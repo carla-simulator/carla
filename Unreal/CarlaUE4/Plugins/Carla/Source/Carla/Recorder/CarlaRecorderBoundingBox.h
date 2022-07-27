@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fstream>
+#include <sstream>
 #include <vector>
 
 #pragma pack(push, 1)
@@ -15,9 +15,9 @@ struct CarlaRecorderBoundingBox
   FVector Origin;
   FVector Extension;
 
-  void Read(std::ifstream &InFile);
+  void Read(std::istream &InFile);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 };
 #pragma pack(pop)
 
@@ -27,9 +27,9 @@ struct CarlaRecorderActorBoundingBox
   uint32_t DatabaseId;
   CarlaRecorderBoundingBox BoundingBox;
 
-  void Read(std::ifstream &InFile);
+  void Read(std::istream &InFile);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 };
 #pragma pack(pop)
 
@@ -41,7 +41,7 @@ class CarlaRecorderActorBoundingBoxes
 
   void Clear(void);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 
 private:
 
@@ -56,7 +56,7 @@ class CarlaRecorderActorTriggerVolumes
 
   void Clear(void);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 
 private:
 

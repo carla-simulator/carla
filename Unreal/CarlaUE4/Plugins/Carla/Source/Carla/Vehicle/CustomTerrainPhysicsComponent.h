@@ -18,11 +18,18 @@ THIRD_PARTY_INCLUDES_END
 
 #include <unordered_map>
 #include <vector>
+#include "Misc/ScopeLock.h"
+#include <string>
 
 #include "CustomTerrainPhysicsComponent.generated.h"
 
 struct FParticle
 {
+  // It formats particle data to "XValue YValue ZValue RadiusValue \n"
+  std::string ToString() const;
+
+  // String received must have format "XValue YValue ZValue RadiusValue \n"
+  void ModifyDataFromString(const std::string& BaseString);
   FDVector Position; // position in m
   FVector Velocity;
   float Radius = 0.02f;
@@ -47,10 +54,18 @@ private:
 struct FDenseTile
 {
   void InitializeTile(float ParticleSize, float Depth, 
-      FDVector TileOrigin, FDVector TileEnd, const FHeightMapData &HeightMap);
+      FDVector TileOrigin, FDVector TileEnd, const FString& SavePath, const FHeightMapData &HeightMap);
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
   void GetParticlesInRadius(FDVector Position, float Radius, std::vector<FParticle*> &ParticlesInRadius);
   void GetParticlesInBox(const FOrientedBox& OBox, std::vector<FParticle*> &ParticlesInRadius);
+
+  // Format DenseTile to "PosX PosY PosZ\n Particles"
+  // WARNING LookAt ParticlesFormat
+  std::string ToString() const;
+
+  // String received must have format "PosX PosY PosZ\n ParticlesList"
+  void ModifyDataFromString(const std::string& BaseString);
+
   std::vector<FParticle> Particles;
   FDVector TilePosition;
 };
@@ -60,6 +75,16 @@ public:
 
   FSparseHighDetailMap(float ParticleDiameter = 0.02f, float Depth = 0.4f)
     : ParticleSize(ParticleDiameter), TerrainDepth(Depth) {};
+
+  void Init(float ParticleDiameter = 0.02f, float Depth = 0.4f)
+  {
+    ParticleSize = ParticleDiameter;
+    TerrainDepth = Depth;
+  }
+
+  inline float GetTileSize() const {
+    return TileSize;
+  }
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
   std::vector<FParticle*> GetParticlesInBox(const FOrientedBox& OBox);
 
@@ -87,16 +112,39 @@ public:
   void UpdateHeightMap(UTexture2D* HeightMapTexture,
       FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight);
 
+
+  void LoadTilesAtPosition(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
+
+  void Update(FVector Position, float RadiusX, float RadiusY);
+
+  void SaveMap();
+
   void Clear();
 
+  void LockMutex()
+  {
+    Lock_Map.Lock();
+  }
+
+  void UnLockMutex()
+  {
+    Lock_Map.Unlock();
+  }
+
+  FString SavePath;
 private:
   std::unordered_map<uint64_t, FDenseTile> Map;
+  std::unordered_map<uint64_t, FDenseTile> TilesToWrite;
   FDVector Tile0Position;
   FDVector Extension;
   float TileSize = 1.f; // 1m per tile
   FHeightMapData Heightmap;
   float ParticleSize = 0.02f;
   float TerrainDepth = 0.4f;
+  FVector PositionToUpdate;
+  FCriticalSection Lock_Map; // UE4 Mutex
+  FCriticalSection Lock_Position; // UE4 Mutex
+
 };
 
 USTRUCT(BlueprintType)
@@ -120,6 +168,7 @@ public:
   UCustomTerrainPhysicsComponent(const FObjectInitializer& ObjectInitializer);
 
   virtual void BeginPlay() override;
+  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
   virtual void TickComponent(float DeltaTime,
       ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 
@@ -135,6 +184,9 @@ public:
   UFUNCTION(BlueprintCallable)
   FVector GetTileCenter(FVector Position);
 
+  UFUNCTION(BlueprintCallable, Category="Tiles")
+  void LoadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
+  
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
     UTexture2D *HeightMap;
 
@@ -143,6 +195,10 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString NeuralModelFile = "";
+
+  FVector LastUpdatedPosition;
+
+  FString SavePath; 
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   float ForceMulFactor = 1.0;
@@ -244,6 +300,9 @@ private:
   FVector HeightMapScaleFactor = FVector(1, 1, 1);
   UPROPERTY(EditAnywhere)
   FVector HeightMapOffset = FVector(0, 0, 0);
+
+  UPROPERTY(EditAnywhere)
+  FVector Radius = FVector(10,10,10);
   
   UPROPERTY(VisibleAnywhere)
   FIntVector CurrentLargeMapTileId = FIntVector(-1,-1,0);
@@ -256,4 +315,22 @@ private:
   TArray<ACarlaWheeledVehicle*> Vehicles;
   carla::learning::NeuralModel TerramechanicsModel;
 
+  class FRunnableThread* Thread;
+  struct FTilesWorker* TilesWorker;
+
+};
+
+struct FTilesWorker : public FRunnable
+{
+	FTilesWorker(class UCustomTerrainPhysicsComponent* TerrainComp, FVector NewPosition, float NewRadiusX, float NewRadiusY );
+
+	virtual ~FTilesWorker() override;
+
+	virtual uint32 Run() override; 
+
+  class UCustomTerrainPhysicsComponent* CustomTerrainComp;
+  FVector Position;
+  float RadiusX; 
+  float RadiusY;
+  bool bShouldContinue = true;
 };

@@ -714,7 +714,7 @@ def game_loop(args):
             random.seed(args.seed)
 
         client = carla.Client(args.host, args.port)
-        client.set_timeout(4.0)
+        client.set_timeout(60.0)
 
         traffic_manager = client.get_trafficmanager()
         sim_world = client.get_world()
@@ -736,11 +736,13 @@ def game_loop(args):
         controller = KeyboardControl(world)
         if args.agent == "Basic":
             agent = BasicAgent(world.player, 30)
+            agent.follow_speed_limits(True)
         elif args.agent == "Constant":
             agent = ConstantVelocityAgent(world.player, 30)
             ground_loc = world.world.ground_projection(world.player.get_location(), 5)
             if ground_loc:
                 world.player.set_location(ground_loc.location + carla.Location(z=0.01))
+            agent.follow_speed_limits(True)
         elif args.agent == "Behavior":
             agent = BehaviorAgent(world.player, behavior=args.behavior)
 

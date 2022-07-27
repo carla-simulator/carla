@@ -43,6 +43,14 @@ void SimulationState::UpdateKinematicHybridEndLocation(ActorId actor_id, cg::Loc
 }
 
 void SimulationState::UpdateTrafficLightState(ActorId actor_id, TrafficLightState state) {
+  // The green-yellow state transition is not notified to the vehicle. This is done to avoid
+  // having vehicles stopped very near the intersection when only the rear part of the vehicle
+  // is colliding with the trigger volume of the traffic light.
+  auto previous_tl_state = GetTLS(actor_id);
+  if (previous_tl_state.at_traffic_light && previous_tl_state.tl_state == TLS::Green) {
+    state.tl_state = TLS::Green;
+  }
+
   tl_state_map.at(actor_id) = state;
 }
 

@@ -35,7 +35,7 @@ namespace tcp {
       if (!ec) {
         session->Open(std::move(on_opened), std::move(on_closed));
       } else {
-        log_error("tcp accept error:", ec.message());
+        log_error("tcp accept stream error:", ec.message());
       }
     };
 

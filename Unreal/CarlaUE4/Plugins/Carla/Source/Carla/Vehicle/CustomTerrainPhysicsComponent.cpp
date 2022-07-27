@@ -8,7 +8,24 @@
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 #include "Engine/CollisionProfile.h"
 #include "CollisionQueryParams.h"
+#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "carla/rpc/String.h"
+#include "HAL/PlatformFilemanager.h"
+#include "HAL/RunnableThread.h"
+#include "Misc/Paths.h"
+#include "Engine/World.h"
+#include "Math/UnrealMathUtility.h"
+#include "GenericPlatform/GenericPlatformFile.h"
+
+#include "Carla/Game/CarlaStatics.h"
+#include "carla/rpc/String.h"
+#include "HAL/PlatformFilemanager.h"
+#include "HAL/RunnableThread.h"
+#include "Misc/Paths.h"
+#include "Engine/World.h"
+#include "Math/UnrealMathUtility.h"
+#include "GenericPlatform/GenericPlatformFile.h"
 #include "Engine/Texture2D.h"
 #include "Engine/Texture.h"
 #include "Rendering/Texture2DResource.h"
@@ -20,11 +37,9 @@
 #include "Components/LineBatchComponent.h"
 #include "Math/OrientedBox.h"
 #include "EngineUtils.h"
-
 #include <algorithm>
+#include <fstream>
 
-// constexpr float ParticleDiameter = 0.013f;
-// constexpr float TerrainDepth = 0.40f;
 constexpr float MToCM = 100.f;
 constexpr float CMToM = 1.f/100.f;
  
@@ -59,7 +74,7 @@ void FHeightMapData::InitializeHeightmap(
   FTexture2DMipMap* TileMipMap = &Texture->PlatformData->Mips[0];
   FByteBulkData* TileRawImageData = &TileMipMap->BulkData;
   FColor* FormatedImageData = (FColor*)(TileRawImageData->Lock(LOCK_READ_ONLY));
-  Size_X = Texture->GetSizeX();
+    Size_X = Texture->GetSizeX();
   Size_Y = Texture->GetSizeY();
   for(uint32_t j = 0; j < Size_Y; j++)
   {
@@ -84,35 +99,82 @@ float FHeightMapData::GetHeight(FDVector Position) const
   return Pixels[Coord_Y*Size_X + Coord_X];
 }
 
+std::string FParticle::ToString() const{
+  return std::string(carla::rpc::FromFString(FString::Printf(TEXT("%.2lf %.2lf %.2lf %.2lf "), 
+                                                          Position.X, Position.Y, Position.Z, Radius) + "\n") );
+}  
+
+void FParticle::ModifyDataFromString(const std::string& BaseString){
+  size_t StartOfSubStr = 0;
+  size_t EndOfSubStr = BaseString.find(" ");
+  std::string XPosition = BaseString.substr(0, EndOfSubStr - StartOfSubStr);
+  // We need to search from the next position to the last place we found delimeter
+  StartOfSubStr = EndOfSubStr + 1;
+  EndOfSubStr = BaseString.find(" ", StartOfSubStr);
+  std::string YPosition = BaseString.substr(StartOfSubStr, EndOfSubStr - StartOfSubStr);
+
+  StartOfSubStr = EndOfSubStr + 1;
+  EndOfSubStr = BaseString.find(" ", StartOfSubStr);
+  std::string ZPosition = BaseString.substr(StartOfSubStr, EndOfSubStr - StartOfSubStr);
+
+  StartOfSubStr = EndOfSubStr + 1;
+  EndOfSubStr = BaseString.find(" ", StartOfSubStr);
+  std::string RadiusString = BaseString.substr(StartOfSubStr, EndOfSubStr - StartOfSubStr);
+
+  Position.X = std::stod(XPosition);
+  Position.Y = std::stod(YPosition);
+  Position.Z = std::stod(ZPosition);
+  Radius = std::stod(RadiusString);
+}
+
 void FHeightMapData::Clear()
 {
   Pixels.clear();
 }
 
 void FDenseTile::InitializeTile(float ParticleSize, float Depth, 
-      FDVector TileOrigin, FDVector TileEnd, const FHeightMapData &HeightMap)
+    FDVector TileOrigin, FDVector TileEnd, 
+    const FString& SavePath, const FHeightMapData &HeightMap)
 {
-  TilePosition = TileOrigin;
-  uint32_t NumParticles_X = (TileEnd.X - TileOrigin.X) / ParticleSize;
-  uint32_t NumParticles_Y = FMath::Abs(TileEnd.Y - TileOrigin.Y) / ParticleSize;
-  uint32_t NumParticles_Z = (Depth) / ParticleSize;
-  UE_LOG(LogCarla, Log, TEXT("Initializing Tile with (%d,%d,%d) particles at location %s, size %f, depth %f. HeightMap at tile origin %f"), 
-      NumParticles_X,NumParticles_Y,NumParticles_Z, *TileOrigin.ToString(), ParticleSize, Depth, HeightMap.GetHeight(TileOrigin));
-  Particles = std::vector<FParticle>(NumParticles_X*NumParticles_Y*NumParticles_Z);
-  for(uint32_t i = 0; i < NumParticles_X; i++)
+
+  std::string FileName = std::string(TCHAR_TO_UTF8(*( SavePath + TileOrigin.ToString() + ".tile" ) ) );
+
+  if( FPaths::FileExists(FString(FileName.c_str())) )
   {
-    for(uint32_t j = 0; j < NumParticles_Y; j++)
+    TRACE_CPUPROFILER_EVENT_SCOPE(DenseTile::InitializeTile);
+    
+    std::ifstream ReadStream(FileName);
+    FVector VectorToRead;
+    ReadFVector(ReadStream, VectorToRead );
+    TilePosition = FDVector(VectorToRead);
+    ReadStdVector<FParticle> (ReadStream, Particles);
+    UE_LOG(LogCarla, Log, TEXT("Reading data, got %d particles"), Particles.size());
+  }
+  else
+  {
+    TilePosition = TileOrigin;
+    uint32_t NumParticles_X = (TileEnd.X - TileOrigin.X) / ParticleSize;
+    uint32_t NumParticles_Y = FMath::Abs(TileEnd.Y - TileOrigin.Y) / ParticleSize;
+    uint32_t NumParticles_Z = (Depth) / ParticleSize;
+    UE_LOG(LogCarla, Log, TEXT("Initializing Tile with (%d,%d,%d) particles at location %s, size %f, depth %f. HeightMap at tile origin %f"), 
+        NumParticles_X,NumParticles_Y,NumParticles_Z, *TileOrigin.ToString(), ParticleSize, Depth, HeightMap.GetHeight(TileOrigin));
+    Particles = std::vector<FParticle>(NumParticles_X*NumParticles_Y*NumParticles_Z);
+    for(uint32_t i = 0; i < NumParticles_X; i++)
     {
-      FDVector ParticlePosition = TileOrigin + FDVector(i*ParticleSize,(j*ParticleSize), 0.f);
-      // UE_LOG(LogCarla, Log, TEXT("  Particle position %s"), *ParticlePosition.ToString());
-      float Height = HeightMap.GetHeight(ParticlePosition);
-      for(uint32_t k = 0; k < NumParticles_Z; k++)
+      for(uint32_t j = 0; j < NumParticles_Y; j++)
       {
-        ParticlePosition.Z = TileOrigin.Z + Height - k*ParticleSize;
-        Particles[k*NumParticles_X*NumParticles_Y + j*NumParticles_X + i] = 
-            {ParticlePosition, FVector(0), ParticleSize/2.f};
+        FDVector ParticlePosition = TileOrigin + FDVector(i*ParticleSize,(j*ParticleSize), 0.f);
+        // UE_LOG(LogCarla, Log, TEXT("  Particle position %s"), *ParticlePosition.ToString());
+        float Height = HeightMap.GetHeight(ParticlePosition);
+        for(uint32_t k = 0; k < NumParticles_Z; k++)
+        {
+          ParticlePosition.Z = TileOrigin.Z + Height - k*ParticleSize;
+          Particles[k*NumParticles_X*NumParticles_Y + j*NumParticles_X + i] = 
+              {ParticlePosition, FVector(0), ParticleSize/2.f};
+        }
       }
     }
+    UE_LOG(LogCarla, Log, TEXT("Initialized, got %d particles"), Particles.size());
   }
 }
 // revise coordinates
@@ -141,8 +203,6 @@ std::vector<FParticle*> FDenseTile::GetParticlesInRadius(FDVector Position, floa
   }
   return ParticlesInRadius;
 }
-
-
 
 void FDenseTile::GetParticlesInBox(
     const FOrientedBox& OBox, std::vector<FParticle*> &ParticlesInRadius)
@@ -200,6 +260,51 @@ std::vector<FParticle*> FSparseHighDetailMap::
   GetTile(Tile_X+1, Tile_Y+1).GetParticlesInBox(OBox, ParticlesInRadius);
   return ParticlesInRadius;
 }
+
+std::string FDenseTile::ToString() const{
+  std::string StringToReturn = std::string(TCHAR_TO_UTF8(*(FString::Printf(TEXT("%.2lf %.2lf %.2lf"), 
+                                                          TilePosition.X, TilePosition.Y, TilePosition.Z) + "\n")));
+  for( uint32_t i = 0; i < Particles.size(); ++i ){
+    StringToReturn += Particles[i].ToString();
+  }
+
+  return StringToReturn;
+}
+
+void FDenseTile::ModifyDataFromString(const std::string& BaseString){
+  size_t StartOfSubStr = 0;
+  size_t EndOfSubStr = BaseString.find(" ");
+  std::string XPosition = BaseString.substr(0, EndOfSubStr);
+  // We need to search from the next position to the last place we found delimeter
+  StartOfSubStr = EndOfSubStr + 1;
+  EndOfSubStr = BaseString.find(" ", StartOfSubStr);
+  std::string YPosition = BaseString.substr(StartOfSubStr, EndOfSubStr - StartOfSubStr);
+
+  StartOfSubStr = EndOfSubStr + 1;
+  EndOfSubStr = BaseString.find(" ", StartOfSubStr);
+  std::string ZPosition = BaseString.substr(StartOfSubStr, EndOfSubStr - StartOfSubStr);
+
+  TilePosition.X = std::stod(XPosition);
+  TilePosition.Y = std::stod(YPosition);
+  TilePosition.Z = std::stod(ZPosition);
+  
+  StartOfSubStr = 0;
+  EndOfSubStr = BaseString.find("\n");
+
+  int i = 0;
+  while( EndOfSubStr != std::string::npos ){
+    std::string NewParticleString = BaseString.substr(StartOfSubStr, EndOfSubStr - StartOfSubStr);
+    FParticle NewParticle;
+    NewParticle.ModifyDataFromString(NewParticleString);
+    Particles.push_back(NewParticle);
+
+    StartOfSubStr = EndOfSubStr +  1;
+    EndOfSubStr = BaseString.find("\n", StartOfSubStr );
+    ++i;
+  }
+
+}
+
 
 uint64_t FSparseHighDetailMap::GetTileId(uint32_t Tile_X, uint32_t Tile_Y)
 {
@@ -265,7 +370,7 @@ FDenseTile& FSparseHighDetailMap::InitializeRegion(uint64_t TileId)
   Tile.InitializeTile(
       ParticleSize, TerrainDepth,
       TileCenter, TileCenter + FDVector(TileSize, TileSize, 0.f),
-      Heightmap);
+      SavePath, Heightmap);
   return Tile;
 }
 
@@ -295,6 +400,122 @@ void FSparseHighDetailMap::Clear()
 {
   Heightmap.Clear();
   Map.clear();
+}
+
+void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX , float RadiusY )
+{
+  // Translate UE4 Position to our coords
+  FScopeLock ScopeLock(&Lock_Map);
+  TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition);
+  std::vector<uint64_t> KeysToRemove;
+  std::vector<uint64_t> KeysToLoad;
+  float MinX = std::max(Position.X - RadiusX, 0.0);
+  float MinY = std::max(Position.Y - RadiusX, 0.0);
+  float MaxX = std::min(Position.X + RadiusX, Extension.X - 1.0 );
+  float MaxY = std::min(Position.Y - RadiusY, Extension.Y - 1.0 );
+
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition::Process);
+    for(auto it : Map) 
+    {
+      KeysToRemove.push_back(it.first);
+    }
+    {
+      for(float X = MinX; X < MaxX; X+=TileSize )
+      {
+        for(float Y = MinY; Y < MaxY; Y+=TileSize )
+        {
+          uint64_t CurrentTileID = GetTileId(FDVector(X,Y,0));
+          if( Map.find(CurrentTileID) != Map.end() )
+          {
+            KeysToRemove.erase(std::remove_if( KeysToRemove.begin(), KeysToRemove.end(), [CurrentTileID](const uint64_t& x) { 
+              return x == CurrentTileID; 
+            }), KeysToRemove.end());    
+          }
+          else
+          {
+            KeysToLoad.push_back(CurrentTileID);
+            Map.emplace(CurrentTileID, FDenseTile() ); 
+          }
+        }
+      }
+    }
+  }
+
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition::Load);
+    for(auto it : KeysToLoad) 
+    {
+      InitializeRegion(it);
+    }
+  }
+
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition::Save);
+    for(auto it : KeysToRemove) 
+    {
+      std::string FileToSavePath = std::string(TCHAR_TO_UTF8(*( SavePath + Map[it].TilePosition.ToString() + ".tile")));
+      std::ofstream OutputStream(FileToSavePath.c_str());
+      WriteFVector(OutputStream, Map[it].TilePosition.ToFVector());
+      WriteStdVector<FParticle> (OutputStream, Map[it].Particles);
+      OutputStream.close();
+    }   
+  }
+  {
+    
+    for(auto it : KeysToRemove) 
+    {
+      Map.erase(it);
+    } 
+  }
+}
+
+void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY)
+{
+
+  float MinX = std::max(Position.X - RadiusX, 0.0f);
+  float MinY = std::max(Position.Y - RadiusX, 0.0f);
+  float MaxX = std::min(Position.X + RadiusX, static_cast<float>( Extension.X ) - 1.0f );
+  float MaxY = std::min(Position.Y - RadiusY, static_cast<float>( Extension.Y ) - 1.0f );
+  for(float X = MinX; X < MaxX ; X += TileSize ) 
+  {
+    for(float Y = MinY ; Y < MaxY; Y += TileSize )
+    {
+      bool ConditionToStopWaiting = true;
+      while(ConditionToStopWaiting) 
+      {
+        uint64_t CurrentTileID = GetTileId(FDVector(X,Y,0));
+        Lock_Map.Lock();
+        ConditionToStopWaiting = Map.find(CurrentTileID) == Map.end();
+        Lock_Map.Unlock();
+        if (ConditionToStopWaiting)
+        {
+          UE_LOG(LogCarla, Log, TEXT("Loop Waiting for Tile %d"), CurrentTileID);
+        }
+      }
+    }
+  }
+
+ // Check if tiles are already loaded
+ // If they are send position
+ // If not wait until loaded
+}
+
+void FSparseHighDetailMap::SaveMap()
+{
+  std::string StringToBeWritten;
+
+  UE_LOG(LogCarla, Warning, TEXT("Save directory %s"), *SavePath );
+  TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::SaveMap);
+  for(auto& it: Map)
+  {
+    StringToBeWritten += it.second.ToString();
+    std::string FileToSavePath = std::string(TCHAR_TO_UTF8(*( SavePath + it.second.TilePosition.ToString() + ".tile")));
+    std::ofstream OutputStream(FileToSavePath.c_str());
+    WriteFVector(OutputStream, it.second.TilePosition.ToFVector());
+    WriteStdVector<FParticle> (OutputStream, it.second.Particles);
+    OutputStream.close();
+  }
 }
 
 void UCustomTerrainPhysicsComponent::BeginPlay()
@@ -384,8 +605,8 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(InitializeDenseMap);
-    SparseMap = FSparseHighDetailMap(CMToM*ParticleDiameter, CMToM*TerrainDepth);
     SparseMap.Clear();
+    SparseMap.Init(CMToM*ParticleDiameter, CMToM*TerrainDepth);
     RootComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
     if (!RootComponent)
     {
@@ -407,7 +628,42 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
     carla::learning::test_learning();
     TerramechanicsModel.LoadModel(TCHAR_TO_ANSI(*NeuralModelFile), CUDADevice);
   }
+  // initialize directories
+  FString LevelName = GetWorld()->GetMapName();
+  LevelName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
+  SavePath = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()) + LevelName + "_Terrain/";
+  SparseMap.SavePath = SavePath;
+  // Creating the FileManager
+  IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+#undef CreateDirectory
+  if( FileManager.CreateDirectory(*SavePath)){
+    UE_LOG(LogCarla, Log, 
+        TEXT("Folder was created at %s"), *SavePath);
+  }else{
+    UE_LOG(LogCarla, Error, 
+        TEXT("Folder was not created at %s"), *SavePath);  
+  }
+  if (TilesWorker == nullptr)
+  {
+    TilesWorker = new FTilesWorker(this, GetOwner()->GetActorLocation(), Radius.X, Radius.Y);
+    Thread = FRunnableThread::Create(TilesWorker, TEXT("TilesWorker"));
+  }
 }
+
+void UCustomTerrainPhysicsComponent::EndPlay(const EEndPlayReason::Type EndPlayReason){
+  Super::EndPlay(EndPlayReason);
+  if( Thread && TilesWorker){
+    TilesWorker->bShouldContinue = false;
+    Thread->WaitForCompletion();
+    Thread->Kill(false);
+    delete TilesWorker;
+    TilesWorker = nullptr;
+  }
+
+  TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::SaveMap);
+  SparseMap.SaveMap();
+}
+
 
 UCustomTerrainPhysicsComponent::UCustomTerrainPhysicsComponent(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
@@ -425,9 +681,10 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
   for (AActor* VehicleActor : VehiclesActors)
   {
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle> (VehicleActor);
+    FVector GlobalLocation = Vehicle->GetActorLocation();
     if(LargeMapManager)
     {
-      FVector GlobalLocation = 
+      GlobalLocation = 
           LargeMapManager->LocalToGlobalLocation(Vehicle->GetActorLocation());
       uint64_t TileId = LargeMapManager->GetTileID(GlobalLocation);
       FIntVector CurrentTileId = 
@@ -475,7 +732,11 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
         }
       }
     }
+    LastUpdatedPosition = UEFrameToSI(GlobalLocation);
+    SparseMap.Update(LastUpdatedPosition, Radius.X, Radius.Y);
+    SparseMap.LockMutex();
     RunNNPhysicsSimulation(Vehicle, DeltaTime);
+    SparseMap.UnLockMutex();
   }
   if (bDrawHeightMap)
   {
@@ -935,7 +1196,6 @@ TArray<FVector> UCustomTerrainPhysicsComponent::GetParticlesInRadius(FVector Pos
 
 FVector UCustomTerrainPhysicsComponent::GetTileCenter(FVector Position)
 {
-  
   return SIToUEFrame(
       SparseMap.GetTilePosition(
           SparseMap.GetTileId(
@@ -1018,4 +1278,34 @@ void UCustomTerrainPhysicsComponent::ApplyForces()
     RootComponent->AddForceAtLocationLocal(Force.Force, Force.Location);
   }
   ForcesToApply.Empty();
+}
+
+void UCustomTerrainPhysicsComponent::LoadTilesAtPosition(FVector Position, float RadiusX, float RadiusY)
+{
+  FDVector PositionTranslated = Position;
+  SparseMap.LoadTilesAtPosition(PositionTranslated, RadiusX, RadiusY);
+
+}
+
+
+FTilesWorker::FTilesWorker(UCustomTerrainPhysicsComponent* TerrainComp, FVector NewPosition, float NewRadiusX, float NewRadiusY )
+{
+  CustomTerrainComp = TerrainComp;
+  Position = NewPosition;
+  RadiusX = NewRadiusX;
+  RadiusY = NewRadiusY;
+}
+
+FTilesWorker::~FTilesWorker()
+{
+  CustomTerrainComp = nullptr;
+}
+
+
+uint32 FTilesWorker::Run(){
+
+  while(bShouldContinue){
+    CustomTerrainComp->LoadTilesAtPosition(CustomTerrainComp->LastUpdatedPosition, RadiusX, RadiusY);
+  }
+  return 0;
 }
