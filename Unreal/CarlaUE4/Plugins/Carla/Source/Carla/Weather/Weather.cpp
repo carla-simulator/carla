@@ -83,6 +83,16 @@ void AWeather::NotifyWeather(ASensor* Sensor)
 		Sensors.Add(AsSceneCaptureCamera);
 #endif
 
+  if (Weather.Precipitation > 0.0f)
+	  ActiveBlendables.Add(MakeTuple(PrecipitationPostProcessMaterial, Weather.Precipitation / 100.0f));
+  else
+	  ActiveBlendables.Remove(PrecipitationPostProcessMaterial);
+
+  if (Weather.DustStorm > 0.0f)
+	  ActiveBlendables.Add(MakeTuple(DustStormPostProcessMaterial, Weather.DustStorm / 100.0f));
+  else
+	  ActiveBlendables.Remove(DustStormPostProcessMaterial);
+
 	// Call the blueprint that actually changes the weather.
 	RefreshWeather(Weather);
 }
