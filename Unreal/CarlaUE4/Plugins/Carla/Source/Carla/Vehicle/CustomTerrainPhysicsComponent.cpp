@@ -58,7 +58,7 @@ float UEFrameToSI(const float& In) { return CMToM * In; }
 
 void FHeightMapData::InitializeHeightmap(
     UTexture2D* Texture, FDVector Size, FDVector Origin,
-    float Min, float Max, FDVector Tile0)
+    float Min, float Max, FDVector Tile0, float ScaleZ)
 {
   Tile0Position = Tile0;
   MinHeight = Min;
@@ -81,7 +81,7 @@ void FHeightMapData::InitializeHeightmap(
     for(uint32_t i = 0; i < Size_X; i++)
     {
       uint32_t idx = j*Size_X + i;
-      float HeightLevel = MinHeight + (MaxHeight - MinHeight) * FormatedImageData[idx].R/255.f;
+      float HeightLevel = Scale_Z*(MinHeight + (MaxHeight - MinHeight) * FormatedImageData[idx].R/255.f);
       Pixels.emplace_back(HeightLevel);
     }
   }
@@ -375,24 +375,26 @@ FDenseTile& FSparseHighDetailMap::InitializeRegion(uint64_t TileId)
 }
 
 void FSparseHighDetailMap::InitializeMap(UTexture2D* HeightMapTexture,
-      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight)
+      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight, 
+      float ScaleZ)
 {
   Tile0Position = Origin;
   TileSize = Size;
   Extension = MapSize;
   Heightmap.InitializeHeightmap(
       HeightMapTexture, Extension, Tile0Position, 
-      MinHeight, MaxHeight, Tile0Position);
+      MinHeight, MaxHeight, Tile0Position, ScaleZ);
   UE_LOG(LogCarla, Log, 
       TEXT("Sparse Map initialized"));
 }
 void FSparseHighDetailMap::UpdateHeightMap(UTexture2D* HeightMapTexture,
-      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight)
+      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight,
+      float ScaleZ)
 {
   Heightmap.Clear();
   Heightmap.InitializeHeightmap(
       HeightMapTexture, Extension, Origin, 
-      MinHeight, MaxHeight, Origin);
+      MinHeight, MaxHeight, Origin, ScaleZ);
   UE_LOG(LogCarla, Log, 
       TEXT("Height map updated"));
 }
@@ -621,7 +623,8 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
       //     TEXT("World Size %s"), *(WorldSize.ToString()));
     }
     Tile0Origin.Z += FloorHeight;
-    SparseMap.InitializeMap(HeightMap, UEFrameToSI(Tile0Origin), UEFrameToSI(WorldSize), 1.f, MinHeight, MaxHeight);
+    SparseMap.InitializeMap(HeightMap, UEFrameToSI(Tile0Origin), UEFrameToSI(WorldSize),
+        1.f, MinHeight, MaxHeight, HeightMapScaleFactor.Z);
   }
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(LoadNNModel);
@@ -712,14 +715,14 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
             if (Texture != nullptr)
             {
               HeightMap = Texture;
-              FVector TilePosition = LargeMapManager->GetTileLocation(CurrentLargeMapTileId) - 0.5f*FVector(LargeMapManager->GetTileSize(), -LargeMapManager->GetTileSize(), 0);
+              FVector TilePosition = HeightMapOffset + LargeMapManager->GetTileLocation(CurrentLargeMapTileId) - 0.5f*FVector(LargeMapManager->GetTileSize(), -LargeMapManager->GetTileSize(), 0);
               UE_LOG(LogCarla, Log, TEXT("Updating height map to location %s in tile location %s"), 
                   *TilePosition.ToString(), *LargeMapManager->GetTileLocation(CurrentLargeMapTileId).ToString());
               TilePosition.Z += FloorHeight;
               SparseMap.UpdateHeightMap(
                   HeightMap, UEFrameToSI(TilePosition), UEFrameToSI(FVector(
                     LargeMapManager->GetTileSize(),-LargeMapManager->GetTileSize(), 0)), 
-                  1.f, MinHeight, MaxHeight);
+                  1.f, MinHeight, MaxHeight, HeightMapScaleFactor.Z);
             }
           }
 
@@ -735,7 +738,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     LastUpdatedPosition = UEFrameToSI(GlobalLocation);
     SparseMap.Update(LastUpdatedPosition, Radius.X, Radius.Y);
     SparseMap.LockMutex();
-    RunNNPhysicsSimulation(Vehicle, DeltaTime);
+    // RunNNPhysicsSimulation(Vehicle, DeltaTime);
     SparseMap.UnLockMutex();
   }
   if (bDrawHeightMap)

@@ -38,7 +38,7 @@ struct FHeightMapData
 {
   void InitializeHeightmap(
     UTexture2D* Texture, FDVector Size, FDVector Origin,
-      float MinHeight, float MaxHeight, FDVector Tile0);
+      float MinHeight, float MaxHeight, FDVector Tile0, float ScaleZ);
   float GetHeight(FDVector Position) const; // get height at a given global 2d position
   void Clear();
 private:
@@ -48,6 +48,7 @@ private:
   uint32_t Size_Y;
   float MinHeight = 0.0f;
   float MaxHeight = 10.0f;
+  float Scale_Z = 1;
   FDVector Tile0Position;
   std::vector<float> Pixels;
 };
@@ -107,11 +108,12 @@ public:
   }
 
   void InitializeMap(UTexture2D* HeightMapTexture,
-      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight);
-  
-  void UpdateHeightMap(UTexture2D* HeightMapTexture,
-      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight);
+      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight,
+      float ScaleZ);
 
+  void UpdateHeightMap(UTexture2D* HeightMapTexture,
+      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight,
+      float ScaleZ);
 
   void LoadTilesAtPosition(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
 
@@ -186,7 +188,7 @@ public:
 
   UFUNCTION(BlueprintCallable, Category="Tiles")
   void LoadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
-  
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
     UTexture2D *HeightMap;
 
