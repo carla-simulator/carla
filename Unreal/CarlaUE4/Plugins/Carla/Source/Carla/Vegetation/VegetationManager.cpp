@@ -164,8 +164,9 @@ void AVegetationManager::Tick(float DeltaTime)
     GenerateTileDataInternals();
   }
   TArray<FString> TilesInUse = GetTilesInUse();
+  if (TilesInUse.Num() == 0)
+    return;
   UpdateMaterials(TilesInUse);
-
   TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> ElementsToSpawn = GetElementsToSpawn(TilesInUse);
   SpawnSkeletalFoliages(ElementsToSpawn);
   DestroySkeletalFoliages();
@@ -629,17 +630,22 @@ TArray<FString> AVegetationManager::GetTilesInUse()
       TileDataCache.Remove(Element.Key);
       return Results;
     }
-    const AProceduralFoliageVolume* Procedural = TileData.ProceduralFoliageVolume;
-    if (!Procedural)
-      continue;
-    
-    const FString TileName = Procedural->GetLevel()->GetOuter()->GetName();
-    const FBox Box = Procedural->ProceduralComponent->GetBounds();
-
     if (Results.Contains(Element.Key))
       continue;
+    const AProceduralFoliageVolume* Procedural = TileData.ProceduralFoliageVolume;
+    if (!IsValid(Procedural))
+      continue;    
+    if (!IsValid(Procedural->ProceduralComponent))
+      continue;
+    if (Element.Key.IsEmpty())
+      continue;
+    const FBox Box = Procedural->ProceduralComponent->GetBounds();
+    if (!Box.IsValid)
+      continue;    
     for (ACarlaWheeledVehicle* Vehicle : VehiclesInLevel)
     {
+      if (!IsValid(Vehicle))
+        continue;   
       if (Box.IsInside(Vehicle->GetActorLocation()))
       {
         Results.Emplace(Element.Key);
