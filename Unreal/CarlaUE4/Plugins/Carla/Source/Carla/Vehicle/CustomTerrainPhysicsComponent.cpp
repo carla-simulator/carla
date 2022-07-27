@@ -39,6 +39,8 @@
 #include "EngineUtils.h"
 #include <algorithm>
 #include <fstream>
+#include <thread>
+#include <chrono>
 
 constexpr float MToCM = 100.f;
 constexpr float CMToM = 1.f/100.f;
@@ -412,9 +414,9 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
   std::vector<uint64_t> KeysToRemove;
   std::vector<uint64_t> KeysToLoad;
   float MinX = std::max(Position.X - RadiusX, 0.0);
-  float MinY = std::max(Position.Y - RadiusX, 0.0);
-  float MaxX = std::min(Position.X + RadiusX, Extension.X - 1.0 );
-  float MaxY = std::min(Position.Y - RadiusY, Extension.Y - 1.0 );
+  float MinY = std::max(Position.Y - RadiusY, 0.0);
+  float MaxX = Position.X + RadiusX;
+  float MaxY = Position.Y + RadiusY;
 
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition::Process);
@@ -432,7 +434,7 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
           {
             KeysToRemove.erase(std::remove_if( KeysToRemove.begin(), KeysToRemove.end(), [CurrentTileID](const uint64_t& x) { 
               return x == CurrentTileID; 
-            }), KeysToRemove.end());    
+            }), KeysToRemove.end());
           }
           else
           {
@@ -448,6 +450,7 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
     TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition::Load);
     for(auto it : KeysToLoad) 
     {
+      UE_LOG(LogCarla, Log, TEXT("Loading tile id %llu, (%f, %f)  (%f, %f)"), it, MinX, MinY, MaxX, MaxY);
       InitializeRegion(it);
     }
   }
@@ -456,6 +459,7 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
     TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition::Save);
     for(auto it : KeysToRemove) 
     {
+      UE_LOG(LogCarla, Log, TEXT("Offlloading tile id %llu, (%f, %f)  (%f, %f)"), it, MinX, MinY, MaxX, MaxY);
       std::string FileToSavePath = std::string(TCHAR_TO_UTF8(*( SavePath + Map[it].TilePosition.ToString() + ".tile")));
       std::ofstream OutputStream(FileToSavePath.c_str());
       WriteFVector(OutputStream, Map[it].TilePosition.ToFVector());
@@ -738,7 +742,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     LastUpdatedPosition = UEFrameToSI(GlobalLocation);
     SparseMap.Update(LastUpdatedPosition, Radius.X, Radius.Y);
     SparseMap.LockMutex();
-    // RunNNPhysicsSimulation(Vehicle, DeltaTime);
+    RunNNPhysicsSimulation(Vehicle, DeltaTime);
     SparseMap.UnLockMutex();
   }
   if (bDrawHeightMap)
@@ -961,84 +965,84 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   {
     NNInput.throttle *= -1;
   }
-  TerramechanicsModel.SetInputs(NNInput);
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE(RunModel);
-    if(bUseDynamicModel)
-    {
-      TerramechanicsModel.ForwardDynamic();
-    }
-    else 
-    {
-      TerramechanicsModel.Forward();
-    }
-  }
-  carla::learning::Outputs& Output = TerramechanicsModel.GetOutputs();
+  // TerramechanicsModel.SetInputs(NNInput);
+  // {
+  //   TRACE_CPUPROFILER_EVENT_SCOPE(RunModel);
+  //   if(bUseDynamicModel)
+  //   {
+  //     TerramechanicsModel.ForwardDynamic();
+  //   }
+  //   else 
+  //   {
+  //     TerramechanicsModel.Forward();
+  //   }
+  // }
+  // carla::learning::Outputs& Output = TerramechanicsModel.GetOutputs();
 
-  if(bUpdateParticles)
-  {
-    UpdateParticles(ParticlesWheel0, Output.wheel0._particle_forces, DeltaTime);
-    UpdateParticles(ParticlesWheel1, Output.wheel1._particle_forces, DeltaTime);
-    UpdateParticles(ParticlesWheel2, Output.wheel2._particle_forces, DeltaTime);
-    UpdateParticles(ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime);
-  }
+  // if(bUpdateParticles)
+  // {
+  //   UpdateParticles(ParticlesWheel0, Output.wheel0._particle_forces, DeltaTime);
+  //   UpdateParticles(ParticlesWheel1, Output.wheel1._particle_forces, DeltaTime);
+  //   UpdateParticles(ParticlesWheel2, Output.wheel2._particle_forces, DeltaTime);
+  //   UpdateParticles(ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime);
+  // }
 
-  if(bUseMeanAcceleration)
-  {
-    ApplyMeanAccelerationToVehicle(Vehicle, 
-        ForceMulFactor*SIToUEFrame(FVector(
-            Output.wheel0.wheel_forces_x,
-            Output.wheel0.wheel_forces_y,
-            Output.wheel0.wheel_forces_z)),
-        ForceMulFactor*SIToUEFrame(FVector(
-            Output.wheel1.wheel_forces_x,
-            Output.wheel1.wheel_forces_y,
-            Output.wheel1.wheel_forces_z)),
-        ForceMulFactor*SIToUEFrame(FVector(
-            Output.wheel2.wheel_forces_x,
-            Output.wheel2.wheel_forces_y,
-            Output.wheel2.wheel_forces_z)),
-        ForceMulFactor*SIToUEFrame(FVector(
-            Output.wheel3.wheel_forces_x,
-            Output.wheel3.wheel_forces_y,
-            Output.wheel3.wheel_forces_z)));
-  }
-  else
-  {
-    ApplyForcesToVehicle(Vehicle, 
-        ForceMulFactor*SIToUEFrame(FVector(
-            Output.wheel0.wheel_forces_x,
-            Output.wheel0.wheel_forces_y,
-            Output.wheel0.wheel_forces_z)),
-        ForceMulFactor*SIToUEFrame(FVector(
-            Output.wheel1.wheel_forces_x,
-            Output.wheel1.wheel_forces_y,
-            Output.wheel1.wheel_forces_z)),
-        ForceMulFactor*SIToUEFrame(FVector(
-            Output.wheel2.wheel_forces_x,
-            Output.wheel2.wheel_forces_y,
-            Output.wheel2.wheel_forces_z)),
-        ForceMulFactor*SIToUEFrame(FVector(
-            Output.wheel3.wheel_forces_x,
-            Output.wheel3.wheel_forces_y,
-            Output.wheel3.wheel_forces_z)),
-        ForceMulFactor*MToCM*SIToUEFrame(FVector(
-            Output.wheel0.wheel_torque_x,
-            Output.wheel0.wheel_torque_y,
-            Output.wheel0.wheel_torque_z)),
-        ForceMulFactor*MToCM*SIToUEFrame(FVector(
-            Output.wheel1.wheel_torque_x,
-            Output.wheel1.wheel_torque_y,
-            Output.wheel1.wheel_torque_z)),
-        ForceMulFactor*MToCM*SIToUEFrame(FVector(
-            Output.wheel2.wheel_torque_x,
-            Output.wheel2.wheel_torque_y,
-            Output.wheel2.wheel_torque_z)),
-        ForceMulFactor*MToCM*SIToUEFrame(FVector(
-            Output.wheel3.wheel_torque_x,
-            Output.wheel3.wheel_torque_y,
-            Output.wheel3.wheel_torque_z)));
-  }
+  // if(bUseMeanAcceleration)
+  // {
+  //   ApplyMeanAccelerationToVehicle(Vehicle, 
+  //       ForceMulFactor*SIToUEFrame(FVector(
+  //           Output.wheel0.wheel_forces_x,
+  //           Output.wheel0.wheel_forces_y,
+  //           Output.wheel0.wheel_forces_z)),
+  //       ForceMulFactor*SIToUEFrame(FVector(
+  //           Output.wheel1.wheel_forces_x,
+  //           Output.wheel1.wheel_forces_y,
+  //           Output.wheel1.wheel_forces_z)),
+  //       ForceMulFactor*SIToUEFrame(FVector(
+  //           Output.wheel2.wheel_forces_x,
+  //           Output.wheel2.wheel_forces_y,
+  //           Output.wheel2.wheel_forces_z)),
+  //       ForceMulFactor*SIToUEFrame(FVector(
+  //           Output.wheel3.wheel_forces_x,
+  //           Output.wheel3.wheel_forces_y,
+  //           Output.wheel3.wheel_forces_z)));
+  // }
+  // else
+  // {
+  //   ApplyForcesToVehicle(Vehicle, 
+  //       ForceMulFactor*SIToUEFrame(FVector(
+  //           Output.wheel0.wheel_forces_x,
+  //           Output.wheel0.wheel_forces_y,
+  //           Output.wheel0.wheel_forces_z)),
+  //       ForceMulFactor*SIToUEFrame(FVector(
+  //           Output.wheel1.wheel_forces_x,
+  //           Output.wheel1.wheel_forces_y,
+  //           Output.wheel1.wheel_forces_z)),
+  //       ForceMulFactor*SIToUEFrame(FVector(
+  //           Output.wheel2.wheel_forces_x,
+  //           Output.wheel2.wheel_forces_y,
+  //           Output.wheel2.wheel_forces_z)),
+  //       ForceMulFactor*SIToUEFrame(FVector(
+  //           Output.wheel3.wheel_forces_x,
+  //           Output.wheel3.wheel_forces_y,
+  //           Output.wheel3.wheel_forces_z)),
+  //       ForceMulFactor*MToCM*SIToUEFrame(FVector(
+  //           Output.wheel0.wheel_torque_x,
+  //           Output.wheel0.wheel_torque_y,
+  //           Output.wheel0.wheel_torque_z)),
+  //       ForceMulFactor*MToCM*SIToUEFrame(FVector(
+  //           Output.wheel1.wheel_torque_x,
+  //           Output.wheel1.wheel_torque_y,
+  //           Output.wheel1.wheel_torque_z)),
+  //       ForceMulFactor*MToCM*SIToUEFrame(FVector(
+  //           Output.wheel2.wheel_torque_x,
+  //           Output.wheel2.wheel_torque_y,
+  //           Output.wheel2.wheel_torque_z)),
+  //       ForceMulFactor*MToCM*SIToUEFrame(FVector(
+  //           Output.wheel3.wheel_torque_x,
+  //           Output.wheel3.wheel_torque_y,
+  //           Output.wheel3.wheel_torque_z)));
+  // }
 }
 
 void UCustomTerrainPhysicsComponent::UpdateParticles(
@@ -1309,6 +1313,7 @@ uint32 FTilesWorker::Run(){
 
   while(bShouldContinue){
     CustomTerrainComp->LoadTilesAtPosition(CustomTerrainComp->LastUpdatedPosition, RadiusX, RadiusY);
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
   }
   return 0;
 }
