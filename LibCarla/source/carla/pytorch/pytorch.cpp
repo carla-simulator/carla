@@ -18,7 +18,7 @@
 #include <sstream>
 
 void add_mark(const std::string &text) {
-  nvtxMark(text.c_str());
+
 }
 
 namespace carla {
