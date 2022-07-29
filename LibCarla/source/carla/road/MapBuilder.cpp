@@ -1043,7 +1043,7 @@ void MapBuilder::CreateController(
       auto closest_waypoint_to_signal =
           map.GetClosestWaypointOnRoad(signal_position,
           static_cast<int32_t>(carla::road::Lane::LaneType::Shoulder) |  static_cast<int32_t>(carla::road::Lane::LaneType::Driving));
-      // workarround to not move speed signals
+      // workarround to not move stencil stop
       if (
           signal->GetName().find("Stencil_STOP") != std::string::npos ||
           signal->_using_inertial_position) {
@@ -1057,7 +1057,7 @@ void MapBuilder::CreateController(
         int iter = 0;
         int MaxIter = 10;
         // Displaces signal until it finds a suitable spot
-        while(distance_to_road < (lane_width * 0.5 + (lane_width*0.2)) && iter < MaxIter) {
+        while(distance_to_road < (lane_width * 0.7) && iter < MaxIter) {
           if(iter == 0) {
             log_debug("Traffic sign",
                 signal->GetSignalId(),
