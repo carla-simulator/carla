@@ -164,10 +164,10 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UTexture2D *HeightMap;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
   UTexture2D* TextureToUpdate;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
   UMaterialParameterCollection* MPC;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -176,16 +176,11 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FVector NextPositionToUpdate = FVector(0,0,0);
   
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  bool UpdateMPC = true;
-
   FVector LastUpdatedPosition;
 private:
 
   void ApplyForces();
 
-  UPROPERTY(EditAnywhere)
-  UMaterialParameterCollectionInstance* MPCInstance;
 
   UPROPERTY(EditAnywhere)
   TArray<FForceAtLocation> ForcesToApply;
@@ -195,10 +190,18 @@ private:
   float RayCastRange = 10.0f;
   UPROPERTY(EditAnywhere)
   FVector WorldSize = FVector(10000,10000,1000);
+  // Radius of the data loaded in memory
   UPROPERTY(EditAnywhere)
-  FVector Radius = FVector( 10, 10, 0 );
+  FVector Radius = FVector( 5, 5, 0 );
+  // Radius of the data collected by the texture
+  UPROPERTY(EditAnywhere, Category="MaterialParameters")
+  float TextureRadius = 4.0f;
+  UPROPERTY(EditAnywhere, Category="MaterialParameters")
+  float EffectMultiplayer = 10.0f;
 
-
+  UPROPERTY()
+  UMaterialParameterCollectionInstance* MPCInstance;
+  
   FSparseHighDetailMap SparseMap;
   TArray<ACarlaWheeledVehicle*> Vehicles;
 
@@ -218,7 +221,7 @@ struct FTilesWorker : public FRunnable
 
   class UCustomTerrainPhysicsComponent* CustomTerrainComp;
   FVector Position;
-  float RadiusX; 
-  float RadiusY;
+  double RadiusX; 
+  double RadiusY;
   bool bShouldContinue = true;
 };
