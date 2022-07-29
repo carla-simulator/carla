@@ -49,7 +49,7 @@ namespace multigpu {
     if (!ec) {
       session->Open(std::move(on_opened), std::move(on_closed), std::move(on_response));
     } else {
-      log_error("tcp accept secondary error:", ec.message());
+      log_error("Secondary server:", ec.message());
     }
   };
 
