@@ -2,8 +2,8 @@ FROM ubuntu:18.04
 
 USER root
 
-ARG EPIC_USER=user
-ARG EPIC_PASS=pass
+ARG GIT_USER=user
+ARG GIT_PAT=pass
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update ; \
   apt-get install -y wget software-properties-common && \
@@ -47,7 +47,7 @@ USER carla
 WORKDIR /home/carla
 ENV UE4_ROOT /home/carla/UE4.26
 
-RUN git clone --depth 1 -b carla "https://${EPIC_USER}:${EPIC_PASS}@github.com/CarlaUnreal/UnrealEngine.git" ${UE4_ROOT}
+RUN git clone --depth 1 -b carla "https://${GIT_USER}:${GIT_PAT}@github.com/CarlaUnreal/UnrealEngine.git" ${UE4_ROOT}
 
 RUN cd $UE4_ROOT && \
   ./Setup.sh && \
