@@ -386,6 +386,7 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
 
 void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::Update);
   
   FVector PositionTranslated;
   PositionTranslated.X = ( Position.X * 0.01 ) + (Extension.X * 0.5f);
@@ -475,6 +476,8 @@ void UCustomTerrainPhysicsComponent::InitTexture(){
 
 void UCustomTerrainPhysicsComponent::UpdateTextureData()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::UpdateTextureData);
+
   float LimitX = TextureToUpdate->GetSizeX(); 
   float LimitY = TextureToUpdate->GetSizeY();
 
@@ -526,14 +529,7 @@ UCustomTerrainPhysicsComponent::UCustomTerrainPhysicsComponent()
 void UCustomTerrainPhysicsComponent::BeginPlay()
 {
   Super::BeginPlay();
-  // torch::Tensor tensor = torch::rand({2, 3});
-  // std::cout << tensor << std::endl;
-  
-  // carla::learning::test_learning();
-  // carla::learning::NeuralModel Model;
-  // Model.LoadModel(TCHAR_TO_ANSI(*NeuralModelFile));
 
- 
   SparseMap.Clear();
   RootComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
   if (!RootComponent)
@@ -553,6 +549,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   FString LevelName = GetWorld()->GetMapName();
 	LevelName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
   SavePath = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()) + LevelName + "_Terrain/";
+  
   // Creating the FileManager
   IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
   if( FileManager.CreateDirectory(*SavePath)){
@@ -562,6 +559,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
     UE_LOG(LogCarla, Error, 
         TEXT("Folder was not created at %s"), *SavePath);  
   }
+
   TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::InitializeMap);
   SparseMap.InitializeMap(HeightMap, FDVector(0.f,0.f,0.f), WorldSize/100.f);
 
@@ -640,40 +638,6 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
   // This function update texture data
   UpdateTexture(Radius.X, Radius.Y);
 }
-
-// TArray<FHitResult> UCustomTerrainPhysicsComponent::SampleTerrainRayCast(
-//     const TArray<FVector> &Locations)
-// {
-//   TArray<FHitResult> HitResult;
-//   HitResult.SetNum(Locations.Num());
-//   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
-//   {
-//     TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent_ParallelFor);
-//     ParallelFor(Locations.Num(), [&](int32 Index) {
-//       TRACE_CPUPROFILER_EVENT_SCOPE(ParallelForTask);
-
-//       FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Terrain")), true, GetOwner());
-//       TraceParams.bTraceComplex = true;
-//       TraceParams.bReturnPhysicalMaterial = false;
-
-//       FHitResult HitInfo;
-//       const FVector& Location = Locations[Index];
-
-//       GetWorld()->ParallelLineTraceSingleByChannel(
-//           HitInfo,
-//           Location,
-//           Location + RayCastRange*FVector(0,0,-1),
-//           ECC_GameTraceChannel2,
-//           TraceParams,
-//           FCollisionResponseParams::DefaultResponseParam);
-//       UE_LOG(LogCarla, Warning, 
-//           TEXT("Paralel for id %d"), Index);
-//       HitResult[Index] = HitInfo;
-//     });
-//   }
-//   GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
-//   return HitResult;
-// }
 
 TArray<FVector> UCustomTerrainPhysicsComponent::GetParticlesInRadius(FVector Position, float Radius)
 {
