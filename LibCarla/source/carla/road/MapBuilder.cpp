@@ -1041,10 +1041,10 @@ void MapBuilder::CreateController(
       auto& signal = signal_pair.second;
       auto signal_position = signal->GetTransform().location;
       auto closest_waypoint_to_signal =
-          map.GetClosestWaypointOnRoad(signal_position);
-      // workarround to not move speed signals
-      if (signal->GetName().substr(0, 6) == "Speed_" ||
-          signal->GetName().substr(0, 6) == "speed_" ||
+          map.GetClosestWaypointOnRoad(signal_position,
+          static_cast<int32_t>(carla::road::Lane::LaneType::Shoulder) |  static_cast<int32_t>(carla::road::Lane::LaneType::Driving));
+      // workarround to not move stencil stop
+      if (
           signal->GetName().find("Stencil_STOP") != std::string::npos ||
           signal->_using_inertial_position) {
         continue;
@@ -1057,17 +1057,18 @@ void MapBuilder::CreateController(
         int iter = 0;
         int MaxIter = 10;
         // Displaces signal until it finds a suitable spot
-        while(distance_to_road < lane_width * 0.5 && iter < MaxIter) {
+        while(distance_to_road < (lane_width * 0.7) && iter < MaxIter) {
           if(iter == 0) {
             log_debug("Traffic sign",
                 signal->GetSignalId(),
                 "overlaps a driving lane. Moving out of the road...");
           }
           geom::Vector3D displacement = 1.f*(signal->GetTransform().GetRightVector()) *
-              static_cast<float>(abs(lane_width))*0.5f;
+              static_cast<float>(abs(lane_width))*0.2f;
           signal_position += displacement;
           closest_waypoint_to_signal =
-              map.GetClosestWaypointOnRoad(signal_position);
+              map.GetClosestWaypointOnRoad(signal_position,
+              static_cast<int32_t>(carla::road::Lane::LaneType::Shoulder) |  static_cast<int32_t>(carla::road::Lane::LaneType::Driving));
           distance_to_road =
               (map.ComputeTransform(closest_waypoint_to_signal.get()).location -
               signal_position).Length();
