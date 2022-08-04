@@ -170,6 +170,9 @@ public:
   UFUNCTION(BlueprintImplementableEvent)
   void AssignLandscapeMaterial(ALandscape* Landscape);
 
+  UFUNCTION(BlueprintImplementableEvent)
+  void InstantiateRiverSublevel(UWorld* World, const FMapGeneratorTileMetaInfo TileMetaInfo);
+
   /// PROVISIONAL
   UFUNCTION(BlueprintImplementableEvent)
   void UpdateTileRT(const FMapGeneratorTileMetaInfo& TileMetaInfo);
@@ -217,6 +220,9 @@ public:
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   bool GenerateWaterFromWorld(UWorld* RiversWorld, TSubclassOf<class AActor> RiverClass);
 
+  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  UWorld* DuplicateWorld(const FString BaseWorldPath, const FString TargetWorldPath, const FString NewWorldName);
+
   /// Adds weather actor of type @a WeatherActorClass and sets the @a SelectedWeather
   /// to the map specified in @a MetaInfo. Ifthe actor already exists on the map
   /// then it is returned so only one weather actor is spawned in each map
@@ -247,6 +253,9 @@ private:
   /// a correct managements of landscapes
   UFUNCTION()
   bool SaveWorld(UWorld* WorldToBeSaved);
+
+  // UFUNCTION()
+  // bool SaveWorldPackage
 
   /// Takes the name of the map from @a MetaInfo and created the main map
   /// including all the actors needed by large map system

@@ -327,6 +327,38 @@ bool UMapGeneratorWidget::GenerateWaterFromWorld(UWorld* RiversWorld, TSubclassO
   return true;
 }
 
+UWorld* UMapGeneratorWidget::DuplicateWorld(FString BaseWorldPath, FString TargetWorldPath, const FString NewWorldName)
+{
+  UWorld* DuplicateWorld;
+
+  UWorld* BaseWorld = LoadObject<UWorld>(nullptr, *BaseWorldPath);
+  if(BaseWorld == nullptr)
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: No World Found in %s"), 
+        *CUR_CLASS_FUNC_LINE, *BaseWorldPath);
+    return nullptr;
+  }
+
+  const FString PackageName = TargetWorldPath + "/" + NewWorldName;
+  UPackage* WorldPackage = CreatePackage(*PackageName);
+
+  FObjectDuplicationParameters Parameters(BaseWorld, WorldPackage);
+  Parameters.DestName = FName(*NewWorldName);
+  Parameters.DestClass = BaseWorld->GetClass();
+  Parameters.DuplicateMode = EDuplicateMode::World;
+  Parameters.PortFlags = PPF_Duplicate;
+
+  DuplicateWorld = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
+  
+  const FString PackageFileName = FPackageName::LongPackageNameToFilename(
+          PackageName, 
+          FPackageName::GetMapPackageExtension());
+      UPackage::SavePackage(WorldPackage, DuplicateWorld, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
+          *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+
+  return DuplicateWorld;
+}
+
 AActor* UMapGeneratorWidget::AddWeatherToExistingMap(TSubclassOf<class AActor> WeatherActorClass, 
     const FMapGeneratorMetaInfo& MetaInfo, const FString SelectedWeather)
 {
@@ -615,6 +647,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       FMapGeneratorTileMetaInfo TileMetaInfo;
       TileMetaInfo.IndexX = i;
       TileMetaInfo.IndexY = MetaInfo.SizeY-j-1;
+      TileMetaInfo.MapMetaInfo = MetaInfo;
       
 
       // River Management
@@ -626,7 +659,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       {
         TileMetaInfo.ContainsRiver = false;
       }
-      TileMetaInfo.RiverPreset = "RiverPreset01";
+      // TileMetaInfo.RiverPreset = "RiverPreset01";
 
       // Update and get heightmap from texture
       UpdateTileRT(TileMetaInfo);
@@ -644,13 +677,9 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
         HeightData.Add((uint16)(LinearColor.R * 255 * 255 + LinearColor.G * 255));
       }
 
-      // Smooth process
-      TArray<uint16> SmoothedData;
-      SmoothHeightmap(HeightData, SmoothedData);
-      HeightData = SmoothedData;
-
       // Flatening if contains river
       // TODO: Move this if to a function
+      // TODO: Check and fix flatening algorithm
       if(TileMetaInfo.ContainsRiver)
       {
         int FlateningMargin = 30;   // Not flatened
@@ -664,7 +693,6 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
             float TransitionFactor = 1.0f;
 
             if(X < (FlateningMargin + FlateningFalloff))
-                // || Y > (TileSize - FlateningMargin - FlateningFalloff))
             {
               TransitionFactor *= (X - FlateningMargin) / (float) FlateningFalloff;
             }
@@ -681,10 +709,17 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
               TransitionFactor *= 1 - ((Y - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
             }
             
-            HeightData[(X * TileSize) + Y] = (HeightData[(X * TileSize) + Y] * MetaInfo.RiverFlateningFactor) * TransitionFactor +  HeightData[(X * TileSize) + Y] * (1-TransitionFactor);
+            // HeightData[(X * TileSize) + Y] = (HeightData[(X * TileSize) + Y] * MetaInfo.RiverFlateningFactor) * TransitionFactor +  HeightData[(X * TileSize) + Y] * (1-TransitionFactor);
           }
         }
+        DuplicateWorld("/CarlaTools/MapGenerator/Rivers/RiverPresets/River01/RiverPreset01.RiverPreset01",
+            MetaInfo.DestinationPath + "/Rivers", MapName + "_River");
       }
+
+      // Smooth process
+      TArray<uint16> SmoothedData;
+      SmoothHeightmap(HeightData, SmoothedData);
+      HeightData = SmoothedData;
 
       FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f);
       Landscape->CreateLandscapeInfo();
@@ -721,6 +756,13 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
             *CUR_CLASS_FUNC_LINE, *ErrorUnloadingStr.ToString());
         return false;
       }
+
+      // TODO: Instantiate water if needed
+      // if(TileMetaInfo.ContainsRiver)
+      // {
+      //   InstantiateRiverSublevel(World, TileMetaInfo);
+      //   SaveWorld(World);
+      // }
     }
   }
 
