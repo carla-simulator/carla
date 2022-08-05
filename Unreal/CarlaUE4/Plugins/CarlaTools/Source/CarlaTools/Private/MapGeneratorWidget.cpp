@@ -409,6 +409,19 @@ TMap<FRoiTile, FVegetationROI> UMapGeneratorWidget::CreateVegetationRoisMap(TArr
   return ResultMap;
 }
 
+TMap<FRoiTile, FTerrainROI> UMapGeneratorWidget::CreateTerrainRoisMap(TArray<FTerrainROI> TerrainRoisArray)
+{
+  TMap<FRoiTile, FTerrainROI> ResultMap;
+  for(FTerrainROI TerrainRoi : TerrainRoisArray)
+  {
+    for(FRoiTile TerrainRoiTile : TerrainRoi.TilesList)
+    {
+      ResultMap.Add(TerrainRoiTile, TerrainRoi);
+    }
+  }
+  return ResultMap;
+}
+
 bool UMapGeneratorWidget::DeleteAllVegetationInMap(const FString Path, const FString MapName)
 {
   TArray<FAssetData> AssetsData;
@@ -675,6 +688,63 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       for(FLinearColor LinearColor : HeightmapColor)
       {
         HeightData.Add((uint16)(LinearColor.R * 255 * 255 + LinearColor.G * 255));
+      }
+
+      // Terrain ROI
+      FRoiTile ThisTileIndex(i, j);
+      if(FRegionOfInterest::IsTileInRegionsSet(ThisTileIndex, MetaInfo.TerrainRoisMap))
+      {
+        FTerrainROI TileRegion = MetaInfo.TerrainRoisMap[ThisTileIndex];
+
+        // Update ROI RT with ROI material
+        UpdateTileRoiRT(TileMetaInfo, TileRegion.RoiMaterialInstance);
+
+        UTextureRenderTarget2D* RoiHeightRT = TileRegion.RoiHeightmapRenderTarget;
+        TArray<uint16> RoiHeightData;
+        FTextureRenderTargetResource* RoiRenderTargetResource = RoiHeightRT->GameThread_GetRenderTargetResource();
+        FIntRect RoiRect = FIntRect(0, 0, RoiHeightRT->SizeX, RoiHeightRT->SizeY);
+        TArray<FLinearColor> RoiHeightmapColor;
+        RoiHeightmapColor.Reserve(RoiRect.Width() * RoiRect.Height());
+        RoiRenderTargetResource->ReadLinearColorPixels(RoiHeightmapColor, FReadSurfaceDataFlags(RCM_MinMax, CubeFace_MAX), RoiRect);
+        RoiHeightData.Reserve(RoiHeightmapColor.Num());
+
+        for(FLinearColor RoiLinearColor : RoiHeightmapColor)
+        {
+          RoiHeightData.Add((uint16)(RoiLinearColor.R * 255 * 255 + RoiLinearColor.G * 255));
+        }
+
+
+        int FlateningMargin = 30;   // Not flatened
+        int FlateningFalloff = 100; // Transition from actual and flat value
+        int TileSize = 1009; // Should be calculated by sqrt(HeightData.Num())
+
+        for(int X = FlateningMargin; X < (TileSize - FlateningMargin); X++)
+        {
+          for(int Y = FlateningMargin; Y < (TileSize - FlateningMargin); Y++)
+          {
+            float TransitionFactor = 1.0f;
+
+            if(X < (FlateningMargin + FlateningFalloff))
+            {
+              TransitionFactor *= (X - FlateningMargin) / (float) FlateningFalloff;
+            }
+            if(Y < (FlateningMargin + FlateningFalloff))
+            {
+              TransitionFactor *= (Y - FlateningMargin) / (float) FlateningFalloff;
+            }
+            if(X > (TileSize - FlateningMargin - FlateningFalloff))
+            {
+              TransitionFactor *= 1 - ((X - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
+            }
+            if(Y > (TileSize - FlateningMargin - FlateningFalloff))
+            {
+              TransitionFactor *= 1 - ((Y - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
+            }
+            
+            HeightData[(X * TileSize) + Y] = (RoiHeightData[(X * TileSize) + Y]) * TransitionFactor +  HeightData[(X * TileSize) + Y] * (1-TransitionFactor);
+          }
+        }
+
       }
 
       // Flatening if contains river

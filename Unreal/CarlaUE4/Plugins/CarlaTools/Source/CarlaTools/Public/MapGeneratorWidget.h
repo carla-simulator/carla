@@ -42,6 +42,12 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
   UPROPERTY(BlueprintReadWrite)
   UTextureRenderTarget2D* GlobalHeightmap;
 
+  // UPROPERTY(BlueprintReadWrite)
+  // UTextureRenderTarget2D* PROVISIONALROIHEIGHTMAP;
+
+  UPROPERTY(BlueprintReadWrite)
+  TMap<FRoiTile, FTerrainROI> TerrainRoisMap;
+
   UPROPERTY(BlueprintReadWrite)
   TMap<FRoiTile, FVegetationROI> VegetationRoisMap;
 
@@ -177,6 +183,9 @@ public:
   UFUNCTION(BlueprintImplementableEvent)
   void UpdateTileRT(const FMapGeneratorTileMetaInfo& TileMetaInfo);
 
+  UFUNCTION(BlueprintImplementableEvent)
+  void UpdateTileRoiRT(const FMapGeneratorTileMetaInfo& TileMetaInfo, UMaterialInstanceDynamic* RoiMeterialInstance);
+
   /// Function called by Widget Blueprint which generates all tiles of map
   /// @a mapName, and saves them in @a destinationPath
   /// Returns a void string is success and an error message if the process failed
@@ -232,6 +241,9 @@ public:
 
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   TMap<FRoiTile, FVegetationROI> CreateVegetationRoisMap(TArray<FVegetationROI> VegetationRoisArray);
+
+  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  TMap<FRoiTile, FTerrainROI> CreateTerrainRoisMap(TArray<FTerrainROI> TerrainRoisArray);
 
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   bool DeleteAllVegetationInMap(const FString Path, const FString MapName);

@@ -6,6 +6,7 @@
 
 #include "Containers/Array.h"
 #include "Containers/EnumAsByte.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "ProceduralFoliageSpawner.h"
 #include "Templates/UnrealTypeTraits.h"
 #include "UObject/NoExportTypes.h"
@@ -17,7 +18,7 @@ UENUM(BlueprintType)
 enum ERegionOfInterestType
 {
   NONE,
-  TERRAIN_REGION,      // Not Supported yet
+  TERRAIN_REGION,      
   WATERBODIES_REGION,  // Not Supported yet 
   VEGETATION_REGION
 };
@@ -135,32 +136,19 @@ struct CARLATOOLS_API FVegetationROI : public FRegionOfInterest
   }
 };
 
-// UCLASS()
-// class CARLATOOLS_API URegionOfInterestWrapper : public UObject
-// {
-//   GENERATED_BODY()
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FTerrainROI : public FRegionOfInterest
+{
+  GENERATED_BODY()
 
-// private:
-// UPROPERTY()
-//   FRegionOfInterest WrappedRegionOfInterest;
+  UPROPERTY(BlueprintReadWrite)
+  UMaterialInstanceDynamic* RoiMaterialInstance;
 
-// public:
-//   URegionOfInterestWrapper()
-//   {}
+  UPROPERTY(BlueprintReadWrite)
+  UTextureRenderTarget2D* RoiHeightmapRenderTarget;
 
-//   URegionOfInterestWrapper(FRegionOfInterest Region) : WrappedRegionOfInterest(Region)
-//   {}
+  FTerrainROI() : FRegionOfInterest(), RoiMaterialInstance()
+  {}
 
-//   FRegionOfInterest GetWrappedROI()
-//   {
-//     return WrappedRegionOfInterest;
-//   }
-
-//   // template <typename R>
-//   // static FORCEINLINE bool IsTileInRegionsSet(FRoiTile RoiTile, TMap<FRoiTile, R*> RoisMap)
-//   // {
-//   //   // static_assert(TIsDerivedFrom<R, FRegionOfInterest>::IsDerived, 
-//   //   //     "ROIs Map Value type is not an URegionOfInterest derived type.");   
-//   //   return RoisMap.Contains(RoiTile);
-//   // }
-// };
+  // TODO: IsEdge() funtion to avoid transition between tiles that belongs to the same ROI
+};
