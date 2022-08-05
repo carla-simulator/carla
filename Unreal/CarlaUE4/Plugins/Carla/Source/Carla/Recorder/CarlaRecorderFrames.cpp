@@ -8,12 +8,12 @@
 #include "CarlaRecorderFrames.h"
 #include "CarlaRecorderHelpers.h"
 
-void CarlaRecorderFrame::Read(std::ifstream &InFile)
+void CarlaRecorderFrame::Read(std::istream &InFile)
 {
   ReadValue<CarlaRecorderFrame>(InFile, *this);
 }
 
-void CarlaRecorderFrame::Write(std::ofstream &OutFile)
+void CarlaRecorderFrame::Write(std::ostream &OutFile)
 {
   WriteValue<CarlaRecorderFrame>(OutFile, *this);
 }
@@ -49,7 +49,7 @@ void CarlaRecorderFrames::SetFrame(double DeltaSeconds)
   ++Frame.Id;
 }
 
-void CarlaRecorderFrames::WriteStart(std::ofstream &OutFile)
+void CarlaRecorderFrames::WriteStart(std::ostream &OutFile)
 {
   std::streampos Pos, Offset;
   double Dummy = -1.0f;
@@ -80,7 +80,7 @@ void CarlaRecorderFrames::WriteStart(std::ofstream &OutFile)
   OffsetPreviousFrame = Offset;
 }
 
-void CarlaRecorderFrames::WriteEnd(std::ofstream &OutFile)
+void CarlaRecorderFrames::WriteEnd(std::ostream &OutFile)
 {
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::FrameEnd));

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fstream>
+#include <sstream>
 #include <chrono>
 
 #pragma pack(push, 1)
@@ -21,9 +21,9 @@ struct CarlaRecorderPlatformTime
   void SetStartTime();
   void UpdateTime();
 
-  void Read(std::ifstream &InFile);
+  void Read(std::istream &InFile);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 
 };
 #pragma pack(pop)

@@ -121,6 +121,16 @@ void TrafficManagerRemote::SetGlobalPercentageSpeedDifference(const float percen
   client.SetGlobalPercentageSpeedDifference(percentage);
 }
 
+void TrafficManagerRemote::SetLaneOffset(const ActorPtr &_actor, const float offset) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetLaneOffset(actor, offset);
+}
+
+void TrafficManagerRemote::SetGlobalLaneOffset(const float offset) {
+  client.SetGlobalLaneOffset(offset);
+}
+
 void TrafficManagerRemote::SetUpdateVehicleLights(const ActorPtr &_actor, const bool do_update) {
   carla::rpc::Actor actor(_actor->Serialize());
 

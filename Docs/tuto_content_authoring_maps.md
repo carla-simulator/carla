@@ -58,7 +58,7 @@ Now open a terminal at the root of the CARLA source directory and run `make impo
 
 You can now see your new map inside the Unreal Editor. Run `make launch` at the root of the CARLA source directory to launch the Unreal Editor. You will now see a new directory in the content browser named `map_package`. Within this directory in the location `Content > map_package > Maps > tutorial` you will now find your new map.
 
-![new_loaded_map](img/tuto_content_authoring_maps/loaded_new_map.png)
+![new_loaded_map](img/tuto_content_authoring_maps/new_map.png)
 
 You have now created the road network, the basis of your map.
 
@@ -80,7 +80,7 @@ Create a new folder in some appropriate location using the Unreal content browse
 
 We will import an FBX file containing the base mesh and the UV map, that we have exported from Blender.
 
-![farmhouse_blender](img/tuto_content_authoring_maps/farmhouse_blender.png)
+![farmhouse_blender](img/tuto_content_authoring_maps/farmhouse_in_blender.png)
 
 In the context menu, ensure that in the __Mesh__ section `Import Normals` is selected
  for `Normal Import Method` and that in the __Material__ section that `Do Not Create Material` is selected. Deselect `Import Textures` in the __Materials__ section since we will import them manually. These choices would differ if you wanted to use some textures already embedded in your FBX file. 
@@ -95,7 +95,7 @@ Open the ORM map by double clicking and deselect the `sRGB` option, to ensure th
 
 Right click in the content browser and select `Material` from the menu. A new material will be created in the content browser. Double click to edit it. Shift select the textures you imported and drag them into the material edit window, you will now get 3 new nodes in the material node editor. 
 
-![material_init](img/tuto_content_authoring_maps/material_init.png)
+![material_init](img/tuto_content_authoring_maps/initialise_material.png)
 
 Now connect the nodes according to the following rules:
 
@@ -107,7 +107,7 @@ Now connect the nodes according to the following rules:
 
 Your material node graph should now look similar to this: 
 
-![material_final](img/tuto_content_authoring_maps/material_final.png)
+![material_final](img/tuto_content_authoring_maps/material_connected.png)
 
 Save the material, then open the asset again and drag the material into the material slot. Your asset should now be fully textured.
 

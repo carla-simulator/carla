@@ -17,7 +17,7 @@ FActorDefinition ANormalsCamera::GetSensorDefinition()
 ANormalsCamera::ANormalsCamera(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
-  Enable16BitFormat(true);
+  Enable16BitFormat(false);
   AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
   AddPostProcessingMaterial(
@@ -27,5 +27,5 @@ ANormalsCamera::ANormalsCamera(const FObjectInitializer &ObjectInitializer)
 void ANormalsCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ANormalsCamera::PostPhysTick);
-  FPixelReader::SendPixelsInRenderThread(*this);
+  FPixelReader::SendPixelsInRenderThread<ANormalsCamera, FColor>(*this);
 }

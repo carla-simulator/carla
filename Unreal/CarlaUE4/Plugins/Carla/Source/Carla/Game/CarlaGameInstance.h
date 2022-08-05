@@ -79,6 +79,11 @@ public:
     return CarlaEngine.GetServer();
   }
 
+  FCarlaServer &GetServer()
+  {
+    return CarlaEngine.GetServer();
+  }
+
   void SetOpendriveGenerationParameters(
       const carla::rpc::OpendriveGenerationParameters & Parameters)
   {

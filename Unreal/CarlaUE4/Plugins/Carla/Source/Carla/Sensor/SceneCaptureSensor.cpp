@@ -457,7 +457,7 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
-  CaptureComponent2D->CaptureScene();
+  GetCaptureComponent2D()->CaptureScene();
 }
 
 void ASceneCaptureSensor::BeginPlay()

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fstream>
+#include <sstream>
 #include <vector>
 #include <type_traits>
 
@@ -19,9 +19,9 @@ struct CarlaRecorderLightVehicle
   uint32_t DatabaseId;
   VehicleLightStateType State;
 
-  void Read(std::ifstream &InFile);
+  void Read(std::istream &InFile);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 };
 #pragma pack(pop)
 
@@ -33,7 +33,11 @@ public:
 
   void Clear(void);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
+
+  void Read(std::istream &InFile);
+
+  const std::vector<CarlaRecorderLightVehicle>& GetLightVehicles();
 
 private:
 

@@ -54,6 +54,7 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
     Id(URandomEngine::GenerateRandomId())
 {
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
+  FrameData.SetEpisode(this);
 }
 
 bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
@@ -282,6 +283,13 @@ void UCarlaEpisode::AttachActors(
 
   UActorAttacher::AttachActors(Child, Parent, InAttachmentType);
 
+  if (bIsPrimaryServer)
+  {
+    GetFrameData().AddEvent(
+        CarlaRecorderEventParent{
+          FindCarlaActor(Child)->GetActorId(),
+          FindCarlaActor(Parent)->GetActorId()});
+  }
   // recorder event
   if (Recorder->IsEnabled())
   {
@@ -405,6 +413,14 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
 
   // NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
   auto result = ActorDispatcher->SpawnActor(LocalTransform, thisActorDescription, DesiredId);
+  if (result.Key == EActorSpawnResultStatus::Success && bIsPrimaryServer)
+  {
+    GetFrameData().CreateRecorderEventAdd(
+        result.Value->GetActorId(),
+        static_cast<uint8_t>(result.Value->GetActorType()),
+        Transform,
+        std::move(thisActorDescription));
+  }
   if (Recorder->IsEnabled())
   {
     if (result.Key == EActorSpawnResultStatus::Success)
