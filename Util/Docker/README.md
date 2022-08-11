@@ -67,6 +67,7 @@ CARLA_BRANCH=master
 
 git clone $CARLA_REPO --depth=1 -b $CARLA_BRANCH
 cd carla
+./Update.sh
 ```
 
 ### Docker Image Build
