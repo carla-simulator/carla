@@ -1,0 +1,42 @@
+# documentation
+Co-Simulation
+Examples
+*.md
+
+# upper-level build automation
+.github
+.pep8
+.readthedocs.yml
+.travis.yml
+Util/Docker/Docker
+Util/Formatting
+Doxyfile
+Jenkinsfile
+
+# temporary files
+Build
+Unreal/CarlaUE4/profiler.csv
+Unreal/CarlaUE4/Binaries
+Unreal/CarlaUE4/Build
+Unreal/CarlaUE4/Debug
+Unreal/CarlaUE4/DerivedDataCache
+Unreal/CarlaUE4/Intermediate
+Unreal/CarlaUE4/Saved
+Unreal/CarlaUE4/Plugins/Carla/Binaries
+Unreal/CarlaUE4/Plugins/Carla/Build
+Unreal/CarlaUE4/Plugins/Carla/CarlaServer
+Unreal/CarlaUE4/Plugins/Carla/CarlaDependencies
+Unreal/CarlaUE4/Plugins/Carla/Debug
+Unreal/CarlaUE4/Plugins/Carla/DerivedDataCache
+Unreal/CarlaUE4/Plugins/Carla/Intermediate
+Unreal/CarlaUE4/Plugins/Carla/Saved
+Unreal/CarlaUE4/Config/CarlaSettings.ini
+Unreal/CarlaUE4/Config/DefaultEditor.ini
+Unreal/CarlaUE4/Config/CarSimConfig.ini
+Unreal/CarlaUE4/*.code-workspace
+Unreal/CarlaUE4/.idea
+Unreal/CarlaUE4/.vscode
+Unreal/CarlaUE4/CMakeLists.txt
+Unreal/CarlaUE4/Makefile
+
+# TODO: add missing temporary files here ...
