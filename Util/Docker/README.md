@@ -1,104 +1,164 @@
-# Building Carla in a Docker
 
-_These instructions have been tested in **Ubuntu 16.04**._
+# Dockerized CARLA Build
 
-This file is intended to explain how to build a Docker image that uses **Ubuntu 18.04** to compile Carla.
-
-Since this building process is based on [**ue4-docker**](https://github.com/adamrehn/ue4-docker) project, it is recommended to take a look at their [documentation](https://adamrehn.com/docs/ue4-docker/read-these-first/introduction-to-ue4-docker).
-
-## Important information
-
-**Building these Docker images can be high time and disk space consuming (~4 hours and up to 300GB on Linux and 500GB on Windows in the build process).**
-
-More information about large containers can be found [here](https://adamrehn.com/docs/ue4-docker/read-these-first/large-container-images-primer).
-
-**The Docker images produced by the ue4-docker Python package contain the UE4 Engine Tools in both source code and object code form. As per Section 1A of the [Unreal Engine EULA](https://www.unrealengine.com/en-US/eula), Engine Licensees are prohibited from public distribution of the Engine Tools unless such distribution takes place via the Unreal Marketplace or a fork of the Epic Games UE4 GitHub repository. Public distribution of the built images via an openly accessible Docker Registry (e.g. Docker Hub) is a direct violation of the license terms. It is your responsibility to ensure that any private distribution to other Engine Licensees (such as via an organization's internal Docker Registry) complies with the terms of the Unreal Engine EULA.**  
-
-For more details, see the [Unreal Engine EULA Restrictions](https://unrealcontainers.com/docs/obtaining-images/eula-restrictions) page on the [Unreal Containers community hub](https://unrealcontainers.com/).
-
-## Requirements
-
-```
-- 64-bit version of Docker in Ubuntu 16.04+.
-- Minimum 8GB of RAM
-- Minimum 300GB available disk space for building container images
-```
-
----
+## About
+This tutorial shows how to build the CARLA simulator with Docker.
 
 ## Prerequisites
 
-You need Docker installed and configured so your Docker images can access to the Internet during the build process.
+### Machine Setup and Requirements
 
-Make sure you have installed **Python 3.6 or newer**, check that is in the path, and is callable using `python3` in your terminal. One possible way to achieve so is by using [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/).
+| Requirement | Description |
+| ----------- | ----------- |
+| Free Disk Space: | ~ 200-300 GB (yes, it's no joke) |
+| Available RAM:   | 16 GB (clang runs out of memory with only 8 GB) |
+| CPU:             | as many cores as possible, you'll need them |
+| Suggested OS:    | Ubuntu 18.04 (because of Python 3.6) |
 
-## Dependencies
+### Unreal Engine GitHub Access
+1) Register as Unreal developer to access the Unreal Engine GitHub repositories, see this [official EPIC tutorial](https://www.unrealengine.com/en-US/ue-on-github)
+2) Create a GitHub personal access token for login (pull the Unreal Engine repo),
+see [official GitHub docs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
 
-As mentioned before, in order to use Unreal Engine inside Docker we use [ue4-docker](https://github.com/adamrehn/ue4-docker). You can install it using `pip3`.  
-Further information on installing ue4-docker on Linux can be found [here](https://adamrehn.com/docs/ue4-docker/configuration/configuring-linux).
+### OS Setup
+Install the latest updates.
 
-```
-pip3 install ue4-docker
-```
-
-You can use ue4-docker to automatically configure your Linux firewall:
-
-```
-ue4-docker setup
-```
-
-## Building the Docker images
-
-Navigate to `carla/Util/Docker` and use the following commands, each one will take a long time.  
-First, let's create a Docker image containing a compiled version of Unreal Engine 4 version `24.3`. Change the version if needed.
-
-```
-ue4-docker build 4.24.3 --no-engine --no-minimal
+```sh
+sudo apt-get update && sudo apt-get upgrade -y
+reboot
 ```
 
-Next, this will build the image with all the necessary requisites to build Carla in a **Ubuntu 18.04**
+### Install Docker with NVIDIA GPU Support
 
-```
-docker build -t carla-prerequisites -f Prerequisites.Dockerfile .
-```
+1) Choose a **proprietary** NVIDIA driver (don't waste time with the open source one!!!)
 
-Finally create the actual Carla image, it will search for `carla-prerequisites:latest`:
+![](./nvidia-driver-selection.png)
 
-```
-docker build -t carla -f Carla.Dockerfile .
-```
+2) Execute following commands to install Docker with GPU support
 
----
+```sh
+# install cURL, Docker and Docker-Compose
+sudo apt-get update && sudo apt-get install -y curl docker.io docker-compose
 
-## Other useful information
+# register the NVIDIA Docker PPA as apt source
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
+    && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - \
+    && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list \
+        | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
 
-You can use a specific repository **branch** or **tag** from our repository, using:
+# install NVIDIA Docker from the official NVIDIA PPA
+sudo apt-get update && sudo apt-get install -y nvidia-docker2
 
-```
-docker build -t carla -f Carla.Dockerfile . --build-arg GIT_BRANCH=branch_name
-```
+# disable the swap partition. be smart, don't kill your disk :)
+sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab && sudo mount -a
 
-Clean up the intermediate images from the build (keep the ue4-source image so you can use it for full rebuilds)
-
-```
-ue4-docker clean
-```
-
-## Using the Docker tools
-
-The `docker_tools.py` (in `/carla/Util/Docker`) is an example of how you can take advantages of these Docker images. It uses [docker-py](https://github.com/docker/docker-py) whose documentation can be found [here](https://docker-py.readthedocs.io/en/stable/).  
-The code is really simple and can be easily expanded to interact with docker in other ways.
-
-You can create a Carla package (distribution) from the Docker image using:
-
-```
-./docker_tools.py --output /output/path
+# allow non-root users to work with Docker (requires a reboot)
+sudo usermod -aG docker $USER && reboot
 ```
 
-Or you can use it to cook assets (like new maps and meshes), ready to be consumed by a Carla package (distribution):
+## Build Steps
+This section shows how to build the CARLA repository with Docker.
 
-```
-./docker_tools.py --input /assets/to/import/path --output /output/path --packages PkgeName1,PkgeName2
+### Clone the CARLA Source Code
+
+```sh
+CARLA_REPO=https://github.com/carla-simulator/carla
+CARLA_BRANCH=master
+
+git clone $CARLA_REPO --depth=1 -b $CARLA_BRANCH
+cd carla
 ```
 
-The needed files and hierarchy to import assets is explained [here](https://carla.readthedocs.io/en/latest/export_import_dist/).
+### Docker Image Build
+Run following commands to build the CARLA simulator.
+The build will take several hours, even on powerful machines.
+
+```sh
+GITHUB_USERNAME=....
+GITHUB_ACCESS_TOKEN=....
+
+docker build -t carla-prerequisites \
+    --build-arg EPIC_USER=$GITHUB_USERNAME \
+    --build-arg EPIC_PASS=$GITHUB_ACCESS_TOKEN \
+    -f Util/Docker/Prerequisites.Dockerfile .
+
+docker build -t carla:latest -f Util/Docker/Carla.Dockerfile .
+```
+
+Check if the carla:latest image exists (should be an image of ~ 16GB size)
+
+```sh
+docker image ls | grep 'carla'
+```
+
+## Example Usage
+
+### Launch Simulator
+Now that the build completed, you can launch the CARLA simulator
+as headless, GPU-empowered backend service.
+
+```sh
+docker run --privileged --gpus all \
+    --net=host -e 2000-2002 \
+    -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+    --name carla_sim carla:latest
+```
+
+### Spawn + Remote-Control a Vehicle via PythonAPI
+
+Copy the PythonAPI from the simulator instance onto the host machine.
+
+```sh
+mkdir temp
+docker cp carla_sim:/home/carla/PythonAPI ./temp/
+cd temp
+```
+
+Register the _carla_ package in the _PYTHONPATH_ and make sure it can be imported.
+
+```sh
+export PYTHONPATH=$PWD/PythonAPI/carla:$PWD/PythonAPI/carla/dist/carla-0.9.13-py3.6-linux-x86_64.egg
+
+python3 -c 'import carla'
+if [ $? -eq 0 ]; then echo 'carla import successful!'; fi
+```
+
+Install _pygame_ to remote-control a vehicle via _PythonAPI/examples/manual_control.py_.
+
+```sh
+sudo apt-get update && sudo apt-get install -y python3-pip
+python3 -m pip install pip --upgrade
+python3 -m pip install numpy pygame
+```
+
+List all available vehicles.
+
+```py
+import carla
+
+client = carla.Client('localhost', 2000)
+world = client.get_world()
+
+vehicle_blueprints = world.get_blueprint_library().filter('*vehicle*')
+print('all vehicles:', vehicle_blueprints)
+```
+
+Spawn a new vehicle and control it via the keyboard.
+
+```sh
+python3 PythonAPI/examples/manual_control.py [--filter <vehicle_to_spawn>]
+```
+
+### Shut Down Simulator
+
+```sh
+docker stop carla_sim'
+```
+
+## Other Useful Commands
+Delete all dangling images and containers to free up your disk again.
+
+```sh
+docker container prune
+docker image prune
+```
