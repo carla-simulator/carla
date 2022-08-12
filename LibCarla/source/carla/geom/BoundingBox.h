@@ -39,10 +39,13 @@ namespace geom {
 
     explicit BoundingBox(const Location &in_location, const Vector3D &in_extent)
       : location(in_location),
-        extent(in_extent) {}
+        extent(in_extent),
+        rotation() {}
 
     explicit BoundingBox(const Vector3D &in_extent)
-      : extent(in_extent) {}
+      : location(),
+        extent(in_extent),
+        rotation() {}
 
     Location location;  ///< Center of the BoundingBox in local space
     Vector3D extent;    ///< Half the size of the BoundingBox in local space
@@ -106,7 +109,7 @@ namespace geom {
      * @param in_bbox_to_world_transform The Transform from this BoundingBox space to world space.
      */
     std::array<Location, 8> GetWorldVertices(const Transform &in_bbox_to_world_tr) const {
-        auto world_vertices = GetLocalVerticesNoRotation();
+        auto world_vertices = GetLocalVertices();
         std::for_each(world_vertices.begin(), world_vertices.end(), [&in_bbox_to_world_tr](auto &world_vertex) {
           in_bbox_to_world_tr.TransformPoint(world_vertex);
         });
