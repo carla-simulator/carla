@@ -96,6 +96,16 @@ void AWeather::SetWeather(const FWeatherParameters& InWeather)
     Weather = InWeather;
 }
 
+float AWeather::GetSunIntensity() const
+{
+    auto PropertyPtr = FindField<FFloatProperty>(GetClass(), "Sun Intensity");
+    check(PropertyPtr != nullptr);
+    auto ValuePtr = PropertyPtr->ContainerPtrToValuePtr<void>(this);
+    check(ValuePtr != nullptr);
+    auto value = PropertyPtr->GetFloatingPointPropertyValue(ValuePtr);
+    return value;
+}
+
 void AWeather::SetDayNightCycle(const bool& active)
 {
     DayNightCycle = active;

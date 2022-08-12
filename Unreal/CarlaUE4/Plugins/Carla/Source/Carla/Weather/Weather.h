@@ -48,6 +48,10 @@ public:
     return DayNightCycle;
   }
 
+  /// Returns whether the day night cycle is active (automatic on/off switch when changin to night mode)
+  UFUNCTION(BlueprintCallable)
+    float GetSunIntensity() const;
+
   /// Update the day night cycle
   void SetDayNightCycle(const bool &active);
 

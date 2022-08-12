@@ -619,6 +619,17 @@ void FCarlaServer::FPimpl::BindActions()
 
   // ~~ Weather ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+  BIND_SYNC(get_sun_intensity) << [this]() -> R<float>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *Weather = Episode->GetWeather();
+    if (Weather == nullptr)
+    {
+      RESPOND_ERROR("internal error: unable to find weather");
+    }
+    return Weather->GetSunIntensity();
+  };
+
   BIND_SYNC(get_weather_parameters) << [this]() -> R<cr::WeatherParameters>
   {
     REQUIRE_CARLA_EPISODE();

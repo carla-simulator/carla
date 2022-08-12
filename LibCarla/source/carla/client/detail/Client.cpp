@@ -263,6 +263,10 @@ namespace detail {
     return _pimpl->CallAndWait<rpc::WeatherParameters>("get_weather_parameters");
   }
 
+  float Client::GetSunIntensity() const {
+    return _pimpl->CallAndWait<float>("get_sun_intensity");
+  }
+
   void Client::SetWeatherParameters(const rpc::WeatherParameters &weather) {
     _pimpl->AsyncCall("set_weather_parameters", weather);
   }
