@@ -1,5 +1,6 @@
 ## Latest
 
+  * Improved algorithm to move signals out of the road by computing the desired displacement direction.
   * Added `TrafficManager.vehicle_lane_offset(actor, offset)` and `TrafficManager.global_lane_offset(offset)` methods.
   * Some of the warnings shown when building a map will now only be showing when debugging.
   * Fixed bug causing traffic signals at the end points of a road to sometimes create malformed waypoints.
