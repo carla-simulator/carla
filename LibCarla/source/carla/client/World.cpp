@@ -87,6 +87,11 @@ namespace client {
     return _episode.Lock()->GetWeatherParameters();
   }
 
+  float World::GetSunIntensity() const
+  {
+    return _episode.Lock()->GetSunIntensity();
+  }
+
   void World::SetWeather(const rpc::WeatherParameters &weather) {
     _episode.Lock()->SetWeatherParameters(weather);
   }

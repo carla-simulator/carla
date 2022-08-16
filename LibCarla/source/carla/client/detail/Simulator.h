@@ -241,6 +241,11 @@ namespace detail {
       return _client.GetWeatherParameters();
     }
 
+    float GetSunIntensity() const
+    {
+      return _client.GetSunIntensity();
+    }
+
     void SetWeatherParameters(const rpc::WeatherParameters &weather) {
       _client.SetWeatherParameters(weather);
     }

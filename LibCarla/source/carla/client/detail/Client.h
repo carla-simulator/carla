@@ -146,6 +146,7 @@ namespace detail {
     uint64_t SetEpisodeSettings(const rpc::EpisodeSettings &settings);
 
     rpc::WeatherParameters GetWeatherParameters();
+    
     float GetSunIntensity() const;
 
     void SetWeatherParameters(const rpc::WeatherParameters &weather);

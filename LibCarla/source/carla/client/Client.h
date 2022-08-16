@@ -66,6 +66,10 @@ namespace client {
       _simulator->RequestFile(name);
     }
 
+    float GetSunIntensity() const {
+      return _simulator->GetSunIntensity();
+    }
+
     World ReloadWorld(bool reset_settings = true) const {
       return World{_simulator->ReloadEpisode(reset_settings)};
     }

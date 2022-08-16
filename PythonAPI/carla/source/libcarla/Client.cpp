@@ -192,6 +192,7 @@ void export_client() {
     .def("get_client_version", &cc::Client::GetClientVersion)
     .def("get_server_version", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerVersion))
     .def("get_world", &cc::Client::GetWorld)
+    .def("get_sun_intensity", &cc::Client::GetSunIntensity)
     .def("get_available_maps", &GetAvailableMaps)
     .def("set_files_base_folder", &cc::Client::SetFilesBaseFolder, (arg("path")))
     .def("get_required_files", &GetRequiredFiles, (arg("folder")="", arg("download")=true))

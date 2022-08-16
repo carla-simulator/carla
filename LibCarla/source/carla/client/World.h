@@ -90,6 +90,8 @@ namespace client {
     /// Retrieve the weather parameters currently active in the world.
     rpc::WeatherParameters GetWeather() const;
 
+    float GetSunIntensity() const;
+
     /// Change the weather in the simulation.
     void SetWeather(const rpc::WeatherParameters &weather);
 
