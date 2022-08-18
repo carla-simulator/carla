@@ -25,7 +25,7 @@ RUN git config --global --add safe.directory /home/carla/carla
 RUN make CarlaUE4Editor && \
     make PythonAPI && \
     make build.utils && \
-    make package --no-zip && \
+    make package ARGS="--no-zip" && \
     mv Dist/CARLA_Shipping_*/LinuxNoEditor $INTERM_BUILD_OUTPUT
     #&& make hard-clean # only add this for shrinking the layer size
 
