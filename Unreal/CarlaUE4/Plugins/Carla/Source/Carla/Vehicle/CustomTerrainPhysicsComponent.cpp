@@ -640,11 +640,13 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
     SparseMap.InitializeMap(HeightMap, UEFrameToSI(Tile0Origin), UEFrameToSI(WorldSize),
         1.f, MinHeight, MaxHeight, HeightMapScaleFactor.Z);
   }
+  #ifdef WITH_PYTORCH
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(LoadNNModel);
     carla::learning::test_learning();
     TerramechanicsModel.LoadModel(TCHAR_TO_ANSI(*NeuralModelFile), CUDADevice);
   }
+  #endif
   // initialize directories
   FString LevelName = GetWorld()->GetMapName();
   LevelName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
@@ -946,6 +948,7 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     SetUpWheelArrays(Vehicle, 2, WheelPos2, WheelOrient2, WheelLinVel2, WheelAngVel2);
     SetUpWheelArrays(Vehicle, 3, WheelPos3, WheelOrient3, WheelLinVel3, WheelAngVel3);
   }
+  #ifdef WITH_PYTORCH
   carla::learning::WheelInput Wheel0 {
       static_cast<int>(ParticlesWheel0.size()), 
       ParticlePos0.GetData(), ParticleVel0.GetData(),
@@ -1053,6 +1056,7 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
             Output.wheel3.wheel_torque_y,
             Output.wheel3.wheel_torque_z)));
   }
+  #endif
 }
 
 void UCustomTerrainPhysicsComponent::UpdateParticles(

@@ -12,8 +12,10 @@
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#ifdef WITH_PYTORCH
 THIRD_PARTY_INCLUDES_START
 #include <carla/pytorch/pytorch.h>
+#endif
 THIRD_PARTY_INCLUDES_END
 
 #include <unordered_map>
@@ -315,7 +317,9 @@ private:
   FSparseHighDetailMap SparseMap;
 
   TArray<ACarlaWheeledVehicle*> Vehicles;
+  #ifdef WITH_PYTORCH
   carla::learning::NeuralModel TerramechanicsModel;
+  #endif
 
   class FRunnableThread* Thread;
   struct FTilesWorker* TilesWorker;
