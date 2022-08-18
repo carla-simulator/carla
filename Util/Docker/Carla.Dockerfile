@@ -9,11 +9,14 @@ ARG INTERM_BUILD_OUTPUT=/home/carla/sim_out
 # make sure the carla user has full
 # ownership of /home/carla/carla
 USER root
-RUN chown -R carla:carla /home/carla
+WORKDIR $INTERM_BUILD_OUTPUT
+RUN chown carla:carla $INTERM_BUILD_OUTPUT
+WORKDIR /home/carla/carla
+RUN chown carla:carla /home/carla/carla
 
 # copy local CARLA repo
 USER carla
-WORKDIR /home/carla/carla
+ADD --chown=carla:carla . .
 RUN git config --global --add safe.directory /home/carla/carla
 
 # TODO: think of a more sophisticated build caching mechanism to speed up CI/CD
@@ -23,8 +26,8 @@ RUN make CarlaUE4Editor && \
     make PythonAPI && \
     make build.utils && \
     make package --no-zip && \
-    mkdir $INTERM_BUILD_OUTPUT && mv Dist/CARLA_Shipping_*/LinuxNoEditor $INTERM_BUILD_OUTPUT && \
-    make hard-clean
+    mv Dist/CARLA_Shipping_*/LinuxNoEditor $INTERM_BUILD_OUTPUT
+    #&& make hard-clean # only add this for shrinking the layer size
 
 # use the official NVIDIA Vulkan runtime for serving
 # GPU-empowered, headless CARLA simulations
