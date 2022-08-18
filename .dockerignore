@@ -1,14 +1,13 @@
 # documentation
-Co-Simulation
 Examples
-*.md
 
 # upper-level build automation
 .github
 .pep8
 .readthedocs.yml
 .travis.yml
-Util/Docker/Docker
+Util/Docker/Carla.Dockerfile
+Util/Docker/Prerequisites.Dockerfile
 Util/Formatting
 Doxyfile
 Jenkinsfile

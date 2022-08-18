@@ -9,12 +9,11 @@ ARG INTERM_BUILD_OUTPUT=/home/carla/sim_out
 # make sure the carla user has full
 # ownership of /home/carla/carla
 USER root
-WORKDIR /home/carla/carla
-RUN chown carla:carla /home/carla/carla
+RUN chown -R carla:carla /home/carla
 
 # copy local CARLA repo
 USER carla
-ADD --chown=carla:carla . .
+WORKDIR /home/carla/carla
 RUN git config --global --add safe.directory /home/carla/carla
 
 # TODO: think of a more sophisticated build caching mechanism to speed up CI/CD
@@ -23,9 +22,8 @@ RUN git config --global --add safe.directory /home/carla/carla
 RUN make CarlaUE4Editor && \
     make PythonAPI && \
     make build.utils && \
-    make package && \
-    mkdir $INTERM_BUILD_OUTPUT && \
-    cp -r Dist/CARLA_Shipping_*/LinuxNoEditor $INTERM_BUILD_OUTPUT && \
+    make package --no-zip && \
+    mkdir $INTERM_BUILD_OUTPUT && mv Dist/CARLA_Shipping_*/LinuxNoEditor $INTERM_BUILD_OUTPUT && \
     make hard-clean
 
 # use the official NVIDIA Vulkan runtime for serving
