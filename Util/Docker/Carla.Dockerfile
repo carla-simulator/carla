@@ -4,20 +4,10 @@
 # as environment for the build stage
 FROM carla-prerequisites:latest as build-env
 
-ARG INTERM_BUILD_OUTPUT=/home/carla/sim_out
-
-# make sure the carla user has full
-# ownership of /home/carla/carla
-USER root
-WORKDIR $INTERM_BUILD_OUTPUT
-RUN chown carla:carla $INTERM_BUILD_OUTPUT
-WORKDIR /home/carla/carla
-RUN chown carla:carla /home/carla/carla
-
-# copy local CARLA repo
-USER carla
-ADD --chown=carla:carla . .
-RUN git config --global --add safe.directory /home/carla/carla
+ARG BUILD_OUTPUT_CACHE=/home/carla/sim_out
+WORKDIR /home/carla
+COPY --chown=carla:carla . .
+RUN git config --global --add safe.directory /home/carla
 
 # TODO: think of a more sophisticated build caching mechanism to speed up CI/CD
 
@@ -25,18 +15,18 @@ RUN git config --global --add safe.directory /home/carla/carla
 RUN make CarlaUE4Editor && \
     make PythonAPI && \
     make build.utils && \
-    make package ARGS="--no-zip" && \
-    mv Dist/CARLA_Shipping_*/LinuxNoEditor $INTERM_BUILD_OUTPUT
+    make package ARGS="--no-zip"
+    # &&  mkdir $BUILD_OUTPUT_CACHE && mv Dist/CARLA_Shipping_*/LinuxNoEditor/* $BUILD_OUTPUT_CACHE
     #&& make hard-clean # only add this for shrinking the layer size
 
-# use the official NVIDIA Vulkan runtime for serving
-# GPU-empowered, headless CARLA simulations
+# # use the official NVIDIA Vulkan runtime for serving
+# # GPU-empowered, headless CARLA simulations
 FROM nvidia/vulkan:1.1.121-cuda-10.1--ubuntu18.04 as runtime
 
 # set up the carla user and copy the build output from previous stage
 RUN useradd -m carla
 WORKDIR /home/carla
-COPY --from=build-env --chown=carla:carla $INTERM_BUILD_OUTPUT .
+COPY --from=build-env --chown=carla:carla /home/carla/Dist/CARLA_Shipping_*/LinuxNoEditor .
 
 # install some packages required to run CARLA with GPU support
 RUN apt-key adv --fetch-keys \

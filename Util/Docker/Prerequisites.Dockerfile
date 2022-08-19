@@ -41,13 +41,11 @@ RUN apt-get update ; \
   update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/clang++ 180 && \
   update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clang 180
 
-RUN useradd -m carla
-COPY --chown=carla:carla . /home/carla
+RUN useradd -m carla && chown carla:carla /home/carla
 USER carla
-WORKDIR /home/carla
 ENV UE4_ROOT /home/carla/UE4.26
-
-RUN git clone --depth 1 -b carla "https://${EPIC_USER}:${EPIC_PASS}@github.com/CarlaUnreal/UnrealEngine.git" ${UE4_ROOT}
+ARG UE4_GITHUB_URL="https://${EPIC_USER}:${EPIC_PASS}@github.com/CarlaUnreal/UnrealEngine.git"
+RUN git clone --depth 1 -b carla ${UE4_GITHUB_URL} ${UE4_ROOT}
 
 RUN cd $UE4_ROOT && \
   ./Setup.sh && \
