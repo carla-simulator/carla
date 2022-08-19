@@ -15,9 +15,9 @@ RUN git config --global --add safe.directory /home/carla
 RUN make CarlaUE4Editor && \
     make PythonAPI && \
     make build.utils && \
-    make package ARGS="--no-zip"
-    # &&  mkdir $BUILD_OUTPUT_CACHE && mv Dist/CARLA_Shipping_*/LinuxNoEditor/* $BUILD_OUTPUT_CACHE
-    #&& make hard-clean # only add this for shrinking the layer size
+    make package ARGS="--no-zip" && \
+    mkdir $BUILD_OUTPUT_CACHE && mv Dist/CARLA_Shipping_*/LinuxNoEditor/* $BUILD_OUTPUT_CACHE && \
+    make hard-clean
 
 # # use the official NVIDIA Vulkan runtime for serving
 # # GPU-empowered, headless CARLA simulations
@@ -26,7 +26,7 @@ FROM nvidia/vulkan:1.1.121-cuda-10.1--ubuntu18.04 as runtime
 # set up the carla user and copy the build output from previous stage
 RUN useradd -m carla
 WORKDIR /home/carla
-COPY --from=build-env --chown=carla:carla /home/carla/Dist/CARLA_Shipping_*/LinuxNoEditor .
+COPY --from=build-env --chown=carla:carla /home/carla/sim_out .
 
 # install some packages required to run CARLA with GPU support
 RUN apt-key adv --fetch-keys \
