@@ -48,7 +48,8 @@ struct FHeightMapData
 struct FDenseTile
 {
   void InitializeTile(float ParticleSize, float Depth, 
-      FDVector TileOrigin, FDVector TileEnd, const FHeightMapData &HeightMap);
+      FDVector TileOrigin, FDVector TileEnd, const FHeightMapData &HeightMap, 
+      const FString& NewSavePath);
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
   
   // Format DenseTile to "PosX PosY PosZ\n Particles"
@@ -60,6 +61,8 @@ struct FDenseTile
 
   std::vector<FParticle> Particles;
   FDVector TilePosition;
+  FString SavePath;
+
 };
 
 class FSparseHighDetailMap
@@ -87,7 +90,7 @@ public:
 
   FIntVector GetVectorTileId(FDVector Position);
   void InitializeMap(UTexture2D* HeightMapTexture,
-      FDVector Origin, FDVector MapSize, float Size = 1.f);
+      FDVector Origin, FDVector MapSize, const FString& NewSavePath,float Size = 1.f);
 
   void LoadTilesAtPosition(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
   
@@ -101,6 +104,8 @@ public:
   FVector PositionToUpdate;
   FCriticalSection Lock_Map; // UE4 Mutex
   FCriticalSection Lock_Position; // UE4 Mutex
+
+  FString SavePath;
 private:
   std::unordered_map<uint64_t, FDenseTile> TilesToWrite;
   FDVector Tile0Position;
@@ -177,6 +182,8 @@ public:
   FVector NextPositionToUpdate = FVector(0,0,0);
   
   FVector LastUpdatedPosition;
+
+  FString SavePath;
 private:
 
   void ApplyForces();

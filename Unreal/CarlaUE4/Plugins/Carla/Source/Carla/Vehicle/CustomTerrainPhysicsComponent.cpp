@@ -29,7 +29,6 @@
 
 constexpr float ParticleDiameter = 0.02f;
 constexpr float TerrainDepth = 0.40f;
-static FString SavePath = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir());
 
 std::string FParticle::ToString() const{
   return std::string(carla::rpc::FromFString(FString::Printf(TEXT("%.2lf %.2lf %.2lf %.2lf "), 
@@ -105,8 +104,10 @@ void FHeightMapData::Clear()
 }
 
 void FDenseTile::InitializeTile(float ParticleSize, float Depth, 
-      FDVector TileOrigin, FDVector TileEnd, const FHeightMapData &HeightMap)
+      FDVector TileOrigin, FDVector TileEnd, const FHeightMapData &HeightMap,
+      const FString& NewSavePath)
 {
+  SavePath = NewSavePath;
   std::string FileName = std::string(TCHAR_TO_UTF8(*( SavePath + TileOrigin.ToString() + ".tile" ) ) );
   if ( FMath::IsNearlyZero(TileOrigin.X) && FMath::IsNearlyZero(TileOrigin.Y) )
   {
@@ -286,17 +287,17 @@ FDenseTile& FSparseHighDetailMap::InitializeRegion(uint64_t TileId)
   Tile.InitializeTile(
       ParticleDiameter, TerrainDepth,
       TileCenter, TileCenter + FDVector(TileSize, TileSize, 0.f),
-      Heightmap);
+      Heightmap, SavePath);
   return Tile;
 }
 
 void FSparseHighDetailMap::InitializeMap(UTexture2D* HeightMapTexture,
-      FDVector Origin, FDVector MapSize, float Size)
+      FDVector Origin, FDVector MapSize,const FString& NewSavePath, float Size)
 {
   Tile0Position = Origin;
   TileSize = Size;
   Extension = MapSize;
-  
+  SavePath = NewSavePath;
   UE_LOG(LogCarla, Log, 
       TEXT("Sparse Map initialized"));
 
@@ -386,14 +387,12 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
 
 void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::Update);
-  
   FVector PositionTranslated;
   PositionTranslated.X = ( Position.X * 0.01 ) + (Extension.X * 0.5f);
   PositionTranslated.Y = (-Position.Y * 0.01 ) + (Extension.Y * 0.5f);
   PositionTranslated.Z = ( Position.Z * 0.01 ) + (Extension.Z * 0.5f);
   PositionToUpdate = PositionTranslated;
-  
+    
   double MinX = std::min( std::max( PositionTranslated.X - RadiusX, 0.0f) , static_cast<float>(Extension.X - 1.0f) );
   double MinY = std::min( std::max( PositionTranslated.Y - RadiusY, 0.0f) , static_cast<float>(Extension.Y - 1.0f) );
   double MaxX = std::min( std::max( PositionTranslated.X + RadiusX, 0.0f) , static_cast<float>(Extension.X - 1.0f) );
@@ -401,24 +400,26 @@ void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY
 
   FIntVector MinVector = GetVectorTileId(FDVector(MinX, MinY, 0));
   FIntVector MaxVector = GetVectorTileId(FDVector(MaxX, MaxY, 0));
-  
-  for(uint32_t X = MinVector.X; X <= MaxVector.X; X++ )
   {
-    for(uint32_t Y = MinVector.Y; Y <= MaxVector.Y; Y++ )
+    TRACE_CPUPROFILER_EVENT_SCOPE(TEXT("FSparseHighDetailMap::Update"));
+    for(uint32_t X = MinVector.X; X <= MaxVector.X; X++ )
     {
-      bool ConditionToStopWaiting = true;
-      int32_t Counter = 0;
-      while(ConditionToStopWaiting) 
+      for(uint32_t Y = MinVector.Y; Y <= MaxVector.Y; Y++ )
       {
-        uint64_t CurrentTileID = GetTileId(X,Y);
-        Lock_Map.Lock();
-        ConditionToStopWaiting = Map.find(CurrentTileID) == Map.end();
-        Lock_Map.Unlock();
-        ++Counter;
-        if( Counter > 1000 ){
-            UE_LOG(LogCarla, Log, TEXT("Waiting long for Tile %lld PosX %d PosY %d"), CurrentTileID, X, Y );            
-            UE_LOG(LogCarla, Log, TEXT("Loadeding Tiles Between X: %d, %d, Y: %d, %d"), MinVector.X, MaxVector.X, MinVector.Y, MaxVector.Y );
-            Counter = 0;
+        bool ConditionToStopWaiting = true;
+        int32_t Counter = 0;
+        while(ConditionToStopWaiting) 
+        {
+          uint64_t CurrentTileID = GetTileId(X,Y);
+          Lock_Map.Lock();
+          ConditionToStopWaiting = Map.find(CurrentTileID) == Map.end();
+          Lock_Map.Unlock();
+          ++Counter;
+          if( Counter > 1000 ){
+              UE_LOG(LogCarla, Log, TEXT("Waiting long for Tile %lld PosX %d PosY %d"), CurrentTileID, X, Y );            
+              UE_LOG(LogCarla, Log, TEXT("Loadeding Tiles Between X: %d, %d, Y: %d, %d"), MinVector.X, MaxVector.X, MinVector.Y, MaxVector.Y );
+              Counter = 0;
+          }
         }
       }
     }
@@ -450,7 +451,7 @@ void UCustomTerrainPhysicsComponent::UpdateTexture(float RadiusX, float RadiusY)
   (
     [NewData=Data, Texture=TextureToUpdate](auto &InRHICmdList) mutable
   {
-    TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::TickComponent Renderthread);
+    TRACE_CPUPROFILER_EVENT_SCOPE(TEXT("UCustomTerrainPhysicsComponent::TickComponent Renderthread"));
     FUpdateTextureRegion2D region;
     region.SrcX = 0;
     region.SrcY = 0;
@@ -476,7 +477,6 @@ void UCustomTerrainPhysicsComponent::InitTexture(){
 
 void UCustomTerrainPhysicsComponent::UpdateTextureData()
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::UpdateTextureData);
 
   float LimitX = TextureToUpdate->GetSizeX(); 
   float LimitY = TextureToUpdate->GetSizeY();
@@ -484,40 +484,43 @@ void UCustomTerrainPhysicsComponent::UpdateTextureData()
   FDVector OriginPosition = SparseMap.PositionToUpdate;
   OriginPosition.Z = 0; 
   FScopeLock ScopeLock(&SparseMap.Lock_Map);
-  for(auto it : SparseMap.Map)
+  
   {
-    for( auto it2 : it.second.Particles ) 
+    TRACE_CPUPROFILER_EVENT_SCOPE(TEXT("UCustomTerrainPhysicsComponent::UpdateTextureData"));
+    for(auto it : SparseMap.Map)
     {
-      FDVector ParticlePos = it2.Position;
-      ParticlePos.Z = 0;      
-
-      // Calculate vector between origin position and current particle position
-      FDVector ParticleOriginVector = (ParticlePos - OriginPosition);
-                  
-
-      // We need to know if the checked particles is inside of area of texture
-      // Check if the position is in the desired radius
-      if( ParticleOriginVector.Size() < TextureRadius )
+      for( auto it2 : it.second.Particles ) 
       {
-        // Create vector which is smaller than unit vector to get position in the texture
-        FDVector TexturePosition = ParticleOriginVector * (1/TextureRadius);
-        
-        // Move Vectors Center to 0.5
-        TexturePosition += 1;
-        TexturePosition *= 0.5f;
+        FDVector ParticlePos = it2.Position;
+        ParticlePos.Z = 0;      
 
-        // Scale positions according to texture size
-        TexturePosition.X = std::floor(TexturePosition.X * LimitX);
-        TexturePosition.Y = std::floor(TexturePosition.Y * LimitY);      
-        
-        // Now we access to the proper position of the Data array and we update the value
-        int32 Index = TexturePosition.X + (LimitX * TexturePosition.Y);
-        uint8 CuurentHeightValue =  it2.Position.Z * -1;
-        Data[Index] = std::max( Data[Index], CuurentHeightValue );
+        // Calculate vector between origin position and current particle position
+        FDVector ParticleOriginVector = (ParticlePos - OriginPosition);
+
+
+        // We need to know if the checked particles is inside of area of texture
+        // Check if the position is in the desired radius
+        if( ParticleOriginVector.Size() < TextureRadius )
+        {
+          // Create vector which is smaller than unit vector to get position in the texture
+          FDVector TexturePosition = ParticleOriginVector * (1/TextureRadius);
+          
+          // Move Vectors Center to 0.5
+          TexturePosition += 1;
+          TexturePosition *= 0.5f;
+
+          // Scale positions according to texture size
+          TexturePosition.X = std::floor(TexturePosition.X * LimitX);
+          TexturePosition.Y = std::floor(TexturePosition.Y * LimitY);      
+          
+          // Now we access to the proper position of the Data array and we update the value
+          int32 Index = TexturePosition.X + (LimitX * TexturePosition.Y);
+          uint8 CuurentHeightValue =  it2.Position.Z * -100;
+          Data[Index] = std::max( Data[Index], CuurentHeightValue );
+        }
       }
     }
   }
-
 }
 
 UCustomTerrainPhysicsComponent::UCustomTerrainPhysicsComponent()
@@ -559,9 +562,10 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
     UE_LOG(LogCarla, Error, 
         TEXT("Folder was not created at %s"), *SavePath);  
   }
-
-  TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::InitializeMap);
-  SparseMap.InitializeMap(HeightMap, FDVector(0.f,0.f,0.f), WorldSize/100.f);
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(TEXT("FSparseHighDetailMap::InitializeMap"));
+    SparseMap.InitializeMap(HeightMap, FDVector(0.f,0.f,0.f), WorldSize/100.f, SavePath);
+  }
 
   InitTexture();
 
@@ -630,7 +634,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     MPCInstance->SetVectorParameterValue("PositionToUpdate", LastUpdatedPosition);
     // We set texture radius in cm as is UE4 default measure unit
     MPCInstance->SetScalarParameterValue("TextureRadius", TextureRadius * 100);
-    MPCInstance->SetScalarParameterValue("EffectMultiplayer", EffectMultiplayer);
+    MPCInstance->SetScalarParameterValue("EffectMultiplayer", EffectMultiplayer); 
   }
 
   // This functions it the loop which waits for the proper tiles to be loaded
