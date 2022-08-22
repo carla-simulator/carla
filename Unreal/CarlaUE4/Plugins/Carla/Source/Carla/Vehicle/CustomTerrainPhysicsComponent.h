@@ -15,8 +15,8 @@
 #ifdef WITH_PYTORCH
 THIRD_PARTY_INCLUDES_START
 #include <carla/pytorch/pytorch.h>
-#endif
 THIRD_PARTY_INCLUDES_END
+#endif
 
 #include <unordered_map>
 #include <vector>
