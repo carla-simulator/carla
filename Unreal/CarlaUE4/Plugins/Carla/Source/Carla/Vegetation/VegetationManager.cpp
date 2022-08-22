@@ -81,7 +81,9 @@ void FPooledActor::DisableActor()
 /********************************************************************************/
 bool FFoliageBlueprint::IsValid() const
 {
-  return !BPFullClassName.IsEmpty() && SpawnedClass;
+  if (BPFullClassName.IsEmpty() || !BPFullClassName.Contains("_C"))
+    return false;
+  return SpawnedClass;
 }
 
 bool FFoliageBlueprint::SetBPClassName(const FString& Path)
@@ -104,18 +106,17 @@ bool FFoliageBlueprint::SetBPClassName(const FString& Path)
   BPFullClassName += BPClassName;
   BPFullClassName += ".";
   BPFullClassName += BPClassName;
-  BPFullClassName += "'";
+  BPFullClassName += "_C'";
   return true;
 }
 
 bool FFoliageBlueprint::SetSpawnedClass()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FoliageBlueprintCache::SetSpawnedClass);
-  UObject* LoadedObject = StaticLoadObject(UObject::StaticClass(), nullptr, *BPFullClassName);
-  UBlueprint* CastedBlueprint = Cast<UBlueprint>(LoadedObject);
-  if (CastedBlueprint && CastedBlueprint->GeneratedClass->IsChildOf(AActor::StaticClass()))
+  UClass* CastedBlueprint = LoadObject< UClass >(nullptr, *BPFullClassName);
+  if (CastedBlueprint)
   {
-    SpawnedClass = *CastedBlueprint->GeneratedClass;  
+    SpawnedClass = CastedBlueprint;  
     return true;
   }
   SpawnedClass = nullptr;
@@ -130,7 +131,6 @@ void FTileData::UpdateMaterialCache(const FLinearColor& Value)
   TRACE_CPUPROFILER_EVENT_SCOPE(FTileData::UpdateMaterialCache);
   for (UMaterialInstanceDynamic* Material : MaterialInstanceDynamicCache)
   {
-    Material->SetScalarParameterValue("ActivateDebug", 0);
     Material->SetScalarParameterValue("ActivateOpacity", 1);
     Material->SetVectorParameterValue("VehiclePosition", Value);
   }
@@ -143,6 +143,9 @@ void AVegetationManager::BeginPlay()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::BeginPlay);
   Super::BeginPlay();
+  LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
+  FWorldDelegates::LevelAddedToWorld.AddUObject(this, &AVegetationManager::OnLevelAddedToWorld);
+  FWorldDelegates::LevelRemovedFromWorld.AddUObject(this, &AVegetationManager::OnLevelRemovedFromWorld);
 }
 
 void AVegetationManager::Tick(float DeltaTime)
@@ -151,7 +154,9 @@ void AVegetationManager::Tick(float DeltaTime)
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(Parent Tick);
     Super::Tick(DeltaTime);
-  }  
+  }
+  if (!LargeMap)
+    return;
   bool FoundVehicles = CheckIfAnyVehicleInLevel();
   if (!FoundVehicles)
     return;
@@ -159,10 +164,13 @@ void AVegetationManager::Tick(float DeltaTime)
   bool NewTilesFound = CheckForNewTiles();
   if (NewTilesFound)
   {
+    //El origen de todos los males parece ser que está aquí, se están generando los mismos tiles una y otra vez.
+    //Cuando se detecta un tile nuevo se generan todos por lo visto. usar los eventos.
     UpdateFoliageBlueprintCache();
     UpdateTileDataCache();
     GenerateTileDataInternals();
   }
+  //Esto se podría hacer tambien con un evento de colision de cada tile.
   TArray<FString> TilesInUse = GetTilesInUse();
   UpdateMaterials(TilesInUse);
 
@@ -204,9 +212,9 @@ void AVegetationManager::UpdateTileDataCache()
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::UpdateTileDataCache);
   const UObject* World = GetWorld();
   TArray<FString> NewKeys;
-  TArray<AActor*> ActorsInLevel;
-  UGameplayStatics::GetAllActorsOfClass(World, AInstancedFoliageActor::StaticClass(), ActorsInLevel);
-  for (AActor* Actor : ActorsInLevel)
+  TArray<AActor*> InstancedFoliageActorsInLevel;
+  UGameplayStatics::GetAllActorsOfClass(World, AInstancedFoliageActor::StaticClass(), InstancedFoliageActorsInLevel);
+  for (AActor* Actor : InstancedFoliageActorsInLevel)
   {
     AInstancedFoliageActor* InstancedFoliageActor = Cast<AInstancedFoliageActor>(Actor);
     if (!IsValid(InstancedFoliageActor))
@@ -223,9 +231,9 @@ void AVegetationManager::UpdateTileDataCache()
     NewKeys.Emplace(TileName);
   }
 
-  ActorsInLevel.Reset();
-  UGameplayStatics::GetAllActorsOfClass(World, AProceduralFoliageVolume::StaticClass(), ActorsInLevel);
-  for (AActor* Actor : ActorsInLevel)
+  TArray<AActor*> ProceduralFoliageVolumesInLevel;
+  UGameplayStatics::GetAllActorsOfClass(World, AProceduralFoliageVolume::StaticClass(), ProceduralFoliageVolumesInLevel);
+  for (AActor* Actor : ProceduralFoliageVolumesInLevel)
   {
     AProceduralFoliageVolume* Procedural = Cast<AProceduralFoliageVolume>(Actor);
     if (!IsValid(Procedural))
@@ -234,7 +242,7 @@ void AVegetationManager::UpdateTileDataCache()
     if (NewKeys.Contains(TileName))
     {
       FTileData* TileData = TileDataCache.Find(TileName);
-      if (TileData)
+      if (TileData && !TileData->ProceduralFoliageVolume)
       {
         TileData->ProceduralFoliageVolume = Procedural;
         UE_LOG(LogCarla, Display, TEXT("Tile: %s added to the cache."), *TileName);
@@ -254,6 +262,12 @@ void AVegetationManager::UpdateFoliageBlueprintCache()
     AInstancedFoliageActor* InstancedFoliageActor = Cast<AInstancedFoliageActor>(Actor);
     if (!IsValid(InstancedFoliageActor))
       continue;
+    const FString TileName = InstancedFoliageActor->GetLevel()->GetOuter()->GetName();
+    if (TileDataCache.Contains(TileName))
+    {
+        UE_LOG(LogCarla, Display, TEXT("Blueprint Cache already has loaded this tile."), *TileName);
+        continue;
+    }
     const TSet<UActorComponent*>& ActorComponents = InstancedFoliageActor->GetComponents();
     for (UActorComponent* Component : ActorComponents)
     {
@@ -290,6 +304,10 @@ void AVegetationManager::GenerateTileDataInternals()
   {
     if (Element.Value.TileMeshesCache.Num() > 0)
       continue;
+    if (Element.Value.MaterialInstanceDynamicCache.Num() > 0)
+      continue;
+    const FString TileName = Element.Value.InstancedFoliageActor->GetLevel()->GetOuter()->GetName();
+    UE_LOG(LogCarla, Display, TEXT("Initializing Tile: %s"), *TileName);
     InitializeInstancedStaticMeshComponentCache(Element.Value);
     InitializeMaterialCache(Element.Value);
   }
@@ -311,26 +329,26 @@ void AVegetationManager::InitializeInstancedStaticMeshComponentCache(FTileData& 
     if (!BPCache->IsValid())
       continue;
     bool Found = false;
-    for (auto& Element : TileData.TileMeshesCache)
+    for (FTileMeshComponent& Element : TileData.TileMeshesCache)
     {
-      if (Element.InstancedStaticMeshComponent == Mesh)
-      {
+      if (Element.StaticMeshPath == Path)
         Found = true;
-        break;
-      }
     }
-    if (Found)
-      continue;
-    FTileMeshComponent Aux;
-    Aux.InstancedStaticMeshComponent = Mesh;
-    TileData.TileMeshesCache.Emplace(Aux);
+    if (!Found)
+    {
+      UE_LOG(LogCarla, Display, TEXT("Mesh Path: %s"), *Path);
+      FTileMeshComponent Aux;
+      Aux.StaticMeshPath = Path;
+      Aux.InstancedStaticMeshComponent = Mesh;
+      TileData.TileMeshesCache.Emplace(Aux);
+    }
   }
 }
 
 void AVegetationManager::InitializeMaterialCache(FTileData& TileData)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::InitializeMaterialCache);
-  const float Distance = VehiclesInLevel[0]->DetectionSize * 2.0f;
+  const float Distance = VehiclesInLevel.Last()->DetectionSize * 2.0f;
   for (FTileMeshComponent& Element : TileData.TileMeshesCache)
   {
     UInstancedStaticMeshComponent* Mesh = Element.InstancedStaticMeshComponent;
@@ -356,7 +374,6 @@ void AVegetationManager::InitializeMaterialCache(FTileData& TileData)
   }
 }
 
-
 /********************************************************************************/
 /********** TICK ****************************************************************/
 /********************************************************************************/
@@ -370,7 +387,7 @@ void AVegetationManager::UpdateVehiclesDetectionBoxes()
 void AVegetationManager::UpdateMaterials(TArray<FString>& Tiles)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::UpdateMaterials);
-  FLinearColor Position = FLinearColor(VehiclesInLevel[0]->GetActorLocation());
+  FLinearColor Position = FLinearColor(VehiclesInLevel.Last()->GetActorLocation());
   for (const FString& TileName : Tiles)
   {
     FTileData* TileData = TileDataCache.Find(TileName);
@@ -384,9 +401,6 @@ TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> AVegetationManager::GetElem
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::GetElementsToSpawn);
   TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> Results;
-  ALargeMapManager* LargeMap =
-        UCarlaStatics::GetLargeMapManager(GetWorld());
-      check(LargeMap);
   for (const FString& TileKey : Tiles)
   {
     FTileData* Tile = TileDataCache.Find(TileKey);
@@ -402,42 +416,28 @@ TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> AVegetationManager::GetElem
         continue;
       if (!BP->IsValid())
         continue;
-      TArray<int32> Indices = VehiclesInLevel[0]->GetFoliageInstancesCloseToVehicle(InstancedStaticMeshComponent);
+      TArray<int32> Indices = VehiclesInLevel.Last()->GetFoliageInstancesCloseToVehicle(InstancedStaticMeshComponent);
       if (Indices.Num() == 0)
         continue;
-      for (int32 i = 0; i < Element.IndicesInUse.Num(); ++i)
-      {
-        if (Element.IndicesInUse[i] == -1)
-          continue;
-        if (Indices.Contains(Element.IndicesInUse[i]))
-          continue;
-        Element.IndicesInUse[i] = -1;
-      }
-      TPair<FFoliageBlueprint, TArray<FTransform>> NewElement {};
-      NewElement.Key = *BP;
-      TArray<FTransform> Transforms;
+      TArray<int32> NewIndices;
       for (int32 Index : Indices)
       {
         if (Element.IndicesInUse.Contains(Index))
           continue;
+        NewIndices.Emplace(Index);
+      }
+      Element.IndicesInUse = Indices;
+      TPair<FFoliageBlueprint, TArray<FTransform>> NewElement {};
+      NewElement.Key = *BP;
+      TArray<FTransform> Transforms;
+      for (int32 Index : NewIndices)
+      {
         FTransform Transform;
         InstancedStaticMeshComponent->GetInstanceTransform(Index, Transform, true);
         FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(Transform);
         Transforms.Emplace(GlobalTransform);
-        bool Found = false;
-        //Add Index to Array
-        for (int32 i = 0; i < Element.IndicesInUse.Num(); ++i)
-        {
-          if (Element.IndicesInUse[i] == -1)
-          {
-            Element.IndicesInUse[i] = Index;
-            Found = true;
-            break;
-          }
-        }
-        if (!Found)
-          Element.IndicesInUse.Emplace(Index);
-        //----------------------------------------------------
+        UE_LOG(LogCarla, Display, TEXT("GetFoliageInstancesCloseToVehicle of type %s"), *BP->BPClassName);
+        UE_LOG(LogCarla, Display, TEXT("Instance found %d"), Index);
       }
       if (Transforms.Num() > 0)
       {
@@ -452,9 +452,6 @@ TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> AVegetationManager::GetElem
 void AVegetationManager::SpawnSkeletalFoliages(TArray<TPair<FFoliageBlueprint, TArray<FTransform>>>& ElementsToSpawn)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::SpawnSkeletalFoliages);
-  ALargeMapManager* LargeMap =
-        UCarlaStatics::GetLargeMapManager(GetWorld());
-      check(LargeMap);
   for (TPair<FFoliageBlueprint, TArray<FTransform>>& Element : ElementsToSpawn)
   {
     FFoliageBlueprint BP = Element.Key;
@@ -468,7 +465,7 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<TPair<FFoliageBlueprint, T
       bool Ok = EnableActorFromPool(Transform, *Pool);
       if (Ok)
       {
-        UE_LOG(LogCarla, Display, TEXT("Pooled actor from pool: %s"), *BP.BPClassName);
+        UE_LOG(LogCarla, Display, TEXT("Pooled actor: %s"), *BP.BPClassName);
       }
       else
       {
@@ -480,7 +477,7 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<TPair<FFoliageBlueprint, T
         {
           NewElement.EnableActor();
           Pool->Emplace(NewElement);
-          UE_LOG(LogCarla, Display, TEXT("Created actor for pool: %s"), *BP.BPClassName);
+          UE_LOG(LogCarla, Display, TEXT("Created actor: %s"), *BP.BPClassName);
         } 
       }
     }
@@ -490,9 +487,6 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<TPair<FFoliageBlueprint, T
 void AVegetationManager::DestroySkeletalFoliages()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::DestroySkeletalFoliages);
-  ALargeMapManager* LargeMap =
-        UCarlaStatics::GetLargeMapManager(GetWorld());
-      check(LargeMap);
   for (TPair<FString, TArray<FPooledActor>>& Element : ActorPool)
   {
     TArray<FPooledActor>& Pool = Element.Value;
@@ -501,10 +495,10 @@ void AVegetationManager::DestroySkeletalFoliages()
       if (!Actor.InUse)
           continue;
       const FVector Location = Actor.GlobalTransform.GetLocation();
-      if (!VehiclesInLevel[0]->IsInVehicleRange(Location))
+      if (!VehiclesInLevel.Last()->IsInVehicleRange(Location))
       {
         Actor.DisableActor();
-        UE_LOG(LogCarla, Display, TEXT("Disabled Actor from pool"));
+        UE_LOG(LogCarla, Display, TEXT("Disabled Actor"));
       }
     }
   }
@@ -512,15 +506,13 @@ void AVegetationManager::DestroySkeletalFoliages()
 
 bool AVegetationManager::EnableActorFromPool(const FTransform& Transform, TArray<FPooledActor>& Pool)
 {
-  ALargeMapManager* LargeMap =
-        UCarlaStatics::GetLargeMapManager(GetWorld());
-      check(LargeMap);
   for (FPooledActor& PooledActor : Pool)
   {
     if (PooledActor.InUse)
       continue;
     PooledActor.GlobalTransform = Transform;
-    FTransform LocalTransform = LargeMap->GlobalToLocalTransform(Transform);
+    FTransform LocalTransform = Transform;
+    LocalTransform = LargeMap->GlobalToLocalTransform(Transform);
     PooledActor.EnableActor();
     PooledActor.Actor->SetActorLocationAndRotation(LocalTransform.GetLocation(), LocalTransform.Rotator(), true, nullptr, ETeleportType::ResetPhysics);
     if (SpawnScale <= 1.01f && SpawnScale >= 0.99f)
@@ -572,8 +564,25 @@ AActor* AVegetationManager::CreateFoliage(const FFoliageBlueprint& BP, const FTr
 }
 
 /********************************************************************************/
-/********** OTHER ***************************************************************/
+/********** TILES ***************************************************************/
 /********************************************************************************/
+
+//TileID TileID = GetTileID(InTileID);
+void AVegetationManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
+{
+  //TODO(Luis): Connenct to OnLevelAddedToWorld Event.
+  //Create the new Tile
+  UE_LOG(LogCarla, Display, TEXT("OnLevelAddedToWorld"));
+}
+
+void AVegetationManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
+{
+  //TODO(Luis): Connect to OnLevelRemovedFromWorld.
+  //Clear FTileData and UMaterials.
+  UE_LOG(LogCarla, Display, TEXT("OnLevelRemovedFromWorld"));
+}
+
+
 bool AVegetationManager::CheckIfAnyVehicleInLevel() const
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::CheckIfAnyVehicleInLevel);
@@ -627,17 +636,19 @@ TArray<FString> AVegetationManager::GetTilesInUse()
     if (!IsValid(TileData.InstancedFoliageActor) || !IsValid(TileData.ProceduralFoliageVolume))
     {
       TileDataCache.Remove(Element.Key);
-      return Resutls;
+      return Results;
     }
+    if (Results.Contains(Element.Key))
+      continue;
     const AProceduralFoliageVolume* Procedural = TileData.ProceduralFoliageVolume;
     if (!Procedural)
       continue;
-    
-    const FString TileName = Procedural->GetLevel()->GetOuter()->GetName();
-    const FBox Box = Procedural->ProceduralComponent->GetBounds();
-
-    if (Results.Contains(Element.Key))
+    if (!Procedural->ProceduralComponent)
       continue;
+    const FBox Box = Procedural->ProceduralComponent->GetBounds();
+    if (!Box.IsValid)
+      continue;
+    
     for (ACarlaWheeledVehicle* Vehicle : VehiclesInLevel)
     {
       if (Box.IsInside(Vehicle->GetActorLocation()))

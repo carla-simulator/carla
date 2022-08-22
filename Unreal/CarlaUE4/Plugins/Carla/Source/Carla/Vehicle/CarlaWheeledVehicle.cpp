@@ -205,11 +205,19 @@ void ACarlaWheeledVehicle::BeginPlay()
 bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::IsInVehicleRange);
-  ALargeMapManager* LargeMap =
-        UCarlaStatics::GetLargeMapManager(GetWorld());
-  check(LargeMap);
-  FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
-  float Distance = Distance = FVector::Distance(Location, GlobalTransform.GetLocation());
+  
+  float Distance = 0.0f;
+  ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
+  if (LargeMap)
+  {
+    FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
+    Distance = Distance = FVector::Distance(Location, GlobalTransform.GetLocation());
+  }
+  else
+  {
+    Distance = Distance = FVector::Distance(Location, GetActorTransform().GetLocation());
+  }
+
   return Distance < DetectionSize * 10.0f;
 }
 
@@ -236,6 +244,12 @@ void ACarlaWheeledVehicle::DrawFoliageBoundingBox() const
 
 FBoxSphereBounds ACarlaWheeledVehicle::GetBoxSphereBounds() const
 {
+  ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
+  if (LargeMap)
+  {
+    FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
+    return VehicleBounds->CalcBounds(GlobalTransform);
+  }
   return VehicleBounds->CalcBounds(GetActorTransform());
 }
 
@@ -382,8 +396,6 @@ void ACarlaWheeledVehicle::SetWheelsFrictionScale(TArray<float> &WheelsFrictionS
     }
   }
 }
-
-
 
 FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
 {

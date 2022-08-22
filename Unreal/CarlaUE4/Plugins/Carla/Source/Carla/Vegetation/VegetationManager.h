@@ -14,6 +14,7 @@
 #include "Containers/Array.h"
 #include "Containers/Map.h"
 
+#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include "VegetationManager.generated.h"
@@ -22,6 +23,7 @@ USTRUCT()
 struct FTileMeshComponent
 {
   GENERATED_BODY()
+  FString StaticMeshPath {};
   UInstancedStaticMeshComponent* InstancedStaticMeshComponent {nullptr};
   TArray<int32> IndicesInUse {};
 };
@@ -30,6 +32,7 @@ USTRUCT()
 struct FTileData
 {
   GENERATED_BODY()
+  FTransform TileGlobalTransform {FTransform()};
   AInstancedFoliageActor* InstancedFoliageActor {nullptr};
   AProceduralFoliageVolume* ProceduralFoliageVolume {nullptr};
   TArray<FTileMeshComponent> TileMeshesCache {};
@@ -106,6 +109,7 @@ private:
   bool IsFoliageTypeEnabled(const FString& Path) const;
   bool CheckIfAnyVehicleInLevel() const;
   bool CheckForNewTiles() const;
+
   TArray<FString> GetTilesInUse();
 
   void UpdateVehiclesDetectionBoxes();
@@ -121,12 +125,19 @@ private:
   void InitializeInstancedStaticMeshComponentCache(FTileData& TileData);
   void InitializeMaterialCache(FTileData& TileData);
 
+  void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
+  void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld);
+
   void CreatePoolForBPClass(const FFoliageBlueprint& BP);
   AActor* CreateFoliage(const FFoliageBlueprint& BP, const FTransform& Transform) const;
 
 private:
+  //Actors
+  ALargeMapManager* LargeMap {nullptr};
   TArray<ACarlaWheeledVehicle*> VehiclesInLevel {};
+  //Caches
   TMap<FString, FFoliageBlueprint> FoliageBlueprintCache {};
-  TMap<FString, TArray<FPooledActor>> ActorPool {};
   TMap<FString, FTileData> TileDataCache {};
+  //Pools
+  TMap<FString, TArray<FPooledActor>> ActorPool {};
 };

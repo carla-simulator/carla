@@ -20,7 +20,7 @@
 #define COLLISIONLOGS 0
 #define ACCUMULATIONLOGS 0
 #define FICTITIOUSFORCELOGS 0
-#define OTHERLOGS 0
+#define OTHERLOGS 1
 
 #if SOLVERLOGS && SPRINGVEGETATIONLOGS
 #define SOLVER_LOG(Level, Msg, ...) UE_LOG(LogCarla, Level, TEXT(Msg), ##__VA_ARGS__)
@@ -208,7 +208,7 @@ void FSkeletonHierarchy::AddForce(const FString& BoneName, const FVector& Force)
   {
     if(Joint.JointName == BoneName)
     {
-      Joint.ExternalForces += Force * 0.001f;
+      Joint.ExternalForces += Force;
     }
   }
 }
@@ -485,8 +485,10 @@ void USpringBasedVegetationComponent::ComputePerJointProperties(
     // force
     Eigen::Vector3d GravityForce = ToEigenVector(Gravity)/100.f; // world space gravity
     Properties.Force = Properties.Mass * GravityForce + ToEigenVector(Joint.ExternalForces)/100.f;
+    Properties.Force *= 0.01f;
     // torque
     Properties.Torque = (Properties.CenterOfMass - JointGlobalPosition).cross(Properties.Force);
+    Properties.Torque *= 0.01f;
     // inertia tensor
     for (FSkeletonBone& Bone : Joint.Bones)
     {
@@ -846,26 +848,24 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     FRotator NewAngularVelocity = EigenVectorToRotator(FinalNewThetaVelocity);
     FRotator NewAngularAccel = EigenVectorToRotator(FinalNewThetaAccel);
 
-    const float ClampedNewPitch = ClampToPositiveDegrees(NewPitch);
-    const float ClampedNewYaw = ClampToPositiveDegrees(MaxYaw);
-    const float ClampedNewRoll = ClampToPositiveDegrees(MaxRoll);
+    NewPitch = ClampToPositiveDegrees(NewPitch);
+    NewYaw = ClampToPositiveDegrees(NewYaw);
+    NewRoll = ClampToPositiveDegrees(NewRoll);
 
-    if (ClampedNewPitch > MaxPitch){
-      NewPitch = ClampedNewPitch;
-
+    if (NewPitch > MaxPitch){
+      NewPitch = MaxPitch;
       NewAngularVelocity.Pitch = 0.0f;
       NewAngularAccel.Pitch = 0.0f;
     }
 
-    if (ClampedNewYaw > MaxYaw){
-      NewYaw = ClampedNewYaw;
-
+    if (NewYaw > MaxYaw){
+      NewYaw = MaxYaw;
       NewAngularVelocity.Yaw = 0.0f;
       NewAngularAccel.Yaw = 0.0f;
     }
 
-    if (ClampedNewRoll > MaxRoll){
-      NewRoll = ClampedNewRoll;
+    if (NewRoll > MaxRoll){
+      NewRoll = MaxRoll;
       NewAngularVelocity.Roll = 0.0f;
       NewAngularAccel.Roll = 0.0f;
     }
