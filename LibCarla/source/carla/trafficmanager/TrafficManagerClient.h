@@ -81,6 +81,13 @@ public:
     _client->call("set_percentage_speed_difference", std::move(_actor), percentage);
   }
 
+  /// Method to set a lane offset displacement from the center line.
+  /// Positive values imply a right offset while negative ones mean a left one.
+  void SetLaneOffset(const carla::rpc::Actor &_actor, const float offset) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_lane_offset", std::move(_actor), offset);
+  }
+
   /// Set a vehicle's exact desired velocity.
   void SetDesiredSpeed(const carla::rpc::Actor &_actor, const float value) {
     DEBUG_ASSERT(_client != nullptr);
@@ -92,6 +99,13 @@ public:
   void SetGlobalPercentageSpeedDifference(const float percentage) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("set_global_percentage_speed_difference", percentage);
+  }
+
+  /// Method to set a global lane offset displacement from the center line.
+  /// Positive values imply a right offset while negative ones mean a left one.
+  void SetGlobalLaneOffset(const float offset) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_global_lane_offset", offset);
   }
 
   /// Method to set the automatic management of the vehicle lights

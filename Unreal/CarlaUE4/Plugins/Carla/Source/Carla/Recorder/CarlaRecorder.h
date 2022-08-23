@@ -59,7 +59,8 @@ enum class CarlaRecorderPacketId : uint8_t
   PlatformTime,
   PhysicsControl,
   TrafficLightTime,
-  TriggerVolume
+  TriggerVolume,
+  FrameCounter
 };
 
 /// Recorder for the simulation

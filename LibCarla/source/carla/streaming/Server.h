@@ -8,6 +8,7 @@
 
 #include "carla/ThreadPool.h"
 #include "carla/streaming/detail/tcp/Server.h"
+#include "carla/streaming/detail/Types.h"
 #include "carla/streaming/low_level/Server.h"
 
 #include <boost/asio/io_context.hpp>
@@ -52,6 +53,10 @@ namespace streaming {
       return _server.MakeStream();
     }
 
+    void CloseStream(carla::streaming::detail::stream_id_type id) {
+      return _server.CloseStream(id);
+    }
+
     void Run() {
       _pool.Run();
     }
@@ -62,6 +67,10 @@ namespace streaming {
 
     void SetSynchronousMode(bool is_synchro) {
       _server.SetSynchronousMode(is_synchro);
+    }
+
+    carla::streaming::detail::token_type GetToken(carla::streaming::detail::stream_id_type sensor_id) {
+      return _server.GetToken(sensor_id);
     }
 
   private:

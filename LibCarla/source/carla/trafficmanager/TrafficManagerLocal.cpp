@@ -334,6 +334,14 @@ void TrafficManagerLocal::SetGlobalPercentageSpeedDifference(const float percent
   parameters.SetGlobalPercentageSpeedDifference(percentage);
 }
 
+void TrafficManagerLocal::SetLaneOffset(const ActorPtr &actor, const float offset) {
+  parameters.SetLaneOffset(actor, offset);
+}
+
+void TrafficManagerLocal::SetGlobalLaneOffset(const float offset) {
+  parameters.SetGlobalLaneOffset(offset);
+}
+
 void TrafficManagerLocal::SetDesiredSpeed(const ActorPtr &actor, const float value) {
   parameters.SetDesiredSpeed(actor, value);
 }

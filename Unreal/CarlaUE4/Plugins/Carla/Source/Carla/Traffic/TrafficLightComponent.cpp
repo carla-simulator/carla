@@ -13,6 +13,7 @@
 #include "TrafficLightManager.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "carla/road/element/RoadInfoSignal.h"
 
 UTrafficLightComponent::UTrafficLightComponent()
   : Super()

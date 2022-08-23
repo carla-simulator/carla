@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fstream>
+#include <sstream>
 #include <vector>
 #include <type_traits>
 
@@ -20,9 +20,9 @@ struct CarlaRecorderLightScene
   bool bOn;
   uint8 Type;
 
-  void Read(std::ifstream &InFile);
+  void Read(std::istream &InFile);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 };
 #pragma pack(pop)
 
@@ -34,7 +34,11 @@ public:
 
   void Clear(void);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
+
+  void Read(std::istream &InFile);
+
+  const std::vector<CarlaRecorderLightScene>& GetLights();
 
 private:
 

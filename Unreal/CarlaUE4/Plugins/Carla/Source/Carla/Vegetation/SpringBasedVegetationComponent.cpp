@@ -17,10 +17,10 @@
 
 #define SPRINGVEGETATIONLOGS 0
 #define SOLVERLOGS 0
-#define COLLISIONLOGS 1
+#define COLLISIONLOGS 0
 #define ACCUMULATIONLOGS 0
 #define FICTITIOUSFORCELOGS 0
-#define OTHERLOGS 1
+#define OTHERLOGS 0
 
 #if SOLVERLOGS && SPRINGVEGETATIONLOGS
 #define SOLVER_LOG(Level, Msg, ...) UE_LOG(LogCarla, Level, TEXT(Msg), ##__VA_ARGS__)
@@ -48,6 +48,24 @@
 #define OTHER_LOG(...)
 #endif
 
+static float ClampToPositiveDegrees(float d)
+{
+  if (d < 0.0f)
+  {
+    while (d < 0.0f)
+    {
+      d += 360.0f;
+    }
+  }
+  else
+  {
+    while (d >= 360.0f)
+    {
+      d -= 360.0f;
+    }
+  }
+  return d;
+}
 template <class T>
 static T GetSign(T n)
 {
@@ -115,6 +133,7 @@ void FSkeletonHierarchy::Clear()
 }
 void FSkeletonHierarchy::ComputeChildrenJointsAndBones()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(FSkeletonHierarchy::ComputeChildrenJointsAndBones);
   for (int i = 1; i < Joints.Num(); i++)
   {
     FSkeletonJoint& Joint = Joints[i];
@@ -137,6 +156,7 @@ void FSkeletonHierarchy::ComputeChildrenJointsAndBones()
 
 void FSkeletonHierarchy::ComputeEndJoints()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(FSkeletonHierarchy::ComputeEndJoints);
   EndJoints.Empty();
   for (int i = 0; i < Joints.Num(); i++)
   {
@@ -183,16 +203,18 @@ void FSkeletonHierarchy::ComputeEndJoints()
 
 void FSkeletonHierarchy::AddForce(const FString& BoneName, const FVector& Force)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(FSkeletonHierarchy::AddForce);
   for (FSkeletonJoint& Joint : Joints)
   {
     if(Joint.JointName == BoneName)
     {
-      Joint.ExternalForces += Force;
+      Joint.ExternalForces += Force * 0.001f;
     }
   }
 }
 void FSkeletonHierarchy::ClearExternalForces()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(FSkeletonHierarchy::ClearExternalForces);
   for (FSkeletonJoint& Joint : Joints)
   {
     Joint.ExternalForces = FVector(0,0,0);
@@ -208,6 +230,7 @@ USpringBasedVegetationComponent::USpringBasedVegetationComponent(const FObjectIn
 
 void USpringBasedVegetationComponent::GenerateSkeletonHierarchy()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::GenerateSkeletonHierarchy);
   OTHER_LOG(Warning, "Get skeleton hierarchy");
   // Get skeleton hierarchy
   if (!SkeletalMesh)
@@ -275,6 +298,7 @@ void USpringBasedVegetationComponent::GenerateSkeletonHierarchy()
 
 void USpringBasedVegetationComponent::BeginPlay()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::BeginPlay);
   Super::BeginPlay();
   OTHER_LOG(Warning, "USpringBasedVegetationComponent::BeginPlay");
   OTHER_LOG(Warning, "Params: BaseSpringStrength %f, Num joints: %d, CollisionForceParameter %f", BaseSpringStrength, Skeleton.Joints.Num(), CollisionForceParameter);
@@ -347,6 +371,33 @@ void USpringBasedVegetationComponent::BeginPlay()
   }
 }
 
+void USpringBasedVegetationComponent::ResetComponent()
+{
+  Skeleton.ClearExternalForces();
+  // Get resting pose for bones
+  auto *AnimInst = SkeletalMesh->GetAnimInstance();
+  if (!AnimInst)
+  {
+    OTHER_LOG(Error, "Could not get animation instance.");
+    return;
+  }
+  UWalkerAnim *WalkerAnim = Cast<UWalkerAnim>(AnimInst);
+  if (!WalkerAnim)
+  {
+    OTHER_LOG(Error, "Could not get UWalkerAnim.");
+    return;
+  }
+
+   // get current pose
+  FPoseSnapshot TempSnapshot;
+  SkeletalMesh->SnapshotPose(TempSnapshot);
+
+  // copy pose
+  WalkerAnim->Snap = TempSnapshot;
+
+  UpdateGlobalTransform();
+}
+
 void USpringBasedVegetationComponent::GenerateCollisionCapsules()
 {
   for (FSkeletonJoint& Joint : Skeleton.Joints)
@@ -376,6 +427,7 @@ void USpringBasedVegetationComponent::GenerateCollisionCapsules()
 
 void USpringBasedVegetationComponent::ComputeSpringStrengthForBranches()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::ComputeSpringStrengthForBranches);
   FTransform RootTransform = Skeleton.GetRootJoint().GlobalTransform;
   FVector RootLocation = RootTransform.GetLocation();
   // FVector TreeAxis = RootTransform.GetRotation().GetUpVector();
@@ -410,6 +462,7 @@ void USpringBasedVegetationComponent::ComputePerJointProperties(
     std::vector<FJointProperties>& JointLocalPropertiesList,
     std::vector<FJointProperties>& JointPropertiesList)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::ComputePerJointProperties);
   for(FSkeletonJoint& Joint : Skeleton.Joints)
   {
     FJointProperties& Properties = JointLocalPropertiesList[Joint.JointId];
@@ -472,6 +525,7 @@ void USpringBasedVegetationComponent::ComputeCompositeBodyContribution(
     std::vector<FJointProperties>& JointLocalPropertiesList,
     std::vector<FJointProperties>& JointPropertiesList)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::ComputeCompositeBodyContribution);
   for (int Id : Skeleton.EndToRootOrder)
   {
     FSkeletonJoint& Joint = Skeleton.Joints[Id];
@@ -533,6 +587,7 @@ void USpringBasedVegetationComponent::ComputeFictitiousForces(
     std::vector<FJointProperties>& JointLocalPropertiesList,
     std::vector<FJointProperties>& JointPropertiesList)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::ComputeFictitiousForces);
   // fictitious forces
   FSkeletonJoint& RootJoint = Skeleton.Joints[0];
   FJointProperties& RootProperties = JointPropertiesList[0];
@@ -581,6 +636,7 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
     std::vector<FJointProperties>& JointLocalPropertiesList,
     std::vector<FJointProperties>& JointPropertiesList)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::ResolveContactsAndCollisions);
   float MinDistance = INFINITY;
   FVector ClosestSurfacePoint;
   for (auto& ActorCapsules : OverlappingActors)
@@ -627,17 +683,15 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
           CurrRotator.Pitch - RestRotator.Pitch, 
           CurrRotator.Yaw - RestRotator.Yaw, 
           CurrRotator.Roll - RestRotator.Roll);
-      Eigen::Vector3d SpringTorque = SpringStrength*RotatorToEigenVector(DeltaRotator);
-      Eigen::Vector3d JointCapsuleVector = JointGlobalPosition - CapsulePosition;
-      Eigen::Vector3d SpringForce = SpringTorque.cross(JointCapsuleVector)*JointCapsuleVector.squaredNorm();
+      const Eigen::Vector3d SpringTorque = SpringStrength*RotatorToEigenVector(DeltaRotator);
+      const Eigen::Vector3d JointCapsuleVector = JointGlobalPosition - CapsulePosition;
+      const Eigen::Vector3d SpringForce = SpringTorque.cross(JointCapsuleVector)*JointCapsuleVector.squaredNorm();
+      const Eigen::Vector3d RepulsionForce = SpringForce;
       
-      const Eigen::Vector3d Multiplier {XMultiplier, YMultiplier, -ZMultiplier};
-      Eigen::Vector3d RepulsionForce = SpringForce.cwiseProduct(Multiplier);      
       Primitive->AddForceAtLocation(-ToUnrealVector(RepulsionForce)*100.f, Capsule->GetComponentLocation());
       
       // force to repel geometry overlapping
       Eigen::Vector3d OverlappingForces = (CapsulePosition - ColliderPosition).normalized()*CollisionForceParameter;
-      OverlappingForces = OverlappingForces.cwiseProduct(Multiplier);
       Primitive->AddForceAtLocation(-ToUnrealVector(OverlappingForces)*100.f, Capsule->GetComponentLocation());
       CollisionTorque += (JointProperties.CenterOfMass - JointGlobalPosition).cross(RepulsionForce + CollisionImpulse + OverlappingForces);
       JointProperties.Torque += CollisionTorque;
@@ -656,6 +710,7 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     std::vector<FJointProperties>& JointPropertiesList,
     float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::SolveEquationOfMotion);
   // solver
   for (FSkeletonJoint& Joint : Skeleton.Joints)
   {
@@ -791,22 +846,26 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     FRotator NewAngularVelocity = EigenVectorToRotator(FinalNewThetaVelocity);
     FRotator NewAngularAccel = EigenVectorToRotator(FinalNewThetaAccel);
 
-    if (abs(NewPitch) > MaxPitch){
-      NewPitch = GetSign(NewPitch) * MaxPitch;
+    const float ClampedNewPitch = ClampToPositiveDegrees(NewPitch);
+    const float ClampedNewYaw = ClampToPositiveDegrees(MaxYaw);
+    const float ClampedNewRoll = ClampToPositiveDegrees(MaxRoll);
+
+    if (ClampedNewPitch > MaxPitch){
+      NewPitch = ClampedNewPitch;
 
       NewAngularVelocity.Pitch = 0.0f;
       NewAngularAccel.Pitch = 0.0f;
     }
 
-    if (abs(NewYaw) > MaxYaw){
-      NewYaw = GetSign(NewYaw) * MaxYaw;
+    if (ClampedNewYaw > MaxYaw){
+      NewYaw = ClampedNewYaw;
 
       NewAngularVelocity.Yaw = 0.0f;
       NewAngularAccel.Yaw = 0.0f;
     }
 
-    if (abs(NewRoll) > MaxRoll){
-      NewRoll = GetSign(NewRoll) * MaxRoll;
+    if (ClampedNewRoll > MaxRoll){
+      NewRoll = ClampedNewRoll;
       NewAngularVelocity.Roll = 0.0f;
       NewAngularAccel.Roll = 0.0f;
     }
@@ -830,6 +889,7 @@ void USpringBasedVegetationComponent::TickComponent(
     enum ELevelTick TickType,
     FActorComponentTickFunction * ThisTickFunction)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::TickComponent);
   Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
   float DeltaTimeFinal = DeltaTime;
@@ -915,6 +975,7 @@ void USpringBasedVegetationComponent::OnEndOverlapEvent(
 
 void USpringBasedVegetationComponent::UpdateSkeletalMesh()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::UpdateSkeletalMesh);
   // get the walker animation class
   auto *AnimInst = SkeletalMesh->GetAnimInstance();
   if (!AnimInst) return;
@@ -949,7 +1010,7 @@ void USpringBasedVegetationComponent::UpdateSkeletalMesh()
 
 void USpringBasedVegetationComponent::UpdateGlobalTransform()
 {
-
+  TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::UpdateGlobalTransform);
   FTransform InitialTransform = SkeletalMesh->GetOwner()->GetActorTransform();
   FSkeletonJoint& RootJoint = Skeleton.Joints[0];
   RootJoint.GlobalTransform = RootJoint.Transform * InitialTransform;

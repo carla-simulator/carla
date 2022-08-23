@@ -457,7 +457,7 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
-  CaptureComponent2D->CaptureScene();
+  GetCaptureComponent2D()->CaptureScene();
 }
 
 void ASceneCaptureSensor::BeginPlay()
@@ -498,7 +498,7 @@ void ASceneCaptureSensor::BeginPlay()
 
   // This ensures the camera is always spawning the raindrops in case the
   // weather was previously set to have rain.
-  GetEpisode().GetWeather()->NotifyWeather();
+  GetEpisode().GetWeather()->NotifyWeather(this);
 
   Super::BeginPlay();
 }
