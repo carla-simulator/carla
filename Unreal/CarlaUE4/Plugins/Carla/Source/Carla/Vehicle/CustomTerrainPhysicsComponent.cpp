@@ -79,6 +79,7 @@ void FHeightMapData::InitializeHeightmap(
   WorldSize = Size;
   Offset = Origin;
   Pixels.clear();
+  
   // setup required parameters
   Texture->CompressionSettings = TextureCompressionSettings::TC_VectorDisplacementmap;
   Texture->SRGB = false;
@@ -132,7 +133,7 @@ void FDenseTile::InitializeTile(float ParticleSize, float Depth,
     ReadFVector(ReadStream, VectorToRead );
     TilePosition = FDVector(VectorToRead);
     ReadStdVector<FParticle> (ReadStream, Particles);
-    UE_LOG(LogCarla, Log, TEXT("Reading data, got %d particles"), Particles.size());
+    //UE_LOG(LogCarla, Log, TEXT("Reading data, got %d particles"), Particles.size());
   }
   else
   {
@@ -241,7 +242,7 @@ std::vector<FParticle*> FSparseHighDetailMap::
   uint32_t Tile_X = (uint32_t)(TileId >> 32);
   uint32_t Tile_Y = (uint32_t)(TileId & (uint32_t)(~0));
 
-  uint32_t RadiusInTiles = Radius/TileSize;
+  uint32_t RadiusInTiles = (Radius/TileSize);
   uint32_t MinX,MinY,MaxX,MaxY = 0; 
   
   if( Tile_X < RadiusInTiles){
@@ -256,18 +257,28 @@ std::vector<FParticle*> FSparseHighDetailMap::
     MinY = Tile_Y - RadiusInTiles;
   }
 
-  if( Tile_X + RadiusInTiles < Tile_X){
+  if( ((Extension.X) / TileSize - RadiusInTiles) < Tile_X ){
     MaxX = (Extension.X) / TileSize;
   }else{
     MaxX = Tile_X + RadiusInTiles;
   }
 
-  if( Tile_Y + RadiusInTiles < Tile_Y){
+  if( ((-Extension.Y) / TileSize)  - RadiusInTiles < Tile_Y  ){
     MaxY = (-Extension.Y) / TileSize;
   }else{
     MaxY = Tile_Y + RadiusInTiles;
   }
+  /*
+  UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::GetParticlesInTileRadius MinX %zu MaxX: %zu, MinY %zu MaxY %zu"),
+      MinX, MaxX, MinY, MaxY);
+  UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::GetParticlesInTileRadius Extension X: %f, Y %f"), Extension.X, Extension.Y);
+  UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::GetParticlesInTileRadius Position X: %f, Y %f"), Position.X, Position.Y);
+  UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::GetParticlesInTileRadius RadiusInTiles %d"), RadiusInTiles);
+  UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::GetParticlesInTileRadius TileId %lld TileX: %d, TileY %d"),
+      TileId, Tile_X, Tile_Y);
 
+
+  */
   // FDenseTile& Tile = GetTile(TileId);
   // return Tile.GetParticlesInRadius(Position, Radius);
   std::vector<FParticle*> ParticlesInRadius;
@@ -324,8 +335,8 @@ FDVector FSparseHighDetailMap::GetTilePosition(uint32_t Tile_X, uint32_t Tile_Y)
 
   FDVector Position = FDVector(Tile_X*TileSize, Tile_Y*TileSize, 0);
   Position = Position + Tile0Position;
-  UE_LOG(LogCarla, Log, TEXT("Getting location from id (%lu, %lu) %s"),
-       (unsigned long)Tile_X, (unsigned long)Tile_Y, *(Position).ToString());
+  //UE_LOG(LogCarla, Log, TEXT("Getting location from id (%lu, %lu) %s"),
+  //      (unsigned long)Tile_X, (unsigned long)Tile_Y, *(Position).ToString());
   return Position;
 }
 
@@ -367,8 +378,8 @@ FDenseTile& FSparseHighDetailMap::InitializeRegion(uint64_t TileId)
 {
   FDVector TileCenter = GetTilePosition(TileId);
   FDenseTile& Tile = Map[TileId]; 
-  UE_LOG(LogCarla, Log, TEXT("Initializing Tile with (%f,%f,%f)"), 
-    TileCenter.X,TileCenter.Y,TileCenter.Z);
+  //UE_LOG(LogCarla, Log, TEXT("Initializing Tile with (%f,%f,%f)"), 
+  //  TileCenter.X,TileCenter.Y,TileCenter.Z);
   
   Tile.InitializeTile(
       ParticleSize, TerrainDepth,
@@ -427,6 +438,11 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
 
   FIntVector MinVector = GetVectorTileId(FDVector(MinX, MinY, 0));
   FIntVector MaxVector = GetVectorTileId(FDVector(MaxX, MaxY, 0));
+
+  //UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::LoadTilesAtPosition Position X: %f, Y %f"), Position.X, Position.Y);
+  //UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::LoadTilesAtPosition Extension X: %f, Y %f"), Extension.X, Extension.Y);
+  //UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::LoadTilesAtPosition Loading Tiles Between X: %d %d Y: %d %d "), MinVector.X, MaxVector.X, MinVector.Y, MaxVector.Y );
+
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition::Process);
     for(auto it : Map) 
@@ -493,7 +509,6 @@ void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY
   PositionTranslated.Z = ( Position.Z * 0.01 ) + (Extension.Z * 0.5f);
   PositionToUpdate = PositionTranslated;
 
-
   double MinX = std::min( std::max( PositionTranslated.X - RadiusX, 0.0f) , static_cast<float>(Extension.X - 1.0f) );
   double MinY = std::min( std::max( PositionTranslated.Y - RadiusY, 0.0f) , static_cast<float>(-Extension.Y + 1.0f) );
   double MaxX = std::min( std::max( PositionTranslated.X + RadiusX, 0.0f) , static_cast<float>(Extension.X - 1.0f) );
@@ -502,12 +517,12 @@ void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY
   FIntVector MinVector = GetVectorTileId(FDVector(MinX, MinY, 0));
   FIntVector MaxVector = GetVectorTileId(FDVector(MaxX, MaxY, 0));
   
-  /*
-  UE_LOG(LogCarla, Log, TEXT("Position X: %f, Y %f"), Position.X, Position.Y);
-  UE_LOG(LogCarla, Log, TEXT("PositionTranslated X: %f, Y %f"), PositionTranslated.X, PositionTranslated.Y);
-  UE_LOG(LogCarla, Log, TEXT("PositionToUpdate X: %f, Y %f"), PositionToUpdate.X, PositionToUpdate.Y);
-  UE_LOG(LogCarla, Log, TEXT("Extension X: %f, Y %f"), Extension.X, Extension.Y);
-  UE_LOG(LogCarla, Log, TEXT("Loading Tiles Between X: %d %d Y: %d %d "), MinVector.X, MaxVector.X, MinVector.Y, MaxVector.Y );
+  
+  /*UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::Update Position X: %f, Y %f"), Position.X, Position.Y);
+  UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::Update PositionTranslated X: %f, Y %f"), PositionTranslated.X, PositionTranslated.Y);
+  UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::Update PositionToUpdate X: %f, Y %f"), PositionToUpdate.X, PositionToUpdate.Y);
+  UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::Update Extension X: %f, Y %f"), Extension.X, Extension.Y);
+  UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::Update Waiting Tiles Between X: %d %d Y: %d %d "), MinVector.X, MaxVector.X, MinVector.Y, MaxVector.Y );
   */
 
   {
@@ -582,7 +597,6 @@ void UCustomTerrainPhysicsComponent::InitTexture(){
   if(Data.Num() == 0){
     Data.Init(0, LimitX * LimitY);
   }
-  UpdateTextureData();
 }
 
 void UCustomTerrainPhysicsComponent::UpdateTextureData()
@@ -593,14 +607,22 @@ void UCustomTerrainPhysicsComponent::UpdateTextureData()
     float LimitX = TextureToUpdate->GetSizeX(); 
     float LimitY = TextureToUpdate->GetSizeY();
 
-    float TextureRadiusInCM = TextureRadius * MToCM;
+    float TextureRadiusInCM = (TextureRadius * MToCM);
     double InverseTextureRadiusInCM = 1/TextureRadiusInCM;
-    FVector OriginPosition = LastUpdatedPosition + (WorldSize * 0.5);
-    OriginPosition.Y = -OriginPosition.Y;
+    FVector OriginPosition;
+       
+    OriginPosition.X =  LastUpdatedPosition.X + (WorldSize.X * 0.5f);
+    OriginPosition.Y =  -LastUpdatedPosition.Y - (WorldSize.Y * 0.5f);
     OriginPosition.Z = 0; 
+
     TArray<FVector> ParticlesPositions;
     ParticlesPositions = GetParticlesInTileRadius(OriginPosition, TextureRadiusInCM);
     
+    /*
+    UE_LOG(LogCarla, Log, TEXT("UCustomTerrainPhysicsComponent::UpdateTextureData OriginPosition X: %f, Y %f"), OriginPosition.X, OriginPosition.Y);
+    UE_LOG(LogCarla, Log, TEXT("UCustomTerrainPhysicsComponent::UpdateTextureData LastUpdatedPosition X: %f, Y %f"), LastUpdatedPosition.X, LastUpdatedPosition.Y);
+    UE_LOG(LogCarla, Log, TEXT("UCustomTerrainPhysicsComponent::UpdateTextureData Particles Number %d"), ParticlesPositions.Num() );
+    */
     for( auto it2 : ParticlesPositions ) 
     {
       FVector ParticlePos = it2;
@@ -611,6 +633,14 @@ void UCustomTerrainPhysicsComponent::UpdateTextureData()
 
       // Create vector which is smaller than unit vector to get position in the texture
       FVector TexturePosition = ParticleOriginVector * (InverseTextureRadiusInCM);         
+      /*
+      UE_LOG(LogCarla, Log, TEXT("UCustomTerrainPhysicsComponent::UpdateTextureData ParticlePos X: %f Y: %f"), ParticlePos.X, ParticlePos.Y );
+      UE_LOG(LogCarla, Log, TEXT("UCustomTerrainPhysicsComponent::UpdateTextureData OriginPosition X: %f Y: %f"), OriginPosition.X, OriginPosition.Y );
+      UE_LOG(LogCarla, Log, TEXT("UCustomTerrainPhysicsComponent::UpdateTextureData ParticleOriginVector X: %f Y: %f"), ParticleOriginVector.X, ParticleOriginVector.Y );
+      UE_LOG(LogCarla, Log, TEXT("UCustomTerrainPhysicsComponent::UpdateTextureData A: TexturePosition X: %f Y: %f"), TexturePosition.X, TexturePosition.Y );
+      UE_LOG(LogCarla, Log, TEXT("UCustomTerrainPhysicsComponent::UpdateTextureData B: TexturePosition X: %f Y: %f"), TexturePosition.X, TexturePosition.Y );
+      UE_LOG(LogCarla, Log, TEXT("UCustomTerrainPhysicsComponent::UpdateTextureData C: TexturePosition X: %f Y: %f"), TexturePosition.X, TexturePosition.Y );
+      */
 
       // Move Vectors Center to 0.5
       TexturePosition.X += 1;
@@ -618,10 +648,12 @@ void UCustomTerrainPhysicsComponent::UpdateTextureData()
       TexturePosition.X *= 0.5f;
       TexturePosition.Y *= 0.5f;
 
+
       // Scale positions according to texture size
       TexturePosition.X = std::floor(TexturePosition.X * LimitX);
       TexturePosition.Y = std::floor(TexturePosition.Y * LimitY);      
       
+
       // Now we access to the proper position of the Data array and we update the value
       int32 Index = TexturePosition.X + (LimitX * TexturePosition.Y);
       uint8 CuurentHeightValue =  it2.Z * -1;
@@ -812,20 +844,6 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::TickComponent);
   Super::TickComponent(DeltaTime,TickType,ThisTickFunction);
-  
-  if( MPCInstance == nullptr )
-  {
-    if(MPC){
-      MPCInstance = GetWorld()->GetParameterCollectionInstance( MPC );
-    }
-  }
-
-  if( MPCInstance ){
-    MPCInstance->SetVectorParameterValue("PositionToUpdate", LastUpdatedPosition);
-    // We set texture radius in cm as is UE4 default measure unit
-    MPCInstance->SetScalarParameterValue("TextureRadius", TextureRadius * 100);
-    MPCInstance->SetScalarParameterValue("EffectMultiplayer", EffectMultiplayer); 
-  }
 
   TArray<AActor*> VehiclesActors;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACarlaWheeledVehicle::StaticClass(), VehiclesActors);
@@ -844,7 +862,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
       {
         //load new height map
         FCarlaMapTile* LargeMapTile = LargeMapManager->GetCarlaMapTile(TileId);
-        if(LargeMapTile)
+        if(LargeMapTile && false)
         {
           CurrentLargeMapTileId = CurrentTileId;
           FString FullTileNamePath = LargeMapTile->Name;
@@ -875,26 +893,59 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
           }          
         }
         else
-        {
+        {/*
           UE_LOG(LogCarla, Log, TEXT("Tile not found %s %s"), 
               *GlobalLocation.ToString(), *CurrentTileId.ToString());
+          */
         }
       }
     }
-    LastUpdatedPosition = UEFrameToSI(GlobalLocation);
+    LastUpdatedPosition = Vehicle->GetActorLocation();
+    
     SparseMap.Update(LastUpdatedPosition, Radius.X, Radius.Y);
     SparseMap.LockMutex();
-    RunNNPhysicsSimulation(Vehicle, DeltaTime);
+    //RunNNPhysicsSimulation(Vehicle, DeltaTime);
     SparseMap.UnLockMutex();
     UpdateTexture(Radius.X, Radius.Y);
-  }
-  
-  if(VehiclesActors.Num() == 0){
-    LastUpdatedPosition = FVector::ZeroVector;
-    SparseMap.Update(LastUpdatedPosition, Radius.X, Radius.Y);
-    UpdateTexture(Radius.X, Radius.Y);
+
+    if( MPCInstance == nullptr )
+    {
+      if(MPC){
+        MPCInstance = GetWorld()->GetParameterCollectionInstance( MPC );
+      }
+    }
+
+    if( MPCInstance ){
+      MPCInstance->SetVectorParameterValue("PositionToUpdate", LastUpdatedPosition);
+      // We set texture radius in cm as is UE4 default measure unit
+      MPCInstance->SetScalarParameterValue("TextureRadius", TextureRadius * 100);
+      MPCInstance->SetScalarParameterValue("EffectMultiplayer", EffectMultiplayer); 
+    }
   }
 
+  if(VehiclesActors.Num() == 0){
+    LastUpdatedPosition = FVector(100,100, 0);
+    
+    SparseMap.Update(LastUpdatedPosition, Radius.X, Radius.Y);
+    SparseMap.LockMutex();
+    //RunNNPhysicsSimulation(Vehicle, DeltaTime);
+    SparseMap.UnLockMutex();
+    UpdateTexture(Radius.X, Radius.Y);
+
+    if( MPCInstance == nullptr )
+    {
+      if(MPC){
+        MPCInstance = GetWorld()->GetParameterCollectionInstance( MPC );
+      }
+    }
+
+    if( MPCInstance ){
+      MPCInstance->SetVectorParameterValue("PositionToUpdate", LastUpdatedPosition);
+      // We set texture radius in cm as is UE4 default measure unit
+      MPCInstance->SetScalarParameterValue("TextureRadius", TextureRadius * 100);
+      MPCInstance->SetScalarParameterValue("EffectMultiplayer", EffectMultiplayer); 
+    }
+  }
   if (bDrawHeightMap)
   {
     float LifeTime = 0.3f;
