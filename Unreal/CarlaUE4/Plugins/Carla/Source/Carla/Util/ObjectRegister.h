@@ -32,6 +32,9 @@ public:
   void RegisterObjects(TArray<AActor*> Actors);
 
   UFUNCTION(Category = "Carla Object Register")
+  void UnRegisterObjects(TArray<AActor*> Actors);
+
+  UFUNCTION(Category = "Carla Object Register")
   void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
 
 private:
@@ -65,7 +68,7 @@ private:
   TMultiMap<uint64, const UStaticMeshComponent*> ObjectIdToComp;
 
   UPROPERTY(Category = "Carla Object Register", EditAnywhere)
-  TArray<FEnvironmentObject> EnvironmentObjects;
+  TMap<AActor*, FEnvironmentObject> EnvironmentObjects;
 
   int FoliageActorInstanceCount = 0;
 

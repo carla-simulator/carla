@@ -27,8 +27,9 @@ TArray<FEnvironmentObject> UObjectRegister::GetEnvironmentObjects(uint8 InTagQue
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
   bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::Any);
 
-  for(const FEnvironmentObject& It : EnvironmentObjects)
+  for(const auto & Pair : EnvironmentObjects)
   {
+    const FEnvironmentObject& It = Pair.Value;
     if(!FilterByTagEnabled || (It.ObjectLabel == TagQueried))
     {
       Result.Emplace(It);
@@ -84,8 +85,9 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
   FileContent += FString::Printf(TEXT("Num actors %d\n"), Actors.Num());
   FileContent += FString::Printf(TEXT("Num registered objects %d\n\n"), EnvironmentObjects.Num());
 
-  for(const FEnvironmentObject& Object : EnvironmentObjects)
+  for(const auto & Pair : EnvironmentObjects)
   {
+    const FEnvironmentObject& Object = Pair.Value;
     FileContent += FString::Printf(TEXT("%llu\t"), Object.Id);
     FileContent += FString::Printf(TEXT("%s\t"), *Object.Name);
     FileContent += FString::Printf(TEXT("%s\t"), *Object.IdStr);
@@ -105,13 +107,27 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
 
 }
 
+void UObjectRegister::UnRegisterObjects(TArray<AActor*> Actors)
+{
+  for (AActor* Actor : Actors)
+  {
+    FEnvironmentObject* Object = EnvironmentObjects.Find(Actor);
+    if (Object)
+    {
+      ObjectIdToComp.Remove(Object->Id);
+    }
+    EnvironmentObjects.Remove(Actor);
+  }
+}
+
 void UObjectRegister::EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable)
 {
   for(uint64 It : EnvObjectIds)
   {
     bool found = false;
-    for(FEnvironmentObject& EnvironmentObject : EnvironmentObjects)
-    {
+  for(auto & Pair : EnvironmentObjects)
+  {
+      FEnvironmentObject& EnvironmentObject = Pair.Value;
       if(It == EnvironmentObject.Id)
       {
         EnableEnvironmentObject(EnvironmentObject, Enable);
@@ -145,7 +161,7 @@ void UObjectRegister::RegisterEnvironmentObject(
   EnvironmentObject.BoundingBox = BoundingBox;
   EnvironmentObject.ObjectLabel = static_cast<crp::CityObjectLabel>(Tag);
   EnvironmentObject.Type = Type;
-  EnvironmentObjects.Emplace(std::move(EnvironmentObject));
+  EnvironmentObjects.Add(Actor, std::move(EnvironmentObject));
 }
 
 void UObjectRegister::RegisterVehicle(ACarlaWheeledVehicle* Vehicle)
@@ -195,7 +211,7 @@ void UObjectRegister::RegisterTrafficLight(ATrafficLightBase* TrafficLight)
     EnvironmentObject.BoundingBox = BB;
     EnvironmentObject.Type = EnvironmentObjectType::TrafficLight;
     EnvironmentObject.ObjectLabel = ObjectLabel;
-    EnvironmentObjects.Emplace(EnvironmentObject);
+    EnvironmentObjects.Add(TrafficLight, EnvironmentObject);
 
     // Register components with its ID; it's not the best solution since we are recalculating the BBs
     // But this is only calculated when the level is loaded
@@ -265,7 +281,7 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
 
       EnvironmentObject.Type = EnvironmentObjectType::ISMComp;
       EnvironmentObject.ObjectLabel = static_cast<crp::CityObjectLabel>(Tag);
-      EnvironmentObjects.Emplace(EnvironmentObject);
+      EnvironmentObjects.Add(Actor, EnvironmentObject);
 
       ObjectIdToComp.Emplace(InstanceId, Comp);
       InstanceCount++;
@@ -307,7 +323,7 @@ void UObjectRegister::RegisterSMComponents(AActor* Actor)
     EnvironmentObject.BoundingBox = BBs[i];
     EnvironmentObject.Type = EnvironmentObjectType::SMComp;
     EnvironmentObject.ObjectLabel = static_cast<crp::CityObjectLabel>(Tags[i]);
-    EnvironmentObjects.Emplace(EnvironmentObject);
+    EnvironmentObjects.Add(Actor, EnvironmentObject);
   }
 }
 
@@ -340,7 +356,7 @@ void UObjectRegister::RegisterSKMComponents(AActor* Actor)
     EnvironmentObject.BoundingBox = BBs[i];
     EnvironmentObject.Type = EnvironmentObjectType::SKMComp;
     EnvironmentObject.ObjectLabel = static_cast<crp::CityObjectLabel>(Tags[i]);
-    EnvironmentObjects.Emplace(EnvironmentObject);
+    EnvironmentObjects.Add(Actor,EnvironmentObject);
 
   }
 

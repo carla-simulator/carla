@@ -112,6 +112,10 @@ public:
 
   TArray<FString> GetNamesOfAllActors();
 
+  void RegisterEnvironmentObjectsInLevel(ULevel *Level);
+
+  void UnRegisterEnvironmentObjectsInLevel(ULevel *Level);
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;

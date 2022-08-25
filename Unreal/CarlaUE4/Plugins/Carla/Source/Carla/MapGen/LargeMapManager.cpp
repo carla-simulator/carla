@@ -5,7 +5,7 @@
 #include "LargeMapManager.h"
 
 #include "Engine/WorldComposition.h"
-
+#include "Carla/Game/CarlaGameModeBase.h"
 #include "UncenteredPivotPointMesh.h"
 
 #include "Walker/WalkerBase.h"
@@ -110,6 +110,8 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
   LM_LOG(Warning, "OnLevelAddedToWorld");
   ATagger::TagActorsInLevel(*InLevel, true);
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(InWorld);
+  GameMode->RegisterEnvironmentObjectsInLevel(InLevel);
 }
 
 void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
@@ -118,6 +120,8 @@ void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
   FCarlaMapTile& Tile = GetCarlaMapTile(InLevel);
   Tile.TilesSpawned = false;
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(InWorld);
+  GameMode->UnRegisterEnvironmentObjectsInLevel(InLevel);
 }
 
 void ALargeMapManager::RegisterInitialObjects()

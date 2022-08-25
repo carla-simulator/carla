@@ -633,6 +633,16 @@ void ACarlaGameModeBase::RegisterEnvironmentObjects()
   ObjectRegister->RegisterObjects(FoundActors);
 }
 
+void ACarlaGameModeBase::RegisterEnvironmentObjectsInLevel(ULevel *Level)
+{
+  ObjectRegister->RegisterObjects(Level->Actors);
+}
+
+void ACarlaGameModeBase::UnRegisterEnvironmentObjectsInLevel(ULevel *Level)
+{
+  ObjectRegister->UnRegisterObjects(Level->Actors);
+}
+
 void ACarlaGameModeBase::EnableEnvironmentObjects(
   const TSet<uint64>& EnvObjectIds,
   bool Enable)
