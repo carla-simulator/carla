@@ -62,6 +62,7 @@ struct FDenseTile
   void GetParticlesInBox(const FOrientedBox& OBox, std::vector<FParticle*> &ParticlesInRadius);
 
   std::vector<FParticle> Particles;
+  std::vector<FDVector> ParticlesHeightMap;
   FDVector TilePosition;
   FString SavePath;
 };
@@ -87,6 +88,7 @@ public:
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
   std::vector<FParticle*> GetParticlesInTileRadius(FDVector Position, float Radius);
   std::vector<FParticle*> GetParticlesInBox(const FOrientedBox& OBox);
+  std::vector<FDVector> GetParticlesHeightMapInTileRadius(FDVector Position, float Radius);
 
   FDenseTile& GetTile(uint32_t Tile_X, uint32_t Tile_Y);
   FDenseTile& GetTile(FDVector Position);
@@ -158,9 +160,6 @@ struct FForceAtLocation
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FVector Location;
 };
-
-
-
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UCustomTerrainPhysicsComponent : public UActorComponent
