@@ -24,8 +24,6 @@ private:
 
   /// Map containing the vehicles entering a specific junction, ordered by time of arrival.
   std::unordered_map<JunctionID, std::deque<ActorId>> entering_vehicles_map;
-  /// Map containing the vehicles exiting a specific junction.
-  std::unordered_map<JunctionID, std::deque<ActorId>> exiting_vehicles_map;
   /// Map linking the vehicles with their current junction. Used for easy access to the previous two maps.
   std::unordered_map<ActorId, JunctionID> vehicle_last_junction;
   /// Map containing the timestamp at which the actor first stopped at a stop sign.
@@ -37,11 +35,14 @@ private:
   /// This controls all vehicle's interactions at non signalized junctions. Priorities are done by order of arrival
   /// and no two vehicle will enter the junction at the same time. Only once it is exiting can the next one enter.
   /// Additionally, all vehicles will always brake at the stop sign for a set amount of time.
-  bool HandleNonSignalisedJunction(const ActorId ego_actor_id, const Junction junction,
-                                   const Buffer &waypoint_buffer, cc::Timestamp timestamp);
+  bool HandleNonSignalisedJunction(const ActorId ego_actor_id, const JunctionID junction_id,
+                                   cc::Timestamp timestamp);
 
   /// Initialized the vehicle to the non-signalized junction maps
-  void AddActorToNonSignalisedJunction(const ActorId ego_actor_id, const Junction junction);
+  void AddActorToNonSignalisedJunction(const ActorId ego_actor_id, const JunctionID junction_id);
+
+  /// Get current affected junction id for the vehicle
+  JunctionID GetAffectedJunctionId(const ActorId ego_actor_id);
 
 public:
   TrafficLightStage(const std::vector<ActorId> &vehicle_id_list,

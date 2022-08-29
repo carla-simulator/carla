@@ -133,6 +133,7 @@ FActorSpawnResult ASensorFactory::SpawnActor(
   {
     auto *Episode = GameInstance->GetCarlaEpisode();
     check(Episode != nullptr);
+    
     Sensor->SetEpisode(*Episode);
     Sensor->Set(Description);
     Sensor->SetDataStream(GameInstance->GetServer().OpenStream());
