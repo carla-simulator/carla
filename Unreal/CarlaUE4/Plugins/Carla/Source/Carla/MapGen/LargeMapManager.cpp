@@ -741,14 +741,15 @@ void ALargeMapManager::ConvertActiveToDormantActors()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::ConvertActiveToDormantActors);
   UWorld* World = GetWorld();
-  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
+  // UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);
 
   // These actors are on dormant state so remove them from active actors
   // But save them on the dormant array first
   for(FCarlaActor::IdType Id : ActiveToDormantActors)
   {
     // To dormant state
-    CarlaEpisode->PutActorToSleep(Id);
+    GameMode->PutActorToSleep(Id);
 
     LM_LOG(Warning, "Converting Active To Dormant... %d", Id);
 
@@ -816,12 +817,13 @@ void ALargeMapManager::ConvertDormantToActiveActors()
   TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::ConvertDormantToActiveActors);
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);
 
   for(FCarlaActor::IdType Id : DormantToActiveActors)
   {
     LM_LOG(Warning, "Converting %d Dormant To Active", Id);
 
-    CarlaEpisode->WakeActorUp(Id);
+    GameMode->WakeActorUp(Id);
 
     FCarlaActor* View = CarlaEpisode->FindCarlaActor(Id);
 

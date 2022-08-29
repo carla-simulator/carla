@@ -630,17 +630,45 @@ void ACarlaGameModeBase::RegisterEnvironmentObjects()
   // Get all actors of the level
   TArray<AActor*> FoundActors;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), FoundActors);
-  ObjectRegister->RegisterObjects(FoundActors);
+  ObjectRegister->RegisterInitialObjects(FoundActors);
 }
 
 void ACarlaGameModeBase::RegisterEnvironmentObjectsInLevel(ULevel *Level)
 {
   ObjectRegister->RegisterObjects(Level->Actors);
+  for (AActor * Actor : Level->Actors)
+  {
+    UE_LOG(LogCarla, Log, TEXT("Regiter %s"), *Actor->GetName());
+  }
 }
 
 void ACarlaGameModeBase::UnRegisterEnvironmentObjectsInLevel(ULevel *Level)
 {
   ObjectRegister->UnRegisterObjects(Level->Actors);
+    for (AActor * Actor : Level->Actors)
+  {
+    UE_LOG(LogCarla, Log, TEXT("UNRegiter %s"), *Actor->GetName());
+  }
+}
+
+void ACarlaGameModeBase::PutActorToSleep(carla::rpc::ActorId ActorId)
+{
+  FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+  if (CarlaActor && CarlaActor->GetActor())
+  {
+    ObjectRegister->UnRegisterObjects({CarlaActor->GetActor()});
+  }
+  Episode->PutActorToSleep(ActorId);
+}
+
+void ACarlaGameModeBase::WakeActorUp(carla::rpc::ActorId ActorId)
+{
+  Episode->WakeActorUp(ActorId);
+  // FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+  // if (CarlaActor && CarlaActor->GetActor())
+  // {
+  //   ObjectRegister->RegisterObjects({CarlaActor->GetActor()});
+  // }
 }
 
 void ACarlaGameModeBase::EnableEnvironmentObjects(

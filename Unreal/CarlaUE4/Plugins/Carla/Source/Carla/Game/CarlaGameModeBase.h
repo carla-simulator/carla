@@ -96,6 +96,10 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Carla Game Mode")
   void OnUnloadStreamLevel();
 
+  void PutActorToSleep(carla::rpc::ActorId ActorId);
+
+  void WakeActorUp(carla::rpc::ActorId ActorId);
+
   ALargeMapManager* GetLMManager() const {
     return LMManager;
   }
@@ -138,6 +142,7 @@ private:
 
   void ParseOpenDrive();
 
+  // registers currently loaded objects (clears previous registry)
   void RegisterEnvironmentObjects();
 
   void ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames);

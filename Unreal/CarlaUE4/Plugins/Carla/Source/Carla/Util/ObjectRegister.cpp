@@ -39,10 +39,15 @@ TArray<FEnvironmentObject> UObjectRegister::GetEnvironmentObjects(uint8 InTagQue
   return Result;
 }
 
-void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
+void UObjectRegister::RegisterInitialObjects(TArray<AActor*> Actors)
 {
   // Empties the array but doesn't change memory allocations
   EnvironmentObjects.Reset();
+  RegisterObjects(Actors);
+}
+
+void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
+{
 
   for(AActor* Actor : Actors)
   {
