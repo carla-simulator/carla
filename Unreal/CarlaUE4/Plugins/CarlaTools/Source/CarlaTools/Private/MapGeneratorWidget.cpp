@@ -9,6 +9,7 @@
 #include "ActorFactories/ActorFactory.h"
 #include "AssetRegistryModule.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "Carla/Weather/Weather.h"
 #include "Components/SplineComponent.h"
 #include "Editor/FoliageEdit/Public/FoliageEdMode.h"
 #include "EditorLevelLibrary.h"
@@ -19,6 +20,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Landscape.h"
 #include "LandscapeProxy.h"
+#include "Misc/FileHelper.h"
+#include "Misc/CString.h"
 #include "ProceduralFoliageComponent.h"
 #include "ProceduralFoliageVolume.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
@@ -30,6 +33,11 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/ObjectMacros.h"
+
+#include "Dom/JsonObject.h"
+#include "JsonObjectConverter.h"
+#include "Serialization/JsonSerializer.h"
+#include "Serialization/JsonReader.h"
 
 #define CUR_CLASS_FUNC (FString(__FUNCTION__))
 #define CUR_LINE  (FString::FromInt(__LINE__))
@@ -219,9 +227,14 @@ AActor* UMapGeneratorWidget::GenerateWater(TSubclassOf<class AActor> RiverClass)
 
   UWorld* World = GetWorld();
 
-  float ActorZCoord = GetLandscapeSurfaceHeight(World, 0, 0, false);
-  FVector Location(20000, 20000, ActorZCoord); // Auxiliar values for x and y coords
-  FRotator Rotation(0,0,0);
+  float XCoord = 2000;
+  float YCoord = 2000;
+
+  float ZRot = 50;
+
+  float ActorZCoord = GetLandscapeSurfaceHeight(World, XCoord, YCoord, false);
+  FVector Location(XCoord, YCoord, ActorZCoord+5); // Auxiliar values for x and y coords
+  FRotator Rotation(0, ZRot, 0);
   FActorSpawnParameters SpawnInfo;
   
   
@@ -243,6 +256,68 @@ AActor* UMapGeneratorWidget::GenerateWater(TSubclassOf<class AActor> RiverClass)
   }
 
   return RiverActor;
+}
+
+bool UMapGeneratorWidget::GenerateWaterFromWorld(UWorld* RiversWorld, TSubclassOf<class AActor> RiverClass)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Generating Rivers from world %s"), 
+        *CUR_CLASS_FUNC_LINE, *RiversWorld->GetMapName());
+
+  TArray<AActor*> RiversActors;
+  UGameplayStatics::GetAllActorsOfClass(RiversWorld, RiverClass, RiversActors);
+
+  if(RiversActors.Num() <= 0)
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: No Rivers Found in %s"), 
+        *CUR_CLASS_FUNC_LINE, *RiversWorld->GetMapName());
+    return false;
+  }
+
+  float RiverSurfaceDisplacement = 100.0f;
+  for(AActor* RiverActor : RiversActors)
+  {
+    USplineComponent* RiverSpline = dynamic_cast<USplineComponent*>(RiverActor->GetComponentByClass(USplineComponent::StaticClass()));
+    for(int i = 0; i < RiverSpline->GetNumberOfSplinePoints(); i++)
+    {
+      FVector SplinePosition = RiverSpline->GetWorldLocationAtSplinePoint(i);
+      SplinePosition.Z = GetLandscapeSurfaceHeight(RiversWorld, SplinePosition.X, SplinePosition.Y, false) + RiverSurfaceDisplacement;
+      RiverSpline->SetWorldLocationAtSplinePoint(i, SplinePosition);
+    }
+
+  }
+  return true;
+}
+
+UWorld* UMapGeneratorWidget::DuplicateWorld(FString BaseWorldPath, FString TargetWorldPath, const FString NewWorldName)
+{
+  UWorld* DuplicateWorld;
+
+  UWorld* BaseWorld = LoadObject<UWorld>(nullptr, *BaseWorldPath);
+  if(BaseWorld == nullptr)
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: No World Found in %s"), 
+        *CUR_CLASS_FUNC_LINE, *BaseWorldPath);
+    return nullptr;
+  }
+
+  const FString PackageName = TargetWorldPath + "/" + NewWorldName;
+  UPackage* WorldPackage = CreatePackage(*PackageName);
+
+  FObjectDuplicationParameters Parameters(BaseWorld, WorldPackage);
+  Parameters.DestName = FName(*NewWorldName);
+  Parameters.DestClass = BaseWorld->GetClass();
+  Parameters.DuplicateMode = EDuplicateMode::World;
+  Parameters.PortFlags = PPF_Duplicate;
+
+  DuplicateWorld = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
+
+  const FString PackageFileName = FPackageName::LongPackageNameToFilename(
+          PackageName, 
+          FPackageName::GetMapPackageExtension());
+      UPackage::SavePackage(WorldPackage, DuplicateWorld, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
+          *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+
+  return DuplicateWorld;
 }
 
 AActor* UMapGeneratorWidget::AddWeatherToExistingMap(TSubclassOf<class AActor> WeatherActorClass, 
@@ -268,10 +343,110 @@ AActor* UMapGeneratorWidget::AddWeatherToExistingMap(TSubclassOf<class AActor> W
   const FString WorldToLoadPath = MapCompletePath + "." + MetaInfo.MapName;
   UWorld* World = LoadObject<UWorld>(nullptr, *WorldToLoadPath);
 
-  AActor* WeatherActor = World->SpawnActor<AActor>(WeatherActorClass);
+  AActor* WeatherActor = UGameplayStatics::GetActorOfClass(World, AWeather::StaticClass());
+
+  if(WeatherActor == nullptr)
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating a new weather actor to world"), 
+        *CUR_CLASS_FUNC_LINE);
+
+    WeatherActor = World->SpawnActor<AActor>(WeatherActorClass);
+  }
 
   return WeatherActor;  
 
+}
+
+TMap<FRoiTile, FVegetationROI> UMapGeneratorWidget::CreateVegetationRoisMap(TArray<FVegetationROI> VegetationRoisArray)
+{
+  TMap<FRoiTile, FVegetationROI> ResultMap;
+  for(FVegetationROI VegetationRoi : VegetationRoisArray)
+  {
+    for(FRoiTile VegetationRoiTile : VegetationRoi.TilesList)
+    {
+      ResultMap.Add(VegetationRoiTile, VegetationRoi);
+    }
+  }
+  return ResultMap;
+}
+
+TMap<FRoiTile, FTerrainROI> UMapGeneratorWidget::CreateTerrainRoisMap(TArray<FTerrainROI> TerrainRoisArray)
+{
+  TMap<FRoiTile, FTerrainROI> ResultMap;
+  for(FTerrainROI TerrainRoi : TerrainRoisArray)
+  {
+    for(FRoiTile TerrainRoiTile : TerrainRoi.TilesList)
+    {
+      ResultMap.Add(TerrainRoiTile, TerrainRoi);
+    }
+  }
+  return ResultMap;
+}
+
+bool UMapGeneratorWidget::DeleteAllVegetationInMap(const FString Path, const FString MapName)
+{
+  TArray<FAssetData> AssetsData;
+  const FString TilesPath = Path;
+  bool success = LoadWorlds(AssetsData, TilesPath);
+  if(!success || AssetsData.Num() <= 0)
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("No Tiles found in %s. Vegetation cooking Aborted!"), *TilesPath);
+    return false;
+  }
+
+  // Cook vegetation for each of the maps
+  for(FAssetData AssetData : AssetsData)
+  {
+    UWorld* World = GetWorldFromAssetData(AssetData);
+    TArray<AActor*> FoliageVolumeActors;
+    UGameplayStatics::GetAllActorsOfClass(World, AProceduralFoliageVolume::StaticClass(), FoliageVolumeActors);
+    for(AActor* FoliageActor : FoliageVolumeActors)
+    {
+      FoliageActor->Destroy();
+    }
+
+    SaveWorld(World);
+  }
+
+  return true;
+}
+
+bool UMapGeneratorWidget::GenerateWidgetStateFileFromStruct(FMapGeneratorWidgetState WidgetState, const FString JsonPath)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating Widget State JSON"), 
+      *CUR_CLASS_FUNC_LINE);
+
+  TSharedRef<FJsonObject> OutJsonObject = MakeShareable(new FJsonObject());
+  FJsonObjectConverter::UStructToJsonObject(FMapGeneratorWidgetState::StaticStruct(), &WidgetState, OutJsonObject, 0, 0);
+
+  FString OutputJsonString;
+  TSharedRef<TJsonWriter<>> JsonWriter = TJsonWriterFactory<>::Create(&OutputJsonString);
+  FJsonSerializer::Serialize(OutJsonObject, JsonWriter);
+
+  FFileHelper::SaveStringToFile(OutputJsonString, *JsonPath);
+
+  return true;
+}
+
+FMapGeneratorWidgetState UMapGeneratorWidget::LoadWidgetStateStructFromFile(const FString JsonPath)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating Widget State Struct from JSON"), 
+      *CUR_CLASS_FUNC_LINE);
+
+  FMapGeneratorWidgetState WidgetState;
+  FString File;
+  FFileHelper::LoadFileToString(File, *JsonPath);
+
+  TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(*File);
+  TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+  bool bDeserializeSuccess = FJsonSerializer::Deserialize(JsonReader, JsonObject, FJsonSerializer::EFlags::None);
+
+  if (bDeserializeSuccess && JsonObject.IsValid())
+	{
+    FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), FMapGeneratorWidgetState::StaticStruct(), &WidgetState, 1, 0);
+  }
+
+  return WidgetState;
 }
 
 bool UMapGeneratorWidget::LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath, bool bRecursive)
@@ -442,8 +617,26 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Heightmap detected with dimensions %dx%d"), 
             *CUR_CLASS_FUNC_LINE, HeightRT->SizeX, HeightRT->SizeY);
       TArray<uint16> HeightData;
-      // TODO: UTexture2D and GetMipData
-      UpdateTileRT(i, MetaInfo.SizeY-j-1);
+      
+      FMapGeneratorTileMetaInfo TileMetaInfo;
+      TileMetaInfo.IndexX = i;
+      TileMetaInfo.IndexY = MetaInfo.SizeY-j-1;
+      TileMetaInfo.MapMetaInfo = MetaInfo;
+      
+
+      // River Management
+      if(FMath::RandRange(0.0f, 100.0f) < MetaInfo.RiverChanceFactor)
+      {
+        TileMetaInfo.ContainsRiver = true;
+      }
+      else
+      {
+        TileMetaInfo.ContainsRiver = false;
+      }
+
+      // Update and get heightmap from texture
+      UpdateTileRT(TileMetaInfo);
+
       FTextureRenderTargetResource* RenderTargetResource = HeightRT->GameThread_GetRenderTargetResource();
       FIntRect Rect = FIntRect(0, 0, HeightRT->SizeX, HeightRT->SizeY);
       TArray<FLinearColor> HeightmapColor;
@@ -456,6 +649,106 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       {
         HeightData.Add((uint16)(LinearColor.R * 255 * 255 + LinearColor.G * 255));
       }
+
+      // Terrain ROI
+      FRoiTile ThisTileIndex(i, j);
+      if(FRegionOfInterest::IsTileInRegionsSet(ThisTileIndex, MetaInfo.TerrainRoisMap))
+      {
+        FTerrainROI TileRegion = MetaInfo.TerrainRoisMap[ThisTileIndex];
+
+        // Update ROI RT with ROI material
+        UpdateTileRoiRT(TileMetaInfo, TileRegion.RoiMaterialInstance);
+
+        UTextureRenderTarget2D* RoiHeightRT = TileRegion.RoiHeightmapRenderTarget;
+        TArray<uint16> RoiHeightData;
+        FTextureRenderTargetResource* RoiRenderTargetResource = RoiHeightRT->GameThread_GetRenderTargetResource();
+        FIntRect RoiRect = FIntRect(0, 0, RoiHeightRT->SizeX, RoiHeightRT->SizeY);
+        TArray<FLinearColor> RoiHeightmapColor;
+        RoiHeightmapColor.Reserve(RoiRect.Width() * RoiRect.Height());
+        RoiRenderTargetResource->ReadLinearColorPixels(RoiHeightmapColor, FReadSurfaceDataFlags(RCM_MinMax, CubeFace_MAX), RoiRect);
+        RoiHeightData.Reserve(RoiHeightmapColor.Num());
+
+        for(FLinearColor RoiLinearColor : RoiHeightmapColor)
+        {
+          RoiHeightData.Add((uint16)(RoiLinearColor.R * 255 * 255 + RoiLinearColor.G * 255));
+        }
+
+
+        int FlateningMargin = 30;   // Not flatened
+        int FlateningFalloff = 100; // Transition from actual and flat value
+        int TileSize = 1009; // Should be calculated by sqrt(HeightData.Num())
+
+        for(int X = FlateningMargin; X < (TileSize - FlateningMargin); X++)
+        {
+          for(int Y = FlateningMargin; Y < (TileSize - FlateningMargin); Y++)
+          {
+            float TransitionFactor = 1.0f;
+
+            if(X < (FlateningMargin + FlateningFalloff))
+            {
+              TransitionFactor *= (X - FlateningMargin) / (float) FlateningFalloff;
+            }
+            if(Y < (FlateningMargin + FlateningFalloff))
+            {
+              TransitionFactor *= (Y - FlateningMargin) / (float) FlateningFalloff;
+            }
+            if(X > (TileSize - FlateningMargin - FlateningFalloff))
+            {
+              TransitionFactor *= 1 - ((X - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
+            }
+            if(Y > (TileSize - FlateningMargin - FlateningFalloff))
+            {
+              TransitionFactor *= 1 - ((Y - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
+            }
+            HeightData[(X * TileSize) + Y] = (RoiHeightData[(X * TileSize) + Y]) * TransitionFactor +  HeightData[(X * TileSize) + Y] * (1-TransitionFactor);
+          }
+        }
+
+      }
+
+      // Flatening if contains river
+      // TODO: Move this if to a function
+      // TODO: Check and fix flatening algorithm
+      if(TileMetaInfo.ContainsRiver)
+      {
+        int FlateningMargin = 30;   // Not flatened
+        int FlateningFalloff = 100; // Transition from actual and flat value
+        int TileSize = 1009; // Should be calculated by sqrt(HeightData.Num())
+
+        for(int X = FlateningMargin; X < (TileSize - FlateningMargin); X++)
+        {
+          for(int Y = FlateningMargin; Y < (TileSize - FlateningMargin); Y++)
+          {
+            float TransitionFactor = 1.0f;
+
+            if(X < (FlateningMargin + FlateningFalloff))
+            {
+              TransitionFactor *= (X - FlateningMargin) / (float) FlateningFalloff;
+            }
+            if(Y < (FlateningMargin + FlateningFalloff))
+            {
+              TransitionFactor *= (Y - FlateningMargin) / (float) FlateningFalloff;
+            }
+            if(X > (TileSize - FlateningMargin - FlateningFalloff))
+            {
+              TransitionFactor *= 1 - ((X - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
+            }
+            if(Y > (TileSize - FlateningMargin - FlateningFalloff))
+            {
+              TransitionFactor *= 1 - ((Y - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
+            }
+            
+            // HeightData[(X * TileSize) + Y] = (HeightData[(X * TileSize) + Y] * MetaInfo.RiverFlateningFactor) * TransitionFactor +  HeightData[(X * TileSize) + Y] * (1-TransitionFactor);
+          }
+        }
+        DuplicateWorld("/CarlaTools/MapGenerator/Rivers/RiverPresets/River01/RiverPreset01.RiverPreset01",
+            MetaInfo.DestinationPath + "/Rivers", MapName + "_River");
+      }
+
+      // Smooth process
+      TArray<uint16> SmoothedData;
+      SmoothHeightmap(HeightData, SmoothedData);
+      HeightData = SmoothedData;
 
       FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f);
       Landscape->CreateLandscapeInfo();
@@ -492,6 +785,8 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
             *CUR_CLASS_FUNC_LINE, *ErrorUnloadingStr.ToString());
         return false;
       }
+
+      // TODO: Instantiate water if needed
     }
   }
 
@@ -546,8 +841,24 @@ bool UMapGeneratorWidget::CookVegetationToTiles(const FMapGeneratorMetaInfo& Met
       return false;
     }
 
+    // ROI checks
+    int TileIndexX, TileIndexY;
+    ExtractCoordinatedFromMapName(World->GetMapName(), TileIndexX, TileIndexY);
+
+    FRoiTile ThisTileIndex(TileIndexX, TileIndexY);
+    TArray<UProceduralFoliageSpawner*> FoliageSpawnersToCook;
+    if(FRegionOfInterest::IsTileInRegionsSet(ThisTileIndex, MetaInfo.VegetationRoisMap))
+    {
+      FVegetationROI TileRegion = MetaInfo.VegetationRoisMap[ThisTileIndex];
+      FoliageSpawnersToCook = TileRegion.GetFoliageSpawners();
+    }
+    else
+    {
+      FoliageSpawnersToCook = MetaInfo.FoliageSpawners;
+    }
+
     // Cook vegetation to world
-    bool bVegetationSuccess = CookVegetationToWorld(World, MetaInfo.FoliageSpawners);
+    bool bVegetationSuccess = CookVegetationToWorld(World, FoliageSpawnersToCook);
     if(!bVegetationSuccess){
       UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Cooking Vegetation in %s"),
           *CUR_CLASS_FUNC_LINE, *MapNameToLoad);
@@ -629,39 +940,73 @@ float UMapGeneratorWidget::GetLandscapeSurfaceHeight(UWorld* World, float x, flo
 {
   if(World)
   {
-    FVector RayStartingPoint(x, y, 999999);
-    FVector RayEndPoint(x, y, -999999);
-
-    // Raytrace
-    FHitResult HitResult;
-    World->LineTraceSingleByObjectType(
-        OUT HitResult,
-        RayStartingPoint,
-        RayEndPoint,
-        FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldStatic),
-        FCollisionQueryParams());
-
-    // Draw debug line.
-    if (bDrawDebugLines)
-    {
-      FColor LineColor;
-
-      if (HitResult.GetActor()) LineColor = FColor::Red;
-      else LineColor = FColor::Green;
-
-      DrawDebugLine(
-          World,
-          RayStartingPoint,
-          RayEndPoint,
-          LineColor,
-          true,
-          5.f,
-          0.f,
-          10.f);
-    }
-
-    // Return Z Location.
-    if (HitResult.GetActor()) return HitResult.ImpactPoint.Z;
+    ALandscape* Landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
+        World, 
+        ALandscape::StaticClass());
+    
+    FVector Location(x, y, 0);
+    TOptional<float> Height = Landscape->GetHeightAtLocation(Location);
+    // TODO: Change function return type to TOptional<float>
+    return Height.IsSet() ? Height.GetValue() : 0.0f;
   }
   return 0.0f;
+}
+
+void UMapGeneratorWidget::ExtractCoordinatedFromMapName(const FString MapName, int& X, int& Y)
+{
+  FString Name, Coordinates;
+  MapName.Split(TEXT("_Tile_"), &Name, &Coordinates);
+
+  FString XStr, YStr;
+  Coordinates.Split(TEXT("_"), &XStr, &YStr);
+
+  X = FCString::Atoi(*XStr);
+  Y = FCString::Atoi(*YStr);
+}
+
+void UMapGeneratorWidget::SmoothHeightmap(TArray<uint16> HeightData, TArray<uint16>& OutHeightData)
+{
+  TArray<uint16> SmoothedData(HeightData);
+
+  // Prepare Gaussian Kernel
+  int KernelSize = 5;
+  int KernelWeight = 273; 
+  float Kernel[] = {1,  4,  7,  4,  1,
+                    4, 16, 26, 16,  4,
+                    7, 26, 41, 26,  7,
+                    4, 16, 26, 16,  4,
+                    1,  4,  7,  4,  1};
+
+  TArray<float> SmoothKernel;
+  for(int i = 0; i < KernelSize*KernelSize; i++)
+  {
+    SmoothKernel.Add(Kernel[i] / KernelWeight);
+  }
+
+  // Apply kernel to height data
+  int TileMargin = 2;
+  int TileSize = 1009; // Should be calculated by sqrt(HeightData.Num())
+
+  for(int X = TileMargin; X < (TileSize - TileMargin); X++)
+  {
+    for(int Y = TileMargin; Y < (TileSize - TileMargin); Y++)
+    {
+      int Value = 0;
+
+      for(int i = -2; i <= 2; i++)
+      {
+        for(int j = -2; j <=2; j++)
+        {
+          float KernelValue = SmoothKernel[(i+2)*2 + (j+2)];
+          int HeightValue = HeightData[ (X+i) * TileSize + (Y+j) ];
+
+          Value += (int) ( KernelValue * HeightValue );
+        }
+      }
+
+      SmoothedData[(X * TileSize) + Y] = Value;
+    }
+  }
+
+  OutHeightData = SmoothedData;
 }
