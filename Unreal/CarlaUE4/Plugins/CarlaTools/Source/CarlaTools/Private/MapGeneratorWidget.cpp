@@ -283,47 +283,8 @@ bool UMapGeneratorWidget::GenerateWaterFromWorld(UWorld* RiversWorld, TSubclassO
       SplinePosition.Z = GetLandscapeSurfaceHeight(RiversWorld, SplinePosition.X, SplinePosition.Y, false) + RiverSurfaceDisplacement;
       RiverSpline->SetWorldLocationAtSplinePoint(i, SplinePosition);
     }
-    
+
   }
-
-  // UWorld* RiverPresetWorld =  LoadObject<UWorld>(nullptr, *RiverPresetMapName);
-
-  // TArray<AActor*> RiverPresetActors;
-
-  // UGameplayStatics::GetAllActorsOfClass(RiverPresetWorld, RiverClass, RiverPresetActors);
-
-  // 
-
-  // UWorld* World = GetWorld();
-
-  // float XCoord = 2000;
-  // float YCoord = 2000;
-
-  // float ZRot = 50;
-
-  // float ActorZCoord = GetLandscapeSurfaceHeight(World, XCoord, YCoord, false);
-  // FVector Location(XCoord, YCoord, ActorZCoord+5); // Auxiliar values for x and y coords
-  // FRotator Rotation(0, ZRot, 0);
-  // FActorSpawnParameters SpawnInfo;
-  
-  
-  // AActor* RiverActor =  World->SpawnActor<AActor>(
-  //     RiverClass, 
-  //     Location, 
-  //     Rotation, 
-  //     SpawnInfo);
-
-  // USplineComponent* RiverSpline = RiverActor->FindComponentByClass<USplineComponent>();
-
-  // int NumberOfPoints = RiverSpline->GetNumberOfSplinePoints();
-
-  // for(int i = 0; i < NumberOfPoints; i++)
-  // {
-  //   FVector PointPosition = RiverSpline->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World);
-  //   PointPosition.Z = GetLandscapeSurfaceHeight(World, PointPosition.X, PointPosition.Y, false);
-  //   RiverSpline->SetLocationAtSplinePoint(i, PointPosition, ESplineCoordinateSpace::World, true);
-  // }
-
   return true;
 }
 
@@ -349,7 +310,7 @@ UWorld* UMapGeneratorWidget::DuplicateWorld(FString BaseWorldPath, FString Targe
   Parameters.PortFlags = PPF_Duplicate;
 
   DuplicateWorld = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
-  
+
   const FString PackageFileName = FPackageName::LongPackageNameToFilename(
           PackageName, 
           FPackageName::GetMapPackageExtension());
@@ -672,7 +633,6 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       {
         TileMetaInfo.ContainsRiver = false;
       }
-      // TileMetaInfo.RiverPreset = "RiverPreset01";
 
       // Update and get heightmap from texture
       UpdateTileRT(TileMetaInfo);
@@ -740,7 +700,6 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
             {
               TransitionFactor *= 1 - ((Y - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
             }
-            
             HeightData[(X * TileSize) + Y] = (RoiHeightData[(X * TileSize) + Y]) * TransitionFactor +  HeightData[(X * TileSize) + Y] * (1-TransitionFactor);
           }
         }
@@ -828,11 +787,6 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       }
 
       // TODO: Instantiate water if needed
-      // if(TileMetaInfo.ContainsRiver)
-      // {
-      //   InstantiateRiverSublevel(World, TileMetaInfo);
-      //   SaveWorld(World);
-      // }
     }
   }
 

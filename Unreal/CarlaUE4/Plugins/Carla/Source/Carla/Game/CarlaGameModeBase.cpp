@@ -130,7 +130,7 @@ void ACarlaGameModeBase::InitGame(
       UGameplayStatics::GetActorOfClass(GetWorld(), AWeather::StaticClass());
   if (WeatherActor != nullptr) {
     UE_LOG(LogCarla, Log, TEXT("Existing weather actor. Doing nothing then!"));
-    Episode->Weather = (AWeather*) WeatherActor;
+    Episode->Weather = static_cast<AWeather*>(WeatherActor);
   }
   else if (WeatherClass != nullptr) {
     Episode->Weather = World->SpawnActor<AWeather>(WeatherClass);
