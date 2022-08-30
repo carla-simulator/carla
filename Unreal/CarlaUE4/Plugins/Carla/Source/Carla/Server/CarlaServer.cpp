@@ -593,6 +593,7 @@ void FCarlaServer::FPimpl::BindActions()
       for(auto& Object : Result)
       {
         Object.Transform = LargeMap->LocalToGlobalTransform(Object.Transform);
+        Object.BoundingBox.Origin = LargeMap->LocalToGlobalLocation(Object.BoundingBox.Origin);
       }
     }
     return MakeVectorFromTArray<cr::EnvironmentObject>(Result);
