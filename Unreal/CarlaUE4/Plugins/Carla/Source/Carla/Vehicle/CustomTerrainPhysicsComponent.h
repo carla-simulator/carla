@@ -55,14 +55,14 @@ struct FHeightMapData
 
 struct FDenseTile
 {
-  void InitializeTile(float ParticleSize, float Depth, 
+  void InitializeTile(uint32_t TextureSize, float AffectedRadius, float ParticleSize, float Depth, 
       FDVector TileOrigin, FDVector TileEnd, const FString& SavePath, const FHeightMapData &HeightMap);
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
   void GetParticlesInRadius(FDVector Position, float Radius, std::vector<FParticle*> &ParticlesInRadius);
   void GetParticlesInBox(const FOrientedBox& OBox, std::vector<FParticle*> &ParticlesInRadius);
 
   std::vector<FParticle> Particles;
-  std::vector<FDVector> ParticlesHeightMap;
+  std::vector<float> ParticlesHeightMap;
   FDVector TilePosition;
   FString SavePath;
 };
@@ -75,10 +75,14 @@ public:
   FSparseHighDetailMap(float ParticleDiameter = 0.02f, float Depth = 0.4f)
     : ParticleSize(ParticleDiameter), TerrainDepth(Depth) {};
 
-  void Init(float ParticleDiameter = 0.02f, float Depth = 0.4f)
+  void Init( uint32 NewTextureSize, float NewAffectedRadius, float ParticleDiameter, float Depth)
   {
     ParticleSize = ParticleDiameter;
     TerrainDepth = Depth;
+    TextureSize = NewTextureSize;
+    AffectedRadius = NewAffectedRadius;
+    UE_LOG(LogCarla, Warning, 
+        TEXT("ParticleSize %f"), ParticleSize);
   }
 
   inline float GetTileSize() const {
@@ -88,7 +92,7 @@ public:
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
   std::vector<FParticle*> GetParticlesInTileRadius(FDVector Position, float Radius);
   std::vector<FParticle*> GetParticlesInBox(const FOrientedBox& OBox);
-  std::vector<FDVector> GetParticlesHeightMapInTileRadius(FDVector Position, float Radius);
+  std::vector<float> GetParticlesHeightMapInTileRadius(FDVector Position, float Radius);
 
   FDenseTile& GetTile(uint32_t Tile_X, uint32_t Tile_Y);
   FDenseTile& GetTile(FDVector Position);
@@ -96,6 +100,7 @@ public:
 
   FDenseTile& InitializeRegion(uint32_t Tile_X, uint32_t Tile_Y);
   FDenseTile& InitializeRegion(uint64_t TileId);
+  FDenseTile& InitializeRegionInCache(uint64_t TileId);
 
   uint64_t GetTileId(uint32_t Tile_X, uint32_t Tile_Y);
   uint64_t GetTileId(uint64_t TileId);
@@ -117,6 +122,7 @@ public:
       float ScaleZ);
 
   void LoadTilesAtPosition(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
+  void ReloadCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
 
   void Update(FVector Position, float RadiusX, float RadiusY);
 
@@ -135,6 +141,7 @@ public:
   }
 
   std::unordered_map<uint64_t, FDenseTile> Map;
+  std::unordered_map<uint64_t, FDenseTile> CacheMap;
   FString SavePath;
 private:
   std::unordered_map<uint64_t, FDenseTile> TilesToWrite;
@@ -144,6 +151,8 @@ private:
   FHeightMapData Heightmap;
   float ParticleSize = 0.02f;
   float TerrainDepth = 0.4f;
+  uint32 TextureSize = 0;
+  float AffectedRadius = 0.0f;
   FVector PositionToUpdate;
   FCriticalSection Lock_Map; // UE4 Mutex
   FCriticalSection Lock_Position; // UE4 Mutex
@@ -194,11 +203,14 @@ public:
   UFUNCTION(BlueprintCallable, Category="Tiles")
   void LoadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
 
+  UFUNCTION(BlueprintCallable, Category="Tiles")
+  void ReloadCache(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
+
   UFUNCTION(BlueprintCallable, Category="Texture")
   void InitTexture();
 
   UFUNCTION(BlueprintCallable, Category="Texture")
-  void UpdateTexture(float RadiusX, float RadiusY);
+  void UpdateTexture();
 
   UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateTextureData();
@@ -253,10 +265,12 @@ private:
   void ApplyAccelerationToVehicle(
       ACarlaWheeledVehicle *Vehicle,
       FVector ForceWheel0, FVector ForceWheel1, FVector ForceWheel2, FVector ForceWheel3);
+      
   void ApplyForces();
   void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles);
   void DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes);
 
+  void UpdateTilesHeightMaps( const std::vector<FParticle*>& Particles);
   UPROPERTY(EditAnywhere)
   TArray<FForceAtLocation> ForcesToApply;
   UPROPERTY(EditAnywhere)
@@ -267,8 +281,14 @@ private:
   FVector WorldSize = FVector(200000,200000,0);
 
   // Radius of the data loaded in memory
-  UPROPERTY(EditAnywhere)
-  FVector Radius = FVector( 5, 5, 0 );
+  UPROPERTY(EditAnywhere, Category="Tiles")
+  FVector TileRadius = FVector( 5, 5, 0 );
+  // Radius of the data loaded in memory
+  UPROPERTY(EditAnywhere, Category="Tiles")
+  FVector CacheRadius = FVector( 50, 50, 0 );
+  UPROPERTY(EditAnywhere, Category="Tiles")
+  int32 TileSize = 1;
+
   // Radius of the data collected by the texture in METERS
   UPROPERTY(EditAnywhere, Category="MaterialParameters")
   float TextureRadius = 4.0f;
