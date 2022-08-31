@@ -587,15 +587,6 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to find CARLA game mode");
     }
     TArray<FEnvironmentObject> Result = GameMode->GetEnvironmentObjects(QueriedTag);
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    if (LargeMap)
-    {
-      for(auto& Object : Result)
-      {
-        Object.Transform = LargeMap->LocalToGlobalTransform(Object.Transform);
-        Object.BoundingBox.Origin = LargeMap->LocalToGlobalLocation(Object.BoundingBox.Origin);
-      }
-    }
     return MakeVectorFromTArray<cr::EnvironmentObject>(Result);
   };
 

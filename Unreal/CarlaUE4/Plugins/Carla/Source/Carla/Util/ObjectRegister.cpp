@@ -20,6 +20,30 @@
 
 namespace crp = carla::rpc;
 
+// get the global position for large maps
+FTransform UObjectRegister::GetGlobalTransformIfLargeMap(FTransform Trans)
+{
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(GetWorld());
+  if (!GameMode) return Trans;
+
+  ALargeMapManager* LargeMap = GameMode->GetLMManager();
+  if (!LargeMap) return Trans;
+
+  return LargeMap->LocalToGlobalTransform(Trans);
+}
+
+// get the global position for large maps
+FVector UObjectRegister::GetGlobalPositionIfLargeMap(FVector Pos)
+{
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(GetWorld());
+  if (!GameMode) return Pos;
+
+  ALargeMapManager* LargeMap = GameMode->GetLMManager();
+  if (!LargeMap) return Pos;
+
+  return LargeMap->LocalToGlobalLocation(Pos);
+}
+
 TArray<FEnvironmentObject> UObjectRegister::GetEnvironmentObjects(uint8 InTagQueried) const
 {
   TArray<FEnvironmentObject> Result;
@@ -158,12 +182,13 @@ void UObjectRegister::RegisterEnvironmentObject(
   const char* ActorNameChar = TCHAR_TO_ANSI(*ActorName);
 
   FEnvironmentObject EnvironmentObject;
-  EnvironmentObject.Transform = Actor->GetActorTransform();
+  EnvironmentObject.Transform = GetGlobalTransformIfLargeMap(Actor->GetActorTransform());
   EnvironmentObject.Id = CityHash64(ActorNameChar, ActorName.Len());
   EnvironmentObject.Name = ActorName;
   EnvironmentObject.Actor = Actor;
   EnvironmentObject.CanTick = Actor->IsActorTickEnabled();
   EnvironmentObject.BoundingBox = BoundingBox;
+  EnvironmentObject.BoundingBox.Origin = GetGlobalPositionIfLargeMap(EnvironmentObject.BoundingBox.Origin);
   EnvironmentObject.ObjectLabel = static_cast<crp::CityObjectLabel>(Tag);
   EnvironmentObject.Type = Type;
   EnvironmentObjects.Add(Actor, std::move(EnvironmentObject));
@@ -208,12 +233,13 @@ void UObjectRegister::RegisterTrafficLight(ATrafficLightBase* TrafficLight)
     const FString SMName = FString::Printf(TEXT("%s_%s_%d"), *ActorName, *TagString, i);
 
     FEnvironmentObject EnvironmentObject;
-    EnvironmentObject.Transform = Transform;
+    EnvironmentObject.Transform = GetGlobalTransformIfLargeMap(Transform);
     EnvironmentObject.Id = CityHash64(TCHAR_TO_ANSI(*SMName), SMName.Len());
     EnvironmentObject.Name = SMName;
     EnvironmentObject.Actor = TrafficLight;
     EnvironmentObject.CanTick = IsActorTickEnabled;
     EnvironmentObject.BoundingBox = BB;
+    EnvironmentObject.BoundingBox.Origin = GetGlobalPositionIfLargeMap(EnvironmentObject.BoundingBox.Origin);
     EnvironmentObject.Type = EnvironmentObjectType::TrafficLight;
     EnvironmentObject.ObjectLabel = ObjectLabel;
     EnvironmentObjects.Add(TrafficLight, EnvironmentObject);
@@ -273,7 +299,7 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
       uint64 InstanceId = CityHash64(TCHAR_TO_ANSI(*InstanceIdStr), InstanceIdStr.Len());
 
       FEnvironmentObject EnvironmentObject;
-      EnvironmentObject.Transform = InstanceTransform * CompTransform;
+      EnvironmentObject.Transform = GetGlobalTransformIfLargeMap(InstanceTransform * CompTransform);
       EnvironmentObject.Id = InstanceId;
       EnvironmentObject.Name = InstanceName;
       EnvironmentObject.IdStr = InstanceIdStr;
@@ -282,6 +308,7 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
       if( i < BoundingBoxes.Num())
       {
         EnvironmentObject.BoundingBox = BoundingBoxes[i];
+        EnvironmentObject.BoundingBox.Origin = GetGlobalPositionIfLargeMap(EnvironmentObject.BoundingBox.Origin);
       }
 
       EnvironmentObject.Type = EnvironmentObjectType::ISMComp;
@@ -320,12 +347,13 @@ void UObjectRegister::RegisterSMComponents(AActor* Actor)
     const FString SMName = FString::Printf(TEXT("%s_SM_%d"), *ActorName, i);
 
     FEnvironmentObject EnvironmentObject;
-    EnvironmentObject.Transform = Transform;
+    EnvironmentObject.Transform = GetGlobalTransformIfLargeMap(Transform);
     EnvironmentObject.Id = CityHash64(TCHAR_TO_ANSI(*SMName), SMName.Len());
     EnvironmentObject.Name = SMName;
     EnvironmentObject.Actor = Actor;
     EnvironmentObject.CanTick = IsActorTickEnabled;
     EnvironmentObject.BoundingBox = BBs[i];
+    EnvironmentObject.BoundingBox.Origin = GetGlobalPositionIfLargeMap(EnvironmentObject.BoundingBox.Origin);
     EnvironmentObject.Type = EnvironmentObjectType::SMComp;
     EnvironmentObject.ObjectLabel = static_cast<crp::CityObjectLabel>(Tags[i]);
     EnvironmentObjects.Add(Actor, EnvironmentObject);
@@ -353,12 +381,13 @@ void UObjectRegister::RegisterSKMComponents(AActor* Actor)
     const FString SKMName = FString::Printf(TEXT("%s_SKM_%d"), *ActorName, i);
 
     FEnvironmentObject EnvironmentObject;
-    EnvironmentObject.Transform = Transform;
+    EnvironmentObject.Transform = GetGlobalTransformIfLargeMap(Transform);
     EnvironmentObject.Id = CityHash64(TCHAR_TO_ANSI(*SKMName), SKMName.Len());
     EnvironmentObject.Name = SKMName;
     EnvironmentObject.Actor = Actor;
     EnvironmentObject.CanTick = IsActorTickEnabled;
     EnvironmentObject.BoundingBox = BBs[i];
+    EnvironmentObject.BoundingBox.Origin = GetGlobalPositionIfLargeMap(EnvironmentObject.BoundingBox.Origin);
     EnvironmentObject.Type = EnvironmentObjectType::SKMComp;
     EnvironmentObject.ObjectLabel = static_cast<crp::CityObjectLabel>(Tags[i]);
     EnvironmentObjects.Add(Actor,EnvironmentObject);

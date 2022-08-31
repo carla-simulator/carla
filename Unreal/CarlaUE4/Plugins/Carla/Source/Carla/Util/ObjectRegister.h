@@ -43,6 +43,9 @@ public:
 
 private:
 
+  FTransform GetGlobalTransformIfLargeMap(FTransform Trans);
+  FVector GetGlobalPositionIfLargeMap(FVector Pos);
+
   void RegisterEnvironmentObject(
     AActor* Actor,
     FBoundingBox& BoundingBox,
