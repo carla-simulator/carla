@@ -664,11 +664,11 @@ void ACarlaGameModeBase::PutActorToSleep(carla::rpc::ActorId ActorId)
 void ACarlaGameModeBase::WakeActorUp(carla::rpc::ActorId ActorId)
 {
   Episode->WakeActorUp(ActorId);
-  // FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
-  // if (CarlaActor && CarlaActor->GetActor())
-  // {
-  //   ObjectRegister->RegisterObjects({CarlaActor->GetActor()});
-  // }
+  FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+  if (CarlaActor && CarlaActor->GetActor())
+  {
+    ObjectRegister->RegisterObjects({CarlaActor->GetActor()});
+  }
 }
 
 void ACarlaGameModeBase::EnableEnvironmentObjects(
