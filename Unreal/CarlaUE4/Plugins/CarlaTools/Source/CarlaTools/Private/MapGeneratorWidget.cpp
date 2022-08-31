@@ -674,35 +674,47 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
         }
 
 
-        int FlateningMargin = 30;   // Not flatened
+        //int FlateningMargin = 30;   // Not flatened
+        int FlateningMargin = 0;   // Not flatened
         int FlateningFalloff = 100; // Transition from actual and flat value
         int TileSize = 1009; // Should be calculated by sqrt(HeightData.Num())
 
-        for(int X = FlateningMargin; X < (TileSize - FlateningMargin); X++)
-        {
-          for(int Y = FlateningMargin; Y < (TileSize - FlateningMargin); Y++)
-          {
-            float TransitionFactor = 1.0f;
+        bool IsThereTileUp, IsThereTileDown, IsThereTileLeft, IsThereTileRight;
 
-            if(X < (FlateningMargin + FlateningFalloff))
+        /* Flattening the height data. */
+        if(FTerrainROI::IsTileInRoiBoundary(ThisTileIndex, MetaInfo.TerrainRoisMap, IsThereTileUp, IsThereTileDown, IsThereTileLeft, IsThereTileRight))
+        {
+          for(int X = FlateningMargin; X < (TileSize - FlateningMargin); X++)
+          {
+            for(int Y = FlateningMargin; Y < (TileSize - FlateningMargin); Y++)
             {
-              TransitionFactor *= (X - FlateningMargin) / (float) FlateningFalloff;
+              float TransitionFactor = 1.0f;
+
+              if(!IsThereTileLeft && X < (FlateningMargin + FlateningFalloff))
+              {
+                TransitionFactor *= (X - FlateningMargin) / (float) FlateningFalloff;
+              }
+              if(!IsThereTileUp && Y < (FlateningMargin + FlateningFalloff))
+              {
+                TransitionFactor *= (Y - FlateningMargin) / (float) FlateningFalloff;
+              }
+              if(!IsThereTileRight && X > (TileSize - FlateningMargin - FlateningFalloff))
+              {
+                TransitionFactor *= 1 - ((X - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
+              }
+              if(!IsThereTileDown && Y > (TileSize - FlateningMargin - FlateningFalloff))
+              {
+                TransitionFactor *= 1 - ((Y - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
+              }
+              HeightData[(X * TileSize) + Y] = (RoiHeightData[(X * TileSize) + Y]) * TransitionFactor +  HeightData[(X * TileSize) + Y] * (1-TransitionFactor);
             }
-            if(Y < (FlateningMargin + FlateningFalloff))
-            {
-              TransitionFactor *= (Y - FlateningMargin) / (float) FlateningFalloff;
-            }
-            if(X > (TileSize - FlateningMargin - FlateningFalloff))
-            {
-              TransitionFactor *= 1 - ((X - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
-            }
-            if(Y > (TileSize - FlateningMargin - FlateningFalloff))
-            {
-              TransitionFactor *= 1 - ((Y - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
-            }
-            HeightData[(X * TileSize) + Y] = (RoiHeightData[(X * TileSize) + Y]) * TransitionFactor +  HeightData[(X * TileSize) + Y] * (1-TransitionFactor);
           }
         }
+        else
+        {
+          HeightData = RoiHeightData;
+        }
+        
 
       }
 

@@ -56,8 +56,34 @@ public:
   {
     return (this->X == Other.X) && (this->Y == Other.Y);
   }
+
+  /// A function that returns the tile that is above the current tile.
+  FORCEINLINE FRoiTile Up()
+  {
+    return FRoiTile(X, Y-1);
+  }
+
+  /// A function that returns the tile that is below the current tile.
+  FORCEINLINE FRoiTile Down()
+  {
+    return FRoiTile(X, Y+1);
+  }
+
+  /// A function that returns the tile that is to the left of the current tile.
+  FORCEINLINE FRoiTile Left()
+  {
+    return FRoiTile(X-1, Y);
+  }
+
+  /// A function that returns the tile that is to the right of the current tile.
+  FORCEINLINE FRoiTile Right()
+  {
+    return FRoiTile(X+1, Y);
+  }
 };
 
+/// A function that is used to hash the FRoiTile struct.
+/// It is used to hash the struct so that it can be used as a key in a TMap.
 FORCEINLINE uint32 GetTypeHash(const FRoiTile& Thing)
 {
   uint32 Hash = FCrc::MemCrc32(&Thing, sizeof(FRoiTile));
@@ -94,6 +120,7 @@ struct CARLATOOLS_API FRegionOfInterest
     return this->RegionType;
   }
 
+  // A template function that checks if a tile is in a map of regions.
   template <typename R>
   static FORCEINLINE bool IsTileInRegionsSet(FRoiTile RoiTile, TMap<FRoiTile, R> RoisMap)
   {
@@ -101,6 +128,8 @@ struct CARLATOOLS_API FRegionOfInterest
         "ROIs Map Value type is not an URegionOfInterest derived type.");   
     return RoisMap.Contains(RoiTile);
   }
+
+  
 
 };
 
@@ -122,12 +151,13 @@ struct CARLATOOLS_API FVegetationROI : public FRegionOfInterest
     FoliageSpawners.Add(Spawner);
   }
 
+  // A function that adds a list of spawners to the list of spawners of the ROI.
   void AddFoliageSpawners(TArray<UProceduralFoliageSpawner*> Spawners)
   {
     for(UProceduralFoliageSpawner* Spawner : Spawners)
-  {
-    AddFoliageSpawner(Spawner);
-  }
+    {
+      AddFoliageSpawner(Spawner);
+    }
   }
 
   TArray<UProceduralFoliageSpawner*> GetFoliageSpawners()
@@ -141,14 +171,37 @@ struct CARLATOOLS_API FTerrainROI : public FRegionOfInterest
 {
   GENERATED_BODY()
 
+  // A pointer to a material instance that is used to change the heightmap material of the ROI.
   UPROPERTY(BlueprintReadWrite)
   UMaterialInstanceDynamic* RoiMaterialInstance;
 
+  // A render target that is used to store the heightmap of the ROI.
   UPROPERTY(BlueprintReadWrite)
   UTextureRenderTarget2D* RoiHeightmapRenderTarget;
 
   FTerrainROI() : FRegionOfInterest(), RoiMaterialInstance()
   {}
 
-  // TODO: IsEdge() funtion to avoid transition between tiles that belongs to the same ROI
+  /**
+ * This function checks if a tile is on the boundary of a region of interest
+ * 
+ * @param RoiTile The tile we're checking
+ * @param RoisMap The map of RoiTiles to Rois.
+ * @param OutUp Is there a tile above this one?
+ * @param OutRight Is there a ROI to the right of this tile?
+ * @param OutDown Is there a ROI tile below this one?
+ * @param OutLeft Is the tile to the left of the current tile in the RoiMap?
+ *
+ * return true if the tile is in a boundary
+ */
+  template <typename R>
+  static bool IsTileInRoiBoundary(FRoiTile RoiTile, TMap<FRoiTile, R> RoisMap, bool& OutUp, bool& OutRight, bool& OutDown, bool& OutLeft)
+  {
+    OutUp   = RoisMap.Contains(RoiTile.Up());
+    OutDown = RoisMap.Contains(RoiTile.Down());
+    OutLeft = RoisMap.Contains(RoiTile.Left());
+    OutRight = RoisMap.Contains(RoiTile.Right());
+
+    return !OutUp || !OutDown || !OutLeft || !OutRight;
+  }
 };
