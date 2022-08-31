@@ -1046,6 +1046,7 @@ void MapBuilder::CreateController(
       // workarround to not move stencil stop
       if (
           signal->GetName().find("Stencil_STOP") != std::string::npos ||
+          signal->GetName().find("STATIC") != std::string::npos ||
           signal->_using_inertial_position) {
         continue;
       }
