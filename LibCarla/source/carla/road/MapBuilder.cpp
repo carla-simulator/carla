@@ -1040,6 +1040,7 @@ void MapBuilder::CreateController(
     for (auto& signal_pair : map._data._signals) {
       auto& signal = signal_pair.second;
       auto signal_position = signal->GetTransform().location;
+      auto signal_rotation = signal->GetTransform().rotation;
       auto closest_waypoint_to_signal =
           map.GetClosestWaypointOnRoad(signal_position,
           static_cast<int32_t>(carla::road::Lane::LaneType::Shoulder) |  static_cast<int32_t>(carla::road::Lane::LaneType::Driving));
@@ -1051,9 +1052,8 @@ void MapBuilder::CreateController(
         continue;
       }
       if(closest_waypoint_to_signal) {
-        auto distance_to_road =
-            (map.ComputeTransform(closest_waypoint_to_signal.get()).location -
-            signal_position).Length();
+        auto road_transform = map.ComputeTransform(closest_waypoint_to_signal.get()); 
+        auto distance_to_road = (road_transform.location -signal_position).Length();
         double lane_width = map.GetLaneWidth(closest_waypoint_to_signal.get());
         int displacement_direction = 1;
         int iter = 0;
@@ -1080,9 +1080,10 @@ void MapBuilder::CreateController(
             displacement_direction = 0;
           }
 
-          geom::Vector3D displacement = 1.f*(signal->GetTransform().GetRightVector()) *
+          geom::Vector3D displacement = 1.f*(road_transform.GetRightVector()) *
               static_cast<float>(abs(lane_width))*0.2f;
           signal_position += (displacement * displacement_direction);
+          signal_rotation = road_transform.rotation;
           closest_waypoint_to_signal =
               map.GetClosestWaypointOnRoad(signal_position,
               static_cast<int32_t>(carla::road::Lane::LaneType::Shoulder) |  static_cast<int32_t>(carla::road::Lane::LaneType::Driving));
@@ -1097,6 +1098,7 @@ void MapBuilder::CreateController(
         } else {
           // Only perform the displacement if a good location has been found
           signal->_transform.location = signal_position;
+          signal->_transform.rotation = signal_rotation;
         }
       }
     }
