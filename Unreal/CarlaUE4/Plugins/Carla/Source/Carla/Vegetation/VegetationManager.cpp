@@ -131,6 +131,7 @@ void FTileData::UpdateMaterialCache(const FLinearColor& Value)
   TRACE_CPUPROFILER_EVENT_SCOPE(FTileData::UpdateMaterialCache);
   for (UMaterialInstanceDynamic* Material : MaterialInstanceDynamicCache)
   {
+    Material->SetScalarParameterValue("ActivateDebug", 1);
     Material->SetScalarParameterValue("ActivateOpacity", 1);
     Material->SetVectorParameterValue("VehiclePosition", Value);
   }
@@ -161,16 +162,8 @@ void AVegetationManager::Tick(float DeltaTime)
   if (!FoundVehicles)
     return;
   UpdateVehiclesDetectionBoxes();
-  bool NewTilesFound = CheckForNewTiles();
-  if (NewTilesFound)
-  {
-    //El origen de todos los males parece ser que está aquí, se están generando los mismos tiles una y otra vez.
-    //Cuando se detecta un tile nuevo se generan todos por lo visto. usar los eventos.
-    UpdateFoliageBlueprintCache();
-    UpdateTileDataCache();
-    GenerateTileDataInternals();
-  }
-  //Esto se podría hacer tambien con un evento de colision de cada tile.
+
+  //TODO: Move to an event. Add event for each tile if any car has collide with it.
   TArray<FString> TilesInUse = GetTilesInUse();
   UpdateMaterials(TilesInUse);
 
@@ -387,7 +380,9 @@ void AVegetationManager::UpdateVehiclesDetectionBoxes()
 void AVegetationManager::UpdateMaterials(TArray<FString>& Tiles)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::UpdateMaterials);
-  FLinearColor Position = FLinearColor(VehiclesInLevel.Last()->GetActorLocation());
+  //FTransform GlobalVehicleTransform = LargeMap->LocalToGlobalTransform(VehiclesInLevel[0]->GetActorTransform());
+  //FLinearColor Position = FLinearColor(GlobalVehicleTransform.GetLocation());
+  const FLinearColor Position = VehiclesInLevel.Last()->GetActorLocation();
   for (const FString& TileName : Tiles)
   {
     FTileData* TileData = TileDataCache.Find(TileName);
@@ -506,6 +501,7 @@ void AVegetationManager::DestroySkeletalFoliages()
 
 bool AVegetationManager::EnableActorFromPool(const FTransform& Transform, TArray<FPooledActor>& Pool)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::EnableActorFromPool);
   for (FPooledActor& PooledActor : Pool)
   {
     if (PooledActor.InUse)
@@ -559,29 +555,24 @@ AActor* AVegetationManager::CreateFoliage(const FFoliageBlueprint& BP, const FTr
     Actor->SetActorScale3D(Transform.GetScale3D());
   else
     Actor->SetActorScale3D({SpawnScale, SpawnScale, SpawnScale});
-  Actor->SetTickableWhenPaused(false);
   return Actor;
 }
 
 /********************************************************************************/
 /********** TILES ***************************************************************/
 /********************************************************************************/
-
-//TileID TileID = GetTileID(InTileID);
 void AVegetationManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
-  //TODO(Luis): Connenct to OnLevelAddedToWorld Event.
-  //Create the new Tile
-  UE_LOG(LogCarla, Display, TEXT("OnLevelAddedToWorld"));
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::OnLevelAddedToWorld);
+  UpdateFoliageBlueprintCache();
+  UpdateTileDataCache();
+  GenerateTileDataInternals();
 }
 
 void AVegetationManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
 {
-  //TODO(Luis): Connect to OnLevelRemovedFromWorld.
-  //Clear FTileData and UMaterials.
-  UE_LOG(LogCarla, Display, TEXT("OnLevelRemovedFromWorld"));
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::OnLevelRemovedFromWorld);
 }
-
 
 bool AVegetationManager::CheckIfAnyVehicleInLevel() const
 {

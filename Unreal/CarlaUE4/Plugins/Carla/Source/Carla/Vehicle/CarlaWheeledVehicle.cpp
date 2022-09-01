@@ -211,13 +211,12 @@ bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
   if (LargeMap)
   {
     FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
-    Distance = Distance = FVector::Distance(Location, GlobalTransform.GetLocation());
+    Distance = FVector::Distance(Location, GlobalTransform.GetLocation());
   }
   else
   {
-    Distance = Distance = FVector::Distance(Location, GetActorTransform().GetLocation());
+    Distance = FVector::Distance(Location, GetActorTransform().GetLocation());
   }
-
   return Distance < DetectionSize * 10.0f;
 }
 

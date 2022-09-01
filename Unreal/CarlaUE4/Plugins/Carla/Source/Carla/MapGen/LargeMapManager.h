@@ -186,7 +186,7 @@ protected:
   TileID GetTileID(FDVector TileLocation) const;
 
   TileID GetTileID(FIntVector TileVectorID) const;
-
+public:
   FCarlaMapTile& GetCarlaMapTile(FVector Location);
 
   FCarlaMapTile& GetCarlaMapTile(ULevel* InLevel);
@@ -194,7 +194,7 @@ protected:
   FCarlaMapTile* GetCarlaMapTile(FIntVector TileVectorID);
 
   FCarlaMapTile& LoadCarlaMapTile(FString TileMapPath, TileID TileId);
-
+protected:
   void UpdateTilesState();
 
   void RemovePendingActorsToRemove();

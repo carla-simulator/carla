@@ -9,6 +9,7 @@
 #include "Math/Matrix.h"
 #include "Components/CapsuleComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/KismetMathLibrary.h"
 #include <unordered_set>
 #include <vector>
 #include "carla/rpc/String.h"
@@ -48,11 +49,11 @@
 #define OTHER_LOG(...)
 #endif
 
-static float ClampToPositiveDegrees(float d)
+static float ClampDegrees(float d)
 {
-  if (d < 0.0f)
+  if (d < -360.0f)
   {
-    while (d < 0.0f)
+    while (d < -360.0f)
     {
       d += 360.0f;
     }
@@ -371,9 +372,28 @@ void USpringBasedVegetationComponent::BeginPlay()
   }
 }
 
-void USpringBasedVegetationComponent::ResetComponent()
+void USpringBasedVegetationComponent::Init()
 {
-  Skeleton.ClearExternalForces();
+  TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::Init);
+  OTHER_LOG(Warning, "USpringBasedVegetationComponent::Init");
+  OTHER_LOG(Warning, "Params: BaseSpringStrength %f, Num joints: %d, CollisionForceParameter %f", BaseSpringStrength, Skeleton.Joints.Num(), CollisionForceParameter);
+  if (!SkeletalMesh)
+  {
+    UActorComponent* Component = GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass());
+    SkeletalMesh = Cast<USkeletalMeshComponent>(Component);
+  }
+  if (!SkeletalMesh)
+  {
+    SetComponentTickEnabled(false);
+    OTHER_LOG(Error, "Could not find skeletal mesh component.");
+    return;
+  }
+  
+  if (!Skeleton.Joints.Num())
+  {
+    GenerateSkeletonHierarchy();
+  }
+
   // Get resting pose for bones
   auto *AnimInst = SkeletalMesh->GetAnimInstance();
   if (!AnimInst)
@@ -388,13 +408,45 @@ void USpringBasedVegetationComponent::ResetComponent()
     return;
   }
 
-   // get current pose
+  // get current pose
   FPoseSnapshot TempSnapshot;
   SkeletalMesh->SnapshotPose(TempSnapshot);
 
   // copy pose
   WalkerAnim->Snap = TempSnapshot;
 
+  for (int i=0; i<Skeleton.Joints.Num(); ++i)
+  {
+    FSkeletonJoint& Joint = Skeleton.Joints[i];
+    FTransform JointTransform = SkeletalMesh->GetSocketTransform(FName(*Joint.JointName), ERelativeTransformSpace::RTS_ParentBoneSpace);
+    Joint.Transform = JointTransform;
+    Joint.RestingAngles = JointTransform.Rotator();
+    OTHER_LOG(Log, "Getting info for bone %s, %f, %f, %f, %f", *Joint.JointName, Joint.RestingAngles.Pitch, Joint.RestingAngles.Yaw, Joint.RestingAngles.Roll);
+    if(i > 0)
+    {
+      FSkeletonJoint& ParentJoint = Skeleton.Joints[Joint.ParentId];
+      FVector BoneCOM = Joint.Transform.GetLocation()*0.5f;
+      float BoneLength = Joint.Transform.GetLocation().Size();
+      ParentJoint.Bones.Add({10, BoneLength, BoneCOM});
+    }
+  }
+  for (int i=0; i<TempSnapshot.BoneNames.Num(); ++i)
+  {
+    OTHER_LOG(Log, "Joint list: %s", *TempSnapshot.BoneNames[i].ToString());
+  }
+
+  UpdateGlobalTransform();
+  GenerateCollisionCapsules();
+  if(bAutoComputeStrength)
+  {
+    ComputeSpringStrengthForBranches();
+  }
+}
+
+void USpringBasedVegetationComponent::ResetComponent()
+{
+  Skeleton.ClearExternalForces();
+  SkeletalMesh->ResetAllBodiesSimulatePhysics();
   UpdateGlobalTransform();
 }
 
@@ -848,24 +900,24 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     FRotator NewAngularVelocity = EigenVectorToRotator(FinalNewThetaVelocity);
     FRotator NewAngularAccel = EigenVectorToRotator(FinalNewThetaAccel);
 
-    NewPitch = ClampToPositiveDegrees(NewPitch);
-    NewYaw = ClampToPositiveDegrees(NewYaw);
-    NewRoll = ClampToPositiveDegrees(NewRoll);
+    const float ClampledPitch = UKismetMathLibrary::Abs(ClampDegrees(NewPitch));
+    const float ClampledYaw = UKismetMathLibrary::Abs(ClampDegrees(NewYaw));
+    const float ClampledRoll = UKismetMathLibrary::Abs(ClampDegrees(NewRoll));
 
-    if (NewPitch > MaxPitch){
-      NewPitch = MaxPitch;
+    if (ClampledPitch > MaxPitch){
+      NewPitch = 0.0f;
       NewAngularVelocity.Pitch = 0.0f;
       NewAngularAccel.Pitch = 0.0f;
     }
 
-    if (NewYaw > MaxYaw){
-      NewYaw = MaxYaw;
+    if (ClampledYaw > MaxYaw){
+      NewYaw = 0.0f;
       NewAngularVelocity.Yaw = 0.0f;
       NewAngularAccel.Yaw = 0.0f;
     }
 
-    if (NewRoll > MaxRoll){
-      NewRoll = MaxRoll;
+    if (ClampledRoll > MaxRoll){
+      NewRoll = 0.0f;
       NewAngularVelocity.Roll = 0.0f;
       NewAngularAccel.Roll = 0.0f;
     }
@@ -936,17 +988,12 @@ void USpringBasedVegetationComponent::OnBeginOverlapEvent(
     bool bFromSweep,
     const FHitResult& SweepResult)
 {
-  // prevent self collision
-  if(OtherActor == GetOwner())
-  {
+  ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
+  if (!IsValid(Vehicle))
     return;
-  }
-  // prevent collision with other tree actors
-  if(OtherActor->GetComponentByClass(USpringBasedVegetationComponent::StaticClass()) != nullptr)
-  {
+  UE_LOG(LogCarla, Display, TEXT("BEGIN OVERLAP: %s"), *(OtherActor->GetName()));
+  if (OverlappingActors.Contains(OtherActor))
     return;
-  }
-  // OverlappingActors.Add(OtherActor);
   TArray<UPrimitiveComponent*>& OverlappingCapsules = OverlappingActors.FindOrAdd(OtherActor);
   OverlappingCapsules.Add(OverlapComponent);
 }
@@ -957,20 +1004,15 @@ void USpringBasedVegetationComponent::OnEndOverlapEvent(
     UPrimitiveComponent* OtherComponent,
     int32 OtherBodyIndex)
 {
-  if(OtherActor == GetOwner())
-  {
+  ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
+  if (!IsValid(Vehicle))
     return;
-  }
-  if(OtherActor->GetComponentByClass(USpringBasedVegetationComponent::StaticClass()) != nullptr)
-  {
+  if (!OverlappingActors.Contains(OtherActor))
     return;
-  }
+  
   TArray<UPrimitiveComponent*>& OverlappingCapsules = OverlappingActors.FindOrAdd(OtherActor);
   OverlappingCapsules.RemoveSingle(OverlapComponent);
-  if (OverlappingCapsules.Num() == 0)
-  {
-    OverlappingActors.Remove(OtherActor);
-  }
+  OverlappingActors.Remove(OtherActor);
 }
 
 void USpringBasedVegetationComponent::UpdateSkeletalMesh()

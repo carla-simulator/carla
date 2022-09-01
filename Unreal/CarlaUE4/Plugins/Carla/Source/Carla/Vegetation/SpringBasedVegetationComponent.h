@@ -140,6 +140,8 @@ public:
 
   void ResetComponent();
 
+  void Init();
+
   UFUNCTION(CallInEditor, Category = "Spring Based Vegetation Component")
   void ComputeSpringStrengthForBranches();
 
@@ -236,10 +238,10 @@ private:
 
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   float CollisionForceMinVel = 1.f;
-
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+public:
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   FSkeletonHierarchy Skeleton;
-
+private:
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   bool bAutoComputeStrength = true;
 

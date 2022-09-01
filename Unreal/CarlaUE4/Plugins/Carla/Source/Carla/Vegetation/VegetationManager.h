@@ -131,6 +131,8 @@ private:
   void CreatePoolForBPClass(const FFoliageBlueprint& BP);
   AActor* CreateFoliage(const FFoliageBlueprint& BP, const FTransform& Transform) const;
 
+  void GetSketalTemplates();
+
 private:
   //Actors
   ALargeMapManager* LargeMap {nullptr};
