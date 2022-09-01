@@ -44,6 +44,14 @@ FVector UObjectRegister::GetGlobalPositionIfLargeMap(FVector Pos)
   return LargeMap->LocalToGlobalLocation(Pos);
 }
 
+uint64 UObjectRegister::GetHashFromNameAndTransform(const FString &Name, FTransform Trans)
+{
+  FVector Loc = Trans.GetLocation();
+  FString ActorName = FString::Printf(TEXT("%s_%f_%f_%f"), *Name, Loc.X, Loc.Y, Loc.Z);
+  const char* ActorNameChar = TCHAR_TO_ANSI(*ActorName);
+  return CityHash64(ActorNameChar, ActorName.Len()); 
+}
+
 TArray<FEnvironmentObject> UObjectRegister::GetEnvironmentObjects(uint8 InTagQueried) const
 {
   TArray<FEnvironmentObject> Result;
@@ -178,13 +186,11 @@ void UObjectRegister::RegisterEnvironmentObject(
     EnvironmentObjectType Type,
     uint8 Tag)
 {
-  const FString ActorName = Actor->GetName();
-  const char* ActorNameChar = TCHAR_TO_ANSI(*ActorName);
 
   FEnvironmentObject EnvironmentObject;
   EnvironmentObject.Transform = GetGlobalTransformIfLargeMap(Actor->GetActorTransform());
-  EnvironmentObject.Id = CityHash64(ActorNameChar, ActorName.Len());
-  EnvironmentObject.Name = ActorName;
+  EnvironmentObject.Id = GetHashFromNameAndTransform(Actor->GetName(), EnvironmentObject.Transform);
+  EnvironmentObject.Name = Actor->GetName();
   EnvironmentObject.Actor = Actor;
   EnvironmentObject.CanTick = Actor->IsActorTickEnabled();
   EnvironmentObject.BoundingBox = BoundingBox;
@@ -234,7 +240,7 @@ void UObjectRegister::RegisterTrafficLight(ATrafficLightBase* TrafficLight)
 
     FEnvironmentObject EnvironmentObject;
     EnvironmentObject.Transform = GetGlobalTransformIfLargeMap(Transform);
-    EnvironmentObject.Id = CityHash64(TCHAR_TO_ANSI(*SMName), SMName.Len());
+    EnvironmentObject.Id = GetHashFromNameAndTransform(SMName, EnvironmentObject.Transform);
     EnvironmentObject.Name = SMName;
     EnvironmentObject.Actor = TrafficLight;
     EnvironmentObject.CanTick = IsActorTickEnabled;
@@ -296,10 +302,10 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
 
       const FString InstanceName = FString::Printf(TEXT("%s_Inst_%d_%d"), *ActorName, InstanceCount, i);
       const FString InstanceIdStr = FString::Printf(TEXT("%s_%s_%d_%d_%d_%d"), *ActorName, *CompName, X, Y, Z, InstanceCount);
-      uint64 InstanceId = CityHash64(TCHAR_TO_ANSI(*InstanceIdStr), InstanceIdStr.Len());
-
+      
       FEnvironmentObject EnvironmentObject;
       EnvironmentObject.Transform = GetGlobalTransformIfLargeMap(InstanceTransform * CompTransform);
+      uint64 InstanceId = GetHashFromNameAndTransform(InstanceIdStr, EnvironmentObject.Transform);
       EnvironmentObject.Id = InstanceId;
       EnvironmentObject.Name = InstanceName;
       EnvironmentObject.IdStr = InstanceIdStr;
@@ -348,7 +354,7 @@ void UObjectRegister::RegisterSMComponents(AActor* Actor)
 
     FEnvironmentObject EnvironmentObject;
     EnvironmentObject.Transform = GetGlobalTransformIfLargeMap(Transform);
-    EnvironmentObject.Id = CityHash64(TCHAR_TO_ANSI(*SMName), SMName.Len());
+    EnvironmentObject.Id = GetHashFromNameAndTransform(SMName, EnvironmentObject.Transform);    
     EnvironmentObject.Name = SMName;
     EnvironmentObject.Actor = Actor;
     EnvironmentObject.CanTick = IsActorTickEnabled;
@@ -382,7 +388,7 @@ void UObjectRegister::RegisterSKMComponents(AActor* Actor)
 
     FEnvironmentObject EnvironmentObject;
     EnvironmentObject.Transform = GetGlobalTransformIfLargeMap(Transform);
-    EnvironmentObject.Id = CityHash64(TCHAR_TO_ANSI(*SKMName), SKMName.Len());
+    EnvironmentObject.Id = GetHashFromNameAndTransform(SKMName, EnvironmentObject.Transform);
     EnvironmentObject.Name = SKMName;
     EnvironmentObject.Actor = Actor;
     EnvironmentObject.CanTick = IsActorTickEnabled;
@@ -425,11 +431,23 @@ void UObjectRegister::EnableActor(FEnvironmentObject& EnvironmentObject, bool En
 {
   AActor* Actor = EnvironmentObject.Actor;
 
-  Actor->SetActorHiddenInGame(!Enable);
-  Actor->SetActorEnableCollision(Enable);
-  if(EnvironmentObject.CanTick)
+  if (!Enable)
   {
-    Actor->SetActorTickEnabled(Enable);
+    Actor->SetActorEnableCollision(false);
+    if(EnvironmentObject.CanTick)
+    {
+      Actor->SetActorTickEnabled(false);
+    }
+    Actor->SetActorHiddenInGame(true);
+  }
+  else
+  {
+    Actor->SetActorHiddenInGame(false);
+    Actor->SetActorEnableCollision(true);
+    if(EnvironmentObject.CanTick)
+    {
+      Actor->SetActorTickEnabled(true);
+    }
   }
 }
 

@@ -45,6 +45,7 @@ private:
 
   FTransform GetGlobalTransformIfLargeMap(FTransform Trans);
   FVector GetGlobalPositionIfLargeMap(FVector Pos);
+  uint64 GetHashFromNameAndTransform(const FString &Name, FTransform Trans);
 
   void RegisterEnvironmentObject(
     AActor* Actor,
