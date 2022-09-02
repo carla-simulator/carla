@@ -738,8 +738,8 @@ if ${USE_PYTORCH} ; then
   LIBTORCH_PATH=${PWD}/${LIBTORCH_BASENAME}
   LIBTORCH_INCLUDE=${LIBTORCH_PATH}/include
   LIBTORCH_LIB=${LIBTORCH_PATH}/lib
-  LIBTORCH_ZIPFILE=libtorch-shared-with-deps-1.12.0+cu113.zip
-  LIBTORCH_REPO=https://download.pytorch.org/libtorch/cu113/libtorch-shared-with-deps-1.12.0%2Bcu113.zip
+  LIBTORCH_ZIPFILE=libtorch-shared-with-deps-1.11.0+cu113.zip
+  LIBTORCH_REPO=https://download.pytorch.org/libtorch/cu113/libtorch-shared-with-deps-1.11.0%2Bcu113.zip
   if [[ ! -d ${LIBTORCH_PATH} ]] ; then
     wget ${LIBTORCH_REPO}
     unzip ${LIBTORCH_ZIPFILE}
@@ -795,7 +795,7 @@ if ${USE_PYTORCH} ; then
 
   mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p ${LIBTORCH_LIB}/*.a ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-  cp -p ${LIBTORCH_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  cp -p ${LIBTORCH_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p ${LIBTORCHSCATTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p ${LIBTORCHCLUSTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
 
