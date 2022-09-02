@@ -60,25 +60,29 @@ public:
   /// A function that returns the tile that is above the current tile.
   FORCEINLINE FRoiTile Up()
   {
-    return FRoiTile(X, Y-1);
+    // return FRoiTile(X, Y-1);
+    return FRoiTile(X-1, Y);
   }
 
   /// A function that returns the tile that is below the current tile.
   FORCEINLINE FRoiTile Down()
   {
-    return FRoiTile(X, Y+1);
+    // return FRoiTile(X, Y+1);
+    return FRoiTile(X+1, Y);
   }
 
   /// A function that returns the tile that is to the left of the current tile.
   FORCEINLINE FRoiTile Left()
   {
-    return FRoiTile(X-1, Y);
+    // return FRoiTile(X-1, Y);
+    return FRoiTile(X, Y+1);
   }
 
   /// A function that returns the tile that is to the right of the current tile.
   FORCEINLINE FRoiTile Right()
   {
-    return FRoiTile(X+1, Y);
+    // return FRoiTile(X+1, Y);
+    return FRoiTile(X, Y-1);
   }
 };
 

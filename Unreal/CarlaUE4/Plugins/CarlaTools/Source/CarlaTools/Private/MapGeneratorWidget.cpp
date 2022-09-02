@@ -681,12 +681,13 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
 
         bool IsThereTileUp, IsThereTileDown, IsThereTileLeft, IsThereTileRight;
 
-        /* Flattening the height data. */
-        if(FTerrainROI::IsTileInRoiBoundary(ThisTileIndex, MetaInfo.TerrainRoisMap, IsThereTileUp, IsThereTileDown, IsThereTileLeft, IsThereTileRight))
+        /* Blending the height data of the ROI with the height data of the tile. */
+        if(FTerrainROI::IsTileInRoiBoundary(ThisTileIndex, MetaInfo.TerrainRoisMap, IsThereTileUp, IsThereTileRight, IsThereTileDown, IsThereTileLeft))
         {
-          for(int X = FlateningMargin; X < (TileSize - FlateningMargin); X++)
+          /* Blending the height data of the ROI with the height data of the tile. */
+          for(int X = FlateningMargin; X < (TileSize); X++)
           {
-            for(int Y = FlateningMargin; Y < (TileSize - FlateningMargin); Y++)
+            for(int Y = FlateningMargin; Y < (TileSize); Y++)
             {
               float TransitionFactor = 1.0f;
 
@@ -714,8 +715,6 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
         {
           HeightData = RoiHeightData;
         }
-        
-
       }
 
       // Flatening if contains river
@@ -776,7 +775,8 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
 
       Landscape->ReregisterAllComponents();
       Landscape->CreateLandscapeInfo();
-      Landscape->SetActorLabel("Landscape");
+      Landscape->SetActorLabel(TEXT("Landscape_"+FString::FromInt(i) + "_" + FString::FromInt(j)));
+      // Landscape->SetActorLabel("Landscape");
 
       // Apply material
       AssignLandscapeMaterial(Landscape);
