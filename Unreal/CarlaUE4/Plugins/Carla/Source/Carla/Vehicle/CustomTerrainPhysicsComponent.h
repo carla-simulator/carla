@@ -238,6 +238,11 @@ private:
 
   void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles);
   void DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes);
+  void GenerateBenchmarkParticles(std::vector<FParticle>& BenchParticles, 
+      std::vector<FParticle*> &ParticlesWheel0, std::vector<FParticle*> &ParticlesWheel1,
+      std::vector<FParticle*> &ParticlesWheel2, std::vector<FParticle*> &ParticlesWheel3,
+      FOrientedBox &BboxWheel0, FOrientedBox &BboxWheel1, 
+      FOrientedBox &BboxWheel2, FOrientedBox &BboxWheel3);
 
   UPROPERTY(EditAnywhere)
   TArray<FForceAtLocation> ForcesToApply;
@@ -259,6 +264,8 @@ private:
   bool bUpdateParticles = false;
   UPROPERTY(EditAnywhere)
   bool bUseDynamicModel = false;
+  UPROPERTY(EditAnywhere)
+  bool bUseCUDAModel = false;
 
   UPROPERTY(EditAnywhere)
   float TireRadius = 33.0229f;
@@ -304,6 +311,10 @@ private:
   FVector HeightMapScaleFactor = FVector(1, 1, 1);
   UPROPERTY(EditAnywhere)
   FVector HeightMapOffset = FVector(0, 0, 0);
+  UPROPERTY(EditAnywhere)
+  bool bBenchMark = false;
+  UPROPERTY(EditAnywhere)
+  int NumBenchParticles = 1000;
 
   UPROPERTY(EditAnywhere)
   FVector Radius = FVector(10,10,10);

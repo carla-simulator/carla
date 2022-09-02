@@ -597,7 +597,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
     NNVerbose = false;
   }
   if (FParse::Param(FCommandLine::Get(), TEXT("-use-impulse")))
-  {
+  { 
     bUseImpulse = true;
   }
   if (FParse::Param(FCommandLine::Get(), TEXT("-use-mean-acceleration")))
@@ -608,10 +608,12 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     bShowForces = false;
   }
+#ifndef WITH_EDITOR
   if (Path == "")
   {
     NeuralModelFile = FPaths::ProjectContentDir() + NeuralModelFile;
   }
+#endif
   bUpdateParticles = true;
   if (FParse::Param(FCommandLine::Get(), TEXT("-disable-terramechanics")))
   {
@@ -742,7 +744,6 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
             }
           }
 
-          
         }
         else
         {
@@ -759,6 +760,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
   }
   if (bDrawHeightMap)
   {
+    TRACE_CPUPROFILER_EVENT_SCOPE(DrawHeightMap);
     float LifeTime = 0.3f;
     bool bPersistentLines = false;
     bool bDepthIsForeground = (0 == SDPG_Foreground);
@@ -872,6 +874,52 @@ void UCustomTerrainPhysicsComponent::DrawOrientedBox(UWorld* World, const TArray
   }
 }
 
+void UCustomTerrainPhysicsComponent::GenerateBenchmarkParticles(std::vector<FParticle>& BenchParticles, 
+    std::vector<FParticle*> &ParticlesWheel0, std::vector<FParticle*> &ParticlesWheel1,
+    std::vector<FParticle*> &ParticlesWheel2, std::vector<FParticle*> &ParticlesWheel3,
+    FOrientedBox &BboxWheel0, FOrientedBox &BboxWheel1, 
+    FOrientedBox &BboxWheel2, FOrientedBox &BboxWheel3)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(GenerateBenchmarkParticles);
+  BenchParticles.reserve(100000);
+  auto GenerateBoxParticles = [&](FOrientedBox &BboxWheel, std::vector<FParticle*> &ParticlesWheel)
+  {
+    ParticlesWheel.clear();
+    FVector TileOrigin = FVector(0,0,0);
+    FVector BoxSize = FVector(2*BboxWheel.ExtentX, 2*BboxWheel.ExtentY, BboxWheel.ExtentZ);
+    uint32_t NumParticles_X = BoxSize.X / ParticleDiameter;
+    uint32_t NumParticles_Y = BoxSize.Y / ParticleDiameter;
+    uint32_t NumParticles_Z = BoxSize.Z / ParticleDiameter;
+    UE_LOG(LogCarla, Log, TEXT("Generating (%d,%d,%d) particles"), 
+        NumParticles_X,NumParticles_Y,NumParticles_Z);
+    for(uint32_t i = 0; i < NumParticles_X; i++)
+    {
+      float XPos = i*ParticleDiameter;
+      for(uint32_t j = 0; j < NumParticles_Y; j++)
+      {
+        float YPos = j*ParticleDiameter;
+        for(uint32_t k = 0; k < NumParticles_Z; k++)
+        {
+          float ZPos = k*ParticleDiameter;
+          FVector ParticlePosition = TileOrigin + FVector(XPos, YPos, ZPos);
+          ParticlePosition = (ParticlePosition.X - BboxWheel.ExtentX) * BboxWheel0.AxisX +
+                             (ParticlePosition.Y - BboxWheel.ExtentY) * BboxWheel0.AxisY +
+                             (ParticlePosition.Z - BboxWheel.ExtentZ) * BboxWheel0.AxisZ + BboxWheel.Center;
+          ParticlePosition = UEFrameToSI(ParticlePosition);
+          BenchParticles.emplace_back(FParticle{ParticlePosition, FVector(0), ParticleDiameter/2.f});
+          ParticlesWheel.emplace_back(&BenchParticles.back());
+        }
+      }
+    }
+  };
+  GenerateBoxParticles(BboxWheel0, ParticlesWheel0);
+  GenerateBoxParticles(BboxWheel1, ParticlesWheel1);
+  GenerateBoxParticles(BboxWheel2, ParticlesWheel2);
+  GenerateBoxParticles(BboxWheel3, ParticlesWheel3);
+
+  UE_LOG(LogCarla, Log, TEXT("Generated %d particles"), BenchParticles.size());
+}
+
 void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     ACarlaWheeledVehicle *Vehicle, float DeltaTime)
 {
@@ -906,15 +954,25 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   {
     DrawOrientedBox(GetWorld(), {BboxWheel0, BboxWheel1, BboxWheel2, BboxWheel3});
   }
-  std::vector<FParticle*> ParticlesWheel0 = 
-      SparseMap.GetParticlesInBox(BboxWheel0);
-  std::vector<FParticle*> ParticlesWheel1 = 
-      SparseMap.GetParticlesInBox(BboxWheel1);
-  std::vector<FParticle*> ParticlesWheel2 = 
-      SparseMap.GetParticlesInBox(BboxWheel2);
-  std::vector<FParticle*> ParticlesWheel3 = 
-      SparseMap.GetParticlesInBox(BboxWheel3);
-  
+
+  std::vector<FParticle*> ParticlesWheel0, ParticlesWheel1, ParticlesWheel2, ParticlesWheel3;
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(ParticleSearch);
+    ParticlesWheel0 = SparseMap.GetParticlesInBox(BboxWheel0);
+    ParticlesWheel1 = SparseMap.GetParticlesInBox(BboxWheel1);
+    ParticlesWheel2 = SparseMap.GetParticlesInBox(BboxWheel2);
+    ParticlesWheel3 = SparseMap.GetParticlesInBox(BboxWheel3);
+  }
+
+  std::vector<FParticle> BenchParticles;
+  if(bBenchMark)
+  {
+    GenerateBenchmarkParticles(BenchParticles, 
+        ParticlesWheel0, ParticlesWheel1, ParticlesWheel2, ParticlesWheel3,
+        BboxWheel0, BboxWheel1, BboxWheel2, BboxWheel3);
+    UE_LOG(LogCarla, Log, TEXT("Generated %d particles"), BenchParticles.size());
+  }
+
   if(DrawDebugInfo)
   {
     DrawParticles(GetWorld(), ParticlesWheel0);
@@ -948,6 +1006,7 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     SetUpWheelArrays(Vehicle, 2, WheelPos2, WheelOrient2, WheelLinVel2, WheelAngVel2);
     SetUpWheelArrays(Vehicle, 3, WheelPos3, WheelOrient3, WheelLinVel3, WheelAngVel3);
   }
+
   #ifdef WITH_PYTORCH
   carla::learning::WheelInput Wheel0 {
       static_cast<int>(ParticlesWheel0.size()), 
@@ -981,7 +1040,11 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   TerramechanicsModel.SetInputs(NNInput);
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(RunModel);
-    if(bUseDynamicModel)
+    if(bUseCUDAModel)
+    {
+      TerramechanicsModel.ForwardCUDATensors();
+    }
+    else if(bUseDynamicModel)
     {
       TerramechanicsModel.ForwardDynamic();
     }

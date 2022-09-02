@@ -67,6 +67,7 @@ namespace learning {
     void SetInputs(Inputs input);
     void Forward();
     void ForwardDynamic();
+    void ForwardCUDATensors();
     Outputs& GetOutputs();
 
     ~NeuralModel();
