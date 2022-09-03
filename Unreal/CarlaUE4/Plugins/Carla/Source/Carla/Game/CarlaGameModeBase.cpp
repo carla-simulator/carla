@@ -636,19 +636,11 @@ void ACarlaGameModeBase::RegisterEnvironmentObjects()
 void ACarlaGameModeBase::RegisterEnvironmentObjectsInLevel(ULevel *Level)
 {
   ObjectRegister->RegisterObjects(Level->Actors);
-  for (AActor * Actor : Level->Actors)
-  {
-    UE_LOG(LogCarla, Log, TEXT("Regiter %s"), *Actor->GetName());
-  }
 }
 
 void ACarlaGameModeBase::UnRegisterEnvironmentObjectsInLevel(ULevel *Level)
 {
   ObjectRegister->UnRegisterObjects(Level->Actors);
-    for (AActor * Actor : Level->Actors)
-  {
-    UE_LOG(LogCarla, Log, TEXT("UNRegiter %s"), *Actor->GetName());
-  }
 }
 
 void ACarlaGameModeBase::PutActorToSleep(carla::rpc::ActorId ActorId)
