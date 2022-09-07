@@ -61,6 +61,7 @@ struct FDenseTile
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
   void GetParticlesInRadius(FDVector Position, float Radius, std::vector<FParticle*> &ParticlesInRadius);
   void GetParticlesInBox(const FOrientedBox& OBox, std::vector<FParticle*> &ParticlesInRadius);
+  void GetAllParticles(std::vector<FParticle*> &ParticlesInRadius);
 
   // Format DenseTile to "PosX PosY PosZ\n Particles"
   // WARNING LookAt ParticlesFormat
@@ -90,6 +91,7 @@ public:
   }
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
   std::vector<FParticle*> GetParticlesInBox(const FOrientedBox& OBox);
+  std::vector<uint64_t> GetIntersectingTiles(const FOrientedBox& OBox);
 
   FDenseTile& GetTile(uint32_t Tile_X, uint32_t Tile_Y);
   FDenseTile& GetTile(FDVector Position);
@@ -238,6 +240,7 @@ private:
 
   void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles);
   void DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes);
+  void DrawTiles(UWorld* World, const std::vector<uint64_t>& TilesIds, float Height = 0);
   void GenerateBenchmarkParticles(std::vector<FParticle>& BenchParticles, 
       std::vector<FParticle*> &ParticlesWheel0, std::vector<FParticle*> &ParticlesWheel1,
       std::vector<FParticle*> &ParticlesWheel2, std::vector<FParticle*> &ParticlesWheel3,

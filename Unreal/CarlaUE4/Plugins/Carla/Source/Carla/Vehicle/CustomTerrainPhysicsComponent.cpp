@@ -51,12 +51,20 @@ FVector SIToUEFrame(const FVector& In)
   return MToCM * FVector(In.X, -In.Y, In.Z);
 }
 float SIToUEFrame(const float& In) { return MToCM * In; }
+FVector SIToUEFrameDirection(const FVector& In)
+{
+  return FVector(In.X, -In.Y, In.Z);
+}
 
 FVector UEFrameToSI(const FVector& In)
 {
   return CMToM*FVector(In.X, -In.Y, In.Z);
 }
 float UEFrameToSI(const float& In) { return CMToM * In; }
+FVector UEFrameToSIDirection(const FVector& In)
+{
+  return FVector(In.X, -In.Y, In.Z);
+}
 
 void FHeightMapData::InitializeHeightmap(
     UTexture2D* Texture, FDVector Size, FDVector Origin,
@@ -222,6 +230,14 @@ void FDenseTile::GetParticlesInBox(
   }
 }
 
+void FDenseTile::GetAllParticles(std::vector<FParticle*> &ParticlesInRadius)
+{
+  for (FParticle& Particle : Particles)
+  {
+    ParticlesInRadius.emplace_back(&Particle);
+  }
+}
+
 // revise coordinates
 std::vector<FParticle*> FSparseHighDetailMap::
     GetParticlesInRadius(FDVector Position, float Radius)
@@ -247,20 +263,124 @@ std::vector<FParticle*> FSparseHighDetailMap::
     GetParticlesInBox(const FOrientedBox& OBox)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::GetParticlesInBox);
-  uint64_t TileId = GetTileId(UEFrameToSI(OBox.Center));
-  uint32_t Tile_X = (uint32_t)(TileId >> 32);
-  uint32_t Tile_Y = (uint32_t)(TileId & (uint32_t)(~0));
-  // UE_LOG(LogCarla, Log, TEXT("Searching tile %s, (%d, %d)"), 
-  //     *UEFrameToSI(OBox.Center).ToString(), Tile_X, Tile_Y);
+  std::vector<uint64_t> TilesToCheck = GetIntersectingTiles(OBox);
+
   std::vector<FParticle*> ParticlesInRadius;
-  GetTile(Tile_X, Tile_Y).GetParticlesInBox(OBox, ParticlesInRadius);
-  GetTile(Tile_X-1, Tile_Y-1).GetParticlesInBox(OBox, ParticlesInRadius);
-  GetTile(Tile_X, Tile_Y-1).GetParticlesInBox(OBox, ParticlesInRadius);
-  GetTile(Tile_X-1, Tile_Y).GetParticlesInBox(OBox, ParticlesInRadius);
-  GetTile(Tile_X+1, Tile_Y).GetParticlesInBox(OBox, ParticlesInRadius);
-  GetTile(Tile_X, Tile_Y+1).GetParticlesInBox(OBox, ParticlesInRadius);
-  GetTile(Tile_X+1, Tile_Y+1).GetParticlesInBox(OBox, ParticlesInRadius);
+  for(uint64_t TileId : TilesToCheck)
+  {
+    GetTile(TileId).GetParticlesInBox(OBox, ParticlesInRadius);
+  }
   return ParticlesInRadius;
+}
+
+std::vector<uint64_t> FSparseHighDetailMap::GetIntersectingTiles(
+    const FOrientedBox& OBox)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::GetIntersectingTiles);
+  std::vector<uint64_t> IntersectingTiles;
+
+  FVector BoxCenter = UEFrameToSI(OBox.Center);
+  float ExtentX = UEFrameToSI(OBox.ExtentX);
+  float ExtentXSqr = ExtentX*ExtentX;
+  FVector AxisX = UEFrameToSIDirection(OBox.AxisX);
+  float ExtentY = UEFrameToSI(OBox.ExtentY);
+  float ExtentYSqr = ExtentY*ExtentY;
+  FVector AxisY = UEFrameToSIDirection(OBox.AxisY);
+
+  uint64_t CenterTileId = GetTileId(BoxCenter);
+  uint32_t CenterTile_X = (uint32_t)(CenterTileId >> 32);
+  uint32_t CenterTile_Y = (uint32_t)(CenterTileId & (uint32_t)(~0));
+  uint32_t TileRange = 1;
+  IntersectingTiles.emplace_back(CenterTileId);
+  FVector2D BoxVert0 = FVector2D(BoxCenter - AxisX*ExtentX - AxisY*ExtentY);
+  FVector2D BoxVert1 = FVector2D(BoxCenter + AxisX*ExtentX - AxisY*ExtentY);
+  FVector2D BoxVert2 = FVector2D(BoxCenter + AxisX*ExtentX + AxisY*ExtentY);
+  FVector2D BoxVert3 = FVector2D(BoxCenter - AxisX*ExtentX + AxisY*ExtentY);
+
+  // Use separate axis theorem to detect intersecting tiles with OBox
+  struct F2DRectangle
+  {
+    FVector2D V1, V2, V3, V4;
+    std::vector<FVector2D> ComputeNormals() const
+    {
+      FVector2D V12 = (V2 - V1).GetSafeNormal();
+      FVector2D V23 = (V3 - V2).GetSafeNormal();
+      return {FVector2D(-V12.Y, V12.X), FVector2D(-V23.Y, V23.X)};
+    }
+  };
+  auto SATtest = [&](const FVector2D& Axis, const F2DRectangle &Shape,
+      float &MinAlong, float &MaxAlong)
+  {
+    for (const FVector2D& Vert : {Shape.V1, Shape.V2, Shape.V3, Shape.V4})
+    {
+      float DotVal = FVector2D::DotProduct(Vert, Axis);
+      if( DotVal < MinAlong ) 
+        MinAlong = DotVal;
+      if( DotVal > MaxAlong ) 
+        MaxAlong = DotVal;
+    }
+  };
+  auto IsBetweenOrdered = [&]( float Val, float LowerBound, float UpperBound ) -> bool
+  {
+    return LowerBound <= Val && Val <= UpperBound ;
+  };
+  auto Overlaps = [&]( float Min1, float Max1, float Min2, float Max2 ) -> bool
+  {
+    return IsBetweenOrdered( Min2, Min1, Max1 ) || IsBetweenOrdered( Min1, Min2, Max2 ) ;
+  };
+  auto RectangleIntersect = [&](
+    const F2DRectangle& Rectangle1, 
+    const F2DRectangle& Rectangle2) -> bool
+  {
+    for (const FVector2D& Normal : Rectangle1.ComputeNormals())
+    {
+      constexpr float LargeNumber = 10000000;
+      float Shape1Min = LargeNumber, Shape1Max = -LargeNumber;
+      float Shape2Min = LargeNumber, Shape2Max = -LargeNumber;
+      SATtest(Normal, Rectangle1, Shape1Min, Shape1Max);
+      SATtest(Normal, Rectangle2, Shape2Min, Shape2Max);
+      if (!Overlaps(Shape1Min, Shape1Max, Shape2Min, Shape2Max))
+      {
+        return false;
+      }
+    }
+    for (const FVector2D& Normal : Rectangle2.ComputeNormals())
+    {
+      constexpr float LargeNumber = 10000000;
+      float Shape1Min = LargeNumber, Shape1Max = -LargeNumber;
+      float Shape2Min = LargeNumber, Shape2Max = -LargeNumber;
+      SATtest(Normal, Rectangle1, Shape1Min, Shape1Max);
+      SATtest(Normal, Rectangle2, Shape2Min, Shape2Max);
+      if (!Overlaps(Shape1Min, Shape1Max, Shape2Min, Shape2Max))
+      {
+        return false;
+      }
+    }
+    return true;
+  };
+  // check surrounding tiles except CenterTile (as it is always included)
+  std::vector<std::pair<uint32_t, uint32_t>> TilesToCheck = {
+      {CenterTile_X-1, CenterTile_Y-1}, {CenterTile_X, CenterTile_Y-1},
+      {CenterTile_X+1, CenterTile_Y-1}, {CenterTile_X-1, CenterTile_Y},
+      {CenterTile_X+1, CenterTile_Y}, {CenterTile_X-1, CenterTile_Y+1},
+      {CenterTile_X, CenterTile_Y+1}, {CenterTile_X+1, CenterTile_Y+1}};
+  for (auto& TileIdPair : TilesToCheck)
+  {
+    uint32_t &Tile_X = TileIdPair.first;
+    uint32_t &Tile_Y = TileIdPair.second;
+    FVector2D V1 = FVector2D(GetTilePosition(Tile_X, Tile_Y).ToFVector());
+    FVector2D V2 = FVector2D(GetTilePosition(Tile_X+1, Tile_Y).ToFVector());
+    FVector2D V3 = FVector2D(GetTilePosition(Tile_X+1, Tile_Y+1).ToFVector());
+    FVector2D V4 = FVector2D(GetTilePosition(Tile_X, Tile_Y+1).ToFVector());
+    if (RectangleIntersect(
+        F2DRectangle{BoxVert0,BoxVert1,BoxVert2,BoxVert3},
+        F2DRectangle{V1,V2,V3,V4}))
+    {
+      IntersectingTiles.emplace_back(GetTileId(Tile_X, Tile_Y));
+    }
+  }
+
+  return IntersectingTiles;
 }
 
 std::string FDenseTile::ToString() const{
@@ -614,7 +734,6 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
     NeuralModelFile = FPaths::ProjectContentDir() + NeuralModelFile;
   }
 #endif
-  bUpdateParticles = true;
   if (FParse::Param(FCommandLine::Get(), TEXT("-disable-terramechanics")))
   {
     SetComponentTickEnabled(false);
@@ -874,6 +993,53 @@ void UCustomTerrainPhysicsComponent::DrawOrientedBox(UWorld* World, const TArray
   }
 }
 
+void UCustomTerrainPhysicsComponent::DrawTiles(UWorld* World, const std::vector<uint64_t>& TilesIds,float Height)
+{
+  float LifeTime = 0.3f;
+  bool bPersistentLines = false;
+  bool bDepthIsForeground = (0 == SDPG_Foreground);
+  float Thickness = 2.0f;
+  FLinearColor Color = FLinearColor(0.0,1.0,0.0);
+  ULineBatchComponent* LineBatcher = 
+      (World ? (bDepthIsForeground ? World->ForegroundLineBatcher : 
+      (( bPersistentLines || (LifeTime > 0.f) ) ? World->PersistentLineBatcher : World->LineBatcher)) : nullptr);
+  if (!LineBatcher)
+  {
+    UE_LOG(LogCarla, Error, TEXT("Missing linebatcher"));
+  }
+  UE_LOG(LogCarla, Log, TEXT("Drawing %d Tiles"), TilesIds.size());
+  for (const uint64_t& TileId : TilesIds)
+  {
+    FVector TileCenter = SparseMap.GetTilePosition(TileId).ToFVector();
+    FVector V1 = SIToUEFrame(TileCenter);
+    FVector V2 = SIToUEFrame(TileCenter + FVector(SparseMap.GetTileSize(),0,0));
+    FVector V3 = SIToUEFrame(TileCenter + FVector(0,SparseMap.GetTileSize(),0));
+    FVector V4 = SIToUEFrame(TileCenter + FVector(SparseMap.GetTileSize(),SparseMap.GetTileSize(),0));
+    if(LargeMapManager)
+    {
+      V1 = LargeMapManager->GlobalToLocalLocation(V1);
+      V2 = LargeMapManager->GlobalToLocalLocation(V2);
+      V3 = LargeMapManager->GlobalToLocalLocation(V3);
+      V4 = LargeMapManager->GlobalToLocalLocation(V4);
+    }
+    V1.Z = Height;
+    V2.Z = Height;
+    V3.Z = Height;
+    V4.Z = Height;
+    LineBatcher->DrawLines({
+        FBatchedLine(V1, V2, 
+            Color, LifeTime, Thickness, 0),
+        FBatchedLine(V2, V4, 
+            Color, LifeTime, Thickness, 0),
+        FBatchedLine(V1, V3, 
+            Color, LifeTime, Thickness, 0),
+        FBatchedLine(V3, V4, 
+            Color, LifeTime, Thickness, 0)});
+    UE_LOG(LogCarla, Log, TEXT("Drawing Tile %ld with verts %s, %s, %s, %s"),
+        TileId, *V1.ToString(), *V2.ToString(), *V3.ToString(), *V4.ToString());
+  }
+}
+
 void UCustomTerrainPhysicsComponent::GenerateBenchmarkParticles(std::vector<FParticle>& BenchParticles, 
     std::vector<FParticle*> &ParticlesWheel0, std::vector<FParticle*> &ParticlesWheel1,
     std::vector<FParticle*> &ParticlesWheel2, std::vector<FParticle*> &ParticlesWheel3,
@@ -979,6 +1145,10 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     DrawParticles(GetWorld(), ParticlesWheel1);
     DrawParticles(GetWorld(), ParticlesWheel2);
     DrawParticles(GetWorld(), ParticlesWheel3);
+    DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel0), BboxWheel0.Center.Z);
+    DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel1), BboxWheel1.Center.Z);
+    DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel2), BboxWheel2.Center.Z);
+    DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel3), BboxWheel3.Center.Z);
   }
   UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 0 %s"), ParticlesWheel0.size(), *WheelPosition0.ToString());
   UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 1 %s"), ParticlesWheel1.size(), *WheelPosition1.ToString());
