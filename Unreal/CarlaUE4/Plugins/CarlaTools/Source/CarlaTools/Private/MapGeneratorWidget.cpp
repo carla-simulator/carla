@@ -377,7 +377,14 @@ TMap<FRoiTile, FTerrainROI> UMapGeneratorWidget::CreateTerrainRoisMap(TArray<FTe
   {
     for(FRoiTile TerrainRoiTile : TerrainRoi.TilesList)
     {
-      ResultMap.Add(TerrainRoiTile, TerrainRoi);
+      if(ResultMap.Contains(TerrainRoiTile))
+      {
+        ResultMap[TerrainRoiTile] = TerrainRoi;
+      }
+      else
+      {
+        ResultMap.Add(TerrainRoiTile, TerrainRoi);
+      }
     }
   }
   return ResultMap;
