@@ -18,7 +18,7 @@ namespace data {
   /// Measurement produced by a Lidar. Consists of an array of 3D points plus
   /// some extra meta-information about the Lidar.
   class SemanticLidarMeasurement : public Array<data::SemanticLidarDetection>  {
-    static_assert(sizeof(data::SemanticLidarDetection) == 6u * sizeof(float), "SemanticLidarDetection size missmatch");
+    static_assert(sizeof(data::SemanticLidarDetection) == 7u * sizeof(float), "SemanticLidarDetection size missmatch");
     using Super = Array<data::SemanticLidarDetection>;
 
   protected:

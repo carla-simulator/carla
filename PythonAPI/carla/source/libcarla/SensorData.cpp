@@ -162,6 +162,7 @@ namespace data {
         << ", v=" << std::to_string(det.v)
         << ", object_idx=" << std::to_string(det.object_idx)
         << ", object_tag=" << std::to_string(det.object_tag)
+        << ", intensity=" << std::to_string(det.intensity)
         << ')';
     return out;
   }
@@ -523,6 +524,7 @@ void export_sensor_data() {
     .def_readwrite("v", &csd::SemanticLidarDetection::v)
     .def_readwrite("object_idx", &csd::SemanticLidarDetection::object_idx)
     .def_readwrite("object_tag", &csd::SemanticLidarDetection::object_tag)
+    .def_readwrite("intensity", &csd::SemanticLidarDetection::intensity)
     .def(self_ns::str(self_ns::self))
   ;
 

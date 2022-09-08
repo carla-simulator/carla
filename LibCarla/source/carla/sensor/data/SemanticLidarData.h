@@ -60,26 +60,28 @@ namespace data {
       //float vz{};
       uint32_t object_idx{};
       uint32_t object_tag{};
+      float intensity{};
       
       SemanticLidarDetection() = default;
 
-      SemanticLidarDetection(float x, float y, float z, float V, uint32_t idx, uint32_t tag) :
-          point(x, y, z), v{ V }, object_idx{ idx }, object_tag{ tag } { }
-      SemanticLidarDetection(geom::Location p, float V, uint32_t idx, uint32_t tag) :
-          point(p), v{ V }, object_idx{ idx }, object_tag{ tag } { }
+      SemanticLidarDetection(float x, float y, float z, float V, uint32_t idx, uint32_t tag, float i) :
+          point(x, y, z), v{ V }, object_idx{ idx }, object_tag{ tag }, intensity{ i } { }
+      SemanticLidarDetection(geom::Location p, float V, uint32_t idx, uint32_t tag, float i) :
+          point(p), v{ V }, object_idx{ idx }, object_tag{ tag }, intensity{ i } { }
 
-      void WritePlyHeaderInfo(std::ostream& out) const{
+      void WritePlyHeaderInfo(std::ostream& out) {
           out << "property float32 x\n" \
               "property float32 y\n" \
               "property float32 z\n" \
               "property float32 v\n" \
               "property uint32_t object_idx\n" \
-              "property uint32_t object_tag";
+              "property uint32_t object_tag\n" \
+              "property float32 intensity";
       }
 
       void WriteDetection(std::ostream& out) const{
           out << point.x << ' ' << point.y << ' ' << point.z << ' ' \
-              << v << ' '<< object_idx << ' ' << object_tag;
+              << v << ' '<< object_idx << ' ' << object_tag << ' ' << intensity;
       }
   };
   #pragma pack(pop)

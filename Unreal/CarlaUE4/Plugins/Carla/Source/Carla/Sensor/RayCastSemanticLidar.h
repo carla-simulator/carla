@@ -58,7 +58,7 @@ protected:
   virtual void PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel);
 
   /// Compute all raw detection information
-  void ComputeRawDetection(const FHitResult &HitInfo, const FTransform &SensorTransf, FSemanticDetection &Detection, const float DeltaTime);
+  void ComputeRawDetection(const FHitResult &HitInfo, const FTransform &SensorTransf, FSemanticDetection &Detection, const float DeltaTime, const FVector CurrentVelocity, const FVector RadarLocation);
 
   /// Saving the hits the raycast returns per channel
   void WritePointAsync(uint32_t Channel, FHitResult &Detection);

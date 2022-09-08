@@ -166,14 +166,20 @@ void ARayCastSemanticLidar::WritePointAsync(uint32_t channel, FHitResult &detect
 
 void ARayCastSemanticLidar::ComputeAndSaveDetections(const FTransform& SensorTransform, const float DeltaTime) {
 	TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
+    
   for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
     PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
   SemanticLidarData.ResetMemory(PointsPerChannel);
-
+  // calculate velocity
+  const FVector RadarLocation = GetActorLocation();
+  const FVector DeltaLocation = RadarLocation - PrevLocation;
+  CurrentVelocity = DeltaLocation / DeltaTime;
+  PrevLocation = RadarLocation;
   for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
+    
     for (auto& hit : RecordedHits[idxChannel]) {
       FSemanticDetection detection;
-      ComputeRawDetection(hit, SensorTransform, detection, DeltaTime);
+      ComputeRawDetection(hit, SensorTransform, detection, DeltaTime, CurrentVelocity, RadarLocation);
       SemanticLidarData.WritePointSync(detection);
     }
   }
@@ -181,10 +187,11 @@ void ARayCastSemanticLidar::ComputeAndSaveDetections(const FTransform& SensorTra
   SemanticLidarData.WriteChannelCount(PointsPerChannel);
 }
 
-void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FSemanticDetection& Detection, const float DeltaTime)
+void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FSemanticDetection& Detection, const float DeltaTime, const FVector CurrentVelocity,const FVector RadarLocation)
 {
     const FVector HitPoint = HitInfo.ImpactPoint;
     Detection.point = SensorTransf.Inverse().TransformPosition(HitPoint);
+
 
     const FVector VecInc = - (HitPoint - SensorTransf.GetLocation()).GetSafeNormal();
     //Detection.cos_inc_angle = FVector::DotProduct(VecInc, HitInfo.ImpactNormal);
@@ -194,23 +201,21 @@ void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const
     const AActor* actor = HitInfo.Actor.Get();
     Detection.object_idx = 0;
     Detection.object_tag = static_cast<uint32_t>(HitInfo.Component->CustomDepthStencilValue);
-    const FCarlaActor* view = Registry.FindCarlaActor(actor);
+    
+    FVector direction;
+    direction.X = Detection.point.x;
+    direction.Y = Detection.point.y;
+    direction.Z = Detection.point.z;
+    
+    const float Distance = Detection.point.Length() * 0.004;
+    
+    const float AbsAtm = exp(-Distance);
+    Detection.intensity = AbsAtm;
 
-    // calculate current velocity
-    const FVector RadarLocation = GetActorLocation();
-    const FVector DeltaLocation = RadarLocation - PrevLocation;
-    // CurrentVelocity= DeltaLocation / DeltaTime;
-    CurrentVelocity.X = DeltaLocation.X / DeltaTime;
-    CurrentVelocity.Y = DeltaLocation.Y / DeltaTime;
-    CurrentVelocity.Z = DeltaLocation.Z / DeltaTime;
-    // PrevLocation=RadarLocation;
-    PrevLocation.X = RadarLocation.X;
-    PrevLocation.Y = RadarLocation.Y;
-    PrevLocation.Z = RadarLocation.Z;
 
     constexpr float TO_METERS = 1e-2;
     if (actor != nullptr) {     
-
+      const FCarlaActor* view = Registry.FindCarlaActor(actor);
       if (view) {
           // if an actor is in RegisterLis
 
@@ -218,26 +223,32 @@ void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const
           
 
           const FVector v = view->GetActorVelocity();
+          //const FVector Direction = direction.GetSafeNormal();
           const FVector Direction = (HitPoint - RadarLocation).GetSafeNormal();
           const FVector DeltaVelocity = (v - CurrentVelocity);
-          const float V = TO_METERS * FVector::DotProduct(DeltaVelocity, Direction);
+          
 
-          Detection.v = V;
+          Detection.v = TO_METERS * FVector::DotProduct(DeltaVelocity, Direction);
       } else {
           Detection.object_idx = 98;
+          const FVector Direction = (HitPoint - RadarLocation).GetSafeNormal();
           
-          FVector Direction = (HitPoint - RadarLocation).GetSafeNormal();
-          float total = Direction.X + Direction.Y + Direction.Z;
+          //float total = Direction.X + Direction.Y + Direction.Z;
 
-          FVector DeltaVelocity = -(CurrentVelocity);
-          float V = TO_METERS * FVector::DotProduct(DeltaVelocity, Direction);
+          const FVector DeltaVelocity =  -(CurrentVelocity);
+          
           //float total_two = DeltaVelocity.X + DeltaVelocity.Y + DeltaVelocity.Z;
           //const float V = TO_METERS * FVector::DotProduct(DeltaVelocity, Direction);
-          float direction_length = sqrt(Direction.X * Direction.X + Direction.Y * Direction.Y + Direction.Z * Direction.Z);
+          //float direction_length = sqrt(Direction.X * Direction.X + Direction.Y * Direction.Y + Direction.Z * Direction.Z);
           //float deltav_length = sqrt(DeltaVelocity.X * DeltaVelocity.X + DeltaVelocity.Y * DeltaVelocity.Y + DeltaVelocity.Z * DeltaVelocity.Z);
           //const float V = (DeltaVelocity.X * Direction.X + DeltaVelocity.Y * Direction.Y + DeltaVelocity.Z * Direction.Z) / direction_length;
-          float division = (DeltaVelocity.X * Direction.X + DeltaVelocity.Y * Direction.Y + DeltaVelocity.Z * Direction.Z);
-          Detection.v = division;
+          //float division = (DeltaVelocity.X * Direction.X + DeltaVelocity.Y * Direction.Y + DeltaVelocity.Z * Direction.Z);
+          
+          Detection.v = TO_METERS * FVector::DotProduct(DeltaVelocity, Direction);
+
+          
+          //Detection.v = CurrentVelocity.X + CurrentVelocity.Y + CurrentVelocity.Z;
+
       
       }
 
