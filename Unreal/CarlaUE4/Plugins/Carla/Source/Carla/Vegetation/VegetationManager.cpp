@@ -126,12 +126,15 @@ bool FFoliageBlueprint::SetSpawnedClass()
 /********************************************************************************/
 /********** TILE DATA STRUCT ****************************************************/
 /********************************************************************************/
-void FTileData::UpdateMaterialCache(const FLinearColor& Value)
+void FTileData::UpdateMaterialCache(const FLinearColor& Value, bool DebugMaterials)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FTileData::UpdateMaterialCache);
   for (UMaterialInstanceDynamic* Material : MaterialInstanceDynamicCache)
   {
-    Material->SetScalarParameterValue("ActivateDebug", 1);
+    if (DebugMaterials)
+      Material->SetScalarParameterValue("ActivateDebug", 1);
+    else
+      Material->SetScalarParameterValue("ActivateDebug", 0);
     Material->SetScalarParameterValue("ActivateOpacity", 1);
     Material->SetVectorParameterValue("VehiclePosition", Value);
   }
@@ -388,7 +391,7 @@ void AVegetationManager::UpdateMaterials(TArray<FString>& Tiles)
     FTileData* TileData = TileDataCache.Find(TileName);
     if (!TileData)
       continue;
-    TileData->UpdateMaterialCache(Position);
+    TileData->UpdateMaterialCache(Position, DebugMaterials);
   }
 }
 
