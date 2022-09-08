@@ -168,8 +168,9 @@ void AVegetationManager::Tick(float DeltaTime)
 
   //TODO: Move to an event. Add event for each tile if any car has collide with it.
   TArray<FString> TilesInUse = GetTilesInUse();
+  if (TilesInUse.Num() == 0)
+    return;
   UpdateMaterials(TilesInUse);
-
   TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> ElementsToSpawn = GetElementsToSpawn(TilesInUse);
   SpawnSkeletalFoliages(ElementsToSpawn);
   DestroySkeletalFoliages();
@@ -645,6 +646,8 @@ TArray<FString> AVegetationManager::GetTilesInUse()
     
     for (ACarlaWheeledVehicle* Vehicle : VehiclesInLevel)
     {
+      if (!IsValid(Vehicle))
+        continue;   
       if (Box.IsInside(Vehicle->GetActorLocation()))
       {
         Results.Emplace(Element.Key);
