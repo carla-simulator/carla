@@ -38,7 +38,7 @@ struct FTileData
   TArray<FTileMeshComponent> TileMeshesCache {};
   TArray<UMaterialInstanceDynamic*> MaterialInstanceDynamicCache {};
 
-  void UpdateMaterialCache(const FLinearColor& Value);
+  void UpdateMaterialCache(const FLinearColor& Value, bool DebugMaterials);
 };
 
 USTRUCT()
@@ -76,7 +76,8 @@ public:
   void RemoveVehicle(ACarlaWheeledVehicle* Vehicle);
 
 public:
-//Cuando se carge un level engancharme al broadcast del delate del collision
+  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  bool DebugMaterials {false};
   //Filters for debug
   UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
   bool SpawnBushes {true};

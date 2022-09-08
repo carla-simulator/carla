@@ -21,7 +21,7 @@
 #define COLLISIONLOGS 0
 #define ACCUMULATIONLOGS 0
 #define FICTITIOUSFORCELOGS 0
-#define OTHERLOGS 1
+#define OTHERLOGS 0
 
 #if SOLVERLOGS && SPRINGVEGETATIONLOGS
 #define SOLVER_LOG(Level, Msg, ...) UE_LOG(LogCarla, Level, TEXT(Msg), ##__VA_ARGS__)
@@ -382,6 +382,7 @@ void USpringBasedVegetationComponent::Init()
     UActorComponent* Component = GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass());
     SkeletalMesh = Cast<USkeletalMeshComponent>(Component);
   }
+  
   if (!SkeletalMesh)
   {
     SetComponentTickEnabled(false);
@@ -430,6 +431,7 @@ void USpringBasedVegetationComponent::Init()
       ParentJoint.Bones.Add({10, BoneLength, BoneCOM});
     }
   }
+  
   for (int i=0; i<TempSnapshot.BoneNames.Num(); ++i)
   {
     OTHER_LOG(Log, "Joint list: %s", *TempSnapshot.BoneNames[i].ToString());
@@ -522,9 +524,7 @@ void USpringBasedVegetationComponent::ComputePerJointProperties(
     Properties.JointToGlobalMatrix = ToEigenMatrix(Joint.GlobalTransform);
     JointPropertiesList[Joint.JointId].JointToGlobalMatrix = Properties.JointToGlobalMatrix;
     if (!Joint.Bones.Num())
-    {
       continue;
-    }
     // COM and mass
     for (FSkeletonBone& Bone : Joint.Bones)
     {
@@ -537,17 +537,13 @@ void USpringBasedVegetationComponent::ComputePerJointProperties(
     // force
     Eigen::Vector3d GravityForce = ToEigenVector(Gravity)/100.f; // world space gravity
     Properties.Force = Properties.Mass * GravityForce + ToEigenVector(Joint.ExternalForces)/100.f;
-    Properties.Force *= 0.01f;
     // torque
     Properties.Torque = (Properties.CenterOfMass - JointGlobalPosition).cross(Properties.Force);
-    Properties.Torque *= 0.01f;
     // inertia tensor
     for (FSkeletonBone& Bone : Joint.Bones)
     {
       if (Bone.Length < 1)
-      {
         continue;
-      }
       float CylinderRadius = 0.1f;
       float CylinderHeight = Bone.Length/100.f;
       Eigen::Matrix3d LocalCylinderInertia;
@@ -559,9 +555,7 @@ void USpringBasedVegetationComponent::ComputePerJointProperties(
       Eigen::Vector3d LocalV1 = BoneVector.normalized();
       Eigen::Vector3d LocalV2 = LocalV1.cross(Eigen::Vector3d(0,1,0));
       if (LocalV2.norm() == 0)
-      {
         LocalV2 = LocalV1.cross(Eigen::Vector3d(0,0,1));
-      }
       LocalV2.normalize();
       Eigen::Vector3d LocalV3 = LocalV1.cross(LocalV2);
       Eigen::Matrix3d LocalToJointMatrix;
@@ -574,6 +568,7 @@ void USpringBasedVegetationComponent::ComputePerJointProperties(
     ACC_LOG(Log, "Local Joint: %s \n Inertia \n %s \n Force \n %s \n Torque \n %s \n COM: \n %s \n Mass %f", *Joint.JointName, *EigenToFString(Properties.InertiaTensor), *EigenToFString(Properties.Force), *EigenToFString(Properties.Torque), *EigenToFString(Properties.CenterOfMass), Properties.Mass);
   }
 }
+
 // Compute accumulated properties (Center of Mass, Inertia, Forces and Torque)
 void USpringBasedVegetationComponent::ComputeCompositeBodyContribution(
     std::vector<FJointProperties>& JointLocalPropertiesList,
@@ -605,11 +600,14 @@ void USpringBasedVegetationComponent::ComputeCompositeBodyContribution(
 
     // compute forces
     JointProperties.Force = JointLocalProperties.Force;
+    static constexpr float MULT_VALUE = 0.1f;
     for(int ChildrenId : Joint.ChildrenIds)
     {
       FSkeletonJoint& ChildrenJoint = Skeleton.Joints[ChildrenId];
       FJointProperties& ChildrenProperties = JointPropertiesList[ChildrenId];
-      JointProperties.Force += ChildrenProperties.Force;
+      const float Value = FMath::Max(0.0f, 1.0f - MULT_VALUE * Joint.ChildrenIds.Num());
+      const Eigen::Vector3d Force {ChildrenProperties.Force[0] * Value, ChildrenProperties.Force[1] * Value, ChildrenProperties.Force[2] * Value};
+      JointProperties.Force += Force;
     }
 
     // compute torque
@@ -620,7 +618,11 @@ void USpringBasedVegetationComponent::ComputeCompositeBodyContribution(
       FJointProperties& ChildrenProperties = JointPropertiesList[ChildrenId];
       Eigen::Vector3d ChildrenJointGlobalPosition = ToEigenVector(ChildrenJoint.GlobalTransform.GetLocation())/100.f;
       Eigen::Vector3d ParentJointGlobalPosition = ToEigenVector(Joint.GlobalTransform.GetLocation())/100.f;
-      JointProperties.Torque += ChildrenProperties.Torque + (ChildrenJointGlobalPosition - ParentJointGlobalPosition).cross(ChildrenProperties.Force);
+      const float TorqueValue = FMath::Max(0.1f, 1.0f - MULT_VALUE * Joint.ChildrenIds.Num());
+      const Eigen::Vector3d Torque {ChildrenProperties.Torque[0] * TorqueValue, ChildrenProperties.Torque[1] * TorqueValue, ChildrenProperties.Torque[2] * TorqueValue};
+      const float ForceValue = FMath::Max(0.1f, 1.0f - MULT_VALUE * Joint.ChildrenIds.Num());
+      const Eigen::Vector3d Force {ChildrenProperties.Force[0] * ForceValue, ChildrenProperties.Force[1] * ForceValue, ChildrenProperties.Force[2] * ForceValue};
+      JointProperties.Torque += Torque + (ChildrenJointGlobalPosition - ParentJointGlobalPosition).cross(Force);
     }
 
     // compute inertia tensor
@@ -696,21 +698,26 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
   for (auto& ActorCapsules : OverlappingActors)
   {
     AActor* CollidingActor = ActorCapsules.Key;
+    ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(CollidingActor);
+    if (!IsValid(Vehicle))
+      continue;
     UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(CollidingActor->GetRootComponent());
     if (!Primitive)
-    {
       continue;
-    }
     // force transferring momentum (for the initial collision frame)
     FVector PrimitiveVelocity = Primitive->GetComponentVelocity();
-    Eigen::Vector3d ColliderVelocity = ToEigenVector(PrimitiveVelocity)/100.f;
-    FVector Impulse = (Primitive->GetMass() * PrimitiveVelocity);
-    Eigen::Vector3d CollisionImpulse = ToEigenVector(Impulse)/100.f;
+    const float VehicleForwardSpeed = Vehicle->GetVehicleForwardSpeed();
+    static constexpr float MIN_VEL = 0.0f;
+    if ((FMath::Abs(VehicleForwardSpeed) - 1.0f) < 0.0f)
+      PrimitiveVelocity *= FVector(MIN_VEL, MIN_VEL, MIN_VEL);
+    const Eigen::Vector3d ColliderVelocity = ToEigenVector(PrimitiveVelocity)/100.f;
+    const FVector Impulse = (Primitive->GetMass() * PrimitiveVelocity);
+    const Eigen::Vector3d CollisionImpulse = ToEigenVector(Impulse)/100.f;
     TArray<UPrimitiveComponent*>& CollidingCapsules = ActorCapsules.Value;
     for (UPrimitiveComponent* Capsule : CollidingCapsules)
     {   
       FVector auxVector;
-      float distance = Primitive->GetClosestPointOnCollision(Capsule->GetComponentLocation(), auxVector);
+      const float distance = Primitive->GetClosestPointOnCollision(Capsule->GetComponentLocation(), auxVector);
       float DistanceToRoot = 0.0f;
       if (distance < MinDistance)
       {
@@ -720,12 +727,12 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
         DistanceToRoot = FMath::Sqrt(std::pow(auxVector.X - RootLocation.X, 2) + std::pow(auxVector.Y - RootLocation.Y, 2) + std::pow(auxVector.Z - RootLocation.Z, 2));
       }
       
-      int JointId = CapsuleToJointId[Capsule];
-      FSkeletonJoint& Joint = Skeleton.Joints[JointId];
+      const int JointId = CapsuleToJointId[Capsule];
+      const FSkeletonJoint& Joint = Skeleton.Joints[JointId];
       FJointProperties& JointProperties = JointLocalPropertiesList[Joint.JointId];
-      Eigen::Vector3d JointGlobalPosition = ToEigenVector(Joint.GlobalTransform.GetLocation())/100.f;
-      Eigen::Vector3d CapsulePosition = ToEigenVector(Capsule->GetComponentLocation())/100.f;
-      Eigen::Vector3d ColliderPosition = ToEigenVector(Primitive->GetComponentLocation())/100.f;
+      const Eigen::Vector3d JointGlobalPosition = ToEigenVector(Joint.GlobalTransform.GetLocation())/100.f;
+      const Eigen::Vector3d CapsulePosition = ToEigenVector(Capsule->GetComponentLocation())/100.f;
+      const Eigen::Vector3d ColliderPosition = ToEigenVector(Primitive->GetComponentLocation())/100.f;
       Eigen::Vector3d CollisionTorque = Eigen::Vector3d::Zero();
 
       const float SpringStrength = Joint.SpringStrength;
@@ -739,23 +746,17 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
           CurrRotator.Roll - RestRotator.Roll);
       const Eigen::Vector3d SpringTorque = SpringStrength*RotatorToEigenVector(DeltaRotator);
       const Eigen::Vector3d JointCapsuleVector = JointGlobalPosition - CapsulePosition;
-      const Eigen::Vector3d SpringForce = SpringTorque.cross(JointCapsuleVector)*JointCapsuleVector.squaredNorm();
-      const Eigen::Vector3d RepulsionForce = SpringForce;
+      const Eigen::Vector3d RepulsionForce = SpringTorque.cross(JointCapsuleVector)*JointCapsuleVector.squaredNorm();
       
       Primitive->AddForceAtLocation(-ToUnrealVector(RepulsionForce)*100.f, Capsule->GetComponentLocation());
       
       // force to repel geometry overlapping
-      Eigen::Vector3d OverlappingForces = (CapsulePosition - ColliderPosition).normalized()*CollisionForceParameter;
+      const Eigen::Vector3d OverlappingForces = (CapsulePosition - ColliderPosition).normalized()*CollisionForceParameter;
       Primitive->AddForceAtLocation(-ToUnrealVector(OverlappingForces)*100.f, Capsule->GetComponentLocation());
       CollisionTorque += (JointProperties.CenterOfMass - JointGlobalPosition).cross(RepulsionForce + CollisionImpulse + OverlappingForces);
       JointProperties.Torque += CollisionTorque;
       // COLLISION_LOG(Log, "Joint: %s \n ProjectedSpeed %f, ProportionalFactor %f \n RepulsionForce %s \n", *Joint.JointName,ProjectedSpeed,ProportionalFactor,*EigenToFString(RepulsionForce),*EigenToFString(CollisionTorque));
     }
-  }
-  if (MinDistance != INFINITY)
-  {
-    
-    //DrawDebugPoint(GetWorld(), ClosestSurfacePoint, 5, FColor(255,0,0), false, 100.f);
   }
 }
 
@@ -900,23 +901,27 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     FRotator NewAngularVelocity = EigenVectorToRotator(FinalNewThetaVelocity);
     FRotator NewAngularAccel = EigenVectorToRotator(FinalNewThetaAccel);
 
-    const float ClampledPitch = UKismetMathLibrary::Abs(ClampDegrees(NewPitch));
-    const float ClampledYaw = UKismetMathLibrary::Abs(ClampDegrees(NewYaw));
-    const float ClampledRoll = UKismetMathLibrary::Abs(ClampDegrees(NewRoll));
+    NewPitch = ClampDegrees(NewPitch);
+    NewYaw = ClampDegrees(NewYaw);
+    NewRoll = ClampDegrees(NewRoll);
 
-    if (ClampledPitch > MaxPitch){
+    const float AbsClampledPitch = UKismetMathLibrary::Abs(NewPitch);
+    const float AbsClampledYaw = UKismetMathLibrary::Abs(NewYaw);
+    const float AbsClampledRoll = UKismetMathLibrary::Abs(NewRoll);
+
+    if (AbsClampledPitch > MaxPitch){
       NewPitch = 0.0f;
       NewAngularVelocity.Pitch = 0.0f;
       NewAngularAccel.Pitch = 0.0f;
     }
 
-    if (ClampledYaw > MaxYaw){
+    if (AbsClampledYaw > MaxYaw){
       NewYaw = 0.0f;
       NewAngularVelocity.Yaw = 0.0f;
       NewAngularAccel.Yaw = 0.0f;
     }
 
-    if (ClampledRoll > MaxRoll){
+    if (AbsClampledRoll > MaxRoll){
       NewRoll = 0.0f;
       NewAngularVelocity.Roll = 0.0f;
       NewAngularAccel.Roll = 0.0f;
@@ -946,9 +951,8 @@ void USpringBasedVegetationComponent::TickComponent(
 
   float DeltaTimeFinal = DeltaTime;
   if (DeltaTimeOverride > 0)
-  {
     DeltaTimeFinal = DeltaTimeOverride;
-  }
+
   std::vector<FJointProperties> JointPropertiesList;
   JointPropertiesList.resize(Skeleton.Joints.Num());
   std::vector<FJointProperties> JointLocalPropertiesList;
@@ -995,7 +999,8 @@ void USpringBasedVegetationComponent::OnBeginOverlapEvent(
   if (OverlappingActors.Contains(OtherActor))
     return;
   TArray<UPrimitiveComponent*>& OverlappingCapsules = OverlappingActors.FindOrAdd(OtherActor);
-  OverlappingCapsules.Add(OverlapComponent);
+  if (!OverlappingCapsules.Contains(OverlapComponent))
+    OverlappingCapsules.Add(OverlapComponent);
 }
 
 void USpringBasedVegetationComponent::OnEndOverlapEvent(
@@ -1009,10 +1014,17 @@ void USpringBasedVegetationComponent::OnEndOverlapEvent(
     return;
   if (!OverlappingActors.Contains(OtherActor))
     return;
-  
+  UE_LOG(LogCarla, Display, TEXT("END OVERLAP: %s"), *(OtherActor->GetName()));
   TArray<UPrimitiveComponent*>& OverlappingCapsules = OverlappingActors.FindOrAdd(OtherActor);
-  OverlappingCapsules.RemoveSingle(OverlapComponent);
-  OverlappingActors.Remove(OtherActor);
+  if (OverlappingCapsules.Contains(OverlapComponent))
+  {
+    OverlappingCapsules.RemoveSingle(OverlapComponent);
+    if (OverlappingCapsules.Num() == 0)
+    {
+      OverlappingActors.Remove(OtherActor);
+      UE_LOG(LogCarla, Display, TEXT("REMOVE ACTOR: %s"), *(OtherActor->GetName()));
+    }
+  }
 }
 
 void USpringBasedVegetationComponent::UpdateSkeletalMesh()
