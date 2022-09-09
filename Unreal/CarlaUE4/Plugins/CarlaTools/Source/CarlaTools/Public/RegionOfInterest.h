@@ -133,7 +133,41 @@ struct CARLATOOLS_API FRegionOfInterest
     return RoisMap.Contains(RoiTile);
   }
 
-  
+  /// Checking if two regions of interest are equal.
+  bool Equals(const FRegionOfInterest& Other)
+  {
+    // Checking if the number of tiles in the two regions is the same.
+    if(this->TilesList.Num() != Other.TilesList.Num())
+    {
+      return false;
+    }
+    
+    // Checking if the two regions have the same tiles.
+    TMap<FRoiTile, int> TileCount;
+    for(FRoiTile Tile : Other.TilesList)
+    {
+      if(TileCount.Contains(Tile))
+        TileCount[Tile]++;
+      else
+        TileCount.Add(Tile, 1);
+    }
+
+    for(FRoiTile Tile : TilesList)
+    {
+      if(!TileCount.Contains(Tile))
+        return false;
+
+      TileCount[Tile]--;
+
+      if(TileCount[Tile] == 0)
+        TileCount.Remove(Tile);
+    }
+
+    if(TileCount.Num() == 0)
+      return true;
+    else
+      return false;
+  }
 
 };
 
@@ -201,10 +235,11 @@ struct CARLATOOLS_API FTerrainROI : public FRegionOfInterest
   template <typename R>
   static bool IsTileInRoiBoundary(FRoiTile RoiTile, TMap<FRoiTile, R> RoisMap, bool& OutUp, bool& OutRight, bool& OutDown, bool& OutLeft)
   {
-    OutUp   = RoisMap.Contains(RoiTile.Up());
-    OutDown = RoisMap.Contains(RoiTile.Down());
-    OutLeft = RoisMap.Contains(RoiTile.Left());
-    OutRight = RoisMap.Contains(RoiTile.Right());
+    FTerrainROI ThisRoi = RoisMap[RoiTile];
+    OutUp   = RoisMap.Contains(RoiTile.Up()) && ThisRoi.Equals(RoisMap[RoiTile.Up()]);
+    OutDown = RoisMap.Contains(RoiTile.Down()) && ThisRoi.Equals(RoisMap[RoiTile.Down()]);
+    OutLeft = RoisMap.Contains(RoiTile.Left()) && ThisRoi.Equals(RoisMap[RoiTile.Left()]);
+    OutRight = RoisMap.Contains(RoiTile.Right()) && ThisRoi.Equals(RoisMap[RoiTile.Right()]);
 
     return !OutUp || !OutDown || !OutLeft || !OutRight;
   }

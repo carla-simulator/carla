@@ -186,6 +186,9 @@ public:
   UFUNCTION(BlueprintImplementableEvent)
   void UpdateTileRoiRT(const FMapGeneratorTileMetaInfo& TileMetaInfo, UMaterialInstanceDynamic* RoiMeterialInstance);
 
+  UFUNCTION(BlueprintImplementableEvent)
+  void UpdateRiverActorSplinesEvent(AActor* RiverActor);
+
   /// Function called by Widget Blueprint which generates all tiles of map
   /// @a mapName, and saves them in @a destinationPath
   /// Returns a void string is success and an error message if the process failed

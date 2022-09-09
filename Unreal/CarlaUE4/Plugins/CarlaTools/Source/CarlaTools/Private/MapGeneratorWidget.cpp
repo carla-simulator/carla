@@ -282,8 +282,11 @@ bool UMapGeneratorWidget::GenerateWaterFromWorld(UWorld* RiversWorld, TSubclassO
       FVector SplinePosition = RiverSpline->GetWorldLocationAtSplinePoint(i);
       SplinePosition.Z = GetLandscapeSurfaceHeight(RiversWorld, SplinePosition.X, SplinePosition.Y, false) + RiverSurfaceDisplacement;
       RiverSpline->SetWorldLocationAtSplinePoint(i, SplinePosition);
+      // FVector SplinePosition = RiverSpline->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Type::Local);
+      // SplinePosition.Z = GetLandscapeSurfaceHeight(RiversWorld, SplinePosition.X, SplinePosition.Y, false) + RiverSurfaceDisplacement;
+      // RiverSpline->SetLocationAtSplinePoint(i, SplinePosition, ESplineCoordinateSpace::Type::Local, false);
     }
-
+    UpdateRiverActorSplinesEvent(RiverActor);
   }
   return true;
 }
