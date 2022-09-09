@@ -237,6 +237,7 @@ private:
       ACarlaWheeledVehicle *Vehicle,
       FVector ForceWheel0, FVector ForceWheel1, FVector ForceWheel2, FVector ForceWheel3);
   void ApplyForces();
+  void LimitParticlesPerWheel(std::vector<FParticle*> &Particles);
 
   void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles);
   void DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes);
@@ -317,7 +318,7 @@ private:
   UPROPERTY(EditAnywhere)
   bool bBenchMark = false;
   UPROPERTY(EditAnywhere)
-  int NumBenchParticles = 1000;
+  int MaxParticlesPerWheel = 6000;
 
   UPROPERTY(EditAnywhere)
   FVector Radius = FVector(10,10,10);

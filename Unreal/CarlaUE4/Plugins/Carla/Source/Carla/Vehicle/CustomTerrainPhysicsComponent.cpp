@@ -17,6 +17,8 @@
 #include "Engine/World.h"
 #include "Math/UnrealMathUtility.h"
 #include "GenericPlatform/GenericPlatformFile.h"
+#include "Async/Async.h"
+#include "Async/Future.h"
 
 #include "Carla/Game/CarlaStatics.h"
 #include "carla/rpc/String.h"
@@ -643,17 +645,36 @@ void FSparseHighDetailMap::SaveMap()
     OutputStream.close();
   }
 }
-
+ 
 void UCustomTerrainPhysicsComponent::BeginPlay()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::BeginPlay);
   Super::BeginPlay();
 
+#ifndef WITH_EDITOR
+  bUpdateParticles = false;
+  DrawDebugInfo = false;
+  bUseDynamicModel = false;
+  bDisableVehicleGravity = false;
+  NNVerbose = true;
+  bUseImpulse = false;
+  bUseMeanAcceleration = false;
+  bShowForces = true;
+  bBenchMark = false;
+  bDrawHeightMap = false;
+  ForceMulFactor = 1.0;
+  FloorHeight = 0.0;
+#endif
+
   int IntValue;
   if (FParse::Value(FCommandLine::Get(), TEXT("-cuda-device="), IntValue))
   {
     CUDADevice = IntValue;
-  } 
+  }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-max-particles-per-wheel="), IntValue))
+  {
+    MaxParticlesPerWheel = IntValue;
+  }
   float Value;
   if (FParse::Value(FCommandLine::Get(), TEXT("-particle-size="), Value))
   {
@@ -695,15 +716,21 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     bUpdateParticles = true;
   }
-  if (FParse::Param(FCommandLine::Get(), TEXT("-no-draw-debug-info")))
+  if (FParse::Param(FCommandLine::Get(), TEXT("-draw-debug-info")))
   {
-    DrawDebugInfo = false;
+    DrawDebugInfo = true;
   }
   FString Path;
   if (FParse::Value(FCommandLine::Get(), TEXT("-network-path="), Path))
   {
     NeuralModelFile = Path;
   }
+#ifndef WITH_EDITOR
+  // if (Path == "")
+  // {
+  //   NeuralModelFile = FPaths::ProjectContentDir() + NeuralModelFile;
+  // }
+#endif
   if (FParse::Param(FCommandLine::Get(), TEXT("-dynamic-model")))
   {
     bUseDynamicModel = true;
@@ -728,12 +755,10 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     bShowForces = false;
   }
-#ifndef WITH_EDITOR
-  if (Path == "")
+  if (FParse::Param(FCommandLine::Get(), TEXT("-benchmark")))
   {
-    NeuralModelFile = FPaths::ProjectContentDir() + NeuralModelFile;
+    bBenchMark = true;
   }
-#endif
   if (FParse::Param(FCommandLine::Get(), TEXT("-disable-terramechanics")))
   {
     SetComponentTickEnabled(false);
@@ -1040,6 +1065,20 @@ void UCustomTerrainPhysicsComponent::DrawTiles(UWorld* World, const std::vector<
   }
 }
 
+void UCustomTerrainPhysicsComponent::LimitParticlesPerWheel(std::vector<FParticle*> &Particles)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(LimitParticlesPerWheel);
+  if (Particles.size() < MaxParticlesPerWheel)
+  {
+    return;
+  }
+  std::sort(Particles.begin(), Particles.end(), [&](FParticle* P1, FParticle* P2) -> bool
+  {
+    return P1->Position.Z < P2->Position.Z;
+  });
+  Particles.resize(MaxParticlesPerWheel);
+}
+
 void UCustomTerrainPhysicsComponent::GenerateBenchmarkParticles(std::vector<FParticle>& BenchParticles, 
     std::vector<FParticle*> &ParticlesWheel0, std::vector<FParticle*> &ParticlesWheel1,
     std::vector<FParticle*> &ParticlesWheel2, std::vector<FParticle*> &ParticlesWheel3,
@@ -1124,10 +1163,26 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   std::vector<FParticle*> ParticlesWheel0, ParticlesWheel1, ParticlesWheel2, ParticlesWheel3;
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(ParticleSearch);
-    ParticlesWheel0 = SparseMap.GetParticlesInBox(BboxWheel0);
-    ParticlesWheel1 = SparseMap.GetParticlesInBox(BboxWheel1);
-    ParticlesWheel2 = SparseMap.GetParticlesInBox(BboxWheel2);
-    ParticlesWheel3 = SparseMap.GetParticlesInBox(BboxWheel3);
+    auto GetAndFilterParticlesInBox = 
+        [&] (FOrientedBox& OBox) -> std::vector<FParticle*>
+    {
+      std::vector<FParticle*> Particles;
+      Particles = SparseMap.GetParticlesInBox(OBox);
+      LimitParticlesPerWheel(Particles);
+      return Particles;
+    };
+    auto FutureParticles0 = Async(EAsyncExecution::TaskGraph, 
+        [&]() {return GetAndFilterParticlesInBox(BboxWheel0);});
+    auto FutureParticles1 = Async(EAsyncExecution::TaskGraph, 
+        [&]() {return GetAndFilterParticlesInBox(BboxWheel1);});
+    auto FutureParticles2 = Async(EAsyncExecution::TaskGraph, 
+        [&]() {return GetAndFilterParticlesInBox(BboxWheel2);});
+    auto FutureParticles3 = Async(EAsyncExecution::TaskGraph, 
+        [&]() {return GetAndFilterParticlesInBox(BboxWheel3);});
+    ParticlesWheel0 = FutureParticles0.Get();
+    ParticlesWheel1 = FutureParticles1.Get();
+    ParticlesWheel2 = FutureParticles2.Get();
+    ParticlesWheel3 = FutureParticles3.Get();
   }
 
   std::vector<FParticle> BenchParticles;
