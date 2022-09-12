@@ -11,6 +11,7 @@
 #include "EditorUtilityWidget.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "ProceduralFoliageSpawner.h"
+#include "RegionOfInterest.h"
 #include "UnrealString.h"
 
 #include "MapGeneratorWidget.generated.h"
@@ -40,6 +41,21 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
 
   UPROPERTY(BlueprintReadWrite)
   UTextureRenderTarget2D* GlobalHeightmap;
+
+  // UPROPERTY(BlueprintReadWrite)
+  // UTextureRenderTarget2D* PROVISIONALROIHEIGHTMAP;
+
+  UPROPERTY(BlueprintReadWrite)
+  TMap<FRoiTile, FTerrainROI> TerrainRoisMap;
+
+  UPROPERTY(BlueprintReadWrite)
+  TMap<FRoiTile, FVegetationROI> VegetationRoisMap;
+
+  UPROPERTY(BlueprintReadWrite)
+  float RiverChanceFactor;
+
+  UPROPERTY(BlueprintReadWrite)
+  float RiverFlateningFactor;
 };
 
 /// Struct used as container of basic tile information
@@ -59,6 +75,92 @@ struct CARLATOOLS_API FMapGeneratorTileMetaInfo
 
   UPROPERTY(BlueprintReadWrite)
   int IndexY;
+
+  UPROPERTY(BlueprintReadWrite)
+  bool ContainsRiver;
+
+  UPROPERTY(BlueprintReadWrite)
+  FString RiverPreset;
+};
+
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FMapGeneratorWidgetState
+{
+  GENERATED_USTRUCT_BODY();
+
+  // General Fields
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  bool IsPersistentState;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  FString MapName;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  FString WorkingPath;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  FString ActiveTabName;
+
+  // Terrain
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralSize;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralSlope;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralMinHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralMaxHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralInvert;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallSeed;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallScale;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallSlope;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallMinHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallMaxHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallInvert;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedSeed;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedScale;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedSlope;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedMinHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedMaxHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedInvert;
 };
 
 /// Class UMapGeneratorWidget extends the functionality of UEditorUtilityWidget
@@ -74,9 +176,15 @@ public:
   UFUNCTION(BlueprintImplementableEvent)
   void AssignLandscapeMaterial(ALandscape* Landscape);
 
+  UFUNCTION(BlueprintImplementableEvent)
+  void InstantiateRiverSublevel(UWorld* World, const FMapGeneratorTileMetaInfo TileMetaInfo);
+
   /// PROVISIONAL
   UFUNCTION(BlueprintImplementableEvent)
-  void UpdateTileRT(int OffsetX, int OffsetY);
+  void UpdateTileRT(const FMapGeneratorTileMetaInfo& TileMetaInfo);
+
+  UFUNCTION(BlueprintImplementableEvent)
+  void UpdateTileRoiRT(const FMapGeneratorTileMetaInfo& TileMetaInfo, UMaterialInstanceDynamic* RoiMeterialInstance);
 
   /// Function called by Widget Blueprint which generates all tiles of map
   /// @a mapName, and saves them in @a destinationPath
@@ -118,11 +226,33 @@ public:
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   AActor* GenerateWater(TSubclassOf<class AActor> RiverClass);
 
+  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  bool GenerateWaterFromWorld(UWorld* RiversWorld, TSubclassOf<class AActor> RiverClass);
+
+  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  UWorld* DuplicateWorld(const FString BaseWorldPath, const FString TargetWorldPath, const FString NewWorldName);
+
   /// Adds weather actor of type @a WeatherActorClass and sets the @a SelectedWeather
-  /// to the map specified in @a MetaInfo
+  /// to the map specified in @a MetaInfo. Ifthe actor already exists on the map
+  /// then it is returned so only one weather actor is spawned in each map
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   AActor* AddWeatherToExistingMap(TSubclassOf<class AActor> WeatherActorClass, 
       const FMapGeneratorMetaInfo& MetaInfo, const FString SelectedWeather);
+
+  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  TMap<FRoiTile, FVegetationROI> CreateVegetationRoisMap(TArray<FVegetationROI> VegetationRoisArray);
+
+  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  TMap<FRoiTile, FTerrainROI> CreateTerrainRoisMap(TArray<FTerrainROI> TerrainRoisArray);
+
+  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  bool DeleteAllVegetationInMap(const FString Path, const FString MapName);
+
+  UFUNCTION(Category="MapGenerator|JsonLibrary", BlueprintCallable)
+  bool GenerateWidgetStateFileFromStruct(FMapGeneratorWidgetState WidgetState, const FString JsonPath);
+
+  UFUNCTION(Category="MapGenerator|JsonLibrary", BlueprintCallable)
+  FMapGeneratorWidgetState LoadWidgetStateStructFromFile(const FString JsonPath);
 
 private:  
   /// Loads a bunch of world objects located in @a BaseMapPath and 
@@ -135,6 +265,9 @@ private:
   /// a correct managements of landscapes
   UFUNCTION()
   bool SaveWorld(UWorld* WorldToBeSaved);
+
+  // UFUNCTION()
+  // bool SaveWorldPackage
 
   /// Takes the name of the map from @a MetaInfo and created the main map
   /// including all the actors needed by large map system
@@ -174,4 +307,10 @@ private:
   /// @a x and @a y.
   UFUNCTION()
   float GetLandscapeSurfaceHeight(UWorld* World, float x, float y, bool bDrawDebugLines);
+
+  UFUNCTION()
+  void ExtractCoordinatedFromMapName(const FString MapName, int& X, int& Y);
+
+  UFUNCTION()
+  void SmoothHeightmap(TArray<uint16> HeightData, TArray<uint16>& OutHeightData);
 };
