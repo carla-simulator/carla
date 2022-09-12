@@ -43,6 +43,10 @@
   * Added post process effects for rainy and dusty weathers.
   * Switched data type of the dust storm weather parameter from bool to float.
   * Check for the version of the installed Clang compiler during build.
+  * Rework Docker build:
+    * add a lightweight Docker-Compose build to edit UE assets with the CarlaUE4Editor inside a GPU-supported Docker build environment
+    * union the Carla.Dockerfile / Release.Dockerfile into one Dockerfile producing a deployable image right away
+  * Rework the Update.sh script to pipe the downloaded tar-archive stream directly into the untar program without hitting the disk
 
 ## CARLA 0.9.13
 
