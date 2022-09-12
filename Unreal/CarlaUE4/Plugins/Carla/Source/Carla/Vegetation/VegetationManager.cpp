@@ -636,9 +636,9 @@ TArray<FString> AVegetationManager::GetTilesInUse()
     if (Results.Contains(Element.Key))
       continue;
     const AProceduralFoliageVolume* Procedural = TileData.ProceduralFoliageVolume;
-    if (!Procedural)
+    if (!IsValid(Procedural))
       continue;
-    if (!Procedural->ProceduralComponent)
+    if (!IsValid(Procedural->ProceduralComponent))
       continue;
     const FBox Box = Procedural->ProceduralComponent->GetBounds();
     if (!Box.IsValid)

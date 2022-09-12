@@ -49,24 +49,6 @@
 #define OTHER_LOG(...)
 #endif
 
-static float ClampDegrees(float d)
-{
-  if (d < -360.0f)
-  {
-    while (d < -360.0f)
-    {
-      d += 360.0f;
-    }
-  }
-  else
-  {
-    while (d >= 360.0f)
-    {
-      d -= 360.0f;
-    }
-  }
-  return d;
-}
 template <class T>
 static T GetSign(T n)
 {
@@ -359,79 +341,6 @@ void USpringBasedVegetationComponent::BeginPlay()
       ParentJoint.Bones.Add({10, BoneLength, BoneCOM});
     }
   }
-  for (int i=0; i<TempSnapshot.BoneNames.Num(); ++i)
-  {
-    OTHER_LOG(Log, "Joint list: %s", *TempSnapshot.BoneNames[i].ToString());
-  }
-
-  UpdateGlobalTransform();
-  GenerateCollisionCapsules();
-  if(bAutoComputeStrength)
-  {
-    ComputeSpringStrengthForBranches();
-  }
-}
-
-void USpringBasedVegetationComponent::Init()
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::Init);
-  OTHER_LOG(Warning, "USpringBasedVegetationComponent::Init");
-  OTHER_LOG(Warning, "Params: BaseSpringStrength %f, Num joints: %d, CollisionForceParameter %f", BaseSpringStrength, Skeleton.Joints.Num(), CollisionForceParameter);
-  if (!SkeletalMesh)
-  {
-    UActorComponent* Component = GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass());
-    SkeletalMesh = Cast<USkeletalMeshComponent>(Component);
-  }
-  
-  if (!SkeletalMesh)
-  {
-    SetComponentTickEnabled(false);
-    OTHER_LOG(Error, "Could not find skeletal mesh component.");
-    return;
-  }
-  
-  if (!Skeleton.Joints.Num())
-  {
-    GenerateSkeletonHierarchy();
-  }
-
-  // Get resting pose for bones
-  auto *AnimInst = SkeletalMesh->GetAnimInstance();
-  if (!AnimInst)
-  {
-    OTHER_LOG(Error, "Could not get animation instance.");
-    return;
-  }
-  UWalkerAnim *WalkerAnim = Cast<UWalkerAnim>(AnimInst);
-  if (!WalkerAnim)
-  {
-    OTHER_LOG(Error, "Could not get UWalkerAnim.");
-    return;
-  }
-
-  // get current pose
-  FPoseSnapshot TempSnapshot;
-  SkeletalMesh->SnapshotPose(TempSnapshot);
-
-  // copy pose
-  WalkerAnim->Snap = TempSnapshot;
-
-  for (int i=0; i<Skeleton.Joints.Num(); ++i)
-  {
-    FSkeletonJoint& Joint = Skeleton.Joints[i];
-    FTransform JointTransform = SkeletalMesh->GetSocketTransform(FName(*Joint.JointName), ERelativeTransformSpace::RTS_ParentBoneSpace);
-    Joint.Transform = JointTransform;
-    Joint.RestingAngles = JointTransform.Rotator();
-    OTHER_LOG(Log, "Getting info for bone %s, %f, %f, %f, %f", *Joint.JointName, Joint.RestingAngles.Pitch, Joint.RestingAngles.Yaw, Joint.RestingAngles.Roll);
-    if(i > 0)
-    {
-      FSkeletonJoint& ParentJoint = Skeleton.Joints[Joint.ParentId];
-      FVector BoneCOM = Joint.Transform.GetLocation()*0.5f;
-      float BoneLength = Joint.Transform.GetLocation().Size();
-      ParentJoint.Bones.Add({10, BoneLength, BoneCOM});
-    }
-  }
-  
   for (int i=0; i<TempSnapshot.BoneNames.Num(); ++i)
   {
     OTHER_LOG(Log, "Joint list: %s", *TempSnapshot.BoneNames[i].ToString());
@@ -900,32 +809,6 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     
     FRotator NewAngularVelocity = EigenVectorToRotator(FinalNewThetaVelocity);
     FRotator NewAngularAccel = EigenVectorToRotator(FinalNewThetaAccel);
-
-    NewPitch = ClampDegrees(NewPitch);
-    NewYaw = ClampDegrees(NewYaw);
-    NewRoll = ClampDegrees(NewRoll);
-
-    const float AbsClampledPitch = UKismetMathLibrary::Abs(NewPitch);
-    const float AbsClampledYaw = UKismetMathLibrary::Abs(NewYaw);
-    const float AbsClampledRoll = UKismetMathLibrary::Abs(NewRoll);
-
-    if (AbsClampledPitch > MaxPitch){
-      NewPitch = 0.0f;
-      NewAngularVelocity.Pitch = 0.0f;
-      NewAngularAccel.Pitch = 0.0f;
-    }
-
-    if (AbsClampledYaw > MaxYaw){
-      NewYaw = 0.0f;
-      NewAngularVelocity.Yaw = 0.0f;
-      NewAngularAccel.Yaw = 0.0f;
-    }
-
-    if (AbsClampledRoll > MaxRoll){
-      NewRoll = 0.0f;
-      NewAngularVelocity.Roll = 0.0f;
-      NewAngularAccel.Roll = 0.0f;
-    }
 
     FRotator NewAngle(
             RestRotator.Pitch + NewPitch,

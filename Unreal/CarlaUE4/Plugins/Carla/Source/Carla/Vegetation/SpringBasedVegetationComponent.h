@@ -140,8 +140,6 @@ public:
 
   void ResetComponent();
 
-  void Init();
-
   UFUNCTION(CallInEditor, Category = "Spring Based Vegetation Component")
   void ComputeSpringStrengthForBranches();
 
@@ -244,14 +242,5 @@ public:
 private:
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   bool bAutoComputeStrength = true;
-
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
-  float MaxYaw = 0.0f;
-
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
-  float MaxPitch = 180.0f;
-
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
-  float MaxRoll = 180.0f;
 };
 
