@@ -82,7 +82,10 @@ public:
   void SetColor(LightId id, Color color);
   void SetIntensity(LightId id, float intensity);
   void SetLightState(LightId id, const LightState& new_state);
+  void SetLightStateNoLock(LightId id, const LightState& new_state);
   void SetLightGroup(LightId id, LightGroup group);
+
+  void SetDayNightCycle(const bool active);
 
 private:
 

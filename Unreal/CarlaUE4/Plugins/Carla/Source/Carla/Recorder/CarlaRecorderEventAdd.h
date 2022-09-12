@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fstream>
+#include <sstream>
 #include <vector>
 
 struct CarlaRecorderActorAttribute
@@ -31,8 +31,8 @@ struct CarlaRecorderEventAdd
     FVector Rotation;
     CarlaRecorderActorDescription Description;
 
-    void Read(std::ifstream &InFile);
-    void Write(std::ofstream &OutFile) const;
+    void Read(std::istream &InFile);
+    void Write(std::ostream &OutFile) const;
 };
 
 class CarlaRecorderEventsAdd
@@ -41,7 +41,9 @@ class CarlaRecorderEventsAdd
     public:
     void Add(const CarlaRecorderEventAdd &Event);
     void Clear(void);
-    void Write(std::ofstream &OutFile);
+    void Write(std::ostream &OutFile);
+    void Read(std::istream &InFile);
+    const std::vector<CarlaRecorderEventAdd>& GetEvents();
 
     private:
     std::vector<CarlaRecorderEventAdd> Events;

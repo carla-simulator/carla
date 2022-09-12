@@ -71,6 +71,13 @@ public:
       bool &Success,
       FActorDefinition &Definition);
 
+  static FActorDefinition MakeNormalsCameraDefinition();
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeNormalsCameraDefinition(
+      bool &Success,
+      FActorDefinition &Definition);
+
   static FActorDefinition MakeLidarDefinition(
       const FString &Id);
 

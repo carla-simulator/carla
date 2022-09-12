@@ -104,6 +104,12 @@ public:
   UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
   void ClearWorldAndTiles();
 
+  UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
+  void GenerateMap_Editor()
+  {
+    if (!LargeMapTilePath.IsEmpty()) GenerateMap(LargeMapTilePath);
+  }
+
   void AddActorToUnloadedList(const FCarlaActor& CarlaActor, const FTransform& Transform);
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
@@ -147,6 +153,8 @@ public:
   void SetTile0Offset(const FVector& Offset);
 
   void SetTileSize(float Size);
+
+  float GetTileSize();
 
   void SetLayerStreamingDistance(float Distance);
 
@@ -283,11 +291,6 @@ protected:
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   bool ShouldTilesBlockOnLoad = false;
 
-  UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
-    void GenerateMap_Editor()
-  {
-    if (!LargeMapTilePath.IsEmpty()) GenerateMap(LargeMapTilePath);
-  }
 
   void RegisterTilesInWorldComposition();
 

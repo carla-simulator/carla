@@ -213,6 +213,15 @@ call "%INSTALLERS_DIR%install_proj.bat"^
 copy %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_PYTHON_DEPENDENCIES%\lib
 
 rem ============================================================================
+rem -- Download and install Eigen ----------------------------------------------
+rem ============================================================================
+
+echo %FILE_N% Installing Eigen
+call "%INSTALLERS_DIR%install_eigen.bat"^
+ --build-dir "%INSTALLATION_DIR%"
+xcopy /Y /S /I "%INSTALLATION_DIR%eigen-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
+
+rem ============================================================================
 rem -- Download and install Chrono ----------------------------------------------
 rem ============================================================================
 

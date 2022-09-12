@@ -65,14 +65,7 @@ void FActorData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaE
   // we need to do it in the UCharacterMovementComponent.
   else if (Character != nullptr)
   {
-    auto CharacterMovement = Cast<UCharacterMovementComponent>(Character->GetCharacterMovement());
 
-    if(bSimulatePhysics) {
-      CharacterMovement->SetDefaultMovementMode();
-    }
-    else {
-      CharacterMovement->DisableMovement();
-    }
   }
   // In the rest of actors, the physics is controlled with the UPrimitiveComponent, so we use
   // that for disable it.
@@ -103,12 +96,16 @@ void FVehicleData::RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* Carla
     PhysicsControl = Vehicle->GetVehiclePhysicsControl();
   }
   Control = Vehicle->GetVehicleControl();
+  AckermannControl = Vehicle->GetVehicleAckermannControl();
+  bAckermannControlActive = Vehicle->IsAckermannControlActive();
+  AckermannControllerSettings = Vehicle->GetAckermannControllerSettings();
   LightState = Vehicle->GetVehicleLightState();
   auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
   if (Controller)
   {
     SpeedLimit = Controller->GetSpeedLimit();
   }
+  FailureState = Vehicle->GetFailureState();
 }
 
 void FVehicleData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
@@ -121,37 +118,49 @@ void FVehicleData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* Carl
   {
     Vehicle->ApplyVehiclePhysicsControl(PhysicsControl);
   }
-  Vehicle->ApplyVehicleControl(Control, EVehicleInputPriority::Client);
+  Vehicle->ApplyAckermannControllerSettings(AckermannControllerSettings);
+  if (!bAckermannControlActive)
+  {
+    Vehicle->ApplyVehicleControl(Control, EVehicleInputPriority::Client);
+  }
+  else
+  {
+    Vehicle->ApplyVehicleAckermannControl(AckermannControl, EVehicleInputPriority::Client);
+  }
   Vehicle->SetVehicleLightState(LightState);
   auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
   if (Controller)
   {
     Controller->SetSpeedLimit(SpeedLimit);
   }
+  Vehicle->SetFailureState(FailureState);
 }
 
 void FWalkerData::RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
 {
   FActorData::RecordActorData(CarlaActor, CarlaEpisode);
   AActor* Actor = CarlaActor->GetActor();
-  auto Walker = Cast<APawn>(Actor);
+  auto Walker = Cast<AWalkerBase>(Actor);
   auto Controller = Walker != nullptr ? Cast<AWalkerController>(Walker->GetController()) : nullptr;
   if (Controller != nullptr)
   {
     WalkerControl = carla::rpc::WalkerControl{Controller->GetWalkerControl()};
   }
+  bAlive = Walker->bAlive;
 }
 
 void FWalkerData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
 {
   FActorData::RestoreActorData(CarlaActor, CarlaEpisode);
   AActor* Actor = CarlaActor->GetActor();
-  auto Walker = Cast<APawn>(Actor);
+  auto Walker = Cast<ACharacter>(Actor);
   auto Controller = Walker != nullptr ? Cast<AWalkerController>(Walker->GetController()) : nullptr;
   if (Controller != nullptr)
   {
     Controller->ApplyWalkerControl(WalkerControl);
   }
+  auto CharacterMovement = Cast<UCharacterMovementComponent>(Walker->GetCharacterMovement());
+  // TODO: Handle death timer
 }
 
 AActor* FTrafficSignData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& Info)

@@ -1,3 +1,49 @@
+## Latest
+
+  * Improved algorithm to move signals out of the road by computing the desired displacement direction.
+  * Added `TrafficManager.vehicle_lane_offset(actor, offset)` and `TrafficManager.global_lane_offset(offset)` methods.
+  * Some of the warnings shown when building a map will now only be showing when debugging.
+  * Fixed bug causing traffic signals at the end points of a road to sometimes create malformed waypoints.
+  * Fixed decals when importing maps. It was using other .json files found in other packages.
+  * Added the speed limits for 100, 110 and 120 Km/h.
+  * Fixing sensor destruction, now the stream and socket is succesfully destroyed.
+  * Fixed bug at `Vehicle.get_traffic_light_state()` and `Vehicle.is_at_traffic_light()` causing vehicles to temporarily not lose the information of a traffic light if they moved away from it before it turned green.
+  * Added multi-GPU feature. Now several servers (with dedicated GPU) can render sensors for the same simulation.
+  * Fixed bug causing the `Vehicle.get_traffic_light_state()` function not notify about the green to yellow and yellow to red light state changes.
+  * Fixed bug causing the `Vehicle.is_at_traffic_light()` function to return *false* if the traffic light was green.
+  * Fixed bug causing the scene lights to return an incorrect location at large maps.
+  * Fixed bug causing the `world.ground_projection()` function to return an incorrect location at large maps.
+  * Added failure state to vehicles, which can be retrieved by using `Vehicle.get_failure_state()`. Only Rollover failure state is currently supported.
+  * Fixed bug causing the TM to block the simulation when another client teleported a vehicle with no physics.
+  * Fixed bug causing the TM to block the simulation when travelling through a short roads that looped on themselves.
+  * Improved the TM's handling of non signalized junctions, resulting in a more fluid overall behavior.
+  * Added check to avoid adding procedural trigger boxes inside intersections.
+  * Python agents now accept a carla.Map and GlobalRoutePlanner instances as inputs, avoiding the need to recompute them.
+  * Python agents now have a function to lane change.
+  * Python agents now detect vehicle in adjacent lanes if invaded due to the offset.
+  * Improved Python agents performance for large maps.
+  * Fix a bug at `Map.get_topology()`, causing lanes with no successors to not be part of it.
+  * Added new ConstantVelocityAgent
+  * Added new parameter to the TrafficManager, `set_desired_speed`, to set a vehicle's speed.
+  * Added 4 new attributes to all vehicles:
+    - `base_type` can be use as a vehicle classification. The possible values are  *car*, *truck*, *van*, *motorcycle* and *bycicle*.
+    - `special_type` provides more information about the vehicle. It is currently restricted to *electric*, *emergency* and *taxi*, and not all vehicles have this attribute filled.
+    - `has_dynamics_doors` can either be *true* or *false* depending on whether or not the vehicle has doors that can be opened using the API.
+    - `has_lights` works in the same way as *has_dynamic_doors*, but differentiates between vehicles with lights, and those that don't.
+  * Added native ackermann controller:
+    - `apply_ackermann_control`:  to apply an ackermann control command to a vehicle
+    - `get_ackermann_controller_settings`: to get the last ackermann controller settings applied
+    - `apply_ackermann_controller_settings`: to apply new ackermann controller settings
+  * Fixed bug causing the Traffic Manager to not be deterministic when using hybrid mode
+  * Added `NormalsSensor`, a new sensor with normals information
+  * Added support for N wheeled vehicles
+  * Added support for new batch commands ConsoleCommand, ApplyLocation (to actor), SetTrafficLightState
+  * Added new API function: `set_day_night_cycle` at the LightManager, to (de)activate the automatic switch of the lights when the simulation changes from day to night mode, and viceversa.
+  * Switch to boost::variant2 for rpc::Command as that allows more than 20 RPC commands
+  * Added post process effects for rainy and dusty weathers.
+  * Switched data type of the dust storm weather parameter from bool to float.
+  * Check for the version of the installed Clang compiler during build.
+
 ## CARLA 0.9.13
 
   * Added new **instance aware semantic segmentation** sensor `sensor.camera.instance_segmentation`

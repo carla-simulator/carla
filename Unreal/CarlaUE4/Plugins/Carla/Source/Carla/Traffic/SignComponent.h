@@ -67,6 +67,9 @@ protected:
   UBoxComponent* GenerateTriggerBox(const FTransform &BoxTransform,
       float BoxSize);
 
+  UBoxComponent* GenerateTriggerBox(const FTransform &BoxTransform,
+      const FVector &BoxSize);
+
 private:
 
   UPROPERTY(Category = "Traffic Sign", EditAnywhere)

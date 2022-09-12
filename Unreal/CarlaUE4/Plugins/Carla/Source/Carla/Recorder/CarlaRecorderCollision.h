@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fstream>
+#include <sstream>
 #include <vector>
 #include <unordered_set>
 
@@ -19,8 +19,8 @@ struct CarlaRecorderCollision
     bool IsActor1Hero;
     bool IsActor2Hero;
 
-    void Read(std::ifstream &InFile);
-    void Write(std::ofstream &OutFile) const;
+    void Read(std::istream &InFile);
+    void Write(std::ostream &OutFile) const;
     // define operator == needed for the 'unordered_set'
     bool operator==(const CarlaRecorderCollision &Other) const;
 };
@@ -47,7 +47,7 @@ class CarlaRecorderCollisions{
     public:
     void Add(const CarlaRecorderCollision &Collision);
     void Clear(void);
-    void Write(std::ofstream &OutFile);
+    void Write(std::ostream &OutFile);
 
     private:
     std::unordered_set<CarlaRecorderCollision> Collisions;

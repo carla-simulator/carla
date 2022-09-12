@@ -7,7 +7,9 @@
 #pragma once
 
 #include "carla/client/Actor.h"
+#include "carla/rpc/AckermannControllerSettings.h"
 #include "carla/rpc/TrafficLightState.h"
+#include "carla/rpc/VehicleAckermannControl.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehicleDoor.h"
 #include "carla/rpc/VehicleLightState.h"
@@ -31,6 +33,7 @@ namespace client {
   public:
 
     using Control = rpc::VehicleControl;
+    using AckermannControl = rpc::VehicleAckermannControl;
     using PhysicsControl = rpc::VehiclePhysicsControl;
     using LightState = rpc::VehicleLightState::LightState;
     using TM = traffic_manager::TrafficManager;
@@ -48,6 +51,17 @@ namespace client {
 
     /// Apply @a control to this vehicle.
     void ApplyControl(const Control &control);
+
+    /// Apply @a control to this vehicle.
+    void ApplyAckermannControl(const AckermannControl &control);
+
+    /// Return the last Ackermann controller settings applied to this vehicle.
+    ///
+    /// @warning This function does call the simulator.
+    rpc::AckermannControllerSettings GetAckermannControllerSettings() const;
+
+    /// Apply Ackermann control settings to this vehicle
+    void ApplyAckermannControllerSettings(const rpc::AckermannControllerSettings &settings);
 
     /// Apply physics control to this vehicle.
     void ApplyPhysicsControl(const PhysicsControl &physics_control);
@@ -123,12 +137,15 @@ namespace client {
         std::string TireJSON = "",
         std::string BaseJSONPath = "");
 
+    /// Returns the failure state of the vehicle
+    rpc::VehicleFailureState GetFailureState() const;
+
   private:
 
     const bool _is_control_sticky;
 
     Control _control;
   };
-  
+
 } // namespace client
 } // namespace carla
