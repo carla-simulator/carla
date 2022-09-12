@@ -1,0 +1,19 @@
+version: "2.3"
+
+services:
+  carla-build-machine:
+    image: carla-localbuildenv:latest
+    runtime: nvidia
+    privileged: true
+    security_opt:
+      - seccomp:unconfined
+    working_dir: '/home/carla/carla'
+    volumes:
+      - '.:/home/carla/carla'
+      - '/tmp/.X11-unix:/tmp/.X11-unix:rw'
+    environment:
+      DISPLAY: ${DISPLAY}
+      SDL_VIDEODRIVER: x11
+      SDL_HINT_CUDA_DEVICE: 0
+      QT_X11_NO_MITSHM: 1
+      UE4_ROOT: /home/carla/UE4.26
