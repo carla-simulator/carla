@@ -242,11 +242,18 @@ public:
   AActor* AddWeatherToExistingMap(TSubclassOf<class AActor> WeatherActorClass, 
       const FMapGeneratorMetaInfo& MetaInfo, const FString SelectedWeather);
 
-  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  UFUNCTION(Category="MapGenerator|ROIs", BlueprintCallable)
   TMap<FRoiTile, FVegetationROI> CreateVegetationRoisMap(TArray<FVegetationROI> VegetationRoisArray);
 
-  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  UFUNCTION(Category="MapGenerator|ROIs", BlueprintCallable)
   TMap<FRoiTile, FTerrainROI> CreateTerrainRoisMap(TArray<FTerrainROI> TerrainRoisArray);
+
+  UFUNCTION(Category="MapGenerator|ROIs", BlueprintCallable)
+  TMap<FRoiTile, FMiscSpreadedActorsROI> CreateMiscSpreadedActorsRoisMap(TArray<FMiscSpreadedActorsROI> SpreadedActorsRoisArray);
+
+  UFUNCTION(Category="MapGenerator|ROIs", BlueprintCallable)
+  TMap<FRoiTile, FMiscSpecificLocationActorsROI> CreateMiscSpreadedActorsRoisMap(TArray<FMiscSpecificLocationActorsROI> SpecificLocationActorsRoisArray);
+
 
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   bool DeleteAllVegetationInMap(const FString Path, const FString MapName);

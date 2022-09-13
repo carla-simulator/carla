@@ -20,7 +20,9 @@ enum ERegionOfInterestType
   NONE,
   TERRAIN_REGION,      
   WATERBODIES_REGION,  // Not Supported yet 
-  VEGETATION_REGION
+  VEGETATION_REGION,
+  MISC_SPREADED_ACTORS_REGION,
+  MISC_SPECIFIC_LOCATION_ACTORS_EDITOR
 };
 
 USTRUCT(BlueprintType)
@@ -244,3 +246,42 @@ struct CARLATOOLS_API FTerrainROI : public FRegionOfInterest
     return !OutUp || !OutDown || !OutLeft || !OutRight;
   }
 };
+
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FMiscSpreadedActorsROI : public FRegionOfInterest
+{
+  GENERATED_BODY()
+
+  UPROPERTY(BlueprintReadWrite)
+  TSubclassOf<AActor> ActorClass;
+
+  UPROPERTY(BlueprintReadWrite)
+  float Density;
+
+  UPROPERTY(BlueprintReadWrite)
+  float MinScale;
+
+  UPROPERTY(BlueprintReadWrite)
+  float MaxScale;
+
+  FMiscSpreadedActorsROI() : FRegionOfInterest(), ActorClass(), Density(0.0f), MinScale(1.0f), MaxScale(1.0f)
+  {}
+};
+
+/// A struct that is used to store the information of a region of interest that is used to 
+/// spawn actors in specific locations.
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FMiscSpecificLocationActorsROI : public FRegionOfInterest
+{
+  GENERATED_BODY()
+
+  UPROPERTY(BlueprintReadWrite)
+  TSubclassOf<AActor> ActorClass;
+
+  UPROPERTY(BlueprintReadWrite)
+  FVector2D ActorLocation;
+
+  FMiscSpecificLocationActorsROI() : FRegionOfInterest(), ActorClass(), ActorLocation(0.0f, 0.0f)
+  {}
+};
+

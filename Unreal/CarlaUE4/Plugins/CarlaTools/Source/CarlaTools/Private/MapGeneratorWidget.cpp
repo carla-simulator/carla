@@ -393,6 +393,32 @@ TMap<FRoiTile, FTerrainROI> UMapGeneratorWidget::CreateTerrainRoisMap(TArray<FTe
   return ResultMap;
 }
 
+TMap<FRoiTile, FMiscSpreadedActorsROI> UMapGeneratorWidget::CreateMiscSpreadedActorsRoisMap(TArray<FMiscSpreadedActorsROI> SpreadedActorsRoisArray)
+{
+  TMap<FRoiTile, FMiscSpreadedActorsROI> ResultMap;
+  for(FMiscSpreadedActorsROI SpreadedRoi : SpreadedActorsRoisArray)
+  {
+    for(FRoiTile SpreadedRoiTile : SpreadedRoi.TilesList)
+    {
+      ResultMap.Add(SpreadedRoiTile, SpreadedRoi);
+    }
+  }
+  return ResultMap;
+}
+
+TMap<FRoiTile, FMiscSpecificLocationActorsROI> UMapGeneratorWidget::CreateMiscSpecificLocationActorsRoisMap(TArray<FMiscSpecificLocationActorsROI> SpecificLocationActorsRoisArray)
+{
+  TMap<FRoiTile, FMiscSpecificLocationActorsROI> ResultMap;
+  for(FMiscSpecificLocationActorsROI SpecificLocationRoi : SpecificLocationActorsRoisArray)
+  {
+    for(FRoiTile SpecificLocationRoiTile : SpecificLocationRoi.TilesList)
+    {
+      ResultMap.Add(SpecificLocationRoiTile, SpecificLocationRoi);
+    }
+  }
+  return ResultMap;
+}
+
 bool UMapGeneratorWidget::DeleteAllVegetationInMap(const FString Path, const FString MapName)
 {
   TArray<FAssetData> AssetsData;
