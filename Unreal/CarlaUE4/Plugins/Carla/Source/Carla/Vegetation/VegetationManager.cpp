@@ -83,7 +83,7 @@ bool FFoliageBlueprint::IsValid() const
 {
   if (BPFullClassName.IsEmpty() || !BPFullClassName.Contains("_C"))
     return false;
-  return SpawnedClass;
+  return SpawnedClass != nullptr;
 }
 
 bool FFoliageBlueprint::SetBPClassName(const FString& Path)
