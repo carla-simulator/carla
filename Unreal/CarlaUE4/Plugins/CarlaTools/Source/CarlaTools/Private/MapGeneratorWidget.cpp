@@ -90,6 +90,13 @@ void UMapGeneratorWidget::CookVegetation(const FMapGeneratorMetaInfo& MetaInfo)
   }
 }
 
+void UMapGeneratorWidget::CookSoilTypeToMaps(const FMapGeneratorMetaInfo& MetaInfo)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Cooking Soil Type to Tiles in %s %s"), 
+      *CUR_CLASS_FUNC_LINE, *MetaInfo.DestinationPath, *MetaInfo.MapName);
+  // TODO: Cook soil info to tiles
+}
+
 void UMapGeneratorWidget::CookVegetationToCurrentTile(const TArray<UProceduralFoliageSpawner*> FoliageSpawners)
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, 
@@ -414,6 +421,19 @@ TMap<FRoiTile, FMiscSpecificLocationActorsROI> UMapGeneratorWidget::CreateMiscSp
     for(FRoiTile SpecificLocationRoiTile : SpecificLocationRoi.TilesList)
     {
       ResultMap.Add(SpecificLocationRoiTile, SpecificLocationRoi);
+    }
+  }
+  return ResultMap;
+}
+
+TMap<FRoiTile, FSoilTypeROI> UMapGeneratorWidget::CreateSoilTypeRoisMap(TArray<FSoilTypeROI> SoilTypeRoisArray)
+{
+  TMap<FRoiTile, FSoilTypeROI> ResultMap;
+  for(FSoilTypeROI SoilTypeRoi : SoilTypeRoisArray)
+  {
+    for(FRoiTile SoilTypeRoiTile : SoilTypeRoi.TilesList)
+    {
+      ResultMap.Add(SoilTypeRoiTile, SoilTypeRoi);
     }
   }
   return ResultMap;

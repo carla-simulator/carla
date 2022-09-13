@@ -40,6 +40,9 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
   TArray<UProceduralFoliageSpawner*> FoliageSpawners;
 
   UPROPERTY(BlueprintReadWrite)
+  FString GeneralSoilType;
+
+  UPROPERTY(BlueprintReadWrite)
   UTextureRenderTarget2D* GlobalHeightmap;
 
   // UPROPERTY(BlueprintReadWrite)
@@ -50,6 +53,15 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
 
   UPROPERTY(BlueprintReadWrite)
   TMap<FRoiTile, FVegetationROI> VegetationRoisMap;
+
+  UPROPERTY(BlueprintReadWrite)
+  TMap<FRoiTile, FSoilTypeROI> SoilTypeRoisMap;
+
+  UPROPERTY(BlueprintReadWrite)
+  TMap<FRoiTile, FMiscSpecificLocationActorsROI> MiscSpecificLocationActorsRoisMap;
+
+  UPROPERTY(BlueprintReadWrite)
+  TMap<FRoiTile, FMiscSpreadedActorsROI> MiscSpreadedActorsRoisMap;
 
   UPROPERTY(BlueprintReadWrite)
   float RiverChanceFactor;
@@ -200,6 +212,9 @@ public:
   UFUNCTION(Category="Map Generator",BlueprintCallable)
   void CookVegetation(const FMapGeneratorMetaInfo& MetaInfo);
 
+  UFUNCTION(Category="Map Generator|Soil Terramechanics", BlueprintCallable)
+  void CookSoilTypeToMaps(const FMapGeneratorMetaInfo& MetaInfo);
+
   /// Function invoked by the widget that cooks the vegetation defined in
   /// @a FoliageSpawners only in the world opened in the editor
   UFUNCTION(Category="Map Generator", BlueprintCallable)
@@ -252,8 +267,10 @@ public:
   TMap<FRoiTile, FMiscSpreadedActorsROI> CreateMiscSpreadedActorsRoisMap(TArray<FMiscSpreadedActorsROI> SpreadedActorsRoisArray);
 
   UFUNCTION(Category="MapGenerator|ROIs", BlueprintCallable)
-  TMap<FRoiTile, FMiscSpecificLocationActorsROI> CreateMiscSpreadedActorsRoisMap(TArray<FMiscSpecificLocationActorsROI> SpecificLocationActorsRoisArray);
+  TMap<FRoiTile, FMiscSpecificLocationActorsROI> CreateMiscSpecificLocationActorsRoisMap(TArray<FMiscSpecificLocationActorsROI> SpecificLocationActorsRoisArray);
 
+  UFUNCTION(Category="MapGenerator|ROIs", BlueprintCallable)
+  TMap<FRoiTile, FSoilTypeROI> CreateSoilTypeRoisMap(TArray<FSoilTypeROI> SoilTypeRoisArray);
 
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   bool DeleteAllVegetationInMap(const FString Path, const FString MapName);

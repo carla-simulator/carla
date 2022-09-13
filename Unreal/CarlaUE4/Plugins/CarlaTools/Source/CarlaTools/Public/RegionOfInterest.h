@@ -22,7 +22,8 @@ enum ERegionOfInterestType
   WATERBODIES_REGION,  // Not Supported yet 
   VEGETATION_REGION,
   MISC_SPREADED_ACTORS_REGION,
-  MISC_SPECIFIC_LOCATION_ACTORS_EDITOR
+  MISC_SPECIFIC_LOCATION_ACTORS_REGION,
+  SOIL_TYPE_REGION
 };
 
 USTRUCT(BlueprintType)
@@ -285,3 +286,14 @@ struct CARLATOOLS_API FMiscSpecificLocationActorsROI : public FRegionOfInterest
   {}
 };
 
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FSoilTypeROI : public FRegionOfInterest
+{
+  GENERATED_BODY()
+
+  UPROPERTY(BlueprintReadWrite)
+  FString SoilTypeTag;
+
+  FSoilTypeROI() : SoilTypeTag("None")
+  {}
+};
