@@ -617,7 +617,13 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       const FVector CapsuleLocation = Capsule->GetComponentLocation();
       const FVector PrimitiveLocation = Primitive->GetComponentLocation();
       const float Distance = Primitive->GetClosestPointOnCollision(CapsuleLocation, ClosestPoint);
+      const float CenterDistance = FVector::Dist(PrimitiveLocation, CapsuleLocation);
+      static constexpr float MIN_DISTANCE = 1.0f;
+      UE_LOG(LogCarla, Display, TEXT("Closest distance: %f"), Distance);
+      UE_LOG(LogCarla, Display, TEXT("Center distance: %f"), CenterDistance);
 
+      if (Distance < MIN_DISTANCE)
+        ClosestPoint = PrimitiveLocation;
       //UE_LOG(LogCarla, Display, TEXT("CAPSULE POSITION { %f, %f, %f }"), CapsuleLocation.X, CapsuleLocation.Y, CapsuleLocation.Z);
       //UE_LOG(LogCarla, Display, TEXT("CLOSEST POINT { %f, %f, %f }"), ClosestPoint.X, ClosestPoint.Y, ClosestPoint.Z);
       //UE_LOG(LogCarla, Display, TEXT("PRIMITIVE LOCATION { %f, %f, %f }"), PrimitiveLocation.X, PrimitiveLocation.Y, PrimitiveLocation.Z);
