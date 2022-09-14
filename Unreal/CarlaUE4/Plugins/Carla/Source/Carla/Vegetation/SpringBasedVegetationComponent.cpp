@@ -663,6 +663,24 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       CollisionTorque += (JointProperties.CenterOfMass - JointGlobalPosition).cross(RepulsionForce + CollisionImpulse + OverlappingForces);
       JointProperties.Torque += CollisionTorque;
       // COLLISION_LOG(Log, "Joint: %s \n ProjectedSpeed %f, ProportionalFactor %f \n RepulsionForce %s \n", *Joint.JointName,ProjectedSpeed,ProportionalFactor,*EigenToFString(RepulsionForce),*EigenToFString(CollisionTorque));
+
+      // block forces to go to rest angles
+      int TempId = JointId;
+      do
+      {
+        FJointProperties& TempJointProperties = JointPropertiesList[TempId];
+        TempJointProperties.canRest = false;
+        
+        FSkeletonJoint &TempJoint = Skeleton.Joints[TempId];
+        TempId = TempJoint.ParentId;
+      }
+      while (TempId != -1);
+
+      // drawing
+      FVector Start = Capsule->GetComponentLocation();
+      FVector End = Primitive->GetComponentLocation();
+      FColor LineColor(FColor::Green);
+      DrawDebugLine(GetWorld(), Start, End, LineColor, false, 0.1f, 0.0f, 1.f);
     }
   }
 }
@@ -680,6 +698,38 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
       continue;
     }
     FJointProperties& JointProperties = JointPropertiesList[Joint.JointId];
+
+    if (!JointProperties.canRest)
+    {
+      // JointProperties.canRest = true;
+      // JointProperties.Force = Eigen::Vector3d::Zero();
+      // JointProperties.Torque = Eigen::Vector3d::Zero();
+      // JointProperties.FictitiousTorque = Eigen::Vector3d::Zero();
+      // JointProperties.AngularVelocity = Eigen::Vector3d::Zero();
+      // JointProperties.LinearVelocity = Eigen::Vector3d::Zero();
+      // JointProperties.AngularAcceleration = Eigen::Vector3d::Zero();
+      // JointProperties.LinearAcceleration = Eigen::Vector3d::Zero();
+      // JointProperties.LocalAngularAcceleration = Eigen::Vector3d::Zero();
+      // drawing
+      if (Joint.ParentId != -1)
+      {
+        FVector Start = Joint.GlobalTransform.GetLocation();
+        FVector End = Skeleton.Joints[Joint.ParentId].GlobalTransform.GetLocation();
+        FColor LineColor(FColor::Red);
+        DrawDebugLine(GetWorld(), Start, End, LineColor, false, 0.3f, 0.0f, 1.f);
+      }
+      // continue;
+    }
+
+    // drawing
+    if (Joint.ParentId != -1)
+    {
+      FVector Start = Joint.GlobalTransform.GetLocation();
+      FVector End = Skeleton.Joints[Joint.ParentId].GlobalTransform.GetLocation();
+      FColor LineColor(FColor::Blue);
+      DrawDebugLine(GetWorld(), Start, End, LineColor, false, 0.1f, 0.0f, 1.f);
+    }
+
     float Mass = JointProperties.Mass;
     Eigen::Vector3d CenterToJoint = JointProperties.CenterOfMass - ToEigenVector(Joint.GlobalTransform.GetLocation())/100.f;
     Eigen::Matrix3d GlobalToJointMatrix = JointProperties.JointToGlobalMatrix.transpose();
@@ -722,6 +772,10 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
         CurrRotator.Pitch - RestRotator.Pitch, 
         CurrRotator.Yaw - RestRotator.Yaw, 
         CurrRotator.Roll - RestRotator.Roll);
+    if (!JointProperties.canRest)
+    {
+      DeltaRotator *= 0.9f;
+    }
     Eigen::Vector3d InitialTheta = Uinv*RotatorToEigenVector(DeltaRotator);
     Eigen::Vector3d InitialThetaVelocity = Uinv*RotatorToEigenVector(AngularVelocity);
     SOLVER_LOG(Log, "Old angle for joint %s, %s", *Joint.JointName, *CurrRotator.ToString());
@@ -818,6 +872,7 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     Joint.Transform.SetRotation(NewAngle.Quaternion());
     Joint.AngularVelocity = NewAngularVelocity;
     Joint.AngularAcceleration = NewAngularAccel;
+    JointProperties.canRest = true;
   }
 }
 
