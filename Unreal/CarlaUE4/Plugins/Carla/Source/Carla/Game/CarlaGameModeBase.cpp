@@ -440,7 +440,7 @@ void ACarlaGameModeBase::GenerateSpawnPoints()
   {
     carla::geom::Transform CarlaTransform = Map->ComputeTransform(Pair.first);
     FTransform Transform(CarlaTransform);
-    Transform.AddToTranslation(FVector(0.f, 0.f, 300.0f));
+    Transform.AddToTranslation(FVector(0.f, 0.f, 50.0f));
     SpawnPointsTransforms.Add(Transform);
   }
 }
