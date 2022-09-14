@@ -509,14 +509,11 @@ void USpringBasedVegetationComponent::ComputeCompositeBodyContribution(
 
     // compute forces
     JointProperties.Force = JointLocalProperties.Force;
-    static constexpr float MULT_VALUE = 0.1f;
     for(int ChildrenId : Joint.ChildrenIds)
     {
       FSkeletonJoint& ChildrenJoint = Skeleton.Joints[ChildrenId];
       FJointProperties& ChildrenProperties = JointPropertiesList[ChildrenId];
-      const float Value = FMath::Max(0.0f, 1.0f - MULT_VALUE * Joint.ChildrenIds.Num());
-      const Eigen::Vector3d Force {ChildrenProperties.Force[0] * Value, ChildrenProperties.Force[1] * Value, ChildrenProperties.Force[2] * Value};
-      JointProperties.Force += Force;
+      JointProperties.Force += ChildrenProperties.Force;
     }
 
     // compute torque
@@ -527,11 +524,7 @@ void USpringBasedVegetationComponent::ComputeCompositeBodyContribution(
       FJointProperties& ChildrenProperties = JointPropertiesList[ChildrenId];
       Eigen::Vector3d ChildrenJointGlobalPosition = ToEigenVector(ChildrenJoint.GlobalTransform.GetLocation())/100.f;
       Eigen::Vector3d ParentJointGlobalPosition = ToEigenVector(Joint.GlobalTransform.GetLocation())/100.f;
-      const float TorqueValue = FMath::Max(0.1f, 1.0f - MULT_VALUE * Joint.ChildrenIds.Num());
-      const Eigen::Vector3d Torque {ChildrenProperties.Torque[0] * TorqueValue, ChildrenProperties.Torque[1] * TorqueValue, ChildrenProperties.Torque[2] * TorqueValue};
-      const float ForceValue = FMath::Max(0.1f, 1.0f - MULT_VALUE * Joint.ChildrenIds.Num());
-      const Eigen::Vector3d Force {ChildrenProperties.Force[0] * ForceValue, ChildrenProperties.Force[1] * ForceValue, ChildrenProperties.Force[2] * ForceValue};
-      JointProperties.Torque += Torque + (ChildrenJointGlobalPosition - ParentJointGlobalPosition).cross(Force);
+      JointProperties.Torque += ChildrenProperties.Torque + (ChildrenJointGlobalPosition - ParentJointGlobalPosition).cross(ChildrenProperties.Force);
     }
 
     // compute inertia tensor
