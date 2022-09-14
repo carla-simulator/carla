@@ -239,6 +239,12 @@ private:
 public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   FSkeletonHierarchy Skeleton;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
+  bool DebugEnableVisualization { true };
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
+  bool DebugEnableAllCollisions { false };
 private:
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   bool bAutoComputeStrength = true;
