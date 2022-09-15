@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 
+#include "Carla/MapGen/SoilTypeManager.h"
 #include "Containers/Array.h"
 #include "Containers/EnumAsByte.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -17,7 +18,7 @@
 UENUM(BlueprintType)
 enum ERegionOfInterestType
 {
-  NONE,
+  NONE_REGION,
   TERRAIN_REGION,      
   WATERBODIES_REGION,  // Not Supported yet 
   VEGETATION_REGION,
@@ -109,7 +110,7 @@ struct CARLATOOLS_API FRegionOfInterest
   TArray<FRoiTile> TilesList;
 
   UPROPERTY(BlueprintReadWrite)
-  TEnumAsByte<ERegionOfInterestType> RegionType = ERegionOfInterestType::NONE;
+  TEnumAsByte<ERegionOfInterestType> RegionType = ERegionOfInterestType::NONE_REGION;
 
   FRegionOfInterest()
   {
@@ -292,8 +293,8 @@ struct CARLATOOLS_API FSoilTypeROI : public FRegionOfInterest
   GENERATED_BODY()
 
   UPROPERTY(BlueprintReadWrite)
-  FString SoilTypeTag;
+  FSoilTerramechanicsProperties SoilProperties;
 
-  FSoilTypeROI() : SoilTypeTag("None")
+  FSoilTypeROI() : SoilProperties()
   {}
 };

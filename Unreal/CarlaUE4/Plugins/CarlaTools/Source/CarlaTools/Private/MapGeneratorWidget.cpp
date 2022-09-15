@@ -9,6 +9,7 @@
 #include "ActorFactories/ActorFactory.h"
 #include "AssetRegistryModule.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "Carla/MapGen/SoilTypeManager.h"
 #include "Carla/Weather/Weather.h"
 #include "Components/SplineComponent.h"
 #include "Editor/FoliageEdit/Public/FoliageEdMode.h"
@@ -94,7 +95,37 @@ void UMapGeneratorWidget::CookSoilTypeToMaps(const FMapGeneratorMetaInfo& MetaIn
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Cooking Soil Type to Tiles in %s %s"), 
       *CUR_CLASS_FUNC_LINE, *MetaInfo.DestinationPath, *MetaInfo.MapName);
-  // TODO: Cook soil info to tiles
+  
+  // Check if map is valid
+  const FString MapCompletePath = MetaInfo.DestinationPath + "/" + MetaInfo.MapName;
+  const FString MapPackageFileName = FPackageName::LongPackageNameToFilename(
+      MapCompletePath, 
+      FPackageName::GetMapPackageExtension());
+    
+  if(!FPaths::FileExists(*MapPackageFileName))
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Soil Terramechanics cannot be applied to a non existing map"), 
+        *CUR_CLASS_FUNC_LINE);
+    return;
+  }
+
+  // Instantiate Weather Actor in main map
+  const FString WorldToLoadPath = MapCompletePath + "." + MetaInfo.MapName;
+  UWorld* World = LoadObject<UWorld>(nullptr, *WorldToLoadPath);
+
+  ASoilTypeManager* SoilTypeManagerActor = (ASoilTypeManager*) UGameplayStatics::GetActorOfClass(World, ASoilTypeManager::StaticClass());
+
+  SoilTypeManagerActor->ClearTerrainPropertiesMap();
+
+  // Set General Settings
+  SoilTypeManagerActor->SetGeneralTerrainProperties(MetaInfo.GeneralSoilType);
+
+  for(TPair<FRoiTile, FSoilTypeROI> SoilROIPair : MetaInfo.SoilTypeRoisMap)
+  {
+    FRoiTile SoilROITile = SoilROIPair.Key;
+    FSoilTypeROI SoilROI = SoilROIPair.Value;
+    SoilTypeManagerActor->AddTerrainPropertiesToTile(SoilROITile.X, SoilROITile.Y, SoilROI.SoilProperties);
+  }
 }
 
 void UMapGeneratorWidget::CookVegetationToCurrentTile(const TArray<UProceduralFoliageSpawner*> FoliageSpawners)

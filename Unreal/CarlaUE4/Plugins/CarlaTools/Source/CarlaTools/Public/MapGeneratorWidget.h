@@ -18,6 +18,8 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCarlaToolsMapGenerator, Log, All);
 
+struct FSoilTerramechanicsProperties;
+
 /// Struct used as container of basic map information
 USTRUCT(BlueprintType)
 struct CARLATOOLS_API FMapGeneratorMetaInfo
@@ -40,7 +42,7 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
   TArray<UProceduralFoliageSpawner*> FoliageSpawners;
 
   UPROPERTY(BlueprintReadWrite)
-  FString GeneralSoilType;
+  FSoilTerramechanicsProperties GeneralSoilType;
 
   UPROPERTY(BlueprintReadWrite)
   UTextureRenderTarget2D* GlobalHeightmap;
