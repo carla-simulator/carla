@@ -93,7 +93,7 @@ docker build -t carla-prerequisites \
 
 ### Use Local Carla UE4 Development Tools With Docker
 
-For local development, you would often require the CARLAUE4Editor
+For local development, you would often require the CarlaUE4Editor
 for integrating custom Unreal assets, etc. This workflow is
 encapsulated within a dockerized build environment as follows.
 
@@ -120,7 +120,7 @@ and then using 'docker compose' with a space instead of 'docker-compose' with a 
 This is required due to lacking GPU support for the NVIDIA runtime in the
 default version of Docker-Compose in the pre-configured Canonical apt sources.*
 
-*Note: It's important to by logged in as user account having uid=1000
+*Note: It's important to be logged in as user account having uid=1000
 for file permissions when bind mounting the Git repository into the container.
 So, be cautious with multi-user workstations as it might not work right away
 without some chmod effort.*
@@ -135,7 +135,7 @@ abstracted by Docker.
 
 ![Editor within Docker](./CarlaUE4Editor_within_Docker.png)
 
-If you need to run more complex commands, you can also attach to the
+If you need to inspect the build environment, you can also attach to the
 container with an interactive bash session, see following command:
 
 ```sh
