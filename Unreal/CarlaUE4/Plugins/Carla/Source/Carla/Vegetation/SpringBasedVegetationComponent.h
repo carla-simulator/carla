@@ -80,6 +80,7 @@ struct FSkeletonJoint
 struct FJointProperties
 {
   float Mass = 0.0;
+  bool canRest = true;
   Eigen::Matrix3d InertiaTensor = Eigen::Matrix3d::Zero();
   Eigen::Vector3d Force = Eigen::Vector3d::Zero();
   Eigen::Vector3d Torque = Eigen::Vector3d::Zero();
@@ -214,6 +215,9 @@ private:
   float Beta = 0.5f;
 
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float Alpha = 0.f;
+
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   FVector Gravity = FVector(0,0,-1);
 
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
@@ -236,6 +240,15 @@ private:
 
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   float CollisionForceMinVel = 1.f;
+
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float ForceDistanceFalloffExponent = 1.f;
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float ForceMaxDistance = 180.f;
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float MinForceFactor = 0.01;
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float LineTraceMaxDistance = 180.f;
 public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   FSkeletonHierarchy Skeleton;
