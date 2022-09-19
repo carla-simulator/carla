@@ -60,8 +60,7 @@ namespace learning {
 
     std::vector<torch::jit::IValue> Tuple 
         {particles_position_tensor, particles_velocity_tensor, wheel_positions_tensor, 
-         wheel_oritentation_tensor, wheel_linear_velocity_tensor, wheel_angular_velocity_tensor, wheel.terrain_type};
-    // std::cout << "Input: " <<  wheel.num_particles << " particles" << std::endl;
+         wheel_oritentation_tensor, wheel_linear_velocity_tensor, wheel_angular_velocity_tensor};
     return torch::ivalue::Tuple::create(Tuple);
   }
 
@@ -136,7 +135,42 @@ namespace learning {
     ~NeuralModelImpl(){
       // std::cout << "Destroying model" << std::endl;
     }
+    std::vector<at::Tensor> particles_position_tensors;
+    std::vector<at::Tensor> particles_velocity_tensors;
+    torch::jit::IValue GetWheelTensorInputsCUDA(WheelInput& wheel, int wheel_idx);
   };
+  torch::jit::IValue NeuralModelImpl::GetWheelTensorInputsCUDA(WheelInput& wheel, int wheel_idx)
+  {
+    at::Tensor particles_position_tensor = 
+        torch::from_blob(wheel.particles_positions, 
+            {wheel.num_particles, 3}, torch::kFloat32);
+
+    at::Tensor particles_velocity_tensor = 
+        torch::from_blob(wheel.particles_velocities, 
+            {wheel.num_particles, 3}, torch::kFloat32);
+
+    at::Tensor wheel_positions_tensor = 
+        torch::from_blob(wheel.wheel_positions, 
+            {3}, torch::kFloat32);
+
+    at::Tensor wheel_oritentation_tensor = 
+        torch::from_blob(wheel.wheel_oritentation, 
+            {4}, torch::kFloat32);
+
+    at::Tensor wheel_linear_velocity_tensor = 
+        torch::from_blob(wheel.wheel_linear_velocity, 
+            {3}, torch::kFloat32);
+
+    at::Tensor wheel_angular_velocity_tensor = 
+        torch::from_blob(wheel.wheel_angular_velocity, 
+            {3}, torch::kFloat32);
+
+    std::vector<torch::jit::IValue> Tuple 
+        {particles_position_tensor.cuda(), particles_velocity_tensor.cuda(), wheel_positions_tensor.cuda(), 
+         wheel_oritentation_tensor.cuda(), wheel_linear_velocity_tensor.cuda(), wheel_angular_velocity_tensor.cuda(),
+         wheel.num_particles};
+    return torch::ivalue::Tuple::create(Tuple);
+  }
 
   NeuralModel::NeuralModel() {
     Model = std::make_unique<NeuralModelImpl>();
@@ -149,7 +183,7 @@ namespace learning {
       Model->module = torch::jit::load(filename_str);
       std::string cuda_str = "cuda:" + std::to_string(device);
       std::cout << "Using CUDA device " << cuda_str << std::endl;
-      Model->module.to(at::Device(cuda_str));
+      // Model->module.to(at::Device(cuda_str));
     } catch (const c10::Error& e) {
       std::cout << "Error loading model: " << e.msg() << std::endl;
     }
@@ -224,6 +258,36 @@ namespace learning {
 
     c10::cuda::CUDACachingAllocator::emptyCache();
 
+  }
+
+  void NeuralModel::ForwardCUDATensors()
+  {
+    std::vector<torch::jit::IValue> TorchInputs;
+    TorchInputs.push_back(Model->GetWheelTensorInputsCUDA(_input.wheel0, 0));
+    TorchInputs.push_back(Model->GetWheelTensorInputsCUDA(_input.wheel1, 1));
+    TorchInputs.push_back(Model->GetWheelTensorInputsCUDA(_input.wheel2, 2));
+    TorchInputs.push_back(Model->GetWheelTensorInputsCUDA(_input.wheel3, 3));
+    auto drv_inputs = torch::tensor(
+        {_input.steering, _input.throttle, _input.braking}, torch::kFloat32); //steer, throtle, brake
+    TorchInputs.push_back(drv_inputs.cuda());
+    TorchInputs.push_back(_input.verbose);
+
+    torch::jit::IValue Output;
+    try {
+      Output = Model->module.forward(TorchInputs);
+    } catch (const c10::Error& e) {
+      std::cout << "Error running model: " << e.msg() << std::endl;
+    }
+
+    std::vector<torch::jit::IValue> Tensors =  Output.toTuple()->elements();
+    _output.wheel0 = GetWheelTensorOutput(
+        Tensors[0].toTensor().cpu(), Tensors[4].toTensor().cpu());
+    _output.wheel1 = GetWheelTensorOutput(
+        Tensors[1].toTensor().cpu(), Tensors[5].toTensor().cpu());
+    _output.wheel2 = GetWheelTensorOutput(
+        Tensors[2].toTensor().cpu(), Tensors[6].toTensor().cpu());
+    _output.wheel3 = GetWheelTensorOutput(
+        Tensors[3].toTensor().cpu(), Tensors[7].toTensor().cpu());
   }
   
   Outputs& NeuralModel::GetOutputs() {

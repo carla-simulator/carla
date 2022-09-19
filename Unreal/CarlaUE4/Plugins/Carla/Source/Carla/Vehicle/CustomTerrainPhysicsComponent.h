@@ -17,8 +17,8 @@
 #ifdef WITH_PYTORCH
 THIRD_PARTY_INCLUDES_START
 #include <carla/pytorch/pytorch.h>
-#endif
 THIRD_PARTY_INCLUDES_END
+#endif
 
 #include <unordered_map>
 #include <vector>
@@ -66,6 +66,7 @@ struct FDenseTile
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
   void GetParticlesInRadius(FDVector Position, float Radius, std::vector<FParticle*> &ParticlesInRadius);
   void GetParticlesInBox(const FOrientedBox& OBox, std::vector<FParticle*> &ParticlesInRadius);
+  void GetAllParticles(std::vector<FParticle*> &ParticlesInRadius);
 
   void UpdateLocalHeightmap();
   std::vector<FParticle> Particles;
@@ -102,6 +103,7 @@ public:
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
   std::vector<FParticle*> GetParticlesInTileRadius(FDVector Position, float Radius);
   std::vector<FParticle*> GetParticlesInBox(const FOrientedBox& OBox);
+  std::vector<uint64_t> GetIntersectingTiles(const FOrientedBox& OBox);
   std::vector<float> GetParticlesHeightMapInTileRadius(FDVector Position, float Radius);
 
   FDenseTile& GetTile(uint32_t Tile_X, uint32_t Tile_Y);
@@ -283,8 +285,15 @@ private:
       FVector ForceWheel0, FVector ForceWheel1, FVector ForceWheel2, FVector ForceWheel3);
       
   void ApplyForces();
+  void LimitParticlesPerWheel(std::vector<FParticle*> &Particles);
   void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles);
   void DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes);
+  void DrawTiles(UWorld* World, const std::vector<uint64_t>& TilesIds, float Height = 0);
+  void GenerateBenchmarkParticles(std::vector<FParticle>& BenchParticles, 
+      std::vector<FParticle*> &ParticlesWheel0, std::vector<FParticle*> &ParticlesWheel1,
+      std::vector<FParticle*> &ParticlesWheel2, std::vector<FParticle*> &ParticlesWheel3,
+      FOrientedBox &BboxWheel0, FOrientedBox &BboxWheel1, 
+      FOrientedBox &BboxWheel2, FOrientedBox &BboxWheel3);
 
   void UpdateParticlesDebug(std::vector<FParticle*> Particles);
   
@@ -349,6 +358,8 @@ private:
   bool bUpdateParticles = false;
   UPROPERTY(EditAnywhere)
   bool bUseDynamicModel = false;
+  UPROPERTY(EditAnywhere)
+  bool bUseCUDAModel = false;
 
   UPROPERTY(EditAnywhere)
   float TireRadius = 33.0229f;
@@ -393,7 +404,15 @@ private:
   UPROPERTY(EditAnywhere)
   FVector HeightMapScaleFactor = FVector(1, 1, 1);
   UPROPERTY(EditAnywhere)
-  FVector HeightMapOffset = FVector(0, 0, 0);  
+  FVector HeightMapOffset = FVector(0, 0, 0);
+  UPROPERTY(EditAnywhere)
+  bool bBenchMark = false;
+  UPROPERTY(EditAnywhere)
+  int MaxParticlesPerWheel = 6000;
+
+  UPROPERTY(EditAnywhere)
+  FVector Radius = FVector(10,10,10);
+  
   UPROPERTY(VisibleAnywhere)
   FIntVector CurrentLargeMapTileId = FIntVector(-1,-1,0);
   UPROPERTY(VisibleAnywhere)
