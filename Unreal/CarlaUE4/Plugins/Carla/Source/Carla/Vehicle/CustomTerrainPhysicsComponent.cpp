@@ -1400,46 +1400,46 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     
     SparseMap.Update(LastUpdatedPosition, TextureRadius, TextureRadius );
     SparseMap.LockMutex();
-    //RunNNPhysicsSimulation(Vehicle, DeltaTime);
-    if(bUpdateParticles)
-    {
-      {
-        TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::DebugToBeRemoved);
+    RunNNPhysicsSimulation(Vehicle, DeltaTime);
+    // if(bUpdateParticles)
+    // {
+    //   {
+    //     TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::DebugToBeRemoved);
 
-        std::vector<FParticle*> ParticlesWheel0;
-        std::vector<FParticle*> ParticlesWheel1;
-        std::vector<FParticle*> ParticlesWheel2;
-        std::vector<FParticle*> ParticlesWheel3;
+    //     std::vector<FParticle*> ParticlesWheel0;
+    //     std::vector<FParticle*> ParticlesWheel1;
+    //     std::vector<FParticle*> ParticlesWheel2;
+    //     std::vector<FParticle*> ParticlesWheel3;
 
-        {
-          TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::RemoveParticles);
-          RemoveParticlesFromOrderedContainer( ParticlesWheel0 );
-          RemoveParticlesFromOrderedContainer( ParticlesWheel1 );
-          RemoveParticlesFromOrderedContainer( ParticlesWheel2 );
-          RemoveParticlesFromOrderedContainer( ParticlesWheel3 );
-        }
-        {
-          TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::UpdateParticles);
-          UpdateParticlesDebug( ParticlesWheel1 );
-          UpdateParticlesDebug( ParticlesWheel2 );
-          UpdateParticlesDebug( ParticlesWheel0 );
-          UpdateParticlesDebug( ParticlesWheel3 );
-        }
+    //     {
+    //       TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::RemoveParticles);
+    //       RemoveParticlesFromOrderedContainer( ParticlesWheel0 );
+    //       RemoveParticlesFromOrderedContainer( ParticlesWheel1 );
+    //       RemoveParticlesFromOrderedContainer( ParticlesWheel2 );
+    //       RemoveParticlesFromOrderedContainer( ParticlesWheel3 );
+    //     }
+    //     {
+    //       TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::UpdateParticles);
+    //       UpdateParticlesDebug( ParticlesWheel1 );
+    //       UpdateParticlesDebug( ParticlesWheel2 );
+    //       UpdateParticlesDebug( ParticlesWheel0 );
+    //       UpdateParticlesDebug( ParticlesWheel3 );
+    //     }
 
-        {
-          TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::AddParticles);
-          AddParticlesToOrderedContainer( ParticlesWheel0 );
-          AddParticlesToOrderedContainer( ParticlesWheel1 );
-          AddParticlesToOrderedContainer( ParticlesWheel2 );
-          AddParticlesToOrderedContainer( ParticlesWheel3 );
-        }
+    //     {
+    //       TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::AddParticles);
+    //       AddParticlesToOrderedContainer( ParticlesWheel0 );
+    //       AddParticlesToOrderedContainer( ParticlesWheel1 );
+    //       AddParticlesToOrderedContainer( ParticlesWheel2 );
+    //       AddParticlesToOrderedContainer( ParticlesWheel3 );
+    //     }
 
-        {
-          TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::UpdateTilesHeightMaps);
-          UpdateTilesHeightMapsInRadius(LastUpdatedPosition, 4);
-        }
-      }
-    }
+    //     {
+    //       TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::UpdateTilesHeightMaps);
+    //       UpdateTilesHeightMapsInRadius(LastUpdatedPosition, 4);
+    //     }
+    //   }
+    // }
     SparseMap.UnLockMutex();
     UpdateTexture();
 
@@ -1838,10 +1838,32 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
 
   if(bUpdateParticles)
   {
-    UpdateParticles(ParticlesWheel0, Output.wheel0._particle_forces, DeltaTime);
-    UpdateParticles(ParticlesWheel1, Output.wheel1._particle_forces, DeltaTime);
-    UpdateParticles(ParticlesWheel2, Output.wheel2._particle_forces, DeltaTime);
-    UpdateParticles(ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime);
+
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE(RemoveParticlesFromOrderedContainer);
+      RemoveParticlesFromOrderedContainer( ParticlesWheel0 );
+      RemoveParticlesFromOrderedContainer( ParticlesWheel1 );
+      RemoveParticlesFromOrderedContainer( ParticlesWheel2 );
+      RemoveParticlesFromOrderedContainer( ParticlesWheel3 );
+    }
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE(UpdateParticles);
+      UpdateParticles(ParticlesWheel0, Output.wheel0._particle_forces, DeltaTime);
+      UpdateParticles(ParticlesWheel1, Output.wheel1._particle_forces, DeltaTime);
+      UpdateParticles(ParticlesWheel2, Output.wheel2._particle_forces, DeltaTime);
+      UpdateParticles(ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime);
+    }
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE(AddParticles);
+      AddParticlesToOrderedContainer( ParticlesWheel0 );
+      AddParticlesToOrderedContainer( ParticlesWheel1 );
+      AddParticlesToOrderedContainer( ParticlesWheel2 );
+      AddParticlesToOrderedContainer( ParticlesWheel3 );
+    }
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::UpdateTilesHeightMaps);
+      UpdateTilesHeightMapsInRadius(LastUpdatedPosition, 4);
+    }
   }
 
   if(bUseMeanAcceleration)
