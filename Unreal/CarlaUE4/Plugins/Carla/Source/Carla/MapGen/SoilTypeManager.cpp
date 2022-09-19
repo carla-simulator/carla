@@ -9,7 +9,7 @@
 ASoilTypeManager::ASoilTypeManager()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 }
 
@@ -22,6 +22,7 @@ void ASoilTypeManager::BeginPlay()
 
 void ASoilTypeManager::Tick(float DeltaTime)
 {
+#if WITH_EDITOR // Only for debugging purposes. Requires to activate tick in contructor
 	if((int)DeltaTime % 2000 == 0)
 	{
 		ALargeMapManager* LargeMapManager = (ALargeMapManager*) UGameplayStatics::GetActorOfClass(GetWorld(), ALargeMapManager::StaticClass());
@@ -31,18 +32,9 @@ void ASoilTypeManager::Tick(float DeltaTime)
 		{
 			FVector CarPos = Car->GetActorLocation();
 
-			// CarPos -= FVector(0.0f, LargeMapManager->GetTileSize() , 0.0f);
-			// CarPos -= FVector(0.0f, 1.0f * 1000.0f * 100.0f , 0.0f);
       FVector GlobalCarPos = LargeMapManager->LocalToGlobalLocation(CarPos);
 			FIntVector TileVector = LargeMapManager->GetTileVectorID(GlobalCarPos);
 			uint64 TileIndex = LargeMapManager->GetTileID(GlobalCarPos);
-			
-			// int TileX = (int)CarPos.X % (int)LargeMapManager->GetTileSize(); 
-			// int TileY = (int)(-1*CarPos.Y) % (int)LargeMapManager->GetTileSize();
-			// FVector Tile0Offset = LargeMapManager->GetTile0Offset();
-			// int TileX = (int)(CarPos.X - Tile0Offset.X) / (int)LargeMapManager->GetTileSize(); 
-			// int TileY = (int)(-1*CarPos.Y - Tile0Offset.Y) / (int)LargeMapManager->GetTileSize();
-			// FIntVector TileVector(TileX, TileY,0);
 
       FString TypeStr = GetTerrainPropertiesAtGlobalLocation(GlobalCarPos).ToString();
 			
@@ -51,6 +43,7 @@ void ASoilTypeManager::Tick(float DeltaTime)
         *TypeStr);
 		}
 	}
+#endif
 }
 
 FSoilTerramechanicsProperties ASoilTypeManager::GetGeneralTerrainProperties()
@@ -87,7 +80,7 @@ void ASoilTypeManager::AddTerrainPropertiesToTile(int TileX, int TileY, FSoilTer
 {
 	// Compute ID from X,Y coords
 	check(LargeMapManager != nullptr)
-  
+
   FIntVector TileVectorID(TileX, TileY, 0);
 
 	// Add to map
