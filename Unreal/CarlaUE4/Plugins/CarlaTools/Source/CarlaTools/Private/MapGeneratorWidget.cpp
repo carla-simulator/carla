@@ -629,8 +629,15 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
 
   LargeMapManager->LargeMapTilePath = MetaInfo.DestinationPath;
   LargeMapManager->LargeMapName = MetaInfo.MapName;
+
+  // Set Tile0Offset to 0 to cook tiles info
+  FVector OriginalTile0Offset = LargeMapManager->GetTile0Offset();
+  LargeMapManager->SetTile0Offset(FVector(0.0f, 0.0f, 0.0f));
    
   LargeMapManager->GenerateMap_Editor();
+
+  // Reset Tile0Offset to original mid-tile position for runtime operations
+  LargeMapManager->SetTile0Offset(OriginalTile0Offset);
 
   UPackage::SavePackage(BaseMapPackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
       *PackageFileName, GError, nullptr, true, true, SAVE_NoError);

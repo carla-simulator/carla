@@ -156,6 +156,8 @@ public:
 
   float GetTileSize();
 
+  FVector GetTile0Offset();
+
   void SetLayerStreamingDistance(float Distance);
 
   void SetActorStreamingDistance(float Distance);

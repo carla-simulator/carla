@@ -49,7 +49,7 @@ private:
 	FSoilTerramechanicsProperties GeneralTerrainProperties;
 
 	UPROPERTY(EditAnywhere)
-	TMap<uint64, FSoilTerramechanicsProperties> TilesTerrainProperties;
+	TMap<FIntVector, FSoilTerramechanicsProperties> TilesTerrainProperties;
 
 	UPROPERTY(EditAnywhere)
 	ALargeMapManager* LargeMapManager;
@@ -70,7 +70,10 @@ public:
 	FSoilTerramechanicsProperties GetGeneralTerrainProperties();
 
 	UFUNCTION(Category="MapGen|Soil Manager")
-	FSoilTerramechanicsProperties GetTerrainPropertiesAtLocation(FVector VehicleLocation);
+	FSoilTerramechanicsProperties GetTerrainPropertiesAtGlobalLocation(FVector VehicleLocation);
+
+  UFUNCTION(Category="MapGen|Soil Manager")
+	FSoilTerramechanicsProperties GetTerrainPropertiesAtLocalLocation(FVector VehicleLocation);
 
 	UFUNCTION(Category="MapGen|Soil Manager")
 	void SetGeneralTerrainProperties(FSoilTerramechanicsProperties TerrainProperties);

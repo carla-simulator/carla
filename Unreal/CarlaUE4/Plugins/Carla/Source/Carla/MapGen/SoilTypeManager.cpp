@@ -27,24 +27,28 @@ void ASoilTypeManager::Tick(float DeltaTime)
 		ALargeMapManager* LargeMapManager = (ALargeMapManager*) UGameplayStatics::GetActorOfClass(GetWorld(), ALargeMapManager::StaticClass());
 		AActor* Car = UGameplayStatics::GetActorOfClass(GetWorld(), PolarisClass);
 
-		if(Car != nullptr && LargeMapManager->IsTileLoaded(0))
+		if(Car != nullptr)
 		{
 			FVector CarPos = Car->GetActorLocation();
 
-			CarPos -= FVector(0.0f, LargeMapManager->GetTileSize() , 0.0f);
+			// CarPos -= FVector(0.0f, LargeMapManager->GetTileSize() , 0.0f);
 			// CarPos -= FVector(0.0f, 1.0f * 1000.0f * 100.0f , 0.0f);
-			// FIntVector TileVector = LargeMapManager->GetTileVectorID(CarPos);
-			uint64 TileIndex = LargeMapManager->GetTileID(CarPos);
+      FVector GlobalCarPos = LargeMapManager->LocalToGlobalLocation(CarPos);
+			FIntVector TileVector = LargeMapManager->GetTileVectorID(GlobalCarPos);
+			uint64 TileIndex = LargeMapManager->GetTileID(GlobalCarPos);
 			
 			// int TileX = (int)CarPos.X % (int)LargeMapManager->GetTileSize(); 
 			// int TileY = (int)(-1*CarPos.Y) % (int)LargeMapManager->GetTileSize();
-			FVector Tile0Offset = LargeMapManager->GetTile0Offset();
-			int TileX = (int)(CarPos.X - Tile0Offset.X) / (int)LargeMapManager->GetTileSize(); 
-			int TileY = (int)(-1*CarPos.Y - Tile0Offset.Y) / (int)LargeMapManager->GetTileSize();
-			FIntVector TileVector(TileX, TileY,0);
+			// FVector Tile0Offset = LargeMapManager->GetTile0Offset();
+			// int TileX = (int)(CarPos.X - Tile0Offset.X) / (int)LargeMapManager->GetTileSize(); 
+			// int TileY = (int)(-1*CarPos.Y - Tile0Offset.Y) / (int)LargeMapManager->GetTileSize();
+			// FIntVector TileVector(TileX, TileY,0);
+
+      FString TypeStr = GetTerrainPropertiesAtGlobalLocation(GlobalCarPos).ToString();
 			
-			UE_LOG(LogCarla, Log, TEXT("Current Tile Index %d ----> (%d, %d) with position [%f, %f, %f] %f"),
-				TileIndex, TileVector.X, TileVector.Y, CarPos.X, CarPos.Y, CarPos.Z, LargeMapManager->GetTileSize() );
+			UE_LOG(LogCarla, Log, TEXT("Current Tile Index %d ----> (%d, %d, %d) with position L[%f, %f, %f] G[%f, %f, %f] Terrain Type: %s"),
+				TileIndex, TileVector.X, TileVector.Y, TileVector.Z, CarPos.X, CarPos.Y, CarPos.Z, GlobalCarPos.X, GlobalCarPos.Y, GlobalCarPos.Z,
+        *TypeStr);
 		}
 	}
 }
@@ -54,21 +58,22 @@ FSoilTerramechanicsProperties ASoilTypeManager::GetGeneralTerrainProperties()
 	return GeneralTerrainProperties;
 }
 
-FSoilTerramechanicsProperties ASoilTypeManager::GetTerrainPropertiesAtLocation(FVector VehicleLocation)
+FSoilTerramechanicsProperties ASoilTypeManager::GetTerrainPropertiesAtGlobalLocation(FVector VehicleLocation)
 {
 	// Get Indexes from location
-	// TODO
-	int TileX = 0;
-	int TileY = 0;
-
-	// Get ID from indexes
-	uint16 TileID = LargeMapManager->GetTileID(FIntVector(TileX, TileY, 0));
+	FIntVector TileVectorID = LargeMapManager->GetTileVectorID(VehicleLocation);
 
 	// Query the map, if not in map, return general
-	if(TilesTerrainProperties.Contains(TileID))
-		return TilesTerrainProperties[TileID];	// Tile properties
+	if(TilesTerrainProperties.Contains(TileVectorID))
+		return TilesTerrainProperties[TileVectorID];	// Tile properties
 	else
 		return GeneralTerrainProperties;		// General properties
+}
+
+FSoilTerramechanicsProperties ASoilTypeManager::GetTerrainPropertiesAtLocalLocation(FVector VehicleLocation)
+{
+  FVector GlobalVehiclePosition = LargeMapManager->LocalToGlobalLocation(VehicleLocation);
+  return GetTerrainPropertiesAtGlobalLocation(GlobalVehiclePosition);
 }
 
 void ASoilTypeManager::SetGeneralTerrainProperties(FSoilTerramechanicsProperties TerrainProperties)
@@ -82,13 +87,14 @@ void ASoilTypeManager::AddTerrainPropertiesToTile(int TileX, int TileY, FSoilTer
 {
 	// Compute ID from X,Y coords
 	check(LargeMapManager != nullptr)
-	uint64 TileID = LargeMapManager->GetTileID(FIntVector(TileX, TileY, 0));
+  
+  FIntVector TileVectorID(TileX, TileY, 0);
 
 	// Add to map
   if(TerrainProperties.TerrainType == ESoilTerramechanicsType::NONE_SOIL)
-	  TilesTerrainProperties.Add(TileID, GeneralTerrainProperties);
+	  TilesTerrainProperties.Add(TileVectorID, GeneralTerrainProperties);
   else
-	  TilesTerrainProperties.Add(TileID, TerrainProperties);
+	  TilesTerrainProperties.Add(TileVectorID, TerrainProperties);
 }
 
 void ASoilTypeManager::ClearTerrainPropertiesMap()
