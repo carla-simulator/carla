@@ -181,7 +181,6 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
     const FString& SavePath, const FHeightMapData &HeightMap)
 {
 
-
   uint32_t TileSize = (TileEnd.X - TileOrigin.X );
   uint32_t PartialHeightMapSize = TextureSize / ( (AffectedRadius * 2) / TileSize);
   std::string FileName = std::string(TCHAR_TO_UTF8(*( SavePath + TileOrigin.ToString() + ".tile" ) ) );
@@ -196,7 +195,7 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
     TilePosition = FDVector(VectorToRead);
     ReadStdVector<FParticle> (ReadStream, Particles);
     ReadStdVector<float> (ReadStream, ParticlesHeightMap);
-    //UE_LOG(LogCarla, Log, TEXT("Reading data, got %d particles"), Particles.size());
+    UE_LOG(LogCarla, Log, TEXT("Reading data, got %d particles"), Particles.size());
   }
   else
   {
@@ -700,6 +699,7 @@ FDenseTile& FSparseHighDetailMap::InitializeRegion(uint64_t TileId)
 
 FDenseTile& FSparseHighDetailMap::InitializeRegionInCache(uint64_t TileId)
 {
+  Lock_CacheMap.Lock();
   FDVector TileCenter = GetTilePosition(TileId);
   FDenseTile& Tile = CacheMap[TileId]; 
   //UE_LOG(LogCarla, Log, TEXT("InitializeRegionInCache Tile with (%f,%f,%f)"), 
@@ -710,6 +710,7 @@ FDenseTile& FSparseHighDetailMap::InitializeRegionInCache(uint64_t TileId)
       ParticleSize, TerrainDepth,
       TileCenter, TileCenter + FDVector(TileSize, TileSize, 0.f),
       SavePath, Heightmap);
+  Lock_CacheMap.Unlock();
   return Tile;
 }
 
@@ -1312,6 +1313,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     DeformationPlaneActor->GetStaticMeshComponent()->SetStaticMesh( DeformationPlaneMesh );
     DeformationPlaneActor->GetStaticMeshComponent()->SetMaterial( 0, DeformationPlaneMaterial );
+    DeformationPlaneActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
   }
 
   ReloadCache(FVector(100,100, 0), CacheRadius.X, CacheRadius.Y );
@@ -1406,7 +1408,6 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
       }
     }
     LastUpdatedPosition = Vehicle->GetActorLocation();
-    DeformationPlaneActor->SetActorLocation(LastUpdatedPosition);
     SparseMap.Update(LastUpdatedPosition, TextureRadius, TextureRadius );
     SparseMap.LockMutex();
     RunNNPhysicsSimulation(Vehicle, DeltaTime);
@@ -2154,6 +2155,7 @@ void UCustomTerrainPhysicsComponent::ApplyForcesToVehicle(
         WheelPosition3 + FVector(0,0,50)+ ForceWheel3.GetSafeNormal()*(5 + ForceMulFactor*10*ForceWheel3.Size()),
         FLinearColor(0.0,1.0,0.0), 0, 3.0, 0.3);
   }
+  /*
   UE_LOG(LogCarla, Log, TEXT("Forces0 %s"), 
       *ForceWheel0.ToString());
   UE_LOG(LogCarla, Log, TEXT("Forces1 %s"), 
@@ -2170,6 +2172,7 @@ void UCustomTerrainPhysicsComponent::ApplyForcesToVehicle(
       *TorqueWheel2.ToString());
   UE_LOG(LogCarla, Log, TEXT("Torque3 %s"), 
       *TorqueWheel3.ToString());
+  */
 }
 
 void UCustomTerrainPhysicsComponent::ApplyMeanAccelerationToVehicle(
