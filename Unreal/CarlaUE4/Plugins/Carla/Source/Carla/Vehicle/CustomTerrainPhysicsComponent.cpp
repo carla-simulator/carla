@@ -1161,6 +1161,15 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
         TEXT("Folder was not created at %s"), *SavePath);  
   }
 
+  
+  DeformationPlaneActor = GetWorld()->SpawnActor<AStaticMeshActor>();
+  
+  if( DeformationPlaneActor )
+  {
+    DeformationPlaneActor->GetStaticMeshComponent()->SetStaticMesh( DeformationPlaneMesh );
+    DeformationPlaneActor->GetStaticMeshComponent()->SetMaterial( 0, DeformationPlaneMaterial );
+  }
+
   ReloadCache(FVector(100,100, 0), CacheRadius.X, CacheRadius.Y );
   LoadTilesAtPosition(FVector(100,100, 0), TileRadius.X, TileRadius.Y );
   InitTexture();
@@ -1253,7 +1262,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
       }
     }
     LastUpdatedPosition = Vehicle->GetActorLocation();
-    
+    DeformationPlaneActor->SetActorLocation(LastUpdatedPosition);
     SparseMap.Update(LastUpdatedPosition, TextureRadius, TextureRadius );
     SparseMap.LockMutex();
     //RunNNPhysicsSimulation(Vehicle, DeltaTime);
