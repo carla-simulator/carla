@@ -55,16 +55,26 @@ struct FHeightMapData
 
 struct FDenseTile
 {
+  FDenseTile();
+  ~FDenseTile();
+  FDenseTile(const FDenseTile& Origin);
+  FDenseTile(FDenseTile&& Origin);
+  FDenseTile& operator=(FDenseTile&& Origin);
+
   void InitializeTile(uint32_t TextureSize, float AffectedRadius, float ParticleSize, float Depth, 
       FDVector TileOrigin, FDVector TileEnd, const FString& SavePath, const FHeightMapData &HeightMap);
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
   void GetParticlesInRadius(FDVector Position, float Radius, std::vector<FParticle*> &ParticlesInRadius);
   void GetParticlesInBox(const FOrientedBox& OBox, std::vector<FParticle*> &ParticlesInRadius);
 
+  void UpdateLocalHeightmap();
   std::vector<FParticle> Particles;
   std::vector<float> ParticlesHeightMap;
+  //std::vector<std::vector<float>> ParticlesZOrdered;
+  std::vector<std::multiset<float,std::greater<float>>> ParticlesZOrdered;
   FDVector TilePosition;
   FString SavePath;
+  bool bHeightmapNeedToUpdate = false;
 };
 
 class FSparseHighDetailMap
@@ -121,7 +131,8 @@ public:
       FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight,
       float ScaleZ);
 
-  void LoadTilesAtPosition(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
+  void LoadTilesAtPositionFromCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
+  void UnLoadTilesAtPositionToCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
   void ReloadCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
 
   void Update(FVector Position, float RadiusX, float RadiusY);
@@ -155,6 +166,7 @@ private:
   float AffectedRadius = 0.0f;
   FVector PositionToUpdate;
   FCriticalSection Lock_Map; // UE4 Mutex
+  FCriticalSection Lock_CacheMap; // UE4 Mutex
   FCriticalSection Lock_Position; // UE4 Mutex
 
 };
@@ -202,6 +214,10 @@ public:
 
   UFUNCTION(BlueprintCallable, Category="Tiles")
   void LoadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
+
+  UFUNCTION(BlueprintCallable, Category="Tiles")
+  void UnloadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
+
 
   UFUNCTION(BlueprintCallable, Category="Tiles")
   void ReloadCache(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
@@ -270,7 +286,13 @@ private:
   void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles);
   void DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes);
 
+  void UpdateParticlesDebug(std::vector<FParticle*> Particles);
+  
   void UpdateTilesHeightMaps( const std::vector<FParticle*>& Particles);
+  void RemoveParticlesFromOrderedContainer(const std::vector<FParticle*>& Particles);
+  void AddParticlesToOrderedContainer(const std::vector<FParticle*>& Particles);
+  void UpdateTilesHeightMapsInRadius(FDVector Position, uint32 Rad );
+  
   UPROPERTY(EditAnywhere)
   TArray<FForceAtLocation> ForcesToApply;
   UPROPERTY(EditAnywhere)
@@ -288,7 +310,14 @@ private:
   FVector CacheRadius = FVector( 50, 50, 0 );
   UPROPERTY(EditAnywhere, Category="Tiles")
   int32 TileSize = 1;
-
+  // TimeToTriggerCacheReload In seconds
+  UPROPERTY(EditAnywhere, Category="Tiles")
+  float TimeToTriggerCacheReload = 20.0f;
+  // TimeToTriggerLoadTiles in MS
+  UPROPERTY(EditAnywhere, Category="Tiles")
+  float TimeToTriggerLoadTiles = 1.0f;
+  UPROPERTY(EditAnywhere, Category="Tiles")
+  float TimeToTriggerUnLoadTiles = 5.0f;
   // Radius of the data collected by the texture in METERS
   UPROPERTY(EditAnywhere, Category="MaterialParameters")
   float TextureRadius = 4.0f;
@@ -372,7 +401,6 @@ private:
 
   class FRunnableThread* Thread;
   struct FTilesWorker* TilesWorker;
-
 };
 
 struct FTilesWorker : public FRunnable
