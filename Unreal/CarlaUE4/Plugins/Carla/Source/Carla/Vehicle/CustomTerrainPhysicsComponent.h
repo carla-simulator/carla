@@ -15,6 +15,7 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Engine/DataAsset.h"
+#include "Async/Future.h"
 #ifdef WITH_PYTORCH
 THIRD_PARTY_INCLUDES_START
 #include <carla/pytorch/pytorch.h>
@@ -139,6 +140,7 @@ public:
   uint64_t GetTileId(uint64_t TileId);
   uint64_t GetTileId(FDVector Position);
   FIntVector GetVectorTileId(FDVector Position);
+  FIntVector GetVectorTileId(uint64_t TileId);
   FDVector GetTilePosition(uint64_t TileId);
   FDVector GetTilePosition(uint32_t Tile_X, uint32_t Tile_Y);
 
@@ -161,6 +163,7 @@ public:
   void LoadTilesAtPositionFromCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
   void UnLoadTilesAtPositionToCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
   void ReloadCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
+  void UpdateMaps(FDVector Position, float RadiusX, float RadiusY, float CacheRadiusX, float CacheRadiusY);
 
   void Update(FVector Position, float RadiusX, float RadiusY);
 
@@ -176,6 +179,25 @@ public:
   void UnLockMutex()
   {
     Lock_Map.Unlock();
+  }
+
+  std::vector<uint64_t> GetTileIdInMap()
+  {
+    std::vector<uint64_t> Result;
+    for (auto& Iter : Map)
+    {
+      Result.emplace_back(Iter.first);
+    }
+    return Result;
+  }
+  std::vector<uint64_t> GetTileIdInCache()
+  {
+    std::vector<uint64_t> Result;
+    for (auto& Iter : CacheMap)
+    {
+      Result.emplace_back(Iter.first);
+    }
+    return Result;
   }
 
   std::unordered_map<uint64_t, FDenseTile> Map;
@@ -257,6 +279,9 @@ public:
   void LoadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
 
   UFUNCTION(BlueprintCallable, Category="Tiles")
+  void UpdateMaps(FVector Position, float RadiusX, float RadiusY, float CacheRadiusX, float CacheRadiusY);
+
+  UFUNCTION(BlueprintCallable, Category="Tiles")
   void UnloadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
 
 
@@ -329,7 +354,8 @@ private:
   void LimitParticlesPerWheel(std::vector<FParticle*> &Particles);
   void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles);
   void DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes);
-  void DrawTiles(UWorld* World, const std::vector<uint64_t>& TilesIds, float Height = 0);
+  void DrawTiles(UWorld* World, const std::vector<uint64_t>& TilesIds, float Height = 0,
+    FLinearColor Color = FLinearColor(0.0,1.0,0.0,0.0));
   void GenerateBenchmarkParticles(std::vector<FParticle>& BenchParticles, 
       std::vector<FParticle*> &ParticlesWheel0, std::vector<FParticle*> &ParticlesWheel1,
       std::vector<FParticle*> &ParticlesWheel2, std::vector<FParticle*> &ParticlesWheel3,
@@ -352,14 +378,18 @@ private:
   UPROPERTY(EditAnywhere)
   FVector WorldSize = FVector(200000,200000,0);
 
+public:
   // Radius of the data loaded in memory
   UPROPERTY(EditAnywhere, Category="Tiles")
-  FVector TileRadius = FVector( 5, 5, 0 );
+  FVector TileRadius = FVector( 100, 100, 0 );
   // Radius of the data loaded in memory
   UPROPERTY(EditAnywhere, Category="Tiles")
   FVector CacheRadius = FVector( 50, 50, 0 );
   UPROPERTY(EditAnywhere, Category="Tiles")
+  bool bDrawLoadedTiles = false;
+  UPROPERTY(EditAnywhere, Category="Tiles")
   int32 TileSize = 1;
+private:
   // TimeToTriggerCacheReload In seconds
   UPROPERTY(EditAnywhere, Category="Tiles")
   float TimeToTriggerCacheReload = 20.0f;
@@ -465,6 +495,8 @@ private:
   #ifdef WITH_PYTORCH
   carla::learning::NeuralModel TerramechanicsModel;
   #endif
+
+  TFuture<bool> IterationCompleted;
 
   class FRunnableThread* Thread;
   struct FTilesWorker* TilesWorker;
