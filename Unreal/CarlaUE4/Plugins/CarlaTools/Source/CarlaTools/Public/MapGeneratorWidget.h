@@ -211,11 +211,14 @@ public:
 
   /// Function called by Widget Blueprint used to start the whole vegetation
   /// process for map defined in @a MetaInfo
-  UFUNCTION(Category="Map Generator",BlueprintCallable)
+  UFUNCTION(Category="Map Generator|Vegetation",BlueprintCallable)
   void CookVegetation(const FMapGeneratorMetaInfo& MetaInfo);
 
   UFUNCTION(Category="Map Generator|Soil Terramechanics", BlueprintCallable)
   void CookSoilTypeToMaps(const FMapGeneratorMetaInfo& MetaInfo);
+  
+  UFUNCTION(Category="Map Generator|Miscellaneous", BlueprintCallable)
+  void CookMiscInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo);
 
   /// Function invoked by the widget that cooks the vegetation defined in
   /// @a FoliageSpawners only in the world opened in the editor
@@ -243,10 +246,10 @@ public:
   bool LoadMapInfoFromPath(FString InDirectory, int& OutMapSize, FString& OutFoundMapName);
 
   /// Spawns rivers of types @a RiverClass
-  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  UFUNCTION(Category="MapGenerator|Water", BlueprintCallable)
   AActor* GenerateWater(TSubclassOf<class AActor> RiverClass);
 
-  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  UFUNCTION(Category="MapGenerator|Water", BlueprintCallable)
   bool GenerateWaterFromWorld(UWorld* RiversWorld, TSubclassOf<class AActor> RiverClass);
 
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
@@ -255,7 +258,7 @@ public:
   /// Adds weather actor of type @a WeatherActorClass and sets the @a SelectedWeather
   /// to the map specified in @a MetaInfo. Ifthe actor already exists on the map
   /// then it is returned so only one weather actor is spawned in each map
-  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  UFUNCTION(Category="MapGenerator|Weather", BlueprintCallable)
   AActor* AddWeatherToExistingMap(TSubclassOf<class AActor> WeatherActorClass, 
       const FMapGeneratorMetaInfo& MetaInfo, const FString SelectedWeather);
 
@@ -274,7 +277,7 @@ public:
   UFUNCTION(Category="MapGenerator|ROIs", BlueprintCallable)
   TMap<FRoiTile, FSoilTypeROI> CreateSoilTypeRoisMap(TArray<FSoilTypeROI> SoilTypeRoisArray);
 
-  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  UFUNCTION(Category="MapGenerator|Vegetation", BlueprintCallable)
   bool DeleteAllVegetationInMap(const FString Path, const FString MapName);
 
   UFUNCTION(Category="MapGenerator|JsonLibrary", BlueprintCallable)
@@ -328,6 +331,9 @@ private:
   UFUNCTION()
   bool CookVegetationToWorld(UWorld* World, const TArray<UProceduralFoliageSpawner*> FoliageSpawners);
 
+  UFUNCTION()
+  bool CookMiscSpreadedActors(const FMapGeneratorMetaInfo& MetaInfo);
+
   /// Returns the world object in @a WorldAssetData
   UFUNCTION()
   UWorld* GetWorldFromAssetData(FAssetData& WorldAssetData);
@@ -336,6 +342,9 @@ private:
   /// @a x and @a y.
   UFUNCTION()
   float GetLandscapeSurfaceHeight(UWorld* World, float x, float y, bool bDrawDebugLines);
+
+  UFUNCTION()
+  float GetLandscapeSurfaceHeightFromRayCast(UWorld* World, float x, float y, bool bDrawDebugLines);
 
   UFUNCTION()
   void ExtractCoordinatedFromMapName(const FString MapName, int& X, int& Y);

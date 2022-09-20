@@ -128,6 +128,24 @@ void UMapGeneratorWidget::CookSoilTypeToMaps(const FMapGeneratorMetaInfo& MetaIn
   }
 }
 
+void UMapGeneratorWidget::CookMiscInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Cooking Miscellaneous Info to Tiles in %s %s"), 
+      *CUR_CLASS_FUNC_LINE, *MetaInfo.DestinationPath, *MetaInfo.MapName);
+
+  // Spreaded actors (ROIs)
+  bool bSpreadedSuccess = CookMiscSpreadedActors(MetaInfo);
+  if(!bSpreadedSuccess)
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Miscellaneous Spreaded Actor cooking was not successful..."), 
+        *CUR_CLASS_FUNC_LINE);
+  }
+
+  // Specific location actors (ROI? Location?)
+
+
+}
+
 void UMapGeneratorWidget::CookVegetationToCurrentTile(const TArray<UProceduralFoliageSpawner*> FoliageSpawners)
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, 
@@ -1029,6 +1047,84 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
   return true;
 }
 
+bool UMapGeneratorWidget::CookMiscSpreadedActors(const FMapGeneratorMetaInfo& MetaInfo)
+{
+  bool bSuccess = true;
+
+  TArray<FRoiTile> ListOfTiles;
+  MetaInfo.MiscSpreadedActorsRoisMap.GetKeys(ListOfTiles);
+
+  for(FRoiTile ThisTile : ListOfTiles)
+  {
+    // Check if map is valid
+    const FString MapCompletePath = MetaInfo.DestinationPath + "/" + MetaInfo.MapName +
+        "_Tile_" + FString::FromInt(ThisTile.X) + "_" + FString::FromInt(ThisTile.Y);
+    // const FString MapPackageFileName = FPackageName::LongPackageNameToFilename(
+    //     MapCompletePath, 
+    //     FPackageName::GetMapPackageExtension());
+      
+    // if(!FPaths::FileExists(*MapPackageFileName))
+    // {
+    //   UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Spreaded actors cannot be applied to a non existing map"), 
+    //       *CUR_CLASS_FUNC_LINE);
+    //   return false;
+    // }
+
+    // Instantiate Weather Actor in main map
+    const FString WorldToLoadPath = MapCompletePath + "." + MetaInfo.MapName + 
+        "_Tile_" + FString::FromInt(ThisTile.X) + "_" + FString::FromInt(ThisTile.Y);
+    // UWorld* World = LoadObject<UWorld>(nullptr, *WorldToLoadPath);
+    bool bLoadedSuccess = FEditorFileUtils::LoadMap(*WorldToLoadPath, false, true);
+    if(!bLoadedSuccess){
+      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Loading %s"),
+          *CUR_CLASS_FUNC_LINE, *WorldToLoadPath);
+      return false;
+    }
+    UWorld* World = GEditor->GetEditorWorldContext().World();
+
+    if(!IsValid(World))
+    {
+      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error loading world %s"), 
+          *CUR_CLASS_FUNC_LINE, *WorldToLoadPath);
+      return false;
+    }
+
+    FMiscSpreadedActorsROI ActorROI = MetaInfo.MiscSpreadedActorsRoisMap[ThisTile];
+
+    int NumOfTilesForSpreadedActorsGrid = 50;
+    float TotalMapTileSize = 100800.0f; // In cm
+    for(int i = 1; i < NumOfTilesForSpreadedActorsGrid - 1; i++)
+    {
+      for(int j = 1; j < NumOfTilesForSpreadedActorsGrid - 1; j++)
+      {
+        bool bIsGridTileEligible = FMath::RandRange(0.0f,100.0f) <= ActorROI.Density;
+        float ActorXCoord = i * TotalMapTileSize / NumOfTilesForSpreadedActorsGrid;
+        float ActorYCoord = j * TotalMapTileSize / NumOfTilesForSpreadedActorsGrid;
+        if(bIsGridTileEligible)
+        {
+          float ActorZCoord = GetLandscapeSurfaceHeight(World, ActorXCoord, ActorYCoord, false);
+          // TODO: Add small random offset inside the grid to add variation
+          FVector Location(ActorXCoord, ActorYCoord, ActorZCoord);
+          FRotator Rotation(0, 0, 0);
+          FActorSpawnParameters SpawnInfo;
+          
+          
+          AActor* RiverActor =  World->SpawnActor<AActor>(
+              ActorROI.ActorClass, 
+              Location, 
+              Rotation, 
+              SpawnInfo);
+        }
+      }
+    }
+
+    // Save map
+    SaveWorld(World);
+  }
+
+  return bSuccess;
+}
+
 UWorld* UMapGeneratorWidget::GetWorldFromAssetData(FAssetData& WorldAssetData)
 {
   UWorld* World;
@@ -1053,7 +1149,50 @@ float UMapGeneratorWidget::GetLandscapeSurfaceHeight(UWorld* World, float x, flo
     FVector Location(x, y, 0);
     TOptional<float> Height = Landscape->GetHeightAtLocation(Location);
     // TODO: Change function return type to TOptional<float>
-    return Height.IsSet() ? Height.GetValue() : 0.0f;
+    return Height.IsSet() ? Height.GetValue() : GetLandscapeSurfaceHeightFromRayCast(World, x, y, bDrawDebugLines);
+  }
+  return 0.0f;
+}
+
+float UMapGeneratorWidget::GetLandscapeSurfaceHeightFromRayCast(UWorld* World, float x, float y, bool bDrawDebugLines)
+{
+  if(World)
+  {
+    FVector RayStartingPoint(x, y, 9999999);
+    FVector RayEndPoint(x, y, -9999999);
+
+    // Raytrace
+    FHitResult HitResult;
+    World->LineTraceSingleByObjectType(
+        OUT HitResult,
+        RayStartingPoint,
+        RayEndPoint,
+        FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldStatic),
+        FCollisionQueryParams());
+
+    // Draw debug line.
+    if (bDrawDebugLines)
+    {
+      FColor LineColor;
+
+      if (HitResult.GetActor()) LineColor = FColor::Red;
+      else LineColor = FColor::Green;
+
+      DrawDebugLine(
+          World,
+          RayStartingPoint,
+          RayEndPoint,
+          LineColor,
+          true,
+          5.f,
+          0.f,
+          10.f);
+    }
+
+    // Return Z Location.
+    if (HitResult.GetActor()) return HitResult.ImpactPoint.Z;
+    
+    
   }
   return 0.0f;
 }
