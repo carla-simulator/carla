@@ -375,6 +375,13 @@ private:
   UPROPERTY(EditAnywhere, Category="MaterialParameters")
   float EffectMultiplayer = 10.0f;
 
+  UPROPERTY(EditAnywhere, Category="DeformationMesh")
+  UStaticMesh* DeformationPlaneMesh = nullptr;
+  UPROPERTY(EditAnywhere, Category="DeformationMesh")
+  UMaterialInstance* DeformationPlaneMaterial = nullptr;
+  UPROPERTY(VisibleAnywhere, Category="DeformationMesh")
+  AStaticMeshActor* DeformationPlaneActor = nullptr;
+
   UPROPERTY()
   UMaterialParameterCollectionInstance* MPCInstance;
   
