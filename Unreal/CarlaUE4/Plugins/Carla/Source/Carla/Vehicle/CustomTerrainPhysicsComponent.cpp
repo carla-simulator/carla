@@ -28,6 +28,7 @@
 #include "GenericPlatform/GenericPlatformFile.h"
 #include "Async/Async.h"
 #include "Async/Future.h"
+#include "LandscapeProxy.h"
 
 
 #include "Carla/Game/CarlaStatics.h"
@@ -100,14 +101,21 @@ void FHeightMapData::InitializeHeightmap(
   FTexture2DMipMap* TileMipMap = &Texture->PlatformData->Mips[0];
   FByteBulkData* TileRawImageData = &TileMipMap->BulkData;
   FColor* FormatedImageData = (FColor*)(TileRawImageData->Lock(LOCK_READ_ONLY));
-    Size_X = Texture->GetSizeX();
+  Size_X = Texture->GetSizeX();
   Size_Y = Texture->GetSizeY();
   for(uint32_t j = 0; j < Size_Y; j++)
   {
     for(uint32_t i = 0; i < Size_X; i++)
     {
       uint32_t idx = j*Size_X + i;
-      float HeightLevel = Scale_Z*(MinHeight + (MaxHeight - MinHeight) * FormatedImageData[idx].R/255.f);
+      float HeightLevel;
+      FColor PixelColor = FormatedImageData[idx];
+      uint8* HeightLevelPtr = (uint8*) &HeightLevel;
+      HeightLevelPtr[0] = PixelColor.B;
+      HeightLevelPtr[1] = PixelColor.G;
+      HeightLevelPtr[2] = PixelColor.R;
+      HeightLevelPtr[3] = PixelColor.A;
+      // HeightLevel = Scale_Z*(MinHeight + (MaxHeight - MinHeight) * FormatedImageData[idx].R/255.f);
       Pixels.emplace_back(HeightLevel);
     }
   }
@@ -115,6 +123,58 @@ void FHeightMapData::InitializeHeightmap(
   UE_LOG(LogCarla, Log, 
       TEXT("Height Map initialized with %d pixels"), Pixels.size());
 }
+void FHeightMapData::InitializeHeightmapFloat(
+    UTexture2D* Texture, FDVector Size, FDVector Origin,
+    float Min, float Max, FDVector Tile0, float ScaleZ)
+{
+  Tile0Position = Tile0;
+  MinHeight = Min;
+  MaxHeight = Max;
+  WorldSize = Size;
+  Offset = Origin;
+  Pixels.clear();
+  // setup required parameters
+  Texture->CompressionSettings = TextureCompressionSettings::TC_VectorDisplacementmap;
+  Texture->SRGB = false;
+  Texture->UpdateResource();
+
+  FTexture2DMipMap* TileMipMap = &Texture->PlatformData->Mips[0];
+  FByteBulkData* TileRawImageData = &TileMipMap->BulkData;
+  FFloat16Color* FormatedImageData = (FFloat16Color*)(TileRawImageData->Lock(LOCK_READ_ONLY));
+  Size_X = Texture->GetSizeX();
+  Size_Y = Texture->GetSizeY();
+  for(uint32_t j = 0; j < Size_Y; j++)
+  {
+    for(uint32_t i = 0; i < Size_X; i++)
+    {
+      uint32_t idx = j*Size_X + i;
+      float HeightLevel = Scale_Z*(MinHeight + (MaxHeight - MinHeight) * FormatedImageData[idx].R.GetFloat());
+      Pixels.emplace_back(HeightLevel);
+    }
+  }
+  TileRawImageData->Unlock();
+  UE_LOG(LogCarla, Log, 
+      TEXT("Height Map initialized with %d pixels"), Pixels.size());
+}
+
+void FHeightMapData::InitializeHeightmap(
+    UHeightMapDataAsset* DataAsset, FDVector Size, FDVector Origin,
+    FDVector Tile0, float ScaleZ)
+{
+  Tile0Position = Tile0;
+  WorldSize = Size;
+  Offset = Origin;
+  Size_X = DataAsset->SizeX;
+  Size_Y = DataAsset->SizeY;
+  // Pixels = DataAsset->HeightValues;
+  Pixels.clear();
+  Pixels.reserve(DataAsset->HeightValues.Num());
+  for (float Height : DataAsset->HeightValues)
+  {
+    Pixels.emplace_back(UEFrameToSI(Height));
+  }
+}
+
 float FHeightMapData::GetHeight(FDVector Position) const
 {
   Position = Position - Tile0Position;
@@ -122,7 +182,7 @@ float FHeightMapData::GetHeight(FDVector Position) const
   uint32_t Coord_Y = (1.f - Position.Y / WorldSize.Y) * Size_Y;
   Coord_X = std::min(Coord_X, Size_X-1);
   Coord_Y = std::min(Coord_Y, Size_Y-1);
-  return Pixels[Coord_Y*Size_X + Coord_X];
+  return Pixels[Coord_X*Size_Y + Coord_Y];
 }
 
 void FHeightMapData::Clear()
@@ -720,10 +780,42 @@ void FSparseHighDetailMap::InitializeMap(UTexture2D* HeightMapTexture,
   Tile0Position = Origin;
   TileSize = Size;
   Extension = MapSize;
+  EPixelFormat TexFormat = HeightMapTexture->GetPixelFormat(0);
+  if(TexFormat == PF_B8G8R8A8 || TexFormat == PF_G8 || TexFormat == PF_DXT5)
+  {
+    UE_LOG(LogCarla, Log, 
+      TEXT("Using 8 bit height map, pixel format %d"), TexFormat);
+    Heightmap.InitializeHeightmap(
+        HeightMapTexture, Extension, Tile0Position, 
+        MinHeight, MaxHeight, Tile0Position, ScaleZ);
+  }
+  else if (TexFormat == PF_FloatRGB || TexFormat == PF_FloatRGBA ||
+           TexFormat == PF_G16)
+  {
+    UE_LOG(LogCarla, Log, 
+      TEXT("Using 16 bit height map, pixel format %d"), TexFormat);
+    Heightmap.InitializeHeightmapFloat(
+        HeightMapTexture, Extension, Tile0Position, 
+        MinHeight, MaxHeight, Tile0Position, ScaleZ);
+  }
+  else
+  {
+    UE_LOG(LogCarla, Error, 
+      TEXT("Unrecofnized pixel format %d"), TexFormat);
+  }
+  UE_LOG(LogCarla, Log, 
+      TEXT("Sparse Map initialized"));
+}
+void FSparseHighDetailMap::InitializeMap(UHeightMapDataAsset* DataAsset,
+      FDVector Origin, FDVector MapSize, float Size, float ScaleZ)
+{
+  Tile0Position = Origin;
+  TileSize = Size;
+  Extension = MapSize;
   Heightmap.InitializeHeightmap(
-      HeightMapTexture, Extension, Tile0Position, 
-      MinHeight, MaxHeight, Tile0Position, ScaleZ);
-  UE_LOG(LogCarla, Error, 
+      DataAsset, Extension, Tile0Position, 
+      Tile0Position, ScaleZ);
+  UE_LOG(LogCarla, Log, 
       TEXT("Sparse Map initialized"));
 
 
@@ -743,6 +835,17 @@ void FSparseHighDetailMap::UpdateHeightMap(UTexture2D* HeightMapTexture,
       TEXT("Height map updated"));
 }
 
+void FSparseHighDetailMap::UpdateHeightMap(UHeightMapDataAsset* DataAsset,
+      FDVector Origin, FDVector MapSize, float Size,
+      float ScaleZ)
+{
+  Heightmap.Clear();
+  Heightmap.InitializeHeightmap(
+      DataAsset, Extension, Origin, 
+      Origin, ScaleZ);
+  UE_LOG(LogCarla, Log, 
+      TEXT("Height map updated"));
+}
 void FSparseHighDetailMap::Clear()
 {
   Heightmap.Clear();
@@ -1276,8 +1379,13 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
       //     TEXT("World Size %s"), *(WorldSize.ToString()));
     }
     Tile0Origin.Z += FloorHeight;
-    SparseMap.InitializeMap(HeightMap, UEFrameToSI(Tile0Origin), UEFrameToSI(WorldSize),
-        TileSize, MinHeight, MaxHeight, HeightMapScaleFactor.Z);
+    // SparseMap.InitializeMap(HeightMap, UEFrameToSI(Tile0Origin), UEFrameToSI(WorldSize),
+    //     1.f, MinHeight, MaxHeight, HeightMapScaleFactor.Z);
+    if (DataAsset)
+    {
+      SparseMap.InitializeMap(DataAsset, UEFrameToSI(Tile0Origin), UEFrameToSI(WorldSize),
+        1.f, HeightMapScaleFactor.Z);
+    }
   }
 #ifdef WITH_PYTORCH
   {
@@ -1318,6 +1426,138 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
     Thread = FRunnableThread::Create(TilesWorker, TEXT("TilesWorker"));
   }
 
+}
+TArray<float> UCustomTerrainPhysicsComponent::BuildLandscapeHeightMap(ALandscapeProxy* Landscape, int Resolution)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::BuildLandscapeHeightMap);
+  TArray<float> HeightMap;
+  HeightMap.Reserve(Resolution*Resolution);
+  FVector Origin = Landscape->GetActorLocation();
+  float DeltaX = WorldSize.X;
+  float DeltaY = WorldSize.Y;
+  for (size_t i = 0; i < Resolution; ++i)
+  {
+    float PosX = Origin.X + i*DeltaX;
+    for (size_t j = 0; j < Resolution; ++j)
+    {
+      float PosY = Origin.Y + j*DeltaY;
+      FVector Location = FVector(PosX, PosY, 0);
+      float Height = Landscape->GetHeightAtLocation(Location).Get(-1);
+      HeightMap.Emplace(Height);
+    }
+  }
+  return HeightMap;
+}
+
+void UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapTexture(ALandscapeProxy* Landscape, 
+    int Resolution, FVector MapSize, FString TexturePath, FString TextureName)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapTexture);
+  TArray<uint8> HeightMap;
+  HeightMap.Reserve(Resolution*Resolution*4);
+  FVector Origin = Landscape->GetActorLocation();
+  float DeltaX = MapSize.X;
+  float DeltaY = MapSize.Y;
+  for (size_t i = 0; i < Resolution; ++i)
+  {
+    float PosX = Origin.X + i*DeltaX;
+    for (size_t j = 0; j < Resolution; ++j)
+    {
+      float PosY = Origin.Y + j*DeltaY;
+      FVector Location = FVector(PosX, PosY, 0);
+      float Height = Landscape->GetHeightAtLocation(Location).Get(-1);
+      uint8* HeightPtr = (uint8*) &Height;
+      HeightMap.Emplace(HeightPtr[0]);
+      HeightMap.Emplace(HeightPtr[1]);
+      HeightMap.Emplace(HeightPtr[2]);
+      HeightMap.Emplace(HeightPtr[3]);
+    }
+  }
+  int TextureWidth = Resolution;
+  int TextureHeight = Resolution;
+  FString PackageName = TexturePath;
+  PackageName += TextureName;
+  UPackage* Package = CreatePackage(NULL, *PackageName);
+  Package->FullyLoad();
+
+  UTexture2D* NewTexture = NewObject<UTexture2D>(Package, *TextureName, RF_Public | RF_Standalone | RF_MarkAsRootSet);
+  NewTexture->AddToRoot();				// This line prevents garbage collection of the texture
+  NewTexture->PlatformData = new FTexturePlatformData();	// Then we initialize the PlatformData
+  NewTexture->PlatformData->SizeX = TextureWidth;
+  NewTexture->PlatformData->SizeY = TextureHeight;
+  // NewTexture->PlatformData->NumSlices = 1;
+  NewTexture->PlatformData->PixelFormat = EPixelFormat::PF_B8G8R8A8;
+
+  // Allocate first mipmap.
+  FTexture2DMipMap* Mip = new(NewTexture->PlatformData->Mips) FTexture2DMipMap();
+  Mip->SizeX = TextureWidth;
+  Mip->SizeY = TextureHeight;
+
+  // Lock the texture so it can be modified
+  Mip->BulkData.Lock(LOCK_READ_WRITE);
+  uint8* TextureData = (uint8*) Mip->BulkData.Realloc(TextureWidth * TextureHeight * 4);
+  FMemory::Memcpy(TextureData, HeightMap.GetData(), 4 * TextureHeight * TextureWidth);
+  Mip->BulkData.Unlock();
+
+  NewTexture->Source.Init(TextureWidth, TextureHeight, 1, 1, ETextureSourceFormat::TSF_BGRA8,
+      HeightMap.GetData());
+
+  NewTexture->UpdateResource();
+  Package->MarkPackageDirty();
+  FAssetRegistryModule::AssetCreated(NewTexture);
+
+  FString PackageFileName = FPackageName::LongPackageNameToFilename(PackageName, FPackageName::GetAssetPackageExtension());
+  bool bSaved = UPackage::SavePackage(Package, NewTexture, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+
+}
+
+void UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapDataAasset(ALandscapeProxy* Landscape, 
+    int Resolution, FVector MapSize, FString AssetPath, FString AssetName)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapTexture);
+  TArray<float> HeightMap;
+  HeightMap.Reserve(Resolution*Resolution);
+  FVector Origin = Landscape->GetActorLocation();
+  float DeltaX = MapSize.X / Resolution;
+  float DeltaY = MapSize.Y / Resolution;
+  for (size_t i = 0; i < Resolution; ++i)
+  {
+    float PosX = Origin.X + i*DeltaX;
+    for (size_t j = 0; j < Resolution; ++j)
+    {
+      float PosY = Origin.Y + j*DeltaY;
+      FVector Location = FVector(PosX, PosY, 0);
+      float Height = Landscape->GetHeightAtLocation(Location).Get(-1);
+      HeightMap.Emplace(Height);
+    }
+  }
+  int TextureWidth = Resolution;
+  int TextureHeight = Resolution;
+  FString PackageName = AssetPath;
+  PackageName += AssetName;
+  UPackage* Package = CreatePackage(NULL, *PackageName);
+  Package->FullyLoad();
+
+  UHeightMapDataAsset* HeightMapAsset = NewObject<UHeightMapDataAsset>(Package, *AssetName, RF_Public | RF_Standalone | RF_MarkAsRootSet);
+  HeightMapAsset->AddToRoot();
+  HeightMapAsset->SizeX = TextureWidth;
+  HeightMapAsset->SizeY = TextureHeight;
+  HeightMapAsset->HeightValues = HeightMap;
+
+  Package->MarkPackageDirty();
+  // FAssetRegistryModule::AssetCreated(NewTexture);
+
+  FString PackageFileName = FPackageName::LongPackageNameToFilename(PackageName, FPackageName::GetAssetPackageExtension());
+  bool bSaved = UPackage::SavePackage(Package, HeightMapAsset, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+}
+
+
+float UCustomTerrainPhysicsComponent::GetHeightAtLocation(ALandscapeProxy * Landscape, FVector Location)
+{
+  TOptional<float> OptionalHeight =  Landscape->GetHeightAtLocation(Location);
+  if(OptionalHeight.IsSet())
+    return OptionalHeight.GetValue();
+  return -1;
 }
 
 void UCustomTerrainPhysicsComponent::EndPlay(const EEndPlayReason::Type EndPlayReason){
@@ -1366,25 +1606,41 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
           FString TileName;
           FString Extension;
           FPaths::Split(FullTileNamePath, TileDirectory, TileName, Extension);
-          FString TexturePath = TileDirectory + "/HeightMaps/" + TileName + "." + TileName;
+          FString AssetPath = TileDirectory + "/HeightMaps/" + TileName + "." + TileName;
           UE_LOG(LogCarla, Log, TEXT("Enter tile %s, %s \n %s \n %s \n %s"), *CurrentTileId.ToString(), 
               *FullTileNamePath, *TileDirectory, *TileName, *Extension);
 
-          UObject* TextureObject = StaticLoadObject(UTexture2D::StaticClass(), nullptr, *(TexturePath));
-          if(TextureObject)
+          // UObject* TextureObject = StaticLoadObject(UTexture2D::StaticClass(), nullptr, *(TexturePath));
+          // if(TextureObject)
+          // {
+          //   UTexture2D* Texture = Cast<UTexture2D>(TextureObject);
+          //   if (Texture != nullptr)
+          //   {
+          //     HeightMap = Texture;
+          //     FVector TilePosition = HeightMapOffset + LargeMapManager->GetTileLocation(CurrentLargeMapTileId) - 0.5f*FVector(LargeMapManager->GetTileSize(), -LargeMapManager->GetTileSize(), 0);
+          //     UE_LOG(LogCarla, Log, TEXT("Updating height map to location %s in tile location %s"), 
+          //         *TilePosition.ToString(), *LargeMapManager->GetTileLocation(CurrentLargeMapTileId).ToString());
+          //     TilePosition.Z += FloorHeight;
+          //     SparseMap.UpdateHeightMap(
+          //         HeightMap, UEFrameToSI(TilePosition), UEFrameToSI(FVector(
+          //           LargeMapManager->GetTileSize(),-LargeMapManager->GetTileSize(), 0)), 
+          //         1.f, MinHeight, MaxHeight, HeightMapScaleFactor.Z);
+          //   }
+          // }
+          UObject* DataAssetObject = StaticLoadObject(UHeightMapDataAsset::StaticClass(), nullptr, *(AssetPath));
+          if(DataAssetObject)
           {
-            UTexture2D* Texture = Cast<UTexture2D>(TextureObject);
-            if (Texture != nullptr)
+            UHeightMapDataAsset* HeightMapDataAsset = Cast<UHeightMapDataAsset>(DataAssetObject);
+            if (HeightMapDataAsset != nullptr)
             {
-              HeightMap = Texture;
               FVector TilePosition = HeightMapOffset + LargeMapManager->GetTileLocation(CurrentLargeMapTileId) - 0.5f*FVector(LargeMapManager->GetTileSize(), -LargeMapManager->GetTileSize(), 0);
               UE_LOG(LogCarla, Log, TEXT("Updating height map to location %s in tile location %s"), 
                   *TilePosition.ToString(), *LargeMapManager->GetTileLocation(CurrentLargeMapTileId).ToString());
               TilePosition.Z += FloorHeight;
               SparseMap.UpdateHeightMap(
-                  HeightMap, UEFrameToSI(TilePosition), UEFrameToSI(FVector(
+                  HeightMapDataAsset, UEFrameToSI(TilePosition), UEFrameToSI(FVector(
                     LargeMapManager->GetTileSize(),-LargeMapManager->GetTileSize(), 0)), 
-                  1.f, MinHeight, MaxHeight, HeightMapScaleFactor.Z);
+                  1.f, HeightMapScaleFactor.Z);
             }
           }
         }

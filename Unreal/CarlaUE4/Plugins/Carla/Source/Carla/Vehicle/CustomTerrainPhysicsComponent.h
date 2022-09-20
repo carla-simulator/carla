@@ -14,6 +14,7 @@
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "Engine/DataAsset.h"
 #ifdef WITH_PYTORCH
 THIRD_PARTY_INCLUDES_START
 #include <carla/pytorch/pytorch.h>
@@ -27,6 +28,20 @@ THIRD_PARTY_INCLUDES_END
 
 #include "CustomTerrainPhysicsComponent.generated.h"
 
+UCLASS(BlueprintType)
+class UHeightMapDataAsset : public UPrimaryDataAsset
+{
+  GENERATED_BODY()
+public:
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HeightMapDataAsset)
+  int SizeX = 0;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HeightMapDataAsset)
+  int SizeY = 0;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HeightMapDataAsset)
+  TArray<float> HeightValues;
+};
+
 struct FParticle
 {
   FDVector Position; // position in m
@@ -37,8 +52,14 @@ struct FParticle
 struct FHeightMapData
 {
   void InitializeHeightmap(
-    UTexture2D* Texture, FDVector Size, FDVector Origin,
+      UTexture2D* Texture, FDVector Size, FDVector Origin,
       float MinHeight, float MaxHeight, FDVector Tile0, float ScaleZ);
+  void InitializeHeightmapFloat(
+      UTexture2D* Texture, FDVector Size, FDVector Origin,
+      float MinHeight, float MaxHeight, FDVector Tile0, float ScaleZ);
+  void InitializeHeightmap(
+      UHeightMapDataAsset* DataAsset, FDVector Size, FDVector Origin,
+      FDVector Tile0, float ScaleZ);
   float GetHeight(FDVector Position) const; // get height at a given global 2d position
   void Clear();
 // private:
@@ -128,10 +149,14 @@ public:
   void InitializeMap(UTexture2D* HeightMapTexture,
       FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight,
       float ScaleZ);
+  void InitializeMap(UHeightMapDataAsset* DataAsset,
+      FDVector Origin, FDVector MapSize, float Size, float ScaleZ);
 
   void UpdateHeightMap(UTexture2D* HeightMapTexture,
       FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight,
       float ScaleZ);
+  void UpdateHeightMap(UHeightMapDataAsset* DataAsset,
+      FDVector Origin, FDVector MapSize, float Size, float ScaleZ);
 
   void LoadTilesAtPositionFromCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
   void UnLoadTilesAtPositionToCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
@@ -206,6 +231,20 @@ public:
   void AddForces(const TArray<FForceAtLocation> &Forces);
 
   UFUNCTION(BlueprintCallable)
+  TArray<float> BuildLandscapeHeightMap(ALandscapeProxy* Landscape, int Resolution);
+
+  UFUNCTION(BlueprintCallable)
+  static void BuildLandscapeHeightMapTexture(ALandscapeProxy* Landscape, 
+      int Resolution, FVector MapSize, FString TexturePath, FString TextureName);
+
+  UFUNCTION(BlueprintCallable)
+  static void BuildLandscapeHeightMapDataAasset(ALandscapeProxy* Landscape, 
+      int Resolution, FVector MapSize, FString AssetPath, FString AssetName);
+
+  UFUNCTION(BlueprintCallable)
+  float GetHeightAtLocation(ALandscapeProxy * Landscape, FVector Location);
+
+  UFUNCTION(BlueprintCallable)
   TArray<FVector> GetParticlesInRadius(FVector Position, float Radius);
 
   UFUNCTION(BlueprintCallable)
@@ -232,6 +271,8 @@ public:
 
   UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateTextureData();
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UHeightMapDataAsset* DataAsset;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UTexture2D *HeightMap;

@@ -276,6 +276,8 @@ class World(object):
                 sys.exit(1)
             spawn_points = self.map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+            # spawn_point = spawn_points[0]
+            # spawn_point = carla.Transform(carla.Location(-3000,5000,380))
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
             self.show_vehicle_telemetry = False
             self.modify_vehicle_physics(self.player)
@@ -1130,6 +1132,7 @@ class CameraManager(object):
             if item[0].startswith('sensor.camera'):
                 bp.set_attribute('image_size_x', str(hud.dim[0]))
                 bp.set_attribute('image_size_y', str(hud.dim[1]))
+                bp.set_attribute('fov', str(120))
                 if bp.has_attribute('gamma'):
                     bp.set_attribute('gamma', str(gamma_correction))
                 for attr_name, attr_value in item[3].items():
@@ -1239,7 +1242,7 @@ def game_loop(args):
 
     try:
         client = carla.Client(args.host, args.port)
-        client.set_timeout(20.0)
+        client.set_timeout(2000.0)
 
         sim_world = client.get_world()
         if args.sync:
