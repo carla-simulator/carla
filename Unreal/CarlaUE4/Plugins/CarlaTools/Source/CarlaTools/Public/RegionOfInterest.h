@@ -8,6 +8,7 @@
 #include "Containers/Array.h"
 #include "Containers/EnumAsByte.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Math/IntPoint.h"
 #include "ProceduralFoliageSpawner.h"
 #include "Templates/UnrealTypeTraits.h"
 #include "UObject/NoExportTypes.h"
@@ -25,6 +26,14 @@ enum ERegionOfInterestType
   MISC_SPREADED_ACTORS_REGION,
   MISC_SPECIFIC_LOCATION_ACTORS_REGION,
   SOIL_TYPE_REGION
+};
+
+UENUM(BlueprintType)
+enum ESpreadedActorsDensity
+{
+  LOW,
+  MEDIUM,
+  HIGH
 };
 
 USTRUCT(BlueprintType)
@@ -258,15 +267,12 @@ struct CARLATOOLS_API FMiscSpreadedActorsROI : public FRegionOfInterest
   TSubclassOf<AActor> ActorClass;
 
   UPROPERTY(BlueprintReadWrite)
-  float Density;
+  float Probability;
 
   UPROPERTY(BlueprintReadWrite)
-  float MinScale;
+  TEnumAsByte<ESpreadedActorsDensity> ActorsDensity;
 
-  UPROPERTY(BlueprintReadWrite)
-  float MaxScale;
-
-  FMiscSpreadedActorsROI() : FRegionOfInterest(), ActorClass(), Density(0.0f), MinScale(1.0f), MaxScale(1.0f)
+  FMiscSpreadedActorsROI() : FRegionOfInterest(), ActorClass(), Probability(0.0f), ActorsDensity(ESpreadedActorsDensity::LOW)
   {}
 };
 

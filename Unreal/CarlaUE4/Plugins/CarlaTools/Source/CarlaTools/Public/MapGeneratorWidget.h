@@ -218,7 +218,10 @@ public:
   void CookSoilTypeToMaps(const FMapGeneratorMetaInfo& MetaInfo);
   
   UFUNCTION(Category="Map Generator|Miscellaneous", BlueprintCallable)
-  void CookMiscInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo);
+  void CookMiscSpreadedInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo);
+
+  UFUNCTION(Category="Map Generator|Miscellaneous", BlueprintCallable)
+  void DeleteAllSpreadedActors(const FMapGeneratorMetaInfo& MetaInfo);
 
   /// Function invoked by the widget that cooks the vegetation defined in
   /// @a FoliageSpawners only in the world opened in the editor
