@@ -724,18 +724,22 @@ FDenseTile& FSparseHighDetailMap::GetTile(uint64_t TileId)
   auto Iterator = Map.find(TileId);
   if (Iterator == Map.end())
   {
-    FScopeLock Lock(&Lock_CacheMap);
-    auto CacheIterator = CacheMap.find(TileId);
-    if (Iterator != CacheMap.end())
+    // FScopeLock Lock(&Lock_CacheMap);
+    FScopeLock TileLock(&Lock_GetTile);
+    bool bGotCacheLock = Lock_CacheMap.TryLock();
+    if(bGotCacheLock)
     {
-      Map.emplace(TileId, std::move(CacheIterator->second));
-      CacheMap.erase(CacheIterator);
-      return Map[TileId];
+      auto CacheIterator = CacheMap.find(TileId);
+      if (CacheIterator != CacheMap.end())
+      {
+        Map.emplace(TileId, std::move(CacheIterator->second));
+        CacheMap.erase(CacheIterator);
+        Lock_CacheMap.Unlock();
+        return Map[TileId];
+      }
+      Lock_CacheMap.Unlock();
     }
-    else
-    {
-      return InitializeRegion(TileId);
-    }
+    return InitializeRegion(TileId);
   }
   return Iterator->second;
 }
@@ -2387,7 +2391,7 @@ void UCustomTerrainPhysicsComponent::UpdateTilesHeightMaps(
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(UpdateTilesHeightMaps);
 
-      uint32_t PartialHeightMapSize = 
+  uint32_t PartialHeightMapSize = 
       SparseMap.GetTileSize() * TextureToUpdate->GetSizeX() / (2*TextureRadius);
   float InverseTileSize = 1.f/SparseMap.GetTileSize();
   float Transformation = InverseTileSize * PartialHeightMapSize;

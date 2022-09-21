@@ -216,7 +216,7 @@ private:
   FVector PositionToUpdate;
   FCriticalSection Lock_Map; // UE4 Mutex
   FCriticalSection Lock_CacheMap; // UE4 Mutex
-  FCriticalSection Lock_Position; // UE4 Mutex
+  FCriticalSection Lock_GetTile;
 
 };
 
