@@ -298,3 +298,15 @@ struct CARLATOOLS_API FSoilTypeROI : public FRegionOfInterest
   FSoilTypeROI() : SoilProperties()
   {}
 };
+
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FMiscWidgetState
+{
+  GENERATED_USTRUCT_BODY()
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary|Misc")
+  bool IsPersistentState;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary|Misc")
+  FIntPoint InTileCoordinates;
+};

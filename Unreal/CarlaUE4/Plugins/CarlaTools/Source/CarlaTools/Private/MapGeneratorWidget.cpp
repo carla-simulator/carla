@@ -554,6 +554,41 @@ FMapGeneratorWidgetState UMapGeneratorWidget::LoadWidgetStateStructFromFile(cons
   return WidgetState;
 }
 
+bool UMapGeneratorWidget::GenerateMiscStateFileFromStruct(FMiscWidgetState MiscState, const FString JsonPath)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating Miscellaneous State JSON"), 
+      *CUR_CLASS_FUNC_LINE);
+  
+  TSharedRef<FJsonObject> OutJsonObject = MakeShareable(new FJsonObject());
+  FJsonObjectConverter::UStructToJsonObject(FMiscWidgetState::StaticStruct(), &MiscState, OutJsonObject, 0, 0);
+
+  FString OutputJsonString;
+  TSharedRef<TJsonWriter<>> JsonWriter = TJsonWriterFactory<>::Create(&OutputJsonString);
+  FJsonSerializer::Serialize(OutJsonObject, JsonWriter);
+
+  FFileHelper::SaveStringToFile(OutputJsonString, *JsonPath);
+
+  return true;
+}
+
+FMiscWidgetState UMapGeneratorWidget::LoadMiscStateStructFromFile(const FString JsonPath)
+{
+  FMiscWidgetState MiscState;
+  FString File;
+  FFileHelper::LoadFileToString(File, *JsonPath);
+
+  TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(*File);
+  TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+  bool bDeserializeSuccess = FJsonSerializer::Deserialize(JsonReader, JsonObject, FJsonSerializer::EFlags::None);
+
+  if(bDeserializeSuccess && JsonObject.IsValid())
+  {
+    FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), FMiscWidgetState::StaticStruct(), &MiscState, 1, 0);
+  }
+
+  return MiscState;
+}
+
 bool UMapGeneratorWidget::LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath, bool bRecursive)
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Loading Worlds from %s"), 
@@ -1119,7 +1154,7 @@ bool UMapGeneratorWidget::CookMiscSpreadedActors(const FMapGeneratorMetaInfo& Me
     }
 
     // Save map
-    SaveWorld(World);
+    SaveWorld(World); 
   }
 
   return bSuccess;

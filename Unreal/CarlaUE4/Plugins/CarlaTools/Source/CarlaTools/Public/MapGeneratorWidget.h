@@ -286,6 +286,12 @@ public:
   UFUNCTION(Category="MapGenerator|JsonLibrary", BlueprintCallable)
   FMapGeneratorWidgetState LoadWidgetStateStructFromFile(const FString JsonPath);
 
+  UFUNCTION(Category="MapGenerator|JsonLibrary|Misc", BlueprintCallable)
+  bool GenerateMiscStateFileFromStruct(FMiscWidgetState MiscState, const FString JsonPath);
+
+  UFUNCTION(Category="MapGenerator|JsonLibrary|Misc", BlueprintCallable)
+  FMiscWidgetState LoadMiscStateStructFromFile(const FString JsonPath);
+
 private:  
   /// Loads a bunch of world objects located in @a BaseMapPath and 
   /// returns them in @a WorldAssetsData.
