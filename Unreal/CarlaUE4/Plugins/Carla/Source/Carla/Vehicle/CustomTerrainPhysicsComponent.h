@@ -516,5 +516,5 @@ struct FTilesWorker : public FRunnable
   double RadiusX; 
   double RadiusY;
 
-  bool bShouldContinue = true;
+  volatile bool bShouldContinue = true;
 };
