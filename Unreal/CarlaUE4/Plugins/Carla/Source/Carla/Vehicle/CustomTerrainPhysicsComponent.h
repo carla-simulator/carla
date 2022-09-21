@@ -256,10 +256,6 @@ public:
   TArray<float> BuildLandscapeHeightMap(ALandscapeProxy* Landscape, int Resolution);
 
   UFUNCTION(BlueprintCallable)
-  static void BuildLandscapeHeightMapTexture(ALandscapeProxy* Landscape, 
-      int Resolution, FVector MapSize, FString TexturePath, FString TextureName);
-
-  UFUNCTION(BlueprintCallable)
   static void BuildLandscapeHeightMapDataAasset(ALandscapeProxy* Landscape, 
       int Resolution, FVector MapSize, FString AssetPath, FString AssetName);
 

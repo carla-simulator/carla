@@ -1418,6 +1418,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   bDrawHeightMap = false;
   ForceMulFactor = 1.0;
   FloorHeight = 0.0;
+  bDrawLoadedTiles = false;
 #endif
 
   int IntValue;
@@ -1466,6 +1467,18 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     FloorHeight = MToCM*Value;
   }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-tile-size="), Value))
+  {
+    TileSize = Value;
+  }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-tile-radius="), Value))
+  {
+    TileRadius = MToCM*FVector(Value, Value, 0.f);
+  }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-cache-radius="), Value))
+  {
+    CacheRadius = MToCM*FVector(Value, Value, 0.f);
+  }
   if (FParse::Param(FCommandLine::Get(), TEXT("-update-particles")))
   {
     bUpdateParticles = true;
@@ -1512,6 +1525,10 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   if (FParse::Param(FCommandLine::Get(), TEXT("-benchmark")))
   {
     bBenchMark = true;
+  }
+  if (FParse::Param(FCommandLine::Get(), TEXT("-draw-loaded-tiles")))
+  {
+    bDrawLoadedTiles = true;
   }
   if (FParse::Param(FCommandLine::Get(), TEXT("-disable-terramechanics")))
   {
@@ -1621,68 +1638,6 @@ TArray<float> UCustomTerrainPhysicsComponent::BuildLandscapeHeightMap(ALandscape
     }
   }
   return HeightMap;
-}
-
-void UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapTexture(ALandscapeProxy* Landscape, 
-    int Resolution, FVector MapSize, FString TexturePath, FString TextureName)
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapTexture);
-  TArray<uint8> HeightMap;
-  HeightMap.Reserve(Resolution*Resolution*4);
-  FVector Origin = Landscape->GetActorLocation();
-  float DeltaX = MapSize.X;
-  float DeltaY = MapSize.Y;
-  for (size_t i = 0; i < Resolution; ++i)
-  {
-    float PosX = Origin.X + i*DeltaX;
-    for (size_t j = 0; j < Resolution; ++j)
-    {
-      float PosY = Origin.Y + j*DeltaY;
-      FVector Location = FVector(PosX, PosY, 0);
-      float Height = Landscape->GetHeightAtLocation(Location).Get(-1);
-      uint8* HeightPtr = (uint8*) &Height;
-      HeightMap.Emplace(HeightPtr[0]);
-      HeightMap.Emplace(HeightPtr[1]);
-      HeightMap.Emplace(HeightPtr[2]);
-      HeightMap.Emplace(HeightPtr[3]);
-    }
-  }
-  int TextureWidth = Resolution;
-  int TextureHeight = Resolution;
-  FString PackageName = TexturePath;
-  PackageName += TextureName;
-  UPackage* Package = CreatePackage(NULL, *PackageName);
-  Package->FullyLoad();
-
-  UTexture2D* NewTexture = NewObject<UTexture2D>(Package, *TextureName, RF_Public | RF_Standalone | RF_MarkAsRootSet);
-  NewTexture->AddToRoot();				// This line prevents garbage collection of the texture
-  NewTexture->PlatformData = new FTexturePlatformData();	// Then we initialize the PlatformData
-  NewTexture->PlatformData->SizeX = TextureWidth;
-  NewTexture->PlatformData->SizeY = TextureHeight;
-  // NewTexture->PlatformData->NumSlices = 1;
-  NewTexture->PlatformData->PixelFormat = EPixelFormat::PF_B8G8R8A8;
-
-  // Allocate first mipmap.
-  FTexture2DMipMap* Mip = new(NewTexture->PlatformData->Mips) FTexture2DMipMap();
-  Mip->SizeX = TextureWidth;
-  Mip->SizeY = TextureHeight;
-
-  // Lock the texture so it can be modified
-  Mip->BulkData.Lock(LOCK_READ_WRITE);
-  uint8* TextureData = (uint8*) Mip->BulkData.Realloc(TextureWidth * TextureHeight * 4);
-  FMemory::Memcpy(TextureData, HeightMap.GetData(), 4 * TextureHeight * TextureWidth);
-  Mip->BulkData.Unlock();
-
-  NewTexture->Source.Init(TextureWidth, TextureHeight, 1, 1, ETextureSourceFormat::TSF_BGRA8,
-      HeightMap.GetData());
-
-  NewTexture->UpdateResource();
-  Package->MarkPackageDirty();
-  FAssetRegistryModule::AssetCreated(NewTexture);
-
-  FString PackageFileName = FPackageName::LongPackageNameToFilename(PackageName, FPackageName::GetAssetPackageExtension());
-  bool bSaved = UPackage::SavePackage(Package, NewTexture, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
-
 }
 
 void UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapDataAasset(ALandscapeProxy* Landscape, 
@@ -2061,7 +2016,7 @@ void UCustomTerrainPhysicsComponent::LimitParticlesPerWheel(std::vector<FParticl
   }
   std::sort(Particles.begin(), Particles.end(), [&](FParticle* P1, FParticle* P2) -> bool
   {
-    return P1->Position.Z < P2->Position.Z;
+    return P1->Position.Z > P2->Position.Z;
   });
   Particles.resize(MaxParticlesPerWheel);
 }
@@ -2116,6 +2071,7 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     ACarlaWheeledVehicle *Vehicle, float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(RunNNPhysicsSimulation);
+  #ifdef WITH_PYTORCH
   FTransform VehicleTransform = Vehicle->GetTransform();
   FVector WheelPosition0 = VehicleTransform.TransformPosition(FVector(140, -70, 40));
   FVector WheelPosition1 = VehicleTransform.TransformPosition(FVector(140, 70, 40));
@@ -2158,13 +2114,13 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
       LimitParticlesPerWheel(Particles);
       return Particles;
     };
-    auto FutureParticles0 = Async(EAsyncExecution::TaskGraph, 
+    auto FutureParticles0 = Async(EAsyncExecution::ThreadPool, 
         [&]() {return GetAndFilterParticlesInBox(BboxWheel0);});
-    auto FutureParticles2 = Async(EAsyncExecution::TaskGraph, 
+    auto FutureParticles2 = Async(EAsyncExecution::ThreadPool, 
         [&]() {return GetAndFilterParticlesInBox(BboxWheel2);});
-    auto FutureParticles1 = Async(EAsyncExecution::TaskGraph, 
+    auto FutureParticles1 = Async(EAsyncExecution::ThreadPool, 
         [&]() {return GetAndFilterParticlesInBox(BboxWheel1);});
-    auto FutureParticles3 = Async(EAsyncExecution::TaskGraph, 
+    auto FutureParticles3 = Async(EAsyncExecution::ThreadPool, 
         [&]() {return GetAndFilterParticlesInBox(BboxWheel3);});
     ParticlesWheel0 = FutureParticles0.Get();
     ParticlesWheel2 = FutureParticles2.Get();
@@ -2219,7 +2175,6 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     SetUpWheelArrays(Vehicle, 3, WheelPos3, WheelOrient3, WheelLinVel3, WheelAngVel3);
   }
 
-  #ifdef WITH_PYTORCH
   carla::learning::WheelInput Wheel0 {
       static_cast<int>(ParticlesWheel0.size()), 
       ParticlePos0.GetData(), ParticleVel0.GetData(),
