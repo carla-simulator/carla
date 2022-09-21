@@ -99,6 +99,9 @@ public:
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static FBoundingBox CombineBBs(const TArray<FBoundingBox>& BBsToCombine);
 
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static FBoundingBox CombineBoxes(const TArray<UBoxComponent *>& BBsToCombine);
+
   // Returns Static Mesh Components that generate the InBB of the Actor
   // ie: the SMComps that creates the BB of the TL light box
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)

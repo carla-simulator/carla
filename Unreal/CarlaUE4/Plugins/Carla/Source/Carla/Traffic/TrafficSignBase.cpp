@@ -23,7 +23,7 @@ TArray<UBoxComponent*> ATrafficSignBase::GetTriggerVolumes() const
   GetComponents<USignComponent>(Components, false);
   if (Components.Num())
   {
-    USignComponent* SignComponent = Components.Top();
+    USignComponent* SignComponent = Components[0];
     return SignComponent->GetEffectTriggerVolume();
   }
   else

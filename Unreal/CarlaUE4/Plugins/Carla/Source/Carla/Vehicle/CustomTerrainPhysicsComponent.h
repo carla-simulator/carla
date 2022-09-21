@@ -14,6 +14,8 @@
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "Engine/DataAsset.h"
+#include "Async/Future.h"
 #ifdef WITH_PYTORCH
 THIRD_PARTY_INCLUDES_START
 #include <carla/pytorch/pytorch.h>
@@ -27,6 +29,20 @@ THIRD_PARTY_INCLUDES_END
 
 #include "CustomTerrainPhysicsComponent.generated.h"
 
+UCLASS(BlueprintType)
+class UHeightMapDataAsset : public UPrimaryDataAsset
+{
+  GENERATED_BODY()
+public:
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HeightMapDataAsset)
+  int SizeX = 0;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HeightMapDataAsset)
+  int SizeY = 0;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HeightMapDataAsset)
+  TArray<float> HeightValues;
+};
+
 struct FParticle
 {
   FDVector Position; // position in m
@@ -37,8 +53,14 @@ struct FParticle
 struct FHeightMapData
 {
   void InitializeHeightmap(
-    UTexture2D* Texture, FDVector Size, FDVector Origin,
+      UTexture2D* Texture, FDVector Size, FDVector Origin,
       float MinHeight, float MaxHeight, FDVector Tile0, float ScaleZ);
+  void InitializeHeightmapFloat(
+      UTexture2D* Texture, FDVector Size, FDVector Origin,
+      float MinHeight, float MaxHeight, FDVector Tile0, float ScaleZ);
+  void InitializeHeightmap(
+      UHeightMapDataAsset* DataAsset, FDVector Size, FDVector Origin,
+      FDVector Tile0, float ScaleZ);
   float GetHeight(FDVector Position) const; // get height at a given global 2d position
   void Clear();
 // private:
@@ -118,6 +140,7 @@ public:
   uint64_t GetTileId(uint64_t TileId);
   uint64_t GetTileId(FDVector Position);
   FIntVector GetVectorTileId(FDVector Position);
+  FIntVector GetVectorTileId(uint64_t TileId);
   FDVector GetTilePosition(uint64_t TileId);
   FDVector GetTilePosition(uint32_t Tile_X, uint32_t Tile_Y);
 
@@ -128,14 +151,19 @@ public:
   void InitializeMap(UTexture2D* HeightMapTexture,
       FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight,
       float ScaleZ);
+  void InitializeMap(UHeightMapDataAsset* DataAsset,
+      FDVector Origin, FDVector MapSize, float Size, float ScaleZ);
 
   void UpdateHeightMap(UTexture2D* HeightMapTexture,
       FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight,
       float ScaleZ);
+  void UpdateHeightMap(UHeightMapDataAsset* DataAsset,
+      FDVector Origin, FDVector MapSize, float Size, float ScaleZ);
 
   void LoadTilesAtPositionFromCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
   void UnLoadTilesAtPositionToCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
   void ReloadCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
+  void UpdateMaps(FDVector Position, float RadiusX, float RadiusY, float CacheRadiusX, float CacheRadiusY);
 
   void Update(FVector Position, float RadiusX, float RadiusY);
 
@@ -151,6 +179,25 @@ public:
   void UnLockMutex()
   {
     Lock_Map.Unlock();
+  }
+
+  std::vector<uint64_t> GetTileIdInMap()
+  {
+    std::vector<uint64_t> Result;
+    for (auto& Iter : Map)
+    {
+      Result.emplace_back(Iter.first);
+    }
+    return Result;
+  }
+  std::vector<uint64_t> GetTileIdInCache()
+  {
+    std::vector<uint64_t> Result;
+    for (auto& Iter : CacheMap)
+    {
+      Result.emplace_back(Iter.first);
+    }
+    return Result;
   }
 
   std::unordered_map<uint64_t, FDenseTile> Map;
@@ -169,7 +216,7 @@ private:
   FVector PositionToUpdate;
   FCriticalSection Lock_Map; // UE4 Mutex
   FCriticalSection Lock_CacheMap; // UE4 Mutex
-  FCriticalSection Lock_Position; // UE4 Mutex
+  FCriticalSection Lock_GetTile;
 
 };
 
@@ -206,6 +253,20 @@ public:
   void AddForces(const TArray<FForceAtLocation> &Forces);
 
   UFUNCTION(BlueprintCallable)
+  TArray<float> BuildLandscapeHeightMap(ALandscapeProxy* Landscape, int Resolution);
+
+  UFUNCTION(BlueprintCallable)
+  static void BuildLandscapeHeightMapTexture(ALandscapeProxy* Landscape, 
+      int Resolution, FVector MapSize, FString TexturePath, FString TextureName);
+
+  UFUNCTION(BlueprintCallable)
+  static void BuildLandscapeHeightMapDataAasset(ALandscapeProxy* Landscape, 
+      int Resolution, FVector MapSize, FString AssetPath, FString AssetName);
+
+  UFUNCTION(BlueprintCallable)
+  float GetHeightAtLocation(ALandscapeProxy * Landscape, FVector Location);
+
+  UFUNCTION(BlueprintCallable)
   TArray<FVector> GetParticlesInRadius(FVector Position, float Radius);
 
   UFUNCTION(BlueprintCallable)
@@ -216,6 +277,9 @@ public:
 
   UFUNCTION(BlueprintCallable, Category="Tiles")
   void LoadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
+
+  UFUNCTION(BlueprintCallable, Category="Tiles")
+  void UpdateMaps(FVector Position, float RadiusX, float RadiusY, float CacheRadiusX, float CacheRadiusY);
 
   UFUNCTION(BlueprintCallable, Category="Tiles")
   void UnloadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
@@ -232,6 +296,8 @@ public:
 
   UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateTextureData();
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UHeightMapDataAsset* DataAsset;
 
   UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateLargeTexture();
@@ -298,7 +364,8 @@ private:
   void LimitParticlesPerWheel(std::vector<FParticle*> &Particles);
   void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles);
   void DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes);
-  void DrawTiles(UWorld* World, const std::vector<uint64_t>& TilesIds, float Height = 0);
+  void DrawTiles(UWorld* World, const std::vector<uint64_t>& TilesIds, float Height = 0,
+    FLinearColor Color = FLinearColor(0.0,1.0,0.0,0.0));
   void GenerateBenchmarkParticles(std::vector<FParticle>& BenchParticles, 
       std::vector<FParticle*> &ParticlesWheel0, std::vector<FParticle*> &ParticlesWheel1,
       std::vector<FParticle*> &ParticlesWheel2, std::vector<FParticle*> &ParticlesWheel3,
@@ -321,14 +388,18 @@ private:
   UPROPERTY(EditAnywhere)
   FVector WorldSize = FVector(200000,200000,0);
 
+public:
   // Radius of the data loaded in memory
   UPROPERTY(EditAnywhere, Category="Tiles")
-  FVector TileRadius = FVector( 5, 5, 0 );
+  FVector TileRadius = FVector( 100, 100, 0 );
   // Radius of the data loaded in memory
   UPROPERTY(EditAnywhere, Category="Tiles")
   FVector CacheRadius = FVector( 50, 50, 0 );
   UPROPERTY(EditAnywhere, Category="Tiles")
+  bool bDrawLoadedTiles = false;
+  UPROPERTY(EditAnywhere, Category="Tiles")
   int32 TileSize = 1;
+private:
   // TimeToTriggerCacheReload In seconds
   UPROPERTY(EditAnywhere, Category="Tiles")
   float TimeToTriggerCacheReload = 20.0f;
@@ -437,6 +508,8 @@ private:
   #ifdef WITH_PYTORCH
   carla::learning::NeuralModel TerramechanicsModel;
   #endif
+
+  TFuture<bool> IterationCompleted;
 
   class FRunnableThread* Thread;
   struct FTilesWorker* TilesWorker;

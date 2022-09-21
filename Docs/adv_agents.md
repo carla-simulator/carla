@@ -63,14 +63,14 @@ destination = random.choice(spawn_points).location
 agent.set_destination(destination)
 ```
 
-__5.__ Vehicle controls and behaviors are applied during a navigation step. During each step, the __Basic Agent__ will apply a vehicle control and react to any vehicles or traffic lights by performing an emergency stop. The __Behavior Agent__ will react to traffic lights, avoid pedestrians, follow cars and navigate intersections according to the behavior type you applied:
+__4.__ Vehicle controls and behaviors are applied during a navigation step. During each step, the __Basic Agent__ will apply a vehicle control and react to any vehicles or traffic lights by performing an emergency stop. The __Behavior Agent__ will react to traffic lights, avoid pedestrians, follow cars and navigate intersections according to the behavior type you applied:
 
 ```py
 while True:
     vehicle.apply_control(agent.run_step())
 ```
 
-__6.__ You can check if the agent has finished its trajectory and perform an action when that happens. The following snippet will end the simulation once your vehicle has reached its destination:
+__5.__ You can check if the agent has finished its trajectory and perform an action when that happens. The following snippet will end the simulation once your vehicle has reached its destination:
 
 ```py
 while True:
@@ -81,7 +81,7 @@ while True:
     vehicle.apply_control(agent.run_step())
 ```
 
-__7.__ Instead of finishing the simulation when an agent has reached its target destination, a new, random route can be generated for the agent to follow:
+__6.__ Instead of finishing the simulation when an agent has reached its target destination, a new, random route can be generated for the agent to follow:
 
 ```py
 while True:
