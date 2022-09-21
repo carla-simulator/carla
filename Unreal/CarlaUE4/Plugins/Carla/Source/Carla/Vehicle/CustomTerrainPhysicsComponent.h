@@ -256,10 +256,6 @@ public:
   TArray<float> BuildLandscapeHeightMap(ALandscapeProxy* Landscape, int Resolution);
 
   UFUNCTION(BlueprintCallable)
-  static void BuildLandscapeHeightMapTexture(ALandscapeProxy* Landscape, 
-      int Resolution, FVector MapSize, FString TexturePath, FString TextureName);
-
-  UFUNCTION(BlueprintCallable)
   static void BuildLandscapeHeightMapDataAasset(ALandscapeProxy* Landscape, 
       int Resolution, FVector MapSize, FString AssetPath, FString AssetName);
 
@@ -418,6 +414,8 @@ private:
   UPROPERTY(EditAnywhere, Category="MaterialParameters")
   float EffectMultiplayer = 10.0f;
 
+  UPROPERTY(EditAnywhere, Category="DeformationMesh")
+  bool bUseDeformationPlane = false;
   UPROPERTY(EditAnywhere, Category="DeformationMesh")
   UStaticMesh* DeformationPlaneMesh = nullptr;
   UPROPERTY(EditAnywhere, Category="DeformationMesh")

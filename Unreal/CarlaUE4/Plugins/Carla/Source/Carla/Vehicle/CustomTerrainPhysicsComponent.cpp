@@ -64,6 +64,12 @@ static bool bDebugLoadingTiles = false;
 
 const int CacheExtraRadius = 10;
 
+#ifdef _WIN32
+      std::string _filesBaseFolder = std::string(getenv("USERPROFILE")) + "/carlaCache/";
+#else
+      std::string _filesBaseFolder = std::string(getenv("HOME")) + "/carlaCache/";
+#endif
+
 FVector SIToUEFrame(const FVector& In)
 {
   return MToCM * FVector(In.X, -In.Y, In.Z);
@@ -1625,11 +1631,8 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
 
   FString LevelName = GetWorld()->GetMapName();
   LevelName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
-#ifdef WITH_EDITOR
-  SavePath = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()) + LevelName + "_Terrain/";
-#else
-  SavePath = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()) + LevelName + "_Terrain/";
-#endif
+  
+  SavePath = FString(_filesBaseFolder.c_str()) + LevelName + "_Terrain/";
   SparseMap.SavePath = SavePath;
   // Creating the FileManager
   IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
@@ -1641,15 +1644,17 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
         TEXT("Folder was not created at %s"), *SavePath);  
   }
 
-  
-  DeformationPlaneActor = GetWorld()->SpawnActor<AStaticMeshActor>();
-  
-  if( DeformationPlaneActor )
-  {
-    DeformationPlaneActor->GetStaticMeshComponent()->SetStaticMesh( DeformationPlaneMesh );
-    DeformationPlaneActor->GetStaticMeshComponent()->SetMaterial( 0, DeformationPlaneMaterial );
-    DeformationPlaneActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+  if(bUseDeformationPlane){
+    DeformationPlaneActor = GetWorld()->SpawnActor<AStaticMeshActor>();
+    
+    if( DeformationPlaneActor )
+    {
+      DeformationPlaneActor->GetStaticMeshComponent()->SetStaticMesh( DeformationPlaneMesh );
+      DeformationPlaneActor->GetStaticMeshComponent()->SetMaterial( 0, DeformationPlaneMaterial );
+      DeformationPlaneActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+    }
   }
+  
 
   // UpdateMaps(FVector(100,100, 0), TileRadius.X, TileRadius.Y, CacheRadius.X, CacheRadius.Y);
   // IterationCompleted.Reset();
@@ -1673,6 +1678,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   }
 
 }
+
 TArray<float> UCustomTerrainPhysicsComponent::BuildLandscapeHeightMap(ALandscapeProxy* Landscape, int Resolution)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::BuildLandscapeHeightMap);
@@ -1693,68 +1699,6 @@ TArray<float> UCustomTerrainPhysicsComponent::BuildLandscapeHeightMap(ALandscape
     }
   }
   return HeightMap;
-}
-
-void UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapTexture(ALandscapeProxy* Landscape, 
-    int Resolution, FVector MapSize, FString TexturePath, FString TextureName)
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapTexture);
-  TArray<uint8> HeightMap;
-  HeightMap.Reserve(Resolution*Resolution*4);
-  FVector Origin = Landscape->GetActorLocation();
-  float DeltaX = MapSize.X;
-  float DeltaY = MapSize.Y;
-  for (size_t i = 0; i < Resolution; ++i)
-  {
-    float PosX = Origin.X + i*DeltaX;
-    for (size_t j = 0; j < Resolution; ++j)
-    {
-      float PosY = Origin.Y + j*DeltaY;
-      FVector Location = FVector(PosX, PosY, 0);
-      float Height = Landscape->GetHeightAtLocation(Location).Get(-1);
-      uint8* HeightPtr = (uint8*) &Height;
-      HeightMap.Emplace(HeightPtr[0]);
-      HeightMap.Emplace(HeightPtr[1]);
-      HeightMap.Emplace(HeightPtr[2]);
-      HeightMap.Emplace(HeightPtr[3]);
-    }
-  }
-  int TextureWidth = Resolution;
-  int TextureHeight = Resolution;
-  FString PackageName = TexturePath;
-  PackageName += TextureName;
-  UPackage* Package = CreatePackage(NULL, *PackageName);
-  Package->FullyLoad();
-
-  UTexture2D* NewTexture = NewObject<UTexture2D>(Package, *TextureName, RF_Public | RF_Standalone | RF_MarkAsRootSet);
-  NewTexture->AddToRoot();				// This line prevents garbage collection of the texture
-  NewTexture->PlatformData = new FTexturePlatformData();	// Then we initialize the PlatformData
-  NewTexture->PlatformData->SizeX = TextureWidth;
-  NewTexture->PlatformData->SizeY = TextureHeight;
-  // NewTexture->PlatformData->NumSlices = 1;
-  NewTexture->PlatformData->PixelFormat = EPixelFormat::PF_B8G8R8A8;
-
-  // Allocate first mipmap.
-  FTexture2DMipMap* Mip = new(NewTexture->PlatformData->Mips) FTexture2DMipMap();
-  Mip->SizeX = TextureWidth;
-  Mip->SizeY = TextureHeight;
-
-  // Lock the texture so it can be modified
-  Mip->BulkData.Lock(LOCK_READ_WRITE);
-  uint8* TextureData = (uint8*) Mip->BulkData.Realloc(TextureWidth * TextureHeight * 4);
-  FMemory::Memcpy(TextureData, HeightMap.GetData(), 4 * TextureHeight * TextureWidth);
-  Mip->BulkData.Unlock();
-
-  NewTexture->Source.Init(TextureWidth, TextureHeight, 1, 1, ETextureSourceFormat::TSF_BGRA8,
-      HeightMap.GetData());
-
-  NewTexture->UpdateResource();
-  Package->MarkPackageDirty();
-  FAssetRegistryModule::AssetCreated(NewTexture);
-
-  FString PackageFileName = FPackageName::LongPackageNameToFilename(PackageName, FPackageName::GetAssetPackageExtension());
-  bool bSaved = UPackage::SavePackage(Package, NewTexture, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
-
 }
 
 void UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapDataAasset(ALandscapeProxy* Landscape, 
@@ -1963,17 +1907,18 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
         MPCInstance->SetScalarParameterValue("TexSizeX", EffectMultiplayer * 100); 
       } 
     }
-
-    if( DeformationPlaneActor ){
-      DeformationPlaneActor->SetActorLocation(LastUpdatedPosition, false, nullptr);
-    }else{
-      DeformationPlaneActor = GetWorld()->SpawnActor<AStaticMeshActor>();
-  
-      if( DeformationPlaneActor )
-      {
-      DeformationPlaneActor->GetStaticMeshComponent()->SetStaticMesh( DeformationPlaneMesh );
-      DeformationPlaneActor->GetStaticMeshComponent()->SetMaterial( 0, DeformationPlaneMaterial );
-      DeformationPlaneActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+    if(bUseDeformationPlane){
+      if( DeformationPlaneActor ){
+        DeformationPlaneActor->SetActorLocation(LastUpdatedPosition, false, nullptr);
+      }else{
+        DeformationPlaneActor = GetWorld()->SpawnActor<AStaticMeshActor>();
+    
+        if( DeformationPlaneActor )
+        {
+        DeformationPlaneActor->GetStaticMeshComponent()->SetStaticMesh( DeformationPlaneMesh );
+        DeformationPlaneActor->GetStaticMeshComponent()->SetMaterial( 0, DeformationPlaneMaterial );
+        DeformationPlaneActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+        }
       }
     }
 
