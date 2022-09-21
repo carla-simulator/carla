@@ -295,11 +295,20 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UHeightMapDataAsset* DataAsset;
 
+  UFUNCTION(BlueprintCallable, Category="Texture")
+  void UpdateLargeTexture();
+  
+  UFUNCTION(BlueprintCallable, Category="Texture")
+  void UpdateLargeTextureData();
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UTexture2D *HeightMap;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
   UTexture2D* TextureToUpdate;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
+  UTexture2D* LargeTextureToUpdate;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
   UMaterialParameterCollection* MPC;
@@ -311,6 +320,7 @@ public:
   FVector NextPositionToUpdate = FVector(0,0,0);
   
   FVector LastUpdatedPosition;
+  FVector CachePosition;
 
   FString SavePath;
 
@@ -397,6 +407,9 @@ private:
   // Radius of the data collected by the texture in METERS
   UPROPERTY(EditAnywhere, Category="MaterialParameters")
   float TextureRadius = 4.0f;
+  // Radius of the data collected by the texture in METERS
+  UPROPERTY(EditAnywhere, Category="MaterialParameters")
+  float LargeTextureRadius = 50.0f;
   // Scalar Factor of deformation effect applied in the landscape
   UPROPERTY(EditAnywhere, Category="MaterialParameters")
   float EffectMultiplayer = 10.0f;
@@ -407,7 +420,6 @@ private:
   UMaterialInstance* DeformationPlaneMaterial = nullptr;
   UPROPERTY(VisibleAnywhere, Category="DeformationMesh")
   AStaticMeshActor* DeformationPlaneActor = nullptr;
-
   UPROPERTY()
   UMaterialParameterCollectionInstance* MPCInstance;
   
@@ -488,6 +500,7 @@ private:
   TArray<ACarlaWheeledVehicle*> Vehicles;
   FSparseHighDetailMap SparseMap;
   TArray<uint8> Data;
+  TArray<uint8> LargeData;
   #ifdef WITH_PYTORCH
   carla::learning::NeuralModel TerramechanicsModel;
   #endif

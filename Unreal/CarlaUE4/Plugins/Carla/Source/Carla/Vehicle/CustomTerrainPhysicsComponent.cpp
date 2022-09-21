@@ -258,7 +258,7 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
     TilePosition = FDVector(VectorToRead);
     ReadStdVector<FParticle> (ReadStream, Particles);
     ReadStdVector<float> (ReadStream, ParticlesHeightMap);
-    UE_LOG(LogCarla, Log, TEXT("Reading data, got %d particles"), Particles.size());
+    //UE_LOG(LogCarla, Log, TEXT("Reading data, got %d particles"), Particles.size());
   }
   else
   {
@@ -271,8 +271,8 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
     ParticlesHeightMap.resize( PartialHeightMapSize*PartialHeightMapSize );
     Particles = std::vector<FParticle>(NumParticles_X*NumParticles_Y*NumParticles_Z);
 
-    UE_LOG(LogCarla, Log, TEXT("Initializing Tile with (%d,%d,%d) particles at location %s, size %f, depth %f, HeightMap at tile origin %f"), 
-       NumParticles_X,NumParticles_Y,NumParticles_Z, *TileOrigin.ToString(), ParticleSize, Depth,  HeightMap.GetHeight(TileOrigin)  );
+    //UE_LOG(LogCarla, Log, TEXT("Initializing Tile with (%d,%d,%d) particles at location %s, size %f, depth %f, HeightMap at tile origin %f"), 
+    //   NumParticles_X,NumParticles_Y,NumParticles_Z, *TileOrigin.ToString(), ParticleSize, Depth,  HeightMap.GetHeight(TileOrigin)  );
 
     for(uint32_t i = 0; i < NumParticles_X; i++)
     {
@@ -297,8 +297,8 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
       Height = 0;
     }
 
-    UE_LOG(LogCarla, Log, TEXT("Initialized, got %d particles"), Particles.size());
-    UE_LOG(LogCarla, Log, TEXT("Initialized ParticlesHeightMap, got %d particles"), ParticlesHeightMap.size());
+    //UE_LOG(LogCarla, Log, TEXT("Initialized, got %d particles"), Particles.size());
+    //UE_LOG(LogCarla, Log, TEXT("Initialized ParticlesHeightMap, got %d particles"), ParticlesHeightMap.size());
   }
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(DenseTile::InitializeTile::ParticlesZOrdered);
@@ -1319,10 +1319,16 @@ void UCustomTerrainPhysicsComponent::UpdateTexture()
 }
 
 void UCustomTerrainPhysicsComponent::InitTexture(){
-  float LimitX = TextureToUpdate->GetSizeX(); 
-  float LimitY = TextureToUpdate->GetSizeY();
-  if(Data.Num() == 0){
+  if( Data.Num() == 0 && TextureToUpdate ){
+    float LimitX = TextureToUpdate->GetSizeX(); 
+    float LimitY = TextureToUpdate->GetSizeY();
     Data.Init(0, LimitX * LimitY);
+  }
+
+  if( LargeData.Num() == 0 && LargeTextureToUpdate ){
+    float LimitX = LargeTextureToUpdate->GetSizeX(); 
+    float LimitY = LargeTextureToUpdate->GetSizeY();
+    LargeData.Init(0, LimitX * LimitY);
   }
 }
 
@@ -1332,17 +1338,13 @@ void UCustomTerrainPhysicsComponent::UpdateTextureData()
   std::vector<float> ParticlesPositions;
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(TEXT("UCustomTerrainPhysicsComponent::UpdateTextureData::GettingHeightMaps"));
-    // FVector OriginPosition;     
-    // OriginPosition.X =  LastUpdatedPosition.X + (WorldSize.X * 0.5f);
-    // OriginPosition.Y =  -LastUpdatedPosition.Y - (WorldSize.Y * 0.5f);
-    // ParticlesPositions = SparseMap.GetParticlesHeightMapInTileRadius(UEFrameToSI(OriginPosition), TextureRadius);
     ParticlesPositions = SparseMap.GetParticlesHeightMapInTileRadius(UEFrameToSI(LastUpdatedPosition), TextureRadius);
     //UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::UpdateTextureData OriginPosition X: %f, Y %f"), OriginPosition.X, OriginPosition.Y);
-
   }
 
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(TEXT("UCustomTerrainPhysicsComponent::UpdateTextureData"));
+
     uint32_t LimitX = TextureToUpdate->GetSizeX() - 1; 
     uint32_t LimitY = TextureToUpdate->GetSizeY() - 1;
     uint32_t OffsetAbsolutX = 0;
@@ -1362,7 +1364,8 @@ void UCustomTerrainPhysicsComponent::UpdateTextureData()
           uint32_t LocalIndex =   x + y * NumberOfParticlesIn1AxisInHeightmap;
           if ( Data.IsValidIndex(AbsolutIndex) && LocalIndex + LocalOffset < ParticlesPositions.size() )
           {
-            Data[AbsolutIndex] = ParticlesPositions[LocalIndex + LocalOffset] + 127;
+            //Data[AbsolutIndex] = 127;
+            Data[AbsolutIndex] = ParticlesPositions[LocalIndex + LocalOffset] + 127 + FMath::RandRange(-127, 127);
           }else{
             /*
             UE_LOG(LogCarla, Log, TEXT("Invalid Indices AbsolutIndex %d LocalIndex + LocalOffset %d"), AbsolutIndex, LocalIndex + LocalOffset);            
@@ -1384,6 +1387,75 @@ void UCustomTerrainPhysicsComponent::UpdateTextureData()
     }
   }
 }
+
+void UCustomTerrainPhysicsComponent::UpdateLargeTexture()
+{  
+  UpdateLargeTextureData();
+
+  ENQUEUE_RENDER_COMMAND(UpdateDynamicTextureCode)
+  (
+    [NewData=LargeData, Texture=LargeTextureToUpdate](auto &InRHICmdList) mutable
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(TEXT("UCustomTerrainPhysicsComponent::TickComponent Renderthread"));
+    FUpdateTextureRegion2D region;
+    region.SrcX = 0;
+    region.SrcY = 0;
+    region.DestX = 0;
+    region.DestY = 0;
+    region.Width = Texture->GetSizeX();
+    region.Height = Texture->GetSizeY();
+
+    FTexture2DResource* resource = (FTexture2DResource*)Texture->Resource;
+    RHIUpdateTexture2D(
+        resource->GetTexture2DRHI(), 0, region, region.Width * sizeof(uint8_t), &NewData[0]); 
+  });
+}
+
+void UCustomTerrainPhysicsComponent::UpdateLargeTextureData()
+{
+  uint32_t NumberOfParticlesIn1AxisInLocalHeightmap = TextureToUpdate->GetSizeX() / (TextureRadius * 2) / TileSize;
+  uint32_t NumberOfParticlesIn1AxisInLargeHeightmap = LargeTextureToUpdate->GetSizeX() / (CacheRadius.X * 2) / TileSize;
+
+  std::vector<float> ParticlesPositions;
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(TEXT("UCustomTerrainPhysicsComponent::UpdateLargeTextureData::GettingHeightMaps"));
+    FVector OriginPosition;     
+    OriginPosition.X =  CachePosition.X + (WorldSize.X * 0.5f);
+    OriginPosition.Y =  -CachePosition.Y - (WorldSize.Y * 0.5f);
+    SparseMap.LockMutex();
+    ParticlesPositions = SparseMap.GetParticlesHeightMapInTileRadius(UEFrameToSI(OriginPosition), CacheRadius.X );
+    SparseMap.UnLockMutex();
+    //UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::UpdateTextureData OriginPosition X: %f, Y %f"), OriginPosition.X, OriginPosition.Y);
+  }
+
+  uint32_t OffsetX = 0;
+  uint32_t OffsetY = 0;
+  float* Ptr = &ParticlesPositions[0];
+  while( OffsetY < LargeTextureToUpdate->GetSizeY() )
+  {
+    for(uint32_t y = 0; y < NumberOfParticlesIn1AxisInLocalHeightmap; y++)
+    {
+      float LocalYTransformed = std::floor(y / NumberOfParticlesIn1AxisInLocalHeightmap * NumberOfParticlesIn1AxisInLargeHeightmap);
+      for(uint32_t x = 0; x < NumberOfParticlesIn1AxisInLocalHeightmap; x++)
+      {
+        uint32_t LocalIndex = x + y * NumberOfParticlesIn1AxisInLocalHeightmap;
+        float LocalXTransformed = std::floor(x / NumberOfParticlesIn1AxisInLocalHeightmap * NumberOfParticlesIn1AxisInLargeHeightmap);
+        //uint32_t AbsolutIndex = (LocalXTransformed + OffsetX) + (LocalYTransformed + OffsetY) * 
+
+      }
+    }
+
+    Ptr += (NumberOfParticlesIn1AxisInLocalHeightmap* NumberOfParticlesIn1AxisInLocalHeightmap);
+    
+    OffsetX += NumberOfParticlesIn1AxisInLargeHeightmap;
+    if( OffsetX >= LargeTextureToUpdate->GetSizeX() )
+    {
+      OffsetX = 0;
+      OffsetY += NumberOfParticlesIn1AxisInLargeHeightmap;
+    }
+  }
+}
+
 
 UCustomTerrainPhysicsComponent::UCustomTerrainPhysicsComponent()
   : Super()
@@ -1771,7 +1843,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     }
     // SparseMap.Update(LastUpdatedPosition, TextureRadius, TextureRadius );
     SparseMap.LockMutex();
-    RunNNPhysicsSimulation(Vehicle, DeltaTime);
+    // RunNNPhysicsSimulation(Vehicle, DeltaTime);
     // if(bUpdateParticles)
     // {
     //   {
@@ -1840,8 +1912,26 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
       MPCInstance->SetVectorParameterValue("PositionToUpdate", LastUpdatedPosition);
       // We set texture radius in cm as is UE4 default measure unit
       MPCInstance->SetScalarParameterValue("TextureRadius", TextureRadius * 100);
-      MPCInstance->SetScalarParameterValue("EffectMultiplayer", EffectMultiplayer * 100); 
+      MPCInstance->SetScalarParameterValue("LargeTextureRadius", TextureRadius * 100);
+      MPCInstance->SetScalarParameterValue("EffectMultiplayer", EffectMultiplayer * 100);
+      if(TextureToUpdate){
+        MPCInstance->SetScalarParameterValue("TexSizeX", EffectMultiplayer * 100); 
+      } 
     }
+
+    if( DeformationPlaneActor ){
+      DeformationPlaneActor->SetActorLocation(LastUpdatedPosition, false, nullptr);
+    }else{
+      DeformationPlaneActor = GetWorld()->SpawnActor<AStaticMeshActor>();
+  
+      if( DeformationPlaneActor )
+      {
+      DeformationPlaneActor->GetStaticMeshComponent()->SetStaticMesh( DeformationPlaneMesh );
+      DeformationPlaneActor->GetStaticMeshComponent()->SetMaterial( 0, DeformationPlaneMaterial );
+      DeformationPlaneActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+      }
+    }
+
   }
 
   if (bDrawHeightMap)
@@ -2148,10 +2238,10 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel2), BboxWheel2.Center.Z);
     DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel3), BboxWheel3.Center.Z);
   }
-  UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 0 %s"), ParticlesWheel0.size(), *WheelPosition0.ToString());
-  UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 1 %s"), ParticlesWheel1.size(), *WheelPosition1.ToString());
-  UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 2 %s"), ParticlesWheel2.size(), *WheelPosition2.ToString());
-  UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 3 %s"), ParticlesWheel3.size(), *WheelPosition3.ToString());
+  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 0 %s"), ParticlesWheel0.size(), *WheelPosition0.ToString());
+  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 1 %s"), ParticlesWheel1.size(), *WheelPosition1.ToString());
+  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 2 %s"), ParticlesWheel2.size(), *WheelPosition2.ToString());
+  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 3 %s"), ParticlesWheel3.size(), *WheelPosition3.ToString());
   if(ParticlesWheel0.size())
     UE_LOG(LogCarla, Log, 
         TEXT("Wheel0 pos %s particle pos %s"), *(UEFrameToSI(WheelPosition0)).ToString(), *(ParticlesWheel0[0]->Position.ToString()));
@@ -2724,31 +2814,21 @@ void UCustomTerrainPhysicsComponent::UpdateMaps(
 
 void UCustomTerrainPhysicsComponent::LoadTilesAtPosition(FVector Position, float RadiusX, float RadiusY)
 {
-  // FDVector PositionTranslated;
-  // PositionTranslated.X = ( Position.X * 0.01 ) + (WorldSize.X * 0.005f);
-  // PositionTranslated.Y = ( -Position.Y * 0.01 ) + (WorldSize.Y * 0.005f);
-  // PositionTranslated.Z = ( Position.Z * 0.01 ) + (WorldSize.Z * 0.005f);
-  // SparseMap.LoadTilesAtPositionFromCache( PositionTranslated, RadiusX, RadiusY );
   SparseMap.LoadTilesAtPositionFromCache( UEFrameToSI(Position), UEFrameToSI(RadiusX), UEFrameToSI(RadiusY) );
 }
 
 void UCustomTerrainPhysicsComponent::UnloadTilesAtPosition(FVector Position, float RadiusX, float RadiusY)
 {
-  // FDVector PositionTranslated;
-  // PositionTranslated.X = ( Position.X * 0.01 ) + (WorldSize.X * 0.005f);
-  // PositionTranslated.Y = ( -Position.Y * 0.01 ) + (WorldSize.Y * 0.005f);
-  // PositionTranslated.Z = ( Position.Z * 0.01 ) + (WorldSize.Z * 0.005f);
-  // SparseMap.UnLoadTilesAtPositionToCache( PositionTranslated, RadiusX, RadiusY );
   SparseMap.UnLoadTilesAtPositionToCache( UEFrameToSI(Position), UEFrameToSI(RadiusX), UEFrameToSI(RadiusY) );
 }
 
 void UCustomTerrainPhysicsComponent::ReloadCache(FVector Position, float RadiusX, float RadiusY)
 {
-  // FDVector PositionTranslated;
-  // PositionTranslated.X = ( Position.X * 0.01 ) + (WorldSize.X * 0.005f);
-  // PositionTranslated.Y = ( -Position.Y * 0.01 ) + (WorldSize.Y * 0.005f);
-  // PositionTranslated.Z = ( Position.Z * 0.01 ) + (WorldSize.Z * 0.005f);
-  // SparseMap.ReloadCache(PositionTranslated, RadiusX, RadiusY);
+  if( MPCInstance ){
+    MPCInstance->SetVectorParameterValue("CacheLastUpdatedPosition", Position);
+    CachePosition = Position;
+  }
+
   SparseMap.ReloadCache(UEFrameToSI(Position), UEFrameToSI(RadiusX), UEFrameToSI(RadiusY));
 }
 
