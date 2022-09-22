@@ -127,6 +127,8 @@ public:
   std::vector<FParticle*> GetParticlesInBox(const FOrientedBox& OBox);
   std::vector<uint64_t> GetIntersectingTiles(const FOrientedBox& OBox);
   std::vector<float> GetParticlesHeightMapInTileRadius(FDVector Position, float Radius);
+  std::vector<uint64_t> GetLoadedTilesInRange(FDVector Position, float Radius);
+
 
   FDenseTile& GetTile(uint32_t Tile_X, uint32_t Tile_Y);
   FDenseTile& GetTile(FDVector Position);
@@ -292,6 +294,8 @@ public:
 
   UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateTextureData();
+  UFUNCTION(BlueprintCallable, Category="Texture")
+  void UpdateLoadedTextureDataRegions();
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UHeightMapDataAsset* DataAsset;
 
@@ -306,6 +310,10 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
   UTexture2D* TextureToUpdate;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
+  float MinDisplacement = -100;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
+  float MaxDisplacement = 100;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
   UTexture2D* LargeTextureToUpdate;
@@ -326,6 +334,8 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   float ForceMulFactor = 1.0;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  float ParticleForceMulFactor = 1.0;
   UPROPERTY(EditAnywhere)
   bool NNVerbose = false;
 
@@ -358,10 +368,11 @@ private:
       
   void ApplyForces();
   void LimitParticlesPerWheel(std::vector<FParticle*> &Particles);
-  void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles);
+  void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles, 
+      FLinearColor Color = FLinearColor(1.f, 0.f, 0.f));
   void DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes);
   void DrawTiles(UWorld* World, const std::vector<uint64_t>& TilesIds, float Height = 0,
-    FLinearColor Color = FLinearColor(0.0,1.0,0.0,0.0));
+    FLinearColor Color = FLinearColor(0.0,1.0,0.0,1.0));
   void GenerateBenchmarkParticles(std::vector<FParticle>& BenchParticles, 
       std::vector<FParticle*> &ParticlesWheel0, std::vector<FParticle*> &ParticlesWheel1,
       std::vector<FParticle*> &ParticlesWheel2, std::vector<FParticle*> &ParticlesWheel3,
