@@ -44,6 +44,8 @@
 #define CUR_LINE  (FString::FromInt(__LINE__))
 #define CUR_CLASS_FUNC_LINE (CUR_CLASS_FUNC + "::" + CUR_LINE)
 
+#define TAG_SPREADED FName("Spreaded Actor")
+
 #undef CreateDirectory
 #undef CopyFile
 
@@ -128,7 +130,7 @@ void UMapGeneratorWidget::CookSoilTypeToMaps(const FMapGeneratorMetaInfo& MetaIn
   }
 }
 
-void UMapGeneratorWidget::CookMiscInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo)
+void UMapGeneratorWidget::CookMiscSpreadedInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo)
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Cooking Miscellaneous Info to Tiles in %s %s"), 
       *CUR_CLASS_FUNC_LINE, *MetaInfo.DestinationPath, *MetaInfo.MapName);
@@ -144,6 +146,36 @@ void UMapGeneratorWidget::CookMiscInformationToTiles(const FMapGeneratorMetaInfo
   // Specific location actors (ROI? Location?)
 
 
+}
+
+void UMapGeneratorWidget::DeleteAllSpreadedActors(const FMapGeneratorMetaInfo& MetaInfo)
+{
+  TArray<FAssetData> AssetsData;
+  const FString TilesPath = MetaInfo.DestinationPath;
+  bool success = LoadWorlds(AssetsData, TilesPath);
+
+  for(FAssetData AssetData : AssetsData)
+  {
+    UWorld* World = GetWorldFromAssetData(AssetData);
+
+    // Check if it is not a tile
+    if(!World->GetMapName().Contains("_Tile_"))
+    {
+      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: %s Skipped as it is not a tile"), 
+          *CUR_CLASS_FUNC_LINE, *World->GetMapName());
+      continue;
+    }
+
+    TArray<AActor*> TaggedActors; 
+    UGameplayStatics::GetAllActorsWithTag(World, TAG_SPREADED, TaggedActors);
+
+    for(AActor* Actor : TaggedActors)
+    {
+      Actor->Destroy();
+    }
+
+    SaveWorld(World);
+  }
 }
 
 void UMapGeneratorWidget::CookVegetationToCurrentTile(const TArray<UProceduralFoliageSpawner*> FoliageSpawners)
@@ -1094,16 +1126,6 @@ bool UMapGeneratorWidget::CookMiscSpreadedActors(const FMapGeneratorMetaInfo& Me
     // Check if map is valid
     const FString MapCompletePath = MetaInfo.DestinationPath + "/" + MetaInfo.MapName +
         "_Tile_" + FString::FromInt(ThisTile.X) + "_" + FString::FromInt(ThisTile.Y);
-    // const FString MapPackageFileName = FPackageName::LongPackageNameToFilename(
-    //     MapCompletePath, 
-    //     FPackageName::GetMapPackageExtension());
-      
-    // if(!FPaths::FileExists(*MapPackageFileName))
-    // {
-    //   UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Spreaded actors cannot be applied to a non existing map"), 
-    //       *CUR_CLASS_FUNC_LINE);
-    //   return false;
-    // }
 
     // Instantiate Weather Actor in main map
     const FString WorldToLoadPath = MapCompletePath + "." + MetaInfo.MapName + 
@@ -1126,29 +1148,44 @@ bool UMapGeneratorWidget::CookMiscSpreadedActors(const FMapGeneratorMetaInfo& Me
 
     FMiscSpreadedActorsROI ActorROI = MetaInfo.MiscSpreadedActorsRoisMap[ThisTile];
 
-    int NumOfTilesForSpreadedActorsGrid = 50;
+    int NumOfTilesForSpreadedActorsGrid;
+    switch(ActorROI.ActorsDensity)
+    {
+      case ESpreadedActorsDensity::LOW:
+        NumOfTilesForSpreadedActorsGrid = 50;
+        break;
+      case ESpreadedActorsDensity::MEDIUM:
+        NumOfTilesForSpreadedActorsGrid = 100;
+        break;
+      case ESpreadedActorsDensity::HIGH:
+        NumOfTilesForSpreadedActorsGrid = 200;
+        break;
+    }
+
     float TotalMapTileSize = 100800.0f; // In cm
+    float MaxTileDisplacement = 0.5f * TotalMapTileSize / NumOfTilesForSpreadedActorsGrid;
     for(int i = 1; i < NumOfTilesForSpreadedActorsGrid - 1; i++)
     {
       for(int j = 1; j < NumOfTilesForSpreadedActorsGrid - 1; j++)
       {
-        bool bIsGridTileEligible = FMath::RandRange(0.0f,100.0f) <= ActorROI.Density;
-        float ActorXCoord = i * TotalMapTileSize / NumOfTilesForSpreadedActorsGrid;
-        float ActorYCoord = j * TotalMapTileSize / NumOfTilesForSpreadedActorsGrid;
+        bool bIsGridTileEligible = FMath::RandRange(0.0f,100.0f) <= ActorROI.Probability;
+        float ActorXCoord = (i * TotalMapTileSize / NumOfTilesForSpreadedActorsGrid) + FMath::RandRange(-MaxTileDisplacement,MaxTileDisplacement);
+        float ActorYCoord = (j * TotalMapTileSize / NumOfTilesForSpreadedActorsGrid) + FMath::RandRange(-MaxTileDisplacement,MaxTileDisplacement);
         if(bIsGridTileEligible)
         {
           float ActorZCoord = GetLandscapeSurfaceHeight(World, ActorXCoord, ActorYCoord, false);
-          // TODO: Add small random offset inside the grid to add variation
           FVector Location(ActorXCoord, ActorYCoord, ActorZCoord);
+          // TODO: Add rotation randomly?
           FRotator Rotation(0, 0, 0);
           FActorSpawnParameters SpawnInfo;
           
           
-          AActor* RiverActor =  World->SpawnActor<AActor>(
+          AActor* SpreadedActor =  World->SpawnActor<AActor>(
               ActorROI.ActorClass, 
               Location, 
               Rotation, 
               SpawnInfo);
+          SpreadedActor->Tags.Add(TAG_SPREADED);
         }
       }
     }
