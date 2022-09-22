@@ -221,6 +221,9 @@ public:
   void CookMiscSpreadedInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo);
 
   UFUNCTION(Category="Map Generator|Miscellaneous", BlueprintCallable)
+  void CookMiscSpecificLocationInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo);
+
+  UFUNCTION(Category="Map Generator|Miscellaneous", BlueprintCallable)
   void DeleteAllSpreadedActors(const FMapGeneratorMetaInfo& MetaInfo);
 
   /// Function invoked by the widget that cooks the vegetation defined in

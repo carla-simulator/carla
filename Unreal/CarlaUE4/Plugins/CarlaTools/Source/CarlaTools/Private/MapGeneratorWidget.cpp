@@ -45,6 +45,7 @@
 #define CUR_CLASS_FUNC_LINE (CUR_CLASS_FUNC + "::" + CUR_LINE)
 
 #define TAG_SPREADED FName("Spreaded Actor")
+#define TAG_SPECIFIC_LOCATION FName("Specific Location Actor")
 
 #undef CreateDirectory
 #undef CopyFile
@@ -142,10 +143,38 @@ void UMapGeneratorWidget::CookMiscSpreadedInformationToTiles(const FMapGenerator
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Miscellaneous Spreaded Actor cooking was not successful..."), 
         *CUR_CLASS_FUNC_LINE);
   }
+}
 
-  // Specific location actors (ROI? Location?)
+void UMapGeneratorWidget::CookMiscSpecificLocationInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo)
+{
+  UWorld* World = GEditor->GetEditorWorldContext().World();
 
+  // Only one ROI at a time supported
+  TArray<FMiscSpecificLocationActorsROI> ActorROIArray;
+  MetaInfo.MiscSpecificLocationActorsRoisMap.GenerateValueArray(ActorROIArray);
 
+  if(ActorROIArray.Num() > 0)
+  {
+    FMiscSpecificLocationActorsROI ActorROI = ActorROIArray[0];
+
+    FRotator Rotation(0, 0, 0);
+    FActorSpawnParameters SpawnInfo;
+
+    AActor* SpawnedActor =  World->SpawnActor<AActor>(
+        ActorROI.ActorClass, 
+        ActorROI.ActorLocation, 
+        Rotation, 
+        SpawnInfo);
+    SpawnedActor->Tags.Add(TAG_SPECIFIC_LOCATION);
+
+    SaveWorld(World);
+  }
+  else
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Miscellaneous Specific Location Actor cooking was not successful..."), 
+        *CUR_CLASS_FUNC_LINE);
+  }
+  
 }
 
 void UMapGeneratorWidget::DeleteAllSpreadedActors(const FMapGeneratorMetaInfo& MetaInfo)

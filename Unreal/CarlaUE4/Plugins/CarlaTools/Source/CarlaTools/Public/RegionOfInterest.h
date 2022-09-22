@@ -287,9 +287,9 @@ struct CARLATOOLS_API FMiscSpecificLocationActorsROI : public FRegionOfInterest
   TSubclassOf<AActor> ActorClass;
 
   UPROPERTY(BlueprintReadWrite)
-  FVector2D ActorLocation;
+  FVector ActorLocation;
 
-  FMiscSpecificLocationActorsROI() : FRegionOfInterest(), ActorClass(), ActorLocation(0.0f, 0.0f)
+  FMiscSpecificLocationActorsROI() : FRegionOfInterest(), ActorClass(), ActorLocation(0.0f)
   {}
 };
 
