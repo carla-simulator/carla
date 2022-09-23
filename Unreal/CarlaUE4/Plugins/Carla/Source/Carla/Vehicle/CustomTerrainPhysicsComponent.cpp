@@ -498,7 +498,6 @@ std::vector<FParticle*> FSparseHighDetailMap::
   TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::GetParticlesInBox);
   std::vector<uint64_t> TilesToCheck = GetIntersectingTiles(OBox);
 
-
   std::vector<FParticle*> ParticlesInRadius;
   for(uint64_t TileId : TilesToCheck)
   {
@@ -841,6 +840,7 @@ FDenseTile& FSparseHighDetailMap::InitializeRegionInCache(uint64_t TileId)
       ParticleSize, TerrainDepth,
       TileCenter, TileCenter + FDVector(TileSize, TileSize, 0.f),
       SavePath, Heightmap);
+  Lock_CacheMap.Unlock();
   return Tile;
 }
 
@@ -1119,69 +1119,6 @@ void FSparseHighDetailMap::LoadTilesAtPositionFromCache(FDVector Position, float
         }
       }
     }    
-  }
-}
-
-void FSparseHighDetailMap::UnLoadTilesAtPositionToCache(FDVector Position, float RadiusX , float RadiusY )
-{
-  // Translate UE4 Position to our coords
-  TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition);
-  std::set<uint64_t> KeysToRemove;
-
-  double MinX = Position.X - RadiusX;
-  double MinY = Position.Y - RadiusY;
-  double MaxX = Position.X + RadiusX;
-  double MaxY = Position.Y + RadiusY;
-  
-  FIntVector MinVector = GetVectorTileId(FDVector(MinX, MinY, 0));
-  FIntVector MaxVector = GetVectorTileId(FDVector(MaxX, MaxY, 0));
-
-  FIntVector CacheMinVector = GetVectorTileId(FDVector(MinX - CacheExtraRadius, MinY - CacheExtraRadius, 0));
-  FIntVector CacheMaxVector = GetVectorTileId(FDVector(MaxX + CacheExtraRadius, MaxY + CacheExtraRadius, 0));
-
-  if( bDebugLoadingTiles ){
-    static FDateTime CurrentTime = FDateTime::Now();
-    if( ( FDateTime::Now() - CurrentTime).GetTotalSeconds() > 20.0f )
-    {
-      UE_LOG(LogCarla, Error, TEXT("FSparseHighDetailMap::UnLoadTilesAtPositionToCache Position X: %f, Y %f"), Position.X, Position.Y);
-      UE_LOG(LogCarla, Error, TEXT("FSparseHighDetailMap::UnLoadTilesAtPositionToCache Loading Tiles Between X: %d %d Y: %d %d "), MinVector.X, MaxVector.X, MinVector.Y, MaxVector.Y );
-      UE_LOG(LogCarla, Error, TEXT("FSparseHighDetailMap::UnLoadTilesAtPositionToCache Cache Tiles Between X: %d %d Y: %d %d "), CacheMinVector.X, CacheMaxVector.X, CacheMinVector.Y, CacheMaxVector.Y );
-      //UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::UnLoadTilesAtPositionToCache Extension X: %f, Y %f"), Extension.X, Extension.Y);
-      //UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::UnLoadTilesAtPositionToCache Before MapSize : %d"), Map.size() );
-      CurrentTime = FDateTime::Now();
-    }
-  }
-
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition::Process);
-    for(uint32_t CacheX = CacheMinVector.X; CacheX < CacheMaxVector.X; CacheX++ )
-    {
-      for(uint32_t CacheY = CacheMinVector.Y; CacheY < CacheMaxVector.Y; CacheY++ )
-      {
-        uint64_t CurrentTileID = GetTileId(CacheX, CacheY);
-        if( Map.find(CurrentTileID) != Map.end() )
-        {
-          if ( MinVector.X <= CacheX  && CacheX <= MaxVector.X && MinVector.Y <= CacheY  && CacheY <= MaxVector.Y )
-          {
-            
-          }else{
-            KeysToRemove.insert( CurrentTileID );
-          }
-        }
-      }
-    }    
-  }
-
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition::Save);
-    FScopeLock ScopeLock(&Lock_Map);
-    for(auto it : KeysToRemove) 
-    {
-      TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition::Erase);
-      FScopeLock ScopeCacheLock(&Lock_CacheMap);
-      CacheMap.emplace(it, std::move(Map[it]) ); 
-      Map.erase(it);
-    }
   }
 }
 
@@ -2072,6 +2009,37 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
             FLinearColor(1.f, 0.f, 0.f), 10.0, 0, LifeTime);
 
       }
+    }    
+  }
+}
+
+void FSparseHighDetailMap::UnLoadTilesAtPositionToCache(FDVector Position, float RadiusX , float RadiusY )
+{
+  // Translate UE4 Position to our coords
+  TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition);
+  std::set<uint64_t> KeysToRemove;
+
+  double MinX = std::min( std::max( Position.X - RadiusX, 0.0) , Extension.X - 1.0);
+  double MinY = std::min( std::max( Position.Y - RadiusY, 0.0) , -Extension.Y + 1.0);
+  double MaxX = std::min( std::max( Position.X + RadiusX, 0.0) , Extension.X - 1.0);
+  double MaxY = std::min( std::max( Position.Y + RadiusY, 0.0) , -Extension.Y + 1.0);
+
+  FIntVector MinVector = GetVectorTileId(FDVector(MinX, MinY, 0));
+  FIntVector MaxVector = GetVectorTileId(FDVector(MaxX, MaxY, 0));
+
+  FIntVector CacheMinVector = GetVectorTileId(FDVector(MinX - 10.0, MinY - 10.0, 0));
+  FIntVector CacheMaxVector = GetVectorTileId(FDVector(MaxX + 10.0, MaxY + 10.0, 0));
+
+  if( bDebugLoadingTiles ){
+    static FDateTime CurrentTime = FDateTime::Now();
+    if( ( FDateTime::Now() - CurrentTime).GetTotalSeconds() > 20.0f )
+    {
+      UE_LOG(LogCarla, Error, TEXT("FSparseHighDetailMap::UnLoadTilesAtPositionToCache Position X: %f, Y %f"), Position.X, Position.Y);
+      UE_LOG(LogCarla, Error, TEXT("FSparseHighDetailMap::UnLoadTilesAtPositionToCache Loading Tiles Between X: %d %d Y: %d %d "), MinVector.X, MaxVector.X, MinVector.Y, MaxVector.Y );
+      UE_LOG(LogCarla, Error, TEXT("FSparseHighDetailMap::UnLoadTilesAtPositionToCache Cache Tiles Between X: %d %d Y: %d %d "), CacheMinVector.X, CacheMaxVector.X, CacheMinVector.Y, CacheMaxVector.Y );
+      //UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::UnLoadTilesAtPositionToCache Extension X: %f, Y %f"), Extension.X, Extension.Y);
+      //UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::UnLoadTilesAtPositionToCache Before MapSize : %d"), Map.size() );
+      CurrentTime = FDateTime::Now();
     }
   }
 }
@@ -2678,7 +2646,6 @@ void UCustomTerrainPhysicsComponent::UpdateTilesHeightMapsInRadius(FDVector Posi
       }
     }
   }
-
 }
 
 void UCustomTerrainPhysicsComponent::ApplyForcesToVehicle(

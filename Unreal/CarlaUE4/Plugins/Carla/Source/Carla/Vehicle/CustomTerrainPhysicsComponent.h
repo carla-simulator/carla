@@ -219,6 +219,7 @@ private:
   FCriticalSection Lock_Map; // UE4 Mutex
   FCriticalSection Lock_CacheMap; // UE4 Mutex
   FCriticalSection Lock_GetTile;
+  FCriticalSection Lock_Position; // UE4 Mutex
 
 };
 
@@ -296,6 +297,7 @@ public:
   void UpdateTextureData();
   UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateLoadedTextureDataRegions();
+  
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UHeightMapDataAsset* DataAsset;
 
@@ -433,6 +435,7 @@ private:
   UMaterialInstance* DeformationPlaneMaterial = nullptr;
   UPROPERTY(VisibleAnywhere, Category="DeformationMesh")
   AStaticMeshActor* DeformationPlaneActor = nullptr;
+
   UPROPERTY()
   UMaterialParameterCollectionInstance* MPCInstance;
   
