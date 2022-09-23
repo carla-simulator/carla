@@ -498,6 +498,7 @@ std::vector<FParticle*> FSparseHighDetailMap::
   TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::GetParticlesInBox);
   std::vector<uint64_t> TilesToCheck = GetIntersectingTiles(OBox);
 
+
   std::vector<FParticle*> ParticlesInRadius;
   for(uint64_t TileId : TilesToCheck)
   {
@@ -1388,17 +1389,21 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE("UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions");
   FDVector TextureCenterPosition = UEFrameToSI(LastUpdatedPosition);
+  
   std::vector<uint64_t> LoadedTiles = 
       SparseMap.GetLoadedTilesInRange(TextureCenterPosition, TextureRadius);
   FDVector TextureOrigin = TextureCenterPosition - FDVector(TextureRadius, TextureRadius, 0);
-  float GlobalTexelSize = 2*TextureRadius / TextureToUpdate->GetSizeX();
-  uint32_t PartialHeightMapSize = 
-      SparseMap.GetTileSize() * TextureToUpdate->GetSizeX() / (2*TextureRadius);
+  float GlobalTexelSize = std::round( ( (2.0f * TextureRadius) / TextureToUpdate->GetSizeX() ) * 10000.0f) / 10000.0f;
+  uint32_t PartialHeightMapSize = std::round( SparseMap.GetTileSize() * TextureToUpdate->GetSizeX() / (2*TextureRadius) );
+  
   float LocalTexelSize = SparseMap.GetTileSize() / PartialHeightMapSize;
+  LocalTexelSize = std::round( LocalTexelSize * 1000.0f ) / 1000.0f;
+  
   for(uint8_t &Value : Data)
   {
     Value = 128;
   }
+
   for (uint64_t TileId : LoadedTiles)
   {
     FDenseTile& CurrentTile = SparseMap.GetTile(TileId);
@@ -1411,8 +1416,9 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
         float Height = CurrentTile.ParticlesHeightMap[LocalIndex];
         FDVector LocalTexelPosition = 
             TilePosition + FDVector(Local_X*LocalTexelSize, Local_Y*LocalTexelSize, 0);
-        uint32_t Coord_X = (LocalTexelPosition.X - TextureOrigin.X ) / GlobalTexelSize;
-        uint32_t Coord_Y = (LocalTexelPosition.Y - TextureOrigin.Y ) / GlobalTexelSize;
+        uint32_t Coord_X = std::round( (LocalTexelPosition.X - TextureOrigin.X ) / GlobalTexelSize );
+        uint32_t Coord_Y = std::round( (LocalTexelPosition.Y - TextureOrigin.Y ) / GlobalTexelSize );
+        
         if (Coord_X >= 0 && Coord_X < TextureToUpdate->GetSizeX() &&
             Coord_Y >= 0 && Coord_Y < TextureToUpdate->GetSizeY())
         {
@@ -1421,8 +1427,8 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
           float DisplacementRange = MaxDisplacement - MinDisplacement;
           float Fraction = (Displacement - MinDisplacement) / DisplacementRange; 
           Fraction = FMath::Clamp(Fraction, 0.f, 1.f);
-          Data[Coord_X * TextureToUpdate->GetSizeY() + Coord_Y] = 
-              static_cast<uint8_t>(Fraction * 255);
+          Fraction = std::floor(Fraction * 255.0f);
+          Data[Coord_X * TextureToUpdate->GetSizeY() + Coord_Y] = static_cast<uint8_t>(Fraction );
         }
       }
     }
@@ -1564,7 +1570,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::BeginPlay);
   Super::BeginPlay();
-  // GEngine->Exec( GetWorld(), TEXT( "Trace.Start default,gpu" ) );
+  //GEngine->Exec( GetWorld(), TEXT( "Trace.Start default,gpu" ) );
 
   SparseMap.Clear();
   RootComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
@@ -1573,7 +1579,6 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
     UE_LOG(LogCarla, Error, 
         TEXT("UCustomTerrainPhysicsComponent: Root component is not a UPrimitiveComponent"));
   }
-
 #ifndef WITH_EDITOR
   bUpdateParticles = false;
   DrawDebugInfo = false;
@@ -1588,6 +1593,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   ForceMulFactor = 1.0;
   FloorHeight = 0.0;
   bDrawLoadedTiles = false;
+
 #endif
 
   int IntValue;
@@ -1980,15 +1986,16 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     //     }
     //   }
     // }
+    LastUpdatedPosition = GlobalLocation;
+
     UpdateTexture();
 
     if (bDrawLoadedTiles)
     {
-      DrawTiles(GetWorld(), SparseMap.GetTileIdInMap(), GlobalLocation.Z, FLinearColor(0.0,0.0,1.0,0.0));
-      DrawTiles(GetWorld(), SparseMap.GetTileIdInCache(), GlobalLocation.Z, FLinearColor(1.0,0.0,0.0,0.0));
+      DrawTiles(GetWorld(), SparseMap.GetTileIdInMap(), GlobalLocation.Z + 300, FLinearColor(0.0,0.0,1.0,0.0));
+      DrawTiles(GetWorld(), SparseMap.GetTileIdInCache(), GlobalLocation.Z + 300, FLinearColor(1.0,0.0,0.0,0.0));
     }
     SparseMap.UnLockMutex();
-    LastUpdatedPosition = GlobalLocation;
     // UpdateMaps(LastUpdatedPosition, TileRadius.X, TileRadius.Y, CacheRadius.X, CacheRadius.Y);
     // IterationCompleted.Reset();
     // IterationCompleted = Async(EAsyncExecution::LargeThreadPool, 
