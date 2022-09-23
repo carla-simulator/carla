@@ -157,7 +157,7 @@ void UMapGeneratorWidget::CookMiscSpecificLocationInformationToTiles(const FMapG
   {
     FMiscSpecificLocationActorsROI ActorROI = ActorROIArray[0];
 
-    FRotator Rotation(0, 0, 0);
+    FRotator Rotation(0, FMath::RandRange(ActorROI.MinRotationRange, ActorROI.MaxRotationRange), 0);
     FActorSpawnParameters SpawnInfo;
 
     AActor* SpawnedActor =  World->SpawnActor<AActor>(

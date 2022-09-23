@@ -289,6 +289,12 @@ struct CARLATOOLS_API FMiscSpecificLocationActorsROI : public FRegionOfInterest
   UPROPERTY(BlueprintReadWrite)
   FVector ActorLocation;
 
+  UPROPERTY(BlueprintReadWrite)
+  float MinRotationRange;
+
+  UPROPERTY(BlueprintReadWrite)
+  float MaxRotationRange;
+
   FMiscSpecificLocationActorsROI() : FRegionOfInterest(), ActorClass(), ActorLocation(0.0f)
   {}
 };
