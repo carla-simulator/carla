@@ -15,6 +15,7 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Engine/DataAsset.h"
+#include "Async/Future.h"
 #ifdef WITH_PYTORCH
 THIRD_PARTY_INCLUDES_START
 #include <carla/pytorch/pytorch.h>
@@ -126,6 +127,8 @@ public:
   std::vector<FParticle*> GetParticlesInBox(const FOrientedBox& OBox);
   std::vector<uint64_t> GetIntersectingTiles(const FOrientedBox& OBox);
   std::vector<float> GetParticlesHeightMapInTileRadius(FDVector Position, float Radius);
+  std::vector<uint64_t> GetLoadedTilesInRange(FDVector Position, float Radius);
+
 
   FDenseTile& GetTile(uint32_t Tile_X, uint32_t Tile_Y);
   FDenseTile& GetTile(FDVector Position);
@@ -139,6 +142,7 @@ public:
   uint64_t GetTileId(uint64_t TileId);
   uint64_t GetTileId(FDVector Position);
   FIntVector GetVectorTileId(FDVector Position);
+  FIntVector GetVectorTileId(uint64_t TileId);
   FDVector GetTilePosition(uint64_t TileId);
   FDVector GetTilePosition(uint32_t Tile_X, uint32_t Tile_Y);
 
@@ -161,6 +165,7 @@ public:
   void LoadTilesAtPositionFromCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
   void UnLoadTilesAtPositionToCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
   void ReloadCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
+  void UpdateMaps(FDVector Position, float RadiusX, float RadiusY, float CacheRadiusX, float CacheRadiusY);
 
   void Update(FVector Position, float RadiusX, float RadiusY);
 
@@ -176,6 +181,25 @@ public:
   void UnLockMutex()
   {
     Lock_Map.Unlock();
+  }
+
+  std::vector<uint64_t> GetTileIdInMap()
+  {
+    std::vector<uint64_t> Result;
+    for (auto& Iter : Map)
+    {
+      Result.emplace_back(Iter.first);
+    }
+    return Result;
+  }
+  std::vector<uint64_t> GetTileIdInCache()
+  {
+    std::vector<uint64_t> Result;
+    for (auto& Iter : CacheMap)
+    {
+      Result.emplace_back(Iter.first);
+    }
+    return Result;
   }
 
   std::unordered_map<uint64_t, FDenseTile> Map;
@@ -194,6 +218,7 @@ private:
   FVector PositionToUpdate;
   FCriticalSection Lock_Map; // UE4 Mutex
   FCriticalSection Lock_CacheMap; // UE4 Mutex
+  FCriticalSection Lock_GetTile;
   FCriticalSection Lock_Position; // UE4 Mutex
 
 };
@@ -234,10 +259,6 @@ public:
   TArray<float> BuildLandscapeHeightMap(ALandscapeProxy* Landscape, int Resolution);
 
   UFUNCTION(BlueprintCallable)
-  static void BuildLandscapeHeightMapTexture(ALandscapeProxy* Landscape, 
-      int Resolution, FVector MapSize, FString TexturePath, FString TextureName);
-
-  UFUNCTION(BlueprintCallable)
   static void BuildLandscapeHeightMapDataAasset(ALandscapeProxy* Landscape, 
       int Resolution, FVector MapSize, FString AssetPath, FString AssetName);
 
@@ -257,6 +278,9 @@ public:
   void LoadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
 
   UFUNCTION(BlueprintCallable, Category="Tiles")
+  void UpdateMaps(FVector Position, float RadiusX, float RadiusY, float CacheRadiusX, float CacheRadiusY);
+
+  UFUNCTION(BlueprintCallable, Category="Tiles")
   void UnloadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
 
 
@@ -271,14 +295,30 @@ public:
 
   UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateTextureData();
+  UFUNCTION(BlueprintCallable, Category="Texture")
+  void UpdateLoadedTextureDataRegions();
+  
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UHeightMapDataAsset* DataAsset;
+
+  UFUNCTION(BlueprintCallable, Category="Texture")
+  void UpdateLargeTexture();
+  
+  UFUNCTION(BlueprintCallable, Category="Texture")
+  void UpdateLargeTextureData();
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UTexture2D *HeightMap;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
   UTexture2D* TextureToUpdate;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
+  float MinDisplacement = -100;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
+  float MaxDisplacement = 100;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
+  UTexture2D* LargeTextureToUpdate;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
   UMaterialParameterCollection* MPC;
@@ -290,11 +330,14 @@ public:
   FVector NextPositionToUpdate = FVector(0,0,0);
   
   FVector LastUpdatedPosition;
+  FVector CachePosition;
 
   FString SavePath;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   float ForceMulFactor = 1.0;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  float ParticleForceMulFactor = 1.0;
   UPROPERTY(EditAnywhere)
   bool NNVerbose = false;
 
@@ -327,9 +370,11 @@ private:
       
   void ApplyForces();
   void LimitParticlesPerWheel(std::vector<FParticle*> &Particles);
-  void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles);
+  void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles, 
+      FLinearColor Color = FLinearColor(1.f, 0.f, 0.f));
   void DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes);
-  void DrawTiles(UWorld* World, const std::vector<uint64_t>& TilesIds, float Height = 0);
+  void DrawTiles(UWorld* World, const std::vector<uint64_t>& TilesIds, float Height = 0,
+    FLinearColor Color = FLinearColor(0.0,1.0,0.0,1.0));
   void GenerateBenchmarkParticles(std::vector<FParticle>& BenchParticles, 
       std::vector<FParticle*> &ParticlesWheel0, std::vector<FParticle*> &ParticlesWheel1,
       std::vector<FParticle*> &ParticlesWheel2, std::vector<FParticle*> &ParticlesWheel3,
@@ -352,14 +397,18 @@ private:
   UPROPERTY(EditAnywhere)
   FVector WorldSize = FVector(200000,200000,0);
 
+public:
   // Radius of the data loaded in memory
   UPROPERTY(EditAnywhere, Category="Tiles")
-  FVector TileRadius = FVector( 5, 5, 0 );
+  FVector TileRadius = FVector( 100, 100, 0 );
   // Radius of the data loaded in memory
   UPROPERTY(EditAnywhere, Category="Tiles")
   FVector CacheRadius = FVector( 50, 50, 0 );
   UPROPERTY(EditAnywhere, Category="Tiles")
+  bool bDrawLoadedTiles = false;
+  UPROPERTY(EditAnywhere, Category="Tiles")
   int32 TileSize = 1;
+private:
   // TimeToTriggerCacheReload In seconds
   UPROPERTY(EditAnywhere, Category="Tiles")
   float TimeToTriggerCacheReload = 20.0f;
@@ -371,10 +420,15 @@ private:
   // Radius of the data collected by the texture in METERS
   UPROPERTY(EditAnywhere, Category="MaterialParameters")
   float TextureRadius = 4.0f;
+  // Radius of the data collected by the texture in METERS
+  UPROPERTY(EditAnywhere, Category="MaterialParameters")
+  float LargeTextureRadius = 50.0f;
   // Scalar Factor of deformation effect applied in the landscape
   UPROPERTY(EditAnywhere, Category="MaterialParameters")
   float EffectMultiplayer = 10.0f;
 
+  UPROPERTY(EditAnywhere, Category="DeformationMesh")
+  bool bUseDeformationPlane = false;
   UPROPERTY(EditAnywhere, Category="DeformationMesh")
   UStaticMesh* DeformationPlaneMesh = nullptr;
   UPROPERTY(EditAnywhere, Category="DeformationMesh")
@@ -462,9 +516,12 @@ private:
   TArray<ACarlaWheeledVehicle*> Vehicles;
   FSparseHighDetailMap SparseMap;
   TArray<uint8> Data;
+  TArray<uint8> LargeData;
   #ifdef WITH_PYTORCH
   carla::learning::NeuralModel TerramechanicsModel;
   #endif
+
+  TFuture<bool> IterationCompleted;
 
   class FRunnableThread* Thread;
   struct FTilesWorker* TilesWorker;
@@ -484,5 +541,5 @@ struct FTilesWorker : public FRunnable
   double RadiusX; 
   double RadiusY;
 
-  bool bShouldContinue = true;
+  volatile bool bShouldContinue = true;
 };
