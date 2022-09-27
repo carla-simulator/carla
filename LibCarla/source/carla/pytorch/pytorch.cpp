@@ -183,7 +183,7 @@ namespace learning {
       Model->module = torch::jit::load(filename_str);
       std::string cuda_str = "cuda:" + std::to_string(device);
       std::cout << "Using CUDA device " << cuda_str << std::endl;
-      Model->module.to(at::Device(cuda_str));
+      // Model->module.to(at::Device(cuda_str));
     } catch (const c10::Error& e) {
       std::cout << "Error loading model: " << e.msg() << std::endl;
     }
