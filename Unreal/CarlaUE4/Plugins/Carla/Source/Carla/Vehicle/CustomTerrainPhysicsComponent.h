@@ -39,7 +39,7 @@ public:
   int SizeX = 0;
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HeightMapDataAsset)
   int SizeY = 0;
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HeightMapDataAsset)
+  UPROPERTY(BlueprintReadWrite, Category = HeightMapDataAsset)
   TArray<float> HeightValues;
 };
 
