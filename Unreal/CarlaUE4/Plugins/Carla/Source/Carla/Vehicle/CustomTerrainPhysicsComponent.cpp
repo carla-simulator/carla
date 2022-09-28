@@ -246,6 +246,8 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
       ParticlesZOrdered[Index].insert(P.Position.Z);
     }
   }
+
+  bHeightmapNeedToUpdate = true;
 }
 
 
@@ -2203,7 +2205,7 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     }
     {
       TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::UpdateTilesHeightMaps);
-      UpdateTilesHeightMapsInRadius(LastUpdatedPosition, TextureRadius);
+      UpdateTilesHeightMapsInRadius( LastUpdatedPosition, TextureRadius);
     }
   }
 
