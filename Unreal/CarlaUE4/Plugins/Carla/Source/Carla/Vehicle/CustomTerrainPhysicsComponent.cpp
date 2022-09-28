@@ -1438,6 +1438,10 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     ForceMulFactor = Value;
   }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-particle-force-mul-factor="), Value))
+  {
+    ParticleForceMulFactor = Value;
+  }
   if (FParse::Value(FCommandLine::Get(), TEXT("-max-force="), Value))
   {
     MaxForceMagnitude = MToCM*Value;
