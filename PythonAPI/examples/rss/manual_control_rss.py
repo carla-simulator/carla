@@ -291,7 +291,7 @@ class Camera(object):
         bp.set_attribute('image_size_x', str(display_dimensions[0]))
         bp.set_attribute('image_size_y', str(display_dimensions[1]))
         self.sensor = self._parent.get_world().spawn_actor(bp, carla.Transform(carla.Location(
-            x=-5.5, z=2.5), carla.Rotation(pitch=8.0)), attach_to=self._parent, attachment_type=carla.AttachmentType.SpringArm)
+            x=-5.5, z=2.5), carla.Rotation(pitch=8.0)), attach_to=self._parent, attachment_type=carla.AttachmentType.SpringArmGhost)
 
         # We need to pass the lambda a weak reference to self to avoid
         # circular reference.

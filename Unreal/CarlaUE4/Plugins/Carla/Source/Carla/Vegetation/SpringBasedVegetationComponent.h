@@ -215,6 +215,9 @@ private:
   float Beta = 0.5f;
 
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float Alpha = 0.f;
+
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   FVector Gravity = FVector(0,0,-1);
 
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
@@ -239,18 +242,23 @@ private:
   float CollisionForceMinVel = 1.f;
 
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float ForceDistanceFalloffExponent = 1.f;
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float ForceMaxDistance = 180.f;
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float MinForceFactor = 0.01;
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float LineTraceMaxDistance = 180.f;
+public:
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   FSkeletonHierarchy Skeleton;
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
+  bool DebugEnableVisualization { false };
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
+  bool DebugEnableAllCollisions { false };
+private:
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   bool bAutoComputeStrength = true;
-
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
-  float MaxYaw = 0.0f;
-
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
-  float MaxPitch = 180.0f;
-
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
-  float MaxRoll = 180.0f;
 };
-

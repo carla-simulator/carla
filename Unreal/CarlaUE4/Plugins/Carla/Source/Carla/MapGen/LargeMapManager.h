@@ -184,7 +184,7 @@ public:
   TileID GetTileID(FDVector TileLocation) const;
 
   TileID GetTileID(FIntVector TileVectorID) const;
-
+public:
   FCarlaMapTile& GetCarlaMapTile(FVector Location);
 
   FCarlaMapTile& GetCarlaMapTile(ULevel* InLevel);
