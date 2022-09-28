@@ -596,7 +596,7 @@ void AVegetationManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 void AVegetationManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::OnLevelRemovedFromWorld);
-  FreeTileCache(InLevel);
+  
 }
 
 bool AVegetationManager::CheckIfAnyVehicleInLevel() const
