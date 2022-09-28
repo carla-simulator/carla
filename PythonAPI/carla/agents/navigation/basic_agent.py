@@ -65,7 +65,7 @@ class BasicAgent(object):
         if 'base_vehicle_threshold' in opt_dict:
             self._base_vehicle_threshold = opt_dict['base_vehicle_threshold']
         if 'max_brake' in opt_dict:
-            self._max_steering = opt_dict['max_brake']
+            self._max_brake = opt_dict['max_brake']
 
         # Initialize the planners
         self._local_planner = LocalPlanner(self._vehicle, opt_dict=opt_dict)
