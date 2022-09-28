@@ -193,8 +193,6 @@ public:
   
   FCarlaMapTile* GetCarlaMapTile(TileID TileID);
 
-  FCarlaMapTile* GetCarlaMapTile(TileID TileID);
-
   FCarlaMapTile& LoadCarlaMapTile(FString TileMapPath, TileID TileId);
 
 protected:
