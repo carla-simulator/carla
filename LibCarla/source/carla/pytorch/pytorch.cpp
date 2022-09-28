@@ -93,7 +93,7 @@ namespace learning {
     {
       std::cout << particle_forces_data[0] << " " << particle_forces_data[1] << " " << particle_forces_data[0] << std::endl;
     }
-    std::cout << "Output: " <<  result._particle_forces.size()/3 << " particles" << std::endl;
+    // std::cout << "Output: " <<  result._particle_forces.size()/3 << " particles" << std::endl;
     return result;
   }
 

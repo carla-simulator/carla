@@ -91,81 +91,6 @@ FVector UEFrameToSIDirection(const FVector& In)
 }
 
 void FHeightMapData::InitializeHeightmap(
-    UTexture2D* Texture, FDVector Size, FDVector Origin,
-    float Min, float Max, FDVector Tile0, float ScaleZ)
-{
-  Tile0Position = Tile0;
-  MinHeight = Min;
-  MaxHeight = Max;
-  WorldSize = Size;
-  Offset = Origin;
-  Pixels.clear();
-  
-  // setup required parameters
-  Texture->CompressionSettings = TextureCompressionSettings::TC_VectorDisplacementmap;
-  Texture->SRGB = false;
-  Texture->UpdateResource();
-
-  FTexture2DMipMap* TileMipMap = &Texture->PlatformData->Mips[0];
-  FByteBulkData* TileRawImageData = &TileMipMap->BulkData;
-  FColor* FormatedImageData = (FColor*)(TileRawImageData->Lock(LOCK_READ_ONLY));
-  Size_X = Texture->GetSizeX();
-  Size_Y = Texture->GetSizeY();
-  for(uint32_t j = 0; j < Size_Y; j++)
-  {
-    for(uint32_t i = 0; i < Size_X; i++)
-    {
-      uint32_t idx = j*Size_X + i;
-      float HeightLevel;
-      FColor PixelColor = FormatedImageData[idx];
-      uint8* HeightLevelPtr = (uint8*) &HeightLevel;
-      HeightLevelPtr[0] = PixelColor.B;
-      HeightLevelPtr[1] = PixelColor.G;
-      HeightLevelPtr[2] = PixelColor.R;
-      HeightLevelPtr[3] = PixelColor.A;
-      // HeightLevel = Scale_Z*(MinHeight + (MaxHeight - MinHeight) * FormatedImageData[idx].R/255.f);
-      Pixels.emplace_back(HeightLevel);
-    }
-  }
-  TileRawImageData->Unlock();
-  UE_LOG(LogCarla, Log, 
-      TEXT("Height Map initialized with %d pixels"), Pixels.size());
-}
-void FHeightMapData::InitializeHeightmapFloat(
-    UTexture2D* Texture, FDVector Size, FDVector Origin,
-    float Min, float Max, FDVector Tile0, float ScaleZ)
-{
-  Tile0Position = Tile0;
-  MinHeight = Min;
-  MaxHeight = Max;
-  WorldSize = Size;
-  Offset = Origin;
-  Pixels.clear();
-  // setup required parameters
-  Texture->CompressionSettings = TextureCompressionSettings::TC_VectorDisplacementmap;
-  Texture->SRGB = false;
-  Texture->UpdateResource();
-
-  FTexture2DMipMap* TileMipMap = &Texture->PlatformData->Mips[0];
-  FByteBulkData* TileRawImageData = &TileMipMap->BulkData;
-  FFloat16Color* FormatedImageData = (FFloat16Color*)(TileRawImageData->Lock(LOCK_READ_ONLY));
-  Size_X = Texture->GetSizeX();
-  Size_Y = Texture->GetSizeY();
-  for(uint32_t j = 0; j < Size_Y; j++)
-  {
-    for(uint32_t i = 0; i < Size_X; i++)
-    {
-      uint32_t idx = j*Size_X + i;
-      float HeightLevel = Scale_Z*(MinHeight + (MaxHeight - MinHeight) * FormatedImageData[idx].R.GetFloat());
-      Pixels.emplace_back(HeightLevel);
-    }
-  }
-  TileRawImageData->Unlock();
-  UE_LOG(LogCarla, Log, 
-      TEXT("Height Map initialized with %d pixels"), Pixels.size());
-}
-
-void FHeightMapData::InitializeHeightmap(
     UHeightMapDataAsset* DataAsset, FDVector Size, FDVector Origin,
     FDVector Tile0, float ScaleZ)
 {
@@ -828,39 +753,6 @@ FDenseTile& FSparseHighDetailMap::InitializeRegionInCache(uint64_t TileId)
   return Tile;
 }
 
-void FSparseHighDetailMap::InitializeMap(UTexture2D* HeightMapTexture,
-      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight, 
-      float ScaleZ)
-{
-  Tile0Position = Origin;
-  TileSize = Size;
-  Extension = MapSize;
-  EPixelFormat TexFormat = HeightMapTexture->GetPixelFormat(0);
-  if(TexFormat == PF_B8G8R8A8 || TexFormat == PF_G8 || TexFormat == PF_DXT5)
-  {
-    UE_LOG(LogCarla, Log, 
-      TEXT("Using 8 bit height map, pixel format %d"), TexFormat);
-    Heightmap.InitializeHeightmap(
-        HeightMapTexture, Extension, Tile0Position, 
-        MinHeight, MaxHeight, Tile0Position, ScaleZ);
-  }
-  else if (TexFormat == PF_FloatRGB || TexFormat == PF_FloatRGBA ||
-           TexFormat == PF_G16)
-  {
-    UE_LOG(LogCarla, Log, 
-      TEXT("Using 16 bit height map, pixel format %d"), TexFormat);
-    Heightmap.InitializeHeightmapFloat(
-        HeightMapTexture, Extension, Tile0Position, 
-        MinHeight, MaxHeight, Tile0Position, ScaleZ);
-  }
-  else
-  {
-    UE_LOG(LogCarla, Error, 
-      TEXT("Unrecofnized pixel format %d"), TexFormat);
-  }
-  UE_LOG(LogCarla, Log, 
-      TEXT("Sparse Map initialized"));
-}
 void FSparseHighDetailMap::InitializeMap(UHeightMapDataAsset* DataAsset,
       FDVector Origin, FDVector MapSize, float Size, float ScaleZ)
 {
@@ -876,18 +768,6 @@ void FSparseHighDetailMap::InitializeMap(UHeightMapDataAsset* DataAsset,
 
   UE_LOG(LogCarla, Error, 
       TEXT("Map Extension %f %f %f"), MapSize.X, MapSize.Y, MapSize.Z );
-}
-
-void FSparseHighDetailMap::UpdateHeightMap(UTexture2D* HeightMapTexture,
-      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight,
-      float ScaleZ)
-{
-  Heightmap.Clear();
-  Heightmap.InitializeHeightmap(
-      HeightMapTexture, Extension, Origin, 
-      MinHeight, MaxHeight, Origin, ScaleZ);
-  UE_LOG(LogCarla, Log, 
-      TEXT("Height map updated"));
 }
 
 void FSparseHighDetailMap::UpdateHeightMap(UHeightMapDataAsset* DataAsset,
@@ -1704,28 +1584,6 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
 
 }
 
-TArray<float> UCustomTerrainPhysicsComponent::BuildLandscapeHeightMap(ALandscapeProxy* Landscape, int Resolution)
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::BuildLandscapeHeightMap);
-  TArray<float> HeightMap;
-  HeightMap.Reserve(Resolution*Resolution);
-  FVector Origin = Landscape->GetActorLocation();
-  float DeltaX = WorldSize.X;
-  float DeltaY = WorldSize.Y;
-  for (size_t i = 0; i < Resolution; ++i)
-  {
-    float PosX = Origin.X + i*DeltaX;
-    for (size_t j = 0; j < Resolution; ++j)
-    {
-      float PosY = Origin.Y + j*DeltaY;
-      FVector Location = FVector(PosX, PosY, 0);
-      float Height = Landscape->GetHeightAtLocation(Location).Get(-1);
-      HeightMap.Emplace(Height);
-    }
-  }
-  return HeightMap;
-}
-
 void UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapDataAasset(ALandscapeProxy* Landscape, 
     int Resolution, FVector MapSize, FString AssetPath, FString AssetName)
 {
@@ -1849,11 +1707,6 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
           */
         }
       }
-    }
-    {
-      // TRACE_CPUPROFILER_EVENT_SCOPE(WaitForMap);
-      // IterationCompleted.Wait();
-      // bool bIterationFinished = IterationCompleted.Get();
     }
 
     SparseMap.LockMutex();
@@ -2273,22 +2126,22 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
       static_cast<int>(ParticlesWheel0.size()), 
       ParticlePos0.GetData(), ParticleVel0.GetData(),
       WheelPos0.GetData(), WheelOrient0.GetData(),
-      WheelLinVel0.GetData(), WheelAngVel0.GetData()};
+      WheelLinVel0.GetData(), WheelAngVel0.GetData(), SoilType};
   carla::learning::WheelInput Wheel1 {
       static_cast<int>(ParticlesWheel1.size()), 
       ParticlePos1.GetData(), ParticleVel1.GetData(),
       WheelPos1.GetData(), WheelOrient1.GetData(),
-      WheelLinVel1.GetData(), WheelAngVel1.GetData()};
+      WheelLinVel1.GetData(), WheelAngVel1.GetData(), SoilType};
   carla::learning::WheelInput Wheel2 {
       static_cast<int>(ParticlesWheel2.size()), 
       ParticlePos2.GetData(), ParticleVel2.GetData(),
       WheelPos2.GetData(), WheelOrient2.GetData(),
-      WheelLinVel2.GetData(), WheelAngVel2.GetData()};
+      WheelLinVel2.GetData(), WheelAngVel2.GetData(), SoilType};
   carla::learning::WheelInput Wheel3 {
       static_cast<int>(ParticlesWheel3.size()), 
       ParticlePos3.GetData(), ParticleVel3.GetData(),
       WheelPos3.GetData(), WheelOrient3.GetData(),
-      WheelLinVel3.GetData(), WheelAngVel3.GetData()};
+      WheelLinVel3.GetData(), WheelAngVel3.GetData(), SoilType};
 
   const FVehicleControl& VehicleControl = Vehicle->GetVehicleControl();
   carla::learning::Inputs NNInput {Wheel0,Wheel1,Wheel2,Wheel3, 
@@ -2649,24 +2502,6 @@ void UCustomTerrainPhysicsComponent::ApplyForcesToVehicle(
         WheelPosition3 + FVector(0,0,50)+ ForceWheel3.GetSafeNormal()*(5 + ForceMulFactor*10*ForceWheel3.Size()),
         FLinearColor(0.0,1.0,0.0), 0, 3.0, 0.3);
   }
-  /*
-  UE_LOG(LogCarla, Log, TEXT("Forces0 %s"), 
-      *ForceWheel0.ToString());
-  UE_LOG(LogCarla, Log, TEXT("Forces1 %s"), 
-      *ForceWheel1.ToString());
-  UE_LOG(LogCarla, Log, TEXT("Forces2 %s"), 
-      *ForceWheel2.ToString());
-  UE_LOG(LogCarla, Log, TEXT("Forces3 %s"), 
-      *ForceWheel3.ToString());
-  UE_LOG(LogCarla, Log, TEXT("Torque0 %s"), 
-      *TorqueWheel0.ToString());
-  UE_LOG(LogCarla, Log, TEXT("Torque1 %s"), 
-      *TorqueWheel1.ToString());
-  UE_LOG(LogCarla, Log, TEXT("Torque2 %s"), 
-      *TorqueWheel2.ToString());
-  UE_LOG(LogCarla, Log, TEXT("Torque3 %s"), 
-      *TorqueWheel3.ToString());
-  */
 }
 
 void UCustomTerrainPhysicsComponent::ApplyMeanAccelerationToVehicle(
@@ -2876,22 +2711,6 @@ uint32 FTilesWorker::Run(){
     {
       break;
     }
-    // if( ( FDateTime::Now() - LoadTilesCurrentTime ).GetTotalMilliseconds() > CustomTerrainComp->TimeToTriggerLoadTiles ){
-    //   CustomTerrainComp->LoadTilesAtPosition( CustomTerrainComp->LastUpdatedPosition, RadiusX, RadiusY );
-    //   LoadTilesCurrentTime = FDateTime::Now();
-    // }
-
-    // if( ( FDateTime::Now() - UnloadTilesCurrentTime ).GetTotalMilliseconds() > CustomTerrainComp->TimeToTriggerUnLoadTiles ){
-    //   CustomTerrainComp->UnloadTilesAtPosition( CustomTerrainComp->LastUpdatedPosition, RadiusX, RadiusY );
-    //   UnloadTilesCurrentTime = FDateTime::Now();
-    // }
-    
-    // if( ( FDateTime::Now() - LoadTilesCurrentTime ).GetTotalSeconds() > CustomTerrainComp->TimeToTriggerCacheReload ){
-    //   UE_LOG(LogCarla, Warning, TEXT("Tiles Cache reloaded"));
-    //   CustomTerrainComp->ReloadCache(CustomTerrainComp->LastUpdatedPosition, 
-    //     CustomTerrainComp->CacheRadius.X, CustomTerrainComp->CacheRadius.Y);
-    //   CacheCurrentTime = FDateTime::Now();
-    // }
   }
 
   return 0;

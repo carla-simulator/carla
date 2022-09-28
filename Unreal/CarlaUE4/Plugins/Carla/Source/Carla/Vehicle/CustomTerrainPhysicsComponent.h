@@ -53,12 +53,6 @@ struct FParticle
 struct FHeightMapData
 {
   void InitializeHeightmap(
-      UTexture2D* Texture, FDVector Size, FDVector Origin,
-      float MinHeight, float MaxHeight, FDVector Tile0, float ScaleZ);
-  void InitializeHeightmapFloat(
-      UTexture2D* Texture, FDVector Size, FDVector Origin,
-      float MinHeight, float MaxHeight, FDVector Tile0, float ScaleZ);
-  void InitializeHeightmap(
       UHeightMapDataAsset* DataAsset, FDVector Size, FDVector Origin,
       FDVector Tile0, float ScaleZ);
   float GetHeight(FDVector Position) const; // get height at a given global 2d position
@@ -150,15 +144,9 @@ public:
     return Heightmap.GetHeight(Position);
   }
 
-  void InitializeMap(UTexture2D* HeightMapTexture,
-      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight,
-      float ScaleZ);
   void InitializeMap(UHeightMapDataAsset* DataAsset,
       FDVector Origin, FDVector MapSize, float Size, float ScaleZ);
 
-  void UpdateHeightMap(UTexture2D* HeightMapTexture,
-      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight,
-      float ScaleZ);
   void UpdateHeightMap(UHeightMapDataAsset* DataAsset,
       FDVector Origin, FDVector MapSize, float Size, float ScaleZ);
 
@@ -256,9 +244,6 @@ public:
   void AddForces(const TArray<FForceAtLocation> &Forces);
 
   UFUNCTION(BlueprintCallable)
-  TArray<float> BuildLandscapeHeightMap(ALandscapeProxy* Landscape, int Resolution);
-
-  UFUNCTION(BlueprintCallable)
   static void BuildLandscapeHeightMapDataAasset(ALandscapeProxy* Landscape, 
       int Resolution, FVector MapSize, FString AssetPath, FString AssetName);
 
@@ -307,9 +292,6 @@ public:
   UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateLargeTextureData();
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  UTexture2D *HeightMap;
-
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
   UTexture2D* TextureToUpdate;
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
@@ -338,6 +320,8 @@ public:
   float ForceMulFactor = 1.0;
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   float ParticleForceMulFactor = 1.0;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  int SoilType = 0;
   UPROPERTY(EditAnywhere)
   bool NNVerbose = false;
 
