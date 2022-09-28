@@ -697,7 +697,7 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       CollisionTorque += (JointProperties.CenterOfMass - JointGlobalPosition).cross(CollisionImpulse + OverlappingForces);
       JointProperties.Torque += CollisionTorque;
       // COLLISION_LOG(Log, "Joint: %s \n ProjectedSpeed %f, ProportionalFactor %f \n RepulsionForce %s \n", *Joint.JointName,ProjectedSpeed,ProportionalFactor,*EigenToFString(RepulsionForce),*EigenToFString(CollisionTorque));
-      UE_LOG(LogCarla, Display, TEXT("DistanceToCollider: %f, ForceFactor: %f"), DistanceToCollider, ForceFactor);
+      COLLISION_LOG(LogCarla, Display, TEXT("DistanceToCollider: %f, ForceFactor: %f"), DistanceToCollider, ForceFactor);
       // block forces to go to rest angles
       int TempId = JointId;
       {
@@ -967,10 +967,7 @@ void USpringBasedVegetationComponent::OnCollisionEvent(
   if (DebugEnableAllCollisions)
   {
     if (!IsValid(OtherActor))
-    {
-      UE_LOG(LogCarla, Display, TEXT("Actor not valid"));
       return;
-    }
   }
   else
   {
@@ -978,7 +975,7 @@ void USpringBasedVegetationComponent::OnCollisionEvent(
     if (!IsValid(Vehicle))
       return;
   }
-  UE_LOG(LogCarla, Log, TEXT("Collision with bone %s, with impulse %s"), *Hit.MyBoneName.ToString(), *NormalImpulse.ToString());
+  COLLISION_LOG(LogCarla, Log, TEXT("Collision with bone %s, with impulse %s"), *Hit.MyBoneName.ToString(), *NormalImpulse.ToString());
   Skeleton.AddForce(Hit.MyBoneName.ToString(), NormalImpulse);
 }
 
@@ -1000,10 +997,7 @@ void USpringBasedVegetationComponent::OnBeginOverlapEvent(
   if (DebugEnableAllCollisions)
   {
     if (!IsValid(OtherActor))
-    {
-      UE_LOG(LogCarla, Display, TEXT("Actor not valid"));
       return;
-    }
   }
   else
   {
@@ -1011,20 +1005,14 @@ void USpringBasedVegetationComponent::OnBeginOverlapEvent(
     if (!IsValid(Vehicle))
       return;
   }
-
-  UE_LOG(LogCarla, Display, TEXT("OverlapComponent: %s"), *(OverlapComponent->GetName()));
-  UE_LOG(LogCarla, Display, TEXT("OtherActor: %s"), *(OtherActor->GetName()));
-  UE_LOG(LogCarla, Display, TEXT("OtherComponent: %s"), *(OtherComponent->GetName()));
   
   if (!OverlappingActors.Contains(OtherActor))
   {
-    UE_LOG(LogCarla, Display, TEXT("New Overlapping Actor: %s"), *(OtherActor->GetName()));
     OverlappingActors.Add(OtherActor);
   }
   TArray<UPrimitiveComponent*>& OverlappingCapsules = OverlappingActors.FindOrAdd(OtherActor);
   if (!OverlappingCapsules.Contains(OverlapComponent))
   {
-    UE_LOG(LogCarla, Display, TEXT("New Overlapping Capsule: %s"), *(OverlapComponent->GetName()));
     OverlappingCapsules.Add(OverlapComponent);
   }
 }
@@ -1045,10 +1033,7 @@ void USpringBasedVegetationComponent::OnEndOverlapEvent(
   if (DebugEnableAllCollisions)
   {
     if (!IsValid(OtherActor))
-    {
-      UE_LOG(LogCarla, Display, TEXT("Actor not valid"));
       return;
-    }
   }
   else
   {
@@ -1062,12 +1047,10 @@ void USpringBasedVegetationComponent::OnEndOverlapEvent(
   TArray<UPrimitiveComponent*>& OverlappingCapsules = OverlappingActors.FindOrAdd(OtherActor);
   if (OverlappingCapsules.Contains(OverlapComponent))
   {
-    UE_LOG(LogCarla, Display, TEXT("Remove Overlapping Capsule: %s"), *(OverlapComponent->GetName()));
     OverlappingCapsules.RemoveSingle(OverlapComponent);
     if (OverlappingCapsules.Num() == 0)
     {
       OverlappingActors.Remove(OtherActor);
-      UE_LOG(LogCarla, Display, TEXT("Remove Overlapping Actor: %s"), *(OtherActor->GetName()));
     }
   }
 }
