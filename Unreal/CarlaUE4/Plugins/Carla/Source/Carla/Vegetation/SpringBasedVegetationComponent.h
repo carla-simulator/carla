@@ -8,6 +8,7 @@
 
 #include "Components/ActorComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include <vector>
 
 // disable warnings for eigen 3.1.0
 #if defined(__clang__)

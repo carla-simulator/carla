@@ -14,12 +14,13 @@ BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
 USE_CARSIM=false
 USE_CHRONO=false
+USE_PYTORCH=false
 EDITOR_FLAGS=""
 
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,chrono,editor-flags: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,editor-flags: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -56,6 +57,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --chrono )
       USE_CHRONO=true
+      shift ;;
+    --pytorch )
+      USE_PYTORCH=true;
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -137,6 +141,11 @@ if ${BUILD_CARLAUE4} ; then
     OPTIONAL_MODULES_TEXT="Chrono ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
   else
     OPTIONAL_MODULES_TEXT="Chrono OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  fi
+  if ${USE_PYTORCH} ; then
+    OPTIONAL_MODULES_TEXT="Pytorch ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  else
+    OPTIONAL_MODULES_TEXT="Pytorch OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
   echo ${OPTIONAL_MODULES_TEXT} > ${PWD}/Config/OptionalModules.ini
 

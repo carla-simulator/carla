@@ -1239,7 +1239,7 @@ def game_loop(args):
 
     try:
         client = carla.Client(args.host, args.port)
-        client.set_timeout(20.0)
+        client.set_timeout(2000.0)
 
         sim_world = client.get_world()
         if args.sync:
