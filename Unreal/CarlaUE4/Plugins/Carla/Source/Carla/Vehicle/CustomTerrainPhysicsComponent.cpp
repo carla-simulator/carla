@@ -321,6 +321,8 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
       ParticlesZOrdered[Index].insert(P.Position.Z);
     }
   }
+
+  bHeightmapNeedToUpdate = true;
 }
 
 
@@ -2350,7 +2352,7 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     }
     {
       TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::UpdateTilesHeightMaps);
-      UpdateTilesHeightMapsInRadius(LastUpdatedPosition, TextureRadius);
+      UpdateTilesHeightMapsInRadius( LastUpdatedPosition, TextureRadius);
     }
   }
 
@@ -2876,22 +2878,6 @@ uint32 FTilesWorker::Run(){
     {
       break;
     }
-    // if( ( FDateTime::Now() - LoadTilesCurrentTime ).GetTotalMilliseconds() > CustomTerrainComp->TimeToTriggerLoadTiles ){
-    //   CustomTerrainComp->LoadTilesAtPosition( CustomTerrainComp->LastUpdatedPosition, RadiusX, RadiusY );
-    //   LoadTilesCurrentTime = FDateTime::Now();
-    // }
-
-    // if( ( FDateTime::Now() - UnloadTilesCurrentTime ).GetTotalMilliseconds() > CustomTerrainComp->TimeToTriggerUnLoadTiles ){
-    //   CustomTerrainComp->UnloadTilesAtPosition( CustomTerrainComp->LastUpdatedPosition, RadiusX, RadiusY );
-    //   UnloadTilesCurrentTime = FDateTime::Now();
-    // }
-    
-    // if( ( FDateTime::Now() - LoadTilesCurrentTime ).GetTotalSeconds() > CustomTerrainComp->TimeToTriggerCacheReload ){
-    //   UE_LOG(LogCarla, Warning, TEXT("Tiles Cache reloaded"));
-    //   CustomTerrainComp->ReloadCache(CustomTerrainComp->LastUpdatedPosition, 
-    //     CustomTerrainComp->CacheRadius.X, CustomTerrainComp->CacheRadius.Y);
-    //   CacheCurrentTime = FDateTime::Now();
-    // }
   }
 
   return 0;
