@@ -23,7 +23,6 @@ USTRUCT()
 struct FTileMeshComponent
 {
   GENERATED_BODY()
-  FString StaticMeshPath {};
   UInstancedStaticMeshComponent* InstancedStaticMeshComponent {nullptr};
   TArray<int32> IndicesInUse {};
 };
@@ -32,12 +31,13 @@ USTRUCT()
 struct FTileData
 {
   GENERATED_BODY()
-  FTransform TileGlobalTransform {FTransform()};
   AInstancedFoliageActor* InstancedFoliageActor {nullptr};
   AProceduralFoliageVolume* ProceduralFoliageVolume {nullptr};
   TArray<FTileMeshComponent> TileMeshesCache {};
   TArray<UMaterialInstanceDynamic*> MaterialInstanceDynamicCache {};
 
+  bool ContainsMesh(const UInstancedStaticMeshComponent*) const;
+  void UpdateTileMeshComponent(UInstancedStaticMeshComponent* NewInstancedStaticMeshComponent);
   void UpdateMaterialCache(const FLinearColor& Value, bool DebugMaterials);
 };
 
@@ -45,7 +45,6 @@ USTRUCT()
 struct FFoliageBlueprint
 {
   GENERATED_BODY()
-  FString BPClassName {};
   FString BPFullClassName {};
   TSubclassOf<AActor> SpawnedClass { nullptr };
 
@@ -120,11 +119,13 @@ private:
   void DestroySkeletalFoliages();
   bool EnableActorFromPool(const FTransform& Transform, TArray<FPooledActor>& Pool);
 
-  void UpdateTileDataCache();
-  void UpdateFoliageBlueprintCache();
-  void GenerateTileDataInternals();
-  void InitializeInstancedStaticMeshComponentCache(FTileData& TileData);
-  void InitializeMaterialCache(FTileData& TileData);
+  void CreateOrUpdateTileCache(ULevel* InLevel);
+  void UpdateFoliageBlueprintCache(ULevel* InLevel);
+  void SetTileDataInternals(FTileData& TileData);
+  void SetInstancedStaticMeshComponentCache(FTileData& TileData);
+  void SetMaterialCache(FTileData& TileData);
+
+  void FreeTileCache(ULevel* InLevel);
 
   void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
   void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld);
@@ -140,7 +141,7 @@ private:
   TArray<ACarlaWheeledVehicle*> VehiclesInLevel {};
   //Caches
   TMap<FString, FFoliageBlueprint> FoliageBlueprintCache {};
-  TMap<FString, FTileData> TileDataCache {};
+  TMap<FString, FTileData> TileCache {};
   //Pools
   TMap<FString, TArray<FPooledActor>> ActorPool {};
 };

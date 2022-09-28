@@ -358,7 +358,6 @@ void USpringBasedVegetationComponent::ResetComponent()
 {
   Skeleton.ClearExternalForces();
   SkeletalMesh->ResetAllBodiesSimulatePhysics();
-  UpdateGlobalTransform();
 }
 
 void USpringBasedVegetationComponent::GenerateCollisionCapsules()
@@ -378,10 +377,20 @@ void USpringBasedVegetationComponent::GenerateCollisionCapsules()
       Capsule->SetRelativeTransform(CapsuleTransform);
       Capsule->SetCapsuleHalfHeight(Bone.Length*0.5f);
       Capsule->SetCapsuleRadius(6);
-      Capsule->SetGenerateOverlapEvents(true);
-      Capsule->SetCollisionProfileName("OverlapAll");
-      Capsule->OnComponentBeginOverlap.AddDynamic(this, &USpringBasedVegetationComponent::OnBeginOverlapEvent);
-      Capsule->OnComponentEndOverlap.AddDynamic(this, &USpringBasedVegetationComponent::OnEndOverlapEvent);
+      if (Joint.bIsStatic)
+      {
+        Capsule->SetGenerateOverlapEvents(false);
+        Capsule->SetCollisionProfileName("BlockAll");
+        Capsule->OnComponentHit.AddDynamic(this, &USpringBasedVegetationComponent::OnCollisionEvent);
+      }
+      else
+      {
+        Capsule->SetGenerateOverlapEvents(true);
+        Capsule->SetCollisionProfileName("OverlapAll");
+        Capsule->OnComponentBeginOverlap.AddDynamic(this, &USpringBasedVegetationComponent::OnBeginOverlapEvent);
+        Capsule->OnComponentEndOverlap.AddDynamic(this, &USpringBasedVegetationComponent::OnEndOverlapEvent);
+      }
+      
       BoneCapsules.Add(Capsule);
       CapsuleToJointId.Add(Capsule, Joint.JointId);
     }
@@ -408,7 +417,6 @@ void USpringBasedVegetationComponent::ComputeSpringStrengthForBranches()
 
     OTHER_LOG(Log, "Joint: %s, location %s, Strength %f", *Joint.JointName, *JointLocation.ToString(), Joint.SpringStrength);
   }
-  
 }
 
 void USpringBasedVegetationComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -639,11 +647,11 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       {
         continue;
       }
-      DrawDebugLine(GetWorld(), ClosestPointOnCapsule, ClosestPointOnCollider, FColor::Green, false, 0.1f, 0.0f, 1.f);
 
       if (DebugEnableVisualization)
       {
-        TRACE_CPUPROFILER_EVENT_SCOPE(DrawDebugSpheres);
+        TRACE_CPUPROFILER_EVENT_SCOPE(DebugEnableVisualization);
+        DrawDebugLine(GetWorld(), ClosestPointOnCapsule, ClosestPointOnCollider, FColor::Green, false, 0.1f, 0.0f, 1.f);
         static constexpr float DEBUG_SPHERE_SIZE = 5.0f;
         DrawDebugSphere(GetWorld(), ClosestPointOnCapsule, DEBUG_SPHERE_SIZE, 64, FColor(255, 0, 255, 255));
         DrawDebugSphere(GetWorld(), ClosestPointOnCollider, DEBUG_SPHERE_SIZE, 64, FColor(255, 0, 255, 255));
@@ -704,12 +712,16 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
         }
         while (TempId != -1);
       }
-      // drawing
-      FVector Start = Capsule->GetComponentLocation();
-      FVector End = Primitive->GetComponentLocation();
-      FColor LineColor(FColor::Green);
-      DrawDebugLine(GetWorld(), Start, End, LineColor, false, 0.1f, 0.0f, 1.f);
-      DrawDebugLine(GetWorld(), CapsuleLocation, CapsuleLocation+RepulsionForceUE.GetSafeNormal()*5.f, FColor::Red, false, 0.1f, 0.0f, 1.f);
+      
+      if (DebugEnableVisualization)
+      {
+        // drawing
+        const FVector Start = Capsule->GetComponentLocation();
+        const FVector End = Primitive->GetComponentLocation();
+        const FColor LineColor(FColor::Green);
+        DrawDebugLine(GetWorld(), Start, End, LineColor, false, 0.1f, 0.0f, 1.f);
+        DrawDebugLine(GetWorld(), CapsuleLocation, CapsuleLocation+RepulsionForceUE.GetSafeNormal()*5.f, FColor::Red, false, 0.1f, 0.0f, 1.f);
+      }
     }
   }
 }
@@ -740,22 +752,22 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
       // JointProperties.LinearAcceleration = Eigen::Vector3d::Zero();
       // JointProperties.LocalAngularAcceleration = Eigen::Vector3d::Zero();
       // drawing
-      if (Joint.ParentId != -1)
+      if (Joint.ParentId != -1 && DebugEnableVisualization)
       {
-        FVector Start = Joint.GlobalTransform.GetLocation();
-        FVector End = Skeleton.Joints[Joint.ParentId].GlobalTransform.GetLocation();
-        FColor LineColor(FColor::Red);
+        const FVector Start = Joint.GlobalTransform.GetLocation();
+        const FVector End = Skeleton.Joints[Joint.ParentId].GlobalTransform.GetLocation();
+        const FColor LineColor(FColor::Red);
         DrawDebugLine(GetWorld(), Start, End, LineColor, false, 0.3f, 0.0f, 1.f);
       }
       // continue;
     }
 
     // drawing
-    if (Joint.ParentId != -1)
+    if (Joint.ParentId != -1 && DebugEnableVisualization)
     {
-      FVector Start = Joint.GlobalTransform.GetLocation();
-      FVector End = Skeleton.Joints[Joint.ParentId].GlobalTransform.GetLocation();
-      FColor LineColor(FColor::Blue);
+      const FVector Start = Joint.GlobalTransform.GetLocation();
+      const FVector End = Skeleton.Joints[Joint.ParentId].GlobalTransform.GetLocation();
+      const FColor LineColor(FColor::Blue);
       DrawDebugLine(GetWorld(), Start, End, LineColor, false, 0.1f, 0.0f, 1.f);
     }
 
@@ -945,6 +957,27 @@ void USpringBasedVegetationComponent::OnCollisionEvent(
     FVector NormalImpulse,
     const FHitResult& Hit)
 {
+  // prevent self collision
+  if (OtherActor == GetOwner())
+    return;
+  // prevent collision with other tree actors
+  if(OtherActor->GetComponentByClass(USpringBasedVegetationComponent::StaticClass()) != nullptr)
+    return;
+  ACarlaWheeledVehicle* Vehicle = nullptr;
+  if (DebugEnableAllCollisions)
+  {
+    if (!IsValid(OtherActor))
+    {
+      UE_LOG(LogCarla, Display, TEXT("Actor not valid"));
+      return;
+    }
+  }
+  else
+  {
+    Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
+    if (!IsValid(Vehicle))
+      return;
+  }
   UE_LOG(LogCarla, Log, TEXT("Collision with bone %s, with impulse %s"), *Hit.MyBoneName.ToString(), *NormalImpulse.ToString());
   Skeleton.AddForce(Hit.MyBoneName.ToString(), NormalImpulse);
 }
@@ -975,8 +1008,8 @@ void USpringBasedVegetationComponent::OnBeginOverlapEvent(
   else
   {
     Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
-    // if (!IsValid(Vehicle))
-    //   return;
+    if (!IsValid(Vehicle))
+      return;
   }
 
   UE_LOG(LogCarla, Display, TEXT("OverlapComponent: %s"), *(OverlapComponent->GetName()));
@@ -1020,8 +1053,8 @@ void USpringBasedVegetationComponent::OnEndOverlapEvent(
   else
   {
     Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
-    // if (!IsValid(Vehicle))
-    //   return;
+    if (!IsValid(Vehicle))
+      return;
   }
 
   if (!OverlappingActors.Contains(OtherActor))
@@ -1089,8 +1122,5 @@ void USpringBasedVegetationComponent::UpdateGlobalTransform()
     FTransform Transform = Joint.Transform * ParentJoint.GlobalTransform;
     Joint.GlobalTransform = Transform;
     Joint.GolbalInverseTransform = Transform.Inverse();
-
-
   }
-
 }
