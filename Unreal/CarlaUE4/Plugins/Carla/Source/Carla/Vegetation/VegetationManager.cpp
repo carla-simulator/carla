@@ -609,16 +609,16 @@ bool AVegetationManager::IsFoliageTypeEnabled(const FString& Path) const
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::IsFoliageTypeEnabled);
   if (!SpawnRocks)
-    if (Path.Contains("/Rock/"))
+    if (Path.Contains("/Rock"))
       return false;
   if (!SpawnTrees)
-    if (Path.Contains("/Tree/"))
+    if (Path.Contains("/Tree"))
       return false;
   if (!SpawnBushes)
-    if (Path.Contains("/Bush/"))
+    if (Path.Contains("/Bush"))
       return false;
   if (!SpawnPlants)
-    if (Path.Contains("/Plant/"))
+    if (Path.Contains("/Plant"))
       return false;
   return true;
 }
