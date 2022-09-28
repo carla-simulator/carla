@@ -778,10 +778,6 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
         CurrRotator.Pitch - RestRotator.Pitch, 
         CurrRotator.Yaw - RestRotator.Yaw, 
         CurrRotator.Roll - RestRotator.Roll);
-    if (!JointProperties.canRest)
-    {
-      // DeltaRotator *= 0.9f;
-    }
     Eigen::Vector3d InitialTheta = Uinv*RotatorToEigenVector(DeltaRotator);
     Eigen::Vector3d InitialThetaVelocity = Uinv*RotatorToEigenVector(AngularVelocity);
     SOLVER_LOG(Log, "Old angle for joint %s, %s", *Joint.JointName, *CurrRotator.ToString());
@@ -878,7 +874,6 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     Joint.Transform.SetRotation(NewAngle.Quaternion());
     Joint.AngularVelocity = NewAngularVelocity;
     Joint.AngularAcceleration = NewAngularAccel;
-    JointProperties.canRest = true;
   }
 }
 

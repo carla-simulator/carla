@@ -81,7 +81,6 @@ struct FSkeletonJoint
 struct FJointProperties
 {
   float Mass = 0.0;
-  bool canRest = true;
   Eigen::Matrix3d InertiaTensor = Eigen::Matrix3d::Zero();
   Eigen::Vector3d Force = Eigen::Vector3d::Zero();
   Eigen::Vector3d Torque = Eigen::Vector3d::Zero();
