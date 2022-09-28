@@ -1527,7 +1527,8 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   bShowForces = true;
   bBenchMark = false;
   bDrawHeightMap = false;
-  ForceMulFactor = 1.0;
+  ForceMulFactor = 1.f;
+  ParticleForceMulFactor = 1.f;
   FloorHeight = 0.0;
   bDrawLoadedTiles = false;
 
@@ -1839,7 +1840,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
       {
         //load new height map
         FCarlaMapTile* LargeMapTile = LargeMapManager->GetCarlaMapTile(TileId);
-        if(LargeMapTile && false)
+        if(LargeMapTile)
         {
           CurrentLargeMapTileId = CurrentTileId;
           FString FullTileNamePath = LargeMapTile->Name;
