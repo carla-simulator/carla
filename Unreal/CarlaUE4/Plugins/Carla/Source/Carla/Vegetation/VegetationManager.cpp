@@ -258,9 +258,7 @@ void AVegetationManager::CreateOrUpdateTileCache(ULevel* InLevel)
   FTileData* ExistingTileData = TileCache.Find(TileName);
   if (ExistingTileData)
   {
-    ExistingTileData->InstancedFoliageActor = TileData.InstancedFoliageActor;
-    ExistingTileData->ProceduralFoliageVolume = TileData.ProceduralFoliageVolume;
-    SetTileDataInternals(*ExistingTileData);
+    UE_LOG(LogCarla, Error, TEXT("Tile %s already loaded."), *TileName);
   }
   else
   {
