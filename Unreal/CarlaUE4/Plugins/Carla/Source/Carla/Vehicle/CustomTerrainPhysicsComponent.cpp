@@ -245,7 +245,9 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
 
       uint32_t Index = HeightMapCoords.Y * PartialHeightMapSize + HeightMapCoords.X;
       // Compare to the current value, if higher replace 
-      ParticlesZOrdered[Index].insert(P.Position.Z);
+      if(Index < ParticlesZOrdered.size() ){
+        ParticlesZOrdered[Index].insert(P.Position.Z);
+      }
     }
   }
 
