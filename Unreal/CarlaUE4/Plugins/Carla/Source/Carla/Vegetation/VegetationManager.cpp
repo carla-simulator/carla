@@ -314,6 +314,8 @@ void AVegetationManager::SetMaterialCache(FTileData& TileData)
   for (FTileMeshComponent& Element : TileData.TileMeshesCache)
   {
     UInstancedStaticMeshComponent* Mesh = Element.InstancedStaticMeshComponent;
+    if (!IsValid(Mesh))
+      continue;
     int32 Index = -1;
     for (UMaterialInterface* Material : Mesh->GetMaterials())
     {
@@ -596,7 +598,7 @@ void AVegetationManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 void AVegetationManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::OnLevelRemovedFromWorld);
-  
+  FreeTileCache(InLevel);
 }
 
 bool AVegetationManager::CheckIfAnyVehicleInLevel() const

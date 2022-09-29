@@ -697,21 +697,7 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       CollisionTorque += (JointProperties.CenterOfMass - JointGlobalPosition).cross(CollisionImpulse + OverlappingForces);
       JointProperties.Torque += CollisionTorque;
       // COLLISION_LOG(Log, "Joint: %s \n ProjectedSpeed %f, ProportionalFactor %f \n RepulsionForce %s \n", *Joint.JointName,ProjectedSpeed,ProportionalFactor,*EigenToFString(RepulsionForce),*EigenToFString(CollisionTorque));
-      COLLISION_LOG(LogCarla, Display, TEXT("DistanceToCollider: %f, ForceFactor: %f"), DistanceToCollider, ForceFactor);
-      // block forces to go to rest angles
-      int TempId = JointId;
-      {
-        TRACE_CPUPROFILER_EVENT_SCOPE(SetcanRestRestAngles)
-        do
-        {
-          FJointProperties& TempJointProperties = JointPropertiesList[TempId];
-          TempJointProperties.canRest = false;
-          
-          FSkeletonJoint &TempJoint = Skeleton.Joints[TempId];
-          TempId = TempJoint.ParentId;
-        }
-        while (TempId != -1);
-      }
+      UE_LOG(LogCarla, Display, TEXT("DistanceToCollider: %f, ForceFactor: %f"), DistanceToCollider, ForceFactor);
       
       if (DebugEnableVisualization)
       {
@@ -739,28 +725,6 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
       continue;
     }
     FJointProperties& JointProperties = JointPropertiesList[Joint.JointId];
-
-    if (!JointProperties.canRest)
-    {
-      // JointProperties.canRest = true;
-      // JointProperties.Force = Eigen::Vector3d::Zero();
-      // JointProperties.Torque = Eigen::Vector3d::Zero();
-      // JointProperties.FictitiousTorque = Eigen::Vector3d::Zero();
-      // JointProperties.AngularVelocity = Eigen::Vector3d::Zero();
-      // JointProperties.LinearVelocity = Eigen::Vector3d::Zero();
-      // JointProperties.AngularAcceleration = Eigen::Vector3d::Zero();
-      // JointProperties.LinearAcceleration = Eigen::Vector3d::Zero();
-      // JointProperties.LocalAngularAcceleration = Eigen::Vector3d::Zero();
-      // drawing
-      if (Joint.ParentId != -1 && DebugEnableVisualization)
-      {
-        const FVector Start = Joint.GlobalTransform.GetLocation();
-        const FVector End = Skeleton.Joints[Joint.ParentId].GlobalTransform.GetLocation();
-        const FColor LineColor(FColor::Red);
-        DrawDebugLine(GetWorld(), Start, End, LineColor, false, 0.3f, 0.0f, 1.f);
-      }
-      // continue;
-    }
 
     // drawing
     if (Joint.ParentId != -1 && DebugEnableVisualization)

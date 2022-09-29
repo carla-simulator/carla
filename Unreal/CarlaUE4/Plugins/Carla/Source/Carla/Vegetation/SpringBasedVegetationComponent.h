@@ -263,4 +263,3 @@ private:
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   bool bAutoComputeStrength = true;
 };
-
