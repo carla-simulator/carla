@@ -4,6 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#undef CreateDirectory
+
 #include "CustomTerrainPhysicsComponent.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 #include "Engine/CollisionProfile.h"
@@ -124,17 +126,17 @@ void FHeightMapData::Clear()
 }
 
 FDenseTile::FDenseTile(){
-  Particles.empty();
-  ParticlesHeightMap.empty();
+  Particles.clear();
+  ParticlesHeightMap.clear();
   TilePosition = FDVector(0.0,0.0,0.0);
   SavePath = FString("NotValidPath");
   bHeightmapNeedToUpdate = false;
 }
 
 FDenseTile::~FDenseTile(){
-  Particles.empty();
-  ParticlesHeightMap.empty();
-  ParticlesZOrdered.empty();
+  Particles.clear();
+  ParticlesHeightMap.clear();
+  ParticlesZOrdered.clear();
   TilePosition = FDVector(0.0,0.0,0.0);
   SavePath = FString("NotValidPath");
   bHeightmapNeedToUpdate = false;
@@ -806,12 +808,12 @@ void FSparseHighDetailMap::UpdateMaps(
   FIntVector CacheMaxVector = GetVectorTileId(
       FDVector(Position.X + CacheRadiusX, Position.Y + CacheRadiusY, 0));
 
-  auto IsInCacheRange = [&](uint32_t Tile_X, uint32_t Tile_Y) -> bool
+  auto IsInCacheRange = [&](int32_t Tile_X, int32_t Tile_Y) -> bool
   {
     return Tile_X >= CacheMinVector.X && Tile_X <= CacheMaxVector.X &&
            Tile_Y >= CacheMinVector.Y && Tile_Y <= CacheMaxVector.Y;
   };
-  auto IsInMapRange = [&](uint32_t Tile_X, uint32_t Tile_Y) -> bool
+  auto IsInMapRange = [&](int32_t Tile_X, int32_t Tile_Y) -> bool
   {
     return Tile_X >= MinVector.X && Tile_X <= MaxVector.X &&
            Tile_Y >= MinVector.Y && Tile_Y <= MaxVector.Y;
@@ -822,9 +824,9 @@ void FSparseHighDetailMap::UpdateMaps(
     TRACE_CPUPROFILER_EVENT_SCOPE(UpdateMap);
     // load tiles to map
     std::vector<uint64_t> TilesToInitialize;
-    for(uint32_t Tile_X = MinVector.X; Tile_X < MaxVector.X; ++Tile_X )
+    for(int32_t Tile_X = MinVector.X; Tile_X < MaxVector.X; ++Tile_X )
     {
-      for(uint32_t Tile_Y = MinVector.Y; Tile_Y < MaxVector.Y; ++Tile_Y )
+      for(int32_t Tile_Y = MinVector.Y; Tile_Y < MaxVector.Y; ++Tile_Y )
       {
         uint64_t CurrentTileID = GetTileId(Tile_X, Tile_Y);
         if (Map.find(CurrentTileID) == Map.end())
@@ -868,9 +870,9 @@ void FSparseHighDetailMap::UpdateMaps(
   {
     FScopeLock ScopeCacheLock(&Lock_CacheMap);
     TRACE_CPUPROFILER_EVENT_SCOPE(UpdateCache);
-    for(uint32_t Tile_X = CacheMinVector.X; Tile_X < CacheMaxVector.X; ++Tile_X )
+    for(int32_t Tile_X = CacheMinVector.X; Tile_X < CacheMaxVector.X; ++Tile_X )
     {
-      for(uint32_t Tile_Y = CacheMinVector.Y; Tile_Y < CacheMaxVector.Y; ++Tile_Y )
+      for(int32_t Tile_Y = CacheMinVector.Y; Tile_Y < CacheMaxVector.Y; ++Tile_Y )
       {
         if (IsInMapRange(Tile_X, Tile_Y))
         {
@@ -960,9 +962,9 @@ void FSparseHighDetailMap::LoadTilesAtPositionFromCache(FDVector Position, float
 
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition::Process);
-    for(uint32_t CacheX = CacheMinVector.X; CacheX < CacheMaxVector.X; CacheX++ )
+    for(int32_t CacheX = CacheMinVector.X; CacheX < CacheMaxVector.X; CacheX++ )
     {
-      for(uint32_t CacheY = CacheMinVector.Y; CacheY < CacheMaxVector.Y; CacheY++ )
+      for(int32_t CacheY = CacheMinVector.Y; CacheY < CacheMaxVector.Y; CacheY++ )
       {
         uint64_t CurrentTileID = GetTileId(CacheX, CacheY);
         if( Map.find(CurrentTileID) == Map.end() )
@@ -1012,9 +1014,9 @@ void FSparseHighDetailMap::ReloadCache(FDVector Position, float RadiusX , float 
 
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::ReloadCache::Process);
-    for(uint32_t CacheX = CacheMinVector.X; CacheX < CacheMaxVector.X; CacheX++ )
+    for(int32_t CacheX = CacheMinVector.X; CacheX < CacheMaxVector.X; CacheX++ )
     {
-      for(uint32_t CacheY = CacheMinVector.Y; CacheY < CacheMaxVector.Y; CacheY++ )
+      for(int32_t CacheY = CacheMinVector.Y; CacheY < CacheMaxVector.Y; CacheY++ )
       {
           uint64_t CurrentTileID = GetTileId(CacheX, CacheY);
           if( Map.find(CurrentTileID) != Map.end() )
@@ -1085,9 +1087,9 @@ void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY
   
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(TEXT("FSparseHighDetailMap::WaitUntilProperTilesAreLoaded"));
-    for(uint32_t X = MinVector.X; X < MaxVector.X; X++ )
+    for(int32_t X = MinVector.X; X < MaxVector.X; X++ )
     {
-      for(uint32_t Y = MinVector.Y; Y < MaxVector.Y; Y++ )
+      for(int32_t Y = MinVector.Y; Y < MaxVector.Y; Y++ )
       {
         bool ConditionToStopWaiting = true;
         // Check if tiles are already loaded
@@ -1103,7 +1105,7 @@ void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY
           
           if(ConditionToStopWaiting) {
             bDebugLoadingTiles = true; 
-            FGenericPlatformProcess::Sleep(0.0001f);
+            Sleep(0.0001f);
             static FDateTime CurrentTime = FDateTime::Now();
             if( ( FDateTime::Now() - CurrentTime).GetTotalSeconds() > 5.0f )
             {
@@ -1196,8 +1198,9 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
   std::vector<uint64_t> LoadedTiles = 
       SparseMap.GetLoadedTilesInRange(TextureCenterPosition, TextureRadius);
   FDVector TextureOrigin = TextureCenterPosition - FDVector(TextureRadius, TextureRadius, 0);
+  if (TextureToUpdate->GetSizeX() == 0) return;
   float GlobalTexelSize = std::round( ( (2.0f * TextureRadius) / TextureToUpdate->GetSizeX() ) * 10000.0f) / 10000.0f;
-  uint32_t PartialHeightMapSize = std::round( SparseMap.GetTileSize() * TextureToUpdate->GetSizeX() / (2*TextureRadius) );
+  int32_t PartialHeightMapSize = std::round( SparseMap.GetTileSize() * TextureToUpdate->GetSizeX() / (2*TextureRadius) );
   
   float LocalTexelSize = SparseMap.GetTileSize() / PartialHeightMapSize;
   LocalTexelSize = std::round( LocalTexelSize * 1000.0f ) / 1000.0f;
@@ -1211,16 +1214,16 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
   {
     FDenseTile& CurrentTile = SparseMap.GetTile(TileId);
     FDVector& TilePosition = CurrentTile.TilePosition;
-    for (uint32_t Local_Y = 0; Local_Y < PartialHeightMapSize; ++Local_Y)
+    for (int32_t Local_Y = 0; Local_Y < PartialHeightMapSize; ++Local_Y)
     {
-      for (uint32_t Local_X = 0; Local_X < PartialHeightMapSize; ++Local_X)
+      for (int32_t Local_X = 0; Local_X < PartialHeightMapSize; ++Local_X)
       {
-        uint32_t LocalIndex = Local_Y * PartialHeightMapSize + Local_X;
+        int32_t LocalIndex = Local_Y * PartialHeightMapSize + Local_X;
         float Height = CurrentTile.ParticlesHeightMap[LocalIndex];
         FDVector LocalTexelPosition = 
             TilePosition + FDVector(Local_X*LocalTexelSize, Local_Y*LocalTexelSize, 0);
-        uint32_t Coord_X = std::round( (LocalTexelPosition.X - TextureOrigin.X ) / GlobalTexelSize );
-        uint32_t Coord_Y = std::round( (LocalTexelPosition.Y - TextureOrigin.Y ) / GlobalTexelSize );
+        int32_t Coord_X = std::round( (LocalTexelPosition.X - TextureOrigin.X ) / GlobalTexelSize );
+        int32_t Coord_Y = std::round( (LocalTexelPosition.Y - TextureOrigin.Y ) / GlobalTexelSize );
         
         if (Coord_X >= 0 && Coord_X < TextureToUpdate->GetSizeX() &&
             Coord_Y >= 0 && Coord_Y < TextureToUpdate->GetSizeY())
@@ -1334,8 +1337,8 @@ void UCustomTerrainPhysicsComponent::UpdateLargeTextureData()
     //UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::UpdateTextureData OriginPosition X: %f, Y %f"), OriginPosition.X, OriginPosition.Y);
   }
 
-  uint32_t OffsetX = 0;
-  uint32_t OffsetY = 0;
+  int32_t OffsetX = 0;
+  int32_t OffsetY = 0;
   float* Ptr = &ParticlesPositions[0];
   while( OffsetY < LargeTextureToUpdate->GetSizeY() )
   {
