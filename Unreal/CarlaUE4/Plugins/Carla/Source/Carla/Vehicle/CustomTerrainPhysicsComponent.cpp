@@ -1105,7 +1105,7 @@ void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY
           
           if(ConditionToStopWaiting) {
             bDebugLoadingTiles = true; 
-            Sleep(0.0001f);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
             static FDateTime CurrentTime = FDateTime::Now();
             if( ( FDateTime::Now() - CurrentTime).GetTotalSeconds() > 5.0f )
             {
