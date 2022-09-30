@@ -311,8 +311,16 @@ void FDenseTile::UpdateLocalHeightmap()
   TRACE_CPUPROFILER_EVENT_SCOPE(FDenseTile::UpdateLocalHeightmap);
   if( bHeightmapNeedToUpdate ){
     for( uint32_t i = 0; i < ParticlesHeightMap.size() ; ++i ){
-      auto it = ParticlesZOrdered[i].begin();
-      ParticlesHeightMap[i] = *it;
+      if( ParticlesZOrdered.size() == ParticlesHeightMap.size() ){
+        auto it = ParticlesZOrdered[i].begin();
+        ParticlesHeightMap[i] = *it;
+      }else{
+        UE_LOG(LogCarla, Log, TEXT("ParticlesZOrdered is not correct sized %d Heightmap size %d"), ParticlesZOrdered.size(), ParticlesHeightMap.size() );
+      }
+    }
+
+    for( uint32_t i = 0; i < ParticlesHeightMap.size() ; ++i ){
+      UE_LOG(LogCarla, Log, TEXT("Updated float %f"), ParticlesHeightMap[i]);
     }
   }
 }
@@ -1661,20 +1669,32 @@ void UCustomTerrainPhysicsComponent::EndPlay(const EEndPlayReason::Type EndPlayR
 void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime, 
     ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+    static float AccumTime = 0.0f;
   TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::TickComponent);
   Super::TickComponent(DeltaTime,TickType,ThisTickFunction);
 
+
   TArray<AActor*> VehiclesActors;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACarlaWheeledVehicle::StaticClass(), VehiclesActors);
-  
+  //DebugLocation = FVector::ZeroVector;
   for (AActor* VehicleActor : VehiclesActors)
   {
+    
+    AccumTime += DeltaTime; 
+    DebugLocation = FMath::Lerp( FVector::ZeroVector, FVector(0, 200, 0), AccumTime/2.0f );
+    if( AccumTime > 2.0f )
+    {
+      AccumTime = 0.0f;
+    }
+
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle> (VehicleActor);
-    FVector GlobalLocation = Vehicle->GetActorLocation();
+    FVector GlobalLocation = DebugLocation;
+    //FVector GlobalLocation = Vehicle->GetActorLocation();
     if(LargeMapManager)
     {
-      GlobalLocation = 
-          LargeMapManager->LocalToGlobalLocation(Vehicle->GetActorLocation());
+      //GlobalLocation = LargeMapManager->LocalToGlobalLocation(Vehicle->GetActorLocation());
+      GlobalLocation = LargeMapManager->LocalToGlobalLocation(DebugLocation);
+      
       uint64_t TileId = LargeMapManager->GetTileID(GlobalLocation);
       FIntVector CurrentTileId = 
           LargeMapManager->GetTileVectorID(GlobalLocation);
@@ -2274,6 +2294,115 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
             Output.wheel3.wheel_torque_y,
             Output.wheel3.wheel_torque_z)));
   }
+  #else
+  //FTransform VehicleTransform = Vehicle->GetTransform();
+  FTransform VehicleTransform = FTransform::Identity;
+  VehicleTransform.SetLocation( DebugLocation );
+  FVector WheelPosition0 = VehicleTransform.TransformPosition(FVector(140, -70, 40));
+  FVector WheelPosition1 = VehicleTransform.TransformPosition(FVector(140, 70, 40));
+  FVector WheelPosition2 = VehicleTransform.TransformPosition(FVector(-140, -70, 40));
+  FVector WheelPosition3 = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
+  if(LargeMapManager)
+  {
+    WheelPosition0 = LargeMapManager->LocalToGlobalLocation(WheelPosition0);
+    WheelPosition1 = LargeMapManager->LocalToGlobalLocation(WheelPosition1);
+    WheelPosition2 = LargeMapManager->LocalToGlobalLocation(WheelPosition2);
+    WheelPosition3 = LargeMapManager->LocalToGlobalLocation(WheelPosition3);
+  }
+  FOrientedBox BboxWheel0;
+  BboxWheel0.AxisX = VehicleTransform.GetUnitAxis(EAxis::X);
+  BboxWheel0.AxisY = VehicleTransform.GetUnitAxis(EAxis::Y);
+  BboxWheel0.AxisZ = VehicleTransform.GetUnitAxis(EAxis::Z);
+  BboxWheel0.Center = WheelPosition0 + FVector(0,0,-TireRadius);
+  BboxWheel0.ExtentX = BoxSearchForwardDistance;
+  BboxWheel0.ExtentY = BoxSearchLateralDistance;
+  BboxWheel0.ExtentZ = BoxSearchDepthDistance;
+  FOrientedBox BboxWheel1 = BboxWheel0;
+  BboxWheel1.Center = WheelPosition1 + FVector(0,0,-TireRadius);
+  FOrientedBox BboxWheel2 = BboxWheel0;
+  BboxWheel2.Center = WheelPosition2 + FVector(0,0,-TireRadius);
+  FOrientedBox BboxWheel3 = BboxWheel0;
+  BboxWheel3.Center = WheelPosition3 + FVector(0,0,-TireRadius);
+  if (DrawDebugInfo)
+  {
+    DrawOrientedBox(GetWorld(), {BboxWheel0, BboxWheel1, BboxWheel2, BboxWheel3});
+  }
+
+  std::vector<FParticle*> ParticlesWheel0, ParticlesWheel1, ParticlesWheel2, ParticlesWheel3;
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(ParticleSearch);
+    auto GetAndFilterParticlesInBox = 
+        [&] (FOrientedBox& OBox) -> std::vector<FParticle*>
+    {
+      std::vector<FParticle*> Particles;
+      Particles = SparseMap.GetParticlesInBox(OBox);
+      LimitParticlesPerWheel(Particles);
+      return Particles;
+    };
+    auto FutureParticles0 = Async(EAsyncExecution::ThreadPool, 
+        [&]() {return GetAndFilterParticlesInBox(BboxWheel0);});
+    auto FutureParticles2 = Async(EAsyncExecution::ThreadPool, 
+        [&]() {return GetAndFilterParticlesInBox(BboxWheel2);});
+    auto FutureParticles1 = Async(EAsyncExecution::ThreadPool, 
+        [&]() {return GetAndFilterParticlesInBox(BboxWheel1);});
+    auto FutureParticles3 = Async(EAsyncExecution::ThreadPool, 
+        [&]() {return GetAndFilterParticlesInBox(BboxWheel3);});
+    ParticlesWheel0 = FutureParticles0.Get();
+    ParticlesWheel2 = FutureParticles2.Get();
+    ParticlesWheel1 = FutureParticles1.Get();
+    ParticlesWheel3 = FutureParticles3.Get();
+  }
+
+  if(DrawDebugInfo)
+  {
+    DrawParticles(GetWorld(), ParticlesWheel0);
+    DrawParticles(GetWorld(), ParticlesWheel1);
+    DrawParticles(GetWorld(), ParticlesWheel2);
+    DrawParticles(GetWorld(), ParticlesWheel3);
+    DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel0), BboxWheel0.Center.Z);
+    DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel1), BboxWheel1.Center.Z);
+    DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel2), BboxWheel2.Center.Z);
+    DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel3), BboxWheel3.Center.Z);
+  }
+
+  if(bUpdateParticles)
+  {
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE(RemoveParticlesFromOrderedContainer);
+      RemoveParticlesFromOrderedContainer( ParticlesWheel0 );
+      RemoveParticlesFromOrderedContainer( ParticlesWheel1 );
+      RemoveParticlesFromOrderedContainer( ParticlesWheel2 );
+      RemoveParticlesFromOrderedContainer( ParticlesWheel3 );
+    }
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE(UpdateParticles);
+      for( auto it : ParticlesWheel0 ){
+        it->Position.Z = -10;
+      }
+      for( auto it : ParticlesWheel1 ){
+        it->Position.Z = -10;
+      }
+      for( auto it : ParticlesWheel2 ){
+        it->Position.Z = -10;
+      }
+      for( auto it : ParticlesWheel3 ){
+        it->Position.Z = -10;
+      }
+    }
+
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE(AddParticles);
+      AddParticlesToOrderedContainer( ParticlesWheel0 );
+      AddParticlesToOrderedContainer( ParticlesWheel1 );
+      AddParticlesToOrderedContainer( ParticlesWheel2 );
+      AddParticlesToOrderedContainer( ParticlesWheel3 );
+    }
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::UpdateTilesHeightMaps);
+      UpdateTilesHeightMapsInRadius( LastUpdatedPosition, CacheRadius.X);
+    }
+  }
+
   #endif
 }
 
@@ -2379,7 +2508,23 @@ void UCustomTerrainPhysicsComponent::RemoveParticlesFromOrderedContainer(
     HeightMapCoords.Y = std::min( std::max( HeightMapCoords.Y, 0) , static_cast<int>(PartialHeightMapSize-1));
     // uint32_t Index = std::floor(ParticleLocalPosition.Y) * PartialHeightMapSize + std::floor(ParticleLocalPosition.X);
     uint32_t Index = HeightMapCoords.Y * PartialHeightMapSize + HeightMapCoords.X;
-    CurrentTile.ParticlesZOrdered[Index].erase(P->Position.Z);
+    if( CurrentTile.ParticlesZOrdered[Index].size() > 1 )
+    {
+      auto it = CurrentTile.ParticlesZOrdered[Index].find(P->Position.Z );
+      if( it != CurrentTile.ParticlesZOrdered[Index].end() )
+      {
+        CurrentTile.ParticlesZOrdered[Index].erase(it);
+      }
+      else
+      {
+        UE_LOG(LogCarla, Error, TEXT("Cannot find in %d, position %f"), Index, P->Position.Z  );
+      }
+      
+    }
+    else
+    {
+      UE_LOG(LogCarla, Error, TEXT("Cannot Remove more from %d, currentsize %d"), Index,CurrentTile.ParticlesZOrdered[Index].size() );
+    }
   }
 }
 
@@ -2408,6 +2553,7 @@ void UCustomTerrainPhysicsComponent::AddParticlesToOrderedContainer(
     HeightMapCoords.Y = std::min( std::max( HeightMapCoords.Y, 0) , static_cast<int>(PartialHeightMapSize-1));
     uint32_t Index = HeightMapCoords.Y * PartialHeightMapSize + HeightMapCoords.X;
     CurrentTile.ParticlesZOrdered[Index].insert(P->Position.Z);
+
   }
 }
 

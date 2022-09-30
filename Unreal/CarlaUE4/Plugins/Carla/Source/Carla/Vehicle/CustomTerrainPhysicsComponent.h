@@ -423,7 +423,8 @@ private:
   UPROPERTY()
   UMaterialParameterCollectionInstance* MPCInstance;
   
-
+  UPROPERTY(VisibleAnywhere, Category="DeformationMesh")
+  FVector DebugLocation = FVector::ZeroVector;
 
   UPROPERTY(EditAnywhere)
   float SearchRadius = 100;
