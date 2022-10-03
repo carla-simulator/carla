@@ -189,7 +189,6 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
     ReadFVector(ReadStream, VectorToRead );
     TilePosition = FDVector(VectorToRead);
     ReadStdVector<FParticle> (ReadStream, Particles);
-    ReadStdVector<float> (ReadStream, ParticlesHeightMap);
     //UE_LOG(LogCarla, Log, TEXT("Reading data, got %d particles"), Particles.size());
   }
   else
@@ -224,11 +223,14 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
     }
 
     //UE_LOG(LogCarla, Log, TEXT("Building local heightMap of %d pixels"), PartialHeightMapSize);
-    for(float& Height : ParticlesHeightMap)
-    {
-      Height = 0;
-    }
+
   }
+  ParticlesHeightMap.resize( PartialHeightMapSize*PartialHeightMapSize );
+  for(float& Height : ParticlesHeightMap)
+  {
+    Height = 0;
+  }
+
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(DenseTile::InitializeTile::ParticlesZOrdered);
     ParticlesZOrdered.resize( PartialHeightMapSize*PartialHeightMapSize );
@@ -317,10 +319,6 @@ void FDenseTile::UpdateLocalHeightmap()
       }else{
         UE_LOG(LogCarla, Log, TEXT("ParticlesZOrdered is not correct sized %d Heightmap size %d"), ParticlesZOrdered.size(), ParticlesHeightMap.size() );
       }
-    }
-
-    for( uint32_t i = 0; i < ParticlesHeightMap.size() ; ++i ){
-      UE_LOG(LogCarla, Log, TEXT("Updated float %f"), ParticlesHeightMap[i]);
     }
   }
 }
@@ -1410,7 +1408,6 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   ParticleForceMulFactor = 1.f;
   FloorHeight = 0.0;
   bDrawLoadedTiles = false;
-
 #endif
 
   int IntValue;
@@ -1681,7 +1678,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
   {
     
     AccumTime += DeltaTime; 
-    DebugLocation = FMath::Lerp( FVector::ZeroVector, FVector(0, 200, 0), AccumTime/2.0f );
+    DebugLocation = FMath::Lerp( FVector::ZeroVector, FVector(0, 2000, 0), AccumTime/2.0f );
     if( AccumTime > 2.0f )
     {
       AccumTime = 0.0f;
