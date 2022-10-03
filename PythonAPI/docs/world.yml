@@ -248,6 +248,9 @@
     - var_name: SpringArm
       doc: >
         An attachment that expands or retracts the position of the actor, depending on its parent. This attachment is only recommended to record videos from the simulation where a smooth movement is needed. SpringArms are an Unreal Engine component so [check the UE docs](https://docs.unrealengine.com/en-US/Gameplay/HowTo/UsingCameras/SpringArmComponents/index.html) to learn more about them. <br><b style="color:red;">Warning:</b> The <b>SpringArm</b> attachment presents weird behaviors when an actor is spawned with a relative translation in the Z-axis (e.g. <code>child_location = Location(0,0,2)</code>).  
+    - var_name: SpringArmGhost
+      doc: >
+        An attachment like the previous one but that does not make the collision test, and that means that it does not expands or retracts the position of the actor. The term **ghost** is because then the camera can cross walls and other geometries. This attachment is only recommended to record videos from the simulation where a smooth movement is needed. SpringArms are an Unreal Engine component so [check the UE docs](https://docs.unrealengine.com/en-US/Gameplay/HowTo/UsingCameras/SpringArmComponents/index.html) to learn more about them. <br><b style="color:red;">Warning:</b> The <b>SpringArm</b> attachment presents weird behaviors when an actor is spawned with a relative translation in the Z-axis (e.g. <code>child_location = Location(0,0,2)</code>).  
     # --------------------------------------
 
   - class_name: LabelledPoint

@@ -572,6 +572,12 @@ FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID)
   return Tile;
 }
 
+FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(TileID TileID)
+{
+  FCarlaMapTile* Tile = MapTiles.Find(TileID);
+  return Tile;
+}
+
 FCarlaMapTile& ALargeMapManager::LoadCarlaMapTile(FString TileMapPath, TileID TileId) {
   TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::LoadCarlaMapTile);
   // Need to generate a new Tile
