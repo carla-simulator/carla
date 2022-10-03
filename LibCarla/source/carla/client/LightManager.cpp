@@ -22,7 +22,7 @@ LightManager::~LightManager(){
   UpdateServerLightsState(true);
 }
 
-void LightManager::SetEpisode(detail::EpisodeProxy episode) {
+void LightManager::SetEpisode(detail::WeakEpisodeProxy episode) {
 
   _episode = episode;
 
