@@ -59,7 +59,7 @@ public:
 	ASoilTypeManager();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<AActor> PolarisClass;
+	TSubclassOf<AActor> CarClass;
 
 protected:
 	// Called when the game starts or when spawned

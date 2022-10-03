@@ -26,7 +26,7 @@ void ASoilTypeManager::Tick(float DeltaTime)
 	if((int)DeltaTime % 2000 == 0)
 	{
 		ALargeMapManager* LargeMapManager = (ALargeMapManager*) UGameplayStatics::GetActorOfClass(GetWorld(), ALargeMapManager::StaticClass());
-		AActor* Car = UGameplayStatics::GetActorOfClass(GetWorld(), PolarisClass);
+		AActor* Car = UGameplayStatics::GetActorOfClass(GetWorld(), CarClass);
 
 		if(Car != nullptr)
 		{
