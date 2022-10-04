@@ -1333,9 +1333,10 @@ void UMapGeneratorWidget::SmoothHeightmap(TArray<uint16> HeightData, TArray<uint
   int TileMargin = 2;
   int TileSize = 1009; // Should be calculated by sqrt(HeightData.Num())
 
-  for(int X = TileMargin; X < (TileSize - TileMargin); X++)
+  /* Applying a smoothing kernel to the height data */
+  for(int X = 0; X < (TileSize); X++)
   {
-    for(int Y = TileMargin; Y < (TileSize - TileMargin); Y++)
+    for(int Y = 0; Y < (TileSize); Y++)
     {
       int Value = 0;
 
@@ -1344,13 +1345,23 @@ void UMapGeneratorWidget::SmoothHeightmap(TArray<uint16> HeightData, TArray<uint
         for(int j = -2; j <=2; j++)
         {
           float KernelValue = SmoothKernel[(i+2)*2 + (j+2)];
-          int HeightValue = HeightData[ (X+i) * TileSize + (Y+j) ];
 
+          int IndexX = X+i;
+          int IndexY = Y+j;
+
+          /* Checking if the index is out of bounds. If it is, it sets the index to the current X or Y. */
+          if(IndexX < 0 || IndexX >= TileSize)
+              IndexX = X;
+          if(IndexY < 0 || IndexY >= TileSize)
+              IndexY = Y;
+
+          int HeightValue = HeightData[ Convert2DTo1DCoord(IndexX, IndexY, TileSize) ];
+          
           Value += (int) ( KernelValue * HeightValue );
         }
       }
 
-      SmoothedData[(X * TileSize) + Y] = Value;
+      SmoothedData[ Convert2DTo1DCoord(X, Y, TileSize) ] = Value;
     }
   }
 

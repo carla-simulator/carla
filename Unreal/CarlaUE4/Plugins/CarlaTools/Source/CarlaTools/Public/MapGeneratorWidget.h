@@ -363,4 +363,10 @@ private:
 
   UFUNCTION()
   void SmoothHeightmap(TArray<uint16> HeightData, TArray<uint16>& OutHeightData);
+
+  UFUNCTION()
+  FORCEINLINE int Convert2DTo1DCoord(int IndexX, int IndexY, int TileSize)
+  {
+    return (IndexX * TileSize) + IndexY;
+  }
 };
