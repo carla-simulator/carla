@@ -46,3 +46,22 @@ struct FActorDefinition
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TArray<FActorAttribute> Attributes;
 };
+
+/// A definition of a Vehicle Actor with all the variation and attributes.
+USTRUCT(BlueprintType)
+struct FVehicleActorDefinition
+{
+  GENERATED_BODY()
+
+  /// A list of comma-separated tags.
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString Tags;
+
+  /// Assign a static mesh into the actor.
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UStaticMesh* mesh;
+
+  /// Colors represent the avaliable colors for each actor
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TArray<FColor> colors;
+};

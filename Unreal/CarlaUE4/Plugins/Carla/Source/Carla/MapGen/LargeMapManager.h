@@ -164,8 +164,6 @@ public:
 
   float GetActorStreamingDistance() const;
 
-protected:
-
   FIntVector GetTileVectorID(FVector TileLocation) const;
 
   FIntVector GetTileVectorID(FDVector TileLocation) const;
@@ -186,14 +184,18 @@ protected:
   TileID GetTileID(FDVector TileLocation) const;
 
   TileID GetTileID(FIntVector TileVectorID) const;
-
+public:
   FCarlaMapTile& GetCarlaMapTile(FVector Location);
 
   FCarlaMapTile& GetCarlaMapTile(ULevel* InLevel);
 
   FCarlaMapTile* GetCarlaMapTile(FIntVector TileVectorID);
+  
+  FCarlaMapTile* GetCarlaMapTile(TileID TileID);
 
   FCarlaMapTile& LoadCarlaMapTile(FString TileMapPath, TileID TileId);
+
+protected:
 
   void UpdateTilesState();
 

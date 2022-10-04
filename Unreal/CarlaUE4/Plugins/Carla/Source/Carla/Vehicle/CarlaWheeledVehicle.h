@@ -326,10 +326,7 @@ private:
 
   /// Current state of the vehicle controller (for debugging purposes).
   UPROPERTY(Category = "AI Controller", VisibleAnywhere)
-  ECarlaWheeledVehicleState State = ECarlaWheeledVehicleState::UNKNOWN;
-
-  UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
-  UBoxComponent *VehicleBounds;  
+  ECarlaWheeledVehicleState State = ECarlaWheeledVehicleState::UNKNOWN; 
 
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
   UVehicleVelocityControl* VelocityControl;
@@ -357,17 +354,26 @@ private:
 
 public:
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditDefaultsOnly)
-  float DetectionSize {200.0f};
+  float DetectionSize { 200.0f };
   
   UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly)
-  mutable FBox FoliageBoundingBox;
+  FBox FoliageBoundingBox;
+
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
+  UBoxComponent *VehicleBounds; 
 
   UFUNCTION()
-  TArray<int32> GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const;  
+  void UpdateDetectionBox();
+
+  UFUNCTION()
+  const TArray<int32> GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const;  
 
   UFUNCTION(BlueprintCallable)
   void DrawFoliageBoundingBox() const;
-
+  
+  UFUNCTION()
+  FBoxSphereBounds GetBoxSphereBounds() const;
+  
   UFUNCTION()
   bool IsInVehicleRange(const FVector& Location) const;
 
@@ -434,6 +440,10 @@ private:
   void ApplyRolloverBehavior();
 
   void CheckRollover(const float roll, const std::pair<float, float> threshold_roll);
+
+  void AddReferenceToManager();
+  void RemoveReferenceToManager();
+
 
   FTimerHandle TimerHandler;
 };

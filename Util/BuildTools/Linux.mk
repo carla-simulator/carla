@@ -113,19 +113,19 @@ LibCarla.release: LibCarla.server.release LibCarla.client.release
 
 LibCarla.server: LibCarla.server.debug LibCarla.server.release
 LibCarla.server.debug: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server --debug
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server --debug $(ARGS)
 LibCarla.server.release: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server --release
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server --release $(ARGS)
 
 LibCarla.client: LibCarla.client.debug LibCarla.client.release
 LibCarla.client.debug: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --debug
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --debug $(ARGS)
 LibCarla.client.release: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release $(ARGS)
 
 LibCarla.client.rss: LibCarla.client.rss.debug LibCarla.client.rss.release
 LibCarla.client.rss.debug: setup ad-rss
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --debug --rss
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --debug --rss 
 LibCarla.client.rss.release: setup ad-rss
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release --rss
 
