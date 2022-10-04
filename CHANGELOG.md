@@ -1,5 +1,6 @@
 ## Latest
 
+  * Added attachment type "SpringArmGhost" for cinematic cameras but without doing the collision test.
   * Improved algorithm to move signals out of the road by computing the desired displacement direction.
   * Added `TrafficManager.vehicle_lane_offset(actor, offset)` and `TrafficManager.global_lane_offset(offset)` methods.
   * Some of the warnings shown when building a map will now only be showing when debugging.
@@ -8,6 +9,7 @@
   * Added the speed limits for 100, 110 and 120 Km/h.
   * Fixing sensor destruction, now the stream and socket is succesfully destroyed.
   * Fixed bug at `Vehicle.get_traffic_light_state()` and `Vehicle.is_at_traffic_light()` causing vehicles to temporarily not lose the information of a traffic light if they moved away from it before it turned green.
+  * Changed the height of the automatic spawn points, from 3m to only 0.5m
   * Added multi-GPU feature. Now several servers (with dedicated GPU) can render sensors for the same simulation.
   * Fixed bug causing the `Vehicle.get_traffic_light_state()` function not notify about the green to yellow and yellow to red light state changes.
   * Fixed bug causing the `Vehicle.is_at_traffic_light()` function to return *false* if the traffic light was green.

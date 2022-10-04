@@ -14,6 +14,7 @@
 #include "Containers/Array.h"
 #include "Containers/Map.h"
 
+#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include "VegetationManager.generated.h"
@@ -35,14 +36,15 @@ struct FTileData
   TArray<FTileMeshComponent> TileMeshesCache {};
   TArray<UMaterialInstanceDynamic*> MaterialInstanceDynamicCache {};
 
-  void UpdateMaterialCache(const FLinearColor& Value);
+  bool ContainsMesh(const UInstancedStaticMeshComponent*) const;
+  void UpdateTileMeshComponent(UInstancedStaticMeshComponent* NewInstancedStaticMeshComponent);
+  void UpdateMaterialCache(const FLinearColor& Value, bool DebugMaterials);
 };
 
 USTRUCT()
 struct FFoliageBlueprint
 {
   GENERATED_BODY()
-  FString BPClassName {};
   FString BPFullClassName {};
   TSubclassOf<AActor> SpawnedClass { nullptr };
 
@@ -73,7 +75,8 @@ public:
   void RemoveVehicle(ACarlaWheeledVehicle* Vehicle);
 
 public:
-//Cuando se carge un level engancharme al broadcast del delate del collision
+  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  bool DebugMaterials {false};
   //Filters for debug
   UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
   bool SpawnBushes {true};
@@ -106,6 +109,7 @@ private:
   bool IsFoliageTypeEnabled(const FString& Path) const;
   bool CheckIfAnyVehicleInLevel() const;
   bool CheckForNewTiles() const;
+
   TArray<FString> GetTilesInUse();
 
   void UpdateVehiclesDetectionBoxes();
@@ -115,18 +119,29 @@ private:
   void DestroySkeletalFoliages();
   bool EnableActorFromPool(const FTransform& Transform, TArray<FPooledActor>& Pool);
 
-  void UpdateTileDataCache();
-  void UpdateFoliageBlueprintCache();
-  void GenerateTileDataInternals();
-  void InitializeInstancedStaticMeshComponentCache(FTileData& TileData);
-  void InitializeMaterialCache(FTileData& TileData);
+  void CreateOrUpdateTileCache(ULevel* InLevel);
+  void UpdateFoliageBlueprintCache(ULevel* InLevel);
+  void SetTileDataInternals(FTileData& TileData);
+  void SetInstancedStaticMeshComponentCache(FTileData& TileData);
+  void SetMaterialCache(FTileData& TileData);
+
+  void FreeTileCache(ULevel* InLevel);
+
+  void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
+  void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld);
 
   void CreatePoolForBPClass(const FFoliageBlueprint& BP);
   AActor* CreateFoliage(const FFoliageBlueprint& BP, const FTransform& Transform) const;
 
+  void GetSketalTemplates();
+
 private:
+  //Actors
+  ALargeMapManager* LargeMap {nullptr};
   TArray<ACarlaWheeledVehicle*> VehiclesInLevel {};
+  //Caches
   TMap<FString, FFoliageBlueprint> FoliageBlueprintCache {};
+  TMap<FString, FTileData> TileCache {};
+  //Pools
   TMap<FString, TArray<FPooledActor>> ActorPool {};
-  TMap<FString, FTileData> TileDataCache {};
 };
