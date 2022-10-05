@@ -710,7 +710,7 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       CollisionTorque += (JointProperties.CenterOfMass - JointGlobalPosition).cross(CollisionImpulse + OverlappingForces);
       JointProperties.Torque += CollisionTorque;
       // COLLISION_LOG(Log, "Joint: %s \n ProjectedSpeed %f, ProportionalFactor %f \n RepulsionForce %s \n", *Joint.JointName,ProjectedSpeed,ProportionalFactor,*EigenToFString(RepulsionForce),*EigenToFString(CollisionTorque));
-      UE_LOG(LogCarla, Display, TEXT("DistanceToCollider: %f, ForceFactor: %f"), DistanceToCollider, ForceFactor);
+      //UE_LOG(LogCarla, Display, TEXT("DistanceToCollider: %f, ForceFactor: %f"), DistanceToCollider, ForceFactor);
       
       // block forces to go to rest angles
       int TempId = JointId;
