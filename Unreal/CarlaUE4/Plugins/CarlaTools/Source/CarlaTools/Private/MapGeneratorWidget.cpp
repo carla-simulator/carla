@@ -47,6 +47,8 @@
 #define TAG_SPREADED FName("Spreaded Actor")
 #define TAG_SPECIFIC_LOCATION FName("Specific Location Actor")
 
+#define TILESIZE 1009
+
 #undef CreateDirectory
 #undef CopyFile
 
@@ -885,7 +887,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
         //int FlateningMargin = 30;   // Not flatened
         int FlateningMargin = 0;   // Not flatened
         int FlateningFalloff = 100; // Transition from actual and flat value
-        int TileSize = 1009; // Should be calculated by sqrt(HeightData.Num())
+        int TileSize = TILESIZE; // Should be calculated by sqrt(HeightData.Num())
 
         bool IsThereTileUp, IsThereTileDown, IsThereTileLeft, IsThereTileRight;
 
@@ -930,9 +932,9 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       // TODO: Check and fix flatening algorithm
       if(TileMetaInfo.ContainsRiver)
       {
+        int TileSize = TILESIZE; // Should be calculated by sqrt(HeightData.Num())
         int FlateningMargin = 30;   // Not flatened
         int FlateningFalloff = 100; // Transition from actual and flat value
-        int TileSize = 1009; // Should be calculated by sqrt(HeightData.Num())
 
         for(int X = FlateningMargin; X < (TileSize - FlateningMargin); X++)
         {
@@ -968,6 +970,32 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       TArray<uint16> SmoothedData;
       SmoothHeightmap(HeightData, SmoothedData);
       HeightData = SmoothedData;
+
+      // Sew Upper and Left boundaries
+      if(BoundariesInfo.Num() != 0) // To avoid crashing on the first Tile
+      {
+        TArray<uint16> SewedData;
+        SewUpperAndLeftTiles(HeightData, SewedData, ThisTileIndex.X, ThisTileIndex.Y);
+        HeightData = SewedData;
+      }
+
+      // Store Boundaries Info
+      FTileBoundariesInfo ThisTileBoundariesInfo;
+      TArray<uint16> RightHeightData;
+      TArray<uint16> BottomHeightData;
+
+      for(int DataIndex = 0; DataIndex < TILESIZE - 1; DataIndex++)
+      {
+        // Right
+        RightHeightData.Add(HeightData[ Convert2DTo1DCoord(0, DataIndex, TILESIZE) ]);
+        // Bottom
+        BottomHeightData.Add(HeightData[ Convert2DTo1DCoord(DataIndex, TILESIZE - 1, TILESIZE) ]);
+      }
+
+      ThisTileBoundariesInfo.RightHeightData = RightHeightData;
+      ThisTileBoundariesInfo.BottomHeightData = BottomHeightData;
+      BoundariesInfo.Add(ThisTileIndex, ThisTileBoundariesInfo);
+
 
       FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f);
       Landscape->CreateLandscapeInfo();
@@ -1005,10 +1033,11 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
             *CUR_CLASS_FUNC_LINE, *ErrorUnloadingStr.ToString());
         return false;
       }
-
-      // TODO: Instantiate water if needed
     }
   }
+
+  // Clear Boundaries Data Array
+  BoundariesInfo.Empty();
 
   CookTilesCollisions(MetaInfo);
 
@@ -1331,12 +1360,11 @@ void UMapGeneratorWidget::SmoothHeightmap(TArray<uint16> HeightData, TArray<uint
 
   // Apply kernel to height data
   int TileMargin = 2;
-  int TileSize = 1009; // Should be calculated by sqrt(HeightData.Num())
 
   /* Applying a smoothing kernel to the height data */
-  for(int X = 0; X < (TileSize); X++)
+  for(int X = 0; X < (TILESIZE); X++)
   {
-    for(int Y = 0; Y < (TileSize); Y++)
+    for(int Y = 0; Y < (TILESIZE); Y++)
     {
       int Value = 0;
 
@@ -1350,20 +1378,51 @@ void UMapGeneratorWidget::SmoothHeightmap(TArray<uint16> HeightData, TArray<uint
           int IndexY = Y+j;
 
           /* Checking if the index is out of bounds. If it is, it sets the index to the current X or Y. */
-          if(IndexX < 0 || IndexX >= TileSize)
+          if(IndexX < 0 || IndexX >= TILESIZE)
               IndexX = X;
-          if(IndexY < 0 || IndexY >= TileSize)
+          if(IndexY < 0 || IndexY >= TILESIZE)
               IndexY = Y;
 
-          int HeightValue = HeightData[ Convert2DTo1DCoord(IndexX, IndexY, TileSize) ];
+          int HeightValue = HeightData[ Convert2DTo1DCoord(IndexX, IndexY, TILESIZE) ];
           
           Value += (int) ( KernelValue * HeightValue );
         }
       }
 
-      SmoothedData[ Convert2DTo1DCoord(X, Y, TileSize) ] = Value;
+      SmoothedData[ Convert2DTo1DCoord(X, Y, TILESIZE) ] = Value;
     }
   }
 
   OutHeightData = SmoothedData;
+}
+
+void UMapGeneratorWidget::SewUpperAndLeftTiles(TArray<uint16> HeightData, TArray<uint16>& OutHeightData, int IndexX, int IndexY)
+{
+  TArray<uint16> SewedData(HeightData);
+
+  FRoiTile ThisTile(IndexX, IndexY);
+  FRoiTile UpTile = ThisTile.Up();
+  FRoiTile LeftTile = ThisTile.Right(); // Right because of the coord system used
+
+  // Up
+  if(BoundariesInfo.Contains(UpTile))
+  {
+    for(int DataIndex = 0; DataIndex < TILESIZE - 1; DataIndex++)
+    {
+      TArray<uint16> BottomInfo = BoundariesInfo[UpTile].BottomHeightData;
+      SewedData[ Convert2DTo1DCoord(DataIndex, 0, TILESIZE) ] = BottomInfo[DataIndex];
+    }
+  }
+
+  // Left
+  if(BoundariesInfo.Contains(LeftTile))
+  {
+    for(int DataIndex = 0; DataIndex < TILESIZE - 1; DataIndex++)
+    {
+      TArray<uint16> RightInfo = BoundariesInfo[LeftTile].RightHeightData;
+      SewedData[ Convert2DTo1DCoord(TILESIZE - 1, DataIndex, TILESIZE) ] = RightInfo[DataIndex];
+    }
+  }
+  
+  OutHeightData = SewedData;
 }

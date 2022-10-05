@@ -177,6 +177,18 @@ struct CARLATOOLS_API FMapGeneratorWidgetState
   float TerrainDetailedInvert;
 };
 
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FTileBoundariesInfo
+{
+  GENERATED_USTRUCT_BODY()
+
+  UPROPERTY()
+  TArray<uint16> RightHeightData;
+
+  UPROPERTY()
+  TArray<uint16> BottomHeightData;
+};
+
 /// Class UMapGeneratorWidget extends the functionality of UEditorUtilityWidget
 /// to be able to generate and manage maps and largemaps tiles for procedural
 /// map generation
@@ -299,6 +311,9 @@ public:
   FMiscWidgetState LoadMiscStateStructFromFile(const FString JsonPath);
 
 private:  
+  UPROPERTY()
+  TMap<FRoiTile, FTileBoundariesInfo> BoundariesInfo;
+
   /// Loads a bunch of world objects located in @a BaseMapPath and 
   /// returns them in @a WorldAssetsData.
   /// The function returns true if success, otherwise false
@@ -364,6 +379,10 @@ private:
   UFUNCTION()
   void SmoothHeightmap(TArray<uint16> HeightData, TArray<uint16>& OutHeightData);
 
+  UFUNCTION()
+  void SewUpperAndLeftTiles(TArray<uint16> HeightData, TArray<uint16>& OutHeightData, int IndexX, int IndexY);
+
+  // Converting a 2D coordinate to a 1D coordinate.
   UFUNCTION()
   FORCEINLINE int Convert2DTo1DCoord(int IndexX, int IndexY, int TileSize)
   {
