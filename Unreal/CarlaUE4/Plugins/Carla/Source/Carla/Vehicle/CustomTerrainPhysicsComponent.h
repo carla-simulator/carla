@@ -87,7 +87,6 @@ struct FDenseTile
   void UpdateLocalHeightmap();
   std::vector<FParticle> Particles;
   std::vector<float> ParticlesHeightMap;
-  //std::vector<std::vector<float>> ParticlesZOrdered;
   std::vector<std::multiset<float,std::greater<float>>> ParticlesZOrdered;
   FDVector TilePosition;
   FString SavePath;
@@ -150,9 +149,6 @@ public:
   void UpdateHeightMap(UHeightMapDataAsset* DataAsset,
       FDVector Origin, FDVector MapSize, float Size, float ScaleZ);
 
-  void LoadTilesAtPositionFromCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
-  void UnLoadTilesAtPositionToCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
-  void ReloadCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
   void UpdateMaps(FDVector Position, float RadiusX, float RadiusY, float CacheRadiusX, float CacheRadiusY);
 
   void Update(FVector Position, float RadiusX, float RadiusY);
@@ -264,13 +260,6 @@ public:
 
   UFUNCTION(BlueprintCallable, Category="Tiles")
   void UpdateMaps(FVector Position, float RadiusX, float RadiusY, float CacheRadiusX, float CacheRadiusY);
-
-  UFUNCTION(BlueprintCallable, Category="Tiles")
-  void UnloadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
-
-
-  UFUNCTION(BlueprintCallable, Category="Tiles")
-  void ReloadCache(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
 
   UFUNCTION(BlueprintCallable, Category="Texture")
   void InitTexture();
@@ -420,9 +409,6 @@ private:
 
   UPROPERTY()
   UMaterialParameterCollectionInstance* MPCInstance;
-  
-  UPROPERTY(VisibleAnywhere, Category="DeformationMesh")
-  FVector DebugLocation = FVector::ZeroVector;
 
   UPROPERTY(EditAnywhere)
   float SearchRadius = 100;
