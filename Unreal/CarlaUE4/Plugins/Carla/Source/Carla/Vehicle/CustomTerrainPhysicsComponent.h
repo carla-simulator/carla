@@ -322,6 +322,8 @@ public:
   float ParticleForceMulFactor = 1.0;
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   int SoilType = 0;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool bUseSoilType = false;
   UPROPERTY(EditAnywhere)
   bool NNVerbose = false;
 

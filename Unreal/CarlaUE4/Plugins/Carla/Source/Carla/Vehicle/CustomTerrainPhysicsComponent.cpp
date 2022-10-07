@@ -1402,7 +1402,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   ParticleForceMulFactor = 1.f;
   FloorHeight = 0.0;
   bDrawLoadedTiles = false;
-
+  bUseSoilType = false;
 #endif
 
   int IntValue;
@@ -1497,6 +1497,10 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   if (FParse::Param(FCommandLine::Get(), TEXT("-disable-nn-verbose")))
   {
     NNVerbose = false;
+  }
+  if (FParse::Param(FCommandLine::Get(), TEXT("-use-terrain-type")))
+  {
+    bUseSoilType = true;
   }
   if (FParse::Param(FCommandLine::Get(), TEXT("-use-impulse")))
   { 
@@ -2137,27 +2141,31 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
       static_cast<int>(ParticlesWheel0.size()), 
       ParticlePos0.GetData(), ParticleVel0.GetData(),
       WheelPos0.GetData(), WheelOrient0.GetData(),
-      WheelLinVel0.GetData(), WheelAngVel0.GetData(), SoilType};
+      WheelLinVel0.GetData(), WheelAngVel0.GetData()};
   carla::learning::WheelInput Wheel1 {
       static_cast<int>(ParticlesWheel1.size()), 
       ParticlePos1.GetData(), ParticleVel1.GetData(),
       WheelPos1.GetData(), WheelOrient1.GetData(),
-      WheelLinVel1.GetData(), WheelAngVel1.GetData(), SoilType};
+      WheelLinVel1.GetData(), WheelAngVel1.GetData()};
   carla::learning::WheelInput Wheel2 {
       static_cast<int>(ParticlesWheel2.size()), 
       ParticlePos2.GetData(), ParticleVel2.GetData(),
       WheelPos2.GetData(), WheelOrient2.GetData(),
-      WheelLinVel2.GetData(), WheelAngVel2.GetData(), SoilType};
+      WheelLinVel2.GetData(), WheelAngVel2.GetData()};
   carla::learning::WheelInput Wheel3 {
       static_cast<int>(ParticlesWheel3.size()), 
       ParticlePos3.GetData(), ParticleVel3.GetData(),
       WheelPos3.GetData(), WheelOrient3.GetData(),
-      WheelLinVel3.GetData(), WheelAngVel3.GetData(), SoilType};
+      WheelLinVel3.GetData(), WheelAngVel3.GetData()};
 
   const FVehicleControl& VehicleControl = Vehicle->GetVehicleControl();
   carla::learning::Inputs NNInput {Wheel0,Wheel1,Wheel2,Wheel3, 
       VehicleControl.Steer, VehicleControl.Throttle, VehicleControl.Brake, 
-      NNVerbose};
+      SoilType, NNVerbose};
+  if (!bUseSoilType)
+  {
+    NNInput.terrain_type = -1;
+  }
   if (VehicleControl.bReverse)
   {
     NNInput.throttle *= -1;
