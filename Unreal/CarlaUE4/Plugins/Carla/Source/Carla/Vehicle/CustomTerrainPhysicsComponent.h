@@ -279,8 +279,6 @@ public:
   void UpdateTexture();
 
   UFUNCTION(BlueprintCallable, Category="Texture")
-  void UpdateTextureData();
-  UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateLoadedTextureDataRegions();
   
   UPROPERTY(EditAnywhere, BlueprintReadWrite)

@@ -62,7 +62,7 @@
 constexpr float MToCM = 100.f;
 constexpr float CMToM = 0.01f;
  
-static std::vector<uint64_t> LoadedTiles;
+static std::vector<uint64_t> LoadedTilesDebug;
 const int CacheExtraRadius = 10;
 
 #ifdef _WIN32
@@ -1119,25 +1119,28 @@ void FSparseHighDetailMap::SaveMap()
 {
   UE_LOG(LogCarla, Warning, TEXT("Save directory %s"), *SavePath );
   TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::SaveMap);
-  for(auto& it: Map)
+  ParallelFor(Map.size(), [this](int32 Idx)
   {
-    std::string FileToSavePath = std::string(TCHAR_TO_UTF8(*( SavePath + it.second.TilePosition.ToString() + ".tile")));
+    std::pair<uint64_t, FDenseTile> it = *(std::next(this->Map.begin(), Idx) );
+    std::string FileToSavePath = std::string(TCHAR_TO_UTF8(*( this->SavePath + it.second.TilePosition.ToString() + ".tile")));
     std::ofstream OutputStream(FileToSavePath.c_str());
     WriteFVector(OutputStream, it.second.TilePosition.ToFVector());
     WriteStdVector<FParticle> (OutputStream, it.second.Particles);
     WriteStdVector<float> (OutputStream, it.second.ParticlesHeightMap);
     OutputStream.close();
-  }
-  for(auto& it: CacheMap)
+  });
+  
+  ParallelFor(CacheMap.size(), [this](int32 Idx)
   {
-    std::string FileToSavePath = std::string(TCHAR_TO_UTF8(*( SavePath + it.second.TilePosition.ToString() + ".tile")));
+    std::pair<uint64_t, FDenseTile> it = *(std::next(this->CacheMap.begin(), Idx) );
+    std::string FileToSavePath = std::string(TCHAR_TO_UTF8(*( this->SavePath + it.second.TilePosition.ToString() + ".tile")));
     std::ofstream OutputStream(FileToSavePath.c_str());
     WriteFVector(OutputStream, it.second.TilePosition.ToFVector());
     WriteStdVector<FParticle> (OutputStream, it.second.Particles);
     WriteStdVector<float> (OutputStream, it.second.ParticlesHeightMap);
-    
     OutputStream.close();
-  }
+  });
+
 }
 
 void UCustomTerrainPhysicsComponent::UpdateTexture()
@@ -1180,17 +1183,18 @@ void UCustomTerrainPhysicsComponent::InitTexture(){
 void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE("UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions");
+  if (TextureToUpdate->GetSizeX() == 0) return;
+  
   FDVector TextureCenterPosition = UEFrameToSI(LastUpdatedPosition);
   
   std::vector<uint64_t> LoadedTiles = 
       SparseMap.GetLoadedTilesInRange(TextureCenterPosition, UEFrameToSI(TileRadius.X) );
   FDVector TextureOrigin = TextureCenterPosition - FDVector(TextureRadius, TextureRadius, 0);
-  if (TextureToUpdate->GetSizeX() == 0) return;
-  float GlobalTexelSize = std::floor( ( (2.0f * TextureRadius) / TextureToUpdate->GetSizeX() ) * 10000.0f) / 10000.0f;
+  float GlobalTexelSize = (2.0f * TextureRadius) / TextureToUpdate->GetSizeX();
   int32_t PartialHeightMapSize = std::floor( SparseMap.GetTileSize() * TextureToUpdate->GetSizeX() / (2*TextureRadius) );
   
   float LocalTexelSize = SparseMap.GetTileSize() / PartialHeightMapSize;
-  LocalTexelSize = std::round( LocalTexelSize * 1000.0f ) / 1000.0f;
+  LocalTexelSize = std::floor( LocalTexelSize * 1000.0f ) / 1000.0f;
   
   for(uint8_t &Value : Data)
   {
@@ -1209,11 +1213,11 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
         float Height = *(CurrentTile.ParticlesZOrdered[LocalIndex].begin());
         FDVector LocalTexelPosition = 
             TilePosition + FDVector(Local_X*LocalTexelSize, Local_Y*LocalTexelSize, 0);
-        int32_t Coord_X = std::round( (LocalTexelPosition.X - TextureOrigin.X ) / GlobalTexelSize );
-        int32_t Coord_Y = std::round( (LocalTexelPosition.Y - TextureOrigin.Y ) / GlobalTexelSize );
+        int32_t Coord_X = std::floor( (LocalTexelPosition.X - TextureOrigin.X ) / GlobalTexelSize );
+        int32_t Coord_Y = std::floor( (LocalTexelPosition.Y - TextureOrigin.Y ) / GlobalTexelSize );
         
-        if (Coord_X >= 0 && Coord_X < TextureToUpdate->GetSizeX() &&
-            Coord_Y >= 0 && Coord_Y < TextureToUpdate->GetSizeY())
+        if ( Coord_X >= 0 && Coord_X < TextureToUpdate->GetSizeX() &&
+            Coord_Y >= 0 && Coord_Y < TextureToUpdate->GetSizeY() )
         {
           float OriginalHeight = SparseMap.GetHeight(LocalTexelPosition);
           float Displacement = Height - OriginalHeight;
@@ -1709,7 +1713,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     }
   }
 
-  if( VehiclesActors.Num() == 0 && true ){
+  if( VehiclesActors.Num() == 0 && false ){
     FVector GlobalLocation = LargeMapManager->LocalToGlobalLocation(DebugLocation);
     SparseMap.LockMutex();
     RunNNPhysicsSimulation(nullptr, DeltaTime);
@@ -2328,13 +2332,13 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     }
   }
 
-  if(LoadedTiles.size() != 0){
-    UE_LOG(LogCarla, Warning, TEXT("------------------ ESTO ES UN AVISO DE COSAS ------------------------") );
+  if(LoadedTilesDebug.size() == 0 ){
+    UE_LOG(LogCarla, Log, TEXT("---------------REMOVE ADD FUNCIONAN BIEEN--------------") );
   }else{
-    UE_LOG(LogCarla, Log, TEXT("------------------ PARECE QUE TODO VA BIE ------------------------") );
-
+    UE_LOG(LogCarla, Warning, TEXT("---------------REMOVE ADD FUNCIONAN MAAAL--------------") );
   }
-  LoadedTiles.clear();
+  LoadedTilesDebug.clear();
+
   #endif
 }
 
@@ -2429,7 +2433,7 @@ void UCustomTerrainPhysicsComponent::RemoveParticlesFromOrderedContainer(
 
     const FParticle* P = Particles[i];
     uint64_t TileId = SparseMap.GetTileId(P->Position);
-    LoadedTiles.push_back(TileId);
+    LoadedTilesDebug.push_back(TileId);
     FDenseTile& CurrentTile = SparseMap.GetTile(TileId);
     FDVector TilePosition = CurrentTile.TilePosition;
     FDVector ParticleLocalPosition = P->Position - TilePosition;
@@ -2441,23 +2445,32 @@ void UCustomTerrainPhysicsComponent::RemoveParticlesFromOrderedContainer(
     HeightMapCoords.Y = std::min( std::max( HeightMapCoords.Y, 0) , static_cast<int>(PartialHeightMapSize-1));
     // uint32_t Index = std::floor(ParticleLocalPosition.Y) * PartialHeightMapSize + std::floor(ParticleLocalPosition.X);
     uint32_t Index = HeightMapCoords.Y * PartialHeightMapSize + HeightMapCoords.X;
-    if( CurrentTile.ParticlesZOrdered[Index].size() > 1 )
+    
+    if(  Index < CurrentTile.ParticlesZOrdered.size()  )
     {
-      auto it = CurrentTile.ParticlesZOrdered[Index].find(P->Position.Z );
-      if( it != CurrentTile.ParticlesZOrdered[Index].end() )
+      if( CurrentTile.ParticlesZOrdered[Index].size() > 1 )
       {
-        CurrentTile.ParticlesZOrdered[Index].erase(it);
+        auto it = CurrentTile.ParticlesZOrdered[Index].find(P->Position.Z );
+        if( it != CurrentTile.ParticlesZOrdered[Index].end() )
+        {
+          CurrentTile.ParticlesZOrdered[Index].erase(it);
+        }
+        else
+        {
+          UE_LOG(LogCarla, Error, TEXT("Cannot find in %d, position %f"), Index, P->Position.Z  );
+        }
+        
       }
       else
       {
-        UE_LOG(LogCarla, Error, TEXT("Cannot find in %d, position %f"), Index, P->Position.Z  );
+        UE_LOG(LogCarla, Error, TEXT("Cannot Remove more from %d, currentsize %d Tile : %s"), Index,CurrentTile.ParticlesZOrdered[Index].size(), *(TilePosition.ToString()) );
       }
-      
     }
     else
     {
-      UE_LOG(LogCarla, Error, TEXT("Cannot Remove more from %d, currentsize %d Tile : %s"), Index,CurrentTile.ParticlesZOrdered[Index].size(), *(TilePosition.ToString()) );
+      UE_LOG(LogCarla, Error, TEXT("RemoveParticlesFromOrderedContainer Invalid Index %d ZOrderedSize %d Tile: %s"), Index,CurrentTile.ParticlesZOrdered.size(), *(TilePosition.ToString()) );
     }
+   
   }
 }
 
@@ -2475,7 +2488,7 @@ void UCustomTerrainPhysicsComponent::AddParticlesToOrderedContainer(
   {
     const FParticle* P = Particles[i];
     uint64_t TileId = SparseMap.GetTileId(P->Position);
-    LoadedTiles.erase( std::find(LoadedTiles.begin(), LoadedTiles.end(),TileId) );
+    LoadedTilesDebug.erase( std::find(LoadedTilesDebug.begin(), LoadedTilesDebug.end(),TileId) );
     FDenseTile& CurrentTile = SparseMap.GetTile(TileId);
     FDVector TilePosition = CurrentTile.TilePosition;
     FDVector ParticleLocalPosition = P->Position - TilePosition;
@@ -2485,7 +2498,13 @@ void UCustomTerrainPhysicsComponent::AddParticlesToOrderedContainer(
     //HeightMapCoords.X = std::min( std::max( HeightMapCoords.X, 0) , static_cast<int>(PartialHeightMapSize-1));
     //HeightMapCoords.Y = std::min( std::max( HeightMapCoords.Y, 0) , static_cast<int>(PartialHeightMapSize-1));
     uint32_t Index = HeightMapCoords.Y * PartialHeightMapSize + HeightMapCoords.X;
-    CurrentTile.ParticlesZOrdered[Index].insert(P->Position.Z);
+    if(  Index < CurrentTile.ParticlesZOrdered.size()  )
+    {
+      CurrentTile.ParticlesZOrdered[Index].insert(P->Position.Z);
+    }else{
+      UE_LOG(LogCarla, Error, TEXT("RemoveParticlesFromOrderedContainer Invalid Index %d ZOrderedSize %d Tile: %s"), Index,CurrentTile.ParticlesZOrdered.size(), *(TilePosition.ToString()) );
+    
+    }
   }
 }
 
