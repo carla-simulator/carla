@@ -382,9 +382,13 @@ void AVegetationManager::UpdateFoliageBlueprintCache(ULevel* InLevel)
 
 void AVegetationManager::FreeTileCache(ULevel* InLevel)
 {
+  if (!IsValid(InLevel))
+    return;
   FTileData TileData {};
   for (AActor* Actor : InLevel->Actors)
   {
+    if (!IsValid(Actor))
+      continue;
     AInstancedFoliageActor* InstancedFoliageActor = Cast<AInstancedFoliageActor>(Actor);
     if (!IsValid(InstancedFoliageActor))
       continue;
