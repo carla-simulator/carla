@@ -39,7 +39,7 @@ public:
   int SizeX = 0;
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HeightMapDataAsset)
   int SizeY = 0;
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HeightMapDataAsset)
+  UPROPERTY(BlueprintReadWrite, Category = HeightMapDataAsset)
   TArray<float> HeightValues;
 };
 
@@ -52,12 +52,6 @@ struct FParticle
 
 struct FHeightMapData
 {
-  void InitializeHeightmap(
-      UTexture2D* Texture, FDVector Size, FDVector Origin,
-      float MinHeight, float MaxHeight, FDVector Tile0, float ScaleZ);
-  void InitializeHeightmapFloat(
-      UTexture2D* Texture, FDVector Size, FDVector Origin,
-      float MinHeight, float MaxHeight, FDVector Tile0, float ScaleZ);
   void InitializeHeightmap(
       UHeightMapDataAsset* DataAsset, FDVector Size, FDVector Origin,
       FDVector Tile0, float ScaleZ);
@@ -93,7 +87,6 @@ struct FDenseTile
   void UpdateLocalHeightmap();
   std::vector<FParticle> Particles;
   std::vector<float> ParticlesHeightMap;
-  //std::vector<std::vector<float>> ParticlesZOrdered;
   std::vector<std::multiset<float,std::greater<float>>> ParticlesZOrdered;
   FDVector TilePosition;
   FString SavePath;
@@ -150,21 +143,12 @@ public:
     return Heightmap.GetHeight(Position);
   }
 
-  void InitializeMap(UTexture2D* HeightMapTexture,
-      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight,
-      float ScaleZ);
   void InitializeMap(UHeightMapDataAsset* DataAsset,
       FDVector Origin, FDVector MapSize, float Size, float ScaleZ);
 
-  void UpdateHeightMap(UTexture2D* HeightMapTexture,
-      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight,
-      float ScaleZ);
   void UpdateHeightMap(UHeightMapDataAsset* DataAsset,
       FDVector Origin, FDVector MapSize, float Size, float ScaleZ);
 
-  void LoadTilesAtPositionFromCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
-  void UnLoadTilesAtPositionToCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
-  void ReloadCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
   void UpdateMaps(FDVector Position, float RadiusX, float RadiusY, float CacheRadiusX, float CacheRadiusY);
 
   void Update(FVector Position, float RadiusX, float RadiusY);
@@ -256,9 +240,6 @@ public:
   void AddForces(const TArray<FForceAtLocation> &Forces);
 
   UFUNCTION(BlueprintCallable)
-  TArray<float> BuildLandscapeHeightMap(ALandscapeProxy* Landscape, int Resolution);
-
-  UFUNCTION(BlueprintCallable)
   static void BuildLandscapeHeightMapDataAasset(ALandscapeProxy* Landscape, 
       int Resolution, FVector MapSize, FString AssetPath, FString AssetName);
 
@@ -275,17 +256,7 @@ public:
   FVector GetTileCenter(FVector Position);
 
   UFUNCTION(BlueprintCallable, Category="Tiles")
-  void LoadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
-
-  UFUNCTION(BlueprintCallable, Category="Tiles")
   void UpdateMaps(FVector Position, float RadiusX, float RadiusY, float CacheRadiusX, float CacheRadiusY);
-
-  UFUNCTION(BlueprintCallable, Category="Tiles")
-  void UnloadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
-
-
-  UFUNCTION(BlueprintCallable, Category="Tiles")
-  void ReloadCache(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
 
   UFUNCTION(BlueprintCallable, Category="Texture")
   void InitTexture();
@@ -293,8 +264,6 @@ public:
   UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateTexture();
 
-  UFUNCTION(BlueprintCallable, Category="Texture")
-  void UpdateTextureData();
   UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateLoadedTextureDataRegions();
   
@@ -306,9 +275,6 @@ public:
   
   UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateLargeTextureData();
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  UTexture2D *HeightMap;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MaterialParameters")
   UTexture2D* TextureToUpdate;
@@ -338,6 +304,10 @@ public:
   float ForceMulFactor = 1.0;
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   float ParticleForceMulFactor = 1.0;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  int SoilType = 0;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool bUseSoilType = false;
   UPROPERTY(EditAnywhere)
   bool NNVerbose = false;
 
@@ -438,8 +408,6 @@ private:
 
   UPROPERTY()
   UMaterialParameterCollectionInstance* MPCInstance;
-  
-
 
   UPROPERTY(EditAnywhere)
   float SearchRadius = 100;

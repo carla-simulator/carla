@@ -78,6 +78,12 @@ struct FSkeletonJoint
   FVector ExternalForces = FVector(0,0,0);
 };
 
+struct FJointCollision
+{
+  bool CanRest = true;
+  int Iteration = 1;
+};
+
 struct FJointProperties
 {
   float Mass = 0.0;
@@ -202,6 +208,8 @@ private:
       std::vector<FJointProperties>& JointPropertiesList);
   void SolveEquationOfMotion(std::vector<FJointProperties>& JointPropertiesList, float DeltaTime);
 
+  std::vector<FJointCollision> JointCollisionList;
+
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   USkeletalMeshComponent* SkeletalMesh;
 
@@ -232,6 +240,9 @@ private:
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   float VerticalFallof = 0.1f;
 
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float RestFactor = 0.5f;
+  
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   float DeltaTimeOverride = -1.f;
   
