@@ -652,6 +652,41 @@ FMiscWidgetState UMapGeneratorWidget::LoadMiscStateStructFromFile(const FString 
   return MiscState;
 }
 
+bool UMapGeneratorWidget::GenerateTerrainPresetFileFromStruct(FMapGeneratorPreset Preset, const FString JsonPath)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating Terrain Preset State JSON"), 
+      *CUR_CLASS_FUNC_LINE);
+
+  TSharedRef<FJsonObject> OutJsonObject = MakeShareable(new FJsonObject());
+  FJsonObjectConverter::UStructToJsonObject(FMapGeneratorPreset::StaticStruct(), &Preset, OutJsonObject, 0, 0);
+
+  FString OutputJsonString;
+  TSharedRef<TJsonWriter<>> JsonWriter = TJsonWriterFactory<>::Create(&OutputJsonString);
+  FJsonSerializer::Serialize(OutJsonObject, JsonWriter);
+
+  FFileHelper::SaveStringToFile(OutputJsonString, *JsonPath);
+    
+  return true;
+}
+
+FMapGeneratorPreset UMapGeneratorWidget::LoadTerrainPresetStructFromFile(const FString JsonPath)
+{
+  FMapGeneratorPreset Preset;
+  FString File;
+  FFileHelper::LoadFileToString(File, *JsonPath);
+
+  TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(*File);
+  TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+  bool bDeserializeSuccess = FJsonSerializer::Deserialize(JsonReader, JsonObject, FJsonSerializer::EFlags::None);
+
+  if(bDeserializeSuccess && JsonObject.IsValid())
+  {
+    FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), FMapGeneratorPreset::StaticStruct(), &Preset, 1, 0);
+  }
+
+  return Preset;
+}
+
 bool UMapGeneratorWidget::LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath, bool bRecursive)
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Loading Worlds from %s"), 

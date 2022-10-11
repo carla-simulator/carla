@@ -47,9 +47,6 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
   UPROPERTY(BlueprintReadWrite)
   UTextureRenderTarget2D* GlobalHeightmap;
 
-  // UPROPERTY(BlueprintReadWrite)
-  // UTextureRenderTarget2D* PROVISIONALROIHEIGHTMAP;
-
   UPROPERTY(BlueprintReadWrite)
   TMap<FRoiTile, FTerrainROI> TerrainRoisMap;
 
@@ -175,6 +172,18 @@ struct CARLATOOLS_API FMapGeneratorWidgetState
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
   float TerrainDetailedInvert;
+};
+
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FMapGeneratorPreset
+{
+  GENERATED_USTRUCT_BODY()
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|TerrainPresets")
+  FString PresetName;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|TerrainPresets")
+  FMapGeneratorWidgetState WidgetState;
 };
 
 USTRUCT(BlueprintType)
@@ -309,6 +318,12 @@ public:
 
   UFUNCTION(Category="MapGenerator|JsonLibrary|Misc", BlueprintCallable)
   FMiscWidgetState LoadMiscStateStructFromFile(const FString JsonPath);
+
+  UFUNCTION(Category="MapGenerator|TerrainPresets", BlueprintCallable)
+  bool GenerateTerrainPresetFileFromStruct(FMapGeneratorPreset Preset, const FString JsonPath);
+
+  UFUNCTION(Category="MapGenerator|TerrainPresets", BlueprintCallable)
+  FMapGeneratorPreset LoadTerrainPresetStructFromFile(const FString JsonPath);
 
 private:  
   UPROPERTY()
