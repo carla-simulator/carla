@@ -1964,10 +1964,24 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   {
     {
       TRACE_CPUPROFILER_EVENT_SCOPE(RemoveParticlesFromOrderedContainer);
-      RemoveParticlesFromOrderedContainer( ParticlesWheel0 );
-      RemoveParticlesFromOrderedContainer( ParticlesWheel1 );
-      RemoveParticlesFromOrderedContainer( ParticlesWheel2 );
-      RemoveParticlesFromOrderedContainer( ParticlesWheel3 );
+      auto RemoveParticles = 
+      [&] (std::vector<FParticle*>& ParticlesWheel)
+      {
+        RemoveParticlesFromOrderedContainer( ParticlesWheel );
+      };
+
+      auto FutureRemoval0 = Async(EAsyncExecution::ThreadPool, 
+        [&]() { RemoveParticles(ParticlesWheel0);});
+      auto FutureRemoval1 = Async(EAsyncExecution::ThreadPool, 
+        [&]() { RemoveParticles(ParticlesWheel1);});
+      auto FutureRemoval2 = Async(EAsyncExecution::ThreadPool, 
+        [&]() { RemoveParticles(ParticlesWheel2);});
+      auto FutureRemoval3 = Async(EAsyncExecution::ThreadPool, 
+        [&]() { RemoveParticles(ParticlesWheel3);});
+      FutureRemoval0.Get();
+      FutureRemoval1.Get();
+      FutureRemoval2.Get();
+      FutureRemoval3.Get();
     }
     {
       TRACE_CPUPROFILER_EVENT_SCOPE(UpdateParticles);
