@@ -419,7 +419,7 @@ std::vector<FParticle*> FSparseHighDetailMap::
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::GetParticlesInBox);
   std::vector<uint64_t> TilesToCheck = GetIntersectingTiles(OBox);
-
+  
   std::vector<FParticle*> ParticlesInRadius;
   for(uint64_t TileId : TilesToCheck)
   {
@@ -446,92 +446,48 @@ std::vector<uint64_t> FSparseHighDetailMap::GetIntersectingTiles(
   uint32_t CenterTile_X = (uint32_t)(CenterTileId >> 32);
   uint32_t CenterTile_Y = (uint32_t)(CenterTileId & (uint32_t)(~0));
   uint32_t TileRange = 1;
-  IntersectingTiles.emplace_back(CenterTileId);
+
   FVector2D BoxVert0 = FVector2D(BoxCenter - AxisX*ExtentX - AxisY*ExtentY);
   FVector2D BoxVert1 = FVector2D(BoxCenter + AxisX*ExtentX - AxisY*ExtentY);
   FVector2D BoxVert2 = FVector2D(BoxCenter + AxisX*ExtentX + AxisY*ExtentY);
   FVector2D BoxVert3 = FVector2D(BoxCenter - AxisX*ExtentX + AxisY*ExtentY);
+  
+  std::vector<uint64_t> VerticesInTiles;
+  VerticesInTiles.emplace_back( GetTileId( FDVector( BoxVert0.X, BoxVert0.Y, 0 ) ) );
+  VerticesInTiles.emplace_back( GetTileId( FDVector( BoxVert1.X, BoxVert1.Y, 0 ) ) );
+  VerticesInTiles.emplace_back( GetTileId( FDVector( BoxVert2.X, BoxVert2.Y, 0 ) ) );
+  VerticesInTiles.emplace_back( GetTileId( FDVector( BoxVert3.X, BoxVert3.Y, 0 ) ) );
+  
+  uint32_t MinX = -1,MinY = -1,MaxX = 0,MaxY = 0; 
+  for( auto TileId : VerticesInTiles )
+  {
+    uint32_t Tile_X = (uint32_t)(TileId >> 32);
+    uint32_t Tile_Y = (uint32_t)(TileId & (uint32_t)(~0));
 
-  // Use separate axis theorem to detect intersecting tiles with OBox
-  struct F2DRectangle
-  {
-    FVector2D V1, V2, V3, V4;
-    std::vector<FVector2D> ComputeNormals() const
-    {
-      FVector2D V12 = (V2 - V1).GetSafeNormal();
-      FVector2D V23 = (V3 - V2).GetSafeNormal();
-      return {FVector2D(-V12.Y, V12.X), FVector2D(-V23.Y, V23.X)};
+    
+    if( Tile_X < MinX){
+      MinX = Tile_X;
     }
-  };
-  auto SATtest = [&](const FVector2D& Axis, const F2DRectangle &Shape,
-      float &MinAlong, float &MaxAlong)
-  {
-    for (const FVector2D& Vert : {Shape.V1, Shape.V2, Shape.V3, Shape.V4})
-    {
-      float DotVal = FVector2D::DotProduct(Vert, Axis);
-      if( DotVal < MinAlong ) 
-        MinAlong = DotVal;
-      if( DotVal > MaxAlong ) 
-        MaxAlong = DotVal;
+
+    if( Tile_X > MaxX){
+      MaxX = Tile_X;
     }
-  };
-  auto IsBetweenOrdered = [&]( float Val, float LowerBound, float UpperBound ) -> bool
-  {
-    return LowerBound <= Val && Val <= UpperBound ;
-  };
-  auto Overlaps = [&]( float Min1, float Max1, float Min2, float Max2 ) -> bool
-  {
-    return IsBetweenOrdered( Min2, Min1, Max1 ) || IsBetweenOrdered( Min1, Min2, Max2 ) ;
-  };
-  auto RectangleIntersect = [&](
-    const F2DRectangle& Rectangle1, 
-    const F2DRectangle& Rectangle2) -> bool
-  {
-    for (const FVector2D& Normal : Rectangle1.ComputeNormals())
-    {
-      constexpr float LargeNumber = 10000000;
-      float Shape1Min = LargeNumber, Shape1Max = -LargeNumber;
-      float Shape2Min = LargeNumber, Shape2Max = -LargeNumber;
-      SATtest(Normal, Rectangle1, Shape1Min, Shape1Max);
-      SATtest(Normal, Rectangle2, Shape2Min, Shape2Max);
-      if (!Overlaps(Shape1Min, Shape1Max, Shape2Min, Shape2Max))
-      {
-        return false;
-      }
+
+    if( Tile_Y < MinY){
+      MinY = Tile_Y;
     }
-    for (const FVector2D& Normal : Rectangle2.ComputeNormals())
-    {
-      constexpr float LargeNumber = 10000000;
-      float Shape1Min = LargeNumber, Shape1Max = -LargeNumber;
-      float Shape2Min = LargeNumber, Shape2Max = -LargeNumber;
-      SATtest(Normal, Rectangle1, Shape1Min, Shape1Max);
-      SATtest(Normal, Rectangle2, Shape2Min, Shape2Max);
-      if (!Overlaps(Shape1Min, Shape1Max, Shape2Min, Shape2Max))
-      {
-        return false;
-      }
+
+    if( Tile_Y > MaxY){
+      MaxY = Tile_Y;
     }
-    return true;
-  };
-  // check surrounding tiles except CenterTile (as it is always included)
-  std::vector<std::pair<uint32_t, uint32_t>> TilesToCheck = {
-      {CenterTile_X-1, CenterTile_Y-1}, {CenterTile_X, CenterTile_Y-1},
-      {CenterTile_X+1, CenterTile_Y-1}, {CenterTile_X-1, CenterTile_Y},
-      {CenterTile_X+1, CenterTile_Y}, {CenterTile_X-1, CenterTile_Y+1},
-      {CenterTile_X, CenterTile_Y+1}, {CenterTile_X+1, CenterTile_Y+1}};
-  for (auto& TileIdPair : TilesToCheck)
+  }
+
+  for( uint32_t X = MinX; X < MaxX; ++X )
   {
-    uint32_t &Tile_X = TileIdPair.first;
-    uint32_t &Tile_Y = TileIdPair.second;
-    FVector2D V1 = FVector2D(GetTilePosition(Tile_X, Tile_Y).ToFVector());
-    FVector2D V2 = FVector2D(GetTilePosition(Tile_X+1, Tile_Y).ToFVector());
-    FVector2D V3 = FVector2D(GetTilePosition(Tile_X+1, Tile_Y+1).ToFVector());
-    FVector2D V4 = FVector2D(GetTilePosition(Tile_X, Tile_Y+1).ToFVector());
-    if (RectangleIntersect(
-        F2DRectangle{BoxVert0,BoxVert1,BoxVert2,BoxVert3},
-        F2DRectangle{V1,V2,V3,V4}))
+    for( uint32_t Y = MinY; Y < MaxY; ++Y )
     {
-      IntersectingTiles.emplace_back(GetTileId(Tile_X, Tile_Y));
+      uint64_t CurrentTileId = GetTileId(X,Y);
+      IntersectingTiles.emplace_back(CurrentTileId);
     }
   }
 
@@ -565,9 +521,6 @@ std::vector<uint64_t> FSparseHighDetailMap::GetLoadedTilesInRange(FDVector Posit
     MaxX = Tile_X + RadiusInTiles;
     MaxY = Tile_Y + RadiusInTiles;
   }
-
-  //UE_LOG(LogCarla, Error, TEXT("FSparseHighDetailMap::GetLoadedTilesInRange Position X: %f, Y %f"), Position.X, Position.Y);
-  //UE_LOG(LogCarla, Error, TEXT("FSparseHighDetailMap::GetLoadedTilesInRange Loading Tiles Between X: %d %d Y: %d %d "), MinX, MaxX, MinY, MaxY );
 
   std::vector<uint64_t> LoadedTiles;
   {
@@ -883,6 +836,7 @@ void FSparseHighDetailMap::UpdateMaps(
   {
     FScopeLock ScopeCacheLock(&Lock_CacheMap);
     TRACE_CPUPROFILER_EVENT_SCOPE(UpdateCache);
+    std::vector<uint64_t> TilesToInitialize;
     for(int32_t Tile_X = CacheMinVector.X; Tile_X < CacheMaxVector.X; ++Tile_X )
     {
       for(int32_t Tile_Y = CacheMinVector.Y; Tile_Y < CacheMaxVector.Y; ++Tile_Y )
@@ -894,10 +848,16 @@ void FSparseHighDetailMap::UpdateMaps(
         uint64_t CurrentTileID = GetTileId(Tile_X, Tile_Y);
         if (CacheMap.find(CurrentTileID) == CacheMap.end())
         {
-          InitializeRegionInCache(CurrentTileID);
+          CacheMap.emplace(CurrentTileID, FDenseTile());
+          TilesToInitialize.emplace_back(CurrentTileID);
         }
       }
     }
+    ParallelFor(TilesToInitialize.size(), [&](int32 Idx)
+    {
+      uint64_t TileId = TilesToInitialize[Idx];
+      InitializeRegionInCache(TileId);
+    });
     // unload extra tiles
     std::vector<uint64_t> TilesToErase;
     {
@@ -1055,7 +1015,7 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
   FDVector TextureCenterPosition = UEFrameToSI(GetTileCenter(LastUpdatedPosition));
   
   std::vector<uint64_t> LoadedTiles = 
-      SparseMap.GetLoadedTilesInRange(TextureCenterPosition, UEFrameToSI(TileRadius.X) );
+      SparseMap.GetLoadedTilesInRange(TextureCenterPosition, TextureRadius );
   FDVector TextureOrigin = TextureCenterPosition - FDVector(TextureRadius, TextureRadius, 0);
   float GlobalTexelSize = (2.0f * TextureRadius) / TextureToUpdate->GetSizeX();
   int32_t PartialHeightMapSize = std::floor( SparseMap.GetTileSize() * TextureToUpdate->GetSizeX() / (2*TextureRadius) );
@@ -1063,10 +1023,7 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
   float LocalTexelSize = SparseMap.GetTileSize() / PartialHeightMapSize;
   LocalTexelSize = std::floor( LocalTexelSize * 1000.0f ) / 1000.0f;
   
-  for(uint8_t &Value : Data)
-  {
-    Value = 128;
-  }
+  Data.Init( 128, Data.Num() );
 
   for (uint64_t TileId : LoadedTiles)
   {
@@ -1083,17 +1040,14 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
         int32_t Coord_X = std::floor( (LocalTexelPosition.X - TextureOrigin.X ) / GlobalTexelSize );
         int32_t Coord_Y = std::floor( (LocalTexelPosition.Y - TextureOrigin.Y ) / GlobalTexelSize );
         
-        if ( Coord_X >= 0 && Coord_X < TextureToUpdate->GetSizeX() &&
-            Coord_Y >= 0 && Coord_Y < TextureToUpdate->GetSizeY() )
-        {
-          float OriginalHeight = SparseMap.GetHeight(LocalTexelPosition);
-          float Displacement = Height - OriginalHeight;
-          float DisplacementRange = MaxDisplacement - MinDisplacement;
-          float Fraction = (Displacement - MinDisplacement) / DisplacementRange; 
-          Fraction = FMath::Clamp(Fraction, 0.f, 1.f);
-          Fraction = std::floor(Fraction * 255.0f);
-          Data[Coord_X * TextureToUpdate->GetSizeY() + Coord_Y] = static_cast<uint8_t>(Fraction );
-        }
+        float OriginalHeight = SparseMap.GetHeight(LocalTexelPosition);
+        float Displacement = Height - OriginalHeight;
+        float DisplacementRange = MaxDisplacement - MinDisplacement;
+        float Fraction = (Displacement - MinDisplacement) / DisplacementRange; 
+        Fraction = FMath::Clamp(Fraction, 0.f, 1.f);
+        Fraction = std::floor(Fraction * 255.0f);
+        Data[Coord_X * TextureToUpdate->GetSizeY() + Coord_Y] = static_cast<uint8_t>(Fraction );
+        
       }
     }
   }
@@ -1985,10 +1939,25 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     }
     {
       TRACE_CPUPROFILER_EVENT_SCOPE(UpdateParticles);
-      UpdateParticles(ParticlesWheel0, Output.wheel0._particle_forces, DeltaTime);
-      UpdateParticles(ParticlesWheel1, Output.wheel1._particle_forces, DeltaTime);
-      UpdateParticles(ParticlesWheel2, Output.wheel2._particle_forces, DeltaTime);
-      UpdateParticles(ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime);
+
+      auto UpdateFutureParticles = 
+      [&] (std::vector<FParticle*>& Particles, std::vector<float>& Forces, float DeltaTime)
+      {
+        UpdateParticles( Particles, Forces, DeltaTime );
+      };
+
+      auto FutureUpdate0 = Async(EAsyncExecution::ThreadPool, 
+        [&]() { UpdateFutureParticles(ParticlesWheel0, Output.wheel0._particle_forces, DeltaTime);});
+      auto FutureUpdate1 = Async(EAsyncExecution::ThreadPool, 
+        [&]() { UpdateFutureParticles(ParticlesWheel1, Output.wheel1._particle_forces, DeltaTime);});
+      auto FutureUpdate2 = Async(EAsyncExecution::ThreadPool, 
+        [&]() { UpdateFutureParticles(ParticlesWheel2, Output.wheel2._particle_forces, DeltaTime);});
+      auto FutureUpdate3 = Async(EAsyncExecution::ThreadPool, 
+        [&]() { UpdateFutureParticles(ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime);});
+      FutureUpdate0.Get();
+      FutureUpdate1.Get();
+      FutureUpdate2.Get();
+      FutureUpdate3.Get();
     }
     if (DrawDebugInfo)
     {
