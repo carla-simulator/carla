@@ -196,7 +196,7 @@ namespace learning {
     auto drv_inputs = torch::tensor(
         {_input.steering, _input.throttle, _input.braking}, torch::kFloat32); //steer, throtle, brake
     TorchInputs.push_back(drv_inputs);
-    if (_input.terrain_type > 0) {
+    if (_input.terrain_type >= 0) {
       TorchInputs.push_back(_input.terrain_type);
     }
     TorchInputs.push_back(_input.verbose);
@@ -231,7 +231,7 @@ namespace learning {
       auto drv_inputs = torch::tensor(
           {_input.steering, _input.throttle, _input.braking}, torch::kFloat32); //steer, throtle, brake
       TorchInputs.push_back(drv_inputs);
-      if (_input.terrain_type > 0) {
+      if (_input.terrain_type >= 0) {
         TorchInputs.push_back(_input.terrain_type);
       }
       TorchInputs.push_back(_input.verbose);
@@ -270,7 +270,7 @@ namespace learning {
     auto drv_inputs = torch::tensor(
         {_input.steering, _input.throttle, _input.braking}, torch::kFloat32); //steer, throtle, brake
     TorchInputs.push_back(drv_inputs.cuda());
-    if (_input.terrain_type > 0) {
+    if (_input.terrain_type >= 0) {
       TorchInputs.push_back(_input.terrain_type);
     }
     TorchInputs.push_back(_input.verbose);
