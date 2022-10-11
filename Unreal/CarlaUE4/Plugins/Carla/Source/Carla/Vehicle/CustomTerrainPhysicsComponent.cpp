@@ -1203,6 +1203,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   FloorHeight = 0.0;
   bDrawLoadedTiles = false;
   bUseSoilType = false;
+  EffectMultiplayer = 200.0f;
 #endif
 
   int IntValue;
@@ -1242,6 +1243,10 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   if (FParse::Value(FCommandLine::Get(), TEXT("-force-mul-factor="), Value))
   {
     ForceMulFactor = Value;
+  }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-defor-mul="), Value))
+  {
+    EffectMultiplayer = Value;
   }
   if (FParse::Value(FCommandLine::Get(), TEXT("-particle-force-mul-factor="), Value))
   {
@@ -1879,13 +1884,11 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel2), BboxWheel2.Center.Z);
     DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel3), BboxWheel3.Center.Z);
   }
+
   //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 0 %s"), ParticlesWheel0.size(), *WheelPosition0.ToString());
   //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 1 %s"), ParticlesWheel1.size(), *WheelPosition1.ToString());
   //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 2 %s"), ParticlesWheel2.size(), *WheelPosition2.ToString());
   //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 3 %s"), ParticlesWheel3.size(), *WheelPosition3.ToString());
-  if(ParticlesWheel0.size())
-    UE_LOG(LogCarla, Log, 
-        TEXT("Wheel0 pos %s particle pos %s"), *(UEFrameToSI(WheelPosition0)).ToString(), *(ParticlesWheel0[0]->Position.ToString()));
   
   TArray<float> ParticlePos0, ParticleVel0, ParticlePos1, ParticleVel1,
                 ParticlePos2, ParticleVel2, ParticlePos3, ParticleVel3;
@@ -2108,6 +2111,8 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     ParticlesWheel1 = FutureParticles1.Get();
     ParticlesWheel3 = FutureParticles3.Get();
   }
+
+
 
   if(DrawDebugInfo)
   {
