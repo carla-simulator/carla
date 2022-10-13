@@ -400,7 +400,9 @@ void USpringBasedVegetationComponent::GenerateCollisionCapsules()
       UCapsuleComponent* Capsule = NewObject<UCapsuleComponent>(GetOwner());
       Capsule->AttachToComponent(SkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform, FName(*Joint.JointName));
       Capsule->RegisterComponent();
-      FTransform CapsuleTransform(FRotator(90, 0, 0), Bone.CenterOfMass, FVector(1,1,1));
+      // create rotation from z direction to align the capsule
+      FRotator BoneRotation = UKismetMathLibrary::MakeRotFromZ(Bone.CenterOfMass.GetSafeNormal());
+      FTransform CapsuleTransform(BoneRotation, Bone.CenterOfMass, FVector(1,1,1));
       Capsule->SetRelativeTransform(CapsuleTransform);
       Capsule->SetCapsuleHalfHeight(Bone.Length*0.5f);
       Capsule->SetCapsuleRadius(6);
