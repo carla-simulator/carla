@@ -62,14 +62,14 @@ private:
 
   friend class LightManager;
 
-  Light(SharedPtr<LightManager> light_manager,
+  Light(WeakPtr<LightManager> light_manager,
     geom::Location location,
     LightId id)
   : _light_manager(light_manager),
     _location (location),
     _id (id) {}
 
-  SharedPtr<LightManager> _light_manager;
+  WeakPtr<LightManager> _light_manager;
   geom::Location _location;
 
   LightId _id;
