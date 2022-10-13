@@ -254,21 +254,12 @@ void AVegetationManager::CreateOrUpdateTileCache(ULevel* InLevel)
     TileData.ProceduralFoliageVolume = ProceduralFoliageVolume;
     break;
   }
+  if (!IsValid(TileData.InstancedFoliageActor))
+    return;
+  if (!IsValid(TileData.ProceduralFoliageVolume))
+    return;
   const FString TileName = TileData.InstancedFoliageActor->GetLevel()->GetOuter()->GetName();
-  FTileData* ExistingTileData = TileCache.Find(TileName);
-  if (ExistingTileData)
-  {
-    ExistingTileData->InstancedFoliageActor = TileData.InstancedFoliageActor;
-    ExistingTileData->ProceduralFoliageVolume = TileData.ProceduralFoliageVolume;
-    for (FTileMeshComponent& Element : ExistingTileData->TileMeshesCache)
-    {
-      Element.InstancedStaticMeshComponent = nullptr;
-      Element.IndicesInUse.Empty();
-    }
-    ExistingTileData->TileMeshesCache.Empty();
-    SetTileDataInternals(*ExistingTileData);
-  }
-  else
+  if (!TileCache.Contains(TileName))
   {
     SetTileDataInternals(TileData);
     TileCache.Emplace(TileName, TileData);
@@ -368,7 +359,7 @@ void AVegetationManager::UpdateFoliageBlueprintCache(ULevel* InLevel)
       
       if (!NewFoliageBlueprint.IsValid())
       {
-        UE_LOG(LogCarla, Error, TEXT("Blueprint %s was invalid."), *NewFoliageBlueprint.BPFullClassName);
+        UE_LOG(LogCarla, Warning, TEXT("Blueprint %s was invalid."), *NewFoliageBlueprint.BPFullClassName);
       }
       else
       {
@@ -398,6 +389,9 @@ void AVegetationManager::FreeTileCache(ULevel* InLevel)
   if (TileData.InstancedFoliageActor == nullptr)
     return;
   const FString TileName = TileData.InstancedFoliageActor->GetLevel()->GetOuter()->GetName();
+  TArray<FString> TilesUsed = GetTilesInUse();
+  if (TilesUsed.Find(TileName) != INDEX_NONE)
+    return;
   FTileData* ExistingTileData = TileCache.Find(TileName);
   if (ExistingTileData)
   {
@@ -657,6 +651,11 @@ TArray<FString> AVegetationManager::GetTilesInUse()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::GetTilesInUse);
   TArray<FString> Results;
+  ACarlaWheeledVehicle* Vehicle = nullptr;
+  if (VehiclesInLevel.Num() > 0)
+    Vehicle = VehiclesInLevel.Last();  
+  if (!IsValid(Vehicle))
+      return Results;
   
   for (const TPair<FString, FTileData>& Element : TileCache)
   {
@@ -676,16 +675,10 @@ TArray<FString> AVegetationManager::GetTilesInUse()
     const FBox Box = Procedural->ProceduralComponent->GetBounds();
     if (!Box.IsValid)
       continue;
-    
-    for (ACarlaWheeledVehicle* Vehicle : VehiclesInLevel)
+    if (Box.IsInside(Vehicle->GetActorLocation()))
     {
-      if (!IsValid(Vehicle))
-        continue;   
-      if (Box.IsInside(Vehicle->GetActorLocation()))
-      {
-        Results.Emplace(Element.Key);
-        break;
-      }
+      Results.Emplace(Element.Key);
+      break;
     }
   }
   return Results;
