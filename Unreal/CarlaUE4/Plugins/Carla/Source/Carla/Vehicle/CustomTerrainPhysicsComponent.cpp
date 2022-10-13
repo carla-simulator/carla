@@ -1049,7 +1049,7 @@ void UCustomTerrainPhysicsComponent::InitTexture(){
 void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE("UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions");
-  const uint32_t TextureSizeX = TextureToUpdate->GetSizeX();
+  const int32_t TextureSizeX = TextureToUpdate->GetSizeX();
   if ( TextureSizeX == 0) return;
   
   
