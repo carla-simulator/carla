@@ -49,12 +49,37 @@
 #define OTHER_LOG(...)
 #endif
 
+
+FRotator GetDeltaRotator(const FRotator & Rotator1, const FRotator & Rotator2)
+{
+  float HalfCircle = 180.f;
+  float FullCircle = 360.f;
+  auto GetDeltaAngle = [&](float Angle1, float Angle2) -> float
+  {
+    if (Angle1 < 0)
+    {
+      Angle1 = FullCircle + Angle1;
+    }
+    if (Angle2 < 0)
+    {
+      Angle2 = FullCircle + Angle2;
+    }
+    float Diff = fmod( Angle1 - Angle2 + HalfCircle , FullCircle) - HalfCircle;
+    return Diff < -HalfCircle ? Diff + FullCircle : Diff;
+  };
+  
+  return FRotator(
+    GetDeltaAngle(Rotator1.Pitch, Rotator2.Pitch),
+    GetDeltaAngle(Rotator1.Yaw, Rotator2.Yaw),
+    GetDeltaAngle(Rotator1.Roll, Rotator2.Roll)
+  );
+}
+
 template <class T>
 static T GetSign(T n)
 {
   return n < 0.0f ? -1.0f : 1.0f;
 }
- 
 template <class T>
 static FString EigenToFString(T& t)
 {
@@ -375,7 +400,9 @@ void USpringBasedVegetationComponent::GenerateCollisionCapsules()
       UCapsuleComponent* Capsule = NewObject<UCapsuleComponent>(GetOwner());
       Capsule->AttachToComponent(SkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform, FName(*Joint.JointName));
       Capsule->RegisterComponent();
-      FTransform CapsuleTransform(FRotator(90, 0, 0), Bone.CenterOfMass, FVector(1,1,1));
+      // create rotation from z direction to align the capsule
+      FRotator BoneRotation = UKismetMathLibrary::MakeRotFromZ(Bone.CenterOfMass.GetSafeNormal());
+      FTransform CapsuleTransform(BoneRotation, Bone.CenterOfMass, FVector(1,1,1));
       Capsule->SetRelativeTransform(CapsuleTransform);
       Capsule->SetCapsuleHalfHeight(Bone.Length*0.5f);
       Capsule->SetCapsuleRadius(6);
@@ -681,10 +708,8 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       // Contact forces due to spring strength
       const FRotator CurrRotator = Joint.Transform.Rotator();
       const FRotator RestRotator = Joint.RestingAngles;
-      const FRotator DeltaRotator (
-          CurrRotator.Pitch - RestRotator.Pitch, 
-          CurrRotator.Yaw - RestRotator.Yaw, 
-          CurrRotator.Roll - RestRotator.Roll);
+      const FRotator DeltaRotator = 
+          GetDeltaRotator(CurrRotator, RestRotator);
       const Eigen::Vector3d SpringTorque = Joint.SpringStrength * RotatorToEigenVector(DeltaRotator);
       const Eigen::Vector3d JointCapsuleVector = JointGlobalPosition - CapsulePosition;
       const Eigen::Vector3d RepulsionForce = SpringTorque.cross(JointCapsuleVector) * JointCapsuleVector.squaredNorm();
@@ -828,10 +853,8 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     FRotator CurrRotator = Joint.Transform.Rotator();
     FRotator RestRotator = Joint.RestingAngles;
     FRotator AngularVelocity = Joint.AngularVelocity;
-    FRotator DeltaRotator (
-        CurrRotator.Pitch - RestRotator.Pitch, 
-        CurrRotator.Yaw - RestRotator.Yaw, 
-        CurrRotator.Roll - RestRotator.Roll);
+    FRotator DeltaRotator = 
+        GetDeltaRotator(CurrRotator, RestRotator);
     if (!JointCollision.CanRest)
     {
       float Factor = 1.0f - ((JointCollision.Iteration / 100.0f) * RestFactor);

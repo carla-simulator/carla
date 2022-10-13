@@ -24,7 +24,6 @@ namespace learning {
     float* wheel_oritentation;
     float* wheel_linear_velocity;
     float* wheel_angular_velocity;
-    int terrain_type = 0;
   };
 
   struct Inputs {
@@ -36,6 +35,7 @@ namespace learning {
     float steering = 0;
     float throttle = 0;
     float braking = 0;
+    int terrain_type = 0;
     bool verbose = false;
   };
  

@@ -87,7 +87,6 @@ struct FDenseTile
   void UpdateLocalHeightmap();
   std::vector<FParticle> Particles;
   std::vector<float> ParticlesHeightMap;
-  //std::vector<std::vector<float>> ParticlesZOrdered;
   std::vector<std::multiset<float,std::greater<float>>> ParticlesZOrdered;
   FDVector TilePosition;
   FString SavePath;
@@ -150,9 +149,6 @@ public:
   void UpdateHeightMap(UHeightMapDataAsset* DataAsset,
       FDVector Origin, FDVector MapSize, float Size, float ScaleZ);
 
-  void LoadTilesAtPositionFromCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
-  void UnLoadTilesAtPositionToCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
-  void ReloadCache(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
   void UpdateMaps(FDVector Position, float RadiusX, float RadiusY, float CacheRadiusX, float CacheRadiusY);
 
   void Update(FVector Position, float RadiusX, float RadiusY);
@@ -260,17 +256,7 @@ public:
   FVector GetTileCenter(FVector Position);
 
   UFUNCTION(BlueprintCallable, Category="Tiles")
-  void LoadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
-
-  UFUNCTION(BlueprintCallable, Category="Tiles")
   void UpdateMaps(FVector Position, float RadiusX, float RadiusY, float CacheRadiusX, float CacheRadiusY);
-
-  UFUNCTION(BlueprintCallable, Category="Tiles")
-  void UnloadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
-
-
-  UFUNCTION(BlueprintCallable, Category="Tiles")
-  void ReloadCache(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
 
   UFUNCTION(BlueprintCallable, Category="Texture")
   void InitTexture();
@@ -278,8 +264,6 @@ public:
   UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateTexture();
 
-  UFUNCTION(BlueprintCallable, Category="Texture")
-  void UpdateTextureData();
   UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateLoadedTextureDataRegions();
   
@@ -322,6 +306,8 @@ public:
   float ParticleForceMulFactor = 1.0;
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   int SoilType = 0;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool bUseSoilType = false;
   UPROPERTY(EditAnywhere)
   bool NNVerbose = false;
 
@@ -422,8 +408,6 @@ private:
 
   UPROPERTY()
   UMaterialParameterCollectionInstance* MPCInstance;
-  
-
 
   UPROPERTY(EditAnywhere)
   float SearchRadius = 100;
