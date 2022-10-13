@@ -391,8 +391,6 @@ class BasicAgent(object):
                 if route_polygon.intersects(target_polygon):
                     return (True, target_vehicle, compute_distance(target_vehicle.get_location(), ego_location))
 
-                return (False, None, -1)
-
             # Simplified approach, using only the plan waypoints (similar to TM)
             else:
 
