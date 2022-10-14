@@ -1,6 +1,5 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
-
 #include "MapGen/SoilTypeManager.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -10,7 +9,6 @@ ASoilTypeManager::ASoilTypeManager()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-
 }
 
 // Called when the game starts or when spawned

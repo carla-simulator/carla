@@ -38,7 +38,6 @@ struct CARLA_API FSoilTerramechanicsProperties
 	};
 };
 
-
 UCLASS()
 class CARLA_API ASoilTypeManager : public AActor
 {
