@@ -100,13 +100,13 @@ void UMapGeneratorWidget::CookSoilTypeToMaps(const FMapGeneratorMetaInfo& MetaIn
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Cooking Soil Type to Tiles in %s %s"), 
       *CUR_CLASS_FUNC_LINE, *MetaInfo.DestinationPath, *MetaInfo.MapName);
-  
+
   // Check if map is valid
   const FString MapCompletePath = MetaInfo.DestinationPath + "/" + MetaInfo.MapName;
   const FString MapPackageFileName = FPackageName::LongPackageNameToFilename(
       MapCompletePath, 
       FPackageName::GetMapPackageExtension());
-    
+
   if(!FPaths::FileExists(*MapPackageFileName))
   {
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Soil Terramechanics cannot be applied to a non existing map"), 
@@ -176,7 +176,7 @@ void UMapGeneratorWidget::CookMiscSpecificLocationInformationToTiles(const FMapG
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Miscellaneous Specific Location Actor cooking was not successful..."), 
         *CUR_CLASS_FUNC_LINE);
   }
-  
+
 }
 
 void UMapGeneratorWidget::DeleteAllSpreadedActors(const FMapGeneratorMetaInfo& MetaInfo)
@@ -401,9 +401,6 @@ bool UMapGeneratorWidget::GenerateWaterFromWorld(UWorld* RiversWorld, TSubclassO
       FVector SplinePosition = RiverSpline->GetWorldLocationAtSplinePoint(i);
       SplinePosition.Z = GetLandscapeSurfaceHeight(RiversWorld, SplinePosition.X, SplinePosition.Y, false) + RiverSurfaceDisplacement;
       RiverSpline->SetWorldLocationAtSplinePoint(i, SplinePosition);
-      // FVector SplinePosition = RiverSpline->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Type::Local);
-      // SplinePosition.Z = GetLandscapeSurfaceHeight(RiversWorld, SplinePosition.X, SplinePosition.Y, false) + RiverSurfaceDisplacement;
-      // RiverSpline->SetLocationAtSplinePoint(i, SplinePosition, ESplineCoordinateSpace::Type::Local, false);
     }
     UpdateRiverActorSplinesEvent(RiverActor);
   }
@@ -621,7 +618,7 @@ bool UMapGeneratorWidget::GenerateMiscStateFileFromStruct(FMiscWidgetState MiscS
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating Miscellaneous State JSON"), 
       *CUR_CLASS_FUNC_LINE);
-  
+
   TSharedRef<FJsonObject> OutJsonObject = MakeShareable(new FJsonObject());
   FJsonObjectConverter::UStructToJsonObject(FMiscWidgetState::StaticStruct(), &MiscState, OutJsonObject, 0, 0);
 
@@ -665,7 +662,7 @@ bool UMapGeneratorWidget::GenerateTerrainPresetFileFromStruct(FMapGeneratorPrese
   FJsonSerializer::Serialize(OutJsonObject, JsonWriter);
 
   FFileHelper::SaveStringToFile(OutputJsonString, *JsonPath);
-    
+
   return true;
 }
 
@@ -784,7 +781,7 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
   // Set Tile0Offset to 0 to cook tiles info
   FVector OriginalTile0Offset = LargeMapManager->GetTile0Offset();
   LargeMapManager->SetTile0Offset(FVector(0.0f, 0.0f, 0.0f));
-   
+
   LargeMapManager->GenerateMap_Editor();
 
   // Reset Tile0Offset to original mid-tile position for runtime operations
@@ -1271,8 +1268,7 @@ bool UMapGeneratorWidget::CookMiscSpreadedActors(const FMapGeneratorMetaInfo& Me
           // TODO: Add rotation randomly?
           FRotator Rotation(0, 0, 0);
           FActorSpawnParameters SpawnInfo;
-          
-          
+
           AActor* SpreadedActor =  World->SpawnActor<AActor>(
               ActorROI.ActorClass, 
               Location, 
@@ -1355,9 +1351,9 @@ float UMapGeneratorWidget::GetLandscapeSurfaceHeightFromRayCast(UWorld* World, f
     }
 
     // Return Z Location.
-    if (HitResult.GetActor()) return HitResult.ImpactPoint.Z;
-    
-    
+    if (HitResult.GetActor()) 
+      return HitResult.ImpactPoint.Z;
+
   }
   return 0.0f;
 }
@@ -1419,7 +1415,7 @@ void UMapGeneratorWidget::SmoothHeightmap(TArray<uint16> HeightData, TArray<uint
               IndexY = Y;
 
           int HeightValue = HeightData[ Convert2DTo1DCoord(IndexX, IndexY, TILESIZE) ];
-          
+
           Value += (int) ( KernelValue * HeightValue );
         }
       }
@@ -1458,6 +1454,6 @@ void UMapGeneratorWidget::SewUpperAndLeftTiles(TArray<uint16> HeightData, TArray
       SewedData[ Convert2DTo1DCoord(TILESIZE - 1, DataIndex, TILESIZE) ] = RightInfo[DataIndex];
     }
   }
-  
+
   OutHeightData = SewedData;
 }

@@ -237,7 +237,7 @@ public:
 
   UFUNCTION(Category="Map Generator|Soil Terramechanics", BlueprintCallable)
   void CookSoilTypeToMaps(const FMapGeneratorMetaInfo& MetaInfo);
-  
+
   UFUNCTION(Category="Map Generator|Miscellaneous", BlueprintCallable)
   void CookMiscSpreadedInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo);
 

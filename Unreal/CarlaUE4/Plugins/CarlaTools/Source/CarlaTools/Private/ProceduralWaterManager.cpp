@@ -294,17 +294,13 @@ float UProceduralWaterManager::GetLandscapeSurfaceHeight(float x, float y, bool 
 
 bool UProceduralWaterManager::CreateRiverPresetFiles(TSubclassOf<AActor> RiverParentClass)
 {
-  // UWorld* World = GEditor->GetEditorWorldContext.GetWorld();
+  UWorld* World = GEditor->GetEditorWorldContext.GetWorld();
 
-  // AActor* RiverActorBase = (ALandscape*) UGameplayStatics::GetActorOfClass(
-  //     World, 
-  //    RiverParentClass);
+  AActor* RiverActorBase = (ALandscape*) UGameplayStatics::GetActorOfClass(
+      World, 
+     RiverParentClass);
 
-  // USplineComponent RiverSpline = (USplineComponent*) RiverActorBase->GetComponentByClass(USplineComponent::StaticClass());
-
-
-
-
+  USplineComponent RiverSpline = (USplineComponent*) RiverActorBase->GetComponentByClass(USplineComponent::StaticClass());
 
   return true;
 }
