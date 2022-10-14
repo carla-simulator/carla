@@ -10,79 +10,79 @@
 UENUM(BlueprintType)
 enum ESoilTerramechanicsType
 {
-	NONE_SOIL = 0,
-	DESERT 	= 1,
-	FOREST 	= 2
+  NONE_SOIL = 0,
+  DESERT   = 1,
+  FOREST   = 2
 };
 
 USTRUCT(BlueprintType)
 struct CARLA_API FSoilTerramechanicsProperties
 {
-	GENERATED_BODY()
+  GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TEnumAsByte<ESoilTerramechanicsType> TerrainType;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TEnumAsByte<ESoilTerramechanicsType> TerrainType;
 
-	const FString ToString() const
-	{
-		switch(TerrainType)
-		{
-			case ESoilTerramechanicsType::NONE_SOIL:
-				return "None";
-			case ESoilTerramechanicsType::DESERT:
-				return "Desert";
-			case ESoilTerramechanicsType::FOREST:
-				return "Forest";
-		}
+  const FString ToString() const
+  {
+    switch(TerrainType)
+    {
+      case ESoilTerramechanicsType::NONE_SOIL:
+        return "None";
+      case ESoilTerramechanicsType::DESERT:
+        return "Desert";
+      case ESoilTerramechanicsType::FOREST:
+        return "Forest";
+    }
     return "";
-	};
+  };
 };
 
 UCLASS()
 class CARLA_API ASoilTypeManager : public AActor
 {
-	GENERATED_BODY()
+  GENERATED_BODY()
 
 private:
-	UPROPERTY(EditAnywhere)
-	FSoilTerramechanicsProperties GeneralTerrainProperties;
+  UPROPERTY(EditAnywhere)
+  FSoilTerramechanicsProperties GeneralTerrainProperties;
 
-	UPROPERTY(EditAnywhere)
-	TMap<FIntVector, FSoilTerramechanicsProperties> TilesTerrainProperties;
+  UPROPERTY(EditAnywhere)
+  TMap<FIntVector, FSoilTerramechanicsProperties> TilesTerrainProperties;
 
-	UPROPERTY(EditAnywhere)
-	ALargeMapManager* LargeMapManager;
-	
-public:	
-	// Sets default values for this actor's properties
-	ASoilTypeManager();
+  UPROPERTY(EditAnywhere)
+  ALargeMapManager* LargeMapManager;
+  
+public:  
+  // Sets default values for this actor's properties
+  ASoilTypeManager();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<AActor> CarClass;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TSubclassOf<AActor> CarClass;
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+  // Called when the game starts or when spawned
+  virtual void BeginPlay() override;
 
-public:	
-	UFUNCTION(Category="MapGen|Soil Manager")
-	FSoilTerramechanicsProperties GetGeneralTerrainProperties();
-
-	UFUNCTION(Category="MapGen|Soil Manager")
-	FSoilTerramechanicsProperties GetTerrainPropertiesAtGlobalLocation(FVector VehicleLocation);
+public:  
+  UFUNCTION(Category="MapGen|Soil Manager")
+  FSoilTerramechanicsProperties GetGeneralTerrainProperties();
 
   UFUNCTION(Category="MapGen|Soil Manager")
-	FSoilTerramechanicsProperties GetTerrainPropertiesAtLocalLocation(FVector VehicleLocation);
+  FSoilTerramechanicsProperties GetTerrainPropertiesAtGlobalLocation(FVector VehicleLocation);
 
-	UFUNCTION(Category="MapGen|Soil Manager")
-	void SetGeneralTerrainProperties(FSoilTerramechanicsProperties TerrainProperties);
+  UFUNCTION(Category="MapGen|Soil Manager")
+  FSoilTerramechanicsProperties GetTerrainPropertiesAtLocalLocation(FVector VehicleLocation);
 
-	UFUNCTION(Category="MapGen|Soil Manager")
-	void AddTerrainPropertiesToTile(int TileX, int TileY, FSoilTerramechanicsProperties TerrainProperties);
+  UFUNCTION(Category="MapGen|Soil Manager")
+  void SetGeneralTerrainProperties(FSoilTerramechanicsProperties TerrainProperties);
 
-	UFUNCTION(Category="MapGen|Soil Manager")
-	void ClearTerrainPropertiesMap();
+  UFUNCTION(Category="MapGen|Soil Manager")
+  void AddTerrainPropertiesToTile(int TileX, int TileY, FSoilTerramechanicsProperties TerrainProperties);
 
-	virtual void Tick(float DeltaSeconds) override;
+  UFUNCTION(Category="MapGen|Soil Manager")
+  void ClearTerrainPropertiesMap();
+
+  virtual void Tick(float DeltaSeconds) override;
 
 };
