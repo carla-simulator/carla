@@ -44,7 +44,6 @@ private:
   cc::Timestamp current_timestamp;
   RandomGenerator &random_device;
   const LocalMapPtr &local_map;
-  TLMap tl_map;
 
   std::pair<bool, float> CollisionHandling(const CollisionHazardData &collision_hazard,
                                            const bool tl_hazard,
