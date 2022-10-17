@@ -126,7 +126,7 @@ You will now have 3 things in your content browser directory, the mesh, the skel
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/physics_asset.png)
 
-First, select the main body, in the `Details` menu on the right, change the `Linear Damping` to 0.0 in the `Physics` section, check `Simulation Generates Hit Events` in the `Collision` section and change the `Primitive Type` from `Capsule` to `Box` in the `Body Creation` section. Then press `Regenterate bodies`. The capsule will now change to a rectangular box. Then select the wheels.
+First, select the main body, in the `Details` menu on the right, change the `Linear Damping` to 0.0 in the `Physics` section, check `Simulation Generates Hit Events` in the `Collision` section and change the `Primitive Type` from `Capsule` to `Box` in the `Body Creation` section. Then press `Regenerate bodies`. The capsule will now change to a rectangular box. Then select the wheels.
 
 ![physics_details](img/tuto_content_authoring_vehicles/physics_details.png)
 
@@ -225,7 +225,7 @@ Finishes on real cars (particularly on mass produced cars for the general market
 
 Some cars have paint jobs that include flakes of other material, such as metals or ceramics, to give the car a `metallic` or `pearlescant` appearance, adding extra glints and reflections that react in an attractive way to light. The flakes parameters allows CARLA to mimic this. To mimic metallic finishes, it would be 
 
-![flakes](img/tuto_content_authoring_vehicles/flake.gif)
+![flakes](img/tuto_content_authoring_vehicles/flakes.gif)
 
 #### __Dust__
 
@@ -299,7 +299,7 @@ Double click on the blueprint to adjust it:
 ### Collision mesh
 
 Firstly, the default cylinder used for the collision mesh has a high polygon count, so we should replace this with a low polygon version. In the content browser locate the `CollisionWheel` mesh inside `Content > Carla > Blueprints > Vehicles`. Drag it onto the 
-`Collision Mesh` slot in the details panel of the blueprint. This will improve performance without any noticable deficit to physics simulation.
+`Collision Mesh` slot in the details panel of the blueprint. This will improve performance without any noticeable deficit to physics simulation.
 
 ### Tire configuration
 
