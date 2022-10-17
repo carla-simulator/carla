@@ -23,9 +23,7 @@ class TestMap(SmokeTest):
         random.shuffle(map_names)
         for map_name in map_names:
             # ignore empty or large maps by now
-            if map_name != '/Game/Carla/Maps/BaseMap/BaseMap' and
-               map_name != '/Game/Carla/Maps/Town12/Town12':
-            :
+            if map_name != '/Game/Carla/Maps/BaseMap/BaseMap' and map_name != '/Game/Carla/Maps/Town11/Town11' and map_name != '/Game/Carla/Maps/Town12/Town12':
                 world = self.client.load_world(map_name)
                 # workaround: give time to UE4 to clean memory after loading (old assets)
                 time.sleep(5)

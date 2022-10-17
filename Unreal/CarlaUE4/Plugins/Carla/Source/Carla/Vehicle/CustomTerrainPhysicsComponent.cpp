@@ -1009,7 +1009,8 @@ void UCustomTerrainPhysicsComponent::InitTexture(){
 void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE("UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions");
-  if (TextureToUpdate->GetSizeX() == 0) return;
+  const int32_t TextureSizeX = TextureToUpdate->GetSizeX();
+  if ( TextureSizeX == 0) return;
   
   
   FDVector TextureCenterPosition = UEFrameToSI(GetTileCenter(LastUpdatedPosition));
@@ -1017,8 +1018,8 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
   std::vector<uint64_t> LoadedTiles = 
       SparseMap.GetLoadedTilesInRange(TextureCenterPosition, TextureRadius );
   FDVector TextureOrigin = TextureCenterPosition - FDVector(TextureRadius, TextureRadius, 0);
-  float GlobalTexelSize = (2.0f * TextureRadius) / TextureToUpdate->GetSizeX();
-  int32_t PartialHeightMapSize = std::floor( SparseMap.GetTileSize() * TextureToUpdate->GetSizeX() / (2*TextureRadius) );
+  float GlobalTexelSize = (2.0f * TextureRadius) / TextureSizeX;
+  int32_t PartialHeightMapSize = std::floor( SparseMap.GetTileSize() * TextureSizeX / (2*TextureRadius) );
   
   float LocalTexelSize = SparseMap.GetTileSize() / PartialHeightMapSize;
   LocalTexelSize = std::floor( LocalTexelSize * 1000.0f ) / 1000.0f;
@@ -1040,14 +1041,17 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
         int32_t Coord_X = std::floor( (LocalTexelPosition.X - TextureOrigin.X ) / GlobalTexelSize );
         int32_t Coord_Y = std::floor( (LocalTexelPosition.Y - TextureOrigin.Y ) / GlobalTexelSize );
         
-        float OriginalHeight = SparseMap.GetHeight(LocalTexelPosition);
-        float Displacement = Height - OriginalHeight;
-        float DisplacementRange = MaxDisplacement - MinDisplacement;
-        float Fraction = (Displacement - MinDisplacement) / DisplacementRange; 
-        Fraction = FMath::Clamp(Fraction, 0.f, 1.f);
-        Fraction = std::floor(Fraction * 255.0f);
-        Data[Coord_X * TextureToUpdate->GetSizeY() + Coord_Y] = static_cast<uint8_t>(Fraction );
-        
+        if ( Coord_X >= 0 && Coord_X < TextureSizeX &&
+            Coord_Y >= 0 && Coord_Y < TextureToUpdate->GetSizeY() )
+        {
+          float OriginalHeight = SparseMap.GetHeight(LocalTexelPosition);
+          float Displacement = Height - OriginalHeight;
+          float DisplacementRange = MaxDisplacement - MinDisplacement;
+          float Fraction = (Displacement - MinDisplacement) / DisplacementRange; 
+          Fraction = FMath::Clamp(Fraction, 0.f, 1.f);
+          Fraction = std::floor(Fraction * 255.0f);
+          Data[Coord_X * TextureToUpdate->GetSizeY() + Coord_Y] = static_cast<uint8_t>(Fraction );
+        }
       }
     }
   }
