@@ -1120,6 +1120,13 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
   StickyControl.RecommendedValues.Emplace(TEXT("true"));
   Definition.Variations.Emplace(StickyControl);
 
+  FActorVariation TerramechanicsAttribute;
+  TerramechanicsAttribute.Id = TEXT("terramechanics");
+  TerramechanicsAttribute.Type = EActorAttributeType::Bool;
+  TerramechanicsAttribute.bRestrictToRecommended = false;
+  TerramechanicsAttribute.RecommendedValues.Emplace(TEXT("false"));
+  Definition.Variations.Emplace(TerramechanicsAttribute);
+
   Definition.Attributes.Emplace(FActorAttribute{
     TEXT("object_type"),
     EActorAttributeType::String,

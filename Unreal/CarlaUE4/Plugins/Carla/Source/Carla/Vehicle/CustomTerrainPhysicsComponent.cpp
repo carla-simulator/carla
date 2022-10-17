@@ -1471,11 +1471,25 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
 
   TArray<AActor*> VehiclesActors;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACarlaWheeledVehicle::StaticClass(), VehiclesActors);
-
+  UCarlaEpisode* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
   for (AActor* VehicleActor : VehiclesActors)
   {
 
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle> (VehicleActor);
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(Vehicle);
+    if (!CarlaActor)
+    {
+      continue;
+    }
+    const FActorInfo* ActorInfo = CarlaActor->GetActorInfo();
+    const FActorDescription& Description = ActorInfo->Description;
+    const FActorAttribute* Attribute = Description.Variations.Find("terramechanics");
+    // If the vehicle has terramechanics enabled
+    if(!Attribute || !UActorBlueprintFunctionLibrary::ActorAttributeToBool(*Attribute, false))
+    {
+      continue;
+    }
+
     FVector GlobalLocation = Vehicle->GetActorLocation();
     if(LargeMapManager)
     {
