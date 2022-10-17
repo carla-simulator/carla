@@ -1,5 +1,6 @@
 ## Latest
 
+  * Fixed bug in FrictionTrigger causing sometimes server segfault
   * Added attachment type "SpringArmGhost" for cinematic cameras but without doing the collision test.
   * Improved algorithm to move signals out of the road by computing the desired displacement direction.
   * Added `TrafficManager.vehicle_lane_offset(actor, offset)` and `TrafficManager.global_lane_offset(offset)` methods.

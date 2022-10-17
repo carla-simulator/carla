@@ -71,6 +71,9 @@ void AFrictionTrigger::OnTriggerEndOverlap(
   UpdateWheelsFriction(OtherActor, OldFrictionValues);
 
   ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
+  if(Vehicle == nullptr)
+    return;
+
   TArray<float> CurrFriction = Vehicle->GetWheelsFrictionScale();
 }
 
