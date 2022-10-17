@@ -1158,6 +1158,8 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   bDrawLoadedTiles = false;
   bUseSoilType = false;
   EffectMultiplayer = 200.0f;
+  MinDisplacement = -10.0f;
+  MaxDisplacement = 10.0f;
 #endif
 
   int IntValue;
@@ -1201,6 +1203,14 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   if (FParse::Value(FCommandLine::Get(), TEXT("-defor-mul="), Value))
   {
     EffectMultiplayer = Value;
+  }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-min-displacement="), Value))
+  {
+    MinDisplacement = Value;
+  }
+   if (FParse::Value(FCommandLine::Get(), TEXT("-max-displacement="), Value))
+  {
+    MaxDisplacement = Value;
   }
   if (FParse::Value(FCommandLine::Get(), TEXT("-particle-force-mul-factor="), Value))
   {
