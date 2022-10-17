@@ -431,7 +431,7 @@ std::vector<FParticle*> FSparseHighDetailMap::
 std::vector<uint64_t> FSparseHighDetailMap::GetIntersectingTiles(
     const FOrientedBox& OBox)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::GetIntersectingTiles);
+TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::GetIntersectingTiles);
   std::vector<uint64_t> IntersectingTiles;
 
   FVector BoxCenter = UEFrameToSI(OBox.Center);
@@ -446,48 +446,92 @@ std::vector<uint64_t> FSparseHighDetailMap::GetIntersectingTiles(
   uint32_t CenterTile_X = (uint32_t)(CenterTileId >> 32);
   uint32_t CenterTile_Y = (uint32_t)(CenterTileId & (uint32_t)(~0));
   uint32_t TileRange = 1;
-
+  IntersectingTiles.emplace_back(CenterTileId);
   FVector2D BoxVert0 = FVector2D(BoxCenter - AxisX*ExtentX - AxisY*ExtentY);
   FVector2D BoxVert1 = FVector2D(BoxCenter + AxisX*ExtentX - AxisY*ExtentY);
   FVector2D BoxVert2 = FVector2D(BoxCenter + AxisX*ExtentX + AxisY*ExtentY);
   FVector2D BoxVert3 = FVector2D(BoxCenter - AxisX*ExtentX + AxisY*ExtentY);
-  
-  std::vector<uint64_t> VerticesInTiles;
-  VerticesInTiles.emplace_back( GetTileId( FDVector( BoxVert0.X, BoxVert0.Y, 0 ) ) );
-  VerticesInTiles.emplace_back( GetTileId( FDVector( BoxVert1.X, BoxVert1.Y, 0 ) ) );
-  VerticesInTiles.emplace_back( GetTileId( FDVector( BoxVert2.X, BoxVert2.Y, 0 ) ) );
-  VerticesInTiles.emplace_back( GetTileId( FDVector( BoxVert3.X, BoxVert3.Y, 0 ) ) );
-  
-  uint32_t MinX = -1,MinY = -1,MaxX = 0,MaxY = 0; 
-  for( auto TileId : VerticesInTiles )
+
+  // Use separate axis theorem to detect intersecting tiles with OBox
+  struct F2DRectangle
   {
-    uint32_t Tile_X = (uint32_t)(TileId >> 32);
-    uint32_t Tile_Y = (uint32_t)(TileId & (uint32_t)(~0));
-
-    
-    if( Tile_X < MinX){
-      MinX = Tile_X;
-    }
-
-    if( Tile_X > MaxX){
-      MaxX = Tile_X;
-    }
-
-    if( Tile_Y < MinY){
-      MinY = Tile_Y;
-    }
-
-    if( Tile_Y > MaxY){
-      MaxY = Tile_Y;
-    }
-  }
-
-  for( uint32_t X = MinX; X < MaxX; ++X )
-  {
-    for( uint32_t Y = MinY; Y < MaxY; ++Y )
+    FVector2D V1, V2, V3, V4;
+    std::vector<FVector2D> ComputeNormals() const
     {
-      uint64_t CurrentTileId = GetTileId(X,Y);
-      IntersectingTiles.emplace_back(CurrentTileId);
+      FVector2D V12 = (V2 - V1).GetSafeNormal();
+      FVector2D V23 = (V3 - V2).GetSafeNormal();
+      return {FVector2D(-V12.Y, V12.X), FVector2D(-V23.Y, V23.X)};
+    }
+  };
+  auto SATtest = [&](const FVector2D& Axis, const F2DRectangle &Shape,
+      float &MinAlong, float &MaxAlong)
+  {
+    for (const FVector2D& Vert : {Shape.V1, Shape.V2, Shape.V3, Shape.V4})
+    {
+      float DotVal = FVector2D::DotProduct(Vert, Axis);
+      if( DotVal < MinAlong ) 
+        MinAlong = DotVal;
+      if( DotVal > MaxAlong ) 
+        MaxAlong = DotVal;
+    }
+  };
+  auto IsBetweenOrdered = [&]( float Val, float LowerBound, float UpperBound ) -> bool
+  {
+    return LowerBound <= Val && Val <= UpperBound ;
+  };
+  auto Overlaps = [&]( float Min1, float Max1, float Min2, float Max2 ) -> bool
+  {
+    return IsBetweenOrdered( Min2, Min1, Max1 ) || IsBetweenOrdered( Min1, Min2, Max2 ) ;
+  };
+  auto RectangleIntersect = [&](
+    const F2DRectangle& Rectangle1, 
+    const F2DRectangle& Rectangle2) -> bool
+  {
+    for (const FVector2D& Normal : Rectangle1.ComputeNormals())
+    {
+      constexpr float LargeNumber = 10000000;
+      float Shape1Min = LargeNumber, Shape1Max = -LargeNumber;
+      float Shape2Min = LargeNumber, Shape2Max = -LargeNumber;
+      SATtest(Normal, Rectangle1, Shape1Min, Shape1Max);
+      SATtest(Normal, Rectangle2, Shape2Min, Shape2Max);
+      if (!Overlaps(Shape1Min, Shape1Max, Shape2Min, Shape2Max))
+      {
+        return false;
+      }
+    }
+    for (const FVector2D& Normal : Rectangle2.ComputeNormals())
+    {
+      constexpr float LargeNumber = 10000000;
+      float Shape1Min = LargeNumber, Shape1Max = -LargeNumber;
+      float Shape2Min = LargeNumber, Shape2Max = -LargeNumber;
+      SATtest(Normal, Rectangle1, Shape1Min, Shape1Max);
+      SATtest(Normal, Rectangle2, Shape2Min, Shape2Max);
+      if (!Overlaps(Shape1Min, Shape1Max, Shape2Min, Shape2Max))
+      {
+        return false;
+      }
+    }
+    return true;
+  };
+  // check surrounding tiles except CenterTile (as it is always included)
+  std::vector<std::pair<uint32_t, uint32_t>> TilesToCheck = {
+      {CenterTile_X-1, CenterTile_Y-1}, {CenterTile_X, CenterTile_Y-1},
+      {CenterTile_X+1, CenterTile_Y-1}, {CenterTile_X-1, CenterTile_Y},
+      {CenterTile_X+1, CenterTile_Y}, {CenterTile_X-1, CenterTile_Y+1},
+      {CenterTile_X, CenterTile_Y+1}, {CenterTile_X+1, CenterTile_Y+1}};
+  for (auto& TileIdPair : TilesToCheck)
+  {
+    uint32_t &Tile_X = TileIdPair.first;
+    uint32_t &Tile_Y = TileIdPair.second;
+    FVector2D V1 = FVector2D(GetTilePosition(Tile_X, Tile_Y).ToFVector());
+    FVector2D V2 = FVector2D(GetTilePosition(Tile_X+1, Tile_Y).ToFVector());
+    FVector2D V3 = FVector2D(GetTilePosition(Tile_X+1, Tile_Y+1).ToFVector());
+    FVector2D V4 = FVector2D(GetTilePosition(Tile_X, Tile_Y+1).ToFVector());
+    if (RectangleIntersect(
+        F2DRectangle{BoxVert0,BoxVert1,BoxVert2,BoxVert3},
+        F2DRectangle{V1,V2,V3,V4}))
+    {
+      IntersectingTiles.emplace_back(GetTileId(Tile_X, Tile_Y));
     }
   }
 
@@ -1937,19 +1981,11 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
       {
         RemoveParticlesFromOrderedContainer( ParticlesWheel );
       };
-
-      auto FutureRemoval0 = Async(EAsyncExecution::ThreadPool, 
-        [&]() { RemoveParticles(ParticlesWheel0);});
-      auto FutureRemoval1 = Async(EAsyncExecution::ThreadPool, 
-        [&]() { RemoveParticles(ParticlesWheel1);});
-      auto FutureRemoval2 = Async(EAsyncExecution::ThreadPool, 
-        [&]() { RemoveParticles(ParticlesWheel2);});
-      auto FutureRemoval3 = Async(EAsyncExecution::ThreadPool, 
-        [&]() { RemoveParticles(ParticlesWheel3);});
-      FutureRemoval0.Get();
-      FutureRemoval1.Get();
-      FutureRemoval2.Get();
-      FutureRemoval3.Get();
+      RemoveParticles(ParticlesWheel0);
+      RemoveParticles(ParticlesWheel1);
+      RemoveParticles(ParticlesWheel2);
+      RemoveParticles(ParticlesWheel3);
+      
     }
     {
       TRACE_CPUPROFILER_EVENT_SCOPE(UpdateParticles);
@@ -1959,19 +1995,10 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
       {
         UpdateParticles( Particles, Forces, DeltaTime );
       };
-
-      auto FutureUpdate0 = Async(EAsyncExecution::ThreadPool, 
-        [&]() { UpdateFutureParticles(ParticlesWheel0, Output.wheel0._particle_forces, DeltaTime);});
-      auto FutureUpdate1 = Async(EAsyncExecution::ThreadPool, 
-        [&]() { UpdateFutureParticles(ParticlesWheel1, Output.wheel1._particle_forces, DeltaTime);});
-      auto FutureUpdate2 = Async(EAsyncExecution::ThreadPool, 
-        [&]() { UpdateFutureParticles(ParticlesWheel2, Output.wheel2._particle_forces, DeltaTime);});
-      auto FutureUpdate3 = Async(EAsyncExecution::ThreadPool, 
-        [&]() { UpdateFutureParticles(ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime);});
-      FutureUpdate0.Get();
-      FutureUpdate1.Get();
-      FutureUpdate2.Get();
-      FutureUpdate3.Get();
+      UpdateFutureParticles(ParticlesWheel0, Output.wheel0._particle_forces, DeltaTime);
+      UpdateFutureParticles(ParticlesWheel1, Output.wheel1._particle_forces, DeltaTime);
+      UpdateFutureParticles(ParticlesWheel2, Output.wheel2._particle_forces, DeltaTime);
+      UpdateFutureParticles(ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime);
     }
     if (DrawDebugInfo)
     {
