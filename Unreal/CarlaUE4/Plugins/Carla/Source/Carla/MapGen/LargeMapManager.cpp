@@ -475,7 +475,7 @@ FIntVector ALargeMapManager::GetTileVectorID(FVector TileLocation) const
 {
   FIntVector VectorId = FIntVector(
       (TileLocation -
-      (Tile0Offset - FVector(0.5f*TileSide,-0.5f*TileSide, 0)))
+      (Tile0Offset - FVector(0.5f*TileSide,-0.5f*TileSide, 0) + LocalTileOffset))
       / TileSide);
   VectorId.Y *= -1;
   return VectorId;
@@ -485,7 +485,7 @@ FIntVector ALargeMapManager::GetTileVectorID(FDVector TileLocation) const
 {
   FIntVector VectorId = (
       (TileLocation -
-      (Tile0Offset - FVector(0.5f*TileSide,-0.5f*TileSide, 0)))
+      (Tile0Offset - FVector(0.5f*TileSide,-0.5f*TileSide, 0) + LocalTileOffset))
       / TileSide).ToFIntVector();
   VectorId.Y *= -1;
   return VectorId;

@@ -89,11 +89,7 @@ namespace learning {
       result._particle_forces.emplace_back(
           particle_forces_data[i*num_dimensions + 2]);
     }
-    if(num_particles > 0)
-    {
-      std::cout << particle_forces_data[0] << " " << particle_forces_data[1] << " " << particle_forces_data[0] << std::endl;
-    }
-    std::cout << "Output: " <<  result._particle_forces.size()/3 << " particles" << std::endl;
+    // std::cout << "Output: " <<  result._particle_forces.size()/3 << " particles" << std::endl;
     return result;
   }
 
@@ -116,10 +112,6 @@ namespace learning {
           particle_forces_data[i*num_dimensions + 1]);
       result._particle_forces.emplace_back(
           particle_forces_data[i*num_dimensions + 2]);
-    }
-    if(num_particles > 0)
-    {
-      std::cout << particle_forces_data[0] << " " << particle_forces_data[1] << " " << particle_forces_data[0] << std::endl;
     }
     // std::cout << "Output: " <<  result._particle_forces.size()/3 << " particles" << std::endl;
     return result;
@@ -183,7 +175,7 @@ namespace learning {
       Model->module = torch::jit::load(filename_str);
       std::string cuda_str = "cuda:" + std::to_string(device);
       std::cout << "Using CUDA device " << cuda_str << std::endl;
-      Model->module.to(at::Device(cuda_str));
+      // Model->module.to(at::Device(cuda_str));
     } catch (const c10::Error& e) {
       std::cout << "Error loading model: " << e.msg() << std::endl;
     }
@@ -204,7 +196,11 @@ namespace learning {
     auto drv_inputs = torch::tensor(
         {_input.steering, _input.throttle, _input.braking}, torch::kFloat32); //steer, throtle, brake
     TorchInputs.push_back(drv_inputs);
+    if (_input.terrain_type >= 0) {
+      TorchInputs.push_back(_input.terrain_type);
+    }
     TorchInputs.push_back(_input.verbose);
+    std::cout << _input.verbose << std::endl;
 
     torch::jit::IValue Output;
     try {
@@ -235,7 +231,11 @@ namespace learning {
       auto drv_inputs = torch::tensor(
           {_input.steering, _input.throttle, _input.braking}, torch::kFloat32); //steer, throtle, brake
       TorchInputs.push_back(drv_inputs);
+      if (_input.terrain_type >= 0) {
+        TorchInputs.push_back(_input.terrain_type);
+      }
       TorchInputs.push_back(_input.verbose);
+      std::cout << _input.verbose << std::endl;
 
       torch::jit::IValue Output;
       try {
@@ -270,7 +270,11 @@ namespace learning {
     auto drv_inputs = torch::tensor(
         {_input.steering, _input.throttle, _input.braking}, torch::kFloat32); //steer, throtle, brake
     TorchInputs.push_back(drv_inputs.cuda());
+    if (_input.terrain_type >= 0) {
+      TorchInputs.push_back(_input.terrain_type);
+    }
     TorchInputs.push_back(_input.verbose);
+    std::cout << _input.verbose << std::endl;
 
     torch::jit::IValue Output;
     try {
