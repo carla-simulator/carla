@@ -155,7 +155,7 @@ void ALargeMapManager::OnActorSpawned(
     const FActorDescription& Description = ActorInfo->Description;
     const FActorAttribute* Attribute = Description.Variations.Find("role_name");
     // If is the hero vehicle
-    if(Attribute && Attribute->Value.Contains("hero"))
+    if(Attribute && (Attribute->Value.Contains("hero") || Attribute->Value.Contains("ego_vehicle")))
     {
       LM_LOG(Error, "HERO VEHICLE DETECTED");
 
@@ -237,6 +237,11 @@ void ALargeMapManager::SetTileSize(float Size)
 float ALargeMapManager::GetTileSize()
 {
   return TileSide;
+}
+
+FVector ALargeMapManager::GetTile0Offset()
+{
+  return Tile0Offset;
 }
 
 void ALargeMapManager::SetLayerStreamingDistance(float Distance)

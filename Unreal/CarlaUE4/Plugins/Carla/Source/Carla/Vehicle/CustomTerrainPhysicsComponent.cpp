@@ -419,7 +419,7 @@ std::vector<FParticle*> FSparseHighDetailMap::
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::GetParticlesInBox);
   std::vector<uint64_t> TilesToCheck = GetIntersectingTiles(OBox);
-
+  
   std::vector<FParticle*> ParticlesInRadius;
   for(uint64_t TileId : TilesToCheck)
   {
@@ -431,7 +431,7 @@ std::vector<FParticle*> FSparseHighDetailMap::
 std::vector<uint64_t> FSparseHighDetailMap::GetIntersectingTiles(
     const FOrientedBox& OBox)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::GetIntersectingTiles);
+TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::GetIntersectingTiles);
   std::vector<uint64_t> IntersectingTiles;
 
   FVector BoxCenter = UEFrameToSI(OBox.Center);
@@ -565,9 +565,6 @@ std::vector<uint64_t> FSparseHighDetailMap::GetLoadedTilesInRange(FDVector Posit
     MaxX = Tile_X + RadiusInTiles;
     MaxY = Tile_Y + RadiusInTiles;
   }
-
-  //UE_LOG(LogCarla, Error, TEXT("FSparseHighDetailMap::GetLoadedTilesInRange Position X: %f, Y %f"), Position.X, Position.Y);
-  //UE_LOG(LogCarla, Error, TEXT("FSparseHighDetailMap::GetLoadedTilesInRange Loading Tiles Between X: %d %d Y: %d %d "), MinX, MaxX, MinY, MaxY );
 
   std::vector<uint64_t> LoadedTiles;
   {
@@ -883,6 +880,7 @@ void FSparseHighDetailMap::UpdateMaps(
   {
     FScopeLock ScopeCacheLock(&Lock_CacheMap);
     TRACE_CPUPROFILER_EVENT_SCOPE(UpdateCache);
+    std::vector<uint64_t> TilesToInitialize;
     for(int32_t Tile_X = CacheMinVector.X; Tile_X < CacheMaxVector.X; ++Tile_X )
     {
       for(int32_t Tile_Y = CacheMinVector.Y; Tile_Y < CacheMaxVector.Y; ++Tile_Y )
@@ -894,10 +892,16 @@ void FSparseHighDetailMap::UpdateMaps(
         uint64_t CurrentTileID = GetTileId(Tile_X, Tile_Y);
         if (CacheMap.find(CurrentTileID) == CacheMap.end())
         {
-          InitializeRegionInCache(CurrentTileID);
+          CacheMap.emplace(CurrentTileID, FDenseTile());
+          TilesToInitialize.emplace_back(CurrentTileID);
         }
       }
     }
+    ParallelFor(TilesToInitialize.size(), [&](int32 Idx)
+    {
+      uint64_t TileId = TilesToInitialize[Idx];
+      InitializeRegionInCache(TileId);
+    });
     // unload extra tiles
     std::vector<uint64_t> TilesToErase;
     {
@@ -1056,7 +1060,7 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
   FDVector TextureCenterPosition = UEFrameToSI(GetTileCenter(LastUpdatedPosition));
   
   std::vector<uint64_t> LoadedTiles = 
-      SparseMap.GetLoadedTilesInRange(TextureCenterPosition, UEFrameToSI(TileRadius.X) );
+      SparseMap.GetLoadedTilesInRange(TextureCenterPosition, TextureRadius );
   FDVector TextureOrigin = TextureCenterPosition - FDVector(TextureRadius, TextureRadius, 0);
   float GlobalTexelSize = (2.0f * TextureRadius) / TextureSizeX;
   int32_t PartialHeightMapSize = std::floor( SparseMap.GetTileSize() * TextureSizeX / (2*TextureRadius) );
@@ -1064,10 +1068,7 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
   float LocalTexelSize = SparseMap.GetTileSize() / PartialHeightMapSize;
   LocalTexelSize = std::floor( LocalTexelSize * 1000.0f ) / 1000.0f;
   
-  for(uint8_t &Value : Data)
-  {
-    Value = 128;
-  }
+  Data.Init( 128, Data.Num() );
 
   for (uint64_t TileId : LoadedTiles)
   {
@@ -1204,6 +1205,9 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   FloorHeight = 0.0;
   bDrawLoadedTiles = false;
   bUseSoilType = false;
+  EffectMultiplayer = 200.0f;
+  MinDisplacement = -10.0f;
+  MaxDisplacement = 10.0f;
 #endif
 
   int IntValue;
@@ -1243,6 +1247,18 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   if (FParse::Value(FCommandLine::Get(), TEXT("-force-mul-factor="), Value))
   {
     ForceMulFactor = Value;
+  }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-defor-mul="), Value))
+  {
+    EffectMultiplayer = Value;
+  }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-min-displacement="), Value))
+  {
+    MinDisplacement = Value;
+  }
+   if (FParse::Value(FCommandLine::Get(), TEXT("-max-displacement="), Value))
+  {
+    MaxDisplacement = Value;
   }
   if (FParse::Value(FCommandLine::Get(), TEXT("-particle-force-mul-factor="), Value))
   {
@@ -1471,11 +1487,25 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
 
   TArray<AActor*> VehiclesActors;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACarlaWheeledVehicle::StaticClass(), VehiclesActors);
-
+  UCarlaEpisode* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
   for (AActor* VehicleActor : VehiclesActors)
   {
 
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle> (VehicleActor);
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(Vehicle);
+    if (!CarlaActor)
+    {
+      continue;
+    }
+    const FActorInfo* ActorInfo = CarlaActor->GetActorInfo();
+    const FActorDescription& Description = ActorInfo->Description;
+    const FActorAttribute* Attribute = Description.Variations.Find("terramechanics");
+    // If the vehicle has terramechanics enabled
+    if(!Attribute || !UActorBlueprintFunctionLibrary::ActorAttributeToBool(*Attribute, false))
+    {
+      continue;
+    }
+
     FVector GlobalLocation = Vehicle->GetActorLocation();
     if(LargeMapManager)
     {
@@ -1880,13 +1910,11 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel2), BboxWheel2.Center.Z);
     DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel3), BboxWheel3.Center.Z);
   }
+
   //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 0 %s"), ParticlesWheel0.size(), *WheelPosition0.ToString());
   //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 1 %s"), ParticlesWheel1.size(), *WheelPosition1.ToString());
   //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 2 %s"), ParticlesWheel2.size(), *WheelPosition2.ToString());
   //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 3 %s"), ParticlesWheel3.size(), *WheelPosition3.ToString());
-  if(ParticlesWheel0.size())
-    UE_LOG(LogCarla, Log, 
-        TEXT("Wheel0 pos %s particle pos %s"), *(UEFrameToSI(WheelPosition0)).ToString(), *(ParticlesWheel0[0]->Position.ToString()));
   
   TArray<float> ParticlePos0, ParticleVel0, ParticlePos1, ParticleVel1,
                 ParticlePos2, ParticleVel2, ParticlePos3, ParticleVel3;
@@ -1962,17 +1990,29 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   {
     {
       TRACE_CPUPROFILER_EVENT_SCOPE(RemoveParticlesFromOrderedContainer);
-      RemoveParticlesFromOrderedContainer( ParticlesWheel0 );
-      RemoveParticlesFromOrderedContainer( ParticlesWheel1 );
-      RemoveParticlesFromOrderedContainer( ParticlesWheel2 );
-      RemoveParticlesFromOrderedContainer( ParticlesWheel3 );
+      auto RemoveParticles = 
+      [&] (std::vector<FParticle*>& ParticlesWheel)
+      {
+        RemoveParticlesFromOrderedContainer( ParticlesWheel );
+      };
+      RemoveParticles(ParticlesWheel0);
+      RemoveParticles(ParticlesWheel1);
+      RemoveParticles(ParticlesWheel2);
+      RemoveParticles(ParticlesWheel3);
+      
     }
     {
       TRACE_CPUPROFILER_EVENT_SCOPE(UpdateParticles);
-      UpdateParticles(ParticlesWheel0, Output.wheel0._particle_forces, DeltaTime);
-      UpdateParticles(ParticlesWheel1, Output.wheel1._particle_forces, DeltaTime);
-      UpdateParticles(ParticlesWheel2, Output.wheel2._particle_forces, DeltaTime);
-      UpdateParticles(ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime);
+
+      auto UpdateFutureParticles = 
+      [&] (std::vector<FParticle*>& Particles, std::vector<float>& Forces, float DeltaTime)
+      {
+        UpdateParticles( Particles, Forces, DeltaTime );
+      };
+      UpdateFutureParticles(ParticlesWheel0, Output.wheel0._particle_forces, DeltaTime);
+      UpdateFutureParticles(ParticlesWheel1, Output.wheel1._particle_forces, DeltaTime);
+      UpdateFutureParticles(ParticlesWheel2, Output.wheel2._particle_forces, DeltaTime);
+      UpdateFutureParticles(ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime);
     }
     if (DrawDebugInfo)
     {
@@ -2109,6 +2149,8 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     ParticlesWheel1 = FutureParticles1.Get();
     ParticlesWheel3 = FutureParticles3.Get();
   }
+
+
 
   if(DrawDebugInfo)
   {

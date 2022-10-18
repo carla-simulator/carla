@@ -53,7 +53,7 @@ In the CARLA API, the [__world__](python_api.md#carla.World) object provides acc
 We can also use the world object to load a map from the client:
 
 ```py
-world.load_world('Town05')
+client.load_world('Town05')
 
 ``` 
 
@@ -118,7 +118,7 @@ spawn_points = world.get_map().get_spawn_points()
 # Spawn 50 vehicles randomly distributed throughout the map 
 # for each spawn point, we choose a random vehicle from the blueprint library
 for i in range(0,50):
-    world.try_spawn_actor(random.choice(vehicle_blueprints, random.choice(spawn_points)))
+    world.try_spawn_actor(random.choice(vehicle_blueprints), random.choice(spawn_points)))
 ```
 
 Now we should also add a vehicle that will be the centerpoint of our simulation. To train an autonomous agent we need to simulate a the vehicle that it the autonomous agent will control. In CARLA parlance, we often refer to this vehicle as the "Ego vehicle". 
@@ -166,7 +166,7 @@ Now we've added our traffic and ego vehicle to the simulation and started record
 We can find all the vehicles in the simulation using the `world.get_actors()` method, filtering for all the vehicles. We can then use the `set_autopilot()` method to hand over control of the vehicle to the Traffic Manager.
 
 ```py
-for vehicle in world.get_actors().filter('vehicle'):
+for vehicle in world.get_actors().filter('*vehicle*'):
     vehicle.set_autopilot(True)
 ```
 
