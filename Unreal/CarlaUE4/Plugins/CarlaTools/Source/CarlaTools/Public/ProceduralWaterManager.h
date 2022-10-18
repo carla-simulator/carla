@@ -116,4 +116,10 @@ private:
   /// Return the Z value
   UFUNCTION()
   float GetLandscapeSurfaceHeight(float x, float y, bool bDrawDebugLines = false);
+
+
+  /************ RIVER PRESETS GENERATOR ************/
+public:
+  UFUNCTION(BlueprintCallable)
+  bool CreateRiverPresetFiles(TSubclassOf<AActor> RiverParentClass);
 };

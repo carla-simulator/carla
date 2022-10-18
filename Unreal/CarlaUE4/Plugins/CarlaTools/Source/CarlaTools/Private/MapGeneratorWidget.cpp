@@ -9,6 +9,7 @@
 #include "ActorFactories/ActorFactory.h"
 #include "AssetRegistryModule.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "Carla/MapGen/SoilTypeManager.h"
 #include "Carla/Weather/Weather.h"
 #include "Components/SplineComponent.h"
 #include "Editor/FoliageEdit/Public/FoliageEdMode.h"
@@ -42,6 +43,11 @@
 #define CUR_CLASS_FUNC (FString(__FUNCTION__))
 #define CUR_LINE  (FString::FromInt(__LINE__))
 #define CUR_CLASS_FUNC_LINE (CUR_CLASS_FUNC + "::" + CUR_LINE)
+
+#define TAG_SPREADED FName("Spreaded Actor")
+#define TAG_SPECIFIC_LOCATION FName("Specific Location Actor")
+
+#define TILESIZE 1009
 
 #undef CreateDirectory
 #undef CopyFile
@@ -87,6 +93,119 @@ void UMapGeneratorWidget::CookVegetation(const FMapGeneratorMetaInfo& MetaInfo)
   {
     UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: SUCCESS Cooking Vegetation to Tiles in %s %s"), 
       *CUR_CLASS_FUNC_LINE, *MetaInfo.DestinationPath, *MetaInfo.MapName);
+  }
+}
+
+void UMapGeneratorWidget::CookSoilTypeToMaps(const FMapGeneratorMetaInfo& MetaInfo)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Cooking Soil Type to Tiles in %s %s"), 
+      *CUR_CLASS_FUNC_LINE, *MetaInfo.DestinationPath, *MetaInfo.MapName);
+
+  // Check if map is valid
+  const FString MapCompletePath = MetaInfo.DestinationPath + "/" + MetaInfo.MapName;
+  const FString MapPackageFileName = FPackageName::LongPackageNameToFilename(
+      MapCompletePath, 
+      FPackageName::GetMapPackageExtension());
+
+  if(!FPaths::FileExists(*MapPackageFileName))
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Soil Terramechanics cannot be applied to a non existing map"), 
+        *CUR_CLASS_FUNC_LINE);
+    return;
+  }
+
+  // Instantiate Weather Actor in main map
+  const FString WorldToLoadPath = MapCompletePath + "." + MetaInfo.MapName;
+  UWorld* World = LoadObject<UWorld>(nullptr, *WorldToLoadPath);
+
+  ASoilTypeManager* SoilTypeManagerActor = (ASoilTypeManager*) UGameplayStatics::GetActorOfClass(World, ASoilTypeManager::StaticClass());
+
+  SoilTypeManagerActor->ClearTerrainPropertiesMap();
+
+  // Set General Settings
+  SoilTypeManagerActor->SetGeneralTerrainProperties(MetaInfo.GeneralSoilType);
+
+  for(TPair<FRoiTile, FSoilTypeROI> SoilROIPair : MetaInfo.SoilTypeRoisMap)
+  {
+    FRoiTile SoilROITile = SoilROIPair.Key;
+    FSoilTypeROI SoilROI = SoilROIPair.Value;
+    SoilTypeManagerActor->AddTerrainPropertiesToTile(SoilROITile.X, SoilROITile.Y, SoilROI.SoilProperties);
+  }
+}
+
+void UMapGeneratorWidget::CookMiscSpreadedInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Cooking Miscellaneous Info to Tiles in %s %s"), 
+      *CUR_CLASS_FUNC_LINE, *MetaInfo.DestinationPath, *MetaInfo.MapName);
+
+  // Spreaded actors (ROIs)
+  bool bSpreadedSuccess = CookMiscSpreadedActors(MetaInfo);
+  if(!bSpreadedSuccess)
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Miscellaneous Spreaded Actor cooking was not successful..."), 
+        *CUR_CLASS_FUNC_LINE);
+  }
+}
+
+void UMapGeneratorWidget::CookMiscSpecificLocationInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo)
+{
+  UWorld* World = GEditor->GetEditorWorldContext().World();
+
+  // Only one ROI at a time supported
+  TArray<FMiscSpecificLocationActorsROI> ActorROIArray;
+  MetaInfo.MiscSpecificLocationActorsRoisMap.GenerateValueArray(ActorROIArray);
+
+  if(ActorROIArray.Num() > 0)
+  {
+    FMiscSpecificLocationActorsROI ActorROI = ActorROIArray[0];
+
+    FRotator Rotation(0, FMath::RandRange(ActorROI.MinRotationRange, ActorROI.MaxRotationRange), 0);
+    FActorSpawnParameters SpawnInfo;
+
+    AActor* SpawnedActor =  World->SpawnActor<AActor>(
+        ActorROI.ActorClass, 
+        ActorROI.ActorLocation, 
+        Rotation, 
+        SpawnInfo);
+    SpawnedActor->Tags.Add(TAG_SPECIFIC_LOCATION);
+
+    SaveWorld(World);
+  }
+  else
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Miscellaneous Specific Location Actor cooking was not successful..."), 
+        *CUR_CLASS_FUNC_LINE);
+  }
+
+}
+
+void UMapGeneratorWidget::DeleteAllSpreadedActors(const FMapGeneratorMetaInfo& MetaInfo)
+{
+  TArray<FAssetData> AssetsData;
+  const FString TilesPath = MetaInfo.DestinationPath;
+  bool success = LoadWorlds(AssetsData, TilesPath);
+
+  for(FAssetData AssetData : AssetsData)
+  {
+    UWorld* World = GetWorldFromAssetData(AssetData);
+
+    // Check if it is not a tile
+    if(!World->GetMapName().Contains("_Tile_"))
+    {
+      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: %s Skipped as it is not a tile"), 
+          *CUR_CLASS_FUNC_LINE, *World->GetMapName());
+      continue;
+    }
+
+    TArray<AActor*> TaggedActors; 
+    UGameplayStatics::GetAllActorsWithTag(World, TAG_SPREADED, TaggedActors);
+
+    for(AActor* Actor : TaggedActors)
+    {
+      Actor->Destroy();
+    }
+
+    SaveWorld(World);
   }
 }
 
@@ -283,7 +402,7 @@ bool UMapGeneratorWidget::GenerateWaterFromWorld(UWorld* RiversWorld, TSubclassO
       SplinePosition.Z = GetLandscapeSurfaceHeight(RiversWorld, SplinePosition.X, SplinePosition.Y, false) + RiverSurfaceDisplacement;
       RiverSpline->SetWorldLocationAtSplinePoint(i, SplinePosition);
     }
-
+    UpdateRiverActorSplinesEvent(RiverActor);
   }
   return true;
 }
@@ -377,7 +496,53 @@ TMap<FRoiTile, FTerrainROI> UMapGeneratorWidget::CreateTerrainRoisMap(TArray<FTe
   {
     for(FRoiTile TerrainRoiTile : TerrainRoi.TilesList)
     {
-      ResultMap.Add(TerrainRoiTile, TerrainRoi);
+      if(ResultMap.Contains(TerrainRoiTile))
+      {
+        ResultMap[TerrainRoiTile] = TerrainRoi;
+      }
+      else
+      {
+        ResultMap.Add(TerrainRoiTile, TerrainRoi);
+      }
+    }
+  }
+  return ResultMap;
+}
+
+TMap<FRoiTile, FMiscSpreadedActorsROI> UMapGeneratorWidget::CreateMiscSpreadedActorsRoisMap(TArray<FMiscSpreadedActorsROI> SpreadedActorsRoisArray)
+{
+  TMap<FRoiTile, FMiscSpreadedActorsROI> ResultMap;
+  for(FMiscSpreadedActorsROI SpreadedRoi : SpreadedActorsRoisArray)
+  {
+    for(FRoiTile SpreadedRoiTile : SpreadedRoi.TilesList)
+    {
+      ResultMap.Add(SpreadedRoiTile, SpreadedRoi);
+    }
+  }
+  return ResultMap;
+}
+
+TMap<FRoiTile, FMiscSpecificLocationActorsROI> UMapGeneratorWidget::CreateMiscSpecificLocationActorsRoisMap(TArray<FMiscSpecificLocationActorsROI> SpecificLocationActorsRoisArray)
+{
+  TMap<FRoiTile, FMiscSpecificLocationActorsROI> ResultMap;
+  for(FMiscSpecificLocationActorsROI SpecificLocationRoi : SpecificLocationActorsRoisArray)
+  {
+    for(FRoiTile SpecificLocationRoiTile : SpecificLocationRoi.TilesList)
+    {
+      ResultMap.Add(SpecificLocationRoiTile, SpecificLocationRoi);
+    }
+  }
+  return ResultMap;
+}
+
+TMap<FRoiTile, FSoilTypeROI> UMapGeneratorWidget::CreateSoilTypeRoisMap(TArray<FSoilTypeROI> SoilTypeRoisArray)
+{
+  TMap<FRoiTile, FSoilTypeROI> ResultMap;
+  for(FSoilTypeROI SoilTypeRoi : SoilTypeRoisArray)
+  {
+    for(FRoiTile SoilTypeRoiTile : SoilTypeRoi.TilesList)
+    {
+      ResultMap.Add(SoilTypeRoiTile, SoilTypeRoi);
     }
   }
   return ResultMap;
@@ -447,6 +612,76 @@ FMapGeneratorWidgetState UMapGeneratorWidget::LoadWidgetStateStructFromFile(cons
   }
 
   return WidgetState;
+}
+
+bool UMapGeneratorWidget::GenerateMiscStateFileFromStruct(FMiscWidgetState MiscState, const FString JsonPath)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating Miscellaneous State JSON"), 
+      *CUR_CLASS_FUNC_LINE);
+
+  TSharedRef<FJsonObject> OutJsonObject = MakeShareable(new FJsonObject());
+  FJsonObjectConverter::UStructToJsonObject(FMiscWidgetState::StaticStruct(), &MiscState, OutJsonObject, 0, 0);
+
+  FString OutputJsonString;
+  TSharedRef<TJsonWriter<>> JsonWriter = TJsonWriterFactory<>::Create(&OutputJsonString);
+  FJsonSerializer::Serialize(OutJsonObject, JsonWriter);
+
+  FFileHelper::SaveStringToFile(OutputJsonString, *JsonPath);
+
+  return true;
+}
+
+FMiscWidgetState UMapGeneratorWidget::LoadMiscStateStructFromFile(const FString JsonPath)
+{
+  FMiscWidgetState MiscState;
+  FString File;
+  FFileHelper::LoadFileToString(File, *JsonPath);
+
+  TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(*File);
+  TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+  bool bDeserializeSuccess = FJsonSerializer::Deserialize(JsonReader, JsonObject, FJsonSerializer::EFlags::None);
+
+  if(bDeserializeSuccess && JsonObject.IsValid())
+  {
+    FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), FMiscWidgetState::StaticStruct(), &MiscState, 1, 0);
+  }
+
+  return MiscState;
+}
+
+bool UMapGeneratorWidget::GenerateTerrainPresetFileFromStruct(FMapGeneratorPreset Preset, const FString JsonPath)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating Terrain Preset State JSON"), 
+      *CUR_CLASS_FUNC_LINE);
+
+  TSharedRef<FJsonObject> OutJsonObject = MakeShareable(new FJsonObject());
+  FJsonObjectConverter::UStructToJsonObject(FMapGeneratorPreset::StaticStruct(), &Preset, OutJsonObject, 0, 0);
+
+  FString OutputJsonString;
+  TSharedRef<TJsonWriter<>> JsonWriter = TJsonWriterFactory<>::Create(&OutputJsonString);
+  FJsonSerializer::Serialize(OutJsonObject, JsonWriter);
+
+  FFileHelper::SaveStringToFile(OutputJsonString, *JsonPath);
+
+  return true;
+}
+
+FMapGeneratorPreset UMapGeneratorWidget::LoadTerrainPresetStructFromFile(const FString JsonPath)
+{
+  FMapGeneratorPreset Preset;
+  FString File;
+  FFileHelper::LoadFileToString(File, *JsonPath);
+
+  TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(*File);
+  TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+  bool bDeserializeSuccess = FJsonSerializer::Deserialize(JsonReader, JsonObject, FJsonSerializer::EFlags::None);
+
+  if(bDeserializeSuccess && JsonObject.IsValid())
+  {
+    FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), FMapGeneratorPreset::StaticStruct(), &Preset, 1, 0);
+  }
+
+  return Preset;
 }
 
 bool UMapGeneratorWidget::LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath, bool bRecursive)
@@ -542,8 +777,15 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
 
   LargeMapManager->LargeMapTilePath = MetaInfo.DestinationPath;
   LargeMapManager->LargeMapName = MetaInfo.MapName;
-   
+
+  // Set Tile0Offset to 0 to cook tiles info
+  FVector OriginalTile0Offset = LargeMapManager->GetTile0Offset();
+  LargeMapManager->SetTile0Offset(FVector(0.0f, 0.0f, 0.0f));
+
   LargeMapManager->GenerateMap_Editor();
+
+  // Reset Tile0Offset to original mid-tile position for runtime operations
+  LargeMapManager->SetTile0Offset(OriginalTile0Offset);
 
   UPackage::SavePackage(BaseMapPackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
       *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
@@ -674,36 +916,47 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
         }
 
 
-        int FlateningMargin = 30;   // Not flatened
+        //int FlateningMargin = 30;   // Not flatened
+        int FlateningMargin = 0;   // Not flatened
         int FlateningFalloff = 100; // Transition from actual and flat value
-        int TileSize = 1009; // Should be calculated by sqrt(HeightData.Num())
+        int TileSize = TILESIZE; // Should be calculated by sqrt(HeightData.Num())
 
-        for(int X = FlateningMargin; X < (TileSize - FlateningMargin); X++)
+        bool IsThereTileUp, IsThereTileDown, IsThereTileLeft, IsThereTileRight;
+
+        /* Blending the height data of the ROI with the height data of the tile. */
+        if(FTerrainROI::IsTileInRoiBoundary(ThisTileIndex, MetaInfo.TerrainRoisMap, IsThereTileUp, IsThereTileRight, IsThereTileDown, IsThereTileLeft))
         {
-          for(int Y = FlateningMargin; Y < (TileSize - FlateningMargin); Y++)
+          /* Blending the height data of the ROI with the height data of the tile. */
+          for(int X = FlateningMargin; X < (TileSize); X++)
           {
-            float TransitionFactor = 1.0f;
+            for(int Y = FlateningMargin; Y < (TileSize); Y++)
+            {
+              float TransitionFactor = 1.0f;
 
-            if(X < (FlateningMargin + FlateningFalloff))
-            {
-              TransitionFactor *= (X - FlateningMargin) / (float) FlateningFalloff;
+              if(!IsThereTileLeft && X < (FlateningMargin + FlateningFalloff))
+              {
+                TransitionFactor *= (X - FlateningMargin) / (float) FlateningFalloff;
+              }
+              if(!IsThereTileUp && Y < (FlateningMargin + FlateningFalloff))
+              {
+                TransitionFactor *= (Y - FlateningMargin) / (float) FlateningFalloff;
+              }
+              if(!IsThereTileRight && X > (TileSize - FlateningMargin - FlateningFalloff))
+              {
+                TransitionFactor *= 1 - ((X - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
+              }
+              if(!IsThereTileDown && Y > (TileSize - FlateningMargin - FlateningFalloff))
+              {
+                TransitionFactor *= 1 - ((Y - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
+              }
+              HeightData[(X * TileSize) + Y] = (RoiHeightData[(X * TileSize) + Y]) * TransitionFactor +  HeightData[(X * TileSize) + Y] * (1-TransitionFactor);
             }
-            if(Y < (FlateningMargin + FlateningFalloff))
-            {
-              TransitionFactor *= (Y - FlateningMargin) / (float) FlateningFalloff;
-            }
-            if(X > (TileSize - FlateningMargin - FlateningFalloff))
-            {
-              TransitionFactor *= 1 - ((X - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
-            }
-            if(Y > (TileSize - FlateningMargin - FlateningFalloff))
-            {
-              TransitionFactor *= 1 - ((Y - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
-            }
-            HeightData[(X * TileSize) + Y] = (RoiHeightData[(X * TileSize) + Y]) * TransitionFactor +  HeightData[(X * TileSize) + Y] * (1-TransitionFactor);
           }
         }
-
+        else
+        {
+          HeightData = RoiHeightData;
+        }
       }
 
       // Flatening if contains river
@@ -711,9 +964,9 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       // TODO: Check and fix flatening algorithm
       if(TileMetaInfo.ContainsRiver)
       {
+        int TileSize = TILESIZE; // Should be calculated by sqrt(HeightData.Num())
         int FlateningMargin = 30;   // Not flatened
         int FlateningFalloff = 100; // Transition from actual and flat value
-        int TileSize = 1009; // Should be calculated by sqrt(HeightData.Num())
 
         for(int X = FlateningMargin; X < (TileSize - FlateningMargin); X++)
         {
@@ -750,6 +1003,32 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       SmoothHeightmap(HeightData, SmoothedData);
       HeightData = SmoothedData;
 
+      // Sew Upper and Left boundaries
+      if(BoundariesInfo.Num() != 0) // To avoid crashing on the first Tile
+      {
+        TArray<uint16> SewedData;
+        SewUpperAndLeftTiles(HeightData, SewedData, ThisTileIndex.X, ThisTileIndex.Y);
+        HeightData = SewedData;
+      }
+
+      // Store Boundaries Info
+      FTileBoundariesInfo ThisTileBoundariesInfo;
+      TArray<uint16> RightHeightData;
+      TArray<uint16> BottomHeightData;
+
+      for(int DataIndex = 0; DataIndex < TILESIZE - 1; DataIndex++)
+      {
+        // Right
+        RightHeightData.Add(HeightData[ Convert2DTo1DCoord(0, DataIndex, TILESIZE) ]);
+        // Bottom
+        BottomHeightData.Add(HeightData[ Convert2DTo1DCoord(DataIndex, TILESIZE - 1, TILESIZE) ]);
+      }
+
+      ThisTileBoundariesInfo.RightHeightData = RightHeightData;
+      ThisTileBoundariesInfo.BottomHeightData = BottomHeightData;
+      BoundariesInfo.Add(ThisTileIndex, ThisTileBoundariesInfo);
+
+
       FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f);
       Landscape->CreateLandscapeInfo();
       Landscape->SetActorTransform(FTransform(FQuat::Identity, FVector(), LandscapeScaleVector));
@@ -764,7 +1043,8 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
 
       Landscape->ReregisterAllComponents();
       Landscape->CreateLandscapeInfo();
-      Landscape->SetActorLabel("Landscape");
+      Landscape->SetActorLabel(TEXT("Landscape_"+FString::FromInt(i) + "_" + FString::FromInt(j)));
+      // Landscape->SetActorLabel("Landscape");
 
       // Apply material
       AssignLandscapeMaterial(Landscape);
@@ -785,10 +1065,11 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
             *CUR_CLASS_FUNC_LINE, *ErrorUnloadingStr.ToString());
         return false;
       }
-
-      // TODO: Instantiate water if needed
     }
   }
+
+  // Clear Boundaries Data Array
+  BoundariesInfo.Empty();
 
   CookTilesCollisions(MetaInfo);
 
@@ -923,6 +1204,88 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
   return true;
 }
 
+bool UMapGeneratorWidget::CookMiscSpreadedActors(const FMapGeneratorMetaInfo& MetaInfo)
+{
+  bool bSuccess = true;
+
+  TArray<FRoiTile> ListOfTiles;
+  MetaInfo.MiscSpreadedActorsRoisMap.GetKeys(ListOfTiles);
+
+  for(FRoiTile ThisTile : ListOfTiles)
+  {
+    // Check if map is valid
+    const FString MapCompletePath = MetaInfo.DestinationPath + "/" + MetaInfo.MapName +
+        "_Tile_" + FString::FromInt(ThisTile.X) + "_" + FString::FromInt(ThisTile.Y);
+
+    // Instantiate Weather Actor in main map
+    const FString WorldToLoadPath = MapCompletePath + "." + MetaInfo.MapName + 
+        "_Tile_" + FString::FromInt(ThisTile.X) + "_" + FString::FromInt(ThisTile.Y);
+    // UWorld* World = LoadObject<UWorld>(nullptr, *WorldToLoadPath);
+    bool bLoadedSuccess = FEditorFileUtils::LoadMap(*WorldToLoadPath, false, true);
+    if(!bLoadedSuccess){
+      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Loading %s"),
+          *CUR_CLASS_FUNC_LINE, *WorldToLoadPath);
+      return false;
+    }
+    UWorld* World = GEditor->GetEditorWorldContext().World();
+
+    if(!IsValid(World))
+    {
+      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error loading world %s"), 
+          *CUR_CLASS_FUNC_LINE, *WorldToLoadPath);
+      return false;
+    }
+
+    FMiscSpreadedActorsROI ActorROI = MetaInfo.MiscSpreadedActorsRoisMap[ThisTile];
+
+    int NumOfTilesForSpreadedActorsGrid;
+    switch(ActorROI.ActorsDensity)
+    {
+      case ESpreadedActorsDensity::LOW:
+        NumOfTilesForSpreadedActorsGrid = 50;
+        break;
+      case ESpreadedActorsDensity::MEDIUM:
+        NumOfTilesForSpreadedActorsGrid = 100;
+        break;
+      case ESpreadedActorsDensity::HIGH:
+        NumOfTilesForSpreadedActorsGrid = 200;
+        break;
+    }
+
+    float TotalMapTileSize = 100800.0f; // In cm
+    float MaxTileDisplacement = 0.5f * TotalMapTileSize / NumOfTilesForSpreadedActorsGrid;
+    for(int i = 1; i < NumOfTilesForSpreadedActorsGrid - 1; i++)
+    {
+      for(int j = 1; j < NumOfTilesForSpreadedActorsGrid - 1; j++)
+      {
+        bool bIsGridTileEligible = FMath::RandRange(0.0f,100.0f) <= ActorROI.Probability;
+        float ActorXCoord = (i * TotalMapTileSize / NumOfTilesForSpreadedActorsGrid) + FMath::RandRange(-MaxTileDisplacement,MaxTileDisplacement);
+        float ActorYCoord = (j * TotalMapTileSize / NumOfTilesForSpreadedActorsGrid) + FMath::RandRange(-MaxTileDisplacement,MaxTileDisplacement);
+        if(bIsGridTileEligible)
+        {
+          float ActorZCoord = GetLandscapeSurfaceHeight(World, ActorXCoord, ActorYCoord, false);
+          FVector Location(ActorXCoord, ActorYCoord, ActorZCoord);
+          // TODO: Add rotation randomly?
+          FRotator Rotation(0, 0, 0);
+          FActorSpawnParameters SpawnInfo;
+
+          AActor* SpreadedActor =  World->SpawnActor<AActor>(
+              ActorROI.ActorClass, 
+              Location, 
+              Rotation, 
+              SpawnInfo);
+          SpreadedActor->Tags.Add(TAG_SPREADED);
+        }
+      }
+    }
+
+    // Save map
+    SaveWorld(World); 
+  }
+
+  return bSuccess;
+}
+
 UWorld* UMapGeneratorWidget::GetWorldFromAssetData(FAssetData& WorldAssetData)
 {
   UWorld* World;
@@ -947,7 +1310,50 @@ float UMapGeneratorWidget::GetLandscapeSurfaceHeight(UWorld* World, float x, flo
     FVector Location(x, y, 0);
     TOptional<float> Height = Landscape->GetHeightAtLocation(Location);
     // TODO: Change function return type to TOptional<float>
-    return Height.IsSet() ? Height.GetValue() : 0.0f;
+    return Height.IsSet() ? Height.GetValue() : GetLandscapeSurfaceHeightFromRayCast(World, x, y, bDrawDebugLines);
+  }
+  return 0.0f;
+}
+
+float UMapGeneratorWidget::GetLandscapeSurfaceHeightFromRayCast(UWorld* World, float x, float y, bool bDrawDebugLines)
+{
+  if(World)
+  {
+    FVector RayStartingPoint(x, y, 9999999);
+    FVector RayEndPoint(x, y, -9999999);
+
+    // Raytrace
+    FHitResult HitResult;
+    World->LineTraceSingleByObjectType(
+        OUT HitResult,
+        RayStartingPoint,
+        RayEndPoint,
+        FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldStatic),
+        FCollisionQueryParams());
+
+    // Draw debug line.
+    if (bDrawDebugLines)
+    {
+      FColor LineColor;
+
+      if (HitResult.GetActor()) LineColor = FColor::Red;
+      else LineColor = FColor::Green;
+
+      DrawDebugLine(
+          World,
+          RayStartingPoint,
+          RayEndPoint,
+          LineColor,
+          true,
+          5.f,
+          0.f,
+          10.f);
+    }
+
+    // Return Z Location.
+    if (HitResult.GetActor()) 
+      return HitResult.ImpactPoint.Z;
+
   }
   return 0.0f;
 }
@@ -985,11 +1391,11 @@ void UMapGeneratorWidget::SmoothHeightmap(TArray<uint16> HeightData, TArray<uint
 
   // Apply kernel to height data
   int TileMargin = 2;
-  int TileSize = 1009; // Should be calculated by sqrt(HeightData.Num())
 
-  for(int X = TileMargin; X < (TileSize - TileMargin); X++)
+  /* Applying a smoothing kernel to the height data */
+  for(int X = 0; X < (TILESIZE); X++)
   {
-    for(int Y = TileMargin; Y < (TileSize - TileMargin); Y++)
+    for(int Y = 0; Y < (TILESIZE); Y++)
     {
       int Value = 0;
 
@@ -998,15 +1404,56 @@ void UMapGeneratorWidget::SmoothHeightmap(TArray<uint16> HeightData, TArray<uint
         for(int j = -2; j <=2; j++)
         {
           float KernelValue = SmoothKernel[(i+2)*2 + (j+2)];
-          int HeightValue = HeightData[ (X+i) * TileSize + (Y+j) ];
+
+          int IndexX = X+i;
+          int IndexY = Y+j;
+
+          /* Checking if the index is out of bounds. If it is, it sets the index to the current X or Y. */
+          if(IndexX < 0 || IndexX >= TILESIZE)
+              IndexX = X;
+          if(IndexY < 0 || IndexY >= TILESIZE)
+              IndexY = Y;
+
+          int HeightValue = HeightData[ Convert2DTo1DCoord(IndexX, IndexY, TILESIZE) ];
 
           Value += (int) ( KernelValue * HeightValue );
         }
       }
 
-      SmoothedData[(X * TileSize) + Y] = Value;
+      SmoothedData[ Convert2DTo1DCoord(X, Y, TILESIZE) ] = Value;
     }
   }
 
   OutHeightData = SmoothedData;
+}
+
+void UMapGeneratorWidget::SewUpperAndLeftTiles(TArray<uint16> HeightData, TArray<uint16>& OutHeightData, int IndexX, int IndexY)
+{
+  TArray<uint16> SewedData(HeightData);
+
+  FRoiTile ThisTile(IndexX, IndexY);
+  FRoiTile UpTile = ThisTile.Up();
+  FRoiTile LeftTile = ThisTile.Right(); // Right because of the coord system used
+
+  // Up
+  if(BoundariesInfo.Contains(UpTile))
+  {
+    for(int DataIndex = 0; DataIndex < TILESIZE - 1; DataIndex++)
+    {
+      TArray<uint16> BottomInfo = BoundariesInfo[UpTile].BottomHeightData;
+      SewedData[ Convert2DTo1DCoord(DataIndex, 0, TILESIZE) ] = BottomInfo[DataIndex];
+    }
+  }
+
+  // Left
+  if(BoundariesInfo.Contains(LeftTile))
+  {
+    for(int DataIndex = 0; DataIndex < TILESIZE - 1; DataIndex++)
+    {
+      TArray<uint16> RightInfo = BoundariesInfo[LeftTile].RightHeightData;
+      SewedData[ Convert2DTo1DCoord(TILESIZE - 1, DataIndex, TILESIZE) ] = RightInfo[DataIndex];
+    }
+  }
+
+  OutHeightData = SewedData;
 }
