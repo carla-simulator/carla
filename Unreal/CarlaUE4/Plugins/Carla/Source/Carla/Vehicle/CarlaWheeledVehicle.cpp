@@ -206,18 +206,13 @@ bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::IsInVehicleRange);
   
-  float Distance = 0.0f;
   ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
-  if (LargeMap)
-  {
-    FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
-    Distance = FVector::Distance(Location, GlobalTransform.GetLocation());
-  }
-  else
-  {
-    Distance = FVector::Distance(Location, GetActorTransform().GetLocation());
-  }
-  return Distance < DetectionSize * 10.0f;
+  if (!IsValid(LargeMap))
+    return false;
+  FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
+  const float Distance = FVector::Distance(Location, GlobalTransform.GetLocation());
+  const FVector BoxSize = FoliageBoundingBox.GetSize();
+  return FMath::Abs(Distance) < (BoxSize.X * 3.0f);
 }
 
 void ACarlaWheeledVehicle::UpdateDetectionBox()

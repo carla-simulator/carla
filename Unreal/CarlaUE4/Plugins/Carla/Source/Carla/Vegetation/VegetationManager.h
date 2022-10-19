@@ -107,12 +107,10 @@ protected:
 
 private:
   bool IsFoliageTypeEnabled(const FString& Path) const;
-  bool CheckIfAnyVehicleInLevel() const;
   bool CheckForNewTiles() const;
 
   TArray<FString> GetTilesInUse();
 
-  void UpdateVehiclesDetectionBoxes();
   void UpdateMaterials(TArray<FString>& Tiles);
   TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> GetElementsToSpawn(const TArray<FString>& Tiles);
   void SpawnSkeletalFoliages(TArray<TPair<FFoliageBlueprint, TArray<FTransform>>>& ElementsToSpawn);
@@ -138,7 +136,7 @@ private:
 private:
   //Actors
   ALargeMapManager* LargeMap {nullptr};
-  TArray<ACarlaWheeledVehicle*> VehiclesInLevel {};
+  ACarlaWheeledVehicle* HeroVehicle {nullptr};
   //Caches
   TMap<FString, FFoliageBlueprint> FoliageBlueprintCache {};
   TMap<FString, FTileData> TileCache {};

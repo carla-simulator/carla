@@ -189,12 +189,10 @@ void AVegetationManager::Tick(float DeltaTime)
   }
   if (!LargeMap)
     return;
-  bool FoundVehicles = CheckIfAnyVehicleInLevel();
-  if (!FoundVehicles)
+  HeroVehicle = LargeMap->GetHeroVehicle();
+  if (!IsValid(HeroVehicle))
     return;
-
-  UpdateVehiclesDetectionBoxes();
-  
+  HeroVehicle->UpdateDetectionBox();  
   TArray<FString> TilesInUse = GetTilesInUse();
   if (TilesInUse.Num() == 0)
     return;
@@ -213,9 +211,7 @@ void AVegetationManager::AddVehicle(ACarlaWheeledVehicle* Vehicle)
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::AddVehicle);
   if (!IsValid(Vehicle))
     return;
-  if (VehiclesInLevel.Contains(Vehicle))
-    return;
-  VehiclesInLevel.Emplace(Vehicle);
+  HeroVehicle = Vehicle;
   UE_LOG(LogCarla, Display, TEXT("Vehicle added."));
 }
 
@@ -224,9 +220,7 @@ void AVegetationManager::RemoveVehicle(ACarlaWheeledVehicle* Vehicle)
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::RemoveVehicle);
   if (!IsValid(Vehicle))
     return;
-  if (!VehiclesInLevel.Contains(Vehicle))
-    return;
-  VehiclesInLevel.RemoveSingle(Vehicle);
+  HeroVehicle = nullptr;
   UE_LOG(LogCarla, Display, TEXT("Vehicle removed."));
 }
 
@@ -316,7 +310,7 @@ void AVegetationManager::SetMaterialCache(FTileData& TileData)
   if (TileData.MaterialInstanceDynamicCache.Num() > 0)
     TileData.MaterialInstanceDynamicCache.Empty();
   
-  const float Distance = VehiclesInLevel.Last()->DetectionSize * 2.0f;
+  const float Distance = 300.0f;
   for (FTileMeshComponent& Element : TileData.TileMeshesCache)
   {
     UInstancedStaticMeshComponent* Mesh = Element.InstancedStaticMeshComponent;
@@ -368,7 +362,7 @@ void AVegetationManager::UpdateFoliageBlueprintCache(ULevel* InLevel)
       
       if (!NewFoliageBlueprint.IsValid())
       {
-        UE_LOG(LogCarla, Error, TEXT("Blueprint %s was invalid."), *NewFoliageBlueprint.BPFullClassName);
+        UE_LOG(LogCarla, Warning, TEXT("Blueprint %s was invalid."), *NewFoliageBlueprint.BPFullClassName);
       }
       else
       {
@@ -383,6 +377,8 @@ void AVegetationManager::UpdateFoliageBlueprintCache(ULevel* InLevel)
 void AVegetationManager::FreeTileCache(ULevel* InLevel)
 {
   if (!IsValid(InLevel))
+    return;
+  if (IsValid(HeroVehicle))
     return;
   FTileData TileData {};
   for (AActor* Actor : InLevel->Actors)
@@ -414,17 +410,10 @@ void AVegetationManager::FreeTileCache(ULevel* InLevel)
 /********************************************************************************/
 /********** TICK ****************************************************************/
 /********************************************************************************/
-void AVegetationManager::UpdateVehiclesDetectionBoxes()
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::UpdateVehiclesDetectionBoxes);
-  for (ACarlaWheeledVehicle* Vehicle : VehiclesInLevel)
-    Vehicle->UpdateDetectionBox();
-}
-
 void AVegetationManager::UpdateMaterials(TArray<FString>& Tiles)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::UpdateMaterials);
-  const FLinearColor Position = VehiclesInLevel.Last()->GetActorLocation();
+  const FLinearColor Position = HeroVehicle->GetActorLocation();
   for (const FString& TileName : Tiles)
   {
     FTileData* TileData = TileCache.Find(TileName);
@@ -451,7 +440,7 @@ TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> AVegetationManager::GetElem
       FFoliageBlueprint* BP = FoliageBlueprintCache.Find(Path);
       if (!BP)
         continue;
-      TArray<int32> Indices = VehiclesInLevel.Last()->GetFoliageInstancesCloseToVehicle(InstancedStaticMeshComponent);
+      TArray<int32> Indices = HeroVehicle->GetFoliageInstancesCloseToVehicle(InstancedStaticMeshComponent);
       if (Indices.Num() == 0)
         continue;
 
@@ -525,7 +514,7 @@ void AVegetationManager::DestroySkeletalFoliages()
       if (!Actor.InUse)
           continue;
       const FVector Location = Actor.GlobalTransform.GetLocation();
-      if (!VehiclesInLevel.Last()->IsInVehicleRange(Location))
+      if (!HeroVehicle->IsInVehicleRange(Location))
       {
         Actor.DisableActor();
         UE_LOG(LogCarla, Display, TEXT("Disabled Actor"));
@@ -611,12 +600,6 @@ void AVegetationManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorl
   FreeTileCache(InLevel);
 }
 
-bool AVegetationManager::CheckIfAnyVehicleInLevel() const
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::CheckIfAnyVehicleInLevel);
-  return VehiclesInLevel.Num() > 0;
-}
-
 bool AVegetationManager::IsFoliageTypeEnabled(const FString& Path) const
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::IsFoliageTypeEnabled);
@@ -675,18 +658,12 @@ TArray<FString> AVegetationManager::GetTilesInUse()
       continue;
     const FBox Box = Procedural->ProceduralComponent->GetBounds();
     if (!Box.IsValid)
-      continue;
-    
-    for (ACarlaWheeledVehicle* Vehicle : VehiclesInLevel)
-    {
-      if (!IsValid(Vehicle))
-        continue;   
-      if (Box.IsInside(Vehicle->GetActorLocation()))
+      continue; 
+    if (Box.IsInside(HeroVehicle->GetActorLocation()))
       {
         Results.Emplace(Element.Key);
         break;
       }
-    }
   }
   return Results;
 }
