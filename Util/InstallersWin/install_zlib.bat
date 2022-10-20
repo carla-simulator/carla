@@ -71,12 +71,12 @@ if not exist "%ZLIB_SRC_DIR%" (
     if not exist "%ZLIB_TEMP_FILE_DIR%" (
         echo %FILE_N% Retrieving %ZLIB_BASENAME%.
         powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%ZLIB_REPO%', '%ZLIB_TEMP_FILE_DIR%')"
-        if %errorlevel% == 0 (
-            echo %FILE_N% Retrieving %ZLIB_BASENAME% from backup.
-            powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%ZLIB_BACKUP_REPO%', '%ZLIB_TEMP_FILE_DIR%')"
-        )
-        if %errorlevel% neq 0 goto error_download
     )
+    if not exist "%ZLIB_TEMP_FILE_DIR%" (
+        echo %FILE_N% Retrieving %ZLIB_BASENAME% from backup.
+        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%ZLIB_BACKUP_REPO%', '%ZLIB_TEMP_FILE_DIR%')"
+    )
+    if %errorlevel% neq 0 goto error_download
     rem Extract the downloaded library
     echo %FILE_N% Extracting zlib from "%ZLIB_TEMP_FILE%".
     powershell -Command "Expand-Archive '%ZLIB_TEMP_FILE_DIR%' -DestinationPath '%BUILD_DIR%'"

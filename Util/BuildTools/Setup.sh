@@ -454,6 +454,12 @@ else
   log "Retrieving xerces-c."
   wget ${XERCESC_REPO}
 
+  # try to use the backup boost we have in Jenkins
+  if [[ ! -f "${XERCESC_BASENAME}.tar.gz" ]] ; then
+    log "Using xerces backup"
+    wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${XERCESC_BASENAME}.tar.gz" || true
+  fi
+
   log "Extracting xerces-c."
   tar -xzf ${XERCESC_BASENAME}.tar.gz
   mv ${XERCESC_BASENAME} ${XERCESC_SRC_DIR}
