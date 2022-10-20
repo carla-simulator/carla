@@ -40,7 +40,7 @@ rem -- Local Variables ---------------------------------------------------------
 rem ============================================================================
 
 set XERCESC_BASENAME=xerces-c
-set XERCESC_VERSION=3.2.4
+set XERCESC_VERSION=3.2.3
 
 rem xerces-c-x.x.x
 set XERCESC_TEMP_FOLDER=%XERCESC_BASENAME%-%XERCESC_VERSION%
@@ -51,7 +51,7 @@ set XERCESC_TEMP_FILE=%XERCESC_TEMP_FOLDER%-src.zip
 rem ../xerces-c-x.x.x-src.zip
 set XERCESC_TEMP_FILE_DIR=%BUILD_DIR%%XERCESC_TEMP_FILE%
 
-set XERCESC_REPO=https://downloads.apache.org/xerces/c/3/sources/xerces-c-%XERCESC_VERSION%.zip
+set XERCESC_REPO=https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-%XERCESC_VERSION%.zip
 
 rem ../xerces-c-x.x.x-source/
 set XERCESC_SRC_DIR=%BUILD_DIR%%XERCESC_BASENAME%-%XERCESC_VERSION%-source\
