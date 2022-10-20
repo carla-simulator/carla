@@ -277,7 +277,7 @@ static carla::Buffer FWorldObserver_Serialize(
   auto total_size = sizeof(Serializer::Header) + sizeof(ActorDynamicState) * Registry.Num();
   auto current_size = 0;
   // Set up buffer for writing.
-  buffer.reset(total_size);
+  buffer.reset(static_cast<carla::Buffer::size_type>(total_size));
   auto write_data = [&current_size, &buffer](const auto &data)
   {
     auto begin = buffer.begin() + current_size;

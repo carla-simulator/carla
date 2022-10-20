@@ -34,8 +34,8 @@ def get_libcarla_extensions():
     if os.name == "posix":
         import distro
 
-        linux_distro = distro.linux_distribution()[0]
-        if linux_distro.lower() in ["ubuntu", "debian", "deepin"]:
+        if distro.id().lower() in ["ubuntu", "debian", "deepin", "darwin"]:
+            is_mac = bool(distro.id().lower() == "darwin")
             pwd = os.path.dirname(os.path.realpath(__file__))
             pylib = "libboost_python%d%d.a" % (sys.version_info.major,
                                                sys.version_info.minor)
@@ -63,6 +63,9 @@ def get_libcarla_extensions():
                 '-Wconversion', '-Wfloat-overflow-conversion',
                 '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT'
             ]
+            if is_mac:
+                extra_compile_args += ['-stdlib=libc++'] # compile same as boost
+                # see: https://stackoverflow.com/questions/35006614/what-does-symbol-not-found-expected-in-flat-namespace-actually-mean
             if is_rss_variant_enabled():
                 extra_compile_args += ['-DLIBCARLA_RSS_ENABLED']
                 extra_compile_args += ['-DLIBCARLA_PYTHON_MAJOR_' +  str(sys.version_info.major)]
@@ -91,7 +94,10 @@ def get_libcarla_extensions():
                 extra_link_args += ['-ljpeg', '-ltiff']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false']
             else:
-                extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
+                if is_mac:
+                    extra_link_args += ['-lpng'] # TODO: find a suitable MacOS replacement for libjpeg and libtiff
+                else:
+                    extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
             # @todo Why would we need this?
             # include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
