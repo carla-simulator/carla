@@ -201,7 +201,7 @@ void AVegetationManager::Tick(float DeltaTime)
   }
   if (!LargeMap)
     return;
-    
+  HeroVehicle = LargeMap->GetHeroVehicle();
   if (!IsValid(HeroVehicle))
     return;
     
