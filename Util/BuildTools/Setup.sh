@@ -438,7 +438,7 @@ fi
 # -- Get and compile libxerces 3.2.3 ------------------------------
 # ==============================================================================
 
-XERCESC_VERSION=3.2.4
+XERCESC_VERSION=3.2.3
 XERCESC_BASENAME=xerces-c-${XERCESC_VERSION}
 
 XERCESC_TEMP_FOLDER=${XERCESC_BASENAME}

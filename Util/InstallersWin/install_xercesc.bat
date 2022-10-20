@@ -40,7 +40,7 @@ rem -- Local Variables ---------------------------------------------------------
 rem ============================================================================
 
 set XERCESC_BASENAME=xerces-c
-set XERCESC_VERSION=3.2.4
+set XERCESC_VERSION=3.2.3
 
 rem xerces-c-x.x.x
 set XERCESC_TEMP_FOLDER=%XERCESC_BASENAME%-%XERCESC_VERSION%
