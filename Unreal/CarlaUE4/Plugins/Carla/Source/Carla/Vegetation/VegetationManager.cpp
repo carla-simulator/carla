@@ -73,7 +73,10 @@ void FPooledActor::DisableActor()
   TRACE_CPUPROFILER_EVENT_SCOPE(FPooledActor::DisableActor);
 
   if (TileMeshComponent)
-    TileMeshComponent->IndicesInUse.RemoveSingle(Index);
+  {
+    if (TileMeshComponent->IndicesInUse.Num() > 0)
+      TileMeshComponent->IndicesInUse.RemoveSingle(Index);
+  }
 
   InUse = false;
   Index = -1;
