@@ -977,7 +977,7 @@ void USpringBasedVegetationComponent::OnCollisionEvent(
       return;
   }
   COLLISION_LOG(LogCarla, Log, TEXT("Collision with bone %s, with impulse %s"), *Hit.MyBoneName.ToString(), *NormalImpulse.ToString());
-  // Skeleton.AddForce(Hit.MyBoneName.ToString(), NormalImpulse);
+  Skeleton.AddForce(Hit.MyBoneName.ToString(), NormalImpulse);
 }
 
 void USpringBasedVegetationComponent::OnBeginOverlapEvent(
