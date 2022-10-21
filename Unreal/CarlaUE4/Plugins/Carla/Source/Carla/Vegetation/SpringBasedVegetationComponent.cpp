@@ -301,7 +301,7 @@ void USpringBasedVegetationComponent::GenerateSkeletonHierarchy()
     }
   }
 
-  UpdateGlobalTransform();
+  // UpdateGlobalTransform();
 }
 
 void USpringBasedVegetationComponent::BeginPlay()
@@ -328,47 +328,6 @@ void USpringBasedVegetationComponent::BeginPlay()
   if (!Skeleton.Joints.Num())
   {
     GenerateSkeletonHierarchy();
-  }
-
-  // Get resting pose for bones
-  auto *AnimInst = SkeletalMesh->GetAnimInstance();
-  if (!AnimInst)
-  {
-    OTHER_LOG(Error, "Could not get animation instance.");
-    return;
-  }
-  UWalkerAnim *WalkerAnim = Cast<UWalkerAnim>(AnimInst);
-  if (!WalkerAnim)
-  {
-    OTHER_LOG(Error, "Could not get UWalkerAnim.");
-    return;
-  }
-
-  // get current pose
-  FPoseSnapshot TempSnapshot;
-  SkeletalMesh->SnapshotPose(TempSnapshot);
-
-  // copy pose
-  WalkerAnim->Snap = TempSnapshot;
-
-  for (int i=0; i<Skeleton.Joints.Num(); ++i)
-  {
-    FSkeletonJoint& Joint = Skeleton.Joints[i];
-    FTransform JointTransform = SkeletalMesh->GetSocketTransform(FName(*Joint.JointName), ERelativeTransformSpace::RTS_ParentBoneSpace);
-    Joint.Transform = JointTransform;
-    Joint.RestingAngles = JointTransform.Rotator();
-    OTHER_LOG(Log, "Getting info for bone %s, %f, %f, %f, %f", *Joint.JointName, Joint.RestingAngles.Pitch, Joint.RestingAngles.Yaw, Joint.RestingAngles.Roll);
-    if(i > 0)
-    {
-      FSkeletonJoint& ParentJoint = Skeleton.Joints[Joint.ParentId];
-      FVector BoneCOM = Joint.Transform.GetLocation()*0.5f;
-      float BoneLength = Joint.Transform.GetLocation().Size();
-      ParentJoint.Bones.Add({10, BoneLength, BoneCOM});
-    }
-  }
-  for (int i=0; i<TempSnapshot.BoneNames.Num(); ++i)
-  {
-    OTHER_LOG(Log, "Joint list: %s", *TempSnapshot.BoneNames[i].ToString());
   }
 
   UpdateGlobalTransform();
@@ -1018,7 +977,7 @@ void USpringBasedVegetationComponent::OnCollisionEvent(
       return;
   }
   COLLISION_LOG(LogCarla, Log, TEXT("Collision with bone %s, with impulse %s"), *Hit.MyBoneName.ToString(), *NormalImpulse.ToString());
-  Skeleton.AddForce(Hit.MyBoneName.ToString(), NormalImpulse);
+  // Skeleton.AddForce(Hit.MyBoneName.ToString(), NormalImpulse);
 }
 
 void USpringBasedVegetationComponent::OnBeginOverlapEvent(
