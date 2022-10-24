@@ -211,7 +211,7 @@ void AVegetationManager::Tick(float DeltaTime)
       return;
   }
     
-  HeroVehicle->UpdateDetectionBox();  
+  HeroVehicle->UpdateDetectionBox();
   TArray<FString> TilesInUse = GetTilesInUse();
   if (TilesInUse.Num() == 0)
   {
@@ -675,12 +675,10 @@ TArray<FString> AVegetationManager::GetTilesInUse()
       continue;
     const FBox Box = Procedural->ProceduralComponent->GetBounds();
     if (!Box.IsValid)
-      continue; 
-    if (Box.IsInside(HeroVehicle->GetActorLocation()))
-      {
+      continue;
+    const FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
+    if (Box.IsInside(GlobalTransform.GetLocation()))
         Results.Emplace(Element.Key);
-        break;
-      }
   }
   return Results;
 }
