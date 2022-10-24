@@ -310,7 +310,8 @@ public:
   bool bUseSoilType = false;
   UPROPERTY(EditAnywhere)
   bool NNVerbose = false;
-
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool bUseLocalFrame = false;
 private:
 
   void RunNNPhysicsSimulation(
@@ -318,7 +319,8 @@ private:
   // TArray<FParticle*> GetParticlesInRange(...);
   void SetUpParticleArrays(std::vector<FParticle*>& ParticlesIn, 
       TArray<float>& ParticlePosOut, 
-      TArray<float>& ParticleVelOut);
+      TArray<float>& ParticleVelOut,
+      const FTransform &WheelTransform);
   void SetUpWheelArrays(ACarlaWheeledVehicle *Vehicle, int WheelIdx,
       TArray<float>& WheelPos, 
       TArray<float>& WheelOrientation, 
@@ -326,7 +328,7 @@ private:
       TArray<float>& WheelAngularVelocity);
   void UpdateParticles(
       std::vector<FParticle*> Particles, std::vector<float> Forces,
-      float DeltaTime);
+      float DeltaTime, const FTransform& WheelTransform);
   void ApplyForcesToVehicle(
       ACarlaWheeledVehicle *Vehicle,
       FVector ForceWheel0, FVector ForceWheel1, FVector ForceWheel2, FVector ForceWheel3,
@@ -341,6 +343,8 @@ private:
   void ApplyForces();
   void LimitParticlesPerWheel(std::vector<FParticle*> &Particles);
   void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles, 
+      FLinearColor Color = FLinearColor(1.f, 0.f, 0.f));
+  void DrawParticlesArray(UWorld* World, TArray<float>& ParticlesArray, 
       FLinearColor Color = FLinearColor(1.f, 0.f, 0.f));
   void DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes);
   void DrawTiles(UWorld* World, const std::vector<uint64_t>& TilesIds, float Height = 0,
