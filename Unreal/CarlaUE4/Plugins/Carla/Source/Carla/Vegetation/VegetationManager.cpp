@@ -204,9 +204,12 @@ void AVegetationManager::Tick(float DeltaTime)
   }
   if (!LargeMap)
     return;
-  HeroVehicle = LargeMap->GetHeroVehicle();
   if (!IsValid(HeroVehicle))
-    return;
+  {
+    HeroVehicle = LargeMap->GetHeroVehicle();
+    if (!IsValid(HeroVehicle))
+      return;
+  }
     
   HeroVehicle->UpdateDetectionBox();  
   TArray<FString> TilesInUse = GetTilesInUse();
@@ -216,7 +219,6 @@ void AVegetationManager::Tick(float DeltaTime)
     return;
   }
 
-  //HeroVehicle->DrawFoliageBoundingBox();
   for (const FString& TileName : TilesInUse)
   {
     FTileData* Tile = TileCache.Find(TileName);
@@ -266,6 +268,8 @@ void AVegetationManager::CreateOrUpdateTileCache(ULevel* InLevel)
     TileData.InstancedFoliageActor = InstancedFoliageActor;
     break;
   }
+  if (!IsValid(TileData.InstancedFoliageActor))
+    return;
 
   for (AActor* Actor : InLevel->Actors)
   {
@@ -275,18 +279,17 @@ void AVegetationManager::CreateOrUpdateTileCache(ULevel* InLevel)
     TileData.ProceduralFoliageVolume = ProceduralFoliageVolume;
     break;
   }
+  if (!IsValid(TileData.ProceduralFoliageVolume))
+    return;
+
   const FString TileName = TileData.InstancedFoliageActor->GetLevel()->GetOuter()->GetName();
   FTileData* ExistingTileData = TileCache.Find(TileName);
   if (ExistingTileData)
   {
     ExistingTileData->InstancedFoliageActor = TileData.InstancedFoliageActor;
     ExistingTileData->ProceduralFoliageVolume = TileData.ProceduralFoliageVolume;
-    for (FTileMeshComponent& Element : ExistingTileData->TileMeshesCache)
-    {
-      Element.InstancedStaticMeshComponent = nullptr;
-      Element.IndicesInUse.Empty();
-    }
     ExistingTileData->TileMeshesCache.Empty();
+    ExistingTileData->MaterialInstanceDynamicCache.Empty();
     SetTileDataInternals(*ExistingTileData);
   }
   else
@@ -294,7 +297,6 @@ void AVegetationManager::CreateOrUpdateTileCache(ULevel* InLevel)
     SetTileDataInternals(TileData);
     TileCache.Emplace(TileName, TileData);
   }
-
 }
 
 void AVegetationManager::SetTileDataInternals(FTileData& TileData)
@@ -406,9 +408,7 @@ void AVegetationManager::FreeTileCache(ULevel* InLevel)
 {
   if (!IsValid(InLevel))
     return;
-  if (IsValid(HeroVehicle))
-    return;
-  FTileData TileData {};
+  AInstancedFoliageActor* TileInstancedFoliageActor = nullptr;
   for (AActor* Actor : InLevel->Actors)
   {
     if (!IsValid(Actor))
@@ -416,12 +416,12 @@ void AVegetationManager::FreeTileCache(ULevel* InLevel)
     AInstancedFoliageActor* InstancedFoliageActor = Cast<AInstancedFoliageActor>(Actor);
     if (!IsValid(InstancedFoliageActor))
       continue;
-    TileData.InstancedFoliageActor = InstancedFoliageActor;
+    TileInstancedFoliageActor = InstancedFoliageActor;
     break;
   }
-  if (TileData.InstancedFoliageActor == nullptr)
+  if (!IsValid(TileInstancedFoliageActor))
     return;
-  const FString TileName = TileData.InstancedFoliageActor->GetLevel()->GetOuter()->GetName();
+  const FString TileName = TileInstancedFoliageActor->GetLevel()->GetOuter()->GetName();
   FTileData* ExistingTileData = TileCache.Find(TileName);
   if (ExistingTileData)
   {
@@ -431,6 +431,9 @@ void AVegetationManager::FreeTileCache(ULevel* InLevel)
       Element.IndicesInUse.Empty();
     }
     ExistingTileData->TileMeshesCache.Empty();
+    ExistingTileData->InstancedFoliageActor = nullptr;
+    ExistingTileData->ProceduralFoliageVolume = nullptr;
+
     TileCache.Remove(TileName);
   }
 }
@@ -505,7 +508,7 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& Element
       bool Ok = EnableActorFromPool(Transform, Index, Element.TileMeshComponent, *Pool);
       if (Ok)
       {
-        //UE_LOG(LogCarla, Display, TEXT("Pooled actor"));
+        
       }
       else
       {
@@ -515,8 +518,6 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& Element
         {
           NewElement.EnableActor(Transform, Index, Element.TileMeshComponent);
           Pool->Emplace(NewElement);
-          //UE_LOG(LogCarla, Display, TEXT("Created actor: %s"), *Element.BP.BPFullClassName);
-          //UE_LOG(LogCarla, Display, TEXT("New Pool Size: %d"), Pool->Num());
         } 
       }
     }
@@ -537,7 +538,6 @@ void AVegetationManager::DestroySkeletalFoliages()
       if (!HeroVehicle->IsInVehicleRange(Location))
       {
         Actor.DisableActor();
-        //UE_LOG(LogCarla, Display, TEXT("Disabled Actor"));
       }
     }
   }
