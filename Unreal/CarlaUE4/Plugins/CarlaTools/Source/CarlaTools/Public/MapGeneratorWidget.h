@@ -63,6 +63,12 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
   TMap<FRoiTile, FMiscSpreadedActorsROI> MiscSpreadedActorsRoisMap;
 
   UPROPERTY(BlueprintReadWrite)
+  TSubclassOf<AActor> VegetationManagerBpClass;
+
+  UPROPERTY(BlueprintReadWrite)
+  TSubclassOf<AActor> TerramechanicsBpClass;
+
+  UPROPERTY(BlueprintReadWrite)
   float RiverChanceFactor;
 
   UPROPERTY(BlueprintReadWrite)
