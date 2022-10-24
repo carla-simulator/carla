@@ -205,26 +205,19 @@ void ACarlaWheeledVehicle::BeginPlay()
 bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::IsInVehicleRange);
-  
-  float Distance = 0.0f;
-  ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
-  if (LargeMap)
-  {
-    FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
-    Distance = FVector::Distance(Location, GlobalTransform.GetLocation());
-  }
-  else
-  {
-    Distance = FVector::Distance(Location, GetActorTransform().GetLocation());
-  }
-  return Distance < DetectionSize * 10.0f;
+
+  return FoliageBoundingBox.IsInside(Location);
 }
 
 void ACarlaWheeledVehicle::UpdateDetectionBox()
 {
+  ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
+  if (!IsValid(LargeMap))
+    return;
+  FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
   const FVector Vec { DetectionSize, DetectionSize, DetectionSize};
   FBox Box = FBox(-Vec, Vec);
-  FoliageBoundingBox = Box.TransformBy(GetActorTransform());
+  FoliageBoundingBox = Box.TransformBy(GlobalTransform);
 }
 
 const TArray<int32> ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const
@@ -937,8 +930,8 @@ FVector ACarlaWheeledVehicle::GetVelocity() const
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   ShowDebugTelemetry(false);
-  RemoveReferenceToManager();
   Super::EndPlay(EndPlayReason);
+  RemoveReferenceToManager();
 }
 
 void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {

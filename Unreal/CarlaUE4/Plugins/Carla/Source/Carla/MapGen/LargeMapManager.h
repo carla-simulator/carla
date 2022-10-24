@@ -197,6 +197,8 @@ public:
 
   FCarlaMapTile& LoadCarlaMapTile(FString TileMapPath, TileID TileId);
 
+  ACarlaWheeledVehicle* GetHeroVehicle();
+
 protected:
 
   void UpdateTilesState();

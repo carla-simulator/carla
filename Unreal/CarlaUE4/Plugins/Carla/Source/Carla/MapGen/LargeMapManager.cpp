@@ -209,6 +209,17 @@ void ALargeMapManager::OnActorSpawned(
 
 }
 
+ACarlaWheeledVehicle* ALargeMapManager::GetHeroVehicle()
+{
+  if (ActorsToConsider.Num() > 0)
+  {
+    ACarlaWheeledVehicle* Hero = Cast<ACarlaWheeledVehicle>(ActorsToConsider[0]);
+    if (IsValid(Hero))
+      return Hero;
+  }
+  return nullptr;
+}
+
 void ALargeMapManager::OnActorDestroyed(AActor* DestroyedActor)
 {
   LM_LOG(Warning, "ALargeMapManager::OnActorDestroyed %s", *DestroyedActor->GetName());

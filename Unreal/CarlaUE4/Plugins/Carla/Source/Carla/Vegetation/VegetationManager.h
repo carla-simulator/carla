@@ -60,9 +60,20 @@ struct FPooledActor
   bool InUse { false };
   AActor* Actor { nullptr };
   FTransform GlobalTransform {FTransform()};
+  int32 Index {-1};
+  FTileMeshComponent* TileMeshComponent {nullptr};
 
-  void EnableActor();
+  void EnableActor(const FTransform& Transform, int32 NewIndex, FTileMeshComponent* NewTileMeshComponent);
   void DisableActor();
+};
+
+USTRUCT()
+struct FElementsToSpawn
+{
+  GENERATED_BODY()
+  FTileMeshComponent* TileMeshComponent;
+  FFoliageBlueprint BP;
+  TArray<TPair<FTransform, int32>> TransformIndex;
 };
 
 UCLASS()
@@ -107,17 +118,15 @@ protected:
 
 private:
   bool IsFoliageTypeEnabled(const FString& Path) const;
-  bool CheckIfAnyVehicleInLevel() const;
   bool CheckForNewTiles() const;
 
   TArray<FString> GetTilesInUse();
 
-  void UpdateVehiclesDetectionBoxes();
-  void UpdateMaterials(TArray<FString>& Tiles);
-  TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> GetElementsToSpawn(const TArray<FString>& Tiles);
-  void SpawnSkeletalFoliages(TArray<TPair<FFoliageBlueprint, TArray<FTransform>>>& ElementsToSpawn);
+  void UpdateMaterials(FTileData* Tile);
+  TArray<FElementsToSpawn> GetElementsToSpawn(FTileData* Tile);
+  void SpawnSkeletalFoliages(TArray<FElementsToSpawn>& ElementsToSpawn);
   void DestroySkeletalFoliages();
-  bool EnableActorFromPool(const FTransform& Transform, TArray<FPooledActor>& Pool);
+  bool EnableActorFromPool(const FTransform& Transform, int32 Index, FTileMeshComponent* TileMeshComponent, TArray<FPooledActor>& Pool);
 
   void CreateOrUpdateTileCache(ULevel* InLevel);
   void UpdateFoliageBlueprintCache(ULevel* InLevel);
@@ -138,7 +147,7 @@ private:
 private:
   //Actors
   ALargeMapManager* LargeMap {nullptr};
-  TArray<ACarlaWheeledVehicle*> VehiclesInLevel {};
+  ACarlaWheeledVehicle* HeroVehicle {nullptr};
   //Caches
   TMap<FString, FFoliageBlueprint> FoliageBlueprintCache {};
   TMap<FString, FTileData> TileCache {};
