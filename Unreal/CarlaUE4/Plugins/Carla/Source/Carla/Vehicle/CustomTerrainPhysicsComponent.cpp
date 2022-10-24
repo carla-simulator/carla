@@ -1865,10 +1865,10 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   FTransform WheelTransform1 = VehicleTransform;
   FTransform WheelTransform2 = VehicleTransform;
   FTransform WheelTransform3 = VehicleTransform;
-  FVector WheelPosition0 = VehicleTransform.TransformPosition(FVector(140, -70, 40));;
-  FVector WheelPosition1 = VehicleTransform.TransformPosition(FVector(140, 70, 40));;
-  FVector WheelPosition2 = VehicleTransform.TransformPosition(FVector(-140, -70, 40));;
-  FVector WheelPosition3 = VehicleTransform.TransformPosition(FVector(-140, 70, 40));;
+  FVector WheelPosition0 = VehicleTransform.TransformPosition(FVector(140, -70, 40));
+  FVector WheelPosition1 = VehicleTransform.TransformPosition(FVector(140, 70, 40));
+  FVector WheelPosition2 = VehicleTransform.TransformPosition(FVector(-140, -70, 40));
+  FVector WheelPosition3 = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
   WheelTransform0.SetLocation(WheelPosition0);
   WheelTransform1.SetLocation(WheelPosition1);
   WheelTransform2.SetLocation(WheelPosition2);
