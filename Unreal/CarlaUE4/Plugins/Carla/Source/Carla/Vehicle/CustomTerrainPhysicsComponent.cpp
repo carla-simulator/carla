@@ -2305,7 +2305,11 @@ void UCustomTerrainPhysicsComponent::AddParticlesToOrderedContainer(
     uint32_t Index = HeightMapCoords.Y * PartialHeightMapSize + HeightMapCoords.X;
     if(  Index < CurrentTile.ParticlesZOrdered.size()  )
     {
-      CurrentTile.ParticlesZOrdered[Index].insert(P->Position.Z);
+      float CurrentHeight = *( CurrentTile.ParticlesZOrdered[Index].begin() );
+      if( P->Position.Z - CurrentHeight < UEFrameToSI( ParticleDiameter ) * 2.0f )
+      {
+        CurrentTile.ParticlesZOrdered[Index].insert(P->Position.Z);
+      }
     }else{
       UE_LOG(LogCarla, Error, TEXT("RemoveParticlesFromOrderedContainer Invalid Index %d ZOrderedSize %d Tile: %s"), Index,CurrentTile.ParticlesZOrdered.size(), *(TilePosition.ToString()) );
     
