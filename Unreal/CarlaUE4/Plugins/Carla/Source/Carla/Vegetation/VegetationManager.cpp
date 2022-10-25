@@ -211,7 +211,7 @@ void AVegetationManager::Tick(float DeltaTime)
       return;
   }
     
-  HeroVehicle->UpdateDetectionBox();  
+  HeroVehicle->UpdateDetectionBox();
   TArray<FString> TilesInUse = GetTilesInUse();
   if (TilesInUse.Num() == 0)
   {
@@ -339,7 +339,7 @@ void AVegetationManager::SetMaterialCache(FTileData& TileData)
   if (TileData.MaterialInstanceDynamicCache.Num() > 0)
     TileData.MaterialInstanceDynamicCache.Empty();
   
-  #define MATERIAL_HIDE_DISTANCE 500.0f
+  #define MATERIAL_HIDE_DISTANCE 350.0f
   const float Distance = MATERIAL_HIDE_DISTANCE;
   for (FTileMeshComponent& Element : TileData.TileMeshesCache)
   {
@@ -675,12 +675,10 @@ TArray<FString> AVegetationManager::GetTilesInUse()
       continue;
     const FBox Box = Procedural->ProceduralComponent->GetBounds();
     if (!Box.IsValid)
-      continue; 
-    if (Box.IsInside(HeroVehicle->GetActorLocation()))
-      {
+      continue;
+    const FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
+    if (Box.IsInside(GlobalTransform.GetLocation()))
         Results.Emplace(Element.Key);
-        break;
-      }
   }
   return Results;
 }

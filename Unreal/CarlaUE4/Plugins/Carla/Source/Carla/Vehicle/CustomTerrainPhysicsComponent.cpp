@@ -320,8 +320,7 @@ void FDenseTile::UpdateLocalHeightmap()
       }
     }
   }else{
-        UE_LOG(LogCarla, Log, TEXT("Not updated") );
-
+    UE_LOG(LogCarla, Log, TEXT("Not updated") );
   }
 }
 
@@ -1251,6 +1250,10 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     EffectMultiplayer = Value;
   }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-defor-res="), Value))
+  {
+    ChosenRes = static_cast<EDefResolutionType>(Value);
+  }
   if (FParse::Value(FCommandLine::Get(), TEXT("-min-displacement="), Value))
   {
     MinDisplacement = Value;
@@ -1347,7 +1350,10 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
     SetComponentTickEnabled(false);
     return;
   }
+
+
   LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
+  TextureToUpdate = TexturesRes[ChosenRes];
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(InitializeDenseMap);
     SparseMap.Clear();
@@ -2271,7 +2277,7 @@ void UCustomTerrainPhysicsComponent::RemoveParticlesFromOrderedContainer(
     // uint32_t Index = std::floor(ParticleLocalPosition.Y) * PartialHeightMapSize + std::floor(ParticleLocalPosition.X);
     uint32_t Index = HeightMapCoords.Y * PartialHeightMapSize + HeightMapCoords.X;
     
-    if(  Index < CurrentTile.ParticlesZOrdered.size()  )
+    if( Index < CurrentTile.ParticlesZOrdered.size() )
     {
       if( CurrentTile.ParticlesZOrdered[Index].size() > 1 )
       {
@@ -2295,7 +2301,6 @@ void UCustomTerrainPhysicsComponent::RemoveParticlesFromOrderedContainer(
     {
       UE_LOG(LogCarla, Error, TEXT("RemoveParticlesFromOrderedContainer Invalid Index %d ZOrderedSize %d Tile: %s"), Index,CurrentTile.ParticlesZOrdered.size(), *(TilePosition.ToString()) );
     }
-   
   }
 }
 
@@ -2324,7 +2329,11 @@ void UCustomTerrainPhysicsComponent::AddParticlesToOrderedContainer(
     uint32_t Index = HeightMapCoords.Y * PartialHeightMapSize + HeightMapCoords.X;
     if(  Index < CurrentTile.ParticlesZOrdered.size()  )
     {
-      CurrentTile.ParticlesZOrdered[Index].insert(P->Position.Z);
+      float CurrentHeight = *( CurrentTile.ParticlesZOrdered[Index].begin() );
+      if( P->Position.Z - CurrentHeight < UEFrameToSI( ParticleDiameter ) * 2.0f )
+      {
+        CurrentTile.ParticlesZOrdered[Index].insert(P->Position.Z);
+      }
     }else{
       UE_LOG(LogCarla, Error, TEXT("RemoveParticlesFromOrderedContainer Invalid Index %d ZOrderedSize %d Tile: %s"), Index,CurrentTile.ParticlesZOrdered.size(), *(TilePosition.ToString()) );
     
