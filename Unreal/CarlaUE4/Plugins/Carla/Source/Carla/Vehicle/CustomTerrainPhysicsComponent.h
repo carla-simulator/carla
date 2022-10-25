@@ -229,7 +229,7 @@ struct FForceAtLocation
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class UCustomTerrainPhysicsComponent : public UActorComponent
+class CARLA_API UCustomTerrainPhysicsComponent : public UActorComponent
 {
   GENERATED_BODY()
   friend struct FTilesWorker;
@@ -378,10 +378,14 @@ private:
   UPrimitiveComponent* RootComponent;
   UPROPERTY(EditAnywhere)
   float RayCastRange = 10.0f;
-  UPROPERTY(EditAnywhere)
-  FVector WorldSize = FVector(200000,200000,0);
 
 public:
+  UPROPERTY(EditAnywhere)
+  FVector WorldSize = FVector(200000,200000,0);
+  UPROPERTY(EditAnywhere)
+  bool DrawDebugInfo = true;
+  UPROPERTY(EditAnywhere)
+  bool bUpdateParticles = false;
   // Radius of the data loaded in memory
   UPROPERTY(EditAnywhere, Category="Tiles")
   FVector TileRadius = FVector( 100, 100, 0 );
@@ -438,8 +442,6 @@ private:
   UPROPERTY(EditAnywhere)
   AActor *FloorActor = nullptr;
   UPROPERTY(EditAnywhere)
-  bool bUpdateParticles = false;
-  UPROPERTY(EditAnywhere)
   bool bUseDynamicModel = false;
   UPROPERTY(EditAnywhere)
   bool bUseCUDAModel = false;
@@ -462,8 +464,6 @@ private:
   float FloorHeight = 0.f;
   UPROPERTY(EditAnywhere)
   bool bUseImpulse = false;
-  UPROPERTY(EditAnywhere)
-  bool DrawDebugInfo = true;
   UPROPERTY(EditAnywhere)
   bool bUseMeanAcceleration = false;
   UPROPERTY(EditAnywhere)
