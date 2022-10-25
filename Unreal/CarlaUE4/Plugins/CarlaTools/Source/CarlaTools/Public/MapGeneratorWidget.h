@@ -178,6 +178,9 @@ struct CARLATOOLS_API FMapGeneratorWidgetState
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
   float TerrainDetailedInvert;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  bool bShowDetailedNoise;
 };
 
 USTRUCT(BlueprintType)

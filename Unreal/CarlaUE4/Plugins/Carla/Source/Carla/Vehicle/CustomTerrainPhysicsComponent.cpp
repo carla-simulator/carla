@@ -12,6 +12,7 @@
 #include "CollisionQueryParams.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/MapGen/SoilTypeManager.h"
 #include "carla/rpc/String.h"
 #include "HAL/PlatformFilemanager.h"
 #include "HAL/RunnableThread.h"
@@ -1997,6 +1998,24 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
       WheelLinVel3.GetData(), WheelAngVel3.GetData()};
 
   const FVehicleControl& VehicleControl = Vehicle->GetVehicleControl();
+  ASoilTypeManager* SoilTypeManagerActor =  Cast<ASoilTypeManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ASoilTypeManager::StaticClass()));
+  if(SoilTypeManagerActor)
+  {
+    FSoilTerramechanicsProperties TerramechanicsProperties = 
+        SoilTypeManagerActor->GetTerrainPropertiesAtGlobalLocation(WheelPosition0);
+
+    switch(TerramechanicsProperties.TerrainType){
+      case ESoilTerramechanicsType::DESERT:
+        SoilType = 0;
+        break;
+      case ESoilTerramechanicsType::FOREST:
+        SoilType = 1;
+        break;
+      default:
+        SoilType = 0;
+    }
+
+  }
   carla::learning::Inputs NNInput {Wheel0,Wheel1,Wheel2,Wheel3, 
       VehicleControl.Steer, VehicleControl.Throttle, VehicleControl.Brake, 
       SoilType, NNVerbose};
