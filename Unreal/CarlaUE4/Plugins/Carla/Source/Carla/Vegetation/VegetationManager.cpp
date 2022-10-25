@@ -339,7 +339,7 @@ void AVegetationManager::SetMaterialCache(FTileData& TileData)
   if (TileData.MaterialInstanceDynamicCache.Num() > 0)
     TileData.MaterialInstanceDynamicCache.Empty();
   
-  #define MATERIAL_HIDE_DISTANCE 500.0f
+  #define MATERIAL_HIDE_DISTANCE 350.0f
   const float Distance = MATERIAL_HIDE_DISTANCE;
   for (FTileMeshComponent& Element : TileData.TileMeshesCache)
   {
