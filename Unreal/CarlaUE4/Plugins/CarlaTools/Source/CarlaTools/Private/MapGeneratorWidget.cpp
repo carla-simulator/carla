@@ -11,6 +11,7 @@
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/MapGen/SoilTypeManager.h"
 #include "Carla/Weather/Weather.h"
+#include "Carla/Vehicle/CustomTerrainPhysicsComponent.h"
 #include "Components/SplineComponent.h"
 #include "Editor/FoliageEdit/Public/FoliageEdMode.h"
 #include "EditorLevelLibrary.h"
@@ -131,6 +132,9 @@ void UMapGeneratorWidget::CookSoilTypeToMaps(const FMapGeneratorMetaInfo& MetaIn
     FSoilTypeROI SoilROI = SoilROIPair.Value;
     SoilTypeManagerActor->AddTerrainPropertiesToTile(SoilROITile.X, SoilROITile.Y, SoilROI.SoilProperties);
   }
+
+  World->GetPackage()->SetDirtyFlag(true);
+  SaveWorld(World);
 }
 
 void UMapGeneratorWidget::CookMiscSpreadedInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo)
@@ -472,8 +476,9 @@ AActor* UMapGeneratorWidget::AddWeatherToExistingMap(TSubclassOf<class AActor> W
     WeatherActor = World->SpawnActor<AActor>(WeatherActorClass);
   }
 
-  return WeatherActor;  
+  World->GetPackage()->SetDirtyFlag(true);
 
+  return WeatherActor;  
 }
 
 TMap<FRoiTile, FVegetationROI> UMapGeneratorWidget::CreateVegetationRoisMap(TArray<FVegetationROI> VegetationRoisArray)
@@ -787,6 +792,24 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
   // Reset Tile0Offset to original mid-tile position for runtime operations
   LargeMapManager->SetTile0Offset(OriginalTile0Offset);
 
+  // Spawn Vegetation Manager if defined
+  if(MetaInfo.VegetationManagerBpClass)
+  {
+    AActor* VegetationManagerActor = World->SpawnActor(MetaInfo.VegetationManagerBpClass);
+  }
+
+  // Spawn Terramechanics Manager if defined
+  if(MetaInfo.TerramechanicsBpClass)
+  {
+    AActor* TerramechanicsActor = World->SpawnActor(MetaInfo.TerramechanicsBpClass);
+    UActorComponent* ActorComponent = TerramechanicsActor->FindComponentByClass(UCustomTerrainPhysicsComponent::StaticClass());
+    UCustomTerrainPhysicsComponent* TerramechanicsActorComponent = StaticCast<UCustomTerrainPhysicsComponent*>(ActorComponent);
+    TerramechanicsActorComponent->WorldSize = FVector(100800,100800,0);
+    TerramechanicsActorComponent->DrawDebugInfo = false;
+    TerramechanicsActorComponent->bUpdateParticles = true;
+
+  }
+
   UPackage::SavePackage(BaseMapPackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
       *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
 
@@ -1050,6 +1073,11 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       AssignLandscapeMaterial(Landscape);
 
       Landscape->RecreateCollisionComponents();
+
+      // Creating terramechanics heightmap
+      FString HeightmapPath = MetaInfo.DestinationPath + "/HeightMaps/";
+      UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapDataAasset(Landscape, 1009, FVector(100800,100800,0),
+          HeightmapPath, MapName);
 
       const FString PackageFileName = FPackageName::LongPackageNameToFilename(
           PackageName, 
