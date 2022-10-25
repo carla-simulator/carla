@@ -29,6 +29,16 @@ THIRD_PARTY_INCLUDES_END
 
 #include "CustomTerrainPhysicsComponent.generated.h"
 
+
+UENUM(BlueprintType)
+enum EDefResolutionType
+{
+  E256M = 0   UMETA(DisplayName = "256M"),
+  E512M = 1   UMETA(DisplayName = "512M"),
+  E1K = 2     UMETA(DisplayName = "1K"),
+  E2K = 3     UMETA(DisplayName = "2K"),
+};
+
 UCLASS(BlueprintType)
 class UHeightMapDataAsset : public UPrimaryDataAsset
 {
@@ -400,6 +410,12 @@ private:
   // Scalar Factor of deformation effect applied in the landscape
   UPROPERTY(EditAnywhere, Category="MaterialParameters")
   float EffectMultiplayer = 10.0f;
+
+  UPROPERTY(EditAnywhere, Category="MaterialParameters")
+  TEnumAsByte<EDefResolutionType> ChosenRes = EDefResolutionType::E1K;
+  UPROPERTY(EditAnywhere, Category="MaterialParameters")
+  TMap<TEnumAsByte<EDefResolutionType>, UTexture2D*> TexturesRes;
+
 
   UPROPERTY(EditAnywhere, Category="DeformationMesh")
   bool bUseDeformationPlane = false;
