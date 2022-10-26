@@ -363,6 +363,12 @@ public:
   UBoxComponent *VehicleBounds; 
 
   UFUNCTION()
+  FBox GetDetectionBox() const;
+
+  UFUNCTION()
+  float GetDetectionSize() const;
+
+  UFUNCTION()
   void UpdateDetectionBox();
 
   UFUNCTION()
