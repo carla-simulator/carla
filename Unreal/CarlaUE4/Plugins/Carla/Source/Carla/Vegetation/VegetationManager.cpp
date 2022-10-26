@@ -508,7 +508,7 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& Element
       if (Element.TileMeshComponent->IndicesInUse.Contains(Index))
         continue;
       const float Distance = FMath::Abs(FVector::Dist(Transform.GetLocation(), HeroLocation));
-      if (Distance > (HideMaterialDistance * 2.0f))
+      if (Distance > (HideMaterialDistance * 3.0f))
         continue;
       bool Ok = EnableActorFromPool(Transform, Index, Element.TileMeshComponent, *Pool);
       if (Ok)
