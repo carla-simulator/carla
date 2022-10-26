@@ -129,7 +129,6 @@ public:
   std::vector<FParticle*> GetParticlesInTileRadius(FDVector Position, float Radius);
   std::vector<FParticle*> GetParticlesInBox(const FOrientedBox& OBox);
   std::vector<uint64_t> GetIntersectingTiles(const FOrientedBox& OBox);
-  std::vector<float> GetParticlesHeightMapInTileRadius(FDVector Position, float Radius);
   std::vector<uint64_t> GetLoadedTilesInRange(FDVector Position, float Radius);
 
 
