@@ -627,8 +627,9 @@ FDenseTile& FSparseHighDetailMap::GetTile(uint64_t TileId)
   auto Iterator = Map.find(TileId);
   if (Iterator == Map.end())
   {
+    TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::GetTile);
     // FScopeLock Lock(&Lock_CacheMap);
-    FScopeLock TileLock(&Lock_GetTile);
+    Lock_GetTile.Lock();
     bool bGotCacheLock = Lock_CacheMap.TryLock();
     if(bGotCacheLock)
     {
@@ -638,10 +639,13 @@ FDenseTile& FSparseHighDetailMap::GetTile(uint64_t TileId)
         Map.emplace(TileId, std::move(CacheIterator->second));
         CacheMap.erase(CacheIterator);
         Lock_CacheMap.Unlock();
+        Lock_GetTile.Unlock();
         return Map[TileId];
       }
       Lock_CacheMap.Unlock();
     }
+    FDenseTile& Tile = Map[TileId];
+    Lock_GetTile.Unlock();
     return InitializeRegion(TileId);
   }
   return Iterator->second;
@@ -2476,6 +2480,18 @@ void UCustomTerrainPhysicsComponent::SetUpParticleArrays(std::vector<FParticle*>
       ParticleVelOut.Add(Particle->Velocity.Y);
       ParticleVelOut.Add(Particle->Velocity.Z);
     }
+    if(ParticlesIn.size() < MaxParticlesPerWheel)
+    {
+      for (int i = 0; i < (MaxParticlesPerWheel - ParticlesIn.size()); ++i)
+      {
+        ParticlePosOut.Add(0.f);
+        ParticlePosOut.Add(0.f);
+        ParticlePosOut.Add(0.f);
+        ParticleVelOut.Add(0.f);
+        ParticleVelOut.Add(0.f);
+        ParticleVelOut.Add(0.f);
+      }
+    }
   }
   else
   {
@@ -2487,6 +2503,19 @@ void UCustomTerrainPhysicsComponent::SetUpParticleArrays(std::vector<FParticle*>
       ParticleVelOut.Add(Particle->Velocity.X);
       ParticleVelOut.Add(Particle->Velocity.Y);
       ParticleVelOut.Add(Particle->Velocity.Z);
+    }
+    if(ParticlesIn.size() < MaxParticlesPerWheel)
+    {
+      FVector WheelPosition = UEFrameToSI(WheelTransform.GetLocation());
+      for (int i = 0; i < (MaxParticlesPerWheel - ParticlesIn.size()); ++i)
+      {
+        ParticlePosOut.Add(WheelPosition.X);
+        ParticlePosOut.Add(WheelPosition.Y);
+        ParticlePosOut.Add(WheelPosition.Z);
+        ParticleVelOut.Add(0.f);
+        ParticleVelOut.Add(0.f);
+        ParticleVelOut.Add(0.f);
+      }
     }
   }
 }
