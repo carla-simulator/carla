@@ -224,7 +224,18 @@ void ACarlaWheeledVehicle::UpdateDetectionBox()
 const TArray<int32> ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const
 {  
   TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle);
-  return Component->GetInstancesOverlappingBox(FoliageBoundingBox);
+  return Component->GetInstancesOverlappingSphere(FoliageBoundingBox.GetCenter(), DetectionSize, true);
+}
+
+FBox ACarlaWheeledVehicle::GetDetectionBox() const
+{  
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::GetDetectionBox);
+  return FoliageBoundingBox;
+}
+
+float ACarlaWheeledVehicle::GetDetectionSize() const
+{
+  return DetectionSize;
 }
 
 void ACarlaWheeledVehicle::DrawFoliageBoundingBox() const
