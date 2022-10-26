@@ -1351,9 +1351,11 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
     return;
   }
 
-
   LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
-  TextureToUpdate = TexturesRes[ChosenRes];
+  if( TexturesRes.Contains(ChosenRes) ){
+    TextureToUpdate = TexturesRes[ChosenRes];
+  }
+
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(InitializeDenseMap);
     SparseMap.Clear();
