@@ -1352,7 +1352,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   }
 
   LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
-  if( TexturesRes.Num() != 0 ){
+  if( TexturesRes.Contains(ChosenRes) ){
     TextureToUpdate = TexturesRes[ChosenRes];
   }
 
