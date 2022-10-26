@@ -339,8 +339,6 @@ void AVegetationManager::SetMaterialCache(FTileData& TileData)
   if (TileData.MaterialInstanceDynamicCache.Num() > 0)
     TileData.MaterialInstanceDynamicCache.Empty();
   
-  #define MATERIAL_HIDE_DISTANCE 350.0f
-  const float Distance = MATERIAL_HIDE_DISTANCE;
   for (FTileMeshComponent& Element : TileData.TileMeshesCache)
   {
     UInstancedStaticMeshComponent* Mesh = Element.InstancedStaticMeshComponent;
@@ -359,7 +357,7 @@ void AVegetationManager::SetMaterialCache(FTileData& TileData)
         continue;
       MaterialInstanceDynamic->SetScalarParameterValue("ActivateOpacity", 0);
       MaterialInstanceDynamic->SetScalarParameterValue("ActivateDebug", 0);
-      MaterialInstanceDynamic->SetScalarParameterValue("Distance", Distance);
+      MaterialInstanceDynamic->SetScalarParameterValue("Distance", HideMaterialDistance);
       Mesh->SetMaterial(Index, MaterialInstanceDynamic);
       TileData.MaterialInstanceDynamicCache.Emplace(MaterialInstanceDynamic);
     }
