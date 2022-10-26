@@ -175,8 +175,8 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
     const FString& SavePath, const FHeightMapData &HeightMap)
 {
 
-  uint32_t TileSize = (TileEnd.X - TileOrigin.X );
-  uint32_t PartialHeightMapSize = TileSize * TextureSize / (2*AffectedRadius);
+  TileSize = (TileEnd.X - TileOrigin.X );
+  PartialHeightMapSize = TileSize * TextureSize / (2*AffectedRadius);
   std::string FileName = std::string(TCHAR_TO_UTF8(*( SavePath + TileOrigin.ToString() + ".tile" ) ) );
   
   if( FPaths::FileExists(FString(FileName.c_str())) )
@@ -223,15 +223,22 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
     //UE_LOG(LogCarla, Log, TEXT("Building local heightMap of %d pixels"), PartialHeightMapSize);
 
   }
-  ParticlesHeightMap.resize( PartialHeightMapSize*PartialHeightMapSize );
+  ParticlesZOrdered.resize( PartialHeightMapSize*PartialHeightMapSize );
   for(float& Height : ParticlesHeightMap)
   {
     Height = 0;
   }
 
+  bParticlesZOrderedInitialized = false;
+  bHeightmapNeedToUpdate = true;
+}
+
+void FDenseTile::InitializeDataStructure()
+{
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(DenseTile::InitializeTile::ParticlesZOrdered);
-    ParticlesZOrdered.resize( PartialHeightMapSize*PartialHeightMapSize );
+    ParticlesHeightMap.clear();
+    ParticlesHeightMap.resize( PartialHeightMapSize*PartialHeightMapSize );
     float InverseTileSize = 1.f/TileSize;
     float Transformation = InverseTileSize * PartialHeightMapSize;
     for (size_t i = 0; i < Particles.size(); i++)
@@ -250,10 +257,9 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
       }
     }
   }
-
+  bParticlesZOrderedInitialized = true;
   bHeightmapNeedToUpdate = true;
 }
-
 
 // revise coordinates
 void FDenseTile::GetParticlesInRadius(FDVector Position, float Radius, std::vector<FParticle*> &ParticlesInRadius)
@@ -308,7 +314,7 @@ void FDenseTile::GetAllParticles(std::vector<FParticle*> &ParticlesInRadius)
 
 void FDenseTile::UpdateLocalHeightmap()
 {
-  if( bHeightmapNeedToUpdate ){
+  if( bHeightmapNeedToUpdate && bParticlesZOrderedInitialized ){
     TRACE_CPUPROFILER_EVENT_SCOPE(FDenseTile::UpdateLocalHeightmap);
     for( uint32_t i = 0; i < ParticlesHeightMap.size() ; ++i ){
       if( ParticlesZOrdered.size() == ParticlesHeightMap.size() ){
@@ -786,11 +792,6 @@ void FSparseHighDetailMap::UpdateMaps(
         }
       }
     }
-    ParallelFor(TilesToInitialize.size(), [&](int32 Idx)
-    {
-      uint64_t TileId = TilesToInitialize[Idx];
-      InitializeRegion(TileId);
-    });
     // unload extra tiles
     std::vector<uint64_t> TilesToErase;
     for (auto &Element : Map)
@@ -807,6 +808,17 @@ void FSparseHighDetailMap::UpdateMaps(
     {
       Map.erase(TileId);
     }
+  }
+  {
+    // TRACE_CPUPROFILER_EVENT_SCOPE(InitializeZOrdered);
+    // for (auto& Element : Map)
+    // {
+    //   FDenseTile& Tile = Element.second;
+    //   if (!Tile.bParticlesZOrderedInitialized)
+    //   {
+    //     Tile.InitializeDataStructure();
+    //   }
+    // }
   }
   {
     FScopeLock ScopeCacheLock(&Lock_CacheMap);
@@ -1003,6 +1015,10 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
   for (uint64_t TileId : LoadedTiles)
   {
     FDenseTile& CurrentTile = SparseMap.GetTile(TileId);
+    if (!CurrentTile.bParticlesZOrderedInitialized)
+    {
+      continue;
+    }
     FDVector& TilePosition = CurrentTile.TilePosition;
     for (int32_t Local_Y = 0; Local_Y < PartialHeightMapSize; ++Local_Y)
     {
@@ -1978,16 +1994,16 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   if(bUpdateParticles)
   {
     {
-      TRACE_CPUPROFILER_EVENT_SCOPE(RemoveParticlesFromOrderedContainer);
-      auto RemoveParticles = 
-      [&] (std::vector<FParticle*>& ParticlesWheel)
-      {
-        RemoveParticlesFromOrderedContainer( ParticlesWheel );
-      };
-      RemoveParticles(ParticlesWheel0);
-      RemoveParticles(ParticlesWheel1);
-      RemoveParticles(ParticlesWheel2);
-      RemoveParticles(ParticlesWheel3);
+      // TRACE_CPUPROFILER_EVENT_SCOPE(RemoveParticlesFromOrderedContainer);
+      // auto RemoveParticles = 
+      // [&] (std::vector<FParticle*>& ParticlesWheel)
+      // {
+      //   RemoveParticlesFromOrderedContainer( ParticlesWheel );
+      // };
+      // RemoveParticles(ParticlesWheel0);
+      // RemoveParticles(ParticlesWheel1);
+      // RemoveParticles(ParticlesWheel2);
+      // RemoveParticles(ParticlesWheel3);
       
     }
     {
@@ -2017,11 +2033,12 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
       DrawParticles(GetWorld(), ParticlesWheel3, Color);
     }
     {
-      TRACE_CPUPROFILER_EVENT_SCOPE(AddParticles);
-      AddParticlesToOrderedContainer( ParticlesWheel0 );
-      AddParticlesToOrderedContainer( ParticlesWheel1 );
-      AddParticlesToOrderedContainer( ParticlesWheel2 );
-      AddParticlesToOrderedContainer( ParticlesWheel3 );
+      // TRACE_CPUPROFILER_EVENT_SCOPE(AddParticles);
+      // AddParticlesToOrderedContainer( ParticlesWheel0 );
+      // AddParticlesToOrderedContainer( ParticlesWheel1 );
+      // AddParticlesToOrderedContainer( ParticlesWheel2 );
+      // AddParticlesToOrderedContainer( ParticlesWheel3 );
+      
     }
     {
       TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::UpdateTilesHeightMaps);
@@ -2108,6 +2125,7 @@ void UCustomTerrainPhysicsComponent::UpdateParticles(
       P->Position = P->Position + P->Velocity*DeltaTime;
     }
   }
+  else
   {
     for (size_t i = 0; i < Particles.size(); i++)
     {

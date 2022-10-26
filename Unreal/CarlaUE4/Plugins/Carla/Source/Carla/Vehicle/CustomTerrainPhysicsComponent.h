@@ -93,14 +93,18 @@ struct FDenseTile
   void GetParticlesInRadius(FDVector Position, float Radius, std::vector<FParticle*> &ParticlesInRadius);
   void GetParticlesInBox(const FOrientedBox& OBox, std::vector<FParticle*> &ParticlesInRadius);
   void GetAllParticles(std::vector<FParticle*> &ParticlesInRadius);
+  void InitializeDataStructure();
 
   void UpdateLocalHeightmap();
   std::vector<FParticle> Particles;
   std::vector<float> ParticlesHeightMap;
   std::vector<std::multiset<float,std::greater<float>>> ParticlesZOrdered;
+  bool bParticlesZOrderedInitialized = false;
   FDVector TilePosition;
   FString SavePath;
   bool bHeightmapNeedToUpdate = false;
+  uint32_t PartialHeightMapSize = 0;
+  uint32_t TileSize = 0;
 };
 
 class FSparseHighDetailMap
