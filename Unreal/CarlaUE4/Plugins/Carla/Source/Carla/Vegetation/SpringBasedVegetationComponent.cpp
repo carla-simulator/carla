@@ -364,7 +364,7 @@ void USpringBasedVegetationComponent::GenerateCollisionCapsules()
       FTransform CapsuleTransform(BoneRotation, Bone.CenterOfMass, FVector(1,1,1));
       Capsule->SetRelativeTransform(CapsuleTransform);
       Capsule->SetCapsuleHalfHeight(Bone.Length*0.5f);
-      Capsule->SetCapsuleRadius(6);
+      Capsule->SetCapsuleRadius(CapsuleRadius);
       if (Joint.bIsStatic)
       {
         Capsule->SetGenerateOverlapEvents(false);
