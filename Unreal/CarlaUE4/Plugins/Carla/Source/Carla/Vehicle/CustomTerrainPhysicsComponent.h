@@ -373,6 +373,7 @@ private:
   void UpdateTilesHeightMaps( const std::vector<FParticle*>& Particles);
   void RemoveParticlesFromOrderedContainer(const std::vector<FParticle*>& Particles);
   void AddParticlesToOrderedContainer(const std::vector<FParticle*>& Particles);
+  void FlagTilesToRedoOrderedContainer(const std::vector<FParticle*>& Particles);
   void UpdateTilesHeightMapsInRadius(FDVector Position, uint32 Rad );
   
   UPROPERTY(EditAnywhere)
