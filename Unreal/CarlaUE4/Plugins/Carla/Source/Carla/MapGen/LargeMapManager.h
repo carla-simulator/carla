@@ -333,4 +333,7 @@ protected:
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   bool bPrintErrors = false;
 
+  UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
+  bool bHasTerramechanics = false;
+
 };

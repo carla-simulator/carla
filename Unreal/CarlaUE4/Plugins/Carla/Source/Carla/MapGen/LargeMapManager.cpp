@@ -5,11 +5,16 @@
 #include "LargeMapManager.h"
 
 #include "Engine/WorldComposition.h"
+#include "Engine/EngineTypes.h"
+#include "Components/PrimitiveComponent.h"
+#include "Landscape.h"
+#include "LandscapeHeightfieldCollisionComponent.h"
 
 #include "UncenteredPivotPointMesh.h"
 
 #include "Walker/WalkerBase.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Vehicle/CustomTerrainPhysicsComponent.h"
 
 #include "FileHelper.h"
 #include "Paths.h"
@@ -64,6 +69,18 @@ void ALargeMapManager::BeginPlay()
   LayerStreamingDistanceSquared = LayerStreamingDistance * LayerStreamingDistance;
   ActorStreamingDistanceSquared = ActorStreamingDistance * ActorStreamingDistance;
   RebaseOriginDistanceSquared = RebaseOriginDistance * RebaseOriginDistance;
+
+  // Look for terramechanics actor
+  TArray<AActor*> FoundActors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), FoundActors);
+  for(auto CurrentActor : FoundActors)
+  {
+    if( CurrentActor->FindComponentByClass( UCustomTerrainPhysicsComponent::StaticClass() ) != nullptr )
+    {
+      bHasTerramechanics = true;
+      break;
+    }
+  }
 }
 
 void ALargeMapManager::PreWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
@@ -109,6 +126,27 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
   LM_LOG(Warning, "OnLevelAddedToWorld");
   ATagger::TagActorsInLevel(*InLevel, true);
+
+  if( bHasTerramechanics )
+  {
+    for(auto CurrentActor : InLevel->Actors)
+    {
+      if( ALandscape* CurrentLandscape = Cast<ALandscape>( CurrentActor )  )
+      {
+        CurrentLandscape->BodyInstance.SetCollisionEnabled( ECollisionEnabled::Type::NoCollision, false);
+        CurrentLandscape->BodyInstance.ReplaceResponseToChannels(  ECollisionResponse::ECR_Block, ECollisionResponse::ECR_Ignore );
+        CurrentLandscape->BodyInstance.ReplaceResponseToChannels(  ECollisionResponse::ECR_Overlap, ECollisionResponse::ECR_Ignore );
+        CurrentLandscape->BodyInstance.SetObjectType( ECollisionChannel::ECC_PhysicsBody );
+        CurrentLandscape->BodyInstance.SetCollisionProfileName(FName(TEXT("LandscapeName")));
+        CurrentLandscape->BodyInstance.FixupData(CurrentLandscape);
+        
+        for(auto CurrentCollision : CurrentLandscape->CollisionComponents){
+          CurrentCollision->SetCollisionResponseToAllChannels( ECollisionResponse::ECR_Ignore );
+        }
+
+      }
+    }
+  }
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }
 
