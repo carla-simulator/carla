@@ -202,6 +202,7 @@ public:
   std::unordered_map<uint64_t, FDenseTile> Map;
   std::unordered_map<uint64_t, FDenseTile> CacheMap;
   FString SavePath;
+  FCriticalSection Lock_Particles;
 private:
   std::unordered_map<uint64_t, FDenseTile> TilesToWrite;
   FDVector Tile0Position;
@@ -424,6 +425,7 @@ private:
   UPROPERTY(EditAnywhere, Category="MaterialParameters")
   TMap<TEnumAsByte<EDefResolutionType>, UTexture2D*> TexturesRes;
 
+  bool bVisualization = false;
 
   UPROPERTY(EditAnywhere, Category="DeformationMesh")
   bool bUseDeformationPlane = false;
@@ -436,6 +438,7 @@ private:
 
   UPROPERTY()
   UMaterialParameterCollectionInstance* MPCInstance;
+
 
   UPROPERTY(EditAnywhere)
   float SearchRadius = 100;
