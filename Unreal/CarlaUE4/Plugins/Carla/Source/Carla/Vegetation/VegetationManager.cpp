@@ -508,7 +508,7 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& Element
       if (Element.TileMeshComponent->IndicesInUse.Contains(Index))
         continue;
       const float Distance = FMath::Abs(FVector::Dist(Transform.GetLocation(), HeroLocation));
-      if (Distance > (HideMaterialDistance * 3.0f))
+      if (Distance > HeroVehicle->GetDetectionSize())
         continue;
       bool Ok = EnableActorFromPool(Transform, Index, Element.TileMeshComponent, *Pool);
       if (Ok)
@@ -544,7 +544,7 @@ void AVegetationManager::DestroySkeletalFoliages()
           continue;
       const FVector Location = Actor.GlobalTransform.GetLocation();
       const float Distance = FMath::Abs(FVector::Dist(Location, HeroLocation));
-      if (Distance > (HideMaterialDistance * 4.0f))
+      if (Distance > HeroVehicle->GetDetectionSize())
       {
         Actor.DisableActor();
       }
