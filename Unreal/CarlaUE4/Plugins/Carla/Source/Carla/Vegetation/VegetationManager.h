@@ -85,6 +85,9 @@ public:
   void AddVehicle(ACarlaWheeledVehicle* Vehicle);
   void RemoveVehicle(ACarlaWheeledVehicle* Vehicle);
 
+  UFUNCTION(BlueprintCallable)
+  void UpdatePoolBasePosition();
+
 public:
   UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
   bool DebugMaterials {false};
@@ -157,4 +160,6 @@ private:
   TMap<FString, FTileData> TileCache {};
   //Pools
   TMap<FString, TArray<FPooledActor>> ActorPool {};
+
+  FTimerHandle UpdatePoolInactiveTransformTimer;
 };

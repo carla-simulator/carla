@@ -197,6 +197,7 @@ void AVegetationManager::BeginPlay()
   LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
   FWorldDelegates::LevelAddedToWorld.AddUObject(this, &AVegetationManager::OnLevelAddedToWorld);
   FWorldDelegates::LevelRemovedFromWorld.AddUObject(this, &AVegetationManager::OnLevelRemovedFromWorld);
+  GetWorldTimerManager().SetTimer(UpdatePoolInactiveTransformTimer, this, &AVegetationManager::UpdatePoolBasePosition, 30.0f, true, 15.0f);
 }
 
 void AVegetationManager::Tick(float DeltaTime)
@@ -608,6 +609,27 @@ AActor* AVegetationManager::CreateFoliage(const FFoliageBlueprint& BP, const FTr
   else
     Actor->SetActorScale3D({SpawnScale, SpawnScale, SpawnScale});
   return Actor;
+}
+
+void AVegetationManager::UpdatePoolBasePosition()
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::UpdatePoolBasePosition);
+  if (!IsValid(HeroVehicle))
+    return;
+  UE_LOG(LogCarla, Display, TEXT("UpdatePoolBasePosition"));
+  const FTransform HeroTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
+  const FVector HeroLocation = HeroTransform.GetLocation();
+  const FTransform PoolTransform(HeroTransform.GetRotation(), FVector(HeroLocation.X, HeroLocation.Y, -1000.0f), FVector(1.0f, 1.0f, 1.0f));
+  for (TPair<FString, TArray<FPooledActor>>& Element : ActorPool)
+  {
+    TArray<FPooledActor>& Pool = Element.Value;
+    for (FPooledActor& PooledActor : Pool)
+    {
+      if (PooledActor.InUse)
+        continue;
+      PooledActor.Actor->SetActorTransform(PoolTransform, true, nullptr, ETeleportType::ResetPhysics);
+    }
+  }
 }
 
 /********************************************************************************/
