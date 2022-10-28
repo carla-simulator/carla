@@ -377,8 +377,8 @@ private:
   void FlagTilesToRedoOrderedContainer(const std::vector<FParticle*>& Particles);
   void UpdateTilesHeightMapsInRadius(FDVector Position, uint32 Rad );
   
-  void AddForcesToVehicleWheels(ACarlaWheeledVehicle *Vehicle, TArray<FVector> WheelsNormals);
-  void AddForceToSingleWheel(USkeletalMeshComponent* SkeletalMeshComponent, FName WheelName, FVector WheelNormalForce);
+  void AddForceToSingleWheel(USkeletalMeshComponent* SkeletalMeshComponent,
+    FVector WheelPosition, FVector WheelNormalForce);
   
   UPROPERTY(EditAnywhere)
   TArray<FForceAtLocation> ForcesToApply;

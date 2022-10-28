@@ -80,6 +80,8 @@ namespace learning {
     result.wheel_normal_x = wheel_normal_data[0];
     result.wheel_normal_y = wheel_normal_data[1];
     result.wheel_normal_z = wheel_normal_data[2];
+    std::cout << "Normal: X " << wheel_normal_data[0] << " Y: " << wheel_normal_data[1] << " Z " << wheel_normal_data[2] << std::endl;
+
     const float* particle_forces_data = particle_forces.data_ptr<float>();
     int num_dimensions = 3;
     int num_particles = particle_forces.sizes()[0];

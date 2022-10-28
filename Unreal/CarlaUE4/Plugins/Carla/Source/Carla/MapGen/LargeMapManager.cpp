@@ -128,7 +128,7 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
   LM_LOG(Warning, "OnLevelAddedToWorld");
   ATagger::TagActorsInLevel(*InLevel, true);
 
-  if( bHasTerramechanics )
+  if( bHasTerramechanics && false )
   {
     for(auto CurrentActor : InLevel->Actors)
     {
