@@ -66,7 +66,8 @@ namespace learning {
 
   WheelOutput GetWheelTensorOutput(
       const at::Tensor &particle_forces, 
-      const at::Tensor &wheel_forces) {
+      const at::Tensor &wheel_forces,
+      const at::Tensor &wheel_normal) {
     WheelOutput result;
     const float* wheel_forces_data = wheel_forces.data_ptr<float>();
     result.wheel_forces_x = wheel_forces_data[0];
@@ -75,6 +76,10 @@ namespace learning {
     result.wheel_torque_x = wheel_forces_data[3];
     result.wheel_torque_y = wheel_forces_data[4];
     result.wheel_torque_z = wheel_forces_data[5];
+    const float* wheel_normal_data = wheel_normal.data_ptr<float>();
+    result.wheel_normal_x = wheel_normal_data[0];
+    result.wheel_normal_y = wheel_normal_data[1];
+    result.wheel_normal_z = wheel_normal_data[2];
     const float* particle_forces_data = particle_forces.data_ptr<float>();
     int num_dimensions = 3;
     int num_particles = particle_forces.sizes()[0];
@@ -202,13 +207,13 @@ namespace learning {
 
     std::vector<torch::jit::IValue> Tensors =  Output.toTuple()->elements();
     _output.wheel0 = GetWheelTensorOutput(
-        Tensors[0].toTensor().cpu(), Tensors[4].toTensor().cpu());
+        Tensors[0].toTensor().cpu(), Tensors[4].toTensor().cpu(), Tensors[8].toTensor().cpu());
     _output.wheel1 = GetWheelTensorOutput(
-        Tensors[1].toTensor().cpu(), Tensors[5].toTensor().cpu());
+        Tensors[1].toTensor().cpu(), Tensors[5].toTensor().cpu(), Tensors[9].toTensor().cpu());
     _output.wheel2 = GetWheelTensorOutput(
-        Tensors[2].toTensor().cpu(), Tensors[6].toTensor().cpu());
+        Tensors[2].toTensor().cpu(), Tensors[6].toTensor().cpu(), Tensors[10].toTensor().cpu());
     _output.wheel3 = GetWheelTensorOutput(
-        Tensors[3].toTensor().cpu(), Tensors[7].toTensor().cpu());
+        Tensors[3].toTensor().cpu(), Tensors[7].toTensor().cpu(), Tensors[11].toTensor().cpu());
 
   }
   void NeuralModel::ForwardDynamic() {
@@ -274,13 +279,17 @@ namespace learning {
 
     std::vector<torch::jit::IValue> Tensors =  Output.toTuple()->elements();
     _output.wheel0 = GetWheelTensorOutput(
-        Tensors[0].toTensor().cpu(), Tensors[4].toTensor().cpu());
+        Tensors[0].toTensor().cpu(), Tensors[4].toTensor().cpu(),
+        Tensors[8].toTensor().cpu());
     _output.wheel1 = GetWheelTensorOutput(
-        Tensors[1].toTensor().cpu(), Tensors[5].toTensor().cpu());
+        Tensors[1].toTensor().cpu(), Tensors[5].toTensor().cpu(),
+        Tensors[9].toTensor().cpu());
     _output.wheel2 = GetWheelTensorOutput(
-        Tensors[2].toTensor().cpu(), Tensors[6].toTensor().cpu());
+        Tensors[2].toTensor().cpu(), Tensors[6].toTensor().cpu(),
+        Tensors[10].toTensor().cpu());
     _output.wheel3 = GetWheelTensorOutput(
-        Tensors[3].toTensor().cpu(), Tensors[7].toTensor().cpu());
+        Tensors[3].toTensor().cpu(), Tensors[7].toTensor().cpu(),
+        Tensors[11].toTensor().cpu());
   }
   
   Outputs& NeuralModel::GetOutputs() {

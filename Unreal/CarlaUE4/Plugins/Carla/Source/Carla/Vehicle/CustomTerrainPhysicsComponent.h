@@ -377,6 +377,9 @@ private:
   void FlagTilesToRedoOrderedContainer(const std::vector<FParticle*>& Particles);
   void UpdateTilesHeightMapsInRadius(FDVector Position, uint32 Rad );
   
+  void AddForcesToVehicleWheels(ACarlaWheeledVehicle *Vehicle, TArray<FVector> WheelsNormals);
+  void AddForceToSingleWheel(USkeletalMeshComponent* SkeletalMeshComponent, FName WheelName, FVector WheelNormalForce);
+  
   UPROPERTY(EditAnywhere)
   TArray<FForceAtLocation> ForcesToApply;
   UPROPERTY(EditAnywhere)
@@ -439,7 +442,9 @@ private:
   UPROPERTY()
   UMaterialParameterCollectionInstance* MPCInstance;
 
-
+  UPROPERTY(EditAnywhere, Category="Forces")
+  float NormalForceIntensity = 100;
+  
   UPROPERTY(EditAnywhere)
   float SearchRadius = 100;
   UPROPERTY(EditAnywhere)

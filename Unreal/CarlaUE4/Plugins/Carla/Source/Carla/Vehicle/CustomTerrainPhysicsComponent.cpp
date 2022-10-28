@@ -28,6 +28,7 @@
 #include "Materials/MaterialParameterCollectionInstance.h"
 // #include <carla/pytorch/pytorch.h>
 
+#include "Components/SkinnedMeshComponent.h"
 #include "GenericPlatform/GenericPlatformFile.h"
 #include "Async/Async.h"
 #include "Async/Future.h"
@@ -2123,6 +2124,27 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
             Output.wheel3.wheel_torque_y,
             Output.wheel3.wheel_torque_z)));
   }
+
+  {
+    TArray<FVector> WheelsNormals;
+    WheelsNormals.Add(FVector(
+            Output.wheel0.wheel_normal_x,
+            Output.wheel0.wheel_normal_y,
+            Output.wheel0.wheel_normal_z));
+    WheelsNormals.Add(FVector(
+            Output.wheel1.wheel_normal_x,
+            Output.wheel1.wheel_normal_y,
+            Output.wheel1.wheel_normal_z));
+    WheelsNormals.Add(FVector(
+            Output.wheel2.wheel_normal_x,
+            Output.wheel2.wheel_normal_y,
+            Output.wheel2.wheel_normal_z));
+    WheelsNormals.Add(FVector(
+            Output.wheel3.wheel_normal_x,
+            Output.wheel3.wheel_normal_y,
+            Output.wheel3.wheel_normal_z));
+    AddForcesToVehicleWheels(Vehicle, WheelsNormals);
+  }
   #endif
 }
 
@@ -2340,6 +2362,40 @@ void UCustomTerrainPhysicsComponent::UpdateTilesHeightMapsInRadius(FDVector Posi
         SparseMap.GetTile(X, Y).UpdateLocalHeightmap();
       }
     }
+  }
+}
+
+void UCustomTerrainPhysicsComponent::AddForcesToVehicleWheels(ACarlaWheeledVehicle *Vehicle, TArray<FVector> WheelsNormals )
+{
+  USkeletalMeshComponent* SKMesh = Cast<USkeletalMeshComponent>( Vehicle->GetRootComponent() );
+
+  UE_LOG(LogCarla, Warning, TEXT("Normal0 %f"), WheelsNormals[0].Z );
+
+  AddForceToSingleWheel( SKMesh, FName(TEXT("Wheel_Front_Left")) , WheelsNormals[0] );
+  AddForceToSingleWheel( SKMesh, FName(TEXT("Wheel_Front_Right")), WheelsNormals[1] );
+  AddForceToSingleWheel( SKMesh, FName(TEXT("Wheel_Rear_Left")), WheelsNormals[2] );
+  AddForceToSingleWheel( SKMesh, FName(TEXT("Wheel_Rear_Left")), WheelsNormals[3] );
+}
+
+void UCustomTerrainPhysicsComponent::AddForceToSingleWheel( USkeletalMeshComponent* SkeletalMeshComponent, FName WheelName, FVector WheelNormalForce )
+{
+  FVector WheelLocation = SkeletalMeshComponent->GetBoneLocation(WheelName, EBoneSpaces::Type::WorldSpace);
+  WheelLocation = UEFrameToSI(WheelLocation);
+  FVector WheelBottomLocation = WheelLocation - FVector(0,0, 0.337);
+  float OriginalHeight = SparseMap.GetHeight(WheelLocation);
+  float FloorHeight = OriginalHeight - UEFrameToSI(TerrainDepth);
+
+  if( WheelBottomLocation.Z < FloorHeight )
+  {
+    SkeletalMeshComponent->AddForceToAllBodiesBelow( WheelNormalForce * NormalForceIntensity, WheelName, false, true );
+  }
+  else if( WheelBottomLocation.Z < OriginalHeight )
+  {
+    SkeletalMeshComponent->AddForceToAllBodiesBelow( WheelNormalForce * NormalForceIntensity, WheelName, false, true );
+  }
+  else
+  {
+
   }
 }
 
