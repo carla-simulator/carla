@@ -55,16 +55,33 @@ void FPooledActor::EnableActor(const FTransform& Transform, int32 NewIndex, FTil
   TileMeshComponent = NewTileMeshComponent;
   TileMeshComponent->IndicesInUse.Emplace(Index);
 
-
   Actor->SetActorHiddenInGame(false);
-  Actor->SetActorEnableCollision(true);
   Actor->SetActorTickEnabled(true);
 
   USpringBasedVegetationComponent* Component = Actor->FindComponentByClass<USpringBasedVegetationComponent>();
   if (Component)
   {
     Component->ResetComponent();
+  }
+}
+
+void FPooledActor::ActiveActor()
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(FPooledActor::ActiveActor);
+
+  IsActive = true;
+  Actor->SetActorEnableCollision(true);
+
+  USpringBasedVegetationComponent* Component = Actor->FindComponentByClass<USpringBasedVegetationComponent>();
+  if (Component)
+  {
     Component->SetComponentTickEnabled(true);
+  }
+
+  USkeletalMeshComponent* SkeletalMesh = Actor->FindComponentByClass<USkeletalMeshComponent>();
+  if (SkeletalMesh)
+  {
+    SkeletalMesh->bNoSkeletonUpdate = false;
   }
 }
 
@@ -79,19 +96,24 @@ void FPooledActor::DisableActor()
   }
 
   InUse = false;
+  IsActive = false;
   Index = -1;
   TileMeshComponent = nullptr;
 
-  Actor->SetActorHiddenInGame(true);
   Actor->SetActorEnableCollision(false);
+  Actor->SetActorHiddenInGame(true);
   Actor->SetActorTickEnabled(false);
-  Actor->SetTickableWhenPaused(false);
 
   USpringBasedVegetationComponent* Component = Actor->FindComponentByClass<USpringBasedVegetationComponent>();
   if (Component)
   {
     Component->SetComponentTickEnabled(false);
-    Component->SetTickableWhenPaused(false);
+  }
+
+  USkeletalMeshComponent* SkeletalMesh = Actor->FindComponentByClass<USkeletalMeshComponent>();
+  if (SkeletalMesh)
+  {
+    SkeletalMesh->bNoSkeletonUpdate = true;
   }
 }
 
@@ -229,6 +251,7 @@ void AVegetationManager::Tick(float DeltaTime)
     UpdateMaterials(Tile);
     TArray<FElementsToSpawn> ElementsToSpawn = GetElementsToSpawn(Tile);
     SpawnSkeletalFoliages(ElementsToSpawn);
+    ActivePooledActors();
     DestroySkeletalFoliages();
   }
   
@@ -496,6 +519,7 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& Element
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::SpawnSkeletalFoliages);
   const FTransform HeroTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
   const FVector HeroLocation = HeroTransform.GetLocation();
+  const float HeroDetectionSizeSquared = HeroVehicle->GetDetectionSize() * HeroVehicle->GetDetectionSize();
 
   for (FElementsToSpawn& Element : ElementsToSpawn)
   {
@@ -508,8 +532,8 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& Element
       int32 Index = TransformIndex.Value;
       if (Element.TileMeshComponent->IndicesInUse.Contains(Index))
         continue;
-      const float Distance = FMath::Abs(FVector::Dist(Transform.GetLocation(), HeroLocation));
-      if (Distance > HeroVehicle->GetDetectionSize())
+      const float Distance = FMath::Abs(FVector::DistSquared(Transform.GetLocation(), HeroLocation));
+      if (Distance > HeroDetectionSizeSquared)
         continue;
       bool Ok = EnableActorFromPool(Transform, Index, Element.TileMeshComponent, *Pool);
       if (Ok)
@@ -530,11 +554,38 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& Element
   }
 }
 
+void AVegetationManager::ActivePooledActors()
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::ActivePooledActors);
+  const FTransform HeroTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
+  const FVector HeroLocation = HeroTransform.GetLocation();
+  const float SquaredActiveActorDistance = ActiveActorDistance * ActiveActorDistance;
+
+  for (TPair<FString, TArray<FPooledActor>>& Element : ActorPool)
+  {
+    TArray<FPooledActor>& Pool = Element.Value;
+    for (FPooledActor& Actor : Pool)
+    {
+      if (!Actor.InUse)
+        continue;
+      if (Actor.IsActive)
+        continue;
+      const FVector Location = Actor.GlobalTransform.GetLocation();
+      const float Distance = FMath::Abs(FVector::DistSquared(Location, HeroLocation));
+      if (Distance < SquaredActiveActorDistance)
+      {
+        Actor.ActiveActor();
+      }
+    }
+  }
+}
+
 void AVegetationManager::DestroySkeletalFoliages()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::DestroySkeletalFoliages);
   const FTransform HeroTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
   const FVector HeroLocation = HeroTransform.GetLocation();
+  const float HeroDetectionSizeSquared = HeroVehicle->GetDetectionSize() * HeroVehicle->GetDetectionSize();
 
   for (TPair<FString, TArray<FPooledActor>>& Element : ActorPool)
   {
@@ -544,8 +595,8 @@ void AVegetationManager::DestroySkeletalFoliages()
       if (!Actor.InUse)
           continue;
       const FVector Location = Actor.GlobalTransform.GetLocation();
-      const float Distance = FMath::Abs(FVector::Dist(Location, HeroLocation));
-      if (Distance > HeroVehicle->GetDetectionSize())
+      const float Distance = FMath::Abs(FVector::DistSquared(Location, HeroLocation));
+      if (Distance > HeroDetectionSizeSquared)
       {
         Actor.DisableActor();
       }
@@ -616,7 +667,6 @@ void AVegetationManager::UpdatePoolBasePosition()
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::UpdatePoolBasePosition);
   if (!IsValid(HeroVehicle))
     return;
-  UE_LOG(LogCarla, Display, TEXT("UpdatePoolBasePosition"));
   const FTransform HeroTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
   const FVector HeroLocation = HeroTransform.GetLocation();
   const FTransform PoolTransform(HeroTransform.GetRotation(), FVector(HeroLocation.X, HeroLocation.Y, -1000.0f), FVector(1.0f, 1.0f, 1.0f));
