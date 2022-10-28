@@ -58,12 +58,14 @@ struct FPooledActor
 {
   GENERATED_BODY()
   bool InUse { false };
+  bool IsActive { false };
   AActor* Actor { nullptr };
   FTransform GlobalTransform {FTransform()};
   int32 Index {-1};
   FTileMeshComponent* TileMeshComponent {nullptr};
 
   void EnableActor(const FTransform& Transform, int32 NewIndex, FTileMeshComponent* NewTileMeshComponent);
+  void ActiveActor();
   void DisableActor();
 };
 
@@ -94,6 +96,9 @@ public:
 
   UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
   float HideMaterialDistance {500.0f};
+
+  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  float ActiveActorDistance {500.0f};
 
   //Filters for debug
   UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
@@ -133,6 +138,7 @@ private:
   TArray<FElementsToSpawn> GetElementsToSpawn(FTileData* Tile);
   void SpawnSkeletalFoliages(TArray<FElementsToSpawn>& ElementsToSpawn);
   void DestroySkeletalFoliages();
+  void ActivePooledActors();
   bool EnableActorFromPool(const FTransform& Transform, int32 Index, FTileMeshComponent* TileMeshComponent, TArray<FPooledActor>& Pool);
 
   void CreateOrUpdateTileCache(ULevel* InLevel);
