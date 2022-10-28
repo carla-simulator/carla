@@ -9,6 +9,7 @@
 #include "Components/PrimitiveComponent.h"
 #include "Landscape.h"
 #include "LandscapeHeightfieldCollisionComponent.h"
+#include "LandscapeComponent.h"
 
 #include "UncenteredPivotPointMesh.h"
 
@@ -133,16 +134,22 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
     {
       if( ALandscape* CurrentLandscape = Cast<ALandscape>( CurrentActor )  )
       {
-        CurrentLandscape->BodyInstance.SetCollisionEnabled( ECollisionEnabled::Type::NoCollision, false);
         CurrentLandscape->BodyInstance.ReplaceResponseToChannels(  ECollisionResponse::ECR_Block, ECollisionResponse::ECR_Ignore );
         CurrentLandscape->BodyInstance.ReplaceResponseToChannels(  ECollisionResponse::ECR_Overlap, ECollisionResponse::ECR_Ignore );
-        CurrentLandscape->BodyInstance.SetObjectType( ECollisionChannel::ECC_PhysicsBody );
-        CurrentLandscape->BodyInstance.SetCollisionProfileName(FName(TEXT("LandscapeName")));
-        CurrentLandscape->BodyInstance.FixupData(CurrentLandscape);
+        CurrentLandscape->BodyInstance.SetCollisionEnabled( ECollisionEnabled::Type::NoCollision, true);
         
         for(auto CurrentCollision : CurrentLandscape->CollisionComponents){
           CurrentCollision->SetCollisionResponseToAllChannels( ECollisionResponse::ECR_Ignore );
+          CurrentCollision->SetCollisionEnabled( ECollisionEnabled::Type::NoCollision );
+
         }
+
+        for(auto CurrentComponent : CurrentLandscape->LandscapeComponents){
+          CurrentComponent->SetCollisionResponseToAllChannels( ECollisionResponse::ECR_Ignore );
+          CurrentComponent->SetCollisionEnabled( ECollisionEnabled::Type::NoCollision );
+        
+        }
+
 
       }
     }
