@@ -93,14 +93,18 @@ struct FDenseTile
   void GetParticlesInRadius(FDVector Position, float Radius, std::vector<FParticle*> &ParticlesInRadius);
   void GetParticlesInBox(const FOrientedBox& OBox, std::vector<FParticle*> &ParticlesInRadius);
   void GetAllParticles(std::vector<FParticle*> &ParticlesInRadius);
+  void InitializeDataStructure();
 
   void UpdateLocalHeightmap();
   std::vector<FParticle> Particles;
   std::vector<float> ParticlesHeightMap;
   std::vector<std::multiset<float,std::greater<float>>> ParticlesZOrdered;
+  bool bParticlesZOrderedInitialized = false;
   FDVector TilePosition;
   FString SavePath;
   bool bHeightmapNeedToUpdate = false;
+  uint32_t PartialHeightMapSize = 0;
+  uint32_t TileSize = 0;
 };
 
 class FSparseHighDetailMap
@@ -198,6 +202,7 @@ public:
   std::unordered_map<uint64_t, FDenseTile> Map;
   std::unordered_map<uint64_t, FDenseTile> CacheMap;
   FString SavePath;
+  FCriticalSection Lock_Particles;
 private:
   std::unordered_map<uint64_t, FDenseTile> TilesToWrite;
   FDVector Tile0Position;
@@ -366,10 +371,16 @@ private:
 
   void UpdateParticlesDebug(std::vector<FParticle*> Particles);
   
+  void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
+  
   void UpdateTilesHeightMaps( const std::vector<FParticle*>& Particles);
   void RemoveParticlesFromOrderedContainer(const std::vector<FParticle*>& Particles);
   void AddParticlesToOrderedContainer(const std::vector<FParticle*>& Particles);
+  void FlagTilesToRedoOrderedContainer(const std::vector<FParticle*>& Particles);
   void UpdateTilesHeightMapsInRadius(FDVector Position, uint32 Rad );
+  
+  void AddForcesToVehicleWheels(ACarlaWheeledVehicle *Vehicle, TArray<FVector> WheelsNormals);
+  void AddForceToSingleWheel(USkeletalMeshComponent* SkeletalMeshComponent, FName WheelName, FVector WheelNormalForce);
   
   UPROPERTY(EditAnywhere)
   TArray<FForceAtLocation> ForcesToApply;
@@ -395,6 +406,8 @@ public:
   bool bDrawLoadedTiles = false;
   UPROPERTY(EditAnywhere, Category="Tiles")
   int32 TileSize = 1;
+  UPROPERTY(EditAnywhere, Category="Tiles")
+  bool bRemoveLandscapeColliders = false;
 private:
   // TimeToTriggerCacheReload In seconds
   UPROPERTY(EditAnywhere, Category="Tiles")
@@ -419,6 +432,7 @@ private:
   UPROPERTY(EditAnywhere, Category="MaterialParameters")
   TMap<TEnumAsByte<EDefResolutionType>, UTexture2D*> TexturesRes;
 
+  bool bVisualization = false;
 
   UPROPERTY(EditAnywhere, Category="DeformationMesh")
   bool bUseDeformationPlane = false;
@@ -432,6 +446,9 @@ private:
   UPROPERTY()
   UMaterialParameterCollectionInstance* MPCInstance;
 
+  UPROPERTY(EditAnywhere, Category="Forces")
+  float NormalForceIntensity = 100;
+  
   UPROPERTY(EditAnywhere)
   float SearchRadius = 100;
   UPROPERTY(EditAnywhere)

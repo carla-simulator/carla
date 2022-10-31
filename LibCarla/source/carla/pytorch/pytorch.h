@@ -47,6 +47,9 @@ namespace learning {
     float wheel_torque_x = 0;
     float wheel_torque_y = 0;
     float wheel_torque_z = 0;
+    float wheel_normal_x = 0;
+    float wheel_normal_y = 0;
+    float wheel_normal_z = 0;
     std::vector<float> _particle_forces;
   };
   struct Outputs {

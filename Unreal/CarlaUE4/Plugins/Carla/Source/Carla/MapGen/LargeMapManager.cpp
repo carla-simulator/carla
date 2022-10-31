@@ -5,11 +5,17 @@
 #include "LargeMapManager.h"
 
 #include "Engine/WorldComposition.h"
+#include "Engine/EngineTypes.h"
+#include "Components/PrimitiveComponent.h"
+#include "Landscape.h"
+#include "LandscapeHeightfieldCollisionComponent.h"
+#include "LandscapeComponent.h"
 
 #include "UncenteredPivotPointMesh.h"
 
 #include "Walker/WalkerBase.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Vehicle/CustomTerrainPhysicsComponent.h"
 
 #include "FileHelper.h"
 #include "Paths.h"
@@ -64,6 +70,18 @@ void ALargeMapManager::BeginPlay()
   LayerStreamingDistanceSquared = LayerStreamingDistance * LayerStreamingDistance;
   ActorStreamingDistanceSquared = ActorStreamingDistance * ActorStreamingDistance;
   RebaseOriginDistanceSquared = RebaseOriginDistance * RebaseOriginDistance;
+
+  // Look for terramechanics actor
+  TArray<AActor*> FoundActors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), FoundActors);
+  for(auto CurrentActor : FoundActors)
+  {
+    if( CurrentActor->FindComponentByClass( UCustomTerrainPhysicsComponent::StaticClass() ) != nullptr )
+    {
+      bHasTerramechanics = true;
+      break;
+    }
+  }
 }
 
 void ALargeMapManager::PreWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
@@ -109,6 +127,8 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
   LM_LOG(Warning, "OnLevelAddedToWorld");
   ATagger::TagActorsInLevel(*InLevel, true);
+
+
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }
 
