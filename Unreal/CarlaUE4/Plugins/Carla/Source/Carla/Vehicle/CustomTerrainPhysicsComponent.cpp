@@ -2151,14 +2151,7 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     FVector WheelPosition1 = VehicleTransform.TransformPosition(FVector(140, 70, 40));
     FVector WheelPosition2 = VehicleTransform.TransformPosition(FVector(-140, -70, 40));
     FVector WheelPosition3 = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
-    if( !ParticlesWheel0.empty() )
-      AddForceToSingleWheel( SKMesh, WheelPosition0 , WheelsNormals[0] );
-    if( !ParticlesWheel1.empty() )
-      AddForceToSingleWheel( SKMesh, WheelPosition1 , WheelsNormals[1] );
-    if( !ParticlesWheel2.empty() )
-      AddForceToSingleWheel( SKMesh, WheelPosition2 , WheelsNormals[2] );
-    if( !ParticlesWheel3.empty() )
-      AddForceToSingleWheel( SKMesh, WheelPosition3 , WheelsNormals[3] );
+   
   }
   #endif
 }
@@ -2390,7 +2383,7 @@ void UCustomTerrainPhysicsComponent::AddForceToSingleWheel( USkeletalMeshCompone
     WheelNormalForce = FVector::UpVector;
   }
 
-  float ForceFactor = ( WheelBottomLocation - OriginalHeight ) / ( FloorHeight - OriginalHeight );
+  float ForceFactor = ( WheelBottomLocation.Z - OriginalHeight ) / ( FloorHeight - OriginalHeight );
   if( ForceFactor < 0){
     ForceFactor = 0;
   }
