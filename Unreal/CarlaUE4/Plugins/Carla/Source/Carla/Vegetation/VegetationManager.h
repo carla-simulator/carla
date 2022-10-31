@@ -16,6 +16,7 @@
 
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include <memory>
 
 #include "VegetationManager.generated.h"
 
@@ -25,6 +26,7 @@ struct FTileMeshComponent
   GENERATED_BODY()
   UInstancedStaticMeshComponent* InstancedStaticMeshComponent {nullptr};
   TArray<int32> IndicesInUse {};
+  bool bIsAlive = false;
 };
 
 USTRUCT()
@@ -33,12 +35,13 @@ struct FTileData
   GENERATED_BODY()
   AInstancedFoliageActor* InstancedFoliageActor {nullptr};
   AProceduralFoliageVolume* ProceduralFoliageVolume {nullptr};
-  TArray<FTileMeshComponent> TileMeshesCache {};
+  TArray<std::shared_ptr<FTileMeshComponent>> TileMeshesCache {};
   TArray<UMaterialInstanceDynamic*> MaterialInstanceDynamicCache {};
 
   bool ContainsMesh(const UInstancedStaticMeshComponent*) const;
   void UpdateTileMeshComponent(UInstancedStaticMeshComponent* NewInstancedStaticMeshComponent);
   void UpdateMaterialCache(const FLinearColor& Value, bool DebugMaterials);
+  ~FTileData();
 };
 
 USTRUCT()
@@ -62,9 +65,12 @@ struct FPooledActor
   AActor* Actor { nullptr };
   FTransform GlobalTransform {FTransform()};
   int32 Index {-1};
-  FTileMeshComponent* TileMeshComponent {nullptr};
+  std::shared_ptr<FTileMeshComponent> TileMeshComponent {nullptr};
 
-  void EnableActor(const FTransform& Transform, int32 NewIndex, FTileMeshComponent* NewTileMeshComponent);
+  void EnableActor(
+      const FTransform& Transform,
+      int32 NewIndex,
+      std::shared_ptr<FTileMeshComponent>& NewTileMeshComponent);
   void ActiveActor();
   void DisableActor();
 };
@@ -73,7 +79,7 @@ USTRUCT()
 struct FElementsToSpawn
 {
   GENERATED_BODY()
-  FTileMeshComponent* TileMeshComponent;
+  std::shared_ptr<FTileMeshComponent> TileMeshComponent;
   FFoliageBlueprint BP;
   TArray<TPair<FTransform, int32>> TransformIndex;
 };
@@ -139,7 +145,11 @@ private:
   void SpawnSkeletalFoliages(TArray<FElementsToSpawn>& ElementsToSpawn);
   void DestroySkeletalFoliages();
   void ActivePooledActors();
-  bool EnableActorFromPool(const FTransform& Transform, int32 Index, FTileMeshComponent* TileMeshComponent, TArray<FPooledActor>& Pool);
+  bool EnableActorFromPool(
+      const FTransform& Transform,
+      int32 Index,
+      std::shared_ptr<FTileMeshComponent>& TileMeshComponent,
+      TArray<FPooledActor>& Pool);
 
   void CreateOrUpdateTileCache(ULevel* InLevel);
   void UpdateFoliageBlueprintCache(ULevel* InLevel);
@@ -148,6 +158,7 @@ private:
   void SetMaterialCache(FTileData& TileData);
 
   void FreeTileCache(ULevel* InLevel);
+  void DisableActorsFromTile(FTileData* TileData);
 
   void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
   void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld);

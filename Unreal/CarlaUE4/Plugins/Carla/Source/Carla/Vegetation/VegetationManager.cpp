@@ -43,10 +43,19 @@ static FString GetVersionFromFString(const FString& String)
   return FString();
 }
 
+FTileData::~FTileData()
+{
+  for(std::shared_ptr<FTileMeshComponent>& 
+      TileMeshComponent : TileMeshesCache)
+  {
+    TileMeshComponent->bIsAlive = false;
+  }
+}
+
 /********************************************************************************/
 /********** POOLED ACTOR STRUCT *************************************************/
 /********************************************************************************/
-void FPooledActor::EnableActor(const FTransform& Transform, int32 NewIndex, FTileMeshComponent* NewTileMeshComponent)
+void FPooledActor::EnableActor(const FTransform& Transform, int32 NewIndex, std::shared_ptr<FTileMeshComponent>& NewTileMeshComponent)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FPooledActor::EnableActor);
   InUse = true;
@@ -89,10 +98,13 @@ void FPooledActor::DisableActor()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FPooledActor::DisableActor);
 
-  if (TileMeshComponent)
+  if (TileMeshComponent && 
+      TileMeshComponent->bIsAlive)
   {
-    if (TileMeshComponent->IndicesInUse.Num() > 0)
+    if (TileMeshComponent->IndicesInUse.Contains(Index))
+    {
       TileMeshComponent->IndicesInUse.RemoveSingle(Index);
+    }
   }
 
   InUse = false;
@@ -170,8 +182,10 @@ bool FFoliageBlueprint::SetSpawnedClass()
 void FTileData::UpdateTileMeshComponent(UInstancedStaticMeshComponent* NewInstancedStaticMeshComponent)
 {
   UInstancedStaticMeshComponent* Aux { nullptr };
-  for (FTileMeshComponent& Element : TileMeshesCache)
+  for (std::shared_ptr<FTileMeshComponent>& ElementPtr
+      : TileMeshesCache)
   {
+    FTileMeshComponent& Element = *ElementPtr;
     if (Element.InstancedStaticMeshComponent == NewInstancedStaticMeshComponent)
     {
       int32 CurrentCount = Element.InstancedStaticMeshComponent->GetInstanceCount();
@@ -187,9 +201,10 @@ void FTileData::UpdateTileMeshComponent(UInstancedStaticMeshComponent* NewInstan
 
 bool FTileData::ContainsMesh(const UInstancedStaticMeshComponent* Mesh) const
 {
-  for (const FTileMeshComponent& Element : TileMeshesCache)
+  for (const std::shared_ptr<FTileMeshComponent>& Element 
+      : TileMeshesCache)
   {
-    if (Element.InstancedStaticMeshComponent == Mesh)
+    if (Element->InstancedStaticMeshComponent == Mesh)
       return true;
   }
   return false;
@@ -351,8 +366,10 @@ void AVegetationManager::SetInstancedStaticMeshComponentCache(FTileData& TileDat
     }
     else
     {
-      FTileMeshComponent Aux;
-      Aux.InstancedStaticMeshComponent = Mesh;
+      std::shared_ptr<FTileMeshComponent> Aux = 
+          std::make_shared<FTileMeshComponent>();
+      Aux->InstancedStaticMeshComponent = Mesh;
+      Aux->bIsAlive = true;
       TileData.TileMeshesCache.Emplace(Aux);
     }
   }
@@ -364,8 +381,10 @@ void AVegetationManager::SetMaterialCache(FTileData& TileData)
   if (TileData.MaterialInstanceDynamicCache.Num() > 0)
     TileData.MaterialInstanceDynamicCache.Empty();
   
-  for (FTileMeshComponent& Element : TileData.TileMeshesCache)
+  for (std::shared_ptr<FTileMeshComponent>& ElementPtr 
+      : TileData.TileMeshesCache)
   {
+    FTileMeshComponent& Element = *ElementPtr;
     UInstancedStaticMeshComponent* Mesh = Element.InstancedStaticMeshComponent;
     if (!IsValid(Mesh))
       continue;
@@ -448,10 +467,13 @@ void AVegetationManager::FreeTileCache(ULevel* InLevel)
   FTileData* ExistingTileData = TileCache.Find(TileName);
   if (ExistingTileData)
   {
+    DisableActorsFromTile(ExistingTileData);
+
     ExistingTileData->MaterialInstanceDynamicCache.Empty();
-    for (FTileMeshComponent& Element : ExistingTileData->TileMeshesCache)
+    for (std::shared_ptr<FTileMeshComponent>& Element 
+        : ExistingTileData->TileMeshesCache)
     {
-      Element.IndicesInUse.Empty();
+      Element->IndicesInUse.Empty();
     }
     ExistingTileData->TileMeshesCache.Empty();
     ExistingTileData->InstancedFoliageActor = nullptr;
@@ -478,8 +500,10 @@ TArray<FElementsToSpawn> AVegetationManager::GetElementsToSpawn(FTileData* Tile)
   TArray<FElementsToSpawn> Results;
   int32 i = -1;
 
-  for (FTileMeshComponent& Element : Tile->TileMeshesCache)
+  for (std::shared_ptr<FTileMeshComponent>& ElementPtr 
+      : Tile->TileMeshesCache)
   {
+    FTileMeshComponent& Element = *ElementPtr;
     TRACE_CPUPROFILER_EVENT_SCOPE(Update Foliage Usage);
     ++i;
     UInstancedStaticMeshComponent* InstancedStaticMeshComponent = Element.InstancedStaticMeshComponent;
@@ -500,7 +524,7 @@ TArray<FElementsToSpawn> AVegetationManager::GetElementsToSpawn(FTileData* Tile)
     }
     
     FElementsToSpawn NewElement {};
-    NewElement.TileMeshComponent = &Tile->TileMeshesCache[i];
+    NewElement.TileMeshComponent = Tile->TileMeshesCache[i];
     NewElement.BP = *BP;
     for (int32 Index : NewIndices)
     {
@@ -546,10 +570,10 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& Element
         NewElement.Actor = CreateFoliage(Element.BP, {});
         if (IsValid(NewElement.Actor))
         {
-          NewElment.Actor->SetTickableWhenPaused(false);
+          NewElement.Actor->SetTickableWhenPaused(false);
           NewElement.EnableActor(Transform, Index, Element.TileMeshComponent);
           Pool->Emplace(NewElement);
-        } 
+        }
       }
     }
   }
@@ -605,7 +629,11 @@ void AVegetationManager::DestroySkeletalFoliages()
   }
 }
 
-bool AVegetationManager::EnableActorFromPool(const FTransform& Transform, int32 Index, FTileMeshComponent* TileMeshComponent, TArray<FPooledActor>& Pool)
+bool AVegetationManager::EnableActorFromPool(
+    const FTransform& Transform,
+    int32 Index,
+    std::shared_ptr<FTileMeshComponent>& TileMeshComponent,
+    TArray<FPooledActor>& Pool)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::EnableActorFromPool);
   for (FPooledActor& PooledActor : Pool)
