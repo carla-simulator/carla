@@ -85,10 +85,14 @@ void FPooledActor::DisableActor()
   Actor->SetActorHiddenInGame(true);
   Actor->SetActorEnableCollision(false);
   Actor->SetActorTickEnabled(false);
+  Actor->SetTickableWhenPaused(false);
 
   USpringBasedVegetationComponent* Component = Actor->FindComponentByClass<USpringBasedVegetationComponent>();
   if (Component)
+  {
     Component->SetComponentTickEnabled(false);
+    Component->SetTickableWhenPaused(false);
+  }
 }
 
 /********************************************************************************/
@@ -204,12 +208,9 @@ void AVegetationManager::Tick(float DeltaTime)
   }
   if (!LargeMap)
     return;
+  HeroVehicle = LargeMap->GetHeroVehicle();
   if (!IsValid(HeroVehicle))
-  {
-    HeroVehicle = LargeMap->GetHeroVehicle();
-    if (!IsValid(HeroVehicle))
       return;
-  }
     
   HeroVehicle->UpdateDetectionBox();
   TArray<FString> TilesInUse = GetTilesInUse();
@@ -339,8 +340,6 @@ void AVegetationManager::SetMaterialCache(FTileData& TileData)
   if (TileData.MaterialInstanceDynamicCache.Num() > 0)
     TileData.MaterialInstanceDynamicCache.Empty();
   
-  #define MATERIAL_HIDE_DISTANCE 350.0f
-  const float Distance = MATERIAL_HIDE_DISTANCE;
   for (FTileMeshComponent& Element : TileData.TileMeshesCache)
   {
     UInstancedStaticMeshComponent* Mesh = Element.InstancedStaticMeshComponent;
@@ -359,7 +358,7 @@ void AVegetationManager::SetMaterialCache(FTileData& TileData)
         continue;
       MaterialInstanceDynamic->SetScalarParameterValue("ActivateOpacity", 0);
       MaterialInstanceDynamic->SetScalarParameterValue("ActivateDebug", 0);
-      MaterialInstanceDynamic->SetScalarParameterValue("Distance", Distance);
+      MaterialInstanceDynamic->SetScalarParameterValue("Distance", HideMaterialDistance);
       Mesh->SetMaterial(Index, MaterialInstanceDynamic);
       TileData.MaterialInstanceDynamicCache.Emplace(MaterialInstanceDynamic);
     }
@@ -454,6 +453,7 @@ TArray<FElementsToSpawn> AVegetationManager::GetElementsToSpawn(FTileData* Tile)
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::GetElementsToSpawn);
   TArray<FElementsToSpawn> Results;
   int32 i = -1;
+
   for (FTileMeshComponent& Element : Tile->TileMeshesCache)
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(Update Foliage Usage);
@@ -482,8 +482,7 @@ TArray<FElementsToSpawn> AVegetationManager::GetElementsToSpawn(FTileData* Tile)
     {
       FTransform Transform;
       InstancedStaticMeshComponent->GetInstanceTransform(Index, Transform, true);
-      FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(Transform);
-      NewElement.TransformIndex.Emplace(TPair<FTransform, int32>(GlobalTransform, Index));
+      NewElement.TransformIndex.Emplace(TPair<FTransform, int32>(Transform, Index));
     }
     if (NewElement.TransformIndex.Num() > 0)
       Results.Emplace(NewElement);
@@ -494,6 +493,9 @@ TArray<FElementsToSpawn> AVegetationManager::GetElementsToSpawn(FTileData* Tile)
 void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& ElementsToSpawn)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::SpawnSkeletalFoliages);
+  const FTransform HeroTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
+  const FVector HeroLocation = HeroTransform.GetLocation();
+
   for (FElementsToSpawn& Element : ElementsToSpawn)
   {
     TArray<FPooledActor>* Pool = ActorPool.Find(Element.BP.BPFullClassName);
@@ -504,6 +506,9 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& Element
       const FTransform& Transform = TransformIndex.Key;
       int32 Index = TransformIndex.Value;
       if (Element.TileMeshComponent->IndicesInUse.Contains(Index))
+        continue;
+      const float Distance = FMath::Abs(FVector::Dist(Transform.GetLocation(), HeroLocation));
+      if (Distance > (HideMaterialDistance * 3.0f))
         continue;
       bool Ok = EnableActorFromPool(Transform, Index, Element.TileMeshComponent, *Pool);
       if (Ok)
@@ -527,6 +532,9 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& Element
 void AVegetationManager::DestroySkeletalFoliages()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::DestroySkeletalFoliages);
+  const FTransform HeroTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
+  const FVector HeroLocation = HeroTransform.GetLocation();
+
   for (TPair<FString, TArray<FPooledActor>>& Element : ActorPool)
   {
     TArray<FPooledActor>& Pool = Element.Value;
@@ -535,7 +543,8 @@ void AVegetationManager::DestroySkeletalFoliages()
       if (!Actor.InUse)
           continue;
       const FVector Location = Actor.GlobalTransform.GetLocation();
-      if (!HeroVehicle->IsInVehicleRange(Location))
+      const float Distance = FMath::Abs(FVector::Dist(Location, HeroLocation));
+      if (Distance > (HideMaterialDistance * 4.0f))
       {
         Actor.DisableActor();
       }

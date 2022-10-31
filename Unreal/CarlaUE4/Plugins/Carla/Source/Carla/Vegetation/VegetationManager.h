@@ -88,6 +88,10 @@ public:
 public:
   UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
   bool DebugMaterials {false};
+
+  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  float HideMaterialDistance {300.0f};
+
   //Filters for debug
   UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
   bool SpawnBushes {true};
