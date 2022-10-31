@@ -219,7 +219,8 @@ void AVegetationManager::BeginPlay()
   LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
   FWorldDelegates::LevelAddedToWorld.AddUObject(this, &AVegetationManager::OnLevelAddedToWorld);
   FWorldDelegates::LevelRemovedFromWorld.AddUObject(this, &AVegetationManager::OnLevelRemovedFromWorld);
-  GetWorldTimerManager().SetTimer(UpdatePoolInactiveTransformTimer, this, &AVegetationManager::UpdatePoolBasePosition, 30.0f, true, 15.0f);
+  FCoreDelegates::PostWorldOriginOffset.AddUObject(this, &AVegetationManager::PostWorldOriginOffset);
+  //GetWorldTimerManager().SetTimer(UpdatePoolInactiveTransformTimer, this, &AVegetationManager::UpdatePoolBasePosition, PoolTranslationTimer, true, PoolTranslationTimer);
 }
 
 void AVegetationManager::Tick(float DeltaTime)
@@ -665,11 +666,11 @@ AActor* AVegetationManager::CreateFoliage(const FFoliageBlueprint& BP, const FTr
 void AVegetationManager::UpdatePoolBasePosition()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::UpdatePoolBasePosition);
-  if (!IsValid(HeroVehicle))
-    return;
-  const FTransform HeroTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
-  const FVector HeroLocation = HeroTransform.GetLocation();
-  const FTransform PoolTransform(HeroTransform.GetRotation(), FVector(HeroLocation.X, HeroLocation.Y, -1000.0f), FVector(1.0f, 1.0f, 1.0f));
+  //if (!IsValid(HeroVehicle))
+  //  return;
+  //const FTransform HeroTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
+  //const FVector HeroLocation = HeroTransform.GetLocation();
+  //const FTransform PoolTransform(HeroTransform.GetRotation(), FVector(HeroLocation.X, HeroLocation.Y, -1000.0f), FVector(1.0f, 1.0f, 1.0f));
   for (TPair<FString, TArray<FPooledActor>>& Element : ActorPool)
   {
     TArray<FPooledActor>& Pool = Element.Value;
@@ -677,13 +678,13 @@ void AVegetationManager::UpdatePoolBasePosition()
     {
       if (PooledActor.InUse)
         continue;
-      PooledActor.Actor->SetActorTransform(PoolTransform, true, nullptr, ETeleportType::ResetPhysics);
+      PooledActor.Actor->SetActorTransform(InactivePoolTransform, true, nullptr, ETeleportType::ResetPhysics);
     }
   }
 }
 
 /********************************************************************************/
-/********** TILES ***************************************************************/
+/********** EVENTS **************************************************************/
 /********************************************************************************/
 void AVegetationManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
@@ -698,6 +699,15 @@ void AVegetationManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorl
   FreeTileCache(InLevel);
 }
 
+void AVegetationManager::PostWorldOriginOffset(UWorld*, FIntVector, FIntVector InDstOrigin)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::PostWorldOriginOffset);
+  InactivePoolTransform.SetLocation(FVector(InDstOrigin.X, InDstOrigin.Y, InDstOrigin.Z));
+}
+
+/********************************************************************************/
+/********** TILES ***************************************************************/
+/********************************************************************************/
 bool AVegetationManager::IsFoliageTypeEnabled(const FString& Path) const
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::IsFoliageTypeEnabled);

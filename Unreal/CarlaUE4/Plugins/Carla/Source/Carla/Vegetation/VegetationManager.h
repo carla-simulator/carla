@@ -151,6 +151,7 @@ private:
 
   void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
   void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld);
+  void PostWorldOriginOffset(UWorld*, FIntVector, FIntVector InDstOrigin);
 
   void CreatePoolForBPClass(const FFoliageBlueprint& BP);
   AActor* CreateFoliage(const FFoliageBlueprint& BP, const FTransform& Transform) const;
@@ -158,6 +159,8 @@ private:
   void GetSketalTemplates();
 
 private:
+  float PoolTranslationTimer {30.0f};
+  FTransform InactivePoolTransform { FQuat(1.0f, 1.0f, 1.0f, 1.0f), FVector(1.0f, 1.0f, 1.0f), FVector(1.0f, 1.0f, 1.0f)};
   //Actors
   ALargeMapManager* LargeMap {nullptr};
   ACarlaWheeledVehicle* HeroVehicle {nullptr};
