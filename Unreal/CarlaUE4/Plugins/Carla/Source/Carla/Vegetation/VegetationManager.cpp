@@ -699,6 +699,7 @@ void AVegetationManager::PostWorldOriginOffset(UWorld*, FIntVector, FIntVector)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::PostWorldOriginOffset);
   InactivePoolTransform.SetLocation(FVector(0.0f, 0.0f, 0.0f));
+  UpdatePoolBasePosition();
 }
 
 /********************************************************************************/
