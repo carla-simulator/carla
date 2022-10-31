@@ -220,7 +220,6 @@ void AVegetationManager::BeginPlay()
   FWorldDelegates::LevelAddedToWorld.AddUObject(this, &AVegetationManager::OnLevelAddedToWorld);
   FWorldDelegates::LevelRemovedFromWorld.AddUObject(this, &AVegetationManager::OnLevelRemovedFromWorld);
   FCoreDelegates::PostWorldOriginOffset.AddUObject(this, &AVegetationManager::PostWorldOriginOffset);
-  //GetWorldTimerManager().SetTimer(UpdatePoolInactiveTransformTimer, this, &AVegetationManager::UpdatePoolBasePosition, PoolTranslationTimer, true, PoolTranslationTimer);
 }
 
 void AVegetationManager::Tick(float DeltaTime)
@@ -547,6 +546,7 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& Element
         NewElement.Actor = CreateFoliage(Element.BP, {});
         if (IsValid(NewElement.Actor))
         {
+          NewElment.Actor->SetTickableWhenPaused(false);
           NewElement.EnableActor(Transform, Index, Element.TileMeshComponent);
           Pool->Emplace(NewElement);
         } 
@@ -638,6 +638,7 @@ void AVegetationManager::CreatePoolForBPClass(const FFoliageBlueprint& BP)
     if (IsValid(NewElement.Actor))
     {
       UE_LOG(LogCarla, Display, TEXT("Created actor for pool"));
+      NewElement.Actor->SetTickableWhenPaused(false);
       NewElement.DisableActor();
       AuxPool.Emplace(NewElement);
     }
@@ -666,11 +667,6 @@ AActor* AVegetationManager::CreateFoliage(const FFoliageBlueprint& BP, const FTr
 void AVegetationManager::UpdatePoolBasePosition()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::UpdatePoolBasePosition);
-  //if (!IsValid(HeroVehicle))
-  //  return;
-  //const FTransform HeroTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
-  //const FVector HeroLocation = HeroTransform.GetLocation();
-  //const FTransform PoolTransform(HeroTransform.GetRotation(), FVector(HeroLocation.X, HeroLocation.Y, -1000.0f), FVector(1.0f, 1.0f, 1.0f));
   for (TPair<FString, TArray<FPooledActor>>& Element : ActorPool)
   {
     TArray<FPooledActor>& Pool = Element.Value;
