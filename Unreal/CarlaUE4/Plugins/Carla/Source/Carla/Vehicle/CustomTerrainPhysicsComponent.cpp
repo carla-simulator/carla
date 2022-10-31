@@ -19,6 +19,10 @@
 #include "Misc/Paths.h"
 #include "Engine/World.h"
 #include "Math/UnrealMathUtility.h"
+#include "Engine/World.h"
+#include "Landscape.h"
+#include "LandscapeHeightfieldCollisionComponent.h"
+#include "LandscapeComponent.h"
 
 #include "RHICommandList.h"
 #include "TextureResource.h"
@@ -773,38 +777,6 @@ void FSparseHighDetailMap::UpdateMaps(
     FScopeLock ScopeLock(&Lock_Map);
     FScopeLock ScopeCacheLock(&Lock_CacheMap);
     TRACE_CPUPROFILER_EVENT_SCOPE(UpdateMap);
-    /*
-    // load tiles to map
-    std::vector<uint64_t> TilesToInitialize;
-    for(int32_t Tile_X = MinVector.X; Tile_X < MaxVector.X; ++Tile_X )
-    {
-      for(int32_t Tile_Y = MinVector.Y; Tile_Y < MaxVector.Y; ++Tile_Y )
-      {
-        uint64_t CurrentTileID = GetTileId(Tile_X, Tile_Y);
-        if (Map.find(CurrentTileID) == Map.end())
-        {
-          if (CacheMap.find(CurrentTileID) == CacheMap.end())
-          {
-            Map.emplace(CurrentTileID, FDenseTile());
-            TilesToInitialize.emplace_back(CurrentTileID);
-          }
-          else
-          {
-            Map.emplace(CurrentTileID, std::move( CacheMap[CurrentTileID] ) );
-            CacheMap.erase(CurrentTileID);
-          }
-        }
-      }
-    }
-
-    ParallelFor(TilesToInitialize.size(), [&](int32 Idx)
-    {
-      uint64_t TileId = TilesToInitialize[Idx];
-      InitializeRegion(TileId);
-    });
-
-    */
-
     // unload extra tiles
     std::vector<uint64_t> TilesToErase;
     for (auto &Element : Map)
@@ -822,33 +794,6 @@ void FSparseHighDetailMap::UpdateMaps(
       Map.erase(TileId);
     }
   }
-  /*
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE(InitializeZOrdered);
-    FScopeLock ScopeLock(&Lock_Particles);
-    std::vector<uint64_t> TilesToInitialize;
-    for(int32_t Tile_X = MinVector.X; Tile_X < MaxVector.X; ++Tile_X )
-    {
-      for(int32_t Tile_Y = MinVector.Y; Tile_Y < MaxVector.Y; ++Tile_Y )
-      {
-        uint64_t CurrentTileID = GetTileId(Tile_X, Tile_Y);
-        if (Map.find(CurrentTileID) != Map.end())
-        {
-          if( ! Map[CurrentTileID].bParticlesZOrderedInitialized )
-          {
-            //TilesToInitialize.push_back(CurrentTileID);
-          } 
-        }
-      }
-    }
-    
-    ParallelFor(TilesToInitialize.size(), [&](int32 Idx)
-    {
-      uint64_t TileId = TilesToInitialize[Idx];
-      //Map[TileId].InitializeDataStructure();
-    });
-  }
-  */
   {
     FScopeLock ScopeCacheLock(&Lock_CacheMap);
     TRACE_CPUPROFILER_EVENT_SCOPE(UpdateCache);
@@ -1160,6 +1105,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   EffectMultiplayer = 200.0f;
   MinDisplacement = -10.0f;
   MaxDisplacement = 10.0f;
+  bRemoveLandscapeColliders = false;
 #endif
 
   int IntValue;
@@ -1299,10 +1245,20 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     bDrawLoadedTiles = true;
   }
+  if (FParse::Param(FCommandLine::Get(), TEXT("-remove-colliders")))
+  {
+    bRemoveLandscapeColliders = true;
+  }
   if (FParse::Param(FCommandLine::Get(), TEXT("-disable-terramechanics")))
   {
     SetComponentTickEnabled(false);
     return;
+  }
+
+  if(bRemoveLandscapeColliders)
+  {
+    FWorldDelegates::LevelAddedToWorld.AddUObject(
+        this, &UCustomTerrainPhysicsComponent::OnLevelAddedToWorld);
   }
 
   LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
@@ -1526,8 +1482,6 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     LastUpdatedPosition = GlobalLocation;
     SparseMap.UnLockMutex();
 
-    //UpdateTexture();
-
     if (bDrawLoadedTiles)
     {
       DrawTiles(GetWorld(), SparseMap.GetTileIdInMap(), GlobalLocation.Z + 300, FLinearColor(0.0,0.0,1.0,0.0));
@@ -1562,9 +1516,9 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     
         if( DeformationPlaneActor )
         {
-        DeformationPlaneActor->GetStaticMeshComponent()->SetStaticMesh( DeformationPlaneMesh );
-        DeformationPlaneActor->GetStaticMeshComponent()->SetMaterial( 0, DeformationPlaneMaterial );
-        DeformationPlaneActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+          DeformationPlaneActor->GetStaticMeshComponent()->SetStaticMesh( DeformationPlaneMesh );
+          DeformationPlaneActor->GetStaticMeshComponent()->SetMaterial( 0, DeformationPlaneMaterial );
+          DeformationPlaneActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
         }
       }
     }
@@ -2004,19 +1958,6 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   if(bUpdateParticles)
   {
     {
-      /*
-      TRACE_CPUPROFILER_EVENT_SCOPE(RemoveParticlesFromOrderedContainer);
-      auto RemoveParticles = [&] (std::vector<FParticle*>& ParticlesWheel)
-      {
-         RemoveParticlesFromOrderedContainer( ParticlesWheel );
-      };
-      RemoveParticles(ParticlesWheel0);
-      RemoveParticles(ParticlesWheel1);
-      RemoveParticles(ParticlesWheel2);
-      RemoveParticles(ParticlesWheel3);
-      */
-    }
-    {
       TRACE_CPUPROFILER_EVENT_SCOPE(UpdateParticles);
       FScopeLock ScopeLock(&SparseMap.Lock_Particles);
       auto UpdateFutureParticles = 
@@ -2034,15 +1975,6 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
       UpdateFutureParticles(
           ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime, WheelTransform3);
     }
-    {
-      /*
-      TRACE_CPUPROFILER_EVENT_SCOPE( FlagTiles );
-      FlagTilesToRedoOrderedContainer( ParticlesWheel0 );
-      FlagTilesToRedoOrderedContainer( ParticlesWheel1 );
-      FlagTilesToRedoOrderedContainer( ParticlesWheel2 );
-      FlagTilesToRedoOrderedContainer( ParticlesWheel3 );
-      */
-    }
     if (DrawDebugInfo)
     {
       FLinearColor Color(1.0,0.0,1.0,1.0);
@@ -2050,21 +1982,6 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
       DrawParticles(GetWorld(), ParticlesWheel1, Color);
       DrawParticles(GetWorld(), ParticlesWheel2, Color);
       DrawParticles(GetWorld(), ParticlesWheel3, Color);
-    }
-    {
-      /*
-      TRACE_CPUPROFILER_EVENT_SCOPE(AddParticles);
-      AddParticlesToOrderedContainer( ParticlesWheel0 );
-      AddParticlesToOrderedContainer( ParticlesWheel1 );
-      AddParticlesToOrderedContainer( ParticlesWheel2 );
-      AddParticlesToOrderedContainer( ParticlesWheel3 );
-      */
-    }
-    {
-      /*
-      TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::UpdateTilesHeightMaps);
-      UpdateTilesHeightMapsInRadius( LastUpdatedPosition, std::min(TextureRadius, TileRadius.X ) );
-      */
     }
   }
 
@@ -2192,6 +2109,36 @@ void UCustomTerrainPhysicsComponent::UpdateParticlesDebug( std::vector<FParticle
     FVector Acceleration = Force;
     P->Velocity = P->Velocity + Acceleration*DeltaTime;
     P->Position = P->Position + P->Velocity*DeltaTime;
+  }
+}
+
+void UCustomTerrainPhysicsComponent::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
+{
+  if( bRemoveLandscapeColliders )
+  {
+    for(auto CurrentActor : InLevel->Actors)
+    {
+      if( ALandscape* CurrentLandscape = Cast<ALandscape>( CurrentActor )  )
+      {
+        CurrentLandscape->BodyInstance.ReplaceResponseToChannels(  ECollisionResponse::ECR_Block, ECollisionResponse::ECR_Ignore );
+        CurrentLandscape->BodyInstance.ReplaceResponseToChannels(  ECollisionResponse::ECR_Overlap, ECollisionResponse::ECR_Ignore );
+        CurrentLandscape->BodyInstance.SetCollisionEnabled( ECollisionEnabled::Type::NoCollision, true);
+        
+        for(auto CurrentCollision : CurrentLandscape->CollisionComponents){
+          CurrentCollision->SetCollisionResponseToAllChannels( ECollisionResponse::ECR_Ignore );
+          CurrentCollision->SetCollisionEnabled( ECollisionEnabled::Type::NoCollision );
+
+        }
+
+        for(auto CurrentComponent : CurrentLandscape->LandscapeComponents){
+          CurrentComponent->SetCollisionResponseToAllChannels( ECollisionResponse::ECR_Ignore );
+          CurrentComponent->SetCollisionEnabled( ECollisionEnabled::Type::NoCollision );
+        
+        }
+
+
+      }
+    }
   }
 }
 
@@ -2413,7 +2360,7 @@ void UCustomTerrainPhysicsComponent::ApplyForcesToVehicle(
   FVector WheelPosition3 = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
   UPrimitiveComponent* PrimitiveComponent = 
       Cast<UPrimitiveComponent>(Vehicle->GetRootComponent());
-  if (!PrimitiveComponent)
+  if(!PrimitiveComponent)
   {
     UE_LOG(LogCarla, Error, TEXT("ApplyForcesToVehicle Vehicle does not contain UPrimitiveComponent"));
     return;
