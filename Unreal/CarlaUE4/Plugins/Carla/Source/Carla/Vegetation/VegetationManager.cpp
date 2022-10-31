@@ -695,10 +695,10 @@ void AVegetationManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorl
   FreeTileCache(InLevel);
 }
 
-void AVegetationManager::PostWorldOriginOffset(UWorld*, FIntVector, FIntVector InDstOrigin)
+void AVegetationManager::PostWorldOriginOffset(UWorld*, FIntVector, FIntVector)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::PostWorldOriginOffset);
-  InactivePoolTransform.SetLocation(FVector(InDstOrigin.X, InDstOrigin.Y, InDstOrigin.Z));
+  InactivePoolTransform.SetLocation(FVector(0.0f, 0.0f, 0.0f));
 }
 
 /********************************************************************************/
