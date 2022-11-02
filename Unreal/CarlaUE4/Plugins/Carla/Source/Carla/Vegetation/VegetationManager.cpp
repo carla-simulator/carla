@@ -8,7 +8,7 @@
 #include "ProceduralFoliageComponent.h"
 
 #include "Carla/Vegetation/VegetationManager.h"
-
+#include "Game/TaggedComponent.h"
 
 static FString GetVersionFromFString(const FString& String)
 {
@@ -692,6 +692,14 @@ AActor* AVegetationManager::CreateFoliage(const FFoliageBlueprint& BP, const FTr
 
   AActor* Actor = GetWorld()->SpawnActor<AActor>(BP.SpawnedClass,
     Transform.GetLocation(), Transform.Rotator());
+  
+  TArray<UTaggedComponent*> TaggedComponents;
+  Actor->GetComponents(TaggedComponents);
+  for (UTaggedComponent* Component: TaggedComponents)
+  {
+    Component->DestroyComponent();
+  }
+
   if (SpawnScale <= 1.01f && SpawnScale >= 0.99f)
     Actor->SetActorScale3D(Transform.GetScale3D());
   else
