@@ -158,7 +158,6 @@ private:
   void SetMaterialCache(FTileData& TileData);
 
   void FreeTileCache(ULevel* InLevel);
-  void DisableActorsFromTile(FTileData* TileData);
 
   void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
   void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld);

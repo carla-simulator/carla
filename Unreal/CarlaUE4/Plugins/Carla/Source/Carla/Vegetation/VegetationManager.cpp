@@ -467,7 +467,6 @@ void AVegetationManager::FreeTileCache(ULevel* InLevel)
   FTileData* ExistingTileData = TileCache.Find(TileName);
   if (ExistingTileData)
   {
-    DisableActorsFromTile(ExistingTileData);
 
     ExistingTileData->MaterialInstanceDynamicCache.Empty();
     for (std::shared_ptr<FTileMeshComponent>& Element 
