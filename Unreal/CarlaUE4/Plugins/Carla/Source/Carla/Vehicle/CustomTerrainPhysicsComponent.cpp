@@ -1862,11 +1862,6 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel3), BboxWheel3.Center.Z);
   }
 
-  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 0 %s"), ParticlesWheel0.size(), *WheelPosition0.ToString());
-  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 1 %s"), ParticlesWheel1.size(), *WheelPosition1.ToString());
-  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 2 %s"), ParticlesWheel2.size(), *WheelPosition2.ToString());
-  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 3 %s"), ParticlesWheel3.size(), *WheelPosition3.ToString());
-
   TArray<float> ParticlePos0, ParticleVel0, ParticlePos1, ParticleVel1,
                 ParticlePos2, ParticleVel2, ParticlePos3, ParticleVel3;
   TArray<float> WheelPos0, WheelOrient0, WheelLinVel0, WheelAngVel0;
@@ -2041,27 +2036,6 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
             Output.wheel3.wheel_torque_y,
             Output.wheel3.wheel_torque_z)));
   }
-
-  {
-    TArray<FVector> WheelsNormals;
-    WheelsNormals.Add(FVector(
-            Output.wheel0.wheel_normal_x,
-            Output.wheel0.wheel_normal_y,
-            Output.wheel0.wheel_normal_z));
-    WheelsNormals.Add(FVector(
-            Output.wheel1.wheel_normal_x,
-            Output.wheel1.wheel_normal_y,
-            Output.wheel1.wheel_normal_z));
-    WheelsNormals.Add(FVector(
-            Output.wheel2.wheel_normal_x,
-            Output.wheel2.wheel_normal_y,
-            Output.wheel2.wheel_normal_z));
-    WheelsNormals.Add(FVector(
-            Output.wheel3.wheel_normal_x,
-            Output.wheel3.wheel_normal_y,
-            Output.wheel3.wheel_normal_z));
-    AddForcesToVehicleWheels(Vehicle, WheelsNormals);
-  }
   #endif
 }
 
@@ -2135,8 +2109,6 @@ void UCustomTerrainPhysicsComponent::OnLevelAddedToWorld(ULevel* InLevel, UWorld
           CurrentComponent->SetCollisionEnabled( ECollisionEnabled::Type::NoCollision );
         
         }
-
-
       }
     }
   }
@@ -2312,38 +2284,22 @@ void UCustomTerrainPhysicsComponent::UpdateTilesHeightMapsInRadius(FDVector Posi
   }
 }
 
-void UCustomTerrainPhysicsComponent::AddForcesToVehicleWheels(ACarlaWheeledVehicle *Vehicle, TArray<FVector> WheelsNormals )
+void UCustomTerrainPhysicsComponent::AddForceToSingleWheel( USkeletalMeshComponent* SkeletalMeshComponent, FVector WheelPosition, FVector WheelNormalForce )
 {
-  USkeletalMeshComponent* SKMesh = Cast<USkeletalMeshComponent>( Vehicle->GetRootComponent() );
-
-  UE_LOG(LogCarla, Warning, TEXT("Normal0 %f"), WheelsNormals[0].Z );
-
-  AddForceToSingleWheel( SKMesh, FName(TEXT("Wheel_Front_Left")) , WheelsNormals[0] );
-  AddForceToSingleWheel( SKMesh, FName(TEXT("Wheel_Front_Right")), WheelsNormals[1] );
-  AddForceToSingleWheel( SKMesh, FName(TEXT("Wheel_Rear_Left")), WheelsNormals[2] );
-  AddForceToSingleWheel( SKMesh, FName(TEXT("Wheel_Rear_Left")), WheelsNormals[3] );
-}
-
-void UCustomTerrainPhysicsComponent::AddForceToSingleWheel( USkeletalMeshComponent* SkeletalMeshComponent, FName WheelName, FVector WheelNormalForce )
-{
-  FVector WheelLocation = SkeletalMeshComponent->GetBoneLocation(WheelName, EBoneSpaces::Type::WorldSpace);
-  WheelLocation = UEFrameToSI(WheelLocation);
-  FVector WheelBottomLocation = WheelLocation - FVector(0,0, 0.337);
-  float OriginalHeight = SparseMap.GetHeight(WheelLocation);
+  FVector WheelBottomLocation = WheelPosition - FVector(0,0, 0.337);
+  float OriginalHeight = SparseMap.GetHeight(WheelPosition);
   float FloorHeight = OriginalHeight - UEFrameToSI(TerrainDepth);
+  
+  if( WheelNormalForce.Size() == 0 ){
+    WheelNormalForce = FVector::UpVector;
+  }
 
-  if( WheelBottomLocation.Z < FloorHeight )
-  {
-    SkeletalMeshComponent->AddForceToAllBodiesBelow( WheelNormalForce * NormalForceIntensity, WheelName, false, true );
+  float ForceFactor = ( WheelBottomLocation.Z - OriginalHeight ) / ( FloorHeight - OriginalHeight );
+  if( ForceFactor < 0){
+    ForceFactor = 0;
   }
-  else if( WheelBottomLocation.Z < OriginalHeight )
-  {
-    SkeletalMeshComponent->AddForceToAllBodiesBelow( WheelNormalForce * NormalForceIntensity, WheelName, false, true );
-  }
-  else
-  {
 
-  }
+  SkeletalMeshComponent->AddForceAtLocationLocal(WheelPosition, SIToUEFrame(WheelNormalForce) * ( ForceFactor * NormalForceIntensity) );
 }
 
 void UCustomTerrainPhysicsComponent::ApplyForcesToVehicle(
