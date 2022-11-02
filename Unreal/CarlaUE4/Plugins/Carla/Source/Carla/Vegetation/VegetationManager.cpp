@@ -488,7 +488,7 @@ void AVegetationManager::FreeTileCache(ULevel* InLevel)
 void AVegetationManager::UpdateMaterials(FTileData* Tile)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::UpdateMaterials);
-  const FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
+  const FTransform GlobalTransform = HeroVehicle->GetActorTransform();
   const FLinearColor Position = GlobalTransform.GetLocation();
   Tile->UpdateMaterialCache(Position, DebugMaterials);
 }
@@ -541,7 +541,7 @@ TArray<FElementsToSpawn> AVegetationManager::GetElementsToSpawn(FTileData* Tile)
 void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& ElementsToSpawn)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::SpawnSkeletalFoliages);
-  const FTransform HeroTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
+  const FTransform HeroTransform = HeroVehicle->GetActorTransform();
   const FVector HeroLocation = HeroTransform.GetLocation();
   const float HeroDetectionSizeSquared = HeroVehicle->GetDetectionSize() * HeroVehicle->GetDetectionSize();
 
@@ -589,7 +589,7 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& Element
 void AVegetationManager::ActivePooledActors()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::ActivePooledActors);
-  const FTransform HeroTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
+  const FTransform HeroTransform = HeroVehicle->GetActorTransform();
   const FVector HeroLocation = HeroTransform.GetLocation();
   const float SquaredActiveActorDistance = ActiveActorDistance * ActiveActorDistance;
 
@@ -615,7 +615,7 @@ void AVegetationManager::ActivePooledActors()
 void AVegetationManager::DestroySkeletalFoliages()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::DestroySkeletalFoliages);
-  const FTransform HeroTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
+  const FTransform HeroTransform = HeroVehicle->GetActorTransform();
   const FVector HeroLocation = HeroTransform.GetLocation();
   const float HeroDetectionSizeSquared = HeroVehicle->GetDetectionSize() * HeroVehicle->GetDetectionSize();
 
@@ -799,8 +799,7 @@ TArray<FString> AVegetationManager::GetTilesInUse()
     const FBox Box = Procedural->ProceduralComponent->GetBounds();
     if (!Box.IsValid)
       continue;
-    const FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
-    if (Box.IsInside(GlobalTransform.GetLocation()))
+    if (Box.IsInside(HeroVehicle->GetActorTransform().GetLocation()))
         Results.Emplace(Element.Key);
   }
   return Results;
