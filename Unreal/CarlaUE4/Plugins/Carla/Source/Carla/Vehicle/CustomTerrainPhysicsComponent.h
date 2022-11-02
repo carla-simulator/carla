@@ -371,6 +371,8 @@ private:
 
   void UpdateParticlesDebug(std::vector<FParticle*> Particles);
   
+  void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
+  
   void UpdateTilesHeightMaps( const std::vector<FParticle*>& Particles);
   void RemoveParticlesFromOrderedContainer(const std::vector<FParticle*>& Particles);
   void AddParticlesToOrderedContainer(const std::vector<FParticle*>& Particles);
@@ -404,6 +406,8 @@ public:
   bool bDrawLoadedTiles = false;
   UPROPERTY(EditAnywhere, Category="Tiles")
   int32 TileSize = 1;
+  UPROPERTY(EditAnywhere, Category="Tiles")
+  bool bRemoveLandscapeColliders = false;
 private:
   // TimeToTriggerCacheReload In seconds
   UPROPERTY(EditAnywhere, Category="Tiles")

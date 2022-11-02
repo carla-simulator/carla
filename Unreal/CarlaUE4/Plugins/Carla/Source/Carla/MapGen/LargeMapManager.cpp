@@ -123,35 +123,11 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 #endif // WITH_EDITOR
 }
 
-void ALargeMapManager::RemoveLandscapeCollisionIfHaveTerraMechanics(ULevel* InLevel)
-{
-  if( bHasTerramechanics )
-  {
-    for(auto CurrentActor : InLevel->Actors)
-    {
-      if( ALandscape* CurrentLandscape = Cast<ALandscape>( CurrentActor )  )
-      {
-        CurrentLandscape->BodyInstance.ReplaceResponseToChannels(  ECollisionResponse::ECR_Block, ECollisionResponse::ECR_Ignore );
-        CurrentLandscape->BodyInstance.ReplaceResponseToChannels(  ECollisionResponse::ECR_Overlap, ECollisionResponse::ECR_Ignore );
-        CurrentLandscape->BodyInstance.SetCollisionEnabled( ECollisionEnabled::Type::NoCollision, true);
-      
-        for(auto CurrentCollision : CurrentLandscape->CollisionComponents){
-          CurrentCollision->SetCollisionResponseToAllChannels( ECollisionResponse::ECR_Ignore );
-          CurrentCollision->SetCollisionEnabled( ECollisionEnabled::Type::NoCollision );
-        }
-
-        for(auto CurrentComponent : CurrentLandscape->LandscapeComponents){
-          CurrentComponent->SetCollisionResponseToAllChannels( ECollisionResponse::ECR_Ignore );
-          CurrentComponent->SetCollisionEnabled( ECollisionEnabled::Type::NoCollision ); 
-        }
-      }
-    }
-  }
-}
 void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
   LM_LOG(Warning, "OnLevelAddedToWorld");
   ATagger::TagActorsInLevel(*InLevel, true);
+
 
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }

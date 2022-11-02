@@ -214,16 +214,28 @@ void ACarlaWheeledVehicle::UpdateDetectionBox()
   ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
   if (!IsValid(LargeMap))
     return;
-  FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
-  const FVector Vec { DetectionSize, DetectionSize, DetectionSize};
+  const FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
+  const FVector Vec { DetectionSize, DetectionSize, DetectionSize };
   FBox Box = FBox(-Vec, Vec);
-  FoliageBoundingBox = Box.TransformBy(GlobalTransform);
+  const FTransform NonScaledTransform(GlobalTransform.GetRotation(), GlobalTransform.GetLocation(), {1.0f, 1.0f, 1.0f});
+  FoliageBoundingBox = Box.TransformBy(NonScaledTransform);
 }
 
 const TArray<int32> ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const
 {  
   TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle);
   return Component->GetInstancesOverlappingBox(FoliageBoundingBox);
+}
+
+FBox ACarlaWheeledVehicle::GetDetectionBox() const
+{  
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::GetDetectionBox);
+  return FoliageBoundingBox;
+}
+
+float ACarlaWheeledVehicle::GetDetectionSize() const
+{
+  return DetectionSize;
 }
 
 void ACarlaWheeledVehicle::DrawFoliageBoundingBox() const

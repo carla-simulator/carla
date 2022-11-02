@@ -75,7 +75,6 @@ namespace learning {
     result.wheel_torque_x = wheel_forces_data[3];
     result.wheel_torque_y = wheel_forces_data[4];
     result.wheel_torque_z = wheel_forces_data[5];
-
     const float* particle_forces_data = particle_forces.data_ptr<float>();
     int num_dimensions = 3;
     int num_particles = particle_forces.sizes()[0];

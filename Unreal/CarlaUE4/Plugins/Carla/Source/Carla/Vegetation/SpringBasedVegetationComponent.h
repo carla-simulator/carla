@@ -260,6 +260,9 @@ private:
   float MinForceFactor = 0.01;
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   float LineTraceMaxDistance = 180.f;
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float CapsuleRadius = 6.0f;
+
 public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   FSkeletonHierarchy Skeleton;
