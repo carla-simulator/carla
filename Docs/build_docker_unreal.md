@@ -66,10 +66,10 @@ The following command will use the image created in the previous step to build t
 docker build -t carla -f Carla.Dockerfile .
 ```
 
-If you would like to build a specific branch or tag of the CARLA repository, run the following command:
+If you would like to build a specific CARLA repository (defaulted to https://github.com/carla-simulator/carla.git), a branch or tag (defaulted to master), run the following command:
 
 ```sh
-docker build -t carla -f Carla.Dockerfile . --build-arg GIT_BRANCH=<branch_or_tag_name>
+docker build -t carla -f Carla.Dockerfile . --build-arg GIT_BRANCH=<branch_or_tag_name> --build-arg GIT_REPO=<repo_url> 
 ```
 
 ---

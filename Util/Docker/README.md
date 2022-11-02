@@ -72,10 +72,10 @@ docker build -t carla -f Carla.Dockerfile .
 
 ## Other useful information
 
-You can use a specific repository **branch** or **tag** from our repository, using:
+You can use a specific **repository** and a  **branch** or **tag** from our repository, using:
 
 ```
-docker build -t carla -f Carla.Dockerfile . --build-arg GIT_BRANCH=branch_name
+docker build -t carla -f Carla.Dockerfile . --build-arg GIT_BRANCH=branch_name --build-arg GIT_REPO=https://github.com/carla-simulator/carla.git
 ```
 
 Clean up the intermediate images from the build (keep the ue4-source image so you can use it for full rebuilds)
