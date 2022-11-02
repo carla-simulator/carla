@@ -495,6 +495,8 @@ void AVegetationManager::UpdateMaterials(FTileData* Tile)
 
 TArray<FElementsToSpawn> AVegetationManager::GetElementsToSpawn(FTileData* Tile)
 {
+  UE_LOG(LogCarla, Error, TEXT("GetElementsToSpawn"));
+
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::GetElementsToSpawn);
   TArray<FElementsToSpawn> Results;
   int32 i = -1;
@@ -513,7 +515,7 @@ TArray<FElementsToSpawn> AVegetationManager::GetElementsToSpawn(FTileData* Tile)
     TArray<int32> Indices = HeroVehicle->GetFoliageInstancesCloseToVehicle(InstancedStaticMeshComponent);
     if (Indices.Num() == 0)
       continue;
-
+    UE_LOG(LogCarla, Error, TEXT("%d instances of %s close to vehicle"), Indices.Num(), *BP->BPFullClassName);
     TArray<int32> NewIndices;
     for (int32 Index : Indices)
     {
@@ -539,6 +541,7 @@ TArray<FElementsToSpawn> AVegetationManager::GetElementsToSpawn(FTileData* Tile)
 
 void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& ElementsToSpawn)
 {
+  UE_LOG(LogCarla, Error, TEXT("SpawnSkeletalFoliages"));
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::SpawnSkeletalFoliages);
   const FTransform HeroTransform = LargeMap->LocalToGlobalTransform(HeroVehicle->GetActorTransform());
   const FVector HeroLocation = HeroTransform.GetLocation();
@@ -547,20 +550,32 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& Element
   for (FElementsToSpawn& Element : ElementsToSpawn)
   {
     TArray<FPooledActor>* Pool = ActorPool.Find(Element.BP.BPFullClassName);
+    UE_LOG(LogCarla, Error, TEXT("Class %s"), *Element.BP.BPFullClassName);
+
     if (Pool == nullptr)
+    {
+      UE_LOG(LogCarla, Error, TEXT("Pool not valid"));
       continue;
+    }
     for (const TPair<FTransform, int32>& TransformIndex : Element.TransformIndex)
     {
       const FTransform& Transform = TransformIndex.Key;
       int32 Index = TransformIndex.Value;
       if (Element.TileMeshComponent->IndicesInUse.Contains(Index))
-        continue;
+      {
+        UE_LOG(LogCarla, Error, TEXT("Indice in use"));
+        continue;        
+      }
       const float Distance = FMath::Abs(FVector::DistSquared(Transform.GetLocation(), HeroLocation));
       if (Distance > HeroDetectionSizeSquared)
+      {
+        UE_LOG(LogCarla, Error, TEXT("Too far from the foliage"));
         continue;
+      }
       bool Ok = EnableActorFromPool(Transform, Index, Element.TileMeshComponent, *Pool);
       if (Ok)
       {
+        UE_LOG(LogCarla, Error, TEXT("Enabled"));
         
       }
       else
@@ -569,6 +584,7 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& Element
         NewElement.Actor = CreateFoliage(Element.BP, {});
         if (IsValid(NewElement.Actor))
         {
+          UE_LOG(LogCarla, Error, TEXT("New element added to pool"));
           NewElement.Actor->SetTickableWhenPaused(false);
           NewElement.EnableActor(Transform, Index, Element.TileMeshComponent);
           Pool->Emplace(NewElement);
