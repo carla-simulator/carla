@@ -97,32 +97,32 @@ public:
   void UpdatePoolBasePosition();
 
 public:
-  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  UPROPERTY(Category = "CARLA Vegetation Spawner", EditDefaultsOnly)
   bool DebugMaterials {false};
 
-  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  UPROPERTY(Category = "CARLA Vegetation Spawner", EditDefaultsOnly)
   float HideMaterialDistance {500.0f};
 
-  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  UPROPERTY(Category = "CARLA Vegetation Spawner", EditDefaultsOnly)
   float ActiveActorDistance {500.0f};
 
   //Filters for debug
-  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  UPROPERTY(Category = "CARLA Vegetation Spawner", EditDefaultsOnly)
   bool SpawnBushes {true};
 
-  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  UPROPERTY(Category = "CARLA Vegetation Spawner", EditDefaultsOnly)
   bool SpawnTrees {true};
 
-  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  UPROPERTY(Category = "CARLA Vegetation Spawner", EditDefaultsOnly)
   bool SpawnRocks {true};
 
-  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  UPROPERTY(Category = "CARLA Vegetation Spawner", EditDefaultsOnly)
   bool SpawnPlants {true};
 
-  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  UPROPERTY(Category = "CARLA Vegetation Spawner", EditDefaultsOnly)
   float SpawnScale {1.0f};
 
-  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  UPROPERTY(Category = "CARLA Vegetation Spawner", EditDefaultsOnly)
   int32 InitialPoolSize {10};
 
   /// @}
