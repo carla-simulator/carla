@@ -207,6 +207,13 @@ struct CARLATOOLS_API FTileBoundariesInfo
   TArray<uint16> BottomHeightData;
 };
 
+UENUM(BlueprintType)
+enum EMapGeneratorToolMode
+{
+  NEW_MAP,
+  MISC_EDITOR
+};
+
 /// Class UMapGeneratorWidget extends the functionality of UEditorUtilityWidget
 /// to be able to generate and manage maps and largemaps tiles for procedural
 /// map generation
