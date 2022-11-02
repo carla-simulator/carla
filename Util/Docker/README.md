@@ -1,6 +1,6 @@
 # Building Carla in a Docker
 
-_These instructions have been tested in **Ubuntu 16.04**._
+_These instructions have been tested in **Ubuntu 18.04**._
 
 This file is intended to explain how to build a Docker image that uses **Ubuntu 18.04** to compile Carla.
 
@@ -49,19 +49,26 @@ ue4-docker setup
 
 ## Building the Docker images
 
-Navigate to `carla/Util/Docker` and use the following commands, each one will take a long time.  
-First, let's create a Docker image containing a compiled version of Unreal Engine 4 version `24.3`. Change the version if needed.
+Navigate to `carla/Util/Docker` and use the following commands, each one will take a long time.
+
+### Image 1 - Unreal Engine 4
+First, let's create a Docker image containing a compiled version of Unreal Engine 4 version using the Carla forked repository and branch. Change the branch if needed.
+
+This will by default ask for the user Git credentials. You can also use -username my_user -password my_password
+Be aware that your password won't work has GitHub does not allow that for security reasons. Therefore, you should use a GitHub Authentification token with repository access. Cf: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token
 
 ```
-ue4-docker build 4.24.3 --no-engine --no-minimal
+ue4-docker build --no-engine --linux --no-minimal custom -repo=https://github.com/CarlaUnreal/UnrealEngine.git -branch=carla
 ```
 
+### Image 2 - Prerequisites to build Carla
 Next, this will build the image with all the necessary requisites to build Carla in a **Ubuntu 18.04**
 
 ```
 docker build -t carla-prerequisites -f Prerequisites.Dockerfile .
 ```
 
+### Image 3 - Carla
 Finally create the actual Carla image, it will search for `carla-prerequisites:latest`:
 
 ```

@@ -2,18 +2,17 @@ FROM carla-prerequisites:latest
 
 ARG GIT_BRANCH
 
-USER carla
-WORKDIR /home/carla
+USER ue4
 
-RUN cd /home/carla/ && \
+RUN cd /home/ue4 && \
   if [ -z ${GIT_BRANCH+x} ]; then git clone --depth 1 https://github.com/carla-simulator/carla.git; \
   else git clone --depth 1 --branch $GIT_BRANCH https://github.com/carla-simulator/carla.git; fi && \
-  cd /home/carla/carla && \
+  cd /home/ue4/carla && \
   ./Update.sh && \
   make CarlaUE4Editor && \
   make PythonAPI && \
   make build.utils && \
   make package && \
-  rm -r /home/carla/carla/Dist
+  rm -r /home/ue4/carla/Dist
 
-WORKDIR /home/carla/carla
+WORKDIR /home/ue4/carla

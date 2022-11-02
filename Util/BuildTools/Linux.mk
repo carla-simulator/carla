@@ -12,7 +12,7 @@ launch-only:
 import: CarlaUE4Editor PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Import.sh $(ARGS)
 
-package: CarlaUE4Editor PythonAPI
+package: CarlaUE4Editor PythonAPI.rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
 
 package.rss: CarlaUE4Editor PythonAPI.rss.rebuild
