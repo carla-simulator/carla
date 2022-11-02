@@ -59,6 +59,7 @@ void FPooledActor::EnableActor(const FTransform& Transform, int32 NewIndex, std:
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FPooledActor::EnableActor);
   InUse = true;
+  IsActive = false;
   GlobalTransform = Transform;
   Index = NewIndex;
   TileMeshComponent = NewTileMeshComponent;
@@ -98,8 +99,7 @@ void FPooledActor::DisableActor()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FPooledActor::DisableActor);
 
-  if (TileMeshComponent && 
-      TileMeshComponent->bIsAlive)
+  if (TileMeshComponent)
   {
     if (TileMeshComponent->IndicesInUse.Contains(Index))
     {
@@ -520,7 +520,10 @@ TArray<FElementsToSpawn> AVegetationManager::GetElementsToSpawn(FTileData* Tile)
     for (int32 Index : Indices)
     {
       if (Element.IndicesInUse.Contains(Index))
+      {
+        UE_LOG(LogCarla, Error, TEXT("Index %d already in use"), Index);
         continue;
+      }
       NewIndices.Emplace(Index);
     }
     
