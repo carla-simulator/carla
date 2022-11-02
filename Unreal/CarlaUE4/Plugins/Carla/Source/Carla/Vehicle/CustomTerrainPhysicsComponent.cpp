@@ -2036,26 +2036,6 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
             Output.wheel3.wheel_torque_y,
             Output.wheel3.wheel_torque_z)));
   }
-
-  {
-    TArray<FVector> WheelsNormals;
-    WheelsNormals.Add(FVector(
-            Output.wheel0.wheel_normal_x,
-            Output.wheel0.wheel_normal_y,
-            Output.wheel0.wheel_normal_z));
-    WheelsNormals.Add(FVector(
-            Output.wheel1.wheel_normal_x,
-            Output.wheel1.wheel_normal_y,
-            Output.wheel1.wheel_normal_z));
-    WheelsNormals.Add(FVector(
-            Output.wheel2.wheel_normal_x,
-            Output.wheel2.wheel_normal_y,
-            Output.wheel2.wheel_normal_z));
-    WheelsNormals.Add(FVector(
-            Output.wheel3.wheel_normal_x,
-            Output.wheel3.wheel_normal_y,
-            Output.wheel3.wheel_normal_z));
-  }
   #endif
 }
 
