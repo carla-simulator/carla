@@ -1908,11 +1908,6 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel3), BboxWheel3.Center.Z);
   }
 
-  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 0 %s"), ParticlesWheel0.size(), *WheelPosition0.ToString());
-  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 1 %s"), ParticlesWheel1.size(), *WheelPosition1.ToString());
-  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 2 %s"), ParticlesWheel2.size(), *WheelPosition2.ToString());
-  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 3 %s"), ParticlesWheel3.size(), *WheelPosition3.ToString());
-
   TArray<float> ParticlePos0, ParticleVel0, ParticlePos1, ParticleVel1,
                 ParticlePos2, ParticleVel2, ParticlePos3, ParticleVel3;
   TArray<float> WheelPos0, WheelOrient0, WheelLinVel0, WheelAngVel0;
@@ -2144,14 +2139,6 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
             Output.wheel3.wheel_normal_y,
             Output.wheel3.wheel_normal_z));
 
-    USkeletalMeshComponent* SKMesh = Cast<USkeletalMeshComponent>( Vehicle->GetRootComponent() );
-
-    FTransform VehicleTransform = Vehicle->GetTransform();
-    FVector WheelPosition0 = VehicleTransform.TransformPosition(FVector(140, -70, 40));
-    FVector WheelPosition1 = VehicleTransform.TransformPosition(FVector(140, 70, 40));
-    FVector WheelPosition2 = VehicleTransform.TransformPosition(FVector(-140, -70, 40));
-    FVector WheelPosition3 = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
-   
   }
   #endif
 }
@@ -2161,7 +2148,7 @@ void UCustomTerrainPhysicsComponent::UpdateParticles(
     float DeltaTime, const FTransform& WheelTransform)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(UpdateParticles);
-  UE_LOG(LogCarla, Log, TEXT("%d vs %d"), Particles.size(), Forces.size()/3);
+  //UE_LOG(LogCarla, Log, TEXT("%d vs %d"), Particles.size(), Forces.size()/3);
   if(bUseLocalFrame)
   {
     for (size_t i = 0; i < Particles.size(); i++)

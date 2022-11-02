@@ -201,6 +201,8 @@ public:
 
 protected:
 
+  void RemoveLandscapeCollisionIfHaveTerraMechanics(ULevel* InLevel);
+
   void UpdateTilesState();
 
   void RemovePendingActorsToRemove();
