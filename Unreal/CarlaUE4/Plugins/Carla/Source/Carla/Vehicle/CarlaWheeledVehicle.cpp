@@ -211,10 +211,7 @@ bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
 
 void ACarlaWheeledVehicle::UpdateDetectionBox()
 {
-  ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
-  if (!IsValid(LargeMap))
-    return;
-  const FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
+  const FTransform GlobalTransform = GetActorTransform();
   const FVector Vec { DetectionSize, DetectionSize, DetectionSize };
   FBox Box = FBox(-Vec, Vec);
   const FTransform NonScaledTransform(GlobalTransform.GetRotation(), GlobalTransform.GetLocation(), {1.0f, 1.0f, 1.0f});
