@@ -115,12 +115,14 @@ public:
   FSparseHighDetailMap(float ParticleDiameter = 0.02f, float Depth = 0.4f)
     : ParticleSize(ParticleDiameter), TerrainDepth(Depth) {};
 
-  void Init( uint32 NewTextureSize, float NewAffectedRadius, float ParticleDiameter, float Depth)
+  void Init( uint32 NewTextureSize, float NewAffectedRadius, float ParticleDiameter, 
+    float Depth, float NewFloorHeight )
   {
     ParticleSize = ParticleDiameter;
     TerrainDepth = Depth;
     TextureSize = NewTextureSize;
     AffectedRadius = NewAffectedRadius;
+    FloorHeight = NewFloorHeight;
     UE_LOG(LogCarla, Warning, 
         TEXT("ParticleSize %f"), ParticleSize);
   }
@@ -211,6 +213,7 @@ private:
   FHeightMapData Heightmap;
   float ParticleSize = 0.02f;
   float TerrainDepth = 0.4f;
+  float FloorHeight = 0.0f;
   uint32 TextureSize = 0;
   float AffectedRadius = 0.0f;
   FVector PositionToUpdate;

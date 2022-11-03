@@ -184,6 +184,7 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
   PartialHeightMapSize = TileSize * TextureSize / (2*AffectedRadius);
   std::string FileName = std::string(TCHAR_TO_UTF8(*( SavePath + TileOrigin.ToString() + ".tile" ) ) );
   
+  //UE_LOG(LogCarla, Log, TEXT("Tile origin %s"), *TileOrigin.ToString() );
   if( FPaths::FileExists(FString(FileName.c_str())) )
   {
     
@@ -214,7 +215,6 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
       {
         FDVector ParticleLocalPosition = FDVector(i*ParticleSize, j*ParticleSize, 0.0f);
         FDVector ParticlePosition = TileOrigin + ParticleLocalPosition;
-        // UE_LOG(LogCarla, Log, TEXT("  Particle position %s"), *ParticlePosition.ToString());
         float Height = HeightMap.GetHeight(ParticlePosition);
         for(uint32_t k = 0; k < NumParticles_Z; k++)
         {
@@ -617,11 +617,8 @@ FDVector FSparseHighDetailMap::GetTilePosition(uint64_t TileId)
 
 FDVector FSparseHighDetailMap::GetTilePosition(uint32_t Tile_X, uint32_t Tile_Y)
 {
-
-  FDVector Position = FDVector(Tile_X*TileSize, Tile_Y*TileSize, 0);
+  FDVector Position = FDVector(Tile_X*TileSize, Tile_Y*TileSize, FloorHeight);
   Position = Position + Tile0Position;
-  //UE_LOG(LogCarla, Log, TEXT("Getting location from id (%lu, %lu) %s"),
-  //      (unsigned long)Tile_X, (unsigned long)Tile_Y, *(Position).ToString());
   return Position;
 }
 
@@ -1272,7 +1269,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
     UE_LOG(LogCarla, Warning, 
         TEXT("ParticleDiameter %f"), ParticleDiameter);
 
-    SparseMap.Init(TextureToUpdate->GetSizeX(), TextureRadius, ParticleDiameter * CMToM, TerrainDepth * CMToM);
+    SparseMap.Init(TextureToUpdate->GetSizeX(), TextureRadius, ParticleDiameter * CMToM, TerrainDepth * CMToM, FloorHeight * CMToM );
     RootComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
     if(LargeMapManager)
     {
@@ -1281,7 +1278,6 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
       // UE_LOG(LogCarla, Log, 
       //     TEXT("World Size %s"), *(WorldSize.ToString()));
     }
-    Tile0Origin.Z += FloorHeight;
     // SparseMap.InitializeMap(HeightMap, UEFrameToSI(Tile0Origin), UEFrameToSI(WorldSize),
     //     1.f, MinHeight, MaxHeight, HeightMapScaleFactor.Z);
     if (DataAsset)
@@ -1460,7 +1456,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
               FVector TilePosition = HeightMapOffset + LargeMapManager->GetTileLocation(CurrentLargeMapTileId) - 0.5f*FVector(LargeMapManager->GetTileSize(), -LargeMapManager->GetTileSize(), 0);
               UE_LOG(LogCarla, Log, TEXT("Updating height map to location %s in tile location %s"), 
                   *TilePosition.ToString(), *LargeMapManager->GetTileLocation(CurrentLargeMapTileId).ToString());
-              TilePosition.Z += FloorHeight;
+              TilePosition.Z += UEFrameToSI(FloorHeight) ;
               SparseMap.UpdateHeightMap(
                   HeightMapDataAsset, UEFrameToSI(TilePosition), UEFrameToSI(FVector(
                     LargeMapManager->GetTileSize(),-LargeMapManager->GetTileSize(), 0)), 
