@@ -45,6 +45,11 @@ static FString GetVersionFromFString(const FString& String)
 
 FTileData::~FTileData()
 {
+  for(std::shared_ptr<FTileMeshComponent>& 
+      TileMeshComponent : TileMeshesCache)
+  {
+    TileMeshComponent->bIsAlive = false;
+  }
 }
 
 /********************************************************************************/
