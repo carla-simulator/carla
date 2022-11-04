@@ -301,7 +301,7 @@ void USpringBasedVegetationComponent::GenerateSkeletonHierarchy()
     }
   }
 
-  // UpdateGlobalTransform();
+  UpdateGlobalTransform();
 }
 
 void USpringBasedVegetationComponent::BeginPlay()
@@ -352,7 +352,7 @@ void USpringBasedVegetationComponent::GenerateCollisionCapsules()
   {
     for (FSkeletonBone& Bone : Joint.Bones)
     {
-      if (Bone.Length < 0.01f)
+      if (Bone.Length < MinBoneLength)
       {
         continue;
       }
@@ -619,8 +619,8 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       if (!IsValid(Capsule))
         continue;
       const FVector CapsuleLocation = Capsule->GetComponentLocation();
-      const FVector PrimitiveLocation = Primitive->GetComponentLocation();
-      static constexpr float MIN_DISTANCE = 1.0f;
+      FVector PrimitiveLocation = Primitive->GetComponentLocation();
+      PrimitiveLocation = PrimitiveLocation + Primitive->GetUpVector()*VehicleCenterZOffset;
       FVector ClosestPointOnCapsule;
       float DistanceOnCapsule;
       FHitResult HitResult;
@@ -637,6 +637,10 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
             LineTraceStart, LineTraceEnd, FCollisionQueryParams());
         ClosestPointOnCollider = HitResult.Location;
         DistanceToCollider = (ClosestPointOnCollider - ClosestPointOnCapsule).Size();
+        if (DebugEnableVisualization)
+        {
+          DrawDebugLine(GetWorld(), LineTraceStart, LineTraceEnd, FColor::Orange, false, 0.1f, 0.0f, 1.f);
+        }
       }
       if(!HitFound)
       {
@@ -651,7 +655,7 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
         DrawDebugSphere(GetWorld(), ClosestPointOnCapsule, DEBUG_SPHERE_SIZE, 64, FColor(255, 0, 255, 255));
         DrawDebugSphere(GetWorld(), ClosestPointOnCollider, DEBUG_SPHERE_SIZE, 64, FColor(255, 0, 255, 255));
         DrawDebugSphere(GetWorld(), CapsuleLocation, DEBUG_SPHERE_SIZE, 64, FColor(255, 255, 255, 255));
-        DrawDebugSphere(GetWorld(), PrimitiveLocation, DEBUG_SPHERE_SIZE, 64, FColor(0, 0, 0, 255));
+        DrawDebugSphere(GetWorld(), PrimitiveLocation, DEBUG_SPHERE_SIZE, 64, FColor(255, 255, 255, 255));
       } 
 
       const int JointId = CapsuleToJointId[Capsule];
@@ -785,9 +789,9 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     float beta = Beta;
     float alpha = Alpha;
     Eigen::Matrix3d K;
-    K << SpringStrength,0.f,0.f,
-         0.f,SpringStrength,0.f,
-         0.f,0.f,SpringStrength;
+    K << SpringStrength*SpringStrengthMulFactor.X,0.f,0.f,
+         0.f,SpringStrength*SpringStrengthMulFactor.Y,0.f,
+         0.f,0.f,SpringStrength*SpringStrengthMulFactor.Z;
     Eigen::LLT<Eigen::Matrix3d> lltofI (I);
     Eigen::Matrix3d L = lltofI.matrixL();
     Eigen::Matrix3d Linv = L.inverse();
