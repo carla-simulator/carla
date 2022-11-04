@@ -281,7 +281,7 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   bool DebugEnableAllCollisions { false };
-private:
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   bool bAutoComputeStrength = true;
 };
