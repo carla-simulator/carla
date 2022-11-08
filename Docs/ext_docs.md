@@ -9,6 +9,7 @@ Below, you will find in depth documentation on the many extensive features of CA
 [__Synchrony and time-step__](adv_synchrony_timestep.md) — Client-server communication and simulation time.  
 [__Benchmarking Performance__](adv_benchmarking.md) — Perform benchmarking using our prepared script.  
 [__CARLA Agents__](adv_agents.md) — Agents scripts allow single vehicles to roam the map or drive to a set destination.  
+[__Multi GPU__](adv_multigpu.md) — Set up the CARLA simulator to use multiple GPUs for processing.
 
 ## Traffic Simulation
 
