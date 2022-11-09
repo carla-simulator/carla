@@ -10,6 +10,7 @@
 #include "Components/CapsuleComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "BaseVegetationActor.h"
 #include <unordered_set>
 #include <vector>
 #include "carla/rpc/String.h"
@@ -320,6 +321,12 @@ void USpringBasedVegetationComponent::BeginPlay()
     SetComponentTickEnabled(false);
     OTHER_LOG(Error, "Could not find skeletal mesh component.");
     return;
+  }
+
+  ABaseVegetationActor* BaseVegetation = Cast<ABaseVegetationActor>(GetOwner());
+  if(BaseVegetation)
+  {
+    BaseVegetation->SetParametersToComponent();
   }
 
   // set callbacks
@@ -678,7 +685,7 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       const Eigen::Vector3d RepulsionForce = SpringTorque.cross(JointCapsuleVector) * JointCapsuleVector.squaredNorm();
 
       FVector RepulsionForceUE = -ToUnrealVector(RepulsionForce) * 100.f;
-      Primitive->AddForceAtLocation(RepulsionForceUE, CapsuleLocation);
+      Primitive->AddForceAtLocation(RepulsionForceUE, ClosestPointOnCollider);
 
       // force to repel geometry overlapping
       float ForceFactor = 1.f;
@@ -693,9 +700,9 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       // const Eigen::Vector3d OverlappingForces = (ColliderPosition - CapsulePosition).normalized() * CollisionForceParameter * ForceFactor;
       // const Eigen::Vector3d OverlappingForces = (ColliderPosition - PointOnCapsulePosition).normalized() * CollisionForceParameter * ForceFactor;
       float Factor = 1.0f - ((JointCollision.Iteration / 100.0f) * RestFactor);
-      const Eigen::Vector3d OverlappingForces = (ColliderPosition - PointOnCapsulePosition).normalized() * CollisionForceParameter * ForceFactor * Factor;
+      const Eigen::Vector3d OverlappingForces = (ColliderPosition - PointOnCapsulePosition).normalized() * CollisionForceParameter * ForceFactor * Factor * Joint.CollisionForceProportionalFactor;
       Primitive->AddForceAtLocation(-ToUnrealVector(OverlappingForces) * 100.f, ClosestPointOnCollider);
-      CollisionTorque += (JointProperties.CenterOfMass - JointGlobalPosition).cross(CollisionImpulse + OverlappingForces);
+      CollisionTorque += (PointOnCapsulePosition - JointGlobalPosition).cross(CollisionImpulse + OverlappingForces);
       JointProperties.Torque += CollisionTorque;
       // COLLISION_LOG(Log, "Joint: %s \n ProjectedSpeed %f, ProportionalFactor %f \n RepulsionForce %s \n", *Joint.JointName,ProjectedSpeed,ProportionalFactor,*EigenToFString(RepulsionForce),*EigenToFString(CollisionTorque));
       //UE_LOG(LogCarla, Display, TEXT("DistanceToCollider: %f, ForceFactor: %f"), DistanceToCollider, ForceFactor);
@@ -714,12 +721,20 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
 
       if (DebugEnableVisualization)
       {
+        static constexpr float DEBUG_SPHERE_SIZE = 5.0f;
         // drawing
         const FVector Start = Capsule->GetComponentLocation();
         const FVector End = Primitive->GetComponentLocation();
         const FColor LineColor(FColor::Green);
         DrawDebugLine(GetWorld(), Start, End, LineColor, false, 0.1f, 0.0f, 1.f);
-        DrawDebugLine(GetWorld(), CapsuleLocation, CapsuleLocation+RepulsionForceUE.GetSafeNormal()*5.f, FColor::Red, false, 0.1f, 0.0f, 1.f);
+        DrawDebugLine(GetWorld(), ClosestPointOnCollider, ClosestPointOnCollider+RepulsionForceUE.GetSafeNormal()*20.f, FColor::Red, false, 0.1f, 0.0f, 1.f);
+        FVector UEOverlapForces = ToUnrealVector(OverlappingForces)*100.f;
+        DrawDebugLine(GetWorld(), ClosestPointOnCapsule, ClosestPointOnCapsule+UEOverlapForces.GetSafeNormal()*20.f, FColor::Turquoise, false, 0.1f, 0.0f, 1.f);
+        FVector UECOM = ToUnrealVector(JointProperties.CenterOfMass )*100.f;
+        DrawDebugSphere(GetWorld(), UECOM, DEBUG_SPHERE_SIZE, 64, FColor::Emerald);
+        FVector UEJointPos = ToUnrealVector(JointGlobalPosition )*100.f;
+        DrawDebugSphere(GetWorld(), UEJointPos, DEBUG_SPHERE_SIZE, 64, FColor::Purple);
+        DrawDebugLine(GetWorld(), ClosestPointOnCapsule, UEJointPos, FColor::Cyan, false, 0.1f, 0.0f, 1.f);
       }
     }
   }

@@ -76,6 +76,8 @@ struct FSkeletonJoint
   TArray<FSkeletonBone> Bones;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FVector ExternalForces = FVector(0,0,0);
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
+  float CollisionForceProportionalFactor = 1.0f;
 };
 
 struct FJointCollision
