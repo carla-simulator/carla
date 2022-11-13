@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 
 if [ -f "crosswalks.obj" ]; then
     rm crosswalks.obj

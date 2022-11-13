@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).

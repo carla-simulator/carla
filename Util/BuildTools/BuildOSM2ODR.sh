@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 DOC_STRING="Build OSM2ODR."
 
 USAGE_STRING=$(cat <<- END

@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 
 
 OPTS=`getopt -o h --long python-version: -n 'parse-options' -- "$@"`
