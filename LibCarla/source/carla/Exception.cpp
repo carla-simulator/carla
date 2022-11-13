@@ -12,9 +12,15 @@
 
 #ifdef BOOST_NO_EXCEPTIONS
 
+#include <boost/assert/source_location.hpp>
+
 namespace boost {
 
   void throw_exception(const std::exception &e) {
+    carla::throw_exception(e);
+  }
+
+  void throw_exception(const std::exception &e, boost::source_location const & loc) {
     carla::throw_exception(e);
   }
 
