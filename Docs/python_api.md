@@ -2498,7 +2498,7 @@ Computes the 4-matrix representation of the inverse transformation.
 Computes the 4-matrix representation of the transformation.  
     - **Return:** _list(list(float))_  
 - <a name="carla.Transform.get_right_vector"></a>**<font color="#7fb800">get_right_vector</font>**(<font color="#00a6ed">**self**</font>)  
-Computes a right vector using the rotatio of the object.  
+Computes a right vector using the rotation of the object.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 - <a name="carla.Transform.get_up_vector"></a>**<font color="#7fb800">get_up_vector</font>**(<font color="#00a6ed">**self**</font>)  
 Computes an up vector using the rotation of the object.  
