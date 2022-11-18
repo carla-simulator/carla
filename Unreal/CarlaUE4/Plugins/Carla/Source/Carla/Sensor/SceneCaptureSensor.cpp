@@ -486,7 +486,7 @@ constexpr const TCHAR* GBufferNames[] =
 };
 
 template <EGBufferTextureID ID, typename T>
-__declspec(noinline) static void CheckGBufferStream(T& GBufferStream, FGBufferRequest& GBuffer)
+static void CheckGBufferStream(T& GBufferStream, FGBufferRequest& GBuffer)
 {
     if (GBufferStream.bIsUsed)
     {
