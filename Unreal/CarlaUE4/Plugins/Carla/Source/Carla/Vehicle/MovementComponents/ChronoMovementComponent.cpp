@@ -47,8 +47,8 @@ void UChronoMovementComponent::CreateChronoMovementComponent(
   }
   ChronoMovementComponent->MaxSubsteps = MaxSubsteps;
   ChronoMovementComponent->MaxSubstepDeltaTime = MaxSubstepDeltaTime;
-  ChronoMovementComponent->RegisterComponent();
   Vehicle->SetCarlaMovementComponent(ChronoMovementComponent);
+  ChronoMovementComponent->RegisterComponent();
   #else
   UE_LOG(LogCarla, Warning, TEXT("Error: Chrono is not enabled") );
   #endif

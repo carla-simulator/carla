@@ -11,8 +11,8 @@
 void UDefaultMovementComponent::CreateDefaultMovementComponent(ACarlaWheeledVehicle* Vehicle)
 {
   UDefaultMovementComponent* DefaultMovementComponent = NewObject<UDefaultMovementComponent>(Vehicle);
-  DefaultMovementComponent->RegisterComponent();
   Vehicle->SetCarlaMovementComponent(DefaultMovementComponent);
+  DefaultMovementComponent->RegisterComponent();
 }
 
 void UDefaultMovementComponent::BeginPlay()
