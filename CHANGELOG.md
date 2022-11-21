@@ -47,6 +47,8 @@
   * Added post process effects for rainy and dusty weathers.
   * Switched data type of the dust storm weather parameter from bool to float.
   * Check for the version of the installed Clang compiler during build.
+  * Added API function to get direct access to the GBuffer textures of a sensor:
+    - `listen_to_gbuffer`: to set a callback for a specific GBuffer texture
 
 ## CARLA 0.9.13
 
