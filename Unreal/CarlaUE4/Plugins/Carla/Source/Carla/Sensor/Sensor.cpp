@@ -44,7 +44,6 @@ void ASensor::Set(const FActorDescription &Description)
 void ASensor::Tick(const float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASensor::Tick);
-#if 0
   Super::Tick(DeltaTime);
   if (bClientsListening)
   {
@@ -68,11 +67,6 @@ void ASensor::Tick(const float DeltaTime)
   }
   ReadyToTick = true;
   PrePhysTick(DeltaTime);
-#else
-  Super::Tick(DeltaTime);
-  ReadyToTick = true;
-  PrePhysTick(DeltaTime);
-#endif
 }
 
 void ASensor::SetSeed(const int32 InSeed)

@@ -25,6 +25,9 @@ import time
 
 
 
+def SaveFinalColorTexture(image):
+    image.save_to_disk('_out/FinalColor-%06d.png' % image.frame)
+
 def SaveSceneColorTexture(image):
     image.save_to_disk('_out/SceneColor-%06d.png' % image.frame)
 
@@ -117,17 +120,21 @@ def main():
         # Let's put the vehicle to drive around.
         vehicle.set_autopilot(True)
 
+        width = 1920
+        height = 1080
+
         # Let's add now a "depth" camera attached to the vehicle. Note that the
         # transform we give here is now relative to the vehicle.
         camera_bp = blueprint_library.find('sensor.camera.rgb')
+        camera_bp.set_attribute('image_size_x', str(width))
+        camera_bp.set_attribute('image_size_y', str(height))
         camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
         camera = world.spawn_actor(camera_bp, camera_transform, attach_to=vehicle)
         actor_list.append(camera)
         print('created %s' % camera.type_id)
 
-        # Regular image capture:
-        # camera.listen(lambda image: image.save_to_disk('_out/%06d.png' % image.frame))
-
+        # Regular image capture, this is currently mandatory for the GBuffers to be extracted:
+        camera.listen(SaveFinalColorTexture)
         # GBuffer image capture:
         camera.listen_to_gbuffer(0, SaveSceneColorTexture)
         camera.listen_to_gbuffer(1, SaveSceneDepthTexture)
@@ -142,31 +149,6 @@ def main():
         camera.listen_to_gbuffer(10, SaveSSAOTexture)
         camera.listen_to_gbuffer(11, SaveCustomDepthTexture)
         camera.listen_to_gbuffer(12, SaveCustomStencilTexture)
-
-        # Oh wait, I don't like the location we gave to the vehicle, I'm going
-        # to move it a bit forward.
-        location = vehicle.get_location()
-        location.x += 40
-        vehicle.set_location(location)
-        print('moved vehicle to %s' % location)
-
-        # But the city now is probably quite empty, let's add a few more
-        # vehicles.
-        transform.location += carla.Location(x=40, y=-3.2)
-        transform.rotation.yaw = -180.0
-        for _ in range(0, 10):
-            transform.location.x += 8.0
-
-            bp = random.choice(blueprint_library.filter('vehicle'))
-
-            # This time we are using try_spawn_actor. If the spot is already
-            # occupied by another object, the function will return None.
-            npc = world.try_spawn_actor(bp, transform)
-            if npc is not None:
-                actor_list.append(npc)
-                npc.set_autopilot(True)
-                print('created %s' % npc.type_id)
-
         time.sleep(10)
 
     finally:
