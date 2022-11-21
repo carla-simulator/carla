@@ -225,6 +225,13 @@ void export_world() {
     .value("Dynamic", cr::CityObjectLabel::Dynamic)
     .value("Water", cr::CityObjectLabel::Water)
     .value("Terrain", cr::CityObjectLabel::Terrain)
+    .value("Tunnel", cr::CityObjectLabel::Tunnel)
+    .value("Truck", cr::CityObjectLabel::Truck)
+    .value("bus", cr::CityObjectLabel::bus)
+    .value("Motorcycle", cr::CityObjectLabel::Motorcycle)
+    .value("bicycle", cr::CityObjectLabel::bicycle)
+
+
     .value("Any", cr::CityObjectLabel::Any)
   ;
 
