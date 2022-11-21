@@ -8,7 +8,7 @@
 
 #include "CarlaRecorderHelpers.h"
 
-#include <fstream>
+#include <sstream>
 #include <ctime>
 
 struct CarlaRecorderInfo
@@ -18,7 +18,7 @@ struct CarlaRecorderInfo
   std::time_t Date;
   FString Mapfile;
 
-  void Read(std::ifstream &File)
+  void Read(std::istream &File)
   {
     ReadValue<uint16_t>(File, Version);
     ReadFString(File, Magic);
@@ -26,7 +26,7 @@ struct CarlaRecorderInfo
     ReadFString(File, Mapfile);
   }
 
-  void Write(std::ofstream &File)
+  void Write(std::ostream &File)
   {
     WriteValue<uint16_t>(File, Version);
     WriteFString(File, Magic);

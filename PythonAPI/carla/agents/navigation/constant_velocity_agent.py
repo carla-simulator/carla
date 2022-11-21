@@ -12,7 +12,6 @@ It can also make use of the global route planner to follow a specifed route
 import carla
 
 from agents.navigation.basic_agent import BasicAgent
-from agents.tools.misc import get_speed
 
 class ConstantVelocityAgent(BasicAgent):
     """
@@ -47,8 +46,6 @@ class ConstantVelocityAgent(BasicAgent):
             self._restart_time = opt_dict['restart_time']
         if 'use_basic_behavior' in opt_dict:
             self._use_basic_behavior = opt_dict['use_basic_behavior']
-        if 'force_lane_following' in opt_dict:
-            self._force_lane_following = opt_dict['force_lane_following']
 
         self.is_constant_velocity_active = True
         self._set_collision_sensor()
@@ -98,7 +95,10 @@ class ConstantVelocityAgent(BasicAgent):
         affected_by_vehicle, adversary, _ = self._vehicle_obstacle_detected(vehicle_list, max_vehicle_distance)
         if affected_by_vehicle:
             vehicle_velocity = self._vehicle.get_velocity()
-            hazard_speed = vehicle_velocity.dot(adversary.get_velocity()) / vehicle_velocity.length()
+            if vehicle_velocity.length() == 0:
+                hazard_speed = 0
+            else:
+                hazard_speed = vehicle_velocity.dot(adversary.get_velocity()) / vehicle_velocity.length()
             hazard_detected = True
 
         # Check if the vehicle is affected by a red traffic light

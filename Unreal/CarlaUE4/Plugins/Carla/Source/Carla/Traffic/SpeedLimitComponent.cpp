@@ -5,8 +5,16 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "SpeedLimitComponent.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Vehicle/WheeledVehicleAIController.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include "carla/geom/Transform.h"
+#include "carla/road/element/Waypoint.h"
+#include "carla/road/element/RoadInfoSignal.h"
+#include <compiler/enable-ue4-macros.h>
 
 void USpeedLimitComponent::SetSpeedLimit(float Limit)
 {
@@ -28,9 +36,9 @@ void USpeedLimitComponent::InitializeSign(const carla::road::Map &Map)
   {
     auto RoadId = Reference.first;
     const auto* SignalReference = Reference.second;
-    for(auto &validity : SignalReference->GetValidities())
+    for(auto &val : SignalReference->GetValidities())
     {
-      for(auto lane : carla::geom::Math::GenerateRange(validity._from_lane, validity._to_lane))
+      for(auto lane : carla::geom::Math::GenerateRange(val._from_lane, val._to_lane))
       {
         if(lane == 0)
           continue;

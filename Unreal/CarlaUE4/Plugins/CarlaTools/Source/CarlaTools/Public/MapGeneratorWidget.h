@@ -11,11 +11,14 @@
 #include "EditorUtilityWidget.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "ProceduralFoliageSpawner.h"
+#include "RegionOfInterest.h"
 #include "UnrealString.h"
 
 #include "MapGeneratorWidget.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCarlaToolsMapGenerator, Log, All);
+
+struct FSoilTerramechanicsProperties;
 
 /// Struct used as container of basic map information
 USTRUCT(BlueprintType)
@@ -39,7 +42,37 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
   TArray<UProceduralFoliageSpawner*> FoliageSpawners;
 
   UPROPERTY(BlueprintReadWrite)
+  FSoilTerramechanicsProperties GeneralSoilType;
+
+  UPROPERTY(BlueprintReadWrite)
   UTextureRenderTarget2D* GlobalHeightmap;
+
+  UPROPERTY(BlueprintReadWrite)
+  TMap<FRoiTile, FTerrainROI> TerrainRoisMap;
+
+  UPROPERTY(BlueprintReadWrite)
+  TMap<FRoiTile, FVegetationROI> VegetationRoisMap;
+
+  UPROPERTY(BlueprintReadWrite)
+  TMap<FRoiTile, FSoilTypeROI> SoilTypeRoisMap;
+
+  UPROPERTY(BlueprintReadWrite)
+  TMap<FRoiTile, FMiscSpecificLocationActorsROI> MiscSpecificLocationActorsRoisMap;
+
+  UPROPERTY(BlueprintReadWrite)
+  TMap<FRoiTile, FMiscSpreadedActorsROI> MiscSpreadedActorsRoisMap;
+
+  UPROPERTY(BlueprintReadWrite)
+  TSubclassOf<AActor> VegetationManagerBpClass;
+
+  UPROPERTY(BlueprintReadWrite)
+  TSubclassOf<AActor> TerramechanicsBpClass;
+
+  UPROPERTY(BlueprintReadWrite)
+  float RiverChanceFactor;
+
+  UPROPERTY(BlueprintReadWrite)
+  float RiverFlateningFactor;
 };
 
 /// Struct used as container of basic tile information
@@ -59,6 +92,126 @@ struct CARLATOOLS_API FMapGeneratorTileMetaInfo
 
   UPROPERTY(BlueprintReadWrite)
   int IndexY;
+
+  UPROPERTY(BlueprintReadWrite)
+  bool ContainsRiver;
+
+  UPROPERTY(BlueprintReadWrite)
+  FString RiverPreset;
+};
+
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FMapGeneratorWidgetState
+{
+  GENERATED_USTRUCT_BODY();
+
+  // General Fields
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  bool IsPersistentState;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  FString MapName;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  FString WorkingPath;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  FString ActiveTabName;
+
+  // Terrain
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralSize;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralSlope;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralMinHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralMaxHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralInvert;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallSeed;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallScale;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallSlope;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallMinHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallMaxHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallInvert;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedSeed;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedScale;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedSlope;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedMinHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedMaxHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedInvert;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  bool bShowDetailedNoise;
+};
+
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FMapGeneratorPreset
+{
+  GENERATED_USTRUCT_BODY()
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|TerrainPresets")
+  FString PresetName;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|TerrainPresets")
+  FMapGeneratorWidgetState WidgetState;
+};
+
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FTileBoundariesInfo
+{
+  GENERATED_USTRUCT_BODY()
+
+  UPROPERTY()
+  TArray<uint16> RightHeightData;
+
+  UPROPERTY()
+  TArray<uint16> BottomHeightData;
+};
+
+UENUM(BlueprintType)
+enum EMapGeneratorToolMode
+{
+  NEW_MAP,
+  MISC_EDITOR
 };
 
 /// Class UMapGeneratorWidget extends the functionality of UEditorUtilityWidget
@@ -74,9 +227,18 @@ public:
   UFUNCTION(BlueprintImplementableEvent)
   void AssignLandscapeMaterial(ALandscape* Landscape);
 
+  UFUNCTION(BlueprintImplementableEvent)
+  void InstantiateRiverSublevel(UWorld* World, const FMapGeneratorTileMetaInfo TileMetaInfo);
+
   /// PROVISIONAL
   UFUNCTION(BlueprintImplementableEvent)
-  void UpdateTileRT(int OffsetX, int OffsetY);
+  void UpdateTileRT(const FMapGeneratorTileMetaInfo& TileMetaInfo);
+
+  UFUNCTION(BlueprintImplementableEvent)
+  void UpdateTileRoiRT(const FMapGeneratorTileMetaInfo& TileMetaInfo, UMaterialInstanceDynamic* RoiMeterialInstance);
+
+  UFUNCTION(BlueprintImplementableEvent)
+  void UpdateRiverActorSplinesEvent(AActor* RiverActor);
 
   /// Function called by Widget Blueprint which generates all tiles of map
   /// @a mapName, and saves them in @a destinationPath
@@ -86,8 +248,20 @@ public:
 
   /// Function called by Widget Blueprint used to start the whole vegetation
   /// process for map defined in @a MetaInfo
-  UFUNCTION(Category="Map Generator",BlueprintCallable)
+  UFUNCTION(Category="Map Generator|Vegetation",BlueprintCallable)
   void CookVegetation(const FMapGeneratorMetaInfo& MetaInfo);
+
+  UFUNCTION(Category="Map Generator|Soil Terramechanics", BlueprintCallable)
+  void CookSoilTypeToMaps(const FMapGeneratorMetaInfo& MetaInfo);
+
+  UFUNCTION(Category="Map Generator|Miscellaneous", BlueprintCallable)
+  void CookMiscSpreadedInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo);
+
+  UFUNCTION(Category="Map Generator|Miscellaneous", BlueprintCallable)
+  void CookMiscSpecificLocationInformationToTiles(const FMapGeneratorMetaInfo& MetaInfo);
+
+  UFUNCTION(Category="Map Generator|Miscellaneous", BlueprintCallable)
+  void DeleteAllSpreadedActors(const FMapGeneratorMetaInfo& MetaInfo);
 
   /// Function invoked by the widget that cooks the vegetation defined in
   /// @a FoliageSpawners only in the world opened in the editor
@@ -115,16 +289,62 @@ public:
   bool LoadMapInfoFromPath(FString InDirectory, int& OutMapSize, FString& OutFoundMapName);
 
   /// Spawns rivers of types @a RiverClass
-  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  UFUNCTION(Category="MapGenerator|Water", BlueprintCallable)
   AActor* GenerateWater(TSubclassOf<class AActor> RiverClass);
 
-  /// Adds weather actor of type @a WeatherActorClass and sets the @a SelectedWeather
-  /// to the map specified in @a MetaInfo
+  UFUNCTION(Category="MapGenerator|Water", BlueprintCallable)
+  bool GenerateWaterFromWorld(UWorld* RiversWorld, TSubclassOf<class AActor> RiverClass);
+
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  UWorld* DuplicateWorld(const FString BaseWorldPath, const FString TargetWorldPath, const FString NewWorldName);
+
+  /// Adds weather actor of type @a WeatherActorClass and sets the @a SelectedWeather
+  /// to the map specified in @a MetaInfo. Ifthe actor already exists on the map
+  /// then it is returned so only one weather actor is spawned in each map
+  UFUNCTION(Category="MapGenerator|Weather", BlueprintCallable)
   AActor* AddWeatherToExistingMap(TSubclassOf<class AActor> WeatherActorClass, 
       const FMapGeneratorMetaInfo& MetaInfo, const FString SelectedWeather);
 
+  UFUNCTION(Category="MapGenerator|ROIs", BlueprintCallable)
+  TMap<FRoiTile, FVegetationROI> CreateVegetationRoisMap(TArray<FVegetationROI> VegetationRoisArray);
+
+  UFUNCTION(Category="MapGenerator|ROIs", BlueprintCallable)
+  TMap<FRoiTile, FTerrainROI> CreateTerrainRoisMap(TArray<FTerrainROI> TerrainRoisArray);
+
+  UFUNCTION(Category="MapGenerator|ROIs", BlueprintCallable)
+  TMap<FRoiTile, FMiscSpreadedActorsROI> CreateMiscSpreadedActorsRoisMap(TArray<FMiscSpreadedActorsROI> SpreadedActorsRoisArray);
+
+  UFUNCTION(Category="MapGenerator|ROIs", BlueprintCallable)
+  TMap<FRoiTile, FMiscSpecificLocationActorsROI> CreateMiscSpecificLocationActorsRoisMap(TArray<FMiscSpecificLocationActorsROI> SpecificLocationActorsRoisArray);
+
+  UFUNCTION(Category="MapGenerator|ROIs", BlueprintCallable)
+  TMap<FRoiTile, FSoilTypeROI> CreateSoilTypeRoisMap(TArray<FSoilTypeROI> SoilTypeRoisArray);
+
+  UFUNCTION(Category="MapGenerator|Vegetation", BlueprintCallable)
+  bool DeleteAllVegetationInMap(const FString Path, const FString MapName);
+
+  UFUNCTION(Category="MapGenerator|JsonLibrary", BlueprintCallable)
+  bool GenerateWidgetStateFileFromStruct(FMapGeneratorWidgetState WidgetState, const FString JsonPath);
+
+  UFUNCTION(Category="MapGenerator|JsonLibrary", BlueprintCallable)
+  FMapGeneratorWidgetState LoadWidgetStateStructFromFile(const FString JsonPath);
+
+  UFUNCTION(Category="MapGenerator|JsonLibrary|Misc", BlueprintCallable)
+  bool GenerateMiscStateFileFromStruct(FMiscWidgetState MiscState, const FString JsonPath);
+
+  UFUNCTION(Category="MapGenerator|JsonLibrary|Misc", BlueprintCallable)
+  FMiscWidgetState LoadMiscStateStructFromFile(const FString JsonPath);
+
+  UFUNCTION(Category="MapGenerator|TerrainPresets", BlueprintCallable)
+  bool GenerateTerrainPresetFileFromStruct(FMapGeneratorPreset Preset, const FString JsonPath);
+
+  UFUNCTION(Category="MapGenerator|TerrainPresets", BlueprintCallable)
+  FMapGeneratorPreset LoadTerrainPresetStructFromFile(const FString JsonPath);
+
 private:  
+  UPROPERTY()
+  TMap<FRoiTile, FTileBoundariesInfo> BoundariesInfo;
+
   /// Loads a bunch of world objects located in @a BaseMapPath and 
   /// returns them in @a WorldAssetsData.
   /// The function returns true if success, otherwise false
@@ -135,6 +355,9 @@ private:
   /// a correct managements of landscapes
   UFUNCTION()
   bool SaveWorld(UWorld* WorldToBeSaved);
+
+  // UFUNCTION()
+  // bool SaveWorldPackage
 
   /// Takes the name of the map from @a MetaInfo and created the main map
   /// including all the actors needed by large map system
@@ -166,6 +389,9 @@ private:
   UFUNCTION()
   bool CookVegetationToWorld(UWorld* World, const TArray<UProceduralFoliageSpawner*> FoliageSpawners);
 
+  UFUNCTION()
+  bool CookMiscSpreadedActors(const FMapGeneratorMetaInfo& MetaInfo);
+
   /// Returns the world object in @a WorldAssetData
   UFUNCTION()
   UWorld* GetWorldFromAssetData(FAssetData& WorldAssetData);
@@ -174,4 +400,23 @@ private:
   /// @a x and @a y.
   UFUNCTION()
   float GetLandscapeSurfaceHeight(UWorld* World, float x, float y, bool bDrawDebugLines);
+
+  UFUNCTION()
+  float GetLandscapeSurfaceHeightFromRayCast(UWorld* World, float x, float y, bool bDrawDebugLines);
+
+  UFUNCTION()
+  void ExtractCoordinatedFromMapName(const FString MapName, int& X, int& Y);
+
+  UFUNCTION()
+  void SmoothHeightmap(TArray<uint16> HeightData, TArray<uint16>& OutHeightData);
+
+  UFUNCTION()
+  void SewUpperAndLeftTiles(TArray<uint16> HeightData, TArray<uint16>& OutHeightData, int IndexX, int IndexY);
+
+  // Converting a 2D coordinate to a 1D coordinate.
+  UFUNCTION()
+  FORCEINLINE int Convert2DTo1DCoord(int IndexX, int IndexY, int TileSize)
+  {
+    return (IndexX * TileSize) + IndexY;
+  }
 };

@@ -177,6 +177,15 @@ public:
     }
   }
 
+  /// Method to set a lane offset displacement from the center line.
+  /// Positive values imply a right offset while negative ones mean a left one.
+  void SetLaneOffset(const ActorPtr &actor, const float offset) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetLaneOffset(actor, offset);
+    }
+  }
+
   /// Set a vehicle's exact desired velocity.
   void SetDesiredSpeed(const ActorPtr &actor, const float value) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
@@ -191,6 +200,15 @@ public:
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if(tm_ptr != nullptr){
       tm_ptr->SetGlobalPercentageSpeedDifference(percentage);
+    }
+  }
+
+  /// Method to set a global lane offset displacement from the center line.
+  /// Positive values imply a right offset while negative ones mean a left one.
+  void SetGlobalLaneOffset(float const offset){
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetGlobalLaneOffset(offset);
     }
   }
 

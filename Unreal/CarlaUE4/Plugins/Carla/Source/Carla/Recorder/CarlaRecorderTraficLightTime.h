@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fstream>
+#include <sstream>
 #include <vector>
 
 #pragma pack(push, 1)
@@ -17,9 +17,9 @@ struct CarlaRecorderTrafficLightTime
   float YellowTime = 0;
   float RedTime = 0;
 
-  void Read(std::ifstream &InFile);
+  void Read(std::istream &InFile);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 };
 #pragma pack(pop)
 
@@ -31,7 +31,7 @@ class CarlaRecorderTrafficLightTimes
 
   void Clear(void);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 
 private:
 

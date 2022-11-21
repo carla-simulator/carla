@@ -198,6 +198,7 @@ void export_world() {
   enum_<cr::AttachmentType>("AttachmentType")
     .value("Rigid", cr::AttachmentType::Rigid)
     .value("SpringArm", cr::AttachmentType::SpringArm)
+    .value("SpringArmGhost", cr::AttachmentType::SpringArmGhost)
   ;
 
   enum_<cr::CityObjectLabel>("CityObjectLabel")

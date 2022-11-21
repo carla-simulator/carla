@@ -464,6 +464,7 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
 #if 0
   CaptureComponent2D->CaptureScene();
 #else
+  // Equivalent to "CaptureComponent2D->CaptureScene" + (optional) GBuffer extraction.
   CaptureSceneCustom();
 #endif
 }
@@ -538,6 +539,7 @@ void ASceneCaptureSensor::CaptureSceneCustom()
 
     if (Prior != GBuffer.DesiredTexturesMask)
         UE_LOG(LogCarla, Log, TEXT("GBuffer selection changed (%llu)."), GBuffer.DesiredTexturesMask);
+
     Prior = GBuffer.DesiredTexturesMask;
 
     GBuffer.OwningActor = CaptureComponent2D->GetViewOwner();
@@ -610,7 +612,7 @@ void ASceneCaptureSensor::BeginPlay()
 
   // This ensures the camera is always spawning the raindrops in case the
   // weather was previously set to have rain.
-  GetEpisode().GetWeather()->NotifyWeather();
+  GetEpisode().GetWeather()->NotifyWeather(this);
 
   Super::BeginPlay();
 }

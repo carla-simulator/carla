@@ -134,7 +134,7 @@ namespace detail {
       if (!GetEpisodeSettings().synchronous_mode) {
         WaitForTick(_client.GetTimeout());
       }
-      _light_manager->SetEpisode(EpisodeProxy{shared_from_this()});
+      _light_manager->SetEpisode(WeakEpisodeProxy{shared_from_this()});
     }
     return EpisodeProxy{shared_from_this()};
   }

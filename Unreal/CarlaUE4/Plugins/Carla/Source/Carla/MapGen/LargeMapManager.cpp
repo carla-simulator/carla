@@ -5,11 +5,17 @@
 #include "LargeMapManager.h"
 
 #include "Engine/WorldComposition.h"
+#include "Engine/EngineTypes.h"
+#include "Components/PrimitiveComponent.h"
+#include "Landscape.h"
+#include "LandscapeHeightfieldCollisionComponent.h"
+#include "LandscapeComponent.h"
 
 #include "UncenteredPivotPointMesh.h"
 
 #include "Walker/WalkerBase.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Vehicle/CustomTerrainPhysicsComponent.h"
 
 #include "FileHelper.h"
 #include "Paths.h"
@@ -64,6 +70,18 @@ void ALargeMapManager::BeginPlay()
   LayerStreamingDistanceSquared = LayerStreamingDistance * LayerStreamingDistance;
   ActorStreamingDistanceSquared = ActorStreamingDistance * ActorStreamingDistance;
   RebaseOriginDistanceSquared = RebaseOriginDistance * RebaseOriginDistance;
+
+  // Look for terramechanics actor
+  TArray<AActor*> FoundActors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), FoundActors);
+  for(auto CurrentActor : FoundActors)
+  {
+    if( CurrentActor->FindComponentByClass( UCustomTerrainPhysicsComponent::StaticClass() ) != nullptr )
+    {
+      bHasTerramechanics = true;
+      break;
+    }
+  }
 }
 
 void ALargeMapManager::PreWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
@@ -109,6 +127,8 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
   LM_LOG(Warning, "OnLevelAddedToWorld");
   ATagger::TagActorsInLevel(*InLevel, true);
+
+
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }
 
@@ -155,7 +175,7 @@ void ALargeMapManager::OnActorSpawned(
     const FActorDescription& Description = ActorInfo->Description;
     const FActorAttribute* Attribute = Description.Variations.Find("role_name");
     // If is the hero vehicle
-    if(Attribute && Attribute->Value.Contains("hero"))
+    if(Attribute && (Attribute->Value.Contains("hero") || Attribute->Value.Contains("ego_vehicle")))
     {
       LM_LOG(Error, "HERO VEHICLE DETECTED");
 
@@ -209,6 +229,17 @@ void ALargeMapManager::OnActorSpawned(
 
 }
 
+ACarlaWheeledVehicle* ALargeMapManager::GetHeroVehicle()
+{
+  if (ActorsToConsider.Num() > 0)
+  {
+    ACarlaWheeledVehicle* Hero = Cast<ACarlaWheeledVehicle>(ActorsToConsider[0]);
+    if (IsValid(Hero))
+      return Hero;
+  }
+  return nullptr;
+}
+
 void ALargeMapManager::OnActorDestroyed(AActor* DestroyedActor)
 {
   LM_LOG(Warning, "ALargeMapManager::OnActorDestroyed %s", *DestroyedActor->GetName());
@@ -232,6 +263,16 @@ void ALargeMapManager::SetTile0Offset(const FVector& Offset)
 void ALargeMapManager::SetTileSize(float Size)
 {
   TileSide = Size;
+}
+
+float ALargeMapManager::GetTileSize()
+{
+  return TileSide;
+}
+
+FVector ALargeMapManager::GetTile0Offset()
+{
+  return Tile0Offset;
 }
 
 void ALargeMapManager::SetLayerStreamingDistance(float Distance)
@@ -470,7 +511,7 @@ FIntVector ALargeMapManager::GetTileVectorID(FVector TileLocation) const
 {
   FIntVector VectorId = FIntVector(
       (TileLocation -
-      (Tile0Offset - FVector(0.5f*TileSide,-0.5f*TileSide, 0)))
+      (Tile0Offset - FVector(0.5f*TileSide,-0.5f*TileSide, 0) + LocalTileOffset))
       / TileSide);
   VectorId.Y *= -1;
   return VectorId;
@@ -480,7 +521,7 @@ FIntVector ALargeMapManager::GetTileVectorID(FDVector TileLocation) const
 {
   FIntVector VectorId = (
       (TileLocation -
-      (Tile0Offset - FVector(0.5f*TileSide,-0.5f*TileSide, 0)))
+      (Tile0Offset - FVector(0.5f*TileSide,-0.5f*TileSide, 0) + LocalTileOffset))
       / TileSide).ToFIntVector();
   VectorId.Y *= -1;
   return VectorId;
@@ -558,6 +599,12 @@ FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(ULevel* InLevel)
 FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID)
 {
   TileID TileID = GetTileID(TileVectorID);
+  FCarlaMapTile* Tile = MapTiles.Find(TileID);
+  return Tile;
+}
+
+FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(TileID TileID)
+{
   FCarlaMapTile* Tile = MapTiles.Find(TileID);
   return Tile;
 }

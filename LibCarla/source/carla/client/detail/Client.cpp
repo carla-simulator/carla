@@ -332,13 +332,15 @@ namespace detail {
       rpc::ActorId parent,
       rpc::AttachmentType attachment_type) {
 
-      if(attachment_type == rpc::AttachmentType::SpringArm) {
+      if (attachment_type == rpc::AttachmentType::SpringArm ||
+          attachment_type == rpc::AttachmentType::SpringArmGhost)
+      {
         const auto a = transform.location.MakeSafeUnitVector(std::numeric_limits<float>::epsilon());
         const auto z = geom::Vector3D(0.0f, 0.f, 1.0f);
         constexpr float OneEps = 1.0f - std::numeric_limits<float>::epsilon();
         if (geom::Math::Dot(a, z) > OneEps) {
           std::cout << "WARNING: Transformations with translation only in the 'z' axis are ill-formed when \
-            using SprintArm attachment. Please, be careful with that." << std::endl;
+            using SpringArm or SpringArmGhost attachment. Please, be careful with that." << std::endl;
         }
       }
 
@@ -575,7 +577,9 @@ namespace detail {
   void Client::SubscribeToStream(
       const streaming::Token &token,
       std::function<void(Buffer)> callback) {
-    _pimpl->streaming_client.Subscribe(token, std::move(callback));
+    carla::streaming::detail::token_type thisToken(token);
+    streaming::Token receivedToken = _pimpl->CallAndWait<streaming::Token>("get_sensor_token", thisToken.get_stream_id());
+    _pimpl->streaming_client.Subscribe(receivedToken, std::move(callback));
   }
 
   void Client::UnSubscribeFromStream(const streaming::Token &token) {

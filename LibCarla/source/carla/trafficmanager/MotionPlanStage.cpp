@@ -58,16 +58,7 @@ MotionPlanStage::MotionPlanStage(
     world(world),
     output_array(output_array),
     random_device(random_device),
-    local_map(local_map) {
-
-      // Adding structure to avoid retrieving traffic lights when checking for landmarks.
-      std::vector<SharedPtr<cc::Landmark>> traffic_lights = world.GetMap()->GetAllLandmarksOfType("1000001");
-      for (auto &tl : traffic_lights) {
-        std::string landmark_id = tl->GetId();
-        SharedPtr<cc::Actor> actor = world.GetTrafficLight(*tl);
-        tl_map.insert({landmark_id, actor});
-      }
-    }
+    local_map(local_map) {}
 
 void MotionPlanStage::Update(const unsigned long index) {
   const ActorId actor_id = vehicle_id_list.at(index);
@@ -159,7 +150,13 @@ void MotionPlanStage::Update(const unsigned long index) {
       const float target_point_distance = std::max(vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
                                                   MIN_TARGET_WAYPOINT_DISTANCE);
       const SimpleWaypointPtr &target_waypoint = GetTargetWaypoint(waypoint_buffer, target_point_distance).first;
-      const cg::Location target_location = target_waypoint->GetLocation();
+      cg::Location target_location = target_waypoint->GetLocation();
+
+      float offset = parameters.GetLaneOffset(actor_id);
+      auto right_vector = target_waypoint->GetTransform().GetRightVector();
+      auto offset_location = cg::Location(cg::Vector3D(offset*right_vector.x, offset*right_vector.y, 0.0f));
+      target_location = target_location + offset_location;
+
       float dot_product = DeviationDotProduct(vehicle_location, vehicle_heading, target_location);
       float cross_product = DeviationCrossProduct(vehicle_location, vehicle_heading, target_location);
       dot_product = acos(dot_product) / PI;
@@ -376,32 +373,7 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
 
       float minimum_velocity = max_target_velocity;
       if (landmark_type == "1000001") {  // Traffic light
-        auto landmark_id = landmark->GetId();
-        if (tl_map.find(landmark_id) != tl_map.end()) {
-          auto actor = tl_map.at(landmark_id);
-          if (actor != nullptr) {
-
-            cc::TrafficLight* tl = static_cast<cc::TrafficLight*>(actor.get());
-            auto state = tl->GetState();
-
-            if (state == carla::rpc::TrafficLightState::Green) {
-              minimum_velocity = TL_GREEN_TARGET_VELOCITY;
-            } else if (state == carla::rpc::TrafficLightState::Yellow || state == carla::rpc::TrafficLightState::Red){
-              minimum_velocity = TL_RED_TARGET_VELOCITY;
-            } else if (state == carla::rpc::TrafficLightState::Unknown){
-              minimum_velocity = TL_UNKNOWN_TARGET_VELOCITY;
-            } else {
-              // Traffic light is off
-              continue;
-            }
-          } else {
-            // It is a traffic light, but it's not present in our structure
-            minimum_velocity = TL_UNKNOWN_TARGET_VELOCITY;
-          }
-        } else {
-          // It is a traffic light, but it's not present in our structure
-          minimum_velocity = TL_UNKNOWN_TARGET_VELOCITY;
-        }
+        minimum_velocity = TL_TARGET_VELOCITY;
       } else if (landmark_type == "206") {  // Stop
         minimum_velocity = STOP_TARGET_VELOCITY;
       } else if (landmark_type == "205") {  // Yield

@@ -25,6 +25,7 @@
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Util/EmptyActor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
+#include "Carla/Vegetation/VegetationManager.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 // =============================================================================
@@ -43,7 +44,7 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl->Deactivate();
 
   GetVehicleMovementComponent()->bReverseAsBrake = false;
-  BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent")); 
+  BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
 }
 
 ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
@@ -197,23 +198,41 @@ void ACarlaWheeledVehicle::BeginPlay()
     // Update physics in the Ackermann Controller
     AckermannController.UpdateVehiclePhysics(this);
   }
+
+  AddReferenceToManager();
 }
 
-UFUNCTION()
 bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
 {
-  const FVector Vec { DetectionSize, DetectionSize, DetectionSize};
-  FBox Box = FBox(-Vec, Vec);
-  FoliageBoundingBox = Box.TransformBy(GetActorTransform());
-  return FoliageBoundingBox.IsInsideOrOn(Location);
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::IsInVehicleRange);
+
+  return FoliageBoundingBox.IsInside(Location);
 }
 
-TArray<int32> ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const
-{  
-  const FVector Vec { DetectionSize, DetectionSize, DetectionSize};
+void ACarlaWheeledVehicle::UpdateDetectionBox()
+{
+  const FTransform GlobalTransform = GetActorTransform();
+  const FVector Vec { DetectionSize, DetectionSize, DetectionSize };
   FBox Box = FBox(-Vec, Vec);
-  FoliageBoundingBox = Box.TransformBy(GetActorTransform());
+  const FTransform NonScaledTransform(GlobalTransform.GetRotation(), GlobalTransform.GetLocation(), {1.0f, 1.0f, 1.0f});
+  FoliageBoundingBox = Box.TransformBy(NonScaledTransform);
+}
+
+const TArray<int32> ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const
+{  
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle);
   return Component->GetInstancesOverlappingBox(FoliageBoundingBox);
+}
+
+FBox ACarlaWheeledVehicle::GetDetectionBox() const
+{  
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::GetDetectionBox);
+  return FoliageBoundingBox;
+}
+
+float ACarlaWheeledVehicle::GetDetectionSize() const
+{
+  return DetectionSize;
 }
 
 void ACarlaWheeledVehicle::DrawFoliageBoundingBox() const
@@ -222,6 +241,17 @@ void ACarlaWheeledVehicle::DrawFoliageBoundingBox() const
   const FVector& Extent = FoliageBoundingBox.GetExtent();
   const FQuat& Rotation = GetActorQuat();
   DrawDebugBox(GetWorld(), Center, Extent, Rotation, FColor::Magenta, false, 0.0f, 0, 5.0f);
+}
+
+FBoxSphereBounds ACarlaWheeledVehicle::GetBoxSphereBounds() const
+{
+  ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
+  if (LargeMap)
+  {
+    FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
+    return VehicleBounds->CalcBounds(GlobalTransform);
+  }
+  return VehicleBounds->CalcBounds(GetActorTransform());
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
@@ -367,8 +397,6 @@ void ACarlaWheeledVehicle::SetWheelsFrictionScale(TArray<float> &WheelsFrictionS
     }
   }
 }
-
-
 
 FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
 {
@@ -911,6 +939,8 @@ FVector ACarlaWheeledVehicle::GetVelocity() const
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   ShowDebugTelemetry(false);
+  Super::EndPlay(EndPlayReason);
+  RemoveReferenceToManager();
 }
 
 void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {
@@ -1036,4 +1066,34 @@ void ACarlaWheeledVehicle::SetRolloverFlag(){
 
 carla::rpc::VehicleFailureState ACarlaWheeledVehicle::GetFailureState() const{
   return FailureState;
+}
+
+void ACarlaWheeledVehicle::AddReferenceToManager()
+{
+  const UObject* World = GetWorld();
+  TArray<AActor*> ActorsInLevel;
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), ActorsInLevel);
+  for (AActor* Actor : ActorsInLevel)
+  {
+    AVegetationManager* Manager = Cast<AVegetationManager>(Actor);
+    if (!IsValid(Manager))
+      continue;
+    Manager->AddVehicle(this);
+    return;
+  }
+}
+
+void ACarlaWheeledVehicle::RemoveReferenceToManager()
+{
+  const UObject* World = GetWorld();
+  TArray<AActor*> ActorsInLevel;
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), ActorsInLevel);
+  for (AActor* Actor : ActorsInLevel)
+  {
+    AVegetationManager* Manager = Cast<AVegetationManager>(Actor);
+    if (!IsValid(Manager))
+      continue;
+    Manager->RemoveVehicle(this);
+    return;
+  }
 }
