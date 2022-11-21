@@ -37,11 +37,10 @@ namespace rpc {
     Dynamic      =  20u,
     Water        =  21u,
     Terrain      =  22u,
-    Tunnel       =  23u,
-    Truck        =  24u,
-    Bus          =  25u,
-    Motorcycle   =  26u,
-    Bicycle      =  27u,
+    Truck        =  23u,
+    Bus          =  24u,
+    Motorcycle   =  25u,
+    Bicycle      =  26u,
     Any          =  0xFF
   };
 
