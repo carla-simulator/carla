@@ -199,6 +199,13 @@ namespace detail {
 
   WorldSnapshot Simulator::WaitForTick(time_duration timeout) {
     DEBUG_ASSERT(_episode != nullptr);
+
+    // tick pedestrian navigation
+    _episode->NavigationTick();
+    
+    // tick traffic manager
+    carla::traffic_manager::TrafficManager::Tick();
+
     auto result = _episode->WaitForState(timeout);
     if (!result.has_value()) {
       throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
