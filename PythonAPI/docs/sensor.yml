@@ -40,6 +40,19 @@
           The called function with one argument containing the sensor data.
       doc: >
         The function the sensor will be calling to every time a new measurement is received. This function needs for an argument containing an object type carla.SensorData to work with.
+    methods:
+    - def_name: listen_to_gbuffer
+      params:
+      - param_name: gbuffer_id
+        type: carla.GBufferTextureID
+        doc: >
+          The ID of the desired Unreal Engine GBuffer texture.
+      - param_name: callback
+        type: function
+        doc: >
+          The called function with one argument containing the received GBuffer texture.
+      doc: >
+        The function the sensor will be calling to every time the desired GBuffer texture is received. This function needs for an argument containing an object type carla.SensorData to work with.
     # --------------------------------------
     - def_name: stop
       doc: >
