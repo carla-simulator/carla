@@ -8,18 +8,6 @@
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Game/CarlaStatics.h"
 
-/*
-#include "Components/DrawFrustumComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "ContentStreaming.h"
-#include "Engine/Classes/Engine/Scene.h"
-#include "Engine/TextureRenderTarget2D.h"
-#include "HAL/UnrealMemory.h"
-#include "HighResScreenshot.h"
-#include "Misc/CoreDelegates.h"
-#include "RHICommandList.h"
-*/
-
 #include <mutex>
 #include <atomic>
 #include <thread>
