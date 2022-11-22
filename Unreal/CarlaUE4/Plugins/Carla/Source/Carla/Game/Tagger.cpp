@@ -47,9 +47,8 @@ crp::CityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
   else if (String == "Water")        return crp::CityObjectLabel::Water;
   else if (String == "Terrain")      return crp::CityObjectLabel::Terrain;
   else if (String == "Truck")      return crp::CityObjectLabel::Truck;
-  else if (String == "Bus")      return crp::CityObjectLabel::Bus;
   else if (String == "Motorcycle")      return crp::CityObjectLabel::Motorcycle;
-  else if (String == "Bicycle")      return crp::CityObjectLabel::Motorcycle;
+  else if (String == "Bicycle")      return crp::CityObjectLabel::Bicycle;
 
   else                               return crp::CityObjectLabel::None;
 }
@@ -257,7 +256,6 @@ FString ATagger::GetTagAsString(const crp::CityObjectLabel Label)
     CARLA_GET_LABEL_STR(Water)
     CARLA_GET_LABEL_STR(Terrain)
     CARLA_GET_LABEL_STR(Truck)
-    CARLA_GET_LABEL_STR(Bus)
     CARLA_GET_LABEL_STR(Motorcycle)
     CARLA_GET_LABEL_STR(Bicycle)
 

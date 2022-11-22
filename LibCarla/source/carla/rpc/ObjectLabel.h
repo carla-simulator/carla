@@ -38,9 +38,8 @@ namespace rpc {
     Water        =  21u,
     Terrain      =  22u,
     Truck        =  23u,
-    Bus          =  24u,
-    Motorcycle   =  25u,
-    Bicycle      =  26u,
+    Motorcycle   =  24u,
+    Bicycle      =  25u,
     Any          =  0xFF
   };
 

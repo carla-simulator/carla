@@ -226,7 +226,6 @@ void export_world() {
     .value("Water", cr::CityObjectLabel::Water)
     .value("Terrain", cr::CityObjectLabel::Terrain)
     .value("Truck", cr::CityObjectLabel::Truck)
-    .value("Bus", cr::CityObjectLabel::Bus)
     .value("Motorcycle", cr::CityObjectLabel::Motorcycle)
     .value("Bicycle", cr::CityObjectLabel::Bicycle)
 
