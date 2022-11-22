@@ -12,13 +12,13 @@
 namespace ImageUtil
 {
 	void DecodePixelsByFormat(
-		void* PixelData,
-		int32 SourcePitch,
-		FIntPoint SourceExtent,
-		FIntPoint DestinationExtent,
-		EPixelFormat Format,
-		FReadSurfaceDataFlags Flags,
-		TArrayView<FLinearColor> Out)
+		  void* PixelData,
+		  int32 SourcePitch,
+		  FIntPoint SourceExtent,
+		  FIntPoint DestinationExtent,
+		  EPixelFormat Format,
+		  FReadSurfaceDataFlags Flags,
+		  TArrayView<FLinearColor> Out)
 	{
 		SourcePitch *= GPixelFormats[Format].BlockBytes;
 		auto OutPixelCount = DestinationExtent.X * DestinationExtent.Y;
@@ -77,13 +77,13 @@ namespace ImageUtil
 	}
 
 	void DecodePixelsByFormat(
-		void* PixelData,
-		int32 SourcePitch,
-		FIntPoint SourceExtent,
-		FIntPoint DestinationExtent,
-		EPixelFormat Format,
-		FReadSurfaceDataFlags Flags,
-		TArrayView<FColor> Out)
+		  void* PixelData,
+		  int32 SourcePitch,
+		  FIntPoint SourceExtent,
+		  FIntPoint DestinationExtent,
+		  EPixelFormat Format,
+		  FReadSurfaceDataFlags Flags,
+		  TArrayView<FColor> Out)
 	{
 		SourcePitch *= GPixelFormats[Format].BlockBytes;
 		auto OutPixelCount = DestinationExtent.X * DestinationExtent.Y;
