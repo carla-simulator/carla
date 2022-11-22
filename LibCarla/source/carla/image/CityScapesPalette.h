@@ -45,8 +45,8 @@ namespace detail {
         // {  0u,   0u,  90u}, // caravan
         // {  0u,   0u, 110u}, // trailer
         // {  0u,   0u, 142u}, // license plate
-        {  0u,   0u, 230u}, // motorcycle    = 25u,
-        {  0u,  60u, 100u}, // bus           = 24u,
+        {  0u,   0u, 230u}, // motorcycle    = 24u,
+        //{  0u,  60u, 100u}, // bus           = 25u,
         // {  0u,  80u, 100u}, // train
         {119u,  11u,  32u}, // bicycle       = 26u,
         //{150u, 120u,  90u}, // tunnel       
