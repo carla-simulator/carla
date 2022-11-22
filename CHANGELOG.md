@@ -29,7 +29,7 @@
   * Fixed bug causing the server to **sigsegv** when a vehicle collides an environment object in recording mode.
   * Fixed **RSSSensor**: made client side calculations threaded
   * Fixed **keep_right_rule** parameter.
-
+  * Fixed **HUD on_world_tick** parameter.
 ## CARLA 0.9.12
 
   * Changed the resolution of the cached map in Traffic Manager from 0.1 to 5 meters
