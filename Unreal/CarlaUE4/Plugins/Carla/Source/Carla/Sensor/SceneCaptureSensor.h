@@ -421,7 +421,8 @@ public:
 
 protected:
     
-  void CaptureSceneCustom();
+  void CaptureSceneExtended();
+
   virtual void SendGBufferTextures(FGBufferRequest& GBuffer);
 
   virtual void BeginPlay() override;

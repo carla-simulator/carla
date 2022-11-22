@@ -381,10 +381,7 @@ namespace detail {
   
   void Simulator::UnSubscribeFromSensor(Actor &sensor) {
     _client.UnSubscribeFromStream(sensor.GetActorDescription().GetStreamToken());
-#if 0
-    for (int i = 0; i != 13; ++i)
-      _client.UnSubscribeFromGBuffer(sensor.GetId(), i);
-#endif
+    // If in the future we need to unsubscribe from each gbuffer individually, it should be done here.
   }
 
   void Simulator::SubscribeToGBuffer(

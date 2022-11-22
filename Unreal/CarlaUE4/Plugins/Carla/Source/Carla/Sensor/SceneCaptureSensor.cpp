@@ -460,13 +460,8 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
 
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
-  // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
-#if 0
-  CaptureComponent2D->CaptureScene();
-#else
   // Equivalent to "CaptureComponent2D->CaptureScene" + (optional) GBuffer extraction.
-  CaptureSceneCustom();
-#endif
+  CaptureSceneExtended();
 }
 
 constexpr const TCHAR* GBufferNames[] =
@@ -493,7 +488,7 @@ static void CheckGBufferStream(T& GBufferStream, FGBufferRequest& GBuffer)
     {
         if (!GBufferStream.Stream.AreClientsListening())
         {
-            UE_LOG(LogCarla, Log, TEXT("Deactivating gbuffer stream for the texture \"%s\"."), GBufferNames[(int)ID]);
+            UE_LOG(LogCarla, Verbose, TEXT("Deactivating gbuffer stream for the texture \"%s\"."), GBufferNames[(int)ID]);
             GBufferStream.bIsUsed = false;
         }
     }
@@ -501,7 +496,7 @@ static void CheckGBufferStream(T& GBufferStream, FGBufferRequest& GBuffer)
     {
         if (GBufferStream.Stream.AreClientsListening())
         {
-            UE_LOG(LogCarla, Log, TEXT("Activating gbuffer stream for the texture \"%s\"."), GBufferNames[(int)ID]);
+            UE_LOG(LogCarla, Verbose, TEXT("Activating gbuffer stream for the texture \"%s\"."), GBufferNames[(int)ID]);
             GBufferStream.bIsUsed = true;
         }
     }
@@ -512,7 +507,7 @@ static void CheckGBufferStream(T& GBufferStream, FGBufferRequest& GBuffer)
 
 static uint64 Prior = 0;
 
-void ASceneCaptureSensor::CaptureSceneCustom()
+void ASceneCaptureSensor::CaptureSceneExtended()
 {
     auto GBufferPtr = MakeUnique<FGBufferRequest>();
     auto& GBuffer = *GBufferPtr;
@@ -533,6 +528,7 @@ void ASceneCaptureSensor::CaptureSceneCustom()
 
     if (GBuffer.DesiredTexturesMask == 0)
     {
+        // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
         CaptureComponent2D->CaptureScene();
         return;
     }
@@ -544,9 +540,10 @@ void ASceneCaptureSensor::CaptureSceneCustom()
 
     GBuffer.OwningActor = CaptureComponent2D->GetViewOwner();
 
-#define CARLA_GBUFFER_DISABLE_TAA
+#define CARLA_GBUFFER_DISABLE_TAA // Temporarily disable TAA to avoid jitter.
+
 #ifdef CARLA_GBUFFER_DISABLE_TAA
-    bool bTAA = CaptureComponent2D->ShowFlags.TemporalAA; // Temporarily disable TAA to avoid jitter.
+    bool bTAA = CaptureComponent2D->ShowFlags.TemporalAA;
     if (bTAA)
         CaptureComponent2D->ShowFlags.TemporalAA = false;
 #endif
