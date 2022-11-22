@@ -46,10 +46,10 @@ namespace detail {
         // {  0u,   0u, 110u}, // trailer
         // {  0u,   0u, 142u}, // license plate
         {  0u,   0u, 230u}, // motorcycle    = 24u,
-        //{  0u,  60u, 100u}, // bus         
+        //{  0u,  60u, 100u}, // bus
         // {  0u,  80u, 100u}, // train
         {119u,  11u,  32u}, // bicycle       = 25u,
-        //{150u, 120u,  90u}, // tunnel       
+        //{150u, 120u,  90u}, // tunnel
         // {153u, 153u, 153u}, // polegroup
         // {250u, 170u, 160u}, // parking
         // {255u,   0u,   0u}, // rider
