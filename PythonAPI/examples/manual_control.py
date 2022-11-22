@@ -640,11 +640,11 @@ class HUD(object):
         self._info_text = []
         self._server_clock = pygame.time.Clock()
 
-    def on_world_tick(self, timestamp):
+    def on_world_tick(self, carla_snapshot):
         self._server_clock.tick()
         self.server_fps = self._server_clock.get_fps()
-        self.frame = timestamp.frame
-        self.simulation_time = timestamp.elapsed_seconds
+        self.frame = carla_snapshot.frame
+        self.simulation_time = carla_snapshot.elapsed_seconds
 
     def tick(self, world, clock):
         self._notifications.tick(world, clock)
