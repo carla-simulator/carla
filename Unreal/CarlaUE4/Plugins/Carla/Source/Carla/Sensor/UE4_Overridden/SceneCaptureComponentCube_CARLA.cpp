@@ -15,5 +15,5 @@ USceneCaptureComponentCube_CARLA::USceneCaptureComponentCube_CARLA(const FObject
 
 const AActor* USceneCaptureComponentCube_CARLA::GetViewOwner() const
 {
-    return ViewActor;
+  return ViewActor;
 }

@@ -18,9 +18,9 @@ class CARLA_API USceneCaptureComponent_CARLA : public USceneCaptureComponent
 	GENERATED_BODY()
 public:
 
-    USceneCaptureComponent_CARLA(const FObjectInitializer& = FObjectInitializer::Get());
+  USceneCaptureComponent_CARLA(const FObjectInitializer& = FObjectInitializer::Get());
 
-    const AActor* ViewActor;
+  const AActor* ViewActor;
 
 	virtual const AActor* GetViewOwner() const override;
 };
