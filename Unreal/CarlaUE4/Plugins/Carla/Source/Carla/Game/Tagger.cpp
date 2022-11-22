@@ -49,7 +49,6 @@ crp::CityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
   else if (String == "Truck")        return crp::CityObjectLabel::Truck;
   else if (String == "Motorcycle")   return crp::CityObjectLabel::Motorcycle;
   else if (String == "Bicycle")      return crp::CityObjectLabel::Bicycle;
-
   else                               return crp::CityObjectLabel::None;
 }
 
