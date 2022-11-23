@@ -114,6 +114,8 @@ namespace detail {
 
     bool HasMapChangedSinceLastCall();
 
+    void NavigationTick();
+
   private:
 
     Episode(Client &client, const rpc::EpisodeInfo &info);
