@@ -415,22 +415,22 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
   auto result = ActorDispatcher->SpawnActor(LocalTransform, thisActorDescription, DesiredId);
   if (result.Key == EActorSpawnResultStatus::Success && bIsPrimaryServer)
   {
-    GetFrameData().CreateRecorderEventAdd(
-        result.Value->GetActorId(),
-        static_cast<uint8_t>(result.Value->GetActorType()),
-        Transform,
-        std::move(thisActorDescription));
-  }
-  if (Recorder->IsEnabled())
-  {
-    if (result.Key == EActorSpawnResultStatus::Success)
+    if (Recorder->IsEnabled())
     {
       Recorder->CreateRecorderEventAdd(
         result.Value->GetActorId(),
         static_cast<uint8_t>(result.Value->GetActorType()),
         Transform,
-        std::move(thisActorDescription)
+        thisActorDescription
       );
+    }
+    if (bIsPrimaryServer)
+    {
+      GetFrameData().CreateRecorderEventAdd(
+          result.Value->GetActorId(),
+          static_cast<uint8_t>(result.Value->GetActorType()),
+          Transform,
+          std::move(thisActorDescription));
     }
   }
 
