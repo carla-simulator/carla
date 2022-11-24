@@ -2808,7 +2808,7 @@ The simulator returns the last physics control applied to this vehicle.
     - **Warning:** <font color="#ED2F2F">_This method does call the simulator to retrieve the value._</font>  
 - <a name="carla.Vehicle.get_speed_limit"></a>**<font color="#7fb800">get_speed_limit</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). The speed limit is updated when passing by a speed limit signal, so a vehicle might have none right after spawning.  
-    - **Return:** _float<small> - m/s</small>_  
+    - **Return:** _float<small> - km/h</small>_  
 - <a name="carla.Vehicle.get_traffic_light"></a>**<font color="#7fb800">get_traffic_light</font>**(<font color="#00a6ed">**self**</font>)  
 Retrieves the traffic light actor affecting this vehicle (if any) according to last tick. The method does not call the simulator.  
     - **Return:** _[carla.TrafficLight](#carla.TrafficLight)_  
