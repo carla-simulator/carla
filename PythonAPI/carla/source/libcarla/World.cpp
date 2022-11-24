@@ -213,7 +213,7 @@ void export_world() {
     .value("Sidewalks", cr::CityObjectLabel::Sidewalks)
     .value("TrafficSigns", cr::CityObjectLabel::TrafficSigns)
     .value("Vegetation", cr::CityObjectLabel::Vegetation)
-    .value("Car", cr::CityObjectLabel::Vehicles)
+    .value("Car", cr::CityObjectLabel::Car)
     .value("Walls", cr::CityObjectLabel::Walls)
     .value("Sky", cr::CityObjectLabel::Sky)
     .value("Ground", cr::CityObjectLabel::Ground)
