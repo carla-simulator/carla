@@ -49,8 +49,8 @@ crp::CityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
   else if (String == "Truck")        return crp::CityObjectLabel::Truck;
   else if (String == "Motorcycle")   return crp::CityObjectLabel::Motorcycle;
   else if (String == "Bicycle")      return crp::CityObjectLabel::Bicycle;
-  else if (String == "Bus")          return crp::CityObjectLebel::Bus;
-  else if (String == "Rider")        return crp::CityObjectLebel::Rider;
+  else if (String == "Bus")          return crp::CityObjectLabel::Bus;
+  else if (String == "Rider")        return crp::CityObjectLabel::Rider;
   else                               return crp::CityObjectLabel::None;
 }
 
@@ -68,7 +68,12 @@ bool ATagger::IsThing(const crp::CityObjectLabel &Label)
 {
   return (Label == crp::CityObjectLabel::Pedestrians ||
           Label == crp::CityObjectLabel::TrafficSigns ||
-          Label == crp::CityObjectLabel::Vehicles ||
+          Label == crp::CityObjectLabel::Car ||
+          Label == crp::CityObjectLabel::Bicycle ||
+          Label == crp::CityObjectLabel::Motorcycle ||
+          Label == crp::CityObjectLabel::Bus ||
+          Label == crp::CityObjectLabel::Rider ||
+          Label == crp::CityObjectLabel::Truck ||
           Label == crp::CityObjectLabel::TrafficLight);
 }
 
@@ -102,7 +107,12 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
   TArray<UStaticMeshComponent *> StaticMeshComponents;
   Actor.GetComponents<UStaticMeshComponent>(StaticMeshComponents);
   for (UStaticMeshComponent *Component : StaticMeshComponents) {
-    const auto Label = GetLabelByPath(Component->GetStaticMesh());
+    auto Label = GetLabelByPath(Component->GetStaticMesh());
+    if (Label == crp::CityObjectLabel::Pedestrians &&
+        Cast<ACarlaWheeledVehicle>(&Actor))
+    {
+      Label = crp::CityObjectLabel::Rider;
+    }
     SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
 #ifdef CARLA_TAGGER_EXTRA_LOG
     UE_LOG(LogCarla, Log, TEXT("  + StaticMeshComponent: %s"), *Component->GetName());
@@ -152,7 +162,12 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
   TArray<USkeletalMeshComponent *> SkeletalMeshComponents;
   Actor.GetComponents<USkeletalMeshComponent>(SkeletalMeshComponents);
   for (USkeletalMeshComponent *Component : SkeletalMeshComponents) {
-    const auto Label = GetLabelByPath(Component->GetPhysicsAsset());
+    auto Label = GetLabelByPath(Component->GetPhysicsAsset());
+    if (Label == crp::CityObjectLabel::Pedestrians &&
+        Cast<ACarlaWheeledVehicle>(&Actor))
+    {
+      Label = crp::CityObjectLabel::Rider;
+    }
     SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
 #ifdef CARLA_TAGGER_EXTRA_LOG
     UE_LOG(LogCarla, Log, TEXT("  + SkeletalMeshComponent: %s"), *Component->GetName());
