@@ -34,7 +34,7 @@ crp::CityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
   else if (String == "SideWalk")     return crp::CityObjectLabel::Sidewalks;
   else if (String == "TrafficSign")  return crp::CityObjectLabel::TrafficSigns;
   else if (String == "Vegetation")   return crp::CityObjectLabel::Vegetation;
-  else if (String == "Vehicles")     return crp::CityObjectLabel::Vehicles;
+  else if (String == "Car")          return crp::CityObjectLabel::Car;
   else if (String == "Wall")         return crp::CityObjectLabel::Walls;
   else if (String == "Sky")          return crp::CityObjectLabel::Sky;
   else if (String == "Ground")       return crp::CityObjectLabel::Ground;
@@ -49,6 +49,8 @@ crp::CityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
   else if (String == "Truck")        return crp::CityObjectLabel::Truck;
   else if (String == "Motorcycle")   return crp::CityObjectLabel::Motorcycle;
   else if (String == "Bicycle")      return crp::CityObjectLabel::Bicycle;
+  else if (String == "Bus")          return crp::CityObjectLebel::Bus;
+  else if (String == "Rider")        return crp::CityObjectLebel::Rider;
   else                               return crp::CityObjectLabel::None;
 }
 
@@ -242,7 +244,7 @@ FString ATagger::GetTagAsString(const crp::CityObjectLabel Label)
     CARLA_GET_LABEL_STR(Sidewalks)
     CARLA_GET_LABEL_STR(TrafficSigns)
     CARLA_GET_LABEL_STR(Vegetation)
-    CARLA_GET_LABEL_STR(Vehicles)
+    CARLA_GET_LABEL_STR(Car)
     CARLA_GET_LABEL_STR(Walls)
     CARLA_GET_LABEL_STR(Sky)
     CARLA_GET_LABEL_STR(Ground)
@@ -257,6 +259,8 @@ FString ATagger::GetTagAsString(const crp::CityObjectLabel Label)
     CARLA_GET_LABEL_STR(Truck)
     CARLA_GET_LABEL_STR(Motorcycle)
     CARLA_GET_LABEL_STR(Bicycle)
+    CARLA_GET_LABEL_STR(Bus)
+    CARLA_GET_LABEL_STR(Rider)
 
 #undef CARLA_GET_LABEL_STR
   }
