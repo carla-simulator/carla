@@ -24,7 +24,7 @@ namespace rpc {
     Roads        =   7u,
     Sidewalks    =   8u,
     Vegetation   =   9u,
-    Vehicles     =  10u,
+    Car          =  10u,
     Walls        =  11u,
     TrafficSigns =  12u,
     Sky          =  13u,
@@ -40,6 +40,8 @@ namespace rpc {
     Truck        =  23u,
     Motorcycle   =  24u,
     Bicycle      =  25u,
+    Bus          =  26u,
+    Rider        =  27u,
     Any          =  0xFF
   };
 
