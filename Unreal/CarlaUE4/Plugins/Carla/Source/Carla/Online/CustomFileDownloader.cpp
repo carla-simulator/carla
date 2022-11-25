@@ -4,19 +4,21 @@
 #include "Online/CustomFileDownloader.h"
 #include "HttpModule.h"
 #include "Http.h"
+#include "Misc/FileHelper.h"
 
 
 void UCustomFileDownloader::StartDownload()
 {
     UE_LOG(LogCarla, Log, TEXT("FHttpTest CREATED"));
-    FHttpTest* Test = new FHttpTest("GET", Url);
+    FHttpTest* Test = new FHttpTest("GET", Url, ResultFileName);
 
     Test->Run();
 }
 
-FHttpTest::FHttpTest(const FString& InVerb, const FString& InUrl)
+FHttpTest::FHttpTest(const FString& InVerb, const FString& InUrl, const FString& InFilename)
 	: Verb(InVerb)
 	, Url(InUrl)
+    , Filename( InFilename )
 {
 	
 }
@@ -43,13 +45,30 @@ void FHttpTest::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr Ht
 	}
 	else
 	{
-		UE_LOG(LogCarla, Log, TEXT("Completed test [%s] Url=[%s] Response=[%d] [%s]"), 
+		UE_LOG(LogCarla, Log, TEXT("Completed test [%s] Url=[%s] Response=[%d]"), 
 			*HttpRequest->GetVerb(), 
 			*HttpRequest->GetURL(), 
-			HttpResponse->GetResponseCode(), 
-			*HttpResponse->GetContentAsString());
+			HttpResponse->GetResponseCode());
 	}
 	
     HttpRequest->OnProcessRequestComplete().Unbind();
+
+    FString CurrentFile = FPaths::ProjectConfigDir();
+    CurrentFile.Append(Filename);
+
+    // We will use this FileManager to deal with the file.
+    IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+    FString StringToWrite = HttpResponse->GetContentAsString();
+    
+    // We use the LoadFileToString to load the file into
+    if( FFileHelper::SaveStringToFile(StringToWrite,*CurrentFile) )
+    {
+        UE_LOG(LogTemp, Warning, TEXT("FileManipulation: Sucsesfuly Written "));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("FileManipulation: Failed to write FString to file."));
+    }
+    
     delete this;
 }

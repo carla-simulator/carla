@@ -40,7 +40,7 @@ public:
 	 * @param Verb - verb to use for request (GET,POST,DELETE,etc)
 	 * @param Url - url address to connect to
 	 */
-	FHttpTest( const FString& InVerb, const FString& InUrl );
+	FHttpTest( const FString& InVerb, const FString& InUrl, const FString& InFilename );
 
 	/**
 	 * Kick off the Http request for the test and wait for delegate to be called
@@ -58,7 +58,6 @@ public:
 
 private:
 	FString Verb;
-	FString Payload;
 	FString Url;
-	int32 TestsToRun;
+	FString Filename;
 };
