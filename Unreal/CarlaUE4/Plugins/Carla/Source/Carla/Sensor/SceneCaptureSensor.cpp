@@ -490,7 +490,7 @@ static void CheckGBufferStream(T& GBufferStream, FGBufferRequest& GBuffer)
   }
 
   if (GBufferStream.bIsUsed)
-    GBufferPtr->MarkAsRequested(ID);
+    GBuffer.MarkAsRequested(ID);
 }
 
 static uint64 Prior = 0;
@@ -546,10 +546,6 @@ void ASceneCaptureSensor::CaptureSceneExtended()
   AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, GBuffer = MoveTemp(GBufferPtr)]() mutable
   {
     SendGBufferTextures(*GBuffer);
-    ENQUEUE_RENDER_COMMAND(ReleaseGBufferRequest)([GBuffer = MoveTemp(GBuffer)](auto& Unused) mutable
-    {
-      GBuffer->Reset();
-    });
   });
 }
 
