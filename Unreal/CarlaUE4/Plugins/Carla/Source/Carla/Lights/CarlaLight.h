@@ -51,6 +51,9 @@ public:
   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Carla Light")
   void UpdateLights();
 
+  UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Carla Light")
+  void RegisterLightWithWeather();
+
   UFUNCTION(BlueprintCallable, Category = "Carla Light")
   void SetLightIntensity(float Intensity);
 
