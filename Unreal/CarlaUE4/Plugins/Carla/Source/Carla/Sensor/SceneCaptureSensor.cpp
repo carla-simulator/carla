@@ -490,7 +490,7 @@ static void CheckGBufferStream(T& GBufferStream, FGBufferRequest& GBuffer)
   }
 
   if (GBufferStream.bIsUsed)
-    GBuffer.MarkAsRequested(ID);
+    GBufferPtr->MarkAsRequested(ID);
 }
 
 static uint64 Prior = 0;
@@ -514,18 +514,18 @@ void ASceneCaptureSensor::CaptureSceneExtended()
   CheckGBufferStream<EGBufferTextureID::CustomDepth>(CameraGBuffers.CustomDepth, GBuffer);
   CheckGBufferStream<EGBufferTextureID::CustomStencil>(CameraGBuffers.CustomStencil, GBuffer);
 
-  if (GBuffer.DesiredTexturesMask == 0)
+  if (GBufferPtr->DesiredTexturesMask == 0)
   {
     // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
     CaptureComponent2D->CaptureScene();
     return;
   }
 
-  if (Prior != GBuffer.DesiredTexturesMask)
-    UE_LOG(LogCarla, Log, TEXT("GBuffer selection changed (%llu)."), GBuffer.DesiredTexturesMask);
+  if (Prior != GBufferPtr->DesiredTexturesMask)
+    UE_LOG(LogCarla, Log, TEXT("GBuffer selection changed (%llu)."), GBufferPtr->DesiredTexturesMask);
   
-  Prior = GBuffer.DesiredTexturesMask;
-  GBuffer.OwningActor = CaptureComponent2D->GetViewOwner();
+  Prior = GBufferPtr->DesiredTexturesMask;
+  GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
 
 #define CARLA_GBUFFER_DISABLE_TAA // Temporarily disable TAA to avoid jitter.
 
@@ -548,7 +548,7 @@ void ASceneCaptureSensor::CaptureSceneExtended()
     SendGBufferTextures(*GBuffer);
     ENQUEUE_RENDER_COMMAND(ReleaseGBufferRequest)([GBuffer = MoveTemp(GBuffer)](auto& Unused) mutable
     {
-      GBuffer.Release();
+      GBuffer->Reset();
     });
   });
 }
