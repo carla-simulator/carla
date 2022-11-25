@@ -150,13 +150,14 @@ except ImportError:
 
 
 gbuffer_names = [
+    'Final Color', # Image received using the regular `listen` method.
     'Scene Color',
     'Scene Depth',
     'Scene Stencil',
-    'GBuffer A - WorldNormal + Object data)',
-    'GBuffer B - HDR + Shading model + selective output mask)',
+    'GBuffer A - WorldNormal + Object data',
+    'GBuffer B - HDR + Shading model + selective output mask',
     'GBuffer C - Diffuse + indirect irradiance or ambient occlusion (depending on selective output mask)',
-    'GBuffer D - ...',
+    'GBuffer D - Material shading model info',
     'GBuffer E - Precomputed shadow factor',
     'GBuffer F - World tangent + anisotropy',
     'Velocity',
@@ -487,7 +488,7 @@ class KeyboardControl(object):
                             pass
                 elif event.key == K_u:
                     world.camera_manager.next_gbuffer()
-                    world.hud.notification(gbuffer_names[world.camera_manager.gbuffer_index])
+                    world.hud.notification(gbuffer_names[world.camera_manager.output_texture_id])
                 elif event.key > K_0 and event.key <= K_9:
                     index_ctrl = 0
                     if pygame.key.get_mods() & KMOD_CTRL:
@@ -1110,7 +1111,7 @@ class CameraManager(object):
         self._parent = parent_actor
         self.hud = hud
         self.recording = False
-        self.gbuffer_index = 0
+        self.output_texture_id = 0
         bound_x = 0.5 + self._parent.bounding_box.extent.x
         bound_y = 0.5 + self._parent.bounding_box.extent.y
         bound_z = 0.5 + self._parent.bounding_box.extent.z
@@ -1193,7 +1194,9 @@ class CameraManager(object):
             # We need to pass the lambda a weak reference to self to avoid
             # circular reference.
             weak_self = weakref.ref(self)
-            self.sensor.listen(lambda image: CameraManager._parse_image(weak_self, image))
+            self.sensor.listen(
+                lambda image:
+                    CameraManager._parse_image(weak_self, image))
         if notify:
             self.hud.notification(self.sensors[index][2])
         self.index = index
@@ -1202,19 +1205,13 @@ class CameraManager(object):
         self.set_sensor(self.index + 1)
 
     def next_gbuffer(self):
-        if self.sensor is not None:
-            print('destroying sensor...')
-            self.sensor.stop()
-            self.sensor.destroy()
-            self.surface = None
-        self.sensor = self._parent.get_world().spawn_actor(
-            self.sensors[0][-1],
-            self._camera_transforms[self.transform_index][0],
-            attach_to=self._parent,
-            attachment_type=self._camera_transforms[self.transform_index][1])
         weak_self = weakref.ref(self)
-        self.gbuffer_index = (self.gbuffer_index + 1) % len(gbuffer_names)
-        self.sensor.listen_to_gbuffer(self.gbuffer_index, lambda image: CameraManager._parse_image(weak_self, image))
+        self.output_texture_id = (self.output_texture_id + 1) % len(gbuffer_names)
+        if self.output_texture_id != 0:
+            self.sensor.listen_to_gbuffer(
+                self.output_texture_id - 1,
+                lambda image, index = self.output_texture_id: # Need to capture the output_texture_id by value.
+                    CameraManager._parse_image(weak_self, image, index))
 
     def toggle_recording(self):
         self.recording = not self.recording
@@ -1225,8 +1222,10 @@ class CameraManager(object):
             display.blit(self.surface, (0, 0))
 
     @staticmethod
-    def _parse_image(weak_self, image):
+    def _parse_image(weak_self, image, output_texture_id = 0):
         self = weak_self()
+        if self.output_texture_id != output_texture_id:
+            return
         if not self:
             return
         if self.sensors[self.index][0].startswith('sensor.lidar'):
