@@ -230,10 +230,6 @@ void ACarlaGameModeBase::BeginPlay()
     for(UCarlaLight* Light : Lights)
     {
       Light->RegisterLight();
-      if(!Light->HasBegunPlay())
-      {
-        Light->BeginPlay();
-      }
     }
   }
   EnableOverlapEvents();
@@ -503,7 +499,14 @@ void ACarlaGameModeBase::EnableOverlapEvents()
     AStaticMeshActor *MeshActor = CastChecked<AStaticMeshActor>(Actor);
     if(MeshActor->GetStaticMeshComponent()->GetStaticMesh() != NULL)
     {
-      if (MeshActor->GetStaticMeshComponent()->GetGenerateOverlapEvents() == false)
+      auto MeshTag = ATagger::GetTagOfTaggedComponent(*MeshActor->GetStaticMeshComponent());
+      namespace crp = carla::rpc;
+      if (MeshTag != crp::CityObjectLabel::Roads && 
+          MeshTag != crp::CityObjectLabel::Sidewalks && 
+          MeshTag != crp::CityObjectLabel::RoadLines && 
+          MeshTag != crp::CityObjectLabel::Ground &&
+          MeshTag != crp::CityObjectLabel::Terrain &&
+          MeshActor->GetStaticMeshComponent()->GetGenerateOverlapEvents() == false)
       {
         MeshActor->GetStaticMeshComponent()->SetGenerateOverlapEvents(true);
       }
