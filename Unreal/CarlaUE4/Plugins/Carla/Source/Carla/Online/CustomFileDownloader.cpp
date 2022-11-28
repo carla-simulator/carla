@@ -63,11 +63,11 @@ void FHttpTest::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr Ht
     // We use the LoadFileToString to load the file into
     if( FFileHelper::SaveStringToFile(StringToWrite,*CurrentFile) )
     {
-        UE_LOG(LogTemp, Warning, TEXT("FileManipulation: Sucsesfuly Written "));
+        UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Sucsesfuly Written "));
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("FileManipulation: Failed to write FString to file."));
+        UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Failed to write FString to file."));
     }
     
     delete this;
