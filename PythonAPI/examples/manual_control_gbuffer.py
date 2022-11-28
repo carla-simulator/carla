@@ -1206,6 +1206,8 @@ class CameraManager(object):
 
     def next_gbuffer(self):
         weak_self = weakref.ref(self)
+        if self.output_texture_id != 0:
+            self.sensor.stop_gbuffer(self.output_texture_id - 1)
         self.output_texture_id = (self.output_texture_id + 1) % len(gbuffer_names)
         if self.output_texture_id != 0:
             self.sensor.listen_to_gbuffer(

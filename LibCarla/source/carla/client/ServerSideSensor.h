@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/client/Sensor.h"
+#include <bitset>
 
 namespace carla {
 namespace client {
@@ -26,15 +27,20 @@ namespace client {
     /// several instances of Sensor (even in different processes) may point to
     /// the same sensor in the simulator.
     void Listen(CallbackFunctionType callback) override;
+
+    /// Listen fr
     void ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback);
 
     /// Stop listening for new measurements.
     void Stop() override;
 
+    /// Stop listening for a specific gbuffer stream.
+    void StopGBuffer(uint32_t GBufferId);
+
     /// Return whether this Sensor instance is currently listening to the
     /// associated sensor in the simulator.
     bool IsListening() const override {
-      return _is_listening;
+      return listening_mask.test(0);
     }
 
     /// @copydoc Actor::Destroy()
@@ -44,7 +50,8 @@ namespace client {
 
   private:
 
-    bool _is_listening = false;
+    std::bitset<32> listening_mask;
+
   };
 
 } // namespace client

@@ -10,6 +10,7 @@
 #include "carla/client/detail/Simulator.h"
 
 #include <exception>
+#include <stdint.h>
 
 namespace carla {
 namespace client {
@@ -34,32 +35,45 @@ namespace client {
     log_debug("calling sensor Listen() ", GetDisplayId());
     log_debug(GetDisplayId(), ": subscribing to stream");
     GetEpisode().Lock()->SubscribeToSensor(*this, std::move(callback));
-    _is_listening = true;
-  }
-
-  void ServerSideSensor::ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback) {
-    log_debug(GetDisplayId(), ": subscribing to gbuffer stream");
-    GetEpisode().Lock()->SubscribeToGBuffer(*this, GBufferId, std::move(callback));
-    _is_listening = true;
+    listening_mask.set(0);
   }
 
   void ServerSideSensor::Stop() {
     log_debug("calling sensor Stop() ", GetDisplayId());
-    if (!_is_listening) {
+    if (!IsListening()) {
       log_warning(
           "attempting to unsubscribe from stream but sensor wasn't listening:",
           GetDisplayId());
       return;
     }
     GetEpisode().Lock()->UnSubscribeFromSensor(*this);
-    _is_listening = false;
+    listening_mask.reset(0);
+  }
+
+  void ServerSideSensor::ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback) {
+    log_debug(GetDisplayId(), ": subscribing to gbuffer stream");
+    GetEpisode().Lock()->SubscribeToGBuffer(*this, GBufferId, std::move(callback));
+    listening_mask.set(0);
+    listening_mask.set(GBufferId);
+  }
+
+  void ServerSideSensor::StopGBuffer(uint32_t GBufferId) {
+    log_debug(GetDisplayId(), ": unsubscribing from gbuffer stream");
+    GetEpisode().Lock()->UnSubscribeFromGBuffer(*this, GBufferId);
+    listening_mask.reset(GBufferId);
+    if (listening_mask.count() == 1)
+      listening_mask.reset(0);
   }
 
   bool ServerSideSensor::Destroy() {
     log_debug("calling sensor Destroy() ", GetDisplayId());
     if (IsListening()) {
+      for (uint32_t i = 1; i != 16; ++i)
+        if (listening_mask.test(i))
+          StopGBuffer(i);
       Stop();
     }
+    listening_mask = {};
     return Actor::Destroy();
   }
 

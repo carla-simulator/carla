@@ -409,6 +409,10 @@ namespace detail {
         });
   }
 
+  void Simulator::UnSubscribeFromGBuffer(Actor &actor, uint32_t gbuffer_id) {
+    _client.UnSubscribeFromGBuffer(actor.GetId(), gbuffer_id);
+  }
+
   void Simulator::FreezeAllTrafficLights(bool frozen) {
     _client.FreezeAllTrafficLights(frozen);
   }
