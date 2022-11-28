@@ -28,19 +28,23 @@ namespace client {
     /// the same sensor in the simulator.
     void Listen(CallbackFunctionType callback) override;
 
-    /// Listen fr
-    void ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback);
-
     /// Stop listening for new measurements.
     void Stop() override;
-
-    /// Stop listening for a specific gbuffer stream.
-    void StopGBuffer(uint32_t GBufferId);
 
     /// Return whether this Sensor instance is currently listening to the
     /// associated sensor in the simulator.
     bool IsListening() const override {
       return listening_mask.test(0);
+    }
+
+    /// Listen fr
+    void ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback);
+
+    /// Stop listening for a specific gbuffer stream.
+    void StopGBuffer(uint32_t GBufferId);
+
+    inline bool IsListeningGBuffer(uint32_t id) const {
+      return listening_mask.test(id + 1);
     }
 
     /// @copydoc Actor::Destroy()

@@ -10,7 +10,6 @@
 #include "carla/client/detail/Simulator.h"
 
 #include <exception>
-#include <stdint.h>
 
 namespace carla {
 namespace client {
@@ -25,6 +24,10 @@ namespace client {
     if (IsListening() && GetEpisode().IsValid()) {
       try {
         Stop();
+        for (uint32_t i = 1; i != 16; ++i) {
+          if (listening_mask.test(i))
+            StopGBuffer(i);
+        }
       } catch (const std::exception &e) {
         log_error("exception trying to stop sensor:", GetDisplayId(), ':', e.what());
       }
@@ -54,13 +57,13 @@ namespace client {
     log_debug(GetDisplayId(), ": subscribing to gbuffer stream");
     GetEpisode().Lock()->SubscribeToGBuffer(*this, GBufferId, std::move(callback));
     listening_mask.set(0);
-    listening_mask.set(GBufferId);
+    listening_mask.set(GBufferId + 1);
   }
 
   void ServerSideSensor::StopGBuffer(uint32_t GBufferId) {
     log_debug(GetDisplayId(), ": unsubscribing from gbuffer stream");
     GetEpisode().Lock()->UnSubscribeFromGBuffer(*this, GBufferId);
-    listening_mask.reset(GBufferId);
+    listening_mask.reset(GBufferId + 1);
     if (listening_mask.count() == 1)
       listening_mask.reset(0);
   }
@@ -68,9 +71,10 @@ namespace client {
   bool ServerSideSensor::Destroy() {
     log_debug("calling sensor Destroy() ", GetDisplayId());
     if (IsListening()) {
-      for (uint32_t i = 1; i != 16; ++i)
+      for (uint32_t i = 1; i != 16; ++i) {
         if (listening_mask.test(i))
           StopGBuffer(i);
+      }
       Stop();
     }
     listening_mask = {};
