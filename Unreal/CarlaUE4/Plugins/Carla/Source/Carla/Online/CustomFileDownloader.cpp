@@ -49,26 +49,26 @@ void FHttpTest::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr Ht
 			*HttpRequest->GetVerb(), 
 			*HttpRequest->GetURL(), 
 			HttpResponse->GetResponseCode());
+
+        HttpRequest->OnProcessRequestComplete().Unbind();
+
+        FString CurrentFile = FPaths::ProjectConfigDir();
+        CurrentFile.Append(Filename);
+
+        // We will use this FileManager to deal with the file.
+        IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+        FString StringToWrite = HttpResponse->GetContentAsString();
+        
+        // We use the LoadFileToString to load the file into
+        if( FFileHelper::SaveStringToFile(StringToWrite,*CurrentFile) )
+        {
+            UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Sucsesfuly Written "));
+        }
+        else
+        {
+            UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Failed to write FString to file."));
+        }
 	}
 	
-    HttpRequest->OnProcessRequestComplete().Unbind();
-
-    FString CurrentFile = FPaths::ProjectConfigDir();
-    CurrentFile.Append(Filename);
-
-    // We will use this FileManager to deal with the file.
-    IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
-    FString StringToWrite = HttpResponse->GetContentAsString();
-    
-    // We use the LoadFileToString to load the file into
-    if( FFileHelper::SaveStringToFile(StringToWrite,*CurrentFile) )
-    {
-        UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Sucsesfuly Written "));
-    }
-    else
-    {
-        UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Failed to write FString to file."));
-    }
-    
     delete this;
 }
