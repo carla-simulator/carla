@@ -16,7 +16,8 @@ struct CarlaRecorderWalkerBone
   FVector Location;
   FVector Rotation;
 
-  CarlaRecorderWalkerBone(FString &InName, FVector &InLocation, FVector &InRotation) : Name(InName), Location(InLocation), Rotation(InRotation) {}
+  CarlaRecorderWalkerBone(FString &InName, FVector &InLocation, FVector &InRotation) : 
+    Name(InName), Location(InLocation), Rotation(InRotation) {}
 };
 
 struct CarlaRecorderWalkerBones
