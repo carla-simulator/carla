@@ -525,15 +525,17 @@ void ASceneCaptureSensor::CaptureSceneExtended()
 
 #ifdef CARLA_GBUFFER_DISABLE_TAA
   bool bTAA = CaptureComponent2D->ShowFlags.TemporalAA;
-  if (bTAA)
+  if (bTAA) {
     CaptureComponent2D->ShowFlags.TemporalAA = false;
+  }
 #endif
 
   CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
 
 #ifdef CARLA_GBUFFER_DISABLE_TAA
-  if (bTAA)
-  CaptureComponent2D->ShowFlags.TemporalAA = true;
+  if (bTAA) {
+    CaptureComponent2D->ShowFlags.TemporalAA = true;
+  }
 #undef CARLA_GBUFFER_DISABLE_TAA
 #endif
 

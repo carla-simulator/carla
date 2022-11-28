@@ -64,16 +64,18 @@ namespace client {
     log_debug(GetDisplayId(), ": unsubscribing from gbuffer stream");
     GetEpisode().Lock()->UnSubscribeFromGBuffer(*this, GBufferId);
     listening_mask.reset(GBufferId + 1);
-    if (listening_mask.count() == 1)
+    if (listening_mask.count() == 1) {
       listening_mask.reset(0);
+    }
   }
 
   bool ServerSideSensor::Destroy() {
     log_debug("calling sensor Destroy() ", GetDisplayId());
     if (IsListening()) {
       for (uint32_t i = 1; i != 16; ++i) {
-        if (listening_mask.test(i))
+        if (listening_mask.test(i)) {
           StopGBuffer(i);
+        }
       }
       Stop();
     }

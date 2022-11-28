@@ -496,8 +496,9 @@ private:
       auto GBufferStream = CameraGBuffer.GetDataStream(Self);
       auto Buffer = GBufferStream.PopBufferFromPool();
       Buffer.copy_from(carla::sensor::SensorRegistry::get<CameraGBufferT*>::type::header_offset, Pixels);
-      if (Buffer.empty())
+      if (Buffer.empty()) {
         return;
+      }
       SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
       GBufferStream.Send(
@@ -513,8 +514,9 @@ protected:
   {
     for (size_t i = 0; i != FGBufferRequest::TextureCount; ++i)
     {
-      if ((GBufferData.DesiredTexturesMask & (UINT64_C(1) << i)) == 0)
+      if ((GBufferData.DesiredTexturesMask & (UINT64_C(1) << i)) == 0) {
         continue;
+      }
       auto& C = CameraGBuffers;
       EGBufferTextureID ID = (EGBufferTextureID)i;
       switch (ID)
