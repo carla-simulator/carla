@@ -472,21 +472,15 @@ constexpr const TCHAR* GBufferNames[] =
 template <EGBufferTextureID ID, typename T>
 static void CheckGBufferStream(T& GBufferStream, FGBufferRequest& GBuffer)
 {
-  if (GBufferStream.bIsUsed)
+  if (!GBufferStream.Stream.AreClientsListening())
   {
-    if (!GBufferStream.Stream.AreClientsListening())
-    {
-      UE_LOG(LogCarla, Verbose, TEXT("Deactivating gbuffer stream for the texture \"%s\"."), GBufferNames[(int)ID]);
-      GBufferStream.bIsUsed = false;
-    }
+    UE_LOG(LogCarla, Verbose, TEXT("Deactivating gbuffer stream for the texture \"%s\"."), GBufferNames[(int)ID]);
+    GBufferStream.bIsUsed = false;
   }
   else
   {
-    if (GBufferStream.Stream.AreClientsListening())
-    {
-      UE_LOG(LogCarla, Verbose, TEXT("Activating gbuffer stream for the texture \"%s\"."), GBufferNames[(int)ID]);
-      GBufferStream.bIsUsed = true;
-    }
+    UE_LOG(LogCarla, Verbose, TEXT("Activating gbuffer stream for the texture \"%s\"."), GBufferNames[(int)ID]);
+    GBufferStream.bIsUsed = true;
   }
 
   if (GBufferStream.bIsUsed)
