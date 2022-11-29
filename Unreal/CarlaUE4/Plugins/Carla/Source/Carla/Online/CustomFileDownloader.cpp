@@ -9,23 +9,23 @@
 
 void UCustomFileDownloader::StartDownload()
 {
-    UE_LOG(LogCarla, Log, TEXT("FHttpDownloader CREATED"));
-    FHttpDownloader* Test = new FHttpDownloader("GET", Url, ResultFileName);
+  UE_LOG(LogCarla, Log, TEXT("FHttpDownloader CREATED"));
+  FHttpDownloader* Test = new FHttpDownloader("GET", Url, ResultFileName);
 
-    Test->Run();
+  Test->Run();
 }
 
 FHttpDownloader::FHttpDownloader(const FString& InVerb, const FString& InUrl, const FString& InFilename)
-	: Verb(InVerb)
-	, Url(InUrl)
-    , Filename( InFilename )
+  : Verb(InVerb)
+  , Url(InUrl)
+  , Filename( InFilename )
 {
 	
 }
 
 void FHttpDownloader::Run(void)
 {
-  UE_LOG(LogCarla, Log, TEXT("Starting test [%s] Url=[%s]"), 	*Verb, *Url);
+  UE_LOG(LogCarla, Log, TEXT("Starting download [%s] Url=[%s]"), 	*Verb, *Url);
   TSharedPtr<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
   Request->OnProcessRequestComplete().BindRaw(this, &FHttpTest::RequestComplete);
   Request->SetURL(Url);
@@ -37,11 +37,11 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
 {
   if (!HttpResponse.IsValid())
   {
-      UE_LOG(LogCarla, Log, TEXT("Test failed. NULL response"));
+    UE_LOG(LogCarla, Log, TEXT("Download failed. NULL response"));
   }
   else
   {
-    UE_LOG(LogCarla, Log, TEXT("Completed test [%s] Url=[%s] Response=[%d]"), 
+    UE_LOG(LogCarla, Log, TEXT("Completed download [%s] Url=[%s] Response=[%d]"), 
       *HttpRequest->GetVerb(), 
       *HttpRequest->GetURL(), 
        HttpResponse->GetResponseCode());

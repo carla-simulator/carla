@@ -11,7 +11,7 @@
 UCLASS(Blueprintable)
 class CARLA_API UCustomFileDownloader : public UObject
 {
-	GENERATED_BODY()
+  GENERATED_BODY()
 public:	
   UFUNCTION(BlueprintCallable)
   void StartDownload();
