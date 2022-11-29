@@ -472,17 +472,7 @@ constexpr const TCHAR* GBufferNames[] =
 template <EGBufferTextureID ID, typename T>
 static void CheckGBufferStream(T& GBufferStream, FGBufferRequest& GBuffer)
 {
-  if (!GBufferStream.Stream.AreClientsListening())
-  {
-    UE_LOG(LogCarla, Verbose, TEXT("Deactivating gbuffer stream for the texture \"%s\"."), GBufferNames[(int)ID]);
-    GBufferStream.bIsUsed = false;
-  }
-  else
-  {
-    UE_LOG(LogCarla, Verbose, TEXT("Activating gbuffer stream for the texture \"%s\"."), GBufferNames[(int)ID]);
-    GBufferStream.bIsUsed = true;
-  }
-
+  GBufferStream.bIsUsed = GBufferStream.Stream.AreClientsListening();
   if (GBufferStream.bIsUsed)
     GBuffer.MarkAsRequested(ID);
 }
@@ -516,7 +506,7 @@ void ASceneCaptureSensor::CaptureSceneExtended()
   }
 
   if (Prior != GBufferPtr->DesiredTexturesMask)
-    UE_LOG(LogCarla, Log, TEXT("GBuffer selection changed (%llu)."), GBufferPtr->DesiredTexturesMask);
+    UE_LOG(LogCarla, Verbose, TEXT("GBuffer selection changed (%llu)."), GBufferPtr->DesiredTexturesMask);
   
   Prior = GBufferPtr->DesiredTexturesMask;
   GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
