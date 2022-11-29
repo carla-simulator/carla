@@ -27,7 +27,7 @@ void FHttpDownloader::Run(void)
 {
   UE_LOG(LogCarla, Log, TEXT("Starting download [%s] Url=[%s]"), 	*Verb, *Url);
   TSharedPtr<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
-  Request->OnProcessRequestComplete().BindRaw(this, &FHttpTest::RequestComplete);
+  Request->OnProcessRequestComplete().BindRaw(this, &FHttpDownloader::RequestComplete);
   Request->SetURL(Url);
   Request->SetVerb(Verb);
   Request->ProcessRequest();	
