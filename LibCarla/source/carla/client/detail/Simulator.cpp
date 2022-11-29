@@ -57,6 +57,10 @@ namespace detail {
         break;
       }
     }
+    if(result) {
+      carla::traffic_manager::TrafficManager::Tick();
+    }
+    
     return result;
   }
 
@@ -202,9 +206,6 @@ namespace detail {
 
     // tick pedestrian navigation
     _episode->NavigationTick();
-    
-    // tick traffic manager
-    carla::traffic_manager::TrafficManager::Tick();
 
     auto result = _episode->WaitForState(timeout);
     if (!result.has_value()) {
@@ -219,9 +220,6 @@ namespace detail {
     // tick pedestrian navigation
     _episode->NavigationTick();
     
-    // tick traffic manager
-    carla::traffic_manager::TrafficManager::Tick();
-
     // send tick command
     const auto frame = _client.SendTickCue();
 
