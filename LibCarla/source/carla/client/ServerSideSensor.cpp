@@ -55,6 +55,11 @@ namespace client {
 
   void ServerSideSensor::ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback) {
     log_debug(GetDisplayId(), ": subscribing to gbuffer stream");
+    if (GetActorDescription().description.id != "sensor.camera.rgb")
+    {
+      log_error("GBuffer methods are not supported on non-RGB sensors (sensor.camera.rgb).");
+      return;
+    }
     GetEpisode().Lock()->SubscribeToGBuffer(*this, GBufferId, std::move(callback));
     listening_mask.set(0);
     listening_mask.set(GBufferId + 1);
@@ -62,6 +67,11 @@ namespace client {
 
   void ServerSideSensor::StopGBuffer(uint32_t GBufferId) {
     log_debug(GetDisplayId(), ": unsubscribing from gbuffer stream");
+    if (GetActorDescription().description.id != "sensor.camera.rgb")
+    {
+      log_error("GBuffer methods are not supported on non-RGB sensors (sensor.camera.rgb).");
+      return;
+    }
     GetEpisode().Lock()->UnSubscribeFromGBuffer(*this, GBufferId);
     listening_mask.reset(GBufferId + 1);
     if (listening_mask.count() == 1) {
