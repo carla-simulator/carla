@@ -4,6 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "ProceduralMeshComponent.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include <boost/optional.hpp>
+#include <carla/road/Map.h>
+#include <compiler/enable-ue4-macros.h>
+
 #include "OpenDriveToMap.generated.h"
 
 /**
@@ -19,10 +26,27 @@ public:
   UPROPERTY( meta = (BindWidget) )
   class UButton* ChooseFileButon;
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
+  FString FilePath;
+
 protected:
   virtual void NativeConstruct() override;
   virtual void NativeDestruct() override;
+
 private:
+
+  UFUNCTION()
+  void CreateMap();
+
   UFUNCTION()
   void OpenFileDialog();
+
+  UFUNCTION()
+  void LoadMap();
+
+  void GenerateAll(const boost::optional<carla::road::Map>& CarlaMap);
+  void GenerateRoadMesh(const boost::optional<carla::road::Map>& CarlaMap);
+  void GenerateSpawnPoints(const boost::optional<carla::road::Map>& CarlaMap);
+
+  const carla::rpc::OpendriveGenerationParameters opg_parameters;
 };
