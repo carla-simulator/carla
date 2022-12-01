@@ -487,13 +487,8 @@ class KeyboardControl(object):
                         except Exception:
                             pass
                 elif event.key == K_u:
-                    name = world.camera_manager.sensors[world.camera_manager.index][0]
-                    if name == 'sensor.camera.rgb':
-                        world.camera_manager.next_gbuffer()
+                    if world.camera_manager.next_gbuffer():
                         world.hud.notification(gbuffer_names[world.camera_manager.output_texture_id])
-                    else:
-                        world.hud.notification('ERROR: Unsupported operation, see log for more info.')
-                        print('ERROR: GBuffer methods are not available for the current sensor type"%s". Only "sensor.camera.rgb" is currently supported.' % name)
                 elif event.key > K_0 and event.key <= K_9:
                     index_ctrl = 0
                     if pygame.key.get_mods() & KMOD_CTRL:
@@ -1184,6 +1179,7 @@ class CameraManager(object):
         self.set_sensor(self.index, notify=False, force_respawn=True)
 
     def set_sensor(self, index, notify=True, force_respawn=False):
+        self.output_texture_id = 0
         index = index % len(self.sensors)
         needs_respawn = True if self.index is None else \
             (force_respawn or (self.sensors[index][2] != self.sensors[self.index][2]))
@@ -1208,21 +1204,26 @@ class CameraManager(object):
 
     def next_sensor(self):
         self.set_sensor(self.index + 1)
-        self.output_texture_id = 0
 
-    def next_gbuffer(self):
+    def set_gbuffer(self, index):
         weak_self = weakref.ref(self)
         name = self.sensors[self.index][0]
         if name != 'sensor.camera.rgb':
-            return
+            self.hud.notification('ERROR: Unsupported operation, see log for more info.')
+            print('ERROR: GBuffer methods are not available for the current sensor type"%s". Only "sensor.camera.rgb" is currently supported.' % name)
+            return False
+        self.output_texture_id = index % len(gbuffer_names)
         if self.output_texture_id != 0:
             self.sensor.stop_gbuffer(self.output_texture_id - 1)
-        self.output_texture_id = (self.output_texture_id + 1) % len(gbuffer_names)
         if self.output_texture_id != 0:
             self.sensor.listen_to_gbuffer(
                 self.output_texture_id - 1,
                 lambda image, index = self.output_texture_id: # Need to capture the output_texture_id by value.
                     CameraManager._parse_image(weak_self, image, index))
+        return True
+
+    def next_gbuffer(self):
+        return self.set_gbuffer(self.output_texture_id + 1)
 
     def toggle_recording(self):
         self.recording = not self.recording
