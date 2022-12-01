@@ -1203,9 +1203,15 @@ class CameraManager(object):
 
     def next_sensor(self):
         self.set_sensor(self.index + 1)
+        self.output_texture_id = 0
 
     def next_gbuffer(self):
         weak_self = weakref.ref(self)
+        name = self.sensors[self.index][0]
+        if name != 'sensor.camera.rgb':
+            self.hud.notification('ERROR: Unsupported operation, see log for more info.')
+            print('ERROR: GBuffer methods are not available for the current sensor type"%s". Only "sensor.camera.rgb" is currently supported.' % name)
+            return
         if self.output_texture_id != 0:
             self.sensor.stop_gbuffer(self.output_texture_id - 1)
         self.output_texture_id = (self.output_texture_id + 1) % len(gbuffer_names)
