@@ -487,8 +487,13 @@ class KeyboardControl(object):
                         except Exception:
                             pass
                 elif event.key == K_u:
-                    world.camera_manager.next_gbuffer()
-                    world.hud.notification(gbuffer_names[world.camera_manager.output_texture_id])
+                    name = world.camera_manager.sensors[world.camera_manager.index][0]
+                    if name == 'sensor.camera.rgb':
+                        world.camera_manager.next_gbuffer()
+                        world.hud.notification(gbuffer_names[world.camera_manager.output_texture_id])
+                    else:
+                        world.hud.notification('ERROR: Unsupported operation, see log for more info.')
+                        print('ERROR: GBuffer methods are not available for the current sensor type"%s". Only "sensor.camera.rgb" is currently supported.' % name)
                 elif event.key > K_0 and event.key <= K_9:
                     index_ctrl = 0
                     if pygame.key.get_mods() & KMOD_CTRL:
@@ -1209,8 +1214,6 @@ class CameraManager(object):
         weak_self = weakref.ref(self)
         name = self.sensors[self.index][0]
         if name != 'sensor.camera.rgb':
-            self.hud.notification('ERROR: Unsupported operation, see log for more info.')
-            print('ERROR: GBuffer methods are not available for the current sensor type"%s". Only "sensor.camera.rgb" is currently supported.' % name)
             return
         if self.output_texture_id != 0:
             self.sensor.stop_gbuffer(self.output_texture_id - 1)
