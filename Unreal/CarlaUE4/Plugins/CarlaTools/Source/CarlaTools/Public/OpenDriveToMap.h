@@ -13,6 +13,8 @@
 
 #include "OpenDriveToMap.generated.h"
 
+
+class UProceduralMeshComponent;
 /**
  * 
  */
@@ -28,6 +30,9 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
+  FString MapName;
 
 protected:
   virtual void NativeConstruct() override;
@@ -49,4 +54,6 @@ private:
   void GenerateSpawnPoints(const boost::optional<carla::road::Map>& CarlaMap);
 
   const carla::rpc::OpendriveGenerationParameters opg_parameters;
+
+  UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex );
 };

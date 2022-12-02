@@ -40,7 +40,9 @@ public class CarlaTools : ModuleRules
 			new string[]
 			{
 				"Core",
-        "ProceduralMeshComponent"
+        "ProceduralMeshComponent",
+        "RawMesh",
+        "AssetTools"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

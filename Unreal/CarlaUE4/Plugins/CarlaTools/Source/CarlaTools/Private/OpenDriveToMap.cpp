@@ -20,6 +20,12 @@
 
 #include "Engine/Classes/Interfaces/Interface_CollisionDataProvider.h"
 #include "PhysicsCore/Public/BodySetupEnums.h"
+#include "RawMesh.h"
+#include "AssetRegistryModule.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/StaticMeshActor.h"
+#include "MeshDescription.h"
+#include "ProceduralMeshConversion.h"
 
 void UOpenDriveToMap::NativeConstruct()
 {
@@ -75,7 +81,10 @@ void UOpenDriveToMap::LoadMap()
   {
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Valid Map loaded"));
   }
-
+  MapName = FPaths::GetCleanFilename(FilePath);
+  int32 CharIndex = 0;
+  MapName.FindChar('.', CharIndex);
+  MapName = MapName.LeftChop(CharIndex - 1);
   GenerateAll(CarlaMap);
 }
 
@@ -96,6 +105,8 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
 {
   const auto Meshes = CarlaMap->GenerateChunkedMesh(opg_parameters);
   TArray<AActor*> ActorMeshList;
+  TArray<UStaticMesh*> MeshesToSpawn;
+  int32 Index = 0;
   for (const auto &Mesh : Meshes) {
     if (!Mesh->GetVertices().size())
     {
@@ -117,8 +128,23 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
         TArray<FLinearColor>(), // VertexColor
         TArray<FProcMeshTangent>(), // Tangents
         true); // Create collision
-
     ActorMeshList.Add(TempActor);
+    UStaticMesh* GeneratedMesh = CreateStaticMeshAsset(TempPMC, Index);
+    if( GeneratedMesh != nullptr)
+    {
+      MeshesToSpawn.Add(GeneratedMesh);
+    }
+    Index++;
+  }
+
+  for( auto CurrentActor : ActorMeshList )
+  {
+    CurrentActor->Destroy();
+  }
+  for(auto CurrentMesh : MeshesToSpawn )
+  {
+    AStaticMeshActor* TempActor = GetWorld()->SpawnActor<AStaticMeshActor>();
+    TempActor->GetStaticMeshComponent()->SetStaticMesh(CurrentMesh);
   }
 /*
   if(!Parameters.enable_mesh_visibility)
@@ -129,7 +155,6 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
     }
   }
 */
-
   // // Build collision data
   // FTriMeshCollisionData CollisitonData;
   // CollisitonData.bDeformableMesh = false;
@@ -159,4 +184,86 @@ void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Ma
     Spawner->SetActorLocation(Trans.GetTranslation() + FVector(0.f, 0.f, SpawnersHeight));
     //VehicleSpawners.Add(Spawner);
   }
+}
+
+UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex)
+{
+  FMeshDescription MeshDescription = BuildMeshDescription(ProcMeshComp);
+
+  IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+  // If we got some valid data.
+  if (MeshDescription.Polygons().Num() > 0)
+  {
+    FString MeshName = *(FString("Build") + FString::FromInt(MeshIndex) );
+    FString PackageName = "/Game/CustomMaps/" + MapName + "/Static/" + MeshName;
+    if( !PlatformFile.DirectoryExists(*PackageName) )
+    {
+      PlatformFile.CreateDirectory(*PackageName);
+    }
+    UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("PackageName %s"), *PackageName );
+
+    // Then find/create it.
+    UPackage* Package = CreatePackage(*PackageName);
+    check(Package);
+    // Create StaticMesh object
+    UStaticMesh* StaticMesh = NewObject<UStaticMesh>(Package, *MeshName, RF_Public | RF_Standalone);
+    StaticMesh->InitResources();
+
+    StaticMesh->LightingGuid = FGuid::NewGuid();
+
+    // Add source to new StaticMesh
+    FStaticMeshSourceModel& SrcModel = StaticMesh->AddSourceModel();
+    SrcModel.BuildSettings.bRecomputeNormals = false;
+    SrcModel.BuildSettings.bRecomputeTangents = false;
+    SrcModel.BuildSettings.bRemoveDegenerates = false;
+    SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
+    SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
+    SrcModel.BuildSettings.bGenerateLightmapUVs = true;
+    SrcModel.BuildSettings.SrcLightmapIndex = 0;
+    SrcModel.BuildSettings.DstLightmapIndex = 1;
+    StaticMesh->CreateMeshDescription(0, MoveTemp(MeshDescription));
+    StaticMesh->CommitMeshDescription(0);
+
+    //// SIMPLE COLLISION
+    if (!ProcMeshComp->bUseComplexAsSimpleCollision )
+    {
+      StaticMesh->CreateBodySetup();
+      UBodySetup* NewBodySetup = StaticMesh->BodySetup;
+      NewBodySetup->BodySetupGuid = FGuid::NewGuid();
+      NewBodySetup->AggGeom.ConvexElems = ProcMeshComp->ProcMeshBodySetup->AggGeom.ConvexElems;
+      NewBodySetup->bGenerateMirroredCollision = false;
+      NewBodySetup->bDoubleSidedGeometry = true;
+      NewBodySetup->CollisionTraceFlag = CTF_UseDefault;
+      NewBodySetup->CreatePhysicsMeshes();
+    }
+
+    //// MATERIALS
+    TSet<UMaterialInterface*> UniqueMaterials;
+    const int32 NumSections = ProcMeshComp->GetNumSections();
+    for (int32 SectionIdx = 0; SectionIdx < NumSections; SectionIdx++)
+    {
+      FProcMeshSection *ProcSection =
+        ProcMeshComp->GetProcMeshSection(SectionIdx);
+      UMaterialInterface *Material = ProcMeshComp->GetMaterial(SectionIdx);
+      UniqueMaterials.Add(Material);
+    }
+    // Copy materials to new mesh
+    for (auto* Material : UniqueMaterials)
+    {
+      StaticMesh->StaticMaterials.Add(FStaticMaterial(Material));
+    }
+
+    //Set the Imported version before calling the build
+    StaticMesh->ImportVersion = EImportStaticMeshVersion::LastVersion;
+
+    // Build mesh from source
+    StaticMesh->Build(false);
+    StaticMesh->PostEditChange();
+
+    // Notify asset registry of new asset
+    FAssetRegistryModule::AssetCreated(StaticMesh);
+    return StaticMesh;
+  }
+  return nullptr;
 }
