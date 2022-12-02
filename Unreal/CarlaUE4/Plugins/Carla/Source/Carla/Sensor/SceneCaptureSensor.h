@@ -476,7 +476,7 @@ private:
         std::is_same<std::remove_reference_t<CameraGBufferT>, FCameraGBufferUint8>::value,
         FColor,
         FLinearColor>::type;
-      FIntPoint ViewSize = {};
+      auto ViewSize = GBufferData.ViewRect.Size();
       TArray<PixelType> Pixels;
       if (GBufferData.WaitForTextureTransfer(TextureID))
       {
@@ -485,13 +485,23 @@ private:
         int32 SourcePitch;
         FIntPoint SourceExtent;
         GBufferData.MapTextureData(TextureID, PixelData, SourcePitch, SourceExtent);
-        ViewSize = GBufferData.ViewRect.Size();
         auto Format = GBufferData.Readbacks[(size_t)TextureID]->GetFormat();
         Pixels.AddUninitialized(ViewSize.X * ViewSize.Y);
         FReadSurfaceDataFlags Flags = {};
         Flags.SetLinearToGamma(true);
-        ImageUtil::DecodePixelsByFormat(PixelData, SourcePitch, SourceExtent, ViewSize, Format, Flags, Pixels);
+        ImageUtil::DecodePixelsByFormat(
+          PixelData,
+          SourcePitch,
+          SourceExtent,
+          ViewSize,
+          Format,
+          Flags,
+          Pixels);
         GBufferData.UnmapTextureData(TextureID);
+      }
+      else
+      {
+        Pixels.AddZeroed(ViewSize.X * ViewSize.Y);
       }
       auto GBufferStream = CameraGBuffer.GetDataStream(Self);
       auto Buffer = GBufferStream.PopBufferFromPool();
@@ -502,8 +512,10 @@ private:
       SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
       GBufferStream.Send(
-        CameraGBuffer, std::move(Buffer),
-        ViewSize.X, ViewSize.Y,
+        CameraGBuffer,
+        std::move(Buffer),
+        ViewSize.X,
+        ViewSize.Y,
         Self.GetFOVAngle());
   }
 
