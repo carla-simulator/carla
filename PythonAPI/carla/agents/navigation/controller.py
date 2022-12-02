@@ -100,6 +100,10 @@ class VehiclePIDController():
         """Changes the parameters of the PIDLateralController"""
         self._lat_controller.change_parameters(**args_lateral)
 
+    def set_offset(self, offset):
+        """Changes the offset"""
+        self._lat_controller.set_offset(offset)
+
 
 class PIDLongitudinalController():
     """
@@ -203,6 +207,10 @@ class PIDLateralController():
             +1 maximum steering to right
         """
         return self._pid_control(waypoint, self._vehicle.get_transform())
+
+    def set_offset(self, offset):
+        """Changes the offset"""
+        self._offset = offset
 
     def _pid_control(self, waypoint, vehicle_transform):
         """
