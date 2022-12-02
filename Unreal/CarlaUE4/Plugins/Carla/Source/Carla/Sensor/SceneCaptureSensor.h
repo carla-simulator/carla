@@ -484,7 +484,11 @@ private:
         void* PixelData;
         int32 SourcePitch;
         FIntPoint SourceExtent;
-        GBufferData.MapTextureData(TextureID, PixelData, SourcePitch, SourceExtent);
+        GBufferData.MapTextureData(
+          TextureID,
+          PixelData,
+          SourcePitch,
+          SourceExtent);
         auto Format = GBufferData.Readbacks[(size_t)TextureID]->GetFormat();
         Pixels.AddUninitialized(ViewSize.X * ViewSize.Y);
         FReadSurfaceDataFlags Flags = {};
@@ -501,11 +505,15 @@ private:
       }
       else
       {
-        Pixels.AddZeroed(ViewSize.X * ViewSize.Y);
+        Pixels.SetNum(ViewSize.X * ViewSize.Y);
+        for (auto& Pixel : Pixels)
+          Pixel = PixelType::Black;
       }
       auto GBufferStream = CameraGBuffer.GetDataStream(Self);
       auto Buffer = GBufferStream.PopBufferFromPool();
-      Buffer.copy_from(carla::sensor::SensorRegistry::get<CameraGBufferT*>::type::header_offset, Pixels);
+      Buffer.copy_from(
+        carla::sensor::SensorRegistry::get<CameraGBufferT*>::type::header_offset,
+        Pixels);
       if (Buffer.empty()) {
         return;
       }
