@@ -108,6 +108,11 @@ public:
     return CurrentMapLayer;
   }
 
+  FCarlaEngine* GetCarlaEngine()
+  {
+    return &CarlaEngine;
+  }
+
 private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
