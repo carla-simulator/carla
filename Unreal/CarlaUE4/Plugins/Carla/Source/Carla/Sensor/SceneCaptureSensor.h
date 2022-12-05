@@ -476,7 +476,7 @@ private:
         std::is_same<std::remove_reference_t<CameraGBufferT>, FCameraGBufferUint8>::value,
         FColor,
         FLinearColor>::type;
-      auto ViewSize = GBufferData.ViewRect.Size();
+      FIntPoint ViewSize;
       TArray<PixelType> Pixels;
       if (GBufferData.WaitForTextureTransfer(TextureID))
       {
@@ -490,6 +490,7 @@ private:
           SourcePitch,
           SourceExtent);
         auto Format = GBufferData.Readbacks[(size_t)TextureID]->GetFormat();
+        ViewSize = GBufferData.ViewRect.Size();
         Pixels.AddUninitialized(ViewSize.X * ViewSize.Y);
         FReadSurfaceDataFlags Flags = {};
         Flags.SetLinearToGamma(true);
@@ -505,6 +506,7 @@ private:
       }
       else
       {
+        ViewSize = GBufferData.ViewRect.Size();
         Pixels.SetNum(ViewSize.X * ViewSize.Y);
         for (auto& Pixel : Pixels)
           Pixel = PixelType::Black;

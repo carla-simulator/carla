@@ -1212,6 +1212,8 @@ class CameraManager(object):
             self.hud.notification('ERROR: Unsupported operation, see log for more info.')
             print('ERROR: GBuffer methods are not available for the current sensor type"%s". Only "sensor.camera.rgb" is currently supported.' % name)
             return False
+        if self.output_texture_id != 0:
+            self.sensor.stop_gbuffer(self.output_texture_id - 1)
         self.output_texture_id = index % len(gbuffer_names)
         adjusted_index = self.output_texture_id - 1
         if self.output_texture_id != 0:
