@@ -1204,6 +1204,8 @@ class CameraManager(object):
 
     def next_sensor(self):
         self.set_sensor(self.index + 1)
+    
+    gbuffer_active_map = {}
 
     def set_gbuffer(self, index):
         weak_self = weakref.ref(self)
@@ -1213,13 +1215,14 @@ class CameraManager(object):
             print('ERROR: GBuffer methods are not available for the current sensor type"%s". Only "sensor.camera.rgb" is currently supported.' % name)
             return False
         self.output_texture_id = index % len(gbuffer_names)
+        adjusted_index = self.output_texture_id - 1
         if self.output_texture_id != 0:
-            self.sensor.stop_gbuffer(self.output_texture_id - 1)
-        if self.output_texture_id != 0:
-            self.sensor.listen_to_gbuffer(
-                self.output_texture_id - 1,
-                lambda image, index = self.output_texture_id: # Need to capture the output_texture_id by value.
-                    CameraManager._parse_image(weak_self, image, index))
+            if not adjusted_index in self.gbuffer_active_map:
+                self.gbuffer_active_map[adjusted_index] = True
+                self.sensor.listen_to_gbuffer(
+                    adjusted_index,
+                    lambda image, index = self.output_texture_id:
+                        CameraManager._parse_image(weak_self, image, index))
         return True
 
     def next_gbuffer(self):
@@ -1234,10 +1237,8 @@ class CameraManager(object):
             display.blit(self.surface, (0, 0))
 
     @staticmethod
-    def _parse_image(weak_self, image, output_texture_id = 0):
+    def _parse_image(weak_self, image, index = 0):
         self = weak_self()
-        if self.output_texture_id != output_texture_id:
-            return
         if not self:
             return
         if self.sensors[self.index][0].startswith('sensor.lidar'):
@@ -1270,6 +1271,8 @@ class CameraManager(object):
             array = array[:, :, ::-1]
             self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
         else:
+            if self.output_texture_id != index:
+                return
             image.convert(self.sensors[self.index][1])
             array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
             array = np.reshape(array, (image.height, image.width, 4))
