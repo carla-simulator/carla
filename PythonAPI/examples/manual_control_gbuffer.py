@@ -1205,8 +1205,6 @@ class CameraManager(object):
     def next_sensor(self):
         self.set_sensor(self.index + 1)
     
-    gbuffer_active_map = {}
-
     def set_gbuffer(self, index):
         weak_self = weakref.ref(self)
         name = self.sensors[self.index][0]
@@ -1217,8 +1215,7 @@ class CameraManager(object):
         self.output_texture_id = index % len(gbuffer_names)
         adjusted_index = self.output_texture_id - 1
         if self.output_texture_id != 0:
-            if not adjusted_index in self.gbuffer_active_map:
-                self.gbuffer_active_map[adjusted_index] = True
+            if not self.sensor.is_listening_gbuffer(adjusted_index):
                 self.sensor.listen_to_gbuffer(
                     adjusted_index,
                     lambda image, index = self.output_texture_id:
