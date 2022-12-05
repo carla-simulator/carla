@@ -159,6 +159,9 @@ namespace road {
     std::vector<std::unique_ptr<geom::Mesh>> GenerateChunkedMesh(
         const rpc::OpendriveGenerationParameters& params) const;
 
+    std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>> 
+      GenerateOrderedChunkedMesh( const rpc::OpendriveGenerationParameters& params) const;
+
     /// Buids a mesh of all crosswalks based on the OpenDRIVE
     geom::Mesh GetAllCrosswalkMesh() const;
 

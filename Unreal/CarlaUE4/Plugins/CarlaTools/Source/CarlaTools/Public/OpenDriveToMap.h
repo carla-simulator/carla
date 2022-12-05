@@ -55,5 +55,5 @@ private:
 
   const carla::rpc::OpendriveGenerationParameters opg_parameters;
 
-  UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex );
+  UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName );
 };

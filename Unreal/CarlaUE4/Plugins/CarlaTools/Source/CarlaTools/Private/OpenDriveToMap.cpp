@@ -27,6 +27,78 @@
 #include "MeshDescription.h"
 #include "ProceduralMeshConversion.h"
 
+
+FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
+{
+  switch (LaneType)
+  {
+  case carla::road::Lane::LaneType::Driving:
+    return FString("Driving");
+    break;
+  case carla::road::Lane::LaneType::Stop:
+    return FString("Stop");
+    break;
+  case carla::road::Lane::LaneType::Shoulder:
+    return FString("Shoulder");
+    break;  
+  case carla::road::Lane::LaneType::Biking:
+    return FString("Biking");
+    break;  
+  case carla::road::Lane::LaneType::Sidewalk:
+    return FString("Sidewalk");
+    break;  
+  case carla::road::Lane::LaneType::Border:
+    return FString("Border");
+    break;
+  case carla::road::Lane::LaneType::Restricted:
+    return FString("Restricted");
+    break;
+  case carla::road::Lane::LaneType::Parking:
+    return FString("Parking");
+    break;
+  case carla::road::Lane::LaneType::Bidirectional:
+    return FString("Bidirectional");
+    break;
+  case carla::road::Lane::LaneType::Median:
+    return FString("Median");
+    break;  
+  case carla::road::Lane::LaneType::Special1:
+    return FString("Special1");
+    break;
+  case carla::road::Lane::LaneType::Special2:
+    return FString("Special2");
+    break;
+  case carla::road::Lane::LaneType::Special3:
+    return FString("Special3");
+    break;
+  case carla::road::Lane::LaneType::RoadWorks:
+    return FString("RoadWorks");
+    break;
+  case carla::road::Lane::LaneType::Tram:
+    return FString("Tram");
+    break;
+  case carla::road::Lane::LaneType::Rail:
+    return FString("Rail");
+    break;
+  case carla::road::Lane::LaneType::Entry:
+    return FString("Entry");
+    break;
+  case carla::road::Lane::LaneType::Exit:
+    return FString("Exit");
+    break;
+  case carla::road::Lane::LaneType::OffRamp:
+    return FString("OffRamp");
+    break;
+  case carla::road::Lane::LaneType::OnRamp:
+    return FString("OnRamp");
+    break;
+  case carla::road::Lane::LaneType::Any:
+    return FString("Any");
+    break;
+  }
+
+  return FString("Empty");
+}
 void UOpenDriveToMap::NativeConstruct()
 {
   Super::NativeConstruct();
@@ -103,38 +175,42 @@ void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& Carla
 
 void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>& CarlaMap )
 {
-  const auto Meshes = CarlaMap->GenerateChunkedMesh(opg_parameters);
+  const auto Meshes = CarlaMap->GenerateOrderedChunkedMesh(opg_parameters);
   TArray<AActor*> ActorMeshList;
   TArray<UStaticMesh*> MeshesToSpawn;
   int32 Index = 0;
-  for (const auto &Mesh : Meshes) {
-    if (!Mesh->GetVertices().size())
+  for (const auto &PairMap : Meshes) 
+  {
+    for( const auto &Mesh : PairMap.second )
     {
-      continue;
-    }
-    AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
-    UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
-    TempPMC->bUseAsyncCooking = true;
-    TempPMC->bUseComplexAsSimpleCollision = true;
-    TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+      if (!Mesh->GetVertices().size())
+      {
+        continue;
+      }
+      AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+      UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
+      TempPMC->bUseAsyncCooking = true;
+      TempPMC->bUseComplexAsSimpleCollision = true;
+      TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
-    const FProceduralCustomMesh MeshData = *Mesh;
-    TempPMC->CreateMeshSection_LinearColor(
-        0,
-        MeshData.Vertices,
-        MeshData.Triangles,
-        MeshData.Normals,
-        TArray<FVector2D>(), // UV0
-        TArray<FLinearColor>(), // VertexColor
-        TArray<FProcMeshTangent>(), // Tangents
-        true); // Create collision
-    ActorMeshList.Add(TempActor);
-    UStaticMesh* GeneratedMesh = CreateStaticMeshAsset(TempPMC, Index);
-    if( GeneratedMesh != nullptr)
-    {
-      MeshesToSpawn.Add(GeneratedMesh);
+      const FProceduralCustomMesh MeshData = *Mesh;
+      TempPMC->CreateMeshSection_LinearColor(
+          0,
+          MeshData.Vertices,
+          MeshData.Triangles,
+          MeshData.Normals,
+          TArray<FVector2D>(), // UV0
+          TArray<FLinearColor>(), // VertexColor
+          TArray<FProcMeshTangent>(), // Tangents
+          true); // Create collision
+      ActorMeshList.Add(TempActor);
+      UStaticMesh* GeneratedMesh = CreateStaticMeshAsset(TempPMC, Index, LaneTypeToFString(PairMap.first));
+      if( GeneratedMesh != nullptr)
+      {
+        MeshesToSpawn.Add(GeneratedMesh);
+      }
+      Index++;
     }
-    Index++;
   }
 
   for( auto CurrentActor : ActorMeshList )
@@ -145,6 +221,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
   {
     AStaticMeshActor* TempActor = GetWorld()->SpawnActor<AStaticMeshActor>();
     TempActor->GetStaticMeshComponent()->SetStaticMesh(CurrentMesh);
+    TempActor->SetActorLabel(FString("SM_") + CurrentMesh->GetName());
   }
 /*
   if(!Parameters.enable_mesh_visibility)
@@ -186,7 +263,7 @@ void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Ma
   }
 }
 
-UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex)
+UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset( UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName )
 {
   FMeshDescription MeshDescription = BuildMeshDescription(ProcMeshComp);
 
@@ -195,8 +272,8 @@ UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset(UProceduralMeshComponent* Pr
   // If we got some valid data.
   if (MeshDescription.Polygons().Num() > 0)
   {
-    FString MeshName = *(FString("Build") + FString::FromInt(MeshIndex) );
-    FString PackageName = "/Game/CustomMaps/" + MapName + "/Static/" + MeshName;
+    FString MeshName = *(FolderName + FString::FromInt(MeshIndex) );
+    FString PackageName = "/Game/CustomMaps/" + MapName + "/Static/" + FolderName + "/" + MeshName;
     if( !PlatformFile.DirectoryExists(*PackageName) )
     {
       PlatformFile.CreateDirectory(*PackageName);
@@ -263,6 +340,7 @@ UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset(UProceduralMeshComponent* Pr
 
     // Notify asset registry of new asset
     FAssetRegistryModule::AssetCreated(StaticMesh);
+    UPackage::SavePackage(Package, StaticMesh, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *MeshName, GError, nullptr, true, true, SAVE_NoError);
     return StaticMesh;
   }
   return nullptr;

@@ -98,6 +98,25 @@ namespace geom {
     return std::make_unique<Mesh>(out_mesh);
   }
 
+  void MeshFactory::GenerateLaneSectionOrdered(
+    const road::LaneSection &lane_section,
+    std::map<carla::road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& result) 
+    const 
+  {
+    for (auto &&lane_pair : lane_section.GetLanes()) 
+    {
+      Mesh out_mesh = *Generate(lane_pair.second);
+      if( result[lane_pair.second.GetType()].empty() )
+      {
+        result[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(out_mesh));
+      }
+      else
+      {
+        *(result[lane_pair.second.GetType()][0]) += out_mesh;
+      }
+    }
+  }
+
   std::unique_ptr<Mesh> MeshFactory::GenerateWalls(const road::LaneSection &lane_section) const {
     Mesh out_mesh;
 
@@ -263,6 +282,60 @@ namespace geom {
     return mesh_uptr_list;
   }
 
+std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory::GenerateOrderedWithMaxLen(
+      const road::Road &road) const {
+    std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> mesh_uptr_list;
+    for (auto &&lane_section : road.GetLaneSections()) {
+      std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> section_uptr_list = GenerateOrderedWithMaxLen(lane_section);
+      mesh_uptr_list.insert( 
+        std::make_move_iterator(section_uptr_list.begin()),
+        std::make_move_iterator(section_uptr_list.end()));
+    }
+    
+    return mesh_uptr_list;
+  }
+
+  std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory::GenerateOrderedWithMaxLen(
+    const road::LaneSection &lane_section) const {
+      std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> mesh_uptr_list;
+      if (lane_section.GetLength() < road_param.max_road_len) {
+        GenerateLaneSectionOrdered(lane_section, mesh_uptr_list);
+      } else {
+        double s_current = lane_section.GetDistance() + EPSILON;
+        const double s_end = lane_section.GetDistance() + lane_section.GetLength() - EPSILON;
+        while(s_current + road_param.max_road_len < s_end) {
+          const auto s_until = s_current + road_param.max_road_len;
+          for (auto &&lane_pair : lane_section.GetLanes()) {
+            Mesh lane_section_mesh = *Generate(lane_pair.second, s_current, s_until);
+            if( mesh_uptr_list[lane_pair.second.GetType()].empty() )
+            {
+              mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
+            }
+            else
+            {
+              *( mesh_uptr_list[lane_pair.second.GetType()][0]) += lane_section_mesh;
+            }
+            
+          }
+          s_current = s_until;
+        }
+        if (s_end - s_current > EPSILON) {
+          for (auto &&lane_pair : lane_section.GetLanes()) {
+            Mesh lane_section_mesh = *Generate(lane_pair.second, s_current, s_end);
+            if( mesh_uptr_list[lane_pair.second.GetType()].empty() )
+            {
+              mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
+            }
+            else
+            {
+              *( mesh_uptr_list[lane_pair.second.GetType()][0]) += lane_section_mesh;
+            }
+          }
+        }
+      }
+      return mesh_uptr_list;
+  }
+
   std::vector<std::unique_ptr<Mesh>> MeshFactory::GenerateWallsWithMaxLen(
       const road::Road &road) const {
     std::vector<std::unique_ptr<Mesh>> mesh_uptr_list;
@@ -350,6 +423,21 @@ namespace geom {
     }
 
     return mesh_uptr_list;
+  }
+
+void MeshFactory::GenerateAllOrderedWithMaxLen(
+      const road::Road &road,
+      std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& roads
+      ) const 
+  {
+    // Get road meshes
+    std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> result = GenerateOrderedWithMaxLen(road);
+    for (auto &pair_map : result) 
+    {
+      std::vector<std::unique_ptr<Mesh>>& origin = roads[pair_map.first];
+      std::vector<std::unique_ptr<Mesh>>& source = pair_map.second;
+      std::move(source.begin(), source.end(), std::back_inserter(origin));
+    }
   }
 
   struct VertexWeight {
