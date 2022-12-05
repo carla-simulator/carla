@@ -77,6 +77,11 @@ public:
     FCarlaEngine::FrameCounter = Value;
   }
 
+  std::shared_ptr<carla::multigpu::Router> GetSecondaryServer()
+  {
+    return SecondaryServer;
+  }
+
 private:
 
   void OnPreTick(UWorld *World, ELevelTick TickType, float DeltaSeconds);

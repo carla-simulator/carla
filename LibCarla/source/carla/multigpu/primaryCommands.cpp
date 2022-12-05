@@ -31,9 +31,9 @@ void PrimaryCommands::SendFrameData(carla::Buffer buffer) {
 }
 
 // broadcast to all secondary servers the map to load
-void PrimaryCommands::SendLoadMap(std::string) {
-  // carla::Buffer buf((unsigned char *) map.c_str(), (size_t) map.size());
-  log_info("sending load map command");
+void PrimaryCommands::SendLoadMap(std::string map) {
+  carla::Buffer buf((unsigned char *) map.c_str(), (size_t) map.size() + 1);
+  _router->Write(MultiGPUCommand::LOAD_MAP, std::move(buf));
 }
 
 // send to who the router wants the request for a token

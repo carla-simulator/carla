@@ -127,8 +127,11 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             break;
           }
           case carla::multigpu::MultiGPUCommand::LOAD_MAP:
+          {
+            FString FinalPath((char *) Data.data());
+            UGameplayStatics::OpenLevel(CurrentEpisode->GetWorld(), *FinalPath, true);
             break;
-          
+          }
           case carla::multigpu::MultiGPUCommand::GET_TOKEN:
           {
             // get the sensor id
