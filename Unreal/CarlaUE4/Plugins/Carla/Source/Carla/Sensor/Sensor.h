@@ -81,17 +81,17 @@ public:
   UFUNCTION(BlueprintCallable)
   void SetSeed(int32 InSeed);
 
-protected:
-
-  void PostActorCreated() override;
-
-  void EndPlay(EEndPlayReason::Type EndPlayReason) override;
-
   const UCarlaEpisode &GetEpisode() const
   {
     check(Episode != nullptr);
     return *Episode;
   }
+
+protected:
+
+  void PostActorCreated() override;
+
+  void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
   /// Return the FDataStream associated with this sensor.
   ///

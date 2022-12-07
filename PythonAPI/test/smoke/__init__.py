@@ -21,12 +21,13 @@ import carla
 import time
 
 TESTING_ADDRESS = ('localhost', 3654)
-
+VEHICLE_VEHICLES_EXCLUDE_FROM_OLD_TOWNS = ['vehicle.mitsubishi.fusorosa']
 
 class SmokeTest(unittest.TestCase):
     def setUp(self):
         self.testing_address = TESTING_ADDRESS
         self.client = carla.Client(*TESTING_ADDRESS)
+        self.vehicle_vehicles_exclude_from_old_towns = VEHICLE_VEHICLES_EXCLUDE_FROM_OLD_TOWNS
         self.client.set_timeout(120.0)
         self.world = self.client.get_world()
 
@@ -36,6 +37,13 @@ class SmokeTest(unittest.TestCase):
         time.sleep(5)
         self.world = None
         self.client = None
+    
+    def filter_vehicles_for_old_towns(self, blueprint_list):
+        new_list = []
+        for blueprint in blueprint_list:
+            if blueprint.id not in self.vehicle_vehicles_exclude_from_old_towns:
+                new_list.append(blueprint)
+        return new_list
 
 
 class SyncSmokeTest(SmokeTest):

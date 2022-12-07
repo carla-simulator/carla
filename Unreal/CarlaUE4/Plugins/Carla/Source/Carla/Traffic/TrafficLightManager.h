@@ -10,6 +10,7 @@
 #include "TrafficLightGroup.h"
 #include "TrafficSignBase.h"
 #include "Carla/OpenDrive/OpenDrive.h"
+
 #include "TrafficLightManager.generated.h"
 
 /// Class In charge of creating and assigning traffic

@@ -15,6 +15,7 @@ class TestSpawnpoints(SyncSmokeTest):
         print("TestSpawnpoints.test_spawn_points")
         self.world = self.client.get_world()
         blueprints = self.world.get_blueprint_library().filter("vehicle.*")
+        blueprints = self.filter_vehicles_for_old_towns(blueprints)
 
         # get all available maps
         maps = self.client.get_available_maps()

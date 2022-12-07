@@ -28,7 +28,7 @@ namespace detail {
         {128u,  64u, 128u}, // road          =   7u,
         {244u,  35u, 232u}, // sidewalk      =   8u,
         {107u, 142u,  35u}, // vegetation    =   9u,
-        {  0u,   0u, 142u}, // vehicle       =  10u,
+        {  0u,   0u, 142u}, // Car           =  10u,
         {102u, 102u, 156u}, // wall          =  11u,
         {220u, 220u,   0u}, // traffic sign  =  12u,
         { 70u, 130u, 180u}, // sky           =  13u,
@@ -41,18 +41,18 @@ namespace detail {
         {170u, 120u,  50u}, // dynamic       =  20u,
         { 45u,  60u, 150u}, // water         =  21u,
         {145u, 170u, 100u}, // terrain       =  22u,
-        // {  0u,   0u,  70u}, // truck
+        {  0u,   0u,  70u}, // truck         =  23u,
         // {  0u,   0u,  90u}, // caravan
         // {  0u,   0u, 110u}, // trailer
         // {  0u,   0u, 142u}, // license plate
-        // {  0u,   0u, 230u}, // motorcycle
-        // {  0u,  60u, 100u}, // bus
+        {  0u,   0u, 230u}, // motorcycle    = 24u,
         // {  0u,  80u, 100u}, // train
-        // {119u,  11u,  32u}, // bicycle
-        // {150u, 120u,  90u}, // tunnel
+        {119u,  11u,  32u}, // bicycle       = 25u,
+        {  0u,  60u, 100u}, // bus           = 26u,
+        {255u,   0u,   0u}, // rider         = 27u,
+        //{150u, 120u,  90u}, // tunnel
         // {153u, 153u, 153u}, // polegroup
         // {250u, 170u, 160u}, // parking
-        // {255u,   0u,   0u}, // rider
     };
 
 } // namespace detail

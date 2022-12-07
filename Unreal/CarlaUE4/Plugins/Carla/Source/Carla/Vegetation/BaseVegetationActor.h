@@ -82,14 +82,16 @@ public:
 
   virtual void BeginPlay() override;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton Bone") 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation") 
   FSpringBasedVegetationParameters SpringParameters;
 
-  UFUNCTION(BlueprintCallable, CallInEditor)
+  UFUNCTION(BlueprintCallable, CallInEditor, Category = "Spring Based Vegetation")
   void GetParametersFromComponent();
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION(BlueprintCallable, CallInEditor, Category = "Spring Based Vegetation")
   void SetParametersToComponent();
 
+  UFUNCTION(BlueprintCallable, CallInEditor, Category = "Spring Based Vegetation")
+  void UpdateSkeletonAndParameters();
 
 };

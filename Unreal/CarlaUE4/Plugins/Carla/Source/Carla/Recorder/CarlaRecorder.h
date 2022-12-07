@@ -29,6 +29,8 @@
 #include "CarlaRecorderPosition.h"
 #include "CarlaRecorderQuery.h"
 #include "CarlaRecorderState.h"
+#include "CarlaRecorderVisualTime.h"
+#include "CarlaRecorderWalkerBones.h"
 #include "CarlaReplayer.h"
 
 #include "CarlaRecorder.generated.h"
@@ -60,7 +62,9 @@ enum class CarlaRecorderPacketId : uint8_t
   PhysicsControl,
   TrafficLightTime,
   TriggerVolume,
-  FrameCounter
+  FrameCounter,
+  WalkerBones,
+  VisualTime
 };
 
 /// Recorder for the simulation
@@ -122,6 +126,8 @@ public:
   void AddPhysicsControl(const ACarlaWheeledVehicle& Vehicle);
 
   void AddTrafficLightTime(const ATrafficLightBase& TrafficLight);
+
+  void AddActorBones(FCarlaActor *CarlaActor);
 
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
@@ -189,7 +195,8 @@ private:
   CarlaRecorderPlatformTime PlatformTime;
   CarlaRecorderPhysicsControls PhysicsControls;
   CarlaRecorderTrafficLightTimes TrafficLightTimes;
-
+  CarlaRecorderWalkersBones WalkersBones;
+  CarlaRecorderVisualTime VisualTime;
 
   // replayer
   CarlaReplayer Replayer;
