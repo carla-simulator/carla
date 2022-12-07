@@ -24,6 +24,8 @@
 #include "GameFramework/SpectatorPawn.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Kismet/GameplayStatics.h"
+#include "Materials/MaterialParameterCollection.h"
+#include "Materials/MaterialParameterCollectionInstance.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 
@@ -324,6 +326,21 @@ void UCarlaEpisode::InitializeAtBeginPlay()
   {
     UE_LOG(LogCarla, Error, TEXT("Can't find spectator!"));
   }
+
+  // material parameters collection
+  UMaterialParameterCollection *Collection = LoadObject<UMaterialParameterCollection>(nullptr, TEXT("/Game/Carla/Blueprints/Game/CarlaParameters.CarlaParameters"), nullptr, LOAD_None, nullptr);
+	if (Collection != nullptr)
+  {
+    MaterialParameters = World->GetParameterCollectionInstance(Collection);
+    if (MaterialParameters == nullptr)
+    {
+      UE_LOG(LogCarla, Error, TEXT("Can't find CarlaParameters instance!"));
+    }
+  }
+  else
+	{
+    UE_LOG(LogCarla, Error, TEXT("Can't find CarlaParameters asset!"));
+	}
 
   for (TActorIterator<ATrafficSignBase> It(World); It; ++It)
   {

@@ -14,6 +14,13 @@ static void SubscribeToStream(carla::client::Sensor &self, boost::python::object
   self.Listen(MakeCallback(std::move(callback)));
 }
 
+static void SubscribeToGBuffer(
+  carla::client::ServerSideSensor &self,
+  uint32_t GBufferId,
+  boost::python::object callback) {
+  self.ListenToGBuffer(GBufferId, MakeCallback(std::move(callback)));
+}
+
 void export_sensor() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -27,6 +34,8 @@ void export_sensor() {
 
   class_<cc::ServerSideSensor, bases<cc::Sensor>, boost::noncopyable, boost::shared_ptr<cc::ServerSideSensor>>
       ("ServerSideSensor", no_init)
+    .def("listen_to_gbuffer", &SubscribeToGBuffer, (arg("gbuffer_id"), arg("callback")))
+    .def("stop_gbuffer", &cc::ServerSideSensor::StopGBuffer, (arg("gbuffer_id")))
     .def(self_ns::str(self_ns::self))
   ;
 

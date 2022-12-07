@@ -1088,7 +1088,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   DrawDebugInfo = false;
   bUseDynamicModel = false;
   bDisableVehicleGravity = false;
-  NNVerbose = true;
+  NNVerbose = false;
   bUseImpulse = false;
   bUseMeanAcceleration = false;
   bShowForces = true;
@@ -1098,7 +1098,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   ParticleForceMulFactor = 1.f;
   FloorHeight = 0.0;
   bDrawLoadedTiles = false;
-  bUseSoilType = false;
+  bUseSoilType = true;
   EffectMultiplayer = 200.0f;
   MinDisplacement = -10.0f;
   MaxDisplacement = 10.0f;

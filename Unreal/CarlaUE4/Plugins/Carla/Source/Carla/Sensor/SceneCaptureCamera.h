@@ -26,6 +26,8 @@ public:
   ASceneCaptureCamera(const FObjectInitializer &ObjectInitializer);
 
 protected:
+	
+  virtual void SendGBufferTextures(FGBufferRequest& GBuffer) override;
 
 
   void BeginPlay() override;
