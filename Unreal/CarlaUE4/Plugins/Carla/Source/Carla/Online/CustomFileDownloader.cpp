@@ -1,6 +1,5 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
-
 #include "Online/CustomFileDownloader.h"
 #include "HttpModule.h"
 #include "Http.h"
@@ -20,7 +19,7 @@ FHttpDownloader::FHttpDownloader(const FString& InVerb, const FString& InUrl, co
   , Url(InUrl)
   , Filename( InFilename )
 {
-	
+
 }
 
 void FHttpDownloader::Run(void)
@@ -44,17 +43,17 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
     UE_LOG(LogCarla, Log, TEXT("Completed download [%s] Url=[%s] Response=[%d]"), 
       *HttpRequest->GetVerb(), 
       *HttpRequest->GetURL(), 
-       HttpResponse->GetResponseCode());
-  
+        HttpResponse->GetResponseCode());
+
     HttpRequest->OnProcessRequestComplete().Unbind();
-  
+
     FString CurrentFile = FPaths::ProjectConfigDir();
     CurrentFile.Append(Filename);
-  
+
     // We will use this FileManager to deal with the file.
     IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
     FString StringToWrite = HttpResponse->GetContentAsString();
-  
+
     // We use the LoadFileToString to load the file into
     if( FFileHelper::SaveStringToFile(StringToWrite,*CurrentFile) )
     {
@@ -65,6 +64,6 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
       UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Failed to write FString to file."));
     }
   }
-  
+
   delete this;
 }

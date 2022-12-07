@@ -21,10 +21,9 @@ public:
   FString Url;
 private:
   void RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
-	
+
   FString Payload;
 };
-
 
 class FHttpDownloader
 {
@@ -36,11 +35,10 @@ public:
    * @param Url - url address to connect to
    */
   FHttpDownloader( const FString& InVerb, const FString& InUrl, const FString& InFilename );  
-  
-  
+
   // Kick off the Http request  and wait for delegate to be called
   void Run(void);  
-  
+
   /**
    * Delegate called when the request completes
    *
