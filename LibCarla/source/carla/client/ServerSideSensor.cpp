@@ -11,6 +11,8 @@
 
 #include <exception>
 
+constexpr size_t GBufferTextureCount = 13;
+
 namespace carla {
 namespace client {
 
@@ -23,7 +25,7 @@ namespace client {
     }
     if (IsListening() && GetEpisode().IsValid()) {
       try {
-        for (uint32_t i = 1; i != 13; ++i) {
+        for (uint32_t i = 1; i != GBufferTextureCount + 1; ++i) {
           if (listening_mask.test(i))
             StopGBuffer(i - 1);
         }
@@ -55,7 +57,7 @@ namespace client {
 
   void ServerSideSensor::ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback) {
     log_debug(GetDisplayId(), ": subscribing to gbuffer stream");
-    RELEASE_ASSERT(GBufferId < 13);
+    RELEASE_ASSERT(GBufferId < GBufferTextureCount);
     if (GetActorDescription().description.id != "sensor.camera.rgb")
     {
       log_error("GBuffer methods are not supported on non-RGB sensors (sensor.camera.rgb).");
@@ -68,7 +70,7 @@ namespace client {
 
   void ServerSideSensor::StopGBuffer(uint32_t GBufferId) {
     log_debug(GetDisplayId(), ": unsubscribing from gbuffer stream");
-    RELEASE_ASSERT(GBufferId < 13);
+    RELEASE_ASSERT(GBufferId < GBufferTextureCount);
     if (GetActorDescription().description.id != "sensor.camera.rgb")
     {
       log_error("GBuffer methods are not supported on non-RGB sensors (sensor.camera.rgb).");
@@ -81,7 +83,7 @@ namespace client {
   bool ServerSideSensor::Destroy() {
     log_debug("calling sensor Destroy() ", GetDisplayId());
     if (IsListening()) {
-      for (uint32_t i = 1; i != 13; ++i) {
+      for (uint32_t i = 1; i != GBufferTextureCount + 1; ++i) {
         if (listening_mask.test(i)) {
           StopGBuffer(i - 1);
         }
