@@ -60,7 +60,7 @@ namespace client {
     RELEASE_ASSERT(GBufferId < GBufferTextureCount);
     if (GetActorDescription().description.id != "sensor.camera.rgb")
     {
-      log_error("GBuffer methods are not supported on non-RGB sensors (sensor.camera.rgb).");
+      log_warning("GBuffer methods are not supported on non-RGB sensors (sensor.camera.rgb).");
       return;
     }
     GetEpisode().Lock()->SubscribeToGBuffer(*this, GBufferId, std::move(callback));
@@ -73,7 +73,7 @@ namespace client {
     RELEASE_ASSERT(GBufferId < GBufferTextureCount);
     if (GetActorDescription().description.id != "sensor.camera.rgb")
     {
-      log_error("GBuffer methods are not supported on non-RGB sensors (sensor.camera.rgb).");
+      log_warning("GBuffer methods are not supported on non-RGB sensors (sensor.camera.rgb).");
       return;
     }
     GetEpisode().Lock()->UnSubscribeFromGBuffer(*this, GBufferId);
