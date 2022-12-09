@@ -237,7 +237,7 @@ for location in lidar_measurement:
     print(location)
 ```
 
-The information of the LIDAR measurement is enconded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by the following formula.
+The information of the LIDAR measurement is encoded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by the following formula.
 <br>
 ![LidarIntensityComputation](img/lidar_intensity.jpg)
 
