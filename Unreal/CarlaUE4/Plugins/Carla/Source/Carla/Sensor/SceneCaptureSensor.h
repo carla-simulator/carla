@@ -476,7 +476,7 @@ private:
         std::is_same<std::remove_reference_t<CameraGBufferT>, FCameraGBufferUint8>::value,
         FColor,
         FLinearColor>::type;
-      FIntPoint ViewSize = {};
+      FIntPoint ViewSize;
       TArray<PixelType> Pixels;
       if (GBufferData.WaitForTextureTransfer(TextureID))
       {
@@ -484,26 +484,48 @@ private:
         void* PixelData;
         int32 SourcePitch;
         FIntPoint SourceExtent;
-        GBufferData.MapTextureData(TextureID, PixelData, SourcePitch, SourceExtent);
-        ViewSize = GBufferData.ViewRect.Size();
+        GBufferData.MapTextureData(
+          TextureID,
+          PixelData,
+          SourcePitch,
+          SourceExtent);
         auto Format = GBufferData.Readbacks[(size_t)TextureID]->GetFormat();
+        ViewSize = GBufferData.ViewRect.Size();
         Pixels.AddUninitialized(ViewSize.X * ViewSize.Y);
         FReadSurfaceDataFlags Flags = {};
         Flags.SetLinearToGamma(true);
-        ImageUtil::DecodePixelsByFormat(PixelData, SourcePitch, SourceExtent, ViewSize, Format, Flags, Pixels);
+        ImageUtil::DecodePixelsByFormat(
+          PixelData,
+          SourcePitch,
+          SourceExtent,
+          ViewSize,
+          Format,
+          Flags,
+          Pixels);
         GBufferData.UnmapTextureData(TextureID);
+      }
+      else
+      {
+        ViewSize = GBufferData.ViewRect.Size();
+        Pixels.SetNum(ViewSize.X * ViewSize.Y);
+        for (auto& Pixel : Pixels)
+          Pixel = PixelType::Black;
       }
       auto GBufferStream = CameraGBuffer.GetDataStream(Self);
       auto Buffer = GBufferStream.PopBufferFromPool();
-      Buffer.copy_from(carla::sensor::SensorRegistry::get<CameraGBufferT*>::type::header_offset, Pixels);
+      Buffer.copy_from(
+        carla::sensor::SensorRegistry::get<CameraGBufferT*>::type::header_offset,
+        Pixels);
       if (Buffer.empty()) {
         return;
       }
       SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
       GBufferStream.Send(
-        CameraGBuffer, std::move(Buffer),
-        ViewSize.X, ViewSize.Y,
+        CameraGBuffer,
+        std::move(Buffer),
+        ViewSize.X,
+        ViewSize.Y,
         Self.GetFOVAngle());
   }
 
