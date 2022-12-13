@@ -9,6 +9,7 @@
   * Fixed bug causing traffic signals at the end points of a road to sometimes create malformed waypoints.
   * Fixed pedestrian skeleton frame, where sometimes it was draw displaced from the body
   * Fixed decals when importing maps. It was using other .json files found in other packages.
+  * In multi-GPU mode some sensors now are forced to be created on the primary server always (ex. collision sensor)
   * Added the speed limits for 100, 110 and 120 Km/h.
   * Fixing sensor destruction, now the stream and socket is succesfully destroyed.
   * Fixed bug at `Vehicle.get_traffic_light_state()` and `Vehicle.is_at_traffic_light()` causing vehicles to temporarily not lose the information of a traffic light if they moved away from it before it turned green.

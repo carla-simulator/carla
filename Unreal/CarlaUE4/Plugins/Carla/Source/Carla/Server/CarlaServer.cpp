@@ -771,14 +771,31 @@ void FCarlaServer::FPimpl::BindActions()
                                  R<carla::streaming::Token>
   {
     REQUIRE_CARLA_EPISODE();
-    if (SecondaryServer->HasClientsConnected() && sensor_id > 1)
+    bool ForceInPrimary = false;
+
+    // check for the world observer (always in primary server)
+    if (sensor_id == 1)
+    {
+      ForceInPrimary = true;
+    }
+
+    // collision sensor always in primary server in multi-gpu
+    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
+    if (Desc == "" || Desc == "sensor.other.collision")
+    {
+      ForceInPrimary = true;
+    }
+
+    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
     {
       // multi-gpu
+      UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in secondary server"), sensor_id, *Desc);
       return SecondaryServer->GetCommander().SendGetToken(sensor_id);
     }
     else
     {
       // single-gpu
+      UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in primary server"), sensor_id, *Desc);
       return StreamingServer.GetToken(sensor_id);
     }
   };

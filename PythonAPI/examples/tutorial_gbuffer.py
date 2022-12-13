@@ -95,22 +95,22 @@ def main():
         # Here we will register the callbacks for each gbuffer texture.
         # The function "listen_to_gbuffer" behaves like the regular listen function,
         # but you must first pass it the ID of the desired gbuffer texture.
-        camera.listen_to_gbuffer(carla.GBufferTextureID.SceneColor, lambda image: image.save_to_disk('_out/SceneColor-%06d.png' % image.frame))
-        camera.listen_to_gbuffer(carla.GBufferTextureID.SceneDepth, lambda image: image.save_to_disk('_out/SceneDepth-%06d.png' % image.frame))
-        camera.listen_to_gbuffer(carla.GBufferTextureID.SceneStencil, lambda image: image.save_to_disk('_out/SceneStencil-%06d.png' % image.frame))
-        camera.listen_to_gbuffer(carla.GBufferTextureID.GBufferA, lambda image: image.save_to_disk('_out/GBufferA-%06d.png' % image.frame))
-        camera.listen_to_gbuffer(carla.GBufferTextureID.GBufferB, lambda image: image.save_to_disk('_out/GBufferB-%06d.png' % image.frame))
-        camera.listen_to_gbuffer(carla.GBufferTextureID.GBufferC, lambda image: image.save_to_disk('_out/GBufferC-%06d.png' % image.frame))
-        camera.listen_to_gbuffer(carla.GBufferTextureID.GBufferD, lambda image: image.save_to_disk('_out/GBufferD-%06d.png' % image.frame))
+        camera.listen_to_gbuffer(carla.GBufferTextureID.SceneColor, lambda image: image.save_to_disk('_out/GBuffer-SceneColor-%06d.png' % image.frame))
+        camera.listen_to_gbuffer(carla.GBufferTextureID.SceneDepth, lambda image: image.save_to_disk('_out/GBuffer-SceneDepth-%06d.png' % image.frame))
+        camera.listen_to_gbuffer(carla.GBufferTextureID.SceneStencil, lambda image: image.save_to_disk('_out/GBuffer-SceneStencil-%06d.png' % image.frame))
+        camera.listen_to_gbuffer(carla.GBufferTextureID.GBufferA, lambda image: image.save_to_disk('_out/GBuffer-A-%06d.png' % image.frame))
+        camera.listen_to_gbuffer(carla.GBufferTextureID.GBufferB, lambda image: image.save_to_disk('_out/GBuffer-B-%06d.png' % image.frame))
+        camera.listen_to_gbuffer(carla.GBufferTextureID.GBufferC, lambda image: image.save_to_disk('_out/GBuffer-C-%06d.png' % image.frame))
+        camera.listen_to_gbuffer(carla.GBufferTextureID.GBufferD, lambda image: image.save_to_disk('_out/GBuffer-D-%06d.png' % image.frame))
         # Note that some gbuffer textures may not be available for a particular scene.
         # For example, the textures E and F are likely unavailable in this example,
         # which will result in them being sent as black images.
-        camera.listen_to_gbuffer(carla.GBufferTextureID.GBufferE, lambda image: image.save_to_disk('_out/GBufferE-%06d.png' % image.frame))
-        camera.listen_to_gbuffer(carla.GBufferTextureID.GBufferF, lambda image: image.save_to_disk('_out/GBufferF-%06d.png' % image.frame))
-        camera.listen_to_gbuffer(carla.GBufferTextureID.Velocity, lambda image: image.save_to_disk('_out/Velocity-%06d.png' % image.frame))
-        camera.listen_to_gbuffer(carla.GBufferTextureID.SSAO, lambda image: image.save_to_disk('_out/SSAO-%06d.png' % image.frame))
-        camera.listen_to_gbuffer(carla.GBufferTextureID.CustomDepth, lambda image: image.save_to_disk('_out/CustomDepth-%06d.png' % image.frame))
-        camera.listen_to_gbuffer(carla.GBufferTextureID.CustomStencil, lambda image: image.save_to_disk('_out/CustomStencil-%06d.png' % image.frame))
+        camera.listen_to_gbuffer(carla.GBufferTextureID.GBufferE, lambda image: image.save_to_disk('_out/GBuffer-E-%06d.png' % image.frame))
+        camera.listen_to_gbuffer(carla.GBufferTextureID.GBufferF, lambda image: image.save_to_disk('_out/GBuffer-F-%06d.png' % image.frame))
+        camera.listen_to_gbuffer(carla.GBufferTextureID.Velocity, lambda image: image.save_to_disk('_out/GBuffer-Velocity-%06d.png' % image.frame))
+        camera.listen_to_gbuffer(carla.GBufferTextureID.SSAO, lambda image: image.save_to_disk('_out/GBuffer-SSAO-%06d.png' % image.frame))
+        camera.listen_to_gbuffer(carla.GBufferTextureID.CustomDepth, lambda image: image.save_to_disk('_out/GBuffer-CustomDepth-%06d.png' % image.frame))
+        camera.listen_to_gbuffer(carla.GBufferTextureID.CustomStencil, lambda image: image.save_to_disk('_out/GBuffer-CustomStencil-%06d.png' % image.frame))
 
         time.sleep(10)
 
