@@ -183,6 +183,14 @@ public:
     return ActorDispatcher->GetActorRegistry().FindCarlaActor(Actor);
   }
 
+  /// Get the description of the Carla actor (sensor) using specific stream id.
+  ///
+  /// If the actor is not found returns an empty string
+  FString GetActorDescriptionFromStream(carla::streaming::detail::stream_id_type StreamId)
+  {
+    return ActorDispatcher->GetActorRegistry().GetDescriptionFromStream(StreamId);
+  }
+
   // ===========================================================================
   // -- Actor handling methods -------------------------------------------------
   // ===========================================================================
