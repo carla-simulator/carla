@@ -368,7 +368,16 @@ namespace detail {
         const streaming::Token &token,
         std::function<void(Buffer)> callback);
 
+    void SubscribeToGBuffer(
+        rpc::ActorId ActorId,
+        uint32_t GBufferId,
+        std::function<void(Buffer)> callback);
+
     void UnSubscribeFromStream(const streaming::Token &token);
+
+    void UnSubscribeFromGBuffer(
+        rpc::ActorId ActorId,
+        uint32_t GBufferId);
 
     void DrawDebugShape(const rpc::DebugShape &shape);
 

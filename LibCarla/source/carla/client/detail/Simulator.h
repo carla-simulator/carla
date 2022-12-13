@@ -590,7 +590,16 @@ namespace detail {
         const Sensor &sensor,
         std::function<void(SharedPtr<sensor::SensorData>)> callback);
 
-    void UnSubscribeFromSensor(const Sensor &sensor);
+    void UnSubscribeFromSensor(Actor &sensor);
+
+    void SubscribeToGBuffer(
+        Actor & sensor,
+        uint32_t gbuffer_id,
+        std::function<void(SharedPtr<sensor::SensorData>)> callback);
+
+    void UnSubscribeFromGBuffer(
+        Actor & sensor,
+        uint32_t gbuffer_id);
 
     /// @}
     // =========================================================================

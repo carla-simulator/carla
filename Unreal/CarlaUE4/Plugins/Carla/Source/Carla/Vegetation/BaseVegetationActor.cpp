@@ -10,8 +10,8 @@
 
 void ABaseVegetationActor::BeginPlay()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ABaseVegetationActor::BeginPlay);
   Super::BeginPlay();
-  SetParametersToComponent();
 }
 
 void ABaseVegetationActor::GetParametersFromComponent()
@@ -88,4 +88,21 @@ void ABaseVegetationActor::SetParametersToComponent()
   SpringComponent->Skeleton = SpringParameters.Skeleton;
   SpringComponent->bAutoComputeStrength = SpringParameters.bAutoComputeStrength;
 
+}
+
+void ABaseVegetationActor::UpdateSkeletonAndParameters()
+{
+  UActorComponent* Component = 
+      GetComponentByClass(USpringBasedVegetationComponent::StaticClass());
+  USpringBasedVegetationComponent* SpringComponent = 
+      Cast<USpringBasedVegetationComponent>(Component);
+  if (!SpringComponent)
+  {
+    UE_LOG(LogCarla, Error, TEXT("ABaseVegetationActor::UpdateSkeletonAndParameters Component not found"));
+    return;
+  }
+  SetParametersToComponent();
+  SpringComponent->GenerateSkeletonHierarchy();
+  SpringComponent->ComputeSpringStrengthForBranches();
+  GetParametersFromComponent();
 }

@@ -57,6 +57,10 @@ namespace detail {
         break;
       }
     }
+    if(result) {
+      carla::traffic_manager::TrafficManager::Tick();
+    }
+    
     return result;
   }
 
@@ -202,9 +206,6 @@ namespace detail {
 
     // tick pedestrian navigation
     _episode->NavigationTick();
-    
-    // tick traffic manager
-    carla::traffic_manager::TrafficManager::Tick();
 
     auto result = _episode->WaitForState(timeout);
     if (!result.has_value()) {
@@ -219,9 +220,6 @@ namespace detail {
     // tick pedestrian navigation
     _episode->NavigationTick();
     
-    // tick traffic manager
-    carla::traffic_manager::TrafficManager::Tick();
-
     // send tick command
     const auto frame = _client.SendTickCue();
 
@@ -391,9 +389,26 @@ namespace detail {
           cb(std::move(data));
         });
   }
-
-  void Simulator::UnSubscribeFromSensor(const Sensor &sensor) {
+  
+  void Simulator::UnSubscribeFromSensor(Actor &sensor) {
     _client.UnSubscribeFromStream(sensor.GetActorDescription().GetStreamToken());
+    // If in the future we need to unsubscribe from each gbuffer individually, it should be done here.
+  }
+
+  void Simulator::SubscribeToGBuffer(
+      Actor &actor,
+      uint32_t gbuffer_id,
+      std::function<void(SharedPtr<sensor::SensorData>)> callback) {
+    _client.SubscribeToGBuffer(actor.GetId(), gbuffer_id,
+        [cb=std::move(callback), ep=WeakEpisodeProxy{shared_from_this()}](auto buffer) {
+          auto data = sensor::Deserializer::Deserialize(std::move(buffer));
+          data->_episode = ep.TryLock();
+          cb(std::move(data));
+        });
+  }
+
+  void Simulator::UnSubscribeFromGBuffer(Actor &actor, uint32_t gbuffer_id) {
+    _client.UnSubscribeFromGBuffer(actor.GetId(), gbuffer_id);
   }
 
   void Simulator::FreezeAllTrafficLights(bool frozen) {
