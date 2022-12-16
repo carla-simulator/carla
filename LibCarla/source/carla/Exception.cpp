@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/Exception.h"
+#include <boost/assert/source_location.hpp>
 
 // =============================================================================
 // -- Define boost::throw_exception --------------------------------------------
@@ -16,6 +17,12 @@ namespace boost {
 
   void throw_exception(const std::exception &e) {
     carla::throw_exception(e);
+  }
+
+  void throw_exception(
+      const std::exception &e,
+      boost::source_location const & loc) {
+    throw_exception(e);
   }
 
 } // namespace boost
