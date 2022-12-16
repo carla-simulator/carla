@@ -107,10 +107,32 @@ if ${BUILD_OSM2ODR} ; then
       -DPROJ_LIBRARY=${CARLA_BUILD_FOLDER}/proj-install/lib/libproj.a \
       -DXercesC_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-install/include \
       -DXercesC_LIBRARY=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-install/lib/libxerces-c.a
+  
+  ninja osm2odr
+  ninja install
+
+  mkdir -p ${OSM2ODR_SERVER_BUILD_FOLDER}
+  cd ${OSM2ODR_SERVER_BUILD_FOLDER}
+
+  LLVM_BASENAME=llvm-8.0
+  LLVM_INCLUDE=${CARLA_BUILD_FOLDER}/${LLVM_BASENAME}-install/include/c++/v1
+  LLVM_LIBPATH=${CARLA_BUILD_FOLDER}/${LLVM_BASENAME}-install/lib
+  
+  echo $LLVM_INCLUDE
+  echo $LLVM_LIBPATH
+
+  cmake ${OSM2ODR_SOURCE_FOLDER} \
+      -G "Eclipse CDT4 - Ninja" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE}" \
+      -DCMAKE_INSTALL_PREFIX=${LIBCARLA_INSTALL_SERVER_FOLDER} \
+      -DPROJ_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/proj-install-server/include \
+      -DPROJ_LIBRARY=${CARLA_BUILD_FOLDER}/proj-install-server/lib/libproj.a \
+      -DXercesC_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-install-server/include \
+      -DXercesC_LIBRARY=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-install-server/lib/libxerces-c.a
 
   ninja osm2odr
   ninja install
 
 fi
 
-log "Success!"
+log " OSM2ODR Success!"

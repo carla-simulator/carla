@@ -15,6 +15,9 @@ class CARLA_API UCustomFileDownloader : public UObject
 public:	
   UFUNCTION(BlueprintCallable)
   void StartDownload();
+  UFUNCTION()
+  void ConvertOSMInOpenDrive(FString FilePath); 
+
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   FString ResultFileName;
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )

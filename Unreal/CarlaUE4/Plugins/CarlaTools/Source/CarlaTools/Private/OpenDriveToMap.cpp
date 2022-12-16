@@ -16,6 +16,7 @@
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/road/Map.h>
 #include <carla/rpc/String.h>
+#include <OSM2ODR.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "Engine/Classes/Interfaces/Interface_CollisionDataProvider.h"
@@ -99,6 +100,13 @@ FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
 
   return FString("Empty");
 }
+
+void UOpenDriveToMap::ConvertOSMInOpenDrive(FString FilePath)
+{
+ 
+
+}
+
 void UOpenDriveToMap::NativeConstruct()
 {
   Super::NativeConstruct();
@@ -154,9 +162,9 @@ void UOpenDriveToMap::LoadMap()
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Valid Map loaded"));
   }
   MapName = FPaths::GetCleanFilename(FilePath);
-  int32 CharIndex = 0;
-  MapName.FindChar('.', CharIndex);
-  MapName = MapName.LeftChop(CharIndex - 1);
+  MapName.RemoveFromEnd(".xodr", ESearchCase::Type::IgnoreCase);
+  UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("MapName %s"), *MapName);
+
   GenerateAll(CarlaMap);
 }
 
@@ -274,11 +282,12 @@ UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset( UProceduralMeshComponent* P
   {
     FString MeshName = *(FolderName + FString::FromInt(MeshIndex) );
     FString PackageName = "/Game/CustomMaps/" + MapName + "/Static/" + FolderName + "/" + MeshName;
+    UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("PackageName %s"), *PackageName );
+
     if( !PlatformFile.DirectoryExists(*PackageName) )
     {
       PlatformFile.CreateDirectory(*PackageName);
     }
-    UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("PackageName %s"), *PackageName );
 
     // Then find/create it.
     UPackage* Package = CreatePackage(*PackageName);

@@ -446,9 +446,11 @@ XERCESC_REPO=https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-${XERCE
 
 XERCESC_SRC_DIR=${XERCESC_BASENAME}-source
 XERCESC_INSTALL_DIR=${XERCESC_BASENAME}-install
+XERCESC_INSTALL_SERVER_DIR=${XERCESC_BASENAME}-install-server
 XERCESC_LIB=${XERCESC_INSTALL_DIR}/lib/libxerces-c.a
+XERCESC_SERVER_LIB=${XERCESC_INSTALL_SERVER_DIR}/lib/libxerces-c.a
 
-if [[ -d ${XERCESC_INSTALL_DIR} ]] ; then
+if [[ -d ${XERCESC_INSTALL_DIR} &&  -d ${XERCESC_INSTALL_SERVER_DIR} ]] ; then
   log "Xerces-c already installed."
 else
   log "Retrieving xerces-c."
@@ -481,12 +483,32 @@ else
 
   popd >/dev/null
 
+  mkdir -p ${XERCESC_INSTALL_SERVER_DIR}
+
+  pushd ${XERCESC_SRC_DIR}/build >/dev/null
+
+  cmake -G "Ninja" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -fPIC -w -I${LLVM_INCLUDE}" \
+      -DCMAKE_INSTALL_PREFIX="../../${XERCESC_INSTALL_SERVER_DIR}" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_SHARED_LIBS=OFF \
+      -Dtranscoder=gnuiconv \
+      -Dnetwork=OFF \
+      ..
+  ninja
+  ninja install
+
+  popd >/dev/null
+
   rm -Rf ${XERCESC_BASENAME}.tar.gz
   rm -Rf ${XERCESC_SRC_DIR}
 fi
 
 mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 cp ${XERCESC_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+
+mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+cp -p ${XERCESC_SERVER_LIB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
 
 # ==============================================================================
 # -- Get Eigen headers 3.1.0 (CARLA dependency) -------------------------------------
@@ -611,6 +633,7 @@ SQLITE_INSTALL_DIR=sqlite-install
 
 SQLITE_INCLUDE_DIR=${PWD}/${SQLITE_INSTALL_DIR}/include
 SQLITE_LIB=${PWD}/${SQLITE_INSTALL_DIR}/lib/libsqlite3.a
+SQLITE_FULL_LIB=${PWD}/${SQLITE_INSTALL_DIR}/lib/
 SQLITE_EXE=${PWD}/${SQLITE_INSTALL_DIR}/bin/sqlite3
 
 if [[ -d ${SQLITE_INSTALL_DIR} ]] ; then
@@ -627,7 +650,7 @@ else
 
   pushd ${SQLITE_SOURCE_DIR} >/dev/null
 
-  export CFLAGS="-fPIC"
+  export CFLAGS="-fPIC -w"
   ./configure --prefix=${PWD}/../sqlite-install/
   make
   make install
@@ -641,6 +664,9 @@ fi
 mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 cp ${SQLITE_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 
+mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+cp -p -r ${SQLITE_FULL_LIB} ${LIBCARLA_INSTALL_SERVER_FOLDER}
+
 # ==============================================================================
 # -- Get and compile PROJ ------------------------------------------------------
 # ==============================================================================
@@ -651,10 +677,13 @@ PROJ_REPO=https://download.osgeo.org/proj/${PROJ_VERSION}.tar.gz
 PROJ_TAR=${PROJ_VERSION}.tar.gz
 PROJ_SRC_DIR=proj-src
 PROJ_INSTALL_DIR=proj-install
+PROJ_INSTALL_SERVER_DIR=proj-install-server
 PROJ_INSTALL_DIR_FULL=${PWD}/${PROJ_INSTALL_DIR}
+PROJ_INSTALL_SERVER_DIR_FULL=${PWD}/${PROJ_INSTALL_SERVER_DIR}
 PROJ_LIB=${PROJ_INSTALL_DIR_FULL}/lib/libproj.a
+PROJ_SERVER_LIB=${PROJ_INSTALL_SERVER_DIR_FULL}/lib/libproj.a
 
-if [[ -d ${PROJ_INSTALL_DIR} ]] ; then
+if [[ -d ${PROJ_INSTALL_DIR} && -d ${PROJ_INSTALL_SERVER_DIR_FULL} ]] ; then
   log "PROJ already installed."
 else
   log "Retrieving PROJ"
@@ -664,8 +693,8 @@ else
   tar -xzf ${PROJ_TAR}
   mv ${PROJ_VERSION} ${PROJ_SRC_DIR}
 
-  mkdir ${PROJ_SRC_DIR}/build
-  mkdir ${PROJ_INSTALL_DIR}
+  mkdir -p ${PROJ_SRC_DIR}/build
+  mkdir -p ${PROJ_INSTALL_DIR}
 
   pushd ${PROJ_SRC_DIR}/build >/dev/null
 
@@ -683,12 +712,33 @@ else
 
   popd >/dev/null
 
+  mkdir -p ${PROJ_INSTALL_SERVER_DIR}
+
+  pushd ${PROJ_SRC_DIR}/build >/dev/null
+
+  cmake -G "Ninja" .. \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}"  \
+      -DSQLITE3_INCLUDE_DIR=${SQLITE_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_LIB} \
+      -DEXE_SQLITE3=${SQLITE_EXE} \
+      -DENABLE_TIFF=OFF -DENABLE_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF \
+      -DCMAKE_BUILD_TYPE=Release -DBUILD_PROJINFO=OFF \
+      -DBUILD_CCT=OFF -DBUILD_CS2CS=OFF -DBUILD_GEOD=OFF -DBUILD_GIE=OFF \
+      -DBUILD_PROJ=OFF -DBUILD_TESTING=OFF \
+      -DCMAKE_INSTALL_PREFIX=${PROJ_INSTALL_SERVER_DIR_FULL}
+  ninja
+  ninja install
+
+  popd >/dev/null
+
   rm -Rf ${PROJ_TAR}
   rm -Rf ${PROJ_SRC_DIR}
 
 fi
 
 cp ${PROJ_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+
+mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+cp -p ${PROJ_SERVER_LIB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
 
 # ==============================================================================
 # -- Get and compile patchelf --------------------------------------------------

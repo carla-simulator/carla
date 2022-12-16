@@ -24,6 +24,9 @@ class CARLATOOLS_API UOpenDriveToMap : public UUserWidget
   GENERATED_BODY()
   
 public:
+  
+  UFUNCTION()
+  void ConvertOSMInOpenDrive(FString FilePath); 
 
   UPROPERTY( meta = (BindWidget) )
   class UButton* ChooseFileButon;
@@ -48,6 +51,7 @@ private:
 
   UFUNCTION()
   void LoadMap();
+
 
   void GenerateAll(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateRoadMesh(const boost::optional<carla::road::Map>& CarlaMap);
