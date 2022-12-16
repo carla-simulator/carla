@@ -118,7 +118,7 @@ unset LLVM_BASENAME
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
 
-BOOST_VERSION=1.72.0
+BOOST_VERSION=1.81.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
@@ -154,10 +154,6 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
     mkdir -p ${BOOST_BASENAME}-install/include
     mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
-    # Boost patch for exception handling
-    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-source/boost/rational.hpp"
-    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-source/boost/geometry/io/wkt/read.hpp"
-    # ---
 
     pushd ${BOOST_BASENAME}-source >/dev/null
 
@@ -186,11 +182,6 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     rm -Rf ${BOOST_BASENAME}-source
     rm ${BOOST_PACKAGE_BASENAME}.tar.gz
-
-    # Boost patch for exception handling
-    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-install/include/boost/rational.hpp"
-    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-install/include/boost/geometry/io/wkt/read.hpp"
-    # ---
 
     # Install boost dependencies
     mkdir -p "${LIBCARLA_INSTALL_CLIENT_FOLDER}/include/system"
