@@ -8,6 +8,9 @@
 /**
  * 
  */
+
+DECLARE_DELEGATE(FDownloadComplete)
+
 UCLASS(Blueprintable)
 class CARLA_API UCustomFileDownloader : public UObject
 {
@@ -15,13 +18,15 @@ class CARLA_API UCustomFileDownloader : public UObject
 public:	
   UFUNCTION(BlueprintCallable)
   void StartDownload();
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   void ConvertOSMInOpenDrive(FString FilePath); 
 
-  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   FString ResultFileName;
-  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+
   FString Url;
+
+  FDownloadComplete DownloadDelegate;
+
 private:
   void RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 
@@ -33,11 +38,10 @@ class FHttpDownloader
 public:
   /**
    *
-   *
    * @param Verb - verb to use for request (GET,POST,DELETE,etc)
    * @param Url - url address to connect to
    */
-  FHttpDownloader( const FString& InVerb, const FString& InUrl, const FString& InFilename );  
+  FHttpDownloader( const FString& InVerb, const FString& InUrl, const FString& InFilename, FDownloadComplete& Delegate );  
 
   // Kick off the Http request  and wait for delegate to be called
   void Run(void);  
@@ -55,4 +59,5 @@ private:
   FString Verb;
   FString Url;
   FString Filename;
+  FDownloadComplete DelegateToCall;
 };

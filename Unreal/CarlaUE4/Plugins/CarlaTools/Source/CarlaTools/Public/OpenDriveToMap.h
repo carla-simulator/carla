@@ -15,6 +15,7 @@
 
 
 class UProceduralMeshComponent;
+class UCustomFileDownloader;
 /**
  * 
  */
@@ -26,10 +27,10 @@ class CARLATOOLS_API UOpenDriveToMap : public UUserWidget
 public:
   
   UFUNCTION()
-  void ConvertOSMInOpenDrive(FString FilePath); 
+  void ConvertOSMInOpenDrive(); 
 
   UPROPERTY( meta = (BindWidget) )
-  class UButton* ChooseFileButon;
+  class UButton* StartButton;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;
@@ -37,14 +38,17 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString MapName;
 
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  FString Url;
+
 protected:
   virtual void NativeConstruct() override;
   virtual void NativeDestruct() override;
 
-private:
-
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   void CreateMap();
+
+private:
 
   UFUNCTION()
   void OpenFileDialog();
@@ -60,4 +64,6 @@ private:
   const carla::rpc::OpendriveGenerationParameters opg_parameters;
 
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName );
+
+  UCustomFileDownloader* FileDownloader;
 };

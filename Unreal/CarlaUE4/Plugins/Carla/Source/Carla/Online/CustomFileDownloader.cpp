@@ -7,15 +7,6 @@
 
 #include <OSM2ODR.h>
 
-
-void UCustomFileDownloader::StartDownload()
-{
-  UE_LOG(LogCarla, Log, TEXT("FHttpDownloader CREATED"));
-  FHttpDownloader* Test = new FHttpDownloader("GET", Url, ResultFileName);
-
-  Test->Run();
-}
-
 void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath)
 {
  IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
@@ -33,19 +24,23 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath)
     {
       UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Did not load text from file"));
     }
+  }else{
+    UE_LOG(LogCarla, Warning, TEXT("File: %s does not exist"), *FilePath);
+    return;  
   }
 
   std::string OsmFile = std::string(TCHAR_TO_UTF8(*FileContent));
   std::string OpenDriveFile = osm2odr::ConvertOSMToOpenDRIVE(OsmFile);
 
-  FString OpenDriveName = FPaths::GetCleanFilename(FilePath);
-  OpenDriveName.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);
-  OpenDriveName += ".xodr";
+  FilePath.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);
+  FilePath += ".xodr";
+
+  UE_LOG(LogCarla, Warning, TEXT("File: %s does not exist"), *FilePath);
 
   // We use the LoadFileToString to load the file into
-  if( FFileHelper::SaveStringToFile(FString(OpenDriveFile.c_str()), *OpenDriveName) )
+  if( FFileHelper::SaveStringToFile(FString(OpenDriveFile.c_str()), *FilePath) )
   {
-    UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Sucsesfuly Written: \"%s\" to the text file"), *OpenDriveName);
+    UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Sucsesfuly Written: \"%s\" to the text file"), *FilePath);
   }
   else
   {
@@ -53,10 +48,18 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath)
   }
 }
 
-FHttpDownloader::FHttpDownloader(const FString& InVerb, const FString& InUrl, const FString& InFilename)
+void UCustomFileDownloader::StartDownload()
+{
+  UE_LOG(LogCarla, Log, TEXT("FHttpDownloader CREATED"));
+  FHttpDownloader* Download = new FHttpDownloader("GET", Url, ResultFileName, DownloadDelegate);
+  Download->Run();
+}
+
+FHttpDownloader::FHttpDownloader(const FString& InVerb, const FString& InUrl, const FString& InFilename, FDownloadComplete& Delegate  )
   : Verb(InVerb)
   , Url(InUrl)
   , Filename( InFilename )
+  , DelegateToCall(Delegate)
 {
 
 }
@@ -79,6 +82,17 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
   }
   else
   {
+    // If we do not get success responses codes we do not do anything
+    if(HttpResponse->GetResponseCode() < 200 || 300 <= HttpResponse->GetResponseCode()  )
+    {
+      UE_LOG(LogCarla, Error, TEXT("Error during download [%s] Url=[%s] Response=[%d]"), 
+        *HttpRequest->GetVerb(), 
+        *HttpRequest->GetURL(), 
+        HttpResponse->GetResponseCode());
+      delete this;
+      return;
+    }
+
     UE_LOG(LogCarla, Log, TEXT("Completed download [%s] Url=[%s] Response=[%d]"), 
       *HttpRequest->GetVerb(), 
       *HttpRequest->GetURL(), 
@@ -99,7 +113,7 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
     FString StringToWrite = HttpResponse->GetContentAsString();
 
     // We use the LoadFileToString to load the file into
-    if( FFileHelper::SaveStringToFile(StringToWrite,*CurrentFile,  FFileHelper::EEncodingOptions::ForceUTF8) )
+    if( FFileHelper::SaveStringToFile(StringToWrite,*CurrentFile, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM ) )
     {
       UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Sucsesfuly Written "));
     }
@@ -108,6 +122,7 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
       UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Failed to write FString to file."));
     }
   }
+  DelegateToCall.ExecuteIfBound();
 
   delete this;
 }

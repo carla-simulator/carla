@@ -8,6 +8,7 @@
 
 #include "Carla/Game/CarlaStatics.h"
 #include "Traffic/TrafficLightManager.h"
+#include "Online/CustomFileDownloader.h"
 #include "Util/ProceduralCustomMesh.h"
 
 #include "OpenDrive/OpenDriveGenerator.h"
@@ -101,34 +102,43 @@ FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
   return FString("Empty");
 }
 
-void UOpenDriveToMap::ConvertOSMInOpenDrive(FString FilePath)
+void UOpenDriveToMap::ConvertOSMInOpenDrive()
 {
- 
+  FilePath = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/" + MapName + ".osm";
+  FileDownloader->ConvertOSMInOpenDrive( FilePath );
+  FilePath.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);
+  FilePath += ".xodr";
 
+  LoadMap();
 }
 
 void UOpenDriveToMap::NativeConstruct()
 {
-  Super::NativeConstruct();
-  if( IsValid(ChooseFileButon) ){
-    ChooseFileButon->OnClicked.AddDynamic( this, &UOpenDriveToMap::CreateMap );
+  if( !IsValid(FileDownloader) ){
+    FileDownloader = NewObject<UCustomFileDownloader>();
   }
-
 }
 
 void UOpenDriveToMap::NativeDestruct()
 {
   Super::NativeDestruct();
-  if( IsValid(ChooseFileButon) ){
-    ChooseFileButon->OnClicked.RemoveDynamic( this, &UOpenDriveToMap::CreateMap );
+  if( IsValid(FileDownloader) ){
+    // UObjects are not being destroyed, they are collected by GarbageCollector
+    // Should we force garbage collection here?
   }
-
 }
 
 void UOpenDriveToMap::CreateMap()
 {
-  OpenFileDialog();
-  LoadMap();
+  if( MapName.IsEmpty() )
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Map Name Is Empty") );
+    return;
+  }
+  FileDownloader->ResultFileName = MapName;
+  FileDownloader->Url = Url;
+  FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
+  FileDownloader->StartDownload();
 }
 
 void UOpenDriveToMap::OpenFileDialog()
@@ -150,6 +160,7 @@ void UOpenDriveToMap::OpenFileDialog()
 void UOpenDriveToMap::LoadMap()
 {
   FString FileContent;
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("UOpenDriveToMap::LoadMap(): File to load %s"), *FilePath );
   FFileHelper::LoadFileToString(FileContent, *FilePath);
   std::string opendrive_xml = carla::rpc::FromLongFString(FileContent);
   boost::optional<carla::road::Map> CarlaMap = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
@@ -179,7 +190,6 @@ void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& Carla
     GenerateSpawnPoints(CarlaMap);
   }
 }
-
 
 void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>& CarlaMap )
 {
