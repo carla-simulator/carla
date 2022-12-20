@@ -230,6 +230,7 @@ void export_world() {
     .value("Bicycle", cr::CityObjectLabel::Bicycle)
     .value("Bus", cr::CityObjectLabel::Bus)
     .value("Rider", cr::CityObjectLabel::Rider)
+    .value("Train", cr::CityObjectLabel::Train)
     .value("Any", cr::CityObjectLabel::Any)
   ;
 
