@@ -11,11 +11,16 @@
 #include "Carla/Game/CarlaEpisode.h"
 
 
-void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData)
+void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, bool bIncludeActorsAgain)
 {
   Episode = ThisEpisode;
   // PlatformTime.UpdateTime();
   const FActorRegistry &Registry = Episode->GetActorRegistry();
+
+  if (bIncludeActorsAgain)
+  {
+    AddExistingActors();
+  }
 
   // through all actors in registry
   for (auto It = Registry.begin(); It != Registry.end(); ++It)
@@ -75,7 +80,8 @@ void FFrameData::PlayFrameData(
         EventAdd.Description,
         EventAdd.DatabaseId,
         false,
-        true);
+        true,
+        MappedId);
     switch (Result.first)
     {
       // actor not created
@@ -87,12 +93,14 @@ void FFrameData::PlayFrameData(
       case 1:
         // mapping id (recorded Id is a new Id in replayer)
         MappedId[OldId] = Result.second;
+        UE_LOG(LogCarla, Log, TEXT("actor created"));
         break;
 
       // actor reused from existing
       case 2:
         // mapping id (say desired Id is mapped to what)
         MappedId[OldId] = Result.second;
+        UE_LOG(LogCarla, Log, TEXT("actor reused"));
         break;
     }
   }
@@ -257,7 +265,8 @@ void FFrameData::CreateRecorderEventAdd(
     uint32_t DatabaseId,
     uint8_t Type,
     const FTransform &Transform,
-    FActorDescription ActorDescription)
+    FActorDescription ActorDescription,
+    bool bAddOtherRelatedInfo)
 {
   CarlaRecorderActorDescription Description;
   Description.UId = ActorDescription.UId;
@@ -289,8 +298,18 @@ void FFrameData::CreateRecorderEventAdd(
   };
   AddEvent(std::move(RecEvent));
 
-  FCarlaActor* CarlaActor = Episode->FindCarlaActor(DatabaseId);
+  if (!bAddOtherRelatedInfo)
+  {
+    return;
+  }
+
   // Other events related to spawning actors
+  FCarlaActor* CarlaActor = Episode->FindCarlaActor(DatabaseId);
+  if (!CarlaActor)
+  {
+    return;
+  }
+  
   // check if it is a vehicle to get initial physics control
   ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
   if (Vehicle)
@@ -587,12 +606,13 @@ void FFrameData::GetFrameCounter()
 }
 
 // create or reuse an actor for replaying
-std::pair<int, FCarlaActor*> FFrameData::TryToCreateReplayerActor(
+std::pair<int, FCarlaActor*> FFrameData::CreateOrReuseActor(
     FVector &Location,
     FVector &Rotation,
     FActorDescription &ActorDesc,
     uint32_t DesiredId,
-    bool SpawnSensors)
+    bool SpawnSensors,
+    std::unordered_map<uint32_t, uint32_t>& MappedId)
 {
   check(Episode != nullptr);
 
@@ -603,6 +623,7 @@ std::pair<int, FCarlaActor*> FFrameData::TryToCreateReplayerActor(
     if (CarlaActor != nullptr)
     {
       // reuse that actor
+      UE_LOG(LogCarla, Log, TEXT("TrafficLight found"));
       return std::pair<int, FCarlaActor*>(2, CarlaActor);
     }
     else
@@ -629,6 +650,21 @@ std::pair<int, FCarlaActor*> FFrameData::TryToCreateReplayerActor(
         return std::pair<int, FCarlaActor*>(2, CarlaActor);
       }
     }
+    else if (MappedId.find(DesiredId) != MappedId.end() && Episode->GetActorRegistry().Contains(MappedId[DesiredId]))
+    {
+      auto* CarlaActor = Episode->FindCarlaActor(MappedId[DesiredId]);
+      const FActorDescription *desc = &CarlaActor->GetActorInfo()->Description;
+      if (desc->Id == ActorDesc.Id)
+      {
+        // we don't need to create, actor of same type already exist
+        // relocate
+        FRotator Rot = FRotator::MakeFromEuler(Rotation);
+        FTransform Trans2(Rot, Location, FVector(1, 1, 1));
+        CarlaActor->SetActorGlobalTransform(Trans2);
+        return std::pair<int, FCarlaActor*>(2, CarlaActor);
+      }
+    }
+    // create new actor
     // create the transform
     FRotator Rot = FRotator::MakeFromEuler(Rotation);
     FTransform Trans(Rot, FVector(0, 0, 100000), FVector(1, 1, 1));
@@ -648,7 +684,7 @@ std::pair<int, FCarlaActor*> FFrameData::TryToCreateReplayerActor(
     }
     else
     {
-      UE_LOG(LogCarla, Log, TEXT("Actor could't be created by replayer"));
+      UE_LOG(LogCarla, Log, TEXT("Actor could't be created"));
       return std::pair<int, FCarlaActor*>(0, Result.Value);
     }
   }
@@ -666,7 +702,8 @@ std::pair<int, uint32_t> FFrameData::ProcessReplayerEventAdd(
     CarlaRecorderActorDescription Description,
     uint32_t DesiredId,
     bool bIgnoreHero,
-    bool ReplaySensors)
+    bool ReplaySensors,
+    std::unordered_map<uint32_t, uint32_t>& MappedId)
 {
   check(Episode != nullptr);
   FActorDescription ActorDesc;
@@ -687,12 +724,13 @@ std::pair<int, uint32_t> FFrameData::ProcessReplayerEventAdd(
       IsHero = true;
   }
 
-  auto result = TryToCreateReplayerActor(
+  auto result = CreateOrReuseActor(
       Location,
       Rotation,
       ActorDesc,
       DesiredId,
-      ReplaySensors);
+      ReplaySensors,
+      MappedId);
 
   if (result.first != 0)
   {
@@ -1024,4 +1062,24 @@ FCarlaActor *FFrameData::FindTrafficLightAt(FVector Location)
   }
   // actor not found
   return nullptr;
+}
+
+void FFrameData::AddExistingActors(void)
+{
+  // registring all existing actors in first frame
+  FActorRegistry Registry = Episode->GetActorRegistry();
+  for (auto& It : Registry)
+  {
+    const FCarlaActor* CarlaActor = It.Value.Get();
+    if (CarlaActor != nullptr)
+    {
+      // create event
+      CreateRecorderEventAdd(
+          CarlaActor->GetActorId(),
+          static_cast<uint8_t>(CarlaActor->GetActorType()),
+          CarlaActor->GetActorGlobalTransform(),
+          CarlaActor->GetActorInfo()->Description,
+          false);
+    }
+  }
 }
