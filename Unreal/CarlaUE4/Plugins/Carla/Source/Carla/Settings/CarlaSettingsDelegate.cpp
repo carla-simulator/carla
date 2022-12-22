@@ -2,7 +2,7 @@
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 
 #include "Carla/Settings/CarlaSettings.h"
-
+#include "Carla/Game/CarlaGameInstance.h"
 #include "Async.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/DirectionalLight.h"
