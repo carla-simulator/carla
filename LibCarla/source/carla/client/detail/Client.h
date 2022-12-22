@@ -331,6 +331,8 @@ namespace detail {
         std::string TireJSON,
         std::string BaseJSONPath);
 
+    void RestorePhysXPhysics(rpc::ActorId vehicle);
+
     void ApplyControlToWalker(
         rpc::ActorId walker,
         const rpc::WalkerControl &control);
