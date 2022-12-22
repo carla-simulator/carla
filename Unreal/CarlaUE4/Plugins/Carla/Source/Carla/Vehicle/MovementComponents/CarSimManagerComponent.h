@@ -52,6 +52,10 @@ public:
 
   float GetVehicleForwardSpeed() const override;
 
+  void DisableCarSimPhysics();
+
+  virtual void DisableSpecialPhysics() override;
+
 private:
 
   // On car mesh hit, only works when carsim is enabled
