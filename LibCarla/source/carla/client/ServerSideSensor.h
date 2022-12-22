@@ -54,7 +54,7 @@ namespace client {
 
   private:
 
-    std::bitset<32> listening_mask;
+    std::bitset<16> listening_mask;
 
   };
 

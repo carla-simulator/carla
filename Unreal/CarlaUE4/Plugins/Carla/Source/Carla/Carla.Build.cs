@@ -237,7 +237,6 @@ public class Carla : ModuleRules
         AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_robot.so"));
 
         bUseRTTI = true;
-        bEnableExceptions = true;
       }
 
       if (UsingPytorch)
@@ -312,7 +311,8 @@ public class Carla : ModuleRules
         RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libnvToolsExt-24de1d56.so.1"));
         PublicAdditionalLibraries.Add("stdc++");
         PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libpython3.9.so");
-      }
+      }      
+
 
       //OsmToODR
       PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libc.so");
@@ -322,6 +322,7 @@ public class Carla : ModuleRules
       PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libosm2odr.a"));
 
     }
+    bEnableExceptions = true;
     
     // Include path.
     string LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");

@@ -5,9 +5,11 @@
   * Improved algorithm to move signals out of the road by computing the desired displacement direction.
   * Added `TrafficManager.vehicle_lane_offset(actor, offset)` and `TrafficManager.global_lane_offset(offset)` methods.
   * Some of the warnings shown when building a map will now only be showing when debugging.
+  * The ids for semantic segmentation has been modified to be the same as cityscapes (labels, ids and colors)
   * Fixed bug causing traffic signals at the end points of a road to sometimes create malformed waypoints.
   * Fixed pedestrian skeleton frame, where sometimes it was draw displaced from the body
   * Fixed decals when importing maps. It was using other .json files found in other packages.
+  * In multi-GPU mode some sensors now are forced to be created on the primary server always (ex. collision sensor)
   * Added the speed limits for 100, 110 and 120 Km/h.
   * Fixing sensor destruction, now the stream and socket is succesfully destroyed.
   * Fixed bug at `Vehicle.get_traffic_light_state()` and `Vehicle.is_at_traffic_light()` causing vehicles to temporarily not lose the information of a traffic light if they moved away from it before it turned green.
@@ -19,7 +21,7 @@
   * Fixed bug causing the scene lights to return an incorrect location at large maps.
   * Fixed bug causing the `world.ground_projection()` function to return an incorrect location at large maps.
   * Added failure state to vehicles, which can be retrieved by using `Vehicle.get_failure_state()`. Only Rollover failure state is currently supported.
-  * Fixed bug causing the TM to block the simulation when another client teleported a vehicle with no physics.
+  * Fixed bug causing the TM to block the simulation when a vehicle with no physics was teleported.
   * Fixed bug causing the TM to block the simulation when travelling through a short roads that looped on themselves.
   * Improved the TM's handling of non signalized junctions, resulting in a more fluid overall behavior.
   * Added check to avoid adding procedural trigger boxes inside intersections.
