@@ -53,6 +53,7 @@
   * Check for the version of the installed Clang compiler during build.
   * Added API function to get direct access to the GBuffer textures of a sensor:
     - `listen_to_gbuffer`: to set a callback for a specific GBuffer texture
+  * Unified `WeatherParameters` with rain names.
 
 ## CARLA 0.9.13
 
