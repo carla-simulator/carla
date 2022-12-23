@@ -1,4 +1,4 @@
-## Latest
+## CARLA 0.9.14
 
   * Fixed bug in FrictionTrigger causing sometimes server segfault
   * Added attachment type "SpringArmGhost" for cinematic cameras but without doing the collision test.
