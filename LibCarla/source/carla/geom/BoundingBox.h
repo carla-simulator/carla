@@ -15,7 +15,9 @@
 #include <array>
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
-#  include "Carla/Util/BoundingBox.h"
+#include <compiler/enable-ue4-macros.h>
+#include "Carla/Util/BoundingBox.h"
+#include <compiler/disable-ue4-macros.h>
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
 namespace carla {
@@ -37,10 +39,13 @@ namespace geom {
 
     explicit BoundingBox(const Location &in_location, const Vector3D &in_extent)
       : location(in_location),
-        extent(in_extent) {}
+        extent(in_extent),
+        rotation() {}
 
     explicit BoundingBox(const Vector3D &in_extent)
-      : extent(in_extent) {}
+      : location(),
+        extent(in_extent),
+        rotation() {}
 
     Location location;  ///< Center of the BoundingBox in local space
     Vector3D extent;    ///< Half the size of the BoundingBox in local space
@@ -79,6 +84,23 @@ namespace geom {
             location + Location(rotation.RotateVector({ extent.x,-extent.y, extent.z})),
             location + Location(rotation.RotateVector({ extent.x, extent.y,-extent.z})),
             location + Location(rotation.RotateVector({ extent.x, extent.y, extent.z}))
+        }};
+    }
+
+    /**
+     *  Returns the positions of the 8 vertices of this BoundingBox in local space without its own rotation.
+     */
+    std::array<Location, 8> GetLocalVerticesNoRotation() const {
+
+        return {{
+            location + Location(-extent.x,-extent.y,-extent.z),
+            location + Location(-extent.x,-extent.y, extent.z),
+            location + Location(-extent.x, extent.y,-extent.z),
+            location + Location(-extent.x, extent.y, extent.z),
+            location + Location( extent.x,-extent.y,-extent.z),
+            location + Location( extent.x,-extent.y, extent.z),
+            location + Location( extent.x, extent.y,-extent.z),
+            location + Location( extent.x, extent.y, extent.z)
         }};
     }
 

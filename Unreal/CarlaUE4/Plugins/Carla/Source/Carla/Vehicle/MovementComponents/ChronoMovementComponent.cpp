@@ -47,8 +47,8 @@ void UChronoMovementComponent::CreateChronoMovementComponent(
   }
   ChronoMovementComponent->MaxSubsteps = MaxSubsteps;
   ChronoMovementComponent->MaxSubstepDeltaTime = MaxSubstepDeltaTime;
-  ChronoMovementComponent->RegisterComponent();
   Vehicle->SetCarlaMovementComponent(ChronoMovementComponent);
+  ChronoMovementComponent->RegisterComponent();
   #else
   UE_LOG(LogCarla, Warning, TEXT("Error: Chrono is not enabled") );
   #endif
@@ -267,7 +267,8 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
     AdvanceChronoSimulation(DeltaTime);
   }
 
-  auto VehiclePos = Vehicle->GetVehiclePos() - ChVector<>(0,0,0.5);
+  const auto ChronoPositionOffset = ChVector<>(0,0,-0.25f);
+  auto VehiclePos = Vehicle->GetVehiclePos() + ChronoPositionOffset;
   auto VehicleRot = Vehicle->GetVehicleRot();
   double Time = Vehicle->GetSystem()->GetChTime();
 
@@ -281,7 +282,11 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
     return;
   }
   CarlaVehicle->SetActorLocation(NewLocation);
-  CarlaVehicle->SetActorRotation(NewRotation);
+  FRotator NewRotator = NewRotation.Rotator();
+  // adding small rotation to compensate chrono offset
+  const float ChronoPitchOffset = 2.5f;
+  NewRotator.Add(ChronoPitchOffset, 0.f, 0.f); 
+  CarlaVehicle->SetActorRotation(NewRotator);
 }
 
 void UChronoMovementComponent::AdvanceChronoSimulation(float StepSize)

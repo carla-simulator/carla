@@ -244,10 +244,29 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
   PACKAGE_FILE=$(<${PACKAGE_PATH_FILE})
   MAPS_TO_COOK=$(<${MAP_LIST_FILE})
 
-  # Cook maps
-  ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
-      -run=cook -map="${MAPS_TO_COOK}" -cooksinglepackage -targetplatform="LinuxNoEditor" \
-      -OutputDir="${BUILD_FOLDER}"
+
+  # Cook maps in batches
+  MAX_STRINGLENGTH=1000
+  IFS="+" read -ra MAP_LIST <<< $MAPS_TO_COOK
+  TOTAL=0
+  MAP_STRING=""
+  for MAP in "${MAP_LIST[@]}"; do
+    if (($(($TOTAL+${#MAP})) > $MAX_STRINGLENGTH)); then
+      echo "Cooking $MAP_STRING"
+      ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
+          -run=cook -map="${MAP_STRING}" -cooksinglepackage -targetplatform="LinuxNoEditor" \
+          -OutputDir="${BUILD_FOLDER}" -iterate
+      MAP_STRING=""
+      TOTAL=0
+    fi
+    MAP_STRING=$MAP_STRING+$MAP
+    TOTAL=$(($TOTAL+${#MAP}))
+  done
+  if (($TOTAL > 0)); then
+    ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
+        -run=cook -map="${MAP_STRING}" -cooksinglepackage -targetplatform="LinuxNoEditor" \
+        -OutputDir="${BUILD_FOLDER}" -iterate
+  fi
 
   PROP_MAP_FOLDER="${PACKAGE_PATH}/Maps/${PROPS_MAP_NAME}"
 
@@ -257,55 +276,55 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
   popd >/dev/null
 
-  if ${DO_TARBALL} ; then
+  pushd "${BUILD_FOLDER}" > /dev/null
 
-    pushd "${BUILD_FOLDER}" > /dev/null
+  SUBST_PATH="${BUILD_FOLDER}/CarlaUE4"
+  SUBST_FILE="${PACKAGE_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
 
-    SUBST_PATH="${BUILD_FOLDER}/CarlaUE4"
-    SUBST_FILE="${PACKAGE_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
+  # Copy the package config file to package
+  mkdir -p "$(dirname ${SUBST_FILE})" && cp "${PACKAGE_FILE}" "$_"
 
-    # Copy the package config file to package
-    mkdir -p "$(dirname ${SUBST_FILE})" && cp "${PACKAGE_FILE}" "$_"
+  # Copy the OpenDRIVE .xodr files to package
+  IFS='+' # set delimiter
+  # MAPS_TO_COOK is read into an array as tokens separated by IFS
+  read -ra ADDR <<< "$MAPS_TO_COOK"
+  for i in "${ADDR[@]}"; do # access each element of array
+    
+    XODR_FILE_PATH="${CARLAUE4_ROOT_FOLDER}/Content${i:5}"
+    MAP_NAME=${XODR_FILE_PATH##*/}
+    XODR_FILE=$(find "${CARLAUE4_ROOT_FOLDER}/Content" -name "${MAP_NAME}.xodr" -print -quit)
 
-    # Copy the OpenDRIVE .xodr files to package
-    IFS='+' # space is set as delimiter
-    # MAPS_TO_COOK is read into an array as tokens separated by IFS
-    read -ra ADDR <<< "$MAPS_TO_COOK"
-    for i in "${ADDR[@]}"; do # access each element of array
+    if [ -f "${XODR_FILE}" ] ; then
 
-      XODR_FILE_PATH="${CARLAUE4_ROOT_FOLDER}/Content${i:5}"
-      MAP_NAME=${XODR_FILE_PATH##*/}
-      XODR_FILE=$(find "${CARLAUE4_ROOT_FOLDER}/Content" -name "${MAP_NAME}.xodr" -print -quit)
+      SUBST_FILE="${XODR_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
 
-      if [ -f "${XODR_FILE}" ] ; then
+      # Copy the package config file to package
+      mkdir -p "$(dirname ${SUBST_FILE})" && cp "${XODR_FILE}" "$_"
 
-        SUBST_FILE="${XODR_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
+    fi
+
+    # binary files for navigation and traffic manager
+    BIN_FILE_PATH="${CARLAUE4_ROOT_FOLDER}/Content${i:5}"
+    MAP_NAME=${BIN_FILE_PATH##*/}
+    find "${CARLAUE4_ROOT_FOLDER}/Content" -name "${MAP_NAME}.bin" -print0 | while read -d $'\0' BIN_FILE
+    do
+      if [ -f "${BIN_FILE}" ] ; then
+
+        SUBST_FILE="${BIN_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
 
         # Copy the package config file to package
-        mkdir -p "$(dirname ${SUBST_FILE})" && cp "${XODR_FILE}" "$_"
-
-      fi
-
-      # binary files for navigation and traffic manager
-      BIN_FILE_PATH="${CARLAUE4_ROOT_FOLDER}/Content${i:5}"
-      MAP_NAME=${BIN_FILE_PATH##*/}
-      find "${CARLAUE4_ROOT_FOLDER}/Content" -name "${MAP_NAME}.bin" -print0 | while read -d $'\0' BIN_FILE
-      do
-        if [ -f "${BIN_FILE}" ] ; then
-
-          SUBST_FILE="${BIN_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
-
-          # Copy the package config file to package
-          mkdir -p "$(dirname ${SUBST_FILE})" && cp "${BIN_FILE}" "$_"
-      fi
-      done
+        mkdir -p "$(dirname ${SUBST_FILE})" && cp "${BIN_FILE}" "$_"
+    fi
     done
+  done
 
     rm -Rf "./CarlaUE4/Metadata"
     rm -Rf "./CarlaUE4/Plugins"
     rm -Rf "./CarlaUE4/Content/${PACKAGE_NAME}/Maps/${PROPS_MAP_NAME}"
     rm -f "./CarlaUE4/AssetRegistry.bin"
 
+  if ${DO_TARBALL} ; then
+  
     if ${SINGLE_PACKAGE} ; then
       tar -rf ${DESTINATION} *
     else

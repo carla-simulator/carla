@@ -83,6 +83,32 @@ Check out the [introduction to blueprints](core_actors.md).
         - `toe` (_Float_) <sub>_- Modifiable_</sub>
         - `use_log` (_Bool_) <sub>_- Modifiable_</sub>
         - `white_clip` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.camera.instance_segmentation</font>**  
+    - **Attributes:**
+        - `fov` (_Float_) <sub>_- Modifiable_</sub>
+        - `image_size_x` (_Int_) <sub>_- Modifiable_</sub>
+        - `image_size_y` (_Int_) <sub>_- Modifiable_</sub>
+        - `lens_circle_falloff` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_circle_multiplier` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_k` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_kcube` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_x_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_y_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.camera.normals</font>**  
+    - **Attributes:**
+        - `fov` (_Float_) <sub>_- Modifiable_</sub>
+        - `image_size_x` (_Int_) <sub>_- Modifiable_</sub>
+        - `image_size_y` (_Int_) <sub>_- Modifiable_</sub>
+        - `lens_circle_falloff` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_circle_multiplier` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_k` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_kcube` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_x_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_y_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">sensor.camera.optical_flow</font>**  
     - **Attributes:**
         - `fov` (_Float_) <sub>_- Modifiable_</sub>
@@ -306,6 +332,10 @@ Check out the [introduction to blueprints](core_actors.md).
     - **Attributes:**
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `size` (_String_)
+- **<font color="#498efc">static.prop.busstoplb</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
 - **<font color="#498efc">static.prop.calibrator</font>**  
     - **Attributes:**
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
@@ -366,6 +396,10 @@ Check out the [introduction to blueprints](core_actors.md).
     - **Attributes:**
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `size` (_String_)
+- **<font color="#498efc">static.prop.foodcart</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
 - **<font color="#498efc">static.prop.fountain</font>**  
     - **Attributes:**
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
@@ -410,6 +444,14 @@ Check out the [introduction to blueprints](core_actors.md).
     - **Attributes:**
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `size` (_String_)
+- **<font color="#498efc">static.prop.haybale</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.haybalelb</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
 - **<font color="#498efc">static.prop.ironplank</font>**  
     - **Attributes:**
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
@@ -428,20 +470,15 @@ Check out the [introduction to blueprints](core_actors.md).
         - `size` (_String_)
 - **<font color="#498efc">static.prop.mesh</font>**  
     - **Attributes:**
+        - `mass` (_Float_) <sub>_- Modifiable_</sub>
+        - `mesh_path` (_String_) <sub>_- Modifiable_</sub>
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `scale` (_Float_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">static.prop.mobile</font>**  
     - **Attributes:**
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `size` (_String_)
 - **<font color="#498efc">static.prop.motorhelmet</font>**  
-    - **Attributes:**
-        - `role_name` (_String_) <sub>_- Modifiable_</sub>
-        - `size` (_String_)
-- **<font color="#498efc">static.prop.omri-0</font>**  
-    - **Attributes:**
-        - `role_name` (_String_) <sub>_- Modifiable_</sub>
-        - `size` (_String_)
-- **<font color="#498efc">static.prop.omri-1</font>**  
     - **Attributes:**
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `size` (_String_)
@@ -597,6 +634,14 @@ Check out the [introduction to blueprints](core_actors.md).
     - **Attributes:**
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `size` (_String_)
+- **<font color="#498efc">static.prop.warningaccident</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.warningconstruction</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
 - **<font color="#498efc">static.prop.wateringcan</font>**  
     - **Attributes:**
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
@@ -612,323 +657,518 @@ Check out the [introduction to blueprints](core_actors.md).
 ### vehicle
 - **<font color="#498efc">vehicle.audi.a2</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.audi.etron</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.audi.tt</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.bh.crossbike</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.bmw.grandtourer</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.carlamotors.carlacola</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.carlamotors.firetruck</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.chevrolet.impala</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.citroen.c3</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.diamondback.century</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.dodge.charger_2020</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.dodge.charger_police</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.dodge.charger_police_2020</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.ford.ambulance</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.ford.crown</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.ford.mustang</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.gazelle.omafiets</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.harley-davidson.low_rider</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.jeep.wrangler_rubicon</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.kawasaki.ninja</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.lincoln.mkz_2017</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.lincoln.mkz_2020</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.mercedes.coupe</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.mercedes.coupe_2020</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.mercedes.sprinter</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.micro.microlino</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.mini.cooper_s</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.mini.cooper_s_2021</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.nissan.micra</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.nissan.patrol</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.nissan.patrol_2021</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.seat.leon</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.tesla.cybertruck</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.tesla.model3</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.toyota.prius</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.vespa.zx125</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.volkswagen.t2</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.volkswagen.t2_2021</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.yamaha.yzf</font>**  
     - **Attributes:**
+        - `base_type` (_String_)
         - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
         - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
         - `generation` (_Int_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `special_type` (_String_)
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+        - `terramechanics` (_Bool_) <sub>_- Modifiable_</sub>
 
 ### walker
 - **<font color="#498efc">walker.pedestrian.0001</font>**  
@@ -1308,6 +1548,14 @@ Check out the [introduction to blueprints](core_actors.md).
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `speed` (_Float_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">walker.pedestrian.0048</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0049</font>**  
     - **Attributes:**
         - `age` (_String_)
         - `gender` (_String_)

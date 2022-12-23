@@ -19,15 +19,15 @@
 /// A registry of all the Carla actors.
 class FActorRegistry
 {
-private:
-
-  // using DatabaseType = std::unordered_map<FCarlaActor::IdType, FCarlaActor>;
-  using DatabaseType = TMap<FCarlaActor::IdType, TSharedPtr<FCarlaActor>>;
-
 public:
 
   using IdType = FCarlaActor::IdType;
   using ValueType = TSharedPtr<FCarlaActor>;
+
+private:
+
+  // using DatabaseType = std::unordered_map<IdType, FCarlaActor>;
+  using DatabaseType = TMap<IdType, TSharedPtr<FCarlaActor>>;
 
   // ===========================================================================
   /// @name Actor registry functions
@@ -90,10 +90,11 @@ public:
     return PtrToId ? FindCarlaActor(*PtrToId) : nullptr;
   }
 
+  FString GetDescriptionFromStream(carla::streaming::detail::stream_id_type Id);
 
-  void PutActorToSleep(FCarlaActor::IdType Id, UCarlaEpisode* CarlaEpisode);
+  void PutActorToSleep(IdType Id, UCarlaEpisode* CarlaEpisode);
 
-  void WakeActorUp(FCarlaActor::IdType Id, UCarlaEpisode* CarlaEpisode);
+  void WakeActorUp(IdType Id, UCarlaEpisode* CarlaEpisode);
 
   /// @}
   // ===========================================================================

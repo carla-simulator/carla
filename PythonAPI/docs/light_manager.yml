@@ -388,3 +388,12 @@
         doc:
           List of state of the attributes to be applied.
     # --------------------------------------
+    - def_name: set_day_night_cycle
+      doc: >
+        All scene lights have a day-night cycle, automatically turning on and off with the altitude of the sun. This interferes in cases where full control of the scene lights is required, so setting this to __False__ deactivates it. It can reactivated by setting it to __True__.
+      params:
+      - param_name: active
+        type: bool
+        doc:
+          (De)activation of the day-night cycle.
+

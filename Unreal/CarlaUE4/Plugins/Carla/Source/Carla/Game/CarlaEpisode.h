@@ -13,8 +13,11 @@
 #include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Weather/Weather.h"
+#include "Carla/Game/FrameData.h"
+#include "Carla/Sensor/SensorManager.h"
 
 #include "GameFramework/Pawn.h"
+#include "Materials/MaterialParameterCollectionInstance.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/geom/BoundingBox.h>
@@ -96,6 +99,23 @@ public:
   {
     return ElapsedGameTime;
   }
+  
+  /// Visual game seconds
+  double GetVisualGameTime() const
+  {
+    return VisualGameTime;
+  }
+  
+  void SetVisualGameTime(double Time)
+  {
+    VisualGameTime = Time;
+
+    // update time in material parameters also
+    if (MaterialParameters)
+    {
+      MaterialParameters->SetScalarParameterValue(FName("VisualTime"), VisualGameTime);
+    }
+  }
 
   /// Return the list of actor definitions that are available to be spawned this
   /// episode.
@@ -161,6 +181,14 @@ public:
   FCarlaActor* FindCarlaActor(AActor *Actor) const
   {
     return ActorDispatcher->GetActorRegistry().FindCarlaActor(Actor);
+  }
+
+  /// Get the description of the Carla actor (sensor) using specific stream id.
+  ///
+  /// If the actor is not found returns an empty string
+  FString GetActorDescriptionFromStream(carla::streaming::detail::stream_id_type StreamId)
+  {
+    return ActorDispatcher->GetActorRegistry().GetDescriptionFromStream(StreamId);
   }
 
   // ===========================================================================
@@ -233,6 +261,11 @@ public:
 
   bool DestroyActor(carla::rpc::ActorId ActorId)
   {
+    if (bIsPrimaryServer)
+    {
+      GetFrameData().AddEvent(
+          CarlaRecorderEventDel{ActorId});
+    }
     if (Recorder->IsEnabled())
     {
       // recorder event
@@ -289,6 +322,12 @@ public:
 
   void SetCurrentMapOrigin(const FIntVector& NewOrigin) { CurrentMapOrigin = NewOrigin; }
 
+  FFrameData& GetFrameData() { return FrameData; }
+
+  FSensorManager& GetSensorManager() { return SensorManager; }
+
+  bool bIsPrimaryServer = true;
+
 private:
 
   friend class ACarlaGameModeBase;
@@ -314,11 +353,16 @@ private:
   void TickTimers(float DeltaSeconds)
   {
     ElapsedGameTime += DeltaSeconds;
+    SetVisualGameTime(VisualGameTime + DeltaSeconds);
   }
 
   const uint64 Id = 0u;
 
+  // simulation time
   double ElapsedGameTime = 0.0;
+  
+  // visual time (used by clounds and other FX that need to be deterministic)
+  double VisualGameTime = 0.0;
 
   UPROPERTY(VisibleAnywhere)
   FString MapName;
@@ -334,10 +378,17 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   AWeather *Weather = nullptr;
+  
+  UPROPERTY(VisibleAnywhere)
+  UMaterialParameterCollectionInstance *MaterialParameters = nullptr;
 
   ACarlaRecorder *Recorder = nullptr;
 
   carla::geom::GeoLocation MapGeoReference;
 
   FIntVector CurrentMapOrigin;
+
+  FFrameData FrameData;
+
+  FSensorManager SensorManager;
 };

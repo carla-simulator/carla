@@ -27,8 +27,7 @@ ALSM::ALSM(
   CollisionStage &collision_stage,
   TrafficLightStage &traffic_light_stage,
   MotionPlanStage &motion_plan_stage,
-  VehicleLightStage &vehicle_light_stage,
-  RandomGeneratorMap &random_devices)
+  VehicleLightStage &vehicle_light_stage)
   : registered_vehicles(registered_vehicles),
     buffer_map(buffer_map),
     track_traffic(track_traffic),
@@ -41,8 +40,7 @@ ALSM::ALSM(
     collision_stage(collision_stage),
     traffic_light_stage(traffic_light_stage),
     motion_plan_stage(motion_plan_stage),
-    vehicle_light_stage(vehicle_light_stage),
-    random_devices(random_devices) {}
+    vehicle_light_stage(vehicle_light_stage) {}
 
 void ALSM::Update() {
 
@@ -203,6 +201,7 @@ void ALSM::UpdateData(const bool hybrid_physics_mode,
   cg::Location vehicle_location = vehicle_transform.location;
   cg::Rotation vehicle_rotation = vehicle_transform.rotation;
   cg::Vector3D vehicle_velocity = vehicle->GetVelocity();
+  bool state_entry_present = simulation_state.ContainsActor(actor_id);
 
   // Initializing idle times.
   if (idle_time.find(actor_id) == idle_time.end() && current_timestamp.elapsed_seconds != 0.0) {
@@ -229,22 +228,19 @@ void ALSM::UpdateData(const bool hybrid_physics_mode,
     if (hero_actors.find(actor_id) == hero_actors.end()) {
       vehicle->SetSimulatePhysics(enable_physics);
       has_physics_enabled[actor_id] = enable_physics;
-      if (enable_physics == true && simulation_state.ContainsActor(actor_id)) {
+      if (enable_physics == true && state_entry_present) {
         vehicle->SetTargetVelocity(simulation_state.GetVelocity(actor_id));
       }
     }
   }
 
-  bool state_entry_present = simulation_state.ContainsActor(actor_id);
-  // If physics is disabled, calculate velocity based on change in position.
-  if (!enable_physics) {
-    cg::Location previous_location;
-    if (state_entry_present) {
-      previous_location = simulation_state.GetLocation(actor_id);
-    } else {
-      previous_location = vehicle_location;
-    }
-    cg::Vector3D displacement = (vehicle_location - previous_location);
+  // If physics are disabled, calculate velocity based on change in position.
+  // Do not use 'enable_physics' as turning off the physics in this tick doesn't remove the velocity.
+  // To avoid issues with other clients teleporting the actors, use the previous outpout location.
+  if (state_entry_present && !simulation_state.IsPhysicsEnabled(actor_id)){
+    cg::Location previous_location = simulation_state.GetLocation(actor_id);
+    cg::Location previous_end_location = simulation_state.GetHybridEndLocation(actor_id);
+    cg::Vector3D displacement = (previous_end_location - previous_location);
     vehicle_velocity = displacement * INV_HYBRID_DT;
   }
 
@@ -252,7 +248,7 @@ void ALSM::UpdateData(const bool hybrid_physics_mode,
   auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(vehicle);
   KinematicState kinematic_state{vehicle_location, vehicle_rotation,
                                   vehicle_velocity, vehicle_ptr->GetSpeedLimit(),
-                                  enable_physics, vehicle->IsDormant()};
+                                  enable_physics, vehicle->IsDormant(), cg::Location()};
 
   // Updated traffic light state object.
   TrafficLightState tl_state = {vehicle_ptr->GetTrafficLightState(), vehicle_ptr->IsAtTrafficLight()};
@@ -286,7 +282,7 @@ void ALSM::UpdateUnregisteredActorsData() {
     const cg::Rotation actor_rotation = actor_transform.rotation;
     const cg::Vector3D actor_velocity = actor_ptr->GetVelocity();
     const bool actor_is_dormant = actor_ptr->IsDormant();
-    KinematicState kinematic_state {actor_location, actor_rotation, actor_velocity, -1.0f, true, actor_is_dormant};
+    KinematicState kinematic_state {actor_location, actor_rotation, actor_velocity, -1.0f, true, actor_is_dormant, cg::Location()};
 
     TrafficLightState tl_state;
     ActorType actor_type = ActorType::Any;
@@ -375,7 +371,6 @@ void ALSM::RemoveActor(const ActorId actor_id, const bool registered_actor) {
     registered_vehicles.Remove({actor_id});
     buffer_map.erase(actor_id);
     idle_time.erase(actor_id);
-    random_devices.erase(actor_id);
     localization_stage.RemoveActor(actor_id);
     collision_stage.RemoveActor(actor_id);
     traffic_light_stage.RemoveActor(actor_id);

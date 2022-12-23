@@ -20,12 +20,12 @@ void CarlaRecorderPlatformTime::UpdateTime()
   Time = diff/1000000.0;
 }
 
-void CarlaRecorderPlatformTime::Read(std::ifstream &InFile)
+void CarlaRecorderPlatformTime::Read(std::istream &InFile)
 {
   ReadValue<double>(InFile, this->Time);
 }
 
-void CarlaRecorderPlatformTime::Write(std::ofstream &OutFile)
+void CarlaRecorderPlatformTime::Write(std::ostream &OutFile)
 {
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::PlatformTime));

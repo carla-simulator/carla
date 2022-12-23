@@ -24,7 +24,7 @@ rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
-set BOOST_VERSION=1.72.0
+set BOOST_VERSION=1.80.0
 set INSTALLERS_DIR=%ROOT_PATH:/=\%Util\InstallersWin\
 set VERSION_FILE=%ROOT_PATH:/=\%Util\ContentVersions.txt
 set CONTENT_DIR=%ROOT_PATH:/=\%Unreal\CarlaUE4\Content\Carla\
@@ -182,9 +182,6 @@ if not defined install_boost (
     goto failed
 )
 
-copy /Y "%INSTALLATION_DIR%..\Util\BoostFiles\rational.hpp" "%INSTALLATION_DIR%boost-%BOOST_VERSION%-install\include\boost\rational.hpp"
-copy /Y "%INSTALLATION_DIR%..\Util\BoostFiles\read.hpp" "%INSTALLATION_DIR%boost-%BOOST_VERSION%-install\include\boost\geometry\io\wkt\read.hpp"
-
 rem ============================================================================
 rem -- Download and install Xercesc --------------------------------------------
 rem ============================================================================
@@ -211,6 +208,15 @@ echo %FILE_N% Installing PROJ
 call "%INSTALLERS_DIR%install_proj.bat"^
  --build-dir "%INSTALLATION_DIR%"
 copy %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_PYTHON_DEPENDENCIES%\lib
+
+rem ============================================================================
+rem -- Download and install Eigen ----------------------------------------------
+rem ============================================================================
+
+echo %FILE_N% Installing Eigen
+call "%INSTALLERS_DIR%install_eigen.bat"^
+ --build-dir "%INSTALLATION_DIR%"
+xcopy /Y /S /I "%INSTALLATION_DIR%eigen-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
 
 rem ============================================================================
 rem -- Download and install Chrono ----------------------------------------------

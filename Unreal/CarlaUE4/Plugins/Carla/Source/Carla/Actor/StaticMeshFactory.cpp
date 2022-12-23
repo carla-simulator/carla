@@ -17,6 +17,18 @@ TArray<FActorDefinition> AStaticMeshFactory::GetDefinitions()
       TEXT("prop"),
       TEXT("mesh"));
   StaticMeshDefinition.Class = AStaticMeshActor::StaticClass();
+  StaticMeshDefinition.Variations.Emplace(FActorVariation{
+      TEXT("mesh_path"),
+      EActorAttributeType::String,
+      {""}, false});
+  StaticMeshDefinition.Variations.Emplace(FActorVariation{
+      TEXT("mass"),
+      EActorAttributeType::Float,
+      {""}, false});
+  StaticMeshDefinition.Variations.Emplace(FActorVariation{
+      TEXT("scale"),
+      EActorAttributeType::Float,
+      {"1.0f"}, false});
   return { StaticMeshDefinition };
 }
 
@@ -33,31 +45,43 @@ FActorSpawnResult AStaticMeshFactory::SpawnActor(
     return {};
   }
 
+  float Scale = ABFL::RetrieveActorAttributeToFloat("scale", ActorDescription.Variations, 1.0f);
+  FTransform ScaledTransform(SpawnAtTransform);
+  ScaledTransform.SetScale3D(FVector(Scale));
+
   FActorSpawnParameters SpawnParameters;
   SpawnParameters.SpawnCollisionHandlingOverride =
       ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
   auto *StaticMeshActor = World->SpawnActor<AStaticMeshActor>(
-      ActorDescription.Class, SpawnAtTransform, SpawnParameters);
+      ActorDescription.Class, ScaledTransform, SpawnParameters);
 
   auto *StaticMeshComponent = Cast<UStaticMeshComponent>(
       StaticMeshActor->GetRootComponent());
+    
   if (StaticMeshComponent)
   {
-    if (ActorDescription.Variations.Contains("mesh_path") &&
-        ActorDescription.Variations.Contains("mass"))
+    if (ActorDescription.Variations.Contains("mesh_path"))
     {
       FString MeshPath = ABFL::ActorAttributeToString(
           ActorDescription.Variations["mesh_path"], "");
-      UObject* MeshObject = StaticLoadObject(UStaticMesh::StaticClass(),
-          nullptr,
-          *(MeshPath));
-      UStaticMesh *Mesh = Cast<UStaticMesh>(MeshObject);
+      
+      UStaticMesh *Mesh = LoadObject<UStaticMesh>(nullptr, *MeshPath);
       StaticMeshComponent->SetMobility(EComponentMobility::Movable);
-      StaticMeshComponent->SetStaticMesh(Mesh);
-      StaticMeshComponent->SetSimulatePhysics(true);
-      StaticMeshComponent->SetCollisionProfileName("PhysicsActor");
-      StaticMeshComponent->SetMassOverrideInKg("",
-         ABFL::ActorAttributeToFloat(ActorDescription.Variations["mass"], 1.0f));
+      if (!StaticMeshComponent->SetStaticMesh(Mesh))
+        UE_LOG(LogCarla, Warning, TEXT("Failed to set the mesh"));
+      StaticMeshComponent->SetMobility(EComponentMobility::Static);
+
+      if (ActorDescription.Variations.Contains("mass"))
+      {
+        float Mass = ABFL::RetrieveActorAttributeToFloat("mass", ActorDescription.Variations, 0.0f);
+        if (Mass > 0)
+        {
+          StaticMeshComponent->SetMobility(EComponentMobility::Movable);
+          StaticMeshComponent->SetSimulatePhysics(true);
+          StaticMeshComponent->SetCollisionProfileName("PhysicsActor");
+          StaticMeshComponent->SetMassOverrideInKg("", Mass);
+        }
+      }
     }
   }
   return FActorSpawnResult(StaticMeshActor);
