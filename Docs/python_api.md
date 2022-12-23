@@ -3304,7 +3304,7 @@ Method to initialize an object defining weather conditions. This class has some 
         - `scattering_intensity` (_float_) - Controls how much the light will contribute to volumetric fog. When set to 0, there is no contribution.  
         - `mie_scattering_scale` (_float_) - Controls interaction of light with large particles like pollen or air pollution resulting in a hazy sky with halos around the light sources. When set to 0, there is no contribution.  
         - `rayleigh_scattering_scale` (_float_) - Controls interaction of light with small particles like air molecules. Dependent on light wavelength, resulting in a blue sky in the day or red sky in the evening.  
-    - **Note:** <font color="#8E8E8E">_ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset. 
+    - **Note:** <font color="#8E8E8E">_Default, ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainyNoon, MidRainyNoon, HardRainyNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainySunset, MidRainySunset, HardRainySunset, ClearNight, CloudyNight, WetNight, WetCloudyNight, SoftRainyNight, MidRainyNight, HardRainyNight, DustStorm. 
 _</font>  
 
 ##### Dunder methods

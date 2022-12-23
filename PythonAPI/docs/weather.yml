@@ -155,7 +155,7 @@
         doc: >
           Controls interaction of light with small particles like air molecules. Dependent on light wavelength, resulting in a blue sky in the day or red sky in the evening.
       note: >
-        ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset. 
+        Default, ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainyNoon, MidRainyNoon, HardRainyNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainySunset, MidRainySunset, HardRainySunset, ClearNight, CloudyNight, WetNight, WetCloudyNight, SoftRainyNight, MidRainyNight, HardRainyNight, DustStorm.
       doc: >
         Method to initialize an object defining weather conditions. This class has some presets for different noon and sunset conditions listed in a note below. 
     # --------------------------------------

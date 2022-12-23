@@ -29,22 +29,22 @@ namespace rpc {
     static WeatherParameters WetNoon;
     static WeatherParameters WetCloudyNoon;
     static WeatherParameters MidRainyNoon;
-    static WeatherParameters HardRainNoon;
-    static WeatherParameters SoftRainNoon;
+    static WeatherParameters HardRainyNoon;
+    static WeatherParameters SoftRainyNoon;
     static WeatherParameters ClearSunset;
     static WeatherParameters CloudySunset;
     static WeatherParameters WetSunset;
     static WeatherParameters WetCloudySunset;
-    static WeatherParameters MidRainSunset;
-    static WeatherParameters HardRainSunset;
-    static WeatherParameters SoftRainSunset;
+    static WeatherParameters MidRainySunset;
+    static WeatherParameters HardRainySunset;
+    static WeatherParameters SoftRainySunset;
     static WeatherParameters ClearNight;
     static WeatherParameters CloudyNight;
     static WeatherParameters WetNight;
     static WeatherParameters WetCloudyNight;
-    static WeatherParameters SoftRainNight;
+    static WeatherParameters SoftRainyNight;
     static WeatherParameters MidRainyNight;
-    static WeatherParameters HardRainNight;
+    static WeatherParameters HardRainyNight;
     static WeatherParameters DustStorm;
 
     /// @}
