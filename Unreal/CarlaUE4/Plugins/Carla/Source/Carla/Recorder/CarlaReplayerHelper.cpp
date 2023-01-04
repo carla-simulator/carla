@@ -8,20 +8,24 @@
 #include "Carla/Recorder/CarlaReplayerHelper.h"
 
 #include "Carla/Actor/ActorDescription.h"
+#include "Carla/Actor/ActorRegistry.h"
+#include "Carla/Actor/ActorSpawnResult.h"
 #include "Carla/Actor/CarlaActor.h"
+#include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/Lights/CarlaLight.h"
+#include "Carla/Lights/CarlaLightSubsystem.h"
+#include "Carla/MapGen/LargeMapManager.h"
+#include "Carla/Traffic/TrafficLightBase.h"
+#include "Carla/Traffic/TrafficLightController.h"
+#include "Carla/Traffic/TrafficLightGroup.h"
+#include "Carla/Traffic/TrafficSignBase.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Vehicle/WheeledVehicleAIController.h"
 #include "Carla/Walker/WalkerControl.h"
 #include "Carla/Walker/WalkerController.h"
-#include "Carla/Lights/CarlaLight.h"
-#include "Carla/Lights/CarlaLightSubsystem.h"
-#include "Carla/Actor/ActorSpawnResult.h"
-#include "Carla/Game/CarlaEpisode.h"
-#include "Carla/Traffic/TrafficSignBase.h"
-#include "Carla/Traffic/TrafficLightBase.h"
-#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Components/BoxComponent.h"
 #include "Engine/StaticMeshActor.h"
-#include "Carla/Game/CarlaStatics.h"
-#include "Carla/MapGen/LargeMapManager.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/VehicleLightState.h>
@@ -413,6 +417,34 @@ void CarlaReplayerHelper::ProcessReplayerLightScene(CarlaRecorderLightScene Ligh
 void CarlaReplayerHelper::ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker)
 {
   SetWalkerSpeed(Walker.DatabaseId, Walker.Speed);
+}
+
+// set walker bones
+void CarlaReplayerHelper::ProcessReplayerWalkerBones(const CarlaRecorderWalkerBones &WalkerBones)
+{
+  check(Episode != nullptr);
+  
+  FCarlaActor* CarlaActor = Episode->FindCarlaActor(WalkerBones.DatabaseId);
+  if (!CarlaActor) return;
+
+  AActor* Actor = CarlaActor->GetActor();
+  auto Walker = Cast<APawn>(Actor);
+  if (!Walker) return;
+
+  AWalkerController *Controller = Cast<AWalkerController>(Walker->GetController());
+  if (!Controller) return;
+
+  // build bones structure
+  FWalkerBoneControlIn BonesIn;
+  for (const auto &Bone : WalkerBones.Bones)
+  {
+    FTransform Trans(FRotator::MakeFromEuler(Bone.Rotation), Bone.Location, FVector(1, 1, 1));
+    BonesIn.BoneTransforms.Add(Bone.Name, Trans);
+  }
+  
+  // set the pose and blend
+  Controller->SetBonesTransform(BonesIn);
+  Controller->BlendPose(1.0f);
 }
 
 // replay finish

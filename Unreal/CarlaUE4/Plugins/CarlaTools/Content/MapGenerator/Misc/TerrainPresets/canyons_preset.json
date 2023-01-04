@@ -1,0 +1,30 @@
+{
+	"presetName": "Canyons",
+	"widgetState":
+	{
+		"isPersistentState": false,
+		"mapName": "",
+		"workingPath": "",
+		"activeTabName": "",
+		"terrainGeneralSize": 0,
+		"terrainGeneralSlope": 1.3600000143051147,
+		"terrainGeneralHeight": 0.80000001192092896,
+		"terrainGeneralMinHeight": 0,
+		"terrainGeneralMaxHeight": 0.57999998331069946,
+		"terrainGeneralInvert": 0.1,
+		"terrainOverallSeed": 2000,
+		"terrainOverallScale": 58,
+		"terrainOverallSlope": 7.9000000953674316,
+		"terrainOverallHeight": 2.7000000476837158,
+		"terrainOverallMinHeight": 0,
+		"terrainOverallMaxHeight": 1,
+		"terrainOverallInvert": 0.6,
+		"terrainDetailedSeed": 6000,
+		"terrainDetailedScale": 21,
+		"terrainDetailedSlope": 0.30000001192092896,
+		"terrainDetailedHeight": 2.5,
+		"terrainDetailedMinHeight": 0,
+		"terrainDetailedMaxHeight": 1,
+		"terrainDetailedInvert": 0.5
+	}
+}

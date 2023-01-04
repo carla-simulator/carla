@@ -24,6 +24,8 @@
 #include "GameFramework/SpectatorPawn.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Kismet/GameplayStatics.h"
+#include "Materials/MaterialParameterCollection.h"
+#include "Materials/MaterialParameterCollectionInstance.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 
@@ -54,6 +56,7 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
     Id(URandomEngine::GenerateRandomId())
 {
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
+  FrameData.SetEpisode(this);
 }
 
 bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
@@ -100,6 +103,21 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
     UGameplayStatics::OpenLevel(GetWorld(), *FinalPath, true);
     if (ResetSettings)
       ApplySettings(FEpisodeSettings{});
+    
+    // send 'LOAD_MAP' command to all secondary servers (if any)
+    if (bIsPrimaryServer)
+    {
+      UCarlaGameInstance *GameInstance = UCarlaStatics::GetGameInstance(GetWorld());
+      if(GameInstance)
+      {
+        FCarlaEngine *CarlaEngine = GameInstance->GetCarlaEngine();
+        auto SecondaryServer = CarlaEngine->GetSecondaryServer();
+        if (SecondaryServer->HasClientsConnected()) 
+        {
+          SecondaryServer->GetCommander().SendLoadMap(std::string(TCHAR_TO_UTF8(*FinalPath)));
+        }
+      }
+    }
   }
   return bIsFileFound;
 }
@@ -282,6 +300,13 @@ void UCarlaEpisode::AttachActors(
 
   UActorAttacher::AttachActors(Child, Parent, InAttachmentType);
 
+  if (bIsPrimaryServer)
+  {
+    GetFrameData().AddEvent(
+        CarlaRecorderEventParent{
+          FindCarlaActor(Child)->GetActorId(),
+          FindCarlaActor(Parent)->GetActorId()});
+  }
   // recorder event
   if (Recorder->IsEnabled())
   {
@@ -316,6 +341,21 @@ void UCarlaEpisode::InitializeAtBeginPlay()
   {
     UE_LOG(LogCarla, Error, TEXT("Can't find spectator!"));
   }
+
+  // material parameters collection
+  UMaterialParameterCollection *Collection = LoadObject<UMaterialParameterCollection>(nullptr, TEXT("/Game/Carla/Blueprints/Game/CarlaParameters.CarlaParameters"), nullptr, LOAD_None, nullptr);
+	if (Collection != nullptr)
+  {
+    MaterialParameters = World->GetParameterCollectionInstance(Collection);
+    if (MaterialParameters == nullptr)
+    {
+      UE_LOG(LogCarla, Error, TEXT("Can't find CarlaParameters instance!"));
+    }
+  }
+  else
+	{
+    UE_LOG(LogCarla, Error, TEXT("Can't find CarlaParameters asset!"));
+	}
 
   for (TActorIterator<ATrafficSignBase> It(World); It; ++It)
   {
@@ -405,16 +445,24 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
 
   // NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
   auto result = ActorDispatcher->SpawnActor(LocalTransform, thisActorDescription, DesiredId);
-  if (Recorder->IsEnabled())
+  if (result.Key == EActorSpawnResultStatus::Success && bIsPrimaryServer)
   {
-    if (result.Key == EActorSpawnResultStatus::Success)
+    if (Recorder->IsEnabled())
     {
       Recorder->CreateRecorderEventAdd(
         result.Value->GetActorId(),
         static_cast<uint8_t>(result.Value->GetActorType()),
         Transform,
-        std::move(thisActorDescription)
+        thisActorDescription
       );
+    }
+    if (bIsPrimaryServer)
+    {
+      GetFrameData().CreateRecorderEventAdd(
+          result.Value->GetActorId(),
+          static_cast<uint8_t>(result.Value->GetActorType()),
+          Transform,
+          std::move(thisActorDescription));
     }
   }
 

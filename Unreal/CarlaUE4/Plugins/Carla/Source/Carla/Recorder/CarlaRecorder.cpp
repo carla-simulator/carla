@@ -6,8 +6,17 @@
 
 #include "Carla.h"
 #include "Carla/Actor/ActorDescription.h"
+#include "Carla/Actor/ActorRegistry.h"
+#include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Lights/CarlaLight.h"
+#include "Carla/Lights/CarlaLightSubsystem.h"
+#include "Carla/Traffic/TrafficLightController.h"
+#include "Carla/Traffic/TrafficLightGroup.h"
+#include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Walker/WalkerControl.h"
 #include "Carla/Walker/WalkerController.h"
+#include "Components/BoxComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/rpc/VehicleLightState.h"
@@ -81,6 +90,8 @@ void ACarlaRecorder::Ticking(float DeltaSeconds)
   if (Enabled)
   {
     PlatformTime.UpdateTime();
+    VisualTime.SetTime(Episode->GetVisualGameTime());
+
     const FActorRegistry &Registry = Episode->GetActorRegistry();
 
     // through all actors in registry
@@ -113,6 +124,7 @@ void ACarlaRecorder::Ticking(float DeltaSeconds)
           if (bAdditionalData)
           {
             AddActorKinematics(View);
+            AddActorBones(View);
           }
           break;
 
@@ -309,6 +321,28 @@ void ACarlaRecorder::AddTrafficLightTime(const ATrafficLightBase& TrafficLight)
   }
 }
 
+void ACarlaRecorder::AddActorBones(FCarlaActor *CarlaActor)
+{
+  check(CarlaActor != nullptr);
+
+  // get the bones
+  FWalkerBoneControlOut Bones;
+  CarlaActor->GetBonesTransform(Bones);
+
+  CarlaRecorderWalkerBones Walker;
+  Walker.DatabaseId = CarlaActor->GetActorId();
+  for (auto &Bone : Bones.BoneTransforms) 
+  {
+    FString Name = Bone.Get<0>();
+    auto Transforms = Bone.Get<1>();
+    FVector Loc = Transforms.Relative.GetTranslation();
+    FVector Rot = Transforms.Relative.GetRotation().Euler();
+    CarlaRecorderWalkerBone Entry(Name, Loc, Rot);
+    Walker.Bones.push_back(Entry);
+  }
+  WalkersBones.Add(std::move(Walker));
+}
+
 std::string ACarlaRecorder::Start(std::string Name, FString MapName, bool AdditionalData)
 {
   // stop replayer if any in course
@@ -382,6 +416,7 @@ void ACarlaRecorder::Clear(void)
   TriggerVolumes.Clear();
   PhysicsControls.Clear();
   TrafficLightTimes.Clear();
+  WalkersBones.Clear();
 }
 
 void ACarlaRecorder::Write(double DeltaSeconds)
@@ -391,6 +426,7 @@ void ACarlaRecorder::Write(double DeltaSeconds)
 
   // start
   Frames.WriteStart(File);
+  VisualTime.Write(File);
 
   // events
   EventsAdd.Write(File);
@@ -417,6 +453,7 @@ void ACarlaRecorder::Write(double DeltaSeconds)
     PlatformTime.Write(File);
     PhysicsControls.Write(File);
     TrafficLightTimes.Write(File);
+    WalkersBones.Write(File);
   }
 
   // end
@@ -470,7 +507,7 @@ void ACarlaRecorder::AddCollision(AActor *Actor1, AActor *Actor2)
 
     // check actor 1
     FCarlaActor *FoundActor1 = Episode->GetActorRegistry().FindCarlaActor(Actor1);
-    if (FoundActor1 != nullptr) { 
+    if (FoundActor1 != nullptr) {
       if (FoundActor1->GetActorInfo() != nullptr)
       {
         auto Role = FoundActor1->GetActorInfo()->Description.Variations.Find("role_name");
@@ -485,7 +522,7 @@ void ACarlaRecorder::AddCollision(AActor *Actor1, AActor *Actor2)
 
     // check actor 2
     FCarlaActor *FoundActor2 = Episode->GetActorRegistry().FindCarlaActor(Actor2);
-    if (FoundActor2 != nullptr) { 
+    if (FoundActor2 != nullptr) {
       if (FoundActor2->GetActorInfo() != nullptr)
       {
         auto Role = FoundActor2->GetActorInfo()->Description.Variations.Find("role_name");

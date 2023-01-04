@@ -86,7 +86,7 @@ using namespace std::chrono_literals;
             }
           } while (!self->_state.compare_exchange(&prev, next));
 
-          if(UpdateLights) {
+          if(UpdateLights || HasMapChanged) {
             self->_on_light_update_callbacks.Call(next);
           }
 
@@ -101,12 +101,6 @@ using namespace std::chrono_literals;
 
           // Notify waiting threads and do the callbacks.
           self->_snapshot.SetValue(next);
-
-          // Tick navigation.
-          auto navigation = self->_navigation.load();
-          if (navigation != nullptr) {
-            navigation->Tick(self);
-          }
 
           // Call user callbacks.
           self->_on_tick_callbacks.Call(next);
@@ -164,6 +158,14 @@ using namespace std::chrono_literals;
       return true;
     }
     return false;
+  }
+
+  void Episode::NavigationTick() {
+    // tick pedestrian navigation
+    auto navigation = _navigation.load();
+    if (navigation != nullptr) {
+      navigation->Tick(shared_from_this());
+    }
   }
 
 } // namespace detail

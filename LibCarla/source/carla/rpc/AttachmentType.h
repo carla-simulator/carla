@@ -16,6 +16,7 @@ namespace rpc {
   enum class AttachmentType : uint8_t {
     Rigid,
     SpringArm,
+    SpringArmGhost,
 
     SIZE,
     INVALID

@@ -20,12 +20,22 @@ class CARLA_API ASceneCaptureCamera : public AShaderBasedSensor
 
 public:
 
+
   static FActorDefinition GetSensorDefinition();
 
   ASceneCaptureCamera(const FObjectInitializer &ObjectInitializer);
 
 protected:
+	
+  virtual void SendGBufferTextures(FGBufferRequest& GBuffer) override;
 
+
+  void BeginPlay() override;
+  void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
+  
+  virtual void OnFirstClientConnected() override;
+  virtual void OnLastClientDisconnected() override;
 
+private:
 };

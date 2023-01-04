@@ -22,7 +22,7 @@ LocalizationStage::LocalizationStage(
   Parameters &parameters,
   std::vector<ActorId>& marked_for_removal,
   LocalizationFrame &output_array,
-  RandomGeneratorMap &random_devices)
+  RandomGenerator &random_device)
     : vehicle_id_list(vehicle_id_list),
     buffer_map(buffer_map),
     simulation_state(simulation_state),
@@ -31,7 +31,7 @@ LocalizationStage::LocalizationStage(
     parameters(parameters),
     marked_for_removal(marked_for_removal),
     output_array(output_array),
-    random_devices(random_devices){}
+    random_device(random_device){}
 
 void LocalizationStage::Update(const unsigned long index) {
 
@@ -120,9 +120,9 @@ void LocalizationStage::Update(const unsigned long index) {
     const float perc_keep_right = parameters.GetKeepRightPercentage(actor_id);
     const float perc_random_leftlanechange = parameters.GetRandomLeftLaneChangePercentage(actor_id);
     const float perc_random_rightlanechange = parameters.GetRandomRightLaneChangePercentage(actor_id);
-    const bool is_keep_right = perc_keep_right > random_devices.at(actor_id).next();
-    const bool is_random_left_change = perc_random_leftlanechange >= random_devices.at(actor_id).next();
-    const bool is_random_right_change = perc_random_rightlanechange >= random_devices.at(actor_id).next();
+    const bool is_keep_right = perc_keep_right > random_device.next();
+    const bool is_random_left_change = perc_random_leftlanechange >= random_device.next();
+    const bool is_random_right_change = perc_random_rightlanechange >= random_device.next();
 
     // Determine which of the parameters we should apply.
     if (is_keep_right || is_random_right_change) {
@@ -135,7 +135,7 @@ void LocalizationStage::Update(const unsigned long index) {
         lane_change_direction = false;
       } else {
         // Both a left and right lane changes are forced. Choose between one of them.
-        lane_change_direction = FIFTYPERC > random_devices.at(actor_id).next();
+        lane_change_direction = FIFTYPERC > random_device.next();
       }
     }
   }
@@ -148,6 +148,7 @@ void LocalizationStage::Update(const unsigned long index) {
   if (!recently_not_executed_lane_change) {
     float distance_frm_previous = cg::Math::DistanceSquared(last_lane_change_swpt.at(actor_id)->GetLocation(), vehicle_location);
     done_with_previous_lane_change = distance_frm_previous > lane_change_distance;
+    if (done_with_previous_lane_change) last_lane_change_swpt.erase(actor_id);
   }
   bool auto_or_force_lane_change = parameters.GetAutoLaneChange(actor_id) || force_lane_change;
   bool front_waypoint_not_junction = !front_waypoint->CheckJunction();
@@ -194,7 +195,7 @@ void LocalizationStage::Update(const unsigned long index) {
       uint64_t selection_index = 0u;
       // Pseudo-randomized path selection if found more than one choice.
       if (next_waypoints.size() > 1) {
-        double r_sample = random_devices.at(actor_id).next();
+        double r_sample = random_device.next();
         selection_index = static_cast<uint64_t>(r_sample*next_waypoints.size()*0.01);
       } else if (next_waypoints.size() == 0) {
         if (!parameters.GetOSMMode()) {
@@ -205,6 +206,10 @@ void LocalizationStage::Update(const unsigned long index) {
       }
       SimpleWaypointPtr next_wp_selection = next_waypoints.at(selection_index);
       PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
+      if (next_wp_selection->GetId() == waypoint_buffer.front()->GetId()){
+        // Found a loop, stop. Don't use zero distance as there can be two waypoints at the same location
+        break;
+      }
     }
   }
   ExtendAndFindSafeSpace(actor_id, is_at_junction_entrance, waypoint_buffer);
@@ -503,14 +508,20 @@ void LocalizationStage::ImportPath(Path &imported_path, Buffer &waypoint_buffer,
         break;
       }
       SimpleWaypointPtr next_wp_selection = next_waypoints.at(selection_index);
-      PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
 
       // Remove the imported waypoint from the path if it's close to the last one.
       if (next_wp_selection->DistanceSquared(imported) < 30.0f) {
         imported_path.erase(imported_path.begin());
+        std::vector<SimpleWaypointPtr> possible_waypoints = next_wp_selection->GetNextWaypoint();
+        if (std::find(possible_waypoints.begin(), possible_waypoints.end(), imported) != possible_waypoints.end()) {
+          // If the lane is changing, only push the new waypoint
+          PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
+        }
         PushWaypoint(actor_id, track_traffic, waypoint_buffer, imported);
         latest_imported = imported_path.front();
         imported = local_map->GetWaypoint(latest_imported);
+      } else {
+        PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
       }
     }
     if (imported_path.empty()) {

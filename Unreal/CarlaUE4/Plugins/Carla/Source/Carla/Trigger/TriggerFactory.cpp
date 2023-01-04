@@ -12,6 +12,7 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Trigger/FrictionTrigger.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
 // =============================================================================
 // -- ATriggerFactory -----------------------------------------------------------

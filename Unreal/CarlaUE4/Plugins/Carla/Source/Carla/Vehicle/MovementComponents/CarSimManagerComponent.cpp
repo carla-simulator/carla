@@ -21,8 +21,8 @@ void UCarSimManagerComponent::CreateCarsimComponent(
   #ifdef WITH_CARSIM
   UCarSimManagerComponent* CarSimManagerComponent = NewObject<UCarSimManagerComponent>(Vehicle);
   CarSimManagerComponent->SimfilePath = Simfile;
-  CarSimManagerComponent->RegisterComponent();
   Vehicle->SetCarlaMovementComponent(CarSimManagerComponent);
+  CarSimManagerComponent->RegisterComponent();
   #else
   UE_LOG(LogCarla, Warning, TEXT("Error: CarSim plugin is not enabled") );
   #endif
