@@ -25,8 +25,22 @@ brew update && brew upgrade
 
 brew install --build-from-source mono
 
-brew install coreutils ninja wget autoconf automake curl libtool libpng aria2 libiconv
+brew install coreutils ninja wget autoconf automake curl libtool aria2 libiconv
+
+# Media libraries
+brew install libpng webp libtiff little-cms2 jpeg-turbo
 ```
+
+IMPORTANT FOR M1 ONLY:
+
+Set some necessary flags to link the installed libraries from a brew with the clang compiler in the M1 architecture. This step is not required for Intel.
+
+```
+export CPATH=/opt/homebrew/include
+export LIBRARY_PATH=/opt/homebrew/lib
+```
+
+And save them to your `~/.zshrc` or `~/.bashrc` configuration files.
 
 I recommend installing python through conda on mac:
 ```bash
@@ -58,6 +72,9 @@ cd /PATH/TO/UnrealEngine
 
 # then finally build UE4
 xcodebuild -scheme UE4 -target UE4 -UseModernBuildSystem=YES # this takes a while to complete
+
+# for Xcode 14 do:
+xcodebuild -scheme UE4 -target UE4 -UseModernBuildSystem=YES GENERATE_INFOPLIST_FILE=YES
 
 # make sure to add the right UnrealEngine path as UE4_ROOT:
 export UE4_ROOT=/PATH/TO/UnrealEngine # or add it in your .zshrc
@@ -139,3 +156,19 @@ export PYTHONPATH="${PYTHONPATH}:/PATH/TO/CARLA/PythonAPI/carla/dist/carla-0.9.1
 # I simply put this in my .zshrc file
 ```
 Then you should be able to quickly `import carla` without hassle!
+
+After running `make package`, a building project is created. You can find this build in the path:
+
+```
+/path/to/carla/Dist/CARLA_Shipping_0.9.13-...-dirty/MacNoEditor/
+```
+
+This folder can be moved to another place if you prefer.
+
+The build folder includes the compiled server app for Mac `CarlaUE4-Mac-Shipping.app`.
+
+To run the server in headless mode, to be used by a client, you can run the following command in the terminal. This mode loads faster, and it delays around 20 seconds to be ready for the client:
+
+```
+open CarlaUE4-Mac-Shipping.app --args -RenderOffScreen
+```
