@@ -198,6 +198,7 @@ void export_world() {
   enum_<cr::AttachmentType>("AttachmentType")
     .value("Rigid", cr::AttachmentType::Rigid)
     .value("SpringArm", cr::AttachmentType::SpringArm)
+    .value("SpringArmGhost", cr::AttachmentType::SpringArmGhost)
   ;
 
   enum_<cr::CityObjectLabel>("CityObjectLabel")
@@ -212,7 +213,7 @@ void export_world() {
     .value("Sidewalks", cr::CityObjectLabel::Sidewalks)
     .value("TrafficSigns", cr::CityObjectLabel::TrafficSigns)
     .value("Vegetation", cr::CityObjectLabel::Vegetation)
-    .value("Vehicles", cr::CityObjectLabel::Vehicles)
+    .value("Car", cr::CityObjectLabel::Car)
     .value("Walls", cr::CityObjectLabel::Walls)
     .value("Sky", cr::CityObjectLabel::Sky)
     .value("Ground", cr::CityObjectLabel::Ground)
@@ -224,6 +225,12 @@ void export_world() {
     .value("Dynamic", cr::CityObjectLabel::Dynamic)
     .value("Water", cr::CityObjectLabel::Water)
     .value("Terrain", cr::CityObjectLabel::Terrain)
+    .value("Truck", cr::CityObjectLabel::Truck)
+    .value("Motorcycle", cr::CityObjectLabel::Motorcycle)
+    .value("Bicycle", cr::CityObjectLabel::Bicycle)
+    .value("Bus", cr::CityObjectLabel::Bus)
+    .value("Rider", cr::CityObjectLabel::Rider)
+    .value("Train", cr::CityObjectLabel::Train)
     .value("Any", cr::CityObjectLabel::Any)
   ;
 

@@ -863,4 +863,71 @@
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
+    
+  - class_name: GBufferTextureID
+    # - DESCRIPTION ------------------------
+    doc: >
+      Defines the identifiers of each GBuffer texture (See the method `carla.Sensor.listen_to_gbuffer`).
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: SceneColor
+      doc: >
+        The texture "SceneColor" contains the final color of the image.
+    - var_name: SceneDepth
+      doc: >
+        The texture "SceneDepth" contains the depth buffer - linear in world units.
+    - var_name: SceneStencil
+      doc: >
+        The texture "SceneStencil" contains the stencil buffer.
+    - var_name: GBufferA
+      doc: >
+        The texture "GBufferA" contains the world-space normal vectors in the RGB channels. The alpha channel contains "per-object data".
+    - var_name: GBufferB
+      doc: >
+        The texture "GBufferB" contains the metallic, specular and roughness in the RGB channels, respectively. The alpha channel contains a mask where the lower 4 bits indicate the shading model and the upper 4 bits contain the selective output mask.
+    - var_name: GBufferC
+      doc: >
+        The texture "GBufferC" contains the diffuse color in the RGB channels, with the indirect irradiance in the alpha channel.<br>
+        If static lightning is not allowed, the alpha channel will contain the ambient occlusion instead.
+    - var_name: GBufferD
+      doc: >
+        The contents of the "GBufferD" varies depending on the rendered object's material shading model (GBufferB):<br>
+          - MSM_Subsurface (2), MSM_PreintegratedSkin (3), MSM_TwoSidedFoliage (6):<br>
+            RGB: Subsurface color.<br>
+            A: Opacity.<br>
+          - MSM_ClearCoat (4):<br>
+            R: Clear coat.<br>
+            G: Roughness.<br>
+          - MSM_SubsurfaceProfile (5):<br>
+            RGB: Subsurface profile.<br>
+          - MSM_Hair (7):<br>
+            RG: World normal.<br>
+            B: Backlit value.<br>
+          - MSM_Cloth (8):<br>
+            RGB: Subsurface color.<br>
+            A: Cloth value.<br>
+          - MSM_Eye (9):<br>
+            RG: Eye tangent.<br>
+            B: Iris mask.<br>
+            A: Iris distance.
+    - var_name: GBufferE
+      doc: >
+        The texture "GBufferE" contains the precomputed shadow factors in the RGBA channels. This texture is unavailable if the selective output mask (GBufferB) does not have its 4th bit set.
+    - var_name: GBufferF
+      doc: >
+        The texture "GBufferF" contains the world-space tangent in the RGB channels and the anisotropy in the alpha channel. This texture is unavailable if the selective output mask (GBufferB) does not have its 5th bit set.
+    - var_name: Velocity
+      doc: >
+        The texture "Velocity" contains the screen-space velocity of the scene objects.
+    - var_name: SSAO
+      doc: >
+        The texture "SSAO" contains the screen-space ambient occlusion texture.
+    - var_name: CustomDepth
+      doc: >
+        The texture "CustomDepth" contains the Unreal Engine custom depth data.
+    - var_name: CustomStencil
+      doc: >
+        The texture "CustomStencil" contains the Unreal Engine custom stencil data.
+    # --------------------------------------
+
 ...

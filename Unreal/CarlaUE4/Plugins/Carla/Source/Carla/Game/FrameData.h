@@ -64,7 +64,7 @@ public:
 
   void SetEpisode(UCarlaEpisode* ThisEpisode) {Episode = ThisEpisode;}
 
-  void GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData = false);
+  void GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData = false, bool bIncludeActorsAgain = false);
 
   void PlayFrameData(UCarlaEpisode *ThisEpisode, std::unordered_map<uint32_t, uint32_t>& MappedId);
 
@@ -78,7 +78,8 @@ public:
       uint32_t DatabaseId,
       uint8_t Type,
       const FTransform &Transform,
-      FActorDescription ActorDescription);
+      FActorDescription ActorDescription,
+      bool bAddOtherRelatedInfo = true);
   void AddEvent(const CarlaRecorderEventAdd &Event);
   void AddEvent(const CarlaRecorderEventDel &Event);
   void AddEvent(const CarlaRecorderEventParent &Event);
@@ -107,12 +108,13 @@ private:
 
   void GetFrameCounter();
 
-  std::pair<int, FCarlaActor*> TryToCreateReplayerActor(
+  std::pair<int, FCarlaActor*> CreateOrReuseActor(
       FVector &Location,
       FVector &Rotation,
       FActorDescription &ActorDesc,
       uint32_t DesiredId,
-      bool SpawnSensors);
+      bool SpawnSensors,
+      std::unordered_map<uint32_t, uint32_t>& MappedId);
 
     // replay event for creating actor
   std::pair<int, uint32_t> ProcessReplayerEventAdd(
@@ -121,7 +123,8 @@ private:
       CarlaRecorderActorDescription Description,
       uint32_t DesiredId,
       bool bIgnoreHero,
-      bool ReplaySensors);
+      bool ReplaySensors,
+      std::unordered_map<uint32_t, uint32_t>& MappedId);
 
   // replay event for removing actor
   bool ProcessReplayerEventDel(uint32_t DatabaseId);
@@ -155,6 +158,8 @@ private:
   void SetFrameCounter();
 
   FCarlaActor* FindTrafficLightAt(FVector Location);
+
+  void AddExistingActors(void);
 
   UCarlaEpisode *Episode;
 };

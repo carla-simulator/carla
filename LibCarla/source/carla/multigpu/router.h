@@ -44,6 +44,8 @@ namespace multigpu {
     void Stop();
 
     void SetCallbacks();
+    void SetNewConnectionCallback(std::function<void(void)>);
+
     void AsyncRun(size_t worker_threads);
 
     boost::asio::ip::tcp::endpoint GetLocalEndpoint() const;
@@ -70,6 +72,7 @@ namespace multigpu {
     uint32_t                                _next;
     std::unordered_map<Primary *, std::shared_ptr<std::promise<SessionInfo>>>   _promises;
     PrimaryCommands                         _commander;
+    std::function<void(void)>               _callback;
   };
 
 } // namespace multigpu

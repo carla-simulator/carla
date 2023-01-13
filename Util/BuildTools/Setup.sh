@@ -8,12 +8,13 @@ DOC_STRING="Download and install the required libraries for carla."
 
 USAGE_STRING="Usage: $0 [--python-version=VERSION]"
 
-OPTS=`getopt -o h --long help,chrono,python-version: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,chrono,pytorch,python-version: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
 PY_VERSION_LIST=3
 USE_CHRONO=false
+USE_PYTORCH=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -22,6 +23,9 @@ while [[ $# -gt 0 ]]; do
       shift 2 ;;
     --chrono )
       USE_CHRONO=true;
+      shift ;;
+    --pytorch )
+      USE_PYTORCH=true;
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -114,7 +118,7 @@ unset LLVM_BASENAME
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
 
-BOOST_VERSION=1.72.0
+BOOST_VERSION=1.80.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
@@ -150,10 +154,6 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
     mkdir -p ${BOOST_BASENAME}-install/include
     mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
-    # Boost patch for exception handling
-    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-source/boost/rational.hpp"
-    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-source/boost/geometry/io/wkt/read.hpp"
-    # ---
 
     pushd ${BOOST_BASENAME}-source >/dev/null
 
@@ -182,11 +182,6 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     rm -Rf ${BOOST_BASENAME}-source
     rm ${BOOST_PACKAGE_BASENAME}.tar.gz
-
-    # Boost patch for exception handling
-    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-install/include/boost/rational.hpp"
-    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-install/include/boost/geometry/io/wkt/read.hpp"
-    # ---
 
     # Install boost dependencies
     mkdir -p "${LIBCARLA_INSTALL_CLIENT_FOLDER}/include/system"
@@ -438,7 +433,7 @@ XERCESC_VERSION=3.2.3
 XERCESC_BASENAME=xerces-c-${XERCESC_VERSION}
 
 XERCESC_TEMP_FOLDER=${XERCESC_BASENAME}
-XERCESC_REPO=https://downloads.apache.org/xerces/c/3/sources/xerces-c-${XERCESC_VERSION}.tar.gz
+XERCESC_REPO=https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-${XERCESC_VERSION}.tar.gz
 
 XERCESC_SRC_DIR=${XERCESC_BASENAME}-source
 XERCESC_INSTALL_DIR=${XERCESC_BASENAME}-install
@@ -449,6 +444,12 @@ if [[ -d ${XERCESC_INSTALL_DIR} ]] ; then
 else
   log "Retrieving xerces-c."
   wget ${XERCESC_REPO}
+
+  # try to use the backup boost we have in Jenkins
+  if [[ ! -f "${XERCESC_BASENAME}.tar.gz" ]] ; then
+    log "Using xerces backup"
+    wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${XERCESC_BASENAME}.tar.gz" || true
+  fi
 
   log "Extracting xerces-c."
   tar -xzf ${XERCESC_BASENAME}.tar.gz
@@ -586,7 +587,6 @@ if ${USE_CHRONO} ; then
   mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
   cp -p ${CHRONO_INSTALL_DIR}/lib/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p -r ${CHRONO_INSTALL_DIR}/include/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
-
 fi
 
 # ==============================================================================
@@ -724,6 +724,85 @@ mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
 cp ${PATCHELF_EXE} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
 
 # ==============================================================================
+# -- Download libtorch and dependencies --------------------------------------------------
+# ==============================================================================
+
+if ${USE_PYTORCH} ; then
+
+  LIBTORCH_BASENAME=libtorch
+
+  LIBTORCH_PATH=${PWD}/${LIBTORCH_BASENAME}
+  LIBTORCH_INCLUDE=${LIBTORCH_PATH}/include
+  LIBTORCH_LIB=${LIBTORCH_PATH}/lib
+  LIBTORCH_ZIPFILE=libtorch-shared-with-deps-1.11.0+cu113.zip
+  LIBTORCH_REPO=https://download.pytorch.org/libtorch/cu113/libtorch-shared-with-deps-1.11.0%2Bcu113.zip
+  if [[ ! -d ${LIBTORCH_PATH} ]] ; then
+    wget ${LIBTORCH_REPO}
+    unzip ${LIBTORCH_ZIPFILE}
+  fi
+
+  function build_torch_extension {
+
+    LIB_SOURCE=$1
+    LIB_INSTALL=$2
+    LIB_REPO=$3
+    if [[ ! -d ${LIB_INSTALL} ]] ; then
+      if [[ ! -d ${LIB_SOURCE} ]] ; then
+        mkdir -p ${LIB_SOURCE}
+        log "${LIB_REPO}"
+        git clone ${LIB_REPO} ${LIB_SOURCE}
+        mkdir -p ${LIB_SOURCE}/build
+      fi
+      pushd ${LIB_SOURCE}/build >/dev/null
+
+      cmake -DCMAKE_PREFIX_PATH="${LIBTORCH_PATH}" \
+          -DCMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc" \
+          -DCMAKE_INSTALL_PREFIX="${LIB_INSTALL}" \
+          -DCMAKE_CUDA_FLAGS="-gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_37,code=sm_37 -gencode=arch=compute_50,code=sm_50 -gencode=arch=compute_52,code=sm_52 -gencode=arch=compute_53,code=sm_53 -gencode=arch=compute_60,code=sm_60 -gencode=arch=compute_61,code=sm_61 -gencode=arch=compute_62,code=sm_62 -gencode=arch=compute_70,code=sm_70 -gencode=arch=compute_72,code=sm_72 -gencode=arch=compute_75,code=sm_75 -gencode=arch=compute_80,code=sm_80 -gencode=arch=compute_86,code=sm_86 -gencode=arch=compute_87,code=sm_87 -Wno-deprecated-gpu-targets" \
+          -DWITH_CUDA=ON \
+          ..
+      make
+      make install
+      popd >/dev/null
+    fi
+
+  }
+
+  log "Build libtorch scatter"
+  #LibtorchScatter
+  LIBTORCHSCATTER_BASENAME=libtorchscatter
+  LIBTORCHSCATTER_SOURCE_DIR=${PWD}/${LIBTORCHSCATTER_BASENAME}-source
+  LIBTORCHSCATTER_INSTALL_DIR=${PWD}/${LIBTORCHSCATTER_BASENAME}-install
+  LIBTORCHSCATTER_INCLUDE=${LIBTORCHSCATTER_INSTALL_DIR}/include
+  LIBTORCHSCATTER_LIB=${LIBTORCHSCATTER_INSTALL_DIR}/lib
+  LIBTORCHSCATTER_REPO="https://github.com/rusty1s/pytorch_scatter.git"
+
+  build_torch_extension ${LIBTORCHSCATTER_SOURCE_DIR} ${LIBTORCHSCATTER_INSTALL_DIR} "${LIBTORCHSCATTER_REPO}"
+
+  log "Build libtorch cluster"
+  LIBTORCHCLUSTER_BASENAME=libtorchcluster
+  LIBTORCHCLUSTER_SOURCE_DIR=${PWD}/${LIBTORCHCLUSTER_BASENAME}-source
+  LIBTORCHCLUSTER_INSTALL_DIR=${PWD}/${LIBTORCHCLUSTER_BASENAME}-install
+  LIBTORCHCLUSTER_INCLUDE=${LIBTORCHCLUSTER_INSTALL_DIR}/include
+  LIBTORCHCLUSTER_LIB=${LIBTORCHCLUSTER_INSTALL_DIR}/lib
+  LIBTORCHCLUSTER_REPO="https://github.com/rusty1s/pytorch_cluster.git"
+
+  build_torch_extension ${LIBTORCHCLUSTER_SOURCE_DIR} ${LIBTORCHCLUSTER_INSTALL_DIR} "${LIBTORCHCLUSTER_REPO}"
+
+  mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  cp -p ${LIBTORCH_LIB}/*.a ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  cp -p ${LIBTORCH_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  cp -p ${LIBTORCHSCATTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  cp -p ${LIBTORCHCLUSTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  
+  mkdir -p ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
+  cp -p ${LIBTORCH_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
+  cp -p ${LIBTORCHSCATTER_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
+  cp -p ${LIBTORCHCLUSTER_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
+fi
+
+
+# ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
 # ==============================================================================
 
@@ -810,6 +889,11 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBCXX_LIBPATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBCXX_LIBPATH}")
+elseif (CMAKE_BUILD_TYPE STREQUAL "Pytorch")
+  list(APPEND CMAKE_PREFIX_PATH "${LIBTORCH_PATH}")
+  list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHSCATTER_INSTALL_DIR}")
+  list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHCLUSTER_INSTALL_DIR}")
+  list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHSPARSE_INSTALL_DIR}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   # Here libraries linking libstdc++.
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBSTDCXX_INCLUDE}")

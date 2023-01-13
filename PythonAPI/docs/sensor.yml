@@ -41,9 +41,45 @@
       doc: >
         The function the sensor will be calling to every time a new measurement is received. This function needs for an argument containing an object type carla.SensorData to work with.
     # --------------------------------------
+    - def_name: is_listening
+      doc: >
+        Returns whether the sensor is in a listening state.
+    # --------------------------------------
     - def_name: stop
       doc: >
         Commands the sensor to stop listening for data.
+    # --------------------------------------
+    - def_name: listen_to_gbuffer
+      params:
+      - param_name: gbuffer_id
+        type: carla.GBufferTextureID
+        doc: >
+          The ID of the target Unreal Engine GBuffer texture.
+      - param_name: callback
+        type: function
+        doc: >
+          The called function with one argument containing the received GBuffer texture.
+      doc: >
+        The function the sensor will be calling to every time the desired GBuffer texture is received.<br>
+        This function needs for an argument containing an object type carla.SensorData to work with.
+    # --------------------------------------
+    - def_name: is_listening_gbuffer
+      params:
+      - param_name: gbuffer_id
+        type: carla.GBufferTextureID
+        doc: >
+          The ID of the target Unreal Engine GBuffer texture.
+      doc: >
+        Returns whether the sensor is in a listening state for a specific GBuffer texture.
+    # --------------------------------------
+    - def_name: stop_gbuffer
+      params:
+      - param_name: gbuffer_id
+        type: carla.GBufferTextureID
+        doc: >
+          The ID of the Unreal Engine GBuffer texture.
+      doc: >
+        Commands the sensor to stop listening for the specified GBuffer texture.
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------

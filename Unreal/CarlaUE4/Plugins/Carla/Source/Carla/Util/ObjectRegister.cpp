@@ -152,7 +152,8 @@ void UObjectRegister::RegisterVehicle(ACarlaWheeledVehicle* Vehicle)
 {
   check(Vehicle);
   FBoundingBox BB = UBoundingBoxCalculator::GetVehicleBoundingBox(Vehicle);
-  RegisterEnvironmentObject(Vehicle, BB, EnvironmentObjectType::Vehicle, static_cast<uint8>(crp::CityObjectLabel::Vehicles));
+  auto Tag = ATagger::GetTagOfTaggedComponent(*Vehicle->GetMesh());
+  RegisterEnvironmentObject(Vehicle, BB, EnvironmentObjectType::Vehicle, static_cast<uint8>(Tag));
 }
 
 void UObjectRegister::RegisterCharacter(ACharacter* Character)

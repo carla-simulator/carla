@@ -332,13 +332,15 @@ namespace detail {
       rpc::ActorId parent,
       rpc::AttachmentType attachment_type) {
 
-      if(attachment_type == rpc::AttachmentType::SpringArm) {
+      if (attachment_type == rpc::AttachmentType::SpringArm ||
+          attachment_type == rpc::AttachmentType::SpringArmGhost)
+      {
         const auto a = transform.location.MakeSafeUnitVector(std::numeric_limits<float>::epsilon());
         const auto z = geom::Vector3D(0.0f, 0.f, 1.0f);
         constexpr float OneEps = 1.0f - std::numeric_limits<float>::epsilon();
         if (geom::Math::Dot(a, z) > OneEps) {
           std::cout << "WARNING: Transformations with translation only in the 'z' axis are ill-formed when \
-            using SprintArm attachment. Please, be careful with that." << std::endl;
+            using SpringArm or SpringArmGhost attachment. Please, be careful with that." << std::endl;
         }
       }
 
@@ -581,6 +583,27 @@ namespace detail {
   }
 
   void Client::UnSubscribeFromStream(const streaming::Token &token) {
+    _pimpl->streaming_client.UnSubscribe(token);
+  }
+
+  void Client::SubscribeToGBuffer(
+      rpc::ActorId ActorId,
+      uint32_t GBufferId,
+      std::function<void(Buffer)> callback)
+  {
+    std::vector<unsigned char> token_data = _pimpl->CallAndWait<std::vector<unsigned char>>("get_gbuffer_token", ActorId, GBufferId);
+    streaming::Token token;
+    std::memcpy(&token.data[0u], token_data.data(), token_data.size());
+    _pimpl->streaming_client.Subscribe(token, std::move(callback));
+  }
+
+  void Client::UnSubscribeFromGBuffer(
+      rpc::ActorId ActorId,
+      uint32_t GBufferId)
+  {
+    std::vector<unsigned char> token_data = _pimpl->CallAndWait<std::vector<unsigned char>>("get_gbuffer_token", ActorId, GBufferId);
+    streaming::Token token;
+    std::memcpy(&token.data[0u], token_data.data(), token_data.size());
     _pimpl->streaming_client.UnSubscribe(token);
   }
 

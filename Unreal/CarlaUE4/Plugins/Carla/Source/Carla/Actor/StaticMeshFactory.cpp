@@ -45,7 +45,7 @@ FActorSpawnResult AStaticMeshFactory::SpawnActor(
     return {};
   }
 
-  float Scale = ABFL::ActorAttributeToFloat(ActorDescription.Variations["scale"], 1.0f);
+  float Scale = ABFL::RetrieveActorAttributeToFloat("scale", ActorDescription.Variations, 1.0f);
   FTransform ScaledTransform(SpawnAtTransform);
   ScaledTransform.SetScale3D(FVector(Scale));
 
@@ -73,7 +73,7 @@ FActorSpawnResult AStaticMeshFactory::SpawnActor(
 
       if (ActorDescription.Variations.Contains("mass"))
       {
-        float Mass = ABFL::ActorAttributeToFloat(ActorDescription.Variations["mass"], 0.0f);
+        float Mass = ABFL::RetrieveActorAttributeToFloat("mass", ActorDescription.Variations, 0.0f);
         if (Mass > 0)
         {
           StaticMeshComponent->SetMobility(EComponentMobility::Movable);

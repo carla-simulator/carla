@@ -13,17 +13,17 @@
 
 FActorDefinition ASceneCaptureCamera::GetSensorDefinition()
 {
-  constexpr bool bEnableModifyingPostProcessEffects = true;
-  return UActorBlueprintFunctionLibrary::MakeCameraDefinition(
-      TEXT("rgb"),
-      bEnableModifyingPostProcessEffects);
+    constexpr bool bEnableModifyingPostProcessEffects = true;
+    return UActorBlueprintFunctionLibrary::MakeCameraDefinition(
+        TEXT("rgb"),
+        bEnableModifyingPostProcessEffects);
 }
 
-ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer &ObjectInitializer)
-  : Super(ObjectInitializer)
+ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
 {
-  AddPostProcessingMaterial(
-      TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
+    AddPostProcessingMaterial(
+        TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
 }
 
 void ASceneCaptureCamera::BeginPlay()
@@ -61,4 +61,9 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
     }
   );
   FPixelReader::SendPixelsInRenderThread<ASceneCaptureCamera, FColor>(*this);
+}
+
+void ASceneCaptureCamera::SendGBufferTextures(FGBufferRequest& GBuffer)
+{
+    SendGBufferTexturesInternal(*this, GBuffer);
 }

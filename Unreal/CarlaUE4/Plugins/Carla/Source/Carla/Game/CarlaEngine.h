@@ -77,6 +77,11 @@ public:
     FCarlaEngine::FrameCounter = Value;
   }
 
+  std::shared_ptr<carla::multigpu::Router> GetSecondaryServer()
+  {
+    return SecondaryServer;
+  }
+
 private:
 
   void OnPreTick(UWorld *World, ELevelTick TickType, float DeltaSeconds);
@@ -110,6 +115,7 @@ private:
   FDelegateHandle OnEpisodeSettingsChangeHandle;
 
   bool bIsPrimaryServer = true;
+  bool bNewConnection = false;
 
   std::unordered_map<uint32_t, uint32_t> MappedId;
 

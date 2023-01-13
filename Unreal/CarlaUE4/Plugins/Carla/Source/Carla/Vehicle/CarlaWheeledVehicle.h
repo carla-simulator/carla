@@ -354,13 +354,19 @@ private:
 
 public:
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditDefaultsOnly)
-  float DetectionSize {200.0f};
+  float DetectionSize { 750.0f };
   
   UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly)
   FBox FoliageBoundingBox;
 
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
   UBoxComponent *VehicleBounds; 
+
+  UFUNCTION()
+  FBox GetDetectionBox() const;
+
+  UFUNCTION()
+  float GetDetectionSize() const;
 
   UFUNCTION()
   void UpdateDetectionBox();

@@ -33,7 +33,7 @@ void UCarlaLight::RegisterLight()
     UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
     CarlaLightSubsystem->RegisterLight(this);
   }
-
+  RegisterLightWithWeather();
   bRegistered = true;
 }
 
