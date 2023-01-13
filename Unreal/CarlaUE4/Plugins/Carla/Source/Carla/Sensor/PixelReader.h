@@ -10,7 +10,7 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/ImageWriteQueue/Public/ImagePixelData.h"
 
-#ifdef PLATFORM_WINDOWS
+#ifdef _WIN32
   #define WIN32_LEAN_AND_MEAN
   #include <D3d12.h>
 #endif
@@ -137,7 +137,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
             
             uint32 CurrentRowBytes = ExpectedRowBytes;
 
-#ifdef PLATFORM_WINDOWS
+#ifdef _WIN32
             // DirectX uses additional bytes to align each row to 256 boundry, 
             // so we need to remove that extra data
             if (IsD3DPlatform(GMaxRHIShaderPlatform, false))
@@ -159,7 +159,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
                 }
               }
             }
-#endif // PLATFORM_WINDOWS
+#endif // _WIN32
 
             if (ExpectedRowBytes == CurrentRowBytes)
             {
