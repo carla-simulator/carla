@@ -1,3 +1,7 @@
+## Latest
+
+  * Fixed the extra data in Directx textures, so we need to copy row by row on Windows to remove extra bytes on images
+
 ## CARLA 0.9.14
 
   * Fixed bug in FrictionTrigger causing sometimes server segfault
