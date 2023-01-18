@@ -5,6 +5,7 @@
 
 ## CARLA 0.9.14
 
+  * Fixed tutorial for adding a sensor to CARLA.
   * Fixed bug in FrictionTrigger causing sometimes server segfault
   * Added attachment type "SpringArmGhost" for cinematic cameras but without doing the collision test.
   * Improved algorithm to move signals out of the road by computing the desired displacement direction.
