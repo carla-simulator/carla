@@ -311,6 +311,29 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
   return false;
 }
 
+void CarlaReplayerHelper::ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels VehicleAnimWheels)
+{
+  check(Episode != nullptr)
+  FCarlaActor *CarlaActor = Episode->FindCarlaActor(VehicleAnimWheels.DatabaseId);
+  if (CarlaActor == nullptr)
+    return;
+  if (CarlaActor->GetActorType() != FCarlaActor::ActorType::Vehicle)
+    return;
+  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+  check(CarlaVehicle != nullptr)
+  USkeletalMeshComponent* SkeletalMesh = CarlaVehicle->GetMesh();
+  check(SkeletalMesh != nullptr)
+  UVehicleAnimInstance* VehicleAnim = Cast<UVehicleAnimInstance>(SkeletalMesh->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+
+  for (uint32_t i = 0; i < VehicleAnimWheels.WheelValues.size(); ++i)
+  {
+    const WheelInfo& Element = VehicleAnimWheels.WheelValues[i];
+    VehicleAnim->SetWheelRotYaw((uint8)Element.Location, Element.SteeringAngle);
+    VehicleAnim->SetWheelPitchAngle((uint8)Element.Location, Element.TireRotation);
+  }
+}
+
 // reposition the camera
 bool CarlaReplayerHelper::SetCameraPosition(uint32_t Id, FVector Offset, FQuat Rotation)
 {
@@ -417,6 +440,18 @@ void CarlaReplayerHelper::ProcessReplayerLightScene(CarlaRecorderLightScene Ligh
 void CarlaReplayerHelper::ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker)
 {
   SetWalkerSpeed(Walker.DatabaseId, Walker.Speed);
+}
+
+void CarlaReplayerHelper::ProcessReplayerAnimBiker(CarlaRecorderAnimBiker Biker)
+{
+  check(Episode != nullptr);
+  FCarlaActor * CarlaActor = Episode->FindCarlaActor(Biker.DatabaseId);
+  if (CarlaActor == nullptr)
+    return;
+  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+  check(CarlaVehicle != nullptr)
+  CarlaVehicle->SetSpeedAnim(Biker.ForwardSpeed);
+  CarlaVehicle->SetRotationAnim(Biker.EngineRotation);
 }
 
 // set walker bones

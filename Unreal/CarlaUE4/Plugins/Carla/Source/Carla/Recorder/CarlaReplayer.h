@@ -144,7 +144,9 @@ private:
   void ProcessStates(void);
 
   void ProcessAnimVehicle(void);
+  void ProcessAnimVehicleWheels(void);
   void ProcessAnimWalker(void);
+  void ProcessAnimBiker(void);
 
   void ProcessLightVehicle(void);
   void ProcessLightScene(void);
