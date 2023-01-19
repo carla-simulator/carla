@@ -89,19 +89,13 @@ if ${BUILD_OSM2ODR} ; then
   mkdir -p ${OSM2ODR_BUILD_FOLDER}
   cd ${OSM2ODR_BUILD_FOLDER}
 
-  CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang --version | head -n 1 | sed -r 's/^([^.]+).*$/\1/; s/^[^0-9]*([0-9]+).*$/\1/')")
-  
-  if [ -z "$CARLA_LLVM_VERSION_MAJOR" ] ; then
-    fatal_error "Failed to retrieve the installed version of the clang compiler."
-  else
-    echo "Using clang-$CARLA_LLVM_VERSION_MAJOR as the CARLA compiler."
-  fi
-
-  export CC=/usr/bin/clang-$CARLA_LLVM_VERSION_MAJOR
-  export CXX=/usr/bin/clang++-$CARLA_LLVM_VERSION_MAJOR
+  export CC="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang"
+  export CXX="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++"
+  export PATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin:$PATH"
 
   cmake ${OSM2ODR_SOURCE_FOLDER} \
       -G "Eclipse CDT4 - Ninja" \
+      -DCMAKE_CXX_FLAGS="-stdlib=libstdc++" \
       -DCMAKE_INSTALL_PREFIX=${LIBCARLA_INSTALL_CLIENT_FOLDER} \
       -DPROJ_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/proj-install/include \
       -DPROJ_LIBRARY=${CARLA_BUILD_FOLDER}/proj-install/lib/libproj.a \
