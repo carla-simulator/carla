@@ -4,7 +4,8 @@ CARLA comes with a generous compliment of assets for creating driving simulation
 
 In this tutorial we will cover the process of creating a simple map for use with CARLA. We will use two software packages to create parts of the map. We will create the road network using [__RoadRunner__](https://es.mathworks.com/products/roadrunner.html) and then add assets to the map through the [__Unreal Editor__](https://www.unrealengine.com/en-US/features/the-unreal-editor).
 
-* __[Prerequisites](#prerequisites)__   
+* __[Prerequisites](#prerequisites)__  
+* __[Large maps](#large-maps)__  
 * __[RoadRunner](#create-a-road-network-using-roadrunner)__  
 * __[Importing into CARLA](#importing-your-road-network-into-carla)__
 * __[Importing assets](#importing-assets-and-adding-them-to-the-map)__
@@ -27,7 +28,9 @@ In this tutorial we will cover the process of creating a simple map for use with
 
 To follow this guide, you will need to build CARLA from source, so that you may use the Unreal Editor. Follow the [__build instructions__](build_carla.md) for your relevant operating system. You will also need a licensed copy of RoadRunner. You may also need a 3D modelling application such as Maya, 3DS Max or Blender to create 3D assets for your custom maps. You should ensure you have completed all the steps to build CARLA and ensure that the Unreal Editor is working, this could take some time to build the application. If you want to create 3D assets for your map, you should use an appropriate 3D design application such as Blender, Maya, 3DsMax or Modo. 
 
+## Large maps
 
+The following text details the procedures for creating and decorating a normal map. From version 0.9.12, CARLA has the Large Map functionality. Large maps are bigger in scale than standard maps, and can be up to 100 km<sup>2</sup>. Most of the details that follow are similar when building a Large Map, but there are some additional steps. Please follow [this guide](content_authoring_large_maps.md).
 ## Create a road network using RoadRunner
 
 Open RoadRunner and create a new scene. Choose the Road Plan Tool and right click in the workspace to drop the first control point for the road. Click and drag elsewhere in the workspace to extend the road. 

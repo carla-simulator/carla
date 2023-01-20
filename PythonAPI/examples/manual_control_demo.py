@@ -79,7 +79,6 @@ except IndexError:
 # -- imports -------------------------------------------------------------------
 # ==============================================================================
 
-
 import carla
 
 from carla import ColorConverter as cc
@@ -210,6 +209,7 @@ class World(object):
         self.imu_sensor = None
         self.radar_sensor = None
         self.camera_manager = None
+        self._spawn_height = args.spawnheight
         self._weather_presets = find_weather_presets()
         self._weather_index = 0
         self._actor_filter = args.filter
@@ -244,10 +244,10 @@ class World(object):
         cam_index = self.camera_manager.index if self.camera_manager is not None else 0
         cam_pos_index = self.camera_manager.transform_index if self.camera_manager is not None else 0
         # Get a random blueprint.
-        blueprint = random.choice(get_actor_blueprints(self.world, self._actor_filter, self._actor_generation))
+
+        blueprint = self.world.get_blueprint_library().find('vehicle.polaris.polaris')
         blueprint.set_attribute('role_name', self.actor_role_name)
-        if blueprint.has_attribute('terramechanics'):
-            blueprint.set_attribute('terramechanics', 'true')
+        blueprint.set_attribute('terramechanics', 'true')
         if blueprint.has_attribute('color'):
             color = random.choice(blueprint.get_attribute('color').recommended_values)
             blueprint.set_attribute('color', color)
@@ -278,6 +278,7 @@ class World(object):
                 sys.exit(1)
             spawn_points = self.map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+            spawn_point.location.z = self._spawn_height
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
             self.show_vehicle_telemetry = False
             self.modify_vehicle_physics(self.player)
@@ -371,10 +372,11 @@ class World(object):
 
 class KeyboardControl(object):
     """Class that handles keyboard input."""
-    def __init__(self, world, start_in_autopilot):
+    def __init__(self, world, start_in_autopilot, speed_limit = 2000):
         self._autopilot_enabled = start_in_autopilot
         self._ackermann_enabled = False
         self._ackermann_reverse = 1
+        self._speed_limit = speed_limit
         if isinstance(world.player, carla.Vehicle):
             self._control = carla.VehicleControl()
             self._ackermann_control = carla.VehicleAckermannControl()
@@ -582,6 +584,10 @@ class KeyboardControl(object):
                     world.player.set_light_state(carla.VehicleLightState(self._lights))
                 # Apply control
                 if not self._ackermann_enabled:
+                    speed = world.player.get_velocity()
+                    # print(speed.length()*3600.0/1000.0)
+                    if(speed.length() > self._speed_limit):
+                        self._control.throttle = 0
                     world.player.apply_control(self._control)
                 else:
                     world.player.apply_ackermann_control(self._ackermann_control)
@@ -597,6 +603,7 @@ class KeyboardControl(object):
     def _parse_vehicle_keys(self, keys, milliseconds):
         if keys[K_UP] or keys[K_w]:
             if not self._ackermann_enabled:
+                #if speed
                 self._control.throttle = min(self._control.throttle + 0.01, 1.00)
             else:
                 self._ackermann_control.speed += round(milliseconds * 0.005, 2) * self._ackermann_reverse
@@ -1164,16 +1171,11 @@ class CameraManager(object):
                 self._camera_transforms[self.transform_index][0],
                 attach_to=self._parent,
                 attachment_type=self._camera_transforms[self.transform_index][1])
-            self.alt_sensor = self._parent.get_world().spawn_actor(
-                self.sensors[5][-1],
-                self._camera_transforms[self.transform_index][0],
-                attach_to=self._parent,
-                attachment_type=self._camera_transforms[self.transform_index][1])
             # We need to pass the lambda a weak reference to self to avoid
             # circular reference.
             weak_self = weakref.ref(self)
             self.sensor.listen(lambda image: CameraManager._parse_image(weak_self, image))
-            self.alt_sensor.listen(lambda image: CameraManager._parse_image_alt(weak_self, image))
+            # self.sensor.listen_to_gbuffer(0, lambda image: CameraManager._parse_image(weak_self, image))
         if notify:
             self.hud.notification(self.sensors[index][2])
         self.index = index
@@ -1188,12 +1190,6 @@ class CameraManager(object):
     def render(self, display):
         if self.surface is not None:
             display.blit(self.surface, (0, 0))
-
-    @staticmethod
-    def _parse_image_alt(weak_self, image):
-        self = weak_self()
-        if self.recording:
-            image.save_to_disk('_sem/%08d' % image.frame)
 
     @staticmethod
     def _parse_image(weak_self, image):
@@ -1253,7 +1249,7 @@ def game_loop(args):
 
     try:
         client = carla.Client(args.host, args.port)
-        client.set_timeout(2000.0)
+        client.set_timeout(20.0)
 
         sim_world = client.get_world()
         if args.sync:
@@ -1261,7 +1257,7 @@ def game_loop(args):
             settings = sim_world.get_settings()
             if not settings.synchronous_mode:
                 settings.synchronous_mode = True
-                settings.fixed_delta_seconds = 0.05
+                settings.fixed_delta_seconds = args.deltatime
             sim_world.apply_settings(settings)
 
             traffic_manager = client.get_trafficmanager()
@@ -1279,7 +1275,7 @@ def game_loop(args):
 
         hud = HUD(args.width, args.height)
         world = World(sim_world, hud, args)
-        controller = KeyboardControl(world, args.autopilot)
+        controller = KeyboardControl(world, args.autopilot, args.speedlimit*1000.0/3600.0)
 
         if args.sync:
             sim_world.tick()
@@ -1368,6 +1364,21 @@ def main():
         '--sync',
         action='store_true',
         help='Activate synchronous mode execution')
+    argparser.add_argument(
+        '--speedlimit',
+        default=200,
+        type=float,
+        help='Speed limit (km/h)')
+    argparser.add_argument(
+        '--spawnheight',
+        default=0.5,
+        type=float,
+        help='Height of spawn (m)')
+    argparser.add_argument(
+        '--deltatime',
+        default=0.05,
+        type=float,
+        help='Simulation step time (s)')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
