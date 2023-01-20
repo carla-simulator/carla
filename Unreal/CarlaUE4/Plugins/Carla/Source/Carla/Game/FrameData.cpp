@@ -40,6 +40,7 @@ void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, 
         AddActorPosition(View);
         AddVehicleAnimation(View);
         AddVehicleLight(View);
+        AddVehicleWheelsAnimation(View);
         if (bAdditionalData)
         {
           AddActorKinematics(View);
@@ -1022,7 +1023,6 @@ void FFrameData::ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels Vehicl
     VehicleAnim->SetWheelPitchAngle((uint8)Element.Location, Element.TireRotation);
   }
 }
-
 
 // set the lights for vehicles
 void FFrameData::ProcessReplayerLightVehicle(CarlaRecorderLightVehicle LightVehicle)
