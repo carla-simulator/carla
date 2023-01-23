@@ -166,7 +166,7 @@ camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame))
 ```
 * Sensors have blueprints too. Setting attributes is crucial.  
 * Most of the sensors will be attached to a vehicle to gather information on its surroundings. 
-* Sensors __listen__ to data. When data is received, they call a function described with a __[Lambda expression](https://docs.python.org/3/reference/expressions.html)__ <small>(6.13 in the link provided)</small>. 
+* Sensors __listen__ to data. When data is received, they call a function described with a __[Lambda expression](https://docs.python.org/3/reference/expressions.html)__ <small>(6.14 in the link provided)</small>. 
 
 ### Spectator
 

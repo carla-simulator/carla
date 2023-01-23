@@ -252,6 +252,9 @@ protected:
   // TODO: support rebase in more than one hero vehicle
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   TArray<AActor*> ActorsToConsider;
+
+  UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
+  AActor* Spectator = nullptr;
   //UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   TArray<FCarlaActor::IdType> ActiveActors;
   TArray<FCarlaActor::IdType> DormantActors;
