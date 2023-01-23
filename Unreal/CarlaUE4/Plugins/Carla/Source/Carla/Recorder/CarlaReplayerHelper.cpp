@@ -458,7 +458,7 @@ void CarlaReplayerHelper::ProcessReplayerAnimBiker(CarlaRecorderAnimBiker Biker)
 void CarlaReplayerHelper::ProcessReplayerWalkerBones(const CarlaRecorderWalkerBones &WalkerBones)
 {
   check(Episode != nullptr);
-  
+
   FCarlaActor* CarlaActor = Episode->FindCarlaActor(WalkerBones.DatabaseId);
   if (!CarlaActor) return;
 
@@ -476,7 +476,7 @@ void CarlaReplayerHelper::ProcessReplayerWalkerBones(const CarlaRecorderWalkerBo
     FTransform Trans(FRotator::MakeFromEuler(Bone.Rotation), Bone.Location, FVector(1, 1, 1));
     BonesIn.BoneTransforms.Add(Bone.Name, Trans);
   }
-  
+
   // set the pose and blend
   Controller->SetBonesTransform(BonesIn);
   Controller->BlendPose(1.0f);

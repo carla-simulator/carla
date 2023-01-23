@@ -244,7 +244,7 @@ void ACarlaRecorder::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
 
   if (CarlaVehicle->IsTwoWheeledVehicle())
   {
-    
+
 
     AddAnimBiker(CarlaRecorderAnimBiker
     {
@@ -393,7 +393,7 @@ void ACarlaRecorder::AddActorBones(FCarlaActor *CarlaActor)
 
   CarlaRecorderWalkerBones Walker;
   Walker.DatabaseId = CarlaActor->GetActorId();
-  for (auto &Bone : Bones.BoneTransforms) 
+  for (auto &Bone : Bones.BoneTransforms)
   {
     FString Name = Bone.Get<0>();
     auto Transforms = Bone.Get<1>();
