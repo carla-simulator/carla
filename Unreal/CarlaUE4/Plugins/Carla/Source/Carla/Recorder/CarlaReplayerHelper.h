@@ -54,7 +54,7 @@ public:
 
   // set the animation for Vehicles
   void ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle);
-  
+
   // set the animation for Vehicles Wheels
   void ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels Vehicle);
 

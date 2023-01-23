@@ -136,7 +136,7 @@ public:
   void AddTrafficLightTime(const ATrafficLightBase& TrafficLight);
 
   void AddActorBones(FCarlaActor *CarlaActor);
-  
+
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
   {

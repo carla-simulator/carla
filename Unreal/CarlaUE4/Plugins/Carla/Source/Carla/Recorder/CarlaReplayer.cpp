@@ -386,7 +386,7 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
         else
           SkipPacket();
         break;
-        
+
       // frame end
       case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
         if (bFrameFound)
@@ -562,7 +562,7 @@ void CarlaReplayer::ProcessAnimVehicle(void)
 void CarlaReplayer::ProcessAnimVehicleWheels(void)
 {
   uint16_t i, Total;
-  
+
   // read Total Vehicles
   ReadValue<uint16_t>(File, Total);
   for (i = 0; i < Total; ++i)
