@@ -134,7 +134,7 @@ private:
   void ProcessToTime(double Time, bool IsFirstTime = false);
 
   void ProcessVisualTime(void);
-  
+
   void ProcessEventsAdd(void);
   void ProcessEventsDel(void);
   void ProcessEventsParent(void);
@@ -152,7 +152,7 @@ private:
   void ProcessLightScene(void);
 
   void ProcessWalkerBones(void);
-  
+
   // positions
   void UpdatePositions(double Per, double DeltaTime);
 
