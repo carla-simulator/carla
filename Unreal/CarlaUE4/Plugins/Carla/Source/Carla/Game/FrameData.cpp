@@ -1019,8 +1019,8 @@ void FFrameData::ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels Vehicl
   for (uint32_t i = 0; i < VehicleAnimWheels.WheelValues.size(); ++i)
   {
     const WheelInfo& Element = VehicleAnimWheels.WheelValues[i];
-    VehicleAnim->SetWheelRotYaw((uint8)Element.Location, Element.SteeringAngle);
-    VehicleAnim->SetWheelPitchAngle((uint8)Element.Location, Element.TireRotation);
+    VehicleAnim->SetWheelRotYaw(static_cast<uint8>(Element.Location), Element.SteeringAngle);
+    VehicleAnim->SetWheelPitchAngle(static_cast<uint8>(Element.Location), Element.TireRotation);
   }
 }
 
