@@ -14,20 +14,20 @@ class FRHIGPUTextureReadback;
 namespace ImageUtil
 {
   void DecodePixelsByFormat(
-      void* PixelData,
+      TArrayView<FColor> Out,
+      TArrayView<uint8> PixelData,
       int32 SourcePitch,
       FIntPoint SourceExtent,
       FIntPoint DestinationExtent,
       EPixelFormat Format,
-      FReadSurfaceDataFlags Flags,
-      TArrayView<FColor> Out);
+      FReadSurfaceDataFlags Flags);
 
   void DecodePixelsByFormat(
-      void* PixelData,
+      TArrayView<FLinearColor> Out,
+      TArrayView<uint8> PixelData,
       int32 SourcePitch,
       FIntPoint SourceExtent,
       FIntPoint DestinationExtent,
       EPixelFormat Format,
-      FReadSurfaceDataFlags Flags,
-      TArrayView<FLinearColor> Out);
+      FReadSurfaceDataFlags Flags);
 }

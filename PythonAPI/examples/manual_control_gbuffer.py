@@ -166,8 +166,6 @@ gbuffer_names = [
     'Custom Stencil'
 ]
 
-
-
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
 # ==============================================================================
@@ -1272,13 +1270,19 @@ class CameraManager(object):
         else:
             if self.output_texture_id != index:
                 return
-            image.convert(self.sensors[self.index][1])
-            array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
+            gbuffer_texture_id = self.output_texture_id - 1
+            is_scene_depth = gbuffer_texture_id == carla.GBufferTextureID.SceneDepth
+            is_custom_depth = gbuffer_texture_id == carla.GBufferTextureID.CustomDepth
+            is_32bit_image = is_scene_depth or is_custom_depth
+            array_type = np.float32 if is_32bit_image else np.uint8
+            if not is_32bit_image:
+                image.convert(self.sensors[self.index][1])
+            array = np.frombuffer(image.raw_data, dtype = array_type)
             array = np.reshape(array, (image.height, image.width, 4))
             array = array[:, :, :3]
             array = array[:, :, ::-1]
             self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
-        if self.recording:
+        if self.recording and not is_32bit_image:
             image.save_to_disk('_out/%08d' % image.frame)
 
 

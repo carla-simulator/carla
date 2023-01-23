@@ -53,14 +53,14 @@ struct FCameraGBufferUint8
   {
     return {};
   }
+
   /// Return the FDataStream associated with this sensor.
   ///
   /// You need to provide a reference to self, this is necessary for template
   /// deduction.
-  template <typename SensorT>
-  FAsyncDataStream GetDataStream(const SensorT &Self)
+  auto GetDataStream(const UCarlaEpisode& Episode)
   {
-    return Stream.MakeAsyncDataStream(Self, Self.GetEpisode().GetElapsedGameTime());
+    return Stream.MakeAsyncDataStream(*this, Episode.GetElapsedGameTime());
   }
 
   mutable bool bIsUsed = false;
@@ -95,14 +95,14 @@ struct FCameraGBufferFloat
   {
     return {};
   }
+
   /// Return the FDataStream associated with this sensor.
   ///
   /// You need to provide a reference to self, this is necessary for template
   /// deduction.
-  template <typename SensorT>
-  FAsyncDataStream GetDataStream(const SensorT &Self)
+  auto GetDataStream(const UCarlaEpisode& Episode)
   {
-    return Stream.MakeAsyncDataStream(Self, Self.GetEpisode().GetElapsedGameTime());
+    return Stream.MakeAsyncDataStream(*this, Episode.GetElapsedGameTime());
   }
   
   mutable bool bIsUsed = false;
@@ -402,10 +402,10 @@ public:
     // FlushRenderingCommands();
   }
 
-  struct
+  struct CameraGBuffersStruct
   {
     FCameraGBufferUint8 SceneColor;
-    FCameraGBufferUint8 SceneDepth;
+    FCameraGBufferFloat SceneDepth;
     FCameraGBufferUint8 SceneStencil;
     FCameraGBufferUint8 GBufferA;
     FCameraGBufferUint8 GBufferB;
@@ -415,9 +415,11 @@ public:
     FCameraGBufferUint8 GBufferF;
     FCameraGBufferUint8 Velocity;
     FCameraGBufferUint8 SSAO;
-    FCameraGBufferUint8 CustomDepth;
+    FCameraGBufferFloat CustomDepth;
     FCameraGBufferUint8 CustomStencil;
-  } CameraGBuffers;
+  };
+  
+  CameraGBuffersStruct CameraGBuffers;
 
 protected:
     
@@ -476,46 +478,46 @@ private:
         std::is_same<std::remove_reference_t<CameraGBufferT>, FCameraGBufferUint8>::value,
         FColor,
         FLinearColor>::type;
-      FIntPoint ViewSize;
+      FIntPoint ImageSize;
       TArray<PixelType> Pixels;
       if (GBufferData.WaitForTextureTransfer(TextureID))
       {
+        FIntPoint SourceExtent = {};
         TRACE_CPUPROFILER_EVENT_SCOPE_STR("GBuffer Decode");
         void* PixelData;
         int32 SourcePitch;
-        FIntPoint SourceExtent;
         GBufferData.MapTextureData(
           TextureID,
           PixelData,
           SourcePitch,
           SourceExtent);
         auto Format = GBufferData.Readbacks[(size_t)TextureID]->GetFormat();
-        ViewSize = GBufferData.ViewRect.Size();
-        Pixels.AddUninitialized(ViewSize.X * ViewSize.Y);
+        ImageSize = GBufferData.ViewRect.Size();
+        Pixels.AddUninitialized(ImageSize.X * ImageSize.Y);
         FReadSurfaceDataFlags Flags = {};
         Flags.SetLinearToGamma(true);
         ImageUtil::DecodePixelsByFormat(
-          PixelData,
+          Pixels,
+          TArrayView<uint8>((uint8*)PixelData, SourcePitch * SourceExtent.Y),
           SourcePitch,
           SourceExtent,
-          ViewSize,
+          ImageSize,
           Format,
-          Flags,
-          Pixels);
+          Flags);
         GBufferData.UnmapTextureData(TextureID);
       }
       else
       {
-        ViewSize = GBufferData.ViewRect.Size();
-        Pixels.SetNum(ViewSize.X * ViewSize.Y);
+        ImageSize = GBufferData.ViewRect.Size();
+        Pixels.AddUninitialized(ImageSize.X * ImageSize.Y);
         for (auto& Pixel : Pixels)
           Pixel = PixelType::Black;
       }
-      auto GBufferStream = CameraGBuffer.GetDataStream(Self);
+      auto GBufferStream = CameraGBuffer.GetDataStream(Self.GetEpisode());
       auto Buffer = GBufferStream.PopBufferFromPool();
       Buffer.copy_from(
         carla::sensor::SensorRegistry::get<CameraGBufferT*>::type::header_offset,
-        Pixels);
+        boost::asio::buffer(&Pixels[0], Pixels.Num() * sizeof(PixelType)));
       if (Buffer.empty()) {
         return;
       }
@@ -524,8 +526,8 @@ private:
       GBufferStream.Send(
         CameraGBuffer,
         std::move(Buffer),
-        ViewSize.X,
-        ViewSize.Y,
+        ImageSize.X,
+        ImageSize.Y,
         Self.GetFOVAngle());
   }
 
