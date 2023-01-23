@@ -106,7 +106,7 @@ def main():
 
     try:
 
-        print("Runnig Docker...")
+        print("Running Docker...")
         carla_container = client.containers.run(**container_args)
 
         if args.packages:
@@ -133,7 +133,7 @@ def main():
             '/home/carla/carla/Dist/*.tar.gz',
             user='carla', verbose=args.verbose)
 
-        # Copy these fles to the output folder
+        # Copy these files to the output folder
         docker_utils.extract_files(carla_container, files_to_copy, args.output)
 
     finally:
