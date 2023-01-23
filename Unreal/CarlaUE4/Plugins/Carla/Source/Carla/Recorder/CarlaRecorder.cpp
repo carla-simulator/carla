@@ -217,22 +217,22 @@ void ACarlaRecorder::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
   WheelInfo FL;
   FL.Location = EVehicleWheelLocation::FL_Wheel;
   FL.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(FL.Location);
-  FL.TireRotation = WheeledVehicleMovementComponent->Wheels[(uint8)FL.Location]->GetRotationAngle();
+  FL.TireRotation = WheeledVehicleMovementComponent->Wheels[static_cast<uint8>(FL.Location)]->GetRotationAngle();
 
   WheelInfo FR;
   FR.Location = EVehicleWheelLocation::FR_Wheel;
   FR.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(FR.Location);
-  FR.TireRotation = WheeledVehicleMovementComponent->Wheels[(uint8)FR.Location]->GetRotationAngle();
+  FR.TireRotation = WheeledVehicleMovementComponent->Wheels[static_cast<uint8>(FR.Location)]->GetRotationAngle();
 
   WheelInfo BL;
   BL.Location = EVehicleWheelLocation::BL_Wheel;
   BL.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(BL.Location);
-  BL.TireRotation = WheeledVehicleMovementComponent->Wheels[(uint8)BL.Location]->GetRotationAngle();
+  BL.TireRotation = WheeledVehicleMovementComponent->Wheels[static_cast<uint8>(BL.Location)]->GetRotationAngle();
 
   WheelInfo BR;
   BR.Location = EVehicleWheelLocation::BR_Wheel;
   BR.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(BR.Location);
-  BR.TireRotation = WheeledVehicleMovementComponent->Wheels[(uint8)BR.Location]->GetRotationAngle();
+  BR.TireRotation = WheeledVehicleMovementComponent->Wheels[static_cast<uint8>(BR.Location)]->GetRotationAngle();
 
   Record.WheelValues.reserve(4);
   Record.WheelValues.push_back(FL);
