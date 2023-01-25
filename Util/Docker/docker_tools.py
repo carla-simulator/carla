@@ -55,7 +55,9 @@ def parse_args():
     argparser.add_argument(
         '--image',
         type=str,
-        help='Use a specific Carla image. Default: "carla:latest"')
+        help='Use a specific Carla image. Default: "carla:latest"',
+        default='carla:latest',
+    )
     args = argparser.parse_args()
 
     if not args.output:
@@ -83,7 +85,7 @@ def parse_args():
 def main():
 
     args = parse_args()
-    carla_image_name = "carla:latest"
+    carla_image_name = args.image
     inbox_assets_path = '/home/carla/carla/Import'
     client = docker.from_env()
 
