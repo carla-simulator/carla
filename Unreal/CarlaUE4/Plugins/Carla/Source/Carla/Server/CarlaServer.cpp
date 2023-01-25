@@ -557,10 +557,10 @@ void FCarlaServer::FPimpl::BindActions()
     return Episode->SerializeActor(CarlaActor);
   };
 
-  BIND_SYNC(get_all_level_BBs) << [this](uint8 QueriedTag) -> R<std::vector<cg::BoundingBox>>
+  BIND_SYNC(get_all_level_BBs) << [this](uint8 QueriedTag) -> R<std::vector<std::pair<int32_t, cg::BoundingBox>>>
   {
     REQUIRE_CARLA_EPISODE();
-    TArray<FBoundingBox> Result;
+    TArray<FActorBoundingBox> Result;
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
     if (!GameMode)
     {
@@ -568,14 +568,17 @@ void FCarlaServer::FPimpl::BindActions()
     }
     Result = GameMode->GetAllBBsOfLevel(QueriedTag);
     ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    if (LargeMap)
-    {
-      for(auto& Box : Result)
-      {
-        Box.Origin = LargeMap->LocalToGlobalLocation(Box.Origin);
-      }
-    }
-    return MakeVectorFromTArray<cg::BoundingBox>(Result);
+
+  	std::vector<std::pair<int32_t, cg::BoundingBox>> ReturnVector;
+  	for (auto& ABox : Result)
+  	{
+  		if (LargeMap)
+  		{
+  			ABox.Box.Origin = LargeMap->LocalToGlobalLocation(ABox.Box.Origin);
+  		}
+  		ReturnVector.push_back(std::make_pair(ABox.Id, ABox.Box));
+  	}
+  	return ReturnVector;
   };
 
   BIND_SYNC(get_environment_objects) << [this](uint8 QueriedTag) -> R<std::vector<cr::EnvironmentObject>>

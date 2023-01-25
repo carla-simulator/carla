@@ -614,7 +614,7 @@ void ACarlaGameModeBase::DebugShowSignals(bool enable)
 
 }
 
-TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried) const
+TArray<FActorBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried) const
 {
   UWorld* World = GetWorld();
 
@@ -622,7 +622,7 @@ TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried) cons
   TArray<AActor*> FoundActors;
   UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
 
-  TArray<FBoundingBox> BoundingBoxes;
+  TArray<FActorBoundingBox> BoundingBoxes;
   BoundingBoxes = UBoundingBoxCalculator::GetBoundingBoxOfActors(FoundActors, TagQueried);
 
   return BoundingBoxes;

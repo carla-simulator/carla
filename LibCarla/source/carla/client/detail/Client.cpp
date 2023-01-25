@@ -639,8 +639,8 @@ namespace detail {
     _pimpl->AsyncCall("update_day_night_cycle", _pimpl->endpoint, active);
   }
 
-  std::vector<geom::BoundingBox> Client::GetLevelBBs(uint8_t queried_tag) const {
-    using return_t = std::vector<geom::BoundingBox>;
+  std::vector<std::pair<int32_t, geom::BoundingBox>> Client::GetLevelBBs(uint8_t queried_tag) const {
+    using return_t = std::vector<std::pair<int32_t, geom::BoundingBox>>;
     return _pimpl->CallAndWait<return_t>("get_all_level_BBs", queried_tag);
   }
 

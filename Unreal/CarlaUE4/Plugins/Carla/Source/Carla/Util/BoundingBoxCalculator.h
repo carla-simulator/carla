@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Carla/Util/BoundingBox.h"
+#include "Util/ActorBoundingBox.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 
@@ -75,7 +76,7 @@ public:
     uint8 InTagQueried = 0xFF);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
-  static TArray<FBoundingBox> GetBoundingBoxOfActors(
+  static TArray<FActorBoundingBox> GetBoundingBoxOfActors(
     const TArray<AActor*>& Actors,
     uint8 InTagQueried = 0xFF);
 
