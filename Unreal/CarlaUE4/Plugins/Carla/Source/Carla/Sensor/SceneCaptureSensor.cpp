@@ -529,6 +529,7 @@ void ASceneCaptureSensor::CaptureSceneExtended()
 #undef CARLA_GBUFFER_DISABLE_TAA
 #endif
 
+  FlushRenderingCommands();
   AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, GBuffer = MoveTemp(GBufferPtr)]() mutable
   {
     SendGBufferTextures(*GBuffer);
