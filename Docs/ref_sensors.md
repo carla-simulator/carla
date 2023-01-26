@@ -709,7 +709,7 @@ This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it
 
 ```py
 ...
-raw_image.save_to_disk("path/to/save/converted/image",carla.cityScapesPalette)
+raw_image.save_to_disk("path/to/save/converted/image",carla.ColorConverter.cityScapesPalette)
 ```
 
 The following tags are currently available:
