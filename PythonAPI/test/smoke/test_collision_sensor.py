@@ -40,6 +40,7 @@ class TestCollisionSensor(SyncSmokeTest):
         print("TestCollisionSensor.test_single_car")
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
+        bp_vehicles = self.filter_vehicles_for_old_towns(bp_vehicles)
         cars_failing = ""
         for bp_veh in bp_vehicles:
             # Run collision agains wall

@@ -8,7 +8,7 @@
 #include "CarlaRecorderCollision.h"
 #include "CarlaRecorderHelpers.h"
 
-void CarlaRecorderCollision::Read(std::ifstream &InFile)
+void CarlaRecorderCollision::Read(std::istream &InFile)
 {
     // id
     ReadValue<uint32_t>(InFile, this->Id);
@@ -19,7 +19,7 @@ void CarlaRecorderCollision::Read(std::ifstream &InFile)
     ReadValue<bool>(InFile, this->IsActor1Hero);
     ReadValue<bool>(InFile, this->IsActor2Hero);
 }
-void CarlaRecorderCollision::Write(std::ofstream &OutFile) const
+void CarlaRecorderCollision::Write(std::ostream &OutFile) const
 {
     // id
     WriteValue<uint32_t>(OutFile, this->Id);
@@ -47,7 +47,7 @@ void CarlaRecorderCollisions::Add(const CarlaRecorderCollision &Collision)
     Collisions.insert(std::move(Collision));
 }
 
-void CarlaRecorderCollisions::Write(std::ofstream &OutFile)
+void CarlaRecorderCollisions::Write(std::ostream &OutFile)
 {
     // write the packet id
     WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::Collision));

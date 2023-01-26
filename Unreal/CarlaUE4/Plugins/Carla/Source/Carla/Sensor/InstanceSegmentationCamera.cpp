@@ -62,6 +62,6 @@ void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickTyp
     SceneCapture->ShowOnlyComponents.Emplace(Component);
   }
 
-  FPixelReader::SendPixelsInRenderThread(*this);
+  FPixelReader::SendPixelsInRenderThread<AInstanceSegmentationCamera, FColor>(*this);
 
 }

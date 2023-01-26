@@ -12,6 +12,7 @@
 - [__RSS sensor__](#rss-sensor)
 - [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
 - [__Semantic segmentation camera__](#semantic-segmentation-camera)
+- [__Instance segmentation camera__](#instance-segmentation-camera)
 - [__DVS camera__](#dvs-camera)
 - [__Optical Flow camera__](#optical-flow-camera)
 
@@ -742,7 +743,19 @@ The following tags are currently available:
 <br>
 
 !!! Note
-    Read [this](tuto_D_create_semantic_tags.md) tutorial to create new semantic tags. 
+    Read [this](tuto_D_create_semantic_tags.md) tutorial to create new semantic tags.
+
+## Instance segmentation camera 
+
+*   __Blueprint:__ sensor.camera.instance_segmentation
+*   __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
+
+This camera classifies every object in the field of view both by class and also by instance ID. 
+When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUE4/Content/Static/Pedestrians` are tagged as `Pedestrian`.
+
+![ImageInstanceSegmentation](img/instance_segmentation.png)
+
+The server provides an image with the tag information __encoded in the red channel__: A pixel with a red value of `x` belongs to an object with tag `x`. The green and blue values of the pixel define the object's unique ID. For example a pixel with an 8 bit RGB value of [10, 20, 55] is a vehicle (Semantic tag 10) with a unique instance ID `20-55`.  
 
 #### Basic camera attributes
 

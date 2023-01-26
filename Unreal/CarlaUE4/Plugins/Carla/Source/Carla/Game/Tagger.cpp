@@ -34,7 +34,7 @@ crp::CityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
   else if (String == "SideWalk")     return crp::CityObjectLabel::Sidewalks;
   else if (String == "TrafficSign")  return crp::CityObjectLabel::TrafficSigns;
   else if (String == "Vegetation")   return crp::CityObjectLabel::Vegetation;
-  else if (String == "Vehicles")     return crp::CityObjectLabel::Vehicles;
+  else if (String == "Car")          return crp::CityObjectLabel::Car;
   else if (String == "Wall")         return crp::CityObjectLabel::Walls;
   else if (String == "Sky")          return crp::CityObjectLabel::Sky;
   else if (String == "Ground")       return crp::CityObjectLabel::Ground;
@@ -46,6 +46,12 @@ crp::CityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
   else if (String == "Dynamic")      return crp::CityObjectLabel::Dynamic;
   else if (String == "Water")        return crp::CityObjectLabel::Water;
   else if (String == "Terrain")      return crp::CityObjectLabel::Terrain;
+  else if (String == "Truck")        return crp::CityObjectLabel::Truck;
+  else if (String == "Motorcycle")   return crp::CityObjectLabel::Motorcycle;
+  else if (String == "Bicycle")      return crp::CityObjectLabel::Bicycle;
+  else if (String == "Bus")          return crp::CityObjectLabel::Bus;
+  else if (String == "Rider")        return crp::CityObjectLabel::Rider;
+  else if (String == "Train")        return crp::CityObjectLabel::Train;
   else                               return crp::CityObjectLabel::None;
 }
 
@@ -63,7 +69,13 @@ bool ATagger::IsThing(const crp::CityObjectLabel &Label)
 {
   return (Label == crp::CityObjectLabel::Pedestrians ||
           Label == crp::CityObjectLabel::TrafficSigns ||
-          Label == crp::CityObjectLabel::Vehicles ||
+          Label == crp::CityObjectLabel::Car ||
+          Label == crp::CityObjectLabel::Train ||
+          Label == crp::CityObjectLabel::Bicycle ||
+          Label == crp::CityObjectLabel::Motorcycle ||
+          Label == crp::CityObjectLabel::Bus ||
+          Label == crp::CityObjectLabel::Rider ||
+          Label == crp::CityObjectLabel::Truck ||
           Label == crp::CityObjectLabel::TrafficLight);
 }
 
@@ -97,7 +109,12 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
   TArray<UStaticMeshComponent *> StaticMeshComponents;
   Actor.GetComponents<UStaticMeshComponent>(StaticMeshComponents);
   for (UStaticMeshComponent *Component : StaticMeshComponents) {
-    const auto Label = GetLabelByPath(Component->GetStaticMesh());
+    auto Label = GetLabelByPath(Component->GetStaticMesh());
+    if (Label == crp::CityObjectLabel::Pedestrians &&
+        Cast<ACarlaWheeledVehicle>(&Actor))
+    {
+      Label = crp::CityObjectLabel::Rider;
+    }
     SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
 #ifdef CARLA_TAGGER_EXTRA_LOG
     UE_LOG(LogCarla, Log, TEXT("  + StaticMeshComponent: %s"), *Component->GetName());
@@ -147,7 +164,12 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
   TArray<USkeletalMeshComponent *> SkeletalMeshComponents;
   Actor.GetComponents<USkeletalMeshComponent>(SkeletalMeshComponents);
   for (USkeletalMeshComponent *Component : SkeletalMeshComponents) {
-    const auto Label = GetLabelByPath(Component->GetPhysicsAsset());
+    auto Label = GetLabelByPath(Component->GetPhysicsAsset());
+    if (Label == crp::CityObjectLabel::Pedestrians &&
+        Cast<ACarlaWheeledVehicle>(&Actor))
+    {
+      Label = crp::CityObjectLabel::Rider;
+    }
     SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
 #ifdef CARLA_TAGGER_EXTRA_LOG
     UE_LOG(LogCarla, Log, TEXT("  + SkeletalMeshComponent: %s"), *Component->GetName());
@@ -239,7 +261,7 @@ FString ATagger::GetTagAsString(const crp::CityObjectLabel Label)
     CARLA_GET_LABEL_STR(Sidewalks)
     CARLA_GET_LABEL_STR(TrafficSigns)
     CARLA_GET_LABEL_STR(Vegetation)
-    CARLA_GET_LABEL_STR(Vehicles)
+    CARLA_GET_LABEL_STR(Car)
     CARLA_GET_LABEL_STR(Walls)
     CARLA_GET_LABEL_STR(Sky)
     CARLA_GET_LABEL_STR(Ground)
@@ -251,6 +273,13 @@ FString ATagger::GetTagAsString(const crp::CityObjectLabel Label)
     CARLA_GET_LABEL_STR(Dynamic)
     CARLA_GET_LABEL_STR(Water)
     CARLA_GET_LABEL_STR(Terrain)
+    CARLA_GET_LABEL_STR(Truck)
+    CARLA_GET_LABEL_STR(Motorcycle)
+    CARLA_GET_LABEL_STR(Bicycle)
+    CARLA_GET_LABEL_STR(Bus)
+    CARLA_GET_LABEL_STR(Train)
+    CARLA_GET_LABEL_STR(Rider)
+
 #undef CARLA_GET_LABEL_STR
   }
 }

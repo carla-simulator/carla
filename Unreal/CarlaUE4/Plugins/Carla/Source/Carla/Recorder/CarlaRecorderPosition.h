@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fstream>
+#include <sstream>
 #include <vector>
 
 #pragma pack(push, 1)
@@ -16,9 +16,9 @@ struct CarlaRecorderPosition
   FVector Location;
   FVector Rotation;
 
-  void Read(std::ifstream &InFile);
+  void Read(std::istream &InFile);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 
 };
 #pragma pack(pop)
@@ -31,7 +31,11 @@ public:
 
   void Clear(void);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
+
+  void Read(std::istream &InFile);
+
+  const std::vector<CarlaRecorderPosition>& GetPositions();
 
 private:
 

@@ -60,7 +60,7 @@ namespace detail {
     if(result) {
       carla::traffic_manager::TrafficManager::Tick();
     }
-
+    
     return result;
   }
 
@@ -134,7 +134,7 @@ namespace detail {
       if (!GetEpisodeSettings().synchronous_mode) {
         WaitForTick(_client.GetTimeout());
       }
-      _light_manager->SetEpisode(EpisodeProxy{shared_from_this()});
+      _light_manager->SetEpisode(WeakEpisodeProxy{shared_from_this()});
     }
     return EpisodeProxy{shared_from_this()};
   }
@@ -203,6 +203,10 @@ namespace detail {
 
   WorldSnapshot Simulator::WaitForTick(time_duration timeout) {
     DEBUG_ASSERT(_episode != nullptr);
+
+    // tick pedestrian navigation
+    _episode->NavigationTick();
+
     auto result = _episode->WaitForState(timeout);
     if (!result.has_value()) {
       throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
@@ -212,7 +216,14 @@ namespace detail {
 
   uint64_t Simulator::Tick(time_duration timeout) {
     DEBUG_ASSERT(_episode != nullptr);
+    
+    // tick pedestrian navigation
+    _episode->NavigationTick();
+    
+    // send tick command
     const auto frame = _client.SendTickCue();
+
+    // waits until new episode is received
     bool result = SynchronizeFrame(frame, *_episode, timeout);
     if (!result) {
       throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
@@ -378,9 +389,26 @@ namespace detail {
           cb(std::move(data));
         });
   }
-
-  void Simulator::UnSubscribeFromSensor(const Sensor &sensor) {
+  
+  void Simulator::UnSubscribeFromSensor(Actor &sensor) {
     _client.UnSubscribeFromStream(sensor.GetActorDescription().GetStreamToken());
+    // If in the future we need to unsubscribe from each gbuffer individually, it should be done here.
+  }
+
+  void Simulator::SubscribeToGBuffer(
+      Actor &actor,
+      uint32_t gbuffer_id,
+      std::function<void(SharedPtr<sensor::SensorData>)> callback) {
+    _client.SubscribeToGBuffer(actor.GetId(), gbuffer_id,
+        [cb=std::move(callback), ep=WeakEpisodeProxy{shared_from_this()}](auto buffer) {
+          auto data = sensor::Deserializer::Deserialize(std::move(buffer));
+          data->_episode = ep.TryLock();
+          cb(std::move(data));
+        });
+  }
+
+  void Simulator::UnSubscribeFromGBuffer(Actor &actor, uint32_t gbuffer_id) {
+    _client.UnSubscribeFromGBuffer(actor.GetId(), gbuffer_id);
   }
 
   void Simulator::FreezeAllTrafficLights(bool frozen) {

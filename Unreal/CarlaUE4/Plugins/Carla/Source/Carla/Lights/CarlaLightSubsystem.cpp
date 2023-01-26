@@ -5,6 +5,8 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "CarlaLightSubsystem.h"
+#include "Carla/Weather/Weather.h"
+#include "Kismet/GameplayStatics.h"
 
 //using cr = carla::rpc;
 
@@ -30,6 +32,7 @@ void UCarlaLightSubsystem::RegisterLight(UCarlaLight* CarlaLight)
     }
     Lights.Add(LightId, CarlaLight);
   }
+  SetClientStatesdirty("");
 }
 
 void UCarlaLightSubsystem::UnregisterLight(UCarlaLight* CarlaLight)
@@ -38,6 +41,7 @@ void UCarlaLightSubsystem::UnregisterLight(UCarlaLight* CarlaLight)
   {
     Lights.Remove(CarlaLight->GetId());
   }
+  SetClientStatesdirty("");
 }
 
 bool UCarlaLightSubsystem::IsUpdatePending() const
@@ -98,6 +102,18 @@ UCarlaLight* UCarlaLightSubsystem::GetLight(int Id)
     return Lights[Id];
   }
   return nullptr;
+}
+
+void UCarlaLightSubsystem::SetDayNightCycle(const bool active) {
+  TArray<AActor*> WeatherActors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AWeather::StaticClass(), WeatherActors);
+  if (WeatherActors.Num())
+  {
+    if (AWeather* WeatherActor = Cast<AWeather>(WeatherActors[0]))
+    {
+      WeatherActor->SetDayNightCycle(active);
+    }
+  }
 }
 
 void UCarlaLightSubsystem::SetClientStatesdirty(FString ClientThatUpdate)

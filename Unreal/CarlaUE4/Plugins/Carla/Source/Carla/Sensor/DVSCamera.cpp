@@ -131,7 +131,7 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
 
   /// Immediate enqueues render commands of the scene at the current time.
   EnqueueRenderSceneImmediate();
-  WaitForRenderThreadToFinsih();
+  WaitForRenderThreadToFinish();
 
   //Super (ASceneCaptureSensor) Capture the Scene in a (UTextureRenderTarget2D) CaptureRenderTarge from the CaptureComponent2D
   /** Read the image **/

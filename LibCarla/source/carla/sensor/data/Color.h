@@ -49,7 +49,7 @@ namespace data {
   };
 #pragma pack(pop)
 
-  static_assert(sizeof(Color) == sizeof(uint32_t), "Invalid color size!");
+static_assert(sizeof(Color) == sizeof(uint32_t), "Invalid color size!");
 
 #pragma pack(push, 1)
   /// Optical flow pixel format. 2 channel float data.
@@ -72,6 +72,7 @@ namespace data {
 
     float x = 0;
     float y = 0;
+    MSGPACK_DEFINE_ARRAY(x, y);
   };
 #pragma pack(pop)
 

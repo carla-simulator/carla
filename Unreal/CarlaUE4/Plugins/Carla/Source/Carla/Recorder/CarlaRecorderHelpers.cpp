@@ -34,7 +34,7 @@ std::string GetRecorderFilename(std::string Filename)
 // ------
 
 // write binary data from FVector
-void WriteFVector(std::ofstream &OutFile, const FVector &InObj)
+void WriteFVector(std::ostream &OutFile, const FVector &InObj)
 {
   WriteValue<float>(OutFile, InObj.X);
   WriteValue<float>(OutFile, InObj.Y);
@@ -42,13 +42,14 @@ void WriteFVector(std::ofstream &OutFile, const FVector &InObj)
 }
 
 // write binary data from FTransform
-// void WriteFTransform(std::ofstream &OutFile, const FTransform &InObj){
-// WriteFVector(OutFile, InObj.GetTranslation());
-// WriteFVector(OutFile, InObj.GetRotation().Euler());
-// }
+void WriteFTransform(std::ofstream &OutFile, const FTransform &InObj)
+{
+  WriteFVector(OutFile, InObj.GetTranslation());
+  WriteFVector(OutFile, InObj.GetRotation().Euler());
+}
 
 // write binary data from FString (length + text)
-void WriteFString(std::ofstream &OutFile, const FString &InObj)
+void WriteFString(std::ostream &OutFile, const FString &InObj)
 {
   // encode the string to UTF8 to know the final length
   FTCHARToUTF8 EncodedString(*InObj);
@@ -63,7 +64,7 @@ void WriteFString(std::ofstream &OutFile, const FString &InObj)
 // -----
 
 // read binary data to FVector
-void ReadFVector(std::ifstream &InFile, FVector &OutObj)
+void ReadFVector(std::istream &InFile, FVector &OutObj)
 {
   ReadValue<float>(InFile, OutObj.X);
   ReadValue<float>(InFile, OutObj.Y);
@@ -71,16 +72,17 @@ void ReadFVector(std::ifstream &InFile, FVector &OutObj)
 }
 
 // read binary data to FTransform
-// void ReadFTransform(std::ifstream &InFile, FTransform &OutObj){
-// FVector Vec;
-// ReadFVector(InFile, Vec);
-// OutObj.SetTranslation(Vec);
-// ReadFVector(InFile, Vec);
-// OutObj.GetRotation().MakeFromEuler(Vec);
-// }
+void ReadFTransform(std::ifstream &InFile, FTransform &OutObj)
+{
+  FVector Vec;
+  ReadFVector(InFile, Vec);
+  OutObj.SetTranslation(Vec);
+  ReadFVector(InFile, Vec);
+  OutObj.GetRotation().MakeFromEuler(Vec);
+}
 
 // read binary data to FString (length + text)
-void ReadFString(std::ifstream &InFile, FString &OutObj)
+void ReadFString(std::istream &InFile, FString &OutObj)
 {
   uint16_t Length;
   ReadValue<uint16_t>(InFile, Length);

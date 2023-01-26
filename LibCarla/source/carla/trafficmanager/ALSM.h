@@ -64,8 +64,6 @@ private:
   // Time elapsed since last vehicle destruction due to being idle for too long.
   double elapsed_last_actor_destruction {0.0};
   cc::Timestamp current_timestamp;
-  // Random devices.
-  RandomGeneratorMap &random_devices;
   std::unordered_map<ActorId, bool> has_physics_enabled;
 
   // Updates the duration for which a registered vehicle is stuck at a location.
@@ -104,8 +102,7 @@ public:
        CollisionStage &collision_stage,
        TrafficLightStage &traffic_light_stage,
        MotionPlanStage &motion_plan_stage,
-       VehicleLightStage &vehicle_light_stage,
-       RandomGeneratorMap &random_devices);
+       VehicleLightStage &vehicle_light_stage);
 
   void Update();
 

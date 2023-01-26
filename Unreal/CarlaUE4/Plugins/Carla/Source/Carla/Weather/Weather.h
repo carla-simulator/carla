@@ -7,10 +7,12 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-
 #include "Carla/Weather/WeatherParameters.h"
 
 #include "Weather.generated.h"
+
+class ASensor;
+class ASceneCaptureCamera;
 
 UCLASS(Abstract)
 class CARLA_API AWeather : public AActor
@@ -26,7 +28,7 @@ public:
   void ApplyWeather(const FWeatherParameters &WeatherParameters);
 
   /// Notifing the weather to the blueprint's event
-  void NotifyWeather();
+  void NotifyWeather(ASensor* Sensor = nullptr);
 
   /// Update the weather parameters without notifing it to the blueprint's event
   UFUNCTION(BlueprintCallable)
@@ -39,6 +41,16 @@ public:
     return Weather;
   }
 
+  /// Returns whether the day night cycle is active (automatic on/off switch when changin to night mode)
+  UFUNCTION(BlueprintCallable)
+  const bool &GetDayNightCycle() const
+  {
+    return DayNightCycle;
+  }
+
+  /// Update the day night cycle
+  void SetDayNightCycle(const bool &active);
+
 protected:
 
   UFUNCTION(BlueprintImplementableEvent)
@@ -46,6 +58,20 @@ protected:
 
 private:
 
+  void CheckWeatherPostProcessEffects();
+
   UPROPERTY(VisibleAnywhere)
   FWeatherParameters Weather;
+
+  UMaterial* PrecipitationPostProcessMaterial;
+
+  UMaterial* DustStormPostProcessMaterial;
+
+  TMap<UMaterial*, float> ActiveBlendables;
+
+  UPROPERTY(VisibleAnywhere)
+  TArray<ASceneCaptureCamera*> Sensors;
+
+  UPROPERTY(EditAnywhere, Category = "Weather")
+  bool DayNightCycle = true;
 };

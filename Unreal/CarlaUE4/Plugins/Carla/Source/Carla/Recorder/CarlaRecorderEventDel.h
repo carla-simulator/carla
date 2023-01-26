@@ -6,15 +6,15 @@
 
 #pragma once
 
-#include <fstream>
+#include <sstream>
 #include <vector>
 
 struct CarlaRecorderEventDel
 {
     uint32_t DatabaseId;
 
-    void Read(std::ifstream &InFile);
-    void Write(std::ofstream &OutFile) const;
+    void Read(std::istream &InFile);
+    void Write(std::ostream &OutFile) const;
 };
 
 class CarlaRecorderEventsDel
@@ -23,7 +23,9 @@ class CarlaRecorderEventsDel
     public:
     void Add(const CarlaRecorderEventDel &Event);
     void Clear(void);
-    void Write(std::ofstream &OutFile);
+    void Write(std::ostream &OutFile);
+    void Read(std::istream &InFile);
+    const std::vector<CarlaRecorderEventDel>& GetEvents();
 
     private:
     std::vector<CarlaRecorderEventDel> Events;

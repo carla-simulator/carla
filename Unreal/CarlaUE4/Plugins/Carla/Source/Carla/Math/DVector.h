@@ -79,6 +79,14 @@ struct FDVector
     return FDVector(X + V.X, Y + V.Y, Z + V.Z);
   }
 
+  FDVector& operator+=(float Scalar)
+  {
+    this->X += Scalar;
+    this->Y += Scalar;
+    this->Z += Scalar;
+    return *this;
+  }
+  
   FDVector operator-(const FDVector& V) const
   {
     return FDVector(X - V.X, Y - V.Y, Z - V.Z);
@@ -108,4 +116,19 @@ struct FDVector
     return FDVector(X * Scale, Y * Scale, Z * Scale);
   }
 
+  FDVector operator*=(float Scale)
+  {
+    this->X *= Scale;
+    this->Y *= Scale;
+    this->Z *= Scale;
+    return *this;
+  }
+
+  FDVector operator*=(double Scale)
+  {
+    this->X *= Scale;
+    this->Y *= Scale;
+    this->Z *= Scale;
+    return *this;
+  }
 };

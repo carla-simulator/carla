@@ -9,7 +9,7 @@
 #include "CarlaRecorderHelpers.h"
 
 
-void CarlaRecorderTrafficLightTime::Write(std::ofstream &OutFile)
+void CarlaRecorderTrafficLightTime::Write(std::ostream &OutFile)
 {
   WriteValue<uint32_t>(OutFile, this->DatabaseId);
   WriteValue(OutFile, this->GreenTime);
@@ -17,7 +17,7 @@ void CarlaRecorderTrafficLightTime::Write(std::ofstream &OutFile)
   WriteValue(OutFile, this->RedTime);
 }
 
-void CarlaRecorderTrafficLightTime::Read(std::ifstream &InFile)
+void CarlaRecorderTrafficLightTime::Read(std::istream &InFile)
 {
   ReadValue<uint32_t>(InFile, this->DatabaseId);
   ReadValue(InFile, this->GreenTime);
@@ -37,7 +37,7 @@ void CarlaRecorderTrafficLightTimes::Add(const CarlaRecorderTrafficLightTime &In
   TrafficLightTimes.push_back(InObj);
 }
 
-void CarlaRecorderTrafficLightTimes::Write(std::ofstream &OutFile)
+void CarlaRecorderTrafficLightTimes::Write(std::ostream &OutFile)
 {
   if (TrafficLightTimes.size() == 0)
   {
