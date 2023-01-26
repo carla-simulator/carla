@@ -43,7 +43,7 @@ public:
     _dirty = other._dirty;
   }
 
-  void SetEpisode(detail::EpisodeProxy episode);
+  void SetEpisode(detail::WeakEpisodeProxy episode);
 
   std::vector<Light> GetAllLights(LightGroup type = LightGroup::None) const;
   // TODO: std::vector<Light> GetAllLightsInRoad(RoadId id, LightGroup type = LightGroup::None);
@@ -82,7 +82,10 @@ public:
   void SetColor(LightId id, Color color);
   void SetIntensity(LightId id, float intensity);
   void SetLightState(LightId id, const LightState& new_state);
+  void SetLightStateNoLock(LightId id, const LightState& new_state);
   void SetLightGroup(LightId id, LightGroup group);
+
+  void SetDayNightCycle(const bool active);
 
 private:
 
@@ -96,7 +99,7 @@ private:
   std::unordered_map<LightId, LightState> _lights_changes;
   std::unordered_map<LightId, Light> _lights;
 
-  detail::EpisodeProxy _episode;
+  detail::WeakEpisodeProxy _episode;
 
   std::mutex _mutex;
 

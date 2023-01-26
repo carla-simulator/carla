@@ -28,7 +28,7 @@ using constants::Collision::EPSILON;
 
 MotionPlanStage::MotionPlanStage(
   const std::vector<ActorId> &vehicle_id_list,
-  const SimulationState &simulation_state,
+  SimulationState &simulation_state,
   const Parameters &parameters,
   const BufferMap &buffer_map,
   TrackTraffic &track_traffic,
@@ -41,7 +41,7 @@ MotionPlanStage::MotionPlanStage(
   const TLFrame &tl_frame,
   const cc::World &world,
   ControlFrame &output_array,
-  RandomGeneratorMap &random_devices,
+  RandomGenerator &random_device,
   const LocalMapPtr &local_map)
     : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
@@ -57,17 +57,8 @@ MotionPlanStage::MotionPlanStage(
     tl_frame(tl_frame),
     world(world),
     output_array(output_array),
-    random_devices(random_devices),
-    local_map(local_map) {
-
-      // Adding structure to avoid retrieving traffic lights when checking for landmarks.
-      std::vector<SharedPtr<cc::Landmark>> traffic_lights = world.GetMap()->GetAllLandmarksOfType("1000001");
-      for (auto &tl : traffic_lights) {
-        std::string landmark_id = tl->GetId();
-        SharedPtr<cc::Actor> actor = world.GetTrafficLight(*tl);
-        tl_map.insert({landmark_id, actor});
-      }
-    }
+    random_device(random_device),
+    local_map(local_map) {}
 
 void MotionPlanStage::Update(const unsigned long index) {
   const ActorId actor_id = vehicle_id_list.at(index);
@@ -77,6 +68,7 @@ void MotionPlanStage::Update(const unsigned long index) {
   const float vehicle_speed = vehicle_velocity.Length();
   const cg::Vector3D vehicle_heading = simulation_state.GetHeading(actor_id);
   const bool vehicle_physics_enabled = simulation_state.IsPhysicsEnabled(actor_id);
+  const float vehicle_speed_limit = simulation_state.GetSpeedLimit(actor_id);
   const Buffer &waypoint_buffer = buffer_map.at(actor_id);
   const LocalizationData &localization = localization_frame.at(index);
   const CollisionHazardData &collision_hazard = collision_frame.at(index);
@@ -111,7 +103,7 @@ void MotionPlanStage::Update(const unsigned long index) {
     double elapsed_time = current_timestamp.elapsed_seconds - teleportation_instance.at(actor_id).elapsed_seconds;
 
     if (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT) {
-      float random_sample = (static_cast<float>(random_devices.at(actor_id).next())*dilate_factor) + lower_bound;
+      float random_sample = (static_cast<float>(random_device.next())*dilate_factor) + lower_bound;
       NodeList teleport_waypoint_list = local_map->GetWaypointsInDelta(hero_location, ATTEMPTS_TO_TELEPORT, random_sample);
       if (!teleport_waypoint_list.empty()) {
         for (auto &teleport_waypoint : teleport_waypoint_list) {
@@ -126,12 +118,19 @@ void MotionPlanStage::Update(const unsigned long index) {
       }
     }
     output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
+
+    // Update the simulation state with the new transform of the vehicle after teleporting it.
+    KinematicState kinematic_state{teleportation_transform.location,
+                                   teleportation_transform.rotation,
+                                   vehicle_velocity, vehicle_speed_limit,
+                                   vehicle_physics_enabled, simulation_state.IsDormant(actor_id),
+                                   teleportation_transform.location};
+    simulation_state.UpdateKinematicState(actor_id, kinematic_state);
   }
 
   else {
 
     // Target velocity for vehicle.
-    const float vehicle_speed_limit = simulation_state.GetSpeedLimit(actor_id);
     float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, vehicle_speed_limit) / 3.6f;
 
     // Algorithm to reduce speed near landmarks
@@ -159,7 +158,13 @@ void MotionPlanStage::Update(const unsigned long index) {
       const float target_point_distance = std::max(vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
                                                   MIN_TARGET_WAYPOINT_DISTANCE);
       const SimpleWaypointPtr &target_waypoint = GetTargetWaypoint(waypoint_buffer, target_point_distance).first;
-      const cg::Location target_location = target_waypoint->GetLocation();
+      cg::Location target_location = target_waypoint->GetLocation();
+
+      float offset = parameters.GetLaneOffset(actor_id);
+      auto right_vector = target_waypoint->GetTransform().GetRightVector();
+      auto offset_location = cg::Location(cg::Vector3D(offset*right_vector.x, offset*right_vector.y, 0.0f));
+      target_location = target_location + offset_location;
+
       float dot_product = DeviationDotProduct(vehicle_location, vehicle_heading, target_location);
       float cross_product = DeviationCrossProduct(vehicle_location, vehicle_heading, target_location);
       dot_product = acos(dot_product) / PI;
@@ -215,7 +220,6 @@ void MotionPlanStage::Update(const unsigned long index) {
       current_state.steer = actuation_signal.steer;
       StateEntry &state = pid_state_map.at(actor_id);
       state = current_state;
-
     }
     // For physics-less vehicles, determine position and orientation for teleportation.
     else {
@@ -258,6 +262,7 @@ void MotionPlanStage::Update(const unsigned long index) {
       }
       // Constructing the actuation signal.
       output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
+      simulation_state.UpdateKinematicHybridEndLocation(actor_id, teleportation_transform.location);
     }
   }
 }
@@ -376,32 +381,7 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
 
       float minimum_velocity = max_target_velocity;
       if (landmark_type == "1000001") {  // Traffic light
-        auto landmark_id = landmark->GetId();
-        if (tl_map.find(landmark_id) != tl_map.end()) {
-          auto actor = tl_map.at(landmark_id);
-          if (actor != nullptr) {
-
-            cc::TrafficLight* tl = static_cast<cc::TrafficLight*>(actor.get());
-            auto state = tl->GetState();
-
-            if (state == carla::rpc::TrafficLightState::Green) {
-              minimum_velocity = TL_GREEN_TARGET_VELOCITY;
-            } else if (state == carla::rpc::TrafficLightState::Yellow || state == carla::rpc::TrafficLightState::Red){
-              minimum_velocity = TL_RED_TARGET_VELOCITY;
-            } else if (state == carla::rpc::TrafficLightState::Unknown){
-              minimum_velocity = TL_UNKNOWN_TARGET_VELOCITY;
-            } else {
-              // Traffic light is off
-              continue;
-            }
-          } else {
-            // It is a traffic light, but it's not present in our structure
-            minimum_velocity = TL_UNKNOWN_TARGET_VELOCITY;
-          }
-        } else {
-          // It is a traffic light, but it's not present in our structure
-          minimum_velocity = TL_UNKNOWN_TARGET_VELOCITY;
-        }
+        minimum_velocity = TL_TARGET_VELOCITY;
       } else if (landmark_type == "206") {  // Stop
         minimum_velocity = STOP_TARGET_VELOCITY;
       } else if (landmark_type == "205") {  // Yield

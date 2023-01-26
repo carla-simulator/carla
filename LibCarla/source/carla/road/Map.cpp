@@ -546,6 +546,9 @@ namespace road {
       const Waypoint waypoint,
       const double distance) const {
     RELEASE_ASSERT(distance > 0.0);
+    if (distance <= EPSILON) {
+      return {waypoint};
+    }
     const auto &lane = GetLane(waypoint);
     const bool forward = (waypoint.lane_id <= 0);
     const double signed_distance = forward ? distance : -distance;
@@ -579,6 +582,9 @@ namespace road {
       const Waypoint waypoint,
       const double distance) const {
     RELEASE_ASSERT(distance > 0.0);
+    if (distance <= EPSILON) {
+      return {waypoint};
+    }
     const auto &lane = GetLane(waypoint);
     const bool forward = !(waypoint.lane_id <= 0);
     const double signed_distance = forward ? distance : -distance;
@@ -711,8 +717,18 @@ namespace road {
     for (const auto &pair : _data.GetRoads()) {
       const auto &road = pair.second;
       ForEachDrivableLane(road, [&](auto &&waypoint) {
-        for (auto &&successor : GetSuccessors(waypoint)) {
-          result.push_back({waypoint, successor});
+        auto successors = GetSuccessors(waypoint);
+        if (successors.size() == 0){
+          auto distance = static_cast<float>(GetDistanceAtEndOfLane(GetLane(waypoint)));
+          auto last_waypoint = GetWaypoint(waypoint.road_id, waypoint.lane_id, distance);
+          if (last_waypoint.has_value()){
+            result.push_back({waypoint, *last_waypoint});
+          }
+        }
+        else{
+          for (auto &&successor : GetSuccessors(waypoint)) {
+            result.push_back({waypoint, successor});
+          }
         }
       });
     }

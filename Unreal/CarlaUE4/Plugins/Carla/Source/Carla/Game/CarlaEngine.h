@@ -14,7 +14,17 @@
 
 #include "Misc/CoreDelegates.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/multigpu/router.h>
+#include <carla/multigpu/primaryCommands.h>
+#include <carla/multigpu/secondary.h>
+#include <carla/multigpu/secondaryCommands.h>
+#include <compiler/enable-ue4-macros.h>
+
+#include <mutex>
+
 class UCarlaSettings;
+class FFrameData;
 struct FEpisodeSettings;
 
 class FCarlaEngine : private NonCopyable
@@ -32,6 +42,11 @@ public:
   void NotifyEndEpisode();
 
   const FCarlaServer &GetServer() const
+  {
+    return Server;
+  }
+
+  FCarlaServer &GetServer()
   {
     return Server;
   }
@@ -60,6 +75,11 @@ public:
   static void ResetFrameCounter(uint64_t Value = 0)
   {
     FCarlaEngine::FrameCounter = Value;
+  }
+
+  std::shared_ptr<carla::multigpu::Router> GetSecondaryServer()
+  {
+    return SecondaryServer;
   }
 
 private:
@@ -93,4 +113,15 @@ private:
   FDelegateHandle OnPostTickHandle;
 
   FDelegateHandle OnEpisodeSettingsChangeHandle;
+
+  bool bIsPrimaryServer = true;
+  bool bNewConnection = false;
+
+  std::unordered_map<uint32_t, uint32_t> MappedId;
+
+  std::shared_ptr<carla::multigpu::Router>    SecondaryServer;
+  std::shared_ptr<carla::multigpu::Secondary> Secondary;
+ 
+  std::vector<FFrameData> FramesToProcess;
+  std::mutex FrameToProcessMutex;
 };

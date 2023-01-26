@@ -8,7 +8,7 @@
 #include "CarlaRecorderState.h"
 #include "CarlaRecorderHelpers.h"
 
-void CarlaRecorderStateTrafficLight::Write(std::ofstream &OutFile)
+void CarlaRecorderStateTrafficLight::Write(std::ostream &OutFile)
 {
   WriteValue<uint32_t>(OutFile, this->DatabaseId);
   WriteValue<bool>(OutFile, this->IsFrozen);
@@ -16,7 +16,7 @@ void CarlaRecorderStateTrafficLight::Write(std::ofstream &OutFile)
   WriteValue<char>(OutFile, this->State);
 }
 
-void CarlaRecorderStateTrafficLight::Read(std::ifstream &InFile)
+void CarlaRecorderStateTrafficLight::Read(std::istream &InFile)
 {
   ReadValue<uint32_t>(InFile, this->DatabaseId);
   ReadValue<bool>(InFile, this->IsFrozen);
@@ -36,7 +36,7 @@ void CarlaRecorderStates::Add(const CarlaRecorderStateTrafficLight &State)
   StatesTrafficLights.push_back(std::move(State));
 }
 
-void CarlaRecorderStates::Write(std::ofstream &OutFile)
+void CarlaRecorderStates::Write(std::ostream &OutFile)
 {
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::State));
@@ -53,4 +53,23 @@ void CarlaRecorderStates::Write(std::ofstream &OutFile)
   {
     StatesTrafficLights[i].Write(OutFile);
   }
+}
+
+void CarlaRecorderStates::Read(std::istream &InFile)
+{
+  uint16_t i, Total;
+  CarlaRecorderStateTrafficLight StateTrafficLight;
+
+  // read Total traffic light states
+  ReadValue<uint16_t>(InFile, Total);
+  for (i = 0; i < Total; ++i)
+  {
+    StateTrafficLight.Read(InFile);
+    Add(StateTrafficLight);
+  }
+}
+
+const std::vector<CarlaRecorderStateTrafficLight>& CarlaRecorderStates::GetStates()
+{
+  return StatesTrafficLights;
 }

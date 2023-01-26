@@ -8,6 +8,7 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Buffer.h>
+#include <carla/Logging.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <carla/sensor/s11n/SensorHeaderSerializer.h>
 #include <carla/streaming/Stream.h>
@@ -56,6 +57,20 @@ public:
   /// Send some data down the stream.
   template <typename SensorT, typename... ArgsT>
   void Send(SensorT &Sensor, ArgsT &&... Args);
+
+  /// allow to change the frame number of the header
+  void SetFrameNumber(uint64_t FrameNumber)
+  {
+    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr = reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
+    if (HeaderStr) 
+    {
+      if (HeaderStr->frame != FrameNumber)
+      {
+        carla::log_info("Re-framing sensor type ", HeaderStr->sensor_type, " from ", HeaderStr->frame, " to ", FrameNumber);
+        HeaderStr->frame = FrameNumber;
+      }
+    }
+  }
 
 private:
 

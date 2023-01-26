@@ -8,7 +8,7 @@
 #include "CarlaRecorderAnimVehicle.h"
 #include "CarlaRecorderHelpers.h"
 
-void CarlaRecorderAnimVehicle::Write(std::ofstream &OutFile)
+void CarlaRecorderAnimVehicle::Write(std::ostream &OutFile)
 {
   // database id
   WriteValue<uint32_t>(OutFile, this->DatabaseId);
@@ -18,7 +18,7 @@ void CarlaRecorderAnimVehicle::Write(std::ofstream &OutFile)
   WriteValue<bool>(OutFile, this->bHandbrake);
   WriteValue<int32_t>(OutFile, this->Gear);
 }
-void CarlaRecorderAnimVehicle::Read(std::ifstream &InFile)
+void CarlaRecorderAnimVehicle::Read(std::istream &InFile)
 {
   // database id
   ReadValue<uint32_t>(InFile, this->DatabaseId);
@@ -41,7 +41,7 @@ void CarlaRecorderAnimVehicles::Add(const CarlaRecorderAnimVehicle &Vehicle)
   Vehicles.push_back(Vehicle);
 }
 
-void CarlaRecorderAnimVehicles::Write(std::ofstream &OutFile)
+void CarlaRecorderAnimVehicles::Write(std::ostream &OutFile)
 {
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::AnimVehicle));
@@ -65,4 +65,23 @@ void CarlaRecorderAnimVehicles::Write(std::ofstream &OutFile)
   OutFile.seekp(PosStart, std::ios::beg);
   WriteValue<uint32_t>(OutFile, Total);
   OutFile.seekp(PosEnd, std::ios::beg);
+}
+
+void CarlaRecorderAnimVehicles::Read(std::istream &InFile)
+{
+  uint16_t i, Total;
+  CarlaRecorderAnimVehicle Vehicle;
+
+  // read Total Vehicles
+  ReadValue<uint16_t>(InFile, Total);
+  for (i = 0; i < Total; ++i)
+  {
+    Vehicle.Read(InFile);
+    Add(Vehicle);
+  }
+}
+
+const std::vector<CarlaRecorderAnimVehicle>& CarlaRecorderAnimVehicles::GetVehicles()
+{
+  return Vehicles;
 }

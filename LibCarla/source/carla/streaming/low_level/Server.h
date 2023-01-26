@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/streaming/detail/Dispatcher.h"
+#include "carla/streaming/detail/Types.h"
 #include "carla/streaming/Stream.h"
 
 #include <boost/asio/io_context.hpp>
@@ -64,8 +65,16 @@ namespace low_level {
       return _dispatcher.MakeStream();
     }
 
+    void CloseStream(carla::streaming::detail::stream_id_type id) {
+      return _dispatcher.CloseStream(id);
+    }
+
     void SetSynchronousMode(bool is_synchro) {
       _server.SetSynchronousMode(is_synchro);
+    }
+
+    carla::streaming::detail::token_type GetToken(carla::streaming::detail::stream_id_type sensor_id) {
+      return _dispatcher.GetToken(sensor_id);
     }
 
   private:
@@ -77,6 +86,7 @@ namespace low_level {
         }
       };
       auto on_session_closed = [this](auto session) {
+        log_debug("on_session_closed called");
         _dispatcher.DeregisterSession(session);
       };
       _server.Listen(on_session_opened, on_session_closed);

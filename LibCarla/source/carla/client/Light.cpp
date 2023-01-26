@@ -16,63 +16,75 @@ namespace client {
   using LightGroup = rpc::LightState::LightGroup;
 
 Color Light::GetColor() const {
-  assert(_light_manager && "No light_manager");
-  return _light_manager->GetColor(_id);
+  auto light_manager = _light_manager.lock();
+  assert(light_manager && "No light_manager");
+  return light_manager->GetColor(_id);
 }
 
 float Light::GetIntensity() const {
-  assert(_light_manager && "No light_manager");
-  return _light_manager->GetIntensity(_id);
+  auto light_manager = _light_manager.lock();
+  assert(light_manager && "No light_manager");
+  return light_manager->GetIntensity(_id);
 }
 
 LightGroup Light::GetLightGroup() const {
-  assert(_light_manager && "No light_manager");
-  return _light_manager->GetLightGroup(_id);
+  auto light_manager = _light_manager.lock();
+  assert(light_manager && "No light_manager");
+  return light_manager->GetLightGroup(_id);
 }
 
 LightState Light::GetLightState() const {
-  assert(_light_manager && "No light_manager");
-  return _light_manager->GetLightState(_id);
+  auto light_manager = _light_manager.lock();
+  assert(light_manager && "No light_manager");
+  return light_manager->GetLightState(_id);
 }
 
 bool Light::IsOn() const {
-  assert(_light_manager && "No light_manager");
-  return _light_manager->IsActive(_id) == true;
+  auto light_manager = _light_manager.lock();
+  assert(light_manager && "No light_manager");
+  return light_manager->IsActive(_id) == true;
 }
 
 bool Light::IsOff() const {
-  assert(_light_manager && "No light_manager");
-  return _light_manager->IsActive(_id) == false;
+  auto light_manager = _light_manager.lock();
+  assert(light_manager && "No light_manager");
+  return light_manager->IsActive(_id) == false;
 }
 
 void Light::SetColor(Color color) {
-  assert(_light_manager && "No light_manager");
-  _light_manager->SetColor(_id, color);
+  auto light_manager = _light_manager.lock();
+  assert(light_manager && "No light_manager");
+  light_manager->SetColor(_id, color);
 }
 
 void Light::SetIntensity(float intensity) {
-  assert(_light_manager && "No light_manager");
-  _light_manager->SetIntensity(_id, intensity);
+  auto light_manager = _light_manager.lock();
+  assert(light_manager && "No light_manager");
+  light_manager->SetIntensity(_id, intensity);
 }
 
 void Light::SetLightGroup(LightGroup group) {
-  assert(_light_manager && "No light_manager");
-  _light_manager->SetLightGroup(_id, group);
+  auto light_manager = _light_manager.lock();
+  assert(light_manager && "No light_manager");
+  light_manager->SetLightGroup(_id, group);
 }
 
 void Light::SetLightState(const LightState& state) {
-  assert(_light_manager && "No light_manager");
-  _light_manager->SetLightState(_id, state);
+  auto light_manager = _light_manager.lock();
+  assert(light_manager && "No light_manager");
+  light_manager->SetLightState(_id, state);
 }
 
 void Light::TurnOn() {
-  assert(_light_manager && "No light_manager");
-  _light_manager->SetActive(_id, true);
+  auto light_manager = _light_manager.lock();
+  assert(light_manager && "No light_manager");
+  light_manager->SetActive(_id, true);
 }
 
 void Light::TurnOff() {
-  assert(_light_manager && "No light_manager");
-  _light_manager->SetActive(_id, false);
+  auto light_manager = _light_manager.lock();
+  assert(light_manager && "No light_manager");
+  light_manager->SetActive(_id, false);
 }
 
 

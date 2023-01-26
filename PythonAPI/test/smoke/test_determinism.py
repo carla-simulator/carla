@@ -7,6 +7,7 @@
 from numpy import random
 from . import SmokeTest
 import time
+import carla
 
 TM_PORT = 7056
 NUM_TICKS = 1000
@@ -39,12 +40,23 @@ class TestDeterminism(SmokeTest):
     def spawn_vehicles(self, world, blueprint_transform_list):
         traffic_manager = self.client.get_trafficmanager(TM_PORT)
         vehicle_actor_list = []
-        for blueprint_transform in blueprint_transform_list:
-            blueprint = blueprint_transform[0]
-            transform = blueprint_transform[1]
-            actor = world.spawn_actor(blueprint, transform)
-            actor.set_autopilot(True, traffic_manager.get_port())
-            vehicle_actor_list.append(actor)
+
+        SpawnActor = carla.command.SpawnActor
+        SetAutopilot = carla.command.SetAutopilot
+        FutureActor = carla.command.FutureActor
+
+        batch = []
+        for blueprint, transform in blueprint_transform_list:
+            batch.append(SpawnActor(blueprint, transform)
+                .then(SetAutopilot(FutureActor, True, traffic_manager.get_port())))
+
+        vehicle_actor_ids = []
+        for response in self.client.apply_batch_sync(batch, True):
+            if not response.error:
+                vehicle_actor_ids.append(response.actor_id)
+
+        vehicle_actor_list = world.get_actors(vehicle_actor_ids)
+
         return vehicle_actor_list
 
     def run_simulation(self, world, vehicle_actor_list):
@@ -81,23 +93,13 @@ class TestDeterminism(SmokeTest):
         world.apply_settings(new_settings)
 
         blueprints = world.get_blueprint_library().filter('vehicle.*')
-
-        # filter bad vehicles
-        blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
-        blueprints = [x for x in blueprints if not x.id.endswith('isetta')]
-        blueprints = [x for x in blueprints if not x.id.endswith('carlacola')]
-        blueprints = [x for x in blueprints if not x.id.endswith('cybertruck')]
-        blueprints = [x for x in blueprints if not x.id.endswith('t2')]
-
-        blueprints = sorted(blueprints, key=lambda bp: bp.id)
-
         spawn_points = world.get_map().get_spawn_points()
-        # random.shuffle(spawn_points)
 
         # --------------
         # Spawn vehicles
         # --------------
         blueprint_transform_list = []
+        hero = True
         for n, transform in enumerate(spawn_points):
             if n >= number_of_vehicles:
                 break
@@ -108,7 +110,11 @@ class TestDeterminism(SmokeTest):
             if blueprint.has_attribute('driver_id'):
                 driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
                 blueprint.set_attribute('driver_id', driver_id)
-            blueprint.set_attribute('role_name', 'autopilot')
+            if hero:
+                blueprint.set_attribute('role_name', 'hero')
+                hero = False
+            else:
+                blueprint.set_attribute('role_name', 'autopilot')
             blueprint_transform_list.append((blueprint, transform))
 
         # reset for simulation 1
@@ -119,6 +125,7 @@ class TestDeterminism(SmokeTest):
         traffic_manager = self.client.get_trafficmanager(TM_PORT)
         traffic_manager.set_synchronous_mode(True)
         traffic_manager.set_random_device_seed(tm_seed)
+        traffic_manager.set_hybrid_physics_mode(True)
 
         # run simulation 1
         vehicle_actor_list = self.spawn_vehicles(world, blueprint_transform_list)
@@ -133,6 +140,7 @@ class TestDeterminism(SmokeTest):
         traffic_manager = self.client.get_trafficmanager(TM_PORT)
         traffic_manager.set_synchronous_mode(True)
         traffic_manager.set_random_device_seed(tm_seed)
+        traffic_manager.set_hybrid_physics_mode(True)
 
         #run simulation 2
         vehicle_actor_list = self.spawn_vehicles(world, blueprint_transform_list)
