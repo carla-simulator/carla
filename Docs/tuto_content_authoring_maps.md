@@ -30,7 +30,7 @@ To follow this guide, you will need to build CARLA from source, so that you may 
 
 ## Large maps
 
-The following text details the procedures for creating and decorating a normal map. From version 0.9.12, CARLA has the Large Map functionality. Large maps are bigger in scale than standard maps, and can be up to 100 km<sup>2</sup>. Most of the details that follow are similar when building a Large Map, but there are some additional steps. Please follow [this guide](content_authoring_large_maps.md).
+The following text details the procedures for creating and decorating a standard map. From version 0.9.12, CARLA has the Large Maps functionality. Large maps are bigger in scale than standard maps, and can be up to 100 km<sup>2</sup> in size. Large maps work in a slightly different way to standard maps, because of hardware limitations, even in high end graphics cards. Large maps are split up into tiles, and only the tiles needed immediately (i.e. those closest to the Ego vehicle) are loaded during the simulation. Other tiles sit dormant until the data is needed. This facilitates the highest performance for CARLA simulations. Most of the details that follow are similar when building a Large Map, but there are some additional steps. Please follow [this guide](content_authoring_large_maps.md) to build a Large Map for CARLA.
 ## Create a road network using RoadRunner
 
 Open RoadRunner and create a new scene. Choose the Road Plan Tool and right click in the workspace to drop the first control point for the road. Click and drag elsewhere in the workspace to extend the road. 
@@ -40,6 +40,22 @@ Open RoadRunner and create a new scene. Choose the Road Plan Tool and right clic
 For the purpose of this tutorial we use a simple oval road with a junction in the middle. For building more advanced networks please refer to the [__roadrunner documentation__](https://es.mathworks.com/products/roadrunner.html).
 
 ![roadrunner_road](img/tuto_content_authoring_maps/simple_crossroads.png)
+
+Once you have made your map in RoadRunner you will be able to export it. Be aware that __the road layout cannot be modified after it has been exported.__ Before exporting, ensure that:
+
+- The map is centered at (0,0) to ensure the map can be visualized correctly in Unreal Engine.
+- The map definition is correct.
+- The map validation is correct, paying close attention to connections and geometries.
+
+
+>>>>![CheckGeometry](../img/check_geometry.jpg)
+
+Once the map is ready, click on the `OpenDRIVE Preview Tool` button to visualize the OpenDRIVE road network and give everything one last check.
+
+>>>>![checkopen](../img/check_open.jpg)
+
+!!! note
+    _OpenDrive Preview Tool_ makes it easier to test the integrity of the map. If there are any errors with junctions, click on `Maneuver Tool`, and `Rebuild Maneuver Roads`.
 
 Once you have created your desired road network, in the RoadRunner menu bar choose `File > Export > Carla (.fbx, .xodr, .rrdata, .xml)` and export to an appropriate location. 
 

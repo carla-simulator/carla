@@ -1,91 +1,88 @@
 # Creating Large Maps for CARLA
 
-Large Maps (like Towns 11 and 12) operate in a different way to standard maps (like Town 10) in CARLA. The map is divided up into tiles, which are subdivisions of the map, that are normally set to be about 1 to 2 km in size. The tiles divide up the map such that only the parts of the map that are needed, i.e. the parts near the ego vehicle and in view of its sensors, are loaded into graphics memory such that the map can be rendered efficiently. The unneeded tiles are dormant and ready to be loaded when required. Normally the tiles next to the tile in the location of the ego vehicle are loaded, but more tiles can be loaded if necessary. This behaviour can be modified in the settings when CARLA is launched.
+Large Maps (like Towns 11 and 12) operate in a different way to standard maps (like Town 10) in CARLA. The map is divided up into tiles, which are subdivisions of the map, that are normally set to be about 1 to 2 km in size. The tiles divide up the map such that only the parts of the map that are needed, i.e. the parts near the ego vehicle and in view of its sensors, are loaded into graphics memory for efficient rendering. The unneeded tiles remain dormant and ready to be loaded when they are required. Normally the tiles next to the tile in the location of the ego vehicle are loaded, but more tiles can be loaded if necessary. This behavior can be modified in the settings when CARLA is launched.
 
 # Create a Large Map in RoadRunner
 
-RoadRunner is the recommended software to create large maps to be imported into CARLA. This guide outlines how to use RoadRunner for creating Large Maps. 
+RoadRunner is the recommended software to create Large Maps to be imported into CARLA. This guide outlines how to use RoadRunner for creating Large Maps and how to import and handle the Large Map in the Unreal Engine editor.
 
-- [__Build a large map in RoadRunner__](#build-a-large-map-in-roadrunner)
-- [__Export a large map in RoadRunner__](#export-a-large-map-in-roadrunner)
-- [__Next steps__](#next-steps)
+- [__Build a Large Map in RoadRunner__](#build-a-large-map-in-roadrunner)
+- [__Export a Large Map in RoadRunner__](#export-a-large-map-in-roadrunner)
+- [__Import a Large Map into CARLA__](#import-a-large-map-into-carla)
+    - [Files and folders](#files-and-folders)
+    - [Create the JSON description (Optional)](#create-the-json-description-optional)
+    - [Making the import](#making-the-import)
+- [__Handling a Large Map in the Unreal Editor__](#handling-a-large-map-in-the-unreal-editor)
+- [__Package a Large Map__](#package-a-large-map)
 ---
 
-## Build a large map in RoadRunner
+## Build a Large Map in RoadRunner
 
-The specifics of how to build a large map in RoadRunner go beyond the scope of this guide, however, there are video tutorials available in the [RoadRunner documentation][rr_tutorials].
+The specifics of how to build a complex map in RoadRunner go beyond the scope of this guide, however, there are video tutorials available in the [RoadRunner documentation][rr_tutorials]. On the face of it, building a Large Map in RoadRunner is largely the same as building a standard map, just bigger in scale. The differences are largely in how the map is exported.
 
-If you are building a large map with elevation, the recommended largest size of the map is 20km by 20km. Maps larger than this may cause RoadRunner to crash on export.
+![roadrunner_draw](img/tuto_content_authoring_maps/large_map_roadrunner.png)
+
+Here we have created a Large Map of about 1.2 km in size. This will be broken up into tiles when we export it, we will choose a tile size of 700m, so the map should split up into around 4 tiles. 
+
+If you are building a Large Map with elevation, the recommended largest size of the map is 20x20 km<sup>2</sup>. Maps larger than this may cause RoadRunner to crash on export.
 
 [rr_tutorials]: https://www.mathworks.com/support/search.html?fq=asset_type_name:video%20category:roadrunner/index&page=1&s_tid=CRUX_topnav
 
 ---
 
-## Export a large map in RoadRunner
+## Export a Large Map in RoadRunner
 
-Below is a basic guideline to export your custom large map from RoadRunner.
+Below is a basic guideline to export your custom Large Map from RoadRunner.
 
 [exportlink]: https://www.mathworks.com/help/roadrunner/ug/Exporting-to-CARLA.html
 
-Once you have made your map in RoadRunner you will be able to export it. Be aware that __the road layout cannot be modified after it has been exported.__ Before exporting, ensure that:
-
-- The map is centered at (0,0) to ensure the map can be visualized correctly in Unreal Engine.
-- The map definition is correct.
-- The map validation is correct, paying close attention to connections and geometries.
-
-
->>>>![CheckGeometry](../img/check_geometry.jpg)
-
-Once the map is ready, click on the `OpenDRIVE Preview Tool` button to visualize the OpenDRIVE road network and give everything one last check.
-
->>>>![checkopen](../img/check_open.jpg)
-
-!!! note
-    _OpenDrive Preview Tool_ makes it easier to test the integrity of the map. If there are any errors with junctions, click on `Maneuver Tool`, and `Rebuild Maneuver Roads`.
-
 Make sure the full map is selected for export by clicking on the [_World settings tool_](https://www.mathworks.com/help/roadrunner/ref/worldsettingstool.html) and dragging the edges of the blue boundary box to encompass the full area you would like to export. when it's ready, click on _Apply World Changes_.
 
-![world_bounds_settings](img/rr_world_settings.png)
+![roadrunner_workspace](img/tuto_content_authoring_maps/roadrunner_workspace.png)
+
+It is helpful to use the scene export preview tool to understand how your map will be divided up into tiles for export. Adjust the *Tile Size* parameters in the *Tiling Options* menu to find a suitable tile size for your map, press *Refresh Scene* to see the impact of your adjustments.
+
+![roadrunner_scene_preview](img/tuto_content_authoring_maps/rr_scene_export_preview.png)
+
+!!! Note
+    __Tile size__: The size of the tiles you use is a judgement call needed to ensure that the map will work efficiently when used in CARLA. If your map will be dense in 3D assets like buildings and vegetation, you may benefit from a smaller tile size to prevent the loading of unnecessary assets. This may, however, increase the complexity of the work needed to build your map. The maximum tile size supported by the CARLA engine is 2 km, we recommend tiles of around 1 km in size. 
 
 When you are ready to export:
 
-__1.__ Export the `.fbx`:
+__1.__ Export the `.xodr` and the `.fbx`:
 
   - In the main toolbar, select `File` -> `Export` -> `Firebox (.fbx)`
 
 __2.__ In the window that pops up:
 
 >- Check the following options:
-    - _Split by Segmentation_: Divides the mesh by semantic segmentation and imroves pedestrian navigation.
+    - _Split by Segmentation_: Divides the mesh by semantic segmentation and improves pedestrian navigation.
     - _Power of Two Texture Dimensions_: Improves performance.
     - _Embed Textures_: Ensures textures are embedded in the mesh.
     - _Export to Tiles_: Choose the size of the tiles. The maximum size that can be used by CARLA is 2000 x 2000.
-    - _Export Individual Tiles_: Generates the individual tiles needed for streaming large maps in CARLA.
+    - _Export Individual Tiles_: Generates the individual tiles needed for streaming Large Maps in CARLA.
 
->>>>>>![export_large_map_fbx](../img/large_map_export_fbx.png)
+>>>>>>![export_large_map_fbx](img/tuto_content_authoring_maps/rr_export.png)
 
 __3.__ Export the `.xodr`:
 
   - In the main toolbar, select `File` -> `Export` -> `OpendDRIVE (.xodr)`
 
+In the folder you chose for export, you will now have several new files, one `.xodr` file and several `.fbx` files:
+
+
+![export_large_map_fbx](img/tuto_content_authoring_maps/large_map_export.png)
+
 !!! Warning
-    Make sure that the `.xodr` and the `.fbx` files have the same name.
+    Make sure that the `.xodr` and the `.fbx` files have the same name root.
+
+Now you've created your Large Map in Roadrunner, you are ready to import it into CARLA. The files that RoadRunner has created should be shifted to the `Import` directory inside the root of the directory you are using to build CARLA. 
 
 ---
 
-Now you've created your Large Map in Roadrunner, you are ready to import it into CARLA.
+# Import a Large Map into CARLA
 
-
-# Import/Package a Large Map
-
-Large maps generated in RoadRunner can be imported into the source build of CARLA and packaged for distribution and usage in a CARLA standalone package. The process is very simlar to that of standard maps with the addition of specific nomenclature for tiles and batch importing.
-
-- [__Files and folders__](#files-and-folders)
-- [__Create the JSON description (Optional)__](#create-the-json-description-optional)
-- [__Making the import__](#making-the-import)
-- [__Package a large map__](#package-a-large-map)
-
----
+Large Maps generated in RoadRunner can be imported into the source build of CARLA and packaged for distribution and usage in a CARLA standalone package. The process is very simlar to that of standard maps with the addition of specific nomenclature for tiles and batch importing.
 
 ## Files and folders
 
@@ -95,30 +92,30 @@ All files to be imported should be placed in the `Import` folder of the root CAR
 - The OpenDRIVE definition in a single `.xodr` file.
 
 !!! Warning
-    You cannot import large maps and standard maps at the same time.
+    You cannot import Large Maps and standard maps at the same time.
 
 The naming convention of map tiles is very important. Each map tile should be named according to the following convention:
 
 ```
 <mapName>_Tile_<x-coordinate>_<y-coordinate>.fbx
-```
+``` 
 
-Be aware that a more positive __y coordinate__ refers to a tile lower on the y-axis. For example,`Map01_Tile_0_1` would sit just below `Map01_Tile_0_0`. 
+RoadRunner should conform to this naming convention by default, but it's worth double checking before you prepare to import into CARLA, because problems caused at this stage can be very hard to fix later on. The tiles will be arranged like in the following diagram in the final map:
 
->>>>>>>>![map_tiles](../img/map_tiles.png)
+>>>>>><img src="../img/tuto_content_authoring_maps/large_map_tiles.png" width="70%">
 
-A resulting `Import` folder with a package containing a large map made of four tiles should have a structure similar to the one below:
+A resulting `Import` folder with a package containing a Large Map made of four tiles should have a structure similar to the one below:
 
 ```sh
 Import
 │
 └── Package01
   ├── Package01.json
-  ├── Map01_Tile_0_0.fbx
-  ├── Map01_Tile_0_1.fbx
-  ├── Map01_Tile_1_0.fbx
-  ├── Map01_Tile_1_1.fbx
-  └── Map01.xodr
+  ├── LargeMap_Tile_0_0.fbx
+  ├── LargeMap_Tile_0_1.fbx
+  ├── LargeMap_Tile_1_0.fbx
+  ├── LargeMap_Tile_1_1.fbx
+  └── LargeMap.xodr
 
 ```
 
@@ -149,15 +146,15 @@ The resulting `.json` file should resemble the following:
 {
   "maps": [
       {
-        "name": "Map01",
-        "xodr": "./Map01.xodr",
+        "name": "LargeMap",
+        "xodr": "./LargeMap.xodr",
         "use_carla_materials": true,
-        "tile_size": 2000,
+        "tile_size": 700,
         "tiles": [ 
-        "./Map01_Tile_0_0.fbx",
-        "./Map01_Tile_0_1.fbx",
-        "./Map01_Tile_1_0.fbx",
-        "./Map01_Tile_1_1.fbx"
+        "./LargeMap_Tile_0_0.fbx",
+        "./LargeMap_Tile_0_1.fbx",
+        "./LargeMap_Tile_1_0.fbx",
+        "./LargeMap_Tile_1_1.fbx"
         ]
       }
   ],
@@ -197,16 +194,33 @@ make import  ARGS="--package=<package_name>"
 make import  ARGS="--no-carla-materials"
 ```
 
-All files will be imported and prepared to be used in the Unreal Editor. The map package will be created in `Unreal/CarlaUE4/Content`. A base map tile, `<mapName>`, will be created as a streaming level for all the tiles. The base tile will contain the sky, weather, and large map actors and will be ready for use in a simulation.
+All files will be imported and prepared to be used in the Unreal Editor. The map package will be created in `Unreal/CarlaUE4/Content`. A base map tile, `<mapName>`, will be created as a streaming level for all the tiles. The base tile will contain the sky, weather, and Large Map actors and will be ready for use in a simulation.
 
 !!! Note
     It is currently not recommended to use the customization tools provided for standard maps in the Unreal Editor, e.g., road painter, procedural buildings, etc.
 
 ---
 
-## Package a large map
 
-To package your large map so it can be used in the CARLA standalone package, run the following command:
+## Handling a Large Map in the Unreal Editor
+
+Now that you have imported your new map, you will find the map in the content browser inside a folder that will be named `map_package` by default. The folder will have an alternative name if you used the `"--package=<package_name>"` argument. Inside this folder, open the `Maps` folder and open the folder inside this one. Inside you will find several *level* files that are coloured orange. 
+
+![export_large_map_fbx](img/tuto_content_authoring_maps/tiles_content_browser.png)
+
+There will be one level file one for the whole map and one level file for each tile you exported from RoadRunner. To add assets to the map like buildings and vegetation, double click on the level file for the tile that you want to work on (e.g. in this example `LargeMap_Tile_0_0`) in order to load it in the editor. You may need to change the view mode from `Lit` to `Unlit` to be able to see your tile once you have loaded it. Now you can follow the [same procedure as for standard maps](tuto_content_authoring_maps.md#importing-assets-and-adding-them-to-the-map) to add details to your map, make sure to save the modifications you make to the tile you are working on, then load the next tile and repeat the procedure. You cannot work on the entire map in one go, so loading (by double clicking) the level file for the entire map (the file that is not followed by the suffix `_Tile_X_Y`) will not be useful for decorating the map.
+
+![export_large_map_fbx](img/tuto_content_authoring_maps/large_map_unreal.png)
+
+---
+
+## Loading the whole map and running the simulation
+
+If you would like to load the map and start the simulation for experimentation, then in this case you should load the level file for the whole map. Double click on the level file with the root map name (the file that is not followed by the suffix `_Tile_X_Y`) and wait for it to load. Loading can sometimes take a few seconds or even minutes for very large maps. Once it has loaded click on the play option in the Unreal Editor toolbar. The simulation will now start with your new Large Map.
+
+## Package a Large Map
+
+To package your Large Map so it can be used in the CARLA standalone package, run the following command:
 
 ```sh
 make package ARGS="--packages=<mapPackage>"
@@ -216,7 +230,7 @@ This will create a standalone package compressed in a `.tar.gz` file. The files 
 
 ---
 
-If you have any questions about the large map import and packaging process, then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions).
+If you have any questions about the Large Map import and packaging process, then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions).
 
 <div class="build-buttons">
 <p>
