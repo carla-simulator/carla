@@ -27,6 +27,7 @@
 #include "Carla/Util/ObjectRegister.h"
 #include "Carla/Weather/Weather.h"
 #include "MapGen/LargeMapManager.h"
+#include "Util/ActorBoundingBox.h"
 
 #include "CarlaGameModeBase.generated.h"
 
@@ -67,7 +68,7 @@ public:
   }
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
-  TArray<FBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0xFF) const;
+  TArray<FActorBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0xFF) const;
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
   TArray<FEnvironmentObject> GetEnvironmentObjects(uint8 QueriedTag = 0xFF) const

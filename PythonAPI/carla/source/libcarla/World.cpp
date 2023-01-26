@@ -93,8 +93,9 @@ static auto GetVehiclesLightStates(carla::client::World &self) {
 
 static auto GetLevelBBs(const carla::client::World &self, uint8_t queried_tag) {
   boost::python::list result;
-  for (const auto &bb : self.GetLevelBBs(queried_tag)) {
-    result.append(bb);
+  auto boxes = self.GetLevelBBs(queried_tag);
+  for (auto &&bb : boxes) {
+    result.append(boost::python::make_tuple(bb.first, bb.second));
   }
   return result;
 }

@@ -405,15 +405,22 @@ void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
   }
 }
 
-TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
+TArray<FActorBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
   const TArray<AActor*>& Actors,
   uint8 InTagQueried)
 {
-  TArray<FBoundingBox> Result;
+  TArray<FActorBoundingBox> Result;
   for(AActor* Actor : Actors)
   {
+    uint32 id = Actor->GetUniqueID();
     TArray<FBoundingBox> BBs = GetBBsOfActor(Actor, InTagQueried);
-    Result.Append(BBs.GetData(), BBs.Num());
+    for (auto & bb : BBs)
+    {
+      id = id & 0x0000ffff; // Keep only 16LSB
+      UE_LOG(LogCarla, Error, TEXT("Found object with ID %lu"), id);
+      FActorBoundingBox ActorBox{static_cast<int32>(id), bb};
+      Result.Add(ActorBox);
+    }
   }
 
   return Result;
