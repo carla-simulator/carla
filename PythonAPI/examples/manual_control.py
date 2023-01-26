@@ -1164,16 +1164,10 @@ class CameraManager(object):
                 self._camera_transforms[self.transform_index][0],
                 attach_to=self._parent,
                 attachment_type=self._camera_transforms[self.transform_index][1])
-            self.alt_sensor = self._parent.get_world().spawn_actor(
-                self.sensors[5][-1],
-                self._camera_transforms[self.transform_index][0],
-                attach_to=self._parent,
-                attachment_type=self._camera_transforms[self.transform_index][1])
             # We need to pass the lambda a weak reference to self to avoid
             # circular reference.
             weak_self = weakref.ref(self)
             self.sensor.listen(lambda image: CameraManager._parse_image(weak_self, image))
-            self.alt_sensor.listen(lambda image: CameraManager._parse_image_alt(weak_self, image))
         if notify:
             self.hud.notification(self.sensors[index][2])
         self.index = index
@@ -1188,12 +1182,6 @@ class CameraManager(object):
     def render(self, display):
         if self.surface is not None:
             display.blit(self.surface, (0, 0))
-
-    @staticmethod
-    def _parse_image_alt(weak_self, image):
-        self = weak_self()
-        if self.recording:
-            image.save_to_disk('_sem/%08d' % image.frame)
 
     @staticmethod
     def _parse_image(weak_self, image):
