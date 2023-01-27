@@ -51,6 +51,7 @@ crp::CityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
   else if (String == "Bicycle")      return crp::CityObjectLabel::Bicycle;
   else if (String == "Bus")          return crp::CityObjectLabel::Bus;
   else if (String == "Rider")        return crp::CityObjectLabel::Rider;
+  else if (String == "Train")        return crp::CityObjectLabel::Train;
   else                               return crp::CityObjectLabel::None;
 }
 
@@ -69,6 +70,7 @@ bool ATagger::IsThing(const crp::CityObjectLabel &Label)
   return (Label == crp::CityObjectLabel::Pedestrians ||
           Label == crp::CityObjectLabel::TrafficSigns ||
           Label == crp::CityObjectLabel::Car ||
+          Label == crp::CityObjectLabel::Train ||
           Label == crp::CityObjectLabel::Bicycle ||
           Label == crp::CityObjectLabel::Motorcycle ||
           Label == crp::CityObjectLabel::Bus ||
@@ -275,6 +277,7 @@ FString ATagger::GetTagAsString(const crp::CityObjectLabel Label)
     CARLA_GET_LABEL_STR(Motorcycle)
     CARLA_GET_LABEL_STR(Bicycle)
     CARLA_GET_LABEL_STR(Bus)
+    CARLA_GET_LABEL_STR(Train)
     CARLA_GET_LABEL_STR(Rider)
 
 #undef CARLA_GET_LABEL_STR

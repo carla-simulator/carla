@@ -24,7 +24,7 @@ rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
-set BOOST_VERSION=1.72.0
+set BOOST_VERSION=1.80.0
 set INSTALLERS_DIR=%ROOT_PATH:/=\%Util\InstallersWin\
 set VERSION_FILE=%ROOT_PATH:/=\%Util\ContentVersions.txt
 set CONTENT_DIR=%ROOT_PATH:/=\%Unreal\CarlaUE4\Content\Carla\
@@ -181,9 +181,6 @@ if not defined install_boost (
     echo %FILE_N% Failed while installing Boost.
     goto failed
 )
-
-copy /Y "%INSTALLATION_DIR%..\Util\BoostFiles\rational.hpp" "%INSTALLATION_DIR%boost-%BOOST_VERSION%-install\include\boost\rational.hpp"
-copy /Y "%INSTALLATION_DIR%..\Util\BoostFiles\read.hpp" "%INSTALLATION_DIR%boost-%BOOST_VERSION%-install\include\boost\geometry\io\wkt\read.hpp"
 
 rem ============================================================================
 rem -- Download and install Xercesc --------------------------------------------

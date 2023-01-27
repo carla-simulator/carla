@@ -103,6 +103,21 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
     UGameplayStatics::OpenLevel(GetWorld(), *FinalPath, true);
     if (ResetSettings)
       ApplySettings(FEpisodeSettings{});
+    
+    // send 'LOAD_MAP' command to all secondary servers (if any)
+    if (bIsPrimaryServer)
+    {
+      UCarlaGameInstance *GameInstance = UCarlaStatics::GetGameInstance(GetWorld());
+      if(GameInstance)
+      {
+        FCarlaEngine *CarlaEngine = GameInstance->GetCarlaEngine();
+        auto SecondaryServer = CarlaEngine->GetSecondaryServer();
+        if (SecondaryServer->HasClientsConnected()) 
+        {
+          SecondaryServer->GetCommander().SendLoadMap(std::string(TCHAR_TO_UTF8(*FinalPath)));
+        }
+      }
+    }
   }
   return bIsFileFound;
 }

@@ -12,13 +12,13 @@ The steps are: first, start the primary server without any render capability. Th
 Run the following from the command line:
 
 ```sh
-./CarlaUE4.sh --nullrhi
+./CarlaUE4.sh -nullrhi
 ```
 
 The primary server will use, by default, the port 2002 to listen for secondary servers. If you need to listen on another port, then you can change it with the port flag:
 
 ```sh
-./CarlaUE4.sh --nullrhi -carla-primary-port=3002
+./CarlaUE4.sh -nullrhi -carla-primary-port=3002
 ```
 
 ## Secondary servers
