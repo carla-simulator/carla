@@ -10,7 +10,11 @@ echo "Creating ${BUILD_DIR} directory."
 mkdir $BUILD_DIR
 cd $BUILD_DIR
 
-cmake ..
+LIB_LIBOSMSCOUT_INCLUDE=/home/aollero/Downloads/libosmcout/libosmscout-master/libosmscout-map-svg/include/
+LIB_LIBOSMSCOUT_LIBS=/home/aollero/Downloads/libosmcout/libosmscout-master/build/libosmscout-map-svg
+
+
+cmake -DCMAKE_CXX_FLAGS="-std=c++17" ..
 make
 
 ./osm-world-renderer
