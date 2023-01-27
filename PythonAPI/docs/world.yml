@@ -572,9 +572,11 @@
         default: Any
         doc: > 
           Semantic tag of the elements contained in the bounding boxes that are returned. 
-      return: array(carla.BoundingBox)
+      return: array(tuple(int, carla.BoundingBox))
       doc: >
-        Returns an array of bounding boxes with location and rotation in world space. The method returns all the bounding boxes in the level by default, but the query can be filtered by semantic tags with the argument `actor_type`. 
+        Returns an array of boundign boxes (location and rotation in world space) paired with the corresponding unique identifier.
+        The provided id is the same identifier returned by the [Instance Segmentation camera](ref_sensors.md#instance-segmentation-camera) must not be confused with the `Actor.id`
+        The method returns all the bounding boxes in the level by default, but the query can be filtered by semantic tags with the argument `actor_type`. 
     # --------------------------------------
     - def_name: get_environment_objects
       params:
