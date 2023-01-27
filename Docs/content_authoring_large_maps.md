@@ -1,6 +1,6 @@
 # Creating Large Maps for CARLA
 
-Large Maps (like Towns 11 and 12) operate in a different way to standard maps (like Town 10) in CARLA. The map is divided up into tiles, which are subdivisions of the map, that are normally set to be about 1 to 2 km in size. The tiles divide up the map such that only the parts of the map that are needed, i.e. the parts near the ego vehicle and in view of its sensors, are loaded into graphics memory for efficient rendering. The unneeded tiles remain dormant and ready to be loaded when they are required. Normally the tiles next to the tile in the location of the ego vehicle are loaded, but more tiles can be loaded if necessary. This behavior can be modified in the settings when CARLA is launched.
+Large Maps (like Towns 11 and 12) operate in a different way to standard maps (like Town 10) in CARLA. The map is divided up into tiles, which are subdivisions of the map, that are normally set to be about 1 to 2 km in size. The tiles divide up the map such that only the parts of the map that are needed are loaded into graphics memory for efficient rendering. The unneeded tiles remain dormant and ready to be loaded when they are required. Normally the tiles next to the tile in the location of the ego vehicle are loaded, but more tiles can be loaded if necessary. This behavior can be modified in the settings when CARLA is launched.
 
 # Create a Large Map in RoadRunner
 
@@ -49,7 +49,7 @@ It is helpful to use the scene export preview tool to understand how your map wi
 
 When you are ready to export:
 
-__1.__ Export the `.xodr` and the `.fbx`:
+__1.__ Export the `.fbx` geometry files:
 
   - In the main toolbar, select `File` -> `Export` -> `Firebox (.fbx)`
 
@@ -64,7 +64,7 @@ __2.__ In the window that pops up:
 
 >>>>>>![export_large_map_fbx](img/tuto_content_authoring_maps/rr_export.png)
 
-__3.__ Export the `.xodr`:
+__3.__ Export the `.xodr` OpenDrive map file:
 
   - In the main toolbar, select `File` -> `Export` -> `OpendDRIVE (.xodr)`
 
@@ -82,7 +82,7 @@ Now you've created your Large Map in Roadrunner, you are ready to import it into
 
 # Import a Large Map into CARLA
 
-Large Maps generated in RoadRunner can be imported into the source build of CARLA and packaged for distribution and usage in a CARLA standalone package. The process is very simlar to that of standard maps with the addition of specific nomenclature for tiles and batch importing.
+Large Maps generated in RoadRunner can be imported into the source build of CARLA and packaged for distribution and usage in a CARLA standalone package. The process is very similar to that of standard maps with the addition of specific nomenclature for tiles and batch importing.
 
 ## Files and folders
 
@@ -100,7 +100,7 @@ The naming convention of map tiles is very important. Each map tile should be na
 <mapName>_Tile_<x-coordinate>_<y-coordinate>.fbx
 ``` 
 
-RoadRunner should conform to this naming convention by default, but it's worth double checking before you prepare to import into CARLA, because problems caused at this stage can be very hard to fix later on. The tiles will be arranged like in the following diagram in the final map:
+RoadRunner should conform to this naming convention by default, but it's worth double checking before you prepare to import into CARLA, because problems caused at this stage can be tedious to fix later on. The tiles in the final map will be arranged like in the following diagram:
 
 >>>>>><img src="../img/tuto_content_authoring_maps/large_map_tiles.png" width="70%">
 
@@ -204,11 +204,11 @@ All files will be imported and prepared to be used in the Unreal Editor. The map
 
 ## Handling a Large Map in the Unreal Editor
 
-Now that you have imported your new map, you will find the map in the content browser inside a folder that will be named `map_package` by default. The folder will have an alternative name if you used the `"--package=<package_name>"` argument. Inside this folder, open the `Maps` folder and open the folder inside this one. Inside you will find several *level* files that are coloured orange. 
+Now that you have imported your new map, you will find the map in the content browser inside a folder that will be named `map_package` by default. The folder will have an alternative name if you used the `"--package=<package_name>"` argument with the import command. Inside this folder, open the `Maps` folder and open the folder inside this one. Inside you will find several *level* files that are coloured orange. 
 
 ![export_large_map_fbx](img/tuto_content_authoring_maps/tiles_content_browser.png)
 
-There will be one level file one for the whole map and one level file for each tile you exported from RoadRunner. To add assets to the map like buildings and vegetation, double click on the level file for the tile that you want to work on (e.g. in this example `LargeMap_Tile_0_0`) in order to load it in the editor. You may need to change the view mode from `Lit` to `Unlit` to be able to see your tile once you have loaded it. Now you can follow the [same procedure as for standard maps](tuto_content_authoring_maps.md#importing-assets-and-adding-them-to-the-map) to add details to your map, make sure to save the modifications you make to the tile you are working on, then load the next tile and repeat the procedure. You cannot work on the entire map in one go, so loading (by double clicking) the level file for the entire map (the file that is not followed by the suffix `_Tile_X_Y`) will not be useful for decorating the map.
+There will be one level file one for the whole map and one level file for each tile you exported from RoadRunner. To add assets to the map like buildings and vegetation, double click on the level file for the tile that you want to work on (e.g. in this example `LargeMap_Tile_0_0`) in order to load it in the editor. The tiles don't have any lighting settings by default, so you may need to change the view mode from `Lit` to `Unlit` to be able to see your tile once you have loaded it. Now you can follow the [same procedure as for standard maps](tuto_content_authoring_maps.md#importing-assets-and-adding-them-to-the-map) to add details to your map, make sure to save the modifications you make to the tile you are working on, then load the next tile and repeat the procedure. You cannot work on the entire map in one go, so loading (by double clicking) the level file for the entire map (the file that is not followed by the suffix `_Tile_X_Y`) will not be useful for decorating the map.
 
 ![export_large_map_fbx](img/tuto_content_authoring_maps/large_map_unreal.png)
 
@@ -216,11 +216,14 @@ There will be one level file one for the whole map and one level file for each t
 
 ## Loading the whole map and running the simulation
 
-If you would like to load the map and start the simulation for experimentation, then in this case you should load the level file for the whole map. Double click on the level file with the root map name (the file that is not followed by the suffix `_Tile_X_Y`) and wait for it to load. Loading can sometimes take a few seconds or even minutes for very large maps. Once it has loaded click on the play option in the Unreal Editor toolbar. The simulation will now start with your new Large Map.
+If you would like to load the map and start the simulation for experimentation you should load the level file for the whole map. Double click on the level file with the root map name (the file that is not followed by the suffix `_Tile_X_Y`) and wait for it to load. Loading can sometimes take a few seconds or even minutes for very large maps. Once it has loaded click on the *play* option in the Unreal Editor toolbar. The simulation will now start with your new Large Map.
+
+!!! note
+    If you are running the simulation from the Unreal Engine editor for the first time it is recommended to first load each of the tiles (by double clicking on them) one by one until you have loaded all of them, prior to starting the simulation. This performs certain operations *in the background* like baking the Mesh Distance Fields and shaders for the tile. If you don't load the tiles one by one at first, these operations may be performed at runtime and this could lead to hangs or crashes in Unreal Engine.
 
 ## Package a Large Map
 
-To package your Large Map so it can be used in the CARLA standalone package, run the following command:
+To package your Large Map so it can be used in the CARLA standalone package follow the same procedure as for standard maps - run the following command:
 
 ```sh
 make package ARGS="--packages=<mapPackage>"
