@@ -290,6 +290,11 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
         }
         break;
 
+      // visual time for FX
+      case static_cast<char>(CarlaRecorderPacketId::VisualTime):
+        ProcessVisualTime();
+        break;
+
       // events add
       case static_cast<char>(CarlaRecorderPacketId::EventAdd):
         ProcessEventsAdd();
@@ -334,10 +339,26 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
           SkipPacket();
         break;
 
+      // vehicle wheels animation
+      case static_cast<char>(CarlaRecorderPacketId::AnimVehicleWheels):
+        if (bFrameFound)
+          ProcessAnimVehicleWheels();
+        else
+          SkipPacket();
+        break;
+
       // walker animation
       case static_cast<char>(CarlaRecorderPacketId::AnimWalker):
         if (bFrameFound)
           ProcessAnimWalker();
+        else
+          SkipPacket();
+        break;
+
+      // biker animation
+      case static_cast<char>(CarlaRecorderPacketId::AnimBiker):
+        if (bFrameFound)
+          ProcessAnimBiker();
         else
           SkipPacket();
         break;
@@ -354,6 +375,14 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
       case static_cast<char>(CarlaRecorderPacketId::SceneLight):
         if (bFrameFound)
           ProcessLightScene();
+        else
+          SkipPacket();
+        break;
+
+      // walker bones
+      case static_cast<char>(CarlaRecorderPacketId::WalkerBones):
+        if (bFrameFound)
+          ProcessWalkerBones();
         else
           SkipPacket();
         break;
@@ -388,6 +417,15 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
     // keep actors in scene and let them continue with autopilot
     Stop(true);
   }
+}
+
+void CarlaReplayer::ProcessVisualTime(void)
+{
+  CarlaRecorderVisualTime VisualTime;
+  VisualTime.Read(File);
+
+  // set the visual time
+  Episode->SetVisualGameTime(VisualTime.Time);
 }
 
 void CarlaReplayer::ProcessEventsAdd(void)
@@ -521,6 +559,25 @@ void CarlaReplayer::ProcessAnimVehicle(void)
   }
 }
 
+void CarlaReplayer::ProcessAnimVehicleWheels(void)
+{
+  uint16_t i, Total;
+
+  // read Total Vehicles
+  ReadValue<uint16_t>(File, Total);
+  for (i = 0; i < Total; ++i)
+  {
+    CarlaRecorderAnimWheels Vehicle;
+    Vehicle.Read(File);
+    Vehicle.DatabaseId = MappedId[Vehicle.DatabaseId];
+    // check if ignore this actor
+    if (!(IgnoreHero && IsHeroMap[Vehicle.DatabaseId]))
+    {
+      Helper.ProcessReplayerAnimVehicleWheels(Vehicle);
+    }
+  }
+}
+
 void CarlaReplayer::ProcessAnimWalker(void)
 {
   uint16_t i, Total;
@@ -537,6 +594,24 @@ void CarlaReplayer::ProcessAnimWalker(void)
     if (!(IgnoreHero && IsHeroMap[Walker.DatabaseId]))
     {
       Helper.ProcessReplayerAnimWalker(Walker);
+    }
+  }
+}
+
+void CarlaReplayer::ProcessAnimBiker(void)
+{
+  uint16_t i, Total;
+  CarlaRecorderAnimBiker Biker;
+  std::stringstream Info;
+
+  ReadValue<uint16_t>(File, Total);
+  for (i = 0; i < Total; ++i)
+  {
+    Biker.Read(File);
+    Biker.DatabaseId = MappedId[Biker.DatabaseId];
+    if (!(IgnoreHero && IsHeroMap[Biker.DatabaseId]))
+    {
+      Helper.ProcessReplayerAnimBiker(Biker);
     }
   }
 }
@@ -604,6 +679,26 @@ void CarlaReplayer::ProcessPositions(bool IsFirstTime)
   if (IsFirstTime)
   {
     PrevPos.clear();
+  }
+}
+
+void CarlaReplayer::ProcessWalkerBones(void)
+{
+  uint16_t i, Total;
+  CarlaRecorderWalkerBones Walker;
+  std::stringstream Info;
+
+  // read Total walkers
+  ReadValue<uint16_t>(File, Total);
+  for (i = 0; i < Total; ++i)
+  {
+    Walker.Read(File);
+    Walker.DatabaseId = MappedId[Walker.DatabaseId];
+    // check if ignore this actor
+    if (!(IgnoreHero && IsHeroMap[Walker.DatabaseId]))
+    {
+      Helper.ProcessReplayerWalkerBones(Walker);
+    }
   }
 }
 

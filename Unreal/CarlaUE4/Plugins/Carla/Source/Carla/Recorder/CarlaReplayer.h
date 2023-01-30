@@ -133,6 +133,8 @@ private:
   // processing packets
   void ProcessToTime(double Time, bool IsFirstTime = false);
 
+  void ProcessVisualTime(void);
+
   void ProcessEventsAdd(void);
   void ProcessEventsDel(void);
   void ProcessEventsParent(void);
@@ -142,10 +144,14 @@ private:
   void ProcessStates(void);
 
   void ProcessAnimVehicle(void);
+  void ProcessAnimVehicleWheels(void);
   void ProcessAnimWalker(void);
+  void ProcessAnimBiker(void);
 
   void ProcessLightVehicle(void);
   void ProcessLightScene(void);
+
+  void ProcessWalkerBones(void);
 
   // positions
   void UpdatePositions(double Per, double DeltaTime);

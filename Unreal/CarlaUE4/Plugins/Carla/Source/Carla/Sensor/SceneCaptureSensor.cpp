@@ -6,20 +6,11 @@
 
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
-
 #include "Carla/Game/CarlaStatics.h"
 
-#include "Async/Async.h"
-#include "Components/DrawFrustumComponent.h"
-#include "Components/SceneCaptureComponent2D.h"
-#include "Components/StaticMeshComponent.h"
-#include "ContentStreaming.h"
-#include "Engine/Classes/Engine/Scene.h"
-#include "Engine/TextureRenderTarget2D.h"
-#include "HAL/UnrealMemory.h"
-#include "HighResScreenshot.h"
-#include "Misc/CoreDelegates.h"
-#include "RHICommandList.h"
+#include <mutex>
+#include <atomic>
+#include <thread>
 
 static auto SCENE_CAPTURE_COUNTER = 0u;
 
@@ -62,11 +53,12 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
   CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
 
-  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(
-      FName(*FString::Printf(TEXT("SceneCaptureComponent2D_%d"), SCENE_CAPTURE_COUNTER)));
+  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D_CARLA>(
+      FName(*FString::Printf(TEXT("USceneCaptureComponent2D_CARLA_%d"), SCENE_CAPTURE_COUNTER)));
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->ViewActor = this;
   CaptureComponent2D->SetupAttachment(RootComponent);
   CaptureComponent2D->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
-
   CaptureComponent2D->bCaptureOnMovement = false;
   CaptureComponent2D->bCaptureEveryFrame = false;
   CaptureComponent2D->bAlwaysPersistRenderingState = true;
@@ -456,8 +448,96 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
 
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
-  // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
-  CaptureComponent2D->CaptureScene();
+  // Equivalent to "CaptureComponent2D->CaptureScene" + (optional) GBuffer extraction.
+  CaptureSceneExtended();
+}
+
+constexpr const TCHAR* GBufferNames[] =
+{
+  TEXT("SceneColor"),
+  TEXT("SceneDepth"),
+  TEXT("SceneStencil"),
+  TEXT("GBufferA"),
+  TEXT("GBufferB"),
+  TEXT("GBufferC"),
+  TEXT("GBufferD"),
+  TEXT("GBufferE"),
+  TEXT("GBufferF"),
+  TEXT("Velocity"),
+  TEXT("SSAO"),
+  TEXT("CustomDepth"),
+  TEXT("CustomStencil"),
+};
+
+template <EGBufferTextureID ID, typename T>
+static void CheckGBufferStream(T& GBufferStream, FGBufferRequest& GBuffer)
+{
+  GBufferStream.bIsUsed = GBufferStream.Stream.AreClientsListening();
+  if (GBufferStream.bIsUsed)
+    GBuffer.MarkAsRequested(ID);
+}
+
+static uint64 Prior = 0;
+
+void ASceneCaptureSensor::CaptureSceneExtended()
+{
+  auto GBufferPtr = MakeUnique<FGBufferRequest>();
+  auto& GBuffer = *GBufferPtr;
+
+  CheckGBufferStream<EGBufferTextureID::SceneColor>(CameraGBuffers.SceneColor, GBuffer);
+  CheckGBufferStream<EGBufferTextureID::SceneDepth>(CameraGBuffers.SceneDepth, GBuffer);
+  CheckGBufferStream<EGBufferTextureID::SceneStencil>(CameraGBuffers.SceneStencil, GBuffer);
+  CheckGBufferStream<EGBufferTextureID::GBufferA>(CameraGBuffers.GBufferA, GBuffer);
+  CheckGBufferStream<EGBufferTextureID::GBufferB>(CameraGBuffers.GBufferB, GBuffer);
+  CheckGBufferStream<EGBufferTextureID::GBufferC>(CameraGBuffers.GBufferC, GBuffer);
+  CheckGBufferStream<EGBufferTextureID::GBufferD>(CameraGBuffers.GBufferD, GBuffer);
+  CheckGBufferStream<EGBufferTextureID::GBufferE>(CameraGBuffers.GBufferE, GBuffer);
+  CheckGBufferStream<EGBufferTextureID::GBufferF>(CameraGBuffers.GBufferF, GBuffer);
+  CheckGBufferStream<EGBufferTextureID::Velocity>(CameraGBuffers.Velocity, GBuffer);
+  CheckGBufferStream<EGBufferTextureID::SSAO>(CameraGBuffers.SSAO, GBuffer);
+  CheckGBufferStream<EGBufferTextureID::CustomDepth>(CameraGBuffers.CustomDepth, GBuffer);
+  CheckGBufferStream<EGBufferTextureID::CustomStencil>(CameraGBuffers.CustomStencil, GBuffer);
+
+  if (GBufferPtr->DesiredTexturesMask == 0)
+  {
+    // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
+    CaptureComponent2D->CaptureScene();
+    return;
+  }
+
+  if (Prior != GBufferPtr->DesiredTexturesMask)
+    UE_LOG(LogCarla, Verbose, TEXT("GBuffer selection changed (%llu)."), GBufferPtr->DesiredTexturesMask);
+  
+  Prior = GBufferPtr->DesiredTexturesMask;
+  GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
+
+#define CARLA_GBUFFER_DISABLE_TAA // Temporarily disable TAA to avoid jitter.
+
+#ifdef CARLA_GBUFFER_DISABLE_TAA
+  bool bTAA = CaptureComponent2D->ShowFlags.TemporalAA;
+  if (bTAA) {
+    CaptureComponent2D->ShowFlags.TemporalAA = false;
+  }
+#endif
+
+  CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
+
+#ifdef CARLA_GBUFFER_DISABLE_TAA
+  if (bTAA) {
+    CaptureComponent2D->ShowFlags.TemporalAA = true;
+  }
+#undef CARLA_GBUFFER_DISABLE_TAA
+#endif
+
+  AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, GBuffer = MoveTemp(GBufferPtr)]() mutable
+  {
+    SendGBufferTextures(*GBuffer);
+  });
+}
+
+void ASceneCaptureSensor::SendGBufferTextures(FGBufferRequest& GBuffer)
+{
+  SendGBufferTexturesInternal(*this, GBuffer);
 }
 
 void ASceneCaptureSensor::BeginPlay()
@@ -498,7 +578,7 @@ void ASceneCaptureSensor::BeginPlay()
 
   // This ensures the camera is always spawning the raindrops in case the
   // weather was previously set to have rain.
-  GetEpisode().GetWeather()->NotifyWeather();
+  GetEpisode().GetWeather()->NotifyWeather(this);
 
   Super::BeginPlay();
 }

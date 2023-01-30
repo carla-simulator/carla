@@ -16,7 +16,7 @@ namespace detail {
   void ActorVariant::MakeActor(EpisodeProxy episode) const {
     _value = detail::ActorFactory::MakeActor(
         episode,
-        boost::get<rpc::Actor>(std::move(_value)),
+        boost::variant2::get<rpc::Actor>(std::move(_value)),
         GarbageCollectionPolicy::Disabled);
   }
 

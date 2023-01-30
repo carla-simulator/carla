@@ -7,6 +7,8 @@
 #pragma once
 
 #include "Math/DVector.h"
+#include "Carla/Vehicle/AckermannControllerSettings.h"
+#include "Carla/Vehicle/VehicleAckermannControl.h"
 #include "Carla/Vehicle/VehicleControl.h"
 #include "Carla/Vehicle/VehicleLightState.h"
 #include "Vehicle/VehicleInputPriority.h"
@@ -57,9 +59,17 @@ public:
 
   FVehicleControl Control;
 
+  FVehicleAckermannControl AckermannControl;
+
+  bool bAckermannControlActive = false;
+
+  FAckermannControllerSettings AckermannControllerSettings;
+
   FVehicleLightState LightState;
 
   float SpeedLimit = 30;
+
+  carla::rpc::VehicleFailureState FailureState;
 
   virtual void RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
 

@@ -387,6 +387,24 @@ void export_sensor_data() {
     .value("CityScapesPalette", EColorConverter::CityScapesPalette)
   ;
 
+  // The values here should match the ones in the enum EGBufferTextureID,
+  // from the CARLA fork of Unreal Engine (Renderer/Public/GBufferView.h).
+  enum_<int>("GBufferTextureID")
+    .value("SceneColor", 0)
+    .value("SceneDepth", 1)
+    .value("SceneStencil", 2)
+    .value("GBufferA", 3)
+    .value("GBufferB", 4)
+    .value("GBufferC", 5)
+    .value("GBufferD", 6)
+    .value("GBufferE", 7)
+    .value("GBufferF", 8)
+    .value("Velocity", 9)
+    .value("SSAO", 10)
+    .value("CustomDepth", 11)
+    .value("CustomStencil", 12)
+  ;
+
   class_<csd::Image, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::Image>>("Image", no_init)
     .add_property("width", &csd::Image::GetWidth)
     .add_property("height", &csd::Image::GetHeight)

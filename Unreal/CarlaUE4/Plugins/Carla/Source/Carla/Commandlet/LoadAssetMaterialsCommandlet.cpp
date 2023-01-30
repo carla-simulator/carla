@@ -121,7 +121,7 @@ ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
 
 #if WITH_EDITORONLY_DATA
 
-void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &LoadedMapName, bool IsInTiles)
+void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &LoadedMapName, const FString &PackageName, bool IsInTiles)
 {
   if (IsInTiles == true) {
 
@@ -143,7 +143,7 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
 
       // Acquire the TilesInfo.txt file for storing the tile data (offset and size)
       TArray<FString> FileList;
-      IFileManager::Get().FindFilesRecursive(FileList, *(FPaths::ProjectContentDir()), *(FString("TilesInfo.txt")), true, false, false);
+      IFileManager::Get().FindFilesRecursive(FileList, *(FPaths::ProjectContentDir() + "/" + PackageName), *(FString("TilesInfo.txt")), true, false, false);
 
       FString TxtFile;
       if (FFileHelper::LoadFileToString(TxtFile, *FileList[0]) == true) {
@@ -156,7 +156,6 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
         TileData.Size = (float) FCString::Atoi(*Out[2]);
       }
       else {
-
         UE_LOG(LogTemp, Warning, TEXT("Could not read TilesInfo.txt file"));
         return;
       }
@@ -169,21 +168,11 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
     // From the loaded map name (in style mymap_Tile_200_400) get the X and the Y (Tile_200_400 -> X = 200, Y = 400)
     int32 XIndex = FCString::Atoi(*StringArray[StringArray.Num() - 2]);
     int32 YIndex = FCString::Atoi(*StringArray[StringArray.Num() - 1]);
-
     FVector TilePosition;
     // This means it's the initial tile (mymap_Tile_0_0)
     // This is in RELATIVE coords
-    if(XIndex == 0 && YIndex == 0) {
-
-      TilePosition.X = TileData.FirstTileCenterX;
-      TilePosition.Y = TileData.FirstTileCenterY;
-    }
-    else {
-
-      TilePosition.X = TileData.FirstTileCenterX + (TileData.Size * (float)XIndex);
-      TilePosition.Y = TileData.FirstTileCenterY - (TileData.Size * (float)YIndex);
-    }
-
+    TilePosition.X = TileData.FirstTileCenterX + (TileData.Size * (float)XIndex);
+    TilePosition.Y = TileData.FirstTileCenterY - (TileData.Size * (float)YIndex);
     TilePosition.Z = 0.0f;
 
     float HalfSize = TileData.Size / 2.0f;
@@ -196,7 +185,7 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
 
     if (ReadConfigFile == true) {
 
-      DecalsProperties = ReadDecalsConfigurationFile();
+      DecalsProperties = ReadDecalsConfigurationFile(PackageName);
       ReadConfigFile = false;
     }
 
@@ -219,10 +208,11 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
         DecalLocation.x = FMath::RandRange(MinXSize, MaxXSize);
         DecalLocation.y = FMath::RandRange(MinYSize, MaxYSize);
         DecalLocation.z = 0.0f;
-
+  
         // Get the closest road waypoint from the random location calculated
         auto Wp = XODRMap->GetClosestWaypointOnRoad(DecalLocation);
-        FVector FinalLocation(XODRMap->ComputeTransform(Wp.get()).location);
+        carla::geom::Location RoadLocation = XODRMap->ComputeTransform(Wp.get()).location;
+        FVector FinalLocation(RoadLocation);
 
         // Check we don't exceed the map boundaries
         if (FinalLocation.X > MinXSizeCm && FinalLocation.X < MaxXSizeCm) {
@@ -268,13 +258,13 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
   }
 }
 
-FDecalsProperties ULoadAssetMaterialsCommandlet::ReadDecalsConfigurationFile() {
+FDecalsProperties ULoadAssetMaterialsCommandlet::ReadDecalsConfigurationFile(const FString &PackageName) {
 
   // Get road painter configuration file
   FString JsonConfigFile;
 
   TArray<FString> FileList;
-  IFileManager::Get().FindFilesRecursive(FileList, *(FPaths::ProjectContentDir()),
+  IFileManager::Get().FindFilesRecursive(FileList, *(FPaths::ProjectContentDir() + "/" + PackageName),
     *(FString("roadpainter_decals.json")), true, false, false);
 
   FDecalsProperties DecalConfiguration;
@@ -339,7 +329,10 @@ void ULoadAssetMaterialsCommandlet::LoadAssetsMaterials(const FString &PackageNa
   MapObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), false, GIsEditor);
   const FString DefaultPath = TEXT("/Game/") + PackageName + TEXT("/Maps/");
   MapObjectLibrary->AddToRoot();
-  MapObjectLibrary->LoadAssetDataFromPath(*DefaultPath);
+  for (auto &&data : MapsPaths)
+  {
+    MapObjectLibrary->LoadAssetDataFromPath(*data.Path);
+  }
   MapObjectLibrary->LoadAssetsFromAssetData();
   MapObjectLibrary->GetAssetDataList(AssetDatas);
 
@@ -372,7 +365,7 @@ void ULoadAssetMaterialsCommandlet::LoadAssetsMaterials(const FString &PackageNa
         if (HasRoadMesh == true) {
 
           bool IsTiledMap = World->GetName().Contains("_Tile_", ESearchCase::Type::CaseSensitive);
-          ApplyRoadPainterMaterials(World->GetName(), IsTiledMap);
+          ApplyRoadPainterMaterials(World->GetName(), PackageName, IsTiledMap);
         }
 
 #if WITH_EDITOR

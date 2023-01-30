@@ -54,9 +54,20 @@ public:
   /// If less than 0, it's a % increase.
   virtual void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) = 0;
 
+  /// Method to set a lane offset displacement from the center line.
+  /// Positive values imply a right offset while negative ones mean a left one.
+  virtual void SetLaneOffset(const ActorPtr &actor, const float offset) = 0;
+
+  /// Set a vehicle's exact desired velocity.
+  virtual void SetDesiredSpeed(const ActorPtr &actor, const float value) = 0;
+
   /// Set a global % decrease in velocity with respect to the speed limit.
   /// If less than 0, it's a % increase.
   virtual void SetGlobalPercentageSpeedDifference(float const percentage) = 0;
+
+  /// Method to set a global lane offset displacement from the center line.
+  /// Positive values imply a right offset while negative ones mean a left one.
+  virtual void SetGlobalLaneOffset(float const offset) = 0;
 
   /// Method to set the automatic management of the vehicle lights
   virtual void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update) = 0;

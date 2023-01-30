@@ -5,7 +5,7 @@
 
 """ This module contains a local planner to perform low-level waypoint following based on PID controllers. """
 
-from enum import Enum
+from enum import IntEnum
 from collections import deque
 import random
 
@@ -14,7 +14,7 @@ from agents.navigation.controller import VehiclePIDController
 from agents.tools.misc import draw_waypoints, get_speed
 
 
-class RoadOption(Enum):
+class RoadOption(IntEnum):
     """
     RoadOption represents the possible topological configurations when moving from a segment of lane to other.
 
@@ -40,7 +40,7 @@ class LocalPlanner(object):
     unless a given global plan has already been specified.
     """
 
-    def __init__(self, vehicle, opt_dict={}):
+    def __init__(self, vehicle, opt_dict={}, map_inst=None):
         """
         :param vehicle: actor to apply to local planner logic onto
         :param opt_dict: dictionary of arguments with different parameters:
@@ -53,10 +53,18 @@ class LocalPlanner(object):
             max_brake: maximum brake applied to the vehicle
             max_steering: maximum steering applied to the vehicle
             offset: distance between the route waypoints and the center of the lane
+        :param map_inst: carla.Map instance to avoid the expensive call of getting it.
         """
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
-        self._map = self._world.get_map()
+        if map_inst:
+            if isinstance(map_inst, carla.Map):
+                self._map = map_inst
+            else:
+                print("Warning: Ignoring the given map as it is not a 'carla.Map'")
+                self._map = self._world.get_map()
+        else:
+            self._map = self._world.get_map()
 
         self._vehicle_controller = None
         self.target_waypoint = None
@@ -77,6 +85,7 @@ class LocalPlanner(object):
         self._max_steer = 0.8
         self._offset = 0
         self._base_min_distance = 3.0
+        self._distance_ratio = 0.5
         self._follow_speed_limits = False
 
         # Overload parameters
@@ -101,6 +110,8 @@ class LocalPlanner(object):
                 self._offset = opt_dict['offset']
             if 'base_min_distance' in opt_dict:
                 self._base_min_distance = opt_dict['base_min_distance']
+            if 'distance_ratio' in opt_dict:
+                self._distance_ratio = opt_dict['distance_ratio']
             if 'follow_speed_limits' in opt_dict:
                 self._follow_speed_limits = opt_dict['follow_speed_limits']
 
@@ -205,6 +216,10 @@ class LocalPlanner(object):
 
         self._stop_waypoint_creation = stop_waypoint_creation
 
+    def set_offset(self, offset):
+        """Sets an offset for the vehicle"""
+        self._vehicle_controller.set_offset(offset)
+
     def run_step(self, debug=False):
         """
         Execute one step of local planning which involves running the longitudinal and lateral PID controllers to
@@ -223,7 +238,7 @@ class LocalPlanner(object):
         # Purge the queue of obsolete waypoints
         veh_location = self._vehicle.get_location()
         vehicle_speed = get_speed(self._vehicle) / 3.6
-        self._min_distance = self._base_min_distance + 0.5 *vehicle_speed
+        self._min_distance = self._base_min_distance + self._distance_ratio * vehicle_speed
 
         num_waypoint_removed = 0
         for waypoint, _ in self._waypoints_queue:

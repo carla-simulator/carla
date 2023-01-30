@@ -67,7 +67,12 @@ namespace parser {
             road::RoadId road_id = node_road.attribute("id").as_uint();
             road::Road *road = map_builder.GetRoad(road_id);
             // speed signal by roadrunner
-            std::string speed_str = name.substr(6);
+            std::string speed_str;
+            if (name.find("STATIC") != std::string::npos) {
+               speed_str = name.substr(13);
+            } else {
+               speed_str = name.substr(6);
+            }
             double speed = std::stod(speed_str);
             map_builder.AddSignal(road,
                 node_object.attribute("id").as_string(),

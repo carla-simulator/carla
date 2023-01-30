@@ -13,6 +13,7 @@
 #include "TrafficLightManager.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "carla/road/element/RoadInfoSignal.h"
 
 UTrafficLightComponent::UTrafficLightComponent()
   : Super()
@@ -39,46 +40,62 @@ void UTrafficLightComponent::InitializeSign(const carla::road::Map &Map)
         auto signal_waypoint = Map.GetWaypoint(
             RoadId, lane, SignalReference->GetS()).get();
 
+        // Prevent adding the bounding box inside the intersection
+        if (Map.IsJunction(RoadId)) {
+          auto predecessors = Map.GetPredecessors(signal_waypoint);
+          if (predecessors.size() == 1) {
+            auto predecessor = predecessors.front();
+            if (!Map.IsJunction(predecessor.road_id)) {
+              signal_waypoint = predecessor;
+            }
+          }
+        }
+
         if(Map.GetLane(signal_waypoint).GetType() != cr::Lane::LaneType::Driving)
           continue;
 
-        // Get 90% of the half size of the width of the lane
-        float BoxSize = static_cast<float>(
-            0.9f*Map.GetLaneWidth(signal_waypoint)*0.5);
+        // Get 50% of the half size of the width of the lane
+        float BoxWidth = static_cast<float>(
+            0.5f*Map.GetLaneWidth(signal_waypoint)*0.5);
+        float BoxLength = 1.5f;
+        float BoxHeight = 1.0f;
+
         // Prevent a situation where the road width is 0,
         // this could happen in a lane that is just appearing
-        BoxSize = std::max(0.01f, BoxSize);
+        BoxWidth = std::max(0.01f, BoxWidth);
         // Get min and max
         double LaneLength = Map.GetLane(signal_waypoint).GetLength();
         double LaneDistance = Map.GetLane(signal_waypoint).GetDistance();
+        // Safe distance to avoid overlapping the bounding box with the intersection
+        float AdditionalDistance = 1.5f;
         if(lane < 0)
         {
-          signal_waypoint.s = FMath::Clamp(signal_waypoint.s - BoxSize,
+          signal_waypoint.s = FMath::Clamp(signal_waypoint.s - (BoxLength + AdditionalDistance),
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
         else
         {
-          signal_waypoint.s = FMath::Clamp(signal_waypoint.s + BoxSize,
+          signal_waypoint.s = FMath::Clamp(signal_waypoint.s + (BoxLength + AdditionalDistance),
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
-        float UnrealBoxSize = 100*BoxSize;
         FTransform BoxTransform = Map.ComputeTransform(signal_waypoint);
         ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
         if (LargeMapManager)
         {
           BoxTransform = LargeMapManager->GlobalToLocalTransform(BoxTransform);
         }
-        GenerateTrafficLightBox(BoxTransform, UnrealBoxSize);
+        GenerateTrafficLightBox(BoxTransform, FVector(100*BoxLength, 100*BoxWidth, 100*BoxHeight));
       }
     }
   }
 }
 
 void UTrafficLightComponent::GenerateTrafficLightBox(const FTransform BoxTransform,
-    float BoxSize)
+    const FVector BoxSize)
 {
   UBoxComponent* BoxComponent = GenerateTriggerBox(BoxTransform, BoxSize);
-  BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UTrafficLightComponent::OnOverlapTriggerBox);
+  BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UTrafficLightComponent::OnBeginOverlapTriggerBox);
+  BoxComponent->OnComponentEndOverlap.AddDynamic(this, &UTrafficLightComponent::OnEndOverlapTriggerBox);
   AddEffectTriggerVolume(BoxComponent);
 }
 
@@ -101,15 +118,7 @@ void UTrafficLightComponent::SetLightState(ETrafficLightState NewState)
     if (Controller != nullptr)
     {
       Controller->SetTrafficLightState(LightState);
-      if (LightState == ETrafficLightState::Green)
-      {
-        Controller->SetTrafficLight(nullptr);
-      }
     }
-  }
-  if (LightState == ETrafficLightState::Green)
-  {
-    Vehicles.Empty();
   }
 }
 
@@ -146,7 +155,7 @@ const UTrafficLightController* UTrafficLightComponent::GetController() const
   return TrafficLightController;
 }
 
-void UTrafficLightComponent::OnOverlapTriggerBox(UPrimitiveComponent *OverlappedComp,
+void UTrafficLightComponent::OnBeginOverlapTriggerBox(UPrimitiveComponent *OverlappedComp,
     AActor *OtherActor,
     UPrimitiveComponent *OtherComp,
     int32 OtherBodyIndex,
@@ -161,12 +170,27 @@ void UTrafficLightComponent::OnOverlapTriggerBox(UPrimitiveComponent *Overlapped
     if (VehicleController)
     {
       VehicleController->SetTrafficLightState(LightState);
-      if (LightState != ETrafficLightState::Green)
-      {
-        Vehicles.Add(VehicleController);
-        VehicleController->SetTrafficLight(
-            Cast<ATrafficLightBase>(GetOwner()));
-      }
+      Vehicles.Add(VehicleController);
+      VehicleController->SetTrafficLight(Cast<ATrafficLightBase>(GetOwner()));
+    }
+  }
+}
+
+void UTrafficLightComponent::OnEndOverlapTriggerBox(UPrimitiveComponent *OverlappedComp,
+    AActor *OtherActor,
+    UPrimitiveComponent *OtherComp,
+    int32 OtherBodyIndex)
+{
+  ACarlaWheeledVehicle * Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
+  if (Vehicle)
+  {
+    AWheeledVehicleAIController* VehicleController =
+        Cast<AWheeledVehicleAIController>(Vehicle->GetController());
+    if (VehicleController)
+    {
+      VehicleController->SetTrafficLightState(ETrafficLightState::Green);
+      VehicleController->SetTrafficLight(nullptr);
+      Vehicles.Remove(VehicleController);
     }
   }
 }

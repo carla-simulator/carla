@@ -126,7 +126,13 @@ void ACarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Missing CarlaSettingsDelegate!"));
   }
 
-  if (WeatherClass != nullptr) {
+  AActor* WeatherActor =
+      UGameplayStatics::GetActorOfClass(GetWorld(), AWeather::StaticClass());
+  if (WeatherActor != nullptr) {
+    UE_LOG(LogCarla, Log, TEXT("Existing weather actor. Doing nothing then!"));
+    Episode->Weather = static_cast<AWeather*>(WeatherActor);
+  }
+  else if (WeatherClass != nullptr) {
     Episode->Weather = World->SpawnActor<AWeather>(WeatherClass);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
@@ -224,10 +230,6 @@ void ACarlaGameModeBase::BeginPlay()
     for(UCarlaLight* Light : Lights)
     {
       Light->RegisterLight();
-      if(!Light->HasBegunPlay())
-      {
-        Light->BeginPlay();
-      }
     }
   }
   EnableOverlapEvents();
@@ -434,7 +436,7 @@ void ACarlaGameModeBase::GenerateSpawnPoints()
   {
     carla::geom::Transform CarlaTransform = Map->ComputeTransform(Pair.first);
     FTransform Transform(CarlaTransform);
-    Transform.AddToTranslation(FVector(0.f, 0.f, 300.0f));
+    Transform.AddToTranslation(FVector(0.f, 0.f, 50.0f));
     SpawnPointsTransforms.Add(Transform);
   }
 }
@@ -497,7 +499,14 @@ void ACarlaGameModeBase::EnableOverlapEvents()
     AStaticMeshActor *MeshActor = CastChecked<AStaticMeshActor>(Actor);
     if(MeshActor->GetStaticMeshComponent()->GetStaticMesh() != NULL)
     {
-      if (MeshActor->GetStaticMeshComponent()->GetGenerateOverlapEvents() == false)
+      auto MeshTag = ATagger::GetTagOfTaggedComponent(*MeshActor->GetStaticMeshComponent());
+      namespace crp = carla::rpc;
+      if (MeshTag != crp::CityObjectLabel::Roads && 
+          MeshTag != crp::CityObjectLabel::Sidewalks && 
+          MeshTag != crp::CityObjectLabel::RoadLines && 
+          MeshTag != crp::CityObjectLabel::Ground &&
+          MeshTag != crp::CityObjectLabel::Terrain &&
+          MeshActor->GetStaticMeshComponent()->GetGenerateOverlapEvents() == false)
       {
         MeshActor->GetStaticMeshComponent()->SetGenerateOverlapEvents(true);
       }
