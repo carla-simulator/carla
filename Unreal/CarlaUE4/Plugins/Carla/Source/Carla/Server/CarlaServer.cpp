@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "Carla/Server/CarlaServer.h"
+#include "Carla/Server/CarlaServerResponse.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
 #include "EngineUtils.h"
 
