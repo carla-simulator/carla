@@ -465,6 +465,18 @@ protected:
 
 private:
 
+    template <typename PixelT>
+    static void SendGBufferFillEmptyTexture(
+        FGBufferRequest& GBufferData,
+        FIntPoint& ImageSize,
+        TArray<PixelT>& Pixels)
+    {
+        ImageSize = GBufferData.ViewRect.Size();
+        Pixels.AddUninitialized(ImageSize.X * ImageSize.Y);
+        for (auto& Pixel : Pixels)
+            Pixel = PixelT::Black;
+    }
+
   template <
     typename SensorT,
     typename CameraGBufferT>
@@ -478,51 +490,59 @@ private:
         std::is_same<std::remove_reference_t<CameraGBufferT>, FCameraGBufferUint8>::value,
         FColor,
         FLinearColor>::type;
+
       FIntPoint ImageSize;
       TArray<PixelType> Pixels;
+
       if (GBufferData.WaitForTextureTransfer(TextureID))
       {
-        FIntPoint SourceExtent = {};
         TRACE_CPUPROFILER_EVENT_SCOPE_STR("GBuffer Decode");
+
+        FIntPoint SourceExtent = {};
         void* PixelData;
         int32 SourcePitch;
-        GBufferData.MapTextureData(
-          TextureID,
-          PixelData,
-          SourcePitch,
-          SourceExtent);
-        auto Format = GBufferData.Readbacks[(size_t)TextureID]->GetFormat();
-        ImageSize = GBufferData.ViewRect.Size();
-        Pixels.AddUninitialized(ImageSize.X * ImageSize.Y);
-        FReadSurfaceDataFlags Flags = {};
-        Flags.SetLinearToGamma(true);
-        ImageUtil::DecodePixelsByFormat(
-          Pixels,
-          TArrayView<uint8>((uint8*)PixelData, SourcePitch * SourceExtent.Y),
-          SourcePitch,
-          SourceExtent,
-          ImageSize,
-          Format,
-          Flags);
-        GBufferData.UnmapTextureData(TextureID);
+
+        if (GBufferData.MapTextureData(TextureID, PixelData, SourcePitch, SourceExtent))
+        {
+            auto Format = GBufferData.Readbacks[(size_t)TextureID]->GetFormat();
+            ImageSize = GBufferData.ViewRect.Size();
+            Pixels.AddUninitialized(ImageSize.X * ImageSize.Y);
+            FReadSurfaceDataFlags Flags = {};
+            Flags.SetLinearToGamma(true);
+            ImageUtil::DecodePixelsByFormat(
+                Pixels,
+                TArrayView<uint8>((uint8*)PixelData, SourcePitch * SourceExtent.Y),
+                SourcePitch,
+                SourceExtent,
+                ImageSize,
+                Format,
+                Flags);
+            GBufferData.UnmapTextureData(TextureID);
+        }
+        else
+        {
+            SendGBufferFillEmptyTexture(GBufferData, ImageSize, Pixels);
+        }
       }
       else
       {
-        ImageSize = GBufferData.ViewRect.Size();
-        Pixels.AddUninitialized(ImageSize.X * ImageSize.Y);
-        for (auto& Pixel : Pixels)
-          Pixel = PixelType::Black;
+          SendGBufferFillEmptyTexture(GBufferData, ImageSize, Pixels);
       }
+
       auto GBufferStream = CameraGBuffer.GetDataStream(Self.GetEpisode());
       auto Buffer = GBufferStream.PopBufferFromPool();
+
       Buffer.copy_from(
         carla::sensor::SensorRegistry::get<CameraGBufferT*>::type::header_offset,
         boost::asio::buffer(&Pixels[0], Pixels.Num() * sizeof(PixelType)));
+
       if (Buffer.empty()) {
         return;
       }
+
       SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
+
       GBufferStream.Send(
         CameraGBuffer,
         std::move(Buffer),

@@ -25,9 +25,8 @@ void FPixelReader::WritePixelsToBuffer(
   TRACE_CPUPROFILER_EVENT_SCOPE_STR("WritePixelsToBuffer");
   check(IsInRenderingThread());
   
-  auto RenderResource =
-      static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
-  FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
+  auto Texture = RenderTarget.Resource->GetTexture2DRHI();
+
   if (!Texture)
   {
     return;
@@ -38,22 +37,27 @@ void FPixelReader::WritePixelsToBuffer(
   EPixelFormat BackBufferPixelFormat = Texture->GetFormat();
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("EnqueueCopy");
-    BackBufferReadback->EnqueueCopy(RHICmdList, 
-                                    Texture, 
-                                    FResolveRect(0, 0, BackBufferSize.X, BackBufferSize.Y));
+    BackBufferReadback->EnqueueCopy(RHICmdList, Texture);
   }
 
   // workaround to force RHI with Vulkan to refresh the fences state in the middle of frame
-  {
-    FRenderQueryRHIRef Query = RHICreateRenderQuery(RQT_AbsoluteTime);
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("create query");
-    RHICmdList.EndRenderQuery(Query);
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Flush");
-    RHICmdList.ImmediateFlush(EImmediateFlushType::FlushRHIThread);
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("query result");
-    uint64 OldAbsTime = 0;
-    RHICmdList.GetRenderQueryResult(Query, OldAbsTime, true);
-  }
+    static thread_local auto QueryPool = RHICreateRenderQueryPool(RQT_AbsoluteTime);
+    auto Query = QueryPool->AllocateQuery();
+    auto QueryPtr = Query.GetQuery();
+
+    {
+        TRACE_CPUPROFILER_EVENT_SCOPE_STR("create query");
+        RHICmdList.EndRenderQuery(QueryPtr);
+    }
+    {
+        TRACE_CPUPROFILER_EVENT_SCOPE_STR("Flush");
+        RHICmdList.ImmediateFlush(EImmediateFlushType::FlushRHIThread);
+    }
+    {
+        TRACE_CPUPROFILER_EVENT_SCOPE_STR("query result");
+        uint64 OldAbsTime = 0;
+        RHICmdList.GetRenderQueryResult(QueryPtr, OldAbsTime, true);
+    }
 
   AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [=, Readback=std::move(BackBufferReadback)]() mutable {
     {
@@ -70,7 +74,14 @@ void FPixelReader::WritePixelsToBuffer(
     void* LockedData = Readback->Lock(Size);
     if (LockedData)
     {
-      FuncForSending(LockedData, Size, Offset, ExpectedRowBytes);
+        try
+        {
+            FuncForSending(LockedData, Size, Offset, ExpectedRowBytes);
+        }
+        catch (std::exception& e)
+        {
+            UE_LOG(LogCarla, Warning, TEXT("Exception thrown from PixelReader send callback: %s"), e.what());
+        }
     }
     Readback->Unlock();
     Readback.reset();
