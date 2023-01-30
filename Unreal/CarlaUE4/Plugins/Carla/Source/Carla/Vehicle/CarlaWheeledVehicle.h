@@ -354,13 +354,19 @@ private:
 
 public:
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditDefaultsOnly)
-  float DetectionSize {200.0f};
+  float DetectionSize { 750.0f };
   
   UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly)
   FBox FoliageBoundingBox;
 
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
   UBoxComponent *VehicleBounds; 
+
+  UFUNCTION()
+  FBox GetDetectionBox() const;
+
+  UFUNCTION()
+  float GetDetectionSize() const;
 
   UFUNCTION()
   void UpdateDetectionBox();
@@ -446,4 +452,19 @@ private:
 
 
   FTimerHandle TimerHandler;
+public:
+  float SpeedAnim { 0.0f };
+  float RotationAnim { 0.0f };
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetSpeedAnim() const { return SpeedAnim; }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetSpeedAnim(float Speed) { SpeedAnim = Speed; }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetRotationAnim() const { return RotationAnim; }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetRotationAnim(float Rotation) { RotationAnim = Rotation; }
 };

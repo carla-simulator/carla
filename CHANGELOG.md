@@ -1,27 +1,41 @@
 ## Latest
 
+  * Fixed the extra data in Directx textures, so we need to copy row by row on Windows to remove extra bytes on images
+  * Restored gamma value to 2.2 instead of 2.4
+
+## CARLA 0.9.14
+
+  * Fixed tutorial for adding a sensor to CARLA.
+  * Fixed bug in FrictionTrigger causing sometimes server segfault
+  * Added attachment type "SpringArmGhost" for cinematic cameras but without doing the collision test.
   * Improved algorithm to move signals out of the road by computing the desired displacement direction.
   * Added `TrafficManager.vehicle_lane_offset(actor, offset)` and `TrafficManager.global_lane_offset(offset)` methods.
   * Some of the warnings shown when building a map will now only be showing when debugging.
+  * The ids for semantic segmentation has been modified to be the same as cityscapes (labels, ids and colors)
   * Fixed bug causing traffic signals at the end points of a road to sometimes create malformed waypoints.
+  * Fixed pedestrian skeleton frame, where sometimes it was draw displaced from the body
   * Fixed decals when importing maps. It was using other .json files found in other packages.
+  * In multi-GPU mode some sensors now are forced to be created on the primary server always (ex. collision sensor)
   * Added the speed limits for 100, 110 and 120 Km/h.
   * Fixing sensor destruction, now the stream and socket is succesfully destroyed.
   * Fixed bug at `Vehicle.get_traffic_light_state()` and `Vehicle.is_at_traffic_light()` causing vehicles to temporarily not lose the information of a traffic light if they moved away from it before it turned green.
   * Changed the height of the automatic spawn points, from 3m to only 0.5m
+  * Added pedestrian skeleton to the recorder, as additional data. They will replay with the exact pose.
   * Added multi-GPU feature. Now several servers (with dedicated GPU) can render sensors for the same simulation.
   * Fixed bug causing the `Vehicle.get_traffic_light_state()` function not notify about the green to yellow and yellow to red light state changes.
   * Fixed bug causing the `Vehicle.is_at_traffic_light()` function to return *false* if the traffic light was green.
   * Fixed bug causing the scene lights to return an incorrect location at large maps.
   * Fixed bug causing the `world.ground_projection()` function to return an incorrect location at large maps.
   * Added failure state to vehicles, which can be retrieved by using `Vehicle.get_failure_state()`. Only Rollover failure state is currently supported.
-  * Fixed bug causing the TM to block the simulation when another client teleported a vehicle with no physics.
+  * Fixed bug causing the TM to block the simulation when a vehicle with no physics was teleported.
   * Fixed bug causing the TM to block the simulation when travelling through a short roads that looped on themselves.
   * Improved the TM's handling of non signalized junctions, resulting in a more fluid overall behavior.
   * Added check to avoid adding procedural trigger boxes inside intersections.
   * Python agents now accept a carla.Map and GlobalRoutePlanner instances as inputs, avoiding the need to recompute them.
   * Python agents now have a function to lane change.
   * Python agents now detect vehicle in adjacent lanes if invaded due to the offset.
+  * Python agents now have the offset exposed.
+  * Fixed bug causing the python agents to sometimes not detect a blocking actor if there were severral actors around it.
   * Improved Python agents performance for large maps.
   * Fix a bug at `Map.get_topology()`, causing lanes with no successors to not be part of it.
   * Added new ConstantVelocityAgent
@@ -44,6 +58,8 @@
   * Added post process effects for rainy and dusty weathers.
   * Switched data type of the dust storm weather parameter from bool to float.
   * Check for the version of the installed Clang compiler during build.
+  * Added API function to get direct access to the GBuffer textures of a sensor:
+    - `listen_to_gbuffer`: to set a callback for a specific GBuffer texture
 
 ## CARLA 0.9.13
 

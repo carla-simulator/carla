@@ -58,7 +58,7 @@ namespace detail {
       }
     }
 
-    _client.ApplyBatch(std::move(commands), false);
+    _client.ApplyBatchSync(std::move(commands), false);
   }
 
   void WalkerNavigation::CheckIfWalkerExist(std::vector<WalkerHandle> walkers, const EpisodeState &state) {

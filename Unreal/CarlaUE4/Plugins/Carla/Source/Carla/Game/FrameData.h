@@ -14,7 +14,9 @@
 #include "Carla/Recorder/CarlaRecorderLightScene.h"
 #include "Carla/Recorder/CarlaRecorderLightVehicle.h"
 #include "Carla/Recorder/CarlaRecorderAnimVehicle.h"
+#include "Carla/Recorder/CarlaRecorderAnimVehicleWheels.h"
 #include "Carla/Recorder/CarlaRecorderAnimWalker.h"
+#include "Carla/Recorder/CarlaRecorderAnimBiker.h"
 #include "Carla/Recorder/CarlaRecorderCollision.h"
 #include "Carla/Recorder/CarlaRecorderEventAdd.h"
 #include "Carla/Recorder/CarlaRecorderEventDel.h"
@@ -41,7 +43,9 @@ class FFrameData
   CarlaRecorderPositions Positions;
   CarlaRecorderStates States;
   CarlaRecorderAnimVehicles Vehicles;
+  CarlaRecorderAnimVehicleWheels Wheels;
   CarlaRecorderAnimWalkers Walkers;
+  CarlaRecorderAnimBikers Bikers;
   CarlaRecorderLightVehicles LightVehicles;
   CarlaRecorderLightScenes LightScenes;
   CarlaRecorderActorsKinematics Kinematics;
@@ -64,7 +68,7 @@ public:
 
   void SetEpisode(UCarlaEpisode* ThisEpisode) {Episode = ThisEpisode;}
 
-  void GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData = false);
+  void GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData = false, bool bIncludeActorsAgain = false);
 
   void PlayFrameData(UCarlaEpisode *ThisEpisode, std::unordered_map<uint32_t, uint32_t>& MappedId);
 
@@ -78,7 +82,8 @@ public:
       uint32_t DatabaseId,
       uint8_t Type,
       const FTransform &Transform,
-      FActorDescription ActorDescription);
+      FActorDescription ActorDescription,
+      bool bAddOtherRelatedInfo = true);
   void AddEvent(const CarlaRecorderEventAdd &Event);
   void AddEvent(const CarlaRecorderEventDel &Event);
   void AddEvent(const CarlaRecorderEventParent &Event);
@@ -88,7 +93,9 @@ private:
   void AddPosition(const CarlaRecorderPosition &Position);
   void AddState(const CarlaRecorderStateTrafficLight &State);
   void AddAnimVehicle(const CarlaRecorderAnimVehicle &Vehicle);
+  void AddAnimVehicleWheels(const CarlaRecorderAnimWheels &VehicleWheels);
   void AddAnimWalker(const CarlaRecorderAnimWalker &Walker);
+  void AddAnimBiker(const CarlaRecorderAnimBiker &Biker);
   void AddLightVehicle(const CarlaRecorderLightVehicle &LightVehicle);
   void AddEventLightSceneChanged(const UCarlaLight* Light);
   void AddKinematics(const CarlaRecorderKinematics &ActorKinematics);
@@ -99,7 +106,9 @@ private:
 
   void AddActorPosition(FCarlaActor *CarlaActor);
   void AddWalkerAnimation(FCarlaActor *CarlaActor);
+  void AddBikerAnimation(FCarlaActor *CarlaActor);
   void AddVehicleAnimation(FCarlaActor *CarlaActor);
+  void AddVehicleWheelsAnimation(FCarlaActor *CarlaActor);
   void AddTrafficLightState(FCarlaActor *CarlaActor);
   void AddVehicleLight(FCarlaActor *CarlaActor);
   void AddActorKinematics(FCarlaActor *CarlaActor);
@@ -107,12 +116,13 @@ private:
 
   void GetFrameCounter();
 
-  std::pair<int, FCarlaActor*> TryToCreateReplayerActor(
+  std::pair<int, FCarlaActor*> CreateOrReuseActor(
       FVector &Location,
       FVector &Rotation,
       FActorDescription &ActorDesc,
       uint32_t DesiredId,
-      bool SpawnSensors);
+      bool SpawnSensors,
+      std::unordered_map<uint32_t, uint32_t>& MappedId);
 
     // replay event for creating actor
   std::pair<int, uint32_t> ProcessReplayerEventAdd(
@@ -121,7 +131,8 @@ private:
       CarlaRecorderActorDescription Description,
       uint32_t DesiredId,
       bool bIgnoreHero,
-      bool ReplaySensors);
+      bool ReplaySensors,
+      std::unordered_map<uint32_t, uint32_t>& MappedId);
 
   // replay event for removing actor
   bool ProcessReplayerEventDel(uint32_t DatabaseId);
@@ -136,6 +147,10 @@ private:
   void ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle);
   // set the animation for walkers
   void ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker);
+  // set the animation for Vehicles Wheels
+  void ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels Vehicle);
+  // set the animation for bikers
+  void ProcessReplayerAnimBiker(CarlaRecorderAnimBiker Biker);
   // set the vehicle light
   void ProcessReplayerLightVehicle(CarlaRecorderLightVehicle LightVehicle);
   // set scene lights
@@ -155,6 +170,8 @@ private:
   void SetFrameCounter();
 
   FCarlaActor* FindTrafficLightAt(FVector Location);
+
+  void AddExistingActors(void);
 
   UCarlaEpisode *Episode;
 };

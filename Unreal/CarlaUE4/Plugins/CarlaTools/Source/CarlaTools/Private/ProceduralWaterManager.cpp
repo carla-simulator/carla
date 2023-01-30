@@ -290,3 +290,10 @@ float UProceduralWaterManager::GetLandscapeSurfaceHeight(float x, float y, bool 
   }
   return 0.0f;
 }
+
+
+bool UProceduralWaterManager::CreateRiverPresetFiles(TSubclassOf<AActor> RiverParentClass)
+{
+  // TODO
+  return true;
+}

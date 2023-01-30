@@ -229,6 +229,10 @@ class BasicAgent(object):
         """(De)activates the checks for stop signs"""
         self._ignore_vehicles = active
 
+    def set_offset(self, offset):
+        """Sets an offset for the vehicle"""
+        self._local_planner.set_offset(offset)
+
     def lane_change(self, direction, same_lane_time=0, other_lane_time=0, lane_change_time=2):
         """
         Changes the path so that the vehicle performs a lane change.
@@ -390,8 +394,6 @@ class BasicAgent(object):
 
                 if route_polygon.intersects(target_polygon):
                     return (True, target_vehicle, compute_distance(target_vehicle.get_location(), ego_location))
-
-                return (False, None, -1)
 
             # Simplified approach, using only the plan waypoints (similar to TM)
             else:

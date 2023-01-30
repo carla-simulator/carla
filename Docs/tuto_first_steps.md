@@ -53,7 +53,7 @@ In the CARLA API, the [__world__](python_api.md#carla.World) object provides acc
 We can also use the world object to load a map from the client:
 
 ```py
-world.load_world('Town05')
+client.load_world('Town05')
 
 ``` 
 
@@ -166,7 +166,7 @@ Now we've added our traffic and ego vehicle to the simulation and started record
 We can find all the vehicles in the simulation using the `world.get_actors()` method, filtering for all the vehicles. We can then use the `set_autopilot()` method to hand over control of the vehicle to the Traffic Manager.
 
 ```py
-for vehicle in world.get_actors().filter('vehicle'):
+for vehicle in world.get_actors().filter('*vehicle*'):
     vehicle.set_autopilot(True)
 ```
 

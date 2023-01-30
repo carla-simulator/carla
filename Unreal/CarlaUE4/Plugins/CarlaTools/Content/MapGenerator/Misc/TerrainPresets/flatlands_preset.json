@@ -1,0 +1,30 @@
+{
+	"presetName": "Flatlands",
+	"widgetState":
+	{
+		"isPersistentState": false,
+		"mapName": "",
+		"workingPath": "",
+		"activeTabName": "",
+		"terrainGeneralSize": 0,
+		"terrainGeneralSlope": 0.54000002145767212,
+		"terrainGeneralHeight": 0.05000000074505806,
+		"terrainGeneralMinHeight": 0.20000000298023224,
+		"terrainGeneralMaxHeight": 1,
+		"terrainGeneralInvert": -0.1,
+		"terrainOverallSeed": 2000,
+		"terrainOverallScale": 22,
+		"terrainOverallSlope": 10,
+		"terrainOverallHeight": 6.6999998092651367,
+		"terrainOverallMinHeight": 0.75,
+		"terrainOverallMaxHeight": 1,
+		"terrainOverallInvert": -0.32,
+		"terrainDetailedSeed": 6000,
+		"terrainDetailedScale": 21,
+		"terrainDetailedSlope": 10,
+		"terrainDetailedHeight": 2.5999999046325684,
+		"terrainDetailedMinHeight": 0.014999999664723873,
+		"terrainDetailedMaxHeight": 1,
+		"terrainDetailedInvert": 1
+	}
+}

@@ -238,7 +238,7 @@ for location in lidar_measurement:
     print(location)
 ```
 
-The information of the LIDAR measurement is enconded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by the following formula.
+The information of the LIDAR measurement is encoded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by the following formula.
 <br>
 ![LidarIntensityComputation](img/lidar_intensity.jpg)
 
@@ -709,7 +709,7 @@ This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it
 
 ```py
 ...
-raw_image.save_to_disk("path/to/save/converted/image",carla.cityScapesPalette)
+raw_image.save_to_disk("path/to/save/converted/image",carla.ColorConverter.cityScapesPalette)
 ```
 
 The following tags are currently available:

@@ -641,6 +641,82 @@
       warning: >
         The `upper_bound` cannot be higher than the `actor_active_distance`. The `lower_bound` cannot be less than 25.
     # --------------------------------------
+    - def_name: set_path
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that must follow the given path
+      - param_name: path
+        type: list
+        doc: >
+          The list of carla.Locations for the actor to follow
+      doc: >
+        Sets a list of locations for a vehicle to follow while controlled by the Traffic Manager. 
+      warning: >
+        Ensure that the road topology doesn't impede the given path.
+    # --------------------------------------
+    - def_name: set_route
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that must follow the given route instructions
+      - param_name: path
+        type: list
+        doc: >
+          The list of route instructions (string) for the vehicle to follow.
+      doc: >
+        Sets a list of route instructions for a vehicle to follow while controlled by the Traffic Manager. The possible route instructions are 'Left', 'Right', 'Straight'.
+      warning: >
+        Ensure that the lane topology doesn't impede the given route.
+    # --------------------------------------
+    - def_name: get_next_action
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that you wish to query. 
+      return: list of two elements - [Road option (string e.g. 'Left', 'Right', 'Straight'), Next waypoint (carla.Waypoint)]
+      doc: >
+        Returns the next known road option and waypoint that an actor controlled by the Traffic Manager will follow.  
+    # --------------------------------------
+    - def_name: get_all_actions
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that you wish to query. 
+      return: list of lists with each element as follows - [Road option (string e.g. 'Left', 'Right', 'Straight'), Next waypoint (carla.Waypoint)]
+      doc: >
+        Returns all known actions (i.e. road options and waypoints) that an actor controlled by the Traffic Manager will perform in its next steps.  
+    # --------------------------------------
+    - def_name: random_left_lanechange_percentage
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that you wish to query. 
+      - param_name: percentage
+        type: float
+        doc: >
+          The probability of lane change in percentage units (between 0 and 100) 
+      doc: >
+        Adjust probability that in each timestep the actor will perform a left lane change, dependent on lane change availability.
+    # --------------------------------------
+    - def_name: random_right_lanechange_percentage
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that you wish to query. 
+      - param_name: percentage
+        type: float
+        doc: >
+          The probability of lane change in percentage units (between 0 and 100)
+      doc: >
+        Adjust probability that in each timestep the actor will perform a right lane change, dependent on lane change availability.
+    # --------------------------------------
 
   - class_name: OpendriveGenerationParameters
     # - DESCRIPTION ------------------------

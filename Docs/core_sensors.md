@@ -49,6 +49,7 @@ blueprint.set_attribute('sensor_tick', '1.0')
 
 * __Rigid attachment.__ Movement is strict regarding its parent location. This is the proper attachment to retrieve data from the simulation.  
 * __SpringArm attachment.__ Movement is eased with little accelerations and decelerations. This attachment is only recommended to record videos from the simulation. The movement is smooth and "hops" are avoided when updating the cameras' positions.  
+* __SpringArmGhost attachment.__ Like the previous one but without doing the collision test, so the camera or sensor could cross walls or other geometries.  
 
 ```py
 transform = carla.Transform(carla.Location(x=0.8, z=1.7))
