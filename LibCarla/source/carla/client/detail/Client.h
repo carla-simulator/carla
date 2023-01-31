@@ -362,6 +362,8 @@ namespace detail {
 
     void SetReplayerIgnoreHero(bool ignore_hero);
 
+    void SetReplayerIgnoreSpectator(bool ignore_spectator);
+
     void StopReplayer(bool keep_actors);
 
     void SubscribeToStream(

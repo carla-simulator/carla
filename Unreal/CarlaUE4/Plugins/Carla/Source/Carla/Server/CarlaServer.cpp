@@ -2232,6 +2232,13 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(set_replayer_ignore_spectator) << [this](bool ignore_spectator) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->GetRecorder()->SetReplayerIgnoreSpectator(ignore_spectator);
+    return R<void>::Success();
+  };
+
   BIND_SYNC(stop_replayer) << [this](bool keep_actors) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
