@@ -13,3 +13,5 @@
 #else
 #define DEFAULT_FONT_FILE "/usr/share/fonts/TTF/LiberationSans-Regular.ttf"
 #endif
+
+#define LOG_PRFX "├ "

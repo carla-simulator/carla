@@ -14,7 +14,7 @@ LIB_LIBOSMSCOUT_INCLUDE=/home/aollero/Downloads/libosmcout/libosmscout-master/li
 LIB_LIBOSMSCOUT_LIBS=/home/aollero/Downloads/libosmcout/libosmscout-master/build/libosmscout-map-svg
 
 
-cmake -DCMAKE_CXX_FLAGS="-std=c++17" ..
+cmake -DCMAKE_CXX_FLAGS="-std=c++17 -g -Og" ..
 make
 
 ./osm-world-renderer

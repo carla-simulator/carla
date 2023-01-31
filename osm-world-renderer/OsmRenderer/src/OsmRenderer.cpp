@@ -53,23 +53,22 @@ int OsmRenderer::InitRenderer()
 int OsmRenderer::StartLoop()
 {
   const int AddrLen = sizeof(Address);
+  std::cout << "┌ Waiting Command..." << std::endl;
+  int ConnectionSocket = accept(RendererSocketfd, (struct sockaddr*)&Address, (socklen_t*)&AddrLen);
+  if(ConnectionSocket < 0)
+  {
+    throw runtime_error("Connection not accepted " + ConnectionSocket);
+  }
   while(true)
   {
-    std::cout << "┌ Waiting Command..." << std::endl;
-    int ConnectionSocket = accept(RendererSocketfd, (struct sockaddr*)&Address, (socklen_t*)&AddrLen);
-    if(ConnectionSocket < 0)
-    {
-      throw runtime_error("Connection not accepted " + ConnectionSocket);
-    }
-
+    
     char Buffer[BUFFER_SIZE] = {};
-    read(ConnectionSocket, Buffer, BUFFER_SIZE);
-    std::cout << "└ Received message: " << Buffer << std::endl;
-    //char* message = "Hello darling";
-    //send(ConnectionSocket, message, strlen(message), 0);
-    //write(ConnectionSocket, message, strlen(message));
+    size_t ReadBytes = read(ConnectionSocket, Buffer, BUFFER_SIZE);
+    std::cout << LOG_PRFX << "Received message: " << Buffer << std::endl;
+
     RunCmd(ConnectionSocket, Buffer);
-    close(ConnectionSocket);
+
+    std::cout << "└ End of Command." << std::endl << "┌ Waiting Command..." << std::endl;
   }
   return 0;
 }
@@ -89,33 +88,20 @@ void OsmRenderer::RunCmd(int ConnectionSocket, char* Cmd)
 
   if(CmdType == "-R")     // Render Command
   {
-    //const char* message = "Render Command";
-    //send(ConnectionSocket, message, strlen(message), 0);
-    //RenderMapCmd(CmdVector);
+    std::uint8_t* RenderedMap = new uint8_t[Drawer->GetImgSizeSqr() * 4];
+    RenderMapCmd(CmdVector, RenderedMap);
+
+    if(send(ConnectionSocket, (const char*)RenderedMap, (Drawer->GetImgSizeSqr() * 4 * sizeof(uint8_t)), 0) < 0)
+    {
+      std::cerr << LOG_PRFX << " ⛔️ ERROR Sending map to client: " << errno << " :: " << strerror(errno) << std::endl;
+    }
+    else{
+      std::cout << LOG_PRFX << " ✅ SUCCESS! Bitmap sent correctly!" << std::endl;
+    }
   }
   else if(CmdType == "-C")// Configuration Command
   {
-    //const char* message = "Configuration Command";
-    //send(ConnectionSocket, message, strlen(message), 0);
     ConfigMapCmd(CmdVector);
-    // TODO: Delete these lines or move them to Render Command handling
-    std::uint8_t* RenderedMap;
-    RenderMapCmd(CmdVector, RenderedMap);
-    //size_t BufferSize = sizeof(RenderedMap) / sizeof(RenderedMap[0]);
-    std::cout << "===> " << ConnectionSocket << " " << Drawer->GetImgSizeSqr() << std::endl;
-    for(size_t i = 0; i < Drawer->GetImgSizeSqr(); i++ )
-    {
-     // std::cout << std::dec << RenderedMap[i] << " ";
-    }
-    if(send(ConnectionSocket, (const char*)RenderedMap, (Drawer->GetImgSizeSqr() * 4 * sizeof(uint8_t)), 0) < 0)
-    //if(send(ConnectionSocket, (const char*)RenderedMap, (Drawer->GetImgSizeSqr() * sizeof(uint8_t)), 0) < 0)
-    //if(send(ConnectionSocket, (const char*)RenderedMap, BufferSize, 0) < 0)
-    {
-      std::cerr << " ⛔️ ERROR Sending map to client: " << errno << " :: " << strerror(errno) << std::endl;
-    }
-    else{
-      std::cout << " ✅ SUCCESS! Bitmap sent correctly!" << std::endl;
-    }
   }
 }
 
@@ -136,24 +122,28 @@ vector<string> OsmRenderer::SplitCmd (string s, string delimiter) {
 
 void OsmRenderer::RenderMapCmd(vector<string> CmdArgs, uint8_t* OutMap)
 {
-  // TODO: Move to RenderMapCmd
+  std::cout << LOG_PRFX << "Rendering map at [" << stof(CmdArgs[R_CMD_LATITUDE]) << ", "
+    << stof(CmdArgs[R_CMD_LONGITUDE]) << "] with zoom: " << CmdArgs[R_CMD_ZOOM] << std::endl;
+
   auto start = std::chrono::high_resolution_clock::now();
-  osmscout::GeoCoord Coord(40.415, -3.702);                 // TODO: Lat and Lon info from command
-  Drawer->Draw(OutMap, Coord, 100000);  // TODO: Zoom info from command
+  osmscout::GeoCoord Coord(stof(CmdArgs[R_CMD_LATITUDE]), stof(CmdArgs[R_CMD_LONGITUDE]));
+  Drawer->Draw(OutMap, Coord, stod(CmdArgs[R_CMD_ZOOM]));
   auto stop = std::chrono::high_resolution_clock::now();
+
   auto ElapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-  std::cout << "Elapsed Rendering time: " << ElapsedTime.count() << "ms." << std::endl;
-  //return RenderedMap;
+  std::cout << LOG_PRFX << "Elapsed Rendering time: " << ElapsedTime.count() << "ms." << std::endl;
 }
 
 void OsmRenderer::ConfigMapCmd(vector<string> CmdArgs)
 {
-  std::cout << "Creating drawer......." << std::endl;
+  std::cout << LOG_PRFX << "Configuring Renderer:: DATABASE:" 
+      << CmdArgs[C_CMD_DATABASE_PATH] << " STYLESHEET: "
+      << CmdArgs[C_CMD_STYLESHEET_PATH] << " SIZE: " << CmdArgs[C_CMD_IMG_SIZE]<< std::endl;
   Drawer = new MapDrawer(CmdArgs);
 
   if(!Drawer)
   {
-    std::cout << "--> ERROR creating Drawer"  << std::endl;
+    std::cout << LOG_PRFX << "--> ERROR creating Drawer"  << std::endl;
     return;
   }
 }

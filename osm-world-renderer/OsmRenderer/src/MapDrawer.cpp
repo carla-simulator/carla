@@ -84,8 +84,6 @@ void MapDrawer::SetDrawParameters()
 
 void MapDrawer::DrawMap(std::uint8_t* OutMap)
 {
-  // TODO: Change stream to bitmap data
-  //std::ofstream OutSvgStream("/home/aollero/Downloads/libosmcout/serverOutTest/madrid.svg", std::ios_base::binary|std::ios_base::trunc|std::ios_base::out);
   std::stringstream OutSvgStream;
   if (!OutSvgStream) {
     std::cerr << "Cannot open '" << "' for writing!" << std::endl;
@@ -94,11 +92,6 @@ void MapDrawer::DrawMap(std::uint8_t* OutMap)
 
   osmscout::MapPainterSVG Painter(StyleSheet);
   Painter.DrawMap(Projection, DrawParameter, MapData, OutSvgStream);
-  //OutSvgStream.close();
 
   Rasterizer->RasterizeSVG(OutMap, OutSvgStream.str(), Size);
 }
-
-// /home/aollero/Downloads/libosmcout/libosmscout-master/maps/madrid_downtown/madrid_big
-// /home/aollero/Downloads/libosmcout/libosmscout-master/stylesheets/standard.oss
-// 40.415 -3.702 100000

@@ -1,4 +1,5 @@
 #include "MapRasterizer.h"
+#include "OsmRendererMacros.h"
 
 //#define STB_IMAGE_WRITE_IMPLEMENTATION
 
@@ -7,6 +8,7 @@
 
 #include <iostream>
 #include <string>
+#include <cstring>
 
 using namespace lunasvg;
 
@@ -23,18 +25,14 @@ void MapRasterizer::RasterizeSVG(std::uint8_t* OutMap, std::string SvgString, in
     Bitmap RasterizedBitmap = SvgDocument->renderToBitmap(Size, Size, BackgroundColor);
     if(!RasterizedBitmap.valid())
     {
-        std::cerr << "ERROR: No valid Bitmap" << std::endl;
+        std::cerr << LOG_PRFX << "ERROR: No valid Bitmap" << std::endl;
         return;
     }
     else
     {
-        std::cout << "Bitmap VALID" << std::endl; 
+        std::cout << LOG_PRFX << "Bitmap VALID" << std::endl; 
     }
 
     RasterizedBitmap.convertToRGBA();
-    //std::cout << std::hex << RasterizedBitmap.data() << std::endl;
-    OutMap = RasterizedBitmap.data();
-    
-    //std::string basename = "/home/aollero/Downloads/libosmcout/serverOutTest/madrid.png"; 
-    //stbi_write_png(basename.c_str(), Size, Size, 4, RasterizedBitmap.data(), 0);
+    std::memcpy(OutMap, RasterizedBitmap.data(), Size*Size*4*sizeof(uint8_t));
 }
