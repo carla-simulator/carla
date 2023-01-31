@@ -1,10 +1,12 @@
-#include "../include/MapDrawer.h"
-#include "../include/OsmRendererMacros.h"
+#include "MapDrawer.h"
+#include "OsmRendererMacros.h"
+#include "MapRasterizer.h"
 
 #include "osmscoutmapsvg/MapPainterSVG.h"
 
 #include <iostream>
-#include <fstream>
+//#include <fstream>
+#include <sstream>
 #include <list>
 
 MapDrawer::MapDrawer(vector<string> Args)
@@ -28,9 +30,11 @@ MapDrawer::MapDrawer(vector<string> Args)
   {
     std::cerr << "ERROR Opening Stylesheet in " << DataBasePath << std::endl;
   }
+
+  Rasterizer = new MapRasterizer();
 }
 
-void MapDrawer::Draw(osmscout::GeoCoord Coords, double ZoomValue)
+void MapDrawer::Draw(std::uint8_t* OutMap, osmscout::GeoCoord Coords, double ZoomValue)
 {
   osmscout::Magnification Zoom;
   Zoom.SetMagnification(ZoomValue);
@@ -39,7 +43,7 @@ void MapDrawer::Draw(osmscout::GeoCoord Coords, double ZoomValue)
   LoadDatabaseData();
   SetDrawParameters();
 
-  DrawMap();
+  DrawMap(OutMap);
 }
 
 void MapDrawer::LoadDatabaseData()
@@ -78,18 +82,21 @@ void MapDrawer::SetDrawParameters()
   DrawParameter.SetLabelLineFitToArea(true);
 }
 
-void MapDrawer::DrawMap()
+void MapDrawer::DrawMap(std::uint8_t* OutMap)
 {
   // TODO: Change stream to bitmap data
-  std::ofstream OutSvgStream("/home/aollero/Downloads/libosmcout/serverOutTest/madrid.svg", std::ios_base::binary|std::ios_base::trunc|std::ios_base::out);
-   if (!OutSvgStream) {
+  //std::ofstream OutSvgStream("/home/aollero/Downloads/libosmcout/serverOutTest/madrid.svg", std::ios_base::binary|std::ios_base::trunc|std::ios_base::out);
+  std::stringstream OutSvgStream;
+  if (!OutSvgStream) {
     std::cerr << "Cannot open '" << "' for writing!" << std::endl;
     return;
   }
 
   osmscout::MapPainterSVG Painter(StyleSheet);
   Painter.DrawMap(Projection, DrawParameter, MapData, OutSvgStream);
-  OutSvgStream.close();
+  //OutSvgStream.close();
+
+  Rasterizer->RasterizeSVG(OutMap, OutSvgStream.str(), Size);
 }
 
 // /home/aollero/Downloads/libosmcout/libosmscout-master/maps/madrid_downtown/madrid_big

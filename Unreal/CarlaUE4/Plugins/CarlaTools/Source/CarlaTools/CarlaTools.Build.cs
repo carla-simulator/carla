@@ -62,7 +62,9 @@ public class CarlaTools : ModuleRules
 				"Carla",
 				"PhysXVehicles",
         "Json",
-        "JsonUtilities"
+        "JsonUtilities",
+        "Networking",
+        "Sockets"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

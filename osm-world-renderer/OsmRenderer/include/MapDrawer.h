@@ -11,14 +11,24 @@
 
 using namespace std;
 
+class MapRasterizer;
+
 class MapDrawer
 {
 public:
     MapDrawer(vector<string> Args);
 
-    void Draw(osmscout::GeoCoord Coords, double ZoomValue);
+    void Draw(std::uint8_t* OutMap, osmscout::GeoCoord Coords, double ZoomValue);
+
+    inline const int GetImgSizeSqr()
+    {
+        return Size * Size;
+    }; 
 
 private:
+    // Rastering
+    MapRasterizer* Rasterizer;
+
     // Arguments
     string DataBasePath;
     string StyleSheetPath;
@@ -42,7 +52,7 @@ private:
     void LoadDatabaseData();
     void SetDrawParameters();
 
-    void DrawMap();
+    void DrawMap(std::uint8_t* OutMap);
      
 };
 

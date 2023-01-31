@@ -25,10 +25,8 @@ private:
   vector<string> SplitCmd (string s, string delimiter);
 
   // Command Handlers
-  void RenderMapCmd(vector<string> CmdArgs);
+  void RenderMapCmd(vector<string> CmdArgs, uint8_t* OutMap);
   void ConfigMapCmd(vector<string> CmdArgs);
-
-  // Map Rendering functions
 
 
 public:

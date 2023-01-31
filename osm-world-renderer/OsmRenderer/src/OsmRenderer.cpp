@@ -1,13 +1,14 @@
-#include "../include/OsmRenderer.h"
+#include "OsmRenderer.h"
 
-#include "../include/OsmRendererMacros.h"
-#include "../include/MapDrawer.h"
+#include "OsmRendererMacros.h"
+#include "MapDrawer.h"
 
 #include <sys/socket.h>
 #include <stdexcept>
 #include <iostream>
 #include <string.h>
 #include <unistd.h>
+#include <chrono>
 
 //#include "osmscoutmapsvg/MapPainterSVG.h"
 
@@ -90,13 +91,31 @@ void OsmRenderer::RunCmd(int ConnectionSocket, char* Cmd)
   {
     //const char* message = "Render Command";
     //send(ConnectionSocket, message, strlen(message), 0);
-    RenderMapCmd(CmdVector);
+    //RenderMapCmd(CmdVector);
   }
   else if(CmdType == "-C")// Configuration Command
   {
     //const char* message = "Configuration Command";
     //send(ConnectionSocket, message, strlen(message), 0);
     ConfigMapCmd(CmdVector);
+    // TODO: Delete these lines or move them to Render Command handling
+    std::uint8_t* RenderedMap;
+    RenderMapCmd(CmdVector, RenderedMap);
+    //size_t BufferSize = sizeof(RenderedMap) / sizeof(RenderedMap[0]);
+    std::cout << "===> " << ConnectionSocket << " " << Drawer->GetImgSizeSqr() << std::endl;
+    for(size_t i = 0; i < Drawer->GetImgSizeSqr(); i++ )
+    {
+     // std::cout << std::dec << RenderedMap[i] << " ";
+    }
+    if(send(ConnectionSocket, (const char*)RenderedMap, (Drawer->GetImgSizeSqr() * 4 * sizeof(uint8_t)), 0) < 0)
+    //if(send(ConnectionSocket, (const char*)RenderedMap, (Drawer->GetImgSizeSqr() * sizeof(uint8_t)), 0) < 0)
+    //if(send(ConnectionSocket, (const char*)RenderedMap, BufferSize, 0) < 0)
+    {
+      std::cerr << " ⛔️ ERROR Sending map to client: " << errno << " :: " << strerror(errno) << std::endl;
+    }
+    else{
+      std::cout << " ✅ SUCCESS! Bitmap sent correctly!" << std::endl;
+    }
   }
 }
 
@@ -115,17 +134,21 @@ vector<string> OsmRenderer::SplitCmd (string s, string delimiter) {
     return res;
 }
 
-void OsmRenderer::RenderMapCmd(vector<string> CmdArgs)
+void OsmRenderer::RenderMapCmd(vector<string> CmdArgs, uint8_t* OutMap)
 {
-  /*for(auto i : CmdArgs)
-  {
-    std::cout << i << std::endl;
-  }*/
-
+  // TODO: Move to RenderMapCmd
+  auto start = std::chrono::high_resolution_clock::now();
+  osmscout::GeoCoord Coord(40.415, -3.702);                 // TODO: Lat and Lon info from command
+  Drawer->Draw(OutMap, Coord, 100000);  // TODO: Zoom info from command
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto ElapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+  std::cout << "Elapsed Rendering time: " << ElapsedTime.count() << "ms." << std::endl;
+  //return RenderedMap;
 }
 
 void OsmRenderer::ConfigMapCmd(vector<string> CmdArgs)
 {
+  std::cout << "Creating drawer......." << std::endl;
   Drawer = new MapDrawer(CmdArgs);
 
   if(!Drawer)
@@ -133,8 +156,4 @@ void OsmRenderer::ConfigMapCmd(vector<string> CmdArgs)
     std::cout << "--> ERROR creating Drawer"  << std::endl;
     return;
   }
-
-  osmscout::GeoCoord Coord(40.415, -3.702);
-  Drawer->Draw(Coord, 100000);
-
 }
