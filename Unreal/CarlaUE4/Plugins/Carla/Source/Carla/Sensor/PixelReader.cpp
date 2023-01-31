@@ -32,7 +32,7 @@ void FPixelReader::WritePixelsToBuffer(
     return;
   }
 
-  auto BackBufferReadback = std::make_unique<FRHIGPUTextureReadback>(TEXT("CameraBufferReadback"));
+  auto BackBufferReadback = MakeUnique<FRHIGPUTextureReadback>(TEXT("CameraBufferReadback"));
   FIntPoint BackBufferSize = Texture->GetSizeXY();
   EPixelFormat BackBufferPixelFormat = Texture->GetFormat();
   {
@@ -59,7 +59,7 @@ void FPixelReader::WritePixelsToBuffer(
         RHICmdList.GetRenderQueryResult(QueryPtr, OldAbsTime, true);
     }
 
-  AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [=, Readback=std::move(BackBufferReadback)]() mutable {
+  AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [=, Readback = MoveTemp(BackBufferReadback)]() mutable {
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
       while (!Readback->IsReady())
@@ -84,7 +84,10 @@ void FPixelReader::WritePixelsToBuffer(
         }
     }
     Readback->Unlock();
-    Readback.reset();
+    ENQUEUE_RENDER_COMMAND(FreeReadback)([Readback = MoveTemp(Readback)](FRHICommandList& CmdList) mutable
+    {
+        Readback.Reset();
+    });
   });  
 }
 

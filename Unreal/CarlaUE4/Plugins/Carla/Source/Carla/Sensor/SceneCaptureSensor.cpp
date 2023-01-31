@@ -518,11 +518,15 @@ void ASceneCaptureSensor::CaptureSceneExtended()
   CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
   CaptureComponent2D->ShowFlags.TemporalAA = Prior;
 
-  FlushRenderingCommands();
   AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, GBuffer = MoveTemp(GBufferPtr)]() mutable
   {
+    GBuffer->Fence.lock();
     SendGBufferTextures(*GBuffer);
-    GBuffer.Reset();
+    GBuffer->Fence.unlock();
+    ENQUEUE_RENDER_COMMAND(ReleaseGBuffer)([GBuffer = MoveTemp(GBuffer)](FRHICommandList& CmdList) mutable
+    {
+        GBuffer.Reset();
+    });
   });
 }
 
