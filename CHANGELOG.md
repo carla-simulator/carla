@@ -2,6 +2,9 @@
 
   * Fixed the extra data in Directx textures, so we need to copy row by row on Windows to remove extra bytes on images
   * Restored gamma value to 2.2 instead of 2.4
+  * Added API function to avoid replaying the spectator
+    * `Client.set_replayer_ignore_spectator(bool)`
+    * `start_replaying.py` using flag `--move-spectator`
 
 ## CARLA 0.9.14
 

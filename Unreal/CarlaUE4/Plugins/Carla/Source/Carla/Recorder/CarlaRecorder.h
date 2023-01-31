@@ -166,6 +166,7 @@ public:
       uint32_t FollowId, bool ReplaySensors);
   void SetReplayerTimeFactor(double TimeFactor);
   void SetReplayerIgnoreHero(bool IgnoreHero);
+  void SetReplayerIgnoreSpectator(bool IgnoreSpectator);
   void StopReplayer(bool KeepActors = false);
 
   void Ticking(float DeltaSeconds);

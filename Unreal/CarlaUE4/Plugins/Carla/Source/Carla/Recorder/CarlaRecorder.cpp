@@ -73,6 +73,11 @@ void ACarlaRecorder::SetReplayerIgnoreHero(bool IgnoreHero)
   Replayer.SetIgnoreHero(IgnoreHero);
 }
 
+void ACarlaRecorder::SetReplayerIgnoreSpectator(bool IgnoreSpectator)
+{
+  Replayer.SetIgnoreSpectator(IgnoreSpectator);
+}
+
 void ACarlaRecorder::StopReplayer(bool KeepActors)
 {
   Replayer.Stop(KeepActors);

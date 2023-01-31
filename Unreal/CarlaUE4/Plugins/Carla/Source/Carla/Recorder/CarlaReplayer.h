@@ -86,6 +86,12 @@ public:
     IgnoreHero = InIgnoreHero;
   }
 
+  // set ignore spectator
+  void SetIgnoreSpectator(bool InIgnoreSpectator)
+  {
+    IgnoreSpectator = InIgnoreSpectator;
+  }
+
   // check if after a map is loaded, we need to replay
   void CheckPlayAfterMapLoaded(void);
 
@@ -119,6 +125,7 @@ private:
   double TimeFactor { 1.0 };
   // ignore hero vehicles
   bool IgnoreHero { false };
+  bool IgnoreSpectator { true };
   std::unordered_map<uint32_t, bool> IsHeroMap;
 
   // utils
