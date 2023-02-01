@@ -470,69 +470,72 @@ constexpr const TCHAR* GBufferNames[] =
 };
 
 template <EGBufferTextureID ID, typename T>
-static void CheckGBufferStream(T& GBufferStream, FGBufferRequest& GBuffer)
+static void CheckGBufferStream(uint64_t& Mask, T& GBufferStreams)
 {
+  auto& GBufferStream = std::get<(size_t)ID>(GBufferStreams);
   GBufferStream.bIsUsed = GBufferStream.Stream.AreClientsListening();
   if (GBufferStream.bIsUsed)
-    GBuffer.MarkAsRequested(ID);
+      FGBufferRequest::MarkAsRequested(Mask, ID);
 }
 
-static uint64 Prior = 0;
+constexpr size_t MAX_CONCURRENT_GBUFFER_TRANSFERS = 64;
+static std::atomic<size_t> active_gbuffer_transfer_count = { 0 };
 
 void ASceneCaptureSensor::CaptureSceneExtended()
 {
-  auto GBufferPtr = MakeUnique<FGBufferRequest>();
-  auto& GBuffer = *GBufferPtr;
+  decltype (FGBufferRequest::DesiredTexturesMask) Mask = 0;
+  CheckGBufferStream<EGBufferTextureID::SceneColor>(Mask, GBufferStreams);
+  CheckGBufferStream<EGBufferTextureID::SceneDepth>(Mask, GBufferStreams);
+  CheckGBufferStream<EGBufferTextureID::SceneStencil>(Mask, GBufferStreams);
+  CheckGBufferStream<EGBufferTextureID::GBufferA>(Mask, GBufferStreams);
+  CheckGBufferStream<EGBufferTextureID::GBufferB>(Mask, GBufferStreams);
+  CheckGBufferStream<EGBufferTextureID::GBufferC>(Mask, GBufferStreams);
+  CheckGBufferStream<EGBufferTextureID::GBufferD>(Mask, GBufferStreams);
+  CheckGBufferStream<EGBufferTextureID::GBufferE>(Mask, GBufferStreams);
+  CheckGBufferStream<EGBufferTextureID::GBufferF>(Mask, GBufferStreams);
+  CheckGBufferStream<EGBufferTextureID::Velocity>(Mask, GBufferStreams);
+  CheckGBufferStream<EGBufferTextureID::SSAO>(Mask, GBufferStreams);
+  CheckGBufferStream<EGBufferTextureID::CustomDepth>(Mask, GBufferStreams);
+  CheckGBufferStream<EGBufferTextureID::CustomStencil>(Mask, GBufferStreams);
 
-  CheckGBufferStream<EGBufferTextureID::SceneColor>(CameraGBuffers.SceneColor, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::SceneDepth>(CameraGBuffers.SceneDepth, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::SceneStencil>(CameraGBuffers.SceneStencil, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::GBufferA>(CameraGBuffers.GBufferA, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::GBufferB>(CameraGBuffers.GBufferB, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::GBufferC>(CameraGBuffers.GBufferC, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::GBufferD>(CameraGBuffers.GBufferD, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::GBufferE>(CameraGBuffers.GBufferE, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::GBufferF>(CameraGBuffers.GBufferF, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::Velocity>(CameraGBuffers.Velocity, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::SSAO>(CameraGBuffers.SSAO, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::CustomDepth>(CameraGBuffers.CustomDepth, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::CustomStencil>(CameraGBuffers.CustomStencil, GBuffer);
-
-  if (GBufferPtr->DesiredTexturesMask == 0)
+  if (Mask == 0)
   {
     // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
     CaptureComponent2D->CaptureScene();
     return;
   }
 
-  if (Prior != GBufferPtr->DesiredTexturesMask)
-    UE_LOG(LogCarla, Verbose, TEXT("GBuffer selection changed (%llu)."), GBufferPtr->DesiredTexturesMask);
-  
-  Prior = GBufferPtr->DesiredTexturesMask;
+  auto count = active_gbuffer_transfer_count.fetch_add(1, std::memory_order_acquire);
+  if (active_gbuffer_transfer_count.fetch_add(1, std::memory_order_acquire) >= MAX_CONCURRENT_GBUFFER_TRANSFERS)
+  {
+      (void)active_gbuffer_transfer_count.fetch_sub(1, std::memory_order_release);
+      std::this_thread::yield();
+  }
+
+  LLM_SCOPE(ELLMTag::CarlaGBufferRequest);
+  auto GBufferPtr = MakeUnique<FGBufferRequest>(Mask);
+
   GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
 
   bool EnableTAA = false;
   bool Prior = CaptureComponent2D->ShowFlags.TemporalAA;
 
   CaptureComponent2D->ShowFlags.TemporalAA = EnableTAA;
-  CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
+  CaptureComponent2D->CaptureSceneWithGBuffer(*GBufferPtr);
   CaptureComponent2D->ShowFlags.TemporalAA = Prior;
 
   AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, GBuffer = MoveTemp(GBufferPtr)]() mutable
   {
     GBuffer->Fence.lock();
-    SendGBufferTextures(*GBuffer);
+    this->SendGBufferTextures(*GBuffer);
     GBuffer->Fence.unlock();
-    ENQUEUE_RENDER_COMMAND(ReleaseGBuffer)([GBuffer = MoveTemp(GBuffer)](FRHICommandList& CmdList) mutable
-    {
-        GBuffer.Reset();
-    });
+    (void)active_gbuffer_transfer_count.fetch_sub(1, std::memory_order_release);
   });
 }
 
-void ASceneCaptureSensor::SendGBufferTextures(FGBufferRequest& GBuffer)
+void ASceneCaptureSensor::SendGBufferTextures(FGBufferRequest& GBufferData)
 {
-  SendGBufferTexturesInternal(*this, GBuffer);
+    SendGBufferTexturesInternal(*this, GBufferData);
 }
 
 void ASceneCaptureSensor::BeginPlay()

@@ -141,19 +141,19 @@ FActorSpawnResult ASensorFactory::SpawnActor(
     ASceneCaptureSensor * SceneCaptureSensor = Cast<ASceneCaptureSensor>(Sensor);
     if(SceneCaptureSensor)
     {
-      SceneCaptureSensor->CameraGBuffers.SceneColor.SetDataStream(GameInstance->GetServer().OpenStream());
-      SceneCaptureSensor->CameraGBuffers.SceneDepth.SetDataStream(GameInstance->GetServer().OpenStream());
-      SceneCaptureSensor->CameraGBuffers.SceneStencil.SetDataStream(GameInstance->GetServer().OpenStream());
-      SceneCaptureSensor->CameraGBuffers.GBufferA.SetDataStream(GameInstance->GetServer().OpenStream());
-      SceneCaptureSensor->CameraGBuffers.GBufferB.SetDataStream(GameInstance->GetServer().OpenStream());
-      SceneCaptureSensor->CameraGBuffers.GBufferC.SetDataStream(GameInstance->GetServer().OpenStream());
-      SceneCaptureSensor->CameraGBuffers.GBufferD.SetDataStream(GameInstance->GetServer().OpenStream());
-      SceneCaptureSensor->CameraGBuffers.GBufferE.SetDataStream(GameInstance->GetServer().OpenStream());
-      SceneCaptureSensor->CameraGBuffers.GBufferF.SetDataStream(GameInstance->GetServer().OpenStream());
-      SceneCaptureSensor->CameraGBuffers.Velocity.SetDataStream(GameInstance->GetServer().OpenStream());
-      SceneCaptureSensor->CameraGBuffers.SSAO.SetDataStream(GameInstance->GetServer().OpenStream());
-      SceneCaptureSensor->CameraGBuffers.CustomDepth.SetDataStream(GameInstance->GetServer().OpenStream());
-      SceneCaptureSensor->CameraGBuffers.CustomStencil.SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::SceneColor>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::SceneDepth>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::SceneStencil>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::GBufferA>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::GBufferB>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::GBufferC>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::GBufferD>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::GBufferE>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::GBufferF>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::Velocity>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::SSAO>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::CustomDepth>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::CustomStencil>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
     }
   }
   UGameplayStatics::FinishSpawningActor(Sensor, Transform);

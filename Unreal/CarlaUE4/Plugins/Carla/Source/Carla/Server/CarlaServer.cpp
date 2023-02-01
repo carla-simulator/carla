@@ -2083,67 +2083,67 @@ void FCarlaServer::FPimpl::BindActions()
     {
       case 0:
       {
-        const auto &Token = Sensor->CameraGBuffers.SceneColor.GetToken();
+        const auto &Token = std::get<0>(Sensor->GBufferStreams).GetToken();
         return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
       }
       case 1:
       {
-        const auto &Token = Sensor->CameraGBuffers.SceneDepth.GetToken();
-        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+          const auto& Token = std::get<1>(Sensor->GBufferStreams).GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
       }
       case 2:
       {
-          const auto& Token = Sensor->CameraGBuffers.SceneStencil.GetToken();
+          const auto& Token = std::get<2>(Sensor->GBufferStreams).GetToken();
           return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
       }
       case 3:
       {
-        const auto &Token = Sensor->CameraGBuffers.GBufferA.GetToken();
-        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+          const auto& Token = std::get<3>(Sensor->GBufferStreams).GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
       }
       case 4:
       {
-        const auto &Token = Sensor->CameraGBuffers.GBufferB.GetToken();
-        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+          const auto& Token = std::get<4>(Sensor->GBufferStreams).GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
       }
       case 5:
       {
-        const auto &Token = Sensor->CameraGBuffers.GBufferC.GetToken();
-        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+          const auto& Token = std::get<5>(Sensor->GBufferStreams).GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
       }
       case 6:
       {
-        const auto &Token = Sensor->CameraGBuffers.GBufferD.GetToken();
-        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+          const auto& Token = std::get<6>(Sensor->GBufferStreams).GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
       }
       case 7:
       {
-        const auto &Token = Sensor->CameraGBuffers.GBufferE.GetToken();
-        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+          const auto& Token = std::get<7>(Sensor->GBufferStreams).GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
       }
       case 8:
       {
-        const auto &Token = Sensor->CameraGBuffers.GBufferF.GetToken();
-        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+          const auto& Token = std::get<8>(Sensor->GBufferStreams).GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
       }
       case 9:
       {
-        const auto &Token = Sensor->CameraGBuffers.Velocity.GetToken();
-        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+          const auto& Token = std::get<9>(Sensor->GBufferStreams).GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
       }
       case 10:
       {
-        const auto &Token = Sensor->CameraGBuffers.SSAO.GetToken();
-        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+          const auto& Token = std::get<0>(Sensor->GBufferStreams).GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
       }
       case 11:
       {
-          const auto& Token = Sensor->CameraGBuffers.CustomDepth.GetToken();
+          const auto& Token = std::get<1>(Sensor->GBufferStreams).GetToken();
           return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
       }
       case 12:
       {
-          const auto& Token = Sensor->CameraGBuffers.CustomStencil.GetToken();
+          const auto& Token = std::get<2>(Sensor->GBufferStreams).GetToken();
           return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
       }
       default:

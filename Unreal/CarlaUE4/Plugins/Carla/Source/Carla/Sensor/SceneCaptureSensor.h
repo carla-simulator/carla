@@ -15,6 +15,7 @@
 #include "Renderer/Public/GBufferView.h"
 
 #include <type_traits>
+#include <tuple>
 
 #include "SceneCaptureSensor.generated.h"
 
@@ -402,24 +403,21 @@ public:
     // FlushRenderingCommands();
   }
 
-  struct CameraGBuffersStruct
-  {
-    FCameraGBufferUint8 SceneColor;
-    FCameraGBufferFloat SceneDepth;
-    FCameraGBufferUint8 SceneStencil;
-    FCameraGBufferUint8 GBufferA;
-    FCameraGBufferUint8 GBufferB;
-    FCameraGBufferUint8 GBufferC;
-    FCameraGBufferUint8 GBufferD;
-    FCameraGBufferUint8 GBufferE;
-    FCameraGBufferUint8 GBufferF;
-    FCameraGBufferUint8 Velocity;
-    FCameraGBufferUint8 SSAO;
-    FCameraGBufferFloat CustomDepth;
-    FCameraGBufferUint8 CustomStencil;
-  };
-  
-  CameraGBuffersStruct CameraGBuffers;
+  std::tuple<
+      FCameraGBufferUint8,
+      FCameraGBufferFloat,
+      FCameraGBufferUint8,
+      FCameraGBufferUint8,
+      FCameraGBufferUint8,
+      FCameraGBufferUint8,
+      FCameraGBufferUint8,
+      FCameraGBufferUint8,
+      FCameraGBufferUint8,
+      FCameraGBufferUint8,
+      FCameraGBufferUint8,
+      FCameraGBufferFloat,
+      FCameraGBufferUint8
+  > GBufferStreams;
 
 protected:
     
@@ -462,7 +460,7 @@ protected:
   /// Whether to change render target format to PF_A16B16G16R16, offering 16bit / channel
   UPROPERTY(EditAnywhere)
   bool bEnable16BitFormat = false;
-
+  
 private:
 
     template <typename PixelT>
@@ -477,19 +475,16 @@ private:
             Pixel = PixelT::Black;
     }
 
-  template <
-    typename SensorT,
-    typename CameraGBufferT>
-  static void SendGBuffer(
-      SensorT& Self,
-      CameraGBufferT& CameraGBuffer,
-      FGBufferRequest& GBufferData,
-      EGBufferTextureID TextureID)
+  template <EGBufferTextureID TextureID, typename SensorT>
+  void SendGBuffer(SensorT& Sensor, FGBufferRequest& GBufferData)
   {
+      auto& GBufferStream = std::get<(size_t)TextureID>(GBufferStreams);
+
+      using CameraGBufferT = std::remove_reference_t<decltype(GBufferStream)>;
       using PixelType = typename std::conditional<
-        std::is_same<std::remove_reference_t<CameraGBufferT>, FCameraGBufferUint8>::value,
-        FColor,
-        FLinearColor>::type;
+          std::is_same<CameraGBufferT, FCameraGBufferUint8>::value,
+          FColor,
+          FLinearColor>::type;
 
       FIntPoint ImageSize;
       TArray<PixelType> Pixels;
@@ -529,8 +524,8 @@ private:
           SendGBufferFillEmptyTexture(GBufferData, ImageSize, Pixels);
       }
 
-      auto GBufferStream = CameraGBuffer.GetDataStream(Self.GetEpisode());
-      auto Buffer = GBufferStream.PopBufferFromPool();
+      auto Stream = GBufferStream.GetDataStream(GetEpisode());
+      auto Buffer = Stream.PopBufferFromPool();
 
       Buffer.copy_from(
         carla::sensor::SensorRegistry::get<CameraGBufferT*>::type::header_offset,
@@ -543,71 +538,45 @@ private:
       SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
 
-      GBufferStream.Send(
-        CameraGBuffer,
+      Stream.Send(
+        GBufferStream,
         std::move(Buffer),
         ImageSize.X,
         ImageSize.Y,
-        Self.GetFOVAngle());
+        Sensor.GetFOVAngle());
   }
 
-protected:
+ protected:
 
-  template <typename T>
-  void SendGBufferTexturesInternal(T& Self, FGBufferRequest& GBufferData)
+  template <typename SensorT>
+  void SendGBufferTexturesInternal(SensorT& Sensor, FGBufferRequest& GBufferData)
   {
-    for (size_t i = 0; i != FGBufferRequest::TextureCount; ++i)
-    {
-      if ((GBufferData.DesiredTexturesMask & (UINT64_C(1) << i)) == 0) {
-        continue;
-      }
-      auto& C = CameraGBuffers;
-      EGBufferTextureID ID = (EGBufferTextureID)i;
-      switch (ID)
-      {
-      case EGBufferTextureID::SceneColor:
-        SendGBuffer(Self, C.SceneColor, GBufferData, ID);
-        break;
-      case EGBufferTextureID::SceneDepth:
-        SendGBuffer(Self, C.SceneDepth, GBufferData, ID);
-        break;
-      case EGBufferTextureID::SceneStencil:
-        SendGBuffer(Self, C.SceneStencil, GBufferData, ID);
-        break;
-      case EGBufferTextureID::GBufferA:
-        SendGBuffer(Self, C.GBufferA, GBufferData, ID);
-        break;
-      case EGBufferTextureID::GBufferB:
-        SendGBuffer(Self, C.GBufferB, GBufferData, ID);
-        break;
-      case EGBufferTextureID::GBufferC:
-        SendGBuffer(Self, C.GBufferC, GBufferData, ID);
-        break;
-      case EGBufferTextureID::GBufferD:
-        SendGBuffer(Self, C.GBufferD, GBufferData, ID);
-        break;
-      case EGBufferTextureID::GBufferE:
-        SendGBuffer(Self, C.GBufferE, GBufferData, ID);
-        break;
-      case EGBufferTextureID::GBufferF:
-        SendGBuffer(Self, C.GBufferF, GBufferData, ID);
-        break;
-      case EGBufferTextureID::Velocity:
-        SendGBuffer(Self, C.Velocity, GBufferData, ID);
-        break;
-      case EGBufferTextureID::SSAO:
-        SendGBuffer(Self, C.SSAO, GBufferData, ID);
-        break;
-      case EGBufferTextureID::CustomDepth:
-        SendGBuffer(Self, C.CustomDepth, GBufferData, ID);
-        break;
-      case EGBufferTextureID::CustomStencil:
-        SendGBuffer(Self, C.CustomStencil, GBufferData, ID);
-        break;
-      default:
-          abort();
-      }
-    }
+    if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::SceneColor)) != 0)
+        SendGBuffer<EGBufferTextureID::SceneColor>(Sensor, GBufferData);
+    if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::SceneDepth)) != 0)
+        SendGBuffer<EGBufferTextureID::SceneDepth>(Sensor, GBufferData);
+    if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::SceneStencil)) != 0)
+        SendGBuffer<EGBufferTextureID::SceneStencil>(Sensor, GBufferData);
+    if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::GBufferA)) != 0)
+        SendGBuffer<EGBufferTextureID::GBufferA>(Sensor, GBufferData);
+    if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::GBufferB)) != 0)
+        SendGBuffer<EGBufferTextureID::GBufferB>(Sensor, GBufferData);
+    if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::GBufferC)) != 0)
+        SendGBuffer<EGBufferTextureID::GBufferC>(Sensor, GBufferData);
+    if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::GBufferD)) != 0)
+        SendGBuffer<EGBufferTextureID::GBufferD>(Sensor, GBufferData);
+    if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::GBufferE)) != 0)
+        SendGBuffer<EGBufferTextureID::GBufferE>(Sensor, GBufferData);
+    if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::GBufferF)) != 0)
+        SendGBuffer<EGBufferTextureID::GBufferF>(Sensor, GBufferData);
+    if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::Velocity)) != 0)
+        SendGBuffer<EGBufferTextureID::Velocity>(Sensor, GBufferData);
+    if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::SSAO)) != 0)
+        SendGBuffer<EGBufferTextureID::SSAO>(Sensor, GBufferData);
+    if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::CustomDepth)) != 0)
+        SendGBuffer<EGBufferTextureID::CustomDepth>(Sensor, GBufferData);
+    if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::CustomStencil)) != 0)
+        SendGBuffer<EGBufferTextureID::CustomStencil>(Sensor, GBufferData);
   }
 
 };

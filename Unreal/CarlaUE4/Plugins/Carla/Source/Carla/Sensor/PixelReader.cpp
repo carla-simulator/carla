@@ -84,10 +84,6 @@ void FPixelReader::WritePixelsToBuffer(
         }
     }
     Readback->Unlock();
-    ENQUEUE_RENDER_COMMAND(FreeReadback)([Readback = MoveTemp(Readback)](FRHICommandList& CmdList) mutable
-    {
-        Readback.Reset();
-    });
   });  
 }
 
