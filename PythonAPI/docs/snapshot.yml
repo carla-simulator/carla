@@ -6,13 +6,13 @@
   - class_name: WorldSnapshot
     # - DESCRIPTION ------------------------
     doc: >
-      This snapshot comprises all the information for every actor on scene at a certain moment of time. It creates and gives acces to a data structure containing a series of carla.ActorSnapshot. The client recieves a new snapshot on every tick that cannot be stored.  
+      This snapshot comprises all the information for every actor on scene at a certain moment of time. It creates and gives access to a data structure containing a series of carla.ActorSnapshot. The client receives a new snapshot on every tick that cannot be stored.  
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
       type: int
       doc: >
-        A value unique for every snapshot to differenciate them. 
+        A value unique for every snapshot to differentiate them. 
     - var_name: frame
       type: int
       doc: >

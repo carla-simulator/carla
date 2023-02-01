@@ -12,6 +12,7 @@ In this tutorial, we will cover a standard workflow in CARLA, from launching the
 * [__Adding NPCs__](#adding-npcs)  
 * [__Add sensors__](#add-sensors)  
 * [__Animate vehicles__](#animate-vehicles-with-traffic-manager)  
+* [__Assigning the Ego Vehicle__](#assign-a-vehicle-as-the-ego-vehicle)
 
 
 ## Launching CARLA and connecting the client
@@ -121,10 +122,12 @@ for i in range(0,50):
     world.try_spawn_actor(random.choice(vehicle_blueprints), random.choice(spawn_points)))
 ```
 
-Now we should also add a vehicle that will be the centerpoint of our simulation. To train an autonomous agent we need to simulate a the vehicle that it the autonomous agent will control. In CARLA parlance, we often refer to this vehicle as the "Ego vehicle". 
+Now we should also add a vehicle that will be the centerpoint of our simulation. To train an autonomous agent we need to simulate a the vehicle that it the autonomous agent will control. In CARLA parlance, we often refer to this vehicle as the ["Ego vehicle"](#assign-a-vehicle-as-the-ego-vehicle).
 
 ```py
-ego_vehicle = world.spawn_actor(random.choice(vehicle_blueprints), random.choice(spawn_points))
+ego_bp = random.choice(vehicle_blueprints)
+ego_bp.set_attribute('role_name', 'hero')
+ego_vehicle = world.spawn_actor(ego_bp, random.choice(spawn_points))
 ```
 
 In addition to vehicles, CARLA also provides pedestrians to add to simulations to simulate realistic driving scenarios. Vehicles and pedestrians are referred to as __actors__ in the CARLA parlance, learn more about them [__here__](core_actors.md).
@@ -170,6 +173,28 @@ for vehicle in world.get_actors().filter('*vehicle*'):
     vehicle.set_autopilot(True)
 ```
 
-Now your simulation is running, with numerous vehicles driving around the map and a camera recording data from one of those vehicles. This data can then be used to feed a machine learning algorithm for training an autonomous driving agent. The Traffic manager has many functions for customising traffic behaviour, learn more [__here__](tuto_G_traffic_manager.md).
+Now your simulation is running, with numerous vehicles driving around the map and a camera recording data from one of those vehicles. This data can then be used to feed a machine learning algorithm for training an autonomous driving agent. The Traffic manager has many functions for customizing traffic behavior, learn more [__here__](tuto_G_traffic_manager.md).
 
 This is the most basic possible set up for a simulation, now you can go into further details deeper into documentation about the many extra sensors you can use to generate data, and the many other features of CARLA that can make your simulations more detailed and more realistic. 
+
+---
+
+## Assign a vehicle as the Ego Vehicle
+
+The __Ego Vehicle__ is an important concept to bear in mind when using CARLA. The Ego Vehicle refers to the vehicle that will be the focus of the simulation. In most CARLA use cases it's likely to be the vehicle to which you will attach your sensors and/or the vehicle that your autonomous driving machine learning stack will control. It is important because it serves as the basis for some simulation operations that help improve the efficiency of the simulation, like for example:
+
+* __Loading map tiles for Large Maps__: Large Maps (like Town 12) are made up of tiles to that are only loaded when needed to improve CARLA performance. The position of the Ego Vehicle dictates which tiles are used. Only the tiles nearest the Ego Vehicle will be loaded.
+
+* __Hybrid Physics Mode__: if your simulation contains a lot of vehicles controlled by the Traffic Manager, calculating physics for all of these vehicles is very computationally expensive. The [Hybrid Physics Mode](adv_traffic_manager.md#hybrid-physics-mode) enables physics calculation to be limited to the vehicles in the vicinity of the Ego Vehicle, hence saving computing resources.
+
+To define the Ego Vehicle, you should set the `role_name` attribute of the vehicle [carla.Actor](python_api.md#carlaactor) object's [blueprint](python_api.md#carlaactorblueprint) when you are spawning your Ego Vehicle:
+
+```py
+
+ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz_2020')
+
+ego_bp.set_attribute('role_name', 'hero')
+
+ego_vehicle = world.spawn_actor(ego_bp, random.choice(spawn_points))
+
+```
