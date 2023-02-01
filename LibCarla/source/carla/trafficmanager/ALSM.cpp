@@ -181,20 +181,19 @@ void ALSM::UpdateRegisteredActorsData(const bool hybrid_physics_mode, ALSM::Idle
     if (is_respawn_vehicles) {
       track_traffic.SetHeroLocation(hero_actor_info.second->GetTransform().location);
     }
-    UpdateData(hybrid_physics_mode, max_idle_time, hero_actor_info.second, hero_actor_present, physics_radius_square);
+    UpdateData(hybrid_physics_mode, hero_actor_info.second, hero_actor_present, physics_radius_square);
   }
   // Update information for all other registered vehicles.
   for (const Actor &vehicle : vehicle_list) {
     ActorId actor_id = vehicle->GetId();
     if (hero_actors.find(actor_id) == hero_actors.end()) {
-      UpdateData(hybrid_physics_mode, max_idle_time, vehicle, hero_actor_present, physics_radius_square);
+      UpdateData(hybrid_physics_mode, vehicle, hero_actor_present, physics_radius_square);
       UpdateIdleTime(max_idle_time, actor_id);
     }
   }
 }
 
-void ALSM::UpdateData(const bool hybrid_physics_mode,
-                      ALSM::IdleInfo &max_idle_time, const Actor &vehicle,
+void ALSM::UpdateData(const bool hybrid_physics_mode, const Actor &vehicle,
                       const bool hero_actor_present, const float physics_radius_square) {
 
   ActorId actor_id = vehicle->GetId();
