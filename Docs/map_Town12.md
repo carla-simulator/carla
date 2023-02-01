@@ -1,6 +1,6 @@
 # Town 12
 
-Town 12 is a Large Map with dimensions of 10x10 km<sup>2</sup>. It is divided into 25 tiles each with dimensions of 2x2 km<sup>2</sup>. The road layout is partially inspired by the road layout of the city of Amarillo in Texas, USA. There are numerous regions to the city including urban, residential and rural and a large highway system surrounding the city. 
+Town 12 is a Large Map with dimensions of 10x10 km<sup>2</sup>. It is divided into 25 tiles each with dimensions of 2x2 km<sup>2</sup>. The road layout is partially inspired by the road layout of the city of Amarillo in Texas, USA. There are numerous regions to the city including urban, residential and rural and a large highway system surrounding the city and the architectural styles reflect those of many medium to large cities across North America.  
 
 ## Navigator
 
@@ -14,8 +14,49 @@ __Using the navigator__:
 
 ![town12_aerial](../img/maps/town12hyperres.webp#map)
 
+```py
+spectator = world.get_spectator()
+loc = carla.Location(0.0, 0.0, 500.0)
+rot = carla.Rotation(pitch=-90, yaw=0.0, roll=-90.0)
+spectator.set_transform(carla.Transform(loc, rot))
+```
+
+__High-rise downtown__:
+
+Town 12's downtown area is a large span of high rise skyscrapers arranged into blocks on a consistent grid of roads, resembling downtown areas in many large American and European cities.
+
+![high_rise](../img/maps/town12/high_rise.webp)
+
+__High density residential__:
+
+The high density residential areas of Town 12 have many 2-10 storey apartment buildings with commercial properties like cafes and retail stores at street level.
+
+![high_dens_res](../img/maps/town12/high_dens_res.webp)
+
+__Low density residential__:
+
+The low density residential regions of Town 12 reflect the classic suburbs of many American cities, with one and two story homes surrounded by fenced gardens and garages.
+
+![low_dens_res](../img/maps/town12/low_dens_res.webp)
+
+__Highways and intersections__:
+
+Town 12 has an extensive highway system, including 3-4 lane highways interspersed with impressive roundabout junctions.
+
+![highway](../img/maps/town12/highway.webp)
+
+__Rural and farmland__:
+
+Town 12 also has rural regions with characteristic farmland buildings like wooden barns and farmhouses, windmills, grain silos, corn fields, hay bails and rural fencing. 
+
+![rural](../img/maps/town12/rural.webp)
+
 <script>
 window.addEventListener('load', function () {
+
+    const coords = document.getElementsByClassName("hljs-number")
+    coords[0].textContent = 10
+    console.log(coords[0].textContent)
   
     const q = document.querySelector('[src$="map"]');
     const canv = document.createElement('canvas');
@@ -33,8 +74,6 @@ window.addEventListener('load', function () {
         dY = event.clientY - state.lastY
         state.lastX = event.clientX
         state.lastY = event.clientY
-
-        console.log(state)
 
         if(state.mDown && state.button == 1) {
             state.canvX += dX
@@ -88,19 +127,14 @@ window.addEventListener('load', function () {
     })
 
     canv.addEventListener('dblclick', (event) => {
-        console.log('double click')
+        console.log('Px: ' + state.pX + ' Py: ' + state.pY)
         
         const p = document.createElement("p")
-        const textNode = document.createTextNode("Carla coordinate: X: " + (10 * state.mdownX).toFixed(1) + " Y: " + (10 * state.mdownY).toFixed(1));
-        p.appendChild(textNode)
 
-        if(state.dblClick){
-            state.list.appendChild(p)
-        } else {
-            state.list = canv.parentNode.parentNode.appendChild(document.createElement('li'))
-            state.list.appendChild(p)
-            state.dblClick = true;
-        }
+        const carlaX = 10497.8366 * state.pX + 0.620390035 * state.pY - 5549.64759;
+        const carlaY = 0.620390035 * state.pX + 10497.8366 * state.pY - 2898.42642;
+        coords[0].textContent = carlaX.toFixed(1)
+        coords[1].textContent = carlaY.toFixed(1)
 
         console.log(canv.parentNode.parentNode)
     })
