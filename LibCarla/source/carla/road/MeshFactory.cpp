@@ -19,6 +19,7 @@ namespace geom {
     road_param.max_road_len = static_cast<float>(params.max_road_length);
     road_param.extra_lane_width = static_cast<float>(params.additional_width);
     road_param.wall_height = static_cast<float>(params.wall_height);
+    road_param.vertex_width_resolution = static_cast<float>(params.vertex_width_resolution);
   }
 
   /// We use this epsilon to shift the waypoints away from the edges of the lane
@@ -48,6 +49,12 @@ namespace geom {
     return Generate(lane, s_start, s_end);
   }
 
+  std::unique_ptr<Mesh> MeshFactory::GenerateTesselated(const road::Lane& lane) const {
+    const double s_start = lane.GetDistance() + EPSILON;
+    const double s_end = lane.GetDistance() + lane.GetLength() - EPSILON;
+    return GenerateTesselated(lane, s_start, s_end);
+  }
+
   std::unique_ptr<Mesh> MeshFactory::Generate(
       const road::Lane &lane, const double s_start, const double s_end) const {
     RELEASE_ASSERT(road_param.resolution > 0.0);
@@ -63,13 +70,16 @@ namespace geom {
     double s_current = s_start;
 
     std::vector<geom::Vector3D> vertices;
+    
     if (lane.IsStraight()) {
       // Mesh optimization: If the lane is straight just add vertices at the
       // begining and at the end of it
       const auto edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
       vertices.push_back(edges.first);
       vertices.push_back(edges.second);
-    } else {
+    } else 
+   
+    {
       // Iterate over the lane's 's' and store the vertices based on it's width
       do {
         // Get the location of the edges of the current lane at the current waypoint
@@ -98,6 +108,86 @@ namespace geom {
     return std::make_unique<Mesh>(out_mesh);
   }
 
+  std::unique_ptr<Mesh> MeshFactory::GenerateTesselated(
+    const road::Lane& lane, const double s_start, const double s_end) const {
+    RELEASE_ASSERT(road_param.resolution > 0.0);
+    DEBUG_ASSERT(s_start >= 0.0);
+    DEBUG_ASSERT(s_end <= lane.GetDistance() + lane.GetLength());
+    DEBUG_ASSERT(s_end >= EPSILON);
+    DEBUG_ASSERT(s_start < s_end);
+    // The lane with lane_id 0 have no physical representation in OpenDRIVE
+    Mesh out_mesh;
+    if (lane.GetId() == 0) {
+      return std::make_unique<Mesh>(out_mesh);
+    }
+    double s_current = s_start;
+
+    std::vector<geom::Vector3D> vertices;
+    // Ensure minimum vertices in width are two
+    const int vertices_in_width = road_param.vertex_width_resolution >= 2 ? road_param.vertex_width_resolution : 2;
+    const int segments_number = vertices_in_width - 1;
+    std::cout << "Vertices width " << vertices_in_width << std::endl;
+    // Iterate over the lane's 's' and store the vertices based on it's width
+    do {
+      // Get the location of the edges of the current lane at the current waypoint
+      std::pair<geom::Vector3D, geom::Vector3D> edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
+      const geom::Vector3D segments_size = ( edges.second - edges.first ) / segments_number;
+      geom::Vector3D current_vertex = edges.first;
+
+      for (int i = 0; i < vertices_in_width; ++i) 
+      {
+        vertices.push_back(current_vertex);
+        current_vertex = current_vertex + segments_size;
+      }
+      // Update the current waypoint's "s"
+      s_current += road_param.resolution;
+    } while (s_current < s_end);
+    
+
+    // This ensures the mesh is constant and have no gaps between roads,
+    // adding geometry at the very end of the lane
+    
+    if (s_end - (s_current - road_param.resolution) > EPSILON) {
+      const auto edges = lane.GetCornerPositions(s_end - MESH_EPSILON, road_param.extra_lane_width);
+      const geom::Vector3D segments_size = (edges.second - edges.first) / segments_number;
+      geom::Vector3D current_vertex = edges.first;
+
+      for (int i = 0; i < vertices_in_width; ++i)
+      {
+        vertices.push_back(current_vertex);
+        current_vertex = current_vertex + segments_size;
+      }
+    }
+     
+    out_mesh.AddVertices(vertices);
+
+    // Add the adient material, create the strip and close the material
+    out_mesh.AddMaterial(
+      lane.GetType() == road::Lane::LaneType::Sidewalk ? "sidewalk" : "road");
+
+    const int number_of_rows = (vertices.size() / vertices_in_width);
+
+    std::cout << "number_of_rows width " << number_of_rows << std::endl;
+    std::cout << "vertices_in_width width " << vertices_in_width << std::endl;
+    for (int i = 0; i < (number_of_rows - 1); ++i) 
+    {
+      for (int j = 0; j < vertices_in_width - 1; ++j) 
+      {
+        out_mesh.AddIndex(   j       + (   i       * vertices_in_width ) + 1);
+        out_mesh.AddIndex( ( j + 1 ) + (   i       * vertices_in_width ) + 1);
+        out_mesh.AddIndex(   j       + ( ( i + 1 ) * vertices_in_width ) + 1);
+
+        out_mesh.AddIndex( ( j + 1 ) + (   i       * vertices_in_width ) + 1);
+        out_mesh.AddIndex( ( j + 1 ) + ( ( i + 1 ) * vertices_in_width ) + 1);
+        out_mesh.AddIndex(   j       + ( ( i + 1 ) * vertices_in_width ) + 1);
+      }
+    }
+    
+    out_mesh.EndMaterial();
+    return std::make_unique<Mesh>(out_mesh);
+  }
+
+
   void MeshFactory::GenerateLaneSectionOrdered(
     const road::LaneSection &lane_section,
     std::map<carla::road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& result) 
@@ -105,7 +195,7 @@ namespace geom {
   {
     for (auto &&lane_pair : lane_section.GetLanes()) 
     {
-      Mesh out_mesh = *Generate(lane_pair.second);
+      Mesh out_mesh = *GenerateTesselated(lane_pair.second);
       if( result[lane_pair.second.GetType()].empty() )
       {
         result[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(out_mesh));
@@ -306,7 +396,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
         while(s_current + road_param.max_road_len < s_end) {
           const auto s_until = s_current + road_param.max_road_len;
           for (auto &&lane_pair : lane_section.GetLanes()) {
-            Mesh lane_section_mesh = *Generate(lane_pair.second, s_current, s_until);
+            Mesh lane_section_mesh = *GenerateTesselated(lane_pair.second, s_current, s_until);
             if( mesh_uptr_list[lane_pair.second.GetType()].empty() )
             {
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
@@ -321,7 +411,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
         }
         if (s_end - s_current > EPSILON) {
           for (auto &&lane_pair : lane_section.GetLanes()) {
-            Mesh lane_section_mesh = *Generate(lane_pair.second, s_current, s_end);
+            Mesh lane_section_mesh = *GenerateTesselated(lane_pair.second, s_current, s_end);
             if( mesh_uptr_list[lane_pair.second.GetType()].empty() )
             {
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));

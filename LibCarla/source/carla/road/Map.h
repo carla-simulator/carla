@@ -204,6 +204,8 @@ private:
         geom::Transform &current_transform,
         Waypoint &current_waypoint,
         Waypoint &next_waypoint);
+
+    float GetZPosInDeformation(float posx, float posy) const;
   };
 
 } // namespace road

@@ -7,6 +7,7 @@
 #include "carla/road/Map.h"
 #include "carla/Exception.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/Vector3D.h"
 #include "carla/road/MeshFactory.h"
 #include "carla/road/element/LaneCrossingCalculator.h"
 #include "carla/road/element/RoadInfoCrosswalk.h"
@@ -16,6 +17,8 @@
 #include "carla/road/element/RoadInfoLaneWidth.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/RoadInfoSignal.h"
+
+#include "simplify/Simplify.h"
 
 #include <vector>
 #include <unordered_map>
@@ -1182,6 +1185,72 @@ namespace road {
       }
     }
 
+    for (auto& current_mesh_vector : out_mesh_list)
+    {
+      for (std::unique_ptr<geom::Mesh>& current_mesh : current_mesh_vector.second)
+      {
+        
+        if ( !current_mesh->IsValid() ) 
+        {        
+          continue;
+        }
+
+        for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
+        {
+          current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+        }
+        
+        for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
+        {
+          Simplify::Vertex v;
+          v.p.x = current_vertex.x;
+          v.p.y = current_vertex.y;
+          v.p.z = current_vertex.z;
+          Simplify::vertices.push_back(v);
+        }
+
+        for (int i = 0; i < current_mesh->GetIndexes().size(); ++i)
+        {
+          Simplify::Triangle t;
+          t.material = 0;
+        
+          for (int j = 0; j < 3; ++j)
+          {
+            t.v[j] = current_mesh->GetIndexes()[i];
+            ++i;
+          }
+        
+          Simplify::triangles.push_back(t);
+        }
+
+        // Reduce to the X% of the polys
+
+        Simplify::simplify_mesh( Simplify::triangles.size() * 0.5f, 7, true );
+        
+        //current_mesh->GetVertices().clear();
+        //current_mesh->GetIndices().clear();
+        //for (Simplify::Vertex& current_vertex : Simplify::vertices)
+        //{
+        //  carla::geom::Vector3D v;
+        //  v.x = current_vertex.p.x;
+        //  v.y = current_vertex.p.y;
+        //  v.z = current_vertex.p.z;
+        //  current_mesh->AddVertex(v);
+        //}
+        //
+        //for (int i = 0; i < Simplify::triangles.size(); ++i)
+        //{
+        //  for (int j = 0; j < 3; ++j) {
+        //    current_mesh->GetIndices().push_back(Simplify::triangles[i].v[j]);
+        //  }
+        //}
+
+        Simplify::vertices.clear();
+        Simplify::triangles.clear();
+
+      }
+    }
+
     return out_mesh_list;
   }
 
@@ -1220,6 +1289,25 @@ namespace road {
 
     out_mesh.EndMaterial();
     return out_mesh;
+  }
+
+  float Map::GetZPosInDeformation(float posx, float posy) const
+  {
+    // Amplitud
+    const float A1 = 500.0f;
+    const float A2 = 200.0f;
+    // Fases
+    const float F1 = 100.0;
+    const float F2 = -1500.0;
+    // Modifiers
+    const float Kx1 =  0.00035f;
+    const float Kx2 =  0.0002f;
+
+    const float Ky1 = -0.0008f;
+    const float Ky2 =  0.0005f;
+
+    return A1 * sin((Kx1 * posx + Ky1 * posy + F1)) +
+           A2 * sin((Kx2 * posx + Ky2 * posy + F2));
   }
 
 } // namespace road

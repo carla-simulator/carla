@@ -29,7 +29,6 @@
 #include "MeshDescription.h"
 #include "ProceduralMeshConversion.h"
 
-
 FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
 {
   switch (LaneType)
@@ -135,6 +134,10 @@ void UOpenDriveToMap::CreateMap()
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Map Name Is Empty") );
     return;
   }
+  if ( !IsValid(FileDownloader) ) 
+  {
+    FileDownloader = NewObject<UCustomFileDownloader>();
+  }
   FileDownloader->ResultFileName = MapName;
   FileDownloader->Url = Url;
   FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
@@ -193,10 +196,17 @@ void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& Carla
 
 void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>& CarlaMap )
 {
+  opg_parameters.vertex_distance = 0.5f;
+  opg_parameters.vertex_width_resolution = 8.0f;
+  double start = FPlatformTime::Seconds();
   const auto Meshes = CarlaMap->GenerateOrderedChunkedMesh(opg_parameters);
+  double end = FPlatformTime::Seconds();
+  UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT(" GenerateOrderedChunkedMesh code executed in %f seconds."), end - start);
   TArray<AActor*> ActorMeshList;
   TArray<UStaticMesh*> MeshesToSpawn;
   int32 Index = 0;
+  start = FPlatformTime::Seconds();
+
   for (const auto &PairMap : Meshes) 
   {
     for( const auto &Mesh : PairMap.second )
@@ -205,11 +215,16 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       {
         continue;
       }
+      if (!Mesh->IsValid()) {
+        continue;
+      }
+
       AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
       UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
       TempPMC->bUseAsyncCooking = true;
       TempPMC->bUseComplexAsSimpleCollision = true;
       TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
 
       const FProceduralCustomMesh MeshData = *Mesh;
       TempPMC->CreateMeshSection_LinearColor(
@@ -265,6 +280,9 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
   // {
   //   UE_LOG(LogCarla, Error, TEXT("The road collision mesh could not be generated!"));
   // }
+
+  end = FPlatformTime::Seconds();
+  UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT(" Create assets and save those took %f minutes."), (end - start) / 60 );
 }
 
 void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Map>& CarlaMap )

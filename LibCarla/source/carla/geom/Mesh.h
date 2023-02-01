@@ -131,7 +131,9 @@ namespace geom {
 
     const std::vector<normal_type> &GetNormals() const;
 
-    const std::vector<index_type> &GetIndexes() const;
+    const std::vector<index_type>& GetIndexes() const;
+
+    std::vector<index_type> &GetIndices();
 
     size_t GetIndexesNum() const;
 

@@ -41,8 +41,15 @@ namespace geom {
     std::unique_ptr<Mesh> Generate(
         const road::Lane &lane, const double s_start, const double s_end) const;
 
+    /// Generates a mesh that defines a lane from a given s start and end with bigger tesselation
+    std::unique_ptr<Mesh> GenerateTesselated(
+      const road::Lane& lane, const double s_start, const double s_end) const;
+
     /// Generates a mesh that defines the whole lane
     std::unique_ptr<Mesh> Generate(const road::Lane &lane) const;
+
+    /// Generates a mesh that defines the whole lane with bigger tesselation
+    std::unique_ptr<Mesh> GenerateTesselated(const road::Lane& lane) const;
 
     /// Generates a mesh that defines a lane section
     void GenerateLaneSectionOrdered(const road::LaneSection &lane_section, 
@@ -109,6 +116,7 @@ namespace geom {
       float max_road_len                = 50.0f;
       float extra_lane_width            =  1.0f;
       float wall_height                 =  0.6f;
+      float vertex_width_resolution     =  4.0f;
       // Road mesh smoothness:
       float max_weight_distance         =  5.0f;
       float same_lane_weight_multiplier =  2.0f;
