@@ -478,7 +478,7 @@ static void CheckGBufferStream(uint64_t& Mask, T& GBufferStreams)
       FGBufferRequest::MarkAsRequested(Mask, ID);
 }
 
-constexpr size_t MAX_CONCURRENT_GBUFFER_TRANSFERS = 64;
+constexpr size_t MAX_CONCURRENT_GBUFFER_TRANSFERS = 2;
 static std::atomic<size_t> active_gbuffer_transfer_count = { 0 };
 
 void ASceneCaptureSensor::CaptureSceneExtended()
@@ -505,8 +505,7 @@ void ASceneCaptureSensor::CaptureSceneExtended()
     return;
   }
 
-  auto count = active_gbuffer_transfer_count.fetch_add(1, std::memory_order_acquire);
-  if (active_gbuffer_transfer_count.fetch_add(1, std::memory_order_acquire) >= MAX_CONCURRENT_GBUFFER_TRANSFERS)
+  while (active_gbuffer_transfer_count.fetch_add(1, std::memory_order_acquire) >= MAX_CONCURRENT_GBUFFER_TRANSFERS)
   {
       (void)active_gbuffer_transfer_count.fetch_sub(1, std::memory_order_release);
       std::this_thread::yield();
