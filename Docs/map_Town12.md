@@ -17,7 +17,7 @@ __Using the navigator__:
 
 __CARLA coordinates__:
 
-Copy and paste this code into a notebook or Python terminal to translate the spectator to the desired location:
+Copy and paste the following code into a notebook or Python terminal to translate the spectator to the desired location. You will need first to [connect the client and set up the world object](tuto_first_steps.md#launching-carla-and-connecting-the-client):
 
 ```py
 spectator = world.get_spectator()
