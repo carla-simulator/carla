@@ -10,9 +10,14 @@ __Using the navigator__:
 
 * `left mouse button` - click and hold, drag downwards to zoom in, drag upwards to zoom out
 * `middle mouse button` or `press mouse wheel` - click and hold, drag left, right, up or down to move the map
+* `double click` - double click on a point on the map to record the coordinates, you will find the coordinates in the code block just below the map
 
 
 ![town12_aerial](../img/maps/town12hyperres.webp#map)
+
+__CARLA coordinates__:
+
+Copy and paste this code into a notebook or Python terminal to translate the spectator to the desired location:
 
 ```py
 spectator = world.get_spectator()
@@ -20,6 +25,8 @@ loc = carla.Location(0.0, 0.0, 500.0)
 rot = carla.Rotation(pitch=-90, yaw=0.0, roll=-90.0)
 spectator.set_transform(carla.Transform(loc, rot))
 ```
+
+## Town 12 zones
 
 __High-rise downtown__:
 
