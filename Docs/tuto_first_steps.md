@@ -119,7 +119,7 @@ spawn_points = world.get_map().get_spawn_points()
 # Spawn 50 vehicles randomly distributed throughout the map 
 # for each spawn point, we choose a random vehicle from the blueprint library
 for i in range(0,50):
-    world.try_spawn_actor(random.choice(vehicle_blueprints), random.choice(spawn_points)))
+    world.try_spawn_actor(random.choice(vehicle_blueprints), random.choice(spawn_points))
 ```
 
 Now we should also add a vehicle that will be the centerpoint of our simulation. To train an autonomous agent we need to simulate a the vehicle that it the autonomous agent will control. In CARLA parlance, we often refer to this vehicle as the ["Ego vehicle"](#assign-a-vehicle-as-the-ego-vehicle).
@@ -198,3 +198,4 @@ ego_bp.set_attribute('role_name', 'hero')
 ego_vehicle = world.spawn_actor(ego_bp, random.choice(spawn_points))
 
 ```
+

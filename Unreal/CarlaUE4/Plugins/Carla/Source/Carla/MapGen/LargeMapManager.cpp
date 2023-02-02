@@ -174,7 +174,7 @@ void ALargeMapManager::OnActorSpawned(
 
   // LM_LOG(Warning, "ALargeMapManager::OnActorSpawned func %s %s", *Actor->GetName(), *Actor->GetTranslation().ToString());
 
-  if (Actor && CarlaActor.GetActorType() == FCarlaActor::ActorType::Vehicle)
+  if (Actor)
   { // Check if is hero vehicle
 
     assert(ActorInfo);
@@ -1076,24 +1076,11 @@ void ALargeMapManager::PrintMapInfo()
   int LastMsgIndex = TilesDistMsgIndex;
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("\nActor Global Position: %s km"), *(FDVector(CurrentActorPosition) / (1000.0 * 100.0)).ToString()) );
+  
+  FIntVector CurrentTile = GetTileVectorID(CurrentActorPosition);
+  GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
+    FString::Printf(TEXT("\nActor Current Tile: %d_%d"), CurrentTile.X, CurrentTile.Y ));
 
-  GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White, TEXT("Closest tiles - Distance:"));
-
-  for (const auto& TilePair : MapTiles)
-  {
-    const FCarlaMapTile& Tile = TilePair.Value;
-    const ULevelStreaming* Level = Tile.StreamingLevel;
-    FVector LevelLocation = Tile.Location;
-    float Distance = FDVector::Dist(LevelLocation, CurrentActorPosition);
-
-    FColor MsgColor = FColor::Green;
-    if (Distance < (TileSide * 2.0f))
-    {
-      GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, MsgColor,
-        FString::Printf(TEXT("%s       %.2f"), *Level->GetName(), Distance / (1000.0f * 100.0f)));
-    }
-    if (LastMsgIndex < MaxTilesDistMsgIndex) break;
-  }
   LastMsgIndex = ClientLocMsgIndex;
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("\nOrigin: %s km"), *(FDVector(CurrentOriginInt) / (1000.0 * 100.0)).ToString()) );
