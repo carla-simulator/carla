@@ -1,6 +1,8 @@
 ## Latest
 
   * Fixed the extra data in Directx textures, so we need to copy row by row on Windows to remove extra bytes on images
+  * Added empty actor
+  * The spectator will be used to load tiles and actor in Large Maps when no other actors with the rolename 'ego_vehicle' or 'hero' are present
   * Restored gamma value to 2.2 instead of 2.4
 
 ## CARLA 0.9.14
