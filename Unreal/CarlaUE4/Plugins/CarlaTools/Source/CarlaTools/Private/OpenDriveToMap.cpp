@@ -139,7 +139,8 @@ void UOpenDriveToMap::CreateMap()
     FileDownloader = NewObject<UCustomFileDownloader>();
   }
   FileDownloader->ResultFileName = MapName;
-  FileDownloader->Url = Url;
+  FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-112.01038,40.68778,-112.00616,40.69152";
+  // FileDownloader->Url = Url;
   FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
   FileDownloader->StartDownload();
 }

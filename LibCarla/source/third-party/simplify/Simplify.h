@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 //#include <stddef.h>
 //#include <functional>
 //#include <sys/stat.h>
@@ -536,7 +537,6 @@ namespace Simplify
 		compact_mesh();
 	} //simplify_mesh_lossless()
 
-
 	// Check if a triangle flips when this edge is removed
 
 	bool flipped(vec3f p,int i0,int i1,Vertex &v0,Vertex &v1,std::vector<int> &deleted)
@@ -634,15 +634,11 @@ namespace Simplify
 			vertices[i].tstart=0;
 			vertices[i].tcount=0;
 		}
-		{
-			std::ofstream out("C:\\Users\\blyro\\Logs\\carla.log", std::ios::app);
-			out << "Triangles size " << triangles.size() << " vertices num" << vertices .size() << std::endl;
-			out.close();
-		}
+
 		loopi(0,triangles.size())
 		{
 			Triangle &t=triangles[i];
-			loopj(0,3) vertices[t.v[j]].tcount++;
+			loopj(0,3) vertices[t.v[j]].tcount++;			
 		}
 		int tstart=0;
 		loopi(0,vertices.size())
@@ -666,7 +662,7 @@ namespace Simplify
 				v.tcount++;
 			}
 		}
-
+		
 		// Init Quadrics by Plane & Edge Errors
 		//
 		// required at the beginning ( iteration == 0 )

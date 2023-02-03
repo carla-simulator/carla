@@ -126,7 +126,7 @@ namespace geom {
     // Ensure minimum vertices in width are two
     const int vertices_in_width = road_param.vertex_width_resolution >= 2 ? road_param.vertex_width_resolution : 2;
     const int segments_number = vertices_in_width - 1;
-    std::cout << "Vertices width " << vertices_in_width << std::endl;
+
     // Iterate over the lane's 's' and store the vertices based on it's width
     do {
       // Get the location of the edges of the current lane at the current waypoint
@@ -167,8 +167,6 @@ namespace geom {
 
     const int number_of_rows = (vertices.size() / vertices_in_width);
 
-    std::cout << "number_of_rows width " << number_of_rows << std::endl;
-    std::cout << "vertices_in_width width " << vertices_in_width << std::endl;
     for (int i = 0; i < (number_of_rows - 1); ++i) 
     {
       for (int j = 0; j < vertices_in_width - 1; ++j) 

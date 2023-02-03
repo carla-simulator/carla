@@ -1187,6 +1187,11 @@ namespace road {
 
     for (auto& current_mesh_vector : out_mesh_list)
     {
+      if ( current_mesh_vector.first != road::Lane::LaneType::Driving ) 
+      {        
+        continue;
+      }
+
       for (std::unique_ptr<geom::Mesh>& current_mesh : current_mesh_vector.second)
       {
         
@@ -1197,8 +1202,9 @@ namespace road {
 
         for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
         {
-          current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+          //current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
         }
+
         
         for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
         {
@@ -1209,45 +1215,46 @@ namespace road {
           Simplify::vertices.push_back(v);
         }
 
-        for (int i = 0; i < current_mesh->GetIndexes().size(); ++i)
+        for (int i = 0; i < current_mesh->GetIndexes().size() - 2; i += 3 )
         {
           Simplify::Triangle t;
           t.material = 0;
-        
-          for (int j = 0; j < 3; ++j)
-          {
-            t.v[j] = current_mesh->GetIndexes()[i];
-            ++i;
+          auto indices = current_mesh->GetIndexes();
+          t.v[0] = (indices[i])     - 1;
+          t.v[1] = (indices[i + 1]) - 1;
+          t.v[2] = (indices[i + 2] )- 1;
+
+          if( i >= current_mesh->GetIndexes().size() ){
+            std::cout << "Not right number of Indexes Index: "  << i << " Indices size: "<< current_mesh->GetIndexes().size() << std::endl;
           }
-        
+                 
           Simplify::triangles.push_back(t);
         }
 
         // Reduce to the X% of the polys
 
-        Simplify::simplify_mesh( Simplify::triangles.size() * 0.5f, 7, true );
+        Simplify::simplify_mesh(Simplify::triangles.size() * 0.5f );
         
-        //current_mesh->GetVertices().clear();
-        //current_mesh->GetIndices().clear();
-        //for (Simplify::Vertex& current_vertex : Simplify::vertices)
-        //{
-        //  carla::geom::Vector3D v;
-        //  v.x = current_vertex.p.x;
-        //  v.y = current_vertex.p.y;
-        //  v.z = current_vertex.p.z;
-        //  current_mesh->AddVertex(v);
-        //}
-        //
-        //for (int i = 0; i < Simplify::triangles.size(); ++i)
-        //{
-        //  for (int j = 0; j < 3; ++j) {
-        //    current_mesh->GetIndices().push_back(Simplify::triangles[i].v[j]);
-        //  }
-        //}
+        current_mesh->GetVertices().clear();
+        current_mesh->GetIndices().clear();
+        for (Simplify::Vertex& current_vertex : Simplify::vertices)
+        {
+          carla::geom::Vector3D v;
+          v.x = current_vertex.p.x;
+          v.y = current_vertex.p.y;
+          v.z = current_vertex.p.z;
+          current_mesh->AddVertex(v);
+        }
+        
+        for (int i = 0; i < Simplify::triangles.size(); ++i)
+        {
+          for (int j = 0; j < 3; ++j) {
+            current_mesh->GetIndices().push_back( (Simplify::triangles[i].v[j]) + 1);
+          }
+        }
 
         Simplify::vertices.clear();
-        Simplify::triangles.clear();
-
+        Simplify::triangles.clear();        
       }
     }
 
