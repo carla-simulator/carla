@@ -12,8 +12,19 @@ __Using the navigator__:
 * `middle mouse button` or `press mouse wheel` - click and hold, drag left, right, up or down to move the map
 * `double click` - double click on a point on the map to record the coordinates, you will find the coordinates in the code block just below the map
 
+__Zone color reference__:
 
-![town12_aerial](../img/maps/town12hyperres.webp#map)
+* <span style="color:#595d5e; background-color:#595d5e;">&nbsp</span>   [Skyscraper](#high-rise-downtown)
+* <span style="color:#d2dddc; background-color:#d2dddc;">&nbsp</span>   [High density residential](#high-density-residential)
+* <span style="color:#838c8b; background-color:#838c8b;">&nbsp</span>   [Community buildings](#community-buildings)
+* <span style="color:#17d894; background-color:#17d894;">&nbsp</span>   [Low density residential](#low-density-residential)
+* <span style="color:#df6a19; background-color:#df6a19;">&nbsp</span>   [Parks](#parks)
+* <span style="color:#839317; background-color:#839317;">&nbsp</span>   [Rural farmland](#rural-and-farmland)
+* <span style="color:#265568; background-color:#265568;">&nbsp</span>   [Water](#water)
+
+
+
+![town12_aerial](../img/maps/town12/town12roadrunner.webp#map)
 
 __CARLA coordinates__:
 
@@ -22,59 +33,75 @@ Copy and paste the following code into a notebook or Python terminal to translat
 ```py
 spectator = world.get_spectator()
 loc = carla.Location(0.0, 0.0, 500.0)
-rot = carla.Rotation(pitch=-90, yaw=0.0, roll=-90.0)
+rot = carla.Rotation(pitch=-90, yaw=0.0, roll=0.0)
 spectator.set_transform(carla.Transform(loc, rot))
 ```
-
 ## Town 12 zones
 
-__High-rise downtown__:
+#### High-rise downtown:
 
 Town 12's downtown area is a large span of high rise skyscrapers arranged into blocks on a consistent grid of roads, resembling downtown areas in many large American and European cities.
 
 ![high_rise](../img/maps/town12/high_rise.webp)
 
-__High density residential__:
+#### High density residential:
 
 The high density residential areas of Town 12 have many 2-10 storey apartment buildings with commercial properties like cafes and retail stores at street level.
 
-![high_dens_res](../img/maps/town12/high_dens_res.webp)
+![high_dens_res](../img/maps/town12/hi_dens_res.webp)
 
-__Low density residential__:
+
+#### Community buildings:
+
+The community buildings have many 2-3 storey apartment buildings in a bohemian style with cafes and boutiques on the ground floors.
+
+![community](../img/maps/town12/community.webp)
+
+#### Low density residential:
 
 The low density residential regions of Town 12 reflect the classic suburbs of many American cities, with one and two story homes surrounded by fenced gardens and garages.
 
 ![low_dens_res](../img/maps/town12/low_dens_res.webp)
 
-__Highways and intersections__:
+#### Parks:
 
-Town 12 has an extensive highway system, including 3-4 lane highways interspersed with impressive roundabout junctions.
+The dense residential and downtown areas are broken up by small islands of green communal space, juxtaposing foliage against urban architecture.
+
+![parks](../img/maps/town12/parks.webp)
+
+#### Highways and intersections:
+
+Town 12 has an extensive highway system, including 3-4 lane highways interspersed with impressive roundabout junctions and intersections.
 
 ![highway](../img/maps/town12/highway.webp)
 
-__Rural and farmland__:
+#### Rural and farmland:
 
 Town 12 also has rural regions with characteristic farmland buildings like wooden barns and farmhouses, windmills, grain silos, corn fields, hay bails and rural fencing. 
 
 ![rural](../img/maps/town12/rural.webp)
 
+#### Water:
+
+There are several bodies of water in town 12 including 2 large lakes and several ponds. 
+
+![water](../img/maps/town12/water.webp)
+
 <script>
 window.addEventListener('load', function () {
 
     const coords = document.getElementsByClassName("hljs-number")
-    coords[0].textContent = 10
-    console.log(coords[0].textContent)
   
-    const q = document.querySelector('[src$="map"]');
+    const image = document.querySelector('[src$="map"]');
     const canv = document.createElement('canvas');
-    canv.setAttribute('height', q.height)
-    canv.setAttribute('width', q.width)
-    q.parentNode.replaceChild(canv, q)
+    canv.setAttribute('height', image.height)
+    canv.setAttribute('width', image.width)
+    image.parentNode.replaceChild(canv, image)
 
     var state = {mDown: false, button: 0, lastX: 0, lastY:0, canvX: 0, canvY: 0, zoom: 1.0, mdownX: 0, mdownY: 0, pX: 0.5, pY: 0.5, dblClick: false, listObj: false}
 
     ctx = canv.getContext('2d')
-    ctx.drawImage(q, 0, 0, canv.width, canv.height)
+    ctx.drawImage(image, 0, 0, canv.width, canv.height)
 
     canv.addEventListener('mousemove', (event) => {
         dX = event.clientX - state.lastX
@@ -86,7 +113,7 @@ window.addEventListener('load', function () {
             state.canvX += dX
             state.canvY += dY
             ctx.clearRect(0, 0, canv.width, canv.height)
-            ctx.drawImage(q,  state.canvX, state.canvY, canv.width * state.zoom, canv.height * state.zoom)
+            ctx.drawImage(image,  state.canvX, state.canvY, canv.width * state.zoom, canv.height * state.zoom)
         }
         if(state.mDown && state.button == 0) {
             if(dY > 0){
@@ -95,21 +122,11 @@ window.addEventListener('load', function () {
                state.zoom *= 0.95
             }
             ctx.clearRect(0, 0, canv.width, canv.height)
-            offX = -state.mdownX * (state.zoom - 1)
-            offY = -state.mdownY * (state.zoom - 1)
-
-            var rect = canv.getBoundingClientRect();
-            
-            var mX = event.clientX - rect.left;
-            var mY = event.clientY - rect.top;
 
             state.canvX = - canv.width * state.zoom * state.pX + state.mdownX;
             state.canvY = - canv.height * state.zoom * state.pY + state.mdownY;
-            //state.canvX += offX
-            //state.canvY += offY
-            ctx.drawImage(q,  state.canvX, state.canvY, canv.width * state.zoom, canv.height * state.zoom)
-            //ctx.drawImage(q,  state.canvX, state.canvY, canv.width * state.zoom, canv.height * state.zoom)
-            //ctx.drawImage(q,  state.canvX, state.canvY, canv.width * state.zoom, canv.height * state.zoom)
+
+            ctx.drawImage(image,  state.canvX, state.canvY, canv.width * state.zoom, canv.height * state.zoom)
         }
     })
 
@@ -134,16 +151,14 @@ window.addEventListener('load', function () {
     })
 
     canv.addEventListener('dblclick', (event) => {
-        console.log('Px: ' + state.pX + ' Py: ' + state.pY)
         
-        const p = document.createElement("p")
+        //Uncomment this line for map calibration
+        //console.log(state.pX + ',' + state.pY)
 
-        const carlaX = 10497.8366 * state.pX + 0.620390035 * state.pY - 5549.64759;
-        const carlaY = 0.620390035 * state.pX + 10497.8366 * state.pY - 2898.42642;
+        const carlaX = 10482.4274 * state.pX + -5.39801455 * state.pY - 5673.07949;
+        const carlaY = 5.39801455 * state.pX + 10482.4274 * state.pY - 2885.15738;
         coords[0].textContent = carlaX.toFixed(1)
         coords[1].textContent = carlaY.toFixed(1)
-
-        console.log(canv.parentNode.parentNode)
     })
 
 })
