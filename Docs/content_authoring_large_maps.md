@@ -18,11 +18,11 @@ RoadRunner is the recommended software to create Large Maps to be imported into 
 
 ## Build a Large Map in RoadRunner
 
-The specifics of how to build a complex map in RoadRunner go beyond the scope of this guide, however, there are video tutorials available in the [RoadRunner documentation][rr_tutorials]. On the face of it, building a Large Map in RoadRunner is largely the same as building a standard map, just bigger in scale. The differences are largely in how the map is exported.
+The specifics of how to build a complex map in RoadRunner go beyond the scope of this guide, however, there are video tutorials available in the [RoadRunner documentation][rr_tutorials]. On the face of it, building a Large Map in RoadRunner is largely the same as building a standard map, just bigger in scale. The differences are mainly in how the map is exported.
 
 ![roadrunner_draw](img/tuto_content_authoring_maps/large_map_roadrunner.png)
 
-Here we have created a Large Map of about 1.2 km in size. This will be broken up into tiles when we export it, we will choose a tile size of 700m, so the map should split up into around 4 tiles. 
+Here we have created a Large Map of about 1.2 km in size. This will be broken up into tiles when we export it, we will choose a tile size of 700m, so the map should split up into around 4-9 tiles. 
 
 If you are building a Large Map with elevation, the recommended largest size of the map is 20x20 km<sup>2</sup>. Maps larger than this may cause RoadRunner to crash on export.
 

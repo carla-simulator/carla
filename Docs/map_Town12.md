@@ -1,6 +1,6 @@
 # Town 12
 
-Town 12 is a Large Map with dimensions of 10x10 km<sup>2</sup>. It is divided into 25 tiles each with dimensions of 2x2 km<sup>2</sup>. The road layout is partially inspired by the road layout of the city of Amarillo in Texas, USA. There are numerous regions to the city including urban, residential and rural and a large highway system surrounding the city and the architectural styles reflect those of many medium to large cities across North America.  
+Town 12 is a Large Map with dimensions of 10x10 km<sup>2</sup>. It is divided into 25 tiles, each with dimensions of 2x2 km<sup>2</sup>. The road layout is partially inspired by the road layout of the city of Amarillo in Texas, USA. There are numerous regions to the city including urban, residential and rural areas, along with a large highway system surrounding the city with a ringroad. The architectural styles reflect those of many medium to large cities across North America.  
 
 ## Navigator
 
