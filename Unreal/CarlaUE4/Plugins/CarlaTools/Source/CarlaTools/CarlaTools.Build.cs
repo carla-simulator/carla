@@ -64,7 +64,8 @@ public class CarlaTools : ModuleRules
         "Json",
         "JsonUtilities",
         "Networking",
-        "Sockets"
+        "Sockets",
+        "RHI"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
