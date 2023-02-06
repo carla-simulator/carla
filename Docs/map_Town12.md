@@ -26,9 +26,14 @@ __Zone color reference__:
 
 ![town12_aerial](../img/maps/town12/town12roadrunner.webp#map)
 
-__CARLA coordinates__:
 
-After double clicking on a point of interest, the navigator will display the corresponding CARLA coordinates in the following code block. Copy and paste the code into a notebook or Python terminal to translate the spectator to the desired location. You will need first to [connect the client and set up the world object](tuto_first_steps.md#launching-carla-and-connecting-the-client):
+__CARLA coordinates__: 
+
+* __X__:  <span id="carlacoord_x">--</span>
+* __Y__:  <span id="carlacoord_y">--</span>
+
+
+After double clicking on a point of interest, the navigator will display the corresponding CARLA coordinates and update them in the following code block. Copy and paste the code into a notebook or Python terminal to translate the spectator to the desired location. You will need first to [connect the client and set up the world object](tuto_first_steps.md#launching-carla-and-connecting-the-client):
 
 ```py
 # CARLA coordinates: X 0.0, Y 0.0
@@ -91,8 +96,10 @@ There are several bodies of water in town 12 including 2 large lakes and several
 <script>
 window.addEventListener('load', function () {
 
-    const coords = document.getElementsByClassName("hljs-number")
-    const comment = document.getElementsByClassName("hljs-comment")
+    const text_coord_x = document.getElementById("carlacoord_x")
+    const text_coord_y = document.getElementById("carlacoord_y")
+    const code_coords = document.getElementsByClassName("hljs-number")
+    const code_comment = document.getElementsByClassName("hljs-comment")
   
     const image = document.querySelector('[src$="map"]');
     const canv = document.createElement('canvas');
@@ -159,10 +166,11 @@ window.addEventListener('load', function () {
 
         const carlaX = 10482.4274 * state.pX + -5.39801455 * state.pY - 5673.07949;
         const carlaY = 5.39801455 * state.pX + 10482.4274 * state.pY - 2885.15738;
-        coords[0].textContent = carlaX.toFixed(1)
-        coords[1].textContent = carlaY.toFixed(1)
-        comment[0].textContent = "# CARLA coordinates - X: " + carlaX.toFixed(1) + " Y: " + carlaY.toFixed(1)
-        console.log(comment)
+        code_coords[0].textContent = carlaX.toFixed(1)
+        code_coords[1].textContent = carlaY.toFixed(1)
+        code_comment[0].textContent = "# CARLA coordinates - X: " + carlaX.toFixed(1) + " Y: " + carlaY.toFixed(1)
+        text_coord_x.textContent = carlaX.toFixed(1)
+        text_coord_y.textContent = carlaY.toFixed(1)
     })
 
 })
