@@ -91,7 +91,7 @@ void OsmRenderer::RunCmd(int ConnectionSocket, char* Cmd)
     std::uint8_t* RenderedMap = new uint8_t[Drawer->GetImgSizeSqr() * 4];
     RenderMapCmd(CmdVector, RenderedMap);
 
-    if(send(ConnectionSocket, (const char*)RenderedMap, (Drawer->GetImgSizeSqr() * 4 * sizeof(uint8_t)), 0) < 0)
+    if(send(ConnectionSocket, RenderedMap, (Drawer->GetImgSizeSqr() * 4 * sizeof(uint8_t)), 0) < 0)
     {
       std::cerr << LOG_PRFX << " ⛔️ ERROR Sending map to client: " << errno << " :: " << strerror(errno) << std::endl;
     }
