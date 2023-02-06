@@ -13,10 +13,17 @@
 #include "carla/streaming/detail/Types.h"
 #include "carla/streaming/detail/tcp/Message.h"
 
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wshadow"
+#endif
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#endif
 
 #include <functional>
 #include <memory>

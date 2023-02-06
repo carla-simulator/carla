@@ -19,6 +19,7 @@
 #include "Carla/Walker/WalkerBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
@@ -167,7 +168,7 @@ carla::rpc::ResponseError RespondError(
     const ECarlaServerResponse& Error,
     const FString& ExtraInfo = "")
 {
-  return RespondError(FuncName, GetStringError(Error), ExtraInfo);
+  return RespondError(FuncName, CarlaGetStringError(Error), ExtraInfo);
 }
 
 class ServerBinder

@@ -6,6 +6,7 @@
   * Added API function to avoid replaying the spectator
     * `Client.set_replayer_ignore_spectator(bool)`
     * `start_replaying.py` using flag `--move-spectator`
+  * Surface non-unity build mode by passing ARGS=--no-unity to make; allows IWYU-type errors to be unmasked and fixed.
 
 ## CARLA 0.9.14
 

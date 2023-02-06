@@ -19,8 +19,11 @@ set LAUNCH_UE4_EDITOR=false
 set REMOVE_INTERMEDIATE=false
 set USE_CARSIM=false
 set USE_CHRONO=false
+set USE_UNITY=true
 set CARSIM_STATE="CarSim OFF"
 set CHRONO_STATE="Chrono OFF"
+set UNITY_STATE="Unity ON"
+set AT_LEAST_WRITE_OPTIONALMODULES=false
 set EDITOR_FLAGS=""
 
 :arg-parse
@@ -45,6 +48,12 @@ if not "%1"=="" (
     if "%1"=="--chrono" (
         set USE_CHRONO=true
     )
+    if "%1"=="--no-unity" (
+        set USE_UNITY=false
+    )
+    if "%1"=="--at-least-write-optionalmodules" (
+        set AT_LEAST_WRITE_OPTIONALMODULES=true
+    )
     if "%1"=="-h" (
         goto help
     )
@@ -60,7 +69,9 @@ set EDITOR_FLAGS=%EDITOR_FLAGS:"=%
 if %REMOVE_INTERMEDIATE% == false (
     if %LAUNCH_UE4_EDITOR% == false (
         if %BUILD_UE4_EDITOR% == false (
-            goto help
+            if %AT_LEAST_WRITE_OPTIONALMODULES% == false (
+                goto help
+            )
         )
     )
 )
@@ -128,7 +139,12 @@ if %USE_CHRONO% == true (
 ) else (
     set CHRONO_STATE="Chrono OFF"
 )
-set OPTIONAL_MODULES_TEXT=%CARSIM_STATE% %CHRONO_STATE%
+if %USE_UNITY% == true (
+    set UNITY_STATE="Unity ON"
+) else (
+    set UNITY_STATE="Unity OFF"
+)
+set OPTIONAL_MODULES_TEXT=%CARSIM_STATE% %CHRONO_STATE% %UNITY_STATE%
 echo %OPTIONAL_MODULES_TEXT% > "%ROOT_PATH%Unreal/CarlaUE4/Config/OptionalModules.ini"
 
 if %BUILD_UE4_EDITOR% == true (

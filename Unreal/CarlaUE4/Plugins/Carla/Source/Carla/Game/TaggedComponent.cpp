@@ -1,5 +1,6 @@
 #include "Carla.h"
 #include "TaggedComponent.h"
+#include "ConstructorHelpers.h"
 
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "SkeletalRenderPublic.h"
