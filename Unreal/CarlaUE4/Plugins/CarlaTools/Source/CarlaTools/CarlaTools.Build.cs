@@ -65,7 +65,8 @@ public class CarlaTools : ModuleRules
         "JsonUtilities",
         "Networking",
         "Sockets",
-        "RHI"
+        "RHI",
+        "RenderCore"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

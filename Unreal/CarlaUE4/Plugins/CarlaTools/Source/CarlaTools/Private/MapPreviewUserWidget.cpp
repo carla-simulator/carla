@@ -7,12 +7,15 @@
 #include "Interfaces/IPv4/IPv4Address.h"
 #include "Common/TcpSocketBuilder.h"
 #include "SocketSubsystem.h"
+#include "SocketTypes.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "Engine/Texture2D.h"
 #include "Containers/ResourceArray.h"
 #include "Rendering/Texture2DResource.h"
 #include "RHI.h"
 #include "RHICommandList.h"
+#include "RenderingThread.h"
+#include "Misc/Timespan.h"
 
 void UMapPreviewUserWidget::ConnectToSocket()
 {
@@ -62,47 +65,93 @@ void UMapPreviewUserWidget::RenderMap()
     
     //uint8* ReceivedData = new uint8_t[512*512*4];
     TArray<uint8_t> ReceivedData;
+    //ReceivedData.Init(0, uint32(512*512*4));
     uint32 ReceivedDataSize;
     //uint32 ReceivedDataSize = 512*512*4;
-    while(Socket->HasPendingData(ReceivedDataSize))
-    {
-        int32 BytesReceived = 0;
-        ReceivedData.Init(0, uint32(512*512*4));
-        //ReceivedData.Init(0, FMath::Min(ReceivedDataSize, uint32(512*512*4)));
-        bool bRecv = Socket->Recv(ReceivedData.GetData(), ReceivedData.Num(), BytesReceived);
-        if (!bRecv)
-        {
-            UE_LOG(LogTemp, Error, TEXT("Error receiving message"));
-        }
-        else
-        {
-            //std::string ReceivedStr = std::string((char*)ReceivedData);
-            //FString Str = UTF8_TO_TCHAR(ReceivedData);
-            //UE_LOG(LogTemp, Log, TEXT("Received %d bytes. [%d]"), BytesReceived, Str.Len());
-            UE_LOG(LogTemp, Log, TEXT("Received %d bytes. %d"), BytesReceived, ReceivedDataSize);
-
-            MapTexture = UTexture2D::CreateTransient(512,512,EPixelFormat::PF_R8G8B8A8,"MapTextureRendered");
-
-            for(size_t i = 0; i < ReceivedDataSize; i++)
-            {
-                ReceivedData[i];
-            }
-            UE_LOG(LogTemp, Log, TEXT("After Loop"));
-            // TODO: Move to function
-            FUpdateTextureRegion2D Region;
-            Region.SrcX = 0;
-            Region.SrcY = 0;
-            Region.DestX = 0;
-            Region.DestY = 0;
-            Region.Width = MapTexture->GetSizeX();
-            Region.Height = MapTexture->GetSizeY();
-            UE_LOG(LogTemp, Log, TEXT("After Region"));
-
-            FTexture2DResource* Resource = (FTexture2DResource*)MapTexture->Resource;
-            RHIUpdateTexture2D(Resource->GetTexture2DRHI(), 0, Region, Region.Width * sizeof(uint8_t), &ReceivedData[0]);
-        }
-    }
     
+    if(Socket->Wait(ESocketWaitConditions::WaitForRead, FTimespan::FromSeconds(5)))
+    {
+        while(Socket->HasPendingData(ReceivedDataSize))
+        {
+            int32 BytesReceived = 0;
+            TArray<uint8_t> ThisReceivedData;
+            //ThisReceivedData.Init(0,uint32(512*512*4));
+            ThisReceivedData.Init(0, FMath::Min(ReceivedDataSize, uint32(512*512*4)));
+            bool bRecv = Socket->Recv(ThisReceivedData.GetData(), ThisReceivedData.Num(), BytesReceived);
+            if (!bRecv)
+            {
+                UE_LOG(LogTemp, Error, TEXT("Error receiving message"));
+            }
+            else
+            {
+                //std::string ReceivedStr = std::string((char*)ReceivedData);
+                //FString Str = UTF8_TO_TCHAR(ReceivedData);
+                //UE_LOG(LogTemp, Log, TEXT("Received %d bytes. [%d]"), BytesReceived, Str.Len());
+                UE_LOG(LogTemp, Log, TEXT("Received %d bytes. %d"), BytesReceived, ReceivedDataSize);
+
+                ReceivedData.Append(ThisReceivedData);
+                UE_LOG(LogTemp, Log, TEXT("Size of Data: %d"), ReceivedData.Num());
+            }
+        }
+
+        MapTexture = UTexture2D::CreateTransient(512,512,EPixelFormat::PF_R8G8B8A8,"MapTextureRendered");
+        MapTexture->UpdateResource();
+
+        UE_LOG(LogTemp, Log, TEXT("Before Loop. Pending data: %d"), ReceivedDataSize);
+        for(size_t i = 0; i < ReceivedData.Num(); i++)
+        {
+            ReceivedData[i];
+        }
+        UE_LOG(LogTemp, Log, TEXT("After Loop"));
+        
+        // TODO: Move to function
+        if(ReceivedData.Num() > 0) // PROV to avoid crashes when socket fails
+        {
+            ENQUEUE_RENDER_COMMAND(UpdateDynamicTextureCode)
+            (
+                [NewData=ReceivedData, Texture=MapTexture](auto &InRHICmdList) mutable
+                {
+                    UE_LOG(LogTemp, Log, TEXT("RHI: In render thread before Region"));
+                    FUpdateTextureRegion2D Region;
+                    Region.SrcX = 0;
+                    Region.SrcY = 0;
+                    Region.DestX = 0;
+                    Region.DestY = 0;
+                    Region.Width = Texture->GetSizeX();
+                    Region.Height = Texture->GetSizeY();
+                    UE_LOG(LogTemp, Log, TEXT("RHI: After Region"));
+
+                    for(size_t i = 0; i < NewData.Num(); i++)
+                    {
+                        NewData[i];
+                    }
+                    UE_LOG(LogTemp, Log, TEXT("RHI: After Loop"));
+
+                    FTexture2DResource* Resource = (FTexture2DResource*)Texture->Resource;
+                    if(Resource)
+                    {
+                        UE_LOG(LogTemp, Log, TEXT("RHI: Is Resource null? NO"));
+                    }
+                    else{
+                        UE_LOG(LogTemp, Log, TEXT("RHI: Is Resource null? YES"));
+                    }
+                    
+
+                    FRHITexture2D* TextureRHI = Resource->GetTexture2DRHI();
+                    if(TextureRHI)
+                    {
+                        UE_LOG(LogTemp, Log, TEXT("RHI: Is RHI Texture null? NO"));
+                    }
+                    else{
+                        UE_LOG(LogTemp, Log, TEXT("RHI: Is Resource null? YES"));
+                    }
+
+                    RHIUpdateTexture2D(Resource->GetTexture2DRHI(), 0, Region, Region.Width * sizeof(uint8_t) * 4, &NewData[0]);
+                }
+            );
+        }
+        
+    }
 }
 
 void UMapPreviewUserWidget::Shutdown()
