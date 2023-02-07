@@ -9,7 +9,7 @@ The navigator interactive map can be used to browse the town and derive coordina
 __Using the navigator__:
 
 * `left mouse button` - click and hold, drag left, right, up or down to move the map
-* `scroll mouse wheel` - scroll up to zoom in, scroll down to zoom out on the point under the mouse pointer
+* `scroll mouse wheel` - scroll down to zoom out, scroll up to zoom in on the location under the mouse pointer
 * `double click` - double click on a point on the map to record the coordinates, you will find the coordinates in the text and the code block just below the map
 
 __Zone color reference__:
