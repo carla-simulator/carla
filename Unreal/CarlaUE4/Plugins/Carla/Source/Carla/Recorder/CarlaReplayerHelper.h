@@ -38,6 +38,7 @@ public:
       CarlaRecorderActorDescription Description,
       uint32_t DesiredId,
       bool bIgnoreHero,
+      bool bIgnoreSpectator,
       bool ReplaySensors);
 
   // replay event for removing actor

@@ -179,6 +179,7 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
     CarlaRecorderActorDescription Description,
     uint32_t DesiredId,
     bool bIgnoreHero,
+    bool bIgnoreSpectator,
     bool ReplaySensors)
 {
   check(Episode != nullptr);
@@ -198,6 +199,13 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
     // check for hero
     if (Item.Id == "role_name" && Item.Value == "hero")
       IsHero = true;
+  }
+
+  // check to ignore Hero or Spectator
+  if ((bIgnoreHero && IsHero) || 
+      (bIgnoreSpectator && ActorDesc.Id.StartsWith("spectator")))
+  {
+    return std::make_pair(3, 0);
   }
 
   auto result = TryToCreateReplayerActor(

@@ -576,6 +576,10 @@ namespace detail {
       _client.SetReplayerIgnoreHero(ignore_hero);
     }
 
+    void SetReplayerIgnoreSpectator(bool ignore_spectator) {
+      _client.SetReplayerIgnoreSpectator(ignore_spectator);
+    }
+
     void StopReplayer(bool keep_actors) {
       _client.StopReplayer(keep_actors);
   }
