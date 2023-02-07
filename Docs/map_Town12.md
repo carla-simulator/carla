@@ -172,9 +172,9 @@ window.addEventListener('load', function () {
         if(state.touch){
             event.preventDefault();
             if(event.wheelDelta > 0){
-                state.zoom *= 1.05 
+                state.zoom *= 1.15 
             } else {
-               state.zoom *= 0.95
+               state.zoom *= 0.85
             }
 
             if(state.zoom < 1.0){state.zoom = 1.0;}
@@ -201,9 +201,6 @@ window.addEventListener('load', function () {
         code_coords[0].textContent = carlaX.toFixed(1)
         code_coords[1].textContent = carlaY.toFixed(1)
         code_comment[0].textContent = "# CARLA coordinates - X: " + carlaX.toFixed(1) + " Y: " + carlaY.toFixed(1)
-        // text_coord_x.textContent = carlaX.toFixed(1)
-        // text_coord_y.textContent = carlaY.toFixed(1)
-        // text_coord_x.outerHTML = "<span id='carlacoord_x' style='animation: fadeMe 2s;'>" + carlaX.toFixed(1) + "</span>"
 
         var newX = text_coord_x.cloneNode(true)
         var newY = text_coord_y.cloneNode(true)
