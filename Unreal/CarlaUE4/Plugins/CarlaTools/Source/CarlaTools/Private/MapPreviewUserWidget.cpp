@@ -17,7 +17,19 @@
 #include "RenderingThread.h"
 #include "Misc/Timespan.h"
 
-void UMapPreviewUserWidget::ConnectToSocket()
+#include "Containers/UnrealString.h"
+#include "GenericPlatform/GenericPlatformProcess.h"
+
+void UMapPreviewUserWidget::CreateTexture()
+{
+  if(!MapTexture)
+  {
+    MapTexture = UTexture2D::CreateTransient(512,512,EPixelFormat::PF_R8G8B8A8,"MapTextureRendered");
+    MapTexture->UpdateResource();
+  }
+}
+
+void UMapPreviewUserWidget::ConnectToSocket(FString DatabasePath, FString StylesheetPath, int Size)
 {
   //FSocket* Socket = FSocket::CreateTCPConnection(nullptr, TEXT("OSMRendererSocket"));
   Socket = FTcpSocketBuilder(TEXT("OSMRendererSocket")).AsReusable();
@@ -35,18 +47,17 @@ void UMapPreviewUserWidget::ConnectToSocket()
     return;
   }
 
-  MapTexture = UTexture2D::CreateTransient(512,512,EPixelFormat::PF_R8G8B8A8,"MapTextureRendered");
-  MapTexture->UpdateResource();
-
   // Send a message
-  FString Message = "-C /home/aollero/Downloads/libosmcout/libosmscout-master/maps/madrid_downtown/madrid_big /home/aollero/Downloads/libosmcout/libosmscout-master/stylesheets/standard.oss 512";
+  FString Message = "-C " + DatabasePath + " " + StylesheetPath + " " + FString::FromInt(Size);
+  //FString Message = "-C /home/aollero/Downloads/libosmcout/libosmscout-master/maps/madrid_downtown/madrid_big /home/aollero/Downloads/libosmcout/libosmscout-master/stylesheets/standard.oss 512";
   SendStr(Message);
-  
+  UE_LOG(LogTemp, Log, TEXT("Configuration Completed"));
 }
 
-void UMapPreviewUserWidget::RenderMap()
+void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FString Zoom)
 {
-  FString Message = "-R 40.415 -3.702 100000";
+ FString Message = "-R " + Latitude + " " + Longitude + " " + Zoom;
+  //FString Message = "-R 40.415 -3.702 100000";
   SendStr(Message);
 
   TArray<uint8_t> ReceivedData;
@@ -102,8 +113,36 @@ void UMapPreviewUserWidget::Shutdown()
   Socket->Close();
 }
 
+void UMapPreviewUserWidget::OpenServer()
+{
+  
+  FPlatformProcess::CreateProc(
+      TEXT("/home/aollero/carla/osm-world-renderer/build/osm-world-renderer"), 
+      nullptr,  // Args
+      true,     // if true process will have its own window
+      false,     // if true it will be minimized
+      false,    // if true it will be hidden in task bar
+      nullptr,  // filled with PID
+      0,        // priority
+      nullptr,  // directory to place after running the program
+      nullptr   // redirection pipe
+  );
+
+}
+
+void UMapPreviewUserWidget::CloseServer()
+{
+  SendStr("-X");
+}
+
 bool UMapPreviewUserWidget::SendStr(FString Msg)
 {
+  if(!Socket)
+  {
+    UE_LOG(LogTemp, Error, TEXT("Error. No socket."));
+    return false;
+  }
+
   std::string MessageStr = std::string(TCHAR_TO_UTF8(*Msg));
   int32 BytesSent = 0;
   bool bSent = Socket->Send((uint8*)MessageStr.c_str(), MessageStr.size(), BytesSent);

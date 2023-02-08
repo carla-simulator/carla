@@ -17,6 +17,8 @@ class CARLATOOLS_API UMapPreviewUserWidget : public UUserWidget
 private:
 	FSocket* Socket;
 
+	
+
 	bool SendStr(FString Msg);
 	//void PaintMapToTexture(TArray<);
 
@@ -25,12 +27,21 @@ public:
 	UTexture2D* MapTexture;
 
 	UFUNCTION(BlueprintCallable)
-	void ConnectToSocket();
+	void ConnectToSocket(FString DatabasePath, FString StylesheetPath, int Size);
 
 	UFUNCTION(BlueprintCallable)
-	void RenderMap();
+	void RenderMap(FString Latitude, FString Longitude, FString Zoom);
 
 	UFUNCTION(BlueprintCallable)
 	void Shutdown();
+
+	UFUNCTION(BlueprintCallable)
+	void CreateTexture();
+
+	UFUNCTION(BlueprintCallable)
+	void OpenServer();
+
+	UFUNCTION(BlueprintCallable)
+	void CloseServer();
 	
 };

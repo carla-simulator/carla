@@ -3,20 +3,22 @@
 
 #include <vector>
 #include <string>
+#include <memory>
+
+#include "MapRasterizer.h"
 
 #include <osmscout/GeoCoord.h>
 #include <osmscout/Database.h>
 #include <osmscoutmap/MapService.h>
 #include <osmscout/BasemapDatabase.h>
 
-using namespace std;
+//using namespace std; // TODO Remove
 
-class MapRasterizer;
 
 class MapDrawer
 {
 public:
-    MapDrawer(vector<string> Args);
+    void PreLoad(std::vector<std::string>& Args);
 
     void Draw(std::uint8_t* OutMap, osmscout::GeoCoord Coords, double ZoomValue);
 
@@ -27,11 +29,11 @@ public:
 
 private:
     // Rastering
-    MapRasterizer* Rasterizer;
+    std::unique_ptr<MapRasterizer> Rasterizer;
 
     // Arguments
-    string DataBasePath;
-    string StyleSheetPath;
+    std::string DataBasePath;
+    std::string StyleSheetPath;
     int Size;
     //size_t Latitude;
     //size_t Longitude;

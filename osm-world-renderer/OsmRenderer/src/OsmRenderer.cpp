@@ -9,11 +9,14 @@
 #include <string.h>
 #include <unistd.h>
 #include <chrono>
+#include <stdlib.h> 
 
 //#include "osmscoutmapsvg/MapPainterSVG.h"
 
 #define PORT 5000
 #define BUFFER_SIZE 1024
+
+using namespace std;
 
 string OsmRenderer::GetOsmRendererString() const
 {
@@ -68,7 +71,7 @@ int OsmRenderer::StartLoop()
 
     RunCmd(ConnectionSocket, Buffer);
 
-    std::cout << "└ End of Command." << std::endl << "┌ Waiting Command..." << std::endl;
+    //std::cout << "End of Command." << std::endl << "┌ Waiting Command..." << std::endl;
   }
   return 0;
 }
@@ -89,19 +92,25 @@ void OsmRenderer::RunCmd(int ConnectionSocket, char* Cmd)
   if(CmdType == "-R")     // Render Command
   {
     std::uint8_t* RenderedMap = new uint8_t[Drawer->GetImgSizeSqr() * 4];
+    //std::uint8_t* RenderedMap = new uint8_t[Drawer->GetImgSizeSqr() * 4];
     RenderMapCmd(CmdVector, RenderedMap);
 
     if(send(ConnectionSocket, RenderedMap, (Drawer->GetImgSizeSqr() * 4 * sizeof(uint8_t)), 0) < 0)
     {
-      std::cerr << LOG_PRFX << " ⛔️ ERROR Sending map to client: " << errno << " :: " << strerror(errno) << std::endl;
+      std::cerr << LOG_PRFX << " ERROR Sending map to client: " << errno << " :: " << strerror(errno) << std::endl;
     }
     else{
-      std::cout << LOG_PRFX << " ✅ SUCCESS! Bitmap sent correctly!" << std::endl;
+      std::cout << LOG_PRFX << " SUCCESS! Bitmap sent correctly!" << std::endl;
     }
   }
   else if(CmdType == "-C")// Configuration Command
   {
     ConfigMapCmd(CmdVector);
+  }
+  else if(CmdType == "-X")// Exit command
+  {
+    std::cout << "└ Bye!" << std::endl;
+    exit(EXIT_SUCCESS);
   }
 }
 
@@ -136,10 +145,11 @@ void OsmRenderer::RenderMapCmd(vector<string> CmdArgs, uint8_t* OutMap)
 
 void OsmRenderer::ConfigMapCmd(vector<string> CmdArgs)
 {
-  std::cout << LOG_PRFX << "Configuring Renderer:: DATABASE:" 
-      << CmdArgs[C_CMD_DATABASE_PATH] << " STYLESHEET: "
-      << CmdArgs[C_CMD_STYLESHEET_PATH] << " SIZE: " << CmdArgs[C_CMD_IMG_SIZE]<< std::endl;
-  Drawer = new MapDrawer(CmdArgs);
+  // std::cout << LOG_PRFX << "Configuring Renderer:: DATABASE:" 
+  //     << CmdArgs[C_CMD_DATABASE_PATH] << " STYLESHEET: "
+  //     << CmdArgs[C_CMD_STYLESHEET_PATH] << " SIZE: " << CmdArgs[C_CMD_IMG_SIZE]<< std::endl;
+  Drawer = std::make_unique<MapDrawer>(); // TODO: Precreate object - use function Load
+  Drawer->PreLoad(CmdArgs);
 
   if(!Drawer)
   {

@@ -4,10 +4,11 @@
 #include <string>
 #include <netinet/in.h>
 #include <vector>
+#include <memory>
+#include "MapDrawer.h"
 
-using namespace std;
+//using namespace std;
 
-class MapDrawer;
 
 class OsmRenderer 
 {
@@ -18,19 +19,19 @@ private:
   sockaddr_in Address;
 
   // Map Drawer
-  MapDrawer* Drawer;
+  std::unique_ptr<MapDrawer> Drawer;
 
   void RunCmd(int ConnectionSocket, char* Cmd);
 
-  vector<string> SplitCmd (string s, string delimiter);
+  std::vector<std::string> SplitCmd (std::string s, std::string delimiter);
 
   // Command Handlers
-  void RenderMapCmd(vector<string> CmdArgs, uint8_t* OutMap);
-  void ConfigMapCmd(vector<string> CmdArgs);
+  void RenderMapCmd(std::vector<std::string> CmdArgs, uint8_t* OutMap);
+  void ConfigMapCmd(std::vector<std::string> CmdArgs);
 
 
 public:
-  string GetOsmRendererString() const;
+  std::string GetOsmRendererString() const;
 
   int InitRenderer();
   int StartLoop();

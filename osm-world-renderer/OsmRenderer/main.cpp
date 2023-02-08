@@ -4,7 +4,11 @@
 
 int main()
 {
-    std::cout << "🚀 Starting renderer" << std::endl;
+    std::locale::global(std::locale("C.UTF-8"));
+    //std::locale::global(std::locale("es_ES.utf8"));
+    // std::locale::global(std::locale("en_US.utf8"));
+
+    std::cout << " Starting renderer " << std::locale().name() << std::endl;
     OsmRenderer Renderer;
     try
     {
@@ -18,7 +22,7 @@ int main()
     }
 
     Renderer.ShutDown();
-    std::cout << "Shutting down renderer. Bye!👋 " << Renderer.GetOsmRendererString() << std::endl;
+    std::cout << "Shutting down renderer. Bye! " << Renderer.GetOsmRendererString() << std::endl;
 
     return 0;
 }

@@ -9,19 +9,27 @@
 #include <sstream>
 #include <list>
 
-MapDrawer::MapDrawer(vector<string> Args)
+using namespace std;
+
+void MapDrawer::PreLoad(vector<string>& Args)
 {
   // Open Database
+  std::cout << "Begining" << std::endl;
   DataBasePath = Args[C_CMD_DATABASE_PATH];
   StyleSheetPath = Args[C_CMD_STYLESHEET_PATH];
+  std::cout << "Before stoi" << std::endl;
   Size = stoi(Args[C_CMD_IMG_SIZE]);
 
   Database = std::make_shared<osmscout::Database>(DbParameter);
+
+  std::cout << "Before opening database" << std::endl;
 
   if(!Database->Open(DataBasePath))
   {
     std::cerr << "ERROR Opening Database in " << DataBasePath << std::endl;
   }
+
+  std::cout << "After opening database" << std::endl;
 
   MapService = std::make_shared<osmscout::MapService>(Database);
 
@@ -31,7 +39,7 @@ MapDrawer::MapDrawer(vector<string> Args)
     std::cerr << "ERROR Opening Stylesheet in " << DataBasePath << std::endl;
   }
 
-  Rasterizer = new MapRasterizer();
+  Rasterizer = std::make_unique<MapRasterizer>();
 }
 
 void MapDrawer::Draw(std::uint8_t* OutMap, osmscout::GeoCoord Coords, double ZoomValue)
