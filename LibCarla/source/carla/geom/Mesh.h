@@ -145,6 +145,9 @@ namespace geom {
     size_t GetLastVertexIndex() const;
 
     /// Merges two meshes into a single mesh
+    Mesh& ConcatMesh(const Mesh& rhs, int num_vertices_to_link);
+
+    /// Merges two meshes into a single mesh
     Mesh &operator+=(const Mesh &rhs);
 
     friend Mesh operator+(const Mesh &lhs, const Mesh &rhs);

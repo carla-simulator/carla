@@ -191,6 +191,7 @@ namespace geom {
     std::map<carla::road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& result) 
     const 
   {
+    const int vertices_in_width = road_param.vertex_width_resolution >= 2 ? road_param.vertex_width_resolution : 2;
     for (auto &&lane_pair : lane_section.GetLanes()) 
     {
       Mesh out_mesh = *GenerateTesselated(lane_pair.second);
@@ -200,7 +201,7 @@ namespace geom {
       }
       else
       {
-        *(result[lane_pair.second.GetType()][0]) += out_mesh;
+        (result[lane_pair.second.GetType()][0])->ConcatMesh(out_mesh, vertices_in_width);
       }
     }
   }
@@ -385,7 +386,10 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
 
   std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory::GenerateOrderedWithMaxLen(
     const road::LaneSection &lane_section) const {
+      const int vertices_in_width = road_param.vertex_width_resolution >= 2 ? road_param.vertex_width_resolution : 2;
+      
       std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> mesh_uptr_list;
+
       if (lane_section.GetLength() < road_param.max_road_len) {
         GenerateLaneSectionOrdered(lane_section, mesh_uptr_list);
       } else {
@@ -401,7 +405,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             }
             else
             {
-              *( mesh_uptr_list[lane_pair.second.GetType()][0]) += lane_section_mesh;
+              (mesh_uptr_list[lane_pair.second.GetType()][0])->ConcatMesh(lane_section_mesh, vertices_in_width);
             }
             
           }
@@ -416,7 +420,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             }
             else
             {
-              *( mesh_uptr_list[lane_pair.second.GetType()][0]) += lane_section_mesh;
+              (mesh_uptr_list[lane_pair.second.GetType()][0])->ConcatMesh(lane_section_mesh, vertices_in_width);
             }
           }
         }
