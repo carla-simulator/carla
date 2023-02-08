@@ -172,6 +172,7 @@ void export_blueprint() {
       return self.at(key);
     }, (arg("id")))
     .def("filter", &cc::BlueprintLibrary::Filter, (arg("wildcard_pattern")))
+    .def("filter_by_attribute", &cc::BlueprintLibrary::FilterByAttribute, (arg("name"), arg("value")))
     .def("__getitem__", +[](const cc::BlueprintLibrary &self, size_t pos) -> cc::ActorBlueprint {
       return self.at(pos);
     })
