@@ -40,6 +40,7 @@ void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, 
         AddActorPosition(View);
         AddVehicleAnimation(View);
         AddVehicleLight(View);
+        AddVehicleWheelsAnimation(View);
         if (bAdditionalData)
         {
           AddActorKinematics(View);
@@ -136,11 +137,25 @@ void FFrameData::PlayFrameData(
     ProcessReplayerAnimVehicle(Vehicle);
   }
 
+  for (const CarlaRecorderAnimWheels &AnimWheel : Wheels.GetVehicleWheels())
+  {
+    CarlaRecorderAnimWheels Wheels = AnimWheel;
+    Wheels.DatabaseId = MappedId[Wheels.DatabaseId];
+    ProcessReplayerAnimVehicleWheels(Wheels);
+  }
+
   for (const CarlaRecorderAnimWalker &AnimWalker : Walkers.GetWalkers())
   {
     CarlaRecorderAnimWalker Walker = AnimWalker;
     Walker.DatabaseId = MappedId[Walker.DatabaseId];
     ProcessReplayerAnimWalker(Walker);
+  }
+
+  for (const CarlaRecorderAnimBiker &AnimBiker : Bikers.GetBikers())
+  {
+    CarlaRecorderAnimBiker Biker = AnimBiker;
+    Biker.DatabaseId = MappedId[Biker.DatabaseId];
+    ProcessReplayerAnimBiker(Biker);
   }
 
   for (const CarlaRecorderLightVehicle &LightVehicle : LightVehicles.GetLightVehicles())
@@ -167,7 +182,9 @@ void FFrameData::Clear()
   Positions.Clear();
   States.Clear();
   Vehicles.Clear();
+  Wheels.Clear();
   Walkers.Clear();
+  Bikers.Clear();
   LightVehicles.Clear();
   LightScenes.Clear();
   Kinematics.Clear();
@@ -186,12 +203,15 @@ void FFrameData::Write(std::ostream& OutStream)
   Positions.Write(OutStream);
   States.Write(OutStream);
   Vehicles.Write(OutStream);
+  Wheels.Write(OutStream);
   Walkers.Write(OutStream);
+  Bikers.Write(OutStream);
   LightVehicles.Write(OutStream);
   LightScenes.Write(OutStream);
   TrafficLightTimes.Write(OutStream);
   FrameCounter.Write(OutStream);
 }
+
 void FFrameData::Read(std::istream& InStream)
 {
   Clear();
@@ -235,6 +255,16 @@ void FFrameData::Read(std::istream& InStream)
       // walker animation
       case static_cast<char>(CarlaRecorderPacketId::AnimWalker):
         Walkers.Read(InStream);
+        break;
+
+      // walker animation
+      case static_cast<char>(CarlaRecorderPacketId::AnimVehicleWheels):
+        Wheels.Read(InStream);
+        break;
+
+      // walker animation
+      case static_cast<char>(CarlaRecorderPacketId::AnimBiker):
+        Bikers.Read(InStream);
         break;
 
       // vehicle light animation
@@ -351,7 +381,6 @@ void FFrameData::AddActorPosition(FCarlaActor *CarlaActor)
   });
 }
 
-
 void FFrameData::AddVehicleAnimation(FCarlaActor *CarlaActor)
 {
   check(CarlaActor != nullptr);
@@ -373,6 +402,64 @@ void FFrameData::AddVehicleAnimation(FCarlaActor *CarlaActor)
   Record.bHandbrake = Control.bHandBrake;
   Record.Gear = Control.Gear;
   AddAnimVehicle(Record);
+}
+
+void FFrameData::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
+{
+  check(CarlaActor != nullptr)
+  if (CarlaActor->IsPendingKill())
+    return;
+  if (CarlaActor->GetActorType() != FCarlaActor::ActorType::Vehicle)
+    return;
+  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+  check(CarlaVehicle != nullptr)
+  USkeletalMeshComponent* SkeletalMesh = CarlaVehicle->GetMesh();
+  check(SkeletalMesh != nullptr)
+  UVehicleAnimInstance* VehicleAnim = Cast<UVehicleAnimInstance>(SkeletalMesh->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  const UWheeledVehicleMovementComponent* WheeledVehicleMovementComponent = VehicleAnim->GetWheeledVehicleMovementComponent();
+  check(WheeledVehicleMovementComponent != nullptr)
+
+  CarlaRecorderAnimWheels Record;
+  Record.DatabaseId = CarlaActor->GetActorId();
+
+  WheelInfo FL;
+  FL.Location = EVehicleWheelLocation::FL_Wheel;
+  FL.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(FL.Location);
+  FL.TireRotation = WheeledVehicleMovementComponent->Wheels[static_cast<uint8>(FL.Location)]->GetRotationAngle();
+
+  WheelInfo FR;
+  FR.Location = EVehicleWheelLocation::FR_Wheel;
+  FR.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(FR.Location);
+  FR.TireRotation = WheeledVehicleMovementComponent->Wheels[static_cast<uint8>(FR.Location)]->GetRotationAngle();
+
+  WheelInfo BL;
+  BL.Location = EVehicleWheelLocation::BL_Wheel;
+  BL.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(BL.Location);
+  BL.TireRotation = WheeledVehicleMovementComponent->Wheels[static_cast<uint8>(BL.Location)]->GetRotationAngle();
+
+  WheelInfo BR;
+  BR.Location = EVehicleWheelLocation::BR_Wheel;
+  BR.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(BR.Location);
+  BR.TireRotation = WheeledVehicleMovementComponent->Wheels[static_cast<uint8>(BR.Location)]->GetRotationAngle();
+
+  Record.WheelValues.reserve(4);
+  Record.WheelValues.push_back(FL);
+  Record.WheelValues.push_back(FR);
+  Record.WheelValues.push_back(BL);
+  Record.WheelValues.push_back(BR);
+
+  AddAnimVehicleWheels(Record);
+
+  if (CarlaVehicle->IsTwoWheeledVehicle())
+  {
+    AddAnimBiker(CarlaRecorderAnimBiker
+    {
+      CarlaActor->GetActorId(),
+      WheeledVehicleMovementComponent->GetForwardSpeed(),
+      WheeledVehicleMovementComponent->GetEngineRotationSpeed() / WheeledVehicleMovementComponent->GetEngineMaxRotationSpeed()
+    });
+  }
 }
 
 void FFrameData::AddWalkerAnimation(FCarlaActor *CarlaActor)
@@ -441,6 +528,7 @@ void FFrameData::AddActorKinematics(FCarlaActor *CarlaActor)
    };
    AddKinematics(Kinematic);
 }
+
 void FFrameData::AddActorBoundingBox(FCarlaActor *CarlaActor)
 {
   check(CarlaActor != nullptr);
@@ -492,7 +580,6 @@ void FFrameData::AddTrafficLightTime(const ATrafficLightBase& TrafficLight)
   };
   TrafficLightTimes.Add(TrafficLightTime);
 }
-
 
 void FFrameData::AddPosition(const CarlaRecorderPosition &Position)
 {
@@ -564,6 +651,16 @@ void FFrameData::AddState(const CarlaRecorderStateTrafficLight &State)
 void FFrameData::AddAnimVehicle(const CarlaRecorderAnimVehicle &Vehicle)
 {
   Vehicles.Add(Vehicle);
+}
+
+void FFrameData::AddAnimVehicleWheels(const CarlaRecorderAnimWheels &VehicleWheels)
+{
+  Wheels.Add(VehicleWheels);
+}
+
+void FFrameData::AddAnimBiker(const CarlaRecorderAnimBiker &Biker)
+{
+  Bikers.Add(Biker);
 }
 
 void FFrameData::AddAnimWalker(const CarlaRecorderAnimWalker &Walker)
@@ -904,6 +1001,29 @@ void FFrameData::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle)
   }
 }
 
+void FFrameData::ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels VehicleAnimWheels)
+{
+  check(Episode != nullptr)
+  FCarlaActor *CarlaActor = Episode->FindCarlaActor(VehicleAnimWheels.DatabaseId);
+  if (CarlaActor == nullptr)
+    return;
+  if (CarlaActor->GetActorType() != FCarlaActor::ActorType::Vehicle)
+    return;
+  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+  check(CarlaVehicle != nullptr)
+  USkeletalMeshComponent* SkeletalMesh = CarlaVehicle->GetMesh();
+  check(SkeletalMesh != nullptr)
+  UVehicleAnimInstance* VehicleAnim = Cast<UVehicleAnimInstance>(SkeletalMesh->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+
+  for (uint32_t i = 0; i < VehicleAnimWheels.WheelValues.size(); ++i)
+  {
+    const WheelInfo& Element = VehicleAnimWheels.WheelValues[i];
+    VehicleAnim->SetWheelRotYaw(static_cast<uint8>(Element.Location), Element.SteeringAngle);
+    VehicleAnim->SetWheelPitchAngle(static_cast<uint8>(Element.Location), Element.TireRotation);
+  }
+}
+
 // set the lights for vehicles
 void FFrameData::ProcessReplayerLightVehicle(CarlaRecorderLightVehicle LightVehicle)
 {
@@ -943,6 +1063,19 @@ void FFrameData::ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker)
 {
   SetWalkerSpeed(Walker.DatabaseId, Walker.Speed);
 }
+
+void FFrameData::ProcessReplayerAnimBiker(CarlaRecorderAnimBiker Biker)
+{
+  check(Episode != nullptr);
+  FCarlaActor * CarlaActor = Episode->FindCarlaActor(Biker.DatabaseId);
+  if (CarlaActor == nullptr)
+    return;
+  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+  check(CarlaVehicle != nullptr)
+  CarlaVehicle->SetSpeedAnim(Biker.ForwardSpeed);
+  CarlaVehicle->SetRotationAnim(Biker.EngineRotation);
+}
+
 
 // replay finish
 bool FFrameData::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, std::unordered_map<uint32_t, bool> &IsHero)
