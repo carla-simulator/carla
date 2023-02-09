@@ -1,9 +1,13 @@
 ## Latest
 
+  * Fixed bug causing the TM's unstuck logic to incorrectly remove the vehicles in some situations.
   * Fixed the extra data in Directx textures, so we need to copy row by row on Windows to remove extra bytes on images
   * Added empty actor
   * The spectator will be used to load tiles and actor in Large Maps when no other actors with the rolename 'ego_vehicle' or 'hero' are present
   * Restored gamma value to 2.2 instead of 2.4
+  * Added API function to avoid replaying the spectator
+    * `Client.set_replayer_ignore_spectator(bool)`
+    * `start_replaying.py` using flag `--move-spectator`
 
 ## CARLA 0.9.14
 
