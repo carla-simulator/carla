@@ -22,6 +22,7 @@ void FPixelReader::WritePixelsToBuffer(
     FRHICommandListImmediate &RHICmdList,
     FPixelReader::Payload FuncForSending)
 {
+    LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_05);
   TRACE_CPUPROFILER_EVENT_SCOPE_STR("WritePixelsToBuffer");
   check(IsInRenderingThread());
   
@@ -32,7 +33,13 @@ void FPixelReader::WritePixelsToBuffer(
     return;
   }
 
-  auto BackBufferReadback = MakeUnique<FRHIGPUTextureReadback>(TEXT("CameraBufferReadback"));
+  TUniquePtr<FRHIGPUTextureReadback> BackBufferReadback;
+
+  {
+      LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_04);
+      BackBufferReadback = MakeUnique<FRHIGPUTextureReadback>(TEXT("CameraBufferReadback"));
+  }
+
   FIntPoint BackBufferSize = Texture->GetSizeXY();
   EPixelFormat BackBufferPixelFormat = Texture->GetFormat();
   {
@@ -59,7 +66,8 @@ void FPixelReader::WritePixelsToBuffer(
         RHICmdList.GetRenderQueryResult(QueryPtr, OldAbsTime, true);
     }
 
-  AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [=, Readback = MoveTemp(BackBufferReadback)]() mutable {
+  AsyncTask(ENamedThreads::ActualRenderingThread, [=, Readback = MoveTemp(BackBufferReadback)]() mutable
+  {
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
       while (!Readback->IsReady())

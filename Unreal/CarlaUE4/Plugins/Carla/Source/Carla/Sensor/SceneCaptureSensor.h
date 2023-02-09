@@ -478,6 +478,8 @@ private:
   template <EGBufferTextureID TextureID, typename SensorT>
   void SendGBuffer(SensorT& Sensor, FGBufferRequest& GBufferData)
   {
+      LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_08);
+
       auto& GBufferStream = std::get<(size_t)TextureID>(GBufferStreams);
 
       using CameraGBufferT = std::remove_reference_t<decltype(GBufferStream)>;
@@ -491,6 +493,8 @@ private:
 
       if (GBufferData.WaitForTextureTransfer(TextureID))
       {
+          LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_09);
+
         TRACE_CPUPROFILER_EVENT_SCOPE_STR("GBuffer Decode");
 
         FIntPoint SourceExtent = {};
@@ -499,6 +503,8 @@ private:
 
         if (GBufferData.MapTextureData(TextureID, PixelData, SourcePitch, SourceExtent))
         {
+            LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_10);
+
             auto Format = GBufferData.Readbacks[(size_t)TextureID]->GetFormat();
             ImageSize = GBufferData.ViewRect.Size();
             Pixels.AddUninitialized(ImageSize.X * ImageSize.Y);
@@ -551,6 +557,8 @@ private:
   template <typename SensorT>
   void SendGBufferTexturesInternal(SensorT& Sensor, FGBufferRequest& GBufferData)
   {
+      LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_07);
+
     if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::SceneColor)) != 0)
         SendGBuffer<EGBufferTextureID::SceneColor>(Sensor, GBufferData);
     if ((GBufferData.DesiredTexturesMask & (1U << (uint8_t)EGBufferTextureID::SceneDepth)) != 0)

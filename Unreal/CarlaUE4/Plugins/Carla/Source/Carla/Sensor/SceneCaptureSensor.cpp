@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Runtime/Core/Public/HAL/LowLevelMemStats.h"
+// #include "Runtime/Core/Public/HAL/LowLevelMemTracker.h"
 
 #include <mutex>
 #include <atomic>
@@ -478,11 +480,82 @@ static void CheckGBufferStream(uint64_t& Mask, T& GBufferStreams)
       FGBufferRequest::MarkAsRequested(Mask, ID);
 }
 
-constexpr size_t MAX_CONCURRENT_GBUFFER_TRANSFERS = 2;
-static std::atomic<size_t> active_gbuffer_transfer_count = { 0 };
+static std::once_flag once_flag;
+
+DECLARE_LLM_MEMORY_STAT(TEXT("CARLA_LLM_TAG_00"), STAT_CARLA, STATGROUP_LLMFULL);
+
+static void InitTags()
+{
+	LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_00, TEXT("CARLA_LLM_TAG_00"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag00"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_01, TEXT("CARLA_LLM_TAG_01"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag01"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_02, TEXT("CARLA_LLM_TAG_02"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag02"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_03, TEXT("CARLA_LLM_TAG_03"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag03"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_04, TEXT("CARLA_LLM_TAG_04"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag04"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_05, TEXT("CARLA_LLM_TAG_05"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag05"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_06, TEXT("CARLA_LLM_TAG_06"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag06"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_07, TEXT("CARLA_LLM_TAG_07"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag07"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_08, TEXT("CARLA_LLM_TAG_08"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag08"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_09, TEXT("CARLA_LLM_TAG_09"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag09"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_10, TEXT("CARLA_LLM_TAG_10"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag10"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_11, TEXT("CARLA_LLM_TAG_11"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag11"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_12, TEXT("CARLA_LLM_TAG_12"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag12"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_13, TEXT("CARLA_LLM_TAG_13"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag13"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_14, TEXT("CARLA_LLM_TAG_14"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag14"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_15, TEXT("CARLA_LLM_TAG_15"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag15"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_16, TEXT("CARLA_LLM_TAG_16"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag16"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_17, TEXT("CARLA_LLM_TAG_17"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag17"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_18, TEXT("CARLA_LLM_TAG_18"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag18"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_19, TEXT("CARLA_LLM_TAG_19"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag19"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_20, TEXT("CARLA_LLM_TAG_20"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag20"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_21, TEXT("CARLA_LLM_TAG_21"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag21"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_22, TEXT("CARLA_LLM_TAG_22"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag22"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_23, TEXT("CARLA_LLM_TAG_23"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag23"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_24, TEXT("CARLA_LLM_TAG_24"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag24"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_25, TEXT("CARLA_LLM_TAG_25"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag25"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_26, TEXT("CARLA_LLM_TAG_26"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag26"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_27, TEXT("CARLA_LLM_TAG_27"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag27"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_28, TEXT("CARLA_LLM_TAG_28"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag28"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_29, TEXT("CARLA_LLM_TAG_29"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag29"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_30, TEXT("CARLA_LLM_TAG_30"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag30"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_31, TEXT("CARLA_LLM_TAG_31"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag31"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_32, TEXT("CARLA_LLM_TAG_32"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag32"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_33, TEXT("CARLA_LLM_TAG_33"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag33"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_34, TEXT("CARLA_LLM_TAG_34"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag34"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_35, TEXT("CARLA_LLM_TAG_35"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag35"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_36, TEXT("CARLA_LLM_TAG_36"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag36"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_37, TEXT("CARLA_LLM_TAG_37"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag37"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_38, TEXT("CARLA_LLM_TAG_38"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag38"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_39, TEXT("CARLA_LLM_TAG_39"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag39"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_40, TEXT("CARLA_LLM_TAG_40"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag40"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_41, TEXT("CARLA_LLM_TAG_41"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag41"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_42, TEXT("CARLA_LLM_TAG_42"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag42"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_43, TEXT("CARLA_LLM_TAG_43"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag43"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_44, TEXT("CARLA_LLM_TAG_44"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag44"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_45, TEXT("CARLA_LLM_TAG_45"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag45"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_46, TEXT("CARLA_LLM_TAG_46"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag46"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_47, TEXT("CARLA_LLM_TAG_47"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag47"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_48, TEXT("CARLA_LLM_TAG_48"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag48"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_49, TEXT("CARLA_LLM_TAG_49"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag49"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_50, TEXT("CARLA_LLM_TAG_50"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag50"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_51, TEXT("CARLA_LLM_TAG_51"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag51"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_52, TEXT("CARLA_LLM_TAG_52"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag52"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_53, TEXT("CARLA_LLM_TAG_53"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag53"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_54, TEXT("CARLA_LLM_TAG_54"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag54"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_55, TEXT("CARLA_LLM_TAG_55"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag55"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_56, TEXT("CARLA_LLM_TAG_56"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag56"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_57, TEXT("CARLA_LLM_TAG_57"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag57"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_58, TEXT("CARLA_LLM_TAG_58"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag58"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_59, TEXT("CARLA_LLM_TAG_59"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag59"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_60, TEXT("CARLA_LLM_TAG_60"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag60"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_61, TEXT("CARLA_LLM_TAG_61"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag61"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_62, TEXT("CARLA_LLM_TAG_62"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag62"), NAME_None));
+    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_63, TEXT("CARLA_LLM_TAG_63"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag63"), NAME_None));
+}
 
 void ASceneCaptureSensor::CaptureSceneExtended()
 {
+    std::call_once(once_flag, InitTags);
+
   decltype (FGBufferRequest::DesiredTexturesMask) Mask = 0;
   CheckGBufferStream<EGBufferTextureID::SceneColor>(Mask, GBufferStreams);
   CheckGBufferStream<EGBufferTextureID::SceneDepth>(Mask, GBufferStreams);
@@ -505,14 +578,12 @@ void ASceneCaptureSensor::CaptureSceneExtended()
     return;
   }
 
-  while (active_gbuffer_transfer_count.fetch_add(1, std::memory_order_acquire) >= MAX_CONCURRENT_GBUFFER_TRANSFERS)
-  {
-      (void)active_gbuffer_transfer_count.fetch_sub(1, std::memory_order_release);
-      std::this_thread::yield();
-  }
+  TUniquePtr<FGBufferRequest> GBufferPtr;
 
-  LLM_SCOPE(ELLMTag::CarlaGBufferRequest);
-  auto GBufferPtr = MakeUnique<FGBufferRequest>(Mask);
+  {
+      LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_00);
+      GBufferPtr = MakeUnique<FGBufferRequest>(Mask);
+  }
 
   GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
 
@@ -523,12 +594,10 @@ void ASceneCaptureSensor::CaptureSceneExtended()
   CaptureComponent2D->CaptureSceneWithGBuffer(*GBufferPtr);
   CaptureComponent2D->ShowFlags.TemporalAA = Prior;
 
-  AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, GBuffer = MoveTemp(GBufferPtr)]() mutable
+  FlushRenderingCommands();
+  AsyncTask(ENamedThreads::ActualRenderingThread, [this, GBuffer = MoveTemp(GBufferPtr)]() mutable
   {
-    GBuffer->Fence.lock();
     this->SendGBufferTextures(*GBuffer);
-    GBuffer->Fence.unlock();
-    (void)active_gbuffer_transfer_count.fetch_sub(1, std::memory_order_release);
   });
 }
 
