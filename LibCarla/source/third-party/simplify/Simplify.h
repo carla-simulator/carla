@@ -398,7 +398,7 @@ namespace Simplify
 					int i0=t.v[ j     ]; Vertex &v0 = vertices[i0];
 					int i1=t.v[(j+1)%3]; Vertex &v1 = vertices[i1];
 					// Border check
-					if(v0.border != v1.border)  continue;
+					if( v0.border || v1.border )  continue;
 
 					// Compute vertex to collapse to
 					vec3f p;

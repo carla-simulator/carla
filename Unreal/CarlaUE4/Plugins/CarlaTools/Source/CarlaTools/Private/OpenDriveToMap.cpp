@@ -5,6 +5,7 @@
 #include "DesktopPlatform/Public/IDesktopPlatform.h"
 #include "DesktopPlatform/Public/DesktopPlatformModule.h"
 #include "Misc/FileHelper.h"
+#include "Runtime/Core/Public/Async/ParallelFor.h"
 
 #include "Carla/Game/CarlaStatics.h"
 #include "Traffic/TrafficLightManager.h"
@@ -139,7 +140,7 @@ void UOpenDriveToMap::CreateMap()
     FileDownloader = NewObject<UCustomFileDownloader>();
   }
   FileDownloader->ResultFileName = MapName;
-  FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-112.01038,40.68778,-112.00616,40.69152";
+  FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-105.0537,39.7001,-105.0247,39.7117";
   // FileDownloader->Url = Url;
   FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
   FileDownloader->StartDownload();
@@ -197,93 +198,113 @@ void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& Carla
 
 void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>& CarlaMap )
 {
-  opg_parameters.vertex_distance = 0.5f;
-  opg_parameters.vertex_width_resolution = 8.0f;
-  double start = FPlatformTime::Seconds();
-  const auto Meshes = CarlaMap->GenerateOrderedChunkedMesh(opg_parameters);
-  double end = FPlatformTime::Seconds();
-  UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT(" GenerateOrderedChunkedMesh code executed in %f seconds."), end - start);
-  TArray<AActor*> ActorMeshList;
-  TArray<UStaticMesh*> MeshesToSpawn;
-  int32 Index = 0;
-  start = FPlatformTime::Seconds();
+  for (int i = 1; i < 5; ++i) {
+    opg_parameters.vertex_distance = 0.5f;
+    opg_parameters.vertex_width_resolution = 8.0f;
+    opg_parameters.simplification_percentage = 15 * i;
+    MapName = FString("VelocityTest") + FString::FromInt(i);
+    double start = FPlatformTime::Seconds();
+    const auto Meshes = CarlaMap->GenerateOrderedChunkedMesh(opg_parameters);
+    double end = FPlatformTime::Seconds();
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT(" GenerateOrderedChunkedMesh code executed in %f seconds. Simplification percentage is %f"), end - start, opg_parameters.simplification_percentage);
+    TArray<AActor*> ActorMeshList;
+    TArray<UStaticMesh*> MeshesToSpawn;
+    TArray<TPair<FString,UProceduralMeshComponent*>> ProceduralMeshesSpawned;
 
-  for (const auto &PairMap : Meshes) 
-  {
-    for( const auto &Mesh : PairMap.second )
+    start = FPlatformTime::Seconds();
+
+    for (const auto &PairMap : Meshes) 
     {
-      if (!Mesh->GetVertices().size())
+      for( const auto &Mesh : PairMap.second )
       {
-        continue;
-      }
-      if (!Mesh->IsValid()) {
-        continue;
-      }
+        if (!Mesh->GetVertices().size())
+        {
+          continue;
+        }
+        if (!Mesh->IsValid()) {
+          continue;
+        }
 
-      AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
-      UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
-      TempPMC->bUseAsyncCooking = true;
-      TempPMC->bUseComplexAsSimpleCollision = true;
-      TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+        UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
+        TempPMC->bUseAsyncCooking = true;
+        TempPMC->bUseComplexAsSimpleCollision = true;
+        TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
 
-      const FProceduralCustomMesh MeshData = *Mesh;
-      TempPMC->CreateMeshSection_LinearColor(
-          0,
-          MeshData.Vertices,
-          MeshData.Triangles,
-          MeshData.Normals,
-          TArray<FVector2D>(), // UV0
-          TArray<FLinearColor>(), // VertexColor
-          TArray<FProcMeshTangent>(), // Tangents
-          true); // Create collision
-      ActorMeshList.Add(TempActor);
-      UStaticMesh* GeneratedMesh = CreateStaticMeshAsset(TempPMC, Index, LaneTypeToFString(PairMap.first));
-      if( GeneratedMesh != nullptr)
-      {
-        MeshesToSpawn.Add(GeneratedMesh);
+        const FProceduralCustomMesh MeshData = *Mesh;
+        TempPMC->CreateMeshSection_LinearColor(
+            0,
+            MeshData.Vertices,
+            MeshData.Triangles,
+            MeshData.Normals,
+            TArray<FVector2D>(), // UV0
+            TArray<FLinearColor>(), // VertexColor
+            TArray<FProcMeshTangent>(), // Tangents
+            true); // Create collision
+        ActorMeshList.Add(TempActor);
+
+        ProceduralMeshesSpawned.Add(TPair<FString, UProceduralMeshComponent*>(LaneTypeToFString(PairMap.first),TempPMC));
+       
+
+   
       }
-      Index++;
     }
-  }
+    
+    end = FPlatformTime::Seconds();
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT(" Loop array code executed in %f seconds."), end - start);
 
-  for( auto CurrentActor : ActorMeshList )
-  {
-    CurrentActor->Destroy();
-  }
-  for(auto CurrentMesh : MeshesToSpawn )
-  {
-    AStaticMeshActor* TempActor = GetWorld()->SpawnActor<AStaticMeshActor>();
-    TempActor->GetStaticMeshComponent()->SetStaticMesh(CurrentMesh);
-    TempActor->SetActorLabel(FString("SM_") + CurrentMesh->GetName());
-  }
-/*
-  if(!Parameters.enable_mesh_visibility)
-  {
-    for(AActor * actor : ActorMeshList)
+    start = FPlatformTime::Seconds();
+
+    MeshesToSpawn = CreateStaticMeshAssets(ProceduralMeshesSpawned);
+
+    end = FPlatformTime::Seconds();
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT(" ParallelFor code executed in %f seconds."), end - start);
+
+    for( auto CurrentActor : ActorMeshList )
     {
-      actor->SetActorHiddenInGame(true);
+      CurrentActor->Destroy();
     }
+
+    start = FPlatformTime::Seconds();
+
+    for(auto CurrentMesh : MeshesToSpawn )
+    {
+      AStaticMeshActor* TempActor = GetWorld()->SpawnActor<AStaticMeshActor>();
+      // Build mesh from source
+      TempActor->GetStaticMeshComponent()->SetStaticMesh(CurrentMesh);
+      TempActor->SetActorLabel(FString("SM_") + CurrentMesh->GetName());
+    }
+
+    end = FPlatformTime::Seconds();
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT(" Spawning Static Meshes code executed in %f seconds."), end - start);
+
+  /*
+    if(!Parameters.enable_mesh_visibility)
+    {
+      for(AActor * actor : ActorMeshList)
+      {
+        actor->SetActorHiddenInGame(true);
+      }
+    }
+  */
+    // // Build collision data
+    // FTriMeshCollisionData CollisitonData;
+    // CollisitonData.bDeformableMesh = false;
+    // CollisitonData.bDisableActiveEdgePrecompute = false;
+    // CollisitonData.bFastCook = false;
+    // CollisitonData.bFlipNormals = false;
+    // CollisitonData.Indices = TriIndices;
+    // CollisitonData.Vertices = Vertices;
+
+    // RoadMesh->ContainsPhysicsTriMeshData(true);
+    // bool Success = RoadMesh->GetPhysicsTriMeshData(&CollisitonData, true);
+    // if (!Success)
+    // {
+    //   UE_LOG(LogCarla, Error, TEXT("The road collision mesh could not be generated!"));
+    // }
+
   }
-*/
-  // // Build collision data
-  // FTriMeshCollisionData CollisitonData;
-  // CollisitonData.bDeformableMesh = false;
-  // CollisitonData.bDisableActiveEdgePrecompute = false;
-  // CollisitonData.bFastCook = false;
-  // CollisitonData.bFlipNormals = false;
-  // CollisitonData.Indices = TriIndices;
-  // CollisitonData.Vertices = Vertices;
-
-  // RoadMesh->ContainsPhysicsTriMeshData(true);
-  // bool Success = RoadMesh->GetPhysicsTriMeshData(&CollisitonData, true);
-  // if (!Success)
-  // {
-  //   UE_LOG(LogCarla, Error, TEXT("The road collision mesh could not be generated!"));
-  // }
-
-  end = FPlatformTime::Seconds();
-  UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT(" Create assets and save those took %f minutes."), (end - start) / 60 );
 }
 
 void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Map>& CarlaMap )
@@ -311,7 +332,6 @@ UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset( UProceduralMeshComponent* P
   {
     FString MeshName = *(FolderName + FString::FromInt(MeshIndex) );
     FString PackageName = "/Game/CustomMaps/" + MapName + "/Static/" + FolderName + "/" + MeshName;
-    UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("PackageName %s"), *PackageName );
 
     if( !PlatformFile.DirectoryExists(*PackageName) )
     {
@@ -371,8 +391,6 @@ UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset( UProceduralMeshComponent* P
 
     //Set the Imported version before calling the build
     StaticMesh->ImportVersion = EImportStaticMeshVersion::LastVersion;
-
-    // Build mesh from source
     StaticMesh->Build(false);
     StaticMesh->PostEditChange();
 
@@ -382,4 +400,115 @@ UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset( UProceduralMeshComponent* P
     return StaticMesh;
   }
   return nullptr;
+}
+
+TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets(const TArray<TPair<FString, UProceduralMeshComponent*>>& Input )
+{
+  TArray<UPackage*> Packages;
+  TArray<UStaticMesh*> StaticMeshes;
+
+  Packages.SetNumUnsafeInternal(Input.Num());
+  StaticMeshes.SetNumUnsafeInternal(Input.Num());
+
+  double start = FPlatformTime::Seconds();
+
+  IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+  for (int i = 0; i < StaticMeshes.Num(); ++i)
+  {
+    FString MeshName = Input[i].Key + FString::FromInt(i);
+    FString PackageName = "/Game/CustomMaps/" + MapName + "/Static/" + Input[i].Key + "/" + MeshName;
+
+    if (!PlatformFile.DirectoryExists(*PackageName))
+    {
+      PlatformFile.CreateDirectory(*PackageName);
+    }
+
+    // Then find/create it.
+    Packages[i] = CreatePackage(*PackageName);
+    check(Packages[i]);
+  }
+
+  ParallelFor(Input.Num(), [&](int32 Idx) 
+    {
+      UProceduralMeshComponent* ProcMeshComp = Input[Idx].Value;
+      FMeshDescription MeshDescription = BuildMeshDescription(ProcMeshComp);
+
+
+
+      // If we got some valid data.
+      if (MeshDescription.Polygons().Num() > 0)
+      {
+        FString MeshName = Input[Idx].Key + FString::FromInt(Idx);
+
+        check(Packages[Idx]);
+        // Create StaticMesh object
+        StaticMeshes[Idx] = NewObject<UStaticMesh>(Packages[Idx], *MeshName, RF_Public | RF_Standalone);
+        StaticMeshes[Idx]->InitResources();
+
+        StaticMeshes[Idx]->LightingGuid = FGuid::NewGuid();
+
+        // Add source to new StaticMesh
+        FStaticMeshSourceModel& SrcModel = StaticMeshes[Idx]->AddSourceModel();
+        SrcModel.BuildSettings.bRecomputeNormals = false;
+        SrcModel.BuildSettings.bRecomputeTangents = false;
+        SrcModel.BuildSettings.bRemoveDegenerates = false;
+        SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
+        SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
+        SrcModel.BuildSettings.bGenerateLightmapUVs = true;
+        SrcModel.BuildSettings.SrcLightmapIndex = 0;
+        SrcModel.BuildSettings.DstLightmapIndex = 1;
+        StaticMeshes[Idx]->CreateMeshDescription(0, MoveTemp(MeshDescription));
+        StaticMeshes[Idx]->CommitMeshDescription(0);
+
+        //// SIMPLE COLLISION
+        if (!ProcMeshComp->bUseComplexAsSimpleCollision)
+        {
+          StaticMeshes[Idx]->CreateBodySetup();
+          UBodySetup* NewBodySetup = StaticMeshes[Idx]->BodySetup;
+          NewBodySetup->BodySetupGuid = FGuid::NewGuid();
+          NewBodySetup->AggGeom.ConvexElems = ProcMeshComp->ProcMeshBodySetup->AggGeom.ConvexElems;
+          NewBodySetup->bGenerateMirroredCollision = false;
+          NewBodySetup->bDoubleSidedGeometry = true;
+          NewBodySetup->CollisionTraceFlag = CTF_UseDefault;
+          NewBodySetup->CreatePhysicsMeshes();
+        }
+
+        //// MATERIALS
+        TSet<UMaterialInterface*> UniqueMaterials;
+        const int32 NumSections = ProcMeshComp->GetNumSections();
+        for (int32 SectionIdx = 0; SectionIdx < NumSections; SectionIdx++)
+        {
+          FProcMeshSection* ProcSection =
+            ProcMeshComp->GetProcMeshSection(SectionIdx);
+          UMaterialInterface* Material = ProcMeshComp->GetMaterial(SectionIdx);
+          UniqueMaterials.Add(Material);
+        }
+        // Copy materials to new mesh
+        for (auto* Material : UniqueMaterials)
+        {
+          StaticMeshes[Idx]->StaticMaterials.Add(FStaticMaterial(Material));
+        }
+      }
+    });
+
+  double end = FPlatformTime::Seconds();
+  UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets Parallel for code executed in %f seconds. "), end - start);
+  start = FPlatformTime::Seconds();
+  for (int i = 0; i < StaticMeshes.Num(); ++i) 
+  {
+    //Set the Imported version before calling the build
+    StaticMeshes[i]->ImportVersion = EImportStaticMeshVersion::LastVersion;
+    StaticMeshes[i]->Build(false);
+    StaticMeshes[i]->PostEditChange();
+
+    FString MeshName = *(Input[i].Key + FString::FromInt(i));
+    // Notify asset registry of new asset
+    FAssetRegistryModule::AssetCreated(StaticMeshes[i]);
+    UPackage::SavePackage(Packages[i], StaticMeshes[i], EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *MeshName, GError, nullptr, true, true, SAVE_NoError);
+  }
+  end = FPlatformTime::Seconds();
+  UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets SAVE ASSETS code executed in %f seconds. "), end - start);
+
+  return StaticMeshes;
 }

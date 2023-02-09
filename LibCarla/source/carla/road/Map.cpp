@@ -1136,6 +1136,7 @@ namespace road {
     std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>> out_mesh_list;
     std::unordered_map<JuncId, geom::Mesh> junction_map;
     
+    float simplificationrate = params.simplification_percentage * 0.01f;
     for (auto &&pair : _data.GetRoads()) 
     {
       const auto &road = pair.second;
@@ -1191,7 +1192,7 @@ namespace road {
 
         // Reduce to the X% of the polys
         float target_size = Simplify::triangles.size();
-        Simplify::simplify_mesh( (target_size * 0.20f) );
+        Simplify::simplify_mesh( (target_size * simplificationrate) );
 
         current_mesh->GetVertices().clear();
         current_mesh->GetIndices().clear();

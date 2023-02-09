@@ -63,7 +63,8 @@ private:
 
   carla::rpc::OpendriveGenerationParameters opg_parameters;
 
-  UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName );
+  UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
+  TArray<UStaticMesh*> CreateStaticMeshAssets(const TArray<TPair<FString, UProceduralMeshComponent*>>& Input);
 
   UCustomFileDownloader* FileDownloader;
 };
