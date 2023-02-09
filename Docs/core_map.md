@@ -251,7 +251,7 @@ Non-layered maps are shown in the table below (click the town name to see an ove
 | **[Town05](img/Town05.jpg)** | Squared-grid town with cross junctions and a bridge. It has multiple lanes per direction. Useful to perform lane changes.  |
 | **[Town06](img/Town06.jpg)** | Long highways with many highway entrances and exits. It also has a [**Michigan left**](<https://en.wikipedia.org/wiki/Michigan_left>). |
 | **[Town07](img/Town07.jpg)** | A rural environment with narrow roads, barns and hardly any traffic lights. |
-| **[Town10](img/Town10.jpg)** | A city environment with different environments such as an avenue or promenade, and more realistic textures.|
+| [__Town10__](map_Town10.md) | A city environment with different environments such as an avenue or promenade, and more realistic textures.|
 | __Town11__ | A Large Map that is undecorated.|
 | [__Town12__](map_Town12.md) | A Large Map with numerous different regions, including high-rise, residential and rural environments.|
 
