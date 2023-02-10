@@ -1,3 +1,41 @@
+<!--- 
+
+The images in this document were captured using the following settings in CARLA:
+
+Town: Town 10
+
+Vehicle location: Transform(Location(x=-46.885479, y=20.083447, z=-0.002633), Rotation(pitch=-0.000034, yaw=141.974243, roll=0.000000))
+
+Camera location, small vehicles: Transform(Location(x=-47.696186, y=24.049326, z=1.471929), Rotation(pitch=-10.843717, yaw=-77.215683, roll=0.000139))
+Camera location, standard vehicles: Transform(Location(x=-48.672256, y=24.830288, z=1.722733), Rotation(pitch=-13.396630, yaw=-75.692039, roll=0.000119))
+Camera location, large vehicles: Transform(Location(x=-49.470921, y=27.835310, z=2.931721), Rotation(pitch=-13.396630, yaw=-75.691978, roll=0.000119))
+
+The weather settings are: 
+
+weather.sun_altitude_angle = 50
+weather.sun_azimuth_angle = 260
+weather.wetness = 10
+weather.precipitation = 10
+weather.scattering_intensity = 5
+weather.mie_scattering_scale = 0.5
+weather.rayleigh_scattering_scale = 0.1
+
+Camera settings:
+
+camera_bp = bp_lib.find('sensor.camera.rgb')
+camera_bp.set_attribute('image_size_x', '1920')
+camera_bp.set_attribute('image_size_y', '1080')
+camera_bp.set_attribute('fstop', '6.0')
+
+Vehicle settings:
+
+control = vehicle.get_control()
+control.steer = -0.25
+vehicle.apply_control(control)
+
+--->
+
+
 # Vehicle catalogue
 
 ## Generation 2
