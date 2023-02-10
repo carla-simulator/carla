@@ -32,6 +32,9 @@ public:
   UPROPERTY( meta = (BindWidget) )
   class UButton* StartButton;
 
+  UPROPERTY(meta = (BindWidget))
+  class UButton* SaveButton;
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;
 
@@ -45,9 +48,11 @@ protected:
   virtual void NativeConstruct() override;
   virtual void NativeDestruct() override;
 
-  UFUNCTION(BlueprintCallable)
+  UFUNCTION( BlueprintCallable )
   void CreateMap();
 
+  UFUNCTION( BlueprintCallable )
+  void SaveMap();
 private:
 
   UFUNCTION()
@@ -55,7 +60,6 @@ private:
 
   UFUNCTION()
   void LoadMap();
-
 
   void GenerateAll(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateRoadMesh(const boost::optional<carla::road::Map>& CarlaMap);
@@ -65,6 +69,13 @@ private:
 
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
   TArray<UStaticMesh*> CreateStaticMeshAssets(const TArray<TPair<FString, UProceduralMeshComponent*>>& Input);
-
+  
+  UPROPERTY()
   UCustomFileDownloader* FileDownloader;
+  UPROPERTY()
+  TArray<AActor*> ActorMeshList;
+  UPROPERTY()
+  TArray<UStaticMesh*> MeshesToSpawn;
+
+  TArray<TPair<FString, class UProceduralMeshComponent*>> ProceduralMeshesSpawned;
 };
