@@ -452,4 +452,19 @@ private:
 
 
   FTimerHandle TimerHandler;
+public:
+  float SpeedAnim { 0.0f };
+  float RotationAnim { 0.0f };
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetSpeedAnim() const { return SpeedAnim; }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetSpeedAnim(float Speed) { SpeedAnim = Speed; }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetRotationAnim() const { return RotationAnim; }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetRotationAnim(float Rotation) { RotationAnim = Rotation; }
 };

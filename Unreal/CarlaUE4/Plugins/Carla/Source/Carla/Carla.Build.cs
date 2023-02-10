@@ -225,12 +225,6 @@ public class Carla : ModuleRules
       }
       if (UsingChrono)
       {
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so.1"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so.1.0"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so.1"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so.1.0"));
         AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine.so"));
         AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine_vehicle.so"));
         AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_vehicle.so"));

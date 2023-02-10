@@ -41,24 +41,13 @@ done
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang --version | head -n 1 | sed -r 's/^([^.]+).*$/\1/; s/^[^0-9]*([0-9]+).*$/\1/')")
-
-if [ -z "$CARLA_LLVM_VERSION_MAJOR" ] ; then
-  fatal_error "Failed to retrieve the installed version of the clang compiler."
-else
-  echo "Using clang-$CARLA_LLVM_VERSION_MAJOR as the CARLA compiler."
-fi
-
 source $(dirname "$0")/Environment.sh
 
-command -v /usr/bin/clang++-$CARLA_LLVM_VERSION_MAJOR >/dev/null 2>&1 || {
-  echo >&2 "clang-$CARLA_LLVM_VERSION_MAJOR is required, but it's not installed.";
-  exit 1;
-}
+export CC="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang"
+export CXX="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++"
+export PATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin:$PATH"
 
-CXX_TAG=c$CARLA_LLVM_VERSION_MAJOR
-export CC=/usr/bin/clang-$CARLA_LLVM_VERSION_MAJOR
-export CXX=/usr/bin/clang++-$CARLA_LLVM_VERSION_MAJOR
+CXX_TAG=c10
 
 # Convert comma-separated string to array of unique elements.
 IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
@@ -66,53 +55,8 @@ IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
 mkdir -p ${CARLA_BUILD_FOLDER}
 pushd ${CARLA_BUILD_FOLDER} >/dev/null
 
-# ==============================================================================
-# -- Get and compile libc++ ----------------------------------------------------
-# ==============================================================================
-
-LLVM_BASENAME=llvm-8.0
-
-LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
-LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
-
-if [[ -d "${LLVM_BASENAME}-install" ]] ; then
-  log "${LLVM_BASENAME} already installed."
-else
-  rm -Rf ${LLVM_BASENAME}-source ${LLVM_BASENAME}-build
-
-  log "Retrieving libc++."
-
-  # TODO URGENT: These links are out of date! LLVM has moved to https://github.com/llvm/llvm-project.
-  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
-  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
-  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
-
-  log "Compiling libc++."
-
-  mkdir -p ${LLVM_BASENAME}-build
-
-  pushd ${LLVM_BASENAME}-build >/dev/null
-
-  cmake -G "Ninja" \
-      -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=OFF \
-      -DLIBCXX_INSTALL_EXPERIMENTAL_LIBRARY=OFF \
-      -DLLVM_ENABLE_EH=OFF \
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="../${LLVM_BASENAME}-install" \
-      ../${LLVM_BASENAME}-source
-
-  ninja cxx
-
-  ninja install-libcxx
-
-  ninja install-libcxxabi
-
-  popd >/dev/null
-
-  rm -Rf ${LLVM_BASENAME}-source ${LLVM_BASENAME}-build
-
-fi
-
-unset LLVM_BASENAME
+LLVM_INCLUDE="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
+LLVM_LIBPATH="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
 
 # ==============================================================================
 # -- Get boost includes --------------------------------------------------------
@@ -125,11 +69,10 @@ BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
 
 for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
-
   SHOULD_BUILD_BOOST=true
   PYTHON_VERSION=$(/usr/bin/env python${PY_VERSION} -V 2>&1)
-  LIB_NAME=${PYTHON_VERSION:7:3}
-  LIB_NAME=${LIB_NAME//.}
+  LIB_NAME=$(cut -d . -f 1,2 <<< "$PYTHON_VERSION" | tr -d .)
+  LIB_NAME=${LIB_NAME:7}
   if [[ -d "${BOOST_BASENAME}-install" ]] ; then
     if [ -f "${BOOST_BASENAME}-install/lib/libboost_python${LIB_NAME}.a" ] ; then
       SHOULD_BUILD_BOOST=false
@@ -157,7 +100,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     pushd ${BOOST_BASENAME}-source >/dev/null
 
-    BOOST_TOOLSET="clang-$CARLA_LLVM_VERSION_MAJOR.0"
+    BOOST_TOOLSET="clang-10.0"
     BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
     py3="/usr/bin/env python${PY_VERSION}"

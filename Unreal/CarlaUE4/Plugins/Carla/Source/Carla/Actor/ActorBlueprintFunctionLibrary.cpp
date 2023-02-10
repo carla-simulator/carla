@@ -383,7 +383,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation Gamma;
     Gamma.Id = TEXT("gamma");
     Gamma.Type = EActorAttributeType::Float;
-    Gamma.RecommendedValues = { TEXT("2.4") };
+    Gamma.RecommendedValues = { TEXT("2.2") };
     Gamma.bRestrictToRecommended = false;
 
     // Motion Blur
@@ -1541,7 +1541,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         Description.Variations["enable_postprocess_effects"],
         true));
     Camera->SetTargetGamma(
-        RetrieveActorAttributeToFloat("gamma", Description.Variations, 2.4f));
+        RetrieveActorAttributeToFloat("gamma", Description.Variations, 2.2f));
     Camera->SetMotionBlurIntensity(
         RetrieveActorAttributeToFloat("motion_blur_intensity", Description.Variations, 0.5f));
     Camera->SetMotionBlurMaxDistortion(

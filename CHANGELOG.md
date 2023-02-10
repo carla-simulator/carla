@@ -1,5 +1,15 @@
 ## Latest
 
+  * Fixed bug causing the TM's unstuck logic to incorrectly remove the vehicles in some situations.
+  * Fixed the extra data in Directx textures, so we need to copy row by row on Windows to remove extra bytes on images
+  * Restored gamma value to 2.2 instead of 2.4
+  * Added API function to avoid replaying the spectator
+    * `Client.set_replayer_ignore_spectator(bool)`
+    * `start_replaying.py` using flag `--move-spectator`
+
+## CARLA 0.9.14
+
+  * Fixed tutorial for adding a sensor to CARLA.
   * Fixed bug in FrictionTrigger causing sometimes server segfault
   * Added attachment type "SpringArmGhost" for cinematic cameras but without doing the collision test.
   * Improved algorithm to move signals out of the road by computing the desired displacement direction.
@@ -28,6 +38,7 @@
   * Python agents now accept a carla.Map and GlobalRoutePlanner instances as inputs, avoiding the need to recompute them.
   * Python agents now have a function to lane change.
   * Python agents now detect vehicle in adjacent lanes if invaded due to the offset.
+  * Python agents now have the offset exposed.
   * Fixed bug causing the python agents to sometimes not detect a blocking actor if there were severral actors around it.
   * Improved Python agents performance for large maps.
   * Fix a bug at `Map.get_topology()`, causing lanes with no successors to not be part of it.
