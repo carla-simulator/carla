@@ -31,6 +31,7 @@ nav:
   - 'Python API': 'python_api.md'  
   - 'C++ reference': 'ref_cpp.md'
   - 'Blueprint library': 'bp_library.md'  
+  - 'Vehicle catalogue': 'catalogue_vehicles.md'
   - 'Tutorials': 'tutorials.md'
   - 'Extended documentation': 'ext_docs.md'
 
