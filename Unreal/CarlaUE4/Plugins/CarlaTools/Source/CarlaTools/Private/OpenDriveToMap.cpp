@@ -145,7 +145,8 @@ void UOpenDriveToMap::CreateMap()
   FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
   FileDownloader->StartDownload();
 
-  ProceduralMeshesSpawned.Empty();
+  RoadType.Empty();
+  RoadMesh.Empty();
   MeshesToSpawn.Empty();
   ActorMeshList.Empty();
 }
@@ -242,8 +243,8 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
           true); // Create collision
       ActorMeshList.Add(TempActor);
 
-      ProceduralMeshesSpawned.Add(TPair<FString, UProceduralMeshComponent*>(LaneTypeToFString(PairMap.first),TempPMC));
-          
+      RoadType.Add(LaneTypeToFString(PairMap.first));
+      RoadMesh.Add(TempPMC);          
     }
   }
     
@@ -373,33 +374,50 @@ UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset( UProceduralMeshComponent* P
   return nullptr;
 }
 
-TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets(const TArray<TPair<FString, UProceduralMeshComponent*>>& Input )
+TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets()
 {
   double start = FPlatformTime::Seconds();
+  double end = FPlatformTime::Seconds();
 
   IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
   
   TArray<UStaticMesh*> StaticMeshes;
 
-  for (int i = 0; i < Input.Num(); ++i)
+  double BuildMeshDescriptionTime = 0.0f;
+  double PackgaesCreatingTime = 0.0f;
+  double MeshInitTime = 0.0f;
+  double MatAndCollInitTime = 0.0f;
+  double MeshBuildTime = 0.0f;
+  double PackSaveTime = 0.0f;
+
+
+  for (int i = 0; i < RoadMesh.Num(); ++i)
   {
-    FString MeshName = Input[i].Key + FString::FromInt(i);
-    FString PackageName = "/Game/CustomMaps/" + MapName + "/Static/" + Input[i].Key + "/" + MeshName;
+    FString MeshName = RoadType[i] + FString::FromInt(i);
+    FString PackageName = "/Game/CustomMaps/" + MapName + "/Static/" + RoadType[i] + "/" + MeshName;
 
     if (!PlatformFile.DirectoryExists(*PackageName))
     {
       PlatformFile.CreateDirectory(*PackageName);
     }
 
-    UProceduralMeshComponent* ProcMeshComp = Input[i].Value;
+    UProceduralMeshComponent* ProcMeshComp = RoadMesh[i];
+    start = FPlatformTime::Seconds();
     FMeshDescription MeshDescription = BuildMeshDescription(ProcMeshComp);
-
+    end = FPlatformTime::Seconds();
+    BuildMeshDescriptionTime += end - start;
     // If we got some valid data.
     if (MeshDescription.Polygons().Num() > 0)
     {
+      start = FPlatformTime::Seconds();
       // Then find/create it.
       UPackage* Package = CreatePackage(*PackageName);
       check(Package);
+      end = FPlatformTime::Seconds();
+      PackgaesCreatingTime += end - start;
+
+      start = FPlatformTime::Seconds();
+
       // Create StaticMesh object
       UStaticMesh* CurrentStaticMesh = NewObject<UStaticMesh>(Package, *MeshName, RF_Public | RF_Standalone);
       CurrentStaticMesh->InitResources();
@@ -418,6 +436,10 @@ TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets(const TArray<TPair<
       SrcModel.BuildSettings.DstLightmapIndex = 1;
       CurrentStaticMesh->CreateMeshDescription(0, MoveTemp(MeshDescription));
       CurrentStaticMesh->CommitMeshDescription(0);
+      
+      end = FPlatformTime::Seconds();
+      MeshInitTime += end - start;
+      start = FPlatformTime::Seconds();
 
       //// SIMPLE COLLISION
       if (!ProcMeshComp->bUseComplexAsSimpleCollision)
@@ -447,23 +469,39 @@ TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets(const TArray<TPair<
       {
         CurrentStaticMesh->StaticMaterials.Add(FStaticMaterial(Material));
       }
-      //Set the Imported version before calling the build
-      StaticMeshes[i]->ImportVersion = EImportStaticMeshVersion::LastVersion;
-      StaticMeshes[i]->Build(false);
-      StaticMeshes[i]->PostEditChange();
 
-      FString MeshName = *(Input[i].Key + FString::FromInt(i));
+      end = FPlatformTime::Seconds();
+      MatAndCollInitTime += end - start;
+      start = FPlatformTime::Seconds();
+      //Set the Imported version before calling the build
+      CurrentStaticMesh->ImportVersion = EImportStaticMeshVersion::LastVersion;
+      CurrentStaticMesh->Build(false);
+      CurrentStaticMesh->PostEditChange();
+
+      end = FPlatformTime::Seconds();
+      MeshBuildTime += end - start;
+      start = FPlatformTime::Seconds();
+
+      FString MeshName = *(RoadType[i] + FString::FromInt(i));
       // Notify asset registry of new asset
       FAssetRegistryModule::AssetCreated(CurrentStaticMesh);
       UPackage::SavePackage(Package, CurrentStaticMesh, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *MeshName, GError, nullptr, true, true, SAVE_NoError);
     
+      end = FPlatformTime::Seconds();
+      PackSaveTime += end - start;
+
+
       StaticMeshes.Add( CurrentStaticMesh );
+      i++;
     }
    
   }
-  double end = FPlatformTime::Seconds();
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets SAVE ASSETS code executed in %f seconds. "), end - start);
-
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in BuildMeshDescriptionTime %f. Time per mesh %f"), BuildMeshDescriptionTime, BuildMeshDescriptionTime/ RoadMesh.Num());
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in BuildMeshDescriptionTime %f. Time per mesh %f"), PackgaesCreatingTime, PackgaesCreatingTime / RoadMesh.Num());
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in BuildMeshDescriptionTime %f. Time per mesh %f"), MeshInitTime, MeshInitTime / RoadMesh.Num());
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in BuildMeshDescriptionTime %f. Time per mesh %f"), MatAndCollInitTime, MatAndCollInitTime / RoadMesh.Num());
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in BuildMeshDescriptionTime %f. Time per mesh %f"), MeshBuildTime, MeshBuildTime / RoadMesh.Num());
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in BuildMeshDescriptionTime %f. Time per mesh %f"), PackSaveTime, PackSaveTime / RoadMesh.Num());
   return StaticMeshes;
 }
 
@@ -471,7 +509,7 @@ void UOpenDriveToMap::SaveMap()
 {
   double start = FPlatformTime::Seconds();
 
-  MeshesToSpawn = CreateStaticMeshAssets(ProceduralMeshesSpawned);
+  MeshesToSpawn = CreateStaticMeshAssets();
 
   double end = FPlatformTime::Seconds();
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" Meshes created static mesh code executed in %f seconds."), end - start);

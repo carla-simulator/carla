@@ -68,7 +68,7 @@ private:
   carla::rpc::OpendriveGenerationParameters opg_parameters;
 
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
-  TArray<UStaticMesh*> CreateStaticMeshAssets(const TArray<TPair<FString, UProceduralMeshComponent*>>& Input);
+  TArray<UStaticMesh*> CreateStaticMeshAssets();
   
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
@@ -76,6 +76,8 @@ private:
   TArray<AActor*> ActorMeshList;
   UPROPERTY()
   TArray<UStaticMesh*> MeshesToSpawn;
-
-  TArray<TPair<FString, class UProceduralMeshComponent*>> ProceduralMeshesSpawned;
+  UPROPERTY()
+  TArray<FString> RoadType;
+  UPROPERTY()
+  TArray<UProceduralMeshComponent*> RoadMesh;
 };
