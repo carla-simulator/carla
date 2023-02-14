@@ -35,22 +35,21 @@ vehicle.apply_control(control)
 
 --->
 
-
 # Vehicle catalogue
 
 ## Generation 2
 
 * __Car__
-	* [__Dodge__ - Police Charger 2020](#dodge-police-charger-2020)
 	* [__Dodge__ - Charger 2020](#dodge-charger-2020)
+	* [__Dodge__ - Police Charger 2020](#dodge-police-charger-2020)
 	* [__Ford__ - Crown (taxi)](#ford-crown-taxi)
 	* [__Lincoln__ - MKZ 2020](#lincoln-mkz-2020)
 	* [__Mercedes__ - Coupe 2020](#mercedes-coupe-2020)
 	* [__Mini__ - Cooper S 2021](#mini-cooper-s-2021)
 	* [__Nissan__ - Patrol 2021](#nissan-patrol-2021)
 * __Truck__
-	* [__Carla Motors__ - Six Wheel Truck](#carla-motors-six-wheel-truck)
-	* [__Carla Motors__ - Firetruck](#carla-motors-firetruck)
+	* [__CARLA Motors__ - European HGV (cab-over-engine type)](#carla-motors-european-hgv-cab-over-engine-type)
+	* [__CARLA Motors__ - Firetruck](#carla-motors-firetruck)
 	* [__Tesla__ - Cybertruck](#tesla-cybertruck)
 * __Van__
 	* [__Ford__ - Ambulance](#ford-ambulance)
@@ -64,8 +63,8 @@ vehicle.apply_control(control)
 
 * __Car__
 	* [__Audi__ - A2](#audi-a2)
-	* [__Audi__ - TT](#audi-tt)
 	* [__Audi__ - E-Tron](#audi-e-tron)
+	* [__Audi__ - TT](#audi-tt)
 	* [__BMW__ - Gran Tourer](#bmw-gran-tourer)
 	* [__Chevrolet__ - Impala](#chevrolet-impala)
 	* [__Citroen__ - C3](#citroen-c3)
@@ -79,10 +78,10 @@ vehicle.apply_control(control)
 	* [__Nissan__ - Micra](#nissan-micra)
 	* [__Nissan__ - Patrol](#nissan-patrol)
 	* [__Seat__ - Leon](#seat-leon)
-	* [__Tesla__ - Model3](#tesla-model3)
+	* [__Tesla__ - Model 3](#tesla-model-3)
 	* [__Toyota__ - Prius](#toyota-prius)
 * __Truck__
-	* [__Carla Motors__ - CarlaCola](#carla-motors-carlacola)
+	* [__CARLA Motors__ - CarlaCola](#carla-motors-carlacola)
 * __Van__
 	* [__Volkswagen__ - T2](#volkswagen-t2)
 * __Motorcycle__
@@ -98,7 +97,46 @@ vehicle.apply_control(control)
 
 ---
 
-## Car
+## Inspect the vehicles in the simulator
+
+To examine a vehicle from the catalog, use the following code, retrieve the blueprint ID from the vehicle's details below and paste it into the line `vehicle_bp = bp_lib.find('blueprint.id.goes_here')`:
+
+```py
+client = carla.Client('localhost', 2000)
+world = client.get_world()
+bp_lib = world.get_blueprint_library()
+spectator = world.get_spectator()
+
+# Set up the vehicle transform
+vehicle_loc = carla.Location(x=-46.9, y=20.0, z=0.2)
+vehicle_rot = carla.Rotation(pitch=0.0, yaw=142.0, roll=0.0)
+vehicle_trans = carla.Transform(vehicle_loc,vehicle_rot)
+
+# Paste the blueprint ID here:
+vehicle_bp = bp_lib.find('vehicle.lincoln.mkz_2020') 
+
+# Set up the view transform
+camera_loc = carla.Location(x=-48.7, y=24.8, z=1.7)
+camera_rot = carla.Rotation(pitch=-13.4, yaw=-75.7, roll=0.0)
+camera_trans = carla.Transform(camera_loc,camera_rot)
+
+# Spawn the vehicle
+vehicle = world.spawn_actor(vehicle_bp, vehicle_trans)
+
+# Move the spectator
+spectator.set_transform(camera_trans)
+
+```
+
+Don't forget to destroy the vehicle before you try and spawn another to avoid a collision:
+
+```py
+vehicle.destroy()
+```
+
+---
+
+## Cars
 ### Audi - A2
 
 ![audi_a2](../img/vehicles/catalogue/audi_a2.webp)
@@ -116,23 +154,6 @@ vehicle.apply_control(control)
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
-### Audi - TT
-
-![audi_tt](../img/vehicles/catalogue/audi_tt.webp)
-
-
-* __Manufacturer__: Audi
-* __Model__: TT
-* __Class__: Standard
-* __Generation__: 1
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.audi.tt<span>
-
-* __Base type__: car
-
-* __Has lights__: <span style="color:#f16c6c;">False<span>
-
-* __Has opening doors__: <span style="color:#f16c6c;">False<span>
-
 ### Audi - E-Tron
 
 ![audi_etron](../img/vehicles/catalogue/audi_etron.webp)
@@ -143,6 +164,25 @@ vehicle.apply_control(control)
 * __Class__: SUV
 * __Generation__: 1
 * __Blueprint ID__: <span style="color:#00a6ed;">vehicle.audi.etron<span>
+
+* __Base type__: car
+
+* __Special type__: electric
+
+* __Has lights__: <span style="color:#f16c6c;">False<span>
+
+* __Has opening doors__: <span style="color:#f16c6c;">False<span>
+
+### Audi - TT
+
+![audi_tt](../img/vehicles/catalogue/audi_tt.webp)
+
+
+* __Manufacturer__: Audi
+* __Model__: TT
+* __Class__: Standard
+* __Generation__: 1
+* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.audi.tt<span>
 
 * __Base type__: car
 
@@ -201,16 +241,16 @@ vehicle.apply_control(control)
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
-### Dodge - Police Charger 2020
+### Dodge - Charger 2020
 
-![dodge_charger_police_2020](../img/vehicles/catalogue/dodge_charger_police_2020.webp)
+![dodge_charger_2020](../img/vehicles/catalogue/dodge_charger_2020.webp)
 
 
 * __Manufacturer__: Dodge
-* __Model__: Police Charger 2020
+* __Model__: Charger 2020
 * __Class__: Standard
 * __Generation__: 2
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.dodge.charger_police_2020<span>
+* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.dodge.charger_2020<span>
 
 * __Base type__: car
 
@@ -231,22 +271,45 @@ vehicle.apply_control(control)
 
 * __Base type__: car
 
+* __Special type__: emergency
+
 * __Has lights__: <span style="color:#f16c6c;">False<span>
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
-### Dodge - Charger 2020
+### Dodge - Police Charger 2020
 
-![dodge_charger_2020](../img/vehicles/catalogue/dodge_charger_2020.webp)
+![dodge_charger_police_2020](../img/vehicles/catalogue/dodge_charger_police_2020.webp)
 
 
 * __Manufacturer__: Dodge
-* __Model__: Charger 2020
+* __Model__: Police Charger 2020
 * __Class__: Standard
 * __Generation__: 2
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.dodge.charger_2020<span>
+* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.dodge.charger_police_2020<span>
 
 * __Base type__: car
+
+* __Special type__: emergency
+
+* __Has lights__: <span style="color:#99c635;">True<span>
+
+* __Has opening doors__: <span style="color:#99c635;">True<span>
+
+### Ford - Crown (taxi)
+
+![ford_crown](../img/vehicles/catalogue/ford_crown.webp)
+
+
+* __Manufacturer__: Ford
+* __Model__: Crown (taxi)
+* __Class__: Standard
+* __Generation__: 2
+* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.ford.crown<span>
+
+* __Base type__: car
+
+* __Special type__: taxi
 
 * __Has lights__: <span style="color:#99c635;">True<span>
 
@@ -268,23 +331,6 @@ vehicle.apply_control(control)
 * __Has lights__: <span style="color:#f16c6c;">False<span>
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
-
-### Ford - Crown (taxi)
-
-![ford_crown](../img/vehicles/catalogue/ford_crown.webp)
-
-
-* __Manufacturer__: Ford
-* __Model__: Crown (taxi)
-* __Class__: Standard
-* __Generation__: 2
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.ford.crown<span>
-
-* __Base type__: car
-
-* __Has lights__: <span style="color:#99c635;">True<span>
-
-* __Has opening doors__: <span style="color:#99c635;">True<span>
 
 ### Jeep - Wrangler Rubicon
 
@@ -337,23 +383,6 @@ vehicle.apply_control(control)
 
 * __Has opening doors__: <span style="color:#99c635;">True<span>
 
-### Mercedes - Coupe 2020
-
-![mercedes_coupe_2020](../img/vehicles/catalogue/mercedes_coupe_2020.webp)
-
-
-* __Manufacturer__: Mercedes
-* __Model__: Coupe 2020
-* __Class__: Standard
-* __Generation__: 2
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.mercedes.coupe_2020<span>
-
-* __Base type__: car
-
-* __Has lights__: <span style="color:#99c635;">True<span>
-
-* __Has opening doors__: <span style="color:#99c635;">True<span>
-
 ### Mercedes - Coupe
 
 ![mercedes_coupe](../img/vehicles/catalogue/mercedes_coupe.webp)
@@ -371,6 +400,23 @@ vehicle.apply_control(control)
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
+### Mercedes - Coupe 2020
+
+![mercedes_coupe_2020](../img/vehicles/catalogue/mercedes_coupe_2020.webp)
+
+
+* __Manufacturer__: Mercedes
+* __Model__: Coupe 2020
+* __Class__: Standard
+* __Generation__: 2
+* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.mercedes.coupe_2020<span>
+
+* __Base type__: car
+
+* __Has lights__: <span style="color:#99c635;">True<span>
+
+* __Has opening doors__: <span style="color:#99c635;">True<span>
+
 ### Micro - Microlino
 
 ![micro_microlino](../img/vehicles/catalogue/micro_microlino.webp)
@@ -383,6 +429,8 @@ vehicle.apply_control(control)
 * __Blueprint ID__: <span style="color:#00a6ed;">vehicle.micro.microlino<span>
 
 * __Base type__: car
+
+* __Special type__: electric
 
 * __Has lights__: <span style="color:#f16c6c;">False<span>
 
@@ -415,23 +463,6 @@ vehicle.apply_control(control)
 * __Class__: Standard
 * __Generation__: 2
 * __Blueprint ID__: <span style="color:#00a6ed;">vehicle.mini.cooper_s_2021<span>
-
-* __Base type__: car
-
-* __Has lights__: <span style="color:#99c635;">True<span>
-
-* __Has opening doors__: <span style="color:#99c635;">True<span>
-
-### Nissan - Patrol 2021
-
-![nissan_patrol_2021](../img/vehicles/catalogue/nissan_patrol_2021.webp)
-
-
-* __Manufacturer__: Nissan
-* __Model__: Patrol 2021
-* __Class__: SUV
-* __Generation__: 2
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.nissan.patrol_2021<span>
 
 * __Base type__: car
 
@@ -473,6 +504,23 @@ vehicle.apply_control(control)
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
+### Nissan - Patrol 2021
+
+![nissan_patrol_2021](../img/vehicles/catalogue/nissan_patrol_2021.webp)
+
+
+* __Manufacturer__: Nissan
+* __Model__: Patrol 2021
+* __Class__: SUV
+* __Generation__: 2
+* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.nissan.patrol_2021<span>
+
+* __Base type__: car
+
+* __Has lights__: <span style="color:#99c635;">True<span>
+
+* __Has opening doors__: <span style="color:#99c635;">True<span>
+
 ### Seat - Leon
 
 ![seat_leon](../img/vehicles/catalogue/seat_leon.webp)
@@ -490,18 +538,20 @@ vehicle.apply_control(control)
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
-### Tesla - Model3
+### Tesla - Model 3
 
 ![tesla_model3](../img/vehicles/catalogue/tesla_model3.webp)
 
 
 * __Manufacturer__: Tesla
-* __Model__: Model3
+* __Model__: Model 3
 * __Class__: Standard
 * __Generation__: 1
 * __Blueprint ID__: <span style="color:#00a6ed;">vehicle.tesla.model3<span>
 
 * __Base type__: car
+
+* __Special type__: electric
 
 * __Has lights__: <span style="color:#f16c6c;">False<span>
 
@@ -520,19 +570,21 @@ vehicle.apply_control(control)
 
 * __Base type__: car
 
+* __Special type__: electric
+
 * __Has lights__: <span style="color:#f16c6c;">False<span>
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
 ---
 
-## Truck
-### Carla Motors - CarlaCola
+## Trucks
+### CARLA Motors - CarlaCola
 
 ![carlamotors_carlacola](../img/vehicles/catalogue/carlamotors_carlacola.webp)
 
 
-* __Manufacturer__: Carla Motors
+* __Manufacturer__: CARLA Motors
 * __Model__: CarlaCola
 * __Class__: Truck
 * __Generation__: 1
@@ -544,16 +596,16 @@ vehicle.apply_control(control)
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
-### Carla Motors - Six Wheel Truck
+### CARLA Motors - European HGV (cab-over-engine type)
 
-![sixwheeltruck_sixwheeltruck](../img/vehicles/catalogue/sixwheeltruck_sixwheeltruck.webp)
+![carlamotors_european_hgv](../img/vehicles/catalogue/carlamotors_european_hgv.webp)
 
 
-* __Manufacturer__: Carla Motors
-* __Model__: Six Wheel Truck
+* __Manufacturer__: CARLA Motors
+* __Model__: European HGV (cab-over-engine type)
 * __Class__: Truck
 * __Generation__: 2
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.sixwheeltruck.sixwheeltruck<span>
+* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.carlamotors.european_hgv<span>
 
 * __Base type__: truck
 
@@ -561,18 +613,20 @@ vehicle.apply_control(control)
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
-### Carla Motors - Firetruck
+### CARLA Motors - Firetruck
 
 ![carlamotors_firetruck](../img/vehicles/catalogue/carlamotors_firetruck.webp)
 
 
-* __Manufacturer__: Carla Motors
+* __Manufacturer__: CARLA Motors
 * __Model__: Firetruck
 * __Class__: Truck
 * __Generation__: 2
 * __Blueprint ID__: <span style="color:#00a6ed;">vehicle.carlamotors.firetruck<span>
 
 * __Base type__: truck
+
+* __Special type__: emergency
 
 * __Has lights__: <span style="color:#99c635;">True<span>
 
@@ -591,13 +645,15 @@ vehicle.apply_control(control)
 
 * __Base type__: truck
 
+* __Special type__: electric
+
 * __Has lights__: <span style="color:#f16c6c;">False<span>
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
 ---
 
-## Van
+## Vans
 ### Ford - Ambulance
 
 ![ford_ambulance](../img/vehicles/catalogue/ford_ambulance.webp)
@@ -610,6 +666,8 @@ vehicle.apply_control(control)
 * __Blueprint ID__: <span style="color:#00a6ed;">vehicle.ford.ambulance<span>
 
 * __Base type__: van
+
+* __Special type__: emergency
 
 * __Has lights__: <span style="color:#99c635;">True<span>
 
@@ -625,23 +683,6 @@ vehicle.apply_control(control)
 * __Class__: Van
 * __Generation__: 2
 * __Blueprint ID__: <span style="color:#00a6ed;">vehicle.mercedes.sprinter<span>
-
-* __Base type__: van
-
-* __Has lights__: <span style="color:#99c635;">True<span>
-
-* __Has opening doors__: <span style="color:#99c635;">True<span>
-
-### Volkswagen - T2 2021
-
-![volkswagen_t2_2021](../img/vehicles/catalogue/volkswagen_t2_2021.webp)
-
-
-* __Manufacturer__: Volkswagen
-* __Model__: T2 2021
-* __Class__: Van
-* __Generation__: 2
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.volkswagen.t2_2021<span>
 
 * __Base type__: van
 
@@ -666,9 +707,26 @@ vehicle.apply_control(control)
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
+### Volkswagen - T2 2021
+
+![volkswagen_t2_2021](../img/vehicles/catalogue/volkswagen_t2_2021.webp)
+
+
+* __Manufacturer__: Volkswagen
+* __Model__: T2 2021
+* __Class__: Van
+* __Generation__: 2
+* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.volkswagen.t2_2021<span>
+
+* __Base type__: van
+
+* __Has lights__: <span style="color:#99c635;">True<span>
+
+* __Has opening doors__: <span style="color:#99c635;">True<span>
+
 ---
 
-## Bus
+## Buses
 ### Mitsubishi - Fusorosa
 
 ![mitsubishi_fusorosa](../img/vehicles/catalogue/mitsubishi_fusorosa.webp)
@@ -682,13 +740,13 @@ vehicle.apply_control(control)
 
 * __Base type__: bus
 
-* __Has lights__: <span style="color:#f16c6c;">False<span>
+* __Has lights__: <span style="color:#99c635;">True<span>
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
 ---
 
-## Motorcycle
+## Motorcycles
 ### Harley Davidson - Low Rider
 
 ![harley-davidson_low_rider](../img/vehicles/catalogue/harley-davidson_low_rider.webp)
@@ -759,7 +817,7 @@ vehicle.apply_control(control)
 
 ---
 
-## Bicycle
+## Bicycles
 ### BH - Crossbike
 
 ![bh_crossbike](../img/vehicles/catalogue/bh_crossbike.webp)
