@@ -11,6 +11,7 @@
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "Engine/Texture2D.h"
 #include "Containers/ResourceArray.h"
+#include "Containers/UnrealString.h"
 #include "Rendering/Texture2DResource.h"
 #include "RHI.h"
 #include "RHICommandList.h"
@@ -52,7 +53,6 @@ void UMapPreviewUserWidget::ConnectToSocket(FString DatabasePath, FString Styles
 
   // Send a message
   FString Message = "-C " + DatabasePath + " " + StylesheetPath + " " + FString::FromInt(Size);
-  //FString Message = "-C /home/aollero/Downloads/libosmcout/libosmscout-master/maps/madrid_downtown/madrid_big /home/aollero/Downloads/libosmcout/libosmscout-master/stylesheets/standard.oss 512";
   SendStr(Message);
   UE_LOG(LogTemp, Log, TEXT("Configuration Completed"));
 }
@@ -108,6 +108,23 @@ void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FStri
       );
     }
   }
+  RecvCornersLatLonCoords();
+}
+
+void UMapPreviewUserWidget::RecvCornersLatLonCoords()
+{
+  SendStr("-L");
+  uint8 TempBuffer[512];
+  int32 BytesReceived = 0;
+  bool bRecv = Socket->Recv(TempBuffer, 512, BytesReceived);
+  if(!bRecv)
+  {
+    UE_LOG(LogTemp, Error, TEXT("Error receiving LatLon message"));
+    return;
+  }
+  
+  FString CoordStr = FString(UTF8_TO_TCHAR((char*)TempBuffer));
+  UE_LOG(LogTemp, Log, TEXT("Received laton [%s] with size %d"), *CoordStr, CoordStr.Len());
 }
 
 void UMapPreviewUserWidget::Shutdown()
@@ -119,8 +136,8 @@ void UMapPreviewUserWidget::Shutdown()
 void UMapPreviewUserWidget::OpenServer()
 {
   
-  FPlatformProcess::CreateProc(
-      TEXT("/home/aollero/carla/osm-world-renderer/build/osm-world-renderer"), 
+  /*FPlatformProcess::CreateProc(
+      TEXT("/home/adas/carla/osm-world-renderer/build/osm-world-renderer"), 
       nullptr,  // Args
       true,     // if true process will have its own window
       false,     // if true it will be minimized
@@ -129,7 +146,7 @@ void UMapPreviewUserWidget::OpenServer()
       0,        // priority
       nullptr,  // directory to place after running the program
       nullptr   // redirection pipe
-  );
+  );*/
 
 }
 
