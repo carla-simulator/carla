@@ -1135,7 +1135,7 @@ namespace road {
     geom::MeshFactory mesh_factory(params);
     std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>> out_mesh_list;
     std::unordered_map<JuncId, geom::Mesh> junction_map;
-    
+
     float simplificationrate = params.simplification_percentage * 0.01f;
     for (auto &&pair : _data.GetRoads()) 
     {
@@ -1195,7 +1195,7 @@ namespace road {
         Simplify::simplify_mesh( (target_size * simplificationrate) );
 
         current_mesh->GetVertices().clear();
-        current_mesh->GetIndices().clear();
+        current_mesh->GetIndexes().clear();
         for (Simplify::Vertex& current_vertex : Simplify::vertices)
         {
           carla::geom::Vector3D v;
@@ -1208,13 +1208,11 @@ namespace road {
         for (int i = 0; i < Simplify::triangles.size(); ++i)
         {
           for (int j = 0; j < 3; ++j) {
-            current_mesh->GetIndices().push_back((Simplify::triangles[i].v[j]) + 1);
+            current_mesh->GetIndexes().push_back((Simplify::triangles[i].v[j]) + 1);
           }
         }
-
         Simplify::vertices.clear();
         Simplify::triangles.clear();
-        
       }
     }
 

@@ -23,9 +23,9 @@ UCLASS()
 class CARLATOOLS_API UOpenDriveToMap : public UUserWidget
 {
   GENERATED_BODY()
-  
+
 public:
-  
+
   UFUNCTION()
   void ConvertOSMInOpenDrive(); 
 
@@ -69,7 +69,7 @@ private:
 
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
   TArray<UStaticMesh*> CreateStaticMeshAssets();
-  
+
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
   UPROPERTY()

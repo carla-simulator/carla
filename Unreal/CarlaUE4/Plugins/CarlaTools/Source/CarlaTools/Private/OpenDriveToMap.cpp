@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "OpenDriveToMap.h"
 #include "Components/Button.h"
@@ -42,13 +42,13 @@ FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
     break;
   case carla::road::Lane::LaneType::Shoulder:
     return FString("Shoulder");
-    break;  
+    break;
   case carla::road::Lane::LaneType::Biking:
     return FString("Biking");
-    break;  
+    break;
   case carla::road::Lane::LaneType::Sidewalk:
     return FString("Sidewalk");
-    break;  
+    break;
   case carla::road::Lane::LaneType::Border:
     return FString("Border");
     break;
@@ -63,7 +63,7 @@ FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
     break;
   case carla::road::Lane::LaneType::Median:
     return FString("Median");
-    break;  
+    break;
   case carla::road::Lane::LaneType::Special1:
     return FString("Special1");
     break;
@@ -140,8 +140,7 @@ void UOpenDriveToMap::CreateMap()
     FileDownloader = NewObject<UCustomFileDownloader>();
   }
   FileDownloader->ResultFileName = MapName;
-  FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-105.0537,39.7001,-105.0247,39.7117";
-  // FileDownloader->Url = Url;
+  FileDownloader->Url = Url;
   FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
   FileDownloader->StartDownload();
 
@@ -247,36 +246,9 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       RoadMesh.Add(TempPMC);          
     }
   }
-    
+
   end = FPlatformTime::Seconds();
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Mesh spawnning and translation code executed in %f seconds."), end - start);
-
-  /*
-    if(!Parameters.enable_mesh_visibility)
-    {
-      for(AActor * actor : ActorMeshList)
-      {
-        actor->SetActorHiddenInGame(true);
-      }
-    }
-  */
-    // // Build collision data
-    // FTriMeshCollisionData CollisitonData;
-    // CollisitonData.bDeformableMesh = false;
-    // CollisitonData.bDisableActiveEdgePrecompute = false;
-    // CollisitonData.bFastCook = false;
-    // CollisitonData.bFlipNormals = false;
-    // CollisitonData.Indices = TriIndices;
-    // CollisitonData.Vertices = Vertices;
-
-    // RoadMesh->ContainsPhysicsTriMeshData(true);
-    // bool Success = RoadMesh->GetPhysicsTriMeshData(&CollisitonData, true);
-    // if (!Success)
-    // {
-    //   UE_LOG(LogCarla, Error, TEXT("The road collision mesh could not be generated!"));
-    // }
-
-  
 }
 
 void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Map>& CarlaMap )
@@ -289,7 +261,6 @@ void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Ma
     AVehicleSpawnPoint *Spawner = GetWorld()->SpawnActor<AVehicleSpawnPoint>();
     Spawner->SetActorRotation(Trans.GetRotation());
     Spawner->SetActorLocation(Trans.GetTranslation() + FVector(0.f, 0.f, SpawnersHeight));
-    //VehicleSpawners.Add(Spawner);
   }
 }
 
@@ -380,7 +351,7 @@ TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets()
   double end = FPlatformTime::Seconds();
 
   IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-  
+
   TArray<UStaticMesh*> StaticMeshes;
 
   double BuildMeshDescriptionTime = 0.0f;
@@ -436,7 +407,7 @@ TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets()
       SrcModel.BuildSettings.DstLightmapIndex = 1;
       CurrentStaticMesh->CreateMeshDescription(0, MoveTemp(MeshDescription));
       CurrentStaticMesh->CommitMeshDescription(0);
-      
+
       end = FPlatformTime::Seconds();
       MeshInitTime += end - start;
       start = FPlatformTime::Seconds();

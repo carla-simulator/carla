@@ -20,7 +20,7 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath)
     // We use the LoadFileToString to load the file into
     if(FFileHelper::LoadFileToString(FileContent, *FilePath, FFileHelper::EHashOptions::None))
     {
-      UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Text From File: %s"), *FilePath);  
+      UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Text From File: %s"), *FilePath);
     }
     else
     {
@@ -28,7 +28,7 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath)
     }
   }else{
     UE_LOG(LogCarla, Warning, TEXT("File: %s does not exist"), *FilePath);
-    return;  
+    return;
   }
 
   std::string OsmFile = std::string(TCHAR_TO_UTF8(*FileContent));
