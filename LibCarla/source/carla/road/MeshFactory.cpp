@@ -70,15 +70,15 @@ namespace geom {
     double s_current = s_start;
 
     std::vector<geom::Vector3D> vertices;
-    
+
     if (lane.IsStraight()) {
       // Mesh optimization: If the lane is straight just add vertices at the
       // begining and at the end of it
       const auto edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
       vertices.push_back(edges.first);
       vertices.push_back(edges.second);
-    } else 
-
+    } 
+    else 
     {
       // Iterate over the lane's 's' and store the vertices based on it's width
       do {
