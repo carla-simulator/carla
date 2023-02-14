@@ -43,8 +43,5 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void CloseServer();
-
-	UFUNCTION(BlueprintCallable)
-	bool CreateDatabaseFromOSM(const FString OsmFilePath, FString& DatabasePath);
 	
 };
