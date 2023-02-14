@@ -28,6 +28,7 @@ private:
   // Command Handlers
   void RenderMapCmd(std::vector<std::string> CmdArgs, uint8_t* OutMap);
   void ConfigMapCmd(std::vector<std::string> CmdArgs);
+  void SendLatLonCmd(std::vector<std::string> CmdArgs, int ConnectionSocket);
 
 
 public:

@@ -17,10 +17,13 @@ class CARLATOOLS_API UMapPreviewUserWidget : public UUserWidget
 private:
 	FSocket* Socket;
 
-	
+	double TopRightLat = 0.f;
+	double TopRightLon = 0.f;
+	double BottomLeftLat = 0.f;
+	double BottomLeftLon = 0.f;
 
 	bool SendStr(FString Msg);
-	//void PaintMapToTexture(TArray<);
+	void RecvCornersLatLonCoords();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

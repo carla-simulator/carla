@@ -25,7 +25,10 @@ public:
     inline const int GetImgSizeSqr()
     {
         return Size * Size;
-    }; 
+    };
+
+    osmscout::GeoCoord GetBottomLeftCoord();
+    osmscout::GeoCoord GetTopRightCoord();
 
 private:
     // Rastering

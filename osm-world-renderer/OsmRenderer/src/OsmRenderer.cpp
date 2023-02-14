@@ -112,6 +112,10 @@ void OsmRenderer::RunCmd(int ConnectionSocket, char* Cmd)
     std::cout << "└ Bye!" << std::endl;
     exit(EXIT_SUCCESS);
   }
+  else if(CmdType == "-L")
+  {
+    SendLatLonCmd(CmdVector, ConnectionSocket);
+  }
 }
 
 vector<string> OsmRenderer::SplitCmd (string s, string delimiter) {
@@ -155,5 +159,26 @@ void OsmRenderer::ConfigMapCmd(vector<string> CmdArgs)
   {
     std::cout << LOG_PRFX << "--> ERROR creating Drawer"  << std::endl;
     return;
+  }
+}
+
+void OsmRenderer::SendLatLonCmd(vector<string> CmdArgs, int ConnectionSocket)
+{
+  osmscout::GeoCoord TopRightCoord = Drawer->GetTopRightCoord();
+  osmscout::GeoCoord BottomLeftCoord = Drawer->GetBottomLeftCoord();
+  std::cout << LOG_PRFX << "TOP: " << TopRightCoord.GetLat() << " -- " << TopRightCoord.GetLon() << std::endl;
+  std::cout << LOG_PRFX << "BOTTOM: " << BottomLeftCoord.GetLat() << " -- " << BottomLeftCoord.GetLon() << std::endl;
+
+  string CoordsStr = to_string(TopRightCoord.GetLat()) + "&" + to_string(TopRightCoord.GetLon()) + 
+      "&" + to_string(BottomLeftCoord.GetLat()) + "&" + to_string(BottomLeftCoord.GetLon());
+
+  std::cout << LOG_PRFX << "Sending " << CoordsStr << std::endl;
+  if(send(ConnectionSocket, CoordsStr.c_str(), CoordsStr.size(), 0) < 0)
+  {
+    std::cerr << LOG_PRFX << " ERROR Sending Lat and Lon to client. " << std::endl;
+  }
+  else
+  {
+    std::cout << LOG_PRFX << " SUCCESS! Lat and Lon sent correctly!" << std::endl;
   }
 }
