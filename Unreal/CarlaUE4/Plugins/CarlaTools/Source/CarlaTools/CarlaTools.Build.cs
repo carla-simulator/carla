@@ -71,6 +71,7 @@ public class CarlaTools : ModuleRules
         "Sockets",
         "RHI",
         "RenderCore"
+        "HoudiniEngine"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
