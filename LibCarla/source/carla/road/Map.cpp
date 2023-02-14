@@ -1133,155 +1133,176 @@ namespace road {
   {
 
     geom::MeshFactory mesh_factory(params);
-    std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>> out_mesh_list;
+    std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> road_out_mesh_list;
+    std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> juntion_out_mesh_list;
+
     std::unordered_map<JuncId, geom::Mesh> junction_map;
+    std::thread juntction_thread([ this, &juntion_out_mesh_list, &params, &mesh_factory ] {
+      // Generate roads within junctions and smooth them
+      for (const auto& junc_pair : _data.GetJunctions()) {
+          const auto& junction = junc_pair.second;
+          std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
+          std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
+          for (const auto& connection_pair : junction.GetConnections()) {
+            const auto& connection = connection_pair.second;
+            const auto& road = _data.GetRoads().at(connection.connecting_road);
+            for (auto&& lane_section : road.GetLaneSections()) {
+              for (auto&& lane_pair : lane_section.GetLanes()) {
+                const auto& lane = lane_pair.second;
+                if (lane.GetType() != road::Lane::LaneType::Sidewalk) {
+                  lane_meshes.push_back(mesh_factory.Generate(lane));
+                }
+                else {
+                  sidewalk_lane_meshes.push_back(mesh_factory.Generate(lane));
+                }
+              }
+            }
+          }
+
+          if (params.smooth_junctions) {
+            std::unique_ptr<geom::Mesh> merged_mesh = mesh_factory.MergeAndSmooth(lane_meshes);
+            std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
+            for (auto& lane : sidewalk_lane_meshes) {
+              *sidewalk_mesh += *lane;
+            }
+
+            for (carla::geom::Vector3D& current_vertex : merged_mesh->GetVertices())
+            {
+              current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+            }
+            for (carla::geom::Vector3D& current_vertex : sidewalk_mesh->GetVertices())
+            {
+              current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+            }
+
+            juntion_out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(merged_mesh));
+            juntion_out_mesh_list[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
+          }
+          else {
+            std::unique_ptr<geom::Mesh> junction_mesh = std::make_unique<geom::Mesh>();
+            std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
+            for (auto& lane : lane_meshes) {
+              *junction_mesh += *lane;
+            }
+            for (auto& lane : sidewalk_lane_meshes) {
+              *sidewalk_mesh += *lane;
+            }
+
+            for (carla::geom::Vector3D& current_vertex : junction_mesh->GetVertices())
+            {
+              current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+            }
+            for (carla::geom::Vector3D& current_vertex : sidewalk_mesh->GetVertices())
+            {
+              current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+            }
+            juntion_out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(junction_mesh));
+            juntion_out_mesh_list[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
+          }
+        }
+    });
     
     float simplificationrate = params.simplification_percentage * 0.01f;
-    for (auto &&pair : _data.GetRoads()) 
+    for (auto&& pair : _data.GetRoads())
     {
-      const auto &road = pair.second;
+      const auto& road = pair.second;
       if (!road.IsJunction()) {
-        mesh_factory.GenerateAllOrderedWithMaxLen(road, out_mesh_list);
+        mesh_factory.GenerateAllOrderedWithMaxLen(road, road_out_mesh_list);
       }
     }
 
-    for (auto& current_mesh_vector : out_mesh_list)
-    {
-      if (current_mesh_vector.first != road::Lane::LaneType::Driving)
+    for (auto& current_mesh_vector : road_out_mesh_list)
       {
-        continue;
-      }
-
-      for (std::unique_ptr<geom::Mesh>& current_mesh : current_mesh_vector.second)
-      {
-
-        if (!current_mesh->IsValid())
+        if (current_mesh_vector.first != road::Lane::LaneType::Driving)
         {
           continue;
         }
 
-        for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
+        for (std::unique_ptr<geom::Mesh>& current_mesh : current_mesh_vector.second)
         {
-          current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-        }
 
-        for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
-        {
-          Simplify::Vertex v;
-          v.p.x = current_vertex.x;
-          v.p.y = current_vertex.y;
-          v.p.z = current_vertex.z;
-          Simplify::vertices.push_back(v);
-        }
-
-        for (int i = 0; i < current_mesh->GetIndexes().size() - 2; i += 3)
-        {
-          Simplify::Triangle t;
-          t.material = 0;
-          auto indices = current_mesh->GetIndexes();
-          t.v[0] = (indices[i]) - 1;
-          t.v[1] = (indices[i + 1]) - 1;
-          t.v[2] = (indices[i + 2]) - 1;
-
-          if (i >= current_mesh->GetIndexes().size()) {
-            std::cout << "Not right number of Indexes Index: " << i << " Indices size: " << current_mesh->GetIndexes().size() << std::endl;
+          if (!current_mesh->IsValid())
+          {
+            continue;
           }
 
-          Simplify::triangles.push_back(t);
-        }
-
-        // Reduce to the X% of the polys
-        float target_size = Simplify::triangles.size();
-        Simplify::simplify_mesh( (target_size * simplificationrate) );
-
-        current_mesh->GetVertices().clear();
-        current_mesh->GetIndices().clear();
-        for (Simplify::Vertex& current_vertex : Simplify::vertices)
-        {
-          carla::geom::Vector3D v;
-          v.x = current_vertex.p.x;
-          v.y = current_vertex.p.y;
-          v.z = current_vertex.p.z;
-          current_mesh->AddVertex(v);
-        }
-
-        for (int i = 0; i < Simplify::triangles.size(); ++i)
-        {
-          for (int j = 0; j < 3; ++j) {
-            current_mesh->GetIndices().push_back((Simplify::triangles[i].v[j]) + 1);
+          for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
+          {
+            current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
           }
-        }
 
-        Simplify::vertices.clear();
-        Simplify::triangles.clear();
-        
-      }
-    }
+          for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
+          {
+            Simplify::Vertex v;
+            v.p.x = current_vertex.x;
+            v.p.y = current_vertex.y;
+            v.p.z = current_vertex.z;
+            Simplify::vertices.push_back(v);
+          }
 
+          for (int i = 0; i < current_mesh->GetIndexes().size() - 2; i += 3)
+          {
+            Simplify::Triangle t;
+            t.material = 0;
+            auto indices = current_mesh->GetIndexes();
+            t.v[0] = (indices[i]) - 1;
+            t.v[1] = (indices[i + 1]) - 1;
+            t.v[2] = (indices[i + 2]) - 1;
 
-    // Generate roads within junctions and smooth them
-    for (const auto &junc_pair : _data.GetJunctions()) {
-      const auto &junction = junc_pair.second;
-      std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
-      std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
-      for(const auto &connection_pair : junction.GetConnections()) {
-        const auto &connection = connection_pair.second;
-        const auto &road = _data.GetRoads().at(connection.connecting_road);
-        for (auto &&lane_section : road.GetLaneSections()) {
-          for (auto &&lane_pair : lane_section.GetLanes()) {
-            const auto &lane = lane_pair.second;
-            if (lane.GetType() != road::Lane::LaneType::Sidewalk) {
-              lane_meshes.push_back(mesh_factory.Generate(lane));
-            } else {
-              sidewalk_lane_meshes.push_back(mesh_factory.Generate(lane));
+            if (i >= current_mesh->GetIndexes().size()) {
+              std::cout << "Not right number of Indexes Index: " << i << " Indices size: " << current_mesh->GetIndexes().size() << std::endl;
+            }
+
+            Simplify::triangles.push_back(t);
+          }
+
+          // Reduce to the X% of the polys
+          float target_size = Simplify::triangles.size();
+          Simplify::simplify_mesh((target_size * simplificationrate));
+
+          current_mesh->GetVertices().clear();
+          current_mesh->GetIndices().clear();
+          for (Simplify::Vertex& current_vertex : Simplify::vertices)
+          {
+            carla::geom::Vector3D v;
+            v.x = current_vertex.p.x;
+            v.y = current_vertex.p.y;
+            v.z = current_vertex.p.z;
+            current_mesh->AddVertex(v);
+          }
+
+          for (int i = 0; i < Simplify::triangles.size(); ++i)
+          {
+            for (int j = 0; j < 3; ++j) {
+              current_mesh->GetIndices().push_back((Simplify::triangles[i].v[j]) + 1);
             }
           }
+
+          Simplify::vertices.clear();
+          Simplify::triangles.clear();
+
         }
       }
+    
 
-      if(params.smooth_junctions) {
-        std::unique_ptr<geom::Mesh> merged_mesh = mesh_factory.MergeAndSmooth(lane_meshes);
-        std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
-        for(auto& lane : sidewalk_lane_meshes) {
-          *sidewalk_mesh += *lane;
-        }
+    juntction_thread.join();
 
-        for (carla::geom::Vector3D& current_vertex : merged_mesh->GetVertices())
-        {
-          current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-        }
-        for (carla::geom::Vector3D& current_vertex : sidewalk_mesh->GetVertices())
-        {
-          current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-        }
-
-        out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(merged_mesh));
-        out_mesh_list[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
-      } else {
-        std::unique_ptr<geom::Mesh> junction_mesh = std::make_unique<geom::Mesh>();
-        std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
-        for(auto& lane : lane_meshes) {
-          *junction_mesh += *lane;
-        }
-        for(auto& lane : sidewalk_lane_meshes) {
-          *sidewalk_mesh += *lane;
-        }
-
-        for (carla::geom::Vector3D& current_vertex : junction_mesh->GetVertices())
-        {
-          current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-        }
-        for (carla::geom::Vector3D& current_vertex : sidewalk_mesh->GetVertices())
-        {
-          current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-        }
-        out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(junction_mesh));
-        out_mesh_list[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
+    for (auto&& pair : juntion_out_mesh_list )
+    {
+      if( road_out_mesh_list.find(pair.first) != road_out_mesh_list.end() )
+      {
+        road_out_mesh_list[pair.first].insert( road_out_mesh_list[pair.first].end(),
+                                               std::make_move_iterator(pair.second.begin()),
+                                               std::make_move_iterator(pair.second.end()));
+      }
+      else 
+      {
+        road_out_mesh_list[pair.first] = std::move(pair.second);
       }
     }
-
-
-    return out_mesh_list;
+  //std::move(std::begin(juntion_out_mesh_list), std::end(juntion_out_mesh_list), std::back_inserter(road_out_mesh_list));
+  // road_out_mesh_list.insert(juntion_out_mesh_list.begin(), juntion_out_mesh_list.end());
+    return road_out_mesh_list;
   }
 
 
