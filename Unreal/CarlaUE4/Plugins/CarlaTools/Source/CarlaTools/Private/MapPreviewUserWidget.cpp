@@ -19,6 +19,9 @@
 
 #include "Containers/UnrealString.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
+#include "Misc/Paths.h"
+#include "GenericPlatform/GenericPlatformFile.h"
+#include "Unix/UnixPlatformProcess.h"
 
 void UMapPreviewUserWidget::CreateTexture()
 {
@@ -155,4 +158,69 @@ bool UMapPreviewUserWidget::SendStr(FString Msg)
     UE_LOG(LogTemp, Log, TEXT("Sent %d bytes"), BytesSent);
   }
   return bSent;
+}
+
+bool UMapPreviewUserWidget::CreateDatabaseFromOSM(const FString OsmFilePath, FString& DatabasePath)
+{
+  bool bDbCreated = false;
+
+  // TODO: Check extension and file existance
+  FString Path;
+  FString FileName;
+  FString Extension;
+  FPaths::Split(OsmFilePath, Path, FileName, Extension);
+
+  if(!FPaths::FileExists(OsmFilePath))
+  {
+    UE_LOG(LogTemp, Error, TEXT("OSM File does not exist."));
+    return false;
+  }
+
+  // TODO: Check if database exists - if true bDbCreated false, if false create database and bDbCreated true
+  // TODO: Check if diretory is empty - if empty ERROR
+  FString DatabaseLocation = FPaths::Combine(Path, FileName);
+  if(!FPaths::DirectoryExists(DatabaseLocation))
+  {
+    // TODO: Change Importer path
+    UE_LOG(LogTemp, Log, TEXT("Creating database at %s"), *DatabaseLocation);
+    FString FullArgs = "--typefile /home/aollero/Downloads/libosmcout/libosmscout-master/stylesheets/map.ost --destinationDirectory " +
+        DatabaseLocation + " " + OsmFilePath;
+
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+    PlatformFile.CreateDirectory(*DatabaseLocation);
+
+    FProcHandle ProcHandle = FPlatformProcess::CreateProc(
+        TEXT("/home/aollero/Downloads/libosmcout/libosmscout-master/build/Import/Import"), // URL
+        *FullArgs,  // Params
+        true,     // bLaunchDetached - if true process will have its own window
+        false,     // bLaunchHidden - if true it will be minimized
+        false,    // bLaunchReallyHidden - if true it will be hidden in task bar
+        nullptr,  // OutProcessID - filled with PID
+        0,        // PriorityModifier
+        nullptr,  // directory to place after running the program
+        nullptr   // redirection pipe
+    );
+    //FGenericPlatformProcess::WaitForProc(ProcHandle);
+    //ProcHandle.GetProcessInfo()->Wait();
+    int LoopSeconds = 0;
+    while(FGenericPlatformProcess::IsProcRunning(ProcHandle))
+    {
+      FGenericPlatformProcess::Sleep(1);
+      if(LoopSeconds++ > 20)
+      {
+        UE_LOG(LogTemp, Error, TEXT("Time elapsed"));
+        break;
+      }
+
+
+    }
+    bDbCreated = true;
+  }
+  else
+  {
+    UE_LOG(LogTemp, Log, TEXT("Using existing database: %s"), *DatabaseLocation);
+  }
+
+  DatabasePath = DatabaseLocation;
+  return bDbCreated;
 }
