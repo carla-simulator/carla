@@ -108,23 +108,26 @@ void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FStri
       );
     }
   }
-  RecvCornersLatLonCoords();
 }
 
-void UMapPreviewUserWidget::RecvCornersLatLonCoords()
+FString UMapPreviewUserWidget::RecvCornersLatLonCoords()
 {
   SendStr("-L");
-  uint8 TempBuffer[512];
+  uint8 TempBuffer[40];
   int32 BytesReceived = 0;
-  bool bRecv = Socket->Recv(TempBuffer, 512, BytesReceived);
-  if(!bRecv)
+  if(Socket->Wait(ESocketWaitConditions::WaitForRead, FTimespan::FromSeconds(5)))
   {
-    UE_LOG(LogTemp, Error, TEXT("Error receiving LatLon message"));
-    return;
+    bool bRecv = Socket->Recv(TempBuffer, 40, BytesReceived);
+    if(!bRecv)
+    {
+      UE_LOG(LogTemp, Error, TEXT("Error receiving LatLon message"));
+      return "";
+    }
+    
+    FString CoordStr = FString(UTF8_TO_TCHAR((char*)TempBuffer));
+    return CoordStr;
   }
-  
-  FString CoordStr = FString(UTF8_TO_TCHAR((char*)TempBuffer));
-  UE_LOG(LogTemp, Log, TEXT("Received laton [%s] with size %d"), *CoordStr, CoordStr.Len());
+  return "";
 }
 
 void UMapPreviewUserWidget::Shutdown()
@@ -175,4 +178,20 @@ bool UMapPreviewUserWidget::SendStr(FString Msg)
     UE_LOG(LogTemp, Log, TEXT("Sent %d bytes"), BytesSent);
   }
   return bSent;
+}
+
+void UMapPreviewUserWidget::UpdateLatLonCoordProperties()
+{
+  FString CoordStr = RecvCornersLatLonCoords();
+  UE_LOG(LogTemp, Log, TEXT("Received laton [%s] with size %d"), *CoordStr, CoordStr.Len());
+
+  TArray<FString> CoordsArray;
+  CoordStr.ParseIntoArray(CoordsArray, TEXT("&"), true);
+
+  check(CoordsArray.Num() == 4);
+
+  TopRightLat = FCString::Atof(*CoordsArray[0]);
+  TopRightLon = FCString::Atof(*CoordsArray[1]);
+  BottomLeftLat = FCString::Atof(*CoordsArray[2]);
+  BottomLeftLon = FCString::Atof(*CoordsArray[3]);
 }
