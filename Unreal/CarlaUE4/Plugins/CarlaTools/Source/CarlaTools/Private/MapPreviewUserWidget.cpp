@@ -113,11 +113,11 @@ void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FStri
 FString UMapPreviewUserWidget::RecvCornersLatLonCoords()
 {
   SendStr("-L");
-  uint8 TempBuffer[512];
+  uint8 TempBuffer[40];
   int32 BytesReceived = 0;
   if(Socket->Wait(ESocketWaitConditions::WaitForRead, FTimespan::FromSeconds(5)))
   {
-    bool bRecv = Socket->Recv(TempBuffer, 512, BytesReceived);
+    bool bRecv = Socket->Recv(TempBuffer, 40, BytesReceived);
     if(!bRecv)
     {
       UE_LOG(LogTemp, Error, TEXT("Error receiving LatLon message"));

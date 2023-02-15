@@ -170,9 +170,9 @@ void OsmRenderer::SendLatLonCmd(vector<string> CmdArgs, int ConnectionSocket)
   std::cout << LOG_PRFX << "BOTTOM: " << BottomLeftCoord.GetLat() << " -- " << BottomLeftCoord.GetLon() << std::endl;
 
   string CoordsStr = to_string(TopRightCoord.GetLat()) + "&" + to_string(TopRightCoord.GetLon()) + 
-      "&" + to_string(BottomLeftCoord.GetLat()) + "&" + to_string(BottomLeftCoord.GetLon());
+      "&" + to_string(BottomLeftCoord.GetLat()) + "&" + to_string(BottomLeftCoord.GetLon()) + "&";
 
-  std::cout << LOG_PRFX << "Sending " << CoordsStr << std::endl;
+  std::cout << LOG_PRFX << "Sending [" << CoordsStr << "] Size: " << CoordsStr.size() << std::endl;
   if(send(ConnectionSocket, CoordsStr.c_str(), CoordsStr.size(), 0) < 0)
   {
     std::cerr << LOG_PRFX << " ERROR Sending Lat and Lon to client. " << std::endl;
