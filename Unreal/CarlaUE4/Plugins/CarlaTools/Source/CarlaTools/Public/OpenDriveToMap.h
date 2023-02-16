@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "ProceduralMeshComponent.h"
+#include "Math/Vector2D.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <boost/optional.hpp>
@@ -43,6 +44,9 @@ public:
 
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   FString Url;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  FVector2D OriginGeoCoordinates;
 
 protected:
   virtual void NativeConstruct() override;

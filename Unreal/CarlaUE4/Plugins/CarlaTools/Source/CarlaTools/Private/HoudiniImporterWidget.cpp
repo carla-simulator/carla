@@ -123,10 +123,6 @@ bool UHoudiniImporterWidget::GetNumberOfClusters(
       UE_LOG(LogCarlaTools, Log, TEXT("found of substr at %d"), Index);
       FString NumClusterString = ObjectName.Mid(Index+2, ObjectName.Len());
       OutNumClusters = FCString::Atoi(*NumClusterString);
-      if(OutNumClusters == 0)
-      {
-        continue;
-      }
       return true;
     }
   }

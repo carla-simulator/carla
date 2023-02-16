@@ -70,7 +70,7 @@ public class CarlaTools : ModuleRules
         "Networking",
         "Sockets",
         "RHI",
-        "RenderCore"
+        "RenderCore",
         "HoudiniEngine"
 				// ... add private dependencies that you statically link with here ...	
 			}
