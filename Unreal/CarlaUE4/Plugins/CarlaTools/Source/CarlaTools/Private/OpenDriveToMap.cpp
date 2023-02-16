@@ -104,7 +104,7 @@ FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
 
 void UOpenDriveToMap::ConvertOSMInOpenDrive()
 {
-  FilePath = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/" + MapName + ".osm";
+  FilePath = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/OpenDrive/" + MapName + ".osm";
   FileDownloader->ConvertOSMInOpenDrive( FilePath );
   FilePath.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);
   FilePath += ".xodr";
@@ -140,8 +140,8 @@ void UOpenDriveToMap::CreateMap()
     FileDownloader = NewObject<UCustomFileDownloader>();
   }
   FileDownloader->ResultFileName = MapName;
-  FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-105.0537,39.7001,-105.0247,39.7117";
-  // FileDownloader->Url = Url;
+  //FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-105.0537,39.7001,-105.0247,39.7117";
+  FileDownloader->Url = Url;
   FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
   FileDownloader->StartDownload();
 
@@ -231,6 +231,21 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       TempPMC->bUseComplexAsSimpleCollision = true;
       TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
+      FVector MeshCentroid = FVector(0,0,0);
+      for( auto Vertex : Mesh->GetVertices() )
+      {
+        MeshCentroid += Vertex.ToFVector();
+      }
+
+      MeshCentroid /= Mesh->GetVertices().size();
+
+      for( auto& Vertex : Mesh->GetVertices() )
+      {
+       Vertex.x -= MeshCentroid.X;
+       Vertex.y -= MeshCentroid.Y;
+       Vertex.z -= MeshCentroid.Z;
+      }
+
       const FProceduralCustomMesh MeshData = *Mesh;
       TempPMC->CreateMeshSection_LinearColor(
           0,
@@ -241,6 +256,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
           TArray<FLinearColor>(), // VertexColor
           TArray<FProcMeshTangent>(), // Tangents
           true); // Create collision
+      TempActor->SetActorLocation(MeshCentroid * 100);
       ActorMeshList.Add(TempActor);
 
       RoadType.Add(LaneTypeToFString(PairMap.first));

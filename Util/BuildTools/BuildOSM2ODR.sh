@@ -109,8 +109,8 @@ if ${BUILD_OSM2ODR} ; then
   cd ${OSM2ODR_SERVER_BUILD_FOLDER}
 
   LLVM_BASENAME=llvm-8.0
-  LLVM_INCLUDE=${CARLA_BUILD_FOLDER}/${LLVM_BASENAME}-install/include/c++/v1
-  LLVM_LIBPATH=${CARLA_BUILD_FOLDER}/${LLVM_BASENAME}-install/lib
+  LLVM_INCLUDE="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
+  LLVM_LIBPATH="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
   
   echo $LLVM_INCLUDE
   echo $LLVM_LIBPATH
