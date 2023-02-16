@@ -17,14 +17,21 @@ class CARLATOOLS_API UMapPreviewUserWidget : public UUserWidget
 private:
 	FSocket* Socket;
 
-	
-
 	bool SendStr(FString Msg);
-	//void PaintMapToTexture(TArray<);
+	FString RecvCornersLatLonCoords();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UTexture2D* MapTexture;
+
+	UPROPERTY(BlueprintReadOnly)
+	float TopRightLat = 0.f;
+	UPROPERTY(BlueprintReadOnly)
+	float TopRightLon = 0.f;
+	UPROPERTY(BlueprintReadOnly)
+	float BottomLeftLat = 0.f;
+	UPROPERTY(BlueprintReadOnly)
+	float BottomLeftLon = 0.f;
 
 	UFUNCTION(BlueprintCallable)
 	void ConnectToSocket(FString DatabasePath, FString StylesheetPath, int Size);
@@ -43,5 +50,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void CloseServer();
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateLatLonCoordProperties();
 	
 };

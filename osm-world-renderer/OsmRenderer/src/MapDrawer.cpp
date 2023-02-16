@@ -54,6 +54,24 @@ void MapDrawer::Draw(std::uint8_t* OutMap, osmscout::GeoCoord Coords, double Zoo
   DrawMap(OutMap);
 }
 
+osmscout::GeoCoord MapDrawer::GetBottomLeftCoord()
+{
+  osmscout::GeoCoord PixelCoord;
+  if(Projection.PixelToGeo(0, Size-1, PixelCoord))
+    return PixelCoord;
+  else
+    return osmscout::GeoCoord(0,0);
+}
+
+osmscout::GeoCoord MapDrawer::GetTopRightCoord()
+{
+  osmscout::GeoCoord PixelCoord;
+  if(Projection.PixelToGeo(Size-1, 0, PixelCoord))
+    return PixelCoord;
+  else
+    return osmscout::GeoCoord(0,0);
+}
+
 void MapDrawer::LoadDatabaseData()
 {
   // Load Database

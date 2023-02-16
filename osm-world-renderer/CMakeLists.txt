@@ -1,17 +1,13 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(OsmMapRenderer)
 
-# Libosmscout Library
-#add_library(libosmscout SHARED PUBLIC)
-#set_target_properties(libosmscout PROPERTIES
-#    IMPORTED_LOCATION "/home/aollero/Downloads/libosmcout/libosmscout-master/installation/lib"
-#    INTERFACE_INCLUDE_DIRECTORIES "/home/aollero/Downloads/libosmcout/libosmscout-master/installation/include")
-include_directories(/home/aollero/Downloads/libosmcout/libosmscout-master/installation/include)
-link_directories(/home/aollero/Downloads/libosmcout/libosmscout-master/installation/lib)
+# Libosmscout and Luna SVG Library
+include_directories(ThirdParties/include)
+link_directories(ThirdParties/lib)
 
 # Luna SVG Library
-include_directories(/home/aollero/Downloads/lunasvg-master/installation/include)
-link_directories(/home/aollero/Downloads/lunasvg-master/installation/lib)
+#include_directories(ThirdParties/include)
+#link_directories(ThirdParties/lib)
 
 # Source Files
 add_library(OsmRenderer OsmRenderer/src/OsmRenderer.cpp)
