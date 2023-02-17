@@ -99,6 +99,9 @@ namespace client {
     /// Enable or disable physics simulation on this actor.
     void SetSimulatePhysics(bool enabled = true);
 
+    /// Enable or disable collisions on this actor.
+    void SetCollisions(bool enabled = true);
+
     /// Enable or disable gravity on this actor.
     void SetEnableGravity(bool enabled = true);
 

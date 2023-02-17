@@ -431,6 +431,10 @@ namespace detail {
       _client.SetActorSimulatePhysics(actor.GetId(), enabled);
     }
 
+    void SetActorCollisions(Actor &actor, bool enabled) {
+      _client.SetActorCollisions(actor.GetId(), enabled);
+    }
+
     void SetActorEnableGravity(Actor &actor, bool enabled) {
       _client.SetActorEnableGravity(actor.GetId(), enabled);
     }

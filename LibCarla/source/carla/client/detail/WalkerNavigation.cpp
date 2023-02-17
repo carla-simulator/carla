@@ -57,8 +57,24 @@ namespace detail {
         commands.emplace_back(Cmd::ApplyWalkerState{ handle.walker, trans, speed });
       }
     }
-
     _client.ApplyBatchSync(std::move(commands), false);
+    
+    // check if any agent has been killed
+    bool alive;
+    for (auto handle : *walkers) {
+      // get the agent state
+      if (_nav.IsWalkerAlive(handle.walker, alive)) {
+        if (!alive) {
+          _client.SetActorCollisions(handle.walker, true);
+          // remove from the crowd
+          _nav.RemoveAgent(handle.walker);
+          // destroy the controller
+          _client.DestroyActor(handle.controller);
+          // unregister from list
+          UnregisterWalker(handle.walker, handle.controller);
+        }
+      }
+    }
   }
 
   void WalkerNavigation::CheckIfWalkerExist(std::vector<WalkerHandle> walkers, const EpisodeState &state) {

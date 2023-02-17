@@ -236,6 +236,10 @@ namespace detail {
         rpc::ActorId actor,
         bool enabled);
 
+    void SetActorCollisions(
+        rpc::ActorId actor,
+        bool enabled);
+
     void SetActorEnableGravity(
         rpc::ActorId actor,
         bool enabled);

@@ -23,6 +23,9 @@ namespace client {
       auto nav = GetEpisode().Lock()->GetNavigation();
       if (nav != nullptr) {
         nav->AddWalker(walker->GetId(), walker->GetLocation());
+        // disable physics and collision of walker actor
+        GetEpisode().Lock()->SetActorSimulatePhysics(*walker, false);
+        GetEpisode().Lock()->SetActorCollisions(*walker, false);
       }
     }
   }
