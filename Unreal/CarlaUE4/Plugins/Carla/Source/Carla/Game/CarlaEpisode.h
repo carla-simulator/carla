@@ -350,6 +350,8 @@ private:
 
   bool SetActorSimulatePhysics(FCarlaActor &CarlaActor, bool bEnabled);
 
+  bool SetActorCollisions(FCarlaActor &CarlaActor, bool bEnabled);
+
   void TickTimers(float DeltaSeconds)
   {
     ElapsedGameTime += DeltaSeconds;
