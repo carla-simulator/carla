@@ -94,6 +94,7 @@ public class Carla : ModuleRules
         "CoreUObject",
         "Engine",
         "Foliage",
+        "Core",
         "ImageWriteQueue",
         "Json",
         "JsonUtilities",

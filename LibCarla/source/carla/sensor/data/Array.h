@@ -20,7 +20,9 @@ namespace data {
 
   /// Base class for all the sensor data consisting of an array of items.
   template <typename T>
-  class Array : public SensorData {
+  class Array : public SensorData
+  {
+    using Super = SensorData;
   public:
 
     using value_type = T;
@@ -124,10 +126,11 @@ namespace data {
   protected:
 
     template <typename FuncT>
-    explicit Array(RawData &&data, FuncT get_offset)
-      : SensorData(data),
-        _data(std::move(data)),
-        _offset(get_offset(_data)) {
+    explicit Array(RawData &&data, FuncT&& get_offset)
+      : Super(data),
+        _offset(get_offset(_data)),
+        _data(std::move(data))
+    {
       DEBUG_ASSERT(_data.size() >= _offset);
       DEBUG_ASSERT((_data.size() - _offset) % sizeof(T) == 0u);
       DEBUG_ASSERT(begin() <= end());
@@ -142,9 +145,9 @@ namespace data {
 
   private:
 
+    const size_t _offset;
     RawData _data;
 
-    const size_t _offset;
   };
 
 } // namespace data

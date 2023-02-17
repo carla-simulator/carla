@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(libcarla)
 
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 option(LIBCARLA_BUILD_DEBUG "Build debug configuration" ON)
 option(LIBCARLA_BUILD_RELEASE "Build release configuration" ON)
 option(LIBCARLA_BUILD_TEST "Build unit tests" ON)

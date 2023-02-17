@@ -7,8 +7,8 @@
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "Runtime/Core/Public/HAL/LowLevelMemStats.h"
-// #include "Runtime/Core/Public/HAL/LowLevelMemTracker.h"
+#include "HighResScreenshot.h"
+#include "Runtime/ImageWriteQueue/Public/ImageWriteQueue.h"
 
 #include <mutex>
 #include <atomic>
@@ -448,162 +448,373 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
   return CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset;
 }
 
-void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
-  TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
-  // Equivalent to "CaptureComponent2D->CaptureScene" + (optional) GBuffer extraction.
-  CaptureSceneExtended();
-}
+using GBufferID = EGBufferTextureID;
 
-constexpr const TCHAR* GBufferNames[] =
-{
-  TEXT("SceneColor"),
-  TEXT("SceneDepth"),
-  TEXT("SceneStencil"),
-  TEXT("GBufferA"),
-  TEXT("GBufferB"),
-  TEXT("GBufferC"),
-  TEXT("GBufferD"),
-  TEXT("GBufferE"),
-  TEXT("GBufferF"),
-  TEXT("Velocity"),
-  TEXT("SSAO"),
-  TEXT("CustomDepth"),
-  TEXT("CustomStencil"),
-};
-
-template <EGBufferTextureID ID, typename T>
+template <GBufferID ID, typename T>
 static void CheckGBufferStream(uint64_t& Mask, T& GBufferStreams)
 {
-  auto& GBufferStream = std::get<(size_t)ID>(GBufferStreams);
-  GBufferStream.bIsUsed = GBufferStream.Stream.AreClientsListening();
-  if (GBufferStream.bIsUsed)
-      FGBufferRequest::MarkAsRequested(Mask, ID);
+    auto& GBufferStream = std::get<(size_t)ID>(GBufferStreams);
+    GBufferStream.bIsUsed = GBufferStream.Stream.AreClientsListening();
+    if (GBufferStream.bIsUsed)
+        FGBufferRequest::MarkAsRequested(Mask, ID);
 }
 
-static std::once_flag once_flag;
-
-DECLARE_LLM_MEMORY_STAT(TEXT("CARLA_LLM_TAG_00"), STAT_CARLA, STATGROUP_LLMFULL);
-
-static void InitTags()
+void ASceneCaptureSensor::EnqueueRenderSceneImmediate()
 {
-	LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_00, TEXT("CARLA_LLM_TAG_00"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag00"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_01, TEXT("CARLA_LLM_TAG_01"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag01"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_02, TEXT("CARLA_LLM_TAG_02"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag02"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_03, TEXT("CARLA_LLM_TAG_03"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag03"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_04, TEXT("CARLA_LLM_TAG_04"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag04"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_05, TEXT("CARLA_LLM_TAG_05"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag05"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_06, TEXT("CARLA_LLM_TAG_06"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag06"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_07, TEXT("CARLA_LLM_TAG_07"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag07"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_08, TEXT("CARLA_LLM_TAG_08"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag08"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_09, TEXT("CARLA_LLM_TAG_09"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag09"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_10, TEXT("CARLA_LLM_TAG_10"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag10"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_11, TEXT("CARLA_LLM_TAG_11"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag11"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_12, TEXT("CARLA_LLM_TAG_12"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag12"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_13, TEXT("CARLA_LLM_TAG_13"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag13"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_14, TEXT("CARLA_LLM_TAG_14"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag14"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_15, TEXT("CARLA_LLM_TAG_15"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag15"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_16, TEXT("CARLA_LLM_TAG_16"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag16"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_17, TEXT("CARLA_LLM_TAG_17"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag17"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_18, TEXT("CARLA_LLM_TAG_18"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag18"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_19, TEXT("CARLA_LLM_TAG_19"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag19"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_20, TEXT("CARLA_LLM_TAG_20"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag20"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_21, TEXT("CARLA_LLM_TAG_21"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag21"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_22, TEXT("CARLA_LLM_TAG_22"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag22"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_23, TEXT("CARLA_LLM_TAG_23"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag23"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_24, TEXT("CARLA_LLM_TAG_24"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag24"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_25, TEXT("CARLA_LLM_TAG_25"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag25"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_26, TEXT("CARLA_LLM_TAG_26"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag26"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_27, TEXT("CARLA_LLM_TAG_27"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag27"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_28, TEXT("CARLA_LLM_TAG_28"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag28"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_29, TEXT("CARLA_LLM_TAG_29"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag29"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_30, TEXT("CARLA_LLM_TAG_30"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag30"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_31, TEXT("CARLA_LLM_TAG_31"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag31"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_32, TEXT("CARLA_LLM_TAG_32"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag32"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_33, TEXT("CARLA_LLM_TAG_33"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag33"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_34, TEXT("CARLA_LLM_TAG_34"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag34"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_35, TEXT("CARLA_LLM_TAG_35"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag35"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_36, TEXT("CARLA_LLM_TAG_36"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag36"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_37, TEXT("CARLA_LLM_TAG_37"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag37"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_38, TEXT("CARLA_LLM_TAG_38"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag38"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_39, TEXT("CARLA_LLM_TAG_39"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag39"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_40, TEXT("CARLA_LLM_TAG_40"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag40"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_41, TEXT("CARLA_LLM_TAG_41"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag41"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_42, TEXT("CARLA_LLM_TAG_42"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag42"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_43, TEXT("CARLA_LLM_TAG_43"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag43"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_44, TEXT("CARLA_LLM_TAG_44"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag44"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_45, TEXT("CARLA_LLM_TAG_45"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag45"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_46, TEXT("CARLA_LLM_TAG_46"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag46"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_47, TEXT("CARLA_LLM_TAG_47"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag47"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_48, TEXT("CARLA_LLM_TAG_48"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag48"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_49, TEXT("CARLA_LLM_TAG_49"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag49"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_50, TEXT("CARLA_LLM_TAG_50"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag50"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_51, TEXT("CARLA_LLM_TAG_51"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag51"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_52, TEXT("CARLA_LLM_TAG_52"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag52"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_53, TEXT("CARLA_LLM_TAG_53"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag53"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_54, TEXT("CARLA_LLM_TAG_54"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag54"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_55, TEXT("CARLA_LLM_TAG_55"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag55"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_56, TEXT("CARLA_LLM_TAG_56"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag56"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_57, TEXT("CARLA_LLM_TAG_57"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag57"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_58, TEXT("CARLA_LLM_TAG_58"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag58"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_59, TEXT("CARLA_LLM_TAG_59"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag59"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_60, TEXT("CARLA_LLM_TAG_60"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag60"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_61, TEXT("CARLA_LLM_TAG_61"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag61"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_62, TEXT("CARLA_LLM_TAG_62"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag62"), NAME_None));
-    LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_63, TEXT("CARLA_LLM_TAG_63"), GET_STATFNAME(STAT_CARLA), TEXT("CARLATag63"), NAME_None));
-}
+  TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
 
-void ASceneCaptureSensor::CaptureSceneExtended()
-{
-    std::call_once(once_flag, InitTags);
-
-  decltype (FGBufferRequest::DesiredTexturesMask) Mask = 0;
-  CheckGBufferStream<EGBufferTextureID::SceneColor>(Mask, GBufferStreams);
-  CheckGBufferStream<EGBufferTextureID::SceneDepth>(Mask, GBufferStreams);
-  CheckGBufferStream<EGBufferTextureID::SceneStencil>(Mask, GBufferStreams);
-  CheckGBufferStream<EGBufferTextureID::GBufferA>(Mask, GBufferStreams);
-  CheckGBufferStream<EGBufferTextureID::GBufferB>(Mask, GBufferStreams);
-  CheckGBufferStream<EGBufferTextureID::GBufferC>(Mask, GBufferStreams);
-  CheckGBufferStream<EGBufferTextureID::GBufferD>(Mask, GBufferStreams);
-  CheckGBufferStream<EGBufferTextureID::GBufferE>(Mask, GBufferStreams);
-  CheckGBufferStream<EGBufferTextureID::GBufferF>(Mask, GBufferStreams);
-  CheckGBufferStream<EGBufferTextureID::Velocity>(Mask, GBufferStreams);
-  CheckGBufferStream<EGBufferTextureID::SSAO>(Mask, GBufferStreams);
-  CheckGBufferStream<EGBufferTextureID::CustomDepth>(Mask, GBufferStreams);
-  CheckGBufferStream<EGBufferTextureID::CustomStencil>(Mask, GBufferStreams);
+  uint64 Mask = 0;
+  CheckGBufferStream<GBufferID::SceneColor>(Mask, GBufferStreams);
+  CheckGBufferStream<GBufferID::SceneDepth>(Mask, GBufferStreams);
+  CheckGBufferStream<GBufferID::SceneStencil>(Mask, GBufferStreams);
+  CheckGBufferStream<GBufferID::GBufferA>(Mask, GBufferStreams);
+  CheckGBufferStream<GBufferID::GBufferB>(Mask, GBufferStreams);
+  CheckGBufferStream<GBufferID::GBufferC>(Mask, GBufferStreams);
+  CheckGBufferStream<GBufferID::GBufferD>(Mask, GBufferStreams);
+  CheckGBufferStream<GBufferID::GBufferE>(Mask, GBufferStreams);
+  CheckGBufferStream<GBufferID::GBufferF>(Mask, GBufferStreams);
+  CheckGBufferStream<GBufferID::Velocity>(Mask, GBufferStreams);
+  CheckGBufferStream<GBufferID::SSAO>(Mask, GBufferStreams);
+  CheckGBufferStream<GBufferID::CustomDepth>(Mask, GBufferStreams);
+  CheckGBufferStream<GBufferID::CustomStencil>(Mask, GBufferStreams);
 
   if (Mask == 0)
   {
-    // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
-    CaptureComponent2D->CaptureScene();
-    return;
+      // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
+      CaptureComponent2D->CaptureScene();
   }
-
-  TUniquePtr<FGBufferRequest> GBufferPtr;
-
+  else
   {
-      LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_00);
-      GBufferPtr = MakeUnique<FGBufferRequest>(Mask);
+      EnqueueRenderSceneImmediateWithGBuffers(Mask);
   }
-
-  GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
-
-  bool EnableTAA = false;
-  bool Prior = CaptureComponent2D->ShowFlags.TemporalAA;
-
-  CaptureComponent2D->ShowFlags.TemporalAA = EnableTAA;
-  CaptureComponent2D->CaptureSceneWithGBuffer(*GBufferPtr);
-  CaptureComponent2D->ShowFlags.TemporalAA = Prior;
-
-  FlushRenderingCommands();
-  AsyncTask(ENamedThreads::ActualRenderingThread, [this, GBuffer = MoveTemp(GBufferPtr)]() mutable
-  {
-    this->SendGBufferTextures(*GBuffer);
-  });
 }
 
-void ASceneCaptureSensor::SendGBufferTextures(FGBufferRequest& GBufferData)
+template <GBufferID TextureID, typename SensorT, typename StreamT>
+static void SendGBufferTexture(
+    SensorT& Sensor,
+    StreamT& GBufferStream,
+    TArrayView<uint8> TextureData,
+    FIntPoint TextureSize)
 {
-    SendGBufferTexturesInternal(*this, GBufferData);
+  static_assert ((size_t)TextureID < (size_t)FGBufferRequest::TextureCount, "Invalid GBuffer texture index.");
+
+  using GBufferStreamType = std::remove_reference_t<decltype(GBufferStream)>;
+
+  constexpr auto Index = (size_t)TextureID;
+
+  if (TextureData.Num() == 0)
+      return;
+
+  if (TextureID == GBufferID::SceneDepth || TextureID == GBufferID::CustomDepth)
+  {
+      auto path = FString::Printf(TEXT("Out/%s/Frame%u.exr"), GBufferTextureNames[(uint8)TextureID], FCarlaEngine::GetFrameCounter());
+
+      auto PixelData = MakeUnique<TImagePixelData<FLinearColor>>(TextureSize);
+      PixelData->Pixels.SetNum(TextureSize.X * TextureSize.Y);
+      (void)memcpy(PixelData->Pixels.GetData(), TextureData.GetData(), TextureData.Num());
+      TUniquePtr<FImageWriteTask> ImageTask = MakeUnique<FImageWriteTask>();
+      ImageTask->PixelData = MoveTemp(PixelData);
+      ImageTask->Filename = path;
+      ImageTask->Format = EImageFormat::EXR;
+      ImageTask->CompressionQuality = (int32)EImageCompressionQuality::Default;
+      ImageTask->bOverwriteFile = true;
+
+      FHighResScreenshotConfig& HighResScreenshotConfig = GetHighResScreenshotConfig();
+      HighResScreenshotConfig.ImageWriteQueue->Enqueue(MoveTemp(ImageTask));
+  }
+  else
+  {
+      LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_01);
+
+      auto Stream = GBufferStream.GetDataStream(Sensor);
+
+      {
+          LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_02);
+
+          auto Buffer = Stream.PopBufferFromPool();
+
+          {
+              LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_03);
+
+              Buffer.copy_from(
+                  carla::sensor::SensorRegistry::get<GBufferStreamType*>::type::header_offset,
+                  boost::asio::buffer(&TextureData[0], TextureData.Num()));
+
+              {
+                  LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_04);
+
+
+                  if (!Buffer.empty())
+                  {
+                      Stream.Send(
+                          GBufferStream,
+                          std::move(Buffer),
+                          TextureSize.X,
+                          TextureSize.Y,
+                          Sensor.GetFOVAngle());
+                  }
+              }
+          }
+      }
+  }
+}
+
+template <GBufferID TextureID, typename StreamT>
+static void ParseGBufferTexture(
+    TArray<uint8>& OutData,
+    FIntPoint& OutSize,
+    StreamT& GBufferStream,
+    FGBufferRequest& GBufferRequest)
+{
+    static_assert ((size_t)TextureID < (size_t)FGBufferRequest::TextureCount, "Invalid GBuffer texture index.");
+
+    using GBufferStreamType = std::remove_reference_t<decltype(GBufferStream)>;
+    using PixelType = typename GBufferStreamType::PixelType;
+
+    if (!GBufferRequest.IsRequested(TextureID))
+      return;
+
+    bool Success = GBufferRequest.WaitForTextureTransfer(TextureID);
+
+    if (Success)
+    {
+        FIntPoint SourceExtent;
+        void* PixelData;
+        int32 SourcePitch;
+
+        Success = GBufferRequest.MapTextureData(TextureID, PixelData, SourcePitch, SourceExtent);
+
+        if (Success)
+        {
+            OutSize = GBufferRequest.ViewRect.Size();
+            auto PixelCount = OutSize.X * OutSize.Y;
+            OutData.AddUninitialized(PixelCount * sizeof(PixelType));
+
+            FReadSurfaceDataFlags Flags = {};
+            Flags.SetLinearToGamma(true);
+
+            ImageUtil::DecodePixelsByFormat(
+                TArrayView<PixelType>(reinterpret_cast<PixelType*>(&OutData[0]), PixelCount),
+                TArrayView<uint8>((uint8*)PixelData, SourcePitch * SourceExtent.Y),
+                SourcePitch,
+                SourceExtent,
+                OutSize,
+                GBufferRequest.Readbacks[(size_t)TextureID]->GetFormat(),
+                Flags);
+
+            GBufferRequest.UnmapTextureData(TextureID);
+            GBufferRequest.ReleasePooledReadback(TextureID);
+        }
+    }
+
+    if (!Success)
+    {
+        OutSize = GBufferRequest.ViewRect.Size();
+        OutData.Add(OutSize.X * OutSize.Y * sizeof(PixelType));
+    }
+}
+
+constexpr GBufferID
+    SceneColor = GBufferID::SceneColor,
+    SceneDepth = GBufferID::SceneDepth,
+    SceneStencil = GBufferID::SceneStencil,
+    GBufferA = GBufferID::GBufferA,
+    GBufferB = GBufferID::GBufferB,
+    GBufferC = GBufferID::GBufferC,
+    GBufferD = GBufferID::GBufferD,
+    GBufferE = GBufferID::GBufferE,
+    GBufferF = GBufferID::GBufferF,
+    Velocity = GBufferID::Velocity,
+    SSAO = GBufferID::SSAO,
+    CustomDepth = GBufferID::CustomDepth,
+    CustomStencil = GBufferID::CustomStencil;
+
+void ASceneCaptureSensor::EnqueueRenderSceneImmediateWithGBuffers(uint64 RequestedMask)
+{
+    // Equivalent to "CaptureComponent2D->CaptureScene" + (optional) GBuffer extraction.
+
+    auto GBuffer = MakeUnique<FGBufferRequest>(RequestedMask);
+
+    GBuffer->OwningActor = CaptureComponent2D->GetViewOwner();
+
+    bool EnableTAA = false;
+    bool Prior = CaptureComponent2D->ShowFlags.TemporalAA;
+
+    CaptureComponent2D->ShowFlags.TemporalAA = EnableTAA;
+    
+    CaptureComponent2D->CaptureSceneWithGBuffer(*GBuffer);
+
+    CaptureComponent2D->ShowFlags.TemporalAA = Prior;
+
+    std::array<TArray<uint8>, FGBufferRequest::TextureCount> TextureData = {};
+    std::array<FIntPoint, FGBufferRequest::TextureCount> TextureSizes = {};
+
+    FlushRenderingCommands();
+
+    bool Completed = false;
+
+    ENQUEUE_RENDER_COMMAND(Command)([this, &Completed, &TextureData, &TextureSizes, GBuffer = MoveTemp(GBuffer)](FRHICommandList& RHICmdList)
+    {
+        LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_00);
+
+      ParseGBufferTexture<SceneColor>(
+        TextureData[(uint8)SceneColor],
+        TextureSizes[(uint8)SceneColor],
+        std::get<(uint8)SceneColor>(GBufferStreams),
+        *GBuffer);
+
+      ParseGBufferTexture<SceneDepth>(
+        TextureData[(uint8)SceneDepth],
+        TextureSizes[(uint8)SceneDepth],
+        std::get<(uint8)SceneDepth>(GBufferStreams),
+        *GBuffer);
+
+      ParseGBufferTexture<SceneStencil>(
+        TextureData[(uint8)SceneStencil],
+        TextureSizes[(uint8)SceneStencil],
+        std::get<(uint8)SceneStencil>(GBufferStreams),
+        *GBuffer);
+
+      ParseGBufferTexture<GBufferA>(
+        TextureData[(uint8)GBufferA],
+        TextureSizes[(uint8)GBufferA],
+        std::get<(uint8)GBufferA>(GBufferStreams),
+        *GBuffer);
+
+      ParseGBufferTexture<GBufferB>(
+        TextureData[(uint8)GBufferB],
+        TextureSizes[(uint8)GBufferB],
+        std::get<(uint8)GBufferB>(GBufferStreams),
+        *GBuffer);
+
+      ParseGBufferTexture<GBufferC>(
+        TextureData[(uint8)GBufferC],
+        TextureSizes[(uint8)GBufferC],
+        std::get<(uint8)GBufferC>(GBufferStreams),
+        *GBuffer);
+
+      ParseGBufferTexture<GBufferD>(
+        TextureData[(uint8)GBufferD],
+        TextureSizes[(uint8)GBufferD],
+        std::get<(uint8)GBufferD>(GBufferStreams),
+        *GBuffer);
+
+      ParseGBufferTexture<GBufferE>(
+        TextureData[(uint8)GBufferE],
+        TextureSizes[(uint8)GBufferE],
+        std::get<(uint8)GBufferE>(GBufferStreams),
+        *GBuffer);
+
+      ParseGBufferTexture<GBufferF>(
+        TextureData[(uint8)GBufferF],
+        TextureSizes[(uint8)GBufferF],
+        std::get<(uint8)GBufferF>(GBufferStreams),
+        *GBuffer);
+
+      ParseGBufferTexture<Velocity>(
+        TextureData[(uint8)Velocity],
+        TextureSizes[(uint8)Velocity],
+        std::get<(uint8)Velocity>(GBufferStreams),
+        *GBuffer);
+
+      ParseGBufferTexture<SSAO>(
+        TextureData[(uint8)SSAO],
+        TextureSizes[(uint8)SSAO],
+        std::get<(uint8)SSAO>(GBufferStreams),
+        *GBuffer);
+
+      ParseGBufferTexture<CustomDepth>(
+        TextureData[(uint8)CustomDepth],
+        TextureSizes[(uint8)CustomDepth],
+        std::get<(uint8)CustomDepth>(GBufferStreams),
+        *GBuffer);
+
+      ParseGBufferTexture<CustomStencil>(
+        TextureData[(uint8)CustomStencil],
+        TextureSizes[(uint8)CustomStencil],
+        std::get<(uint8)CustomStencil>(GBufferStreams),
+        *GBuffer);
+    });
+
+    FlushRenderingCommands();
+
+    SendGBufferTexture<SceneColor>(
+      *this,
+      std::get<(uint8)SceneColor>(GBufferStreams),
+      TextureData[(uint8)SceneColor],
+      TextureSizes[(uint8)SceneColor]);
+
+    SendGBufferTexture<SceneDepth>(
+      *this,
+      std::get<(uint8)SceneDepth>(GBufferStreams),
+      TextureData[(uint8)SceneDepth],
+      TextureSizes[(uint8)SceneDepth]);
+
+    SendGBufferTexture<SceneStencil>(
+      *this,
+      std::get<(uint8)SceneStencil>(GBufferStreams),
+      TextureData[(uint8)SceneStencil],
+      TextureSizes[(uint8)SceneStencil]);
+
+    SendGBufferTexture<GBufferA>(
+      *this,
+      std::get<(uint8)GBufferA>(GBufferStreams),
+      TextureData[(uint8)GBufferA],
+      TextureSizes[(uint8)GBufferA]);
+
+    SendGBufferTexture<GBufferB>(
+      *this,
+      std::get<(uint8)GBufferB>(GBufferStreams),
+      TextureData[(uint8)GBufferB],
+      TextureSizes[(uint8)GBufferB]);
+
+    SendGBufferTexture<GBufferC>(
+      *this,
+      std::get<(uint8)GBufferC>(GBufferStreams),
+      TextureData[(uint8)GBufferC],
+      TextureSizes[(uint8)GBufferC]);
+
+    SendGBufferTexture<GBufferD>(
+      *this,
+      std::get<(uint8)GBufferD>(GBufferStreams),
+      TextureData[(uint8)GBufferD],
+      TextureSizes[(uint8)GBufferD]);
+
+    SendGBufferTexture<GBufferE>(
+      *this,
+      std::get<(uint8)GBufferE>(GBufferStreams),
+      TextureData[(uint8)GBufferE],
+      TextureSizes[(uint8)GBufferE]);
+
+    SendGBufferTexture<GBufferF>(
+      *this,
+      std::get<(uint8)GBufferF>(GBufferStreams),
+      TextureData[(uint8)GBufferF],
+      TextureSizes[(uint8)GBufferF]);
+
+    SendGBufferTexture<Velocity>(
+      *this,
+      std::get<(uint8)Velocity>(GBufferStreams),
+      TextureData[(uint8)Velocity],
+      TextureSizes[(uint8)Velocity]);
+
+    SendGBufferTexture<SSAO>(
+      *this,
+      std::get<(uint8)SSAO>(GBufferStreams),
+      TextureData[(uint8)SSAO],
+      TextureSizes[(uint8)SSAO]);
+
+    SendGBufferTexture<CustomDepth>(
+      *this,
+      std::get<(uint8)CustomDepth>(GBufferStreams),
+      TextureData[(uint8)CustomDepth],
+      TextureSizes[(uint8)CustomDepth]);
+
+    SendGBufferTexture<CustomStencil>(
+      *this,
+      std::get<(uint8)CustomStencil>(GBufferStreams),
+      TextureData[(uint8)CustomStencil],
+      TextureSizes[(uint8)CustomStencil]);
 }
 
 void ASceneCaptureSensor::BeginPlay()

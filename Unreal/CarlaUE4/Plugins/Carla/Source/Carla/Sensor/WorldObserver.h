@@ -39,7 +39,7 @@ public:
     bool PendingLightUpdate);
 
   /// Dummy. Required for compatibility with other sensors only.
-  FTransform GetActorTransform() const
+  inline FTransform GetActorTransform() const
   {
     return {};
   }

@@ -67,10 +67,13 @@
 #include <carla/rpc/MaterialParameter.h>
 #include <compiler/enable-ue4-macros.h>
 
+#include <mutex>
+#include <type_traits>
 #include <vector>
 #include <atomic>
 #include <map>
 #include <tuple>
+#include <utility>
 
 template <typename T>
 using R = carla::rpc::Response<T>;
@@ -83,6 +86,16 @@ template <typename T, typename Other>
 static std::vector<T> MakeVectorFromTArray(const TArray<Other> &Array)
 {
   return {Array.GetData(), Array.GetData() + Array.Num()};
+}
+
+template <typename T>
+static auto GetGBufferToken(T& GBufferStreamState)
+{
+  auto &GBufferStream = GBufferStreamState;
+  const auto &Token = GBufferStream.GetToken();
+  return std::vector<unsigned char>(
+    std::begin(Token.data),
+    std::end(Token.data));
 }
 
 // =============================================================================
@@ -2055,7 +2068,9 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_gbuffer_token) << [this](const cr::ActorId ActorId, uint32_t GBufferId) -> R<std::vector<unsigned char>>
   {
     REQUIRE_CARLA_EPISODE();
+
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+
     if(!CarlaActor)
     {
       return RespondError(
@@ -2063,6 +2078,7 @@ void FCarlaServer::FPimpl::BindActions()
           ECarlaServerResponse::ActorNotFound,
           " Actor Id: " + FString::FromInt(ActorId));
     }
+
     if (CarlaActor->IsDormant())
     {
       return RespondError(
@@ -2070,7 +2086,8 @@ void FCarlaServer::FPimpl::BindActions()
           ECarlaServerResponse::FunctionNotAvailiableWhenDormant,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    ASceneCaptureSensor* Sensor = Cast<ASceneCaptureSensor>(CarlaActor->GetActor());
+
+    auto Sensor = Cast<ASceneCaptureSensor>(CarlaActor->GetActor());
     if (!Sensor)
     {
       return RespondError(
@@ -2081,74 +2098,24 @@ void FCarlaServer::FPimpl::BindActions()
 
     switch (GBufferId)
     {
-      case 0:
-      {
-        const auto &Token = std::get<0>(Sensor->GBufferStreams).GetToken();
-        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
-      }
-      case 1:
-      {
-          const auto& Token = std::get<1>(Sensor->GBufferStreams).GetToken();
-          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
-      }
-      case 2:
-      {
-          const auto& Token = std::get<2>(Sensor->GBufferStreams).GetToken();
-          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
-      }
-      case 3:
-      {
-          const auto& Token = std::get<3>(Sensor->GBufferStreams).GetToken();
-          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
-      }
-      case 4:
-      {
-          const auto& Token = std::get<4>(Sensor->GBufferStreams).GetToken();
-          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
-      }
-      case 5:
-      {
-          const auto& Token = std::get<5>(Sensor->GBufferStreams).GetToken();
-          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
-      }
-      case 6:
-      {
-          const auto& Token = std::get<6>(Sensor->GBufferStreams).GetToken();
-          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
-      }
-      case 7:
-      {
-          const auto& Token = std::get<7>(Sensor->GBufferStreams).GetToken();
-          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
-      }
-      case 8:
-      {
-          const auto& Token = std::get<8>(Sensor->GBufferStreams).GetToken();
-          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
-      }
-      case 9:
-      {
-          const auto& Token = std::get<9>(Sensor->GBufferStreams).GetToken();
-          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
-      }
-      case 10:
-      {
-          const auto& Token = std::get<0>(Sensor->GBufferStreams).GetToken();
-          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
-      }
-      case 11:
-      {
-          const auto& Token = std::get<1>(Sensor->GBufferStreams).GetToken();
-          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
-      }
-      case 12:
-      {
-          const auto& Token = std::get<2>(Sensor->GBufferStreams).GetToken();
-          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
-      }
+      case 0:   return GetGBufferToken(std::get<0>(Sensor->GBufferStreams));
+      case 1:   return GetGBufferToken(std::get<1>(Sensor->GBufferStreams));
+      case 2:   return GetGBufferToken(std::get<2>(Sensor->GBufferStreams));
+      case 3:   return GetGBufferToken(std::get<3>(Sensor->GBufferStreams));
+      case 4:   return GetGBufferToken(std::get<4>(Sensor->GBufferStreams));
+      case 5:   return GetGBufferToken(std::get<5>(Sensor->GBufferStreams));
+      case 6:   return GetGBufferToken(std::get<6>(Sensor->GBufferStreams));
+      case 7:   return GetGBufferToken(std::get<7>(Sensor->GBufferStreams));
+      case 8:   return GetGBufferToken(std::get<8>(Sensor->GBufferStreams));
+      case 9:   return GetGBufferToken(std::get<9>(Sensor->GBufferStreams));
+      case 10:  return GetGBufferToken(std::get<10>(Sensor->GBufferStreams));
+      case 11:  return GetGBufferToken(std::get<11>(Sensor->GBufferStreams));
+      case 12:  return GetGBufferToken(std::get<12>(Sensor->GBufferStreams));
       default:
+      {
         UE_LOG(LogCarla, Error, TEXT("Requested invalid GBuffer ID %u"), GBufferId);
         return {};
+      }
     }
   };
 

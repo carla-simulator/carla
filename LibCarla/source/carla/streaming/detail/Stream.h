@@ -54,9 +54,9 @@ namespace detail {
 
     /// Make a copy of @a data and flush it down the stream.
     template <typename T>
-    Stream &operator<<(const T &data) {
+    Stream &operator<<(T &&data) {
       auto buffer = MakeBuffer();
-      buffer.copy_from(data);
+      buffer.copy_from(std::forward<T>(data));
       Write(std::move(buffer));
       return *this;
     }

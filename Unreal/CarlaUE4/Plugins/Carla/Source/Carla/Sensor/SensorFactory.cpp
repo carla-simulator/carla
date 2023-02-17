@@ -126,6 +126,7 @@ FActorSpawnResult ASensorFactory::SpawnActor(
       this,
       nullptr,
       ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+
   if (Sensor == nullptr)
   {
     UE_LOG(LogCarla, Error, TEXT("ASensorFactory: spawn sensor failed."));
@@ -138,22 +139,26 @@ FActorSpawnResult ASensorFactory::SpawnActor(
     Sensor->SetEpisode(*Episode);
     Sensor->Set(Description);
     Sensor->SetDataStream(GameInstance->GetServer().OpenStream());
-    ASceneCaptureSensor * SceneCaptureSensor = Cast<ASceneCaptureSensor>(Sensor);
+
+    auto SceneCaptureSensor = Cast<ASceneCaptureSensor>(Sensor);
+
     if(SceneCaptureSensor)
     {
-      std::get<(size_t)EGBufferTextureID::SceneColor>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
-      std::get<(size_t)EGBufferTextureID::SceneDepth>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
-      std::get<(size_t)EGBufferTextureID::SceneStencil>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
-      std::get<(size_t)EGBufferTextureID::GBufferA>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
-      std::get<(size_t)EGBufferTextureID::GBufferB>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
-      std::get<(size_t)EGBufferTextureID::GBufferC>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
-      std::get<(size_t)EGBufferTextureID::GBufferD>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
-      std::get<(size_t)EGBufferTextureID::GBufferE>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
-      std::get<(size_t)EGBufferTextureID::GBufferF>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
-      std::get<(size_t)EGBufferTextureID::Velocity>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
-      std::get<(size_t)EGBufferTextureID::SSAO>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
-      std::get<(size_t)EGBufferTextureID::CustomDepth>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
-      std::get<(size_t)EGBufferTextureID::CustomStencil>(SceneCaptureSensor->GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      auto& GBufferStreams = SceneCaptureSensor->GBufferStreams;
+      // This should be thread-safe
+      std::get<(size_t)EGBufferTextureID::SceneColor>(GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::SceneDepth>(GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::SceneStencil>(GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::GBufferA>(GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::GBufferB>(GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::GBufferC>(GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::GBufferD>(GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::GBufferE>(GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::GBufferF>(GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::Velocity>(GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::SSAO>(GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::CustomDepth>(GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
+      std::get<(size_t)EGBufferTextureID::CustomStencil>(GBufferStreams).SetDataStream(GameInstance->GetServer().OpenStream());
     }
   }
   UGameplayStatics::FinishSpawningActor(Sensor, Transform);

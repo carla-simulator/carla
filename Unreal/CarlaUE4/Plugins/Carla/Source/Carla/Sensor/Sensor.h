@@ -16,6 +16,8 @@
 
 struct FActorDescription;
 
+class FGBufferRequest;
+
 /// Base class for sensors.
 UCLASS(Abstract, hidecategories = (Collision, Attachment, Actor))
 class CARLA_API ASensor : public AActor
@@ -63,7 +65,6 @@ public:
   // Small interface to notify sensors when no clients are listening
   virtual void OnLastClientDisconnected() {};
 
-  
   void PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds);
 
   UFUNCTION(BlueprintCallable)
