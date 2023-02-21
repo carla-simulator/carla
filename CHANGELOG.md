@@ -1,5 +1,6 @@
 ## Latest
 
+  * Updated Prerequisites.Dockerfile to use SSH keys instead of user/pass due to Github's password usage removal.
   * Fixed bug causing the TM's unstuck logic to incorrectly remove the vehicles in some situations.
   * Fixed the extra data in Directx textures, so we need to copy row by row on Windows to remove extra bytes on images
   * Restored gamma value to 2.2 instead of 2.4
