@@ -62,7 +62,8 @@ echo "Building osm-map-renderer"
 mkdir -p ${OSM_RENDERER_BUILD}
 cd ${OSM_RENDERER_BUILD}
 
-cmake -DCMAKE_CXX_FLAGS="-std=c++17 -g" ${OSM_RENDERER_SOURCE}
+cmake -DCMAKE_CXX_FLAGS="-std=c++17 -g -pthread -I${CARLA_BUILD_FOLDER}/boost-1.80.0-c10-install/include" \
+    ${OSM_RENDERER_SOURCE}
 make
 
 echo "SUCCESS! Finishing setting up renderer."
