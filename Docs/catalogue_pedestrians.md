@@ -39,11 +39,11 @@
 * __Adult pedestrian - 10__
 	* [__Variant__ 1](#adult-pedestrian-10-variant-1)
 	* [__Variant__ 2](#adult-pedestrian-10-variant-2)
+	* [__Variant__ 3](#adult-pedestrian-10-variant-3)
+	* [__Variant__ 4](#adult-pedestrian-10-variant-4)
 * __Adult pedestrian - 11__
 	* [__Variant__ 1](#adult-pedestrian-11-variant-1)
 	* [__Variant__ 2](#adult-pedestrian-11-variant-2)
-	* [__Variant__ 3](#adult-pedestrian-11-variant-3)
-	* [__Variant__ 4](#adult-pedestrian-11-variant-4)
 * __Adult pedestrian - 12__
 	* [__Variant__ 1](#adult-pedestrian-12-variant-1)
 	* [__Variant__ 2](#adult-pedestrian-12-variant-2)
@@ -272,12 +272,26 @@
 
 #### Adult pedestrian 10 - variant 1
 
+![pedestrian_0041](../img/catalogue/pedestrians/pedestrian_0041.webp)
+
+
+* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0041<span>
+
+#### Adult pedestrian 10 - variant 2
+
+![pedestrian_0040](../img/catalogue/pedestrians/pedestrian_0040.webp)
+
+
+* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0040<span>
+
+#### Adult pedestrian 10 - variant 3
+
 ![pedestrian_0033](../img/catalogue/pedestrians/pedestrian_0033.webp)
 
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0033<span>
 
-#### Adult pedestrian 10 - variant 2
+#### Adult pedestrian 10 - variant 4
 
 ![pedestrian_0031](../img/catalogue/pedestrians/pedestrian_0031.webp)
 
@@ -294,20 +308,6 @@
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0034<span>
 
 #### Adult pedestrian 11 - variant 2
-
-![pedestrian_0041](../img/catalogue/pedestrians/pedestrian_0041.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0041<span>
-
-#### Adult pedestrian 11 - variant 3
-
-![pedestrian_0040](../img/catalogue/pedestrians/pedestrian_0040.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0040<span>
-
-#### Adult pedestrian 11 - variant 4
 
 ![pedestrian_0038](../img/catalogue/pedestrians/pedestrian_0038.webp)
 
