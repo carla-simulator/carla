@@ -6,6 +6,7 @@ using UnrealBuildTool;
 
 public class CarlaTools : ModuleRules
 {
+  bool UsingHoudini = false;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
@@ -20,6 +21,22 @@ public class CarlaTools : ModuleRules
     if (IsWindows(Target))
     {
       bEnableExceptions = true;
+    }
+
+    // Read config about carsim
+    string CarlaToolsPluginPath = Path.GetFullPath( ModuleDirectory );
+    string ConfigDir =  Path.GetFullPath(Path.Combine(CarlaToolsPluginPath, "../../../../Config/"));
+    string OptionalModulesFile = Path.Combine(ConfigDir, "OptionalModules.ini");
+    string[] text = System.IO.File.ReadAllLines(OptionalModulesFile);
+    foreach (string line in text)
+    {
+      if (line.Contains("Houdini ON"))
+      {
+        Console.WriteLine("Enabling Houdini Plugin");
+        UsingHoudini = true;
+        PublicDefinitions.Add("WITH_HOUDINI");
+        PrivateDefinitions.Add("WITH_HOUDINI");
+      }
     }
 		
 		PublicIncludePaths.AddRange(
@@ -70,11 +87,18 @@ public class CarlaTools : ModuleRules
         "Networking",
         "Sockets",
         "RHI",
-        "RenderCore",
-        "HoudiniEngine"
+        "RenderCore"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
+    if(UsingHoudini)
+    {
+      PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+          "HoudiniEngine"
+        });
+    }
 		
 		
 		DynamicallyLoadedModuleNames.AddRange(
