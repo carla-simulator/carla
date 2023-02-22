@@ -6,6 +6,7 @@
   * Added API function to avoid replaying the spectator
     * `Client.set_replayer_ignore_spectator(bool)`
     * `start_replaying.py` using flag `--move-spectator`
+  * Fixed bug causing the `FPixelReader::SavePixelsToDisk(PixelData, FilePath)` function to crash due to pixel array not set correctly.
 
 ## CARLA 0.9.14
 

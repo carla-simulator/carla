@@ -104,6 +104,7 @@ TUniquePtr<TImagePixelData<FColor>> FPixelReader::DumpPixels(
   {
     return nullptr;
   }
+  PixelData->Pixels = Pixels;
   return PixelData;
 }
 
