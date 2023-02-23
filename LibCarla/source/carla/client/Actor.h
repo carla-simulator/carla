@@ -102,6 +102,9 @@ namespace client {
     /// Enable or disable collisions on this actor.
     void SetCollisions(bool enabled = true);
 
+    /// Set actor as dead and starts his life span
+    void SetActorDead();
+
     /// Enable or disable gravity on this actor.
     void SetEnableGravity(bool enabled = true);
 

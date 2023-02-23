@@ -352,6 +352,8 @@ private:
 
   bool SetActorCollisions(FCarlaActor &CarlaActor, bool bEnabled);
 
+  bool SetActorDead(FCarlaActor &CarlaActor);
+
   void TickTimers(float DeltaSeconds)
   {
     ElapsedGameTime += DeltaSeconds;

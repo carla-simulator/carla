@@ -416,6 +416,10 @@ namespace detail {
     _pimpl->CallAndWait<void>("set_actor_collisions", actor, enabled);
   }
 
+  void Client::SetActorDead(rpc::ActorId actor) {
+    _pimpl->AsyncCall<void>("set_actor_dead", actor);
+  }
+
   void Client::SetActorEnableGravity(rpc::ActorId actor, const bool enabled) {
     _pimpl->AsyncCall("set_actor_enable_gravity", actor, enabled);
   }

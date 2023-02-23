@@ -415,6 +415,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse SetActorDead()
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse FreezeTrafficLight(bool)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -609,6 +614,8 @@ public:
   virtual ECarlaServerResponse BlendPose(float Blend);
 
   virtual ECarlaServerResponse GetPoseFromAnimation();
+
+  virtual ECarlaServerResponse SetActorDead();
 };
 
 class FOtherActor : public FCarlaActor

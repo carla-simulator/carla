@@ -88,6 +88,10 @@ namespace client {
     GetEpisode().Lock()->SetActorCollisions(*this, enabled);
   }
 
+  void Actor::SetActorDead() {
+    GetEpisode().Lock()->SetActorDead(*this);
+  }
+
   void Actor::SetEnableGravity(const bool enabled) {
     GetEpisode().Lock()->SetActorEnableGravity(*this, enabled);
   }
