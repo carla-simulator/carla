@@ -55,7 +55,7 @@ namespace multigpu {
       static_assert(
           are_same<Buffer, Buffers...>::value,
           "This function only accepts arguments of type Buffer.");
-      return std::make_shared<const carla::streaming::detail::tcp::Message>(std::move(buffers)...);
+      return std::make_shared<const carla::streaming::detail::tcp::Message>(std::forward<Buffers>(buffers)...);
     }
 
     /// Writes some data to the socket.
@@ -70,7 +70,7 @@ namespace multigpu {
     /// Writes some data to the socket.
     template <typename... Buffers>
     void Write(Buffers &&... buffers) {
-      Write(MakeMessage(std::move(buffers)...));
+      Write(MakeMessage(std::forward<Buffers>(buffers)...));
     }
 
     /// Post a job to close the session.
@@ -101,8 +101,6 @@ namespace multigpu {
     Listener::callback_function_type_response _on_response;
 
     std::shared_ptr<BufferPool> _buffer_pool;
-
-    bool _is_writing = false;
 
   };
 

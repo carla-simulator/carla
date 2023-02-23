@@ -86,6 +86,7 @@ endif()
 file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/*.h"
     "${libcarla_source_path}/carla/Buffer.cpp"
+    "${libcarla_source_path}/carla/BufferPool.cpp"
     "${libcarla_source_path}/carla/Exception.cpp"
     "${libcarla_source_path}/carla/geom/*.cpp"
     "${libcarla_source_path}/carla/geom/*.h"

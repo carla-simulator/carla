@@ -34,11 +34,6 @@ namespace data {
     friend s11n::GBufferFloatSerializer;
     friend SerializerNormals;
 
-    explicit ImageTmpl(RawData &&data)
-      : Super(Serializer::header_offset, std::move(data)) {
-      DEBUG_ASSERT(GetWidth() * GetHeight() == Super::size());
-    }
-
   private:
 
     const auto &GetHeader() const {
@@ -48,6 +43,11 @@ namespace data {
   public:
 
     using pixel_type = PixelT;
+
+    explicit ImageTmpl(RawData &&data)
+      : Super(Serializer::header_offset, std::move(data)) {
+      DEBUG_ASSERT(GetWidth() * GetHeight() == Super::size());
+    }
 
     /// Get image width in pixels.
     auto GetWidth() const {

@@ -505,6 +505,7 @@ static void SendGBufferTexture(
   if (TextureData.Num() == 0)
       return;
 
+#if 0
   if (TextureID == GBufferID::SceneDepth || TextureID == GBufferID::CustomDepth)
   {
       auto path = FString::Printf(TEXT("Out/%s/Frame%u.exr"), GBufferTextureNames[(uint8)TextureID], FCarlaEngine::GetFrameCounter());
@@ -523,25 +524,33 @@ static void SendGBufferTexture(
       HighResScreenshotConfig.ImageWriteQueue->Enqueue(MoveTemp(ImageTask));
   }
   else
+#endif
   {
-      LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_01);
+
+#ifdef CARLA_ENABLE_LLM
+#define LLM_SCOPE_WRAPPER(Tag) LLM_SCOPE(Tag)
+#else
+#define LLM_SCOPE_WRAPPER(Tag)
+#endif
+
+      LLM_SCOPE_WRAPPER(ELLMTag::CARLA_LLM_TAG_01);
 
       auto Stream = GBufferStream.GetDataStream(Sensor);
 
       {
-          LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_02);
+          LLM_SCOPE_WRAPPER(ELLMTag::CARLA_LLM_TAG_02);
 
           auto Buffer = Stream.PopBufferFromPool();
 
           {
-              LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_03);
+              LLM_SCOPE_WRAPPER(ELLMTag::CARLA_LLM_TAG_03);
 
               Buffer.copy_from(
                   carla::sensor::SensorRegistry::get<GBufferStreamType*>::type::header_offset,
                   boost::asio::buffer(&TextureData[0], TextureData.Num()));
 
               {
-                  LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_04);
+                  LLM_SCOPE_WRAPPER(ELLMTag::CARLA_LLM_TAG_04);
 
 
                   if (!Buffer.empty())
@@ -655,8 +664,6 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediateWithGBuffers(uint64 Request
 
     ENQUEUE_RENDER_COMMAND(Command)([this, &Completed, &TextureData, &TextureSizes, GBuffer = MoveTemp(GBuffer)](FRHICommandList& RHICmdList)
     {
-        LLM_SCOPE(ELLMTag::CARLA_LLM_TAG_00);
-
       ParseGBufferTexture<SceneColor>(
         TextureData[(uint8)SceneColor],
         TextureSizes[(uint8)SceneColor],

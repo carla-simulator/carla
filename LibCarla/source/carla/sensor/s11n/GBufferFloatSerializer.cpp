@@ -13,8 +13,7 @@ namespace sensor {
 namespace s11n {
 
   SharedPtr<SensorData> GBufferFloatSerializer::Deserialize(RawData &&data) {
-    auto image = SharedPtr<data::FloatImage>(new data::FloatImage{std::move(data)});
-    return image;
+    return MakeShared<data::FloatImage>(std::move(data));
   }
 
 } // namespace s11n

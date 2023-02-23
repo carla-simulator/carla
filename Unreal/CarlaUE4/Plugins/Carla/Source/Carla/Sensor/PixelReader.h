@@ -81,7 +81,7 @@ public:
       const UTextureRenderTarget2D &RenderTarget,
       uint32 Offset,
       FRHICommandListImmediate &InRHICmdList,
-      FPixelReader::Payload FuncForSending);
+      FPixelReader::Payload&& FuncForSending);
 
 };
 

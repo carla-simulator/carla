@@ -62,7 +62,7 @@ namespace tcp {
       static_assert(
           are_same<Buffer, Buffers...>::value,
           "This function only accepts arguments of type Buffer.");
-      return std::make_shared<const Message>(std::move(buffers)...);
+      return std::make_shared<const Message>(std::forward<Buffers>(buffers)...);
     }
 
     /// Writes some data to the socket.
@@ -71,7 +71,7 @@ namespace tcp {
     /// Writes some data to the socket.
     template <typename... Buffers>
     void Write(Buffers &&... buffers) {
-      Write(MakeMessage(std::move(buffers)...));
+      Write(MakeMessage(std::forward<Buffers>(buffers)...));
     }
 
     /// Post a job to close the session.
@@ -101,7 +101,8 @@ namespace tcp {
 
     callback_function_type _on_closed;
 
-    bool _is_writing = false;
+    std::atomic_size_t _write_head;
+    std::atomic_size_t _write_tail;
   };
 
 } // namespace tcp

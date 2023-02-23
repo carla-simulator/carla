@@ -17,6 +17,7 @@
 #include <rpc/server.h>
 
 #include <future>
+#include <utility>
 
 namespace carla {
 namespace rpc {
@@ -31,8 +32,8 @@ namespace rpc {
   /// Use `AsyncRun` to start the worker threads, and use `SyncRunFor` to
   /// run a slice of work in the caller's thread.
   ///
-  /// Functions that are bind using `BindAsync` will run asynchronously in the
-  /// worker threads. Functions that are bind using `BindSync` will run within
+  /// Functions that are bound using `BindAsync` will run asynchronously in the
+  /// worker threads. Functions that bound bind using `BindSync` will run within
   /// `SyncRunFor` function.
   class Server {
   public:

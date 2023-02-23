@@ -11,11 +11,14 @@
 #include "Async/Async.h"
 #include "HighResScreenshot.h"
 #include "Runtime/ImageWriteQueue/Public/ImageWriteQueue.h"
-#include "HAL/LowLevelMemStats.h"
 
 // =============================================================================
 // -- FPixelReader -------------------------------------------------------------
 // =============================================================================
+
+#ifdef CARLA_ENABLE_LLM
+
+#include "HAL/LowLevelMemStats.h"
 
 DECLARE_LLM_MEMORY_STAT(TEXT("STAT_CARLA"), STAT_CARLA, STATGROUP_LLMFULL);
 
@@ -87,15 +90,19 @@ static void InitTags()
     LLM(FLowLevelMemTracker::Get().RegisterProjectTag((int32)ELLMTag::CARLA_LLM_TAG_63, TEXT("CARLA_LLM_TAG_63"), GET_STATFNAME(STAT_CARLA), NAME_None));
 }
 
+#endif
+
 void FPixelReader::WritePixelsToBuffer(
     const UTextureRenderTarget2D &RenderTarget,
     uint32 Offset,
     FRHICommandListImmediate &RHICmdList,
-    FPixelReader::Payload FuncForSending)
+    FPixelReader::Payload&& FuncForSending)
 {
+#ifdef CARLA_ENABLE_LLM
     static std::once_flag once_flag;
 
     std::call_once(once_flag, InitTags);
+#endif
 
   TRACE_CPUPROFILER_EVENT_SCOPE_STR("WritePixelsToBuffer");
   check(IsInRenderingThread());
@@ -111,16 +118,18 @@ void FPixelReader::WritePixelsToBuffer(
 
   FIntPoint BackBufferSize = Texture->GetSizeXY();
   EPixelFormat BackBufferPixelFormat = Texture->GetFormat();
+  
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("EnqueueCopy");
     BackBufferReadback->EnqueueCopy(RHICmdList, Texture);
   }
 
   // workaround to force RHI with Vulkan to refresh the fences state in the middle of frame
-    static thread_local auto QueryPool = RHICreateRenderQueryPool(RQT_AbsoluteTime);
+  static thread_local auto QueryPool = RHICreateRenderQueryPool(RQT_AbsoluteTime);
+
+  {
     auto Query = QueryPool->AllocateQuery();
     auto QueryPtr = Query.GetQuery();
-
     {
         TRACE_CPUPROFILER_EVENT_SCOPE_STR("create query");
         RHICmdList.EndRenderQuery(QueryPtr);
@@ -134,8 +143,9 @@ void FPixelReader::WritePixelsToBuffer(
         uint64 OldAbsTime = 0;
         RHICmdList.GetRenderQueryResult(QueryPtr, OldAbsTime, true);
     }
+  }
 
-  AsyncTask(ENamedThreads::ActualRenderingThread, [=, Readback = MoveTemp(BackBufferReadback)]() mutable
+  AsyncTask(ENamedThreads::ActualRenderingThread, [=, Readback = MoveTemp(BackBufferReadback), FuncForSending = std::move(FuncForSending)]() mutable
   {
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");

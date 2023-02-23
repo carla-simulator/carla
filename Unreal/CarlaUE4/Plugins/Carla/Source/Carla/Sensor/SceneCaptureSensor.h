@@ -33,16 +33,17 @@ struct FCameraGBufferUint8
   using not_spawnable = void;
   using PixelType = FColor;
 
-  void SetDataStream(FDataStream InStream)
+  void SetDataStream(FDataStream&& InStream)
   {
     Stream = std::move(InStream);
   }
 
   /// Replace the Stream associated with this sensor.
-  void SetStream(FDataMultiStream InStream)
+  void SetStream(FDataMultiStream&& InStream)
   {
     Stream = std::move(InStream);
   }
+
   /// Return the token that allows subscribing to this sensor's stream.
   auto GetToken() const
   {
@@ -66,8 +67,8 @@ struct FCameraGBufferUint8
     return Stream.MakeAsyncDataStream(*this, Self.GetEpisode().GetElapsedGameTime());
   }
 
-  mutable bool bIsUsed = false;
   FDataStream Stream;
+  mutable bool bIsUsed = false;
 };
 
 
@@ -78,22 +79,24 @@ struct FCameraGBufferFloat
   using not_spawnable = void;
   using PixelType = FLinearColor;
 
-  void SetDataStream(FDataStream InStream)
+  void SetDataStream(FDataStream&& InStream)
   {
     Stream = std::move(InStream);
   }
 
   /// Replace the Stream associated with this sensor.
-  void SetStream(FDataMultiStream InStream)
+  void SetStream(FDataMultiStream&& InStream)
   {
     Stream = std::move(InStream);
   }
+  
   /// Return the token that allows subscribing to this sensor's stream.
   auto GetToken() const
   {
     bIsUsed = true;
     return Stream.GetToken();
   }
+
   /// Dummy. Required for compatibility with other sensors only.
   FTransform GetActorTransform() const
   {
@@ -110,8 +113,8 @@ struct FCameraGBufferFloat
     return Stream.MakeAsyncDataStream(*this, Self.GetEpisode().GetElapsedGameTime());
   }
   
-  mutable bool bIsUsed = false;
   FDataStream Stream;
+  mutable bool bIsUsed = false;
 };
 
 
@@ -404,7 +407,7 @@ public:
   /// Blocks until the render thread has finished all it's tasks.
   void WaitForRenderThreadToFinish() {
     TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::WaitForRenderThreadToFinish);
-    // FlushRenderingCommands();
+    FlushRenderingCommands();
   }
 
   std::tuple<

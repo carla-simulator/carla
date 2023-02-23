@@ -45,7 +45,7 @@ namespace tcp {
 
     template <typename... Buffers>
     MessageTmpl(size_t size, Buffer &&buffer, Buffers &&... buffers)
-      : MessageTmpl(size, std::move(buffers)...) {
+      : MessageTmpl(size, std::forward<Buffers>(buffers)...) {
       ++_number_of_buffers;
       _total_size += buffer.size();
       _buffer_views[1u + size - _number_of_buffers] = buffer.cbuffer();
@@ -56,11 +56,13 @@ namespace tcp {
 
     template <typename... Buffers>
     MessageTmpl(Buffer &&buf, Buffers &&... buffers)
-      : MessageTmpl(sizeof...(Buffers) + 1u, std::move(buf), std::move(buffers)...) {
+      : MessageTmpl(sizeof...(Buffers) + 1u, std::move(buf), std::forward<Buffers>(buffers)...) {
       static_assert(sizeof...(Buffers) < max_size(), "Too many buffers!");
       _buffer_views[0u] = boost::asio::buffer(&_total_size, sizeof(_total_size));
     }
 
+    ~MessageTmpl() = default;
+    
     /// Size in bytes of the message excluding the header.
     auto size() const noexcept {
       return _total_size;

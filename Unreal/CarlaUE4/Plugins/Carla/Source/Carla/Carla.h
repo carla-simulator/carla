@@ -23,6 +23,8 @@ DECLARE_CYCLE_STAT(TEXT("Copy Text"),   STAT_CarlaSensorCopyText,   STATGROUP_Ca
 DECLARE_CYCLE_STAT(TEXT("Buffer Copy"), STAT_CarlaSensorBufferCopy, STATGROUP_CarlaSensor);
 DECLARE_CYCLE_STAT(TEXT("Stream Send"), STAT_CarlaSensorStreamSend, STATGROUP_CarlaSensor);
 
+#define CARLA_ENABLE_LLM
+
 // Options to compile with extra debug log.
 #if WITH_EDITOR
 // #define CARLA_AI_VEHICLES_EXTRA_LOG

@@ -192,15 +192,15 @@ public:
       _sync(sync) {}
 
   template <typename FuncT>
-  auto operator<<(FuncT func)
+  auto operator<<(FuncT&& func)
   {
     if (_sync)
     {
-      _server.BindSync(_name, func);
+      _server.BindSync(_name, std::forward<FuncT>(func));
     }
     else
     {
-      _server.BindAsync(_name, func);
+      _server.BindAsync(_name, std::forward<FuncT>(func));
     }
     return func;
   }

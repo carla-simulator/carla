@@ -83,8 +83,8 @@ namespace carla {
 
     /// Copy @a source into this buffer. Allocates the necessary memory.
     template <typename T>
-    explicit Buffer(const T &source) {
-      copy_from(source);
+    explicit Buffer(T &&source) {
+      copy_from(std::forward<T>(source));
     }
 
     explicit Buffer(const value_type *data, size_type size) {
@@ -125,10 +125,8 @@ namespace carla {
     Buffer &operator=(const Buffer &) = delete;
 
     Buffer &operator=(Buffer &&rhs) noexcept {
-      _parent_pool = std::move(rhs._parent_pool);
-      _size = rhs._size;
-      _capacity = rhs._capacity;
-      _data = rhs.pop();
+      this->~Buffer();
+      new (this) Buffer(std::move(rhs));
       return *this;
     }
 
@@ -301,8 +299,8 @@ namespace carla {
 
     /// Copy @a source into this buffer. Allocates memory if necessary.
     template <typename T>
-    void copy_from(const T &source) {
-      copy_from(0u, source);
+    void copy_from(T &&source) {
+      copy_from(0u, std::forward<T>(source));
     }
 
     /// Copy @a size bytes of the memory pointed by @a data into this buffer.
@@ -320,19 +318,20 @@ namespace carla {
     /// @copydoc copy_from(size_type, const Buffer &)
     template <typename T>
     typename std::enable_if<boost::asio::is_const_buffer_sequence<T>::value>::type
-    copy_from(size_type offset, const T &source) {
-      reset(boost::asio::buffer_size(source) + offset);
-      DEBUG_ASSERT(boost::asio::buffer_size(source) == size() - offset);
+    copy_from(size_type offset, T &&source) {
+      auto buffer_size = boost::asio::buffer_size(source);
+      reset(buffer_size + offset);
+      DEBUG_ASSERT(buffer_size == size() - offset);
       DEBUG_ONLY(auto bytes_copied = )
-      boost::asio::buffer_copy(buffer() + offset, source);
+      boost::asio::buffer_copy(buffer() + offset, std::forward<T>(source));
       DEBUG_ASSERT(bytes_copied == size() - offset);
     }
 
     /// @copydoc copy_from(size_type, const Buffer &)
     template <typename T>
     typename std::enable_if<!boost::asio::is_const_buffer_sequence<T>::value>::type
-    copy_from(size_type offset, const T &source) {
-      copy_from(offset, boost::asio::buffer(source));
+    copy_from(size_type offset, T &&source) {
+      copy_from(offset, boost::asio::buffer(std::forward<T>(source)));
     }
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4

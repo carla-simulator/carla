@@ -32,27 +32,16 @@ namespace carla {
 
     BufferPool() = default;
 
-    explicit BufferPool(size_t estimated_size) : _queue(estimated_size) {}
+    inline explicit BufferPool(size_t estimated_size) : _queue(estimated_size) {}
 
     /// Pop a Buffer from the queue, creates a new one if the queue is empty.
-    Buffer Pop() {
-      Buffer item;
-      _queue.try_dequeue(item); // we don't care if it fails.
-#if __cplusplus >= 201703L // C++17
-      item._parent_pool = weak_from_this();
-#else
-      item._parent_pool = shared_from_this();
-#endif
-      return item;
-    }
+    Buffer Pop();
 
   private:
 
     friend class Buffer;
 
-    void Push(Buffer &&buffer) {
-      _queue.enqueue(std::move(buffer));
-    }
+    void Push(Buffer &&buffer);
 
     moodycamel::ConcurrentQueue<Buffer> _queue;
   };

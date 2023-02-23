@@ -26,12 +26,12 @@ namespace s11n {
       const uint64_t frame,
       double timestamp,
       const rpc::Transform transform) {
+    auto buffer = PopBufferFromPool();
     Header h;
     h.sensor_type = index;
     h.frame = frame;
     h.timestamp = timestamp;
     h.sensor_transform = transform;
-    auto buffer = PopBufferFromPool();
     buffer.copy_from(reinterpret_cast<const unsigned char *>(&h), sizeof(h));
     return buffer;
   }

@@ -24,6 +24,7 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <utility>
 
 namespace carla {
 
@@ -63,7 +64,7 @@ namespace multigpu {
       static_assert(
           are_same<Buffer, Buffers...>::value,
           "This function only accepts arguments of type Buffer.");
-      return std::make_shared<const carla::streaming::detail::tcp::Message>(std::move(buffers)...);
+      return std::make_shared<const carla::streaming::detail::tcp::Message>(std::forward<Buffers>(buffers)...);
     }
 
   private:

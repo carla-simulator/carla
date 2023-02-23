@@ -79,26 +79,27 @@ namespace tcp {
     DEBUG_ASSERT(message != nullptr);
     DEBUG_ASSERT(!message->empty());
     auto self = shared_from_this();
-    boost::asio::post(_strand, [=]() {
+    boost::asio::post(_strand, [=, message = std::move(message)]() mutable {
       if (!_socket.is_open()) {
         return;
       }
-      if (_is_writing) {
+      
+      auto ticket = _write_head.fetch_add(1, std::memory_order_acquire);
+      if (_write_tail.load(std::memory_order_acquire) != ticket) {
         if (_server.IsSynchronousMode()) {
           // wait until previous message has been sent
-          while (_is_writing) {
+          while (_write_tail.load(std::memory_order_acquire) != ticket)
             std::this_thread::yield();
-          }
         } else {
           // ignore this message
           log_debug("session", _session_id, ": connection too slow: message discarded");
           return;
         }      
       }
-      _is_writing = true;
 
-      auto handle_sent = [this, self, message](const boost::system::error_code &ec, size_t DEBUG_ONLY(bytes)) {
-        _is_writing = false;
+      auto buffers = message->GetBufferSequence();
+      auto message_size = message->size();
+      auto handle_sent = [this, self, message = std::move(message)](const boost::system::error_code &ec, size_t DEBUG_ONLY(bytes)) mutable {
         if (ec) {
           log_info("session", _session_id, ": error sending data :", ec.message());
           CloseNow();
@@ -106,14 +107,15 @@ namespace tcp {
           DEBUG_ONLY(log_debug("session", _session_id, ": successfully sent", bytes, "bytes"));
           DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type) + message->size());
         }
+        (void)_write_tail.fetch_add(1, std::memory_order_release);
       };
 
-      log_debug("session", _session_id, ": sending message of", message->size(), "bytes");
+      log_debug("session", _session_id, ": sending message of", message_size, "bytes");
 
       _deadline.expires_from_now(_timeout);
       boost::asio::async_write(
           _socket,
-          message->GetBufferSequence(),
+          buffers,
           handle_sent);
     });
   }
