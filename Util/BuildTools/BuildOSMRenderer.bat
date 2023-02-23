@@ -14,7 +14,7 @@ set OSM_RENDERER_SOURCE=%ROOT_PATH:/=\%osm-world-renderer\
 set OSM_RENDERER_VSPROJECT_PATH=%INSTALLATION_DIR:/=\%%osm-world-renderer-visualstudio\
 
 rem Installation path for server dependencies
-set DEPENDENCIES_INSTALLATION_PATH=%OSM_RENDERER_SOURCE:/=\%ThirdParties
+set DEPENDENCIES_INSTALLATION_PATH=%OSM_RENDERER_SOURCE:/=\%ThirdParties\
 
 
 rem ============================================================================
@@ -24,7 +24,7 @@ set VCPKG_REPO=https://github.com/microsoft/vcpkg
 set VCPKG_PATH=%INSTALLATION_DIR:/=\%vcpkg\
 set VCPKG_CMAKE_TOOLCHAIN_PATH=%VCPKG_PATH:/=\%scripts\buildsystems\vcpkg.cmake
 
-if not exist "%VCPKG_PATH%" git clone %VCPKG_REPO% %VCPKG_PATH%
+rem if not exist "%VCPKG_PATH%" git clone %VCPKG_REPO% %VCPKG_PATH%
 
 rem .\"%VCPKG_PATH:/=\%"bootstrap-vcpkg.bat
 
@@ -47,7 +47,9 @@ cmake -G "Visual Studio 16 2019"^
     -DOSMSCOUT_BUILD_DEMOS=OFF^
     "%LIBOSMSCOUT_SOURCE_PATH%"
 
-cmake --build . --target install
+rem -DCMAKE_CXX_FLAGS_RELEASE="/DM_PI=3.14159265358979323846"^
+
+cmake --build . --config=Release --target install
 
 rem ============================================================================
 rem -- Download and build lunasvg ----------------------------------------------
@@ -73,8 +75,11 @@ if not exist "%OSM_RENDERER_VSPROJECT_PATH%" mkdir "%OSM_RENDERER_VSPROJECT_PATH
 cd "%OSM_RENDERER_VSPROJECT_PATH%"
 
 cmake -G "Visual Studio 16 2019" -A x64^
-    -DCMAKE_CXX_FLAGS_RELEASE="/std:c++17 /wd4251"^
+    -DCMAKE_CXX_FLAGS_RELEASE="/std:c++17 /wd4251 /I%INSTALLATION_DIR:/=\%boost-1.80.0-install\include"^
     "%OSM_RENDERER_SOURCE%"
 
 cmake --build . --config Release
+rem cmake --build . --config Release
 rem    -DOSMSCOUT_BUILD_MAP_QT=OFF^
+
+copy "%DEPENDENCIES_INSTALLATION_PATH:/=\%"bin "%OSM_RENDERER_VSPROJECT_PATH:/=\%"Release\

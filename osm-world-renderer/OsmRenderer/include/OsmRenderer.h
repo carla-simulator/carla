@@ -1,12 +1,12 @@
 #ifndef OSM_RENDERER_H
 #define OSM_RENDERER_H
 
+#include <boost/asio.hpp>
+
 #include <string>
 #include <vector>
 #include <memory>
 #include "MapDrawer.h"
-
-#include <boost/asio.hpp>
 
 
 class OsmRenderer 

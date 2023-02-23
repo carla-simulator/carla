@@ -3,12 +3,21 @@
 
 #include "MapPreviewUserWidget.h"
 
+#include "AllowWindowsPlatformTypes.h"
+//#include "AllowWindowsPlatformAtomics.h"
+
+#include "GenericPlatform/GenericPlatformMath.h"
+//#include "GenericPlatform/GenericPlatformProcess.h"
+#include "GenericPlatform/GenericPlatformFile.h"
+
 #include "Sockets.h"
 #include "Interfaces/IPv4/IPv4Address.h"
 #include "Common/TcpSocketBuilder.h"
 #include "SocketSubsystem.h"
 #include "SocketTypes.h"
-#include "GenericPlatform/GenericPlatformMath.h"
+
+#include "HideWindowsPlatformTypes.h"
+
 #include "Engine/Texture2D.h"
 #include "Containers/ResourceArray.h"
 #include "Containers/UnrealString.h"
@@ -17,12 +26,14 @@
 #include "RHICommandList.h"
 #include "RenderingThread.h"
 #include "Misc/Timespan.h"
-
 #include "Containers/UnrealString.h"
-#include "GenericPlatform/GenericPlatformProcess.h"
 #include "Misc/Paths.h"
-#include "GenericPlatform/GenericPlatformFile.h"
-#include "Unix/UnixPlatformProcess.h"
+
+
+
+
+
+//#include "Unix/UnixPlatformProcess.h"
 
 void UMapPreviewUserWidget::CreateTexture()
 {
