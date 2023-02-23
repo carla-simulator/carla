@@ -3,8 +3,9 @@
 
 #include "MapPreviewUserWidget.h"
 
-#include "AllowWindowsPlatformTypes.h"
-//#include "AllowWindowsPlatformAtomics.h"
+#if PLATFORM_WINDOWS
+  #include "AllowWindowsPlatformTypes.h"
+#endif
 
 #include "GenericPlatform/GenericPlatformMath.h"
 //#include "GenericPlatform/GenericPlatformProcess.h"
@@ -16,7 +17,9 @@
 #include "SocketSubsystem.h"
 #include "SocketTypes.h"
 
-#include "HideWindowsPlatformTypes.h"
+#if PLATFORM_WINDOWS
+  #include "HideWindowsPlatformTypes.h"
+#endif
 
 #include "Engine/Texture2D.h"
 #include "Containers/ResourceArray.h"
