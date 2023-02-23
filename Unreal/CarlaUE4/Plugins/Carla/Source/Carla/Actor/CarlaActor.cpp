@@ -1454,3 +1454,26 @@ ECarlaServerResponse FWalkerActor::GetPoseFromAnimation()
   }
   return ECarlaServerResponse::Success;
 }
+
+ECarlaServerResponse FWalkerActor::SetActorDead()
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto Walker = Cast<AWalkerBase>(Pawn);
+    if (Walker == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    Walker->StartDeathLifeSpan();
+    UE_LOG(LogCarla, Warning, TEXT("Walker starting life span by dead"));
+  }
+  return ECarlaServerResponse::Success;
+}

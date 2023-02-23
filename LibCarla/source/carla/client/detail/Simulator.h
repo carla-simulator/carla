@@ -435,6 +435,10 @@ namespace detail {
       _client.SetActorCollisions(actor.GetId(), enabled);
     }
 
+    void SetActorDead(Actor &actor) {
+      _client.SetActorDead(actor.GetId());
+    }
+
     void SetActorEnableGravity(Actor &actor, bool enabled) {
       _client.SetActorEnableGravity(actor.GetId(), enabled);
     }

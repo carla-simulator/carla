@@ -66,6 +66,7 @@ namespace detail {
       if (_nav.IsWalkerAlive(handle.walker, alive)) {
         if (!alive) {
           _client.SetActorCollisions(handle.walker, true);
+          _client.SetActorDead(handle.walker);
           // remove from the crowd
           _nav.RemoveAgent(handle.walker);
           // destroy the controller
