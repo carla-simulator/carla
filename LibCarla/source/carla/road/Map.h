@@ -15,6 +15,7 @@
 #include "carla/road/element/Waypoint.h"
 #include "carla/road/MapData.h"
 #include "carla/road/RoadTypes.h"
+#include "carla/road/MeshFactory.h"
 #include "carla/rpc/OpendriveGenerationParameters.h"
 
 #include <boost/optional.hpp>
@@ -205,7 +206,16 @@ private:
         Waypoint &current_waypoint,
         Waypoint &next_waypoint);
 
-    float GetZPosInDeformation(float posx, float posy) const;
+public:
+    inline float GetZPosInDeformation(float posx, float posy) const;
+
+    std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> 
+      GenerateRoadsMultithreaded( const carla::geom::MeshFactory& mesh_factory,
+                                   const size_t index, const size_t number_of_roads_per_thread) const;
+
+    void DeformateRoadsMultithreaded(std::vector<geom::Mesh*>& roadsmesh, const size_t index,
+      const size_t number_of_roads_per_thread, const float simplificationrate) const;
+
   };
 
 } // namespace road
