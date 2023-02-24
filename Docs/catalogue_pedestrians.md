@@ -3,82 +3,82 @@
 ## Adults
 
 * __Adult pedestrian - 1__
-	* [__Variant__ 1](#adult-pedestrian-1-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-1-variant-2)
-	* [__Variant__ 3](#adult-pedestrian-1-variant-3)
-	* [__Variant__ 4](#adult-pedestrian-1-variant-4)
-	* [__Variant__ 5](#adult-pedestrian-1-variant-5)
-	* [__Variant__ 6](#adult-pedestrian-1-variant-6)
+	* [__Variant 1__](#adult-pedestrian-1-variant-1)
+	* [__Variant 2__](#adult-pedestrian-1-variant-2)
+	* [__Variant 3__](#adult-pedestrian-1-variant-3)
+	* [__Variant 4__](#adult-pedestrian-1-variant-4)
+	* [__Variant 5__](#adult-pedestrian-1-variant-5)
+	* [__Variant 6__](#adult-pedestrian-1-variant-6)
 * __Adult pedestrian - 2__
-	* [__Variant__ 1](#adult-pedestrian-2-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-2-variant-2)
-	* [__Variant__ 3](#adult-pedestrian-2-variant-3)
-	* [__Variant__ 4](#adult-pedestrian-2-variant-4)
+	* [__Variant 1__](#adult-pedestrian-2-variant-1)
+	* [__Variant 2__](#adult-pedestrian-2-variant-2)
+	* [__Variant 3__](#adult-pedestrian-2-variant-3)
+	* [__Variant 4__](#adult-pedestrian-2-variant-4)
 * __Adult pedestrian - 3__
-	* [__Variant__ 1](#adult-pedestrian-3-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-3-variant-2)
+	* [__Variant 1__](#adult-pedestrian-3-variant-1)
+	* [__Variant 2__](#adult-pedestrian-3-variant-2)
 * __Adult pedestrian - 4__
-	* [__Variant__ 1](#adult-pedestrian-4-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-4-variant-2)
+	* [__Variant 1__](#adult-pedestrian-4-variant-1)
+	* [__Variant 2__](#adult-pedestrian-4-variant-2)
 * __Adult pedestrian - 5__
-	* [__Variant__ 1](#adult-pedestrian-5-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-5-variant-2)
+	* [__Variant 1__](#adult-pedestrian-5-variant-1)
+	* [__Variant 2__](#adult-pedestrian-5-variant-2)
 * __Adult pedestrian - 6__
-	* [__Variant__ 1](#adult-pedestrian-6-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-6-variant-2)
+	* [__Variant 1__](#adult-pedestrian-6-variant-1)
+	* [__Variant 2__](#adult-pedestrian-6-variant-2)
 * __Adult pedestrian - 7__
-	* [__Variant__ 1](#adult-pedestrian-7-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-7-variant-2)
+	* [__Variant 1__](#adult-pedestrian-7-variant-1)
+	* [__Variant 2__](#adult-pedestrian-7-variant-2)
 * __Adult pedestrian - 8__
-	* [__Variant__ 1](#adult-pedestrian-8-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-8-variant-2)
+	* [__Variant 1__](#adult-pedestrian-8-variant-1)
+	* [__Variant 2__](#adult-pedestrian-8-variant-2)
 * __Adult pedestrian - 9__
-	* [__Variant__ 1](#adult-pedestrian-9-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-9-variant-2)
-	* [__Variant__ 3](#adult-pedestrian-9-variant-3)
+	* [__Variant 1__](#adult-pedestrian-9-variant-1)
+	* [__Variant 2__](#adult-pedestrian-9-variant-2)
+	* [__Variant 3__](#adult-pedestrian-9-variant-3)
 * __Adult pedestrian - 10__
-	* [__Variant__ 1](#adult-pedestrian-10-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-10-variant-2)
-	* [__Variant__ 3](#adult-pedestrian-10-variant-3)
-	* [__Variant__ 4](#adult-pedestrian-10-variant-4)
+	* [__Variant 1__](#adult-pedestrian-10-variant-1)
+	* [__Variant 2__](#adult-pedestrian-10-variant-2)
+	* [__Variant 3__](#adult-pedestrian-10-variant-3)
+	* [__Variant 4__](#adult-pedestrian-10-variant-4)
 * __Adult pedestrian - 11__
-	* [__Variant__ 1](#adult-pedestrian-11-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-11-variant-2)
+	* [__Variant 1__](#adult-pedestrian-11-variant-1)
+	* [__Variant 2__](#adult-pedestrian-11-variant-2)
 * __Adult pedestrian - 12__
-	* [__Variant__ 1](#adult-pedestrian-12-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-12-variant-2)
-	* [__Variant__ 3](#adult-pedestrian-12-variant-3)
+	* [__Variant 1__](#adult-pedestrian-12-variant-1)
+	* [__Variant 2__](#adult-pedestrian-12-variant-2)
+	* [__Variant 3__](#adult-pedestrian-12-variant-3)
 * __Adult pedestrian - 13__
-	* [__Variant__ 1](#adult-pedestrian-13-variant-1)
+	* [__Variant 1__](#adult-pedestrian-13-variant-1)
 * __Adult pedestrian - 14__
-	* [__Variant__ 1](#adult-pedestrian-14-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-14-variant-2)
-	* [__Variant__ 3](#adult-pedestrian-14-variant-3)
+	* [__Variant 1__](#adult-pedestrian-14-variant-1)
+	* [__Variant 2__](#adult-pedestrian-14-variant-2)
+	* [__Variant 3__](#adult-pedestrian-14-variant-3)
 * __Adult pedestrian - 15__
-	* [__Variant__ 1](#adult-pedestrian-15-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-15-variant-2)
+	* [__Variant 1__](#adult-pedestrian-15-variant-1)
+	* [__Variant 2__](#adult-pedestrian-15-variant-2)
 
 
 ## Children
 
 * __Child pedestrian - 1__
-	* [__Variant__ 1](#adult-pedestrian-1-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-1-variant-2)
-	* [__Variant__ 3](#adult-pedestrian-1-variant-3)
-	* [__Variant__ 4](#adult-pedestrian-1-variant-4)
-	* [__Variant__ 5](#adult-pedestrian-1-variant-5)
-	* [__Variant__ 6](#adult-pedestrian-1-variant-6)
+	* [__Variant 1__](#adult-pedestrian-1-variant-1)
+	* [__Variant 2__](#adult-pedestrian-1-variant-2)
+	* [__Variant 3__](#adult-pedestrian-1-variant-3)
+	* [__Variant 4__](#adult-pedestrian-1-variant-4)
+	* [__Variant 5__](#adult-pedestrian-1-variant-5)
+	* [__Variant 6__](#adult-pedestrian-1-variant-6)
 * __Child pedestrian - 2__
-	* [__Variant__ 1](#adult-pedestrian-2-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-2-variant-2)
-	* [__Variant__ 3](#adult-pedestrian-2-variant-3)
-	* [__Variant__ 4](#adult-pedestrian-2-variant-4)
+	* [__Variant 1__](#adult-pedestrian-2-variant-1)
+	* [__Variant 2__](#adult-pedestrian-2-variant-2)
+	* [__Variant 3__](#adult-pedestrian-2-variant-3)
+	* [__Variant 4__](#adult-pedestrian-2-variant-4)
 * __Child pedestrian - 3__
-	* [__Variant__ 1](#adult-pedestrian-3-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-3-variant-2)
+	* [__Variant 1__](#adult-pedestrian-3-variant-1)
+	* [__Variant 2__](#adult-pedestrian-3-variant-2)
 * __Child pedestrian - 4__
-	* [__Variant__ 1](#adult-pedestrian-4-variant-1)
-	* [__Variant__ 2](#adult-pedestrian-4-variant-2)
+	* [__Variant 1__](#adult-pedestrian-4-variant-1)
+	* [__Variant 2__](#adult-pedestrian-4-variant-2)
 
 
 ## Police
