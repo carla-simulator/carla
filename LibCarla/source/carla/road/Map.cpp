@@ -1422,7 +1422,7 @@ namespace road {
         Simplification.vertices.push_back(v);
       }
 
-      for (int i = 0; i < current_mesh->GetIndexes().size() - 2; i += 3)
+      for (size_t i = 0; i < current_mesh->GetIndexes().size() - 2; i += 3)
       {
         Simplify::Triangle t;
         t.material = 0;
@@ -1448,7 +1448,7 @@ namespace road {
         current_mesh->AddVertex(v);
       }
 
-      for (int i = 0; i < Simplification.triangles.size(); ++i)
+      for (size_t i = 0; i < Simplification.triangles.size(); ++i)
       {
         current_mesh->GetIndices().push_back((Simplification.triangles[i].v[0]) + 1);
         current_mesh->GetIndices().push_back((Simplification.triangles[i].v[1]) + 1);

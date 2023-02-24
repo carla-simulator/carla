@@ -451,7 +451,7 @@ namespace Simplify
 			// main iteration loop
 			int deleted_triangles=0;
 			std::vector<int> deleted0,deleted1;
-			int triangle_count=triangles.size();
+
 			//int iteration = 0;
 			//loop(iteration,0,100)
 			for (int iteration = 0; iteration < 9999; iteration ++)
