@@ -35,6 +35,8 @@ namespace rpc {
     double max_road_length = 50.0;
     double wall_height = 1.0;
     double additional_width = 0.6;
+    double vertex_width_resolution = 4.0f;
+    float simplification_percentage = 20.0f;
     bool smooth_junctions = true;
     bool enable_mesh_visibility = true;
     bool enable_pedestrian_navigation = true;

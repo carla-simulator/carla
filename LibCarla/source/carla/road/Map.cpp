@@ -7,6 +7,7 @@
 #include "carla/road/Map.h"
 #include "carla/Exception.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/Vector3D.h"
 #include "carla/road/MeshFactory.h"
 #include "carla/road/element/LaneCrossingCalculator.h"
 #include "carla/road/element/RoadInfoCrosswalk.h"
@@ -16,6 +17,8 @@
 #include "carla/road/element/RoadInfoLaneWidth.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/RoadInfoSignal.h"
+
+#include "simplify/Simplify.h"
 
 #include <vector>
 #include <unordered_map>
@@ -1040,6 +1043,7 @@ namespace road {
     return out_mesh;
   }
 
+
   std::vector<std::unique_ptr<geom::Mesh>> Map::GenerateChunkedMesh(
       const rpc::OpendriveGenerationParameters& params) const {
     geom::MeshFactory mesh_factory(params);
@@ -1124,6 +1128,161 @@ namespace road {
     return result;
   }
 
+  std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>> 
+    Map::GenerateOrderedChunkedMesh( const rpc::OpendriveGenerationParameters& params) const 
+  {
+
+    geom::MeshFactory mesh_factory(params);
+    std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>> out_mesh_list;
+    std::unordered_map<JuncId, geom::Mesh> junction_map;
+
+    float simplificationrate = params.simplification_percentage * 0.01f;
+    for (auto &&pair : _data.GetRoads()) 
+    {
+      const auto &road = pair.second;
+      if (!road.IsJunction()) {
+        mesh_factory.GenerateAllOrderedWithMaxLen(road, out_mesh_list);
+      }
+    }
+
+    for (auto& current_mesh_vector : out_mesh_list)
+    {
+      if (current_mesh_vector.first != road::Lane::LaneType::Driving)
+      {
+        continue;
+      }
+
+      for (std::unique_ptr<geom::Mesh>& current_mesh : current_mesh_vector.second)
+      {
+
+        if (!current_mesh->IsValid())
+        {
+          continue;
+        }
+
+        for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
+        {
+          current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+        }
+
+        for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
+        {
+          Simplify::Vertex v;
+          v.p.x = current_vertex.x;
+          v.p.y = current_vertex.y;
+          v.p.z = current_vertex.z;
+          Simplify::vertices.push_back(v);
+        }
+
+        for (int i = 0; i < current_mesh->GetIndexes().size() - 2; i += 3)
+        {
+          Simplify::Triangle t;
+          t.material = 0;
+          auto indices = current_mesh->GetIndexes();
+          t.v[0] = (indices[i]) - 1;
+          t.v[1] = (indices[i + 1]) - 1;
+          t.v[2] = (indices[i + 2]) - 1;
+
+          if (i >= current_mesh->GetIndexes().size()) {
+            std::cout << "Not right number of Indexes Index: " << i << " Indices size: " << current_mesh->GetIndexes().size() << std::endl;
+          }
+
+          Simplify::triangles.push_back(t);
+        }
+
+        // Reduce to the X% of the polys
+        float target_size = Simplify::triangles.size();
+        Simplify::simplify_mesh( (target_size * simplificationrate) );
+
+        current_mesh->GetVertices().clear();
+        current_mesh->GetIndexes().clear();
+        for (Simplify::Vertex& current_vertex : Simplify::vertices)
+        {
+          carla::geom::Vector3D v;
+          v.x = current_vertex.p.x;
+          v.y = current_vertex.p.y;
+          v.z = current_vertex.p.z;
+          current_mesh->AddVertex(v);
+        }
+
+        for (int i = 0; i < Simplify::triangles.size(); ++i)
+        {
+          for (int j = 0; j < 3; ++j) {
+            current_mesh->GetIndexes().push_back((Simplify::triangles[i].v[j]) + 1);
+          }
+        }
+        Simplify::vertices.clear();
+        Simplify::triangles.clear();
+      }
+    }
+
+
+    // Generate roads within junctions and smooth them
+    for (const auto &junc_pair : _data.GetJunctions()) {
+      const auto &junction = junc_pair.second;
+      std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
+      std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
+      for(const auto &connection_pair : junction.GetConnections()) {
+        const auto &connection = connection_pair.second;
+        const auto &road = _data.GetRoads().at(connection.connecting_road);
+        for (auto &&lane_section : road.GetLaneSections()) {
+          for (auto &&lane_pair : lane_section.GetLanes()) {
+            const auto &lane = lane_pair.second;
+            if (lane.GetType() != road::Lane::LaneType::Sidewalk) {
+              lane_meshes.push_back(mesh_factory.Generate(lane));
+            } else {
+              sidewalk_lane_meshes.push_back(mesh_factory.Generate(lane));
+            }
+          }
+        }
+      }
+
+      if(params.smooth_junctions) {
+        std::unique_ptr<geom::Mesh> merged_mesh = mesh_factory.MergeAndSmooth(lane_meshes);
+        std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
+        for(auto& lane : sidewalk_lane_meshes) {
+          *sidewalk_mesh += *lane;
+        }
+
+        for (carla::geom::Vector3D& current_vertex : merged_mesh->GetVertices())
+        {
+          current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+        }
+        for (carla::geom::Vector3D& current_vertex : sidewalk_mesh->GetVertices())
+        {
+          current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+        }
+
+        out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(merged_mesh));
+        out_mesh_list[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
+      } else {
+        std::unique_ptr<geom::Mesh> junction_mesh = std::make_unique<geom::Mesh>();
+        std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
+        for(auto& lane : lane_meshes) {
+          *junction_mesh += *lane;
+        }
+        for(auto& lane : sidewalk_lane_meshes) {
+          *sidewalk_mesh += *lane;
+        }
+
+        for (carla::geom::Vector3D& current_vertex : junction_mesh->GetVertices())
+        {
+          current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+        }
+        for (carla::geom::Vector3D& current_vertex : sidewalk_mesh->GetVertices())
+        {
+          current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+        }
+        out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(junction_mesh));
+        out_mesh_list[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
+      }
+    }
+
+
+    return out_mesh_list;
+  }
+
+
   geom::Mesh Map::GetAllCrosswalkMesh() const {
     geom::Mesh out_mesh;
 
@@ -1158,6 +1317,25 @@ namespace road {
 
     out_mesh.EndMaterial();
     return out_mesh;
+  }
+
+  float Map::GetZPosInDeformation(float posx, float posy) const
+  {
+    // Amplitud
+    const float A1 = 0.3f;
+    const float A2 = 0.5f;
+    // Fases
+    const float F1 = 100.0;
+    const float F2 = -1500.0;
+    // Modifiers
+    const float Kx1 =  0.035f;
+    const float Kx2 =  0.02f;
+
+    const float Ky1 = -0.08f;
+    const float Ky2 =  0.05f;
+
+    return A1 * sin((Kx1 * posx + Ky1 * posy + F1)) +
+           A2 * sin((Kx2 * posx + Ky2 * posy + F2));
   }
 
 } // namespace road

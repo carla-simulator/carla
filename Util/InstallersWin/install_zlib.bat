@@ -172,6 +172,7 @@ rem ============================================================================
 :good_exit
     echo %FILE_N% Exiting...
     rem A return value used for checking for errors
+    copy %ZLIB_INSTALL_DIR%\lib\zlibstatic.lib %CARLA_DEPENDENCIES_FOLDER%\lib
     endlocal & set install_zlib=%ZLIB_INSTALL_DIR%
     exit /b 0
 

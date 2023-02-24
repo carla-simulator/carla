@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "Carla/Server/CarlaServer.h"
+#include "Carla/Server/CarlaServerResponse.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
 #include "EngineUtils.h"
 
@@ -2228,6 +2229,13 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     Episode->GetRecorder()->SetReplayerIgnoreHero(ignore_hero);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_replayer_ignore_spectator) << [this](bool ignore_spectator) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->GetRecorder()->SetReplayerIgnoreSpectator(ignore_spectator);
     return R<void>::Success();
   };
 
