@@ -6,6 +6,7 @@
   * Added API function to avoid replaying the spectator
     * `Client.set_replayer_ignore_spectator(bool)`
     * `start_replaying.py` using flag `--move-spectator`
+  * Add keyword arguments for `carla.TrafficManager` Python API functions
 
 ## CARLA 0.9.14
 
