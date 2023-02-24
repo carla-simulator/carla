@@ -226,16 +226,10 @@ struct vec3f
     return (double)sqrt(x * x + y * y + z * z);
   }
 
-  inline vec3f normalize(double desired_length = 1)
+  inline vec3f normalize()
   {
     double square = sqrt(x * x + y * y + z * z);
-    /*
-    if (square <= 0.00001f )
-    {
-      x=1;y=0;z=0;
-      return *this;
-    }*/
-    // double len = desired_length / square;
+
     x /= square;
     y /= square;
     z /= square;
