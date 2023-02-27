@@ -268,7 +268,7 @@ namespace geom {
     return _indexes;
   }
 
-  std::vector<Mesh::index_type>& Mesh::GetIndices() {
+  std::vector<Mesh::index_type>& Mesh::GetIndexes() {
     return _indexes;
   }
   size_t Mesh::GetIndexesNum() const {

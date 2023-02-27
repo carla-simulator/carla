@@ -9,33 +9,32 @@
 
 #include <OSM2ODR.h>
 
-void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0, float Lon_0)
+void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath)
 {
- IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+  IPlatformFile &FileManager = FPlatformFileManager::Get().GetPlatformFile();
 
   FString FileContent;
   // Always first check if the file that you want to manipulate exist.
   if (FileManager.FileExists(*FilePath))
   {
     // We use the LoadFileToString to load the file into
-    if(FFileHelper::LoadFileToString(FileContent, *FilePath, FFileHelper::EHashOptions::None))
+    if (FFileHelper::LoadFileToString(FileContent, *FilePath, FFileHelper::EHashOptions::None))
     {
-      UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Text From File: %s"), *FilePath);  
+      UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Text From File: %s"), *FilePath);
     }
     else
     {
       UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Did not load text from file"));
     }
-  }else{
+  }
+  else
+  {
     UE_LOG(LogCarla, Warning, TEXT("File: %s does not exist"), *FilePath);
-    return;  
+    return;
   }
 
   std::string OsmFile = std::string(TCHAR_TO_UTF8(*FileContent));
-  osm2odr::OSM2ODRSettings Settings;
-  Settings.proj_string += " +lat_0=" + std::to_string(Lat_0) + " +lon_0=" + std::to_string(Lon_0);
-  Settings.center_map = false;
-  std::string OpenDriveFile = osm2odr::ConvertOSMToOpenDRIVE(OsmFile, Settings);
+  std::string OpenDriveFile = osm2odr::ConvertOSMToOpenDRIVE(OsmFile);
 
   FilePath.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);
   FilePath += ".xodr";
@@ -43,7 +42,7 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0,
   UE_LOG(LogCarla, Warning, TEXT("File: %s does not exist"), *FilePath);
 
   // We use the LoadFileToString to load the file into
-  if( FFileHelper::SaveStringToFile(FString(OpenDriveFile.c_str()), *FilePath) )
+  if (FFileHelper::SaveStringToFile(FString(OpenDriveFile.c_str()), *FilePath))
   {
     UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Sucsesfuly Written: \"%s\" to the text file"), *FilePath);
   }
@@ -56,27 +55,23 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0,
 void UCustomFileDownloader::StartDownload()
 {
   UE_LOG(LogCarla, Log, TEXT("FHttpDownloader CREATED"));
-  FHttpDownloader* Download = new FHttpDownloader("GET", Url, ResultFileName, DownloadDelegate);
+  FHttpDownloader *Download = new FHttpDownloader("GET", Url, ResultFileName, DownloadDelegate);
   Download->Run();
 }
 
-FHttpDownloader::FHttpDownloader(const FString& InVerb, const FString& InUrl, const FString& InFilename, FDownloadComplete& Delegate  )
-  : Verb(InVerb)
-  , Url(InUrl)
-  , Filename( InFilename )
-  , DelegateToCall(Delegate)
+FHttpDownloader::FHttpDownloader(const FString &InVerb, const FString &InUrl, const FString &InFilename, FDownloadComplete &Delegate)
+    : Verb(InVerb), Url(InUrl), Filename(InFilename), DelegateToCall(Delegate)
 {
-
 }
 
 void FHttpDownloader::Run(void)
 {
-  UE_LOG(LogCarla, Log, TEXT("Starting download [%s] Url=[%s]"), 	*Verb, *Url);
+  UE_LOG(LogCarla, Log, TEXT("Starting download [%s] Url=[%s]"), *Verb, *Url);
   TSharedPtr<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
   Request->OnProcessRequestComplete().BindRaw(this, &FHttpDownloader::RequestComplete);
   Request->SetURL(Url);
   Request->SetVerb(Verb);
-  Request->ProcessRequest();	
+  Request->ProcessRequest();
 }
 
 void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded)
@@ -88,28 +83,28 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
   else
   {
     // If we do not get success responses codes we do not do anything
-    if(HttpResponse->GetResponseCode() < 200 || 300 <= HttpResponse->GetResponseCode()  )
+    if (HttpResponse->GetResponseCode() < 200 || 300 <= HttpResponse->GetResponseCode())
     {
-      UE_LOG(LogCarla, Error, TEXT("Error during download [%s] Url=[%s] Response=[%d]"), 
-        *HttpRequest->GetVerb(), 
-        *HttpRequest->GetURL(), 
-        HttpResponse->GetResponseCode());
+      UE_LOG(LogCarla, Error, TEXT("Error during download [%s] Url=[%s] Response=[%d]"),
+             *HttpRequest->GetVerb(),
+             *HttpRequest->GetURL(),
+             HttpResponse->GetResponseCode());
       delete this;
       return;
     }
 
-    UE_LOG(LogCarla, Log, TEXT("Completed download [%s] Url=[%s] Response=[%d]"), 
-      *HttpRequest->GetVerb(), 
-      *HttpRequest->GetURL(), 
-        HttpResponse->GetResponseCode());
+    UE_LOG(LogCarla, Log, TEXT("Completed download [%s] Url=[%s] Response=[%d]"),
+           *HttpRequest->GetVerb(),
+           *HttpRequest->GetURL(),
+           HttpResponse->GetResponseCode());
 
     HttpRequest->OnProcessRequestComplete().Unbind();
 
-    FString CurrentFile = FPaths::ProjectContentDir() + "CustomMaps/" + Filename + "/OpenDrive/" ;
+    FString CurrentFile = FPaths::ProjectContentDir() + "CustomMaps/" + Filename + "/";
 
     // We will use this FileManager to deal with the file.
-    IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
-    if( !FileManager.DirectoryExists(*CurrentFile) )
+    IPlatformFile &FileManager = FPlatformFileManager::Get().GetPlatformFile();
+    if (!FileManager.DirectoryExists(*CurrentFile))
     {
       FileManager.CreateDirectory(*CurrentFile);
     }
@@ -118,7 +113,7 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
     FString StringToWrite = HttpResponse->GetContentAsString();
 
     // We use the LoadFileToString to load the file into
-    if( FFileHelper::SaveStringToFile(StringToWrite,*CurrentFile, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM ) )
+    if (FFileHelper::SaveStringToFile(StringToWrite, *CurrentFile, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
     {
       UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Sucsesfuly Written "));
     }

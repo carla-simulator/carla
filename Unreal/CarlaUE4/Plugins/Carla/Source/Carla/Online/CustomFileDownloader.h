@@ -19,7 +19,7 @@ public:
   UFUNCTION(BlueprintCallable)
   void StartDownload();
   UFUNCTION(BlueprintCallable)
-  void ConvertOSMInOpenDrive(FString FilePath, float Lat_0 = 0, float Lon_0 = 0); 
+  void ConvertOSMInOpenDrive(FString FilePath); 
 
   FString ResultFileName;
 

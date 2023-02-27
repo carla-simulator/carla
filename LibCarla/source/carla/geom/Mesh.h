@@ -133,7 +133,7 @@ namespace geom {
 
     const std::vector<index_type>& GetIndexes() const;
 
-    std::vector<index_type> &GetIndices();
+    std::vector<index_type> &GetIndexes();
 
     size_t GetIndexesNum() const;
 

@@ -70,15 +70,14 @@ namespace geom {
     double s_current = s_start;
 
     std::vector<geom::Vector3D> vertices;
-    
     if (lane.IsStraight()) {
       // Mesh optimization: If the lane is straight just add vertices at the
       // begining and at the end of it
       const auto edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
       vertices.push_back(edges.first);
       vertices.push_back(edges.second);
-    } else 
-   
+    } 
+    else 
     {
       // Iterate over the lane's 's' and store the vertices based on it's width
       do {
@@ -142,11 +141,10 @@ namespace geom {
       // Update the current waypoint's "s"
       s_current += road_param.resolution;
     } while (s_current < s_end);
-    
 
     // This ensures the mesh is constant and have no gaps between roads,
     // adding geometry at the very end of the lane
-    
+
     if (s_end - (s_current - road_param.resolution) > EPSILON) {
       const auto edges = lane.GetCornerPositions(s_end - MESH_EPSILON, road_param.extra_lane_width);
       const geom::Vector3D segments_size = (edges.second - edges.first) / segments_number;
@@ -158,7 +156,6 @@ namespace geom {
         current_vertex = current_vertex + segments_size;
       }
     }
-     
     out_mesh.AddVertices(vertices);
 
     // Add the adient material, create the strip and close the material
@@ -180,7 +177,6 @@ namespace geom {
         out_mesh.AddIndex(   j       + ( ( i + 1 ) * vertices_in_width ) + 1);
       }
     }
-    
     out_mesh.EndMaterial();
     return std::make_unique<Mesh>(out_mesh);
   }
@@ -380,14 +376,12 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
         std::make_move_iterator(section_uptr_list.begin()),
         std::make_move_iterator(section_uptr_list.end()));
     }
-    
     return mesh_uptr_list;
   }
 
   std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory::GenerateOrderedWithMaxLen(
     const road::LaneSection &lane_section) const {
       const int vertices_in_width = road_param.vertex_width_resolution >= 2 ? road_param.vertex_width_resolution : 2;
-      
       std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> mesh_uptr_list;
 
       if (lane_section.GetLength() < road_param.max_road_len) {
@@ -407,7 +401,6 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             {
               (mesh_uptr_list[lane_pair.second.GetType()][0])->ConcatMesh(lane_section_mesh, vertices_in_width);
             }
-            
           }
           s_current = s_until;
         }
