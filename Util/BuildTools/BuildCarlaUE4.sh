@@ -21,7 +21,7 @@ USE_HOUDINI=false
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,with-houdini,chrono,editor-flags: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,editor-flags: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -131,20 +131,15 @@ fi
 # -- Download Houdini Plugin for Unreal Engine ---------------------------------
 # ==============================================================================
 
-log ${USE_HOUDINI}
-if ${USE_HOUDINI} ; then
-
-  HOUDINI_PLUGIN_REPO=https://github.com/sideeffects/HoudiniEngineForUnreal.git
-  HOUDINI_PLUGIN_PATH=Plugins/HoudiniEngine
-  HOUDINI_PLUGIN_BRANCH=Houdini19.5-Unreal4.26
-  HOUDINI_PATCH=${CARLA_UTIL_FOLDER}/Patches/houdini_patch.txt
-  if [[ ! -d ${HOUDINI_PLUGIN_PATH} ]] ; then
-    git clone -b ${HOUDINI_PLUGIN_BRANCH} ${HOUDINI_PLUGIN_REPO} ${HOUDINI_PLUGIN_PATH}
-    pushd ${HOUDINI_PLUGIN_PATH} >/dev/null
-    git apply ${HOUDINI_PATCH}
-    popd >/dev/null
-  fi
-
+HOUDINI_PLUGIN_REPO=https://github.com/sideeffects/HoudiniEngineForUnreal.git
+HOUDINI_PLUGIN_PATH=Plugins/HoudiniEngine
+HOUDINI_PLUGIN_BRANCH=Houdini19.5-Unreal4.26
+HOUDINI_PATCH=${CARLA_UTIL_FOLDER}/Patches/houdini_patch.txt
+if [[ ! -d ${HOUDINI_PLUGIN_PATH} ]] ; then
+  git clone -b ${HOUDINI_PLUGIN_BRANCH} ${HOUDINI_PLUGIN_REPO} ${HOUDINI_PLUGIN_PATH}
+  pushd ${HOUDINI_PLUGIN_PATH} >/dev/null
+  git apply ${HOUDINI_PATCH}
+  popd >/dev/null
 fi
 
 # ==============================================================================
@@ -170,11 +165,6 @@ if ${BUILD_CARLAUE4} ; then
     OPTIONAL_MODULES_TEXT="Pytorch ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
   else
     OPTIONAL_MODULES_TEXT="Pytorch OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
-  fi
-  if ${USE_HOUDINI} ; then
-    OPTIONAL_MODULES_TEXT="Houdini ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
-  else
-    OPTIONAL_MODULES_TEXT="Houdini OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
   echo ${OPTIONAL_MODULES_TEXT} > ${PWD}/Config/OptionalModules.ini
 
