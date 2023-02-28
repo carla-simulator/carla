@@ -203,7 +203,7 @@ ego_vehicle = world.spawn_actor(ego_bp, random.choice(spawn_points))
 
 ![maps_montage](../img/catalogue/maps/maps_montage.webp)
 
-CARLA comes loaded with several pre-made maps focused on providing a diversity of features. The maps present a divers range of environments such as urban, rural and residential. There are also differing architectural styles and also a multitude of different road layouts from unmarked rural roads to multi-lane highways. Browse the map guides in the [catalogue](catalogue.md) or in the table below. 
+CARLA comes loaded with several pre-made maps focused on providing a diversity of features. The maps present a range of environments such as urban, rural and residential. There are also differing architectural styles and also a multitude of different road layouts from unmarked rural roads to multi-lane highways. Browse the map guides in the [catalogue](catalogue.md) or in the table below. 
 
 | Town       | Summary |
 | -----------| ------  |
@@ -220,7 +220,7 @@ CARLA comes loaded with several pre-made maps focused on providing a diversity o
 | __Town11__ | A Large Map that is undecorated.|
 | [__Town12__](map_town12.md) | A Large Map with numerous different regions, including high-rise, residential and rural environments.|
 
-You can browse the available maps in your CARLA installation like so:
+You can browse the available maps in your CARLA installation:
 
 ```py
 client.get_available_maps()
@@ -243,7 +243,7 @@ client.load_world('Town03_Opt')
 
 CARLA provides a library of vehicles to fill your simulation with traffic. Browse the vehicle models in the [CARLA vehicle catalogue](catalogue_vehicles.md). 
 
-You can see all available blueprints by filtering the blueprint library for vehicles. 
+You can see all available vehicle blueprints by filtering the blueprint library. 
 
 ```py
 for bp in world.get_blueprint_library().filter('vehicle'):
