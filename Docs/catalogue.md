@@ -10,7 +10,7 @@ The CARLA simulator provides a vast library of 3D assets to populate your autono
 
 The CARLA simulator provides 10 pre-built maps to choose from, providing a diverse array of environments for training and testing your autonomous agents. 
 
-![town_12](../img/catalogue/maps/town12/town12.webp)
+![town_12](../img/catalogue/maps/maps_montage.webp)
 
 | Town       | Summary |
 | -----------| ------  |
