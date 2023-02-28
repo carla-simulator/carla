@@ -5,10 +5,6 @@ project(OsmMapRenderer)
 include_directories(ThirdParties/include)
 link_directories(ThirdParties/lib)
 
-# Luna SVG Library
-#include_directories(ThirdParties/include)
-#link_directories(ThirdParties/lib)
-
 # Source Files
 add_library(OsmRenderer OsmRenderer/src/OsmRenderer.cpp)
 target_sources(OsmRenderer PRIVATE OsmRenderer/src/MapDrawer.cpp)

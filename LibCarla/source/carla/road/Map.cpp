@@ -1438,7 +1438,7 @@ namespace road {
       Simplification.simplify_mesh((target_size * simplificationrate));
 
       current_mesh->GetVertices().clear();
-      current_mesh->GetIndices().clear();
+      current_mesh->GetIndexes().clear();
       for (Simplify::Vertex& current_vertex : Simplification.vertices)
       {
         carla::geom::Vector3D v;
@@ -1450,9 +1450,9 @@ namespace road {
 
       for (size_t i = 0; i < Simplification.triangles.size(); ++i)
       {
-        current_mesh->GetIndices().push_back((Simplification.triangles[i].v[0]) + 1);
-        current_mesh->GetIndices().push_back((Simplification.triangles[i].v[1]) + 1);
-        current_mesh->GetIndices().push_back((Simplification.triangles[i].v[2]) + 1);
+        current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[0]) + 1);
+        current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
+        current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
       } 
     }
   }

@@ -593,6 +593,12 @@ ALargeMapManager::TileID ALargeMapManager::GetTileID(FDVector TileLocation) cons
   return GetTileID(TileID);
 }
 
+FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FVector Location)
+{
+  TileID TileID = GetTileID(Location);
+  return GetCarlaMapTile(TileID);
+}
+
 FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(ULevel* InLevel)
 {
   FCarlaMapTile* Tile = nullptr;
@@ -610,11 +616,11 @@ FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(ULevel* InLevel)
   return *Tile;
 }
 
-FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID)
+FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID)
 {
   TileID TileID = GetTileID(TileVectorID);
   FCarlaMapTile* Tile = MapTiles.Find(TileID);
-  return Tile;
+  return *Tile;
 }
 
 FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(TileID TileID)

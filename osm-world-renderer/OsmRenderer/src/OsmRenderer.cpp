@@ -3,86 +3,63 @@
 #include "OsmRendererMacros.h"
 #include "MapDrawer.h"
 
-#include <sys/socket.h>
 #include <stdexcept>
 #include <iostream>
 #include <string.h>
-#include <unistd.h>
 #include <chrono>
 #include <stdlib.h> 
-
-//#include "osmscoutmapsvg/MapPainterSVG.h"
 
 #define PORT 5000
 #define BUFFER_SIZE 1024
 
 using namespace std;
 
+namespace Asio = boost::asio;
+using AsioStreamBuf = boost::asio::streambuf;
+using AsioTCP = boost::asio::ip::tcp;
+using AsioSocket = boost::asio::ip::tcp::socket;
+using AsioAcceptor = boost::asio::ip::tcp::acceptor;
+using AsioEndpoint = boost::asio::ip::tcp::endpoint;
+
+
 string OsmRenderer::GetOsmRendererString() const
 {
   return "Renderer speaking here";
 }
 
-int OsmRenderer::InitRenderer() 
+void OsmRenderer::InitRenderer() 
 {
-  // Open socket
-  if((RendererSocketfd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-  {
-    throw runtime_error("Error opening the renderer socket");
-  }
-  // Attach socket to port 
-  int opt = 1;
-  if(setsockopt(RendererSocketfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)) < 0)
-  {
-    throw runtime_error("Error setting renderer socket opt");
-  }
-  Address.sin_family = AF_INET;
-  Address.sin_addr.s_addr = INADDR_ANY;
-  Address.sin_port = htons(PORT);
-
-  if(bind(RendererSocketfd, (struct sockaddr*)&Address, sizeof(Address)) < 0)
-  {
-    throw runtime_error("Error binding renderer socket to port " + PORT);
-  }
-
-  if(listen(RendererSocketfd, 3) < 0 )
-  {
-    throw runtime_error("Error listening to port " + PORT);
-  }
-
-  return RendererSocketfd;
+  SocketAcceptorPtr = make_unique<AsioAcceptor>(io_service, AsioEndpoint(AsioTCP::v4(), PORT));
+  SocketPtr = make_unique<AsioSocket>(io_service);
 }
 
-int OsmRenderer::StartLoop()
+void OsmRenderer::StartLoop()
 {
-  const int AddrLen = sizeof(Address);
   std::cout << "┌ Waiting Command..." << std::endl;
-  int ConnectionSocket = accept(RendererSocketfd, (struct sockaddr*)&Address, (socklen_t*)&AddrLen);
-  if(ConnectionSocket < 0)
+  SocketAcceptorPtr->accept(*SocketPtr);
+  if(!SocketPtr->is_open())
   {
-    throw runtime_error("Connection not accepted " + ConnectionSocket);
+    throw runtime_error("Connection not accepted. Socket is not opened.");
   }
   while(true)
   {
-    
-    char Buffer[BUFFER_SIZE] = {};
-    size_t ReadBytes = read(ConnectionSocket, Buffer, BUFFER_SIZE);
-    std::cout << LOG_PRFX << "Received message: " << Buffer << std::endl;
+    AsioStreamBuf Buffer;
+    Asio::read(*SocketPtr, Buffer, Asio::transfer_at_least(2));
 
-    RunCmd(ConnectionSocket, Buffer);
+    string BufferStr = Asio::buffer_cast<const char*>(Buffer.data());
 
-    //std::cout << "End of Command." << std::endl << "┌ Waiting Command..." << std::endl;
+    std::cout << LOG_PRFX << "Received message: " << BufferStr << std::endl;
+
+    RunCmd(BufferStr);
   }
-  return 0;
 }
 
 void OsmRenderer::ShutDown()
 {
-  //close(RendererSocketfd);
-  shutdown(RendererSocketfd, SHUT_RDWR);
+  // TODO Shutdown socket and clear pointers
 }
 
-void OsmRenderer::RunCmd(int ConnectionSocket, char* Cmd)
+void OsmRenderer::RunCmd(string Cmd)
 {
   string CmdStr = Cmd;
   vector<string> CmdVector = SplitCmd(CmdStr, " ");
@@ -92,16 +69,11 @@ void OsmRenderer::RunCmd(int ConnectionSocket, char* Cmd)
   if(CmdType == "-R")     // Render Command
   {
     std::uint8_t* RenderedMap = new uint8_t[Drawer->GetImgSizeSqr() * 4];
-    //std::uint8_t* RenderedMap = new uint8_t[Drawer->GetImgSizeSqr() * 4];
     RenderMapCmd(CmdVector, RenderedMap);
 
-    if(send(ConnectionSocket, RenderedMap, (Drawer->GetImgSizeSqr() * 4 * sizeof(uint8_t)), 0) < 0)
-    {
-      std::cerr << LOG_PRFX << " ERROR Sending map to client: " << errno << " :: " << strerror(errno) << std::endl;
-    }
-    else{
-      std::cout << LOG_PRFX << " SUCCESS! Bitmap sent correctly!" << std::endl;
-    }
+    Asio::write(*SocketPtr, Asio::buffer(RenderedMap, (Drawer->GetImgSizeSqr() * 4 * sizeof(uint8_t))));
+
+    // TODO: delete RenderedMap after is sent
   }
   else if(CmdType == "-C")// Configuration Command
   {
@@ -114,7 +86,7 @@ void OsmRenderer::RunCmd(int ConnectionSocket, char* Cmd)
   }
   else if(CmdType == "-L")
   {
-    SendLatLonCmd(CmdVector, ConnectionSocket);
+    SendLatLonCmd(CmdVector);
   }
 }
 
@@ -149,10 +121,10 @@ void OsmRenderer::RenderMapCmd(vector<string> CmdArgs, uint8_t* OutMap)
 
 void OsmRenderer::ConfigMapCmd(vector<string> CmdArgs)
 {
-  // std::cout << LOG_PRFX << "Configuring Renderer:: DATABASE:" 
-  //     << CmdArgs[C_CMD_DATABASE_PATH] << " STYLESHEET: "
-  //     << CmdArgs[C_CMD_STYLESHEET_PATH] << " SIZE: " << CmdArgs[C_CMD_IMG_SIZE]<< std::endl;
-  Drawer = std::make_unique<MapDrawer>(); // TODO: Precreate object - use function Load
+  std::cout << LOG_PRFX << "Configuring Renderer:: DATABASE:" 
+       << CmdArgs[C_CMD_DATABASE_PATH] << " STYLESHEET: "
+       << CmdArgs[C_CMD_STYLESHEET_PATH] << " SIZE: " << CmdArgs[C_CMD_IMG_SIZE]<< std::endl;
+  Drawer = std::make_unique<MapDrawer>();
   Drawer->PreLoad(CmdArgs);
 
   if(!Drawer)
@@ -162,10 +134,11 @@ void OsmRenderer::ConfigMapCmd(vector<string> CmdArgs)
   }
 }
 
-void OsmRenderer::SendLatLonCmd(vector<string> CmdArgs, int ConnectionSocket)
+void OsmRenderer::SendLatLonCmd(vector<string> CmdArgs)
 {
   osmscout::GeoCoord TopRightCoord = Drawer->GetTopRightCoord();
   osmscout::GeoCoord BottomLeftCoord = Drawer->GetBottomLeftCoord();
+
   std::cout << LOG_PRFX << "TOP: " << TopRightCoord.GetLat() << " -- " << TopRightCoord.GetLon() << std::endl;
   std::cout << LOG_PRFX << "BOTTOM: " << BottomLeftCoord.GetLat() << " -- " << BottomLeftCoord.GetLon() << std::endl;
 
@@ -173,12 +146,6 @@ void OsmRenderer::SendLatLonCmd(vector<string> CmdArgs, int ConnectionSocket)
       "&" + to_string(BottomLeftCoord.GetLat()) + "&" + to_string(BottomLeftCoord.GetLon()) + "&";
 
   std::cout << LOG_PRFX << "Sending [" << CoordsStr << "] Size: " << CoordsStr.size() << std::endl;
-  if(send(ConnectionSocket, CoordsStr.c_str(), CoordsStr.size(), 0) < 0)
-  {
-    std::cerr << LOG_PRFX << " ERROR Sending Lat and Lon to client. " << std::endl;
-  }
-  else
-  {
-    std::cout << LOG_PRFX << " SUCCESS! Lat and Lon sent correctly!" << std::endl;
-  }
+  
+  Asio::write(*SocketPtr, Asio::buffer(CoordsStr));
 }

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "ProceduralMeshComponent.h"
+#include "Math/Vector2D.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <boost/optional.hpp>
@@ -23,9 +24,9 @@ UCLASS(Blueprintable, BlueprintType)
 class CARLATOOLS_API UOpenDriveToMap : public UObject
 {
   GENERATED_BODY()
-  
+
 public:
-  
+
   UFUNCTION()
   void ConvertOSMInOpenDrive(); 
 
