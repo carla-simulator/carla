@@ -29,7 +29,7 @@ nav:
 
 - Resources:
   - 'Python API': 'python_api.md'
-  - 'CARLA catalogue': 'catalogue.md'  
+  - 'Catalogue': 'catalogue.md'  
   - 'C++ reference': 'ref_cpp.md'
   - 'Blueprint library': 'bp_library.md'  
   - 'Tutorials': 'tutorials.md'
