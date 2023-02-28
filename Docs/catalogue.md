@@ -10,7 +10,7 @@ The CARLA simulator provides a vast library of 3D assets to populate your autono
 
 The CARLA simulator provides 10 pre-built maps to choose from, providing a diverse array of environments for training and testing your autonomous agents. 
 
-![town_12](../img/catalogue/maps/maps_montage.webp)
+![maps_montage](../img/catalogue/maps/maps_montage.webp)
 
 | Town       | Summary |
 | -----------| ------  |
@@ -31,7 +31,7 @@ The CARLA simulator provides 10 pre-built maps to choose from, providing a diver
 
 CARLA provides a diverse array of vehicles, with high fidelity models of real world cars, trucks and bikes, for replicating traffic in your simulations. Browse and choose the vehicles you like in the [__vehicle catalogue__](catalogue_vehicles.md).
 
-![vehicles_overview](../img/catalogue/vehicles/vehicles_overview.webp)
+![vehicles_overview](../img/catalogue/vehicles/vehicle_montage.webp)
 
 ## Pedestrians
 

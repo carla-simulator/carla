@@ -12,6 +12,7 @@ In this tutorial, we will cover a standard workflow in CARLA, from launching the
 * [__Adding NPCs__](#adding-npcs)  
 * [__Add sensors__](#add-sensors)  
 * [__Animate vehicles__](#animate-vehicles-with-traffic-manager)  
+* [__Assign a vehicle as the Ego Vehicle__](#assign-a-vehicle-as-the-ego-vehicle)
 * [__Choose your map__](#choose-your-map) 
 * [__Choose your vehicles__](#choose-your-vehicles) 
 
@@ -200,6 +201,8 @@ ego_vehicle = world.spawn_actor(ego_bp, random.choice(spawn_points))
 ---
 ## Choose your map
 
+![maps_montage](../img/catalogue/maps/maps_montage.webp)
+
 CARLA comes loaded with several pre-made maps focused on providing a diversity of features. The maps present a divers range of environments such as urban, rural and residential. There are also differing architectural styles and also a multitude of different road layouts from unmarked rural roads to multi-lane highways. Browse the map guides in the [catalogue](catalogue.md) or in the table below. 
 
 | Town       | Summary |
@@ -234,6 +237,9 @@ client.load_world('Town03_Opt')
 ---
 
 ## Choose your vehicles
+
+
+![vehicles_overview](../img/catalogue/vehicles/vehicle_montage.webp)
 
 CARLA provides a library of vehicles to fill your simulation with traffic. Browse the vehicle models in the [CARLA vehicle catalogue](catalogue_vehicles.md). 
 
