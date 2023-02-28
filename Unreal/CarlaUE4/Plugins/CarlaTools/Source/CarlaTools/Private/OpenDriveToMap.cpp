@@ -22,13 +22,17 @@
 #include <compiler/enable-ue4-macros.h>
 
 #include "Engine/Classes/Interfaces/Interface_CollisionDataProvider.h"
+#include "Factories/MaterialInstanceConstantFactoryNew.h"
 #include "PhysicsCore/Public/BodySetupEnums.h"
 #include "RawMesh.h"
 #include "AssetRegistryModule.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshActor.h"
 #include "MeshDescription.h"
+#include "EditorLevelLibrary.h"
 #include "ProceduralMeshConversion.h"
+#include "ContentBrowserModule.h"
+#include "Materials/MaterialInstanceConstant.h"
 
 FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
 {
@@ -105,27 +109,12 @@ FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
 void UOpenDriveToMap::ConvertOSMInOpenDrive()
 {
   FilePath = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/OpenDrive/" + MapName + ".osm";
-  FileDownloader->ConvertOSMInOpenDrive( FilePath );
+  FileDownloader->ConvertOSMInOpenDrive(FilePath,(39.69973 + 39.70426) * 0.5f, (-105.04127f + -105.03116f) * 0.5f );
+  //FileDownloader->ConvertOSMInOpenDrive( FilePath, OriginGeoCoordinates.X, OriginGeoCoordinates.Y);
   FilePath.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);
   FilePath += ".xodr";
 
   LoadMap();
-}
-
-void UOpenDriveToMap::NativeConstruct()
-{
-  if( !IsValid(FileDownloader) ){
-    FileDownloader = NewObject<UCustomFileDownloader>();
-  }
-}
-
-void UOpenDriveToMap::NativeDestruct()
-{
-  Super::NativeDestruct();
-  if( IsValid(FileDownloader) ){
-    // UObjects are not being destroyed, they are collected by GarbageCollector
-    // Should we force garbage collection here?
-  }
 }
 
 void UOpenDriveToMap::CreateMap()
@@ -140,8 +129,8 @@ void UOpenDriveToMap::CreateMap()
     FileDownloader = NewObject<UCustomFileDownloader>();
   }
   FileDownloader->ResultFileName = MapName;
-  //FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-105.0537,39.7001,-105.0247,39.7117";
-  FileDownloader->Url = Url;
+  FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-105.04127,39.69973,-105.03116,39.70426";
+  //FileDownloader->Url = Url;
   FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
   FileDownloader->StartDownload();
 
@@ -178,7 +167,8 @@ void UOpenDriveToMap::LoadMap()
   if (!CarlaMap.has_value()) 
   {
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Invalid Map"));
-  }else
+  }
+  else
   {
     UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Valid Map loaded"));
   }
@@ -528,19 +518,21 @@ void UOpenDriveToMap::SaveMap()
   double end = FPlatformTime::Seconds();
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" Meshes created static mesh code executed in %f seconds."), end - start);
 
-  for (auto CurrentActor : ActorMeshList)
-  {
-    CurrentActor->Destroy();
-  }
 
   start = FPlatformTime::Seconds();
 
-  for (auto CurrentMesh : MeshesToSpawn)
+  for (int i = 0; i < MeshesToSpawn.Num(); ++i)
   {
     AStaticMeshActor* TempActor = GetWorld()->SpawnActor<AStaticMeshActor>();
     // Build mesh from source
-    TempActor->GetStaticMeshComponent()->SetStaticMesh(CurrentMesh);
-    TempActor->SetActorLabel(FString("SM_") + CurrentMesh->GetName());
+    TempActor->GetStaticMeshComponent()->SetStaticMesh(MeshesToSpawn[i]);
+    TempActor->SetActorLabel(FString("SM_") + MeshesToSpawn[i]->GetName());
+    TempActor->SetActorTransform(ActorMeshList[i]->GetActorTransform());
+  }
+
+  for (auto CurrentActor : ActorMeshList)
+  {
+    CurrentActor->Destroy();
   }
 
   end = FPlatformTime::Seconds();

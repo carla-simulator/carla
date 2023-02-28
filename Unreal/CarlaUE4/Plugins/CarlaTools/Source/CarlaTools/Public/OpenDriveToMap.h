@@ -19,8 +19,8 @@ class UCustomFileDownloader;
 /**
  * 
  */
-UCLASS()
-class CARLATOOLS_API UOpenDriveToMap : public UUserWidget
+UCLASS(Blueprintable, BlueprintType)
+class CARLATOOLS_API UOpenDriveToMap : public UObject
 {
   GENERATED_BODY()
   
@@ -29,11 +29,8 @@ public:
   UFUNCTION()
   void ConvertOSMInOpenDrive(); 
 
-  UPROPERTY( meta = (BindWidget) )
-  class UButton* StartButton;
-
-  UPROPERTY(meta = (BindWidget))
-  class UButton* SaveButton;
+  UFUNCTION( BlueprintCallable )
+  void CreateMap();
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;
@@ -44,12 +41,10 @@ public:
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   FString Url;
 
-protected:
-  virtual void NativeConstruct() override;
-  virtual void NativeDestruct() override;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+  FVector2D OriginGeoCoordinates;
 
-  UFUNCTION( BlueprintCallable )
-  void CreateMap();
+protected:
 
   UFUNCTION( BlueprintCallable )
   void SaveMap();
