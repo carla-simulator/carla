@@ -1,0 +1,3 @@
+future
+numpy
+pygame
