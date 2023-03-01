@@ -72,7 +72,8 @@ public class Carla : ModuleRules
         "RenderCore",
         "RHI",
         "Renderer",
-        "ProceduralMeshComponent"
+        "ProceduralMeshComponent",
+        "MeshDescription"
         // ... add other public dependencies that you statically link with here ...
       }
       );
@@ -94,6 +95,8 @@ public class Carla : ModuleRules
         "CoreUObject",
         "Engine",
         "Foliage",
+        "HTTP",
+        "StaticMeshDescription",
         "ImageWriteQueue",
         "Json",
         "JsonUtilities",
@@ -201,6 +204,13 @@ public class Carla : ModuleRules
         AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoModels_robot.dll");
         bUseRTTI = true;
       }
+
+      //OsmToODR
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "sqlite3.lib"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "xerces-c_3.lib"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "proj.lib"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "osm2odr.lib"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "zlibstatic.lib"));
     }
     else
     {
@@ -219,6 +229,7 @@ public class Carla : ModuleRules
         AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine_vehicle.so"));
         AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_vehicle.so"));
         AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_robot.so"));
+
         bUseRTTI = true;
       }
 
@@ -295,7 +306,15 @@ public class Carla : ModuleRules
         PublicAdditionalLibraries.Add("stdc++");
         PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libpython3.9.so");
       }
-      
+
+
+      //OsmToODR
+      PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libc.so");
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libsqlite3.so"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libxerces-c.a"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libproj.a"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libosm2odr.a"));
+
     }
     bEnableExceptions = true;
 

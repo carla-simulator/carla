@@ -3,7 +3,7 @@ default: help
 help:
 	@less ${CARLA_BUILD_TOOLS_FOLDER}/Linux.mk.help
 
-launch: LibCarla.server.release
+launch: LibCarla.server.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build --launch $(ARGS)
 
 launch-only:
@@ -79,7 +79,7 @@ examples:
 run-examples:
 	@for D in ${CARLA_EXAMPLES_FOLDER}/*; do [ -d "$${D}" ] && make -C $${D} run.only; done
 
-CarlaUE4Editor: LibCarla.server.release
+CarlaUE4Editor: LibCarla.server.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build $(ARGS)
 
 .PHONY: PythonAPI
