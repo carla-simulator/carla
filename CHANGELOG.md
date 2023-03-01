@@ -6,6 +6,7 @@
   * Added API function to avoid replaying the spectator
     * `Client.set_replayer_ignore_spectator(bool)`
     * `start_replaying.py` using flag `--move-spectator`
+  * Added maps, vehicles, pedestrians and props catalogues to the documentation
 
 ## CARLA 0.9.14
 
