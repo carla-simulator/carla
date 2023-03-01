@@ -100,7 +100,7 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
 
     HttpRequest->OnProcessRequestComplete().Unbind();
 
-    FString CurrentFile = FPaths::ProjectContentDir() + "CustomMaps/" + Filename + "/";
+    FString CurrentFile = FPaths::ProjectContentDir() + "CustomMaps/" + Filename + "/Opendrive/";
 
     // We will use this FileManager to deal with the file.
     IPlatformFile &FileManager = FPlatformFileManager::Get().GetPlatformFile();

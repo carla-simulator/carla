@@ -106,6 +106,10 @@ namespace geom {
 
     std::unique_ptr<Mesh> MergeAndSmooth(std::vector<std::unique_ptr<Mesh>> &lane_meshes) const;
 
+    // -- LaneMarks --
+    
+    void GenerateLaneMarkForRoad(const road::Road& road, std::vector<std::unique_ptr<Mesh>>& inout) const;
+
     // =========================================================================
     // -- Generation parameters ------------------------------------------------
     // =========================================================================

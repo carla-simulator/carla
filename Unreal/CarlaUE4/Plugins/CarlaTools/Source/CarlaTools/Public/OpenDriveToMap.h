@@ -60,6 +60,7 @@ private:
   void GenerateAll(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateRoadMesh(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateSpawnPoints(const boost::optional<carla::road::Map>& CarlaMap);
+  void GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap);
 
   carla::rpc::OpendriveGenerationParameters opg_parameters;
 
@@ -70,6 +71,8 @@ private:
   UCustomFileDownloader* FileDownloader;
   UPROPERTY()
   TArray<AActor*> ActorMeshList;
+  UPROPERTY()
+  TArray<AActor*> LaneMarkerActorList;
   UPROPERTY()
   TArray<UStaticMesh*> MeshesToSpawn;
   UPROPERTY()
