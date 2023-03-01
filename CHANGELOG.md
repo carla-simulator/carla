@@ -7,6 +7,7 @@
     * `Client.set_replayer_ignore_spectator(bool)`
     * `start_replaying.py` using flag `--move-spectator`
   * Surface non-unity build mode by passing ARGS=--no-unity to make; allows IWYU-type errors to be unmasked and fixed.
+  * Added maps, vehicles, pedestrians and props catalogues to the documentation
 
 ## CARLA 0.9.14
 
