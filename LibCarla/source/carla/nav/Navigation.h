@@ -109,7 +109,7 @@ namespace nav {
     /// make agent look at some location
     bool SetWalkerLookAt(ActorId id, carla::geom::Location location);
     /// return if the agent has been killed by a vehicle
-    bool Navigation::IsWalkerAlive(ActorId id, bool &alive);
+    bool IsWalkerAlive(ActorId id, bool &alive);
 
     dtCrowd *GetCrowd() { return _crowd; };
 
