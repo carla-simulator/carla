@@ -208,12 +208,13 @@ class TestVehicleFriction(SyncSmokeTest):
 
     def test_vehicle_zero_friction(self):
         print("TestVehicleFriction.test_vehicle_zero_friction")
-
+        
         self.client.load_world("Town05_Opt", False)
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
+        bp_vehicles = self.filter_vehicles_for_old_towns(bp_vehicles)
         for bp_veh in bp_vehicles:
 
             veh_transf_00 = carla.Transform(carla.Location(33, -200, 0.2), carla.Rotation(yaw=90))
