@@ -16,7 +16,9 @@
 
 
 class UProceduralMeshComponent;
+class UMeshComponent;
 class UCustomFileDownloader;
+class UMaterialInstance;
 /**
  * 
  */
@@ -45,6 +47,9 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
   FVector2D OriginGeoCoordinates;
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UMaterialInstance* DefaultRoadMaterial;
+
 protected:
 
   UFUNCTION( BlueprintCallable )
@@ -65,6 +70,8 @@ private:
 
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
   TArray<UStaticMesh*> CreateStaticMeshAssets();
+
+  void SetMaterialToMeshComponent(UMeshComponent* MeshComponent);
   
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
@@ -76,4 +83,5 @@ private:
   TArray<FString> RoadType;
   UPROPERTY()
   TArray<UProceduralMeshComponent*> RoadMesh;
+  
 };

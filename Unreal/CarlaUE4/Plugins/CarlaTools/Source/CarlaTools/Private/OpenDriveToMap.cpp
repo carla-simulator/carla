@@ -129,8 +129,8 @@ void UOpenDriveToMap::CreateMap()
     FileDownloader = NewObject<UCustomFileDownloader>();
   }
   FileDownloader->ResultFileName = MapName;
-  FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-105.04127,39.69973,-105.03116,39.70426";
-  //FileDownloader->Url = Url;
+  //FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-105.04127,39.69973,-105.03116,39.70426";
+  FileDownloader->Url = Url;
 
   FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
   FileDownloader->StartDownload();
@@ -222,6 +222,8 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       TempPMC->bUseComplexAsSimpleCollision = true;
       TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
+      SetMaterialToMeshComponent(TempPMC);
+
       FVector MeshCentroid = FVector(0,0,0);
       for( auto Vertex : Mesh->GetVertices() )
       {
@@ -309,6 +311,7 @@ UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset( UProceduralMeshComponent* P
     SrcModel.BuildSettings.bGenerateLightmapUVs = true;
     SrcModel.BuildSettings.SrcLightmapIndex = 0;
     SrcModel.BuildSettings.DstLightmapIndex = 1;
+    SrcModel.BuildSettings.DistanceFieldResolutionScale = 0;
     StaticMesh->CreateMeshDescription(0, MoveTemp(MeshDescription));
     StaticMesh->CommitMeshDescription(0);
 
@@ -478,6 +481,12 @@ TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets()
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in MeshBuildTime %f. Time per mesh %f"), MeshBuildTime, MeshBuildTime / RoadMesh.Num());
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in PackSaveTime %f. Time per mesh %f"), PackSaveTime, PackSaveTime / RoadMesh.Num());
   return StaticMeshes;
+}
+
+void UOpenDriveToMap::SetMaterialToMeshComponent(UMeshComponent* MeshComponent)
+{
+  if(DefaultRoadMaterial)
+    MeshComponent->SetMaterial(0, DefaultRoadMaterial);
 }
 
 void UOpenDriveToMap::SaveMap()
