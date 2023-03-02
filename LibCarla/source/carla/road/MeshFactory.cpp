@@ -10,6 +10,8 @@
 
 #include <carla/geom/Vector3D.h>
 #include <carla/geom/Rtree.h>
+#include <carla/road/element/LaneMarking.h>
+#include <carla/road/element/RoadInfoMarkRecord.h>
 
 namespace carla {
 namespace geom {
@@ -510,7 +512,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
     return mesh_uptr_list;
   }
 
-void MeshFactory::GenerateAllOrderedWithMaxLen(
+  void MeshFactory::GenerateAllOrderedWithMaxLen(
       const road::Road &road,
       std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& roads
       ) const 
@@ -522,6 +524,67 @@ void MeshFactory::GenerateAllOrderedWithMaxLen(
       std::vector<std::unique_ptr<Mesh>>& origin = roads[pair_map.first];
       std::vector<std::unique_ptr<Mesh>>& source = pair_map.second;
       std::move(source.begin(), source.end(), std::back_inserter(origin));
+    }
+  }
+
+  void MeshFactory::GenerateLaneMarkForRoad(
+    const road::Road& road, std::vector<std::unique_ptr<Mesh>>& inout) const
+  {
+    for ( auto&& lane_section : road.GetLaneSections() )
+    {
+      for( auto&& lane : lane_section.GetLanes() )
+      {
+        if (lane.second.GetId() != 0) 
+        {
+          Mesh out_mesh;
+          const double s_start = lane.second.GetDistance();
+          const double s_end = lane.second.GetDistance() + lane.second.GetLength();
+          double s_current = s_start;
+          std::vector<geom::Vector3D> vertices;
+          do 
+          {
+            //Get Lane info
+            const carla::road::element::RoadInfoMarkRecord* road_info_mark = lane.second.GetInfo<carla::road::element::RoadInfoMarkRecord>(s_current);
+            if (road_info_mark != nullptr) 
+            {
+              carla::road::element::LaneMarking lane_mark_info(*road_info_mark);
+              
+              if ( lane_mark_info.type != carla::road::element::LaneMarking::Type::None ) 
+              {
+                std::pair<geom::Vector3D, geom::Vector3D> edges = lane.second.GetCornerPositions(s_current, road_param.extra_lane_width);
+                geom::Vector3D director = edges.first - edges.second;
+                geom::Vector3D endmarking = edges.second + director * lane_mark_info.width * 0.5f;
+                vertices.push_back(endmarking);
+                vertices.push_back(edges.second);
+              }
+              
+            }
+            s_current += road_param.resolution;
+          } 
+          while (s_current <= s_end );
+          
+          const carla::road::element::RoadInfoMarkRecord* road_info_mark = lane.second.GetInfo<carla::road::element::RoadInfoMarkRecord>(s_end);
+          if (road_info_mark != nullptr)
+          {
+            carla::road::element::LaneMarking lane_mark_info(*road_info_mark);
+
+            if (lane_mark_info.type != carla::road::element::LaneMarking::Type::None)
+            {
+              std::pair<geom::Vector3D, geom::Vector3D> edges = lane.second.GetCornerPositions(s_end, road_param.extra_lane_width);
+              geom::Vector3D director = edges.first - edges.second;
+              geom::Vector3D endmarking = edges.second + director * lane_mark_info.width * 0.5f;
+              vertices.push_back(endmarking);
+              vertices.push_back(edges.second);
+            }
+          }
+
+
+          if (vertices.size() != 0) {
+            out_mesh.AddTriangleStrip(vertices);
+            inout.push_back(std::make_unique<Mesh>(out_mesh));
+          }
+        }
+      }
     }
   }
 
@@ -648,6 +711,7 @@ void MeshFactory::GenerateAllOrderedWithMaxLen(
 
     return std::make_unique<Mesh>(out_mesh);
   }
+
 
 } // namespace geom
 } // namespace carla

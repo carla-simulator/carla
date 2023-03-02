@@ -1360,6 +1360,34 @@ namespace road {
     return out_mesh;
   }
 
+  /// Buids a list of meshes related with LineMarkings
+  std::vector<std::unique_ptr<geom::Mesh>> Map::GenerateLineMarkings( const rpc::OpendriveGenerationParameters& params ) const
+  {
+    std::vector<std::unique_ptr<geom::Mesh>> LineMarks;
+    geom::MeshFactory mesh_factory(params);
+    for ( auto&& pair : _data.GetRoads() ) 
+    {
+      if ( pair.second.IsJunction() ) {
+        continue;
+      }
+      mesh_factory.GenerateLaneMarkForRoad(pair.second, LineMarks);
+    }
+
+    for (auto& Mesh : LineMarks) 
+    {
+      if (!Mesh->IsValid())
+      {
+        continue;
+      }
+
+      for (carla::geom::Vector3D& current_vertex : Mesh->GetVertices())
+      {
+        current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y) + 0.01;
+      }
+    }
+    return std::move(LineMarks);
+  }
+
   inline float Map::GetZPosInDeformation(float posx, float posy) const
   {
     // Amplitud

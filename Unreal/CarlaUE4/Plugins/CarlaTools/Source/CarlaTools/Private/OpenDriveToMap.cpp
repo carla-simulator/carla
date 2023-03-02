@@ -109,7 +109,7 @@ FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
 void UOpenDriveToMap::ConvertOSMInOpenDrive()
 {
 
-  FilePath = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/" + MapName + ".osm";
+  FilePath = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/OpenDrive/" + MapName + ".osm";
   FileDownloader->ConvertOSMInOpenDrive( FilePath );
   FilePath.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);
   FilePath += ".xodr";
@@ -189,6 +189,7 @@ void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& Carla
   {
     GenerateRoadMesh(CarlaMap);
     GenerateSpawnPoints(CarlaMap);
+    GenerateLaneMarks(CarlaMap);
   }
 }
 
@@ -204,6 +205,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" GenerateOrderedChunkedMesh code executed in %f seconds. Simplification percentage is %f"), end - start, opg_parameters.simplification_percentage);
 
   start = FPlatformTime::Seconds();
+  int index = 0;
   for (const auto &PairMap : Meshes) 
   {
     for( const auto &Mesh : PairMap.second )
@@ -217,6 +219,8 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       }
 
       AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+      TempActor->SetActorLabel(FString("SM_Lane_") + FString::FromInt(index));
+
       UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
       TempPMC->bUseAsyncCooking = true;
       TempPMC->bUseComplexAsSimpleCollision = true;
@@ -253,13 +257,120 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       ActorMeshList.Add(TempActor);
 
       RoadType.Add(LaneTypeToFString(PairMap.first));
-      RoadMesh.Add(TempPMC);          
+      RoadMesh.Add(TempPMC);    
+      index++;
     }
   }
     
   end = FPlatformTime::Seconds();
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Mesh spawnning and translation code executed in %f seconds."), end - start);
- 
+  
+  auto MarkingMeshes = CarlaMap->GenerateLineMarkings(opg_parameters);
+
+  index = 0;
+  for (const auto& Mesh : MarkingMeshes)
+  {
+    if (!Mesh->GetVertices().size())
+    {
+      continue;
+    }
+    if (!Mesh->IsValid()) {
+      continue;
+    }
+
+    AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+    TempActor->SetActorLabel(FString("SM_LaneMark_") + FString::FromInt(index));
+    UProceduralMeshComponent* TempPMC = TempActor->MeshComponent;
+    TempPMC->bUseAsyncCooking = true;
+    TempPMC->bUseComplexAsSimpleCollision = true;
+    TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    FVector MeshCentroid = FVector(0, 0, 0);
+    for (auto Vertex : Mesh->GetVertices())
+    {
+      MeshCentroid += Vertex.ToFVector();
+    }
+
+    MeshCentroid /= Mesh->GetVertices().size();
+
+    for (auto& Vertex : Mesh->GetVertices())
+    {
+      Vertex.x -= MeshCentroid.X;
+      Vertex.y -= MeshCentroid.Y;
+      Vertex.z -= MeshCentroid.Z;
+    }
+
+    const FProceduralCustomMesh MeshData = *Mesh;
+    TempPMC->CreateMeshSection_LinearColor(
+      0,
+      MeshData.Vertices,
+      MeshData.Triangles,
+      MeshData.Normals,
+      TArray<FVector2D>(), // UV0
+      TArray<FLinearColor>(), // VertexColor
+      TArray<FProcMeshTangent>(), // Tangents
+      true); // Create collision
+    TempActor->SetActorLocation(MeshCentroid * 100);
+    ActorMeshList.Add(TempActor);
+    index++;
+  }
+}
+
+void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap)
+{
+  opg_parameters.vertex_distance = 0.5f;
+  opg_parameters.vertex_width_resolution = 8.0f;
+  opg_parameters.simplification_percentage = 15.0f;
+
+  auto MarkingMeshes = CarlaMap->GenerateLineMarkings(opg_parameters);
+
+  int index = 0;
+  for (const auto& Mesh : MarkingMeshes)
+  {
+    if ( !Mesh->GetVertices().size() )
+    {
+      continue;
+    }
+    if ( !Mesh->IsValid() ) {
+      continue;
+    }
+
+    AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+    TempActor->SetActorLabel(FString("SM_LaneMark_") + FString::FromInt(index));
+    UProceduralMeshComponent* TempPMC = TempActor->MeshComponent;
+    TempPMC->bUseAsyncCooking = true;
+    TempPMC->bUseComplexAsSimpleCollision = true;
+    TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    FVector MeshCentroid = FVector(0, 0, 0);
+    for (auto Vertex : Mesh->GetVertices())
+    {
+      MeshCentroid += Vertex.ToFVector();
+    }
+
+    MeshCentroid /= Mesh->GetVertices().size();
+
+    for (auto& Vertex : Mesh->GetVertices())
+    {
+      Vertex.x -= MeshCentroid.X;
+      Vertex.y -= MeshCentroid.Y;
+      Vertex.z -= MeshCentroid.Z;
+    }
+
+    const FProceduralCustomMesh MeshData = *Mesh;
+    TempPMC->CreateMeshSection_LinearColor(
+      0,
+      MeshData.Vertices,
+      MeshData.Triangles,
+      MeshData.Normals,
+      TArray<FVector2D>(), // UV0
+      TArray<FLinearColor>(), // VertexColor
+      TArray<FProcMeshTangent>(), // Tangents
+      true); // Create collision
+    TempActor->SetActorLocation(MeshCentroid * 100);
+    LaneMarkerActorList.Add(TempActor);
+    index++;
+  }
 }
 
 void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Map>& CarlaMap )
