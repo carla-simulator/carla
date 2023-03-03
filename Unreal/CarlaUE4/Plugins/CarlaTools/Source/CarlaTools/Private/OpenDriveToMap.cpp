@@ -226,7 +226,8 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       TempPMC->bUseComplexAsSimpleCollision = true;
       TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
-      SetMaterialToMeshComponent(TempPMC);
+      if(DefaultRoadMaterial)
+        TempPMC->SetMaterial(0, DefaultRoadMaterial);
 
       FVector MeshCentroid = FVector(0,0,0);
       for( auto Vertex : Mesh->GetVertices() )
@@ -292,6 +293,9 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
     TempPMC->bUseAsyncCooking = true;
     TempPMC->bUseComplexAsSimpleCollision = true;
     TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    if(DefaultLaneMarksMaterial)
+      TempPMC->SetMaterial(0, DefaultLaneMarksMaterial);
 
     FVector MeshCentroid = FVector(0, 0, 0);
     for (auto Vertex : Mesh->GetVertices())
@@ -543,12 +547,6 @@ TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets()
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in MeshBuildTime %f. Time per mesh %f"), MeshBuildTime, MeshBuildTime / RoadMesh.Num());
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in PackSaveTime %f. Time per mesh %f"), PackSaveTime, PackSaveTime / RoadMesh.Num());
   return StaticMeshes;
-}
-
-void UOpenDriveToMap::SetMaterialToMeshComponent(UMeshComponent* MeshComponent)
-{
-  if(DefaultRoadMaterial)
-    MeshComponent->SetMaterial(0, DefaultRoadMaterial);
 }
 
 void UOpenDriveToMap::SaveMap()
