@@ -402,17 +402,30 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
       } else {
         double s_current = lane_section.GetDistance() + EPSILON;
         const double s_end = lane_section.GetDistance() + lane_section.GetLength() - EPSILON;
+        std::vector<size_t> redirections;
         while(s_current + road_param.max_road_len < s_end) {
           const auto s_until = s_current + road_param.max_road_len;
+
+          
           for (auto &&lane_pair : lane_section.GetLanes()) {
             Mesh lane_section_mesh = *GenerateTesselated(lane_pair.second, s_current, s_until);
-            if( mesh_uptr_list[lane_pair.second.GetType()].empty() )
+
+            auto it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+            if (it == redirections.end())
+            {
+              redirections.push_back(lane_pair.first);
+              it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+            }
+
+            size_t PosToAdd = it - redirections.begin();
+
+            if (mesh_uptr_list[lane_pair.second.GetType()].size() <= PosToAdd)
             {
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
             }
             else
             {
-              (mesh_uptr_list[lane_pair.second.GetType()][0])->ConcatMesh(lane_section_mesh, vertices_in_width);
+              (mesh_uptr_list[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(lane_section_mesh, vertices_in_width);
             }
           }
           s_current = s_until;
@@ -420,13 +433,22 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
         if (s_end - s_current > EPSILON) {
           for (auto &&lane_pair : lane_section.GetLanes()) {
             Mesh lane_section_mesh = *GenerateTesselated(lane_pair.second, s_current, s_end);
-            if( mesh_uptr_list[lane_pair.second.GetType()].empty() )
+            auto it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+            if (it == redirections.end())
+            {
+              redirections.push_back(lane_pair.first);
+              it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+            }
+
+            size_t PosToAdd = it - redirections.begin();
+
+            if (mesh_uptr_list[lane_pair.second.GetType()].size() <= PosToAdd)
             {
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
             }
             else
             {
-              (mesh_uptr_list[lane_pair.second.GetType()][0])->ConcatMesh(lane_section_mesh, vertices_in_width);
+              (mesh_uptr_list[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(lane_section_mesh, vertices_in_width);
             }
           }
         }
@@ -718,12 +740,12 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
       {
         carla::road::element::LaneMarking lane_mark_info(*road_info_mark);
         std::pair<geom::Vector3D, geom::Vector3D> edges = lane.GetCornerPositions(s_end, 0);
-        geom::Vector3D director = edges.first - edges.second;
+        geom::Vector3D director = edges.second - edges.first;
         director /= director.Length();
-        geom::Vector3D endmarking = edges.second - director * lane_mark_info.width * 4;
+        geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
 
-        out_mesh.AddVertex( edges.second );
-        out_mesh.AddVertex( endmarking );
+        out_mesh.AddVertex(edges.first);
+        out_mesh.AddVertex(endmarking);
       }
       inout.push_back(std::make_unique<Mesh>(out_mesh));
     }
