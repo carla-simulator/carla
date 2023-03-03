@@ -28,7 +28,8 @@ nav:
   - 'Custom assets': 'custom_assets_tutorials.md'
 
 - Resources:
-  - 'Python API': 'python_api.md'  
+  - 'Python API': 'python_api.md'
+  - 'Catalogue': 'catalogue.md'  
   - 'C++ reference': 'ref_cpp.md'
   - 'Blueprint library': 'bp_library.md'  
   - 'Tutorials': 'tutorials.md'

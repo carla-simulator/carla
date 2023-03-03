@@ -777,7 +777,7 @@ void ALargeMapManager::CheckActiveActors()
 
         float DistanceSquared = (RelativeLocation - HeroLocation).SizeSquared();
 
-        if (DistanceSquared > ActorStreamingDistanceSquared)
+        if (DistanceSquared > ActorStreamingDistanceSquared && View->GetActorType() != FCarlaActor::ActorType::Sensor)
         {
           // Save to temporal container. Later will be converted to dormant
           ActiveToDormantActors.Add(Id);
@@ -1076,7 +1076,7 @@ void ALargeMapManager::PrintMapInfo()
   int LastMsgIndex = TilesDistMsgIndex;
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("\nActor Global Position: %s km"), *(FDVector(CurrentActorPosition) / (1000.0 * 100.0)).ToString()) );
-  
+
   FIntVector CurrentTile = GetTileVectorID(CurrentActorPosition);
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("\nActor Current Tile: %d_%d"), CurrentTile.X, CurrentTile.Y ));
