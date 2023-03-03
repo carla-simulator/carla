@@ -99,7 +99,7 @@ vehicle.apply_control(control)
 
 ## Inspect the vehicles in the simulator
 
-To examine a vehicle from the catalog, use the following code, retrieve the blueprint ID from the vehicle's details below and paste it into the line `vehicle_bp = bp_lib.find('blueprint.id.goes_here')`:
+To examine a vehicle from the catalog, use the following code, retrieve the blueprint ID from the vehicle's details below and paste it into the line `bp_lib.find('blueprint.id.goes_here')`:
 
 ```py
 client = carla.Client('localhost', 2000)
