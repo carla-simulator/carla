@@ -24,7 +24,7 @@ The CARLA simulator provides 10 pre-built maps to choose from, providing a diver
 | **Town08** | Secret "unseen" town used for the [Leaderboard](https://leaderboard.carla.org/) challenge |
 | **Town09** | Secret "unseen" town used for the [Leaderboard](https://leaderboard.carla.org/) challenge |
 | [__Town10__](map_town10.md) | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade.|
-| __Town11__ | A Large Map that is undecorated.|
+| [__Town11__](map_town11.md) | A Large Map that is undecorated. Serves as a proof of concept of the Large Maps feature. |
 | [__Town12__](map_town12.md) | A Large Map with numerous different regions, including high-rise, residential and rural environments.|
 
 ## Vehicles

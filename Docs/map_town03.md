@@ -2,7 +2,7 @@
 
 ![town_03_slideshow](../img/catalogue/maps/town03/town03_panorama.webp)
 
-Town 3 is a larger town with features of a downtown urban area, including a raised metro track, a roundabout, a construction site and underpasses and overpasses. 
+Town 3 is a larger town with features of a downtown urban area. The map includes some interesting road network features such as a roundabout and underpasses and overpasses. The town also includes a raised metro track and a large building under construction.
 
 ## Road network
 
