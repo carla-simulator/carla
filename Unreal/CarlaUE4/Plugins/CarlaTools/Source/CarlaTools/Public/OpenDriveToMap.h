@@ -50,6 +50,9 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UMaterialInstance* DefaultRoadMaterial;
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UMaterialInstance* DefaultLaneMarksMaterial;
+
 protected:
 
   UFUNCTION( BlueprintCallable )
@@ -71,8 +74,6 @@ private:
 
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
   TArray<UStaticMesh*> CreateStaticMeshAssets();
-
-  void SetMaterialToMeshComponent(UMeshComponent* MeshComponent);
   
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
