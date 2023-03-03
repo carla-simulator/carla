@@ -129,7 +129,7 @@ void UOpenDriveToMap::CreateMap()
     FileDownloader = NewObject<UCustomFileDownloader>();
   }
   FileDownloader->ResultFileName = MapName;
-  //FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-105.04127,39.69973,-105.03116,39.70426";
+  //FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-74.08542,40.71047,-74.08167,40.71237";
   FileDownloader->Url = Url;
 
   FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
@@ -265,55 +265,6 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
   end = FPlatformTime::Seconds();
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Mesh spawnning and translation code executed in %f seconds."), end - start);
   
-  auto MarkingMeshes = CarlaMap->GenerateLineMarkings(opg_parameters);
-
-  index = 0;
-  for (const auto& Mesh : MarkingMeshes)
-  {
-    if (!Mesh->GetVertices().size())
-    {
-      continue;
-    }
-    if (!Mesh->IsValid()) {
-      continue;
-    }
-
-    AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
-    TempActor->SetActorLabel(FString("SM_LaneMark_") + FString::FromInt(index));
-    UProceduralMeshComponent* TempPMC = TempActor->MeshComponent;
-    TempPMC->bUseAsyncCooking = true;
-    TempPMC->bUseComplexAsSimpleCollision = true;
-    TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-    FVector MeshCentroid = FVector(0, 0, 0);
-    for (auto Vertex : Mesh->GetVertices())
-    {
-      MeshCentroid += Vertex.ToFVector();
-    }
-
-    MeshCentroid /= Mesh->GetVertices().size();
-
-    for (auto& Vertex : Mesh->GetVertices())
-    {
-      Vertex.x -= MeshCentroid.X;
-      Vertex.y -= MeshCentroid.Y;
-      Vertex.z -= MeshCentroid.Z;
-    }
-
-    const FProceduralCustomMesh MeshData = *Mesh;
-    TempPMC->CreateMeshSection_LinearColor(
-      0,
-      MeshData.Vertices,
-      MeshData.Triangles,
-      MeshData.Normals,
-      TArray<FVector2D>(), // UV0
-      TArray<FLinearColor>(), // VertexColor
-      TArray<FProcMeshTangent>(), // Tangents
-      true); // Create collision
-    TempActor->SetActorLocation(MeshCentroid * 100);
-    ActorMeshList.Add(TempActor);
-    index++;
-  }
 }
 
 void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap)
