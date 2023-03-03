@@ -52,15 +52,15 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 
   // Road materials.
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadRuralNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/MI_Road_Rural.MI_Road_Rural'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/MI_Road_Rural_2.MI_Road_Rural_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadBoulevardNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/MI_Road_Asphalt.MI_Road_Asphalt'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/MI_Road_Asphalt_2.MI_Road_Asphalt_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadAvenueNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/MI_Road_Asphalt.MI_Road_Asphalt'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/MI_Road_Asphalt_2.MI_Road_Asphalt_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadCityNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/MI_Road_Asphalt.MI_Road_Asphalt'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/MI_Road_Asphalt_2.MI_Road_Asphalt_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadElectricPoleNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/MI_Road_Asphalt.MI_Road_Asphalt'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/MI_Road_Asphalt_2.MI_Road_Asphalt_2'"));
   RoadRuralMaterial = (UMaterialInstance *) RoadRuralNode.Object;
   RoadBoulevardMaterial = (UMaterialInstance *) RoadBoulevardNode.Object;
   RoadAvenueMaterial = (UMaterialInstance *) RoadAvenueNode.Object;
@@ -74,19 +74,19 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 
   // Lane Markings.
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingYellowAsphaltNode(TEXT(
-    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LaneMarkings/MI_LaneMarkingYellow_Asphalt.MI_LaneMarkingYellow_Asphalt'"));
+    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LaneMarkings/MI_LaneMarkingYellow_Asphalt_2.MI_LaneMarkingYellow_Asphalt_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingYellowResidentialNode(TEXT(
-    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LaneMarkings/MI_LaneMarkingYellow_Residential.MI_LaneMarkingYellow_Residential'"));
+    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LaneMarkings/MI_LaneMarkingYellow_Residential_2.MI_LaneMarkingYellow_Residential_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingYellowRuralNode(TEXT(
-    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LaneMarkings/MI_LaneMarkingYellow_Rural.MI_LaneMarkingYellow_Rural'"));
+    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LaneMarkings/MI_LaneMarkingYellow_Rural_2.MI_LaneMarkingYellow_Rural_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingAsphaltNode(TEXT(
-    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LaneMarkings/MI_LaneMarking_Asphalt.MI_LaneMarking_Asphalt'"));
+    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LaneMarkings/MI_LaneMarking_Asphalt_2.MI_LaneMarking_Asphalt_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingResidentialNode(TEXT(
-    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LaneMarkings/MI_LaneMarking_Residential.MI_LaneMarking_Residential'"));
+    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LaneMarkings/MI_LaneMarking_Residential_2.MI_LaneMarking_Residential_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingRuralNode(TEXT(
-    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LaneMarkings/MI_LaneMarking_Rural.MI_LaneMarking_Rural'"));
+    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LaneMarkings/MI_LaneMarking_Rural_2.MI_LaneMarking_Rural_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingParkingNode(TEXT(
-    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LaneMarkings/MI_LaneMarking_Asphalt.MI_LaneMarking_Asphalt'"));
+    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LaneMarkings/MI_LaneMarking_Asphalt_2.MI_LaneMarking_Asphalt_2'"));
   MarkingYellowAsphaltMaterial = (UMaterialInstance *) MarkingYellowAsphaltNode.Object;
   MarkingYellowResidentialMaterial = (UMaterialInstance *) MarkingYellowResidentialNode.Object;
   MarkingYellowRuralMaterial = (UMaterialInstance *) MarkingYellowRuralNode.Object;
@@ -103,27 +103,27 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
   MarkingYellowMaterial = (UMaterialInstance *) MarkingYellowNode.Object;
   MarkingMaterial = (UMaterialInstance *) MarkingNode.Object;
 
-  // Curb and Gutter materials
+  // Curb materials
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> CurbNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/LargeMap_materials/largeM_curb/MI_largeM_curb01.MI_largeM_curb01'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/LargeMap_materials/largeM_curb/MI_largeM_curb01_2.MI_largeM_curb01_2'"));
   CurbMaterial = (UMaterialInstance *) CurbNode.Object;
 
-  // Gutter
+  // Gutter materials
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> GutterNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/LargeMap_materials/largeM_gutter/MI_largeM_gutter01.MI_largeM_gutter01'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/LargeMap_materials/largeM_gutter/MI_largeM_gutter02.MI_largeM_gutter02'"));
   GutterMaterial = (UMaterialInstance *) GutterNode.Object;
 
-  // Sidewalk
+  // Sidewalk materials
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> SidewalkResidentialNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Residential.MI_Sidewalk_Residential'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Residential_2.MI_Sidewalk_Residential_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> SidewalkResidentialGrassNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Residential_Grass.MI_Sidewalk_Residential_Grass'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Residential_Grass_2.MI_Sidewalk_Residential_Grass_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> SidewalkSkyscrapersNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Skyscrapper.MI_Sidewalk_Skyscrapper'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Skyscrapper_v2.MI_Sidewalk_Skyscrapper_v2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> SidewalkApartmentNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Apartment.MI_Sidewalk_Apartment'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Apartment_v2.MI_Sidewalk_Apartment_v2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> SidewalkCommunityNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Community.MI_Sidewalk_Community'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Community_v2.MI_Sidewalk_Community_v2'"));
   SidewalkResidentialMaterial = (UMaterialInstance *) SidewalkResidentialNode.Object;
   SidewalkResidentialGrassMaterial = (UMaterialInstance *) SidewalkResidentialGrassNode.Object;
   SidewalkSkyscrapersMaterial = (UMaterialInstance *) SidewalkSkyscrapersNode.Object;
@@ -135,31 +135,31 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/LargeMap_materials/largeM_sidewalk/tile01/MI_largeM_tile02.MI_largeM_tile02'"));
   SidewalkMaterial = (UMaterialInstance *) SidewalkNode.Object;
 
-  // Terrain
+  // Terrain materials
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainHighwayNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Highway.MI_LargeLandscape_Highway'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Highway_2.MI_LargeLandscape_Highway_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainInterurbanNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Interurban.MI_LargeLandscape_Interurban'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Interurban_2.MI_LargeLandscape_Interurban_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainMountainNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Mountain.MI_LargeLandscape_Mountain'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Mountain_2.MI_LargeLandscape_Mountain_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainRuralNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Rural.MI_LargeLandscape_Rural'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Rural_2.MI_LargeLandscape_Rural_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainGrassNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Grass.MI_LargeLandscape_Grass'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Grass_2.MI_LargeLandscape_Grass_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainResidentialNode(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Ground/MI_Grass_Cutted.MI_Grass_Cutted'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainParkNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Ground/MI_Grass_Park.MI_Grass_Park'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Ground/MI_Grass_Park_2.MI_Grass_Park_2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainWaterLakeNode(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Water/MI_Water_Lake.MI_Water_Lake'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainSkyscrapersNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Skyscrapper.MI_Sidewalk_Skyscrapper'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Skyscrapper_v2.MI_Sidewalk_Skyscrapper_v2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainApartmentNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Apartment.MI_Sidewalk_Apartment'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Apartment_v2.MI_Sidewalk_Apartment_v2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainCommunityNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Community.MI_Sidewalk_Community'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Community_v2.MI_Sidewalk_Community_v2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> BridgeWallNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Wall/MI_WallBridge.MI_WallBridge'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Wall/MI_WallBridge_2.MI_WallBridge_2'"));
   TerrainHighwayMaterial = (UMaterialInstance *) TerrainHighwayNode.Object;
   TerrainInterurbanMaterial = (UMaterialInstance *) TerrainInterurbanNode.Object;
   TerrainMountainMaterial = (UMaterialInstance *) TerrainMountainNode.Object;
@@ -190,7 +190,7 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> BridgeGuardrailBaseNode(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Concrete/MI_BaseBridgeRailling.MI_BaseBridgeRailling'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> SafetyWallHighwayNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Wall/MI_SafetyWallHighWay.MI_SafetyWallHighWay'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Wall/MI_SafetyWallHighWay_2.MI_SafetyWallHighWay_2'"));
   GuardrailPostMaterial = (UMaterialInstance *) GuardrailPostNode.Object;
   GuardrailMetalMaterial = (UMaterialInstance *) GuardrailMetalNode.Object;
   BridgeGuardrailPostMaterial = (UMaterialInstance *) BridgeGuardrailPostNode.Object;
