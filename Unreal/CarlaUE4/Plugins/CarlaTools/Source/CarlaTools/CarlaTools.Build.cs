@@ -6,6 +6,7 @@ using UnrealBuildTool;
 
 public class CarlaTools : ModuleRules
 {
+  bool UsingHoudini = true;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
@@ -21,7 +22,7 @@ public class CarlaTools : ModuleRules
     {
       bEnableExceptions = true;
     }
-		
+
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
@@ -74,6 +75,16 @@ public class CarlaTools : ModuleRules
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
+    if(UsingHoudini)
+    {
+      PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+          "HoudiniEngine",
+          "HoudiniEngineEditor",
+          "HoudiniEngineRuntime"
+        });
+    }
 		
 		
 		DynamicallyLoadedModuleNames.AddRange(

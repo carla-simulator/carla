@@ -10,6 +10,8 @@
 
 #include <carla/geom/Vector3D.h>
 #include <carla/geom/Rtree.h>
+#include <carla/road/element/LaneMarking.h>
+#include <carla/road/element/RoadInfoMarkRecord.h>
 
 namespace carla {
 namespace geom {
@@ -70,15 +72,14 @@ namespace geom {
     double s_current = s_start;
 
     std::vector<geom::Vector3D> vertices;
-    
     if (lane.IsStraight()) {
       // Mesh optimization: If the lane is straight just add vertices at the
       // begining and at the end of it
       const auto edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
       vertices.push_back(edges.first);
       vertices.push_back(edges.second);
-    } else 
-   
+    } 
+    else 
     {
       // Iterate over the lane's 's' and store the vertices based on it's width
       do {
@@ -142,11 +143,10 @@ namespace geom {
       // Update the current waypoint's "s"
       s_current += road_param.resolution;
     } while (s_current < s_end);
-    
 
     // This ensures the mesh is constant and have no gaps between roads,
     // adding geometry at the very end of the lane
-    
+
     if (s_end - (s_current - road_param.resolution) > EPSILON) {
       const auto edges = lane.GetCornerPositions(s_end - MESH_EPSILON, road_param.extra_lane_width);
       const geom::Vector3D segments_size = (edges.second - edges.first) / segments_number;
@@ -158,7 +158,6 @@ namespace geom {
         current_vertex = current_vertex + segments_size;
       }
     }
-     
     out_mesh.AddVertices(vertices);
 
     // Add the adient material, create the strip and close the material
@@ -180,7 +179,6 @@ namespace geom {
         out_mesh.AddIndex(   j       + ( ( i + 1 ) * vertices_in_width ) + 1);
       }
     }
-    
     out_mesh.EndMaterial();
     return std::make_unique<Mesh>(out_mesh);
   }
@@ -192,16 +190,26 @@ namespace geom {
     const 
   {
     const int vertices_in_width = road_param.vertex_width_resolution >= 2 ? road_param.vertex_width_resolution : 2;
+    std::vector<size_t> redirections;
     for (auto &&lane_pair : lane_section.GetLanes()) 
     {
+      auto it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+      if ( it == redirections.end() ) 
+      {
+        redirections.push_back(lane_pair.first);
+        it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+      }
+      
+      size_t PosToAdd = it - redirections.begin();
+
       Mesh out_mesh = *GenerateTesselated(lane_pair.second);
-      if( result[lane_pair.second.GetType()].empty() )
+      if( result[lane_pair.second.GetType()].size() <= PosToAdd )
       {
         result[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(out_mesh));
       }
       else
       {
-        (result[lane_pair.second.GetType()][0])->ConcatMesh(out_mesh, vertices_in_width);
+        (result[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(out_mesh, vertices_in_width);
       }
     }
   }
@@ -379,15 +387,14 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
       mesh_uptr_list.insert( 
         std::make_move_iterator(section_uptr_list.begin()),
         std::make_move_iterator(section_uptr_list.end()));
+      break;
     }
-    
     return mesh_uptr_list;
   }
 
   std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory::GenerateOrderedWithMaxLen(
     const road::LaneSection &lane_section) const {
       const int vertices_in_width = road_param.vertex_width_resolution >= 2 ? road_param.vertex_width_resolution : 2;
-      
       std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> mesh_uptr_list;
 
       if (lane_section.GetLength() < road_param.max_road_len) {
@@ -395,32 +402,53 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
       } else {
         double s_current = lane_section.GetDistance() + EPSILON;
         const double s_end = lane_section.GetDistance() + lane_section.GetLength() - EPSILON;
+        std::vector<size_t> redirections;
         while(s_current + road_param.max_road_len < s_end) {
           const auto s_until = s_current + road_param.max_road_len;
+
+          
           for (auto &&lane_pair : lane_section.GetLanes()) {
             Mesh lane_section_mesh = *GenerateTesselated(lane_pair.second, s_current, s_until);
-            if( mesh_uptr_list[lane_pair.second.GetType()].empty() )
+
+            auto it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+            if (it == redirections.end())
+            {
+              redirections.push_back(lane_pair.first);
+              it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+            }
+
+            size_t PosToAdd = it - redirections.begin();
+
+            if (mesh_uptr_list[lane_pair.second.GetType()].size() <= PosToAdd)
             {
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
             }
             else
             {
-              (mesh_uptr_list[lane_pair.second.GetType()][0])->ConcatMesh(lane_section_mesh, vertices_in_width);
+              (mesh_uptr_list[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(lane_section_mesh, vertices_in_width);
             }
-            
           }
           s_current = s_until;
         }
         if (s_end - s_current > EPSILON) {
           for (auto &&lane_pair : lane_section.GetLanes()) {
             Mesh lane_section_mesh = *GenerateTesselated(lane_pair.second, s_current, s_end);
-            if( mesh_uptr_list[lane_pair.second.GetType()].empty() )
+            auto it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+            if (it == redirections.end())
+            {
+              redirections.push_back(lane_pair.first);
+              it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+            }
+
+            size_t PosToAdd = it - redirections.begin();
+
+            if (mesh_uptr_list[lane_pair.second.GetType()].size() <= PosToAdd)
             {
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
             }
             else
             {
-              (mesh_uptr_list[lane_pair.second.GetType()][0])->ConcatMesh(lane_section_mesh, vertices_in_width);
+              (mesh_uptr_list[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(lane_section_mesh, vertices_in_width);
             }
           }
         }
@@ -517,7 +545,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
     return mesh_uptr_list;
   }
 
-void MeshFactory::GenerateAllOrderedWithMaxLen(
+  void MeshFactory::GenerateAllOrderedWithMaxLen(
       const road::Road &road,
       std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& roads
       ) const 
@@ -529,6 +557,372 @@ void MeshFactory::GenerateAllOrderedWithMaxLen(
       std::vector<std::unique_ptr<Mesh>>& origin = roads[pair_map.first];
       std::vector<std::unique_ptr<Mesh>>& source = pair_map.second;
       std::move(source.begin(), source.end(), std::back_inserter(origin));
+    }
+  }
+
+  void MeshFactory::GenerateLaneMarkForRoad(
+    const road::Road& road, std::vector<std::unique_ptr<Mesh>>& inout) const
+  {
+    for (auto&& lane_section : road.GetLaneSections())
+    {
+      for (auto&& lane : lane_section.GetLanes())
+      {
+        if (lane.first != 0)
+        {
+          GenerateLaneMarksForNotCenterLine(lane_section, lane.second, inout);
+        }
+        else 
+        {
+          GenerateLaneMarksForCenterLine(road, lane_section, lane.second, inout);
+        }
+      }
+    }
+  }
+
+  void MeshFactory::GenerateLaneMarksForNotCenterLine(
+    const road::LaneSection& lane_section,
+    const road::Lane& lane,
+    std::vector<std::unique_ptr<Mesh>>& inout) const 
+  {
+    Mesh out_mesh;
+    const double s_start = lane_section.GetDistance();
+    const double s_end = lane_section.GetDistance() + lane_section.GetLength();
+    double s_current = s_start;
+    std::vector<geom::Vector3D> vertices;
+    std::vector<size_t> indices;
+
+    do
+    {
+      //Get Lane info
+      const carla::road::element::RoadInfoMarkRecord* road_info_mark = lane.GetInfo<carla::road::element::RoadInfoMarkRecord>(s_current);
+      if (road_info_mark != nullptr)
+      {
+        carla::road::element::LaneMarking lane_mark_info(*road_info_mark);
+
+        switch (lane_mark_info.type)
+        {
+        case carla::road::element::LaneMarking::Type::Solid:
+        {
+          size_t currentIndex = out_mesh.GetVertices().size() + 1;
+
+          std::pair<geom::Vector3D, geom::Vector3D> edges = lane.GetCornerPositions(s_current, 0);
+
+          geom::Vector3D director = edges.second - edges.first;
+          director /= director.Length();
+          geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
+
+          out_mesh.AddVertex(edges.first);
+          out_mesh.AddVertex(endmarking);
+
+          out_mesh.AddIndex(currentIndex);
+          out_mesh.AddIndex(currentIndex + 1);
+          out_mesh.AddIndex(currentIndex + 2);
+
+          out_mesh.AddIndex(currentIndex + 1);
+          out_mesh.AddIndex(currentIndex + 3);
+          out_mesh.AddIndex(currentIndex + 2);
+
+          s_current += road_param.resolution;
+          break;
+        }
+        case carla::road::element::LaneMarking::Type::Broken:
+        {
+          size_t currentIndex = out_mesh.GetVertices().size() + 1;
+
+          std::pair<geom::Vector3D, geom::Vector3D> edges =
+            lane.GetCornerPositions(s_current, road_param.extra_lane_width);
+
+          geom::Vector3D director = edges.second - edges.first;
+          director /= director.Length();
+          geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
+
+          out_mesh.AddVertex(edges.first);
+          out_mesh.AddVertex(endmarking);
+
+          s_current += road_param.resolution * 3;
+          if (s_current > s_end)
+          {
+            s_current = s_end;
+          }
+          edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
+
+          director = edges.second - edges.first;
+          director /= director.Length();
+          endmarking = edges.first + director * lane_mark_info.width;
+
+          out_mesh.AddVertex(edges.first);
+          out_mesh.AddVertex(endmarking);
+
+          out_mesh.AddIndex(currentIndex);
+          out_mesh.AddIndex(currentIndex + 1);
+          out_mesh.AddIndex(currentIndex + 2);
+
+          out_mesh.AddIndex(currentIndex + 1);
+          out_mesh.AddIndex(currentIndex + 3);
+          out_mesh.AddIndex(currentIndex + 2);
+
+          s_current += road_param.resolution * 3;
+
+          break;
+        }
+        case carla::road::element::LaneMarking::Type::SolidSolid:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        case carla::road::element::LaneMarking::Type::SolidBroken:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        case carla::road::element::LaneMarking::Type::BrokenSolid:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        case carla::road::element::LaneMarking::Type::BrokenBroken:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        case carla::road::element::LaneMarking::Type::BottsDots:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        case carla::road::element::LaneMarking::Type::Grass:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        case carla::road::element::LaneMarking::Type::Curb:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        case carla::road::element::LaneMarking::Type::Other:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        default:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        }
+
+      }
+
+    } while (s_current < s_end);
+
+    if (out_mesh.IsValid()) {
+      const carla::road::element::RoadInfoMarkRecord* road_info_mark = lane.GetInfo<carla::road::element::RoadInfoMarkRecord>(s_current);
+      if (road_info_mark != nullptr)
+      {
+        carla::road::element::LaneMarking lane_mark_info(*road_info_mark);
+        std::pair<geom::Vector3D, geom::Vector3D> edges = lane.GetCornerPositions(s_end, 0);
+        geom::Vector3D director = edges.second - edges.first;
+        director /= director.Length();
+        geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
+
+        out_mesh.AddVertex(edges.first);
+        out_mesh.AddVertex(endmarking);
+      }
+      inout.push_back(std::make_unique<Mesh>(out_mesh));
+    }
+  }
+
+  void MeshFactory::GenerateLaneMarksForCenterLine(
+    const road::Road& road,
+    const road::LaneSection& lane_section,
+    const road::Lane& lane,
+    std::vector<std::unique_ptr<Mesh>>& inout) const
+  {
+    Mesh out_mesh;
+    const double s_start = lane_section.GetDistance();
+    const double s_end = lane_section.GetDistance() + lane_section.GetLength();
+    double s_current = s_start;
+    std::vector<geom::Vector3D> vertices;
+    std::vector<size_t> indices;
+
+    do
+    {
+      //Get Lane info
+      const carla::road::element::RoadInfoMarkRecord* road_info_mark = lane.GetInfo<carla::road::element::RoadInfoMarkRecord>(s_current);
+      if (road_info_mark != nullptr)
+      {
+        carla::road::element::LaneMarking lane_mark_info(*road_info_mark);
+
+        switch (lane_mark_info.type)
+        {
+        case carla::road::element::LaneMarking::Type::Solid:
+        {
+          size_t currentIndex = out_mesh.GetVertices().size() + 1;
+
+          carla::road::element::DirectedPoint rightpoint = road.GetDirectedPointIn(s_current);
+          carla::road::element::DirectedPoint leftpoint = rightpoint;
+
+          rightpoint.ApplyLateralOffset(lane_mark_info.width * 0.5);
+          leftpoint.ApplyLateralOffset(lane_mark_info.width * -0.5);
+
+          // Unreal's Y axis hack
+          rightpoint.location.y *= -1;
+          leftpoint.location.y *= -1;
+
+          out_mesh.AddVertex(rightpoint.location);
+          out_mesh.AddVertex(leftpoint.location);
+
+          out_mesh.AddIndex(currentIndex);
+          out_mesh.AddIndex(currentIndex + 1);
+          out_mesh.AddIndex(currentIndex + 2);
+
+          out_mesh.AddIndex(currentIndex + 1);
+          out_mesh.AddIndex(currentIndex + 3);
+          out_mesh.AddIndex(currentIndex + 2);
+
+          s_current += road_param.resolution;
+          break;
+        }
+        case carla::road::element::LaneMarking::Type::Broken:
+        {
+          size_t currentIndex = out_mesh.GetVertices().size() + 1;
+
+          std::pair<geom::Vector3D, geom::Vector3D> edges =
+            lane.GetCornerPositions(s_current, road_param.extra_lane_width);
+
+
+          //out_mesh.AddVertex(endmarking + geom::Vector3D(0, 0, lane.first).Abs() * 10);
+          //out_mesh.AddVertex(edges.first + geom::Vector3D(0, 0, lane.first).Abs() * 10);
+
+          s_current += road_param.resolution * 3;
+          if (s_current > s_end)
+          {
+            s_current = s_end;
+          }
+
+
+          //out_mesh.AddVertex(endmarking + geom::Vector3D(0, 0, lane.first).Abs() * 10);
+          //out_mesh.AddVertex(edges.first + geom::Vector3D(0, 0, lane.first).Abs() * 10);
+
+          out_mesh.AddIndex(currentIndex);
+          out_mesh.AddIndex(currentIndex + 1);
+          out_mesh.AddIndex(currentIndex + 2);
+
+          out_mesh.AddIndex(currentIndex + 1);
+          out_mesh.AddIndex(currentIndex + 3);
+          out_mesh.AddIndex(currentIndex + 2);
+
+          s_current += road_param.resolution * 3;
+
+          break;
+        }
+        case carla::road::element::LaneMarking::Type::SolidSolid:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        case carla::road::element::LaneMarking::Type::SolidBroken:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        case carla::road::element::LaneMarking::Type::BrokenSolid:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        case carla::road::element::LaneMarking::Type::BrokenBroken:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        case carla::road::element::LaneMarking::Type::BottsDots:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        case carla::road::element::LaneMarking::Type::Grass:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        case carla::road::element::LaneMarking::Type::Curb:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        case carla::road::element::LaneMarking::Type::Other:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        default:
+        {
+
+          s_current += road_param.resolution;
+
+        }
+        break;
+        }
+
+      }
+
+    } while (s_current < s_end);
+
+    if (out_mesh.IsValid()) {
+      const carla::road::element::RoadInfoMarkRecord* road_info_mark = lane.GetInfo<carla::road::element::RoadInfoMarkRecord>(s_current);
+      if (road_info_mark != nullptr)
+      {
+        carla::road::element::LaneMarking lane_mark_info(*road_info_mark);
+        carla::road::element::DirectedPoint rightpoint = road.GetDirectedPointIn(s_current);
+        carla::road::element::DirectedPoint leftpoint = rightpoint;
+
+        rightpoint.ApplyLateralOffset(lane_mark_info.width * 0.5);
+        leftpoint.ApplyLateralOffset(lane_mark_info.width * -0.5);
+
+        // Unreal's Y axis hack
+        rightpoint.location.y *= -1;
+        leftpoint.location.y *= -1;
+
+        out_mesh.AddVertex(rightpoint.location);
+        out_mesh.AddVertex(leftpoint.location);
+      }
+      inout.push_back(std::make_unique<Mesh>(out_mesh));
     }
   }
 
@@ -655,6 +1049,7 @@ void MeshFactory::GenerateAllOrderedWithMaxLen(
 
     return std::make_unique<Mesh>(out_mesh);
   }
+
 
 } // namespace geom
 } // namespace carla

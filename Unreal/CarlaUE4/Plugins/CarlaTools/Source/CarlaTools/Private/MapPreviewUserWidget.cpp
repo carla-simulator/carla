@@ -3,12 +3,24 @@
 
 #include "MapPreviewUserWidget.h"
 
+#if PLATFORM_WINDOWS
+  #include "AllowWindowsPlatformTypes.h"
+#endif
+
+#include "GenericPlatform/GenericPlatformMath.h"
+//#include "GenericPlatform/GenericPlatformProcess.h"
+#include "GenericPlatform/GenericPlatformFile.h"
+
 #include "Sockets.h"
 #include "Interfaces/IPv4/IPv4Address.h"
 #include "Common/TcpSocketBuilder.h"
 #include "SocketSubsystem.h"
 #include "SocketTypes.h"
-#include "GenericPlatform/GenericPlatformMath.h"
+
+#if PLATFORM_WINDOWS
+  #include "HideWindowsPlatformTypes.h"
+#endif
+
 #include "Engine/Texture2D.h"
 #include "Containers/ResourceArray.h"
 #include "Containers/UnrealString.h"
@@ -17,12 +29,14 @@
 #include "RHICommandList.h"
 #include "RenderingThread.h"
 #include "Misc/Timespan.h"
-
 #include "Containers/UnrealString.h"
-#include "GenericPlatform/GenericPlatformProcess.h"
 #include "Misc/Paths.h"
-#include "GenericPlatform/GenericPlatformFile.h"
-#include "Unix/UnixPlatformProcess.h"
+
+
+
+
+
+//#include "Unix/UnixPlatformProcess.h"
 
 void UMapPreviewUserWidget::CreateTexture()
 {
@@ -188,7 +202,7 @@ void UMapPreviewUserWidget::UpdateLatLonCoordProperties()
   TArray<FString> CoordsArray;
   CoordStr.ParseIntoArray(CoordsArray, TEXT("&"), true);
 
-  check(CoordsArray.Num() == 4);
+  check(CoordsArray.Num() >= 4);
 
   TopRightLat = FCString::Atof(*CoordsArray[0]);
   TopRightLon = FCString::Atof(*CoordsArray[1]);

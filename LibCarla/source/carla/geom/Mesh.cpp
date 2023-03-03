@@ -268,7 +268,7 @@ namespace geom {
     return _indexes;
   }
 
-  std::vector<Mesh::index_type>& Mesh::GetIndices() {
+  std::vector<Mesh::index_type>& Mesh::GetIndexes() {
     return _indexes;
   }
   size_t Mesh::GetIndexesNum() const {
@@ -306,7 +306,7 @@ namespace geom {
       rhs.GetNormals().begin(),
       rhs.GetNormals().end());
 
-    const int vertex_to_start_concating = v_num - num_vertices_to_link;
+    const size_t vertex_to_start_concating = v_num - num_vertices_to_link;
    
     for( int i = 1; i < num_vertices_to_link; ++i )
     {

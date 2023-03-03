@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "ProceduralMeshComponent.h"
+#include "Math/Vector2D.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <boost/optional.hpp>
@@ -15,25 +16,24 @@
 
 
 class UProceduralMeshComponent;
+class UMeshComponent;
 class UCustomFileDownloader;
+class UMaterialInstance;
 /**
  * 
  */
-UCLASS()
-class CARLATOOLS_API UOpenDriveToMap : public UUserWidget
+UCLASS(Blueprintable, BlueprintType)
+class CARLATOOLS_API UOpenDriveToMap : public UObject
 {
   GENERATED_BODY()
-  
+
 public:
-  
+
   UFUNCTION()
   void ConvertOSMInOpenDrive(); 
 
-  UPROPERTY( meta = (BindWidget) )
-  class UButton* StartButton;
-
-  UPROPERTY(meta = (BindWidget))
-  class UButton* SaveButton;
+  UFUNCTION( BlueprintCallable )
+  void CreateMap();
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;
@@ -44,12 +44,13 @@ public:
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   FString Url;
 
-protected:
-  virtual void NativeConstruct() override;
-  virtual void NativeDestruct() override;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+  FVector2D OriginGeoCoordinates;
 
-  UFUNCTION( BlueprintCallable )
-  void CreateMap();
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UMaterialInstance* DefaultRoadMaterial;
+
+protected:
 
   UFUNCTION( BlueprintCallable )
   void SaveMap();
@@ -64,20 +65,26 @@ private:
   void GenerateAll(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateRoadMesh(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateSpawnPoints(const boost::optional<carla::road::Map>& CarlaMap);
+  void GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap);
 
   carla::rpc::OpendriveGenerationParameters opg_parameters;
 
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
   TArray<UStaticMesh*> CreateStaticMeshAssets();
+
+  void SetMaterialToMeshComponent(UMeshComponent* MeshComponent);
   
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
   UPROPERTY()
   TArray<AActor*> ActorMeshList;
   UPROPERTY()
+  TArray<AActor*> LaneMarkerActorList;
+  UPROPERTY()
   TArray<UStaticMesh*> MeshesToSpawn;
   UPROPERTY()
   TArray<FString> RoadType;
   UPROPERTY()
   TArray<UProceduralMeshComponent*> RoadMesh;
+  
 };

@@ -4,7 +4,7 @@
 
 int main()
 {
-    std::locale::global(std::locale("C.UTF-8"));
+    //std::locale::global(std::locale("C.UTF-8"));
     //std::locale::global(std::locale("es_ES.utf8"));
     // std::locale::global(std::locale("en_US.utf8"));
 

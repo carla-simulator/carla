@@ -12,9 +12,6 @@
 #include <osmscoutmap/MapService.h>
 #include <osmscout/BasemapDatabase.h>
 
-//using namespace std; // TODO Remove
-
-
 class MapDrawer
 {
 public:
@@ -38,9 +35,6 @@ private:
     std::string DataBasePath;
     std::string StyleSheetPath;
     int Size;
-    //size_t Latitude;
-    //size_t Longitude;
-    //size_t Zoom;
 
     // Entities
     osmscout::DatabaseParameter DbParameter;

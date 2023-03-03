@@ -23,6 +23,7 @@
 #include <vector>
 #include <unordered_map>
 #include <stdexcept>
+#include <chrono>
 
 namespace carla {
 namespace road {
@@ -1132,6 +1133,9 @@ namespace road {
     Map::GenerateOrderedChunkedMesh( const rpc::OpendriveGenerationParameters& params) const 
   {
 
+    auto start = std::chrono::high_resolution_clock::now();
+    auto stop = std::chrono::high_resolution_clock::now();
+
     geom::MeshFactory mesh_factory(params);
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> road_out_mesh_list;
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> juntion_out_mesh_list;
@@ -1203,87 +1207,96 @@ namespace road {
     });
     
     float simplificationrate = params.simplification_percentage * 0.01f;
-    for (auto&& pair : _data.GetRoads())
+    std::ofstream myfile;
+    myfile.open(std::string("C:\\log\\carlatimes") + std::string(".txt"), std::ofstream::app);
+
     {
-      const auto& road = pair.second;
-      if (!road.IsJunction()) {
-        mesh_factory.GenerateAllOrderedWithMaxLen(road, road_out_mesh_list);
+
+      myfile << " Init times: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << std::endl;
+      start = std::chrono::high_resolution_clock::now();
+
+
+      size_t num_roads = _data.GetRoads().size();
+      size_t num_roads_per_thread = 100;
+      size_t num_threads = (num_roads / num_roads_per_thread) + 1;
+      num_threads = num_threads > 1 ? num_threads : 1;
+      std::vector<std::thread> workers;
+      std::mutex write_mutex;
+
+      for ( size_t i = 0; i < num_threads; ++i ) 
+      {
+
+        std::thread neworker([this, &write_mutex, &mesh_factory, &road_out_mesh_list, i, num_roads_per_thread]() {
+     
+          std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current = std::move(GenerateRoadsMultithreaded(mesh_factory, i, num_roads_per_thread));
+          std::lock_guard<std::mutex> guard(write_mutex);
+          for ( auto&& pair : Current )
+          {
+            if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end())
+            {
+              road_out_mesh_list[pair.first].insert(road_out_mesh_list[pair.first].end(),
+                std::make_move_iterator(pair.second.begin()),
+                std::make_move_iterator(pair.second.end()));
+            }
+            else
+            {
+              road_out_mesh_list[pair.first] = std::move(pair.second);
+            }
+          }
+      
+        });
+      
+        workers.push_back(std::move(neworker));
       }
+
+      auto stop = std::chrono::high_resolution_clock::now();
+      for (size_t i = 0; i < num_threads; ++i)
+      {
+        workers[i].join();
+      }
+      stop = std::chrono::high_resolution_clock::now();
+      myfile << " Road build time: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << std::endl;
     }
 
-    for (auto& current_mesh_vector : road_out_mesh_list)
+    {
+      start = std::chrono::high_resolution_clock::now();
+
+      for (auto& current_mesh_vector : road_out_mesh_list)
       {
         if (current_mesh_vector.first != road::Lane::LaneType::Driving)
         {
           continue;
         }
 
-        for (std::unique_ptr<geom::Mesh>& current_mesh : current_mesh_vector.second)
+        size_t num_roads = current_mesh_vector.second.size();
+        size_t num_roads_per_thread = 10;
+        size_t num_threads = (num_roads / num_roads_per_thread) + 1;
+        num_threads = num_threads > 1 ? num_threads : 1;
+        std::vector<std::thread> workers;
+
+        for (size_t i = 0; i < num_threads; ++i)
         {
-
-          if (!current_mesh->IsValid())
+          std::vector<geom::Mesh*> RoadsMesh;
+          for (std::unique_ptr<geom::Mesh>& current_mesh : current_mesh_vector.second)
           {
-            continue;
+            RoadsMesh.push_back( current_mesh.get() );
           }
 
-          for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
-          {
-            current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-          }
+          std::thread neworker( &Map::DeformateRoadsMultithreaded, this, RoadsMesh, i, num_roads_per_thread, simplificationrate );
+          workers.push_back( std::move(neworker) );
+        }
 
-          for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
-          {
-            Simplify::Vertex v;
-            v.p.x = current_vertex.x;
-            v.p.y = current_vertex.y;
-            v.p.z = current_vertex.z;
-            Simplify::vertices.push_back(v);
-          }
-
-          for (int i = 0; i < current_mesh->GetIndexes().size() - 2; i += 3)
-          {
-            Simplify::Triangle t;
-            t.material = 0;
-            auto indices = current_mesh->GetIndexes();
-            t.v[0] = (indices[i]) - 1;
-            t.v[1] = (indices[i + 1]) - 1;
-            t.v[2] = (indices[i + 2]) - 1;
-
-            if (i >= current_mesh->GetIndexes().size()) {
-              std::cout << "Not right number of Indexes Index: " << i << " Indices size: " << current_mesh->GetIndexes().size() << std::endl;
-            }
-
-            Simplify::triangles.push_back(t);
-          }
-
-          // Reduce to the X% of the polys
-          float target_size = Simplify::triangles.size();
-          Simplify::simplify_mesh((target_size * simplificationrate));
-
-          current_mesh->GetVertices().clear();
-          current_mesh->GetIndices().clear();
-          for (Simplify::Vertex& current_vertex : Simplify::vertices)
-          {
-            carla::geom::Vector3D v;
-            v.x = current_vertex.p.x;
-            v.y = current_vertex.p.y;
-            v.z = current_vertex.p.z;
-            current_mesh->AddVertex(v);
-          }
-
-          for (int i = 0; i < Simplify::triangles.size(); ++i)
-          {
-            for (int j = 0; j < 3; ++j) {
-              current_mesh->GetIndices().push_back((Simplify::triangles[i].v[j]) + 1);
-            }
-          }
-
-          Simplify::vertices.clear();
-          Simplify::triangles.clear();
-
+        for (size_t i = 0; i < num_threads; ++i)
+        {
+          workers[i].join();
         }
       }
-    
+
+      stop = std::chrono::high_resolution_clock::now();
+      myfile << " Mesh processing time: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << std::endl;
+    }
+
+    start = std::chrono::high_resolution_clock::now();
 
     juntction_thread.join();
 
@@ -1300,6 +1313,11 @@ namespace road {
         road_out_mesh_list[pair.first] = std::move(pair.second);
       }
     }
+
+    stop = std::chrono::high_resolution_clock::now();
+    myfile << " Junction time : " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << std::endl;
+    myfile.close();
+
   //std::move(std::begin(juntion_out_mesh_list), std::end(juntion_out_mesh_list), std::back_inserter(road_out_mesh_list));
   // road_out_mesh_list.insert(juntion_out_mesh_list.begin(), juntion_out_mesh_list.end());
     return road_out_mesh_list;
@@ -1342,7 +1360,35 @@ namespace road {
     return out_mesh;
   }
 
-  float Map::GetZPosInDeformation(float posx, float posy) const
+  /// Buids a list of meshes related with LineMarkings
+  std::vector<std::unique_ptr<geom::Mesh>> Map::GenerateLineMarkings( const rpc::OpendriveGenerationParameters& params ) const
+  {
+    std::vector<std::unique_ptr<geom::Mesh>> LineMarks;
+    geom::MeshFactory mesh_factory(params);
+    for ( auto&& pair : _data.GetRoads() ) 
+    {
+      if ( pair.second.IsJunction() ) {
+        continue;
+      }
+      mesh_factory.GenerateLaneMarkForRoad(pair.second, LineMarks);
+    }
+
+    for (auto& Mesh : LineMarks) 
+    {
+      if (!Mesh->IsValid())
+      {
+        continue;
+      }
+
+      for (carla::geom::Vector3D& current_vertex : Mesh->GetVertices())
+      {
+        current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y) + 0.01;
+      }
+    }
+    return std::move(LineMarks);
+  }
+
+  inline float Map::GetZPosInDeformation(float posx, float posy) const
   {
     // Amplitud
     const float A1 = 0.3f;
@@ -1351,15 +1397,92 @@ namespace road {
     const float F1 = 100.0;
     const float F2 = -1500.0;
     // Modifiers
-    const float Kx1 =  0.035f;
-    const float Kx2 =  0.02f;
+    const float Kx1 = 0.035f;
+    const float Kx2 = 0.02f;
 
     const float Ky1 = -0.08f;
-    const float Ky2 =  0.05f;
+    const float Ky2 = 0.05f;
 
     return A1 * sin((Kx1 * posx + Ky1 * posy + F1)) +
-           A2 * sin((Kx2 * posx + Ky2 * posy + F2));
+      A2 * sin((Kx2 * posx + Ky2 * posy + F2));
   }
 
+  std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> 
+      Map::GenerateRoadsMultithreaded( const carla::geom::MeshFactory& mesh_factory, 
+                                        const size_t index, const size_t number_of_roads_per_thread) const 
+  {
+    std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> out;
+
+    auto start = std::next( _data.GetRoads().begin(), (index ) * number_of_roads_per_thread);
+    auto end = std::next( _data.GetRoads().begin(), (index+1) * number_of_roads_per_thread );
+    for (auto pair = start; pair != end && pair != _data.GetRoads().end(); ++pair)
+    {
+      const auto& road = pair->second;
+      if (!road.IsJunction()) {
+        mesh_factory.GenerateAllOrderedWithMaxLen(road, out);
+      }
+    }
+
+    return out;
+  }
+
+  void Map::DeformateRoadsMultithreaded( std::vector<geom::Mesh*>& roadsmesh,
+      const size_t index, const size_t number_of_roads_per_thread, const float simplificationrate) const
+  {
+    auto start = std::next( roadsmesh.begin(), ( index ) * number_of_roads_per_thread);
+    auto end = std::next( roadsmesh.begin(), (index + 1) * number_of_roads_per_thread);
+    for ( auto it = start; it != end && it != roadsmesh.end(); ++it )
+    {
+      geom::Mesh* current_mesh = *it;
+      Simplify::SimplificationObject Simplification;
+
+      if ( !current_mesh->IsValid() )
+      {
+        continue;
+      }
+
+      for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
+      {
+        Simplify::Vertex v;
+        v.p.x = current_vertex.x;
+        v.p.y = current_vertex.y;
+        v.p.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+        Simplification.vertices.push_back(v);
+      }
+
+      for (size_t i = 0; i < current_mesh->GetIndexes().size() - 2; i += 3)
+      {
+        Simplify::Triangle t;
+        t.material = 0;
+        auto indices = current_mesh->GetIndexes();
+        t.v[0] = (indices[i]) - 1;
+        t.v[1] = (indices[i + 1]) - 1;
+        t.v[2] = (indices[i + 2]) - 1;
+        Simplification.triangles.push_back(t);
+      }
+
+      // Reduce to the X% of the polys
+      float target_size = Simplification.triangles.size();
+      Simplification.simplify_mesh((target_size * simplificationrate));
+
+      current_mesh->GetVertices().clear();
+      current_mesh->GetIndexes().clear();
+      for (Simplify::Vertex& current_vertex : Simplification.vertices)
+      {
+        carla::geom::Vector3D v;
+        v.x = current_vertex.p.x;
+        v.y = current_vertex.p.y;
+        v.z = current_vertex.p.z;
+        current_mesh->AddVertex(v);
+      }
+
+      for (size_t i = 0; i < Simplification.triangles.size(); ++i)
+      {
+        current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[0]) + 1);
+        current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
+        current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
+      } 
+    }
+  }
 } // namespace road
 } // namespace carla
