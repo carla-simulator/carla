@@ -150,3 +150,6 @@ build.utils: PythonAPI
 
 osm2odr:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --build $(ARGS)
+
+osmrenderer:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSMRenderer.sh

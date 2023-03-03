@@ -82,3 +82,6 @@ deploy:
 
 osm2odr:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat" --build $(ARGS)
+
+osmrenderer:
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildOSMRenderer.bat"
