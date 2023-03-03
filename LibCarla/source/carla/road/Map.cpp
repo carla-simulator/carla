@@ -24,6 +24,7 @@
 #include <unordered_map>
 #include <stdexcept>
 #include <chrono>
+#include <thread>
 
 namespace carla {
 namespace road {
@@ -1132,15 +1133,12 @@ namespace road {
   std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>> 
     Map::GenerateOrderedChunkedMesh( const rpc::OpendriveGenerationParameters& params) const 
   {
-
-    auto start = std::chrono::high_resolution_clock::now();
-    auto stop = std::chrono::high_resolution_clock::now();
-
     geom::MeshFactory mesh_factory(params);
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> road_out_mesh_list;
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> juntion_out_mesh_list;
 
     std::unordered_map<JuncId, geom::Mesh> junction_map;
+  
     std::thread juntction_thread([ this, &juntion_out_mesh_list, &params, &mesh_factory ] {
       // Generate roads within junctions and smooth them
       for (const auto& junc_pair : _data.GetJunctions()) {
@@ -1162,7 +1160,6 @@ namespace road {
               }
             }
           }
-
           if (params.smooth_junctions) {
             std::unique_ptr<geom::Mesh> merged_mesh = mesh_factory.MergeAndSmooth(lane_meshes);
             std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
@@ -1205,17 +1202,9 @@ namespace road {
           }
         }
     });
-    
+
     float simplificationrate = params.simplification_percentage * 0.01f;
-    std::ofstream myfile;
-    myfile.open(std::string("C:\\log\\carlatimes") + std::string(".txt"), std::ofstream::app);
-
     {
-
-      myfile << " Init times: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << std::endl;
-      start = std::chrono::high_resolution_clock::now();
-
-
       size_t num_roads = _data.GetRoads().size();
       size_t num_roads_per_thread = 100;
       size_t num_threads = (num_roads / num_roads_per_thread) + 1;
@@ -1225,10 +1214,9 @@ namespace road {
 
       for ( size_t i = 0; i < num_threads; ++i ) 
       {
-
         std::thread neworker([this, &write_mutex, &mesh_factory, &road_out_mesh_list, i, num_roads_per_thread]() {
      
-          std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current = std::move(GenerateRoadsMultithreaded(mesh_factory, i, num_roads_per_thread));
+          std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current = std::move(GenerateRoadsMultithreaded(mesh_factory, i, num_roads_per_thread));          
           std::lock_guard<std::mutex> guard(write_mutex);
           for ( auto&& pair : Current )
           {
@@ -1245,22 +1233,17 @@ namespace road {
           }
       
         });
-      
         workers.push_back(std::move(neworker));
       }
-
-      auto stop = std::chrono::high_resolution_clock::now();
-      for (size_t i = 0; i < num_threads; ++i)
+      
+      for (size_t i = 0; i < workers.size(); ++i)
       {
         workers[i].join();
       }
-      stop = std::chrono::high_resolution_clock::now();
-      myfile << " Road build time: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << std::endl;
+
     }
 
-    {
-      start = std::chrono::high_resolution_clock::now();
-
+    {      
       for (auto& current_mesh_vector : road_out_mesh_list)
       {
         if (current_mesh_vector.first != road::Lane::LaneType::Driving)
@@ -1279,27 +1262,27 @@ namespace road {
           std::vector<geom::Mesh*> RoadsMesh;
           for (std::unique_ptr<geom::Mesh>& current_mesh : current_mesh_vector.second)
           {
-            RoadsMesh.push_back( current_mesh.get() );
+            if(current_mesh) {
+              RoadsMesh.push_back( current_mesh.get() );
+            }
           }
 
           std::thread neworker( &Map::DeformateRoadsMultithreaded, this, RoadsMesh, i, num_roads_per_thread, simplificationrate );
           workers.push_back( std::move(neworker) );
         }
 
-        for (size_t i = 0; i < num_threads; ++i)
+      
+        for (size_t i = 0; i < workers.size(); ++i)
         {
-          workers[i].join();
+          if( workers[i].joinable() )
+          {
+            workers[i].join();
+          }
         }
       }
-
-      stop = std::chrono::high_resolution_clock::now();
-      myfile << " Mesh processing time: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << std::endl;
     }
 
-    start = std::chrono::high_resolution_clock::now();
-
     juntction_thread.join();
-
     for (auto&& pair : juntion_out_mesh_list )
     {
       if( road_out_mesh_list.find(pair.first) != road_out_mesh_list.end() )
@@ -1313,13 +1296,7 @@ namespace road {
         road_out_mesh_list[pair.first] = std::move(pair.second);
       }
     }
-
-    stop = std::chrono::high_resolution_clock::now();
-    myfile << " Junction time : " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << std::endl;
-    myfile.close();
-
-  //std::move(std::begin(juntion_out_mesh_list), std::end(juntion_out_mesh_list), std::back_inserter(road_out_mesh_list));
-  // road_out_mesh_list.insert(juntion_out_mesh_list.begin(), juntion_out_mesh_list.end());
+    
     return road_out_mesh_list;
   }
 
@@ -1414,7 +1391,13 @@ namespace road {
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> out;
 
     auto start = std::next( _data.GetRoads().begin(), (index ) * number_of_roads_per_thread);
-    auto end = std::next( _data.GetRoads().begin(), (index+1) * number_of_roads_per_thread );
+    size_t endoffset = (index+1) * number_of_roads_per_thread;
+    if( endoffset >= _data.GetRoads().size() )
+    {
+      endoffset = _data.GetRoads().size() - 1; 
+    }
+    auto end = std::next( _data.GetRoads().begin(), endoffset );
+
     for (auto pair = start; pair != end && pair != _data.GetRoads().end(); ++pair)
     {
       const auto& road = pair->second;
@@ -1422,25 +1405,32 @@ namespace road {
         mesh_factory.GenerateAllOrderedWithMaxLen(road, out);
       }
     }
-
     return out;
   }
 
-  void Map::DeformateRoadsMultithreaded( std::vector<geom::Mesh*>& roadsmesh,
+  void Map::DeformateRoadsMultithreaded(const std::vector<geom::Mesh*>& roadsmesh,
       const size_t index, const size_t number_of_roads_per_thread, const float simplificationrate) const
   {
     auto start = std::next( roadsmesh.begin(), ( index ) * number_of_roads_per_thread);
-    auto end = std::next( roadsmesh.begin(), (index + 1) * number_of_roads_per_thread);
-    for ( auto it = start; it != end && it != roadsmesh.end(); ++it )
+    size_t endoffset = (index+1) * number_of_roads_per_thread;
+    if( endoffset >= roadsmesh.size() )
+    {
+      endoffset = roadsmesh.size() - 1; 
+    }
+    auto end = std::next( roadsmesh.begin(), endoffset );
+    for ( auto it = start; it != end  && it != roadsmesh.end(); ++it )
     {
       geom::Mesh* current_mesh = *it;
-      Simplify::SimplificationObject Simplification;
+      if( current_mesh == nullptr )
+      {
+        continue;
+      }
 
       if ( !current_mesh->IsValid() )
       {
         continue;
       }
-
+      Simplify::SimplificationObject Simplification;
       for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
       {
         Simplify::Vertex v;
@@ -1449,6 +1439,7 @@ namespace road {
         v.p.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
         Simplification.vertices.push_back(v);
       }
+
 
       for (size_t i = 0; i < current_mesh->GetIndexes().size() - 2; i += 3)
       {
@@ -1464,6 +1455,7 @@ namespace road {
       // Reduce to the X% of the polys
       float target_size = Simplification.triangles.size();
       Simplification.simplify_mesh((target_size * simplificationrate));
+      std::cout << "Post simplification for Index: " << index << std::endl;
 
       current_mesh->GetVertices().clear();
       current_mesh->GetIndexes().clear();
@@ -1482,6 +1474,7 @@ namespace road {
         current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
         current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
       } 
+
     }
   }
 } // namespace road

@@ -216,7 +216,7 @@ public:
       GenerateRoadsMultithreaded( const carla::geom::MeshFactory& mesh_factory,
                                    const size_t index, const size_t number_of_roads_per_thread) const;
 
-    void DeformateRoadsMultithreaded(std::vector<geom::Mesh*>& roadsmesh, const size_t index,
+    void DeformateRoadsMultithreaded(const std::vector<geom::Mesh*>& roadsmesh, const size_t index,
       const size_t number_of_roads_per_thread, const float simplificationrate) const;
 
   };

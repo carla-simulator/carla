@@ -39,8 +39,6 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath)
   FilePath.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);
   FilePath += ".xodr";
 
-  UE_LOG(LogCarla, Warning, TEXT("File: %s does not exist"), *FilePath);
-
   // We use the LoadFileToString to load the file into
   if (FFileHelper::SaveStringToFile(FString(OpenDriveFile.c_str()), *FilePath))
   {
@@ -100,7 +98,7 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
 
     HttpRequest->OnProcessRequestComplete().Unbind();
 
-    FString CurrentFile = FPaths::ProjectContentDir() + "CustomMaps/" + Filename + "/Opendrive/";
+    FString CurrentFile = FPaths::ProjectContentDir() + "CustomMaps/" + Filename + "/OpenDrive/";
 
     // We will use this FileManager to deal with the file.
     IPlatformFile &FileManager = FPlatformFileManager::Get().GetPlatformFile();
