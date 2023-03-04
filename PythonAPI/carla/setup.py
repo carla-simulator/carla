@@ -173,4 +173,5 @@ setup(
     url='https://github.com/carla-simulator/carla',
     author='The CARLA team',
     author_email='carla.simulator@gmail.com',
-    include_package_data=True)
+    include_package_data=True,
+    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,<3.9')
