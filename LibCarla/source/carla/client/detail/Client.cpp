@@ -574,6 +574,10 @@ namespace detail {
     _pimpl->AsyncCall("set_replayer_ignore_hero", ignore_hero);
   }
 
+  void Client::SetReplayerIgnoreSpectator(bool ignore_spectator) {
+    _pimpl->AsyncCall("set_replayer_ignore_spectator", ignore_spectator);
+  }
+
   void Client::SubscribeToStream(
       const streaming::Token &token,
       std::function<void(Buffer)> callback) {

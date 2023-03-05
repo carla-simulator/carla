@@ -16,7 +16,7 @@ help:
 import: server
 	@"${CARLA_BUILD_TOOLS_FOLDER}/Import.py" $(ARGS)
 
-CarlaUE4Editor: LibCarla
+CarlaUE4Editor: LibCarla osm2odr
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --build $(ARGS)
 
 launch: CarlaUE4Editor
@@ -82,3 +82,6 @@ deploy:
 
 osm2odr:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat" --build $(ARGS)
+
+osmrenderer:
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildOSMRenderer.bat"

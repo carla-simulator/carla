@@ -131,7 +131,9 @@ namespace geom {
 
     const std::vector<normal_type> &GetNormals() const;
 
-    const std::vector<index_type> &GetIndexes() const;
+    const std::vector<index_type>& GetIndexes() const;
+
+    std::vector<index_type> &GetIndexes();
 
     size_t GetIndexesNum() const;
 
@@ -141,6 +143,9 @@ namespace geom {
 
     /// Returns the index of the last added vertex (number of vertices).
     size_t GetLastVertexIndex() const;
+
+    /// Merges two meshes into a single mesh
+    Mesh& ConcatMesh(const Mesh& rhs, int num_vertices_to_link);
 
     /// Merges two meshes into a single mesh
     Mesh &operator+=(const Mesh &rhs);

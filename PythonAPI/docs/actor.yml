@@ -328,7 +328,7 @@
     # --------------------------------------
     - def_name: get_speed_limit
       return: float
-      return_units: m/s
+      return_units: km/h
       doc: >
         The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). The speed limit is updated when passing by a speed limit signal, so a vehicle might have none right after spawning.
     # --------------------------------------

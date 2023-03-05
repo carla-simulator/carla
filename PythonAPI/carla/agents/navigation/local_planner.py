@@ -216,6 +216,10 @@ class LocalPlanner(object):
 
         self._stop_waypoint_creation = stop_waypoint_creation
 
+    def set_offset(self, offset):
+        """Sets an offset for the vehicle"""
+        self._vehicle_controller.set_offset(offset)
+
     def run_step(self, debug=False):
         """
         Execute one step of local planning which involves running the longitudinal and lateral PID controllers to

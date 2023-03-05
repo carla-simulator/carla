@@ -83,8 +83,7 @@ private:
   using IdleInfo = std::pair<ActorId, double>;
   void UpdateRegisteredActorsData(const bool hybrid_physics_mode, IdleInfo &max_idle_time);
 
-  void UpdateData(const bool hybrid_physics_mode,
-                  ALSM::IdleInfo &max_idle_time, const Actor &vehicle,
+  void UpdateData(const bool hybrid_physics_mode, const Actor &vehicle,
                   const bool hero_actor_present, const float physics_radius_square);
 
   void UpdateUnregisteredActorsData();
