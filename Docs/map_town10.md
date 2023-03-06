@@ -24,7 +24,7 @@ An ocean promenade lines the other side of the town.
 
 ![town_10_promenade](../img/catalogue/maps/town10/promenade.webp)
 
-The architecture includes numerous skyscrapers in varying styles, including glossy, reflective buildings and unusually shaped towers.
+The architecture includes numerous skyscrapers in varying styles, including glossy, reflective buildings and unusually shaped twisting and cylindrical towers.
 
 ![town_10_skyscrapers](../img/catalogue/maps/town10/skyscrapers.webp)
 
