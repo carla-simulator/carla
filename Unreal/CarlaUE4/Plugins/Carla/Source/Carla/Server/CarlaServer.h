@@ -11,6 +11,11 @@
 
 #include "CoreMinimal.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/multigpu/router.h>
+#include <carla/streaming/Server.h>
+#include <compiler/enable-ue4-macros.h>
+
 class UCarlaEpisode;
 
 class FCarlaServer
@@ -21,7 +26,7 @@ public:
 
   ~FCarlaServer();
 
-  FDataMultiStream Start(uint16_t RPCPort, uint16_t StreamingPort);
+  FDataMultiStream Start(uint16_t RPCPort, uint16_t StreamingPort, uint16_t SecondaryPort);
 
   void NotifyBeginEpisode(UCarlaEpisode &Episode);
 
@@ -31,11 +36,17 @@ public:
 
   void RunSome(uint32 Milliseconds);
 
+  void Tick();
+  
   bool TickCueReceived();
 
   void Stop();
 
   FDataStream OpenStream() const;
+
+  std::shared_ptr<carla::multigpu::Router> GetSecondaryServer();
+
+  carla::streaming::Server &GetStreamingServer();
 
 private:
 

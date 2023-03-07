@@ -38,20 +38,20 @@ struct FActiveActor
   FQuat Rotation;
 };
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FCarlaMapTile
 {
   GENERATED_BODY()
 
-  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Carla Map Tile")
   FString Name; // Tile_{TileID_X}_{TileID_Y}
 
   // Absolute location, does not depend on rebasing
-  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
+  UPROPERTY(VisibleAnywhere,  BlueprintReadWrite, Category = "Carla Map Tile")
   FVector Location{0.0f};
   // TODO: not FVector
 
-  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
+  UPROPERTY(VisibleAnywhere,  BlueprintReadWrite, Category = "Carla Map Tile")
   ULevelStreamingDynamic* StreamingLevel = nullptr;
 
   bool TilesSpawned = false;
@@ -104,6 +104,12 @@ public:
   UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
   void ClearWorldAndTiles();
 
+  UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
+  void GenerateMap_Editor()
+  {
+    if (!LargeMapTilePath.IsEmpty()) GenerateMap(LargeMapTilePath);
+  }
+
   void AddActorToUnloadedList(const FCarlaActor& CarlaActor, const FTransform& Transform);
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
@@ -148,6 +154,10 @@ public:
 
   void SetTileSize(float Size);
 
+  float GetTileSize();
+
+  FVector GetTile0Offset();
+
   void SetLayerStreamingDistance(float Distance);
 
   void SetActorStreamingDistance(float Distance);
@@ -156,8 +166,7 @@ public:
 
   float GetActorStreamingDistance() const;
 
-protected:
-
+  UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   FIntVector GetTileVectorID(FVector TileLocation) const;
 
   FIntVector GetTileVectorID(FDVector TileLocation) const;
@@ -165,7 +174,8 @@ protected:
   FIntVector GetTileVectorID(TileID TileID) const;
 
   FVector GetTileLocation(TileID TileID) const;
-
+  
+  UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   FVector GetTileLocation(FIntVector TileVectorID) const;
 
   FDVector GetTileLocationD(TileID TileID) const;
@@ -178,14 +188,23 @@ protected:
   TileID GetTileID(FDVector TileLocation) const;
 
   TileID GetTileID(FIntVector TileVectorID) const;
-
-  FCarlaMapTile& GetCarlaMapTile(FVector Location);
+public:
+  FCarlaMapTile* GetCarlaMapTile(FVector Location);
 
   FCarlaMapTile& GetCarlaMapTile(ULevel* InLevel);
 
-  FCarlaMapTile* GetCarlaMapTile(FIntVector TileVectorID);
+  UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
+  FCarlaMapTile& GetCarlaMapTile(FIntVector TileVectorID);
+  
+  FCarlaMapTile* GetCarlaMapTile(TileID TileID);
 
   FCarlaMapTile& LoadCarlaMapTile(FString TileMapPath, TileID TileId);
+
+  ACarlaWheeledVehicle* GetHeroVehicle();
+
+protected:
+
+  void RemoveLandscapeCollisionIfHaveTerraMechanics(ULevel* InLevel);
 
   void UpdateTilesState();
 
@@ -236,6 +255,9 @@ protected:
   // TODO: support rebase in more than one hero vehicle
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   TArray<AActor*> ActorsToConsider;
+
+  UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
+  AActor* Spectator = nullptr;
   //UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   TArray<FCarlaActor::IdType> ActiveActors;
   TArray<FCarlaActor::IdType> DormantActors;
@@ -281,13 +303,11 @@ protected:
   float TileSide = 2.0f * 1000.0f * 100.0f; // 2km
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  FVector LocalTileOffset = FVector(0,0,0);
+
+  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   bool ShouldTilesBlockOnLoad = false;
 
-  UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
-    void GenerateMap_Editor()
-  {
-    if (!LargeMapTilePath.IsEmpty()) GenerateMap(LargeMapTilePath);
-  }
 
   void RegisterTilesInWorldComposition();
 
@@ -320,5 +340,8 @@ protected:
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   bool bPrintErrors = false;
+
+  UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
+  bool bHasTerramechanics = false;
 
 };

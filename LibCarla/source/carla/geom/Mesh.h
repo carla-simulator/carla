@@ -12,7 +12,9 @@
 #include <carla/geom/Vector2D.h>
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
+#include <compiler/enable-ue4-macros.h>
 #include "Util/ProceduralCustomMesh.h"
+#include <compiler/disable-ue4-macros.h>
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
 namespace carla {
@@ -129,7 +131,9 @@ namespace geom {
 
     const std::vector<normal_type> &GetNormals() const;
 
-    const std::vector<index_type> &GetIndexes() const;
+    const std::vector<index_type>& GetIndexes() const;
+
+    std::vector<index_type> &GetIndexes();
 
     size_t GetIndexesNum() const;
 
@@ -139,6 +143,9 @@ namespace geom {
 
     /// Returns the index of the last added vertex (number of vertices).
     size_t GetLastVertexIndex() const;
+
+    /// Merges two meshes into a single mesh
+    Mesh& ConcatMesh(const Mesh& rhs, int num_vertices_to_link);
 
     /// Merges two meshes into a single mesh
     Mesh &operator+=(const Mesh &rhs);

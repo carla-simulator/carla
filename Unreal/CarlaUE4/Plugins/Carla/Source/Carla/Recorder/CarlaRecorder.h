@@ -19,7 +19,9 @@
 #include "CarlaRecorderLightScene.h"
 #include "CarlaRecorderLightVehicle.h"
 #include "CarlaRecorderAnimVehicle.h"
+#include "CarlaRecorderAnimVehicleWheels.h"
 #include "CarlaRecorderAnimWalker.h"
+#include "CarlaRecorderAnimBiker.h"
 #include "CarlaRecorderCollision.h"
 #include "CarlaRecorderEventAdd.h"
 #include "CarlaRecorderEventDel.h"
@@ -29,6 +31,8 @@
 #include "CarlaRecorderPosition.h"
 #include "CarlaRecorderQuery.h"
 #include "CarlaRecorderState.h"
+#include "CarlaRecorderVisualTime.h"
+#include "CarlaRecorderWalkerBones.h"
 #include "CarlaReplayer.h"
 
 #include "CarlaRecorder.generated.h"
@@ -59,7 +63,12 @@ enum class CarlaRecorderPacketId : uint8_t
   PlatformTime,
   PhysicsControl,
   TrafficLightTime,
-  TriggerVolume
+  TriggerVolume,
+  FrameCounter,
+  WalkerBones,
+  VisualTime,
+  AnimVehicleWheels,
+  AnimBiker
 };
 
 /// Recorder for the simulation
@@ -106,7 +115,11 @@ public:
 
   void AddAnimVehicle(const CarlaRecorderAnimVehicle &Vehicle);
 
+  void AddAnimVehicleWheels(const CarlaRecorderAnimWheels &VehicleWheels);
+
   void AddAnimWalker(const CarlaRecorderAnimWalker &Walker);
+
+  void AddAnimBiker(const CarlaRecorderAnimBiker &Biker);
 
   void AddLightVehicle(const CarlaRecorderLightVehicle &LightVehicle);
 
@@ -121,6 +134,8 @@ public:
   void AddPhysicsControl(const ACarlaWheeledVehicle& Vehicle);
 
   void AddTrafficLightTime(const ATrafficLightBase& TrafficLight);
+
+  void AddActorBones(FCarlaActor *CarlaActor);
 
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
@@ -151,6 +166,7 @@ public:
       uint32_t FollowId, bool ReplaySensors);
   void SetReplayerTimeFactor(double TimeFactor);
   void SetReplayerIgnoreHero(bool IgnoreHero);
+  void SetReplayerIgnoreSpectator(bool IgnoreSpectator);
   void StopReplayer(bool KeepActors = false);
 
   void Ticking(float DeltaSeconds);
@@ -179,7 +195,9 @@ private:
   CarlaRecorderPositions Positions;
   CarlaRecorderStates States;
   CarlaRecorderAnimVehicles Vehicles;
+  CarlaRecorderAnimVehicleWheels Wheels;
   CarlaRecorderAnimWalkers Walkers;
+  CarlaRecorderAnimBikers Bikers;
   CarlaRecorderLightVehicles LightVehicles;
   CarlaRecorderLightScenes LightScenes;
   CarlaRecorderActorsKinematics Kinematics;
@@ -188,7 +206,8 @@ private:
   CarlaRecorderPlatformTime PlatformTime;
   CarlaRecorderPhysicsControls PhysicsControls;
   CarlaRecorderTrafficLightTimes TrafficLightTimes;
-
+  CarlaRecorderWalkersBones WalkersBones;
+  CarlaRecorderVisualTime VisualTime;
 
   // replayer
   CarlaReplayer Replayer;
@@ -199,7 +218,9 @@ private:
   void AddExistingActors(void);
   void AddActorPosition(FCarlaActor *CarlaActor);
   void AddWalkerAnimation(FCarlaActor *CarlaActor);
+  void AddBikerAnimation(FCarlaActor *CarlaActor);
   void AddVehicleAnimation(FCarlaActor *CarlaActor);
+  void AddVehicleWheelsAnimation(FCarlaActor *CarlaActor);
   void AddTrafficLightState(FCarlaActor *CarlaActor);
   void AddVehicleLight(FCarlaActor *CarlaActor);
   void AddActorKinematics(FCarlaActor *CarlaActor);

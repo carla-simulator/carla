@@ -137,6 +137,10 @@ namespace client {
       _simulator->SetReplayerIgnoreHero(ignore_hero);
     }
 
+    void SetReplayerIgnoreSpectator(bool ignore_spectator) {
+      _simulator->SetReplayerIgnoreSpectator(ignore_spectator);
+    }
+
     void ApplyBatch(
         std::vector<rpc::Command> commands,
         bool do_tick_cue = false) const {

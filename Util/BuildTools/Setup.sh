@@ -8,12 +8,13 @@ DOC_STRING="Download and install the required libraries for carla."
 
 USAGE_STRING="Usage: $0 [--python-version=VERSION]"
 
-OPTS=`getopt -o h --long help,chrono,python-version: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,chrono,pytorch,python-version: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
 PY_VERSION_LIST=3
 USE_CHRONO=false
+USE_PYTORCH=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -22,6 +23,9 @@ while [[ $# -gt 0 ]]; do
       shift 2 ;;
     --chrono )
       USE_CHRONO=true;
+      shift ;;
+    --pytorch )
+      USE_PYTORCH=true;
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -37,16 +41,13 @@ done
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-command -v /usr/bin/clang++-8 >/dev/null 2>&1 || {
-  echo >&2 "clang 8 is required, but it's not installed.";
-  exit 1;
-}
-
-CXX_TAG=c8
-export CC=/usr/bin/clang-8
-export CXX=/usr/bin/clang++-8
-
 source $(dirname "$0")/Environment.sh
+
+export CC="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang"
+export CXX="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++"
+export PATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin:$PATH"
+
+CXX_TAG=c10
 
 # Convert comma-separated string to array of unique elements.
 IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
@@ -54,69 +55,24 @@ IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
 mkdir -p ${CARLA_BUILD_FOLDER}
 pushd ${CARLA_BUILD_FOLDER} >/dev/null
 
-# ==============================================================================
-# -- Get and compile libc++ ----------------------------------------------------
-# ==============================================================================
-
-LLVM_BASENAME=llvm-8.0
-
-LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
-LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
-
-if [[ -d "${LLVM_BASENAME}-install" ]] ; then
-  log "${LLVM_BASENAME} already installed."
-else
-  rm -Rf ${LLVM_BASENAME}-source ${LLVM_BASENAME}-build
-
-  log "Retrieving libc++."
-
-  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
-  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
-  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
-
-  log "Compiling libc++."
-
-  mkdir -p ${LLVM_BASENAME}-build
-
-  pushd ${LLVM_BASENAME}-build >/dev/null
-
-  cmake -G "Ninja" \
-      -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=OFF \
-      -DLIBCXX_INSTALL_EXPERIMENTAL_LIBRARY=OFF \
-      -DLLVM_ENABLE_EH=OFF \
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="../${LLVM_BASENAME}-install" \
-      ../${LLVM_BASENAME}-source
-
-  ninja cxx
-
-  ninja install-libcxx
-
-  ninja install-libcxxabi
-
-  popd >/dev/null
-
-  rm -Rf ${LLVM_BASENAME}-source ${LLVM_BASENAME}-build
-
-fi
-
-unset LLVM_BASENAME
+LLVM_INCLUDE="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
+LLVM_LIBPATH="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
 
 # ==============================================================================
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
 
-BOOST_VERSION=1.72.0
+BOOST_VERSION=1.80.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
 
 for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
-
   SHOULD_BUILD_BOOST=true
   PYTHON_VERSION=$(/usr/bin/env python${PY_VERSION} -V 2>&1)
-  LIB_NAME=${PYTHON_VERSION:7:3}
-  LIB_NAME=${LIB_NAME//.}
+  LIB_NAME=$(cut -d . -f 1,2 <<< "$PYTHON_VERSION" | tr -d .)
+  LIB_NAME=${LIB_NAME:7}
   if [[ -d "${BOOST_BASENAME}-install" ]] ; then
     if [ -f "${BOOST_BASENAME}-install/lib/libboost_python${LIB_NAME}.a" ] ; then
       SHOULD_BUILD_BOOST=false
@@ -141,14 +97,10 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
     mkdir -p ${BOOST_BASENAME}-install/include
     mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
-    # Boost patch for exception handling
-    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-source/boost/rational.hpp"
-    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-source/boost/geometry/io/wkt/read.hpp"
-    # ---
 
     pushd ${BOOST_BASENAME}-source >/dev/null
 
-    BOOST_TOOLSET="clang-8.0"
+    BOOST_TOOLSET="clang-10.0"
     BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
     py3="/usr/bin/env python${PY_VERSION}"
@@ -173,11 +125,6 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     rm -Rf ${BOOST_BASENAME}-source
     rm ${BOOST_PACKAGE_BASENAME}.tar.gz
-
-    # Boost patch for exception handling
-    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-install/include/boost/rational.hpp"
-    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-install/include/boost/geometry/io/wkt/read.hpp"
-    # ---
 
     # Install boost dependencies
     mkdir -p "${LIBCARLA_INSTALL_CLIENT_FOLDER}/include/system"
@@ -429,17 +376,25 @@ XERCESC_VERSION=3.2.3
 XERCESC_BASENAME=xerces-c-${XERCESC_VERSION}
 
 XERCESC_TEMP_FOLDER=${XERCESC_BASENAME}
-XERCESC_REPO=https://ftp.cixug.es/apache//xerces/c/3/sources/xerces-c-${XERCESC_VERSION}.tar.gz
+XERCESC_REPO=https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-${XERCESC_VERSION}.tar.gz
 
 XERCESC_SRC_DIR=${XERCESC_BASENAME}-source
 XERCESC_INSTALL_DIR=${XERCESC_BASENAME}-install
+XERCESC_INSTALL_SERVER_DIR=${XERCESC_BASENAME}-install-server
 XERCESC_LIB=${XERCESC_INSTALL_DIR}/lib/libxerces-c.a
+XERCESC_SERVER_LIB=${XERCESC_INSTALL_SERVER_DIR}/lib/libxerces-c.a
 
-if [[ -d ${XERCESC_INSTALL_DIR} ]] ; then
+if [[ -d ${XERCESC_INSTALL_DIR} &&  -d ${XERCESC_INSTALL_SERVER_DIR} ]] ; then
   log "Xerces-c already installed."
 else
   log "Retrieving xerces-c."
   wget ${XERCESC_REPO}
+
+  # try to use the backup boost we have in Jenkins
+  if [[ ! -f "${XERCESC_BASENAME}.tar.gz" ]] ; then
+    log "Using xerces backup"
+    wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${XERCESC_BASENAME}.tar.gz" || true
+  fi
 
   log "Extracting xerces-c."
   tar -xzf ${XERCESC_BASENAME}.tar.gz
@@ -462,12 +417,65 @@ else
 
   popd >/dev/null
 
+  mkdir -p ${XERCESC_INSTALL_SERVER_DIR}
+
+  pushd ${XERCESC_SRC_DIR}/build >/dev/null
+
+  cmake -G "Ninja" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -fPIC -w -I${LLVM_INCLUDE} -L${LLVM_LIBPATH}" \
+      -DCMAKE_INSTALL_PREFIX="../../${XERCESC_INSTALL_SERVER_DIR}" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_SHARED_LIBS=OFF \
+      -Dtranscoder=gnuiconv \
+      -Dnetwork=OFF \
+      ..
+  ninja
+  ninja install
+
+  popd >/dev/null
+
   rm -Rf ${XERCESC_BASENAME}.tar.gz
   rm -Rf ${XERCESC_SRC_DIR}
 fi
 
 mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 cp ${XERCESC_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+
+mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+cp -p ${XERCESC_SERVER_LIB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+
+# ==============================================================================
+# -- Get Eigen headers 3.1.0 (CARLA dependency) -------------------------------------
+# ==============================================================================
+
+EIGEN_VERSION=3.1.0
+EIGEN_REPO=https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VERSION}/eigen-${EIGEN_VERSION}.tar.gz
+EIGEN_BASENAME=eigen-${EIGEN_VERSION}
+
+EIGEN_SRC_DIR=eigen-${EIGEN_VERSION}-src
+EIGEN_INSTALL_DIR=eigen-${EIGEN_VERSION}-install
+EIGEN_INCLUDE=${EIGEN_INSTALL_DIR}/include
+
+
+if [[ -d ${EIGEN_INSTALL_DIR} ]] ; then
+  log "Eigen already installed."
+else
+  log "Retrieving Eigen."
+  wget ${EIGEN_REPO}
+
+  log "Extracting Eigen."
+  tar -xzf ${EIGEN_BASENAME}.tar.gz
+  mv ${EIGEN_BASENAME} ${EIGEN_SRC_DIR}
+  mkdir -p ${EIGEN_INCLUDE}/unsupported
+  mv ${EIGEN_SRC_DIR}/Eigen ${EIGEN_INCLUDE}
+  mv ${EIGEN_SRC_DIR}/unsupported/Eigen ${EIGEN_INCLUDE}/unsupported/Eigen
+
+  rm -Rf ${EIGEN_BASENAME}.tar.gz
+  rm -Rf ${EIGEN_SRC_DIR}
+fi
+
+mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+cp -p -r ${EIGEN_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
 
 if ${USE_CHRONO} ; then
 
@@ -544,7 +552,6 @@ if ${USE_CHRONO} ; then
   mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
   cp -p ${CHRONO_INSTALL_DIR}/lib/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p -r ${CHRONO_INSTALL_DIR}/include/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
-
 fi
 
 # ==============================================================================
@@ -560,6 +567,7 @@ SQLITE_INSTALL_DIR=sqlite-install
 
 SQLITE_INCLUDE_DIR=${PWD}/${SQLITE_INSTALL_DIR}/include
 SQLITE_LIB=${PWD}/${SQLITE_INSTALL_DIR}/lib/libsqlite3.a
+SQLITE_FULL_LIB=${PWD}/${SQLITE_INSTALL_DIR}/lib/
 SQLITE_EXE=${PWD}/${SQLITE_INSTALL_DIR}/bin/sqlite3
 
 if [[ -d ${SQLITE_INSTALL_DIR} ]] ; then
@@ -576,7 +584,7 @@ else
 
   pushd ${SQLITE_SOURCE_DIR} >/dev/null
 
-  export CFLAGS="-fPIC"
+  export CFLAGS="-fPIC -w"
   ./configure --prefix=${PWD}/../sqlite-install/
   make
   make install
@@ -590,6 +598,9 @@ fi
 mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 cp ${SQLITE_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 
+mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+cp -p -r ${SQLITE_FULL_LIB} ${LIBCARLA_INSTALL_SERVER_FOLDER}
+
 # ==============================================================================
 # -- Get and compile PROJ ------------------------------------------------------
 # ==============================================================================
@@ -600,10 +611,13 @@ PROJ_REPO=https://download.osgeo.org/proj/${PROJ_VERSION}.tar.gz
 PROJ_TAR=${PROJ_VERSION}.tar.gz
 PROJ_SRC_DIR=proj-src
 PROJ_INSTALL_DIR=proj-install
+PROJ_INSTALL_SERVER_DIR=proj-install-server
 PROJ_INSTALL_DIR_FULL=${PWD}/${PROJ_INSTALL_DIR}
+PROJ_INSTALL_SERVER_DIR_FULL=${PWD}/${PROJ_INSTALL_SERVER_DIR}
 PROJ_LIB=${PROJ_INSTALL_DIR_FULL}/lib/libproj.a
+PROJ_SERVER_LIB=${PROJ_INSTALL_SERVER_DIR_FULL}/lib/libproj.a
 
-if [[ -d ${PROJ_INSTALL_DIR} ]] ; then
+if [[ -d ${PROJ_INSTALL_DIR} && -d ${PROJ_INSTALL_SERVER_DIR_FULL} ]] ; then
   log "PROJ already installed."
 else
   log "Retrieving PROJ"
@@ -613,8 +627,8 @@ else
   tar -xzf ${PROJ_TAR}
   mv ${PROJ_VERSION} ${PROJ_SRC_DIR}
 
-  mkdir ${PROJ_SRC_DIR}/build
-  mkdir ${PROJ_INSTALL_DIR}
+  mkdir -p ${PROJ_SRC_DIR}/build
+  mkdir -p ${PROJ_INSTALL_DIR}
 
   pushd ${PROJ_SRC_DIR}/build >/dev/null
 
@@ -632,12 +646,33 @@ else
 
   popd >/dev/null
 
+  mkdir -p ${PROJ_INSTALL_SERVER_DIR}
+
+  pushd ${PROJ_SRC_DIR}/build >/dev/null
+
+  cmake -G "Ninja" .. \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}"  \
+      -DSQLITE3_INCLUDE_DIR=${SQLITE_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_LIB} \
+      -DEXE_SQLITE3=${SQLITE_EXE} \
+      -DENABLE_TIFF=OFF -DENABLE_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF \
+      -DCMAKE_BUILD_TYPE=Release -DBUILD_PROJINFO=OFF \
+      -DBUILD_CCT=OFF -DBUILD_CS2CS=OFF -DBUILD_GEOD=OFF -DBUILD_GIE=OFF \
+      -DBUILD_PROJ=OFF -DBUILD_TESTING=OFF \
+      -DCMAKE_INSTALL_PREFIX=${PROJ_INSTALL_SERVER_DIR_FULL}
+  ninja
+  ninja install
+
+  popd >/dev/null
+
   rm -Rf ${PROJ_TAR}
   rm -Rf ${PROJ_SRC_DIR}
 
 fi
 
 cp ${PROJ_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+
+mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+cp -p ${PROJ_SERVER_LIB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
 
 # ==============================================================================
 # -- Get and compile patchelf --------------------------------------------------
@@ -680,6 +715,85 @@ fi
 
 mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
 cp ${PATCHELF_EXE} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
+
+# ==============================================================================
+# -- Download libtorch and dependencies --------------------------------------------------
+# ==============================================================================
+
+if ${USE_PYTORCH} ; then
+
+  LIBTORCH_BASENAME=libtorch
+
+  LIBTORCH_PATH=${PWD}/${LIBTORCH_BASENAME}
+  LIBTORCH_INCLUDE=${LIBTORCH_PATH}/include
+  LIBTORCH_LIB=${LIBTORCH_PATH}/lib
+  LIBTORCH_ZIPFILE=libtorch-shared-with-deps-1.11.0+cu113.zip
+  LIBTORCH_REPO=https://download.pytorch.org/libtorch/cu113/libtorch-shared-with-deps-1.11.0%2Bcu113.zip
+  if [[ ! -d ${LIBTORCH_PATH} ]] ; then
+    wget ${LIBTORCH_REPO}
+    unzip ${LIBTORCH_ZIPFILE}
+  fi
+
+  function build_torch_extension {
+
+    LIB_SOURCE=$1
+    LIB_INSTALL=$2
+    LIB_REPO=$3
+    if [[ ! -d ${LIB_INSTALL} ]] ; then
+      if [[ ! -d ${LIB_SOURCE} ]] ; then
+        mkdir -p ${LIB_SOURCE}
+        log "${LIB_REPO}"
+        git clone ${LIB_REPO} ${LIB_SOURCE}
+        mkdir -p ${LIB_SOURCE}/build
+      fi
+      pushd ${LIB_SOURCE}/build >/dev/null
+
+      cmake -DCMAKE_PREFIX_PATH="${LIBTORCH_PATH}" \
+          -DCMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc" \
+          -DCMAKE_INSTALL_PREFIX="${LIB_INSTALL}" \
+          -DCMAKE_CUDA_FLAGS="-gencode=arch=compute_35,code=sm_35 -gencode=arch=compute_37,code=sm_37 -gencode=arch=compute_50,code=sm_50 -gencode=arch=compute_52,code=sm_52 -gencode=arch=compute_53,code=sm_53 -gencode=arch=compute_60,code=sm_60 -gencode=arch=compute_61,code=sm_61 -gencode=arch=compute_62,code=sm_62 -gencode=arch=compute_70,code=sm_70 -gencode=arch=compute_72,code=sm_72 -gencode=arch=compute_75,code=sm_75 -gencode=arch=compute_80,code=sm_80 -gencode=arch=compute_86,code=sm_86 -gencode=arch=compute_87,code=sm_87 -Wno-deprecated-gpu-targets" \
+          -DWITH_CUDA=ON \
+          ..
+      make
+      make install
+      popd >/dev/null
+    fi
+
+  }
+
+  log "Build libtorch scatter"
+  #LibtorchScatter
+  LIBTORCHSCATTER_BASENAME=libtorchscatter
+  LIBTORCHSCATTER_SOURCE_DIR=${PWD}/${LIBTORCHSCATTER_BASENAME}-source
+  LIBTORCHSCATTER_INSTALL_DIR=${PWD}/${LIBTORCHSCATTER_BASENAME}-install
+  LIBTORCHSCATTER_INCLUDE=${LIBTORCHSCATTER_INSTALL_DIR}/include
+  LIBTORCHSCATTER_LIB=${LIBTORCHSCATTER_INSTALL_DIR}/lib
+  LIBTORCHSCATTER_REPO="https://github.com/rusty1s/pytorch_scatter.git"
+
+  build_torch_extension ${LIBTORCHSCATTER_SOURCE_DIR} ${LIBTORCHSCATTER_INSTALL_DIR} "${LIBTORCHSCATTER_REPO}"
+
+  log "Build libtorch cluster"
+  LIBTORCHCLUSTER_BASENAME=libtorchcluster
+  LIBTORCHCLUSTER_SOURCE_DIR=${PWD}/${LIBTORCHCLUSTER_BASENAME}-source
+  LIBTORCHCLUSTER_INSTALL_DIR=${PWD}/${LIBTORCHCLUSTER_BASENAME}-install
+  LIBTORCHCLUSTER_INCLUDE=${LIBTORCHCLUSTER_INSTALL_DIR}/include
+  LIBTORCHCLUSTER_LIB=${LIBTORCHCLUSTER_INSTALL_DIR}/lib
+  LIBTORCHCLUSTER_REPO="https://github.com/rusty1s/pytorch_cluster.git"
+
+  build_torch_extension ${LIBTORCHCLUSTER_SOURCE_DIR} ${LIBTORCHCLUSTER_INSTALL_DIR} "${LIBTORCHCLUSTER_REPO}"
+
+  mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  cp -p ${LIBTORCH_LIB}/*.a ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  cp -p ${LIBTORCH_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  cp -p ${LIBTORCHSCATTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  cp -p ${LIBTORCHCLUSTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  
+  mkdir -p ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
+  cp -p ${LIBTORCH_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
+  cp -p ${LIBTORCHSCATTER_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
+  cp -p ${LIBTORCHCLUSTER_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
+fi
+
 
 # ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
@@ -768,6 +882,11 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBCXX_LIBPATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBCXX_LIBPATH}")
+elseif (CMAKE_BUILD_TYPE STREQUAL "Pytorch")
+  list(APPEND CMAKE_PREFIX_PATH "${LIBTORCH_PATH}")
+  list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHSCATTER_INSTALL_DIR}")
+  list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHCLUSTER_INSTALL_DIR}")
+  list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHSPARSE_INSTALL_DIR}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   # Here libraries linking libstdc++.
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBSTDCXX_INCLUDE}")

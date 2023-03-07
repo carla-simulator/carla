@@ -185,6 +185,7 @@ class TestApplyVehiclePhysics(SyncSmokeTest):
         print("TestApplyVehiclePhysics.test_single_physics_control")
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
+        bp_vehicles = self.filter_vehicles_for_old_towns(bp_vehicles)
         for bp_veh in bp_vehicles:
             self.check_single_physics_control(bp_veh)
 
@@ -192,10 +193,12 @@ class TestApplyVehiclePhysics(SyncSmokeTest):
         print("TestApplyVehiclePhysics.test_multiple_physics_control")
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
+        bp_vehicles = self.filter_vehicles_for_old_towns(bp_vehicles)
         for idx in range(0, len(bp_vehicles)):
             self.check_multiple_physics_control(bp_vehicles, idx)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
+        bp_vehicles = self.filter_vehicles_for_old_towns(bp_vehicles)
         self.check_multiple_physics_control(bp_vehicles)
 
 class TestVehicleFriction(SyncSmokeTest):

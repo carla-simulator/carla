@@ -86,24 +86,22 @@ static auto ApplyBatchCommandsSync(
         bool autopilotValue = false;
 
         CommandType::CommandType& cmd_type = cmds[i].command;
-        const boost::typeindex::type_info& cmd_type_info = cmd_type.type();
 
         // check SpawnActor command
-        if (cmd_type_info == typeid(carla::rpc::Command::SpawnActor)) {
+        if (const auto *maybe_spawn_actor_cmd = boost::variant2::get_if<carla::rpc::Command::SpawnActor>(&cmd_type)) {
           // check inside 'do_after'
-          auto &spawn = boost::get<carla::rpc::Command::SpawnActor>(cmd_type);
-          for (auto &cmd : spawn.do_after) {
-            if (cmd.command.type() == typeid(carla::rpc::Command::SetAutopilot)) {
-              tm_port = boost::get<carla::rpc::Command::SetAutopilot>(cmd.command).tm_port;
-              autopilotValue = boost::get<carla::rpc::Command::SetAutopilot>(cmd.command).enabled;
+          for (auto &cmd : maybe_spawn_actor_cmd->do_after) {
+            if (const auto *maybe_set_autopilot_command = boost::variant2::get_if<carla::rpc::Command::SetAutopilot>(&cmd.command)) {
+              tm_port = maybe_set_autopilot_command->tm_port;
+              autopilotValue = maybe_set_autopilot_command->enabled;
               isAutopilot = true;
             }
           }
         }
         // check SetAutopilot command
-        else if (cmd_type_info == typeid(carla::rpc::Command::SetAutopilot)) {
-          tm_port = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).tm_port;
-          autopilotValue = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).enabled;
+        else if (const auto *maybe_set_autopilot_command = boost::variant2::get_if<carla::rpc::Command::SetAutopilot>(&cmd_type)) {
+          tm_port = maybe_set_autopilot_command->tm_port;
+          autopilotValue = maybe_set_autopilot_command->enabled;
           isAutopilot = true;
         }
 
@@ -156,10 +154,17 @@ static auto ApplyBatchCommandsSync(
   vehicles_to_enable.shrink_to_fit();
   vehicles_to_disable.shrink_to_fit();
 
+  // Ensure the TM always receives the same vector by sorting the elements
+  std::vector<carla::traffic_manager::ActorPtr> sorted_vehicle_to_enable = vehicles_to_enable;
+  std::sort(sorted_vehicle_to_enable.begin(), sorted_vehicle_to_enable.end(), [](carla::traffic_manager::ActorPtr &a, carla::traffic_manager::ActorPtr &b) {return a->GetId() < b->GetId(); });
+
+  std::vector<carla::traffic_manager::ActorPtr> sorted_vehicle_to_disable = vehicles_to_disable;
+  std::sort(sorted_vehicle_to_disable.begin(), sorted_vehicle_to_disable.end(), [](carla::traffic_manager::ActorPtr &a, carla::traffic_manager::ActorPtr &b) {return a->GetId() < b->GetId(); });
+
   // check if any autopilot command was sent
-  if (vehicles_to_enable.size() || vehicles_to_disable.size()) {
-    self.GetInstanceTM(tm_port).RegisterVehicles(vehicles_to_enable);
-    self.GetInstanceTM(tm_port).UnregisterVehicles(vehicles_to_disable);
+  if (sorted_vehicle_to_enable.size() || sorted_vehicle_to_disable.size()) {
+    self.GetInstanceTM(tm_port).RegisterVehicles(sorted_vehicle_to_enable);
+    self.GetInstanceTM(tm_port).UnregisterVehicles(sorted_vehicle_to_disable);
   }
 
   return result;
@@ -205,6 +210,7 @@ void export_client() {
     .def("stop_replayer", &cc::Client::StopReplayer, (arg("keep_actors")))
     .def("set_replayer_time_factor", &cc::Client::SetReplayerTimeFactor, (arg("time_factor")))
     .def("set_replayer_ignore_hero", &cc::Client::SetReplayerIgnoreHero, (arg("ignore_hero")))
+    .def("set_replayer_ignore_spectator", &cc::Client::SetReplayerIgnoreSpectator, (arg("ignore_spectator")))
     .def("apply_batch", &ApplyBatchCommands, (arg("commands"), arg("do_tick")=false))
     .def("apply_batch_sync", &ApplyBatchCommandsSync, (arg("commands"), arg("do_tick")=false))
     .def("get_trafficmanager", CONST_CALL_WITHOUT_GIL_1(cc::Client, GetInstanceTM, uint16_t), (arg("port")=ctm::TM_DEFAULT_PORT))

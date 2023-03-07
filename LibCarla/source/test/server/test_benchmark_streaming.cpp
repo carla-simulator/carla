@@ -126,7 +126,7 @@ private:
 
 static size_t get_max_concurrency() {
   size_t concurrency = std::thread::hardware_concurrency() / 2u;
-  return std::max(2ul, concurrency);
+  return std::max((size_t) 2u, concurrency);
 }
 
 static void benchmark_image(

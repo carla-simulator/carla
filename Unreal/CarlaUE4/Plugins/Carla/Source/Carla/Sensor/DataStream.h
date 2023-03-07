@@ -50,6 +50,11 @@ public:
     return (*Stream).token();
   }
 
+  bool AreClientsListening()
+  {
+    return Stream ? Stream->AreClientsListening() : false;
+  }
+
 private:
 
   boost::optional<StreamType> Stream;

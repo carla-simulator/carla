@@ -31,8 +31,8 @@ static const double DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0;
 } // namespace VehicleRemoval
 
 namespace HybridMode {
-static const float HYBRID_MODE_DT_FL = 0.1f;
-static const double HYBRID_MODE_DT = 0.1;
+static const float HYBRID_MODE_DT_FL = 0.05f;
+static const double HYBRID_MODE_DT = 0.05;
 static const double INV_HYBRID_DT = 1.0 / HYBRID_MODE_DT;
 static const float PHYSICS_RADIUS = 50.0f;
 } // namespace HybridMode
@@ -108,8 +108,8 @@ static float const STRAIGHT_DEG = 19.0f;
 } // namespace Map
 
 namespace TrafficLight {
-static const uint64_t NO_SIGNAL_PASSTHROUGH_INTERVAL = 5u;
-static const double DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL = 5.0;
+static const double MINIMUM_STOP_TIME = 2.0;
+static const double EXIT_JUNCTION_THRESHOLD = 0;  // Dot product of 90º
 } // namespace TrafficLight
 
 namespace MotionPlan {
@@ -120,12 +120,10 @@ static const float EPSILON_RELATIVE_SPEED = 0.001f;
 static const float MAX_JUNCTION_BLOCK_DISTANCE = 1.0f * WaypointSelection::SAFE_DISTANCE_AFTER_JUNCTION;
 static const float TWO_KM = 2000.0f;
 static const uint16_t ATTEMPTS_TO_TELEPORT = 5u;
-static const float LANDMARK_DETECTION_TIME = 2.5f;
-static const float TL_GREEN_TARGET_VELOCITY = 20.0f / 3.6f;
-static const float TL_RED_TARGET_VELOCITY = 15.0f / 3.6f;
-static const float TL_UNKNOWN_TARGET_VELOCITY = TL_RED_TARGET_VELOCITY;
-static const float STOP_TARGET_VELOCITY = 15.0f / 3.6f;
-static const float YIELD_TARGET_VELOCITY = 15.0f / 3.6f;
+static const float LANDMARK_DETECTION_TIME = 3.5f;
+static const float TL_TARGET_VELOCITY = 15.0f / 3.6f;
+static const float STOP_TARGET_VELOCITY = 10.0f / 3.6f;
+static const float YIELD_TARGET_VELOCITY = 10.0f / 3.6f;
 static const float FRICTION = 0.6f;
 static const float GRAVITY = 9.81f;
 static const float PI = 3.1415927f;

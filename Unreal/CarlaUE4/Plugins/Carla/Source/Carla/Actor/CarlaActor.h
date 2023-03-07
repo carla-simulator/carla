@@ -243,6 +243,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse GetFailureState(carla::rpc::VehicleFailureState&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse GetVehicleLightState(FVehicleLightState&)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -284,7 +289,28 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse ApplyAckermannControlToVehicle(
+      const FVehicleAckermannControl&, const EVehicleInputPriority&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse GetVehicleControl(FVehicleControl&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetVehicleAckermannControl(FVehicleAckermannControl&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetAckermannControllerSettings(FAckermannControllerSettings&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse ApplyAckermannControllerSettings(const FAckermannControllerSettings&)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -451,6 +477,8 @@ public:
 
   virtual ECarlaServerResponse GetPhysicsControl(FVehiclePhysicsControl& PhysicsControl) final;
 
+  virtual ECarlaServerResponse GetFailureState(carla::rpc::VehicleFailureState&) final;
+
   virtual ECarlaServerResponse GetVehicleLightState(FVehicleLightState& LightState) final;
 
   virtual ECarlaServerResponse OpenVehicleDoor(const EVehicleDoor DoorIdx) final;
@@ -474,7 +502,16 @@ public:
   virtual ECarlaServerResponse ApplyControlToVehicle(
       const FVehicleControl&, const EVehicleInputPriority&) final;
 
+  virtual ECarlaServerResponse ApplyAckermannControlToVehicle(
+      const FVehicleAckermannControl&, const EVehicleInputPriority&) final;
+
   virtual ECarlaServerResponse GetVehicleControl(FVehicleControl&) final;
+
+  virtual ECarlaServerResponse GetVehicleAckermannControl(FVehicleAckermannControl&) final;
+
+  virtual ECarlaServerResponse GetAckermannControllerSettings(FAckermannControllerSettings&) final;
+
+  virtual ECarlaServerResponse ApplyAckermannControllerSettings(const FAckermannControllerSettings&) final;
 
   virtual ECarlaServerResponse SetActorAutopilot(bool bEnabled, bool bKeepState = false) final;
 
@@ -564,7 +601,7 @@ public:
   virtual ECarlaServerResponse GetWalkerControl(FWalkerControl&) final;
 
   virtual ECarlaServerResponse GetBonesTransform(FWalkerBoneControlOut&) final;
-  
+
   virtual ECarlaServerResponse SetBonesTransform(const FWalkerBoneControlIn&) final;
 
   virtual ECarlaServerResponse BlendPose(float Blend);

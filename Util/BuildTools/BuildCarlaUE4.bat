@@ -21,10 +21,15 @@ set USE_CARSIM=false
 set USE_CHRONO=false
 set CARSIM_STATE="CarSim OFF"
 set CHRONO_STATE="Chrono OFF"
+set EDITOR_FLAGS=""
 
 :arg-parse
 echo %1
 if not "%1"=="" (
+    if "%1"=="--editor-flags" (
+        set EDITOR_FLAGS=%2
+        shift
+    )
     if "%1"=="--build" (
         set BUILD_UE4_EDITOR=true
     )
@@ -49,6 +54,8 @@ if not "%1"=="" (
     shift
     goto arg-parse
 )
+rem remove quotes from arguments
+set EDITOR_FLAGS=%EDITOR_FLAGS:"=%
 
 if %REMOVE_INTERMEDIATE% == false (
     if %LAUNCH_UE4_EDITOR% == false (
@@ -106,6 +113,16 @@ if %REMOVE_INTERMEDIATE% == true (
     )
 )
 
+rem Download Houdini Plugin
+
+set HOUDINI_PLUGIN_REPO=https://github.com/sideeffects/HoudiniEngineForUnreal.git
+set HOUDINI_PLUGIN_PATH=Plugins/HoudiniEngine
+set HOUDINI_PLUGIN_BRANCH=Houdini19.5-Unreal4.26
+set HOUDINI_PATCH=${CARLA_UTIL_FOLDER}/Patches/houdini_patch.txt
+if not exist "%HOUDINI_PLUGIN_PATH%" (
+  call git clone -b %HOUDINI_PLUGIN_BRANCH% %HOUDINI_PLUGIN_REPO% %HOUDINI_PLUGIN_PATH%
+)
+
 rem Build Carla Editor
 rem
 
@@ -151,7 +168,7 @@ rem
 if %LAUNCH_UE4_EDITOR% == true (
     echo %FILE_N% Launching Unreal Editor...
     call "%UE4_ROOT%\Engine\Binaries\Win64\UE4Editor.exe"^
-        "%UE4_PROJECT_FOLDER%CarlaUE4.uproject"
+        "%UE4_PROJECT_FOLDER%CarlaUE4.uproject" %EDITOR_FLAGS%
     if %errorlevel% neq 0 goto error_build
 )
 

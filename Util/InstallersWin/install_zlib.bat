@@ -48,14 +48,14 @@ rem -- Local Variables ---------------------------------------------------------
 rem ============================================================================
 
 set ZLIB_BASENAME=zlib
-set ZLIB_VERSION=1.2.11
+set ZLIB_VERSION=1.2.13
 
 set ZLIB_TEMP_FOLDER=%ZLIB_BASENAME%-%ZLIB_VERSION%
 set ZLIB_TEMP_FILE=%ZLIB_TEMP_FOLDER%.zip
 set ZLIB_TEMP_FILE_DIR=%BUILD_DIR%%ZLIB_TEMP_FILE%
 
-set ZLIB_REPO=http://www.zlib.net/zlib%ZLIB_VERSION:.=%.zip
-
+set ZLIB_REPO=https://www.zlib.net/zlib%ZLIB_VERSION:.=%.zip
+set ZLIB_BACKUP_REPO=https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/zlib%ZLIB_VERSION:.=%.zip
 set ZLIB_SRC_DIR=%BUILD_DIR%%ZLIB_BASENAME%-source\
 set ZLIB_INSTALL_DIR=%BUILD_DIR%%ZLIB_BASENAME%-install\
 
@@ -71,8 +71,12 @@ if not exist "%ZLIB_SRC_DIR%" (
     if not exist "%ZLIB_TEMP_FILE_DIR%" (
         echo %FILE_N% Retrieving %ZLIB_BASENAME%.
         powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%ZLIB_REPO%', '%ZLIB_TEMP_FILE_DIR%')"
-        if %errorlevel% neq 0 goto error_download
     )
+    if not exist "%ZLIB_TEMP_FILE_DIR%" (
+        echo %FILE_N% Retrieving %ZLIB_BASENAME% from backup.
+        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%ZLIB_BACKUP_REPO%', '%ZLIB_TEMP_FILE_DIR%')"
+    )
+    if %errorlevel% neq 0 goto error_download
     rem Extract the downloaded library
     echo %FILE_N% Extracting zlib from "%ZLIB_TEMP_FILE%".
     powershell -Command "Expand-Archive '%ZLIB_TEMP_FILE_DIR%' -DestinationPath '%BUILD_DIR%'"
@@ -168,6 +172,7 @@ rem ============================================================================
 :good_exit
     echo %FILE_N% Exiting...
     rem A return value used for checking for errors
+    copy %ZLIB_INSTALL_DIR%\lib\zlibstatic.lib %CARLA_DEPENDENCIES_FOLDER%\lib
     endlocal & set install_zlib=%ZLIB_INSTALL_DIR%
     exit /b 0
 

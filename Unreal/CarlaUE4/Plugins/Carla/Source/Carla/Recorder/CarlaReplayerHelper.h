@@ -38,6 +38,7 @@ public:
       CarlaRecorderActorDescription Description,
       uint32_t DesiredId,
       bool bIgnoreHero,
+      bool bIgnoreSpectator,
       bool ReplaySensors);
 
   // replay event for removing actor
@@ -55,14 +56,23 @@ public:
   // set the animation for Vehicles
   void ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle);
 
+  // set the animation for Vehicles Wheels
+  void ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels Vehicle);
+
   // set the animation for walkers
   void ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker);
+
+  // set the animation for bikers
+  void ProcessReplayerAnimBiker(CarlaRecorderAnimBiker Biker);
 
   // set the vehicle light
   void ProcessReplayerLightVehicle(CarlaRecorderLightVehicle LightVehicle);
 
   // set scene lights
   void ProcessReplayerLightScene(CarlaRecorderLightScene LightScene);
+
+  // set walker bones
+  void ProcessReplayerWalkerBones(const CarlaRecorderWalkerBones &Walker);
 
   // replay finish
   bool ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, std::unordered_map<uint32_t, bool> &IsHero);

@@ -10,11 +10,13 @@
 #include "carla/Version.h"
 #include "carla/client/FileTransfer.h"
 #include "carla/client/TimeoutException.h"
+#include "carla/rpc/AckermannControllerSettings.h"
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/BoneTransformDataIn.h"
 #include "carla/rpc/Client.h"
 #include "carla/rpc/DebugShape.h"
 #include "carla/rpc/Response.h"
+#include "carla/rpc/VehicleAckermannControl.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/WalkerBoneControlIn.h"
@@ -330,13 +332,15 @@ namespace detail {
       rpc::ActorId parent,
       rpc::AttachmentType attachment_type) {
 
-      if(attachment_type == rpc::AttachmentType::SpringArm) {
+      if (attachment_type == rpc::AttachmentType::SpringArm ||
+          attachment_type == rpc::AttachmentType::SpringArmGhost)
+      {
         const auto a = transform.location.MakeSafeUnitVector(std::numeric_limits<float>::epsilon());
         const auto z = geom::Vector3D(0.0f, 0.f, 1.0f);
         constexpr float OneEps = 1.0f - std::numeric_limits<float>::epsilon();
         if (geom::Math::Dot(a, z) > OneEps) {
           std::cout << "WARNING: Transformations with translation only in the 'z' axis are ill-formed when \
-            using SprintArm attachment. Please, be careful with that." << std::endl;
+            using SpringArm or SpringArmGhost attachment. Please, be careful with that." << std::endl;
         }
       }
 
@@ -405,7 +409,7 @@ namespace detail {
   }
 
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {
-    _pimpl->AsyncCall("set_actor_simulate_physics", actor, enabled);
+    _pimpl->CallAndWait<void>("set_actor_simulate_physics", actor, enabled);
   }
 
   void Client::SetActorEnableGravity(rpc::ActorId actor, const bool enabled) {
@@ -422,6 +426,19 @@ namespace detail {
 
   void Client::ApplyControlToVehicle(rpc::ActorId vehicle, const rpc::VehicleControl &control) {
     _pimpl->AsyncCall("apply_control_to_vehicle", vehicle, control);
+  }
+
+  void Client::ApplyAckermannControlToVehicle(rpc::ActorId vehicle, const rpc::VehicleAckermannControl &control) {
+    _pimpl->AsyncCall("apply_ackermann_control_to_vehicle", vehicle, control);
+  }
+
+  rpc::AckermannControllerSettings Client::GetAckermannControllerSettings(
+      rpc::ActorId vehicle) const {
+    return _pimpl->CallAndWait<carla::rpc::AckermannControllerSettings>("get_ackermann_controller_settings", vehicle);
+  }
+
+  void Client::ApplyAckermannControllerSettings(rpc::ActorId vehicle, const rpc::AckermannControllerSettings &settings) {
+    _pimpl->AsyncCall("apply_ackermann_controller_settings", vehicle, settings);
   }
 
   void Client::EnableCarSim(rpc::ActorId vehicle, std::string simfile_path) {
@@ -557,13 +574,40 @@ namespace detail {
     _pimpl->AsyncCall("set_replayer_ignore_hero", ignore_hero);
   }
 
+  void Client::SetReplayerIgnoreSpectator(bool ignore_spectator) {
+    _pimpl->AsyncCall("set_replayer_ignore_spectator", ignore_spectator);
+  }
+
   void Client::SubscribeToStream(
       const streaming::Token &token,
       std::function<void(Buffer)> callback) {
-    _pimpl->streaming_client.Subscribe(token, std::move(callback));
+    carla::streaming::detail::token_type thisToken(token);
+    streaming::Token receivedToken = _pimpl->CallAndWait<streaming::Token>("get_sensor_token", thisToken.get_stream_id());
+    _pimpl->streaming_client.Subscribe(receivedToken, std::move(callback));
   }
 
   void Client::UnSubscribeFromStream(const streaming::Token &token) {
+    _pimpl->streaming_client.UnSubscribe(token);
+  }
+
+  void Client::SubscribeToGBuffer(
+      rpc::ActorId ActorId,
+      uint32_t GBufferId,
+      std::function<void(Buffer)> callback)
+  {
+    std::vector<unsigned char> token_data = _pimpl->CallAndWait<std::vector<unsigned char>>("get_gbuffer_token", ActorId, GBufferId);
+    streaming::Token token;
+    std::memcpy(&token.data[0u], token_data.data(), token_data.size());
+    _pimpl->streaming_client.Subscribe(token, std::move(callback));
+  }
+
+  void Client::UnSubscribeFromGBuffer(
+      rpc::ActorId ActorId,
+      uint32_t GBufferId)
+  {
+    std::vector<unsigned char> token_data = _pimpl->CallAndWait<std::vector<unsigned char>>("get_gbuffer_token", ActorId, GBufferId);
+    streaming::Token token;
+    std::memcpy(&token.data[0u], token_data.data(), token_data.size());
     _pimpl->streaming_client.UnSubscribe(token);
   }
 
@@ -593,6 +637,10 @@ namespace detail {
 
   void Client::UpdateServerLightsState(std::vector<rpc::LightState>& lights, bool discard_client) const {
     _pimpl->AsyncCall("update_lights_state", _pimpl->endpoint, std::move(lights), discard_client);
+  }
+
+  void Client::UpdateDayNightCycle(const bool active) const {
+    _pimpl->AsyncCall("update_day_night_cycle", _pimpl->endpoint, active);
   }
 
   std::vector<geom::BoundingBox> Client::GetLevelBBs(uint8_t queried_tag) const {

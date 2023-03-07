@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fstream>
+#include <sstream>
 
 #pragma pack(push, 1)
 
@@ -17,9 +17,9 @@ struct CarlaRecorderStateTrafficLight
   float ElapsedTime;
   char State;
 
-  void Read(std::ifstream &InFile);
+  void Read(std::istream &InFile);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 
 };
 
@@ -34,7 +34,11 @@ public:
 
   void Clear(void);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
+
+  void Read(std::istream &InFile);
+
+  const std::vector<CarlaRecorderStateTrafficLight>& GetStates();
 
 private:
 

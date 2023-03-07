@@ -3,7 +3,7 @@ default: help
 help:
 	@less ${CARLA_BUILD_TOOLS_FOLDER}/Linux.mk.help
 
-launch: LibCarla.server.release
+launch: LibCarla.server.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build --launch $(ARGS)
 
 launch-only:
@@ -79,7 +79,7 @@ examples:
 run-examples:
 	@for D in ${CARLA_EXAMPLES_FOLDER}/*; do [ -d "$${D}" ] && make -C $${D} run.only; done
 
-CarlaUE4Editor: LibCarla.server.release
+CarlaUE4Editor: LibCarla.server.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build $(ARGS)
 
 .PHONY: PythonAPI
@@ -113,19 +113,19 @@ LibCarla.release: LibCarla.server.release LibCarla.client.release
 
 LibCarla.server: LibCarla.server.debug LibCarla.server.release
 LibCarla.server.debug: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server --debug
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server --debug $(ARGS)
 LibCarla.server.release: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server --release
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --server --release $(ARGS)
 
 LibCarla.client: LibCarla.client.debug LibCarla.client.release
 LibCarla.client.debug: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --debug
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --debug $(ARGS)
 LibCarla.client.release: setup
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release $(ARGS)
 
 LibCarla.client.rss: LibCarla.client.rss.debug LibCarla.client.rss.release
 LibCarla.client.rss.debug: setup ad-rss
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --debug --rss
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --debug --rss 
 LibCarla.client.rss.release: setup ad-rss
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release --rss
 
@@ -150,3 +150,6 @@ build.utils: PythonAPI
 
 osm2odr:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --build $(ARGS)
+
+osmrenderer:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSMRenderer.sh
