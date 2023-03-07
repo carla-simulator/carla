@@ -1370,6 +1370,7 @@ namespace road {
     // Amplitud
     const float A1 = 0.3f;
     const float A2 = 0.5f;
+    const float A3 = 0.15f;
     // Fases
     const float F1 = 100.0;
     const float F2 = -1500.0;
@@ -1380,8 +1381,27 @@ namespace road {
     const float Ky1 = -0.08f;
     const float Ky2 = 0.05f;
 
+    float bumpsoffset = 0;
+
+    const float constraintX = 15.0f;
+    const float constraintY = 15.0f;
+
+    float BumpX = std::round(posx / constraintX);
+    float BumpY = std::round(posy / constraintX);
+
+    BumpX *= constraintX;
+    BumpY *= constraintY;
+
+    float DistanceToBumpOrigin = sqrt(pow(BumpX - posx, 2) + pow(BumpY - posy, 2) );
+    float MaxDistance = 2;
+    if (DistanceToBumpOrigin <= MaxDistance) 
+    {
+      bumpsoffset = abs((1.0f / MaxDistance) * DistanceToBumpOrigin * DistanceToBumpOrigin - MaxDistance);
+    }
+
     return A1 * sin((Kx1 * posx + Ky1 * posy + F1)) +
-      A2 * sin((Kx2 * posx + Ky2 * posy + F2));
+      A2 * sin((Kx2 * posx + Ky2 * posy + F2)) + 
+      A3 * bumpsoffset;
   }
 
   std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> 
