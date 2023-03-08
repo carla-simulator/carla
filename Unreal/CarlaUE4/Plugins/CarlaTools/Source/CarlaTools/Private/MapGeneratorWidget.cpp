@@ -917,7 +917,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
 
       // Terrain ROI
       FRoiTile ThisTileIndex(i, j);
-      if(FRegionOfInterest::IsTileInRegionsSet(ThisTileIndex, MetaInfo.TerrainRoisMap))
+      if(FCarlaRegionOfInterest::IsTileInRegionsSet(ThisTileIndex, MetaInfo.TerrainRoisMap))
       {
         FTerrainROI TileRegion = MetaInfo.TerrainRoisMap[ThisTileIndex];
 
@@ -1156,7 +1156,7 @@ bool UMapGeneratorWidget::CookVegetationToTiles(const FMapGeneratorMetaInfo& Met
 
     FRoiTile ThisTileIndex(TileIndexX, TileIndexY);
     TArray<UProceduralFoliageSpawner*> FoliageSpawnersToCook;
-    if(FRegionOfInterest::IsTileInRegionsSet(ThisTileIndex, MetaInfo.VegetationRoisMap))
+    if(FCarlaRegionOfInterest::IsTileInRegionsSet(ThisTileIndex, MetaInfo.VegetationRoisMap))
     {
       FVegetationROI TileRegion = MetaInfo.VegetationRoisMap[ThisTileIndex];
       FoliageSpawnersToCook = TileRegion.GetFoliageSpawners();

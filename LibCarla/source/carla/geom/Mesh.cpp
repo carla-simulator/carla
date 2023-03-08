@@ -307,7 +307,7 @@ namespace geom {
       rhs.GetNormals().end());
 
     const int vertex_to_start_concating = v_num - num_vertices_to_link;
-
+   
     for( int i = 1; i < num_vertices_to_link; ++i )
     {
       _indexes.push_back( vertex_to_start_concating + i );

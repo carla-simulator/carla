@@ -1135,7 +1135,7 @@ namespace road {
     geom::MeshFactory mesh_factory(params);
     std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>> out_mesh_list;
     std::unordered_map<JuncId, geom::Mesh> junction_map;
-
+    
     float simplificationrate = params.simplification_percentage * 0.01f;
     for (auto &&pair : _data.GetRoads()) 
     {
