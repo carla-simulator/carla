@@ -230,6 +230,21 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       TempPMC->bUseComplexAsSimpleCollision = true;
       TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
+      FVector MeshCentroid = FVector(0,0,0);
+      for( auto Vertex : Mesh->GetVertices() )
+      {
+        MeshCentroid += Vertex.ToFVector();
+      }
+
+      MeshCentroid /= Mesh->GetVertices().size();
+
+      for( auto& Vertex : Mesh->GetVertices() )
+      {
+       Vertex.x -= MeshCentroid.X;
+       Vertex.y -= MeshCentroid.Y;
+       Vertex.z -= MeshCentroid.Z;
+      }
+
       const FProceduralCustomMesh MeshData = *Mesh;
       TempPMC->CreateMeshSection_LinearColor(
           0,
@@ -240,15 +255,17 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
           TArray<FLinearColor>(), // VertexColor
           TArray<FProcMeshTangent>(), // Tangents
           true); // Create collision
+      TempActor->SetActorLocation(MeshCentroid * 100);
       ActorMeshList.Add(TempActor);
 
       RoadType.Add(LaneTypeToFString(PairMap.first));
-      RoadMesh.Add(TempPMC);
+      RoadMesh.Add(TempPMC);          
     }
   }
-
+    
   end = FPlatformTime::Seconds();
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Mesh spawnning and translation code executed in %f seconds."), end - start);
+ 
 }
 
 void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Map>& CarlaMap )
@@ -351,7 +368,6 @@ TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets()
   double end = FPlatformTime::Seconds();
 
   IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-
   TArray<UStaticMesh*> StaticMeshes;
 
   double BuildMeshDescriptionTime = 0.0f;
@@ -407,7 +423,6 @@ TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets()
       SrcModel.BuildSettings.DstLightmapIndex = 1;
       CurrentStaticMesh->CreateMeshDescription(0, MoveTemp(MeshDescription));
       CurrentStaticMesh->CommitMeshDescription(0);
-
       end = FPlatformTime::Seconds();
       MeshInitTime += end - start;
       start = FPlatformTime::Seconds();
@@ -457,7 +472,6 @@ TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets()
       // Notify asset registry of new asset
       FAssetRegistryModule::AssetCreated(CurrentStaticMesh);
       UPackage::SavePackage(Package, CurrentStaticMesh, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *MeshName, GError, nullptr, true, true, SAVE_NoError);
-
       end = FPlatformTime::Seconds();
       PackSaveTime += end - start;
 

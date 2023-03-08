@@ -16,6 +16,7 @@ USE_CARSIM=false
 USE_CHRONO=false
 USE_PYTORCH=false
 EDITOR_FLAGS=""
+USE_HOUDINI=false
 
 GDB=
 RHI="-vulkan"
@@ -60,6 +61,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --pytorch )
       USE_PYTORCH=true;
+      shift ;;
+    --with-houdini )
+      USE_HOUDINI=true;
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -121,6 +125,21 @@ if ${REMOVE_INTERMEDIATE} ; then
 
   popd >/dev/null
 
+fi
+
+# ==============================================================================
+# -- Download Houdini Plugin for Unreal Engine ---------------------------------
+# ==============================================================================
+
+HOUDINI_PLUGIN_REPO=https://github.com/sideeffects/HoudiniEngineForUnreal.git
+HOUDINI_PLUGIN_PATH=Plugins/HoudiniEngine
+HOUDINI_PLUGIN_BRANCH=Houdini19.5-Unreal4.26
+HOUDINI_PATCH=${CARLA_UTIL_FOLDER}/Patches/houdini_patch.txt
+if [[ ! -d ${HOUDINI_PLUGIN_PATH} ]] ; then
+  git clone -b ${HOUDINI_PLUGIN_BRANCH} ${HOUDINI_PLUGIN_REPO} ${HOUDINI_PLUGIN_PATH}
+  pushd ${HOUDINI_PLUGIN_PATH} >/dev/null
+  git apply ${HOUDINI_PATCH}
+  popd >/dev/null
 fi
 
 # ==============================================================================

@@ -109,7 +109,6 @@ if %BUILD_OSM2ODR% == true (
 
     cmake --build . --config Release --target install | findstr /V "Up-to-date:"
     if %errorlevel% neq 0 goto error_install
-
     copy %OSM2ODR_INSTALL_PATH%\lib\osm2odr.lib %CARLA_DEPENDENCIES_FOLDER%\lib
     copy %OSM2ODR_INSTALL_PATH%\include\OSM2ODR.h %CARLA_DEPENDENCIES_FOLDER%\include
 )
