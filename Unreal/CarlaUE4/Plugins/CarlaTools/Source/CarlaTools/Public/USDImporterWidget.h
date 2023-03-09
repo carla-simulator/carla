@@ -22,6 +22,4 @@ class CARLATOOLS_API UUSDImporterWidget : public UUserWidget
   static AActor* GetGeneratedBlueprint(UWorld* World, const FString& USDPath);
   UFUNCTION(BlueprintCallable, Category="USD Importer")
   static bool MergeStaticMeshComponents(TArray<AActor*> Actors, const FString& DestMesh);
-  UFUNCTION(BlueprintPure, Category="USD Importer")
-  static FString GetFileName(const FString& FullPath);
 };

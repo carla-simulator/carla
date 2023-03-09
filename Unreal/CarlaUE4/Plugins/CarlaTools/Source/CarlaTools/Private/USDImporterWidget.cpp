@@ -1,7 +1,7 @@
 // Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "USDImporterWidget.h"
-#include "USDAlternateImporter.h"
+#include "USDCARLAInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "Modules/ModuleManager.h"
 #include "IMeshMergeUtilities.h"
@@ -12,7 +12,7 @@
 void UUSDImporterWidget::ImportUSDProp(
     const FString& USDPath, const FString& DestinationAssetPath, bool bAsBlueprint)
 {
-  FUSDAlternateImporter::ImportUSD(USDPath, DestinationAssetPath, false, bAsBlueprint);
+  FUSDCARLAInterface::ImportUSD(USDPath, DestinationAssetPath, false, bAsBlueprint);
 }
 
 void UUSDImporterWidget::ImportUSDVehicle(
@@ -60,9 +60,4 @@ bool UUSDImporterWidget::MergeStaticMeshComponents(
   FVector NewLocation;
   MeshUtilities.MergeComponentsToStaticMesh(ComponentsToMerge, World, MeshMergeSettings, nullptr, nullptr, DestMesh, AssetsToSync, NewLocation, ScreenAreaSize, true);
   return true;
-}
-
-FString UUSDImporterWidget::GetFileName(FString& FullPath)
-{
-  return FPaths::GetBaseFilename(FullPath, true);
 }
