@@ -7,6 +7,7 @@ using UnrealBuildTool;
 public class CarlaTools : ModuleRules
 {
   bool UsingHoudini = true;
+  bool bUsingOmniverseConnector = false;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
@@ -21,6 +22,21 @@ public class CarlaTools : ModuleRules
     if (IsWindows(Target))
     {
       bEnableExceptions = true;
+    }
+
+    string CarlaPluginPath = Path.GetFullPath( ModuleDirectory );
+    string ConfigDir =  Path.GetFullPath(Path.Combine(CarlaPluginPath, "../../../../Config/"));
+    string OptionalModulesFile = Path.Combine(ConfigDir, "OptionalModules.ini");
+    string[] text = System.IO.File.ReadAllLines(OptionalModulesFile);
+    foreach (string line in text)
+    {
+      if (line.Contains("Omniverse ON"))
+      {
+        Console.WriteLine("Enabling OmniverseConnector");
+        bUsingOmniverseConnector = true;
+        PublicDefinitions.Add("WITH_OMNIVERSE");
+        PrivateDefinitions.Add("WITH_OMNIVERSE");
+      }
     }
 
 		PublicIncludePaths.AddRange(
@@ -58,8 +74,6 @@ public class CarlaTools : ModuleRules
 				"Slate",
 				"SlateCore",
 				"UnrealEd",
-        "OmniverseUSD",
-        "OmniverseRuntime",
 				"Blutility",
 				"UMG",
 				"EditorScriptingUtilities",
@@ -88,8 +102,16 @@ public class CarlaTools : ModuleRules
           "HoudiniEngineRuntime"
         });
     }
-		
-		
+    if(bUsingOmniverseConnector)
+    {
+      PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+          "OmniverseUSD",
+          "OmniverseRuntime"
+        });
+    }
+
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
