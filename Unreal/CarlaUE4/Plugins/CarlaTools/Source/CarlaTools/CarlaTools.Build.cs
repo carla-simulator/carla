@@ -66,6 +66,7 @@ public class CarlaTools : ModuleRules
 				"Landscape",
 				"Foliage",
 				"FoliageEdit",
+        "MeshMergeUtilities",
 				"Carla",
 				"PhysXVehicles",
         "Json",
@@ -118,7 +119,10 @@ public class CarlaTools : ModuleRules
   private void AddBoostLibs(string LibPath)
   {
     string [] files = Directory.GetFiles(LibPath, "*boost*.lib");
-    foreach (string file in files) PublicAdditionalLibraries.Add(file);
+    foreach (string file in files)
+    {
+      PublicAdditionalLibraries.Add(file);
+    } 
   }
 
 

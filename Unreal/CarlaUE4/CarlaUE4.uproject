@@ -112,6 +112,10 @@
 		{
 			"Name": "CarlaTools",
 			"Enabled": true
+		},
+		{
+			"Name": "PythonScriptPlugin",
+			"Enabled": true
 		}
 	]
 }
