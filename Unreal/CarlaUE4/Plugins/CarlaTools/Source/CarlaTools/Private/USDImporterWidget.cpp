@@ -1,7 +1,9 @@
 // Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "USDImporterWidget.h"
-#include "USDCARLAInterface.h"
+#ifdef WITH_OMNIVERSE
+  #include "USDCARLAInterface.h"
+#endif
 #include "Kismet/GameplayStatics.h"
 #include "Modules/ModuleManager.h"
 #include "IMeshMergeUtilities.h"
@@ -12,7 +14,12 @@
 void UUSDImporterWidget::ImportUSDProp(
     const FString& USDPath, const FString& DestinationAssetPath, bool bAsBlueprint)
 {
+#ifdef WITH_OMNIVERSE
   FUSDCARLAInterface::ImportUSD(USDPath, DestinationAssetPath, false, bAsBlueprint);
+#else
+  UE_LOG(LogCarlaTools, Error, TEXT("Omniverse Plugin is not enabled"));
+#endif
+
 }
 
 void UUSDImporterWidget::ImportUSDVehicle(
