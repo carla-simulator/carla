@@ -14,6 +14,14 @@ class CARLATOOLS_API UUSDImporterWidget : public UUserWidget
 
   public:
 
-  void ImportUSDProp(const FString& USDPath, const FString& DestinationAssetPath);
-  void ImportUSDVehicle(const FString& USDPath, const FString& DestinationAssetPath);
+  UFUNCTION(BlueprintCallable, Category="USD Importer")
+  void ImportUSDProp(const FString& USDPath, const FString& DestinationAssetPath, bool bAsBlueprint = true);
+  UFUNCTION(BlueprintCallable, Category="USD Importer")
+  void ImportUSDVehicle(const FString& USDPath, const FString& DestinationAssetPath, bool bAsBlueprint = true);
+  UFUNCTION(BlueprintCallable, Category="USD Importer")
+  static AActor* GetGeneratedBlueprint(UWorld* World, const FString& USDPath);
+  UFUNCTION(BlueprintCallable, Category="USD Importer")
+  static bool MergeStaticMeshComponents(TArray<AActor*> Actors, const FString& DestMesh);
+  UFUNCTION(BlueprintPure, Category="USD Importer")
+  static FString GetFileName(const FString& FullPath);
 };
