@@ -8,6 +8,7 @@
     * `Client.set_replayer_ignore_spectator(bool)`
     * `start_replaying.py` using flag `--move-spectator`
   * Added maps, vehicles, pedestrians and props catalogues to the documentation
+  * Add keyword arguments for `carla.TrafficManager` Python API functions
 
 ## CARLA 0.9.14
 
