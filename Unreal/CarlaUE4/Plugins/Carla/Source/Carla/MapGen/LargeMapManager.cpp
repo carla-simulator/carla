@@ -593,6 +593,12 @@ ALargeMapManager::TileID ALargeMapManager::GetTileID(FDVector TileLocation) cons
   return GetTileID(TileID);
 }
 
+FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FVector Location)
+{
+  TileID TileID = GetTileID(Location);
+  return GetCarlaMapTile(TileID);
+}
+
 FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(ULevel* InLevel)
 {
   FCarlaMapTile* Tile = nullptr;
@@ -610,11 +616,11 @@ FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(ULevel* InLevel)
   return *Tile;
 }
 
-FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID)
+FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID)
 {
   TileID TileID = GetTileID(TileVectorID);
   FCarlaMapTile* Tile = MapTiles.Find(TileID);
-  return Tile;
+  return *Tile;
 }
 
 FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(TileID TileID)
@@ -777,7 +783,7 @@ void ALargeMapManager::CheckActiveActors()
 
         float DistanceSquared = (RelativeLocation - HeroLocation).SizeSquared();
 
-        if (DistanceSquared > ActorStreamingDistanceSquared)
+        if (DistanceSquared > ActorStreamingDistanceSquared && View->GetActorType() != FCarlaActor::ActorType::Sensor)
         {
           // Save to temporal container. Later will be converted to dormant
           ActiveToDormantActors.Add(Id);
@@ -1076,7 +1082,7 @@ void ALargeMapManager::PrintMapInfo()
   int LastMsgIndex = TilesDistMsgIndex;
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("\nActor Global Position: %s km"), *(FDVector(CurrentActorPosition) / (1000.0 * 100.0)).ToString()) );
-  
+
   FIntVector CurrentTile = GetTileVectorID(CurrentActorPosition);
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("\nActor Current Tile: %d_%d"), CurrentTile.X, CurrentTile.Y ));
