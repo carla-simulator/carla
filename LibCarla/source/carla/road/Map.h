@@ -219,6 +219,9 @@ public:
     void DeformateRoadsMultithreaded(const std::vector<geom::Mesh*>& roadsmesh, const size_t index,
       const size_t number_of_roads_per_thread, const float simplificationrate) const;
 
+    std::vector<geom::Vector3D> GetSDF(const road::Junction& input, float grid_resolution) const;
+    
+    std::unique_ptr<geom::Mesh> SDFToMesh(const road::Junction& jinput, const std::vector<geom::Vector3D>& sdfinput, float grid_resolution) const;
   };
 
 } // namespace road

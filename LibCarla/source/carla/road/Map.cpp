@@ -20,11 +20,16 @@
 
 #include "simplify/Simplify.h"
 
+#define MC_IMPLEM_ENABLE
+#include "marchingcube/MC.h"
+
 #include <vector>
 #include <unordered_map>
 #include <stdexcept>
 #include <chrono>
 #include <thread>
+#include <fstream>
+#include <iomanip>
 
 namespace carla {
 namespace road {
@@ -1133,6 +1138,8 @@ namespace road {
   std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>> 
     Map::GenerateOrderedChunkedMesh( const rpc::OpendriveGenerationParameters& params) const 
   {
+    std::ofstream DebugFile;
+
     geom::MeshFactory mesh_factory(params);
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> road_out_mesh_list;
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> juntion_out_mesh_list;
@@ -1141,68 +1148,20 @@ namespace road {
   
     std::thread juntction_thread([ this, &juntion_out_mesh_list, &params, &mesh_factory ] {
       // Generate roads within junctions and smooth them
-      for (const auto& junc_pair : _data.GetJunctions()) {
-          const auto& junction = junc_pair.second;
-          std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
-          std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
-          for (const auto& connection_pair : junction.GetConnections()) {
-            const auto& connection = connection_pair.second;
-            const auto& road = _data.GetRoads().at(connection.connecting_road);
-            for (auto&& lane_section : road.GetLaneSections()) {
-              for (auto&& lane_pair : lane_section.GetLanes()) {
-                const auto& lane = lane_pair.second;
-                if (lane.GetType() != road::Lane::LaneType::Sidewalk) {
-                  lane_meshes.push_back(mesh_factory.Generate(lane));
-                }
-                else {
-                  sidewalk_lane_meshes.push_back(mesh_factory.Generate(lane));
-                }
-              }
-            }
-          }
-          if (params.smooth_junctions) {
-            std::unique_ptr<geom::Mesh> merged_mesh = mesh_factory.MergeAndSmooth(lane_meshes);
-            std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
-            for (auto& lane : sidewalk_lane_meshes) {
-              *sidewalk_mesh += *lane;
-            }
-
-            for (carla::geom::Vector3D& current_vertex : merged_mesh->GetVertices())
-            {
-              current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-            }
-            for (carla::geom::Vector3D& current_vertex : sidewalk_mesh->GetVertices())
-            {
-              current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-            }
-
-            juntion_out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(merged_mesh));
-            juntion_out_mesh_list[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
-          }
-          else {
-            std::unique_ptr<geom::Mesh> junction_mesh = std::make_unique<geom::Mesh>();
-            std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
-            for (auto& lane : lane_meshes) {
-              *junction_mesh += *lane;
-            }
-            for (auto& lane : sidewalk_lane_meshes) {
-              *sidewalk_mesh += *lane;
-            }
-
-            for (carla::geom::Vector3D& current_vertex : junction_mesh->GetVertices())
-            {
-              current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-            }
-            for (carla::geom::Vector3D& current_vertex : sidewalk_mesh->GetVertices())
-            {
-              current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-            }
-            juntion_out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(junction_mesh));
-            juntion_out_mesh_list[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
-          }
-        }
+      for (const auto& junc_pair : _data.GetJunctions())
+      {
+        const auto& junction = junc_pair.second;
+        std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
+        std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
+        std::vector<carla::geom::Vector3D> perimeterpoints;
+       
+        //perimeterpoints = GetSDF(junction, 0.5f);
+        auto pmesh = SDFToMesh(junction, perimeterpoints, 0.1f);
+       
+        juntion_out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
+      }
     });
-
+    /*
     float simplificationrate = params.simplification_percentage * 0.01f;
     {
       size_t num_roads = _data.GetRoads().size();
@@ -1281,8 +1240,10 @@ namespace road {
         }
       }
     }
+    */
 
     juntction_thread.join();
+
     for (auto&& pair : juntion_out_mesh_list )
     {
       if( road_out_mesh_list.find(pair.first) != road_out_mesh_list.end() )
@@ -1296,10 +1257,9 @@ namespace road {
         road_out_mesh_list[pair.first] = std::move(pair.second);
       }
     }
-    
+
     return road_out_mesh_list;
   }
-
 
   geom::Mesh Map::GetAllCrosswalkMesh() const {
     geom::Mesh out_mesh;
@@ -1414,7 +1374,7 @@ namespace road {
     size_t endoffset = (index+1) * number_of_roads_per_thread;
     if( endoffset >= _data.GetRoads().size() )
     {
-      endoffset = _data.GetRoads().size() - 1; 
+      endoffset = _data.GetRoads().size(); 
     }
     auto end = std::next( _data.GetRoads().begin(), endoffset );
 
@@ -1435,7 +1395,7 @@ namespace road {
     size_t endoffset = (index+1) * number_of_roads_per_thread;
     if( endoffset >= roadsmesh.size() )
     {
-      endoffset = roadsmesh.size() - 1; 
+      endoffset = roadsmesh.size(); 
     }
     auto end = std::next( roadsmesh.begin(), endoffset );
     for ( auto it = start; it != end  && it != roadsmesh.end(); ++it )
@@ -1496,6 +1456,99 @@ namespace road {
       } 
 
     }
+  }
+
+  std::vector<geom::Vector3D> Map::GetSDF(const road::Junction& input, float grid_resolution) const
+  {
+    std::vector<geom::Vector3D> sdf;
+    carla::geom::BoundingBox bb = input.GetBoundingBox();
+    carla::geom::Vector3D MinOffset = bb.location - geom::Location(bb.extent);
+    carla::geom::Vector3D MaxOffset = bb.location + geom::Location(bb.extent);
+
+    for (float Z = MinOffset.z; Z <= MaxOffset.z; Z += grid_resolution)
+    {
+      for (float Y = MinOffset.y; Y <= MaxOffset.y; Y += grid_resolution)
+      {
+        for (float X = MinOffset.x; X <= MaxOffset.x; X += grid_resolution)
+        {
+          geom::Vector3D next(X, Y, Z);
+          if ( GetWaypoint(geom::Location(next)) )
+          {
+            sdf.push_back(next);
+          }
+        }
+      }
+    }
+    return sdf;
+  }
+
+  std::unique_ptr<geom::Mesh> Map::SDFToMesh(const road::Junction& jinput,
+    const std::vector<geom::Vector3D>& sdfinput,
+    float grid_resolution) const 
+  {
+    int n = 100 * grid_resolution;
+    carla::geom::BoundingBox bb = jinput.GetBoundingBox();
+    carla::geom::Vector3D MinOffset = bb.location - geom::Location(bb.extent);
+    carla::geom::Vector3D MaxOffset = bb.location + geom::Location(bb.extent);
+    
+    std::ofstream iout;
+    std::vector<float> field(n*n*n,-1.0f);
+
+    for (float Z = MinOffset.z; Z <= MaxOffset.z; Z += grid_resolution)
+    {
+      for (float Y = MinOffset.y; Y <= MaxOffset.y; Y += grid_resolution)
+      {
+        for (float X = MinOffset.x; X <= MaxOffset.x; X += grid_resolution)
+        {
+          if ( GetWaypoint( geom::Location( geom::Vector3D( X, Y, Z ) ) ) )
+          {
+            int ix = ((X - MinOffset.x) / (MaxOffset.x - MinOffset.x)) * n;
+            int iy = ((Y - MinOffset.y) / (MaxOffset.y - MinOffset.y)) * n;
+            int iz = ((Z - MinOffset.z) / (MaxOffset.z - MinOffset.z)) * n;
+            field[(iz * n + iy) * n + ix] = 1.0f;
+          }
+        }
+      }
+    }
+
+
+    MC::mcMesh mcmesh;
+    MC::marching_cube(field.data(), n, n, n, mcmesh);
+
+    geom::Mesh out_mesh;
+    for (auto cv : mcmesh.vertices) 
+    {
+      geom::Vector3D newvertex;
+      newvertex.x = cv.x;
+      newvertex.y = cv.y;
+      newvertex.z = cv.z;
+      out_mesh.AddVertex(newvertex);
+    }
+    for (auto ci : mcmesh.indices)
+    {
+      out_mesh.AddIndex(ci + 1);
+    }
+
+    // Export the result as an .obj file
+    std::ofstream out;
+    out.open(std::string("C:\\log\\aitem") + std::to_string(jinput.GetId()) + std::string(".obj"));
+    if (out.is_open() == false)
+      return std::make_unique<geom::Mesh>();
+    out << "g " << "Obj" << std::endl;
+    for (size_t i = 0; i < mcmesh.vertices.size(); i++)
+      out << "v " << mcmesh.vertices.at(i).x << " " << mcmesh.vertices.at(i).y << " " << mcmesh.vertices.at(i).z << '\n';
+    for (size_t i = 0; i < mcmesh.vertices.size(); i++)
+      out << "vn " << mcmesh.normals.at(i).x << " " << mcmesh.normals.at(i).y << " " << mcmesh.normals.at(i).z << '\n';
+    for (size_t i = 0; i < mcmesh.indices.size(); i += 3)
+    {
+      out << "f " << mcmesh.indices.at(i) + 1 << "//" << mcmesh.indices.at(i) + 1
+        << " " << mcmesh.indices.at(i + 1) + 1 << "//" << mcmesh.indices.at(i + 1) + 1
+        << " " << mcmesh.indices.at(i + 2) + 1 << "//" << mcmesh.indices.at(i + 2) + 1
+        << '\n';
+    }
+    out.close();
+
+    return std::make_unique<geom::Mesh>(out_mesh);
   }
 } // namespace road
 } // namespace carla
