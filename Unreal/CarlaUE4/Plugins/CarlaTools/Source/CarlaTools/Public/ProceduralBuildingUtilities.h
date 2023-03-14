@@ -21,6 +21,6 @@ public:
   void GenerateImpostor();
 
   UFUNCTION(BlueprintCallable, Category="Procedural Building Utilities")
-  void CookProceduralBuildingToMesh(const FString& DestinationPath);
+  void CookProceduralBuildingToMesh(const FString& DestinationPath, const FString& FileName);
 
 };
