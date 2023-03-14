@@ -30,13 +30,6 @@ void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& D
   const IMeshMergeUtilities& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshMergeModule>("MeshMergeUtilities").GetUtilities();
   MeshUtilities.MergeComponentsToStaticMesh(Components, World, MeshMergeSettings, nullptr, nullptr, DestinationPath, AssetsToSync, NewLocation, ScreenAreaSize, true);
 
-
-  for(UObject* ObjectToSave : AssetsToSync)
-  {
-    FAssetRegistryModule::AssetCreated(ObjectToSave);
-    UPackage* ObjectPackage = ObjectToSave->GetPackage();
-    ObjectPackage->MarkPackageDirty();
-  }
-
-  FEditorFileUtils::SaveDirtyPackages(false, false, true, false, true, false, nullptr);
+  TArray<UClass*> ClassesToSave = { UStaticMesh::StaticClass() };
+  FEditorFileUtils::SaveDirtyContentPackages(ClassesToSave, false, false, true, false);
 }
