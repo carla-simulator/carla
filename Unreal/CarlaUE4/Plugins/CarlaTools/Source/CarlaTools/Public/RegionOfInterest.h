@@ -111,7 +111,7 @@ FORCEINLINE uint32 GetTypeHash(const FRoiTile& Thing)
  * 
  */
 USTRUCT(BlueprintType)
-struct CARLATOOLS_API FRegionOfInterest
+struct CARLATOOLS_API FCarlaRegionOfInterest
 {
 	GENERATED_BODY()
 
@@ -121,7 +121,7 @@ struct CARLATOOLS_API FRegionOfInterest
   UPROPERTY(BlueprintReadWrite)
   TEnumAsByte<ERegionOfInterestType> RegionType = ERegionOfInterestType::NONE_REGION;
 
-  FRegionOfInterest()
+  FCarlaRegionOfInterest()
   {
     TilesList.Empty();
   }
@@ -141,13 +141,13 @@ struct CARLATOOLS_API FRegionOfInterest
   template <typename R>
   static FORCEINLINE bool IsTileInRegionsSet(FRoiTile RoiTile, TMap<FRoiTile, R> RoisMap)
   {
-    static_assert(TIsDerivedFrom<R, FRegionOfInterest>::IsDerived, 
+    static_assert(TIsDerivedFrom<R, FCarlaRegionOfInterest>::IsDerived, 
         "ROIs Map Value type is not an URegionOfInterest derived type.");   
     return RoisMap.Contains(RoiTile);
   }
 
   /// Checking if two regions of interest are equal.
-  bool Equals(const FRegionOfInterest& Other)
+  bool Equals(const FCarlaRegionOfInterest& Other)
   {
     // Checking if the number of tiles in the two regions is the same.
     if(this->TilesList.Num() != Other.TilesList.Num())
@@ -185,14 +185,14 @@ struct CARLATOOLS_API FRegionOfInterest
 };
 
 USTRUCT(BlueprintType)
-struct CARLATOOLS_API FVegetationROI : public FRegionOfInterest
+struct CARLATOOLS_API FVegetationROI : public FCarlaRegionOfInterest
 {
   GENERATED_BODY()
 
   UPROPERTY(BlueprintReadWrite)
   TArray<UProceduralFoliageSpawner*> FoliageSpawners;
   
-  FVegetationROI() : FRegionOfInterest()
+  FVegetationROI() : FCarlaRegionOfInterest()
   {
     this->FoliageSpawners.Empty();
   }
@@ -218,7 +218,7 @@ struct CARLATOOLS_API FVegetationROI : public FRegionOfInterest
 };
 
 USTRUCT(BlueprintType)
-struct CARLATOOLS_API FTerrainROI : public FRegionOfInterest
+struct CARLATOOLS_API FTerrainROI : public FCarlaRegionOfInterest
 {
   GENERATED_BODY()
 
@@ -230,7 +230,7 @@ struct CARLATOOLS_API FTerrainROI : public FRegionOfInterest
   UPROPERTY(BlueprintReadWrite)
   UTextureRenderTarget2D* RoiHeightmapRenderTarget;
 
-  FTerrainROI() : FRegionOfInterest(), RoiMaterialInstance()
+  FTerrainROI() : FCarlaRegionOfInterest(), RoiMaterialInstance()
   {}
 
   /**
@@ -259,7 +259,7 @@ struct CARLATOOLS_API FTerrainROI : public FRegionOfInterest
 };
 
 USTRUCT(BlueprintType)
-struct CARLATOOLS_API FMiscSpreadedActorsROI : public FRegionOfInterest
+struct CARLATOOLS_API FMiscSpreadedActorsROI : public FCarlaRegionOfInterest
 {
   GENERATED_BODY()
 
@@ -272,14 +272,14 @@ struct CARLATOOLS_API FMiscSpreadedActorsROI : public FRegionOfInterest
   UPROPERTY(BlueprintReadWrite)
   TEnumAsByte<ESpreadedActorsDensity> ActorsDensity;
 
-  FMiscSpreadedActorsROI() : FRegionOfInterest(), ActorClass(), Probability(0.0f), ActorsDensity(ESpreadedActorsDensity::LOW)
+  FMiscSpreadedActorsROI() : FCarlaRegionOfInterest(), ActorClass(), Probability(0.0f), ActorsDensity(ESpreadedActorsDensity::LOW)
   {}
 };
 
 /// A struct that is used to store the information of a region of interest that is used to 
 /// spawn actors in specific locations.
 USTRUCT(BlueprintType)
-struct CARLATOOLS_API FMiscSpecificLocationActorsROI : public FRegionOfInterest
+struct CARLATOOLS_API FMiscSpecificLocationActorsROI : public FCarlaRegionOfInterest
 {
   GENERATED_BODY()
 
@@ -295,12 +295,12 @@ struct CARLATOOLS_API FMiscSpecificLocationActorsROI : public FRegionOfInterest
   UPROPERTY(BlueprintReadWrite)
   float MaxRotationRange;
 
-  FMiscSpecificLocationActorsROI() : FRegionOfInterest(), ActorClass(), ActorLocation(0.0f)
+  FMiscSpecificLocationActorsROI() : FCarlaRegionOfInterest(), ActorClass(), ActorLocation(0.0f)
   {}
 };
 
 USTRUCT(BlueprintType)
-struct CARLATOOLS_API FSoilTypeROI : public FRegionOfInterest
+struct CARLATOOLS_API FSoilTypeROI : public FCarlaRegionOfInterest
 {
   GENERATED_BODY()
 

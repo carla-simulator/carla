@@ -2,11 +2,13 @@
 
   * Fixed bug causing the TM's unstuck logic to incorrectly remove the vehicles in some situations.
   * Fixed the extra data in Directx textures, so we need to copy row by row on Windows to remove extra bytes on images
+  * Fixed the import script, where could use any other TilesInfo.txt if the destination folder has many
   * Restored gamma value to 2.2 instead of 2.4
   * Added API function to avoid replaying the spectator
     * `Client.set_replayer_ignore_spectator(bool)`
     * `start_replaying.py` using flag `--move-spectator`
   * Added maps, vehicles, pedestrians and props catalogues to the documentation
+  * Add keyword arguments for `carla.TrafficManager` Python API functions
 
 ## CARLA 0.9.14
 
