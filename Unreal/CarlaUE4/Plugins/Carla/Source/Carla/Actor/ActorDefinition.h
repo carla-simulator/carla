@@ -65,3 +65,22 @@ struct FVehicleActorDefinition
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TArray<FColor> colors;
 };
+
+/// A definition of a Procedural Building Material with all the variation of colors.
+USTRUCT(BlueprintType)
+struct FProceduralBuildingActorDefinition
+{
+  GENERATED_BODY()
+
+  /// A list of comma-separated tags.
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString Tags;
+
+  /// The base material
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UMaterial* Material;
+
+  /// Colors represent the avaliable colors for each material
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TArray<FColor> Tints;
+};

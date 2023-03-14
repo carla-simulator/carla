@@ -71,7 +71,8 @@ public class CarlaTools : ModuleRules
         "Networking",
         "Sockets",
         "RHI",
-        "RenderCore"
+        "RenderCore",
+        "MeshMergeUtilities"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
