@@ -14,7 +14,7 @@ void AProceduralBuildingUtilities::GenerateImpostor()
   // Not implemented yet.
 }
 
-void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& DestinationPath)
+void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& DestinationPath, const FString& FileName)
 {
   TArray<UPrimitiveComponent*> Components;
   this->GetComponents(Components, false);
@@ -27,9 +27,13 @@ void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& D
   FVector NewLocation;
   const float ScreenAreaSize = TNumericLimits<float>::Max();
 
-  const IMeshMergeUtilities& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshMergeModule>("MeshMergeUtilities").GetUtilities();
-  MeshUtilities.MergeComponentsToStaticMesh(Components, World, MeshMergeSettings, nullptr, nullptr, DestinationPath, AssetsToSync, NewLocation, ScreenAreaSize, true);
+  FString PackageName = DestinationPath + FileName;
+  UPackage* NewPackage = CreatePackage(*PackageName);
 
-  TArray<UClass*> ClassesToSave = { UStaticMesh::StaticClass() };
-  FEditorFileUtils::SaveDirtyContentPackages(ClassesToSave, false, false, true, false);
+  const IMeshMergeUtilities& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshMergeModule>("MeshMergeUtilities").GetUtilities();
+  MeshUtilities.MergeComponentsToStaticMesh(Components, World, MeshMergeSettings, nullptr, NewPackage, FileName, AssetsToSync, NewLocation, ScreenAreaSize, true);
+
+  //UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Size of AssetsToSync %d"), AssetsToSync.Num());
+
+  UPackage::SavePackage(NewPackage, AssetsToSync[0], EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *FileName, GError, nullptr, true, true, SAVE_NoError);
 }
