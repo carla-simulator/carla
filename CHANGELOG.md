@@ -1,5 +1,6 @@
 ## Latest
 
+  * Updated data coming from the radar. The speed is transmitted along both axes relative to the radar.
   * Fixed bug causing the TM's unstuck logic to incorrectly remove the vehicles in some situations.
   * Fixed the extra data in Directx textures, so we need to copy row by row on Windows to remove extra bytes on images
   * Fixed the import script, where could use any other TilesInfo.txt if the destination folder has many
