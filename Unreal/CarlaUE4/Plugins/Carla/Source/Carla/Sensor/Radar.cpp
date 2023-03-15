@@ -5,14 +5,16 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <PxScene.h>
-
 #include "Carla.h"
 #include "Carla/Sensor/Radar.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
-
+#include "Containers/UnrealString.h"
 #include "carla/geom/Math.h"
+
+#include <cmath>
+#include <string>
 
 FActorDefinition ARadar::GetSensorDefinition()
 {
@@ -96,9 +98,13 @@ void ARadar::SendLineTraces(float DeltaTime)
   const FRotator& TransformRotator = ActorTransform.Rotator();
   const FVector& RadarLocation = GetActorLocation();
   const FVector& ForwardVector = GetActorForwardVector();
+  const FVector& RightVector = GetActorRightVector();
+  
   const FVector TransformXAxis = ActorTransform.GetUnitAxis(EAxis::X);
   const FVector TransformYAxis = ActorTransform.GetUnitAxis(EAxis::Y);
   const FVector TransformZAxis = ActorTransform.GetUnitAxis(EAxis::Z);
+
+
 
   // Maximum radar radius in horizontal and vertical direction
   const float MaxRx = FMath::Tan(FMath::DegreesToRadians(HorizontalFOV * 0.5f)) * Range;
@@ -114,7 +120,7 @@ void ARadar::SendLineTraces(float DeltaTime)
     Rays[i].Hitted = false;
   }
 
-  FCriticalSection Mutex;
+  //FCriticalSection Mutex;
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
@@ -146,7 +152,7 @@ void ARadar::SendLineTraces(float DeltaTime)
       if (Hitted && HittedActor.Get()) {
         Rays[idx].Hitted = true;
 
-        Rays[idx].RelativeVelocity = CalculateRelativeVelocity(OutHit, RadarLocation);
+        Rays[idx].RelativeVelocity = CalculateRelativeVelocity(OutHit, ForwardVector, RightVector, GetTransform().Inverse());
 
         Rays[idx].AzimuthAndElevation = FMath::GetAzimuthAndElevation (
           (EndLocation - RadarLocation).GetSafeNormal() * Range,
@@ -165,7 +171,8 @@ void ARadar::SendLineTraces(float DeltaTime)
   for (auto& ray : Rays) {
     if (ray.Hitted) {
       RadarData.WriteDetection({
-        ray.RelativeVelocity,
+        ray.RelativeVelocity.X,
+        ray.RelativeVelocity.Y,
         ray.AzimuthAndElevation.X,
         ray.AzimuthAndElevation.Y,
         ray.Distance
@@ -175,16 +182,27 @@ void ARadar::SendLineTraces(float DeltaTime)
 
 }
 
-float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation)
+FVector2D ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& ForwardVector, const FVector& RightVector, const FTransform& ActorTransform)
 {
+
   constexpr float TO_METERS = 1e-2;
 
   const TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
   const FVector TargetVelocity = HittedActor->GetVelocity();
   const FVector TargetLocation = OutHit.ImpactPoint;
-  const FVector Direction = (TargetLocation - RadarLocation).GetSafeNormal();
+
   const FVector DeltaVelocity = (TargetVelocity - CurrentVelocity);
-  const float V = TO_METERS * FVector::DotProduct(DeltaVelocity, Direction);
+
+  FVector2D V(ActorTransform.TransformVector(DeltaVelocity));
+
+  V.X *= TO_METERS;
+  V.Y *= TO_METERS;
+
+
+  // Для дебага! 
+  //UE_LOG(LogTemp, Warning, TEXT("Vf: %s"), *DV.ToString());
+  
+
 
   return V;
 }
