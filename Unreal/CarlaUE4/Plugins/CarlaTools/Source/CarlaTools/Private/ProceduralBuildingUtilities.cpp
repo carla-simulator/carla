@@ -4,7 +4,9 @@
 #include "ProceduralBuildingUtilities.h"
 
 #include "AssetRegistryModule.h"
+#include "Components/StaticMeshComponent.h"
 #include "FileHelpers.h"
+#include "GameFramework/Actor.h"
 #include "IMeshMergeUtilities.h"
 #include "MeshMergeModule.h"
 #include "UObject/Class.h"
@@ -17,9 +19,18 @@ void AProceduralBuildingUtilities::GenerateImpostor()
 void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& DestinationPath, const FString& FileName)
 {
   TArray<UPrimitiveComponent*> Components;
-  this->GetComponents(Components, false);
+  TArray<UStaticMeshComponent*> StaticMeshComponents;
+  GetComponents<UStaticMeshComponent>(StaticMeshComponents, false); // Components of class
 
-  UWorld* World = this->GetWorld();
+  for(UStaticMeshComponent* StaticMeshComponent : StaticMeshComponents)
+  {
+    if(StaticMeshComponent->GetStaticMesh())
+    {
+      Components.Add(StaticMeshComponent);
+    }
+  }
+
+  UWorld* World = GetWorld();
 
   FMeshMergingSettings MeshMergeSettings;
   TArray<UObject*> AssetsToSync;
