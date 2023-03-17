@@ -8,30 +8,30 @@ import json
 
 # convert PropSize to string
 def size_to_str(prop_size):
-    if args.size == unreal.PropSize.TINY:
+    if prop_size == unreal.PropSize.TINY:
         return 'Tiny'
-    elif args.size == unreal.PropSize.SMALL:
+    elif prop_size == unreal.PropSize.SMALL:
         return 'Small'
-    elif args.size == unreal.PropSize.MEDIUM:
+    elif prop_size == unreal.PropSize.MEDIUM:
         return 'Medium'
-    elif args.size == unreal.PropSize.BIG:
+    elif prop_size == unreal.PropSize.BIG:
         return 'Big'
-    elif args.size == unreal.PropSize.HUGE:
+    elif prop_size == unreal.PropSize.HUGE:
         return 'Huge'
     else:
         return 'Medium'
 
 # convert string to PropSize
 def str_to_size(prop_size):
-    if args.size == "tiny":
+    if prop_size == "tiny":
         return unreal.PropSize.TINY
-    elif args.size == "small":
+    elif prop_size == "small":
         return unreal.PropSize.SMALL
-    elif args.size == "medium":
+    elif prop_size == "medium":
         return unreal.PropSize.MEDIUM
-    elif args.size == "big":
+    elif prop_size == "big":
         return unreal.PropSize.BIG
-    elif args.size == "huge":
+    elif prop_size == "huge":
         return unreal.PropSize.HUGE
     else:
         return unreal.PropSize.MEDIUM
