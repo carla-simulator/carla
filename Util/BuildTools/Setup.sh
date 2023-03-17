@@ -806,7 +806,7 @@ fi
 # -- Generate Version.h --------------------------------------------------------
 # ==============================================================================
 
-CARLA_VERSION=$(get_git_repository_version)
+CARLA_VERSION="0.9.14"
 
 log "CARLA version ${CARLA_VERSION}."
 
