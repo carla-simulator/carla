@@ -11,6 +11,7 @@
     * `start_replaying.py` using flag `--move-spectator`
   * Added maps, vehicles, pedestrians and props catalogues to the documentation
   * Add keyword arguments for `carla.TrafficManager` Python API functions
+  * Fixed bug causing the `FPixelReader::SavePixelsToDisk(PixelData, FilePath)` function to crash due to pixel array not set correctly.
 
 ## CARLA 0.9.14
 
