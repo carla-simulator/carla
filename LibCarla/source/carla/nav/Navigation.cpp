@@ -67,6 +67,13 @@ namespace nav {
     dtFreeNavMesh(_nav_mesh);
   }
 
+  // reference to the simulator to access API functions
+  void Navigation::SetSimulator(std::weak_ptr<carla::client::detail::Simulator> simulator)
+  {
+    _simulator = simulator;
+    _walker_manager.SetSimulator(simulator);
+  }
+
   // set the seed to use with random numbers
   void Navigation::SetSeed(unsigned int seed) {
     srand(seed);
