@@ -62,23 +62,17 @@
 ## Children
 
 * __Child pedestrian - 1__
-	* [__Variant 1__](#adult-pedestrian-1-variant-1)
-	* [__Variant 2__](#adult-pedestrian-1-variant-2)
-	* [__Variant 3__](#adult-pedestrian-1-variant-3)
-	* [__Variant 4__](#adult-pedestrian-1-variant-4)
-	* [__Variant 5__](#adult-pedestrian-1-variant-5)
-	* [__Variant 6__](#adult-pedestrian-1-variant-6)
+	* [__Variant 1__](#child-pedestrian-1-variant-1)
+	* [__Variant 2__](#child-pedestrian-1-variant-2)
+	* [__Variant 3__](#child-pedestrian-1-variant-3)
 * __Child pedestrian - 2__
-	* [__Variant 1__](#adult-pedestrian-2-variant-1)
-	* [__Variant 2__](#adult-pedestrian-2-variant-2)
-	* [__Variant 3__](#adult-pedestrian-2-variant-3)
-	* [__Variant 4__](#adult-pedestrian-2-variant-4)
+	* [__Variant 1__](#child-pedestrian-2-variant-1)
+	* [__Variant 2__](#child-pedestrian-2-variant-2)
+	* [__Variant 3__](#child-pedestrian-2-variant-3)
 * __Child pedestrian - 3__
-	* [__Variant 1__](#adult-pedestrian-3-variant-1)
-	* [__Variant 2__](#adult-pedestrian-3-variant-2)
+	* [__Variant 1__](#child-pedestrian-3-variant-1)
 * __Child pedestrian - 4__
-	* [__Variant 1__](#adult-pedestrian-4-variant-1)
-	* [__Variant 2__](#adult-pedestrian-4-variant-2)
+	* [__Variant 1__](#child-pedestrian-4-variant-1)
 
 
 ## Police
