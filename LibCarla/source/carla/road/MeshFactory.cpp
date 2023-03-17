@@ -70,7 +70,6 @@ namespace geom {
     double s_current = s_start;
 
     std::vector<geom::Vector3D> vertices;
-
     if (lane.IsStraight()) {
       // Mesh optimization: If the lane is straight just add vertices at the
       // begining and at the end of it
@@ -157,7 +156,6 @@ namespace geom {
         current_vertex = current_vertex + segments_size;
       }
     }
-
     out_mesh.AddVertices(vertices);
 
     // Add the adient material, create the strip and close the material
@@ -179,7 +177,6 @@ namespace geom {
         out_mesh.AddIndex(   j       + ( ( i + 1 ) * vertices_in_width ) + 1);
       }
     }
-
     out_mesh.EndMaterial();
     return std::make_unique<Mesh>(out_mesh);
   }
@@ -385,7 +382,6 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
   std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory::GenerateOrderedWithMaxLen(
     const road::LaneSection &lane_section) const {
       const int vertices_in_width = road_param.vertex_width_resolution >= 2 ? road_param.vertex_width_resolution : 2;
-
       std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> mesh_uptr_list;
 
       if (lane_section.GetLength() < road_param.max_road_len) {
@@ -405,7 +401,6 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             {
               (mesh_uptr_list[lane_pair.second.GetType()][0])->ConcatMesh(lane_section_mesh, vertices_in_width);
             }
-
           }
           s_current = s_until;
         }
