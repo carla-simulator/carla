@@ -7,6 +7,7 @@
 #include "carla/client/WalkerAIController.h"
 
 #include "carla/client/detail/Simulator.h"
+#include "carla/client/detail/WalkerNavigation.h"
 
 namespace carla {
 namespace client {

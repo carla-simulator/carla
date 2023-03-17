@@ -71,6 +71,8 @@ namespace nav {
     bool GetAgentRoute(ActorId id, carla::geom::Location from, carla::geom::Location to,
     std::vector<carla::geom::Location> &path, std::vector<unsigned char> &area);
 
+    /// reference to the simulator to access API functions
+    void SetSimulator(std::weak_ptr<carla::client::detail::Simulator> simulator);
     /// set the seed to use with random numbers
     void SetSeed(unsigned int seed);
     /// create the crowd object
@@ -140,6 +142,8 @@ namespace nav {
     /// walker manager for the route planning with events
     WalkerManager _walker_manager;
 
+    std::weak_ptr<carla::client::detail::Simulator> _simulator;
+    
     mutable std::mutex _mutex;
 
     float _probability_crossing { 0.0f };
