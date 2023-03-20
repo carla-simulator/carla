@@ -125,6 +125,15 @@ if not exist "%HOUDINI_PLUGIN_PATH%" (
 
 rem Build Carla Editor
 rem
+set OMNIVERSE_PATCH_FOLDER=%ROOT_PATH%Util\Patches\omniverse_4.26\
+set OMNIVERSE_PLUGIN_FOLDER=%UE4_ROOT%Engine\Plugins\Marketplace\NVIDIA\Omniverse\
+if exist %OMNIVERSE_PLUGIN_FOLDER% (
+    set OMNIVERSE_PLUGIN_INSTALLED="Omniverse ON"
+    xcopy /Y /S /I "%OMNIVERSE_PATCH_FOLDER%USDCARLAInterface.h" "%OMNIVERSE_PLUGIN_FOLDER%Source\OmniverseUSD\Public\" > NUL
+    xcopy /Y /S /I "%OMNIVERSE_PATCH_FOLDER%USDCARLAInterface.cpp" "%OMNIVERSE_PLUGIN_FOLDER%Source\OmniverseUSD\Private\" > NUL
+) else (
+    set OMNIVERSE_PLUGIN_INSTALLED="Omniverse OFF"
+)
 
 if %USE_CARSIM% == true (
     py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -e
@@ -138,8 +147,10 @@ if %USE_CHRONO% == true (
 ) else (
     set CHRONO_STATE="Chrono OFF"
 )
-set OPTIONAL_MODULES_TEXT=%CARSIM_STATE% %CHRONO_STATE%
+
+set OPTIONAL_MODULES_TEXT=%CARSIM_STATE% %CHRONO_STATE% %OMNIVERSE_PLUGIN_INSTALLED%
 echo %OPTIONAL_MODULES_TEXT% > "%ROOT_PATH%Unreal/CarlaUE4/Config/OptionalModules.ini"
+
 
 if %BUILD_UE4_EDITOR% == true (
     echo %FILE_N% Building Unreal Editor...

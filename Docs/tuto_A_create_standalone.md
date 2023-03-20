@@ -2,7 +2,7 @@
 
 It is a common practice in CARLA to manage assets with standalone packages. Keeping them aside allows to reduce the size of the build. These asset packages can be easily imported into a CARLA package anytime. They also become really useful to easily distribute assets in an organized way. 
 
-- [__Export a package from the UE4 Editor__](#export-a-package-from-the-ue4-editor)  
+- [__Export a package in a CARLA build from source__](#export-a-package-in-a-carla-build-from-source)  
 - [__Export a package using Docker__](#export-a-package-using-docker)
 - [__Import assets into a CARLA package__](#import-assets-into-a-carla-package)  
 
