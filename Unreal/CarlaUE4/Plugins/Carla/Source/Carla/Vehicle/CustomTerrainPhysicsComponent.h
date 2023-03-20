@@ -8,6 +8,7 @@
 
 #include "Components/ActorComponent.h"
 #include "Components/PrimitiveComponent.h"
+#include "Engine/StaticMeshActor.h"
 #include "Misc/ScopeLock.h"
 
 #include "Carla/Math/DVector.h"

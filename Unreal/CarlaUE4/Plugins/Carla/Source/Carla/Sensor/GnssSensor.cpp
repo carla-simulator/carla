@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Sensor/GnssSensor.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaStatics.h"

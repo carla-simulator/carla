@@ -392,3 +392,5 @@ private:
 
   FSensorManager SensorManager;
 };
+
+FString CarlaGetRelevantTagAsString(const TSet<crp::CityObjectLabel> &SemanticTags);

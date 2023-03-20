@@ -12,6 +12,7 @@
 #include "Carla.h"
 #include "Carla/Util/RandomEngine.h"
 #include "Carla/Sensor/DVSCamera.h"
+#include "Actor/ActorBlueprintFunctionLibrary.h"
 
 static float FColorToGrayScaleFloat(FColor Color)
 {

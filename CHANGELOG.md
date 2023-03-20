@@ -9,6 +9,7 @@
   * Added API function to avoid replaying the spectator
     * `Client.set_replayer_ignore_spectator(bool)`
     * `start_replaying.py` using flag `--move-spectator`
+  * Surface non-unity build mode by passing ARGS=--no-unity to make; allows IWYU-type errors to be unmasked and fixed.
   * Added maps, vehicles, pedestrians and props catalogues to the documentation
   * Add keyword arguments for `carla.TrafficManager` Python API functions
   * Fixed bug causing the `FPixelReader::SavePixelsToDisk(PixelData, FilePath)` function to crash due to pixel array not set correctly.
