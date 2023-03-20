@@ -42,9 +42,25 @@ void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& D
   UPackage* NewPackage = CreatePackage(*PackageName);
 
   const IMeshMergeUtilities& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshMergeModule>("MeshMergeUtilities").GetUtilities();
-  MeshUtilities.MergeComponentsToStaticMesh(Components, World, MeshMergeSettings, nullptr, NewPackage, FileName, AssetsToSync, NewLocation, ScreenAreaSize, true);
+  MeshUtilities.MergeComponentsToStaticMesh(
+      Components,
+      World,
+      MeshMergeSettings,
+      nullptr,
+      NewPackage,
+      FileName,
+      AssetsToSync,
+      NewLocation,
+      ScreenAreaSize,
+      true);
 
-  //UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Size of AssetsToSync %d"), AssetsToSync.Num());
-
-  UPackage::SavePackage(NewPackage, AssetsToSync[0], EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *FileName, GError, nullptr, true, true, SAVE_NoError);
+  UPackage::SavePackage(NewPackage,
+      AssetsToSync[0],
+      EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
+      *FileName,
+      GError,
+      nullptr,
+      true,
+      true,
+      SAVE_NoError);
 }
