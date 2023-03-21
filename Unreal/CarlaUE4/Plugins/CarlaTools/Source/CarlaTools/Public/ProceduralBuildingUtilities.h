@@ -6,7 +6,17 @@
 #include "EditorUtilityActor.h"
 #include "ProceduralBuildingUtilities.generated.h"
 
-struct FIntRect;
+class USceneCaptureComponent2D;
+class UTexture2D;
+
+UENUM(BlueprintType)
+enum EBuildingCameraView
+{
+  FRONT,
+  LEFT,
+  BACK,
+  RIGHT
+};
 
 /**
  * 
@@ -17,10 +27,17 @@ class CARLATOOLS_API AProceduralBuildingUtilities : public AEditorUtilityActor
   GENERATED_BODY()
 
 public:
+  UFUNCTION(BlueprintImplementableEvent, Category="Procedural Building Utilities")
+  void BakeSceneCaptureRTToTextureAtlas(UTexture2D* SceneCaptureRT, EBuildingCameraView TargetView);
+
   UFUNCTION(BlueprintCallable, Category="Procedural Building Utilities")
   void GenerateImpostor();
 
   UFUNCTION(BlueprintCallable, Category="Procedural Building Utilities")
   void CookProceduralBuildingToMesh(const FString& DestinationPath, const FString& FileName);
+
+private:
+  void RenderImpostorView(USceneCaptureComponent2D* Camera, const FVector BuildingSize, const EBuildingCameraView View);
+  void MoveCameraToViewPosition(USceneCaptureComponent2D* Camera, const FVector BuildingSize, const EBuildingCameraView View);
 
 };
