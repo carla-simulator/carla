@@ -22,6 +22,7 @@
 #include <compiler/enable-ue4-macros.h>
 
 #include "Engine/Classes/Interfaces/Interface_CollisionDataProvider.h"
+#include "Engine/TriggerBox.h"
 #include "Factories/MaterialInstanceConstantFactoryNew.h"
 #include "PhysicsCore/Public/BodySetupEnums.h"
 #include "RawMesh.h"
@@ -197,7 +198,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
 {
   opg_parameters.vertex_distance = 0.5f;
   opg_parameters.vertex_width_resolution = 8.0f;
-  opg_parameters.simplification_percentage = 15.0f;
+  opg_parameters.simplification_percentage = 50.0f;
 
   double start = FPlatformTime::Seconds();
   const auto Meshes = CarlaMap->GenerateOrderedChunkedMesh(opg_parameters);
@@ -228,7 +229,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
 
       if(DefaultRoadMaterial)
         TempPMC->SetMaterial(0, DefaultRoadMaterial);
-
+      
       FVector MeshCentroid = FVector(0,0,0);
       for( auto Vertex : Mesh->GetVertices() )
       {
@@ -529,10 +530,10 @@ TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets()
       MeshBuildTime += end - start;
       start = FPlatformTime::Seconds();
 
-      FString MeshName = *(RoadType[i] + FString::FromInt(i));
+      FString RoadName = *(RoadType[i] + FString::FromInt(i));
       // Notify asset registry of new asset
       FAssetRegistryModule::AssetCreated(CurrentStaticMesh);
-      UPackage::SavePackage(Package, CurrentStaticMesh, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *MeshName, GError, nullptr, true, true, SAVE_NoError);
+      UPackage::SavePackage(Package, CurrentStaticMesh, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *RoadName, GError, nullptr, true, true, SAVE_NoError);
       end = FPlatformTime::Seconds();
       PackSaveTime += end - start;
 

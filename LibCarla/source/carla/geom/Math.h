@@ -83,6 +83,11 @@ namespace geom {
       return std::sqrt(DistanceSquared2D(a, b));
     }
 
+    static float LinearLerp(float a, float b, float f) 
+    {
+      return a * (1.0 - f) + (b * f);
+    }
+
     /// Returns the angle between 2 vectors in radians
     static double GetVectorAngle(const Vector3D &a, const Vector3D &b);
 

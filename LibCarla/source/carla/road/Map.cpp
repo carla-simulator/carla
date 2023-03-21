@@ -20,8 +20,9 @@
 
 #include "simplify/Simplify.h"
 
-#define MC_IMPLEM_ENABLE
-#include "marchingcube/MC.h"
+
+#include "marchingcube/MeshReconstruction.h"
+#include "marchingcube/IO.h"
 
 #include <vector>
 #include <unordered_map>
@@ -30,6 +31,7 @@
 #include <thread>
 #include <fstream>
 #include <iomanip>
+#include <cmath>
 
 namespace carla {
 namespace road {
@@ -1148,20 +1150,73 @@ namespace road {
   
     std::thread juntction_thread([ this, &juntion_out_mesh_list, &params, &mesh_factory ] {
       // Generate roads within junctions and smooth them
+      float simplificationrate = params.simplification_percentage * 0.01f;
       for (const auto& junc_pair : _data.GetJunctions())
       {
         const auto& junction = junc_pair.second;
         std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
         std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
         std::vector<carla::geom::Vector3D> perimeterpoints;
-       
+        
+        std::ofstream out(std::string("C:\\log\\junctiondebug") + std::to_string(junc_pair.first) + std::string(".txt"), std::ios::app);
         //perimeterpoints = GetSDF(junction, 0.5f);
-        auto pmesh = SDFToMesh(junction, perimeterpoints, 0.1f);
-       
+        auto pmesh = SDFToMesh(junction, perimeterpoints, 75);
+        Simplify::SimplificationObject Simplification;
+        for (carla::geom::Vector3D& current_vertex : pmesh->GetVertices())
+        {
+          Simplify::Vertex v;
+          v.p.x = current_vertex.x;
+          v.p.y = current_vertex.y;
+          v.p.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+          Simplification.vertices.push_back(v);
+        }
+
+        for (size_t i = 0; i < pmesh->GetIndexes().size() - 2; i += 3)
+        {
+          Simplify::Triangle t;
+          t.material = 0;
+          auto indices = pmesh->GetIndexes();
+          t.v[0] = (indices[i]) - 1;
+          t.v[1] = (indices[i + 1]) - 1;
+          t.v[2] = (indices[i + 2]) - 1;
+          Simplification.triangles.push_back(t);
+        }
+        out << "Indices Pre: " << pmesh->GetIndexes().size() << std::endl;
+        // Reduce to the X% of the polys
+        float target_size = Simplification.triangles.size();
+        out << "target_size " << Simplification.triangles.size() << " vertices: " << Simplification.vertices.size()  << std::endl;
+        out << "(target_size * 0.simplificationrate) " << (target_size * simplificationrate) << std::endl;
+
+        Simplification.simplify_mesh( (target_size * simplificationrate) );
+
+        pmesh->GetVertices().clear();
+        pmesh->GetIndexes().clear();
+        out << "Indices During: " << pmesh->GetIndexes().size() << std::endl;
+
+        for (Simplify::Vertex& current_vertex : Simplification.vertices)
+        {
+          carla::geom::Vector3D v;
+          v.x = current_vertex.p.x;
+          v.y = current_vertex.p.y;
+          v.z = current_vertex.p.z;
+          pmesh->AddVertex(v);
+        }
+
+        for (size_t i = 0; i < Simplification.triangles.size(); ++i)
+        {
+          pmesh->GetIndexes().push_back((Simplification.triangles[i].v[0]) + 1);
+          pmesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
+          pmesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
+        }
+
+        out << "Indices Post: " << pmesh->GetIndexes().size() << std::endl;
+
         juntion_out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
+        out.close();
       }
+
     });
-    /*
+    
     float simplificationrate = params.simplification_percentage * 0.01f;
     {
       size_t num_roads = _data.GetRoads().size();
@@ -1240,19 +1295,17 @@ namespace road {
         }
       }
     }
-    */
 
     juntction_thread.join();
-
-    for (auto&& pair : juntion_out_mesh_list )
+    for (auto&& pair : juntion_out_mesh_list)
     {
-      if( road_out_mesh_list.find(pair.first) != road_out_mesh_list.end() )
+      if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end())
       {
-        road_out_mesh_list[pair.first].insert( road_out_mesh_list[pair.first].end(),
-                                               std::make_move_iterator(pair.second.begin()),
-                                               std::make_move_iterator(pair.second.end()));
+        road_out_mesh_list[pair.first].insert(road_out_mesh_list[pair.first].end(),
+          std::make_move_iterator(pair.second.begin()),
+          std::make_move_iterator(pair.second.end()));
       }
-      else 
+      else
       {
         road_out_mesh_list[pair.first] = std::move(pair.second);
       }
@@ -1325,6 +1378,19 @@ namespace road {
     return std::move(LineMarks);
   }
 
+  std::vector<carla::geom::BoundingBox> Map::GetJunctionsBoundingBoxes() const
+  {
+    std::vector<carla::geom::BoundingBox> returning;
+    for ( const auto& junc_pair : _data.GetJunctions() ) 
+    {
+      const auto& junction = junc_pair.second;
+      float box_extraextension_factor = 1.5f;
+      carla::geom::BoundingBox bb = junction.GetBoundingBox();
+      bb.extent *= box_extraextension_factor;
+      returning.push_back(bb);
+    }
+    return returning;
+  }
   inline float Map::GetZPosInDeformation(float posx, float posy) const
   {
     // Amplitud
@@ -1484,69 +1550,92 @@ namespace road {
 
   std::unique_ptr<geom::Mesh> Map::SDFToMesh(const road::Junction& jinput,
     const std::vector<geom::Vector3D>& sdfinput,
-    float grid_resolution) const 
+    int grid_cells_per_dim) const
   {
-    int n = 100 * grid_resolution;
+    int junctionid = jinput.GetId();
+    float box_extraextension_factor = 1.5f;
     carla::geom::BoundingBox bb = jinput.GetBoundingBox();
-    carla::geom::Vector3D MinOffset = bb.location - geom::Location(bb.extent);
-    carla::geom::Vector3D MaxOffset = bb.location + geom::Location(bb.extent);
-    
-    std::ofstream iout;
-    std::vector<float> field(n*n*n,-1.0f);
+    carla::geom::Vector3D MinOffset = bb.location - geom::Location(bb.extent * box_extraextension_factor);
+    carla::geom::Vector3D MaxOffset = bb.location + geom::Location(bb.extent * box_extraextension_factor);
+    carla::geom::Vector3D OffsetPerCell = ( bb.extent * box_extraextension_factor * 2 ) / grid_cells_per_dim;
 
-    for (float Z = MinOffset.z; Z <= MaxOffset.z; Z += grid_resolution)
+    auto junctionsdf = [this, OffsetPerCell, MinOffset, junctionid](MeshReconstruction::Vec3 const& pos)
     {
-      for (float Y = MinOffset.y; Y <= MaxOffset.y; Y += grid_resolution)
+      geom::Vector3D worldloc(pos.x, pos.y, pos.z);
+      boost::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(worldloc), 0x1 << 1);
+      
+      if (CheckingWaypoint)
       {
-        for (float X = MinOffset.x; X <= MaxOffset.x; X += grid_resolution)
+        if ( pos.z < 0.2) {
+          return 0.0;
+        }
+        else 
         {
-          if ( GetWaypoint( geom::Location( geom::Vector3D( X, Y, Z ) ) ) )
-          {
-            int ix = ((X - MinOffset.x) / (MaxOffset.x - MinOffset.x)) * n;
-            int iy = ((Y - MinOffset.y) / (MaxOffset.y - MinOffset.y)) * n;
-            int iz = ((Z - MinOffset.z) / (MaxOffset.z - MinOffset.z)) * n;
-            field[(iz * n + iy) * n + ix] = 1.0f;
-          }
+          return -abs(pos.z);
         }
       }
-    }
+      
+      boost::optional<element::Waypoint> InRoadWaypoint = GetClosestWaypointOnRoad(geom::Location(worldloc), 0x1 << 1);
+      geom::Transform InRoadWPTransform = ComputeTransform(*InRoadWaypoint);
+
+      geom::Vector3D director = geom::Location(worldloc) - (InRoadWPTransform.location);
+      geom::Vector3D laneborder = InRoadWPTransform.location + geom::Location(director.MakeUnitVector() * GetLaneWidth(*InRoadWaypoint) * 0.5f);
+
+      geom::Vector3D Distance = laneborder - worldloc;
+      if (Distance.Length2D() < 0.3 && pos.z < 0.2)
+      {
+        return 0.0;
+      }
+      return Distance.Length() * -1.0;
+    };
 
 
-    MC::mcMesh mcmesh;
-    MC::marching_cube(field.data(), n, n, n, mcmesh);
+
+    double gridsizeindouble = grid_cells_per_dim;
+    MeshReconstruction::Rect3 domain;
+    domain.min = { MinOffset.x, MinOffset.y, MinOffset.z };
+    domain.size = { bb.extent.x * box_extraextension_factor * 2, bb.extent.y * box_extraextension_factor * 2, 0.4 };
+
+    MeshReconstruction::Vec3 cubeSize{ 0.35, 0.35, 0.2 };
+
+    auto mesh = MeshReconstruction::MarchCube(junctionsdf, domain, cubeSize );
+
+    carla::geom::Rotation inverse = bb.rotation;
+    carla::geom::Vector3D trasltation = bb.location;
 
     geom::Mesh out_mesh;
-    for (auto cv : mcmesh.vertices) 
+    
+    for (auto cv : mesh.vertices)
     {
-      geom::Vector3D newvertex;
-      newvertex.x = cv.x;
-      newvertex.y = cv.y;
-      newvertex.z = cv.z;
-      out_mesh.AddVertex(newvertex);
-    }
-    for (auto ci : mcmesh.indices)
-    {
-      out_mesh.AddIndex(ci + 1);
+      geom::Vector3D worldloc(cv.x, cv.y, cv.z);
+      boost::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(worldloc), 0x1 << 1);
+      
+      if (!CheckingWaypoint)
+      {
+        boost::optional<element::Waypoint> InRoadWaypoint = GetClosestWaypointOnRoad(geom::Location(worldloc), 0x1 << 1);
+        geom::Transform InRoadWPTransform = ComputeTransform(*InRoadWaypoint);
+
+        geom::Vector3D director = geom::Location(worldloc) - (InRoadWPTransform.location);
+        geom::Vector3D laneborder = InRoadWPTransform.location + geom::Location(director.MakeUnitVector() * GetLaneWidth(*InRoadWaypoint) * 0.5f);
+        out_mesh.AddVertex(laneborder);
+      }
+      else 
+      {
+        geom::Vector3D newvertex;
+        newvertex.x = cv.x;
+        newvertex.y = cv.y;
+        newvertex.z = cv.z;
+        out_mesh.AddVertex(newvertex);
+      }
+
     }
 
-    // Export the result as an .obj file
-    std::ofstream out;
-    out.open(std::string("C:\\log\\aitem") + std::to_string(jinput.GetId()) + std::string(".obj"));
-    if (out.is_open() == false)
-      return std::make_unique<geom::Mesh>();
-    out << "g " << "Obj" << std::endl;
-    for (size_t i = 0; i < mcmesh.vertices.size(); i++)
-      out << "v " << mcmesh.vertices.at(i).x << " " << mcmesh.vertices.at(i).y << " " << mcmesh.vertices.at(i).z << '\n';
-    for (size_t i = 0; i < mcmesh.vertices.size(); i++)
-      out << "vn " << mcmesh.normals.at(i).x << " " << mcmesh.normals.at(i).y << " " << mcmesh.normals.at(i).z << '\n';
-    for (size_t i = 0; i < mcmesh.indices.size(); i += 3)
+    for (auto ct : mesh.triangles)
     {
-      out << "f " << mcmesh.indices.at(i) + 1 << "//" << mcmesh.indices.at(i) + 1
-        << " " << mcmesh.indices.at(i + 1) + 1 << "//" << mcmesh.indices.at(i + 1) + 1
-        << " " << mcmesh.indices.at(i + 2) + 1 << "//" << mcmesh.indices.at(i + 2) + 1
-        << '\n';
+      out_mesh.AddIndex(ct[1] + 1);
+      out_mesh.AddIndex(ct[0] + 1);
+      out_mesh.AddIndex(ct[2] + 1);
     }
-    out.close();
 
     return std::make_unique<geom::Mesh>(out_mesh);
   }

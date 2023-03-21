@@ -179,6 +179,8 @@ namespace road {
       return _data.GetControllers();
     }
 
+    std::vector<carla::geom::BoundingBox> GetJunctionsBoundingBoxes() const;
+
 #ifdef LIBCARLA_WITH_GTEST
     MapData &GetMap() {
       return _data;
@@ -221,7 +223,8 @@ public:
 
     std::vector<geom::Vector3D> GetSDF(const road::Junction& input, float grid_resolution) const;
     
-    std::unique_ptr<geom::Mesh> SDFToMesh(const road::Junction& jinput, const std::vector<geom::Vector3D>& sdfinput, float grid_resolution) const;
+    std::unique_ptr<geom::Mesh> SDFToMesh(const road::Junction& jinput, const std::vector<geom::Vector3D>& sdfinput, int grid_cells_per_dim) const;
+  
   };
 
 } // namespace road
