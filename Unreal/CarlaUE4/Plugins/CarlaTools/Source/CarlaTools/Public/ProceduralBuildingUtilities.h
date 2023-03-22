@@ -31,7 +31,7 @@ public:
   void BakeSceneCaptureRTToTextureAtlas(UTexture2D* SceneCaptureRT, EBuildingCameraView TargetView);
 
   UFUNCTION(BlueprintCallable, Category="Procedural Building Utilities")
-  void GenerateImpostor();
+  void GenerateImpostor(const FVector& BuildingSize);
 
   UFUNCTION(BlueprintCallable, Category="Procedural Building Utilities")
   void CookProceduralBuildingToMesh(const FString& DestinationPath, const FString& FileName);

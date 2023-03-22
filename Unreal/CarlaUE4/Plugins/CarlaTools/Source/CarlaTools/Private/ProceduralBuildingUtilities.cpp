@@ -13,23 +13,27 @@
 #include "MeshMergeModule.h"
 #include "UObject/Class.h"
 
-void AProceduralBuildingUtilities::GenerateImpostor()
+void AProceduralBuildingUtilities::GenerateImpostor(const FVector& BuildingSize)
 {
-  // TODO: 
   USceneCaptureComponent2D* Camera = Cast<USceneCaptureComponent2D>(GetComponentByClass(USceneCaptureComponent2D::StaticClass()));
 
   check(Camera!=nullptr);
 
-  const FVector BuildingSize(400.0f, -400.0f, 2030.0f); // TODO: Change Hardcoded default debugging values to real values
+  Camera->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+  if(Camera->ShowOnlyActors.Num() == 0)
+  {
+    Camera->ShowOnlyActors.Add(this);
+  }
 
-  // FRONT
+  // FRONT View
   RenderImpostorView(Camera, BuildingSize, EBuildingCameraView::FRONT);
-  // LEFT
+  // LEFT View
   RenderImpostorView(Camera, BuildingSize, EBuildingCameraView::LEFT);
-  // BACK
+  // BACK View
   RenderImpostorView(Camera, BuildingSize, EBuildingCameraView::BACK);
-  // RIGHT
+  // RIGHT View
   RenderImpostorView(Camera, BuildingSize, EBuildingCameraView::RIGHT);
+
   
 }
 
@@ -93,42 +97,66 @@ void AProceduralBuildingUtilities::RenderImpostorView(USceneCaptureComponent2D* 
 
 void AProceduralBuildingUtilities::MoveCameraToViewPosition(USceneCaptureComponent2D* Camera, const FVector BuildingSize, const EBuildingCameraView View)
 {
-  const float CameraFOVAngle = 60.0f; // TODO: Get from camera
-  float BuildingHeight = BuildingSize.Z;
+  // const float CameraFOVAngle = Camera->FOVAngle; // TODO: Get from camera
+  const float BuildingHeight = BuildingSize.Z;
   float ViewAngle = 0.f;
   float BuildingWidth = 0.f;
+  float BuildingDepth = 0.f;
 
   if(View == EBuildingCameraView::FRONT)
   {
     ViewAngle = 0.0f;
-    BuildingWidth = FMath::Abs(BuildingSize.X);
+    BuildingWidth = FMath::Abs(BuildingSize.Y);
+    BuildingDepth = FMath::Abs(BuildingSize.X);
   }
   else if(View == EBuildingCameraView::LEFT)
   {
     ViewAngle = 90.0f;
-    BuildingWidth = FMath::Abs(BuildingSize.Y);
+    BuildingWidth = FMath::Abs(BuildingSize.X);
+    BuildingDepth = FMath::Abs(BuildingSize.Y);
   }
   else if(View == EBuildingCameraView::BACK)
   {
     ViewAngle = 180.0f;
-    BuildingWidth = FMath::Abs(BuildingSize.X);
+    BuildingWidth = FMath::Abs(BuildingSize.Y);
+    BuildingDepth = FMath::Abs(BuildingSize.X);
   } 
   else if(View == EBuildingCameraView::RIGHT)
   {
     ViewAngle = 270.0f;
-    BuildingWidth = FMath::Abs(BuildingSize.Y);
+    BuildingWidth = FMath::Abs(BuildingSize.X);
+    BuildingDepth = FMath::Abs(BuildingSize.Y);
   }
 
 
-  float FrontAspectRation = BuildingWidth / BuildingHeight;
+  //float FrontAspectRatio = BuildingWidth / BuildingHeight;
 
-  float CameraDistance = BuildingHeight / (2.0f * FMath::Tan(FMath::DegreesToRadians(CameraFOVAngle / 2.0f)));
-  CameraDistance += BuildingWidth / 2.0f;
+  // Distance ajusted to height or width depending on which is bigger
+  //float DistanceTangentFactor = FrontAspectRatio < 1.0f ? BuildingHeight : BuildingWidth; 
+
+
+  // float DistanceTangentFactor = FMath::Max(BuildingWidth, BuildingHeight);
+
+  // float CameraDistance = DistanceTangentFactor / (2.0f * FMath::Tan(FMath::DegreesToRadians(CameraFOVAngle / 2.0f)));
+  // CameraDistance += BuildingWidth / 2.0f; 
+
+  // FVector NewCameraLocation(
+  //     CameraDistance * FMath::Cos(FMath::DegreesToRadians(ViewAngle)) + 0.5f * BuildingSize.X,
+  //     CameraDistance * FMath::Sin(FMath::DegreesToRadians(ViewAngle)) + 0.5f * BuildingSize.Y,
+  //     BuildingSize.Z / 2.0f);
+
+  /* ORTHO - Works with materials problems */
+  float ViewOrthoWidth = FMath::Max(BuildingWidth, BuildingHeight);
+  Camera->OrthoWidth = ViewOrthoWidth;
+
+  // float CameraDistance = 50000.0f;
+  float CameraDistance = 0.5f * BuildingDepth + 1000.f;
 
   FVector NewCameraLocation(
       CameraDistance * FMath::Cos(FMath::DegreesToRadians(ViewAngle)) + 0.5f * BuildingSize.X,
       CameraDistance * FMath::Sin(FMath::DegreesToRadians(ViewAngle)) + 0.5f * BuildingSize.Y,
       BuildingSize.Z / 2.0f);
+  /*****************/
 
   FRotator NewCameraRotation(0.0f, ViewAngle + 180.f, 0.0f);
 
