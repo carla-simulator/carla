@@ -85,7 +85,7 @@ namespace geom {
 
     static float LinearLerp(float a, float b, float f) 
     {
-      return a * (1.0 - f) + (b * f);
+      return a * (1.0f - f) + (b * f);
     }
 
     /// Returns the angle between 2 vectors in radians

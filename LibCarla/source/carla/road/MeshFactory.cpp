@@ -166,9 +166,9 @@ namespace geom {
 
     const int number_of_rows = (vertices.size() / vertices_in_width);
 
-    for (int i = 0; i < (number_of_rows - 1); ++i) 
+    for (size_t i = 0; i < (number_of_rows - 1); ++i) 
     {
-      for (int j = 0; j < vertices_in_width - 1; ++j) 
+      for (size_t j = 0; j < vertices_in_width - 1; ++j) 
       {
         out_mesh.AddIndex(   j       + (   i       * vertices_in_width ) + 1);
         out_mesh.AddIndex( ( j + 1 ) + (   i       * vertices_in_width ) + 1);
@@ -912,8 +912,8 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
         carla::road::element::DirectedPoint rightpoint = road.GetDirectedPointIn(s_current);
         carla::road::element::DirectedPoint leftpoint = rightpoint;
 
-        rightpoint.ApplyLateralOffset(lane_mark_info.width * 0.5);
-        leftpoint.ApplyLateralOffset(lane_mark_info.width * -0.5);
+        rightpoint.ApplyLateralOffset(lane_mark_info.width * 0.5f);
+        leftpoint.ApplyLateralOffset(lane_mark_info.width * -0.5f);
 
         // Unreal's Y axis hack
         rightpoint.location.y *= -1;

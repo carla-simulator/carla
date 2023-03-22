@@ -20,9 +20,7 @@
 
 #include "simplify/Simplify.h"
 
-
 #include "marchingcube/MeshReconstruction.h"
-#include "marchingcube/IO.h"
 
 #include <vector>
 #include <unordered_map>
