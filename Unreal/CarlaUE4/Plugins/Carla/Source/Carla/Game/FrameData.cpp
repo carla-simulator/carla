@@ -8,7 +8,16 @@
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Actor/CarlaActor.h"
 #include "Carla/Game/CarlaEngine.h"
-#include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Traffic/TrafficLightController.h"
+#include "Carla/Traffic/TrafficLightGroup.h"
+#include "Carla/MapGen/LargeMapManager.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/Settings/CarlaSettings.h"
+#include "Carla/Lights/CarlaLightSubsystem.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include "carla/rpc/VehicleLightState.h"
+#include <compiler/enable-ue4-macros.h>
 
 
 void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, bool bIncludeActorsAgain)

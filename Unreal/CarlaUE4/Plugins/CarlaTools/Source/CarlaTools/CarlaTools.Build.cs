@@ -7,6 +7,7 @@ using UnrealBuildTool;
 public class CarlaTools : ModuleRules
 {
   bool UsingHoudini = true;
+  bool bUsingOmniverseConnector = false;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
@@ -21,6 +22,21 @@ public class CarlaTools : ModuleRules
     if (IsWindows(Target))
     {
       bEnableExceptions = true;
+    }
+
+    string CarlaPluginPath = Path.GetFullPath( ModuleDirectory );
+    string ConfigDir =  Path.GetFullPath(Path.Combine(CarlaPluginPath, "../../../../Config/"));
+    string OptionalModulesFile = Path.Combine(ConfigDir, "OptionalModules.ini");
+    string[] text = System.IO.File.ReadAllLines(OptionalModulesFile);
+    foreach (string line in text)
+    {
+      if (line.Contains("Omniverse ON"))
+      {
+        Console.WriteLine("Enabling OmniverseConnector");
+        bUsingOmniverseConnector = true;
+        PublicDefinitions.Add("WITH_OMNIVERSE");
+        PrivateDefinitions.Add("WITH_OMNIVERSE");
+      }
     }
 
 		PublicIncludePaths.AddRange(
@@ -64,6 +80,7 @@ public class CarlaTools : ModuleRules
 				"Landscape",
 				"Foliage",
 				"FoliageEdit",
+        "MeshMergeUtilities",
 				"Carla",
 				"PhysXVehicles",
         "Json",
@@ -71,7 +88,8 @@ public class CarlaTools : ModuleRules
         "Networking",
         "Sockets",
         "RHI",
-        "RenderCore"
+        "RenderCore",
+        "MeshMergeUtilities"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
@@ -85,8 +103,16 @@ public class CarlaTools : ModuleRules
           "HoudiniEngineRuntime"
         });
     }
-		
-		
+    if(bUsingOmniverseConnector)
+    {
+      PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+          "OmniverseUSD",
+          "OmniverseRuntime"
+        });
+    }
+
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
@@ -116,7 +142,10 @@ public class CarlaTools : ModuleRules
   private void AddBoostLibs(string LibPath)
   {
     string [] files = Directory.GetFiles(LibPath, "*boost*.lib");
-    foreach (string file in files) PublicAdditionalLibraries.Add(file);
+    foreach (string file in files)
+    {
+      PublicAdditionalLibraries.Add(file);
+    } 
   }
 
 

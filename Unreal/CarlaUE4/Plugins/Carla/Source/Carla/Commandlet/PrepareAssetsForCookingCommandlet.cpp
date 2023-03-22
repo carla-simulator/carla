@@ -6,9 +6,16 @@
 
 #include "PrepareAssetsForCookingCommandlet.h"
 
+#include "AssetRegistry/AssetRegistryModule.h"
+
+#include "SSTags.h"
+
 #if WITH_EDITOR
 #include "FileHelpers.h"
 #endif
+#include "Misc/FileHelper.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 #include "HAL/PlatformFilemanager.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInstanceConstant.h"

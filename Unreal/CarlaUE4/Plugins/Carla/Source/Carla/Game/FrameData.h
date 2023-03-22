@@ -25,8 +25,15 @@
 #include "Carla/Recorder/CarlaRecorderInfo.h"
 #include "Carla/Recorder/CarlaRecorderPosition.h"
 #include "Carla/Recorder/CarlaRecorderFrameCounter.h"
+#include "Carla/Recorder/CarlaRecorderState.h"
+#include "Carla/Actor/ActorDescription.h"
+#include "Carla/Lights/CarlaLight.h"
+#include "Carla/Traffic/TrafficLightBase.h"
+#include "Carla/Traffic/TrafficSignBase.h"
+
 
 #include <sstream>
+#include <unordered_map>
 
 class UCarlaEpisode;
 class FCarlaActor;
