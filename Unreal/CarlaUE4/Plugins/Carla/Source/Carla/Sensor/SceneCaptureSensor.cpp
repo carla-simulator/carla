@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Actor/ActorBlueprintFunctionLibrary.h"
 
 #include <mutex>
 #include <atomic>

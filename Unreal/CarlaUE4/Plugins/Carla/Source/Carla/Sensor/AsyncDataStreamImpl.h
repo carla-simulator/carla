@@ -4,6 +4,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+// Note: AsyncDataStream.h has a circular dependency with Game/CarlaEngine.h.
+// You should not have to include this file directly (CarlaEngine.h includes it
+// at the appropriate place.)
+
+#pragma once
+
 #include "Carla/Game/CarlaEngine.h"
 #include "Carla/Sensor/AsyncDataStream.h"
 
