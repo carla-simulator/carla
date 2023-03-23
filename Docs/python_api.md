@@ -50,7 +50,7 @@ Returns whether this object was destroyed using this actor handle.
 - <a name="carla.Actor.is_active"></a>**<font color="#f8805a">is_active</font>** (_bool_)  
 Returns whether this actor is active (True) or not (False).  
 - <a name="carla.Actor.is_dormant"></a>**<font color="#f8805a">is_dormant</font>** (_bool_)  
-Returns whether this actor is dormant (True) or not (False) - the opposite of is_dormant.  
+Returns whether this actor is dormant (True) or not (False) - the opposite of is_active.  
 - <a name="carla.Actor.parent"></a>**<font color="#f8805a">parent</font>** (_[carla.Actor](#carla.Actor)_)  
 Actors may be attached to a parent actor that they will follow around. This is said actor.  
 - <a name="carla.Actor.semantic_tags"></a>**<font color="#f8805a">semantic_tags</font>** (_list(int)_)  
@@ -315,9 +315,9 @@ Class that defines the state of an actor.
 - <a name="carla.ActorState.Invalid"></a>**<font color="#f8805a">Invalid</font>**  
 An actor is Invalid if a problem has occurred.  
 - <a name="carla.ActorState.Active"></a>**<font color="#f8805a">Active</font>**  
-An actor is Active when it is participating in the simulation and can be visualized and can affect other actors.  
+An actor is Active when it visualized and can affect other actors.  
 - <a name="carla.ActorState.Dormant"></a>**<font color="#f8805a">Dormant</font>**  
-An actor is Dormant when it is not participating in the simulation, it is not visualized and will not affect other actors through physics. For example, actors are dormant if they are on an unloaded tile in a large map.  
+An actor is Dormant when it is not visualized and will not affect other actors through physics. For example, actors are dormant if they are on an unloaded tile in a large map.  
 
 ---
 
@@ -2843,11 +2843,9 @@ Applies a physics control object in the next tick containing the parameters that
     - **Parameters:**
         - `physics_control` (_[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)_)  
 - <a name="carla.Vehicle.close_door"></a>**<font color="#7fb800">close_door</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**door_idx**</font>)  
-Close the door door_idx if the vehicle has it. Use [carla.VehicleDoor.All](#carla.VehicleDoor.All) to close all available doors.  
+Close the door `door_idx` if the vehicle has it. Use [carla.VehicleDoor.All](#carla.VehicleDoor.All) to close all available doors.  
     - **Parameters:**
         - `door_idx` (_[carla.VehicleDoor](#carla.VehicleDoor)_) - door index.  
-    - **Note:** <font color="#8E8E8E">_Only [carla.Vehicle](#carla.Vehicle) actors can use this method.
-_</font>  
 - <a name="carla.Vehicle.enable_carsim"></a>**<font color="#7fb800">enable_carsim</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**simfile_path**</font>)  
 Enables the CarSim physics solver for this particular vehicle. In order for this function to work, there needs to be a valid license manager running on the server side. The control inputs are redirected to CarSim which will provide the position and orientation of the vehicle for every frame.  
     - **Parameters:**
@@ -2869,13 +2867,11 @@ _</font>
 Vehicles will be affected by a traffic light when the light is red and the vehicle is inside its bounding box. The client returns whether a traffic light is affecting this vehicle according to last tick (it does not call the simulator).  
     - **Return:** _bool_  
 - <a name="carla.Vehicle.open_door"></a>**<font color="#7fb800">open_door</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**door_idx**</font>)  
-Open the door door_idx if the vehicle has it. Use [carla.VehicleDoor.All](#carla.VehicleDoor.All) to open all available doors.  
+Open the door `door_idx` if the vehicle has it. Use [carla.VehicleDoor.All](#carla.VehicleDoor.All) to open all available doors.  
     - **Parameters:**
         - `door_idx` (_[carla.VehicleDoor](#carla.VehicleDoor)_) - door index.  
-    - **Note:** <font color="#8E8E8E">_Only [carla.Vehicle](#carla.Vehicle) actors can use this method.
-_</font>  
 - <a name="carla.Vehicle.show_debug_telemetry"></a>**<font color="#7fb800">show_debug_telemetry</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>)  
-Enables or disables the telemetry on this vehicle. This shows information about the vehicles current state and forces applied to it in the spectator window. Only information for one vehicle can be shown so if you enable a second one, the previous will be automatically disabled.  
+Enables or disables the telemetry on this vehicle. This shows information about the vehicles current state and forces applied to it in the spectator window. Only information for one vehicle can be shown so that, if you enable a second one, the previous will be automatically disabled.  
     - **Parameters:**
         - `enabled` (_bool_)  
 - <a name="carla.Vehicle.use_carsim_road"></a>**<font color="#7fb800">use_carsim_road</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**</font>)  

@@ -31,7 +31,7 @@
     - var_name: is_dormant
       type: bool
       doc: >
-        Returns whether this actor is dormant (True) or not (False) - the opposite of is_dormant.
+        Returns whether this actor is dormant (True) or not (False) - the opposite of is_active.
     - var_name: parent
       type: carla.Actor
       doc: >
@@ -209,10 +209,10 @@
         An actor is Invalid if a problem has occurred.
     - var_name: Active
       doc: >
-        An actor is Active when it is participating in the simulation and can be visualized and can affect other actors. 
+        An actor is Active when it visualized and can affect other actors. 
     - var_name: Dormant
       doc: >
-        An actor is Dormant when it is not participating in the simulation, it is not visualized and will not affect other actors through physics. For example, actors are dormant if they are on an unloaded tile in a large map. 
+        An actor is Dormant when it is not visualized and will not affect other actors through physics. For example, actors are dormant if they are on an unloaded tile in a large map. 
 
 
   - class_name: VehicleLightState
@@ -439,7 +439,7 @@
         type: bool
         default: True
       doc: >
-        Enables or disables the telemetry on this vehicle. This shows information about the vehicles current state and forces applied to it in the spectator window. Only information for one vehicle can be shown so if you enable a second one, the previous will be automatically disabled.
+        Enables or disables the telemetry on this vehicle. This shows information about the vehicles current state and forces applied to it in the spectator window. Only information for one vehicle can be shown so that, if you enable a second one, the previous will be automatically disabled.
     # --------------------------------------
     - def_name: open_door
       params:
@@ -448,9 +448,7 @@
         doc: >
           door index
       doc: >
-        Open the door door_idx if the vehicle has it. Use carla.VehicleDoor.All to open all available doors.
-      note: >
-        Only carla.Vehicle actors can use this method.
+        Open the door `door_idx` if the vehicle has it. Use carla.VehicleDoor.All to open all available doors.
     # --------------------------------------
     - def_name: close_door
       params:
@@ -459,9 +457,7 @@
         doc: >
           door index
       doc: >
-        Close the door door_idx if the vehicle has it. Use carla.VehicleDoor.All to close all available doors.
-      note: >
-        Only carla.Vehicle actors can use this method.
+        Close the door `door_idx` if the vehicle has it. Use carla.VehicleDoor.All to close all available doors.
 
 
   - class_name: Walker
