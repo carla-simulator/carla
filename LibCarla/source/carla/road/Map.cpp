@@ -1138,7 +1138,6 @@ namespace road {
   std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>> 
     Map::GenerateOrderedChunkedMesh( const rpc::OpendriveGenerationParameters& params) const 
   {
-    std::ofstream DebugFile;
 
     geom::MeshFactory mesh_factory(params);
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> road_out_mesh_list;
@@ -1152,65 +1151,93 @@ namespace road {
       for (const auto& junc_pair : _data.GetJunctions())
       {
         const auto& junction = junc_pair.second;
-        std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
-        std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
-        std::vector<carla::geom::Vector3D> perimeterpoints;
+        if ( junction.GetConnections().size() > 2 ) 
+        {
+          std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
+          std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
+          std::vector<carla::geom::Vector3D> perimeterpoints;
         
-        std::ofstream out(std::string("C:\\log\\junctiondebug") + std::to_string(junc_pair.first) + std::string(".txt"), std::ios::app);
-        //perimeterpoints = GetSDF(junction, 0.5f);
-        auto pmesh = SDFToMesh(junction, perimeterpoints, 75);
-        Simplify::SimplificationObject Simplification;
-        for (carla::geom::Vector3D& current_vertex : pmesh->GetVertices())
-        {
-          Simplify::Vertex v;
-          v.p.x = current_vertex.x;
-          v.p.y = current_vertex.y;
-          v.p.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-          Simplification.vertices.push_back(v);
+          auto pmesh = SDFToMesh(junction, perimeterpoints, 75);
+          Simplify::SimplificationObject Simplification;
+          for (carla::geom::Vector3D& current_vertex : pmesh->GetVertices())
+          {
+            Simplify::Vertex v;
+            v.p.x = current_vertex.x;
+            v.p.y = current_vertex.y;
+            v.p.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+            Simplification.vertices.push_back(v);
+          }
+
+          for (size_t i = 0; i < pmesh->GetIndexes().size() - 2; i += 3)
+          {
+            Simplify::Triangle t;
+            t.material = 0;
+            auto indices = pmesh->GetIndexes();
+            t.v[0] = (indices[i]) - 1;
+            t.v[1] = (indices[i + 1]) - 1;
+            t.v[2] = (indices[i + 2]) - 1;
+            Simplification.triangles.push_back(t);
+          }
+
+          // Reduce to the X% of the polys
+          float target_size = Simplification.triangles.size();
+          Simplification.simplify_mesh( (target_size * simplificationrate) );
+
+          pmesh->GetVertices().clear();
+          pmesh->GetIndexes().clear();
+
+          for (Simplify::Vertex& current_vertex : Simplification.vertices)
+          {
+            carla::geom::Vector3D v;
+            v.x = current_vertex.p.x;
+            v.y = current_vertex.p.y;
+            v.z = current_vertex.p.z;
+            pmesh->AddVertex(v);
+          }
+
+          for (size_t i = 0; i < Simplification.triangles.size(); ++i)
+          {
+            pmesh->GetIndexes().push_back((Simplification.triangles[i].v[0]) + 1);
+            pmesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
+            pmesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
+          }
+
+          juntion_out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
         }
+        else {
+          std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
+          std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
+          for (const auto& connection_pair : junction.GetConnections()) {
+            const auto& connection = connection_pair.second;
+            const auto& road = _data.GetRoads().at(connection.connecting_road);
+            for (auto&& lane_section : road.GetLaneSections()) {
+              for (auto&& lane_pair : lane_section.GetLanes()) {
+                const auto& lane = lane_pair.second;
+                if (lane.GetType() != road::Lane::LaneType::Sidewalk) {
+                  lane_meshes.push_back(mesh_factory.GenerateTesselated(lane));
+                }
+                else {
+                  sidewalk_lane_meshes.push_back(mesh_factory.Generate(lane));
+                }
+              }
+            }
+          }
+          std::unique_ptr<geom::Mesh> merged_mesh = std::make_unique<geom::Mesh>();
+          for (auto& lane : lane_meshes) {
+            *merged_mesh += *lane;
+          }
+          for (carla::geom::Vector3D& current_vertex : merged_mesh->GetVertices())
+          {
+            current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+          }
+          std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
+          for (auto& lane : sidewalk_lane_meshes) {
+            *sidewalk_mesh += *lane;
+          }
 
-        for (size_t i = 0; i < pmesh->GetIndexes().size() - 2; i += 3)
-        {
-          Simplify::Triangle t;
-          t.material = 0;
-          auto indices = pmesh->GetIndexes();
-          t.v[0] = (indices[i]) - 1;
-          t.v[1] = (indices[i + 1]) - 1;
-          t.v[2] = (indices[i + 2]) - 1;
-          Simplification.triangles.push_back(t);
+          juntion_out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(merged_mesh));
+          juntion_out_mesh_list[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
         }
-        out << "Indices Pre: " << pmesh->GetIndexes().size() << std::endl;
-        // Reduce to the X% of the polys
-        float target_size = Simplification.triangles.size();
-        out << "target_size " << Simplification.triangles.size() << " vertices: " << Simplification.vertices.size()  << std::endl;
-        out << "(target_size * 0.simplificationrate) " << (target_size * simplificationrate) << std::endl;
-
-        Simplification.simplify_mesh( (target_size * simplificationrate) );
-
-        pmesh->GetVertices().clear();
-        pmesh->GetIndexes().clear();
-        out << "Indices During: " << pmesh->GetIndexes().size() << std::endl;
-
-        for (Simplify::Vertex& current_vertex : Simplification.vertices)
-        {
-          carla::geom::Vector3D v;
-          v.x = current_vertex.p.x;
-          v.y = current_vertex.p.y;
-          v.z = current_vertex.p.z;
-          pmesh->AddVertex(v);
-        }
-
-        for (size_t i = 0; i < Simplification.triangles.size(); ++i)
-        {
-          pmesh->GetIndexes().push_back((Simplification.triangles[i].v[0]) + 1);
-          pmesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
-          pmesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
-        }
-
-        out << "Indices Post: " << pmesh->GetIndexes().size() << std::endl;
-
-        juntion_out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
-        out.close();
       }
 
     });
@@ -1518,7 +1545,6 @@ namespace road {
         current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
         current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
       } 
-
     }
   }
 
@@ -1552,12 +1578,13 @@ namespace road {
   {
     int junctionid = jinput.GetId();
     float box_extraextension_factor = 1.5f;
+    const double CubeSize = 0.5;
     carla::geom::BoundingBox bb = jinput.GetBoundingBox();
     carla::geom::Vector3D MinOffset = bb.location - geom::Location(bb.extent * box_extraextension_factor);
     carla::geom::Vector3D MaxOffset = bb.location + geom::Location(bb.extent * box_extraextension_factor);
     carla::geom::Vector3D OffsetPerCell = ( bb.extent * box_extraextension_factor * 2 ) / grid_cells_per_dim;
 
-    auto junctionsdf = [this, OffsetPerCell, MinOffset, junctionid](MeshReconstruction::Vec3 const& pos)
+    auto junctionsdf = [this, OffsetPerCell, CubeSize, MinOffset, junctionid](MeshReconstruction::Vec3 const& pos)
     {
       geom::Vector3D worldloc(pos.x, pos.y, pos.z);
       boost::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(worldloc), 0x1 << 1);
@@ -1580,21 +1607,19 @@ namespace road {
       geom::Vector3D laneborder = InRoadWPTransform.location + geom::Location(director.MakeUnitVector() * GetLaneWidth(*InRoadWaypoint) * 0.5f);
 
       geom::Vector3D Distance = laneborder - worldloc;
-      if (Distance.Length2D() < 0.3 && pos.z < 0.2)
+      if (Distance.Length2D() < CubeSize * 1.1 && pos.z < 0.2)
       {
         return 0.0;
       }
       return Distance.Length() * -1.0;
     };
 
-
-
     double gridsizeindouble = grid_cells_per_dim;
     MeshReconstruction::Rect3 domain;
     domain.min = { MinOffset.x, MinOffset.y, MinOffset.z };
     domain.size = { bb.extent.x * box_extraextension_factor * 2, bb.extent.y * box_extraextension_factor * 2, 0.4 };
 
-    MeshReconstruction::Vec3 cubeSize{ 0.35, 0.35, 0.2 };
+    MeshReconstruction::Vec3 cubeSize{ CubeSize, CubeSize, 0.2 };
 
     auto mesh = MeshReconstruction::MarchCube(junctionsdf, domain, cubeSize );
 
@@ -1603,38 +1628,59 @@ namespace road {
 
     geom::Mesh out_mesh;
     
-    for (auto cv : mesh.vertices)
+    for (auto& cv : mesh.vertices)
     {
-      geom::Vector3D worldloc(cv.x, cv.y, cv.z);
-      boost::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(worldloc), 0x1 << 1);
-      
-      if (!CheckingWaypoint)
-      {
-        boost::optional<element::Waypoint> InRoadWaypoint = GetClosestWaypointOnRoad(geom::Location(worldloc), 0x1 << 1);
-        geom::Transform InRoadWPTransform = ComputeTransform(*InRoadWaypoint);
-
-        geom::Vector3D director = geom::Location(worldloc) - (InRoadWPTransform.location);
-        geom::Vector3D laneborder = InRoadWPTransform.location + geom::Location(director.MakeUnitVector() * GetLaneWidth(*InRoadWaypoint) * 0.5f);
-        out_mesh.AddVertex(laneborder);
-      }
-      else 
-      {
-        geom::Vector3D newvertex;
-        newvertex.x = cv.x;
-        newvertex.y = cv.y;
-        newvertex.z = cv.z;
+      geom::Vector3D newvertex;
+      newvertex.x = cv.x;
+      newvertex.y = cv.y;
+      newvertex.z = cv.z;
+      if ( std::find( out_mesh.GetVertices().begin(), out_mesh.GetVertices().end(), newvertex) == out_mesh.GetVertices().end() ) {
         out_mesh.AddVertex(newvertex);
       }
-
     }
 
+    auto finalvertices = out_mesh.GetVertices();
     for (auto ct : mesh.triangles)
     {
-      out_mesh.AddIndex(ct[1] + 1);
-      out_mesh.AddIndex(ct[0] + 1);
-      out_mesh.AddIndex(ct[2] + 1);
+      auto cv = mesh.vertices[ct[1]];
+      geom::Vector3D newvertex;
+      newvertex.x = cv.x;
+      newvertex.y = cv.y;
+      newvertex.z = cv.z;
+
+      auto it = std::find(finalvertices.begin(), finalvertices.end(), newvertex);
+      out_mesh.AddIndex(it - finalvertices.begin() + 1);
+
+      cv = mesh.vertices[ct[0]];
+      newvertex.x = cv.x;
+      newvertex.y = cv.y;
+      newvertex.z = cv.z;
+
+      it = std::find(finalvertices.begin(), finalvertices.end(), newvertex);
+      out_mesh.AddIndex(it - finalvertices.begin() + 1);
+
+      cv = mesh.vertices[ct[2]];
+      newvertex.x = cv.x;
+      newvertex.y = cv.y;
+      newvertex.z = cv.z;
+
+      it = std::find(finalvertices.begin(), finalvertices.end(), newvertex);
+      out_mesh.AddIndex(it - finalvertices.begin() + 1);
     }
 
+    for (auto& cv : out_mesh.GetVertices() )
+    {
+      boost::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(cv), 0x1 << 1);
+      if (!CheckingWaypoint)
+      {
+        boost::optional<element::Waypoint> InRoadWaypoint = GetClosestWaypointOnRoad(geom::Location(cv), 0x1 << 1);
+        geom::Transform InRoadWPTransform = ComputeTransform(*InRoadWaypoint);
+
+        geom::Vector3D director = geom::Location(cv) - (InRoadWPTransform.location);
+        geom::Vector3D laneborder = InRoadWPTransform.location + geom::Location(director.MakeUnitVector() * GetLaneWidth(*InRoadWaypoint) * 0.5f);
+        cv = laneborder;
+      }
+    }
     return std::make_unique<geom::Mesh>(out_mesh);
   }
 } // namespace road
