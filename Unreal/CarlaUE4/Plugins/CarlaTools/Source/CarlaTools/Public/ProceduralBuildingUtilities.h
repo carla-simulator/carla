@@ -30,6 +30,9 @@ public:
   UFUNCTION(BlueprintImplementableEvent, Category="Procedural Building Utilities")
   void BakeSceneCaptureRTToTextureAtlas(UTexture2D* SceneCaptureRT, EBuildingCameraView TargetView);
 
+  UFUNCTION(BlueprintImplementableEvent, Category="Procedural Building Utilities")
+  void SetTargetTextureToSceneCaptureComponent(USceneCaptureComponent2D* SceneCaptureComponent);
+
   UFUNCTION(BlueprintCallable, Category="Procedural Building Utilities")
   void GenerateImpostor(const FVector& BuildingSize);
 
