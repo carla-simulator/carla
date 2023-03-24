@@ -15,15 +15,28 @@
 
 void AProceduralBuildingUtilities::GenerateImpostor(const FVector& BuildingSize)
 {
-  USceneCaptureComponent2D* Camera = Cast<USceneCaptureComponent2D>(GetComponentByClass(USceneCaptureComponent2D::StaticClass()));
+  USceneCaptureComponent2D* Camera = NewObject<USceneCaptureComponent2D>(this, USceneCaptureComponent2D::StaticClass(), TEXT("ViewProjectionCaptureComponent"));
+  
+  Camera->AttachToComponent(
+      GetRootComponent(), 
+      FAttachmentTransformRules::SnapToTargetNotIncludingScale, 
+      FName("ViewProjectionCaptureComponentName"));
+  AddInstanceComponent(Camera);
+  Camera->OnComponentCreated();
+  Camera->RegisterComponent();
 
   check(Camera!=nullptr);
 
+  Camera->ProjectionType = ECameraProjectionMode::Orthographic;
   Camera->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+  Camera->CaptureSource = ESceneCaptureSource::SCS_BaseColor;
+
   if(Camera->ShowOnlyActors.Num() == 0)
   {
     Camera->ShowOnlyActors.Add(this);
   }
+
+  SetTargetTextureToSceneCaptureComponent(Camera);
 
   // FRONT View
   RenderImpostorView(Camera, BuildingSize, EBuildingCameraView::FRONT);
@@ -34,7 +47,7 @@ void AProceduralBuildingUtilities::GenerateImpostor(const FVector& BuildingSize)
   // RIGHT View
   RenderImpostorView(Camera, BuildingSize, EBuildingCameraView::RIGHT);
 
-  
+  Camera->DestroyComponent();
 }
 
 void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& DestinationPath, const FString& FileName)
@@ -152,9 +165,13 @@ void AProceduralBuildingUtilities::MoveCameraToViewPosition(USceneCaptureCompone
   // float CameraDistance = 50000.0f;
   float CameraDistance = 0.5f * BuildingDepth + 1000.f;
 
+  // FVector NewCameraLocation(
+  //     CameraDistance * FMath::Cos(FMath::DegreesToRadians(ViewAngle)) + 0.5f * BuildingSize.X,
+  //     CameraDistance * FMath::Sin(FMath::DegreesToRadians(ViewAngle)) + 0.5f * BuildingSize.Y,
+  //     BuildingSize.Z / 2.0f);
   FVector NewCameraLocation(
-      CameraDistance * FMath::Cos(FMath::DegreesToRadians(ViewAngle)) + 0.5f * BuildingSize.X,
-      CameraDistance * FMath::Sin(FMath::DegreesToRadians(ViewAngle)) + 0.5f * BuildingSize.Y,
+      CameraDistance * FMath::Cos(FMath::DegreesToRadians(ViewAngle)),
+      CameraDistance * FMath::Sin(FMath::DegreesToRadians(ViewAngle)),
       BuildingSize.Z / 2.0f);
   /*****************/
 
