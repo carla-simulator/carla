@@ -10,8 +10,10 @@
 #include "FileHelpers.h"
 #include "GameFramework/Actor.h"
 #include "IMeshMergeUtilities.h"
+#include "Materials/MaterialInstanceConstant.h"
 #include "MeshMergeModule.h"
 #include "UObject/Class.h"
+#include "UObject/UObjectGlobals.h"
 
 void AProceduralBuildingUtilities::GenerateImpostor(const FVector& BuildingSize)
 {
@@ -97,6 +99,33 @@ void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& D
       true,
       true,
       SAVE_NoError);
+}
+
+UMaterialInstanceConstant* AProceduralBuildingUtilities::GenerateBuildingMaterialAsset(const FString& DuplicateParentPath, const FString& DestinationPath, const FString& FileName)
+{
+  const FString BaseMaterialSearchPath = DuplicateParentPath;
+  const FString PackageName = DestinationPath + FileName;
+  
+  UMaterialInstanceConstant* ParentMaterial = LoadObject<UMaterialInstanceConstant>(nullptr, *BaseMaterialSearchPath);
+  
+  check(ParentMaterial != nullptr);
+
+  UPackage* NewPackage = CreatePackage(*PackageName);
+  FObjectDuplicationParameters Parameters(ParentMaterial, NewPackage);
+  Parameters.DestName = FName(FileName);
+  Parameters.DestClass = ParentMaterial->GetClass();
+  Parameters.DuplicateMode = EDuplicateMode::Normal;
+  Parameters.PortFlags = PPF_Duplicate;
+
+  UMaterialInstanceConstant* DuplicatedMaterial = CastChecked<UMaterialInstanceConstant>(StaticDuplicateObjectEx(Parameters));
+
+  const FString PackageFileName = FPackageName::LongPackageNameToFilename(
+      PackageName, 
+      ".uasset");
+  UPackage::SavePackage(NewPackage, DuplicatedMaterial, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
+      *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+
+  return DuplicatedMaterial;
 }
 
 void AProceduralBuildingUtilities::RenderImpostorView(USceneCaptureComponent2D* Camera, const FVector BuildingSize, const EBuildingCameraView View)
