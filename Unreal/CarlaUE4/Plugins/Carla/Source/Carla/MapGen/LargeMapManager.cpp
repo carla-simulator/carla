@@ -5,6 +5,10 @@
 #include "LargeMapManager.h"
 
 #include "Engine/WorldComposition.h"
+#include "Engine/ObjectLibrary.h"
+#include "Game/CarlaStatics.h"
+#include "Actor/ActorRegistry.h"
+#include "Game/CarlaEpisode.h"
 #include "Engine/EngineTypes.h"
 #include "Components/PrimitiveComponent.h"
 #include "Landscape.h"

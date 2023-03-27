@@ -24,4 +24,4 @@ enum class ECarlaServerResponse
   FunctionNotAvailiableWhenDormant
 };
 
-FString GetStringError(ECarlaServerResponse Response);
+FString CarlaGetStringError(ECarlaServerResponse Response);

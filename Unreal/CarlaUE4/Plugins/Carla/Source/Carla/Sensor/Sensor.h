@@ -10,6 +10,8 @@
 #include "Carla/Sensor/DataStream.h"
 #include "Carla/Util/RandomEngine.h"
 
+#include "Carla/Game/CarlaEngine.h"
+
 #include "GameFramework/Actor.h"
 
 #include "Sensor.generated.h"
