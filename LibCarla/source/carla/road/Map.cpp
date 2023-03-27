@@ -1144,7 +1144,7 @@ namespace road {
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> juntion_out_mesh_list;
 
     std::thread juntction_thread( &Map::GenerateJunctions, this, mesh_factory, params, &juntion_out_mesh_list);
-    
+
     float simplificationrate = params.simplification_percentage * 0.01f;
     size_t num_roads = _data.GetRoads().size();
     size_t num_roads_per_thread = 100;
