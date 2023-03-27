@@ -131,8 +131,7 @@ void UOpenDriveToMap::CreateMap()
     FileDownloader = NewObject<UCustomFileDownloader>();
   }
   FileDownloader->ResultFileName = MapName;
-  FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-74.08542,40.71047,-74.08167,40.71237";
-  //FileDownloader->Url = Url;
+  FileDownloader->Url = Url;
 
   FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
   FileDownloader->StartDownload();
@@ -190,8 +189,8 @@ void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& Carla
   }else
   {
     GenerateRoadMesh(CarlaMap);
-    //GenerateSpawnPoints(CarlaMap);
-    //GenerateLaneMarks(CarlaMap);
+    GenerateSpawnPoints(CarlaMap);
+    GenerateLaneMarks(CarlaMap);
   }
 }
 
@@ -577,7 +576,6 @@ void UOpenDriveToMap::SaveMap()
   double end = FPlatformTime::Seconds();
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" Meshes created static mesh code executed in %f seconds."), end - start);
 
-
   start = FPlatformTime::Seconds();
 
   for (int i = 0; i < MeshesToSpawn.Num(); ++i)
@@ -596,5 +594,4 @@ void UOpenDriveToMap::SaveMap()
 
   end = FPlatformTime::Seconds();
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" Spawning Static Meshes code executed in %f seconds."), end - start);
-
 }
