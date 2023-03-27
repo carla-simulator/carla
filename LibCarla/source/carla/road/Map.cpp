@@ -1143,181 +1143,77 @@ namespace road {
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> road_out_mesh_list;
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> juntion_out_mesh_list;
 
-    std::unordered_map<JuncId, geom::Mesh> junction_map;
-  
-    std::thread juntction_thread([ this, &juntion_out_mesh_list, &params, &mesh_factory ] {
-      // Generate roads within junctions and smooth them
-      float simplificationrate = params.simplification_percentage * 0.01f;
-      for (const auto& junc_pair : _data.GetJunctions())
-      {
-        const auto& junction = junc_pair.second;
-        if ( junction.GetConnections().size() > 2 ) 
-        {
-          std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
-          std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
-          std::vector<carla::geom::Vector3D> perimeterpoints;
-        
-          auto pmesh = SDFToMesh(junction, perimeterpoints, 75);
-          Simplify::SimplificationObject Simplification;
-          for (carla::geom::Vector3D& current_vertex : pmesh->GetVertices())
-          {
-            Simplify::Vertex v;
-            v.p.x = current_vertex.x;
-            v.p.y = current_vertex.y;
-            v.p.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-            Simplification.vertices.push_back(v);
-          }
-
-          for (size_t i = 0; i < pmesh->GetIndexes().size() - 2; i += 3)
-          {
-            Simplify::Triangle t;
-            t.material = 0;
-            auto indices = pmesh->GetIndexes();
-            t.v[0] = (indices[i]) - 1;
-            t.v[1] = (indices[i + 1]) - 1;
-            t.v[2] = (indices[i + 2]) - 1;
-            Simplification.triangles.push_back(t);
-          }
-
-          // Reduce to the X% of the polys
-          float target_size = Simplification.triangles.size();
-          Simplification.simplify_mesh( (target_size * simplificationrate) );
-
-          pmesh->GetVertices().clear();
-          pmesh->GetIndexes().clear();
-
-          for (Simplify::Vertex& current_vertex : Simplification.vertices)
-          {
-            carla::geom::Vector3D v;
-            v.x = current_vertex.p.x;
-            v.y = current_vertex.p.y;
-            v.z = current_vertex.p.z;
-            pmesh->AddVertex(v);
-          }
-
-          for (size_t i = 0; i < Simplification.triangles.size(); ++i)
-          {
-            pmesh->GetIndexes().push_back((Simplification.triangles[i].v[0]) + 1);
-            pmesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
-            pmesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
-          }
-
-          juntion_out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
-        }
-        else {
-          std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
-          std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
-          for (const auto& connection_pair : junction.GetConnections()) {
-            const auto& connection = connection_pair.second;
-            const auto& road = _data.GetRoads().at(connection.connecting_road);
-            for (auto&& lane_section : road.GetLaneSections()) {
-              for (auto&& lane_pair : lane_section.GetLanes()) {
-                const auto& lane = lane_pair.second;
-                if (lane.GetType() != road::Lane::LaneType::Sidewalk) {
-                  lane_meshes.push_back(mesh_factory.GenerateTesselated(lane));
-                }
-                else {
-                  sidewalk_lane_meshes.push_back(mesh_factory.Generate(lane));
-                }
-              }
-            }
-          }
-          std::unique_ptr<geom::Mesh> merged_mesh = std::make_unique<geom::Mesh>();
-          for (auto& lane : lane_meshes) {
-            *merged_mesh += *lane;
-          }
-          for (carla::geom::Vector3D& current_vertex : merged_mesh->GetVertices())
-          {
-            current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-          }
-          std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
-          for (auto& lane : sidewalk_lane_meshes) {
-            *sidewalk_mesh += *lane;
-          }
-
-          juntion_out_mesh_list[road::Lane::LaneType::Driving].push_back(std::move(merged_mesh));
-          juntion_out_mesh_list[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
-        }
-      }
-
-    });
+    std::thread juntction_thread( &Map::GenerateJunctions, this, mesh_factory, params, &juntion_out_mesh_list);
     
     float simplificationrate = params.simplification_percentage * 0.01f;
+    size_t num_roads = _data.GetRoads().size();
+    size_t num_roads_per_thread = 100;
+    size_t num_threads = (num_roads / num_roads_per_thread) + 1;
+    num_threads = num_threads > 1 ? num_threads : 1;
+    std::vector<std::thread> workers;
+    std::mutex write_mutex;
+
+    for ( size_t i = 0; i < num_threads; ++i ) 
     {
-      size_t num_roads = _data.GetRoads().size();
-      size_t num_roads_per_thread = 100;
-      size_t num_threads = (num_roads / num_roads_per_thread) + 1;
-      num_threads = num_threads > 1 ? num_threads : 1;
-      std::vector<std::thread> workers;
-      std::mutex write_mutex;
-
-      for ( size_t i = 0; i < num_threads; ++i ) 
+      std::thread neworker([this, &write_mutex, &mesh_factory, &road_out_mesh_list, i, num_roads_per_thread]() 
       {
-        std::thread neworker([this, &write_mutex, &mesh_factory, &road_out_mesh_list, i, num_roads_per_thread]() {
-     
-          std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current = std::move(GenerateRoadsMultithreaded(mesh_factory, i, num_roads_per_thread));          
-          std::lock_guard<std::mutex> guard(write_mutex);
-          for ( auto&& pair : Current )
+        std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current = std::move(GenerateRoadsMultithreaded(mesh_factory, i, num_roads_per_thread));          
+        std::lock_guard<std::mutex> guard(write_mutex);
+        for ( auto&& pair : Current )
+        {
+          if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end())
           {
-            if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end())
-            {
-              road_out_mesh_list[pair.first].insert(road_out_mesh_list[pair.first].end(),
-                std::make_move_iterator(pair.second.begin()),
-                std::make_move_iterator(pair.second.end()));
-            }
-            else
-            {
-              road_out_mesh_list[pair.first] = std::move(pair.second);
-            }
+            road_out_mesh_list[pair.first].insert(road_out_mesh_list[pair.first].end(),
+              std::make_move_iterator(pair.second.begin()),
+              std::make_move_iterator(pair.second.end()));
           }
+          else
+          {
+            road_out_mesh_list[pair.first] = std::move(pair.second);
+          }
+        }
       
-        });
-        workers.push_back(std::move(neworker));
-      }
-      
-      for (size_t i = 0; i < workers.size(); ++i)
-      {
-        workers[i].join();
-      }
-
+      });
+      workers.push_back(std::move(neworker));
     }
 
-    {      
-      for (auto& current_mesh_vector : road_out_mesh_list)
+    for (size_t i = 0; i < workers.size(); ++i)
+    {
+      workers[i].join();
+    }
+    workers.clear();
+    for (auto& current_mesh_vector : road_out_mesh_list)
+    {
+      if (current_mesh_vector.first != road::Lane::LaneType::Driving)
       {
-        if (current_mesh_vector.first != road::Lane::LaneType::Driving)
+        continue;
+      }
+
+      size_t num_roads = current_mesh_vector.second.size();
+      size_t num_roads_per_thread = 15;
+      size_t num_threads = (num_roads / num_roads_per_thread) + 1;
+      num_threads = num_threads > 1 ? num_threads : 1;
+
+      for (size_t i = 0; i < num_threads; ++i)
+      {
+        std::vector<geom::Mesh*> RoadsMesh;
+        for (std::unique_ptr<geom::Mesh>& current_mesh : current_mesh_vector.second)
         {
-          continue;
-        }
-
-        size_t num_roads = current_mesh_vector.second.size();
-        size_t num_roads_per_thread = 10;
-        size_t num_threads = (num_roads / num_roads_per_thread) + 1;
-        num_threads = num_threads > 1 ? num_threads : 1;
-        std::vector<std::thread> workers;
-
-        for (size_t i = 0; i < num_threads; ++i)
-        {
-          std::vector<geom::Mesh*> RoadsMesh;
-          for (std::unique_ptr<geom::Mesh>& current_mesh : current_mesh_vector.second)
-          {
-            if(current_mesh) {
-              RoadsMesh.push_back( current_mesh.get() );
-            }
-          }
-
-          std::thread neworker( &Map::DeformateRoadsMultithreaded, this, RoadsMesh, i, num_roads_per_thread, simplificationrate );
-          workers.push_back( std::move(neworker) );
-        }
-
-      
-        for (size_t i = 0; i < workers.size(); ++i)
-        {
-          if( workers[i].joinable() )
-          {
-            workers[i].join();
+          if(current_mesh) {
+            RoadsMesh.push_back( current_mesh.get() );
           }
         }
+
+        std::thread neworker( &Map::DeformateRoadsMultithreaded, this, RoadsMesh, i, num_roads_per_thread, simplificationrate );
+        workers.push_back( std::move(neworker) );
+      }
+    }
+
+    for (size_t i = 0; i < workers.size(); ++i)
+    {
+      if (workers[i].joinable())
+      {
+        workers[i].join();
       }
     }
 
@@ -1416,6 +1312,7 @@ namespace road {
     }
     return returning;
   }
+
   inline float Map::GetZPosInDeformation(float posx, float posy) const
   {
     // Amplitud
@@ -1477,6 +1374,105 @@ namespace road {
       }
     }
     return out;
+  }
+
+  void Map::GenerateJunctions(const carla::geom::MeshFactory& mesh_factory,
+    const rpc::OpendriveGenerationParameters& params,
+    std::map<road::Lane::LaneType,
+    std::vector<std::unique_ptr<geom::Mesh>>>* juntion_out_mesh_list) const 
+  {
+    float simplificationrate = params.simplification_percentage * 0.01f;
+    for (const auto& junc_pair : _data.GetJunctions())
+    {
+      const auto& junction = junc_pair.second;
+      if (junction.GetConnections().size() > 2)
+      {
+        std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
+        std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
+        std::vector<carla::geom::Vector3D> perimeterpoints;
+
+        auto pmesh = SDFToMesh(junction, perimeterpoints, 75);
+        Simplify::SimplificationObject Simplification;
+        for (carla::geom::Vector3D& current_vertex : pmesh->GetVertices())
+        {
+          Simplify::Vertex v;
+          v.p.x = current_vertex.x;
+          v.p.y = current_vertex.y;
+          v.p.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+          Simplification.vertices.push_back(v);
+        }
+
+        for (size_t i = 0; i < pmesh->GetIndexes().size() - 2; i += 3)
+        {
+          Simplify::Triangle t;
+          t.material = 0;
+          auto indices = pmesh->GetIndexes();
+          t.v[0] = (indices[i]) - 1;
+          t.v[1] = (indices[i + 1]) - 1;
+          t.v[2] = (indices[i + 2]) - 1;
+          Simplification.triangles.push_back(t);
+        }
+
+        // Reduce to the X% of the polys
+        float target_size = Simplification.triangles.size();
+        Simplification.simplify_mesh((target_size * simplificationrate));
+
+        pmesh->GetVertices().clear();
+        pmesh->GetIndexes().clear();
+
+        for (Simplify::Vertex& current_vertex : Simplification.vertices)
+        {
+          carla::geom::Vector3D v;
+          v.x = current_vertex.p.x;
+          v.y = current_vertex.p.y;
+          v.z = current_vertex.p.z;
+          pmesh->AddVertex(v);
+        }
+
+        for (size_t i = 0; i < Simplification.triangles.size(); ++i)
+        {
+          pmesh->GetIndexes().push_back((Simplification.triangles[i].v[0]) + 1);
+          pmesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
+          pmesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
+        }
+
+        (*juntion_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
+      }
+      else {
+        std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
+        std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
+        for (const auto& connection_pair : junction.GetConnections()) {
+          const auto& connection = connection_pair.second;
+          const auto& road = _data.GetRoads().at(connection.connecting_road);
+          for (auto&& lane_section : road.GetLaneSections()) {
+            for (auto&& lane_pair : lane_section.GetLanes()) {
+              const auto& lane = lane_pair.second;
+              if (lane.GetType() != road::Lane::LaneType::Sidewalk) {
+                lane_meshes.push_back(mesh_factory.GenerateTesselated(lane));
+              }
+              else {
+                sidewalk_lane_meshes.push_back(mesh_factory.Generate(lane));
+              }
+            }
+          }
+        }
+        std::unique_ptr<geom::Mesh> merged_mesh = std::make_unique<geom::Mesh>();
+        for (auto& lane : lane_meshes) {
+          *merged_mesh += *lane;
+        }
+        for (carla::geom::Vector3D& current_vertex : merged_mesh->GetVertices())
+        {
+          current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
+        }
+        std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
+        for (auto& lane : sidewalk_lane_meshes) {
+          *sidewalk_mesh += *lane;
+        }
+
+        (*juntion_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(merged_mesh));
+        (*juntion_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
+      }
+    }
   }
 
   void Map::DeformateRoadsMultithreaded(const std::vector<geom::Mesh*>& roadsmesh,
@@ -1546,30 +1542,6 @@ namespace road {
         current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
       } 
     }
-  }
-
-  std::vector<geom::Vector3D> Map::GetSDF(const road::Junction& input, float grid_resolution) const
-  {
-    std::vector<geom::Vector3D> sdf;
-    carla::geom::BoundingBox bb = input.GetBoundingBox();
-    carla::geom::Vector3D MinOffset = bb.location - geom::Location(bb.extent);
-    carla::geom::Vector3D MaxOffset = bb.location + geom::Location(bb.extent);
-
-    for (float Z = MinOffset.z; Z <= MaxOffset.z; Z += grid_resolution)
-    {
-      for (float Y = MinOffset.y; Y <= MaxOffset.y; Y += grid_resolution)
-      {
-        for (float X = MinOffset.x; X <= MaxOffset.x; X += grid_resolution)
-        {
-          geom::Vector3D next(X, Y, Z);
-          if ( GetWaypoint(geom::Location(next)) )
-          {
-            sdf.push_back(next);
-          }
-        }
-      }
-    }
-    return sdf;
   }
 
   std::unique_ptr<geom::Mesh> Map::SDFToMesh(const road::Junction& jinput,

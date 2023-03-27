@@ -217,14 +217,17 @@ public:
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> 
       GenerateRoadsMultithreaded( const carla::geom::MeshFactory& mesh_factory,
                                    const size_t index, const size_t number_of_roads_per_thread) const;
+    
+    void GenerateJunctions(const carla::geom::MeshFactory& mesh_factory, 
+      const rpc::OpendriveGenerationParameters& params,
+      std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>*
+      juntion_out_mesh_list) const;
 
     void DeformateRoadsMultithreaded(const std::vector<geom::Mesh*>& roadsmesh, const size_t index,
       const size_t number_of_roads_per_thread, const float simplificationrate) const;
 
-    std::vector<geom::Vector3D> GetSDF(const road::Junction& input, float grid_resolution) const;
-    
     std::unique_ptr<geom::Mesh> SDFToMesh(const road::Junction& jinput, const std::vector<geom::Vector3D>& sdfinput, int grid_cells_per_dim) const;
-  
+
   };
 
 } // namespace road
