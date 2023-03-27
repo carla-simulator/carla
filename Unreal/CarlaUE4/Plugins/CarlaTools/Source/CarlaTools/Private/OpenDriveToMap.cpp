@@ -34,6 +34,7 @@
 #include "ProceduralMeshConversion.h"
 #include "ContentBrowserModule.h"
 #include "Materials/MaterialInstanceConstant.h"
+#include "Math/Vector.h"
 
 FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
 {
@@ -288,16 +289,6 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
       continue;
     }
 
-    AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
-    TempActor->SetActorLabel(FString("SM_LaneMark_") + FString::FromInt(index));
-    UProceduralMeshComponent* TempPMC = TempActor->MeshComponent;
-    TempPMC->bUseAsyncCooking = true;
-    TempPMC->bUseComplexAsSimpleCollision = true;
-    TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-    if(DefaultLaneMarksMaterial)
-      TempPMC->SetMaterial(0, DefaultLaneMarksMaterial);
-
     FVector MeshCentroid = FVector(0, 0, 0);
     for (auto Vertex : Mesh->GetVertices())
     {
@@ -312,6 +303,33 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
       Vertex.y -= MeshCentroid.Y;
       Vertex.z -= MeshCentroid.Z;
     }
+
+    // TODO: Improve this code
+    float MinDistance = 99999999.9f;
+    for(auto SpawnedActor : LaneMarkerActorList)
+    {
+      float VectorDistance = FVector::Distance(MeshCentroid*100, SpawnedActor->GetActorLocation());
+      if(VectorDistance < MinDistance)
+      {
+        MinDistance = VectorDistance;
+      }      
+    }
+
+    if(MinDistance < 250)
+    {
+      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Skkipped is %f."), MinDistance);
+      continue;
+    }
+
+    AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+    TempActor->SetActorLabel(FString("SM_LaneMark_") + FString::FromInt(index));
+    UProceduralMeshComponent* TempPMC = TempActor->MeshComponent;
+    TempPMC->bUseAsyncCooking = true;
+    TempPMC->bUseComplexAsSimpleCollision = true;
+    TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    if(DefaultLaneMarksMaterial)
+      TempPMC->SetMaterial(0, DefaultLaneMarksMaterial);
 
     const FProceduralCustomMesh MeshData = *Mesh;
     TempPMC->CreateMeshSection_LinearColor(
