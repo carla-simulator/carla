@@ -39,6 +39,9 @@ public:
   UFUNCTION(BlueprintCallable, Category="Procedural Building Utilities")
   void CookProceduralBuildingToMesh(const FString& DestinationPath, const FString& FileName);
 
+  UFUNCTION(BlueprintCallable, Category="Procedural Building Utilities")
+  UMaterialInstanceConstant* GenerateBuildingMaterialAsset(const FString& DuplicateParentPath ,const FString& DestinationPath, const FString& FileName);
+
 private:
   void RenderImpostorView(USceneCaptureComponent2D* Camera, const FVector BuildingSize, const EBuildingCameraView View);
   void MoveCameraToViewPosition(USceneCaptureComponent2D* Camera, const FVector BuildingSize, const EBuildingCameraView View);
