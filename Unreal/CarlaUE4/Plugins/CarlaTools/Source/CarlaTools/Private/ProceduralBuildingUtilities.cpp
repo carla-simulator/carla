@@ -12,10 +12,11 @@
 #include "IMeshMergeUtilities.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "MeshMergeModule.h"
+#include "ProceduralMeshComponent.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
 
-void AProceduralBuildingUtilities::GenerateImpostor(const FVector& BuildingSize)
+void AProceduralBuildingUtilities::GenerateImpostorTexture(const FVector& BuildingSize)
 {
   USceneCaptureComponent2D* Camera = NewObject<USceneCaptureComponent2D>(this, USceneCaptureComponent2D::StaticClass(), TEXT("ViewProjectionCaptureComponent"));
   
@@ -40,6 +41,8 @@ void AProceduralBuildingUtilities::GenerateImpostor(const FVector& BuildingSize)
 
   SetTargetTextureToSceneCaptureComponent(Camera);
 
+  check(Camera->TextureTarget != nullptr);
+
   // FRONT View
   RenderImpostorView(Camera, BuildingSize, EBuildingCameraView::FRONT);
   // LEFT View
@@ -50,6 +53,37 @@ void AProceduralBuildingUtilities::GenerateImpostor(const FVector& BuildingSize)
   RenderImpostorView(Camera, BuildingSize, EBuildingCameraView::RIGHT);
 
   Camera->DestroyComponent();
+}
+
+UProceduralMeshComponent* AProceduralBuildingUtilities::GenerateImpostorGeometry(const FVector& BuildingSize)
+{
+  // Spawn procedural mesh actor / component
+  UProceduralMeshComponent* Mesh = NewObject<UProceduralMeshComponent>(this, UProceduralMeshComponent::StaticClass(), TEXT("LOD Impostor Mesh"));
+
+  Mesh->AttachToComponent(
+      GetRootComponent(), 
+      FAttachmentTransformRules::SnapToTargetNotIncludingScale, 
+      FName("LOD Impostor Mesh"));
+  AddInstanceComponent(Mesh);
+  Mesh->OnComponentCreated();
+  Mesh->RegisterComponent();
+
+  check(Mesh != nullptr)
+
+  // FRONT View
+  CreateBuildingImpostorGeometryForView(Mesh, BuildingSize, EBuildingCameraView::FRONT);
+  // LEFT View
+  CreateBuildingImpostorGeometryForView(Mesh, BuildingSize, EBuildingCameraView::LEFT);
+  // BACK View
+  CreateBuildingImpostorGeometryForView(Mesh, BuildingSize, EBuildingCameraView::BACK);
+  // RIGHT View
+  CreateBuildingImpostorGeometryForView(Mesh, BuildingSize, EBuildingCameraView::RIGHT);
+
+  return Mesh;
+
+  // Cook new mesh to a static mesh
+
+  // Assign as LOD or store on disk for manual import
 }
 
 void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& DestinationPath, const FString& FileName)
@@ -76,6 +110,7 @@ void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& D
 
   FString PackageName = DestinationPath + FileName;
   UPackage* NewPackage = CreatePackage(*PackageName);
+  check(NewPackage);
 
   const IMeshMergeUtilities& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshMergeModule>("MeshMergeUtilities").GetUtilities();
   MeshUtilities.MergeComponentsToStaticMesh(
@@ -101,13 +136,80 @@ void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& D
       SAVE_NoError);
 }
 
+void AProceduralBuildingUtilities::CookProceduralMeshToMesh(UProceduralMeshComponent* Mesh, const FString& DestinationPath, const FString& FileName)
+{
+  FMeshDescription MeshDescription = BuildMeshDescription(Mesh);
+
+  FString PackageName = DestinationPath + FileName;
+  UPackage* NewPackage = CreatePackage(*PackageName);
+  check(NewPackage);
+
+  UStaticMesh* StaticMesh = NewObject<UStaticMesh>(NewPackage, *FileName, RF_Public | RF_Standalone);
+  StaticMesh->InitResources();
+  StaticMesh->LightingGuid = FGuid::NewGuid();
+
+  FStaticMeshSourceModel& SrcModel = StaticMesh->AddSourceModel();
+  SrcModel.BuildSettings.bRecomputeNormals = false;
+  SrcModel.BuildSettings.bRecomputeTangents = false;
+  SrcModel.BuildSettings.bRemoveDegenerates = false;
+  SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
+  SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
+  SrcModel.BuildSettings.bGenerateLightmapUVs = true;
+  SrcModel.BuildSettings.SrcLightmapIndex = 0;
+  SrcModel.BuildSettings.DstLightmapIndex = 1;
+  StaticMesh->CreateMeshDescription(0, MoveTemp(MeshDescription));
+  StaticMesh->CommitMeshDescription(0);
+
+  if (!Mesh->bUseComplexAsSimpleCollision )
+  {
+    StaticMesh->CreateBodySetup();
+    UBodySetup* NewBodySetup = StaticMesh->BodySetup;
+    NewBodySetup->BodySetupGuid = FGuid::NewGuid();
+    NewBodySetup->AggGeom.ConvexElems = Mesh->ProcMeshBodySetup->AggGeom.ConvexElems;
+    NewBodySetup->bGenerateMirroredCollision = false;
+    NewBodySetup->bDoubleSidedGeometry = true;
+    NewBodySetup->CollisionTraceFlag = CTF_UseDefault;
+    NewBodySetup->CreatePhysicsMeshes();
+  }
+
+  TSet<UMaterialInterface*> UniqueMaterials;
+  const int32 NumSections = Mesh->GetNumSections();
+  for (int32 SectionIdx = 0; SectionIdx < NumSections; SectionIdx++)
+  {
+    FProcMeshSection *ProcSection =
+      Mesh->GetProcMeshSection(SectionIdx);
+    UMaterialInterface *Material = Mesh->GetMaterial(SectionIdx);
+    UniqueMaterials.Add(Material);
+  }
+
+  for (auto* Material : UniqueMaterials)
+  {
+    StaticMesh->StaticMaterials.Add(FStaticMaterial(Material));
+  }
+
+  StaticMesh->ImportVersion = EImportStaticMeshVersion::LastVersion;
+  StaticMesh->Build(false);
+  StaticMesh->PostEditChange();
+  FAssetRegistryModule::AssetCreated(StaticMesh);
+
+  UPackage::SavePackage(NewPackage,
+      StaticMesh,
+      EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
+      *FileName,
+      GError,
+      nullptr,
+      true,
+      true,
+      SAVE_NoError);
+}
+
 UMaterialInstanceConstant* AProceduralBuildingUtilities::GenerateBuildingMaterialAsset(const FString& DuplicateParentPath, const FString& DestinationPath, const FString& FileName)
 {
   const FString BaseMaterialSearchPath = DuplicateParentPath;
   const FString PackageName = DestinationPath + FileName;
-  
+
   UMaterialInstanceConstant* ParentMaterial = LoadObject<UMaterialInstanceConstant>(nullptr, *BaseMaterialSearchPath);
-  
+
   check(ParentMaterial != nullptr);
 
   UPackage* NewPackage = CreatePackage(*PackageName);
@@ -139,72 +241,162 @@ void AProceduralBuildingUtilities::RenderImpostorView(USceneCaptureComponent2D* 
 
 void AProceduralBuildingUtilities::MoveCameraToViewPosition(USceneCaptureComponent2D* Camera, const FVector BuildingSize, const EBuildingCameraView View)
 {
-  // const float CameraFOVAngle = Camera->FOVAngle; // TODO: Get from camera
   const float BuildingHeight = BuildingSize.Z;
   float ViewAngle = 0.f;
   float BuildingWidth = 0.f;
   float BuildingDepth = 0.f;
 
-  if(View == EBuildingCameraView::FRONT)
-  {
-    ViewAngle = 0.0f;
-    BuildingWidth = FMath::Abs(BuildingSize.Y);
-    BuildingDepth = FMath::Abs(BuildingSize.X);
-  }
-  else if(View == EBuildingCameraView::LEFT)
-  {
-    ViewAngle = 90.0f;
-    BuildingWidth = FMath::Abs(BuildingSize.X);
-    BuildingDepth = FMath::Abs(BuildingSize.Y);
-  }
-  else if(View == EBuildingCameraView::BACK)
-  {
-    ViewAngle = 180.0f;
-    BuildingWidth = FMath::Abs(BuildingSize.Y);
-    BuildingDepth = FMath::Abs(BuildingSize.X);
-  } 
-  else if(View == EBuildingCameraView::RIGHT)
-  {
-    ViewAngle = 270.0f;
-    BuildingWidth = FMath::Abs(BuildingSize.X);
-    BuildingDepth = FMath::Abs(BuildingSize.Y);
-  }
+  GetWidthDepthFromView(BuildingSize, View, BuildingWidth, BuildingDepth, ViewAngle);
 
-
-  //float FrontAspectRatio = BuildingWidth / BuildingHeight;
-
-  // Distance ajusted to height or width depending on which is bigger
-  //float DistanceTangentFactor = FrontAspectRatio < 1.0f ? BuildingHeight : BuildingWidth; 
-
-
-  // float DistanceTangentFactor = FMath::Max(BuildingWidth, BuildingHeight);
-
-  // float CameraDistance = DistanceTangentFactor / (2.0f * FMath::Tan(FMath::DegreesToRadians(CameraFOVAngle / 2.0f)));
-  // CameraDistance += BuildingWidth / 2.0f; 
-
-  // FVector NewCameraLocation(
-  //     CameraDistance * FMath::Cos(FMath::DegreesToRadians(ViewAngle)) + 0.5f * BuildingSize.X,
-  //     CameraDistance * FMath::Sin(FMath::DegreesToRadians(ViewAngle)) + 0.5f * BuildingSize.Y,
-  //     BuildingSize.Z / 2.0f);
-
-  /* ORTHO - Works with materials problems */
+  /* ORTHO */
   float ViewOrthoWidth = FMath::Max(BuildingWidth, BuildingHeight);
   Camera->OrthoWidth = ViewOrthoWidth;
 
-  // float CameraDistance = 50000.0f;
   float CameraDistance = 0.5f * BuildingDepth + 1000.f;
 
-  // FVector NewCameraLocation(
-  //     CameraDistance * FMath::Cos(FMath::DegreesToRadians(ViewAngle)) + 0.5f * BuildingSize.X,
-  //     CameraDistance * FMath::Sin(FMath::DegreesToRadians(ViewAngle)) + 0.5f * BuildingSize.Y,
-  //     BuildingSize.Z / 2.0f);
   FVector NewCameraLocation(
       CameraDistance * FMath::Cos(FMath::DegreesToRadians(ViewAngle)),
       CameraDistance * FMath::Sin(FMath::DegreesToRadians(ViewAngle)),
       BuildingSize.Z / 2.0f);
-  /*****************/
 
   FRotator NewCameraRotation(0.0f, ViewAngle + 180.f, 0.0f);
 
   Camera->SetRelativeLocationAndRotation(NewCameraLocation, NewCameraRotation, false, nullptr, ETeleportType::None);
+}
+
+void AProceduralBuildingUtilities::CreateBuildingImpostorGeometryForView(UProceduralMeshComponent* Mesh, const FVector& BuildingSize, const EBuildingCameraView View)
+{
+  // Create vertices based on Building Size
+  TArray<FVector> Vertices;
+  TArray<int32> Triangles;
+
+  const float BuildingHeight = BuildingSize.Z;
+  float BuildingWidth = 0.f;
+  float BuildingDepth = 0.f;
+  float ViewAngle = 0.f;
+
+  GetWidthDepthFromView(BuildingSize, View, BuildingWidth, BuildingDepth, ViewAngle);
+
+  FVector RotationAxis(0.0f, 0.0f, 1.0f);
+  FVector OriginOffset(- 0.5f * BuildingDepth, - 0.5f * BuildingWidth, 0.0f);
+
+  // Vertices are created in local space, then offsetted to compensate origin and finally rotating
+  // according to the ViewAngle
+  Vertices.Add((FVector(0.0f, 0.0f, 0.0f)                     + OriginOffset).RotateAngleAxis(ViewAngle, RotationAxis));
+	Vertices.Add((FVector(0.0f, 0.0f, BuildingHeight)           + OriginOffset).RotateAngleAxis(ViewAngle, RotationAxis));
+	Vertices.Add((FVector(0.0f, BuildingWidth, 0.0f)            + OriginOffset).RotateAngleAxis(ViewAngle, RotationAxis));
+	Vertices.Add((FVector(0.0f, BuildingWidth, BuildingHeight)  + OriginOffset).RotateAngleAxis(ViewAngle, RotationAxis));
+
+  Triangles.Add(0); Triangles.Add(2); Triangles.Add(1); 
+  Triangles.Add(2); Triangles.Add(3); Triangles.Add(1);
+
+  TArray<FVector2D> UVs;
+  CalculateViewGeometryUVs(BuildingWidth, BuildingHeight, View, UVs);
+
+  TArray<FVector> Normals;
+  Normals.Init(FVector(-1.0f, 0.0f, 0.0f).RotateAngleAxis(ViewAngle, RotationAxis), Vertices.Num());
+  
+  TArray<FLinearColor> Colors;
+  Colors.Init(FLinearColor(0.0f, 0.0f, 0.0f, 1.0f), Vertices.Num());
+
+  TArray<FProcMeshTangent> Tangents;
+  // Tangents.Init(FProcMeshTangent(-1.0f, -1.0f, -1.0f).RotateAngleAxis(ViewAngle, RotationAxis), Vertices.Num());
+  Tangents.Init(FProcMeshTangent(FVector(0.0f, 1.0f, 0.0f).RotateAngleAxis(ViewAngle, RotationAxis), false), Vertices.Num());
+
+  Mesh->CreateMeshSection_LinearColor((int32)View, Vertices, Triangles, Normals, UVs, Colors, Tangents, false);
+}
+
+void AProceduralBuildingUtilities::GetWidthDepthFromView(const FVector& BuildingSize, const EBuildingCameraView View, float& OutWidth, float& OutDepth, float& OutViewAngle)
+{
+  switch(View)
+  {
+    case EBuildingCameraView::FRONT:
+      OutViewAngle = 0.0f;
+      OutWidth = FMath::Abs(BuildingSize.Y);
+      OutDepth = FMath::Abs(BuildingSize.X);
+      break;
+    
+    case EBuildingCameraView::LEFT:
+      OutViewAngle = 90.0f;
+      OutWidth = FMath::Abs(BuildingSize.X);
+      OutDepth = FMath::Abs(BuildingSize.Y);
+      break;
+
+    case EBuildingCameraView::BACK:
+      OutViewAngle = 180.0f;
+      OutWidth = FMath::Abs(BuildingSize.Y);
+      OutDepth = FMath::Abs(BuildingSize.X);
+      break;
+
+    case EBuildingCameraView::RIGHT:
+      OutViewAngle = 270.0f;
+      OutWidth = FMath::Abs(BuildingSize.X);
+      OutDepth = FMath::Abs(BuildingSize.Y);
+      break;
+
+    default:
+      OutViewAngle = 0.0f;
+      OutWidth = 0.0f;
+      OutDepth = 0.0f;
+  }
+}
+
+void AProceduralBuildingUtilities::CalculateViewGeometryUVs(const float BuildingWidth, const float BuildingHeight, const EBuildingCameraView View, TArray<FVector2D>& OutUVs)
+{
+  // Calculate UVs from 0 to 1
+  //  ------------
+  // |  uv1  uv3  |
+  // |  uv0  uv2  |
+  //  ------------
+
+  FVector2D OriginOffset;
+  switch(View)
+  {
+    case EBuildingCameraView::FRONT:
+      OriginOffset = FVector2D(0.3f, 0.3f);
+      break;
+
+    case EBuildingCameraView::LEFT:
+      OriginOffset = FVector2D(0.3f, 0.4f);
+      break;
+
+    case EBuildingCameraView::BACK:
+      OriginOffset = FVector2D(0.4f, 0.3f);
+      break;
+
+    case EBuildingCameraView::RIGHT:
+      OriginOffset = FVector2D(0.4f, 0.4f);
+      break;
+
+    default:
+      OriginOffset = FVector2D(0.0f, 0.0f);
+  }
+
+  float WidthRatio = BuildingWidth / BuildingHeight;
+  float HeightRatio = BuildingHeight / BuildingWidth;
+
+  FVector2D X0, X1, X2, X3;
+
+  if(WidthRatio < 1.0f)
+  {
+    // Fit Vertically
+    X0 = FVector2D(0.05f - 0.05f * WidthRatio, 0.1f) + OriginOffset;
+    X1 = FVector2D(0.05f - 0.05f * WidthRatio, 0.0f) + OriginOffset;
+    X2 = FVector2D(0.05f + 0.05f * WidthRatio, 0.1f) + OriginOffset;
+    X3 = FVector2D(0.05f + 0.05f * WidthRatio, 0.0f) + OriginOffset;
+  }
+  else
+  {
+    // Fit Horizontally
+    X0 = FVector2D(0.0f, 0.05f + 0.05f * HeightRatio) + OriginOffset;
+    X1 = FVector2D(0.0f, 0.05f - 0.05f * HeightRatio) + OriginOffset;
+    X2 = FVector2D(0.1f, 0.05f + 0.05f * HeightRatio) + OriginOffset;
+    X3 = FVector2D(0.1f, 0.05f - 0.05f * HeightRatio) + OriginOffset;
+  }
+
+  // Fix offset to fit in view quadrant
+  OutUVs.Add(X0);
+  OutUVs.Add(X1);
+  OutUVs.Add(X2);
+  OutUVs.Add(X3);
 }
