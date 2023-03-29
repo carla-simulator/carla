@@ -256,10 +256,10 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
           TArray<FProcMeshTangent>(), // Tangents
           true); // Create collision
       TempActor->SetActorLocation(MeshCentroid * 100);
-      ActorMeshList.Add(TempActor);
+      // ActorMeshList.Add(TempActor);
 
       RoadType.Add(LaneTypeToFString(PairMap.first));
-      RoadMesh.Add(TempPMC);          
+      // RoadMesh.Add(TempPMC);          
     }
   }
     

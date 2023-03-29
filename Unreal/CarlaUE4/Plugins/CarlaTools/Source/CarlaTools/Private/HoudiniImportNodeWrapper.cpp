@@ -21,7 +21,8 @@ UHoudiniImportNodeWrapper* UHoudiniImportNodeWrapper::ImportBuildings(
     UObject* InWorldContextObject,
     const FString& MapName, const FString& OSMFilePath,
     float Latitude, float Longitude,
-    int ClusterSize, int CurrentCluster)
+    int ClusterSize, int CurrentCluster,
+    bool bUseCOM)
 {
   UE_LOG(LogCarlaTools, Log, TEXT("Start building import"));
   UHoudiniAsset* InHoudiniAsset = Cast<UHoudiniAsset>(InHoudiniObject);
@@ -39,13 +40,15 @@ UHoudiniImportNodeWrapper* UHoudiniImportNodeWrapper::ImportBuildings(
     {"displayedCluster", FHoudiniParameterTuple(CurrentCluster)},
     {"startCooking", FHoudiniParameterTuple(true)},
     {"lat", FHoudiniParameterTuple(Latitude)},
-    {"lon", FHoudiniParameterTuple(Longitude)}};
+    {"lon", FHoudiniParameterTuple(Longitude)},
+    {"centOfMass", FHoudiniParameterTuple(bUseCOM)}};
   
   WrapperNode->HDANode = 
       UHoudiniPublicAPIProcessHDANode::ProcessHDA(
       InHoudiniAsset, InInstantiateAt, InParameters, {}, {},
       InWorldContextObject, nullptr,
-      true, true);
+      true, true, "", EHoudiniEngineBakeOption::ToActor,
+      true);
   WrapperNode->HDANode->Completed.AddDynamic(WrapperNode, &UHoudiniImportNodeWrapper::HandleCompleted);
   WrapperNode->HDANode->Failed.AddDynamic(WrapperNode, &UHoudiniImportNodeWrapper::HandleFailed);
   UE_LOG(LogCarlaTools, Log, TEXT("HDA node created"));
