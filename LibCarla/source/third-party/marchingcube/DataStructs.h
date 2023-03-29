@@ -9,19 +9,19 @@ namespace MeshReconstruction
   {
     double x, y, z;
 
-    Vec3 operator+(Vec3 const& o) const
+    Vec3 operator+(Vec3 const &o) const
     {
-      return { x + o.x, y + o.y, z + o.z };
+      return {x + o.x, y + o.y, z + o.z};
     }
 
-    Vec3 operator-(Vec3 const& o) const
+    Vec3 operator-(Vec3 const &o) const
     {
-      return { x - o.x, y - o.y, z - o.z };
+      return {x - o.x, y - o.y, z - o.z};
     }
 
     Vec3 operator*(double c) const
     {
-      return { c * x, c * y, c * z };
+      return {c * x, c * y, c * z};
     }
 
     double Norm() const
@@ -32,7 +32,7 @@ namespace MeshReconstruction
     Vec3 Normalized() const
     {
       auto n = Norm();
-      return { x / n, y / n, z / n };
+      return {x / n, y / n, z / n};
     }
   };
 
@@ -51,6 +51,6 @@ namespace MeshReconstruction
     std::vector<Vec3> vertexNormals;
   };
 
-  using Fun3s = std::function<double(Vec3 const&)>;
-  using Fun3v = std::function<Vec3(Vec3 const&)>;
+  using Fun3s = std::function<double(Vec3 const &)>;
+  using Fun3v = std::function<Vec3(Vec3 const &)>;
 }

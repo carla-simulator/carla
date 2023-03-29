@@ -10,8 +10,8 @@ namespace MeshReconstruction
   /// @param domain Domain of reconstruction.
   /// @returns The reconstructed mesh.
   Mesh MarchCube(
-    Fun3s const& sdf,
-    Rect3 const& domain);
+      Fun3s const &sdf,
+      Rect3 const &domain);
 
   /// Reconstructs a triangle mesh from a given signed distance function using <a href="https://en.wikipedia.org/wiki/Marching_cubes">Marching Cubes</a>.
   /// @param sdf The <a href="http://www.iquilezles.org/www/articles/distfunctions/distfunctions.htm">Signed Distance Function</a>.
@@ -21,11 +21,11 @@ namespace MeshReconstruction
   /// @param sdfGrad Gradient of the SDF which yields the vertex normals of the reconstructed mesh. If none is provided a numerical approximation is used.
   /// @returns The reconstructed mesh.
   Mesh MarchCube(
-    Fun3s const& sdf,
-    Rect3 const& domain,
-    Vec3 const& cubeSize,
-    double isoLevel = 0,
-    Fun3v sdfGrad = nullptr);
+      Fun3s const &sdf,
+      Rect3 const &domain,
+      Vec3 const &cubeSize,
+      double isoLevel = 0,
+      Fun3v sdfGrad = nullptr);
 }
 
 using namespace MeshReconstruction;
@@ -35,18 +35,18 @@ using namespace std;
 
 namespace
 {
-  Vec3 NumGrad(Fun3s const& f, Vec3 const& p)
+  Vec3 NumGrad(Fun3s const &f, Vec3 const &p)
   {
     auto const Eps = 1e-6;
-    Vec3 epsX{ Eps, 0, 0 }, epsY{ 0, Eps, 0 }, epsZ{ 0, 0, Eps };
+    Vec3 epsX{Eps, 0, 0}, epsY{0, Eps, 0}, epsZ{0, 0, Eps};
     auto gx = (f(p + epsX) - f(p - epsX)) / 2;
     auto gy = (f(p + epsY) - f(p - epsY)) / 2;
     auto gz = (f(p + epsZ) - f(p - epsZ)) / 2;
-    return { gx, gy, gz };
+    return {gx, gy, gz};
   }
 }
 
-Mesh MeshReconstruction::MarchCube(Fun3s const& sdf, Rect3 const& domain)
+Mesh MeshReconstruction::MarchCube(Fun3s const &sdf, Rect3 const &domain)
 {
   auto const NumCubes = 50;
   auto cubeSize = domain.size * (1.0 / NumCubes);
@@ -55,16 +55,17 @@ Mesh MeshReconstruction::MarchCube(Fun3s const& sdf, Rect3 const& domain)
 }
 
 Mesh MeshReconstruction::MarchCube(
-  Fun3s const& sdf,
-  Rect3 const& domain,
-  Vec3 const& cubeSize,
-  double isoLevel,
-  Fun3v sdfGrad)
+    Fun3s const &sdf,
+    Rect3 const &domain,
+    Vec3 const &cubeSize,
+    double isoLevel,
+    Fun3v sdfGrad)
 {
   // Default value.
   sdfGrad = sdfGrad == nullptr
-    ? [&sdf](Vec3 const& p) { return NumGrad(sdf, p); }
-  : sdfGrad;
+                ? [&sdf](Vec3 const &p)
+  { return NumGrad(sdf, p); }
+                : sdfGrad;
 
   auto const NumX = static_cast<int>(ceil(domain.size.x / cubeSize.x));
   auto const NumY = static_cast<int>(ceil(domain.size.y / cubeSize.y));
@@ -86,14 +87,15 @@ Mesh MeshReconstruction::MarchCube(
       for (auto iz = 0; iz < NumZ; ++iz)
       {
         auto z = domain.min.z + iz * cubeSize.z;
-        Vec3 min{ x, y, z };
+        Vec3 min{x, y, z};
 
         // Process only if cube lies within narrow band around surface.
         auto cubeCenter = min + HalfCubeSize;
         auto dist = abs(sdf(cubeCenter) - isoLevel);
-        if (dist > HalfCubeDiag) continue;
+        if (dist > HalfCubeDiag)
+          continue;
 
-        Cube cube({ min, cubeSize }, sdf);
+        Cube cube({min, cubeSize}, sdf);
         auto intersect = cube.Intersect(isoLevel);
         Triangulate(intersect, sdfGrad, mesh);
       }

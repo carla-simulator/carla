@@ -19,7 +19,6 @@
 #include "carla/road/element/RoadInfoSignal.h"
 
 #include "simplify/Simplify.h"
-
 #include "marchingcube/MeshReconstruction.h"
 
 #include <vector>
@@ -27,7 +26,6 @@
 #include <stdexcept>
 #include <chrono>
 #include <thread>
-#include <fstream>
 #include <iomanip>
 #include <cmath>
 
@@ -1153,22 +1151,17 @@ namespace road {
     std::vector<std::thread> workers;
     std::mutex write_mutex;
 
-    for ( size_t i = 0; i < num_threads; ++i ) 
-    {
-      std::thread neworker([this, &write_mutex, &mesh_factory, &road_out_mesh_list, i, num_roads_per_thread]() 
-      {
+    for ( size_t i = 0; i < num_threads; ++i ) {
+      std::thread neworker(
+        [this, &write_mutex, &mesh_factory, &road_out_mesh_list, i, num_roads_per_thread]() {
         std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current = std::move(GenerateRoadsMultithreaded(mesh_factory, i, num_roads_per_thread));          
         std::lock_guard<std::mutex> guard(write_mutex);
-        for ( auto&& pair : Current )
-        {
-          if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end())
-          {
+        for ( auto&& pair : Current ) {
+          if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end()) {
             road_out_mesh_list[pair.first].insert(road_out_mesh_list[pair.first].end(),
               std::make_move_iterator(pair.second.begin()),
               std::make_move_iterator(pair.second.end()));
-          }
-          else
-          {
+          } else {
             road_out_mesh_list[pair.first] = std::move(pair.second);
           }
         }
@@ -1177,15 +1170,12 @@ namespace road {
       workers.push_back(std::move(neworker));
     }
 
-    for (size_t i = 0; i < workers.size(); ++i)
-    {
+    for (size_t i = 0; i < workers.size(); ++i) {
       workers[i].join();
     }
     workers.clear();
-    for (auto& current_mesh_vector : road_out_mesh_list)
-    {
-      if (current_mesh_vector.first != road::Lane::LaneType::Driving)
-      {
+    for (auto& current_mesh_vector : road_out_mesh_list) {
+      if (current_mesh_vector.first != road::Lane::LaneType::Driving) {
         continue;
       }
 
@@ -1194,11 +1184,9 @@ namespace road {
       size_t num_threads = (num_roads / num_roads_per_thread) + 1;
       num_threads = num_threads > 1 ? num_threads : 1;
 
-      for (size_t i = 0; i < num_threads; ++i)
-      {
+      for (size_t i = 0; i < num_threads; ++i) {
         std::vector<geom::Mesh*> RoadsMesh;
-        for (std::unique_ptr<geom::Mesh>& current_mesh : current_mesh_vector.second)
-        {
+        for (std::unique_ptr<geom::Mesh>& current_mesh : current_mesh_vector.second) {
           if(current_mesh) {
             RoadsMesh.push_back( current_mesh.get() );
           }
@@ -1209,17 +1197,14 @@ namespace road {
       }
     }
 
-    for (size_t i = 0; i < workers.size(); ++i)
-    {
-      if (workers[i].joinable())
-      {
+    for (size_t i = 0; i < workers.size(); ++i) {
+      if (workers[i].joinable()) {
         workers[i].join();
       }
     }
 
     juntction_thread.join();
-    for (auto&& pair : juntion_out_mesh_list)
-    {
+    for (auto&& pair : juntion_out_mesh_list) {
       if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end())
       {
         road_out_mesh_list[pair.first].insert(road_out_mesh_list[pair.first].end(),
@@ -1276,34 +1261,28 @@ namespace road {
   {
     std::vector<std::unique_ptr<geom::Mesh>> LineMarks;
     geom::MeshFactory mesh_factory(params);
-    for ( auto&& pair : _data.GetRoads() ) 
-    {
+    for ( auto&& pair : _data.GetRoads() ) {
       if ( pair.second.IsJunction() ) {
         continue;
       }
       mesh_factory.GenerateLaneMarkForRoad(pair.second, LineMarks);
     }
 
-    for (auto& Mesh : LineMarks) 
-    {
-      if (!Mesh->IsValid())
-      {
+    for (auto& Mesh : LineMarks) {
+      if (!Mesh->IsValid()) {
         continue;
       }
 
-      for (carla::geom::Vector3D& current_vertex : Mesh->GetVertices())
-      {
+      for (carla::geom::Vector3D& current_vertex : Mesh->GetVertices()) {
         current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y) + 0.01;
       }
     }
     return std::move(LineMarks);
   }
 
-  std::vector<carla::geom::BoundingBox> Map::GetJunctionsBoundingBoxes() const
-  {
+  std::vector<carla::geom::BoundingBox> Map::GetJunctionsBoundingBoxes() const {
     std::vector<carla::geom::BoundingBox> returning;
-    for ( const auto& junc_pair : _data.GetJunctions() ) 
-    {
+    for ( const auto& junc_pair : _data.GetJunctions() ) {
       const auto& junction = junc_pair.second;
       float box_extraextension_factor = 1.5f;
       carla::geom::BoundingBox bb = junction.GetBoundingBox();
@@ -1313,8 +1292,7 @@ namespace road {
     return returning;
   }
 
-  inline float Map::GetZPosInDeformation(float posx, float posy) const
-  {
+  inline float Map::GetZPosInDeformation(float posx, float posy) const {
     // Amplitud
     const float A1 = 0.3f;
     const float A2 = 0.5f;
@@ -1342,8 +1320,7 @@ namespace road {
 
     float DistanceToBumpOrigin = sqrt(pow(BumpX - posx, 2) + pow(BumpY - posy, 2) );
     float MaxDistance = 2;
-    if (DistanceToBumpOrigin <= MaxDistance) 
-    {
+    if (DistanceToBumpOrigin <= MaxDistance) {
       bumpsoffset = abs((1.0f / MaxDistance) * DistanceToBumpOrigin * DistanceToBumpOrigin - MaxDistance);
     }
 
@@ -1360,14 +1337,12 @@ namespace road {
 
     auto start = std::next( _data.GetRoads().begin(), (index ) * number_of_roads_per_thread);
     size_t endoffset = (index+1) * number_of_roads_per_thread;
-    if( endoffset >= _data.GetRoads().size() )
-    {
+    if( endoffset >= _data.GetRoads().size() ) {
       endoffset = _data.GetRoads().size(); 
     }
     auto end = std::next( _data.GetRoads().begin(), endoffset );
 
-    for (auto pair = start; pair != end && pair != _data.GetRoads().end(); ++pair)
-    {
+    for (auto pair = start; pair != end && pair != _data.GetRoads().end(); ++pair) {
       const auto& road = pair->second;
       if (!road.IsJunction()) {
         mesh_factory.GenerateAllOrderedWithMaxLen(road, out);
@@ -1379,22 +1354,19 @@ namespace road {
   void Map::GenerateJunctions(const carla::geom::MeshFactory& mesh_factory,
     const rpc::OpendriveGenerationParameters& params,
     std::map<road::Lane::LaneType,
-    std::vector<std::unique_ptr<geom::Mesh>>>* juntion_out_mesh_list) const 
-  {
+    std::vector<std::unique_ptr<geom::Mesh>>>* juntion_out_mesh_list) const {
+
     float simplificationrate = params.simplification_percentage * 0.01f;
-    for (const auto& junc_pair : _data.GetJunctions())
-    {
+    for (const auto& junc_pair : _data.GetJunctions()) {
       const auto& junction = junc_pair.second;
-      if (junction.GetConnections().size() > 2)
-      {
+      if (junction.GetConnections().size() > 2) {
         std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
         std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
         std::vector<carla::geom::Vector3D> perimeterpoints;
 
         auto pmesh = SDFToMesh(junction, perimeterpoints, 75);
         Simplify::SimplificationObject Simplification;
-        for (carla::geom::Vector3D& current_vertex : pmesh->GetVertices())
-        {
+        for (carla::geom::Vector3D& current_vertex : pmesh->GetVertices()) {
           Simplify::Vertex v;
           v.p.x = current_vertex.x;
           v.p.y = current_vertex.y;
@@ -1402,8 +1374,7 @@ namespace road {
           Simplification.vertices.push_back(v);
         }
 
-        for (size_t i = 0; i < pmesh->GetIndexes().size() - 2; i += 3)
-        {
+        for (size_t i = 0; i < pmesh->GetIndexes().size() - 2; i += 3) {
           Simplify::Triangle t;
           t.material = 0;
           auto indices = pmesh->GetIndexes();
@@ -1420,8 +1391,7 @@ namespace road {
         pmesh->GetVertices().clear();
         pmesh->GetIndexes().clear();
 
-        for (Simplify::Vertex& current_vertex : Simplification.vertices)
-        {
+        for (Simplify::Vertex& current_vertex : Simplification.vertices) {
           carla::geom::Vector3D v;
           v.x = current_vertex.p.x;
           v.y = current_vertex.p.y;
@@ -1429,16 +1399,14 @@ namespace road {
           pmesh->AddVertex(v);
         }
 
-        for (size_t i = 0; i < Simplification.triangles.size(); ++i)
-        {
+        for (size_t i = 0; i < Simplification.triangles.size(); ++i) {
           pmesh->GetIndexes().push_back((Simplification.triangles[i].v[0]) + 1);
           pmesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
           pmesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
         }
 
         (*juntion_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
-      }
-      else {
+      } else {
         std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
         std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
         for (const auto& connection_pair : junction.GetConnections()) {
@@ -1460,8 +1428,7 @@ namespace road {
         for (auto& lane : lane_meshes) {
           *merged_mesh += *lane;
         }
-        for (carla::geom::Vector3D& current_vertex : merged_mesh->GetVertices())
-        {
+        for (carla::geom::Vector3D& current_vertex : merged_mesh->GetVertices()) {
           current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
         }
         std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
@@ -1480,26 +1447,21 @@ namespace road {
   {
     auto start = std::next( roadsmesh.begin(), ( index ) * number_of_roads_per_thread);
     size_t endoffset = (index+1) * number_of_roads_per_thread;
-    if( endoffset >= roadsmesh.size() )
-    {
+    if( endoffset >= roadsmesh.size() ) {
       endoffset = roadsmesh.size(); 
     }
     auto end = std::next( roadsmesh.begin(), endoffset );
-    for ( auto it = start; it != end  && it != roadsmesh.end(); ++it )
-    {
+    for ( auto it = start; it != end  && it != roadsmesh.end(); ++it ) {
       geom::Mesh* current_mesh = *it;
-      if( current_mesh == nullptr )
-      {
+      if( current_mesh == nullptr ) {
         continue;
       }
 
-      if ( !current_mesh->IsValid() )
-      {
+      if ( !current_mesh->IsValid() ) {
         continue;
       }
       Simplify::SimplificationObject Simplification;
-      for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices())
-      {
+      for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices()) {
         Simplify::Vertex v;
         v.p.x = current_vertex.x;
         v.p.y = current_vertex.y;
@@ -1508,8 +1470,7 @@ namespace road {
       }
 
 
-      for (size_t i = 0; i < current_mesh->GetIndexes().size() - 2; i += 3)
-      {
+      for (size_t i = 0; i < current_mesh->GetIndexes().size() - 2; i += 3) {
         Simplify::Triangle t;
         t.material = 0;
         auto indices = current_mesh->GetIndexes();
@@ -1522,12 +1483,10 @@ namespace road {
       // Reduce to the X% of the polys
       float target_size = Simplification.triangles.size();
       Simplification.simplify_mesh((target_size * simplificationrate));
-      std::cout << "Post simplification for Index: " << index << std::endl;
 
       current_mesh->GetVertices().clear();
       current_mesh->GetIndexes().clear();
-      for (Simplify::Vertex& current_vertex : Simplification.vertices)
-      {
+      for (Simplify::Vertex& current_vertex : Simplification.vertices) {
         carla::geom::Vector3D v;
         v.x = current_vertex.p.x;
         v.y = current_vertex.p.y;
@@ -1535,8 +1494,7 @@ namespace road {
         current_mesh->AddVertex(v);
       }
 
-      for (size_t i = 0; i < Simplification.triangles.size(); ++i)
-      {
+      for (size_t i = 0; i < Simplification.triangles.size(); ++i) {
         current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[0]) + 1);
         current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
         current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
@@ -1546,8 +1504,8 @@ namespace road {
 
   std::unique_ptr<geom::Mesh> Map::SDFToMesh(const road::Junction& jinput,
     const std::vector<geom::Vector3D>& sdfinput,
-    int grid_cells_per_dim) const
-  {
+    int grid_cells_per_dim) const {
+
     int junctionid = jinput.GetId();
     float box_extraextension_factor = 1.5f;
     const double CubeSize = 0.5;
@@ -1561,13 +1519,10 @@ namespace road {
       geom::Vector3D worldloc(pos.x, pos.y, pos.z);
       boost::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(worldloc), 0x1 << 1);
       
-      if (CheckingWaypoint)
-      {
+      if (CheckingWaypoint) {
         if ( pos.z < 0.2) {
           return 0.0;
-        }
-        else 
-        {
+        } else {
           return -abs(pos.z);
         }
       }
@@ -1579,8 +1534,7 @@ namespace road {
       geom::Vector3D laneborder = InRoadWPTransform.location + geom::Location(director.MakeUnitVector() * GetLaneWidth(*InRoadWaypoint) * 0.5f);
 
       geom::Vector3D Distance = laneborder - worldloc;
-      if (Distance.Length2D() < CubeSize * 1.1 && pos.z < 0.2)
-      {
+      if (Distance.Length2D() < CubeSize * 1.1 && pos.z < 0.2) {
         return 0.0;
       }
       return Distance.Length() * -1.0;
@@ -1600,8 +1554,8 @@ namespace road {
 
     geom::Mesh out_mesh;
     
-    for (auto& cv : mesh.vertices)
-    {
+    for (auto& cv : mesh.vertices) {
+
       geom::Vector3D newvertex;
       newvertex.x = cv.x;
       newvertex.y = cv.y;
@@ -1612,8 +1566,7 @@ namespace road {
     }
 
     auto finalvertices = out_mesh.GetVertices();
-    for (auto ct : mesh.triangles)
-    {
+    for (auto ct : mesh.triangles) {
       auto cv = mesh.vertices[ct[1]];
       geom::Vector3D newvertex;
       newvertex.x = cv.x;
@@ -1640,8 +1593,7 @@ namespace road {
       out_mesh.AddIndex(it - finalvertices.begin() + 1);
     }
 
-    for (auto& cv : out_mesh.GetVertices() )
-    {
+    for (auto& cv : out_mesh.GetVertices() ) {
       boost::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(cv), 0x1 << 1);
       if (!CheckingWaypoint)
       {

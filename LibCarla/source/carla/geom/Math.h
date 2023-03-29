@@ -83,8 +83,7 @@ namespace geom {
       return std::sqrt(DistanceSquared2D(a, b));
     }
 
-    static float LinearLerp(float a, float b, float f) 
-    {
+    static float LinearLerp(float a, float b, float f) {
       return a * (1.0f - f) + (b * f);
     }
 
