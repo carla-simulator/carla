@@ -321,10 +321,6 @@ else
 
   rm -Rf ${RECAST_BASENAME}-source ${RECAST_BASENAME}-build
 
-  # move headers inside 'recast' folder
-  mkdir -p "${PWD}/${RECAST_BASENAME}-install/include/recast"
-  mv "${PWD}/${RECAST_BASENAME}-install/include/"*h "${PWD}/${RECAST_BASENAME}-install/include/recast/"
-
 fi
 
 # make sure the RecastBuilder is corrctly copied
