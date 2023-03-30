@@ -20,6 +20,7 @@
 #include <carla/multigpu/primaryCommands.h>
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
+#include <carla/ros2/ROS2.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <mutex>
@@ -32,6 +33,7 @@ class FCarlaEngine : private NonCopyable
 public:
 
   static uint64_t FrameCounter;
+  static std::shared_ptr<carla::ros2::ROS2> ROS2;
 
   ~FCarlaEngine();
 
@@ -69,12 +71,16 @@ public:
   static uint64_t UpdateFrameCounter()
   {
     FCarlaEngine::FrameCounter += 1;
+    if (ROS2)
+      ROS2->set_frame(FCarlaEngine::FrameCounter);
     return FCarlaEngine::FrameCounter;
   }
 
   static void ResetFrameCounter(uint64_t Value = 0)
   {
     FCarlaEngine::FrameCounter = Value;
+    if (ROS2)
+      ROS2->set_frame(FCarlaEngine::FrameCounter);
   }
 
   std::shared_ptr<carla::multigpu::Router> GetSecondaryServer()
@@ -121,7 +127,7 @@ private:
 
   std::shared_ptr<carla::multigpu::Router>    SecondaryServer;
   std::shared_ptr<carla::multigpu::Secondary> Secondary;
- 
+
   std::vector<FFrameData> FramesToProcess;
   std::mutex FrameToProcessMutex;
 };

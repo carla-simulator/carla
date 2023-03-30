@@ -25,6 +25,7 @@
 #include <carla/multigpu/commands.h>
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
+#include <carla/ros2/ROS2.h>
 #include <carla/streaming/EndPoint.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
@@ -35,8 +36,9 @@
 // -- Static local methods -----------------------------------------------------
 // =============================================================================
 
-// init static frame counter
+// init static variables
 uint64_t FCarlaEngine::FrameCounter = 0;
+std::shared_ptr<carla::ros2::ROS2> FCarlaEngine::ROS2;
 
 static uint32 FCarlaEngine_GetNumberOfThreadsForRPCServer()
 {
@@ -77,7 +79,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     const auto SecondaryPort = Settings.SecondaryPort;
     const auto PrimaryIP     = Settings.PrimaryIP;
     const auto PrimaryPort   = Settings.PrimaryPort;
-    
+
     auto BroadcastStream     = Server.Start(Settings.RPCPort, StreamingPort, SecondaryPort);
     Server.AsyncRun(FCarlaEngine_GetNumberOfThreadsForRPCServer());
 
@@ -100,7 +102,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     {
       // we are secondary server, connecting to primary server
       bIsPrimaryServer = false;
-      
+
       // define the commands executor (when a command comes from the primary server)
       auto CommandExecutor = [=](carla::multigpu::MultiGPUCommand Id, carla::Buffer Data) {
         struct CarlaStreamBuffer : public std::streambuf
@@ -144,7 +146,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             Secondary->Write(std::move(buf));
             break;
           }
-          
+
           case carla::multigpu::MultiGPUCommand::YOU_ALIVE:
           {
             std::string msg("Yes, I'm alive");
@@ -157,8 +159,8 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       };
 
       Secondary = std::make_shared<carla::multigpu::Secondary>(
-        PrimaryIP, 
-        PrimaryPort, 
+        PrimaryIP,
+        PrimaryPort,
         CommandExecutor
       );
 
@@ -172,11 +174,17 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       bIsPrimaryServer = true;
       SecondaryServer = Server.GetSecondaryServer();
       SecondaryServer->SetNewConnectionCallback([this]()
-      { 
+      {
         this->bNewConnection = true;
         UE_LOG(LogCarla, Log, TEXT("New secondary connection detected"));
       });
     }
+  }
+
+  // create ROS2 manager
+  if (Settings.ROS2)
+  {
+    ROS2 = std::make_shared<carla::ros2::ROS2>();
   }
 
   bMapChanged = true;
@@ -234,7 +242,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 
     if (bIsPrimaryServer)
     {
-      if (CurrentEpisode && !bSynchronousMode && SecondaryServer->HasClientsConnected()) 
+      if (CurrentEpisode && !bSynchronousMode && SecondaryServer->HasClientsConnected())
       {
         // set synchronous mode
         CurrentSettings.bSynchronousMode = true;
