@@ -9,7 +9,7 @@
 
 #include <OSM2ODR.h>
 
-void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath)
+void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0, float Lon_0)
 {
   IPlatformFile &FileManager = FPlatformFileManager::Get().GetPlatformFile();
 
@@ -34,7 +34,10 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath)
   }
 
   std::string OsmFile = std::string(TCHAR_TO_UTF8(*FileContent));
-  std::string OpenDriveFile = osm2odr::ConvertOSMToOpenDRIVE(OsmFile);
+  osm2odr::OSM2ODRSettings Settings;
+  Settings.proj_string += " +lat_0=" + std::to_string(Lat_0) + " +lon_0=" + std::to_string(Lon_0);
+  Settings.center_map = false;
+  std::string OpenDriveFile = osm2odr::ConvertOSMToOpenDRIVE(OsmFile, Settings);
 
   FilePath.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);
   FilePath += ".xodr";
