@@ -165,6 +165,10 @@ namespace road {
     /// Buids a mesh of all crosswalks based on the OpenDRIVE
     geom::Mesh GetAllCrosswalkMesh() const;
 
+    std::vector<geom::Vector3D> GetTreesPosition(
+      float distancebetweentrees, 
+      float distancefromdrivinglineborder) const;
+
     geom::Mesh GenerateWalls(const double distance, const float wall_height) const;
 
     const std::unordered_map<SignId, std::unique_ptr<Signal>>& GetSignals() const {
