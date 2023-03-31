@@ -32,6 +32,7 @@ set CARLA_DEPENDENCIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\Carla
 set CARLA_BINARIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\Binaries\Win64
 set CARLA_PYTHON_DEPENDENCIES=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 set USE_CHRONO=false
+set USE_ROS2=false
 
 :arg-parse
 if not "%1"=="" (
@@ -43,6 +44,9 @@ if not "%1"=="" (
     )
     if "%1"=="--chrono" (
         set USE_CHRONO=true
+    )
+    if "%1"=="--ros2" (
+        set USE_ROS2=true
     )
     if "%1"=="-h" (
         goto help
@@ -162,6 +166,26 @@ if not defined install_recast (
     goto failed
 ) else (
     set RECAST_INSTALL_DIR=%install_recast:\=/%
+)
+
+rem ============================================================================
+rem -- Download and install Fast-DDS (for ROS2)---------------------------------
+rem ============================================================================
+
+if %USE_ROS2% == true (
+    echo %FILE_N% Installing "Fast-DDS"...
+    call "%INSTALLERS_DIR%install_fastDDS.bat"^
+    --build-dir "%INSTALLATION_DIR%"
+
+    if %errorlevel% neq 0 goto failed
+
+    if not defined install_dds (
+
+        echo %FILE_N% Failed while installing "Fast-DDS".
+        goto failed
+    ) else (
+        set FASTDDS_INSTALL_DIR=%install_dds:\=/%
+    )
 )
 
 rem ============================================================================
