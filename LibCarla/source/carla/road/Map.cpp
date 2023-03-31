@@ -1282,7 +1282,38 @@ namespace road {
     return out_mesh_list;
   }
 
+  std::vector<geom::Vector3D> Map::GetTreesPosition(
+    float distancebetweentrees, 
+    float distancefromdrivinglineborder) const {
+    
+    std::vector<geom::Vector3D> positions;
+    for (auto &&pair : _data.GetRoads()) 
+    {
+      const auto &road = pair.second;
+      if (!road.IsJunction()) {
+        for (auto &&lane_section : road.GetLaneSections()) {
+          const auto min_lane = lane_section.GetLanes().begin()->first == 0 ?
+            1 : lane_section.GetLanes().begin()->first;
+          const auto max_lane = lane_section.GetLanes().rbegin()->first == 0 ?
+           -1 : lane_section.GetLanes().rbegin()->first;
+          const road::Lane* lane = lane_section.GetLane(min_lane);
+          if( lane ) {
+            double s_current = lane_section.GetDistance();
+            const double s_end = lane_section.GetDistance() + lane_section.GetLength();
+            while(s_current < s_end){
+              const auto edges = lane->GetCornerPositions(s_current, 0);
+              geom::Vector3D director = edges.second - edges.first;
+              geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
+              positions.push_back(treeposition);
+              s_current += distancebetweentrees;
+            }
 
+          }
+        }
+      }
+    }
+    return positions;
+  }
   geom::Mesh Map::GetAllCrosswalkMesh() const {
     geom::Mesh out_mesh;
 

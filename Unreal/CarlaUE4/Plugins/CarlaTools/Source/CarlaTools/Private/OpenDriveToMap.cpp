@@ -199,6 +199,7 @@ void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& Carla
   {
     GenerateRoadMesh(CarlaMap);
     GenerateSpawnPoints(CarlaMap);
+    GenerateTreePositions(CarlaMap);
   }
 }
 
@@ -283,6 +284,18 @@ void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Ma
   }
 }
 
+void UOpenDriveToMap::GenerateTreePositions( const boost::optional<carla::road::Map>& CarlaMap )
+{
+  const auto Locations = CarlaMap->GetTreesPosition(DistanceBetweenTrees, DistanceFromRoadEdge );
+  int i = 0;
+  for (const auto &cl : Locations)
+  {
+    AActor *Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), cl.ToFVector() * 100, FRotator(0,0,0));
+    Spawner->Tags.Add(FName("TreeSpawnPosition"));
+    Spawner->SetActorLabel("TreeSpawnPosition" + FString::FromInt(i) );
+    ++i;
+  }
+}
 UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset( UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName )
 {
   FMeshDescription MeshDescription = BuildMeshDescription(ProcMeshComp);

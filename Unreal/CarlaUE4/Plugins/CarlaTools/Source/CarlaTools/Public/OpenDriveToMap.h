@@ -48,6 +48,10 @@ public:
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   FVector2D OriginGeoCoordinates;
 
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  float DistanceBetweenTrees = 50.0f;
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  float DistanceFromRoadEdge = 3.0f;
 protected:
   virtual void NativeConstruct() override;
   virtual void NativeDestruct() override;
@@ -68,7 +72,7 @@ private:
   void GenerateAll(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateRoadMesh(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateSpawnPoints(const boost::optional<carla::road::Map>& CarlaMap);
-
+  void GenerateTreePositions(const boost::optional<carla::road::Map>& CarlaMap);
   carla::rpc::OpendriveGenerationParameters opg_parameters;
 
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
