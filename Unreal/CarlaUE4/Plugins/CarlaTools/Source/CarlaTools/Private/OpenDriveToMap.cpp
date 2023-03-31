@@ -130,6 +130,7 @@ void UOpenDriveToMap::NativeDestruct()
 
 void UOpenDriveToMap::CreateMap()
 {
+    MapName = "NewMap"; //New
   if( MapName.IsEmpty() )
   {
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Map Name Is Empty") );
@@ -140,9 +141,10 @@ void UOpenDriveToMap::CreateMap()
     FileDownloader = NewObject<UCustomFileDownloader>();
   }
   FileDownloader->ResultFileName = MapName;
-  FileDownloader->Url = Url;
-  FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
-  FileDownloader->StartDownload();
+  FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-3.67762,40.40980,-3.67326,40.41256"; //Edited "Url"
+  //FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
+  //FileDownloader->StartDownload();
+  ConvertOSMInOpenDrive(); //New
 
   RoadType.Empty();
   RoadMesh.Empty();
