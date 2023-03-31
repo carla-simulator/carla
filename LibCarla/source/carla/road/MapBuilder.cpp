@@ -822,17 +822,17 @@ namespace road {
   }
 
   void MapBuilder::SolveControllerAndJuntionReferences() {
-    for(const auto& junction : _map_data._junctions) {
-      for(const auto& controller : junction.second._controllers) {
-        auto it = _map_data._controllers.find(controller);
-        DEBUG_ASSERT(it != _map_data._controllers.end());
-        it->second->_junctions.insert(junction.first);
-        for(const auto & signal : it->second->_signals) {
-          auto signal_it = _map_data._signals.find(signal);
-          signal_it->second->_controllers.insert(controller);
-        }
-      }
-    }
+    //for(const auto& junction : _map_data._junctions) {
+    //  for(const auto& controller : junction.second._controllers) {
+    //    auto it = _map_data._controllers.find(controller);
+    //    DEBUG_ASSERT(it != _map_data._controllers.end());
+    //    it->second->_junctions.insert(junction.first);
+    //    for(const auto & signal : it->second->_signals) {
+    //      auto signal_it = _map_data._signals.find(signal);
+    //      signal_it->second->_controllers.insert(controller);
+    //    }
+    //  }
+    //}
   }
 
   void MapBuilder::CreateJunctionBoundingBoxes(Map &map) {

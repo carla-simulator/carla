@@ -198,11 +198,18 @@ namespace geom {
       
       size_t PosToAdd = it - redirections.begin();
 
-      Mesh out_mesh = *GenerateTesselated(lane_pair.second);
+      Mesh out_mesh;
+      if(lane_pair.second.GetType() == road::Lane::LaneType::Driving ){
+        out_mesh += *GenerateTesselated(lane_pair.second);
+      }else{
+        out_mesh += *Generate(lane_pair.second);
+      }
+       
       if( result[lane_pair.second.GetType()].size() <= PosToAdd ){
         result[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(out_mesh));
       } else {
-        (result[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(out_mesh, vertices_in_width);
+        uint32_t verticesinwidth = lane_pair.second.GetType() == road::Lane::LaneType::Driving ? vertices_in_width : 2; 
+        (result[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(out_mesh, verticesinwidth);
       }
     }
   }
@@ -399,7 +406,12 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
           const auto s_until = s_current + road_param.max_road_len;
 
           for (auto &&lane_pair : lane_section.GetLanes()) {
-            Mesh lane_section_mesh = *GenerateTesselated(lane_pair.second, s_current, s_until);
+            Mesh lane_section_mesh;
+            if(lane_pair.second.GetType() == road::Lane::LaneType::Driving ){
+              lane_section_mesh += *GenerateTesselated(lane_pair.second, s_current, s_until);
+            }else{
+              lane_section_mesh += *Generate(lane_pair.second, s_current, s_until);
+            }
 
             auto it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
             if (it == redirections.end()) {
@@ -411,14 +423,21 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             if (mesh_uptr_list[lane_pair.second.GetType()].size() <= PosToAdd) {
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
             } else {
-              (mesh_uptr_list[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(lane_section_mesh, vertices_in_width);
+              uint32_t verticesinwidth = lane_pair.second.GetType() == road::Lane::LaneType::Driving ? vertices_in_width : 2; 
+              (mesh_uptr_list[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(lane_section_mesh, verticesinwidth);
             }
           }
           s_current = s_until;
         }
         if (s_end - s_current > EPSILON) {
           for (auto &&lane_pair : lane_section.GetLanes()) {
-            Mesh lane_section_mesh = *GenerateTesselated(lane_pair.second, s_current, s_end);
+            Mesh lane_section_mesh;
+            if(lane_pair.second.GetType() == road::Lane::LaneType::Driving ){
+              lane_section_mesh += *GenerateTesselated(lane_pair.second, s_current, s_end);
+            }else{
+              lane_section_mesh += *Generate(lane_pair.second, s_current, s_end);
+            }
+
             auto it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
             if (it == redirections.end()) {
               redirections.push_back(lane_pair.first);
@@ -430,7 +449,8 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             if (mesh_uptr_list[lane_pair.second.GetType()].size() <= PosToAdd) {
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
             } else {
-              (mesh_uptr_list[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(lane_section_mesh, vertices_in_width);
+              uint32_t verticesinwidth = lane_pair.second.GetType() == road::Lane::LaneType::Driving ? vertices_in_width : 2; 
+              (mesh_uptr_list[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(lane_section_mesh, verticesinwidth);
             }
           }
         }
@@ -548,7 +568,9 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
     for (auto&& lane_section : road.GetLaneSections()) {
       for (auto&& lane : lane_section.GetLanes()) {
         if (lane.first != 0) {
-          GenerateLaneMarksForNotCenterLine(lane_section, lane.second, inout);
+          if(lane.second.GetType() == road::Lane::LaneType::Driving ){
+            GenerateLaneMarksForNotCenterLine(lane_section, lane.second, inout);
+          }
         } else {
           GenerateLaneMarksForCenterLine(road, lane_section, lane.second, inout);
         }
