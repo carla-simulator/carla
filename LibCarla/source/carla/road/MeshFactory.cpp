@@ -751,11 +751,9 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             //out_mesh.AddVertex(edges.first + geom::Vector3D(0, 0, lane.first).Abs() * 10);
 
             s_current += road_param.resolution * 3;
-            if (s_current > s_end)
-            {
+            if (s_current > s_end) {
               s_current = s_end;
             }
-
 
             //out_mesh.AddVertex(endmarking + geom::Vector3D(0, 0, lane.first).Abs() * 10);
             //out_mesh.AddVertex(edges.first + geom::Vector3D(0, 0, lane.first).Abs() * 10);
@@ -800,13 +798,11 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             s_current += road_param.resolution;
             break;
           }
-          case carla::road::element::LaneMarking::Type::Other:
-          {
+          case carla::road::element::LaneMarking::Type::Other: {
             s_current += road_param.resolution;
             break;
           }
-          default:
-          {
+          default: {
             s_current += road_param.resolution;
             break;
           }

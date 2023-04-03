@@ -259,7 +259,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       ActorMeshList.Add(TempActor);
 
       RoadType.Add(LaneTypeToFString(PairMap.first));
-      RoadMesh.Add(TempPMC);    
+      RoadMesh.Add(TempPMC);
       index++;
     }
   }
@@ -311,7 +311,7 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
       if(VectorDistance < MinDistance)
       {
         MinDistance = VectorDistance;
-      }      
+      }
     }
 
     if(MinDistance < 250)

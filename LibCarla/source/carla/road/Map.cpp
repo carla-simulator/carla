@@ -1154,7 +1154,8 @@ namespace road {
     for ( size_t i = 0; i < num_threads; ++i ) {
       std::thread neworker(
         [this, &write_mutex, &mesh_factory, &road_out_mesh_list, i, num_roads_per_thread]() {
-        std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current = std::move(GenerateRoadsMultithreaded(mesh_factory, i, num_roads_per_thread));          
+        std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current = 
+          std::move(GenerateRoadsMultithreaded(mesh_factory, i, num_roads_per_thread));
         std::lock_guard<std::mutex> guard(write_mutex);
         for ( auto&& pair : Current ) {
           if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end()) {
