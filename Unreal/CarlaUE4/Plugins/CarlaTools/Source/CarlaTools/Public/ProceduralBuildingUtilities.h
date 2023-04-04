@@ -46,14 +46,30 @@ public:
   void CookProceduralMeshToMesh(class UProceduralMeshComponent* Mesh, const FString& DestinationPath, const FString& FileName);
 
   UFUNCTION(BlueprintCallable, Category="Procedural Building Utilities")
-  class UMaterialInstanceConstant* GenerateBuildingMaterialAsset(const FString& DuplicateParentPath, const FString& DestinationPath, const FString& FileName);
+  class UMaterialInstanceConstant* GenerateBuildingMaterialAsset(
+      const FString& DuplicateParentPath,
+      const FString& DestinationPath,
+      const FString& FileName);
 
 private:
   void RenderImpostorView(USceneCaptureComponent2D* Camera, const FVector BuildingSize, const EBuildingCameraView View);
   void MoveCameraToViewPosition(USceneCaptureComponent2D* Camera, const FVector BuildingSize, const EBuildingCameraView View);
 
-  void CreateBuildingImpostorGeometryForView(class UProceduralMeshComponent* Mesh, const FVector& BuildingSize, const EBuildingCameraView View);
-  void GetWidthDepthFromView(const FVector& BuildingSize, const EBuildingCameraView View, float& OutWidth, float& OutDepth, float& OutViewAngle);
-  void CalculateViewGeometryUVs(const float BuildingWidth, const float BuildingHeight, const EBuildingCameraView View, TArray<FVector2D>& OutUVs);
+  void CreateBuildingImpostorGeometryForView(
+      class UProceduralMeshComponent* Mesh,
+      const FVector& BuildingSize,
+      const EBuildingCameraView View);
+
+  void GetWidthDepthFromView(
+      const FVector& BuildingSize,
+      const EBuildingCameraView View
+      float& OutWidth, float& OutDepth,
+      float& OutViewAngle);
+
+  void CalculateViewGeometryUVs(
+      const float BuildingWidth,
+      const float BuildingHeight,
+      const EBuildingCameraView View,
+      TArray<FVector2D>& OutUVs);
 
 };

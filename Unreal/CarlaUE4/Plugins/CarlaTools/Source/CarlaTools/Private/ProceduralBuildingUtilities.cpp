@@ -18,8 +18,9 @@
 
 void AProceduralBuildingUtilities::GenerateImpostorTexture(const FVector& BuildingSize)
 {
-  USceneCaptureComponent2D* Camera = NewObject<USceneCaptureComponent2D>(this, USceneCaptureComponent2D::StaticClass(), TEXT("ViewProjectionCaptureComponent"));
-  
+  USceneCaptureComponent2D* Camera = NewObject<USceneCaptureComponent2D>(
+      this, USceneCaptureComponent2D::StaticClass(), TEXT("ViewProjectionCaptureComponent"));
+
   Camera->AttachToComponent(
       GetRootComponent(), 
       FAttachmentTransformRules::SnapToTargetNotIncludingScale, 
@@ -58,7 +59,8 @@ void AProceduralBuildingUtilities::GenerateImpostorTexture(const FVector& Buildi
 UProceduralMeshComponent* AProceduralBuildingUtilities::GenerateImpostorGeometry(const FVector& BuildingSize)
 {
   // Spawn procedural mesh actor / component
-  UProceduralMeshComponent* Mesh = NewObject<UProceduralMeshComponent>(this, UProceduralMeshComponent::StaticClass(), TEXT("LOD Impostor Mesh"));
+  UProceduralMeshComponent* Mesh = NewObject<UProceduralMeshComponent>(
+      this, UProceduralMeshComponent::StaticClass(), TEXT("LOD Impostor Mesh"));
 
   Mesh->AttachToComponent(
       GetRootComponent(), 
@@ -136,7 +138,10 @@ void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& D
       SAVE_NoError);
 }
 
-void AProceduralBuildingUtilities::CookProceduralMeshToMesh(UProceduralMeshComponent* Mesh, const FString& DestinationPath, const FString& FileName)
+void AProceduralBuildingUtilities::CookProceduralMeshToMesh(
+    UProceduralMeshComponent* Mesh,
+    const FString& DestinationPath,
+    const FString& FileName)
 {
   FMeshDescription MeshDescription = BuildMeshDescription(Mesh);
 
@@ -203,7 +208,10 @@ void AProceduralBuildingUtilities::CookProceduralMeshToMesh(UProceduralMeshCompo
       SAVE_NoError);
 }
 
-UMaterialInstanceConstant* AProceduralBuildingUtilities::GenerateBuildingMaterialAsset(const FString& DuplicateParentPath, const FString& DestinationPath, const FString& FileName)
+UMaterialInstanceConstant* AProceduralBuildingUtilities::GenerateBuildingMaterialAsset(
+    const FString& DuplicateParentPath,
+    const FString& DestinationPath,
+    const FString& FileName)
 {
   const FString BaseMaterialSearchPath = DuplicateParentPath;
   const FString PackageName = DestinationPath + FileName;
@@ -230,7 +238,10 @@ UMaterialInstanceConstant* AProceduralBuildingUtilities::GenerateBuildingMateria
   return DuplicatedMaterial;
 }
 
-void AProceduralBuildingUtilities::RenderImpostorView(USceneCaptureComponent2D* Camera, const FVector BuildingSize, const EBuildingCameraView View)
+void AProceduralBuildingUtilities::RenderImpostorView(
+    USceneCaptureComponent2D* Camera,
+    const FVector BuildingSize,
+    const EBuildingCameraView View)
 {
   MoveCameraToViewPosition(Camera, BuildingSize, View);
   Camera->CaptureScene();
@@ -239,7 +250,10 @@ void AProceduralBuildingUtilities::RenderImpostorView(USceneCaptureComponent2D* 
   BakeSceneCaptureRTToTextureAtlas(ViewTexture, View);
 }
 
-void AProceduralBuildingUtilities::MoveCameraToViewPosition(USceneCaptureComponent2D* Camera, const FVector BuildingSize, const EBuildingCameraView View)
+void AProceduralBuildingUtilities::MoveCameraToViewPosition(
+    USceneCaptureComponent2D* Camera,
+    const FVector BuildingSize,
+    const EBuildingCameraView View)
 {
   const float BuildingHeight = BuildingSize.Z;
   float ViewAngle = 0.f;
@@ -264,7 +278,10 @@ void AProceduralBuildingUtilities::MoveCameraToViewPosition(USceneCaptureCompone
   Camera->SetRelativeLocationAndRotation(NewCameraLocation, NewCameraRotation, false, nullptr, ETeleportType::None);
 }
 
-void AProceduralBuildingUtilities::CreateBuildingImpostorGeometryForView(UProceduralMeshComponent* Mesh, const FVector& BuildingSize, const EBuildingCameraView View)
+void AProceduralBuildingUtilities::CreateBuildingImpostorGeometryForView(
+    UProceduralMeshComponent* Mesh,
+    const FVector& BuildingSize,
+    const EBuildingCameraView View)
 {
   // Create vertices based on Building Size
   TArray<FVector> Vertices;
@@ -283,9 +300,9 @@ void AProceduralBuildingUtilities::CreateBuildingImpostorGeometryForView(UProced
   // Vertices are created in local space, then offsetted to compensate origin and finally rotating
   // according to the ViewAngle
   Vertices.Add((FVector(0.0f, 0.0f, 0.0f)                     + OriginOffset).RotateAngleAxis(ViewAngle, RotationAxis));
-	Vertices.Add((FVector(0.0f, 0.0f, BuildingHeight)           + OriginOffset).RotateAngleAxis(ViewAngle, RotationAxis));
-	Vertices.Add((FVector(0.0f, BuildingWidth, 0.0f)            + OriginOffset).RotateAngleAxis(ViewAngle, RotationAxis));
-	Vertices.Add((FVector(0.0f, BuildingWidth, BuildingHeight)  + OriginOffset).RotateAngleAxis(ViewAngle, RotationAxis));
+  Vertices.Add((FVector(0.0f, 0.0f, BuildingHeight)           + OriginOffset).RotateAngleAxis(ViewAngle, RotationAxis));
+  Vertices.Add((FVector(0.0f, BuildingWidth, 0.0f)            + OriginOffset).RotateAngleAxis(ViewAngle, RotationAxis));
+  Vertices.Add((FVector(0.0f, BuildingWidth, BuildingHeight)  + OriginOffset).RotateAngleAxis(ViewAngle, RotationAxis));
 
   Triangles.Add(0); Triangles.Add(2); Triangles.Add(1); 
   Triangles.Add(2); Triangles.Add(3); Triangles.Add(1);
@@ -295,7 +312,7 @@ void AProceduralBuildingUtilities::CreateBuildingImpostorGeometryForView(UProced
 
   TArray<FVector> Normals;
   Normals.Init(FVector(-1.0f, 0.0f, 0.0f).RotateAngleAxis(ViewAngle, RotationAxis), Vertices.Num());
-  
+
   TArray<FLinearColor> Colors;
   Colors.Init(FLinearColor(0.0f, 0.0f, 0.0f, 1.0f), Vertices.Num());
 
@@ -306,7 +323,12 @@ void AProceduralBuildingUtilities::CreateBuildingImpostorGeometryForView(UProced
   Mesh->CreateMeshSection_LinearColor((int32)View, Vertices, Triangles, Normals, UVs, Colors, Tangents, false);
 }
 
-void AProceduralBuildingUtilities::GetWidthDepthFromView(const FVector& BuildingSize, const EBuildingCameraView View, float& OutWidth, float& OutDepth, float& OutViewAngle)
+void AProceduralBuildingUtilities::GetWidthDepthFromView(
+    const FVector& BuildingSize,
+    const EBuildingCameraView View,
+    float& OutWidth,
+    float& OutDepth,
+    float& OutViewAngle)
 {
   switch(View)
   {
@@ -315,7 +337,7 @@ void AProceduralBuildingUtilities::GetWidthDepthFromView(const FVector& Building
       OutWidth = FMath::Abs(BuildingSize.Y);
       OutDepth = FMath::Abs(BuildingSize.X);
       break;
-    
+
     case EBuildingCameraView::LEFT:
       OutViewAngle = 90.0f;
       OutWidth = FMath::Abs(BuildingSize.X);
@@ -341,7 +363,11 @@ void AProceduralBuildingUtilities::GetWidthDepthFromView(const FVector& Building
   }
 }
 
-void AProceduralBuildingUtilities::CalculateViewGeometryUVs(const float BuildingWidth, const float BuildingHeight, const EBuildingCameraView View, TArray<FVector2D>& OutUVs)
+void AProceduralBuildingUtilities::CalculateViewGeometryUVs(
+    const float BuildingWidth,
+    const float BuildingHeight,
+    const EBuildingCameraView View,
+    TArray<FVector2D>& OutUVs)
 {
   // Calculate UVs from 0 to 1
   //  ------------
