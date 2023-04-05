@@ -13,6 +13,7 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Vector3D.h"
+#include "Carla/ros2/ROS2.h"
 #include <compiler/enable-ue4-macros.h>
 
 AGnssSensor::AGnssSensor(const FObjectInitializer &ObjectInitializer)
@@ -56,13 +57,20 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
   double Longitude = CurrentLocation.longitude + LongitudeBias + LonError;
   double Altitude = CurrentLocation.altitude + AltitudeBias + AltError;
 
+  auto Stream = GetDataStream(*this);
+
+  // ROS2
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (ROS2->IsEnabled())
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
+    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
+    ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), StreamId, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
+  }
+
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("AGnssSensor Stream Send");
-    if (IsStreamReady())
-    {
-      auto Stream = GetDataStream(*this);
-      Stream.Send(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
-    }
+    Stream.Send(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
   }
 }
 

@@ -12,7 +12,14 @@
 #include <unordered_set>
 
 namespace carla {
+namespace geom {
+  class GeoLocation;
+}
+}
+
+namespace carla {
 namespace ros2 {
+
 
 class ROS2
 {
@@ -37,7 +44,8 @@ class ROS2
   void ResetStreams() { _publish_stream.clear(); }
 
   // receiving data to publish
-  void ProcessDataFromSensor(uint64_t sensor_type, carla::streaming::detail::stream_id_type stream_id, carla::Buffer &buffer);
+  void ProcessDataFromSensor(uint64_t sensor_type, carla::streaming::detail::stream_id_type stream_id, const carla::Buffer &buffer);
+  void ProcessDataFromGNSS(uint64_t sensor_type, carla::streaming::detail::stream_id_type stream_id, const carla::geom::GeoLocation &data);
 
   private:
 

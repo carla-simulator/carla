@@ -6,6 +6,7 @@
 
 #include "carla/Logging.h"
 #include "carla/ros2/ROS2.h"
+#include "carla/geom/GeoLocation.h"
 
 namespace carla {
 namespace ros2 {
@@ -46,70 +47,74 @@ void ROS2::SetFrame(uint64_t frame) {
   // log_info("ROS2 new frame: ", _frame);
 }
 
-void ROS2::ProcessDataFromSensor(uint64_t sensor_type, carla::streaming::detail::stream_id_type stream_id, carla::Buffer &buffer) {
+void ROS2::ProcessDataFromSensor(uint64_t sensor_type, carla::streaming::detail::stream_id_type stream_id, const carla::Buffer &buffer) {
 
   switch (sensor_type) {
     case ESensors::CollisionSensor:
       log_info("Sensor Collision to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::DepthCamera:
-      log_info("Sensor DepthCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor DepthCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::NormalsCamera:
-      log_info("Sensor NormalsCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor NormalsCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::DVSCamera:
-      log_info("Sensor DVSCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor DVSCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
-    case ESensors::GnssSensor:
-      log_info("Sensor GnssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
-      break;
+    // case ESensors::GnssSensor:
+    //   log_info("Sensor GnssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+    //   break;
     case ESensors::InertialMeasurementUnit:
-      log_info("Sensor InertialMeasurementUnit to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor InertialMeasurementUnit to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::LaneInvasionSensor:
-      log_info("Sensor LaneInvasionSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor LaneInvasionSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::ObstacleDetectionSensor:
-      log_info("Sensor ObstacleDetectionSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor ObstacleDetectionSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::OpticalFlowCamera:
-      log_info("Sensor OpticalFlowCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor OpticalFlowCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::Radar:
-      log_info("Sensor Radar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor Radar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::RayCastSemanticLidar:
-      log_info("Sensor RayCastSemanticLidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor RayCastSemanticLidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::RayCastLidar:
-      log_info("Sensor RayCastLidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor RayCastLidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::RssSensor:
-      log_info("Sensor RssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor RssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::SceneCaptureCamera:
-      log_info("Sensor SceneCaptureCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor SceneCaptureCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::SemanticSegmentationCamera:
-      log_info("Sensor SemanticSegmentationCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor SemanticSegmentationCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::InstanceSegmentationCamera:
-      log_info("Sensor InstanceSegmentationCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor InstanceSegmentationCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::WorldObserver:
-      log_info("Sensor WorldObserver to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor WorldObserver to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::CameraGBufferUint8:
-      log_info("Sensor CameraGBufferUint8 to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor CameraGBufferUint8 to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::CameraGBufferFloat:
-      log_info("Sensor CameraGBufferFloat to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor CameraGBufferFloat to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     default:
-      log_info("Sensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", "buffer.", buffer.size());
+      log_info("Sensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
   }
 }
+
+  void ROS2::ProcessDataFromGNSS(uint64_t sensor_type, carla::streaming::detail::stream_id_type stream_id, const carla::geom::GeoLocation &data) {
+    log_info("Sensor GnssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "geo.", data.latitude, data.longitude, data.altitude);
+  }
 
 } // namespace ros2
 } // namespace carla
