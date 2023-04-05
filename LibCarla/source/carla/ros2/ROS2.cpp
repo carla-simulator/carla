@@ -7,6 +7,7 @@
 #include "carla/Logging.h"
 #include "carla/ros2/ROS2.h"
 #include "carla/geom/GeoLocation.h"
+#include "carla/geom/Vector3D.h"
 
 namespace carla {
 namespace ros2 {
@@ -65,9 +66,9 @@ void ROS2::ProcessDataFromSensor(uint64_t sensor_type, carla::streaming::detail:
     // case ESensors::GnssSensor:
     //   log_info("Sensor GnssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
     //   break;
-    case ESensors::InertialMeasurementUnit:
-      log_info("Sensor InertialMeasurementUnit to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
-      break;
+    // case ESensors::InertialMeasurementUnit:
+    //   log_info("Sensor InertialMeasurementUnit to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+    //   break;
     case ESensors::LaneInvasionSensor:
       log_info("Sensor LaneInvasionSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
@@ -114,6 +115,10 @@ void ROS2::ProcessDataFromSensor(uint64_t sensor_type, carla::streaming::detail:
 
   void ROS2::ProcessDataFromGNSS(uint64_t sensor_type, carla::streaming::detail::stream_id_type stream_id, const carla::geom::GeoLocation &data) {
     log_info("Sensor GnssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "geo.", data.latitude, data.longitude, data.altitude);
+  }
+
+  void ROS2::ProcessDataFromIMU(uint64_t sensor_type, carla::streaming::detail::stream_id_type stream_id, carla::geom::Vector3D accelerometer, carla::geom::Vector3D gyroscope, float compass) {
+    log_info("Sensor InertialMeasurementUnit to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "imu.", accelerometer.x, gyroscope.x, compass);
   }
 
 } // namespace ros2

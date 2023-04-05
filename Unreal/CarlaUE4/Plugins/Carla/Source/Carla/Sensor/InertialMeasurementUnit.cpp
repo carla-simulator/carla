@@ -13,6 +13,7 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
+#include "Carla/ros2/ROS2.h"
 #include <compiler/enable-ue4-macros.h>
 
 #include <limits>
@@ -183,15 +184,24 @@ float AInertialMeasurementUnit::ComputeCompass()
 
 void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(AInertialMeasurementUnit::PostPhysTick);
-  if (IsStreamReady())
+  carla::geom::Vector3D Accelerometer = ComputeAccelerometer(DeltaTime);
+  carla::geom::Vector3D Gyroscope = ComputeGyroscope();
+  float Compass = ComputeCompass();
+
+  auto Stream = GetDataStream(*this);
+
+  // ROS2
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (ROS2->IsEnabled())
   {
-    auto Stream = GetDataStream(*this);
-    Stream.Send(
-        *this,
-        ComputeAccelerometer(DeltaTime),
-        ComputeGyroscope(),
-        ComputeCompass());
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
+    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
+    ROS2->ProcessDataFromIMU(Stream.GetSensorType(), StreamId, Accelerometer, Gyroscope, Compass);
+  }
+
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(AInertialMeasurementUnit::PostPhysTick);
+    Stream.Send(*this, Accelerometer, Gyroscope, Compass);
   }
 }
 

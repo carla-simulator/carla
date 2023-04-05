@@ -14,6 +14,7 @@
 namespace carla {
 namespace geom {
   class GeoLocation;
+  class Vector3D;
 }
 }
 
@@ -44,8 +45,17 @@ class ROS2
   void ResetStreams() { _publish_stream.clear(); }
 
   // receiving data to publish
-  void ProcessDataFromSensor(uint64_t sensor_type, carla::streaming::detail::stream_id_type stream_id, const carla::Buffer &buffer);
-  void ProcessDataFromGNSS(uint64_t sensor_type, carla::streaming::detail::stream_id_type stream_id, const carla::geom::GeoLocation &data);
+  void ProcessDataFromSensor(uint64_t sensor_type, 
+      carla::streaming::detail::stream_id_type stream_id, 
+      const carla::Buffer &buffer);
+  void ProcessDataFromGNSS(uint64_t sensor_type, 
+      carla::streaming::detail::stream_id_type stream_id, 
+      const carla::geom::GeoLocation &data);
+  void ProcessDataFromIMU(uint64_t sensor_type, 
+      carla::streaming::detail::stream_id_type stream_id, 
+      carla::geom::Vector3D accelerometer,
+      carla::geom::Vector3D gyroscope,
+      float compass);
 
   private:
 
