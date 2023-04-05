@@ -33,7 +33,6 @@ class FCarlaEngine : private NonCopyable
 public:
 
   static uint64_t FrameCounter;
-  static std::shared_ptr<carla::ros2::ROS2> ROS2;
 
   ~FCarlaEngine();
 
@@ -71,16 +70,18 @@ public:
   static uint64_t UpdateFrameCounter()
   {
     FCarlaEngine::FrameCounter += 1;
-    if (ROS2)
-      ROS2->set_frame(FCarlaEngine::FrameCounter);
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+      ROS2->SetFrame(FCarlaEngine::FrameCounter);
     return FCarlaEngine::FrameCounter;
   }
 
   static void ResetFrameCounter(uint64_t Value = 0)
   {
     FCarlaEngine::FrameCounter = Value;
-    if (ROS2)
-      ROS2->set_frame(FCarlaEngine::FrameCounter);
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+      ROS2->SetFrame(FCarlaEngine::FrameCounter);
   }
 
   std::shared_ptr<carla::multigpu::Router> GetSecondaryServer()

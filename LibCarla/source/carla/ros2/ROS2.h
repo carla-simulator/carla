@@ -6,20 +6,48 @@
 
 #pragma once
 
-// #include "carla/Logging.h"
 #include "carla/Buffer.h"
-#include <functional>
+#include "carla/streaming/detail/Types.h"
+
+#include <unordered_set>
 
 namespace carla {
 namespace ros2 {
 
-class ROS2 : public std::enable_shared_from_this<ROS2>
+class ROS2
 {
   public:
-  void set_frame(uint64_t frame);
+
+  // deleting copy constructor for singleton
+  ROS2(const ROS2& obj) = delete;
+  static std::shared_ptr<ROS2> GetInstance() {
+    if (!_instance)
+      _instance = std::shared_ptr<ROS2>(new ROS2);
+    return _instance;
+  }
+
+  // general
+  void Enable(bool enable);
+  bool IsEnabled() { return _enabled; }
+  void SetFrame(uint64_t frame);
+  
+  // enabling streams to publish
+  void EnableStream(carla::streaming::detail::stream_id_type id) { _publish_stream.insert(id); }
+  bool IsStreamEnabled(carla::streaming::detail::stream_id_type id) { return _publish_stream.count(id) > 0; }
+  void ResetStreams() { _publish_stream.clear(); }
+
+  // receiving data to publish
+  void ProcessDataFromSensor(uint64_t sensor_type, carla::streaming::detail::stream_id_type stream_id, carla::Buffer &buffer);
 
   private:
-  uint64_t _frame;
+
+  // sigleton
+  ROS2() {};
+  static std::shared_ptr<ROS2> _instance;
+
+  bool _enabled { false };
+  uint64_t _frame { 0 };
+  std::unordered_set<carla::streaming::detail::stream_id_type> _publish_stream;
 };
 
 } // namespace ros2

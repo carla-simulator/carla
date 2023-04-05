@@ -72,6 +72,17 @@ public:
     }
   }
 
+  /// return the type of sensor of this stream
+  uint64_t GetSensorType()
+  {
+    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr = reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
+    if (HeaderStr) 
+    {
+      return HeaderStr->sensor_type;
+    }
+    return 0u;
+  }
+
 private:
 
   friend class FDataStreamTmpl<T>;

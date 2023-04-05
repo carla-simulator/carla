@@ -38,7 +38,6 @@
 
 // init static variables
 uint64_t FCarlaEngine::FrameCounter = 0;
-std::shared_ptr<carla::ros2::ROS2> FCarlaEngine::ROS2;
 
 static uint32 FCarlaEngine_GetNumberOfThreadsForRPCServer()
 {
@@ -184,7 +183,8 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
   // create ROS2 manager
   if (Settings.ROS2)
   {
-    ROS2 = std::make_shared<carla::ros2::ROS2>();
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    ROS2->Enable(true);
   }
 
   bMapChanged = true;

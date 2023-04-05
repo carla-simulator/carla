@@ -46,7 +46,7 @@ if not "%1"=="" (
         set USE_CHRONO=true
     )
     if "%1"=="--ros2" (
-        set USE_ROS2=true
+        set USE_ROS2=false
     )
     if "%1"=="-h" (
         goto help
