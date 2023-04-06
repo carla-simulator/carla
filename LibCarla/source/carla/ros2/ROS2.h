@@ -11,11 +11,17 @@
 
 #include <unordered_set>
 
+// forward declarations
 namespace carla {
-namespace geom {
-  class GeoLocation;
-  class Vector3D;
-}
+  namespace geom {
+    class GeoLocation;
+    class Vector3D;
+  }
+  namespace sensor {
+    namespace data {
+      struct DVSEvent;
+    }
+  }
 }
 
 namespace carla {
@@ -56,6 +62,10 @@ class ROS2
       carla::geom::Vector3D accelerometer,
       carla::geom::Vector3D gyroscope,
       float compass);
+  void ProcessDataFromDVS(uint64_t sensor_type, 
+      carla::streaming::detail::stream_id_type stream_id, 
+      const std::vector<carla::sensor::data::DVSEvent> &events, 
+      const carla::Buffer &buffer);
 
   private:
 

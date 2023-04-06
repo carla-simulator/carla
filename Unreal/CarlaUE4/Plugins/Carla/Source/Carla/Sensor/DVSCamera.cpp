@@ -14,6 +14,10 @@
 #include "Carla/Sensor/DVSCamera.h"
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include "Carla/ros2/ROS2.h"
+#include <compiler/enable-ue4-macros.h>
+
 static float FColorToGrayScaleFloat(FColor Color)
 {
   return 0.2989 * Color.R + 0.587 * Color.G + 0.114 * Color.B;
@@ -152,16 +156,23 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
   /** DVS Simulator **/
   ADVSCamera::DVSEventArray events = this->Simulation(DeltaTime);
 
+  auto Stream = GetDataStream(*this);
+  auto Buffer = Stream.PopBufferFromPool();
+
+  // ROS2
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (ROS2->IsEnabled())
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
+    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
+    ROS2->ProcessDataFromDVS(Stream.GetSensorType(), StreamId, events, Buffer);
+  }
+
   if (events.size() > 0)
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ADVSCamera Stream Send");
     /** Send the events **/
-    if (IsStreamReady())
-    {
-      auto Stream = GetDataStream(*this);
-      auto Buffer = Stream.PopBufferFromPool();
-      Stream.Send(*this, events, std::move(Buffer));
-    }
+    Stream.Send(*this, events, std::move(Buffer));
   }
 }
 

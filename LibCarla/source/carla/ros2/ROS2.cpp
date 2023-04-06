@@ -8,6 +8,7 @@
 #include "carla/ros2/ROS2.h"
 #include "carla/geom/GeoLocation.h"
 #include "carla/geom/Vector3D.h"
+#include "carla/sensor/data/DVSEvent.h"
 
 namespace carla {
 namespace ros2 {
@@ -48,7 +49,9 @@ void ROS2::SetFrame(uint64_t frame) {
   // log_info("ROS2 new frame: ", _frame);
 }
 
-void ROS2::ProcessDataFromSensor(uint64_t sensor_type, carla::streaming::detail::stream_id_type stream_id, const carla::Buffer &buffer) {
+void ROS2::ProcessDataFromSensor(uint64_t sensor_type,
+    carla::streaming::detail::stream_id_type stream_id, 
+    const carla::Buffer &buffer) {
 
   switch (sensor_type) {
     case ESensors::CollisionSensor:
@@ -113,13 +116,26 @@ void ROS2::ProcessDataFromSensor(uint64_t sensor_type, carla::streaming::detail:
   }
 }
 
-  void ROS2::ProcessDataFromGNSS(uint64_t sensor_type, carla::streaming::detail::stream_id_type stream_id, const carla::geom::GeoLocation &data) {
-    log_info("Sensor GnssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "geo.", data.latitude, data.longitude, data.altitude);
-  }
+void ROS2::ProcessDataFromGNSS(uint64_t sensor_type,
+    carla::streaming::detail::stream_id_type stream_id, 
+    const carla::geom::GeoLocation &data) {
+  log_info("Sensor GnssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "geo.", data.latitude, data.longitude, data.altitude);
+}
 
-  void ROS2::ProcessDataFromIMU(uint64_t sensor_type, carla::streaming::detail::stream_id_type stream_id, carla::geom::Vector3D accelerometer, carla::geom::Vector3D gyroscope, float compass) {
-    log_info("Sensor InertialMeasurementUnit to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "imu.", accelerometer.x, gyroscope.x, compass);
-  }
+void ROS2::ProcessDataFromIMU(uint64_t sensor_type,
+    carla::streaming::detail::stream_id_type stream_id, 
+    carla::geom::Vector3D accelerometer, 
+    carla::geom::Vector3D gyroscope, 
+    float compass) {
+  log_info("Sensor InertialMeasurementUnit to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "imu.", accelerometer.x, gyroscope.x, compass);
+}
+
+void ROS2::ProcessDataFromDVS(uint64_t sensor_type,
+    carla::streaming::detail::stream_id_type stream_id, 
+    const std::vector<carla::sensor::data::DVSEvent> &events, 
+    const carla::Buffer &buffer) {
+  log_info("Sensor DVS to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "events.", events.size(), "buffer.", buffer.size());
+}
 
 } // namespace ros2
 } // namespace carla
