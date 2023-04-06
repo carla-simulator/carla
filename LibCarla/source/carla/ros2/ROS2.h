@@ -20,6 +20,7 @@ namespace carla {
   namespace sensor {
     namespace data {
       struct DVSEvent;
+      class LidarData;
     }
   }
 }
@@ -44,28 +45,31 @@ class ROS2
   void Enable(bool enable);
   bool IsEnabled() { return _enabled; }
   void SetFrame(uint64_t frame);
-  
+
   // enabling streams to publish
   void EnableStream(carla::streaming::detail::stream_id_type id) { _publish_stream.insert(id); }
   bool IsStreamEnabled(carla::streaming::detail::stream_id_type id) { return _publish_stream.count(id) > 0; }
   void ResetStreams() { _publish_stream.clear(); }
 
   // receiving data to publish
-  void ProcessDataFromSensor(uint64_t sensor_type, 
-      carla::streaming::detail::stream_id_type stream_id, 
+  void ProcessDataFromSensor(uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
       const carla::Buffer &buffer);
-  void ProcessDataFromGNSS(uint64_t sensor_type, 
-      carla::streaming::detail::stream_id_type stream_id, 
+  void ProcessDataFromGNSS(uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::GeoLocation &data);
-  void ProcessDataFromIMU(uint64_t sensor_type, 
-      carla::streaming::detail::stream_id_type stream_id, 
+  void ProcessDataFromIMU(uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
       carla::geom::Vector3D accelerometer,
       carla::geom::Vector3D gyroscope,
       float compass);
-  void ProcessDataFromDVS(uint64_t sensor_type, 
-      carla::streaming::detail::stream_id_type stream_id, 
-      const std::vector<carla::sensor::data::DVSEvent> &events, 
+  void ProcessDataFromDVS(uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
+      const std::vector<carla::sensor::data::DVSEvent> &events,
       const carla::Buffer &buffer);
+  void ProcessDataFromLidar(uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
+      const carla::sensor::data::LidarData &data);
 
   private:
 
