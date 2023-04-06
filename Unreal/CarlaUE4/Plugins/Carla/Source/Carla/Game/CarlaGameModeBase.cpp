@@ -224,6 +224,7 @@ void ACarlaGameModeBase::BeginPlay()
 
   if (LMManager) {
     LMManager->RegisterInitialObjects();
+    LMManager->ConsiderSpectatorAsEgo(Episode->GetSettings().SpectatorAsEgo);
   }
 
   // Manually run begin play on lights as it may not run on sublevels
