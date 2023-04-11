@@ -16,6 +16,7 @@
 #include "carla/road/element/RoadInfoLaneOffset.h"
 #include "carla/road/element/RoadInfoLaneWidth.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
+#include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/road/element/RoadInfoSignal.h"
 
 #include "simplify/Simplify.h"
@@ -1220,11 +1221,11 @@ namespace road {
 
     return road_out_mesh_list;
   }
-  std::vector<geom::Vector3D> Map::GetTreesPosition(
+  std::vector<std::pair<geom::Vector3D, std::string>> Map::GetTreesPosition(
     float distancebetweentrees,
     float distancefromdrivinglineborder) const {
 
-    std::vector<geom::Vector3D> positions;
+    std::vector<std::pair<geom::Vector3D, std::string>> positions;
     for (auto &&pair : _data.GetRoads())
     {
       const auto &road = pair.second;
@@ -1242,7 +1243,8 @@ namespace road {
               const auto edges = lane->GetCornerPositions(s_current, 0);
               geom::Vector3D director = edges.second - edges.first;
               geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
-              positions.push_back(treeposition);
+              const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
+              positions.push_back(std::make_pair(treeposition,roadinfo->GetType()));
               s_current += distancebetweentrees;
             }
 

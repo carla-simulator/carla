@@ -363,12 +363,14 @@ void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Ma
 
 void UOpenDriveToMap::GenerateTreePositions( const boost::optional<carla::road::Map>& CarlaMap )
 {
-  const auto Locations = CarlaMap->GetTreesPosition(DistanceBetweenTrees, DistanceFromRoadEdge );
+  const std::vector<std::pair<carla::geom::Vector3D, std::string>> Locations =
+    CarlaMap->GetTreesPosition(DistanceBetweenTrees, DistanceFromRoadEdge );
   int i = 0;
   for (const auto &cl : Locations)
   {
-    AActor *Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), cl.ToFVector() * 100, FRotator(0,0,0));
+    AActor *Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), cl.first.ToFVector() * 100, FRotator(0,0,0));
     Spawner->Tags.Add(FName("TreeSpawnPosition"));
+    Spawner->Tags.Add(FName(cl.second.c_str()));
     Spawner->SetActorLabel("TreeSpawnPosition" + FString::FromInt(i) );
     ++i;
   }

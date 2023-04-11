@@ -51,15 +51,6 @@ namespace road {
       Any           = -2 // 0xFFFFFFFE
     };
 
-        /// Can be used as flags
-    enum class LaneDescriptor : int32_t {
-      None          = 0x1,
-      Town          = 0x1 << 1,
-      Motorway      = 0x1 << 2,
-      Rural         = 0x1 << 3,
-      Any           = -2 // 0xFFFFFFFE
-    };
-
   public:
 
     Lane() = default;
