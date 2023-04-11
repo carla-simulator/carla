@@ -62,7 +62,7 @@ private:
 
   void GetWidthDepthFromView(
       const FVector& BuildingSize,
-      const EBuildingCameraView View
+      const EBuildingCameraView View,
       float& OutWidth, float& OutDepth,
       float& OutViewAngle);
 
