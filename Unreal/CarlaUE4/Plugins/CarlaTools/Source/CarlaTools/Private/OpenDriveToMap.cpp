@@ -220,16 +220,23 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       }
 
       AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
-      TempActor->SetActorLabel(FString("SM_Lane_") + FString::FromInt(index));
+
 
       UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
       TempPMC->bUseAsyncCooking = true;
       TempPMC->bUseComplexAsSimpleCollision = true;
       TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
-      if(DefaultRoadMaterial)
+      if(DefaultRoadMaterial && PairMap.first == carla::road::Lane::LaneType::Driving)
+      {
         TempPMC->SetMaterial(0, DefaultRoadMaterial);
-      
+        TempActor->SetActorLabel(FString("SM_DrivingLane_") + FString::FromInt(index));
+      }
+      if(DefaultSidewalksMaterial && PairMap.first == carla::road::Lane::LaneType::Sidewalk)
+      {
+        TempPMC->SetMaterial(0, DefaultSidewalksMaterial);
+        TempActor->SetActorLabel(FString("SM_Sidewalk_") + FString::FromInt(index));
+      }
       FVector MeshCentroid = FVector(0,0,0);
       for( auto Vertex : Mesh->GetVertices() )
       {

@@ -32,9 +32,10 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath)
     UE_LOG(LogCarla, Warning, TEXT("File: %s does not exist"), *FilePath);
     return;
   }
-
   std::string OsmFile = std::string(TCHAR_TO_UTF8(*FileContent));
-  std::string OpenDriveFile = osm2odr::ConvertOSMToOpenDRIVE(OsmFile);
+  
+  osm2odr::OSM2ODRSettings settings;
+  std::string OpenDriveFile = osm2odr::ConvertOSMToOpenDRIVE(OsmFile, settings);
 
   FilePath.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);
   FilePath += ".xodr";

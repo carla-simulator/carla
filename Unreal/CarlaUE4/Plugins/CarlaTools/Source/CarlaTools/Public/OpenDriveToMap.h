@@ -52,7 +52,9 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UMaterialInstance* DefaultLaneMarksMaterial;
-
+  
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UMaterialInstance* DefaultSidewalksMaterial;
 protected:
 
   UFUNCTION( BlueprintCallable )

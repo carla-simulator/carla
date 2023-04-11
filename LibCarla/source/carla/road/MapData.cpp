@@ -6,6 +6,7 @@
 
 #include "carla/road/MapData.h"
 #include "carla/road/Lane.h"
+#include <iostream>
 
 namespace carla {
 namespace road {

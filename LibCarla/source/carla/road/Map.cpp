@@ -9,6 +9,7 @@
 #include "carla/geom/Math.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/road/MeshFactory.h"
+#include "carla/road/Deformation.h"
 #include "carla/road/element/LaneCrossingCalculator.h"
 #include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/element/RoadInfoElevation.h"
@@ -1293,40 +1294,8 @@ namespace road {
   }
 
   inline float Map::GetZPosInDeformation(float posx, float posy) const {
-    // Amplitud
-    const float A1 = 0.3f;
-    const float A2 = 0.5f;
-    const float A3 = 0.15f;
-    // Fases
-    const float F1 = 100.0;
-    const float F2 = -1500.0;
-    // Modifiers
-    const float Kx1 = 0.035f;
-    const float Kx2 = 0.02f;
-
-    const float Ky1 = -0.08f;
-    const float Ky2 = 0.05f;
-
-    float bumpsoffset = 0;
-
-    const float constraintX = 15.0f;
-    const float constraintY = 15.0f;
-
-    float BumpX = std::round(posx / constraintX);
-    float BumpY = std::round(posy / constraintX);
-
-    BumpX *= constraintX;
-    BumpY *= constraintY;
-
-    float DistanceToBumpOrigin = sqrt(pow(BumpX - posx, 2) + pow(BumpY - posy, 2) );
-    float MaxDistance = 2;
-    if (DistanceToBumpOrigin <= MaxDistance) {
-      bumpsoffset = abs((1.0f / MaxDistance) * DistanceToBumpOrigin * DistanceToBumpOrigin - MaxDistance);
-    }
-
-    return A1 * sin((Kx1 * posx + Ky1 * posy + F1)) +
-      A2 * sin((Kx2 * posx + Ky2 * posy + F2)) + 
-      A3 * bumpsoffset;
+    return geom::deformation::GetZPosInDeformation(posx, posy) +
+      geom::deformation::GetBumpDeformation(posx,posy);
   }
 
   std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> 
@@ -1406,6 +1375,24 @@ namespace road {
         }
 
         (*juntion_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
+
+        for (const auto& connection_pair : junction.GetConnections()) {
+          const auto& connection = connection_pair.second;
+          const auto& road = _data.GetRoads().at(connection.connecting_road);
+          for (auto&& lane_section : road.GetLaneSections()) {
+            for (auto&& lane_pair : lane_section.GetLanes()) {
+              const auto& lane = lane_pair.second;
+              if (lane.GetType() == road::Lane::LaneType::Sidewalk) {
+                sidewalk_lane_meshes.push_back(mesh_factory.GenerateSidewalk(lane));
+              }
+            }
+          }
+        }
+        std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
+        for (auto& lane : sidewalk_lane_meshes) {
+          *sidewalk_mesh += *lane;
+        }
+        (*juntion_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
       } else {
         std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
         std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
@@ -1419,7 +1406,7 @@ namespace road {
                 lane_meshes.push_back(mesh_factory.GenerateTesselated(lane));
               }
               else {
-                sidewalk_lane_meshes.push_back(mesh_factory.Generate(lane));
+                sidewalk_lane_meshes.push_back(mesh_factory.GenerateSidewalk(lane));
               }
             }
           }
