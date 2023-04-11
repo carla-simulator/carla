@@ -1519,7 +1519,7 @@ namespace road {
     {
       geom::Vector3D worldloc(pos.x, pos.y, pos.z);
       boost::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(worldloc), 0x1 << 1);
-      
+
       if (CheckingWaypoint) {
         if ( pos.z < 0.2) {
           return 0.0;

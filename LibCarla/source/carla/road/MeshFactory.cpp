@@ -766,7 +766,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
 
             out_mesh.AddVertex(edges.first);
             out_mesh.AddVertex(endmarking);
-            
+
             out_mesh.AddIndex(currentIndex);
             out_mesh.AddIndex(currentIndex + 1);
             out_mesh.AddIndex(currentIndex + 2);
