@@ -179,6 +179,7 @@ void UOpenDriveToMap::LoadMap()
   UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("MapName %s"), *MapName);
 
   GenerateAll(CarlaMap);
+  GenerationFinished();
 }
 
 void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& CarlaMap )

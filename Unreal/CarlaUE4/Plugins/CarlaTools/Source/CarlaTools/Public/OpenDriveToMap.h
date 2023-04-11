@@ -62,6 +62,9 @@ protected:
 
   UFUNCTION( BlueprintCallable )
   void SaveMap();
+
+  UFUNCTION( BlueprintImplementableEvent )
+  void GenerationFinished();
 private:
 
   UFUNCTION()
