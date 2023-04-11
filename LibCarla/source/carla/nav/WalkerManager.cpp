@@ -289,7 +289,6 @@ namespace nav {
             if (actor.description.id == "traffic.traffic_light") {
                 // get the TL actor
                 SharedPtr<carla::client::TrafficLight> tl = boost::static_pointer_cast<carla::client::TrafficLight>(world.GetActor(actor.id));
-                // carla::logging::log("TL ", actor.id, " at (", snapshot.transform.location.x, ", ",  snapshot.transform.location.y,", ", snapshot.transform.location.z, ") has status ", (uint8_t) snapshot.state.traffic_light_data.state);
                 // get the waypoints where the TL affects
                 std::vector<SharedPtr<carla::client::Waypoint>> list = tl->GetStopWaypoints();
                 for (auto &way : list) {
