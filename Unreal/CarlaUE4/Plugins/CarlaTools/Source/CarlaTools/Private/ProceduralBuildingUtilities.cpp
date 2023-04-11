@@ -246,7 +246,7 @@ void AProceduralBuildingUtilities::RenderImpostorView(
   MoveCameraToViewPosition(Camera, BuildingSize, View);
   Camera->CaptureScene();
   UTextureRenderTarget2D* CameraRT = Camera->TextureTarget;
-  UTexture2D* ViewTexture = CameraRT->ConstructTexture2D(GetWorld(), FString("View_"+View), EObjectFlags::RF_NoFlags );
+  UTexture2D* ViewTexture = CameraRT->ConstructTexture2D(GetWorld(), FString("View_").Append(FString::FromInt(View)), EObjectFlags::RF_NoFlags );
   BakeSceneCaptureRTToTextureAtlas(ViewTexture, View);
 }
 
