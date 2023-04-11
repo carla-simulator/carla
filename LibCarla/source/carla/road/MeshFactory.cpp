@@ -195,7 +195,7 @@ namespace geom {
         redirections.push_back(lane_pair.first);
         it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
       }
-      
+
       size_t PosToAdd = it - redirections.begin();
 
       Mesh out_mesh = *GenerateTesselated(lane_pair.second);
@@ -560,7 +560,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
     const road::LaneSection& lane_section,
     const road::Lane& lane,
     std::vector<std::unique_ptr<Mesh>>& inout) const {
-    
+
     Mesh out_mesh;
     const double s_start = lane_section.GetDistance();
     const double s_end = lane_section.GetDistance() + lane_section.GetLength();
@@ -746,18 +746,27 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             std::pair<geom::Vector3D, geom::Vector3D> edges =
               lane.GetCornerPositions(s_current, road_param.extra_lane_width);
 
+            geom::Vector3D director = edges.second - edges.first;
+            director /= director.Length();
+            geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
 
-            //out_mesh.AddVertex(endmarking + geom::Vector3D(0, 0, lane.first).Abs() * 10);
-            //out_mesh.AddVertex(edges.first + geom::Vector3D(0, 0, lane.first).Abs() * 10);
+            out_mesh.AddVertex(edges.first);
+            out_mesh.AddVertex(endmarking);
 
             s_current += road_param.resolution * 3;
             if (s_current > s_end) {
               s_current = s_end;
             }
 
-            //out_mesh.AddVertex(endmarking + geom::Vector3D(0, 0, lane.first).Abs() * 10);
-            //out_mesh.AddVertex(edges.first + geom::Vector3D(0, 0, lane.first).Abs() * 10);
+            edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
 
+            director = edges.second - edges.first;
+            director /= director.Length();
+            endmarking = edges.first + director * lane_mark_info.width;
+
+            out_mesh.AddVertex(edges.first);
+            out_mesh.AddVertex(endmarking);
+            
             out_mesh.AddIndex(currentIndex);
             out_mesh.AddIndex(currentIndex + 1);
             out_mesh.AddIndex(currentIndex + 2);

@@ -217,7 +217,7 @@ public:
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> 
       GenerateRoadsMultithreaded( const carla::geom::MeshFactory& mesh_factory,
                                    const size_t index, const size_t number_of_roads_per_thread) const;
-    
+
     void GenerateJunctions(const carla::geom::MeshFactory& mesh_factory, 
       const rpc::OpendriveGenerationParameters& params,
       std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>*
