@@ -6,7 +6,7 @@
 
 #include "carla/nav/WalkerManager.h"
 
-#include "carla/logging.h"
+#include "carla/Logging.h"
 #include "carla/client/ActorSnapshot.h"
 #include "carla/client/Waypoint.h"
 #include "carla/client/World.h"
@@ -297,11 +297,11 @@ namespace nav {
                 }
             }
         }
-        
+
         AlreadyCalculated = true;
     }
 
-    
+
     // return the trafficlight affecting that position
     SharedPtr<carla::client::TrafficLight> WalkerManager::GetTrafficLightAffecting(carla::geom::Location UnrealPos, float max_distance) {
         float min_dist = std::numeric_limits<float>::infinity();
