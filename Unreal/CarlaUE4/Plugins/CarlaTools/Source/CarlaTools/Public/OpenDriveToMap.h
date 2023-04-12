@@ -16,12 +16,14 @@
 
 
 class UProceduralMeshComponent;
+class UMeshComponent;
 class UCustomFileDownloader;
+class UMaterialInstance;
 /**
  * 
  */
-UCLASS()
-class CARLATOOLS_API UOpenDriveToMap : public UUserWidget
+UCLASS(Blueprintable, BlueprintType)
+class CARLATOOLS_API UOpenDriveToMap : public UObject
 {
   GENERATED_BODY()
 
@@ -30,11 +32,8 @@ public:
   UFUNCTION()
   void ConvertOSMInOpenDrive(); 
 
-  UPROPERTY( meta = (BindWidget) )
-  class UButton* StartButton;
-
-  UPROPERTY(meta = (BindWidget))
-  class UButton* SaveButton;
+  UFUNCTION( BlueprintCallable )
+  void CreateMap();
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;
@@ -45,15 +44,16 @@ public:
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   FString Url;
 
-  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
   FVector2D OriginGeoCoordinates;
 
-protected:
-  virtual void NativeConstruct() override;
-  virtual void NativeDestruct() override;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UMaterialInstance* DefaultRoadMaterial;
 
-  UFUNCTION( BlueprintCallable )
-  void CreateMap();
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UMaterialInstance* DefaultLaneMarksMaterial;
+
+protected:
 
   UFUNCTION( BlueprintCallable )
   void SaveMap();
@@ -68,6 +68,7 @@ private:
   void GenerateAll(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateRoadMesh(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateSpawnPoints(const boost::optional<carla::road::Map>& CarlaMap);
+  void GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap);
 
   carla::rpc::OpendriveGenerationParameters opg_parameters;
 
@@ -79,9 +80,12 @@ private:
   UPROPERTY()
   TArray<AActor*> ActorMeshList;
   UPROPERTY()
+  TArray<AActor*> LaneMarkerActorList;
+  UPROPERTY()
   TArray<UStaticMesh*> MeshesToSpawn;
   UPROPERTY()
   TArray<FString> RoadType;
   UPROPERTY()
   TArray<UProceduralMeshComponent*> RoadMesh;
+
 };
