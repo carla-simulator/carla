@@ -37,6 +37,6 @@ struct CARLA_API FEpisodeSettings
 
   float ActorActiveDistance = 200000.f; // 2km
 
-  float SpectatorAsEgo = true;
+  bool SpectatorAsEgo = true;
 
 };
