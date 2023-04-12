@@ -9,6 +9,18 @@
 #include "USDImporterWidget.generated.h"
 
 USTRUCT(BlueprintType)
+struct FVehicleLight
+{
+  GENERATED_BODY()
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Light")
+  FString Name;
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Light")
+  FVector Location;
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Light")
+  FLinearColor Color;
+};
+
+USTRUCT(BlueprintType)
 struct CARLATOOLS_API FVehicleMeshAnchorPoints
 {
   GENERATED_BODY();
@@ -65,6 +77,8 @@ struct CARLATOOLS_API FVehicleMeshParts
   TArray<UPrimitiveComponent*> Body;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
   FVehicleMeshAnchorPoints Anchors;
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
+  TArray<FVehicleLight> Lights;
 };
 
 USTRUCT(BlueprintType)
@@ -96,6 +110,8 @@ struct CARLATOOLS_API FMergedVehicleMeshParts
   UStaticMesh* Body;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
   FVehicleMeshAnchorPoints Anchors;
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
+  TArray<FVehicleLight> Lights;
 };
 
 UCLASS()
@@ -108,7 +124,11 @@ public:
   UFUNCTION(BlueprintCallable, Category="USD Importer")
   void ImportUSDProp(const FString& USDPath, const FString& DestinationAssetPath, bool bAsBlueprint = true);
   UFUNCTION(BlueprintCallable, Category="USD Importer")
-  void ImportUSDVehicle(const FString& USDPath, const FString& DestinationAssetPath, bool bAsBlueprint = true);
+  void ImportUSDVehicle(
+      const FString& USDPath,
+      const FString& DestinationAssetPath,
+      TArray<FVehicleLight>& LightList,
+      bool bAsBlueprint = true);
   UFUNCTION(BlueprintCallable, Category="USD Importer")
   static AActor* GetGeneratedBlueprint(UWorld* World, const FString& USDPath);
   UFUNCTION(BlueprintCallable, Category="USD Importer")
@@ -116,7 +136,8 @@ public:
   UFUNCTION(BlueprintCallable, Category="USD Importer")
   static TArray<UObject*> MergeMeshComponents(TArray<UPrimitiveComponent*> Components, const FString& DestMesh);
   UFUNCTION(BlueprintCallable, Category="USD Importer")
-  static FVehicleMeshParts SplitVehicleParts(AActor* BlueprintActor);
+  static FVehicleMeshParts SplitVehicleParts(
+      AActor* BlueprintActor, const TArray<FVehicleLight>& LightList);
   UFUNCTION(BlueprintCallable, Category="USD Importer")
   static FMergedVehicleMeshParts GenerateVehicleMeshes(const FVehicleMeshParts& VehicleMeshParts, const FString& DestPath);
   UFUNCTION(BlueprintCallable, Category="USD Importer")
