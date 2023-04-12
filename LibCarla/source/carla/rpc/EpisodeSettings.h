@@ -100,7 +100,7 @@ namespace rpc {
           (deterministic_ragdolls == rhs.deterministic_ragdolls) &&
           (tile_stream_distance == tile_stream_distance) &&
           (actor_active_distance == actor_active_distance) &&
-          (spectator_as_ego == spectator_as_ego);
+          (spectator_as_ego == rhs.spectator_as_ego);
     }
 
     bool operator!=(const EpisodeSettings &rhs) const {
