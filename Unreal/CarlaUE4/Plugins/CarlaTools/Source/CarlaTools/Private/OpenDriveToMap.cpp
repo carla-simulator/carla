@@ -35,6 +35,9 @@
 #include "ContentBrowserModule.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "Math/Vector.h"
+#include "GameFramework/Actor.h"
+
+#include "DrawDebugHelpers.h"
 
 FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
 {
@@ -140,6 +143,69 @@ void UOpenDriveToMap::CreateMap()
   RoadMesh.Empty();
   MeshesToSpawn.Empty();
   ActorMeshList.Empty();
+}
+
+void UOpenDriveToMap::CreateTerrainMesh(const int GridSize, const float GridSectionSize, const UTexture2D* HeightmapTexture)
+{
+  // const float GridSectionSize = 100.0f; // In cm
+  const float HeightScale = 3.0f;
+
+  UWorld* World = GetWorld();
+
+  FActorSpawnParameters Params;
+  AProceduralMeshActor* MeshActor = World->SpawnActor<AProceduralMeshActor>(AProceduralMeshActor::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, Params);
+  UProceduralMeshComponent* Mesh = Cast<UProceduralMeshComponent>(MeshActor->GetComponentByClass(UProceduralMeshComponent::StaticClass()));
+
+  TArray<FVector> Vertices;
+  TArray<int32> Triangles;
+
+  TArray<FVector> Normals;
+  TArray<FLinearColor> Colors;
+  TArray<FProcMeshTangent> Tangents;
+  TArray<FVector2D> UVs;
+
+  Normals.Init(FVector(0.0f, 0.0f, 1.0f), Vertices.Num());
+  Colors.Init(FLinearColor(0.0f, 0.0f, 0.0f, 1.0f), Vertices.Num());
+  Tangents.Init(FProcMeshTangent(FVector(0.0f, 1.0f, 0.0f), false), Vertices.Num());
+  // UVs.Init(FVector2D::ZeroVector, Vertices.Num());
+
+  FByteBulkData* RawHeightmap = &HeightmapTexture->PlatformData->Mips[0].BulkData;
+  FColor* FormatedHeightmap = StaticCast<FColor*>(RawHeightmap->Lock(LOCK_READ_ONLY));
+
+  FColor DebugColor = FColor::Emerald;
+  // int CellIndex = 0;
+  const float GridTotalSize = GridSize * GridSectionSize;
+  for(float i = 0.f; i < GridTotalSize; i += GridSectionSize)
+  {
+    for(float j = 0.f; j < GridTotalSize; j += GridSectionSize)
+    {
+      // DrawDebugSphere(World, FVector(i, j, 0.0f), 10.0f, 5, DebugColor, true, 30.0f, 0, 0.0f);
+      const int CellIndex = (i / GridSectionSize) + (j / GridSectionSize * GridSize);
+      float HeightValue = HeightScale *  FormatedHeightmap[CellIndex].R;
+      Vertices.Add(FVector(i, j, HeightValue));
+      UVs.Add(FVector2D(i / (GridTotalSize - GridSectionSize), j / (GridTotalSize - GridSectionSize)));
+    }
+
+    DebugColor = DebugColor == FColor::Emerald ? FColor::Red : FColor::Emerald;
+  }
+  RawHeightmap->Unlock();
+
+  for(int i = 0; i < GridSize - 1; i++)
+  {
+    for(int j = 0; j < GridSize - 1; j++)
+    {
+      int Index1D = i + j * GridSize;
+      Triangles.Add(Index1D);
+      Triangles.Add(Index1D + 1);
+      Triangles.Add(Index1D + GridSize);
+
+      Triangles.Add(Index1D + 1);
+      Triangles.Add(Index1D + GridSize + 1);
+      Triangles.Add(Index1D + GridSize);
+    }
+  }
+
+  Mesh->CreateMeshSection_LinearColor(0, Vertices, Triangles, Normals, UVs, Colors, Tangents, false);
 }
 
 void UOpenDriveToMap::OpenFileDialog()

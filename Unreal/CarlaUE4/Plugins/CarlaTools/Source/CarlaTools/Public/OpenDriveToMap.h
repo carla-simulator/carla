@@ -35,6 +35,9 @@ public:
   UFUNCTION( BlueprintCallable )
   void CreateMap();
 
+  UFUNCTION(BlueprintCallable)
+  void CreateTerrainMesh(const int GridSize, const float GridSectionSize, const class UTexture2D* HeightmapTexture);
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;
 
