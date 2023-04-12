@@ -19,13 +19,14 @@
 #include "EditorAssetLibrary.h"
 #include <unordered_map>
 #include <string>
+#include "Components/PointLightComponent.h"
 
 
 void UUSDImporterWidget::ImportUSDProp(
     const FString& USDPath, const FString& DestinationAssetPath, bool bAsBlueprint)
 {
 #ifdef WITH_OMNIVERSE
-  FUSDCARLAInterface::ImportUSD(USDPath, DestinationAssetPath, false, bAsBlueprint);
+  UUSDCARLAInterface::ImportUSD(USDPath, DestinationAssetPath, false, bAsBlueprint);
 #else
   UE_LOG(LogCarlaTools, Error, TEXT("Omniverse Plugin is not enabled"));
 #endif
@@ -33,9 +34,23 @@ void UUSDImporterWidget::ImportUSDProp(
 }
 
 void UUSDImporterWidget::ImportUSDVehicle(
-    const FString& USDPath, const FString& DestinationAssetPath, bool bAsBlueprint)
+    const FString& USDPath,
+    const FString& DestinationAssetPath,
+    TArray<FVehicleLight>& LightList,
+    bool bAsBlueprint)
 {
-
+#ifdef WITH_OMNIVERSE
+  UUSDCARLAInterface::ImportUSD(USDPath, DestinationAssetPath, false, bAsBlueprint);
+  TArray<FUSDCARLALight> USDLights = UUSDCARLAInterface::GetUSDLights(USDPath);
+  LightList.Empty();
+  for (const FUSDCARLALight& USDLight : USDLights)
+  {
+    FVehicleLight Light {USDLight.Name, USDLight.Location, USDLight.Color};
+    LightList.Add(Light);
+  }
+#else
+  UE_LOG(LogCarlaTools, Error, TEXT("Omniverse Plugin is not enabled"));
+#endif
 }
 
 AActor* UUSDImporterWidget::GetGeneratedBlueprint(UWorld* World, const FString& USDPath)
@@ -112,9 +127,11 @@ bool IsChildrenOf(USceneComponent* Component, FString StringInParent)
   return false;
 }
 
-FVehicleMeshParts UUSDImporterWidget::SplitVehicleParts(AActor* BlueprintActor)
+FVehicleMeshParts UUSDImporterWidget::SplitVehicleParts(
+    AActor* BlueprintActor, const TArray<FVehicleLight>& LightList)
 {
   FVehicleMeshParts Result;
+  Result.Lights = LightList;
   TArray<UStaticMeshComponent*> MeshComponents;
   BlueprintActor->GetComponents(MeshComponents, false);
   FVector BodyLocation = FVector(0,0,0);
@@ -210,6 +227,10 @@ FVehicleMeshParts UUSDImporterWidget::SplitVehicleParts(AActor* BlueprintActor)
   Result.Anchors.WheelRL -= BodyLocation;
   Result.Anchors.Hood -= BodyLocation;
   Result.Anchors.Trunk -= BodyLocation;
+  for (FVehicleLight& Light : Result.Lights)
+  {
+    Light.Location -= BodyLocation;
+  }
   return Result;
 }
 
@@ -247,7 +268,70 @@ FMergedVehicleMeshParts UUSDImporterWidget::GenerateVehicleMeshes(
   Result.WheelRL = MergePart(VehicleMeshParts.WheelRL, DestPath + "_wheel_rl");
   Result.Body = MergePart(VehicleMeshParts.Body, DestPath + "_body");
   Result.Anchors = VehicleMeshParts.Anchors;
+  Result.Lights = VehicleMeshParts.Lights;
   return Result;
+}
+
+FString GetCarlaLightName(const FString &USDName)
+{
+  FString LowerCaseUSDName = USDName.ToLower();
+  FString LightType = "";
+  if (LowerCaseUSDName.Contains("headlight"))
+  {
+    LightType = "low_beam";
+  }
+  else if (LowerCaseUSDName.Contains("brakelight"))
+  {
+    LightType = "brake";
+  }
+  else if (LowerCaseUSDName.Contains("blinker"))
+  {
+    LightType = "blinker";
+  }
+  else if (LowerCaseUSDName.Contains("night"))
+  {
+    LightType = "high_beam";
+  }
+  else if (LowerCaseUSDName.Contains("reverse"))
+  {
+    LightType = "reverse";
+  }
+  else if (LowerCaseUSDName.Contains("highbeamlight"))
+  {
+    LightType = "high_beam";
+  }
+  else if (LowerCaseUSDName.Contains("foglight"))
+  {
+    LightType = "fog";
+  }
+  else if (LowerCaseUSDName.Contains("TailLight"))
+  {
+    LightType = "position";
+  }
+  else
+  {
+    LightType = USDName;
+  }
+
+  FString FinalName = "-" + LightType + "-";
+  if (LowerCaseUSDName.EndsWith("_fr"))
+  {
+    FinalName = "front" + FinalName + "r-";
+  }
+  else if (LowerCaseUSDName.EndsWith("_fl"))
+  {
+    FinalName = "front" + FinalName + "l-";
+  }
+  else if (LowerCaseUSDName.EndsWith("_rr"))
+  {
+    FinalName = "back" + FinalName + "r-";
+  }
+  else if (LowerCaseUSDName.EndsWith("_rl"))
+  {
+    FinalName = "back" + FinalName + "l-";
+  }
+
+  return FinalName;
 }
 
 AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
@@ -270,7 +354,7 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     {"Wheel_RL", {VehicleMeshes.WheelRL, FVector(0,0,0)}},
     {"Body", {VehicleMeshes.Body, FVector(0,0,0)}}
   };
-  
+
   AActor* TemplateActor = World->SpawnActor<AActor>(BaseClass);
   // Get an replace all static meshes with the appropiate mesh
   TArray<UStaticMeshComponent*> MeshComponents;
@@ -317,10 +401,23 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     return nullptr;
   }
   SkeletalMeshComponent->SetSkeletalMesh(NewSkeletalMesh);
+  UE_LOG(LogCarlaTools, Log, TEXT("Num Lights %d"), VehicleMeshes.Lights.Num());
+  for (const FVehicleLight& Light : VehicleMeshes.Lights)
+  {
+    
+    UPointLightComponent* PointLightComponent = NewObject<UPointLightComponent>(TemplateActor, FName(*GetCarlaLightName(Light.Name)));
+    PointLightComponent->RegisterComponent();
+    PointLightComponent->AttachToComponent(TemplateActor->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+    PointLightComponent->SetRelativeLocation(Light.Location); // Set the position of the light relative to the actor
+    PointLightComponent->SetIntensity(5000.f); // Set the brightness of the light
+    PointLightComponent->SetLightColor(Light.Color);
+    TemplateActor->AddInstanceComponent(PointLightComponent);
+    UE_LOG(LogCarlaTools, Log, TEXT("Spawn Light %s, %s, %s"), *Light.Name, *Light.Location.ToString(), *Light.Color.ToString());
+  }
 
   // Create the new blueprint vehicle
   FKismetEditorUtilities::FCreateBlueprintFromActorParams Params;
-  Params.bReplaceActor = true;
+  Params.bReplaceActor = false;
   Params.bKeepMobility = true;
   Params.bDeferCompilation = false;
   Params.bOpenBlueprint = false;
@@ -355,11 +452,7 @@ bool UUSDImporterWidget::EditSkeletalMeshBones(
     UE_LOG(LogCarlaTools, Log, TEXT("Bone %s corresponds to index %d"), *BoneName, BoneIdx);
     SkeletonModifier.UpdateRefPoseTransform(BoneIdx, BoneTransform);
   }
-  
-  // UE_LOG(LogCarlaTools, Log, TEXT("Creating new skeletal mesh in path %s"), *PackagePath);
-  // UPackage* NewPackage = CreatePackage(nullptr, *PackagePath);
-  // UObject* NewObject = DuplicateObject(Skeleton, NewPackage);
-  // SavePackageHelper(NewPackage, *PackagePath);
+
   NewSkeletalMesh->MarkPackageDirty();
   UPackage* Package = NewSkeletalMesh->GetOutermost();
   return UPackage::SavePackage(
