@@ -98,8 +98,8 @@ namespace rpc {
           (max_substeps == rhs.max_substeps) &&
           (max_culling_distance == rhs.max_culling_distance) &&
           (deterministic_ragdolls == rhs.deterministic_ragdolls) &&
-          (tile_stream_distance == tile_stream_distance) &&
-          (actor_active_distance == actor_active_distance) &&
+          (tile_stream_distance == rhs.tile_stream_distance) &&
+          (actor_active_distance == rhs.actor_active_distance) &&
           (spectator_as_ego == rhs.spectator_as_ego);
     }
 
