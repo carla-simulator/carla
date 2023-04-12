@@ -47,7 +47,7 @@ namespace rpc {
 
     float actor_active_distance = 2000.f; // 2km
 
-    float spectator_as_ego = true;
+    bool spectator_as_ego = true;
 
     MSGPACK_DEFINE_ARRAY(synchronous_mode, no_rendering_mode, fixed_delta_seconds, substepping,
         max_substep_delta_time, max_substeps, max_culling_distance, deterministic_ragdolls,
