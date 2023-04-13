@@ -22,13 +22,19 @@
 #include <compiler/enable-ue4-macros.h>
 
 #include "Engine/Classes/Interfaces/Interface_CollisionDataProvider.h"
+#include "Engine/TriggerBox.h"
+#include "Factories/MaterialInstanceConstantFactoryNew.h"
 #include "PhysicsCore/Public/BodySetupEnums.h"
 #include "RawMesh.h"
 #include "AssetRegistryModule.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshActor.h"
 #include "MeshDescription.h"
+#include "EditorLevelLibrary.h"
 #include "ProceduralMeshConversion.h"
+#include "ContentBrowserModule.h"
+#include "Materials/MaterialInstanceConstant.h"
+#include "Math/Vector.h"
 
 FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
 {
@@ -104,7 +110,8 @@ FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
 
 void UOpenDriveToMap::ConvertOSMInOpenDrive()
 {
-  FilePath = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/" + MapName + ".osm";
+
+  FilePath = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/OpenDrive/" + MapName + ".osm";
   FileDownloader->ConvertOSMInOpenDrive( FilePath );
   FilePath.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);
   FilePath += ".xodr";
@@ -112,39 +119,22 @@ void UOpenDriveToMap::ConvertOSMInOpenDrive()
   LoadMap();
 }
 
-void UOpenDriveToMap::NativeConstruct()
-{
-  if( !IsValid(FileDownloader) ){
-    FileDownloader = NewObject<UCustomFileDownloader>();
-  }
-}
-
-void UOpenDriveToMap::NativeDestruct()
-{
-  Super::NativeDestruct();
-  if( IsValid(FileDownloader) ){
-    // UObjects are not being destroyed, they are collected by GarbageCollector
-    // Should we force garbage collection here?
-  }
-}
-
 void UOpenDriveToMap::CreateMap()
 {
-    MapName = "NewMap"; //New
   if( MapName.IsEmpty() )
   {
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Map Name Is Empty") );
     return;
   }
-  if ( !IsValid(FileDownloader) ) 
+  if ( !IsValid(FileDownloader) )
   {
     FileDownloader = NewObject<UCustomFileDownloader>();
   }
   FileDownloader->ResultFileName = MapName;
-  FileDownloader->Url = "https://overpass-api.de/api/map?bbox=-3.67762,40.40980,-3.67326,40.41256"; //Edited "Url"
-  //FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
-  //FileDownloader->StartDownload();
-  ConvertOSMInOpenDrive(); //New
+  FileDownloader->Url = Url;
+
+  FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
+  FileDownloader->StartDownload();
 
   RoadType.Empty();
   RoadMesh.Empty();
@@ -176,10 +166,11 @@ void UOpenDriveToMap::LoadMap()
   std::string opendrive_xml = carla::rpc::FromLongFString(FileContent);
   boost::optional<carla::road::Map> CarlaMap = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
 
-  if (!CarlaMap.has_value()) 
+  if (!CarlaMap.has_value())
   {
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Invalid Map"));
-  }else
+  }
+  else
   {
     UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Valid Map loaded"));
   }
@@ -188,11 +179,12 @@ void UOpenDriveToMap::LoadMap()
   UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("MapName %s"), *MapName);
 
   GenerateAll(CarlaMap);
+  GenerationFinished();
 }
 
 void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& CarlaMap )
 {
-  if (!CarlaMap.has_value()) 
+  if (!CarlaMap.has_value())
   {
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Invalid Map"));
   }else
@@ -200,6 +192,7 @@ void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& Carla
     GenerateRoadMesh(CarlaMap);
     GenerateSpawnPoints(CarlaMap);
     GenerateTreePositions(CarlaMap);
+    GenerateLaneMarks(CarlaMap);
   }
 }
 
@@ -207,7 +200,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
 {
   opg_parameters.vertex_distance = 0.5f;
   opg_parameters.vertex_width_resolution = 8.0f;
-  opg_parameters.simplification_percentage = 15.0f;
+  opg_parameters.simplification_percentage = 50.0f;
 
   double start = FPlatformTime::Seconds();
   const auto Meshes = CarlaMap->GenerateOrderedChunkedMesh(opg_parameters);
@@ -215,7 +208,8 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" GenerateOrderedChunkedMesh code executed in %f seconds. Simplification percentage is %f"), end - start, opg_parameters.simplification_percentage);
 
   start = FPlatformTime::Seconds();
-  for (const auto &PairMap : Meshes) 
+  int index = 0;
+  for (const auto &PairMap : Meshes)
   {
     for( const auto &Mesh : PairMap.second )
     {
@@ -228,10 +222,15 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       }
 
       AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+      TempActor->SetActorLabel(FString("SM_Lane_") + FString::FromInt(index));
+
       UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
       TempPMC->bUseAsyncCooking = true;
       TempPMC->bUseComplexAsSimpleCollision = true;
       TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+      if(DefaultRoadMaterial)
+        TempPMC->SetMaterial(0, DefaultRoadMaterial);
 
       FVector MeshCentroid = FVector(0,0,0);
       for( auto Vertex : Mesh->GetVertices() )
@@ -262,13 +261,91 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       ActorMeshList.Add(TempActor);
 
       RoadType.Add(LaneTypeToFString(PairMap.first));
-      RoadMesh.Add(TempPMC);          
+      RoadMesh.Add(TempPMC);
+      index++;
     }
   }
-    
+
   end = FPlatformTime::Seconds();
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Mesh spawnning and translation code executed in %f seconds."), end - start);
- 
+
+}
+
+void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap)
+{
+  opg_parameters.vertex_distance = 0.5f;
+  opg_parameters.vertex_width_resolution = 8.0f;
+  opg_parameters.simplification_percentage = 15.0f;
+
+  auto MarkingMeshes = CarlaMap->GenerateLineMarkings(opg_parameters);
+
+  int index = 0;
+  for (const auto& Mesh : MarkingMeshes)
+  {
+    if ( !Mesh->GetVertices().size() )
+    {
+      continue;
+    }
+    if ( !Mesh->IsValid() ) {
+      continue;
+    }
+
+    FVector MeshCentroid = FVector(0, 0, 0);
+    for (auto Vertex : Mesh->GetVertices())
+    {
+      MeshCentroid += Vertex.ToFVector();
+    }
+
+    MeshCentroid /= Mesh->GetVertices().size();
+
+    for (auto& Vertex : Mesh->GetVertices())
+    {
+      Vertex.x -= MeshCentroid.X;
+      Vertex.y -= MeshCentroid.Y;
+      Vertex.z -= MeshCentroid.Z;
+    }
+
+    // TODO: Improve this code
+    float MinDistance = 99999999.9f;
+    for(auto SpawnedActor : LaneMarkerActorList)
+    {
+      float VectorDistance = FVector::Distance(MeshCentroid*100, SpawnedActor->GetActorLocation());
+      if(VectorDistance < MinDistance)
+      {
+        MinDistance = VectorDistance;
+      }
+    }
+
+    if(MinDistance < 250)
+    {
+      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Skkipped is %f."), MinDistance);
+      continue;
+    }
+
+    AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+    TempActor->SetActorLabel(FString("SM_LaneMark_") + FString::FromInt(index));
+    UProceduralMeshComponent* TempPMC = TempActor->MeshComponent;
+    TempPMC->bUseAsyncCooking = true;
+    TempPMC->bUseComplexAsSimpleCollision = true;
+    TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+    if(DefaultLaneMarksMaterial)
+      TempPMC->SetMaterial(0, DefaultLaneMarksMaterial);
+
+    const FProceduralCustomMesh MeshData = *Mesh;
+    TempPMC->CreateMeshSection_LinearColor(
+      0,
+      MeshData.Vertices,
+      MeshData.Triangles,
+      MeshData.Normals,
+      TArray<FVector2D>(), // UV0
+      TArray<FLinearColor>(), // VertexColor
+      TArray<FProcMeshTangent>(), // Tangents
+      true); // Create collision
+    TempActor->SetActorLocation(MeshCentroid * 100);
+    LaneMarkerActorList.Add(TempActor);
+    index++;
+  }
 }
 
 void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Map>& CarlaMap )
@@ -286,12 +363,14 @@ void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Ma
 
 void UOpenDriveToMap::GenerateTreePositions( const boost::optional<carla::road::Map>& CarlaMap )
 {
-  const auto Locations = CarlaMap->GetTreesPosition(DistanceBetweenTrees, DistanceFromRoadEdge );
+  const std::vector<std::pair<carla::geom::Vector3D, std::string>> Locations =
+    CarlaMap->GetTreesPosition(DistanceBetweenTrees, DistanceFromRoadEdge );
   int i = 0;
   for (const auto &cl : Locations)
   {
-    AActor *Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), cl.ToFVector() * 100, FRotator(0,0,0));
+    AActor *Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), cl.first.ToFVector() * 100, FRotator(0,0,0));
     Spawner->Tags.Add(FName("TreeSpawnPosition"));
+    Spawner->Tags.Add(FName(cl.second.c_str()));
     Spawner->SetActorLabel("TreeSpawnPosition" + FString::FromInt(i) );
     ++i;
   }
@@ -332,6 +411,7 @@ UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset( UProceduralMeshComponent* P
     SrcModel.BuildSettings.bGenerateLightmapUVs = true;
     SrcModel.BuildSettings.SrcLightmapIndex = 0;
     SrcModel.BuildSettings.DstLightmapIndex = 1;
+    SrcModel.BuildSettings.DistanceFieldResolutionScale = 0;
     StaticMesh->CreateMeshDescription(0, MoveTemp(MeshDescription));
     StaticMesh->CommitMeshDescription(0);
 
@@ -483,10 +563,10 @@ TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets()
       MeshBuildTime += end - start;
       start = FPlatformTime::Seconds();
 
-      FString MeshName = *(RoadType[i] + FString::FromInt(i));
+      FString RoadName = *(RoadType[i] + FString::FromInt(i));
       // Notify asset registry of new asset
       FAssetRegistryModule::AssetCreated(CurrentStaticMesh);
-      UPackage::SavePackage(Package, CurrentStaticMesh, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *MeshName, GError, nullptr, true, true, SAVE_NoError);
+      UPackage::SavePackage(Package, CurrentStaticMesh, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *RoadName, GError, nullptr, true, true, SAVE_NoError);
       end = FPlatformTime::Seconds();
       PackSaveTime += end - start;
 
@@ -512,22 +592,22 @@ void UOpenDriveToMap::SaveMap()
   double end = FPlatformTime::Seconds();
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" Meshes created static mesh code executed in %f seconds."), end - start);
 
+  start = FPlatformTime::Seconds();
+
+  for (int i = 0; i < MeshesToSpawn.Num(); ++i)
+  {
+    AStaticMeshActor* TempActor = GetWorld()->SpawnActor<AStaticMeshActor>();
+    // Build mesh from source
+    TempActor->GetStaticMeshComponent()->SetStaticMesh(MeshesToSpawn[i]);
+    TempActor->SetActorLabel(FString("SM_") + MeshesToSpawn[i]->GetName());
+    TempActor->SetActorTransform(ActorMeshList[i]->GetActorTransform());
+  }
+
   for (auto CurrentActor : ActorMeshList)
   {
     CurrentActor->Destroy();
   }
 
-  start = FPlatformTime::Seconds();
-
-  for (auto CurrentMesh : MeshesToSpawn)
-  {
-    AStaticMeshActor* TempActor = GetWorld()->SpawnActor<AStaticMeshActor>();
-    // Build mesh from source
-    TempActor->GetStaticMeshComponent()->SetStaticMesh(CurrentMesh);
-    TempActor->SetActorLabel(FString("SM_") + CurrentMesh->GetName());
-  }
-
   end = FPlatformTime::Seconds();
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" Spawning Static Meshes code executed in %f seconds."), end - start);
-
 }
