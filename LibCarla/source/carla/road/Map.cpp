@@ -1226,8 +1226,7 @@ namespace road {
     float distancefromdrivinglineborder) const {
 
     std::vector<std::pair<geom::Vector3D, std::string>> positions;
-    for (auto &&pair : _data.GetRoads())
-    {
+    for (auto &&pair : _data.GetRoads()) {
       const auto &road = pair.second;
       if (!road.IsJunction()) {
         for (auto &&lane_section : road.GetLaneSections()) {
