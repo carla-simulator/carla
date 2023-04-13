@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(libcarla-unit-tests)
 
+find_package(fastrtps REQUIRED)
+
 if (CMAKE_BUILD_TYPE STREQUAL "Client")
   set(carla_config client)
 elseif (CMAKE_BUILD_TYPE STREQUAL "Server")
