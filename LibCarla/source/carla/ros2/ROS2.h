@@ -21,6 +21,8 @@ namespace carla {
     namespace data {
       struct DVSEvent;
       class LidarData;
+      class SemanticLidarData;
+      class RadarData;
     }
   }
 }
@@ -70,6 +72,12 @@ class ROS2
   void ProcessDataFromLidar(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::sensor::data::LidarData &data);
+  void ProcessDataFromSemanticLidar(uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
+      const carla::sensor::data::SemanticLidarData &data);
+  void ProcessDataFromRadar(uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
+      const carla::sensor::data::RadarData &data);
 
   private:
 

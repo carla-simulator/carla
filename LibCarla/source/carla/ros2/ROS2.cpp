@@ -10,6 +10,8 @@
 #include "carla/geom/Vector3D.h"
 #include "carla/sensor/data/DVSEvent.h"
 #include "carla/sensor/data/LidarData.h"
+#include "carla/sensor/data/SemanticLidarData.h"
+#include "carla/sensor/data/RadarData.h"
 
 namespace carla {
 namespace ros2 {
@@ -142,6 +144,18 @@ void ROS2::ProcessDataFromDVS(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::sensor::data::LidarData &data) {
     log_info("Sensor Lidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._points.size());
+  }
+
+  void ROS2::ProcessDataFromSemanticLidar(uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
+      const carla::sensor::data::SemanticLidarData &data) {
+    log_info("Sensor SemanticLidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._ser_points.size());
+  }
+
+  void ROS2::ProcessDataFromRadar(uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
+      const carla::sensor::data::RadarData &data) {
+    log_info("Sensor Radar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._detections.size());
   }
 
 } // namespace ros2

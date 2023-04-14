@@ -12,7 +12,10 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 
+#include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
+#include "carla/ros2/ROS2.h"
+#include <compiler/enable-ue4-macros.h>
 
 FActorDefinition ARadar::GetSensorDefinition()
 {
@@ -74,13 +77,20 @@ void ARadar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
   RadarData.Reset();
   SendLineTraces(DeltaTime);
 
+  auto DataStream = GetDataStream(*this);
+
+  // ROS2
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (ROS2->IsEnabled())
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
+    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
+    ROS2->ProcessDataFromRadar(DataStream.GetSensorType(), StreamId, RadarData);
+  }
+
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");
-    if (IsStreamReady())
-    {
-      auto DataStream = GetDataStream(*this);
-      DataStream.Send(*this, RadarData, DataStream.PopBufferFromPool());
-    }
+    DataStream.Send(*this, RadarData, DataStream.PopBufferFromPool());
   }
 }
 
