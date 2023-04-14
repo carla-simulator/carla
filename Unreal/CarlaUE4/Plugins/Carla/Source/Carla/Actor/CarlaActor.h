@@ -224,7 +224,7 @@ public:
   ECarlaServerResponse AddActorTorque(const FVector& Torque);
 
   virtual ECarlaServerResponse SetActorSimulatePhysics(bool bEnabled);
-  
+
   virtual ECarlaServerResponse SetActorCollisions(bool bEnabled);
 
   virtual ECarlaServerResponse SetActorEnableGravity(bool bEnabled);

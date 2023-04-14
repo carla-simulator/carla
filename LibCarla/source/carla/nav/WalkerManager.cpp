@@ -288,7 +288,8 @@ namespace nav {
             // check traffic lights only
             if (actor.description.id == "traffic.traffic_light") {
                 // get the TL actor
-                SharedPtr<carla::client::TrafficLight> tl = boost::static_pointer_cast<carla::client::TrafficLight>(world.GetActor(actor.id));
+                SharedPtr<carla::client::TrafficLight> tl =
+                    boost::static_pointer_cast<carla::client::TrafficLight>(world.GetActor(actor.id));
                 // get the waypoints where the TL affects
                 std::vector<SharedPtr<carla::client::Waypoint>> list = tl->GetStopWaypoints();
                 for (auto &way : list) {
@@ -302,22 +303,24 @@ namespace nav {
 
 
     // return the trafficlight affecting that position
-    SharedPtr<carla::client::TrafficLight> WalkerManager::GetTrafficLightAffecting(carla::geom::Location UnrealPos, float max_distance) {
-        float min_dist = std::numeric_limits<float>::infinity();
-        SharedPtr<carla::client::TrafficLight> actor;
-        for (auto &&item : _traffic_lights) {
-            float dist = UnrealPos.DistanceSquared(item.second);
-            if (dist < min_dist) {
-                min_dist = dist;
-                actor = item.first;
+    SharedPtr<carla::client::TrafficLight> WalkerManager::GetTrafficLightAffecting(
+        carla::geom::Location UnrealPos,
+        float max_distance) {
+            float min_dist = std::numeric_limits<float>::infinity();
+            SharedPtr<carla::client::TrafficLight> actor;
+            for (auto &&item : _traffic_lights) {
+                float dist = UnrealPos.DistanceSquared(item.second);
+                if (dist < min_dist) {
+                    min_dist = dist;
+                    actor = item.first;
+                }
             }
-        }
-        // if distance is not in the limit, then reject the trafficlight
-        if (max_distance < 0.0f || min_dist <= max_distance * max_distance) {
-            return actor;
-        } else {
-            return SharedPtr<carla::client::TrafficLight>();
-        }
+            // if distance is not in the limit, then reject the trafficlight
+            if (max_distance < 0.0f || min_dist <= max_distance * max_distance) {
+                return actor;
+            } else {
+                return SharedPtr<carla::client::TrafficLight>();
+            }
     }
 
 
