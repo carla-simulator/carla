@@ -30,7 +30,7 @@ TArray<FUSDCARLALight> UUSDCARLAInterface::GetUSDLights(const FString& Path)
   {
     pxr::UsdLuxLight Light(LightPrim);
     std::string StdName = LightPrim.GetName();
-    
+
     pxr::GfVec3f PxColor;
     pxr::VtValue vtValue;
     if (Light.GetColorAttr().Get(&vtValue)) {
@@ -39,7 +39,7 @@ TArray<FUSDCARLALight> UUSDCARLAInterface::GetUSDLights(const FString& Path)
     pxr::UsdGeomXformCache Cache;
     pxr::GfMatrix4d Transform = Cache.GetLocalToWorldTransform(LightPrim);
     pxr::GfVec3d PxLocation = Transform.ExtractTranslation();
-    
+
     FString Name(StdName.size(), UTF8_TO_TCHAR(StdName.c_str()));
     FLinearColor Color(PxColor[0], PxColor[1], PxColor[2]);
     FVector Location(PxLocation[0], -PxLocation[1], PxLocation[2]);
