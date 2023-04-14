@@ -404,7 +404,6 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
   UE_LOG(LogCarlaTools, Log, TEXT("Num Lights %d"), VehicleMeshes.Lights.Num());
   for (const FVehicleLight& Light : VehicleMeshes.Lights)
   {
-    
     UPointLightComponent* PointLightComponent = NewObject<UPointLightComponent>(TemplateActor, FName(*GetCarlaLightName(Light.Name)));
     PointLightComponent->RegisterComponent();
     PointLightComponent->AttachToComponent(TemplateActor->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
