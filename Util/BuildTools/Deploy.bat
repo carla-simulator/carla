@@ -5,9 +5,8 @@ rem ============================================================================
 rem -- Set up environment --------------------------------------------------------
 rem ==============================================================================
 
-set REPLACE_LATEST=false
+set REPLACE_LATEST=true
 set AWS_COPY=aws s3 cp
-set UPLOAD_MAPS=true
 
 rem ==============================================================================
 rem -- Parse arguments -----------------------------------------------------------
@@ -24,7 +23,7 @@ if not "%1"=="" (
     )
 
     if "%1"=="--dry-run" (
-      echo %AWS_COPY%
+      set AWS_COPY=rem aws s3 cp
     )
 
     if "%1"=="--help" (
@@ -40,32 +39,45 @@ if not "%1"=="" (
 rem Get repository version
 for /f %%i in ('git describe --tags --dirty --always') do set REPOSITORY_TAG=%%i
 if not defined REPOSITORY_TAG goto error_carla_version
+echo REPOSITORY_TAG = !REPOSITORY_TAG!
 
 rem Last package data
 set CARLA_DIST_FOLDER=%~dp0%\Build\UE4Carla
-set LATEST_PACKAGE=CARLA_%REPOSITORY_TAG%.zip
-set LATEST_PACKAGE_PATH=%CARLA_DIST_FOLDER%\%LATEST_PACKAGE%
+set PACKAGE=CARLA_%REPOSITORY_TAG%.zip
+set PACKAGE_PATH=%CARLA_DIST_FOLDER%\%PACKAGE%
+set PACKAGE2=AdditionalMaps_%REPOSITORY_TAG%.zip
+set PACKAGE_PATH2=%CARLA_DIST_FOLDER%\%PACKAGE2%
 
 set S3_PREFIX=s3://carla-releases/Windows
 
 set LATEST_DEPLOY_URI=!S3_PREFIX!/Dev/CARLA_Latest.zip
+set LATEST_DEPLOY_URI2=!S3_PREFIX!/Dev/AdditionalMaps_Latest.zip
 
 rem Check for TAG version
 echo %REPOSITORY_TAG% | findstr /R /C:"^[0-9]*\.[0-9]*\.[0-9]*.$" 1>nul
 if %errorlevel% == 0 (
-  echo Detected tag %REPOSITORY_TAG%
+  echo Detected release version with tag %REPOSITORY_TAG%
   set DEPLOY_NAME=CARLA_%REPOSITORY_TAG%.zip
+  set DEPLOY_NAME2=AdditionalMaps_%REPOSITORY_TAG%.zip
 ) else (
+  echo Detected non-release version with tag %REPOSITORY_TAG%
   set S3_PREFIX=!S3_PREFIX!/Dev
   git log --pretty=format:%%cd_%%h --date=format:%%Y%%m%%d -n 1 > tempo1234
   set /p DEPLOY_NAME= < tempo1234
   del tempo1234
   set DEPLOY_NAME=!DEPLOY_NAME!.zip
+  echo deploy name = !DEPLOY_NAME!
+  
+  git log --pretty=format:%%h -n 1 > tempo1234
+  set /p DEPLOY_NAME2= < tempo1234
+  del tempo1234
+  set DEPLOY_NAME2=AdditionalMaps_!DEPLOY_NAME2!.zip
+  echo deploy name2 = !DEPLOY_NAME2!
 )
 echo Version detected: %REPOSITORY_TAG%
-echo Using package %LATEST_PACKAGE% as %DEPLOY_NAME%
+echo Using package %PACKAGE% as %DEPLOY_NAME%
 
-if not exist "%LATEST_PACKAGE_PATH%" (
+if not exist "%PACKAGE_PATH%" (
   echo Latest package not found, please run 'make package'
   goto :bad_exit
 )
@@ -75,26 +87,22 @@ rem -- Upload ------------------------------------------------------------------
 rem ==============================================================================
 
 set DEPLOY_URI=!S3_PREFIX!/%DEPLOY_NAME%
-%AWS_COPY% %LATEST_PACKAGE_PATH% %DEPLOY_URI%
+%AWS_COPY% %PACKAGE_PATH% %DEPLOY_URI%
 echo Latest build uploaded to %DEPLOY_URI%
+
+set DEPLOY_URI2=!S3_PREFIX!/%DEPLOY_NAME2%
+%AWS_COPY% %PACKAGE_PATH2% %DEPLOY_URI2%
+echo Latest build uploaded to %DEPLOY_URI2%
+
+rem ==============================================================================
+rem -- Replace Latest ------------------------------------------------------------
+rem ==============================================================================
 
 if %REPLACE_LATEST%==true (
   %AWS_COPY% %DEPLOY_URI% %LATEST_DEPLOY_URI%
-  echo Latest build uploaded to %LATEST_DEPLOY_URI%
-)
-
-if %UPLOAD_MAPS%==true (
-
-  pushd "%CARLA_DIST_FOLDER%"
-
-  for /f %%i in ('dir *_%REPOSITORY_TAG%.zip /b') do (
-    if not %%i == %LATEST_PACKAGE% (
-      set DEPLOY_MAP_URI=!S3_PREFIX!/%%i
-      %AWS_COPY% %%i !DEPLOY_MAP_URI!
-      echo %%i uploaded to !DEPLOY_MAP_URI!
-    )
-  )
-  popd
+  echo Latest build updated as %LATEST_DEPLOY_URI%
+  %AWS_COPY% %DEPLOY_URI2% %LATEST_DEPLOY_URI2%
+  echo Latest build updated as %LATEST_DEPLOY_URI2%
 )
 
 rem ==============================================================================
