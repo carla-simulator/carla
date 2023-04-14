@@ -60,7 +60,7 @@ namespace detail {
       }
     }
     _simulator.lock()->ApplyBatchSync(std::move(commands), false);
-    
+
     // check if any agent has been killed
     bool alive;
     for (auto handle : *walkers) {
