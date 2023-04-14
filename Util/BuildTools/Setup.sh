@@ -283,14 +283,10 @@ mkdir libstdcxx-build
 pushd libstdcxx-build >/dev/null
 log "Building fast_dds with libstdc++."
 cmake -G "Ninja" \
-    -DCMAKE_CXX_FLAGS="-std=c++14" \
+    -DCMAKE_CXX_FLAGS="-std=c++14 -latomic" \
     -DCMAKE_INSTALL_PREFIX="../../${FAST_DDS_LIBSTDCXX_INSTALL_FOLDER}" \
     ..
 ninja
-cp "../../libatomic.a" "./src/cpp"
-cp "../../libatomic.so" "./src/cpp"
-cp "../../libatomic.so.1" "./src/cpp"
-cp "../../libatomic.so.1.0.0" "./src/cpp"
 ninja install
 popd >/dev/null
 popd >/dev/null
