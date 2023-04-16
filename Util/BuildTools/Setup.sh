@@ -207,91 +207,81 @@ fi
 unset RPCLIB_BASENAME
 
 # ==============================================================================
-# -- Get foonathan_memory_vendor and compile it with libc++ and libstdc++ ------
+# -- Get foonathan_memory_vendor and compile it with libc++ --------------------
 # ==============================================================================
-export CMAKE_LDFLAGS="-L$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu/lib64/libatomic.so.1.0.0"
+FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan_memory_vendor_${CXX_TAG}
+FAST_CDR_BASENAME=fast_cdr-${CXX_TAG}
 FAST_DDS_BASENAME=fast_dds-${CXX_TAG}
 
 FAST_DDS_LIBCXX_INSTALL_FOLDER=${FAST_DDS_BASENAME}-libcxx-install
-FAST_DDS_LIBSTDCXX_INSTALL_FOLDER=${FAST_DDS_BASENAME}-libstdcxx-install
+FAST_DDS_LIBCXX_INCLUDE=${PWD}/${FAST_DDS_LIBCXX_INSTALL_FOLDER}/include
+FAST_DDS_LIBCXX_LIBPATH=${PWD}/${FAST_DDS_LIBCXX_INSTALL_FOLDER}/lib
 
-FAST_DDS_LIBSTDCXX_INCLUDE=${PWD}/${FAST_DDS_LIBSTDCXX_INSTALL_FOLDER}/include
-FAST_DDS_LIBSTDCXX_LIBPATH=${PWD}/${FAST_DDS_LIBSTDCXX_INSTALL_FOLDER}/lib
-
-FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan_memory_vendor_${CXX_TAG}
-
-if [[ -d "${FAST_DDS_BASENAME}-libcxx-install" && -d "${FAST_DDS_BASENAME}-libstdcxx-install" ]] ; then
+if [[-d "${FAST_DDS_BASENAME}-libcxx-install" ]] ; then
   log "${FAST_DDS_BASENAME} already installed."
 else
-  rm -Rf \
-      ${FAST_DDS_BASENAME}-source \
-      ${FAST_DDS_BASENAME}-libcxx-build ${FAST_DDS_BASENAME}-libstdcxx-build \
-      ${FAST_DDS_BASENAME}-libcxx-install ${FAST_DDS_BASENAME}-libstdcxx-install
   log "Retrieving foonathan_memory_vendor."
   git clone https://github.com/eProsima/foonathan_memory_vendor.git ${FOONATHAN_MEMORY_VENDOR_BASENAME}-source
   pushd ${FOONATHAN_MEMORY_VENDOR_BASENAME}-source >/dev/null
-  log "Building foonathan_memory_vendor with libstdc++."
-  mkdir libstdcxx-build
-  pushd libstdcxx-build >/dev/null
+  log "Building foonathan_memory_vendor with libcxx."
+  mkdir libcxx-build
+  pushd libcxx-build >/dev/null
   cmake -G "Ninja" \
       -DBUILD_SHARED_LIBS=ON \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -L${LLVM_LIBPATH}/lib64" \
-      -DCMAKE_INSTALL_PREFIX="../../${FAST_DDS_LIBSTDCXX_INSTALL_FOLDER}" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}" \
+      -DCMAKE_INSTALL_PREFIX="../../${FAST_DDS_LIBCXX_INSTALL_FOLDER}" \
       ..
   ninja
   ninja install
   popd >/dev/null
   popd >/dev/null
   rm -Rf ${FOONATHAN_MEMORY_VENDOR_BASENAME}-source
-fi
 
-unset FOONATHAN_MEMORY_VENDOR_BASENAME
 
 # ==============================================================================
-# -- Get fast-cdr and compile it with libc++ and libstdc++ ---------------------
+# -- Get fast-cdr and compile it with libc++ -----------------------------------
 # ==============================================================================
 
-FAST_CDR_BASENAME=fast_cdr-${CXX_TAG}
-
-log "Retrieving fast_cdr."
-git clone https://github.com/eProsima/Fast-CDR.git ${FAST_CDR_BASENAME}-source
-pushd ${FAST_CDR_BASENAME}-source >/dev/null
-mkdir libstdcxx-build
-pushd libstdcxx-build >/dev/null
-log "Building fast_cdr with libstdc++."
-cmake -G "Ninja" \
-    -DCMAKE_CXX_FLAGS="-std=c++14" \
-    -DCMAKE_INSTALL_PREFIX="../../${FAST_DDS_LIBSTDCXX_INSTALL_FOLDER}" \
-    ..
-ninja
-ninja install
-popd >/dev/null
-popd >/dev/null
-rm -Rf ${FAST_CDR_BASENAME}-source
-
-unset FAST_CDR_BASENAME
+  log "Retrieving fast_cdr."
+  git clone https://github.com/eProsima/Fast-CDR.git ${FAST_CDR_BASENAME}-source
+  pushd ${FAST_CDR_BASENAME}-source >/dev/null
+  mkdir libcxx-build
+  pushd libcxx-build >/dev/null
+  log "Building fast_cdr with libcxx."
+  cmake -G "Ninja" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}" \
+      -DCMAKE_INSTALL_PREFIX="../../${FAST_DDS_LIBCXX_INSTALL_FOLDER}" \
+      ..
+  ninja
+  ninja install
+  popd >/dev/null
+  popd >/dev/null
+  rm -Rf ${FAST_CDR_BASENAME}-source
 
 # ==============================================================================
 # -- Get fast-dds and compile it with libc++ and libstdc++ ---------------------
 # ==============================================================================
 
-log "Retrieving fast_dds."
-git clone https://github.com/eProsima/Fast-DDS.git ${FAST_DDS_BASENAME}-source
-pushd ${FAST_DDS_BASENAME}-source >/dev/null
+  log "Retrieving fast_dds."
+  git clone https://github.com/eProsima/Fast-DDS.git ${FAST_DDS_BASENAME}-source
+  pushd ${FAST_DDS_BASENAME}-source >/dev/null
 
-mkdir libstdcxx-build
-pushd libstdcxx-build >/dev/null
-log "Building fast_dds with libstdc++."
-cmake -G "Ninja" \
-    -DCMAKE_CXX_FLAGS="-std=c++14 -latomic" \
-    -DCMAKE_INSTALL_PREFIX="../../${FAST_DDS_LIBSTDCXX_INSTALL_FOLDER}" \
-    ..
-ninja
-ninja install
-popd >/dev/null
-popd >/dev/null
-rm -Rf ${FAST_DDS_BASENAME}-source
+  mkdir libcxx-build
+  pushd libcxx-build >/dev/null
+  log "Building fast_dds with libcxx."
+  cmake -G "Ninja" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -latomic -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}" \
+      -DCMAKE_INSTALL_PREFIX="../../${FAST_DDS_LIBCXX_INSTALL_FOLDER}" \
+      ..
+  ninja
+  ninja install
+  popd >/dev/null
+  popd >/dev/null
+  rm -Rf ${FAST_DDS_BASENAME}-source
+fi
 
+unset FOONATHAN_MEMORY_VENDOR_BASENAME
+unset FAST_CDR_BASENAME
 unset FAST_DDS_BASENAME
 
 # ==============================================================================
@@ -964,6 +954,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   set(LLVM_LIB_PATH "${LLVM_LIBPATH}")
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBCXX_INCLUDE}")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBCXX_LIBPATH}")
+  set(FAST_DDS_INCLUDE_PATH "${FAST_DDS_LIBCXX_INCLUDE}")
+  set(FAST_DDS_LIB_PATH "${FAST_DDS_LIBCXX_LIBPATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBCXX_LIBPATH}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Pytorch")
