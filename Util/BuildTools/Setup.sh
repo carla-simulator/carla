@@ -217,7 +217,7 @@ FAST_DDS_LIBCXX_INSTALL_FOLDER=${FAST_DDS_BASENAME}-libcxx-install
 FAST_DDS_LIBCXX_INCLUDE=${PWD}/${FAST_DDS_LIBCXX_INSTALL_FOLDER}/include
 FAST_DDS_LIBCXX_LIBPATH=${PWD}/${FAST_DDS_LIBCXX_INSTALL_FOLDER}/lib
 
-if [[-d "${FAST_DDS_BASENAME}-libcxx-install" ]] ; then
+if [ -d "${FAST_DDS_LIBCXX_INSTALL_FOLDER}" ] ; then
   log "${FAST_DDS_BASENAME} already installed."
 else
   log "Retrieving foonathan_memory_vendor."
@@ -249,7 +249,6 @@ else
   pushd libcxx-build >/dev/null
   log "Building fast_cdr with libcxx."
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}" \
       -DCMAKE_INSTALL_PREFIX="../../${FAST_DDS_LIBCXX_INSTALL_FOLDER}" \
       ..
   ninja
@@ -270,7 +269,7 @@ else
   pushd libcxx-build >/dev/null
   log "Building fast_dds with libcxx."
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -latomic -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}" \
+      -DCMAKE_CXX_FLAGS="-latomic" \
       -DCMAKE_INSTALL_PREFIX="../../${FAST_DDS_LIBCXX_INSTALL_FOLDER}" \
       ..
   ninja

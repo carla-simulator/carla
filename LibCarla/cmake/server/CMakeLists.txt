@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(libcarla-server)
 
-#find_package(fastcdr REQUIRED)
-find_package(fastrtps REQUIRED)
-
 # Install libc++ shared libraries.
 file(GLOB LibCXX_Libraries "${LLVM_LIB_PATH}/libc++*")
 install(FILES ${LibCXX_Libraries} DESTINATION lib)
@@ -12,6 +9,11 @@ install(FILES ${LibCXX_Libraries} DESTINATION lib)
 install(DIRECTORY "${RPCLIB_INCLUDE_PATH}/rpc" DESTINATION include)
 file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
 install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
+
+# Install fastdds.
+install(DIRECTORY "${FAST_DDS_INCLUDE_PATH}" DESTINATION include)
+file(GLOB libcarla_carla_fastdds "${FAST_DDS_LIB_PATH}/*.*")
+install(FILES ${libcarla_carla_fastdds} DESTINATION lib)
 
 # Install headers.
 
@@ -140,12 +142,13 @@ if (LIBCARLA_BUILD_RELEASE)
 
   target_include_directories(carla_server SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
-      "${RPCLIB_INCLUDE_PATH}")
+      "${RPCLIB_INCLUDE_PATH}"
+      "${FAST_DDS_INCLUDE_PATH}")
 
   install(TARGETS carla_server DESTINATION lib OPTIONAL)
 
   set_target_properties(carla_server PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
-  target_link_libraries(carla_server fastrtps)
+  target_link_libraries(carla_server)
 
 endif()
 
@@ -155,12 +158,13 @@ if (LIBCARLA_BUILD_DEBUG)
 
   target_include_directories(carla_server_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
-      "${RPCLIB_INCLUDE_PATH}")
+      "${RPCLIB_INCLUDE_PATH}"
+      ${FAST_DDS_INCLUDE_PATH})
 
   install(TARGETS carla_server_debug DESTINATION lib OPTIONAL)
 
   set_target_properties(carla_server_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
   target_compile_definitions(carla_server_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
-  target_link_libraries(carla_server fastrtps)
+  target_link_libraries(carla_server)
 
 endif()
