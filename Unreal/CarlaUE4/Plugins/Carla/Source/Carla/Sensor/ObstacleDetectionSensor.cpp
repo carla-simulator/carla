@@ -13,6 +13,10 @@
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include "carla/ros2/ROS2.h"
+#include <compiler/enable-ue4-macros.h>
+
 AObstacleDetectionSensor::AObstacleDetectionSensor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -135,7 +139,19 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
   if ((Actor != nullptr) && (OtherActor != nullptr) && IsStreamReady())
   {
     const auto &Episode = GetEpisode();
-    GetDataStream(*this).Send(*this,
+
+    auto DataStream = GetDataStream(*this);
+
+    // ROS2
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
+      auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
+      ROS2->ProcessDataFromObstacleDetection(DataStream.GetSensorType(), StreamId, Actor, OtherActor, HitDistance/100.0f);
+    }
+
+    DataStream.Send(*this,
         Episode.SerializeActor(Actor),
         Episode.SerializeActor(OtherActor),
         HitDistance/100.0f);

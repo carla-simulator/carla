@@ -158,5 +158,13 @@ void ROS2::ProcessDataFromDVS(uint64_t sensor_type,
     log_info("Sensor Radar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._detections.size());
   }
 
+  void ROS2::ProcessDataFromObstacleDetection(uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
+      AActor *Actor,
+      AActor *OtherActor,
+      float Distance) {
+    log_info("Sensor ObstacleDetector to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "distance.", Distance);
+  }
+
 } // namespace ros2
 } // namespace carla

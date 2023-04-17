@@ -12,6 +12,7 @@
 #include <unordered_set>
 
 // forward declarations
+class AActor;
 namespace carla {
   namespace geom {
     class GeoLocation;
@@ -78,6 +79,11 @@ class ROS2
   void ProcessDataFromRadar(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::sensor::data::RadarData &data);
+  void ProcessDataFromObstacleDetection(uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
+      AActor *Actor,
+      AActor *OtherActor,
+      float Distance);
 
   private:
 

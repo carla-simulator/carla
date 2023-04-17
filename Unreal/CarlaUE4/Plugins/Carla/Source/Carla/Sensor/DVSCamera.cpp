@@ -15,7 +15,7 @@
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include "Carla/ros2/ROS2.h"
+#include "carla/ros2/ROS2.h"
 #include <compiler/enable-ue4-macros.h>
 
 static float FColorToGrayScaleFloat(FColor Color)

@@ -13,7 +13,7 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Vector3D.h"
-#include "Carla/ros2/ROS2.h"
+#include "carla/ros2/ROS2.h"
 #include <compiler/enable-ue4-macros.h>
 
 AGnssSensor::AGnssSensor(const FObjectInitializer &ObjectInitializer)
