@@ -159,7 +159,7 @@ if (LIBCARLA_BUILD_DEBUG)
   target_include_directories(carla_server_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
-      ${FAST_DDS_INCLUDE_PATH})
+      "${FAST_DDS_INCLUDE_PATH}")
 
   install(TARGETS carla_server_debug DESTINATION lib OPTIONAL)
 

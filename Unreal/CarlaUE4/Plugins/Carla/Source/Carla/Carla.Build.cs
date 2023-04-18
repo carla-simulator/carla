@@ -215,6 +215,10 @@ public class Carla : ModuleRules
     else
     {
       PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
+      AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libfastcdr.so"));
+      AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libfastrtps.so"));
+      AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libfoonathan_memory-0.7.3.so"));
+
       if (UseDebugLibs(Target))
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
