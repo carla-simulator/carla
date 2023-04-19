@@ -20,6 +20,7 @@
 #include <carla/sensor/data/GnssMeasurement.h>
 #include <carla/sensor/data/RadarMeasurement.h>
 #include <carla/sensor/data/DVSEventArray.h>
+#include <carla/sensor/data/GimbalEvent.h>
 
 #include <carla/sensor/data/RadarData.h>
 
@@ -572,5 +573,13 @@ void export_sensor_data() {
     .def("to_array_t", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayT))
     .def("to_array_pol", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayPol))
     .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<csd::GimbalEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::GimbalEvent>>("GimbalEvent", no_init)
+    .def("__len__", &csd::GimbalEvent::size)
+    .def("__iter__", iterator<csd::GimbalEvent>())
+    .def("__getitem__", +[](const csd::GimbalEvent &self, size_t pos) -> cr::ActorId {
+      return self.at(pos);
+    })
   ;
 }

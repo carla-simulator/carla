@@ -9,6 +9,8 @@
 #include "carla/Logging.h"
 #include "carla/client/detail/Simulator.h"
 
+#include "carla/rpc/GimbalMode.h"
+
 #include <exception>
 
 constexpr size_t GBufferTextureCount = 13;
@@ -91,6 +93,14 @@ namespace client {
       Stop();
     }
     return Actor::Destroy();
+  }
+
+  void ServerSideSensor::SetGimbalMode(const carla::rpc::GimbalMode mode) {
+    GetEpisode().Lock()->SetGimbalMode(*this, mode);
+  }
+
+  void ServerSideSensor::SetGimbalCmd(const float roll, const float pitch, const float yaw) {
+    GetEpisode().Lock()->SetGimbalCmd(*this, roll, pitch, yaw);
   }
 
 } // namespace client

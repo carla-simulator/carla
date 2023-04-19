@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/client/Sensor.h"
+#include "carla/rpc/GimbalMode.h"
 #include <bitset>
 
 namespace carla {
@@ -51,6 +52,12 @@ namespace client {
     ///
     /// Additionally stop listening.
     bool Destroy() override;
+
+    /// Set Gimbal commands for roll, pitch, and yaw
+    void SetGimbalCmd(const float roll, const float pitch, const float yaw);
+
+    /// Set Gimbal commands for roll, pitch, and yaw
+    void SetGimbalMode(const carla::rpc::GimbalMode mode);
 
   private:
 

@@ -19,6 +19,7 @@
 #include "carla/rpc/EnvironmentObject.h"
 #include "carla/rpc/EpisodeInfo.h"
 #include "carla/rpc/EpisodeSettings.h"
+#include "carla/rpc/GimbalMode.h"
 #include "carla/rpc/LabelledPoint.h"
 #include "carla/rpc/LightState.h"
 #include "carla/rpc/MapInfo.h"
@@ -413,6 +414,11 @@ namespace detail {
 
     std::vector<rpc::LabelledPoint> CastRay(
         geom::Location start_location, geom::Location end_location) const;
+
+    void SetGimbalCmd(
+        rpc::ActorId gimbal_sensor, const float roll, const float pitch, const float yaw);
+
+    void SetGimbalMode(rpc::ActorId gimbal_sensor, const rpc::GimbalMode mode);
 
   private:
 

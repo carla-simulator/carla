@@ -2409,6 +2409,66 @@ void FCarlaServer::FPimpl::BindActions()
     return URayTracer::CastRay(StartLocation, EndLocation, World);
   };
 
+// ~~ GimbalSensor ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  BIND_SYNC(set_gimbal_mode) << [this](
+      cr::ActorId ActorId,
+      cr::GimbalMode mode) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "set_gimbal_mode",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    auto Gimbal = Cast<AGimbal>(CarlaActor->GetActor());
+    if (Gimbal == nullptr)
+    {
+      RESPOND_ERROR("unable to get gimbal sensor: actor is not a gimbal sensor");
+    }
+    ECarlaServerResponse Response =
+        Gimbal->SetMode(mode);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_gimbal_mode",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_gimbal_cmd) << [this](
+      cr::ActorId ActorId,
+      float roll, float pitch, float yaw) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "set_gimbal_cmd",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    auto Gimbal = Cast<AGimbal>(CarlaActor->GetActor());
+    if (Gimbal == nullptr)
+    {
+      RESPOND_ERROR("unable to get gimbal sensor: actor is not a gimbal sensor");
+    }
+    ECarlaServerResponse Response =
+        Gimbal->SetCmd(roll, pitch, yaw);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_gimbal_cmd",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
 }
 
 // =============================================================================

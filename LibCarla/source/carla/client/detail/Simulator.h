@@ -11,6 +11,7 @@
 #include "carla/NonCopyable.h"
 #include "carla/client/Actor.h"
 #include "carla/client/GarbageCollectionPolicy.h"
+#include "carla/client/GimbalSensor.h"
 #include "carla/client/TrafficLight.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/Walker.h"
@@ -27,6 +28,7 @@
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/rpc/Texture.h"
 #include "carla/rpc/MaterialParameter.h"
+#include "carla/rpc/GimbalMode.h"
 
 #include <boost/optional.hpp>
 
@@ -600,6 +602,28 @@ namespace detail {
     void UnSubscribeFromGBuffer(
         Actor & sensor,
         uint32_t gbuffer_id);
+
+    /// @}
+    // =========================================================================
+    /// @name Operations with gimbals
+    // =========================================================================
+    /// @{
+
+    void SetGimbalMode(GimbalSensor &gimbal, const rpc::GimbalMode mode) {
+      _client.SetGimbalMode(gimbal.GetId(), mode);
+    };
+
+    void SetGimbalCmd(GimbalSensor &gimbal, const float roll, const float pitch, const float yaw) {
+      _client.SetGimbalCmd(gimbal.GetId(), roll, pitch, yaw);
+    };
+
+    void SetGimbalMode(Sensor &gimbal, const rpc::GimbalMode mode) {
+      _client.SetGimbalMode(gimbal.GetId(), mode);
+    };
+
+    void SetGimbalCmd(Sensor &gimbal, const float roll, const float pitch, const float yaw) {
+      _client.SetGimbalCmd(gimbal.GetId(), roll, pitch, yaw);
+    };
 
     /// @}
     // =========================================================================

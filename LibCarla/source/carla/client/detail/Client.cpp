@@ -667,6 +667,14 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
   }
 
+  void Client::SetGimbalCmd(rpc::ActorId gimbal_sensor, const float roll, const float pitch, const float yaw) {
+    _pimpl->AsyncCall("set_gimbal_cmd", gimbal_sensor, roll, pitch, yaw);
+  }
+
+  void Client::SetGimbalMode(rpc::ActorId gimbal_sensor, const rpc::GimbalMode mode) {
+    _pimpl->AsyncCall("set_gimbal_mode", gimbal_sensor, mode);
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla
