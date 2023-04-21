@@ -27,7 +27,7 @@ Once you have downloaded the OSM file, you then need to process it to allow the 
 Linux:
 
 ```sh
-{libosm-src-path}/maps/build.sh <path_to_osm_file>
+{CARLA_ROOT}/maps/build.sh <path_to_osm_file>
 ```
 
 Windows:
@@ -41,7 +41,7 @@ Windows:
 
 ## OpenStreetMap browser
 
-To open the OSM browser, open the content browser and navigate to `CarlaToolsContent/OnroadMapGenerator`. Double click on *UW_OnRoadMainWidget*. This will open the tool's interface. 
+To open the OSM browser, open the content browser and navigate to `CarlaToolsContent/OnroadMapGenerator`. Right click on *UW_OnRoadMainWidget* and select *Launch Editor Utility Widget* from the context menu. This will open the tool's interface. 
 
 ![osm_interface_open](img/open_digital_twin_tool.png)
 
