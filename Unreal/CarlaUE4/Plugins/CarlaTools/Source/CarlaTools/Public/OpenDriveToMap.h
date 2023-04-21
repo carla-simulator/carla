@@ -36,7 +36,10 @@ public:
   void CreateMap();
 
   UFUNCTION(BlueprintCallable)
-  void CreateTerrainMesh(const int GridSize, const float GridSectionSize, const class UTexture2D* HeightmapTexture);
+  void CreateTerrain(const int SectionPerSize, const int MeshGridSize, const float MeshGridSectionSize, const class UTexture2D* HeightmapTexture);
+
+  UFUNCTION(BlueprintCallable)
+  void CreateTerrainMesh(const int MeshIndex, const FVector2D Offset, const int GridSize, const float GridSectionSize, const class UTexture2D* HeightmapTexture, const class UTexture2D* RoadMask);
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;

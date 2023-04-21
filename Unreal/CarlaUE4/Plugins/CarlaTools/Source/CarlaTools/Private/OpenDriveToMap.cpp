@@ -145,13 +145,28 @@ void UOpenDriveToMap::CreateMap()
   ActorMeshList.Empty();
 }
 
-void UOpenDriveToMap::CreateTerrainMesh(const int GridSize, const float GridSectionSize, const UTexture2D* HeightmapTexture)
+void UOpenDriveToMap::CreateTerrain(const int SectionPerSize, const int MeshGridSize, const float MeshGridSectionSize, const class UTexture2D* HeightmapTexture)
+{
+  /* Blueprint darfted code should be here */
+  for(int i = 0; i < SectionPerSize; i++)
+  {
+    for(int j = 0; j < SectionPerSize; j++)
+    {
+      // Offset that each procedural mesh is displaced to accomodate all the tiles
+      FVector2D Offset( i * MeshGridSectionSize * MeshGridSize, j * MeshGridSectionSize * MeshGridSize);
+      CreateTerrainMesh(i * SectionPerSize + j, Offset, MeshGridSize, MeshGridSectionSize, HeightmapTexture, /* Change to mask RT */ nullptr);
+    }
+  }
+}
+
+void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Offset, const int GridSize, const float GridSectionSize, const UTexture2D* HeightmapTexture, const UTexture2D* RoadMask)
 {
   // const float GridSectionSize = 100.0f; // In cm
   const float HeightScale = 3.0f;
 
   UWorld* World = GetWorld();
 
+  // Creation of the procedural mesh
   FActorSpawnParameters Params;
   AProceduralMeshActor* MeshActor = World->SpawnActor<AProceduralMeshActor>(AProceduralMeshActor::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, Params);
   UProceduralMeshComponent* Mesh = Cast<UProceduralMeshComponent>(MeshActor->GetComponentByClass(UProceduralMeshComponent::StaticClass()));
@@ -164,32 +179,44 @@ void UOpenDriveToMap::CreateTerrainMesh(const int GridSize, const float GridSect
   TArray<FProcMeshTangent> Tangents;
   TArray<FVector2D> UVs;
 
+  // Procedural mesh default parameters
   Normals.Init(FVector(0.0f, 0.0f, 1.0f), Vertices.Num());
   Colors.Init(FLinearColor(0.0f, 0.0f, 0.0f, 1.0f), Vertices.Num());
   Tangents.Init(FProcMeshTangent(FVector(0.0f, 1.0f, 0.0f), false), Vertices.Num());
-  // UVs.Init(FVector2D::ZeroVector, Vertices.Num());
 
+  // Get Heightmap data from texture, Loading first mip and getting a pointer to the color of the first pixel
   FByteBulkData* RawHeightmap = &HeightmapTexture->PlatformData->Mips[0].BulkData;
   FColor* FormatedHeightmap = StaticCast<FColor*>(RawHeightmap->Lock(LOCK_READ_ONLY));
 
-  FColor DebugColor = FColor::Emerald;
-  // int CellIndex = 0;
+  // Road mask
+  // FByteBulkData* RawRoadMask = &RoadMask->PlatformData->Mips[0].BulkData; /* Uncomment to apply road mask */
+  // FColor* FormatedRoadMask = StaticCast<FColor*>(RawRoadMask->Lock(LOCK_READ_ONLY)); /* Uncomment to apply road mask */
+
+  // check(FormatedHeightmap != nullptr);
+  // check(FormatedRoadMask != nullptr);
+
   const float GridTotalSize = GridSize * GridSectionSize;
   for(float i = 0.f; i < GridTotalSize; i += GridSectionSize)
   {
     for(float j = 0.f; j < GridTotalSize; j += GridSectionSize)
     {
-      // DrawDebugSphere(World, FVector(i, j, 0.0f), 10.0f, 5, DebugColor, true, 30.0f, 0, 0.0f);
       const int CellIndex = (i / GridSectionSize) + (j / GridSectionSize * GridSize);
-      float HeightValue = HeightScale *  FormatedHeightmap[CellIndex].R;
-      Vertices.Add(FVector(i, j, HeightValue));
+      float HeightValue = 0.f;
+      UE_LOG(LogTemp, Warning, TEXT("CellIndex = %d"), CellIndex);
+      // if(FormatedRoadMask[CellIndex].R < 0.05f) // Small Threshold  /* Uncomment to apply road mask */
+      {
+        // Getting the value for the height in this vertex.
+        // If the road mask is higher that 0, there is road so height value = 0
+        HeightValue = HeightScale *  FormatedHeightmap[CellIndex].R;
+      }
+      Vertices.Add(FVector(i + Offset.X, j + Offset.Y, HeightValue));
       UVs.Add(FVector2D(i / (GridTotalSize - GridSectionSize), j / (GridTotalSize - GridSectionSize)));
     }
-
-    DebugColor = DebugColor == FColor::Emerald ? FColor::Red : FColor::Emerald;
   }
   RawHeightmap->Unlock();
+  // RawRoadMask->Unlock();  /* Uncomment to apply road mask */
 
+  // Triangles formation. 2 triangles per section.
   for(int i = 0; i < GridSize - 1; i++)
   {
     for(int j = 0; j < GridSize - 1; j++)
@@ -205,7 +232,7 @@ void UOpenDriveToMap::CreateTerrainMesh(const int GridSize, const float GridSect
     }
   }
 
-  Mesh->CreateMeshSection_LinearColor(0, Vertices, Triangles, Normals, UVs, Colors, Tangents, false);
+  Mesh->CreateMeshSection_LinearColor(MeshIndex, Vertices, Triangles, Normals, UVs, Colors, Tangents, false);
 }
 
 void UOpenDriveToMap::OpenFileDialog()
