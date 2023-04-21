@@ -193,7 +193,11 @@ def main():
         world.apply_settings(settings)
 
         blueprints = get_actor_blueprints(world, args.filterv, args.generationv)
+        if not blueprints:
+            raise ValueError("Couldn't find any vehicles with the specified filters")
         blueprintsWalkers = get_actor_blueprints(world, args.filterw, args.generationw)
+        if not blueprintsWalkers:
+            raise ValueError("Couldn't find any walkers with the specified filters")
 
         if args.safe:
             blueprints = [x for x in blueprints if x.get_attribute('base_type') == 'car']
