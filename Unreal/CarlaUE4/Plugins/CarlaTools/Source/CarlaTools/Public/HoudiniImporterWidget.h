@@ -28,8 +28,10 @@ class CARLATOOLS_API UHoudiniImporterWidget : public UEditorUtilityWidget
   UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
   static void MoveActorsToSubLevel(TArray<AActor*> Actors, ULevelStreaming* Level);
 
+  UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
   static void UpdateGenericActorCoordinates(AActor* Actor, FVector TileOrigin);
 
+  UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
   static void UpdateInstancedMeshCoordinates(
       UHierarchicalInstancedStaticMeshComponent* Component, FVector TileOrigin);
   
