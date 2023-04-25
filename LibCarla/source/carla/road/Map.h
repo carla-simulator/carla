@@ -160,11 +160,15 @@ namespace road {
     std::vector<std::unique_ptr<geom::Mesh>> GenerateChunkedMesh(
         const rpc::OpendriveGenerationParameters& params) const;
 
-    std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>> 
+    std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>>
       GenerateOrderedChunkedMesh( const rpc::OpendriveGenerationParameters& params) const;
 
     /// Buids a mesh of all crosswalks based on the OpenDRIVE
     geom::Mesh GetAllCrosswalkMesh() const;
+
+    std::vector<std::pair<geom::Vector3D, std::string>> GetTreesPosition(
+      float distancebetweentrees,
+      float distancefromdrivinglineborder) const;
 
     geom::Mesh GenerateWalls(const double distance, const float wall_height) const;
 
@@ -214,11 +218,11 @@ private:
 public:
     inline float GetZPosInDeformation(float posx, float posy) const;
 
-    std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> 
+    std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>
       GenerateRoadsMultithreaded( const carla::geom::MeshFactory& mesh_factory,
                                    const size_t index, const size_t number_of_roads_per_thread) const;
-    
-    void GenerateJunctions(const carla::geom::MeshFactory& mesh_factory, 
+
+    void GenerateJunctions(const carla::geom::MeshFactory& mesh_factory,
       const rpc::OpendriveGenerationParameters& params,
       std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>*
       juntion_out_mesh_list) const;

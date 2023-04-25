@@ -17,6 +17,7 @@
 #include "carla/road/element/RoadInfoLaneOffset.h"
 #include "carla/road/element/RoadInfoLaneWidth.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
+#include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/road/element/RoadInfoSignal.h"
 
 #include "simplify/Simplify.h"
@@ -1134,8 +1135,8 @@ namespace road {
     return result;
   }
 
-  std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>> 
-    Map::GenerateOrderedChunkedMesh( const rpc::OpendriveGenerationParameters& params) const 
+  std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>>
+    Map::GenerateOrderedChunkedMesh( const rpc::OpendriveGenerationParameters& params) const
   {
 
     geom::MeshFactory mesh_factory(params);
@@ -1155,7 +1156,8 @@ namespace road {
     for ( size_t i = 0; i < num_threads; ++i ) {
       std::thread neworker(
         [this, &write_mutex, &mesh_factory, &road_out_mesh_list, i, num_roads_per_thread]() {
-        std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current = std::move(GenerateRoadsMultithreaded(mesh_factory, i, num_roads_per_thread));          
+        std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current =
+          std::move(GenerateRoadsMultithreaded(mesh_factory, i, num_roads_per_thread));
         std::lock_guard<std::mutex> guard(write_mutex);
         for ( auto&& pair : Current ) {
           if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end()) {
@@ -1166,7 +1168,6 @@ namespace road {
             road_out_mesh_list[pair.first] = std::move(pair.second);
           }
         }
-      
       });
       workers.push_back(std::move(neworker));
     }
@@ -1293,21 +1294,54 @@ namespace road {
     return returning;
   }
 
+   std::vector<std::pair<geom::Vector3D, std::string>> Map::GetTreesPosition(
+    float distancebetweentrees,
+    float distancefromdrivinglineborder) const {
+
+    std::vector<std::pair<geom::Vector3D, std::string>> positions;
+    for (auto &&pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      if (!road.IsJunction()) {
+        for (auto &&lane_section : road.GetLaneSections()) {
+          const auto min_lane = lane_section.GetLanes().begin()->first == 0 ?
+            1 : lane_section.GetLanes().begin()->first;
+          const auto max_lane = lane_section.GetLanes().rbegin()->first == 0 ?
+           -1 : lane_section.GetLanes().rbegin()->first;
+          const road::Lane* lane = lane_section.GetLane(min_lane);
+          if( lane ) {
+            double s_current = lane_section.GetDistance();
+            const double s_end = lane_section.GetDistance() + lane_section.GetLength();
+            while(s_current < s_end){
+              const auto edges = lane->GetCornerPositions(s_current, 0);
+              geom::Vector3D director = edges.second - edges.first;
+              geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
+              const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
+              positions.push_back(std::make_pair(treeposition,roadinfo->GetType()));
+              s_current += distancebetweentrees;
+            }
+
+          }
+        }
+      }
+    }
+    return positions;
+  }
+
   inline float Map::GetZPosInDeformation(float posx, float posy) const {
     return geom::deformation::GetZPosInDeformation(posx, posy) +
       geom::deformation::GetBumpDeformation(posx,posy);
   }
 
-  std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> 
-      Map::GenerateRoadsMultithreaded( const carla::geom::MeshFactory& mesh_factory, 
-                                        const size_t index, const size_t number_of_roads_per_thread) const 
+  std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>
+      Map::GenerateRoadsMultithreaded( const carla::geom::MeshFactory& mesh_factory,
+                                        const size_t index, const size_t number_of_roads_per_thread) const
   {
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> out;
 
     auto start = std::next( _data.GetRoads().begin(), (index ) * number_of_roads_per_thread);
     size_t endoffset = (index+1) * number_of_roads_per_thread;
     if( endoffset >= _data.GetRoads().size() ) {
-      endoffset = _data.GetRoads().size(); 
+      endoffset = _data.GetRoads().size();
     }
     auto end = std::next( _data.GetRoads().begin(), endoffset );
 
@@ -1435,7 +1469,7 @@ namespace road {
     auto start = std::next( roadsmesh.begin(), ( index ) * number_of_roads_per_thread);
     size_t endoffset = (index+1) * number_of_roads_per_thread;
     if( endoffset >= roadsmesh.size() ) {
-      endoffset = roadsmesh.size(); 
+      endoffset = roadsmesh.size();
     }
     auto end = std::next( roadsmesh.begin(), endoffset );
     for ( auto it = start; it != end  && it != roadsmesh.end(); ++it ) {
@@ -1485,7 +1519,7 @@ namespace road {
         current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[0]) + 1);
         current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
         current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
-      } 
+      }
     }
   }
 
@@ -1505,7 +1539,7 @@ namespace road {
     {
       geom::Vector3D worldloc(pos.x, pos.y, pos.z);
       boost::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(worldloc), 0x1 << 1);
-      
+
       if (CheckingWaypoint) {
         if ( pos.z < 0.2) {
           return 0.0;
@@ -1513,7 +1547,7 @@ namespace road {
           return -abs(pos.z);
         }
       }
-      
+
       boost::optional<element::Waypoint> InRoadWaypoint = GetClosestWaypointOnRoad(geom::Location(worldloc), 0x1 << 1);
       geom::Transform InRoadWPTransform = ComputeTransform(*InRoadWaypoint);
 
@@ -1540,7 +1574,7 @@ namespace road {
     carla::geom::Vector3D trasltation = bb.location;
 
     geom::Mesh out_mesh;
-    
+
     for (auto& cv : mesh.vertices) {
 
       geom::Vector3D newvertex;

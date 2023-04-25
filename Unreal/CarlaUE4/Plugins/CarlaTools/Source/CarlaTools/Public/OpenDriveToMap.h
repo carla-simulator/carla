@@ -20,7 +20,7 @@ class UMeshComponent;
 class UCustomFileDownloader;
 class UMaterialInstance;
 /**
- * 
+ *
  */
 UCLASS(Blueprintable, BlueprintType)
 class CARLATOOLS_API UOpenDriveToMap : public UObject
@@ -30,7 +30,7 @@ class CARLATOOLS_API UOpenDriveToMap : public UObject
 public:
 
   UFUNCTION()
-  void ConvertOSMInOpenDrive(); 
+  void ConvertOSMInOpenDrive();
 
   UFUNCTION( BlueprintCallable )
   void CreateMap();
@@ -52,13 +52,22 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UMaterialInstance* DefaultLaneMarksMaterial;
-  
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UMaterialInstance* DefaultSidewalksMaterial;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  float DistanceBetweenTrees = 50.0f;
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  float DistanceFromRoadEdge = 3.0f;
+
 protected:
 
   UFUNCTION( BlueprintCallable )
   void SaveMap();
+
+  UFUNCTION( BlueprintImplementableEvent )
+  void GenerationFinished();
 private:
 
   UFUNCTION()
@@ -70,13 +79,14 @@ private:
   void GenerateAll(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateRoadMesh(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateSpawnPoints(const boost::optional<carla::road::Map>& CarlaMap);
+  void GenerateTreePositions(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap);
 
   carla::rpc::OpendriveGenerationParameters opg_parameters;
 
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
   TArray<UStaticMesh*> CreateStaticMeshAssets();
-  
+
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
   UPROPERTY()
@@ -89,5 +99,4 @@ private:
   TArray<FString> RoadType;
   UPROPERTY()
   TArray<UProceduralMeshComponent*> RoadMesh;
-  
 };
