@@ -29,10 +29,10 @@ class CARLATOOLS_API UHoudiniImporterWidget : public UEditorUtilityWidget
 
   static void UpdateInstancedMeshCoordinates(
       UHierarchicalInstancedStaticMeshComponent* Component, FVector TileOrigin);
-  
+
   UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
   static void UseCOMasActorLocation(TArray<AActor*> Actors);
-  
+
   // Gets the total number of cluster from the actor name following the following scheme
   // b{builsing}c{cluster}of{clustersize}
   UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
