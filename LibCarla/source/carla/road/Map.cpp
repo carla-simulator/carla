@@ -1141,9 +1141,9 @@ namespace road {
 
     geom::MeshFactory mesh_factory(params);
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> road_out_mesh_list;
-    std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> juntion_out_mesh_list;
+    std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> junction_out_mesh_list;
 
-    std::thread juntction_thread( &Map::GenerateJunctions, this, mesh_factory, params, &juntion_out_mesh_list);
+    std::thread juntction_thread( &Map::GenerateJunctions, this, mesh_factory, params, &junction_out_mesh_list);
 
     float simplificationrate = params.simplification_percentage * 0.01f;
     size_t num_roads = _data.GetRoads().size();
@@ -1206,7 +1206,7 @@ namespace road {
     }
 
     juntction_thread.join();
-    for (auto&& pair : juntion_out_mesh_list) {
+    for (auto&& pair : junction_out_mesh_list) {
       if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end())
       {
         road_out_mesh_list[pair.first].insert(road_out_mesh_list[pair.first].end(),
@@ -1357,7 +1357,7 @@ namespace road {
   void Map::GenerateJunctions(const carla::geom::MeshFactory& mesh_factory,
     const rpc::OpendriveGenerationParameters& params,
     std::map<road::Lane::LaneType,
-    std::vector<std::unique_ptr<geom::Mesh>>>* juntion_out_mesh_list) const {
+    std::vector<std::unique_ptr<geom::Mesh>>>* junction_out_mesh_list) const {
 
     float simplificationrate = params.simplification_percentage * 0.01f;
     for (const auto& junc_pair : _data.GetJunctions()) {
@@ -1408,7 +1408,7 @@ namespace road {
           pmesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
         }
 
-        (*juntion_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
+        (*junction_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
 
         for (const auto& connection_pair : junction.GetConnections()) {
           const auto& connection = connection_pair.second;
@@ -1426,7 +1426,7 @@ namespace road {
         for (auto& lane : sidewalk_lane_meshes) {
           *sidewalk_mesh += *lane;
         }
-        (*juntion_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
+        (*junction_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
       } else {
         std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
         std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
@@ -1457,8 +1457,8 @@ namespace road {
           *sidewalk_mesh += *lane;
         }
 
-        (*juntion_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(merged_mesh));
-        (*juntion_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
+        (*junction_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(merged_mesh));
+        (*junction_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
       }
     }
   }
@@ -1567,12 +1567,9 @@ namespace road {
     domain.size = { bb.extent.x * box_extraextension_factor * 2, bb.extent.y * box_extraextension_factor * 2, 0.4 };
 
     MeshReconstruction::Vec3 cubeSize{ CubeSize, CubeSize, 0.2 };
-
     auto mesh = MeshReconstruction::MarchCube(junctionsdf, domain, cubeSize );
-
     carla::geom::Rotation inverse = bb.rotation;
     carla::geom::Vector3D trasltation = bb.location;
-
     geom::Mesh out_mesh;
 
     for (auto& cv : mesh.vertices) {

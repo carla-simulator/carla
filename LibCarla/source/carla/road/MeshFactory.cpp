@@ -80,9 +80,7 @@ namespace geom {
       const auto edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
       vertices.push_back(edges.first);
       vertices.push_back(edges.second);
-    }
-    else
-    {
+    } else {
       // Iterate over the lane's 's' and store the vertices based on it's width
       do {
         // Get the location of the edges of the current lane at the current waypoint
@@ -137,8 +135,7 @@ namespace geom {
       const geom::Vector3D segments_size = ( edges.second - edges.first ) / segments_number;
       geom::Vector3D current_vertex = edges.first;
 
-      for (int i = 0; i < vertices_in_width; ++i)
-      {
+      for (int i = 0; i < vertices_in_width; ++i) {
         vertices.push_back(current_vertex);
         current_vertex = current_vertex + segments_size;
       }
@@ -187,9 +184,8 @@ namespace geom {
 
   void MeshFactory::GenerateLaneSectionOrdered(
     const road::LaneSection &lane_section,
-    std::map<carla::road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& result)
-    const
-  {
+    std::map<carla::road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& result) const {
+
     const int vertices_in_width = road_param.vertex_width_resolution >= 2 ? road_param.vertex_width_resolution : 2;
     std::vector<size_t> redirections;
     for (auto &&lane_pair : lane_section.GetLanes()) {
@@ -663,8 +659,8 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
   void MeshFactory::GenerateAllOrderedWithMaxLen(
       const road::Road &road,
       std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& roads
-      ) const
-  {
+      ) const {
+
     // Get road meshes
     std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> result = GenerateOrderedWithMaxLen(road);
     for (auto &pair_map : result)

@@ -59,8 +59,8 @@ namespace deformation {
     return A3 * bumpsoffset;
   }
 
-  
 
-} // namespace geom
+
+} // namespace deformation
 } // namespace geom
 } // namespace carla
