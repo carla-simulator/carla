@@ -10,6 +10,7 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaEngine.h"
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 
@@ -44,18 +45,34 @@ void ACollisionSensor::OnCollisionEvent(
     FVector NormalImpulse,
     const FHitResult &Hit)
 {
-  if ((Actor != nullptr) && (OtherActor != nullptr))
-  {
-    const auto &Episode = GetEpisode();
-    constexpr float TO_METERS = 1e-2;
-    NormalImpulse *= TO_METERS;
-    GetDataStream(*this).Send(
-        *this,
-        Episode.SerializeActor(Actor),
-        Episode.SerializeActor(OtherActor),
-        carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z});
-    // record the collision event
-    if (Episode.GetRecorder()->IsEnabled())
-      Episode.GetRecorder()->AddCollision(Actor, OtherActor);
+  if ((Actor == nullptr) || (OtherActor == nullptr)){
+    return;
   }
+
+  uint64_t CurrentFrame = FCarlaEngine::GetFrameCounter();
+  auto CollisionRegistry_ = CollisionRegistry;
+  for (auto & Collision: CollisionRegistry_){
+    if (std::get<0>(Collision) < CurrentFrame){
+      auto Index = std::find(CollisionRegistry.begin(), CollisionRegistry.end(), Collision);
+      CollisionRegistry.erase(Index);
+    }
+    else if ((std::get<0>(Collision) == CurrentFrame) && (std::get<1>(Collision) == Actor) && (std::get<2>(Collision) == OtherActor)){
+      return;
+    }
+  }
+
+  const auto &Episode = GetEpisode();
+  constexpr float TO_METERS = 1e-2;
+  NormalImpulse *= TO_METERS;
+  GetDataStream(*this).Send(
+      *this,
+      Episode.SerializeActor(Actor),
+      Episode.SerializeActor(OtherActor),
+      carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z});
+  // record the collision event
+  if (Episode.GetRecorder()->IsEnabled()){
+    Episode.GetRecorder()->AddCollision(Actor, OtherActor);
+  }
+
+  CollisionRegistry.push_back(std::make_tuple(CurrentFrame, Actor, OtherActor));
 }
