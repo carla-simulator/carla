@@ -25,8 +25,7 @@
 * __Blueprint:__ sensor.other.collision
 * __Output:__ [carla.CollisionEvent](python_api.md#carla.CollisionEvent) per collision.
 
-This sensor registers an event each time its parent actor collisions against something in the world. Several collisions may be detected during a single simulation step.
-To ensure that collisions with any kind of object are detected, the server creates "fake" actors for elements such as buildings or bushes so the semantic tag can be retrieved to identify it.
+This sensor registers an event each time its parent actor collides against something in the world. Each collision sensor produces one collision event per collision per frame. Multiple collision events may be produced in a single frame by collisions with multiple other actors. To ensure that collisions with any kind of object are detected, the server creates "fake" actors for elements such as buildings or bushes so the semantic tag can be retrieved to identify it.
 
 Collision detectors do not have any configurable attribute.
 
