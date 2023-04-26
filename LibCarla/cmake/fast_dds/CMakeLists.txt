@@ -3,8 +3,11 @@ project(libcarla_fastdds)
 
 # Install headers.
 
-file(GLOB libcarla_carla_fastdds_headers "${libcarla_source_path}/carla/fast_dds/*.h")
-install(FILES ${libcarla_carla_fastdds_headers} DESTINATION include/carla)
+file(GLOB libcarla_carla_fastdds_headers
+  "${libcarla_source_path}/carla/ros2/publishers/*.h"
+  "${libcarla_source_path}/carla/ros2/types/*.h"
+  )
+install(FILES ${libcarla_carla_fastdds_headers} DESTINATION include/carla/ros2)
 
 file(GLOB fast_dds_dependencies "${FASTDDS_LIB_PATH}/*.so*")
 install(FILES ${fast_dds_dependencies} DESTINATION lib)
@@ -12,14 +15,11 @@ install(FILES ${fast_dds_dependencies} DESTINATION lib)
 # carla_fastdds library.
 
 file(GLOB libcarla_fastdds_sources
-  "${libcarla_source_path}/carla/fast_dds/*.h"
-  "${libcarla_source_path}/carla/fast_dds/*.cpp"
-  "${libcarla_source_path}/carla/fast_dds/types/*.h"
-  "${libcarla_source_path}/carla/fast_dds/types/*.cpp"
-  "${libcarla_source_path}/carla/fast_dds/types/*.cxx")
+  "${libcarla_source_path}/carla/ros2/publishers/*.cpp"
+  "${libcarla_source_path}/carla/ros2/types/*.cpp")
 
-#find_package(fastrtps REQUIRED)
-#find_package(fastcdr REQUIRED)
+find_package(fastrtps REQUIRED)
+find_package(fastcdr REQUIRED)
 
 set(FASTDDS_CPP_STD_INCLUDES "/usr/include/c++/7")
 set(CMAKE_CXX_FLAGS_RELEASE "-DDEBUG -std=c++14 -O2 -fPIC -D_GLIBCXX_USE_CXX11_ABI=0 -I${FASTDDS_CPP_STD_INCLUDES}" CACHE STRING "" FORCE)
@@ -28,11 +28,10 @@ set(CMAKE_CXX_FLAGS_RELEASE "-DDEBUG -std=c++14 -O2 -fPIC -D_GLIBCXX_USE_CXX11_A
 # Create targets for debug and release in the same build type.
 # ==============================================================================
 
-message("INLCUDES ${FASTDDS_INCLUDE_PATH}")
-
 if (LIBCARLA_BUILD_RELEASE)
   add_library(carla_fastdds STATIC ${libcarla_fastdds_sources})
   target_include_directories(carla_fastdds PRIVATE SYSTEM "${FASTDDS_INCLUDE_PATH}")
+  target_include_directories(carla_fastdds PRIVATE SYSTEM "${libcarla_source_path}/carla/ros2")
   target_link_libraries(carla_fastdds "${FAST_DDS_LIBRARIES}")
 
   install(TARGETS carla_fastdds DESTINATION lib OPTIONAL)
@@ -44,6 +43,7 @@ if (LIBCARLA_BUILD_DEBUG)
 
   add_library(carla_fastdds_debug STATIC ${libcarla_fastdds_sources})
   target_include_directories(carla_fastdds_debug PRIVATE SYSTEM "${FASTDDS_INCLUDE_PATH}")
+  target_include_directories(carla_fastdds PRIVATE SYSTEM "${libcarla_source_path}/carla/ros2")
   target_link_libraries(carla_fastdds_debug "${FAST_DDS_LIBRARIES}")
 
   install(TARGETS carla_fastdds_debug DESTINATION lib OPTIONAL)

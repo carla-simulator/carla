@@ -802,7 +802,6 @@ FASTDDS_BASENAME=fast-dds
 FASTDDS_INSTALL_DIR=${PWD}/${FASTDDS_BASENAME}-install
 FASTDDS_INCLUDE=${FASTDDS_INSTALL_DIR}/include
 FASTDDS_LIB=${FASTDDS_INSTALL_DIR}/lib
-log "LOG ${FASTDDS_INCLUDE}"
 if ${USE_ROS2} ; then
 
   function build_fastdds_extension {
