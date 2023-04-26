@@ -13,8 +13,6 @@
 #include "carla/sensor/data/SemanticLidarData.h"
 #include "carla/sensor/data/RadarData.h"
 
-#include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
-
 namespace carla {
 namespace ros2 {
 

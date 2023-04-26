@@ -9,6 +9,7 @@ public class Carla : ModuleRules
   bool UsingCarSim = false;
   bool UsingChrono = false;
   bool UsingPytorch = false;
+  bool UsingRos2 = true;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
@@ -50,6 +51,14 @@ public class Carla : ModuleRules
         UsingPytorch = true;
         PublicDefinitions.Add("WITH_PYTORCH");
         PrivateDefinitions.Add("WITH_PYTORCH");
+      }
+
+      if (line.Contains("Ros2 ON"))
+      {
+        Console.WriteLine("Enabling ros2");
+        UsingRos2 = true;
+        PublicDefinitions.Add("WITH_ROS2");
+        PrivateDefinitions.Add("WITH_ROS2");
       }
     }
 
@@ -215,10 +224,6 @@ public class Carla : ModuleRules
     else
     {
       PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
-      AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libfastcdr.so"));
-      AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libfastrtps.so"));
-      AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libfoonathan_memory-0.7.3.so"));
-
       if (UseDebugLibs(Target))
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
@@ -309,6 +314,17 @@ public class Carla : ModuleRules
         RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libnvToolsExt-24de1d56.so.1"));
         PublicAdditionalLibraries.Add("stdc++");
         PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libpython3.9.so");
+      }
+
+      if (UsingRos2)
+      {
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds")));
+        
+        string LibFastDDSPath = LibCarlaInstallPath;
+        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfoonathan_memory-0.7.3.so"));
+        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastcdr.so"));
+        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastrtps.so"));
+        PublicAdditionalLibraries.Add("stdc++");
       }
 
 

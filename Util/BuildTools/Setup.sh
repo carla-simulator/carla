@@ -15,6 +15,7 @@ eval set -- "$OPTS"
 PY_VERSION_LIST=3
 USE_CHRONO=false
 USE_PYTORCH=false
+USE_ROS2=true
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -26,6 +27,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --pytorch )
       USE_PYTORCH=true;
+      shift ;;
+    --ros2 )
+      USE_ROS2=true;
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -205,89 +209,6 @@ else
 fi
 
 unset RPCLIB_BASENAME
-
-# ==============================================================================
-# -- Get foonathan_memory_vendor and compile it with libc++ --------------------
-# ==============================================================================
-FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan_memory_vendor_${CXX_TAG}
-FAST_CDR_BASENAME=fast_cdr-${CXX_TAG}
-FAST_DDS_BASENAME=fast_dds-${CXX_TAG}
-
-FAST_DDS_LIBCXX_INSTALL_FOLDER=${FAST_DDS_BASENAME}-libcxx-install
-FAST_DDS_LIBCXX_INCLUDE=${PWD}/${FAST_DDS_LIBCXX_INSTALL_FOLDER}/include
-FAST_DDS_LIBCXX_LIBPATH=${PWD}/${FAST_DDS_LIBCXX_INSTALL_FOLDER}/lib
-
-if [ -d "${FAST_DDS_LIBCXX_INSTALL_FOLDER}" ] ; then
-  log "${FAST_DDS_BASENAME} already installed."
-else
-  log "Retrieving foonathan_memory_vendor."
-  git clone https://github.com/eProsima/foonathan_memory_vendor.git ${FOONATHAN_MEMORY_VENDOR_BASENAME}-source
-  pushd ${FOONATHAN_MEMORY_VENDOR_BASENAME}-source >/dev/null
-  log "Building foonathan_memory_vendor with libcxx."
-  mkdir libcxx-build
-  pushd libcxx-build >/dev/null
-  cmake -G "Ninja" \
-      -DBUILD_SHARED_LIBS=ON \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}" \
-      -DCMAKE_INSTALL_PREFIX="../../${FAST_DDS_LIBCXX_INSTALL_FOLDER}" \
-      ..
-  ninja
-  ninja install
-  popd >/dev/null
-  popd >/dev/null
-  rm -Rf ${FOONATHAN_MEMORY_VENDOR_BASENAME}-source
-
-
-# ==============================================================================
-# -- Get fast-cdr and compile it with libc++ -----------------------------------
-# ==============================================================================
-
-  log "Retrieving fast_cdr."
-  git clone https://github.com/eProsima/Fast-CDR.git ${FAST_CDR_BASENAME}-source
-  pushd ${FAST_CDR_BASENAME}-source >/dev/null
-  mkdir libcxx-build
-  pushd libcxx-build >/dev/null
-  log "Building fast_cdr with libcxx."
-  cmake -G "Ninja" \
-      -DCMAKE_INSTALL_PREFIX="../../${FAST_DDS_LIBCXX_INSTALL_FOLDER}" \
-      ..
-  ninja
-  ninja install
-  popd >/dev/null
-  popd >/dev/null
-  rm -Rf ${FAST_CDR_BASENAME}-source
-
-# ==============================================================================
-# -- Get fast-dds and compile it with libc++ and libstdc++ ---------------------
-# ==============================================================================
-
-  log "Retrieving fast_dds."
-  git clone https://github.com/eProsima/Fast-DDS.git ${FAST_DDS_BASENAME}-source
-  pushd ${FAST_DDS_BASENAME}-source >/dev/null
-
-  mkdir libcxx-build
-  pushd libcxx-build >/dev/null
-  log "Building fast_dds with libcxx."
-  cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-latomic" \
-      -DCMAKE_INSTALL_PREFIX="../../${FAST_DDS_LIBCXX_INSTALL_FOLDER}" \
-      ..
-  ninja
-  ninja install
-  popd >/dev/null
-  popd >/dev/null
-  rm -Rf ${FAST_DDS_BASENAME}-source
-fi
-
-mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
-cp -p ${FAST_DDS_LIBCXX_INSTALL_FOLDER}/lib/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-cp -p ${FAST_DDS_LIBCXX_INSTALL_FOLDER}/lib/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-cp -p -rf ${FAST_DDS_LIBCXX_INSTALL_FOLDER}/include/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
-
-unset FOONATHAN_MEMORY_VENDOR_BASENAME
-unset FAST_CDR_BASENAME
-unset FAST_DDS_BASENAME
 
 # ==============================================================================
 # -- Get GTest and compile it with libc++ --------------------------------------
@@ -796,7 +717,7 @@ mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
 cp ${PATCHELF_EXE} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
 
 # ==============================================================================
-# -- Download libtorch and dependencies --------------------------------------------------
+# -- Download libtorch and dependencies ----------------------------------------
 # ==============================================================================
 
 if ${USE_PYTORCH} ; then
@@ -873,6 +794,68 @@ if ${USE_PYTORCH} ; then
   cp -p ${LIBTORCHCLUSTER_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
 fi
 
+# ==============================================================================
+# -- Download Fast DDS and dependencies ----------------------------------------
+# ==============================================================================
+
+FASTDDS_BASENAME=fast-dds
+FASTDDS_INSTALL_DIR=${PWD}/${FASTDDS_BASENAME}-install
+FASTDDS_INCLUDE=${FASTDDS_INSTALL_DIR}/include
+FASTDDS_LIB=${FASTDDS_INSTALL_DIR}/lib
+log "LOG ${FASTDDS_INCLUDE}"
+if ${USE_ROS2} ; then
+
+  function build_fastdds_extension {
+    LIB_SOURCE=$1
+    LIB_REPO=$2
+    CMAKE_FLAGS=$3
+    
+    if [[ ! -d ${LIB_SOURCE} ]] ; then
+      mkdir -p ${LIB_SOURCE}
+      log "${LIB_REPO}"
+      git clone ${LIB_REPO} ${LIB_SOURCE}
+      mkdir -p ${LIB_SOURCE}/build      
+    fi
+    pushd ${LIB_SOURCE}/build >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      ${CMAKE_FLAGS} \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${LIB_SOURCE}
+  }
+  if [[ ! -d ${FASTDDS_INSTALL_DIR} ]] ; then
+    mkdir -p ${FASTDDS_INSTALL_DIR}
+    log "Build foonathan memory vendor"
+    FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan-memory-vendor
+    FOONATHAN_MEMORY_VENDOR_SOURCE_DIR=${PWD}/${FOONATHAN_MEMORY_VENDOR_BASENAME}-source
+    FOONATHAN_MEMORY_VENDOR_REPO="https://github.com/eProsima/foonathan_memory_vendor.git"
+    FOONATHAN_MEMORY_VENDOR_CMAKE_FLAGS=-DBUILD_SHARED_LIBS=ON
+    build_fastdds_extension ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR} "${FOONATHAN_MEMORY_VENDOR_REPO}" "${FOONATHAN_MEMORY_VENDOR_CMAKE_FLAGS}"
+
+    log "Build fast cdr"
+    FAST_CDR_BASENAME=fast-cdr
+    FAST_CDR_SOURCE_DIR=${PWD}/${FAST_CDR_BASENAME}-source
+    FAST_CDR_REPO="https://github.com/eProsima/Fast-CDR.git"
+    FAST_CDR_CMAKE_FLAGS=
+    build_fastdds_extension ${FAST_CDR_SOURCE_DIR} "${FAST_CDR_REPO}" "${FAST_CDR_CMAKE_FLAGS}"
+
+    log "Build fast dds"
+    FAST_DDS_LIB_BASENAME=fast-dds-lib
+    FAST_DDS_LIB_SOURCE_DIR=${PWD}/${FAST_DDS_LIB_BASENAME}-source
+    FAST_DDS_LIB_REPO="https://github.com/eProsima/Fast-DDS.git"
+    FAST_DDS_LIB_CMAKE_FLAGS=-DCMAKE_CXX_FLAGS="-latomic"
+    build_fastdds_extension ${FAST_DDS_LIB_SOURCE_DIR} "${FAST_DDS_LIB_REPO}" "${FAST_DDS_LIB_CMAKE_FLAGS}"
+
+    mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+    cp -p ${FASTDDS_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+    
+    mkdir -p ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
+    cp -p ${FASTDDS_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
+  fi
+fi
 
 # ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
@@ -952,6 +935,8 @@ endif ()
 add_definitions(-DLIBCARLA_TEST_CONTENT_FOLDER="${LIBCARLA_TEST_CONTENT_FOLDER}")
 
 set(BOOST_INCLUDE_PATH "${BOOST_INCLUDE}")
+set(FASTDDS_INCLUDE_PATH "${FASTDDS_INCLUDE}")
+set(FASTDDS_LIB_PATH "${FASTDDS_LIB}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Server")
   # Here libraries linking libc++.
@@ -959,10 +944,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   set(LLVM_LIB_PATH "${LLVM_LIBPATH}")
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBCXX_INCLUDE}")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBCXX_LIBPATH}")
-  set(FAST_DDS_INCLUDE_PATH "${FAST_DDS_LIBCXX_INCLUDE}")
-  set(FAST_DDS_LIB_PATH "${FAST_DDS_LIBCXX_LIBPATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBCXX_LIBPATH}")
+elseif (CMAKE_BUILD_TYPE STREQUAL "ros2")
+  list(APPEND CMAKE_PREFIX_PATH "${FASTDDS_INSTALL_DIR}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Pytorch")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCH_PATH}")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHSCATTER_INSTALL_DIR}")

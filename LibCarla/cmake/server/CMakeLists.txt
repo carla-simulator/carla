@@ -11,9 +11,9 @@ file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
 install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
 
 # Install fastdds.
-install(DIRECTORY "${FAST_DDS_INCLUDE_PATH}" DESTINATION include)
-file(GLOB libcarla_carla_fastdds "${FAST_DDS_LIB_PATH}/*.*")
-install(FILES ${libcarla_carla_fastdds} DESTINATION lib)
+#install(DIRECTORY "${FAST_DDS_INCLUDE_PATH}/fastdds" DESTINATION include)
+#file(GLOB libcarla_carla_fastdds "${FAST_DDS_LIB_PATH}/*.*")
+#install(FILES ${libcarla_carla_fastdds} DESTINATION lib)
 
 # Install headers.
 
@@ -125,6 +125,11 @@ file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/multigpu/*.cpp"
     "${libcarla_source_path}/carla/ros2/*.h"
     "${libcarla_source_path}/carla/ros2/*.cpp"
+    "${libcarla_source_path}/carla/ros2/publishers/*.h"
+    "${libcarla_source_path}/carla/ros2/publishers/*.cpp"
+    "${libcarla_source_path}/carla/ros2/types/*.h"
+    "${libcarla_source_path}/carla/ros2/types/*.cpp"
+    "${libcarla_source_path}/carla/ros2/types/*.cxx"
     "${libcarla_source_thirdparty_path}/odrSpiral/*.cpp"
     "${libcarla_source_thirdparty_path}/odrSpiral/*.h"
     "${libcarla_source_thirdparty_path}/moodycamel/*.cpp"
