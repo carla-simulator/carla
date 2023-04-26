@@ -106,6 +106,22 @@ namespace geom {
 
     std::unique_ptr<Mesh> MergeAndSmooth(std::vector<std::unique_ptr<Mesh>> &lane_meshes) const;
 
+    // -- LaneMarks --
+
+    void GenerateLaneMarkForRoad(const road::Road& road, std::vector<std::unique_ptr<Mesh>>& inout) const;
+
+    // Generate for NOT center line AKA All lines but the one which id 0
+    void GenerateLaneMarksForNotCenterLine(
+      const road::LaneSection& lane_section,
+      const road::Lane& lane,
+      std::vector<std::unique_ptr<Mesh>>& inout) const;
+
+    // Generate marks ONLY for line with ID 0
+    void GenerateLaneMarksForCenterLine(
+      const road::Road& road,
+      const road::LaneSection& lane_section,
+      const road::Lane& lane,
+      std::vector<std::unique_ptr<Mesh>>& inout) const;
     // =========================================================================
     // -- Generation parameters ------------------------------------------------
     // =========================================================================

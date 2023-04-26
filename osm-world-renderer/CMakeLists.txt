@@ -5,6 +5,8 @@ project(OsmMapRenderer)
 include_directories(ThirdParties/include)
 link_directories(ThirdParties/lib)
 
+add_definitions(-D_USE_MATH_DEFINES)
+
 # Source Files
 add_library(OsmRenderer OsmRenderer/src/OsmRenderer.cpp)
 target_sources(OsmRenderer PRIVATE OsmRenderer/src/MapDrawer.cpp)

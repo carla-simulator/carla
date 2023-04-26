@@ -1097,3 +1097,15 @@ void ACarlaWheeledVehicle::RemoveReferenceToManager()
     return;
   }
 }
+
+FRotator ACarlaWheeledVehicle::GetPhysicsConstraintAngle(
+    UPhysicsConstraintComponent* Component)
+{
+  return Component->ConstraintInstance.AngularRotationOffset;
+}
+
+void ACarlaWheeledVehicle::SetPhysicsConstraintAngle(
+    UPhysicsConstraintComponent* Component, const FRotator &NewAngle)
+{
+  Component->ConstraintInstance.AngularRotationOffset = NewAngle;
+}
