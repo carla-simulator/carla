@@ -45,18 +45,31 @@ void ACollisionSensor::OnCollisionEvent(
     FVector NormalImpulse,
     const FHitResult &Hit)
 {
-  if ((Actor == nullptr) || (OtherActor == nullptr)){
+  if (Actor == nullptr || OtherActor == nullptr)
+  {
     return;
   }
 
   uint64_t CurrentFrame = FCarlaEngine::GetFrameCounter();
-  auto CollisionRegistry_ = CollisionRegistry;
-  for (auto & Collision: CollisionRegistry_){
-    if (std::get<0>(Collision) < CurrentFrame){
-      auto Index = std::find(CollisionRegistry.begin(), CollisionRegistry.end(), Collision);
-      CollisionRegistry.erase(Index);
-    }
-    else if ((std::get<0>(Collision) == CurrentFrame) && (std::get<1>(Collision) == Actor) && (std::get<2>(Collision) == OtherActor)){
+
+  // remove all items from previous frames
+  CollisionRegistry.erase(
+      std::remove_if(
+          CollisionRegistry.begin(),
+          CollisionRegistry.end(),
+          [CurrentFrame](std::tuple<uint64_t, AActor*, AActor*> Item)
+          {
+            return std::get<0>(Item) < CurrentFrame;
+          }),
+      CollisionRegistry.end());
+
+  // check if this collision has been procesed already in this frame
+  for (auto& Collision: CollisionRegistry)
+  {
+    if (std::get<0>(Collision) == CurrentFrame &&
+        std::get<1>(Collision) == Actor &&
+        std::get<2>(Collision) == OtherActor)
+    {
       return;
     }
   }
@@ -74,5 +87,5 @@ void ACollisionSensor::OnCollisionEvent(
     Episode.GetRecorder()->AddCollision(Actor, OtherActor);
   }
 
-  CollisionRegistry.push_back(std::make_tuple(CurrentFrame, Actor, OtherActor));
+  CollisionRegistry.emplace_back(CurrentFrame, Actor, OtherActor);
 }
