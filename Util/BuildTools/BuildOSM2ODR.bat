@@ -20,8 +20,8 @@ set USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--build] [--clean] [-
 set REMOVE_INTERMEDIATE=false
 set BUILD_OSM2ODR=false
 set GIT_PULL=true
-set CURRENT_OSM2ODR_COMMIT=17824c728f7aec49c0c3005a6da1f03cb0200da2
-set OSM2ODR_BRANCH=carla_osm2odr
+set CURRENT_OSM2ODR_COMMIT=5ea48877eb9eb4d1aac4f860ba2cc66056ed8ad4
+set OSM2ODR_BRANCH=aaron/osm2odrfix
 set OSM2ODR_REPO=https://github.com/carla-simulator/sumo.git
 
 :arg-parse
