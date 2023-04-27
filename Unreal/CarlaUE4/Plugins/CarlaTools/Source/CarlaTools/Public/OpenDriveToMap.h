@@ -63,6 +63,9 @@ protected:
   UFUNCTION( BlueprintCallable )
   void SaveMap();
 
+  UFUNCTION(BlueprintCallable)
+  TArray<AActor*> GenerateMiscActors();
+
   UFUNCTION( BlueprintImplementableEvent )
   void GenerationFinished();
 private:
@@ -97,4 +100,6 @@ private:
   UPROPERTY()
   TArray<UProceduralMeshComponent*> RoadMesh;
 
+
+  boost::optional<carla::road::Map> CarlaMap;
 };

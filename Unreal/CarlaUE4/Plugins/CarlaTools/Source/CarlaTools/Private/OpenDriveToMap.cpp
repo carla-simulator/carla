@@ -164,7 +164,7 @@ void UOpenDriveToMap::LoadMap()
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("UOpenDriveToMap::LoadMap(): File to load %s"), *FilePath );
   FFileHelper::LoadFileToString(FileContent, *FilePath);
   std::string opendrive_xml = carla::rpc::FromLongFString(FileContent);
-  boost::optional<carla::road::Map> CarlaMap = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
+  CarlaMap = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
 
   if (!CarlaMap.has_value())
   {
@@ -182,6 +182,23 @@ void UOpenDriveToMap::LoadMap()
   GenerationFinished();
 }
 
+TArray<AActor*> UOpenDriveToMap::GenerateMiscActors()
+{   
+  const std::vector<std::pair<carla::geom::Vector3D, std::string>>
+    Locations = CarlaMap->GetTreesPosition(DistanceBetweenTrees, DistanceFromRoadEdge);
+  TArray<AActor*> Returning;
+  int i = 0;
+  for (const auto& cl : Locations)
+  {
+    AActor* Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), cl.first.ToFVector() * 100, FRotator(0, 0, 0));
+    Spawner->Tags.Add(FName("MiscSpawnPosition"));
+    Spawner->Tags.Add(FName(cl.second.c_str()));
+    Spawner->SetActorLabel("MiscSpawnPosition" + FString::FromInt(i));
+    ++i;
+    Returning.Add(Spawner);
+  }
+  return Returning;
+}
 void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& CarlaMap )
 {
   if (!CarlaMap.has_value())
