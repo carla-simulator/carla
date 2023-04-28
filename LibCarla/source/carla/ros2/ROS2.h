@@ -28,9 +28,11 @@ namespace carla {
   }
 }
 
+
 namespace carla {
 namespace ros2 {
 
+class CarlaImagePublisher;
 
 class ROS2
 {
@@ -48,6 +50,8 @@ class ROS2
   void Enable(bool enable);
   bool IsEnabled() { return _enabled; }
   void SetFrame(uint64_t frame);
+
+  void InitPublisher();
 
   // enabling streams to publish
   void EnableStream(carla::streaming::detail::stream_id_type id) { _publish_stream.insert(id); }
@@ -94,6 +98,7 @@ class ROS2
   bool _enabled { false };
   uint64_t _frame { 0 };
   std::unordered_set<carla::streaming::detail::stream_id_type> _publish_stream;
+  CarlaImagePublisher* _image_publisher { nullptr };
 };
 
 } // namespace ros2

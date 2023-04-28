@@ -13,6 +13,10 @@
 #include "carla/sensor/data/SemanticLidarData.h"
 #include "carla/sensor/data/RadarData.h"
 
+#include "publishers/ImagePublisher.h"
+
+#include <vector>
+
 namespace carla {
 namespace ros2 {
 
@@ -49,7 +53,15 @@ void ROS2::Enable(bool enable) {
 
 void ROS2::SetFrame(uint64_t frame) {
   _frame = frame;
-  // log_info("ROS2 new frame: ", _frame);
+   //log_info("ROS2 new frame: ", _frame);
+}
+
+void ROS2::InitPublisher() {
+  if (!_image_publisher)
+    return;
+    
+  _image_publisher = new CarlaImagePublisher();
+  _image_publisher->Init("carla_test");
 }
 
 void ROS2::ProcessDataFromSensor(uint64_t sensor_type,

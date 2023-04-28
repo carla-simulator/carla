@@ -185,6 +185,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
   {
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     ROS2->Enable(true);
+    ROS2->InitPublisher();
   }
 
   bMapChanged = true;

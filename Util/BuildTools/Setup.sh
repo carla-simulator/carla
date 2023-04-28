@@ -815,15 +815,6 @@ if ${USE_ROS2} ; then
       git clone ${LIB_REPO} ${LIB_SOURCE}
       mkdir -p ${LIB_SOURCE}/build      
     fi
-    pushd ${LIB_SOURCE}/build >/dev/null
-    cmake -G "Ninja" \
-      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
-      ${CMAKE_FLAGS} \
-      ..
-    ninja
-    ninja install
-    popd >/dev/null
-    rm -Rf ${LIB_SOURCE}
   }
   if [[ ! -d ${FASTDDS_INSTALL_DIR} ]] ; then
     mkdir -p ${FASTDDS_INSTALL_DIR}
@@ -832,21 +823,49 @@ if ${USE_ROS2} ; then
     FOONATHAN_MEMORY_VENDOR_SOURCE_DIR=${PWD}/${FOONATHAN_MEMORY_VENDOR_BASENAME}-source
     FOONATHAN_MEMORY_VENDOR_REPO="https://github.com/eProsima/foonathan_memory_vendor.git"
     FOONATHAN_MEMORY_VENDOR_CMAKE_FLAGS=-DBUILD_SHARED_LIBS=ON
-    build_fastdds_extension ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR} "${FOONATHAN_MEMORY_VENDOR_REPO}" "${FOONATHAN_MEMORY_VENDOR_CMAKE_FLAGS}"
+    build_fastdds_extension ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR} "${FOONATHAN_MEMORY_VENDOR_REPO}"
+    pushd ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}/build >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DBUILD_SHARED_LIBS=ON \
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}
 
     log "Build fast cdr"
     FAST_CDR_BASENAME=fast-cdr
     FAST_CDR_SOURCE_DIR=${PWD}/${FAST_CDR_BASENAME}-source
     FAST_CDR_REPO="https://github.com/eProsima/Fast-CDR.git"
-    FAST_CDR_CMAKE_FLAGS=
-    build_fastdds_extension ${FAST_CDR_SOURCE_DIR} "${FAST_CDR_REPO}" "${FAST_CDR_CMAKE_FLAGS}"
+    build_fastdds_extension ${FAST_CDR_SOURCE_DIR} "${FAST_CDR_REPO}"
+    pushd ${FAST_CDR_SOURCE_DIR}/build >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${FAST_CDR_SOURCE_DIR}
 
     log "Build fast dds"
     FAST_DDS_LIB_BASENAME=fast-dds-lib
     FAST_DDS_LIB_SOURCE_DIR=${PWD}/${FAST_DDS_LIB_BASENAME}-source
     FAST_DDS_LIB_REPO="https://github.com/eProsima/Fast-DDS.git"
-    FAST_DDS_LIB_CMAKE_FLAGS=-DCMAKE_CXX_FLAGS="-latomic"
-    build_fastdds_extension ${FAST_DDS_LIB_SOURCE_DIR} "${FAST_DDS_LIB_REPO}" "${FAST_DDS_LIB_CMAKE_FLAGS}"
+    build_fastdds_extension ${FAST_DDS_LIB_SOURCE_DIR} "${FAST_DDS_LIB_REPO}"
+    pushd ${FAST_DDS_LIB_SOURCE_DIR}/build >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DCMAKE_CXX_FLAGS=-latomic \
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+       \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${FAST_DDS_LIB_SOURCE_DIR}
 
     mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
     cp -p ${FASTDDS_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
