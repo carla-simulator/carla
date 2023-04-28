@@ -1221,11 +1221,12 @@ namespace road {
 
     return road_out_mesh_list;
   }
-  std::vector<std::pair<geom::Vector3D, std::string>> Map::GetTreesPosition(
+  std::vector<std::pair<geom::Transform, std::string>> Map::GetTreesTransform(
     float distancebetweentrees,
-    float distancefromdrivinglineborder) const {
+    float distancefromdrivinglineborder,
+    float s_offset) const {
 
-    std::vector<std::pair<geom::Vector3D, std::string>> positions;
+    std::vector<std::pair<geom::Transform, std::string>> transforms;
     for (auto &&pair : _data.GetRoads()) {
       const auto &road = pair.second;
       if (!road.IsJunction()) {
@@ -1236,14 +1237,16 @@ namespace road {
            -1 : lane_section.GetLanes().rbegin()->first;
           const road::Lane* lane = lane_section.GetLane(min_lane);
           if( lane ) {
-            double s_current = lane_section.GetDistance();
+            double s_current = lane_section.GetDistance() + s_offset;
             const double s_end = lane_section.GetDistance() + lane_section.GetLength();
             while(s_current < s_end){
               const auto edges = lane->GetCornerPositions(s_current, 0);
               geom::Vector3D director = edges.second - edges.first;
               geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
+              geom::Transform lanetransform = lane->ComputeTransform(s_current);
+              geom::Transform treeTransform(treeposition, lanetransform.rotation);
               const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
-              positions.push_back(std::make_pair(treeposition,roadinfo->GetType()));
+              transforms.push_back(std::make_pair(treeTransform,roadinfo->GetType()));
               s_current += distancebetweentrees;
             }
 
@@ -1251,7 +1254,7 @@ namespace road {
         }
       }
     }
-    return positions;
+    return transforms;
   }
   geom::Mesh Map::GetAllCrosswalkMesh() const {
     geom::Mesh out_mesh;

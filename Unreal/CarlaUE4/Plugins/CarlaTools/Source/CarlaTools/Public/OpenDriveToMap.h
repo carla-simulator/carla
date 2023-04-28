@@ -64,7 +64,7 @@ protected:
   void SaveMap();
 
   UFUNCTION(BlueprintCallable)
-  TArray<AActor*> GenerateMiscActors();
+  TArray<AActor*> GenerateMiscActors(float Offset);
 
   UFUNCTION( BlueprintImplementableEvent )
   void GenerationFinished();
