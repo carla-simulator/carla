@@ -51,6 +51,8 @@ class ROS2
   bool IsEnabled() { return _enabled; }
   void SetFrame(uint64_t frame);
 
+  void Publish();
+
   void InitPublisher();
 
   // enabling streams to publish

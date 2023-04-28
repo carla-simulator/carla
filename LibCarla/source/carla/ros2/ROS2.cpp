@@ -56,8 +56,15 @@ void ROS2::SetFrame(uint64_t frame) {
    //log_info("ROS2 new frame: ", _frame);
 }
 
+void ROS2::Publish() {
+  if (_image_publisher)
+  {
+    _image_publisher->Publish();
+  }
+}
+
 void ROS2::InitPublisher() {
-  if (!_image_publisher)
+  if (_image_publisher)
     return;
     
   _image_publisher = new CarlaImagePublisher();
