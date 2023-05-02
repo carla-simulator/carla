@@ -9,46 +9,37 @@
 namespace carla {
 namespace ros2 {
 
-    class CarlaImageListenerImpl : public eprosima::fastdds::dds::DataWriterListener
-    {
-    public:
-        void on_publication_matched(
-                eprosima::fastdds::dds::DataWriter* writer,
-                const eprosima::fastdds::dds::PublicationMatchedStatus& info) override;
-                    
+  namespace efd = eprosima::fastdds::dds;
 
-        int m_Matched {0};
-        bool m_FirstConnected {false};
+    class CarlaImageListenerImpl : public efd::DataWriterListener {
+      public:
+      void on_publication_matched(
+              efd::DataWriter* writer,
+              const efd::PublicationMatchedStatus& info) override;
+                  
+
+      int _matched {0};
+      bool _first_connected {false};
     };
 
-    void CarlaImageListenerImpl::on_publication_matched(eprosima::fastdds::dds::DataWriter* writer, const eprosima::fastdds::dds::PublicationMatchedStatus& info)
+    void CarlaImageListenerImpl::on_publication_matched(efd::DataWriter* writer, const efd::PublicationMatchedStatus& info)
     {
-        if (info.current_count_change == 1)
-        {
-            m_Matched = info.total_count;
-            m_FirstConnected = true;
-            std::cout << "Publisher matched." << std::endl;
-        }
-        else if (info.current_count_change == -1)
-        {
-            m_Matched = info.total_count;
-            std::cout << "Publisher unmatched." << std::endl;
-        }
-        else
-        {
-            std::cerr << info.current_count_change
-                    << " is not a valid value for PublicationMatchedStatus current count change" << std::endl;
-        }
+      if (info.current_count_change == 1) {
+          _matched = info.total_count;
+          _first_connected = true;
+          std::cout << "Publisher matched." << std::endl;
+      } else if (info.current_count_change == -1) {
+          _matched = info.total_count;
+          std::cout << "Publisher unmatched." << std::endl;
+      } else {
+          std::cerr << info.current_count_change
+                  << " is not a valid value for PublicationMatchedStatus current count change" << std::endl;
+      }
     }
 
-    CarlaImageListener::CarlaImageListener() : m_Impl(new CarlaImageListenerImpl())
-    {
+    CarlaImageListener::CarlaImageListener() :
+    _impl(std::make_unique<CarlaImageListenerImpl>()) { }
 
-    }
-
-    CarlaImageListener::~CarlaImageListener()
-    {
-        delete m_Impl;
-    }
+    CarlaImageListener::~CarlaImageListener() {}
 
 }}

@@ -5,22 +5,23 @@
 #pragma once
 #define _GLIBCXX_USE_CXX11_ABI 0
 
+#include <memory>
+
 namespace carla {
 namespace ros2 {
 
   class CarlaImageListenerImpl;
 
-  class CarlaImageListener
-  {
+  class CarlaImageListener {
     public:
-        CarlaImageListener();
-        ~CarlaImageListener();
-        CarlaImageListener(const CarlaImageListener&) = delete;
-        CarlaImageListener& operator=(const CarlaImageListener&) = delete;
-        CarlaImageListener(CarlaImageListener&&) = delete;
-        CarlaImageListener& operator=(CarlaImageListener&&) = delete;
+      CarlaImageListener();
+      ~CarlaImageListener();
+      CarlaImageListener(const CarlaImageListener&) = delete;
+      CarlaImageListener& operator=(const CarlaImageListener&) = delete;
+      CarlaImageListener(CarlaImageListener&&) = delete;
+      CarlaImageListener& operator=(CarlaImageListener&&) = delete;
 
-        CarlaImageListenerImpl* m_Impl;
+      std::unique_ptr<CarlaImageListenerImpl> _impl;
   };
 }
 }

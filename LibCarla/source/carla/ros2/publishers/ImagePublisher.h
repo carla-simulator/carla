@@ -13,23 +13,21 @@ namespace ros2 {
 
   struct CarlaImagePublisherImpl;
 
-  class CarlaImagePublisher
-  {
+  class CarlaImagePublisher {
     public:
-        CarlaImagePublisher();
-        ~CarlaImagePublisher();
-        CarlaImagePublisher(const CarlaImagePublisher&) = delete;
-        CarlaImagePublisher& operator=(const CarlaImagePublisher&) = delete;
-        CarlaImagePublisher(CarlaImagePublisher&&) = delete;
-        CarlaImagePublisher& operator=(CarlaImagePublisher&&) = delete;
+      CarlaImagePublisher();
+      ~CarlaImagePublisher();
+      CarlaImagePublisher(const CarlaImagePublisher&) = delete;
+      CarlaImagePublisher& operator=(const CarlaImagePublisher&) = delete;
+      CarlaImagePublisher(CarlaImagePublisher&&) = delete;
+      CarlaImagePublisher& operator=(CarlaImagePublisher&&) = delete;
 
-        bool Init(const char* topic);
-        bool Publish();
-
-        void SetImage(uint32_t height, uint32_t width, const std::vector<uint8_t>& data);
+      bool Init(const char* topic);
+      bool Publish();
+      void SetImage(uint32_t height, uint32_t width, const std::vector<uint8_t>& data);
 
     private:
-        std::unique_ptr<CarlaImagePublisherImpl> m_Impl;
+      std::unique_ptr<CarlaImagePublisherImpl> _impl;
   };
 }
 }
