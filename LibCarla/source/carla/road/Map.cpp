@@ -16,6 +16,7 @@
 #include "carla/road/element/RoadInfoLaneOffset.h"
 #include "carla/road/element/RoadInfoLaneWidth.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
+#include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/road/element/RoadInfoSignal.h"
 
 #include "simplify/Simplify.h"
@@ -1133,15 +1134,15 @@ namespace road {
     return result;
   }
 
-  std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>> 
-    Map::GenerateOrderedChunkedMesh( const rpc::OpendriveGenerationParameters& params) const 
+  std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>>
+    Map::GenerateOrderedChunkedMesh( const rpc::OpendriveGenerationParameters& params) const
   {
 
     geom::MeshFactory mesh_factory(params);
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> road_out_mesh_list;
-    std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> juntion_out_mesh_list;
+    std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> junction_out_mesh_list;
 
-    std::thread juntction_thread( &Map::GenerateJunctions, this, mesh_factory, params, &juntion_out_mesh_list);
+    std::thread juntction_thread( &Map::GenerateJunctions, this, mesh_factory, params, &junction_out_mesh_list);
 
     float simplificationrate = params.simplification_percentage * 0.01f;
     size_t num_roads = _data.GetRoads().size();
@@ -1154,7 +1155,7 @@ namespace road {
     for ( size_t i = 0; i < num_threads; ++i ) {
       std::thread neworker(
         [this, &write_mutex, &mesh_factory, &road_out_mesh_list, i, num_roads_per_thread]() {
-        std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current = 
+        std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current =
           std::move(GenerateRoadsMultithreaded(mesh_factory, i, num_roads_per_thread));
         std::lock_guard<std::mutex> guard(write_mutex);
         for ( auto&& pair : Current ) {
@@ -1166,7 +1167,6 @@ namespace road {
             road_out_mesh_list[pair.first] = std::move(pair.second);
           }
         }
-      
       });
       workers.push_back(std::move(neworker));
     }
@@ -1205,7 +1205,7 @@ namespace road {
     }
 
     juntction_thread.join();
-    for (auto&& pair : juntion_out_mesh_list) {
+    for (auto&& pair : junction_out_mesh_list) {
       if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end())
       {
         road_out_mesh_list[pair.first].insert(road_out_mesh_list[pair.first].end(),
@@ -1220,7 +1220,38 @@ namespace road {
 
     return road_out_mesh_list;
   }
+  std::vector<std::pair<geom::Vector3D, std::string>> Map::GetTreesPosition(
+    float distancebetweentrees,
+    float distancefromdrivinglineborder) const {
 
+    std::vector<std::pair<geom::Vector3D, std::string>> positions;
+    for (auto &&pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      if (!road.IsJunction()) {
+        for (auto &&lane_section : road.GetLaneSections()) {
+          const auto min_lane = lane_section.GetLanes().begin()->first == 0 ?
+            1 : lane_section.GetLanes().begin()->first;
+          const auto max_lane = lane_section.GetLanes().rbegin()->first == 0 ?
+           -1 : lane_section.GetLanes().rbegin()->first;
+          const road::Lane* lane = lane_section.GetLane(min_lane);
+          if( lane ) {
+            double s_current = lane_section.GetDistance();
+            const double s_end = lane_section.GetDistance() + lane_section.GetLength();
+            while(s_current < s_end){
+              const auto edges = lane->GetCornerPositions(s_current, 0);
+              geom::Vector3D director = edges.second - edges.first;
+              geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
+              const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
+              positions.push_back(std::make_pair(treeposition,roadinfo->GetType()));
+              s_current += distancebetweentrees;
+            }
+
+          }
+        }
+      }
+    }
+    return positions;
+  }
   geom::Mesh Map::GetAllCrosswalkMesh() const {
     geom::Mesh out_mesh;
 
@@ -1326,20 +1357,20 @@ namespace road {
     }
 
     return A1 * sin((Kx1 * posx + Ky1 * posy + F1)) +
-      A2 * sin((Kx2 * posx + Ky2 * posy + F2)) + 
+      A2 * sin((Kx2 * posx + Ky2 * posy + F2)) +
       A3 * bumpsoffset;
   }
 
-  std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> 
-      Map::GenerateRoadsMultithreaded( const carla::geom::MeshFactory& mesh_factory, 
-                                        const size_t index, const size_t number_of_roads_per_thread) const 
+  std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>
+      Map::GenerateRoadsMultithreaded( const carla::geom::MeshFactory& mesh_factory,
+                                        const size_t index, const size_t number_of_roads_per_thread) const
   {
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> out;
 
     auto start = std::next( _data.GetRoads().begin(), (index ) * number_of_roads_per_thread);
     size_t endoffset = (index+1) * number_of_roads_per_thread;
     if( endoffset >= _data.GetRoads().size() ) {
-      endoffset = _data.GetRoads().size(); 
+      endoffset = _data.GetRoads().size();
     }
     auto end = std::next( _data.GetRoads().begin(), endoffset );
 
@@ -1355,7 +1386,7 @@ namespace road {
   void Map::GenerateJunctions(const carla::geom::MeshFactory& mesh_factory,
     const rpc::OpendriveGenerationParameters& params,
     std::map<road::Lane::LaneType,
-    std::vector<std::unique_ptr<geom::Mesh>>>* juntion_out_mesh_list) const {
+    std::vector<std::unique_ptr<geom::Mesh>>>* junction_out_mesh_list) const {
 
     float simplificationrate = params.simplification_percentage * 0.01f;
     for (const auto& junc_pair : _data.GetJunctions()) {
@@ -1406,7 +1437,7 @@ namespace road {
           pmesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
         }
 
-        (*juntion_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
+        (*junction_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
       } else {
         std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
         std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
@@ -1437,8 +1468,8 @@ namespace road {
           *sidewalk_mesh += *lane;
         }
 
-        (*juntion_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(merged_mesh));
-        (*juntion_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
+        (*junction_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(merged_mesh));
+        (*junction_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
       }
     }
   }
@@ -1449,7 +1480,7 @@ namespace road {
     auto start = std::next( roadsmesh.begin(), ( index ) * number_of_roads_per_thread);
     size_t endoffset = (index+1) * number_of_roads_per_thread;
     if( endoffset >= roadsmesh.size() ) {
-      endoffset = roadsmesh.size(); 
+      endoffset = roadsmesh.size();
     }
     auto end = std::next( roadsmesh.begin(), endoffset );
     for ( auto it = start; it != end  && it != roadsmesh.end(); ++it ) {
@@ -1499,7 +1530,7 @@ namespace road {
         current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[0]) + 1);
         current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
         current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
-      } 
+      }
     }
   }
 
@@ -1519,7 +1550,6 @@ namespace road {
     {
       geom::Vector3D worldloc(pos.x, pos.y, pos.z);
       boost::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(worldloc), 0x1 << 1);
-      
       if (CheckingWaypoint) {
         if ( pos.z < 0.2) {
           return 0.0;
@@ -1527,7 +1557,6 @@ namespace road {
           return -abs(pos.z);
         }
       }
-      
       boost::optional<element::Waypoint> InRoadWaypoint = GetClosestWaypointOnRoad(geom::Location(worldloc), 0x1 << 1);
       geom::Transform InRoadWPTransform = ComputeTransform(*InRoadWaypoint);
 
@@ -1547,14 +1576,11 @@ namespace road {
     domain.size = { bb.extent.x * box_extraextension_factor * 2, bb.extent.y * box_extraextension_factor * 2, 0.4 };
 
     MeshReconstruction::Vec3 cubeSize{ CubeSize, CubeSize, 0.2 };
-
     auto mesh = MeshReconstruction::MarchCube(junctionsdf, domain, cubeSize );
-
     carla::geom::Rotation inverse = bb.rotation;
     carla::geom::Vector3D trasltation = bb.location;
-
     geom::Mesh out_mesh;
-    
+
     for (auto& cv : mesh.vertices) {
 
       geom::Vector3D newvertex;

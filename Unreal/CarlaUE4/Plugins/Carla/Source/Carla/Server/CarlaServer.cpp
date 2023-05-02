@@ -539,6 +539,18 @@ void FCarlaServer::FPimpl::BindActions()
     REQUIRE_CARLA_EPISODE();
     Episode->ApplySettings(settings);
     StreamingServer.SetSynchronousMode(settings.synchronous_mode);
+
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    if (LargeMap)
+    {
+      LargeMap->ConsiderSpectatorAsEgo(settings.spectator_as_ego);
+    }
+
     return FCarlaEngine::GetFrameCounter();
   };
 

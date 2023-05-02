@@ -52,7 +52,7 @@ namespace geom {
     std::unique_ptr<Mesh> GenerateTesselated(const road::Lane& lane) const;
 
     /// Generates a mesh that defines a lane section
-    void GenerateLaneSectionOrdered(const road::LaneSection &lane_section, 
+    void GenerateLaneSectionOrdered(const road::LaneSection &lane_section,
         std::map<carla::road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& result ) const;
     // -- Walls --
 
@@ -100,14 +100,13 @@ namespace geom {
     std::vector<std::unique_ptr<Mesh>> GenerateAllWithMaxLen(
         const road::Road &road) const;
 
-   
+
     void GenerateAllOrderedWithMaxLen(const road::Road &road,
          std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& roads) const;
 
     std::unique_ptr<Mesh> MergeAndSmooth(std::vector<std::unique_ptr<Mesh>> &lane_meshes) const;
 
     // -- LaneMarks --
-    
     void GenerateLaneMarkForRoad(const road::Road& road, std::vector<std::unique_ptr<Mesh>>& inout) const;
 
     // Generate for NOT center line AKA All lines but the one which id 0

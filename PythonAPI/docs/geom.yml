@@ -192,6 +192,14 @@
       doc: >
         Computes the 2-dimensional squared distance between two vectors.
     # --------------------------------------
+    - def_name: get_vector_angle
+      return: float
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the angle between a pair of 3D vectors in radians.
+    # --------------------------------------
     - def_name: __add__
       params:
       - param_name: other
@@ -436,6 +444,15 @@
       doc: >
         Translates a 3D point from local to global coordinates using the current transformation as frame of reference.
     # --------------------------------------
+    - def_name: transform_vector
+      params:
+      - param_name: in_vector
+        type: carla.Vector3D
+        doc: >
+          Vector to which the transformation will be applied.
+      doc: >
+        Rotates a vector using the current transformation as frame of reference, without applying translation. Use this to transform, for example, a velocity.
+    # --------------------------------------
     - def_name: get_forward_vector
       return: carla.Vector3D
       doc: >
@@ -444,7 +461,7 @@
     - def_name: get_right_vector
       return: carla.Vector3D
       doc: >
-        Computes a right vector using the rotatio of the object.
+        Computes a right vector using the rotation of the object.
     # --------------------------------------
     - def_name: get_up_vector
       return: carla.Vector3D

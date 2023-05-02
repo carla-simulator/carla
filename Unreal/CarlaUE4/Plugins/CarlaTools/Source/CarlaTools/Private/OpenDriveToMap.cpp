@@ -129,7 +129,7 @@ void UOpenDriveToMap::CreateMap()
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Map Name Is Empty") );
     return;
   }
-  if ( !IsValid(FileDownloader) ) 
+  if ( !IsValid(FileDownloader) )
   {
     FileDownloader = NewObject<UCustomFileDownloader>();
   }
@@ -259,7 +259,7 @@ void UOpenDriveToMap::LoadMap()
   std::string opendrive_xml = carla::rpc::FromLongFString(FileContent);
   boost::optional<carla::road::Map> CarlaMap = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
 
-  if (!CarlaMap.has_value()) 
+  if (!CarlaMap.has_value())
   {
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Invalid Map"));
   }
@@ -272,17 +272,19 @@ void UOpenDriveToMap::LoadMap()
   UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("MapName %s"), *MapName);
 
   GenerateAll(CarlaMap);
+  GenerationFinished();
 }
 
 void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& CarlaMap )
 {
-  if (!CarlaMap.has_value()) 
+  if (!CarlaMap.has_value())
   {
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Invalid Map"));
   }else
   {
     GenerateRoadMesh(CarlaMap);
     GenerateSpawnPoints(CarlaMap);
+    GenerateTreePositions(CarlaMap);
     GenerateLaneMarks(CarlaMap);
   }
 }
@@ -300,7 +302,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
 
   start = FPlatformTime::Seconds();
   int index = 0;
-  for (const auto &PairMap : Meshes) 
+  for (const auto &PairMap : Meshes)
   {
     for( const auto &Mesh : PairMap.second )
     {
@@ -322,7 +324,6 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
 
       if(DefaultRoadMaterial)
         TempPMC->SetMaterial(0, DefaultRoadMaterial);
-      
       FVector MeshCentroid = FVector(0,0,0);
       for( auto Vertex : Mesh->GetVertices() )
       {
@@ -356,10 +357,9 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       index++;
     }
   }
-    
+
   end = FPlatformTime::Seconds();
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Mesh spawnning and translation code executed in %f seconds."), end - start);
-  
 }
 
 void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap)
@@ -452,6 +452,20 @@ void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Ma
   }
 }
 
+void UOpenDriveToMap::GenerateTreePositions( const boost::optional<carla::road::Map>& CarlaMap )
+{
+  const std::vector<std::pair<carla::geom::Vector3D, std::string>> Locations =
+    CarlaMap->GetTreesPosition(DistanceBetweenTrees, DistanceFromRoadEdge );
+  int i = 0;
+  for (const auto &cl : Locations)
+  {
+    AActor *Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), cl.first.ToFVector() * 100, FRotator(0,0,0));
+    Spawner->Tags.Add(FName("TreeSpawnPosition"));
+    Spawner->Tags.Add(FName(cl.second.c_str()));
+    Spawner->SetActorLabel("TreeSpawnPosition" + FString::FromInt(i) );
+    ++i;
+  }
+}
 UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset( UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName )
 {
   FMeshDescription MeshDescription = BuildMeshDescription(ProcMeshComp);
