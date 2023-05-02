@@ -297,7 +297,7 @@
         doc: >
           New timeout value. Default is 5 seconds.
       doc: >
-        Sets the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.
+        Sets the maximum time a network call is allowed before blocking it and raising a timeout exceeded error.
      # --------------------------------------
     - def_name: set_replayer_ignore_hero
       params:
