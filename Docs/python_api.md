@@ -588,7 +588,7 @@ When used, the time speed of the reenacted simulation is modified at will. It ca
     - **Parameters:**
         - `time_factor` (_float_) - 1.0 means normal time speed. Greater than 1.0 means fast motion (2.0 would be double speed) and lesser means slow motion (0.5 would be half speed).  
 - <a name="carla.Client.set_timeout"></a>**<font color="#7fb800">set_timeout</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**</font>)  
-Sets the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.  
+Sets the maximum time a network call is allowed before blocking it and raising a timeout exceeded error.  
     - **Parameters:**
         - `seconds` (_float<small> - seconds</small>_) - New timeout value. Default is 5 seconds.  
 
