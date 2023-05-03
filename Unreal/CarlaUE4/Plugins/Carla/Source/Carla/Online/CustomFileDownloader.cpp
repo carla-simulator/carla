@@ -33,7 +33,7 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath)
     return;
   }
   std::string OsmFile = std::string(TCHAR_TO_UTF8(*FileContent));
-  
+
   osm2odr::OSM2ODRSettings settings;
   std::string OpenDriveFile = osm2odr::ConvertOSMToOpenDRIVE(OsmFile, settings);
 

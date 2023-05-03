@@ -235,7 +235,10 @@ namespace geom {
     const double s_end = lane.GetDistance() + lane.GetLength() - EPSILON;
     return GenerateSidewalk(lane, s_start, s_end);
   }
-  std::unique_ptr<Mesh> MeshFactory::GenerateSidewalk(const road::Lane &lane, const double s_start, const double s_end) const{
+  std::unique_ptr<Mesh> MeshFactory::GenerateSidewalk(
+    const road::Lane &lane, const double s_start,
+    const double s_end ) const {
+
     RELEASE_ASSERT(road_param.resolution > 0.0);
     DEBUG_ASSERT(s_start >= 0.0);
     DEBUG_ASSERT(s_end <= lane.GetDistance() + lane.GetLength());
