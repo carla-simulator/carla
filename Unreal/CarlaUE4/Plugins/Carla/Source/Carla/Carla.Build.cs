@@ -9,7 +9,7 @@ public class Carla : ModuleRules
   bool UsingCarSim = false;
   bool UsingChrono = false;
   bool UsingPytorch = false;
-  bool UsingRos2 = true;
+  bool UsingRos2 = false;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
