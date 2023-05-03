@@ -18,6 +18,7 @@ UTaggedComponent::UTaggedComponent(const FObjectInitializer& ObjectInitializer) 
 
   TaggedMaterial = TaggedMaterialObject.Object;
   PrimaryComponentTick.bCanEverTick = true;
+  PrimaryComponentTick.bStartWithTickEnabled = false;
 }
 
 void UTaggedComponent::OnRegister()

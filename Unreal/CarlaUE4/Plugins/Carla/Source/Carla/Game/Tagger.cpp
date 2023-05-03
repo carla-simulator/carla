@@ -214,6 +214,7 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
 
     TaggedComponent->SetColor(Color);
     TaggedComponent->MarkRenderStateDirty();
+    TaggedComponent->SetComponentTickEnabled(true);
 
   }
 }
