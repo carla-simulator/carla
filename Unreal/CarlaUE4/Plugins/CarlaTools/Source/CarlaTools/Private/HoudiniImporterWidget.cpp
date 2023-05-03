@@ -21,6 +21,9 @@ void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Ac
   TMap<FCarlaMapTile*, TArray<AActor*>> ActorsToMove;
   for (AActor* Actor : Actors)
   {
+    if (Actor == nullptr) {
+      continue;
+    }
     UHierarchicalInstancedStaticMeshComponent* Component
         = Cast<UHierarchicalInstancedStaticMeshComponent>(
           Actor->GetComponentByClass(
