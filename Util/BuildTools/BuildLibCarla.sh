@@ -34,7 +34,7 @@ BUILD_OPTION_RELEASE=false
 BUILD_OPTION_DUMMY=false
 BUILD_RSS_VARIANT=false
 USE_PYTORCH=false
-USE_ROS2=true
+USE_ROS2=false
 
 OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss,pytorch,carsim,ros2 -n 'parse-options' -- "$@"`
 

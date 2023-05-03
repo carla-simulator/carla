@@ -16,7 +16,7 @@ USE_CARSIM=false
 USE_CHRONO=false
 USE_PYTORCH=false
 USE_UNITY=true
-USE_ROS2=true
+USE_ROS2=false
 
 EDITOR_FLAGS=""
 USE_HOUDINI=false

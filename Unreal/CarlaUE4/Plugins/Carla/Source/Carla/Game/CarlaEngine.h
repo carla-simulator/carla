@@ -72,10 +72,7 @@ public:
     FCarlaEngine::FrameCounter += 1;
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
-    {
       ROS2->SetFrame(FCarlaEngine::FrameCounter);
-      ROS2->Publish();
-    }
     return FCarlaEngine::FrameCounter;
   }
 

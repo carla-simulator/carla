@@ -15,7 +15,7 @@ eval set -- "$OPTS"
 PY_VERSION_LIST=3
 USE_CHRONO=false
 USE_PYTORCH=false
-USE_ROS2=true
+USE_ROS2=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
