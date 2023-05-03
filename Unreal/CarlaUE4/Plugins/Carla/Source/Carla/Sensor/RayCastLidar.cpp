@@ -63,6 +63,7 @@ void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float Delta
   auto DataStream = GetDataStream(*this);
 
   // ROS2
+  #if defined(WITH_ROS2)
   auto ROS2 = carla::ros2::ROS2::GetInstance();
   if (ROS2->IsEnabled())
   {
@@ -70,6 +71,7 @@ void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float Delta
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
     ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, LidarData);
   }
+  #endif
 
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");

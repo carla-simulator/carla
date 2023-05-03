@@ -176,6 +176,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
               if(Buffer.data())
               {
                 // ROS2
+                #if defined(WITH_ROS2)
                 auto ROS2 = carla::ros2::ROS2::GetInstance();
                 if (ROS2->IsEnabled())
                 {
@@ -183,6 +184,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
                   auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
                   ROS2->ProcessDataFromSensor(Stream.GetSensorType(), StreamId, Buffer);
                 }
+                #endif
 
                 // network
                 SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);

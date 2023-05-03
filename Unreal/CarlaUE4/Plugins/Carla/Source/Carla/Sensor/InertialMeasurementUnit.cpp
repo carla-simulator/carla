@@ -191,6 +191,7 @@ void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, 
   auto Stream = GetDataStream(*this);
 
   // ROS2
+  #if defined(WITH_ROS2)
   auto ROS2 = carla::ros2::ROS2::GetInstance();
   if (ROS2->IsEnabled())
   {
@@ -198,6 +199,7 @@ void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, 
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
     ROS2->ProcessDataFromIMU(Stream.GetSensorType(), StreamId, Accelerometer, Gyroscope, Compass);
   }
+  #endif
 
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(AInertialMeasurementUnit::PostPhysTick);

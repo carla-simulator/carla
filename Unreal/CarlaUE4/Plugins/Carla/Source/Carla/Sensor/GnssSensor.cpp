@@ -60,6 +60,7 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
   auto Stream = GetDataStream(*this);
 
   // ROS2
+  #if defined(WITH_ROS2)
   auto ROS2 = carla::ros2::ROS2::GetInstance();
   if (ROS2->IsEnabled())
   {
@@ -67,7 +68,7 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
     ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), StreamId, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
   }
-
+  #endif
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("AGnssSensor Stream Send");
     Stream.Send(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});

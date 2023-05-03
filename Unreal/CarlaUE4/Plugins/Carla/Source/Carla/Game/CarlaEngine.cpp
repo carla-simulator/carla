@@ -180,6 +180,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     }
   }
 
+  #if defined(WITH_ROS2)
   // create ROS2 manager
   if (Settings.ROS2)
   {
@@ -187,6 +188,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     ROS2->Enable(true);
     ROS2->InitPublisher();
   }
+  #endif
 
   bMapChanged = true;
 }

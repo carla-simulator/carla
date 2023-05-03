@@ -143,6 +143,7 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
     auto DataStream = GetDataStream(*this);
 
     // ROS2
+    #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
     {
@@ -150,6 +151,7 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
       auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
       ROS2->ProcessDataFromObstacleDetection(DataStream.GetSensorType(), StreamId, Actor, OtherActor, HitDistance/100.0f);
     }
+    #endif
 
     DataStream.Send(*this,
         Episode.SerializeActor(Actor),
