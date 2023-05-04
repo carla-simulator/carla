@@ -9,15 +9,23 @@
 #include "CustomTerrainPhysicsComponent.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 #include "Engine/CollisionProfile.h"
+#include "Engine/StaticMeshActor.h"
+#include "StaticMeshResources.h"
 #include "CollisionQueryParams.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "carla/rpc/String.h"
+#include "Carla/MapGen/SoilTypeManager.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+
 #include "HAL/PlatformFilemanager.h"
 #include "HAL/RunnableThread.h"
 #include "Misc/Paths.h"
 #include "Engine/World.h"
 #include "Math/UnrealMathUtility.h"
+#include "Engine/World.h"
+#include "Landscape.h"
+#include "LandscapeHeightfieldCollisionComponent.h"
+#include "LandscapeComponent.h"
 
 #include "RHICommandList.h"
 #include "TextureResource.h"
@@ -25,8 +33,11 @@
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Materials/MaterialParameterCollection.h"
 #include "Materials/MaterialParameterCollectionInstance.h"
+#include "Materials/MaterialInterface.h"
+#include "Materials/MaterialInstance.h"
 // #include <carla/pytorch/pytorch.h>
 
+#include "Components/SkinnedMeshComponent.h"
 #include "GenericPlatform/GenericPlatformFile.h"
 #include "Async/Async.h"
 #include "Async/Future.h"
@@ -34,7 +45,6 @@
 
 
 #include "Carla/Game/CarlaStatics.h"
-#include "carla/rpc/String.h"
 #include "HAL/PlatformFilemanager.h"
 #include "HAL/RunnableThread.h"
 #include "Misc/Paths.h"
@@ -58,6 +68,11 @@
 
 #include <thread>
 #include <chrono>
+
+#include <compiler/disable-ue4-macros.h>
+#include "carla/rpc/String.h"
+#include <compiler/enable-ue4-macros.h>
+
 
 constexpr float MToCM = 100.f;
 constexpr float CMToM = 0.01f;
@@ -128,7 +143,7 @@ FDenseTile::FDenseTile(){
   ParticlesHeightMap.clear();
   TilePosition = FDVector(0.0,0.0,0.0);
   SavePath = FString("NotValidPath");
-  bHeightmapNeedToUpdate = true;
+  bHeightmapNeedToUpdate = false;
 }
 
 FDenseTile::~FDenseTile(){
@@ -137,13 +152,13 @@ FDenseTile::~FDenseTile(){
   ParticlesZOrdered.clear();
   TilePosition = FDVector(0.0,0.0,0.0);
   SavePath = FString("NotValidPath");
-  bHeightmapNeedToUpdate = true;
+  bHeightmapNeedToUpdate = false;
 }
 
 FDenseTile::FDenseTile(const FDenseTile& Origin){
   TilePosition = Origin.TilePosition;
   SavePath = Origin.SavePath;
-  bHeightmapNeedToUpdate = true;
+  bHeightmapNeedToUpdate = false;
   Particles = Origin.Particles;
   ParticlesHeightMap = Origin.ParticlesHeightMap;
   ParticlesZOrdered = Origin.ParticlesZOrdered;
@@ -152,7 +167,7 @@ FDenseTile::FDenseTile(const FDenseTile& Origin){
 FDenseTile::FDenseTile(FDenseTile&& Origin){
   TilePosition = Origin.TilePosition;
   SavePath = Origin.SavePath;
-  bHeightmapNeedToUpdate = true;
+  bHeightmapNeedToUpdate = false;
   Particles = std::move(Origin.Particles);
   ParticlesHeightMap = std::move(Origin.ParticlesHeightMap);
   ParticlesZOrdered = std::move(Origin.ParticlesZOrdered);
@@ -162,7 +177,7 @@ FDenseTile& FDenseTile::operator=(FDenseTile&& Origin)
 {
   TilePosition = Origin.TilePosition;
   SavePath = Origin.SavePath;
-  bHeightmapNeedToUpdate = true;
+  bHeightmapNeedToUpdate = false;
   Particles = std::move(Origin.Particles);
   ParticlesHeightMap = std::move(Origin.ParticlesHeightMap);
   ParticlesZOrdered = std::move(Origin.ParticlesZOrdered);
@@ -174,10 +189,11 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
     const FString& SavePath, const FHeightMapData &HeightMap)
 {
 
-  uint32_t TileSize = (TileEnd.X - TileOrigin.X );
-  uint32_t PartialHeightMapSize = TileSize * TextureSize / (2*AffectedRadius);
+  TileSize = (TileEnd.X - TileOrigin.X );
+  PartialHeightMapSize = TileSize * TextureSize / (2*AffectedRadius);
   std::string FileName = std::string(TCHAR_TO_UTF8(*( SavePath + TileOrigin.ToString() + ".tile" ) ) );
   
+  //UE_LOG(LogCarla, Log, TEXT("Tile origin %s"), *TileOrigin.ToString() );
   if( FPaths::FileExists(FString(FileName.c_str())) )
   {
     
@@ -197,7 +213,6 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
     uint32_t NumParticles_X = (TileEnd.X - TileOrigin.X) / ParticleSize;
     uint32_t NumParticles_Y = FMath::Abs(TileEnd.Y - TileOrigin.Y) / ParticleSize;
     uint32_t NumParticles_Z = (Depth) / ParticleSize;
-    ParticlesHeightMap.resize( PartialHeightMapSize*PartialHeightMapSize );
     Particles = std::vector<FParticle>(NumParticles_X*NumParticles_Y*NumParticles_Z);
 
     //UE_LOG(LogCarla, Log, TEXT("Initializing Tile with (%d,%d,%d) particles at location %s, size %f, depth %f, HeightMap at tile origin %f"), 
@@ -209,7 +224,6 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
       {
         FDVector ParticleLocalPosition = FDVector(i*ParticleSize, j*ParticleSize, 0.0f);
         FDVector ParticlePosition = TileOrigin + ParticleLocalPosition;
-        // UE_LOG(LogCarla, Log, TEXT("  Particle position %s"), *ParticlePosition.ToString());
         float Height = HeightMap.GetHeight(ParticlePosition);
         for(uint32_t k = 0; k < NumParticles_Z; k++)
         {
@@ -223,17 +237,26 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
     //UE_LOG(LogCarla, Log, TEXT("Building local heightMap of %d pixels"), PartialHeightMapSize);
 
   }
-  ParticlesHeightMap.resize( PartialHeightMapSize*PartialHeightMapSize );
+  ParticlesZOrdered.resize( PartialHeightMapSize*PartialHeightMapSize );
+
   for(float& Height : ParticlesHeightMap)
   {
     Height = 0;
   }
 
+  bParticlesZOrderedInitialized = false;
+  bHeightmapNeedToUpdate = true;
+}
+
+void FDenseTile::InitializeDataStructure()
+{
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(DenseTile::InitializeTile::ParticlesZOrdered);
-    ParticlesZOrdered.resize( PartialHeightMapSize*PartialHeightMapSize );
+    ParticlesHeightMap.clear();
+    ParticlesHeightMap.resize( PartialHeightMapSize*PartialHeightMapSize );
     float InverseTileSize = 1.f/TileSize;
     float Transformation = InverseTileSize * PartialHeightMapSize;
+
     for (size_t i = 0; i < Particles.size(); i++)
     {
       const FParticle& P = Particles[i];
@@ -249,11 +272,11 @@ void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, floa
         ParticlesZOrdered[Index].insert(P.Position.Z);
       }
     }
+    
   }
-
+  bParticlesZOrderedInitialized = true;
   bHeightmapNeedToUpdate = true;
 }
-
 
 // revise coordinates
 void FDenseTile::GetParticlesInRadius(FDVector Position, float Radius, std::vector<FParticle*> &ParticlesInRadius)
@@ -308,20 +331,17 @@ void FDenseTile::GetAllParticles(std::vector<FParticle*> &ParticlesInRadius)
 
 void FDenseTile::UpdateLocalHeightmap()
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(FDenseTile::UpdateLocalHeightmap);
-  if( bHeightmapNeedToUpdate ){
+  if( bHeightmapNeedToUpdate && bParticlesZOrderedInitialized ){
+    TRACE_CPUPROFILER_EVENT_SCOPE(FDenseTile::UpdateLocalHeightmap);
     for( uint32_t i = 0; i < ParticlesHeightMap.size() ; ++i ){
       if( ParticlesZOrdered.size() == ParticlesHeightMap.size() ){
-        auto it = ParticlesZOrdered[i].begin();
-        ParticlesHeightMap[i] = *it;
-      }else{
-        UE_LOG(LogCarla, Log, TEXT("ParticlesZOrdered is not correct sized %d Heightmap size %d"), ParticlesZOrdered.size(), ParticlesHeightMap.size() );
+        float Value = * ( ParticlesZOrdered[i].begin() );
+        ParticlesHeightMap[i] = Value;
       }
     }
-  }else{
-        UE_LOG(LogCarla, Log, TEXT("Not updated") );
-
+    bHeightmapNeedToUpdate = false;
   }
+
 }
 
 // revise coordinates
@@ -584,74 +604,6 @@ std::vector<uint64_t> FSparseHighDetailMap::GetLoadedTilesInRange(FDVector Posit
   return LoadedTiles;
 }
 
-std::vector<float> FSparseHighDetailMap::
-    GetParticlesHeightMapInTileRadius(FDVector Position, float Radius)
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::GetParticlesHeightMapInTileRadius);
- 
-  uint64_t TileId = GetTileId(Position);
-  uint32_t Tile_X = (uint32_t)(TileId >> 32);
-  uint32_t Tile_Y = (uint32_t)(TileId & (uint32_t)(~0));
-
-  uint32_t RadiusInTiles = (Radius/TileSize);
-  uint32_t MinX = 0,MinY = 0,MaxX = 0,MaxY = 0; 
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE(Comparisons);
-    if( Tile_X < RadiusInTiles){
-      MinX = 0;
-    }else{
-      MinX = Tile_X - RadiusInTiles;
-    }
-    
-    if( Tile_Y < RadiusInTiles){
-      MinY = 0;
-    }else{
-      MinY = Tile_Y - RadiusInTiles;
-    }
-
-    MaxX = Tile_X + RadiusInTiles;
-    MaxY = Tile_Y + RadiusInTiles;
-  }
-  
-  // UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::GetParticlesHeightMapInTileRadius MinX %zu MaxX: %zu, MinY %zu MaxY %zu"),
-  //     MinX, MaxX, MinY, MaxY);
-  // UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::GetParticlesHeightMapInTileRadius TileId %lld TileX: %d, TileY %d"),
-  //     TileId, Tile_X, Tile_Y);
-  // UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::GetParticlesHeightMapInTileRadius RadiusInTiles %d"), RadiusInTiles);
-  // UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::GetParticlesHeightMapInTileRadius Extension X: %f, Y %f"), Extension.X, Extension.Y);
-  // UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::GetParticlesHeightMapInTileRadius Position X: %f, Y %f"), Position.X, Position.Y);
-  
-  std::vector<float> ParticlesHeightMap;
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE(Looping);
-    for( uint32_t X = MinX; X < MaxX; ++X )
-    {
-      for( uint32_t Y = MinY; Y < MaxY; ++Y )
-      {
-        TRACE_CPUPROFILER_EVENT_SCOPE(InnerBody);
-        uint64_t CurrentTileId = GetTileId(X,Y);
-        if( Map.find(CurrentTileId) != Map.end() )
-        {
-          TRACE_CPUPROFILER_EVENT_SCOPE(GetTile);
-          std::vector<float>& CurrentHeightMap = GetTile(X,Y).ParticlesHeightMap;
-          // UE_LOG(LogCarla, Log, TEXT("Pre ParticlesHeightMap %d particlesheightmap"), ParticlesHeightMap.size());
-          {
-            TRACE_CPUPROFILER_EVENT_SCOPE(Inserting);
-            ParticlesHeightMap.insert(ParticlesHeightMap.end(), 
-                                      CurrentHeightMap.begin() ,
-                                      CurrentHeightMap.end() ); 
-          }
-          // UE_LOG(LogCarla, Log, TEXT("New %d particlesheightmap"), CurrentHeightMap.size());
-        }else{
-          //UE_LOG(LogCarla, Log, TEXT("Requested Tile not found TileId %lld TileX: %d, TileY %d"), CurrentTileId, X, Y);
-        }
-      }
-    }
-  }
-  return ParticlesHeightMap;
-}
-
-
 uint64_t FSparseHighDetailMap::GetTileId(uint32_t Tile_X, uint32_t Tile_Y)
 {
   return (uint64_t) Tile_X << 32 | Tile_Y;
@@ -674,11 +626,8 @@ FDVector FSparseHighDetailMap::GetTilePosition(uint64_t TileId)
 
 FDVector FSparseHighDetailMap::GetTilePosition(uint32_t Tile_X, uint32_t Tile_Y)
 {
-
-  FDVector Position = FDVector(Tile_X*TileSize, Tile_Y*TileSize, 0);
+  FDVector Position = FDVector(Tile_X*TileSize, Tile_Y*TileSize, FloorHeight);
   Position = Position + Tile0Position;
-  //UE_LOG(LogCarla, Log, TEXT("Getting location from id (%lu, %lu) %s"),
-  //      (unsigned long)Tile_X, (unsigned long)Tile_Y, *(Position).ToString());
   return Position;
 }
 
@@ -698,8 +647,9 @@ FDenseTile& FSparseHighDetailMap::GetTile(uint64_t TileId)
   auto Iterator = Map.find(TileId);
   if (Iterator == Map.end())
   {
+    TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::GetTile);
     // FScopeLock Lock(&Lock_CacheMap);
-    FScopeLock TileLock(&Lock_GetTile);
+    Lock_GetTile.Lock();
     bool bGotCacheLock = Lock_CacheMap.TryLock();
     if(bGotCacheLock)
     {
@@ -709,10 +659,13 @@ FDenseTile& FSparseHighDetailMap::GetTile(uint64_t TileId)
         Map.emplace(TileId, std::move(CacheIterator->second));
         CacheMap.erase(CacheIterator);
         Lock_CacheMap.Unlock();
+        Lock_GetTile.Unlock();
         return Map[TileId];
       }
       Lock_CacheMap.Unlock();
     }
+    FDenseTile& Tile = Map[TileId];
+    Lock_GetTile.Unlock();
     return InitializeRegion(TileId);
   }
   return Iterator->second;
@@ -778,9 +731,7 @@ void FSparseHighDetailMap::InitializeMap(UHeightMapDataAsset* DataAsset,
       Tile0Position, ScaleZ);
   UE_LOG(LogCarla, Log, 
       TEXT("Sparse Map initialized"));
-
-
-  UE_LOG(LogCarla, Error, 
+  UE_LOG(LogCarla, Log, 
       TEXT("Map Extension %f %f %f"), MapSize.X, MapSize.Y, MapSize.Z );
 }
 
@@ -832,34 +783,6 @@ void FSparseHighDetailMap::UpdateMaps(
     FScopeLock ScopeLock(&Lock_Map);
     FScopeLock ScopeCacheLock(&Lock_CacheMap);
     TRACE_CPUPROFILER_EVENT_SCOPE(UpdateMap);
-    // load tiles to map
-    std::vector<uint64_t> TilesToInitialize;
-    for(int32_t Tile_X = MinVector.X; Tile_X < MaxVector.X; ++Tile_X )
-    {
-      for(int32_t Tile_Y = MinVector.Y; Tile_Y < MaxVector.Y; ++Tile_Y )
-      {
-        uint64_t CurrentTileID = GetTileId(Tile_X, Tile_Y);
-        if (Map.find(CurrentTileID) == Map.end())
-        {
-          if (CacheMap.find(CurrentTileID) == CacheMap.end())
-          {
-            // InitializeRegion(CurrentTileID);
-            Map.emplace(CurrentTileID, FDenseTile());
-            TilesToInitialize.emplace_back(CurrentTileID);
-          }
-          else
-          {
-            Map.emplace(CurrentTileID, std::move( CacheMap[CurrentTileID] ) );
-            CacheMap.erase(CurrentTileID);
-          }
-        }
-      }
-    }
-    ParallelFor(TilesToInitialize.size(), [&](int32 Idx)
-    {
-      uint64_t TileId = TilesToInitialize[Idx];
-      InitializeRegion(TileId);
-    });
     // unload extra tiles
     std::vector<uint64_t> TilesToErase;
     for (auto &Element : Map)
@@ -880,28 +803,7 @@ void FSparseHighDetailMap::UpdateMaps(
   {
     FScopeLock ScopeCacheLock(&Lock_CacheMap);
     TRACE_CPUPROFILER_EVENT_SCOPE(UpdateCache);
-    std::vector<uint64_t> TilesToInitialize;
-    for(int32_t Tile_X = CacheMinVector.X; Tile_X < CacheMaxVector.X; ++Tile_X )
-    {
-      for(int32_t Tile_Y = CacheMinVector.Y; Tile_Y < CacheMaxVector.Y; ++Tile_Y )
-      {
-        if (IsInMapRange(Tile_X, Tile_Y))
-        {
-          continue;
-        }
-        uint64_t CurrentTileID = GetTileId(Tile_X, Tile_Y);
-        if (CacheMap.find(CurrentTileID) == CacheMap.end())
-        {
-          CacheMap.emplace(CurrentTileID, FDenseTile());
-          TilesToInitialize.emplace_back(CurrentTileID);
-        }
-      }
-    }
-    ParallelFor(TilesToInitialize.size(), [&](int32 Idx)
-    {
-      uint64_t TileId = TilesToInitialize[Idx];
-      InitializeRegionInCache(TileId);
-    });
+    
     // unload extra tiles
     std::vector<uint64_t> TilesToErase;
     {
@@ -912,11 +814,11 @@ void FSparseHighDetailMap::UpdateMaps(
         FIntVector VectorTileId = GetVectorTileId(TileId);
         if (!IsInCacheRange(VectorTileId.X, VectorTileId.Y))
         {
-          // CacheMap.emplace(TileId, std::move(Element.second));
           TilesToErase.emplace_back(TileId);
         }
       }
     }
+
     {
       TRACE_CPUPROFILER_EVENT_SCOPE(EraseTiles);
       ParallelFor(TilesToErase.size(), [&](int32 Idx)
@@ -929,7 +831,6 @@ void FSparseHighDetailMap::UpdateMaps(
         std::ofstream OutputStream(FileToSavePath.c_str());
         WriteFVector(OutputStream, Tile.TilePosition.ToFVector());
         WriteStdVector<FParticle> (OutputStream, Tile.Particles);
-        WriteStdVector<float> (OutputStream, Tile.ParticlesHeightMap);
         OutputStream.close();
       });
       {
@@ -996,7 +897,6 @@ void FSparseHighDetailMap::SaveMap()
     std::ofstream OutputStream(FileToSavePath.c_str());
     WriteFVector(OutputStream, it.second.TilePosition.ToFVector());
     WriteStdVector<FParticle> (OutputStream, it.second.Particles);
-    WriteStdVector<float> (OutputStream, it.second.ParticlesHeightMap);
     OutputStream.close();
   });
   
@@ -1007,7 +907,6 @@ void FSparseHighDetailMap::SaveMap()
     std::ofstream OutputStream(FileToSavePath.c_str());
     WriteFVector(OutputStream, it.second.TilePosition.ToFVector());
     WriteStdVector<FParticle> (OutputStream, it.second.Particles);
-    WriteStdVector<float> (OutputStream, it.second.ParticlesHeightMap);
     OutputStream.close();
   });
 
@@ -1069,17 +968,25 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
   LocalTexelSize = std::floor( LocalTexelSize * 1000.0f ) / 1000.0f;
   
   Data.Init( 128, Data.Num() );
+  float DisplacementRange = MaxDisplacement - MinDisplacement;
+  float InverseDisplacementRange = 1.0f / DisplacementRange;
 
   for (uint64_t TileId : LoadedTiles)
   {
     FDenseTile& CurrentTile = SparseMap.GetTile(TileId);
+
+    if (!CurrentTile.bParticlesZOrderedInitialized)
+    {
+      continue;
+    }
+
     FDVector& TilePosition = CurrentTile.TilePosition;
     for (int32_t Local_Y = 0; Local_Y < PartialHeightMapSize; ++Local_Y)
     {
       for (int32_t Local_X = 0; Local_X < PartialHeightMapSize; ++Local_X)
       {
         int32_t LocalIndex = Local_Y * PartialHeightMapSize + Local_X;
-        float Height = *(CurrentTile.ParticlesZOrdered[LocalIndex].begin());
+        float Height = CurrentTile.ParticlesHeightMap[LocalIndex];
         FDVector LocalTexelPosition = 
             TilePosition + FDVector(Local_X*LocalTexelSize, Local_Y*LocalTexelSize, 0);
         int32_t Coord_X = std::floor( (LocalTexelPosition.X - TextureOrigin.X ) / GlobalTexelSize );
@@ -1090,10 +997,8 @@ void UCustomTerrainPhysicsComponent::UpdateLoadedTextureDataRegions()
         {
           float OriginalHeight = SparseMap.GetHeight(LocalTexelPosition);
           float Displacement = Height - OriginalHeight;
-          float DisplacementRange = MaxDisplacement - MinDisplacement;
-          float Fraction = (Displacement - MinDisplacement) / DisplacementRange; 
-          Fraction = FMath::Clamp(Fraction, 0.f, 1.f);
-          Fraction = std::floor(Fraction * 255.0f);
+          float Fraction = (Displacement - MinDisplacement) * InverseDisplacementRange; 
+          Fraction = FMath::Clamp(Fraction, 0.f, 1.f) * 255;
           Data[Coord_X * TextureToUpdate->GetSizeY() + Coord_Y] = static_cast<uint8_t>(Fraction );
         }
       }
@@ -1135,9 +1040,7 @@ void UCustomTerrainPhysicsComponent::UpdateLargeTextureData()
     FVector OriginPosition;     
     OriginPosition.X =  CachePosition.X + (WorldSize.X * 0.5f);
     OriginPosition.Y =  -CachePosition.Y - (WorldSize.Y * 0.5f);
-    SparseMap.LockMutex();
-    ParticlesPositions = SparseMap.GetParticlesHeightMapInTileRadius(UEFrameToSI(OriginPosition), CacheRadius.X );
-    SparseMap.UnLockMutex();
+
     //UE_LOG(LogCarla, Log, TEXT("FSparseHighDetailMap::UpdateTextureData OriginPosition X: %f, Y %f"), OriginPosition.X, OriginPosition.Y);
   }
 
@@ -1190,11 +1093,11 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
         TEXT("UCustomTerrainPhysicsComponent: Root component is not a UPrimitiveComponent"));
   }
 #ifndef WITH_EDITOR
-  bUpdateParticles = false;
+  bUpdateParticles = true;
   DrawDebugInfo = false;
   bUseDynamicModel = false;
   bDisableVehicleGravity = false;
-  NNVerbose = true;
+  NNVerbose = false;
   bUseImpulse = false;
   bUseMeanAcceleration = false;
   bShowForces = true;
@@ -1204,10 +1107,11 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   ParticleForceMulFactor = 1.f;
   FloorHeight = 0.0;
   bDrawLoadedTiles = false;
-  bUseSoilType = false;
+  bUseSoilType = true;
   EffectMultiplayer = 200.0f;
   MinDisplacement = -10.0f;
   MaxDisplacement = 10.0f;
+  bRemoveLandscapeColliders = false;
 #endif
 
   int IntValue;
@@ -1252,6 +1156,10 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     EffectMultiplayer = Value;
   }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-defor-res="), Value))
+  {
+    ChosenRes = static_cast<EDefResolutionType>(Value);
+  }
   if (FParse::Value(FCommandLine::Get(), TEXT("-min-displacement="), Value))
   {
     MinDisplacement = Value;
@@ -1291,6 +1199,10 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   if (FParse::Param(FCommandLine::Get(), TEXT("-draw-debug-info")))
   {
     DrawDebugInfo = true;
+  }
+  if (FParse::Param(FCommandLine::Get(), TEXT("-use-local-frame")))
+  {
+    bUseLocalFrame = true;
   }
   FString Path;
   if (FParse::Value(FCommandLine::Get(), TEXT("-network-path="), Path))
@@ -1339,19 +1251,34 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     bDrawLoadedTiles = true;
   }
+  if (FParse::Param(FCommandLine::Get(), TEXT("-remove-colliders")))
+  {
+    bRemoveLandscapeColliders = true;
+  }
   if (FParse::Param(FCommandLine::Get(), TEXT("-disable-terramechanics")))
   {
     SetComponentTickEnabled(false);
     return;
   }
+
+  if(bRemoveLandscapeColliders)
+  {
+    FWorldDelegates::LevelAddedToWorld.AddUObject(
+        this, &UCustomTerrainPhysicsComponent::OnLevelAddedToWorld);
+  }
+
   LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
+  if( TexturesRes.Contains(ChosenRes) ){
+    TextureToUpdate = TexturesRes[ChosenRes];
+  }
+
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(InitializeDenseMap);
     SparseMap.Clear();
     UE_LOG(LogCarla, Warning, 
         TEXT("ParticleDiameter %f"), ParticleDiameter);
 
-    SparseMap.Init(TextureToUpdate->GetSizeX(), TextureRadius, ParticleDiameter * CMToM, TerrainDepth * CMToM);
+    SparseMap.Init(TextureToUpdate->GetSizeX(), TextureRadius, ParticleDiameter * CMToM, TerrainDepth * CMToM, FloorHeight * CMToM );
     RootComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
     if(LargeMapManager)
     {
@@ -1360,7 +1287,6 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
       // UE_LOG(LogCarla, Log, 
       //     TEXT("World Size %s"), *(WorldSize.ToString()));
     }
-    Tile0Origin.Z += FloorHeight;
     // SparseMap.InitializeMap(HeightMap, UEFrameToSI(Tile0Origin), UEFrameToSI(WorldSize),
     //     1.f, MinHeight, MaxHeight, HeightMapScaleFactor.Z);
     if (DataAsset)
@@ -1539,7 +1465,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
               FVector TilePosition = HeightMapOffset + LargeMapManager->GetTileLocation(CurrentLargeMapTileId) - 0.5f*FVector(LargeMapManager->GetTileSize(), -LargeMapManager->GetTileSize(), 0);
               UE_LOG(LogCarla, Log, TEXT("Updating height map to location %s in tile location %s"), 
                   *TilePosition.ToString(), *LargeMapManager->GetTileLocation(CurrentLargeMapTileId).ToString());
-              TilePosition.Z += FloorHeight;
+              TilePosition.Z += UEFrameToSI(FloorHeight) ;
               SparseMap.UpdateHeightMap(
                   HeightMapDataAsset, UEFrameToSI(TilePosition), UEFrameToSI(FVector(
                     LargeMapManager->GetTileSize(),-LargeMapManager->GetTileSize(), 0)), 
@@ -1558,17 +1484,14 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
 
     SparseMap.LockMutex();
     RunNNPhysicsSimulation(Vehicle, DeltaTime);
-
     LastUpdatedPosition = GlobalLocation;
-
-    UpdateTexture();
+    SparseMap.UnLockMutex();
 
     if (bDrawLoadedTiles)
     {
       DrawTiles(GetWorld(), SparseMap.GetTileIdInMap(), GlobalLocation.Z + 300, FLinearColor(0.0,0.0,1.0,0.0));
       DrawTiles(GetWorld(), SparseMap.GetTileIdInCache(), GlobalLocation.Z + 300, FLinearColor(1.0,0.0,0.0,0.0));
     }
-    SparseMap.UnLockMutex();
 
     if( MPCInstance == nullptr )
     {
@@ -1589,6 +1512,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
         MPCInstance->SetScalarParameterValue("TexSizeX", TextureToUpdate->GetSizeX()); 
       } 
     }
+
     if(bUseDeformationPlane){
       if( DeformationPlaneActor ){
         DeformationPlaneActor->SetActorLocation(LastUpdatedPosition, false, nullptr);
@@ -1597,9 +1521,9 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     
         if( DeformationPlaneActor )
         {
-        DeformationPlaneActor->GetStaticMeshComponent()->SetStaticMesh( DeformationPlaneMesh );
-        DeformationPlaneActor->GetStaticMeshComponent()->SetMaterial( 0, DeformationPlaneMaterial );
-        DeformationPlaneActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+          DeformationPlaneActor->GetStaticMeshComponent()->SetStaticMesh( DeformationPlaneMesh );
+          DeformationPlaneActor->GetStaticMeshComponent()->SetMaterial( 0, DeformationPlaneMaterial );
+          DeformationPlaneActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
         }
       }
     }
@@ -1662,6 +1586,30 @@ void UCustomTerrainPhysicsComponent::DrawParticles(UWorld* World, std::vector<FP
     {
       Point = LargeMapManager->GlobalToLocalLocation(Point);
     }
+    LineBatcher->DrawPoint(Point, 
+          Color, 1.0, 0, LifeTime);
+  }
+}
+
+void UCustomTerrainPhysicsComponent::DrawParticlesArray(UWorld* World, TArray<float>& ParticlesArray, 
+    FLinearColor Color)
+{
+  float LifeTime = 0.3f;
+  bool bPersistentLines = false;
+  bool bDepthIsForeground = (0 == SDPG_Foreground);
+  ULineBatchComponent* LineBatcher = 
+      (World ? (bDepthIsForeground ? World->ForegroundLineBatcher : 
+      (( bPersistentLines || (LifeTime > 0.f) ) ? World->PersistentLineBatcher : World->LineBatcher)) : nullptr);
+  if (!LineBatcher)
+  {
+    UE_LOG(LogCarla, Error, TEXT("Missing linebatcher"));
+  }
+  for(int i = 0; i < ParticlesArray.Num(); i+=3)
+  {
+    FVector Position = FVector(ParticlesArray[i+0], ParticlesArray[i+1], ParticlesArray[i+2]);
+    // DrawDebugPoint(World, MToCM*Particle->Position.ToFVector(),
+    //     1.0, FColor(255,0,0), false, 0.3, 0);
+    FVector Point = SIToUEFrame(Position);
     LineBatcher->DrawPoint(Point, 
           Color, 1.0, 0, LifeTime);
   }
@@ -1835,10 +1783,18 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   TRACE_CPUPROFILER_EVENT_SCOPE(RunNNPhysicsSimulation);
   #ifdef WITH_PYTORCH
   FTransform VehicleTransform = Vehicle->GetTransform();
+  FTransform WheelTransform0 = VehicleTransform;
+  FTransform WheelTransform1 = VehicleTransform;
+  FTransform WheelTransform2 = VehicleTransform;
+  FTransform WheelTransform3 = VehicleTransform;
   FVector WheelPosition0 = VehicleTransform.TransformPosition(FVector(140, -70, 40));
   FVector WheelPosition1 = VehicleTransform.TransformPosition(FVector(140, 70, 40));
   FVector WheelPosition2 = VehicleTransform.TransformPosition(FVector(-140, -70, 40));
   FVector WheelPosition3 = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
+  WheelTransform0.SetLocation(WheelPosition0);
+  WheelTransform1.SetLocation(WheelPosition1);
+  WheelTransform2.SetLocation(WheelPosition2);
+  WheelTransform3.SetLocation(WheelPosition3);
   if(LargeMapManager)
   {
     WheelPosition0 = LargeMapManager->LocalToGlobalLocation(WheelPosition0);
@@ -1911,11 +1867,6 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel3), BboxWheel3.Center.Z);
   }
 
-  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 0 %s"), ParticlesWheel0.size(), *WheelPosition0.ToString());
-  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 1 %s"), ParticlesWheel1.size(), *WheelPosition1.ToString());
-  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 2 %s"), ParticlesWheel2.size(), *WheelPosition2.ToString());
-  //UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 3 %s"), ParticlesWheel3.size(), *WheelPosition3.ToString());
-  
   TArray<float> ParticlePos0, ParticleVel0, ParticlePos1, ParticleVel1,
                 ParticlePos2, ParticleVel2, ParticlePos3, ParticleVel3;
   TArray<float> WheelPos0, WheelOrient0, WheelLinVel0, WheelAngVel0;
@@ -1924,10 +1875,10 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   TArray<float> WheelPos3, WheelOrient3, WheelLinVel3, WheelAngVel3;
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(SetUpArrays);
-    SetUpParticleArrays(ParticlesWheel0, ParticlePos0, ParticleVel0);
-    SetUpParticleArrays(ParticlesWheel1, ParticlePos1, ParticleVel1);
-    SetUpParticleArrays(ParticlesWheel2, ParticlePos2, ParticleVel2);
-    SetUpParticleArrays(ParticlesWheel3, ParticlePos3, ParticleVel3);
+    SetUpParticleArrays(ParticlesWheel0, ParticlePos0, ParticleVel0, WheelTransform0);
+    SetUpParticleArrays(ParticlesWheel1, ParticlePos1, ParticleVel1, WheelTransform1);
+    SetUpParticleArrays(ParticlesWheel2, ParticlePos2, ParticleVel2, WheelTransform2);
+    SetUpParticleArrays(ParticlesWheel3, ParticlePos3, ParticleVel3, WheelTransform3);
 
     SetUpWheelArrays(Vehicle, 0, WheelPos0, WheelOrient0, WheelLinVel0, WheelAngVel0);
     SetUpWheelArrays(Vehicle, 1, WheelPos1, WheelOrient1, WheelLinVel1, WheelAngVel1);
@@ -1957,6 +1908,24 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
       WheelLinVel3.GetData(), WheelAngVel3.GetData()};
 
   const FVehicleControl& VehicleControl = Vehicle->GetVehicleControl();
+  ASoilTypeManager* SoilTypeManagerActor =  Cast<ASoilTypeManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ASoilTypeManager::StaticClass()));
+  if(SoilTypeManagerActor)
+  {
+    FSoilTerramechanicsProperties TerramechanicsProperties = 
+        SoilTypeManagerActor->GetTerrainPropertiesAtGlobalLocation(WheelPosition0);
+
+    switch(TerramechanicsProperties.TerrainType){
+      case ESoilTerramechanicsType::DESERT:
+        SoilType = 0;
+        break;
+      case ESoilTerramechanicsType::FOREST:
+        SoilType = 1;
+        break;
+      default:
+        SoilType = 0;
+    }
+
+  }
   carla::learning::Inputs NNInput {Wheel0,Wheel1,Wheel2,Wheel3, 
       VehicleControl.Steer, VehicleControl.Throttle, VehicleControl.Brake, 
       SoilType, NNVerbose};
@@ -1989,30 +1958,22 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   if(bUpdateParticles)
   {
     {
-      TRACE_CPUPROFILER_EVENT_SCOPE(RemoveParticlesFromOrderedContainer);
-      auto RemoveParticles = 
-      [&] (std::vector<FParticle*>& ParticlesWheel)
-      {
-        RemoveParticlesFromOrderedContainer( ParticlesWheel );
-      };
-      RemoveParticles(ParticlesWheel0);
-      RemoveParticles(ParticlesWheel1);
-      RemoveParticles(ParticlesWheel2);
-      RemoveParticles(ParticlesWheel3);
-      
-    }
-    {
       TRACE_CPUPROFILER_EVENT_SCOPE(UpdateParticles);
-
+      FScopeLock ScopeLock(&SparseMap.Lock_Particles);
       auto UpdateFutureParticles = 
-      [&] (std::vector<FParticle*>& Particles, std::vector<float>& Forces, float DeltaTime)
+      [&] (std::vector<FParticle*>& Particles, std::vector<float>& Forces, float DeltaTime,
+          const FTransform& WheelTransform)
       {
-        UpdateParticles( Particles, Forces, DeltaTime );
+        UpdateParticles( Particles, Forces, DeltaTime, WheelTransform );
       };
-      UpdateFutureParticles(ParticlesWheel0, Output.wheel0._particle_forces, DeltaTime);
-      UpdateFutureParticles(ParticlesWheel1, Output.wheel1._particle_forces, DeltaTime);
-      UpdateFutureParticles(ParticlesWheel2, Output.wheel2._particle_forces, DeltaTime);
-      UpdateFutureParticles(ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime);
+      UpdateFutureParticles(
+          ParticlesWheel0, Output.wheel0._particle_forces, DeltaTime, WheelTransform0);
+      UpdateFutureParticles(
+          ParticlesWheel1, Output.wheel1._particle_forces, DeltaTime, WheelTransform1);
+      UpdateFutureParticles(
+          ParticlesWheel2, Output.wheel2._particle_forces, DeltaTime, WheelTransform2);
+      UpdateFutureParticles(
+          ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime, WheelTransform3);
     }
     if (DrawDebugInfo)
     {
@@ -2021,17 +1982,6 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
       DrawParticles(GetWorld(), ParticlesWheel1, Color);
       DrawParticles(GetWorld(), ParticlesWheel2, Color);
       DrawParticles(GetWorld(), ParticlesWheel3, Color);
-    }
-    {
-      TRACE_CPUPROFILER_EVENT_SCOPE(AddParticles);
-      AddParticlesToOrderedContainer( ParticlesWheel0 );
-      AddParticlesToOrderedContainer( ParticlesWheel1 );
-      AddParticlesToOrderedContainer( ParticlesWheel2 );
-      AddParticlesToOrderedContainer( ParticlesWheel3 );
-    }
-    {
-      TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::UpdateTilesHeightMaps);
-      UpdateTilesHeightMapsInRadius( LastUpdatedPosition, TextureRadius);
     }
   }
 
@@ -2091,131 +2041,39 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
             Output.wheel3.wheel_torque_y,
             Output.wheel3.wheel_torque_z)));
   }
-  #else
-  FTransform VehicleTransform;
-  VehicleTransform = Vehicle->GetTransform();
-
-  FVector WheelPosition0 = VehicleTransform.TransformPosition(FVector(140, -70, 40));
-  FVector WheelPosition1 = VehicleTransform.TransformPosition(FVector(140, 70, 40));
-  FVector WheelPosition2 = VehicleTransform.TransformPosition(FVector(-140, -70, 40));
-  FVector WheelPosition3 = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
-  if(LargeMapManager)
-  {
-    WheelPosition0 = LargeMapManager->LocalToGlobalLocation(WheelPosition0);
-    WheelPosition1 = LargeMapManager->LocalToGlobalLocation(WheelPosition1);
-    WheelPosition2 = LargeMapManager->LocalToGlobalLocation(WheelPosition2);
-    WheelPosition3 = LargeMapManager->LocalToGlobalLocation(WheelPosition3);
-  }
-  FOrientedBox BboxWheel0;
-  BboxWheel0.AxisX = VehicleTransform.GetUnitAxis(EAxis::X);
-  BboxWheel0.AxisY = VehicleTransform.GetUnitAxis(EAxis::Y);
-  BboxWheel0.AxisZ = VehicleTransform.GetUnitAxis(EAxis::Z);
-  BboxWheel0.Center = WheelPosition0 + FVector(0,0,-TireRadius);
-  BboxWheel0.ExtentX = BoxSearchForwardDistance;
-  BboxWheel0.ExtentY = BoxSearchLateralDistance;
-  BboxWheel0.ExtentZ = BoxSearchDepthDistance;
-  FOrientedBox BboxWheel1 = BboxWheel0;
-  BboxWheel1.Center = WheelPosition1 + FVector(0,0,-TireRadius);
-  FOrientedBox BboxWheel2 = BboxWheel0;
-  BboxWheel2.Center = WheelPosition2 + FVector(0,0,-TireRadius);
-  FOrientedBox BboxWheel3 = BboxWheel0;
-  BboxWheel3.Center = WheelPosition3 + FVector(0,0,-TireRadius);
-  if (DrawDebugInfo)
-  {
-    DrawOrientedBox(GetWorld(), {BboxWheel0, BboxWheel1, BboxWheel2, BboxWheel3});
-  }
-
-  std::vector<FParticle*> ParticlesWheel0, ParticlesWheel1, ParticlesWheel2, ParticlesWheel3;
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE(ParticleSearch);
-    auto GetAndFilterParticlesInBox = 
-        [&] (FOrientedBox& OBox) -> std::vector<FParticle*>
-    {
-      std::vector<FParticle*> Particles;
-      Particles = SparseMap.GetParticlesInBox(OBox);
-      LimitParticlesPerWheel(Particles);
-      return Particles;
-    };
-    auto FutureParticles0 = Async(EAsyncExecution::ThreadPool, 
-        [&]() {return GetAndFilterParticlesInBox(BboxWheel0);});
-    auto FutureParticles2 = Async(EAsyncExecution::ThreadPool, 
-        [&]() {return GetAndFilterParticlesInBox(BboxWheel2);});
-    auto FutureParticles1 = Async(EAsyncExecution::ThreadPool, 
-        [&]() {return GetAndFilterParticlesInBox(BboxWheel1);});
-    auto FutureParticles3 = Async(EAsyncExecution::ThreadPool, 
-        [&]() {return GetAndFilterParticlesInBox(BboxWheel3);});
-    ParticlesWheel0 = FutureParticles0.Get();
-    ParticlesWheel2 = FutureParticles2.Get();
-    ParticlesWheel1 = FutureParticles1.Get();
-    ParticlesWheel3 = FutureParticles3.Get();
-  }
-
-
-
-  if(DrawDebugInfo)
-  {
-    DrawParticles(GetWorld(), ParticlesWheel0);
-    DrawParticles(GetWorld(), ParticlesWheel1);
-    DrawParticles(GetWorld(), ParticlesWheel2);
-    DrawParticles(GetWorld(), ParticlesWheel3);
-    DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel0), BboxWheel0.Center.Z);
-    DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel1), BboxWheel1.Center.Z);
-    DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel2), BboxWheel2.Center.Z);
-    DrawTiles(GetWorld(), SparseMap.GetIntersectingTiles(BboxWheel3), BboxWheel3.Center.Z);
-  }
-
-  if(bUpdateParticles)
-  {
-    {
-      TRACE_CPUPROFILER_EVENT_SCOPE(RemoveParticlesFromOrderedContainer);
-      RemoveParticlesFromOrderedContainer( ParticlesWheel0 );
-      RemoveParticlesFromOrderedContainer( ParticlesWheel1 );
-      RemoveParticlesFromOrderedContainer( ParticlesWheel2 );
-      RemoveParticlesFromOrderedContainer( ParticlesWheel3 );
-    }
-    {
-      TRACE_CPUPROFILER_EVENT_SCOPE(UpdateParticles);
-      for( auto it : ParticlesWheel0 ){
-        it->Position.Z = -10;
-      }
-      for( auto it : ParticlesWheel1 ){
-        it->Position.Z = -10;
-      }
-      for( auto it : ParticlesWheel2 ){
-        it->Position.Z = -10;
-      }
-      for( auto it : ParticlesWheel3 ){
-        it->Position.Z = -10;
-      }
-    }
-    {
-      TRACE_CPUPROFILER_EVENT_SCOPE(AddParticles);
-      AddParticlesToOrderedContainer( ParticlesWheel0 );
-      AddParticlesToOrderedContainer( ParticlesWheel1 );
-      AddParticlesToOrderedContainer( ParticlesWheel2 );
-      AddParticlesToOrderedContainer( ParticlesWheel3 );
-    }
-    {
-      TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::UpdateTilesHeightMaps);
-      UpdateTilesHeightMapsInRadius( LastUpdatedPosition, 64);
-    }
-  }
   #endif
 }
 
 void UCustomTerrainPhysicsComponent::UpdateParticles(
     std::vector<FParticle*> Particles, std::vector<float> Forces,
-    float DeltaTime)
+    float DeltaTime, const FTransform& WheelTransform)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(UpdateParticles);
-  UE_LOG(LogCarla, Log, TEXT("%d vs %d"), Particles.size(), Forces.size()/3);
-  for (size_t i = 0; i < Particles.size(); i++)
+  //UE_LOG(LogCarla, Log, TEXT("%d vs %d"), Particles.size(), Forces.size()/3);
+  if(bUseLocalFrame)
   {
-    FVector Force = FVector(Forces[3*i + 0], Forces[3*i + 1], Forces[3*i + 2]) * ParticleForceMulFactor;
-    FParticle* P = Particles[i];
-    FVector Acceleration = Force;
-    P->Velocity = P->Velocity + Acceleration*DeltaTime;
-    P->Position = P->Position + P->Velocity*DeltaTime;
+    for (size_t i = 0; i < Particles.size(); i++)
+    {
+      FVector Force = FVector(Forces[3*i + 0], Forces[3*i + 1], Forces[3*i + 2]) * ParticleForceMulFactor;
+      FVector LocalAcceleration = Force;
+      FVector UELocalAcceleration = SIToUEFrame(LocalAcceleration);
+      FVector UEGlobalAcceleration = WheelTransform.TransformVector(UELocalAcceleration);
+      FVector Acceleration = UEFrameToSI(UEGlobalAcceleration);
+      FParticle* P = Particles[i];
+      P->Velocity = P->Velocity + Acceleration*DeltaTime;
+      P->Position = P->Position + P->Velocity*DeltaTime;
+    }
+  }
+  else
+  {
+    for (size_t i = 0; i < Particles.size(); i++)
+    {
+      FVector Force = FVector(Forces[3*i + 0], Forces[3*i + 1], Forces[3*i + 2]) * ParticleForceMulFactor;
+      FParticle* P = Particles[i];
+      FVector Acceleration = Force;
+      P->Velocity = P->Velocity + Acceleration*DeltaTime;
+      P->Position = P->Position + P->Velocity*DeltaTime;
+    }
   }
 }
 
@@ -2230,6 +2088,34 @@ void UCustomTerrainPhysicsComponent::UpdateParticlesDebug( std::vector<FParticle
     FVector Acceleration = Force;
     P->Velocity = P->Velocity + Acceleration*DeltaTime;
     P->Position = P->Position + P->Velocity*DeltaTime;
+  }
+}
+
+void UCustomTerrainPhysicsComponent::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
+{
+  if( bRemoveLandscapeColliders )
+  {
+    for(auto CurrentActor : InLevel->Actors)
+    {
+      if( ALandscape* CurrentLandscape = Cast<ALandscape>( CurrentActor )  )
+      {
+        CurrentLandscape->BodyInstance.ReplaceResponseToChannels(  ECollisionResponse::ECR_Block, ECollisionResponse::ECR_Ignore );
+        CurrentLandscape->BodyInstance.ReplaceResponseToChannels(  ECollisionResponse::ECR_Overlap, ECollisionResponse::ECR_Ignore );
+        CurrentLandscape->BodyInstance.SetCollisionEnabled( ECollisionEnabled::Type::NoCollision, true);
+        
+        for(auto CurrentCollision : CurrentLandscape->CollisionComponents){
+          CurrentCollision->SetCollisionResponseToAllChannels( ECollisionResponse::ECR_Ignore );
+          CurrentCollision->SetCollisionEnabled( ECollisionEnabled::Type::NoCollision );
+
+        }
+
+        for(auto CurrentComponent : CurrentLandscape->LandscapeComponents){
+          CurrentComponent->SetCollisionResponseToAllChannels( ECollisionResponse::ECR_Ignore );
+          CurrentComponent->SetCollisionEnabled( ECollisionEnabled::Type::NoCollision );
+        
+        }
+      }
+    }
   }
 }
 
@@ -2275,26 +2161,10 @@ void UCustomTerrainPhysicsComponent::RemoveParticlesFromOrderedContainer(
   float ParticlesInARowInHeightMap = TextureToUpdate->GetSizeX() / (TextureRadius * 2);
   for (size_t i = 0; i < Particles.size(); i++)
   {
-    // FParticle* P = Particles[i];
-    // FIntVector TilePosition;
-    // TilePosition.X = std::floor( P->Position.X / TileSize );
-    // TilePosition.Y = std::floor( P->Position.Y / TileSize );
-  
-    // FDenseTile& CurrentTile = SparseMap.GetTile(TilePosition.X , TilePosition.Y);
-    // CurrentTile.bHeightmapNeedToUpdate = true;
-    // // We need to find local position of particle
-    // FDVector ParticleLocalPosition = P->Position - TilePosition;
-    // // Recalculate position to get it into heightmap coords
-    // ParticleLocalPosition.X /= ( SparseMap.GetTileSize() );
-    // ParticleLocalPosition.Y /= ( SparseMap.GetTileSize() );
-    // ParticleLocalPosition.X *= ( ParticlesInARowInHeightMap );
-    // ParticleLocalPosition.Y *= ( ParticlesInARowInHeightMap );
-
-    // uint32_t Index = ParticleLocalPosition.Y * ParticlesInARowInHeightMap + ParticleLocalPosition.X;
-
     const FParticle* P = Particles[i];
     uint64_t TileId = SparseMap.GetTileId(P->Position);
     FDenseTile& CurrentTile = SparseMap.GetTile(TileId);
+    CurrentTile.bHeightmapNeedToUpdate = true;
     FDVector TilePosition = CurrentTile.TilePosition;
     FDVector ParticleLocalPosition = P->Position - TilePosition;
     FIntVector HeightMapCoords = FIntVector(
@@ -2306,7 +2176,7 @@ void UCustomTerrainPhysicsComponent::RemoveParticlesFromOrderedContainer(
     // uint32_t Index = std::floor(ParticleLocalPosition.Y) * PartialHeightMapSize + std::floor(ParticleLocalPosition.X);
     uint32_t Index = HeightMapCoords.Y * PartialHeightMapSize + HeightMapCoords.X;
     
-    if(  Index < CurrentTile.ParticlesZOrdered.size()  )
+    if( Index < CurrentTile.ParticlesZOrdered.size() )
     {
       if( CurrentTile.ParticlesZOrdered[Index].size() > 1 )
       {
@@ -2317,9 +2187,8 @@ void UCustomTerrainPhysicsComponent::RemoveParticlesFromOrderedContainer(
         }
         else
         {
-          UE_LOG(LogCarla, Error, TEXT("Cannot find in %d, position %f"), Index, P->Position.Z  );
-        }
-        
+          //UE_LOG(LogCarla, Error, TEXT("Cannot find in %d, position %f"), Index, P->Position.Z  );
+        }       
       }
       else
       {
@@ -2330,7 +2199,6 @@ void UCustomTerrainPhysicsComponent::RemoveParticlesFromOrderedContainer(
     {
       UE_LOG(LogCarla, Error, TEXT("RemoveParticlesFromOrderedContainer Invalid Index %d ZOrderedSize %d Tile: %s"), Index,CurrentTile.ParticlesZOrdered.size(), *(TilePosition.ToString()) );
     }
-   
   }
 }
 
@@ -2349,6 +2217,7 @@ void UCustomTerrainPhysicsComponent::AddParticlesToOrderedContainer(
     const FParticle* P = Particles[i];
     uint64_t TileId = SparseMap.GetTileId(P->Position);
     FDenseTile& CurrentTile = SparseMap.GetTile(TileId);
+    CurrentTile.bHeightmapNeedToUpdate = true;
     FDVector TilePosition = CurrentTile.TilePosition;
     FDVector ParticleLocalPosition = P->Position - TilePosition;
     FIntVector HeightMapCoords = FIntVector(
@@ -2359,7 +2228,11 @@ void UCustomTerrainPhysicsComponent::AddParticlesToOrderedContainer(
     uint32_t Index = HeightMapCoords.Y * PartialHeightMapSize + HeightMapCoords.X;
     if(  Index < CurrentTile.ParticlesZOrdered.size()  )
     {
-      CurrentTile.ParticlesZOrdered[Index].insert(P->Position.Z);
+      float CurrentHeight = *( CurrentTile.ParticlesZOrdered[Index].begin() );
+      if( P->Position.Z - CurrentHeight < UEFrameToSI( ParticleDiameter ) * 2.0f )
+      {
+        CurrentTile.ParticlesZOrdered[Index].insert(P->Position.Z);
+      }
     }else{
       UE_LOG(LogCarla, Error, TEXT("RemoveParticlesFromOrderedContainer Invalid Index %d ZOrderedSize %d Tile: %s"), Index,CurrentTile.ParticlesZOrdered.size(), *(TilePosition.ToString()) );
     
@@ -2367,11 +2240,32 @@ void UCustomTerrainPhysicsComponent::AddParticlesToOrderedContainer(
   }
 }
 
+void UCustomTerrainPhysicsComponent::FlagTilesToRedoOrderedContainer(
+    const std::vector<FParticle*>& Particles)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(AddParticlesToOrderedContainer);
+  
+  uint32_t PartialHeightMapSize = 
+    SparseMap.GetTileSize() * TextureToUpdate->GetSizeX() / (2*TextureRadius);
+  float InverseTileSize = 1.f/SparseMap.GetTileSize();
+  float Transformation = InverseTileSize * PartialHeightMapSize;
+  float ParticlesInARowInHeightMap = TextureToUpdate->GetSizeX() / (TextureRadius * 2);
+  for (size_t i = 0; i < Particles.size(); i++)
+  {
+    const FParticle* P = Particles[i];
+    uint64_t TileId = SparseMap.GetTileId(P->Position);
+    FDenseTile& CurrentTile = SparseMap.GetTile(TileId);
+    CurrentTile.bHeightmapNeedToUpdate = true;
+    CurrentTile.bParticlesZOrderedInitialized = false;
+  }
+}
+
+
 void UCustomTerrainPhysicsComponent::UpdateTilesHeightMapsInRadius(FDVector Position, uint32 Rad )
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(UpdateTilesHeightMapsInRadius);
 
-  uint64_t TileId = SparseMap.GetTileId(Position);
+  uint64_t TileId = SparseMap.GetTileId( UEFrameToSI(Position.ToFVector() ) );
   uint32_t Tile_X = (uint32_t)(TileId >> 32);
   uint32_t Tile_Y = (uint32_t)(TileId & (uint32_t)(~0));
   uint32_t RadiusInTiles = (Rad/TileSize);
@@ -2387,13 +2281,30 @@ void UCustomTerrainPhysicsComponent::UpdateTilesHeightMapsInRadius(FDVector Posi
     for( uint32_t Y = MinY; Y <= MaxY; ++Y )
     {
       uint64_t CurrentTileId = SparseMap.GetTileId(X,Y);
-      
       if( SparseMap.Map.count(CurrentTileId) )
       {
         SparseMap.GetTile(X, Y).UpdateLocalHeightmap();
       }
     }
   }
+}
+
+void UCustomTerrainPhysicsComponent::AddForceToSingleWheel( USkeletalMeshComponent* SkeletalMeshComponent, FVector WheelPosition, FVector WheelNormalForce )
+{
+  FVector WheelBottomLocation = WheelPosition - FVector(0,0, 0.337);
+  float OriginalHeight = SparseMap.GetHeight(WheelPosition);
+  float NewFloorHeight = OriginalHeight - UEFrameToSI(TerrainDepth);
+  
+  if( WheelNormalForce.Size() == 0 ){
+    WheelNormalForce = FVector::UpVector;
+  }
+
+  float ForceFactor = ( WheelBottomLocation.Z - OriginalHeight ) / ( NewFloorHeight - OriginalHeight );
+  if( ForceFactor < 0){
+    ForceFactor = 0;
+  }
+
+  SkeletalMeshComponent->AddForceAtLocationLocal(WheelPosition, SIToUEFrame(WheelNormalForce) * ( ForceFactor * NormalForceIntensity) );
 }
 
 void UCustomTerrainPhysicsComponent::ApplyForcesToVehicle(
@@ -2410,7 +2321,7 @@ void UCustomTerrainPhysicsComponent::ApplyForcesToVehicle(
   FVector WheelPosition3 = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
   UPrimitiveComponent* PrimitiveComponent = 
       Cast<UPrimitiveComponent>(Vehicle->GetRootComponent());
-  if (!PrimitiveComponent)
+  if(!PrimitiveComponent)
   {
     UE_LOG(LogCarla, Error, TEXT("ApplyForcesToVehicle Vehicle does not contain UPrimitiveComponent"));
     return;
@@ -2418,6 +2329,13 @@ void UCustomTerrainPhysicsComponent::ApplyForcesToVehicle(
   if(bDisableVehicleGravity && PrimitiveComponent->IsGravityEnabled())
   {
     PrimitiveComponent->SetEnableGravity(false);
+  }
+  if(bUseLocalFrame)
+  {
+    ForceWheel0 = VehicleTransform.TransformVector(ForceWheel0);
+    ForceWheel1 = VehicleTransform.TransformVector(ForceWheel1);
+    ForceWheel2 = VehicleTransform.TransformVector(ForceWheel2);
+    ForceWheel3 = VehicleTransform.TransformVector(ForceWheel3);
   }
   ForceWheel0 = ForceWheel0.GetClampedToMaxSize(MaxForceMagnitude);
   ForceWheel1 = ForceWheel1.GetClampedToMaxSize(MaxForceMagnitude);
@@ -2488,6 +2406,11 @@ void UCustomTerrainPhysicsComponent::ApplyMeanAccelerationToVehicle(
   {
     PrimitiveComponent->SetEnableGravity(false);
   }
+  if(bUseLocalFrame)
+  {
+    FTransform VehicleTransform = Vehicle->GetTransform();
+    MeanAcceleration = VehicleTransform.TransformVector(MeanAcceleration);
+  }
   PrimitiveComponent->AddForce(MeanAcceleration, FName(""), true);
 
   if (DrawDebugInfo && bShowForces)
@@ -2509,9 +2432,9 @@ void UCustomTerrainPhysicsComponent::ApplyMeanAccelerationToVehicle(
   }
 }
 
-TArray<FVector> UCustomTerrainPhysicsComponent::GetParticlesInRadius(FVector Position, float Radius)
+TArray<FVector> UCustomTerrainPhysicsComponent::GetParticlesInRadius(FVector Position, float InRadius)
 {
-  std::vector<FParticle*> Particles = SparseMap.GetParticlesInRadius(UEFrameToSI(Position), Radius*CMToM);
+  std::vector<FParticle*> Particles = SparseMap.GetParticlesInRadius(UEFrameToSI(Position), InRadius*CMToM);
   TArray<FVector> ParticlePositions;
   for(FParticle* Particle : Particles)
   {
@@ -2520,9 +2443,9 @@ TArray<FVector> UCustomTerrainPhysicsComponent::GetParticlesInRadius(FVector Pos
   return ParticlePositions;
 }
 
-TArray<FVector> UCustomTerrainPhysicsComponent::GetParticlesInTileRadius(FVector Position, float Radius)
+TArray<FVector> UCustomTerrainPhysicsComponent::GetParticlesInTileRadius(FVector Position, float InRadius)
 {
-  std::vector<FParticle*> Particles = SparseMap.GetParticlesInTileRadius(UEFrameToSI(Position), Radius*CMToM);
+  std::vector<FParticle*> Particles = SparseMap.GetParticlesInTileRadius(UEFrameToSI(Position), InRadius*CMToM);
   TArray<FVector> ParticlePositions;
   for(FParticle* Particle : Particles)
   {
@@ -2542,20 +2465,65 @@ FVector UCustomTerrainPhysicsComponent::GetTileCenter(FVector Position)
 
 void UCustomTerrainPhysicsComponent::SetUpParticleArrays(std::vector<FParticle*>& ParticlesIn, 
     TArray<float>& ParticlePosOut, 
-    TArray<float>& ParticleVelOut)
+    TArray<float>& ParticleVelOut,
+    const FTransform &WheelTransform)
 {
   ParticlePosOut.Empty();
   ParticleVelOut.Empty();
   ParticlePosOut.Reserve(ParticlesIn.size()*3);
   ParticleVelOut.Reserve(ParticlesIn.size()*3);
-  for(FParticle* Particle : ParticlesIn)
+  if(bUseLocalFrame)
   {
-    ParticlePosOut.Add(static_cast<float>(Particle->Position.X));
-    ParticlePosOut.Add(static_cast<float>(Particle->Position.Y));
-    ParticlePosOut.Add(static_cast<float>(Particle->Position.Z));
-    ParticleVelOut.Add(Particle->Velocity.X);
-    ParticleVelOut.Add(Particle->Velocity.Y);
-    ParticleVelOut.Add(Particle->Velocity.Z);
+    const FTransform InverseTransform = WheelTransform.Inverse();
+    for(FParticle* Particle : ParticlesIn)
+    {
+      FVector UEPosition = SIToUEFrame(Particle->Position.ToFVector());
+      FVector UELocalPosition = InverseTransform.TransformPosition(UEPosition);
+      FVector Position = UEFrameToSI(UELocalPosition);
+      ParticlePosOut.Add(static_cast<float>(Position.X));
+      ParticlePosOut.Add(static_cast<float>(Position.Y));
+      ParticlePosOut.Add(static_cast<float>(Position.Z));
+      ParticleVelOut.Add(Particle->Velocity.X);
+      ParticleVelOut.Add(Particle->Velocity.Y);
+      ParticleVelOut.Add(Particle->Velocity.Z);
+    }
+    if(ParticlesIn.size() < MaxParticlesPerWheel)
+    {
+      for (int i = 0; i < (MaxParticlesPerWheel - ParticlesIn.size()); ++i)
+      {
+        ParticlePosOut.Add(0.f);
+        ParticlePosOut.Add(0.f);
+        ParticlePosOut.Add(0.f);
+        ParticleVelOut.Add(0.f);
+        ParticleVelOut.Add(0.f);
+        ParticleVelOut.Add(0.f);
+      }
+    }
+  }
+  else
+  {
+    for(FParticle* Particle : ParticlesIn)
+    {
+      ParticlePosOut.Add(static_cast<float>(Particle->Position.X));
+      ParticlePosOut.Add(static_cast<float>(Particle->Position.Y));
+      ParticlePosOut.Add(static_cast<float>(Particle->Position.Z));
+      ParticleVelOut.Add(Particle->Velocity.X);
+      ParticleVelOut.Add(Particle->Velocity.Y);
+      ParticleVelOut.Add(Particle->Velocity.Z);
+    }
+    if(ParticlesIn.size() < MaxParticlesPerWheel)
+    {
+      FVector WheelPosition = UEFrameToSI(WheelTransform.GetLocation());
+      for (int i = 0; i < (MaxParticlesPerWheel - ParticlesIn.size()); ++i)
+      {
+        ParticlePosOut.Add(WheelPosition.X);
+        ParticlePosOut.Add(WheelPosition.Y);
+        ParticlePosOut.Add(WheelPosition.Z);
+        ParticleVelOut.Add(0.f);
+        ParticleVelOut.Add(0.f);
+        ParticleVelOut.Add(0.f);
+      }
+    }
   }
 }
 
@@ -2571,33 +2539,66 @@ void UCustomTerrainPhysicsComponent::SetUpWheelArrays(ACarlaWheeledVehicle *Vehi
   switch (WheelIdx)
   {
     case 0:
-      Position = VehicleTransform.TransformPosition(FVector(140, -70, 40));
+      Position = FVector(140, -70, 40);
       break;
     case 1:
-      Position = VehicleTransform.TransformPosition(FVector(140, 70, 40));
+      Position = FVector(140, 70, 40);
       break;
     case 2:
-      Position = VehicleTransform.TransformPosition(FVector(-140, -70, 40));
+      Position = FVector(-140, -70, 40);
       break;
     case 3:
     default:
-      Position = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
+      Position = FVector(-140, 70, 40);
       break;
   }
-  if(LargeMapManager)
+  FVector PhysAngularVelocity = Vehicle->GetMesh()->GetPhysicsAngularVelocityInRadians();
+  //UE_LOG(LogCarla, Log, TEXT("AngVel: %s"), *PhysAngularVelocity.ToString());
+  if (bUseLocalFrame)
   {
-    Position = LargeMapManager->LocalToGlobalLocation(Position);
+    FTransform InverseTransform = VehicleTransform.Inverse();
+    Position = FVector(0,0,0);
+    FVector Velocity = UEFrameToSI(
+        InverseTransform.TransformVector(Vehicle->GetVelocity()));
+    WheelPos = {Position.X, Position.Y, Position.Z};
+    // convert to SI
+    WheelOrientation = {1.f, 0.f, 0.f, 0.f};
+    WheelLinearVelocity = {Velocity.X, Velocity.Y, Velocity.Z};
+    FVector LocalAngularVelocity = InverseTransform.TransformVector(PhysAngularVelocity);
+    //UE_LOG(LogCarla, Log, TEXT("Local Total AngVel: %s"), *LocalAngularVelocity.ToString());
+    float ForwardSpeed = Velocity.X;
+    float AngularSpeed = (ForwardSpeed/(CMToM*TireRadius));
+    WheelAngularVelocity = {
+        LocalAngularVelocity.X, 
+        AngularSpeed + LocalAngularVelocity.Y, 
+        -LocalAngularVelocity.Z};
   }
-  Position = UEFrameToSI(Position);
-  FVector Velocity = UEFrameToSI(Vehicle->GetVelocity());
-  WheelPos = {Position.X, Position.Y, Position.Z};
-  FQuat Quat = VehicleTransform.GetRotation();
-  float sin = FMath::Sin(Quat.W/2.f);
-  WheelOrientation = {FMath::Cos(Quat.W/2.f),sin*Quat.X,sin*Quat.Y,sin*Quat.Z};
-  WheelLinearVelocity = {Velocity.X, Velocity.Y, Velocity.Z};
-  FVector LeftVector = -Quat.GetRightVector();
-  LeftVector = LeftVector*(Velocity.Size()/(CMToM*TireRadius));
-  WheelAngularVelocity = {LeftVector.X,LeftVector.Y,LeftVector.Z};
+  else
+  {
+    Position = VehicleTransform.TransformPosition(Position);
+    if(LargeMapManager)
+    {
+      Position = LargeMapManager->LocalToGlobalLocation(Position);
+    }
+    Position = UEFrameToSI(Position);
+    float ForwardSpeed = FVector::DotProduct(
+        Vehicle->GetVelocity(),VehicleTransform.GetRotation().GetForwardVector());
+    FVector Velocity = UEFrameToSI(Vehicle->GetVelocity());
+    WheelPos = {Position.X, Position.Y, Position.Z};
+    FQuat Quat = VehicleTransform.GetRotation();
+    //UE_LOG(LogCarla, Log, TEXT("Quat: %s"), *Quat.ToString());
+    // convert to SI
+    WheelOrientation = {Quat.W,Quat.X,-Quat.Y,Quat.Z};
+    WheelLinearVelocity = {Velocity.X, Velocity.Y, Velocity.Z};
+    float AngularSpeed = (ForwardSpeed)/(TireRadius);
+    FVector GlobalAngulaSpeed = VehicleTransform.TransformVector(FVector(0, AngularSpeed, 0));
+    PhysAngularVelocity = PhysAngularVelocity + GlobalAngulaSpeed;
+    WheelAngularVelocity = {
+        PhysAngularVelocity.X, 
+        PhysAngularVelocity.Y, 
+        -PhysAngularVelocity.Z};
+    //UE_LOG(LogCarla, Log, TEXT("Total AngVel: %s"), *PhysAngularVelocity.ToString());
+  }
 }
 
 void UCustomTerrainPhysicsComponent::AddForces(

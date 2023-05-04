@@ -11,6 +11,7 @@
 #include "Carla/Server/CarlaServer.h"
 #include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/Util/NonCopyable.h"
+#include "Carla/Game/FrameData.h"
 
 #include "Misc/CoreDelegates.h"
 
@@ -24,7 +25,6 @@
 #include <mutex>
 
 class UCarlaSettings;
-class FFrameData;
 struct FEpisodeSettings;
 
 class FCarlaEngine : private NonCopyable
@@ -77,6 +77,11 @@ public:
     FCarlaEngine::FrameCounter = Value;
   }
 
+  std::shared_ptr<carla::multigpu::Router> GetSecondaryServer()
+  {
+    return SecondaryServer;
+  }
+
 private:
 
   void OnPreTick(UWorld *World, ELevelTick TickType, float DeltaSeconds);
@@ -110,6 +115,7 @@ private:
   FDelegateHandle OnEpisodeSettingsChangeHandle;
 
   bool bIsPrimaryServer = true;
+  bool bNewConnection = false;
 
   std::unordered_map<uint32_t, uint32_t> MappedId;
 
@@ -119,3 +125,6 @@ private:
   std::vector<FFrameData> FramesToProcess;
   std::mutex FrameToProcessMutex;
 };
+
+// Note: this has a circular dependency with FCarlaEngine; it must be included late.
+#include "Sensor/AsyncDataStreamImpl.h"

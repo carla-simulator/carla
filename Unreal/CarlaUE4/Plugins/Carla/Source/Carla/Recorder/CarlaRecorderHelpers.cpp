@@ -4,6 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <fstream>
 #include <vector>
 
 #include "UnrealString.h"
@@ -42,10 +43,11 @@ void WriteFVector(std::ostream &OutFile, const FVector &InObj)
 }
 
 // write binary data from FTransform
-// void WriteFTransform(std::ostream &OutFile, const FTransform &InObj){
-// WriteFVector(OutFile, InObj.GetTranslation());
-// WriteFVector(OutFile, InObj.GetRotation().Euler());
-// }
+void WriteFTransform(std::ofstream &OutFile, const FTransform &InObj)
+{
+  WriteFVector(OutFile, InObj.GetTranslation());
+  WriteFVector(OutFile, InObj.GetRotation().Euler());
+}
 
 // write binary data from FString (length + text)
 void WriteFString(std::ostream &OutFile, const FString &InObj)
@@ -71,13 +73,14 @@ void ReadFVector(std::istream &InFile, FVector &OutObj)
 }
 
 // read binary data to FTransform
-// void ReadFTransform(std::istream &InFile, FTransform &OutObj){
-// FVector Vec;
-// ReadFVector(InFile, Vec);
-// OutObj.SetTranslation(Vec);
-// ReadFVector(InFile, Vec);
-// OutObj.GetRotation().MakeFromEuler(Vec);
-// }
+void ReadFTransform(std::ifstream &InFile, FTransform &OutObj)
+{
+  FVector Vec;
+  ReadFVector(InFile, Vec);
+  OutObj.SetTranslation(Vec);
+  ReadFVector(InFile, Vec);
+  OutObj.GetRotation().MakeFromEuler(Vec);
+}
 
 // read binary data to FString (length + text)
 void ReadFString(std::istream &InFile, FString &OutObj)

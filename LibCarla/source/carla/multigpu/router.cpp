@@ -70,6 +70,11 @@ void Router::SetCallbacks() {
   log_info("Listening at ", _endpoint);
 }
 
+void Router::SetNewConnectionCallback(std::function<void(void)> func)
+{
+  _callback = func;
+}
+
 void Router::AsyncRun(size_t worker_threads) {
   _pool.AsyncRun(worker_threads);
 }
@@ -83,6 +88,9 @@ void Router::ConnectSession(std::shared_ptr<Primary> session) {
   std::lock_guard<std::mutex> lock(_mutex);
   _sessions.emplace_back(std::move(session));
   log_info("Connected secondary servers:", _sessions.size());
+  // run external callback for new connections
+  if (_callback) 
+    _callback();
 }
 
 void Router::DisconnectSession(std::shared_ptr<Primary> session) {

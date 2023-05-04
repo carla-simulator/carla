@@ -8,11 +8,11 @@ sensor as an example.
 *   [__Prerequisites__](#prerequisites)  
 *   [__Introduction__](#introduction)  
 *   [__Creating a new sensor__](#creating-a-new-sensor)  
-	*   [1- Sensor actor](#1-sensor-actor)  
-	*   [2- Sensor data serializer](#2-sensor-data-serializer)  
-	*   [3- Sensor data object](#3-sensor-data-object)  
-	*   [4- Register your sensor](#4-register-your-sensor)  
-	*   [5- Usage example](#5-usage-example)  
+	*   [1. Sensor actor](#1-sensor-actor)  
+	*   [2. Sensor data serializer](#2-sensor-data-serializer)  
+	*   [3. Sensor data object](#3-sensor-data-object)  
+	*   [4. Register your sensor](#4-register-your-sensor)  
+	*   [5. Usage example](#5-usage-example)  
 *   [__Appendix__](#appendix)  
 	*   [Reusing buffers](#reusing-buffers)  
 	*   [Sending data asynchronously](#sending-data-asynchronously)  
@@ -22,8 +22,7 @@ sensor as an example.
 ## Prerequisites
 
 In order to implement a new sensor, you'll need to compile CARLA source code,
-for detailed instructions on how to achieve this see
-[Building from source](build_linux.md).
+for detailed instructions on how to achieve this, see [building from source](build_linux.md).
 
 This tutorial also assumes the reader is fluent in C++ programming.
 
@@ -71,7 +70,7 @@ pipeline
 ---
 ## Creating a new sensor
 
-[**Full source code here.**](https://gist.github.com/nsubiron/011fd1b9767cd441b1d8467dc11e00f9)
+See [**source code**](https://gist.github.com/nsubiron/011fd1b9767cd441b1d8467dc11e00f9).
 
 We're going to create a sensor that detects other actors around our vehicle. For
 that we'll create a trigger box that detects objects within, and we'll be
@@ -84,7 +83,7 @@ _For the sake of simplicity we're not going to take into account all the edge
 cases, nor it will be implemented in the most efficient way. This is just an
 illustrative example._
 
-### 1- Sensor actor
+### 1. Sensor actor
 
 This is the most complicated class we're going to create. Here we're running
 inside Unreal Engine framework, knowledge of UE4 API will be very helpful but
@@ -250,8 +249,9 @@ void ASafeDistanceSensor::Set(const FActorDescription &Description)
 }
 ```
 
-Note that the set function is called before UE4's `BeginPlay`, we won't use
-this virtual function here, but it's important for other sensors.
+!!! note
+    The set function is called before UE4's `BeginPlay`, we won't use this
+    virtual function here, but it's important for other sensors.
 
 Now we're going to extend the box volume based on the bounding box of the actor
 that we're attached to. For that, the most convenient method is to use the
@@ -307,7 +307,7 @@ that, the data is going to travel through several layers. First of them will be
 the serializer that we have to create next. We'll fully understand this part
 once we have completed the `Serialize` function in the next section.
 
-### 2- Sensor data serializer
+### 2. Sensor data serializer
 
 This class is actually rather simple, it's only required to have two static
 methods, `Serialize` and `Deserialize`. We'll add two files for it, this time to
@@ -356,8 +356,7 @@ static Buffer Serialize(
 }
 ```
 
-Note that we templatize the UE4 classes to avoid including these files within
-LibCarla.
+> **Note**: We templatize the UE4 classes to avoid including these files within LibCarla.
 
 This buffer we're returning is going to come back to us, except that this time
 in the client-side, in the `Deserialize` function packed in a `RawData` object
@@ -377,7 +376,7 @@ SharedPtr<SensorData> SafeDistanceSerializer::Deserialize(RawData &&data) {
 except for the fact that we haven't defined yet what's a `SafeDistanceEvent`.
 
 
-### 3- Sensor data object
+### 3. Sensor data object
 
 We need to create a data object for the users of this sensor, representing the
 data of a _safe distance event_. We'll add this file to
@@ -436,7 +435,7 @@ class_<
 ;
 ```
 
-Note that `csd` is an alias for the namespace `carla::sensor::data`.
+> **Note**: `csd` is an alias for the namespace `carla::sensor::data`.
 
 What we're doing here is exposing some C++ methods in Python. Just with this,
 the Python API will be able to recognise our new event and it'll behave similar
@@ -464,7 +463,7 @@ be a bit cryptic.
 make rebuild
 ```
 
-### 5- Usage example
+### 5. Usage example
 
 Finally, we have the sensor included and we have finished recompiling, our
 sensor by now should be available in Python.

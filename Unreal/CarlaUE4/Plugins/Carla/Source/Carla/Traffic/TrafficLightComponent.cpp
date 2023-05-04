@@ -15,6 +15,10 @@
 #include "Carla/MapGen/LargeMapManager.h"
 #include "carla/road/element/RoadInfoSignal.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/road/element/RoadInfoSignal.h>
+#include <compiler/enable-ue4-macros.h>
+
 UTrafficLightComponent::UTrafficLightComponent()
   : Super()
 {
@@ -37,9 +41,15 @@ void UTrafficLightComponent::InitializeSign(const carla::road::Map &Map)
         if(lane == 0)
           continue;
 
-        auto signal_waypoint = Map.GetWaypoint(
-            RoadId, lane, SignalReference->GetS()).get();
-
+        carla::road::element::Waypoint signal_waypoint;
+        boost::optional<carla::road::element::Waypoint> opt_signal_waypoint = Map.GetWaypoint(
+            RoadId, lane, SignalReference->GetS());
+        if(opt_signal_waypoint){
+          signal_waypoint = opt_signal_waypoint.get();
+        }else{
+          UE_LOG(LogCarla, Error, TEXT("signal_waypoint is not valid") );
+          continue;
+        }
         // Prevent adding the bounding box inside the intersection
         if (Map.IsJunction(RoadId)) {
           auto predecessors = Map.GetPredecessors(signal_waypoint);

@@ -8,7 +8,9 @@
 #include "ProceduralFoliageComponent.h"
 
 #include "Carla/Vegetation/VegetationManager.h"
-
+#include "Carla/Vegetation/SpringBasedVegetationComponent.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Game/TaggedComponent.h"
 
 static FString GetVersionFromFString(const FString& String)
 {
@@ -43,37 +45,88 @@ static FString GetVersionFromFString(const FString& String)
   return FString();
 }
 
+FTileData::~FTileData()
+{
+}
+
 /********************************************************************************/
 /********** POOLED ACTOR STRUCT *************************************************/
 /********************************************************************************/
-void FPooledActor::EnableActor()
+void FPooledActor::EnableActor(const FTransform& Transform, int32 NewIndex, std::shared_ptr<FTileMeshComponent>& NewTileMeshComponent)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FPooledActor::EnableActor);
   InUse = true;
+  IsActive = false;
+  GlobalTransform = Transform;
+  Index = NewIndex;
+  TileMeshComponent = NewTileMeshComponent;
+  TileMeshComponent->IndicesInUse.Emplace(Index);
+
   Actor->SetActorHiddenInGame(false);
-  Actor->SetActorEnableCollision(true);
   Actor->SetActorTickEnabled(true);
 
   USpringBasedVegetationComponent* Component = Actor->FindComponentByClass<USpringBasedVegetationComponent>();
   if (Component)
   {
     Component->ResetComponent();
+  }
+}
+
+void FPooledActor::ActiveActor()
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(FPooledActor::ActiveActor);
+
+  IsActive = true;
+  Actor->SetActorEnableCollision(true);
+
+  USpringBasedVegetationComponent* Component = Actor->FindComponentByClass<USpringBasedVegetationComponent>();
+  if (Component)
+  {
     Component->SetComponentTickEnabled(true);
+  }
+
+  USkeletalMeshComponent* SkeletalMesh = Actor->FindComponentByClass<USkeletalMeshComponent>();
+  if (SkeletalMesh)
+  {
+    SkeletalMesh->bNoSkeletonUpdate = false;
   }
 }
 
 void FPooledActor::DisableActor()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FPooledActor::DisableActor);
+
+  if (TileMeshComponent)
+  {
+    if (TileMeshComponent->bIsAlive)
+    {
+      if (TileMeshComponent->IndicesInUse.Contains(Index))
+      {
+        TileMeshComponent->IndicesInUse.RemoveSingle(Index);
+      }
+    }
+  }
+
   InUse = false;
-  Actor->SetActorTransform(FTransform());
-  Actor->SetActorHiddenInGame(true);
+  IsActive = false;
+  Index = -1;
+  TileMeshComponent = nullptr;
+
   Actor->SetActorEnableCollision(false);
+  Actor->SetActorHiddenInGame(true);
   Actor->SetActorTickEnabled(false);
 
   USpringBasedVegetationComponent* Component = Actor->FindComponentByClass<USpringBasedVegetationComponent>();
   if (Component)
+  {
     Component->SetComponentTickEnabled(false);
+  }
+
+  USkeletalMeshComponent* SkeletalMesh = Actor->FindComponentByClass<USkeletalMeshComponent>();
+  if (SkeletalMesh)
+  {
+    SkeletalMesh->bNoSkeletonUpdate = true;
+  }
 }
 
 /********************************************************************************/
@@ -129,12 +182,15 @@ bool FFoliageBlueprint::SetSpawnedClass()
 void FTileData::UpdateTileMeshComponent(UInstancedStaticMeshComponent* NewInstancedStaticMeshComponent)
 {
   UInstancedStaticMeshComponent* Aux { nullptr };
-  for (FTileMeshComponent& Element : TileMeshesCache)
+  for (std::shared_ptr<FTileMeshComponent>& ElementPtr
+      : TileMeshesCache)
   {
+    FTileMeshComponent& Element = *ElementPtr;
     if (Element.InstancedStaticMeshComponent == NewInstancedStaticMeshComponent)
     {
       int32 CurrentCount = Element.InstancedStaticMeshComponent->GetInstanceCount();
       int32 NewCount = NewInstancedStaticMeshComponent->GetInstanceCount();
+      Element.bIsAlive = true;
       if (NewCount > CurrentCount)
       {
         Element.InstancedStaticMeshComponent = NewInstancedStaticMeshComponent;
@@ -146,9 +202,10 @@ void FTileData::UpdateTileMeshComponent(UInstancedStaticMeshComponent* NewInstan
 
 bool FTileData::ContainsMesh(const UInstancedStaticMeshComponent* Mesh) const
 {
-  for (const FTileMeshComponent& Element : TileMeshesCache)
+  for (const std::shared_ptr<FTileMeshComponent>& Element 
+      : TileMeshesCache)
   {
-    if (Element.InstancedStaticMeshComponent == Mesh)
+    if (Element->InstancedStaticMeshComponent == Mesh)
       return true;
   }
   return false;
@@ -178,6 +235,7 @@ void AVegetationManager::BeginPlay()
   LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
   FWorldDelegates::LevelAddedToWorld.AddUObject(this, &AVegetationManager::OnLevelAddedToWorld);
   FWorldDelegates::LevelRemovedFromWorld.AddUObject(this, &AVegetationManager::OnLevelRemovedFromWorld);
+  FCoreDelegates::PostWorldOriginOffset.AddUObject(this, &AVegetationManager::PostWorldOriginOffset);
 }
 
 void AVegetationManager::Tick(float DeltaTime)
@@ -189,20 +247,30 @@ void AVegetationManager::Tick(float DeltaTime)
   }
   if (!LargeMap)
     return;
-  bool FoundVehicles = CheckIfAnyVehicleInLevel();
-  if (!FoundVehicles)
-    return;
-
-  UpdateVehiclesDetectionBoxes();
-  
+  HeroVehicle = LargeMap->GetHeroVehicle();
+  if (!IsValid(HeroVehicle))
+      return;
+    
+  HeroVehicle->UpdateDetectionBox();
   TArray<FString> TilesInUse = GetTilesInUse();
   if (TilesInUse.Num() == 0)
+  {
+    UE_LOG(LogCarla, Warning, TEXT("No tiles detected."));
     return;
+  }
+
+  for (const FString& TileName : TilesInUse)
+  {
+    FTileData* Tile = TileCache.Find(TileName);
+    if (!Tile)
+      continue;
+    UpdateMaterials(Tile);
+    TArray<FElementsToSpawn> ElementsToSpawn = GetElementsToSpawn(Tile);
+    SpawnSkeletalFoliages(ElementsToSpawn);
+    ActivePooledActors();
+    DestroySkeletalFoliages();
+  }
   
-  UpdateMaterials(TilesInUse);
-  TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> ElementsToSpawn = GetElementsToSpawn(TilesInUse);
-  SpawnSkeletalFoliages(ElementsToSpawn);
-  DestroySkeletalFoliages();
 }
 
 /********************************************************************************/
@@ -213,9 +281,7 @@ void AVegetationManager::AddVehicle(ACarlaWheeledVehicle* Vehicle)
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::AddVehicle);
   if (!IsValid(Vehicle))
     return;
-  if (VehiclesInLevel.Contains(Vehicle))
-    return;
-  VehiclesInLevel.Emplace(Vehicle);
+  HeroVehicle = Vehicle;
   UE_LOG(LogCarla, Display, TEXT("Vehicle added."));
 }
 
@@ -224,9 +290,7 @@ void AVegetationManager::RemoveVehicle(ACarlaWheeledVehicle* Vehicle)
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::RemoveVehicle);
   if (!IsValid(Vehicle))
     return;
-  if (!VehiclesInLevel.Contains(Vehicle))
-    return;
-  VehiclesInLevel.RemoveSingle(Vehicle);
+  HeroVehicle = nullptr;
   UE_LOG(LogCarla, Display, TEXT("Vehicle removed."));
 }
 
@@ -245,6 +309,8 @@ void AVegetationManager::CreateOrUpdateTileCache(ULevel* InLevel)
     TileData.InstancedFoliageActor = InstancedFoliageActor;
     break;
   }
+  if (!IsValid(TileData.InstancedFoliageActor))
+    return;
 
   for (AActor* Actor : InLevel->Actors)
   {
@@ -254,18 +320,17 @@ void AVegetationManager::CreateOrUpdateTileCache(ULevel* InLevel)
     TileData.ProceduralFoliageVolume = ProceduralFoliageVolume;
     break;
   }
+  if (!IsValid(TileData.ProceduralFoliageVolume))
+    return;
+
   const FString TileName = TileData.InstancedFoliageActor->GetLevel()->GetOuter()->GetName();
   FTileData* ExistingTileData = TileCache.Find(TileName);
   if (ExistingTileData)
   {
     ExistingTileData->InstancedFoliageActor = TileData.InstancedFoliageActor;
     ExistingTileData->ProceduralFoliageVolume = TileData.ProceduralFoliageVolume;
-    for (FTileMeshComponent& Element : ExistingTileData->TileMeshesCache)
-    {
-      Element.InstancedStaticMeshComponent = nullptr;
-      Element.IndicesInUse.Empty();
-    }
     ExistingTileData->TileMeshesCache.Empty();
+    ExistingTileData->MaterialInstanceDynamicCache.Empty();
     SetTileDataInternals(*ExistingTileData);
   }
   else
@@ -273,7 +338,6 @@ void AVegetationManager::CreateOrUpdateTileCache(ULevel* InLevel)
     SetTileDataInternals(TileData);
     TileCache.Emplace(TileName, TileData);
   }
-
 }
 
 void AVegetationManager::SetTileDataInternals(FTileData& TileData)
@@ -303,8 +367,10 @@ void AVegetationManager::SetInstancedStaticMeshComponentCache(FTileData& TileDat
     }
     else
     {
-      FTileMeshComponent Aux;
-      Aux.InstancedStaticMeshComponent = Mesh;
+      std::shared_ptr<FTileMeshComponent> Aux = 
+          std::make_shared<FTileMeshComponent>();
+      Aux->InstancedStaticMeshComponent = Mesh;
+      Aux->bIsAlive = true;
       TileData.TileMeshesCache.Emplace(Aux);
     }
   }
@@ -316,9 +382,10 @@ void AVegetationManager::SetMaterialCache(FTileData& TileData)
   if (TileData.MaterialInstanceDynamicCache.Num() > 0)
     TileData.MaterialInstanceDynamicCache.Empty();
   
-  const float Distance = VehiclesInLevel.Last()->DetectionSize * 2.0f;
-  for (FTileMeshComponent& Element : TileData.TileMeshesCache)
+  for (std::shared_ptr<FTileMeshComponent>& ElementPtr 
+      : TileData.TileMeshesCache)
   {
+    FTileMeshComponent& Element = *ElementPtr;
     UInstancedStaticMeshComponent* Mesh = Element.InstancedStaticMeshComponent;
     if (!IsValid(Mesh))
       continue;
@@ -335,7 +402,7 @@ void AVegetationManager::SetMaterialCache(FTileData& TileData)
         continue;
       MaterialInstanceDynamic->SetScalarParameterValue("ActivateOpacity", 0);
       MaterialInstanceDynamic->SetScalarParameterValue("ActivateDebug", 0);
-      MaterialInstanceDynamic->SetScalarParameterValue("Distance", Distance);
+      MaterialInstanceDynamic->SetScalarParameterValue("Distance", HideMaterialDistance);
       Mesh->SetMaterial(Index, MaterialInstanceDynamic);
       TileData.MaterialInstanceDynamicCache.Emplace(MaterialInstanceDynamic);
     }
@@ -368,7 +435,7 @@ void AVegetationManager::UpdateFoliageBlueprintCache(ULevel* InLevel)
       
       if (!NewFoliageBlueprint.IsValid())
       {
-        UE_LOG(LogCarla, Error, TEXT("Blueprint %s was invalid."), *NewFoliageBlueprint.BPFullClassName);
+        UE_LOG(LogCarla, Warning, TEXT("Blueprint %s was invalid."), *NewFoliageBlueprint.BPFullClassName);
       }
       else
       {
@@ -384,7 +451,7 @@ void AVegetationManager::FreeTileCache(ULevel* InLevel)
 {
   if (!IsValid(InLevel))
     return;
-  FTileData TileData {};
+  AInstancedFoliageActor* TileInstancedFoliageActor = nullptr;
   for (AActor* Actor : InLevel->Actors)
   {
     if (!IsValid(Actor))
@@ -392,21 +459,27 @@ void AVegetationManager::FreeTileCache(ULevel* InLevel)
     AInstancedFoliageActor* InstancedFoliageActor = Cast<AInstancedFoliageActor>(Actor);
     if (!IsValid(InstancedFoliageActor))
       continue;
-    TileData.InstancedFoliageActor = InstancedFoliageActor;
+    TileInstancedFoliageActor = InstancedFoliageActor;
     break;
   }
-  if (TileData.InstancedFoliageActor == nullptr)
+  if (!IsValid(TileInstancedFoliageActor))
     return;
-  const FString TileName = TileData.InstancedFoliageActor->GetLevel()->GetOuter()->GetName();
+  const FString TileName = TileInstancedFoliageActor->GetLevel()->GetOuter()->GetName();
   FTileData* ExistingTileData = TileCache.Find(TileName);
   if (ExistingTileData)
   {
+
     ExistingTileData->MaterialInstanceDynamicCache.Empty();
-    for (FTileMeshComponent& Element : ExistingTileData->TileMeshesCache)
+    for (std::shared_ptr<FTileMeshComponent>& Element 
+        : ExistingTileData->TileMeshesCache)
     {
-      Element.IndicesInUse.Empty();
+      Element->IndicesInUse.Empty();
+      Element->bIsAlive = false;
     }
     ExistingTileData->TileMeshesCache.Empty();
+    ExistingTileData->InstancedFoliageActor = nullptr;
+    ExistingTileData->ProceduralFoliageVolume = nullptr;
+
     TileCache.Remove(TileName);
   }
 }
@@ -414,101 +487,128 @@ void AVegetationManager::FreeTileCache(ULevel* InLevel)
 /********************************************************************************/
 /********** TICK ****************************************************************/
 /********************************************************************************/
-void AVegetationManager::UpdateVehiclesDetectionBoxes()
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::UpdateVehiclesDetectionBoxes);
-  for (ACarlaWheeledVehicle* Vehicle : VehiclesInLevel)
-    Vehicle->UpdateDetectionBox();
-}
-
-void AVegetationManager::UpdateMaterials(TArray<FString>& Tiles)
+void AVegetationManager::UpdateMaterials(FTileData* Tile)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::UpdateMaterials);
-  const FLinearColor Position = VehiclesInLevel.Last()->GetActorLocation();
-  for (const FString& TileName : Tiles)
-  {
-    FTileData* TileData = TileCache.Find(TileName);
-    if (!TileData)
-      continue;
-    TileData->UpdateMaterialCache(Position, DebugMaterials);
-  }
+  const FTransform GlobalTransform = HeroVehicle->GetActorTransform();
+  const FLinearColor Position = GlobalTransform.GetLocation();
+  Tile->UpdateMaterialCache(Position, DebugMaterials);
 }
 
-TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> AVegetationManager::GetElementsToSpawn(const TArray<FString>& Tiles)
+TArray<FElementsToSpawn> AVegetationManager::GetElementsToSpawn(FTileData* Tile)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::GetElementsToSpawn);
-  TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> Results;
-  for (const FString& TileKey : Tiles)
-  {
-    FTileData* Tile = TileCache.Find(TileKey);
-    if (!Tile)
-      continue;
-    for (FTileMeshComponent& Element : Tile->TileMeshesCache)
-    {
-      TRACE_CPUPROFILER_EVENT_SCOPE(Update Foliage Usage);
-      UInstancedStaticMeshComponent* InstancedStaticMeshComponent = Element.InstancedStaticMeshComponent;
-      const FString Path = InstancedStaticMeshComponent->GetStaticMesh()->GetPathName();
-      FFoliageBlueprint* BP = FoliageBlueprintCache.Find(Path);
-      if (!BP)
-        continue;
-      TArray<int32> Indices = VehiclesInLevel.Last()->GetFoliageInstancesCloseToVehicle(InstancedStaticMeshComponent);
-      if (Indices.Num() == 0)
-        continue;
+  TArray<FElementsToSpawn> Results;
+  int32 i = -1;
 
-      TArray<int32> NewIndices;
-      for (int32 Index : Indices)
+  for (std::shared_ptr<FTileMeshComponent>& ElementPtr 
+      : Tile->TileMeshesCache)
+  {
+    FTileMeshComponent& Element = *ElementPtr;
+    TRACE_CPUPROFILER_EVENT_SCOPE(Update Foliage Usage);
+    ++i;
+    UInstancedStaticMeshComponent* InstancedStaticMeshComponent = Element.InstancedStaticMeshComponent;
+    const FString Path = InstancedStaticMeshComponent->GetStaticMesh()->GetPathName();
+    FFoliageBlueprint* BP = FoliageBlueprintCache.Find(Path);
+    if (!BP)
+      continue;
+    TArray<int32> Indices = HeroVehicle->GetFoliageInstancesCloseToVehicle(InstancedStaticMeshComponent);
+    if (Indices.Num() == 0)
+      continue;
+    TArray<int32> NewIndices;
+    for (int32 Index : Indices)
+    {
+      if (Element.IndicesInUse.Contains(Index))
       {
-        if (Element.IndicesInUse.Contains(Index))
-          continue;
-        NewIndices.Emplace(Index);
+        continue;
       }
-      Element.IndicesInUse = Indices;
-      TPair<FFoliageBlueprint, TArray<FTransform>> NewElement {};
-      NewElement.Key = *BP;
-      TArray<FTransform> Transforms;
-      for (int32 Index : NewIndices)
-      {
-        FTransform Transform;
-        InstancedStaticMeshComponent->GetInstanceTransform(Index, Transform, true);
-        FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(Transform);
-        Transforms.Emplace(GlobalTransform);
-      }
-      if (Transforms.Num() > 0)
-      {
-        NewElement.Value = Transforms;
-        Results.Emplace(NewElement);
-      }
+      NewIndices.Emplace(Index);
     }
+    
+    FElementsToSpawn NewElement {};
+    NewElement.TileMeshComponent = Tile->TileMeshesCache[i];
+    NewElement.BP = *BP;
+    for (int32 Index : NewIndices)
+    {
+      FTransform Transform;
+      InstancedStaticMeshComponent->GetInstanceTransform(Index, Transform, true);
+      NewElement.TransformIndex.Emplace(TPair<FTransform, int32>(Transform, Index));
+    }
+    if (NewElement.TransformIndex.Num() > 0)
+      Results.Emplace(NewElement);
   }
   return Results;
 }
 
-void AVegetationManager::SpawnSkeletalFoliages(TArray<TPair<FFoliageBlueprint, TArray<FTransform>>>& ElementsToSpawn)
+void AVegetationManager::SpawnSkeletalFoliages(TArray<FElementsToSpawn>& ElementsToSpawn)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::SpawnSkeletalFoliages);
-  for (TPair<FFoliageBlueprint, TArray<FTransform>>& Element : ElementsToSpawn)
+  const FTransform HeroTransform = HeroVehicle->GetActorTransform();
+  const FVector HeroLocation = HeroTransform.GetLocation();
+  const float HeroDetectionSizeSquared = HeroVehicle->GetDetectionSize() * HeroVehicle->GetDetectionSize();
+
+  for (FElementsToSpawn& Element : ElementsToSpawn)
   {
-    FFoliageBlueprint BP = Element.Key;
-    TArray<FPooledActor>* Pool = ActorPool.Find(BP.BPFullClassName);
-    for (const FTransform& Transform : Element.Value)
+    TArray<FPooledActor>* Pool = ActorPool.Find(Element.BP.BPFullClassName);
+
+    if (Pool == nullptr)
     {
-      bool Ok = EnableActorFromPool(Transform, *Pool);
-      if (Ok)
+      UE_LOG(LogCarla, Error, TEXT("Pool not valid"));
+      continue;
+    }
+    for (const TPair<FTransform, int32>& TransformIndex : Element.TransformIndex)
+    {
+      const FTransform& Transform = TransformIndex.Key;
+      int32 Index = TransformIndex.Value;
+      if (Element.TileMeshComponent->IndicesInUse.Contains(Index))
       {
-        UE_LOG(LogCarla, Display, TEXT("Pooled actor: %s"), *BP.BPFullClassName);
+        continue;        
+      }
+      const float Distance = FMath::Abs(FVector::DistSquared(Transform.GetLocation(), HeroLocation));
+      if (Distance > HeroDetectionSizeSquared)
+      {
+        continue;
+      }
+      bool Ok = EnableActorFromPool(Transform, Index, Element.TileMeshComponent, *Pool);
+      if (Ok)
+      {        
       }
       else
       {
         FPooledActor NewElement;
-        NewElement.GlobalTransform = Transform;
-        FTransform LocalTransform = LargeMap->GlobalToLocalTransform(Transform);
-        NewElement.Actor = CreateFoliage(BP, LocalTransform);
+        NewElement.Actor = CreateFoliage(Element.BP, {});
         if (IsValid(NewElement.Actor))
         {
-          NewElement.EnableActor();
+          NewElement.Actor->SetTickableWhenPaused(false);
+          NewElement.EnableActor(Transform, Index, Element.TileMeshComponent);
           Pool->Emplace(NewElement);
-          UE_LOG(LogCarla, Display, TEXT("Created actor: %s"), *BP.BPFullClassName);
-        } 
+        }
+      }
+    }
+  }
+}
+
+void AVegetationManager::ActivePooledActors()
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::ActivePooledActors);
+  const FTransform HeroTransform = HeroVehicle->GetActorTransform();
+  const FVector HeroLocation = HeroTransform.GetLocation();
+  const float SquaredActiveActorDistance = ActiveActorDistance * ActiveActorDistance;
+
+  for (TPair<FString, TArray<FPooledActor>>& Element : ActorPool)
+  {
+    TArray<FPooledActor>& Pool = Element.Value;
+    for (FPooledActor& Actor : Pool)
+    {
+      if (!Actor.InUse)
+        continue;
+      if (Actor.IsActive)
+        continue;
+      const FVector Location = Actor.GlobalTransform.GetLocation();
+      const float Distance = FMath::Abs(FVector::DistSquared(Location, HeroLocation));
+      if (Distance < SquaredActiveActorDistance)
+      {
+        Actor.ActiveActor();
       }
     }
   }
@@ -517,6 +617,10 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<TPair<FFoliageBlueprint, T
 void AVegetationManager::DestroySkeletalFoliages()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::DestroySkeletalFoliages);
+  const FTransform HeroTransform = HeroVehicle->GetActorTransform();
+  const FVector HeroLocation = HeroTransform.GetLocation();
+  const float HeroDetectionSizeSquared = HeroVehicle->GetDetectionSize() * HeroVehicle->GetDetectionSize();
+
   for (TPair<FString, TArray<FPooledActor>>& Element : ActorPool)
   {
     TArray<FPooledActor>& Pool = Element.Value;
@@ -525,31 +629,32 @@ void AVegetationManager::DestroySkeletalFoliages()
       if (!Actor.InUse)
           continue;
       const FVector Location = Actor.GlobalTransform.GetLocation();
-      if (!VehiclesInLevel.Last()->IsInVehicleRange(Location))
+      const float Distance = FMath::Abs(FVector::DistSquared(Location, HeroLocation));
+      if (Distance > HeroDetectionSizeSquared)
       {
         Actor.DisableActor();
-        UE_LOG(LogCarla, Display, TEXT("Disabled Actor"));
       }
     }
   }
 }
 
-bool AVegetationManager::EnableActorFromPool(const FTransform& Transform, TArray<FPooledActor>& Pool)
+bool AVegetationManager::EnableActorFromPool(
+    const FTransform& Transform,
+    int32 Index,
+    std::shared_ptr<FTileMeshComponent>& TileMeshComponent,
+    TArray<FPooledActor>& Pool)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::EnableActorFromPool);
   for (FPooledActor& PooledActor : Pool)
   {
     if (PooledActor.InUse)
       continue;
-    PooledActor.GlobalTransform = Transform;
-    FTransform LocalTransform = Transform;
-    LocalTransform = LargeMap->GlobalToLocalTransform(Transform);
-    PooledActor.EnableActor();
-    PooledActor.Actor->SetActorLocationAndRotation(LocalTransform.GetLocation(), LocalTransform.Rotator(), true, nullptr, ETeleportType::ResetPhysics);
+    PooledActor.EnableActor(Transform, Index, TileMeshComponent);
+    PooledActor.Actor->SetActorLocationAndRotation(Transform.GetLocation(), Transform.Rotator(), true, nullptr, ETeleportType::ResetPhysics);
     if (SpawnScale <= 1.01f && SpawnScale >= 0.99f)
-      PooledActor.Actor->SetActorScale3D(LocalTransform.GetScale3D());
+      PooledActor.Actor->SetActorScale3D(Transform.GetScale3D());
     else
-      PooledActor.Actor->SetActorScale3D({SpawnScale, SpawnScale, SpawnScale});    
+      PooledActor.Actor->SetActorScale3D({SpawnScale, SpawnScale, SpawnScale});
     return true;
   }
   return false;
@@ -570,6 +675,7 @@ void AVegetationManager::CreatePoolForBPClass(const FFoliageBlueprint& BP)
     if (IsValid(NewElement.Actor))
     {
       UE_LOG(LogCarla, Display, TEXT("Created actor for pool"));
+      NewElement.Actor->SetTickableWhenPaused(false);
       NewElement.DisableActor();
       AuxPool.Emplace(NewElement);
     }
@@ -588,6 +694,14 @@ AActor* AVegetationManager::CreateFoliage(const FFoliageBlueprint& BP, const FTr
 
   AActor* Actor = GetWorld()->SpawnActor<AActor>(BP.SpawnedClass,
     Transform.GetLocation(), Transform.Rotator());
+  
+  TArray<UTaggedComponent*> TaggedComponents;
+  Actor->GetComponents(TaggedComponents);
+  for (UTaggedComponent* Component: TaggedComponents)
+  {
+    Component->DestroyComponent();
+  }
+
   if (SpawnScale <= 1.01f && SpawnScale >= 0.99f)
     Actor->SetActorScale3D(Transform.GetScale3D());
   else
@@ -595,8 +709,23 @@ AActor* AVegetationManager::CreateFoliage(const FFoliageBlueprint& BP, const FTr
   return Actor;
 }
 
+void AVegetationManager::UpdatePoolBasePosition()
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::UpdatePoolBasePosition);
+  for (TPair<FString, TArray<FPooledActor>>& Element : ActorPool)
+  {
+    TArray<FPooledActor>& Pool = Element.Value;
+    for (FPooledActor& PooledActor : Pool)
+    {
+      if (PooledActor.InUse)
+        continue;
+      PooledActor.Actor->SetActorTransform(InactivePoolTransform, true, nullptr, ETeleportType::ResetPhysics);
+    }
+  }
+}
+
 /********************************************************************************/
-/********** TILES ***************************************************************/
+/********** EVENTS **************************************************************/
 /********************************************************************************/
 void AVegetationManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
@@ -611,12 +740,16 @@ void AVegetationManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorl
   FreeTileCache(InLevel);
 }
 
-bool AVegetationManager::CheckIfAnyVehicleInLevel() const
+void AVegetationManager::PostWorldOriginOffset(UWorld*, FIntVector, FIntVector)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::CheckIfAnyVehicleInLevel);
-  return VehiclesInLevel.Num() > 0;
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::PostWorldOriginOffset);
+  InactivePoolTransform.SetLocation(FVector(0.0f, 0.0f, 0.0f));
+  UpdatePoolBasePosition();
 }
 
+/********************************************************************************/
+/********** TILES ***************************************************************/
+/********************************************************************************/
 bool AVegetationManager::IsFoliageTypeEnabled(const FString& Path) const
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::IsFoliageTypeEnabled);
@@ -676,17 +809,8 @@ TArray<FString> AVegetationManager::GetTilesInUse()
     const FBox Box = Procedural->ProceduralComponent->GetBounds();
     if (!Box.IsValid)
       continue;
-    
-    for (ACarlaWheeledVehicle* Vehicle : VehiclesInLevel)
-    {
-      if (!IsValid(Vehicle))
-        continue;   
-      if (Box.IsInside(Vehicle->GetActorLocation()))
-      {
+    if (Box.IsInside(HeroVehicle->GetActorTransform().GetLocation()))
         Results.Emplace(Element.Key);
-        break;
-      }
-    }
   }
   return Results;
 }

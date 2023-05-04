@@ -76,6 +76,8 @@ struct FSkeletonJoint
   TArray<FSkeletonBone> Bones;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FVector ExternalForces = FVector(0,0,0);
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
+  float CollisionForceProportionalFactor = 1.0f;
 };
 
 struct FJointCollision
@@ -210,56 +212,68 @@ private:
 
   std::vector<FJointCollision> JointCollisionList;
 
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+public:
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   USkeletalMeshComponent* SkeletalMesh;
 
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   TArray<UPrimitiveComponent*> BoneCapsules;
 
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   TMap<UPrimitiveComponent*, int> CapsuleToJointId;
 
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float Beta = 0.5f;
 
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float Alpha = 0.f;
 
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   FVector Gravity = FVector(0,0,-1);
 
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float BaseSpringStrength = 10000.f;
 
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float MinSpringStrength = 2000.f;
 
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float HorizontalFallof = 0.1f;
 
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float VerticalFallof = 0.1f;
 
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float RestFactor = 0.5f;
   
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float DeltaTimeOverride = -1.f;
   
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float CollisionForceParameter = 10.f;
 
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float CollisionForceMinVel = 1.f;
 
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float ForceDistanceFalloffExponent = 1.f;
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float ForceMaxDistance = 180.f;
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float MinForceFactor = 0.01;
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float LineTraceMaxDistance = 180.f;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
+  float CapsuleRadius = 6.0f;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
+  float MinBoneLength = 10.f;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
+  FVector SpringStrengthMulFactor = FVector(1,1,1);
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
+  float VehicleCenterZOffset = 120.f;
+  
+
+
 public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   FSkeletonHierarchy Skeleton;
@@ -269,7 +283,7 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   bool DebugEnableAllCollisions { false };
-private:
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   bool bAutoComputeStrength = true;
 };

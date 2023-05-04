@@ -9,6 +9,7 @@
 
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
 #include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Settings/CarlaSettings.h"
@@ -127,8 +128,11 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             break;
           }
           case carla::multigpu::MultiGPUCommand::LOAD_MAP:
+          {
+            FString FinalPath((char *) Data.data());
+            UGameplayStatics::OpenLevel(CurrentEpisode->GetWorld(), *FinalPath, true);
             break;
-          
+          }
           case carla::multigpu::MultiGPUCommand::GET_TOKEN:
           {
             // get the sensor id
@@ -167,6 +171,11 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       // we are primary server, starting server
       bIsPrimaryServer = true;
       SecondaryServer = Server.GetSecondaryServer();
+      SecondaryServer->SetNewConnectionCallback([this]()
+      { 
+        this->bNewConnection = true;
+        UE_LOG(LogCarla, Log, TEXT("New secondary connection detected"));
+      });
     }
   }
 
@@ -254,18 +263,19 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
     // update frame counter
     UpdateFrameCounter();
 
-    if (CurrentEpisode != nullptr)
+    if (CurrentEpisode)
     {
       CurrentEpisode->TickTimers(DeltaSeconds);
-    }
-    if (!bIsPrimaryServer && GetCurrentEpisode())
-    {
-      if (FramesToProcess.size())
+
+      if (!bIsPrimaryServer)
       {
-        TRACE_CPUPROFILER_EVENT_SCOPE_STR("FramesToProcess.PlayFrameData");
-        std::lock_guard<std::mutex> Lock(FrameToProcessMutex);
-        FramesToProcess.front().PlayFrameData(GetCurrentEpisode(), MappedId);
-        FramesToProcess.erase(FramesToProcess.begin()); // remove first element
+        if (FramesToProcess.size())
+        {
+          TRACE_CPUPROFILER_EVENT_SCOPE_STR("FramesToProcess.PlayFrameData");
+          std::lock_guard<std::mutex> Lock(FrameToProcessMutex);
+          FramesToProcess.front().PlayFrameData(CurrentEpisode, MappedId);
+          FramesToProcess.erase(FramesToProcess.begin()); // remove first element
+        }
       }
     }
   }
@@ -281,10 +291,11 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
     if (bIsPrimaryServer)
     {
       if (SecondaryServer->HasClientsConnected()) {
-        GetCurrentEpisode()->GetFrameData().GetFrameData(GetCurrentEpisode());
+        GetCurrentEpisode()->GetFrameData().GetFrameData(GetCurrentEpisode(), true, bNewConnection);
+        bNewConnection = false;
         std::ostringstream OutStream;
         GetCurrentEpisode()->GetFrameData().Write(OutStream);
-        
+
         // send frame data to secondary
         std::string Tmp(OutStream.str());
         SecondaryServer->GetCommander().SendFrameData(carla::Buffer(std::move((unsigned char *) Tmp.c_str()), (size_t) Tmp.size()));

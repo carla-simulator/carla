@@ -7,11 +7,17 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaHUD.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/Game/CarlaStaticDelegates.h"
 #include "Carla/Lights/CarlaLight.h"
 #include "Engine/DecalActor.h"
 #include "Engine/LevelStreaming.h"
 #include "Engine/LocalPlayer.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Engine/StaticMeshActor.h"
+#include "Vehicle/VehicleSpawnPoint.h"
+#include "Util/BoundingBoxCalculator.h"
+#include "EngineUtils.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
@@ -218,6 +224,7 @@ void ACarlaGameModeBase::BeginPlay()
 
   if (LMManager) {
     LMManager->RegisterInitialObjects();
+    LMManager->ConsiderSpectatorAsEgo(Episode->GetSettings().SpectatorAsEgo);
   }
 
   // Manually run begin play on lights as it may not run on sublevels
@@ -230,10 +237,6 @@ void ACarlaGameModeBase::BeginPlay()
     for(UCarlaLight* Light : Lights)
     {
       Light->RegisterLight();
-      if(!Light->HasBegunPlay())
-      {
-        Light->BeginPlay();
-      }
     }
   }
   EnableOverlapEvents();
@@ -503,7 +506,14 @@ void ACarlaGameModeBase::EnableOverlapEvents()
     AStaticMeshActor *MeshActor = CastChecked<AStaticMeshActor>(Actor);
     if(MeshActor->GetStaticMeshComponent()->GetStaticMesh() != NULL)
     {
-      if (MeshActor->GetStaticMeshComponent()->GetGenerateOverlapEvents() == false)
+      auto MeshTag = ATagger::GetTagOfTaggedComponent(*MeshActor->GetStaticMeshComponent());
+      namespace crp = carla::rpc;
+      if (MeshTag != crp::CityObjectLabel::Roads && 
+          MeshTag != crp::CityObjectLabel::Sidewalks && 
+          MeshTag != crp::CityObjectLabel::RoadLines && 
+          MeshTag != crp::CityObjectLabel::Ground &&
+          MeshTag != crp::CityObjectLabel::Terrain &&
+          MeshActor->GetStaticMeshComponent()->GetGenerateOverlapEvents() == false)
       {
         MeshActor->GetStaticMeshComponent()->SetGenerateOverlapEvents(true);
       }

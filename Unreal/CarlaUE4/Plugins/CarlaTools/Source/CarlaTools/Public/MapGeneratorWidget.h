@@ -63,6 +63,12 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
   TMap<FRoiTile, FMiscSpreadedActorsROI> MiscSpreadedActorsRoisMap;
 
   UPROPERTY(BlueprintReadWrite)
+  TSubclassOf<AActor> VegetationManagerBpClass;
+
+  UPROPERTY(BlueprintReadWrite)
+  TSubclassOf<AActor> TerramechanicsBpClass;
+
+  UPROPERTY(BlueprintReadWrite)
   float RiverChanceFactor;
 
   UPROPERTY(BlueprintReadWrite)
@@ -172,6 +178,9 @@ struct CARLATOOLS_API FMapGeneratorWidgetState
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
   float TerrainDetailedInvert;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  bool bShowDetailedNoise;
 };
 
 USTRUCT(BlueprintType)
@@ -196,6 +205,13 @@ struct CARLATOOLS_API FTileBoundariesInfo
 
   UPROPERTY()
   TArray<uint16> BottomHeightData;
+};
+
+UENUM(BlueprintType)
+enum EMapGeneratorToolMode
+{
+  NEW_MAP,
+  MISC_EDITOR
 };
 
 /// Class UMapGeneratorWidget extends the functionality of UEditorUtilityWidget

@@ -68,6 +68,7 @@ void MotionPlanStage::Update(const unsigned long index) {
   const float vehicle_speed = vehicle_velocity.Length();
   const cg::Vector3D vehicle_heading = simulation_state.GetHeading(actor_id);
   const bool vehicle_physics_enabled = simulation_state.IsPhysicsEnabled(actor_id);
+  const float vehicle_speed_limit = simulation_state.GetSpeedLimit(actor_id);
   const Buffer &waypoint_buffer = buffer_map.at(actor_id);
   const LocalizationData &localization = localization_frame.at(index);
   const CollisionHazardData &collision_hazard = collision_frame.at(index);
@@ -117,12 +118,19 @@ void MotionPlanStage::Update(const unsigned long index) {
       }
     }
     output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
+
+    // Update the simulation state with the new transform of the vehicle after teleporting it.
+    KinematicState kinematic_state{teleportation_transform.location,
+                                   teleportation_transform.rotation,
+                                   vehicle_velocity, vehicle_speed_limit,
+                                   vehicle_physics_enabled, simulation_state.IsDormant(actor_id),
+                                   teleportation_transform.location};
+    simulation_state.UpdateKinematicState(actor_id, kinematic_state);
   }
 
   else {
 
     // Target velocity for vehicle.
-    const float vehicle_speed_limit = simulation_state.GetSpeedLimit(actor_id);
     float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, vehicle_speed_limit) / 3.6f;
 
     // Algorithm to reduce speed near landmarks

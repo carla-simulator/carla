@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "Carla/Server/CarlaServer.h"
+#include "Carla/Server/CarlaServerResponse.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
 #include "EngineUtils.h"
 
@@ -18,6 +19,7 @@
 #include "Carla/Walker/WalkerBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
@@ -166,7 +168,7 @@ carla::rpc::ResponseError RespondError(
     const ECarlaServerResponse& Error,
     const FString& ExtraInfo = "")
 {
-  return RespondError(FuncName, GetStringError(Error), ExtraInfo);
+  return RespondError(FuncName, CarlaGetStringError(Error), ExtraInfo);
 }
 
 class ServerBinder
@@ -537,6 +539,18 @@ void FCarlaServer::FPimpl::BindActions()
     REQUIRE_CARLA_EPISODE();
     Episode->ApplySettings(settings);
     StreamingServer.SetSynchronousMode(settings.synchronous_mode);
+
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    if (LargeMap)
+    {
+      LargeMap->ConsiderSpectatorAsEgo(settings.spectator_as_ego);
+    }
+
     return FCarlaEngine::GetFrameCounter();
   };
 
@@ -771,14 +785,31 @@ void FCarlaServer::FPimpl::BindActions()
                                  R<carla::streaming::Token>
   {
     REQUIRE_CARLA_EPISODE();
-    if (SecondaryServer->HasClientsConnected() && sensor_id > 1)
+    bool ForceInPrimary = false;
+
+    // check for the world observer (always in primary server)
+    if (sensor_id == 1)
+    {
+      ForceInPrimary = true;
+    }
+
+    // collision sensor always in primary server in multi-gpu
+    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
+    if (Desc == "" || Desc == "sensor.other.collision")
+    {
+      ForceInPrimary = true;
+    }
+
+    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
     {
       // multi-gpu
+      UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in secondary server"), sensor_id, *Desc);
       return SecondaryServer->GetCommander().SendGetToken(sensor_id);
     }
     else
     {
       // single-gpu
+      UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in primary server"), sensor_id, *Desc);
       return StreamingServer.GetToken(sensor_id);
     }
   };
@@ -2001,7 +2032,7 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
-    if (CarlaActor)
+    if (!CarlaActor)
     {
       return RespondError(
           "get_light_boxes",
@@ -2031,6 +2062,107 @@ void FCarlaServer::FPimpl::BindActions()
           TrafficLight, Result, OutTag,
           static_cast<uint8>(carla::rpc::CityObjectLabel::TrafficLight));
       return MakeVectorFromTArray<cg::BoundingBox>(Result);
+    }
+  };
+
+  // ~~ GBuffer tokens ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  BIND_SYNC(get_gbuffer_token) << [this](const cr::ActorId ActorId, uint32_t GBufferId) -> R<std::vector<unsigned char>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor)
+    {
+      return RespondError(
+          "get_gbuffer_token",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    if (CarlaActor->IsDormant())
+    {
+      return RespondError(
+          "get_gbuffer_token",
+          ECarlaServerResponse::FunctionNotAvailiableWhenDormant,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ASceneCaptureSensor* Sensor = Cast<ASceneCaptureSensor>(CarlaActor->GetActor());
+    if (!Sensor)
+    {
+      return RespondError(
+        "get_gbuffer_token",
+        ECarlaServerResponse::ActorTypeMismatch,
+        " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    switch (GBufferId)
+    {
+      case 0:
+      {
+        const auto &Token = Sensor->CameraGBuffers.SceneColor.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 1:
+      {
+        const auto &Token = Sensor->CameraGBuffers.SceneDepth.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 2:
+      {
+          const auto& Token = Sensor->CameraGBuffers.SceneStencil.GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 3:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferA.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 4:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferB.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 5:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferC.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 6:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferD.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 7:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferE.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 8:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferF.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 9:
+      {
+        const auto &Token = Sensor->CameraGBuffers.Velocity.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 10:
+      {
+        const auto &Token = Sensor->CameraGBuffers.SSAO.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 11:
+      {
+          const auto& Token = Sensor->CameraGBuffers.CustomDepth.GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 12:
+      {
+          const auto& Token = Sensor->CameraGBuffers.CustomStencil.GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      default:
+        UE_LOG(LogCarla, Error, TEXT("Requested invalid GBuffer ID %u"), GBufferId);
+        return {};
     }
   };
 
@@ -2110,6 +2242,13 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     Episode->GetRecorder()->SetReplayerIgnoreHero(ignore_hero);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_replayer_ignore_spectator) << [this](bool ignore_spectator) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->GetRecorder()->SetReplayerIgnoreSpectator(ignore_spectator);
     return R<void>::Success();
   };
 

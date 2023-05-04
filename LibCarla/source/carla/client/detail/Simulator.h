@@ -576,6 +576,10 @@ namespace detail {
       _client.SetReplayerIgnoreHero(ignore_hero);
     }
 
+    void SetReplayerIgnoreSpectator(bool ignore_spectator) {
+      _client.SetReplayerIgnoreSpectator(ignore_spectator);
+    }
+
     void StopReplayer(bool keep_actors) {
       _client.StopReplayer(keep_actors);
   }
@@ -590,7 +594,16 @@ namespace detail {
         const Sensor &sensor,
         std::function<void(SharedPtr<sensor::SensorData>)> callback);
 
-    void UnSubscribeFromSensor(const Sensor &sensor);
+    void UnSubscribeFromSensor(Actor &sensor);
+
+    void SubscribeToGBuffer(
+        Actor & sensor,
+        uint32_t gbuffer_id,
+        std::function<void(SharedPtr<sensor::SensorData>)> callback);
+
+    void UnSubscribeFromGBuffer(
+        Actor & sensor,
+        uint32_t gbuffer_id);
 
     /// @}
     // =========================================================================

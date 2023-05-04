@@ -362,13 +362,24 @@ namespace detail {
 
     void SetReplayerIgnoreHero(bool ignore_hero);
 
+    void SetReplayerIgnoreSpectator(bool ignore_spectator);
+
     void StopReplayer(bool keep_actors);
 
     void SubscribeToStream(
         const streaming::Token &token,
         std::function<void(Buffer)> callback);
 
+    void SubscribeToGBuffer(
+        rpc::ActorId ActorId,
+        uint32_t GBufferId,
+        std::function<void(Buffer)> callback);
+
     void UnSubscribeFromStream(const streaming::Token &token);
+
+    void UnSubscribeFromGBuffer(
+        rpc::ActorId ActorId,
+        uint32_t GBufferId);
 
     void DrawDebugShape(const rpc::DebugShape &shape);
 
