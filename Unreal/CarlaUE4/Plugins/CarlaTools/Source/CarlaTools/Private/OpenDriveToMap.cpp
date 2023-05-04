@@ -5,7 +5,10 @@
 #include "DesktopPlatform/Public/IDesktopPlatform.h"
 #include "DesktopPlatform/Public/DesktopPlatformModule.h"
 #include "Misc/FileHelper.h"
+#include "Engine/LevelBounds.h"
+#include "Engine/SceneCapture2D.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
+#include "Kismet/KismetRenderingLibrary.h"
 
 #include "Carla/Game/CarlaStatics.h"
 #include "Traffic/TrafficLightManager.h"
@@ -147,19 +150,42 @@ void UOpenDriveToMap::CreateMap()
 
 void UOpenDriveToMap::CreateTerrain(const int SectionPerSize, const int MeshGridSize, const float MeshGridSectionSize, const class UTexture2D* HeightmapTexture)
 {
+  TArray<AActor*> FoundActors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AProceduralMeshActor::StaticClass(), FoundActors);
+  FVector BoxOrigin;
+  FVector BoxExtent;
+  UGameplayStatics::GetActorArrayBounds(FoundActors, false, BoxOrigin, BoxExtent);
+  FVector MinBox = BoxOrigin - BoxExtent;
+
+  int NumI = ( BoxExtent.X * 2.0f ) / MeshGridSize;
+  int NumJ = ( BoxExtent.Y * 2.0f ) / MeshGridSize;
+  ASceneCapture2D* SceneCapture = Cast<ASceneCapture2D>(GetWorld()->SpawnActor(ASceneCapture2D::StaticClass()));
+  SceneCapture->SetActorRotation(FRotator(-90,90,0));
+  SceneCapture->GetCaptureComponent2D()->ProjectionType = ECameraProjectionMode::Type::Orthographic;
+  SceneCapture->GetCaptureComponent2D()->OrthoWidth = MeshGridSize;
+  SceneCapture->GetCaptureComponent2D()->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+  SceneCapture->GetCaptureComponent2D()->CompositeMode = ESceneCaptureCompositeMode::SCCM_Overwrite;
+  SceneCapture->GetCaptureComponent2D()->bCaptureEveryFrame = false;
+  SceneCapture->GetCaptureComponent2D()->bCaptureOnMovement = false;
+  UTextureRenderTarget2D* RenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(GetWorld(), 256, 256,
+                                                            ETextureRenderTargetFormat::RTF_RGBA8, FLinearColor(0,0,0), false );
+  SceneCapture->GetCaptureComponent2D()->TextureTarget = RenderTarget;
+
   /* Blueprint darfted code should be here */
-  for(int i = 0; i < SectionPerSize; i++)
+  for( int i = 0; i < NumI; i++ )
   {
-    for(int j = 0; j < SectionPerSize; j++)
+    for( int j = 0; j < NumJ; j++ )
     {
       // Offset that each procedural mesh is displaced to accomodate all the tiles
-      FVector2D Offset( i * MeshGridSectionSize * MeshGridSize, j * MeshGridSectionSize * MeshGridSize);
-      CreateTerrainMesh(i * SectionPerSize + j, Offset, MeshGridSize, MeshGridSectionSize, HeightmapTexture, /* Change to mask RT */ nullptr);
+      FVector2D Offset( MinBox.X + i * MeshGridSize, MinBox.Y + j * MeshGridSize);
+      SceneCapture->SetActorLocation(FVector(Offset.X + MeshGridSize/2, Offset.Y + MeshGridSize/2, 500));
+      SceneCapture->GetCaptureComponent2D()->CaptureScene();
+      CreateTerrainMesh(i * NumJ + j, Offset, MeshGridSize, MeshGridSectionSize, HeightmapTexture, RenderTarget );
     }
   }
 }
 
-void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Offset, const int GridSize, const float GridSectionSize, const UTexture2D* HeightmapTexture, const UTexture2D* RoadMask)
+void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Offset, const int GridSize, const float GridSectionSize, const UTexture2D* HeightmapTexture, UTextureRenderTarget2D* RoadMask)
 {
   // const float GridSectionSize = 100.0f; // In cm
   const float HeightScale = 3.0f;
@@ -168,7 +194,7 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
 
   // Creation of the procedural mesh
   FActorSpawnParameters Params;
-  AProceduralMeshActor* MeshActor = World->SpawnActor<AProceduralMeshActor>(AProceduralMeshActor::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, Params);
+  AProceduralMeshActor* MeshActor = World->SpawnActor<AProceduralMeshActor>(AProceduralMeshActor::StaticClass(), FVector(Offset.X, Offset.Y, 0), FRotator::ZeroRotator, Params);
   UProceduralMeshComponent* Mesh = Cast<UProceduralMeshComponent>(MeshActor->GetComponentByClass(UProceduralMeshComponent::StaticClass()));
 
   TArray<FVector> Vertices;
@@ -179,60 +205,71 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
   TArray<FProcMeshTangent> Tangents;
   TArray<FVector2D> UVs;
 
-  // Procedural mesh default parameters
-  Normals.Init(FVector(0.0f, 0.0f, 1.0f), Vertices.Num());
-  Colors.Init(FLinearColor(0.0f, 0.0f, 0.0f, 1.0f), Vertices.Num());
-  Tangents.Init(FProcMeshTangent(FVector(0.0f, 1.0f, 0.0f), false), Vertices.Num());
-
-  // Get Heightmap data from texture, Loading first mip and getting a pointer to the color of the first pixel
-  FByteBulkData* RawHeightmap = &HeightmapTexture->PlatformData->Mips[0].BulkData;
-  FColor* FormatedHeightmap = StaticCast<FColor*>(RawHeightmap->Lock(LOCK_READ_ONLY));
-
-  // Road mask
-  // FByteBulkData* RawRoadMask = &RoadMask->PlatformData->Mips[0].BulkData; /* Uncomment to apply road mask */
-  // FColor* FormatedRoadMask = StaticCast<FColor*>(RawRoadMask->Lock(LOCK_READ_ONLY)); /* Uncomment to apply road mask */
-
-  // check(FormatedHeightmap != nullptr);
-  // check(FormatedRoadMask != nullptr);
-
-  const float GridTotalSize = GridSize * GridSectionSize;
-  for(float i = 0.f; i < GridTotalSize; i += GridSectionSize)
+  //// Procedural mesh default parameters
+  //// Get Heightmap data from texture, Loading first mip and getting a pointer to the color of the first pixel
+  //FByteBulkData* RawHeightmap = &HeightmapTexture->PlatformData->Mips[0].BulkData;
+  //FColor* FormatedHeightmap = StaticCast<FColor*>(RawHeightmap->Lock(LOCK_READ_ONLY));
+//
+  //// Road mask
+	int32 Width = RoadMask->SizeX, Height = RoadMask->SizeY;
+	TArray<FFloat16Color> ImageData;
+	FTextureRenderTargetResource* RenderTargetResource;
+	ImageData.AddUninitialized(Width * Height);
+	RenderTargetResource = RoadMask->GameThread_GetRenderTargetResource();
+	RenderTargetResource->ReadFloat16Pixels(ImageData);
+//
+  //// check(FormatedHeightmap != nullptr);
+  //// check(FormatedRoadMask != nullptr);
+//
+  int VerticesInLine = (GridSize / GridSectionSize) + 1.0f;
+  for( int i = 0; i < VerticesInLine; i++ )
   {
-    for(float j = 0.f; j < GridTotalSize; j += GridSectionSize)
+    float X = (i * GridSectionSize);
+    const int RoadMapX = i * 255 / VerticesInLine;
+    for( int j = 0; j < VerticesInLine; j++ )
     {
-      const int CellIndex = (i / GridSectionSize) + (j / GridSectionSize * GridSize);
+      float Y = (j * GridSectionSize);
+      const int RoadMapY = j * 255 / VerticesInLine;
+      const int CellIndex = RoadMapY + 255 * RoadMapX;
       float HeightValue = 0.f;
-      UE_LOG(LogTemp, Warning, TEXT("CellIndex = %d"), CellIndex);
-      // if(FormatedRoadMask[CellIndex].R < 0.05f) // Small Threshold  /* Uncomment to apply road mask */
+      if( ImageData[CellIndex].R > 0.5 ) // Small Threshold  /* Uncomment to apply road mask */
       {
         // Getting the value for the height in this vertex.
         // If the road mask is higher that 0, there is road so height value = 0
-        HeightValue = HeightScale *  FormatedHeightmap[CellIndex].R;
+        HeightValue = -500.0f;
       }
-      Vertices.Add(FVector(i + Offset.X, j + Offset.Y, HeightValue));
-      UVs.Add(FVector2D(i / (GridTotalSize - GridSectionSize), j / (GridTotalSize - GridSectionSize)));
+      //UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" i %d, j %d, X %f, RoadMapX %d, Y %f, RoadMapY %d, CellIndex %d"), i, j, X, RoadMapX, Y, RoadMapY, CellIndex );
+
+      Vertices.Add(FVector( X, Y, HeightValue));
+      //UVs.Add(FVector2D(i / (GridTotalSize - GridSectionSize), j / (GridTotalSize - GridSectionSize)));
     }
   }
-  RawHeightmap->Unlock();
-  // RawRoadMask->Unlock();  /* Uncomment to apply road mask */
 
-  // Triangles formation. 2 triangles per section.
-  for(int i = 0; i < GridSize - 1; i++)
+  Normals.Init(FVector(0.0f, 0.0f, 1.0f), Vertices.Num());
+  //RawHeightmap->Unlock();
+  //RawRoadMask->Unlock();  /* Uncomment to apply road mask */
+
+  //// Triangles formation. 2 triangles per section.
+
+  for(int i = 0; i < VerticesInLine - 1; i++)
   {
-    for(int j = 0; j < GridSize - 1; j++)
+    for(int j = 0; j < VerticesInLine - 1; j++)
     {
-      int Index1D = i + j * GridSize;
-      Triangles.Add(Index1D);
-      Triangles.Add(Index1D + 1);
-      Triangles.Add(Index1D + GridSize);
+      Triangles.Add(   j       + (   i       * VerticesInLine ) );
+      Triangles.Add( ( j + 1 ) + (   i       * VerticesInLine ) );
+      Triangles.Add(   j       + ( ( i + 1 ) * VerticesInLine ) );
 
-      Triangles.Add(Index1D + 1);
-      Triangles.Add(Index1D + GridSize + 1);
-      Triangles.Add(Index1D + GridSize);
+      Triangles.Add( ( j + 1 ) + (   i       * VerticesInLine ) );
+      Triangles.Add( ( j + 1 ) + ( ( i + 1 ) * VerticesInLine ) );
+      Triangles.Add(   j       + ( ( i + 1 ) * VerticesInLine ) );
     }
   }
 
-  Mesh->CreateMeshSection_LinearColor(MeshIndex, Vertices, Triangles, Normals, UVs, Colors, Tangents, false);
+  Mesh->CreateMeshSection_LinearColor(MeshIndex, Vertices, Triangles, Normals,
+      TArray<FVector2D>(), // UV0
+      TArray<FLinearColor>(), // VertexColor
+      TArray<FProcMeshTangent>(), // Tangents
+      false); // Create collision);
 }
 
 void UOpenDriveToMap::OpenFileDialog()
