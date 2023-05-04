@@ -110,9 +110,8 @@ FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
 
 void UOpenDriveToMap::ConvertOSMInOpenDrive()
 {
-
   FilePath = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/OpenDrive/" + MapName + ".osm";
-  FileDownloader->ConvertOSMInOpenDrive( FilePath );
+  FileDownloader->ConvertOSMInOpenDrive( FilePath , OriginGeoCoordinates.X, OriginGeoCoordinates.Y);
   FilePath.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);
   FilePath += ".xodr";
 
@@ -266,10 +265,10 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
           TArray<FProcMeshTangent>(), // Tangents
           true); // Create collision
       TempActor->SetActorLocation(MeshCentroid * 100);
-      ActorMeshList.Add(TempActor);
+      // ActorMeshList.Add(TempActor);
 
       RoadType.Add(LaneTypeToFString(PairMap.first));
-      RoadMesh.Add(TempPMC);
+      // RoadMesh.Add(TempPMC);
       index++;
     }
   }
