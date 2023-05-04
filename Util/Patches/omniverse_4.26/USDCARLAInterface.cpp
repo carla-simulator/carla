@@ -55,7 +55,7 @@ TArray<FUSDCARLAWheelData> UUSDCARLAInterface::GetUSDWheelData(const FString& Pa
 {
   pxr::UsdStageRefPtr Stage = 
       FOmniverseUSDHelper::LoadUSDStageFromPath(Path);
-  
+
   // Get the wheel data
   const std::string UsdPhysxWheelPath = "/vehicle/_physx/_physxWheels/";
   const std::string UsdPhysxSuspensionPath = "/vehicle/_physx/_physxSuspensions/";
@@ -121,7 +121,7 @@ TArray<FUSDCARLAWheelData> UUSDCARLAInterface::GetUSDWheelData(const FString& Pa
     pxr::UsdPrim PhysxWheelPrim = GetPrimFromRelationship(WheelRelationship);
     pxr::UsdPrim PhysxTirePrim = GetPrimFromRelationship(TireRelationship);
     pxr::UsdPrim PhysxSuspensionlPrim = GetPrimFromRelationship(SuspensionRelationship);
-    
+
     if (!PhysxWheelPrim || !PhysxTirePrim || !PhysxSuspensionlPrim)
     {
       UE_LOG(LogOmniverseUsd, Warning, TEXT("Prims fail: %d %d %d"), 
@@ -147,7 +147,7 @@ TArray<FUSDCARLAWheelData> UUSDCARLAInterface::GetUSDWheelData(const FString& Pa
     OutWheelData.LongitudinalStiffness = 
         GetFloatAttributeValue(
         PhysxTirePrim, "physxVehicleTire:longitudinalStiffnessPerUnitGravity");
-    
+
     UE_LOG(LogOmniverseUsd, Warning, TEXT("USD values: %f %f %f %f %f %f %f %f %f"), 
     OutWheelData.MaxBrakeTorque, OutWheelData.MaxHandBrakeTorque, OutWheelData.MaxSteerAngle,
     OutWheelData.SpringStrength, OutWheelData.MaxCompression, OutWheelData.MaxDroop,
