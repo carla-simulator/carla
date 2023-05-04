@@ -13,7 +13,6 @@ namespace rpc {
 
   std::ostream &operator<<(std::ostream &out, const WeatherParameters &weather) {
     out << "WeatherParameters(cloudiness=" << std::to_string(weather.cloudiness)
-        << ", cloudiness=" << std::to_string(weather.cloudiness)
         << ", precipitation=" << std::to_string(weather.precipitation)
         << ", precipitation_deposits=" << std::to_string(weather.precipitation_deposits)
         << ", wind_intensity=" << std::to_string(weather.wind_intensity)
