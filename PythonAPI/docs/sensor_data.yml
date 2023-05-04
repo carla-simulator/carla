@@ -379,7 +379,7 @@
     parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines a collision data for <b>sensor.other.collision</b>. The sensor creates one of this for every collision detected which may be many for one simulation step. Learn more about this [here](ref_sensors.md#collision-detector).
+      Class that defines a collision data for <b>sensor.other.collision</b>. The sensor creates one of these for every collision detected. Each collision sensor produces one collision event per collision per frame. Multiple collision events may be produced in a single frame by collisions with multiple other actors. Learn more about this [here](ref_sensors.md#collision-detector).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor

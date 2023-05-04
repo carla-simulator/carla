@@ -32,8 +32,8 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0,
     UE_LOG(LogCarla, Warning, TEXT("File: %s does not exist"), *FilePath);
     return;
   }
-
   std::string OsmFile = std::string(TCHAR_TO_UTF8(*FileContent));
+
   osm2odr::OSM2ODRSettings Settings;
   Settings.proj_string += " +lat_0=" + std::to_string(Lat_0) + " +lon_0=" + std::to_string(Lon_0);
   Settings.center_map = false;

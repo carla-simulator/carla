@@ -9,6 +9,7 @@
 #include "carla/geom/Math.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/road/MeshFactory.h"
+#include "carla/road/Deformation.h"
 #include "carla/road/element/LaneCrossingCalculator.h"
 #include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/element/RoadInfoElevation.h"
@@ -1167,7 +1168,6 @@ namespace road {
             road_out_mesh_list[pair.first] = std::move(pair.second);
           }
         }
-
       });
       workers.push_back(std::move(neworker));
     }
@@ -1221,38 +1221,7 @@ namespace road {
 
     return road_out_mesh_list;
   }
-  std::vector<std::pair<geom::Vector3D, std::string>> Map::GetTreesPosition(
-    float distancebetweentrees,
-    float distancefromdrivinglineborder) const {
 
-    std::vector<std::pair<geom::Vector3D, std::string>> positions;
-    for (auto &&pair : _data.GetRoads()) {
-      const auto &road = pair.second;
-      if (!road.IsJunction()) {
-        for (auto &&lane_section : road.GetLaneSections()) {
-          const auto min_lane = lane_section.GetLanes().begin()->first == 0 ?
-            1 : lane_section.GetLanes().begin()->first;
-          const auto max_lane = lane_section.GetLanes().rbegin()->first == 0 ?
-           -1 : lane_section.GetLanes().rbegin()->first;
-          const road::Lane* lane = lane_section.GetLane(min_lane);
-          if( lane ) {
-            double s_current = lane_section.GetDistance();
-            const double s_end = lane_section.GetDistance() + lane_section.GetLength();
-            while(s_current < s_end){
-              const auto edges = lane->GetCornerPositions(s_current, 0);
-              geom::Vector3D director = edges.second - edges.first;
-              geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
-              const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
-              positions.push_back(std::make_pair(treeposition,roadinfo->GetType()));
-              s_current += distancebetweentrees;
-            }
-
-          }
-        }
-      }
-    }
-    return positions;
-  }
   geom::Mesh Map::GetAllCrosswalkMesh() const {
     geom::Mesh out_mesh;
 
@@ -1325,41 +1294,42 @@ namespace road {
     return returning;
   }
 
-  inline float Map::GetZPosInDeformation(float posx, float posy) const {
-    // Amplitud
-    const float A1 = 0.3f;
-    const float A2 = 0.5f;
-    const float A3 = 0.15f;
-    // Fases
-    const float F1 = 100.0;
-    const float F2 = -1500.0;
-    // Modifiers
-    const float Kx1 = 0.035f;
-    const float Kx2 = 0.02f;
+   std::vector<std::pair<geom::Vector3D, std::string>> Map::GetTreesPosition(
+    float distancebetweentrees,
+    float distancefromdrivinglineborder) const {
 
-    const float Ky1 = -0.08f;
-    const float Ky2 = 0.05f;
+    std::vector<std::pair<geom::Vector3D, std::string>> positions;
+    for (auto &&pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      if (!road.IsJunction()) {
+        for (auto &&lane_section : road.GetLaneSections()) {
+          const auto min_lane = lane_section.GetLanes().begin()->first == 0 ?
+            1 : lane_section.GetLanes().begin()->first;
+          const auto max_lane = lane_section.GetLanes().rbegin()->first == 0 ?
+           -1 : lane_section.GetLanes().rbegin()->first;
+          const road::Lane* lane = lane_section.GetLane(min_lane);
+          if( lane ) {
+            double s_current = lane_section.GetDistance();
+            const double s_end = lane_section.GetDistance() + lane_section.GetLength();
+            while(s_current < s_end){
+              const auto edges = lane->GetCornerPositions(s_current, 0);
+              geom::Vector3D director = edges.second - edges.first;
+              geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
+              const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
+              positions.push_back(std::make_pair(treeposition,roadinfo->GetType()));
+              s_current += distancebetweentrees;
+            }
 
-    float bumpsoffset = 0;
-
-    const float constraintX = 15.0f;
-    const float constraintY = 15.0f;
-
-    float BumpX = std::round(posx / constraintX);
-    float BumpY = std::round(posy / constraintX);
-
-    BumpX *= constraintX;
-    BumpY *= constraintY;
-
-    float DistanceToBumpOrigin = sqrt(pow(BumpX - posx, 2) + pow(BumpY - posy, 2) );
-    float MaxDistance = 2;
-    if (DistanceToBumpOrigin <= MaxDistance) {
-      bumpsoffset = abs((1.0f / MaxDistance) * DistanceToBumpOrigin * DistanceToBumpOrigin - MaxDistance);
+          }
+        }
+      }
     }
+    return positions;
+  }
 
-    return A1 * sin((Kx1 * posx + Ky1 * posy + F1)) +
-      A2 * sin((Kx2 * posx + Ky2 * posy + F2)) +
-      A3 * bumpsoffset;
+  inline float Map::GetZPosInDeformation(float posx, float posy) const {
+    return geom::deformation::GetZPosInDeformation(posx, posy) +
+      geom::deformation::GetBumpDeformation(posx,posy);
   }
 
   std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>
@@ -1439,6 +1409,24 @@ namespace road {
         }
 
         (*junction_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
+
+        for (const auto& connection_pair : junction.GetConnections()) {
+          const auto& connection = connection_pair.second;
+          const auto& road = _data.GetRoads().at(connection.connecting_road);
+          for (auto&& lane_section : road.GetLaneSections()) {
+            for (auto&& lane_pair : lane_section.GetLanes()) {
+              const auto& lane = lane_pair.second;
+              if (lane.GetType() == road::Lane::LaneType::Sidewalk) {
+                sidewalk_lane_meshes.push_back(mesh_factory.GenerateSidewalk(lane));
+              }
+            }
+          }
+        }
+        std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
+        for (auto& lane : sidewalk_lane_meshes) {
+          *sidewalk_mesh += *lane;
+        }
+        (*junction_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
       } else {
         std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
         std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
@@ -1452,7 +1440,7 @@ namespace road {
                 lane_meshes.push_back(mesh_factory.GenerateTesselated(lane));
               }
               else {
-                sidewalk_lane_meshes.push_back(mesh_factory.Generate(lane));
+                sidewalk_lane_meshes.push_back(mesh_factory.GenerateSidewalk(lane));
               }
             }
           }

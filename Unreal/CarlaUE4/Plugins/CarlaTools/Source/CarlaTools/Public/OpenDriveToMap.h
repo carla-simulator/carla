@@ -47,16 +47,19 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
   FVector2D OriginGeoCoordinates;
 
-  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
-  float DistanceBetweenTrees = 50.0f;
-  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
-  float DistanceFromRoadEdge = 3.0f;
-
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UMaterialInstance* DefaultRoadMaterial;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UMaterialInstance* DefaultLaneMarksMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UMaterialInstance* DefaultSidewalksMaterial;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  float DistanceBetweenTrees = 50.0f;
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  float DistanceFromRoadEdge = 3.0f;
 
 protected:
 
@@ -96,5 +99,4 @@ private:
   TArray<FString> RoadType;
   UPROPERTY()
   TArray<UProceduralMeshComponent*> RoadMesh;
-
 };
