@@ -1231,8 +1231,12 @@ namespace road {
       const auto &road = pair.second;
       if (!road.IsJunction()) {
         for (auto &&lane_section : road.GetLaneSections()) {
-          const auto min_lane = lane_section.GetLanes().begin()->first == 0 ?
-            1 : lane_section.GetLanes().begin()->first;
+          LaneId min_lane = 0;
+          for (auto &pairlane : lane_section.GetLanes()) {
+            if (min_lane > pairlane.first && pairlane.second.GetType() == Lane::LaneType::Driving) {
+              min_lane = pairlane.first;
+            }
+          }   
           const auto max_lane = lane_section.GetLanes().rbegin()->first == 0 ?
            -1 : lane_section.GetLanes().rbegin()->first;
           const road::Lane* lane = lane_section.GetLane(min_lane);
