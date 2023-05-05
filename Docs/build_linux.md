@@ -179,7 +179,7 @@ To download the assets for a __specific version__ of CARLA:
 3. Extract the file with a command similar to the following:
 
 ```sh
-        tar -xvzf <assets_file_name>.tar.gz.tar -C C:\path\to\carla\Unreal\CarlaUE4\Content\Carla
+        tar -xvzf <assets_file_name>.tar.gz.tar -C /path/to/carla/Unreal/CarlaUE4/Content/Carla
 ```
 
 ### Set Unreal Engine environment variable
