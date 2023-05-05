@@ -52,8 +52,12 @@ namespace geom {
     std::unique_ptr<Mesh> GenerateTesselated(const road::Lane& lane) const;
 
     /// Generates a mesh that defines a lane section
-    void GenerateLaneSectionOrdered(const road::LaneSection &lane_section, 
+    void GenerateLaneSectionOrdered(const road::LaneSection &lane_section,
         std::map<carla::road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& result ) const;
+
+    std::unique_ptr<Mesh> GenerateSidewalk(const road::LaneSection &lane_section) const;
+    std::unique_ptr<Mesh> GenerateSidewalk(const road::Lane &lane) const;
+    std::unique_ptr<Mesh> GenerateSidewalk(const road::Lane &lane, const double s_start, const double s_end) const;
     // -- Walls --
 
     /// Genrates a mesh representing a wall on the road corners to avoid
@@ -100,7 +104,7 @@ namespace geom {
     std::vector<std::unique_ptr<Mesh>> GenerateAllWithMaxLen(
         const road::Road &road) const;
 
-   
+
     void GenerateAllOrderedWithMaxLen(const road::Road &road,
          std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& roads) const;
 

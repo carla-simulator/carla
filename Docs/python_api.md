@@ -588,7 +588,7 @@ When used, the time speed of the reenacted simulation is modified at will. It ca
     - **Parameters:**
         - `time_factor` (_float_) - 1.0 means normal time speed. Greater than 1.0 means fast motion (2.0 would be double speed) and lesser means slow motion (0.5 would be half speed).  
 - <a name="carla.Client.set_timeout"></a>**<font color="#7fb800">set_timeout</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**</font>)  
-Sets the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.  
+Sets the maximum time a network call is allowed before blocking it and raising a timeout exceeded error.  
     - **Parameters:**
         - `seconds` (_float<small> - seconds</small>_) - New timeout value. Default is 5 seconds.  
 
@@ -596,7 +596,7 @@ Sets the maxixum time a network call is allowed before blocking it and raising a
 
 ## carla.CollisionEvent<a name="carla.CollisionEvent"></a>
 <small style="display:block;margin-top:-20px;">Inherited from _[carla.SensorData](#carla.SensorData)_</small></br>
-Class that defines a collision data for <b>sensor.other.collision</b>. The sensor creates one of this for every collision detected which may be many for one simulation step. Learn more about this [here](ref_sensors.md#collision-detector).  
+Class that defines a collision data for <b>sensor.other.collision</b>. The sensor creates one of these for every collision detected. Each collision sensor produces one collision event per collision per frame. Multiple collision events may be produced in a single frame by collisions with multiple other actors. Learn more about this [here](ref_sensors.md#collision-detector).  
 
 ### Instance Variables
 - <a name="carla.CollisionEvent.actor"></a>**<font color="#f8805a">actor</font>** (_[carla.Actor](#carla.Actor)_)  

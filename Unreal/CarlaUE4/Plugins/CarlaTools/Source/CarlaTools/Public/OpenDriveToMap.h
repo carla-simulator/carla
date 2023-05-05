@@ -47,16 +47,19 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
   FVector2D OriginGeoCoordinates;
 
-  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
-  float DistanceBetweenTrees = 50.0f;
-  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
-  float DistanceFromRoadEdge = 3.0f;
-
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UMaterialInstance* DefaultRoadMaterial;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UMaterialInstance* DefaultLaneMarksMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UMaterialInstance* DefaultSidewalksMaterial;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  float DistanceBetweenTrees = 50.0f;
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  float DistanceFromRoadEdge = 3.0f;
 
 protected:
 
@@ -83,6 +86,7 @@ private:
   void GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap);
 
   carla::rpc::OpendriveGenerationParameters opg_parameters;
+  boost::optional<carla::road::Map> CarlaMap;
 
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
   TArray<UStaticMesh*> CreateStaticMeshAssets();
@@ -99,7 +103,4 @@ private:
   TArray<FString> RoadType;
   UPROPERTY()
   TArray<UProceduralMeshComponent*> RoadMesh;
-
-
-  boost::optional<carla::road::Map> CarlaMap;
 };

@@ -20,7 +20,7 @@ class CARLATOOLS_API UHoudiniImporterWidget : public UEditorUtilityWidget
   GENERATED_BODY()
 
   UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
-  void CreateSubLevels(ALargeMapManager* LargeMapManager);
+  static void CreateSubLevels(ALargeMapManager* LargeMapManager);
 
   UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
   static void MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Actors, ALargeMapManager* LargeMapManager);
@@ -31,13 +31,15 @@ class CARLATOOLS_API UHoudiniImporterWidget : public UEditorUtilityWidget
   UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
   static void UpdateGenericActorCoordinates(AActor* Actor, FVector TileOrigin);
 
-  UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
   static void UpdateInstancedMeshCoordinates(
       UHierarchicalInstancedStaticMeshComponent* Component, FVector TileOrigin);
-  
+
+  UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
+  static void UseCOMasActorLocation(TArray<AActor*> Actors);
+
   // Gets the total number of cluster from the actor name following the following scheme
   // b{builsing}c{cluster}of{clustersize}
   UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
-  bool GetNumberOfClusters(TArray<AActor*> ActorList, int& OutNumClusters);
+  static bool GetNumberOfClusters(TArray<AActor*> ActorList, int& OutNumClusters);
 
 };
