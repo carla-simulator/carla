@@ -17,6 +17,7 @@
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Components/CapsuleComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/AckermannControllerSettings.h>
@@ -574,6 +575,18 @@ ECarlaServerResponse FCarlaActor::SetActorSimulatePhysics(bool bEnabled)
 
     RootComponent->SetSimulatePhysics(bEnabled);
     RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FCarlaActor::SetActorCollisions(bool bEnabled)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    GetActor()->SetActorEnableCollision(bEnabled);
   }
   return ECarlaServerResponse::Success;
 }
@@ -1201,12 +1214,15 @@ ECarlaServerResponse FWalkerActor::SetWalkerState(
 {
   FVector NewLocation = Transform.GetLocation();
   FVector CurrentLocation = GetActorGlobalLocation();
-  NewLocation.Z += 90.0f; // move point up because in Unreal walker is centered in the middle height
 
-  // if difference between Z position is small, then we keep current, otherwise we set the new one
-  // (to avoid Z fighting position and falling pedestrians)
-  if (NewLocation.Z - CurrentLocation.Z < 100.0f)
-    NewLocation.Z = CurrentLocation.Z;
+  // adjust position up by half of capsule height 
+  // (because in Unreal walker is centered at the capsule middle,
+  // while Recast uses the bottom point)
+  UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(GetActor()->GetRootComponent());
+  if (Capsule)
+  {
+    NewLocation.Z += Capsule->GetScaledCapsuleHalfHeight();
+  }
 
   FTransform NewTransform = Transform;
   NewTransform.SetLocation(NewLocation);
@@ -1435,6 +1451,29 @@ ECarlaServerResponse FWalkerActor::GetPoseFromAnimation()
       return ECarlaServerResponse::WalkerIncompatibleController;
     }
     Controller->GetPoseFromAnimation();
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::SetActorDead()
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto Walker = Cast<AWalkerBase>(Pawn);
+    if (Walker == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    Walker->StartDeathLifeSpan();
+    UE_LOG(LogCarla, Warning, TEXT("Walker starting life span by dead"));
   }
   return ECarlaServerResponse::Success;
 }

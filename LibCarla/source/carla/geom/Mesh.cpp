@@ -289,8 +289,12 @@ namespace geom {
 
   Mesh& Mesh::ConcatMesh(const Mesh& rhs, int num_vertices_to_link) {
 
+<<<<<<< HEAD
     if (!rhs.IsValid())
     {
+=======
+    if (!rhs.IsValid()){
+>>>>>>> dev
       return *this += rhs;
     }
     const size_t v_num = GetVerticesNum();

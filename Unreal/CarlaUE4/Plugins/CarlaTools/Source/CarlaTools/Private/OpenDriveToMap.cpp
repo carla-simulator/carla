@@ -117,9 +117,8 @@ FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
 
 void UOpenDriveToMap::ConvertOSMInOpenDrive()
 {
-
   FilePath = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/OpenDrive/" + MapName + ".osm";
-  FileDownloader->ConvertOSMInOpenDrive( FilePath );
+  FileDownloader->ConvertOSMInOpenDrive( FilePath , OriginGeoCoordinates.X, OriginGeoCoordinates.Y);
   FilePath.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);
   FilePath += ".xodr";
 
@@ -356,6 +355,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       Simplify.Simplificate(Mesh);
 
       AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+
       TempActor->SetActorLabel(FString("SM_Lane_") + FString::FromInt(index));
 
       UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
@@ -363,8 +363,16 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       TempPMC->bUseComplexAsSimpleCollision = true;
       TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
-      if(DefaultRoadMaterial)
+      if(DefaultRoadMaterial && PairMap.first == carla::road::Lane::LaneType::Driving)
+      {
         TempPMC->SetMaterial(0, DefaultRoadMaterial);
+        TempActor->SetActorLabel(FString("SM_DrivingLane_") + FString::FromInt(index));
+      }
+      if(DefaultSidewalksMaterial && PairMap.first == carla::road::Lane::LaneType::Sidewalk)
+      {
+        TempPMC->SetMaterial(0, DefaultSidewalksMaterial);
+        TempActor->SetActorLabel(FString("SM_Sidewalk_") + FString::FromInt(index));
+      }
       FVector MeshCentroid = FVector(0,0,0);
       for( auto Vertex : Mesh->GetVertices() )
       {
@@ -391,10 +399,10 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
           TArray<FProcMeshTangent>(), // Tangents
           true); // Create collision
       TempActor->SetActorLocation(MeshCentroid * 100);
-      ActorMeshList.Add(TempActor);
+      // ActorMeshList.Add(TempActor);
 
       RoadType.Add(LaneTypeToFString(PairMap.first));
-      RoadMesh.Add(TempPMC);
+      // RoadMesh.Add(TempPMC);
       index++;
     }
   }

@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "FileHelpers.h"
+#include "Components/PrimitiveComponent.h"
 
 void UHoudiniImporterWidget::CreateSubLevels(ALargeMapManager* LargeMapManager)
 {
@@ -62,6 +63,11 @@ void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ALarge
   {
     FCarlaMapTile* Tile = Element.Key;
     TArray<AActor*> ActorList = Element.Value;
+    if(!ActorList.Num())
+    {
+      continue;
+    }
+    UWorld* World = ActorList[0]->GetWorld();
     ULevelStreamingDynamic* StreamingLevel = Tile->StreamingLevel;
     UE_LOG(LogCarlaTools, Log, TEXT("Got Tile %s in location %s"),
         *StreamingLevel->PackageNameToLoad.ToString(), *Tile->Location.ToString());
@@ -70,8 +76,8 @@ void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ALarge
     StreamingLevel->SetShouldBeLoaded(true);
     ULevelStreaming* Level = 
         UEditorLevelUtils::AddLevelToWorld(
-        GetWorld(), *Tile->Name, ULevelStreamingDynamic::StaticClass(), FTransform());
-        
+        World, *Tile->Name, ULevelStreamingDynamic::StaticClass(), FTransform());
+
     int MovedActors = UEditorLevelUtils::MoveActorsToLevel(ActorList, Level, false, false);
     // StreamingLevel->SetShouldBeLoaded(false);
     UE_LOG(LogCarlaTools, Log, TEXT("Moved %d actors"), MovedActors);
@@ -103,6 +109,28 @@ void UHoudiniImporterWidget::UpdateInstancedMeshCoordinates(
         *Transform.GetTranslation().ToString());
   }
   Component->BatchUpdateInstancesTransforms(0, NewTransforms, true, true, true);
+}
+
+void UHoudiniImporterWidget::UseCOMasActorLocation(TArray<AActor*> Actors)
+{
+  for (AActor* Actor : Actors)
+  {
+    UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(
+        Actor->GetComponentByClass(UPrimitiveComponent::StaticClass()));
+    if(Primitive)
+    {
+      FBodyInstance* BodyInstance = Primitive->GetBodyInstance();
+      FVector CenterOfMass = BodyInstance->COMNudge;
+      Actor->SetActorLocation(CenterOfMass);
+      UE_LOG(LogCarlaTools, Log, TEXT("Updating actor %s to %s"),
+        *Actor->GetName(), *CenterOfMass.ToString());
+    }
+    else
+    {
+      UE_LOG(LogCarlaTools, Log, TEXT("Not updating actor %s"),
+        *Actor->GetName());
+    }
+  }
 }
 
 bool UHoudiniImporterWidget::GetNumberOfClusters(

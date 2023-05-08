@@ -9,6 +9,7 @@
 #include "carla/client/detail/Client.h"
 #include "carla/client/detail/Episode.h"
 #include "carla/client/detail/EpisodeState.h"
+#include "carla/client/detail/Simulator.h"
 #include "carla/nav/Navigation.h"
 #include "carla/rpc/Command.h"
 #include "carla/rpc/DebugShape.h"
@@ -20,11 +21,12 @@ namespace carla {
 namespace client {
 namespace detail {
 
-  WalkerNavigation::WalkerNavigation(Client &client) : _client(client), _next_check_index(0) {
+  WalkerNavigation::WalkerNavigation(std::weak_ptr<Simulator> simulator) : _simulator(simulator), _next_check_index(0) {
+    _nav.SetSimulator(simulator);
     // Here call the server to retrieve the navmesh data.
-    auto files = _client.GetRequiredFiles("Nav");
+    auto files = _simulator.lock()->GetRequiredFiles("Nav");
     if (!files.empty()) {
-      _nav.Load(_client.GetCacheFile(files[0]));
+      _nav.Load(_simulator.lock()->GetCacheFile(files[0], true));
     }
   }
 
@@ -57,8 +59,25 @@ namespace detail {
         commands.emplace_back(Cmd::ApplyWalkerState{ handle.walker, trans, speed });
       }
     }
+    _simulator.lock()->ApplyBatchSync(std::move(commands), false);
 
-    _client.ApplyBatchSync(std::move(commands), false);
+    // check if any agent has been killed
+    bool alive;
+    for (auto handle : *walkers) {
+      // get the agent state
+      if (_nav.IsWalkerAlive(handle.walker, alive)) {
+        if (!alive) {
+          _simulator.lock()->SetActorCollisions(handle.walker, true);
+          _simulator.lock()->SetActorDead(handle.walker);
+          // remove from the crowd
+          _nav.RemoveAgent(handle.walker);
+          // destroy the controller
+          _simulator.lock()->DestroyActor(handle.controller);
+          // unregister from list
+          UnregisterWalker(handle.walker, handle.controller);
+        }
+      }
+    }
   }
 
   void WalkerNavigation::CheckIfWalkerExist(std::vector<WalkerHandle> walkers, const EpisodeState &state) {
@@ -72,7 +91,7 @@ namespace detail {
       // remove from the crowd
       _nav.RemoveAgent(walkers[_next_check_index].walker);
       // destroy the controller
-      _client.DestroyActor(walkers[_next_check_index].controller);
+      _simulator.lock()->DestroyActor(walkers[_next_check_index].controller);
       // unregister from list
       UnregisterWalker(walkers[_next_check_index].walker, walkers[_next_check_index].controller);
     }
@@ -131,19 +150,19 @@ namespace detail {
           // line 1
           line1.primitive = carla::rpc::DebugShape::Line {p1, p2, 0.2f};
           line1.color = { 0, 255, 0 };
-          _client.DrawDebugShape(line1);
+          _simulator.lock()->DrawDebugShape(line1);
           // line 2
           line1.primitive = carla::rpc::DebugShape::Line {p2, p3, 0.2f};
           line1.color = { 255, 0, 0 };
-          _client.DrawDebugShape(line1);
+          _simulator.lock()->DrawDebugShape(line1);
           // line 3
           line1.primitive = carla::rpc::DebugShape::Line {p3, p4, 0.2f};
           line1.color = { 0, 0, 255 };
-          _client.DrawDebugShape(line1);
+          _simulator.lock()->DrawDebugShape(line1);
           // line 4
           line1.primitive = carla::rpc::DebugShape::Line {p4, p1, 0.2f};
           line1.color = { 255, 255, 0 };
-          _client.DrawDebugShape(line1);
+          _simulator.lock()->DrawDebugShape(line1);
         }
       }
 
@@ -162,7 +181,7 @@ namespace detail {
             text.persistent_lines = false;
             text.primitive = carla::rpc::DebugShape::String {p1, out.str(), false};
             text.color = { 0, 255, 0 };
-            _client.DrawDebugShape(text);
+            _simulator.lock()->DrawDebugShape(text);
           }
         }
       }
