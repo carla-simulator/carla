@@ -11,6 +11,7 @@
 #include <osmscout/Database.h>
 #include <osmscoutmap/MapService.h>
 #include <osmscout/BasemapDatabase.h>
+#include <osmscout/projection/MercatorProjection.h>
 
 class MapDrawer
 {
