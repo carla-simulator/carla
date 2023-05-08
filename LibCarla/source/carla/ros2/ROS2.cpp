@@ -12,6 +12,8 @@
 #include "carla/sensor/data/LidarData.h"
 #include "carla/sensor/data/SemanticLidarData.h"
 #include "carla/sensor/data/RadarData.h"
+#include "carla/sensor/data/Image.h"
+#include "carla/sensor/s11n/SensorHeaderSerializer.h"
 
 #include "publishers/ImagePublisher.h"
 
@@ -59,6 +61,28 @@ void ROS2::SetFrame(uint64_t frame) {
 void ROS2::Publish() {
   if (_image_publisher)
   {
+    _image_publisher->Publish();
+  }
+}
+
+void ROS2::UpdateImage(const carla::Buffer& buffer) {
+  if (_image_publisher)
+  {
+    carla::Buffer tmp;
+    size_t Offset = sizeof(carla::sensor::s11n::SensorHeaderSerializer::Header);
+    tmp.copy_from(Offset, buffer);
+    carla::sensor::data::Image img { std::move(tmp) };
+    size_t width = img.GetWidth();
+    size_t height = img.GetHeight();
+
+    std::vector<uint8_t> image_buffer;
+    image_buffer.resize(buffer.size());
+    auto it = buffer.cbegin();
+    for (size_t i = 0; i < image_buffer.size(); ++i, ++it) {
+        image_buffer[i] = *it;
+    }
+
+    _image_publisher->SetImage(height, width, image_buffer.data());
     _image_publisher->Publish();
   }
 }
@@ -116,8 +140,11 @@ void ROS2::ProcessDataFromSensor(uint64_t sensor_type,
       log_info("Sensor RssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::SceneCaptureCamera:
+    {
       log_info("Sensor SceneCaptureCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+      UpdateImage(buffer);
       break;
+    }
     case ESensors::SemanticSegmentationCamera:
       log_info("Sensor SemanticSegmentationCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;

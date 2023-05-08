@@ -24,8 +24,10 @@ namespace ros2 {
 
       bool Init(const char* topic);
       bool Publish();
-      void SetImage(uint32_t height, uint32_t width, const std::vector<uint8_t>& data);
-
+      void SetImage(size_t height, size_t width, const uint8_t* data);
+      private:
+      void SetImage(size_t height, size_t width, const std::vector<uint8_t>& data);
+      
     private:
       std::unique_ptr<CarlaImagePublisherImpl> _impl;
   };

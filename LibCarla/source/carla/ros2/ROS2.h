@@ -51,6 +51,7 @@ class ROS2
   bool IsEnabled() { return _enabled; }
   void SetFrame(uint64_t frame);
 
+  void UpdateImage(const carla::Buffer& buffer);
   void Publish();
 
   void InitPublisher();

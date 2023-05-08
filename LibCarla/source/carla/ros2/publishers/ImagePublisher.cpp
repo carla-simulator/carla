@@ -5,8 +5,8 @@
 #include <string>
 #include <chrono>
 
-#include "types/ImagePubSubTypes.h"
-#include "listeners/ImageListener.h"
+#include "carla/ros2/types/ImagePubSubTypes.h"
+#include "carla/ros2/listeners/ImageListener.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
 #include <fastdds/dds/publisher/Publisher.hpp>
@@ -40,7 +40,6 @@ namespace ros2 {
     CarlaImageListener _listener {};
     sensor_msgs::msg::Image _image {};
   };
-
 
   bool CarlaImagePublisher::Init(const char* topic_char) {
     if (_impl->_type == nullptr) {
@@ -84,11 +83,9 @@ namespace ros2 {
   }
 
   bool CarlaImagePublisher::Publish() {
-    SetImage(1, 1, {255, 255, 255});
     eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
     eprosima::fastrtps::types::ReturnCode_t rcode = _impl->_datawriter->write(&_impl->_image, instance_handle);
     if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
-        std::cerr << "RETCODE_OK" << std::endl;
         return true;
     }
     if (rcode == erc::ReturnCodeValue::RETCODE_ERROR) {
@@ -147,7 +144,18 @@ namespace ros2 {
     return false;
   }
 
-  void CarlaImagePublisher::SetImage(uint32_t height, uint32_t width, const std::vector<uint8_t>& data) {
+
+void CarlaImagePublisher::SetImage(size_t height, size_t width, const uint8_t* data) {
+
+    std::vector<uint8_t> vector_data;
+    vector_data.reserve(height * width * 4);
+    for (size_t i = 0 ; i < height * width * 4; ++i, ++data){
+        vector_data.push_back(*data);
+    }
+    SetImage(height, width, vector_data);
+
+  }
+  void CarlaImagePublisher::SetImage(size_t height, size_t width, const std::vector<uint8_t>& data) {
     auto epoch = std::chrono::system_clock::now().time_since_epoch();
     auto secons = std::chrono::duration_cast<std::chrono::seconds>(epoch);
     epoch -= secons;
@@ -166,9 +174,9 @@ namespace ros2 {
     image.header(header);
     image.width(width);
     image.height(height);
-    image.encoding("bgr8"); //taken from the list of strings in include/sensor_msgs/image_encodings.h
+    image.encoding("bgra8"); //taken from the list of strings in include/sensor_msgs/image_encodings.h
     image.is_bigendian(0);
-    image.step(width * sizeof(uint8_t) * 3);
+    image.step(image.width() * sizeof(uint8_t) * 4);
     image.data(data); //https://github.com/eProsima/Fast-DDS/issues/2330
     _impl->_image = image;
   }
