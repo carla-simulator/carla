@@ -19,7 +19,6 @@
 #include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/road/element/RoadInfoSignal.h"
 
-#include "simplify/Simplify.h"
 #include "marchingcube/MeshReconstruction.h"
 
 #include <vector>
@@ -1144,7 +1143,6 @@ namespace road {
 
     std::thread juntction_thread( &Map::GenerateJunctions, this, mesh_factory, params, &junction_out_mesh_list);
 
-    float simplificationrate = params.simplification_percentage * 0.01f;
     size_t num_roads = _data.GetRoads().size();
     size_t num_roads_per_thread = 100;
     size_t num_threads = (num_roads / num_roads_per_thread) + 1;
@@ -1175,29 +1173,6 @@ namespace road {
       workers[i].join();
     }
     workers.clear();
-    for (auto& current_mesh_vector : road_out_mesh_list) {
-      if (current_mesh_vector.first != road::Lane::LaneType::Driving) {
-        continue;
-      }
-
-      size_t num_roads = current_mesh_vector.second.size();
-      size_t num_roads_per_thread = 15;
-      size_t num_threads = (num_roads / num_roads_per_thread) + 1;
-      num_threads = num_threads > 1 ? num_threads : 1;
-
-      for (size_t i = 0; i < num_threads; ++i) {
-        std::vector<geom::Mesh*> RoadsMesh;
-        for (std::unique_ptr<geom::Mesh>& current_mesh : current_mesh_vector.second) {
-          if(current_mesh) {
-            RoadsMesh.push_back( current_mesh.get() );
-          }
-        }
-
-        std::thread neworker( &Map::DeformateRoadsMultithreaded, this, RoadsMesh, i, num_roads_per_thread, simplificationrate );
-        workers.push_back( std::move(neworker) );
-      }
-    }
-
     for (size_t i = 0; i < workers.size(); ++i) {
       if (workers[i].joinable()) {
         workers[i].join();
@@ -1388,7 +1363,6 @@ namespace road {
     std::map<road::Lane::LaneType,
     std::vector<std::unique_ptr<geom::Mesh>>>* junction_out_mesh_list) const {
 
-    float simplificationrate = params.simplification_percentage * 0.01f;
     for (const auto& junc_pair : _data.GetJunctions()) {
       const auto& junction = junc_pair.second;
       if (junction.GetConnections().size() > 2) {
@@ -1397,46 +1371,6 @@ namespace road {
         std::vector<carla::geom::Vector3D> perimeterpoints;
 
         auto pmesh = SDFToMesh(junction, perimeterpoints, 75);
-        Simplify::SimplificationObject Simplification;
-        for (carla::geom::Vector3D& current_vertex : pmesh->GetVertices()) {
-          Simplify::Vertex v;
-          v.p.x = current_vertex.x;
-          v.p.y = current_vertex.y;
-          v.p.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-          Simplification.vertices.push_back(v);
-        }
-
-        for (size_t i = 0; i < pmesh->GetIndexes().size() - 2; i += 3) {
-          Simplify::Triangle t;
-          t.material = 0;
-          auto indices = pmesh->GetIndexes();
-          t.v[0] = (indices[i]) - 1;
-          t.v[1] = (indices[i + 1]) - 1;
-          t.v[2] = (indices[i + 2]) - 1;
-          Simplification.triangles.push_back(t);
-        }
-
-        // Reduce to the X% of the polys
-        float target_size = Simplification.triangles.size();
-        Simplification.simplify_mesh((target_size * simplificationrate));
-
-        pmesh->GetVertices().clear();
-        pmesh->GetIndexes().clear();
-
-        for (Simplify::Vertex& current_vertex : Simplification.vertices) {
-          carla::geom::Vector3D v;
-          v.x = current_vertex.p.x;
-          v.y = current_vertex.p.y;
-          v.z = current_vertex.p.z;
-          pmesh->AddVertex(v);
-        }
-
-        for (size_t i = 0; i < Simplification.triangles.size(); ++i) {
-          pmesh->GetIndexes().push_back((Simplification.triangles[i].v[0]) + 1);
-          pmesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
-          pmesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
-        }
-
         (*junction_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
       } else {
         std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
@@ -1470,66 +1404,6 @@ namespace road {
 
         (*junction_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(merged_mesh));
         (*junction_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
-      }
-    }
-  }
-
-  void Map::DeformateRoadsMultithreaded(const std::vector<geom::Mesh*>& roadsmesh,
-      const size_t index, const size_t number_of_roads_per_thread, const float simplificationrate) const
-  {
-    auto start = std::next( roadsmesh.begin(), ( index ) * number_of_roads_per_thread);
-    size_t endoffset = (index+1) * number_of_roads_per_thread;
-    if( endoffset >= roadsmesh.size() ) {
-      endoffset = roadsmesh.size();
-    }
-    auto end = std::next( roadsmesh.begin(), endoffset );
-    for ( auto it = start; it != end  && it != roadsmesh.end(); ++it ) {
-      geom::Mesh* current_mesh = *it;
-      if( current_mesh == nullptr ) {
-        continue;
-      }
-
-      if ( !current_mesh->IsValid() ) {
-        continue;
-      }
-      Simplify::SimplificationObject Simplification;
-      for (carla::geom::Vector3D& current_vertex : current_mesh->GetVertices()) {
-        Simplify::Vertex v;
-        v.p.x = current_vertex.x;
-        v.p.y = current_vertex.y;
-        v.p.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
-        Simplification.vertices.push_back(v);
-      }
-
-
-      for (size_t i = 0; i < current_mesh->GetIndexes().size() - 2; i += 3) {
-        Simplify::Triangle t;
-        t.material = 0;
-        auto indices = current_mesh->GetIndexes();
-        t.v[0] = (indices[i]) - 1;
-        t.v[1] = (indices[i + 1]) - 1;
-        t.v[2] = (indices[i + 2]) - 1;
-        Simplification.triangles.push_back(t);
-      }
-
-      // Reduce to the X% of the polys
-      float target_size = Simplification.triangles.size();
-      Simplification.simplify_mesh((target_size * simplificationrate));
-
-      current_mesh->GetVertices().clear();
-      current_mesh->GetIndexes().clear();
-      for (Simplify::Vertex& current_vertex : Simplification.vertices) {
-        carla::geom::Vector3D v;
-        v.x = current_vertex.p.x;
-        v.y = current_vertex.p.y;
-        v.z = current_vertex.p.z;
-        current_mesh->AddVertex(v);
-      }
-
-      for (size_t i = 0; i < Simplification.triangles.size(); ++i) {
-        current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[0]) + 1);
-        current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[1]) + 1);
-        current_mesh->GetIndexes().push_back((Simplification.triangles[i].v[2]) + 1);
       }
     }
   }

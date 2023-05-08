@@ -20,6 +20,7 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/road/Map.h>
+#include <carla/geom/Simplification.h>
 #include <carla/rpc/String.h>
 #include <OSM2ODR.h>
 #include <compiler/enable-ue4-macros.h>
@@ -341,7 +342,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
   int index = 0;
   for (const auto &PairMap : Meshes)
   {
-    for( const auto &Mesh : PairMap.second )
+    for( auto& Mesh : PairMap.second )
     {
       if (!Mesh->GetVertices().size())
       {
@@ -350,6 +351,9 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       if (!Mesh->IsValid()) {
         continue;
       }
+
+      carla::geom::Simplification Simplify(0.15);
+      Simplify.Simplificate(Mesh);
 
       AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
       TempActor->SetActorLabel(FString("SM_Lane_") + FString::FromInt(index));
@@ -738,4 +742,8 @@ void UOpenDriveToMap::SaveMap()
 
   end = FPlatformTime::Seconds();
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" Spawning Static Meshes code executed in %f seconds."), end - start);
+}
+
+float UOpenDriveToMap::GetHeight(float PosX, float PosY){
+  return 0;
 }

@@ -87,6 +87,7 @@ private:
   void GenerateTreePositions(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap);
 
+  float GetHeight(float PosX, float PosY);
   carla::rpc::OpendriveGenerationParameters opg_parameters;
 
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
