@@ -634,7 +634,9 @@ void UUSDImporterWidget::CopyCollisionToPhysicsAsset(
     UPhysicsAsset* PhysicsAssetToEdit, UStaticMesh* StaticMesh)
 {
   UE_LOG(LogCarlaTools, Log, TEXT("Num bodysetups %d"), PhysicsAssetToEdit->SkeletalBodySetups.Num());
-  UBodySetup* BodySetupPhysicsAsset = PhysicsAssetToEdit->SkeletalBodySetups[PhysicsAssetToEdit->FindBodyIndex(FName("Vehicle_Base"))];
+  UBodySetup* BodySetupPhysicsAsset = 
+      PhysicsAssetToEdit->SkeletalBodySetups[
+          PhysicsAssetToEdit->FindBodyIndex(FName("Vehicle_Base"))];
   UBodySetup* BodySetupStaticMesh = StaticMesh->BodySetup;
   BodySetupPhysicsAsset->AggGeom = BodySetupStaticMesh->AggGeom;
 
