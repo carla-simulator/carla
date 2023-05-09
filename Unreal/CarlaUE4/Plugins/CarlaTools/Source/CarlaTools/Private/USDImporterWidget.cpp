@@ -582,7 +582,8 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
   UEditorStaticMeshLibrary::AddSimpleCollisions(
       VehicleMeshes.Body, EScriptingCollisionShapeType::NDOP26);
   CopyCollisionToPhysicsAsset(NewPhysicsAsset, VehicleMeshes.Body);
-
+  // assign the physics asset to the skeletal mesh
+  NewSkeletalMesh->PhysicsAsset = NewPhysicsAsset;
   // Create the new blueprint vehicle
   FKismetEditorUtilities::FCreateBlueprintFromActorParams Params;
   Params.bReplaceActor = false;
