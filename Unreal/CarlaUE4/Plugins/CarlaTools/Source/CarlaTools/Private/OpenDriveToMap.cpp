@@ -21,6 +21,7 @@
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/road/Map.h>
 #include <carla/geom/Simplification.h>
+#include <carla/road/Deformation.h>
 #include <carla/rpc/String.h>
 #include <OSM2ODR.h>
 #include <compiler/enable-ue4-macros.h>
@@ -167,9 +168,9 @@ void UOpenDriveToMap::CreateTerrain(const int SectionPerSize, const int MeshGrid
   SceneCapture->GetCaptureComponent2D()->CompositeMode = ESceneCaptureCompositeMode::SCCM_Overwrite;
   SceneCapture->GetCaptureComponent2D()->bCaptureEveryFrame = false;
   SceneCapture->GetCaptureComponent2D()->bCaptureOnMovement = false;
-  UTextureRenderTarget2D* RenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(GetWorld(), 256, 256,
-                                                            ETextureRenderTargetFormat::RTF_RGBA8, FLinearColor(0,0,0), false );
-  SceneCapture->GetCaptureComponent2D()->TextureTarget = RenderTarget;
+  //UTextureRenderTarget2D* RenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(GetWorld(), 256, 256,
+  //                                                          ETextureRenderTargetFormat::RTF_RGBA8, FLinearColor(0,0,0), false );
+  //SceneCapture->GetCaptureComponent2D()->TextureTarget = RenderTarget;
 
   /* Blueprint darfted code should be here */
   for( int i = 0; i < NumI; i++ )
@@ -179,8 +180,8 @@ void UOpenDriveToMap::CreateTerrain(const int SectionPerSize, const int MeshGrid
       // Offset that each procedural mesh is displaced to accomodate all the tiles
       FVector2D Offset( MinBox.X + i * MeshGridSize, MinBox.Y + j * MeshGridSize);
       SceneCapture->SetActorLocation(FVector(Offset.X + MeshGridSize/2, Offset.Y + MeshGridSize/2, 500));
-      SceneCapture->GetCaptureComponent2D()->CaptureScene();
-      CreateTerrainMesh(i * NumJ + j, Offset, MeshGridSize, MeshGridSectionSize, HeightmapTexture, RenderTarget );
+      //SceneCapture->GetCaptureComponent2D()->CaptureScene();
+      CreateTerrainMesh(i * NumJ + j, Offset, MeshGridSize, MeshGridSectionSize, HeightmapTexture, nullptr );
     }
   }
 }
@@ -193,9 +194,9 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
   UWorld* World = GetWorld();
 
   // Creation of the procedural mesh
-  FActorSpawnParameters Params;
-  AProceduralMeshActor* MeshActor = World->SpawnActor<AProceduralMeshActor>(AProceduralMeshActor::StaticClass(), FVector(Offset.X, Offset.Y, 0), FRotator::ZeroRotator, Params);
-  UProceduralMeshComponent* Mesh = Cast<UProceduralMeshComponent>(MeshActor->GetComponentByClass(UProceduralMeshComponent::StaticClass()));
+  AProceduralMeshActor* MeshActor = World->SpawnActor<AProceduralMeshActor>();
+  MeshActor->SetActorLocation(FVector(Offset.X, Offset.Y, 0));
+  UProceduralMeshComponent* Mesh = MeshActor->MeshComponent;
 
   TArray<FVector> Vertices;
   TArray<int32> Triangles;
@@ -211,12 +212,12 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
   //FColor* FormatedHeightmap = StaticCast<FColor*>(RawHeightmap->Lock(LOCK_READ_ONLY));
 //
   //// Road mask
-	int32 Width = RoadMask->SizeX, Height = RoadMask->SizeY;
-	TArray<FFloat16Color> ImageData;
-	FTextureRenderTargetResource* RenderTargetResource;
-	ImageData.AddUninitialized(Width * Height);
-	RenderTargetResource = RoadMask->GameThread_GetRenderTargetResource();
-	RenderTargetResource->ReadFloat16Pixels(ImageData);
+	//int32 Width = RoadMask->SizeX, Height = RoadMask->SizeY;
+	//TArray<FFloat16Color> ImageData;
+	//FTextureRenderTargetResource* RenderTargetResource;
+	//ImageData.AddUninitialized(Width * Height);
+	//RenderTargetResource = RoadMask->GameThread_GetRenderTargetResource();
+	//RenderTargetResource->ReadFloat16Pixels(ImageData);
 //
   //// check(FormatedHeightmap != nullptr);
   //// check(FormatedRoadMask != nullptr);
@@ -231,13 +232,13 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
       float Y = (j * GridSectionSize);
       const int RoadMapY = j * 255 / VerticesInLine;
       const int CellIndex = RoadMapY + 255 * RoadMapX;
-      float HeightValue = 0.f;
-      if( ImageData[CellIndex].R > 0.5 ) // Small Threshold  /* Uncomment to apply road mask */
-      {
-        // Getting the value for the height in this vertex.
-        // If the road mask is higher that 0, there is road so height value = 0
-        HeightValue = -500.0f;
-      }
+      float HeightValue = GetHeight( (Offset.X + X) * 0.01f ,  (Offset.Y + Y) * 0.01f) * 100 - 3;
+      //if( ImageData[CellIndex].R > 0.5 ) // Small Threshold  /* Uncomment to apply road mask */
+      //{
+      //  // Getting the value for the height in this vertex.
+      //  // If the road mask is higher that 0, there is road so height value = 0
+      //  HeightValue -= 500.0f;
+      //}
       //UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" i %d, j %d, X %f, RoadMapX %d, Y %f, RoadMapY %d, CellIndex %d"), i, j, X, RoadMapX, Y, RoadMapY, CellIndex );
 
       Vertices.Add(FVector( X, Y, HeightValue));
@@ -265,11 +266,20 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
     }
   }
 
-  Mesh->CreateMeshSection_LinearColor(MeshIndex, Vertices, Triangles, Normals,
+  if( DefaultLandscapeMaterial )
+  {
+    Mesh->SetMaterial(0, DefaultLandscapeMaterial);
+  }
+
+  Mesh->CreateMeshSection_LinearColor(0, Vertices, Triangles, Normals,
       TArray<FVector2D>(), // UV0
       TArray<FLinearColor>(), // VertexColor
       TArray<FProcMeshTangent>(), // Tangents
       false); // Create collision);
+
+    Spawner->SetActorLabel("SM_Landscape" + (MeshIndex) );
+
+
 }
 
 void UOpenDriveToMap::OpenFileDialog()
@@ -351,8 +361,20 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
         continue;
       }
 
-      carla::geom::Simplification Simplify(0.15);
-      Simplify.Simplificate(Mesh);
+      if(PairMap.first == carla::road::Lane::LaneType::Driving)
+      {
+        for( auto& Vertex : Mesh->GetVertices() )
+        {
+          Vertex.z += GetHeight(Vertex.x, Vertex.y, true);
+        }
+        carla::geom::Simplification Simplify(0.15);
+        Simplify.Simplificate(Mesh);
+      }else{
+        for( auto& Vertex : Mesh->GetVertices() )
+        {
+          Vertex.z += GetHeight(Vertex.x, Vertex.y, false);
+        }
+      }
 
       AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
 
@@ -431,8 +453,9 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
     }
 
     FVector MeshCentroid = FVector(0, 0, 0);
-    for (auto Vertex : Mesh->GetVertices())
+    for (auto& Vertex : Mesh->GetVertices())
     {
+      Vertex.z += GetHeight(Vertex.x, Vertex.y, true) + 0.01f;
       MeshCentroid += Vertex.ToFVector();
     }
 
@@ -752,6 +775,11 @@ void UOpenDriveToMap::SaveMap()
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" Spawning Static Meshes code executed in %f seconds."), end - start);
 }
 
-float UOpenDriveToMap::GetHeight(float PosX, float PosY){
-  return 0;
+float UOpenDriveToMap::GetHeight(float PosX, float PosY, bool bDrivingLane){
+  if( bDrivingLane ){
+    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) +
+      carla::geom::deformation::GetBumpDeformation(PosX,PosY);
+  }else{
+    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY);
+  }
 }

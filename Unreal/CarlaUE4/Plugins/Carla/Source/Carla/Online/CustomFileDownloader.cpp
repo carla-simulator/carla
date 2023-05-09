@@ -36,7 +36,7 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0,
 
   osm2odr::OSM2ODRSettings Settings;
   Settings.proj_string += " +lat_0=" + std::to_string(Lat_0) + " +lon_0=" + std::to_string(Lon_0);
-  Settings.center_map = false;
+  Settings.center_map = true;
   std::string OpenDriveFile = osm2odr::ConvertOSMToOpenDRIVE(OsmFile, Settings);
 
   FilePath.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);

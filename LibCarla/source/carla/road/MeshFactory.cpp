@@ -260,8 +260,7 @@ namespace geom {
       // Get the location of the edges of the current lane at the current waypoint
       std::pair<geom::Vector3D, geom::Vector3D> edges =
         lane.GetCornerPositions(s_current, road_param.extra_lane_width);
-      edges.first.z += deformation::GetZPosInDeformation(edges.first.x, edges.first.y);
-      edges.second.z += deformation::GetZPosInDeformation(edges.second.x, edges.second.y);
+
       geom::Vector3D low_vertex_first = edges.first - geom::Vector3D(0,0,1);
       geom::Vector3D low_vertex_second = edges.second - geom::Vector3D(0,0,1);
       vertices.push_back(low_vertex_first);
@@ -280,8 +279,6 @@ namespace geom {
       std::pair<carla::geom::Vector3D, carla::geom::Vector3D> edges =
         lane.GetCornerPositions(s_end - MESH_EPSILON, road_param.extra_lane_width);
 
-      edges.first.z += deformation::GetZPosInDeformation(edges.first.x, edges.first.y);
-      edges.second.z += deformation::GetZPosInDeformation(edges.second.x, edges.second.y);
       geom::Vector3D low_vertex_first = edges.first - geom::Vector3D(0,0,1);
       geom::Vector3D low_vertex_second = edges.second - geom::Vector3D(0,0,1);
       vertices.push_back(low_vertex_first);

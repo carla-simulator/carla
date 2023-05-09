@@ -1145,7 +1145,7 @@ namespace road {
     std::thread juntction_thread( &Map::GenerateJunctions, this, mesh_factory, params, &junction_out_mesh_list);
 
     size_t num_roads = _data.GetRoads().size();
-    size_t num_roads_per_thread = 100;
+    size_t num_roads_per_thread = 20;
     size_t num_threads = (num_roads / num_roads_per_thread) + 1;
     num_threads = num_threads > 1 ? num_threads : 1;
     std::vector<std::thread> workers;
@@ -1245,15 +1245,6 @@ namespace road {
       mesh_factory.GenerateLaneMarkForRoad(pair.second, LineMarks);
     }
 
-    for (auto& Mesh : LineMarks) {
-      if (!Mesh->IsValid()) {
-        continue;
-      }
-
-      for (carla::geom::Vector3D& current_vertex : Mesh->GetVertices()) {
-        current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y) + 0.01;
-      }
-    }
     return std::move(LineMarks);
   }
 
@@ -1300,11 +1291,6 @@ namespace road {
       }
     }
     return positions;
-  }
-
-  inline float Map::GetZPosInDeformation(float posx, float posy) const {
-    return geom::deformation::GetZPosInDeformation(posx, posy) +
-      geom::deformation::GetBumpDeformation(posx,posy);
   }
 
   std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>
@@ -1382,9 +1368,6 @@ namespace road {
         std::unique_ptr<geom::Mesh> merged_mesh = std::make_unique<geom::Mesh>();
         for (auto& lane : lane_meshes) {
           *merged_mesh += *lane;
-        }
-        for (carla::geom::Vector3D& current_vertex : merged_mesh->GetVertices()) {
-          current_vertex.z = GetZPosInDeformation(current_vertex.x, current_vertex.y);
         }
         std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
         for (auto& lane : sidewalk_lane_meshes) {

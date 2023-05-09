@@ -64,6 +64,9 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UMaterialInstance* DefaultSidewalksMaterial;
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UMaterialInstance* DefaultLandscapeMaterial;
+
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   float DistanceBetweenTrees = 50.0f;
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
@@ -90,7 +93,7 @@ private:
   void GenerateTreePositions(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap);
 
-  float GetHeight(float PosX, float PosY);
+  float GetHeight(float PosX, float PosY,bool bDrivingLane = false);
   carla::rpc::OpendriveGenerationParameters opg_parameters;
 
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
