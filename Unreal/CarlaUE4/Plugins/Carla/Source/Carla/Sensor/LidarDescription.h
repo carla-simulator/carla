@@ -38,7 +38,7 @@ struct CARLA_API FLidarDescription
   /// horizontal line.
   UPROPERTY(EditAnywhere)
   float LowerFovLimit = -30.0f;
-  
+
   /// Horizontal field of view
   UPROPERTY(EditAnywhere)
   float HorizontalFov = 360.0f;
@@ -69,4 +69,12 @@ struct CARLA_API FLidarDescription
 
   UPROPERTY(EditAnywhere)
   float NoiseStdDev = 0.0f;
+
+  // Point cloud density variable. The larger the number, the denser the point cloud (the higher the frequency of reading CSV files)
+  UPROPERTY(EditAnywhere)
+  float Decay = 1.0f;
+
+  // lidar type. 0-horizon,1-mid40,2-avia,3-tele
+  UPROPERTY(EditAnywhere)
+  float LidarType = 0.0f;
 };

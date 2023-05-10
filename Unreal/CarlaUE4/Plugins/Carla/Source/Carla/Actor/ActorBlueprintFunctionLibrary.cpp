@@ -970,7 +970,19 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   FActorVariation StdDevLidar;
   StdDevLidar.Id = TEXT("noise_stddev");
   StdDevLidar.Type = EActorAttributeType::Float;
-  StdDevLidar.RecommendedValues = { TEXT("0.0") };
+  StdDevLidar.RecommendedValues = {TEXT("0.0")};
+
+  // Point cloud density parameter 
+  FActorVariation Decay;
+  Decay.Id = TEXT("decay_time");
+  Decay.Type = EActorAttributeType::Float;
+  Decay.RecommendedValues = {TEXT("1.0")};
+
+  // lidar type
+  FActorVariation LidarType;
+  LidarType.Id = TEXT("lidar_type");
+  LidarType.Type = EActorAttributeType::Float;
+  LidarType.RecommendedValues = {TEXT("0.0")};
 
   if (Id == "ray_cast") {
     Definition.Variations.Append({
@@ -997,6 +1009,20 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
       UpperFOV,
       LowerFOV,
       HorizontalFOV});
+  }
+  else if (Id == "ray_cast_livox") {
+      Definition.Variations.Append({
+      Channels,
+      Range,
+      PointsPerSecond,
+      AtmospAttenRate,
+      NoiseSeed,
+      DropOffGenRate,
+      DropOffIntensityLimit,
+      DropOffAtZeroIntensity,
+      StdDevLidar,
+      Decay,
+      LidarType});
   }
   else {
     DEBUG_ASSERT(false);
@@ -1665,6 +1691,10 @@ void UActorBlueprintFunctionLibrary::SetLidar(
       RetrieveActorAttributeToFloat("dropoff_zero_intensity", Description.Variations, Lidar.DropOffAtZeroIntensity);
   Lidar.NoiseStdDev =
       RetrieveActorAttributeToFloat("noise_stddev", Description.Variations, Lidar.NoiseStdDev);
+  Lidar.Decay =
+        RetrieveActorAttributeToFloat("decay_time", Description.Variations, Lidar.Decay);
+  Lidar.LidarType =
+        RetrieveActorAttributeToFloat("lidar_type", Description.Variations, Lidar.LidarType);  
 }
 
 void UActorBlueprintFunctionLibrary::SetGnss(

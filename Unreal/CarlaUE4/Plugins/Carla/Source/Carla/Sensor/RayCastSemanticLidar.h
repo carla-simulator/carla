@@ -4,8 +4,6 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-
-
 #pragma once
 
 #include "Carla/Sensor/Sensor.h"
@@ -27,7 +25,6 @@ class CARLA_API ARayCastSemanticLidar : public ASensor
   GENERATED_BODY()
 
 protected:
-
   using FSemanticLidarData = carla::sensor::data::SemanticLidarData;
   using FSemanticDetection = carla::sensor::data::SemanticLidarDetection;
 
@@ -45,11 +42,18 @@ protected:
   /// Creates a Laser for each channel.
   void CreateLasers();
 
+  void CreateLasers_livox(); // livox version
+
   /// Updates LidarMeasurement with the points read in DeltaTime.
   void SimulateLidar(const float DeltaTime);
 
+  void SimulateLidar_livox(const float DeltaTime); // livox version
+
   /// Shoot a laser ray-trace, return whether the laser hit something.
-  bool ShootLaser(const float VerticalAngle, float HorizontalAngle, FHitResult &HitResult, FCollisionQueryParams& TraceParams) const;
+  bool ShootLaser(const float VerticalAngle, float HorizontalAngle, FHitResult &HitResult, FCollisionQueryParams &TraceParams) const;
+
+  /// Shoot a livox laser ray-trace, return whether the laser hit something.
+  bool ShootLaser_livox(const float VerticalAngle, float HorizontalAngle, FHitResult &HitResult, FCollisionQueryParams &TraceParams, int LineIndex, float livoxTimeStamp) const; // livox version
 
   /// Method that allow to preprocess if the rays will be traced.
   virtual void PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel);
@@ -76,7 +80,12 @@ protected:
   std::vector<std::vector<bool>> RayPreprocessCondition;
   std::vector<uint32_t> PointsPerChannel;
 
+  // func of reading csv file
+  std::vector<std::vector<float>> LivoxCsvReader(); 
+  std::vector<std::vector<float>> LivoxCsvInfo;     
+  int LivoxCount = 0;                               
+  int LivoxSize = 0;
+
 private:
   FSemanticLidarData SemanticLidarData;
-
 };

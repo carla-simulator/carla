@@ -27,9 +27,13 @@
 #include "carla/sensor/s11n/ObstacleDetectionEventSerializer.h"
 #include "carla/sensor/s11n/RadarSerializer.h"
 #include "carla/sensor/s11n/SemanticLidarSerializer.h"
+<<<<<<< HEAD
 #include "carla/sensor/s11n/GBufferUint8Serializer.h"
 #include "carla/sensor/s11n/GBufferFloatSerializer.h"
 
+=======
+#include "carla/sensor/s11n/LivoxLidarSerializer.h"// livox
+>>>>>>> 2ded54197... Added livox
 // 2. Add a forward-declaration of the sensor here.
 class ACollisionSensor;
 class ADepthCamera;
@@ -48,9 +52,13 @@ class ASemanticSegmentationCamera;
 class AInstanceSegmentationCamera;
 class ARssSensor;
 class FWorldObserver;
+<<<<<<< HEAD
 struct FCameraGBufferUint8;
 struct FCameraGBufferFloat;
 
+=======
+class ARayCastLivoxLidar;
+>>>>>>> 2ded54197... Added livox
 namespace carla {
 namespace sensor {
 
@@ -74,6 +82,7 @@ namespace sensor {
     std::pair<ARadar *, s11n::RadarSerializer>,
     std::pair<ARayCastSemanticLidar *, s11n::SemanticLidarSerializer>,
     std::pair<ARayCastLidar *, s11n::LidarSerializer>,
+    std::pair<ARayCastLivoxLidar *, s11n::LivoxLidarSerializer>, //livox
     std::pair<ARssSensor *, s11n::NoopSerializer>,
     std::pair<ASceneCaptureCamera *, s11n::ImageSerializer>,
     std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>,
@@ -82,7 +91,6 @@ namespace sensor {
     std::pair<FCameraGBufferUint8 *, s11n::GBufferUint8Serializer>,
     std::pair<FCameraGBufferFloat *, s11n::GBufferFloatSerializer>
   >;
-
 } // namespace sensor
 } // namespace carla
 
@@ -103,6 +111,7 @@ namespace sensor {
 #include "Carla/Sensor/Radar.h"
 #include "Carla/Sensor/RayCastLidar.h"
 #include "Carla/Sensor/RayCastSemanticLidar.h"
+#include "Carla/Sensor/RayCastLivoxLidar.h" // livox
 #include "Carla/Sensor/RssSensor.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
 #include "Carla/Sensor/SemanticSegmentationCamera.h"
