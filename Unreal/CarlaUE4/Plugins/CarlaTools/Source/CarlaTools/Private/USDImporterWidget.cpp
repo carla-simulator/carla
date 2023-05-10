@@ -19,7 +19,17 @@
 #include "EditorAssetLibrary.h"
 #include <unordered_map>
 #include <string>
+#include "Components/LightComponent.h"
 #include "Components/PointLightComponent.h"
+#include "Components/SpotLightComponent.h"
+#include "VehicleWheel.h"
+#include "IAssetTools.h"
+#include "AssetToolsModule.h"
+#include "AssetRegistryModule.h"
+#include "Factories/BlueprintFactory.h"
+#include "Kismet2/BlueprintEditorUtils.h"
+#include "BlueprintEditor.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 
 void UUSDImporterWidget::ImportUSDProp(
@@ -36,11 +46,15 @@ void UUSDImporterWidget::ImportUSDProp(
 void UUSDImporterWidget::ImportUSDVehicle(
     const FString& USDPath,
     const FString& DestinationAssetPath,
+    FWheelTemplates BaseWheelData,
     TArray<FVehicleLight>& LightList,
+    FWheelTemplates& WheelObjects,
     bool bAsBlueprint)
 {
 #ifdef WITH_OMNIVERSE
+  // Import meshes
   UUSDCARLAInterface::ImportUSD(USDPath, DestinationAssetPath, false, bAsBlueprint);
+  // Import Lights
   TArray<FUSDCARLALight> USDLights = UUSDCARLAInterface::GetUSDLights(USDPath);
   LightList.Empty();
   for (const FUSDCARLALight& USDLight : USDLights)
@@ -48,6 +62,58 @@ void UUSDImporterWidget::ImportUSDVehicle(
     FVehicleLight Light {USDLight.Name, USDLight.Location, USDLight.Color};
     LightList.Add(Light);
   }
+  // Import Wheel and suspension data
+  TArray<FUSDCARLAWheelData> WheelsData = UUSDCARLAInterface::GetUSDWheelData(USDPath);
+  auto CreateVehicleWheel = 
+      [&](const FUSDCARLAWheelData& WheelData, 
+         TSubclassOf<UVehicleWheel> TemplateClass,
+         const FString &PackagePathName) 
+      -> TSubclassOf<UVehicleWheel>
+  {
+    // Get a reference to the editor subsystem
+    constexpr float MToCM = 0.01f;
+    constexpr float RadToDeg = 360.f/3.14159265359f;
+    FString BlueprintName =  FPaths::GetBaseFilename(PackagePathName);
+    FString BlueprintPath = FPaths::GetPath(PackagePathName);
+    IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
+    // Create a new Blueprint factory
+    UBlueprintFactory* Factory = NewObject<UBlueprintFactory>();
+    // Set the parent class for the new Blueprint
+    Factory->ParentClass = TemplateClass;
+    // Create a new Blueprint asset with the given name
+    UObject* NewAsset = AssetTools.CreateAsset(BlueprintName, BlueprintPath, UBlueprint::StaticClass(), Factory);
+    // Cast the new asset to a UBlueprint
+    UBlueprint* NewBlueprint = Cast<UBlueprint>(NewAsset);
+    // Modify the new Blueprint
+    NewBlueprint->Modify();
+    // Edit the default object for the new Blueprint
+    UVehicleWheel* Result = Cast<UVehicleWheel>(NewBlueprint->GeneratedClass->ClassDefaultObject);
+    Result->MaxBrakeTorque = MToCM*WheelData.MaxBrakeTorque;
+    if (WheelData.MaxHandBrakeTorque != 0)
+    {
+      Result->MaxHandBrakeTorque = MToCM*WheelData.MaxHandBrakeTorque;
+    }
+    Result->SteerAngle = RadToDeg*WheelData.MaxSteerAngle;
+    Result->SuspensionMaxDrop = MToCM*WheelData.MaxDroop;
+    Result->LatStiffValue = WheelData.LateralStiffnessY;
+    Result->LongStiffValue = WheelData.LongitudinalStiffness;
+    return Result->GetClass();
+  };
+  // Save wheel objects
+  FString AssetPath = DestinationAssetPath + FPaths::GetBaseFilename(USDPath);
+  FString PathWheelFL = AssetPath + "_Wheel_FLW";
+  FString PathWheelFR = AssetPath + "_Wheel_FRW";
+  FString PathWheelRL = AssetPath + "_Wheel_RLW";
+  FString PathWheelRR = AssetPath + "_Wheel_RRW";
+  WheelObjects.WheelFL = CreateVehicleWheel(
+      WheelsData[0], BaseWheelData.WheelFL, PathWheelFL);
+  WheelObjects.WheelFR = CreateVehicleWheel(
+      WheelsData[1], BaseWheelData.WheelFR, PathWheelFR);
+  WheelObjects.WheelRL = CreateVehicleWheel(
+      WheelsData[2], BaseWheelData.WheelRL, PathWheelRL);
+  WheelObjects.WheelRR = CreateVehicleWheel(
+      WheelsData[3], BaseWheelData.WheelRR, PathWheelRR);
+
 #else
   UE_LOG(LogCarlaTools, Error, TEXT("Omniverse Plugin is not enabled"));
 #endif
@@ -128,13 +194,16 @@ bool IsChildrenOf(USceneComponent* Component, FString StringInParent)
 }
 
 FVehicleMeshParts UUSDImporterWidget::SplitVehicleParts(
-    AActor* BlueprintActor, const TArray<FVehicleLight>& LightList)
+    AActor* BlueprintActor,
+    const TArray<FVehicleLight>& LightList,
+    UMaterialInterface* GlassMaterial)
 {
   FVehicleMeshParts Result;
   Result.Lights = LightList;
   TArray<UStaticMeshComponent*> MeshComponents;
   BlueprintActor->GetComponents(MeshComponents, false);
   FVector BodyLocation = FVector(0,0,0);
+  TArray<UStaticMeshComponent*> GlassComponents;
   for (UStaticMeshComponent* Component : MeshComponents)
   {
     if (!Component->GetStaticMesh())
@@ -142,22 +211,22 @@ FVehicleMeshParts UUSDImporterWidget::SplitVehicleParts(
       continue;
     }
     FString ComponentName = UKismetSystemLibrary::GetDisplayName(Component);
-    if (ComponentName.Contains("door_0"))
+    if (IsChildrenOf(Component, "door_0"))
     {
       Result.DoorFL.Add(Component);
       Result.Anchors.DoorFL = Component->GetComponentTransform().GetLocation();
     }
-    else if (ComponentName.Contains("door_1"))
+    else if (IsChildrenOf(Component, "door_1"))
     {
       Result.DoorFR.Add(Component);
       Result.Anchors.DoorFR = Component->GetComponentTransform().GetLocation();
     }
-    else if (ComponentName.Contains("door_2"))
+    else if (IsChildrenOf(Component, "door_2"))
     {
       Result.DoorRL.Add(Component);
       Result.Anchors.DoorRL = Component->GetComponentTransform().GetLocation();
     }
-    else if (ComponentName.Contains("door_3"))
+    else if (IsChildrenOf(Component, "door_3"))
     {
       Result.DoorRR.Add(Component);
       Result.Anchors.DoorRR = Component->GetComponentTransform().GetLocation();
@@ -216,6 +285,12 @@ FVehicleMeshParts UUSDImporterWidget::SplitVehicleParts(
         BodyLocation = Component->GetComponentTransform().GetLocation();
       }
     }
+
+    if(ComponentName.Contains("glass") || 
+       IsChildrenOf(Component, "glass"))
+    {
+      GlassComponents.Add(Component);
+    }
   }
   Result.Anchors.DoorFR -= BodyLocation;
   Result.Anchors.DoorFL -= BodyLocation;
@@ -230,6 +305,23 @@ FVehicleMeshParts UUSDImporterWidget::SplitVehicleParts(
   for (FVehicleLight& Light : Result.Lights)
   {
     Light.Location -= BodyLocation;
+  }
+  // fix glass materials not being transparent
+  for (UStaticMeshComponent* Compopnent : GlassComponents)
+  {
+    const TArray<UMaterialInterface*>& Materials = Compopnent->GetMaterials();
+    for (int32 i = 0; i < Materials.Num(); i++)
+    {
+      UMaterialInterface* Material = Materials[i];
+      if (Material)
+      {
+        FString MaterialName = Material->GetName();
+        if (MaterialName == "DefaultMaterial")
+        {
+          Compopnent->SetMaterial(i, GlassMaterial);
+        }
+      }
+    }
   }
   return Result;
 }
@@ -339,7 +431,8 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     UClass* BaseClass,
     USkeletalMesh* NewSkeletalMesh,
     const FString &DestPath, 
-    const FMergedVehicleMeshParts& VehicleMeshes)
+    const FMergedVehicleMeshParts& VehicleMeshes,
+    const FWheelTemplates& WheelTemplates)
 {
   std::unordered_map<std::string, std::pair<UStaticMesh*, FVector>> MeshMap = {
     {"SM_DoorFR", {VehicleMeshes.DoorFR, VehicleMeshes.Anchors.DoorFR}},
@@ -404,14 +497,74 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
   UE_LOG(LogCarlaTools, Log, TEXT("Num Lights %d"), VehicleMeshes.Lights.Num());
   for (const FVehicleLight& Light : VehicleMeshes.Lights)
   {
-    UPointLightComponent* PointLightComponent = NewObject<UPointLightComponent>(TemplateActor, FName(*GetCarlaLightName(Light.Name)));
-    PointLightComponent->RegisterComponent();
-    PointLightComponent->AttachToComponent(TemplateActor->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-    PointLightComponent->SetRelativeLocation(Light.Location); // Set the position of the light relative to the actor
-    PointLightComponent->SetIntensity(5000.f); // Set the brightness of the light
-    PointLightComponent->SetLightColor(Light.Color);
-    TemplateActor->AddInstanceComponent(PointLightComponent);
+    FString FixedLightName = GetCarlaLightName(Light.Name);
+    UClass * LightClass = UPointLightComponent::StaticClass();
+    if (FixedLightName.Contains("beam"))
+    {
+      LightClass = USpotLightComponent::StaticClass();
+    }
+    ULocalLightComponent * LightComponent = NewObject<ULocalLightComponent>(TemplateActor, LightClass, FName(*FixedLightName));
+    LightComponent->RegisterComponent();
+    LightComponent->AttachToComponent(
+        TemplateActor->GetRootComponent(), 
+        FAttachmentTransformRules::KeepRelativeTransform);
+    LightComponent->SetRelativeLocation(Light.Location); // Set the position of the light relative to the actor
+    LightComponent->SetIntensityUnits(ELightUnits::Lumens);
+    LightComponent->SetIntensity(5000.f); // Set the brightness of the light
+    LightComponent->SetVolumetricScatteringIntensity(0.f);
+    if (FixedLightName.Contains("high_beam"))
+    {
+      USpotLightComponent* SpotLight = 
+          Cast<USpotLightComponent>(LightComponent);
+      SpotLight->SetRelativeRotation(FRotator(-1.5f, 0, 0));
+      SpotLight->SetAttenuationRadius(5000.f);
+      SpotLight->SetInnerConeAngle(20.f);
+      SpotLight->SetOuterConeAngle(30.f);
+      LightComponent->SetIntensity(150000.f); // Set the brightness of the light
+      LightComponent->SetVolumetricScatteringIntensity(0.025f);
+    }
+    else if (FixedLightName.Contains("low_beam"))
+    {
+      USpotLightComponent* SpotLight = 
+          Cast<USpotLightComponent>(LightComponent);
+      LightComponent->SetRelativeRotation(FRotator(-3.f, 0, 0));
+      LightComponent->SetAttenuationRadius(3000.f);
+      SpotLight->SetInnerConeAngle(50.f);
+      SpotLight->SetOuterConeAngle(65.f);
+      LightComponent->SetIntensity(15000.f); // Set the brightness of the light
+      LightComponent->SetVolumetricScatteringIntensity(0.025f);
+    }
+    LightComponent->SetLightColor(Light.Color);
+    TemplateActor->AddInstanceComponent(LightComponent);
     UE_LOG(LogCarlaTools, Log, TEXT("Spawn Light %s, %s, %s"), *Light.Name, *Light.Location.ToString(), *Light.Color.ToString());
+  }
+  // assign generated wheel types
+  TArray<FWheelSetup> WheelSetups;
+  FWheelSetup Setup;
+  Setup.WheelClass = WheelTemplates.WheelFL;
+  Setup.BoneName = "Wheel_Front_Left";
+  WheelSetups.Add(Setup);
+  Setup.WheelClass = WheelTemplates.WheelFR;
+  Setup.BoneName = "Wheel_Front_Right";
+  WheelSetups.Add(Setup);
+  Setup.WheelClass = WheelTemplates.WheelRL;
+  Setup.BoneName = "Wheel_Rear_Left";
+  WheelSetups.Add(Setup);
+  Setup.WheelClass = WheelTemplates.WheelRR;
+  Setup.BoneName = "Wheel_Rear_Right";
+  WheelSetups.Add(Setup);
+  ACarlaWheeledVehicle* CarlaVehicle = 
+      Cast<ACarlaWheeledVehicle>(TemplateActor);
+  if(CarlaVehicle)
+  {
+    UWheeledVehicleMovementComponent4W* MovementComponent = 
+        Cast<UWheeledVehicleMovementComponent4W>(
+            CarlaVehicle->GetVehicleMovementComponent());
+    MovementComponent->WheelSetups = WheelSetups;
+  }
+  else
+  {
+    UE_LOG(LogCarlaTools, Error, TEXT("Null CarlaVehicle"));
   }
 
   // Create the new blueprint vehicle

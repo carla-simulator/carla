@@ -5,8 +5,24 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Animation/Skeleton.h"
+#include "VehicleWheel.h"
+#include "Materials/MaterialInterface.h"
 
 #include "USDImporterWidget.generated.h"
+
+USTRUCT(BlueprintType)
+struct FWheelTemplates
+{
+  GENERATED_BODY()
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Wheel")
+  TSubclassOf<UVehicleWheel> WheelFR;
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Wheel")
+  TSubclassOf<UVehicleWheel> WheelFL;
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Wheel")
+  TSubclassOf<UVehicleWheel> WheelRR;
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Wheel")
+  TSubclassOf<UVehicleWheel> WheelRL;
+};
 
 USTRUCT(BlueprintType)
 struct FVehicleLight
@@ -127,7 +143,9 @@ public:
   void ImportUSDVehicle(
       const FString& USDPath,
       const FString& DestinationAssetPath,
+      FWheelTemplates BaseWheelData,
       TArray<FVehicleLight>& LightList,
+      FWheelTemplates& WheelObjects,
       bool bAsBlueprint = true);
   UFUNCTION(BlueprintCallable, Category="USD Importer")
   static AActor* GetGeneratedBlueprint(UWorld* World, const FString& USDPath);
@@ -137,7 +155,9 @@ public:
   static TArray<UObject*> MergeMeshComponents(TArray<UPrimitiveComponent*> Components, const FString& DestMesh);
   UFUNCTION(BlueprintCallable, Category="USD Importer")
   static FVehicleMeshParts SplitVehicleParts(
-      AActor* BlueprintActor, const TArray<FVehicleLight>& LightList);
+      AActor* BlueprintActor,
+      const TArray<FVehicleLight>& LightList,
+      UMaterialInterface* GlassMaterial);
   UFUNCTION(BlueprintCallable, Category="USD Importer")
   static FMergedVehicleMeshParts GenerateVehicleMeshes(const FVehicleMeshParts& VehicleMeshParts, const FString& DestPath);
   UFUNCTION(BlueprintCallable, Category="USD Importer")
@@ -146,10 +166,11 @@ public:
       UClass* BaseClass,
       USkeletalMesh* NewSkeletalMesh,
       const FString &DestPath,
-      const FMergedVehicleMeshParts& VehicleMeshes);
+      const FMergedVehicleMeshParts& VehicleMeshes,
+      const FWheelTemplates& WheelTemplates);
   UFUNCTION(BlueprintCallable, Category="USD Importer")
   static bool EditSkeletalMeshBones(
-      USkeletalMesh* Skeleton, 
+      USkeletalMesh* Skeleton,
       const TMap<FString, FTransform> &NewBoneTransforms);
 
 };
