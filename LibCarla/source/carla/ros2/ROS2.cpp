@@ -74,16 +74,7 @@ void ROS2::UpdateImage(const carla::Buffer& buffer) {
     carla::sensor::data::Image img { std::move(tmp) };
     size_t width = img.GetWidth();
     size_t height = img.GetHeight();
-
-    std::vector<uint8_t> image_buffer;
-    image_buffer.resize(buffer.size());
-    auto it = buffer.cbegin();
-    for (size_t i = 0; i < image_buffer.size(); ++i, ++it) {
-        image_buffer[i] = *it;
-    }
-
-    _image_publisher->SetImage(height, width, image_buffer.data());
-    _image_publisher->Publish();
+    _image_publisher->SetImage(height, width, (const uint8_t*)buffer.data());
   }
 }
 
@@ -142,7 +133,6 @@ void ROS2::ProcessDataFromSensor(uint64_t sensor_type,
     case ESensors::SceneCaptureCamera:
     {
       log_info("Sensor SceneCaptureCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
-      UpdateImage(buffer);
       break;
     }
     case ESensors::SemanticSegmentationCamera:

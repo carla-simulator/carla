@@ -148,37 +148,34 @@ namespace ros2 {
 void CarlaImagePublisher::SetImage(size_t height, size_t width, const uint8_t* data) {
 
     std::vector<uint8_t> vector_data;
-    vector_data.reserve(height * width * 4);
-    for (size_t i = 0 ; i < height * width * 4; ++i, ++data){
-        vector_data.push_back(*data);
-    }
-    SetImage(height, width, vector_data);
-
+    const size_t size = height * width * 4;
+    vector_data.resize(size);
+    std::memcpy(&vector_data[0], &data[0], size);    
+    SetImage(height, width, std::move(vector_data));
   }
-  void CarlaImagePublisher::SetImage(size_t height, size_t width, const std::vector<uint8_t>& data) {
+
+  void CarlaImagePublisher::SetImage(size_t height, size_t width, std::vector<uint8_t>&& data) {
     auto epoch = std::chrono::system_clock::now().time_since_epoch();
-    auto secons = std::chrono::duration_cast<std::chrono::seconds>(epoch);
+    const auto secons = std::chrono::duration_cast<std::chrono::seconds>(epoch);
     epoch -= secons;
-    auto secs = static_cast<int32_t>(secons.count());
-    auto nanoseconds = static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(epoch).count());
+    const auto secs = static_cast<int32_t>(secons.count());
+    const auto nanoseconds = static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(epoch).count());
 
     builtin_interfaces::msg::Time time;
     time.sec(secs);
     time.nanosec(nanoseconds);
 
     std_msgs::msg::Header header;
-    header.stamp(time);
+    header.stamp(std::move(time));
     header.frame_id("1");
 
-    sensor_msgs::msg::Image image;
-    image.header(header);
-    image.width(width);
-    image.height(height);
-    image.encoding("bgra8"); //taken from the list of strings in include/sensor_msgs/image_encodings.h
-    image.is_bigendian(0);
-    image.step(image.width() * sizeof(uint8_t) * 4);
-    image.data(data); //https://github.com/eProsima/Fast-DDS/issues/2330
-    _impl->_image = image;
+    _impl->_image.header(std::move(header));
+    _impl->_image.width(width);
+    _impl->_image.height(height);
+    _impl->_image.encoding("bgra8"); //taken from the list of strings in include/sensor_msgs/image_encodings.h
+    _impl->_image.is_bigendian(0);
+    _impl->_image.step(_impl->_image.width() * sizeof(uint8_t) * 4);
+    _impl->_image.data(std::move(data)); //https://github.com/eProsima/Fast-DDS/issues/2330
   }
 
   CarlaImagePublisher::CarlaImagePublisher() :
