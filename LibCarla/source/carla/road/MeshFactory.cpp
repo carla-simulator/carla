@@ -128,17 +128,23 @@ namespace geom {
     const int vertices_in_width = road_param.vertex_width_resolution >= 2 ? road_param.vertex_width_resolution : 2;
     const int segments_number = vertices_in_width - 1;
 
+    std::vector<geom::Vector2D> uvs;
+    int uvx = 0;
+    int uvy = 0;
     // Iterate over the lane's 's' and store the vertices based on it's width
     do {
       // Get the location of the edges of the current lane at the current waypoint
       std::pair<geom::Vector3D, geom::Vector3D> edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
       const geom::Vector3D segments_size = ( edges.second - edges.first ) / segments_number;
       geom::Vector3D current_vertex = edges.first;
-
+      uvx = 0;
       for (int i = 0; i < vertices_in_width; ++i) {
+        uvs.push_back(geom::Vector2D(uvx, uvy));
         vertices.push_back(current_vertex);
         current_vertex = current_vertex + segments_size;
+        uvx++;
       }
+      uvy++;
       // Update the current waypoint's "s"
       s_current += road_param.resolution;
     } while (s_current < s_end);
@@ -151,14 +157,17 @@ namespace geom {
         lane.GetCornerPositions(s_end - MESH_EPSILON, road_param.extra_lane_width);
       const geom::Vector3D segments_size = (edges.second - edges.first) / segments_number;
       geom::Vector3D current_vertex = edges.first;
-
+      uvx = 0;
       for (int i = 0; i < vertices_in_width; ++i)
       {
+        uvs.push_back(geom::Vector2D(uvx, uvy));
         vertices.push_back(current_vertex);
         current_vertex = current_vertex + segments_size;
+        uvx++;
       }
     }
     out_mesh.AddVertices(vertices);
+    out_mesh.AddUVs(uvs);
 
     // Add the adient material, create the strip and close the material
     out_mesh.AddMaterial(
@@ -254,6 +263,8 @@ namespace geom {
     // Ensure minimum vertices in width are two
     const int vertices_in_width = 4;
     const int segments_number = vertices_in_width - 1;
+    std::vector<geom::Vector2D> uvs;
+    int uvy = 0;
 
     // Iterate over the lane's 's' and store the vertices based on it's width
     do {
@@ -264,12 +275,21 @@ namespace geom {
       geom::Vector3D low_vertex_first = edges.first - geom::Vector3D(0,0,1);
       geom::Vector3D low_vertex_second = edges.second - geom::Vector3D(0,0,1);
       vertices.push_back(low_vertex_first);
+      uvs.push_back(geom::Vector2D(0, uvy));
+
       vertices.push_back(edges.first);
+      uvs.push_back(geom::Vector2D(1, uvy));
+
       vertices.push_back(edges.second);
+      uvs.push_back(geom::Vector2D(2, uvy));
+
       vertices.push_back(low_vertex_second);
+      uvs.push_back(geom::Vector2D(3, uvy));
+
 
       // Update the current waypoint's "s"
       s_current += road_param.resolution;
+      uvy++;
     } while (s_current < s_end);
 
     // This ensures the mesh is constant and have no gaps between roads,
@@ -282,12 +302,21 @@ namespace geom {
       geom::Vector3D low_vertex_first = edges.first - geom::Vector3D(0,0,1);
       geom::Vector3D low_vertex_second = edges.second - geom::Vector3D(0,0,1);
       vertices.push_back(low_vertex_first);
-      vertices.push_back(edges.first);
-      vertices.push_back(edges.second);
-      vertices.push_back(low_vertex_second);
-    }
-    out_mesh.AddVertices(vertices);
+      uvs.push_back(geom::Vector2D(0, uvy));
 
+      vertices.push_back(edges.first);
+      uvs.push_back(geom::Vector2D(1, uvy));
+
+      vertices.push_back(edges.second);
+      uvs.push_back(geom::Vector2D(2, uvy));
+
+      vertices.push_back(low_vertex_second);
+      uvs.push_back(geom::Vector2D(3, uvy));
+
+    }
+
+    out_mesh.AddVertices(vertices);
+    out_mesh.AddUVs(uvs);
     // Add the adient material, create the strip and close the material
     out_mesh.AddMaterial(
       lane.GetType() == road::Lane::LaneType::Sidewalk ? "sidewalk" : "road");

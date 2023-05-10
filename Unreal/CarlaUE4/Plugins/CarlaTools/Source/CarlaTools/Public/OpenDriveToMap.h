@@ -36,7 +36,7 @@ public:
   void CreateMap();
 
   UFUNCTION(BlueprintCallable)
-  void CreateTerrain(const int SectionPerSize, const int MeshGridSize, const float MeshGridSectionSize,
+  void CreateTerrain(const int MeshGridSize, const float MeshGridSectionSize,
      const class UTexture2D* HeightmapTexture);
 
   UFUNCTION(BlueprintCallable)
@@ -55,17 +55,20 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
   FVector2D OriginGeoCoordinates;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
   UMaterialInstance* DefaultRoadMaterial;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
   UMaterialInstance* DefaultLaneMarksMaterial;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
   UMaterialInstance* DefaultSidewalksMaterial;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
   UMaterialInstance* DefaultLandscapeMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UTexture2D* DefaultHeightmap;
 
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   float DistanceBetweenTrees = 50.0f;
@@ -111,4 +114,6 @@ private:
   TArray<FString> RoadType;
   UPROPERTY()
   TArray<UProceduralMeshComponent*> RoadMesh;
+  UPROPERTY()
+  UTexture2D* Heightmap;
 };

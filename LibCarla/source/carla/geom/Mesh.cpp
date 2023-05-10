@@ -106,6 +106,10 @@ namespace geom {
     _uvs.push_back(uv);
   }
 
+  void Mesh::AddUVs(const std::vector<uv_type> & uv) {
+    std::copy(uv.begin(), uv.end(), std::back_inserter(_uvs));
+  }
+
   void Mesh::AddMaterial(const std::string &material_name) {
     const size_t open_index = _indexes.size();
     if (!_materials.empty()) {

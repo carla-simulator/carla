@@ -9,6 +9,7 @@
 #include "Engine/SceneCapture2D.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 #include "Kismet/KismetRenderingLibrary.h"
+#include "KismetProceduralMeshLibrary.h"
 
 #include "Carla/Game/CarlaStatics.h"
 #include "Traffic/TrafficLightManager.h"
@@ -37,6 +38,7 @@
 #include "MeshDescription.h"
 #include "EditorLevelLibrary.h"
 #include "ProceduralMeshConversion.h"
+
 #include "ContentBrowserModule.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "Math/Vector.h"
@@ -149,7 +151,7 @@ void UOpenDriveToMap::CreateMap()
   ActorMeshList.Empty();
 }
 
-void UOpenDriveToMap::CreateTerrain(const int SectionPerSize, const int MeshGridSize, const float MeshGridSectionSize, const class UTexture2D* HeightmapTexture)
+void UOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGridSectionSize, const class UTexture2D* HeightmapTexture)
 {
   TArray<AActor*> FoundActors;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), AProceduralMeshActor::StaticClass(), FoundActors);
@@ -277,9 +279,7 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
       TArray<FProcMeshTangent>(), // Tangents
       false); // Create collision);
 
-    Spawner->SetActorLabel("SM_Landscape" + (MeshIndex) );
-
-
+  MeshActor->SetActorLabel("SM_Landscape" + FString::FromInt(MeshIndex) );
 }
 
 void UOpenDriveToMap::OpenFileDialog()
@@ -329,10 +329,15 @@ void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& Carla
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Invalid Map"));
   }else
   {
+    if(DefaultHeightmap && !Heightmap){
+      Heightmap = DefaultHeightmap;
+    }
+
     GenerateRoadMesh(CarlaMap);
     GenerateSpawnPoints(CarlaMap);
     GenerateTreePositions(CarlaMap);
     GenerateLaneMarks(CarlaMap);
+    CreateTerrain(12800, 256, nullptr);
   }
 }
 
@@ -372,7 +377,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       }else{
         for( auto& Vertex : Mesh->GetVertices() )
         {
-          Vertex.z += GetHeight(Vertex.x, Vertex.y, false);
+          Vertex.z += GetHeight(Vertex.x, Vertex.y, false) + 0.20;
         }
       }
 
@@ -411,14 +416,23 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       }
 
       const FProceduralCustomMesh MeshData = *Mesh;
+      TArray<FVector> Normals;
+      TArray<FProcMeshTangent> Tangents;
+      UKismetProceduralMeshLibrary::CalculateTangentsForMesh(
+        MeshData.Vertices,
+        MeshData.Triangles,
+        MeshData.UV0,
+        Normals,
+        Tangents
+      );
       TempPMC->CreateMeshSection_LinearColor(
           0,
           MeshData.Vertices,
           MeshData.Triangles,
-          MeshData.Normals,
-          TArray<FVector2D>(), // UV0
+          Normals,
+          MeshData.UV0, // UV0
           TArray<FLinearColor>(), // VertexColor
-          TArray<FProcMeshTangent>(), // Tangents
+          Tangents, // Tangents
           true); // Create collision
       TempActor->SetActorLocation(MeshCentroid * 100);
       // ActorMeshList.Add(TempActor);
@@ -496,14 +510,23 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
       TempPMC->SetMaterial(0, DefaultLaneMarksMaterial);
 
     const FProceduralCustomMesh MeshData = *Mesh;
+    TArray<FVector> Normals;
+    TArray<FProcMeshTangent> Tangents;
+    UKismetProceduralMeshLibrary::CalculateTangentsForMesh(
+      MeshData.Vertices,
+      MeshData.Triangles,
+      MeshData.UV0,
+      Normals,
+      Tangents
+    );
     TempPMC->CreateMeshSection_LinearColor(
       0,
       MeshData.Vertices,
       MeshData.Triangles,
-      MeshData.Normals,
-      TArray<FVector2D>(), // UV0
+      Normals,
+      MeshData.UV0, // UV0
       TArray<FLinearColor>(), // VertexColor
-      TArray<FProcMeshTangent>(), // Tangents
+      Tangents, // Tangents
       true); // Create collision
     TempActor->SetActorLocation(MeshCentroid * 100);
     LaneMarkerActorList.Add(TempActor);
