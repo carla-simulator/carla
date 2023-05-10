@@ -50,3 +50,116 @@ TArray<FUSDCARLALight> UUSDCARLAInterface::GetUSDLights(const FString& Path)
   }
   return Result;
 }
+
+TArray<FUSDCARLAWheelData> UUSDCARLAInterface::GetUSDWheelData(const FString& Path)
+{
+  pxr::UsdStageRefPtr Stage = 
+      FOmniverseUSDHelper::LoadUSDStageFromPath(Path);
+
+  // Get the wheel data
+  const std::string UsdPhysxWheelPath = "/vehicle/_physx/_physxWheels/";
+  const std::string UsdPhysxSuspensionPath = "/vehicle/_physx/_physxSuspensions/";
+  auto GetFloatAttributeValue = [](pxr::UsdPrim& Prim, const std::string& AttrName) -> float
+  {
+    pxr::UsdAttribute Attribute = 
+        Prim.GetAttribute(pxr::TfToken(AttrName));
+    if(!Attribute)
+    {
+      return 0.f;
+    }
+    float Value = 0.f;
+    Attribute.Get(&Value);
+    return Value;
+  };
+  auto GetPrimFromRelationship = [&](
+      pxr::UsdRelationship& Relationship) -> pxr::UsdPrim
+  {
+    std::vector<pxr::SdfPath> Targets;
+    Relationship.GetTargets(&Targets);
+    if (!Targets.size())
+    {
+      return pxr::UsdPrim();
+    }
+    return Stage->GetPrimAtPath(Targets.front());
+  };
+  auto ParseWheelData = [&](
+      const std::string& WheelName, 
+      FUSDCARLAWheelData& OutWheelData) -> bool
+  {
+    pxr::SdfPath WheelPath(UsdPhysxWheelPath + WheelName);
+    pxr::UsdPrim WheelPrim = Stage->GetPrimAtPath(WheelPath);
+    if(!WheelPrim)
+    {
+      UE_LOG(LogOmniverseUsd, Warning, TEXT("Wheel prim fail"));
+    }
+    pxr::UsdRelationship WheelRelationship;
+    pxr::UsdRelationship TireRelationship;
+    pxr::UsdRelationship SuspensionRelationship;
+    for (pxr::UsdProperty& Property : WheelPrim.GetProperties())
+    {
+      FString Name (Property.GetBaseName().GetText());
+      if(Name == "wheel")
+      {
+        WheelRelationship = Property.As<pxr::UsdRelationship>();
+      }
+      if(Name == "tire")
+      {
+        TireRelationship = Property.As<pxr::UsdRelationship>();
+      }
+      if(Name == "suspension")
+      {
+        SuspensionRelationship = 
+            Property.As<pxr::UsdRelationship>();
+      }
+    }
+    if(!WheelRelationship || !TireRelationship || !SuspensionRelationship)
+    {
+      UE_LOG(LogOmniverseUsd, Warning, TEXT("Relationships fail: %d %d %d"), 
+          bool(WheelRelationship), bool(TireRelationship), bool(SuspensionRelationship));
+      return false;
+    }
+    pxr::UsdPrim PhysxWheelPrim = GetPrimFromRelationship(WheelRelationship);
+    pxr::UsdPrim PhysxTirePrim = GetPrimFromRelationship(TireRelationship);
+    pxr::UsdPrim PhysxSuspensionlPrim = GetPrimFromRelationship(SuspensionRelationship);
+
+    if (!PhysxWheelPrim || !PhysxTirePrim || !PhysxSuspensionlPrim)
+    {
+      UE_LOG(LogOmniverseUsd, Warning, TEXT("Prims fail: %d %d %d"), 
+          bool(PhysxWheelPrim), bool(PhysxTirePrim), bool(PhysxSuspensionlPrim));
+      return false;
+    }
+    OutWheelData.MaxBrakeTorque = 
+        GetFloatAttributeValue(PhysxWheelPrim, "physxVehicleWheel:maxBrakeTorque");
+    OutWheelData.MaxHandBrakeTorque = 
+        GetFloatAttributeValue(PhysxWheelPrim, "physxVehicleWheel:maxHandBrakeTorque");
+    OutWheelData.MaxSteerAngle = 
+        GetFloatAttributeValue(PhysxWheelPrim, "physxVehicleWheel:maxSteerAngle");
+    OutWheelData.SpringStrength = 
+        GetFloatAttributeValue(PhysxSuspensionlPrim, "physxVehicleSuspension:springStrength");
+    OutWheelData.MaxCompression = 
+        GetFloatAttributeValue(PhysxSuspensionlPrim, "physxVehicleSuspension:maxCompression");
+    OutWheelData.MaxDroop = 
+        GetFloatAttributeValue(PhysxSuspensionlPrim, "physxVehicleSuspension:maxDroop");
+    OutWheelData.LateralStiffnessX = 
+        GetFloatAttributeValue(PhysxTirePrim, "physxVehicleTire:latStiffX");
+    OutWheelData.LateralStiffnessY = 
+        GetFloatAttributeValue(PhysxTirePrim, "physxVehicleTire:latStiffY");
+    OutWheelData.LongitudinalStiffness = 
+        GetFloatAttributeValue(
+        PhysxTirePrim, "physxVehicleTire:longitudinalStiffnessPerUnitGravity");
+
+    UE_LOG(LogOmniverseUsd, Warning, TEXT("USD values: %f %f %f %f %f %f %f %f %f"), 
+    OutWheelData.MaxBrakeTorque, OutWheelData.MaxHandBrakeTorque, OutWheelData.MaxSteerAngle,
+    OutWheelData.SpringStrength, OutWheelData.MaxCompression, OutWheelData.MaxDroop,
+    OutWheelData.LateralStiffnessX, OutWheelData.LateralStiffnessY, OutWheelData.LongitudinalStiffness);
+
+    return true;
+  };
+  FUSDCARLAWheelData Wheel0, Wheel1, Wheel2, Wheel3;
+  ParseWheelData("wheel_0", Wheel0);
+  ParseWheelData("wheel_1", Wheel1);
+  ParseWheelData("wheel_2", Wheel2);
+  ParseWheelData("wheel_3", Wheel3);
+
+  return {Wheel0, Wheel1, Wheel2, Wheel3};
+}
