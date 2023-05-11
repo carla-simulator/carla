@@ -6,8 +6,8 @@
 
 
 UCLASS(BlueprintType)
-class CARLATOOLS_API UEditorCameraUtils :
-	public UObject
+class CARLATOOLS_API AEditorCameraUtils :
+	public AActor
 {
 	GENERATED_BODY()
 public:

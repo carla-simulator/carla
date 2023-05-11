@@ -3,7 +3,7 @@
 #include "Editor/EditorEngine.h"
 #include "EditorViewportClient.h"
 
-void UEditorCameraUtils::Get()
+void AEditorCameraUtils::Get()
 {
 	auto ViewportClient = dynamic_cast<FEditorViewportClient*>(GEditor->GetActiveViewport()->GetClient());
 	CameraTransform = FTransform();
@@ -11,7 +11,7 @@ void UEditorCameraUtils::Get()
 	CameraTransform.SetRotation(FQuat(ViewportClient->GetViewRotation()));
 }
 
-void UEditorCameraUtils::Set()
+void AEditorCameraUtils::Set()
 {
 	auto ViewportClient = dynamic_cast<FEditorViewportClient*>(GEditor->GetActiveViewport()->GetClient());
 	ViewportClient->SetViewLocation(CameraTransform.GetLocation());
