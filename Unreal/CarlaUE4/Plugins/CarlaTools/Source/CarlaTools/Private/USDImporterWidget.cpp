@@ -72,7 +72,7 @@ void UUSDImporterWidget::ImportUSDVehicle(
       -> TSubclassOf<UVehicleWheel>
   {
     // Get a reference to the editor subsystem
-    constexpr float MToCM = 0.01f;
+    constexpr float MToCM = 100.f;
     constexpr float RadToDeg = 360.f/3.14159265359f;
     FString BlueprintName =  FPaths::GetBaseFilename(PackagePathName);
     FString BlueprintPath = FPaths::GetPath(PackagePathName);
