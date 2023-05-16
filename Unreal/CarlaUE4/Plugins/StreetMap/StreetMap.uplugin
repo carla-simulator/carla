@@ -1,0 +1,31 @@
+{
+	"FileVersion" : 3,
+	"Version" : 1,
+	"VersionName" : "1.0",
+	"FriendlyName" : "Street Map",
+	"Description" : "Import and render OpenStreetMap data",
+	"Category" : "Importers",
+	"CreatedBy" : "Mike Fricker",
+	"CreatedByURL" : "http://twitter.com/mike_fricker",
+	"DocsURL" : "http://github.com/ue4plugins/StreetMap",
+	"MarketplaceURL" : "",
+	"SupportURL" : "",
+	"EnabledByDefault" : true,
+	"CanContainContent" : true,
+	"IsBetaVersion" : false,
+	"Installed" : false,
+	"Modules" :
+	[
+		{
+			"Name" : "StreetMapRuntime",
+			"Type" : "Runtime",
+			"LoadingPhase" : "Default"
+		},
+	
+		{
+			"Name" : "StreetMapImporting",
+			"Type" : "Editor",
+			"LoadingPhase" : "Default"
+		}
+  ]
+}
