@@ -80,6 +80,9 @@ protected:
   UFUNCTION( BlueprintCallable )
   void SaveMap();
 
+  UFUNCTION(BlueprintCallable)
+  TArray<AActor*> GenerateMiscActors(float Offset);
+
   UFUNCTION( BlueprintImplementableEvent )
   void GenerationFinished();
 private:
@@ -98,6 +101,7 @@ private:
 
   float GetHeight(float PosX, float PosY,bool bDrivingLane = false);
   carla::rpc::OpendriveGenerationParameters opg_parameters;
+  boost::optional<carla::road::Map> CarlaMap;
 
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
   TArray<UStaticMesh*> CreateStaticMeshAssets();

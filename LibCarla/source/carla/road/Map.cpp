@@ -1196,6 +1196,45 @@ namespace road {
 
     return road_out_mesh_list;
   }
+  std::vector<std::pair<geom::Transform, std::string>> Map::GetTreesTransform(
+    float distancebetweentrees,
+    float distancefromdrivinglineborder,
+    float s_offset) const {
+
+    std::vector<std::pair<geom::Transform, std::string>> transforms;
+    for (auto &&pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      if (!road.IsJunction()) {
+        for (auto &&lane_section : road.GetLaneSections()) {
+          LaneId min_lane = 0;
+          for (auto &pairlane : lane_section.GetLanes()) {
+            if (min_lane > pairlane.first && pairlane.second.GetType() == Lane::LaneType::Driving) {
+              min_lane = pairlane.first;
+            }
+          }
+          const auto max_lane = lane_section.GetLanes().rbegin()->first == 0 ?
+           -1 : lane_section.GetLanes().rbegin()->first;
+          const road::Lane* lane = lane_section.GetLane(min_lane);
+          if( lane ) {
+            double s_current = lane_section.GetDistance() + s_offset;
+            const double s_end = lane_section.GetDistance() + lane_section.GetLength();
+            while(s_current < s_end){
+              const auto edges = lane->GetCornerPositions(s_current, 0);
+              geom::Vector3D director = edges.second - edges.first;
+              geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
+              geom::Transform lanetransform = lane->ComputeTransform(s_current);
+              geom::Transform treeTransform(treeposition, lanetransform.rotation);
+              const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
+              transforms.push_back(std::make_pair(treeTransform,roadinfo->GetType()));
+              s_current += distancebetweentrees;
+            }
+
+          }
+        }
+      }
+    }
+    return transforms;
+  }
 
   geom::Mesh Map::GetAllCrosswalkMesh() const {
     geom::Mesh out_mesh;
@@ -1260,37 +1299,9 @@ namespace road {
     return returning;
   }
 
-   std::vector<std::pair<geom::Vector3D, std::string>> Map::GetTreesPosition(
-    float distancebetweentrees,
-    float distancefromdrivinglineborder) const {
-
-    std::vector<std::pair<geom::Vector3D, std::string>> positions;
-    for (auto &&pair : _data.GetRoads()) {
-      const auto &road = pair.second;
-      if (!road.IsJunction()) {
-        for (auto &&lane_section : road.GetLaneSections()) {
-          const auto min_lane = lane_section.GetLanes().begin()->first == 0 ?
-            1 : lane_section.GetLanes().begin()->first;
-          const auto max_lane = lane_section.GetLanes().rbegin()->first == 0 ?
-           -1 : lane_section.GetLanes().rbegin()->first;
-          const road::Lane* lane = lane_section.GetLane(min_lane);
-          if( lane ) {
-            double s_current = lane_section.GetDistance();
-            const double s_end = lane_section.GetDistance() + lane_section.GetLength();
-            while(s_current < s_end){
-              const auto edges = lane->GetCornerPositions(s_current, 0);
-              geom::Vector3D director = edges.second - edges.first;
-              geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
-              const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
-              positions.push_back(std::make_pair(treeposition,roadinfo->GetType()));
-              s_current += distancebetweentrees;
-            }
-
-          }
-        }
-      }
-    }
-    return positions;
+  inline float Map::GetZPosInDeformation(float posx, float posy) const {
+    return geom::deformation::GetZPosInDeformation(posx, posy) +
+      geom::deformation::GetBumpDeformation(posx,posy);
   }
 
   std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>

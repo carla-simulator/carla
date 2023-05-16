@@ -166,9 +166,10 @@ namespace road {
     /// Buids a mesh of all crosswalks based on the OpenDRIVE
     geom::Mesh GetAllCrosswalkMesh() const;
 
-    std::vector<std::pair<geom::Vector3D, std::string>> GetTreesPosition(
+    std::vector<std::pair<geom::Transform, std::string>> GetTreesTransform(
       float distancebetweentrees,
-      float distancefromdrivinglineborder) const;
+      float distancefromdrivinglineborder,
+      float s_offset = 0) const;
 
     geom::Mesh GenerateWalls(const double distance, const float wall_height) const;
 

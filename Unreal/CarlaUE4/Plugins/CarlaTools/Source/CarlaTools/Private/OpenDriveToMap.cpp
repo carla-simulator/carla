@@ -304,7 +304,7 @@ void UOpenDriveToMap::LoadMap()
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("UOpenDriveToMap::LoadMap(): File to load %s"), *FilePath );
   FFileHelper::LoadFileToString(FileContent, *FilePath);
   std::string opendrive_xml = carla::rpc::FromLongFString(FileContent);
-  boost::optional<carla::road::Map> CarlaMap = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
+  CarlaMap = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
 
   if (!CarlaMap.has_value())
   {
@@ -322,6 +322,26 @@ void UOpenDriveToMap::LoadMap()
   GenerationFinished();
 }
 
+TArray<AActor*> UOpenDriveToMap::GenerateMiscActors(float Offset)
+{   
+  const std::vector<std::pair<carla::geom::Transform, std::string>>
+    Locations = CarlaMap->GetTreesTransform(DistanceBetweenTrees, DistanceFromRoadEdge, Offset);
+  TArray<AActor*> Returning;
+  int i = 0;
+  for (const auto& cl : Locations)
+  {
+    const FVector scale{ 1.0f, 1.0f, 1.0f };
+    FTransform NewTransform ( FRotator(cl.first.rotation), FVector(cl.first.location), scale );
+    AActor* Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), 
+      NewTransform.GetLocation(), NewTransform.Rotator());
+    Spawner->Tags.Add(FName("MiscSpawnPosition"));
+    Spawner->Tags.Add(FName(cl.second.c_str()));
+    Spawner->SetActorLabel("MiscSpawnPosition" + FString::FromInt(i));
+    ++i;
+    Returning.Add(Spawner);
+  }
+  return Returning;
+}
 void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& CarlaMap )
 {
   if (!CarlaMap.has_value())
@@ -549,12 +569,12 @@ void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Ma
 
 void UOpenDriveToMap::GenerateTreePositions( const boost::optional<carla::road::Map>& CarlaMap )
 {
-  const std::vector<std::pair<carla::geom::Vector3D, std::string>> Locations =
-    CarlaMap->GetTreesPosition(DistanceBetweenTrees, DistanceFromRoadEdge );
+  const std::vector<std::pair<carla::geom::Transform, std::string>> Locations =
+    CarlaMap->GetTreesTransform(DistanceBetweenTrees, DistanceFromRoadEdge );
   int i = 0;
   for (const auto &cl : Locations)
   {
-    AActor *Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), cl.first.ToFVector() * 100, FRotator(0,0,0));
+    AActor *Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), cl.first.location.ToFVector() * 100, FRotator(0,0,0));
     Spawner->Tags.Add(FName("TreeSpawnPosition"));
     Spawner->Tags.Add(FName(cl.second.c_str()));
     Spawner->SetActorLabel("TreeSpawnPosition" + FString::FromInt(i) );
