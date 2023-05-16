@@ -323,16 +323,17 @@ void UOpenDriveToMap::LoadMap()
 }
 
 TArray<AActor*> UOpenDriveToMap::GenerateMiscActors(float Offset)
-{   
-  const std::vector<std::pair<carla::geom::Transform, std::string>>
+{
+  std::vector<std::pair<carla::geom::Transform, std::string>>
     Locations = CarlaMap->GetTreesTransform(DistanceBetweenTrees, DistanceFromRoadEdge, Offset);
   TArray<AActor*> Returning;
   int i = 0;
-  for (const auto& cl : Locations)
+  for (auto& cl : Locations)
   {
     const FVector scale{ 1.0f, 1.0f, 1.0f };
+    cl.first.location.z = GetHeight(cl.first.location.x, cl.first.location.y) + 0.3f;
     FTransform NewTransform ( FRotator(cl.first.rotation), FVector(cl.first.location), scale );
-    AActor* Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), 
+    AActor* Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(),
       NewTransform.GetLocation(), NewTransform.Rotator());
     Spawner->Tags.Add(FName("MiscSpawnPosition"));
     Spawner->Tags.Add(FName(cl.second.c_str()));
@@ -569,11 +570,12 @@ void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Ma
 
 void UOpenDriveToMap::GenerateTreePositions( const boost::optional<carla::road::Map>& CarlaMap )
 {
-  const std::vector<std::pair<carla::geom::Transform, std::string>> Locations =
+  std::vector<std::pair<carla::geom::Transform, std::string>> Locations =
     CarlaMap->GetTreesTransform(DistanceBetweenTrees, DistanceFromRoadEdge );
   int i = 0;
-  for (const auto &cl : Locations)
+  for (auto &cl : Locations)
   {
+    cl.first.location.z  = GetHeight(cl.first.location.x, cl.first.location.y) + 0.3f;
     AActor *Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), cl.first.location.ToFVector() * 100, FRotator(0,0,0));
     Spawner->Tags.Add(FName("TreeSpawnPosition"));
     Spawner->Tags.Add(FName(cl.second.c_str()));
