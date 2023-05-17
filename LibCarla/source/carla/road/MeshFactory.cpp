@@ -219,7 +219,7 @@ namespace geom {
         if(lane_pair.second.GetType() == road::Lane::LaneType::Driving) {
           verticesinwidth = vertices_in_width;
         }else if(lane_pair.second.GetType() == road::Lane::LaneType::Sidewalk){
-          verticesinwidth = 4;
+          verticesinwidth = 6;
         }else{
           verticesinwidth = 2;
         }
@@ -261,7 +261,7 @@ namespace geom {
 
     std::vector<geom::Vector3D> vertices;
     // Ensure minimum vertices in width are two
-    const int vertices_in_width = 4;
+    const int vertices_in_width = 6;
     const int segments_number = vertices_in_width - 1;
     std::vector<geom::Vector2D> uvs;
     int uvy = 0;
@@ -280,12 +280,17 @@ namespace geom {
       vertices.push_back(edges.first);
       uvs.push_back(geom::Vector2D(1, uvy));
 
+      vertices.push_back(edges.first);
+      uvs.push_back(geom::Vector2D(1, uvy));
+
+      vertices.push_back(edges.second);
+      uvs.push_back(geom::Vector2D(2, uvy));
+
       vertices.push_back(edges.second);
       uvs.push_back(geom::Vector2D(2, uvy));
 
       vertices.push_back(low_vertex_second);
       uvs.push_back(geom::Vector2D(3, uvy));
-
 
       // Update the current waypoint's "s"
       s_current += road_param.resolution;
@@ -301,11 +306,18 @@ namespace geom {
 
       geom::Vector3D low_vertex_first = edges.first - geom::Vector3D(0,0,1);
       geom::Vector3D low_vertex_second = edges.second - geom::Vector3D(0,0,1);
+
       vertices.push_back(low_vertex_first);
       uvs.push_back(geom::Vector2D(0, uvy));
 
       vertices.push_back(edges.first);
       uvs.push_back(geom::Vector2D(1, uvy));
+
+      vertices.push_back(edges.first);
+      uvs.push_back(geom::Vector2D(1, uvy));
+
+      vertices.push_back(edges.second);
+      uvs.push_back(geom::Vector2D(2, uvy));
 
       vertices.push_back(edges.second);
       uvs.push_back(geom::Vector2D(2, uvy));
@@ -325,6 +337,11 @@ namespace geom {
 
     for (size_t i = 0; i < (number_of_rows - 1); ++i) {
       for (size_t j = 0; j < vertices_in_width - 1; ++j) {
+
+        if(j == 1 || j == 3){
+          continue;
+        }
+
         out_mesh.AddIndex(   j       + (   i       * vertices_in_width ) + 1);
         out_mesh.AddIndex( ( j + 1 ) + (   i       * vertices_in_width ) + 1);
         out_mesh.AddIndex(   j       + ( ( i + 1 ) * vertices_in_width ) + 1);
@@ -332,6 +349,7 @@ namespace geom {
         out_mesh.AddIndex( ( j + 1 ) + (   i       * vertices_in_width ) + 1);
         out_mesh.AddIndex( ( j + 1 ) + ( ( i + 1 ) * vertices_in_width ) + 1);
         out_mesh.AddIndex(   j       + ( ( i + 1 ) * vertices_in_width ) + 1);
+
       }
     }
     out_mesh.EndMaterial();
@@ -550,7 +568,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
               if(lane_pair.second.GetType() == road::Lane::LaneType::Driving) {
                 verticesinwidth = vertices_in_width;
               }else if(lane_pair.second.GetType() == road::Lane::LaneType::Sidewalk){
-                verticesinwidth = 4;
+                verticesinwidth = 6;
               }else{
                 verticesinwidth = 2;
               }
@@ -583,7 +601,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
               if(lane_pair.second.GetType() == road::Lane::LaneType::Driving) {
                 verticesinwidth = vertices_in_width;
               }else if(lane_pair.second.GetType() == road::Lane::LaneType::Sidewalk){
-                verticesinwidth = 4;
+                verticesinwidth = 6;
               }else{
                 verticesinwidth = 2;
               }

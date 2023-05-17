@@ -439,6 +439,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       const FProceduralCustomMesh MeshData = *Mesh;
       TArray<FVector> Normals;
       TArray<FProcMeshTangent> Tangents;
+
       UKismetProceduralMeshLibrary::CalculateTangentsForMesh(
         MeshData.Vertices,
         MeshData.Triangles,
@@ -446,11 +447,12 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
         Normals,
         Tangents
       );
+
       TempPMC->CreateMeshSection_LinearColor(
           0,
           MeshData.Vertices,
           MeshData.Triangles,
-          Normals,
+          MeshData.Normals,
           MeshData.UV0, // UV0
           TArray<FLinearColor>(), // VertexColor
           Tangents, // Tangents
