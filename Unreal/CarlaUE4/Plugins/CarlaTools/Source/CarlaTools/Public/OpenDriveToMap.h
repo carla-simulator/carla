@@ -35,6 +35,14 @@ public:
   UFUNCTION( BlueprintCallable )
   void CreateMap();
 
+  UFUNCTION(BlueprintCallable)
+  void CreateTerrain(const int MeshGridSize, const float MeshGridSectionSize,
+     const class UTexture2D* HeightmapTexture);
+
+  UFUNCTION(BlueprintCallable)
+  void CreateTerrainMesh(const int MeshIndex, const FVector2D Offset, const int GridSize, const float GridSectionSize,
+     const class UTexture2D* HeightmapTexture, class UTextureRenderTarget2D* RoadMask);
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;
 
@@ -47,14 +55,20 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
   FVector2D OriginGeoCoordinates;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
   UMaterialInstance* DefaultRoadMaterial;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
   UMaterialInstance* DefaultLaneMarksMaterial;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
   UMaterialInstance* DefaultSidewalksMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UMaterialInstance* DefaultLandscapeMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UTexture2D* DefaultHeightmap;
 
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   float DistanceBetweenTrees = 50.0f;
@@ -85,6 +99,7 @@ private:
   void GenerateTreePositions(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap);
 
+  float GetHeight(float PosX, float PosY,bool bDrivingLane = false);
   carla::rpc::OpendriveGenerationParameters opg_parameters;
   boost::optional<carla::road::Map> CarlaMap;
 
@@ -103,4 +118,6 @@ private:
   TArray<FString> RoadType;
   UPROPERTY()
   TArray<UProceduralMeshComponent*> RoadMesh;
+  UPROPERTY()
+  UTexture2D* Heightmap;
 };
