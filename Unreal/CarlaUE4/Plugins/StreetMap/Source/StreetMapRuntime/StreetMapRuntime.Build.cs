@@ -14,7 +14,8 @@ namespace UnrealBuildTool.Rules
           "Engine",
           "RHI",
           "RenderCore",
-          "PropertyEditor"
+          "PropertyEditor",
+          "ProceduralMeshComponent"
         }
       );
 

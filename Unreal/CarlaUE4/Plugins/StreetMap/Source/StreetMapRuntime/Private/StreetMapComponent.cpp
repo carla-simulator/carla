@@ -9,13 +9,14 @@
 #include "PolygonTools.h"
 
 #include "PhysicsEngine/BodySetup.h"
+#include "ProceduralMeshComponent.h"
 
 #if WITH_EDITOR
 #include "Modules/ModuleManager.h"
 #include "PropertyEditorModule.h"
 #endif //WITH_EDITOR
 
-
+DEFINE_LOG_CATEGORY(LogNoriega);
 
 UStreetMapComponent::UStreetMapComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer),
@@ -290,7 +291,18 @@ void UStreetMapComponent::GenerateMesh()
 		for( int32 BuildingIndex = 0; BuildingIndex < Buildings.Num(); ++BuildingIndex )
 		{
 			const auto& Building = Buildings[ BuildingIndex ];
+			AActor* TempActor = GetWorld()->SpawnActor<AActor>();
 
+			TempActor->SetActorLabel(FString("SMBuilding") + FString::FromInt(BuildingIndex));
+			FString ActorName = FString("ProcMesh") + FString::FromInt(BuildingIndex);
+			UProceduralMeshComponent* TempPMC = NewObject<UProceduralMeshComponent>(TempActor, FName(*ActorName));
+			TempActor->SetRootComponent(TempPMC);
+			if (TempPMC)
+			{
+				TempPMC->RegisterComponent();
+				TempPMC->AttachTo(TempActor->GetRootComponent(), NAME_None);
+			}
+			
 			// Building mesh (or filled area, if the building has no height)
 
 			// Triangulate this building
@@ -313,6 +325,9 @@ void UStreetMapComponent::GenerateMesh()
 					}
 					else if (Building.BuildingLevels > 0) {
 						BuildingFillZ = (float)Building.BuildingLevels * BuildingLevelFloorFactor;
+					}
+					else {
+						BuildingFillZ = FMath::RandRange(2, 7) * BuildingLevelFloorFactor;
 					}
 				}		
 
@@ -427,6 +442,32 @@ void UStreetMapComponent::GenerateMesh()
 						MeshBoundingBox );
 				}
 			}
+			FVector MeshCentroid = FVector(0, 0, 0);
+			for (auto Vertex : VerticesPositions)
+			{
+				MeshCentroid += Vertex;
+			}
+
+			MeshCentroid /= VerticesPositions.Num();
+			MeshCentroid.Z = 0;
+			for (auto& Vertex : VerticesPositions)
+			{
+				Vertex.X -= MeshCentroid.X;
+				Vertex.Y -= MeshCentroid.Y;
+				Vertex.Z -= MeshCentroid.Z;
+			}
+			TempPMC->CreateMeshSection_LinearColor(
+          0,
+          VerticesPositions,
+          ProcIndices,
+          TArray<FVector>(),
+          TArray<FVector2D>(), // UV0
+          TArray<FLinearColor>(), // VertexColor
+          TArray<FProcMeshTangent>(), // Tangents
+          false); // Create collision
+			TempActor->SetActorLocation(MeshCentroid);
+			VerticesPositions.Empty();
+			ProcIndices.Empty();
 		}
 
 		CachedLocalBounds = MeshBoundingBox;
@@ -604,6 +645,7 @@ void UStreetMapComponent::AddThick2DLine( const FVector2D Start, const FVector2D
 void UStreetMapComponent::AddTriangles( const TArray<FVector>& Points, const TArray<int32>& PointIndices, const FVector& ForwardVector, const FVector& UpVector, const FColor& Color, FBox& MeshBoundingBox )
 {
 	const int32 FirstVertexIndex = Vertices.Num();
+	const int32 FirstProcVertexIndex = VerticesPositions.Num();
 
 	for( FVector Point : Points )
 	{
@@ -613,13 +655,14 @@ void UStreetMapComponent::AddTriangles( const TArray<FVector>& Points, const TAr
 		NewVertex.TangentX = ForwardVector;
 		NewVertex.TangentZ = UpVector;
 		NewVertex.Color = Color;
-
+		VerticesPositions.Add(Point);
 		MeshBoundingBox += NewVertex.Position;
 	}
 
 	for( int32 PointIndex : PointIndices )
 	{
 		Indices.Add( FirstVertexIndex + PointIndex );
+		ProcIndices.Add(FirstProcVertexIndex + PointIndex);
 	}
 };
 

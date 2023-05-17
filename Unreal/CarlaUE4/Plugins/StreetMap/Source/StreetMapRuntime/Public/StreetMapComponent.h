@@ -7,7 +7,7 @@
 #include "StreetMapSceneProxy.h"
 #include "StreetMapComponent.generated.h"
 
-
+DECLARE_LOG_CATEGORY_EXTERN(LogNoriega, Log, All);
 
 class UBodySetup;
 
@@ -173,9 +173,15 @@ protected:
 	UPROPERTY()
 		TArray< struct FStreetMapVertex > Vertices;
 
+	UPROPERTY()
+		TArray< FVector > VerticesPositions;
+
 	/** Cached raw mesh triangle indices */
 	UPROPERTY()
 		TArray< uint32 > Indices;
+
+	UPROPERTY()
+		TArray< int32 > ProcIndices;
 
 	/** Cached bounding box */
 	UPROPERTY()
