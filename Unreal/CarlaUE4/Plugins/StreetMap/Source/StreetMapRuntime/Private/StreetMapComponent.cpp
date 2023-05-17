@@ -10,6 +10,7 @@
 
 #include "PhysicsEngine/BodySetup.h"
 #include "ProceduralMeshComponent.h"
+#include "Carla/OpenDrive/OpenDriveGenerator.h"
 
 #if WITH_EDITOR
 #include "Modules/ModuleManager.h"
