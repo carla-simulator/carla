@@ -176,6 +176,12 @@ protected:
 	UPROPERTY()
 		TArray< FVector > VerticesPositions;
 
+	UPROPERTY()
+		TArray< FVector > VerticesNormals;
+
+	UPROPERTY()
+		TArray< FVector2D > VerticesUVs;
+
 	/** Cached raw mesh triangle indices */
 	UPROPERTY()
 		TArray< uint32 > Indices;

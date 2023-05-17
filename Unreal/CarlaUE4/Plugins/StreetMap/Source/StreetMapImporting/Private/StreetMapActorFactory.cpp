@@ -29,7 +29,7 @@ void UStreetMapActorFactory::PostSpawnActor(UObject* Asset, AActor* NewActor)
 	{
 		AStreetMapActor* StreetMapActor = CastChecked<AStreetMapActor>(NewActor);
 		UStreetMapComponent* StreetMapComponent = StreetMapActor->GetStreetMapComponent();
-		StreetMapComponent->SetStreetMap(StreetMapAsset, false, true);
+		StreetMapComponent->SetStreetMap(StreetMapAsset, false, false);
 	}
 }
 

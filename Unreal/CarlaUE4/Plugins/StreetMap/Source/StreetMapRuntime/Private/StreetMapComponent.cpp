@@ -246,7 +246,7 @@ void UStreetMapComponent::GenerateMesh()
 
 		const auto& Roads = StreetMap->GetRoads();
 		const auto& Nodes = StreetMap->GetNodes();
-		const auto& Buildings = StreetMap->GetBuildings();
+		auto& Buildings = StreetMap->GetBuildings();
 
 		/*for (const auto& Road : Roads)
 		{
@@ -291,18 +291,11 @@ void UStreetMapComponent::GenerateMesh()
 		TArray< FVector > TempPoints;
 		for( int32 BuildingIndex = 0; BuildingIndex < Buildings.Num(); ++BuildingIndex )
 		{
-			const auto& Building = Buildings[ BuildingIndex ];
-			AActor* TempActor = GetWorld()->SpawnActor<AActor>();
+			auto& Building = Buildings[ BuildingIndex ];
+			AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
 
 			TempActor->SetActorLabel(FString("SMBuilding") + FString::FromInt(BuildingIndex));
-			FString ActorName = FString("ProcMesh") + FString::FromInt(BuildingIndex);
-			UProceduralMeshComponent* TempPMC = NewObject<UProceduralMeshComponent>(TempActor, FName(*ActorName));
-			TempActor->SetRootComponent(TempPMC);
-			if (TempPMC)
-			{
-				TempPMC->RegisterComponent();
-				TempPMC->AttachTo(TempActor->GetRootComponent(), NAME_None);
-			}
+			UProceduralMeshComponent* TempPMC = TempActor->MeshComponent;
 			
 			// Building mesh (or filled area, if the building has no height)
 
@@ -328,7 +321,8 @@ void UStreetMapComponent::GenerateMesh()
 						BuildingFillZ = (float)Building.BuildingLevels * BuildingLevelFloorFactor;
 					}
 					else {
-						BuildingFillZ = FMath::RandRange(2, 7) * BuildingLevelFloorFactor;
+						Building.Height = FMath::RandRange(2, 7) * BuildingLevelFloorFactor;
+						BuildingFillZ = Building.Height;
 					}
 				}		
 
@@ -461,14 +455,15 @@ void UStreetMapComponent::GenerateMesh()
           0,
           VerticesPositions,
           ProcIndices,
-          TArray<FVector>(),
+		      VerticesNormals,
           TArray<FVector2D>(), // UV0
           TArray<FLinearColor>(), // VertexColor
           TArray<FProcMeshTangent>(), // Tangents
           false); // Create collision
-			TempActor->SetActorLocation(MeshCentroid);
-			VerticesPositions.Empty();
-			ProcIndices.Empty();
+      TempActor->SetActorLocation(MeshCentroid);
+      VerticesPositions.Empty();
+      ProcIndices.Empty();
+      VerticesNormals.Empty();
 		}
 
 		CachedLocalBounds = MeshBoundingBox;
@@ -657,6 +652,7 @@ void UStreetMapComponent::AddTriangles( const TArray<FVector>& Points, const TAr
 		NewVertex.TangentZ = UpVector;
 		NewVertex.Color = Color;
 		VerticesPositions.Add(Point);
+		VerticesNormals.Add(UpVector);
 		MeshBoundingBox += NewVertex.Position;
 	}
 
