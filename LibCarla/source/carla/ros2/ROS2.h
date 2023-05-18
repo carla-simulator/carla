@@ -87,8 +87,7 @@ class ROS2
   void ProcessDataFromDVS(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
-      const std::vector<carla::sensor::data::DVSEvent> &events,
-      const carla::Buffer &buffer);
+      const std::vector<carla::sensor::data::DVSEvent> &events);
   void ProcessDataFromLidar(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
@@ -112,7 +111,7 @@ class ROS2
   void UpdateRGBCamera(const carla::Buffer& buffer, const char* frame_id);
   void UpdateDepthCamera(const carla::Buffer& buffer, const char* frame_id);
   void UpdateSSCamera(const carla::Buffer& buffer, const char* frame_id);
-  void UpdateDVSCamera(const carla::Buffer& buffer, const char* frame_id);
+  void UpdateDVSCamera(const std::vector<carla::sensor::data::DVSEvent> &events, const char* frame_id);
   void UpdateLidar(const carla::sensor::data::LidarData &data, const char* frame_id);
   void UpdateSemanticLidar(const carla::sensor::data::SemanticLidarData &data, const char* frame_id);
   void UpdateRadar(const carla::sensor::data::RadarData &data, const char* frame_id);

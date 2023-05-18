@@ -114,34 +114,11 @@ void ROS2::ProcessDataFromSensor(uint64_t sensor_type,
     case ESensors::NormalsCamera:
       log_info("Sensor NormalsCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
-    case ESensors::DVSCamera:
-      log_info("Sensor DVSCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
-      UpdateDVSCamera(buffer, std::to_string(_frame).c_str());
-      _dvs_camera_publisher->Publish();
-      break;
-    // case ESensors::GnssSensor:
-    //   log_info("Sensor GnssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
-    //   break;
-    // case ESensors::InertialMeasurementUnit:
-    //   log_info("Sensor InertialMeasurementUnit to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
-    //   break;
     case ESensors::LaneInvasionSensor:
       log_info("Sensor LaneInvasionSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
-    case ESensors::ObstacleDetectionSensor:
-      log_info("Sensor ObstacleDetectionSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
-      break;
     case ESensors::OpticalFlowCamera:
       log_info("Sensor OpticalFlowCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
-      break;
-    case ESensors::Radar:
-      log_info("Sensor Radar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
-      break;
-    case ESensors::RayCastSemanticLidar:
-      log_info("Sensor RayCastSemanticLidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
-      break;
-    case ESensors::RayCastLidar:
-      log_info("Sensor RayCastLidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
       break;
     case ESensors::RssSensor:
       log_info("Sensor RssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
@@ -198,10 +175,9 @@ void ROS2::ProcessDataFromIMU(uint64_t sensor_type,
 void ROS2::ProcessDataFromDVS(uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
-    const std::vector<carla::sensor::data::DVSEvent> &events,
-    const carla::Buffer &buffer) {
-  log_info("Sensor DVS to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "events.", events.size(), "buffer.", buffer.size());
-  UpdateDVSCamera(buffer, std::to_string(_frame).c_str());
+    const std::vector<carla::sensor::data::DVSEvent> &events) {
+  log_info("Sensor DVS to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "events.", events.size());
+  UpdateDVSCamera(events, std::to_string(_frame).c_str());
   _dvs_camera_publisher->Publish();
 }
 
@@ -278,15 +254,15 @@ void ROS2::UpdateSSCamera(const carla::Buffer& buffer, const char* frame_id) {
   }
 }
 
-void ROS2::UpdateDVSCamera(const carla::Buffer& buffer, const char* frame_id) {
+void ROS2::UpdateDVSCamera(const std::vector<carla::sensor::data::DVSEvent> &events, const char* frame_id) {
   if (_dvs_camera_publisher) {
-    carla::Buffer tmp;
-    size_t Offset = sizeof(carla::sensor::s11n::SensorHeaderSerializer::Header);
-    tmp.copy_from(Offset, buffer);
-    carla::sensor::data::Image img { std::move(tmp) };
-    size_t width = img.GetWidth();
-    size_t height = img.GetHeight();
-    _dvs_camera_publisher->SetData(height, width, (const uint8_t*)buffer.data(), frame_id);
+    // carla::Buffer tmp;
+    // size_t Offset = sizeof(carla::sensor::s11n::SensorHeaderSerializer::Header);
+    // tmp.copy_from(Offset, buffer);
+    // carla::sensor::data::Image img { std::move(tmp) };
+    // size_t width = img.GetWidth();
+    // size_t height = img.GetHeight();
+    // _dvs_camera_publisher->SetData(height, width, (const uint8_t*)buffer.data(), frame_id);
   }
 }
 
