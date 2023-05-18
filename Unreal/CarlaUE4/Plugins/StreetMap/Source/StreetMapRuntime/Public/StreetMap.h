@@ -280,31 +280,31 @@ struct STREETMAPRUNTIME_API FStreetMapBuilding
 	FString BuildingName;
 
 	/** Polygon points that define the perimeter of the building */
-	UPROPERTY( Category=StreetMap, EditAnywhere )
+	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadOnly )
 	TArray<FVector2D> BuildingPoints;
 
 	/** Height of the building in meters (if known, otherwise zero) */
-	UPROPERTY( Category=StreetMap, EditAnywhere )
+	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadOnly )
 	float Height;
 
 	/** Levels of the building (if known, otherwise zero) */
-	UPROPERTY(Category = StreetMap, EditAnywhere)
+	UPROPERTY(Category = StreetMap, EditAnywhere, BlueprintReadOnly )
 	int BuildingLevels;
 
 	// @todo: Performance: Bounding information could be computed at load time if we want to avoid the memory cost of storing it
 
 	/** 2D bounds (min) of this building's points */
-	UPROPERTY( Category=StreetMap, EditAnywhere )
+	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadOnly )
 	FVector2D BoundsMin;
 	
 	/** 2D bounds (max) of this building's points */
-	UPROPERTY( Category=StreetMap, EditAnywhere )
+	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadOnly )
 	FVector2D BoundsMax;
 };
 
 
 /** A loaded street map */
-UCLASS()
+UCLASS( Blueprintable, BlueprintType )
 class STREETMAPRUNTIME_API UStreetMap : public UObject
 {
 	GENERATED_BODY()
@@ -375,7 +375,7 @@ protected:
 	TArray<FStreetMapNode> Nodes;
 
 	/** List of all buildings on the street map */
-	UPROPERTY( Category=StreetMap, VisibleAnywhere)
+	UPROPERTY( Category=StreetMap, VisibleAnywhere, BlueprintReadOnly )
 	TArray<FStreetMapBuilding> Buildings;
 
 	/** 2D bounds (min) of this map's roads and buildings */
@@ -387,8 +387,9 @@ protected:
 	FVector2D BoundsMax;
 
 #if WITH_EDITORONLY_DATA
+public:
 	/** Importing data and options used for this mesh */
-	UPROPERTY( VisibleAnywhere, Instanced, Category=ImportSettings )
+	UPROPERTY( VisibleAnywhere, Instanced, Category=ImportSettings, BlueprintReadWrite )
 	class UAssetImportData* AssetImportData;
 
 	friend class UStreetMapFactory;

@@ -16,4 +16,7 @@ class STREETMAPRUNTIME_API AStreetMapActor : public AActor
 
 public: 
 	FORCEINLINE class UStreetMapComponent* GetStreetMapComponent() { return StreetMapComponent; }
+	
+	UFUNCTION(BlueprintCallable)
+	void SetNewStreetMap(UStreetMap* NewMap);
 };

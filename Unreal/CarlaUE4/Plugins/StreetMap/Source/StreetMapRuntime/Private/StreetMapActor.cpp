@@ -11,3 +11,7 @@ AStreetMapActor::AStreetMapActor(const FObjectInitializer& ObjectInitializer)
 	StreetMapComponent = CreateDefaultSubobject<UStreetMapComponent>(TEXT("StreetMapComp"));
 	RootComponent = StreetMapComponent;
 }
+
+void AStreetMapActor::SetNewStreetMap(UStreetMap* NewMap){
+	StreetMapComponent->SetStreetMap(NewMap);
+}

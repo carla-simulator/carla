@@ -14,7 +14,7 @@ class UBodySetup;
 /**
  * Component that represents a section of street map roads and buildings
  */
-UCLASS( meta=(BlueprintSpawnableComponent) , hidecategories = (Physics))
+UCLASS( Blueprintable, BlueprintType, meta=(BlueprintSpawnableComponent) , hidecategories = (Physics))
 class STREETMAPRUNTIME_API UStreetMapComponent : public UMeshComponent, public IInterface_CollisionDataProvider
 {
 	GENERATED_BODY()
@@ -86,7 +86,7 @@ public:
 	 * @return Sets the street map object
 	 */
 	UFUNCTION(BlueprintCallable, Category = "StreetMap")
-		void SetStreetMap(UStreetMap* NewStreetMap, bool bClearPreviousMeshIfAny = false, bool bRebuildMesh = false);
+	void SetStreetMap(UStreetMap* NewStreetMap, bool bClearPreviousMeshIfAny = false, bool bRebuildMesh = false);
 
 
 
