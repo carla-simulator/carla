@@ -278,7 +278,7 @@ void ROS2::UpdateSemanticLidar(const carla::sensor::data::SemanticLidarData &dat
   if (_semantic_lidar_publisher) {
     size_t width = data._ser_points.size();
     size_t height = 1;
-    _semantic_lidar_publisher->SetData(height, width, (const char*)&data._ser_points[0], frame_id);
+    _semantic_lidar_publisher->SetData(height, width, (const uint8_t*)&data._ser_points[0], frame_id);
   }
 }
 
