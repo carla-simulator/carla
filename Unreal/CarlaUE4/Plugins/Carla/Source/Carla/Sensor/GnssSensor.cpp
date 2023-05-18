@@ -66,12 +66,12 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
-    ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), StreamId, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
+    ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), carla::geom::GeoLocation{Latitude, Longitude, Altitude});
   }
   #endif
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("AGnssSensor Stream Send");
-    Stream.Send(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
+    Stream.SerializeAndSend(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
   }
 }
 

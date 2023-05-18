@@ -166,14 +166,14 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
-    ROS2->ProcessDataFromDVS(Stream.GetSensorType(), StreamId, events, Buffer);
+    ROS2->ProcessDataFromDVS(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), events, Buffer);
   }
   #endif
   if (events.size() > 0)
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ADVSCamera Stream Send");
     /** Send the events **/
-    Stream.Send(*this, events, std::move(Buffer));
+    Stream.SerializeAndSend(*this, events, std::move(Buffer));
   }
 }
 

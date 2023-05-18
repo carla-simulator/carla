@@ -72,7 +72,7 @@ void ROS2::SetFrame(uint64_t frame) {
 void ROS2::InitPublishers() {
   if (_rgb_camera_publisher)
     return;
-  
+
   _rgb_camera_publisher = new CarlaRGBCameraPublisher();
   _rgb_camera_publisher->Init();
   _depth_camera_publisher = new CarlaDepthCameraPublisher();
@@ -99,6 +99,7 @@ void ROS2::InitPublishers() {
 
 void ROS2::ProcessDataFromSensor(uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform sensor_transform,
     const carla::Buffer &buffer) {
 
   switch (sensor_type) {
@@ -176,6 +177,7 @@ void ROS2::ProcessDataFromSensor(uint64_t sensor_type,
 
 void ROS2::ProcessDataFromGNSS(uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform sensor_transform,
     const carla::geom::GeoLocation &data) {
   log_info("Sensor GnssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "geo.", data.latitude, data.longitude, data.altitude);
   UpdateGNSS(data, std::to_string(_frame).c_str());
@@ -184,6 +186,7 @@ void ROS2::ProcessDataFromGNSS(uint64_t sensor_type,
 
 void ROS2::ProcessDataFromIMU(uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform sensor_transform,
     carla::geom::Vector3D accelerometer,
     carla::geom::Vector3D gyroscope,
     float compass) {
@@ -194,49 +197,53 @@ void ROS2::ProcessDataFromIMU(uint64_t sensor_type,
 
 void ROS2::ProcessDataFromDVS(uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform sensor_transform,
     const std::vector<carla::sensor::data::DVSEvent> &events,
     const carla::Buffer &buffer) {
-      log_info("Sensor DVS to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "events.", events.size(), "buffer.", buffer.size());
-      UpdateDVSCamera(buffer, std::to_string(_frame).c_str());
-      _dvs_camera_publisher->Publish();
+  log_info("Sensor DVS to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "events.", events.size(), "buffer.", buffer.size());
+  UpdateDVSCamera(buffer, std::to_string(_frame).c_str());
+  _dvs_camera_publisher->Publish();
 }
 
-  void ROS2::ProcessDataFromLidar(uint64_t sensor_type,
-      carla::streaming::detail::stream_id_type stream_id,
-      const carla::sensor::data::LidarData &data) {
-    log_info("Sensor Lidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._points.size());
-    UpdateLidar(data, std::to_string(_frame).c_str());
-    _lidar_publisher->Publish();
-  }
+void ROS2::ProcessDataFromLidar(uint64_t sensor_type,
+    carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform sensor_transform,
+    const carla::sensor::data::LidarData &data) {
+  log_info("Sensor Lidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._points.size());
+  UpdateLidar(data, std::to_string(_frame).c_str());
+  _lidar_publisher->Publish();
+}
 
-  void ROS2::ProcessDataFromSemanticLidar(uint64_t sensor_type,
-      carla::streaming::detail::stream_id_type stream_id,
-      const carla::sensor::data::SemanticLidarData &data) {
-    log_info("Sensor SemanticLidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._ser_points.size());
-    UpdateSemanticLidar(data, std::to_string(_frame).c_str());
-    _semantic_lidar_publisher->Publish();
-  }
+void ROS2::ProcessDataFromSemanticLidar(uint64_t sensor_type,
+    carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform sensor_transform,
+    const carla::sensor::data::SemanticLidarData &data) {
+  log_info("Sensor SemanticLidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._ser_points.size());
+  UpdateSemanticLidar(data, std::to_string(_frame).c_str());
+  _semantic_lidar_publisher->Publish();
+}
 
-  void ROS2::ProcessDataFromRadar(uint64_t sensor_type,
-      carla::streaming::detail::stream_id_type stream_id,
-      const carla::sensor::data::RadarData &data) {
-    log_info("Sensor Radar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._detections.size());
-    UpdateRadar(data, std::to_string(_frame).c_str());
-    _radar_publisher->Publish();
-  }
+void ROS2::ProcessDataFromRadar(uint64_t sensor_type,
+    carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform sensor_transform,
+    const carla::sensor::data::RadarData &data) {
+  log_info("Sensor Radar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._detections.size());
+  UpdateRadar(data, std::to_string(_frame).c_str());
+  _radar_publisher->Publish();
+}
 
-  void ROS2::ProcessDataFromObstacleDetection(uint64_t sensor_type,
-      carla::streaming::detail::stream_id_type stream_id,
-      AActor *Actor,
-      AActor *OtherActor,
-      float Distance) {
-    log_info("Sensor ObstacleDetector to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "distance.", Distance);
-  }
+void ROS2::ProcessDataFromObstacleDetection(uint64_t sensor_type,
+    carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform sensor_transform,
+    AActor *Actor,
+    AActor *OtherActor,
+    float Distance) {
+  log_info("Sensor ObstacleDetector to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "distance.", Distance);
+}
 
 
-  void ROS2::UpdateRGBCamera(const carla::Buffer& buffer, const char* frame_id) {
-  if (_rgb_camera_publisher)
-  {
+void ROS2::UpdateRGBCamera(const carla::Buffer& buffer, const char* frame_id) {
+  if (_rgb_camera_publisher) {
     carla::Buffer tmp;
     size_t Offset = sizeof(carla::sensor::s11n::SensorHeaderSerializer::Header);
     tmp.copy_from(Offset, buffer);
@@ -248,8 +255,7 @@ void ROS2::ProcessDataFromDVS(uint64_t sensor_type,
 }
 
 void ROS2::UpdateDepthCamera(const carla::Buffer& buffer, const char* frame_id) {
-  if (_depth_camera_publisher)
-  {
+  if (_depth_camera_publisher) {
     carla::Buffer tmp;
     size_t Offset = sizeof(carla::sensor::s11n::SensorHeaderSerializer::Header);
     tmp.copy_from(Offset, buffer);
@@ -261,8 +267,7 @@ void ROS2::UpdateDepthCamera(const carla::Buffer& buffer, const char* frame_id) 
 }
 
 void ROS2::UpdateSSCamera(const carla::Buffer& buffer, const char* frame_id) {
-  if (_ss_camera_publisher)
-  {
+  if (_ss_camera_publisher) {
     carla::Buffer tmp;
     size_t Offset = sizeof(carla::sensor::s11n::SensorHeaderSerializer::Header);
     tmp.copy_from(Offset, buffer);
@@ -274,8 +279,7 @@ void ROS2::UpdateSSCamera(const carla::Buffer& buffer, const char* frame_id) {
 }
 
 void ROS2::UpdateDVSCamera(const carla::Buffer& buffer, const char* frame_id) {
-  if (_dvs_camera_publisher)
-  {
+  if (_dvs_camera_publisher) {
     carla::Buffer tmp;
     size_t Offset = sizeof(carla::sensor::s11n::SensorHeaderSerializer::Header);
     tmp.copy_from(Offset, buffer);
@@ -287,8 +291,7 @@ void ROS2::UpdateDVSCamera(const carla::Buffer& buffer, const char* frame_id) {
 }
 
 void ROS2::UpdateLidar(const carla::sensor::data::LidarData &data, const char* frame_id) {
-  if (_lidar_publisher)
-  {
+  if (_lidar_publisher) {
     size_t width = data._points.size();
     size_t height = 1;
     _lidar_publisher->SetData(height, width, (const uint8_t*)data._points.data(), frame_id);
@@ -296,8 +299,7 @@ void ROS2::UpdateLidar(const carla::sensor::data::LidarData &data, const char* f
 }
 
 void ROS2::UpdateSemanticLidar(const carla::sensor::data::SemanticLidarData &data, const char* frame_id) {
-  if (_semantic_lidar_publisher)
-  {
+  if (_semantic_lidar_publisher) {
     size_t width = data._ser_points.size();
     size_t height = 1;
     _semantic_lidar_publisher->SetData(height, width, (const char*)&data._ser_points[0], frame_id);
@@ -305,8 +307,7 @@ void ROS2::UpdateSemanticLidar(const carla::sensor::data::SemanticLidarData &dat
 }
 
 void ROS2::UpdateRadar(const carla::sensor::data::RadarData &data, const char* frame_id) {
-if (_radar_publisher)
-  {
+if (_radar_publisher) {
     size_t width = data.GetDetectionCount();
     size_t height = 1;
     _radar_publisher->SetData(height, width, (const uint8_t*)data._detections.data(), frame_id);
@@ -314,29 +315,25 @@ if (_radar_publisher)
 }
 
 void ROS2::UpdateIMU(carla::geom::Vector3D accelerometer, carla::geom::Vector3D gyroscope, float compass, const char* frame_id) {
-  if (_imu_publisher)
-  {
+  if (_imu_publisher) {
     _imu_publisher->SetData(reinterpret_cast<float*>(&accelerometer), reinterpret_cast<float*>(&gyroscope), compass, frame_id);
   }
 }
 
 void ROS2::UpdateGNSS(const carla::geom::GeoLocation &data, const char* frame_id) {
-  if (_gnss_publisher)
-  {
+  if (_gnss_publisher) {
     _gnss_publisher->SetData(reinterpret_cast<const double*>(&data), frame_id);
   }
 }
 
 void ROS2::UpdateMapSensor(const char* data) {
-  if (_map_sensor_publisher)
-  {
+  if (_map_sensor_publisher) {
     _map_sensor_publisher->SetData(data);
   }
 }
 
 void ROS2::UpdateSpeedometerSensor(float data) {
-  if (_speedometer_sensor)
-  {
+  if (_speedometer_sensor) {
     _speedometer_sensor->SetData(data);
   }
 }

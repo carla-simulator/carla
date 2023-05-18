@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/Buffer.h"
+#include "carla/geom/Transform.h"
 #include "carla/streaming/detail/Types.h"
 
 #include <unordered_set>
@@ -71,30 +72,38 @@ class ROS2
   // receiving data to publish
   void ProcessDataFromSensor(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
+      const carla::geom::Transform sensor_transform,
       const carla::Buffer &buffer);
   void ProcessDataFromGNSS(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
+      const carla::geom::Transform sensor_transform,
       const carla::geom::GeoLocation &data);
   void ProcessDataFromIMU(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
+      const carla::geom::Transform sensor_transform,
       carla::geom::Vector3D accelerometer,
       carla::geom::Vector3D gyroscope,
       float compass);
   void ProcessDataFromDVS(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
+      const carla::geom::Transform sensor_transform,
       const std::vector<carla::sensor::data::DVSEvent> &events,
       const carla::Buffer &buffer);
   void ProcessDataFromLidar(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
+      const carla::geom::Transform sensor_transform,
       const carla::sensor::data::LidarData &data);
   void ProcessDataFromSemanticLidar(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
+      const carla::geom::Transform sensor_transform,
       const carla::sensor::data::SemanticLidarData &data);
   void ProcessDataFromRadar(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
+      const carla::geom::Transform sensor_transform,
       const carla::sensor::data::RadarData &data);
   void ProcessDataFromObstacleDetection(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
+      const carla::geom::Transform sensor_transform,
       AActor *Actor,
       AActor *OtherActor,
       float Distance);

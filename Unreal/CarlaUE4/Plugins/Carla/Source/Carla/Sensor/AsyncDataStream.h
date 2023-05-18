@@ -58,11 +58,14 @@ public:
   template <typename SensorT, typename... ArgsT>
   void Send(SensorT &Sensor, ArgsT &&... Args);
 
+  template <typename SensorT, typename... ArgsT>
+  void SerializeAndSend(SensorT &Sensor, ArgsT &&... Args);
+
   /// allow to change the frame number of the header
   void SetFrameNumber(uint64_t FrameNumber)
   {
     carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr = reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
-    if (HeaderStr) 
+    if (HeaderStr)
     {
       if (HeaderStr->frame != FrameNumber)
       {
@@ -76,11 +79,22 @@ public:
   uint64_t GetSensorType()
   {
     carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr = reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
-    if (HeaderStr) 
+    if (HeaderStr)
     {
       return HeaderStr->sensor_type;
     }
     return 0u;
+  }
+
+  /// return the transform of the sensor
+  FTransform GetSensorTransform()
+  {
+    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr = reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
+    if (HeaderStr)
+    {
+      return FTransform(HeaderStr->sensor_transform);
+    }
+    return FTransform();
   }
 
 private:
@@ -113,9 +127,18 @@ using FAsyncDataMultiStream = FAsyncDataStreamTmpl<carla::streaming::Stream>;
 
 template <typename T>
 template <typename SensorT, typename... ArgsT>
-inline void FAsyncDataStreamTmpl<T>::Send(SensorT &Sensor, ArgsT &&... Args)
+inline void FAsyncDataStreamTmpl<T>::SerializeAndSend(SensorT &Sensor, ArgsT &&... Args)
 {
   Stream.Write(
       std::move(Header),
       carla::sensor::SensorRegistry::Serialize(Sensor, std::forward<ArgsT>(Args)...));
+}
+
+template <typename T>
+template <typename SensorT, typename... ArgsT>
+inline void FAsyncDataStreamTmpl<T>::Send(SensorT &Sensor, ArgsT &&... Args)
+{
+  Stream.Write(
+      std::move(Header),
+      std::forward<ArgsT>(Args)...);
 }
