@@ -39,6 +39,31 @@ Once we have selected our preferred mesh pieces, we chose the basic parameters o
 
 ## Detailed mesh parameters
 
+In this section you can select the more detailed elements of the building such as windows, columns, plant pots, air conditioning units and antennas. Each type of decoration has slightly different properties,. The parameters work as follows:
+
+* __Percentage__: controls the amount of the pieces that will be placed on the building
+* __Offset__: offset of the piece from the body of the building
+
+* Blinds and curtains have a specific parameter:
+	* __Min/Max size__: Only for the blinds/curtains section, selects the min/max size of the blinds or curtains with random variation between the values.
+
+* Pipes and wires have specific parameters:
+	* __Index__: defines the face of the building where the pipe will be placed
+	* __Offset side/front__: adds a spatial offset to the piece from the center of the face of the building
+
+## Facade materials
+
+In the facade materials tab, you can select the material that you want to decorate the walls of your building.
+
+## Cooking
+
+In the cooking tab, you initiate the combination of all the mesh pieces and materials you've selected into a single static mesh with associated materials and textures. An LOD texture of the building will also be created for creating the LOD. Specify a folder name in the interface where the assets for your new building will be saved.
+
+Once you have cooked your building, you will then be able to place instances of the building in the map just like any other CARLA assets.
+
+
+
+
 
 
 
