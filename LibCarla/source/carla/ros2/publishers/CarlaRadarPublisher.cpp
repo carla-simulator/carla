@@ -166,16 +166,34 @@ void CarlaRadarPublisher::SetData(size_t height, size_t width, const uint8_t* da
 
     std_msgs::msg::Header header;
     header.stamp(std::move(time));
-    header.frame_id(frame_id);
+    header.frame_id("map");
+    
+    sensor_msgs::msg::PointField descriptor1;
+    descriptor1.name("x");
+    descriptor1.offset(0);
+    descriptor1.datatype(sensor_msgs::msg::PointField__FLOAT32);
+    descriptor1.count(1);
+    sensor_msgs::msg::PointField descriptor2;
+    descriptor2.name("y");
+    descriptor2.offset(4);
+    descriptor2.datatype(sensor_msgs::msg::PointField__FLOAT32);
+    descriptor2.count(1);
+    sensor_msgs::msg::PointField descriptor3;
+    descriptor3.name("z");
+    descriptor3.offset(8);
+    descriptor3.datatype(sensor_msgs::msg::PointField__FLOAT32);
+    descriptor3.count(1);
 
+    const size_t point_size = 3 * sizeof(float);
     _impl->_radar.header(std::move(header));
-    _impl->_radar.width(width);
+    _impl->_radar.width(width / 3);
     _impl->_radar.height(height);
-    _impl->_radar.is_bigendian(0);
-    _impl->_radar.row_step(_impl->_radar.width() * sizeof(float) * 4);
-    _impl->_radar.point_step(_impl->_radar.row_step() * _impl->_radar.height());
-    _impl->_radar.is_dense(1); //True if there are not invalid points
-    _impl->_radar.data(std::move(data)); //https://github.com/eProsima/Fast-DDS/issues/2330
+    _impl->_radar.is_bigendian(false);
+    _impl->_radar.fields({descriptor1, descriptor2, descriptor3});
+    _impl->_radar.point_step(point_size);
+    _impl->_radar.row_step(width * point_size);
+    _impl->_radar.is_dense(false); //True if there are not invalid points
+    _impl->_radar.data(std::move(data));
   }
 
   CarlaRadarPublisher::CarlaRadarPublisher() :

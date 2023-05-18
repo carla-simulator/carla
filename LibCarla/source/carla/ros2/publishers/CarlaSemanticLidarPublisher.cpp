@@ -143,20 +143,15 @@ namespace ros2 {
     return false;
   }
 
-
-void CarlaSemanticLidarPublisher::SetData(size_t height, size_t width, const char* data, const char* frame_id) {
-
+void CarlaSemanticLidarPublisher::SetData(size_t height, size_t width, const uint8_t* data, const char* frame_id) {
     std::vector<uint8_t> vector_data;
-    const size_t detection_size { 4 * sizeof(float)  + 2 * sizeof(uint32_t)};
-    const size_t size = height * width * detection_size;
+    const size_t size = height * width * sizeof(float);
     vector_data.resize(size);
-    std::memcpy(&vector_data[0], &data[0], size);    
+    std::memcpy(&vector_data[0], &data[0], size);
     SetData(height, width, std::move(vector_data), frame_id);
-  }
+}
 
-  void CarlaSemanticLidarPublisher::SetData(size_t height, size_t width, std::vector<uint8_t>&& data, const char* frame_id) {
-    const size_t detection_size { 4 * sizeof(float)  + 2 * sizeof(uint32_t)};
-    
+void CarlaSemanticLidarPublisher::SetData(size_t height, size_t width, std::vector<uint8_t>&& data, const char* frame_id) {
     auto epoch = std::chrono::system_clock::now().time_since_epoch();
     const auto secons = std::chrono::duration_cast<std::chrono::seconds>(epoch);
     epoch -= secons;
@@ -169,38 +164,49 @@ void CarlaSemanticLidarPublisher::SetData(size_t height, size_t width, const cha
 
     std_msgs::msg::Header header;
     header.stamp(std::move(time));
-    header.frame_id(frame_id);
-
+    header.frame_id("map");
+    
     sensor_msgs::msg::PointField descriptor1;
-    descriptor1.name("point");
+    descriptor1.name("x");
     descriptor1.offset(0);
     descriptor1.datatype(sensor_msgs::msg::PointField__FLOAT32);
-    descriptor1.count(3);
+    descriptor1.count(1);
     sensor_msgs::msg::PointField descriptor2;
-    descriptor2.name("cos_inc_angle");
-    descriptor2.offset(12);
+    descriptor2.name("y");
+    descriptor2.offset(4);
     descriptor2.datatype(sensor_msgs::msg::PointField__FLOAT32);
     descriptor2.count(1);
     sensor_msgs::msg::PointField descriptor3;
-    descriptor3.name("object_idx");
-    descriptor3.offset(16);
-    descriptor3.datatype(sensor_msgs::msg::PointField__UINT32);
+    descriptor3.name("z");
+    descriptor3.offset(8);
+    descriptor3.datatype(sensor_msgs::msg::PointField__FLOAT32);
     descriptor3.count(1);
     sensor_msgs::msg::PointField descriptor4;
-    descriptor4.name("object_tag");
-    descriptor4.offset(20);
-    descriptor4.datatype(sensor_msgs::msg::PointField__UINT32);
+    descriptor4.name("cos_inc_angle");
+    descriptor4.offset(12);
+    descriptor4.datatype(sensor_msgs::msg::PointField__FLOAT32);
     descriptor4.count(1);
+    sensor_msgs::msg::PointField descriptor5;
+    descriptor5.name("object_idx");
+    descriptor5.offset(16);
+    descriptor5.datatype(sensor_msgs::msg::PointField__UINT32);
+    descriptor5.count(1);
+    sensor_msgs::msg::PointField descriptor6;
+    descriptor6.name("object_tag");
+    descriptor6.offset(20);
+    descriptor6.datatype(sensor_msgs::msg::PointField__UINT32);
+    descriptor6.count(1);
 
+    const size_t point_size = 6 * sizeof(float);
     _impl->_lidar.header(std::move(header));
-    _impl->_lidar.width(width);
+    _impl->_lidar.width(width / 6);
     _impl->_lidar.height(height);
-    _impl->_lidar.is_bigendian(0);
-    _impl->_lidar.fields({descriptor1, descriptor2, descriptor3, descriptor4});
-    _impl->_lidar.point_step(detection_size);
-    _impl->_lidar.row_step(width * detection_size);
-    _impl->_lidar.is_dense(1); //True if there are not invalid points
-    _impl->_lidar.data(std::move(data)); //https://github.com/eProsima/Fast-DDS/issues/2330
+    _impl->_lidar.is_bigendian(false);
+    _impl->_lidar.fields({descriptor1, descriptor2, descriptor3, descriptor4, descriptor5, descriptor6});
+    _impl->_lidar.point_step(point_size);
+    _impl->_lidar.row_step(width * point_size);
+    _impl->_lidar.is_dense(false); //True if there are not invalid points
+    _impl->_lidar.data(std::move(data));
   }
 
   CarlaSemanticLidarPublisher::CarlaSemanticLidarPublisher() :

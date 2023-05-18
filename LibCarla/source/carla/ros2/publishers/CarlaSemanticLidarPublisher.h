@@ -24,7 +24,7 @@ namespace ros2 {
 
       bool Init();
       bool Publish();
-      void SetData(size_t height, size_t width, const char* data, const char* frame_id);
+      void SetData(size_t height, size_t width, const uint8_t* data, const char* frame_id);
       private:
       void SetData(size_t height, size_t width, std::vector<uint8_t>&& data, const char* frame_id);
       

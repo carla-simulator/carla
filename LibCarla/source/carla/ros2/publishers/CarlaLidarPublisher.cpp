@@ -160,37 +160,13 @@ void CarlaLidarPublisher::SetData(size_t height, size_t width, const uint8_t* da
     const auto secs = static_cast<int32_t>(secons.count());
     const auto nanoseconds = static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(epoch).count());
 
-    //std::cout << "SetData" << std::endl;
-    //std::cout << "height: " << height << std::endl;
-    //std::cout << "width: " << width << std::endl;
-    //float* pFloat = (float*)data.data();
-    //for (size_t i = 0; i < data.size(); i += 4)
-    //{
-    //    float x = *pFloat++;
-    //    float y = *pFloat++;
-    //    float z = *pFloat++;
-    //    float intensity = *pFloat++;
-    //    std::cout << "PointField\n    x: " << x << "\n    y: " << y << "\n    z: " << z << "\n    I: " << intensity << std::endl;
-    //}
-
     builtin_interfaces::msg::Time time;
     time.sec(secs);
     time.nanosec(nanoseconds);
 
     std_msgs::msg::Header header;
-    time.sec(0);
-    time.nanosec(0);
     header.stamp(std::move(time));
-    header.frame_id("world");
-
-    /*
-    PointField
-
-    string name
-    uint32 offset
-    uint8 datatype
-    uint32 count
-    */
+    header.frame_id("map");
     
     sensor_msgs::msg::PointField descriptor1;
     descriptor1.name("x");
@@ -213,37 +189,16 @@ void CarlaLidarPublisher::SetData(size_t height, size_t width, const uint8_t* da
     descriptor4.datatype(sensor_msgs::msg::PointField__FLOAT32);
     descriptor4.count(1);
 
-    /*
-    PointCloud2
-
-    std_msgs/Header header
-    uint32 height
-    uint32 width
-    sensor_msgs/PointField[] fields
-    bool is_bigendian
-    uint32 point_step
-    uint32 row_step
-    uint8[] data
-    bool is_dense
-    */
-    const size_t point_size = 1 * sizeof(float);
-
-    std::vector<float> fv { 1.0f };
-    std::vector<uint8_t> bv;
-    bv.resize(fv.size() * sizeof(float));
-    std::memcpy(&bv[0], &fv[0], fv.size() * sizeof(float));
-    width = 1;
-
+    const size_t point_size = 4 * sizeof(float);
     _impl->_lidar.header(std::move(header));
-    _impl->_lidar.width(width);
+    _impl->_lidar.width(width / 4);
     _impl->_lidar.height(height);
     _impl->_lidar.is_bigendian(false);
-    //_impl->_lidar.fields({descriptor1, descriptor2, descriptor3, descriptor4});
-    _impl->_lidar.fields({descriptor1});
+    _impl->_lidar.fields({descriptor1, descriptor2, descriptor3, descriptor4});
     _impl->_lidar.point_step(point_size);
     _impl->_lidar.row_step(width * point_size);
     _impl->_lidar.is_dense(false); //True if there are not invalid points
-    _impl->_lidar.data(bv);
+    _impl->_lidar.data(std::move(data));
   }
 
   CarlaLidarPublisher::CarlaLidarPublisher() :
