@@ -32,7 +32,17 @@ namespace carla {
 namespace carla {
 namespace ros2 {
 
-class CarlaImagePublisher;
+class CarlaRGBCameraPublisher;
+class CarlaDepthCameraPublisher;
+class CarlaSSCameraPublisher;
+class CarlaDVSCameraPublisher;
+class CarlaLidarPublisher;
+class CarlaSemanticLidarPublisher;
+class CarlaRadarPublisher;
+class CarlaIMUPublisher;
+class CarlaGNSSPublisher;
+class CarlaMapSensorPublisher;
+class CarlaSpeedometerSensor;
 
 class ROS2
 {
@@ -51,10 +61,7 @@ class ROS2
   bool IsEnabled() { return _enabled; }
   void SetFrame(uint64_t frame);
 
-  void UpdateImage(const carla::Buffer& buffer);
-  void Publish();
-
-  void InitPublisher();
+  void InitPublishers();
 
   // enabling streams to publish
   void EnableStream(carla::streaming::detail::stream_id_type id) { _publish_stream.insert(id); }
@@ -93,6 +100,17 @@ class ROS2
       float Distance);
 
   private:
+  void UpdateRGBCamera(const carla::Buffer& buffer, const char* frame_id);
+  void UpdateDepthCamera(const carla::Buffer& buffer, const char* frame_id);
+  void UpdateSSCamera(const carla::Buffer& buffer, const char* frame_id);
+  void UpdateDVSCamera(const carla::Buffer& buffer, const char* frame_id);
+  void UpdateLidar(const carla::sensor::data::LidarData &data, const char* frame_id);
+  void UpdateSemanticLidar(const carla::sensor::data::SemanticLidarData &data, const char* frame_id);
+  void UpdateRadar(const carla::sensor::data::RadarData &data, const char* frame_id);
+  void UpdateIMU(carla::geom::Vector3D accelerometer, carla::geom::Vector3D gyroscope, float compass, const char* frame_id);
+  void UpdateGNSS(const carla::geom::GeoLocation &data, const char* frame_id);
+  void UpdateMapSensor(const char* data);
+  void UpdateSpeedometerSensor(float data);
 
   // sigleton
   ROS2() {};
@@ -101,7 +119,17 @@ class ROS2
   bool _enabled { false };
   uint64_t _frame { 0 };
   std::unordered_set<carla::streaming::detail::stream_id_type> _publish_stream;
-  CarlaImagePublisher* _image_publisher { nullptr };
+  CarlaRGBCameraPublisher* _rgb_camera_publisher { nullptr };
+  CarlaDepthCameraPublisher* _depth_camera_publisher { nullptr };
+  CarlaSSCameraPublisher* _ss_camera_publisher { nullptr };
+  CarlaDVSCameraPublisher* _dvs_camera_publisher { nullptr };
+  CarlaLidarPublisher* _lidar_publisher { nullptr };
+  CarlaSemanticLidarPublisher* _semantic_lidar_publisher { nullptr };
+  CarlaRadarPublisher* _radar_publisher { nullptr };
+  CarlaIMUPublisher* _imu_publisher { nullptr };
+  CarlaGNSSPublisher* _gnss_publisher { nullptr };
+  CarlaMapSensorPublisher* _map_sensor_publisher { nullptr };
+  CarlaSpeedometerSensor* _speedometer_sensor { nullptr };
 };
 
 } // namespace ros2

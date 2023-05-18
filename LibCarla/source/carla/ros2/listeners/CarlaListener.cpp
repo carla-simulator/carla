@@ -1,6 +1,6 @@
 #define _GLIBCXX_USE_CXX11_ABI 0
 
-#include "ImageListener.h"
+#include "CarlaListener.h"
 #include <iostream>
 
 #include <fastdds/dds/publisher/DataWriterListener.hpp>
@@ -11,7 +11,7 @@ namespace ros2 {
 
   namespace efd = eprosima::fastdds::dds;
 
-    class CarlaImageListenerImpl : public efd::DataWriterListener {
+    class CarlaListenerImpl : public efd::DataWriterListener {
       public:
       void on_publication_matched(
               efd::DataWriter* writer,
@@ -22,7 +22,7 @@ namespace ros2 {
       bool _first_connected {false};
     };
 
-    void CarlaImageListenerImpl::on_publication_matched(efd::DataWriter* writer, const efd::PublicationMatchedStatus& info)
+    void CarlaListenerImpl::on_publication_matched(efd::DataWriter* writer, const efd::PublicationMatchedStatus& info)
     {
       if (info.current_count_change == 1) {
           _matched = info.total_count;
@@ -37,9 +37,9 @@ namespace ros2 {
       }
     }
 
-    CarlaImageListener::CarlaImageListener() :
-    _impl(std::make_unique<CarlaImageListenerImpl>()) { }
+    CarlaListener::CarlaListener() :
+    _impl(std::make_unique<CarlaListenerImpl>()) { }
 
-    CarlaImageListener::~CarlaImageListener() {}
+    CarlaListener::~CarlaListener() {}
 
 }}

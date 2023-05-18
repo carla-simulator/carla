@@ -1,12 +1,12 @@
 #define _GLIBCXX_USE_CXX11_ABI 0
 
-#include "ImagePublisher.h"
+#include "CarlaSSCameraPublisher.h"
 
 #include <string>
 #include <chrono>
 
 #include "carla/ros2/types/ImagePubSubTypes.h"
-#include "carla/ros2/listeners/ImageListener.h"
+#include "carla/ros2/listeners/CarlaListener.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
 #include <fastdds/dds/publisher/Publisher.hpp>
@@ -31,17 +31,17 @@ namespace ros2 {
   namespace efd = eprosima::fastdds::dds;
   using erc = eprosima::fastrtps::types::ReturnCode_t;
 
-  struct CarlaImagePublisherImpl {
+  struct CarlaSSCameraPublisherImpl {
     efd::DomainParticipant* _participant { nullptr };
     efd::Publisher* _publisher { nullptr };
     efd::Topic* _topic { nullptr };
     efd::DataWriter* _datawriter { nullptr };
     efd::TypeSupport _type { new sensor_msgs::msg::ImagePubSubType() };
-    CarlaImageListener _listener {};
+    CarlaListener _listener {};
     sensor_msgs::msg::Image _image {};
   };
 
-  bool CarlaImagePublisher::Init(const char* topic_char) {
+  bool CarlaSSCameraPublisher::Init() {
     if (_impl->_type == nullptr) {
         std::cerr << "Invalid TypeSupport" << std::endl;
         return false;
@@ -62,8 +62,7 @@ namespace ros2 {
       return false;
     }
     efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
-    std::string topic_name {"rt/"};
-    topic_name += topic_char;
+    const std::string topic_name {"rt/carla/semantic_segmentation_camera"};
     _impl->_topic = _impl->_participant->create_topic(topic_name, _impl->_type->getName(), tqos);
     if (_impl->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
@@ -82,7 +81,7 @@ namespace ros2 {
     return true;
   }
 
-  bool CarlaImagePublisher::Publish() {
+  bool CarlaSSCameraPublisher::Publish() {
     eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
     eprosima::fastrtps::types::ReturnCode_t rcode = _impl->_datawriter->write(&_impl->_image, instance_handle);
     if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
@@ -145,16 +144,16 @@ namespace ros2 {
   }
 
 
-void CarlaImagePublisher::SetImage(size_t height, size_t width, const uint8_t* data) {
+void CarlaSSCameraPublisher::SetData(size_t height, size_t width, const uint8_t* data, const char* frame_id) {
 
     std::vector<uint8_t> vector_data;
     const size_t size = height * width * 4;
     vector_data.resize(size);
     std::memcpy(&vector_data[0], &data[0], size);    
-    SetImage(height, width, std::move(vector_data));
+    SetData(height, width, std::move(vector_data), frame_id);
   }
 
-  void CarlaImagePublisher::SetImage(size_t height, size_t width, std::vector<uint8_t>&& data) {
+  void CarlaSSCameraPublisher::SetData(size_t height, size_t width, std::vector<uint8_t>&& data, const char* frame_id) {
     auto epoch = std::chrono::system_clock::now().time_since_epoch();
     const auto secons = std::chrono::duration_cast<std::chrono::seconds>(epoch);
     epoch -= secons;
@@ -167,7 +166,7 @@ void CarlaImagePublisher::SetImage(size_t height, size_t width, const uint8_t* d
 
     std_msgs::msg::Header header;
     header.stamp(std::move(time));
-    header.frame_id("1");
+    header.frame_id(frame_id);
 
     _impl->_image.header(std::move(header));
     _impl->_image.width(width);
@@ -178,10 +177,10 @@ void CarlaImagePublisher::SetImage(size_t height, size_t width, const uint8_t* d
     _impl->_image.data(std::move(data)); //https://github.com/eProsima/Fast-DDS/issues/2330
   }
 
-  CarlaImagePublisher::CarlaImagePublisher() :
-  _impl(std::make_unique<CarlaImagePublisherImpl>()) {}
+  CarlaSSCameraPublisher::CarlaSSCameraPublisher() :
+  _impl(std::make_unique<CarlaSSCameraPublisherImpl>()) {}
 
-  CarlaImagePublisher::~CarlaImagePublisher() {
+  CarlaSSCameraPublisher::~CarlaSSCameraPublisher() {
       if (!_impl)
           return;
 
