@@ -280,25 +280,25 @@ struct STREETMAPRUNTIME_API FStreetMapBuilding
 	FString BuildingName;
 
 	/** Polygon points that define the perimeter of the building */
-	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadOnly )
+	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadWrite )
 	TArray<FVector2D> BuildingPoints;
 
 	/** Height of the building in meters (if known, otherwise zero) */
-	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadOnly )
+	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadWrite )
 	float Height;
 
 	/** Levels of the building (if known, otherwise zero) */
-	UPROPERTY(Category = StreetMap, EditAnywhere, BlueprintReadOnly )
+	UPROPERTY(Category = StreetMap, EditAnywhere, BlueprintReadWrite )
 	int BuildingLevels;
 
 	// @todo: Performance: Bounding information could be computed at load time if we want to avoid the memory cost of storing it
 
 	/** 2D bounds (min) of this building's points */
-	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadOnly )
+	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadWrite )
 	FVector2D BoundsMin;
 	
 	/** 2D bounds (max) of this building's points */
-	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadOnly )
+	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadWrite )
 	FVector2D BoundsMax;
 };
 
