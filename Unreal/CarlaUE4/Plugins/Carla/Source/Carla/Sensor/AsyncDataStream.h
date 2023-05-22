@@ -64,7 +64,8 @@ public:
   /// allow to change the frame number of the header
   void SetFrameNumber(uint64_t FrameNumber)
   {
-    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr = reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
+    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr =
+      reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
     if (HeaderStr)
     {
       if (HeaderStr->frame != FrameNumber)
@@ -78,7 +79,8 @@ public:
   /// return the type of sensor of this stream
   uint64_t GetSensorType()
   {
-    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr = reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
+    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr =
+      reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
     if (HeaderStr)
     {
       return HeaderStr->sensor_type;
@@ -89,12 +91,25 @@ public:
   /// return the transform of the sensor
   FTransform GetSensorTransform()
   {
-    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr = reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
+    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr =
+      reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
     if (HeaderStr)
     {
       return FTransform(HeaderStr->sensor_transform);
     }
     return FTransform();
+  }
+
+  /// return the timestamp of the sensor
+  double GetSensorTimestamp()
+  {
+    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr =
+      reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
+    if (HeaderStr)
+    {
+      return HeaderStr->timestamp;
+    }
+    return 0.0;
   }
 
 private:
