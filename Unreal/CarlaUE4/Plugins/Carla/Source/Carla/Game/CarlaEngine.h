@@ -73,7 +73,7 @@ public:
     #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
-      ROS2->SetFrame(FCarlaEngine::FrameCounter, GetCurrentEpisode()->GetElapsedGameTime());
+      ROS2->SetFrame(FCarlaEngine::FrameCounter);
     #endif
     return FCarlaEngine::FrameCounter;
   }
@@ -84,7 +84,7 @@ public:
     #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
-      ROS2->SetFrame(FCarlaEngine::FrameCounter, GetCurrentEpisode()->GetElapsedGameTime());
+      ROS2->SetFrame(FCarlaEngine::FrameCounter);
     #endif
   }
 

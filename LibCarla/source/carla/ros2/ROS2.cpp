@@ -67,8 +67,12 @@ void ROS2::Enable(bool enable) {
 
 void ROS2::SetFrame(uint64_t frame, double timestamp) {
   _frame = frame;
+   //log_info("ROS2 new frame: ", _frame);
+}
+
+void ROS2::SetTimestamp(double timestamp) {
   _timestamp = timestamp;
-   //log_info("ROS2 new frame: ", _frame, _timestamp);
+   //log_info("ROS2 new timestamp: ", _timestamp);
 }
 
 void ROS2::InitPublishers() {

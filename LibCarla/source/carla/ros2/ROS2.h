@@ -60,7 +60,8 @@ class ROS2
   // general
   void Enable(bool enable);
   bool IsEnabled() { return _enabled; }
-  void SetFrame(uint64_t frame, double timestamp);
+  void SetFrame(uint64_t frame);
+  void SetTimestamp(double timestamp);
 
   void InitPublishers();
 
