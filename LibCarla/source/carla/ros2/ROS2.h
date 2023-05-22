@@ -60,7 +60,7 @@ class ROS2
   // general
   void Enable(bool enable);
   bool IsEnabled() { return _enabled; }
-  void SetFrame(uint64_t frame);
+  void SetFrame(uint64_t frame, double timestamp);
 
   void InitPublishers();
 
@@ -126,6 +126,7 @@ class ROS2
 
   bool _enabled { false };
   uint64_t _frame { 0 };
+  double _timestamp { 0 };
   std::unordered_set<carla::streaming::detail::stream_id_type> _publish_stream;
   CarlaRGBCameraPublisher* _rgb_camera_publisher { nullptr };
   CarlaDepthCameraPublisher* _depth_camera_publisher { nullptr };

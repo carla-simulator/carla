@@ -13,6 +13,7 @@
 #include "carla/sensor/data/SemanticLidarData.h"
 #include "carla/sensor/data/RadarData.h"
 #include "carla/sensor/data/Image.h"
+#include "carla/sensor/s11n/ImageSerializer.h"
 #include "carla/sensor/s11n/SensorHeaderSerializer.h"
 
 #include "publishers/CarlaRGBCameraPublisher.h"
@@ -64,9 +65,10 @@ void ROS2::Enable(bool enable) {
   log_info("ROS2 enabled: ", _enabled);
 }
 
-void ROS2::SetFrame(uint64_t frame) {
+void ROS2::SetFrame(uint64_t frame, double timestamp) {
   _frame = frame;
-   //log_info("ROS2 new frame: ", _frame);
+  _timestamp = timestamp;
+   //log_info("ROS2 new frame: ", _frame, _timestamp);
 }
 
 void ROS2::InitPublishers() {
@@ -219,22 +221,26 @@ void ROS2::ProcessDataFromObstacleDetection(uint64_t sensor_type,
 
 
 void ROS2::UpdateRGBCamera(const carla::Buffer& buffer, const char* frame_id) {
-  if (_rgb_camera_publisher) {
-    carla::Buffer tmp;
-    size_t Offset = sizeof(carla::sensor::s11n::SensorHeaderSerializer::Header);
-    tmp.copy_from(Offset, buffer);
-    carla::sensor::data::Image img { std::move(tmp) };
-    size_t width = img.GetWidth();
-    size_t height = img.GetHeight();
-    _rgb_camera_publisher->SetData(height, width, (const uint8_t*)buffer.data(), frame_id);
-  }
+  if (!_rgb_camera_publisher)
+    return;
+
+  // header
+  carla::sensor::s11n::ImageSerializer::ImageHeader *header =
+    reinterpret_cast<carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer.data());
+  if (!header)
+    return;
+
+  _rgb_camera_publisher->SetData(
+      header->height,
+      header->width,
+      (const uint8_t*) (buffer.data() + carla::sensor::s11n::ImageSerializer::header_offset),
+      frame_id);
 }
 
 void ROS2::UpdateDepthCamera(const carla::Buffer& buffer, const char* frame_id) {
   if (_depth_camera_publisher) {
     carla::Buffer tmp;
-    size_t Offset = sizeof(carla::sensor::s11n::SensorHeaderSerializer::Header);
-    tmp.copy_from(Offset, buffer);
+    tmp.copy_from(carla::sensor::s11n::SensorHeaderSerializer::header_offset, buffer);
     carla::sensor::data::Image img { std::move(tmp) };
     size_t width = img.GetWidth();
     size_t height = img.GetHeight();
@@ -245,8 +251,7 @@ void ROS2::UpdateDepthCamera(const carla::Buffer& buffer, const char* frame_id) 
 void ROS2::UpdateSSCamera(const carla::Buffer& buffer, const char* frame_id) {
   if (_ss_camera_publisher) {
     carla::Buffer tmp;
-    size_t Offset = sizeof(carla::sensor::s11n::SensorHeaderSerializer::Header);
-    tmp.copy_from(Offset, buffer);
+    tmp.copy_from(carla::sensor::s11n::SensorHeaderSerializer::header_offset, buffer);
     carla::sensor::data::Image img { std::move(tmp) };
     size_t width = img.GetWidth();
     size_t height = img.GetHeight();
@@ -257,8 +262,7 @@ void ROS2::UpdateSSCamera(const carla::Buffer& buffer, const char* frame_id) {
 void ROS2::UpdateDVSCamera(const std::vector<carla::sensor::data::DVSEvent> &events, const char* frame_id) {
   if (_dvs_camera_publisher) {
     // carla::Buffer tmp;
-    // size_t Offset = sizeof(carla::sensor::s11n::SensorHeaderSerializer::Header);
-    // tmp.copy_from(Offset, buffer);
+    // tmp.copy_from(carla::sensor::s11n::SensorHeaderSerializer::header_offset, buffer);
     // carla::sensor::data::Image img { std::move(tmp) };
     // size_t width = img.GetWidth();
     // size_t height = img.GetHeight();
