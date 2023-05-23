@@ -20,10 +20,10 @@ namespace geom {
 namespace deformation {
   inline float GetZPosInDeformation(float posx, float posy){
     // Amplitud
-    const float A1 = 0.3f;
-    const float A2 = 0.5f;
+    const float A1 = 0.6f;
+    const float A2 = 1.1f;
     // Fases
-    const float F1 = 100.0;
+    const float F1 = 1000.0;
     const float F2 = -1500.0;
     // Modifiers
     const float Kx1 = 0.035f;
@@ -50,7 +50,7 @@ namespace deformation {
     BumpY *= constraintY;
 
     float DistanceToBumpOrigin = sqrt(pow(BumpX - posx, 2) + pow(BumpY - posy, 2) );
-    float MaxDistance = 2;
+    float MaxDistance = 2.5;
 
     if (DistanceToBumpOrigin <= MaxDistance) {
       bumpsoffset = abs((1.0f / MaxDistance) * DistanceToBumpOrigin * DistanceToBumpOrigin - MaxDistance);

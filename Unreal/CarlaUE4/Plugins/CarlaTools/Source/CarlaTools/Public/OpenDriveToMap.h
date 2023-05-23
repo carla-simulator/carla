@@ -59,7 +59,10 @@ public:
   UMaterialInstance* DefaultRoadMaterial;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
-  UMaterialInstance* DefaultLaneMarksMaterial;
+  UMaterialInstance* DefaultLaneMarksWhiteMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UMaterialInstance* DefaultLaneMarksYellowMaterial;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
   UMaterialInstance* DefaultSidewalksMaterial;
@@ -106,6 +109,10 @@ private:
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
   TArray<UStaticMesh*> CreateStaticMeshAssets();
 
+  FTransform GetSnappedPosition(FTransform Origin);
+
+  float GetHeightForLandscape(FVector Origin);
+
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
   UPROPERTY()
@@ -118,6 +125,8 @@ private:
   TArray<FString> RoadType;
   UPROPERTY()
   TArray<UProceduralMeshComponent*> RoadMesh;
+  UPROPERTY()
+  TArray<AActor*> Landscapes;
   UPROPERTY()
   UTexture2D* Heightmap;
 };

@@ -234,7 +234,9 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
       float Y = (j * GridSectionSize);
       const int RoadMapY = j * 255 / VerticesInLine;
       const int CellIndex = RoadMapY + 255 * RoadMapX;
-      float HeightValue = GetHeight( (Offset.X + X) * 0.01f ,  (Offset.Y + Y) * 0.01f) * 100 - 3;
+      float HeightValue = GetHeightForLandscape( FVector( (Offset.X + X),
+                                                          (Offset.Y + Y),
+                                                          0));
       //if( ImageData[CellIndex].R > 0.5 ) // Small Threshold  /* Uncomment to apply road mask */
       //{
       //  // Getting the value for the height in this vertex.
@@ -277,9 +279,10 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
       TArray<FVector2D>(), // UV0
       TArray<FLinearColor>(), // VertexColor
       TArray<FProcMeshTangent>(), // Tangents
-      false); // Create collision);
+      true); // Create collision);
 
   MeshActor->SetActorLabel("SM_Landscape" + FString::FromInt(MeshIndex) );
+  Landscapes.Add(MeshActor);
 }
 
 void UOpenDriveToMap::OpenFileDialog()
@@ -333,6 +336,9 @@ TArray<AActor*> UOpenDriveToMap::GenerateMiscActors(float Offset)
     const FVector scale{ 1.0f, 1.0f, 1.0f };
     cl.first.location.z = GetHeight(cl.first.location.x, cl.first.location.y) + 0.3f;
     FTransform NewTransform ( FRotator(cl.first.rotation), FVector(cl.first.location), scale );
+
+    NewTransform = GetSnappedPosition(NewTransform);
+
     AActor* Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(),
       NewTransform.GetLocation(), NewTransform.Rotator());
     Spawner->Tags.Add(FName("MiscSpawnPosition"));
@@ -355,10 +361,10 @@ void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& Carla
     }
 
     GenerateRoadMesh(CarlaMap);
-    GenerateSpawnPoints(CarlaMap);
-    GenerateTreePositions(CarlaMap);
     GenerateLaneMarks(CarlaMap);
+    GenerateSpawnPoints(CarlaMap);
     CreateTerrain(12800, 256, nullptr);
+    GenerateTreePositions(CarlaMap);
   }
 }
 
@@ -398,7 +404,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       }else{
         for( auto& Vertex : Mesh->GetVertices() )
         {
-          Vertex.z += GetHeight(Vertex.x, Vertex.y, false) + 0.20;
+          Vertex.z += GetHeight(Vertex.x, Vertex.y, false) + 0.10;
         }
       }
 
@@ -475,8 +481,8 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
   opg_parameters.vertex_distance = 0.5f;
   opg_parameters.vertex_width_resolution = 8.0f;
   opg_parameters.simplification_percentage = 15.0f;
-
-  auto MarkingMeshes = CarlaMap->GenerateLineMarkings(opg_parameters);
+  std::vector<std::string> lanemarkinfo;
+  auto MarkingMeshes = CarlaMap->GenerateLineMarkings(opg_parameters, lanemarkinfo);
 
   int index = 0;
   for (const auto& Mesh : MarkingMeshes)
@@ -529,8 +535,14 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
     TempPMC->bUseComplexAsSimpleCollision = true;
     TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-    if(DefaultLaneMarksMaterial)
-      TempPMC->SetMaterial(0, DefaultLaneMarksMaterial);
+    if (lanemarkinfo[index].find("yellow") != std::string::npos) {
+      if(DefaultLaneMarksYellowMaterial)
+        TempPMC->SetMaterial(0, DefaultLaneMarksYellowMaterial);
+    }else{
+      if(DefaultLaneMarksWhiteMaterial)
+        TempPMC->SetMaterial(0, DefaultLaneMarksWhiteMaterial);
+
+    }
 
     const FProceduralCustomMesh MeshData = *Mesh;
     TArray<FVector> Normals;
@@ -552,6 +564,7 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
       Tangents, // Tangents
       true); // Create collision
     TempActor->SetActorLocation(MeshCentroid * 100);
+    TempActor->Tags.Add(*FString(lanemarkinfo[index].c_str()));
     LaneMarkerActorList.Add(TempActor);
     index++;
   }
@@ -577,8 +590,14 @@ void UOpenDriveToMap::GenerateTreePositions( const boost::optional<carla::road::
   int i = 0;
   for (auto &cl : Locations)
   {
+    const FVector scale{ 1.0f, 1.0f, 1.0f };
     cl.first.location.z  = GetHeight(cl.first.location.x, cl.first.location.y) + 0.3f;
-    AActor *Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), cl.first.location.ToFVector() * 100, FRotator(0,0,0));
+    FTransform NewTransform ( FRotator(cl.first.rotation), FVector(cl.first.location), scale );
+    NewTransform = GetSnappedPosition(NewTransform);
+
+    AActor* Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(),
+      NewTransform.GetLocation(), NewTransform.Rotator());
+
     Spawner->Tags.Add(FName("TreeSpawnPosition"));
     Spawner->Tags.Add(FName(cl.second.c_str()));
     Spawner->SetActorLabel("TreeSpawnPosition" + FString::FromInt(i) );
@@ -824,9 +843,55 @@ void UOpenDriveToMap::SaveMap()
 
 float UOpenDriveToMap::GetHeight(float PosX, float PosY, bool bDrivingLane){
   if( bDrivingLane ){
-    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) +
+    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) -
       carla::geom::deformation::GetBumpDeformation(PosX,PosY);
   }else{
-    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY);
+    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) + (carla::geom::deformation::GetZPosInDeformation(PosX, PosY) * -0.15f);
   }
+}
+
+FTransform UOpenDriveToMap::GetSnappedPosition( FTransform Origin ){
+  FTransform ToReturn = Origin;
+  FVector Start = Origin.GetLocation() + FVector( 0, 0, 1000);
+  FVector End = Origin.GetLocation() - FVector( 0, 0, 1000);
+  FHitResult HitResult;
+  FCollisionQueryParams CollisionQuery;
+  FCollisionResponseParams CollisionParams;
+
+  if( GetWorld()->LineTraceSingleByChannel(
+    HitResult,
+    Start,
+    End,
+    ECollisionChannel::ECC_WorldStatic,
+    CollisionQuery,
+    CollisionParams
+  ) )
+  {
+    ToReturn.SetLocation(HitResult.Location);
+  }
+  return ToReturn;
+}
+
+float UOpenDriveToMap::GetHeightForLandscape( FVector Origin ){
+  FVector Start = Origin + FVector( 0, 0, 10000);
+  FVector End = Origin - FVector( 0, 0, 10000);
+  FHitResult HitResult;
+  FCollisionQueryParams CollisionQuery;
+  CollisionQuery.AddIgnoredActors(Landscapes);
+  FCollisionResponseParams CollisionParams;
+
+  if( GetWorld()->LineTraceSingleByChannel(
+    HitResult,
+    Start,
+    End,
+    ECollisionChannel::ECC_WorldStatic,
+    CollisionQuery,
+    CollisionParams
+  ) )
+  {
+    return GetHeight(Origin.X * 0.01f, Origin.Y * 0.01f, true) * 100.0f - 25.0f;
+  }else{
+    return GetHeight(Origin.X * 0.01f, Origin.Y * 0.01f, true) * 100.0f;
+  }
+  return 0.0f;
 }

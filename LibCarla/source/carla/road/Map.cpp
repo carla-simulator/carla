@@ -1273,7 +1273,9 @@ namespace road {
   }
 
   /// Buids a list of meshes related with LineMarkings
-  std::vector<std::unique_ptr<geom::Mesh>> Map::GenerateLineMarkings( const rpc::OpendriveGenerationParameters& params ) const
+  std::vector<std::unique_ptr<geom::Mesh>> Map::GenerateLineMarkings(
+    const rpc::OpendriveGenerationParameters& params,
+    std::vector<std::string>& outinfo ) const
   {
     std::vector<std::unique_ptr<geom::Mesh>> LineMarks;
     geom::MeshFactory mesh_factory(params);
@@ -1281,7 +1283,7 @@ namespace road {
       if ( pair.second.IsJunction() ) {
         continue;
       }
-      mesh_factory.GenerateLaneMarkForRoad(pair.second, LineMarks);
+      mesh_factory.GenerateLaneMarkForRoad(pair.second, LineMarks, outinfo);
     }
 
     return std::move(LineMarks);

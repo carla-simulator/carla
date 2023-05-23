@@ -718,16 +718,18 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
   }
 
   void MeshFactory::GenerateLaneMarkForRoad(
-    const road::Road& road, std::vector<std::unique_ptr<Mesh>>& inout) const
+    const road::Road& road,
+    std::vector<std::unique_ptr<Mesh>>& inout,
+    std::vector<std::string>& outinfo ) const
   {
     for (auto&& lane_section : road.GetLaneSections()) {
       for (auto&& lane : lane_section.GetLanes()) {
         if (lane.first != 0) {
           if(lane.second.GetType() == road::Lane::LaneType::Driving ){
-            GenerateLaneMarksForNotCenterLine(lane_section, lane.second, inout);
+            GenerateLaneMarksForNotCenterLine(lane_section, lane.second, inout, outinfo);
           }
         } else {
-          GenerateLaneMarksForCenterLine(road, lane_section, lane.second, inout);
+          GenerateLaneMarksForCenterLine(road, lane_section, lane.second, inout, outinfo);
         }
       }
     }
@@ -736,7 +738,8 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
   void MeshFactory::GenerateLaneMarksForNotCenterLine(
     const road::LaneSection& lane_section,
     const road::Lane& lane,
-    std::vector<std::unique_ptr<Mesh>>& inout) const {
+    std::vector<std::unique_ptr<Mesh>>& inout,
+    std::vector<std::string>& outinfo ) const {
     Mesh out_mesh;
     const double s_start = lane_section.GetDistance();
     const double s_end = lane_section.GetDistance() + lane_section.GetLength();
@@ -864,6 +867,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
 
         out_mesh.AddVertex(edges.first);
         out_mesh.AddVertex(endmarking);
+        outinfo.push_back(lane_mark_info.GetColorInfoAsString());
       }
       inout.push_back(std::make_unique<Mesh>(out_mesh));
     }
@@ -873,7 +877,8 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
     const road::Road& road,
     const road::LaneSection& lane_section,
     const road::Lane& lane,
-    std::vector<std::unique_ptr<Mesh>>& inout) const
+    std::vector<std::unique_ptr<Mesh>>& inout,
+    std::vector<std::string>& outinfo ) const
   {
     Mesh out_mesh;
     const double s_start = lane_section.GetDistance();
@@ -1012,6 +1017,8 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
 
         out_mesh.AddVertex(rightpoint.location);
         out_mesh.AddVertex(leftpoint.location);
+
+        outinfo.push_back("yellow");
       }
       inout.push_back(std::make_unique<Mesh>(out_mesh));
     }

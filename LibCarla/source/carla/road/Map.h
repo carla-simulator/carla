@@ -174,7 +174,9 @@ namespace road {
     geom::Mesh GenerateWalls(const double distance, const float wall_height) const;
 
     /// Buids a list of meshes related with LineMarkings
-    std::vector<std::unique_ptr<geom::Mesh>> GenerateLineMarkings( const rpc::OpendriveGenerationParameters& params ) const;
+    std::vector<std::unique_ptr<geom::Mesh>> GenerateLineMarkings(
+      const rpc::OpendriveGenerationParameters& params,
+      std::vector<std::string>& outinfo ) const;
 
     const std::unordered_map<SignId, std::unique_ptr<Signal>>& GetSignals() const {
       return _data.GetSignals();
