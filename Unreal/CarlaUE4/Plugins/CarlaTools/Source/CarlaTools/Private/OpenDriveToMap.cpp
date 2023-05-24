@@ -489,9 +489,11 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
   {
     if ( !Mesh->GetVertices().size() )
     {
+      index++;
       continue;
     }
     if ( !Mesh->IsValid() ) {
+      index++;
       continue;
     }
 
@@ -525,6 +527,7 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
     if(MinDistance < 250)
     {
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Skkipped is %f."), MinDistance);
+      index++;
       continue;
     }
 

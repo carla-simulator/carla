@@ -727,9 +727,13 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
         if (lane.first != 0) {
           if(lane.second.GetType() == road::Lane::LaneType::Driving ){
             GenerateLaneMarksForNotCenterLine(lane_section, lane.second, inout, outinfo);
+            outinfo.push_back("white");
           }
         } else {
-          GenerateLaneMarksForCenterLine(road, lane_section, lane.second, inout, outinfo);
+          if(lane.second.GetType() == road::Lane::LaneType::None ){
+            GenerateLaneMarksForCenterLine(road, lane_section, lane.second, inout, outinfo);
+            outinfo.push_back("yellow");
+          }
         }
       }
     }
@@ -867,7 +871,6 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
 
         out_mesh.AddVertex(edges.first);
         out_mesh.AddVertex(endmarking);
-        outinfo.push_back(lane_mark_info.GetColorInfoAsString());
       }
       inout.push_back(std::make_unique<Mesh>(out_mesh));
     }
@@ -1018,7 +1021,6 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
         out_mesh.AddVertex(rightpoint.location);
         out_mesh.AddVertex(leftpoint.location);
 
-        outinfo.push_back("yellow");
       }
       inout.push_back(std::make_unique<Mesh>(out_mesh));
     }
