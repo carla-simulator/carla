@@ -1398,7 +1398,7 @@ namespace road {
     int grid_cells_per_dim) const {
 
     int junctionid = jinput.GetId();
-    float box_extraextension_factor = 1.5f;
+    float box_extraextension_factor = 1.2f;
     const double CubeSize = 0.5;
     carla::geom::BoundingBox bb = jinput.GetBoundingBox();
     carla::geom::Vector3D MinOffset = bb.location - geom::Location(bb.extent * box_extraextension_factor);

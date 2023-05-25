@@ -605,7 +605,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
               }else{
                 verticesinwidth = 2;
               }
-              (mesh_uptr_list[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(lane_section_mesh, verticesinwidth);
+              *(mesh_uptr_list[lane_pair.second.GetType()][PosToAdd]) += lane_section_mesh;
             }
           }
         }

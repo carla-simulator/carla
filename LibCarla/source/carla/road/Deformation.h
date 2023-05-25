@@ -37,23 +37,23 @@ namespace deformation {
   }
 
   inline float GetBumpDeformation(float posx, float posy){
-    const float A3 = 0.15f;
+    const float A3 = 0.10f;
     float bumpsoffset = 0;
 
-    const float constraintX = 15.0f;
-    const float constraintY = 15.0f;
+    static float constraintX = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/5)) + 5.0f;
+    static float constraintY = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/4)) + 6.0f;
 
-    float BumpX = std::round(posx / constraintX);
-    float BumpY = std::round(posy / constraintX);
+    float BumpX = std::ceil(posx / constraintX);
+    float BumpY = std::floor(posy / constraintY);
 
     BumpX *= constraintX;
     BumpY *= constraintY;
 
     float DistanceToBumpOrigin = sqrt(pow(BumpX - posx, 2) + pow(BumpY - posy, 2) );
-    float MaxDistance = 2.5;
+    float MaxDistance = 2.0;
 
     if (DistanceToBumpOrigin <= MaxDistance) {
-      bumpsoffset = abs((1.0f / MaxDistance) * DistanceToBumpOrigin * DistanceToBumpOrigin - MaxDistance);
+      bumpsoffset = sin(DistanceToBumpOrigin);
     }
 
     return A3 * bumpsoffset;
