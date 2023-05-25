@@ -4,8 +4,12 @@
 # Procedural Building Tool
 
 - [__Opening the tool__](#opening-the-procedural-building-tool)
-- [__Mesh parameters__](#mesh-parameters)
 - [__Base parameters__](#base-parameters)
+- [__Mesh parameters__](#mesh-parameters)
+- [__Mesh elements__](#mesh-elements)
+	- [Sockets](#sockets)
+- [__Facade materials__](#facade-materials)
+- [__Cooking__](#cooking)
 
 The __Procedural Building Tool__ facilitates the generation of virtual 3D buildings for which the dimensions and decoration styles can be modulated to create a near infinite array of variations through a simple interface. The footprint dimensions and height in stories can be chosen through the interface. Then users can select a variety of styles for the building lobby, the body and the top floor or penthouse. A variety of facia element styles can be chosen for features such as corners windows and balconies from the CARLA asset library. 
 
@@ -82,15 +86,42 @@ There are numerous types of decoration for details of the building:
 
  The parameters work as follows:
 
-* __Percentage__: controls the amount of the pieces that will be placed on the building
-* __Offset__: offset of the piece from the body of the building
+ __Common parameters__:
 
-* Blinds and curtains have a specific parameter:
-	* __Min/Max size__: Only for the blinds/curtains section, selects the min/max size of the blinds or curtains with random variation between the values.
+* __Percentage__: controls the amount pieces that will be placed on the building, 100% means all available spaces will be occupied
+* __Offset__: spacial offset of the piece from the body of the building
 
-* Pipes and wires have specific parameters:
-	* __Index__: defines the face of the building where the pipe will be placed
-	* __Offset side/front__: adds a spatial offset to the piece from the center of the face of the building
+__Blinds and curtains__:
+
+* __Min/Max size__: selects the min/max length of the blinds or curtains with random variation between the values. 1.0 is fully shut, 0.0 is fully open.
+
+__Pipes and wires__:
+
+* __Index__: defines the face of the building where the pipe will be placed
+* __Offset side/front__: adds a spatial offset to the piece from the center of the face of the building
+
+!!! note
+	You may find in some cases that when you choose detail mesh pieces such as plant pots, antennas and air conditioning units, you don't see any change in the building. This is most likely because the pieces you are using don't have the appropriate sockets needed to add the pieces you chose. Refer to the [sockets section](#sockets) to learn how to use sockets
+
+### Sockets
+
+![socket_details](img/pb_detail_section.png)
+
+Sockets are anchor points which define where to place detail meshes on another mesh piece. To add sockets to the mesh pieces in the procedural building, with the procedural building selected, go to the *details panel*, normally on the right hand side of the UE editor interface. In there, you will find the *Meshes* and *Detail meshes* panels. Open the relevant section to open the mesh piece where you wish to place the socket.
+
+![mesh_details](img/pb_mesh_details.png)
+
+Find the mesh on which you want to place a socket and double click the icon to open it in the editor. Click *create socket* to add a socket and name it using the following convention:
+
+* Air conditioning unit: aa_*
+* Antennas: ant_*
+* Plant pots: pot_*
+
+Replace the asterisk with an index, depending upon how many sockets you have, i.e. aa_0, aa_2, aa_3...
+
+![socket_details](img/pb_add_socket.png)
+
+When you click *Create socket* the socket will be instantiated in the editor with a 3D handle. Drag the socket to the desired position on the mesh, this is where your detail piece will appear attached to the unit. 
 
 ## Facade materials
 
@@ -102,7 +133,7 @@ In the facade materials tab, you can browse and preview the material that you wa
 
 ## Cooking
 
-In the cooking tab, you initiate the combination of all the mesh pieces and materials you've selected into a single static mesh with associated materials and textures. An LOD texture of the building will also be created for creating the LOD. Specify a folder name in the interface where the assets for your new building will be saved.
+In the cooking tab, you initiate the combination of all the mesh pieces and materials you've selected into a single static mesh with associated materials and textures. An LOD texture of the building will also be created for the LOD. Specify a folder name in the interface where the assets for your new building will be saved.
 
 Once you have cooked your building, you will then be able to place instances of the building in the map just like any other CARLA assets.
 

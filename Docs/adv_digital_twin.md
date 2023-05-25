@@ -20,7 +20,9 @@ The __Digital Twin Tool__ enables procedural generation of unique 3D environment
 
 ## Downloading and preparing OSM map data
 
-In a web-browser, go to the [OpenStreetMap website](www.openstreetmap.org) and choose an area of the map which you would like to use. Define your region and then export the data as an `.osm` file. Alternatively, you could use other tools based on the OpenStreetMap service such as [GeoFabrik](https://download.geofabrik.de/), which allows specific map regions such as states or territories to be extracted from the OSM data. 
+![osm_website](img/osm_export.png)
+
+In a web-browser, go to the [OpenStreetMap website](https:/www.openstreetmap.org) and choose an area of the map which you would like to use. Define your region and then export the data as an `.osm` file. Alternatively, you could use other tools based on the OpenStreetMap service such as [GeoFabrik](https://download.geofabrik.de/), which allows specific map regions such as states or territories to be extracted from the OSM data. 
 
 Once you have downloaded the OSM file, you then need to process it to allow the data to be loaded in the CARLA editor. Run one of the following commands, depending on your OS:
 
