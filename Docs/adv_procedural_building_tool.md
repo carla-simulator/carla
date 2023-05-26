@@ -3,6 +3,8 @@
 
 # Procedural Building Tool
 
+The __Procedural Building Tool__ facilitates the generation of virtual 3D buildings for which the dimensions and decoration styles can be modulated to create a near infinite array of variations through a simple interface. The footprint dimensions and height in stories can be chosen through the interface. Then users can select a variety of styles for the building lobby, the body and the top floor or penthouse. A variety of facia element styles can be chosen for features such as corners windows and balconies from the CARLA asset library. 
+
 - [__Opening the tool__](#opening-the-procedural-building-tool)
 - [__Base parameters__](#base-parameters)
 - [__Mesh parameters__](#mesh-parameters)
@@ -10,8 +12,6 @@
 	- [Sockets](#sockets)
 - [__Facade materials__](#facade-materials)
 - [__Cooking__](#cooking)
-
-The __Procedural Building Tool__ facilitates the generation of virtual 3D buildings for which the dimensions and decoration styles can be modulated to create a near infinite array of variations through a simple interface. The footprint dimensions and height in stories can be chosen through the interface. Then users can select a variety of styles for the building lobby, the body and the top floor or penthouse. A variety of facia element styles can be chosen for features such as corners windows and balconies from the CARLA asset library. 
 
 ## Opening the Procedural Building Tool
 
