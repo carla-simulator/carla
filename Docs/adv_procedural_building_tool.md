@@ -15,12 +15,12 @@ The __Procedural Building Tool__ facilitates the generation of virtual 3D buildi
 
 ## Opening the Procedural Building Tool
 
-Firstly, you need to add a procedural building actor to the scene. Navigate to `Content>Carla>Blueprints>LevelDesign` and drag the *BP_ProceduralBuilding* blueprint into your map. Move the asset to the position where you wish to visualize the building. Choose a place where you have space so you can see the result clearly. Then to open the tool, launch the Procedural Building tool by right clicking on the *UW_ProceduralBuilding* widget and selecting *Run editor utility widget* from the context menu. This will open the tool's interface. 
+Firstly, you need to add a procedural building actor to the scene. Navigate to `Content>Carla>Blueprints>LevelDesign` and drag the *BP_ProceduralBuilding* blueprint into your map. Move the asset to the position where you wish to visualize the building. Choose a place where you have space so you can see the result clearly. Then to open the tool, launch the Procedural Building tool by right clicking on the *WD_ProceduralBuilding* widget and selecting *Run editor utility widget* from the context menu. This will open the tool's interface. 
 
 ![open_pb_tool](img/open_pb_tool.png)
 
 !!! note
-	You must complete this step before opening the tool, an instance of the *BP_ProceduralBuilding* blueprint must exist in the map before the tool can function.
+	You must complete this step before opening the tool, an instance of the *BP_ProceduralBuilding* blueprint must exist in the map before the tool can function. You must also ensure that the *BP_ProceduralBuilding* entity is selected in the *World outliner* before proceeding.
 
 ## Base parameters
 
@@ -38,7 +38,7 @@ The available parameters are as follows:
 - __Length X/Y__: defines the size of the footprint of the building in the X and Y dimensions. These are unitless, the number denotes the number repeating sections, each section is a column of windows.
 - __Create automatically__: if this option is selected, the building will automatically update in the viewport so you can see the effect of your adjustments.
 - __Corners__: allows corner pieces to be added to the building, you can choose these pieces in the Mesh Parameters section.
-- __Walls__: replace the middle pieces of the left/right/front/back of the building with alternate pieces that can be selected using the Mess parameters menu.
+- __Walls__: replace the middle pieces of the left/right/front/back of the building with alternate pieces that can be selected using the [Mesh parameters](#mesh-parameters) menu.
 - __Doors__: array allowing the placement of a door in the lobby level. The door is placed at the chosen index position.
 
 ## Mesh parameters
