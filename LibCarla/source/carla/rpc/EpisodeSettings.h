@@ -47,9 +47,11 @@ namespace rpc {
 
     float actor_active_distance = 2000.f; // 2km
 
+    bool spectator_as_ego = true;
+
     MSGPACK_DEFINE_ARRAY(synchronous_mode, no_rendering_mode, fixed_delta_seconds, substepping,
         max_substep_delta_time, max_substeps, max_culling_distance, deterministic_ragdolls,
-        tile_stream_distance, actor_active_distance);
+        tile_stream_distance, actor_active_distance, spectator_as_ego);
 
     // =========================================================================
     // -- Constructors ---------------------------------------------------------
@@ -67,7 +69,8 @@ namespace rpc {
         float max_culling_distance = 0.0f,
         bool deterministic_ragdolls = true,
         float tile_stream_distance = 3000.f,
-        float actor_active_distance = 2000.f)
+        float actor_active_distance = 2000.f,
+        bool spectator_as_ego = true)
       : synchronous_mode(synchronous_mode),
         no_rendering_mode(no_rendering_mode),
         fixed_delta_seconds(
@@ -78,7 +81,8 @@ namespace rpc {
         max_culling_distance(max_culling_distance),
         deterministic_ragdolls(deterministic_ragdolls),
         tile_stream_distance(tile_stream_distance),
-        actor_active_distance(actor_active_distance) {}
+        actor_active_distance(actor_active_distance),
+        spectator_as_ego(spectator_as_ego) {}
 
     // =========================================================================
     // -- Comparison operators -------------------------------------------------
@@ -94,8 +98,9 @@ namespace rpc {
           (max_substeps == rhs.max_substeps) &&
           (max_culling_distance == rhs.max_culling_distance) &&
           (deterministic_ragdolls == rhs.deterministic_ragdolls) &&
-          (tile_stream_distance == tile_stream_distance) &&
-          (actor_active_distance == actor_active_distance);
+          (tile_stream_distance == rhs.tile_stream_distance) &&
+          (actor_active_distance == rhs.actor_active_distance) &&
+          (spectator_as_ego == rhs.spectator_as_ego);
     }
 
     bool operator!=(const EpisodeSettings &rhs) const {
@@ -119,7 +124,8 @@ namespace rpc {
             Settings.MaxCullingDistance,
             Settings.bDeterministicRagdolls,
             Settings.TileStreamingDistance,
-            Settings.ActorActiveDistance) {
+            Settings.ActorActiveDistance,
+            Settings.SpectatorAsEgo) {
       constexpr float CMTOM = 1.f/100.f;
       tile_stream_distance = CMTOM * Settings.TileStreamingDistance;
       actor_active_distance = CMTOM * Settings.ActorActiveDistance;
@@ -140,6 +146,7 @@ namespace rpc {
       Settings.bDeterministicRagdolls = deterministic_ragdolls;
       Settings.TileStreamingDistance = MTOCM * tile_stream_distance;
       Settings.ActorActiveDistance = MTOCM * actor_active_distance;
+      Settings.SpectatorAsEgo = spectator_as_ego;
 
       return Settings;
     }

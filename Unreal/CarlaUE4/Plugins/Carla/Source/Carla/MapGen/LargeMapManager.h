@@ -202,6 +202,11 @@ public:
 
   ACarlaWheeledVehicle* GetHeroVehicle();
 
+  // The spectator is treated as an ego vehicle by default when no other egos are around,
+  // but this can be changed from the Python API, which ends up in this function.
+  bool SpectatorAsEgo = false;
+  void ConsiderSpectatorAsEgo(bool _SpectatorAsEgo);
+
 protected:
 
   void RemoveLandscapeCollisionIfHaveTerraMechanics(ULevel* InLevel);
@@ -343,5 +348,4 @@ protected:
 
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   bool bHasTerramechanics = false;
-
 };
