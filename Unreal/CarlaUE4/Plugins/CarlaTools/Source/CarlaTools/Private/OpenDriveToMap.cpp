@@ -488,6 +488,7 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
   int index = 0;
   for (const auto& Mesh : MarkingMeshes)
   {
+
     if ( !Mesh->GetVertices().size() )
     {
       index++;
