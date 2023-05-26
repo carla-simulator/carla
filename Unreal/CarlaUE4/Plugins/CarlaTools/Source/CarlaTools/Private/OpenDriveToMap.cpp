@@ -208,22 +208,6 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
   TArray<FProcMeshTangent> Tangents;
   TArray<FVector2D> UVs;
 
-  //// Procedural mesh default parameters
-  //// Get Heightmap data from texture, Loading first mip and getting a pointer to the color of the first pixel
-  //FByteBulkData* RawHeightmap = &HeightmapTexture->PlatformData->Mips[0].BulkData;
-  //FColor* FormatedHeightmap = StaticCast<FColor*>(RawHeightmap->Lock(LOCK_READ_ONLY));
-//
-  //// Road mask
-	//int32 Width = RoadMask->SizeX, Height = RoadMask->SizeY;
-	//TArray<FFloat16Color> ImageData;
-	//FTextureRenderTargetResource* RenderTargetResource;
-	//ImageData.AddUninitialized(Width * Height);
-	//RenderTargetResource = RoadMask->GameThread_GetRenderTargetResource();
-	//RenderTargetResource->ReadFloat16Pixels(ImageData);
-//
-  //// check(FormatedHeightmap != nullptr);
-  //// check(FormatedRoadMask != nullptr);
-//
   int VerticesInLine = (GridSize / GridSectionSize) + 1.0f;
   for( int i = 0; i < VerticesInLine; i++ )
   {
@@ -237,23 +221,11 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
       float HeightValue = GetHeightForLandscape( FVector( (Offset.X + X),
                                                           (Offset.Y + Y),
                                                           0));
-      //if( ImageData[CellIndex].R > 0.5 ) // Small Threshold  /* Uncomment to apply road mask */
-      //{
-      //  // Getting the value for the height in this vertex.
-      //  // If the road mask is higher that 0, there is road so height value = 0
-      //  HeightValue -= 500.0f;
-      //}
-      //UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" i %d, j %d, X %f, RoadMapX %d, Y %f, RoadMapY %d, CellIndex %d"), i, j, X, RoadMapX, Y, RoadMapY, CellIndex );
-
       Vertices.Add(FVector( X, Y, HeightValue));
-      //UVs.Add(FVector2D(i / (GridTotalSize - GridSectionSize), j / (GridTotalSize - GridSectionSize)));
     }
   }
 
   Normals.Init(FVector(0.0f, 0.0f, 1.0f), Vertices.Num());
-  //RawHeightmap->Unlock();
-  //RawRoadMask->Unlock();  /* Uncomment to apply road mask */
-
   //// Triangles formation. 2 triangles per section.
 
   for(int i = 0; i < VerticesInLine - 1; i++)
@@ -851,7 +823,8 @@ float UOpenDriveToMap::GetHeight(float PosX, float PosY, bool bDrivingLane){
     return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) -
       carla::geom::deformation::GetBumpDeformation(PosX,PosY);
   }else{
-    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) + (carla::geom::deformation::GetZPosInDeformation(PosX, PosY) * -0.15f);
+    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) +
+      (carla::geom::deformation::GetZPosInDeformation(PosX, PosY) * -0.15f);
   }
 }
 
