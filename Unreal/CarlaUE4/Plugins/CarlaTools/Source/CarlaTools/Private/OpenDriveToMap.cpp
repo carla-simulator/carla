@@ -397,7 +397,8 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       {
         for( auto& Vertex : Mesh->GetVertices() )
         {
-          Vertex.z += GetHeight(Vertex.x, Vertex.y, true);
+          FVector VertexFVector = Vertex.ToFVector();
+          Vertex.z += GetHeight(Vertex.x, Vertex.y, DistanceToLaneBorder(CarlaMap,VertexFVector) > 65.0f );
         }
         carla::geom::Simplification Simplify(0.15);
         Simplify.Simplificate(Mesh);
@@ -500,7 +501,8 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
     FVector MeshCentroid = FVector(0, 0, 0);
     for (auto& Vertex : Mesh->GetVertices())
     {
-      Vertex.z += GetHeight(Vertex.x, Vertex.y, true) + 0.01f;
+      FVector VertexFVector = Vertex.ToFVector();
+      Vertex.z += GetHeight(Vertex.x, Vertex.y, DistanceToLaneBorder(CarlaMap,VertexFVector) > 65.0f ) + 0.0001f;
       MeshCentroid += Vertex.ToFVector();
     }
 
@@ -537,7 +539,7 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
     TempPMC->bUseAsyncCooking = true;
     TempPMC->bUseComplexAsSimpleCollision = true;
     TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
+    TempPMC->CastShadow = false;
     if (lanemarkinfo[index].find("yellow") != std::string::npos) {
       if(DefaultLaneMarksYellowMaterial)
         TempPMC->SetMaterial(0, DefaultLaneMarksYellowMaterial);
@@ -898,3 +900,19 @@ float UOpenDriveToMap::GetHeightForLandscape( FVector Origin ){
   }
   return 0.0f;
 }
+
+float UOpenDriveToMap::DistanceToLaneBorder(const boost::optional<carla::road::Map>& CarlaMap,
+        FVector &location, int32_t lane_type ) const
+{
+  carla::geom::Location cl(location);
+  //wp = GetClosestWaypoint(pos). if distance wp - pos == lane_width --> estas al borde de la carretera
+  auto wp = CarlaMap->GetClosestWaypointOnRoad(cl, lane_type);
+  if(wp)
+  {
+    carla::geom::Transform ct = CarlaMap->ComputeTransform(*wp);
+    double LaneWidth = CarlaMap->GetLaneWidth(*wp);
+    return cl.Distance(ct.location) - LaneWidth;
+  }
+  return 100000.0f;
+}
+

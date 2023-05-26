@@ -40,8 +40,8 @@ namespace deformation {
     const float A3 = 0.10f;
     float bumpsoffset = 0;
 
-    static float constraintX = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/5)) + 5.0f;
-    static float constraintY = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/4)) + 6.0f;
+    float constraintX = 17.0f;
+    float constraintY = 12.0f;
 
     float BumpX = std::ceil(posx / constraintX);
     float BumpY = std::floor(posy / constraintY);

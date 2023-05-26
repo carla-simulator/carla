@@ -113,6 +113,10 @@ private:
 
   float GetHeightForLandscape(FVector Origin);
 
+  float DistanceToLaneBorder(const boost::optional<carla::road::Map>& CarlaMap,
+      FVector &location,
+      int32_t lane_type = static_cast<int32_t>(carla::road::Lane::LaneType::Driving)) const;
+
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
   UPROPERTY()

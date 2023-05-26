@@ -24,7 +24,7 @@ UStreetMapComponent::UStreetMapComponent(const FObjectInitializer& ObjectInitial
 	  StreetMap(nullptr),
 	  CachedLocalBounds(ForceInit)
 {
-	// We make sure our mesh collision profile name is set to NoCollisionProfileName at initialization. 
+	// We make sure our mesh collision profile name is set to NoCollisionProfileName at initialization.
 	// Because we don't have collision data yet!
 	SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
 
@@ -60,7 +60,7 @@ FPrimitiveSceneProxy* UStreetMapComponent::CreateSceneProxy()
 		StreetMapSceneProxy = new FStreetMapSceneProxy( this );
 		StreetMapSceneProxy->Init( this, Vertices, Indices );
 	}
-	
+
 	return StreetMapSceneProxy;
 }
 
@@ -68,7 +68,7 @@ FPrimitiveSceneProxy* UStreetMapComponent::CreateSceneProxy()
 int32 UStreetMapComponent::GetNumMaterials() const
 {
 	// NOTE: This is a bit of a weird thing about Unreal that we need to deal with when defining a component that
-	// can have materials assigned.  UPrimitiveComponent::GetNumMaterials() will return 0, so we need to override it 
+	// can have materials assigned.  UPrimitiveComponent::GetNumMaterials() will return 0, so we need to override it
 	// to return the number of overridden materials, which are the actual materials assigned to the component.
 	return HasValidMesh() ? GetNumMeshSections() : GetNumOverrideMaterials();
 }
@@ -200,7 +200,7 @@ class UBodySetup* UStreetMapComponent::GetBodySetup()
 {
 	if (CollisionSettings.bGenerateCollision == true)
 	{
-		// checking if we have a valid body setup. 
+		// checking if we have a valid body setup.
 		// A new one is created only if a valid body setup is not found.
 		CreateBodySetupIfNeeded();
 		return StreetMapBodySetup;
@@ -258,24 +258,24 @@ void UStreetMapComponent::GenerateMesh()
 					RoadThickness = HighwayThickness;
 					RoadColor = HighwayColor;
 					break;
-					
+
 				case EStreetMapRoadType::MajorRoad:
 					RoadThickness = MajorRoadThickness;
 					RoadColor = MajorRoadColor;
 					break;
-					
+
 				case EStreetMapRoadType::Street:
 				case EStreetMapRoadType::Other:
 					break;
-					
+
 				default:
 					check( 0 );
 					break;
 			}
-			
+
 			for( int32 PointIndex = 0; PointIndex < Road.RoadPoints.Num() - 1; ++PointIndex )
 			{
-				AddThick2DLine( 
+				AddThick2DLine(
 					Road.RoadPoints[ PointIndex ],
 					Road.RoadPoints[ PointIndex + 1 ],
 					RoadZ,
@@ -292,15 +292,11 @@ void UStreetMapComponent::GenerateMesh()
 		for( int32 BuildingIndex = 0; BuildingIndex < Buildings.Num(); ++BuildingIndex )
 		{
 			auto& Building = Buildings[ BuildingIndex ];
-			AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
 
-			TempActor->SetActorLabel(FString("SMBuilding") + FString::FromInt(BuildingIndex));
-			UProceduralMeshComponent* TempPMC = TempActor->MeshComponent;
-			
 			// Building mesh (or filled area, if the building has no height)
 
 			// Triangulate this building
-			// @todo: Performance: Triangulating lots of building polygons is quite slow.  We could easily do this 
+			// @todo: Performance: Triangulating lots of building polygons is quite slow.  We could easily do this
 			//        as part of the import process and store tessellated geometry instead of doing this at load time.
 			bool WindsClockwise;
 			if( FPolygonTools::TriangulatePolygon( Building.BuildingPoints, TempIndices, /* Out */ TriangulatedVertexIndices, /* Out */ WindsClockwise ) )
@@ -324,7 +320,7 @@ void UStreetMapComponent::GenerateMesh()
 						Building.Height = FMath::RandRange(2, 7) * BuildingLevelFloorFactor;
 						BuildingFillZ = Building.Height;
 					}
-				}		
+				}
 
 				// Top of building
 				{
@@ -437,33 +433,6 @@ void UStreetMapComponent::GenerateMesh()
 						MeshBoundingBox );
 				}
 			}
-			FVector MeshCentroid = FVector(0, 0, 0);
-			for (auto Vertex : VerticesPositions)
-			{
-				MeshCentroid += Vertex;
-			}
-
-			MeshCentroid /= VerticesPositions.Num();
-			MeshCentroid.Z = 0;
-			for (auto& Vertex : VerticesPositions)
-			{
-				Vertex.X -= MeshCentroid.X;
-				Vertex.Y -= MeshCentroid.Y;
-				Vertex.Z -= MeshCentroid.Z;
-			}
-			TempPMC->CreateMeshSection_LinearColor(
-          0,
-          VerticesPositions,
-          ProcIndices,
-		      VerticesNormals,
-          TArray<FVector2D>(), // UV0
-          TArray<FLinearColor>(), // VertexColor
-          TArray<FProcMeshTangent>(), // Tangents
-          false); // Create collision
-      TempActor->SetActorLocation(MeshCentroid);
-      VerticesPositions.Empty();
-      ProcIndices.Empty();
-      VerticesNormals.Empty();
 		}
 
 		CachedLocalBounds = MeshBoundingBox;
