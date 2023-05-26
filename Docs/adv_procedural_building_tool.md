@@ -15,9 +15,12 @@ The __Procedural Building Tool__ facilitates the generation of virtual 3D buildi
 
 ## Opening the Procedural Building Tool
 
-Firstly, you need to add a procedural building actor to the scene. Navigate to `Content>Carla>Blueprints>LevelDesign` and drag the BP_ProceduralBuilding blueprint into your map. Choose a place where you have space so you can see the result clearly. Then to open the tool, launch the Procedural Building tool by right clicking on the *UW_ProceduralBuilding* widget and selecting *Run editor utility widget* from the context menu. This will open the tool's interface. 
+Firstly, you need to add a procedural building actor to the scene. Navigate to `Content>Carla>Blueprints>LevelDesign` and drag the *BP_ProceduralBuilding* blueprint into your map. Move the asset to the position where you wish to visualize the building. Choose a place where you have space so you can see the result clearly. Then to open the tool, launch the Procedural Building tool by right clicking on the *UW_ProceduralBuilding* widget and selecting *Run editor utility widget* from the context menu. This will open the tool's interface. 
 
 ![open_pb_tool](img/open_pb_tool.png)
+
+!!! note
+	You must complete this step before opening the tool, an instance of the *BP_ProceduralBuilding* blueprint must exist in the map before the tool can function.
 
 ## Base parameters
 
