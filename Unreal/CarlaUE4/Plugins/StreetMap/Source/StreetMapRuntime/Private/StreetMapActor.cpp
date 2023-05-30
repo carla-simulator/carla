@@ -15,3 +15,7 @@ AStreetMapActor::AStreetMapActor(const FObjectInitializer& ObjectInitializer)
 void AStreetMapActor::SetNewStreetMap(UStreetMap* NewMap){
 	StreetMapComponent->SetStreetMap(NewMap);
 }
+
+void AStreetMapActor::GenerateTopOfBuildings(){
+	StreetMapComponent->GenerateTopsOfBuildings();
+}
