@@ -692,10 +692,21 @@ void UStreetMapComponent::GenerateTopsOfBuildings()
           TempPoints[ PointIndex ] = FVector( Building.BuildingPoints[ ( Building.BuildingPoints.Num() - PointIndex ) - 1 ], BuildingFillZ );
         }
 
-        for( FVector Point : TempPoints )
+        if(WindsClockwise){
+          for( int32 PointIndex = 0; PointIndex < Building.BuildingPoints.Num(); PointIndex++ )
+          {
+            BPositions.Add( FVector(Building.BuildingPoints[PointIndex], BuildingFillZ) );
+            BNormals.Add(FVector::UpVector);
+          }
+        }
+        else
         {
-          BPositions.Add(Point);
-          BNormals.Add(FVector::UpVector);
+          for( int32 PointIndex = 0; PointIndex < Building.BuildingPoints.Num(); PointIndex++ )
+          {
+            int RealIndex = ( Building.BuildingPoints.Num() - 1 ) - PointIndex;
+            BPositions.Add( FVector(Building.BuildingPoints[RealIndex], BuildingFillZ) );
+            BNormals.Add(FVector::UpVector);
+          }
         }
         for( int32 PointIndex : TriangulatedVertexIndices )
         {

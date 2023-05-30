@@ -15,6 +15,7 @@ namespace UnrealBuildTool.Rules
           "RHI",
           "RenderCore",
           "PropertyEditor",
+          "GeometricObjects",
           "ProceduralMeshComponent",
           "Carla"
         }
