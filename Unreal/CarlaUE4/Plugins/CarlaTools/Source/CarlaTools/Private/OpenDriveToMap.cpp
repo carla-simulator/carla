@@ -282,6 +282,7 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
       true); // Create collision);
 
   MeshActor->SetActorLabel("SM_Landscape" + FString::FromInt(MeshIndex) );
+  Mesh->CastShadow = false;
   Landscapes.Add(MeshActor);
 }
 
@@ -421,6 +422,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       if(DefaultRoadMaterial && PairMap.first == carla::road::Lane::LaneType::Driving)
       {
         TempPMC->SetMaterial(0, DefaultRoadMaterial);
+        TempPMC->CastShadow = false;
         TempActor->SetActorLabel(FString("SM_DrivingLane_") + FString::FromInt(index));
       }
       if(DefaultSidewalksMaterial && PairMap.first == carla::road::Lane::LaneType::Sidewalk)
