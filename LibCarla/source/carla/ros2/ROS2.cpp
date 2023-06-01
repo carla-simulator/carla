@@ -65,7 +65,7 @@ void ROS2::Enable(bool enable) {
   log_info("ROS2 enabled: ", _enabled);
 }
 
-void ROS2::SetFrame(uint64_t frame, double timestamp) {
+void ROS2::SetFrame(uint64_t frame) {
   _frame = frame;
    //log_info("ROS2 new frame: ", _frame);
 }
@@ -106,55 +106,55 @@ void ROS2::InitPublishers() {
 void ROS2::ProcessDataFromSensor(uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
-    const carla::Buffer &buffer) {
+    const carla::SharedBufferView buffer) {
 
   switch (sensor_type) {
     case ESensors::CollisionSensor:
-      log_info("Sensor Collision to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+      log_info("Sensor Collision to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       break;
     case ESensors::DepthCamera:
-      log_info("Sensor DepthCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+      log_info("Sensor DepthCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       UpdateDepthCamera(buffer, std::to_string(_frame).c_str());
       _depth_camera_publisher->Publish();
       break;
     case ESensors::NormalsCamera:
-      log_info("Sensor NormalsCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+      log_info("Sensor NormalsCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       break;
     case ESensors::LaneInvasionSensor:
-      log_info("Sensor LaneInvasionSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+      log_info("Sensor LaneInvasionSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       break;
     case ESensors::OpticalFlowCamera:
-      log_info("Sensor OpticalFlowCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+      log_info("Sensor OpticalFlowCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       break;
     case ESensors::RssSensor:
-      log_info("Sensor RssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+      log_info("Sensor RssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       break;
     case ESensors::SceneCaptureCamera:
     {
-      log_info("Sensor SceneCaptureCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+      log_info("Sensor SceneCaptureCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       UpdateRGBCamera(buffer, std::to_string(_frame).c_str());
       _rgb_camera_publisher->Publish();
       break;
     }
     case ESensors::SemanticSegmentationCamera:
-      log_info("Sensor SemanticSegmentationCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+      log_info("Sensor SemanticSegmentationCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       UpdateSSCamera(buffer, std::to_string(_frame).c_str());
       _ss_camera_publisher->Publish();
       break;
     case ESensors::InstanceSegmentationCamera:
-      log_info("Sensor InstanceSegmentationCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+      log_info("Sensor InstanceSegmentationCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       break;
     case ESensors::WorldObserver:
-      log_info("Sensor WorldObserver to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+      log_info("Sensor WorldObserver to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       break;
     case ESensors::CameraGBufferUint8:
-      log_info("Sensor CameraGBufferUint8 to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+      log_info("Sensor CameraGBufferUint8 to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       break;
     case ESensors::CameraGBufferFloat:
-      log_info("Sensor CameraGBufferFloat to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+      log_info("Sensor CameraGBufferFloat to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       break;
     default:
-      log_info("Sensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+      log_info("Sensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
   }
 }
 
@@ -224,43 +224,55 @@ void ROS2::ProcessDataFromObstacleDetection(uint64_t sensor_type,
 }
 
 
-void ROS2::UpdateRGBCamera(const carla::Buffer& buffer, const char* frame_id) {
+void ROS2::UpdateRGBCamera(carla::SharedBufferView buffer, const char* frame_id) {
   if (!_rgb_camera_publisher)
     return;
 
   // header
-  carla::sensor::s11n::ImageSerializer::ImageHeader *header =
-    reinterpret_cast<carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer.data());
+  const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
+    reinterpret_cast<const carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer->data());
   if (!header)
     return;
 
   _rgb_camera_publisher->SetData(
       header->height,
       header->width,
-      (const uint8_t*) (buffer.data() + carla::sensor::s11n::ImageSerializer::header_offset),
+      (const uint8_t *) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset),
       frame_id);
 }
 
-void ROS2::UpdateDepthCamera(const carla::Buffer& buffer, const char* frame_id) {
-  if (_depth_camera_publisher) {
-    carla::Buffer tmp;
-    tmp.copy_from(carla::sensor::s11n::SensorHeaderSerializer::header_offset, buffer);
-    carla::sensor::data::Image img { std::move(tmp) };
-    size_t width = img.GetWidth();
-    size_t height = img.GetHeight();
-    _depth_camera_publisher->SetData(height, width, (const uint8_t*)buffer.data(), frame_id);
-  }
+void ROS2::UpdateDepthCamera(carla::SharedBufferView buffer, const char* frame_id) {
+  if (!_depth_camera_publisher)
+    return;
+
+  // header
+  const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
+    reinterpret_cast<const carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer->data());
+  if (!header)
+    return;
+
+  _depth_camera_publisher->SetData(
+    header->height,
+    header->width,
+    (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset),
+    frame_id);
 }
 
-void ROS2::UpdateSSCamera(const carla::Buffer& buffer, const char* frame_id) {
-  if (_ss_camera_publisher) {
-    carla::Buffer tmp;
-    tmp.copy_from(carla::sensor::s11n::SensorHeaderSerializer::header_offset, buffer);
-    carla::sensor::data::Image img { std::move(tmp) };
-    size_t width = img.GetWidth();
-    size_t height = img.GetHeight();
-    _ss_camera_publisher->SetData(height, width, (const uint8_t*)buffer.data(), frame_id);
-  }
+void ROS2::UpdateSSCamera(carla::SharedBufferView buffer, const char* frame_id) {
+  if (!_ss_camera_publisher)
+    return;
+
+  // header
+  const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
+    reinterpret_cast<const carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer->data());
+  if (!header)
+    return;
+
+  _ss_camera_publisher->SetData(
+    header->height,
+    header->width,
+    (const uint8_t *) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset),
+    frame_id);
 }
 
 void ROS2::UpdateDVSCamera(const std::vector<carla::sensor::data::DVSEvent> &events, const char* frame_id) {

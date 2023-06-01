@@ -65,11 +65,11 @@ namespace tcp {
     }
 
     template <typename... Buffers>
-    static auto MakeMessage(Buffers &&... buffers) {
+    static auto MakeMessage(Buffers... buffers) {
       static_assert(
-          are_same<Buffer, Buffers...>::value,
+          are_same<SharedBufferView, Buffers...>::value,
           "This function only accepts arguments of type Buffer.");
-      return std::make_shared<const Message>(std::move(buffers)...);
+      return std::make_shared<const Message>(buffers...);
     }
 
     /// Writes some data to the socket.
@@ -77,8 +77,8 @@ namespace tcp {
 
     /// Writes some data to the socket.
     template <typename... Buffers>
-    void Write(Buffers &&... buffers) {
-      Write(MakeMessage(std::move(buffers)...));
+    void Write(Buffers... buffers) {
+      Write(MakeMessage(buffers...));
     }
 
     /// Post a job to close the session.

@@ -144,16 +144,24 @@ template <typename T>
 template <typename SensorT, typename... ArgsT>
 inline void FAsyncDataStreamTmpl<T>::SerializeAndSend(SensorT &Sensor, ArgsT &&... Args)
 {
-  Stream.Write(
-      std::move(Header),
-      carla::sensor::SensorRegistry::Serialize(Sensor, std::forward<ArgsT>(Args)...));
+  // serialize data
+  carla::Buffer Data(carla::sensor::SensorRegistry::Serialize(Sensor, std::forward<ArgsT>(Args)...));
+
+  // create views of buffers
+  auto ViewHeader = carla::BufferView::CreateFrom(std::move(Header));
+  auto ViewData = carla::BufferView::CreateFrom(std::move(Data));
+
+  // send views
+  Stream.Write(ViewHeader, ViewData);
 }
 
 template <typename T>
 template <typename SensorT, typename... ArgsT>
 inline void FAsyncDataStreamTmpl<T>::Send(SensorT &Sensor, ArgsT &&... Args)
 {
-  Stream.Write(
-      std::move(Header),
-      std::forward<ArgsT>(Args)...);
+  // create views of buffers
+  auto ViewHeader = carla::BufferView::CreateFrom(std::move(Header));
+
+  // send views
+  Stream.Write(ViewHeader, std::forward<ArgsT>(Args)...);
 }

@@ -27,28 +27,28 @@ namespace detail {
 
     using StreamStateBase::StreamStateBase;
 
-    MultiStreamState(const token_type &token) : 
-      StreamStateBase(token), 
+    MultiStreamState(const token_type &token) :
+      StreamStateBase(token),
       _session(nullptr)
       {};
 
     template <typename... Buffers>
-    void Write(Buffers &&... buffers) {
+    void Write(Buffers... buffers) {
       // try write single stream
       auto session = _session.load();
       if (session != nullptr) {
-        auto message = Session::MakeMessage(std::move(buffers)...);
+        auto message = Session::MakeMessage(buffers...);
         session->Write(std::move(message));
-        log_debug("sensor ", session->get_stream_id()," data sent");        
-        // Return here, _session is only valid if we have a 
+        log_debug("sensor ", session->get_stream_id()," data sent");
+        // Return here, _session is only valid if we have a
         // single session.
-        return; 
+        return;
       }
 
       // try write multiple stream
       std::lock_guard<std::mutex> lock(_mutex);
       if (_sessions.size() > 0) {
-        auto message = Session::MakeMessage(std::move(buffers)...);
+        auto message = Session::MakeMessage(buffers...);
         for (auto &s : _sessions) {
           if (s != nullptr) {
             s->Write(message);
@@ -94,7 +94,7 @@ namespace detail {
         _sessions.erase(
             std::remove(_sessions.begin(), _sessions.end(), session),
             _sessions.end());
-        
+
         // set single session if only one
         if (_sessions.size() == 1)
           _session.store(_sessions[0]);

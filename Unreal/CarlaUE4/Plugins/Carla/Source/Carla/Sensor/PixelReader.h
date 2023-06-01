@@ -20,6 +20,7 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Logging.h>
 #include <carla/Buffer.h>
+#include <carla/BufferView.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -175,6 +176,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
               {
                 // serialize data
                 carla::Buffer BufferReady(std::move(carla::sensor::SensorRegistry::Serialize(Sensor, std::move(Buffer))));
+                carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(BufferReady));
 
                 // ROS2
                 #if defined(WITH_ROS2)
@@ -183,14 +185,17 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
                 {
                   TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send PixelReader");
                   auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
-                  ROS2->ProcessDataFromSensor(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), BufferReady);
+                  auto Res = std::async(std::launch::async, [this, ROS2, &Stream, StreamId, BufView]()
+                  {
+                    ROS2->ProcessDataFromSensor(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), BufView);
+                  });
                 }
                 #endif
 
                 // network
                 SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
                 TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
-                Stream.Send(Sensor, std::move(BufferReady));
+                Stream.Send(Sensor, BufView);
               }
             }
           };

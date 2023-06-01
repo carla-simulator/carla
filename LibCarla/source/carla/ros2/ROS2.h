@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/Buffer.h"
+#include "carla/BufferView.h"
 #include "carla/geom/Transform.h"
 #include "carla/streaming/detail/Types.h"
 
@@ -28,7 +29,6 @@ namespace carla {
     }
   }
 }
-
 
 namespace carla {
 namespace ros2 {
@@ -74,7 +74,7 @@ class ROS2
   void ProcessDataFromSensor(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
-      const carla::Buffer &buffer);
+      const carla::SharedBufferView buffer);
   void ProcessDataFromGNSS(uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
@@ -109,9 +109,9 @@ class ROS2
       float Distance);
 
   private:
-  void UpdateRGBCamera(const carla::Buffer& buffer, const char* frame_id);
-  void UpdateDepthCamera(const carla::Buffer& buffer, const char* frame_id);
-  void UpdateSSCamera(const carla::Buffer& buffer, const char* frame_id);
+  void UpdateRGBCamera(const carla::SharedBufferView buffer, const char* frame_id);
+  void UpdateDepthCamera(const carla::SharedBufferView buffer, const char* frame_id);
+  void UpdateSSCamera(const carla::SharedBufferView buffer, const char* frame_id);
   void UpdateDVSCamera(const std::vector<carla::sensor::data::DVSEvent> &events, const char* frame_id);
   void UpdateLidar(const carla::sensor::data::LidarData &data, const char* frame_id);
   void UpdateSemanticLidar(const carla::sensor::data::SemanticLidarData &data, const char* frame_id);
