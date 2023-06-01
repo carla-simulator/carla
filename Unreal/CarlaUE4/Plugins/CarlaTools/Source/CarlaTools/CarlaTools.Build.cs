@@ -44,15 +44,15 @@ public class CarlaTools : ModuleRules
 				// ... add public include paths required here ...
 			}
 			);
-				
-		
+
+
 		PrivateIncludePaths.AddRange(
 			new string[] {
 				// ... add other private include paths required here ...
 			}
 			);
-			
-		
+
+
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
@@ -64,8 +64,8 @@ public class CarlaTools : ModuleRules
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
-			
-		
+
+
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
@@ -87,10 +87,11 @@ public class CarlaTools : ModuleRules
         "JsonUtilities",
         "Networking",
         "Sockets",
+        "HTTP",
         "RHI",
         "RenderCore",
         "MeshMergeUtilities"
-				// ... add private dependencies that you statically link with here ...	
+				// ... add private dependencies that you statically link with here ...
 			}
 			);
     if(UsingHoudini)
@@ -145,7 +146,7 @@ public class CarlaTools : ModuleRules
     foreach (string file in files)
     {
       PublicAdditionalLibraries.Add(file);
-    } 
+    }
   }
 
 
