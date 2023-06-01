@@ -45,7 +45,7 @@ private:
 };
 
 UCLASS(Blueprintable)
-class CARLA_API UCustomFileDownloader : public UObject
+class CARLATOOLS_API UCustomFileDownloader : public UObject
 {
   GENERATED_BODY()
 public:
