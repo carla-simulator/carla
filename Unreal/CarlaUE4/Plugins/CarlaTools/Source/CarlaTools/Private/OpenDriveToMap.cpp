@@ -38,6 +38,7 @@
 #include "MeshDescription.h"
 #include "EditorLevelLibrary.h"
 #include "ProceduralMeshConversion.h"
+#include "EditorLevelLibrary.h"
 
 #include "ContentBrowserModule.h"
 #include "Materials/MaterialInstanceConstant.h"
@@ -142,7 +143,7 @@ void UOpenDriveToMap::CreateMap()
   FileDownloader->ResultFileName = MapName;
   FileDownloader->Url = Url;
 
-  FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
+  FileDownloader->XodrToMap = this;
   FileDownloader->StartDownload();
 
   RoadType.Empty();
@@ -154,7 +155,7 @@ void UOpenDriveToMap::CreateMap()
 void UOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGridSectionSize, const class UTexture2D* HeightmapTexture)
 {
   TArray<AActor*> FoundActors;
-  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AProceduralMeshActor::StaticClass(), FoundActors);
+  UGameplayStatics::GetAllActorsOfClass(UEditorLevelLibrary::GetEditorWorld(), AProceduralMeshActor::StaticClass(), FoundActors);
   FVector BoxOrigin;
   FVector BoxExtent;
   UGameplayStatics::GetActorArrayBounds(FoundActors, false, BoxOrigin, BoxExtent);
@@ -162,7 +163,7 @@ void UOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGri
 
   int NumI = ( BoxExtent.X * 2.0f ) / MeshGridSize;
   int NumJ = ( BoxExtent.Y * 2.0f ) / MeshGridSize;
-  ASceneCapture2D* SceneCapture = Cast<ASceneCapture2D>(GetWorld()->SpawnActor(ASceneCapture2D::StaticClass()));
+  ASceneCapture2D* SceneCapture = Cast<ASceneCapture2D>(UEditorLevelLibrary::GetEditorWorld()->SpawnActor(ASceneCapture2D::StaticClass()));
   SceneCapture->SetActorRotation(FRotator(-90,90,0));
   SceneCapture->GetCaptureComponent2D()->ProjectionType = ECameraProjectionMode::Type::Orthographic;
   SceneCapture->GetCaptureComponent2D()->OrthoWidth = MeshGridSize;
@@ -170,7 +171,7 @@ void UOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGri
   SceneCapture->GetCaptureComponent2D()->CompositeMode = ESceneCaptureCompositeMode::SCCM_Overwrite;
   SceneCapture->GetCaptureComponent2D()->bCaptureEveryFrame = false;
   SceneCapture->GetCaptureComponent2D()->bCaptureOnMovement = false;
-  //UTextureRenderTarget2D* RenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(GetWorld(), 256, 256,
+  //UTextureRenderTarget2D* RenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(UEditorLevelLibrary::GetEditorWorld(), 256, 256,
   //                                                          ETextureRenderTargetFormat::RTF_RGBA8, FLinearColor(0,0,0), false );
   //SceneCapture->GetCaptureComponent2D()->TextureTarget = RenderTarget;
 
@@ -193,7 +194,7 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
   // const float GridSectionSize = 100.0f; // In cm
   const float HeightScale = 3.0f;
 
-  UWorld* World = GetWorld();
+  UWorld* World = UEditorLevelLibrary::GetEditorWorld();
 
   // Creation of the procedural mesh
   AProceduralMeshActor* MeshActor = World->SpawnActor<AProceduralMeshActor>();
@@ -246,11 +247,10 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
       //UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" i %d, j %d, X %f, RoadMapX %d, Y %f, RoadMapY %d, CellIndex %d"), i, j, X, RoadMapX, Y, RoadMapY, CellIndex );
 
       Vertices.Add(FVector( X, Y, HeightValue));
-      //UVs.Add(FVector2D(i / (GridTotalSize - GridSectionSize), j / (GridTotalSize - GridSectionSize)));
+      UVs.Add(FVector2D(i, j));
     }
   }
 
-  Normals.Init(FVector(0.0f, 0.0f, 1.0f), Vertices.Num());
   //RawHeightmap->Unlock();
   //RawRoadMask->Unlock();  /* Uncomment to apply road mask */
 
@@ -275,10 +275,18 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
     Mesh->SetMaterial(0, DefaultLandscapeMaterial);
   }
 
+  UKismetProceduralMeshLibrary::CalculateTangentsForMesh(
+    Vertices,
+    Triangles,
+    UVs,
+    Normals,
+    Tangents
+  );
+
   Mesh->CreateMeshSection_LinearColor(0, Vertices, Triangles, Normals,
-      TArray<FVector2D>(), // UV0
+      UVs, // UV0
       TArray<FLinearColor>(), // VertexColor
-      TArray<FProcMeshTangent>(), // Tangents
+      Tangents, // Tangents
       true); // Create collision);
 
   MeshActor->SetActorLabel("SM_Landscape" + FString::FromInt(MeshIndex) );
@@ -340,7 +348,7 @@ TArray<AActor*> UOpenDriveToMap::GenerateMiscActors(float Offset)
 
     NewTransform = GetSnappedPosition(NewTransform);
 
-    AActor* Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(),
+    AActor* Spawner = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(),
       NewTransform.GetLocation(), NewTransform.Rotator());
     Spawner->Tags.Add(FName("MiscSpawnPosition"));
     Spawner->Tags.Add(FName(cl.second.c_str()));
@@ -410,7 +418,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
         }
       }
 
-      AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+      AProceduralMeshActor* TempActor = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AProceduralMeshActor>();
 
       TempActor->SetActorLabel(FString("SM_Lane_") + FString::FromInt(index));
 
@@ -536,7 +544,7 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
       continue;
     }
 
-    AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+    AProceduralMeshActor* TempActor = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AProceduralMeshActor>();
     TempActor->SetActorLabel(FString("SM_LaneMark_") + FString::FromInt(index));
     UProceduralMeshComponent* TempPMC = TempActor->MeshComponent;
     TempPMC->bUseAsyncCooking = true;
@@ -585,7 +593,7 @@ void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Ma
   for (const auto &Wp : Waypoints)
   {
     const FTransform Trans = CarlaMap->ComputeTransform(Wp);
-    AVehicleSpawnPoint *Spawner = GetWorld()->SpawnActor<AVehicleSpawnPoint>();
+    AVehicleSpawnPoint *Spawner = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AVehicleSpawnPoint>();
     Spawner->SetActorRotation(Trans.GetRotation());
     Spawner->SetActorLocation(Trans.GetTranslation() + FVector(0.f, 0.f, SpawnersHeight));
   }
@@ -603,7 +611,7 @@ void UOpenDriveToMap::GenerateTreePositions( const boost::optional<carla::road::
     FTransform NewTransform ( FRotator(cl.first.rotation), FVector(cl.first.location), scale );
     NewTransform = GetSnappedPosition(NewTransform);
 
-    AActor* Spawner = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(),
+    AActor* Spawner = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(),
       NewTransform.GetLocation(), NewTransform.Rotator());
 
     Spawner->Tags.Add(FName("TreeSpawnPosition"));
@@ -833,7 +841,7 @@ void UOpenDriveToMap::SaveMap()
 
   for (int i = 0; i < MeshesToSpawn.Num(); ++i)
   {
-    AStaticMeshActor* TempActor = GetWorld()->SpawnActor<AStaticMeshActor>();
+    AStaticMeshActor* TempActor = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AStaticMeshActor>();
     // Build mesh from source
     TempActor->GetStaticMeshComponent()->SetStaticMesh(MeshesToSpawn[i]);
     TempActor->SetActorLabel(FString("SM_") + MeshesToSpawn[i]->GetName());
@@ -866,7 +874,7 @@ FTransform UOpenDriveToMap::GetSnappedPosition( FTransform Origin ){
   FCollisionQueryParams CollisionQuery;
   FCollisionResponseParams CollisionParams;
 
-  if( GetWorld()->LineTraceSingleByChannel(
+  if( UEditorLevelLibrary::GetEditorWorld()->LineTraceSingleByChannel(
     HitResult,
     Start,
     End,
@@ -888,7 +896,7 @@ float UOpenDriveToMap::GetHeightForLandscape( FVector Origin ){
   CollisionQuery.AddIgnoredActors(Landscapes);
   FCollisionResponseParams CollisionParams;
 
-  if( GetWorld()->LineTraceSingleByChannel(
+  if( UEditorLevelLibrary::GetEditorWorld()->LineTraceSingleByChannel(
     HitResult,
     Start,
     End,
