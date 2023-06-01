@@ -6,16 +6,49 @@
 #include "Interfaces/IHttpRequest.h"
 #include "CustomFileDownloader.generated.h"
 /**
- * 
+ *
  */
 
 DECLARE_DELEGATE(FDownloadComplete)
+
+class FHttpDownloader
+{
+public:
+
+  FHttpDownloader();
+
+  /**
+   *
+   * @param Verb - verb to use for request (GET,POST,DELETE,etc)
+   * @param Url - url address to connect to
+   */
+  FHttpDownloader( const FString& InVerb, const FString& InUrl, const FString& InFilename, FDownloadComplete& Delegate );
+
+  // Kick off the Http request  and wait for delegate to be called
+  void Run(void);
+
+  /**
+   * Delegate called when the request completes
+   *
+   * @param HttpRequest - object that started/processed the request
+   * @param HttpResponse - optional response object if request completed
+   * @param bSucceeded - true if Url connection was made and response was received
+   */
+  void RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
+  UPROPERTY()
+  class UOpenDriveToMap* XodrToMap;
+private:
+  FString Verb;
+  FString Url;
+  FString Filename;
+  FDownloadComplete DelegateToCall;
+};
 
 UCLASS(Blueprintable)
 class CARLA_API UCustomFileDownloader : public UObject
 {
   GENERATED_BODY()
-public:	
+public:
   UFUNCTION(BlueprintCallable)
   void StartDownload();
   UFUNCTION(BlueprintCallable)
@@ -27,37 +60,14 @@ public:
 
   FDownloadComplete DownloadDelegate;
 
+  UPROPERTY()
+  class UOpenDriveToMap* XodrToMap;
 private:
   void RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 
   FString Payload;
+
+  FHttpDownloader Download;
 };
 
-class FHttpDownloader
-{
-public:
-  /**
-   *
-   * @param Verb - verb to use for request (GET,POST,DELETE,etc)
-   * @param Url - url address to connect to
-   */
-  FHttpDownloader( const FString& InVerb, const FString& InUrl, const FString& InFilename, FDownloadComplete& Delegate );  
 
-  // Kick off the Http request  and wait for delegate to be called
-  void Run(void);  
-
-  /**
-   * Delegate called when the request completes
-   *
-   * @param HttpRequest - object that started/processed the request
-   * @param HttpResponse - optional response object if request completed
-   * @param bSucceeded - true if Url connection was made and response was received
-   */
-  void RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
-
-private:
-  FString Verb;
-  FString Url;
-  FString Filename;
-  FDownloadComplete DelegateToCall;
-};
