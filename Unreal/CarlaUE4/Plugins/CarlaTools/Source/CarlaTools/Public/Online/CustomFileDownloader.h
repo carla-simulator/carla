@@ -11,9 +11,11 @@
 
 DECLARE_DELEGATE(FDownloadComplete)
 
-class FHttpDownloader
+USTRUCT()
+struct FHttpDownloader
 {
 public:
+  GENERATED_BODY()
 
   FHttpDownloader();
 
@@ -35,6 +37,7 @@ public:
    * @param bSucceeded - true if Url connection was made and response was received
    */
   void RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
+
   UPROPERTY()
   class UOpenDriveToMap* XodrToMap;
 private:
@@ -66,7 +69,7 @@ private:
   void RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 
   FString Payload;
-
+  UPROPERTY()
   FHttpDownloader Download;
 };
 

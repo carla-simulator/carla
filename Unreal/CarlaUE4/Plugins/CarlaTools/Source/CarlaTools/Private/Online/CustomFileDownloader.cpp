@@ -57,6 +57,7 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0,
 void UCustomFileDownloader::StartDownload()
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("FHttpDownloader CREATED"));
+  UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Map Name Is %s"), *ResultFileName );
   Download = FHttpDownloader("GET", Url, ResultFileName, DownloadDelegate);
   Download.XodrToMap = XodrToMap;
   Download.Run();
@@ -76,6 +77,7 @@ void FHttpDownloader::Run(void)
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Starting download [%s] Url=[%s]"), *Verb, *Url);
   TSharedPtr<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+  UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Map Name Is %s"), *Filename );
   Request->OnProcessRequestComplete().BindRaw(this, &FHttpDownloader::RequestComplete);
   Request->SetURL(Url);
   Request->SetVerb(Verb);
@@ -105,8 +107,6 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
            *HttpRequest->GetURL(),
            HttpResponse->GetResponseCode());
 
-    HttpRequest->OnProcessRequestComplete().Unbind();
-
     FString CurrentFile = FPaths::ProjectContentDir() + "CustomMaps/" + Filename + "/OpenDrive/";
 
     // We will use this FileManager to deal with the file.
@@ -123,12 +123,14 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
     if (FFileHelper::SaveStringToFile(StringToWrite, *CurrentFile, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
     {
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: Sucsesfuly Written "));
+      XodrToMap->ConvertOSMInOpenDrive();
     }
     else
     {
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: Failed to write FString to file."));
+      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: CurrentFile %s."), *CurrentFile);
+      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: StringToWrite %s."), *StringToWrite);
     }
   }
 
-  XodrToMap->ConvertOSMInOpenDrive();
 }
