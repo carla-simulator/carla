@@ -47,6 +47,11 @@
 
 #include "DrawDebugHelpers.h"
 
+UOpenDriveToMap::~UOpenDriveToMap()
+{
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("UOpenDriveToMap IS BEING DESTROYED") );
+}
+
 FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
 {
   switch (LaneType)
@@ -131,6 +136,7 @@ void UOpenDriveToMap::ConvertOSMInOpenDrive()
 
 void UOpenDriveToMap::CreateMap()
 {
+  AddToRoot();
   if( MapName.IsEmpty() )
   {
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Map Name Is Empty") );
@@ -142,6 +148,8 @@ void UOpenDriveToMap::CreateMap()
   }
   FileDownloader->ResultFileName = MapName;
   FileDownloader->Url = Url;
+
+  UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Map Name Is %s"), *MapName );
 
   FileDownloader->XodrToMap = this;
   FileDownloader->StartDownload();

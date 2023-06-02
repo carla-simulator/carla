@@ -28,7 +28,8 @@ class CARLATOOLS_API UOpenDriveToMap : public UObject
   GENERATED_BODY()
 
 public:
-
+  ~UOpenDriveToMap();
+  
   UFUNCTION()
   void ConvertOSMInOpenDrive();
 

@@ -108,8 +108,8 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
            HttpResponse->GetResponseCode());
 
     FString CurrentFile = FPaths::ProjectContentDir() + "CustomMaps/" + (XodrToMap->MapName) + "/OpenDrive/";
-    UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: CurrentFile %s."), *CurrentFile);
-    UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: Filename %s."), *(XodrToMap->MapName));
+    UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FHttpDownloader::RequestComplete CurrentFile %s."), *CurrentFile);
+    UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FHttpDownloader::RequestComplete Filename %s."), *(XodrToMap->MapName));
 
     // We will use this FileManager to deal with the file.
     IPlatformFile &FileManager = FPlatformFileManager::Get().GetPlatformFile();
