@@ -139,7 +139,6 @@ namespace detail {
     }
   }
 EpisodeProxy Simulator::GetCurrentEpisode() {
-    log_warning("GetCurrentEpisode");
     GetReadyCurrentEpisode();
     return EpisodeProxy{shared_from_this()};
   }
