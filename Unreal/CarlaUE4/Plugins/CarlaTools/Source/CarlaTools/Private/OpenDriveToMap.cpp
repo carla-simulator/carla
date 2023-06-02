@@ -340,6 +340,7 @@ void UOpenDriveToMap::LoadMap()
 
   GenerateAll(CarlaMap);
   GenerationFinished();
+  RemoveFromRoot();
 }
 
 TArray<AActor*> UOpenDriveToMap::GenerateMiscActors(float Offset)
