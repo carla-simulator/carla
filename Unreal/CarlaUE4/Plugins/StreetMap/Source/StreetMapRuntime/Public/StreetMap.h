@@ -276,7 +276,7 @@ struct STREETMAPRUNTIME_API FStreetMapBuilding
 	GENERATED_USTRUCT_BODY()
 
 	/** Name of the building */
-	UPROPERTY( Category=StreetMap, EditAnywhere )
+	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadWrite )
 	FString BuildingName;
 
 	/** Polygon points that define the perimeter of the building */
