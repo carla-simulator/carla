@@ -24,7 +24,7 @@ public:
    * @param Verb - verb to use for request (GET,POST,DELETE,etc)
    * @param Url - url address to connect to
    */
-  FHttpDownloader( const FString& InVerb, const FString& InUrl, const FString& InFilename, FDownloadComplete& Delegate );
+  FHttpDownloader( const FString& InVerb, const FString& InUrl, const FString& InFilename );
 
   // Kick off the Http request  and wait for delegate to be called
   void Run(void);
@@ -60,8 +60,6 @@ public:
   FString ResultFileName;
 
   FString Url;
-
-  FDownloadComplete DownloadDelegate;
 
   UPROPERTY()
   class UOpenDriveToMap* XodrToMap;
