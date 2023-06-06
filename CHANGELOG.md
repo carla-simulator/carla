@@ -2,6 +2,7 @@
 
   * Fixed bug causing the TM's unstuck logic to incorrectly remove the vehicles in some situations.
   * Fixed the extra data in Directx textures, so we need to copy row by row on Windows to remove extra bytes on images
+  * Fixed sensors to check for the stream to be ready (race condition)
   * Added empty actor
   * The spectator will be used to load tiles and actor in Large Maps when no other actors with the rolename 'ego_vehicle' or 'hero' are present. Added the `spectator_as_ego` to the `carla.WorldSettings()` to allow users to disable this behavior.
   * Fixed the import script, where could use any other TilesInfo.txt if the destination folder has many
