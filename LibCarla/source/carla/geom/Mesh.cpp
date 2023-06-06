@@ -106,6 +106,10 @@ namespace geom {
     _uvs.push_back(uv);
   }
 
+  void Mesh::AddUVs(const std::vector<uv_type> & uv) {
+    std::copy(uv.begin(), uv.end(), std::back_inserter(_uvs));
+  }
+
   void Mesh::AddMaterial(const std::string &material_name) {
     const size_t open_index = _indexes.size();
     if (!_materials.empty()) {
@@ -306,7 +310,6 @@ namespace geom {
       rhs.GetNormals().end());
 
     const size_t vertex_to_start_concating = v_num - num_vertices_to_link;
-
     for( size_t i = 1; i < num_vertices_to_link; ++i ) {
       _indexes.push_back( vertex_to_start_concating + i );
       _indexes.push_back( vertex_to_start_concating + i  + 1 );

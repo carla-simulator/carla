@@ -145,9 +145,9 @@ public:
   FTransform LocalToGlobalTransform(const FTransform& InTransform) const;
   FVector LocalToGlobalLocation(const FVector& InLocation) const;
 
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Large Map Manager")
   FString LargeMapTilePath = "/Game/Carla/Maps/testmap";
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Large Map Manager")
   FString LargeMapName = "testmap";
 
   void SetTile0Offset(const FVector& Offset);
@@ -285,32 +285,32 @@ protected:
 
   FDVector CurrentOriginD;
 
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Large Map Manager")
   FVector Tile0Offset = FVector(0,0,0);
 
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Large Map Manager")
   float TickInterval = 0.0f;
 
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Large Map Manager")
   float LayerStreamingDistance = 3.0f * 1000.0f * 100.0f;
 
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Large Map Manager")
   float ActorStreamingDistance = 2.0f * 1000.0f * 100.0f;
 
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Large Map Manager")
   float RebaseOriginDistance = 2.0f * 1000.0f * 100.0f;
 
   float LayerStreamingDistanceSquared = LayerStreamingDistance * LayerStreamingDistance;
   float ActorStreamingDistanceSquared = ActorStreamingDistance * ActorStreamingDistance;
   float RebaseOriginDistanceSquared = RebaseOriginDistance * RebaseOriginDistance;
 
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Large Map Manager")
   float TileSide = 2.0f * 1000.0f * 100.0f; // 2km
 
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Large Map Manager")
   FVector LocalTileOffset = FVector(0,0,0);
 
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Large Map Manager")
   bool ShouldTilesBlockOnLoad = false;
 
 
@@ -324,7 +324,7 @@ protected:
 
   void PrintMapInfo();
 
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Large Map Manager")
   FString AssetsPath = "";
 
   FString BaseTileMapPath = "/Game/Carla/Maps/LargeMap/EmptyTileBase";

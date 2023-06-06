@@ -17,11 +17,14 @@ void UHoudiniImporterWidget::CreateSubLevels(ALargeMapManager* LargeMapManager)
 
 }
 
-void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ALargeMapManager* LargeMapManager)
+void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Actors, ALargeMapManager* LargeMapManager)
 {
   TMap<FCarlaMapTile*, TArray<AActor*>> ActorsToMove;
   for (AActor* Actor : Actors)
   {
+    if (Actor == nullptr) {
+      continue;
+    }
     UHierarchicalInstancedStaticMeshComponent* Component
         = Cast<UHierarchicalInstancedStaticMeshComponent>(
           Actor->GetComponentByClass(
@@ -77,13 +80,21 @@ void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ALarge
     ULevelStreaming* Level = 
         UEditorLevelUtils::AddLevelToWorld(
         World, *Tile->Name, ULevelStreamingDynamic::StaticClass(), FTransform());
-
     int MovedActors = UEditorLevelUtils::MoveActorsToLevel(ActorList, Level, false, false);
     // StreamingLevel->SetShouldBeLoaded(false);
     UE_LOG(LogCarlaTools, Log, TEXT("Moved %d actors"), MovedActors);
     FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
     UEditorLevelUtils::RemoveLevelFromWorld(Level->GetLoadedLevel());
   }
+}
+
+void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ULevelStreaming* Level)
+{
+  int MovedActors = UEditorLevelUtils::MoveActorsToLevel(Actors, Level, false, false);
+  // StreamingLevel->SetShouldBeLoaded(false);
+  UE_LOG(LogCarlaTools, Log, TEXT("Moved %d actors"), MovedActors);
+  FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
+  UEditorLevelUtils::RemoveLevelFromWorld(Level->GetLoadedLevel());
 }
 
 void UHoudiniImporterWidget::UpdateGenericActorCoordinates(
