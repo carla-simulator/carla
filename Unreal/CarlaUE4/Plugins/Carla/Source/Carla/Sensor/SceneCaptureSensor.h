@@ -60,6 +60,11 @@ struct FCameraGBufferUint8
   template <typename SensorT>
   FAsyncDataStream GetDataStream(const SensorT &Self)
   {
+    while (!Stream.IsStreamReady())
+    {
+      std::this_thread::yield();
+    }
+
     return Stream.MakeAsyncDataStream(Self, Self.GetEpisode().GetElapsedGameTime());
   }
 
@@ -102,9 +107,14 @@ struct FCameraGBufferFloat
   template <typename SensorT>
   FAsyncDataStream GetDataStream(const SensorT &Self)
   {
+    while (!Stream.IsStreamReady())
+    {
+      std::this_thread::yield();
+    }
+
     return Stream.MakeAsyncDataStream(Self, Self.GetEpisode().GetElapsedGameTime());
   }
-  
+
   mutable bool bIsUsed = false;
   FDataStream Stream;
 };
@@ -420,7 +430,7 @@ public:
   } CameraGBuffers;
 
 protected:
-    
+
   void CaptureSceneExtended();
 
   virtual void SendGBufferTextures(FGBufferRequest& GBuffer);
