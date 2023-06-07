@@ -714,6 +714,22 @@ void UStreetMapComponent::GenerateTopsOfBuildings()
         }
       }
 
+      FVector MeshCentroid = FVector(0,0,0);
+      for( const auto& Vertex : BPositions )
+      {
+        MeshCentroid += Vertex;
+      }
+
+      MeshCentroid /= BPositions.Num();
+
+      for( auto& Vertex : BPositions )
+      {
+       Vertex.X -= MeshCentroid.X;
+       Vertex.Y -= MeshCentroid.Y;
+       Vertex.Z -= MeshCentroid.Z;
+      }
+      TempActor->SetActorLocation( MeshCentroid );
+
       TempPMC->CreateMeshSection_LinearColor(
         0,
         BPositions,
