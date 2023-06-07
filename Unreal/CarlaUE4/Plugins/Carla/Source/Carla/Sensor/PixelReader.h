@@ -113,7 +113,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("FWritePixels_SendPixelsInRenderThread");
 
       /// @todo Can we make sure the sensor is not going to be destroyed?
-      if (!Sensor.IsPendingKill())
+      if (!Sensor.IsPendingKill() && Sensor.IsStreamReady())
       {
         FPixelReader::Payload FuncForSending =
           [&Sensor, Frame = FCarlaEngine::GetFrameCounter(), Conversor = std::move(Conversor)](void *LockedData, uint32 Size, uint32 Offset, uint32 ExpectedRowBytes)
@@ -131,6 +131,8 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
               Size = Converted.Num() * Converted.GetTypeSize();
             }
 
+            if (!Sensor.IsStreamReady())
+              return;
             auto Stream = Sensor.GetDataStream(Sensor);
             Stream.SetFrameNumber(Frame);
             auto Buffer = Stream.PopBufferFromPool();
