@@ -107,11 +107,6 @@ protected:
   template <typename SensorT>
   FAsyncDataStream GetDataStream(const SensorT &Self)
   {
-    while (!Stream.IsStreamReady())
-    {
-      std::this_thread::yield();
-    }
-
     return Stream.MakeAsyncDataStream(Self, GetEpisode().GetElapsedGameTime());
   }
 
