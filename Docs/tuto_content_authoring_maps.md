@@ -63,6 +63,10 @@ Once you have created your desired road network, in the RoadRunner menu bar choo
 
 RoadRunner is the best application for creating custom maps. There are alternatives such as [__OpenStreetMap__](tuto_G_openstreetmap.md) that focus on generating maps from real road maps. 
 
+## Traffic lights in RoadRunner
+
+You can choose to add traffic lights in RoadRunner, before importing into CARLA. Alternatively, you can add traffic lights after the import process through the CARLA Unreal Engine editor. It is recommended to add the traffic lights in RoadRunner before import. Please see the instructions [here](adv_roadrunner_trafficlights.md) for details about adding traffic lights in RoadRunner.
+
 ## TrueVision designer
 
 RoadRunner is a proprietary software that requires MATLAB. Some institutions like universities may have deals with MathWorks such that some users may be able to acquire a RoadRunner license. If you don't have budget for a license, a convenient open source alternative to RoadRunner is the [__TrueVision Designer__](https://www.truevision.ai/designer). This app has many of the same features as RoadRunner and is useful if you cannot acquire a license for RoadRunner. 
