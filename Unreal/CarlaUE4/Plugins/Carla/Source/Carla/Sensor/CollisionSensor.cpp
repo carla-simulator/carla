@@ -77,11 +77,15 @@ void ACollisionSensor::OnCollisionEvent(
   const auto &Episode = GetEpisode();
   constexpr float TO_METERS = 1e-2;
   NormalImpulse *= TO_METERS;
-  GetDataStream(*this).Send(
+  if (IsStreamReady())
+  {
+    GetDataStream(*this).Send(
       *this,
       Episode.SerializeActor(Actor),
       Episode.SerializeActor(OtherActor),
       carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z});
+  }
+
   // record the collision event
   if (Episode.GetRecorder()->IsEnabled()){
     Episode.GetRecorder()->AddCollision(Actor, OtherActor);
