@@ -607,6 +607,7 @@ void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   Super::EndPlay(EndPlayReason);
+  FlushRenderingCommands();
   SCENE_CAPTURE_COUNTER = 0u;
 }
 
