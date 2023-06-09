@@ -3,3 +3,4 @@
 
 #include "UnrealEd.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogStreetMapImporting, Log, All);

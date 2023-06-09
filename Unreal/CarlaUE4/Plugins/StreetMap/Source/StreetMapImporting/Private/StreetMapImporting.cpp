@@ -7,6 +7,8 @@
 #include "StreetMapComponentDetails.h"
 
 
+DEFINE_LOG_CATEGORY(LogStreetMapImporting);
+
 class FStreetMapImportingModule : public IModuleInterface
 {
 
