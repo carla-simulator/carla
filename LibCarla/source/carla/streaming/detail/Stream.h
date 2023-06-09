@@ -43,7 +43,10 @@ namespace detail {
     /// messages sent through the stream are big and have (approximately) the
     /// same size.
     Buffer MakeBuffer() {
-      return _shared_state->MakeBuffer();
+      if (_shared_state)
+        return _shared_state->MakeBuffer();
+      else
+        return Buffer();
     }
 
     /// Flush @a buffers down the stream. No copies are made.
