@@ -19,10 +19,8 @@ namespace detail {
   StreamStateBase::~StreamStateBase() = default;
 
   Buffer StreamStateBase::MakeBuffer() {
-    if (_buffer_pool)
-      return _buffer_pool->Pop();
-    else
-      return Buffer();
+    auto pool = _buffer_pool;
+    return pool->Pop();
   }
 
 } // namespace detail
