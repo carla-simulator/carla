@@ -89,9 +89,10 @@ public:
 	void SetStreetMap(UStreetMap* NewStreetMap, bool bClearPreviousMeshIfAny = false, bool bRebuildMesh = false);
 
 	UFUNCTION(BlueprintCallable, Category = "StreetMap")
-	void GenerateTopsOfBuildings();
+	TArray<AActor*> GenerateTopsOfBuildings();
 
-
+  UFUNCTION(BlueprintCallable, Category = "StreetMap")
+	AActor* GenerateTopOfBuilding(int Index);
 
 	//** Begin Interface_CollisionDataProvider Interface */
 	virtual bool GetPhysicsTriMeshData(struct FTriMeshCollisionData* CollisionData, bool InUseAllTriData) override;
@@ -116,7 +117,7 @@ protected:
 public:
 
 	// UPrimitiveComponent interface
-	virtual  UBodySetup* GetBodySetup() override;
+	virtual UBodySetup* GetBodySetup() override;
 	virtual FPrimitiveSceneProxy* CreateSceneProxy() override;
 	virtual FBoxSphereBounds CalcBounds(const FTransform& LocalToWorld) const override;
 	virtual int32 GetNumMaterials() const override;
@@ -157,15 +158,14 @@ protected:
 protected:
 
 	UPROPERTY(EditAnywhere, Category = "StreetMap")
-		FStreetMapMeshBuildSettings MeshBuildSettings;
+	FStreetMapMeshBuildSettings MeshBuildSettings;
 
 	UPROPERTY(EditAnywhere, Category = "StreetMap")
-		FStreetMapCollisionSettings CollisionSettings;
+	FStreetMapCollisionSettings CollisionSettings;
 
 	//** Physics data for mesh collision. */
 	UPROPERTY(Transient)
-		UBodySetup* StreetMapBodySetup;
-
+	UBodySetup* StreetMapBodySetup;
 
 protected:
 	//
@@ -174,30 +174,30 @@ protected:
 
 	/** Cached raw mesh vertices */
 	UPROPERTY()
-		TArray< struct FStreetMapVertex > Vertices;
+	TArray<struct FStreetMapVertex> Vertices;
 
 	UPROPERTY()
-		TArray< FVector > VerticesPositions;
+	TArray<FVector> VerticesPositions;
 
 	UPROPERTY()
-		TArray< FVector > VerticesNormals;
+	TArray<FVector> VerticesNormals;
 
 	UPROPERTY()
-		TArray< FVector2D > VerticesUVs;
+	TArray<FVector2D> VerticesUVs;
 
 	/** Cached raw mesh triangle indices */
 	UPROPERTY()
-		TArray< uint32 > Indices;
+	TArray<uint32> Indices;
 
 	UPROPERTY()
-		TArray< int32 > ProcIndices;
+	TArray<int32> ProcIndices;
 
 	/** Cached bounding box */
 	UPROPERTY()
-		FBoxSphereBounds CachedLocalBounds;
+	FBoxSphereBounds CachedLocalBounds;
 
 	/** Cached StreetMap DefaultMaterial */
 	UPROPERTY()
-		UMaterialInterface* StreetMapDefaultMaterial;
+	UMaterialInterface* StreetMapDefaultMaterial;
 
 };

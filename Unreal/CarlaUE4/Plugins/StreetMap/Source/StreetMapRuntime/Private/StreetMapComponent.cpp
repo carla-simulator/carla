@@ -639,106 +639,118 @@ FString UStreetMapComponent::GetStreetMapAssetName() const
   return StreetMap != nullptr ? StreetMap->GetName() : FString(TEXT("NONE"));
 }
 
-void UStreetMapComponent::GenerateTopsOfBuildings()
+TArray<AActor*> UStreetMapComponent::GenerateTopsOfBuildings()
 {
+  TArray<AActor*> Returning;
   const float BuildingLevelFloorFactor = MeshBuildSettings.BuildingLevelFloorFactor;
   auto& Buildings = StreetMap->GetBuildings();
   for( int32 BuildingIndex = 0; BuildingIndex < Buildings.Num(); ++BuildingIndex )
   {
-    auto& Building = Buildings[ BuildingIndex ];
-    AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
-    TempActor->SetActorLabel(FString("SM_Roof_") + FString::FromInt(BuildingIndex));
-    UProceduralMeshComponent* TempPMC = TempActor->MeshComponent;
-    TempPMC->bUseAsyncCooking = true;
-    TempPMC->bUseComplexAsSimpleCollision = true;
-    TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    TempPMC->CastShadow = false;
-
-    TArray<FVector> BPositions;
-    TArray<FVector> BNormals;
-    TArray<int32> BIndices;
-    TArray<int32> TempIndices;
-    TArray<int32> TriangulatedVertexIndices;
-    TArray<FVector> TempPoints;
-    // Building mesh (or filled area, if the building has no height)
-
-    // Triangulate this building
-    // @todo: Performance: Triangulating lots of building polygons is quite slow.  We could easily do this
-    //        as part of the import process and store tessellated geometry instead of doing this at load time.
-    bool WindsClockwise;
-    if( FPolygonTools::TriangulatePolygon( Building.BuildingPoints, TempIndices, /* Out */ TriangulatedVertexIndices, /* Out */ WindsClockwise ) )
-    {
-      const int32 FirstTopVertexIndex = this->Vertices.Num();
-
-      // calculate fill Z for buildings
-      // either use the defined height or extrapolate from building level count
-      float BuildingFillZ = 0.0f;
-      if (Building.Height > 0) {
-        BuildingFillZ = Building.Height;
-      }
-      else if (Building.BuildingLevels > 0) {
-        BuildingFillZ = (float)Building.BuildingLevels * BuildingLevelFloorFactor;
-      }
-      else {
-        Building.Height = FMath::RandRange(2, 7) * BuildingLevelFloorFactor;
-        BuildingFillZ = Building.Height;
-      }
-
-      // Top of building
-      {
-        TempPoints.SetNum( Building.BuildingPoints.Num(), false );
-        for( int32 PointIndex = 0; PointIndex < Building.BuildingPoints.Num(); ++PointIndex )
-        {
-          TempPoints[ PointIndex ] = FVector( Building.BuildingPoints[ ( Building.BuildingPoints.Num() - PointIndex ) - 1 ], BuildingFillZ );
-        }
-
-        if(WindsClockwise){
-          for( int32 PointIndex = 0; PointIndex < Building.BuildingPoints.Num(); PointIndex++ )
-          {
-            BPositions.Add( FVector(Building.BuildingPoints[PointIndex], BuildingFillZ) );
-            BNormals.Add(FVector::UpVector);
-          }
-        }
-        else
-        {
-          for( int32 PointIndex = 0; PointIndex < Building.BuildingPoints.Num(); PointIndex++ )
-          {
-            int RealIndex = ( Building.BuildingPoints.Num() - 1 ) - PointIndex;
-            BPositions.Add( FVector(Building.BuildingPoints[RealIndex], BuildingFillZ) );
-            BNormals.Add(FVector::UpVector);
-          }
-        }
-        for( int32 PointIndex : TriangulatedVertexIndices )
-        {
-          BIndices.Add( PointIndex );
-        }
-      }
-
-      FVector MeshCentroid = FVector(0,0,0);
-      for( const auto& Vertex : BPositions )
-      {
-        MeshCentroid += Vertex;
-      }
-
-      MeshCentroid /= BPositions.Num();
-
-      for( auto& Vertex : BPositions )
-      {
-       Vertex.X -= MeshCentroid.X;
-       Vertex.Y -= MeshCentroid.Y;
-       Vertex.Z -= MeshCentroid.Z;
-      }
-      TempActor->SetActorLocation( MeshCentroid );
-
-      TempPMC->CreateMeshSection_LinearColor(
-        0,
-        BPositions,
-        BIndices,
-        BNormals,
-        TArray<FVector2D>(), // UV0
-        TArray<FLinearColor>(), // VertexColor
-        TArray<FProcMeshTangent>(), // Tangents
-        false); // Create collision
-    }
+    Returning.Add(GenerateTopOfBuilding(BuildingIndex));
   }
+
+  return Returning;
+}
+
+AActor* UStreetMapComponent::GenerateTopOfBuilding(int Index){
+
+  const float BuildingLevelFloorFactor = MeshBuildSettings.BuildingLevelFloorFactor;
+  auto& Buildings = StreetMap->GetBuildings();
+  
+  auto& Building = Buildings[ Index ];
+  AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+  TempActor->SetActorLabel(FString("SM_Roof_") + FString::FromInt(Index));
+  UProceduralMeshComponent* TempPMC = TempActor->MeshComponent;
+  TempPMC->bUseAsyncCooking = true;
+  TempPMC->bUseComplexAsSimpleCollision = true;
+  TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+  TempPMC->CastShadow = false;
+
+  TArray<FVector> BPositions;
+  TArray<FVector> BNormals;
+  TArray<int32> BIndices;
+  TArray<int32> TempIndices;
+  TArray<int32> TriangulatedVertexIndices;
+  TArray<FVector> TempPoints;
+  // Building mesh (or filled area, if the building has no height)
+
+  // Triangulate this building
+  // @todo: Performance: Triangulating lots of building polygons is quite slow.  We could easily do this
+  //        as part of the import process and store tessellated geometry instead of doing this at load time.
+  bool WindsClockwise;
+  if( FPolygonTools::TriangulatePolygon( Building.BuildingPoints, TempIndices, /* Out */ TriangulatedVertexIndices, /* Out */ WindsClockwise ) )
+  {
+    const int32 FirstTopVertexIndex = this->Vertices.Num();
+
+    // calculate fill Z for buildings
+    // either use the defined height or extrapolate from building level count
+    float BuildingFillZ = 0.0f;
+    if (Building.Height > 0) {
+      BuildingFillZ = Building.Height;
+    }
+    else if (Building.BuildingLevels > 0) {
+      BuildingFillZ = (float)Building.BuildingLevels * BuildingLevelFloorFactor;
+    }
+    else {
+      Building.Height = FMath::RandRange(2, 7) * BuildingLevelFloorFactor;
+      BuildingFillZ = Building.Height;
+    }
+
+    // Top of building
+    {
+      TempPoints.SetNum( Building.BuildingPoints.Num(), false );
+      for( int32 PointIndex = 0; PointIndex < Building.BuildingPoints.Num(); ++PointIndex )
+      {
+        TempPoints[ PointIndex ] = FVector( Building.BuildingPoints[ ( Building.BuildingPoints.Num() - PointIndex ) - 1 ], BuildingFillZ );
+      }
+
+      if(WindsClockwise){
+        for( int32 PointIndex = 0; PointIndex < Building.BuildingPoints.Num(); PointIndex++ )
+        {
+          BPositions.Add( FVector(Building.BuildingPoints[PointIndex], BuildingFillZ) );
+          BNormals.Add(FVector::UpVector);
+        }
+      }
+      else
+      {
+        for( int32 PointIndex = 0; PointIndex < Building.BuildingPoints.Num(); PointIndex++ )
+        {
+          int RealIndex = ( Building.BuildingPoints.Num() - 1 ) - PointIndex;
+          BPositions.Add( FVector(Building.BuildingPoints[RealIndex], BuildingFillZ) );
+          BNormals.Add(FVector::UpVector);
+        }
+      }
+      for( int32 PointIndex : TriangulatedVertexIndices )
+      {
+        BIndices.Add( PointIndex );
+      }
+    }
+
+    FVector MeshCentroid = FVector(0,0,0);
+    for( const auto& Vertex : BPositions )
+    {
+      MeshCentroid += Vertex;
+    }
+
+    MeshCentroid /= BPositions.Num();
+
+    for( auto& Vertex : BPositions )
+    {
+      Vertex.X -= MeshCentroid.X;
+      Vertex.Y -= MeshCentroid.Y;
+      Vertex.Z -= MeshCentroid.Z;
+    }
+    TempActor->SetActorLocation( MeshCentroid );
+
+    TempPMC->CreateMeshSection_LinearColor(
+      0,
+      BPositions,
+      BIndices,
+      BNormals,
+      TArray<FVector2D>(), // UV0
+      TArray<FLinearColor>(), // VertexColor
+      TArray<FProcMeshTangent>(), // Tangents
+      false); // Create collision
+  }
+  return TempActor;
 }

@@ -16,6 +16,12 @@ void AStreetMapActor::SetNewStreetMap(UStreetMap* NewMap){
 	StreetMapComponent->SetStreetMap(NewMap);
 }
 
-void AStreetMapActor::GenerateTopOfBuildings(){
-	StreetMapComponent->GenerateTopsOfBuildings();
+TArray<AActor*> AStreetMapActor::GenerateTopOfBuildings()
+{
+	return StreetMapComponent->GenerateTopsOfBuildings();
+}
+
+AActor* AStreetMapActor::GenerateTopOfBuilding(int Index)
+{
+	return StreetMapComponent->GenerateTopOfBuilding(Index);
 }

@@ -19,6 +19,8 @@ void UHoudiniImporterWidget::CreateSubLevels(ALargeMapManager* LargeMapManager)
 
 void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Actors, ALargeMapManager* LargeMapManager)
 {
+  UE_LOG(LogCarlaTools, Log, TEXT("Moved %d actors"), Actors.Num());
+
   TMap<FCarlaMapTile*, TArray<AActor*>> ActorsToMove;
   for (AActor* Actor : Actors)
   {

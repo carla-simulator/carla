@@ -23,5 +23,7 @@ public:
 	void SetNewStreetMap(UStreetMap* NewMap);
 
   UFUNCTION(BlueprintCallable)
-	void GenerateTopOfBuildings();
+	TArray<AActor*> GenerateTopOfBuildings();
+  UFUNCTION(BlueprintCallable)
+	AActor* GenerateTopOfBuilding(int Index);
 };
