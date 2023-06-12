@@ -43,7 +43,7 @@ After double clicking on a point of interest, the navigator will display the cor
 ```py
 # CARLA coordinates: X 0.0, Y 0.0
 spectator = world.get_spectator()
-loc = carla.Location(0.0, 0.0, 500.0)
+loc = carla.Location(0.0, 0.0, 300.0)
 rot = carla.Rotation(pitch=-90, yaw=0.0, roll=0.0)
 spectator.set_transform(carla.Transform(loc, rot))
 ```
@@ -200,8 +200,8 @@ window.addEventListener('load', function () {
         text_coord_x = document.getElementById("carlacoord_x")
         text_coord_y = document.getElementById("carlacoord_y")
 
-        const carlaX = 10482.4274 * state.pX + -5.39801455 * state.pY - 5673.07949;
-        const carlaY = 5.39801455 * state.pX + 10482.4274 * state.pY - 2885.15738;
+        const carlaX = 14556.0868 * state.pX + -7.34734913 * state.pY - 6655.00941;
+        const carlaY = 2.19186383 * state.pX + 12431.3323 * state.pY - 4524.46039;
 
         code_coords[0].textContent = carlaX.toFixed(1)
         code_coords[1].textContent = carlaY.toFixed(1)
@@ -219,7 +219,7 @@ window.addEventListener('load', function () {
         parentX.replaceChild(newX, text_coord_x);
         parentY.replaceChild(newY, text_coord_y);
 
-        console.log(state.pX + ", " + state.pY)
+        //console.log(state.pX + ", " + state.pY)
 
     })
 
