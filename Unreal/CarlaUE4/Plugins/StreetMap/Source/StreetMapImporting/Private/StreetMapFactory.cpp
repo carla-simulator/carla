@@ -410,8 +410,6 @@ bool UStreetMapFactory::LoadFromOpenStreetMapXMLFile( UStreetMap* StreetMap, FSt
 
 FVector2D UStreetMapFactory::GetTransversemercProjection(float lat, float lon, float lat0, float lon0)
 {
-  UE_LOG(LogStreetMapImporting, Log, TEXT("lat %f lon %f lat0 %f lon0 %f ."), lat, lon, lat0, lon0 );
-
   // earth radius in m
   const float R = 6373000.0f;
   float latt = FMath::DegreesToRadians(lat);
@@ -426,6 +424,6 @@ FVector2D UStreetMapFactory::GetTransversemercProjection(float lat, float lon, f
   float x0 = R*nab0;
   float y0 = R*eps0;
   FVector2D Result = FVector2D(x, -(y - y0)) * OSMToCentimetersScaleFactor;
-  UE_LOG(LogStreetMapImporting, Log, TEXT("GetTransversemercProjection Result  %s ."), *(Result.ToString()) );
+
   return Result;
 }

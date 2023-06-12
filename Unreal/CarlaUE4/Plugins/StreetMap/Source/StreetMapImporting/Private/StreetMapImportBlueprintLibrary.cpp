@@ -17,8 +17,6 @@ UStreetMap* UStreetMapImportBlueprintLibrary::ImportStreetMap(FString Path, FStr
   // Create a new street map factory
   UStreetMapFactory* Factory = NewObject<UStreetMapFactory>();
   Factory->LatLonOrigin = OriginLatLon;
-  UE_LOG(LogStreetMapImporting, Log, TEXT("ImportStreetMap OriginLatLon  %s ."), *(OriginLatLon.ToString()) );
-  UE_LOG(LogStreetMapImporting, Log, TEXT("ImportStreetMap Factory->LatLonOrigin  %s ."), *(Factory->LatLonOrigin.ToString()) );
   // Create a new Blueprint asset with the given name
   TArray<UObject*> NewAssets = AssetTools.ImportAssets(AssetPath, DestinationAssetPath, Factory, true );
 
