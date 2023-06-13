@@ -61,14 +61,18 @@ void UMapPreviewUserWidget::ConnectToSocket(FString DatabasePath, FString Styles
 
   // Send a message
   FString Message = "-C " + DatabasePath + " " + StylesheetPath + " " + FString::FromInt(Size);
-  SendStr(Message);
+  if( !SendStr(Message) ){
+    return;
+  }
   UE_LOG(LogTemp, Log, TEXT("Configuration Completed"));
 }
 
 void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FString Zoom)
 {
   FString Message = "-R " + Latitude + " " + Longitude + " " + Zoom;
-  SendStr(Message);
+  if( !SendStr(Message) ){
+    return;
+  }
 
   TArray<uint8_t> ReceivedData;
   uint32 ReceivedDataSize = 0;
@@ -115,8 +119,11 @@ void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FStri
 }
 
 FString UMapPreviewUserWidget::RecvCornersLatLonCoords()
-{
-  SendStr("-L");
+{  
+  if( !SendStr("-L") ){
+    UE_LOG(LogTemp, Error, TEXT("Error sending message: num bytes mismatch"));
+    return FString();
+  }
 
   AsioStreamBuf Buffer;
   std::size_t BytesReceived = 
@@ -141,7 +148,10 @@ void UMapPreviewUserWidget::OpenServer()
 
 void UMapPreviewUserWidget::CloseServer()
 {
-  SendStr("-X");
+  if( !SendStr("-X") ){
+    UE_LOG(LogTemp, Error, TEXT("Error sending message"));
+    return;
+  }
 }
 
 bool UMapPreviewUserWidget::SendStr(FString Msg)
@@ -178,6 +188,11 @@ bool UMapPreviewUserWidget::SendStr(FString Msg)
 void UMapPreviewUserWidget::UpdateLatLonCoordProperties()
 {
   FString CoordStr = RecvCornersLatLonCoords();
+  if(CoordStr.Len() == 0)
+  {
+    UE_LOG(LogTemp, Error, TEXT("Error during update of lat lon coord properties. Check osm server connection or use OSMURL to generate map") );
+    return;
+  }
   UE_LOG(LogTemp, Log, TEXT("Received laton [%s] with size %d"), *CoordStr, CoordStr.Len());
 
   TArray<FString> CoordsArray;
