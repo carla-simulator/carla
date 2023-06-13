@@ -14,11 +14,8 @@ class UStreetMapFactory : public UFactory
 	GENERATED_BODY()
 
 public:
-
 	/** UStreetMapFactory constructor */
 	UStreetMapFactory( const class FObjectInitializer& ObjectInitializer );
-
-
 
 	// UFactory overrides
 	virtual UObject* FactoryCreateText( UClass* Class, UObject* Parent, FName Name, EObjectFlags Flags, UObject* Context, const TCHAR* Type, const TCHAR*& Buffer, const TCHAR* BufferEnd, FFeedbackContext* Warn ) override;
@@ -32,7 +29,4 @@ protected:
 
 	/** Static: Latitude/longitude scale factor */
 	static const double LatitudeLongitudeScale;
-
-
 };
-

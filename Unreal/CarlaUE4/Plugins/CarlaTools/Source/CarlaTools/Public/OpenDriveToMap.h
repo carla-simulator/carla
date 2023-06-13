@@ -79,6 +79,9 @@ public:
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   float DistanceFromRoadEdge = 3.0f;
 
+  UFUNCTION(BlueprintCallable)
+  static FVector2D GetTransversemercProjection(float lat, float lon, float lat0, float lon0);
+
 protected:
 
   UFUNCTION( BlueprintCallable )
@@ -97,11 +100,11 @@ private:
   UFUNCTION()
   void LoadMap();
 
-  void GenerateAll(const boost::optional<carla::road::Map>& CarlaMap);
-  void GenerateRoadMesh(const boost::optional<carla::road::Map>& CarlaMap);
-  void GenerateSpawnPoints(const boost::optional<carla::road::Map>& CarlaMap);
-  void GenerateTreePositions(const boost::optional<carla::road::Map>& CarlaMap);
-  void GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap);
+  void GenerateAll(const boost::optional<carla::road::Map>& ParamCarlaMap);
+  void GenerateRoadMesh(const boost::optional<carla::road::Map>& ParamCarlaMap);
+  void GenerateSpawnPoints(const boost::optional<carla::road::Map>& ParamCarlaMap);
+  void GenerateTreePositions(const boost::optional<carla::road::Map>& ParamCarlaMap);
+  void GenerateLaneMarks(const boost::optional<carla::road::Map>& ParamCarlaMap);
 
   float GetHeight(float PosX, float PosY,bool bDrivingLane = false);
   carla::rpc::OpendriveGenerationParameters opg_parameters;
