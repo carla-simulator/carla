@@ -75,6 +75,23 @@ void ROS2::SetTimestamp(double timestamp) {
    //log_info("ROS2 new timestamp: ", _timestamp);
 }
 
+void ROS2::AddActorRosName(void *actor, std::string ros_name) {
+  _actor_ros_name.insert({actor, ros_name});
+}
+
+void ROS2::RemoveActorRosName(void *actor) {
+  _actor_ros_name.erase(actor);
+}
+
+std::string ROS2::GetActorRosName(void *actor) {
+  auto it = _actor_ros_name.find(actor);
+  if (it != _actor_ros_name.end())
+    return it->second;
+  else
+    return std::string("");
+}
+
+
 void ROS2::InitPublishers() {
   if (_rgb_camera_publisher)
     return;
@@ -103,10 +120,22 @@ void ROS2::InitPublishers() {
   _speedometer_sensor->Init();
 }
 
-void ROS2::ProcessDataFromSensor(uint64_t sensor_type,
+void ROS2::ProcessDataFromSensor(
+    void *actor,
+    uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     const carla::SharedBufferView buffer) {
+
+  // check if we need to create a publisher yet
+  if (need_to_create_publisher_for_this_sensor) {
+    // get ros_name for the topic name
+    std::string RosName = GetActorRosName(actor);
+
+    // build topic name
+
+    // create publisher
+  }
 
   switch (sensor_type) {
     case ESensors::CollisionSensor:
@@ -158,7 +187,9 @@ void ROS2::ProcessDataFromSensor(uint64_t sensor_type,
   }
 }
 
-void ROS2::ProcessDataFromGNSS(uint64_t sensor_type,
+void ROS2::ProcessDataFromGNSS(
+    void *actor,
+    uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     const carla::geom::GeoLocation &data) {
@@ -167,7 +198,9 @@ void ROS2::ProcessDataFromGNSS(uint64_t sensor_type,
   _gnss_publisher->Publish();
 }
 
-void ROS2::ProcessDataFromIMU(uint64_t sensor_type,
+void ROS2::ProcessDataFromIMU(
+    void *actor,
+    uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     carla::geom::Vector3D accelerometer,
@@ -178,7 +211,9 @@ void ROS2::ProcessDataFromIMU(uint64_t sensor_type,
   _imu_publisher->Publish();
 }
 
-void ROS2::ProcessDataFromDVS(uint64_t sensor_type,
+void ROS2::ProcessDataFromDVS(
+    void *actor,
+    uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     const std::vector<carla::sensor::data::DVSEvent> &events) {
@@ -187,7 +222,9 @@ void ROS2::ProcessDataFromDVS(uint64_t sensor_type,
   _dvs_camera_publisher->Publish();
 }
 
-void ROS2::ProcessDataFromLidar(uint64_t sensor_type,
+void ROS2::ProcessDataFromLidar(
+    void *actor,
+    uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     const carla::sensor::data::LidarData &data) {
@@ -196,7 +233,9 @@ void ROS2::ProcessDataFromLidar(uint64_t sensor_type,
   _lidar_publisher->Publish();
 }
 
-void ROS2::ProcessDataFromSemanticLidar(uint64_t sensor_type,
+void ROS2::ProcessDataFromSemanticLidar(
+    void *actor,
+    uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     const carla::sensor::data::SemanticLidarData &data) {
@@ -205,7 +244,9 @@ void ROS2::ProcessDataFromSemanticLidar(uint64_t sensor_type,
   _semantic_lidar_publisher->Publish();
 }
 
-void ROS2::ProcessDataFromRadar(uint64_t sensor_type,
+void ROS2::ProcessDataFromRadar(
+    void *actor,
+    uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     const carla::sensor::data::RadarData &data) {
@@ -214,13 +255,15 @@ void ROS2::ProcessDataFromRadar(uint64_t sensor_type,
   _radar_publisher->Publish();
 }
 
-void ROS2::ProcessDataFromObstacleDetection(uint64_t sensor_type,
+void ROS2::ProcessDataFromObstacleDetection(
+    void *actor,
+    uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
-    AActor *Actor,
-    AActor *OtherActor,
-    float Distance) {
-  log_info("Sensor ObstacleDetector to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "distance.", Distance);
+    AActor *first_ctor,
+    AActor *second_actor,
+    float distance) {
+  log_info("Sensor ObstacleDetector to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "distance.", distance);
 }
 
 

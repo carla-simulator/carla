@@ -14,6 +14,10 @@
 
 #include "GameFramework/Controller.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include "carla/ros2/ROS2.h"
+#include <compiler/enable-ue4-macros.h>
+
 void UActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
 {
   if (UActorBlueprintFunctionLibrary::CheckActorDefinition(Definition))
@@ -162,6 +166,23 @@ FCarlaActor* UActorDispatcher::RegisterActor(
   {
     // TODO: support external actor destruction
     Actor.OnDestroyed.AddDynamic(this, &UActorDispatcher::OnActorDestroyed);
+
+    // ROS2 mapping of actor->ros_name
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+    {
+      std::string RosName;
+      for (auto &&Attr : Description.Variations)
+      {
+        if (Attr->first == "ros_name")
+        {
+          RosName = std::string(Attr->second);
+        }
+      }
+      ROS2->AddActorRosName(reinterpret_cast<void *>(Actor), RosName);
+    }
+    #endif
   }
   return View;
 }
@@ -186,4 +207,12 @@ void UActorDispatcher::OnActorDestroyed(AActor *Actor)
       Registry.Deregister(CarlaActor->GetActorId());
     }
   }
+
+  #if defined(WITH_ROS2)
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (ROS2->IsEnabled())
+  {
+    ROS2->RemoveActorRosName(reinterpret_cast<void *>(Actor));
+  }
+  #endif
 }

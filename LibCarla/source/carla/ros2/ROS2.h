@@ -63,6 +63,11 @@ class ROS2
   void SetFrame(uint64_t frame);
   void SetTimestamp(double timestamp);
 
+  // ros_name managing
+  void AddActorRosName(void *actor, std::string ros_name);
+  void RemoveActorRosName(void *actor);
+  std::string GetActorRosName(void *actor);
+
   void InitPublishers();
 
   // enabling streams to publish
@@ -71,42 +76,58 @@ class ROS2
   void ResetStreams() { _publish_stream.clear(); }
 
   // receiving data to publish
-  void ProcessDataFromSensor(uint64_t sensor_type,
+  void ProcessDataFromSensor(
+      void *actor,
+      uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
       const carla::SharedBufferView buffer);
-  void ProcessDataFromGNSS(uint64_t sensor_type,
+  void ProcessDataFromGNSS(
+      void *actor,
+      uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
       const carla::geom::GeoLocation &data);
-  void ProcessDataFromIMU(uint64_t sensor_type,
+  void ProcessDataFromIMU(
+      void *actor,
+      uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
       carla::geom::Vector3D accelerometer,
       carla::geom::Vector3D gyroscope,
       float compass);
-  void ProcessDataFromDVS(uint64_t sensor_type,
+  void ProcessDataFromDVS(
+      void *actor,
+      uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
       const std::vector<carla::sensor::data::DVSEvent> &events);
-  void ProcessDataFromLidar(uint64_t sensor_type,
+  void ProcessDataFromLidar(
+      void *actor,
+      uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
       const carla::sensor::data::LidarData &data);
-  void ProcessDataFromSemanticLidar(uint64_t sensor_type,
+  void ProcessDataFromSemanticLidar(
+      void *actor,
+      uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
       const carla::sensor::data::SemanticLidarData &data);
-  void ProcessDataFromRadar(uint64_t sensor_type,
+  void ProcessDataFromRadar(
+      void *actor,
+      uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
       const carla::sensor::data::RadarData &data);
-  void ProcessDataFromObstacleDetection(uint64_t sensor_type,
+  void ProcessDataFromObstacleDetection(
+      void *actor,
+      uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
-      AActor *Actor,
-      AActor *OtherActor,
-      float Distance);
+      AActor *first_actor,
+      AActor *second_actor,
+      float distance);
 
   private:
   void UpdateRGBCamera(const carla::SharedBufferView buffer, const char* frame_id);
@@ -128,6 +149,7 @@ class ROS2
   bool _enabled { false };
   uint64_t _frame { 0 };
   double _timestamp { 0 };
+  std::unordered_map<void *, std::string> _actor_ros_name;
   std::unordered_set<carla::streaming::detail::stream_id_type> _publish_stream;
   CarlaRGBCameraPublisher* _rgb_camera_publisher { nullptr };
   CarlaDepthCameraPublisher* _depth_camera_publisher { nullptr };
