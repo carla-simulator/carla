@@ -174,12 +174,12 @@ The assets will be downloaded and extracted to the appropriate location.
 
 To download the assets for a __specific version__ of CARLA:
 
-1. From the root CARLA directory, navigate to `\Util\ContentVersions.txt`. This document contains the links to the assets for all CARLA releases. 
+1. From the root CARLA directory, navigate to `/Util/ContentVersions.txt`. This document contains the links to the assets for all CARLA releases. 
 2. Extract the assets in `Unreal\CarlaUE4\Content\Carla`. If the path doesn't exist, create it.  
 3. Extract the file with a command similar to the following:
 
 ```sh
-        tar -xvzf <assets_file_name>.tar.gz.tar -C C:\path\to\carla\Unreal\CarlaUE4\Content\Carla
+        tar -xvzf <assets_file_name>.tar.gz.tar -C /path/to/carla/Unreal/CarlaUE4/Content/Carla
 ```
 
 ### Set Unreal Engine environment variable
