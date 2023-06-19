@@ -324,7 +324,7 @@ bool FOSMFile::ProcessAttribute( const TCHAR* AttributeName, const TCHAR* Attrib
 			else if( !FCString::Stricmp( CurrentWayTagKey, TEXT( "building" ) ) )
 			{
 				CurrentWayInfo->WayType = EOSMWayType::Building;
-
+				CurrentWayInfo->Category = AttributeValue;
 				if( !FCString::Stricmp( AttributeValue, TEXT( "yes" ) ) )
 				{
 					CurrentWayInfo->WayType = EOSMWayType::Building;

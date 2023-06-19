@@ -162,6 +162,7 @@ public:
 	{
 		FString Name;
 		FString Ref;
+		FString Category;
 		TArray<FOSMNodeInfo*> Nodes;
 		EOSMWayType WayType;
 		double Height;
