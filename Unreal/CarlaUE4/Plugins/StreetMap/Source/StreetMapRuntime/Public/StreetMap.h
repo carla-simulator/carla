@@ -279,6 +279,10 @@ struct STREETMAPRUNTIME_API FStreetMapBuilding
 	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadWrite )
 	FString BuildingName;
 
+	/** Category of the building */
+	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadWrite )
+	FString BuildingCategory;
+
 	/** Polygon points that define the perimeter of the building */
 	UPROPERTY( Category=StreetMap, EditAnywhere, BlueprintReadWrite )
 	TArray<FVector2D> BuildingPoints;

@@ -254,6 +254,7 @@ bool UStreetMapFactory::LoadFromOpenStreetMapXMLFile( UStreetMap* StreetMap, FSt
 				}
 
 				NewBuilding.BuildingName = OSMWay.Name;
+				NewBuilding.BuildingCategory = OSMWay.Category;
 				if( NewBuilding.BuildingName.IsEmpty() )
 				{
 					NewBuilding.BuildingName = OSMWay.Ref;
