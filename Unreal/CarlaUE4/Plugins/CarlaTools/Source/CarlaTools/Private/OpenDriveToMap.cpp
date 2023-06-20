@@ -52,7 +52,7 @@
 
 UOpenDriveToMap::~UOpenDriveToMap()
 {
-    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("UOpenDriveToMap IS BEING DESTROYED") );
+
 }
 
 FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
@@ -636,6 +636,7 @@ FTransform UOpenDriveToMap::GetSnappedPosition( FTransform Origin ){
   FVector End = Origin.GetLocation() - FVector( 0, 0, 1000);
   FHitResult HitResult;
   FCollisionQueryParams CollisionQuery;
+  CollisionQuery.bTraceComplex = true;
   FCollisionResponseParams CollisionParams;
 
   if( UEditorLevelLibrary::GetEditorWorld()->LineTraceSingleByChannel(
@@ -657,6 +658,7 @@ float UOpenDriveToMap::GetHeightForLandscape( FVector Origin ){
   FVector End = Origin - FVector( 0, 0, 10000);
   FHitResult HitResult;
   FCollisionQueryParams CollisionQuery;
+  CollisionQuery.bTraceComplex = true;
   CollisionQuery.AddIgnoredActors(Landscapes);
   FCollisionResponseParams CollisionParams;
 
