@@ -1,7 +1,6 @@
 // Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "OpenDriveToMap.h"
-#include "Components/Button.h"
 #include "DesktopPlatform/Public/IDesktopPlatform.h"
 #include "DesktopPlatform/Public/DesktopPlatformModule.h"
 #include "Misc/FileHelper.h"
@@ -10,12 +9,13 @@
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "KismetProceduralMeshLibrary.h"
+#include "StaticMeshAttributes.h"
 
-#include "Carla/Game/CarlaStatics.h"
 #include "Traffic/TrafficLightManager.h"
 #include "Online/CustomFileDownloader.h"
 #include "Util/ProceduralCustomMesh.h"
-
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/BlueprintLibary/MapGenFunctionLibrary.h"
 #include "OpenDrive/OpenDriveGenerator.h"
 
 #include <compiler/disable-ue4-macros.h>
@@ -31,6 +31,7 @@
 #include "Engine/TriggerBox.h"
 #include "Factories/MaterialInstanceConstantFactoryNew.h"
 #include "PhysicsCore/Public/BodySetupEnums.h"
+#include "PhysicsEngine/BodySetup.h"
 #include "RawMesh.h"
 #include "AssetRegistryModule.h"
 #include "Engine/StaticMesh.h"
@@ -47,7 +48,7 @@
 
 #include "DrawDebugHelpers.h"
 
-static const float OSMToCentimetersScaleFactor = 100.0f;
+
 
 UOpenDriveToMap::~UOpenDriveToMap()
 {
@@ -165,7 +166,7 @@ void UOpenDriveToMap::CreateMap()
 void UOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGridSectionSize, const class UTexture2D* HeightmapTexture)
 {
   TArray<AActor*> FoundActors;
-  UGameplayStatics::GetAllActorsOfClass(UEditorLevelLibrary::GetEditorWorld(), AProceduralMeshActor::StaticClass(), FoundActors);
+  UGameplayStatics::GetAllActorsOfClass(UEditorLevelLibrary::GetEditorWorld(), AStaticMeshActor::StaticClass(), FoundActors);
   FVector BoxOrigin;
   FVector BoxExtent;
   UGameplayStatics::GetActorArrayBounds(FoundActors, false, BoxOrigin, BoxExtent);
@@ -207,9 +208,9 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
   UWorld* World = UEditorLevelLibrary::GetEditorWorld();
 
   // Creation of the procedural mesh
-  AProceduralMeshActor* MeshActor = World->SpawnActor<AProceduralMeshActor>();
+  AStaticMeshActor* MeshActor = World->SpawnActor<AStaticMeshActor>();
   MeshActor->SetActorLocation(FVector(Offset.X, Offset.Y, 0));
-  UProceduralMeshComponent* Mesh = MeshActor->MeshComponent;
+  UStaticMeshComponent* Mesh = MeshActor->GetStaticMeshComponent();
 
   TArray<FVector> Vertices;
   TArray<int32> Triangles;
@@ -280,11 +281,6 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
     }
   }
 
-  if( DefaultLandscapeMaterial )
-  {
-    Mesh->SetMaterial(0, DefaultLandscapeMaterial);
-  }
-
   UKismetProceduralMeshLibrary::CalculateTangentsForMesh(
     Vertices,
     Triangles,
@@ -293,13 +289,14 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
     Tangents
   );
 
-  Mesh->CreateMeshSection_LinearColor(0, Vertices, Triangles, Normals,
-      UVs, // UV0
-      TArray<FLinearColor>(), // VertexColor
-      Tangents, // Tangents
-      true); // Create collision);
-
-  MeshActor->SetActorLabel("SM_Landscape" + FString::FromInt(MeshIndex) );
+  FProceduralCustomMesh MeshData;
+  MeshData.Vertices = Vertices;
+  MeshData.Triangles = Triangles;
+  MeshData.Normals = Normals;
+  MeshData.UV0 = UVs;
+  UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, DefaultLandscapeMaterial, MapName, "Landscape", FName(TEXT("SM_LandscapeMesh" + FString::FromInt(MeshIndex) )));
+  Mesh->SetStaticMesh(MeshToSet);
+  MeshActor->SetActorLabel("SM_LandscapeActor" + FString::FromInt(MeshIndex) );
   Mesh->CastShadow = false;
   Landscapes.Add(MeshActor);
 }
@@ -555,19 +552,17 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
       continue;
     }
 
-    AProceduralMeshActor* TempActor = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AProceduralMeshActor>();
+    AStaticMeshActor* TempActor = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AStaticMeshActor>();
+    UStaticMeshComponent* StaticMeshComponent = TempActor->GetStaticMeshComponent();
     TempActor->SetActorLabel(FString("SM_LaneMark_") + FString::FromInt(index));
-    UProceduralMeshComponent* TempPMC = TempActor->MeshComponent;
-    TempPMC->bUseAsyncCooking = true;
-    TempPMC->bUseComplexAsSimpleCollision = true;
-    TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    TempPMC->CastShadow = false;
+    StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    StaticMeshComponent->CastShadow = false;
     if (lanemarkinfo[index].find("yellow") != std::string::npos) {
       if(DefaultLaneMarksYellowMaterial)
-        TempPMC->SetMaterial(0, DefaultLaneMarksYellowMaterial);
+        StaticMeshComponent->SetMaterial(0, DefaultLaneMarksYellowMaterial);
     }else{
       if(DefaultLaneMarksWhiteMaterial)
-        TempPMC->SetMaterial(0, DefaultLaneMarksWhiteMaterial);
+        StaticMeshComponent->SetMaterial(0, DefaultLaneMarksWhiteMaterial);
 
     }
 
@@ -581,15 +576,9 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
       Normals,
       Tangents
     );
-    TempPMC->CreateMeshSection_LinearColor(
-      0,
-      MeshData.Vertices,
-      MeshData.Triangles,
-      Normals,
-      MeshData.UV0, // UV0
-      TArray<FLinearColor>(), // VertexColor
-      Tangents, // Tangents
-      true); // Create collision
+
+    UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, DefaultLandscapeMaterial, MapName, "LaneMark", FName(TEXT("SM_LaneMarkMesh" + FString::FromInt(index) )));
+    StaticMeshComponent->SetStaticMesh(MeshToSet);
     TempActor->SetActorLocation(MeshCentroid * 100);
     TempActor->Tags.Add(*FString(lanemarkinfo[index].c_str()));
     LaneMarkerActorList.Add(TempActor);
@@ -630,242 +619,6 @@ void UOpenDriveToMap::GenerateTreePositions( const boost::optional<carla::road::
     Spawner->SetActorLabel("TreeSpawnPosition" + FString::FromInt(i) );
     ++i;
   }
-}
-UStaticMesh* UOpenDriveToMap::CreateStaticMeshAsset( UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName )
-{
-  FMeshDescription MeshDescription = BuildMeshDescription(ProcMeshComp);
-
-  IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-
-  // If we got some valid data.
-  if (MeshDescription.Polygons().Num() > 0)
-  {
-    FString MeshName = *(FolderName + FString::FromInt(MeshIndex) );
-    FString PackageName = "/Game/CustomMaps/" + MapName + "/Static/" + FolderName + "/" + MeshName;
-
-    if( !PlatformFile.DirectoryExists(*PackageName) )
-    {
-      PlatformFile.CreateDirectory(*PackageName);
-    }
-
-    // Then find/create it.
-    UPackage* Package = CreatePackage(*PackageName);
-    check(Package);
-    // Create StaticMesh object
-    UStaticMesh* StaticMesh = NewObject<UStaticMesh>(Package, *MeshName, RF_Public | RF_Standalone);
-    StaticMesh->InitResources();
-
-    StaticMesh->LightingGuid = FGuid::NewGuid();
-
-    // Add source to new StaticMesh
-    FStaticMeshSourceModel& SrcModel = StaticMesh->AddSourceModel();
-    SrcModel.BuildSettings.bRecomputeNormals = false;
-    SrcModel.BuildSettings.bRecomputeTangents = false;
-    SrcModel.BuildSettings.bRemoveDegenerates = false;
-    SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
-    SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
-    SrcModel.BuildSettings.bGenerateLightmapUVs = true;
-    SrcModel.BuildSettings.SrcLightmapIndex = 0;
-    SrcModel.BuildSettings.DstLightmapIndex = 1;
-    SrcModel.BuildSettings.DistanceFieldResolutionScale = 0;
-    StaticMesh->CreateMeshDescription(0, MoveTemp(MeshDescription));
-    StaticMesh->CommitMeshDescription(0);
-
-    //// SIMPLE COLLISION
-    if (!ProcMeshComp->bUseComplexAsSimpleCollision )
-    {
-      StaticMesh->CreateBodySetup();
-      UBodySetup* NewBodySetup = StaticMesh->BodySetup;
-      NewBodySetup->BodySetupGuid = FGuid::NewGuid();
-      NewBodySetup->AggGeom.ConvexElems = ProcMeshComp->ProcMeshBodySetup->AggGeom.ConvexElems;
-      NewBodySetup->bGenerateMirroredCollision = false;
-      NewBodySetup->bDoubleSidedGeometry = true;
-      NewBodySetup->CollisionTraceFlag = CTF_UseDefault;
-      NewBodySetup->CreatePhysicsMeshes();
-    }
-
-    //// MATERIALS
-    TSet<UMaterialInterface*> UniqueMaterials;
-    const int32 NumSections = ProcMeshComp->GetNumSections();
-    for (int32 SectionIdx = 0; SectionIdx < NumSections; SectionIdx++)
-    {
-      FProcMeshSection *ProcSection =
-        ProcMeshComp->GetProcMeshSection(SectionIdx);
-      UMaterialInterface *Material = ProcMeshComp->GetMaterial(SectionIdx);
-      UniqueMaterials.Add(Material);
-    }
-    // Copy materials to new mesh
-    for (auto* Material : UniqueMaterials)
-    {
-      StaticMesh->StaticMaterials.Add(FStaticMaterial(Material));
-    }
-
-    //Set the Imported version before calling the build
-    StaticMesh->ImportVersion = EImportStaticMeshVersion::LastVersion;
-    StaticMesh->Build(false);
-    StaticMesh->PostEditChange();
-
-    // Notify asset registry of new asset
-    FAssetRegistryModule::AssetCreated(StaticMesh);
-    UPackage::SavePackage(Package, StaticMesh, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *MeshName, GError, nullptr, true, true, SAVE_NoError);
-    return StaticMesh;
-  }
-  return nullptr;
-}
-
-TArray<UStaticMesh*> UOpenDriveToMap::CreateStaticMeshAssets()
-{
-  double start = FPlatformTime::Seconds();
-  double end = FPlatformTime::Seconds();
-
-  IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-  TArray<UStaticMesh*> StaticMeshes;
-
-  double BuildMeshDescriptionTime = 0.0f;
-  double PackgaesCreatingTime = 0.0f;
-  double MeshInitTime = 0.0f;
-  double MatAndCollInitTime = 0.0f;
-  double MeshBuildTime = 0.0f;
-  double PackSaveTime = 0.0f;
-
-
-  for (int i = 0; i < RoadMesh.Num(); ++i)
-  {
-    FString MeshName = RoadType[i] + FString::FromInt(i);
-    FString PackageName = "/Game/CustomMaps/" + MapName + "/Static/" + RoadType[i] + "/" + MeshName;
-
-    if (!PlatformFile.DirectoryExists(*PackageName))
-    {
-      PlatformFile.CreateDirectory(*PackageName);
-    }
-
-    UProceduralMeshComponent* ProcMeshComp = RoadMesh[i];
-    start = FPlatformTime::Seconds();
-    FMeshDescription MeshDescription = BuildMeshDescription(ProcMeshComp);
-    end = FPlatformTime::Seconds();
-    BuildMeshDescriptionTime += end - start;
-    // If we got some valid data.
-    if (MeshDescription.Polygons().Num() > 0)
-    {
-      start = FPlatformTime::Seconds();
-      // Then find/create it.
-      UPackage* Package = CreatePackage(*PackageName);
-      check(Package);
-      end = FPlatformTime::Seconds();
-      PackgaesCreatingTime += end - start;
-
-      start = FPlatformTime::Seconds();
-
-      // Create StaticMesh object
-      UStaticMesh* CurrentStaticMesh = NewObject<UStaticMesh>(Package, *MeshName, RF_Public | RF_Standalone);
-      CurrentStaticMesh->InitResources();
-
-      CurrentStaticMesh->LightingGuid = FGuid::NewGuid();
-
-      // Add source to new StaticMesh
-      FStaticMeshSourceModel& SrcModel = CurrentStaticMesh->AddSourceModel();
-      SrcModel.BuildSettings.bRecomputeNormals = false;
-      SrcModel.BuildSettings.bRecomputeTangents = false;
-      SrcModel.BuildSettings.bRemoveDegenerates = false;
-      SrcModel.BuildSettings.bUseHighPrecisionTangentBasis = false;
-      SrcModel.BuildSettings.bUseFullPrecisionUVs = false;
-      SrcModel.BuildSettings.bGenerateLightmapUVs = true;
-      SrcModel.BuildSettings.SrcLightmapIndex = 0;
-      SrcModel.BuildSettings.DstLightmapIndex = 1;
-      CurrentStaticMesh->CreateMeshDescription(0, MoveTemp(MeshDescription));
-      CurrentStaticMesh->CommitMeshDescription(0);
-      end = FPlatformTime::Seconds();
-      MeshInitTime += end - start;
-      start = FPlatformTime::Seconds();
-
-      //// SIMPLE COLLISION
-      if (!ProcMeshComp->bUseComplexAsSimpleCollision)
-      {
-        CurrentStaticMesh->CreateBodySetup();
-        UBodySetup* NewBodySetup = CurrentStaticMesh->BodySetup;
-        NewBodySetup->BodySetupGuid = FGuid::NewGuid();
-        NewBodySetup->AggGeom.ConvexElems = ProcMeshComp->ProcMeshBodySetup->AggGeom.ConvexElems;
-        NewBodySetup->bGenerateMirroredCollision = false;
-        NewBodySetup->bDoubleSidedGeometry = true;
-        NewBodySetup->CollisionTraceFlag = CTF_UseDefault;
-        NewBodySetup->CreatePhysicsMeshes();
-      }
-
-      //// MATERIALS
-      TSet<UMaterialInterface*> UniqueMaterials;
-      const int32 NumSections = ProcMeshComp->GetNumSections();
-      for (int32 SectionIdx = 0; SectionIdx < NumSections; SectionIdx++)
-      {
-        FProcMeshSection* ProcSection =
-          ProcMeshComp->GetProcMeshSection(SectionIdx);
-        UMaterialInterface* Material = ProcMeshComp->GetMaterial(SectionIdx);
-        UniqueMaterials.Add(Material);
-      }
-      // Copy materials to new mesh
-      for (auto* Material : UniqueMaterials)
-      {
-        CurrentStaticMesh->StaticMaterials.Add(FStaticMaterial(Material));
-      }
-
-      end = FPlatformTime::Seconds();
-      MatAndCollInitTime += end - start;
-      start = FPlatformTime::Seconds();
-      //Set the Imported version before calling the build
-      CurrentStaticMesh->ImportVersion = EImportStaticMeshVersion::LastVersion;
-      CurrentStaticMesh->Build(false);
-      CurrentStaticMesh->PostEditChange();
-
-      end = FPlatformTime::Seconds();
-      MeshBuildTime += end - start;
-      start = FPlatformTime::Seconds();
-
-      FString RoadName = *(RoadType[i] + FString::FromInt(i));
-      // Notify asset registry of new asset
-      FAssetRegistryModule::AssetCreated(CurrentStaticMesh);
-      UPackage::SavePackage(Package, CurrentStaticMesh, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *RoadName, GError, nullptr, true, true, SAVE_NoError);
-      end = FPlatformTime::Seconds();
-      PackSaveTime += end - start;
-
-
-      StaticMeshes.Add( CurrentStaticMesh );
-    }
-  }
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in BuildMeshDescriptionTime %f. Time per mesh %f"), BuildMeshDescriptionTime, BuildMeshDescriptionTime/ RoadMesh.Num());
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in PackgaesCreatingTime %f. Time per mesh %f"), PackgaesCreatingTime, PackgaesCreatingTime / RoadMesh.Num());
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in MeshInitTime %f. Time per mesh %f"), MeshInitTime, MeshInitTime / RoadMesh.Num());
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in MatAndCollInitTime %f. Time per mesh %f"), MatAndCollInitTime, MatAndCollInitTime / RoadMesh.Num());
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in MeshBuildTime %f. Time per mesh %f"), MeshBuildTime, MeshBuildTime / RoadMesh.Num());
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" UOpenDriveToMap::CreateStaticMeshAssets total time in PackSaveTime %f. Time per mesh %f"), PackSaveTime, PackSaveTime / RoadMesh.Num());
-  return StaticMeshes;
-}
-
-void UOpenDriveToMap::SaveMap()
-{
-  double start = FPlatformTime::Seconds();
-
-  MeshesToSpawn = CreateStaticMeshAssets();
-
-  double end = FPlatformTime::Seconds();
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" Meshes created static mesh code executed in %f seconds."), end - start);
-
-  start = FPlatformTime::Seconds();
-
-  for (int i = 0; i < MeshesToSpawn.Num(); ++i)
-  {
-    AStaticMeshActor* TempActor = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AStaticMeshActor>();
-    // Build mesh from source
-    TempActor->GetStaticMeshComponent()->SetStaticMesh(MeshesToSpawn[i]);
-    TempActor->SetActorLabel(FString("SM_") + MeshesToSpawn[i]->GetName());
-    TempActor->SetActorTransform(ActorMeshList[i]->GetActorTransform());
-  }
-
-  for (auto CurrentActor : ActorMeshList)
-  {
-    CurrentActor->Destroy();
-  }
-
-  end = FPlatformTime::Seconds();
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" Spawning Static Meshes code executed in %f seconds."), end - start);
 }
 
 float UOpenDriveToMap::GetHeight(float PosX, float PosY, bool bDrivingLane){
@@ -936,24 +689,4 @@ float UOpenDriveToMap::DistanceToLaneBorder(const boost::optional<carla::road::M
     return cl.Distance(ct.location) - LaneWidth;
   }
   return 100000.0f;
-}
-
-FVector2D UOpenDriveToMap::GetTransversemercProjection(float lat, float lon, float lat0, float lon0)
-{
-  // earth radius in m
-  const float R = 6373000.0f;
-  float latt = FMath::DegreesToRadians(lat);
-  float lonn  = FMath::DegreesToRadians(lon - lon0);
-  float latt0 = FMath::DegreesToRadians(lat0);
-  float eps = atan(tan(latt)/cos(lonn));
-  float nab = asinh(sin(lonn)/sqrt(tan(latt)*tan(latt)+cos(lonn)*cos(lonn)));
-  float x = R*nab;
-  float y = R*eps;
-  float eps0 = atan(tan(latt0)/cos(0));
-  float nab0 = asinh(sin(0)/sqrt(tan(latt0)*tan(latt0)+cos(0)*cos(0)));
-  float x0 = R*nab0;
-  float y0 = R*eps0;
-  FVector2D Result = FVector2D(x, -(y - y0)) * OSMToCentimetersScaleFactor;
-
-  return Result;
 }

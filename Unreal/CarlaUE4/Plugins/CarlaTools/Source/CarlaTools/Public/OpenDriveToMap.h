@@ -29,7 +29,7 @@ class CARLATOOLS_API UOpenDriveToMap : public UObject
 
 public:
   ~UOpenDriveToMap();
-  
+
   UFUNCTION()
   void ConvertOSMInOpenDrive();
 
@@ -79,13 +79,7 @@ public:
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   float DistanceFromRoadEdge = 3.0f;
 
-  UFUNCTION(BlueprintCallable)
-  static FVector2D GetTransversemercProjection(float lat, float lon, float lat0, float lon0);
-
 protected:
-
-  UFUNCTION( BlueprintCallable )
-  void SaveMap();
 
   UFUNCTION(BlueprintCallable)
   TArray<AActor*> GenerateMiscActors(float Offset);
@@ -109,9 +103,6 @@ private:
   float GetHeight(float PosX, float PosY,bool bDrivingLane = false);
   carla::rpc::OpendriveGenerationParameters opg_parameters;
   boost::optional<carla::road::Map> CarlaMap;
-
-  UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
-  TArray<UStaticMesh*> CreateStaticMeshAssets();
 
   FTransform GetSnappedPosition(FTransform Origin);
 

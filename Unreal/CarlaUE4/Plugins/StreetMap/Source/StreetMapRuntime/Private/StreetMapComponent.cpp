@@ -4,13 +4,15 @@
 #include "StreetMapRuntime.h"
 
 #include "StreetMapSceneProxy.h"
-#include "Runtime/Engine/Classes/Engine/StaticMesh.h"
-#include "Runtime/Engine/Public/StaticMeshResources.h"
+#include "Engine/StaticMesh.h"
+#include "StaticMeshResources.h"
+#include "Engine/StaticMeshActor.h"
 #include "PolygonTools.h"
 
 #include "PhysicsEngine/BodySetup.h"
 #include "ProceduralMeshComponent.h"
 #include "Carla/OpenDrive/OpenDriveGenerator.h"
+#include "Carla/BlueprintLibary/MapGenFunctionLibrary.h"
 
 #if WITH_EDITOR
 #include "Modules/ModuleManager.h"
@@ -639,32 +641,30 @@ FString UStreetMapComponent::GetStreetMapAssetName() const
   return StreetMap != nullptr ? StreetMap->GetName() : FString(TEXT("NONE"));
 }
 
-TArray<AActor*> UStreetMapComponent::GenerateTopsOfBuildings()
+TArray<AActor*> UStreetMapComponent::GenerateTopsOfBuildings(FString MapName, UMaterialInstance* MaterialInstance)
 {
   TArray<AActor*> Returning;
   const float BuildingLevelFloorFactor = MeshBuildSettings.BuildingLevelFloorFactor;
   auto& Buildings = StreetMap->GetBuildings();
   for( int32 BuildingIndex = 0; BuildingIndex < Buildings.Num(); ++BuildingIndex )
   {
-    Returning.Add(GenerateTopOfBuilding(BuildingIndex));
+    Returning.Add(GenerateTopOfBuilding(BuildingIndex, MapName, MaterialInstance));
   }
 
   return Returning;
 }
 
-AActor* UStreetMapComponent::GenerateTopOfBuilding(int Index){
-
+AActor* UStreetMapComponent::GenerateTopOfBuilding(int Index, FString MapName, UMaterialInstance* MaterialInstance)
+{
   const float BuildingLevelFloorFactor = MeshBuildSettings.BuildingLevelFloorFactor;
   auto& Buildings = StreetMap->GetBuildings();
-  
+
   auto& Building = Buildings[ Index ];
-  AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+  AStaticMeshActor* TempActor = GetWorld()->SpawnActor<AStaticMeshActor>();
+  UStaticMeshComponent* StaticMeshComponent = TempActor->GetStaticMeshComponent();
+
   TempActor->SetActorLabel(FString("SM_Roof_") + FString::FromInt(Index));
-  UProceduralMeshComponent* TempPMC = TempActor->MeshComponent;
-  TempPMC->bUseAsyncCooking = true;
-  TempPMC->bUseComplexAsSimpleCollision = true;
-  TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-  TempPMC->CastShadow = false;
+  StaticMeshComponent->CastShadow = false;
 
   TArray<FVector> BPositions;
   TArray<FVector> BNormals;
@@ -740,17 +740,15 @@ AActor* UStreetMapComponent::GenerateTopOfBuilding(int Index){
       Vertex.Y -= MeshCentroid.Y;
       Vertex.Z -= MeshCentroid.Z;
     }
-    TempActor->SetActorLocation( MeshCentroid );
+    FProceduralCustomMesh MeshData;
+    MeshData.Vertices = BPositions;
+    MeshData.Triangles = BIndices;
+    MeshData.Normals = BNormals;
+    TArray<FProcMeshTangent> Tangents;
+    UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, MaterialInstance, MapName, "Roofs", FName(TEXT("SM_RoofMesh" + FString::FromInt(Index) )));
 
-    TempPMC->CreateMeshSection_LinearColor(
-      0,
-      BPositions,
-      BIndices,
-      BNormals,
-      TArray<FVector2D>(), // UV0
-      TArray<FLinearColor>(), // VertexColor
-      TArray<FProcMeshTangent>(), // Tangents
-      false); // Create collision
+    StaticMeshComponent->SetStaticMesh(MeshToSet);
+    TempActor->SetActorLocation( MeshCentroid );
   }
   return TempActor;
 }

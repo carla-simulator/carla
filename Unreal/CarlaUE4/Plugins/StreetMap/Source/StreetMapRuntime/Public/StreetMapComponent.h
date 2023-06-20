@@ -89,10 +89,10 @@ public:
 	void SetStreetMap(UStreetMap* NewStreetMap, bool bClearPreviousMeshIfAny = false, bool bRebuildMesh = false);
 
 	UFUNCTION(BlueprintCallable, Category = "StreetMap")
-	TArray<AActor*> GenerateTopsOfBuildings();
+	TArray<AActor*> GenerateTopsOfBuildings(FString MapName, UMaterialInstance* MaterialInstance);
 
   UFUNCTION(BlueprintCallable, Category = "StreetMap")
-	AActor* GenerateTopOfBuilding(int Index);
+	AActor* GenerateTopOfBuilding(int Index, FString MapName, UMaterialInstance* MaterialInstance);
 
 	//** Begin Interface_CollisionDataProvider Interface */
 	virtual bool GetPhysicsTriMeshData(struct FTriMeshCollisionData* CollisionData, bool InUseAllTriData) override;

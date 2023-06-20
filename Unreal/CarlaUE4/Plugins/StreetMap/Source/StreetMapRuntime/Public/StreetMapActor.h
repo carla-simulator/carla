@@ -23,7 +23,7 @@ public:
 	void SetNewStreetMap(UStreetMap* NewMap);
 
   UFUNCTION(BlueprintCallable)
-	TArray<AActor*> GenerateTopOfBuildings();
+	TArray<AActor*> GenerateTopOfBuildings(FString MapName, UMaterialInstance* MaterialInstance);
   UFUNCTION(BlueprintCallable)
-	AActor* GenerateTopOfBuilding(int Index);
+	AActor* GenerateTopOfBuilding(int Index, FString MapName, UMaterialInstance* MaterialInstance);
 };

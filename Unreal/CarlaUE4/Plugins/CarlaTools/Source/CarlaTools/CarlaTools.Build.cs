@@ -82,6 +82,7 @@ public class CarlaTools : ModuleRules
 				"FoliageEdit",
         "MeshMergeUtilities",
 				"Carla",
+        "StaticMeshDescription",
 				"PhysXVehicles",
         "Json",
         "JsonUtilities",
