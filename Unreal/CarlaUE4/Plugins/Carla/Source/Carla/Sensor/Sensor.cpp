@@ -107,8 +107,6 @@ void ASensor::EndPlay(EEndPlayReason::Type EndPlayReason)
   auto StreamId = carla::streaming::detail::token_type(Stream.GetToken()).get_stream_id();
   StreamingServer.CloseStream(StreamId);
 
-  // Stream = FDataStream();
-
   UCarlaEpisode* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
   if(Episode)
   {
