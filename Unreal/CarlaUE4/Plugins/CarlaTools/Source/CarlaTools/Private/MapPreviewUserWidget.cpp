@@ -199,7 +199,7 @@ void UMapPreviewUserWidget::UpdateLatLonCoordProperties()
   TArray<FString> CoordsArray;
   CoordStr.ParseIntoArray(CoordsArray, TEXT("&"), true);
 
-  check(CoordsArray.Num() >= 4);
+  ensure(CoordsArray.Num() == 4);
 
   TopRightLat = FCString::Atof(*CoordsArray[0]);
   TopRightLon = FCString::Atof(*CoordsArray[1]);
