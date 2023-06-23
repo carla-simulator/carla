@@ -422,28 +422,25 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       }else{
         for( auto& Vertex : Mesh->GetVertices() )
         {
-          Vertex.z += GetHeight(Vertex.x, Vertex.y, false) + 0.10;
+          Vertex.z += GetHeight(Vertex.x, Vertex.y, false) + 0.15f;
         }
       }
 
-      AProceduralMeshActor* TempActor = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AProceduralMeshActor>();
-
+      AStaticMeshActor* TempActor = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AStaticMeshActor>();
+      UStaticMeshComponent* StaticMeshComponent = TempActor->GetStaticMeshComponent();
       TempActor->SetActorLabel(FString("SM_Lane_") + FString::FromInt(index));
 
-      UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
-      TempPMC->bUseAsyncCooking = true;
-      TempPMC->bUseComplexAsSimpleCollision = true;
-      TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+      StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
       if(DefaultRoadMaterial && PairMap.first == carla::road::Lane::LaneType::Driving)
       {
-        TempPMC->SetMaterial(0, DefaultRoadMaterial);
-        TempPMC->CastShadow = false;
+        StaticMeshComponent->SetMaterial(0, DefaultRoadMaterial);
+        StaticMeshComponent->CastShadow = false;
         TempActor->SetActorLabel(FString("SM_DrivingLane_") + FString::FromInt(index));
       }
       if(DefaultSidewalksMaterial && PairMap.first == carla::road::Lane::LaneType::Sidewalk)
       {
-        TempPMC->SetMaterial(0, DefaultSidewalksMaterial);
+        StaticMeshComponent->SetMaterial(0, DefaultSidewalksMaterial);
         TempActor->SetActorLabel(FString("SM_Sidewalk_") + FString::FromInt(index));
       }
       FVector MeshCentroid = FVector(0,0,0);
@@ -473,18 +470,21 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
         Tangents
       );
 
-      TempPMC->CreateMeshSection_LinearColor(
-          0,
-          MeshData.Vertices,
-          MeshData.Triangles,
-          MeshData.Normals,
-          MeshData.UV0, // UV0
-          TArray<FLinearColor>(), // VertexColor
-          Tangents, // Tangents
-          true); // Create collision
+      if(PairMap.first == carla::road::Lane::LaneType::Sidewalk)
+      {
+        UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, DefaultSidewalksMaterial, MapName, "DrivingLane", FName(TEXT("SM_SidewalkMesh" + FString::FromInt(index) )));
+        StaticMeshComponent->SetStaticMesh(MeshToSet);
+      }
+
+      if(PairMap.first == carla::road::Lane::LaneType::Driving)
+      {
+        UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, DefaultRoadMaterial, MapName, "DrivingLane", FName(TEXT("SM_DrivingLaneMesh" + FString::FromInt(index) )));
+        StaticMeshComponent->SetStaticMesh(MeshToSet);
+      }
       TempActor->SetActorLocation(MeshCentroid * 100);
       // ActorMeshList.Add(TempActor);
-
+      StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+      TempActor->SetActorEnableCollision(true);
       RoadType.Add(LaneTypeToFString(PairMap.first));
       // RoadMesh.Add(TempPMC);
       index++;
@@ -555,7 +555,6 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
     AStaticMeshActor* TempActor = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AStaticMeshActor>();
     UStaticMeshComponent* StaticMeshComponent = TempActor->GetStaticMeshComponent();
     TempActor->SetActorLabel(FString("SM_LaneMark_") + FString::FromInt(index));
-    StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     StaticMeshComponent->CastShadow = false;
     if (lanemarkinfo[index].find("yellow") != std::string::npos) {
       if(DefaultLaneMarksYellowMaterial)
@@ -583,6 +582,9 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
     TempActor->Tags.Add(*FString(lanemarkinfo[index].c_str()));
     LaneMarkerActorList.Add(TempActor);
     index++;
+    TempActor->SetActorEnableCollision(false);
+    StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
   }
 }
 
@@ -623,10 +625,11 @@ void UOpenDriveToMap::GenerateTreePositions( const boost::optional<carla::road::
 
 float UOpenDriveToMap::GetHeight(float PosX, float PosY, bool bDrivingLane){
   if( bDrivingLane ){
-    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) -
+    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) +
+      (carla::geom::deformation::GetZPosInDeformation(PosX, PosY) * -0.3f) -
       carla::geom::deformation::GetBumpDeformation(PosX,PosY);
   }else{
-    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) + (carla::geom::deformation::GetZPosInDeformation(PosX, PosY) * -0.15f);
+    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) + (carla::geom::deformation::GetZPosInDeformation(PosX, PosY) * -0.3f);
   }
 }
 
@@ -658,7 +661,6 @@ float UOpenDriveToMap::GetHeightForLandscape( FVector Origin ){
   FVector End = Origin - FVector( 0, 0, 10000);
   FHitResult HitResult;
   FCollisionQueryParams CollisionQuery;
-  CollisionQuery.bTraceComplex = true;
   CollisionQuery.AddIgnoredActors(Landscapes);
   FCollisionResponseParams CollisionParams;
 
@@ -671,7 +673,7 @@ float UOpenDriveToMap::GetHeightForLandscape( FVector Origin ){
     CollisionParams
   ) )
   {
-    return GetHeight(Origin.X * 0.01f, Origin.Y * 0.01f, true) * 100.0f - 25.0f;
+    return GetHeight(Origin.X * 0.01f, Origin.Y * 0.01f, true) * 100.0f - 50.0f;
   }else{
     return GetHeight(Origin.X * 0.01f, Origin.Y * 0.01f, true) * 100.0f;
   }
@@ -692,3 +694,20 @@ float UOpenDriveToMap::DistanceToLaneBorder(const boost::optional<carla::road::M
   }
   return 100000.0f;
 }
+
+bool UOpenDriveToMap::IsInRoad(
+  const boost::optional<carla::road::Map>& ParamCarlaMap,
+  FVector &location)
+{
+  int32_t start = static_cast<int32_t>(carla::road::Lane::LaneType::Driving);
+  int32_t end = static_cast<int32_t>(carla::road::Lane::LaneType::Sidewalk);
+  for( int32_t i = start; i < end; ++i)
+  {
+    if(ParamCarlaMap->GetWaypoint(location, i))
+    {
+      return true;
+    }
+  }
+  return false;
+}
+

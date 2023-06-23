@@ -1441,42 +1441,42 @@ namespace road {
     geom::Mesh out_mesh;
 
     for (auto& cv : mesh.vertices) {
-
       geom::Vector3D newvertex;
       newvertex.x = cv.x;
       newvertex.y = cv.y;
       newvertex.z = cv.z;
-      if ( std::find( out_mesh.GetVertices().begin(), out_mesh.GetVertices().end(), newvertex) == out_mesh.GetVertices().end() ) {
-        out_mesh.AddVertex(newvertex);
-      }
+      out_mesh.AddVertex(newvertex);
     }
 
     auto finalvertices = out_mesh.GetVertices();
     for (auto ct : mesh.triangles) {
-      auto cv = mesh.vertices[ct[1]];
-      geom::Vector3D newvertex;
-      newvertex.x = cv.x;
-      newvertex.y = cv.y;
-      newvertex.z = cv.z;
-
-      auto it = std::find(finalvertices.begin(), finalvertices.end(), newvertex);
-      out_mesh.AddIndex(it - finalvertices.begin() + 1);
-
-      cv = mesh.vertices[ct[0]];
-      newvertex.x = cv.x;
-      newvertex.y = cv.y;
-      newvertex.z = cv.z;
-
-      it = std::find(finalvertices.begin(), finalvertices.end(), newvertex);
-      out_mesh.AddIndex(it - finalvertices.begin() + 1);
-
-      cv = mesh.vertices[ct[2]];
-      newvertex.x = cv.x;
-      newvertex.y = cv.y;
-      newvertex.z = cv.z;
-
-      it = std::find(finalvertices.begin(), finalvertices.end(), newvertex);
-      out_mesh.AddIndex(it - finalvertices.begin() + 1);
+      out_mesh.AddIndex(ct[1] + 1);
+      out_mesh.AddIndex(ct[0] + 1);
+      out_mesh.AddIndex(ct[2] + 1);
+      //auto cv = mesh.vertices[ct[1]];
+      //geom::Vector3D newvertex;
+      //newvertex.x = cv.x;
+      //newvertex.y = cv.y;
+      //newvertex.z = cv.z;
+////
+      //auto it = std::find(finalvertices.begin(), finalvertices.end(), newvertex);
+      //out_mesh.AddIndex(it - finalvertices.begin() + 1);
+////
+      //cv = mesh.vertices[ct[0]];
+      //newvertex.x = cv.x;
+      //newvertex.y = cv.y;
+      //newvertex.z = cv.z;
+////
+      //it = std::find(finalvertices.begin(), finalvertices.end(), newvertex);
+      //out_mesh.AddIndex(it - finalvertices.begin() + 1);
+////
+      //cv = mesh.vertices[ct[2]];
+      //newvertex.x = cv.x;
+      //newvertex.y = cv.y;
+      //newvertex.z = cv.z;
+////
+      //it = std::find(finalvertices.begin(), finalvertices.end(), newvertex);
+      //out_mesh.AddIndex(it - finalvertices.begin() + 1);
     }
 
     for (auto& cv : out_mesh.GetVertices() ) {

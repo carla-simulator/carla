@@ -71,18 +71,19 @@ void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FStri
 {
   FString Message = "-R " + Latitude + " " + Longitude + " " + Zoom;
   if( !SendStr(Message) ){
+    UE_LOG(LogTemp, Log, TEXT("Send Str failed"));
     return;
   }
 
   TArray<uint8_t> ReceivedData;
   uint32 ReceivedDataSize = 0;
-  
+
   {
     SocketPtr->wait(boost::asio::ip::tcp::socket::wait_read);
     while (SocketPtr->available())
     {
       AsioStreamBuf Buffer;
-      std::size_t BytesReceived = 
+      std::size_t BytesReceived =
         Asio::read(*SocketPtr, Buffer, Asio::transfer_at_least(2));
       TArray<uint8_t> ThisReceivedData;
       const char* DataPtr = Asio::buffer_cast<const char*>(Buffer.data());
@@ -109,7 +110,7 @@ void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FStri
           Region.DestY = 0;
           Region.Width = Texture->GetSizeX();
           Region.Height = Texture->GetSizeY();
- 
+
           FTexture2DResource* Resource = (FTexture2DResource*)Texture->Resource;
           RHIUpdateTexture2D(Resource->GetTexture2DRHI(), 0, Region, Region.Width * sizeof(uint8_t) * 4, &NewData[0]);
         }
@@ -119,17 +120,17 @@ void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FStri
 }
 
 FString UMapPreviewUserWidget::RecvCornersLatLonCoords()
-{  
+{
   if( !SendStr("-L") ){
     UE_LOG(LogTemp, Error, TEXT("Error sending message: num bytes mismatch"));
     return FString();
   }
 
   AsioStreamBuf Buffer;
-  std::size_t BytesReceived = 
+  std::size_t BytesReceived =
       Asio::read(*SocketPtr, Buffer, Asio::transfer_at_least(2));
   std::string BytesStr = Asio::buffer_cast<const char*>(Buffer.data());
-  
+
   FString CoordStr = FString(BytesStr.size(), UTF8_TO_TCHAR(BytesStr.c_str()));
   UE_LOG(LogTemp, Log, TEXT("Received Coords %s"), *CoordStr);
   return CoordStr;
@@ -176,12 +177,12 @@ bool UMapPreviewUserWidget::SendStr(FString Msg)
   if (BytesSent != MessageStr.size())
   {
     UE_LOG(LogTemp, Error, TEXT("Error sending message: num bytes mismatch"));
-    return true;
+    return false;
   }
   else
   {
     UE_LOG(LogTemp, Log, TEXT("Sent %d bytes"), BytesSent);
-    return false;
+    return true;
   }
 }
 

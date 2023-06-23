@@ -112,6 +112,9 @@ private:
       FVector &location,
       int32_t lane_type = static_cast<int32_t>(carla::road::Lane::LaneType::Driving)) const;
 
+  bool IsInRoad(const boost::optional<carla::road::Map>& ParamCarlaMap,
+        FVector &location);
+
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
   UPROPERTY()

@@ -162,12 +162,12 @@ UStaticMesh* UMapGenFunctionLibrary::CreateMesh(
 
     Mesh->LightingGuid = FGuid::NewGuid();
     Mesh->StaticMaterials.Add(FStaticMaterial(MaterialInstance));
-    //Set the Imported version before calling the build
-    Mesh->ImportVersion = EImportStaticMeshVersion::LastVersion;
-    // Build mesh from source
     Mesh->BuildFromMeshDescriptions({ &Description }, Params);
+    Mesh->CreateBodySetup();
+    Mesh->BodySetup->CollisionTraceFlag = ECollisionTraceFlag::CTF_UseComplexAsSimple;
+    Mesh->BodySetup->CreatePhysicsMeshes();
+    // Build mesh from source
     Mesh->NeverStream = false;
-    Mesh->PostEditChange();
     TArray<UObject*> CreatedAssets;
     CreatedAssets.Add(Mesh);
 
