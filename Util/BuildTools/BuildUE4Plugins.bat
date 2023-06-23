@@ -52,13 +52,6 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-if %REMOVE_INTERMEDIATE% == false (
-    if %BUILD_STREETMAP% == false (
-        echo Nothing selected to be done.
-        goto :eof
-    )
-)
-
 rem ============================================================================
 rem -- Local Variables ---------------------------------------------------------
 rem ============================================================================
@@ -71,8 +64,8 @@ set CARLA_STREETMAP_PLUGINS_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\StreetMa
 rem Build STREETMAP
 
 if  %GIT_PULL% == true (
-    if not exist "%CARLA_STREETMAP_PLUGINS_PATH%" git clone -b %STREETMAP_BRANCH% %STREETMAP_REPO% %CARLA_PLUGINS_PATH%
-    cd "%CARLA_PLUGINS_PATH%"
+    if not exist "%CARLA_STREETMAP_PLUGINS_PATH%" git clone -b %STREETMAP_BRANCH% %STREETMAP_REPO% %CARLA_STREETMAP_PLUGINS_PATH%
+    cd "%CARLA_STREETMAP_PLUGINS_PATH%"
     git fetch
     git checkout %CURRENT_STREETMAP_COMMIT%
 )
@@ -85,7 +78,7 @@ rem -- Messages and Errors -----------------------------------------------------
 rem ============================================================================
 
 :success
-    if %BUILD_STREETMAP% == true echo %FILE_N% STREETMAP has been successfully installed in "%STREETMAP_INSTALL_PATH%"!
+    if %BUILD_STREETMAP% == true echo %FILE_N% STREETMAP has been successfully installed in "%CARLA_PLUGINS_PATH%"!
     goto good_exit
 
 :good_exit
