@@ -1350,7 +1350,8 @@ namespace road {
             for (auto&& lane_pair : lane_section.GetLanes()) {
               const auto& lane = lane_pair.second;
               if (lane.GetType() == road::Lane::LaneType::Sidewalk) {
-                sidewalk_lane_meshes.push_back(mesh_factory.GenerateSidewalk(lane));
+                // TODO Remove this comment when we fix sumo to avoid sidewalks going through the driving lanes
+                //sidewalk_lane_meshes.push_back(mesh_factory.GenerateSidewalk(lane));
               }
             }
           }
