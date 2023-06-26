@@ -132,7 +132,7 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
     float HitDistance,
     const FHitResult &Hit)
 {
-  if ((Actor != nullptr) && (OtherActor != nullptr))
+  if ((Actor != nullptr) && (OtherActor != nullptr) && IsStreamReady())
   {
     const auto &Episode = GetEpisode();
     GetDataStream(*this).Send(*this,
