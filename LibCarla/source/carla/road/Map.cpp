@@ -1219,13 +1219,15 @@ namespace road {
             double s_current = lane_section.GetDistance() + s_offset;
             const double s_end = lane_section.GetDistance() + lane_section.GetLength();
             while(s_current < s_end){
-              const auto edges = lane->GetCornerPositions(s_current, 0);
-              geom::Vector3D director = edges.second - edges.first;
-              geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
-              geom::Transform lanetransform = lane->ComputeTransform(s_current);
-              geom::Transform treeTransform(treeposition, lanetransform.rotation);
-              const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
-              transforms.push_back(std::make_pair(treeTransform,roadinfo->GetType()));
+              if(lane->GetWidth(s_current) != 0.0f){
+                const auto edges = lane->GetCornerPositions(s_current, 0);
+                geom::Vector3D director = edges.second - edges.first;
+                geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
+                geom::Transform lanetransform = lane->ComputeTransform(s_current);
+                geom::Transform treeTransform(treeposition, lanetransform.rotation);
+                const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
+                transforms.push_back(std::make_pair(treeTransform,roadinfo->GetType()));
+              }
               s_current += distancebetweentrees;
             }
 
@@ -1349,8 +1351,12 @@ namespace road {
           for (auto&& lane_section : road.GetLaneSections()) {
             for (auto&& lane_pair : lane_section.GetLanes()) {
               const auto& lane = lane_pair.second;
-              if (lane.GetType() == road::Lane::LaneType::Sidewalk) {
-                sidewalk_lane_meshes.push_back(mesh_factory.GenerateSidewalk(lane));
+              if ( lane.GetType() == road::Lane::LaneType::Sidewalk ) {
+                boost::optional<element::Waypoint> sw =
+                  GetWaypoint(road.GetId(), lane_pair.first, lane.GetDistance() + (lane.GetLength() * 0.5f));
+                if( GetWaypoint(ComputeTransform(*sw).location).get_ptr() == nullptr ){
+                  sidewalk_lane_meshes.push_back(mesh_factory.GenerateSidewalk(lane));
+                }
               }
             }
           }
