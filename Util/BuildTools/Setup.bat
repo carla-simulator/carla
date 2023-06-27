@@ -46,7 +46,7 @@ if not "%1"=="" (
         set USE_CHRONO=true
     )
     if "%1"=="--ros2" (
-        set USE_ROS2=false
+        set USE_ROS2=true
     )
     if "%1"=="-h" (
         goto help
@@ -270,6 +270,80 @@ if %USE_CHRONO% == true (
     copy "%INSTALLATION_DIR%chrono-install\lib\*.lib" "%CARLA_DEPENDENCIES_FOLDER%lib\*.lib" > NUL
     copy "%INSTALLATION_DIR%chrono-install\bin\*.dll" "%CARLA_DEPENDENCIES_FOLDER%dll\*.dll" > NUL
     xcopy /Y /S /I "%INSTALLATION_DIR%eigen-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
+)
+
+REM ==============================================================================
+REM -- Download Fast DDS and dependencies ----------------------------------------
+REM ==============================================================================
+
+SET FASTDDS_BASENAME=fast-dds
+SET FASTDDS_INSTALL_DIR=%CD%\%FASTDDS_BASENAME%-install
+SET FASTDDS_INCLUDE=%FASTDDS_INSTALL_DIR%\include
+SET FASTDDS_LIB=%FASTDDS_INSTALL_DIR%\lib
+IF "%USE_ROS2%"=="true" (
+
+  :build_fastdds_extension
+  SET LIB_SOURCE=%1
+  SET LIB_REPO=%2
+  SET CMAKE_FLAGS=%3
+
+  IF NOT EXIST "%LIB_SOURCE%" (
+    mkdir "%LIB_SOURCE%"
+    echo %LIB_REPO%
+    git clone %LIB_REPO% %LIB_SOURCE%
+    mkdir "%LIB_SOURCE%\build"
+  )
+
+  IF NOT EXIST "%FASTDDS_INSTALL_DIR%" (
+    mkdir "%FASTDDS_INSTALL_DIR%"
+    echo Build foonathan memory vendor
+    SET FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan-memory-vendor
+    SET FOONATHAN_MEMORY_VENDOR_SOURCE_DIR=%CD%\%FOONATHAN_MEMORY_VENDOR_BASENAME%-source
+    SET FOONATHAN_MEMORY_VENDOR_REPO="https://github.com/eProsima/foonathan_memory_vendor.git"
+    SET FOONATHAN_MEMORY_VENDOR_CMAKE_FLAGS=-DBUILD_SHARED_LIBS=ON
+    CALL :build_fastdds_extension "%FOONATHAN_MEMORY_VENDOR_SOURCE_DIR%" "%FOONATHAN_MEMORY_VENDOR_REPO%"
+    pushd "%FOONATHAN_MEMORY_VENDOR_SOURCE_DIR%\build" >nul
+    cmake -G "Ninja" ^
+      -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR%" ^
+      -DBUILD_SHARED_LIBS=ON ^
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" ^
+      ..
+    ninja
+    ninja install
+    popd >nul
+    rmdir /s /q "%FOONATHAN_MEMORY_VENDOR_SOURCE_DIR%"
+
+    echo Build fast cdr
+    SET FAST_CDR_BASENAME=fast-cdr
+    SET FAST_CDR_SOURCE_DIR=%CD%\%FAST_CDR_BASENAME%-source
+    SET FAST_CDR_REPO="https://github.com/eProsima/Fast-CDR.git"
+    CALL :build_fastdds_extension "%FAST_CDR_SOURCE_DIR%" "%FAST_CDR_REPO%"
+    pushd "%FAST_CDR_SOURCE_DIR%\build" >nul
+    cmake -G "Ninja" ^
+      -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR%" ^
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" ^
+      ..
+    ninja
+    ninja install
+    popd >nul
+    rmdir /s /q "%FAST_CDR_SOURCE_DIR%"
+
+    echo Build fast dds
+    SET FAST_DDS_LIB_BASENAME=fast-dds-lib
+    SET FAST_DDS_LIB_SOURCE_DIR=%CD%\%FAST_DDS_LIB_BASENAME%-source
+    SET FAST_DDS_LIB_REPO="https://github.com/eProsima/Fast-DDS.git"
+    CALL :build_fastdds_extension "%FAST_DDS_LIB_SOURCE_DIR%" "%FAST_DDS_LIB_REPO%"
+    pushd "%FAST_DDS_LIB_SOURCE_DIR%\build" >nul
+    cmake -G "Ninja" ^
+      -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR%" ^
+      -DCMAKE_CXX_FLAGS=-latomic ^
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" ^
+      ..
+    ninja
+    ninja install
+    popd >nul
+    rmdir /
+  )
 )
 
 rem ============================================================================
