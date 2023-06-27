@@ -16,6 +16,7 @@
 #include "carla/sensor/s11n/ImageSerializer.h"
 #include "carla/sensor/s11n/SensorHeaderSerializer.h"
 
+#include "publishers/CarlaPublisher.h"
 #include "publishers/CarlaRGBCameraPublisher.h"
 #include "publishers/CarlaDepthCameraPublisher.h"
 #include "publishers/CarlaSSCameraPublisher.h"
@@ -27,7 +28,12 @@
 #include "publishers/CarlaGNSSPublisher.h"
 #include "publishers/CarlaMapSensorPublisher.h"
 #include "publishers/CarlaSpeedometerSensor.h"
+#include "publishers/CarlaTransformPublisher.h"
+#include "publishers/CarlaCollisionPublisher.h"
+#include "publishers/CarlaLineInvasionPublisher.h"
 
+#include "subscribers/CarlaSubscriber.h"
+#include "subscribers/CarlaEgoVehicleControlSubscriber.h"
 
 #include <vector>
 
@@ -63,6 +69,8 @@ enum ESensors {
 void ROS2::Enable(bool enable) {
   _enabled = enable;
   log_info("ROS2 enabled: ", _enabled);
+  _controller = std::make_shared<CarlaEgoVehicleControlSubscriber>("ego", "map");
+  _controller->Init();
 }
 
 void ROS2::SetFrame(uint64_t frame) {
@@ -71,7 +79,11 @@ void ROS2::SetFrame(uint64_t frame) {
 }
 
 void ROS2::SetTimestamp(double timestamp) {
-  _timestamp = timestamp;
+  double integral;
+  const double fractional = modf(timestamp, &integral);
+  const double multiplier = 1000000000.0;
+  _seconds = static_cast<int32_t>(integral);
+  _nanoseconds = static_cast<uint32_t>(fractional * multiplier);
    //log_info("ROS2 new timestamp: ", _timestamp);
 }
 
@@ -91,60 +103,154 @@ std::string ROS2::GetActorRosName(void *actor) {
     return std::string("");
 }
 
-
-void ROS2::InitPublishers() {
-  if (_rgb_camera_publisher)
-    return;
-
-  _rgb_camera_publisher = new CarlaRGBCameraPublisher();
-  _rgb_camera_publisher->Init();
-  _depth_camera_publisher = new CarlaDepthCameraPublisher();
-  _depth_camera_publisher->Init();
-  _ss_camera_publisher = new CarlaSSCameraPublisher();
-  _ss_camera_publisher->Init();
-  _dvs_camera_publisher = new CarlaDVSCameraPublisher();
-  _dvs_camera_publisher->Init();
-  _lidar_publisher = new CarlaLidarPublisher();
-  _lidar_publisher->Init();
-  _semantic_lidar_publisher = new CarlaSemanticLidarPublisher();
-  _semantic_lidar_publisher->Init();
-  _radar_publisher = new CarlaRadarPublisher();
-  _radar_publisher->Init();
-  _imu_publisher = new CarlaIMUPublisher();
-  _imu_publisher->Init();
-  _gnss_publisher = new CarlaGNSSPublisher();
-  _gnss_publisher->Init();
-  _map_sensor_publisher = new CarlaMapSensorPublisher();
-  _map_sensor_publisher->Init();
-  _speedometer_sensor = new CarlaSpeedometerSensor();
-  _speedometer_sensor->Init();
+std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> ROS2::GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id) {
+  auto it_publishers = _publishers.find(id);
+  auto it_transforms = _transforms.find(id);
+  std::shared_ptr<CarlaPublisher> publisher {};
+  std::shared_ptr<CarlaTransformPublisher> transform {};
+  const char* ros_name = std::to_string(id).c_str();
+  if (it_publishers != _publishers.end()) {
+    publisher = it_publishers->second;
+    if (it_transforms != _transforms.end()) {
+      transform = it_transforms->second;
+    }
+  } else {
+    //Sensor not found, creating one of the given type
+    switch(type) {
+      case ESensors::CollisionSensor: {
+        std::shared_ptr<CarlaCollisionPublisher> new_publisher = std::make_shared<CarlaCollisionPublisher>(ros_name);
+        if (new_publisher->Init()) {
+          _publishers.insert({id, new_publisher});
+          publisher = new_publisher;
+        }
+      } break;
+      case ESensors::DepthCamera: {
+        std::shared_ptr<CarlaDepthCameraPublisher> new_publisher = std::make_shared<CarlaDepthCameraPublisher>(ros_name);
+        if (new_publisher->Init()) {
+          _publishers.insert({id, new_publisher});
+          publisher = new_publisher;
+        }
+      } break;
+      case ESensors::NormalsCamera: {
+        std::cout << "Normals camera does not have an available publisher" << std::endl;
+      } break;
+      case ESensors::DVSCamera: {
+        std::shared_ptr<CarlaDVSCameraPublisher> new_publisher = std::make_shared<CarlaDVSCameraPublisher>(ros_name);
+        if (new_publisher->Init()) {
+          _publishers.insert({id, new_publisher});
+          publisher = new_publisher;
+        }
+      } break;
+      case ESensors::GnssSensor: {
+        std::shared_ptr<CarlaGNSSPublisher> new_publisher = std::make_shared<CarlaGNSSPublisher>(ros_name);
+        if (new_publisher->Init()) {
+          _publishers.insert({id, new_publisher});
+          publisher = new_publisher;
+        }
+      } break;
+      case ESensors::InertialMeasurementUnit: {
+        std::shared_ptr<CarlaIMUPublisher> new_publisher = std::make_shared<CarlaIMUPublisher>(ros_name);
+        if (new_publisher->Init()) {
+          _publishers.insert({id, new_publisher});
+          publisher = new_publisher;
+        }
+      } break;
+      case ESensors::LaneInvasionSensor: {
+        std::shared_ptr<CarlaLineInvasionPublisher> new_publisher = std::make_shared<CarlaLineInvasionPublisher>(ros_name);
+        if (new_publisher->Init()) {
+          _publishers.insert({id, new_publisher});
+          publisher = new_publisher;
+        }
+      } break;
+      case ESensors::ObstacleDetectionSensor: {
+        std::cout << "Obstacle detection sensor does not have an available publisher" << std::endl;
+      } break;
+      case ESensors::OpticalFlowCamera: {
+        std::cout << "Optical flow camera does not have an available publisher" << std::endl;
+      } break;
+      case ESensors::Radar: {
+        std::shared_ptr<CarlaRadarPublisher> new_publisher = std::make_shared<CarlaRadarPublisher>(ros_name);
+        if (new_publisher->Init()) {
+          _publishers.insert({id, new_publisher});
+          publisher = new_publisher;
+        }
+      } break;
+      case ESensors::RayCastSemanticLidar: {
+        std::shared_ptr<CarlaSemanticLidarPublisher> new_publisher = std::make_shared<CarlaSemanticLidarPublisher>(ros_name);
+        if (new_publisher->Init()) {
+          _publishers.insert({id, new_publisher});
+          publisher = new_publisher;
+        }
+      } break;
+      case ESensors::RayCastLidar: {
+        std::shared_ptr<CarlaLidarPublisher> new_publisher = std::make_shared<CarlaLidarPublisher>(ros_name);
+        if (new_publisher->Init()) {
+          _publishers.insert({id, new_publisher});
+          publisher = new_publisher;
+        }
+      } break;
+      case ESensors::RssSensor: {
+        std::cout << "RSS sensor does not have an available publisher" << std::endl;
+      } break;
+      case ESensors::SceneCaptureCamera: {
+        std::shared_ptr<CarlaRGBCameraPublisher> new_publisher = std::make_shared<CarlaRGBCameraPublisher>(ros_name);
+        if (new_publisher->Init()) {
+          _publishers.insert({id, new_publisher});
+          publisher = new_publisher;
+        }
+      } break;
+      case ESensors::SemanticSegmentationCamera: {
+        std::shared_ptr<CarlaSSCameraPublisher> new_publisher = std::make_shared<CarlaSSCameraPublisher>(ros_name);
+        if (new_publisher->Init()) {
+          _publishers.insert({id, new_publisher});
+          publisher = new_publisher;
+        }
+      } break;
+      case ESensors::InstanceSegmentationCamera: {
+        std::cout << "Instance segmentation camera does not have an available publisher" << std::endl;
+      } break;
+      case ESensors::WorldObserver: {
+        std::cout << "World obserser does not have an available publisher" << std::endl;
+      } break;
+      case ESensors::CameraGBufferUint8: {
+        std::cout << "Camera GBuffer uint8 does not have an available publisher" << std::endl;
+      } break;
+      case ESensors::CameraGBufferFloat: {
+        std::cout << "Camera GBuffer float does not have an available publisher" << std::endl;
+      } break;
+      default: {
+        std::cout << "Unknown sensor type" << std::endl;
+      }
+    }
+  }
+  return { publisher, transform };
 }
 
 void ROS2::ProcessDataFromSensor(
-    void *actor,
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
-    const carla::SharedBufferView buffer) {
-
-  // check if we need to create a publisher yet
-  if (need_to_create_publisher_for_this_sensor) {
-    // get ros_name for the topic name
-    std::string RosName = GetActorRosName(actor);
-
-    // build topic name
-
-    // create publisher
-  }
+    const carla::SharedBufferView buffer,
+    void *actor) {
 
   switch (sensor_type) {
     case ESensors::CollisionSensor:
       log_info("Sensor Collision to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       break;
     case ESensors::DepthCamera:
-      log_info("Sensor DepthCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
-      UpdateDepthCamera(buffer, std::to_string(_frame).c_str());
-      _depth_camera_publisher->Publish();
+      {
+        log_info("Sensor DepthCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
+        auto sensors = GetOrCreateSensor(ESensors::DepthCamera, stream_id);
+        if (sensors.first) {
+          std::shared_ptr<CarlaDepthCameraPublisher> publisher = std::dynamic_pointer_cast<CarlaDepthCameraPublisher>(sensors.first);
+          const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
+            reinterpret_cast<const carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer->data());
+          if (!header)
+            return;
+          publisher->SetData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+          publisher->Publish();
+        }
+      }
       break;
     case ESensors::NormalsCamera:
       log_info("Sensor NormalsCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
@@ -161,15 +267,22 @@ void ROS2::ProcessDataFromSensor(
     case ESensors::SceneCaptureCamera:
     {
       log_info("Sensor SceneCaptureCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
-      UpdateRGBCamera(buffer, std::to_string(_frame).c_str());
-      _rgb_camera_publisher->Publish();
+      {
+        auto sensors = GetOrCreateSensor(ESensors::SceneCaptureCamera, stream_id);
+        if (sensors.first) {
+          std::shared_ptr<CarlaRGBCameraPublisher> publisher = std::dynamic_pointer_cast<CarlaRGBCameraPublisher>(sensors.first);
+          const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
+            reinterpret_cast<const carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer->data());
+          if (!header)
+            return;
+          publisher->SetData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+          publisher->Publish();
+        }
+      }
       break;
     }
     case ESensors::SemanticSegmentationCamera:
       log_info("Sensor SemanticSegmentationCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
-      UpdateSSCamera(buffer, std::to_string(_frame).c_str());
-      _ss_camera_publisher->Publish();
-      break;
     case ESensors::InstanceSegmentationCamera:
       log_info("Sensor InstanceSegmentationCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       break;
@@ -188,194 +301,118 @@ void ROS2::ProcessDataFromSensor(
 }
 
 void ROS2::ProcessDataFromGNSS(
-    void *actor,
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
-    const carla::geom::GeoLocation &data) {
+    const carla::geom::GeoLocation &data,
+    void *actor) {
   log_info("Sensor GnssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "geo.", data.latitude, data.longitude, data.altitude);
-  UpdateGNSS(data, std::to_string(_frame).c_str());
-  _gnss_publisher->Publish();
+  auto sensors = GetOrCreateSensor(ESensors::GnssSensor, stream_id);
+  if (sensors.first) {
+    std::shared_ptr<CarlaGNSSPublisher> publisher = std::dynamic_pointer_cast<CarlaGNSSPublisher>(sensors.first);
+    publisher->SetData(_seconds, _nanoseconds, reinterpret_cast<const double*>(&data));
+    publisher->Publish();
+  }
 }
 
 void ROS2::ProcessDataFromIMU(
-    void *actor,
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     carla::geom::Vector3D accelerometer,
     carla::geom::Vector3D gyroscope,
-    float compass) {
+    float compass,
+    void *actor) {
   log_info("Sensor InertialMeasurementUnit to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "imu.", accelerometer.x, gyroscope.x, compass);
-  UpdateIMU(accelerometer, gyroscope, compass, std::to_string(_frame).c_str());
-  _imu_publisher->Publish();
+  auto sensors = GetOrCreateSensor(ESensors::InertialMeasurementUnit, stream_id);
+  if (sensors.first) {
+    std::shared_ptr<CarlaIMUPublisher> publisher = std::dynamic_pointer_cast<CarlaIMUPublisher>(sensors.first);
+    publisher->SetData(_seconds, _nanoseconds, reinterpret_cast<float*>(&accelerometer), reinterpret_cast<float*>(&gyroscope), compass);
+    publisher->Publish();
+  }
 }
 
 void ROS2::ProcessDataFromDVS(
-    void *actor,
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
-    const std::vector<carla::sensor::data::DVSEvent> &events) {
+    const std::vector<carla::sensor::data::DVSEvent> &events,
+    void *actor) {
   log_info("Sensor DVS to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "events.", events.size());
-  UpdateDVSCamera(events, std::to_string(_frame).c_str());
-  _dvs_camera_publisher->Publish();
 }
 
 void ROS2::ProcessDataFromLidar(
-    void *actor,
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
-    const carla::sensor::data::LidarData &data) {
+    const carla::sensor::data::LidarData &data,
+    void *actor) {
   log_info("Sensor Lidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._points.size());
-  UpdateLidar(data, std::to_string(_frame).c_str());
-  _lidar_publisher->Publish();
+  auto sensors = GetOrCreateSensor(ESensors::RayCastLidar, stream_id);
+  if (sensors.first) {
+    std::shared_ptr<CarlaLidarPublisher> publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(sensors.first);
+    size_t width = data._points.size();
+    size_t height = 1;
+    publisher->SetData(_seconds, _nanoseconds, width, height, (float*)data._points.data());
+    publisher->Publish();
+  }
 }
 
 void ROS2::ProcessDataFromSemanticLidar(
-    void *actor,
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
-    const carla::sensor::data::SemanticLidarData &data) {
+    const carla::sensor::data::SemanticLidarData &data,
+    void *actor) {
   log_info("Sensor SemanticLidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._ser_points.size());
-  UpdateSemanticLidar(data, std::to_string(_frame).c_str());
-  _semantic_lidar_publisher->Publish();
+  auto sensors = GetOrCreateSensor(ESensors::RayCastSemanticLidar, stream_id);
+  if (sensors.first) {
+    std::shared_ptr<CarlaLidarPublisher> publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(sensors.first);
+    size_t width = data._ser_points.size();
+    size_t height = 1;
+    publisher->SetData(_seconds, _nanoseconds, width, height, (float*)data._ser_points.data());
+    publisher->Publish();
+  }
 }
 
 void ROS2::ProcessDataFromRadar(
-    void *actor,
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
-    const carla::sensor::data::RadarData &data) {
+    const carla::sensor::data::RadarData &data,
+    void *actor) {
   log_info("Sensor Radar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._detections.size());
-  UpdateRadar(data, std::to_string(_frame).c_str());
-  _radar_publisher->Publish();
+  auto sensors = GetOrCreateSensor(ESensors::Radar, stream_id);
+  if (sensors.first) {
+    std::shared_ptr<CarlaLidarPublisher> publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(sensors.first);
+    size_t width = data.GetDetectionCount();
+    size_t height = 1;
+    publisher->SetData(_seconds, _nanoseconds, width, height, (float*)data._detections.data());
+    publisher->Publish();
+  }
 }
 
 void ROS2::ProcessDataFromObstacleDetection(
-    void *actor,
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     AActor *first_ctor,
     AActor *second_actor,
-    float distance) {
+    float distance,
+    void *actor) {
   log_info("Sensor ObstacleDetector to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "distance.", distance);
 }
 
-
-void ROS2::UpdateRGBCamera(carla::SharedBufferView buffer, const char* frame_id) {
-  if (!_rgb_camera_publisher)
-    return;
-
-  // header
-  const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
-    reinterpret_cast<const carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer->data());
-  if (!header)
-    return;
-
-  _rgb_camera_publisher->SetData(
-      header->height,
-      header->width,
-      (const uint8_t *) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset),
-      frame_id);
-}
-
-void ROS2::UpdateDepthCamera(carla::SharedBufferView buffer, const char* frame_id) {
-  if (!_depth_camera_publisher)
-    return;
-
-  // header
-  const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
-    reinterpret_cast<const carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer->data());
-  if (!header)
-    return;
-
-  _depth_camera_publisher->SetData(
-    header->height,
-    header->width,
-    (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset),
-    frame_id);
-}
-
-void ROS2::UpdateSSCamera(carla::SharedBufferView buffer, const char* frame_id) {
-  if (!_ss_camera_publisher)
-    return;
-
-  // header
-  const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
-    reinterpret_cast<const carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer->data());
-  if (!header)
-    return;
-
-  _ss_camera_publisher->SetData(
-    header->height,
-    header->width,
-    (const uint8_t *) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset),
-    frame_id);
-}
-
-void ROS2::UpdateDVSCamera(const std::vector<carla::sensor::data::DVSEvent> &events, const char* frame_id) {
-  if (_dvs_camera_publisher) {
-    // carla::Buffer tmp;
-    // tmp.copy_from(carla::sensor::s11n::SensorHeaderSerializer::header_offset, buffer);
-    // carla::sensor::data::Image img { std::move(tmp) };
-    // size_t width = img.GetWidth();
-    // size_t height = img.GetHeight();
-    // _dvs_camera_publisher->SetData(height, width, (const uint8_t*)buffer.data(), frame_id);
+void ROS2::Shutdown() {
+  for (auto& element : _publishers) {
+    element.second.reset();
   }
-}
-
-void ROS2::UpdateLidar(const carla::sensor::data::LidarData &data, const char* frame_id) {
-  if (_lidar_publisher) {
-    size_t width = data._points.size();
-    size_t height = 1;
-    _lidar_publisher->SetData(height, width, (const uint8_t*)data._points.data(), frame_id);
+  for (auto& element : _transforms) {
+    element.second.reset();
   }
+  _controller.reset();
+  _enabled = false;
 }
 
-void ROS2::UpdateSemanticLidar(const carla::sensor::data::SemanticLidarData &data, const char* frame_id) {
-  if (_semantic_lidar_publisher) {
-    size_t width = data._ser_points.size();
-    size_t height = 1;
-    _semantic_lidar_publisher->SetData(height, width, (const uint8_t*)&data._ser_points[0], frame_id);
-  }
-}
-
-void ROS2::UpdateRadar(const carla::sensor::data::RadarData &data, const char* frame_id) {
-if (_radar_publisher) {
-    size_t width = data.GetDetectionCount();
-    size_t height = 1;
-    _radar_publisher->SetData(height, width, (const uint8_t*)data._detections.data(), frame_id);
-  }
-}
-
-void ROS2::UpdateIMU(carla::geom::Vector3D accelerometer, carla::geom::Vector3D gyroscope, float compass, const char* frame_id) {
-  if (_imu_publisher) {
-    _imu_publisher->SetData(reinterpret_cast<float*>(&accelerometer), reinterpret_cast<float*>(&gyroscope), compass, frame_id);
-  }
-}
-
-void ROS2::UpdateGNSS(const carla::geom::GeoLocation &data, const char* frame_id) {
-  if (_gnss_publisher) {
-    _gnss_publisher->SetData(reinterpret_cast<const double*>(&data), frame_id);
-  }
-}
-
-void ROS2::UpdateMapSensor(const char* data) {
-  if (_map_sensor_publisher) {
-    _map_sensor_publisher->SetData(data);
-  }
-}
-
-void ROS2::UpdateSpeedometerSensor(float data) {
-  if (_speedometer_sensor) {
-    _speedometer_sensor->SetData(data);
-  }
-}
-
-} // namespace ros2
+ } // namespace ros2
 } // namespace carla

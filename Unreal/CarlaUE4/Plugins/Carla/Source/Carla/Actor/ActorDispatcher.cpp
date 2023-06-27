@@ -175,12 +175,12 @@ FCarlaActor* UActorDispatcher::RegisterActor(
       std::string RosName;
       for (auto &&Attr : Description.Variations)
       {
-        if (Attr->first == "ros_name")
+        if (Attr.Key == "ros_name")
         {
-          RosName = std::string(Attr->second);
+          RosName = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
         }
       }
-      ROS2->AddActorRosName(reinterpret_cast<void *>(Actor), RosName);
+      ROS2->AddActorRosName(static_cast<void*>(&Actor), RosName);
     }
     #endif
   }

@@ -3,7 +3,6 @@
 #include "CarlaTransformPublisher.h"
 
 #include <string>
-#include <chrono>
 
 #include "carla/ros2/types/TFMessagePubSubTypes.h"
 #include "carla/ros2/listeners/CarlaListener.h"
@@ -45,8 +44,9 @@ namespace ros2 {
         std::cerr << "Invalid TypeSupport" << std::endl;
         return false;
     }
+
     efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    pqos.name("CarlaPublisherParticipant");
+    pqos.name(_name);
     auto factory = efd::DomainParticipantFactory::get_instance();
     _impl->_participant = factory->create_participant(0, pqos);
     if (_impl->_participant == nullptr) {
@@ -54,21 +54,22 @@ namespace ros2 {
         return false;
     }
     _impl->_type.register_type(_impl->_participant);
+
     efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
     _impl->_publisher = _impl->_participant->create_publisher(pubqos, nullptr);
     if (_impl->_publisher == nullptr) {
       std::cerr << "Failed to create Publisher" << std::endl;
       return false;
     }
+
     efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
-    const std::string topic_name {"rt/carla/tf2"};
+    const std::string topic_name { "rt/tf" };
     _impl->_topic = _impl->_participant->create_topic(topic_name, _impl->_type->getName(), tqos);
     if (_impl->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
         return false;
     }
-    eprosima::fastrtps::ReliabilityQosPolicy rqos;
-    rqos.kind = eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS;
+
     efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
     wqos.endpoint().history_memory_policy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
     efd::DataWriterListener* listener = (efd::DataWriterListener*)_impl->_listener._impl.get();
@@ -77,6 +78,7 @@ namespace ros2 {
         std::cerr << "Failed to create DataWriter" << std::endl;
         return false;
     }
+    _frame_id = _name;
     return true;
   }
 
@@ -138,11 +140,11 @@ namespace ros2 {
         std::cerr << "RETCODE_NOT_ALLOWED_BY_SECURITY" << std::endl;
         return false;
     }
-    std::cout << "UNKNOWN" << std::endl;    
+    std::cout << "UNKNOWN" << std::endl;
     return false;
   }
 
-  void CarlaTransformPublisher::SetData(const float* translation, const float* rotation, const char* frame_id) {
+  void CarlaTransformPublisher::SetData(int32_t seconds, uint32_t nanoseconds, const float* translation, const float* rotation) {
     geometry_msgs::msg::Vector3 vec_translation;
     geometry_msgs::msg::Quaternion vec_rotation;
     float tx = *translation++;
@@ -160,30 +162,33 @@ namespace ros2 {
     vec_rotation.z(rz);
     vec_rotation.w(rw);
 
-    auto epoch = std::chrono::system_clock::now().time_since_epoch();
-    const auto secons = std::chrono::duration_cast<std::chrono::seconds>(epoch);
-    epoch -= secons;
-    const auto secs = static_cast<int32_t>(secons.count());
-    const auto nanoseconds = static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(epoch).count());
-
     builtin_interfaces::msg::Time time;
-    time.sec(secs);
+    time.sec(seconds);
     time.nanosec(nanoseconds);
 
     std_msgs::msg::Header header;
     header.stamp(std::move(time));
-    header.frame_id(frame_id);
+    header.frame_id(_parent);
 
     geometry_msgs::msg::Transform t;
-    t.rotation(vec_rotation);
-    t.translation(vec_translation);
+    t.rotation(std::move(vec_rotation));
+    t.translation(std::move(vec_translation));
+
     geometry_msgs::msg::TransformStamped ts;
-    ts.transform(t);
+    ts.header(std::move(header));
+    ts.transform(std::move(t));
+    ts.child_frame_id(_frame_id);
     _impl->_transform.transforms({ts});
   }
 
-  CarlaTransformPublisher::CarlaTransformPublisher() :
-  _impl(std::make_unique<CarlaTransformPublisherImpl>()) {}
+  CarlaTransformPublisher::CarlaTransformPublisher(const char* ros_name, const char* parent) :
+  _impl(std::make_shared<CarlaTransformPublisherImpl>()) {
+    if (ros_name == "")
+      _name = "tf";
+    else
+      _name = ros_name;
+    _parent = parent;
+  }
 
   CarlaTransformPublisher::~CarlaTransformPublisher() {
       if (!_impl)
@@ -197,9 +202,41 @@ namespace ros2 {
 
       if (_impl->_topic)
           _impl->_participant->delete_topic(_impl->_topic);
-      
+
       if (_impl->_participant)
           efd::DomainParticipantFactory::get_instance()->delete_participant(_impl->_participant);
+  }
+
+  CarlaTransformPublisher::CarlaTransformPublisher(const CarlaTransformPublisher& other) {
+    _frame_id = other._frame_id;
+    _name = other._name;
+    _parent = other._parent;
+    _impl = other._impl;
+  }
+
+  CarlaTransformPublisher& CarlaTransformPublisher::operator=(const CarlaTransformPublisher& other) {
+    _frame_id = other._frame_id;
+    _name = other._name;
+    _parent = other._parent;
+    _impl = other._impl;
+
+    return *this;
+  }
+
+  CarlaTransformPublisher::CarlaTransformPublisher(CarlaTransformPublisher&& other) {
+    _frame_id = std::move(other._frame_id);
+    _name = std::move(other._name);
+    _parent = std::move(other._parent);
+    _impl = std::move(other._impl);
+  }
+
+  CarlaTransformPublisher& CarlaTransformPublisher::operator=(CarlaTransformPublisher&& other) {
+    _frame_id = std::move(other._frame_id);
+    _name = std::move(other._name);
+    _parent = std::move(other._parent);
+    _impl = std::move(other._impl);
+
+    return *this;
   }
 }
 }

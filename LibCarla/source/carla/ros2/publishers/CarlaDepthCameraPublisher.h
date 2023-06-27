@@ -8,28 +8,32 @@
 #include <memory>
 #include <vector>
 
+#include "CarlaPublisher.h"
+
 namespace carla {
 namespace ros2 {
 
   struct CarlaDepthCameraPublisherImpl;
 
-  class CarlaDepthCameraPublisher {
+  class CarlaDepthCameraPublisher : public CarlaPublisher {
     public:
-      CarlaDepthCameraPublisher();
+      CarlaDepthCameraPublisher(const char* ros_name = "", const char* parent = "");
       ~CarlaDepthCameraPublisher();
-      CarlaDepthCameraPublisher(const CarlaDepthCameraPublisher&) = delete;
-      CarlaDepthCameraPublisher& operator=(const CarlaDepthCameraPublisher&) = delete;
-      CarlaDepthCameraPublisher(CarlaDepthCameraPublisher&&) = delete;
-      CarlaDepthCameraPublisher& operator=(CarlaDepthCameraPublisher&&) = delete;
+      CarlaDepthCameraPublisher(const CarlaDepthCameraPublisher&);
+      CarlaDepthCameraPublisher& operator=(const CarlaDepthCameraPublisher&);
+      CarlaDepthCameraPublisher(CarlaDepthCameraPublisher&&);
+      CarlaDepthCameraPublisher& operator=(CarlaDepthCameraPublisher&&);
 
       bool Init();
       bool Publish();
-      void SetData(size_t height, size_t width, const uint8_t* data, const char* frame_id);
-      private:
-      void SetData(size_t height, size_t width, std::vector<uint8_t>&& data, const char* frame_id);
-      
+      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data);
+      const char* type() const override { return "depth camera"; }
+
     private:
-      std::unique_ptr<CarlaDepthCameraPublisherImpl> _impl;
+      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data);
+
+    private:
+      std::shared_ptr<CarlaDepthCameraPublisherImpl> _impl;
   };
 }
 }

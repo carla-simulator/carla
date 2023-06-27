@@ -8,28 +8,32 @@
 #include <memory>
 #include <vector>
 
+#include "CarlaPublisher.h"
+
 namespace carla {
 namespace ros2 {
 
   struct CarlaLidarPublisherImpl;
 
-  class CarlaLidarPublisher {
+  class CarlaLidarPublisher : public CarlaPublisher {
     public:
-      CarlaLidarPublisher();
+      CarlaLidarPublisher(const char* ros_name = "", const char* parent = "");
       ~CarlaLidarPublisher();
-      CarlaLidarPublisher(const CarlaLidarPublisher&) = delete;
-      CarlaLidarPublisher& operator=(const CarlaLidarPublisher&) = delete;
-      CarlaLidarPublisher(CarlaLidarPublisher&&) = delete;
-      CarlaLidarPublisher& operator=(CarlaLidarPublisher&&) = delete;
+      CarlaLidarPublisher(const CarlaLidarPublisher&);
+      CarlaLidarPublisher& operator=(const CarlaLidarPublisher&);
+      CarlaLidarPublisher(CarlaLidarPublisher&&);
+      CarlaLidarPublisher& operator=(CarlaLidarPublisher&&);
 
       bool Init();
       bool Publish();
-      void SetData(size_t height, size_t width, const uint8_t* data, const char* frame_id);
-      private:
-      void SetData(size_t height, size_t width, std::vector<uint8_t>&& data, const char* frame_id);
-      
+      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, float* data);
+      const char* type() const override { return "lidar"; }
+
     private:
-      std::unique_ptr<CarlaLidarPublisherImpl> _impl;
+      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data);
+
+    private:
+      std::shared_ptr<CarlaLidarPublisherImpl> _impl;
   };
 }
 }

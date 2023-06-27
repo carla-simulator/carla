@@ -5,6 +5,7 @@ project(libcarla_fastdds)
 
 file(GLOB libcarla_carla_fastdds_headers
   "${libcarla_source_path}/carla/ros2/publishers/*.h"
+  "${libcarla_source_path}/carla/ros2/subscribers/*.h"
   "${libcarla_source_path}/carla/ros2/listeners/*.h"
   "${libcarla_source_path}/carla/ros2/types/*.h"
   )
@@ -16,15 +17,13 @@ install(FILES ${fast_dds_dependencies} DESTINATION lib)
 
 file(GLOB libcarla_fastdds_sources
   "${libcarla_source_path}/carla/ros2/publishers/*.cpp"
+  "${libcarla_source_path}/carla/ros2/subscribers/*.cpp"
   "${libcarla_source_path}/carla/ros2/listeners/*.cpp"
   "${libcarla_source_path}/carla/ros2/types/*.cpp")
 
-#find_package(fastrtps REQUIRED)
-#find_package(fastcdr REQUIRED)
-
 set(FASTDDS_CPP_STD_INCLUDES "/usr/include/c++/7")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fPIC -D_GLIBCXX_USE_CXX11_ABI=0 -I${FASTDDS_CPP_STD_INCLUDES}" CACHE STRING "" FORCE)
- 
+
 # ==============================================================================
 # Create targets for debug and release in the same build type.
 # ==============================================================================

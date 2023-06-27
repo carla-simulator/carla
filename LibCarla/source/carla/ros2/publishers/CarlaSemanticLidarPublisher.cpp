@@ -3,7 +3,6 @@
 #include "CarlaSemanticLidarPublisher.h"
 
 #include <string>
-#include <chrono>
 
 #include "carla/ros2/types/PointCloud2PubSubTypes.h"
 #include "carla/ros2/listeners/CarlaListener.h"
@@ -47,7 +46,7 @@ namespace ros2 {
         return false;
     }
     efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    pqos.name("CarlaPublisherParticipant");
+    pqos.name(_name);
     auto factory = efd::DomainParticipantFactory::get_instance();
     _impl->_participant = factory->create_participant(0, pqos);
     if (_impl->_participant == nullptr) {
@@ -55,21 +54,26 @@ namespace ros2 {
         return false;
     }
     _impl->_type.register_type(_impl->_participant);
+
     efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
     _impl->_publisher = _impl->_participant->create_publisher(pubqos, nullptr);
     if (_impl->_publisher == nullptr) {
       std::cerr << "Failed to create Publisher" << std::endl;
       return false;
     }
+
     efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
-    const std::string topic_name {"rt/carla/semantic_lidar"};
+    const std::string base { "rt/carla/" };
+    std::string topic_name = base;
+    if (!_parent.empty())
+      topic_name += _parent + "/";
+    topic_name += _name;
     _impl->_topic = _impl->_participant->create_topic(topic_name, _impl->_type->getName(), tqos);
     if (_impl->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
         return false;
     }
-    eprosima::fastrtps::ReliabilityQosPolicy rqos;
-    rqos.kind = eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS;
+
     efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
     wqos.endpoint().history_memory_policy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
     efd::DataWriterListener* listener = (efd::DataWriterListener*)_impl->_listener._impl.get();
@@ -78,6 +82,7 @@ namespace ros2 {
         std::cerr << "Failed to create DataWriter" << std::endl;
         return false;
     }
+    _frame_id = _name;
     return true;
   }
 
@@ -139,33 +144,27 @@ namespace ros2 {
         std::cerr << "RETCODE_NOT_ALLOWED_BY_SECURITY" << std::endl;
         return false;
     }
-    std::cout << "UNKNOWN" << std::endl;    
+    std::cout << "UNKNOWN" << std::endl;
     return false;
   }
 
-void CarlaSemanticLidarPublisher::SetData(size_t height, size_t width, const uint8_t* data, const char* frame_id) {
+void CarlaSemanticLidarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data) {
     std::vector<uint8_t> vector_data;
     const size_t size = height * width * sizeof(float);
     vector_data.resize(size);
     std::memcpy(&vector_data[0], &data[0], size);
-    SetData(height, width, std::move(vector_data), frame_id);
+    SetData(seconds, nanoseconds, height, width, std::move(vector_data));
 }
 
-void CarlaSemanticLidarPublisher::SetData(size_t height, size_t width, std::vector<uint8_t>&& data, const char* frame_id) {
-    auto epoch = std::chrono::system_clock::now().time_since_epoch();
-    const auto secons = std::chrono::duration_cast<std::chrono::seconds>(epoch);
-    epoch -= secons;
-    const auto secs = static_cast<int32_t>(secons.count());
-    const auto nanoseconds = static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(epoch).count());
-
+void CarlaSemanticLidarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data) {
     builtin_interfaces::msg::Time time;
-    time.sec(secs);
+    time.sec(seconds);
     time.nanosec(nanoseconds);
 
     std_msgs::msg::Header header;
     header.stamp(std::move(time));
-    header.frame_id("map");
-    
+    header.frame_id(_frame_id);
+
     sensor_msgs::msg::PointField descriptor1;
     descriptor1.name("x");
     descriptor1.offset(0);
@@ -209,8 +208,14 @@ void CarlaSemanticLidarPublisher::SetData(size_t height, size_t width, std::vect
     _impl->_lidar.data(std::move(data));
   }
 
-  CarlaSemanticLidarPublisher::CarlaSemanticLidarPublisher() :
-  _impl(std::make_unique<CarlaSemanticLidarPublisherImpl>()) {}
+  CarlaSemanticLidarPublisher::CarlaSemanticLidarPublisher(const char* ros_name, const char* parent) :
+  _impl(std::make_shared<CarlaSemanticLidarPublisherImpl>()) {
+    if (ros_name == "")
+      _name = "semantic_lidar";
+    else
+      _name = ros_name;
+    _parent = parent;
+  }
 
   CarlaSemanticLidarPublisher::~CarlaSemanticLidarPublisher() {
       if (!_impl)
@@ -224,9 +229,41 @@ void CarlaSemanticLidarPublisher::SetData(size_t height, size_t width, std::vect
 
       if (_impl->_topic)
           _impl->_participant->delete_topic(_impl->_topic);
-      
+
       if (_impl->_participant)
           efd::DomainParticipantFactory::get_instance()->delete_participant(_impl->_participant);
+  }
+
+  CarlaSemanticLidarPublisher::CarlaSemanticLidarPublisher(const CarlaSemanticLidarPublisher& other) {
+    _frame_id = other._frame_id;
+    _name = other._name;
+    _parent = other._parent;
+    _impl = other._impl;
+  }
+
+  CarlaSemanticLidarPublisher& CarlaSemanticLidarPublisher::operator=(const CarlaSemanticLidarPublisher& other) {
+    _frame_id = other._frame_id;
+    _name = other._name;
+    _parent = other._parent;
+    _impl = other._impl;
+
+    return *this;
+  }
+
+  CarlaSemanticLidarPublisher::CarlaSemanticLidarPublisher(CarlaSemanticLidarPublisher&& other) {
+    _frame_id = std::move(other._frame_id);
+    _name = std::move(other._name);
+    _parent = std::move(other._parent);
+    _impl = std::move(other._impl);
+  }
+
+  CarlaSemanticLidarPublisher& CarlaSemanticLidarPublisher::operator=(CarlaSemanticLidarPublisher&& other) {
+    _frame_id = std::move(other._frame_id);
+    _name = std::move(other._name);
+    _parent = std::move(other._parent);
+    _impl = std::move(other._impl);
+
+    return *this;
   }
 }
 }

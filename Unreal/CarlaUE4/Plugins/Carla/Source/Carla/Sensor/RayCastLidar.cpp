@@ -69,7 +69,7 @@ void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float Delta
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
-    ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, Stream.GetSensorTransform(), LidarData);
+    ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), LidarData);
   }
   #endif
 

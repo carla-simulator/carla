@@ -3,7 +3,6 @@
 #include "CarlaLidarPublisher.h"
 
 #include <string>
-#include <chrono>
 
 #include "carla/ros2/types/PointCloud2PubSubTypes.h"
 #include "carla/ros2/listeners/CarlaListener.h"
@@ -23,7 +22,6 @@
 #include <fastrtps/qos/QosPolicies.h>
 #include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
 #include <fastdds/dds/publisher/DataWriterListener.hpp>
-
 
 namespace carla {
 namespace ros2 {
@@ -46,8 +44,9 @@ namespace ros2 {
         std::cerr << "Invalid TypeSupport" << std::endl;
         return false;
     }
+
     efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    pqos.name("CarlaPublisherParticipant");
+    pqos.name(_name);
     auto factory = efd::DomainParticipantFactory::get_instance();
     _impl->_participant = factory->create_participant(0, pqos);
     if (_impl->_participant == nullptr) {
@@ -55,21 +54,26 @@ namespace ros2 {
         return false;
     }
     _impl->_type.register_type(_impl->_participant);
+
     efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
     _impl->_publisher = _impl->_participant->create_publisher(pubqos, nullptr);
     if (_impl->_publisher == nullptr) {
       std::cerr << "Failed to create Publisher" << std::endl;
       return false;
     }
+
     efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
-    const std::string topic_name {"rt/carla/lidar"};
+    const std::string base { "rt/carla/" };
+    std::string topic_name = base;
+    if (!_parent.empty())
+      topic_name += _parent + "/";
+    topic_name += _name;
     _impl->_topic = _impl->_participant->create_topic(topic_name, _impl->_type->getName(), tqos);
     if (_impl->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
         return false;
     }
-    eprosima::fastrtps::ReliabilityQosPolicy rqos;
-    rqos.kind = eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS;
+
     efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
     wqos.endpoint().history_memory_policy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
     efd::DataWriterListener* listener = (efd::DataWriterListener*)_impl->_listener._impl.get();
@@ -78,6 +82,7 @@ namespace ros2 {
         std::cerr << "Failed to create DataWriter" << std::endl;
         return false;
     }
+    _frame_id = _name;
     return true;
   }
 
@@ -139,35 +144,33 @@ namespace ros2 {
         std::cerr << "RETCODE_NOT_ALLOWED_BY_SECURITY" << std::endl;
         return false;
     }
-    std::cout << "UNKNOWN return code: " << rcode() << std::endl;   
+    std::cout << "UNKNOWN return code: " << rcode() << std::endl;
     return false;
   }
 
 
-void CarlaLidarPublisher::SetData(size_t height, size_t width, const uint8_t* data, const char* frame_id) {
-    const size_t point_size = 4 * sizeof(float);
+void CarlaLidarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, float* data) {
+    float* it = data;
+    float* end = &data[height * width * 4];
+    for (++it; it < end; it += 4) {
+        *it *= -1.0f;
+    }
     std::vector<uint8_t> vector_data;
-    const size_t size = height * 5 * point_size;
+    const size_t size = height * width * sizeof(float);
     vector_data.resize(size);
-    std::memcpy(&vector_data[0], &data[0], size);    
-    SetData(height, 5, std::move(vector_data), frame_id);
+    std::memcpy(&vector_data[0], &data[0], size);
+    SetData(seconds, nanoseconds, height, width, std::move(vector_data));
   }
 
-  void CarlaLidarPublisher::SetData(size_t height, size_t width, std::vector<uint8_t>&& data, const char* frame_id) {
-    auto epoch = std::chrono::system_clock::now().time_since_epoch();
-    const auto secons = std::chrono::duration_cast<std::chrono::seconds>(epoch);
-    epoch -= secons;
-    const auto secs = static_cast<int32_t>(secons.count());
-    const auto nanoseconds = static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(epoch).count());
-
+  void CarlaLidarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data) {
     builtin_interfaces::msg::Time time;
-    time.sec(secs);
+    time.sec(seconds);
     time.nanosec(nanoseconds);
 
     std_msgs::msg::Header header;
     header.stamp(std::move(time));
-    header.frame_id("map");
-    
+    header.frame_id(_frame_id);
+
     sensor_msgs::msg::PointField descriptor1;
     descriptor1.name("x");
     descriptor1.offset(0);
@@ -196,13 +199,19 @@ void CarlaLidarPublisher::SetData(size_t height, size_t width, const uint8_t* da
     _impl->_lidar.is_bigendian(false);
     _impl->_lidar.fields({descriptor1, descriptor2, descriptor3, descriptor4});
     _impl->_lidar.point_step(point_size);
-    _impl->_lidar.row_step(width * point_size);
+    _impl->_lidar.row_step(width * sizeof(float));
     _impl->_lidar.is_dense(false); //True if there are not invalid points
     _impl->_lidar.data(std::move(data));
   }
 
-  CarlaLidarPublisher::CarlaLidarPublisher() :
-  _impl(std::make_unique<CarlaLidarPublisherImpl>()) {}
+  CarlaLidarPublisher::CarlaLidarPublisher(const char* ros_name, const char* parent) :
+  _impl(std::make_shared<CarlaLidarPublisherImpl>()) {
+    if (ros_name == "")
+      _name = "lidar";
+    else
+      _name = ros_name;
+    _parent = parent;
+  }
 
   CarlaLidarPublisher::~CarlaLidarPublisher() {
       if (!_impl)
@@ -216,9 +225,41 @@ void CarlaLidarPublisher::SetData(size_t height, size_t width, const uint8_t* da
 
       if (_impl->_topic)
           _impl->_participant->delete_topic(_impl->_topic);
-      
+
       if (_impl->_participant)
           efd::DomainParticipantFactory::get_instance()->delete_participant(_impl->_participant);
+  }
+
+  CarlaLidarPublisher::CarlaLidarPublisher(const CarlaLidarPublisher& other) {
+    _frame_id = other._frame_id;
+    _name = other._name;
+    _parent = other._parent;
+    _impl = other._impl;
+  }
+
+  CarlaLidarPublisher& CarlaLidarPublisher::operator=(const CarlaLidarPublisher& other) {
+    _frame_id = other._frame_id;
+    _name = other._name;
+    _parent = other._parent;
+    _impl = other._impl;
+
+    return *this;
+  }
+
+  CarlaLidarPublisher::CarlaLidarPublisher(CarlaLidarPublisher&& other) {
+    _frame_id = std::move(other._frame_id);
+    _name = std::move(other._name);
+    _parent = std::move(other._parent);
+    _impl = std::move(other._impl);
+  }
+
+  CarlaLidarPublisher& CarlaLidarPublisher::operator=(CarlaLidarPublisher&& other) {
+    _frame_id = std::move(other._frame_id);
+    _name = std::move(other._name);
+    _parent = std::move(other._parent);
+    _impl = std::move(other._impl);
+
+    return *this;
   }
 }
 }

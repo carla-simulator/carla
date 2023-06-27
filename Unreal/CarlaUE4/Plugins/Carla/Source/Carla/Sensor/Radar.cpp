@@ -86,7 +86,7 @@ void ARadar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
-    ROS2->ProcessDataFromRadar(DataStream.GetSensorType(), StreamId, Stream.GetSensorTransform(), RadarData);
+    ROS2->ProcessDataFromRadar(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), RadarData);
   }
   #endif
 

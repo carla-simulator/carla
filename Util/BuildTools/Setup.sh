@@ -8,7 +8,7 @@ DOC_STRING="Download and install the required libraries for carla."
 
 USAGE_STRING="Usage: $0 [--python-version=VERSION]"
 
-OPTS=`getopt -o h --long help,chrono,pytorch,python-version: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,chrono,ros2,pytorch,python-version: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -787,7 +787,7 @@ if ${USE_PYTORCH} ; then
   cp -p ${LIBTORCH_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p ${LIBTORCHSCATTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p ${LIBTORCHCLUSTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-  
+
   mkdir -p ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   cp -p ${LIBTORCH_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   cp -p ${LIBTORCHSCATTER_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
@@ -808,12 +808,12 @@ if ${USE_ROS2} ; then
     LIB_SOURCE=$1
     LIB_REPO=$2
     CMAKE_FLAGS=$3
-    
+
     if [[ ! -d ${LIB_SOURCE} ]] ; then
       mkdir -p ${LIB_SOURCE}
       log "${LIB_REPO}"
       git clone ${LIB_REPO} ${LIB_SOURCE}
-      mkdir -p ${LIB_SOURCE}/build      
+      mkdir -p ${LIB_SOURCE}/build
     fi
   }
   if [[ ! -d ${FASTDDS_INSTALL_DIR} ]] ; then
@@ -869,7 +869,7 @@ if ${USE_ROS2} ; then
 
     mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
     cp -p ${FASTDDS_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-    
+
     mkdir -p ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
     cp -p ${FASTDDS_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   fi

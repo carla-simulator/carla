@@ -1,27 +1,27 @@
 #define _GLIBCXX_USE_CXX11_ABI 0
 
-#include "CarlaDepthCameraPublisher.h"
+#include "CarlaEgoVehicleControlSubscriber.h"
 
-#include <string>
-
-#include "carla/ros2/types/ImagePubSubTypes.h"
+#include "carla/ros2/types/CarlaEgoVehicleControl.h"
+#include "carla/ros2/types/CarlaEgoVehicleControlPubSubTypes.h"
 #include "carla/ros2/listeners/CarlaListener.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
-#include <fastdds/dds/publisher/Publisher.hpp>
+#include <fastdds/dds/subscriber/Subscriber.hpp>
 #include <fastdds/dds/topic/Topic.hpp>
-#include <fastdds/dds/publisher/DataWriter.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
 #include <fastdds/dds/topic/TypeSupport.hpp>
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
 
 #include <fastdds/dds/domain/qos/DomainParticipantQos.hpp>
 #include <fastdds/dds/domain/DomainParticipantFactory.hpp>
-#include <fastdds/dds/publisher/qos/PublisherQos.hpp>
+#include <fastdds/dds/subscriber/qos/SubscriberQos.hpp>
 #include <fastdds/dds/topic/qos/TopicQos.hpp>
 
 #include <fastrtps/attributes/ParticipantAttributes.h>
 #include <fastrtps/qos/QosPolicies.h>
-#include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
-#include <fastdds/dds/publisher/DataWriterListener.hpp>
+#include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
 
 
 namespace carla {
@@ -30,17 +30,17 @@ namespace ros2 {
   namespace efd = eprosima::fastdds::dds;
   using erc = eprosima::fastrtps::types::ReturnCode_t;
 
-  struct CarlaDepthCameraPublisherImpl {
+  struct CarlaEgoVehicleControlSubscriberImpl {
     efd::DomainParticipant* _participant { nullptr };
-    efd::Publisher* _publisher { nullptr };
+    efd::Subscriber* _subscriber { nullptr };
     efd::Topic* _topic { nullptr };
-    efd::DataWriter* _datawriter { nullptr };
-    efd::TypeSupport _type { new sensor_msgs::msg::ImagePubSubType() };
+    efd::DataReader* _datareader { nullptr };
+    efd::TypeSupport _type { new carla_msgs::msg::VehicleControlPubSubType() };
     CarlaListener _listener {};
-    sensor_msgs::msg::Image _image {};
+    carla_msgs::msg::VehicleControl _event {};
   };
 
-  bool CarlaDepthCameraPublisher::Init() {
+  bool CarlaEgoVehicleControlSubscriber::Init() {
     if (_impl->_type == nullptr) {
         std::cerr << "Invalid TypeSupport" << std::endl;
         return false;
@@ -56,42 +56,39 @@ namespace ros2 {
     }
     _impl->_type.register_type(_impl->_participant);
 
-    efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
-    _impl->_publisher = _impl->_participant->create_publisher(pubqos, nullptr);
-    if (_impl->_publisher == nullptr) {
-      std::cerr << "Failed to create Publisher" << std::endl;
+    efd::SubscriberQos subqos = efd::SUBSCRIBER_QOS_DEFAULT;
+    _impl->_subscriber = _impl->_participant->create_subscriber(subqos, nullptr);
+    if (_impl->_subscriber == nullptr) {
+      std::cerr << "Failed to create Subscriber" << std::endl;
       return false;
     }
 
     efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
-    const std::string publisher_type {"/image"};
     const std::string base { "rt/carla/" };
     std::string topic_name = base;
     if (!_parent.empty())
       topic_name += _parent + "/";
     topic_name += _name;
-    topic_name += publisher_type;
     _impl->_topic = _impl->_participant->create_topic(topic_name, _impl->_type->getName(), tqos);
     if (_impl->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
         return false;
     }
 
-    efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
-    wqos.endpoint().history_memory_policy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-    efd::DataWriterListener* listener = (efd::DataWriterListener*)_impl->_listener._impl.get();
-    _impl->_datawriter = _impl->_publisher->create_datawriter(_impl->_topic, wqos, listener);
-    if (_impl->_datawriter == nullptr) {
-        std::cerr << "Failed to create DataWriter" << std::endl;
+    efd::DataReaderQos rqos = efd::DATAREADER_QOS_DEFAULT;
+    rqos.endpoint().history_memory_policy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+    efd::DataReaderListener* listener = (efd::DataReaderListener*)_impl->_listener._impl.get();
+    _impl->_datareader = _impl->_subscriber->create_datareader(_impl->_topic, rqos, listener);
+    if (_impl->_datareader == nullptr) {
+        std::cerr << "Failed to create DataReader" << std::endl;
         return false;
     }
-    _frame_id = _name;
     return true;
   }
 
-  bool CarlaDepthCameraPublisher::Publish() {
-    eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
-    eprosima::fastrtps::types::ReturnCode_t rcode = _impl->_datawriter->write(&_impl->_image, instance_handle);
+  bool CarlaEgoVehicleControlSubscriber::Read() {
+    efd::SampleInfo info;
+    eprosima::fastrtps::types::ReturnCode_t rcode = _impl->_datareader->take_next_sample(&_impl->_event, &info);
     if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
         return true;
     }
@@ -151,49 +148,24 @@ namespace ros2 {
     return false;
   }
 
-void CarlaDepthCameraPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data) {    std::vector<uint8_t> vector_data;
-    const size_t size = height * width * 4;
-    vector_data.resize(size);
-    std::memcpy(&vector_data[0], &data[0], size);
-    SetData(seconds, nanoseconds,height, width, std::move(vector_data));
-  }
-
-  void CarlaDepthCameraPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data) {
-    builtin_interfaces::msg::Time time;
-    time.sec(seconds);
-    time.nanosec(nanoseconds);
-
-    std_msgs::msg::Header header;
-    header.stamp(std::move(time));
-    header.frame_id(_frame_id);
-
-    _impl->_image.header(std::move(header));
-    _impl->_image.width(width);
-    _impl->_image.height(height);
-    _impl->_image.encoding("bgra8");
-    _impl->_image.is_bigendian(0);
-    _impl->_image.step(_impl->_image.width() * sizeof(uint8_t) * 4);
-    _impl->_image.data(std::move(data)); //https://github.com/eProsima/Fast-DDS/issues/2330
-  }
-
-  CarlaDepthCameraPublisher::CarlaDepthCameraPublisher(const char* ros_name, const char* parent) :
-  _impl(std::make_shared<CarlaDepthCameraPublisherImpl>()) {
+  CarlaEgoVehicleControlSubscriber::CarlaEgoVehicleControlSubscriber(const char* ros_name, const char* parent) :
+  _impl(std::make_shared<CarlaEgoVehicleControlSubscriberImpl>()) {
     if (ros_name == "")
-      _name = "depth_camera";
+      _name = "ego_vehicle_control";
     else
       _name = ros_name;
     _parent = parent;
   }
 
-  CarlaDepthCameraPublisher::~CarlaDepthCameraPublisher() {
+  CarlaEgoVehicleControlSubscriber::~CarlaEgoVehicleControlSubscriber() {
       if (!_impl)
           return;
 
-      if (_impl->_datawriter)
-          _impl->_publisher->delete_datawriter(_impl->_datawriter);
+      if (_impl->_datareader)
+          _impl->_subscriber->delete_datareader(_impl->_datareader);
 
-      if (_impl->_publisher)
-          _impl->_participant->delete_publisher(_impl->_publisher);
+      if (_impl->_subscriber)
+          _impl->_participant->delete_subscriber(_impl->_subscriber);
 
       if (_impl->_topic)
           _impl->_participant->delete_topic(_impl->_topic);
@@ -202,14 +174,14 @@ void CarlaDepthCameraPublisher::SetData(int32_t seconds, uint32_t nanoseconds, s
           efd::DomainParticipantFactory::get_instance()->delete_participant(_impl->_participant);
   }
 
-  CarlaDepthCameraPublisher::CarlaDepthCameraPublisher(const CarlaDepthCameraPublisher& other) {
+  CarlaEgoVehicleControlSubscriber::CarlaEgoVehicleControlSubscriber(const CarlaEgoVehicleControlSubscriber& other) {
     _frame_id = other._frame_id;
     _name = other._name;
     _parent = other._parent;
     _impl = other._impl;
   }
 
-  CarlaDepthCameraPublisher& CarlaDepthCameraPublisher::operator=(const CarlaDepthCameraPublisher& other) {
+  CarlaEgoVehicleControlSubscriber& CarlaEgoVehicleControlSubscriber::operator=(const CarlaEgoVehicleControlSubscriber& other) {
     _frame_id = other._frame_id;
     _name = other._name;
     _parent = other._parent;
@@ -218,14 +190,14 @@ void CarlaDepthCameraPublisher::SetData(int32_t seconds, uint32_t nanoseconds, s
     return *this;
   }
 
-  CarlaDepthCameraPublisher::CarlaDepthCameraPublisher(CarlaDepthCameraPublisher&& other) {
+  CarlaEgoVehicleControlSubscriber::CarlaEgoVehicleControlSubscriber(CarlaEgoVehicleControlSubscriber&& other) {
     _frame_id = std::move(other._frame_id);
     _name = std::move(other._name);
     _parent = std::move(other._parent);
     _impl = std::move(other._impl);
   }
 
-  CarlaDepthCameraPublisher& CarlaDepthCameraPublisher::operator=(CarlaDepthCameraPublisher&& other) {
+  CarlaEgoVehicleControlSubscriber& CarlaEgoVehicleControlSubscriber::operator=(CarlaEgoVehicleControlSubscriber&& other) {
     _frame_id = std::move(other._frame_id);
     _name = std::move(other._name);
     _parent = std::move(other._parent);

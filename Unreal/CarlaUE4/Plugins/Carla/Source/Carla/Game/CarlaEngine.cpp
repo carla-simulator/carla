@@ -63,6 +63,11 @@ FCarlaEngine::~FCarlaEngine()
 {
   if (bIsRunning)
   {
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+      ROS2->Shutdown();
+    #endif
     FWorldDelegates::OnWorldTickStart.Remove(OnPreTickHandle);
     FWorldDelegates::OnWorldPostActorTick.Remove(OnPostTickHandle);
     FCarlaStaticDelegates::OnEpisodeSettingsChange.Remove(OnEpisodeSettingsChangeHandle);
@@ -180,13 +185,12 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     }
   }
 
-  #if defined(WITH_ROS2)
   // create ROS2 manager
+  #if defined(WITH_ROS2)
   if (Settings.ROS2)
   {
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     ROS2->Enable(true);
-    ROS2->InitPublisher();
   }
   #endif
 

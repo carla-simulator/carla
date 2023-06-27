@@ -8,28 +8,32 @@
 #include <memory>
 #include <vector>
 
+#include "CarlaPublisher.h"
+
 namespace carla {
 namespace ros2 {
 
   struct CarlaRGBCameraPublisherImpl;
 
-  class CarlaRGBCameraPublisher {
+  class CarlaRGBCameraPublisher : public CarlaPublisher {
     public:
-      CarlaRGBCameraPublisher();
+      CarlaRGBCameraPublisher(const char* ros_name = "", const char* parent = "");
       ~CarlaRGBCameraPublisher();
-      CarlaRGBCameraPublisher(const CarlaRGBCameraPublisher&) = delete;
-      CarlaRGBCameraPublisher& operator=(const CarlaRGBCameraPublisher&) = delete;
-      CarlaRGBCameraPublisher(CarlaRGBCameraPublisher&&) = delete;
-      CarlaRGBCameraPublisher& operator=(CarlaRGBCameraPublisher&&) = delete;
+      CarlaRGBCameraPublisher(const CarlaRGBCameraPublisher&);
+      CarlaRGBCameraPublisher& operator=(const CarlaRGBCameraPublisher&);
+      CarlaRGBCameraPublisher(CarlaRGBCameraPublisher&&);
+      CarlaRGBCameraPublisher& operator=(CarlaRGBCameraPublisher&&);
 
       bool Init();
       bool Publish();
-      void SetData(size_t height, size_t width, const uint8_t* data, const char* frame_id);
-      private:
-      void SetData(size_t height, size_t width, std::vector<uint8_t>&& data, const char* frame_id);
-      
+      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data);
+      const char* type() const override { return "rgb camera"; }
+
     private:
-      std::unique_ptr<CarlaRGBCameraPublisherImpl> _impl;
+      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data);
+
+    private:
+      std::shared_ptr<CarlaRGBCameraPublisherImpl> _impl;
   };
 }
 }

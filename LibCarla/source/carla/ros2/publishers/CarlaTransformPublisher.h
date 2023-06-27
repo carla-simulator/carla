@@ -8,26 +8,29 @@
 #include <memory>
 #include <vector>
 
+#include "CarlaPublisher.h"
+
 namespace carla {
 namespace ros2 {
 
   struct CarlaTransformPublisherImpl;
 
-  class CarlaTransformPublisher {
+  class CarlaTransformPublisher : public CarlaPublisher {
     public:
-      CarlaTransformPublisher();
+      CarlaTransformPublisher(const char* ros_name = "", const char* parent = "");
       ~CarlaTransformPublisher();
-      CarlaTransformPublisher(const CarlaTransformPublisher&) = delete;
-      CarlaTransformPublisher& operator=(const CarlaTransformPublisher&) = delete;
-      CarlaTransformPublisher(CarlaTransformPublisher&&) = delete;
-      CarlaTransformPublisher& operator=(CarlaTransformPublisher&&) = delete;
+      CarlaTransformPublisher(const CarlaTransformPublisher&);
+      CarlaTransformPublisher& operator=(const CarlaTransformPublisher&);
+      CarlaTransformPublisher(CarlaTransformPublisher&&);
+      CarlaTransformPublisher& operator=(CarlaTransformPublisher&&);
 
       bool Init();
       bool Publish();
-      void SetData(const float* translation, const float* rotation, const char* frame_id);
-      
+      void SetData(int32_t seconds, uint32_t nanoseconds, const float* translation, const float* rotation);
+      const char* type() const override { return "transform"; }
+
     private:
-      std::unique_ptr<CarlaTransformPublisherImpl> _impl;
+      std::shared_ptr<CarlaTransformPublisherImpl> _impl;
   };
 }
 }

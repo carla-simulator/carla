@@ -8,28 +8,32 @@
 #include <memory>
 #include <vector>
 
+#include "CarlaPublisher.h"
+
 namespace carla {
 namespace ros2 {
 
   struct CarlaCollisionPublisherImpl;
 
-  class CarlaCollisionPublisher {
+  class CarlaCollisionPublisher : public CarlaPublisher {
     public:
-      CarlaCollisionPublisher();
+      CarlaCollisionPublisher(const char* ros_name = "", const char* parent = "");
       ~CarlaCollisionPublisher();
-      CarlaCollisionPublisher(const CarlaCollisionPublisher&) = delete;
-      CarlaCollisionPublisher& operator=(const CarlaCollisionPublisher&) = delete;
-      CarlaCollisionPublisher(CarlaCollisionPublisher&&) = delete;
-      CarlaCollisionPublisher& operator=(CarlaCollisionPublisher&&) = delete;
+      CarlaCollisionPublisher(const CarlaCollisionPublisher&);
+      CarlaCollisionPublisher& operator=(const CarlaCollisionPublisher&);
+      CarlaCollisionPublisher(CarlaCollisionPublisher&&);
+      CarlaCollisionPublisher& operator=(CarlaCollisionPublisher&&);
 
       bool Init();
       bool Publish();
-      void SetData(uint32_t actor_id, const uint8_t* data, const char* frame_id);
-      private:
-      void SetData(uint32_t actor_id, std::vector<float>&& data, const char* frame_id);
-      
+      void SetData(int32_t seconds, uint32_t nanoseconds, uint32_t actor_id, const uint8_t* data);
+      const char* type() const override { return "collision"; }
+
     private:
-      std::unique_ptr<CarlaCollisionPublisherImpl> _impl;
+      void SetData(int32_t seconds, uint32_t nanoseconds, uint32_t actor_id, std::vector<float>&& data);
+
+    private:
+      std::shared_ptr<CarlaCollisionPublisherImpl> _impl;
   };
 }
 }

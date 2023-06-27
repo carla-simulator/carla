@@ -245,7 +245,7 @@ public class Carla : ModuleRules
       if (UsingPytorch)
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_pytorch")));
-        
+
         string LibTorchPath = LibCarlaInstallPath;
         PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libonnx_proto.a"));
         PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libfbgemm.a"));
@@ -319,7 +319,7 @@ public class Carla : ModuleRules
       if (UsingRos2)
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds")));
-        
+
         string LibFastDDSPath = LibCarlaInstallPath;
         AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfoonathan_memory-0.7.3.so"));
         AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastcdr.so"));
@@ -337,7 +337,7 @@ public class Carla : ModuleRules
 
     }
     bEnableExceptions = true;
-    
+
     // Include path.
     string LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
 

@@ -8,28 +8,32 @@
 #include <memory>
 #include <vector>
 
+#include "CarlaPublisher.h"
+
 namespace carla {
 namespace ros2 {
 
   struct CarlaSSCameraPublisherImpl;
 
-  class CarlaSSCameraPublisher {
+  class CarlaSSCameraPublisher : public CarlaPublisher {
     public:
-      CarlaSSCameraPublisher();
+      CarlaSSCameraPublisher(const char* ros_name = "", const char* parent = "");
       ~CarlaSSCameraPublisher();
-      CarlaSSCameraPublisher(const CarlaSSCameraPublisher&) = delete;
-      CarlaSSCameraPublisher& operator=(const CarlaSSCameraPublisher&) = delete;
-      CarlaSSCameraPublisher(CarlaSSCameraPublisher&&) = delete;
-      CarlaSSCameraPublisher& operator=(CarlaSSCameraPublisher&&) = delete;
+      CarlaSSCameraPublisher(const CarlaSSCameraPublisher&);
+      CarlaSSCameraPublisher& operator=(const CarlaSSCameraPublisher&);
+      CarlaSSCameraPublisher(CarlaSSCameraPublisher&&);
+      CarlaSSCameraPublisher& operator=(CarlaSSCameraPublisher&&);
 
       bool Init();
       bool Publish();
-      void SetData(size_t height, size_t width, const uint8_t* data, const char* frame_id);
-      private:
-      void SetData(size_t height, size_t width, std::vector<uint8_t>&& data, const char* frame_id);
-      
+      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data);
+      const char* type() const override { return "semantic segmentation"; }
+
     private:
-      std::unique_ptr<CarlaSSCameraPublisherImpl> _impl;
+      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data);
+
+    private:
+      std::shared_ptr<CarlaSSCameraPublisherImpl> _impl;
   };
 }
 }

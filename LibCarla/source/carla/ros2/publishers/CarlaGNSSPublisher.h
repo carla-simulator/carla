@@ -6,28 +6,30 @@
 #define _GLIBCXX_USE_CXX11_ABI 0
 
 #include <memory>
-#include <vector>
+
+#include "CarlaPublisher.h"
 
 namespace carla {
 namespace ros2 {
 
   struct CarlaGNSSPublisherImpl;
 
-  class CarlaGNSSPublisher {
+  class CarlaGNSSPublisher : public CarlaPublisher {
     public:
-      CarlaGNSSPublisher();
+      CarlaGNSSPublisher(const char* ros_name = "", const char* parent = "");
       ~CarlaGNSSPublisher();
-      CarlaGNSSPublisher(const CarlaGNSSPublisher&) = delete;
-      CarlaGNSSPublisher& operator=(const CarlaGNSSPublisher&) = delete;
-      CarlaGNSSPublisher(CarlaGNSSPublisher&&) = delete;
-      CarlaGNSSPublisher& operator=(CarlaGNSSPublisher&&) = delete;
+      CarlaGNSSPublisher(const CarlaGNSSPublisher&);
+      CarlaGNSSPublisher& operator=(const CarlaGNSSPublisher&);
+      CarlaGNSSPublisher(CarlaGNSSPublisher&&);
+      CarlaGNSSPublisher& operator=(CarlaGNSSPublisher&&);
 
       bool Init();
       bool Publish();
-      void SetData(const double* data, const char* frame_id);
-      
+      void SetData(int32_t seconds, uint32_t nanoseconds, const double* data);
+      const char* type() const override { return "gnss"; }
+
     private:
-      std::unique_ptr<CarlaGNSSPublisherImpl> _impl;
+      std::shared_ptr<CarlaGNSSPublisherImpl> _impl;
   };
 }
 }

@@ -24,7 +24,7 @@ USE_HOUDINI=false
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,no-unity,editor-flags: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,ros2,no-unity,editor-flags: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -177,9 +177,9 @@ if ${BUILD_CARLAUE4} ; then
     OPTIONAL_MODULES_TEXT="Pytorch OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
   if ${USE_ROS2} ; then
-    OPTIONAL_MODULES_TEXT="ros2 ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
+    OPTIONAL_MODULES_TEXT="Ros2 ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
   else
-    OPTIONAL_MODULES_TEXT="ros2 OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
+    OPTIONAL_MODULES_TEXT="Ros2 OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
   if ${USE_UNITY} ; then
     OPTIONAL_MODULES_TEXT="Unity ON"$'\n'"${OPTIONAL_MODULES_TEXT}"

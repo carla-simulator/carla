@@ -6,28 +6,30 @@
 #define _GLIBCXX_USE_CXX11_ABI 0
 
 #include <memory>
-#include <vector>
+
+#include "CarlaPublisher.h"
 
 namespace carla {
 namespace ros2 {
 
   struct CarlaIMUPublisherImpl;
 
-  class CarlaIMUPublisher {
+  class CarlaIMUPublisher : public CarlaPublisher {
     public:
-      CarlaIMUPublisher();
+      CarlaIMUPublisher(const char* ros_name = "", const char* parent = "");
       ~CarlaIMUPublisher();
-      CarlaIMUPublisher(const CarlaIMUPublisher&) = delete;
-      CarlaIMUPublisher& operator=(const CarlaIMUPublisher&) = delete;
-      CarlaIMUPublisher(CarlaIMUPublisher&&) = delete;
-      CarlaIMUPublisher& operator=(CarlaIMUPublisher&&) = delete;
+      CarlaIMUPublisher(const CarlaIMUPublisher&);
+      CarlaIMUPublisher& operator=(const CarlaIMUPublisher&);
+      CarlaIMUPublisher(CarlaIMUPublisher&&);
+      CarlaIMUPublisher& operator=(CarlaIMUPublisher&&);
 
       bool Init();
       bool Publish();
-      void SetData(float* accelerometer, float* gyroscope, float compass, const char* frame_id);
-      
+      void SetData(int32_t seconds, uint32_t nanoseconds, float* accelerometer, float* gyroscope, float compass);
+      const char* type() const override { return "inertial measurement unit"; }
+
     private:
-      std::unique_ptr<CarlaIMUPublisherImpl> _impl;
+      std::shared_ptr<CarlaIMUPublisherImpl> _impl;
   };
 }
 }

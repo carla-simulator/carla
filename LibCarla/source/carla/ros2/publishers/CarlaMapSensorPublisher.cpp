@@ -3,7 +3,6 @@
 #include "CarlaMapSensorPublisher.h"
 
 #include <string>
-#include <chrono>
 
 #include "carla/ros2/types/StringPubSubTypes.h"
 #include "carla/ros2/listeners/CarlaListener.h"
@@ -45,8 +44,9 @@ namespace ros2 {
         std::cerr << "Invalid TypeSupport" << std::endl;
         return false;
     }
+
     efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    pqos.name("CarlaPublisherParticipant");
+    pqos.name(_name);
     auto factory = efd::DomainParticipantFactory::get_instance();
     _impl->_participant = factory->create_participant(0, pqos);
     if (_impl->_participant == nullptr) {
@@ -54,21 +54,26 @@ namespace ros2 {
         return false;
     }
     _impl->_type.register_type(_impl->_participant);
+
     efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
     _impl->_publisher = _impl->_participant->create_publisher(pubqos, nullptr);
     if (_impl->_publisher == nullptr) {
       std::cerr << "Failed to create Publisher" << std::endl;
       return false;
     }
+
     efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
-    const std::string topic_name {"rt/carla/map_sensor"};
+    const std::string base { "rt/carla/" };
+    std::string topic_name = base;
+    if (!_parent.empty())
+      topic_name += _parent + "/";
+    topic_name += _name;
     _impl->_topic = _impl->_participant->create_topic(topic_name, _impl->_type->getName(), tqos);
     if (_impl->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
         return false;
     }
-    eprosima::fastrtps::ReliabilityQosPolicy rqos;
-    rqos.kind = eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS;
+
     efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
     wqos.endpoint().history_memory_policy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
     efd::DataWriterListener* listener = (efd::DataWriterListener*)_impl->_listener._impl.get();
@@ -77,6 +82,7 @@ namespace ros2 {
         std::cerr << "Failed to create DataWriter" << std::endl;
         return false;
     }
+    _frame_id = _name;
     return true;
   }
 
@@ -138,7 +144,7 @@ namespace ros2 {
         std::cerr << "RETCODE_NOT_ALLOWED_BY_SECURITY" << std::endl;
         return false;
     }
-    std::cout << "UNKNOWN" << std::endl;    
+    std::cout << "UNKNOWN" << std::endl;
     return false;
   }
 
@@ -146,8 +152,14 @@ namespace ros2 {
     _impl->_string.data(data);
   }
 
-  CarlaMapSensorPublisher::CarlaMapSensorPublisher() :
-  _impl(std::make_unique<CarlaMapSensorPublisherImpl>()) {}
+  CarlaMapSensorPublisher::CarlaMapSensorPublisher(const char* ros_name, const char* parent) :
+  _impl(std::make_shared<CarlaMapSensorPublisherImpl>()) {
+    if (ros_name == "")
+      _name = "map_sensor";
+    else
+      _name = ros_name;
+    _parent = parent;
+  }
 
   CarlaMapSensorPublisher::~CarlaMapSensorPublisher() {
       if (!_impl)
@@ -161,9 +173,41 @@ namespace ros2 {
 
       if (_impl->_topic)
           _impl->_participant->delete_topic(_impl->_topic);
-      
+
       if (_impl->_participant)
           efd::DomainParticipantFactory::get_instance()->delete_participant(_impl->_participant);
+  }
+
+  CarlaMapSensorPublisher::CarlaMapSensorPublisher(const CarlaMapSensorPublisher& other) {
+    _frame_id = other._frame_id;
+    _name = other._name;
+    _parent = other._parent;
+    _impl = other._impl;
+  }
+
+  CarlaMapSensorPublisher& CarlaMapSensorPublisher::operator=(const CarlaMapSensorPublisher& other) {
+    _frame_id = other._frame_id;
+    _name = other._name;
+    _parent = other._parent;
+    _impl = other._impl;
+
+    return *this;
+  }
+
+  CarlaMapSensorPublisher::CarlaMapSensorPublisher(CarlaMapSensorPublisher&& other) {
+    _frame_id = std::move(other._frame_id);
+    _name = std::move(other._name);
+    _parent = std::move(other._parent);
+    _impl = std::move(other._impl);
+  }
+
+  CarlaMapSensorPublisher& CarlaMapSensorPublisher::operator=(CarlaMapSensorPublisher&& other) {
+    _frame_id = std::move(other._frame_id);
+    _name = std::move(other._name);
+    _parent = std::move(other._parent);
+    _impl = std::move(other._impl);
+
+    return *this;
   }
 }
 }

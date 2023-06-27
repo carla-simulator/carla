@@ -8,26 +8,29 @@
 #include <memory>
 #include <vector>
 
+#include "CarlaPublisher.h"
+
 namespace carla {
 namespace ros2 {
 
   struct CarlaSpeedometerSensorImpl;
 
-  class CarlaSpeedometerSensor {
+  class CarlaSpeedometerSensor : public CarlaPublisher {
     public:
-      CarlaSpeedometerSensor();
+      CarlaSpeedometerSensor(const char* ros_name = "", const char* parent = "");
       ~CarlaSpeedometerSensor();
-      CarlaSpeedometerSensor(const CarlaSpeedometerSensor&) = delete;
-      CarlaSpeedometerSensor& operator=(const CarlaSpeedometerSensor&) = delete;
-      CarlaSpeedometerSensor(CarlaSpeedometerSensor&&) = delete;
-      CarlaSpeedometerSensor& operator=(CarlaSpeedometerSensor&&) = delete;
+      CarlaSpeedometerSensor(const CarlaSpeedometerSensor&);
+      CarlaSpeedometerSensor& operator=(const CarlaSpeedometerSensor&);
+      CarlaSpeedometerSensor(CarlaSpeedometerSensor&&);
+      CarlaSpeedometerSensor& operator=(CarlaSpeedometerSensor&&);
 
       bool Init();
       bool Publish();
       void SetData(float data);
-      
+      const char* type() const override { return "speedometer"; }
+
     private:
-      std::unique_ptr<CarlaSpeedometerSensorImpl> _impl;
+      std::shared_ptr<CarlaSpeedometerSensorImpl> _impl;
   };
 }
 }

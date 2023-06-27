@@ -16,7 +16,7 @@ namespace ros2 {
       void on_publication_matched(
               efd::DataWriter* writer,
               const efd::PublicationMatchedStatus& info) override;
-                  
+
 
       int _matched {0};
       bool _first_connected {false};

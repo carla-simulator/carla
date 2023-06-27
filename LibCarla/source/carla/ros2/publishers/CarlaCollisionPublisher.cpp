@@ -3,7 +3,6 @@
 #include "CarlaCollisionPublisher.h"
 
 #include <string>
-#include <chrono>
 
 #include "carla/ros2/types/CarlaCollisionEventPubSubTypes.h"
 #include "carla/ros2/listeners/CarlaListener.h"
@@ -46,8 +45,9 @@ namespace ros2 {
         std::cerr << "Invalid TypeSupport" << std::endl;
         return false;
     }
+
     efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    pqos.name("CarlaPublisherParticipant");
+    pqos.name(_name);
     auto factory = efd::DomainParticipantFactory::get_instance();
     _impl->_participant = factory->create_participant(0, pqos);
     if (_impl->_participant == nullptr) {
@@ -55,21 +55,26 @@ namespace ros2 {
         return false;
     }
     _impl->_type.register_type(_impl->_participant);
+
     efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
     _impl->_publisher = _impl->_participant->create_publisher(pubqos, nullptr);
     if (_impl->_publisher == nullptr) {
       std::cerr << "Failed to create Publisher" << std::endl;
       return false;
     }
+
     efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
-    const std::string topic_name {"rt/carla/collision_event"};
+    const std::string base { "rt/carla/" };
+    std::string topic_name = base;
+    if (!_parent.empty())
+      topic_name += _parent + "/";
+    topic_name += _name;
     _impl->_topic = _impl->_participant->create_topic(topic_name, _impl->_type->getName(), tqos);
     if (_impl->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
         return false;
     }
-    eprosima::fastrtps::ReliabilityQosPolicy rqos;
-    rqos.kind = eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS;
+
     efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
     wqos.endpoint().history_memory_policy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
     efd::DataWriterListener* listener = (efd::DataWriterListener*)_impl->_listener._impl.get();
@@ -139,33 +144,26 @@ namespace ros2 {
         std::cerr << "RETCODE_NOT_ALLOWED_BY_SECURITY" << std::endl;
         return false;
     }
-    std::cout << "UNKNOWN" << std::endl;    
+    std::cout << "UNKNOWN" << std::endl;
     return false;
   }
 
-
-void CarlaCollisionPublisher::SetData(uint32_t actor_id, const uint8_t* data, const char* frame_id) {
+void CarlaCollisionPublisher::SetData(int32_t seconds, uint32_t nanoseconds, uint32_t actor_id, const uint8_t* data) {
     const size_t vector3_size = 3 * sizeof(float);
     std::vector<float> vector_data;
     vector_data.resize(3);
-    std::memcpy(&vector_data[0], &data[0], vector3_size);    
-    SetData(actor_id, std::move(vector_data), frame_id);
+    std::memcpy(&vector_data[0], &data[0], vector3_size);
+    SetData(seconds, nanoseconds, actor_id, std::move(vector_data));
   }
 
-  void CarlaCollisionPublisher::SetData(uint32_t actor_id, std::vector<float>&& data, const char* frame_id) {
-    auto epoch = std::chrono::system_clock::now().time_since_epoch();
-    const auto secons = std::chrono::duration_cast<std::chrono::seconds>(epoch);
-    epoch -= secons;
-    const auto secs = static_cast<int32_t>(secons.count());
-    const auto nanoseconds = static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(epoch).count());
-
+  void CarlaCollisionPublisher::SetData(int32_t seconds, uint32_t nanoseconds, uint32_t actor_id, std::vector<float>&& data) {
     builtin_interfaces::msg::Time time;
-    time.sec(secs);
+    time.sec(seconds);
     time.nanosec(nanoseconds);
 
     std_msgs::msg::Header header;
     header.stamp(std::move(time));
-    header.frame_id(frame_id);
+    header.frame_id(_frame_id);
 
     geometry_msgs::msg::Vector3 impulse;
     impulse.x(data[0]);
@@ -176,8 +174,14 @@ void CarlaCollisionPublisher::SetData(uint32_t actor_id, const uint8_t* data, co
     _impl->_event.normal_impulse(impulse);
   }
 
-  CarlaCollisionPublisher::CarlaCollisionPublisher() :
-  _impl(std::make_unique<CarlaCollisionPublisherImpl>()) {}
+  CarlaCollisionPublisher::CarlaCollisionPublisher(const char* ros_name, const char* parent) :
+  _impl(std::make_shared<CarlaCollisionPublisherImpl>()) {
+    if (ros_name == "")
+      _name = "collision_event";
+    else
+      _name = ros_name;
+    _parent = parent;
+  }
 
   CarlaCollisionPublisher::~CarlaCollisionPublisher() {
       if (!_impl)
@@ -191,9 +195,41 @@ void CarlaCollisionPublisher::SetData(uint32_t actor_id, const uint8_t* data, co
 
       if (_impl->_topic)
           _impl->_participant->delete_topic(_impl->_topic);
-      
+
       if (_impl->_participant)
           efd::DomainParticipantFactory::get_instance()->delete_participant(_impl->_participant);
+  }
+
+  CarlaCollisionPublisher::CarlaCollisionPublisher(const CarlaCollisionPublisher& other) {
+    _frame_id = other._frame_id;
+    _name = other._name;
+    _parent = other._parent;
+    _impl = other._impl;
+  }
+
+  CarlaCollisionPublisher& CarlaCollisionPublisher::operator=(const CarlaCollisionPublisher& other) {
+    _frame_id = other._frame_id;
+    _name = other._name;
+    _parent = other._parent;
+    _impl = other._impl;
+
+    return *this;
+  }
+
+  CarlaCollisionPublisher::CarlaCollisionPublisher(CarlaCollisionPublisher&& other) {
+    _frame_id = std::move(other._frame_id);
+    _name = std::move(other._name);
+    _parent = std::move(other._parent);
+    _impl = std::move(other._impl);
+  }
+
+  CarlaCollisionPublisher& CarlaCollisionPublisher::operator=(CarlaCollisionPublisher&& other) {
+    _frame_id = std::move(other._frame_id);
+    _name = std::move(other._name);
+    _parent = std::move(other._parent);
+    _impl = std::move(other._impl);
+
+    return *this;
   }
 }
 }

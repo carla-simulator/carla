@@ -6,28 +6,30 @@
 #define _GLIBCXX_USE_CXX11_ABI 0
 
 #include <memory>
-#include <vector>
+
+#include "CarlaPublisher.h"
 
 namespace carla {
 namespace ros2 {
 
   struct CarlaMapSensorPublisherImpl;
 
-  class CarlaMapSensorPublisher {
+  class CarlaMapSensorPublisher : public CarlaPublisher {
     public:
-      CarlaMapSensorPublisher();
+      CarlaMapSensorPublisher(const char* ros_name = "", const char* parent = "");
       ~CarlaMapSensorPublisher();
-      CarlaMapSensorPublisher(const CarlaMapSensorPublisher&) = delete;
-      CarlaMapSensorPublisher& operator=(const CarlaMapSensorPublisher&) = delete;
-      CarlaMapSensorPublisher(CarlaMapSensorPublisher&&) = delete;
-      CarlaMapSensorPublisher& operator=(CarlaMapSensorPublisher&&) = delete;
+      CarlaMapSensorPublisher(const CarlaMapSensorPublisher&);
+      CarlaMapSensorPublisher& operator=(const CarlaMapSensorPublisher&);
+      CarlaMapSensorPublisher(CarlaMapSensorPublisher&&);
+      CarlaMapSensorPublisher& operator=(CarlaMapSensorPublisher&&);
 
       bool Init();
       bool Publish();
       void SetData(const char* data);
-      
+      const char* type() const override { return "map sensor"; }
+
     private:
-      std::unique_ptr<CarlaMapSensorPublisherImpl> _impl;
+      std::shared_ptr<CarlaMapSensorPublisherImpl> _impl;
   };
 }
 }
