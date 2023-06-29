@@ -19,8 +19,6 @@ void UHoudiniImporterWidget::CreateSubLevels(ALargeMapManager* LargeMapManager)
 
 void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Actors, ALargeMapManager* LargeMapManager)
 {
-  UE_LOG(LogCarlaTools, Log, TEXT("Moved %d actors"), Actors.Num());
-
   TMap<FCarlaMapTile*, TArray<AActor*>> ActorsToMove;
   for (AActor* Actor : Actors)
   {
@@ -79,7 +77,7 @@ void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Ac
     StreamingLevel->bShouldBlockOnLoad = true;
     StreamingLevel->SetShouldBeVisible(true);
     StreamingLevel->SetShouldBeLoaded(true);
-    ULevelStreaming* Level = 
+    ULevelStreaming* Level =
         UEditorLevelUtils::AddLevelToWorld(
         World, *Tile->Name, ULevelStreamingDynamic::StaticClass(), FTransform());
     int MovedActors = UEditorLevelUtils::MoveActorsToLevel(ActorList, Level, false, false);
@@ -88,6 +86,7 @@ void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Ac
     FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
     UEditorLevelUtils::RemoveLevelFromWorld(Level->GetLoadedLevel());
   }
+  GEngine->PerformGarbageCollectionAndCleanupActors();
 }
 
 void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ULevelStreaming* Level)
@@ -149,7 +148,7 @@ void UHoudiniImporterWidget::UseCOMasActorLocation(TArray<AActor*> Actors)
 bool UHoudiniImporterWidget::GetNumberOfClusters(
     TArray<AActor*> ActorList, int& OutNumClusters)
 {
-  
+
   for (AActor* Actor : ActorList)
   {
     FString ObjectName = UKismetSystemLibrary::GetObjectName(Actor);

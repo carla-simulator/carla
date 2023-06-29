@@ -482,6 +482,7 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
         StaticMeshComponent->SetStaticMesh(MeshToSet);
       }
       TempActor->SetActorLocation(MeshCentroid * 100);
+      TempActor->Tags.Add(FName("RoadLane"));
       // ActorMeshList.Add(TempActor);
       StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
       TempActor->SetActorEnableCollision(true);
@@ -580,6 +581,7 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
     StaticMeshComponent->SetStaticMesh(MeshToSet);
     TempActor->SetActorLocation(MeshCentroid * 100);
     TempActor->Tags.Add(*FString(lanemarkinfo[index].c_str()));
+    TempActor->Tags.Add(FName("RoadLane"));
     LaneMarkerActorList.Add(TempActor);
     index++;
     TempActor->SetActorEnableCollision(false);
