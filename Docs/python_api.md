@@ -807,6 +807,21 @@ Iterate over the [CustomV2XData](#carlacustomv2xdata) retrieved as data.
 
 ---
 
+
+## carla.ContactPoint<a name="carla.ContactPoint"></a>
+Class that represents a contact point with a surface. It exposes the normal vector and the friction coefficient of the surface.
+
+### Instance Variables
+- <a name="carla.ContactPoint.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)_)
+Position in 3D space.
+- <a name="carla.ContactPoint.normal"></a>**<font color="#f8805a">normal</font>** (_[carla.Vector3D](#carla.Vector3D)_)
+Normal vector of the surface on which the contact point lies.
+- <a name="carla.ContactPoint.friction"></a>**<font color="#f8805a">friction</font>** (_float_)
+Surface friction coefficient. If the surface material is not defined in the map, the friction coefficient is set to -1.0.
+
+---
+
+
 ## carla.DVSEvent<a name="carla.DVSEvent"></a>
 Class that defines a DVS event. An event is a quadruple, so a tuple of 4 elements, with `x`, `y` pixel coordinate location, timestamp `t` and polarity `pol` of the event. Learn more about them [here](ref_sensors.md).  
 
@@ -3911,6 +3926,13 @@ Projects the specified point downwards in the scene. The functions casts a ray f
         - `location` (_[carla.Location](#carla.Location)_) - The point to be projected.  
         - `search_distance` (_float_) - The maximum distance to perform the projection.  
     - **Return:** _[carla.LabelledPoint](#carla.LabelledPoint)_  
+- <a name="carla.World.get_contact_points"></a>**<font color="#7fb800">get_contact_points</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**locations**</font>, <font color="#00a6ed">**ignored_actor_ids**</font>, <font color="#00a6ed">**search_distance**</font>)
+Casts rays from the specified locations downwards in the scene, i.e. in the directions (0,0,-1), in order to find the first intersection of each ray with a surface. Intersections with actors defined via the given ids are ignored. For each intersection a [carla.ContactPoint](#carla.ContactPoint) is returned. If no intersection was found in the search_distance range, `None` is returned instead of a [carla.ContactPoint](#carla.ContactPoint).
+    - **Parameters:**
+        - `locations` (_list([carla.Location](#carla.Location))_) - Points to be projected
+        - `ignored_actor_ids` (_list(int)_) - Actors ignored during ray casting. In most use cases this would be the actor for which the contact point is checked.
+        - `search_distance` (_float_) - The maximum distance to perform the projection.
+    - **Return:** _list([carla.ContactPoint](#carla.ContactPoint) | None)_
 - <a name="carla.World.load_map_layer"></a>**<font color="#7fb800">load_map_layer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_layers**</font>)<button class="SnipetButton" id="carla.World.load_map_layer-snipet_button">snippet &rarr;</button>  
 Loads the selected layers to the level. If the layer is already loaded the call has no effect.  
     - **Parameters:**
