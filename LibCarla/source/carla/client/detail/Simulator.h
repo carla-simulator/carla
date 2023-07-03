@@ -644,6 +644,14 @@ namespace detail {
       return _client.GetWheelPitchAngle(vehicle.GetId(), wheel_location);
     }
 
+    void SetWheelHeight(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float height) {
+      _client.SetWheelHeight(vehicle.GetId(), wheel_location, height);
+    }
+
+    float GetWheelHeight(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location) {
+      return _client.GetWheelHeight(vehicle.GetId(), wheel_location);
+    }
+
     void EnableCarSim(Vehicle &vehicle, std::string simfile_path) {
       _client.EnableCarSim(vehicle.GetId(), simfile_path);
     }
