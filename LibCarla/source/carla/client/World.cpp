@@ -275,9 +275,9 @@ namespace client {
   std::vector<boost::optional<rpc::ContactPoint>> World::GetContactPoints(
       const std::vector<geom::Location>& locations,
       const std::vector<ActorId>& ignored_actor_ids,
+      const std::vector<geom::Vector3D>& directions,
       float search_distance) const {
-    const geom::Vector3D down_vector(0, 0, -1);
-    auto result = _episode.Lock()->GetContactPoints(locations, down_vector, search_distance, ignored_actor_ids);
+    auto result = _episode.Lock()->GetContactPoints(locations, directions, search_distance, ignored_actor_ids);
 
     std::vector<boost::optional<rpc::ContactPoint>> points;
     points.reserve(result.size());

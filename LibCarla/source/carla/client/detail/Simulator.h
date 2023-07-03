@@ -305,10 +305,10 @@ namespace detail {
 
     std::vector<std::pair<bool, rpc::ContactPoint>> GetContactPoints(
         const std::vector<geom::Location>& locations,
-        geom::Vector3D direction,
+        const std::vector<geom::Vector3D>& directions,
         float search_distance,
         const std::vector<ActorId>& ignored_actor_ids) const {
-      return _client.GetContactPoints(locations, direction, search_distance, ignored_actor_ids);
+      return _client.GetContactPoints(locations, directions, search_distance, ignored_actor_ids);
     }
 
     std::vector<rpc::LabelledPoint> CastRay(

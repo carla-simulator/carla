@@ -78,7 +78,7 @@ std::pair<bool, crp::LabelledPoint> URayTracer::ProjectPoint(
 
 std::vector<std::pair<bool, crp::ContactPoint>> URayTracer::ProjectPoints(
     const std::vector<FVector>& StartLocations,
-    FVector Direction,
+    const std::vector<FVector>& Directions,
     float MaxDistance,
     UWorld * World,
     const std::vector<const AActor *>& IgnoredActors)
@@ -95,7 +95,11 @@ std::vector<std::pair<bool, crp::ContactPoint>> URayTracer::ProjectPoints(
         QueryParams.AddIgnoredActor(IgnoredActor);
     }
 
-    for (const auto & StartLocation : StartLocations) {
+    size_t NumLocations = StartLocations.size();
+    size_t NumDirections = Directions.size();
+    for (size_t i= 0; i < NumLocations; ++i) {
+        const auto& StartLocation = StartLocations[i];
+        const auto& Direction = i < NumDirections ? Directions[i] : Directions[NumDirections - 1];
         bool bDidHit = World->LineTraceSingleByChannel(
             Hit,
             StartLocation,

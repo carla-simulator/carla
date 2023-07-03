@@ -3926,10 +3926,11 @@ Projects the specified point downwards in the scene. The functions casts a ray f
         - `location` (_[carla.Location](#carla.Location)_) - The point to be projected.  
         - `search_distance` (_float_) - The maximum distance to perform the projection.  
     - **Return:** _[carla.LabelledPoint](#carla.LabelledPoint)_  
-- <a name="carla.World.get_contact_points"></a>**<font color="#7fb800">get_contact_points</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**locations**</font>, <font color="#00a6ed">**ignored_actor_ids**</font>, <font color="#00a6ed">**search_distance**</font>)
-Casts rays from the specified locations downwards in the scene, i.e. in the directions (0,0,-1), in order to find the first intersection of each ray with a surface. Intersections with actors defined via the given ids are ignored. For each intersection a [carla.ContactPoint](#carla.ContactPoint) is returned. If no intersection was found in the search_distance range, `None` is returned instead of a [carla.ContactPoint](#carla.ContactPoint).
+- <a name="carla.World.get_contact_points"></a>**<font color="#7fb800">get_contact_points</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**locations**</font>, <font color="#00a6ed">**directions**</font>, <font color="#00a6ed">**ignored_actor_ids**</font>, <font color="#00a6ed">**search_distance**</font>)
+Casts rays from the specified locations in the given directions, in order to find the first intersection of each ray with a surface. Intersections with actors defined via the given ids are ignored. For each intersection a [carla.ContactPoint](#carla.ContactPoint) is returned. If no intersection was found in the search_distance range, `None` is returned instead of a [carla.ContactPoint](#carla.ContactPoint).
     - **Parameters:**
-        - `locations` (_list([carla.Location](#carla.Location))_) - Points to be projected
+        - `locations` (_list([carla.Location](#carla.Location))_) - Points to be projected.
+        - `directions` (_list([carla.Vector3D](#carla.Vector3D))_) - A direction in which a ray should be casted for each point in `locations`. If the length of `directions` is smaller than the lenght of `locations`, the last direction vector will be used for all points from `locations` that don't have a corresponding direction vector defined.
         - `ignored_actor_ids` (_list(int)_) - Actors ignored during ray casting. In most use cases this would be the actor for which the contact point is checked.
         - `search_distance` (_float_) - The maximum distance to perform the projection.
     - **Return:** _list([carla.ContactPoint](#carla.ContactPoint) | None)_

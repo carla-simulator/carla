@@ -202,6 +202,7 @@ namespace client {
     std::vector<boost::optional<rpc::ContactPoint>> GetContactPoints(
         const std::vector<geom::Location>& locations,
         const std::vector<ActorId>& ignored_actor_ids,
+        const std::vector<geom::Vector3D>& directions,
         float search_distance = 10000.0f) const;
 
     std::vector<rpc::LabelledPoint> CastRay(

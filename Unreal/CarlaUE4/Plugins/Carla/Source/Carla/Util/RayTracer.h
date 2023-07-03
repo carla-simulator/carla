@@ -38,7 +38,7 @@ public:
 
   static std::vector<std::pair<bool, carla::rpc::ContactPoint>> ProjectPoints(
       const std::vector<FVector>& StartLocations,
-      FVector Direction,
+      const std::vector<FVector>& Directions,
       float MaxDistance,
       UWorld * World,
       const std::vector<const AActor *>& IgnoredActors);

@@ -827,11 +827,11 @@ namespace detail {
 
   std::vector<std::pair<bool, rpc::ContactPoint>> Client::GetContactPoints(
       const std::vector<geom::Location>& locations,
-      geom::Vector3D direction,
+      const std::vector<geom::Vector3D>& directions,
       float search_distance,
       const std::vector<ActorId>& ignored_actor_ids) const {
     using return_t = std::vector<std::pair<bool, rpc::ContactPoint>>;
-    return _pimpl->CallAndWait<return_t>("contact_points", locations, direction, search_distance, ignored_actor_ids);
+    return _pimpl->CallAndWait<return_t>("contact_points", locations, directions, search_distance, ignored_actor_ids);
   }
 
   std::vector<rpc::LabelledPoint> Client::CastRay(

@@ -407,14 +407,20 @@ void export_world() {
     .def("cast_ray", CALL_RETURNING_LIST_2(cc::World, CastRay, cg::Location, cg::Location), (arg("initial_location"), arg("final_location")))
     .def("project_point", CALL_RETURNING_OPTIONAL_3(cc::World, ProjectPoint, cg::Location, cg::Vector3D, float), (arg("location"), arg("direction"), arg("search_distance")=10000.f))
     .def("ground_projection", CALL_RETURNING_OPTIONAL_2(cc::World, GroundProjection, cg::Location, float), (arg("location"), arg("search_distance")=10000.f))
-    .def("get_contact_points", +[](cc::World &self, boost::python::list &locations, boost::python::list &ignored_actor_ids, float search_distance) {
-        auto contact_points = self.GetContactPoints(PythonListToVector<cg::Location>(locations), PythonListToVector<carla::ActorId>(ignored_actor_ids), search_distance);
+    .def("get_contact_points", +[](cc::World &self, boost::python::list &locations, boost::python::list &directions, boost::python::list &ignored_actor_ids, float search_distance) {
+        auto contact_points = self.GetContactPoints(
+          PythonListToVector<cg::Location>(locations),
+          PythonListToVector<carla::ActorId>(ignored_actor_ids),
+          PythonListToVector<cg::Vector3D>(directions),
+          search_distance
+        );
+
         boost::python::list result;
         for (auto &&optional : contact_points) {
           result.append(OptionalToPythonObject(optional));
         }
         return result;
-      }, (arg("locations"), arg("ignored_actor_ids"), arg("search_distance")=10000.0f))
+      }, (arg("locations"), arg("directions"), arg("ignored_actor_ids"), arg("search_distance")=10000.0f))
     .def("get_names_of_all_objects", CALL_RETURNING_LIST(cc::World, GetNamesOfAllObjects))
     .def("apply_color_texture_to_object", &cc::World::ApplyColorTextureToObject, (arg("object_name"), arg("material_parameter"), arg("texture")))
     .def("apply_float_color_texture_to_object", &cc::World::ApplyFloatColorTextureToObject, (arg("object_name"), arg("material_parameter"), arg("texture")))

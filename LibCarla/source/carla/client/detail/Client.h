@@ -513,7 +513,7 @@ namespace detail {
 
     std::vector<std::pair<bool, rpc::ContactPoint>> GetContactPoints(
         const std::vector<geom::Location>& locations,
-        geom::Vector3D direction,
+        const std::vector<geom::Vector3D>& directions,
         float search_distance,
         const std::vector<ActorId>& ignored_actor_ids) const;
 
