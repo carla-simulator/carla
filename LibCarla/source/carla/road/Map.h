@@ -230,6 +230,11 @@ public:
       std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>*
       juntion_out_mesh_list) const;
 
+    void GenerateSingleJunction(const carla::geom::MeshFactory& mesh_factory,
+      const size_t index,
+      std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>*
+      junction_out_mesh_list) const;
+
     std::unique_ptr<geom::Mesh> SDFToMesh(const road::Junction& jinput, const std::vector<geom::Vector3D>& sdfinput, int grid_cells_per_dim) const;
 
   };

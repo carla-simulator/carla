@@ -87,6 +87,12 @@ void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Ac
     UEditorLevelUtils::RemoveLevelFromWorld(Level->GetLoadedLevel());
   }
   GEngine->PerformGarbageCollectionAndCleanupActors();
+  FText TransResetText(FText::FromString("Clean up after Move actors to sublevels"));
+  if ( GEditor->Trans )
+  {
+    GEditor->Trans->Reset(TransResetText);
+    GEditor->Cleanse(true, true, TransResetText);
+  }
 }
 
 void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ULevelStreaming* Level)
@@ -96,6 +102,11 @@ void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ULevel
   UE_LOG(LogCarlaTools, Log, TEXT("Moved %d actors"), MovedActors);
   FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
   UEditorLevelUtils::RemoveLevelFromWorld(Level->GetLoadedLevel());
+  FText TransResetText(FText::FromString("Clean up after Move actors to sublevels"));
+  if ( GEditor->Trans )
+  {
+    GEditor->Trans->Reset(TransResetText);
+  }
 }
 
 void UHoudiniImporterWidget::UpdateGenericActorCoordinates(
