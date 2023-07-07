@@ -1,0 +1,266 @@
+import glob
+import os
+import sys
+
+try:
+    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
+        sys.version_info.major,
+        sys.version_info.minor,
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+except IndexError:
+    pass
+
+
+# ==============================================================================
+# -- imports -------------------------------------------------------------------
+# ==============================================================================
+
+import carla
+
+import weakref
+import random
+import math
+import time
+import queue
+import cv2
+
+try:
+    import pygame
+    from pygame.locals import K_ESCAPE
+    from pygame.locals import K_SPACE
+    from pygame.locals import K_a
+    from pygame.locals import K_d
+    from pygame.locals import K_s
+    from pygame.locals import K_w
+except ImportError:
+    raise RuntimeError('cannot import pygame, make sure pygame package is installed')
+
+try:
+    import numpy as np
+except ImportError:
+    raise RuntimeError('cannot import numpy, make sure numpy package is installed')
+
+VIEW_WIDTH = 1920//2
+VIEW_HEIGHT = 1080//2
+VIEW_FOV = 90
+
+BB_COLOR = (248, 64, 24)
+
+# ==============================================================================
+# -- functions -----------------------------------------------------------------
+# ==============================================================================
+def get_camera_matrix(w, h, fov):
+    """
+    Calculate projection matrix of the camera (intrinsics).
+
+    Input:
+        w: width of image (px)
+        h: height of image (px)
+        fov: field of view (deg)
+    Output:
+        K: 3x3 camera matrix
+    """
+    focal = w / (2.0 * np.tan(fov * np.pi / 360.0))
+    K = np.identity(3)
+    K[0, 0] = K[1, 1] = focal
+    K[0, 2] = w / 2.0
+    K[1, 2] = h / 2.0
+    return K
+
+def get_image_point(loc, K, w2c):
+    """
+    Calculate 2D projection of 3D coordinate.
+
+    Input:
+        loc: 3D coordinate of object (carla.Position object)
+        K: camera projection matrix
+        w2c: transformation matrix from point in worl to point in camera coord. system
+    Output:
+        2D point in image. 
+    """
+
+    # Format the input coordinate
+    point = np.array([loc.x, loc.y, loc.z, 1])
+    # transform to camera coordinates
+    point_camera = np.dot(w2c, point)
+
+    # New we must change from UE4's coordinate system to an "standard"
+    # (x, y ,z) -> (y, -z, x)
+    # and we remove the fourth component also
+    point_camera = [point_camera[1], -point_camera[2], point_camera[0]]
+
+    # now project 3D->2D using the camera matrix
+    point_img = np.dot(K, point_camera)
+    # normalize
+    point_img[0] /= point_img[2]
+    point_img[1] /= point_img[2]
+
+    return point_img[0:2]
+
+
+def render_bounding_boxes(bb, ego_vehicle, w2c, img, actor=None, dim="3D"):
+    edges = [[0,1], [1,3], [3,2], [2,0], [0,4], [4,5], [5,1], [5,7], [7,6], [6,4], [6,2], [7,3]]
+
+    dist = bb.location.distance(ego_vehicle.get_transform().location) 
+
+    # Filter for the vehicles within 50m
+    if dist < 50:
+
+    # Calculate the dot product between the forward vector
+    # of the vehicle and the vector between the vehicle
+    # and the other vehicle. We threshold this dot product
+    # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
+        forward_vec = ego_vehicle.get_transform().get_forward_vector()
+        ray = bb.location - ego_vehicle.get_transform().location
+
+        if forward_vec.dot(ray) > 1:
+            p1 = get_image_point(bb.location, K, w2c)
+            if actor is not None:
+                print("Jup")
+                verts = [v for v in bb.get_world_vertices(actor.get_transform())]
+            else:
+                verts = [v for v in bb.get_world_vertices(carla.Transform())]
+
+            if dim == "3D":
+                for edge in edges:
+                    p1 = get_image_point(verts[edge[0]], K, world_2_camera)
+                    p2 = get_image_point(verts[edge[1]],  K, world_2_camera)
+                    cv2.line(img, (int(p1[0]),int(p1[1])), (int(p2[0]),int(p2[1])), (255,0,0, 255), 1)
+
+            elif dim == "2D":
+                x_max = -10000
+                x_min = 10000
+                y_max = -10000
+                y_min = 10000
+
+                for vert in verts:
+                    p = get_image_point(vert, K, world_2_camera)
+                    # Find the rightmost vertex
+                    if p[0] > x_max:
+                        x_max = p[0]
+                    # Find the leftmost vertex
+                    if p[0] < x_min:
+                        x_min = p[0]
+                    # Find the highest vertex
+                    if p[1] > y_max:
+                        y_max = p[1]
+                    # Find the lowest  vertex
+                    if p[1] < y_min:
+                        y_min = p[1]
+
+                cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), (0,0,255, 255), 1)
+                cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
+                cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), (0,0,255, 255), 1)
+                cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
+            
+            elif type(dim) == str:
+                ValueError("Invalid argument value for parameter 'dim', can only be '2D' or '3D'!")
+            else:
+                TypeError
+            
+    return img
+
+
+# ==============================================================================
+# -- prepare client ------------------------------------------------------------
+# ==============================================================================
+client = carla.Client('localhost', 2000)
+world  = client.get_world()
+bp_lib = world.get_blueprint_library()
+
+# get spawn points
+spawn_points = world.get_map().get_spawn_points()
+
+# spawn vehicle
+vehicle_bp =bp_lib.find('vehicle.lincoln.mkz_2020')
+vehicle = world.try_spawn_actor(vehicle_bp, random.choice(spawn_points))
+
+# spawn camera
+camera_bp = bp_lib.find('sensor.camera.rgb')
+camera_init_trans = carla.Transform(carla.Location(x=1.5, z=2.4))
+camera = world.spawn_actor(camera_bp, camera_init_trans, attach_to=vehicle)
+vehicle.set_autopilot(True)
+
+# Set up the simulator in synchronous mode
+settings = world.get_settings()
+settings.synchronous_mode = True # Enables synchronous mode
+settings.fixed_delta_seconds = 0.05
+world.apply_settings(settings)
+
+# Create a queue to store and retrieve the sensor data
+image_queue = queue.Queue()
+camera.listen(image_queue.put)
+
+# Get the world to camera transformation matrix
+world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
+
+# Get the attributes from the camera
+image_w = camera_bp.get_attribute("image_size_x").as_int()
+image_h = camera_bp.get_attribute("image_size_y").as_int()
+fov = camera_bp.get_attribute("fov").as_float()
+
+# Calculate the camera projection matrix to project from 3D -> 2D
+K = get_camera_matrix(image_w, image_h, fov)
+
+edges = [[0,1], [1,3], [3,2], [2,0], [0,4], [4,5], [5,1], [5,7], [7,6], [6,4], [6,2], [7,3]]
+
+for i in range(50):
+    vehicle_bp = random.choice(bp_lib.filter('vehicle'))
+    npc = world.try_spawn_actor(vehicle_bp, random.choice(spawn_points))
+    if npc:
+        npc.set_autopilot(True)
+
+# Retrieve the first image
+world.tick()
+image = image_queue.get()
+
+# Reshape the raw data into an RGB array
+img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4)) 
+
+# Display the image in an OpenCV display window
+cv2.namedWindow('BoundingBoxes', cv2.WINDOW_AUTOSIZE)
+cv2.imshow('BoundingBoxes',img)
+cv2.waitKey(1)
+
+# main loop
+while True:
+    # Retrieve and reshape the image
+    world.tick()
+    image = image_queue.get()
+
+    img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
+
+    # Get the camera matrix 
+    world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
+
+    for npc in world.get_actors().filter('*vehicle*'):
+
+        # Filter out the ego vehicle
+        if npc.id != vehicle.id:
+
+            bb = npc.bounding_box
+            # img = render_bounding_boxes(bb, vehicle, world_2_camera, img, npc)
+            dist = npc.get_transform().location.distance(vehicle.get_transform().location)
+
+            # Filter for the vehicles within 50m
+            if dist < 50:
+
+            # Calculate the dot product between the forward vector
+            # of the vehicle and the vector between the vehicle
+            # and the other vehicle. We threshold this dot product
+            # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
+                forward_vec = vehicle.get_transform().get_forward_vector()
+                ray = npc.get_transform().location - vehicle.get_transform().location
+
+                if forward_vec.dot(ray) > 1:
+                    p1 = get_image_point(bb.location, K, world_2_camera)
+                    verts = [v for v in bb.get_world_vertices(npc.get_transform())]
+                    for edge in edges:
+                        p1 = get_image_point(verts[edge[0]], K, world_2_camera)
+                        p2 = get_image_point(verts[edge[1]],  K, world_2_camera)
+                        cv2.line(img, (int(p1[0]),int(p1[1])), (int(p2[0]),int(p2[1])), (255,0,0, 255), 1)
+
+    cv2.imshow('BoundingBoxes',img)
+    if cv2.waitKey(1) == ord('q'):
+        break
+cv2.destroyAllWindows()

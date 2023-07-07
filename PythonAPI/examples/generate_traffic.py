@@ -344,6 +344,7 @@ def main():
                 world.wait_for_tick()
 
     finally:
+        print("DESTROOOOOOOOOOOOOOOY!")
 
         if not args.asynch and synchronous_master:
             settings = world.get_settings()
