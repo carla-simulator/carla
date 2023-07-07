@@ -43,4 +43,9 @@ public:
   UFUNCTION(BlueprintCallable)
   static FVector2D GetTransversemercProjection(float lat, float lon, float lat0, float lon0);
 
+  UFUNCTION(BlueprintCallable)
+  static void SetThreadToSleep(float seconds);
+
+  UFUNCTION(BlueprintCallable)
+  static void FlushRenderingCommandsInBlueprint();
 };

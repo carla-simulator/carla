@@ -156,11 +156,6 @@ void UOpenDriveToMap::CreateMap()
 
   FileDownloader->XodrToMap = this;
   FileDownloader->StartDownload();
-
-  RoadType.Empty();
-  RoadMesh.Empty();
-  MeshesToSpawn.Empty();
-  ActorMeshList.Empty();
 }
 
 void UOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGridSectionSize, const class UTexture2D* HeightmapTexture)
@@ -294,7 +289,7 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
   MeshData.Triangles = Triangles;
   MeshData.Normals = Normals;
   MeshData.UV0 = UVs;
-  UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, DefaultLandscapeMaterial, MapName, "Landscape", FName(TEXT("SM_LandscapeMesh" + FString::FromInt(MeshIndex) )));
+  UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, DefaultLandscapeMaterial, MapName, "Terrain", FName(TEXT("SM_LandscapeMesh" + FString::FromInt(MeshIndex) )));
   Mesh->SetStaticMesh(MeshToSet);
   MeshActor->SetActorLabel("SM_LandscapeActor" + FString::FromInt(MeshIndex) );
   Mesh->CastShadow = false;
@@ -486,8 +481,6 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
       // ActorMeshList.Add(TempActor);
       StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
       TempActor->SetActorEnableCollision(true);
-      RoadType.Add(LaneTypeToFString(PairMap.first));
-      // RoadMesh.Add(TempPMC);
       index++;
     }
   }
@@ -503,7 +496,7 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
   opg_parameters.simplification_percentage = 15.0f;
   std::vector<std::string> lanemarkinfo;
   auto MarkingMeshes = ParamCarlaMap->GenerateLineMarkings(opg_parameters, lanemarkinfo);
-
+  TArray<AActor*> LaneMarkerActorList;
   int index = 0;
   for (const auto& Mesh : MarkingMeshes)
   {

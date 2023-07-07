@@ -1145,11 +1145,12 @@ namespace road {
     std::thread juntction_thread( &Map::GenerateJunctions, this, mesh_factory, params, &junction_out_mesh_list);
 
     size_t num_roads = _data.GetRoads().size();
-    size_t num_roads_per_thread = 20;
+    size_t num_roads_per_thread = 100;
     size_t num_threads = (num_roads / num_roads_per_thread) + 1;
     num_threads = num_threads > 1 ? num_threads : 1;
     std::vector<std::thread> workers;
     std::mutex write_mutex;
+    std::cout << "Generating " << std::to_string(num_roads) << " roads" << std::endl;
 
     for ( size_t i = 0; i < num_threads; ++i ) {
       std::thread neworker(
@@ -1193,9 +1194,11 @@ namespace road {
         road_out_mesh_list[pair.first] = std::move(pair.second);
       }
     }
+    std::cout << "Generated " << std::to_string(num_roads) << " roads" << std::endl;
 
     return road_out_mesh_list;
   }
+
   std::vector<std::pair<geom::Transform, std::string>> Map::GetTreesTransform(
     float distancebetweentrees,
     float distancefromdrivinglineborder,
@@ -1327,6 +1330,7 @@ namespace road {
         mesh_factory.GenerateAllOrderedWithMaxLen(road, out);
       }
     }
+    std::cout << "Generated roads from " + std::to_string(index * number_of_roads_per_thread) + " to " + std::to_string((index+1) * number_of_roads_per_thread ) << std::endl;
     return out;
   }
 
@@ -1335,66 +1339,57 @@ namespace road {
     std::map<road::Lane::LaneType,
     std::vector<std::unique_ptr<geom::Mesh>>>* junction_out_mesh_list) const {
 
-    for (const auto& junc_pair : _data.GetJunctions()) {
-      const auto& junction = junc_pair.second;
-      if (junction.GetConnections().size() > 2) {
-        std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
-        std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
-        std::vector<carla::geom::Vector3D> perimeterpoints;
+    size_t num_junctions = _data.GetJunctions().size();
+    std::cout << "Generating " << std::to_string(num_junctions) << " junctions" << std::endl;
+    size_t junctionindex = 0;
+    size_t num_junctions_per_thread = 10;
+    size_t num_threads = (num_junctions / num_junctions_per_thread) + 1;
+    num_threads = num_threads > 1 ? num_threads : 1;
+    std::vector<std::thread> workers;
+    std::mutex write_mutex;
 
-        auto pmesh = SDFToMesh(junction, perimeterpoints, 75);
-        (*junction_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
+    for ( size_t i = 0; i < num_threads; ++i ) {
+      std::thread neworker(
+        [this, &write_mutex, &mesh_factory, &junction_out_mesh_list, i, num_junctions_per_thread, num_junctions]() {
+        std::map<road::Lane::LaneType,
+          std::vector<std::unique_ptr<geom::Mesh>>> junctionsofthisthread;
 
-        for (const auto& connection_pair : junction.GetConnections()) {
-          const auto& connection = connection_pair.second;
-          const auto& road = _data.GetRoads().at(connection.connecting_road);
-          for (auto&& lane_section : road.GetLaneSections()) {
-            for (auto&& lane_pair : lane_section.GetLanes()) {
-              const auto& lane = lane_pair.second;
-              if ( lane.GetType() == road::Lane::LaneType::Sidewalk ) {
-                boost::optional<element::Waypoint> sw =
-                  GetWaypoint(road.GetId(), lane_pair.first, lane.GetDistance() + (lane.GetLength() * 0.5f));
-                if( GetWaypoint(ComputeTransform(*sw).location).get_ptr() == nullptr ){
-                  sidewalk_lane_meshes.push_back(mesh_factory.GenerateSidewalk(lane));
-                }
-              }
-            }
+        size_t minimum = 0;
+        if( (i + 1) * num_junctions_per_thread < num_junctions ){
+          minimum = (i + 1) * num_junctions_per_thread;
+        }else{
+          minimum = num_junctions;
+        }
+        std::cout << "Generating Junctions between  " << std::to_string(i * num_junctions_per_thread) << " and " << std::to_string(minimum) << std::endl;
+
+        for ( size_t junctionindex = i * num_junctions_per_thread;
+                        junctionindex < minimum;
+                        ++junctionindex )
+        {
+          GenerateSingleJunction(mesh_factory, junctionindex, &junctionsofthisthread);
+        }
+        std::cout << "Generated Junctions between  " << std::to_string(i * num_junctions_per_thread) << " and " << std::to_string(minimum) << std::endl;
+        std::lock_guard<std::mutex> guard(write_mutex);
+        for ( auto&& pair : junctionsofthisthread ) {
+          if ((*junction_out_mesh_list).find(pair.first) != (*junction_out_mesh_list).end()) {
+            (*junction_out_mesh_list)[pair.first].insert((*junction_out_mesh_list)[pair.first].end(),
+              std::make_move_iterator(pair.second.begin()),
+              std::make_move_iterator(pair.second.end()));
+          } else {
+            (*junction_out_mesh_list)[pair.first] = std::move(pair.second);
           }
         }
-        std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
-        for (auto& lane : sidewalk_lane_meshes) {
-          *sidewalk_mesh += *lane;
-        }
-        (*junction_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
-      } else {
-        std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
-        std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
-        for (const auto& connection_pair : junction.GetConnections()) {
-          const auto& connection = connection_pair.second;
-          const auto& road = _data.GetRoads().at(connection.connecting_road);
-          for (auto&& lane_section : road.GetLaneSections()) {
-            for (auto&& lane_pair : lane_section.GetLanes()) {
-              const auto& lane = lane_pair.second;
-              if (lane.GetType() != road::Lane::LaneType::Sidewalk) {
-                lane_meshes.push_back(mesh_factory.GenerateTesselated(lane));
-              }
-              else {
-                sidewalk_lane_meshes.push_back(mesh_factory.GenerateSidewalk(lane));
-              }
-            }
-          }
-        }
-        std::unique_ptr<geom::Mesh> merged_mesh = std::make_unique<geom::Mesh>();
-        for (auto& lane : lane_meshes) {
-          *merged_mesh += *lane;
-        }
-        std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
-        for (auto& lane : sidewalk_lane_meshes) {
-          *sidewalk_mesh += *lane;
-        }
+      });
+      workers.push_back(std::move(neworker));
+    }
 
-        (*junction_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(merged_mesh));
-        (*junction_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
+    for (size_t i = 0; i < workers.size(); ++i) {
+      workers[i].join();
+    }
+    workers.clear();
+    for (size_t i = 0; i < workers.size(); ++i) {
+      if (workers[i].joinable()) {
+        workers[i].join();
       }
     }
   }
@@ -1499,5 +1494,73 @@ namespace road {
     }
     return std::make_unique<geom::Mesh>(out_mesh);
   }
+
+  void Map::GenerateSingleJunction(const carla::geom::MeshFactory& mesh_factory,
+      const size_t index,
+      std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>*
+      junction_out_mesh_list) const {
+
+      auto start = std::next( _data.GetJunctions().begin(), index );
+      const auto& junction = start->second;
+      if (junction.GetConnections().size() > 2) {
+        std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
+        std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
+        std::vector<carla::geom::Vector3D> perimeterpoints;
+
+        auto pmesh = SDFToMesh(junction, perimeterpoints, 75);
+        (*junction_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(pmesh));
+
+        for (const auto& connection_pair : junction.GetConnections()) {
+          const auto& connection = connection_pair.second;
+          const auto& road = _data.GetRoads().at(connection.connecting_road);
+          for (auto&& lane_section : road.GetLaneSections()) {
+            for (auto&& lane_pair : lane_section.GetLanes()) {
+              const auto& lane = lane_pair.second;
+              if ( lane.GetType() == road::Lane::LaneType::Sidewalk ) {
+                boost::optional<element::Waypoint> sw =
+                  GetWaypoint(road.GetId(), lane_pair.first, lane.GetDistance() + (lane.GetLength() * 0.5f));
+                if( GetWaypoint(ComputeTransform(*sw).location).get_ptr () == nullptr ){
+                  sidewalk_lane_meshes.push_back(mesh_factory.GenerateSidewalk(lane));
+                }
+              }
+            }
+          }
+        }
+        std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
+        for (auto& lane : sidewalk_lane_meshes) {
+          *sidewalk_mesh += *lane;
+        }
+        (*junction_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
+      } else {
+        std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
+        std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
+        for (const auto& connection_pair : junction.GetConnections()) {
+          const auto& connection = connection_pair.second;
+          const auto& road = _data.GetRoads().at(connection.connecting_road);
+          for (auto&& lane_section : road.GetLaneSections()) {
+            for (auto&& lane_pair : lane_section.GetLanes()) {
+              const auto& lane = lane_pair.second;
+              if (lane.GetType() != road::Lane::LaneType::Sidewalk) {
+                lane_meshes.push_back(mesh_factory.GenerateTesselated(lane));
+              }
+              else {
+                sidewalk_lane_meshes.push_back(mesh_factory.GenerateSidewalk(lane));
+              }
+            }
+          }
+        }
+        std::unique_ptr<geom::Mesh> merged_mesh = std::make_unique<geom::Mesh>();
+        for (auto& lane : lane_meshes) {
+          *merged_mesh += *lane;
+        }
+        std::unique_ptr<geom::Mesh> sidewalk_mesh = std::make_unique<geom::Mesh>();
+        for (auto& lane : sidewalk_lane_meshes) {
+          *sidewalk_mesh += *lane;
+        }
+
+        (*junction_out_mesh_list)[road::Lane::LaneType::Driving].push_back(std::move(merged_mesh));
+        (*junction_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
+      }
+    }
 } // namespace road
 } // namespace carla

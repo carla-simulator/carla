@@ -10,6 +10,7 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Materials/MaterialInstance.h"
 #include "StaticMeshAttributes.h"
+#include "RenderingThread.h"
 // Carla C++ headers
 
 // Carla plugin headers
@@ -200,4 +201,11 @@ FVector2D UMapGenFunctionLibrary::GetTransversemercProjection(float lat, float l
   return Result;
 }
 
+void UMapGenFunctionLibrary::SetThreadToSleep(float seconds){
+  FGenericPlatformProcess::Sleep(seconds);
+}
 
+void UMapGenFunctionLibrary::FlushRenderingCommandsInBlueprint(){
+  FlushRenderingCommands(true);
+ 	FlushPendingDeleteRHIResources_GameThread();
+}

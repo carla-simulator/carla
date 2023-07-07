@@ -118,16 +118,6 @@ private:
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
   UPROPERTY()
-  TArray<AActor*> ActorMeshList;
-  UPROPERTY()
-  TArray<AActor*> LaneMarkerActorList;
-  UPROPERTY()
-  TArray<UStaticMesh*> MeshesToSpawn;
-  UPROPERTY()
-  TArray<FString> RoadType;
-  UPROPERTY()
-  TArray<UProceduralMeshComponent*> RoadMesh;
-  UPROPERTY()
   TArray<AActor*> Landscapes;
   UPROPERTY()
   UTexture2D* Heightmap;
