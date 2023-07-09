@@ -154,10 +154,7 @@ namespace ros2 {
 
   CarlaMapSensorPublisher::CarlaMapSensorPublisher(const char* ros_name, const char* parent) :
   _impl(std::make_shared<CarlaMapSensorPublisherImpl>()) {
-    if (ros_name == "")
-      _name = "map_sensor";
-    else
-      _name = ros_name;
+    _name = ros_name;
     _parent = parent;
   }
 

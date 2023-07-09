@@ -180,10 +180,7 @@ void CarlaDVSCameraPublisher::SetData(int32_t seconds, uint32_t nanoseconds, siz
 
   CarlaDVSCameraPublisher::CarlaDVSCameraPublisher(const char* ros_name, const char* parent) :
   _impl(std::make_shared<CarlaDVSCameraPublisherImpl>()) {
-    if (ros_name == "")
-      _name = "dvs_camera";
-    else
-      _name = ros_name;
+    _name = ros_name;
     _parent = parent;
   }
 

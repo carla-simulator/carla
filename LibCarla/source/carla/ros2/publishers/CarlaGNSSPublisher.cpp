@@ -165,10 +165,7 @@ namespace ros2 {
 
   CarlaGNSSPublisher::CarlaGNSSPublisher(const char* ros_name, const char* parent) :
   _impl(std::make_shared<CarlaGNSSPublisherImpl>()) {
-    if (ros_name == "")
-      _name = "gnss";
-    else
-      _name = ros_name;
+    _name = ros_name;
     _parent = parent;
   }
 

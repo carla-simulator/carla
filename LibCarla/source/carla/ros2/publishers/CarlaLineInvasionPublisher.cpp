@@ -158,16 +158,12 @@ namespace ros2 {
     header.frame_id(_frame_id);
 
     _impl->_event.header(std::move(header));
-    //TODO: Get the elements of the data.
     _impl->_event.crossed_lane_markings({data[0], data[1], data[2]});
   }
 
   CarlaLineInvasionPublisher::CarlaLineInvasionPublisher(const char* ros_name, const char* parent) :
   _impl(std::make_shared<CarlaLineInvasionPublisherImpl>()) {
-    if (ros_name == "")
-      _name = "line_invasion";
-    else
-      _name = ros_name;
+    _name = ros_name;
     _parent = parent;
   }
 

@@ -123,7 +123,7 @@ class ROS2
       void *actor = nullptr);
 
   private:
-  std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id);
+  std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, const char* ros_name);
 
   // sigleton
   ROS2() {};

@@ -172,14 +172,6 @@ namespace ros2 {
     header.stamp(std::move(time));
     header.frame_id(_frame_id);
 
-    /*
-    roll, pitch, yaw = trans.carla_rotation_to_RPY(carla_imu_measurement.transform.rotation)
-        quat = euler2quat(roll, pitch, yaw)
-        imu_msg.orientation.w = quat[0]
-        imu_msg.orientation.x = quat[1]
-        imu_msg.orientation.y = quat[2]
-        imu_msg.orientation.z = quat[3]
-    */
     geometry_msgs::msg::Quaternion orientation;
 
     _impl->_imu.header(std::move(header));
@@ -190,10 +182,7 @@ namespace ros2 {
 
   CarlaIMUPublisher::CarlaIMUPublisher(const char* ros_name, const char* parent) :
   _impl(std::make_shared<CarlaIMUPublisherImpl>()) {
-    if (ros_name == "")
-      _name = "imu";
-    else
-      _name = ros_name;
+    _name = ros_name;
     _parent = parent;
   }
 

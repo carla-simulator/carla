@@ -183,10 +183,7 @@ namespace ros2 {
 
   CarlaTransformPublisher::CarlaTransformPublisher(const char* ros_name, const char* parent) :
   _impl(std::make_shared<CarlaTransformPublisherImpl>()) {
-    if (ros_name == "")
-      _name = "tf";
-    else
-      _name = ros_name;
+    _name = ros_name;
     _parent = parent;
   }
 

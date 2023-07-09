@@ -180,10 +180,7 @@ void CarlaRGBCameraPublisher::SetData(int32_t seconds, uint32_t nanoseconds, siz
 
   CarlaRGBCameraPublisher::CarlaRGBCameraPublisher(const char* ros_name, const char* parent) :
   _impl(std::make_shared<CarlaRGBCameraPublisherImpl>()) {
-    if (ros_name == "")
-      _name = "rgb_camera";
-    else
-      _name = ros_name;
+    _name = ros_name;
     _parent = parent;
   }
 

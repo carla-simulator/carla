@@ -176,10 +176,7 @@ void CarlaCollisionPublisher::SetData(int32_t seconds, uint32_t nanoseconds, uin
 
   CarlaCollisionPublisher::CarlaCollisionPublisher(const char* ros_name, const char* parent) :
   _impl(std::make_shared<CarlaCollisionPublisherImpl>()) {
-    if (ros_name == "")
-      _name = "collision_event";
-    else
-      _name = ros_name;
+    _name = ros_name;
     _parent = parent;
   }
 

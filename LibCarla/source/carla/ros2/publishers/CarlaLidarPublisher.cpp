@@ -206,10 +206,7 @@ void CarlaLidarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t 
 
   CarlaLidarPublisher::CarlaLidarPublisher(const char* ros_name, const char* parent) :
   _impl(std::make_shared<CarlaLidarPublisherImpl>()) {
-    if (ros_name == "")
-      _name = "lidar";
-    else
-      _name = ros_name;
+    _name = ros_name;
     _parent = parent;
   }
 

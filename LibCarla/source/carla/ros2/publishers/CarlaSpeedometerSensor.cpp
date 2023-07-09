@@ -153,10 +153,7 @@ namespace ros2 {
 
   CarlaSpeedometerSensor::CarlaSpeedometerSensor(const char* ros_name, const char* parent) :
   _impl(std::make_shared<CarlaSpeedometerSensorImpl>()) {
-    if (ros_name == "")
-      _name = "speedometer";
-    else
-      _name = ros_name;
+    _name = ros_name;
     _parent = parent;
   }
 

@@ -198,10 +198,7 @@ void CarlaRadarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t 
 
   CarlaRadarPublisher::CarlaRadarPublisher(const char* ros_name, const char* parent) :
   _impl(std::make_shared<CarlaRadarPublisherImpl>()) {
-    if (ros_name == "")
-      _name = "radar";
-    else
-      _name = ros_name;
+    _name = ros_name;
     _parent = parent;
   }
 
