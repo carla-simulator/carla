@@ -23,6 +23,8 @@ import math
 import time
 import queue
 import cv2
+import os
+import json
 
 try:
     import pygame
@@ -100,8 +102,12 @@ def get_image_point(loc, K, w2c):
 
 def render_bounding_boxes(bb, ego_vehicle, w2c, img, actor=None, dim="3D"):
     edges = [[0,1], [1,3], [3,2], [2,0], [0,4], [4,5], [5,1], [5,7], [7,6], [6,4], [6,2], [7,3]]
+    bbox_params = []
 
-    dist = bb.location.distance(ego_vehicle.get_transform().location) 
+    if actor:
+        dist = actor.get_transform().location.distance(ego_vehicle.get_transform().location)
+    else:
+        dist = bb.location.distance(ego_vehicle.get_transform().location)
 
     # Filter for the vehicles within 50m
     if dist < 50:
@@ -111,22 +117,25 @@ def render_bounding_boxes(bb, ego_vehicle, w2c, img, actor=None, dim="3D"):
     # and the other vehicle. We threshold this dot product
     # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
         forward_vec = ego_vehicle.get_transform().get_forward_vector()
-        ray = bb.location - ego_vehicle.get_transform().location
+        if actor:
+            ray = actor.get_transform().location - ego_vehicle.get_transform().location
+        else:
+            ray = bb.location - ego_vehicle.get_transform().location
 
         if forward_vec.dot(ray) > 1:
             p1 = get_image_point(bb.location, K, w2c)
             if actor is not None:
-                print("Jup")
                 verts = [v for v in bb.get_world_vertices(actor.get_transform())]
             else:
                 verts = [v for v in bb.get_world_vertices(carla.Transform())]
+
+            print('DIM: ', dim)
 
             if dim == "3D":
                 for edge in edges:
                     p1 = get_image_point(verts[edge[0]], K, world_2_camera)
                     p2 = get_image_point(verts[edge[1]],  K, world_2_camera)
-                    cv2.line(img, (int(p1[0]),int(p1[1])), (int(p2[0]),int(p2[1])), (255,0,0, 255), 1)
-
+                    img = cv2.line(img, (int(p1[0]),int(p1[1])), (int(p2[0]),int(p2[1])), (0,0,255, 255), 1)
             elif dim == "2D":
                 x_max = -10000
                 x_min = 10000
@@ -148,17 +157,19 @@ def render_bounding_boxes(bb, ego_vehicle, w2c, img, actor=None, dim="3D"):
                     if p[1] < y_min:
                         y_min = p[1]
 
-                cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), (0,0,255, 255), 1)
-                cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
-                cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), (0,0,255, 255), 1)
-                cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
+                bbox_params = [x_min, y_min, x_max-x_min, y_max-y_min]
+
+                img = cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), (0,0,255, 255), 1)
+                img = cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
+                img = cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), (0,0,255, 255), 1)
+                img = cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
             
             elif type(dim) == str:
                 ValueError("Invalid argument value for parameter 'dim', can only be '2D' or '3D'!")
             else:
                 TypeError
             
-    return img
+    return img, bbox_params
 
 
 # ==============================================================================
@@ -171,14 +182,18 @@ bp_lib = world.get_blueprint_library()
 # get spawn points
 spawn_points = world.get_map().get_spawn_points()
 
+ego_vehicle_list = []
 # spawn vehicle
 vehicle_bp =bp_lib.find('vehicle.lincoln.mkz_2020')
 vehicle = world.try_spawn_actor(vehicle_bp, random.choice(spawn_points))
+if vehicle:
+    ego_vehicle_list.append(vehicle)
 
 # spawn camera
 camera_bp = bp_lib.find('sensor.camera.rgb')
 camera_init_trans = carla.Transform(carla.Location(x=1.5, z=2.4))
 camera = world.spawn_actor(camera_bp, camera_init_trans, attach_to=vehicle)
+ego_vehicle_list.append(camera)
 vehicle.set_autopilot(True)
 
 # Set up the simulator in synchronous mode
@@ -204,11 +219,35 @@ K = get_camera_matrix(image_w, image_h, fov)
 
 edges = [[0,1], [1,3], [3,2], [2,0], [0,4], [4,5], [5,1], [5,7], [7,6], [6,4], [6,2], [7,3]]
 
+vehicle_list = []
 for i in range(50):
     vehicle_bp = random.choice(bp_lib.filter('vehicle'))
     npc = world.try_spawn_actor(vehicle_bp, random.choice(spawn_points))
     if npc:
+        vehicle_list.append(npc)
         npc.set_autopilot(True)
+
+ground_truth_annotations = {
+    "info": {},
+
+    "licenses": {},
+
+    "images": [],
+
+    "categories": [
+        {"supercategory": "vehicle", "id": 1, "name": "car" },
+        {"supercategory": "vehicle", "id": 2, "name": "truck" },
+        {"supercategory": "vehicle", "id": 3, "name": "motorcycle" },
+        {"supercategory": "vehicle", "id": 4, "name": "bicycle" },
+        {"supercategory": "vehicle", "id": 5, "name": "bus" },
+        {"supercategory": "vehicle", "id": 6, "name": "rider" },
+        {"supercategory": "vehicle", "id": 7, "name": "train" },
+    ],
+
+    "annotations": []
+}
+
+frame_number = 0
 
 # Retrieve the first image
 world.tick()
@@ -222,45 +261,99 @@ cv2.namedWindow('BoundingBoxes', cv2.WINDOW_AUTOSIZE)
 cv2.imshow('BoundingBoxes',img)
 cv2.waitKey(1)
 
+try:
 # main loop
-while True:
-    # Retrieve and reshape the image
-    world.tick()
-    image = image_queue.get()
+    while True:
+        frame_number += 1
+        # Retrieve and reshape the image
+        world.tick()
+        all_vehicles_bbs = []
+        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Car)))
+        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Truck)))
+        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Motorcycle)))
+        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Bicycle)))
+        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Bus)))
+        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Rider)))
+        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Train)))
+        image = image_queue.get()
 
-    img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
+        img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
 
-    # Get the camera matrix 
-    world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
+        frame_file = "{:05d}.png".format(frame_number)
 
-    for npc in world.get_actors().filter('*vehicle*'):
+        ground_truth_annotations["images"].append({
+        "file_name": frame_file,
+        "height": image.height,
+        "width": image.width,
+        "id": frame_number})
 
-        # Filter out the ego vehicle
-        if npc.id != vehicle.id:
+        # Get the camera matrix 
+        world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
 
-            bb = npc.bounding_box
-            # img = render_bounding_boxes(bb, vehicle, world_2_camera, img, npc)
-            dist = npc.get_transform().location.distance(vehicle.get_transform().location)
+        # for npc in world.get_actors().filter('*vehicle*'):
 
-            # Filter for the vehicles within 50m
-            if dist < 50:
+        #     # Filter out the ego vehicle
+        #     if npc.id != vehicle.id:
+        #         bb = npc.bounding_box
+        #         img = render_bounding_boxes(bb, vehicle, world_2_camera, img, npc, '2D')
+                # dist = npc.get_transform().location.distance(vehicle.get_transform().location)
+                # dist_bb = bb.get_world_vertices().location.distance(vehicle.get_transform().location)
+                # diff = abs(dist-dist_bb)
+                # if math.sqrt(bb.location.x**2 + bb.location.y**2 + bb.location.z**2) > 2:
+                #     continue
+                # print(math.sqrt(bb.location.x**2 + bb.location.y**2 + bb.location.z**2))
 
-            # Calculate the dot product between the forward vector
-            # of the vehicle and the vector between the vehicle
-            # and the other vehicle. We threshold this dot product
-            # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
-                forward_vec = vehicle.get_transform().get_forward_vector()
-                ray = npc.get_transform().location - vehicle.get_transform().location
+                # # Filter for the vehicles within 50m
+                # if dist < 50:
 
-                if forward_vec.dot(ray) > 1:
-                    p1 = get_image_point(bb.location, K, world_2_camera)
-                    verts = [v for v in bb.get_world_vertices(npc.get_transform())]
-                    for edge in edges:
-                        p1 = get_image_point(verts[edge[0]], K, world_2_camera)
-                        p2 = get_image_point(verts[edge[1]],  K, world_2_camera)
-                        cv2.line(img, (int(p1[0]),int(p1[1])), (int(p2[0]),int(p2[1])), (255,0,0, 255), 1)
+                # # Calculate the dot product between the forward vector
+                # # of the vehicle and the vector between the vehicle
+                # # and the other vehicle. We threshold this dot product
+                # # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
+                #     forward_vec = vehicle.get_transform().get_forward_vector()
+                #     ray = npc.get_transform().location - vehicle.get_transform().location
 
-    cv2.imshow('BoundingBoxes',img)
-    if cv2.waitKey(1) == ord('q'):
-        break
+                #     if forward_vec.dot(ray) > 1:
+                #         p1 = get_image_point(bb.location, K, world_2_camera)
+                #         verts = [v for v in bb.get_world_vertices(npc.get_transform())]
+                #         for edge in edges:
+                #             p1 = get_image_point(verts[edge[0]], K, world_2_camera)
+                #             p2 = get_image_point(verts[edge[1]],  K, world_2_camera)
+                #             img = cv2.line(img, (int(p1[0]),int(p1[1])), (int(p2[0]),int(p2[1])), (255,0,0, 255), 1)
+        
+        for i, vehicle_class in enumerate(all_vehicles_bbs):
+            for bb in vehicle_class:
+                img, bb_params = render_bounding_boxes(bb, vehicle, world_2_camera, img, dim='2D')
+                if bb_params:
+
+                    ground_truth_annotations["annotations"].append({
+                        "segmentation": [],
+                        "area": bb_params[2]*bb_params[3],
+                        "iscrowd": 0,
+                        "category_id": i+1,
+                        "image_id": frame_number,
+                        "bbox": bb_params
+                    })
+
+        cv2.imwrite(os.path.join("out" , frame_file), img)
+        cv2.imshow('BoundingBoxes',img)
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+except KeyboardInterrupt:
+    pass
+    
+finally:
+    print('Destroying {} vehicles!!!'.format(len(vehicle_list)))
+    # destroy all actors
+    for npc in vehicle_list:
+        npc.destroy()
+    for part in ego_vehicle_list:
+        part.destroy()
+
+    print("Saving annotations to json file.")
+    with open('out/annotations.json', 'w') as json_file:
+        json.dump(ground_truth_annotations, json_file)
+
+
 cv2.destroyAllWindows()
