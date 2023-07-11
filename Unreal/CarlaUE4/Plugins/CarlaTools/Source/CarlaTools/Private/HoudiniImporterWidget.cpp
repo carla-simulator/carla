@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "FileHelpers.h"
+#include "EditorLevelLibrary.h"
 #include "Components/PrimitiveComponent.h"
 
 void UHoudiniImporterWidget::CreateSubLevels(ALargeMapManager* LargeMapManager)
@@ -46,8 +47,8 @@ void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Ac
     FCarlaMapTile* Tile = LargeMapManager->GetCarlaMapTile(ActorLocation);
     if(!Tile)
     {
-      UE_LOG(LogCarlaTools, Error, TEXT("Error: actor in location %s is outside the map"),
-          *ActorLocation.ToString());
+      UE_LOG(LogCarlaTools, Error, TEXT("Error: actor %s in location %s is outside the map"),
+          *Actor->GetName(),*ActorLocation.ToString());
       continue;
     }
 
@@ -70,10 +71,13 @@ void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Ac
     {
       continue;
     }
-    UWorld* World = ActorList[0]->GetWorld();
+
+    UWorld* World = UEditorLevelLibrary::GetEditorWorld();
     ULevelStreamingDynamic* StreamingLevel = Tile->StreamingLevel;
-    UE_LOG(LogCarlaTools, Log, TEXT("Got Tile %s in location %s"),
+    UE_LOG(LogCarlaTools, Log, TEXT("Got Tile %s in location %s,"),
         *StreamingLevel->PackageNameToLoad.ToString(), *Tile->Location.ToString());
+    UE_LOG(LogCarlaTools, Log, TEXT("Trying to move %d actors,"),
+        ActorList.Num() );
     StreamingLevel->bShouldBlockOnLoad = true;
     StreamingLevel->SetShouldBeVisible(true);
     StreamingLevel->SetShouldBeLoaded(true);
@@ -114,8 +118,8 @@ void UHoudiniImporterWidget::UpdateGenericActorCoordinates(
 {
   FVector LocalLocation = Actor->GetActorLocation() - TileOrigin;
   Actor->SetActorLocation(LocalLocation);
-  UE_LOG(LogCarlaTools, Log, TEXT("New location %s"),
-    *LocalLocation.ToString());
+  UE_LOG(LogCarlaTools, Log, TEXT("%s New location %s"),
+    *Actor->GetName(), *LocalLocation.ToString());
 }
 
 void UHoudiniImporterWidget::UpdateInstancedMeshCoordinates(

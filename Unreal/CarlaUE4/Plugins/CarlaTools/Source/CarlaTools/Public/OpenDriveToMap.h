@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "ProceduralMeshComponent.h"
 #include "Math/Vector2D.h"
+	#include "EditorUtilityActor.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <boost/optional.hpp>
@@ -23,12 +24,13 @@ class UMaterialInstance;
  *
  */
 UCLASS(Blueprintable, BlueprintType)
-class CARLATOOLS_API UOpenDriveToMap : public UObject
+class CARLATOOLS_API AOpenDriveToMap : public AEditorUtilityActor
 {
   GENERATED_BODY()
 
 public:
-  ~UOpenDriveToMap();
+  AOpenDriveToMap();
+  ~AOpenDriveToMap();
 
   UFUNCTION()
   void ConvertOSMInOpenDrive();
@@ -79,6 +81,14 @@ public:
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   float DistanceFromRoadEdge = 3.0f;
 
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Stage" )
+  bool bHasStarted = false;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Stage" )
+  bool bRoadsFinished = false;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Stage" )
+  bool bMapLoaded = false;
 protected:
 
   UFUNCTION(BlueprintCallable)
@@ -86,12 +96,18 @@ protected:
 
   UFUNCTION( BlueprintImplementableEvent )
   void GenerationFinished();
+
+  UFUNCTION( BlueprintImplementableEvent )
+  void CustomTick();
+
+  UFUNCTION( BlueprintCallable )
+  void MoveActorsToSubLevels(TArray<AActor*> ActorsToMove);
 private:
 
   UFUNCTION()
   void OpenFileDialog();
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   void LoadMap();
 
   void GenerateAll(const boost::optional<carla::road::Map>& ParamCarlaMap);
@@ -115,10 +131,13 @@ private:
   bool IsInRoad(const boost::optional<carla::road::Map>& ParamCarlaMap,
         FVector &location);
 
+
+
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
   UPROPERTY()
   TArray<AActor*> Landscapes;
   UPROPERTY()
   UTexture2D* Heightmap;
+
 };

@@ -18,7 +18,7 @@ UCLASS(BlueprintType)
 class CARLATOOLS_API UHoudiniImporterWidget : public UEditorUtilityWidget
 {
   GENERATED_BODY()
-
+public:
   UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
   static void CreateSubLevels(ALargeMapManager* LargeMapManager);
 
