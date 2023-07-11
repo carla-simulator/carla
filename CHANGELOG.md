@@ -2,6 +2,10 @@
 
   * Fixed bug causing the TM's unstuck logic to incorrectly remove the vehicles in some situations.
   * Fixed the extra data in Directx textures, so we need to copy row by row on Windows to remove extra bytes on images
+  * Added API functions to enable sensor data publishing for ROS2 without listen to it
+    * `Sensor.enable_for_ros()`
+    * `Sensor.disable_for_ros()`
+    * `Sensor.is_enabled_for_ros()`
   * Fixed sensors to check for the stream to be ready (race condition)
   * Added empty actor
   * The spectator will be used to load tiles and actor in Large Maps when no other actors with the rolename 'ego_vehicle' or 'hero' are present. Added the `spectator_as_ego` to the `carla.WorldSettings()` to allow users to disable this behavior.

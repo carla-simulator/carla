@@ -161,5 +161,41 @@ std::future<SessionInfo> Router::WriteToNext(MultiGPUCommand id, Buffer &&buffer
   return response->get_future();
 }
 
+std::future<SessionInfo> Router::WriteToOne(std::weak_ptr<Primary> server, MultiGPUCommand id, Buffer &&buffer) {
+  // define the command header
+  CommandHeader header;
+  header.id = id;
+  header.size = buffer.size();
+  Buffer buf_header((uint8_t *) &header, sizeof(header));
+
+  auto view_header = carla::BufferView::CreateFrom(std::move(buf_header));
+  auto view_data = carla::BufferView::CreateFrom(std::move(buffer));
+  auto message = Primary::MakeMessage(view_header, view_data);
+
+  // create the promise for the posible answer
+  auto response = std::make_shared<std::promise<SessionInfo>>();
+
+  // write to the specific server only
+  std::lock_guard<std::mutex> lock(_mutex);
+  auto s = server.lock();
+  if (s) {
+    _promises[s.get()] = response;
+    s->Write(message);
+  }
+  return response->get_future();
+}
+
+std::weak_ptr<Primary> Router::GetNextServer() {
+  std::lock_guard<std::mutex> lock(_mutex);
+  if (_next >= _sessions.size()) {
+    _next = 0;
+  }
+  if (_next < _sessions.size()) {
+    return std::weak_ptr<Primary>(_sessions[_next]);
+  } else {
+    return std::weak_ptr<Primary>();
+  }
+}
+
 } // namespace multigpu
 } // namespace carla

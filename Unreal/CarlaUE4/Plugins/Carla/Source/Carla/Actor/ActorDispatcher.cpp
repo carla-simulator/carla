@@ -161,7 +161,7 @@ FCarlaActor* UActorDispatcher::RegisterActor(
     AActor &Actor, FActorDescription Description,
     FActorRegistry::IdType DesiredId)
 {
-  FCarlaActor* View = Registry.Register(Actor, std::move(Description), DesiredId);
+  FCarlaActor* View = Registry.Register(Actor, Description, DesiredId);
   if (View)
   {
     // TODO: support external actor destruction

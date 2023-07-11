@@ -64,16 +64,19 @@ void FPixelReader::WritePixelsToBuffer(
       }
     }
 
-    FPixelFormatInfo PixelFormat = GPixelFormats[BackBufferPixelFormat];
-    uint32 ExpectedRowBytes = BackBufferSize.X * PixelFormat.BlockBytes;
-    int32 Size = (BackBufferSize.Y * (PixelFormat.BlockBytes * BackBufferSize.X));
-    void* LockedData = Readback->Lock(Size);
-    if (LockedData)
     {
-      FuncForSending(LockedData, Size, Offset, ExpectedRowBytes);
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("Readback data");
+      FPixelFormatInfo PixelFormat = GPixelFormats[BackBufferPixelFormat];
+      uint32 ExpectedRowBytes = BackBufferSize.X * PixelFormat.BlockBytes;
+      int32 Size = (BackBufferSize.Y * (PixelFormat.BlockBytes * BackBufferSize.X));
+      void* LockedData = Readback->Lock(Size);
+      if (LockedData)
+      {
+        FuncForSending(LockedData, Size, Offset, ExpectedRowBytes);
+      }
+      Readback->Unlock();
+      Readback.reset();
     }
-    Readback->Unlock();
-    Readback.reset();
   });
 }
 
