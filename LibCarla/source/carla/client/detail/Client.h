@@ -236,6 +236,13 @@ namespace detail {
         rpc::ActorId actor,
         bool enabled);
 
+    void SetActorCollisions(
+        rpc::ActorId actor,
+        bool enabled);
+
+    void SetActorDead(
+        rpc::ActorId actor);
+
     void SetActorEnableGravity(
         rpc::ActorId actor,
         bool enabled);
@@ -361,6 +368,8 @@ namespace detail {
     void SetReplayerTimeFactor(double time_factor);
 
     void SetReplayerIgnoreHero(bool ignore_hero);
+
+    void SetReplayerIgnoreSpectator(bool ignore_spectator);
 
     void StopReplayer(bool keep_actors);
 

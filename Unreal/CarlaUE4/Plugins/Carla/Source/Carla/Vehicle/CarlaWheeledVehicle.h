@@ -22,7 +22,7 @@
 #include "VehicleAnimInstance.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
- 	
+
 
 #include "FoliageInstancedStaticMeshComponent.h"
 #include "CoreMinimal.h"
@@ -47,6 +47,8 @@ enum class EVehicleWheelLocation : uint8 {
   FR_Wheel = 1,
   BL_Wheel = 2,
   BR_Wheel = 3,
+  ML_Wheel = 4,
+  MR_Wheel = 5,
   //Use for bikes and bicycles
   Front_Wheel = 0,
   Back_Wheel = 1,
@@ -326,7 +328,7 @@ private:
 
   /// Current state of the vehicle controller (for debugging purposes).
   UPROPERTY(Category = "AI Controller", VisibleAnywhere)
-  ECarlaWheeledVehicleState State = ECarlaWheeledVehicleState::UNKNOWN; 
+  ECarlaWheeledVehicleState State = ECarlaWheeledVehicleState::UNKNOWN;
 
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
   UVehicleVelocityControl* VelocityControl;
@@ -355,12 +357,12 @@ private:
 public:
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditDefaultsOnly)
   float DetectionSize { 750.0f };
-  
+
   UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly)
   FBox FoliageBoundingBox;
 
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
-  UBoxComponent *VehicleBounds; 
+  UBoxComponent *VehicleBounds;
 
   UFUNCTION()
   FBox GetDetectionBox() const;
@@ -372,14 +374,14 @@ public:
   void UpdateDetectionBox();
 
   UFUNCTION()
-  const TArray<int32> GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const;  
+  const TArray<int32> GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const;
 
   UFUNCTION(BlueprintCallable)
   void DrawFoliageBoundingBox() const;
-  
+
   UFUNCTION()
   FBoxSphereBounds GetBoxSphereBounds() const;
-  
+
   UFUNCTION()
   bool IsInVehicleRange(const FVector& Location) const;
 
@@ -412,12 +414,18 @@ public:
 //-------------------------------------------
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
-  bool bIsNWVehicle = false;  
+  bool bIsNWVehicle = false;
 
   void SetRolloverFlag();
 
   carla::rpc::VehicleFailureState GetFailureState() const;
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  static FRotator GetPhysicsConstraintAngle(UPhysicsConstraintComponent* Component);
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  static void SetPhysicsConstraintAngle(
+      UPhysicsConstraintComponent*Component, const FRotator &NewAngle);
+ 
 private:
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
@@ -452,4 +460,19 @@ private:
 
 
   FTimerHandle TimerHandler;
+public:
+  float SpeedAnim { 0.0f };
+  float RotationAnim { 0.0f };
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetSpeedAnim() const { return SpeedAnim; }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetSpeedAnim(float Speed) { SpeedAnim = Speed; }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetRotationAnim() const { return RotationAnim; }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetRotationAnim(float Rotation) { RotationAnim = Rotation; }
 };

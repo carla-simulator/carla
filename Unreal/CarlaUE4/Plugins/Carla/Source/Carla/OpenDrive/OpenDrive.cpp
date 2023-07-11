@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Game/CarlaGameModeBase.h"
+#include "Misc/FileHelper.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 

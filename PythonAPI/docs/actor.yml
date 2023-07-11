@@ -16,10 +16,22 @@
       type: int
       doc: >
         Identifier for this actor. Unique during a given episode.
+    - var_name: type_id
+      type: str
+      doc: >
+        The identifier of the blueprint this actor was based on, e.g. `vehicle.ford.mustang`.
     - var_name: is_alive
       type: bool
       doc: >
         Returns whether this object was destroyed using this actor handle.
+    - var_name: is_active
+      type: bool
+      doc: >
+        Returns whether this actor is active (True) or not (False).
+    - var_name: is_dormant
+      type: bool
+      doc: >
+        Returns whether this actor is dormant (True) or not (False) - the opposite of is_active.
     - var_name: parent
       type: carla.Actor
       doc: >
@@ -28,10 +40,14 @@
       type: list(int)
       doc: >
         A list of semantic tags provided by the blueprint listing components for this actor. E.g. a traffic light could be tagged with `Pole` and `TrafficLight`. These tags are used by the semantic segmentation sensor. Find more about this and other sensors [here](ref_sensors.md#semantic-segmentation-camera). 
-    - var_name: type_id
-      type: str
+    - var_name: actor_state
+      type: carla.ActorState
       doc: >
-        The identifier of the blueprint this actor was based on, e.g. `vehicle.ford.mustang`.
+        Returns the carla.ActorState, which can identify if the actor is Active, Dormant or Invalid.
+    - var_name: bounding_box
+      type: carla.BoundingBox
+      doc: >
+        Bounding box containing the geometry of the actor. Its location and rotation are relative to the actor it is attached to.
 
     # - METHODS ----------------------------
     methods:
@@ -86,39 +102,6 @@
       doc: >
         Disables any constant velocity previously set for a carla.Vehicle actor.  
     # --------------------------------------
-    - def_name: enable_chrono_physics
-      params:
-        - param_name: max_substeps
-          type: int
-          doc: >
-            Max number of Chrono substeps
-        - param_name: max_substep_delta_time
-          type: int
-          doc: >
-            Max size of substep
-        - param_name: vehicle_json
-          type: str
-          doc: >
-            Path to vehicle json file relative to `base_json_path`
-        - param_name: powertrain_json
-          type: str
-          doc: >
-            Path to powertrain json file relative to `base_json_path`
-        - param_name: tire_json
-          type: str
-          doc: >
-            Path to tire json file relative to `base_json_path`
-        - param_name: base_json_path
-          type: str
-          doc: >
-            Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final `/` character is required).
-      doc: >
-        Enables Chrono physics on a spawned vehicle.
-      note: >
-        Ensure that you have started the CARLA server with the `ARGS="--chrono"` flag. You will not be able to use Chrono physics without this flag set.
-      warning: >
-        Collisions are not supported. When a collision is detected, physics will revert to the default CARLA physics.
-    # --------------------------------------
     - def_name: enable_constant_velocity
       params:
       - param_name: velocity
@@ -132,36 +115,6 @@
         Only carla.Vehicle actors can use this method.  
       warning: >
         Enabling a constant velocity for a vehicle managed by the [Traffic Manager](https://carla.readthedocs.io/en/latest/adv_traffic_manager/) may cause conflicts. This method overrides any changes in velocity by the TM.  
-    # --------------------------------------
-    - def_name: show_debug_telemetry
-      params:
-      - param_name: enabled
-        type: bool
-        default: True
-      doc: >
-        Enables or disables the telemetry on this vehicle. This shows information about the vehicles current state and forces applied to it in the spectator window. Only information for one vehicle can be shown so if you enable a second one, the previous will be automatically disabled.
-    # --------------------------------------
-    - def_name: open_door
-      params:
-      - param_name: door_idx
-        type: carla.VehicleDoor
-        doc: >
-          door index
-      doc: >
-        Open the door door_idx if the vehicle has it. Use carla.VehicleDoor.All to open all available doors.
-      note: >
-        Only carla.Vehicle actors can use this method.
-    # --------------------------------------
-    - def_name: close_door
-      params:
-      - param_name: door_idx
-        type: carla.VehicleDoor
-        doc: >
-          door index
-      doc: >
-        Close the door door_idx if the vehicle has it. Use carla.VehicleDoor.All to close all available doors.
-      note: >
-        Only carla.Vehicle actors can use this method.
     # --------------------------------------
     - def_name: get_acceleration
       return: carla.Vector3D
@@ -244,6 +197,24 @@
       doc: >
         Enables or disables gravity for the actor. __Default__ is True.
 
+
+  - class_name: ActorState
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines the state of an actor. 
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: Invalid
+      doc: >
+        An actor is Invalid if a problem has occurred.
+    - var_name: Active
+      doc: >
+        An actor is Active when it visualized and can affect other actors. 
+    - var_name: Dormant
+      doc: >
+        An actor is Dormant when it is not visualized and will not affect other actors through physics. For example, actors are dormant if they are on an unloaded tile in a large map. 
+
+
   - class_name: VehicleLightState
     # - DESCRIPTION ------------------------
     doc: >
@@ -281,7 +252,7 @@
     parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
-      One of the most important group of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these actors is provided in carla.BlueprintLibrary to facilitate differente requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the <b>traffic manager</b>. 
+      One of the most important groups of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these actors is provided in carla.BlueprintLibrary to facilitate differente requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the <b>traffic manager</b>. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: bounding_box
@@ -295,7 +266,28 @@
       - param_name: control
         type: carla.VehicleControl
       doc: >
-        Applies a control object on the next tick, containing driving parameters such as throttle, steering or gear shifting. 
+        Applies a control object on the next tick, containing driving parameters such as throttle, steering or gear shifting.
+    # --------------------------------------
+    - def_name: apply_ackermann_control
+      params: 
+      - param_name: control
+        type: carla.VehicleAckermannControl
+      doc: >
+        Applies an Ackermann control object on the next tick.
+    # --------------------------------------
+    - def_name: apply_ackermann_controller_settings
+      params:
+      - param_name: settings
+        type: carla.AckermannControllerSettings
+      doc: >
+        Applies a new Ackermann control settings to this vehicle in the next tick. 
+      warning: This method does call the simulator.
+    # --------------------------------------
+    - def_name: get_ackermann_controller_settings
+      return: carla.AckermannControllerSettings
+      doc: >
+        Returns the last Ackermann control settings applied to this vehicle.
+      warning: This method does call the simulator to retrieve the value.
     # --------------------------------------
     - def_name: apply_physics_control
       params:
@@ -328,7 +320,7 @@
     # --------------------------------------
     - def_name: get_speed_limit
       return: float
-      return_units: m/s
+      return_units: km/h
       doc: >
         The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). The speed limit is updated when passing by a speed limit signal, so a vehicle might have none right after spawning.
     # --------------------------------------
@@ -360,6 +352,39 @@
       doc: >
         Enables or disables the usage of CarSim vs terrain file specified in the `.simfile`. By default this option is disabled and CarSim uses unreal engine methods to process the geometry of the scene.
     # --------------------------------------
+    - def_name: enable_chrono_physics
+      params:
+        - param_name: max_substeps
+          type: int
+          doc: >
+            Max number of Chrono substeps
+        - param_name: max_substep_delta_time
+          type: int
+          doc: >
+            Max size of substep
+        - param_name: vehicle_json
+          type: str
+          doc: >
+            Path to vehicle json file relative to `base_json_path`
+        - param_name: powertrain_json
+          type: str
+          doc: >
+            Path to powertrain json file relative to `base_json_path`
+        - param_name: tire_json
+          type: str
+          doc: >
+            Path to tire json file relative to `base_json_path`
+        - param_name: base_json_path
+          type: str
+          doc: >
+            Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final `/` character is required).
+      doc: >
+        Enables Chrono physics on a spawned vehicle.
+      note: >
+        Ensure that you have started the CARLA server with the `ARGS="--chrono"` flag. You will not be able to use Chrono physics without this flag set.
+      warning: >
+        Collisions are not supported. When a collision is detected, physics will revert to the default CARLA physics.
+     # -------------------------------------- 
     - def_name: set_autopilot
       params:
       - param_name: enabled
@@ -408,6 +433,31 @@
       doc: >
         Vehicle have failure states, to  indicate that it is incapable of continuing its route. This function returns the vehicle's specific failure state, or in other words, the cause that resulted in it.
     # --------------------------------------
+    - def_name: show_debug_telemetry
+      params:
+      - param_name: enabled
+        type: bool
+        default: True
+      doc: >
+        Enables or disables the telemetry on this vehicle. This shows information about the vehicles current state and forces applied to it in the spectator window. Only information for one vehicle can be shown so that, if you enable a second one, the previous will be automatically disabled.
+    # --------------------------------------
+    - def_name: open_door
+      params:
+      - param_name: door_idx
+        type: carla.VehicleDoor
+        doc: >
+          door index
+      doc: >
+        Open the door `door_idx` if the vehicle has it. Use carla.VehicleDoor.All to open all available doors.
+    # --------------------------------------
+    - def_name: close_door
+      params:
+      - param_name: door_idx
+        type: carla.VehicleDoor
+        doc: >
+          door index
+      doc: >
+        Close the door `door_idx` if the vehicle has it. Use carla.VehicleDoor.All to close all available doors.
 
 
   - class_name: Walker
@@ -416,11 +466,6 @@
     doc: >
       This class inherits from the carla.Actor and defines pedestrians in the simulation. Walkers are a special type of actor that can be controlled either by an AI (carla.WalkerAIController) or manually via script, using a series of carla.WalkerControl to move these and their skeletons.  
     # - PROPERTIES -------------------------
-    instance_variables:
-    - var_name: bounding_box
-      type: carla.BoundingBox
-      doc: >
-        Bounding box containing the geometry of the walker. Its location and rotation are relative to the walker it is attached to. 
     # - METHODS ----------------------------
     methods:
     - def_name: apply_control
@@ -669,6 +714,8 @@
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
+
+
   - class_name: VehicleWheelLocation
     doc: >
       `enum` representing the position of each wheel on a vehicle. 
@@ -694,6 +741,7 @@
       doc: >
         Back wheel of a 2 wheeled vehicle.
     # --------------------------------------
+
   - class_name: VehicleDoor
     doc: >
       Possible index representing the possible doors that can be open.

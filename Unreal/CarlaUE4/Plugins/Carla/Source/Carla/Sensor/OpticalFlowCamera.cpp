@@ -2,6 +2,8 @@
 #include "Carla/Sensor/OpticalFlowCamera.h"
 #include "HAL/IConsoleManager.h"
 
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+
 #include "Carla/Sensor/PixelReader.h"
 
 FActorDefinition AOpticalFlowCamera::GetSensorDefinition()

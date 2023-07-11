@@ -4,7 +4,11 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "CarlaRecorderQuery.h"
+
 #include "CarlaRecorderHelpers.h"
+
+#include "CarlaRecorder.h"
 
 #include <ctime>
 #include <sstream>

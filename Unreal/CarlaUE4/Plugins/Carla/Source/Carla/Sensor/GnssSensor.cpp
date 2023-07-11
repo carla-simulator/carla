@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Sensor/GnssSensor.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaStatics.h"
@@ -57,8 +58,11 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
 
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("AGnssSensor Stream Send");
-    auto Stream = GetDataStream(*this);
-    Stream.Send(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
+    if (IsStreamReady())
+    {
+      auto Stream = GetDataStream(*this);
+      Stream.Send(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
+    }
   }
 }
 

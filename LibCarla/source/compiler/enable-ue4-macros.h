@@ -2252,4 +2252,8 @@
 #pragma pop_macro("RETURN_FALSE_ON_FAIL")
 #pragma pop_macro("PI")
 
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
 #undef LIBCARLA_INCLUDED_FROM_UE4
+#else
+#error "This file does not support nesting guards (preprocessor can't do math) - instead, in LibCarla, enable macros, include Unreal header, and disable macros."
+#endif

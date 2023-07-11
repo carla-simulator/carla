@@ -20,7 +20,7 @@ set USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--build] [--clean] [-
 set REMOVE_INTERMEDIATE=false
 set BUILD_OSM2ODR=false
 set GIT_PULL=true
-set CURRENT_OSM2ODR_COMMIT=ee0c2b9241fef5365a6bc044ac82e6580b8ce936
+set CURRENT_OSM2ODR_COMMIT=03f2f1de6dcbfde41f2af464829d96b582fc2909
 set OSM2ODR_BRANCH=carla_osm2odr
 set OSM2ODR_REPO=https://github.com/carla-simulator/sumo.git
 
@@ -69,6 +69,8 @@ rem
 set OSM2ODR_VSPROJECT_PATH=%INSTALLATION_DIR:/=\%osm2odr-visualstudio\
 set OSM2ODR_SOURCE_PATH=%INSTALLATION_DIR:/=\%om2odr-source\
 set OSM2ODR_INSTALL_PATH=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
+set OSM2ODR__SERVER_INSTALL_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies
+set CARLA_DEPENDENCIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies\
 
 if %REMOVE_INTERMEDIATE% == true (
     rem Remove directories
@@ -107,6 +109,8 @@ if %BUILD_OSM2ODR% == true (
 
     cmake --build . --config Release --target install | findstr /V "Up-to-date:"
     if %errorlevel% neq 0 goto error_install
+    copy %OSM2ODR_INSTALL_PATH%\lib\osm2odr.lib %CARLA_DEPENDENCIES_FOLDER%\lib
+    copy %OSM2ODR_INSTALL_PATH%\include\OSM2ODR.h %CARLA_DEPENDENCIES_FOLDER%\include
 )
 
 goto success

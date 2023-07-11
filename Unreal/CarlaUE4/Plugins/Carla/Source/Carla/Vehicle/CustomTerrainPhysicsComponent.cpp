@@ -9,11 +9,14 @@
 #include "CustomTerrainPhysicsComponent.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 #include "Engine/CollisionProfile.h"
+#include "Engine/StaticMeshActor.h"
+#include "StaticMeshResources.h"
 #include "CollisionQueryParams.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/MapGen/SoilTypeManager.h"
-#include "carla/rpc/String.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+
 #include "HAL/PlatformFilemanager.h"
 #include "HAL/RunnableThread.h"
 #include "Misc/Paths.h"
@@ -30,6 +33,8 @@
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Materials/MaterialParameterCollection.h"
 #include "Materials/MaterialParameterCollectionInstance.h"
+#include "Materials/MaterialInterface.h"
+#include "Materials/MaterialInstance.h"
 // #include <carla/pytorch/pytorch.h>
 
 #include "Components/SkinnedMeshComponent.h"
@@ -40,7 +45,6 @@
 
 
 #include "Carla/Game/CarlaStatics.h"
-#include "carla/rpc/String.h"
 #include "HAL/PlatformFilemanager.h"
 #include "HAL/RunnableThread.h"
 #include "Misc/Paths.h"
@@ -64,6 +68,11 @@
 
 #include <thread>
 #include <chrono>
+
+#include <compiler/disable-ue4-macros.h>
+#include "carla/rpc/String.h"
+#include <compiler/enable-ue4-macros.h>
+
 
 constexpr float MToCM = 100.f;
 constexpr float CMToM = 0.01f;
@@ -2284,13 +2293,13 @@ void UCustomTerrainPhysicsComponent::AddForceToSingleWheel( USkeletalMeshCompone
 {
   FVector WheelBottomLocation = WheelPosition - FVector(0,0, 0.337);
   float OriginalHeight = SparseMap.GetHeight(WheelPosition);
-  float FloorHeight = OriginalHeight - UEFrameToSI(TerrainDepth);
+  float NewFloorHeight = OriginalHeight - UEFrameToSI(TerrainDepth);
   
   if( WheelNormalForce.Size() == 0 ){
     WheelNormalForce = FVector::UpVector;
   }
 
-  float ForceFactor = ( WheelBottomLocation.Z - OriginalHeight ) / ( FloorHeight - OriginalHeight );
+  float ForceFactor = ( WheelBottomLocation.Z - OriginalHeight ) / ( NewFloorHeight - OriginalHeight );
   if( ForceFactor < 0){
     ForceFactor = 0;
   }
@@ -2423,9 +2432,9 @@ void UCustomTerrainPhysicsComponent::ApplyMeanAccelerationToVehicle(
   }
 }
 
-TArray<FVector> UCustomTerrainPhysicsComponent::GetParticlesInRadius(FVector Position, float Radius)
+TArray<FVector> UCustomTerrainPhysicsComponent::GetParticlesInRadius(FVector Position, float InRadius)
 {
-  std::vector<FParticle*> Particles = SparseMap.GetParticlesInRadius(UEFrameToSI(Position), Radius*CMToM);
+  std::vector<FParticle*> Particles = SparseMap.GetParticlesInRadius(UEFrameToSI(Position), InRadius*CMToM);
   TArray<FVector> ParticlePositions;
   for(FParticle* Particle : Particles)
   {
@@ -2434,9 +2443,9 @@ TArray<FVector> UCustomTerrainPhysicsComponent::GetParticlesInRadius(FVector Pos
   return ParticlePositions;
 }
 
-TArray<FVector> UCustomTerrainPhysicsComponent::GetParticlesInTileRadius(FVector Position, float Radius)
+TArray<FVector> UCustomTerrainPhysicsComponent::GetParticlesInTileRadius(FVector Position, float InRadius)
 {
-  std::vector<FParticle*> Particles = SparseMap.GetParticlesInTileRadius(UEFrameToSI(Position), Radius*CMToM);
+  std::vector<FParticle*> Particles = SparseMap.GetParticlesInTileRadius(UEFrameToSI(Position), InRadius*CMToM);
   TArray<FVector> ParticlePositions;
   for(FParticle* Particle : Particles)
   {

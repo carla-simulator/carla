@@ -6,6 +6,11 @@
 #pragma once
 
 #include "carla/MsgPack.h"
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#include <compiler/enable-ue4-macros.h>
+#include "Vehicle/VehiclePhysicsControl.h"
+#include <compiler/disable-ue4-macros.h>
+#endif
 
 namespace carla {
 namespace rpc {

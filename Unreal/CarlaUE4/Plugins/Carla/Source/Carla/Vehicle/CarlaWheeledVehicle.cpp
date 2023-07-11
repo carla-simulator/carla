@@ -827,8 +827,21 @@ void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
 
 void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState &LightState)
 {
-  InputControl.LightState = LightState;
-  RefreshLightState(LightState);
+  if (LightState.Position != InputControl.LightState.Position ||
+      LightState.LowBeam != InputControl.LightState.LowBeam ||
+      LightState.HighBeam != InputControl.LightState.HighBeam ||
+      LightState.Brake != InputControl.LightState.Brake ||
+      LightState.RightBlinker != InputControl.LightState.RightBlinker ||
+      LightState.LeftBlinker != InputControl.LightState.LeftBlinker ||
+      LightState.Reverse != InputControl.LightState.Reverse ||
+      LightState.Fog != InputControl.LightState.Fog ||
+      LightState.Interior != InputControl.LightState.Interior ||
+      LightState.Special1 != InputControl.LightState.Special1 ||
+      LightState.Special2 != InputControl.LightState.Special2)
+  {
+    InputControl.LightState = LightState;
+    RefreshLightState(LightState);
+  }
 }
 
 void ACarlaWheeledVehicle::SetFailureState(const carla::rpc::VehicleFailureState &InFailureState)
@@ -1096,4 +1109,16 @@ void ACarlaWheeledVehicle::RemoveReferenceToManager()
     Manager->RemoveVehicle(this);
     return;
   }
+}
+
+FRotator ACarlaWheeledVehicle::GetPhysicsConstraintAngle(
+    UPhysicsConstraintComponent* Component)
+{
+  return Component->ConstraintInstance.AngularRotationOffset;
+}
+
+void ACarlaWheeledVehicle::SetPhysicsConstraintAngle(
+    UPhysicsConstraintComponent* Component, const FRotator &NewAngle)
+{
+  Component->ConstraintInstance.AngularRotationOffset = NewAngle;
 }

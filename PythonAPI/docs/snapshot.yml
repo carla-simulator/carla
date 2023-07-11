@@ -12,7 +12,7 @@
     - var_name: id
       type: int
       doc: >
-        A value unique for every snapshot to differenciate them. 
+        A value unique for every snapshot to differentiate them. 
     - var_name: frame
       type: int
       doc: >
