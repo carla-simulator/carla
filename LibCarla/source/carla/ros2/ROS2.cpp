@@ -108,7 +108,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
   auto it_transforms = _transforms.find(id);
   std::shared_ptr<CarlaPublisher> publisher {};
   std::shared_ptr<CarlaTransformPublisher> transform {};
-  const char* string_id = std::to_string(id).c_str();
+  std::string string_id = std::to_string(id);
   if (it_publishers != _publishers.end()) {
     publisher = it_publishers->second;
     if (it_transforms != _transforms.end()) {
