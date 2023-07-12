@@ -23,7 +23,6 @@ import math
 import time
 import queue
 import cv2
-import os
 import json
 
 try:
