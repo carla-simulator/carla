@@ -14,6 +14,7 @@ namespace carla {
 namespace ros2 {
 
   struct CarlaRGBCameraPublisherImpl;
+  struct CarlaCameraInfoPublisherImpl;
 
   class CarlaRGBCameraPublisher : public CarlaPublisher {
     public:
@@ -26,14 +27,23 @@ namespace ros2 {
 
       bool Init();
       bool Publish();
-      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data);
+      void SetImageData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data);
+      void SetInfoData(const double* data_D, const double* data_K, const double* data_R, const double* data_P);
+      void SetInfoRegionOfInterest( uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, bool do_rectify);
+      void SetInfoStaticData(uint32_t height, uint32_t width, const char* distortion = "plumb_bob", uint32_t binning_x = 0, uint32_t binning_y = 0);
       const char* type() const override { return "rgb camera"; }
 
     private:
-      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data);
+      bool InitImage();
+      bool InitInfo();
+      bool PublishImage();
+      bool PublishInfo();
+
+      void SetImageData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data);
 
     private:
       std::shared_ptr<CarlaRGBCameraPublisherImpl> _impl;
+      std::shared_ptr<CarlaCameraInfoPublisherImpl> _impl_info;
   };
 }
 }

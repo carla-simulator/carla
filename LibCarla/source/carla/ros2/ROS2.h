@@ -60,8 +60,10 @@ class ROS2
 
   // ros_name managing
   void AddActorRosName(void *actor, std::string ros_name);
+  void AddActorParentRosName(void *actor, std::string ros_name);
   void RemoveActorRosName(void *actor);
   std::string GetActorRosName(void *actor);
+  std::string GetActorParentRosName(void *actor);
 
   // enabling streams to publish
   void EnableStream(carla::streaming::detail::stream_id_type id) { _publish_stream.insert(id); }
@@ -123,7 +125,7 @@ class ROS2
       void *actor = nullptr);
 
   private:
-  std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, const char* ros_name);
+  std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor);
 
   // sigleton
   ROS2() {};
@@ -135,6 +137,7 @@ class ROS2
   int32_t _seconds { 0 };
   uint32_t _nanoseconds { 0 };
   std::unordered_map<void *, std::string> _actor_ros_name;
+  std::unordered_map<void *, std::string> _actor_parent_ros_name;
   std::shared_ptr<CarlaEgoVehicleControlSubscriber> _controller;
   std::unordered_map<carla::streaming::detail::stream_id_type, std::shared_ptr<CarlaPublisher>> _publishers;
   std::unordered_map<carla::streaming::detail::stream_id_type, std::shared_ptr<CarlaTransformPublisher>> _transforms;

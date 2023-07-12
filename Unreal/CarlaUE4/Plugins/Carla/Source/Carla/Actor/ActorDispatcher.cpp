@@ -173,6 +173,7 @@ FCarlaActor* UActorDispatcher::RegisterActor(
     if (ROS2->IsEnabled())
     {
       std::string RosName;
+      std::string ParentRosName;
       for (auto &&Attr : Description.Variations)
       {
         if (Attr.Key == "ros_name")
@@ -180,7 +181,17 @@ FCarlaActor* UActorDispatcher::RegisterActor(
           RosName = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
         }
       }
+      FCarlaActor* ParentView = Registry.FindCarlaActor(View->GetParent());
+      if (ParentView)
+      {
+        AActor* ParentActor = ParentView->GetActor();
+        if (ParentActor)
+        {
+          ParentRosName = ROS2->GetActorParentRosName(&ParentActor);
+        }
+      }
       ROS2->AddActorRosName(static_cast<void*>(&Actor), RosName);
+      ROS2->AddActorParentRosName(static_cast<void*>(&Actor), ParentRosName);
     }
     #endif
   }
