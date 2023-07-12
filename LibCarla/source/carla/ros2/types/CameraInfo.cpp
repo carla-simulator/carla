@@ -33,6 +33,7 @@ char dummy;
 using namespace eprosima::fastcdr::exception;
 
 #include <utility>
+#include <cmath>
 
 #define builtin_interfaces_msg_Time_max_cdr_typesize 8ULL;
 #define sensor_msgs_msg_CameraInfo_max_cdr_typesize 3793ULL;
@@ -43,29 +44,26 @@ using namespace eprosima::fastcdr::exception;
 #define sensor_msgs_msg_RegionOfInterest_max_key_cdr_typesize 0ULL;
 #define std_msgs_msg_Header_max_key_cdr_typesize 0ULL;
 
-sensor_msgs::msg::CameraInfo::CameraInfo()
-{
-    // std_msgs::msg::Header m_header
 
-    // unsigned long m_height
-    m_height = 0;
-    // unsigned long m_width
-    m_width = 0;
+sensor_msgs::msg::CameraInfo::CameraInfo(uint32_t height, uint32_t width, double fov) :
+m_height(height),
+m_width(width)
+{
     // string m_distortion_model
     m_distortion_model = "plumb_bob";
-    // sequence<double> m_D
 
-    // sequence<double> m_K
+    const double cx = static_cast<double>(m_width) / 2.0;
+    const double cy = static_cast<double>(m_height) / 2.0;
+    const double fx = static_cast<double>(m_width) / (2.0 * std::tan(fov) * M_PI / 360.0);
+    const double fy = fx;
 
-    // sequence<double> m_R
+    m_D = { 0.0, 0.0, 0.0, 0.0, 0.0 };
+    m_K = {fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0};
+    m_R = { 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
+    m_P = {fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0};
 
-    // sequence<double> m_P
-
-    // unsigned long m_binning_x
     m_binning_x = 0;
-    // unsigned long m_binning_y
     m_binning_y = 0;
-    // sensor_msgs::msg::RegionOfInterest m_roi
 }
 
 sensor_msgs::msg::CameraInfo::~CameraInfo()

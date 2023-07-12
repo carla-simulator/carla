@@ -116,12 +116,6 @@ std::string ROS2::GetActorParentRosName(void *actor) {
     return std::string("");
 }
 
-void ROS2::UpdateActorRosName(void* actor, std::string new_name) {
-  auto it = _actor_ros_name.find(actor);
-  if (it != _actor_ros_name.end())
-    it->second = new_name;
-}
-
 std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> ROS2::GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor) {
   auto it_publishers = _publishers.find(id);
   auto it_transforms = _transforms.find(id);
@@ -351,7 +345,7 @@ void ROS2::ProcessDataFromSensor(
             reinterpret_cast<const carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer->data());
           if (!header)
             return;
-          publisher->SetData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+          publisher->SetImageData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
           publisher->Publish();
         }
       }

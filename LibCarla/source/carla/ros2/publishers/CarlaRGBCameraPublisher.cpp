@@ -308,22 +308,6 @@ void CarlaRGBCameraPublisher::SetImageData(int32_t seconds, uint32_t nanoseconds
     _impl->_image.data(std::move(data));
   }
 
-  void CarlaRGBCameraPublisher::SetInfoData(const double* data_D, const double* data_K, const double* data_R, const double* data_P) {
-
-    std::vector<double> vector_data_D(5);
-    std::vector<double> vector_data_K(9);
-    std::vector<double> vector_data_R(9);
-    std::vector<double> vector_data_P(12);
-    std::memcpy(&vector_data_D[0], &data_D[0], sizeof(double) * 5);
-    std::memcpy(&vector_data_K[0], &data_K[0], sizeof(double) * 9);
-    std::memcpy(&vector_data_R[0], &data_R[0], sizeof(double) * 9);
-    std::memcpy(&vector_data_P[0], &data_P[0], sizeof(double) * 12);
-    _impl_info->_info.D(vector_data_D);
-    _impl_info->_info.K(vector_data_K);
-    _impl_info->_info.R(vector_data_R);
-    _impl_info->_info.P(vector_data_P);
-  }
-
   void CarlaRGBCameraPublisher::SetInfoRegionOfInterest( uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, bool do_rectify) {
     sensor_msgs::msg::RegionOfInterest roi;
     roi.x_offset(x_offset);
@@ -332,14 +316,6 @@ void CarlaRGBCameraPublisher::SetImageData(int32_t seconds, uint32_t nanoseconds
     roi.width(width);
     roi.do_rectify(do_rectify);
     _impl_info->_info.roi(roi);
-  }
-
-  void CarlaRGBCameraPublisher::SetInfoStaticData(uint32_t height, uint32_t width, const char* distortion, uint32_t binning_x, uint32_t binning_y) {
-    _impl_info->_info.height(height);
-    _impl_info->_info.width(width);
-    _impl_info->_info.distortion_model(distortion);
-    _impl_info->_info.binning_x(binning_x);
-    _impl_info->_info.binning_y(binning_y);
   }
 
   CarlaRGBCameraPublisher::CarlaRGBCameraPublisher(const char* ros_name, const char* parent) :

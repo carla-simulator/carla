@@ -78,7 +78,7 @@ namespace sensor_msgs {
             /*!
              * @brief Default constructor.
              */
-            eProsima_user_DllExport CameraInfo();
+            eProsima_user_DllExport CameraInfo(uint32_t height = 0, uint32_t width = 0, double fov = 0.0);
 
             /*!
              * @brief Default destructor.
