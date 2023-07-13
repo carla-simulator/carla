@@ -359,10 +359,11 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
   return { publisher, transform };
 }
 
-void ROS2::ProcessDataFromSensor(
+void ROS2::ProcessDataFromCamera(
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
+    int W, int H, float Fov,
     const carla::SharedBufferView buffer,
     void *actor) {
 

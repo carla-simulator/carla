@@ -35,6 +35,8 @@ public:
 
   virtual void Set(const FActorDescription &Description);
 
+  boost::optional<FActorAttribute> GetAttribute(const FString Name);
+
   virtual void BeginPlay();
 
   /// Replace the FDataStream associated with this sensor.
@@ -126,6 +128,8 @@ private:
   FDataStream Stream;
 
   FDelegateHandle OnPostTickDelegate;
+
+  FActorDescription SensorDescription;
 
   const UCarlaEpisode *Episode = nullptr;
 
