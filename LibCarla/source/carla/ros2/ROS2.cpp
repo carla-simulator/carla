@@ -526,7 +526,7 @@ void ROS2::ProcessDataFromSemanticLidar(
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
-    const carla::sensor::data::SemanticLidarData &data,
+    carla::sensor::data::SemanticLidarData &data,
     void *actor) {
   log_info("Sensor SemanticLidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._ser_points.size());
   auto sensors = GetOrCreateSensor(ESensors::RayCastSemanticLidar, stream_id, actor);
@@ -534,7 +534,7 @@ void ROS2::ProcessDataFromSemanticLidar(
     std::shared_ptr<CarlaSemanticLidarPublisher> publisher = std::dynamic_pointer_cast<CarlaSemanticLidarPublisher>(sensors.first);
     size_t width = data._ser_points.size();
     size_t height = 1;
-    publisher->SetData(_seconds, _nanoseconds, height, width, (const uint8_t*)data._ser_points.data());
+    publisher->SetData(_seconds, _nanoseconds, height, width, (float*)data._ser_points.data());
     publisher->Publish();
   }
   if (sensors.second) {
