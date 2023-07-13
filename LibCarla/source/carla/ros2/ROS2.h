@@ -101,7 +101,7 @@ class ROS2
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
-      const carla::sensor::data::LidarData &data,
+      carla::sensor::data::LidarData &data,
       void *actor = nullptr);
   void ProcessDataFromSemanticLidar(
       uint64_t sensor_type,

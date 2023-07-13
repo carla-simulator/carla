@@ -151,7 +151,7 @@ namespace ros2 {
 
 void CarlaLidarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, float* data) {
     float* it = data;
-    float* end = &data[height * width * 4];
+    float* end = &data[height * width];
     for (++it; it < end; it += 4) {
         *it *= -1.0f;
     }

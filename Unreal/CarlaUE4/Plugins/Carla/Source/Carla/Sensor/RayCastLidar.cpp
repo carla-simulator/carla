@@ -61,7 +61,10 @@ void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float Delta
   SimulateLidar(DeltaTime);
 
   auto DataStream = GetDataStream(*this);
-
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");
+    DataStream.SerializeAndSend(*this, LidarData, DataStream.PopBufferFromPool());
+  }
   // ROS2
   #if defined(WITH_ROS2)
   auto ROS2 = carla::ros2::ROS2::GetInstance();
@@ -73,10 +76,7 @@ void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float Delta
   }
   #endif
 
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");
-    DataStream.SerializeAndSend(*this, LidarData, DataStream.PopBufferFromPool());
-  }
+
 }
 
 float ARayCastLidar::ComputeIntensity(const FSemanticDetection& RawDetection) const

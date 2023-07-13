@@ -143,6 +143,11 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({id, new_publisher});
           publisher = new_publisher;
         }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(pub_name.c_str(), parent_ros_name.c_str());
+        if (new_transform->Init()) {
+          _transforms.insert({id, new_transform});
+          transform = new_transform;
+        }
       } break;
       case ESensors::DepthCamera: {
         std::string pub_name = ros_name;
@@ -154,6 +159,11 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         if (new_publisher->Init()) {
           _publishers.insert({id, new_publisher});
           publisher = new_publisher;
+        }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(pub_name.c_str(), parent_ros_name.c_str());
+        if (new_transform->Init()) {
+          _transforms.insert({id, new_transform});
+          transform = new_transform;
         }
       } break;
       case ESensors::NormalsCamera: {
@@ -170,6 +180,11 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({id, new_publisher});
           publisher = new_publisher;
         }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(pub_name.c_str(), parent_ros_name.c_str());
+        if (new_transform->Init()) {
+          _transforms.insert({id, new_transform});
+          transform = new_transform;
+        }
       } break;
       case ESensors::GnssSensor: {
         std::string pub_name = ros_name;
@@ -181,6 +196,11 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         if (new_publisher->Init()) {
           _publishers.insert({id, new_publisher});
           publisher = new_publisher;
+        }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(pub_name.c_str(), parent_ros_name.c_str());
+        if (new_transform->Init()) {
+          _transforms.insert({id, new_transform});
+          transform = new_transform;
         }
       } break;
       case ESensors::InertialMeasurementUnit: {
@@ -194,6 +214,11 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({id, new_publisher});
           publisher = new_publisher;
         }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(pub_name.c_str(), parent_ros_name.c_str());
+        if (new_transform->Init()) {
+          _transforms.insert({id, new_transform});
+          transform = new_transform;
+        }
       } break;
       case ESensors::LaneInvasionSensor: {
         std::string pub_name = ros_name;
@@ -205,6 +230,11 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         if (new_publisher->Init()) {
           _publishers.insert({id, new_publisher});
           publisher = new_publisher;
+        }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(pub_name.c_str(), parent_ros_name.c_str());
+        if (new_transform->Init()) {
+          _transforms.insert({id, new_transform});
+          transform = new_transform;
         }
       } break;
       case ESensors::ObstacleDetectionSensor: {
@@ -224,6 +254,11 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({id, new_publisher});
           publisher = new_publisher;
         }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(pub_name.c_str(), parent_ros_name.c_str());
+        if (new_transform->Init()) {
+          _transforms.insert({id, new_transform});
+          transform = new_transform;
+        }
       } break;
       case ESensors::RayCastSemanticLidar: {
         std::string pub_name = ros_name;
@@ -236,6 +271,11 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({id, new_publisher});
           publisher = new_publisher;
         }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(pub_name.c_str(), parent_ros_name.c_str());
+        if (new_transform->Init()) {
+          _transforms.insert({id, new_transform});
+          transform = new_transform;
+        }
       } break;
       case ESensors::RayCastLidar: {
         std::string pub_name = ros_name;
@@ -247,6 +287,11 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         if (new_publisher->Init()) {
           _publishers.insert({id, new_publisher});
           publisher = new_publisher;
+        }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(pub_name.c_str(), parent_ros_name.c_str());
+        if (new_transform->Init()) {
+          _transforms.insert({id, new_transform});
+          transform = new_transform;
         }
       } break;
       case ESensors::RssSensor: {
@@ -263,6 +308,11 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({id, new_publisher});
           publisher = new_publisher;
         }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(pub_name.c_str(), parent_ros_name.c_str());
+        if (new_transform->Init()) {
+          _transforms.insert({id, new_transform});
+          transform = new_transform;
+        }
       } break;
       case ESensors::SemanticSegmentationCamera: {
         std::string pub_name = ros_name;
@@ -274,6 +324,11 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         if (new_publisher->Init()) {
           _publishers.insert({id, new_publisher});
           publisher = new_publisher;
+        }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(pub_name.c_str(), parent_ros_name.c_str());
+        if (new_transform->Init()) {
+          _transforms.insert({id, new_transform});
+          transform = new_transform;
         }
       } break;
       case ESensors::InstanceSegmentationCamera: {
@@ -320,6 +375,11 @@ void ROS2::ProcessDataFromSensor(
           publisher->SetData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
           publisher->Publish();
         }
+        if (sensors.second) {
+          std::shared_ptr<CarlaTransformPublisher> publisher = std::dynamic_pointer_cast<CarlaTransformPublisher>(sensors.second);
+          publisher->SetData(_seconds, _nanoseconds, (const float*)&sensor_transform.location, (const float*)&sensor_transform.rotation);
+          publisher->Publish();
+        }
       }
       break;
     case ESensors::NormalsCamera:
@@ -346,6 +406,11 @@ void ROS2::ProcessDataFromSensor(
           if (!header)
             return;
           publisher->SetImageData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+          publisher->Publish();
+        }
+        if (sensors.second) {
+          std::shared_ptr<CarlaTransformPublisher> publisher = std::dynamic_pointer_cast<CarlaTransformPublisher>(sensors.second);
+          publisher->SetData(_seconds, _nanoseconds, (const float*)&sensor_transform.location, (const float*)&sensor_transform.rotation);
           publisher->Publish();
         }
       }
@@ -383,6 +448,11 @@ void ROS2::ProcessDataFromGNSS(
     publisher->SetData(_seconds, _nanoseconds, reinterpret_cast<const double*>(&data));
     publisher->Publish();
   }
+  if (sensors.second) {
+    std::shared_ptr<CarlaTransformPublisher> publisher = std::dynamic_pointer_cast<CarlaTransformPublisher>(sensors.second);
+    publisher->SetData(_seconds, _nanoseconds, (const float*)&sensor_transform.location, (const float*)&sensor_transform.rotation);
+    publisher->Publish();
+  }
 }
 
 void ROS2::ProcessDataFromIMU(
@@ -400,6 +470,11 @@ void ROS2::ProcessDataFromIMU(
     publisher->SetData(_seconds, _nanoseconds, reinterpret_cast<float*>(&accelerometer), reinterpret_cast<float*>(&gyroscope), compass);
     publisher->Publish();
   }
+  if (sensors.second) {
+    std::shared_ptr<CarlaTransformPublisher> publisher = std::dynamic_pointer_cast<CarlaTransformPublisher>(sensors.second);
+    publisher->SetData(_seconds, _nanoseconds, (const float*)&sensor_transform.location, (const float*)&sensor_transform.rotation);
+    publisher->Publish();
+  }
 }
 
 void ROS2::ProcessDataFromDVS(
@@ -409,13 +484,27 @@ void ROS2::ProcessDataFromDVS(
     const std::vector<carla::sensor::data::DVSEvent> &events,
     void *actor) {
   log_info("Sensor DVS to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "events.", events.size());
+  auto sensors = GetOrCreateSensor(ESensors::DVSCamera, stream_id, actor);
+  if (sensors.first) {
+    std::shared_ptr<CarlaDVSCameraPublisher> publisher = std::dynamic_pointer_cast<CarlaDVSCameraPublisher>(sensors.first);
+    //publisher->SetData(_seconds, _nanoseconds, );
+    //set camera data
+    //set camera info data
+    //set pointcloud data
+    publisher->Publish();
+  }
+  if (sensors.second) {
+    std::shared_ptr<CarlaTransformPublisher> publisher = std::dynamic_pointer_cast<CarlaTransformPublisher>(sensors.second);
+    publisher->SetData(_seconds, _nanoseconds, (const float*)&sensor_transform.location, (const float*)&sensor_transform.rotation);
+    publisher->Publish();
+  }
 }
 
 void ROS2::ProcessDataFromLidar(
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
-    const carla::sensor::data::LidarData &data,
+    carla::sensor::data::LidarData &data,
     void *actor) {
   log_info("Sensor Lidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._points.size());
   auto sensors = GetOrCreateSensor(ESensors::RayCastLidar, stream_id, actor);
@@ -423,7 +512,12 @@ void ROS2::ProcessDataFromLidar(
     std::shared_ptr<CarlaLidarPublisher> publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(sensors.first);
     size_t width = data._points.size();
     size_t height = 1;
-    publisher->SetData(_seconds, _nanoseconds, width, height, (float*)data._points.data());
+    publisher->SetData(_seconds, _nanoseconds, height, width, (float*)data._points.data());
+    publisher->Publish();
+  }
+  if (sensors.second) {
+    std::shared_ptr<CarlaTransformPublisher> publisher = std::dynamic_pointer_cast<CarlaTransformPublisher>(sensors.second);
+    publisher->SetData(_seconds, _nanoseconds, (const float*)&sensor_transform.location, (const float*)&sensor_transform.rotation);
     publisher->Publish();
   }
 }
@@ -437,10 +531,15 @@ void ROS2::ProcessDataFromSemanticLidar(
   log_info("Sensor SemanticLidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._ser_points.size());
   auto sensors = GetOrCreateSensor(ESensors::RayCastSemanticLidar, stream_id, actor);
   if (sensors.first) {
-    std::shared_ptr<CarlaLidarPublisher> publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(sensors.first);
+    std::shared_ptr<CarlaSemanticLidarPublisher> publisher = std::dynamic_pointer_cast<CarlaSemanticLidarPublisher>(sensors.first);
     size_t width = data._ser_points.size();
     size_t height = 1;
-    publisher->SetData(_seconds, _nanoseconds, width, height, (float*)data._ser_points.data());
+    publisher->SetData(_seconds, _nanoseconds, height, width, (const uint8_t*)data._ser_points.data());
+    publisher->Publish();
+  }
+  if (sensors.second) {
+    std::shared_ptr<CarlaTransformPublisher> publisher = std::dynamic_pointer_cast<CarlaTransformPublisher>(sensors.second);
+    publisher->SetData(_seconds, _nanoseconds, (const float*)&sensor_transform.location, (const float*)&sensor_transform.rotation);
     publisher->Publish();
   }
 }
@@ -454,10 +553,15 @@ void ROS2::ProcessDataFromRadar(
   log_info("Sensor Radar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._detections.size());
   auto sensors = GetOrCreateSensor(ESensors::Radar, stream_id, actor);
   if (sensors.first) {
-    std::shared_ptr<CarlaLidarPublisher> publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(sensors.first);
+    std::shared_ptr<CarlaRadarPublisher> publisher = std::dynamic_pointer_cast<CarlaRadarPublisher>(sensors.first);
     size_t width = data.GetDetectionCount();
     size_t height = 1;
-    publisher->SetData(_seconds, _nanoseconds, width, height, (float*)data._detections.data());
+    publisher->SetData(_seconds, _nanoseconds, height, width, (const uint8_t*)data._detections.data());
+    publisher->Publish();
+  }
+  if (sensors.second) {
+    std::shared_ptr<CarlaTransformPublisher> publisher = std::dynamic_pointer_cast<CarlaTransformPublisher>(sensors.second);
+    publisher->SetData(_seconds, _nanoseconds, (const float*)&sensor_transform.location, (const float*)&sensor_transform.rotation);
     publisher->Publish();
   }
 }
