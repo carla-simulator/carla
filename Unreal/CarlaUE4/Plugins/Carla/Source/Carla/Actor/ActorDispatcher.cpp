@@ -8,9 +8,11 @@
 #include "Carla/Actor/ActorDispatcher.h"
 
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Actor/ActorROS2Handler.h"
 #include "Carla/Actor/CarlaActorFactory.h"
 
 #include "Carla/Game/Tagger.h"
+#include "Carla/Vehicle/VehicleControl.h"
 
 #include "GameFramework/Controller.h"
 
@@ -172,8 +174,8 @@ FCarlaActor* UActorDispatcher::RegisterActor(
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
     {
+      // actor ros_name
       std::string RosName;
-      std::string ParentRosName;
       for (auto &&Attr : Description.Variations)
       {
         if (Attr.Key == "ros_name")
@@ -181,6 +183,9 @@ FCarlaActor* UActorDispatcher::RegisterActor(
           RosName = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
         }
       }
+
+      // parent ros_name
+      std::string ParentRosName;
       FCarlaActor* ParentView = Registry.FindCarlaActor(View->GetParent());
       if (ParentView)
       {
@@ -192,6 +197,20 @@ FCarlaActor* UActorDispatcher::RegisterActor(
       }
       ROS2->AddActorRosName(static_cast<void*>(&Actor), RosName);
       ROS2->AddActorParentRosName(static_cast<void*>(&Actor), ParentRosName);
+
+      // vehicle controller for hero
+      for (auto &&Attr : Description.Variations)
+      {
+        if (Attr.Key == "role_name" && (Attr.Value.Value == "hero" || Attr.Value.Value == "ego"))
+        {
+          ROS2->AddActorCallback(RosName, [RosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
+          {
+            AActor *UEActor = reinterpret_cast<AActor *>(Actor);
+            ActorROS2Handler Handler(UEActor, RosName);
+            boost::variant2::visit(Handler, Data);
+          });
+        }
+      }
     }
     #endif
   }

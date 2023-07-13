@@ -116,6 +116,14 @@ std::string ROS2::GetActorParentRosName(void *actor) {
     return std::string("");
 }
 
+void ROS2::AddActorCallback(std::string ros_name, ActorCallback callback) {
+  _actor_callbacks.insert({ros_name, std::move(callback)});
+}
+
+void ROS2::RemoveActorCallback(std::string ros_name) {
+  _actor_callbacks.erase(ros_name);
+}
+
 std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> ROS2::GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor) {
   auto it_publishers = _publishers.find(id);
   auto it_transforms = _transforms.find(id);

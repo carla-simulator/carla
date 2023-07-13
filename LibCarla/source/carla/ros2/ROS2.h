@@ -9,6 +9,7 @@
 #include "carla/Buffer.h"
 #include "carla/BufferView.h"
 #include "carla/geom/Transform.h"
+#include "carla/ros2/ROS2CallbackData.h"
 #include "carla/streaming/detail/Types.h"
 
 #include <unordered_set>
@@ -64,6 +65,10 @@ class ROS2
   void RemoveActorRosName(void *actor);
   std::string GetActorRosName(void *actor);
   std::string GetActorParentRosName(void *actor);
+
+  // callbacks
+  void AddActorCallback(std::string ros_name, ActorCallback callback);
+  void RemoveActorCallback(std::string ros_name);
 
   // enabling streams to publish
   void EnableStream(carla::streaming::detail::stream_id_type id) { _publish_stream.insert(id); }
@@ -142,6 +147,8 @@ class ROS2
   std::unordered_map<carla::streaming::detail::stream_id_type, std::shared_ptr<CarlaPublisher>> _publishers;
   std::unordered_map<carla::streaming::detail::stream_id_type, std::shared_ptr<CarlaTransformPublisher>> _transforms;
   std::unordered_set<carla::streaming::detail::stream_id_type> _publish_stream;
+  std::unordered_map<std::string, ActorCallback> _actor_callbacks;
+
 };
 
 } // namespace ros2
