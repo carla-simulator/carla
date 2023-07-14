@@ -26,10 +26,10 @@ struct FTreeTableRow : public FTableRowBase {
 
 public:
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Category")
-  ELaneDescriptor TreesCategory;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Meshes")
+  TArray<TSoftObjectPtr<UStaticMesh>> Meshes;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Trees")
-  TArray<TSoftObjectPtr<UStaticMesh>> Trees;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Blueprints")
+  TArray<TSoftClassPtr<AActor>> Blueprints;
 
 };

@@ -6,45 +6,28 @@
 #include "Interfaces/IHttpRequest.h"
 #include "CustomFileDownloader.generated.h"
 /**
- * 
+ *
  */
 
 DECLARE_DELEGATE(FDownloadComplete)
 
-UCLASS(Blueprintable)
-class CARLA_API UCustomFileDownloader : public UObject
-{
-  GENERATED_BODY()
-public:	
-  UFUNCTION(BlueprintCallable)
-  void StartDownload();
-  UFUNCTION(BlueprintCallable)
-  void ConvertOSMInOpenDrive(FString FilePath); 
-
-  FString ResultFileName;
-
-  FString Url;
-
-  FDownloadComplete DownloadDelegate;
-
-private:
-  void RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
-
-  FString Payload;
-};
-
-class FHttpDownloader
+USTRUCT()
+struct FHttpDownloader
 {
 public:
+  GENERATED_BODY()
+
+  FHttpDownloader();
+
   /**
    *
    * @param Verb - verb to use for request (GET,POST,DELETE,etc)
    * @param Url - url address to connect to
    */
-  FHttpDownloader( const FString& InVerb, const FString& InUrl, const FString& InFilename, FDownloadComplete& Delegate );  
+  FHttpDownloader( const FString& InVerb, const FString& InUrl, const FString& InFilename );
 
   // Kick off the Http request  and wait for delegate to be called
-  void Run(void);  
+  void Run(void);
 
   /**
    * Delegate called when the request completes
@@ -55,9 +38,37 @@ public:
    */
   void RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 
+  UPROPERTY()
+  class AOpenDriveToMap* XodrToMap;
 private:
   FString Verb;
   FString Url;
   FString Filename;
   FDownloadComplete DelegateToCall;
 };
+
+UCLASS(Blueprintable)
+class CARLATOOLS_API UCustomFileDownloader : public UObject
+{
+  GENERATED_BODY()
+public:
+  UFUNCTION(BlueprintCallable)
+  void StartDownload();
+  UFUNCTION(BlueprintCallable)
+  void ConvertOSMInOpenDrive(FString FilePath, float Lat_0 = 0, float Lon_0 = 0);
+
+  FString ResultFileName;
+
+  FString Url;
+
+  UPROPERTY()
+  class AOpenDriveToMap* XodrToMap;
+private:
+  void RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
+
+  FString Payload;
+  UPROPERTY()
+  FHttpDownloader Download;
+};
+
+

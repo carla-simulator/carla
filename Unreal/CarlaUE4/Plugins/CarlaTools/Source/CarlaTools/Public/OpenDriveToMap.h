@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "ProceduralMeshComponent.h"
 #include "Math/Vector2D.h"
+	#include "EditorUtilityActor.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <boost/optional.hpp>
@@ -23,17 +24,27 @@ class UMaterialInstance;
  *
  */
 UCLASS(Blueprintable, BlueprintType)
-class CARLATOOLS_API UOpenDriveToMap : public UObject
+class CARLATOOLS_API AOpenDriveToMap : public AEditorUtilityActor
 {
   GENERATED_BODY()
 
 public:
+  AOpenDriveToMap();
+  ~AOpenDriveToMap();
 
   UFUNCTION()
   void ConvertOSMInOpenDrive();
 
   UFUNCTION( BlueprintCallable )
   void CreateMap();
+
+  UFUNCTION(BlueprintCallable)
+  void CreateTerrain(const int MeshGridSize, const float MeshGridSectionSize,
+     const class UTexture2D* HeightmapTexture);
+
+  UFUNCTION(BlueprintCallable)
+  void CreateTerrainMesh(const int MeshIndex, const FVector2D Offset, const int GridSize, const float GridSectionSize,
+     const class UTexture2D* HeightmapTexture, class UTextureRenderTarget2D* RoadMask);
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;
@@ -47,54 +58,86 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
   FVector2D OriginGeoCoordinates;
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UMaterialInstance* DefaultRoadMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UMaterialInstance* DefaultLaneMarksWhiteMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UMaterialInstance* DefaultLaneMarksYellowMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UMaterialInstance* DefaultSidewalksMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UMaterialInstance* DefaultLandscapeMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UTexture2D* DefaultHeightmap;
+
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   float DistanceBetweenTrees = 50.0f;
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   float DistanceFromRoadEdge = 3.0f;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  UMaterialInstance* DefaultRoadMaterial;
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Stage" )
+  bool bHasStarted = false;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  UMaterialInstance* DefaultLaneMarksMaterial;
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Stage" )
+  bool bRoadsFinished = false;
 
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Stage" )
+  bool bMapLoaded = false;
 protected:
 
-  UFUNCTION( BlueprintCallable )
-  void SaveMap();
+  UFUNCTION(BlueprintCallable)
+  TArray<AActor*> GenerateMiscActors(float Offset);
 
   UFUNCTION( BlueprintImplementableEvent )
   void GenerationFinished();
+
+  UFUNCTION( BlueprintImplementableEvent )
+  void CustomTick();
+
+  UFUNCTION( BlueprintCallable )
+  void MoveActorsToSubLevels(TArray<AActor*> ActorsToMove);
 private:
 
   UFUNCTION()
   void OpenFileDialog();
 
-  UFUNCTION()
+  UFUNCTION(BlueprintCallable)
   void LoadMap();
 
-  void GenerateAll(const boost::optional<carla::road::Map>& CarlaMap);
-  void GenerateRoadMesh(const boost::optional<carla::road::Map>& CarlaMap);
-  void GenerateSpawnPoints(const boost::optional<carla::road::Map>& CarlaMap);
-  void GenerateTreePositions(const boost::optional<carla::road::Map>& CarlaMap);
-  void GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap);
+  void GenerateAll(const boost::optional<carla::road::Map>& ParamCarlaMap);
+  void GenerateRoadMesh(const boost::optional<carla::road::Map>& ParamCarlaMap);
+  void GenerateSpawnPoints(const boost::optional<carla::road::Map>& ParamCarlaMap);
+  void GenerateTreePositions(const boost::optional<carla::road::Map>& ParamCarlaMap);
+  void GenerateLaneMarks(const boost::optional<carla::road::Map>& ParamCarlaMap);
 
+  float GetHeight(float PosX, float PosY,bool bDrivingLane = false);
   carla::rpc::OpendriveGenerationParameters opg_parameters;
+  boost::optional<carla::road::Map> CarlaMap;
 
-  UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
-  TArray<UStaticMesh*> CreateStaticMeshAssets();
+  FTransform GetSnappedPosition(FTransform Origin);
+
+  float GetHeightForLandscape(FVector Origin);
+
+  float DistanceToLaneBorder(const boost::optional<carla::road::Map>& CarlaMap,
+      FVector &location,
+      int32_t lane_type = static_cast<int32_t>(carla::road::Lane::LaneType::Driving)) const;
+
+  bool IsInRoad(const boost::optional<carla::road::Map>& ParamCarlaMap,
+        FVector &location);
+
+
 
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
   UPROPERTY()
-  TArray<AActor*> ActorMeshList;
+  TArray<AActor*> Landscapes;
   UPROPERTY()
-  TArray<AActor*> LaneMarkerActorList;
-  UPROPERTY()
-  TArray<UStaticMesh*> MeshesToSpawn;
-  UPROPERTY()
-  TArray<FString> RoadType;
-  UPROPERTY()
-  TArray<UProceduralMeshComponent*> RoadMesh;
+  UTexture2D* Heightmap;
 
 };

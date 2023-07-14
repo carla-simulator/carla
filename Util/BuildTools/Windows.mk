@@ -71,7 +71,7 @@ client: setup
 LibCarla: setup
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --server --client
 
-setup:
+setup: downloadplugin
 	@"${CARLA_BUILD_TOOLS_FOLDER}/Setup.bat" --boost-toolset msvc-14.2 $(ARGS)
 
 .PHONY: Plugins
@@ -86,3 +86,6 @@ osm2odr:
 
 osmrenderer:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildOSMRenderer.bat"
+
+downloadplugin:
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildUE4Plugins.bat" --build $(ARGS)

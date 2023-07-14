@@ -539,6 +539,18 @@ void FCarlaServer::FPimpl::BindActions()
     REQUIRE_CARLA_EPISODE();
     Episode->ApplySettings(settings);
     StreamingServer.SetSynchronousMode(settings.synchronous_mode);
+
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    if (LargeMap)
+    {
+      LargeMap->ConsiderSpectatorAsEgo(settings.spectator_as_ego);
+    }
+
     return FCarlaEngine::GetFrameCounter();
   };
 
@@ -1366,6 +1378,55 @@ void FCarlaServer::FPimpl::BindActions()
     {
       return RespondError(
           "set_actor_simulate_physics",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_actor_collisions) << [this](
+      cr::ActorId ActorId,
+      bool bEnabled) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "set_actor_collisions",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->SetActorCollisions(bEnabled);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_actor_collisions",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_actor_dead) << [this](
+      cr::ActorId ActorId) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "set_actor_dead",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->SetActorDead();
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_actor_dead",
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
