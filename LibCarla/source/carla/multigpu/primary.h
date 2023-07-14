@@ -42,7 +42,7 @@ namespace multigpu {
         Listener &server);
 
     ~Primary();
-    
+
     /// Starts the session and calls @a on_opened after successfully reading the
     /// stream id, and @a on_closed once the session is closed.
     void Open(
@@ -60,7 +60,7 @@ namespace multigpu {
 
     /// Writes some data to the socket.
     void Write(std::shared_ptr<const carla::streaming::detail::tcp::Message> message);
-    
+
     /// Writes a string
     void Write(std::string text);
 
@@ -80,7 +80,7 @@ namespace multigpu {
 
     void StartTimer();
 
-    void CloseNow();
+    void CloseNow(boost::system::error_code ec = boost::system::error_code());
 
     friend class Listener;
 

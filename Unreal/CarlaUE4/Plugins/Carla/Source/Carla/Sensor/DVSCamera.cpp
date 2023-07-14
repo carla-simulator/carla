@@ -156,9 +156,12 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ADVSCamera Stream Send");
     /** Send the events **/
-    auto Stream = GetDataStream(*this);
-    auto Buffer = Stream.PopBufferFromPool();
-    Stream.Send(*this, events, std::move(Buffer));
+    if (IsStreamReady())
+    {
+      auto Stream = GetDataStream(*this);
+      auto Buffer = Stream.PopBufferFromPool();
+      Stream.Send(*this, events, std::move(Buffer));
+    }
   }
 }
 
