@@ -264,21 +264,14 @@ cv2.waitKey(1)
 try:
 # main loop
     while True:
-        frame_number += 1
-        # Retrieve and reshape the image
         world.tick()
-        all_vehicles_bbs = []
-        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Car)))
-        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Truck)))
-        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Motorcycle)))
-        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Bicycle)))
-        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Bus)))
-        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Rider)))
-        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Train)))
-        image = image_queue.get()
+        frame_number += 1
 
+        # Retrieve and reshape the image
+        image = image_queue.get()
         img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
 
+        # Save frame to annotations json
         frame_file = "{:05d}.png".format(frame_number)
 
         ground_truth_annotations["images"].append({
@@ -287,39 +280,19 @@ try:
         "width": image.width,
         "id": frame_number})
 
+        # get bounding boxes of all types of vehicles
+        all_vehicles_bbs = []
+        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Car)))
+        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Truck)))
+        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Motorcycle)))
+        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Bicycle)))
+        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Bus)))
+        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Rider)))
+        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Train)))
+        
+
         # Get the camera matrix 
         world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
-
-        # for npc in world.get_actors().filter('*vehicle*'):
-
-        #     # Filter out the ego vehicle
-        #     if npc.id != vehicle.id:
-        #         bb = npc.bounding_box
-        #         img = render_bounding_boxes(bb, vehicle, world_2_camera, img, npc, '2D')
-                # dist = npc.get_transform().location.distance(vehicle.get_transform().location)
-                # dist_bb = bb.get_world_vertices().location.distance(vehicle.get_transform().location)
-                # diff = abs(dist-dist_bb)
-                # if math.sqrt(bb.location.x**2 + bb.location.y**2 + bb.location.z**2) > 2:
-                #     continue
-                # print(math.sqrt(bb.location.x**2 + bb.location.y**2 + bb.location.z**2))
-
-                # # Filter for the vehicles within 50m
-                # if dist < 50:
-
-                # # Calculate the dot product between the forward vector
-                # # of the vehicle and the vector between the vehicle
-                # # and the other vehicle. We threshold this dot product
-                # # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
-                #     forward_vec = vehicle.get_transform().get_forward_vector()
-                #     ray = npc.get_transform().location - vehicle.get_transform().location
-
-                #     if forward_vec.dot(ray) > 1:
-                #         p1 = get_image_point(bb.location, K, world_2_camera)
-                #         verts = [v for v in bb.get_world_vertices(npc.get_transform())]
-                #         for edge in edges:
-                #             p1 = get_image_point(verts[edge[0]], K, world_2_camera)
-                #             p2 = get_image_point(verts[edge[1]],  K, world_2_camera)
-                #             img = cv2.line(img, (int(p1[0]),int(p1[1])), (int(p2[0]),int(p2[1])), (255,0,0, 255), 1)
         
         for i, vehicle_class in enumerate(all_vehicles_bbs):
             for bb in vehicle_class:
