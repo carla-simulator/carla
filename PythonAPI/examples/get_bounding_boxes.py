@@ -129,8 +129,6 @@ def render_bounding_boxes(bb, ego_vehicle, w2c, img, actor=None, dim="3D"):
             else:
                 verts = [v for v in bb.get_world_vertices(carla.Transform())]
 
-            print('DIM: ', dim)
-
             if dim == "3D":
                 for edge in edges:
                     p1 = get_image_point(verts[edge[0]], K, world_2_camera)
@@ -157,12 +155,14 @@ def render_bounding_boxes(bb, ego_vehicle, w2c, img, actor=None, dim="3D"):
                     if p[1] < y_min:
                         y_min = p[1]
 
-                bbox_params = [x_min, y_min, x_max-x_min, y_max-y_min]
+                # make sure bb is in image!
+                if x_min > 0 and x_max < image_w and y_min > 0 and y_max < image_h:
+                    bbox_params = [x_min, y_min, x_max-x_min, y_max-y_min]
 
-                img = cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), (0,0,255, 255), 1)
-                img = cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
-                img = cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), (0,0,255, 255), 1)
-                img = cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
+                # img = cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), (0,0,255, 255), 1)
+                # img = cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
+                # img = cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), (0,0,255, 255), 1)
+                # img = cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
             
             elif type(dim) == str:
                 ValueError("Invalid argument value for parameter 'dim', can only be '2D' or '3D'!")
@@ -296,7 +296,7 @@ try:
         
         for i, vehicle_class in enumerate(all_vehicles_bbs):
             for bb in vehicle_class:
-                img, bb_params = render_bounding_boxes(bb, vehicle, world_2_camera, img, dim='2D')
+                img_bb, bb_params = render_bounding_boxes(bb, vehicle, world_2_camera, img, dim='2D')
                 if bb_params:
 
                     ground_truth_annotations["annotations"].append({
