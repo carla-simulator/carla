@@ -1135,17 +1135,22 @@ namespace road {
   }
 
   std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>>
-    Map::GenerateOrderedChunkedMesh( const rpc::OpendriveGenerationParameters& params) const
+    Map::GenerateOrderedChunkedMeshInLocations( const rpc::OpendriveGenerationParameters& params,
+                                     const geom::Vector3D& minpos,
+                                     const geom::Vector3D& maxpos) const
   {
 
     geom::MeshFactory mesh_factory(params);
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> road_out_mesh_list;
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> junction_out_mesh_list;
 
-    std::thread juntction_thread( &Map::GenerateJunctions, this, mesh_factory, params, &junction_out_mesh_list);
+    std::thread juntction_thread( &Map::GenerateJunctions, this, mesh_factory, params,
+      minpos, maxpos, &junction_out_mesh_list);
 
-    size_t num_roads = _data.GetRoads().size();
-    size_t num_roads_per_thread = 100;
+    const std::vector<RoadId> RoadsIDToGenerate = FilterRoadsByPosition(minpos, maxpos);
+
+    size_t num_roads = RoadsIDToGenerate.size();
+    size_t num_roads_per_thread = 30;
     size_t num_threads = (num_roads / num_roads_per_thread) + 1;
     num_threads = num_threads > 1 ? num_threads : 1;
     std::vector<std::thread> workers;
@@ -1154,9 +1159,9 @@ namespace road {
 
     for ( size_t i = 0; i < num_threads; ++i ) {
       std::thread neworker(
-        [this, &write_mutex, &mesh_factory, &road_out_mesh_list, i, num_roads_per_thread]() {
+        [this, &write_mutex, &mesh_factory, &RoadsIDToGenerate, &road_out_mesh_list, i, num_roads_per_thread]() {
         std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current =
-          std::move(GenerateRoadsMultithreaded(mesh_factory, i, num_roads_per_thread));
+          std::move(GenerateRoadsMultithreaded(mesh_factory, RoadsIDToGenerate,i, num_roads_per_thread ));
         std::lock_guard<std::mutex> guard(write_mutex);
         for ( auto&& pair : Current ) {
           if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end()) {
@@ -1200,13 +1205,17 @@ namespace road {
   }
 
   std::vector<std::pair<geom::Transform, std::string>> Map::GetTreesTransform(
+    const geom::Vector3D& minpos,
+    const geom::Vector3D& maxpos,
     float distancebetweentrees,
     float distancefromdrivinglineborder,
     float s_offset) const {
 
     std::vector<std::pair<geom::Transform, std::string>> transforms;
-    for (auto &&pair : _data.GetRoads()) {
-      const auto &road = pair.second;
+
+    const std::vector<RoadId> RoadsIDToGenerate = FilterRoadsByPosition(minpos, maxpos);
+    for ( RoadId id : RoadsIDToGenerate ) {
+      const auto& road = _data.GetRoads().at(id);
       if (!road.IsJunction()) {
         for (auto &&lane_section : road.GetLaneSections()) {
           LaneId min_lane = 0;
@@ -1215,8 +1224,7 @@ namespace road {
               min_lane = pairlane.first;
             }
           }
-          const auto max_lane = lane_section.GetLanes().rbegin()->first == 0 ?
-           -1 : lane_section.GetLanes().rbegin()->first;
+
           const road::Lane* lane = lane_section.GetLane(min_lane);
           if( lane ) {
             double s_current = lane_section.GetDistance() + s_offset;
@@ -1280,15 +1288,19 @@ namespace road {
   /// Buids a list of meshes related with LineMarkings
   std::vector<std::unique_ptr<geom::Mesh>> Map::GenerateLineMarkings(
     const rpc::OpendriveGenerationParameters& params,
+    const geom::Vector3D& minpos,
+    const geom::Vector3D& maxpos,
     std::vector<std::string>& outinfo ) const
   {
     std::vector<std::unique_ptr<geom::Mesh>> LineMarks;
     geom::MeshFactory mesh_factory(params);
-    for ( auto&& pair : _data.GetRoads() ) {
-      if ( pair.second.IsJunction() ) {
-        continue;
+
+    const std::vector<RoadId> RoadsIDToGenerate = FilterRoadsByPosition(minpos, maxpos);
+    for ( RoadId id : RoadsIDToGenerate ) {
+      const auto& road = _data.GetRoads().at(id);
+      if (!road.IsJunction()) {
+        mesh_factory.GenerateLaneMarkForRoad(road, LineMarks, outinfo);
       }
-      mesh_factory.GenerateLaneMarkForRoad(pair.second, LineMarks, outinfo);
     }
 
     return std::move(LineMarks);
@@ -1313,19 +1325,17 @@ namespace road {
 
   std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>
       Map::GenerateRoadsMultithreaded( const carla::geom::MeshFactory& mesh_factory,
+                                        const std::vector<RoadId>& RoadsId,
                                         const size_t index, const size_t number_of_roads_per_thread) const
   {
     std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> out;
 
-    auto start = std::next( _data.GetRoads().begin(), (index ) * number_of_roads_per_thread);
+    size_t start = index * number_of_roads_per_thread;
     size_t endoffset = (index+1) * number_of_roads_per_thread;
-    if( endoffset >= _data.GetRoads().size() ) {
-      endoffset = _data.GetRoads().size();
-    }
-    auto end = std::next( _data.GetRoads().begin(), endoffset );
+    size_t end = RoadsId.size();
 
-    for (auto pair = start; pair != end && pair != _data.GetRoads().end(); ++pair) {
-      const auto& road = pair->second;
+    for (int i = start; i < endoffset && i < end; ++i) {
+      const auto& road = _data.GetRoads().at(RoadsId[i]);
       if (!road.IsJunction()) {
         mesh_factory.GenerateAllOrderedWithMaxLen(road, out);
       }
@@ -1336,13 +1346,16 @@ namespace road {
 
   void Map::GenerateJunctions(const carla::geom::MeshFactory& mesh_factory,
     const rpc::OpendriveGenerationParameters& params,
+    const geom::Vector3D& minpos,
+    const geom::Vector3D& maxpos,
     std::map<road::Lane::LaneType,
     std::vector<std::unique_ptr<geom::Mesh>>>* junction_out_mesh_list) const {
 
-    size_t num_junctions = _data.GetJunctions().size();
+    std::vector<JuncId> JunctionsToGenerate = FilterJunctionsByPosition(minpos, maxpos);
+    size_t num_junctions = JunctionsToGenerate.size();
     std::cout << "Generating " << std::to_string(num_junctions) << " junctions" << std::endl;
     size_t junctionindex = 0;
-    size_t num_junctions_per_thread = 10;
+    size_t num_junctions_per_thread = 5;
     size_t num_threads = (num_junctions / num_junctions_per_thread) + 1;
     num_threads = num_threads > 1 ? num_threads : 1;
     std::vector<std::thread> workers;
@@ -1350,7 +1363,7 @@ namespace road {
 
     for ( size_t i = 0; i < num_threads; ++i ) {
       std::thread neworker(
-        [this, &write_mutex, &mesh_factory, &junction_out_mesh_list, i, num_junctions_per_thread, num_junctions]() {
+        [this, &write_mutex, &mesh_factory, &junction_out_mesh_list, JunctionsToGenerate, i, num_junctions_per_thread, num_junctions]() {
         std::map<road::Lane::LaneType,
           std::vector<std::unique_ptr<geom::Mesh>>> junctionsofthisthread;
 
@@ -1366,7 +1379,7 @@ namespace road {
                         junctionindex < minimum;
                         ++junctionindex )
         {
-          GenerateSingleJunction(mesh_factory, junctionindex, &junctionsofthisthread);
+          GenerateSingleJunction(mesh_factory, JunctionsToGenerate[junctionindex], &junctionsofthisthread);
         }
         std::cout << "Generated Junctions between  " << std::to_string(i * num_junctions_per_thread) << " and " << std::to_string(minimum) << std::endl;
         std::lock_guard<std::mutex> guard(write_mutex);
@@ -1392,6 +1405,40 @@ namespace road {
         workers[i].join();
       }
     }
+  }
+
+  std::vector<JuncId> Map::FilterJunctionsByPosition( const geom::Vector3D& minpos,
+    const geom::Vector3D& maxpos ) const {
+
+    std::cout << "Filtered from " + std::to_string(_data.GetJunctions().size() ) + " junctions " << std::endl;
+    std::vector<JuncId> ToReturn;
+    for( auto& junction : _data.GetJunctions() ){
+      geom::Location junctionLocation = junction.second.GetBoundingBox().location;
+      if( minpos.x < junctionLocation.x && junctionLocation.x < maxpos.x &&
+            minpos.y > junctionLocation.y && junctionLocation.y > maxpos.y ) {
+        ToReturn.push_back(junction.first);
+      }
+    }
+    std::cout << "To " + std::to_string(ToReturn.size() ) + " junctions " << std::endl;
+
+    return ToReturn;
+  }
+
+  std::vector<RoadId> Map::FilterRoadsByPosition( const geom::Vector3D& minpos,
+    const geom::Vector3D& maxpos ) const {
+
+    std::vector<RoadId> ToReturn;
+    std::cout << "Filtered from " + std::to_string(_data.GetRoads().size() ) + " roads " << std::endl;
+    for( auto& road : _data.GetRoads() ){
+      boost::optional<element::Waypoint> wp = GetWaypoint(road.first, -1, road.second.GetLength() );
+      geom::Location roadLocation = ComputeTransform(*wp).location;
+      if( minpos.x < roadLocation.x && roadLocation.x < maxpos.x &&
+            minpos.y > roadLocation.y && roadLocation.y > maxpos.y ) {
+        ToReturn.push_back(road.first);
+      }
+    }
+    std::cout << "To " + std::to_string(ToReturn.size() ) + " roads " << std::endl;
+    return ToReturn;
   }
 
   std::unique_ptr<geom::Mesh> Map::SDFToMesh(const road::Junction& jinput,
@@ -1496,12 +1543,11 @@ namespace road {
   }
 
   void Map::GenerateSingleJunction(const carla::geom::MeshFactory& mesh_factory,
-      const size_t index,
+      const JuncId Id,
       std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>*
       junction_out_mesh_list) const {
 
-      auto start = std::next( _data.GetJunctions().begin(), index );
-      const auto& junction = start->second;
+      const auto& junction = _data.GetJunctions().at(Id);
       if (junction.GetConnections().size() > 2) {
         std::vector<std::unique_ptr<geom::Mesh>> lane_meshes;
         std::vector<std::unique_ptr<geom::Mesh>> sidewalk_lane_meshes;
@@ -1562,5 +1608,6 @@ namespace road {
         (*junction_out_mesh_list)[road::Lane::LaneType::Sidewalk].push_back(std::move(sidewalk_mesh));
       }
     }
+
 } // namespace road
 } // namespace carla

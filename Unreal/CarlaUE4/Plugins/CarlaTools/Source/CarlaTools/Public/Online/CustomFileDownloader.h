@@ -39,7 +39,7 @@ public:
   void RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 
   UPROPERTY()
-  class AOpenDriveToMap* XodrToMap;
+  class UOpenDriveToMap* XodrToMap;
 private:
   FString Verb;
   FString Url;
@@ -62,7 +62,7 @@ public:
   FString Url;
 
   UPROPERTY()
-  class AOpenDriveToMap* XodrToMap;
+  class UOpenDriveToMap* XodrToMap;
 private:
   void RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 

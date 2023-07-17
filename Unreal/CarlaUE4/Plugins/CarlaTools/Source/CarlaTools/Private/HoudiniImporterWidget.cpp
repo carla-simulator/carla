@@ -90,6 +90,7 @@ void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Ac
     FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
     UEditorLevelUtils::RemoveLevelFromWorld(Level->GetLoadedLevel());
   }
+
   GEngine->PerformGarbageCollectionAndCleanupActors();
   FText TransResetText(FText::FromString("Clean up after Move actors to sublevels"));
   if ( GEditor->Trans )
@@ -97,6 +98,46 @@ void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Ac
     GEditor->Trans->Reset(TransResetText);
     GEditor->Cleanse(true, true, TransResetText);
   }
+}
+
+void UHoudiniImporterWidget::ForceStreamingLevelsToUnload( ALargeMapManager* LargeMapManager )
+{
+  UWorld* World = UEditorLevelLibrary::GetGameWorld();
+
+  FIntVector NumTilesInXY  = LargeMapManager->GetNumTilesInXY();
+  UE_LOG(LogCarlaTools, Log, TEXT("Num Tiles %s "), *NumTilesInXY.ToString() );
+
+  for(int x = 0; x < NumTilesInXY.X; ++x)
+  {
+    for(int y = 0; y < NumTilesInXY.Y; ++y)
+    {
+      FIntVector CurrentTileVector(x, y, 0);
+      UE_LOG(LogCarlaTools, Log, TEXT("Current Tile %s "), *CurrentTileVector.ToString() );
+      FCarlaMapTile CarlaTile = LargeMapManager->GetCarlaMapTile(CurrentTileVector);
+      ULevelStreamingDynamic* StreamingLevel = CarlaTile.StreamingLevel;
+      ULevelStreaming* Level =
+        UEditorLevelUtils::AddLevelToWorld(
+        World, *CarlaTile.Name, ULevelStreamingDynamic::StaticClass(), FTransform());
+      FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
+      UEditorLevelUtils::RemoveLevelFromWorld(Level->GetLoadedLevel());
+    }
+  }
+
+  //const TArray<ULevelStreaming*>& StreamedLevels = World->GetStreamingLevels();
+  //UE_LOG(LogCarlaTools, Log, TEXT(" StreamedLevels num %d "), StreamedLevels.Num() );
+//
+  //for (ULevelStreaming* StreamingLevel : StreamedLevels)
+  //{
+  //  UE_LOG(LogCarlaTools, Log, TEXT("Current Tile %s "), *(StreamingLevel->PackageNameToLoad.ToString()) );
+//
+  //  if( StreamingLevel->GetLoadedLevel() != nullptr && !StreamingLevel->GetIsRequestingUnloadAndRemoval() && StreamingLevel->IsLevelVisible() ){
+  //    UE_LOG(LogCarlaTools, Warning, TEXT("Unloading Tile %s "), *(StreamingLevel->PackageNameToLoad.ToString()) );
+  //    StreamingLevel->bShouldBlockOnUnload = true;
+  //    StreamingLevel->SetShouldBeVisible(false);
+  //    StreamingLevel->SetShouldBeLoaded(false);
+  //    UEditorLevelUtils::RemoveLevelFromWorld(StreamingLevel->GetLoadedLevel());
+  //  }
+  //}
 }
 
 void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ULevelStreaming* Level)

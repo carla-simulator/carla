@@ -26,6 +26,9 @@ public:
   static void MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Actors, ALargeMapManager* LargeMapManager);
 
   UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
+  static void ForceStreamingLevelsToUnload( ALargeMapManager* LargeMapManager );
+
+  UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
   static void MoveActorsToSubLevel(TArray<AActor*> Actors, ULevelStreaming* Level);
 
   UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")

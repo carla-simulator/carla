@@ -6,7 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "ProceduralMeshComponent.h"
 #include "Math/Vector2D.h"
-	#include "EditorUtilityActor.h"
+#include "EditorUtilityActor.h"
+#include "EditorUtilityObject.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <boost/optional.hpp>
@@ -24,13 +25,13 @@ class UMaterialInstance;
  *
  */
 UCLASS(Blueprintable, BlueprintType)
-class CARLATOOLS_API AOpenDriveToMap : public AEditorUtilityActor
+class CARLATOOLS_API UOpenDriveToMap : public UEditorUtilityObject
 {
   GENERATED_BODY()
 
 public:
-  AOpenDriveToMap();
-  ~AOpenDriveToMap();
+  UOpenDriveToMap();
+  ~UOpenDriveToMap();
 
   UFUNCTION()
   void ConvertOSMInOpenDrive();
@@ -45,6 +46,12 @@ public:
   UFUNCTION(BlueprintCallable)
   void CreateTerrainMesh(const int MeshIndex, const FVector2D Offset, const int GridSize, const float GridSectionSize,
      const class UTexture2D* HeightmapTexture, class UTextureRenderTarget2D* RoadMask);
+
+  UFUNCTION(BlueprintCallable)
+  static float GetHeight(float PosX, float PosY,bool bDrivingLane = false);
+
+  UFUNCTION(BlueprintCallable)
+  static AActor* SpawnActorWithCheckNoCollisions(UClass* ActorClassToSpawn, FTransform Transform);
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;
@@ -89,13 +96,34 @@ public:
 
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Stage" )
   bool bMapLoaded = false;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="TileGeneration" )
+  FVector MinPosition;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="TileGeneration" )
+  FVector MaxPosition;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="TileGeneration" )
+  float TileSize;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="TileGeneration" )
+  FVector Tile0Offset;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="TileGeneration" )
+  bool bTileFinished;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="TileGeneration" )
+  FIntVector NumTilesInXY;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="TileGeneration" )
+  FIntVector CurrentTilesInXY;
 protected:
 
   UFUNCTION(BlueprintCallable)
-  TArray<AActor*> GenerateMiscActors(float Offset);
+  TArray<AActor*> GenerateMiscActors(float Offset, FVector MinLocation, FVector MaxLocation );
 
   UFUNCTION( BlueprintImplementableEvent )
-  void GenerationFinished();
+  void GenerationFinished(FVector MinLocation, FVector MaxLocation);
 
   UFUNCTION( BlueprintImplementableEvent )
   void CustomTick();
@@ -110,13 +138,12 @@ private:
   UFUNCTION(BlueprintCallable)
   void LoadMap();
 
-  void GenerateAll(const boost::optional<carla::road::Map>& ParamCarlaMap);
-  void GenerateRoadMesh(const boost::optional<carla::road::Map>& ParamCarlaMap);
-  void GenerateSpawnPoints(const boost::optional<carla::road::Map>& ParamCarlaMap);
-  void GenerateTreePositions(const boost::optional<carla::road::Map>& ParamCarlaMap);
-  void GenerateLaneMarks(const boost::optional<carla::road::Map>& ParamCarlaMap);
+  void GenerateAll(const boost::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
+  void GenerateRoadMesh(const boost::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
+  void GenerateSpawnPoints(const boost::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
+  void GenerateTreePositions(const boost::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
+  void GenerateLaneMarks(const boost::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
 
-  float GetHeight(float PosX, float PosY,bool bDrivingLane = false);
   carla::rpc::OpendriveGenerationParameters opg_parameters;
   boost::optional<carla::road::Map> CarlaMap;
 

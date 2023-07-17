@@ -48,15 +48,14 @@
 
 #include "DrawDebugHelpers.h"
 
-AOpenDriveToMap::AOpenDriveToMap()
+UOpenDriveToMap::UOpenDriveToMap()
 {
-  PrimaryActorTick.bCanEverTick = true;
   bRoadsFinished = false;
   bHasStarted = false;
   bMapLoaded = false;
 }
 
-AOpenDriveToMap::~AOpenDriveToMap()
+UOpenDriveToMap::~UOpenDriveToMap()
 {
 
 }
@@ -133,7 +132,7 @@ FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
   return FString("Empty");
 }
 
-void AOpenDriveToMap::ConvertOSMInOpenDrive()
+void UOpenDriveToMap::ConvertOSMInOpenDrive()
 {
   FilePath = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/OpenDrive/" + MapName + ".osm";
   FileDownloader->ConvertOSMInOpenDrive( FilePath , OriginGeoCoordinates.X, OriginGeoCoordinates.Y);
@@ -142,7 +141,7 @@ void AOpenDriveToMap::ConvertOSMInOpenDrive()
 
 }
 
-void AOpenDriveToMap::CreateMap()
+void UOpenDriveToMap::CreateMap()
 {
 
   if( MapName.IsEmpty() )
@@ -161,9 +160,10 @@ void AOpenDriveToMap::CreateMap()
 
   FileDownloader->XodrToMap = this;
   FileDownloader->StartDownload();
+  AddToRoot();
 }
 
-void AOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGridSectionSize, const class UTexture2D* HeightmapTexture)
+void UOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGridSectionSize, const class UTexture2D* HeightmapTexture)
 {
   TArray<AActor*> FoundActors;
   UGameplayStatics::GetAllActorsOfClass(UEditorLevelLibrary::GetEditorWorld(), AStaticMeshActor::StaticClass(), FoundActors);
@@ -200,7 +200,7 @@ void AOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGri
   }
 }
 
-void AOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Offset, const int GridSize, const float GridSectionSize, const UTexture2D* HeightmapTexture, UTextureRenderTarget2D* RoadMask)
+void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Offset, const int GridSize, const float GridSectionSize, const UTexture2D* HeightmapTexture, UTextureRenderTarget2D* RoadMask)
 {
   // const float GridSectionSize = 100.0f; // In cm
   const float HeightScale = 3.0f;
@@ -302,7 +302,19 @@ void AOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
   Landscapes.Add(MeshActor);
 }
 
-void AOpenDriveToMap::OpenFileDialog()
+AActor* UOpenDriveToMap::SpawnActorWithCheckNoCollisions(UClass* ActorClassToSpawn, FTransform Transform)
+{
+  UWorld* World = UEditorLevelLibrary::GetEditorWorld();
+  FActorSpawnParameters SpawnParameters;
+  SpawnParameters.bNoFail = true;
+  SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+  // Creation of the procedural mesh
+  return World->SpawnActor<AActor>(ActorClassToSpawn, Transform, SpawnParameters);
+
+}
+
+void UOpenDriveToMap::OpenFileDialog()
 {
   TArray<FString> OutFileNames;
   void* ParentWindowPtr = FSlateApplication::Get().GetActiveTopLevelWindow()->GetNativeWindow()->GetOSWindowHandle();
@@ -318,13 +330,13 @@ void AOpenDriveToMap::OpenFileDialog()
   }
 }
 
-void AOpenDriveToMap::LoadMap()
+void UOpenDriveToMap::LoadMap()
 {
   if( FilePath.IsEmpty() ){
     return;
   }
   FString FileContent;
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("AOpenDriveToMap::LoadMap(): File to load %s"), *FilePath );
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("UOpenDriveToMap::LoadMap(): File to load %s"), *FilePath );
   FFileHelper::LoadFileToString(FileContent, *FilePath);
   std::string opendrive_xml = carla::rpc::FromLongFString(FileContent);
   CarlaMap = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
@@ -340,18 +352,41 @@ void AOpenDriveToMap::LoadMap()
     MapName.RemoveFromEnd(".xodr", ESearchCase::Type::IgnoreCase);
     UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("MapName %s"), *MapName);
 
-    GenerateAll(CarlaMap);
-    bHasStarted = true;
-    bRoadsFinished = true;
-    bMapLoaded = true;
-    GenerationFinished();
+    AActor* QueryActor = UGameplayStatics::GetActorOfClass(
+                                UEditorLevelLibrary::GetEditorWorld(),
+                                ALargeMapManager::StaticClass() );
+
+    if( QueryActor != nullptr ){
+      ALargeMapManager* LargeMapManager = Cast<ALargeMapManager>(QueryActor);
+      NumTilesInXY  = LargeMapManager->GetNumTilesInXY();
+      TileSize = LargeMapManager->GetTileSize();
+      Tile0Offset = LargeMapManager->GetTile0Offset();
+      for(int x = 0; x < 1; ++x)
+      {
+        for(int y = 0; y < 1; ++y)
+        {
+          MinPosition = FVector(x * TileSize, y * -TileSize, 0.0f);
+          MaxPosition = FVector((x+1.0f) * TileSize, (y+1.0f) * -TileSize, 0.0f);
+
+          GenerateAll(CarlaMap, MinPosition, MaxPosition);
+          bHasStarted = true;
+          bRoadsFinished = true;
+          bMapLoaded = true;
+          bTileFinished = false;
+        }
+      }
+
+    }
   }
 }
 
-TArray<AActor*> AOpenDriveToMap::GenerateMiscActors(float Offset)
+TArray<AActor*> UOpenDriveToMap::GenerateMiscActors(float Offset, FVector MinLocation, FVector MaxLocation )
 {
+  carla::geom::Vector3D CarlaMinLocation(MinLocation.X / 100, MinLocation.Y / 100, MinLocation.Z /100);
+  carla::geom::Vector3D CarlaMaxLocation(MaxLocation.X / 100, MaxLocation.Y / 100, MaxLocation.Z /100);
+
   std::vector<std::pair<carla::geom::Transform, std::string>>
-    Locations = CarlaMap->GetTreesTransform(DistanceBetweenTrees, DistanceFromRoadEdge, Offset);
+    Locations = CarlaMap->GetTreesTransform(CarlaMinLocation, CarlaMaxLocation, DistanceBetweenTrees, DistanceFromRoadEdge, Offset);
   TArray<AActor*> Returning;
   static int i = 0;
   for (auto& cl : Locations)
@@ -372,7 +407,9 @@ TArray<AActor*> AOpenDriveToMap::GenerateMiscActors(float Offset)
   }
   return Returning;
 }
-void AOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& ParamCarlaMap )
+void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& ParamCarlaMap,
+  FVector MinLocation,
+  FVector MaxLocation )
 {
   if (!ParamCarlaMap.has_value())
   {
@@ -383,22 +420,25 @@ void AOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& Param
       Heightmap = DefaultHeightmap;
     }
 
-    GenerateRoadMesh(ParamCarlaMap);
-    GenerateLaneMarks(ParamCarlaMap);
-    GenerateSpawnPoints(ParamCarlaMap);
+    GenerateRoadMesh(ParamCarlaMap, MinLocation, MaxLocation);
+    GenerateLaneMarks(ParamCarlaMap, MinLocation, MaxLocation);
+    //GenerateSpawnPoints(ParamCarlaMap);
     CreateTerrain(12800, 256, nullptr);
-    GenerateTreePositions(ParamCarlaMap);
+    GenerateTreePositions(ParamCarlaMap, MinLocation, MaxLocation);
+    GenerationFinished(MinLocation, MaxLocation);
   }
 }
 
-void AOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>& ParamCarlaMap )
+void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation )
 {
   opg_parameters.vertex_distance = 0.5f;
   opg_parameters.vertex_width_resolution = 8.0f;
   opg_parameters.simplification_percentage = 50.0f;
-
   double start = FPlatformTime::Seconds();
-  const auto Meshes = ParamCarlaMap->GenerateOrderedChunkedMesh(opg_parameters);
+
+  carla::geom::Vector3D CarlaMinLocation(MinLocation.X / 100, MinLocation.Y / 100, MinLocation.Z /100);
+  carla::geom::Vector3D CarlaMaxLocation(MaxLocation.X / 100, MaxLocation.Y / 100, MaxLocation.Z /100);
+  const auto Meshes = ParamCarlaMap->GenerateOrderedChunkedMeshInLocations(opg_parameters, CarlaMinLocation, CarlaMaxLocation);
   double end = FPlatformTime::Seconds();
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" GenerateOrderedChunkedMesh code executed in %f seconds. Simplification percentage is %f"), end - start, opg_parameters.simplification_percentage);
 
@@ -500,13 +540,15 @@ void AOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Mesh spawnning and translation code executed in %f seconds."), end - start);
 }
 
-void AOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>& ParamCarlaMap)
+void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation )
 {
   opg_parameters.vertex_distance = 0.5f;
   opg_parameters.vertex_width_resolution = 8.0f;
   opg_parameters.simplification_percentage = 15.0f;
   std::vector<std::string> lanemarkinfo;
-  auto MarkingMeshes = ParamCarlaMap->GenerateLineMarkings(opg_parameters, lanemarkinfo);
+  carla::geom::Vector3D CarlaMinLocation(MinLocation.X / 100, MinLocation.Y / 100, MinLocation.Z /100);
+  carla::geom::Vector3D CarlaMaxLocation(MaxLocation.X / 100, MaxLocation.Y / 100, MaxLocation.Z /100);
+  auto MarkingMeshes = ParamCarlaMap->GenerateLineMarkings(opg_parameters, CarlaMinLocation, CarlaMaxLocation, lanemarkinfo);
   TArray<AActor*> LaneMarkerActorList;
   int index = 0;
   for (const auto& Mesh : MarkingMeshes)
@@ -592,10 +634,9 @@ void AOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
     StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
   }
-  MoveActorsToSubLevels(LaneMarkerActorList);
 }
 
-void AOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Map>& ParamCarlaMap )
+void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation  )
 {
   float SpawnersHeight = 300.f;
   const auto Waypoints = ParamCarlaMap->GenerateWaypointsOnRoadEntries();
@@ -608,13 +649,15 @@ void AOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Ma
     Spawner->SetActorLocation(Trans.GetTranslation() + FVector(0.f, 0.f, SpawnersHeight));
     ActorsToMove.Add(Spawner);
   }
-  MoveActorsToSubLevels(ActorsToMove);
 }
 
-void AOpenDriveToMap::GenerateTreePositions( const boost::optional<carla::road::Map>& ParamCarlaMap )
+void UOpenDriveToMap::GenerateTreePositions( const boost::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation  )
 {
+  carla::geom::Vector3D CarlaMinLocation(MinLocation.X / 100, MinLocation.Y / 100, MinLocation.Z /100);
+  carla::geom::Vector3D CarlaMaxLocation(MaxLocation.X / 100, MaxLocation.Y / 100, MaxLocation.Z /100);
+
   std::vector<std::pair<carla::geom::Transform, std::string>> Locations =
-    ParamCarlaMap->GetTreesTransform(DistanceBetweenTrees, DistanceFromRoadEdge );
+    ParamCarlaMap->GetTreesTransform(CarlaMinLocation, CarlaMaxLocation,DistanceBetweenTrees, DistanceFromRoadEdge );
   int i = 0;
   for (auto &cl : Locations)
   {
@@ -633,7 +676,7 @@ void AOpenDriveToMap::GenerateTreePositions( const boost::optional<carla::road::
   }
 }
 
-float AOpenDriveToMap::GetHeight(float PosX, float PosY, bool bDrivingLane){
+float UOpenDriveToMap::GetHeight(float PosX, float PosY, bool bDrivingLane){
   if( bDrivingLane ){
     return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) +
       (carla::geom::deformation::GetZPosInDeformation(PosX, PosY) * -0.3f) -
@@ -643,7 +686,7 @@ float AOpenDriveToMap::GetHeight(float PosX, float PosY, bool bDrivingLane){
   }
 }
 
-FTransform AOpenDriveToMap::GetSnappedPosition( FTransform Origin ){
+FTransform UOpenDriveToMap::GetSnappedPosition( FTransform Origin ){
   FTransform ToReturn = Origin;
   FVector Start = Origin.GetLocation() + FVector( 0, 0, 1000);
   FVector End = Origin.GetLocation() - FVector( 0, 0, 1000);
@@ -666,7 +709,7 @@ FTransform AOpenDriveToMap::GetSnappedPosition( FTransform Origin ){
   return ToReturn;
 }
 
-float AOpenDriveToMap::GetHeightForLandscape( FVector Origin ){
+float UOpenDriveToMap::GetHeightForLandscape( FVector Origin ){
   FVector Start = Origin + FVector( 0, 0, 10000);
   FVector End = Origin - FVector( 0, 0, 10000);
   FHitResult HitResult;
@@ -690,7 +733,7 @@ float AOpenDriveToMap::GetHeightForLandscape( FVector Origin ){
   return 0.0f;
 }
 
-float AOpenDriveToMap::DistanceToLaneBorder(const boost::optional<carla::road::Map>& ParamCarlaMap,
+float UOpenDriveToMap::DistanceToLaneBorder(const boost::optional<carla::road::Map>& ParamCarlaMap,
         FVector &location, int32_t lane_type ) const
 {
   carla::geom::Location cl(location);
@@ -705,7 +748,7 @@ float AOpenDriveToMap::DistanceToLaneBorder(const boost::optional<carla::road::M
   return 100000.0f;
 }
 
-bool AOpenDriveToMap::IsInRoad(
+bool UOpenDriveToMap::IsInRoad(
   const boost::optional<carla::road::Map>& ParamCarlaMap,
   FVector &location)
 {
@@ -721,7 +764,7 @@ bool AOpenDriveToMap::IsInRoad(
   return false;
 }
 
-void AOpenDriveToMap::MoveActorsToSubLevels(TArray<AActor*> ActorsToMove)
+void UOpenDriveToMap::MoveActorsToSubLevels(TArray<AActor*> ActorsToMove)
 {
   AActor* QueryActor = UGameplayStatics::GetActorOfClass(
                                 UEditorLevelLibrary::GetEditorWorld(),
