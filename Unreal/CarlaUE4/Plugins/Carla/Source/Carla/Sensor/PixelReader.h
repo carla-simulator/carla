@@ -200,7 +200,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
                     if (FovOpt.has_value())
                       Fov = FCString::Atof(*FovOpt->Value);
                     // send data to ROS2
-                    ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), W, H, Fov, BufView);
+                    ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), W, H, Fov, BufView, &Sensor);
                   });
                 }
                 #endif

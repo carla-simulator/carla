@@ -15,6 +15,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <memory>
+#include <vector>
 
 // forward declarations
 class AActor;
@@ -61,8 +62,9 @@ class ROS2
 
   // ros_name managing
   void AddActorRosName(void *actor, std::string ros_name);
-  void AddActorParentRosName(void *actor, std::string ros_name);
+  void AddActorParentRosName(void *actor, void* parent);
   void RemoveActorRosName(void *actor);
+  void UpdateActorRosName(void *actor, std::string ros_name);
   std::string GetActorRosName(void *actor);
   std::string GetActorParentRosName(void *actor);
 
@@ -143,7 +145,7 @@ class ROS2
   int32_t _seconds { 0 };
   uint32_t _nanoseconds { 0 };
   std::unordered_map<void *, std::string> _actor_ros_name;
-  std::unordered_map<void *, std::string> _actor_parent_ros_name;
+  std::unordered_map<void *, std::vector<void*> > _actor_parent_ros_name;
   std::shared_ptr<CarlaEgoVehicleControlSubscriber> _controller;
   std::unordered_map<carla::streaming::detail::stream_id_type, std::shared_ptr<CarlaPublisher>> _publishers;
   std::unordered_map<carla::streaming::detail::stream_id_type, std::shared_ptr<CarlaTransformPublisher>> _transforms;

@@ -197,7 +197,7 @@ void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, 
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
-    ROS2->ProcessDataFromIMU(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), Accelerometer, Gyroscope, Compass);
+    ROS2->ProcessDataFromIMU(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), Accelerometer, Gyroscope, Compass, this);
   }
   #endif
 

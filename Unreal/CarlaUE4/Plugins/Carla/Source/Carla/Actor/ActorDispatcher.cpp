@@ -183,20 +183,39 @@ FCarlaActor* UActorDispatcher::RegisterActor(
           RosName = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
         }
       }
+      const std::string id = std::string(TCHAR_TO_UTF8(*Description.Id));
+      if (RosName == id) {
+        ROS2->AddActorRosName(static_cast<void*>(&Actor), "");
+      } else {
+        ROS2->AddActorRosName(static_cast<void*>(&Actor), RosName);
+      }
 
       // parent ros_name
-      std::string ParentRosName;
-      FCarlaActor* ParentView = Registry.FindCarlaActor(View->GetParent());
-      if (ParentView)
-      {
-        AActor* ParentActor = ParentView->GetActor();
-        if (ParentActor)
+      FCarlaActor* CurrentView = View;
+      FCarlaActor* ParentView = nullptr;
+      do {
+        ParentView = Registry.FindCarlaActor(CurrentView->GetParent());
+        if (ParentView)
         {
-          ParentRosName = ROS2->GetActorParentRosName(&ParentActor);
+          CurrentView = ParentView;
+          for (const auto &Attr : ParentView->GetActorInfo()->Description.Variations)
+          {
+            if (Attr.Key == "ros_name")
+            {
+              const std::string value = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
+              if (value == id)
+              {
+                continue;
+              }
+              if (value == RosName)
+              {
+                continue;
+              }
+              ROS2->AddActorParentRosName(static_cast<void*>(&Actor), static_cast<void*>(ParentView->GetActor()));
+            }
+          }
         }
-      }
-      ROS2->AddActorRosName(static_cast<void*>(&Actor), RosName);
-      ROS2->AddActorParentRosName(static_cast<void*>(&Actor), ParentRosName);
+      }while(ParentView);
 
       // vehicle controller for hero
       for (auto &&Attr : Description.Variations)
