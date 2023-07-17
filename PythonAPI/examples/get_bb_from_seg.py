@@ -40,14 +40,17 @@ def get_bb_from_seg(seg_im, object_color):
     The input image should be a RGB image with dim (wxhx3).
     """
     object_mask = np.where((seg_im[:,:,:3] == object_color).all(axis=2), 1,0)
+    # cv2.imshow("seg im", seg_im)
+    print(seg_im[23,33,:])
 
-    # reduce to 2 dimensions
-    object_mask = object_mask[:,:,0]
+    print("ONES: ",np.where(object_mask==1))
 
-    contours = cv2.findContours(object_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours = cv2.findContours(object_mask, cv2.RETR_FLOODFILL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = contours[0] if len(contours) == 2 else contours[1]
+    cnts = list(cnts)
     bounding_boxes = []
     
-    for cnt in contours:
+    for cnt in cnts:
         rect = cv2.minAreaRect(cnt)
         box = cv2.boxPoints(rect)
         bounding_boxes.append(np.int0(box))
@@ -97,6 +100,7 @@ ego_vehicle_list.append(camera)
 segmentation_bp = bp_lib.find('sensor.camera.semantic_segmentation')
 segmentation_init_trans = carla.Transform(carla.Location(x=1.5, z=2.4))
 segmentation = world.spawn_actor(segmentation_bp, segmentation_init_trans, attach_to=vehicle)
+colorConverter = carla.ColorConverter.CityScapesPalette
 ego_vehicle_list.append(segmentation)
 vehicle.set_autopilot(True)
 
@@ -148,10 +152,17 @@ frame_number = 0
 # Retrieve the first image
 world.tick()
 image = image_queue.get()
-seg_im = segmentation_queue.get()
+seg_image = segmentation_queue.get()
+seg_image.convert(colorConverter)
 
 # Reshape the raw data into an RGB array
-img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4)) 
+img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
+print(type(seg_image))
+seg_img = np.reshape(np.copy(seg_image.raw_data), (seg_image.height, seg_image.width, 4))
+print(type(seg_img))
+
+
+cv2.imshow("SEG IM", seg_img)
 
 # Display the image in an OpenCV display window
 cv2.namedWindow('BoundingBoxes', cv2.WINDOW_AUTOSIZE)
@@ -159,13 +170,13 @@ cv2.imshow('BoundingBoxes',img)
 cv2.waitKey(1)
 
 palette = {
-    "rider": {255,   0,   0},       # 13
-    "car": {  0,   0, 142},         # 14
-    "truck": {  0,   0,  70},       # 15
-    "bus": {  0,  60, 100},         # 16
-    "train": {  0,  80, 100},       # 17
-    "motorcycle": {  0,   0, 230},  # 18
-    "bicycle": {119,  11,  32}      # 19
+    "rider": np.array([255, 0, 0]),       # 13
+    "car": np.array([0, 0, 142]),         # 14
+    "truck": np.array([0, 0, 70]),       # 15
+    "bus": np.array([0, 60, 100]),         # 16
+    "train": np.array([0, 80, 100]),       # 17
+    "motorcycle": np.array([0, 0, 230]),  # 18
+    "bicycle": np.array([119, 11, 32])      # 19
 }
 
 try:
@@ -176,6 +187,8 @@ try:
         world.tick()
         image = image_queue.get()
         seg_image = segmentation_queue.get()
+        seg_image.convert(colorConverter)
+
 
         img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
         seg_img = np.reshape(np.copy(seg_image.raw_data), (seg_image.height, seg_image.width, 4))
@@ -225,7 +238,7 @@ finally:
         part.destroy()
 
     print("Saving annotations to json file.")
-    with open('out/annotations.json', 'w') as json_file:
+    with open('out_test/annotations.json', 'w') as json_file:
         json.dump(ground_truth_annotations, json_file)
 
 
