@@ -177,6 +177,7 @@ def render_bounding_boxes(bb, ego_vehicle, w2c, img, actor=None, dim="3D"):
 # ==============================================================================
 client = carla.Client('localhost', 2000)
 world  = client.get_world()
+print(client.get_available_maps())
 bp_lib = world.get_blueprint_library()
 
 # get spawn points
