@@ -31,24 +31,202 @@ except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
 
-OBJECTS = dict()
-
 # ==============================================================================
 # -- functions -----------------------------------------------------------------
 # ==============================================================================
 
-def get_bb_from_seg(seg_im, object):
+def get_bb_from_seg(seg_im, object_color):
     """
     The input image should be a RGB image with dim (wxhx3).
     """
-    np_img = np.array(seg_im)
-
-    object_color = OBJECTS[object]
-    object_mask = np.where(np_img == object_color)
+    object_mask = np.where((seg_im[:,:,:3] == object_color).all(axis=2), 1,0)
 
     # reduce to 2 dimensions
     object_mask = object_mask[:,:,0]
 
-    contours = cv2.findContours(object_mask)
+    contours = cv2.findContours(object_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    bounding_boxes = []
+    
+    for cnt in contours:
+        rect = cv2.minAreaRect(cnt)
+        box = cv2.boxPoints(rect)
+        bounding_boxes.append(np.int0(box))
 
-    # convert contours to bounding boxes and return the bounding box
+    return bounding_boxes
+
+
+def render_bounding_boxes(bb, img):
+    
+    x_min = bb[0]
+    y_min = bb[1]
+    x_max = bb[2]
+    y_max = bb[3]
+
+    img = cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), (0,0,255, 255), 1)
+    img = cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
+    img = cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), (0,0,255, 255), 1)
+    img = cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
+            
+    return img
+
+
+# ==============================================================================
+# -- prepare client ------------------------------------------------------------
+# ==============================================================================
+client = carla.Client('localhost', 2000)
+world  = client.get_world()
+bp_lib = world.get_blueprint_library()
+
+# get spawn points
+spawn_points = world.get_map().get_spawn_points()
+
+ego_vehicle_list = []
+# spawn vehicle
+vehicle_bp =bp_lib.find('vehicle.lincoln.mkz_2020')
+vehicle = world.try_spawn_actor(vehicle_bp, random.choice(spawn_points))
+if vehicle:
+    ego_vehicle_list.append(vehicle)
+
+# spawn camera
+camera_bp = bp_lib.find('sensor.camera.rgb')
+camera_init_trans = carla.Transform(carla.Location(x=1.5, z=2.4))
+camera = world.spawn_actor(camera_bp, camera_init_trans, attach_to=vehicle)
+ego_vehicle_list.append(camera)
+
+# spawn "segmentation sensor"
+segmentation_bp = bp_lib.find('sensor.camera.semantic_segmentation')
+segmentation_init_trans = carla.Transform(carla.Location(x=1.5, z=2.4))
+segmentation = world.spawn_actor(segmentation_bp, segmentation_init_trans, attach_to=vehicle)
+ego_vehicle_list.append(segmentation)
+vehicle.set_autopilot(True)
+
+# Set up the simulator in synchronous mode
+settings = world.get_settings()
+settings.synchronous_mode = True # Enables synchronous mode
+settings.fixed_delta_seconds = 0.05
+world.apply_settings(settings)
+
+# Create a queue to store and retrieve the sensor data
+image_queue = queue.Queue()
+segmentation_queue = queue.Queue()
+camera.listen(image_queue.put)
+segmentation.listen(segmentation_queue.put)
+
+# Get the world to camera transformation matrix
+world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
+
+vehicle_list = []
+for i in range(50):
+    vehicle_bp = random.choice(bp_lib.filter('vehicle'))
+    npc = world.try_spawn_actor(vehicle_bp, random.choice(spawn_points))
+    if npc:
+        vehicle_list.append(npc)
+        npc.set_autopilot(True)
+
+ground_truth_annotations = {
+    "info": {},
+
+    "licenses": {},
+
+    "images": [],
+
+    "categories": [
+        {"supercategory": "vehicle", "id": 1, "name": "car" },
+        {"supercategory": "vehicle", "id": 2, "name": "truck" },
+        {"supercategory": "vehicle", "id": 3, "name": "motorcycle" },
+        {"supercategory": "vehicle", "id": 4, "name": "bicycle" },
+        {"supercategory": "vehicle", "id": 5, "name": "bus" },
+        {"supercategory": "vehicle", "id": 6, "name": "rider" },
+        {"supercategory": "vehicle", "id": 7, "name": "train" },
+    ],
+
+    "annotations": []
+}
+
+frame_number = 0
+
+# Retrieve the first image
+world.tick()
+image = image_queue.get()
+seg_im = segmentation_queue.get()
+
+# Reshape the raw data into an RGB array
+img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4)) 
+
+# Display the image in an OpenCV display window
+cv2.namedWindow('BoundingBoxes', cv2.WINDOW_AUTOSIZE)
+cv2.imshow('BoundingBoxes',img)
+cv2.waitKey(1)
+
+palette = {
+    "rider": {255,   0,   0},       # 13
+    "car": {  0,   0, 142},         # 14
+    "truck": {  0,   0,  70},       # 15
+    "bus": {  0,  60, 100},         # 16
+    "train": {  0,  80, 100},       # 17
+    "motorcycle": {  0,   0, 230},  # 18
+    "bicycle": {119,  11,  32}      # 19
+}
+
+try:
+# main loop
+    while True:
+        frame_number += 1
+        # Retrieve and reshape the image
+        world.tick()
+        image = image_queue.get()
+        seg_image = segmentation_queue.get()
+
+        img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
+        seg_img = np.reshape(np.copy(seg_image.raw_data), (seg_image.height, seg_image.width, 4))
+
+        frame_file = "{:05d}.png".format(frame_number)
+
+        ground_truth_annotations["images"].append({
+        "file_name": frame_file,
+        "height": image.height,
+        "width": image.width,
+        "id": frame_number})
+
+        # Get the camera matrix 
+        world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
+
+        for key in palette:
+            object_color = palette[key]
+
+            bounding_boxes = get_bb_from_seg(seg_img, object_color)
+
+            for bb in bounding_boxes:
+                img = render_bounding_boxes(bb, vehicle, world_2_camera, img, dim='2D')
+
+                ground_truth_annotations["annotations"].append({
+                    "segmentation": [],
+                    "area": (bb[2]-bb[0])*(bb[3]-bb[1]),
+                    "iscrowd": 0,
+                    "category_id": i+1,
+                    "image_id": frame_number,
+                    "bbox": [bb[0], bb[1], bb[2]-bb[0], bb[3]-bb[1]]
+                })
+
+        cv2.imwrite(os.path.join("out" , frame_file), img)
+        cv2.imshow('BoundingBoxes',img)
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+except KeyboardInterrupt:
+    pass
+    
+finally:
+    print('Destroying {} vehicles!!!'.format(len(vehicle_list)))
+    # destroy all actors
+    for npc in vehicle_list:
+        npc.destroy()
+    for part in ego_vehicle_list:
+        part.destroy()
+
+    print("Saving annotations to json file.")
+    with open('out/annotations.json', 'w') as json_file:
+        json.dump(ground_truth_annotations, json_file)
+
+
+cv2.destroyAllWindows()
