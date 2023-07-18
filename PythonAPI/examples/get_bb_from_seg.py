@@ -31,6 +31,9 @@ except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
 
+OUT_FOLDER = "_ground_truth_bb_from_seg"
+
+
 # ==============================================================================
 # -- functions -----------------------------------------------------------------
 # ==============================================================================
@@ -39,11 +42,9 @@ def get_bb_from_seg(seg_im, object_color):
     """
     The input image should be a RGB image with dim (wxhx3).
     """
-    object_mask = np.where((seg_im[:,:,:3] == object_color).all(axis=2), 1,0)
+    object_mask = np.where((seg_im[:,:,:3] == np.flip(object_color)).all(axis=2), 1,0)
     # cv2.imshow("seg im", seg_im)
-    print(seg_im[23,33,:])
-
-    print("ONES: ",np.where(object_mask==1))
+    # object_mask = object_mask.astype(np.uint8)
 
     contours = cv2.findContours(object_mask, cv2.RETR_FLOODFILL, cv2.CHAIN_APPROX_SIMPLE)
     cnts = contours[0] if len(contours) == 2 else contours[1]
@@ -60,10 +61,10 @@ def get_bb_from_seg(seg_im, object_color):
 
 def render_bounding_boxes(bb, img):
     
-    x_min = bb[0]
-    y_min = bb[1]
-    x_max = bb[2]
-    y_max = bb[3]
+    x_min = bb[0][0]
+    y_min = bb[0][1]
+    x_max = bb[1][0]
+    y_max = bb[2][1]
 
     img = cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), (0,0,255, 255), 1)
     img = cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
@@ -157,12 +158,9 @@ seg_image.convert(colorConverter)
 
 # Reshape the raw data into an RGB array
 img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
-print(type(seg_image))
+# print(type(seg_image))
 seg_img = np.reshape(np.copy(seg_image.raw_data), (seg_image.height, seg_image.width, 4))
-print(type(seg_img))
-
-
-cv2.imshow("SEG IM", seg_img)
+# print(type(seg_img))
 
 # Display the image in an OpenCV display window
 cv2.namedWindow('BoundingBoxes', cv2.WINDOW_AUTOSIZE)
@@ -170,13 +168,13 @@ cv2.imshow('BoundingBoxes',img)
 cv2.waitKey(1)
 
 palette = {
-    "rider": np.array([255, 0, 0]),       # 13
+    # "rider": np.array([255, 0, 0]),       # 13
     "car": np.array([0, 0, 142]),         # 14
     "truck": np.array([0, 0, 70]),       # 15
     "bus": np.array([0, 60, 100]),         # 16
-    "train": np.array([0, 80, 100]),       # 17
-    "motorcycle": np.array([0, 0, 230]),  # 18
-    "bicycle": np.array([119, 11, 32])      # 19
+    # "train": np.array([0, 80, 100]),       # 17
+    # "motorcycle": np.array([0, 0, 230]),  # 18
+    # "bicycle": np.array([119, 11, 32])      # 19
 }
 
 try:
@@ -210,18 +208,25 @@ try:
             bounding_boxes = get_bb_from_seg(seg_img, object_color)
 
             for bb in bounding_boxes:
-                img = render_bounding_boxes(bb, vehicle, world_2_camera, img, dim='2D')
+                x_min = bb[0][0]
+                y_min = bb[0][1]
+                width = bb[1][0]-bb[0][0]
+                height = bb[2][1]-bb[0][1]
+                # print("AREA: ",width*height)
+                if width*height > 500:
+                    img = render_bounding_boxes(bb, img)
+                    
 
-                ground_truth_annotations["annotations"].append({
-                    "segmentation": [],
-                    "area": (bb[2]-bb[0])*(bb[3]-bb[1]),
-                    "iscrowd": 0,
-                    "category_id": i+1,
-                    "image_id": frame_number,
-                    "bbox": [bb[0], bb[1], bb[2]-bb[0], bb[3]-bb[1]]
-                })
+                    ground_truth_annotations["annotations"].append({
+                        "segmentation": [],
+                        "area": (bb[1][0]-bb[0][0])*(bb[2][1]-bb[0][1]),
+                        "iscrowd": 0,
+                        "category_id": i+1,
+                        "image_id": frame_number,
+                        "bbox": [bb[0][0], bb[0][1], bb[1][0]-bb[0][0], bb[2][1]-bb[0][1]]
+                    })
 
-        cv2.imwrite(os.path.join("out" , frame_file), img)
+        cv2.imwrite(os.path.join(OUT_FOLDER , frame_file), img)
         cv2.imshow('BoundingBoxes',img)
         if cv2.waitKey(1) == ord('q'):
             break
@@ -238,7 +243,7 @@ finally:
         part.destroy()
 
     print("Saving annotations to json file.")
-    with open('out_test/annotations.json', 'w') as json_file:
+    with open(OUT_FOLDER+'/annotations.json', 'w') as json_file:
         json.dump(ground_truth_annotations, json_file)
 
 
