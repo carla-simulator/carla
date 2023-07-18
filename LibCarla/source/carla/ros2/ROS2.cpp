@@ -103,24 +103,23 @@ void ROS2::AddActorParentRosName(void *actor, void* parent) {
 void ROS2::RemoveActorRosName(void *actor) {
   _actor_ros_name.erase(actor);
   _actor_parent_ros_name.erase(actor);
+
+  _publishers.erase(actor);
+  _transforms.erase(actor);
 }
 
-void ROS2::UpdateActorRosName(void *actor, std::string ros_name)
-{
+void ROS2::UpdateActorRosName(void *actor, std::string ros_name) {
   auto it = _actor_ros_name.find(actor);
   if (it != _actor_ros_name.end()) {
     it->second = ros_name;
   }
 }
 
-
 std::string ROS2::GetActorRosName(void *actor) {
   auto it = _actor_ros_name.find(actor);
   if (it != _actor_ros_name.end()) {
     return it->second;
-  }
-  else
-  {
+  } else {
     return std::string("");
   }
 }
@@ -161,8 +160,8 @@ void ROS2::RemoveActorCallback(std::string ros_name) {
 }
 
 std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> ROS2::GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor) {
-  auto it_publishers = _publishers.find(id);
-  auto it_transforms = _transforms.find(id);
+  auto it_publishers = _publishers.find(actor);
+  auto it_transforms = _transforms.find(actor);
   std::shared_ptr<CarlaPublisher> publisher {};
   std::shared_ptr<CarlaTransformPublisher> transform {};
   if (it_publishers != _publishers.end()) {
@@ -183,12 +182,12 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
         std::shared_ptr<CarlaCollisionPublisher> new_publisher = std::make_shared<CarlaCollisionPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_publisher->Init()) {
-          _publishers.insert({id, new_publisher});
+          _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
         std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_transform->Init()) {
-          _transforms.insert({id, new_transform});
+          _transforms.insert({actor, new_transform});
           transform = new_transform;
         }
       } break;
@@ -199,12 +198,12 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
         std::shared_ptr<CarlaDepthCameraPublisher> new_publisher = std::make_shared<CarlaDepthCameraPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_publisher->Init()) {
-          _publishers.insert({id, new_publisher});
+          _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
         std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_transform->Init()) {
-          _transforms.insert({id, new_transform});
+          _transforms.insert({actor, new_transform});
           transform = new_transform;
         }
       } break;
@@ -218,12 +217,12 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
         std::shared_ptr<CarlaDVSCameraPublisher> new_publisher = std::make_shared<CarlaDVSCameraPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_publisher->Init()) {
-          _publishers.insert({id, new_publisher});
+          _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
         std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_transform->Init()) {
-          _transforms.insert({id, new_transform});
+          _transforms.insert({actor, new_transform});
           transform = new_transform;
         }
       } break;
@@ -234,12 +233,12 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
         std::shared_ptr<CarlaGNSSPublisher> new_publisher = std::make_shared<CarlaGNSSPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_publisher->Init()) {
-          _publishers.insert({id, new_publisher});
+          _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
         std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_transform->Init()) {
-          _transforms.insert({id, new_transform});
+          _transforms.insert({actor, new_transform});
           transform = new_transform;
         }
       } break;
@@ -250,12 +249,12 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
         std::shared_ptr<CarlaIMUPublisher> new_publisher = std::make_shared<CarlaIMUPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_publisher->Init()) {
-          _publishers.insert({id, new_publisher});
+          _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
         std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_transform->Init()) {
-          _transforms.insert({id, new_transform});
+          _transforms.insert({actor, new_transform});
           transform = new_transform;
         }
       } break;
@@ -266,12 +265,12 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
         std::shared_ptr<CarlaLineInvasionPublisher> new_publisher = std::make_shared<CarlaLineInvasionPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_publisher->Init()) {
-          _publishers.insert({id, new_publisher});
+          _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
         std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_transform->Init()) {
-          _transforms.insert({id, new_transform});
+          _transforms.insert({actor, new_transform});
           transform = new_transform;
         }
       } break;
@@ -288,12 +287,12 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
         std::shared_ptr<CarlaRadarPublisher> new_publisher = std::make_shared<CarlaRadarPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_publisher->Init()) {
-          _publishers.insert({id, new_publisher});
+          _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
         std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_transform->Init()) {
-          _transforms.insert({id, new_transform});
+          _transforms.insert({actor, new_transform});
           transform = new_transform;
         }
       } break;
@@ -304,12 +303,12 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
         std::shared_ptr<CarlaSemanticLidarPublisher> new_publisher = std::make_shared<CarlaSemanticLidarPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_publisher->Init()) {
-          _publishers.insert({id, new_publisher});
+          _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
         std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_transform->Init()) {
-          _transforms.insert({id, new_transform});
+          _transforms.insert({actor, new_transform});
           transform = new_transform;
         }
       } break;
@@ -320,12 +319,12 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
         std::shared_ptr<CarlaLidarPublisher> new_publisher = std::make_shared<CarlaLidarPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_publisher->Init()) {
-          _publishers.insert({id, new_publisher});
+          _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
         std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_transform->Init()) {
-          _transforms.insert({id, new_transform});
+          _transforms.insert({actor, new_transform});
           transform = new_transform;
         }
       } break;
@@ -339,12 +338,12 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
         std::shared_ptr<CarlaRGBCameraPublisher> new_publisher = std::make_shared<CarlaRGBCameraPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_publisher->Init()) {
-          _publishers.insert({id, new_publisher});
+          _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
         std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_transform->Init()) {
-          _transforms.insert({id, new_transform});
+          _transforms.insert({actor, new_transform});
           transform = new_transform;
         }
       } break;
@@ -355,12 +354,12 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
         std::shared_ptr<CarlaSSCameraPublisher> new_publisher = std::make_shared<CarlaSSCameraPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_publisher->Init()) {
-          _publishers.insert({id, new_publisher});
+          _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
         std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
         if (new_transform->Init()) {
-          _transforms.insert({id, new_transform});
+          _transforms.insert({actor, new_transform});
           transform = new_transform;
         }
       } break;
