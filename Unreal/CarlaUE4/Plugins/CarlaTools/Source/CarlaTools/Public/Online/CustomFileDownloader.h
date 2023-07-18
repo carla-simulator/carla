@@ -11,12 +11,10 @@
 
 DECLARE_DELEGATE(FDownloadComplete)
 
-USTRUCT()
+
 struct FHttpDownloader
 {
 public:
-  GENERATED_BODY()
-
   FHttpDownloader();
 
   /**
@@ -24,7 +22,7 @@ public:
    * @param Verb - verb to use for request (GET,POST,DELETE,etc)
    * @param Url - url address to connect to
    */
-  FHttpDownloader( const FString& InVerb, const FString& InUrl, const FString& InFilename );
+  FHttpDownloader( const FString& InVerb, const FString& InUrl, const FString& InFilename, FDownloadComplete& Delegate  );
 
   // Kick off the Http request  and wait for delegate to be called
   void Run(void);
@@ -38,8 +36,6 @@ public:
    */
   void RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 
-  UPROPERTY()
-  class UOpenDriveToMap* XodrToMap;
 private:
   FString Verb;
   FString Url;
@@ -61,14 +57,11 @@ public:
 
   FString Url;
 
-  UPROPERTY()
-  class UOpenDriveToMap* XodrToMap;
+  FDownloadComplete DownloadDelegate;
 private:
   void RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 
   FString Payload;
-  UPROPERTY()
-  FHttpDownloader Download;
 };
 
 

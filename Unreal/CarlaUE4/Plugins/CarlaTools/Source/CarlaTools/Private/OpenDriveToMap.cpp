@@ -53,11 +53,13 @@ UOpenDriveToMap::UOpenDriveToMap()
   bRoadsFinished = false;
   bHasStarted = false;
   bMapLoaded = false;
+  UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Creating OpenDriveToMap") );
+
 }
 
 UOpenDriveToMap::~UOpenDriveToMap()
 {
-
+  UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Destroying") );
 }
 
 FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
@@ -138,12 +140,10 @@ void UOpenDriveToMap::ConvertOSMInOpenDrive()
   FileDownloader->ConvertOSMInOpenDrive( FilePath , OriginGeoCoordinates.X, OriginGeoCoordinates.Y);
   FilePath.RemoveFromEnd(".osm", ESearchCase::Type::IgnoreCase);
   FilePath += ".xodr";
-
 }
 
 void UOpenDriveToMap::CreateMap()
 {
-
   if( MapName.IsEmpty() )
   {
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Map Name Is Empty") );
@@ -153,14 +153,15 @@ void UOpenDriveToMap::CreateMap()
   {
     FileDownloader = NewObject<UCustomFileDownloader>();
   }
+  AddToRoot();
+
   FileDownloader->ResultFileName = MapName;
   FileDownloader->Url = Url;
 
   UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Map Name Is %s"), *MapName );
 
-  FileDownloader->XodrToMap = this;
+  FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
   FileDownloader->StartDownload();
-  AddToRoot();
 }
 
 void UOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGridSectionSize, const class UTexture2D* HeightmapTexture)
@@ -314,6 +315,47 @@ AActor* UOpenDriveToMap::SpawnActorWithCheckNoCollisions(UClass* ActorClassToSpa
 
 }
 
+void UOpenDriveToMap::GenerateTile(){
+  AActor* QueryActor = UGameplayStatics::GetActorOfClass(
+                              UEditorLevelLibrary::GetEditorWorld(),
+                              ALargeMapManager::StaticClass() );
+
+  if( QueryActor != nullptr ){
+    ALargeMapManager* LmManager = Cast<ALargeMapManager>(QueryActor);
+    FCarlaMapTile& CarlaTile =  LmManager->GetCarlaMapTile(CurrentTilesInXY);
+    UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("LevelToOpen %s"), *CarlaTile.Name );
+
+    UGameplayStatics::OpenLevel(UEditorLevelLibrary::GetEditorWorld(), *FPaths::GetCleanFilename(CarlaTile.Name) );
+
+    //MinPosition = FVector(CurrentTilesInXY.X * TileSize, CurrentTilesInXY.Y * -TileSize, 0.0f);
+    //MaxPosition = FVector((CurrentTilesInXY.X + 1.0f ) * TileSize, (CurrentTilesInXY.Y + 1.0f) * -TileSize, 0.0f);
+//
+    //GenerateAll(CarlaMap, MinPosition, MaxPosition);
+    //bHasStarted = true;
+    //bRoadsFinished = true;
+    //bMapLoaded = true;
+    //bTileFinished = false;
+  }
+}
+
+bool UOpenDriveToMap::GoNextTile(){
+  CurrentTilesInXY.X++;
+  if( CurrentTilesInXY.X >= NumTilesInXY.X ){
+    CurrentTilesInXY.X = 0;
+    CurrentTilesInXY.Y++;
+    if( CurrentTilesInXY.Y >= NumTilesInXY.Y ){
+      return false;
+    }
+  }
+  return true;
+}
+
+void UOpenDriveToMap::ReturnToMainLevel(){
+  FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
+  UGameplayStatics::OpenLevel(UEditorLevelLibrary::GetEditorWorld(), *BaseLevelName );
+}
+
+
 void UOpenDriveToMap::OpenFileDialog()
 {
   TArray<FString> OutFileNames;
@@ -356,26 +398,15 @@ void UOpenDriveToMap::LoadMap()
                                 UEditorLevelLibrary::GetEditorWorld(),
                                 ALargeMapManager::StaticClass() );
 
-    if( QueryActor != nullptr ){
+    if( QueryActor != nullptr )
+    {
       ALargeMapManager* LargeMapManager = Cast<ALargeMapManager>(QueryActor);
       NumTilesInXY  = LargeMapManager->GetNumTilesInXY();
       TileSize = LargeMapManager->GetTileSize();
       Tile0Offset = LargeMapManager->GetTile0Offset();
-      for(int x = 0; x < 1; ++x)
-      {
-        for(int y = 0; y < 1; ++y)
-        {
-          MinPosition = FVector(x * TileSize, y * -TileSize, 0.0f);
-          MaxPosition = FVector((x+1.0f) * TileSize, (y+1.0f) * -TileSize, 0.0f);
-
-          GenerateAll(CarlaMap, MinPosition, MaxPosition);
-          bHasStarted = true;
-          bRoadsFinished = true;
-          bMapLoaded = true;
-          bTileFinished = false;
-        }
-      }
-
+      CurrentTilesInXY = FIntVector(0,0,0);
+      BaseLevelName = UEditorLevelLibrary::GetEditorWorld()->GetMapName();
+      GenerateTile();
     }
   }
 }
@@ -407,6 +438,7 @@ TArray<AActor*> UOpenDriveToMap::GenerateMiscActors(float Offset, FVector MinLoc
   }
   return Returning;
 }
+
 void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& ParamCarlaMap,
   FVector MinLocation,
   FVector MaxLocation )
@@ -723,8 +755,7 @@ float UOpenDriveToMap::GetHeightForLandscape( FVector Origin ){
     End,
     ECollisionChannel::ECC_WorldStatic,
     CollisionQuery,
-    CollisionParams
-  ) )
+    CollisionParams) )
   {
     return GetHeight(Origin.X * 0.01f, Origin.Y * 0.01f, true) * 100.0f - 50.0f;
   }else{
@@ -750,7 +781,7 @@ float UOpenDriveToMap::DistanceToLaneBorder(const boost::optional<carla::road::M
 
 bool UOpenDriveToMap::IsInRoad(
   const boost::optional<carla::road::Map>& ParamCarlaMap,
-  FVector &location)
+  FVector &location) const
 {
   int32_t start = static_cast<int32_t>(carla::road::Lane::LaneType::Driving);
   int32_t end = static_cast<int32_t>(carla::road::Lane::LaneType::Sidewalk);

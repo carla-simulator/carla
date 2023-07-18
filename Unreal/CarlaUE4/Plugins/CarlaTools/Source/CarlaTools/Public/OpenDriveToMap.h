@@ -25,7 +25,7 @@ class UMaterialInstance;
  *
  */
 UCLASS(Blueprintable, BlueprintType)
-class CARLATOOLS_API UOpenDriveToMap : public UEditorUtilityObject
+class CARLATOOLS_API UOpenDriveToMap : public UObject
 {
   GENERATED_BODY()
 
@@ -52,6 +52,25 @@ public:
 
   UFUNCTION(BlueprintCallable)
   static AActor* SpawnActorWithCheckNoCollisions(UClass* ActorClassToSpawn, FTransform Transform);
+
+  UFUNCTION(BlueprintCallable)
+  float GetDistanceToDrivingLaneBorder(FVector Location) const{
+    return DistanceToLaneBorder(CarlaMap, Location);
+  }
+
+  UFUNCTION(BlueprintCallable)
+  bool GetIsInRoad(FVector Location) const {
+    return IsInRoad(CarlaMap, Location);
+  }
+
+  UFUNCTION(BlueprintCallable)
+  void GenerateTile();
+
+  UFUNCTION(BlueprintCallable)
+  bool GoNextTile();
+
+  UFUNCTION(BlueprintCallable)
+  void ReturnToMainLevel();
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;
@@ -117,6 +136,9 @@ public:
 
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="TileGeneration" )
   FIntVector CurrentTilesInXY;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="TileGeneration" )
+  FString BaseLevelName;
 protected:
 
   UFUNCTION(BlueprintCallable)
@@ -130,6 +152,7 @@ protected:
 
   UFUNCTION( BlueprintCallable )
   void MoveActorsToSubLevels(TArray<AActor*> ActorsToMove);
+
 private:
 
   UFUNCTION()
@@ -156,7 +179,7 @@ private:
       int32_t lane_type = static_cast<int32_t>(carla::road::Lane::LaneType::Driving)) const;
 
   bool IsInRoad(const boost::optional<carla::road::Map>& ParamCarlaMap,
-        FVector &location);
+        FVector &location) const;
 
 
 
@@ -166,5 +189,9 @@ private:
   TArray<AActor*> Landscapes;
   UPROPERTY()
   UTexture2D* Heightmap;
+
+};
+
+struct OpenDriveToMapDataStruct{
 
 };

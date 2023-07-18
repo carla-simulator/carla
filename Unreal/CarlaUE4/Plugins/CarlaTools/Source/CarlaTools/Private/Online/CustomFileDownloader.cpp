@@ -58,19 +58,18 @@ void UCustomFileDownloader::StartDownload()
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("FHttpDownloader CREATED"));
   UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Map Name Is %s"), *ResultFileName );
-  Download = FHttpDownloader("GET", Url, ResultFileName);
-  Download.XodrToMap = XodrToMap;
-  Download.Run();
+  FHttpDownloader *Download = new FHttpDownloader("GET", Url, ResultFileName, DownloadDelegate);
+  Download->Run();
 }
 
-FHttpDownloader::FHttpDownloader(const FString &InVerb, const FString &InUrl, const FString &InFilename)
-    : Verb(InVerb), Url(InUrl), Filename(InFilename)
+FHttpDownloader::FHttpDownloader(const FString &InVerb, const FString &InUrl, const FString &InFilename, FDownloadComplete &Delegate)
+    : Verb(InVerb), Url(InUrl), Filename(InFilename), DelegateToCall(Delegate)
 {
 }
 
 FHttpDownloader::FHttpDownloader()
 {
-  XodrToMap = nullptr;
+
 }
 
 void FHttpDownloader::Run(void)
@@ -86,7 +85,7 @@ void FHttpDownloader::Run(void)
 
 void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded)
 {
-  if (!HttpResponse.IsValid() && IsValid(XodrToMap) )
+  if (!HttpResponse.IsValid() )
   {
     UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Download failed. NULL response"));
   }
@@ -107,9 +106,8 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
            *HttpRequest->GetURL(),
            HttpResponse->GetResponseCode());
 
-    FString CurrentFile = FPaths::ProjectContentDir() + "CustomMaps/" + (XodrToMap->MapName) + "/OpenDrive/";
+    FString CurrentFile = FPaths::ProjectContentDir() + "CustomMaps/" + (Filename) + "/OpenDrive/";
     UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FHttpDownloader::RequestComplete CurrentFile %s."), *CurrentFile);
-    UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FHttpDownloader::RequestComplete Filename %s."), *(XodrToMap->MapName));
 
     // We will use this FileManager to deal with the file.
     IPlatformFile &FileManager = FPlatformFileManager::Get().GetPlatformFile();
@@ -125,14 +123,13 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
     if (FFileHelper::SaveStringToFile(StringToWrite, *CurrentFile, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
     {
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: Sucsesfuly Written "));
-      XodrToMap->ConvertOSMInOpenDrive();
+      DelegateToCall.ExecuteIfBound();
     }
     else
     {
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: Failed to write FString to file."));
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: CurrentFile %s."), *CurrentFile);
-      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: CurrentFile %s."), *(XodrToMap->MapName) );
     }
   }
-
+  delete this;
 }
