@@ -83,6 +83,8 @@ namespace ros2 {
         std::cerr << "Failed to create DataWriter" << std::endl;
         return false;
     }
+
+    _frame_id = _name;
     return true;
   }
 
