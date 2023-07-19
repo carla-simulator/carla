@@ -42,6 +42,9 @@ except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
 
+OUTPUT_FOLDER = "_test"
+
+
 # =============================================================================
 # -- client -------------------------------------------------------------------
 # =============================================================================
@@ -68,6 +71,7 @@ class GTBoundingBoxes(object):
                 bounding_boxes.append(bb_verts)
 
                 if img is not None and bb_verts:
+                    bb_verts.append(i+1)
                     img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[1])), (int(bb_verts[2]),int(bb_verts[1])), (0,0,255, 255), 1)
                     img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[3])), (int(bb_verts[2]),int(bb_verts[3])), (0,0,255, 255), 1)
                     img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[1])), (int(bb_verts[0]),int(bb_verts[3])), (0,0,255, 255), 1)
@@ -130,7 +134,7 @@ class GTBoundingBoxes(object):
     @staticmethod
     def __get_image_point(loc, K, w2c):
         """
-        Calculate 2D projection of 3D coordinate.
+        Calculate 2D projecbb_vertstion of 3D coordinate.
 
         Input:
             loc: 3D coordinate of object (carla.Position object)
@@ -170,6 +174,26 @@ class StaticAttackScenario(object):
         self.K = None
         self.image_queue = queue.Queue()
 
+        self.ground_truth_annotations = {
+            "info": {},
+
+            "licenses": {},
+
+            "images": [],
+
+            "categories": [
+                {"supercategory": "vehicle", "id": 1, "name": "car" },
+                {"supercategory": "vehicle", "id": 2, "name": "truck" },
+                {"supercategory": "vehicle", "id": 3, "name": "motorcycle" },
+                {"supercategory": "vehicle", "id": 4, "name": "bicycle" },
+                {"supercategory": "vehicle", "id": 5, "name": "bus" },
+                {"supercategory": "vehicle", "id": 6, "name": "rider" },
+                {"supercategory": "vehicle", "id": 7, "name": "train" },
+            ],
+
+            "annotations": []
+        }
+
         self.display = None
         self.image = None
         self.capture = True
@@ -181,8 +205,20 @@ class StaticAttackScenario(object):
         settings.fixed_delta_seconds = 0.05
         self.world.apply_settings(settings)
 
-    def spawn_npcs(self):
-        pass
+    def spawn_npcs(self, n):
+        """
+        Spawns a given number of NPC vehicles.
+        """
+        spawn_points = self.world.get_map().get_spawn_points()
+
+        for i in range(n):
+            vehicle_bp = random.choice(self.bp_lib.filter('vehicle'))
+            npc = self.world.try_spawn_actor(vehicle_bp, spawn_points[i+1])
+            if npc:
+                self.vehicle_list.append(npc)
+                npc.set_autopilot(True)
+
+        print("Spawned {} NPC vehicles.".format(n))
 
     def spawn_ego(self, transform):
         """
@@ -226,9 +262,7 @@ class StaticAttackScenario(object):
 
             spawn_points = self.world.get_map().get_spawn_points()
 
-            print(type(self.camera))
             self.spawn_ego(spawn_points[0])
-            print(type(self.camera))
 
             # Calculate the camera projection matrix to project from 3D -> 2D and save to camera attributes
             image_w = int(self.camera.attributes["image_size_x"])
@@ -236,12 +270,24 @@ class StaticAttackScenario(object):
             fov = float(self.camera.attributes["fov"])
             self.K = self.get_camera_matrix(image_w, image_h, fov)
 
+            self.spawn_npcs(5)
+
             self.set_synchronous_mode(True)
 
+            # delete old images from output folder
+            out_folder = os.listdir(OUTPUT_FOLDER)
+
+            for item in out_folder:
+                if item.endswith(".png"):
+                    os.remove(os.path.join(OUTPUT_FOLDER, item))
+
             self.world.tick()
+            frame_number = 0
+
             image = self.image_queue.get()
             # Reshape the raw data into an RGB array
             img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
+
             # Display the image in an OpenCV display window
             cv2.namedWindow('CameraFeed', cv2.WINDOW_AUTOSIZE)
             cv2.imshow('CameraFeed',img)
@@ -249,14 +295,41 @@ class StaticAttackScenario(object):
 
             while True:
                 self.world.tick()
+                frame_number += 1
 
                 # Retrieve and reshape the image
                 image = self.image_queue.get()
                 img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
+                bb_img = img.copy()
 
-                bb_params, img = GTBoundingBoxes.get_bounding_boxes(self.world, self.car, self.camera, self.K, img)
+                # Save frame to annotations json
+                frame_file = "{:05d}.png".format(frame_number)
 
-                cv2.imshow('CameraFeed',img)
+                self.ground_truth_annotations["images"].append({
+                    "file_name": frame_file,
+                    "height": image.height,
+                    "width": image.width,
+                    "id": frame_number
+                })
+
+                bounding_boxes, bb_img = GTBoundingBoxes.get_bounding_boxes(self.world, self.car, self.camera, self.K, bb_img)
+
+                for bb_verts in bounding_boxes:
+                    if bb_verts:
+                        bb_cocoFormat = [bb_verts[0], bb_verts[1], bb_verts[2]-bb_verts[0], bb_verts[3]-bb_verts[1]]
+                        category = bb_verts[-1]
+                        self.ground_truth_annotations["annotations"].append({
+                            "segmentation": [],
+                            "area": bb_cocoFormat[2]*bb_cocoFormat[3],
+                            "iscrowd": 0,
+                            "category_id": category,
+                            "image_id": frame_number,
+                            "bbox": bb_cocoFormat
+                        })
+
+                cv2.imwrite(os.path.join(OUTPUT_FOLDER, frame_file), img)
+
+                cv2.imshow('CameraFeed',bb_img)
                 if cv2.waitKey(1) == ord('q'):
                     break
 
@@ -270,8 +343,14 @@ class StaticAttackScenario(object):
 
             self.car.destroy()
             self.camera.destroy()
+
+            print("Destroyed {} vehicles and the ego-vehicle and camera.".format(len(self.vehicle_list)))
             
             cv2.destroyAllWindows()
+
+            print("Saving annotations to json file.")
+            with open(os.path.join(OUTPUT_FOLDER, 'annotations.json'), 'w') as json_file:
+                json.dump(self.ground_truth_annotations, json_file)
 
 
 if __name__ == "__main__":
@@ -280,20 +359,3 @@ if __name__ == "__main__":
         client.game_loop()
     finally:
         print("EXIT!")
-
-
-
-
-
-
-
-            # print("Spwaning in ", custom_spawn_point)
-            # for i in range(1):
-            #     vehicle_bp = random.choice(self.bp_lib.filter('vehicle'))
-            #     npc = self.world.try_spawn_actor(vehicle_bp, custom_spawn_point)
-            #     if npc:
-            #         self.vehicle_list.append(npc)
-            #         # npc.set_autopilot(True)
-
-            # # print(self.world.get_actors())
-            # print("Spawned")
