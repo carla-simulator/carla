@@ -437,7 +437,6 @@ namespace sensor_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             std_msgs::msg::Header m_header;
             uint32_t m_height;
             uint32_t m_width;
@@ -449,7 +448,6 @@ namespace sensor_msgs {
             uint32_t m_binning_x;
             uint32_t m_binning_y;
             sensor_msgs::msg::RegionOfInterest m_roi;
-
         };
     } // namespace msg
 } // namespace sensor_msgs

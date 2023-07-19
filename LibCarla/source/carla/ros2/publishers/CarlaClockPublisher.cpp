@@ -1,54 +1,49 @@
 #define _GLIBCXX_USE_CXX11_ABI 0
 
-#include "CarlaEgoVehicleControlSubscriber.h"
+#include "CarlaClockPublisher.h"
 
-#include "carla/ros2/types/CarlaEgoVehicleControl.h"
-#include "carla/ros2/types/CarlaEgoVehicleControlPubSubTypes.h"
-#include "carla/ros2/listeners/CarlaSubscriberListener.h"
+#include <string>
+
+#include "carla/ros2/types/TimePubSubTypes.h"
+#include "carla/ros2/listeners/CarlaListener.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
-#include <fastdds/dds/subscriber/Subscriber.hpp>
+#include <fastdds/dds/publisher/Publisher.hpp>
 #include <fastdds/dds/topic/Topic.hpp>
-#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/publisher/DataWriter.hpp>
 #include <fastdds/dds/topic/TypeSupport.hpp>
-#include <fastdds/dds/subscriber/SampleInfo.hpp>
 
 #include <fastdds/dds/domain/qos/DomainParticipantQos.hpp>
 #include <fastdds/dds/domain/DomainParticipantFactory.hpp>
-#include <fastdds/dds/subscriber/qos/SubscriberQos.hpp>
+#include <fastdds/dds/publisher/qos/PublisherQos.hpp>
 #include <fastdds/dds/topic/qos/TopicQos.hpp>
 
 #include <fastrtps/attributes/ParticipantAttributes.h>
 #include <fastrtps/qos/QosPolicies.h>
-#include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
-#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
+#include <fastdds/dds/publisher/DataWriterListener.hpp>
 
 
 namespace carla {
 namespace ros2 {
-
   namespace efd = eprosima::fastdds::dds;
   using erc = eprosima::fastrtps::types::ReturnCode_t;
 
-  struct CarlaEgoVehicleControlSubscriberImpl {
+  struct CarlaClockPublisherImpl {
     efd::DomainParticipant* _participant { nullptr };
-    efd::Subscriber* _subscriber { nullptr };
+    efd::Publisher* _publisher { nullptr };
     efd::Topic* _topic { nullptr };
-    efd::DataReader* _datareader { nullptr };
-    efd::TypeSupport _type { new carla_msgs::msg::VehicleControlPubSubType() };
-    CarlaSubscriberListener _listener {nullptr};
-    carla_msgs::msg::VehicleControl _event {};
-    VehicleControl _control {};
-    bool _new_message {false};
-    void* _vehicle {nullptr};
+    efd::DataWriter* _datawriter { nullptr };
+    efd::TypeSupport _type { new builtin_interfaces::msg::TimePubSubType() };
+    CarlaListener _listener {};
+    builtin_interfaces::msg::Time _time {};
   };
 
-  bool CarlaEgoVehicleControlSubscriber::Init() {
+  bool CarlaClockPublisher::Init() {
     if (_impl->_type == nullptr) {
         std::cerr << "Invalid TypeSupport" << std::endl;
         return false;
     }
-
     efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
     pqos.name(_name);
     auto factory = efd::DomainParticipantFactory::get_instance();
@@ -59,10 +54,10 @@ namespace ros2 {
     }
     _impl->_type.register_type(_impl->_participant);
 
-    efd::SubscriberQos subqos = efd::SUBSCRIBER_QOS_DEFAULT;
-    _impl->_subscriber = _impl->_participant->create_subscriber(subqos, nullptr);
-    if (_impl->_subscriber == nullptr) {
-      std::cerr << "Failed to create Subscriber" << std::endl;
+    efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
+    _impl->_publisher = _impl->_participant->create_publisher(pubqos, nullptr);
+    if (_impl->_publisher == nullptr) {
+      std::cerr << "Failed to create Publisher" << std::endl;
       return false;
     }
 
@@ -78,19 +73,20 @@ namespace ros2 {
         return false;
     }
 
-    efd::DataReaderQos rqos = efd::DATAREADER_QOS_DEFAULT;
-    efd::DataReaderListener* listener = (efd::DataReaderListener*)_impl->_listener._impl.get();
-    _impl->_datareader = _impl->_subscriber->create_datareader(_impl->_topic, rqos, listener);
-    if (_impl->_datareader == nullptr) {
-        std::cerr << "Failed to create DataReader" << std::endl;
+    efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
+    efd::DataWriterListener* listener = (efd::DataWriterListener*)_impl->_listener._impl.get();
+    _impl->_datawriter = _impl->_publisher->create_datawriter(_impl->_topic, wqos, listener);
+    if (_impl->_datawriter == nullptr) {
+        std::cerr << "Failed to create DataWriter" << std::endl;
         return false;
     }
+    _frame_id = _name;
     return true;
   }
 
-  bool CarlaEgoVehicleControlSubscriber::Read() {
-    efd::SampleInfo info;
-    eprosima::fastrtps::types::ReturnCode_t rcode = _impl->_datareader->take_next_sample(&_impl->_event, &info);
+  bool CarlaClockPublisher::Publish() {
+    eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
+    eprosima::fastrtps::types::ReturnCode_t rcode = _impl->_datawriter->write(&_impl->_time, instance_handle);
     if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
         return true;
     }
@@ -150,42 +146,26 @@ namespace ros2 {
     return false;
   }
 
-
-  void CarlaEgoVehicleControlSubscriber::ForwardMessage(VehicleControl control) {
-    _impl->_control = control;
-    _impl->_new_message = true;
+  void CarlaClockPublisher::SetData(int32_t sec, uint32_t nanosec) {
+    _impl->_time.sec(sec);
+    _impl->_time.nanosec(nanosec);
   }
 
-  VehicleControl CarlaEgoVehicleControlSubscriber::GetMessage() {
-    _impl->_new_message = false;
-    return _impl->_control;
-  }
-
-  bool CarlaEgoVehicleControlSubscriber::HasNewMessage() {
-    return _impl->_new_message;
-  }
-
-  void* CarlaEgoVehicleControlSubscriber::GetVehicle() {
-    return _impl->_vehicle;
-  }
-
-  CarlaEgoVehicleControlSubscriber::CarlaEgoVehicleControlSubscriber(void* vehicle, const char* ros_name, const char* parent) :
-  _impl(std::make_shared<CarlaEgoVehicleControlSubscriberImpl>()) {
-    _impl->_listener.SetOwner(this);
-    _impl->_vehicle = vehicle;
+  CarlaClockPublisher::CarlaClockPublisher(const char* ros_name, const char* parent) :
+  _impl(std::make_shared<CarlaClockPublisherImpl>()) {
     _name = ros_name;
     _parent = parent;
   }
 
-  CarlaEgoVehicleControlSubscriber::~CarlaEgoVehicleControlSubscriber() {
+  CarlaClockPublisher::~CarlaClockPublisher() {
       if (!_impl)
           return;
 
-      if (_impl->_datareader)
-          _impl->_subscriber->delete_datareader(_impl->_datareader);
+      if (_impl->_datawriter)
+          _impl->_publisher->delete_datawriter(_impl->_datawriter);
 
-      if (_impl->_subscriber)
-          _impl->_participant->delete_subscriber(_impl->_subscriber);
+      if (_impl->_publisher)
+          _impl->_participant->delete_publisher(_impl->_publisher);
 
       if (_impl->_topic)
           _impl->_participant->delete_topic(_impl->_topic);
@@ -194,38 +174,34 @@ namespace ros2 {
           efd::DomainParticipantFactory::get_instance()->delete_participant(_impl->_participant);
   }
 
-  CarlaEgoVehicleControlSubscriber::CarlaEgoVehicleControlSubscriber(const CarlaEgoVehicleControlSubscriber& other) {
+  CarlaClockPublisher::CarlaClockPublisher(const CarlaClockPublisher& other) {
     _frame_id = other._frame_id;
     _name = other._name;
     _parent = other._parent;
     _impl = other._impl;
-    _impl->_listener.SetOwner(this);
   }
 
-  CarlaEgoVehicleControlSubscriber& CarlaEgoVehicleControlSubscriber::operator=(const CarlaEgoVehicleControlSubscriber& other) {
+  CarlaClockPublisher& CarlaClockPublisher::operator=(const CarlaClockPublisher& other) {
     _frame_id = other._frame_id;
     _name = other._name;
     _parent = other._parent;
     _impl = other._impl;
-    _impl->_listener.SetOwner(this);
 
     return *this;
   }
 
-  CarlaEgoVehicleControlSubscriber::CarlaEgoVehicleControlSubscriber(CarlaEgoVehicleControlSubscriber&& other) {
+  CarlaClockPublisher::CarlaClockPublisher(CarlaClockPublisher&& other) {
     _frame_id = std::move(other._frame_id);
     _name = std::move(other._name);
     _parent = std::move(other._parent);
     _impl = std::move(other._impl);
-    _impl->_listener.SetOwner(this);
   }
 
-  CarlaEgoVehicleControlSubscriber& CarlaEgoVehicleControlSubscriber::operator=(CarlaEgoVehicleControlSubscriber&& other) {
+  CarlaClockPublisher& CarlaClockPublisher::operator=(CarlaClockPublisher&& other) {
     _frame_id = std::move(other._frame_id);
     _name = std::move(other._name);
     _parent = std::move(other._parent);
     _impl = std::move(other._impl);
-    _impl->_listener.SetOwner(this);
 
     return *this;
   }

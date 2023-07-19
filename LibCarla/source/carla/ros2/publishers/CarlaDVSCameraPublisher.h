@@ -28,7 +28,7 @@ namespace ros2 {
 
       bool Init();
       bool Publish();
-      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data);
+      void SetImageData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data);
       void SetPointCloudData(size_t height, size_t width, const uint8_t* data);
       void SetInfoRegionOfInterest( uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, bool do_rectify);
       const char* type() const override { return "dvs camera"; }

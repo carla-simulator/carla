@@ -147,20 +147,31 @@ namespace ros2 {
   void CarlaTransformPublisher::SetData(int32_t seconds, uint32_t nanoseconds, const float* translation, const float* rotation) {
     geometry_msgs::msg::Vector3 vec_translation;
     geometry_msgs::msg::Quaternion vec_rotation;
-    float tx = *translation++;
-    float ty = *translation++;
-    float tz = *translation++;
+
+    const float tx = *translation++;
+    const float ty = *translation++;
+    const float tz = *translation++;
+
     vec_translation.x(tx);
     vec_translation.y(-ty);
     vec_translation.z(tz);
-    float rx = *rotation++;
-    float ry = *rotation++;
-    float rz = *rotation++;
-    float rw = *rotation++;
-    vec_rotation.x(-rx);
-    vec_rotation.y(-ry);
-    vec_rotation.z(rz);
-    vec_rotation.w(rw);
+
+    const float rx = (*rotation++) * -1.0f;
+    const float ry = (*rotation++) * -1.0f;
+    const float rz = *rotation++;
+    const float rw = *rotation++;
+
+    const float cr = cosf(rz * 0.5f);
+    const float sr = sinf(rz * 0.5f);
+    const float cp = cosf(rx * 0.5f);
+    const float sp = sinf(rx * 0.5f);
+    const float cy = cosf(ry * 0.5f);
+    const float sy = sinf(ry * 0.5f);
+
+    vec_rotation.w(cr * cp * cy + sr * sp * sy);
+    vec_rotation.x(sr * cp * cy - cr * sp * sy);
+    vec_rotation.y(cr * sp * cy + sr * cp * sy);
+    vec_rotation.z(cr * cp * sy - sr * sp * cy);
 
     builtin_interfaces::msg::Time time;
     time.sec(seconds);

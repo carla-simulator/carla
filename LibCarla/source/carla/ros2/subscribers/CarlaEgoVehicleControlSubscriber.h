@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "CarlaSubscriber.h"
+#include "carla/ros2/ROS2CallbackData.h"
 
 namespace carla {
 namespace ros2 {
@@ -17,17 +18,23 @@ namespace ros2 {
 
   class CarlaEgoVehicleControlSubscriber : public CarlaSubscriber {
     public:
-      CarlaEgoVehicleControlSubscriber(const char* ros_name = "", const char* parent = "");
+      CarlaEgoVehicleControlSubscriber(void* vehicle, const char* ros_name = "", const char* parent = "");
       ~CarlaEgoVehicleControlSubscriber();
       CarlaEgoVehicleControlSubscriber(const CarlaEgoVehicleControlSubscriber&);
       CarlaEgoVehicleControlSubscriber& operator=(const CarlaEgoVehicleControlSubscriber&);
       CarlaEgoVehicleControlSubscriber(CarlaEgoVehicleControlSubscriber&&);
       CarlaEgoVehicleControlSubscriber& operator=(CarlaEgoVehicleControlSubscriber&&);
 
+      bool HasNewMessage();
+      VehicleControl GetMessage();
+      void* GetVehicle();
+
       bool Init();
       bool Read();
       const char* type() const override { return "Ego vehicle control"; }
 
+      //Do not call, for internal use only
+      void ForwardMessage(VehicleControl control);
     private:
       void SetData(int32_t seconds, uint32_t nanoseconds, uint32_t actor_id, std::vector<float>&& data);
 

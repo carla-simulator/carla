@@ -11,15 +11,18 @@ namespace carla {
 namespace ros2 {
 
   class CarlaSubscriberListenerImpl;
+  class CarlaEgoVehicleControlSubscriber;
 
   class CarlaSubscriberListener {
     public:
-      CarlaSubscriberListener();
+      CarlaSubscriberListener(CarlaEgoVehicleControlSubscriber* owner);
       ~CarlaSubscriberListener();
       CarlaSubscriberListener(const CarlaSubscriberListener&) = delete;
       CarlaSubscriberListener& operator=(const CarlaSubscriberListener&) = delete;
       CarlaSubscriberListener(CarlaSubscriberListener&&) = delete;
       CarlaSubscriberListener& operator=(CarlaSubscriberListener&&) = delete;
+
+      void SetOwner(CarlaEgoVehicleControlSubscriber* owner);
 
       std::unique_ptr<CarlaSubscriberListenerImpl> _impl;
   };

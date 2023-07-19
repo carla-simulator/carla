@@ -13,23 +13,23 @@
 namespace carla {
 namespace ros2 {
 
-  struct CarlaSSCameraPublisherImpl;
+  struct CarlaOpticalFlowCameraPublisherImpl;
   struct CarlaCameraInfoPublisherImpl;
 
-  class CarlaSSCameraPublisher : public CarlaPublisher {
+  class CarlaOpticalFlowCameraPublisher : public CarlaPublisher {
     public:
-      CarlaSSCameraPublisher(const char* ros_name = "", const char* parent = "");
-      ~CarlaSSCameraPublisher();
-      CarlaSSCameraPublisher(const CarlaSSCameraPublisher&);
-      CarlaSSCameraPublisher& operator=(const CarlaSSCameraPublisher&);
-      CarlaSSCameraPublisher(CarlaSSCameraPublisher&&);
-      CarlaSSCameraPublisher& operator=(CarlaSSCameraPublisher&&);
+      CarlaOpticalFlowCameraPublisher(const char* ros_name = "", const char* parent = "");
+      ~CarlaOpticalFlowCameraPublisher();
+      CarlaOpticalFlowCameraPublisher(const CarlaOpticalFlowCameraPublisher&);
+      CarlaOpticalFlowCameraPublisher& operator=(const CarlaOpticalFlowCameraPublisher&);
+      CarlaOpticalFlowCameraPublisher(CarlaOpticalFlowCameraPublisher&&);
+      CarlaOpticalFlowCameraPublisher& operator=(CarlaOpticalFlowCameraPublisher&&);
 
       bool Init();
       bool Publish();
       void SetImageData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data);
       void SetInfoRegionOfInterest( uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, bool do_rectify);
-      const char* type() const override { return "semantic segmentation"; }
+      const char* type() const override { return "optical flow camera"; }
 
     private:
       bool InitImage();
@@ -39,7 +39,7 @@ namespace ros2 {
       void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data);
 
     private:
-      std::shared_ptr<CarlaSSCameraPublisherImpl> _impl;
+      std::shared_ptr<CarlaOpticalFlowCameraPublisherImpl> _impl;
       std::shared_ptr<CarlaCameraInfoPublisherImpl> _impl_info;
   };
 }

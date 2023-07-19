@@ -7,6 +7,9 @@
 #include <fastdds/dds/subscriber/DataReaderListener.hpp>
 #include <fastdds/dds/core/status/SubscriptionMatchedStatus.hpp>
 #include <fastdds/dds/subscriber/SampleInfo.hpp>
+#include "carla/ros2/types/CarlaEgoVehicleControl.h"
+#include "carla/ros2/subscribers/CarlaEgoVehicleControlSubscriber.h"
+#include "carla/ros2/ROS2CallbackData.h"
 
 namespace carla {
 namespace ros2 {
@@ -23,6 +26,8 @@ namespace ros2 {
 
       int _matched {0};
       bool _first_connected {false};
+      CarlaEgoVehicleControlSubscriber* _owner {nullptr};
+      carla_msgs::msg::VehicleControl _message {};
     };
 
     void CarlaSubscriberListenerImpl::on_subscription_matched(efd::DataReader* reader, const efd::SubscriptionMatchedStatus& info)
@@ -41,9 +46,17 @@ namespace ros2 {
     void CarlaSubscriberListenerImpl::on_data_available(efd::DataReader* reader)
     {
       efd::SampleInfo info;
-      eprosima::fastrtps::types::ReturnCode_t rcode = reader->take_next_sample(nullptr, &info);
+      eprosima::fastrtps::types::ReturnCode_t rcode = reader->take_next_sample(&_message, &info);
       if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
-        std::cout << "RETCODE_OK" << std::endl;
+        VehicleControl control;
+        control.throttle = _message.throttle();
+        control.steer = _message.steer();
+        control.brake = _message.brake();
+        control.hand_brake = _message.hand_brake();
+        control.reverse = _message.reverse();
+        control.gear = _message.gear();
+        control.manual_gear_shift = _message.manual_gear_shift();
+        _owner->ForwardMessage(control);
       }
       if (rcode == erc::ReturnCodeValue::RETCODE_ERROR) {
           std::cerr << "RETCODE_ERROR" << std::endl;
@@ -86,8 +99,14 @@ namespace ros2 {
       }
     }
 
-    CarlaSubscriberListener::CarlaSubscriberListener() :
-    _impl(std::make_unique<CarlaSubscriberListenerImpl>()) { }
+    void CarlaSubscriberListener::SetOwner(CarlaEgoVehicleControlSubscriber* owner) {
+        _impl->_owner = owner;
+    }
+
+    CarlaSubscriberListener::CarlaSubscriberListener(CarlaEgoVehicleControlSubscriber* owner) :
+    _impl(std::make_unique<CarlaSubscriberListenerImpl>()) {
+        _impl->_owner = owner;
+    }
 
     CarlaSubscriberListener::~CarlaSubscriberListener() {}
 

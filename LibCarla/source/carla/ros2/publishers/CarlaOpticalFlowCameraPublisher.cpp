@@ -1,12 +1,11 @@
 #define _GLIBCXX_USE_CXX11_ABI 0
 
-#include "CarlaDVSCameraPublisher.h"
+#include "CarlaOpticalFlowCameraPublisher.h"
 
 #include <string>
 
 #include "carla/ros2/types/ImagePubSubTypes.h"
 #include "carla/ros2/types/CameraInfoPubSubTypes.h"
-#include "carla/ros2/types/PointCloud2PubSubTypes.h"
 #include "carla/ros2/listeners/CarlaListener.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
@@ -32,7 +31,7 @@ namespace ros2 {
   namespace efd = eprosima::fastdds::dds;
   using erc = eprosima::fastrtps::types::ReturnCode_t;
 
-  struct CarlaDVSCameraPublisherImpl {
+  struct CarlaOpticalFlowCameraPublisherImpl {
     efd::DomainParticipant* _participant { nullptr };
     efd::Publisher* _publisher { nullptr };
     efd::Topic* _topic { nullptr };
@@ -49,24 +48,14 @@ namespace ros2 {
     efd::DataWriter* _datawriter { nullptr };
     efd::TypeSupport _type { new sensor_msgs::msg::CameraInfoPubSubType() };
     CarlaListener _listener {};
-    sensor_msgs::msg::CameraInfo _ci {};
+    sensor_msgs::msg::CameraInfo _info {};
   };
 
-  struct CarlaPointCloudPublisherImpl {
-    efd::DomainParticipant* _participant { nullptr };
-    efd::Publisher* _publisher { nullptr };
-    efd::Topic* _topic { nullptr };
-    efd::DataWriter* _datawriter { nullptr };
-    efd::TypeSupport _type { new sensor_msgs::msg::PointCloud2PubSubType() };
-    CarlaListener _listener {};
-    sensor_msgs::msg::PointCloud2 _pc {};
-  };
-
-  bool CarlaDVSCameraPublisher::Init() {
-    return InitImage() && InitInfo() && InitPointCloud();
+  bool CarlaOpticalFlowCameraPublisher::Init() {
+    return InitImage() && InitInfo();
   }
 
-  bool CarlaDVSCameraPublisher::InitImage() {
+  bool CarlaOpticalFlowCameraPublisher::InitImage() {
     if (_impl->_type == nullptr) {
         std::cerr << "Invalid TypeSupport" << std::endl;
         return false;
@@ -115,8 +104,8 @@ namespace ros2 {
     return true;
   }
 
-  bool CarlaDVSCameraPublisher::InitInfo() {
-    if (_info->_type == nullptr) {
+  bool CarlaOpticalFlowCameraPublisher::InitInfo() {
+    if (_impl_info->_type == nullptr) {
         std::cerr << "Invalid TypeSupport" << std::endl;
         return false;
     }
@@ -124,16 +113,16 @@ namespace ros2 {
     efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
     pqos.name(_name);
     auto factory = efd::DomainParticipantFactory::get_instance();
-    _info->_participant = factory->create_participant(0, pqos);
-    if (_info->_participant == nullptr) {
+    _impl_info->_participant = factory->create_participant(0, pqos);
+    if (_impl_info->_participant == nullptr) {
         std::cerr << "Failed to create DomainParticipant" << std::endl;
         return false;
     }
-    _info->_type.register_type(_info->_participant);
+    _impl_info->_type.register_type(_impl_info->_participant);
 
     efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
-    _info->_publisher = _info->_participant->create_publisher(pubqos, nullptr);
-    if (_info->_publisher == nullptr) {
+    _impl_info->_publisher = _impl_info->_participant->create_publisher(pubqos, nullptr);
+    if (_impl_info->_publisher == nullptr) {
       std::cerr << "Failed to create Publisher" << std::endl;
       return false;
     }
@@ -146,15 +135,15 @@ namespace ros2 {
       topic_name += _parent + "/";
     topic_name += _name;
     topic_name += publisher_type;
-    _info->_topic = _info->_participant->create_topic(topic_name, _info->_type->getName(), tqos);
-    if (_info->_topic == nullptr) {
+    _impl_info->_topic = _impl_info->_participant->create_topic(topic_name, _impl_info->_type->getName(), tqos);
+    if (_impl_info->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
         return false;
     }
     efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
-    efd::DataWriterListener* listener = (efd::DataWriterListener*)_info->_listener._impl.get();
-    _info->_datawriter = _info->_publisher->create_datawriter(_info->_topic, wqos, listener);
-    if (_info->_datawriter == nullptr) {
+    efd::DataWriterListener* listener = (efd::DataWriterListener*)_impl_info->_listener._impl.get();
+    _impl_info->_datawriter = _impl_info->_publisher->create_datawriter(_impl_info->_topic, wqos, listener);
+    if (_impl_info->_datawriter == nullptr) {
         std::cerr << "Failed to create DataWriter" << std::endl;
         return false;
     }
@@ -163,60 +152,13 @@ namespace ros2 {
     return true;
   }
 
-  bool CarlaDVSCameraPublisher::InitPointCloud() {
-    if (_point_cloud->_type == nullptr) {
-        std::cerr << "Invalid TypeSupport" << std::endl;
-        return false;
-    }
-
-    efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    pqos.name(_name);
-    auto factory = efd::DomainParticipantFactory::get_instance();
-    _point_cloud->_participant = factory->create_participant(0, pqos);
-    if (_point_cloud->_participant == nullptr) {
-        std::cerr << "Failed to create DomainParticipant" << std::endl;
-        return false;
-    }
-    _point_cloud->_type.register_type(_point_cloud->_participant);
-
-    efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
-    _point_cloud->_publisher = _point_cloud->_participant->create_publisher(pubqos, nullptr);
-    if (_point_cloud->_publisher == nullptr) {
-      std::cerr << "Failed to create Publisher" << std::endl;
-      return false;
-    }
-
-    efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
-    const std::string base { "rt/carla/" };
-    std::string topic_name = base;
-    if (!_parent.empty())
-      topic_name += _parent + "/";
-    topic_name += _name;
-    _point_cloud->_topic = _point_cloud->_participant->create_topic(topic_name, _point_cloud->_type->getName(), tqos);
-    if (_point_cloud->_topic == nullptr) {
-        std::cerr << "Failed to create Topic" << std::endl;
-        return false;
-    }
-
-    efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
-    wqos.endpoint().history_memory_policy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-    efd::DataWriterListener* listener = (efd::DataWriterListener*)_point_cloud->_listener._impl.get();
-    _point_cloud->_datawriter = _point_cloud->_publisher->create_datawriter(_point_cloud->_topic, wqos, listener);
-    if (_point_cloud->_datawriter == nullptr) {
-        std::cerr << "Failed to create DataWriter" << std::endl;
-        return false;
-    }
-    _frame_id = _name;
-    return true;
+  bool CarlaOpticalFlowCameraPublisher::Publish() {
+    return PublishImage() && PublishInfo();
   }
 
-  bool CarlaDVSCameraPublisher::Publish() {
-    return PublishImage() && PublishInfo() && PublishPointCloud();
-  }
-
-  bool CarlaDVSCameraPublisher::PublishImage() {
+  bool CarlaOpticalFlowCameraPublisher::PublishImage() {
     eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
-    eprosima::fastrtps::types::ReturnCode_t rcode = _impl->_datawriter->write(& _impl->_image, instance_handle);
+    eprosima::fastrtps::types::ReturnCode_t rcode = _impl->_datawriter->write(&_impl->_image, instance_handle);
     if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
         return true;
     }
@@ -276,9 +218,9 @@ namespace ros2 {
     return false;
   }
 
-  bool CarlaDVSCameraPublisher::PublishInfo() {
+  bool CarlaOpticalFlowCameraPublisher::PublishInfo() {
     eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
-    eprosima::fastrtps::types::ReturnCode_t rcode = _info->_datawriter->write(& _info->_ci, instance_handle);
+    eprosima::fastrtps::types::ReturnCode_t rcode = _impl_info->_datawriter->write(&_impl_info->_info, instance_handle);
     if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
         return true;
     }
@@ -338,77 +280,24 @@ namespace ros2 {
     return false;
   }
 
-  bool CarlaDVSCameraPublisher::PublishPointCloud() {
-    eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
-    eprosima::fastrtps::types::ReturnCode_t rcode = _point_cloud->_datawriter->write(&_point_cloud->_pc, instance_handle);
-    if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
-        return true;
-    }
-    if (rcode == erc::ReturnCodeValue::RETCODE_ERROR) {
-        std::cerr << "RETCODE_ERROR" << std::endl;
-        return false;
-    }
-    if (rcode == erc::ReturnCodeValue::RETCODE_UNSUPPORTED) {
-        std::cerr << "RETCODE_UNSUPPORTED" << std::endl;
-        return false;
-    }
-    if (rcode == erc::ReturnCodeValue::RETCODE_BAD_PARAMETER) {
-        std::cerr << "RETCODE_BAD_PARAMETER" << std::endl;
-        return false;
-    }
-    if (rcode == erc::ReturnCodeValue::RETCODE_PRECONDITION_NOT_MET) {
-        std::cerr << "RETCODE_PRECONDITION_NOT_MET" << std::endl;
-        return false;
-    }
-    if (rcode == erc::ReturnCodeValue::RETCODE_OUT_OF_RESOURCES) {
-        std::cerr << "RETCODE_OUT_OF_RESOURCES" << std::endl;
-        return false;
-    }
-    if (rcode == erc::ReturnCodeValue::RETCODE_NOT_ENABLED) {
-        std::cerr << "RETCODE_NOT_ENABLED" << std::endl;
-        return false;
-    }
-    if (rcode == erc::ReturnCodeValue::RETCODE_IMMUTABLE_POLICY) {
-        std::cerr << "RETCODE_IMMUTABLE_POLICY" << std::endl;
-        return false;
-    }
-    if (rcode == erc::ReturnCodeValue::RETCODE_INCONSISTENT_POLICY) {
-        std::cerr << "RETCODE_INCONSISTENT_POLICY" << std::endl;
-        return false;
-    }
-    if (rcode == erc::ReturnCodeValue::RETCODE_ALREADY_DELETED) {
-        std::cerr << "RETCODE_ALREADY_DELETED" << std::endl;
-        return false;
-    }
-    if (rcode == erc::ReturnCodeValue::RETCODE_TIMEOUT) {
-        std::cerr << "RETCODE_TIMEOUT" << std::endl;
-        return false;
-    }
-    if (rcode == erc::ReturnCodeValue::RETCODE_NO_DATA) {
-        std::cerr << "RETCODE_NO_DATA" << std::endl;
-        return false;
-    }
-    if (rcode == erc::ReturnCodeValue::RETCODE_ILLEGAL_OPERATION) {
-        std::cerr << "RETCODE_ILLEGAL_OPERATION" << std::endl;
-        return false;
-    }
-    if (rcode == erc::ReturnCodeValue::RETCODE_NOT_ALLOWED_BY_SECURITY) {
-        std::cerr << "RETCODE_NOT_ALLOWED_BY_SECURITY" << std::endl;
-        return false;
-    }
-    std::cout << "UNKNOWN" << std::endl;
-    return false;
-  }
-
-  void CarlaDVSCameraPublisher::SetImageData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data) {
-    std::vector<uint8_t> vector_data;
+  void CarlaOpticalFlowCameraPublisher::SetImageData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data) {    std::vector<uint8_t> vector_data;
     const size_t size = height * width * 4;
     vector_data.resize(size);
     std::memcpy(&vector_data[0], &data[0], size);
-    SetData(seconds, nanoseconds, height, width, std::move(vector_data));
+    SetData(seconds, nanoseconds,height, width, std::move(vector_data));
   }
 
-  void CarlaDVSCameraPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data) {
+  void CarlaOpticalFlowCameraPublisher::SetInfoRegionOfInterest( uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, bool do_rectify) {
+    sensor_msgs::msg::RegionOfInterest roi;
+    roi.x_offset(x_offset);
+    roi.y_offset(y_offset);
+    roi.height(height);
+    roi.width(width);
+    roi.do_rectify(do_rectify);
+    _impl_info->_info.roi(roi);
+  }
+
+  void CarlaOpticalFlowCameraPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data) {
     builtin_interfaces::msg::Time time;
     time.sec(seconds);
     time.nanosec(nanoseconds);
@@ -416,71 +305,24 @@ namespace ros2 {
     std_msgs::msg::Header header;
     header.stamp(std::move(time));
     header.frame_id(_frame_id);
-    _impl->_image.header(header);
-    _info->_ci.header(header);
-    _point_cloud->_pc.header(header);
 
+    _impl->_image.header(std::move(header));
     _impl->_image.width(width);
     _impl->_image.height(height);
-    _impl->_image.encoding("bgra8"); //taken from the list of strings in include/sensor_msgs/image_encodings.h
+    _impl->_image.encoding("bgra8");
     _impl->_image.is_bigendian(0);
     _impl->_image.step(_impl->_image.width() * sizeof(uint8_t) * 4);
     _impl->_image.data(std::move(data)); //https://github.com/eProsima/Fast-DDS/issues/2330
   }
 
-  void CarlaDVSCameraPublisher::SetInfoRegionOfInterest( uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, bool do_rectify) {
-    sensor_msgs::msg::RegionOfInterest roi;
-    roi.x_offset(x_offset);
-    roi.y_offset(y_offset);
-    roi.height(height);
-    roi.width(width);
-    roi.do_rectify(do_rectify);
-    _info->_ci.roi(roi);
-  }
-
-  void CarlaDVSCameraPublisher::SetPointCloudData(size_t height, size_t width, const uint8_t* data) {
-
-    std::vector<uint8_t> vector_data;
-    const size_t size = height * width * 4;
-    vector_data.resize(size);
-    std::memcpy(&vector_data[0], &data[0], size);
-
-    sensor_msgs::msg::PointField descriptor1;
-    descriptor1.name("x");
-    descriptor1.offset(0);
-    descriptor1.datatype(sensor_msgs::msg::PointField__FLOAT32);
-    descriptor1.count(1);
-    sensor_msgs::msg::PointField descriptor2;
-    descriptor2.name("y");
-    descriptor2.offset(4);
-    descriptor2.datatype(sensor_msgs::msg::PointField__FLOAT32);
-    descriptor2.count(1);
-    sensor_msgs::msg::PointField descriptor3;
-    descriptor3.name("z");
-    descriptor3.offset(8);
-    descriptor3.datatype(sensor_msgs::msg::PointField__FLOAT32);
-    descriptor3.count(1);
-
-    const size_t point_size = 3 * sizeof(float);
-    _point_cloud->_pc.width(width / 3);
-    _point_cloud->_pc.height(height);
-    _point_cloud->_pc.is_bigendian(false);
-    _point_cloud->_pc.fields({descriptor1, descriptor2, descriptor3});
-    _point_cloud->_pc.point_step(point_size);
-    _point_cloud->_pc.row_step(width * point_size);
-    _point_cloud->_pc.is_dense(false); //True if there are not invalid points
-    _point_cloud->_pc.data(std::move(vector_data));
-  }
-
-  CarlaDVSCameraPublisher::CarlaDVSCameraPublisher(const char* ros_name, const char* parent) :
-  _impl(std::make_shared<CarlaDVSCameraPublisherImpl>()),
-  _info(std::make_shared<CarlaCameraInfoPublisherImpl>()),
-  _point_cloud(std::make_shared<CarlaPointCloudPublisherImpl>()) {
+  CarlaOpticalFlowCameraPublisher::CarlaOpticalFlowCameraPublisher(const char* ros_name, const char* parent) :
+  _impl(std::make_shared<CarlaOpticalFlowCameraPublisherImpl>()),
+  _impl_info(std::make_shared<CarlaCameraInfoPublisherImpl>()) {
     _name = ros_name;
     _parent = parent;
   }
 
-  CarlaDVSCameraPublisher::~CarlaDVSCameraPublisher() {
+  CarlaOpticalFlowCameraPublisher::~CarlaOpticalFlowCameraPublisher() {
       if (!_impl)
           return;
 
@@ -496,73 +338,55 @@ namespace ros2 {
       if (_impl->_participant)
           efd::DomainParticipantFactory::get_instance()->delete_participant(_impl->_participant);
 
-      if (!_info)
-          return;
+      if (!_impl_info)
+        return;
 
-      if (_info->_datawriter)
-          _info->_publisher->delete_datawriter(_info->_datawriter);
+      if (_impl_info->_datawriter)
+          _impl_info->_publisher->delete_datawriter(_impl_info->_datawriter);
 
-      if (_info->_publisher)
-          _info->_participant->delete_publisher(_info->_publisher);
+      if (_impl_info->_publisher)
+          _impl_info->_participant->delete_publisher(_impl_info->_publisher);
 
-      if (_info->_topic)
-          _info->_participant->delete_topic(_info->_topic);
+      if (_impl_info->_topic)
+          _impl_info->_participant->delete_topic(_impl_info->_topic);
 
-      if (_info->_participant)
-          efd::DomainParticipantFactory::get_instance()->delete_participant(_info->_participant);
-
-      if (!_point_cloud)
-          return;
-
-      if (_point_cloud->_datawriter)
-          _point_cloud->_publisher->delete_datawriter(_point_cloud->_datawriter);
-
-      if (_point_cloud->_publisher)
-          _point_cloud->_participant->delete_publisher(_point_cloud->_publisher);
-
-      if (_point_cloud->_topic)
-          _point_cloud->_participant->delete_topic(_point_cloud->_topic);
-
-      if (_point_cloud->_participant)
-          efd::DomainParticipantFactory::get_instance()->delete_participant(_point_cloud->_participant);
+      if (_impl_info->_participant)
+          efd::DomainParticipantFactory::get_instance()->delete_participant(_impl_info->_participant);
   }
 
-  CarlaDVSCameraPublisher::CarlaDVSCameraPublisher(const CarlaDVSCameraPublisher& other) {
+  CarlaOpticalFlowCameraPublisher::CarlaOpticalFlowCameraPublisher(const CarlaOpticalFlowCameraPublisher& other) {
     _frame_id = other._frame_id;
     _name = other._name;
     _parent = other._parent;
     _impl = other._impl;
-    _info = other._info;
-    _point_cloud = other._point_cloud;
+    _impl_info = other._impl_info;
   }
 
-  CarlaDVSCameraPublisher& CarlaDVSCameraPublisher::operator=(const CarlaDVSCameraPublisher& other) {
+  CarlaOpticalFlowCameraPublisher& CarlaOpticalFlowCameraPublisher::operator=(const CarlaOpticalFlowCameraPublisher& other) {
     _frame_id = other._frame_id;
     _name = other._name;
     _parent = other._parent;
     _impl = other._impl;
-    _info = other._info;
-    _point_cloud = other._point_cloud;
+    _impl_info = other._impl_info;
 
     return *this;
   }
 
-  CarlaDVSCameraPublisher::CarlaDVSCameraPublisher(CarlaDVSCameraPublisher&& other) {
+  CarlaOpticalFlowCameraPublisher::CarlaOpticalFlowCameraPublisher(CarlaOpticalFlowCameraPublisher&& other) {
     _frame_id = std::move(other._frame_id);
     _name = std::move(other._name);
     _parent = std::move(other._parent);
     _impl = std::move(other._impl);
-    _info = std::move(other._info);
-    _point_cloud = std::move(other._point_cloud);
+    _impl_info = std::move(other._impl_info);
+
   }
 
-  CarlaDVSCameraPublisher& CarlaDVSCameraPublisher::operator=(CarlaDVSCameraPublisher&& other) {
+  CarlaOpticalFlowCameraPublisher& CarlaOpticalFlowCameraPublisher::operator=(CarlaOpticalFlowCameraPublisher&& other) {
     _frame_id = std::move(other._frame_id);
     _name = std::move(other._name);
     _parent = std::move(other._parent);
     _impl = std::move(other._impl);
-    _info = std::move(other._info);
-    _point_cloud = std::move(other._point_cloud);
+    _impl_info = std::move(other._impl_info);
 
     return *this;
   }

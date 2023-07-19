@@ -39,6 +39,7 @@ namespace ros2 {
 
   class CarlaPublisher;
   class CarlaTransformPublisher;
+  class CarlaClockPublisher;
   class CarlaEgoVehicleControlSubscriber;
 
 class ROS2
@@ -69,7 +70,7 @@ class ROS2
   std::string GetActorParentRosName(void *actor);
 
   // callbacks
-  void AddActorCallback(std::string ros_name, ActorCallback callback);
+  void AddActorCallback(void* actor, std::string ros_name, ActorCallback callback);
   void RemoveActorCallback(std::string ros_name);
 
   // enabling streams to publish
@@ -147,6 +148,7 @@ class ROS2
   std::unordered_map<void *, std::string> _actor_ros_name;
   std::unordered_map<void *, std::vector<void*> > _actor_parent_ros_name;
   std::shared_ptr<CarlaEgoVehicleControlSubscriber> _controller;
+  std::shared_ptr<CarlaClockPublisher> _clock_publisher;
   std::unordered_map<void *, std::shared_ptr<CarlaPublisher>> _publishers;
   std::unordered_map<void *, std::shared_ptr<CarlaTransformPublisher>> _transforms;
   std::unordered_set<carla::streaming::detail::stream_id_type> _publish_stream;
