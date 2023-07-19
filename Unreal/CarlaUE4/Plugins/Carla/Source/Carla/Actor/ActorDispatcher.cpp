@@ -194,11 +194,10 @@ FCarlaActor* UActorDispatcher::RegisterActor(
         {
           size_t pos = RosName.find_last_of('.');
           if (pos != std::string::npos) {
-            std::string lastToken = RosName.substr(pos + 1);
+            std::string lastToken = RosName.substr(pos + 1) + "__";
             ROS2->AddActorRosName(static_cast<void*>(&Actor), lastToken);
           }
         }
-
       } else {
         ROS2->AddActorRosName(static_cast<void*>(&Actor), RosName);
       }

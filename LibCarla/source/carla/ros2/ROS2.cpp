@@ -176,7 +176,9 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
     std::string parent_ros_name = GetActorParentRosName(actor);
     switch(type) {
       case ESensors::CollisionSensor: {
-        if (ros_name == "collision") {
+        if (ros_name == "collision__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
           ros_name += string_id;
           UpdateActorRosName(actor, ros_name);
         }
@@ -192,7 +194,9 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
       } break;
       case ESensors::DepthCamera: {
-        if (ros_name == "depth") {
+        if (ros_name == "depth__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
           ros_name += string_id;
           UpdateActorRosName(actor, ros_name);
         }
@@ -211,7 +215,9 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         std::cout << "Normals camera does not have an available publisher" << std::endl;
       } break;
       case ESensors::DVSCamera: {
-        if (ros_name == "dvs") {
+        if (ros_name == "dvs__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
           ros_name += string_id;
           UpdateActorRosName(actor, ros_name);
         }
@@ -227,7 +233,9 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
       } break;
       case ESensors::GnssSensor: {
-        if (ros_name == "gnss") {
+        if (ros_name == "gnss__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
           ros_name += string_id;
           UpdateActorRosName(actor, ros_name);
         }
@@ -243,7 +251,9 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
       } break;
       case ESensors::InertialMeasurementUnit: {
-        if (ros_name == "imu") {
+        if (ros_name == "imu__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
           ros_name += string_id;
           UpdateActorRosName(actor, ros_name);
         }
@@ -259,7 +269,9 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
       } break;
       case ESensors::LaneInvasionSensor: {
-        if (ros_name == "lane_invasion") {
+        if (ros_name == "lane_invasion__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
           ros_name += string_id;
           UpdateActorRosName(actor, ros_name);
         }
@@ -281,7 +293,9 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         std::cout << "Optical flow camera does not have an available publisher" << std::endl;
       } break;
       case ESensors::Radar: {
-        if (ros_name == "radar") {
+        if (ros_name == "radar__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
           ros_name += string_id;
           UpdateActorRosName(actor, ros_name);
         }
@@ -297,7 +311,9 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
       } break;
       case ESensors::RayCastSemanticLidar: {
-        if (ros_name == "semantic") {
+        if (ros_name == "semantic__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
           ros_name += string_id;
           UpdateActorRosName(actor, ros_name);
         }
@@ -313,7 +329,9 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
       } break;
       case ESensors::RayCastLidar: {
-        if (ros_name == "ray_cast") {
+        if (ros_name == "ray_cast__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
           ros_name += string_id;
           UpdateActorRosName(actor, ros_name);
         }
@@ -332,7 +350,9 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         std::cout << "RSS sensor does not have an available publisher" << std::endl;
       } break;
       case ESensors::SceneCaptureCamera: {
-        if (ros_name == "rgb") {
+        if (ros_name == "rgb__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
           ros_name += string_id;
           UpdateActorRosName(actor, ros_name);
         }
@@ -348,7 +368,9 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
       } break;
       case ESensors::SemanticSegmentationCamera: {
-        if (ros_name == "semantic_segmentation") {
+        if (ros_name == "semantic_segmentation__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
           ros_name += string_id;
           UpdateActorRosName(actor, ros_name);
         }
@@ -405,7 +427,8 @@ void ROS2::ProcessDataFromCamera(
             reinterpret_cast<const carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer->data());
           if (!header)
             return;
-          publisher->SetData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+          publisher->SetImageData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+          publisher->SetInfoRegionOfInterest(0, 0, H, W, true);
           publisher->Publish();
         }
         if (sensors.second) {
@@ -439,6 +462,7 @@ void ROS2::ProcessDataFromCamera(
           if (!header)
             return;
           publisher->SetImageData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+          publisher->SetInfoRegionOfInterest(0, 0, H, W, true);
           publisher->Publish();
         }
         if (sensors.second) {
