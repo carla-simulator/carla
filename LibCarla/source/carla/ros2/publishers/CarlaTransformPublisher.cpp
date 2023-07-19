@@ -151,14 +151,14 @@ namespace ros2 {
     float ty = *translation++;
     float tz = *translation++;
     vec_translation.x(tx);
-    vec_translation.y(ty);
+    vec_translation.y(-ty);
     vec_translation.z(tz);
     float rx = *rotation++;
     float ry = *rotation++;
     float rz = *rotation++;
     float rw = *rotation++;
-    vec_rotation.x(rx);
-    vec_rotation.y(ry);
+    vec_rotation.x(-rx);
+    vec_rotation.y(-ry);
     vec_rotation.z(rz);
     vec_rotation.w(rw);
 
