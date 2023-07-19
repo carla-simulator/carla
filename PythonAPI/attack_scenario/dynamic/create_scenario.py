@@ -43,10 +43,6 @@ except ImportError:
 
 
 OUTPUT_FOLDER = "_test"
-ATTACK_MESH_PATH = "/home/magnus/carla_own/Unreal/Carla/Blueprints/Props/StaticAttack.COPY"
-#"/home/magnus/carla_own/Unreal/CarlaUE4/Content/Carla/Blueprints/Props/StaticAttack.uasset"
-#"/home/magnus/carla_own/Unreal/CarlaUE4/Content/Carla/Static/Static/Trashcans/T_TrashCan1_d.uasset"
-
 
 
 # =============================================================================
@@ -76,7 +72,7 @@ class GTBoundingBoxes(object):
 
                 if img is not None and bb_verts:
                     bb_verts.append(i+1)
-                    img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[1])), (int(bb_verts[2]),int(bb_verts[1])), (0,0,255, 255), 1)
+                    img = cv2.line(img, (int(bb_verts[0]),int(bb_vePythonAPI/attack_scenario/static/create_scenario.pyrts[1])), (int(bb_verts[2]),int(bb_verts[1])), (0,0,255, 255), 1)
                     img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[3])), (int(bb_verts[2]),int(bb_verts[3])), (0,0,255, 255), 1)
                     img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[1])), (int(bb_verts[0]),int(bb_verts[3])), (0,0,255, 255), 1)
                     img = cv2.line(img, (int(bb_verts[2]),int(bb_verts[1])), (int(bb_verts[2]),int(bb_verts[3])), (0,0,255, 255), 1)
@@ -165,8 +161,10 @@ class GTBoundingBoxes(object):
         point_img[1] /= point_img[2]
 
         return point_img[0:2]
+    
 
-class StaticAttackScenario(object):
+
+class DynamicAttackScenario(object):
     def __init__(self) -> None:
         self.client = None
         self.world = None
@@ -219,14 +217,6 @@ class StaticAttackScenario(object):
             vehicle_bp = random.choice(self.bp_lib.filter('vehicle'))
             npc = self.world.try_spawn_actor(vehicle_bp, spawn_points[i+1])
             if npc:
-                prop_bp = self.bp_lib.find('static.prop.mesh')
-                prop_bp.set_attribute('mesh_path', ATTACK_MESH_PATH)
-                prop_bp.set_attribute('mass', '1.0')
-                prop_bp.set_attribute('scale', '2.0')
-                for attr in prop_bp:
-                    print('  - {}'.format(attr))
-                prop_pos = carla.Transform(carla.Location(z=2.4))
-                prop = self.world.spawn_actor(prop_bp, prop_pos, attach_to=npc)
                 self.vehicle_list.append(npc)
                 npc.set_autopilot(True)
 
@@ -349,10 +339,9 @@ class StaticAttackScenario(object):
             pass
 
         finally:
-            self.set_synchronous_mode(False)
             print("Destroying the actors!")
             for npc in self.vehicle_list:
-                npc.destroy()
+                carla.command.DestroyActor(npc)
 
             self.car.destroy()
             self.camera.destroy()
