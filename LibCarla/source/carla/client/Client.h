@@ -8,6 +8,7 @@
 
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/World.h"
+#include "carla/client/Map.h"
 #include "carla/PythonUtil.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
@@ -77,6 +78,45 @@ namespace client {
       return World{_simulator->LoadEpisode(std::move(map_name), reset_settings, map_layers)};
     }
 
+    /// Return (and load) a new world (map) only when the requested map is different from the current one
+
+    void LoadWorldIfDifferent(
+        std::string map_name,
+        bool reset_settings = true,
+        rpc::MapLayer map_layers = rpc::MapLayer::All) const {
+      carla::client::World world = GetWorld();
+      carla::SharedPtr<carla::client::Map> current_map = world.GetMap();
+      std::string current_map_name = current_map->GetName();
+      std::string map_name_prefix = "Carla/Maps/";
+      std::string map_name_without_prefix = map_name;
+      std::string map_name_with_prefix = map_name_prefix + map_name;
+      if(!(map_name_without_prefix == current_map_name) && !(map_name_with_prefix == current_map_name)){
+        World World{_simulator->LoadEpisode(std::move(map_name), reset_settings, map_layers)};
+      }else{
+
+      }
+    }
+
+/*
+    bool LoadWorldIfDifferent(
+        std::string map_name,
+        bool reset_settings = true,
+        rpc::MapLayer map_layers = rpc::MapLayer::All) const {
+        carla::client::World world = GetWorld();
+        carla::SharedPtr<carla::client::Map> current_map = world.GetMap();
+        std::string current_map_name = current_map->GetName();
+        std::string name_prefix = "Carla/Maps/";
+        std::string final_name = name_prefix + current_map_name;
+        if(!(current_map_name == map_name)){
+          World world = LoadWorld(map_name,reset_settings,map_layers);
+          return true;
+        }
+        else
+          return false;
+    }
+*/  
+
+    
     World GenerateOpenDriveWorld(
         std::string opendrive,
         const rpc::OpendriveGenerationParameters & params,
