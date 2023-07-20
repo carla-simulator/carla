@@ -144,7 +144,7 @@ namespace ros2 {
         std::cerr << "RETCODE_NOT_ALLOWED_BY_SECURITY" << std::endl;
         return false;
     }
-    std::cout << "UNKNOWN return code: " << rcode() << std::endl;
+    std::cerr << "UNKNOWN" << std::endl;
     return false;
   }
 

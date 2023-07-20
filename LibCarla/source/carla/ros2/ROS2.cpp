@@ -86,10 +86,7 @@ void ROS2::SetFrame(uint64_t frame) {
       auto it = _actor_callbacks.find(actor);
       if (it != _actor_callbacks.end()) {
         VehicleControl control = _controller->GetMessage();
-        std::cout << "Send Vehicle control to ego" << std::endl;
         it->second(actor, control);
-      } else {
-        std::cout << "Failed to find ego vehicle" << std::endl;
       }
     }
    }

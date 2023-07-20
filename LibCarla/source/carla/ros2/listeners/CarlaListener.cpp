@@ -27,10 +27,8 @@ namespace ros2 {
       if (info.current_count_change == 1) {
           _matched = info.total_count;
           _first_connected = true;
-          std::cout << "Publisher matched." << std::endl;
       } else if (info.current_count_change == -1) {
           _matched = info.total_count;
-          std::cout << "Publisher unmatched." << std::endl;
       } else {
           std::cerr << info.current_count_change
                   << " is not a valid value for PublicationMatchedStatus current count change" << std::endl;

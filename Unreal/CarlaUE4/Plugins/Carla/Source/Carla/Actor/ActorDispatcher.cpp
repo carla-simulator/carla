@@ -184,11 +184,10 @@ FCarlaActor* UActorDispatcher::RegisterActor(
         }
       }
       const std::string id = std::string(TCHAR_TO_UTF8(*Description.Id));
-
-      if(Description.Id.Contains("vehicle."))
+      if(RosName.find("vehicle.") != std::string::npos)
       {
-        RosName = "vehicle" + std::to_string(View->GetActorId());
-        ROS2->AddActorRosName(static_cast<void*>(&Actor), RosName);
+        std::string VehicleName = "vehicle" + std::to_string(View->GetActorId());
+        ROS2->AddActorRosName(static_cast<void*>(&Actor), VehicleName);
       } else if (RosName == id) {
         size_t pos = RosName.find_last_of('.');
         if (pos != std::string::npos) {

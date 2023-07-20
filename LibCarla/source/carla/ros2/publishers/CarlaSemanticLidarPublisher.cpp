@@ -144,13 +144,13 @@ namespace ros2 {
         std::cerr << "RETCODE_NOT_ALLOWED_BY_SECURITY" << std::endl;
         return false;
     }
-    std::cout << "UNKNOWN" << std::endl;
+    std::cerr << "UNKNOWN" << std::endl;
     return false;
   }
 
 void CarlaSemanticLidarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t elements, size_t height, size_t width, float* data) {
     float* it = data;
-    float* end = &data[height * width];
+    float* end = &data[height * width * elements];
     for (++it; it < end; it += elements) {
         *it *= -1.0f;
     }
