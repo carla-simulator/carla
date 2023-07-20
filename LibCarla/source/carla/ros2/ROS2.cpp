@@ -81,13 +81,17 @@ void ROS2::SetFrame(uint64_t frame) {
   _frame = frame;
    //log_info("ROS2 new frame: ", _frame);
    if (_controller) {
-    if (_controller->HasNewMessage()) {
-      void* actor = _controller->GetVehicle();
-      auto it = _actor_callbacks.find(actor);
-      if (it != _actor_callbacks.end()) {
-        VehicleControl control = _controller->GetMessage();
-        it->second(actor, control);
+    void* actor = _controller->GetVehicle();
+    if (_controller->IsAlive()) {
+      if (_controller->HasNewMessage()) {
+        auto it = _actor_callbacks.find(actor);
+        if (it != _actor_callbacks.end()) {
+          VehicleControl control = _controller->GetMessage();
+          it->second(actor, control);
+        }
       }
+    } else {
+      RemoveActorCallback(actor);
     }
    }
 }

@@ -40,6 +40,7 @@ namespace ros2 {
     carla_msgs::msg::CarlaEgoVehicleControl _event {};
     VehicleControl _control {};
     bool _new_message {false};
+    bool _alive {true};
     void* _vehicle {nullptr};
   };
 
@@ -158,9 +159,17 @@ namespace ros2 {
     _impl->_new_message = true;
   }
 
+  void CarlaEgoVehicleControlSubscriber::DestroySubscriber() {
+    _impl->_alive = false;
+  }
+
   VehicleControl CarlaEgoVehicleControlSubscriber::GetMessage() {
     _impl->_new_message = false;
     return _impl->_control;
+  }
+
+  bool CarlaEgoVehicleControlSubscriber::IsAlive() {
+    return _impl->_alive;
   }
 
   bool CarlaEgoVehicleControlSubscriber::HasNewMessage() {

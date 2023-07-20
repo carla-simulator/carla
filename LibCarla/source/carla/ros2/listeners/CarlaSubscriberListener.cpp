@@ -37,6 +37,9 @@ namespace ros2 {
           _first_connected = true;
       } else if (info.current_count_change == -1) {
           _matched = info.total_count;
+          if (_matched == 0) {
+            _owner->DestroySubscriber();
+          }
       } else {
           std::cerr << info.current_count_change
                   << " is not a valid value for PublicationMatchedStatus current count change" << std::endl;

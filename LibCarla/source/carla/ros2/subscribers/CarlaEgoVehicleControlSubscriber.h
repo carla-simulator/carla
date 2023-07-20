@@ -26,6 +26,7 @@ namespace ros2 {
       CarlaEgoVehicleControlSubscriber& operator=(CarlaEgoVehicleControlSubscriber&&);
 
       bool HasNewMessage();
+      bool IsAlive();
       VehicleControl GetMessage();
       void* GetVehicle();
 
@@ -35,6 +36,7 @@ namespace ros2 {
 
       //Do not call, for internal use only
       void ForwardMessage(VehicleControl control);
+      void DestroySubscriber();
     private:
       void SetData(int32_t seconds, uint32_t nanoseconds, uint32_t actor_id, std::vector<float>&& data);
 
