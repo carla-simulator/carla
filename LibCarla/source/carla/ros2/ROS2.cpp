@@ -82,9 +82,9 @@ void ROS2::SetFrame(uint64_t frame) {
    //log_info("ROS2 new frame: ", _frame);
    if (_controller) {
     if (_controller->HasNewMessage()) {
-      auto it = _actor_callbacks.find(_controller->name());
+      void* actor = _controller->GetVehicle();
+      auto it = _actor_callbacks.find(actor);
       if (it != _actor_callbacks.end()) {
-        void* actor = _controller->GetVehicle();
         VehicleControl control = _controller->GetMessage();
         std::cout << "Send Vehicle control to ego" << std::endl;
         it->second(actor, control);
@@ -171,16 +171,16 @@ std::string ROS2::GetActorParentRosName(void *actor) {
 }
 
 void ROS2::AddActorCallback(void* actor, std::string ros_name, ActorCallback callback) {
-  _actor_callbacks.insert({ros_name, std::move(callback)});
+  _actor_callbacks.insert({actor, std::move(callback)});
 
   _controller.reset();
   _controller = std::make_shared<CarlaEgoVehicleControlSubscriber>(actor, ros_name.c_str());
   _controller->Init();
 }
 
-void ROS2::RemoveActorCallback(std::string ros_name) {
+void ROS2::RemoveActorCallback(void* actor) {
   _controller.reset();
-  _actor_callbacks.erase(ros_name);
+  _actor_callbacks.erase(actor);
 }
 
 std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> ROS2::GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor) {
