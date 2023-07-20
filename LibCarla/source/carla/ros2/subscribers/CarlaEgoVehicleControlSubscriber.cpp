@@ -68,10 +68,12 @@ namespace ros2 {
 
     efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
     const std::string base { "rt/carla/" };
+    const std::string publisher_type {"/vehicle_cmd"};
     std::string topic_name = base;
     if (!_parent.empty())
       topic_name += _parent + "/";
     topic_name += _name;
+    topic_name += publisher_type;
     _impl->_topic = _impl->_participant->create_topic(topic_name, _impl->_type->getName(), tqos);
     if (_impl->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
