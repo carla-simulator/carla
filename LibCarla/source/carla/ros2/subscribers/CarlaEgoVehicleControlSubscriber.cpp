@@ -68,7 +68,7 @@ namespace ros2 {
 
     efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
     const std::string base { "rt/carla/" };
-    const std::string publisher_type {"/vehicle_cmd"};
+    const std::string publisher_type {"/vehicle_control_cmd"};
     std::string topic_name = base;
     if (!_parent.empty())
       topic_name += _parent + "/";

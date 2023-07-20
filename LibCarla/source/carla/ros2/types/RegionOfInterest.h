@@ -285,10 +285,8 @@ namespace sensor_msgs {
             uint32_t m_height;
             uint32_t m_width;
             bool m_do_rectify;
-
         };
     } // namespace msg
 } // namespace sensor_msgs
 
 #endif // _FAST_DDS_GENERATED_SENSOR_MSGS_MSG_REGIONOFINTEREST_H_
-
