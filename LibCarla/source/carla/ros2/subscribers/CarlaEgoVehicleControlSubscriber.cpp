@@ -35,9 +35,9 @@ namespace ros2 {
     efd::Subscriber* _subscriber { nullptr };
     efd::Topic* _topic { nullptr };
     efd::DataReader* _datareader { nullptr };
-    efd::TypeSupport _type { new carla_msgs::msg::VehicleControlPubSubType() };
+    efd::TypeSupport _type { new carla_msgs::msg::CarlaEgoVehicleControlPubSubType() };
     CarlaSubscriberListener _listener {nullptr};
-    carla_msgs::msg::VehicleControl _event {};
+    carla_msgs::msg::CarlaEgoVehicleControl _event {};
     VehicleControl _control {};
     bool _new_message {false};
     void* _vehicle {nullptr};

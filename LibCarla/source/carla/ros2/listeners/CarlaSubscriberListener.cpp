@@ -27,7 +27,7 @@ namespace ros2 {
       int _matched {0};
       bool _first_connected {false};
       CarlaEgoVehicleControlSubscriber* _owner {nullptr};
-      carla_msgs::msg::VehicleControl _message {};
+      carla_msgs::msg::CarlaEgoVehicleControl _message {};
     };
 
     void CarlaSubscriberListenerImpl::on_subscription_matched(efd::DataReader* reader, const efd::SubscriptionMatchedStatus& info)
@@ -45,6 +45,7 @@ namespace ros2 {
 
     void CarlaSubscriberListenerImpl::on_data_available(efd::DataReader* reader)
     {
+        std::cout << "CarlaEgoVehicleControl Message received successfully" << std::endl;
       efd::SampleInfo info;
       eprosima::fastrtps::types::ReturnCode_t rcode = reader->take_next_sample(&_message, &info);
       if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
