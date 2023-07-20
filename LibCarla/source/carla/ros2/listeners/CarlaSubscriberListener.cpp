@@ -45,7 +45,6 @@ namespace ros2 {
 
     void CarlaSubscriberListenerImpl::on_data_available(efd::DataReader* reader)
     {
-        std::cout << "CarlaEgoVehicleControl Message received successfully" << std::endl;
       efd::SampleInfo info;
       eprosima::fastrtps::types::ReturnCode_t rcode = reader->take_next_sample(&_message, &info);
       if (rcode == erc::ReturnCodeValue::RETCODE_OK) {

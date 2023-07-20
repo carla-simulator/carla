@@ -26,7 +26,7 @@ namespace ros2 {
 
       bool Init();
       bool Publish();
-      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, float* data);
+      void SetData(int32_t seconds, uint32_t nanoseconds, size_t elements, size_t height, size_t width, float* data);
       const char* type() const override { return "semantic lidar"; }
 
     private:

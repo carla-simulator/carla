@@ -86,7 +86,10 @@ void ROS2::SetFrame(uint64_t frame) {
       if (it != _actor_callbacks.end()) {
         void* actor = _controller->GetVehicle();
         VehicleControl control = _controller->GetMessage();
+        std::cout << "Send Vehicle control to ego" << std::endl;
         it->second(actor, control);
+      } else {
+        std::cout << "Failed to find ego vehicle" << std::endl;
       }
     }
    }
@@ -362,7 +365,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
       } break;
       case ESensors::RayCastSemanticLidar: {
-        if (ros_name == "semantic__") {
+        if (ros_name == "ray_cast_semantic__") {
           ros_name.pop_back();
           ros_name.pop_back();
           ros_name += string_id;
@@ -720,13 +723,14 @@ void ROS2::ProcessDataFromSemanticLidar(
     const carla::geom::Transform sensor_transform,
     carla::sensor::data::SemanticLidarData &data,
     void *actor) {
+  static_assert(sizeof(float) == sizeof(uint32_t), "Invalid float size");
   log_info("Sensor SemanticLidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._ser_points.size());
   auto sensors = GetOrCreateSensor(ESensors::RayCastSemanticLidar, stream_id, actor);
   if (sensors.first) {
     std::shared_ptr<CarlaSemanticLidarPublisher> publisher = std::dynamic_pointer_cast<CarlaSemanticLidarPublisher>(sensors.first);
     size_t width = data._ser_points.size();
     size_t height = 1;
-    publisher->SetData(_seconds, _nanoseconds, height, width, (float*)data._ser_points.data());
+    publisher->SetData(_seconds, _nanoseconds, 6, height, width, (float*)data._ser_points.data());
     publisher->Publish();
   }
   if (sensors.second) {

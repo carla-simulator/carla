@@ -148,14 +148,15 @@ namespace ros2 {
     return false;
   }
 
-void CarlaSemanticLidarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, float* data) {
+void CarlaSemanticLidarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t elements, size_t height, size_t width, float* data) {
     float* it = data;
     float* end = &data[height * width];
-    for (++it; it < end; it += 4) {
+    for (++it; it < end; it += elements) {
         *it *= -1.0f;
     }
+
     std::vector<uint8_t> vector_data;
-    const size_t size = height * width * sizeof(float);
+    const size_t size = height * width * sizeof(float) * elements;
     vector_data.resize(size);
     std::memcpy(&vector_data[0], &data[0], size);
     SetData(seconds, nanoseconds, height, width, std::move(vector_data));
