@@ -43,6 +43,7 @@ except ImportError:
 
 
 OUTPUT_FOLDER = "_test"
+PATCH_PATH = "./attack.png"
 
 
 # =============================================================================
@@ -72,7 +73,7 @@ class GTBoundingBoxes(object):
 
                 if img is not None and bb_verts:
                     bb_verts.append(i+1)
-                    img = cv2.line(img, (int(bb_verts[0]),int(bb_vePythonAPI/attack_scenario/static/create_scenario.pyrts[1])), (int(bb_verts[2]),int(bb_verts[1])), (0,0,255, 255), 1)
+                    img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[1])), (int(bb_verts[2]),int(bb_verts[1])), (0,0,255, 255), 1)
                     img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[3])), (int(bb_verts[2]),int(bb_verts[3])), (0,0,255, 255), 1)
                     img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[1])), (int(bb_verts[0]),int(bb_verts[3])), (0,0,255, 255), 1)
                     img = cv2.line(img, (int(bb_verts[2]),int(bb_verts[1])), (int(bb_verts[2]),int(bb_verts[3])), (0,0,255, 255), 1)
@@ -161,10 +162,8 @@ class GTBoundingBoxes(object):
         point_img[1] /= point_img[2]
 
         return point_img[0:2]
-    
 
-
-class DynamicAttackScenario(object):
+class StaticAttackScenario(object):
     def __init__(self) -> None:
         self.client = None
         self.world = None
@@ -174,7 +173,7 @@ class DynamicAttackScenario(object):
         self.car = None
         self.camera = None
         self.K = None
-        self.image_queue = queue.Queue()
+        self.image_queue = queue.LifoQueue(maxsize=10)
 
         self.ground_truth_annotations = {
             "info": {},
@@ -217,7 +216,12 @@ class DynamicAttackScenario(object):
             vehicle_bp = random.choice(self.bp_lib.filter('vehicle'))
             npc = self.world.try_spawn_actor(vehicle_bp, spawn_points[i+1])
             if npc:
+                prop_bp = self.bp_lib.find('static.prop.staticattack')
+                bb = npc.bounding_box
+                prop_pos = carla.Transform(carla.Location(x=bb.location.x-bb.extent.x, y=0,z=bb.location.z))
+                prop = self.world.spawn_actor(prop_bp, prop_pos, attach_to=npc)
                 self.vehicle_list.append(npc)
+                self.vehicle_list.append(prop)
                 npc.set_autopilot(True)
 
         print("Spawned {} NPC vehicles.".format(n))
@@ -255,12 +259,20 @@ class DynamicAttackScenario(object):
         return K
 
     def game_loop(self):
+        # delete old images from output folder
+        out_folder = os.listdir(OUTPUT_FOLDER)
+
+        for item in out_folder:
+            if item.endswith(".png"):
+                os.remove(os.path.join(OUTPUT_FOLDER, item))
         try: 
             self.client = carla.Client("localhost", 2000)
             self.client.set_timeout(2.0)
             self.world = self.client.get_world()
             self.bp_lib = self.world.get_blueprint_library()
             # spectator = self.world.get_spectator()
+
+            self.spawn_npcs(5)
 
             spawn_points = self.world.get_map().get_spawn_points()
 
@@ -272,16 +284,7 @@ class DynamicAttackScenario(object):
             fov = float(self.camera.attributes["fov"])
             self.K = self.get_camera_matrix(image_w, image_h, fov)
 
-            self.spawn_npcs(5)
-
             self.set_synchronous_mode(True)
-
-            # delete old images from output folder
-            out_folder = os.listdir(OUTPUT_FOLDER)
-
-            for item in out_folder:
-                if item.endswith(".png"):
-                    os.remove(os.path.join(OUTPUT_FOLDER, item))
 
             self.world.tick()
             frame_number = 0
@@ -339,14 +342,17 @@ class DynamicAttackScenario(object):
             pass
 
         finally:
+            self.set_synchronous_mode(False)
             print("Destroying the actors!")
-            for npc in self.vehicle_list:
-                carla.command.DestroyActor(npc)
+            # for npc in self.vehicle_list:
+            #     npc.destroy()
+            self.client.apply_batch([carla.command.DestroyActor(x) for x in self.vehicle_list])
 
-            self.car.destroy()
-            self.camera.destroy()
+            # self.car.destroy()
+            # self.camera.destroy()
+            if self.car.destroy() and self.camera.destroy():
 
-            print("Destroyed {} vehicles and the ego-vehicle and camera.".format(len(self.vehicle_list)))
+                print("Destroyed {} vehicles and the ego-vehicle and camera.".format(len(self.vehicle_list)))
             
             cv2.destroyAllWindows()
 
@@ -357,7 +363,7 @@ class DynamicAttackScenario(object):
 
 if __name__ == "__main__":
     try:
-        client = StaticAttackScenario()
-        client.game_loop()
+        attack_scenario = StaticAttackScenario()
+        attack_scenario.game_loop()
     finally:
         print("EXIT!")

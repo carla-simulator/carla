@@ -43,14 +43,11 @@ except ImportError:
 
 
 OUTPUT_FOLDER = "_test"
-ATTACK_MESH_PATH = "/Game/Package_Attacks/Static/Static/StaticAttack/Prop01_Attack.Prop01_Attack"
-#"/home/magnus/carla_own/Unreal/CarlaUE4/Content/Carla/Blueprints/Props/StaticAttack.uasset"
-#"/home/magnus/carla_own/Unreal/CarlaUE4/Content/Carla/Static/Static/Trashcans/T_TrashCan1_d.uasset"
 
 
 
 # =============================================================================
-# -- client -------------------------------------------------------------------
+# -- get bounding boxes -------------------------------------------------------
 # =============================================================================
 
 class GTBoundingBoxes(object):
@@ -165,6 +162,12 @@ class GTBoundingBoxes(object):
         point_img[1] /= point_img[2]
 
         return point_img[0:2]
+    
+
+# =============================================================================
+# -- static attack client -----------------------------------------------------
+# =============================================================================
+
 
 class StaticAttackScenario(object):
     def __init__(self) -> None:
