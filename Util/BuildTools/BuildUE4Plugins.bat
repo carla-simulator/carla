@@ -19,7 +19,7 @@ set USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--build] [--clean] [-
 
 set BUILD_STREETMAP=false
 set GIT_PULL=true
-set CURRENT_STREETMAP_COMMIT=04bd179ea323e6ca0a804629106fc536fa6342b0
+set CURRENT_STREETMAP_COMMIT=78e5c40e0ce1b6d109c79b59bd84f7f24e35e347
 set STREETMAP_BRANCH=master
 set STREETMAP_REPO=https://github.com/carla-simulator/StreetMap.git
 

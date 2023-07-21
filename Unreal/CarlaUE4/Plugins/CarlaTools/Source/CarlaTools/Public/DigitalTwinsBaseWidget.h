@@ -28,4 +28,7 @@ public:
 
   UFUNCTION(BlueprintCallable)
   void SetOpenDriveToMap(UOpenDriveToMap* ToSet);
+
+  UFUNCTION(BlueprintCallable)
+  void DestroyOpenDriveToMap();
 };

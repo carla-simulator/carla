@@ -72,6 +72,9 @@ public:
   UFUNCTION(BlueprintCallable)
   void ReturnToMainLevel();
 
+  UFUNCTION(BlueprintCallable)
+  void CorrectPositionForAllActorsInCurrentTile();
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;
 

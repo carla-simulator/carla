@@ -25,3 +25,8 @@ UOpenDriveToMap* UDigitalTwinsBaseWidget::GetOpenDriveToMap(){
 void UDigitalTwinsBaseWidget::SetOpenDriveToMap(UOpenDriveToMap* ToSet){
   OpenDriveToMapObject = ToSet;
 }
+
+void UDigitalTwinsBaseWidget::DestroyOpenDriveToMap(){
+  OpenDriveToMapObject->ConditionalBeginDestroy();
+  OpenDriveToMapObject = nullptr;
+}

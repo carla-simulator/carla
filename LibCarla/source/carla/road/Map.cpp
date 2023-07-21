@@ -1430,11 +1430,15 @@ namespace road {
     std::vector<RoadId> ToReturn;
     std::cout << "Filtered from " + std::to_string(_data.GetRoads().size() ) + " roads " << std::endl;
     for( auto& road : _data.GetRoads() ){
-      boost::optional<element::Waypoint> wp = GetWaypoint(road.first, -1, road.second.GetLength() );
-      geom::Location roadLocation = ComputeTransform(*wp).location;
-      if( minpos.x < roadLocation.x && roadLocation.x < maxpos.x &&
-            minpos.y > roadLocation.y && roadLocation.y > maxpos.y ) {
-        ToReturn.push_back(road.first);
+      auto &&lane_section = (*road.second.GetLaneSections().begin());
+      const road::Lane* lane = lane_section.GetLane(-1);
+      if( lane ) {
+        const double s_check = lane_section.GetDistance() + lane_section.GetLength() * 0.5;
+        geom::Location roadLocation = lane->ComputeTransform(s_check).location;
+        if( minpos.x < roadLocation.x && roadLocation.x < maxpos.x &&
+              minpos.y > roadLocation.y && roadLocation.y > maxpos.y ) {
+          ToReturn.push_back(road.first);
+        }
       }
     }
     std::cout << "To " + std::to_string(ToReturn.size() ) + " roads " << std::endl;
