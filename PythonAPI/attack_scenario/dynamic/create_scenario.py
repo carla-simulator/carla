@@ -24,6 +24,7 @@ import time
 import queue
 import cv2
 import json
+import keyboard
 
 try:
     import pygame
@@ -50,10 +51,13 @@ PATCH_PATH = "./attack.png"
 # -- client -------------------------------------------------------------------
 # =============================================================================
 
-class GTBoundingBoxes(object):
+class GTBoundingBoxesAndPatchAttack(object):
+
+    patch = cv2.imread(PATCH_PATH, cv2.IMREAD_UNCHANGED)
     
     @staticmethod
     def get_bounding_boxes(world, vehicle, camera, K, img=None):
+        patched_img = img.copy()       
         bounding_boxes = []
 
         # get bounding boxes of all types of vehicles
@@ -68,18 +72,42 @@ class GTBoundingBoxes(object):
         
         for i, vehicle_class in enumerate(all_vehicles_bbs):
             for bb in vehicle_class:
-                bb_verts = GTBoundingBoxes.__filter_bbs(bb, vehicle, camera, K)
+                bb_verts = GTBoundingBoxesAndPatchAttack.__filter_bbs(bb, vehicle, camera, K)
                 bounding_boxes.append(bb_verts)
 
-                if img is not None and bb_verts:
-                    bb_verts.append(i+1)
-                    img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[1])), (int(bb_verts[2]),int(bb_verts[1])), (0,0,255, 255), 1)
-                    img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[3])), (int(bb_verts[2]),int(bb_verts[3])), (0,0,255, 255), 1)
-                    img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[1])), (int(bb_verts[0]),int(bb_verts[3])), (0,0,255, 255), 1)
-                    img = cv2.line(img, (int(bb_verts[2]),int(bb_verts[1])), (int(bb_verts[2]),int(bb_verts[3])), (0,0,255, 255), 1)
+                if img is not None:
+
+                    if bb_verts:
+                        bb_verts.append(i+1)
+
+                        # resize patch and insert it into the image in the middle of the bounding box
+                        width_bb = bb_verts[2]-bb_verts[0]
+                        height_bb = bb_verts[3]-bb_verts[1]
+                        area_bb = width_bb * height_bb
+                        l = int(math.sqrt(0.2*area_bb))
+                        patch_dim = (l, l)
+
+                        if l < width_bb and l < height_bb and l > 0:
+                            patch = GTBoundingBoxesAndPatchAttack.patch.copy()
+                            patch = cv2.resize(patch, patch_dim)
+                            x_c = int(bb_verts[0]+((bb_verts[2]-bb_verts[0])/2))
+                            y_c = int(bb_verts[1]+((bb_verts[3]-bb_verts[1])/2))
+                            x_min_p = int(x_c-l/2)
+                            x_max_p = x_min_p+l
+                            y_min_p = int(y_c-l/2)
+                            y_max_p = y_min_p+l
+                            
+                            if patch.shape == patched_img[x_min_p:x_max_p, y_min_p:y_max_p,:].shape:
+                                patched_img[y_min_p:y_max_p, x_min_p:x_max_p,:] = patch
+                                img[y_min_p:y_max_p, x_min_p:x_max_p,:] = patch
+
+                        img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[1])), (int(bb_verts[2]),int(bb_verts[1])), (0,0,255, 255), 1)
+                        img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[3])), (int(bb_verts[2]),int(bb_verts[3])), (0,0,255, 255), 1)
+                        img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[1])), (int(bb_verts[0]),int(bb_verts[3])), (0,0,255, 255), 1)
+                        img = cv2.line(img, (int(bb_verts[2]),int(bb_verts[1])), (int(bb_verts[2]),int(bb_verts[3])), (0,0,255, 255), 1)
         
         if img is not None:
-            return bounding_boxes, img
+            return bounding_boxes, img, patched_img
         
         return bounding_boxes
 
@@ -112,7 +140,7 @@ class GTBoundingBoxes(object):
                 y_min = 10000
 
                 for vert in verts:
-                    p = GTBoundingBoxes.__get_image_point(vert, K, world_2_camera)
+                    p = GTBoundingBoxesAndPatchAttack.__get_image_point(vert, K, world_2_camera)
                     # Find the rightmost vertex
                     if p[0] > x_max:
                         x_max = p[0]
@@ -163,7 +191,7 @@ class GTBoundingBoxes(object):
 
         return point_img[0:2]
 
-class StaticAttackScenario(object):
+class DynamicAttackScenario(object):
     def __init__(self) -> None:
         self.client = None
         self.world = None
@@ -216,12 +244,7 @@ class StaticAttackScenario(object):
             vehicle_bp = random.choice(self.bp_lib.filter('vehicle'))
             npc = self.world.try_spawn_actor(vehicle_bp, spawn_points[i+1])
             if npc:
-                prop_bp = self.bp_lib.find('static.prop.staticattack')
-                bb = npc.bounding_box
-                prop_pos = carla.Transform(carla.Location(x=bb.location.x-bb.extent.x, y=0,z=bb.location.z))
-                prop = self.world.spawn_actor(prop_bp, prop_pos, attach_to=npc)
                 self.vehicle_list.append(npc)
-                self.vehicle_list.append(prop)
                 npc.set_autopilot(True)
 
         print("Spawned {} NPC vehicles.".format(n))
@@ -270,13 +293,13 @@ class StaticAttackScenario(object):
             self.client.set_timeout(2.0)
             self.world = self.client.get_world()
             self.bp_lib = self.world.get_blueprint_library()
-            # spectator = self.world.get_spectator()
+            spectator = self.world.get_spectator()
 
             self.spawn_npcs(5)
 
             spawn_points = self.world.get_map().get_spawn_points()
 
-            self.spawn_ego(spawn_points[0])
+            self.spawn_ego(spawn_points[114])
 
             # Calculate the camera projection matrix to project from 3D -> 2D and save to camera attributes
             image_w = int(self.camera.attributes["image_size_x"])
@@ -317,7 +340,7 @@ class StaticAttackScenario(object):
                     "id": frame_number
                 })
 
-                bounding_boxes, bb_img = GTBoundingBoxes.get_bounding_boxes(self.world, self.car, self.camera, self.K, bb_img)
+                bounding_boxes, bb_img, patched_img = GTBoundingBoxesAndPatchAttack.get_bounding_boxes(self.world, self.car, self.camera, self.K, bb_img)
 
                 for bb_verts in bounding_boxes:
                     if bb_verts:
@@ -332,7 +355,7 @@ class StaticAttackScenario(object):
                             "bbox": bb_cocoFormat
                         })
 
-                cv2.imwrite(os.path.join(OUTPUT_FOLDER, frame_file), img)
+                cv2.imwrite(os.path.join(OUTPUT_FOLDER, frame_file), patched_img)
 
                 cv2.imshow('CameraFeed',bb_img)
                 if cv2.waitKey(1) == ord('q'):
@@ -363,7 +386,7 @@ class StaticAttackScenario(object):
 
 if __name__ == "__main__":
     try:
-        attack_scenario = StaticAttackScenario()
+        attack_scenario = DynamicAttackScenario()
         attack_scenario.game_loop()
     finally:
         print("EXIT!")
