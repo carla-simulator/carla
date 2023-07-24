@@ -681,9 +681,9 @@ void ROS2::ProcessDataFromDVS(
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
-    const std::vector<carla::sensor::data::DVSEvent> &events,
+    const carla::SharedBufferView buffer,
     void *actor) {
-  log_info("Sensor DVS to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "events.", events.size());
+  log_info("Sensor DVS to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
   auto sensors = GetOrCreateSensor(ESensors::DVSCamera, stream_id, actor);
   if (sensors.first) {
     std::shared_ptr<CarlaDVSCameraPublisher> publisher = std::dynamic_pointer_cast<CarlaDVSCameraPublisher>(sensors.first);
