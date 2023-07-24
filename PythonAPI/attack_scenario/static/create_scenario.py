@@ -16,6 +16,7 @@ except IndexError:
 # ==============================================================================
 
 import carla
+import logging
 
 import weakref
 import random
@@ -40,6 +41,9 @@ try:
     import numpy as np
 except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed')
+
+
+SpawnActor = carla.command.SpawnActor
 
 
 OUTPUT_FOLDER = "_test"
@@ -175,6 +179,7 @@ class StaticAttackScenario(object):
         self.world = None
         self.bp_lib = None
         self.vehicle_list = []
+        self.pedestrian_list = []
 
         self.car = None
         self.camera = None
@@ -212,9 +217,12 @@ class StaticAttackScenario(object):
         settings.fixed_delta_seconds = 0.05
         self.world.apply_settings(settings)
 
-    def spawn_npcs(self, n):
+    def spawn_npc_vehicles(self, n):
         """
         Spawns a given number of NPC vehicles.
+
+        Input:
+            n: number of NPCs
         """
         spawn_points = self.world.get_map().get_spawn_points()
 
@@ -231,6 +239,103 @@ class StaticAttackScenario(object):
                 npc.set_autopilot(True)
 
         print("Spawned {} NPC vehicles.".format(n))
+
+    def spawn_npc_pedestrians(self, n):
+        """
+        Spawns a given number of NPC pedestrians.
+
+        Input:
+            n: number of NPCs
+        """
+        # -------------
+        # Spawn Walkers
+        # -------------
+        # some settings
+        percentagePedestriansRunning = 0.0      # how many pedestrians will run
+        percentagePedestriansCrossing = 0.0     # how many pedestrians will walk through the road
+        self.world.set_pedestrians_seed(42)
+        # 1. take all the random locations to spawn
+        spawn_points = []
+        for i in range(n):
+            spawn_point = carla.Transform()
+            loc = self.world.get_random_location_from_navigation()
+            if (loc != None):
+                spawn_point.location = loc
+                spawn_points.append(spawn_point)
+        # 2. we spawn the walker object
+        batch = []
+        walker_speed = []
+        for spawn_point in spawn_points:
+            walker_bp = random.choice(self.bp_lib.filter('walker'))
+            # set as not invincible
+            if walker_bp.has_attribute('is_invincible'):
+                walker_bp.set_attribute('is_invincible', 'false')
+            # set the max speed
+            if walker_bp.has_attribute('speed'):
+                if (random.random() > percentagePedestriansRunning):
+                    # walking
+                    walker_speed.append(walker_bp.get_attribute('speed').recommended_values[1])
+                else:
+                    # running
+                    walker_speed.append(walker_bp.get_attribute('speed').recommended_values[2])
+            else:
+                print("Walker has no speed")
+                walker_speed.append(0.0)
+
+            batch.append(SpawnActor(walker_bp, spawn_point))
+
+        results = self.client.apply_batch_sync(batch, True)
+        walker_speed2 = []
+        walkers_list = []
+        for i in range(len(results)):
+            if results[i].error:
+                logging.error(results[i].error)
+            else:
+                walkers_list.append({"id": results[i].actor_id})
+                walker_speed2.append(walker_speed[i])
+        walker_speed = walker_speed2
+        # 3. we spawn the walker controller
+        batch = []
+        walker_controller_bp = self.bp_lib.find('controller.ai.walker')
+        for i in range(len(walkers_list)):
+            batch.append(SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
+        results = self.client.apply_batch_sync(batch, True)
+        for i in range(len(results)):
+            if results[i].error:
+                logging.error(results[i].error)
+            else:
+                walkers_list[i]["con"] = results[i].actor_id
+        # Spawn attack patches and attach the to the walkers
+        batch = []
+        patch_bp = self.bp_lib.find('static.prop.staticattack')
+        for i in range(len(walkers_list)):
+            patch_pos = carla.Transform(carla.Location(x=0.15, y=0,z=0.6))
+            batch.append(SpawnActor(patch_bp, patch_pos, walkers_list[i]["id"]))
+        results = self.client.apply_batch_sync(batch, True)
+        for i in range(len(results)):
+            if results[i].error:
+                logging.error(results[i].error)
+            else:
+                walkers_list[i]["patch"] = results[i].actor_id
+        # 4. we put together the walkers and controllers id to get the objects from their id
+        for i in range(len(walkers_list)):
+            self.pedestrian_list.append(walkers_list[i]["con"])
+            self.pedestrian_list.append(walkers_list[i]["id"])
+            self.pedestrian_list.append(walkers_list[i]["patch"])
+        all_pedestrians = self.world.get_actors(self.pedestrian_list)
+
+        self.world.tick()
+
+        # 5. initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
+        # set how many pedestrians can cross the road
+        self.world.set_pedestrians_cross_factor(percentagePedestriansCrossing)
+        for i in range(0, len(self.pedestrian_list), 3):
+            # start walker
+            all_pedestrians[i].start()
+            # set walk to random point
+            all_pedestrians[i].go_to_location(self.world.get_random_location_from_navigation())
+            # max speed
+            all_pedestrians[i].set_max_speed(float(walker_speed[int(i/2)]))
 
     def spawn_ego(self, transform):
         """
@@ -278,7 +383,8 @@ class StaticAttackScenario(object):
             self.bp_lib = self.world.get_blueprint_library()
             # spectator = self.world.get_spectator()
 
-            self.spawn_npcs(5)
+            # self.spawn_npc_vehicles(5)
+            self.spawn_npc_pedestrians(30)
 
             spawn_points = self.world.get_map().get_spawn_points()
 
@@ -350,9 +456,12 @@ class StaticAttackScenario(object):
         finally:
             self.set_synchronous_mode(False)
             print("Destroying the actors!")
-            # for npc in self.vehicle_list:
-            #     npc.destroy()
+            
+            # Destroy them vehicles
             self.client.apply_batch([carla.command.DestroyActor(x) for x in self.vehicle_list])
+
+            # Destroy them pedestrians
+            self.client.apply_batch([carla.command.DestroyActor(x) for x in self.pedestrian_list])
 
             # self.car.destroy()
             # self.camera.destroy()
