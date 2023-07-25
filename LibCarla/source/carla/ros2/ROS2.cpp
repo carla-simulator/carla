@@ -695,7 +695,7 @@ void ROS2::ProcessDataFromDVS(
     size_t elements = (buffer->size() - carla::sensor::s11n::ImageSerializer::header_offset) / sizeof(carla::sensor::data::DVSEvent);
     publisher->SetImageData(_seconds, _nanoseconds, elements, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
     publisher->SetInfoRegionOfInterest(0, 0, H, W, true);
-    //publisher->SetPointCloudData(header->height, header->width, buffer->size() * sizeof(carla::sensor::data::DVSEvent), (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+    publisher->SetPointCloudData(1, elements * sizeof(carla::sensor::data::DVSEvent), elements, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
     publisher->Publish();
   }
   if (sensors.second) {
