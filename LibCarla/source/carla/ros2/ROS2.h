@@ -105,6 +105,7 @@ class ROS2
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
       const carla::SharedBufferView buffer,
+      int W, int H, float Fov,
       void *actor = nullptr);
   void ProcessDataFromLidar(
       uint64_t sensor_type,

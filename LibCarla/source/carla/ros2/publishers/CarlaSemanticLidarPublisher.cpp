@@ -204,7 +204,7 @@ void CarlaSemanticLidarPublisher::SetData(int32_t seconds, uint32_t nanoseconds,
 
     const size_t point_size = 6 * sizeof(float);
     _impl->_lidar.header(std::move(header));
-    _impl->_lidar.width(width / 6);
+    _impl->_lidar.width(width);
     _impl->_lidar.height(height);
     _impl->_lidar.is_bigendian(false);
     _impl->_lidar.fields({descriptor1, descriptor2, descriptor3, descriptor4, descriptor5, descriptor6});

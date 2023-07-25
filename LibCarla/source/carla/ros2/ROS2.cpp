@@ -682,11 +682,20 @@ void ROS2::ProcessDataFromDVS(
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     const carla::SharedBufferView buffer,
+    int W, int H, float Fov,
     void *actor) {
-  log_info("Sensor DVS to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer.size());
+  log_info("Sensor DVS to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id);
   auto sensors = GetOrCreateSensor(ESensors::DVSCamera, stream_id, actor);
   if (sensors.first) {
     std::shared_ptr<CarlaDVSCameraPublisher> publisher = std::dynamic_pointer_cast<CarlaDVSCameraPublisher>(sensors.first);
+    const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
+      reinterpret_cast<const carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer->data());
+    if (!header)
+      return;
+    size_t elements = (buffer->size() - carla::sensor::s11n::ImageSerializer::header_offset) / sizeof(carla::sensor::data::DVSEvent);
+    publisher->SetImageData(_seconds, _nanoseconds, elements, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+    publisher->SetInfoRegionOfInterest(0, 0, H, W, true);
+    //publisher->SetPointCloudData(header->height, header->width, buffer->size() * sizeof(carla::sensor::data::DVSEvent), (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
     publisher->Publish();
   }
   if (sensors.second) {

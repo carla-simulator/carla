@@ -159,10 +159,10 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
   ADVSCamera::DVSEventArray events = this->Simulation(DeltaTime);
 
   auto Stream = GetDataStream(*this);
-  auto Buffer = Stream.PopBufferFromPool();
+  auto Buff = Stream.PopBufferFromPool();
 
   // serialize data
-  carla::Buffer BufferReady(std::move(carla::sensor::SensorRegistry::Serialize(*this, events, std::move(Buffer))));
+  carla::Buffer BufferReady(carla::sensor::SensorRegistry::Serialize(*this, events, std::move(Buff)));
   carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(BufferReady));
 
   // ROS2
@@ -172,7 +172,21 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
-    ROS2->ProcessDataFromDVS(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), BufView, this);
+    {
+      // get resolution of camera
+      int W = -1, H = -1;
+      float Fov = -1.0f;
+      auto WidthOpt = GetAttribute("image_size_x");
+      if (WidthOpt.has_value())
+        W = FCString::Atoi(*WidthOpt->Value);
+      auto HeightOpt = GetAttribute("image_size_y");
+      if (HeightOpt.has_value())
+        H = FCString::Atoi(*HeightOpt->Value);
+      auto FovOpt = GetAttribute("fov");
+      if (FovOpt.has_value())
+        Fov = FCString::Atof(*FovOpt->Value);
+      ROS2->ProcessDataFromDVS(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), BufView, W, H, Fov, this);
+    }
   }
   #endif
   if (events.size() > 0)

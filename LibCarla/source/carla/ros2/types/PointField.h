@@ -73,6 +73,9 @@ namespace sensor_msgs {
         const uint8_t PointField__UINT32 = 6;
         const uint8_t PointField__FLOAT32 = 7;
         const uint8_t PointField__FLOAT64 = 8;
+        const uint8_t PointField__INT64 = 9;
+        const uint8_t PointField__UINT64 = 10;
+        const uint8_t PointField__BOOL = 11;
         /*!
          * @brief This class represents the structure PointField defined by the user in the IDL file.
          * @ingroup POINTFIELD

@@ -4,6 +4,8 @@
 
 #include <string>
 
+#include "carla/sensor/data/DVSEvent.h"
+
 #include "carla/ros2/types/ImagePubSubTypes.h"
 #include "carla/ros2/types/CameraInfoPubSubTypes.h"
 #include "carla/ros2/types/PointCloud2PubSubTypes.h"
@@ -187,11 +189,13 @@ namespace ros2 {
     }
 
     efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
+    const std::string publisher_type {"/point_cloud"};
     const std::string base { "rt/carla/" };
     std::string topic_name = base;
     if (!_parent.empty())
       topic_name += _parent + "/";
     topic_name += _name;
+    topic_name += publisher_type;
     _point_cloud->_topic = _point_cloud->_participant->create_topic(topic_name, _point_cloud->_type->getName(), tqos);
     if (_point_cloud->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
@@ -400,12 +404,17 @@ namespace ros2 {
     return false;
   }
 
-  void CarlaDVSCameraPublisher::SetImageData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data) {
-    std::vector<uint8_t> vector_data;
-    const size_t size = height * width * 4;
-    vector_data.resize(size);
-    std::memcpy(&vector_data[0], &data[0], size);
-    SetData(seconds, nanoseconds, height, width, std::move(vector_data));
+  void CarlaDVSCameraPublisher::SetImageData(int32_t seconds, uint32_t nanoseconds, size_t elements, size_t height, size_t width, const uint8_t* data) {
+    std::vector<uint8_t> im_data;
+    const size_t im_size = width * height * 3;
+    im_data.resize(im_size);
+    carla::sensor::data::DVSEvent* vec_event = (carla::sensor::data::DVSEvent*)&data[0];
+    for (size_t i = 0; i < elements; ++i, ++vec_event) {
+        size_t index = (vec_event->y * width + vec_event->x) * 3 + (static_cast<int>(vec_event->pol) * 2);
+        im_data[index] = 255;
+    }
+
+    SetData(seconds, nanoseconds, height, width, std::move(im_data));
   }
 
   void CarlaDVSCameraPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data) {
@@ -422,9 +431,9 @@ namespace ros2 {
 
     _impl->_image.width(width);
     _impl->_image.height(height);
-    _impl->_image.encoding("bgra8"); //taken from the list of strings in include/sensor_msgs/image_encodings.h
+    _impl->_image.encoding("bgr8"); //taken from the list of strings in include/sensor_msgs/image_encodings.h
     _impl->_image.is_bigendian(0);
-    _impl->_image.step(_impl->_image.width() * sizeof(uint8_t) * 4);
+    _impl->_image.step(_impl->_image.width() * sizeof(uint8_t) * 3);
     _impl->_image.data(std::move(data)); //https://github.com/eProsima/Fast-DDS/issues/2330
   }
 
@@ -438,34 +447,39 @@ namespace ros2 {
     _info->_ci.roi(roi);
   }
 
-  void CarlaDVSCameraPublisher::SetPointCloudData(size_t height, size_t width, const uint8_t* data) {
+  void CarlaDVSCameraPublisher::SetPointCloudData(size_t height, size_t width, size_t elements, const uint8_t* data) {
 
     std::vector<uint8_t> vector_data;
-    const size_t size = height * width * 4;
+    const size_t size = height * width;
     vector_data.resize(size);
     std::memcpy(&vector_data[0], &data[0], size);
 
     sensor_msgs::msg::PointField descriptor1;
     descriptor1.name("x");
     descriptor1.offset(0);
-    descriptor1.datatype(sensor_msgs::msg::PointField__FLOAT32);
+    descriptor1.datatype(sensor_msgs::msg::PointField__UINT16);
     descriptor1.count(1);
     sensor_msgs::msg::PointField descriptor2;
     descriptor2.name("y");
-    descriptor2.offset(4);
-    descriptor2.datatype(sensor_msgs::msg::PointField__FLOAT32);
+    descriptor2.offset(2);
+    descriptor2.datatype(sensor_msgs::msg::PointField__UINT16);
     descriptor2.count(1);
     sensor_msgs::msg::PointField descriptor3;
-    descriptor3.name("z");
-    descriptor3.offset(8);
-    descriptor3.datatype(sensor_msgs::msg::PointField__FLOAT32);
+    descriptor3.name("t");
+    descriptor3.offset(4);
+    descriptor3.datatype(sensor_msgs::msg::PointField__INT64);
+    descriptor3.count(1);
+    sensor_msgs::msg::PointField descriptor4;
+    descriptor3.name("pol");
+    descriptor3.offset(12);
+    descriptor3.datatype(sensor_msgs::msg::PointField__BOOL);
     descriptor3.count(1);
 
-    const size_t point_size = 3 * sizeof(float);
-    _point_cloud->_pc.width(width / 3);
+    const size_t point_size = sizeof(float) * 4;
+    _point_cloud->_pc.width(width);
     _point_cloud->_pc.height(height);
     _point_cloud->_pc.is_bigendian(false);
-    _point_cloud->_pc.fields({descriptor1, descriptor2, descriptor3});
+    _point_cloud->_pc.fields({descriptor1, descriptor2, descriptor3, descriptor4});
     _point_cloud->_pc.point_step(point_size);
     _point_cloud->_pc.row_step(width * point_size);
     _point_cloud->_pc.is_dense(false); //True if there are not invalid points
