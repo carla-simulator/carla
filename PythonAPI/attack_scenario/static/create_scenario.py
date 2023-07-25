@@ -25,6 +25,7 @@ import time
 import queue
 import cv2
 import json
+import csv
 
 try:
     import pygame
@@ -46,7 +47,7 @@ except ImportError:
 SpawnActor = carla.command.SpawnActor
 
 
-OUTPUT_FOLDER = "_test_pedestrians"
+OUTPUT_FOLDER = "_test_pedestrians_2p"
 
 
 
@@ -57,26 +58,17 @@ OUTPUT_FOLDER = "_test_pedestrians"
 class GTBoundingBoxes(object):
     
     @staticmethod
-    def get_bounding_boxes(world, vehicle, camera, K, img=None):
+    def get_bounding_boxes(world, vehicle, camera, K, labels, img=None):
         bounding_boxes = []
 
-        # get bounding boxes of all types of vehicles
-        all_vehicles_bbs = []
-        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Car)))
-        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Truck)))
-        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Motorcycle)))
-        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Bicycle)))
-        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Bus)))
-        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Rider)))
-        all_vehicles_bbs.append(list(world.get_level_bbs(carla.CityObjectLabel.Train)))
-        
-        for i, vehicle_class in enumerate(all_vehicles_bbs):
-            for bb in vehicle_class:
+        for label in labels:
+            bbs = list(world.get_level_bbs(label))
+            for bb in bbs:
                 bb_verts = GTBoundingBoxes.__filter_bbs(bb, vehicle, camera, K)
                 bounding_boxes.append(bb_verts)
 
                 if img is not None and bb_verts:
-                    bb_verts.append(i+1)
+                    bb_verts.append(label)
                     img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[1])), (int(bb_verts[2]),int(bb_verts[1])), (0,0,255, 255), 1)
                     img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[3])), (int(bb_verts[2]),int(bb_verts[3])), (0,0,255, 255), 1)
                     img = cv2.line(img, (int(bb_verts[0]),int(bb_verts[1])), (int(bb_verts[0]),int(bb_verts[3])), (0,0,255, 255), 1)
@@ -180,6 +172,7 @@ class StaticAttackScenario(object):
         self.bp_lib = None
         self.vehicle_list = []
         self.pedestrian_list = []
+        self.static_attacks = []
 
         self.car = None
         self.camera = None
@@ -201,14 +194,39 @@ class StaticAttackScenario(object):
                 {"supercategory": "vehicle", "id": 5, "name": "bus" },
                 {"supercategory": "vehicle", "id": 6, "name": "rider" },
                 {"supercategory": "vehicle", "id": 7, "name": "train" },
+                {"supercategory": "", "id": 8, "name": "pedestrian" }
             ],
 
             "annotations": []
         }
 
+        self.objectlabel2categoryid = {
+            carla.CityObjectLabel.Car           :   1,
+            carla.CityObjectLabel.Truck         :   2,
+            carla.CityObjectLabel.Motorcycle    :   3,
+            carla.CityObjectLabel.Bicycle       :   4,
+            carla.CityObjectLabel.Rider         :   5,
+            carla.CityObjectLabel.Bus           :   6,
+            carla.CityObjectLabel.Train         :   7,
+            carla.CityObjectLabel.Pedestrians   :   8
+        }
+
         self.display = None
         self.image = None
         self.capture = True
+
+        # Get Walker spawn points
+        self.walker_spawn_point = []
+        with open("./../pedestrian_spawn_points.csv", 'r') as file:
+            csvreader = csv.reader(file)
+            for i, row in enumerate(csvreader):
+                if i==0:
+                    continue
+                spawn_point = carla.Transform()
+                spawn_point.location.x = float(row[1])
+                spawn_point.location.y = float(row[2])
+                spawn_point.location.z = float(row[3])
+                self.walker_spawn_point.append(spawn_point)
 
     def set_synchronous_mode(self, mode):
         # Set up the simulator in synchronous mode
@@ -265,7 +283,9 @@ class StaticAttackScenario(object):
         # 2. we spawn the walker object
         batch = []
         walker_speed = []
-        for spawn_point in spawn_points:
+        # for spawn_point in self.walker_spawn_point:
+        for i in range(n):
+            spawn_point = spawn_points[i]
             walker_bp = random.choice(self.bp_lib.filter('walker'))
             # set as not invincible
             if walker_bp.has_attribute('is_invincible'):
@@ -308,11 +328,14 @@ class StaticAttackScenario(object):
                 walkers_list[i]["con"] = results[i].actor_id
         # Spawn attack patches and attach the to the walkers
         batch = []
-        for blueprint in self.bp_lib.filter('static'):
-            print(blueprint.id)
         patch_bp = self.bp_lib.find('static.prop.staticattackpedestrian')
         for i in range(num_walkers):
-            patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45))
+            walker = self.world.get_actor(walkers_list[i]["id"])
+            bb_height = walker.bounding_box.extent.z
+            if bb_height > 0 and bb_height < 2.5:
+                patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45*bb_height))
+            else:  
+                patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45))
             batch.append(SpawnActor(patch_bp, patch_pos, walkers_list[i]["id"]))
         results = self.client.apply_batch_sync(batch, True)
         for i in range(len(results)):
@@ -320,25 +343,52 @@ class StaticAttackScenario(object):
                 logging.error(results[i].error)
             else:
                 walkers_list[i]["patch"] = results[i].actor_id
+        batch = []
+        for i in range(num_walkers):
+            walker = self.world.get_actor(walkers_list[i]["id"])
+            bb_height = walker.bounding_box.extent.z
+            if bb_height > 0 and bb_height < 2.5:
+                patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45*bb_height))
+            else:  
+                patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45))
+            batch.append(SpawnActor(patch_bp, patch2_pos, walkers_list[i]["id"]))
+        results = self.client.apply_batch_sync(batch, True)
+        for i in range(len(results)):
+            if results[i].error:
+                logging.error(results[i].error)
+            else:
+                walkers_list[i]["patch_front"] = results[i].actor_id
         # 4. we put together the walkers and controllers id to get the objects from their id
         for i in range(len(walkers_list)):
             self.pedestrian_list.append(walkers_list[i]["con"])
             self.pedestrian_list.append(walkers_list[i]["id"])
             self.pedestrian_list.append(walkers_list[i]["patch"])
+            self.pedestrian_list.append(walkers_list[i]["patch_front"])
         all_pedestrians = self.world.get_actors(self.pedestrian_list)
 
-        self.world.wait_for_tick()
+        self.world.tick()
 
         # 5. initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
         # set how many pedestrians can cross the road
         self.world.set_pedestrians_cross_factor(percentagePedestriansCrossing)
-        for i in range(0, len(self.pedestrian_list), 3):
+        for i in range(0, len(self.pedestrian_list), 4):
             # start walker
             all_pedestrians[i].start()
             # set walk to random point
             all_pedestrians[i].go_to_location(self.world.get_random_location_from_navigation())
             # max speed
-            all_pedestrians[i].set_max_speed(float(walker_speed[int(i/3)]))
+            all_pedestrians[i].set_max_speed(float(walker_speed[int(i/4)]))
+
+    def spawn_static_attack_parked(self):
+        parked_vehicles = self.world.get_environment_objects(carla.CityObjectLabel.Car)
+        patch_bp = self.bp_lib.find('static.prop.staticattack')
+        spectator = self.world.get_spectator()
+        for parked_car in parked_vehicles:
+            bb = parked_car.bounding_box
+            patch_pos = carla.Transform(carla.Location(x=bb.location.x+bb.extent.x, y=bb.location.y,z=bb.location.z))
+            patch = self.world.spawn_actor(patch_bp, patch_pos)
+            # spectator.set_transform(patch_pos)
+            self.static_attacks.append(patch)
 
     def spawn_ego(self, transform):
         """
@@ -352,7 +402,6 @@ class StaticAttackScenario(object):
         self.camera = self.world.spawn_actor(camera_bp, camera_init_trans, attach_to=self.car)
         self.camera.listen(self.image_queue.put)
 
-        self.car.set_autopilot(True)
 
     def get_camera_matrix(self, w, h, fov):
         """
@@ -386,12 +435,27 @@ class StaticAttackScenario(object):
             self.bp_lib = self.world.get_blueprint_library()
             # spectator = self.world.get_spectator()
 
+            labels = [carla.CityObjectLabel.Car,
+                      carla.CityObjectLabel.Truck,
+                      carla.CityObjectLabel.Motorcycle,
+                      carla.CityObjectLabel.Bicycle,
+                      carla.CityObjectLabel.Rider,
+                      carla.CityObjectLabel.Bus,
+                      carla.CityObjectLabel.Train,
+                      carla.CityObjectLabel.Pedestrians]
+
+            self.spawn_static_attack_parked()
+
+            self.set_synchronous_mode(True)
+
             # self.spawn_npc_vehicles(5)
-            self.spawn_npc_pedestrians(30)
+            self.spawn_npc_pedestrians(100)
 
             spawn_points = self.world.get_map().get_spawn_points()
 
             self.spawn_ego(spawn_points[1])
+
+            self.world.tick()
 
             # Calculate the camera projection matrix to project from 3D -> 2D and save to camera attributes
             image_w = int(self.camera.attributes["image_size_x"])
@@ -399,7 +463,7 @@ class StaticAttackScenario(object):
             fov = float(self.camera.attributes["fov"])
             self.K = self.get_camera_matrix(image_w, image_h, fov)
 
-            self.set_synchronous_mode(True)
+            self.car.set_autopilot(True)
 
             self.world.tick()
             frame_number = 0
@@ -425,27 +489,27 @@ class StaticAttackScenario(object):
                 # Save frame to annotations json
                 frame_file = "{:05d}.png".format(frame_number)
 
-                # self.ground_truth_annotations["images"].append({
-                #     "file_name": frame_file,
-                #     "height": image.height,
-                #     "width": image.width,
-                #     "id": frame_number
-                # })
+                self.ground_truth_annotations["images"].append({
+                    "file_name": frame_file,
+                    "height": image.height,
+                    "width": image.width,
+                    "id": frame_number
+                })
 
-                # bounding_boxes, bb_img = GTBoundingBoxes.get_bounding_boxes(self.world, self.car, self.camera, self.K, bb_img)
+                bounding_boxes, bb_img = GTBoundingBoxes.get_bounding_boxes(self.world, self.car, self.camera, self.K, labels, bb_img)
 
-                # for bb_verts in bounding_boxes:
-                #     if bb_verts:
-                #         bb_cocoFormat = [bb_verts[0], bb_verts[1], bb_verts[2]-bb_verts[0], bb_verts[3]-bb_verts[1]]
-                #         category = bb_verts[-1]
-                #         self.ground_truth_annotations["annotations"].append({
-                #             "segmentation": [],
-                #             "area": bb_cocoFormat[2]*bb_cocoFormat[3],
-                #             "iscrowd": 0,
-                #             "category_id": category,
-                #             "image_id": frame_number,
-                #             "bbox": bb_cocoFormat
-                #         })
+                for bb_verts in bounding_boxes:
+                    if bb_verts:
+                        bb_cocoFormat = [bb_verts[0], bb_verts[1], bb_verts[2]-bb_verts[0], bb_verts[3]-bb_verts[1]]
+                        category = self.objectlabel2categoryid[bb_verts[-1]]
+                        self.ground_truth_annotations["annotations"].append({
+                            "segmentation": [],
+                            "area": bb_cocoFormat[2]*bb_cocoFormat[3],
+                            "iscrowd": 0,
+                            "category_id": category,
+                            "image_id": frame_number,
+                            "bbox": bb_cocoFormat
+                        })
 
                 cv2.imwrite(os.path.join(OUTPUT_FOLDER, frame_file), img)
 
@@ -459,13 +523,16 @@ class StaticAttackScenario(object):
         finally:
             self.set_synchronous_mode(False)
             print("Destroying the actors!")
+
+            # Destroy them static attacks
+            self.client.apply_batch([carla.command.DestroyActor(x) for x in self.static_attacks])
             
             # Destroy them vehicles
             self.client.apply_batch([carla.command.DestroyActor(x) for x in self.vehicle_list])
 
             # Stop walker controllers
             all_pedestrians = self.world.get_actors(self.pedestrian_list)
-            for i in range(0, len(self.pedestrian_list), 3):
+            for i in range(0, len(self.pedestrian_list), 4):
                 all_pedestrians[i].stop()
             # Destroy them pedestrians
             print(len(self.pedestrian_list))
@@ -475,7 +542,7 @@ class StaticAttackScenario(object):
             # self.camera.destroy()
             if self.car.destroy() and self.camera.destroy():
 
-                print("Destroyed {} vehicles, {} and the ego-vehicle and camera.".format(len(self.vehicle_list), len(self.pedestrian_list)/3))
+                print("Destroyed {} vehicles, {} walkers and the ego-vehicle and camera.".format(len(self.vehicle_list), int(len(self.pedestrian_list)/4)))
             
             cv2.destroyAllWindows()
 
