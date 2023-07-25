@@ -1,3 +1,14 @@
+# CARLA simulator with a Livox lidar
+
+This is fork of an official CARLA Simulator 0.9.14 with [Livox lidar sensor created by IKAROS93](https://github.com/IKAROS93/Livox_laser_simulation_for_CARLA).
+
+The files from [the official repository](https://github.com/carla-simulator/carla) were merged with files created by IKAROS93.
+
+For easier ussage, the content of csv file **horizon.csv** was included into the source code of CARLA, so there is no need to have */home/LivoxCsv* folder as described by IKAROS93 for *lidar_type 0*.
+
+The author was not able to use other types of lidar than horizon, so they are not included in the source code. If you need to use another csv, the program is still able to read */home/LivoxCsv* folder for other files than horizon.csv.
+For example if you set **lidar_type to 1**, the simulator will read the file  **/home/LivoxCsv/mid40.csv**.
+
 CARLA Simulator
 ===============
 
