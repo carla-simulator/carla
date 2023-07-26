@@ -47,7 +47,10 @@ except ImportError:
 SpawnActor = carla.command.SpawnActor
 
 
-OUTPUT_FOLDER = "_test_pedestrians_2p"
+OUTPUT_FOLDER = "_pedestrians_nopatch" # "_pedestrians_nopatch"
+
+if not os.path.exists(os.path.join("./",OUTPUT_FOLDER)):
+    os.makedirs(os.path.join("./",OUTPUT_FOLDER))
 
 
 
@@ -286,7 +289,12 @@ class StaticAttackScenario(object):
         # for spawn_point in self.walker_spawn_point:
         for i in range(n):
             spawn_point = spawn_points[i]
-            walker_bp = random.choice(self.bp_lib.filter('walker'))
+            walker_bp = self.bp_lib.filter('walker')[i%len(self.bp_lib.filter('walker'))]
+            if walker_bp.has_attribute("age"):
+                # print(walker_bp.get_attribute("age").as_str())
+                if walker_bp.get_attribute("age").as_str() == "child":
+                    walker_bp = self.bp_lib.filter('walker')[i%len(self.bp_lib.filter('walker')) + 2]
+            # walker_bp = random.choice(self.bp_lib.filter('walker'))
             # set as not invincible
             if walker_bp.has_attribute('is_invincible'):
                 walker_bp.set_attribute('is_invincible', 'false')
@@ -332,10 +340,10 @@ class StaticAttackScenario(object):
         for i in range(num_walkers):
             walker = self.world.get_actor(walkers_list[i]["id"])
             bb_height = walker.bounding_box.extent.z
-            if bb_height > 0 and bb_height < 2.5:
+            if bb_height > 0 and bb_height < 2.5 and False:
                 patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45*bb_height))
             else:  
-                patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45))
+                patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=-10.45))
             batch.append(SpawnActor(patch_bp, patch_pos, walkers_list[i]["id"]))
         results = self.client.apply_batch_sync(batch, True)
         for i in range(len(results)):
@@ -347,10 +355,10 @@ class StaticAttackScenario(object):
         for i in range(num_walkers):
             walker = self.world.get_actor(walkers_list[i]["id"])
             bb_height = walker.bounding_box.extent.z
-            if bb_height > 0 and bb_height < 2.5:
+            if bb_height > 0 and bb_height < 2.5 and False:
                 patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45*bb_height))
             else:  
-                patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45))
+                patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=-10.45))
             batch.append(SpawnActor(patch_bp, patch2_pos, walkers_list[i]["id"]))
         results = self.client.apply_batch_sync(batch, True)
         for i in range(len(results)):
@@ -446,6 +454,8 @@ class StaticAttackScenario(object):
 
             self.spawn_static_attack_parked()
 
+            self.world.reset_all_traffic_lights()
+
             self.set_synchronous_mode(True)
 
             # self.spawn_npc_vehicles(5)
@@ -515,6 +525,9 @@ class StaticAttackScenario(object):
 
                 cv2.imshow('CameraFeed',bb_img)
                 if cv2.waitKey(1) == ord('q'):
+                    break
+
+                if frame_number >= 500:
                     break
 
         except KeyboardInterrupt:
