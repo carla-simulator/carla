@@ -261,7 +261,7 @@ class StaticAttackScenario(object):
 
         print("Spawned {} NPC vehicles.".format(n))
 
-    def spawn_npc_pedestrians(self, n):
+    def spawn_npc_pedestrians(self, n, hidePatch=False):
         """
         Spawns a given number of NPC pedestrians.
 
@@ -340,10 +340,13 @@ class StaticAttackScenario(object):
         for i in range(num_walkers):
             walker = self.world.get_actor(walkers_list[i]["id"])
             bb_height = walker.bounding_box.extent.z
-            if bb_height > 0 and bb_height < 2.5 and False:
-                patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45*bb_height))
-            else:  
-                patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=-10.45))
+            if hidePatch:
+                patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=-10))
+            else:
+                if bb_height > 0 and bb_height < 2.5:
+                    patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45*bb_height))
+                else:  
+                    patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45))
             batch.append(SpawnActor(patch_bp, patch_pos, walkers_list[i]["id"]))
         results = self.client.apply_batch_sync(batch, True)
         for i in range(len(results)):
@@ -355,10 +358,13 @@ class StaticAttackScenario(object):
         for i in range(num_walkers):
             walker = self.world.get_actor(walkers_list[i]["id"])
             bb_height = walker.bounding_box.extent.z
-            if bb_height > 0 and bb_height < 2.5 and False:
-                patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45*bb_height))
-            else:  
-                patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=-10.45))
+            if hidePatch:
+                patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=-10))
+            else:
+                if bb_height > 0 and bb_height < 2.5:
+                    patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45*bb_height))
+                else:  
+                    patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45))
             batch.append(SpawnActor(patch_bp, patch2_pos, walkers_list[i]["id"]))
         results = self.client.apply_batch_sync(batch, True)
         for i in range(len(results)):
