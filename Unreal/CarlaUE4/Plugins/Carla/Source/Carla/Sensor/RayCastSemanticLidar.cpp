@@ -71,6 +71,7 @@ void ARayCastSemanticLidar::PostPhysTick(UWorld *World, ELevelTick TickType, flo
   SimulateLidar(DeltaTime);
 
   auto DataStream = GetDataStream(*this);
+  auto SensorTransform = DataStream.GetSensorTransform();
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");
     DataStream.SerializeAndSend(*this, SemanticLidarData, DataStream.PopBufferFromPool());
@@ -82,7 +83,16 @@ void ARayCastSemanticLidar::PostPhysTick(UWorld *World, ELevelTick TickType, flo
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
-    ROS2->ProcessDataFromSemanticLidar(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), SemanticLidarData, this);
+    AActor* ParentActor = GetAttachParentActor();
+    if (ParentActor)
+    {
+      FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
+      ROS2->ProcessDataFromSemanticLidar(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, SemanticLidarData, this);
+    }
+    else
+    {
+      ROS2->ProcessDataFromSemanticLidar(DataStream.GetSensorType(), StreamId, SensorTransform, SemanticLidarData, this);
+    }
   }
   #endif
 }

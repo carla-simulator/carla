@@ -185,7 +185,16 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
       auto FovOpt = GetAttribute("fov");
       if (FovOpt.has_value())
         Fov = FCString::Atof(*FovOpt->Value);
-      ROS2->ProcessDataFromDVS(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), BufView, W, H, Fov, this);
+      AActor* ParentActor = GetAttachParentActor();
+      if (ParentActor)
+      {
+        FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
+        ROS2->ProcessDataFromDVS(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, BufView, W, H, Fov, this);
+      }
+      else
+      {
+        ROS2->ProcessDataFromDVS(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), BufView, W, H, Fov, this);
+      }
     }
   }
   #endif

@@ -327,7 +327,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
       } break;
       case ESensors::ObstacleDetectionSensor: {
-        std::cout << "Obstacle detection sensor does not have an available publisher" << std::endl;
+        std::cerr << "Obstacle detection sensor does not have an available publisher" << std::endl;
       } break;
       case ESensors::OpticalFlowCamera: {
         if (ros_name == "optical_flow__") {
@@ -402,7 +402,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
       } break;
       case ESensors::RssSensor: {
-        std::cout << "RSS sensor does not have an available publisher" << std::endl;
+        std::cerr << "RSS sensor does not have an available publisher" << std::endl;
       } break;
       case ESensors::SceneCaptureCamera: {
         if (ros_name == "rgb__") {
@@ -459,16 +459,16 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
       } break;
       case ESensors::WorldObserver: {
-        std::cout << "World obserser does not have an available publisher" << std::endl;
+        std::cerr << "World obserser does not have an available publisher" << std::endl;
       } break;
       case ESensors::CameraGBufferUint8: {
-        std::cout << "Camera GBuffer uint8 does not have an available publisher" << std::endl;
+        std::cerr << "Camera GBuffer uint8 does not have an available publisher" << std::endl;
       } break;
       case ESensors::CameraGBufferFloat: {
-        std::cout << "Camera GBuffer float does not have an available publisher" << std::endl;
+        std::cerr << "Camera GBuffer float does not have an available publisher" << std::endl;
       } break;
       default: {
-        std::cout << "Unknown sensor type" << std::endl;
+        std::cerr << "Unknown sensor type" << std::endl;
       }
     }
   }
@@ -760,9 +760,10 @@ void ROS2::ProcessDataFromRadar(
   auto sensors = GetOrCreateSensor(ESensors::Radar, stream_id, actor);
   if (sensors.first) {
     std::shared_ptr<CarlaRadarPublisher> publisher = std::dynamic_pointer_cast<CarlaRadarPublisher>(sensors.first);
-    size_t width = data.GetDetectionCount();
+    size_t elements = data.GetDetectionCount();
+    size_t width = elements * sizeof(carla::sensor::data::RadarDetection);
     size_t height = 1;
-    publisher->SetData(_seconds, _nanoseconds, height, width, (const uint8_t*)data._detections.data());
+    publisher->SetData(_seconds, _nanoseconds, height, width, elements, (const uint8_t*)data._detections.data());
     publisher->Publish();
   }
   if (sensors.second) {

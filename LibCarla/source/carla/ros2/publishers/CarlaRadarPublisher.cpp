@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "carla/sensor/data/RadarData.h"
 #include "carla/ros2/types/PointCloud2PubSubTypes.h"
 #include "carla/ros2/listeners/CarlaListener.h"
 
@@ -38,6 +39,13 @@ namespace ros2 {
     efd::TypeSupport _type { new sensor_msgs::msg::PointCloud2PubSubType() };
     CarlaListener _listener {};
     sensor_msgs::msg::PointCloud2 _radar {};
+  };
+
+  struct RadarDetectionWithPosition {
+    float x;
+    float y;
+    float z;
+    carla::sensor::data::RadarDetection detection;
   };
 
   bool CarlaRadarPublisher::Init() {
@@ -149,17 +157,24 @@ namespace ros2 {
     return false;
   }
 
-
-void CarlaRadarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data) {
+void CarlaRadarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, size_t elements, const uint8_t* data) {
 
     std::vector<uint8_t> vector_data;
-    const size_t size = height * width * 4;
+    const size_t size = elements * sizeof(RadarDetectionWithPosition);
     vector_data.resize(size);
-    std::memcpy(&vector_data[0], &data[0], size);
-    SetData(seconds, nanoseconds, height, width, std::move(vector_data));
+    RadarDetectionWithPosition* radar_data = (RadarDetectionWithPosition*)&vector_data[0];
+    carla::sensor::data::RadarDetection* detection_data = (carla::sensor::data::RadarDetection*)data;
+    for (size_t i = 0; i < elements; ++i, ++radar_data, ++detection_data) {
+      radar_data->x = detection_data->depth * cosf(detection_data->azimuth) * cosf(-detection_data->altitude);
+      radar_data->y = detection_data->depth * sinf(-detection_data->azimuth) * cosf(detection_data->altitude);
+      radar_data->z = detection_data->depth * sinf(detection_data->altitude);
+      radar_data->detection = *detection_data;
+    }
+
+    SetData(seconds, nanoseconds, height, width, elements, std::move(vector_data));
   }
 
-  void CarlaRadarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data) {
+  void CarlaRadarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, size_t elements, std::vector<uint8_t>&& data) {
     builtin_interfaces::msg::Time time;
     time.sec(seconds);
     time.nanosec(nanoseconds);
@@ -183,16 +198,36 @@ void CarlaRadarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t 
     descriptor3.offset(8);
     descriptor3.datatype(sensor_msgs::msg::PointField__FLOAT32);
     descriptor3.count(1);
+    sensor_msgs::msg::PointField descriptor4;
+    descriptor4.name("velocity");
+    descriptor4.offset(12);
+    descriptor4.datatype(sensor_msgs::msg::PointField__FLOAT32);
+    descriptor4.count(1);
+    sensor_msgs::msg::PointField descriptor5;
+    descriptor5.name("azimuth");
+    descriptor5.offset(16);
+    descriptor5.datatype(sensor_msgs::msg::PointField__FLOAT32);
+    descriptor5.count(1);
+    sensor_msgs::msg::PointField descriptor6;
+    descriptor6.name("altitude");
+    descriptor6.offset(20);
+    descriptor6.datatype(sensor_msgs::msg::PointField__FLOAT32);
+    descriptor6.count(1);
+    sensor_msgs::msg::PointField descriptor7;
+    descriptor7.name("depth");
+    descriptor7.offset(24);
+    descriptor7.datatype(sensor_msgs::msg::PointField__FLOAT32);
+    descriptor7.count(1);
 
-    const size_t point_size = 3 * sizeof(float);
+    const size_t point_size = sizeof(RadarDetectionWithPosition);
     _impl->_radar.header(std::move(header));
-    _impl->_radar.width(width / 3);
+    _impl->_radar.width(elements);
     _impl->_radar.height(height);
     _impl->_radar.is_bigendian(false);
-    _impl->_radar.fields({descriptor1, descriptor2, descriptor3});
+    _impl->_radar.fields({descriptor1, descriptor2, descriptor3, descriptor4, descriptor5, descriptor6, descriptor7});
     _impl->_radar.point_step(point_size);
-    _impl->_radar.row_step(width * point_size);
-    _impl->_radar.is_dense(false); //True if there are not invalid points
+    _impl->_radar.row_step(elements * point_size);
+    _impl->_radar.is_dense(false);
     _impl->_radar.data(std::move(data));
   }
 

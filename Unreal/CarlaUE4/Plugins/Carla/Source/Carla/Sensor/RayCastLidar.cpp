@@ -61,6 +61,8 @@ void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float Delta
   SimulateLidar(DeltaTime);
 
   auto DataStream = GetDataStream(*this);
+  auto SensorTransform = DataStream.GetSensorTransform();
+
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");
     DataStream.SerializeAndSend(*this, LidarData, DataStream.PopBufferFromPool());
@@ -72,7 +74,16 @@ void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float Delta
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
-    ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), LidarData, this);
+    AActor* ParentActor = GetAttachParentActor();
+    if (ParentActor)
+    {
+      FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
+      ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, LidarData, this);
+    }
+    else
+    {
+      ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, SensorTransform, LidarData, this);
+    }
   }
   #endif
 

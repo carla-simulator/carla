@@ -26,11 +26,11 @@ namespace ros2 {
 
       bool Init();
       bool Publish();
-      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data);
+      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, size_t elements, const uint8_t* data);
       const char* type() const override { return "radar"; }
 
     private:
-      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data);
+      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, size_t elements, std::vector<uint8_t>&& data);
 
     private:
       std::shared_ptr<CarlaRadarPublisherImpl> _impl;
