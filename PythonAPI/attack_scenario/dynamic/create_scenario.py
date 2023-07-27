@@ -62,14 +62,14 @@ class GTBoundingBoxesAndPatchAttack(object):
     patch = cv2.imread(PATCH_PATH, cv2.IMREAD_UNCHANGED)
     
     @staticmethod
-    def get_bounding_boxes(world, vehicle, camera, K, labels, img=None):
+    def get_bounding_boxes(world, vehicle, camera, K, labels, depth_img, img=None):
         patched_img = img.copy()       
         bounding_boxes = []
 
         for label in labels:
             bbs = list(world.get_level_bbs(label))
             for bb in bbs:
-                bb_verts = GTBoundingBoxesAndPatchAttack.__filter_bbs(bb, vehicle, camera, K)
+                bb_verts = GTBoundingBoxesAndPatchAttack.__filter_bbs(bb, vehicle, camera, K, depth_img)
                 bounding_boxes.append(bb_verts)
 
                 if img is not None and bb_verts:
@@ -107,7 +107,7 @@ class GTBoundingBoxesAndPatchAttack(object):
         return bounding_boxes
 
     @staticmethod
-    def __filter_bbs(bb, ego_vehicle, camera, K):
+    def __filter_bbs(bb, ego_vehicle, camera, K, depth_img):
         bbox_verts = []
 
         # Get the camera matrix 
@@ -117,6 +117,10 @@ class GTBoundingBoxesAndPatchAttack(object):
 
         # distance in meters
         dist = bb.location.distance(ego_vehicle.get_transform().location)
+
+        bb_coords = np.array([bb.location.x, bb.location.y, bb.location.z, 1])
+        bb_camframe = GTBoundingBoxesAndPatchAttack.__world_to_sensor(bb_coords, camera)
+        # print("BBCAMFRAME: ",bb_camframe.shape)
 
         # Filter for the vehicles within 50m
         if dist < 50:
@@ -161,8 +165,16 @@ class GTBoundingBoxesAndPatchAttack(object):
                         x_min_red = int(x_min + 0.1*width)
                         x_max_red = int(x_max - 0.1*width)
 
-                        for px in depth_img[y_min_red:y_max_red, x_min_red:x_min_red]:
-                            if px
+                        threshold = 0.5
+                        count = 0
+                        for row in depth_img[y_min_red:y_max_red, x_min_red:x_max_red]:
+                            for px in row:
+                                print("DEPTH: ", px)
+                                print("DIFFX: ", bb_camframe[0,0])
+                                if px < bb_camframe[0,0] - threshold:
+                                    count+=1
+                                    if count > 0.8*depth_img[y_min_red:y_max_red, x_min_red:x_min_red].size:
+                                        return []
                         
 
                         bbox_verts = [x_min, y_min, x_max, y_max]
@@ -199,6 +211,38 @@ class GTBoundingBoxesAndPatchAttack(object):
         point_img[1] /= point_img[2]
 
         return point_img[0:2]
+    
+    @staticmethod
+    def __get_matrix(transform):
+        rotation = transform.rotation
+        location = transform.location
+        c_y = np.cos(np.radians(rotation.yaw))
+        s_y = np.sin(np.radians(rotation.yaw))
+        c_r = np.cos(np.radians(rotation.roll))
+        s_r = np.sin(np.radians(rotation.roll))
+        c_p = np.cos(np.radians(rotation.pitch))
+        s_p = np.sin(np.radians(rotation.pitch))
+        matrix = np.matrix(np.identity(4))
+        matrix[0, 3] = location.x
+        matrix[1, 3] = location.y
+        matrix[2, 3] = location.z
+        matrix[0, 0] = c_p * c_y
+        matrix[0, 1] = c_y * s_p * s_r - s_y * c_r
+        matrix[0, 2] = -c_y * s_p * c_r - s_y * s_r
+        matrix[1, 0] = s_y * c_p
+        matrix[1, 1] = s_y * s_p * s_r + c_y * c_r
+        matrix[1, 2] = -s_y * s_p * c_r + c_y * s_r
+        matrix[2, 0] = s_p
+        matrix[2, 1] = -c_p * s_r
+        matrix[2, 2] = c_p * c_r
+        return matrix
+    
+    @staticmethod
+    def __world_to_sensor(cords, sensor):
+        sensor_world_matrix = GTBoundingBoxesAndPatchAttack.__get_matrix(sensor.get_transform())
+        world_sensor_matrix = np.linalg.inv(sensor_world_matrix)
+        sensor_cords = np.dot(world_sensor_matrix, cords.T)
+        return sensor_cords
 
 class DynamicAttackScenario(object):
     def __init__(self) -> None:
@@ -375,7 +419,7 @@ class DynamicAttackScenario(object):
         camera_bp = self.bp_lib.find('sensor.camera.rgb')
         camera_init_trans = carla.Transform(carla.Location(x=1.5, z=2.4))
         self.camera = self.world.spawn_actor(camera_bp, camera_init_trans, attach_to=self.car)
-        depth_bp = self.bp_lib.fin('sensor.camera.depth')
+        depth_bp = self.bp_lib.find('sensor.camera.depth')
         self.depth_cam = self.world.spawn_actor(depth_bp, camera_init_trans, attach_to=self.car)
         self.camera.listen(self.image_queue.put)
         self.depth_cam.listen(self.depth_img_queue.put)
@@ -465,6 +509,17 @@ class DynamicAttackScenario(object):
                 img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
                 bb_img = img.copy()
 
+                depth_image = self.depth_img_queue.get()
+                depth_img = img = np.reshape(np.copy(depth_image.raw_data), (depth_image.height, depth_image.width, 4))
+                # convert BGRA image to image with pixels containing depth in meters
+                R = depth_img[:,:,2]
+                G = depth_img[:,:,1]
+                B = depth_img[:,:,0]
+                normalized = (R + G * 256 + B * 256 * 256) / (256 * 256 * 256 - 1)
+                in_meters = 1000 * normalized
+                # print("SHAPE DEPTH", in_meters.shape)
+
+
                 # Save frame to annotations json
                 frame_file = "{:05d}.png".format(frame_number)
 
@@ -475,7 +530,7 @@ class DynamicAttackScenario(object):
                     "id": frame_number
                 })
 
-                bounding_boxes, bb_img, patched_img = GTBoundingBoxesAndPatchAttack.get_bounding_boxes(self.world, self.car, self.camera, self.K, labels, bb_img)
+                bounding_boxes, bb_img, patched_img = GTBoundingBoxesAndPatchAttack.get_bounding_boxes(self.world, self.car, self.camera, self.K, labels, in_meters, bb_img)
 
                 for bb_verts in bounding_boxes:
                     if bb_verts:
