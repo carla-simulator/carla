@@ -47,11 +47,16 @@ except ImportError:
 SpawnActor = carla.command.SpawnActor
 
 
-OUTPUT_FOLDER = "_pedestrians_nopatch" # "_pedestrians_nopatch"
+OUTPUT_FOLDER = "_testing" # "_pedestrians_nopatch"
 
 if not os.path.exists(os.path.join("./",OUTPUT_FOLDER)):
     os.makedirs(os.path.join("./",OUTPUT_FOLDER))
 
+EGO_SPAWN_POINT = carla.Transform(carla.Location(x=13.883884, y=-67.906418, z=0.5), carla.Rotation(pitch=0.0, yaw=180.0, roll=0.0))
+PEDESTRIAN_SPAWN_LIST = [carla.Transform(carla.Location(x=-32.164324, y=-75.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),
+                         carla.Transform(carla.Location(x=-27.164324, y=-74.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),
+                         carla.Transform(carla.Location(x=-30.164324, y=-57.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),
+                         carla.Transform(carla.Location(x=-31.164324, y=-54.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),]
 
 
 # =============================================================================
@@ -173,6 +178,7 @@ class StaticAttackScenario(object):
         self.client = None
         self.world = None
         self.bp_lib = None
+        self.map = None
         self.vehicle_list = []
         self.pedestrian_list = []
         self.static_attacks = []
@@ -219,17 +225,18 @@ class StaticAttackScenario(object):
         self.capture = True
 
         # Get Walker spawn points
-        self.walker_spawn_point = []
-        with open("./../pedestrian_spawn_points.csv", 'r') as file:
-            csvreader = csv.reader(file)
-            for i, row in enumerate(csvreader):
-                if i==0:
-                    continue
-                spawn_point = carla.Transform()
-                spawn_point.location.x = float(row[1])
-                spawn_point.location.y = float(row[2])
-                spawn_point.location.z = float(row[3])
-                self.walker_spawn_point.append(spawn_point)
+        # self.walker_spawn_points = []
+        # with open("./../pedestrian_spawn_points.csv", 'r') as file:
+        #     csvreader = csv.reader(file)
+        #     for i, row in enumerate(csvreader):
+        #         if i==0:
+        #             continue
+        #         spawn_point = carla.Transform()
+        #         spawn_point.location.x = float(row[1])
+        #         spawn_point.location.y = float(row[2])
+        #         spawn_point.location.z = float(row[3])
+        #         self.walker_spawn_points.append(spawn_point)
+        self.walker_spawn_points = PEDESTRIAN_SPAWN_LIST
 
     def set_synchronous_mode(self, mode):
         # Set up the simulator in synchronous mode
@@ -288,7 +295,7 @@ class StaticAttackScenario(object):
         walker_speed = []
         # for spawn_point in self.walker_spawn_point:
         for i in range(n):
-            spawn_point = spawn_points[i]
+            spawn_point = self.walker_spawn_points[i] #spawn_points[i]
             walker_bp = self.bp_lib.filter('walker')[i%len(self.bp_lib.filter('walker'))]
             if walker_bp.has_attribute("age"):
                 # print(walker_bp.get_attribute("age").as_str())
@@ -344,7 +351,7 @@ class StaticAttackScenario(object):
                 patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=-10))
             else:
                 if bb_height > 0 and bb_height < 2.5:
-                    patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45*bb_height))
+                    patch_pos = carla.Transform(carla.Location(x=0.0, y=0.3,z=0.45*bb_height), carla.Rotation(yaw=90))
                 else:  
                     patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45))
             batch.append(SpawnActor(patch_bp, patch_pos, walkers_list[i]["id"]))
@@ -446,8 +453,11 @@ class StaticAttackScenario(object):
             self.client = carla.Client("localhost", 2000)
             self.client.set_timeout(2.0)
             self.world = self.client.get_world()
+            self.map = self.world.get_map()
             self.bp_lib = self.world.get_blueprint_library()
-            # spectator = self.world.get_spectator()
+            spectator = self.world.get_spectator()
+            tf = carla.Transform(carla.Location(x=-32.164324, y=-75.203926, z=1.0), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000))
+            spectator.set_transform(tf)
 
             labels = [carla.CityObjectLabel.Car,
                       carla.CityObjectLabel.Truck,
@@ -465,11 +475,11 @@ class StaticAttackScenario(object):
             self.set_synchronous_mode(True)
 
             # self.spawn_npc_vehicles(5)
-            self.spawn_npc_pedestrians(100, hidePatch=True)
+            self.spawn_npc_pedestrians(4)
 
-            spawn_points = self.world.get_map().get_spawn_points()
+            spawn_points = self.map.get_spawn_points()
 
-            self.spawn_ego(spawn_points[1])
+            self.spawn_ego(EGO_SPAWN_POINT)
 
             self.world.tick()
 
@@ -493,8 +503,33 @@ class StaticAttackScenario(object):
             cv2.imshow('CameraFeed',img)
             cv2.waitKey(1)
 
+            stopatLight = True
+            traffic_lights = self.world.get_actors().filter('traffic.traffic_light*')
+
             while True:
                 self.world.tick()
+
+                if stopatLight:
+                    waypoint = self.map.get_waypoint(self.car.get_location())
+                    waypoints = waypoint.next(30)
+                    for light in traffic_lights:
+                        for bb in light.get_light_boxes():
+                            if bb.location.distance(waypoints[0].transform.location) < 10:
+                                print("SETTING RED")
+                                light.set_red_time(20)
+                                light.set_state(carla.TrafficLightState.Red)
+                                stopatLight = False
+                # print(len(waypoints))
+                # print(waypoints[0].transform.location.distance(self.car.get_location()))
+                
+                if self.car.is_at_traffic_light():
+                    for i, point in enumerate(self.walker_spawn_points):
+                        if point.location.distance(self.car.get_location()) < 20:
+                            print(point)
+                            print(i)
+                            print(point.location.distance(self.car.get_location()))
+                            print(self.car.get_location())
+                
                 frame_number += 1
 
                 # Retrieve and reshape the image
