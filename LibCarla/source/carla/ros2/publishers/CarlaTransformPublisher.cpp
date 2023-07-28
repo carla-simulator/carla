@@ -37,6 +37,11 @@ namespace ros2 {
     efd::TypeSupport _type { new tf2_msgs::msg::TFMessagePubSubType() };
     CarlaListener _listener {};
     tf2_msgs::msg::TFMessage _transform {};
+
+    float last_translation[3] = {0.0f};
+    float last_rotation[4] = {0.0f};
+    geometry_msgs::msg::Vector3 vec_translation;
+    geometry_msgs::msg::Quaternion vec_rotation;
   };
 
   bool CarlaTransformPublisher::Init() {
@@ -145,33 +150,39 @@ namespace ros2 {
   }
 
   void CarlaTransformPublisher::SetData(int32_t seconds, uint32_t nanoseconds, const float* translation, const float* rotation) {
-    geometry_msgs::msg::Vector3 vec_translation;
-    geometry_msgs::msg::Quaternion vec_rotation;
 
-    const float tx = *translation++;
-    const float ty = *translation++;
-    const float tz = *translation++;
+    int same_translation = std::memcmp(translation, _impl->last_translation, sizeof(float) * 3);
+    int same_rotation = std::memcmp(rotation, _impl->last_rotation, sizeof(float) * 4);
+    if (same_translation != 0 || same_rotation != 0) {
+        std::memcpy(_impl->last_translation, translation, sizeof(float) * 3);
+        std::memcpy(_impl->last_rotation, rotation, sizeof(float) * 4);
 
-    vec_translation.x(tx);
-    vec_translation.y(-ty);
-    vec_translation.z(tz);
+        const float tx = *translation++;
+        const float ty = *translation++;
+        const float tz = *translation++;
 
-    const float rx = (*rotation++) * -1.0f;
-    const float ry = (*rotation++) * -1.0f;
-    const float rz = *rotation++;
-    const float rw = *rotation++;
+        const float rx = (*rotation++) * -1.0f;
+        const float ry = (*rotation++) * -1.0f;
+        const float rz = *rotation++;
+        const float rw = *rotation++;
 
-    const float cr = cosf(rz * 0.5f);
-    const float sr = sinf(rz * 0.5f);
-    const float cp = cosf(rx * 0.5f);
-    const float sp = sinf(rx * 0.5f);
-    const float cy = cosf(ry * 0.5f);
-    const float sy = sinf(ry * 0.5f);
+        const float cr = cosf(rz * 0.5f);
+        const float sr = sinf(rz * 0.5f);
+        const float cp = cosf(rx * 0.5f);
+        const float sp = sinf(rx * 0.5f);
+        const float cy = cosf(ry * 0.5f);
+        const float sy = sinf(ry * 0.5f);
 
-    vec_rotation.w(cr * cp * cy + sr * sp * sy);
-    vec_rotation.x(sr * cp * cy - cr * sp * sy);
-    vec_rotation.y(cr * sp * cy + sr * cp * sy);
-    vec_rotation.z(cr * cp * sy - sr * sp * cy);
+        _impl->vec_translation.x(tx);
+        _impl->vec_translation.y(-ty);
+        _impl->vec_translation.z(tz);
+
+        _impl->vec_rotation.w(cr * cp * cy + sr * sp * sy);
+        _impl->vec_rotation.x(sr * cp * cy - cr * sp * sy);
+        _impl->vec_rotation.y(cr * sp * cy + sr * cp * sy);
+        _impl->vec_rotation.z(cr * cp * sy - sr * sp * cy);
+    }
+
 
     builtin_interfaces::msg::Time time;
     time.sec(seconds);
@@ -182,8 +193,8 @@ namespace ros2 {
     header.frame_id(_parent);
 
     geometry_msgs::msg::Transform t;
-    t.rotation(std::move(vec_rotation));
-    t.translation(std::move(vec_translation));
+    t.rotation(_impl->vec_rotation);
+    t.translation(_impl->vec_translation);
 
     geometry_msgs::msg::TransformStamped ts;
     ts.header(std::move(header));
