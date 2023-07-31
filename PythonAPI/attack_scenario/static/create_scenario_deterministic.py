@@ -52,11 +52,11 @@ OUTPUT_FOLDER = "_testing" # "_pedestrians_nopatch"
 if not os.path.exists(os.path.join("./",OUTPUT_FOLDER)):
     os.makedirs(os.path.join("./",OUTPUT_FOLDER))
 
-EGO_SPAWN_POINT = carla.Transform(carla.Location(x=13.883884, y=-67.906418, z=0.5), carla.Rotation(pitch=0.0, yaw=180.0, roll=0.0))
+EGO_SPAWN_POINT = carla.Transform(carla.Location(x=-5.883884, y=-67.906418, z=0.5), carla.Rotation(pitch=0.0, yaw=180.0, roll=0.0))
 PEDESTRIAN_SPAWN_LIST = [carla.Transform(carla.Location(x=-32.164324, y=-75.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),
+                         carla.Transform(carla.Location(x=-30.164324, y=-47.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),
                          carla.Transform(carla.Location(x=-27.164324, y=-74.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),
-                         carla.Transform(carla.Location(x=-30.164324, y=-57.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),
-                         carla.Transform(carla.Location(x=-31.164324, y=-54.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),]
+                         carla.Transform(carla.Location(x=-31.164324, y=-44.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),]
 
 
 # =============================================================================
@@ -280,7 +280,7 @@ class StaticAttackScenario(object):
         # -------------
         # some settings
         percentagePedestriansRunning = 0.0      # how many pedestrians will run
-        percentagePedestriansCrossing = 0.0     # how many pedestrians will walk through the road
+        percentagePedestriansCrossing = 1.0     # how many pedestrians will walk through the road
         self.world.set_pedestrians_seed(42)
         # 1. take all the random locations to spawn
         spawn_points = []
@@ -338,7 +338,7 @@ class StaticAttackScenario(object):
         results = self.client.apply_batch_sync(batch, True)
         for i in range(len(results)):
             if results[i].error:
-                logging.error(results[i].error)
+                logging.error(results[i].error) 
             else:
                 walkers_list[i]["con"] = results[i].actor_id
         # Spawn attack patches and attach the to the walkers
@@ -352,8 +352,9 @@ class StaticAttackScenario(object):
             else:
                 if bb_height > 0 and bb_height < 2.5:
                     patch_pos = carla.Transform(carla.Location(x=0.0, y=0.3,z=0.45*bb_height), carla.Rotation(yaw=90))
-                else:  
-                    patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45))
+                else:
+                    patch_pos = carla.Transform(carla.Location(x=0.0, y=0.3,z=0.45), carla.Rotation(yaw=90))
+                    # patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45))
             batch.append(SpawnActor(patch_bp, patch_pos, walkers_list[i]["id"]))
         results = self.client.apply_batch_sync(batch, True)
         for i in range(len(results)):
@@ -369,9 +370,11 @@ class StaticAttackScenario(object):
                 patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=-10))
             else:
                 if bb_height > 0 and bb_height < 2.5:
-                    patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45*bb_height))
-                else:  
-                    patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45))
+                    patch2_pos = carla.Transform(carla.Location(x=0.0, y=-0.3,z=0.45*bb_height), carla.Rotation(yaw=90))
+                    # patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45*bb_height))
+                else:
+                    patch_pos = carla.Transform(carla.Location(x=0.0, y=-0.3,z=0.45), carla.Rotation(yaw=90))
+                    # patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45))
             batch.append(SpawnActor(patch_bp, patch2_pos, walkers_list[i]["id"]))
         results = self.client.apply_batch_sync(batch, True)
         for i in range(len(results)):
@@ -396,7 +399,14 @@ class StaticAttackScenario(object):
             # start walker
             all_pedestrians[i].start()
             # set walk to random point
-            all_pedestrians[i].go_to_location(self.world.get_random_location_from_navigation())
+            # direction = carla.Vector3D()
+            # direction.x = all_pedestrians[i].get_transform().location.x - self.walker_spawn_points[int(i/4)-1].location.x
+            # direction.y = all_pedestrians[i].get_transform().location.y - self.walker_spawn_points[int(i/4)-1].location.y
+            # direction.z = all_pedestrians[i].get_transform().location.z - self.walker_spawn_points[int(i/4)-1].location.z
+            # controller = carla.WalkerControl(direction, 3.0, jump=True)
+            # all_pedestrians[i].apply_control(controller)
+            all_pedestrians[i].go_to_location(self.walker_spawn_points[int(i/4)-1].location)
+            #all_pedestrians[i].go_to_location(self.world.get_random_location_from_navigation())
             # max speed
             all_pedestrians[i].set_max_speed(float(walker_speed[int(i/4)]))
 
@@ -456,8 +466,8 @@ class StaticAttackScenario(object):
             self.map = self.world.get_map()
             self.bp_lib = self.world.get_blueprint_library()
             spectator = self.world.get_spectator()
-            tf = carla.Transform(carla.Location(x=-32.164324, y=-75.203926, z=1.0), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000))
-            spectator.set_transform(tf)
+            # tf = carla.Transform(carla.Location(x=-32.164324, y=-75.203926, z=1.0), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000))
+            # spectator.set_transform(tf)
 
             labels = [carla.CityObjectLabel.Car,
                       carla.CityObjectLabel.Truck,
@@ -522,13 +532,13 @@ class StaticAttackScenario(object):
                 # print(len(waypoints))
                 # print(waypoints[0].transform.location.distance(self.car.get_location()))
                 
-                if self.car.is_at_traffic_light():
-                    for i, point in enumerate(self.walker_spawn_points):
-                        if point.location.distance(self.car.get_location()) < 20:
-                            print(point)
-                            print(i)
-                            print(point.location.distance(self.car.get_location()))
-                            print(self.car.get_location())
+                # if self.car.is_at_traffic_light():
+                #     for i, point in enumerate(self.walker_spawn_points):
+                #         if point.location.distance(self.car.get_location()) < 20:
+                #             print(point)
+                #             print(i)
+                #             print(point.location.distance(self.car.get_location()))
+                #             print(self.car.get_location())
                 
                 frame_number += 1
 
@@ -568,7 +578,7 @@ class StaticAttackScenario(object):
                 if cv2.waitKey(1) == ord('q'):
                     break
 
-                if frame_number >= 500:
+                if frame_number >= 380:
                     break
 
         except KeyboardInterrupt:
