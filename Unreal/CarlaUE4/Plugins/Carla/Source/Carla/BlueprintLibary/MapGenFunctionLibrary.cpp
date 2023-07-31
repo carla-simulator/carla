@@ -209,3 +209,15 @@ void UMapGenFunctionLibrary::FlushRenderingCommandsInBlueprint(){
   FlushRenderingCommands(true);
  	FlushPendingDeleteRHIResources_GameThread();
 }
+
+void UMapGenFunctionLibrary::CleanupGEngine(){
+  GEngine->PerformGarbageCollectionAndCleanupActors();
+#if WITH_EDITOR
+  FText TransResetText(FText::FromString("Clean up after Move actors to sublevels"));
+  if ( GEditor->Trans )
+  {
+    GEditor->Trans->Reset(TransResetText);
+    GEditor->Cleanse(true, true, TransResetText);
+  }
+#endif
+}

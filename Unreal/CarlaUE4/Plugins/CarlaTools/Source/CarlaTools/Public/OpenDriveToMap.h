@@ -40,15 +40,13 @@ public:
   void CreateMap();
 
   UFUNCTION(BlueprintCallable)
-  void CreateTerrain(const int MeshGridSize, const float MeshGridSectionSize,
-     const class UTexture2D* HeightmapTexture);
+  void CreateTerrain(const int MeshGridSize, const float MeshGridSectionSize);
 
   UFUNCTION(BlueprintCallable)
-  void CreateTerrainMesh(const int MeshIndex, const FVector2D Offset, const int GridSize, const float GridSectionSize,
-     const class UTexture2D* HeightmapTexture, class UTextureRenderTarget2D* RoadMask);
+  void CreateTerrainMesh(const int MeshIndex, const FVector2D Offset, const int GridSize, const float GridSectionSize);
 
   UFUNCTION(BlueprintCallable)
-  static float GetHeight(float PosX, float PosY,bool bDrivingLane = false);
+  float GetHeight(float PosX, float PosY,bool bDrivingLane = false);
 
   UFUNCTION(BlueprintCallable)
   static AActor* SpawnActorWithCheckNoCollisions(UClass* ActorClassToSpawn, FTransform Transform);
@@ -102,8 +100,7 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
   UMaterialInstance* DefaultLandscapeMaterial;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
-  UTexture2D* DefaultHeightmap;
+
 
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   float DistanceBetweenTrees = 50.0f;
@@ -142,6 +139,23 @@ public:
 
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="TileGeneration" )
   FString BaseLevelName;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heightmap")
+  UTexture2D* DefaultHeightmap;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Heightmap" )
+  FVector WorldEndPosition;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Heightmap" )
+  FVector WorldOriginPosition;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Heightmap" )
+  float MinHeight;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Heightmap" )
+  float MaxHeight;
+
+
 protected:
 
   UFUNCTION(BlueprintCallable)
@@ -184,7 +198,7 @@ private:
   bool IsInRoad(const boost::optional<carla::road::Map>& ParamCarlaMap,
         FVector &location) const;
 
-
+  void InitTextureData();
 
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
@@ -192,9 +206,4 @@ private:
   TArray<AActor*> Landscapes;
   UPROPERTY()
   UTexture2D* Heightmap;
-
-};
-
-struct OpenDriveToMapDataStruct{
-
 };

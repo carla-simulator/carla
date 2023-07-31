@@ -48,4 +48,7 @@ public:
 
   UFUNCTION(BlueprintCallable)
   static void FlushRenderingCommandsInBlueprint();
+
+  UFUNCTION(BlueprintCallable)
+  static void CleanupGEngine();
 };

@@ -53,13 +53,11 @@ UOpenDriveToMap::UOpenDriveToMap()
   bRoadsFinished = false;
   bHasStarted = false;
   bMapLoaded = false;
-  UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Creating OpenDriveToMap") );
-
 }
 
 UOpenDriveToMap::~UOpenDriveToMap()
 {
-  UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Destroying") );
+
 }
 
 FString LaneTypeToFString(carla::road::Lane::LaneType LaneType)
@@ -158,13 +156,11 @@ void UOpenDriveToMap::CreateMap()
   FileDownloader->ResultFileName = MapName;
   FileDownloader->Url = Url;
 
-  UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Map Name Is %s"), *MapName );
-
   FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
   FileDownloader->StartDownload();
 }
 
-void UOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGridSectionSize, const class UTexture2D* HeightmapTexture)
+void UOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGridSectionSize)
 {
   TArray<AActor*> FoundActors;
   UGameplayStatics::GetAllActorsOfClass(UEditorLevelLibrary::GetEditorWorld(), AStaticMeshActor::StaticClass(), FoundActors);
@@ -173,39 +169,24 @@ void UOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGri
 
   int NumI = BoxExtent.X  / MeshGridSize;
   int NumJ = BoxExtent.Y  / MeshGridSize;
-  ASceneCapture2D* SceneCapture = Cast<ASceneCapture2D>(UEditorLevelLibrary::GetEditorWorld()->SpawnActor(ASceneCapture2D::StaticClass()));
-  SceneCapture->SetActorRotation(FRotator(-90,90,0));
-  SceneCapture->GetCaptureComponent2D()->ProjectionType = ECameraProjectionMode::Type::Orthographic;
-  SceneCapture->GetCaptureComponent2D()->OrthoWidth = MeshGridSize;
-  SceneCapture->GetCaptureComponent2D()->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
-  SceneCapture->GetCaptureComponent2D()->CompositeMode = ESceneCaptureCompositeMode::SCCM_Overwrite;
-  SceneCapture->GetCaptureComponent2D()->bCaptureEveryFrame = false;
-  SceneCapture->GetCaptureComponent2D()->bCaptureOnMovement = false;
-  //UTextureRenderTarget2D* RenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(UEditorLevelLibrary::GetEditorWorld(), 256, 256,
-  //                                                          ETextureRenderTargetFormat::RTF_RGBA8, FLinearColor(0,0,0), false );
-  //SceneCapture->GetCaptureComponent2D()->TextureTarget = RenderTarget;
 
-  /* Blueprint darfted code should be here */
   for( int i = 0; i <= NumI; i++ )
   {
     for( int j = 0; j <= NumJ; j++ )
     {
       // Offset that each procedural mesh is displaced to accomodate all the tiles
       FVector2D Offset( MinBox.X + i * MeshGridSize, MinBox.Y + j * MeshGridSize);
-      SceneCapture->SetActorLocation(FVector(Offset.X + MeshGridSize/2, Offset.Y + MeshGridSize/2, 500));
-      //SceneCapture->GetCaptureComponent2D()->CaptureScene();
-      CreateTerrainMesh(i * NumJ + j, Offset, MeshGridSize, MeshGridSectionSize, HeightmapTexture, nullptr );
+      CreateTerrainMesh(i * NumJ + j, Offset, MeshGridSize, MeshGridSectionSize );
     }
   }
 }
 
-void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Offset, const int GridSize, const float GridSectionSize, const UTexture2D* HeightmapTexture, UTextureRenderTarget2D* RoadMask)
+void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Offset, const int GridSize, const float GridSectionSize)
 {
   // const float GridSectionSize = 100.0f; // In cm
   const float HeightScale = 3.0f;
 
   UWorld* World = UEditorLevelLibrary::GetEditorWorld();
-
   // Creation of the procedural mesh
   AStaticMeshActor* MeshActor = World->SpawnActor<AStaticMeshActor>();
   MeshActor->SetActorLocation(FVector(Offset.X, Offset.Y, 0));
@@ -219,22 +200,7 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
   TArray<FProcMeshTangent> Tangents;
   TArray<FVector2D> UVs;
 
-  //// Procedural mesh default parameters
-  //// Get Heightmap data from texture, Loading first mip and getting a pointer to the color of the first pixel
-  //FByteBulkData* RawHeightmap = &HeightmapTexture->PlatformData->Mips[0].BulkData;
-  //FColor* FormatedHeightmap = StaticCast<FColor*>(RawHeightmap->Lock(LOCK_READ_ONLY));
-//
-  //// Road mask
-	//int32 Width = RoadMask->SizeX, Height = RoadMask->SizeY;
-	//TArray<FFloat16Color> ImageData;
-	//FTextureRenderTargetResource* RenderTargetResource;
-	//ImageData.AddUninitialized(Width * Height);
-	//RenderTargetResource = RoadMask->GameThread_GetRenderTargetResource();
-	//RenderTargetResource->ReadFloat16Pixels(ImageData);
-//
-  //// check(FormatedHeightmap != nullptr);
-  //// check(FormatedRoadMask != nullptr);
-//
+
   int VerticesInLine = (GridSize / GridSectionSize) + 1.0f;
   static int StaticMeshIndex = 0;
   for( int i = 0; i < VerticesInLine; i++ )
@@ -249,24 +215,12 @@ void UOpenDriveToMap::CreateTerrainMesh(const int MeshIndex, const FVector2D Off
       float HeightValue = GetHeightForLandscape( FVector( (Offset.X + X),
                                                           (Offset.Y + Y),
                                                           0));
-      //if( ImageData[CellIndex].R > 0.5 ) // Small Threshold  /* Uncomment to apply road mask */
-      //{
-      //  // Getting the value for the height in this vertex.
-      //  // If the road mask is higher that 0, there is road so height value = 0
-      //  HeightValue -= 500.0f;
-      //}
-      //UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT(" i %d, j %d, X %f, RoadMapX %d, Y %f, RoadMapY %d, CellIndex %d"), i, j, X, RoadMapX, Y, RoadMapY, CellIndex );
-
       Vertices.Add(FVector( X, Y, HeightValue));
       UVs.Add(FVector2D(i, j));
     }
   }
 
-  //RawHeightmap->Unlock();
-  //RawRoadMask->Unlock();  /* Uncomment to apply road mask */
-
   //// Triangles formation. 2 triangles per section.
-
   for(int i = 0; i < VerticesInLine - 1; i++)
   {
     for(int j = 0; j < VerticesInLine - 1; j++)
@@ -329,7 +283,6 @@ void UOpenDriveToMap::GenerateTile(){
 
     MinPosition = FVector(CurrentTilesInXY.X * TileSize, CurrentTilesInXY.Y * -TileSize, 0.0f);
     MaxPosition = FVector((CurrentTilesInXY.X + 1.0f ) * TileSize, (CurrentTilesInXY.Y + 1.0f) * -TileSize, 0.0f);
-
     GenerateAll(CarlaMap, MinPosition, MaxPosition);
     bHasStarted = true;
     bRoadsFinished = true;
@@ -361,7 +314,14 @@ void UOpenDriveToMap::CorrectPositionForAllActorsInCurrentTile(){
   UGameplayStatics::GetAllActorsOfClass(UEditorLevelLibrary::GetEditorWorld(), AActor::StaticClass(), FoundActors);
   for( AActor* Current : FoundActors){
     Current->AddActorWorldOffset(-MinPosition, false);
+    if( AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(Current) ){
+      UStaticMesh* StaticMesh = MeshActor->GetStaticMeshComponent()->GetStaticMesh();
+      if(StaticMesh)
+        StaticMesh->ClearFlags(RF_Standalone);
+    }
   }
+  CollectGarbage(GARBAGE_COLLECTION_KEEPFLAGS);
+  GEngine->PerformGarbageCollectionAndCleanupActors();
 }
 
 
@@ -458,14 +418,10 @@ void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& Param
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Invalid Map"));
   }else
   {
-    if(DefaultHeightmap && !Heightmap){
-      Heightmap = DefaultHeightmap;
-    }
-
     GenerateRoadMesh(ParamCarlaMap, MinLocation, MaxLocation);
     GenerateLaneMarks(ParamCarlaMap, MinLocation, MaxLocation);
     //GenerateSpawnPoints(ParamCarlaMap);
-    CreateTerrain(12800, 256, nullptr);
+    CreateTerrain(12800, 256);
     GenerateTreePositions(ParamCarlaMap, MinLocation, MaxLocation);
     GenerationFinished(MinLocation, MaxLocation);
   }
@@ -721,19 +677,64 @@ void UOpenDriveToMap::GenerateTreePositions( const boost::optional<carla::road::
 }
 
 float UOpenDriveToMap::GetHeight(float PosX, float PosY, bool bDrivingLane){
-  if( bDrivingLane ){
-    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) +
-      (carla::geom::deformation::GetZPosInDeformation(PosX, PosY) * -0.3f) -
-      carla::geom::deformation::GetBumpDeformation(PosX,PosY);
+  if( DefaultHeightmap ){
+    const FColor* FormatedImageData = static_cast<const FColor*>( DefaultHeightmap->PlatformData->Mips[0].BulkData.LockReadOnly());
+
+    int32 TextureSizeX = DefaultHeightmap->GetSizeX();
+    int32 TextureSizeY = DefaultHeightmap->GetSizeY();
+
+    int32 PixelX = ( ( PosX - WorldOriginPosition.X/100) / (WorldEndPosition.X/100 - WorldOriginPosition.X/100) ) * ((float)TextureSizeX);
+    int32 PixelY = ( ( PosY - WorldOriginPosition.Y/100) / (WorldEndPosition.Y/100 - WorldOriginPosition.Y/100) ) * ((float)TextureSizeY);
+
+    if( PixelX < 0 ){
+      PixelX += TextureSizeX;
+    }
+
+    if( PixelY < 0 ){
+      PixelY += TextureSizeY;
+    }
+
+    if( PixelX > TextureSizeX ){
+      PixelX -= TextureSizeX;
+    }
+
+    if( PixelY > TextureSizeY ){
+      PixelY -= TextureSizeY;
+    }
+
+    FColor PixelColor = FormatedImageData[PixelY * TextureSizeX + PixelX];
+
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("PosX %f PosY %f "), PosX, PosY );
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("WorldOriginPosition %s "), *WorldOriginPosition.ToString() );
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("WorldEndPosition %s "), *WorldEndPosition.ToString() );
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("PixelColor %s "), *WorldEndPosition.ToString() );
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Reading Pixel X: %d Y %d Total Size X %d Y %d"), PixelX, PixelY, TextureSizeX, TextureSizeY );
+
+    DefaultHeightmap->PlatformData->Mips[0].BulkData.Unlock();
+
+    float LandscapeHeight = ( (PixelColor.R/255.0f ) * ( MaxHeight - MinHeight ) ) + MinHeight;
+
+    if( bDrivingLane ){
+      return LandscapeHeight -
+        carla::geom::deformation::GetBumpDeformation(PosX,PosY);
+    }else{
+      return LandscapeHeight;
+    }
   }else{
-    return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) + (carla::geom::deformation::GetZPosInDeformation(PosX, PosY) * -0.3f);
+    if( bDrivingLane ){
+      return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) +
+        (carla::geom::deformation::GetZPosInDeformation(PosX, PosY) * -0.3f) -
+        carla::geom::deformation::GetBumpDeformation(PosX,PosY);
+    }else{
+      return carla::geom::deformation::GetZPosInDeformation(PosX, PosY) + (carla::geom::deformation::GetZPosInDeformation(PosX, PosY) * -0.3f);
+    }
   }
 }
 
 FTransform UOpenDriveToMap::GetSnappedPosition( FTransform Origin ){
   FTransform ToReturn = Origin;
-  FVector Start = Origin.GetLocation() + FVector( 0, 0, 1000);
-  FVector End = Origin.GetLocation() - FVector( 0, 0, 1000);
+  FVector Start = Origin.GetLocation() + FVector( 0, 0, 10000);
+  FVector End = Origin.GetLocation() - FVector( 0, 0, 10000);
   FHitResult HitResult;
   FCollisionQueryParams CollisionQuery;
   CollisionQuery.bTraceComplex = true;
@@ -821,3 +822,4 @@ void UOpenDriveToMap::MoveActorsToSubLevels(TArray<AActor*> ActorsToMove)
     }
   }
 }
+
