@@ -45,7 +45,8 @@ except ImportError:
 
 SpawnActor = carla.command.SpawnActor
 
-OUTPUT_FOLDER = "_test_pedestrians"
+OUTPUT_FOLDER = "_testing"
+OUTPUT_FOLDER_CLEAN = "_testing_clean"
 PATCH_PATH = "./attack.png"
 
 if not os.path.exists(os.path.join("./",OUTPUT_FOLDER)):
@@ -546,7 +547,7 @@ class DynamicAttackScenario(object):
                         })
 
                 cv2.imwrite(os.path.join(OUTPUT_FOLDER, frame_file), patched_img)
-                cv2.imwrite(os.path.join(OUTPUT_FOLDER, "nopatch_"+frame_file), img)
+                cv2.imwrite(os.path.join(OUTPUT_FOLDER_CLEAN, frame_file), img)
 
                 cv2.imshow('CameraFeed',bb_img)
                 if cv2.waitKey(1) == ord('q'):
