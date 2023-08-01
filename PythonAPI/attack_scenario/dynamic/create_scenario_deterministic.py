@@ -48,9 +48,14 @@ SpawnActor = carla.command.SpawnActor
 
 
 OUTPUT_FOLDER = "_testing" # "_pedestrians_nopatch"
+OUTPUT_FOLDER_CLEAN = "_testing_clean"
+PATCH_PATH = "./attack.png"
 
 if not os.path.exists(os.path.join("./",OUTPUT_FOLDER)):
     os.makedirs(os.path.join("./",OUTPUT_FOLDER))
+if not os.path.exists(os.path.join("./",OUTPUT_FOLDER_CLEAN)):
+    os.makedirs(os.path.join("./",OUTPUT_FOLDER_CLEAN))
+
 
 EGO_SPAWN_POINT = carla.Transform(carla.Location(x=-5.883884, y=-67.906418, z=0.5), carla.Rotation(pitch=0.0, yaw=180.0, roll=0.0))
 PEDESTRIAN_SPAWN_LIST = [carla.Transform(carla.Location(x=-32.164324, y=-75.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),
@@ -63,17 +68,44 @@ PEDESTRIAN_SPAWN_LIST = [carla.Transform(carla.Location(x=-32.164324, y=-75.2039
 # -- get bounding boxes -------------------------------------------------------
 # =============================================================================
 
-class GTBoundingBoxes(object):
+class GTBoundingBoxesAndPatchAttack(object):
+
+    patch = cv2.imread(PATCH_PATH, cv2.IMREAD_UNCHANGED)
     
     @staticmethod
     def get_bounding_boxes(world, vehicle, camera, K, labels, img=None):
+        patched_img = img.copy()
         bounding_boxes = []
 
         for label in labels:
             bbs = list(world.get_level_bbs(label))
             for bb in bbs:
-                bb_verts = GTBoundingBoxes.__filter_bbs(bb, vehicle, camera, K)
+                bb_verts = GTBoundingBoxesAndPatchAttack.__filter_bbs(bb, vehicle, camera, K)
                 bounding_boxes.append(bb_verts)
+
+                if img is not None and bb_verts:
+                    bb_verts.append(label)
+
+                    # resize patch and insert it into the image in the middle of the bounding box
+                    width_bb = bb_verts[2]-bb_verts[0]
+                    height_bb = bb_verts[3]-bb_verts[1]
+                    area_bb = width_bb * height_bb
+                    l = int(math.sqrt(0.2*area_bb))
+                    patch_dim = (l, l)
+
+                    if l > 0: # l < width_bb and l < height_bb and
+                        patch = GTBoundingBoxesAndPatchAttack.patch.copy()
+                        patch = cv2.resize(patch, patch_dim)
+                        x_c = int(bb_verts[0]+((bb_verts[2]-bb_verts[0])/2))
+                        y_c = int(bb_verts[1]+((bb_verts[3]-bb_verts[1])/2))
+                        x_min_p = int(x_c-l/2)
+                        x_max_p = x_min_p+l
+                        y_min_p = int(y_c-l/2)
+                        y_max_p = y_min_p+l
+                        
+                        if patch.shape == patched_img[x_min_p:x_max_p, y_min_p:y_max_p,:].shape:
+                            patched_img[y_min_p:y_max_p, x_min_p:x_max_p,:] = patch
+                            img[y_min_p:y_max_p, x_min_p:x_max_p,:] = patch
 
                 if img is not None and bb_verts:
                     bb_verts.append(label)
@@ -83,7 +115,7 @@ class GTBoundingBoxes(object):
                     img = cv2.line(img, (int(bb_verts[2]),int(bb_verts[1])), (int(bb_verts[2]),int(bb_verts[3])), (0,0,255, 255), 1)
         
         if img is not None:
-            return bounding_boxes, img
+            return bounding_boxes, img, patched_img
         
         return bounding_boxes
 
@@ -116,7 +148,7 @@ class GTBoundingBoxes(object):
                 y_min = 10000
 
                 for vert in verts:
-                    p = GTBoundingBoxes.__get_image_point(vert, K, world_2_camera)
+                    p = GTBoundingBoxesAndPatchAttack.__get_image_point(vert, K, world_2_camera)
                     # Find the rightmost vertex
                     if p[0] > x_max:
                         x_max = p[0]
@@ -341,6 +373,8 @@ class StaticAttackScenario(object):
                 logging.error(results[i].error) 
             else:
                 walkers_list[i]["con"] = results[i].actor_id
+        
+        # 4. we put together the walkers and controllers id to get the objects from their id
         # Spawn attack patches and attach the to the walkers
         batch = []
         patch_bp = self.bp_lib.find('static.prop.staticattackpedestrian')
@@ -351,9 +385,9 @@ class StaticAttackScenario(object):
                 patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=-10))
             else:
                 if bb_height > 0 and bb_height < 2.5:
-                    patch_pos = carla.Transform(carla.Location(x=0.0, y=0.3,z=0.45*bb_height), carla.Rotation(yaw=90))
+                    patch_pos = carla.Transform(carla.Location(x=0.0, y=0.3,z=-10.45*bb_height), carla.Rotation(yaw=90))
                 else:
-                    patch_pos = carla.Transform(carla.Location(x=0.0, y=0.3,z=0.45), carla.Rotation(yaw=90))
+                    patch_pos = carla.Transform(carla.Location(x=0.0, y=0.3,z=-10.45), carla.Rotation(yaw=90))
                     # patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45))
             batch.append(SpawnActor(patch_bp, patch_pos, walkers_list[i]["id"]))
         results = self.client.apply_batch_sync(batch, True)
@@ -370,10 +404,10 @@ class StaticAttackScenario(object):
                 patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=-10))
             else:
                 if bb_height > 0 and bb_height < 2.5:
-                    patch2_pos = carla.Transform(carla.Location(x=0.0, y=-0.3,z=0.45*bb_height), carla.Rotation(yaw=90))
+                    patch2_pos = carla.Transform(carla.Location(x=0.0, y=-0.3,z=-10.45*bb_height), carla.Rotation(yaw=90))
                     # patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45*bb_height))
                 else:
-                    patch_pos = carla.Transform(carla.Location(x=0.0, y=-0.3,z=0.45), carla.Rotation(yaw=90))
+                    patch_pos = carla.Transform(carla.Location(x=0.0, y=-0.3,z=-10.45), carla.Rotation(yaw=90))
                     # patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45))
             batch.append(SpawnActor(patch_bp, patch2_pos, walkers_list[i]["id"]))
         results = self.client.apply_batch_sync(batch, True)
@@ -451,53 +485,6 @@ class StaticAttackScenario(object):
         K[0, 2] = w / 2.0
         K[1, 2] = h / 2.0
         return K
-    
-
-    def get_FOI(self):
-        l = self.car.get_location()
-        car_location = np.array([l.x, l.y, l.z])
-        fw = self.car.get_transform().rotation.get_forward_vector()
-        forward = np.array([fw.x, fw.y, fw.z])
-        min_fw = car_location + 4*forward
-        max_fw = car_location + 10*forward
-        rv = self.car.get_transform().rotation.get_right_vector()
-        right = np.array([rv.x, rv.y, rv.z])
-        
-        verteces = [min_fw-5*right, min_fw+5*right, max_fw-5*right, max_fw+5*right]
-
-        return verteces
-    
-    def is_in_FOI(self, actor, FOI):
-        pos = actor.get_location()
-        actor_location = np.array([pos.x, pos.y, pos.z])
-        if FOI[2][0] < actor_location[0] < FOI[0][0]:
-            if FOI[1][1] < actor_location[1] < FOI[0][1]:
-                return True
-        return False
-    
-    def spawn_patch(self, actor):
-        patch_bp = self.bp_lib.find('static.prop.staticattackpedestrian')
-        fw = self.car.get_transform().rotation.get_forward_vector()
-        car_forward = np.array([fw.x, fw.y])
-        fw_p = actor.get_transform().rotation.get_forward_vector()
-        ped_forward = np.array([fw_p.x, fw_p.y])
-        theta = np.arctan2(ped_forward[1], ped_forward[0]) - np.arctan2(car_forward[1], car_forward[0])
-        if theta > math.pi:
-            theta -= 2*math.pi
-        elif theta <= math.pi:
-            theta += 2*math.pi
-        theta_deg = np.rad2deg(theta)
-        print("THETA: ", theta)
-        print("FW car: ", car_forward)
-        print("FD PED :", ped_forward)
-        patch_pos = carla.Transform(carla.Location(x=np.cos(theta)*0.3, y=np.sin(theta)*0.3, z=0.45), carla.Rotation(yaw=theta_deg))
-        for i in range(1,len(self.pedestrian_list),4):
-            if self.pedestrian_list[i] == actor.id:
-                print("Spawning")
-                patch = self.world.spawn_actor(patch_bp, patch_pos, attach_to=actor)
-                pseudo_patch = self.world.get_actor(self.pedestrian_list[i+1])
-                pseudo_patch.destroy()
-                self.pedestrian_list[i+1] = patch.id
                 
 
 
@@ -584,18 +571,6 @@ class StaticAttackScenario(object):
                                 light.set_red_time(20)
                                 light.set_state(carla.TrafficLightState.Red)
                                 stopatLight = False
-
-                FOI = self.get_FOI()
-
-                for i in range(1, len(self.pedestrian_list), 4):
-                    if self.is_in_FOI(all_pedestrians[i], FOI):
-                        if not(in_FOI[int(i/4)]):
-                            print("SPAAAAAAWN")
-                            self.spawn_patch(all_pedestrians[i])
-                            in_FOI[int(i/4)] = True
-                    else:
-                        if in_FOI[int(i/4)]:
-                            in_FOI[int(i/4)] = False
                 
                 frame_number += 1
 
@@ -614,7 +589,7 @@ class StaticAttackScenario(object):
                     "id": frame_number
                 })
 
-                bounding_boxes, bb_img = GTBoundingBoxes.get_bounding_boxes(self.world, self.car, self.camera, self.K, labels, bb_img)
+                bounding_boxes, bb_img, patched_img = GTBoundingBoxesAndPatchAttack.get_bounding_boxes(self.world, self.car, self.camera, self.K, labels, bb_img)
 
                 for bb_verts in bounding_boxes:
                     if bb_verts:
@@ -629,9 +604,10 @@ class StaticAttackScenario(object):
                             "bbox": bb_cocoFormat
                         })
 
-                cv2.imwrite(os.path.join(OUTPUT_FOLDER, frame_file), img)
+                cv2.imwrite(os.path.join(OUTPUT_FOLDER, frame_file), patched_img)
+                cv2.imwrite(os.path.join(OUTPUT_FOLDER_CLEAN, frame_file), img)
 
-                cv2.imshow('CameraFeed',bb_img)
+                cv2.imshow('CameraFeed',patched_img)
                 if cv2.waitKey(1) == ord('q'):
                     break
 
