@@ -351,9 +351,9 @@ class StaticAttackScenario(object):
                 patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=-10))
             else:
                 if bb_height > 0 and bb_height < 2.5:
-                    patch_pos = carla.Transform(carla.Location(x=0.0, y=0.3,z=-10.45*bb_height), carla.Rotation(yaw=90))
+                    patch_pos = carla.Transform(carla.Location(x=0.0, y=0.3,z=0.45*bb_height), carla.Rotation(yaw=90))
                 else:
-                    patch_pos = carla.Transform(carla.Location(x=0.0, y=0.3,z=-10.45), carla.Rotation(yaw=90))
+                    patch_pos = carla.Transform(carla.Location(x=0.0, y=0.3,z=0.45), carla.Rotation(yaw=90))
                     # patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45))
             batch.append(SpawnActor(patch_bp, patch_pos, walkers_list[i]["id"]))
         results = self.client.apply_batch_sync(batch, True)
@@ -370,10 +370,10 @@ class StaticAttackScenario(object):
                 patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=-10))
             else:
                 if bb_height > 0 and bb_height < 2.5:
-                    patch2_pos = carla.Transform(carla.Location(x=0.0, y=-0.3,z=-10.45*bb_height), carla.Rotation(yaw=90))
+                    patch2_pos = carla.Transform(carla.Location(x=0.0, y=-0.3,z=0.45*bb_height), carla.Rotation(yaw=90))
                     # patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45*bb_height))
                 else:
-                    patch_pos = carla.Transform(carla.Location(x=0.0, y=-0.3,z=-10.45), carla.Rotation(yaw=90))
+                    patch_pos = carla.Transform(carla.Location(x=0.0, y=-0.3,z=0.45), carla.Rotation(yaw=90))
                     # patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45))
             batch.append(SpawnActor(patch_bp, patch2_pos, walkers_list[i]["id"]))
         results = self.client.apply_batch_sync(batch, True)
@@ -534,7 +534,7 @@ class StaticAttackScenario(object):
             self.set_synchronous_mode(True)
 
             # self.spawn_npc_vehicles(5)
-            self.spawn_npc_pedestrians(4)
+            self.spawn_npc_pedestrians(4, hidePatch=True)
 
             spawn_points = self.map.get_spawn_points()
 
