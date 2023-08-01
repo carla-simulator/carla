@@ -47,11 +47,16 @@ except ImportError:
 SpawnActor = carla.command.SpawnActor
 
 
-OUTPUT_FOLDER = "_pedestrians_nopatch" # "_pedestrians_nopatch"
+OUTPUT_FOLDER = "_testing" # "_pedestrians_nopatch"
 
 if not os.path.exists(os.path.join("./",OUTPUT_FOLDER)):
     os.makedirs(os.path.join("./",OUTPUT_FOLDER))
 
+EGO_SPAWN_POINT = carla.Transform(carla.Location(x=-5.883884, y=-67.906418, z=0.5), carla.Rotation(pitch=0.0, yaw=180.0, roll=0.0))
+PEDESTRIAN_SPAWN_LIST = [carla.Transform(carla.Location(x=-32.164324, y=-75.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),
+                         carla.Transform(carla.Location(x=-30.164324, y=-47.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),
+                         carla.Transform(carla.Location(x=-27.164324, y=-74.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),
+                         carla.Transform(carla.Location(x=-31.164324, y=-44.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),]
 
 
 # =============================================================================
@@ -173,6 +178,7 @@ class StaticAttackScenario(object):
         self.client = None
         self.world = None
         self.bp_lib = None
+        self.map = None
         self.vehicle_list = []
         self.pedestrian_list = []
         self.static_attacks = []
@@ -219,17 +225,18 @@ class StaticAttackScenario(object):
         self.capture = True
 
         # Get Walker spawn points
-        self.walker_spawn_point = []
-        with open("./../pedestrian_spawn_points.csv", 'r') as file:
-            csvreader = csv.reader(file)
-            for i, row in enumerate(csvreader):
-                if i==0:
-                    continue
-                spawn_point = carla.Transform()
-                spawn_point.location.x = float(row[1])
-                spawn_point.location.y = float(row[2])
-                spawn_point.location.z = float(row[3])
-                self.walker_spawn_point.append(spawn_point)
+        # self.walker_spawn_points = []
+        # with open("./../pedestrian_spawn_points.csv", 'r') as file:
+        #     csvreader = csv.reader(file)
+        #     for i, row in enumerate(csvreader):
+        #         if i==0:
+        #             continue
+        #         spawn_point = carla.Transform()
+        #         spawn_point.location.x = float(row[1])
+        #         spawn_point.location.y = float(row[2])
+        #         spawn_point.location.z = float(row[3])
+        #         self.walker_spawn_points.append(spawn_point)
+        self.walker_spawn_points = PEDESTRIAN_SPAWN_LIST
 
     def set_synchronous_mode(self, mode):
         # Set up the simulator in synchronous mode
@@ -273,7 +280,7 @@ class StaticAttackScenario(object):
         # -------------
         # some settings
         percentagePedestriansRunning = 0.0      # how many pedestrians will run
-        percentagePedestriansCrossing = 0.0     # how many pedestrians will walk through the road
+        percentagePedestriansCrossing = 1.0     # how many pedestrians will walk through the road
         self.world.set_pedestrians_seed(42)
         # 1. take all the random locations to spawn
         spawn_points = []
@@ -288,7 +295,7 @@ class StaticAttackScenario(object):
         walker_speed = []
         # for spawn_point in self.walker_spawn_point:
         for i in range(n):
-            spawn_point = spawn_points[i]
+            spawn_point = self.walker_spawn_points[i] #spawn_points[i]
             walker_bp = self.bp_lib.filter('walker')[i%len(self.bp_lib.filter('walker'))]
             if walker_bp.has_attribute("age"):
                 # print(walker_bp.get_attribute("age").as_str())
@@ -331,7 +338,7 @@ class StaticAttackScenario(object):
         results = self.client.apply_batch_sync(batch, True)
         for i in range(len(results)):
             if results[i].error:
-                logging.error(results[i].error)
+                logging.error(results[i].error) 
             else:
                 walkers_list[i]["con"] = results[i].actor_id
         # Spawn attack patches and attach the to the walkers
@@ -344,9 +351,10 @@ class StaticAttackScenario(object):
                 patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=-10))
             else:
                 if bb_height > 0 and bb_height < 2.5:
-                    patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45*bb_height))
-                else:  
-                    patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45))
+                    patch_pos = carla.Transform(carla.Location(x=0.0, y=0.3,z=-10.45*bb_height), carla.Rotation(yaw=90))
+                else:
+                    patch_pos = carla.Transform(carla.Location(x=0.0, y=0.3,z=-10.45), carla.Rotation(yaw=90))
+                    # patch_pos = carla.Transform(carla.Location(x=-0.2, y=0,z=0.45))
             batch.append(SpawnActor(patch_bp, patch_pos, walkers_list[i]["id"]))
         results = self.client.apply_batch_sync(batch, True)
         for i in range(len(results)):
@@ -362,9 +370,11 @@ class StaticAttackScenario(object):
                 patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=-10))
             else:
                 if bb_height > 0 and bb_height < 2.5:
-                    patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45*bb_height))
-                else:  
-                    patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45))
+                    patch2_pos = carla.Transform(carla.Location(x=0.0, y=-0.3,z=-10.45*bb_height), carla.Rotation(yaw=90))
+                    # patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45*bb_height))
+                else:
+                    patch_pos = carla.Transform(carla.Location(x=0.0, y=-0.3,z=-10.45), carla.Rotation(yaw=90))
+                    # patch2_pos = carla.Transform(carla.Location(x=0.2, y=0,z=0.45))
             batch.append(SpawnActor(patch_bp, patch2_pos, walkers_list[i]["id"]))
         results = self.client.apply_batch_sync(batch, True)
         for i in range(len(results)):
@@ -389,7 +399,14 @@ class StaticAttackScenario(object):
             # start walker
             all_pedestrians[i].start()
             # set walk to random point
-            all_pedestrians[i].go_to_location(self.world.get_random_location_from_navigation())
+            # direction = carla.Vector3D()
+            # direction.x = all_pedestrians[i].get_transform().location.x - self.walker_spawn_points[int(i/4)-1].location.x
+            # direction.y = all_pedestrians[i].get_transform().location.y - self.walker_spawn_points[int(i/4)-1].location.y
+            # direction.z = all_pedestrians[i].get_transform().location.z - self.walker_spawn_points[int(i/4)-1].location.z
+            # controller = carla.WalkerControl(direction, 3.0, jump=True)
+            # all_pedestrians[i].apply_control(controller)
+            all_pedestrians[i].go_to_location(self.walker_spawn_points[int(i/4)-1].location)
+            #all_pedestrians[i].go_to_location(self.world.get_random_location_from_navigation())
             # max speed
             all_pedestrians[i].set_max_speed(float(walker_speed[int(i/4)]))
 
@@ -434,6 +451,55 @@ class StaticAttackScenario(object):
         K[0, 2] = w / 2.0
         K[1, 2] = h / 2.0
         return K
+    
+
+    def get_FOI(self):
+        l = self.car.get_location()
+        car_location = np.array([l.x, l.y, l.z])
+        fw = self.car.get_transform().rotation.get_forward_vector()
+        forward = np.array([fw.x, fw.y, fw.z])
+        min_fw = car_location + 4*forward
+        max_fw = car_location + 10*forward
+        rv = self.car.get_transform().rotation.get_right_vector()
+        right = np.array([rv.x, rv.y, rv.z])
+        
+        verteces = [min_fw-5*right, min_fw+5*right, max_fw-5*right, max_fw+5*right]
+
+        return verteces
+    
+    def is_in_FOI(self, actor, FOI):
+        pos = actor.get_location()
+        actor_location = np.array([pos.x, pos.y, pos.z])
+        if FOI[2][0] < actor_location[0] < FOI[0][0]:
+            if FOI[1][1] < actor_location[1] < FOI[0][1]:
+                return True
+        return False
+    
+    def spawn_patch(self, actor):
+        patch_bp = self.bp_lib.find('static.prop.staticattackpedestrian')
+        fw = self.car.get_transform().rotation.get_forward_vector()
+        car_forward = np.array([fw.x, fw.y])
+        fw_p = actor.get_transform().rotation.get_forward_vector()
+        ped_forward = np.array([fw_p.x, fw_p.y])
+        theta = np.arctan2(ped_forward[1], ped_forward[0]) - np.arctan2(car_forward[1], car_forward[0])
+        if theta > math.pi:
+            theta -= 2*math.pi
+        elif theta <= math.pi:
+            theta += 2*math.pi
+        theta_deg = np.rad2deg(theta)
+        print("THETA: ", theta)
+        print("FW car: ", car_forward)
+        print("FD PED :", ped_forward)
+        patch_pos = carla.Transform(carla.Location(x=np.cos(theta)*0.3, y=np.sin(theta)*0.3, z=0.45), carla.Rotation(yaw=theta_deg))
+        for i in range(1,len(self.pedestrian_list),4):
+            if self.pedestrian_list[i] == actor.id:
+                print("Spawning")
+                patch = self.world.spawn_actor(patch_bp, patch_pos, attach_to=actor)
+                pseudo_patch = self.world.get_actor(self.pedestrian_list[i+1])
+                pseudo_patch.destroy()
+                self.pedestrian_list[i+1] = patch.id
+                
+
 
     def game_loop(self):
         # delete old images from output folder
@@ -446,8 +512,11 @@ class StaticAttackScenario(object):
             self.client = carla.Client("localhost", 2000)
             self.client.set_timeout(2.0)
             self.world = self.client.get_world()
+            self.map = self.world.get_map()
             self.bp_lib = self.world.get_blueprint_library()
-            # spectator = self.world.get_spectator()
+            spectator = self.world.get_spectator()
+            # tf = carla.Transform(carla.Location(x=-32.164324, y=-75.203926, z=1.0), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000))
+            # spectator.set_transform(tf)
 
             labels = [carla.CityObjectLabel.Car,
                       carla.CityObjectLabel.Truck,
@@ -465,11 +534,11 @@ class StaticAttackScenario(object):
             self.set_synchronous_mode(True)
 
             # self.spawn_npc_vehicles(5)
-            self.spawn_npc_pedestrians(100, hidePatch=True)
+            self.spawn_npc_pedestrians(4)
 
-            spawn_points = self.world.get_map().get_spawn_points()
+            spawn_points = self.map.get_spawn_points()
 
-            self.spawn_ego(spawn_points[1])
+            self.spawn_ego(EGO_SPAWN_POINT)
 
             self.world.tick()
 
@@ -493,8 +562,41 @@ class StaticAttackScenario(object):
             cv2.imshow('CameraFeed',img)
             cv2.waitKey(1)
 
+            stopatLight = True
+            traffic_lights = self.world.get_actors().filter('traffic.traffic_light*')
+
+            all_pedestrians = self.world.get_actors(self.pedestrian_list)
+            in_FOI = []
+            for i in range(int(len(self.pedestrian_list)/4)):
+                in_FOI.append(False)
+
+
             while True:
                 self.world.tick()
+
+                if stopatLight:
+                    waypoint = self.map.get_waypoint(self.car.get_location())
+                    waypoints = waypoint.next(30)
+                    for light in traffic_lights:
+                        for bb in light.get_light_boxes():
+                            if bb.location.distance(waypoints[0].transform.location) < 10:
+                                print("SETTING RED")
+                                light.set_red_time(20)
+                                light.set_state(carla.TrafficLightState.Red)
+                                stopatLight = False
+
+                FOI = self.get_FOI()
+
+                for i in range(1, len(self.pedestrian_list), 4):
+                    if self.is_in_FOI(all_pedestrians[i], FOI):
+                        if not(in_FOI[int(i/4)]):
+                            print("SPAAAAAAWN")
+                            self.spawn_patch(all_pedestrians[i])
+                            in_FOI[int(i/4)] = True
+                    else:
+                        if in_FOI[int(i/4)]:
+                            in_FOI[int(i/4)] = False
+                
                 frame_number += 1
 
                 # Retrieve and reshape the image
@@ -533,7 +635,7 @@ class StaticAttackScenario(object):
                 if cv2.waitKey(1) == ord('q'):
                     break
 
-                if frame_number >= 500:
+                if frame_number >= 380:
                     break
 
         except KeyboardInterrupt:
