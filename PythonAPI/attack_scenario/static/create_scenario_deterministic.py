@@ -59,6 +59,8 @@ PEDESTRIAN_SPAWN_LIST = [carla.Transform(carla.Location(x=-32.164324, y=-75.2039
                          carla.Transform(carla.Location(x=-31.164324, y=-44.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),]
 
 
+AREAS = []
+
 # =============================================================================
 # -- get bounding boxes -------------------------------------------------------
 # =============================================================================
@@ -109,6 +111,9 @@ class GTBoundingBoxes(object):
 
             if forward_vec.dot(ray) > 1:
                 verts = [v for v in bb.get_world_vertices(carla.Transform())]
+
+                area = bb.extent.x*2 * bb.extent.z*2
+                AREAS.append(area)
 
                 x_max = -10000
                 x_min = 10000
@@ -429,7 +434,7 @@ class StaticAttackScenario(object):
         self.car = self.world.try_spawn_actor(vehicle_bp, transform)
 
         camera_bp = self.bp_lib.find('sensor.camera.rgb')
-        camera_init_trans = carla.Transform(carla.Location(x=1.5, z=2.4))
+        camera_init_trans = carla.Transform(carla.Location(x=1.0, z=2.0))
         self.camera = self.world.spawn_actor(camera_bp, camera_init_trans, attach_to=self.car)
         self.camera.listen(self.image_queue.put)
 
@@ -458,8 +463,8 @@ class StaticAttackScenario(object):
         car_location = np.array([l.x, l.y, l.z])
         fw = self.car.get_transform().rotation.get_forward_vector()
         forward = np.array([fw.x, fw.y, fw.z])
-        min_fw = car_location + 4*forward
-        max_fw = car_location + 10*forward
+        min_fw = car_location + 6*forward
+        max_fw = car_location + 11*forward
         rv = self.car.get_transform().rotation.get_right_vector()
         right = np.array([rv.x, rv.y, rv.z])
         
@@ -487,10 +492,7 @@ class StaticAttackScenario(object):
         elif theta <= math.pi:
             theta += 2*math.pi
         theta_deg = np.rad2deg(theta)
-        print("THETA: ", theta)
-        print("FW car: ", car_forward)
-        print("FD PED :", ped_forward)
-        patch_pos = carla.Transform(carla.Location(x=np.cos(theta)*0.3, y=np.sin(theta)*0.3, z=0.45), carla.Rotation(yaw=theta_deg))
+        patch_pos = carla.Transform(carla.Location(x=np.cos(theta)*0.3, y=np.sin(theta)*0.3, z=0.0), carla.Rotation(yaw=theta_deg))
         for i in range(1,len(self.pedestrian_list),4):
             if self.pedestrian_list[i] == actor.id:
                 print("Spawning")
@@ -499,7 +501,6 @@ class StaticAttackScenario(object):
                 pseudo_patch.destroy()
                 self.pedestrian_list[i+1] = patch.id
                 
-
 
     def game_loop(self):
         # delete old images from output folder
@@ -670,6 +671,13 @@ class StaticAttackScenario(object):
             print("Saving annotations to json file.")
             with open(os.path.join(OUTPUT_FOLDER, 'annotations.json'), 'w') as json_file:
                 json.dump(self.ground_truth_annotations, json_file)
+
+            average_area = 0
+            for area in AREAS:
+                average_area += area
+            average_area = average_area/len(AREAS)
+
+            print(average_area)
 
 
 if __name__ == "__main__":

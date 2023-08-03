@@ -49,7 +49,7 @@ SpawnActor = carla.command.SpawnActor
 
 OUTPUT_FOLDER = "_testing" # "_pedestrians_nopatch"
 OUTPUT_FOLDER_CLEAN = "_testing_clean"
-PATCH_PATH = "./attack.png"
+PATCH_PATH = "./patch.png"
 
 if not os.path.exists(os.path.join("./",OUTPUT_FOLDER)):
     os.makedirs(os.path.join("./",OUTPUT_FOLDER))
