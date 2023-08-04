@@ -434,7 +434,7 @@ class StaticAttackScenario(object):
         self.car = self.world.try_spawn_actor(vehicle_bp, transform)
 
         camera_bp = self.bp_lib.find('sensor.camera.rgb')
-        camera_init_trans = carla.Transform(carla.Location(x=1.0, z=2.0))
+        camera_init_trans = carla.Transform(carla.Location(x=1.5, z=2.4))
         self.camera = self.world.spawn_actor(camera_bp, camera_init_trans, attach_to=self.car)
         self.camera.listen(self.image_queue.put)
 
