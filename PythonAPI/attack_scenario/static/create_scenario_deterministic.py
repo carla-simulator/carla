@@ -500,6 +500,40 @@ class StaticAttackScenario(object):
                 pseudo_patch = self.world.get_actor(self.pedestrian_list[i+1])
                 pseudo_patch.destroy()
                 self.pedestrian_list[i+1] = patch.id
+
+    def spawn_double_patch(self, actor, delta=0.1):
+        patch_bp = self.bp_lib.find('static.prop.staticattackpedestrian')
+        fw = self.car.get_transform().rotation.get_forward_vector()
+        car_forward = np.array([fw.x, fw.y])
+        fw_p = actor.get_transform().rotation.get_forward_vector()
+        ped_forward = np.array([fw_p.x, fw_p.y])
+        theta = np.arctan2(ped_forward[1], ped_forward[0]) - np.arctan2(car_forward[1], car_forward[0])
+        if theta > math.pi:
+            theta -= 2*math.pi
+        elif theta <= math.pi:
+            theta += 2*math.pi
+        theta_deg = np.rad2deg(theta)
+        bb_height = 2*actor.bounding_box.extent.z
+        bb_width = 2*actor.bounding_box.extent.y*np.sin(theta) + 2*actor.bounding_box.extent.x*np.cos(theta)
+        x1 = np.cos(theta)*0.3-delta*bb_width*np.sin(abs(theta))
+        y1 = np.sin(theta)*0.3-delta*bb_width*np.cos(abs(theta))
+        z1 = delta*bb_height
+        patch1_pos = carla.Transform(carla.Location(x=x1, y=y1, z=z1), carla.Rotation(yaw=theta_deg))
+        x2 = np.cos(theta)*0.35+delta*bb_width*np.sin(abs(theta))
+        y2 = np.sin(theta)*0.35+delta*bb_width*np.cos(abs(theta))
+        z2 = -delta*bb_height
+        patch2_pos = carla.Transform(carla.Location(x=x2, y=y2, z=z2), carla.Rotation(yaw=theta_deg))
+        for i in range(1,len(self.pedestrian_list),4):
+            if self.pedestrian_list[i] == actor.id:
+                print("Spawning")
+                patch = self.world.spawn_actor(patch_bp, patch1_pos, attach_to=actor)
+                pseudo_patch = self.world.get_actor(self.pedestrian_list[i+1])
+                pseudo_patch.destroy()
+                self.pedestrian_list[i+1] = patch.id
+                patch = self.world.spawn_actor(patch_bp, patch2_pos, attach_to=actor)
+                pseudo_patch = self.world.get_actor(self.pedestrian_list[i+2])
+                pseudo_patch.destroy()
+                self.pedestrian_list[i+2] = patch.id
                 
 
     def game_loop(self):
@@ -571,6 +605,9 @@ class StaticAttackScenario(object):
             for i in range(int(len(self.pedestrian_list)/4)):
                 in_FOI.append(False)
 
+            for i in range(1, len(self.pedestrian_list), 4):
+                self.spawn_double_patch(all_pedestrians[i])
+
 
             while True:
                 self.world.tick()
@@ -591,8 +628,8 @@ class StaticAttackScenario(object):
                 for i in range(1, len(self.pedestrian_list), 4):
                     if self.is_in_FOI(all_pedestrians[i], FOI):
                         if not(in_FOI[int(i/4)]):
-                            print("SPAAAAAAWN")
-                            self.spawn_patch(all_pedestrians[i])
+                            # self.spawn_patch(all_pedestrians[i])
+                            self.spawn_double_patch(all_pedestrians[i])
                             in_FOI[int(i/4)] = True
                     else:
                         if in_FOI[int(i/4)]:

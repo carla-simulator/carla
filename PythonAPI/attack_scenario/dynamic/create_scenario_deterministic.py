@@ -49,7 +49,7 @@ SpawnActor = carla.command.SpawnActor
 
 OUTPUT_FOLDER = "_testing" # "_pedestrians_nopatch"
 OUTPUT_FOLDER_CLEAN = "_testing_clean"
-PATCH_PATH = "./patch.png"
+PATCH_PATH = "./new_patch.png"
 
 if not os.path.exists(os.path.join("./",OUTPUT_FOLDER)):
     os.makedirs(os.path.join("./",OUTPUT_FOLDER))
@@ -73,7 +73,7 @@ class GTBoundingBoxesAndPatchAttack(object):
     patch = cv2.imread(PATCH_PATH, cv2.IMREAD_UNCHANGED)
     
     @staticmethod
-    def get_bounding_boxes(world, vehicle, camera, K, labels, img=None):
+    def get_bounding_boxes(world, vehicle, camera, K, labels, double=False, delta=0.1, img=None):
         patched_img = img.copy()
         bounding_boxes = []
 
@@ -98,14 +98,39 @@ class GTBoundingBoxesAndPatchAttack(object):
                         patch = cv2.resize(patch, patch_dim)
                         x_c = int(bb_verts[0]+((bb_verts[2]-bb_verts[0])/2))
                         y_c = int(bb_verts[1]+((bb_verts[3]-bb_verts[1])/2))
-                        x_min_p = int(x_c-l/2)
-                        x_max_p = x_min_p+l
-                        y_min_p = int(y_c-l/2)
-                        y_max_p = y_min_p+l
+                        if double:
+                            x_c1 = x_c + delta*width_bb
+                            y_c1 = y_c + delta*height_bb
+                            x_c2 = x_c - delta*width_bb
+                            y_c2 = y_c - delta*height_bb
+
+                            x_min_p1 = int(x_c1-l/2)
+                            x_max_p1 = x_min_p1+l
+                            y_min_p1 = int(y_c1-l/2)
+                            y_max_p1 = y_min_p1+l
+
+                            x_min_p2 = int(x_c2-l/2)
+                            x_max_p2 = x_min_p2+l
+                            y_min_p2 = int(y_c2-l/2)
+                            y_max_p2 = y_min_p2+l
+
+                            if (patch.shape == patched_img[x_min_p1:x_max_p1, y_min_p1:y_max_p1,:].shape and
+                                 patch.shape == patched_img[x_min_p2:x_max_p2, y_min_p2:y_max_p2,:].shape):
+                                patched_img[y_min_p1:y_max_p1, x_min_p1:x_max_p1,:] = patch
+                                img[y_min_p1:y_max_p1, x_min_p1:x_max_p1,:] = patch
+
+                                patched_img[y_min_p2:y_max_p2, x_min_p2:x_max_p2,:] = patch
+                                img[y_min_p2:y_max_p2, x_min_p2:x_max_p2,:] = patch
+                        else:
+                            x_min_p = int(x_c-l/2)
+                            x_max_p = x_min_p+l
+                            y_min_p = int(y_c-l/2)
+                            y_max_p = y_min_p+l
+                            
+                            if patch.shape == patched_img[x_min_p:x_max_p, y_min_p:y_max_p,:].shape:
+                                patched_img[y_min_p:y_max_p, x_min_p:x_max_p,:] = patch
+                                img[y_min_p:y_max_p, x_min_p:x_max_p,:] = patch
                         
-                        if patch.shape == patched_img[x_min_p:x_max_p, y_min_p:y_max_p,:].shape:
-                            patched_img[y_min_p:y_max_p, x_min_p:x_max_p,:] = patch
-                            img[y_min_p:y_max_p, x_min_p:x_max_p,:] = patch
 
                 if img is not None and bb_verts:
                     bb_verts.append(label)
@@ -589,7 +614,7 @@ class StaticAttackScenario(object):
                     "id": frame_number
                 })
 
-                bounding_boxes, bb_img, patched_img = GTBoundingBoxesAndPatchAttack.get_bounding_boxes(self.world, self.car, self.camera, self.K, labels, bb_img)
+                bounding_boxes, bb_img, patched_img = GTBoundingBoxesAndPatchAttack.get_bounding_boxes(self.world, self.car, self.camera, self.K, labels,double=True, delta=0.1, img=bb_img)
 
                 for bb_verts in bounding_boxes:
                     if bb_verts:
