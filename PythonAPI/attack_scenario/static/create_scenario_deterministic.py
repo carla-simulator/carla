@@ -1,6 +1,7 @@
 import glob
 import os
 import sys
+import subprocess
 
 try:
     sys.path.append(glob.glob('../../carla/dist/carla-*%d.%d-%s.egg' % (
@@ -719,6 +720,18 @@ class StaticAttackScenario(object):
 
 if __name__ == "__main__":
     try:
+        attack_scenario = StaticAttackScenario()
+        attack_scenario.game_loop()
+
+        print("HERERERE")
+
+        patch = cv2.imread("/home/magnus/carla_own/PythonAPI/attack_scenario/dynamic/patch.png", cv2.IMREAD_UNCHANGED)
+        cv2.imwrite("/home/magnus/carla_own/Unreal/CarlaUE4/Content/Package_Attacks/Static/Static/StaticAttackPedestrian/universal_patch_300_hs_resized.png", patch)
+        # result = subprocess.run(["/home/magnus/carla_own/PythonAPI/attack_scenario/static/reimport.sh"], shell=True, text=True)
+        # print(result)
+        time.sleep(10)
+
+        attack_scenario.client.reload_world()
         attack_scenario = StaticAttackScenario()
         attack_scenario.game_loop()
     finally:
