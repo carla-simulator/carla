@@ -605,8 +605,8 @@ class StaticAttackScenario(object):
             for i in range(int(len(self.pedestrian_list)/4)):
                 in_FOI.append(False)
 
-            for i in range(1, len(self.pedestrian_list), 4):
-                self.spawn_double_patch(all_pedestrians[i])
+            # for i in range(1, len(self.pedestrian_list), 4):
+            #     self.spawn_double_patch(all_pedestrians[i])
 
 
             while True:
@@ -628,8 +628,8 @@ class StaticAttackScenario(object):
                 for i in range(1, len(self.pedestrian_list), 4):
                     if self.is_in_FOI(all_pedestrians[i], FOI):
                         if not(in_FOI[int(i/4)]):
-                            # self.spawn_patch(all_pedestrians[i])
-                            self.spawn_double_patch(all_pedestrians[i])
+                            self.spawn_patch(all_pedestrians[i])
+                            # self.spawn_double_patch(all_pedestrians[i])
                             in_FOI[int(i/4)] = True
                     else:
                         if in_FOI[int(i/4)]:
