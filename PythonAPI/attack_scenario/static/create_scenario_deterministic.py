@@ -48,7 +48,7 @@ except ImportError:
 SpawnActor = carla.command.SpawnActor
 
 
-OUTPUT_FOLDER = "_testing" # "_pedestrians_nopatch"
+OUTPUT_FOLDER = "_testing_clean" # "_pedestrians_nopatch"
 
 if not os.path.exists(os.path.join("./",OUTPUT_FOLDER)):
     os.makedirs(os.path.join("./",OUTPUT_FOLDER))
@@ -626,15 +626,15 @@ class StaticAttackScenario(object):
 
                 FOI = self.get_FOI()
 
-                for i in range(1, len(self.pedestrian_list), 4):
-                    if self.is_in_FOI(all_pedestrians[i], FOI):
-                        if not(in_FOI[int(i/4)]):
-                            self.spawn_patch(all_pedestrians[i])
-                            # self.spawn_double_patch(all_pedestrians[i])
-                            in_FOI[int(i/4)] = True
-                    else:
-                        if in_FOI[int(i/4)]:
-                            in_FOI[int(i/4)] = False
+                # for i in range(1, len(self.pedestrian_list), 4):
+                #     if self.is_in_FOI(all_pedestrians[i], FOI):
+                #         if not(in_FOI[int(i/4)]):
+                #             self.spawn_patch(all_pedestrians[i])
+                #             # self.spawn_double_patch(all_pedestrians[i])
+                #             in_FOI[int(i/4)] = True
+                #     else:
+                #         if in_FOI[int(i/4)]:
+                #             in_FOI[int(i/4)] = False
                 
                 frame_number += 1
 
@@ -723,16 +723,16 @@ if __name__ == "__main__":
         attack_scenario = StaticAttackScenario()
         attack_scenario.game_loop()
 
-        print("HERERERE")
+        # print("HERERERE")
 
-        patch = cv2.imread("/home/magnus/carla_own/PythonAPI/attack_scenario/dynamic/patch.png", cv2.IMREAD_UNCHANGED)
-        cv2.imwrite("/home/magnus/carla_own/Unreal/CarlaUE4/Content/Package_Attacks/Static/Static/StaticAttackPedestrian/universal_patch_300_hs_resized.png", patch)
+        # patch = cv2.imread("/home/magnus/carla_own/PythonAPI/attack_scenario/dynamic/patch.png", cv2.IMREAD_UNCHANGED)
+        # cv2.imwrite("/home/magnus/carla_own/Unreal/CarlaUE4/Content/Package_Attacks/Static/Static/StaticAttackPedestrian/universal_patch_300_hs_resized.png", patch)
         # result = subprocess.run(["/home/magnus/carla_own/PythonAPI/attack_scenario/static/reimport.sh"], shell=True, text=True)
-        # print(result)
-        time.sleep(10)
+        # # print(result)
+        # time.sleep(10)
 
-        attack_scenario.client.reload_world()
-        attack_scenario = StaticAttackScenario()
-        attack_scenario.game_loop()
+        # attack_scenario.client.reload_world()
+        # attack_scenario = StaticAttackScenario()
+        # attack_scenario.game_loop()
     finally:
         print("EXIT!")
