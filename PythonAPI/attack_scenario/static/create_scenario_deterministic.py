@@ -1,6 +1,7 @@
 import glob
 import os
 import sys
+import subprocess
 
 try:
     sys.path.append(glob.glob('../../carla/dist/carla-*%d.%d-%s.egg' % (
@@ -47,7 +48,7 @@ except ImportError:
 SpawnActor = carla.command.SpawnActor
 
 
-OUTPUT_FOLDER = "_testing" # "_pedestrians_nopatch"
+OUTPUT_FOLDER = "_testing_clean" # "_pedestrians_nopatch"
 
 if not os.path.exists(os.path.join("./",OUTPUT_FOLDER)):
     os.makedirs(os.path.join("./",OUTPUT_FOLDER))
@@ -58,6 +59,8 @@ PEDESTRIAN_SPAWN_LIST = [carla.Transform(carla.Location(x=-32.164324, y=-75.2039
                          carla.Transform(carla.Location(x=-27.164324, y=-74.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),
                          carla.Transform(carla.Location(x=-31.164324, y=-44.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),]
 
+
+AREAS = []
 
 # =============================================================================
 # -- get bounding boxes -------------------------------------------------------
@@ -109,6 +112,9 @@ class GTBoundingBoxes(object):
 
             if forward_vec.dot(ray) > 1:
                 verts = [v for v in bb.get_world_vertices(carla.Transform())]
+
+                area = bb.extent.x*2 * bb.extent.z*2
+                AREAS.append(area)
 
                 x_max = -10000
                 x_min = 10000
@@ -458,8 +464,8 @@ class StaticAttackScenario(object):
         car_location = np.array([l.x, l.y, l.z])
         fw = self.car.get_transform().rotation.get_forward_vector()
         forward = np.array([fw.x, fw.y, fw.z])
-        min_fw = car_location + 4*forward
-        max_fw = car_location + 10*forward
+        min_fw = car_location + 6*forward
+        max_fw = car_location + 11*forward
         rv = self.car.get_transform().rotation.get_right_vector()
         right = np.array([rv.x, rv.y, rv.z])
         
@@ -487,10 +493,7 @@ class StaticAttackScenario(object):
         elif theta <= math.pi:
             theta += 2*math.pi
         theta_deg = np.rad2deg(theta)
-        print("THETA: ", theta)
-        print("FW car: ", car_forward)
-        print("FD PED :", ped_forward)
-        patch_pos = carla.Transform(carla.Location(x=np.cos(theta)*0.3, y=np.sin(theta)*0.3, z=0.45), carla.Rotation(yaw=theta_deg))
+        patch_pos = carla.Transform(carla.Location(x=np.cos(theta)*0.3, y=np.sin(theta)*0.3, z=0.0), carla.Rotation(yaw=theta_deg))
         for i in range(1,len(self.pedestrian_list),4):
             if self.pedestrian_list[i] == actor.id:
                 print("Spawning")
@@ -498,8 +501,41 @@ class StaticAttackScenario(object):
                 pseudo_patch = self.world.get_actor(self.pedestrian_list[i+1])
                 pseudo_patch.destroy()
                 self.pedestrian_list[i+1] = patch.id
-                
 
+    def spawn_double_patch(self, actor, delta=0.1):
+        patch_bp = self.bp_lib.find('static.prop.staticattackpedestrian')
+        fw = self.car.get_transform().rotation.get_forward_vector()
+        car_forward = np.array([fw.x, fw.y])
+        fw_p = actor.get_transform().rotation.get_forward_vector()
+        ped_forward = np.array([fw_p.x, fw_p.y])
+        theta = np.arctan2(ped_forward[1], ped_forward[0]) - np.arctan2(car_forward[1], car_forward[0])
+        if theta > math.pi:
+            theta -= 2*math.pi
+        elif theta <= math.pi:
+            theta += 2*math.pi
+        theta_deg = np.rad2deg(theta)
+        bb_height = 2*actor.bounding_box.extent.z
+        bb_width = 2*actor.bounding_box.extent.y*np.sin(theta) + 2*actor.bounding_box.extent.x*np.cos(theta)
+        x1 = np.cos(theta)*0.3-delta*bb_width*np.sin(abs(theta))
+        y1 = np.sin(theta)*0.3-delta*bb_width*np.cos(abs(theta))
+        z1 = delta*bb_height
+        patch1_pos = carla.Transform(carla.Location(x=x1, y=y1, z=z1), carla.Rotation(yaw=theta_deg))
+        x2 = np.cos(theta)*0.35+delta*bb_width*np.sin(abs(theta))
+        y2 = np.sin(theta)*0.35+delta*bb_width*np.cos(abs(theta))
+        z2 = -delta*bb_height
+        patch2_pos = carla.Transform(carla.Location(x=x2, y=y2, z=z2), carla.Rotation(yaw=theta_deg))
+        for i in range(1,len(self.pedestrian_list),4):
+            if self.pedestrian_list[i] == actor.id:
+                print("Spawning")
+                patch = self.world.spawn_actor(patch_bp, patch1_pos, attach_to=actor)
+                pseudo_patch = self.world.get_actor(self.pedestrian_list[i+1])
+                pseudo_patch.destroy()
+                self.pedestrian_list[i+1] = patch.id
+                patch = self.world.spawn_actor(patch_bp, patch2_pos, attach_to=actor)
+                pseudo_patch = self.world.get_actor(self.pedestrian_list[i+2])
+                pseudo_patch.destroy()
+                self.pedestrian_list[i+2] = patch.id
+                
 
     def game_loop(self):
         # delete old images from output folder
@@ -570,6 +606,9 @@ class StaticAttackScenario(object):
             for i in range(int(len(self.pedestrian_list)/4)):
                 in_FOI.append(False)
 
+            # for i in range(1, len(self.pedestrian_list), 4):
+            #     self.spawn_double_patch(all_pedestrians[i])
+
 
             while True:
                 self.world.tick()
@@ -587,15 +626,15 @@ class StaticAttackScenario(object):
 
                 FOI = self.get_FOI()
 
-                for i in range(1, len(self.pedestrian_list), 4):
-                    if self.is_in_FOI(all_pedestrians[i], FOI):
-                        if not(in_FOI[int(i/4)]):
-                            print("SPAAAAAAWN")
-                            self.spawn_patch(all_pedestrians[i])
-                            in_FOI[int(i/4)] = True
-                    else:
-                        if in_FOI[int(i/4)]:
-                            in_FOI[int(i/4)] = False
+                # for i in range(1, len(self.pedestrian_list), 4):
+                #     if self.is_in_FOI(all_pedestrians[i], FOI):
+                #         if not(in_FOI[int(i/4)]):
+                #             self.spawn_patch(all_pedestrians[i])
+                #             # self.spawn_double_patch(all_pedestrians[i])
+                #             in_FOI[int(i/4)] = True
+                #     else:
+                #         if in_FOI[int(i/4)]:
+                #             in_FOI[int(i/4)] = False
                 
                 frame_number += 1
 
@@ -671,10 +710,29 @@ class StaticAttackScenario(object):
             with open(os.path.join(OUTPUT_FOLDER, 'annotations.json'), 'w') as json_file:
                 json.dump(self.ground_truth_annotations, json_file)
 
+            average_area = 0
+            for area in AREAS:
+                average_area += area
+            average_area = average_area/len(AREAS)
+
+            print(average_area)
+
 
 if __name__ == "__main__":
     try:
         attack_scenario = StaticAttackScenario()
         attack_scenario.game_loop()
+
+        # print("HERERERE")
+
+        # patch = cv2.imread("/home/magnus/carla_own/PythonAPI/attack_scenario/dynamic/patch.png", cv2.IMREAD_UNCHANGED)
+        # cv2.imwrite("/home/magnus/carla_own/Unreal/CarlaUE4/Content/Package_Attacks/Static/Static/StaticAttackPedestrian/universal_patch_300_hs_resized.png", patch)
+        # result = subprocess.run(["/home/magnus/carla_own/PythonAPI/attack_scenario/static/reimport.sh"], shell=True, text=True)
+        # # print(result)
+        # time.sleep(10)
+
+        # attack_scenario.client.reload_world()
+        # attack_scenario = StaticAttackScenario()
+        # attack_scenario.game_loop()
     finally:
         print("EXIT!")
