@@ -1,10 +1,11 @@
+import subprocess
+
 import glob
 import os
 import sys
-import subprocess
 
 try:
-    sys.path.append(glob.glob('../../carla/dist/carla-*%d.%d-%s.egg' % (
+    sys.path.append(glob.glob('/home/magnus/carla_own/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
@@ -18,6 +19,8 @@ except IndexError:
 
 import carla
 import logging
+
+
 
 import weakref
 import random
@@ -49,9 +52,25 @@ SpawnActor = carla.command.SpawnActor
 
 
 OUTPUT_FOLDER = "_testing_clean" # "_pedestrians_nopatch"
+PATCH_PATH = "/home/magnus/Downloads/universal_patch_300_hs_resized.png"
+TEXTURE_PATH = "/home/magnus/carla_own/Unreal/CarlaUE4/Content/Package_Attacks/Static/Static/StaticAttackPedestrian/patch_texture.png"
+PATCH_OUT = "_patch_out"
 
 if not os.path.exists(os.path.join("./",OUTPUT_FOLDER)):
     os.makedirs(os.path.join("./",OUTPUT_FOLDER))
+if not os.path.exists(os.path.join("./",PATCH_OUT)):
+    os.makedirs(os.path.join("./",PATCH_OUT))
+
+folder = os.listdir(OUTPUT_FOLDER)
+
+for item in folder:
+    if item.endswith(".png"):
+        os.remove(os.path.join(OUTPUT_FOLDER, item))
+
+folder = os.listdir(PATCH_OUT)
+
+for item in folder:
+    os.remove(os.path.join(PATCH_OUT, item))
 
 EGO_SPAWN_POINT = carla.Transform(carla.Location(x=-5.883884, y=-67.906418, z=0.5), carla.Rotation(pitch=0.0, yaw=180.0, roll=0.0))
 PEDESTRIAN_SPAWN_LIST = [carla.Transform(carla.Location(x=-32.164324, y=-75.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),
@@ -122,7 +141,7 @@ class GTBoundingBoxes(object):
                 y_min = 10000
 
                 for vert in verts:
-                    p = GTBoundingBoxes.__get_image_point(vert, K, world_2_camera)
+                    p = GTBoundingBoxes.get_image_point(vert, K, world_2_camera)
                     # Find the rightmost vertex
                     if p[0] > x_max:
                         x_max = p[0]
@@ -143,7 +162,7 @@ class GTBoundingBoxes(object):
         return bbox_verts
                 
     @staticmethod
-    def __get_image_point(loc, K, w2c):
+    def get_image_point(loc, K, w2c):
         """
         Calculate 2D projecbb_vertstion of 3D coordinate.
 
@@ -485,22 +504,38 @@ class StaticAttackScenario(object):
         patch_bp = self.bp_lib.find('static.prop.staticattackpedestrian')
         fw = self.car.get_transform().rotation.get_forward_vector()
         car_forward = np.array([fw.x, fw.y])
+        ped_wrld_loc = actor.get_transform().location
+        ped_wrld_vec = np.array([ped_wrld_loc.x, ped_wrld_loc.y, ped_wrld_loc.z, 1])
+        world2cam = np.array(self.camera.get_transform().get_inverse_matrix())
+        ped_cam_vec = np.dot(world2cam, ped_wrld_vec)
+        # ped_cam_vec = [ped_cam_vec[1], -ped_cam_vec[2], ped_cam_vec[0]]
+        alpha = np.arctan2(ped_cam_vec[1], ped_cam_vec[0])
+        # if alpha > math.pi:
+        #     alpha -= 2*math.pi
+        # elif alpha <= math.pi:
+        #     alpha += 2*math.pi
+        alpha_deg = np.rad2deg(alpha)
+        print("RELATIVE TO CAM: ",ped_cam_vec)
         fw_p = actor.get_transform().rotation.get_forward_vector()
         ped_forward = np.array([fw_p.x, fw_p.y])
         theta = np.arctan2(ped_forward[1], ped_forward[0]) - np.arctan2(car_forward[1], car_forward[0])
-        if theta > math.pi:
-            theta -= 2*math.pi
-        elif theta <= math.pi:
-            theta += 2*math.pi
+        # if theta > math.pi:
+        #     theta -= 2*math.pi
+        # elif theta <= math.pi:
+        #     theta += 2*math.pi
         theta_deg = np.rad2deg(theta)
-        patch_pos = carla.Transform(carla.Location(x=np.cos(theta)*0.3, y=np.sin(theta)*0.3, z=0.0), carla.Rotation(yaw=theta_deg))
+        print(theta_deg, alpha_deg)
+        patch_pos = carla.Transform(carla.Location(x=np.cos(theta)*0.3, y=np.sin(theta)*0.3, z=0.0), carla.Rotation(yaw=theta_deg+alpha_deg))
         for i in range(1,len(self.pedestrian_list),4):
             if self.pedestrian_list[i] == actor.id:
                 print("Spawning")
                 patch = self.world.spawn_actor(patch_bp, patch_pos, attach_to=actor)
                 pseudo_patch = self.world.get_actor(self.pedestrian_list[i+1])
+                print(self.pedestrian_list[i+1])
+                print("OLD PSEUDO: ",pseudo_patch)
                 pseudo_patch.destroy()
                 self.pedestrian_list[i+1] = patch.id
+                print("NEW PATCH: ",patch.id)
 
     def spawn_double_patch(self, actor, delta=0.1):
         patch_bp = self.bp_lib.find('static.prop.staticattackpedestrian')
@@ -526,7 +561,7 @@ class StaticAttackScenario(object):
         patch2_pos = carla.Transform(carla.Location(x=x2, y=y2, z=z2), carla.Rotation(yaw=theta_deg))
         for i in range(1,len(self.pedestrian_list),4):
             if self.pedestrian_list[i] == actor.id:
-                print("Spawning")
+                print("Spawning double")
                 patch = self.world.spawn_actor(patch_bp, patch1_pos, attach_to=actor)
                 pseudo_patch = self.world.get_actor(self.pedestrian_list[i+1])
                 pseudo_patch.destroy()
@@ -535,15 +570,77 @@ class StaticAttackScenario(object):
                 pseudo_patch = self.world.get_actor(self.pedestrian_list[i+2])
                 pseudo_patch.destroy()
                 self.pedestrian_list[i+2] = patch.id
-                
+
+    def get_patch_from_img(self, frame, patch_id):
+        patch_size = 0.447
+        patch = self.world.get_actor(patch_id)
+        # print(patch)
+
+        # actor = patch.parent
+        # actor_world_loc = actor.get_transform().location
+        # actor_world_pos = np.array([actor_world_loc.x, actor_world_loc.y, actor_world_loc.z, 1])
+        world2cam = np.array(self.camera.get_transform().get_inverse_matrix())
+        # actor_cam_pos = np.dot(world2cam, actor_world_pos)
+        # actor_cam_pos = [actor_cam_pos[1], -actor_cam_pos[2], actor_cam_pos[0]]
+
+        patch_world_loc = patch.get_transform().location
+        # print(patch_world_loc)
+        if patch_world_loc.z <= 0:
+            print(patch)
+            return
+        # print(patch_world_loc)
+        patch_fw = patch.get_transform().rotation.get_forward_vector().make_unit_vector()
+        print("FW: ", patch_fw)
+        theta = np.arctan2(patch_fw.y, patch_fw.x)
+        horizontal_vec = np.array([-np.sin(theta), np.cos(theta), 0])
+        # fw_vec = np.array([patch_fw.x, patch_fw.y, patch_fw.z])
+        # c = np.dot(fw_vec, horizontal_vec)/np.linalg.norm(fw_vec)/np.linalg.norm(horizontal_vec)
+        # angle = np.arccos(np.clip(c, -1, 1))
+        print("HORIZONTAL: ", horizontal_vec)
+        margin = 0.05
+        patch_top_left = carla.Location(patch_world_loc.x + (patch_size/2 + margin)*horizontal_vec[0],
+                          patch_world_loc.y + (patch_size/2 + margin)*horizontal_vec[1],
+                          patch_world_loc.z + patch_size/2 + margin)
+        patch_bottom_left = carla.Location(patch_world_loc.x + (patch_size/2 + margin)*horizontal_vec[0],
+                          patch_world_loc.y + (patch_size/2 + margin)*horizontal_vec[1],
+                          patch_world_loc.z - patch_size/2 + margin)
+        patch_bottom_right = carla.Location(patch_world_loc.x - (patch_size/2 + margin)*horizontal_vec[0],
+                          patch_world_loc.y - (patch_size/2 + margin)*horizontal_vec[1],
+                          patch_world_loc.z - patch_size/2 + margin)
+        patch_top_right = carla.Location(patch_world_loc.x - (patch_size/2 + margin)*horizontal_vec[0],
+                          patch_world_loc.y - (patch_size/2 + margin)*horizontal_vec[1],
+                          patch_world_loc.z + patch_size/2 + margin)
+        
+        patch_verteces = [patch_top_left, patch_bottom_left, patch_bottom_right, patch_top_right]
+        patch_vert_img = []
+        for vertex in patch_verteces:
+            img_point = GTBoundingBoxes.get_image_point(vertex, self.K, world2cam)
+            img_point[0] = int(img_point[0])
+            img_point[1] = int(img_point[1])
+            patch_vert_img.append(img_point)
+        
+        img = frame.copy()
+        top_left = (min(int(patch_vert_img[0][0]), int(patch_vert_img[1][0])), min(int(patch_vert_img[0][1]), int(patch_vert_img[3][1])))
+        bottom_left = (min(int(patch_vert_img[0][0]), int(patch_vert_img[1][0])), max(int(patch_vert_img[1][1]), int(patch_vert_img[2][1])))
+        bottom_right = (max(int(patch_vert_img[2][0]), int(patch_vert_img[3][0])), max(int(patch_vert_img[1][1]), int(patch_vert_img[2][1])))
+        top_right = (max(int(patch_vert_img[2][0]), int(patch_vert_img[3][0])), min(int(patch_vert_img[0][1]), int(patch_vert_img[3][1])))
+        # print(top_left)
+        # cv2.rectangle(img, top_left, bottom_right, (255,0,0), 1)
+        # cv2.circle(img, top_left, 2, (0,0,255), -1)
+        # cv2.circle(img, bottom_left, 2, (0,0,255), -1)
+        # cv2.circle(img, bottom_right, 2, (0,0,255), -1)
+        # cv2.circle(img, top_right, 2, (0,0,255), -1)
+        num = len(os.listdir(PATCH_OUT))
+        # cv2.imwrite(os.path.join(PATCH_OUT, "patch_{:01d}.png".format(num)), img)
+        # print(patch_vert_img)
+        patch_cropped = img[min(int(patch_vert_img[0][1]), int(patch_vert_img[3][1])):max(int(patch_vert_img[1][1]), int(patch_vert_img[2][1])),
+                            min(int(patch_vert_img[0][0]), int(patch_vert_img[1][0])):max(int(patch_vert_img[2][0]), int(patch_vert_img[3][0]))]
+
+        cv2.imshow('Patch',patch_cropped)
+        cv2.imwrite(os.path.join(PATCH_OUT, "patch_{:01d}.png".format(num+1)), patch_cropped)
+        
 
     def game_loop(self):
-        # delete old images from output folder
-        out_folder = os.listdir(OUTPUT_FOLDER)
-
-        for item in out_folder:
-            if item.endswith(".png"):
-                os.remove(os.path.join(OUTPUT_FOLDER, item))
         try: 
             self.client = carla.Client("localhost", 2000)
             self.client.set_timeout(2.0)
@@ -624,24 +721,28 @@ class StaticAttackScenario(object):
                                 light.set_state(carla.TrafficLightState.Red)
                                 stopatLight = False
 
-                FOI = self.get_FOI()
-
-                # for i in range(1, len(self.pedestrian_list), 4):
-                #     if self.is_in_FOI(all_pedestrians[i], FOI):
-                #         if not(in_FOI[int(i/4)]):
-                #             self.spawn_patch(all_pedestrians[i])
-                #             # self.spawn_double_patch(all_pedestrians[i])
-                #             in_FOI[int(i/4)] = True
-                #     else:
-                #         if in_FOI[int(i/4)]:
-                #             in_FOI[int(i/4)] = False
-                
                 frame_number += 1
 
                 # Retrieve and reshape the image
                 image = self.image_queue.get()
                 img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
                 bb_img = img.copy()
+
+                FOI = self.get_FOI()
+
+                for i in range(1, len(self.pedestrian_list), 4):
+                    if self.is_in_FOI(all_pedestrians[i], FOI):
+                        if not(in_FOI[int(i/4)]):
+                            self.spawn_patch(all_pedestrians[i])
+                            # self.spawn_double_patch(all_pedestrians[i])
+                            in_FOI[int(i/4)] = True
+                        elif in_FOI[int(i/4)]:
+                            # pass
+                            self.get_patch_from_img(img, self.pedestrian_list[i+1])
+                            self.spawn_patch(all_pedestrians[i])
+                    else:
+                        if in_FOI[int(i/4)]:
+                            in_FOI[int(i/4)] = False
 
                 # Save frame to annotations json
                 frame_file = "{:05d}.png".format(frame_number)
@@ -723,13 +824,13 @@ if __name__ == "__main__":
         attack_scenario = StaticAttackScenario()
         attack_scenario.game_loop()
 
-        # print("HERERERE")
+        # patch = cv2.imread(PATCH_PATH, cv2.IMREAD_UNCHANGED)
+        # cv2.imwrite(TEXTURE_PATH, patch)
 
-        # patch = cv2.imread("/home/magnus/carla_own/PythonAPI/attack_scenario/dynamic/patch.png", cv2.IMREAD_UNCHANGED)
-        # cv2.imwrite("/home/magnus/carla_own/Unreal/CarlaUE4/Content/Package_Attacks/Static/Static/StaticAttackPedestrian/universal_patch_300_hs_resized.png", patch)
-        # result = subprocess.run(["/home/magnus/carla_own/PythonAPI/attack_scenario/static/reimport.sh"], shell=True, text=True)
+        # result = subprocess.run(["/home/magnus/carla_own/PythonAPI/attack_scenario/static/shellscript.sh"], shell=True, text=True)
         # # print(result)
-        # time.sleep(10)
+
+        # time.sleep(3)
 
         # attack_scenario.client.reload_world()
         # attack_scenario = StaticAttackScenario()
