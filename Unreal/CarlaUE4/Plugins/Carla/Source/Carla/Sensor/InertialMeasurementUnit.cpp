@@ -184,12 +184,15 @@ float AInertialMeasurementUnit::ComputeCompass()
 void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AInertialMeasurementUnit::PostPhysTick);
-  auto Stream = GetDataStream(*this);
-  Stream.Send(
-      *this,
-      ComputeAccelerometer(DeltaTime),
-      ComputeGyroscope(),
-      ComputeCompass());
+  if (IsStreamReady())
+  {
+    auto Stream = GetDataStream(*this);
+    Stream.Send(
+        *this,
+        ComputeAccelerometer(DeltaTime),
+        ComputeGyroscope(),
+        ComputeCompass());
+  }
 }
 
 void AInertialMeasurementUnit::SetAccelerationStandardDeviation(const FVector &Vec)

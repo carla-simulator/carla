@@ -88,7 +88,7 @@ namespace tcp {
 
     void StartTimer();
 
-    void CloseNow();
+    void CloseNow(boost::system::error_code ec = boost::system::error_code());
 
     friend class Server;
 

@@ -307,7 +307,10 @@ void FCarlaServer::FPimpl::BindActions()
 
     if(!Episode->LoadNewEpisode(cr::ToFString(map_name), reset_settings))
     {
-      RESPOND_ERROR("map not found");
+      FString Str(TEXT("Map '"));
+      Str += cr::ToFString(map_name);
+      Str += TEXT("' not found");
+      RESPOND_ERROR_FSTRING(Str);
     }
 
     return R<void>::Success();

@@ -166,14 +166,17 @@ namespace road {
     /// Buids a mesh of all crosswalks based on the OpenDRIVE
     geom::Mesh GetAllCrosswalkMesh() const;
 
-    std::vector<std::pair<geom::Vector3D, std::string>> GetTreesPosition(
+    std::vector<std::pair<geom::Transform, std::string>> GetTreesTransform(
       float distancebetweentrees,
-      float distancefromdrivinglineborder) const;
+      float distancefromdrivinglineborder,
+      float s_offset = 0) const;
 
     geom::Mesh GenerateWalls(const double distance, const float wall_height) const;
 
     /// Buids a list of meshes related with LineMarkings
-    std::vector<std::unique_ptr<geom::Mesh>> GenerateLineMarkings( const rpc::OpendriveGenerationParameters& params ) const;
+    std::vector<std::unique_ptr<geom::Mesh>> GenerateLineMarkings(
+      const rpc::OpendriveGenerationParameters& params,
+      std::vector<std::string>& outinfo ) const;
 
     const std::unordered_map<SignId, std::unique_ptr<Signal>>& GetSignals() const {
       return _data.GetSignals();
@@ -226,9 +229,6 @@ public:
       const rpc::OpendriveGenerationParameters& params,
       std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>*
       juntion_out_mesh_list) const;
-
-    void DeformateRoadsMultithreaded(const std::vector<geom::Mesh*>& roadsmesh, const size_t index,
-      const size_t number_of_roads_per_thread, const float simplificationrate) const;
 
     std::unique_ptr<geom::Mesh> SDFToMesh(const road::Junction& jinput, const std::vector<geom::Vector3D>& sdfinput, int grid_cells_per_dim) const;
 
