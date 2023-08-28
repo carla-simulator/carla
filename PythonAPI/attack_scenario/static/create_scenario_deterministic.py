@@ -481,7 +481,7 @@ class StaticAttackScenario(object):
     def get_FOI(self):
         l = self.car.get_location()
         car_location = np.array([l.x, l.y, l.z])
-        fw = self.car.get_transform().rotation.get_forward_vector()
+        fw = self.car.get_transform().rotation.get_forward_vector().make_unit_vector()
         forward = np.array([fw.x, fw.y, fw.z])
         min_fw = car_location + 6*forward
         max_fw = car_location + 11*forward
@@ -508,34 +508,38 @@ class StaticAttackScenario(object):
         ped_wrld_vec = np.array([ped_wrld_loc.x, ped_wrld_loc.y, ped_wrld_loc.z, 1])
         world2cam = np.array(self.camera.get_transform().get_inverse_matrix())
         ped_cam_vec = np.dot(world2cam, ped_wrld_vec)
-        # ped_cam_vec = [ped_cam_vec[1], -ped_cam_vec[2], ped_cam_vec[0]]
         alpha = np.arctan2(ped_cam_vec[1], ped_cam_vec[0])
         # if alpha > math.pi:
         #     alpha -= 2*math.pi
         # elif alpha <= math.pi:
         #     alpha += 2*math.pi
         alpha_deg = np.rad2deg(alpha)
-        print("RELATIVE TO CAM: ",ped_cam_vec)
+        # print("RELATIVE TO CAM: ",ped_cam_vec)
         fw_p = actor.get_transform().rotation.get_forward_vector()
         ped_forward = np.array([fw_p.x, fw_p.y])
         theta = np.arctan2(ped_forward[1], ped_forward[0]) - np.arctan2(car_forward[1], car_forward[0])
-        # if theta > math.pi:
-        #     theta -= 2*math.pi
-        # elif theta <= math.pi:
-        #     theta += 2*math.pi
+        if theta > math.pi:
+            theta -= 2*math.pi
+        elif theta <= -math.pi:
+            theta += 2*math.pi
         theta_deg = np.rad2deg(theta)
-        print(theta_deg, alpha_deg)
-        patch_pos = carla.Transform(carla.Location(x=np.cos(theta)*0.3, y=np.sin(theta)*0.3, z=0.0), carla.Rotation(yaw=theta_deg+alpha_deg))
+        angle = theta_deg+alpha_deg
+        if angle > 180:
+            angle -= 360
+        elif angle < -180:
+            angle += 360
+        # print("ANGLE: ", -angle)
+        patch_pos = carla.Transform(carla.Location(x=np.cos(theta)*0.3, y=np.sin(theta)*0.3, z=0.0), carla.Rotation(yaw=angle))
         for i in range(1,len(self.pedestrian_list),4):
             if self.pedestrian_list[i] == actor.id:
                 print("Spawning")
                 patch = self.world.spawn_actor(patch_bp, patch_pos, attach_to=actor)
                 pseudo_patch = self.world.get_actor(self.pedestrian_list[i+1])
-                print(self.pedestrian_list[i+1])
-                print("OLD PSEUDO: ",pseudo_patch)
+                # print(self.pedestrian_list[i+1])
+                # print("OLD PSEUDO: ",pseudo_patch)
                 pseudo_patch.destroy()
                 self.pedestrian_list[i+1] = patch.id
-                print("NEW PATCH: ",patch.id)
+                # print("NEW PATCH: ",patch.id)
 
     def spawn_double_patch(self, actor, delta=0.1):
         patch_bp = self.bp_lib.find('static.prop.staticattackpedestrian')
@@ -592,12 +596,13 @@ class StaticAttackScenario(object):
         patch_fw = patch.get_transform().rotation.get_forward_vector().make_unit_vector()
         print("FW: ", patch_fw)
         theta = np.arctan2(patch_fw.y, patch_fw.x)
+        print("THETA ", np.rad2deg(theta))
         horizontal_vec = np.array([-np.sin(theta), np.cos(theta), 0])
         # fw_vec = np.array([patch_fw.x, patch_fw.y, patch_fw.z])
         # c = np.dot(fw_vec, horizontal_vec)/np.linalg.norm(fw_vec)/np.linalg.norm(horizontal_vec)
         # angle = np.arccos(np.clip(c, -1, 1))
         print("HORIZONTAL: ", horizontal_vec)
-        margin = 0.05
+        margin = 0.0
         patch_top_left = carla.Location(patch_world_loc.x + (patch_size/2 + margin)*horizontal_vec[0],
                           patch_world_loc.y + (patch_size/2 + margin)*horizontal_vec[1],
                           patch_world_loc.z + patch_size/2 + margin)
@@ -610,14 +615,17 @@ class StaticAttackScenario(object):
         patch_top_right = carla.Location(patch_world_loc.x - (patch_size/2 + margin)*horizontal_vec[0],
                           patch_world_loc.y - (patch_size/2 + margin)*horizontal_vec[1],
                           patch_world_loc.z + patch_size/2 + margin)
+        patch_center = carla.Location(patch_world_loc.x, patch_world_loc.y, patch_world_loc.z)
         
-        patch_verteces = [patch_top_left, patch_bottom_left, patch_bottom_right, patch_top_right]
+        patch_verteces = [patch_top_left, patch_bottom_left, patch_bottom_right, patch_top_right, patch_center]
         patch_vert_img = []
         for vertex in patch_verteces:
             img_point = GTBoundingBoxes.get_image_point(vertex, self.K, world2cam)
             img_point[0] = int(img_point[0])
             img_point[1] = int(img_point[1])
             patch_vert_img.append(img_point)
+        
+
         
         img = frame.copy()
         top_left = (min(int(patch_vert_img[0][0]), int(patch_vert_img[1][0])), min(int(patch_vert_img[0][1]), int(patch_vert_img[3][1])))
@@ -633,8 +641,16 @@ class StaticAttackScenario(object):
         num = len(os.listdir(PATCH_OUT))
         # cv2.imwrite(os.path.join(PATCH_OUT, "patch_{:01d}.png".format(num)), img)
         # print(patch_vert_img)
-        patch_cropped = img[min(int(patch_vert_img[0][1]), int(patch_vert_img[3][1])):max(int(patch_vert_img[1][1]), int(patch_vert_img[2][1])),
-                            min(int(patch_vert_img[0][0]), int(patch_vert_img[1][0])):max(int(patch_vert_img[2][0]), int(patch_vert_img[3][0]))]
+        # patch_cropped = img[min(int(patch_vert_img[0][1]), int(patch_vert_img[3][1])):max(int(patch_vert_img[1][1]), int(patch_vert_img[2][1])),
+        #                     min(int(patch_vert_img[0][0]), int(patch_vert_img[1][0])):max(int(patch_vert_img[2][0]), int(patch_vert_img[3][0]))]
+        
+        patch_cropped = img[int(patch_vert_img[4][1])-15:int(patch_vert_img[4][1])+15,
+                            int(patch_vert_img[4][0])-15:int(patch_vert_img[4][0])+15]
+        
+        print("SHAPE:   ",patch_cropped.shape)
+        if patch_cropped.shape[0] == 0 or patch_cropped.shape[1] == 0:
+            print("NVM!!!!")
+            return
 
         cv2.imshow('Patch',patch_cropped)
         cv2.imwrite(os.path.join(PATCH_OUT, "patch_{:01d}.png".format(num+1)), patch_cropped)
@@ -650,7 +666,6 @@ class StaticAttackScenario(object):
             spectator = self.world.get_spectator()
             # tf = carla.Transform(carla.Location(x=-32.164324, y=-75.203926, z=1.0), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000))
             # spectator.set_transform(tf)
-
             labels = [carla.CityObjectLabel.Car,
                       carla.CityObjectLabel.Truck,
                       carla.CityObjectLabel.Motorcycle,
