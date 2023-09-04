@@ -297,7 +297,7 @@
         doc: >
           New timeout value. Default is 5 seconds.
       doc: >
-        Sets the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.
+        Sets the maximum time a network call is allowed before blocking it and raising a timeout exceeded error.
      # --------------------------------------
     - def_name: set_replayer_ignore_hero
       params:
@@ -305,6 +305,13 @@
         type: bool
         doc: >
           Enables or disables playback of the hero vehicle during a playback of a recorded simulation.
+    # --------------------------------------
+    - def_name: set_replayer_ignore_spectator
+      params:
+      - param_name: ignore_spectator
+        type: bool
+        doc: >
+          Determines whether the recorded spectator movements will be replicated by the replayer.
      # --------------------------------------
     - def_name: set_files_base_folder
       params:
@@ -716,6 +723,10 @@
           The probability of lane change in percentage units (between 0 and 100)
       doc: >
         Adjust probability that in each timestep the actor will perform a right lane change, dependent on lane change availability.
+    # --------------------------------------
+    - def_name: shut_down
+      doc: >
+        Shuts down the traffic manager. 
     # --------------------------------------
 
   - class_name: OpendriveGenerationParameters

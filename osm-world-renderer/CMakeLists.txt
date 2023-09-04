@@ -3,7 +3,10 @@ project(OsmMapRenderer)
 
 # Libosmscout and Luna SVG Library
 include_directories(ThirdParties/include)
+include_directories(ThirdParties/include/lunasvg)
 link_directories(ThirdParties/lib)
+
+add_definitions(-D_USE_MATH_DEFINES)
 
 # Source Files
 add_library(OsmRenderer OsmRenderer/src/OsmRenderer.cpp)

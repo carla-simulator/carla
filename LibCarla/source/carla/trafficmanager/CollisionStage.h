@@ -3,10 +3,17 @@
 
 #include <memory>
 
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wshadow"
+#endif
 #include "boost/geometry.hpp"
 #include "boost/geometry/geometries/geometries.hpp"
 #include "boost/geometry/geometries/point_xy.hpp"
 #include "boost/geometry/geometries/polygon.hpp"
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#endif
 
 #include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/Parameters.h"

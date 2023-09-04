@@ -17,6 +17,8 @@
 #include "Carla/Walker/WalkerControl.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Components/BoxComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "VehicleAnimInstance.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/rpc/VehicleLightState.h"
@@ -207,14 +209,22 @@ void ACarlaRecorder::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
     return;
   if (CarlaActor->GetActorType() != FCarlaActor::ActorType::Vehicle)
     return;
+
   ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-  check(CarlaVehicle != nullptr)
+  if (CarlaVehicle == nullptr)
+    return;
+
   USkeletalMeshComponent* SkeletalMesh = CarlaVehicle->GetMesh();
-  check(SkeletalMesh != nullptr)
+  if (SkeletalMesh == nullptr)
+    return;
+
   UVehicleAnimInstance* VehicleAnim = Cast<UVehicleAnimInstance>(SkeletalMesh->GetAnimInstance());
-  check(VehicleAnim != nullptr)
+  if (VehicleAnim == nullptr)
+    return;
+
   const UWheeledVehicleMovementComponent* WheeledVehicleMovementComponent = VehicleAnim->GetWheeledVehicleMovementComponent();
-  check(WheeledVehicleMovementComponent != nullptr)
+  if (WheeledVehicleMovementComponent == nullptr)
+    return;
 
   CarlaRecorderAnimWheels Record;
   Record.DatabaseId = CarlaActor->GetActorId();

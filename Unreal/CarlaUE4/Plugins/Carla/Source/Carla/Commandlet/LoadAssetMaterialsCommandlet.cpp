@@ -9,6 +9,7 @@
 #if WITH_EDITOR
 #include "FileHelpers.h"
 #endif
+#include "Misc/FileHelper.h"
 #include "JsonObject.h"
 #include "JsonSerializer.h"
 #include "UObject/ConstructorHelpers.h"

@@ -76,8 +76,11 @@ void ARadar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");
-    auto DataStream = GetDataStream(*this);
-    DataStream.Send(*this, RadarData, DataStream.PopBufferFromPool());
+    if (IsStreamReady())
+    {
+      auto DataStream = GetDataStream(*this);
+      DataStream.Send(*this, RadarData, DataStream.PopBufferFromPool());
+    }
   }
 }
 

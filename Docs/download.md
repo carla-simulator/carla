@@ -11,7 +11,9 @@
 > next release, but also some experimental changes. Use at your own risk!
 
 - [CARLA Nightly Build (Linux)](https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/Dev/CARLA_Latest.tar.gz)  
+- [AdditionalMaps Nightly Build (Linux)](https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/Dev/AdditionalMaps_Latest.tar.gz)  
 - [CARLA Nightly Build (Windows)](https://carla-releases.s3.eu-west-3.amazonaws.com/Windows/Dev/CARLA_Latest.zip)  
+- [AdditionalMaps Nightly Build (Windows)](https://carla-releases.s3.eu-west-3.amazonaws.com/Windows/Dev/AdditionalMaps_Latest.zip)  
 
 ### Versions 0.9.x
 

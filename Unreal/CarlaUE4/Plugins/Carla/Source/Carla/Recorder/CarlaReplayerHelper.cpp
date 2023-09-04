@@ -218,20 +218,26 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
   if (result.first != 0)
   {
     // disable physics and autopilot on vehicles
-    if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle)
+    if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle ||
+        result.second->GetActorType() == FCarlaActor::ActorType::Walker)
     {
       // ignore hero ?
       if (!(bIgnoreHero && IsHero))
       {
         // disable physics
         SetActorSimulatePhysics(result.second, false);
-        // disable autopilot
-        SetActorAutopilot(result.second, false, false);
+        // disable collisions
+        result.second->GetActor()->SetActorEnableCollision(false);
+        // disable autopilot for vehicles
+        if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle)
+          SetActorAutopilot(result.second, false, false);
       }
       else
       {
-        // reenable physics just in case
+        // enable physics just in case
         SetActorSimulatePhysics(result.second, true);
+        // enable collisions
+        result.second->GetActor()->SetActorEnableCollision(true);
       }
     }
     return std::make_pair(result.first, result.second->GetActorId());

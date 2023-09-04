@@ -9,10 +9,13 @@
 #include "CarlaRecorderEventAdd.h"
 #include "CarlaRecorderPosition.h"
 #include "CarlaRecorderState.h"
+#include "CarlaRecorderAnimBiker.h"
 #include "CarlaRecorderAnimWalker.h"
 #include "CarlaRecorderAnimVehicle.h"
+#include "CarlaRecorderAnimVehicleWheels.h"
 #include "CarlaRecorderLightVehicle.h"
 #include "CarlaRecorderLightScene.h"
+#include "CarlaRecorderWalkerBones.h"
 
 #include <unordered_map>
 
