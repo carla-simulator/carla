@@ -92,9 +92,7 @@ namespace client {
       std::string map_name_with_prefix = map_name_prefix + map_name;
       if(!(map_name_without_prefix == current_map_name) && !(map_name_with_prefix == current_map_name)){
         World World{_simulator->LoadEpisode(std::move(map_name), reset_settings, map_layers)};
-      }else{
-
-      }
+      }else{}
     }
     
     World GenerateOpenDriveWorld(
