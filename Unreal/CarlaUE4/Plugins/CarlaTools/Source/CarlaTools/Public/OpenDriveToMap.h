@@ -62,6 +62,9 @@ public:
   }
 
   UFUNCTION(BlueprintCallable)
+  void GenerateTileStandalone();
+
+  UFUNCTION(BlueprintCallable)
   void GenerateTile();
 
   UFUNCTION(BlueprintCallable)
@@ -72,6 +75,12 @@ public:
 
   UFUNCTION(BlueprintCallable)
   void CorrectPositionForAllActorsInCurrentTile();
+
+  UFUNCTION(BlueprintCallable)
+  FString GetStringForCurrentTile();
+
+  UFUNCTION(BlueprintCallable)
+  AActor* SpawnActorInEditorWorld(UClass* Class, FVector Location, FRotator Rotation);
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;
@@ -165,7 +174,11 @@ protected:
   void GenerationFinished(FVector MinLocation, FVector MaxLocation);
 
   UFUNCTION( BlueprintImplementableEvent )
-  void CustomTick();
+  void DownloadFinished();
+
+
+  UFUNCTION( BlueprintImplementableEvent )
+  void ExecuteTileCommandlet();
 
   UFUNCTION( BlueprintCallable )
   void MoveActorsToSubLevels(TArray<AActor*> ActorsToMove);

@@ -53,13 +53,18 @@ FMeshDescription UMapGenFunctionLibrary::BuildMeshDescriptionFromData(
   TMap<UMaterialInterface*, FPolygonGroupID> UniqueMaterials;
 	const int32 NumSections = 1;
 	UniqueMaterials.Reserve(1);
-
-  UMaterialInterface *Material = MaterialInstance;
   FPolygonGroupID NewPolygonGroup = MeshDescription.CreatePolygonGroup();
-  UniqueMaterials.Add(Material, NewPolygonGroup);
-  PolygonGroupNames[NewPolygonGroup] = Material->GetFName();
 
+  if( MaterialInstance != nullptr ){
+    UMaterialInterface *Material = MaterialInstance;
+    UniqueMaterials.Add(Material, NewPolygonGroup);
+    PolygonGroupNames[NewPolygonGroup] = Material->GetFName();
+  }else{
+    UE_LOG(LogCarla, Error, TEXT("MaterialInstance is nullptr"));
+  }
   PolygonGroupForSection = NewPolygonGroup;
+
+
 
   // Create the vertex
   int32 NumVertex = Data.Vertices.Num();

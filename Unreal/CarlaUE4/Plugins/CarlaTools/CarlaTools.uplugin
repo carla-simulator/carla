@@ -18,7 +18,7 @@
 		{
 			"Name": "CarlaTools",
 			"Type": "Editor",
-			"LoadingPhase": "PostEngineInit"
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
