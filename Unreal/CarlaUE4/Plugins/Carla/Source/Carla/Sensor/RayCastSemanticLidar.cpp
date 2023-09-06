@@ -71,8 +71,11 @@ void ARayCastSemanticLidar::PostPhysTick(UWorld *World, ELevelTick TickType, flo
 
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");
-    auto DataStream = GetDataStream(*this);
-    DataStream.Send(*this, SemanticLidarData, DataStream.PopBufferFromPool());
+    if (IsStreamReady())
+    {
+      auto DataStream = GetDataStream(*this);
+      DataStream.Send(*this, SemanticLidarData, DataStream.PopBufferFromPool());
+    }
   }
 }
 
