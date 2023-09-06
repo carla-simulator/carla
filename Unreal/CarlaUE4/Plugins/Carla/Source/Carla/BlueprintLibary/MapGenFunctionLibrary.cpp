@@ -147,7 +147,7 @@ UStaticMesh* UMapGenFunctionLibrary::CreateMesh(
 
   if (!PlatformFile.DirectoryExists(*PackageName))
   {
-    PlatformFile.CreateDirectory(*PackageName);
+    //PlatformFile.CreateDirectory(*PackageName);
   }
 
 
@@ -202,7 +202,7 @@ FVector2D UMapGenFunctionLibrary::GetTransversemercProjection(float lat, float l
 }
 
 void UMapGenFunctionLibrary::SetThreadToSleep(float seconds){
-  FGenericPlatformProcess::Sleep(seconds);
+  //FGenericPlatformProcess::Sleep(seconds);
 }
 
 void UMapGenFunctionLibrary::FlushRenderingCommandsInBlueprint(){

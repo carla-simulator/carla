@@ -113,14 +113,14 @@ void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ULevel
   }
 }
 
-void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ULevelStreaming* Level)
+/*void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ULevelStreaming* Level)
 {
   int MovedActors = UEditorLevelUtils::MoveActorsToLevel(Actors, Level, false, false);
   // StreamingLevel->SetShouldBeLoaded(false);
   UE_LOG(LogCarlaTools, Log, TEXT("Moved %d actors"), MovedActors);
   FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
   UEditorLevelUtils::RemoveLevelFromWorld(Level->GetLoadedLevel());
-}
+}*/
 
 void UHoudiniImporterWidget::UpdateGenericActorCoordinates(
     AActor* Actor, FVector TileOrigin)
