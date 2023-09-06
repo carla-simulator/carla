@@ -20,7 +20,8 @@ namespace s11n {
 namespace data {
 
   struct RadarDetection {
-    float velocity; // m/s
+    float velocity_x; // m/s
+    float velocity_y; // m/s
     float azimuth;  // rad
     float altitude; // rad
     float depth;    // m
@@ -28,7 +29,7 @@ namespace data {
 
   class RadarData {
     static_assert(sizeof(float) == sizeof(uint32_t), "Invalid float size");
-    static_assert(sizeof(float) * 4 == sizeof(RadarDetection), "Invalid RadarDetection size");
+    static_assert(sizeof(float) * 5 == sizeof(RadarDetection), "Invalid RadarDetection size");
 
   public:
     explicit RadarData() = default;

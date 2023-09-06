@@ -138,7 +138,8 @@ namespace data {
 
 
   std::ostream &operator<<(std::ostream &out, const RadarDetection &det) {
-    out << "RadarDetection(velocity=" << std::to_string(det.velocity)
+    out << "RadarDetection(velocity_x=" << std::to_string(det.velocity_x)
+        << ", velocity_y=" << std::to_string(det.velocity_y)
         << ", azimuth=" << std::to_string(det.azimuth)
         << ", altitude=" << std::to_string(det.altitude)
         << ", depth=" << std::to_string(det.depth)
@@ -523,7 +524,8 @@ void export_sensor_data() {
   ;
 
   class_<csd::RadarDetection>("RadarDetection")
-    .def_readwrite("velocity", &csd::RadarDetection::velocity)
+    .def_readwrite("velocity_x", &csd::RadarDetection::velocity_x)
+    .def_readwrite("velocity_y", &csd::RadarDetection::velocity_y)
     .def_readwrite("azimuth", &csd::RadarDetection::azimuth)
     .def_readwrite("altitude", &csd::RadarDetection::altitude)
     .def_readwrite("depth", &csd::RadarDetection::depth)

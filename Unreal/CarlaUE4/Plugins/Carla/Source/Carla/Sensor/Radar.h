@@ -69,7 +69,7 @@ private:
 
   void SendLineTraces(float DeltaTime);
 
-  float CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation);
+  FVector2D CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& ForvardVector, const FVector& RightVector, const FTransform& ActorTransform);
 
   FRadarData RadarData;
 
@@ -84,7 +84,7 @@ private:
     float Radius;
     float Angle;
     bool Hitted;
-    float RelativeVelocity;
+    FVector2D RelativeVelocity;
     FVector2D AzimuthAndElevation;
     float Distance;
   };
