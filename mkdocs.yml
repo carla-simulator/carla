@@ -47,6 +47,7 @@ nav:
   - 'ROS': https://carla.readthedocs.io/projects/ros-bridge/en/latest/
   - 'Scenic': 'tuto_G_scenic.md'
   - 'SUMO': 'adv_sumo.md'
+  - 'SYNKROTRON': 'ecosys_synkrotron.md'
 
 - Contributing:
   - 'Guidelines': 'cont_contribution_guidelines.md' 
