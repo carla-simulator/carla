@@ -1,6 +1,6 @@
 # Synkrotron simulation solutions
 
-<img src="/img/synkrotron.jpg" alt= “synkrotron_logo” style="display: block; margin-left: auto; margin-right: auto; width: 70%;">
+<img src="../img/synkrotron.jpg" alt= “synkrotron_logo” style="display: block; margin-left: auto; margin-right: auto; width: 70%;">
 
 Synkrotron provides advanced solutions for autonomous driving simulation, built on top of CARLA's existing toolset to streamline scenario authoring, simulation data pipelining, sensor modelling and cloud based compute scaling tools for streamlining the AD research and development process.
 
