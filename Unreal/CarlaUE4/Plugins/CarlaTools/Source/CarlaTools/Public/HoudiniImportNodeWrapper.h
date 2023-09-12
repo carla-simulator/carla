@@ -32,7 +32,8 @@ public:
       UObject* InWorldContextObject,
       const FString& MapName, const FString& OSMFilePath,
       float Latitude, float Longitude,
-      int ClusterSize, int CurrentCluster);
+      int ClusterSize, int CurrentCluster,
+      bool bUseCOM);
 
   // Fires on task completed
   UPROPERTY(BlueprintAssignable, Category="Houdini|Public API")

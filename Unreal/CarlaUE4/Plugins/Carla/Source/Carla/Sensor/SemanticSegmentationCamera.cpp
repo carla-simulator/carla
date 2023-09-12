@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "Carla/Sensor/SemanticSegmentationCamera.h"
 
+#include "Actor/ActorBlueprintFunctionLibrary.h"
+
 #include "Carla/Sensor/PixelReader.h"
 
 FActorDefinition ASemanticSegmentationCamera::GetSensorDefinition()

@@ -30,7 +30,8 @@ void CarlaReplayer::Stop(bool bKeepActors)
     Helper.ProcessReplayerFinish(bKeepActors, IgnoreHero, IsHeroMap);
   }
 
-  File.close();
+  if (File.is_open())
+    File.close();
 }
 
 bool CarlaReplayer::ReadHeader()

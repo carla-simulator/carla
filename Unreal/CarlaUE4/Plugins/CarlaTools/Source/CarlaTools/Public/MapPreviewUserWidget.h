@@ -4,6 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+
+THIRD_PARTY_INCLUDES_START
+#include <boost/asio.hpp>
+THIRD_PARTY_INCLUDES_END
+#include <memory>
+
 #include "MapPreviewUserWidget.generated.h"
 
 class FSocket;
@@ -15,7 +21,10 @@ class CARLATOOLS_API UMapPreviewUserWidget : public UUserWidget
 	GENERATED_BODY()
 
 private:
-	FSocket* Socket;
+	// Boost socket
+  boost::asio::io_service io_service;
+  std::unique_ptr<boost::asio::ip::tcp::socket> SocketPtr;
+
 
 	bool SendStr(FString Msg);
 	FString RecvCornersLatLonCoords();

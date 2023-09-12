@@ -187,7 +187,7 @@ void export_client() {
   ;
 
   class_<cc::Client>("Client",
-      init<std::string, uint16_t, size_t>((arg("host"), arg("port"), arg("worker_threads")=0u)))
+      init<std::string, uint16_t, size_t>((arg("host")="127.0.0.1", arg("port")=2000, arg("worker_threads")=0u)))
     .def("set_timeout", &::SetTimeout, (arg("seconds")))
     .def("get_client_version", &cc::Client::GetClientVersion)
     .def("get_server_version", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerVersion))
@@ -198,6 +198,7 @@ void export_client() {
     .def("request_file", &cc::Client::RequestFile, (arg("name")))
     .def("reload_world", CONST_CALL_WITHOUT_GIL_1(cc::Client, ReloadWorld, bool), (arg("reset_settings")=true))
     .def("load_world", CONST_CALL_WITHOUT_GIL_3(cc::Client, LoadWorld, std::string, bool, rpc::MapLayer), (arg("map_name"), arg("reset_settings")=true, arg("map_layers")=rpc::MapLayer::All))
+    .def("load_world_if_different", &cc::Client::LoadWorldIfDifferent, (arg("map_name"), arg("reset_settings")=true, arg("map_layers")=rpc::MapLayer::All))
     .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_3(cc::Client, GenerateOpenDriveWorld, std::string,
         rpc::OpendriveGenerationParameters, bool), (arg("opendrive"), arg("parameters")=rpc::OpendriveGenerationParameters(),
         arg("reset_settings")=true))

@@ -41,7 +41,7 @@
     instance_variables:
     - var_name: CityScapesPalette
       doc: >
-        Converts the image to a segmentated map using tags provided by the blueprint library. Used by the [semantic segmentation camera](ref_sensors.md#semantic-segmentation-camera).
+        Converts the image to a segmented map using tags provided by the blueprint library. Used by the [semantic segmentation camera](ref_sensors.md#semantic-segmentation-camera).
     - var_name: Depth
       doc: >
         Converts the image to a linear depth map. Used by the [depth camera](ref_sensors.md#depth-camera).
@@ -106,6 +106,8 @@
         Image width in pixels.
     - var_name: raw_data
       type: bytes
+      doc: >
+        Flattened array of pixel data, use reshape to create an image array.
     # - METHODS ----------------------------
     methods:
     - def_name: convert
@@ -172,6 +174,8 @@
         Image width in pixels.
     - var_name: raw_data
       type: bytes
+      doc: >
+        Flattened array of pixel data, use reshape to create an image array.
     # - METHODS ----------------------------
     methods:
     - def_name: get_color_coded_flow
@@ -221,7 +225,7 @@
     - var_name: raw_data
       type: bytes
       doc: >
-        Received list of 4D points. Each point consists of [x,y,z] coordiantes plus the intensity computed for that point.
+        Received list of 4D points. Each point consists of [x,y,z] coordinates plus the intensity computed for that point.
     # - METHODS ----------------------------
     methods:
     - def_name: save_to_disk
@@ -263,7 +267,7 @@
   - class_name: LidarDetection
     # - DESCRIPTION ------------------------
     doc: >
-      Data contained inside a carla.LidarMeasurement. Each of these represents one of the points in the cloud with its location and its asociated intensity.
+      Data contained inside a carla.LidarMeasurement. Each of these represents one of the points in the cloud with its location and its associated intensity.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: point
@@ -375,7 +379,7 @@
     parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines a collision data for <b>sensor.other.collision</b>. The sensor creates one of this for every collision detected which may be many for one simulation step. Learn more about this [here](ref_sensors.md#collision-detector).
+      Class that defines a collision data for <b>sensor.other.collision</b>. The sensor creates one of these for every collision detected. Each collision sensor produces one collision event per collision per frame. Multiple collision events may be produced in a single frame by collisions with multiple other actors. Learn more about this [here](ref_sensors.md#collision-detector).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor
@@ -613,6 +617,7 @@
       Part of the data contained inside a carla.RssResponse describing the state of the vehicle. The parameters include its current dynamics, and how it is heading regarding the target route.
     # - PROPERTIES -------------------------
     instance_variables:
+    ## ** Missing timestamp and time_since_epoch_check_start_ms
     - var_name: ego_speed
       type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">ad.physics.Speed</a>
       doc: >

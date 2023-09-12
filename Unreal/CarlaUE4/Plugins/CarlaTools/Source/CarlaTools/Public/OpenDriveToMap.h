@@ -16,25 +16,32 @@
 
 
 class UProceduralMeshComponent;
+class UMeshComponent;
 class UCustomFileDownloader;
+class UMaterialInstance;
 /**
- * 
+ *
  */
-UCLASS()
-class CARLATOOLS_API UOpenDriveToMap : public UUserWidget
+UCLASS(Blueprintable, BlueprintType)
+class CARLATOOLS_API UOpenDriveToMap : public UObject
 {
   GENERATED_BODY()
 
 public:
 
   UFUNCTION()
-  void ConvertOSMInOpenDrive(); 
+  void ConvertOSMInOpenDrive();
 
-  UPROPERTY( meta = (BindWidget) )
-  class UButton* StartButton;
+  UFUNCTION( BlueprintCallable )
+  void CreateMap();
 
-  UPROPERTY(meta = (BindWidget))
-  class UButton* SaveButton;
+  UFUNCTION(BlueprintCallable)
+  void CreateTerrain(const int MeshGridSize, const float MeshGridSectionSize,
+     const class UTexture2D* HeightmapTexture);
+
+  UFUNCTION(BlueprintCallable)
+  void CreateTerrainMesh(const int MeshIndex, const FVector2D Offset, const int GridSize, const float GridSectionSize,
+     const class UTexture2D* HeightmapTexture, class UTextureRenderTarget2D* RoadMask);
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="File")
   FString FilePath;
@@ -45,18 +52,42 @@ public:
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   FString Url;
 
-  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
   FVector2D OriginGeoCoordinates;
 
-protected:
-  virtual void NativeConstruct() override;
-  virtual void NativeDestruct() override;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UMaterialInstance* DefaultRoadMaterial;
 
-  UFUNCTION( BlueprintCallable )
-  void CreateMap();
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UMaterialInstance* DefaultLaneMarksWhiteMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UMaterialInstance* DefaultLaneMarksYellowMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UMaterialInstance* DefaultSidewalksMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UMaterialInstance* DefaultLandscapeMaterial;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Defaults")
+  UTexture2D* DefaultHeightmap;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  float DistanceBetweenTrees = 50.0f;
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  float DistanceFromRoadEdge = 3.0f;
+
+protected:
 
   UFUNCTION( BlueprintCallable )
   void SaveMap();
+
+  UFUNCTION(BlueprintCallable)
+  TArray<AActor*> GenerateMiscActors(float Offset);
+
+  UFUNCTION( BlueprintImplementableEvent )
+  void GenerationFinished();
 private:
 
   UFUNCTION()
@@ -68,20 +99,38 @@ private:
   void GenerateAll(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateRoadMesh(const boost::optional<carla::road::Map>& CarlaMap);
   void GenerateSpawnPoints(const boost::optional<carla::road::Map>& CarlaMap);
+  void GenerateTreePositions(const boost::optional<carla::road::Map>& CarlaMap);
+  void GenerateLaneMarks(const boost::optional<carla::road::Map>& CarlaMap);
 
+  float GetHeight(float PosX, float PosY,bool bDrivingLane = false);
   carla::rpc::OpendriveGenerationParameters opg_parameters;
+  boost::optional<carla::road::Map> CarlaMap;
 
   UStaticMesh* CreateStaticMeshAsset(UProceduralMeshComponent* ProcMeshComp, int32 MeshIndex, FString FolderName);
   TArray<UStaticMesh*> CreateStaticMeshAssets();
-  
+
+  FTransform GetSnappedPosition(FTransform Origin);
+
+  float GetHeightForLandscape(FVector Origin);
+
+  float DistanceToLaneBorder(const boost::optional<carla::road::Map>& CarlaMap,
+      FVector &location,
+      int32_t lane_type = static_cast<int32_t>(carla::road::Lane::LaneType::Driving)) const;
+
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
   UPROPERTY()
   TArray<AActor*> ActorMeshList;
+  UPROPERTY()
+  TArray<AActor*> LaneMarkerActorList;
   UPROPERTY()
   TArray<UStaticMesh*> MeshesToSpawn;
   UPROPERTY()
   TArray<FString> RoadType;
   UPROPERTY()
   TArray<UProceduralMeshComponent*> RoadMesh;
+  UPROPERTY()
+  TArray<AActor*> Landscapes;
+  UPROPERTY()
+  UTexture2D* Heightmap;
 };

@@ -13,11 +13,20 @@
 #ifdef WITH_CHRONO
 #include "compiler/disable-ue4-macros.h"
 
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wshadow"
+#endif
+
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/ChTerrain.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
+
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#endif
 
 #include "compiler/enable-ue4-macros.h"
 #endif

@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Actor/ActorBlueprintFunctionLibrary.h"
 
 #include <mutex>
 #include <atomic>
@@ -448,8 +449,11 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
 
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
-  // Equivalent to "CaptureComponent2D->CaptureScene" + (optional) GBuffer extraction.
-  CaptureSceneExtended();
+  // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
+  GetCaptureComponent2D()->CaptureScene();
+
+  // // Equivalent to "CaptureComponent2D->CaptureScene" + (optional) GBuffer extraction.
+  // CaptureSceneExtended();
 }
 
 constexpr const TCHAR* GBufferNames[] =
@@ -507,7 +511,7 @@ void ASceneCaptureSensor::CaptureSceneExtended()
 
   if (Prior != GBufferPtr->DesiredTexturesMask)
     UE_LOG(LogCarla, Verbose, TEXT("GBuffer selection changed (%llu)."), GBufferPtr->DesiredTexturesMask);
-  
+
   Prior = GBufferPtr->DesiredTexturesMask;
   GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
 
@@ -603,6 +607,7 @@ void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   Super::EndPlay(EndPlayReason);
+  FlushRenderingCommands();
   SCENE_CAPTURE_COUNTER = 0u;
 }
 

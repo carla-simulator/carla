@@ -5,20 +5,38 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/nav/WalkerManager.h"
+
+#include "carla/Logging.h"
+#include "carla/client/ActorSnapshot.h"
+#include "carla/client/Waypoint.h"
+#include "carla/client/World.h"
+#include "carla/client/detail/Simulator.h"
 #include "carla/nav/Navigation.h"
+#include "carla/rpc/Actor.h"
 
 namespace carla {
 namespace nav {
 
     WalkerManager::WalkerManager() {
-        _nav = nullptr;
     }
 
     WalkerManager::~WalkerManager() {
     }
 
+    // assign the navigation module
+    void WalkerManager::SetNav(Navigation *nav) {
+        _nav = nav;
+    }
+
+    // reference to the simulator to access API functions
+    void WalkerManager::SetSimulator(std::weak_ptr<carla::client::detail::Simulator> simulator) {
+        _simulator = simulator;
+    }
+
 	// create a new walker route
     bool WalkerManager::AddWalker(ActorId id) {
+        GetAllTrafficLightWaypoints();
+
         WalkerInfo info;
         info.state = WALKER_IDLE;
 
@@ -148,7 +166,7 @@ namespace nav {
                 case CARLA_AREA_CROSSWALK:
                     // only if we come from a safe area (sidewalks, grass or crosswalk)
                     if (previous_area != CARLA_AREA_CROSSWALK && previous_area != CARLA_AREA_ROAD)
-                        info.route.emplace_back(WalkerEventStopAndCheck(5), std::move(path[i]), area[i]);
+                        info.route.emplace_back(WalkerEventStopAndCheck(60), std::move(path[i]), area[i]);
                     break;
 
                 default:
@@ -254,6 +272,55 @@ namespace nav {
         WalkerEventVisitor visitor(this, id, delta);
         // run the event
         return boost::variant2::visit(visitor, rp.event);
+    }
+
+    void WalkerManager::GetAllTrafficLightWaypoints() {
+        static bool AlreadyCalculated = false;
+        if (AlreadyCalculated) return;
+
+        // the world
+        carla::client::World world = _simulator.lock()->GetWorld();
+
+        _traffic_lights.clear();
+        std::vector<carla::rpc::Actor> actors = _simulator.lock()->GetAllTheActorsInTheEpisode();
+        for (auto actor : actors) {
+            carla::client::ActorSnapshot snapshot = _simulator.lock()->GetActorSnapshot(actor.id);
+            // check traffic lights only
+            if (actor.description.id == "traffic.traffic_light") {
+                // get the TL actor
+                SharedPtr<carla::client::TrafficLight> tl =
+                    boost::static_pointer_cast<carla::client::TrafficLight>(world.GetActor(actor.id));
+                // get the waypoints where the TL affects
+                std::vector<SharedPtr<carla::client::Waypoint>> list = tl->GetStopWaypoints();
+                for (auto &way : list) {
+                    _traffic_lights.emplace_back(tl, way->GetTransform().location);
+                }
+            }
+        }
+
+        AlreadyCalculated = true;
+    }
+
+
+    // return the trafficlight affecting that position
+    SharedPtr<carla::client::TrafficLight> WalkerManager::GetTrafficLightAffecting(
+        carla::geom::Location UnrealPos,
+        float max_distance) {
+            float min_dist = std::numeric_limits<float>::infinity();
+            SharedPtr<carla::client::TrafficLight> actor;
+            for (auto &&item : _traffic_lights) {
+                float dist = UnrealPos.DistanceSquared(item.second);
+                if (dist < min_dist) {
+                    min_dist = dist;
+                    actor = item.first;
+                }
+            }
+            // if distance is not in the limit, then reject the trafficlight
+            if (max_distance < 0.0f || min_dist <= max_distance * max_distance) {
+                return actor;
+            } else {
+                return SharedPtr<carla::client::TrafficLight>();
+            }
     }
 
 

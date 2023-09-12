@@ -152,6 +152,11 @@
       type: float
       doc: >
         Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant. Actors within this range will be active, and actors outside will become dormant.
+    - var_name: spectator_as_ego
+      type: bool
+      doc: >
+        Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. By default, the spectator will provoke loading of neighboring tiles in the absence of an ego actor. This might be inconvenient for applications that immediately spawn an ego actor. 
+    
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -172,6 +177,35 @@
         param_units: seconds
         doc: >
           Set a fixed time-step in between frames. <code>0.0</code> means variable time-step and it is the default mode. 
+      - param_name: max_culling_distance
+        type: float
+        default: 0.0
+        param_units: meters
+        doc: >
+          Configure the max draw distance for each mesh of the level. 
+      - param_name: deterministic_ragdolls
+        type: bool
+        default: False
+        doc: >
+          Defines wether to use deterministic physics or ragdoll simulation for pedestrian deaths.
+      - param_name: tile_stream_distance
+        type: float
+        default: 3000
+        param_units: meters
+        doc: >
+          Used for large maps only. Configures the maximum distance from the hero vehicle to stream tiled maps.
+      - param_name: actor_active_distance
+        type: float
+        default: 2000
+        param_units: meters
+        doc: >
+          Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant.
+      - param_name: spectator_as_ego
+        type: bool
+        default: True
+        doc: >
+          Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. 
+        
       doc: >
         Creates an object containing desired settings that could later be applied through carla.World and its method __<font color="#7fb800">apply_settings()</font>__.
     # --------------------------------------
@@ -244,7 +278,7 @@
     instance_variables:
     - var_name: Rigid
       doc: >
-        With this fixed attatchment the object follow its parent position strictly. This is the recommended attachment to retrieve precise data from the simulation.  
+        With this fixed attachment the object follow its parent position strictly. This is the recommended attachment to retrieve precise data from the simulation.  
     - var_name: SpringArm
       doc: >
         An attachment that expands or retracts the position of the actor, depending on its parent. This attachment is only recommended to record videos from the simulation where a smooth movement is needed. SpringArms are an Unreal Engine component so [check the UE docs](https://docs.unrealengine.com/en-US/Gameplay/HowTo/UsingCameras/SpringArmComponents/index.html) to learn more about them. <br><b style="color:red;">Warning:</b> The <b>SpringArm</b> attachment presents weird behaviors when an actor is spawned with a relative translation in the Z-axis (e.g. <code>child_location = Location(0,0,2)</code>).  
@@ -756,7 +790,7 @@
         doc: >
           The maximum distance to perform the projection
       doc: >
-        Projects the specified point downwards in the scene. The functions casts a ray from location in the direction (0,0,-1) (downwards) and returns a carla.Labelled object with the first geometry this ray intersects (usually the ground). If no geometry is found in the search_distance range the function returns `None`.
+        Projects the specified point downwards in the scene. The functions casts a ray from location in the direction (0,0,-1) (downwards) and returns a carla.LabelledPoint object with the first geometry this ray intersects (usually the ground). If no geometry is found in the search_distance range the function returns `None`.
     # --------------------------------------
     - def_name: load_map_layer
       params: 

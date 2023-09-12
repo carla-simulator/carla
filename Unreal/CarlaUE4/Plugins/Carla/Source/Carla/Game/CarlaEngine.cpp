@@ -9,6 +9,7 @@
 
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
 #include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Settings/CarlaSettings.h"

@@ -6,6 +6,7 @@
 
 #include "Carla/Sensor/ImageUtil.h"
 #include "Runtime/RHI/Public/RHISurfaceDataConversion.h"
+#include "Carla/Carla.h"
 
 
 

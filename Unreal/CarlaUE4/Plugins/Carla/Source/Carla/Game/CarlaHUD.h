@@ -21,6 +21,7 @@
 // We can fix that by just undefining the function that conflicts with the name of the Windows API in Unicode.
 #undef DrawText
 
+#include "Carla.h"
 #include "Containers/Array.h"
 #include "GameFramework/HUD.h"
 #include "WheeledVehicleMovementComponent.h"
