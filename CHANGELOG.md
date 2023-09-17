@@ -1,5 +1,6 @@
 ## Latest
 
+  * Added build support for VS2022 and Ninja for LibCarla and osm2odr on Windows
   * Fixed bug causing the TM's unstuck logic to incorrectly remove the vehicles in some situations.
   * Fixed the extra data in Directx textures, so we need to copy row by row on Windows to remove extra bytes on images
   * Fixed sensors to check for the stream to be ready (race condition)
