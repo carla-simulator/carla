@@ -36,9 +36,7 @@ except ImportError:
     raise RuntimeError(
         'cannot import numpy, make sure numpy package is installed')
 
-# ==============================================================================
-# -- Find CARLA module ---------------------------------------------------------
-# ==============================================================================
+# -- Find CARLA module 
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
@@ -46,10 +44,7 @@ try:
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
 except IndexError:
     pass
-
-# ==============================================================================
-# -- Add PythonAPI for release mode --------------------------------------------
-# ==============================================================================
+# -- Add PythonAPI for release mode 
 try:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/carla')
 except IndexError:
@@ -62,10 +57,7 @@ from agents.navigation.behavior_agent import BehaviorAgent  # pylint: disable=im
 from agents.navigation.basic_agent import BasicAgent  # pylint: disable=import-error
 from agents.navigation.constant_velocity_agent import ConstantVelocityAgent  # pylint: disable=import-error
 
-
-# ==============================================================================
-# -- Global functions ----------------------------------------------------------
-# ==============================================================================
+# -- Global functions 
 
 
 def find_weather_presets():
@@ -105,9 +97,7 @@ def get_actor_blueprints(world, filter, generation):
         print("   Warning! Actor Generation is not valid. No actor will be spawned.")
         return []
 
-# ==============================================================================
-# -- World ---------------------------------------------------------------
-# ==============================================================================
+# -- World 
 
 class World(object):
     """ Class representing the surrounding environment """
@@ -230,9 +220,7 @@ class World(object):
                 actor.destroy()
 
 
-# ==============================================================================
-# -- KeyboardControl -----------------------------------------------------------
-# ==============================================================================
+# -- KeyboardControl
 
 
 class KeyboardControl(object):
@@ -252,9 +240,7 @@ class KeyboardControl(object):
         """Shortcut for quitting"""
         return (key == K_ESCAPE) or (key == K_q and pygame.key.get_mods() & KMOD_CTRL)
 
-# ==============================================================================
-# -- HUD -----------------------------------------------------------------------
-# ==============================================================================
+# -- HUD 
 
 
 class HUD(object):
@@ -404,9 +390,7 @@ class HUD(object):
         self._notifications.render(display)
         self.help.render(display)
 
-# ==============================================================================
-# -- FadingText ----------------------------------------------------------------
-# ==============================================================================
+# -- FadingText
 
 
 class FadingText(object):
@@ -438,9 +422,7 @@ class FadingText(object):
         """Render fading text method"""
         display.blit(self.surface, self.pos)
 
-# ==============================================================================
-# -- HelpText ------------------------------------------------------------------
-# ==============================================================================
+# -- HelpText 
 
 
 class HelpText(object):
@@ -469,10 +451,7 @@ class HelpText(object):
         """Render help text method"""
         if self._render:
             display.blit(self.surface, self.pos)
-
-# ==============================================================================
-# -- CollisionSensor -----------------------------------------------------------
-# ==============================================================================
+# -- CollisionSensor 
 
 
 class CollisionSensor(object):
@@ -513,9 +492,7 @@ class CollisionSensor(object):
         if len(self.history) > 4000:
             self.history.pop(0)
 
-# ==============================================================================
-# -- LaneInvasionSensor --------------------------------------------------------
-# ==============================================================================
+# -- LaneInvasionSensor 
 
 
 class LaneInvasionSensor(object):
@@ -544,9 +521,7 @@ class LaneInvasionSensor(object):
         text = ['%r' % str(x).split()[-1] for x in lane_types]
         self.hud.notification('Crossed line %s' % ' and '.join(text))
 
-# ==============================================================================
-# -- GnssSensor --------------------------------------------------------
-# ==============================================================================
+# -- GnssSensor 
 
 
 class GnssSensor(object):
@@ -575,11 +550,7 @@ class GnssSensor(object):
             return
         self.lat = event.latitude
         self.lon = event.longitude
-
-# ==============================================================================
-# -- CameraManager -------------------------------------------------------------
-# ==============================================================================
-
+# == Camera Manager ==
 
 class CameraManager(object):
     """ Class for camera management"""
@@ -694,9 +665,7 @@ class CameraManager(object):
         if self.recording:
             image.save_to_disk('_out/%08d' % image.frame)
 
-# ==============================================================================
-# -- Game Loop ---------------------------------------------------------
-# ==============================================================================
+# -- Game Loop 
 
 
 def game_loop(args):
@@ -793,9 +762,7 @@ def game_loop(args):
         pygame.quit()
 
 
-# ==============================================================================
-# -- main() --------------------------------------------------------------
-# ==============================================================================
+# -- main() 
 
 
 def main():
