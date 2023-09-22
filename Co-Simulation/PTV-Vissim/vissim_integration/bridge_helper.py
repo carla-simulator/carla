@@ -7,9 +7,7 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 """ This module provides a helper for the co-simulation between vissim and carla. """
 
-# ==================================================================================================
-# -- imports ---------------------------------------------------------------------------------------
-# ==================================================================================================
+# -- imports 
 
 import logging
 import math
@@ -17,11 +15,7 @@ import random
 
 import carla  # pylint: disable=import-error
 
-# ==================================================================================================
-# -- Bridge helper (VISSIM <=> CARLA) --------------------------------------------------------------
-# ==================================================================================================
-
-
+# -- Bridge helper (VISSIM <=> CARLA) 
 class BridgeHelper(object):
     """
     BridgeHelper provides methos to ease the co-simulation between vissim and carla.
@@ -34,10 +28,10 @@ class BridgeHelper(object):
     def get_carla_transform(in_vissim_transform, extent=None):
         """
         Returns carla transform based on vissim transform.
+
         """
         in_location = in_vissim_transform.location
         in_rotation = in_vissim_transform.rotation
-
         # From front-center-bumper to center (vissim reference system).
         if extent is not None:
             out_location = (in_location.x - math.cos(math.radians(in_rotation.yaw)) * extent.x,
@@ -46,7 +40,6 @@ class BridgeHelper(object):
         else:
             out_location = (in_location.x, in_location.y, in_location.z)
         out_rotation = (in_rotation.pitch, in_rotation.yaw, in_rotation.roll)
-
         # Transform to carla reference system (left-handed system).
         out_transform = carla.Transform(
             carla.Location(out_location[0], -out_location[1], out_location[2]),
@@ -84,6 +77,7 @@ class BridgeHelper(object):
     def _flip_y(in_vector):
         """
         Flips y coordinate of the given vector.
+        
         """
         return carla.Vector3D(in_vector.x, -in_vector.y, in_vector.z)
 
