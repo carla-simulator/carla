@@ -33,13 +33,10 @@ def get_libcarla_extensions():
 
     if os.name == "posix":
         import distro
-        from setuptools.extern import packaging
+        supported_dists = ["ubuntu", "debian", "deepin"]
         
-        if packaging.version.parse(distro.__version__) < packaging.version.parse("1.6.0"):
-            linux_distro = distro.linux_distribution()[0] # deprecated
-        else:
-            linux_distro = distro.id()
-        if linux_distro.lower() in ["ubuntu", "debian", "deepin"]:
+        linux_distro = distro.id().lower()
+        if linux_distro in supported_dists:
             pwd = os.path.dirname(os.path.realpath(__file__))
             pylib = "libboost_python%d%d.a" % (sys.version_info.major,
                                                sys.version_info.minor)
@@ -103,7 +100,7 @@ def get_libcarla_extensions():
             # extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
             extra_link_args += ['-lstdc++']
         else:
-            raise NotImplementedError
+            raise NotImplementedError(linux_distro + " not in " + str(supported_dists) +". if this is a mistake adjust PythonAPI/carla/setup.py." )
     elif os.name == "nt":
         pwd = os.path.dirname(os.path.realpath(__file__))
         pylib = 'libboost_python%d%d' % (
