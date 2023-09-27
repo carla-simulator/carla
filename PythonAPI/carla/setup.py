@@ -33,8 +33,12 @@ def get_libcarla_extensions():
 
     if os.name == "posix":
         import distro
-
-        linux_distro = distro.linux_distribution()[0]
+        from setuptools.extern import packaging
+        
+        if packaging.version.parse(distro.__version__) < packaging.version.parse("1.6.0"):
+            linux_distro = distro.linux_distribution()[0] # deprecated
+        else:
+            linux_distro = distro.id()
         if linux_distro.lower() in ["ubuntu", "debian", "deepin"]:
             pwd = os.path.dirname(os.path.realpath(__file__))
             pylib = "libboost_python%d%d.a" % (sys.version_info.major,
