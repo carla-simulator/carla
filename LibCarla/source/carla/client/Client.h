@@ -8,6 +8,7 @@
 
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/World.h"
+#include "carla/client/Map.h"
 #include "carla/PythonUtil.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
@@ -77,6 +78,23 @@ namespace client {
       return World{_simulator->LoadEpisode(std::move(map_name), reset_settings, map_layers)};
     }
 
+    /// Return (and load) a new world (map) only when the requested map is different from the current one
+
+    void LoadWorldIfDifferent(
+        std::string map_name,
+        bool reset_settings = true,
+        rpc::MapLayer map_layers = rpc::MapLayer::All) const {
+      carla::client::World world = GetWorld();
+      carla::SharedPtr<carla::client::Map> current_map = world.GetMap();
+      std::string current_map_name = current_map->GetName();
+      std::string map_name_prefix = "Carla/Maps/";
+      std::string map_name_without_prefix = map_name;
+      std::string map_name_with_prefix = map_name_prefix + map_name;
+      if(!(map_name_without_prefix == current_map_name) && !(map_name_with_prefix == current_map_name)){
+        World World{_simulator->LoadEpisode(std::move(map_name), reset_settings, map_layers)};
+      }else{}
+    }
+    
     World GenerateOpenDriveWorld(
         std::string opendrive,
         const rpc::OpendriveGenerationParameters & params,
@@ -135,6 +153,10 @@ namespace client {
 
     void SetReplayerIgnoreHero(bool ignore_hero) {
       _simulator->SetReplayerIgnoreHero(ignore_hero);
+    }
+
+    void SetReplayerIgnoreSpectator(bool ignore_spectator) {
+      _simulator->SetReplayerIgnoreSpectator(ignore_spectator);
     }
 
     void ApplyBatch(

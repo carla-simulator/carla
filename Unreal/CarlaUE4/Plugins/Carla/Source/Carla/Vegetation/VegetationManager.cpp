@@ -8,6 +8,8 @@
 #include "ProceduralFoliageComponent.h"
 
 #include "Carla/Vegetation/VegetationManager.h"
+#include "Carla/Vegetation/SpringBasedVegetationComponent.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Game/TaggedComponent.h"
 
 static FString GetVersionFromFString(const FString& String)

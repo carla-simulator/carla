@@ -6,14 +6,14 @@
 
 #pragma once
 
+#include "GameFramework/Actor.h"
+
 #include "Carla/Util/BoundingBox.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Util/EnvironmentObject.h"
 
 #include "ObjectRegister.generated.h"
-
-class AActor;
 
 UCLASS()
 class CARLA_API UObjectRegister : public UObject

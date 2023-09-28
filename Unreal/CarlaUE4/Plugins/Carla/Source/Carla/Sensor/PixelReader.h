@@ -10,6 +10,11 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/ImageWriteQueue/Public/ImagePixelData.h"
 
+#ifdef _WIN32
+  #define WIN32_LEAN_AND_MEAN
+  #include <D3d12.h>
+#endif
+
 #include "Carla/Game/CarlaEngine.h"
 
 #include <compiler/disable-ue4-macros.h>
@@ -29,7 +34,7 @@ class FPixelReader
 {
 public:
 
-  using Payload = std::function<void(void *, uint32, uint32)>;
+  using Payload = std::function<void(void *, uint32, uint32, uint32)>;
 
   /// Copy the pixels in @a RenderTarget into @a BitMap.
   ///
@@ -90,7 +95,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
   TRACE_CPUPROFILER_EVENT_SCOPE(FPixelReader::SendPixelsInRenderThread);
   check(Sensor.CaptureRenderTarget != nullptr);
 
-  if (!Sensor.HasActorBegunPlay() || Sensor.IsPendingKill())
+  if (!Sensor.HasActorBegunPlay() || Sensor.IsPendingKill() || !Sensor.IsStreamReady())
   {
     return;
   }
@@ -108,10 +113,10 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("FWritePixels_SendPixelsInRenderThread");
 
       /// @todo Can we make sure the sensor is not going to be destroyed?
-      if (!Sensor.IsPendingKill())
+      if (!Sensor.IsPendingKill() && Sensor.IsStreamReady())
       {
-        FPixelReader::Payload FuncForSending = 
-          [&Sensor, Frame = FCarlaEngine::GetFrameCounter(), Conversor = std::move(Conversor)](void *LockedData, uint32 Size, uint32 Offset)
+        FPixelReader::Payload FuncForSending =
+          [&Sensor, Frame = FCarlaEngine::GetFrameCounter(), Conversor = std::move(Conversor)](void *LockedData, uint32 Size, uint32 Offset, uint32 ExpectedRowBytes)
           {
             if (Sensor.IsPendingKill()) return;
 
@@ -125,15 +130,46 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
               LockedData = reinterpret_cast<void *>(Converted.GetData());
               Size = Converted.Num() * Converted.GetTypeSize();
             }
-    
+
+            if (!Sensor.IsStreamReady())
+              return;
             auto Stream = Sensor.GetDataStream(Sensor);
             Stream.SetFrameNumber(Frame);
             auto Buffer = Stream.PopBufferFromPool();
 
+            uint32 CurrentRowBytes = ExpectedRowBytes;
+
+            #ifdef _WIN32
+            // DirectX uses additional bytes to align each row to 256 boundry,
+            // so we need to remove that extra data
+            if (IsD3DPlatform(GMaxRHIShaderPlatform, false))
             {
+              CurrentRowBytes = Align(ExpectedRowBytes, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+              if (ExpectedRowBytes != CurrentRowBytes)
+              {
+                TRACE_CPUPROFILER_EVENT_SCOPE_STR("Buffer Copy (windows, row by row)");
+                Buffer.reset(Offset + Size);
+                auto DstRow = Buffer.begin() + Offset;
+                const uint8 *SrcRow = reinterpret_cast<uint8 *>(LockedData);
+                uint32 i = 0;
+                while (i < Size)
+                {
+                  FMemory::Memcpy(DstRow, SrcRow, ExpectedRowBytes);
+                  DstRow += ExpectedRowBytes;
+                  SrcRow += CurrentRowBytes;
+                  i += ExpectedRowBytes;
+                }
+              }
+            }
+            #endif // _WIN32
+
+            if (ExpectedRowBytes == CurrentRowBytes)
+            {
+              check(ExpectedRowBytes == CurrentRowBytes);
               TRACE_CPUPROFILER_EVENT_SCOPE_STR("Buffer Copy");
               Buffer.copy_from(Offset, boost::asio::buffer(LockedData, Size));
             }
+
             {
               // send
               TRACE_CPUPROFILER_EVENT_SCOPE_STR("Sending buffer");
@@ -145,11 +181,11 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
               }
             }
           };
-          
+
           WritePixelsToBuffer(
               *Sensor.CaptureRenderTarget,
               carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
-              InRHICmdList, 
+              InRHICmdList,
               std::move(FuncForSending));
         }
       }

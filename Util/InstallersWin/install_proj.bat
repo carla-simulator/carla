@@ -27,9 +27,15 @@ if not "%1"=="" (
     if "%1"=="--help" (
         goto help
     )
+    if "%1"=="--generator" (
+        set GENERATOR=%2
+        shift
+    )
     shift
     goto :arg-parse
 )
+
+if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
 
 rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
@@ -73,7 +79,13 @@ move %BUILD_DIR%%PROJ_BASE_NAME% %PROJ_SRC_DIR%
 mkdir %PROJ_BUILD_DIR%
 cd %PROJ_BUILD_DIR%
 
-cmake .. -G "Visual Studio 16 2019" -A x64^
+echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
+    set PLATFORM=-A x64
+) || (
+    set PLATFORM=
+)
+
+cmake .. -G %GENERATOR% %PLATFORM%^
     -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
     -DCMAKE_CXX_FLAGS="/MD /MP"^
     -DSQLITE3_INCLUDE_DIR=%SQLITE_INCLUDE_DIR% -DSQLITE3_LIBRARY=%SQLITE_LIB%^

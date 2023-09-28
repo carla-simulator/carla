@@ -43,7 +43,7 @@ def get_actor_blueprints(world, filter, generation):
     try:
         int_generation = int(generation)
         # Check if generation is in available generations
-        if int_generation in [1, 2]:
+        if int_generation in [1, 2, 3]:
             bps = [x for x in bps if int(x.get_attribute('generation')) == int_generation]
             return bps
         else:
@@ -193,7 +193,11 @@ def main():
         world.apply_settings(settings)
 
         blueprints = get_actor_blueprints(world, args.filterv, args.generationv)
+        if not blueprints:
+            raise ValueError("Couldn't find any vehicles with the specified filters")
         blueprintsWalkers = get_actor_blueprints(world, args.filterw, args.generationw)
+        if not blueprintsWalkers:
+            raise ValueError("Couldn't find any walkers with the specified filters")
 
         if args.safe:
             blueprints = [x for x in blueprints if x.get_attribute('base_type') == 'car']

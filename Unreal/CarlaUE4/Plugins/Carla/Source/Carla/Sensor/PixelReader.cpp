@@ -13,27 +13,6 @@
 #include "Runtime/ImageWriteQueue/Public/ImageWriteQueue.h"
 
 // =============================================================================
-// -- Local variables and types ------------------------------------------------
-// =============================================================================
-
-struct LockTexture
-{
-  LockTexture(FRHITexture2D *InTexture, uint32 &Stride)
-    : Texture(InTexture),
-      Source(reinterpret_cast<const uint8 *>(
-            RHILockTexture2D(Texture, 0, RLM_ReadOnly, Stride, false))) {}
-
-  ~LockTexture()
-  {
-    RHIUnlockTexture2D(Texture, 0, false);
-  }
-
-  FRHITexture2D *Texture;
-
-  const uint8 *Source;
-};
-
-// =============================================================================
 // -- FPixelReader -------------------------------------------------------------
 // =============================================================================
 
@@ -76,7 +55,7 @@ void FPixelReader::WritePixelsToBuffer(
     RHICmdList.GetRenderQueryResult(Query, OldAbsTime, true);
   }
 
-  AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [=, Readback=std::move(BackBufferReadback)]() mutable {
+  AsyncTask(ENamedThreads::ActualRenderingThread, [=, Readback=std::move(BackBufferReadback)]() mutable {
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
       while (!Readback->IsReady())
@@ -86,11 +65,12 @@ void FPixelReader::WritePixelsToBuffer(
     }
     
     FPixelFormatInfo PixelFormat = GPixelFormats[BackBufferPixelFormat];
+    uint32 ExpectedRowBytes = BackBufferSize.X * PixelFormat.BlockBytes;
     int32 Size = (BackBufferSize.Y * (PixelFormat.BlockBytes * BackBufferSize.X));
     void* LockedData = Readback->Lock(Size);
     if (LockedData)
     {
-      FuncForSending(LockedData, Size, Offset);
+      FuncForSending(LockedData, Size, Offset, ExpectedRowBytes);
     }
     Readback->Unlock();
     Readback.reset();
@@ -124,6 +104,7 @@ TUniquePtr<TImagePixelData<FColor>> FPixelReader::DumpPixels(
   {
     return nullptr;
   }
+  PixelData->Pixels = Pixels;
   return PixelData;
 }
 
