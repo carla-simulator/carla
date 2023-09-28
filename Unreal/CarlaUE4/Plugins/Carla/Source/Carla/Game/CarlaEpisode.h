@@ -350,6 +350,10 @@ private:
 
   bool SetActorSimulatePhysics(FCarlaActor &CarlaActor, bool bEnabled);
 
+  bool SetActorCollisions(FCarlaActor &CarlaActor, bool bEnabled);
+
+  bool SetActorDead(FCarlaActor &CarlaActor);
+
   void TickTimers(float DeltaSeconds)
   {
     ElapsedGameTime += DeltaSeconds;
@@ -392,3 +396,5 @@ private:
 
   FSensorManager SensorManager;
 };
+
+FString CarlaGetRelevantTagAsString(const TSet<crp::CityObjectLabel> &SemanticTags);

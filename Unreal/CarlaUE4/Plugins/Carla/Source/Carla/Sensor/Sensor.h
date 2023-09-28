@@ -10,6 +10,8 @@
 #include "Carla/Sensor/DataStream.h"
 #include "Carla/Util/RandomEngine.h"
 
+#include "Carla/Game/CarlaEngine.h"
+
 #include "GameFramework/Actor.h"
 
 #include "Sensor.generated.h"
@@ -54,6 +56,11 @@ public:
     return Stream.GetToken();
   }
 
+  bool IsStreamReady()
+  {
+    return Stream.IsStreamReady();
+  }
+
   void Tick(const float DeltaTime) final;
 
   virtual void PrePhysTick(float DeltaSeconds) {}
@@ -63,7 +70,7 @@ public:
   // Small interface to notify sensors when no clients are listening
   virtual void OnLastClientDisconnected() {};
 
-  
+
   void PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds);
 
   UFUNCTION(BlueprintCallable)

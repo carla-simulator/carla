@@ -44,18 +44,24 @@ if not "%1"=="" (
     if "%1"=="--chrono" (
         set USE_CHRONO=true
     )
+    if "%1" == "--generator" (
+        set GENERATOR=%2
+        shift
+    )
     if "%1"=="-h" (
         goto help
     )
     if "%1"=="--help" (
         goto help
     )
+    
     shift
     goto :arg-parse
 )
 
 rem If not defined, use Visual Studio 2019 as tool set
 if "%TOOLSET%" == "" set TOOLSET=msvc-14.2
+if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
 
 rem If is not set, set the number of parallel jobs to the number of CPU threads
 if "%NUMBER_OF_ASYNC_JOBS%" == "" set NUMBER_OF_ASYNC_JOBS=%NUMBER_OF_PROCESSORS%
@@ -68,6 +74,7 @@ set INSTALLATION_DIR=%INSTALLATION_DIR:/=\%
 
 echo %FILE_N% Asynchronous jobs:  %NUMBER_OF_ASYNC_JOBS%
 echo %FILE_N% Boost toolset:      %TOOLSET%
+echo %FILE_N% Generator:          %GENERATOR%
 echo %FILE_N% Install directory:  "%INSTALLATION_DIR%"
 
 if not exist "%CONTENT_DIR%" (
@@ -121,7 +128,8 @@ rem ============================================================================
 
 echo %FILE_N% Installing rpclib...
 call "%INSTALLERS_DIR%install_rpclib.bat"^
- --build-dir "%INSTALLATION_DIR%"
+ --build-dir "%INSTALLATION_DIR%"^
+ --generator %GENERATOR%
 
 if %errorlevel% neq 0 goto failed
 
@@ -136,7 +144,8 @@ rem ============================================================================
 
 echo %FILE_N% Installing Google Test...
 call "%INSTALLERS_DIR%install_gtest.bat"^
- --build-dir "%INSTALLATION_DIR%"
+ --build-dir "%INSTALLATION_DIR%"^
+ --generator %GENERATOR%
 
 if %errorlevel% neq 0 goto failed
 
@@ -152,7 +161,8 @@ rem ============================================================================
 
 echo %FILE_N% Installing "Recast & Detour"...
 call "%INSTALLERS_DIR%install_recast.bat"^
- --build-dir "%INSTALLATION_DIR%"
+ --build-dir "%INSTALLATION_DIR%"^
+ --generator %GENERATOR%
 
 if %errorlevel% neq 0 goto failed
 
@@ -188,17 +198,19 @@ rem ============================================================================
 
 echo %FILE_N% Installing Xercesc...
 call "%INSTALLERS_DIR%install_xercesc.bat"^
- --build-dir "%INSTALLATION_DIR%"
+ --build-dir "%INSTALLATION_DIR%"^
+ --generator %GENERATOR%
 copy %INSTALLATION_DIR%\xerces-c-3.2.3-install\lib\xerces-c_3.lib %CARLA_PYTHON_DEPENDENCIES%\lib
+copy %INSTALLATION_DIR%\xerces-c-3.2.3-install\lib\xerces-c_3.lib %CARLA_DEPENDENCIES_FOLDER%\lib
 
 rem ============================================================================
 rem -- Download and install Sqlite3 --------------------------------------------
 rem ============================================================================
-
 echo %FILE_N% Installing Sqlite3
 call "%INSTALLERS_DIR%install_sqlite3.bat"^
  --build-dir "%INSTALLATION_DIR%"
 copy %INSTALLATION_DIR%\sqlite3-install\lib\sqlite3.lib %CARLA_PYTHON_DEPENDENCIES%\lib
+copy %INSTALLATION_DIR%\sqlite3-install\lib\sqlite3.lib %CARLA_DEPENDENCIES_FOLDER%\lib
 
 rem ============================================================================
 rem -- Download and install PROJ --------------------------------------------
@@ -206,8 +218,10 @@ rem ============================================================================
 
 echo %FILE_N% Installing PROJ
 call "%INSTALLERS_DIR%install_proj.bat"^
- --build-dir "%INSTALLATION_DIR%"
+ --build-dir "%INSTALLATION_DIR%"^
+ --generator %GENERATOR%
 copy %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_PYTHON_DEPENDENCIES%\lib
+copy %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_DEPENDENCIES_FOLDER%\lib
 
 rem ============================================================================
 rem -- Download and install Eigen ----------------------------------------------
@@ -225,7 +239,8 @@ rem ============================================================================
 if %USE_CHRONO% == true (
     echo %FILE_N% Installing Chrono...
     call "%INSTALLERS_DIR%install_chrono.bat"^
-     --build-dir "%INSTALLATION_DIR%"
+     --build-dir "%INSTALLATION_DIR%" ^
+     --generator %GENERATOR%
 
     if not exist "%CARLA_DEPENDENCIES_FOLDER%" (
         mkdir "%CARLA_DEPENDENCIES_FOLDER%"
@@ -347,6 +362,7 @@ rem ============================================================================
     echo                               Visual Studio 2015 -^> msvc-14.0
     echo                               Visual Studio 2017 -^> msvc-14.1
     echo                               Visual Studio 2019 -^> msvc-14.2 *
+    echo                               Visual Studio 2022 -^> msvc-14.3
     goto good_exit
 
 :error_cl

@@ -412,6 +412,14 @@ namespace detail {
     _pimpl->CallAndWait<void>("set_actor_simulate_physics", actor, enabled);
   }
 
+  void Client::SetActorCollisions(rpc::ActorId actor, const bool enabled) {
+    _pimpl->CallAndWait<void>("set_actor_collisions", actor, enabled);
+  }
+
+  void Client::SetActorDead(rpc::ActorId actor) {
+    _pimpl->AsyncCall("set_actor_dead", actor);
+  }
+
   void Client::SetActorEnableGravity(rpc::ActorId actor, const bool enabled) {
     _pimpl->AsyncCall("set_actor_enable_gravity", actor, enabled);
   }
@@ -572,6 +580,10 @@ namespace detail {
 
   void Client::SetReplayerIgnoreHero(bool ignore_hero) {
     _pimpl->AsyncCall("set_replayer_ignore_hero", ignore_hero);
+  }
+
+  void Client::SetReplayerIgnoreSpectator(bool ignore_spectator) {
+    _pimpl->AsyncCall("set_replayer_ignore_spectator", ignore_spectator);
   }
 
   void Client::SubscribeToStream(

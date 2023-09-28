@@ -5,6 +5,10 @@
 #include "LargeMapManager.h"
 
 #include "Engine/WorldComposition.h"
+#include "Engine/ObjectLibrary.h"
+#include "Game/CarlaStatics.h"
+#include "Actor/ActorRegistry.h"
+#include "Game/CarlaEpisode.h"
 #include "Engine/EngineTypes.h"
 #include "Components/PrimitiveComponent.h"
 #include "Landscape.h"
@@ -82,11 +86,18 @@ void ALargeMapManager::BeginPlay()
       break;
     }
   }
+
+  // Get spectator
+  APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+  if(PlayerController)
+  {
+    Spectator = PlayerController->GetPawnOrSpectator();
+  }
 }
 
 void ALargeMapManager::PreWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
 {
-  LM_LOG(Error, "PreWorldOriginOffset Src: %s  ->  Dst: %s", *InSrcOrigin.ToString(), *InDstOrigin.ToString());
+  LM_LOG(Log, "PreWorldOriginOffset Src: %s  ->  Dst: %s", *InSrcOrigin.ToString(), *InDstOrigin.ToString());
 }
 
 void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
@@ -102,7 +113,7 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 #if WITH_EDITOR
   GEngine->AddOnScreenDebugMessage(66, MsgTime, FColor::Yellow,
     FString::Printf(TEXT("Src: %s  ->  Dst: %s"), *InSrcOrigin.ToString(), *InDstOrigin.ToString()));
-  LM_LOG(Error, "PostWorldOriginOffset Src: %s  ->  Dst: %s", *InSrcOrigin.ToString(), *InDstOrigin.ToString());
+  LM_LOG(Log, "PostWorldOriginOffset Src: %s  ->  Dst: %s", *InSrcOrigin.ToString(), *InDstOrigin.ToString());
 
   // This is just to update the color of the msg with the same as the closest map
   const TArray<ULevelStreaming*>& StreamingLevels = World->GetStreamingLevels();
@@ -167,7 +178,7 @@ void ALargeMapManager::OnActorSpawned(
 
   // LM_LOG(Warning, "ALargeMapManager::OnActorSpawned func %s %s", *Actor->GetName(), *Actor->GetTranslation().ToString());
 
-  if (Actor && CarlaActor.GetActorType() == FCarlaActor::ActorType::Vehicle)
+  if (Actor)
   { // Check if is hero vehicle
 
     assert(ActorInfo);
@@ -177,8 +188,12 @@ void ALargeMapManager::OnActorSpawned(
     // If is the hero vehicle
     if(Attribute && (Attribute->Value.Contains("hero") || Attribute->Value.Contains("ego_vehicle")))
     {
-      LM_LOG(Error, "HERO VEHICLE DETECTED");
+      LM_LOG(Log, "HERO VEHICLE DETECTED");
 
+      if (ActorsToConsider.Num() == 1 && ActorsToConsider.Contains(Spectator))
+      {
+        ActorsToConsider.Reset();
+      }
       ActorsToConsider.Add(Actor);
 
       CheckIfRebaseIsNeeded();
@@ -202,13 +217,12 @@ void ALargeMapManager::OnActorSpawned(
     // Any actor that is not the hero vehicle could possible be destroyed at some point
     // we need to store the CarlaActor information to be able to spawn it again if needed
 
-    LM_LOG(Error, "... not hero vehicle ...");
     if(IsValid(Actor))
     { // Actor was spwaned succesfully
       // TODO: not dormant but not hero => ActiveActor
       //       LM: Map<AActor* FActiveActor>  maybe per tile and in a tile sublevel?
 
-      LM_LOG(Error, "ACTIVE VEHICLE DETECTED");
+      LM_LOG(Log, "ACTIVE VEHICLE DETECTED");
       ActiveActors.Add(CarlaActor.GetActorId());
     }
     else
@@ -216,7 +230,7 @@ void ALargeMapManager::OnActorSpawned(
       // TODO: dormant => no actor so Actorview stored per tile
       //       LM: Map<ActorId, TileID> , Tile: Map<ActorID, FDormantActor>
       //       In case of update: update Tile Map, update LM Map
-      LM_LOG(Error, "DORMANT VEHICLE DETECTED");
+      LM_LOG(Log, "DORMANT VEHICLE DETECTED");
       DormantActors.Add(CarlaActor.GetActorId());
     }
   }
@@ -417,6 +431,10 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
   GEngine->ForceGarbageCollection(true);
 
   ActorsToConsider.Reset();
+  if (SpectatorAsEgo && Spectator)
+  {
+    ActorsToConsider.Add(Spectator);
+  }
 
 #if WITH_EDITOR
   LM_LOG(Warning, "GenerateMap num Tiles generated %d", MapTiles.Num());
@@ -579,6 +597,12 @@ ALargeMapManager::TileID ALargeMapManager::GetTileID(FDVector TileLocation) cons
   return GetTileID(TileID);
 }
 
+FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FVector Location)
+{
+  TileID TileID = GetTileID(Location);
+  return GetCarlaMapTile(TileID);
+}
+
 FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(ULevel* InLevel)
 {
   FCarlaMapTile* Tile = nullptr;
@@ -596,11 +620,11 @@ FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(ULevel* InLevel)
   return *Tile;
 }
 
-FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID)
+FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID)
 {
   TileID TileID = GetTileID(TileVectorID);
   FCarlaMapTile* Tile = MapTiles.Find(TileID);
-  return Tile;
+  return *Tile;
 }
 
 FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(TileID TileID)
@@ -707,12 +731,16 @@ void ALargeMapManager::RemovePendingActorsToRemove()
   TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::RemovePendingActorsToRemove);
   if(ActorsToRemove.Num() > 0 || ActivesToRemove.Num() > 0)
   {
-    LM_LOG(Error, "ActorsToRemove %d ActivesToRemove %d", ActorsToRemove.Num(), ActivesToRemove.Num());
+    LM_LOG(Log, "ActorsToRemove %d ActivesToRemove %d", ActorsToRemove.Num(), ActivesToRemove.Num());
   }
 
   for (AActor* ActorToRemove : ActorsToRemove)
   {
     ActorsToConsider.Remove(ActorToRemove);
+  }
+  if(ActorsToConsider.Num() == 0 && SpectatorAsEgo && Spectator)
+  {
+    ActorsToConsider.Add(Spectator);
   }
   ActorsToRemove.Reset();
 
@@ -759,7 +787,7 @@ void ALargeMapManager::CheckActiveActors()
 
         float DistanceSquared = (RelativeLocation - HeroLocation).SizeSquared();
 
-        if (DistanceSquared > ActorStreamingDistanceSquared)
+        if (DistanceSquared > ActorStreamingDistanceSquared && View->GetActorType() != FCarlaActor::ActorType::Sensor)
         {
           // Save to temporal container. Later will be converted to dormant
           ActiveToDormantActors.Add(Id);
@@ -811,19 +839,19 @@ void ALargeMapManager::CheckDormantActors()
     // If the Ids don't match, the actor has been removed
     if(!CarlaActor)
     {
-      LM_LOG(Error, "CheckDormantActors Carla Actor %d not found", Id);
+      LM_LOG(Log, "CheckDormantActors Carla Actor %d not found", Id);
       DormantsToRemove.Add(Id);
       continue;
     }
     if(CarlaActor->GetActorId() != Id)
     {
-      LM_LOG(Error, "CheckDormantActors IDs doesn't match!! Wanted = %d Received = %d", Id, CarlaActor->GetActorId());
+      LM_LOG(Warning, "CheckDormantActors IDs doesn't match!! Wanted = %d Received = %d", Id, CarlaActor->GetActorId());
       DormantsToRemove.Add(Id);
       continue;
     }
     if (!CarlaActor->IsDormant())
     {
-      LM_LOG(Error, "CheckDormantActors Carla Actor %d is not dormant", Id);
+      LM_LOG(Warning, "CheckDormantActors Carla Actor %d is not dormant", Id);
       DormantsToRemove.Add(Id);
       continue;
     }
@@ -893,11 +921,8 @@ void ALargeMapManager::CheckIfRebaseIsNeeded()
     {
       FVector ActorLocation = ActorToConsider->GetActorLocation();
       FIntVector ILocation = FIntVector(ActorLocation.X, ActorLocation.Y, ActorLocation.Z);
-      //WorldComposition->EvaluateWorldOriginLocation(ActorToConsider->GetActorLocation());
       if (ActorLocation.SizeSquared() > FMath::Square(RebaseOriginDistance) )
       {
-        // LM_LOG(Error, "Rebasing from %s to %s", *CurrentOriginInt.ToString(), *(ILocation + CurrentOriginInt).ToString());
-        // World->SetNewWorldOrigin(ILocation + CurrentOriginInt);
         TileID TileId = GetTileID(CurrentOriginD + ActorLocation);
         FVector NewOrigin = GetTileLocation(TileId);
         World->SetNewWorldOrigin(FIntVector(NewOrigin));
@@ -1062,23 +1087,10 @@ void ALargeMapManager::PrintMapInfo()
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("\nActor Global Position: %s km"), *(FDVector(CurrentActorPosition) / (1000.0 * 100.0)).ToString()) );
 
-  GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White, TEXT("Closest tiles - Distance:"));
+  FIntVector CurrentTile = GetTileVectorID(CurrentActorPosition);
+  GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
+    FString::Printf(TEXT("\nActor Current Tile: %d_%d"), CurrentTile.X, CurrentTile.Y ));
 
-  for (const auto& TilePair : MapTiles)
-  {
-    const FCarlaMapTile& Tile = TilePair.Value;
-    const ULevelStreaming* Level = Tile.StreamingLevel;
-    FVector LevelLocation = Tile.Location;
-    float Distance = FDVector::Dist(LevelLocation, CurrentActorPosition);
-
-    FColor MsgColor = FColor::Green;
-    if (Distance < (TileSide * 2.0f))
-    {
-      GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, MsgColor,
-        FString::Printf(TEXT("%s       %.2f"), *Level->GetName(), Distance / (1000.0f * 100.0f)));
-    }
-    if (LastMsgIndex < MaxTilesDistMsgIndex) break;
-  }
   LastMsgIndex = ClientLocMsgIndex;
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("\nOrigin: %s km"), *(FDVector(CurrentOriginInt) / (1000.0 * 100.0)).ToString()) );
@@ -1104,5 +1116,20 @@ void ALargeMapManager::PrintMapInfo()
 
       if (LastMsgIndex > MaxClientLocMsgIndex) break;
     }
+  }
+}
+
+void ALargeMapManager::ConsiderSpectatorAsEgo(bool _SpectatorAsEgo)
+{
+  SpectatorAsEgo = _SpectatorAsEgo;
+  if(SpectatorAsEgo && ActorsToConsider.Num() == 0 && Spectator)
+  {
+    // Activating the spectator in an empty world
+    ActorsToConsider.Add(Spectator);
+  }
+  if (!SpectatorAsEgo && ActorsToConsider.Num() == 1 && ActorsToConsider.Contains(Spectator))
+  {
+    // Deactivating the spectator in a world with no other egos
+    ActorsToConsider.Reset();
   }
 }

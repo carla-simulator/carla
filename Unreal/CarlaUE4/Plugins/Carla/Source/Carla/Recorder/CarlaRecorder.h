@@ -19,7 +19,9 @@
 #include "CarlaRecorderLightScene.h"
 #include "CarlaRecorderLightVehicle.h"
 #include "CarlaRecorderAnimVehicle.h"
+#include "CarlaRecorderAnimVehicleWheels.h"
 #include "CarlaRecorderAnimWalker.h"
+#include "CarlaRecorderAnimBiker.h"
 #include "CarlaRecorderCollision.h"
 #include "CarlaRecorderEventAdd.h"
 #include "CarlaRecorderEventDel.h"
@@ -64,7 +66,9 @@ enum class CarlaRecorderPacketId : uint8_t
   TriggerVolume,
   FrameCounter,
   WalkerBones,
-  VisualTime
+  VisualTime,
+  AnimVehicleWheels,
+  AnimBiker
 };
 
 /// Recorder for the simulation
@@ -111,7 +115,11 @@ public:
 
   void AddAnimVehicle(const CarlaRecorderAnimVehicle &Vehicle);
 
+  void AddAnimVehicleWheels(const CarlaRecorderAnimWheels &VehicleWheels);
+
   void AddAnimWalker(const CarlaRecorderAnimWalker &Walker);
+
+  void AddAnimBiker(const CarlaRecorderAnimBiker &Biker);
 
   void AddLightVehicle(const CarlaRecorderLightVehicle &LightVehicle);
 
@@ -158,6 +166,7 @@ public:
       uint32_t FollowId, bool ReplaySensors);
   void SetReplayerTimeFactor(double TimeFactor);
   void SetReplayerIgnoreHero(bool IgnoreHero);
+  void SetReplayerIgnoreSpectator(bool IgnoreSpectator);
   void StopReplayer(bool KeepActors = false);
 
   void Ticking(float DeltaSeconds);
@@ -186,7 +195,9 @@ private:
   CarlaRecorderPositions Positions;
   CarlaRecorderStates States;
   CarlaRecorderAnimVehicles Vehicles;
+  CarlaRecorderAnimVehicleWheels Wheels;
   CarlaRecorderAnimWalkers Walkers;
+  CarlaRecorderAnimBikers Bikers;
   CarlaRecorderLightVehicles LightVehicles;
   CarlaRecorderLightScenes LightScenes;
   CarlaRecorderActorsKinematics Kinematics;
@@ -207,7 +218,9 @@ private:
   void AddExistingActors(void);
   void AddActorPosition(FCarlaActor *CarlaActor);
   void AddWalkerAnimation(FCarlaActor *CarlaActor);
+  void AddBikerAnimation(FCarlaActor *CarlaActor);
   void AddVehicleAnimation(FCarlaActor *CarlaActor);
+  void AddVehicleWheelsAnimation(FCarlaActor *CarlaActor);
   void AddTrafficLightState(FCarlaActor *CarlaActor);
   void AddVehicleLight(FCarlaActor *CarlaActor);
   void AddActorKinematics(FCarlaActor *CarlaActor);
