@@ -625,16 +625,15 @@ class StaticAttackScenario(object):
             img_point[1] = int(img_point[1])
             patch_vert_img.append(img_point)
         
-
-        
         img = frame.copy()
         top_left = (min(int(patch_vert_img[0][0]), int(patch_vert_img[1][0])), min(int(patch_vert_img[0][1]), int(patch_vert_img[3][1])))
         bottom_left = (min(int(patch_vert_img[0][0]), int(patch_vert_img[1][0])), max(int(patch_vert_img[1][1]), int(patch_vert_img[2][1])))
         bottom_right = (max(int(patch_vert_img[2][0]), int(patch_vert_img[3][0])), max(int(patch_vert_img[1][1]), int(patch_vert_img[2][1])))
         top_right = (max(int(patch_vert_img[2][0]), int(patch_vert_img[3][0])), min(int(patch_vert_img[0][1]), int(patch_vert_img[3][1])))
+        center = (int(patch_vert_img[4][0]), int(patch_vert_img[4][1]))
         # print(top_left)
         # cv2.rectangle(img, top_left, bottom_right, (255,0,0), 1)
-        # cv2.circle(img, top_left, 2, (0,0,255), -1)
+        # cv2.circle(img, center, 3, (0,0,0), -1)
         # cv2.circle(img, bottom_left, 2, (0,0,255), -1)
         # cv2.circle(img, bottom_right, 2, (0,0,255), -1)
         # cv2.circle(img, top_right, 2, (0,0,255), -1)
