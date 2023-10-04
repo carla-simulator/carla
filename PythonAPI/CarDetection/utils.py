@@ -1208,7 +1208,7 @@ def detect_surrounding_cars_outside_junction(
     return key_value_pairs
 
 
-def getJunctionShape(ego_vehicle, ego_wp, junction, road_lane_ids, direction_angle):
+def getJunctionShape(ego_vehicle, ego_wp, wps, road_lane_ids, direction_angle):
     """
     Determines the shape of the junction in the city matrix and returns relevant information.
 
@@ -1230,7 +1230,7 @@ def getJunctionShape(ego_vehicle, ego_wp, junction, road_lane_ids, direction_ang
             yaw (float): The yaw angle of the ego vehicle's rotation.
     """
     lanes_all, junction_roads = get_all_lanes(
-        ego_vehicle, ego_wp, junction, road_lane_ids, direction_angle
+        ego_vehicle, ego_wp, wps, road_lane_ids, direction_angle
     )
 
     key_value_pairs = [
@@ -1320,7 +1320,7 @@ def get_clostest_starting_waypoint(junction_waypoints, ego_location):
     return closest_start_wp
 
 
-def get_all_lanes(ego_vehicle, ego_wp, junction, road_lane_ids, direction_angle):
+def get_all_lanes(ego_vehicle, ego_wp, junction_waypoints, road_lane_ids, direction_angle):
     """
     Get all lanes related to the junction and the corresponding directions from the ego vehicle's perspective.
 
@@ -1336,7 +1336,6 @@ def get_all_lanes(ego_vehicle, ego_wp, junction, road_lane_ids, direction_angle)
                     and a list of junction roads with their respective directions and end waypoints.
     """
     ego_location = ego_vehicle.get_location()
-    junction_waypoints = junction.get_waypoints(carla.LaneType().Driving)
     road_id_ego = str(ego_wp.road_id)
     lane_id_ego = ego_wp.lane_id
     start_wps = [[], [], []]
@@ -1580,7 +1579,7 @@ def fill_boxes(boxes, ego_vehicle, world):
                 surrounding_cars.append(actor)
     for car in surrounding_cars:
         car_location = car.get_location()
-
+        
         for box in boxes:
             if car.id == ego_vehicle.id:
                 if box[0].contains(car_location, carla.Transform()):
@@ -1772,7 +1771,7 @@ def detect_cars_inside_junction(key_value_pairs, ego_vehicle, junction, yaw, wor
 
 def is_highway_junction(ego_vehicle, ego_wp, junction, road_lane_ids, direction_angle):
     lanes_all, junction_roads = get_all_lanes(
-        ego_vehicle, ego_wp, junction, road_lane_ids, direction_angle
+        ego_vehicle, ego_wp, junction.get_waypoints(carla.LaneType().Driving), road_lane_ids, direction_angle
     )
 
     highway_junction = False
