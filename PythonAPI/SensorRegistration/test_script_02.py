@@ -100,35 +100,43 @@ data_list = []
 previous_speed = 0  # Store the previous speed value
 previous_yaw = 0  # Store the previous yaw angle value
 
+time_interval = 1.0
+
 try:
     # Set the ego vehicle on autopilot
     ego_vehicle.set_autopilot(True)
 
     while True:
         follow_car(ego_vehicle, world)
-         # Get the ego vehicle's current location
-        ego_location = ego_vehicle.get_location()
 
         # Get the velocity of the ego vehicle
         velocity = ego_vehicle.get_velocity()
-        speed = carla.Vector3D(velocity.x, velocity.y, velocity.z).length()
+        speed = velocity.length()
 
         #acceleration_vector = ego_vehicle.get_acceleration()
         #acceleration = carla.Vector3D(acceleration_vector.x, acceleration_vector.y, acceleration_vector.z).length()
-        acceleration = (speed - previous_speed) / 1.0  # Change in speed over 1 second
+        acceleration = (speed - previous_speed) / time_interval  # Change in speed during one time interval
 
         steering_angle = get_steering_angle(ego_vehicle)
 
 
-        # Get the rotation (yaw) of the ego vehicle
+        # Get the lateral rotation (yaw) of the ego vehicle
         yaw = ego_vehicle.get_transform().rotation.yaw
 
-        lateral_acceleration = (speed * math.radians(yaw - previous_yaw)) / 1.0  # Change in yaw over 1 second
+        #lateral_acceleration = (speed * math.radians(yaw - previous_yaw)) / time_interval  # Change in yaw over 1 second
+        lateral_acceleration = speed * math.radians(yaw) # Change in yaw during one time interval
+
         #print(lateral_acceleration)
 
         # Get and print the curvature at the ego vehicle's location in degrees per meter
-        curvature_degrees_per_meter = get_curvature_at_location(ego_location)
-        print(f'Curvature at Ego Vehicle Location (Degrees/m): {curvature_degrees_per_meter}')
+        curvature_degrees_per_meter = get_curvature_at_location(ego_vehicle.get_location())
+        #print(f'Curvature at Ego Vehicle Location (Degrees/m): {curvature_degrees_per_meter}')
+
+        print({'Speed (m/s)': speed, '\nAcceleration (m/s^2)': acceleration, '\nSteering Angle' : steering_angle, '\nLateral Acceleration' : lateral_acceleration})
+        print('\nCurvature at Ego Vehicle Location (Degrees/m): ' + str(curvature_degrees_per_meter))
+
+        print("\n\n")
+
 
 
 
@@ -140,13 +148,12 @@ try:
 
 
         # Append the data as a dictionary to the list
-        data_list.append({'Speed (m/s)': speed, 'Acceleration (m/s^2)': acceleration, 'Steering Angle' : steering_angle, 'Lateral Acceleration' : lateral_acceleration})
+        data_list.append({'Speed (m/s)\t\t': speed, 'Acceleration (m/s^2)\t\t': acceleration, 'Steering Angle\t\t' : steering_angle, 'Lateral Acceleration\t\t' : lateral_acceleration})
 
         previous_speed = speed  # Update the previous speed value
         previous_yaw = yaw  # Update the previous yaw angle value
 
-        # Wait for 1 second before the next measurement
-        time.sleep(1.0)
+        time.sleep(time_interval)
 
 except KeyboardInterrupt:
     pass
