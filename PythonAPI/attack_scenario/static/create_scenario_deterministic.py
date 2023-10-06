@@ -3,6 +3,7 @@ import subprocess
 import glob
 import os
 import sys
+import argparse
 
 try:
     sys.path.append(glob.glob('/home/magnus/carla_own/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
@@ -48,29 +49,40 @@ except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--single",action='store_true',help="perfrom single patch attacks")
+parser.add_argument("--double",action='store_true',help="perfrom double patch attacks")
+parser.add_argument("--output_dir",default="_test/",type=str,help="relative directory to save frames")
+args = parser.parse_args()
+
+if args.single and args.double:
+    raise Exception("Can't pass single and double argument at the same time.")
+
 SpawnActor = carla.command.SpawnActor
 
-
-OUTPUT_FOLDER = "_testing_clean" # "_pedestrians_nopatch"
+if not args.output_dir.startswith("_"):
+    args.output_dir = "_" + args.output_dir
+OUTPUT_FOLDER_PATCHED = os.path.join(args.output_dir, "patched/")
+OUTPUT_FOLDER_CLEAN = os.path.join(args.output_dir, "clean/")
 PATCH_PATH = "/home/magnus/Downloads/universal_patch_300_hs_resized.png"
 TEXTURE_PATH = "/home/magnus/carla_own/Unreal/CarlaUE4/Content/Package_Attacks/Static/Static/StaticAttackPedestrian/patch_texture.png"
 PATCH_OUT = "_patch_out"
 
-if not os.path.exists(os.path.join("./",OUTPUT_FOLDER)):
-    os.makedirs(os.path.join("./",OUTPUT_FOLDER))
+if not os.path.exists(os.path.join("./",args.output_dir)):
+    os.makedirs(os.path.join("./",args.output_dir))
+if not os.path.exists(os.path.join("./",OUTPUT_FOLDER_PATCHED)):
+    os.makedirs(os.path.join("./",OUTPUT_FOLDER_PATCHED))
+if not os.path.exists(os.path.join("./",OUTPUT_FOLDER_CLEAN)):
+    os.makedirs(os.path.join("./",OUTPUT_FOLDER_CLEAN))
 if not os.path.exists(os.path.join("./",PATCH_OUT)):
     os.makedirs(os.path.join("./",PATCH_OUT))
 
-folder = os.listdir(OUTPUT_FOLDER)
+folders = [OUTPUT_FOLDER_PATCHED, OUTPUT_FOLDER_CLEAN, PATCH_OUT]
+for folder in folders:
+    for item in os.listdir(folder):
+        if item.endswith(".png"):
+            os.remove(os.path.join(folder, item))
 
-for item in folder:
-    if item.endswith(".png"):
-        os.remove(os.path.join(OUTPUT_FOLDER, item))
-
-folder = os.listdir(PATCH_OUT)
-
-for item in folder:
-    os.remove(os.path.join(PATCH_OUT, item))
 
 EGO_SPAWN_POINT = carla.Transform(carla.Location(x=-5.883884, y=-67.906418, z=0.5), carla.Rotation(pitch=0.0, yaw=180.0, roll=0.0))
 PEDESTRIAN_SPAWN_LIST = [carla.Transform(carla.Location(x=-32.164324, y=-75.203926, z=0.2), carla.Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000)),
@@ -655,7 +667,7 @@ class StaticAttackScenario(object):
         cv2.imwrite(os.path.join(PATCH_OUT, "patch_{:01d}.png".format(num+1)), patch_cropped)
         
 
-    def game_loop(self):
+    def game_loop(self, attack):
         try: 
             self.client = carla.Client("localhost", 2000)
             self.client.set_timeout(2.0)
@@ -744,19 +756,26 @@ class StaticAttackScenario(object):
 
                 FOI = self.get_FOI()
 
-                for i in range(1, len(self.pedestrian_list), 4):
-                    if self.is_in_FOI(all_pedestrians[i], FOI):
-                        if not(in_FOI[int(i/4)]):
-                            self.spawn_patch(all_pedestrians[i])
-                            # self.spawn_double_patch(all_pedestrians[i])
-                            in_FOI[int(i/4)] = True
-                        elif in_FOI[int(i/4)]:
-                            # pass
-                            self.get_patch_from_img(img, self.pedestrian_list[i+1])
-                            self.spawn_patch(all_pedestrians[i])
-                    else:
-                        if in_FOI[int(i/4)]:
-                            in_FOI[int(i/4)] = False
+                if attack:
+                    for i in range(1, len(self.pedestrian_list), 4):
+                        if self.is_in_FOI(all_pedestrians[i], FOI):
+                            if not(in_FOI[int(i/4)]):
+
+                                if args.single:
+                                    self.spawn_patch(all_pedestrians[i])
+                                elif args.double:
+                                    self.spawn_double_patch(all_pedestrians[i])
+                                else:
+                                    self.spawn_patch(all_pedestrians[i])
+
+                                in_FOI[int(i/4)] = True
+                            # elif in_FOI[int(i/4)]:
+                            #     # pass
+                            #     self.get_patch_from_img(img, self.pedestrian_list[i+1])
+                            #     self.spawn_patch(all_pedestrians[i])
+                        else:
+                            if in_FOI[int(i/4)]:
+                                in_FOI[int(i/4)] = False
 
                 # Save frame to annotations json
                 frame_file = "{:05d}.png".format(frame_number)
@@ -783,7 +802,10 @@ class StaticAttackScenario(object):
                             "bbox": bb_cocoFormat
                         })
 
-                cv2.imwrite(os.path.join(OUTPUT_FOLDER, frame_file), img)
+                if attack:
+                    cv2.imwrite(os.path.join(OUTPUT_FOLDER_PATCHED, frame_file), img)
+                else:
+                    cv2.imwrite(os.path.join(OUTPUT_FOLDER_CLEAN, frame_file), img)
 
                 cv2.imshow('CameraFeed',bb_img)
                 if cv2.waitKey(1) == ord('q'):
@@ -792,7 +814,7 @@ class StaticAttackScenario(object):
                 if frame_number >= 380:
                     break
 
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, Exception):
             pass
 
         finally:
@@ -820,10 +842,15 @@ class StaticAttackScenario(object):
                 print("Destroyed {} vehicles, {} walkers and the ego-vehicle and camera.".format(len(self.vehicle_list), int(len(self.pedestrian_list)/4)))
             
             cv2.destroyAllWindows()
-
+            
             print("Saving annotations to json file.")
-            with open(os.path.join(OUTPUT_FOLDER, 'annotations.json'), 'w') as json_file:
-                json.dump(self.ground_truth_annotations, json_file)
+            if attack:
+                with open(os.path.join(OUTPUT_FOLDER_PATCHED, 'annotations.json'), 'w') as json_file:
+                    json.dump(self.ground_truth_annotations, json_file)
+            else:
+                with open(os.path.join(OUTPUT_FOLDER_CLEAN, 'annotations.json'), 'w') as json_file:
+                    json.dump(self.ground_truth_annotations, json_file)
+            
 
             average_area = 0
             for area in AREAS:
@@ -836,7 +863,7 @@ class StaticAttackScenario(object):
 if __name__ == "__main__":
     try:
         attack_scenario = StaticAttackScenario()
-        attack_scenario.game_loop()
+        attack_scenario.game_loop(attack=True)
 
         # patch = cv2.imread(PATCH_PATH, cv2.IMREAD_UNCHANGED)
         # cv2.imwrite(TEXTURE_PATH, patch)
@@ -844,10 +871,10 @@ if __name__ == "__main__":
         # result = subprocess.run(["/home/magnus/carla_own/PythonAPI/attack_scenario/static/shellscript.sh"], shell=True, text=True)
         # # print(result)
 
-        # time.sleep(3)
+        time.sleep(3)
 
-        # attack_scenario.client.reload_world()
-        # attack_scenario = StaticAttackScenario()
-        # attack_scenario.game_loop()
+        attack_scenario.client.reload_world()
+        attack_scenario = StaticAttackScenario()
+        attack_scenario.game_loop(attack=False)
     finally:
         print("EXIT!")

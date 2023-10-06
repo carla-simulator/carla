@@ -1,6 +1,7 @@
 import glob
 import os
 import sys
+import argparse
 
 try:
     sys.path.append(glob.glob('../../carla/dist/carla-*%d.%d-%s.egg' % (
@@ -46,15 +47,37 @@ except ImportError:
 
 SpawnActor = carla.command.SpawnActor
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--single",action='store_true',help="perfrom single patch attacks")
+parser.add_argument("--double",action='store_true',help="perfrom double patch attacks")
+parser.add_argument("--output_dir",default="_test/",type=str,help="relative directory to save frames")
+parser.add_argument("--patch_path",default="./new_patch.png",type=str,help="path to the patch png (absolute or relative path)")
+args = parser.parse_args()
 
-OUTPUT_FOLDER = "_testing" # "_pedestrians_nopatch"
-OUTPUT_FOLDER_CLEAN = "_testing_clean"
+if args.single and args.double:
+    raise Exception("Can't pass single and double argument at the same time.")
+
+
+if not args.output_dir.startswith("_"):
+    args.output_dir = "_" + args.output_dir
+OUTPUT_FOLDER_PATCHED = os.path.join(args.output_dir, "patched/")
+OUTPUT_FOLDER_CLEAN = os.path.join(args.output_dir, "clean/")
+
 PATCH_PATH = "./new_patch.png"
 
-if not os.path.exists(os.path.join("./",OUTPUT_FOLDER)):
-    os.makedirs(os.path.join("./",OUTPUT_FOLDER))
+if not os.path.exists(os.path.join("./",args.output_dir)):
+    os.makedirs(os.path.join("./",args.output_dir))
+if not os.path.exists(os.path.join("./",OUTPUT_FOLDER_PATCHED)):
+    os.makedirs(os.path.join("./",OUTPUT_FOLDER_PATCHED))
 if not os.path.exists(os.path.join("./",OUTPUT_FOLDER_CLEAN)):
     os.makedirs(os.path.join("./",OUTPUT_FOLDER_CLEAN))
+
+folders = [OUTPUT_FOLDER_PATCHED, OUTPUT_FOLDER_CLEAN]
+for folder in folders:
+    for item in os.listdir(folder):
+        if item.endswith(".png"):
+            os.remove(os.path.join(folder, item))
+
 
 
 EGO_SPAWN_POINT = carla.Transform(carla.Location(x=-5.883884, y=-67.906418, z=0.5), carla.Rotation(pitch=0.0, yaw=180.0, roll=0.0))
@@ -514,13 +537,8 @@ class StaticAttackScenario(object):
 
 
     def game_loop(self):
-        # delete old images from output folder
-        out_folder = os.listdir(OUTPUT_FOLDER)
-
-        for item in out_folder:
-            if item.endswith(".png"):
-                os.remove(os.path.join(OUTPUT_FOLDER, item))
-        try: 
+        try:
+            double_attack = False
             self.client = carla.Client("localhost", 2000)
             self.client.set_timeout(2.0)
             self.world = self.client.get_world()
@@ -614,6 +632,9 @@ class StaticAttackScenario(object):
                     "id": frame_number
                 })
 
+                if args.double:
+                    double_attack = True
+
                 bounding_boxes, bb_img, patched_img = GTBoundingBoxesAndPatchAttack.get_bounding_boxes(self.world, self.car, self.camera, self.K, labels,double=True, delta=0.1, img=bb_img)
 
                 for bb_verts in bounding_boxes:
@@ -629,7 +650,7 @@ class StaticAttackScenario(object):
                             "bbox": bb_cocoFormat
                         })
 
-                cv2.imwrite(os.path.join(OUTPUT_FOLDER, frame_file), patched_img)
+                cv2.imwrite(os.path.join(OUTPUT_FOLDER_PATCHED, frame_file), patched_img)
                 cv2.imwrite(os.path.join(OUTPUT_FOLDER_CLEAN, frame_file), img)
 
                 cv2.imshow('CameraFeed',patched_img)
@@ -669,7 +690,7 @@ class StaticAttackScenario(object):
             cv2.destroyAllWindows()
 
             print("Saving annotations to json file.")
-            with open(os.path.join(OUTPUT_FOLDER, 'annotations.json'), 'w') as json_file:
+            with open(os.path.join(OUTPUT_FOLDER_PATCHED, 'annotations.json'), 'w') as json_file:
                 json.dump(self.ground_truth_annotations, json_file)
 
 
