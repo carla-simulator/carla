@@ -49,6 +49,7 @@
 
 #include "DrawDebugHelpers.h"
 
+#if WITH_EDITOR
 UOpenDriveToMap::UOpenDriveToMap()
 {
   AddToRoot();
@@ -892,3 +893,4 @@ void UOpenDriveToMap::MoveActorsToSubLevels(TArray<AActor*> ActorsToMove)
   }
 }
 
+#endif

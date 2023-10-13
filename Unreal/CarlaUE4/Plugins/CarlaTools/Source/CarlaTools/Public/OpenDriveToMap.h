@@ -28,7 +28,7 @@ UCLASS(Blueprintable, BlueprintType)
 class CARLATOOLS_API UOpenDriveToMap : public UObject
 {
   GENERATED_BODY()
-
+#if WITH_EDITOR
 public:
   UOpenDriveToMap();
   ~UOpenDriveToMap();
@@ -219,4 +219,5 @@ private:
   TArray<AActor*> Landscapes;
   UPROPERTY()
   UTexture2D* Heightmap;
+#endif
 };
