@@ -538,11 +538,11 @@ void ROS2::ProcessDataFromCamera(
         auto sensors = GetOrCreateSensor(ESensors::OpticalFlowCamera, stream_id, actor);
         if (sensors.first) {
           std::shared_ptr<CarlaOpticalFlowCameraPublisher> publisher = std::dynamic_pointer_cast<CarlaOpticalFlowCameraPublisher>(sensors.first);
-          const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
-            reinterpret_cast<const carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer->data());
+          const carla::sensor::s11n::OpticalFlowImageSerializer::ImageHeader *header =
+            reinterpret_cast<const carla::sensor::s11n::OpticalFlowImageSerializer::ImageHeader *>(buffer->data());
           if (!header)
             return;
-          publisher->SetImageData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+          publisher->SetImageData(_seconds, _nanoseconds, header->height, header->width, (const float*) (buffer->data() + carla::sensor::s11n::OpticalFlowImageSerializer::header_offset));
           publisher->SetInfoRegionOfInterest(0, 0, H, W, true);
           publisher->Publish();
         }

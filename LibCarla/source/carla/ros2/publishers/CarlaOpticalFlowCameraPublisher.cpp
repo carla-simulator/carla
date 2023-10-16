@@ -3,6 +3,7 @@
 #include "CarlaOpticalFlowCameraPublisher.h"
 
 #include <string>
+#include <cmath>
 
 #include "carla/ros2/types/ImagePubSubTypes.h"
 #include "carla/ros2/types/CameraInfoPubSubTypes.h"
@@ -24,13 +25,16 @@
 #include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
 #include <fastdds/dds/publisher/DataWriterListener.hpp>
 
+template <typename T> T CLAMP(const T& value, const T& low, const T& high)
+{
+  return value < low ? low : (value > high ? high : value);
+}
 
 namespace carla {
 namespace ros2 {
 
   namespace efd = eprosima::fastdds::dds;
   using erc = eprosima::fastrtps::types::ReturnCode_t;
-
   struct CarlaOpticalFlowCameraPublisherImpl {
     efd::DomainParticipant* _participant { nullptr };
     efd::Publisher* _publisher { nullptr };
@@ -280,11 +284,89 @@ namespace ros2 {
     return false;
   }
 
-  void CarlaOpticalFlowCameraPublisher::SetImageData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data) {    std::vector<uint8_t> vector_data;
-    const size_t size = height * width * 4;
-    vector_data.resize(size);
-    std::memcpy(&vector_data[0], &data[0], size);
-    SetData(seconds, nanoseconds,height, width, std::move(vector_data));
+  void CarlaOpticalFlowCameraPublisher::SetImageData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const float* data) {
+    constexpr float pi = 3.1415f;
+    constexpr float rad2ang = 360.0f/(2.0f*pi);
+    const size_t max_index = width * height * 2;
+    std::vector<uint8_t> vector_data;
+    vector_data.resize(height * width * 4);
+    size_t data_index = 0;
+    for (size_t index = 0; index < max_index; index += 2) {
+        const float vx = data[index];
+        const float vy = data[index + 1];
+        float angle = 180.0f + std::atan2(vy, vx) * rad2ang;
+        if (angle < 0)
+        {
+            angle = 360.0f + angle;
+        }
+        angle = std::fmod(angle, 360.0f);
+
+        const float norm = std::sqrt(vx * vx + vy * vy);
+        const float shift = 0.999f;
+        const float a = 1.0f / std::log(0.1f + shift);
+        const float intensity = CLAMP<float>(a * std::log(norm + shift), 0.0f, 1.0f);
+
+        const float& H = angle;
+        const float S = 1.0f;
+        const float V = intensity;
+        const float H_60 = H * (1.0f / 60.0f);
+
+        const float C = V * S;
+        const float X = C * (1.0f - std::abs(std::fmod(H_60, 2.0f) - 1.0f));
+        const float m = V - C;
+
+        float r = 0;
+        float g = 0;
+        float b = 0;
+        const unsigned int angle_case = static_cast<const unsigned int>(H_60);
+        switch (angle_case) {
+        case 0:
+            r = C;
+            g = X;
+            b = 0;
+            break;
+        case 1:
+            r = X;
+            g = C;
+            b = 0;
+            break;
+        case 2:
+            r = 0;
+            g = C;
+            b = X;
+            break;
+        case 3:
+            r = 0;
+            g = X;
+            b = C;
+            break;
+        case 4:
+            r = X;
+            g = 0;
+            b = C;
+            break;
+        case 5:
+            r = C;
+            g = 0;
+            b = X;
+            break;
+        default:
+            r = 1;
+            g = 1;
+            b = 1;
+            break;
+        }
+
+        const uint8_t R = static_cast<uint8_t>((r + m) * 255.0f);
+        const uint8_t G = static_cast<uint8_t>((g + m) * 255.0f);
+        const uint8_t B = static_cast<uint8_t>((b + m) * 255.0f);
+
+        vector_data[data_index++] = B;
+        vector_data[data_index++] = G;
+        vector_data[data_index++] = R;
+        vector_data[data_index++] = 0;
+    }
+    SetData(seconds, nanoseconds, height, width, std::move(vector_data));
   }
 
   void CarlaOpticalFlowCameraPublisher::SetInfoRegionOfInterest( uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, bool do_rectify) {
