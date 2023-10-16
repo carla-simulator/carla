@@ -69,7 +69,7 @@ fi
 # -- Build library -------------------------------------------------------------
 # ==============================================================================
 
-if ! [ -d ${CARLAUE4_STREETMAP_FOLDER} ]; then
+if ${BUILD_STREETMAP} ; then
   log "Downloading STREETMAP plugin."
   # [ ! -d ${STREETMAP_BUILD_FOLDER} ] && mkdir ${STREETMAP_BUILD_FOLDER}
   if ${GIT_PULL} ; then
