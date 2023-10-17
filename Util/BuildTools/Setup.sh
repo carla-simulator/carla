@@ -803,16 +803,14 @@ FASTDDS_INSTALL_DIR=${PWD}/${FASTDDS_BASENAME}-install
 FASTDDS_INCLUDE=${FASTDDS_INSTALL_DIR}/include
 FASTDDS_LIB=${FASTDDS_INSTALL_DIR}/lib
 if ${USE_ROS2} ; then
-
   function build_fastdds_extension {
     LIB_SOURCE=$1
     LIB_REPO=$2
-    CMAKE_FLAGS=$3
-
+    LIB_BRANCH=$3
     if [[ ! -d ${LIB_SOURCE} ]] ; then
       mkdir -p ${LIB_SOURCE}
       log "${LIB_REPO}"
-      git clone ${LIB_REPO} ${LIB_SOURCE}
+      git clone --depth 1 --branch ${LIB_BRANCH} ${LIB_REPO} ${LIB_SOURCE}
       mkdir -p ${LIB_SOURCE}/build
     fi
   }
@@ -822,8 +820,8 @@ if ${USE_ROS2} ; then
     FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan-memory-vendor
     FOONATHAN_MEMORY_VENDOR_SOURCE_DIR=${PWD}/${FOONATHAN_MEMORY_VENDOR_BASENAME}-source
     FOONATHAN_MEMORY_VENDOR_REPO="https://github.com/eProsima/foonathan_memory_vendor.git"
-    FOONATHAN_MEMORY_VENDOR_CMAKE_FLAGS=-DBUILD_SHARED_LIBS=ON
-    build_fastdds_extension ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR} "${FOONATHAN_MEMORY_VENDOR_REPO}"
+    FOONATHAN_MEMORY_VENDOR_BRANCH=master
+    build_fastdds_extension ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR} "${FOONATHAN_MEMORY_VENDOR_REPO}" "${FOONATHAN_MEMORY_VENDOR_BRANCH}"
     pushd ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}/build >/dev/null
     cmake -G "Ninja" \
       -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
@@ -839,7 +837,8 @@ if ${USE_ROS2} ; then
     FAST_CDR_BASENAME=fast-cdr
     FAST_CDR_SOURCE_DIR=${PWD}/${FAST_CDR_BASENAME}-source
     FAST_CDR_REPO="https://github.com/eProsima/Fast-CDR.git"
-    build_fastdds_extension ${FAST_CDR_SOURCE_DIR} "${FAST_CDR_REPO}"
+    FAST_CDR_BRANCH=1.1.x
+    build_fastdds_extension ${FAST_CDR_SOURCE_DIR} "${FAST_CDR_REPO}" "${FAST_CDR_BRANCH}"
     pushd ${FAST_CDR_SOURCE_DIR}/build >/dev/null
     cmake -G "Ninja" \
       -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
@@ -854,7 +853,8 @@ if ${USE_ROS2} ; then
     FAST_DDS_LIB_BASENAME=fast-dds-lib
     FAST_DDS_LIB_SOURCE_DIR=${PWD}/${FAST_DDS_LIB_BASENAME}-source
     FAST_DDS_LIB_REPO="https://github.com/eProsima/Fast-DDS.git"
-    build_fastdds_extension ${FAST_DDS_LIB_SOURCE_DIR} "${FAST_DDS_LIB_REPO}"
+    FAST_DDS_LIB_BRANCH=2.11.2
+    build_fastdds_extension ${FAST_DDS_LIB_SOURCE_DIR} "${FAST_DDS_LIB_REPO}" "${FAST_DDS_LIB_BRANCH}"
     pushd ${FAST_DDS_LIB_SOURCE_DIR}/build >/dev/null
     cmake -G "Ninja" \
       -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
