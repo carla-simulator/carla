@@ -28,21 +28,25 @@ def check_road_change(ego_vehicle_location, road_lane_ids, front, world_map):
 
     ego_vehicle_waypoint = world_map.get_waypoint(ego_vehicle_location)
     if front:
-        next_waypoints = ego_vehicle_waypoint.next(60)
+        for i in range(1, 60, 5):
+            next_waypoint = ego_vehicle_waypoint.next(i)[0]
+            if next_waypoint.road_id != ego_vehicle_waypoint.road_id:
+                break
     else:
-        next_waypoints = ego_vehicle_waypoint.previous(60)
-    next_waypoint = next_waypoints[0]
-    ego_vehicle_road_id = str(ego_vehicle_waypoint.road_id)
-    next_waypoint_road_id = str(next_waypoint.road_id)
+        for i in range(1, 60, 5):
+            next_waypoint = ego_vehicle_waypoint.previous(i)[0]
+            if next_waypoint.road_id != ego_vehicle_waypoint.road_id:
+                break
+
 
     next_lanes = None
     next_road_id = None
-    if next_waypoint_road_id != ego_vehicle_road_id and len(next_waypoints) == 1:
-        next_road_id = next_waypoint_road_id
+    if next_waypoint.road_id != ego_vehicle_waypoint.road_id:
+        next_road_id = str(next_waypoint.road_id)
         next_lanes = [
             id.split("_")[1]
             for id in road_lane_ids
-            if next_waypoint_road_id == id.split("_")[0]
+            if next_road_id == id.split("_")[0]
         ]
     return (next_road_id, next_lanes)
 
@@ -2610,6 +2614,7 @@ def update_matrix(
 
             entry_streets = entry_road_id + entry_highway_road
             exit_streets = exit_road_id + exit_highway_road
+            print(col, row)
             if (other_car_road_id in entry_streets) and (col_entry < 8):
                 insert_in_matrix(matrix, car, ego_vehicle, col_entry, row)
 
@@ -2622,7 +2627,7 @@ def update_matrix(
 def get_waypoint_on_highway_junction(
     ego_waypoint, ego_vehicle_location, wps, world_map
 ):
-    bbx_location = get_junction_ahead(ego_waypoint, 40).bounding_box.location
+    bbx_location = junction.bounding_box.location
 
     # Calculate the direction vector from bounding box to ego vehicle
     direction = ego_vehicle_location - bbx_location
