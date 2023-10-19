@@ -28,23 +28,37 @@ def check_road_change(ego_vehicle_location, road_lane_ids, front, world_map):
 
     ego_vehicle_waypoint = world_map.get_waypoint(ego_vehicle_location)
     if front:
-        next_waypoints = ego_vehicle_waypoint.next(60)
+        for i in range(1, 60, 5):
+            next_waypoint = ego_vehicle_waypoint.next(i)[0]
+            if next_waypoint.road_id != ego_vehicle_waypoint.road_id:
+                break
     else:
-        next_waypoints = ego_vehicle_waypoint.previous(60)
-    next_waypoint = next_waypoints[0]
-    ego_vehicle_road_id = str(ego_vehicle_waypoint.road_id)
-    next_waypoint_road_id = str(next_waypoint.road_id)
+        for i in range(1, 60, 5):
+            next_waypoint = ego_vehicle_waypoint.previous(i)[0]
+            if next_waypoint.road_id != ego_vehicle_waypoint.road_id:
+                break
+
 
     next_lanes = None
     next_road_id = None
-    if next_waypoint_road_id != ego_vehicle_road_id and len(next_waypoints) == 1:
-        next_road_id = next_waypoint_road_id
+    if next_waypoint.road_id != ego_vehicle_waypoint.road_id:
+        next_road_id = str(next_waypoint.road_id)
         next_lanes = [
             id.split("_")[1]
             for id in road_lane_ids
-            if next_waypoint_road_id == id.split("_")[0]
+            if next_road_id == id.split("_")[0]
         ]
-    return (next_road_id, next_lanes)
+    our_lanes = [
+        id.split("_")[1]
+        for id in road_lane_ids
+        if str(ego_vehicle_waypoint.road_id) == id.split("_")[0]
+    ]
+    next_lanes.sort()
+    our_lanes.sort()
+    if next_lanes == our_lanes:
+        return (next_road_id, next_lanes)
+    else:
+        return (None, None)
 
 
 def check_ego_on_highway(ego_vehicle_location, road_lane_ids, world_map):
@@ -172,7 +186,7 @@ def get_ego_direction_lanes(ego_vehicle, road_lane_ids, world_map):
     return ego_direction, other_direction
 
 
-def create_city_matrix(ego_vehicle_location, road_lane_ids, world_map, ghost=False):
+def create_city_matrix(ego_vehicle_location, road_lane_ids, world_map, ghost=False, ego_on_bad_highway_street = False):
     """
     Create a matrix representing the lanes around the ego vehicle.
 
@@ -192,6 +206,7 @@ def create_city_matrix(ego_vehicle_location, road_lane_ids, world_map, ghost=Fal
     # Get lane id for ego_vehicle
     ego_vehilce_waypoint = world_map.get_waypoint(ego_vehicle_location)
     ego_vehilce_lane_id = str(ego_vehilce_waypoint.lane_id)
+    print("ego_vehicle_lane_id: ", ego_vehilce_lane_id)
     ego_vehilce_road_id = str(ego_vehilce_waypoint.road_id)
 
     lanes = []
@@ -342,10 +357,17 @@ def create_city_matrix(ego_vehicle_location, road_lane_ids, world_map, ghost=Fal
     # Update matrix
     if key_value_pairs:
         matrix = collections.OrderedDict(key_value_pairs)
-
     if matrix and not ghost:
-        matrix[str(ego_vehilce_road_id) + "_" + str(ego_vehilce_lane_id)][3] = 1
-
+        try:
+            if ego_on_bad_highway_street:
+                if int(ego_vehilce_lane_id) > 0:
+                    matrix[str(ego_vehilce_road_id) + "_" + str(int(ego_vehilce_lane_id) + 1)][3] = 1
+                else:
+                    matrix[str(ego_vehilce_road_id) + "_" + str(int(ego_vehilce_lane_id) - 1)][3] = 1
+            else:
+                matrix[str(ego_vehilce_road_id) + "_" + str(ego_vehilce_lane_id)][3] = 1
+        except KeyError:
+            matrix[str(ego_vehilce_road_id) + "_" + str(ego_vehilce_lane_id)][3] = 1
     return matrix
 
 
@@ -525,9 +547,12 @@ def detect_surronding_cars(
                         col
                     ] = 1
                 else:
-                    matrix[str(ego_vehicle_road_id) + "_" + str(other_car_lane_id)][
-                        col
-                    ] = 2
+                    try:
+                        matrix[str(ego_vehicle_road_id) + "_" + str(other_car_lane_id)][
+                            col
+                        ] = 2
+                    except:
+                        pass
 
     return matrix, surrounding_cars_on_highway_entryExit
 
@@ -811,9 +836,12 @@ def get_junction_ahead(ego_waypoint, distance):
         carla.Junction or None: The carla.Junction object representing the junction ahead if found within
                                  the specified distance. Returns None if no junction is found.
     """
+
     for x in list(range(1, distance + 1)):
         if ego_waypoint.next(x)[0].is_junction:
             return ego_waypoint.next(x)[0].get_junction()
+    if ego_waypoint.is_junction:
+        return ego_waypoint.get_junction()
     return None
 
 
@@ -832,25 +860,9 @@ def get_junction_behind(ego_waypoint, distance):
     for x in list(range(1, distance + 1)):
         if ego_waypoint.previous(x)[0].is_junction:
             return ego_waypoint.previous(x)[0].get_junction()
+    if ego_waypoint.is_junction:
+        return ego_waypoint.get_junction()
     return None
-
-
-def is_junction_behind(ego_waypoint, distance):
-    """
-    Check if a junction is behind the ego vehicle within a specified distance.
-
-    Parameters:
-        ego_waypoint (carla.Waypoint): The current waypoint of the ego vehicle.
-        distance (int): The maximum distance (in meters) to search for a junction in the back.
-
-    Returns:
-        bool: True if a junction is found behind within the specified distance, False otherwise.
-    """
-    # return True if junction is ahead of ego in <= distance meter, start checking at 1m ahead and increment by 1 every loop
-    for x in list(range(1, distance + 1)):
-        if ego_waypoint.previous(x)[0].is_junction:
-            return True
-    return False
 
 
 def get_waypoint_direction(
@@ -918,7 +930,7 @@ def get_waypoint_direction(
 
 
 def detect_ego_before_junction(
-    key_value_pairs, junction_roads, lanes_all, lane_id_ego, ego_wp, distance_to_junc
+    key_value_pairs, junction_roads, lanes_all, lane_id_ego, ego_wp, distance_to_junc, junction
 ):
     """
     Update the city matrix to detect the position of the ego vehicle relative to a junction.
@@ -936,19 +948,22 @@ def detect_ego_before_junction(
     """
     # detect ego before junction
 
+
     # cast lane id's to int
     for road in junction_roads:
         lanes_all[road[1]] = [int(id) for id in lanes_all[road[1]]]
+
+    print(lanes_all)
 
     # check on which lane ego is: i=0 means most out
     if lane_id_ego > 0:
         lanes_all["ego"].sort(reverse=True)
     else:
         lanes_all["ego"].sort()
-    for i in range(int(len(lanes_all["ego"]) / 2)):
+    for i in range(int(len(lanes_all["ego"]))):
         if lanes_all["ego"][i] == lane_id_ego:
             break  # i=0: lane most out
-
+    
     # check how many lanes the roads right and left of ego have
     if len(lanes_all["left"]) == 0:
         columns = int((8 - len(lanes_all["right"])) / 2)
@@ -972,6 +987,9 @@ def detect_ego_before_junction(
         c = columns - 2
     else:  # if 3 columns and further away than 10m, then cell farsest away
         c = columns - 3
+    if ego_wp.road_id == 23:
+        return key_value_pairs
+
     for j in range(8):
         if key_value_pairs[-1 - j][1][c] != 3:
             key_value_pairs[-1 - j - i][1][c] = 1
@@ -1007,17 +1025,30 @@ def detect_surrounding_cars_outside_junction(
         list: Updated key-value pairs representing the city matrix with information about surrounding cars.
     """
     world_map = world.get_map()
+    ego_waypoint = world_map.get_waypoint(ego_vehicle.get_location())
     junction_id = junction.id
     # junction_roads =
     #   [road_id of incoming road, direction from ego-perspective, wp of outgoing lane of incoming road, corresponding lane_id ],
     #       ... for all 4 directions ego, left, right, straight
-    #   ]
+    #   ]    # Special Highway Traffi
+
     surrounding_cars = {"ego": [], "left": [], "straight": [], "right": []}
-    for actor in world.get_actors():
-        if "vehicle" in actor.type_id and actor.id != ego_vehicle.id:
-            for road in junction_roads:
-                actor_location = actor.get_location()
-                actor_waypoint = world_map.get_waypoint(actor_location)
+    actors = world.get_actors()
+    ego_actor = actors.find(ego_vehicle.id)
+    actors = [ego_actor] + [actor for actor in actors if actor.id != ego_vehicle.id]
+    if type(key_value_pairs) == dict:
+        ego_already_in_matrix = any(1 in val for key, val in key_value_pairs.items()) # TODO: sometimes list, sometimes dict (whaaaat?)
+    else:
+        ego_already_in_matrix = any(1 in val for key, val in key_value_pairs)
+    for actor in actors:
+        if "vehicle" in actor.type_id:# and actor.id != ego_vehicle.id:
+            if actor.id == ego_vehicle.id and ego_already_in_matrix:
+                continue
+            actor_location = actor.get_location()
+            actor_waypoint = world_map.get_waypoint(actor_location)
+            if junction_id == 1368 and np.sign(ego_waypoint.lane_id) != np.sign(actor_waypoint.lane_id) and actor_waypoint.road_id in [40, 41]:
+                continue
+            for road in junction_roads:                
                 distance_to_actor = distance(actor_location, road[2].transform.location)
                 different_road_distance = None
 
@@ -1091,13 +1122,13 @@ def detect_surrounding_cars_outside_junction(
                 actor_waypoint_lane_id = actor_waypoint.lane_id
 
             # sort list of lane ID's
-            if int(road[3]) < 0:
+            if (int(road[3]) < 0 and not junction.id == 1368) or int(road[3]) > 0 and junction.id == 1368:
                 lanes_all[road[1]].sort(reverse=True)
             else:
                 lanes_all[road[1]].sort()
 
             # determine lane of actor, i=0: lane most out of lanes incoming the junction
-            for i in range(int(len(lanes_all[road[1]]))):
+            for i in range(len(lanes_all[road[1]])):
                 if lanes_all[road[1]][i] == actor_waypoint_lane_id:
                     break
 
@@ -1155,6 +1186,10 @@ def detect_surrounding_cars_outside_junction(
                     c = columns - 3
 
             # write "2" in identified cell
+            if actor.id == ego_vehicle.id:
+                cell_val = 1
+            else:
+                cell_val = 2
             if road[1] == "ego":
                 for j in range(8):
                     # ego road
@@ -1172,6 +1207,7 @@ def detect_surrounding_cars_outside_junction(
                                     c == columns - 1
                                 ):  # already in front cell
                                     key_value_pairs[-1 - j - i][1][c - 1] = 1
+                                    key_value_pairs[-1 - j - i][1][c] = cell_val
                                 elif (
                                     columns != 1
                                 ):  # not in front cell but more than 1 cells available
@@ -1179,36 +1215,42 @@ def detect_surrounding_cars_outside_junction(
                             else:  # other car behind
                                 if (columns != 1) and (c == 0):  # already in last cell
                                     key_value_pairs[-1 - j - i][1][c + 1] = 1
+                                    key_value_pairs[-1 - j - i][1][c] = cell_val
                                 elif (
                                     columns != 1
                                 ):  # not in last cell but more than 1 cells available
-                                    key_value_pairs[-1 - j - i][1][c - 1] = 2
+                                    key_value_pairs[-1 - j - i][1][c - 1] = cell_val
                         else:
-                            key_value_pairs[-1 - j - i][1][c] = 2
+                            key_value_pairs[-1 - j - i][1][c] = cell_val
                         break
             elif road[1] == "left":
                 for j in range(8):
                     # left road
                     if key_value_pairs[c][1][j] != 3:
-                        key_value_pairs[c][1][j + i] = 2
+                        key_value_pairs[c][1][j + i] = cell_val
                         break
             elif road[1] == "straight":
                 for j in range(8):
                     # straight road
                     if key_value_pairs[j][1][-1 - c] != 3:
-                        key_value_pairs[j + i][1][-1 - c] = 2
+                        key_value_pairs[j + i][1][-1 - c] = cell_val
                         break
             elif road[1] == "right":
                 for j in range(8):
                     # right road
                     if key_value_pairs[-1 - c][1][-1 - j] != 3:
-                        key_value_pairs[-1 - c][1][-1 - j - i] = 2
+                        key_value_pairs[-1 - c][1][-1 - j - i] = cell_val
                         break
+
+    if junction.id == 1368:
+        key_value_pairs[2][1][-3:], key_value_pairs[5][1][-3:] = key_value_pairs[5][1][-3:], key_value_pairs[2][1][-3:]
+        key_value_pairs[3][1][-3:], key_value_pairs[4][1][-3:] = key_value_pairs[4][1][-3:], key_value_pairs[3][1][-3:]
 
     return key_value_pairs
 
 
-def getJunctionShape(ego_vehicle, ego_wp, junction, road_lane_ids, direction_angle):
+
+def getJunctionShape(ego_vehicle, ego_wp, wps, road_lane_ids, direction_angle, world_map):
     """
     Determines the shape of the junction in the city matrix and returns relevant information.
 
@@ -1230,9 +1272,8 @@ def getJunctionShape(ego_vehicle, ego_wp, junction, road_lane_ids, direction_ang
             yaw (float): The yaw angle of the ego vehicle's rotation.
     """
     lanes_all, junction_roads = get_all_lanes(
-        ego_vehicle, ego_wp, junction, road_lane_ids, direction_angle
+        ego_vehicle, ego_wp, wps, road_lane_ids, direction_angle
     )
-
     key_value_pairs = [
         ("1", [0, 0, 0, 0, 0, 0, 0, 0]),
         ("2", [0, 0, 0, 0, 0, 0, 0, 0]),
@@ -1290,10 +1331,18 @@ def getJunctionShape(ego_vehicle, ego_wp, junction, road_lane_ids, direction_ang
         if i == left_lanes:
             left_complete = True
 
-    ego_transform = ego_vehicle.get_transform()
-    ego_rotation = ego_transform.rotation
-    yaw = ego_rotation.yaw
+    if world_map.get_waypoint(ego_vehicle.get_location()).road_id == 23: # on traffic light junction, use yaw of ghost not ego
+        if world_map.get_waypoint(ego_vehicle.get_location()).lane_id == -3: # yaw, in case we entry to the right
+            yaw = 179
+        else:
+            yaw = 1
+    else:
+        ego_transform = ego_vehicle.get_transform()
+        ego_rotation = ego_transform.rotation
+        yaw = ego_rotation.yaw
+
     return key_value_pairs, lanes_all, junction_roads, yaw
+
 
 
 # Inner junction:
@@ -1320,7 +1369,7 @@ def get_clostest_starting_waypoint(junction_waypoints, ego_location):
     return closest_start_wp
 
 
-def get_all_lanes(ego_vehicle, ego_wp, junction, road_lane_ids, direction_angle):
+def get_all_lanes(ego_vehicle, ego_wp, junction_waypoints, road_lane_ids, direction_angle):
     """
     Get all lanes related to the junction and the corresponding directions from the ego vehicle's perspective.
 
@@ -1335,29 +1384,42 @@ def get_all_lanes(ego_vehicle, ego_wp, junction, road_lane_ids, direction_angle)
         dict, list: A dictionary containing lists of lanes for each direction
                     and a list of junction roads with their respective directions and end waypoints.
     """
-    ego_location = ego_vehicle.get_location()
-    junction_waypoints = junction.get_waypoints(carla.LaneType().Driving)
+    ego_location = ego_wp.transform.location
+
     road_id_ego = str(ego_wp.road_id)
+    
     lane_id_ego = ego_wp.lane_id
     start_wps = [[], [], []]
     end_wps = [[], [], [], []]
     closest_start_wp = get_clostest_starting_waypoint(junction_waypoints, ego_location)
 
-    for start_wp, end_wp in junction_waypoints:
-        # end
-        road_id_end_wp = str(end_wp.next(2)[0].road_id)
-        lane_id_end_wp = str(end_wp.next(2)[0].lane_id)
+    for i, (start_wp, end_wp) in enumerate(junction_waypoints):
+        if junction_waypoints[0][0].get_junction().id == 1368 and ((i < 2) or (i>=len(junction_waypoints)-2)):  
+            road_id_end_wp = str(end_wp.previous(2)[0].road_id)
+            lane_id_end_wp = str(end_wp.previous(2)[0].lane_id)
+        else:
+            # end
+            road_id_end_wp = str(end_wp.next(1)[0].road_id)
+            lane_id_end_wp = str(end_wp.next(1)[0].lane_id)
+
         end_wps[0].append(end_wp)
         end_wps[1].append(road_id_end_wp)
-        if road_id_end_wp != road_id_ego:
+
+        if (road_id_end_wp != road_id_ego and str(end_wp.next(10)[0].road_id) != road_id_ego) \
+            and (not ((int(road_id_end_wp) in [2, 3] and int(road_id_ego) in [467, 468, 477]) or int(road_id_ego)  in [12, 13, 879, 880, 886]) \
+                or not ((int(road_id_end_wp) in [12, 13] and int(road_id_ego) in [12, 13, 879, 880, 886]) or int(road_id_ego)  in [467, 468, 477])):
             end_wps[2].append(
                 get_waypoint_direction(
                     ego_vehicle, closest_start_wp, end_wp, direction_angle
                 )
             )
-        elif road_id_end_wp == road_id_ego:
+
+        else:
             end_wps[2].append("ego")
+
         end_wps[3].append(lane_id_end_wp)
+    
+
 
     # get distinct road id + corresponding direction from ego + end_wp
     junction_roads = []
@@ -1376,8 +1438,10 @@ def get_all_lanes(ego_vehicle, ego_wp, junction, road_lane_ids, direction_angle)
     for lane_id in road_lane_ids:  # iterate through all lanes of map
         for road in junction_roads:  # for each road of the junction
             if road[0] == lane_id.split("_")[0]:
-                lanes_all[road[1]].append(lane_id.split("_")[1])
-
+                if (junction_waypoints[0][0].get_junction().id == 1368) and int(lane_id.split("_")[1])*np.sign(ego_wp.lane_id) < 0 and int(road[0]) != 23:
+                    continue
+                else:
+                    lanes_all[road[1]].append(lane_id.split("_")[1])
     return lanes_all, junction_roads
 
 
@@ -1507,7 +1571,7 @@ def group_waypoints(waypoints):
     return groups
 
 
-def divide_bounding_box_into_boxes(junction):
+def divide_bounding_box_into_boxes(junction_waypoints):
     """
     Divide the bounding box of the given junction into smaller boxes.
 
@@ -1517,7 +1581,6 @@ def divide_bounding_box_into_boxes(junction):
     Returns:
         list: A list of boxes, where each box is represented as a list containing a carla.BoundingBox object and an integer value initialized to 0.
     """
-    junction_waypoints = junction.get_waypoints(carla.LaneType().Driving)
     junction_waypoints = list(sum(junction_waypoints, ()))
     grouped_waypoints = group_waypoints(junction_waypoints)
     locations = []
@@ -1554,8 +1617,7 @@ def divide_bounding_box_into_boxes(junction):
 
     return boxes
 
-
-def fill_boxes(boxes, ego_vehicle, world):
+def fill_boxes(boxes, ego_vehicle, world, junction_waypoints, traffic_light_entry_right):
     """
     Fill the boxes with information about surrounding cars.
 
@@ -1570,6 +1632,7 @@ def fill_boxes(boxes, ego_vehicle, world):
               1 - The ego vehicle is inside the box
               2 - Another surrounding car is inside the box
     """
+    special_junction_row = None
     surrounding_cars = []
     for actor in world.get_actors():
         if "vehicle" in actor.type_id:
@@ -1578,19 +1641,29 @@ def fill_boxes(boxes, ego_vehicle, world):
             )
             if distance_to_actor <= 100:
                 surrounding_cars.append(actor)
+    special_junction_rows = []
     for car in surrounding_cars:
         car_location = car.get_location()
-
+        if junction_waypoints[-1][0].get_junction().id == 1368 and distance(junction_waypoints[-1][0].transform.location, car_location) < 30 and world.get_map().get_waypoint(car_location).is_junction and not traffic_light_entry_right:
+            if car.id == ego_vehicle.id:
+                special_junction_rows.append((1, 1))# (row, cell value)
+            elif world.get_map().get_waypoint(car_location).road_id != 1450:
+                special_junction_rows.append((1, 2))# (row, cell value)
+            continue
         for box in boxes:
             if car.id == ego_vehicle.id:
                 if box[0].contains(car_location, carla.Transform()):
                     box[1] = 1
             else:
                 if box[0].contains(car_location, carla.Transform()):
-                    box[1] = 2
+                    if box[1] == 1:
+                        continue # TODO: Other car gets lost if in the same box as the ego box
+                    # here: check the relative pos. of the other car and safe it into list[(other_car, rel_pos)]
+                    # later when matrix is build, add these other cars to the matrix based on the rel_pos
+                    else:
+                        box[1] = 2
 
-    return boxes
-
+    return boxes, special_junction_rows
 
 def build_grid(boxes):
     """
@@ -1714,7 +1787,7 @@ def get_grid_corners(junction_shape):
     return [[y_1, x_1], [y_1, x_2], [y_2, x_1], [y_2, x_2]]
 
 
-def detect_cars_inside_junction(key_value_pairs, ego_vehicle, junction, yaw, world):
+def detect_cars_inside_junction(key_value_pairs, ego_vehicle, junction_waypoints, yaw, world):
     """
     Detect and mark cars inside the junction in the grid representation.
 
@@ -1746,14 +1819,21 @@ def detect_cars_inside_junction(key_value_pairs, ego_vehicle, junction, yaw, wor
     cols_min = min([value[1] for value in grid_corners])
     cols_max = max([value[1] for value in grid_corners])
 
+    if sum(key_value_pairs[0][1]) == 3 * 8: # all values of first row == 3 --> no special row needed (lol)
+        traffic_light_entry_right = True
+    else:
+        traffic_light_entry_right = False
+                    
+
     rows = rows_max - rows_min + 1
     columns = cols_max - cols_min + 1
 
     if check_flipping_rows_and_columns(ego_vehicle):
         rows, columns = columns, rows
-    boxes = divide_bounding_box_into_boxes(junction)
+        
+    boxes = divide_bounding_box_into_boxes(junction_waypoints)
 
-    boxes = fill_boxes(boxes, ego_vehicle, world)
+    boxes, special_junction_rows = fill_boxes(boxes, ego_vehicle, world, junction_waypoints, traffic_light_entry_right)
 
     grid = build_grid(boxes)
 
@@ -1766,13 +1846,18 @@ def detect_cars_inside_junction(key_value_pairs, ego_vehicle, junction, yaw, wor
             key_value_pairs[i][1][j] = cell[1]
             j = j + 1
         i = i + 1
-
+    for special_junction_row in special_junction_rows:
+        if special_junction_row is not None:
+            if key_value_pairs[special_junction_row[0]][1][4] != 1:
+                key_value_pairs[special_junction_row[0]][1][4] = special_junction_row[1] # TODO: if we turn left then we currently ignore cars turning right that are already on junction
+            else:
+                key_value_pairs[special_junction_row[0]+1][1][4] = special_junction_row[1] # TODO: if we turn left then we currently ignore cars turning right that are already on junction
     return dict(key_value_pairs)
 
 
 def is_highway_junction(ego_vehicle, ego_wp, junction, road_lane_ids, direction_angle):
     lanes_all, junction_roads = get_all_lanes(
-        ego_vehicle, ego_wp, junction, road_lane_ids, direction_angle
+        ego_vehicle, ego_wp, junction.get_waypoints(carla.LaneType().Driving), road_lane_ids, direction_angle
     )
 
     highway_junction = False
@@ -1796,6 +1881,7 @@ class Point:
 
 # cluster wps of highway junctions
 def remove_wps(closest_waypoint, wps):
+    is_traffic_light_junction = False
     wps_on_ego_lane = []
     for group in wps:
         enough_distance = (
@@ -1815,21 +1901,34 @@ def remove_wps(closest_waypoint, wps):
         )
         for wp in wps_on_ego_lane:
             if (
-                distance(wp[0].transform.location, group[0].transform.location) < 7
+                (distance(wp[0].transform.location, group[0].transform.location) < 7
                 and enough_distance
-                and group not in wps_on_ego_lane
+                and group not in wps_on_ego_lane)
+                or group[0].road_id in [1450, 1412, 1421, 1432, 1442] 
             ):
-                exit_and_entry_wp.append(group)
+                if group[0].road_id in [1450, 1412, 1421, 1432, 1442]:
+                    is_traffic_light_junction = True
+                    exit_and_entry_wp.append((group[0], group[0]))
+                else:    
+                    exit_and_entry_wp.append(group)
                 break
             elif (
-                distance(wp[1].transform.location, group[1].transform.location) < 7
+                (distance(wp[1].transform.location, group[1].transform.location) < 7
                 and enough_distance
-                and group not in wps_on_ego_lane
+                and group not in wps_on_ego_lane)
             ):
                 exit_and_entry_wp.append(group)
 
+    if is_traffic_light_junction:
+        wps_on_ego_lane[0] = (wps_on_ego_lane[0][1], wps_on_ego_lane[0][0])
+        wps_on_ego_lane[1] = (wps_on_ego_lane[1][1], wps_on_ego_lane[1][0])
+
+    if is_traffic_light_junction: #and closest_waypoint.previous(2)[0].lane_id > 0:
+        exit_and_entry_wp = exit_and_entry_wp[0:2]
+
     result = wps_on_ego_lane + exit_and_entry_wp
     return list(dict.fromkeys(result))
+
 
 
 def clustering_algorithm(points, threshold):
@@ -1900,13 +1999,23 @@ def prepare_waypoints(closest_waypoint, wps, ego_waypoint):
 # highway entry/exit
 def get_exit_or_entry(wps, exit_or_entry, junction):
     junction_wps = junction.get_waypoints(carla.LaneType().Driving)
+    first = []
+    second = []
+
+    # special case for junction 1368: traffic light junction on highway
+    if junction.id == 1368:
+        entry_road_ids = [1450, 1412, 1421, 1432, 1442]
+        for start_wp, end_wp in junction_wps:
+            if start_wp.road_id in entry_road_ids:
+                first.append(start_wp)
+                second.append(end_wp)
+        return (first, second)  # first = start_wp, second = end_wp
 
     if exit_or_entry == "exit":
         order = ["end", "start"]
     elif exit_or_entry == "entry":
         order = ["start", "end"]
-    first = []
-    second = []
+
     for group in wps:
         if len(group) != 4:
             for wp in group:
@@ -1931,37 +2040,47 @@ def get_exit_or_entry(wps, exit_or_entry, junction):
         return (first, second)  # first = start_wp, second = end_wp
 
 
-def get_highway_shape(wps_grouped, junction):      
+def get_highway_shape(wps_grouped, junction, ego_waypoint): #TODO new parameter ego_waypoint     
     # Check if entry or exit
     wps_grouped.sort(key=len)
-    if len(wps_grouped[0]) == 2:
-        if wps_grouped[0][0][1] != wps_grouped[0][1][1]:
-            highway_type = "entry_and_exit"
-        elif wps_grouped[0][0][1] == "start":
-            highway_type = "dual_entry"
-        elif wps_grouped[0][0][1] == "end":
-            highway_type = "dual_exit"
-
-    elif len(wps_grouped[0]) == 1:
-        if wps_grouped[0][0][1] == "start":
-            highway_type = "single_entry"
+    # special case for junction 1368: traffic light junction on highway
+    if junction.id == 1368:
+        if ego_waypoint.road_id == 41:
+            highway_type = "traffic_light_junction_entry_left"
+        elif ego_waypoint.road_id == 40:
+            highway_type = "traffic_light_junction_entry_right"
         else:
-            highway_type = "single_exit"
-    else:
-        print("Junction object w/o shape")
-        return ("normal_highway", 4, None, None)
-
-    # Check number of lanes
-    road_ids = [wp[0].road_id for wp in wps_grouped[1]]
-    if len(set(road_ids)) == 1:
+            print("Error in get_highway_shape: Junction 1368 (traffic light junction on highway on Map04), ego vehicle not on road 40 or 41")
         straight_lanes = 4
     else:
-        straight_lanes = 3
+        if len(wps_grouped[0]) == 2:
+            if wps_grouped[0][0][1] != wps_grouped[0][1][1]:
+                highway_type = "entry_and_exit"
+            elif wps_grouped[0][0][1] == "start":
+                highway_type = "dual_entry"
+            elif wps_grouped[0][0][1] == "end":
+                highway_type = "dual_exit"
 
+        elif len(wps_grouped[0]) == 1:
+            if wps_grouped[0][0][1] == "start":
+                highway_type = "single_entry"
+            else:
+                highway_type = "single_exit"
+        else:
+            print("Junction object w/o shape")
+            return ("normal_highway", 4, None, None)
+
+        # Check number of lanes
+        road_ids = [wp[0].road_id for wp in wps_grouped[1]]
+        if len(set(road_ids)) == 1:
+            straight_lanes = 4
+        else:
+            straight_lanes = 3
+    # TODO: STRAIGHT LANES UND ENTRY WPS /   EXIT WPS
     entry_wps = None
     exit_wps = None
     # get start & end waypoint of entry / exit as tuple
-    if highway_type in ["entry_and_exit", "single_entry", "dual_entry"]:
+    if highway_type in ["entry_and_exit", "single_entry", "dual_entry", "traffic_light_junction_entry_left", "traffic_light_junction_entry_right"]:
         entry_wps = get_exit_or_entry(wps_grouped, "entry", junction)
     if highway_type in ["entry_and_exit", "single_exit", "dual_exit"]:
         exit_wps = get_exit_or_entry(wps_grouped, "exit", junction)
@@ -1997,8 +2116,44 @@ def search_entry_or_exit(
     junction_id,
     right_lane_end_wp,
     right_lane_start_wp,
+    ghost=False,
+    on_entry=False
 ):
     ego_waypoint = world_map.get_waypoint(ego_vehicle_location)
+    
+    # if on entry/exit, fix matrix:
+    if ghost and highway_shape[0] == "entry_and_exit": 
+        if on_entry:
+            col_entryExit = 1
+            # exit lane 
+            matrix[6][1][1] = 0
+            matrix[7][1][1] = 0
+            # entry lane
+            matrix[6][1][3] = 0
+            matrix[7][1][3] = 0
+        else:
+            col_entryExit = 3
+            # exit lane 
+            matrix[6][1][3] = 0
+            matrix[7][1][3] = 0
+            # entry lane
+            matrix[6][1][5] = 0
+            matrix[7][1][5] = 0
+        return True, col_entryExit, matrix
+    elif ghost and highway_shape[0] == "dual_entry": 
+        col_entryExit = 3
+        # 1st entry lane 
+        matrix[6][1][3] = 0
+        matrix[7][1][3] = 0
+        # 2nd entry lane
+        matrix[6][1][4] = 0
+        matrix[7][1][4] = 0
+        return True, col_entryExit, matrix
+    elif ghost:
+        col_entryExit = 3
+        matrix[6][1][3] = 0
+        matrix[7][1][3] = 0
+        return True, col_entryExit, matrix
 
     # for dual entry/exit we compare yaw values based on most right highway lane
     if highway_shape[0] in ["dual_exit", "dual_entry"]:
@@ -2038,7 +2193,7 @@ def search_entry_or_exit(
         if highway_shape[0] in [
             "entry_and_exit"
         ]:  # special because entry & exit are very close compared to normal column distance in matrix
-            col_distances = [55, 35, 10, 6]
+            col_distances = [55, 20, 10, 6]
         elif highway_shape[0] in ["dual_exit"]:  # special because for dual exit
             col_distances = [55, 35, 20, 6]
         else:
@@ -2062,6 +2217,8 @@ def search_entry_or_exit(
                 wp = initial_wp.next(col_distance + j)[0]
             # Look behind
             elif direction == "behind":
+                if col_distance == 6 and j == -5:
+                    continue
                 # j = 0
                 if highway_shape[0] == ["dual_entry", "dual_exit"]:
                     wp = initial_wp.previous(col_distance + j)[0]
@@ -2106,6 +2263,33 @@ def search_entry_or_exit(
                         right_lane_end_wp.transform.rotation.yaw
                     ) - abs(wp.transform.rotation.yaw)
                     already_in_curve = abs(yaw_difference) > degree
+                elif highway_shape[0] in ["traffic_light_junction_entry_right"]:
+                    for entry_end_wp in entry_wps[1]:
+                        if entry_end_wp.road_id == 1450:
+                            distance_junction_end = get_distance_junction_end(wp)
+                            yaw_difference = abs(
+                                entry_end_wp.transform.rotation.yaw
+                            ) - abs(
+                                entry_end_wp
+                                .previous(distance_junction_end)[0]
+                                .transform.rotation.yaw
+                            )
+                            already_in_curve = abs(yaw_difference) < degree
+                            break
+                elif highway_shape[0] in ["traffic_light_junction_entry_left"]:
+                    # 1 entry lane from left with 4 road_ids, starting at the same position and ending on 4 different highway lanes
+                    for entry_end_wp in entry_wps[1]:
+                        if entry_end_wp.road_id == 1421: # road_id 1421 is middle lane ending on 2nd left lane of highway
+                            distance_junction_end = get_distance_junction_end(wp)
+                            yaw_difference = abs(
+                                entry_end_wp.transform.rotation.yaw
+                            ) - abs(
+                                entry_end_wp
+                                .previous(distance_junction_end)[0]
+                                .transform.rotation.yaw
+                            )
+                            already_in_curve = abs(yaw_difference) < degree
+                            break
                 else:
                     already_in_curve = False
 
@@ -2120,8 +2304,12 @@ def search_entry_or_exit(
 
                 # if wp already in curve, update matrix
                 if already_in_curve:
-                    matrix[6][1][z + i] = 0
-                    matrix[7][1][z + i] = 0
+                    if highway_shape[0] in ["traffic_light_junction_entry_left"]:
+                        matrix[0][1][z + i] = 0
+                        matrix[1][1][z + i] = 0
+                    else:
+                        matrix[6][1][z + i] = 0
+                        matrix[7][1][z + i] = 0
                     col_entryExit = z + i
                     if (
                         z + i + 1 < 8
@@ -2139,10 +2327,14 @@ def search_entry_or_exit(
                         elif highway_shape[0] in ["dual_exit"]:
                             matrix[6][1][z + i + 1] = 0
                             matrix[7][1][z + i + 1] = 0
+                    if (z + i - 1 >= 0):
+                        if highway_shape[0] in ["traffic_light_junction_entry_right"]:
+                            matrix[6][1][z + i - 1] = 0
+                            matrix[7][1][z + i - 1] = 0
                     exit_entry_found = True
                     break
-
     return exit_entry_found, col_entryExit, matrix
+
 
 def insert_in_matrix(matrix, car, ego_vehicle, col, row):
     if car.id == ego_vehicle.id:
@@ -2187,8 +2379,10 @@ def update_matrix(
     direction_angle,
     ghost=False,
     on_entry = False,
+    is_2nd_update = False,
 ):
-    if highway_shape[1] == 3:
+
+    if highway_shape[1] == 3 and sum (matrix[list(matrix.keys())[5]]) == 24:
         matrix[list(matrix.keys())[5]] = [0, 0, 0, 0, 0, 0, 0, 0]
 
     matrix = list(matrix.items())
@@ -2203,18 +2397,25 @@ def update_matrix(
         degree = 20
     elif highway_shape[0] in ["dual_entry"] or highway_shape[0] in ["dual_exit"]:
         degree = 18  # TODO: test and fine tuning of degree
+    elif highway_shape[0] in [ "traffic_light_junction_entry_left", "traffic_light_junction_entry_right"]:
+        degree = 30
     else:
         # just in case
         degree = 20
 
     # get right_lane_end_wp & right_lane_start_wp for dual entry & exit surrounding cars angle calculation
-    for wps_group in wps:
-        if (len(wps_group) == 4) and (wps_group[0][1] == "end"):
-            right_lane_end_wp = get_right_lane_wp(wps_group)
-        elif (len(wps_group) == 4) and (wps_group[0][1] == "start"):
-            right_lane_start_wp = get_right_lane_wp(wps_group)
+    if highway_shape[0] in ["dual_entry", "dual_exit"]:
+        for wps_group in wps:
+            if (len(wps_group) == 4) and (wps_group[0][1] == "end"):
+                right_lane_end_wp = get_right_lane_wp(wps_group)
+            elif (len(wps_group) == 4) and (wps_group[0][1] == "start"):
+                right_lane_start_wp = get_right_lane_wp(wps_group)
+    else:
+        right_lane_end_wp = None
+        right_lane_start_wp = None
 
-    # First: Look behind ego
+
+    # First: Look behind ego   
     exit_entry_found, col_entryExit, matrix = search_entry_or_exit(
         world_map,
         ego_location,
@@ -2229,6 +2430,8 @@ def update_matrix(
         junction.id,
         right_lane_end_wp,
         right_lane_start_wp,
+        ghost,
+        on_entry,
     )
     # if not yet found, look in front
     if exit_entry_found == False:
@@ -2246,7 +2449,10 @@ def update_matrix(
             junction.id,
             right_lane_end_wp,
             right_lane_start_wp,
+            ghost,
+            on_entry
         )
+
 
     # get road ids of: entry/exit, city road before and highway road after junction object
     entry_road_id = []
@@ -2291,13 +2497,13 @@ def update_matrix(
         )
         if col is None:
             continue
+
         # matrix = list(matrix)
         if matrix:
             ego_already_in_matrix = False
             for key, row in matrix:
                 if 1 in row:
                     ego_already_in_matrix = True
-
             if (ego_already_in_matrix and car.id == ego_vehicle.id):
                 continue
             other_car_waypoint = world_map.get_waypoint(car.get_location())
@@ -2347,6 +2553,9 @@ def update_matrix(
                             on_exit_street = True
                         else:
                             on_exit_street = False
+                    else:
+                        on_exit_street = False
+
                 else:
                     on_exit_street = False
                 if (other_car_road_id in entry_city_road) and (col_entry < 8) and not on_exit_street:
@@ -2392,9 +2601,12 @@ def update_matrix(
                         .next(distance_junction_start)[0]
                         .transform.rotation.yaw
                     )
-             
-            already_in_curve = abs(yaw_difference) > degree
-            already_after_curve = abs(yaw_difference) > degree * 2
+            try:
+                already_in_curve = abs(yaw_difference) > degree
+                already_after_curve = abs(yaw_difference) > degree * 2
+            except UnboundLocalError:
+                already_after_curve = False
+                already_in_curve = False
             if not on_entry:
                 if already_after_curve:
                     row = 7
@@ -2405,16 +2617,7 @@ def update_matrix(
                     row = 5
             else:
                 row = 5
-                """
-                distance_bounding_box = distance(junction.bounding_box.location, car.get_location())
-                print(distance_bounding_box)
-                if distance_bounding_box < 30:
-                    row = 5
-                if distance_bounding_box < 40:
-                    row = 6
-                else:
-                    row = 7
-                """
+
             if already_in_curve:
                 if highway_shape[0] in ["entry_and_exit"]:
                     col_entry = col_entryExit + 2
@@ -2469,6 +2672,10 @@ def update_matrix(
                             row = row - 1
                     col_entry = col
                 col_exit = col
+            
+            # if on exit lane, don't jump back! 
+            if ghost and not on_entry:
+                col_exit = 3
 
             entry_streets = entry_road_id + entry_highway_road
             exit_streets = exit_road_id + exit_highway_road
@@ -2482,9 +2689,9 @@ def update_matrix(
 
 
 def get_waypoint_on_highway_junction(
-    ego_waypoint, ego_vehicle_location, wps, world_map
+    junction, ego_waypoint, ego_vehicle_location, wps, world_map
 ):
-    bbx_location = get_junction_ahead(ego_waypoint, 40).bounding_box.location
+    bbx_location = junction.bounding_box.location
 
     # Calculate the direction vector from bounding box to ego vehicle
     direction = ego_vehicle_location - bbx_location
@@ -2497,7 +2704,11 @@ def get_waypoint_on_highway_junction(
         direction /= distance
 
     # Move the bounding box location closer to the ego vehicle by a certain distance (e.g., 5 meters)
-    distance_to_move = 5.0
+    if (ego_waypoint.road_id == 23) and ego_waypoint.lane_id == -2: # before traffic light junction & left turn entry ahead
+        distance_to_move = -15.0 # move bbox away from ego towards highway lanes in the direction left
+    else:
+        distance_to_move = 5.0
+        
     new_bbx_location = bbx_location + direction * distance_to_move
 
     highway_waypoint = world_map.get_waypoint(new_bbx_location).previous(40)[0]
@@ -2507,7 +2718,6 @@ def get_waypoint_on_highway_junction(
     )
 
     return closest_waypoint, new_bbx_location
-
 
 #####################
 # Functions not in use
@@ -2585,6 +2795,57 @@ def getJunctionShapeForHighway(lanes_all):
             key_value_pairs[highway_exit_at][1][i] = 3
 
     return key_value_pairs
+
+
+def safe_data(ego_vehicle, matrix, street_type):
+    steering_angle = get_steering_angle(ego_vehicle)
+    speed = get_speed(ego_vehicle)
+    print("============================================================")
+    if matrix:
+        row_data = get_row(matrix)
+        row_data["speed"] = speed
+        row_data["steering_angle"] = steering_angle
+        row_data["street_type"] = street_type
+        # df = df.append(row_data, ignore_index=True)
+
+
+
+
+
+
+# Highway exits
+
+def get_wp_x_units_to_left(ego_vehicle, x):
+    location = ego_vehicle.get_location()
+    transform = ego_vehicle.get_transform()
+
+    ego_forward_vector = transform.get_forward_vector()
+    left_vector = carla.Vector3D(x=-ego_forward_vector.y, y=ego_forward_vector.x, z=ego_forward_vector.z)
+
+    target_location = location - left_vector * 3
+    target_location = carla.Location(target_location.x, target_location.y, target_location.z)
+    return target_location
+
+
+def angle_between_vectors(a, b):
+    dot = a.x * b.x + a.y * b.y
+    mag_a = math.sqrt(a.x**2 + a.y**2)
+    mag_b = math.sqrt(b.x**2 + b.y**2)
+    cos_theta = dot / (mag_a * mag_b)
+    theta = math.acos(cos_theta)
+    return math.degrees(theta)
+
+
+def check_ego_exit_highway(ego_vehicle, ego_waypoint, highway_forward_vector, highway_shape, current_lanes):
+    if highway_forward_vector and "exit" in highway_shape[0] and highway_shape[0] != "dual_exit":
+        if (ego_waypoint.lane_id == max(current_lanes, key=abs) or len(current_lanes) <=2) and angle_between_vectors(ego_vehicle.get_transform().get_forward_vector(), highway_forward_vector) >= 8:
+            return True
+        else:
+            return False
+    else: 
+        return False
+
+
 
 
 ### OLD VERSIONS ###
