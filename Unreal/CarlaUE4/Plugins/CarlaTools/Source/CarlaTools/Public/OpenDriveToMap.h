@@ -25,7 +25,7 @@ class UMaterialInstance;
  *
  */
 UCLASS(Blueprintable, BlueprintType)
-class CARLATOOLS_API UOpenDriveToMap : public UObject
+class CARLATOOLS_API UOpenDriveToMap : public UEditorUtilityObject
 {
   GENERATED_BODY()
 #if WITH_EDITOR
