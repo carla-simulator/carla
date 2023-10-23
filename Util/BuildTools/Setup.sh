@@ -277,7 +277,7 @@ unset GTEST_BASENAME
 
 RECAST_HASH=ffdc02
 RECAST_COMMIT=ffdc02a0e807e76998a6313eeec00d2bd3176162
-RECAST_BASENAME=recast-${RECAST_HASH}-${CXX_TAG}
+RECAST_BASENAME=recast-${CXX_TAG}
 
 RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
 RECAST_LIBPATH=${PWD}/${RECAST_BASENAME}-install/lib
@@ -297,7 +297,7 @@ else
 
   pushd ${RECAST_BASENAME}-source >/dev/null
 
-  git reset --hard ${RECAST_COMMIT}
+  git checkout carla
 
   popd >/dev/null
 
