@@ -53,8 +53,9 @@ def check_road_change(ego_vehicle_location, road_lane_ids, front, world_map):
         for id in road_lane_ids
         if str(ego_vehicle_waypoint.road_id) == id.split("_")[0]
     ]
-    next_lanes.sort()
-    our_lanes.sort()
+    if next_lanes:
+        next_lanes.sort()
+        our_lanes.sort()
     if next_lanes == our_lanes:
         return (next_road_id, next_lanes)
     else:
@@ -758,6 +759,14 @@ def initialize_dataframe():
     # Initialize the DataFrame with empty values
     return pd.DataFrame(columns=column_names)
 
+def initialize_error_dataframe():
+    col_names = []
+
+    col_names.append("location")
+    col_names.append("error")
+
+    return pd.DataFrame(columns=col_names)
+
 
 def get_row(matrix):
     """
@@ -821,6 +830,28 @@ def is_junction_ahead(ego_waypoint, distance):
     for x in list(range(1, distance + 1)):
         if ego_waypoint.next(x)[0].is_junction:
             return True
+    if ego_waypoint.is_junction:
+        return True
+    return False
+
+
+def is_junction_behind(ego_waypoint, distance):
+    """
+    Check if a junction is ahead of the ego vehicle within a specified distance.
+
+    Parameters:
+        ego_waypoint (carla.Waypoint): The current waypoint of the ego vehicle.
+        distance (int): The maximum distance (in meters) to search for a junction ahead.
+
+    Returns:
+        bool: True if a junction is found ahead within the specified distance, False otherwise.
+    """
+    # return True if junction is ahead of ego in <= distance meter, start checking at 1m ahead and increment by 1 every loop
+    for x in list(range(1, distance + 1)):
+        if ego_waypoint.previous(x)[0].is_junction:
+            return True
+    if ego_waypoint.is_junction:
+        return True
     return False
 
 
@@ -2797,7 +2828,7 @@ def getJunctionShapeForHighway(lanes_all):
     return key_value_pairs
 
 
-def safe_data(ego_vehicle, matrix, street_type):
+def safe_data(ego_vehicle, matrix, street_type, df):
     steering_angle = get_steering_angle(ego_vehicle)
     speed = get_speed(ego_vehicle)
     print("============================================================")
@@ -2806,7 +2837,8 @@ def safe_data(ego_vehicle, matrix, street_type):
         row_data["speed"] = speed
         row_data["steering_angle"] = steering_angle
         row_data["street_type"] = street_type
-        # df = df.append(row_data, ignore_index=True)
+        df = df._append(row_data, ignore_index=True)
+        return df
 
 
 
