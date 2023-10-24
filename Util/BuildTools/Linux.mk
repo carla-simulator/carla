@@ -3,7 +3,7 @@ default: help
 help:
 	@less ${CARLA_BUILD_TOOLS_FOLDER}/Linux.mk.help
 
-launch: LibCarla.server.release osm2odr
+launch: LibCarla.server.release osm2odr downloadplugins
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUE4Plugins.sh --build $(ARGS)
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build --launch $(ARGS)
 
@@ -138,7 +138,7 @@ LibCarla.client.rss.release: setup ad-rss
 plugins:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Plugins.sh $(ARGS)
 
-setup:
+setup downloadplugins:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Setup.sh $(ARGS)
 
 ad-rss:
