@@ -61,7 +61,13 @@ if ${REMOVE_INTERMEDIATE} ; then
 
   log "Cleaning intermediate files and folders."
 
-  rm -Rf ${CARLAUE4_STREETMAP_FOLDER}*
+  UE4_INTERMEDIATE_FOLDERS="Binaries Build Intermediate DerivedDataCache"
+
+  pushd "${CARLAUE4_STREETMAP_FOLDER}" >/dev/null
+
+  rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
+
+  popd >/dev/null
 
 fi
 
@@ -71,7 +77,6 @@ fi
 
 if ${BUILD_STREETMAP} ; then
   log "Downloading STREETMAP plugin."
-  # [ ! -d ${STREETMAP_BUILD_FOLDER} ] && mkdir ${STREETMAP_BUILD_FOLDER}
   if ${GIT_PULL} ; then
     if [ ! -d ${CARLAUE4_STREETMAP_FOLDER} ] ; then
       git clone -b ${STREETMAP_BRANCH} ${STREETMAP_REPO} ${CARLAUE4_STREETMAP_FOLDER}
