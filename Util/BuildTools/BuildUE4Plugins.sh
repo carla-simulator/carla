@@ -1,5 +1,5 @@
 #! /bin/bash
-DOC_STRING="Build STREETMAP."
+DOC_STRING="Download StreetMapUE4 Plugin."
 
 USAGE_STRING=$(cat <<- END
 Usage: $0 [-h|--help]
@@ -18,7 +18,7 @@ CURRENT_STREETMAP_COMMIT=6939683992ee580c2c7bd65e6e42d7f0fcb3e1fa
 STREETMAP_BRANCH=master
 STREETMAP_REPO=https://github.com/carla-simulator/StreetMap.git
 
-OPTS=`getopt -o h --long help,rebuild,build,clean,carsim,no-pull -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long build,rebuild,clean, -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -87,4 +87,4 @@ if ${BUILD_STREETMAP} ; then
   fi
 fi
 
-log " STREETMAP Success!"
+log "StreetMap Success!"
