@@ -13,6 +13,8 @@ import numpy as np
 import random
 warnings.filterwarnings("ignore")
 from utils import *
+import sys
+import os
 
 if __name__ == "__main__":
     # config:
@@ -24,7 +26,6 @@ if __name__ == "__main__":
     # to the simulator. Here we'll assume the simulator is accepting
     # requests in the localhost at port 2000.
     client = carla.Client("localhost", 2000)
-    client.set_timeout(2.0)
     print("client found")
     # Get traffic manager
     traffic_manager = client.get_trafficmanager()
@@ -48,7 +49,7 @@ if __name__ == "__main__":
 
     # Now we need to give an initial transform to the vehicle. We choose a
     # random transform from the list of recommended spawn points of the map.
-    transform = random.choice(world.get_map().get_spawn_points())
+    transform = world.get_map().get_spawn_points()[0]
 
     # So let's tell the world to spawn the vehicle.
     ego_vehicle = world.spawn_actor(bp, transform)
@@ -338,15 +339,17 @@ if __name__ == "__main__":
             df = safe_data(ego_vehicle, matrix, street_type, df)
 
             # clock.tick_busy_loop(60)
-            time.sleep(0.3)
+            time.sleep(0.1)
             world.tick()
         
         except Exception as e:
-            new_row = {"location": ego_location, "error": e}
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            new_row = {"location": ego_location, "error": e, "fname": fname, "line": exc_tb.tb_lineno, "exc_type": exc_type}
             df_errors = df_errors._append(new_row, ignore_index=True)
             continue
 
-    df.to_csv("errors.csv")
+    df_errors.to_csv("errors.csv")
     df.to_csv("test.csv")
     vehicles_list = [ego_vehicle]
     print("\ndestroying %d vehicles" % len(vehicles_list))
