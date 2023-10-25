@@ -25,6 +25,15 @@ UGenerateTileCommandlet::UGenerateTileCommandlet()
 #endif
 }
 
+UGenerateTileCommandlet::UGenerateTileCommandlet(const FObjectInitializer& Initializer)
+  : Super(Initializer)
+{
+#if WITH_EDITOR
+  ConstructorHelpers::FClassFinder<UOpenDriveToMap> OpenDrivelassFinder(TEXT("/CarlaTools/OnroadMapGenerator/BP_OpenDriveToMap"));
+  OpenDriveClass = OpenDrivelassFinder.Class;
+#endif
+}
+
 #if WITH_EDITORONLY_DATA
 
 int32 UGenerateTileCommandlet::Main(const FString &Params)

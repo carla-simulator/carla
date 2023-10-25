@@ -32,6 +32,7 @@ public:
 
   /// Default constructor.
   UGenerateTileCommandlet();
+  UGenerateTileCommandlet(const FObjectInitializer &);
 
 #if WITH_EDITORONLY_DATA
 
