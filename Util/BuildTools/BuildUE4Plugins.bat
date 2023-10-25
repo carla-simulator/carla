@@ -1,4 +1,4 @@
-@echo off
+@REM @echo off
 setlocal enabledelayedexpansion
 
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
