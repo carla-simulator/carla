@@ -289,7 +289,7 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
   # MAPS_TO_COOK is read into an array as tokens separated by IFS
   read -ra ADDR <<< "$MAPS_TO_COOK"
   for i in "${ADDR[@]}"; do # access each element of array
-    
+
     XODR_FILE_PATH="${CARLAUE4_ROOT_FOLDER}/Content${i:5}"
     MAP_NAME=${XODR_FILE_PATH##*/}
     XODR_FILE=$(find "${CARLAUE4_ROOT_FOLDER}/Content" -name "${MAP_NAME}.xodr" -print -quit)
@@ -318,17 +318,12 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
     done
   done
 
-    rm -Rf "./CarlaUE4/Metadata"
-    rm -Rf "./CarlaUE4/Plugins"
-    rm -Rf "./CarlaUE4/Content/${PACKAGE_NAME}/Maps/${PROPS_MAP_NAME}"
-    rm -f "./CarlaUE4/AssetRegistry.bin"
-
   if ${DO_TARBALL} ; then
-  
+
     if ${SINGLE_PACKAGE} ; then
-      tar -rf ${DESTINATION} *
+      tar -rf ${DESTINATION} "./CarlaUE4/Content/${PACKAGE_NAME}/"
     else
-      tar -czf ${DESTINATION}.gz *
+      tar -czf ${DESTINATION}.gz "./CarlaUE4/Content/${PACKAGE_NAME}/"
     fi
 
     popd >/dev/null
