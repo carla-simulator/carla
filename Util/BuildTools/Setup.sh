@@ -331,9 +331,7 @@ unset GTEST_BASENAME
 # -- Get Recast&Detour and compile it with libc++ ------------------------------
 # ==============================================================================
 
-RECAST_HASH=0b13b0
-RECAST_COMMIT=0b13b0d288ac96fdc5347ee38299511c6e9400db
-RECAST_BASENAME=recast-${RECAST_HASH}-${CXX_TAG}
+RECAST_BASENAME=recast-${CXX_TAG}
 
 RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
 RECAST_LIBPATH=${PWD}/${RECAST_BASENAME}-install/lib
@@ -353,7 +351,7 @@ else
 
   pushd ${RECAST_BASENAME}-source >/dev/null
 
-  git reset --hard ${RECAST_COMMIT}
+  git checkout carla
 
   popd >/dev/null
 
@@ -794,7 +792,7 @@ if ${USE_PYTORCH} ; then
   cp -p ${LIBTORCH_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p ${LIBTORCHSCATTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p ${LIBTORCHCLUSTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-  
+
   mkdir -p ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   cp -p ${LIBTORCH_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   cp -p ${LIBTORCHSCATTER_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
