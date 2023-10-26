@@ -62,17 +62,17 @@ PythonAPI: LibCarla osm2odr
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --py3
 
 server: setup
-	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --server
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --server --generator "$(GENERATOR)"
 
 client: setup
-	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --client
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --client --generator "$(GENERATOR)"
 
 .PHONY: LibCarla
 LibCarla: setup
-	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --server --client
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --server --client --generator "$(GENERATOR)"
 
 setup:
-	@"${CARLA_BUILD_TOOLS_FOLDER}/Setup.bat" --boost-toolset msvc-14.2 $(ARGS)
+	@"${CARLA_BUILD_TOOLS_FOLDER}/Setup.bat" --boost-toolset msvc-14.2 --generator "$(GENERATOR)" $(ARGS)
 
 .PHONY: Plugins
 plugins:
@@ -82,7 +82,7 @@ deploy:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/Deploy.bat" $(ARGS)
 
 osm2odr:
-	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat" --build $(ARGS)
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat" --generator "$(GENERATOR)" --build $(ARGS)
 
 osmrenderer:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildOSMRenderer.bat"
