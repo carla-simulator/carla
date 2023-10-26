@@ -23,7 +23,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogCarlaToolsMapGenerateTileCommandlet, Log, All);
 
 
 UCLASS()
-class CARLA_API UGenerateTileCommandlet
+class CARLATOOLS_API UGenerateTileCommandlet
   : public UCommandlet
 {
   GENERATED_BODY()
