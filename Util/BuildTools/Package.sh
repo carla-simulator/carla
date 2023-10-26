@@ -318,12 +318,17 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
     done
   done
 
+  rm -Rf "./CarlaUE4/Metadata"
+  rm -Rf "./CarlaUE4/Plugins"
+  rm -Rf "./CarlaUE4/Content/${PACKAGE_NAME}/Maps/${PROPS_MAP_NAME}"
+  rm -f "./CarlaUE4/AssetRegistry.bin"
+
   if ${DO_TARBALL} ; then
 
     if ${SINGLE_PACKAGE} ; then
-      tar -rf ${DESTINATION} "./CarlaUE4/Content/${PACKAGE_NAME}/"
+      tar -rf ${DESTINATION} *
     else
-      tar -czf ${DESTINATION}.gz "./CarlaUE4/Content/${PACKAGE_NAME}/"
+      tar -czf ${DESTINATION}.gz *
     fi
 
     popd >/dev/null
