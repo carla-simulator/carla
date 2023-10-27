@@ -389,10 +389,10 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
             )
         )
 
-        @REM rmdir /S /Q "!BUILD_FOLDER!\CarlaUE4\Metadata"
-        @REM rmdir /S /Q "!BUILD_FOLDER!\CarlaUE4\Plugins"
-        @REM REM del "!BUILD_FOLDER!\CarlaUE4\Content\!PACKAGE_NAME!/Maps/!PROPS_MAP_NAME!"
-        @REM del "!BUILD_FOLDER!\CarlaUE4\AssetRegistry.bin"
+        rmdir /S /Q "!BUILD_FOLDER!\CarlaUE4\Metadata"
+        rmdir /S /Q "!BUILD_FOLDER!\CarlaUE4\Plugins"
+        REM del "!BUILD_FOLDER!\CarlaUE4\Content\!PACKAGE_NAME!/Maps/!PROPS_MAP_NAME!"
+        del "!BUILD_FOLDER!\CarlaUE4\AssetRegistry.bin"
 
         if %DO_TARBALL%==true (
 
@@ -410,7 +410,7 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
             pushd "!SOURCE!"
 
             if exist "%ProgramW6432%/7-Zip/7z.exe" (
-                "%ProgramW6432%/7-Zip/7z.exe" a "!DST_ZIP!" "!BUILD_FOLDER!\CarlaUE4\Content\!PACKAGE_NAME!/" -tzip -mmt -mx5
+                "%ProgramW6432%/7-Zip/7z.exe" a "!DST_ZIP!" . -tzip -mmt -mx5
             ) else (
                 rem https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.archive/compress-archive?view=powershell-6
                 powershell -command "& { Compress-Archive -Update -Path * -CompressionLevel Fastest -DestinationPath '!DST_ZIP!' }"
