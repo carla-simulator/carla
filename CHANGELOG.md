@@ -1,16 +1,19 @@
 ## Latest
 
+  * Added build support for VS2022 and Ninja for LibCarla and osm2odr on Windows
   * Fixed bug causing the TM's unstuck logic to incorrectly remove the vehicles in some situations.
   * Fixed the extra data in Directx textures, so we need to copy row by row on Windows to remove extra bytes on images
   * Added API functions to enable sensor data publishing for ROS2 without listen to it
     * `Sensor.enable_for_ros()`
     * `Sensor.disable_for_ros()`
     * `Sensor.is_enabled_for_ros()`
+  * Fixed vertices of big meshes (more than 65k vertices) in CarlaExporter
   * Fixed sensors to check for the stream to be ready (race condition)
   * Added empty actor
   * The spectator will be used to load tiles and actor in Large Maps when no other actors with the rolename 'ego_vehicle' or 'hero' are present. Added the `spectator_as_ego` to the `carla.WorldSettings()` to allow users to disable this behavior.
   * Fixed the import script, where could use any other TilesInfo.txt if the destination folder has many
   * Restored gamma value to 2.2 instead of 2.4
+  * CarlaExporter tool now exports the box collider and convex collider of the object if it has one, otherwise the mesh
   * Pedestrians with AI or in replayer are now faster around 10x. They have collisions disabled until they hit a vehicle.
   * Added API function to avoid replaying the spectator
     * `Client.set_replayer_ignore_spectator(bool)`
@@ -20,6 +23,8 @@
   * Add keyword arguments for `carla.TrafficManager` Python API functions
   * Fixed bug causing the `FPixelReader::SavePixelsToDisk(PixelData, FilePath)` function to crash due to pixel array not set correctly.
   * Collisions detected by the CollisionSensor no longer generate more than one event per frame.
+  * Fixed segfaults in Python API due to incorrect GIL locking under Python 3.10.
+  * Added API function to load a map only if it is different from the current one.
 
 ## CARLA 0.9.14
 
