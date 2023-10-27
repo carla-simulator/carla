@@ -91,7 +91,9 @@ public class CarlaTools : ModuleRules
         "HTTP",
         "RHI",
         "RenderCore",
-        "MeshMergeUtilities"
+        "MeshMergeUtilities",
+        "StreetMapImporting",
+        "StreetMapRuntime"
 				// ... add private dependencies that you statically link with here ...
 			}
 			);
