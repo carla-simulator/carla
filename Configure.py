@@ -7,12 +7,12 @@ import subprocess, tarfile, zipfile, requests, psutil, shutil, json, sys, os
 workspace_path = Path(__file__).parent.resolve()
 libcarla_path = workspace_path / 'LibCarla'
 python_api_path = workspace_path / 'PythonAPI'
-examples_folder = workspace_path / 'Examples'
+examples_path = workspace_path / 'Examples'
 build_path = workspace_path / 'Build'
-dist_folder = workspace_path / 'Dist'
-util_folder = workspace_path / 'Util'
-docker_utils_folder = util_folder / 'DockerUtils'
-build_tools_path = util_folder / 'BuildTools'
+dist_path = workspace_path / 'Dist'
+util_path = workspace_path / 'Util'
+docker_utils_path = util_path / 'DockerUtils'
+build_tools_path = util_path / 'BuildTools'
 # UE plugin
 carla_ue_path = workspace_path / 'Unreal' / 'CarlaUE4'
 carla_ue_plugin_root_path = carla_ue_path / 'Plugins'
@@ -44,15 +44,15 @@ if ue_workspace_path is None:
     print('Could not find Unreal Engine workspace. Please set the environment variable UE4_ROOT as specified in the docs.')
 ue_workspace_path = Path(ue_workspace_path)
 # Dependencies
-dependency_list_file_path = util_folder / 'Dependencies.json'
+dependency_list_file_path = util_path / 'Dependencies.json'
 # Houdini
 houdini_url = 'https://github.com/sideeffects/HoudiniEngineForUnreal.git'
 houdini_plugin_path = carla_ue_plugin_root_path / 'HoudiniEngine'
 houdini_commit_hash = '55b6a16cdf274389687fce3019b33e3b6e92a914'
-houdini_patch_path = util_folder / 'Patches' / 'houdini_patch.txt'
+houdini_patch_path = util_path / 'Patches' / 'houdini_patch.txt'
 # Omniverse
 omniverse_plugin_path = ue_workspace_path / 'Engine' / 'Plugins' / 'Marketplace' / 'NVIDIA' / 'Omniverse'
-omniverse_patch_path = util_folder / 'Patches' / 'omniverse_4.26'
+omniverse_patch_path = util_path / 'Patches' / 'omniverse_4.26'
 # Script settings
 parallelism = psutil.cpu_count(logical = True)
 force_sequential = False
@@ -294,6 +294,11 @@ def BuildCarlaUEMain(c : ConfigureContext):
 def BuildPythonAPIMain(c : ConfigureContext):
     print('Building Python API')
     pass
+
+
+
+def SetupUnrealEngine(c : ConfigureContext):
+    print('Setting up Unreal Engine.')
 
 
 
