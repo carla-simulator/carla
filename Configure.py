@@ -185,7 +185,7 @@ def UpdateDependency(dep : dict):
                 UpdateGitDependency(name, download_path, url)
             elif str(url).endswith('.tar.gz') or str(url).endswith('.zip'):
                 if download_path.exists():
-                    print(f'Dependency "{name}" already downloaded. Delete "{download_path}" if you wish for it to be re-downloaded.')
+                    print(f'Dependency "{name}" already present. Delete "{download_path}" if you wish for it to be downloaded again.')
                 else:
                     UpdateArchiveDependency(name, download_path, url)
             return
