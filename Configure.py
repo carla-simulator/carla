@@ -129,14 +129,19 @@ def UpdateArchiveDependency(name : str, path : Path, url : str):
     try:
         if url.endswith('.tar.gz'):
             archive_path = temp_path.with_suffix('.tar.gz')
+            extract_path = path.with_name(path.name + '-temp')
             temp_path.rename(archive_path)
-            with tarfile.TarFile.open(archive_path) as file:
-                file.extractall(path)
+            with tarfile.open(archive_path) as file:
+                file.extractall(extract_path)
+            entries = [ file for file in extract_path.iterdir() ]
+            if len(entries) == 1 and entries[0].is_dir():
+                Path(entries[0]).replace(path)
+            extract_path.rmdir()
         elif url.endswith('.zip'):
             archive_path = temp_path.with_suffix('.zip')
             temp_path.rename(archive_path)
             zipfile.ZipFile(archive_path).extractall(path)
-    except:
+    except Exception as err:
         print(f'Failed to extract dependency "{name}": {err}')
 
 
@@ -203,6 +208,11 @@ def UpdateDependencies(c : ConfigureContext):
             c.Dispatch(UpdateDependency, dep)
         except Exception as err:
             print(f'Failed to update dependency "{name}": {err}')
+
+
+
+def BuildDependencies(context : ConfigureContext):
+    pass
 
 
 
@@ -287,10 +297,6 @@ def BuildPythonAPIMain(c : ConfigureContext):
 def ParseCommandLine():
     arg_parser = ArgumentParser(description = __doc__)
     arg_parser.add_argument(
-        '-update-dependencies',
-        action='store_true',
-        help = 'Whether to update the CARLA dependencies.')
-    arg_parser.add_argument(
         '-build-libcarla',
         action='store_true',
         help = 'Build LibCarla.')
@@ -302,6 +308,14 @@ def ParseCommandLine():
         '-build-carla-ue',
         action='store_true',
         help = 'Build Carla Unreal.')
+    arg_parser.add_argument(
+        '-update-dependencies',
+        action='store_true',
+        help = 'Whether to update the CARLA dependencies.')
+    arg_parser.add_argument(
+        '-build-dependencies',
+        action='store_true',
+        help = 'Whether to build the CARLA dependencies.')
     arg_parser.add_argument(
         '-build-osm2odr',
         action='store_true',
@@ -354,6 +368,10 @@ def Main():
 
     if arg.update_dependencies or True:
         UpdateDependencies(c)
+        c.Wait()
+    
+    if arg.build_dependencies or True:
+        BuildDependencies(c)
         c.Wait()
 
     if arg.build_libcarla:
