@@ -127,20 +127,23 @@ def UpdateArchiveDependency(name : str, path : Path, url : str):
         print(f'Failed to download dependency "{name}": {err}')
     # Extract:
     try:
+        extract_path = path.with_name(path.name + '-temp')
         if url.endswith('.tar.gz'):
             archive_path = temp_path.with_suffix('.tar.gz')
-            extract_path = path.with_name(path.name + '-temp')
             temp_path.rename(archive_path)
             with tarfile.open(archive_path) as file:
                 file.extractall(extract_path)
-            entries = [ file for file in extract_path.iterdir() ]
-            if len(entries) == 1 and entries[0].is_dir():
-                Path(entries[0]).replace(path)
-            extract_path.rmdir()
         elif url.endswith('.zip'):
             archive_path = temp_path.with_suffix('.zip')
             temp_path.rename(archive_path)
-            zipfile.ZipFile(archive_path).extractall(path)
+            zipfile.ZipFile(archive_path).extractall(extract_path)
+        # Peel unnecessary outer directory:
+        entries = [ file for file in extract_path.iterdir() ]
+        if len(entries) == 1 and entries[0].is_dir():
+            Path(entries[0]).replace(path)
+            extract_path.rmdir()
+        else:
+            extract_path.rename(path)
     except Exception as err:
         print(f'Failed to extract dependency "{name}": {err}')
 
