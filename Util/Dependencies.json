@@ -1,0 +1,66 @@
+[
+    {
+        "name" : "boost",
+        "version" : "1.80.0",
+        "urls" :
+        [
+            "https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.zip",
+            "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_1_80_0.zip"
+        ]
+    },
+    {
+        "name" : "chrono",
+        "version" : "6.0.0",
+        "urls" : [ "https://github.com/projectchrono/chrono.git" ]
+    },
+    {
+        "name" : "eigen",
+        "version" : "3.3.7",
+        "urls" : [ "https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.zip" ]
+    },
+    {
+        "name" : "libpng",
+        "version" : "1.2.37",
+        "urls" : [ "http://downloads.sourceforge.net/gnuwin32/libpng-1.2.37-src.zip" ]
+    },
+    {
+        "name" : "proj",
+        "version" : "7.2.1",
+        "urls" : [ "https://download.osgeo.org/proj/proj-7.2.1.tar.gz" ]
+    },
+    {
+        "name" : "gtest",
+        "version" : "1.8.1",
+        "urls" : [ "https://github.com/google/googletest.git" ]
+    },
+    {
+        "name" : "zlib",
+        "version" : "latest",
+        "urls" :
+        [
+            "https://zlib.net/current/zlib.tar.gz"
+        ]
+    },
+    {
+        "name" : "xercesc",
+        "version" : "3.2.3",
+        "urls" :
+        [
+            "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.3.zip",
+            "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/xerces-c-3.2.3.zip"
+        ]
+    },
+    {
+        "name" : "sqlite",
+        "urls" : [ "https://www.sqlite.org/2021/sqlite-amalgamation-3340100.zip" ]
+    },
+    {
+        "name" : "rpclib",
+        "version" : "v2.2.1_c5",
+        "urls" : [ "https://github.com/carla-simulator/rpclib.git" ]
+    },
+    {
+        "name" : "recast",
+        "urls" : [ "https://github.com/carla-simulator/recastnavigation.git" ]
+    }
+]

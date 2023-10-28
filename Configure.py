@@ -1,14 +1,14 @@
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from argparse import ArgumentParser
 from pathlib import Path
-import subprocess, psutil, shutil, sys, os
+import subprocess, tarfile, zipfile, requests, psutil, shutil, json, sys, os
 
 # Basic paths
 workspace_path = Path(__file__).parent.resolve()
 libcarla_path = workspace_path / 'LibCarla'
 python_api_path = workspace_path / 'PythonAPI'
 examples_folder = workspace_path / 'Examples'
-build_folder = workspace_path / 'Build'
+build_path = workspace_path / 'Build'
 dist_folder = workspace_path / 'Dist'
 util_folder = workspace_path / 'Util'
 docker_utils_folder = util_folder / 'DockerUtils'
@@ -23,37 +23,28 @@ python_version_major = sys.version_info.major
 python_version_minor = sys.version_info.minor
 python_api_source_path = python_api_path / 'carla'
 # LibCarla
-libcarla_build_path_server = build_folder / 'libcarla-server-build'
-libcarla_build_path_client = build_folder / 'libcarla-client-build'
-libcarla_build_path_pytorch = build_folder / 'libcarla-pytorch-build'
+libcarla_build_path_server = build_path / 'libcarla-server-build'
+libcarla_build_path_client = build_path / 'libcarla-client-build'
+libcarla_build_path_pytorch = build_path / 'libcarla-pytorch-build'
 libcarla_install_path_server = carla_ue_plugin_deps_path
 libcarla_install_path_client = python_api_source_path / 'dependencies'
-libcarla_test_content_path = build_folder / 'test-content'
+libcarla_test_content_path = build_path / 'test-content'
 # OSM2ODR
-osm2odr_build_path = build_folder / 'libosm2dr-build'
-osm2odr_build_path_server = build_folder / 'libosm2dr-build-server'
-osm2odr_source_path = build_folder / 'libosm2dr-source'
+osm2odr_build_path = build_path / 'libosm2dr-build'
+osm2odr_build_path_server = build_path / 'libosm2dr-build-server'
+osm2odr_source_path = build_path / 'libosm2dr-source'
 # Misc
-test_results_path = build_folder / 'test-results'
-libstdcpp_toolchain_path = build_folder / 'LibStdCppToolChain.cmake'
-libcpp_toolchain_path = build_folder / 'LibCppToolChain.cmake'
-cmake_config_file_path = build_folder / 'CMakeLists.txt.in'
+test_results_path = build_path / 'test-results'
+libstdcpp_toolchain_path = build_path / 'LibStdCppToolChain.cmake'
+libcpp_toolchain_path = build_path / 'LibCppToolChain.cmake'
+cmake_config_file_path = build_path / 'CMakeLists.txt.in'
 # Unreal Engine
 ue_workspace_path = os.getenv('UE4_ROOT')
 if ue_workspace_path is None:
     print('Could not find Unreal Engine workspace. Please set the environment variable UE4_ROOT as specified in the docs.')
 ue_workspace_path = Path(ue_workspace_path)
-# Boost
-# ZLib
-# LibPNG
-# RPCLib
-# Google Test
-# Recast & Detour
-# Xercesc
-# Sqlite3
-# PROJ
-# Eigen
-# Chrono
+# Dependencies
+dependency_list_file_path = util_folder / 'Dependencies.json'
 # Houdini
 houdini_url = 'https://github.com/sideeffects/HoudiniEngineForUnreal.git'
 houdini_plugin_path = carla_ue_plugin_root_path / 'HoudiniEngine'
@@ -64,27 +55,89 @@ omniverse_plugin_path = ue_workspace_path / 'Engine' / 'Plugins' / 'Marketplace'
 omniverse_patch_path = util_folder / 'Patches' / 'omniverse_4.26'
 # Script settings
 parallelism = psutil.cpu_count(logical = True)
-sequential = False
+force_sequential = False
 cmake_generator = 'Ninja'
 
 
 
+class ConfigureContext:
+
+    def __init__(self, arg):
+        self.pool = ProcessPoolExecutor(parallelism)
+        self.futures = []
+        self.arg = arg
+    
+    def Dispatch(self, callable, arg):
+        if force_sequential:
+            callable(arg)
+        else:
+            self.futures.append(self.pool.submit(callable, arg))
+    
+    def Wait(self):
+        if len(self.futures) == 0 or force_sequential:
+            return
+        for future in as_completed(self.futures):
+            try:
+                future.result()
+            except Exception as e:
+                print(f'Failed to run task: {e}')
+            finally:
+                pass
+        self.futures = []
+
+
+
+def LaunchSubprocess(cmd : list, display_output : bool = False):
+    return subprocess.run(cmd) if display_output else subprocess.run(
+        cmd,
+        stdout = subprocess.PIPE,
+        stderr = subprocess.PIPE)
+        
+
+
 def UpdateGitDependency(name : str, path : Path, url : str):
     if path.exists():
-        subprocess.run([
+        LaunchSubprocess([
             'git',
             '-C', str(path),
             'pull'
         ]).check_returncode()
     else:
-        subprocess.run([
+        LaunchSubprocess([
             'git',
             '-C', str(path.parent),
             'clone',
-            '-depth', '1', '-single-branch',
+            '--depth', '1', '--single-branch',
             url,
-            name
+            path.stem
         ]).check_returncode()
+
+
+
+def UpdateArchiveDependency(name : str, path : Path, url : str):
+    # Download:
+    try:
+        temp_path = Path(str(path) + '.tmp')
+        with requests.Session() as session:
+            with session.get(url, stream = True) as result:
+                result.raise_for_status()
+                with open(temp_path, 'wb') as file:
+                    shutil.copyfileobj(result.raw, file)
+    except Exception as err:
+        print(f'Failed to download dependency "{name}": {err}')
+    # Extract:
+    try:
+        if url.endswith('.tar.gz'):
+            archive_path = temp_path.with_suffix('.tar.gz')
+            temp_path.rename(archive_path)
+            with tarfile.TarFile.open(archive_path) as file:
+                file.extractall(path)
+        elif url.endswith('.zip'):
+            archive_path = temp_path.with_suffix('.zip')
+            temp_path.rename(archive_path)
+            zipfile.ZipFile(archive_path).extractall(path)
+    except:
+        print(f'Failed to extract dependency "{name}": {err}')
 
 
 
@@ -93,10 +146,10 @@ def UpdateHoudini():
         'HoudiniEngine',
         carla_ue_plugin_root_path,
         houdini_url)
-    # subprocess.run([
+    # LaunchSubprocess([
     #     'git', '-C', str(houdini_plugin_path), 'checkout', houdini_commit_hash
     # ]).check_returncode()
-    # subprocess.run([
+    # LaunchSubprocess([
     #     'git', '-C', str(houdini_plugin_path), 'apply', str(houdini_patch_path)
     # ]).check_returncode()
 
@@ -116,20 +169,46 @@ def InstallNVIDIAOmniverse():
 
 
 
-def AwaitTasks(futures : list):
-    for future in as_completed(futures):
+def UpdateDependency(dep : dict):
+    name = dep['name']
+    download_path = build_path / f'{name}-source'
+    urls = dep.get('urls', [])
+    assert type(urls) == type([])
+    for url in urls:
         try:
-            future.result()
-        except Exception as e:
-            print(f'Failed to run task: {e}')
-            exit(-1)
-    futures = []
+            if str(url).endswith('.git'):
+                UpdateGitDependency(name, download_path, url)
+            elif str(url).endswith('.tar.gz') or str(url).endswith('.zip'):
+                if download_path.exists():
+                    print(f'Dependency "{name}" already downloaded. Delete "{download_path}" if you wish for it to be re-downloaded.')
+                else:
+                    UpdateArchiveDependency(name, download_path, url)
+            return
+        finally:
+            pass
+    print(f'Failed to update dependency "{name}".')
+    assert False
+
+
+
+def UpdateDependencies(c : ConfigureContext):
+    dependencies = []
+    with open(dependency_list_file_path, 'r') as file:
+        dependencies = json.load(file)
+    for dep in dependencies:
+        name = dep['name']
+        version = dep.get('version', 'N/A')
+        print(f'Updating {name} (version {version}).')
+        try:
+            c.Dispatch(UpdateDependency, dep)
+        except Exception as err:
+            print(f'Failed to update dependency "{name}": {err}')
 
 
 
 def BuildCarlaUnrealEditor():
     if os.name == 'nt':
-        subprocess.run([
+        LaunchSubprocess([
             ue_workspace_path / 'Engine' / 'Build' / 'BatchFiles' / 'Build.bat',
             'CarlaUE4', 'Win64', 'Development', '-WaitMutex', '-FromMsBuild',
             carla_ue_path / 'CarlaUE4.uproject'
@@ -137,15 +216,15 @@ def BuildCarlaUnrealEditor():
 
 
 
-def BuildCarlaUE(pool : ProcessPoolExecutor, futures : list):
-    futures.append(pool.submit(UpdateHoudini))
-    AwaitTasks(futures)
-    futures.append(pool.submit(BuildCarlaUnrealEditor))
+def BuildCarlaUE(context : ConfigureContext):
+    context.Dispatch(UpdateHoudini)
+    context.Wait()
+    context.Dispatch(BuildCarlaUnrealEditor)
 
 
 
 def ConfigureLibCarla(configuration : str):
-    return subprocess.run([
+    return LaunchSubprocess([
         'cmake',
         '-G', cmake_generator,
         f'-DCMAKE_BUILD_TYPE={configuration}',
@@ -157,7 +236,7 @@ def ConfigureLibCarla(configuration : str):
 
 
 def BuildLibCarlaCore(configuration : str):
-    return subprocess.run([
+    return LaunchSubprocess([
         'cmake', '-build', '.', '-config', 'Release', '-target', 'install'
     ])
 
@@ -177,43 +256,40 @@ def BuildLibCarlaServer():
 
 
 
-def BuildLibCarlaMain(pool : ProcessPoolExecutor, futures : list, arg):
-    if sequential:
-        if not arg.skip_libcarla_server:
-            BuildLibCarlaServer()
-        if not arg.skip_libcarla_client:
-            BuildLibCarlaClient()
-    else:
-        if not arg.skip_libcarla_server:
-            futures.append(pool.submit(BuildLibCarlaServer))
-        if not arg.skip_libcarla_client:
-            futures.append(pool.submit(BuildLibCarlaClient))
+def BuildLibCarlaMain(c : ConfigureContext):
+    if not c.arg.skip_libcarla_server:
+        c.Dispatch(BuildLibCarlaServer)
+    if not c.arg.skip_libcarla_client:
+        c.Dispatch(BuildLibCarlaClient)
 
 
 
-def BuildCarlaUEMain(pool : ProcessPoolExecutor, futures : list, arg):
+def BuildCarlaUEMain(c : ConfigureContext):
     print('Building Carla UE Editor')
     optional_modules = {}
-    optional_modules['CarSim'] = arg.use_unity
-    optional_modules['Chrono'] = arg.use_unity
-    optional_modules['Unity'] = arg.use_unity
-    optional_modules['Omniverse'] = arg.use_omniverse
+    optional_modules['CarSim'] = c.arg.use_unity
+    optional_modules['Chrono'] = c.arg.use_unity
+    optional_modules['Unity'] = c.arg.use_unity
+    optional_modules['Omniverse'] = c.arg.use_omniverse
     if optional_modules['Omniverse']:
-        futures.append(pool.submit(InstallNVIDIAOmniverse))
-    BuildCarlaUE(pool, futures)
-    AwaitTasks(futures)
+        c.Dispatch(InstallNVIDIAOmniverse)
+    BuildCarlaUE(c)
+    c.Wait()
 
 
 
-def BuildPythonAPIMain(pool : ProcessPoolExecutor, futures : list, arg):
+def BuildPythonAPIMain(c : ConfigureContext):
     print('Building Python API')
     pass
 
 
 
-def Main():
-    print('Starting.')
+def ParseCommandLine():
     arg_parser = ArgumentParser(description = __doc__)
+    arg_parser.add_argument(
+        '-update-dependencies',
+        action='store_true',
+        help = 'Whether to update the CARLA dependencies.')
     arg_parser.add_argument(
         '-build-libcarla',
         action='store_true',
@@ -264,24 +340,41 @@ def Main():
         '-use-omniverse',
         action='store_true',
         help = 'Whether to enable plugin "NVIDIA Omniverse".')
-    arg = arg_parser.parse_args()
+    return arg_parser.parse_args()
 
-    with ProcessPoolExecutor(parallelism) as pool:
-        futures = []
-        if arg.build_libcarla:
-            BuildLibCarlaMain(pool, futures, arg)
-            AwaitTasks()
-        if arg.build_python_api:
-            BuildPythonAPIMain(pool, futures, arg)
-            AwaitTasks()
-        if arg.build_carla_ue:
-            BuildCarlaUEMain(pool, futures, arg)
-            AwaitTasks()
+
+
+def Main():
+    print('Started.')
+    
+    build_path.mkdir(exist_ok = True)
+
+    arg = ParseCommandLine()
+    c = ConfigureContext(arg)
+
+    if arg.update_dependencies or True:
+        UpdateDependencies(c)
+        c.Wait()
+
+    if arg.build_libcarla:
+        BuildLibCarlaMain(c)
+        c.Wait()
+
+    if arg.build_python_api:
+        BuildPythonAPIMain(c)
+        c.Wait()
+
+    if arg.build_carla_ue:
+        BuildCarlaUEMain(c)
+        c.Wait()
+    
+    for ext in [ '*.tmp', '*.zip', '*.tar.gz' ]:
+        for e in build_path.glob(ext):
+            e.unlink(missing_ok = True)
+
+    print('Done.')
 
 
 
 if __name__ == '__main__':
-    try:
-        Main()
-    finally:
-        print('Done.')
+    Main()
