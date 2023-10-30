@@ -44,16 +44,16 @@ pipeline
                             steps
                             {
                                 sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
-                                sh 'make setup ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
+                                sh 'make setup ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono --ros2"'
                             }
                         }
                         stage('ubuntu build')
                         {
                             steps
                             {
-                                sh 'make LibCarla'
+                                sh 'make LibCarla --server'
                                 sh 'make PythonAPI ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
-                                sh 'make CarlaUE4Editor ARGS="--chrono"'
+                                sh 'make CarlaUE4Editor ARGS="--chrono --ros2"'
                                 sh 'make plugins'
                                 sh 'make examples'
                             }
