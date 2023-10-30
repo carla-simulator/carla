@@ -41,17 +41,10 @@ using namespace eprosima::fastcdr::exception;
 
 geometry_msgs::msg::Twist::Twist()
 {
-    // geometry_msgs::msg::Vector3 m_linear
-
-    // geometry_msgs::msg::Vector3 m_angular
-
-
 }
 
 geometry_msgs::msg::Twist::~Twist()
 {
-
-
 }
 
 geometry_msgs::msg::Twist::Twist(
@@ -62,7 +55,7 @@ geometry_msgs::msg::Twist::Twist(
 }
 
 geometry_msgs::msg::Twist::Twist(
-        Twist&& x) noexcept 
+        Twist&& x) noexcept
 {
     m_linear = std::move(x.m_linear);
     m_angular = std::move(x.m_angular);
@@ -71,7 +64,6 @@ geometry_msgs::msg::Twist::Twist(
 geometry_msgs::msg::Twist& geometry_msgs::msg::Twist::operator =(
         const Twist& x)
 {
-
     m_linear = x.m_linear;
     m_angular = x.m_angular;
 
@@ -81,7 +73,6 @@ geometry_msgs::msg::Twist& geometry_msgs::msg::Twist::operator =(
 geometry_msgs::msg::Twist& geometry_msgs::msg::Twist::operator =(
         Twist&& x) noexcept
 {
-
     m_linear = std::move(x.m_linear);
     m_angular = std::move(x.m_angular);
 
@@ -91,7 +82,6 @@ geometry_msgs::msg::Twist& geometry_msgs::msg::Twist::operator =(
 bool geometry_msgs::msg::Twist::operator ==(
         const Twist& x) const
 {
-
     return (m_linear == x.m_linear && m_angular == x.m_angular);
 }
 
@@ -112,10 +102,7 @@ size_t geometry_msgs::msg::Twist::getCdrSerializedSize(
         const geometry_msgs::msg::Twist& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += geometry_msgs::msg::Vector3::getCdrSerializedSize(data.linear(), current_alignment);
     current_alignment += geometry_msgs::msg::Vector3::getCdrSerializedSize(data.angular(), current_alignment);
 
@@ -125,16 +112,13 @@ size_t geometry_msgs::msg::Twist::getCdrSerializedSize(
 void geometry_msgs::msg::Twist::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_linear;
     scdr << m_angular;
-
 }
 
 void geometry_msgs::msg::Twist::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_linear;
     dcdr >> m_angular;
 }
@@ -176,6 +160,7 @@ geometry_msgs::msg::Vector3& geometry_msgs::msg::Twist::linear()
 {
     return m_linear;
 }
+
 /*!
  * @brief This function copies the value in member angular
  * @param _angular New value to be copied in member angular
@@ -232,5 +217,3 @@ void geometry_msgs::msg::Twist::serializeKey(
 {
     (void) scdr;
 }
-
-

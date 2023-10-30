@@ -37,27 +37,16 @@ using namespace eprosima::fastcdr::exception;
 #define sensor_msgs_msg_NavSatStatus_max_cdr_typesize 4ULL;
 #define sensor_msgs_msg_NavSatStatus_max_key_cdr_typesize 0ULL;
 
-
-
-
-
-
-
-
-
 sensor_msgs::msg::NavSatStatus::NavSatStatus()
 {
     // octet m_status
     m_status = 0;
     // unsigned short m_service
     m_service = 0;
-
 }
 
 sensor_msgs::msg::NavSatStatus::~NavSatStatus()
 {
-
-
 }
 
 sensor_msgs::msg::NavSatStatus::NavSatStatus(
@@ -68,7 +57,7 @@ sensor_msgs::msg::NavSatStatus::NavSatStatus(
 }
 
 sensor_msgs::msg::NavSatStatus::NavSatStatus(
-        NavSatStatus&& x) noexcept 
+        NavSatStatus&& x) noexcept
 {
     m_status = x.m_status;
     m_service = x.m_service;
@@ -77,7 +66,6 @@ sensor_msgs::msg::NavSatStatus::NavSatStatus(
 sensor_msgs::msg::NavSatStatus& sensor_msgs::msg::NavSatStatus::operator =(
         const NavSatStatus& x)
 {
-
     m_status = x.m_status;
     m_service = x.m_service;
 
@@ -87,7 +75,6 @@ sensor_msgs::msg::NavSatStatus& sensor_msgs::msg::NavSatStatus::operator =(
 sensor_msgs::msg::NavSatStatus& sensor_msgs::msg::NavSatStatus::operator =(
         NavSatStatus&& x) noexcept
 {
-
     m_status = x.m_status;
     m_service = x.m_service;
 
@@ -97,7 +84,6 @@ sensor_msgs::msg::NavSatStatus& sensor_msgs::msg::NavSatStatus::operator =(
 bool sensor_msgs::msg::NavSatStatus::operator ==(
         const NavSatStatus& x) const
 {
-
     return (m_status == x.m_status && m_service == x.m_service);
 }
 
@@ -120,14 +106,8 @@ size_t sensor_msgs::msg::NavSatStatus::getCdrSerializedSize(
 {
     (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-
-
     current_alignment += 2 + eprosima::fastcdr::Cdr::alignment(current_alignment, 2);
-
-
 
     return current_alignment - initial_alignment;
 }
@@ -135,16 +115,13 @@ size_t sensor_msgs::msg::NavSatStatus::getCdrSerializedSize(
 void sensor_msgs::msg::NavSatStatus::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_status;
     scdr << m_service;
-
 }
 
 void sensor_msgs::msg::NavSatStatus::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_status;
     dcdr >> m_service;
 }
@@ -205,8 +182,6 @@ uint16_t& sensor_msgs::msg::NavSatStatus::service()
     return m_service;
 }
 
-
-
 size_t sensor_msgs::msg::NavSatStatus::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -224,5 +199,3 @@ void sensor_msgs::msg::NavSatStatus::serializeKey(
 {
     (void) scdr;
 }
-
-

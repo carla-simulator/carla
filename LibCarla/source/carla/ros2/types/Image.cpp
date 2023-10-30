@@ -56,19 +56,10 @@ sensor_msgs::msg::Image::Image()
     // unsigned long m_step
     m_step = 0;
     // sequence<uint8> m_data
-
-
 }
 
 sensor_msgs::msg::Image::~Image()
 {
-
-
-
-
-
-
-
 }
 
 sensor_msgs::msg::Image::Image(
@@ -84,7 +75,7 @@ sensor_msgs::msg::Image::Image(
 }
 
 sensor_msgs::msg::Image::Image(
-        Image&& x) noexcept 
+        Image&& x) noexcept
 {
     m_header = std::move(x.m_header);
     m_height = x.m_height;
@@ -98,7 +89,6 @@ sensor_msgs::msg::Image::Image(
 sensor_msgs::msg::Image& sensor_msgs::msg::Image::operator =(
         const Image& x)
 {
-
     m_header = x.m_header;
     m_height = x.m_height;
     m_width = x.m_width;
@@ -113,7 +103,6 @@ sensor_msgs::msg::Image& sensor_msgs::msg::Image::operator =(
 sensor_msgs::msg::Image& sensor_msgs::msg::Image::operator =(
         Image&& x) noexcept
 {
-
     m_header = std::move(x.m_header);
     m_height = x.m_height;
     m_width = x.m_width;
@@ -128,7 +117,6 @@ sensor_msgs::msg::Image& sensor_msgs::msg::Image::operator =(
 bool sensor_msgs::msg::Image::operator ==(
         const Image& x) const
 {
-
     return (m_header == x.m_header && m_height == x.m_height && m_width == x.m_width && m_encoding == x.m_encoding && m_is_bigendian == x.m_is_bigendian && m_step == x.m_step && m_data == x.m_data);
 }
 
@@ -149,25 +137,13 @@ size_t sensor_msgs::msg::Image::getCdrSerializedSize(
         const sensor_msgs::msg::Image& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.encoding().size() + 1;
-
     current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
     if (data.data().size() > 0)
@@ -175,16 +151,12 @@ size_t sensor_msgs::msg::Image::getCdrSerializedSize(
         current_alignment += (data.data().size() * 1) + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
     }
 
-
-
-
     return current_alignment - initial_alignment;
 }
 
 void sensor_msgs::msg::Image::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_header;
     scdr << m_height;
     scdr << m_width;
@@ -192,13 +164,11 @@ void sensor_msgs::msg::Image::serialize(
     scdr << m_is_bigendian;
     scdr << m_step;
     scdr << m_data;
-
 }
 
 void sensor_msgs::msg::Image::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_header;
     dcdr >> m_height;
     dcdr >> m_width;
@@ -245,6 +215,7 @@ std_msgs::msg::Header& sensor_msgs::msg::Image::header()
 {
     return m_header;
 }
+
 /*!
  * @brief This function sets a value in member height
  * @param _height New value for member height
@@ -338,6 +309,7 @@ std::string& sensor_msgs::msg::Image::encoding()
 {
     return m_encoding;
 }
+
 /*!
  * @brief This function sets a value in member is_bigendian
  * @param _is_bigendian New value for member is_bigendian
@@ -432,7 +404,6 @@ std::vector<uint8_t>& sensor_msgs::msg::Image::data()
     return m_data;
 }
 
-
 size_t sensor_msgs::msg::Image::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -450,5 +421,3 @@ void sensor_msgs::msg::Image::serializeKey(
 {
     (void) scdr;
 }
-
-

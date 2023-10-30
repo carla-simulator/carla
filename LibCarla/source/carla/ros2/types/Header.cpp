@@ -41,17 +41,11 @@ using namespace eprosima::fastcdr::exception;
 
 std_msgs::msg::Header::Header()
 {
-    // builtin_interfaces::msg::Time m_stamp
-
-    // string m_frame_id
     m_frame_id ="";
-
 }
 
 std_msgs::msg::Header::~Header()
 {
-
-
 }
 
 std_msgs::msg::Header::Header(
@@ -62,7 +56,7 @@ std_msgs::msg::Header::Header(
 }
 
 std_msgs::msg::Header::Header(
-        Header&& x) noexcept 
+        Header&& x) noexcept
 {
     m_stamp = std::move(x.m_stamp);
     m_frame_id = std::move(x.m_frame_id);
@@ -71,7 +65,6 @@ std_msgs::msg::Header::Header(
 std_msgs::msg::Header& std_msgs::msg::Header::operator =(
         const Header& x)
 {
-
     m_stamp = x.m_stamp;
     m_frame_id = x.m_frame_id;
 
@@ -81,7 +74,6 @@ std_msgs::msg::Header& std_msgs::msg::Header::operator =(
 std_msgs::msg::Header& std_msgs::msg::Header::operator =(
         Header&& x) noexcept
 {
-
     m_stamp = std::move(x.m_stamp);
     m_frame_id = std::move(x.m_frame_id);
 
@@ -91,7 +83,6 @@ std_msgs::msg::Header& std_msgs::msg::Header::operator =(
 bool std_msgs::msg::Header::operator ==(
         const Header& x) const
 {
-
     return (m_stamp == x.m_stamp && m_frame_id == x.m_frame_id);
 }
 
@@ -112,13 +103,9 @@ size_t std_msgs::msg::Header::getCdrSerializedSize(
         const std_msgs::msg::Header& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += builtin_interfaces::msg::Time::getCdrSerializedSize(data.stamp(), current_alignment);
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.frame_id().size() + 1;
-
 
     return current_alignment - initial_alignment;
 }
@@ -126,16 +113,13 @@ size_t std_msgs::msg::Header::getCdrSerializedSize(
 void std_msgs::msg::Header::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_stamp;
     scdr << m_frame_id.c_str();
-
 }
 
 void std_msgs::msg::Header::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_stamp;
     dcdr >> m_frame_id;
 }
@@ -233,5 +217,3 @@ void std_msgs::msg::Header::serializeKey(
 {
     (void) scdr;
 }
-
-

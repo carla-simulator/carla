@@ -47,7 +47,6 @@ using namespace eprosima::fastcdr::exception;
 #define std_msgs_msg_Header_max_key_cdr_typesize 0ULL;
 #define sensor_msgs_msg_Imu_max_key_cdr_typesize 0ULL;
 
-
 sensor_msgs::msg::Imu::Imu()
 {
     // std_msgs::msg::Header m_header
@@ -64,18 +63,10 @@ sensor_msgs::msg::Imu::Imu()
 
     // sensor_msgs::msg::sensor_msgs__Imu__double_array_9 m_linear_acceleration_covariance
     memset(&m_linear_acceleration_covariance, 0, (9) * 8);
-
 }
 
 sensor_msgs::msg::Imu::~Imu()
 {
-
-
-
-
-
-
-
 }
 
 sensor_msgs::msg::Imu::Imu(
@@ -91,7 +82,7 @@ sensor_msgs::msg::Imu::Imu(
 }
 
 sensor_msgs::msg::Imu::Imu(
-        Imu&& x) noexcept 
+        Imu&& x) noexcept
 {
     m_header = std::move(x.m_header);
     m_orientation = std::move(x.m_orientation);
@@ -105,7 +96,6 @@ sensor_msgs::msg::Imu::Imu(
 sensor_msgs::msg::Imu& sensor_msgs::msg::Imu::operator =(
         const Imu& x)
 {
-
     m_header = x.m_header;
     m_orientation = x.m_orientation;
     m_orientation_covariance = x.m_orientation_covariance;
@@ -120,7 +110,6 @@ sensor_msgs::msg::Imu& sensor_msgs::msg::Imu::operator =(
 sensor_msgs::msg::Imu& sensor_msgs::msg::Imu::operator =(
         Imu&& x) noexcept
 {
-
     m_header = std::move(x.m_header);
     m_orientation = std::move(x.m_orientation);
     m_orientation_covariance = std::move(x.m_orientation_covariance);
@@ -135,7 +124,6 @@ sensor_msgs::msg::Imu& sensor_msgs::msg::Imu::operator =(
 bool sensor_msgs::msg::Imu::operator ==(
         const Imu& x) const
 {
-
     return (m_header == x.m_header && m_orientation == x.m_orientation && m_orientation_covariance == x.m_orientation_covariance && m_angular_velocity == x.m_angular_velocity && m_angular_velocity_covariance == x.m_angular_velocity_covariance && m_linear_acceleration == x.m_linear_acceleration && m_linear_acceleration_covariance == x.m_linear_acceleration_covariance);
 }
 
@@ -156,20 +144,14 @@ size_t sensor_msgs::msg::Imu::getCdrSerializedSize(
         const sensor_msgs::msg::Imu& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
     current_alignment += geometry_msgs::msg::Quaternion::getCdrSerializedSize(data.orientation(), current_alignment);
     current_alignment += ((9) * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
     current_alignment += geometry_msgs::msg::Vector3::getCdrSerializedSize(data.angular_velocity(), current_alignment);
     current_alignment += ((9) * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
     current_alignment += geometry_msgs::msg::Vector3::getCdrSerializedSize(data.linear_acceleration(), current_alignment);
     current_alignment += ((9) * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
 
     return current_alignment - initial_alignment;
 }
@@ -177,34 +159,25 @@ size_t sensor_msgs::msg::Imu::getCdrSerializedSize(
 void sensor_msgs::msg::Imu::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_header;
     scdr << m_orientation;
     scdr << m_orientation_covariance;
-
     scdr << m_angular_velocity;
     scdr << m_angular_velocity_covariance;
-
     scdr << m_linear_acceleration;
     scdr << m_linear_acceleration_covariance;
-
-
 }
 
 void sensor_msgs::msg::Imu::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_header;
     dcdr >> m_orientation;
     dcdr >> m_orientation_covariance;
-
     dcdr >> m_angular_velocity;
     dcdr >> m_angular_velocity_covariance;
-
     dcdr >> m_linear_acceleration;
     dcdr >> m_linear_acceleration_covariance;
-
 }
 
 /*!
@@ -244,6 +217,7 @@ std_msgs::msg::Header& sensor_msgs::msg::Imu::header()
 {
     return m_header;
 }
+
 /*!
  * @brief This function copies the value in member orientation
  * @param _orientation New value to be copied in member orientation
@@ -281,6 +255,7 @@ geometry_msgs::msg::Quaternion& sensor_msgs::msg::Imu::orientation()
 {
     return m_orientation;
 }
+
 /*!
  * @brief This function copies the value in member orientation_covariance
  * @param _orientation_covariance New value to be copied in member orientation_covariance
@@ -318,6 +293,7 @@ sensor_msgs::msg::sensor_msgs__Imu__double_array_9& sensor_msgs::msg::Imu::orien
 {
     return m_orientation_covariance;
 }
+
 /*!
  * @brief This function copies the value in member angular_velocity
  * @param _angular_velocity New value to be copied in member angular_velocity
@@ -355,6 +331,7 @@ geometry_msgs::msg::Vector3& sensor_msgs::msg::Imu::angular_velocity()
 {
     return m_angular_velocity;
 }
+
 /*!
  * @brief This function copies the value in member angular_velocity_covariance
  * @param _angular_velocity_covariance New value to be copied in member angular_velocity_covariance
@@ -392,6 +369,7 @@ sensor_msgs::msg::sensor_msgs__Imu__double_array_9& sensor_msgs::msg::Imu::angul
 {
     return m_angular_velocity_covariance;
 }
+
 /*!
  * @brief This function copies the value in member linear_acceleration
  * @param _linear_acceleration New value to be copied in member linear_acceleration
@@ -429,6 +407,7 @@ geometry_msgs::msg::Vector3& sensor_msgs::msg::Imu::linear_acceleration()
 {
     return m_linear_acceleration;
 }
+
 /*!
  * @brief This function copies the value in member linear_acceleration_covariance
  * @param _linear_acceleration_covariance New value to be copied in member linear_acceleration_covariance
@@ -467,7 +446,6 @@ sensor_msgs::msg::sensor_msgs__Imu__double_array_9& sensor_msgs::msg::Imu::linea
     return m_linear_acceleration_covariance;
 }
 
-
 size_t sensor_msgs::msg::Imu::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -485,5 +463,3 @@ void sensor_msgs::msg::Imu::serializeKey(
 {
     (void) scdr;
 }
-
-

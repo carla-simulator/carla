@@ -22,7 +22,6 @@
 #ifndef _FAST_DDS_GENERATED_SENSOR_MSGS_MSG_NAVSATSTATUS_H_
 #define _FAST_DDS_GENERATED_SENSOR_MSGS_MSG_NAVSATSTATUS_H_
 
-
 #include <fastrtps/utils/fixed_size_string.hpp>
 
 #include <stdint.h>
@@ -61,7 +60,6 @@ namespace fastcdr {
 class Cdr;
 } // namespace fastcdr
 } // namespace eprosima
-
 
 namespace sensor_msgs {
     namespace msg {
@@ -171,7 +169,6 @@ namespace sensor_msgs {
              */
             eProsima_user_DllExport uint16_t& service();
 
-
             /*!
             * @brief This function returns the maximum serialized size of an object
             * depending on the buffer alignment.
@@ -191,7 +188,6 @@ namespace sensor_msgs {
                     const sensor_msgs::msg::NavSatStatus& data,
                     size_t current_alignment = 0);
 
-
             /*!
              * @brief This function serializes an object using CDR serialization.
              * @param cdr CDR serialization object.
@@ -205,8 +201,6 @@ namespace sensor_msgs {
              */
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
-
-
 
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object
@@ -230,10 +224,8 @@ namespace sensor_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             uint8_t m_status;
             uint16_t m_service;
-
         };
     } // namespace msg
 } // namespace sensor_msgs

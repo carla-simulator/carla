@@ -54,15 +54,10 @@ geometry_msgs::msg::TransformStamped::TransformStamped()
     // string m_child_frame_id
     m_child_frame_id ="";
     // geometry_msgs::msg::Transform m_transform
-
-
 }
 
 geometry_msgs::msg::TransformStamped::~TransformStamped()
 {
-
-
-
 }
 
 geometry_msgs::msg::TransformStamped::TransformStamped(
@@ -74,7 +69,7 @@ geometry_msgs::msg::TransformStamped::TransformStamped(
 }
 
 geometry_msgs::msg::TransformStamped::TransformStamped(
-        TransformStamped&& x) noexcept 
+        TransformStamped&& x) noexcept
 {
     m_header = std::move(x.m_header);
     m_child_frame_id = std::move(x.m_child_frame_id);
@@ -84,7 +79,6 @@ geometry_msgs::msg::TransformStamped::TransformStamped(
 geometry_msgs::msg::TransformStamped& geometry_msgs::msg::TransformStamped::operator =(
         const TransformStamped& x)
 {
-
     m_header = x.m_header;
     m_child_frame_id = x.m_child_frame_id;
     m_transform = x.m_transform;
@@ -95,7 +89,6 @@ geometry_msgs::msg::TransformStamped& geometry_msgs::msg::TransformStamped::oper
 geometry_msgs::msg::TransformStamped& geometry_msgs::msg::TransformStamped::operator =(
         TransformStamped&& x) noexcept
 {
-
     m_header = std::move(x.m_header);
     m_child_frame_id = std::move(x.m_child_frame_id);
     m_transform = std::move(x.m_transform);
@@ -106,7 +99,6 @@ geometry_msgs::msg::TransformStamped& geometry_msgs::msg::TransformStamped::oper
 bool geometry_msgs::msg::TransformStamped::operator ==(
         const TransformStamped& x) const
 {
-
     return (m_header == x.m_header && m_child_frame_id == x.m_child_frame_id && m_transform == x.m_transform);
 }
 
@@ -127,13 +119,9 @@ size_t geometry_msgs::msg::TransformStamped::getCdrSerializedSize(
         const geometry_msgs::msg::TransformStamped& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.child_frame_id().size() + 1;
-
     current_alignment += geometry_msgs::msg::Transform::getCdrSerializedSize(data.transform(), current_alignment);
 
     return current_alignment - initial_alignment;
@@ -142,17 +130,14 @@ size_t geometry_msgs::msg::TransformStamped::getCdrSerializedSize(
 void geometry_msgs::msg::TransformStamped::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_header;
     scdr << m_child_frame_id.c_str();
     scdr << m_transform;
-
 }
 
 void geometry_msgs::msg::TransformStamped::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_header;
     dcdr >> m_child_frame_id;
     dcdr >> m_transform;
@@ -195,6 +180,7 @@ std_msgs::msg::Header& geometry_msgs::msg::TransformStamped::header()
 {
     return m_header;
 }
+
 /*!
  * @brief This function copies the value in member child_frame_id
  * @param _child_frame_id New value to be copied in member child_frame_id
@@ -232,6 +218,7 @@ std::string& geometry_msgs::msg::TransformStamped::child_frame_id()
 {
     return m_child_frame_id;
 }
+
 /*!
  * @brief This function copies the value in member transform
  * @param _transform New value to be copied in member transform
@@ -270,7 +257,6 @@ geometry_msgs::msg::Transform& geometry_msgs::msg::TransformStamped::transform()
     return m_transform;
 }
 
-
 size_t geometry_msgs::msg::TransformStamped::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -288,5 +274,3 @@ void geometry_msgs::msg::TransformStamped::serializeKey(
 {
     (void) scdr;
 }
-
-

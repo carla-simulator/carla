@@ -51,9 +51,6 @@ using namespace eprosima::fastcdr::exception;
 
 tf2_msgs::msg::TFMessage::TFMessage()
 {
-    // sequence<geometry_msgs::msg::TransformStamped> m_transforms
-
-
 }
 
 tf2_msgs::msg::TFMessage::~TFMessage()
@@ -67,7 +64,7 @@ tf2_msgs::msg::TFMessage::TFMessage(
 }
 
 tf2_msgs::msg::TFMessage::TFMessage(
-        TFMessage&& x) noexcept 
+        TFMessage&& x) noexcept
 {
     m_transforms = std::move(x.m_transforms);
 }
@@ -75,7 +72,6 @@ tf2_msgs::msg::TFMessage::TFMessage(
 tf2_msgs::msg::TFMessage& tf2_msgs::msg::TFMessage::operator =(
         const TFMessage& x)
 {
-
     m_transforms = x.m_transforms;
 
     return *this;
@@ -84,7 +80,6 @@ tf2_msgs::msg::TFMessage& tf2_msgs::msg::TFMessage::operator =(
 tf2_msgs::msg::TFMessage& tf2_msgs::msg::TFMessage::operator =(
         TFMessage&& x) noexcept
 {
-
     m_transforms = std::move(x.m_transforms);
 
     return *this;
@@ -93,7 +88,6 @@ tf2_msgs::msg::TFMessage& tf2_msgs::msg::TFMessage::operator =(
 bool tf2_msgs::msg::TFMessage::operator ==(
         const TFMessage& x) const
 {
-
     return (m_transforms == x.m_transforms);
 }
 
@@ -114,16 +108,13 @@ size_t tf2_msgs::msg::TFMessage::getCdrSerializedSize(
         const tf2_msgs::msg::TFMessage& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
 
     for(size_t a = 0; a < data.transforms().size(); ++a)
     {
-        current_alignment += geometry_msgs::msg::TransformStamped::getCdrSerializedSize(data.transforms().at(a), current_alignment);}
+        current_alignment += geometry_msgs::msg::TransformStamped::getCdrSerializedSize(data.transforms().at(a), current_alignment);
+    }
 
     return current_alignment - initial_alignment;
 }
@@ -131,15 +122,14 @@ size_t tf2_msgs::msg::TFMessage::getCdrSerializedSize(
 void tf2_msgs::msg::TFMessage::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_transforms;
 }
 
 void tf2_msgs::msg::TFMessage::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
-    dcdr >> m_transforms;}
+    dcdr >> m_transforms;
+}
 
 /*!
  * @brief This function copies the value in member transforms
@@ -179,7 +169,6 @@ std::vector<geometry_msgs::msg::TransformStamped>& tf2_msgs::msg::TFMessage::tra
     return m_transforms;
 }
 
-
 size_t tf2_msgs::msg::TFMessage::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -197,5 +186,3 @@ void tf2_msgs::msg::TFMessage::serializeKey(
 {
     (void) scdr;
 }
-
-

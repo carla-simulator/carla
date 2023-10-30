@@ -37,12 +37,9 @@ using namespace eprosima::fastcdr::exception;
 #define geometry_msgs_msg_TwistWithCovariance_max_cdr_typesize 336ULL;
 #define geometry_msgs_msg_Vector3_max_cdr_typesize 24ULL;
 #define geometry_msgs_msg_Twist_max_cdr_typesize 48ULL;
-
 #define geometry_msgs_msg_TwistWithCovariance_max_key_cdr_typesize 0ULL;
 #define geometry_msgs_msg_Vector3_max_key_cdr_typesize 0ULL;
 #define geometry_msgs_msg_Twist_max_key_cdr_typesize 0ULL;
-
-
 
 geometry_msgs::msg::TwistWithCovariance::TwistWithCovariance()
 {
@@ -50,13 +47,10 @@ geometry_msgs::msg::TwistWithCovariance::TwistWithCovariance()
 
     // geometry_msgs::msg::geometry_msgs__TwistWithCovariance__double_array_36 m_covariance
     memset(&m_covariance, 0, (36) * 8);
-
 }
 
 geometry_msgs::msg::TwistWithCovariance::~TwistWithCovariance()
 {
-
-
 }
 
 geometry_msgs::msg::TwistWithCovariance::TwistWithCovariance(
@@ -67,7 +61,7 @@ geometry_msgs::msg::TwistWithCovariance::TwistWithCovariance(
 }
 
 geometry_msgs::msg::TwistWithCovariance::TwistWithCovariance(
-        TwistWithCovariance&& x) noexcept 
+        TwistWithCovariance&& x) noexcept
 {
     m_twist = std::move(x.m_twist);
     m_covariance = std::move(x.m_covariance);
@@ -76,7 +70,6 @@ geometry_msgs::msg::TwistWithCovariance::TwistWithCovariance(
 geometry_msgs::msg::TwistWithCovariance& geometry_msgs::msg::TwistWithCovariance::operator =(
         const TwistWithCovariance& x)
 {
-
     m_twist = x.m_twist;
     m_covariance = x.m_covariance;
 
@@ -86,7 +79,6 @@ geometry_msgs::msg::TwistWithCovariance& geometry_msgs::msg::TwistWithCovariance
 geometry_msgs::msg::TwistWithCovariance& geometry_msgs::msg::TwistWithCovariance::operator =(
         TwistWithCovariance&& x) noexcept
 {
-
     m_twist = std::move(x.m_twist);
     m_covariance = std::move(x.m_covariance);
 
@@ -96,7 +88,6 @@ geometry_msgs::msg::TwistWithCovariance& geometry_msgs::msg::TwistWithCovariance
 bool geometry_msgs::msg::TwistWithCovariance::operator ==(
         const TwistWithCovariance& x) const
 {
-
     return (m_twist == x.m_twist && m_covariance == x.m_covariance);
 }
 
@@ -117,13 +108,9 @@ size_t geometry_msgs::msg::TwistWithCovariance::getCdrSerializedSize(
         const geometry_msgs::msg::TwistWithCovariance& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += geometry_msgs::msg::Twist::getCdrSerializedSize(data.twist(), current_alignment);
     current_alignment += ((36) * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
 
     return current_alignment - initial_alignment;
 }
@@ -131,20 +118,15 @@ size_t geometry_msgs::msg::TwistWithCovariance::getCdrSerializedSize(
 void geometry_msgs::msg::TwistWithCovariance::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_twist;
     scdr << m_covariance;
-
-
 }
 
 void geometry_msgs::msg::TwistWithCovariance::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_twist;
     dcdr >> m_covariance;
-
 }
 
 /*!
@@ -184,6 +166,7 @@ geometry_msgs::msg::Twist& geometry_msgs::msg::TwistWithCovariance::twist()
 {
     return m_twist;
 }
+
 /*!
  * @brief This function copies the value in member covariance
  * @param _covariance New value to be copied in member covariance
@@ -222,7 +205,6 @@ geometry_msgs::msg::geometry_msgs__TwistWithCovariance__double_array_36& geometr
     return m_covariance;
 }
 
-
 size_t geometry_msgs::msg::TwistWithCovariance::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -240,5 +222,3 @@ void geometry_msgs::msg::TwistWithCovariance::serializeKey(
 {
     (void) scdr;
 }
-
-

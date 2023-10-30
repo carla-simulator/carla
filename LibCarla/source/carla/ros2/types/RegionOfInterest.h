@@ -22,7 +22,6 @@
 #ifndef _FAST_DDS_GENERATED_SENSOR_MSGS_MSG_REGIONOFINTEREST_H_
 #define _FAST_DDS_GENERATED_SENSOR_MSGS_MSG_REGIONOFINTEREST_H_
 
-
 #include <fastrtps/utils/fixed_size_string.hpp>
 
 #include <stdint.h>
@@ -61,7 +60,6 @@ namespace fastcdr {
 class Cdr;
 } // namespace fastcdr
 } // namespace eprosima
-
 
 namespace sensor_msgs {
     namespace msg {
@@ -240,7 +238,6 @@ namespace sensor_msgs {
                     const sensor_msgs::msg::RegionOfInterest& data,
                     size_t current_alignment = 0);
 
-
             /*!
              * @brief This function serializes an object using CDR serialization.
              * @param cdr CDR serialization object.
@@ -254,8 +251,6 @@ namespace sensor_msgs {
              */
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
-
-
 
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object
@@ -279,7 +274,6 @@ namespace sensor_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             uint32_t m_x_offset;
             uint32_t m_y_offset;
             uint32_t m_height;

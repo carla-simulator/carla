@@ -49,16 +49,10 @@ sensor_msgs::msg::RegionOfInterest::RegionOfInterest()
     m_width = 0;
     // boolean m_do_rectify
     m_do_rectify = false;
-
 }
 
 sensor_msgs::msg::RegionOfInterest::~RegionOfInterest()
 {
-
-
-
-
-
 }
 
 sensor_msgs::msg::RegionOfInterest::RegionOfInterest(
@@ -72,7 +66,7 @@ sensor_msgs::msg::RegionOfInterest::RegionOfInterest(
 }
 
 sensor_msgs::msg::RegionOfInterest::RegionOfInterest(
-        RegionOfInterest&& x) noexcept 
+        RegionOfInterest&& x) noexcept
 {
     m_x_offset = x.m_x_offset;
     m_y_offset = x.m_y_offset;
@@ -84,7 +78,6 @@ sensor_msgs::msg::RegionOfInterest::RegionOfInterest(
 sensor_msgs::msg::RegionOfInterest& sensor_msgs::msg::RegionOfInterest::operator =(
         const RegionOfInterest& x)
 {
-
     m_x_offset = x.m_x_offset;
     m_y_offset = x.m_y_offset;
     m_height = x.m_height;
@@ -97,7 +90,6 @@ sensor_msgs::msg::RegionOfInterest& sensor_msgs::msg::RegionOfInterest::operator
 sensor_msgs::msg::RegionOfInterest& sensor_msgs::msg::RegionOfInterest::operator =(
         RegionOfInterest&& x) noexcept
 {
-
     m_x_offset = x.m_x_offset;
     m_y_offset = x.m_y_offset;
     m_height = x.m_height;
@@ -110,7 +102,6 @@ sensor_msgs::msg::RegionOfInterest& sensor_msgs::msg::RegionOfInterest::operator
 bool sensor_msgs::msg::RegionOfInterest::operator ==(
         const RegionOfInterest& x) const
 {
-
     return (m_x_offset == x.m_x_offset && m_y_offset == x.m_y_offset && m_height == x.m_height && m_width == x.m_width && m_do_rectify == x.m_do_rectify);
 }
 
@@ -133,23 +124,11 @@ size_t sensor_msgs::msg::RegionOfInterest::getCdrSerializedSize(
 {
     (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-
-
 
     return current_alignment - initial_alignment;
 }
@@ -157,19 +136,16 @@ size_t sensor_msgs::msg::RegionOfInterest::getCdrSerializedSize(
 void sensor_msgs::msg::RegionOfInterest::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_x_offset;
     scdr << m_y_offset;
     scdr << m_height;
     scdr << m_width;
     scdr << m_do_rectify;
-
 }
 
 void sensor_msgs::msg::RegionOfInterest::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_x_offset;
     dcdr >> m_y_offset;
     dcdr >> m_height;
@@ -317,8 +293,6 @@ bool& sensor_msgs::msg::RegionOfInterest::do_rectify()
     return m_do_rectify;
 }
 
-
-
 size_t sensor_msgs::msg::RegionOfInterest::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -336,6 +310,3 @@ void sensor_msgs::msg::RegionOfInterest::serializeKey(
 {
     (void) scdr;
 }
-
-
-

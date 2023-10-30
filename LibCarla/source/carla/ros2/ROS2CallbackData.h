@@ -34,6 +34,5 @@ namespace ros2 {
 
   using ActorCallback = std::function<void(void *actor, ROS2CallbackData data)>;
 
-
 } // namespace ros2
 } // namespace carla

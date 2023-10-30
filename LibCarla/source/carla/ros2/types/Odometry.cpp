@@ -44,8 +44,6 @@ using namespace eprosima::fastcdr::exception;
 #define geometry_msgs_msg_PoseWithCovariance_max_cdr_typesize 344ULL;
 #define geometry_msgs_msg_Quaternion_max_cdr_typesize 32ULL;
 #define std_msgs_msg_Header_max_cdr_typesize 268ULL;
-
-
 #define geometry_msgs_msg_TwistWithCovariance_max_key_cdr_typesize 0ULL;
 #define geometry_msgs_msg_Vector3_max_key_cdr_typesize 0ULL;
 #define geometry_msgs_msg_Pose_max_key_cdr_typesize 0ULL;
@@ -57,8 +55,6 @@ using namespace eprosima::fastcdr::exception;
 #define geometry_msgs_msg_Quaternion_max_key_cdr_typesize 0ULL;
 #define std_msgs_msg_Header_max_key_cdr_typesize 0ULL;
 
-
-
 nav_msgs::msg::Odometry::Odometry()
 {
     // std_msgs::msg::Header m_header
@@ -68,16 +64,10 @@ nav_msgs::msg::Odometry::Odometry()
     // geometry_msgs::msg::PoseWithCovariance m_pose
 
     // geometry_msgs::msg::TwistWithCovariance m_twist
-
-
 }
 
 nav_msgs::msg::Odometry::~Odometry()
 {
-
-
-
-
 }
 
 nav_msgs::msg::Odometry::Odometry(
@@ -90,7 +80,7 @@ nav_msgs::msg::Odometry::Odometry(
 }
 
 nav_msgs::msg::Odometry::Odometry(
-        Odometry&& x) noexcept 
+        Odometry&& x) noexcept
 {
     m_header = std::move(x.m_header);
     m_child_frame_id = std::move(x.m_child_frame_id);
@@ -101,7 +91,6 @@ nav_msgs::msg::Odometry::Odometry(
 nav_msgs::msg::Odometry& nav_msgs::msg::Odometry::operator =(
         const Odometry& x)
 {
-
     m_header = x.m_header;
     m_child_frame_id = x.m_child_frame_id;
     m_pose = x.m_pose;
@@ -113,7 +102,6 @@ nav_msgs::msg::Odometry& nav_msgs::msg::Odometry::operator =(
 nav_msgs::msg::Odometry& nav_msgs::msg::Odometry::operator =(
         Odometry&& x) noexcept
 {
-
     m_header = std::move(x.m_header);
     m_child_frame_id = std::move(x.m_child_frame_id);
     m_pose = std::move(x.m_pose);
@@ -125,7 +113,6 @@ nav_msgs::msg::Odometry& nav_msgs::msg::Odometry::operator =(
 bool nav_msgs::msg::Odometry::operator ==(
         const Odometry& x) const
 {
-
     return (m_header == x.m_header && m_child_frame_id == x.m_child_frame_id && m_pose == x.m_pose && m_twist == x.m_twist);
 }
 
@@ -146,13 +133,9 @@ size_t nav_msgs::msg::Odometry::getCdrSerializedSize(
         const nav_msgs::msg::Odometry& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.child_frame_id().size() + 1;
-
     current_alignment += geometry_msgs::msg::PoseWithCovariance::getCdrSerializedSize(data.pose(), current_alignment);
     current_alignment += geometry_msgs::msg::TwistWithCovariance::getCdrSerializedSize(data.twist(), current_alignment);
 
@@ -162,18 +145,15 @@ size_t nav_msgs::msg::Odometry::getCdrSerializedSize(
 void nav_msgs::msg::Odometry::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_header;
     scdr << m_child_frame_id.c_str();
     scdr << m_pose;
     scdr << m_twist;
-
 }
 
 void nav_msgs::msg::Odometry::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_header;
     dcdr >> m_child_frame_id;
     dcdr >> m_pose;
@@ -254,6 +234,7 @@ std::string& nav_msgs::msg::Odometry::child_frame_id()
 {
     return m_child_frame_id;
 }
+
 /*!
  * @brief This function copies the value in member pose
  * @param _pose New value to be copied in member pose
@@ -291,6 +272,7 @@ geometry_msgs::msg::PoseWithCovariance& nav_msgs::msg::Odometry::pose()
 {
     return m_pose;
 }
+
 /*!
  * @brief This function copies the value in member twist
  * @param _twist New value to be copied in member twist
@@ -329,7 +311,6 @@ geometry_msgs::msg::TwistWithCovariance& nav_msgs::msg::Odometry::twist()
     return m_twist;
 }
 
-
 size_t nav_msgs::msg::Odometry::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -347,5 +328,3 @@ void nav_msgs::msg::Odometry::serializeKey(
 {
     (void) scdr;
 }
-
-

@@ -45,14 +45,10 @@ geometry_msgs::msg::Vector3::Vector3()
     m_y = 0.0;
     // double m_z
     m_z = 0.0;
-
 }
 
 geometry_msgs::msg::Vector3::~Vector3()
 {
-
-
-
 }
 
 geometry_msgs::msg::Vector3::Vector3(
@@ -64,7 +60,7 @@ geometry_msgs::msg::Vector3::Vector3(
 }
 
 geometry_msgs::msg::Vector3::Vector3(
-        Vector3&& x) noexcept 
+        Vector3&& x) noexcept
 {
     m_x = x.m_x;
     m_y = x.m_y;
@@ -85,7 +81,6 @@ geometry_msgs::msg::Vector3& geometry_msgs::msg::Vector3::operator =(
 geometry_msgs::msg::Vector3& geometry_msgs::msg::Vector3::operator =(
         Vector3&& x) noexcept
 {
-
     m_x = x.m_x;
     m_y = x.m_y;
     m_z = x.m_z;
@@ -96,7 +91,6 @@ geometry_msgs::msg::Vector3& geometry_msgs::msg::Vector3::operator =(
 bool geometry_msgs::msg::Vector3::operator ==(
         const Vector3& x) const
 {
-
     return (m_x == x.m_x && m_y == x.m_y && m_z == x.m_z);
 }
 
@@ -119,17 +113,9 @@ size_t geometry_msgs::msg::Vector3::getCdrSerializedSize(
 {
     (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
-
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
-
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
-
 
     return current_alignment - initial_alignment;
 }
@@ -137,17 +123,14 @@ size_t geometry_msgs::msg::Vector3::getCdrSerializedSize(
 void geometry_msgs::msg::Vector3::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_x;
     scdr << m_y;
     scdr << m_z;
-
 }
 
 void geometry_msgs::msg::Vector3::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_x;
     dcdr >> m_y;
     dcdr >> m_z;
@@ -237,8 +220,6 @@ double& geometry_msgs::msg::Vector3::z()
     return m_z;
 }
 
-
-
 size_t geometry_msgs::msg::Vector3::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -256,5 +237,3 @@ void geometry_msgs::msg::Vector3::serializeKey(
 {
     (void) scdr;
 }
-
-

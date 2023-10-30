@@ -64,7 +64,6 @@ class Cdr;
 } // namespace fastcdr
 } // namespace eprosima
 
-
 namespace sensor_msgs {
     namespace msg {
         /*!
@@ -398,7 +397,6 @@ namespace sensor_msgs {
                     const sensor_msgs::msg::CameraInfo& data,
                     size_t current_alignment = 0);
 
-
             /*!
              * @brief This function serializes an object using CDR serialization.
              * @param cdr CDR serialization object.
@@ -412,8 +410,6 @@ namespace sensor_msgs {
              */
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
-
-
 
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object

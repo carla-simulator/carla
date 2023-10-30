@@ -62,7 +62,6 @@ class Cdr;
 } // namespace fastcdr
 } // namespace eprosima
 
-
 namespace builtin_interfaces {
     namespace msg {
         /*!
@@ -163,7 +162,6 @@ namespace builtin_interfaces {
              */
             eProsima_user_DllExport uint32_t& nanosec();
 
-
             /*!
             * @brief This function returns the maximum serialized size of an object
             * depending on the buffer alignment.
@@ -183,7 +181,6 @@ namespace builtin_interfaces {
                     const builtin_interfaces::msg::Time& data,
                     size_t current_alignment = 0);
 
-
             /*!
              * @brief This function serializes an object using CDR serialization.
              * @param cdr CDR serialization object.
@@ -197,8 +194,6 @@ namespace builtin_interfaces {
              */
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
-
-
 
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object
@@ -222,10 +217,8 @@ namespace builtin_interfaces {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             int32_t m_sec;
             uint32_t m_nanosec;
-
         };
     } // namespace msg
 } // namespace builtin_interfaces

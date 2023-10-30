@@ -22,7 +22,6 @@
 #ifndef _FAST_DDS_GENERATED_TF2_MSGS_MSG_TF2ERROR_H_
 #define _FAST_DDS_GENERATED_TF2_MSGS_MSG_TF2ERROR_H_
 
-
 #include <fastrtps/utils/fixed_size_string.hpp>
 
 #include <stdint.h>
@@ -196,7 +195,6 @@ namespace tf2_msgs {
                     const tf2_msgs::msg::TF2Error& data,
                     size_t current_alignment = 0);
 
-
             /*!
              * @brief This function serializes an object using CDR serialization.
              * @param cdr CDR serialization object.
@@ -210,8 +208,6 @@ namespace tf2_msgs {
              */
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
-
-
 
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object
@@ -235,10 +231,8 @@ namespace tf2_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             uint8_t m_error;
             std::string m_error_string;
-
         };
     } // namespace msg
 } // namespace tf2_msgs

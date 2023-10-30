@@ -44,12 +44,6 @@ using namespace eprosima::fastcdr::exception;
 #define std_msgs_msg_Header_max_key_cdr_typesize 0ULL;
 #define sensor_msgs_msg_NavSatFix_max_key_cdr_typesize 0ULL;
 
-
-
-
-
-
-
 sensor_msgs::msg::NavSatFix::NavSatFix()
 {
     // std_msgs::msg::Header m_header
@@ -66,18 +60,10 @@ sensor_msgs::msg::NavSatFix::NavSatFix()
     memset(&m_position_covariance, 0, (9) * 8);
     // octet m_position_covariance_type
     m_position_covariance_type = 0;
-
 }
 
 sensor_msgs::msg::NavSatFix::~NavSatFix()
 {
-
-
-
-
-
-
-
 }
 
 sensor_msgs::msg::NavSatFix::NavSatFix(
@@ -93,7 +79,7 @@ sensor_msgs::msg::NavSatFix::NavSatFix(
 }
 
 sensor_msgs::msg::NavSatFix::NavSatFix(
-        NavSatFix&& x) noexcept 
+        NavSatFix&& x) noexcept
 {
     m_header = std::move(x.m_header);
     m_status = std::move(x.m_status);
@@ -107,7 +93,6 @@ sensor_msgs::msg::NavSatFix::NavSatFix(
 sensor_msgs::msg::NavSatFix& sensor_msgs::msg::NavSatFix::operator =(
         const NavSatFix& x)
 {
-
     m_header = x.m_header;
     m_status = x.m_status;
     m_latitude = x.m_latitude;
@@ -122,7 +107,6 @@ sensor_msgs::msg::NavSatFix& sensor_msgs::msg::NavSatFix::operator =(
 sensor_msgs::msg::NavSatFix& sensor_msgs::msg::NavSatFix::operator =(
         NavSatFix&& x) noexcept
 {
-
     m_header = std::move(x.m_header);
     m_status = std::move(x.m_status);
     m_latitude = x.m_latitude;
@@ -137,7 +121,6 @@ sensor_msgs::msg::NavSatFix& sensor_msgs::msg::NavSatFix::operator =(
 bool sensor_msgs::msg::NavSatFix::operator ==(
         const NavSatFix& x) const
 {
-
     return (m_header == x.m_header && m_status == x.m_status && m_latitude == x.m_latitude && m_longitude == x.m_longitude && m_altitude == x.m_altitude && m_position_covariance == x.m_position_covariance && m_position_covariance_type == x.m_position_covariance_type);
 }
 
@@ -158,26 +141,14 @@ size_t sensor_msgs::msg::NavSatFix::getCdrSerializedSize(
         const sensor_msgs::msg::NavSatFix& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
     current_alignment += sensor_msgs::msg::NavSatStatus::getCdrSerializedSize(data.status(), current_alignment);
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
-
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
-
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
-
     current_alignment += ((9) * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
     current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-
-
 
     return current_alignment - initial_alignment;
 }
@@ -185,29 +156,24 @@ size_t sensor_msgs::msg::NavSatFix::getCdrSerializedSize(
 void sensor_msgs::msg::NavSatFix::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_header;
     scdr << m_status;
     scdr << m_latitude;
     scdr << m_longitude;
     scdr << m_altitude;
     scdr << m_position_covariance;
-
     scdr << m_position_covariance_type;
-
 }
 
 void sensor_msgs::msg::NavSatFix::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_header;
     dcdr >> m_status;
     dcdr >> m_latitude;
     dcdr >> m_longitude;
     dcdr >> m_altitude;
     dcdr >> m_position_covariance;
-
     dcdr >> m_position_covariance_type;
 }
 
@@ -248,6 +214,7 @@ std_msgs::msg::Header& sensor_msgs::msg::NavSatFix::header()
 {
     return m_header;
 }
+
 /*!
  * @brief This function copies the value in member status
  * @param _status New value to be copied in member status
@@ -285,6 +252,7 @@ sensor_msgs::msg::NavSatStatus& sensor_msgs::msg::NavSatFix::status()
 {
     return m_status;
 }
+
 /*!
  * @brief This function sets a value in member latitude
  * @param _latitude New value for member latitude
@@ -434,8 +402,6 @@ uint8_t& sensor_msgs::msg::NavSatFix::position_covariance_type()
     return m_position_covariance_type;
 }
 
-
-
 size_t sensor_msgs::msg::NavSatFix::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -453,5 +419,3 @@ void sensor_msgs::msg::NavSatFix::serializeKey(
 {
     (void) scdr;
 }
-
-

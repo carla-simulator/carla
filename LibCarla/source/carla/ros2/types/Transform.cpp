@@ -43,17 +43,10 @@ using namespace eprosima::fastcdr::exception;
 
 geometry_msgs::msg::Transform::Transform()
 {
-    // geometry_msgs::msg::Vector3 m_translation
-
-    // geometry_msgs::msg::Quaternion m_rotation
-
-
 }
 
 geometry_msgs::msg::Transform::~Transform()
 {
-
-
 }
 
 geometry_msgs::msg::Transform::Transform(
@@ -64,7 +57,7 @@ geometry_msgs::msg::Transform::Transform(
 }
 
 geometry_msgs::msg::Transform::Transform(
-        Transform&& x) noexcept 
+        Transform&& x) noexcept
 {
     m_translation = std::move(x.m_translation);
     m_rotation = std::move(x.m_rotation);
@@ -73,7 +66,6 @@ geometry_msgs::msg::Transform::Transform(
 geometry_msgs::msg::Transform& geometry_msgs::msg::Transform::operator =(
         const Transform& x)
 {
-
     m_translation = x.m_translation;
     m_rotation = x.m_rotation;
 
@@ -83,7 +75,6 @@ geometry_msgs::msg::Transform& geometry_msgs::msg::Transform::operator =(
 geometry_msgs::msg::Transform& geometry_msgs::msg::Transform::operator =(
         Transform&& x) noexcept
 {
-
     m_translation = std::move(x.m_translation);
     m_rotation = std::move(x.m_rotation);
 
@@ -93,7 +84,6 @@ geometry_msgs::msg::Transform& geometry_msgs::msg::Transform::operator =(
 bool geometry_msgs::msg::Transform::operator ==(
         const Transform& x) const
 {
-
     return (m_translation == x.m_translation && m_rotation == x.m_rotation);
 }
 
@@ -114,10 +104,7 @@ size_t geometry_msgs::msg::Transform::getCdrSerializedSize(
         const geometry_msgs::msg::Transform& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += geometry_msgs::msg::Vector3::getCdrSerializedSize(data.translation(), current_alignment);
     current_alignment += geometry_msgs::msg::Quaternion::getCdrSerializedSize(data.rotation(), current_alignment);
 
@@ -127,16 +114,13 @@ size_t geometry_msgs::msg::Transform::getCdrSerializedSize(
 void geometry_msgs::msg::Transform::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_translation;
     scdr << m_rotation;
-
 }
 
 void geometry_msgs::msg::Transform::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_translation;
     dcdr >> m_rotation;
 }
@@ -216,7 +200,6 @@ geometry_msgs::msg::Quaternion& geometry_msgs::msg::Transform::rotation()
     return m_rotation;
 }
 
-
 size_t geometry_msgs::msg::Transform::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -234,5 +217,3 @@ void geometry_msgs::msg::Transform::serializeKey(
 {
     (void) scdr;
 }
-
-

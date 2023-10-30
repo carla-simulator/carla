@@ -171,7 +171,6 @@ namespace tf2_msgs {
                     const tf2_msgs::msg::TFMessage& data,
                     size_t current_alignment = 0);
 
-
             /*!
              * @brief This function serializes an object using CDR serialization.
              * @param cdr CDR serialization object.
@@ -185,8 +184,6 @@ namespace tf2_msgs {
              */
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
-
-
 
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object
@@ -210,7 +207,6 @@ namespace tf2_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             std::vector<geometry_msgs::msg::TransformStamped> m_transforms;
 
         };

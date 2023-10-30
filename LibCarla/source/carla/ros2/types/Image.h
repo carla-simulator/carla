@@ -63,7 +63,6 @@ class Cdr;
 } // namespace fastcdr
 } // namespace eprosima
 
-
 namespace sensor_msgs {
     namespace msg {
         /*!
@@ -312,8 +311,6 @@ namespace sensor_msgs {
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
 
-
-
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object
              * depending on the buffer alignment.
@@ -336,7 +333,6 @@ namespace sensor_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             std_msgs::msg::Header m_header;
             uint32_t m_height;
             uint32_t m_width;
@@ -344,7 +340,6 @@ namespace sensor_msgs {
             uint8_t m_is_bigendian;
             uint32_t m_step;
             std::vector<uint8_t> m_data;
-
         };
     } // namespace msg
 } // namespace sensor_msgs

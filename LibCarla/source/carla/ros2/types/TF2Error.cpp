@@ -37,26 +37,16 @@ using namespace eprosima::fastcdr::exception;
 #define tf2_msgs_msg_TF2Error_max_cdr_typesize 264ULL;
 #define tf2_msgs_msg_TF2Error_max_key_cdr_typesize 0ULL;
 
-
-
-
-
-
-
-
 tf2_msgs::msg::TF2Error::TF2Error()
 {
     // octet m_error
     m_error = 0;
     // string m_error_string
     m_error_string ="";
-
 }
 
 tf2_msgs::msg::TF2Error::~TF2Error()
 {
-
-
 }
 
 tf2_msgs::msg::TF2Error::TF2Error(
@@ -67,7 +57,7 @@ tf2_msgs::msg::TF2Error::TF2Error(
 }
 
 tf2_msgs::msg::TF2Error::TF2Error(
-        TF2Error&& x) noexcept 
+        TF2Error&& x) noexcept
 {
     m_error = x.m_error;
     m_error_string = std::move(x.m_error_string);
@@ -76,7 +66,6 @@ tf2_msgs::msg::TF2Error::TF2Error(
 tf2_msgs::msg::TF2Error& tf2_msgs::msg::TF2Error::operator =(
         const TF2Error& x)
 {
-
     m_error = x.m_error;
     m_error_string = x.m_error_string;
 
@@ -86,7 +75,6 @@ tf2_msgs::msg::TF2Error& tf2_msgs::msg::TF2Error::operator =(
 tf2_msgs::msg::TF2Error& tf2_msgs::msg::TF2Error::operator =(
         TF2Error&& x) noexcept
 {
-
     m_error = x.m_error;
     m_error_string = std::move(x.m_error_string);
 
@@ -96,7 +84,6 @@ tf2_msgs::msg::TF2Error& tf2_msgs::msg::TF2Error::operator =(
 bool tf2_msgs::msg::TF2Error::operator ==(
         const TF2Error& x) const
 {
-
     return (m_error == x.m_error && m_error_string == x.m_error_string);
 }
 
@@ -117,15 +104,9 @@ size_t tf2_msgs::msg::TF2Error::getCdrSerializedSize(
         const tf2_msgs::msg::TF2Error& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.error_string().size() + 1;
-
 
     return current_alignment - initial_alignment;
 }
@@ -133,16 +114,13 @@ size_t tf2_msgs::msg::TF2Error::getCdrSerializedSize(
 void tf2_msgs::msg::TF2Error::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_error;
     scdr << m_error_string.c_str();
-
 }
 
 void tf2_msgs::msg::TF2Error::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_error;
     dcdr >> m_error_string;
 }
@@ -231,5 +209,3 @@ void tf2_msgs::msg::TF2Error::serializeKey(
 {
     (void) scdr;
 }
-
-

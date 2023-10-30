@@ -64,7 +64,6 @@ class Cdr;
 } // namespace fastcdr
 } // namespace eprosima
 
-
 namespace geometry_msgs {
     namespace msg {
         /*!
@@ -197,7 +196,6 @@ namespace geometry_msgs {
                     const geometry_msgs::msg::Transform& data,
                     size_t current_alignment = 0);
 
-
             /*!
              * @brief This function serializes an object using CDR serialization.
              * @param cdr CDR serialization object.
@@ -211,8 +209,6 @@ namespace geometry_msgs {
              */
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
-
-
 
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object
@@ -236,10 +232,8 @@ namespace geometry_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             geometry_msgs::msg::Vector3 m_translation;
             geometry_msgs::msg::Quaternion m_rotation;
-
         };
     } // namespace msg
 } // namespace geometry_msgs

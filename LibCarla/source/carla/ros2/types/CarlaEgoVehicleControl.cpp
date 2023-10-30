@@ -64,14 +64,6 @@ carla_msgs::msg::CarlaEgoVehicleControl::CarlaEgoVehicleControl()
 
 carla_msgs::msg::CarlaEgoVehicleControl::~CarlaEgoVehicleControl()
 {
-
-
-
-
-
-
-
-
 }
 
 carla_msgs::msg::CarlaEgoVehicleControl::CarlaEgoVehicleControl(
@@ -103,7 +95,6 @@ carla_msgs::msg::CarlaEgoVehicleControl::CarlaEgoVehicleControl(
 carla_msgs::msg::CarlaEgoVehicleControl& carla_msgs::msg::CarlaEgoVehicleControl::operator =(
         const CarlaEgoVehicleControl& x)
 {
-
     m_header = x.m_header;
     m_throttle = x.m_throttle;
     m_steer = x.m_steer;
@@ -119,7 +110,6 @@ carla_msgs::msg::CarlaEgoVehicleControl& carla_msgs::msg::CarlaEgoVehicleControl
 carla_msgs::msg::CarlaEgoVehicleControl& carla_msgs::msg::CarlaEgoVehicleControl::operator =(
         CarlaEgoVehicleControl&& x) noexcept
 {
-
     m_header = std::move(x.m_header);
     m_throttle = x.m_throttle;
     m_steer = x.m_steer;
@@ -135,7 +125,6 @@ carla_msgs::msg::CarlaEgoVehicleControl& carla_msgs::msg::CarlaEgoVehicleControl
 bool carla_msgs::msg::CarlaEgoVehicleControl::operator ==(
         const CarlaEgoVehicleControl& x) const
 {
-
     return (m_header == x.m_header && m_throttle == x.m_throttle && m_steer == x.m_steer && m_brake == x.m_brake && m_hand_brake == x.m_hand_brake && m_reverse == x.m_reverse && m_gear == x.m_gear && m_manual_gear_shift == x.m_manual_gear_shift);
 }
 
@@ -156,40 +145,21 @@ size_t carla_msgs::msg::CarlaEgoVehicleControl::getCdrSerializedSize(
         const carla_msgs::msg::CarlaEgoVehicleControl& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-
-
     current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-
-
-
     return current_alignment - initial_alignment;
 }
 
 void carla_msgs::msg::CarlaEgoVehicleControl::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_header;
     scdr << m_throttle;
     scdr << m_steer;
@@ -198,13 +168,11 @@ void carla_msgs::msg::CarlaEgoVehicleControl::serialize(
     scdr << m_reverse;
     scdr << m_gear;
     scdr << m_manual_gear_shift;
-
 }
 
 void carla_msgs::msg::CarlaEgoVehicleControl::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_header;
     dcdr >> m_throttle;
     dcdr >> m_steer;
@@ -447,8 +415,6 @@ bool& carla_msgs::msg::CarlaEgoVehicleControl::manual_gear_shift()
 {
     return m_manual_gear_shift;
 }
-
-
 
 size_t carla_msgs::msg::CarlaEgoVehicleControl::getKeyMaxCdrSerializedSize(
         size_t current_alignment)

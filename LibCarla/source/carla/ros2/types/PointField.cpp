@@ -37,14 +37,6 @@ using namespace eprosima::fastcdr::exception;
 #define sensor_msgs_msg_PointField_max_cdr_typesize 272ULL;
 #define sensor_msgs_msg_PointField_max_key_cdr_typesize 0ULL;
 
-
-
-
-
-
-
-
-
 sensor_msgs::msg::PointField::PointField()
 {
     // string m_name
@@ -55,15 +47,10 @@ sensor_msgs::msg::PointField::PointField()
     m_datatype = 0;
     // unsigned long m_count
     m_count = 0;
-
 }
 
 sensor_msgs::msg::PointField::~PointField()
 {
-
-
-
-
 }
 
 sensor_msgs::msg::PointField::PointField(
@@ -76,7 +63,7 @@ sensor_msgs::msg::PointField::PointField(
 }
 
 sensor_msgs::msg::PointField::PointField(
-        PointField&& x) noexcept 
+        PointField&& x) noexcept
 {
     m_name = std::move(x.m_name);
     m_offset = x.m_offset;
@@ -87,7 +74,6 @@ sensor_msgs::msg::PointField::PointField(
 sensor_msgs::msg::PointField& sensor_msgs::msg::PointField::operator =(
         const PointField& x)
 {
-
     m_name = x.m_name;
     m_offset = x.m_offset;
     m_datatype = x.m_datatype;
@@ -99,7 +85,6 @@ sensor_msgs::msg::PointField& sensor_msgs::msg::PointField::operator =(
 sensor_msgs::msg::PointField& sensor_msgs::msg::PointField::operator =(
         PointField&& x) noexcept
 {
-
     m_name = std::move(x.m_name);
     m_offset = x.m_offset;
     m_datatype = x.m_datatype;
@@ -111,7 +96,6 @@ sensor_msgs::msg::PointField& sensor_msgs::msg::PointField::operator =(
 bool sensor_msgs::msg::PointField::operator ==(
         const PointField& x) const
 {
-
     return (m_name == x.m_name && m_offset == x.m_offset && m_datatype == x.m_datatype && m_count == x.m_count);
 }
 
@@ -132,21 +116,11 @@ size_t sensor_msgs::msg::PointField::getCdrSerializedSize(
         const sensor_msgs::msg::PointField& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.name().size() + 1;
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
 
     return current_alignment - initial_alignment;
 }
@@ -154,18 +128,15 @@ size_t sensor_msgs::msg::PointField::getCdrSerializedSize(
 void sensor_msgs::msg::PointField::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_name.c_str();
     scdr << m_offset;
     scdr << m_datatype;
     scdr << m_count;
-
 }
 
 void sensor_msgs::msg::PointField::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_name;
     dcdr >> m_offset;
     dcdr >> m_datatype;
@@ -209,6 +180,7 @@ std::string& sensor_msgs::msg::PointField::name()
 {
     return m_name;
 }
+
 /*!
  * @brief This function sets a value in member offset
  * @param _offset New value for member offset
@@ -293,8 +265,6 @@ uint32_t& sensor_msgs::msg::PointField::count()
     return m_count;
 }
 
-
-
 size_t sensor_msgs::msg::PointField::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -312,5 +282,3 @@ void sensor_msgs::msg::PointField::serializeKey(
 {
     (void) scdr;
 }
-
-

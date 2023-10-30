@@ -47,15 +47,10 @@ geometry_msgs::msg::Quaternion::Quaternion()
     m_z = 0.0;
     // double m_w
     m_w = 0.0;
-
 }
 
 geometry_msgs::msg::Quaternion::~Quaternion()
 {
-
-
-
-
 }
 
 geometry_msgs::msg::Quaternion::Quaternion(
@@ -68,7 +63,7 @@ geometry_msgs::msg::Quaternion::Quaternion(
 }
 
 geometry_msgs::msg::Quaternion::Quaternion(
-        Quaternion&& x) noexcept 
+        Quaternion&& x) noexcept
 {
     m_x = x.m_x;
     m_y = x.m_y;
@@ -79,7 +74,6 @@ geometry_msgs::msg::Quaternion::Quaternion(
 geometry_msgs::msg::Quaternion& geometry_msgs::msg::Quaternion::operator =(
         const Quaternion& x)
 {
-
     m_x = x.m_x;
     m_y = x.m_y;
     m_z = x.m_z;
@@ -91,7 +85,6 @@ geometry_msgs::msg::Quaternion& geometry_msgs::msg::Quaternion::operator =(
 geometry_msgs::msg::Quaternion& geometry_msgs::msg::Quaternion::operator =(
         Quaternion&& x) noexcept
 {
-
     m_x = x.m_x;
     m_y = x.m_y;
     m_z = x.m_z;
@@ -103,7 +96,6 @@ geometry_msgs::msg::Quaternion& geometry_msgs::msg::Quaternion::operator =(
 bool geometry_msgs::msg::Quaternion::operator ==(
         const Quaternion& x) const
 {
-
     return (m_x == x.m_x && m_y == x.m_y && m_z == x.m_z && m_w == x.m_w);
 }
 
@@ -126,20 +118,10 @@ size_t geometry_msgs::msg::Quaternion::getCdrSerializedSize(
 {
     (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
-
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
-
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
-
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
-
 
     return current_alignment - initial_alignment;
 }
@@ -147,18 +129,15 @@ size_t geometry_msgs::msg::Quaternion::getCdrSerializedSize(
 void geometry_msgs::msg::Quaternion::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_x;
     scdr << m_y;
     scdr << m_z;
     scdr << m_w;
-
 }
 
 void geometry_msgs::msg::Quaternion::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_x;
     dcdr >> m_y;
     dcdr >> m_z;
@@ -277,8 +256,6 @@ double& geometry_msgs::msg::Quaternion::w()
     return m_w;
 }
 
-
-
 size_t geometry_msgs::msg::Quaternion::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -296,5 +273,3 @@ void geometry_msgs::msg::Quaternion::serializeKey(
 {
     (void) scdr;
 }
-
-

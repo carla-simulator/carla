@@ -70,7 +70,7 @@ carla_msgs::msg::CollisionEvent::CollisionEvent(
 }
 
 carla_msgs::msg::CollisionEvent::CollisionEvent(
-        CollisionEvent&& x) noexcept 
+        CollisionEvent&& x) noexcept
 {
     m_header = std::move(x.m_header);
     m_other_actor_id = x.m_other_actor_id;
@@ -276,5 +276,3 @@ void carla_msgs::msg::CollisionEvent::serializeKey(
 {
     (void) scdr;
 }
-
-

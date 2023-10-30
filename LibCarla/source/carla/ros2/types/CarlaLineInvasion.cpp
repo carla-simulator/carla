@@ -41,22 +41,12 @@ using namespace eprosima::fastcdr::exception;
 #define carla_msgs_msg_LaneInvasionEvent_max_key_cdr_typesize 0ULL;
 #define carla_msgs_msg_std_msgs_msg_Time_max_key_cdr_typesize 0ULL;
 
-
-
-
 carla_msgs::msg::LaneInvasionEvent::LaneInvasionEvent()
 {
-    // std_msgs::msg::Header m_header
-
-    // sequence<long> m_crossed_lane_markings
-
-
 }
 
 carla_msgs::msg::LaneInvasionEvent::~LaneInvasionEvent()
 {
-
-
 }
 
 carla_msgs::msg::LaneInvasionEvent::LaneInvasionEvent(
@@ -67,7 +57,7 @@ carla_msgs::msg::LaneInvasionEvent::LaneInvasionEvent(
 }
 
 carla_msgs::msg::LaneInvasionEvent::LaneInvasionEvent(
-        LaneInvasionEvent&& x) noexcept 
+        LaneInvasionEvent&& x) noexcept
 {
     m_header = std::move(x.m_header);
     m_crossed_lane_markings = std::move(x.m_crossed_lane_markings);
@@ -76,7 +66,6 @@ carla_msgs::msg::LaneInvasionEvent::LaneInvasionEvent(
 carla_msgs::msg::LaneInvasionEvent& carla_msgs::msg::LaneInvasionEvent::operator =(
         const LaneInvasionEvent& x)
 {
-
     m_header = x.m_header;
     m_crossed_lane_markings = x.m_crossed_lane_markings;
 
@@ -86,7 +75,6 @@ carla_msgs::msg::LaneInvasionEvent& carla_msgs::msg::LaneInvasionEvent::operator
 carla_msgs::msg::LaneInvasionEvent& carla_msgs::msg::LaneInvasionEvent::operator =(
         LaneInvasionEvent&& x) noexcept
 {
-
     m_header = std::move(x.m_header);
     m_crossed_lane_markings = std::move(x.m_crossed_lane_markings);
 
@@ -96,7 +84,6 @@ carla_msgs::msg::LaneInvasionEvent& carla_msgs::msg::LaneInvasionEvent::operator
 bool carla_msgs::msg::LaneInvasionEvent::operator ==(
         const LaneInvasionEvent& x) const
 {
-
     return (m_header == x.m_header && m_crossed_lane_markings == x.m_crossed_lane_markings);
 }
 
@@ -117,10 +104,7 @@ size_t carla_msgs::msg::LaneInvasionEvent::getCdrSerializedSize(
         const carla_msgs::msg::LaneInvasionEvent& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
@@ -129,25 +113,19 @@ size_t carla_msgs::msg::LaneInvasionEvent::getCdrSerializedSize(
         current_alignment += (data.crossed_lane_markings().size() * 4) + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
     }
 
-
-
-
     return current_alignment - initial_alignment;
 }
 
 void carla_msgs::msg::LaneInvasionEvent::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_header;
     scdr << m_crossed_lane_markings;
-
 }
 
 void carla_msgs::msg::LaneInvasionEvent::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_header;
     dcdr >> m_crossed_lane_markings;
 }
@@ -245,5 +223,3 @@ void carla_msgs::msg::LaneInvasionEvent::serializeKey(
 {
     (void) scdr;
 }
-
-

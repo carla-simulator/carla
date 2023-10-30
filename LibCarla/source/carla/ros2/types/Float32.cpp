@@ -39,9 +39,7 @@ using namespace eprosima::fastcdr::exception;
 
 std_msgs::msg::Float32::Float32()
 {
-    // float m_data
     m_data = 0.0;
-
 }
 
 std_msgs::msg::Float32::~Float32()
@@ -55,7 +53,7 @@ std_msgs::msg::Float32::Float32(
 }
 
 std_msgs::msg::Float32::Float32(
-        Float32&& x) noexcept 
+        Float32&& x) noexcept
 {
     m_data = x.m_data;
 }
@@ -63,25 +61,20 @@ std_msgs::msg::Float32::Float32(
 std_msgs::msg::Float32& std_msgs::msg::Float32::operator =(
         const Float32& x)
 {
-
     m_data = x.m_data;
-
     return *this;
 }
 
 std_msgs::msg::Float32& std_msgs::msg::Float32::operator =(
         Float32&& x) noexcept
 {
-
     m_data = x.m_data;
-
     return *this;
 }
 
 bool std_msgs::msg::Float32::operator ==(
         const Float32& x) const
 {
-
     return (m_data == x.m_data);
 }
 
@@ -104,26 +97,19 @@ size_t std_msgs::msg::Float32::getCdrSerializedSize(
 {
     (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     return current_alignment - initial_alignment;
 }
 
 void std_msgs::msg::Float32::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_data;
-
 }
 
 void std_msgs::msg::Float32::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_data;
 }
 
@@ -155,8 +141,6 @@ float& std_msgs::msg::Float32::data()
     return m_data;
 }
 
-
-
 size_t std_msgs::msg::Float32::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -174,5 +158,3 @@ void std_msgs::msg::Float32::serializeKey(
 {
     (void) scdr;
 }
-
-

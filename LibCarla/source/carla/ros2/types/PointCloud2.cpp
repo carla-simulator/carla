@@ -63,20 +63,10 @@ sensor_msgs::msg::PointCloud2::PointCloud2()
 
     // boolean m_is_dense
     m_is_dense = false;
-
 }
 
 sensor_msgs::msg::PointCloud2::~PointCloud2()
 {
-
-
-
-
-
-
-
-
-
 }
 
 sensor_msgs::msg::PointCloud2::PointCloud2(
@@ -94,7 +84,7 @@ sensor_msgs::msg::PointCloud2::PointCloud2(
 }
 
 sensor_msgs::msg::PointCloud2::PointCloud2(
-        PointCloud2&& x) noexcept 
+        PointCloud2&& x) noexcept
 {
     m_header = std::move(x.m_header);
     m_height = x.m_height;
@@ -110,7 +100,6 @@ sensor_msgs::msg::PointCloud2::PointCloud2(
 sensor_msgs::msg::PointCloud2& sensor_msgs::msg::PointCloud2::operator =(
         const PointCloud2& x)
 {
-
     m_header = x.m_header;
     m_height = x.m_height;
     m_width = x.m_width;
@@ -127,7 +116,6 @@ sensor_msgs::msg::PointCloud2& sensor_msgs::msg::PointCloud2::operator =(
 sensor_msgs::msg::PointCloud2& sensor_msgs::msg::PointCloud2::operator =(
         PointCloud2&& x) noexcept
 {
-
     m_header = std::move(x.m_header);
     m_height = x.m_height;
     m_width = x.m_width;
@@ -144,7 +132,6 @@ sensor_msgs::msg::PointCloud2& sensor_msgs::msg::PointCloud2::operator =(
 bool sensor_msgs::msg::PointCloud2::operator ==(
         const PointCloud2& x) const
 {
-
     return (m_header == x.m_header && m_height == x.m_height && m_width == x.m_width && m_fields == x.m_fields && m_is_bigendian == x.m_is_bigendian && m_point_step == x.m_point_step && m_row_step == x.m_row_step && m_data == x.m_data && m_is_dense == x.m_is_dense);
 }
 
@@ -165,33 +152,20 @@ size_t sensor_msgs::msg::PointCloud2::getCdrSerializedSize(
         const sensor_msgs::msg::PointCloud2& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
 
     for(size_t a = 0; a < data.fields().size(); ++a)
     {
-        current_alignment += sensor_msgs::msg::PointField::getCdrSerializedSize(data.fields().at(a), current_alignment);}
+        current_alignment += sensor_msgs::msg::PointField::getCdrSerializedSize(data.fields().at(a), current_alignment);
+    }
 
     current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
     if (data.data().size() > 0)
@@ -199,11 +173,7 @@ size_t sensor_msgs::msg::PointCloud2::getCdrSerializedSize(
         current_alignment += (data.data().size() * 1) + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
     }
 
-
-
     current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-
-
 
     return current_alignment - initial_alignment;
 }
@@ -211,7 +181,6 @@ size_t sensor_msgs::msg::PointCloud2::getCdrSerializedSize(
 void sensor_msgs::msg::PointCloud2::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_header;
     scdr << m_height;
     scdr << m_width;
@@ -221,13 +190,11 @@ void sensor_msgs::msg::PointCloud2::serialize(
     scdr << m_row_step;
     scdr << m_data;
     scdr << m_is_dense;
-
 }
 
 void sensor_msgs::msg::PointCloud2::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_header;
     dcdr >> m_height;
     dcdr >> m_width;
@@ -276,6 +243,7 @@ std_msgs::msg::Header& sensor_msgs::msg::PointCloud2::header()
 {
     return m_header;
 }
+
 /*!
  * @brief This function sets a value in member height
  * @param _height New value for member height
@@ -369,6 +337,7 @@ std::vector<sensor_msgs::msg::PointField>& sensor_msgs::msg::PointCloud2::fields
 {
     return m_fields;
 }
+
 /*!
  * @brief This function sets a value in member is_bigendian
  * @param _is_bigendian New value for member is_bigendian
@@ -490,6 +459,7 @@ std::vector<uint8_t>& sensor_msgs::msg::PointCloud2::data()
 {
     return m_data;
 }
+
 /*!
  * @brief This function sets a value in member is_dense
  * @param _is_dense New value for member is_dense
@@ -518,8 +488,6 @@ bool& sensor_msgs::msg::PointCloud2::is_dense()
     return m_is_dense;
 }
 
-
-
 size_t sensor_msgs::msg::PointCloud2::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -537,5 +505,3 @@ void sensor_msgs::msg::PointCloud2::serializeKey(
 {
     (void) scdr;
 }
-
-

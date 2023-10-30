@@ -43,13 +43,10 @@ builtin_interfaces::msg::Time::Time()
     m_sec = 0;
     // unsigned long m_nanosec
     m_nanosec = 0;
-
 }
 
 builtin_interfaces::msg::Time::~Time()
 {
-
-
 }
 
 builtin_interfaces::msg::Time::Time(
@@ -60,7 +57,7 @@ builtin_interfaces::msg::Time::Time(
 }
 
 builtin_interfaces::msg::Time::Time(
-        Time&& x) noexcept 
+        Time&& x) noexcept
 {
     m_sec = x.m_sec;
     m_nanosec = x.m_nanosec;
@@ -69,7 +66,6 @@ builtin_interfaces::msg::Time::Time(
 builtin_interfaces::msg::Time& builtin_interfaces::msg::Time::operator =(
         const Time& x)
 {
-
     m_sec = x.m_sec;
     m_nanosec = x.m_nanosec;
 
@@ -79,7 +75,6 @@ builtin_interfaces::msg::Time& builtin_interfaces::msg::Time::operator =(
 builtin_interfaces::msg::Time& builtin_interfaces::msg::Time::operator =(
         Time&& x) noexcept
 {
-
     m_sec = x.m_sec;
     m_nanosec = x.m_nanosec;
 
@@ -89,7 +84,6 @@ builtin_interfaces::msg::Time& builtin_interfaces::msg::Time::operator =(
 bool builtin_interfaces::msg::Time::operator ==(
         const Time& x) const
 {
-
     return (m_sec == x.m_sec && m_nanosec == x.m_nanosec);
 }
 
@@ -112,14 +106,8 @@ size_t builtin_interfaces::msg::Time::getCdrSerializedSize(
 {
     (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
 
     return current_alignment - initial_alignment;
 }
@@ -127,16 +115,13 @@ size_t builtin_interfaces::msg::Time::getCdrSerializedSize(
 void builtin_interfaces::msg::Time::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_sec;
     scdr << m_nanosec;
-
 }
 
 void builtin_interfaces::msg::Time::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_sec;
     dcdr >> m_nanosec;
 }
@@ -197,8 +182,6 @@ uint32_t& builtin_interfaces::msg::Time::nanosec()
     return m_nanosec;
 }
 
-
-
 size_t builtin_interfaces::msg::Time::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -216,5 +199,3 @@ void builtin_interfaces::msg::Time::serializeKey(
 {
     (void) scdr;
 }
-
-

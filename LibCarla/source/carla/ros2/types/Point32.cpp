@@ -45,14 +45,10 @@ geometry_msgs::msg::Point32::Point32()
     m_y = 0.0;
     // float m_z
     m_z = 0.0;
-
 }
 
 geometry_msgs::msg::Point32::~Point32()
 {
-
-
-
 }
 
 geometry_msgs::msg::Point32::Point32(
@@ -64,7 +60,7 @@ geometry_msgs::msg::Point32::Point32(
 }
 
 geometry_msgs::msg::Point32::Point32(
-        Point32&& x) noexcept 
+        Point32&& x) noexcept
 {
     m_x = x.m_x;
     m_y = x.m_y;
@@ -74,7 +70,6 @@ geometry_msgs::msg::Point32::Point32(
 geometry_msgs::msg::Point32& geometry_msgs::msg::Point32::operator =(
         const Point32& x)
 {
-
     m_x = x.m_x;
     m_y = x.m_y;
     m_z = x.m_z;
@@ -85,7 +80,6 @@ geometry_msgs::msg::Point32& geometry_msgs::msg::Point32::operator =(
 geometry_msgs::msg::Point32& geometry_msgs::msg::Point32::operator =(
         Point32&& x) noexcept
 {
-
     m_x = x.m_x;
     m_y = x.m_y;
     m_z = x.m_z;
@@ -96,7 +90,6 @@ geometry_msgs::msg::Point32& geometry_msgs::msg::Point32::operator =(
 bool geometry_msgs::msg::Point32::operator ==(
         const Point32& x) const
 {
-
     return (m_x == x.m_x && m_y == x.m_y && m_z == x.m_z);
 }
 
@@ -119,17 +112,9 @@ size_t geometry_msgs::msg::Point32::getCdrSerializedSize(
 {
     (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
 
     return current_alignment - initial_alignment;
 }
@@ -137,17 +122,14 @@ size_t geometry_msgs::msg::Point32::getCdrSerializedSize(
 void geometry_msgs::msg::Point32::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_x;
     scdr << m_y;
     scdr << m_z;
-
 }
 
 void geometry_msgs::msg::Point32::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_x;
     dcdr >> m_y;
     dcdr >> m_z;
@@ -237,8 +219,6 @@ float& geometry_msgs::msg::Point32::z()
     return m_z;
 }
 
-
-
 size_t geometry_msgs::msg::Point32::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -256,5 +236,3 @@ void geometry_msgs::msg::Point32::serializeKey(
 {
     (void) scdr;
 }
-
-

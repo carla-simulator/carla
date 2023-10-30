@@ -65,7 +65,6 @@ class Cdr;
 } // namespace fastcdr
 } // namespace eprosima
 
-
 namespace sensor_msgs {
     namespace msg {
         typedef std::array<double, 9> sensor_msgs__Imu__double_array_9;
@@ -324,7 +323,6 @@ namespace sensor_msgs {
                     const sensor_msgs::msg::Imu& data,
                     size_t current_alignment = 0);
 
-
             /*!
              * @brief This function serializes an object using CDR serialization.
              * @param cdr CDR serialization object.
@@ -338,8 +336,6 @@ namespace sensor_msgs {
              */
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
-
-
 
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object
@@ -363,7 +359,6 @@ namespace sensor_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             std_msgs::msg::Header m_header;
             geometry_msgs::msg::Quaternion m_orientation;
             sensor_msgs::msg::sensor_msgs__Imu__double_array_9 m_orientation_covariance;
@@ -371,7 +366,6 @@ namespace sensor_msgs {
             sensor_msgs::msg::sensor_msgs__Imu__double_array_9 m_angular_velocity_covariance;
             geometry_msgs::msg::Vector3 m_linear_acceleration;
             sensor_msgs::msg::sensor_msgs__Imu__double_array_9 m_linear_acceleration_covariance;
-
         };
     } // namespace msg
 } // namespace sensor_msgs

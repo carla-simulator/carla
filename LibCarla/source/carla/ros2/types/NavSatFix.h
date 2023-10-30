@@ -64,7 +64,6 @@ class Cdr;
 } // namespace fastcdr
 } // namespace eprosima
 
-
 namespace sensor_msgs {
     namespace msg {
         const uint8_t NavSatFix__COVARIANCE_TYPE_UNKNOWN = 0;
@@ -283,7 +282,6 @@ namespace sensor_msgs {
              */
             eProsima_user_DllExport uint8_t& position_covariance_type();
 
-
             /*!
             * @brief This function returns the maximum serialized size of an object
             * depending on the buffer alignment.
@@ -303,7 +301,6 @@ namespace sensor_msgs {
                     const sensor_msgs::msg::NavSatFix& data,
                     size_t current_alignment = 0);
 
-
             /*!
              * @brief This function serializes an object using CDR serialization.
              * @param cdr CDR serialization object.
@@ -317,8 +314,6 @@ namespace sensor_msgs {
              */
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
-
-
 
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object
@@ -342,7 +337,6 @@ namespace sensor_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             std_msgs::msg::Header m_header;
             sensor_msgs::msg::NavSatStatus m_status;
             double m_latitude;
@@ -350,7 +344,6 @@ namespace sensor_msgs {
             double m_altitude;
             sensor_msgs::msg::sensor_msgs__NavSatFix__double_array_9 m_position_covariance;
             uint8_t m_position_covariance_type;
-
         };
     } // namespace msg
 } // namespace sensor_msgs

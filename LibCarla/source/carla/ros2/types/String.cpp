@@ -41,7 +41,6 @@ std_msgs::msg::String::String()
 {
     // string m_data
     m_data ="";
-
 }
 
 std_msgs::msg::String::~String()
@@ -55,7 +54,7 @@ std_msgs::msg::String::String(
 }
 
 std_msgs::msg::String::String(
-        String&& x) noexcept 
+        String&& x) noexcept
 {
     m_data = std::move(x.m_data);
 }
@@ -63,7 +62,6 @@ std_msgs::msg::String::String(
 std_msgs::msg::String& std_msgs::msg::String::operator =(
         const String& x)
 {
-
     m_data = x.m_data;
 
     return *this;
@@ -72,7 +70,6 @@ std_msgs::msg::String& std_msgs::msg::String::operator =(
 std_msgs::msg::String& std_msgs::msg::String::operator =(
         String&& x) noexcept
 {
-
     m_data = std::move(x.m_data);
 
     return *this;
@@ -81,7 +78,6 @@ std_msgs::msg::String& std_msgs::msg::String::operator =(
 bool std_msgs::msg::String::operator ==(
         const String& x) const
 {
-
     return (m_data == x.m_data);
 }
 
@@ -102,10 +98,7 @@ size_t std_msgs::msg::String::getCdrSerializedSize(
         const std_msgs::msg::String& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.data().size() + 1;
 
     return current_alignment - initial_alignment;
@@ -114,16 +107,14 @@ size_t std_msgs::msg::String::getCdrSerializedSize(
 void std_msgs::msg::String::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_data.c_str();
-
 }
 
 void std_msgs::msg::String::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
-    dcdr >> m_data;}
+    dcdr >> m_data;
+}
 
 /*!
  * @brief This function copies the value in member data
@@ -163,7 +154,6 @@ std::string& std_msgs::msg::String::data()
     return m_data;
 }
 
-
 size_t std_msgs::msg::String::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -181,5 +171,3 @@ void std_msgs::msg::String::serializeKey(
 {
     (void) scdr;
 }
-
-

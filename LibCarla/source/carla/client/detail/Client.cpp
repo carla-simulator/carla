@@ -613,7 +613,6 @@ namespace detail {
     return _pimpl->CallAndWait<bool>("is_sensor_enabled_for_ros", thisToken.get_stream_id());
   }
 
-
   void Client::SubscribeToGBuffer(
       rpc::ActorId ActorId,
       uint32_t GBufferId,

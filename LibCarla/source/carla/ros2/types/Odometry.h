@@ -65,7 +65,6 @@ class Cdr;
 } // namespace fastcdr
 } // namespace eprosima
 
-
 namespace nav_msgs {
     namespace msg {
         /*!
@@ -248,7 +247,6 @@ namespace nav_msgs {
                     const nav_msgs::msg::Odometry& data,
                     size_t current_alignment = 0);
 
-
             /*!
              * @brief This function serializes an object using CDR serialization.
              * @param cdr CDR serialization object.
@@ -262,8 +260,6 @@ namespace nav_msgs {
              */
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
-
-
 
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object
@@ -287,12 +283,10 @@ namespace nav_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             std_msgs::msg::Header m_header;
             std::string m_child_frame_id;
             geometry_msgs::msg::PoseWithCovariance m_pose;
             geometry_msgs::msg::TwistWithCovariance m_twist;
-
         };
     } // namespace msg
 } // namespace nav_msgs

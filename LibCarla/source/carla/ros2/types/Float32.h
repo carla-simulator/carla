@@ -22,7 +22,6 @@
 #ifndef _FAST_DDS_GENERATED_STD_MSGS_MSG_FLOAT32_H_
 #define _FAST_DDS_GENERATED_STD_MSGS_MSG_FLOAT32_H_
 
-
 #include <fastrtps/utils/fixed_size_string.hpp>
 
 #include <stdint.h>
@@ -62,7 +61,6 @@ class Cdr;
 } // namespace fastcdr
 } // namespace eprosima
 
-
 namespace std_msgs {
     namespace msg {
         /*!
@@ -72,7 +70,6 @@ namespace std_msgs {
         class Float32
         {
         public:
-
             /*!
              * @brief Default constructor.
              */
@@ -144,7 +141,6 @@ namespace std_msgs {
              */
             eProsima_user_DllExport float& data();
 
-
             /*!
             * @brief This function returns the maximum serialized size of an object
             * depending on the buffer alignment.
@@ -164,7 +160,6 @@ namespace std_msgs {
                     const std_msgs::msg::Float32& data,
                     size_t current_alignment = 0);
 
-
             /*!
              * @brief This function serializes an object using CDR serialization.
              * @param cdr CDR serialization object.
@@ -178,8 +173,6 @@ namespace std_msgs {
              */
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
-
-
 
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object
@@ -203,9 +196,7 @@ namespace std_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             float m_data;
-
         };
     } // namespace msg
 } // namespace std_msgs

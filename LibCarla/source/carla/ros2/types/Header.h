@@ -63,7 +63,6 @@ class Cdr;
 } // namespace fastcdr
 } // namespace eprosima
 
-
 namespace std_msgs {
     namespace msg {
         /*!
@@ -196,7 +195,6 @@ namespace std_msgs {
                     const std_msgs::msg::Header& data,
                     size_t current_alignment = 0);
 
-
             /*!
              * @brief This function serializes an object using CDR serialization.
              * @param cdr CDR serialization object.
@@ -210,8 +208,6 @@ namespace std_msgs {
              */
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
-
-
 
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object
@@ -235,10 +231,8 @@ namespace std_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             builtin_interfaces::msg::Time m_stamp;
             std::string m_frame_id;
-
         };
     } // namespace msg
 } // namespace std_msgs

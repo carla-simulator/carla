@@ -43,17 +43,10 @@ using namespace eprosima::fastcdr::exception;
 
 geometry_msgs::msg::Pose::Pose()
 {
-    // geometry_msgs::msg::Point m_position
-
-    // geometry_msgs::msg::Quaternion m_orientation
-
-
 }
 
 geometry_msgs::msg::Pose::~Pose()
 {
-
-
 }
 
 geometry_msgs::msg::Pose::Pose(
@@ -64,7 +57,7 @@ geometry_msgs::msg::Pose::Pose(
 }
 
 geometry_msgs::msg::Pose::Pose(
-        Pose&& x) noexcept 
+        Pose&& x) noexcept
 {
     m_position = std::move(x.m_position);
     m_orientation = std::move(x.m_orientation);
@@ -73,7 +66,6 @@ geometry_msgs::msg::Pose::Pose(
 geometry_msgs::msg::Pose& geometry_msgs::msg::Pose::operator =(
         const Pose& x)
 {
-
     m_position = x.m_position;
     m_orientation = x.m_orientation;
 
@@ -83,7 +75,6 @@ geometry_msgs::msg::Pose& geometry_msgs::msg::Pose::operator =(
 geometry_msgs::msg::Pose& geometry_msgs::msg::Pose::operator =(
         Pose&& x) noexcept
 {
-
     m_position = std::move(x.m_position);
     m_orientation = std::move(x.m_orientation);
 
@@ -93,7 +84,6 @@ geometry_msgs::msg::Pose& geometry_msgs::msg::Pose::operator =(
 bool geometry_msgs::msg::Pose::operator ==(
         const Pose& x) const
 {
-
     return (m_position == x.m_position && m_orientation == x.m_orientation);
 }
 
@@ -114,10 +104,7 @@ size_t geometry_msgs::msg::Pose::getCdrSerializedSize(
         const geometry_msgs::msg::Pose& data,
         size_t current_alignment)
 {
-    (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += geometry_msgs::msg::Point::getCdrSerializedSize(data.position(), current_alignment);
     current_alignment += geometry_msgs::msg::Quaternion::getCdrSerializedSize(data.orientation(), current_alignment);
 
@@ -127,16 +114,13 @@ size_t geometry_msgs::msg::Pose::getCdrSerializedSize(
 void geometry_msgs::msg::Pose::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_position;
     scdr << m_orientation;
-
 }
 
 void geometry_msgs::msg::Pose::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_position;
     dcdr >> m_orientation;
 }
@@ -178,6 +162,7 @@ geometry_msgs::msg::Point& geometry_msgs::msg::Pose::position()
 {
     return m_position;
 }
+
 /*!
  * @brief This function copies the value in member orientation
  * @param _orientation New value to be copied in member orientation
@@ -234,5 +219,3 @@ void geometry_msgs::msg::Pose::serializeKey(
 {
     (void) scdr;
 }
-
-

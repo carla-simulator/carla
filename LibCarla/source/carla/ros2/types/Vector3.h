@@ -22,7 +22,6 @@
 #ifndef _FAST_DDS_GENERATED_GEOMETRY_MSGS_MSG_VECTOR3_H_
 #define _FAST_DDS_GENERATED_GEOMETRY_MSGS_MSG_VECTOR3_H_
 
-
 #include <fastrtps/utils/fixed_size_string.hpp>
 
 #include <stdint.h>
@@ -182,7 +181,6 @@ namespace geometry_msgs {
              */
             eProsima_user_DllExport double& z();
 
-
             /*!
             * @brief This function returns the maximum serialized size of an object
             * depending on the buffer alignment.
@@ -202,7 +200,6 @@ namespace geometry_msgs {
                     const geometry_msgs::msg::Vector3& data,
                     size_t current_alignment = 0);
 
-
             /*!
              * @brief This function serializes an object using CDR serialization.
              * @param cdr CDR serialization object.
@@ -216,8 +213,6 @@ namespace geometry_msgs {
              */
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
-
-
 
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object
@@ -241,11 +236,9 @@ namespace geometry_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             double m_x;
             double m_y;
             double m_z;
-
         };
     } // namespace msg
 } // namespace geometry_msgs

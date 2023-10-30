@@ -796,5 +796,5 @@ void ROS2::Shutdown() {
   _enabled = false;
 }
 
- } // namespace ros2
+} // namespace ros2
 } // namespace carla

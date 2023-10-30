@@ -45,14 +45,10 @@ geometry_msgs::msg::Point::Point()
     m_y = 0.0;
     // double m_z
     m_z = 0.0;
-
 }
 
 geometry_msgs::msg::Point::~Point()
 {
-
-
-
 }
 
 geometry_msgs::msg::Point::Point(
@@ -64,7 +60,7 @@ geometry_msgs::msg::Point::Point(
 }
 
 geometry_msgs::msg::Point::Point(
-        Point&& x) noexcept 
+        Point&& x) noexcept
 {
     m_x = x.m_x;
     m_y = x.m_y;
@@ -74,7 +70,6 @@ geometry_msgs::msg::Point::Point(
 geometry_msgs::msg::Point& geometry_msgs::msg::Point::operator =(
         const Point& x)
 {
-
     m_x = x.m_x;
     m_y = x.m_y;
     m_z = x.m_z;
@@ -85,7 +80,6 @@ geometry_msgs::msg::Point& geometry_msgs::msg::Point::operator =(
 geometry_msgs::msg::Point& geometry_msgs::msg::Point::operator =(
         Point&& x) noexcept
 {
-
     m_x = x.m_x;
     m_y = x.m_y;
     m_z = x.m_z;
@@ -96,7 +90,6 @@ geometry_msgs::msg::Point& geometry_msgs::msg::Point::operator =(
 bool geometry_msgs::msg::Point::operator ==(
         const Point& x) const
 {
-
     return (m_x == x.m_x && m_y == x.m_y && m_z == x.m_z);
 }
 
@@ -119,17 +112,9 @@ size_t geometry_msgs::msg::Point::getCdrSerializedSize(
 {
     (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
-
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
-
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
-
-
 
     return current_alignment - initial_alignment;
 }
@@ -137,17 +122,14 @@ size_t geometry_msgs::msg::Point::getCdrSerializedSize(
 void geometry_msgs::msg::Point::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_x;
     scdr << m_y;
     scdr << m_z;
-
 }
 
 void geometry_msgs::msg::Point::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_x;
     dcdr >> m_y;
     dcdr >> m_z;
@@ -237,8 +219,6 @@ double& geometry_msgs::msg::Point::z()
     return m_z;
 }
 
-
-
 size_t geometry_msgs::msg::Point::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
 {
@@ -256,5 +236,3 @@ void geometry_msgs::msg::Point::serializeKey(
 {
     (void) scdr;
 }
-
-

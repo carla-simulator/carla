@@ -44,7 +44,6 @@ using namespace eprosima::fastcdr::exception;
 #define sensor_msgs_msg_RegionOfInterest_max_key_cdr_typesize 0ULL;
 #define std_msgs_msg_Header_max_key_cdr_typesize 0ULL;
 
-
 sensor_msgs::msg::CameraInfo::CameraInfo(uint32_t height, uint32_t width, double fov) :
 m_height(height),
 m_width(width)
@@ -105,7 +104,6 @@ sensor_msgs::msg::CameraInfo::CameraInfo(
 sensor_msgs::msg::CameraInfo& sensor_msgs::msg::CameraInfo::operator =(
         const CameraInfo& x)
 {
-
     m_header = x.m_header;
     m_height = x.m_height;
     m_width = x.m_width;
@@ -124,7 +122,6 @@ sensor_msgs::msg::CameraInfo& sensor_msgs::msg::CameraInfo::operator =(
 sensor_msgs::msg::CameraInfo& sensor_msgs::msg::CameraInfo::operator =(
         CameraInfo&& x) noexcept
 {
-
     m_header = std::move(x.m_header);
     m_height = x.m_height;
     m_width = x.m_width;
@@ -143,7 +140,6 @@ sensor_msgs::msg::CameraInfo& sensor_msgs::msg::CameraInfo::operator =(
 bool sensor_msgs::msg::CameraInfo::operator ==(
         const CameraInfo& x) const
 {
-
     return (m_header == x.m_header && m_height == x.m_height && m_width == x.m_width && m_distortion_model == x.m_distortion_model && m_D == x.m_D && m_K == x.m_K && m_R == x.m_R && m_P == x.m_P && m_binning_x == x.m_binning_x && m_binning_y == x.m_binning_y && m_roi == x.m_roi);
 }
 
@@ -166,25 +162,16 @@ size_t sensor_msgs::msg::CameraInfo::getCdrSerializedSize(
 {
     (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.distortion_model().size() + 1;
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
     if (data.D().size() > 0)
     {
         current_alignment += (data.D().size() * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
     }
-
-
 
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
@@ -193,16 +180,12 @@ size_t sensor_msgs::msg::CameraInfo::getCdrSerializedSize(
         current_alignment += (data.K().size() * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
     }
 
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
     if (data.R().size() > 0)
     {
         current_alignment += (data.R().size() * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
     }
-
-
 
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
@@ -211,14 +194,8 @@ size_t sensor_msgs::msg::CameraInfo::getCdrSerializedSize(
         current_alignment += (data.P().size() * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
     }
 
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += sensor_msgs::msg::RegionOfInterest::getCdrSerializedSize(data.roi(), current_alignment);
 
     return current_alignment - initial_alignment;
@@ -227,7 +204,6 @@ size_t sensor_msgs::msg::CameraInfo::getCdrSerializedSize(
 void sensor_msgs::msg::CameraInfo::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_header;
     scdr << m_height;
     scdr << m_width;
@@ -239,13 +215,11 @@ void sensor_msgs::msg::CameraInfo::serialize(
     scdr << m_binning_x;
     scdr << m_binning_y;
     scdr << m_roi;
-
 }
 
 void sensor_msgs::msg::CameraInfo::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_header;
     dcdr >> m_height;
     dcdr >> m_width;
@@ -389,6 +363,7 @@ std::string& sensor_msgs::msg::CameraInfo::distortion_model()
 {
     return m_distortion_model;
 }
+
 /*!
  * @brief This function copies the value in member D
  * @param _D New value to be copied in member D
@@ -426,6 +401,7 @@ std::vector<double>& sensor_msgs::msg::CameraInfo::D()
 {
     return m_D;
 }
+
 /*!
  * @brief This function copies the value in member K
  * @param _K New value to be copied in member K
@@ -463,6 +439,7 @@ std::vector<double>& sensor_msgs::msg::CameraInfo::K()
 {
     return m_K;
 }
+
 /*!
  * @brief This function copies the value in member R
  * @param _R New value to be copied in member R
@@ -500,6 +477,7 @@ std::vector<double>& sensor_msgs::msg::CameraInfo::R()
 {
     return m_R;
 }
+
 /*!
  * @brief This function copies the value in member P
  * @param _P New value to be copied in member P
@@ -537,6 +515,7 @@ std::vector<double>& sensor_msgs::msg::CameraInfo::P()
 {
     return m_P;
 }
+
 /*!
  * @brief This function sets a value in member binning_x
  * @param _binning_x New value for member binning_x
@@ -630,7 +609,6 @@ sensor_msgs::msg::RegionOfInterest& sensor_msgs::msg::CameraInfo::roi()
 {
     return m_roi;
 }
-
 
 size_t sensor_msgs::msg::CameraInfo::getKeyMaxCdrSerializedSize(
         size_t current_alignment)

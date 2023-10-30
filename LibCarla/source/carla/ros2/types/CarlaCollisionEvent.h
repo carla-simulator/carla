@@ -216,7 +216,6 @@ namespace carla_msgs {
                     const carla_msgs::msg::CollisionEvent& data,
                     size_t current_alignment = 0);
 
-
             /*!
              * @brief This function serializes an object using CDR serialization.
              * @param cdr CDR serialization object.
@@ -230,8 +229,6 @@ namespace carla_msgs {
              */
             eProsima_user_DllExport void deserialize(
                     eprosima::fastcdr::Cdr& cdr);
-
-
 
             /*!
              * @brief This function returns the maximum serialized size of the Key of an object
@@ -255,11 +252,9 @@ namespace carla_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-
             std_msgs::msg::Header m_header;
             uint32_t m_other_actor_id;
             geometry_msgs::msg::Vector3 m_normal_impulse;
-
         };
     } // namespace msg
 } // namespace carla_msgs
