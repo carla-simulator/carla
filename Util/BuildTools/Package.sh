@@ -167,6 +167,10 @@ if ${DO_CARLA_RELEASE} ; then
     copy_if_changed "./Plugins/" "${DESTINATION}/Plugins/"
   fi
 
+  if [ -d "./Unreal/CarlaUE4/Plugins/Carla/CarlaDependencies/lib" ] ; then
+    copy_if_changed "./Unreal/CarlaUE4/Plugins/Carla/CarlaDependencies/lib" "${DESTINATION}/CarlaUE4/Plugins/Carla/CarlaDependencies"
+  fi
+
   copy_if_changed "./Unreal/CarlaUE4/Content/Carla/HDMaps/*.pcd" "${DESTINATION}/HDMaps/"
   copy_if_changed "./Unreal/CarlaUE4/Content/Carla/HDMaps/Readme.md" "${DESTINATION}/HDMaps/README"
 
@@ -289,7 +293,7 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
   # MAPS_TO_COOK is read into an array as tokens separated by IFS
   read -ra ADDR <<< "$MAPS_TO_COOK"
   for i in "${ADDR[@]}"; do # access each element of array
-    
+
     XODR_FILE_PATH="${CARLAUE4_ROOT_FOLDER}/Content${i:5}"
     MAP_NAME=${XODR_FILE_PATH##*/}
     XODR_FILE=$(find "${CARLAUE4_ROOT_FOLDER}/Content" -name "${MAP_NAME}.xodr" -print -quit)
@@ -324,7 +328,7 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
     rm -f "./CarlaUE4/AssetRegistry.bin"
 
   if ${DO_TARBALL} ; then
-  
+
     if ${SINGLE_PACKAGE} ; then
       tar -rf ${DESTINATION} *
     else

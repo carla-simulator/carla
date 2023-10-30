@@ -868,9 +868,6 @@ if ${USE_ROS2} ; then
 
     mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
     cp -p ${FASTDDS_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-
-    mkdir -p ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
-    cp -p ${FASTDDS_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   fi
 fi
 
