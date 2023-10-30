@@ -19,6 +19,7 @@
   * Add keyword arguments for `carla.TrafficManager` Python API functions
   * Fixed bug causing the `FPixelReader::SavePixelsToDisk(PixelData, FilePath)` function to crash due to pixel array not set correctly.
   * Collisions detected by the CollisionSensor no longer generate more than one event per frame.
+  * Fixed segfaults in Python API due to incorrect GIL locking under Python 3.10.
   * Added API function to load a map only if it is different from the current one.
 
 ## CARLA 0.9.14
