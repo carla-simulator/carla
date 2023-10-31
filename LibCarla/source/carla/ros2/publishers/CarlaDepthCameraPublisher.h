@@ -26,9 +26,12 @@ namespace ros2 {
       CarlaDepthCameraPublisher& operator=(CarlaDepthCameraPublisher&&);
 
       bool Init();
+      void InitInfoData(uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, float fov, bool do_rectify);
       bool Publish();
+
+      bool HasBeenInitialized() const;
       void SetImageData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data);
-      void SetCameraInfoData(int32_t seconds, uint32_t nanoseconds, uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, float fov, bool do_rectify);
+      void SetCameraInfoData(int32_t seconds, uint32_t nanoseconds);
       const char* type() const override { return "depth camera"; }
 
     private:

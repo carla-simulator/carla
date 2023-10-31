@@ -437,10 +437,10 @@ namespace sensor_msgs {
             uint32_t m_height;
             uint32_t m_width;
             std::string m_distortion_model;
-            std::vector<double> m_D;
-            std::vector<double> m_K;
-            std::vector<double> m_R;
-            std::vector<double> m_P;
+            std::vector<double> m_d;
+            std::vector<double> m_k;
+            std::vector<double> m_r;
+            std::vector<double> m_p;
             uint32_t m_binning_x;
             uint32_t m_binning_y;
             sensor_msgs::msg::RegionOfInterest m_roi;

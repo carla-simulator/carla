@@ -56,10 +56,10 @@ m_width(width)
     const double fx = static_cast<double>(m_width) / (2.0 * std::tan(fov) * M_PI / 360.0);
     const double fy = fx;
 
-    m_D = { 0.0, 0.0, 0.0, 0.0, 0.0 };
-    m_K = {fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0};
-    m_R = { 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
-    m_P = {fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0};
+    m_d = { 0.0, 0.0, 0.0, 0.0, 0.0 };
+    m_k = {fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0};
+    m_r = { 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
+    m_p = {fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0};
 
     m_binning_x = 0;
     m_binning_y = 0;
@@ -76,10 +76,10 @@ sensor_msgs::msg::CameraInfo::CameraInfo(
     m_height = x.m_height;
     m_width = x.m_width;
     m_distortion_model = x.m_distortion_model;
-    m_D = x.m_D;
-    m_K = x.m_K;
-    m_R = x.m_R;
-    m_P = x.m_P;
+    m_d = x.m_d;
+    m_k = x.m_k;
+    m_r = x.m_r;
+    m_p = x.m_p;
     m_binning_x = x.m_binning_x;
     m_binning_y = x.m_binning_y;
     m_roi = x.m_roi;
@@ -92,10 +92,10 @@ sensor_msgs::msg::CameraInfo::CameraInfo(
     m_height = x.m_height;
     m_width = x.m_width;
     m_distortion_model = std::move(x.m_distortion_model);
-    m_D = std::move(x.m_D);
-    m_K = std::move(x.m_K);
-    m_R = std::move(x.m_R);
-    m_P = std::move(x.m_P);
+    m_d = std::move(x.m_d);
+    m_k = std::move(x.m_k);
+    m_r = std::move(x.m_r);
+    m_p = std::move(x.m_p);
     m_binning_x = x.m_binning_x;
     m_binning_y = x.m_binning_y;
     m_roi = std::move(x.m_roi);
@@ -108,10 +108,10 @@ sensor_msgs::msg::CameraInfo& sensor_msgs::msg::CameraInfo::operator =(
     m_height = x.m_height;
     m_width = x.m_width;
     m_distortion_model = x.m_distortion_model;
-    m_D = x.m_D;
-    m_K = x.m_K;
-    m_R = x.m_R;
-    m_P = x.m_P;
+    m_d = x.m_d;
+    m_k = x.m_k;
+    m_r = x.m_r;
+    m_p = x.m_p;
     m_binning_x = x.m_binning_x;
     m_binning_y = x.m_binning_y;
     m_roi = x.m_roi;
@@ -126,10 +126,10 @@ sensor_msgs::msg::CameraInfo& sensor_msgs::msg::CameraInfo::operator =(
     m_height = x.m_height;
     m_width = x.m_width;
     m_distortion_model = std::move(x.m_distortion_model);
-    m_D = std::move(x.m_D);
-    m_K = std::move(x.m_K);
-    m_R = std::move(x.m_R);
-    m_P = std::move(x.m_P);
+    m_d = std::move(x.m_d);
+    m_k = std::move(x.m_k);
+    m_r = std::move(x.m_r);
+    m_p = std::move(x.m_p);
     m_binning_x = x.m_binning_x;
     m_binning_y = x.m_binning_y;
     m_roi = std::move(x.m_roi);
@@ -140,7 +140,7 @@ sensor_msgs::msg::CameraInfo& sensor_msgs::msg::CameraInfo::operator =(
 bool sensor_msgs::msg::CameraInfo::operator ==(
         const CameraInfo& x) const
 {
-    return (m_header == x.m_header && m_height == x.m_height && m_width == x.m_width && m_distortion_model == x.m_distortion_model && m_D == x.m_D && m_K == x.m_K && m_R == x.m_R && m_P == x.m_P && m_binning_x == x.m_binning_x && m_binning_y == x.m_binning_y && m_roi == x.m_roi);
+    return (m_header == x.m_header && m_height == x.m_height && m_width == x.m_width && m_distortion_model == x.m_distortion_model && m_d == x.m_d && m_k == x.m_k && m_r == x.m_r && m_p == x.m_p && m_binning_x == x.m_binning_x && m_binning_y == x.m_binning_y && m_roi == x.m_roi);
 }
 
 bool sensor_msgs::msg::CameraInfo::operator !=(
@@ -208,10 +208,10 @@ void sensor_msgs::msg::CameraInfo::serialize(
     scdr << m_height;
     scdr << m_width;
     scdr << m_distortion_model.c_str();
-    scdr << m_D;
-    scdr << m_K;
-    scdr << m_R;
-    scdr << m_P;
+    scdr << m_d;
+    scdr << m_k;
+    scdr << m_r;
+    scdr << m_p;
     scdr << m_binning_x;
     scdr << m_binning_y;
     scdr << m_roi;
@@ -224,10 +224,10 @@ void sensor_msgs::msg::CameraInfo::deserialize(
     dcdr >> m_height;
     dcdr >> m_width;
     dcdr >> m_distortion_model;
-    dcdr >> m_D;
-    dcdr >> m_K;
-    dcdr >> m_R;
-    dcdr >> m_P;
+    dcdr >> m_d;
+    dcdr >> m_k;
+    dcdr >> m_r;
+    dcdr >> m_p;
     dcdr >> m_binning_x;
     dcdr >> m_binning_y;
     dcdr >> m_roi;
@@ -371,7 +371,7 @@ std::string& sensor_msgs::msg::CameraInfo::distortion_model()
 void sensor_msgs::msg::CameraInfo::D(
         const std::vector<double>& _D)
 {
-    m_D = _D;
+    m_d = _D;
 }
 
 /*!
@@ -381,7 +381,7 @@ void sensor_msgs::msg::CameraInfo::D(
 void sensor_msgs::msg::CameraInfo::D(
         std::vector<double>&& _D)
 {
-    m_D = std::move(_D);
+    m_d = std::move(_D);
 }
 
 /*!
@@ -390,7 +390,7 @@ void sensor_msgs::msg::CameraInfo::D(
  */
 const std::vector<double>& sensor_msgs::msg::CameraInfo::D() const
 {
-    return m_D;
+    return m_d;
 }
 
 /*!
@@ -399,7 +399,7 @@ const std::vector<double>& sensor_msgs::msg::CameraInfo::D() const
  */
 std::vector<double>& sensor_msgs::msg::CameraInfo::D()
 {
-    return m_D;
+    return m_d;
 }
 
 /*!
@@ -409,7 +409,7 @@ std::vector<double>& sensor_msgs::msg::CameraInfo::D()
 void sensor_msgs::msg::CameraInfo::K(
         const std::vector<double>& _K)
 {
-    m_K = _K;
+    m_k = _K;
 }
 
 /*!
@@ -419,7 +419,7 @@ void sensor_msgs::msg::CameraInfo::K(
 void sensor_msgs::msg::CameraInfo::K(
         std::vector<double>&& _K)
 {
-    m_K = std::move(_K);
+    m_k = std::move(_K);
 }
 
 /*!
@@ -428,7 +428,7 @@ void sensor_msgs::msg::CameraInfo::K(
  */
 const std::vector<double>& sensor_msgs::msg::CameraInfo::K() const
 {
-    return m_K;
+    return m_k;
 }
 
 /*!
@@ -437,7 +437,7 @@ const std::vector<double>& sensor_msgs::msg::CameraInfo::K() const
  */
 std::vector<double>& sensor_msgs::msg::CameraInfo::K()
 {
-    return m_K;
+    return m_k;
 }
 
 /*!
@@ -447,7 +447,7 @@ std::vector<double>& sensor_msgs::msg::CameraInfo::K()
 void sensor_msgs::msg::CameraInfo::R(
         const std::vector<double>& _R)
 {
-    m_R = _R;
+    m_r = _R;
 }
 
 /*!
@@ -457,7 +457,7 @@ void sensor_msgs::msg::CameraInfo::R(
 void sensor_msgs::msg::CameraInfo::R(
         std::vector<double>&& _R)
 {
-    m_R = std::move(_R);
+    m_r = std::move(_R);
 }
 
 /*!
@@ -466,7 +466,7 @@ void sensor_msgs::msg::CameraInfo::R(
  */
 const std::vector<double>& sensor_msgs::msg::CameraInfo::R() const
 {
-    return m_R;
+    return m_r;
 }
 
 /*!
@@ -475,7 +475,7 @@ const std::vector<double>& sensor_msgs::msg::CameraInfo::R() const
  */
 std::vector<double>& sensor_msgs::msg::CameraInfo::R()
 {
-    return m_R;
+    return m_r;
 }
 
 /*!
@@ -485,7 +485,7 @@ std::vector<double>& sensor_msgs::msg::CameraInfo::R()
 void sensor_msgs::msg::CameraInfo::P(
         const std::vector<double>& _P)
 {
-    m_P = _P;
+    m_p = _P;
 }
 
 /*!
@@ -495,7 +495,7 @@ void sensor_msgs::msg::CameraInfo::P(
 void sensor_msgs::msg::CameraInfo::P(
         std::vector<double>&& _P)
 {
-    m_P = std::move(_P);
+    m_p = std::move(_P);
 }
 
 /*!
@@ -504,7 +504,7 @@ void sensor_msgs::msg::CameraInfo::P(
  */
 const std::vector<double>& sensor_msgs::msg::CameraInfo::P() const
 {
-    return m_P;
+    return m_p;
 }
 
 /*!
@@ -513,7 +513,7 @@ const std::vector<double>& sensor_msgs::msg::CameraInfo::P() const
  */
 std::vector<double>& sensor_msgs::msg::CameraInfo::P()
 {
-    return m_P;
+    return m_p;
 }
 
 /*!
