@@ -41,8 +41,8 @@ public:
   void AddStream() {
     Stream stream = _server.MakeStream();
 
-    _client.Subscribe(stream.token(), [this](carla::Buffer DEBUG_ONLY(msg)) {
-      DEBUG_ASSERT_EQ(msg.size(), _message->size());
+    _client.Subscribe(stream.token(), [this](carla::SharedBufferView DEBUG_ONLY(msg)) {
+      DEBUG_ASSERT_EQ(msg->size(), _message->size());
       DEBUG_ASSERT(msg == _message);
       boost::asio::post(_client_callback, [this]() {
         CARLA_PROFILE_FPS(client, listen_callback);
