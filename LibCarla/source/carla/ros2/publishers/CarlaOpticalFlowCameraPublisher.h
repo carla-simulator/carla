@@ -28,7 +28,7 @@ namespace ros2 {
       bool Init();
       bool Publish();
       void SetImageData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const float* data);
-      void SetInfoRegionOfInterest( uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, bool do_rectify);
+      void SetCameraInfoData(int32_t seconds, uint32_t nanoseconds, uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, float fov, bool do_rectify);
       const char* type() const override { return "optical flow camera"; }
 
     private:
@@ -36,6 +36,8 @@ namespace ros2 {
       bool InitInfo();
       bool PublishImage();
       bool PublishInfo();
+
+      void SetInfoRegionOfInterest( uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, bool do_rectify);
       void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data);
 
     private:

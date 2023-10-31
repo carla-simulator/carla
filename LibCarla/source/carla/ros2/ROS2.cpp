@@ -498,7 +498,7 @@ void ROS2::ProcessDataFromCamera(
           if (!header)
             return;
           publisher->SetImageData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
-          publisher->SetInfoRegionOfInterest(0, 0, H, W, true);
+          publisher->SetCameraInfoData(_seconds, _nanoseconds, 0, 0, H, W, Fov, true);
           publisher->Publish();
         }
         if (sensors.second) {
@@ -519,7 +519,7 @@ void ROS2::ProcessDataFromCamera(
           if (!header)
             return;
           publisher->SetImageData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
-          publisher->SetInfoRegionOfInterest(0, 0, H, W, true);
+          publisher->SetCameraInfoData(_seconds, _nanoseconds, 0, 0, H, W, Fov, true);
           publisher->Publish();
         }
         if (sensors.second) {
@@ -543,7 +543,7 @@ void ROS2::ProcessDataFromCamera(
           if (!header)
             return;
           publisher->SetImageData(_seconds, _nanoseconds, header->height, header->width, (const float*) (buffer->data() + carla::sensor::s11n::OpticalFlowImageSerializer::header_offset));
-          publisher->SetInfoRegionOfInterest(0, 0, H, W, true);
+          publisher->SetCameraInfoData(_seconds, _nanoseconds, 0, 0, H, W, Fov, true);
           publisher->Publish();
         }
         if (sensors.second) {
@@ -568,7 +568,7 @@ void ROS2::ProcessDataFromCamera(
           if (!header)
             return;
           publisher->SetImageData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
-          publisher->SetInfoRegionOfInterest(0, 0, H, W, true);
+          publisher->SetCameraInfoData(_seconds, _nanoseconds, 0, 0, H, W, Fov, true);
           publisher->Publish();
         }
         if (sensors.second) {
@@ -590,7 +590,7 @@ void ROS2::ProcessDataFromCamera(
           if (!header)
             return;
           publisher->SetImageData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
-          publisher->SetInfoRegionOfInterest(0, 0, H, W, true);
+          publisher->SetCameraInfoData(_seconds, _nanoseconds, 0, 0, H, W, Fov, true);
           publisher->Publish();
         }
         if (sensors.second) {
@@ -611,7 +611,7 @@ void ROS2::ProcessDataFromCamera(
           if (!header)
             return;
           publisher->SetImageData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
-          publisher->SetInfoRegionOfInterest(0, 0, H, W, true);
+          publisher->SetCameraInfoData(_seconds, _nanoseconds, 0, 0, H, W, Fov, true);
           publisher->Publish();
         }
         if (sensors.second) {
@@ -694,7 +694,7 @@ void ROS2::ProcessDataFromDVS(
       return;
     size_t elements = (buffer->size() - carla::sensor::s11n::ImageSerializer::header_offset) / sizeof(carla::sensor::data::DVSEvent);
     publisher->SetImageData(_seconds, _nanoseconds, elements, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
-    publisher->SetInfoRegionOfInterest(0, 0, H, W, true);
+    publisher->SetCameraInfoData(_seconds, _nanoseconds, 0, 0, H, W, Fov, true);
     publisher->SetPointCloudData(1, elements * sizeof(carla::sensor::data::DVSEvent), elements, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
     publisher->Publish();
   }

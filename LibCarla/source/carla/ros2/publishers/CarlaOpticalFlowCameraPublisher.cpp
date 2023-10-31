@@ -397,6 +397,33 @@ namespace ros2 {
     _impl->_image.data(std::move(data)); //https://github.com/eProsima/Fast-DDS/issues/2330
   }
 
+  void CarlaOpticalFlowCameraPublisher::SetCameraInfoData(int32_t seconds, uint32_t nanoseconds, uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, float fov, bool do_rectify) {
+    builtin_interfaces::msg::Time time;
+    time.sec(seconds);
+    time.nanosec(nanoseconds);
+
+    std_msgs::msg::Header header;
+    header.stamp(std::move(time));
+    header.frame_id(_frame_id);
+    _impl_info->_info.header(header);
+
+    _impl_info->_info.width(width);
+    _impl_info->_info.height(height);
+    _impl_info->_info.distortion_model("plumb_bob");
+
+    const double cx = width / 2.0;
+    const double cy = height / 2.0;
+    const double fx = static_cast<double>(width) / (2.0 * std::tan(fov) * M_PI / 360.0);
+    const double fy = fx;
+
+    _impl_info->_info.K({fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0});
+    _impl_info->_info.D({0.0, 0.0, 0.0, 0.0, 0.0});
+    _impl_info->_info.R({1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0});
+    _impl_info->_info.P({fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0});
+
+    SetInfoRegionOfInterest(x_offset, y_offset, height, width, do_rectify);
+  }
+
   CarlaOpticalFlowCameraPublisher::CarlaOpticalFlowCameraPublisher(const char* ros_name, const char* parent) :
   _impl(std::make_shared<CarlaOpticalFlowCameraPublisherImpl>()),
   _impl_info(std::make_shared<CarlaCameraInfoPublisherImpl>()) {

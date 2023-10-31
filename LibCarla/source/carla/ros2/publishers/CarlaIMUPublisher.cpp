@@ -151,15 +151,15 @@ namespace ros2 {
   void CarlaIMUPublisher::SetData(int32_t seconds, uint32_t nanoseconds, float* pAccelerometer, float* pGyroscope, float compass) {
     geometry_msgs::msg::Vector3 gyroscope;
     geometry_msgs::msg::Vector3 linear_acceleration;
-    float ax = *pAccelerometer++;
-    float ay = *pAccelerometer++;
-    float az = *pAccelerometer++;
+    const float ax = *pAccelerometer++;
+    const float ay = *pAccelerometer++;
+    const float az = *pAccelerometer++;
     linear_acceleration.x(ax);
     linear_acceleration.y(ay);
     linear_acceleration.z(az);
-    float gx = *pGyroscope++;
-    float gy = *pGyroscope++;
-    float gz = *pGyroscope++;
+    const float gx = *pGyroscope++;
+    const float gy = *pGyroscope++;
+    const float gz = *pGyroscope++;
     gyroscope.x(gx);
     gyroscope.y(gy);
     gyroscope.z(gz);
@@ -173,6 +173,22 @@ namespace ros2 {
     header.frame_id(_frame_id);
 
     geometry_msgs::msg::Quaternion orientation;
+
+    const float rx = sinf(compass);
+    const float ry = cosf(compass);
+    const float rz = 0.0f;
+
+    const float cr = cosf(rz * 0.5f);
+    const float sr = sinf(rz * 0.5f);
+    const float cp = cosf(rx * 0.5f);
+    const float sp = sinf(rx * 0.5f);
+    const float cy = cosf(ry * 0.5f);
+    const float sy = sinf(ry * 0.5f);
+
+    orientation.w(cr * cp * cy + sr * sp * sy);
+    orientation.x(sr * cp * cy - cr * sp * sy);
+    orientation.y(cr * sp * cy + sr * cp * sy);
+    orientation.z(cr * cp * sy - sr * sp * cy);
 
     _impl->_imu.header(std::move(header));
     _impl->_imu.orientation(orientation);

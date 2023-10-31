@@ -183,7 +183,6 @@ namespace ros2 {
         _impl->vec_rotation.z(cr * cp * sy - sr * sp * cy);
     }
 
-
     builtin_interfaces::msg::Time time;
     time.sec(seconds);
     time.nanosec(nanoseconds);

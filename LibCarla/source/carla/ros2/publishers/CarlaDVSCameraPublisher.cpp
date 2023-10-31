@@ -437,6 +437,33 @@ namespace ros2 {
     _impl->_image.data(std::move(data)); //https://github.com/eProsima/Fast-DDS/issues/2330
   }
 
+  void CarlaDVSCameraPublisher::SetCameraInfoData(int32_t seconds, uint32_t nanoseconds, uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, float fov, bool do_rectify) {
+    builtin_interfaces::msg::Time time;
+    time.sec(seconds);
+    time.nanosec(nanoseconds);
+
+    std_msgs::msg::Header header;
+    header.stamp(std::move(time));
+    header.frame_id(_frame_id);
+
+    _info->_ci.header(header);
+    _info->_ci.width(width);
+    _info->_ci.height(height);
+    _info->_ci.distortion_model("plumb_bob");
+
+    const double cx = width / 2.0;
+    const double cy = height / 2.0;
+    const double fx = static_cast<double>(width) / (2.0 * std::tan(fov) * M_PI / 360.0);
+    const double fy = fx;
+
+    _info->_ci.K({fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0});
+    _info->_ci.D({0.0, 0.0, 0.0, 0.0, 0.0});
+    _info->_ci.R({1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0});
+    _info->_ci.P({fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0});
+
+    SetInfoRegionOfInterest(x_offset, y_offset, height, width, do_rectify);
+  }
+
   void CarlaDVSCameraPublisher::SetInfoRegionOfInterest( uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, bool do_rectify) {
     sensor_msgs::msg::RegionOfInterest roi;
     roi.x_offset(x_offset);
