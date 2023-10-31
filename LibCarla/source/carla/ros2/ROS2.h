@@ -133,6 +133,13 @@ class ROS2
       AActor *second_actor,
       float distance,
       void *actor = nullptr);
+void ProcessDataFromCollisionSensor(
+    uint64_t sensor_type,
+    carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform sensor_transform,
+    uint32_t other_actor,
+    carla::geom::Vector3D impulse,
+    void* actor);
 
   private:
   std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor);

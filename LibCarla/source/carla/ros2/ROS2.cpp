@@ -531,6 +531,19 @@ void ROS2::ProcessDataFromCamera(
       break;
     case ESensors::LaneInvasionSensor:
       log_info("Sensor LaneInvasionSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
+      {
+        auto sensors = GetOrCreateSensor(ESensors::LaneInvasionSensor, stream_id, actor);
+        if (sensors.first) {
+          std::shared_ptr<CarlaLineInvasionPublisher> publisher = std::dynamic_pointer_cast<CarlaLineInvasionPublisher>(sensors.first);
+          publisher->SetData(_seconds, _nanoseconds, (const int32_t*) buffer->data());
+          publisher->Publish();
+        }
+        if (sensors.second) {
+          std::shared_ptr<CarlaTransformPublisher> publisher = std::dynamic_pointer_cast<CarlaTransformPublisher>(sensors.second);
+          publisher->SetData(_seconds, _nanoseconds, (const float*)&sensor_transform.location, (const float*)&sensor_transform.rotation);
+          publisher->Publish();
+        }
+      }
       break;
     case ESensors::OpticalFlowCamera:
       log_info("Sensor OpticalFlowCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
@@ -782,6 +795,26 @@ void ROS2::ProcessDataFromObstacleDetection(
     float distance,
     void *actor) {
   log_info("Sensor ObstacleDetector to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "distance.", distance);
+}
+
+void ROS2::ProcessDataFromCollisionSensor(
+    uint64_t sensor_type,
+    carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform sensor_transform,
+    uint32_t other_actor,
+    carla::geom::Vector3D impulse,
+    void* actor) {
+  auto sensors = GetOrCreateSensor(ESensors::CollisionSensor, stream_id, actor);
+  if (sensors.first) {
+    std::shared_ptr<CarlaCollisionPublisher> publisher = std::dynamic_pointer_cast<CarlaCollisionPublisher>(sensors.first);
+    publisher->SetData(_seconds, _nanoseconds, other_actor, (const uint8_t*)&impulse);
+    publisher->Publish();
+  }
+  if (sensors.second) {
+    std::shared_ptr<CarlaTransformPublisher> publisher = std::dynamic_pointer_cast<CarlaTransformPublisher>(sensors.second);
+    publisher->SetData(_seconds, _nanoseconds, (const float*)&sensor_transform.location, (const float*)&sensor_transform.rotation);
+    publisher->Publish();
+  }
 }
 
 void ROS2::Shutdown() {

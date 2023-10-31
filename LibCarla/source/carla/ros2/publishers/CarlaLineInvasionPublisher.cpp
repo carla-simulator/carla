@@ -148,7 +148,7 @@ namespace ros2 {
     return false;
   }
 
-  void CarlaLineInvasionPublisher::SetData(int32_t seconds, uint32_t nanoseconds, int32_t* data) {
+  void CarlaLineInvasionPublisher::SetData(int32_t seconds, uint32_t nanoseconds, const int32_t* data) {
     builtin_interfaces::msg::Time time;
     time.sec(seconds);
     time.nanosec(nanoseconds);

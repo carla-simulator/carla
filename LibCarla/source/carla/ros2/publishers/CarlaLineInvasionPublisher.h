@@ -25,7 +25,7 @@ namespace ros2 {
 
       bool Init();
       bool Publish();
-      void SetData(int32_t seconds, uint32_t nanoseconds, int32_t* data);
+      void SetData(int32_t seconds, uint32_t nanoseconds, const int32_t* data);
       const char* type() const override { return "line invasion"; }
 
     private:
