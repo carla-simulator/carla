@@ -153,7 +153,6 @@ namespace ros2 {
     return false;
   }
 
-
   void CarlaEgoVehicleControlSubscriber::ForwardMessage(VehicleControl control) {
     _impl->_control = control;
     _impl->_new_message = true;
