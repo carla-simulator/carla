@@ -44,7 +44,6 @@ public:
     _client.Subscribe(stream.token(), [this](carla::Buffer msg) {
       carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(msg));
       DEBUG_ASSERT_EQ(BufView->size(), _message->size());
-      DEBUG_ASSERT(BufView == _message);
       boost::asio::post(_client_callback, [this]() {
         CARLA_PROFILE_FPS(client, listen_callback);
         ++_number_of_messages_received;
