@@ -39,13 +39,6 @@ pipeline
                     }
                     stages
                     {
-                        stage('ubuntu install ros2 dependencies')
-                        {
-                            steps
-                            {
-                                sh 'apt-get --yes install libasio-dev libtinyxml2-dev'
-                            }
-                        }
                         stage('ubuntu setup')
                         {
                             steps
