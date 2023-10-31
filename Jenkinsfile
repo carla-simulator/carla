@@ -39,13 +39,19 @@ pipeline
                     }
                     stages
                     {
+                        stage('ubuntu install ros2 dependencies')
+                        {
+                            steps
+                            {
+                                sh 'apt-get --yes install libasio-dev libtinyxml2-dev'
+                            }
+                        }
                         stage('ubuntu setup')
                         {
                             steps
                             {
                                 sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
                                 sh 'make setup ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono --ros2"'
-                                sh 'apt-get --yes install libasio-dev libtinyxml2-dev'
                             }
                         }
                         stage('ubuntu build')
