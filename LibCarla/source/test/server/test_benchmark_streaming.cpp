@@ -41,7 +41,7 @@ public:
   void AddStream() {
     Stream stream = _server.MakeStream();
 
-    _client.Subscribe(stream.token(), [this](carla::Buffer DEBUG_ONLY(msg)) {
+    _client.Subscribe(stream.token(), [this](carla::Buffer msg) {
       carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(msg));
       DEBUG_ASSERT_EQ(BufView->size(), _message->size());
       DEBUG_ASSERT(BufView == _message);
