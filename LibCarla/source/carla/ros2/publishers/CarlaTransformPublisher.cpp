@@ -39,7 +39,7 @@ namespace ros2 {
     tf2_msgs::msg::TFMessage _transform {};
 
     float last_translation[3] = {0.0f};
-    float last_rotation[4] = {0.0f};
+    float last_rotation[3] = {0.0f};
     geometry_msgs::msg::Vector3 vec_translation;
     geometry_msgs::msg::Quaternion vec_rotation;
   };
@@ -152,10 +152,10 @@ namespace ros2 {
   void CarlaTransformPublisher::SetData(int32_t seconds, uint32_t nanoseconds, const float* translation, const float* rotation) {
 
     int same_translation = std::memcmp(translation, _impl->last_translation, sizeof(float) * 3);
-    int same_rotation = std::memcmp(rotation, _impl->last_rotation, sizeof(float) * 4);
+    int same_rotation = std::memcmp(rotation, _impl->last_rotation, sizeof(float) * 3);
     if (same_translation != 0 || same_rotation != 0) {
         std::memcpy(_impl->last_translation, translation, sizeof(float) * 3);
-        std::memcpy(_impl->last_rotation, rotation, sizeof(float) * 4);
+        std::memcpy(_impl->last_rotation, rotation, sizeof(float) * 3);
 
         const float tx = *translation++;
         const float ty = *translation++;
@@ -164,7 +164,6 @@ namespace ros2 {
         const float rx = (*rotation++) * -1.0f;
         const float ry = (*rotation++) * -1.0f;
         const float rz = *rotation++;
-        const float rw = *rotation++;
 
         const float cr = cosf(rz * 0.5f);
         const float sr = sinf(rz * 0.5f);
