@@ -3,6 +3,7 @@
 #undef CreateDirectory
 
 #include "Online/CustomFileDownloader.h"
+#include "OpenDriveToMap.h"
 #include "HttpModule.h"
 #include "Http.h"
 #include "Misc/FileHelper.h"
@@ -20,16 +21,16 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0,
     // We use the LoadFileToString to load the file into
     if (FFileHelper::LoadFileToString(FileContent, *FilePath, FFileHelper::EHashOptions::None))
     {
-      UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Text From File: %s"), *FilePath);
+      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: Text From File: %s"), *FilePath);
     }
     else
     {
-      UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Did not load text from file"));
+      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: Did not load text from file"));
     }
   }
   else
   {
-    UE_LOG(LogCarla, Warning, TEXT("File: %s does not exist"), *FilePath);
+    UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("File: %s does not exist"), *FilePath);
     return;
   }
   std::string OsmFile = std::string(TCHAR_TO_UTF8(*FileContent));
@@ -45,17 +46,18 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0,
   // We use the LoadFileToString to load the file into
   if (FFileHelper::SaveStringToFile(FString(OpenDriveFile.c_str()), *FilePath))
   {
-    UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Sucsesfuly Written: \"%s\" to the text file"), *FilePath);
+    UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: Sucsesfuly Written: \"%s\" to the text file"), *FilePath);
   }
   else
   {
-    UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Failed to write FString to file."));
+    UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: Failed to write FString to file."));
   }
 }
 
 void UCustomFileDownloader::StartDownload()
 {
-  UE_LOG(LogCarla, Log, TEXT("FHttpDownloader CREATED"));
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("FHttpDownloader CREATED"));
+  UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Map Name Is %s"), *ResultFileName );
   FHttpDownloader *Download = new FHttpDownloader("GET", Url, ResultFileName, DownloadDelegate);
   Download->Run();
 }
@@ -65,10 +67,16 @@ FHttpDownloader::FHttpDownloader(const FString &InVerb, const FString &InUrl, co
 {
 }
 
+FHttpDownloader::FHttpDownloader()
+{
+
+}
+
 void FHttpDownloader::Run(void)
 {
-  UE_LOG(LogCarla, Log, TEXT("Starting download [%s] Url=[%s]"), *Verb, *Url);
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Starting download [%s] Url=[%s]"), *Verb, *Url);
   TSharedPtr<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+  UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Map Name Is %s"), *Filename );
   Request->OnProcessRequestComplete().BindRaw(this, &FHttpDownloader::RequestComplete);
   Request->SetURL(Url);
   Request->SetVerb(Verb);
@@ -77,31 +85,29 @@ void FHttpDownloader::Run(void)
 
 void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded)
 {
-  if (!HttpResponse.IsValid())
+  if (!HttpResponse.IsValid() )
   {
-    UE_LOG(LogCarla, Log, TEXT("Download failed. NULL response"));
+    UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Download failed. NULL response"));
   }
   else
   {
     // If we do not get success responses codes we do not do anything
     if (HttpResponse->GetResponseCode() < 200 || 300 <= HttpResponse->GetResponseCode())
     {
-      UE_LOG(LogCarla, Error, TEXT("Error during download [%s] Url=[%s] Response=[%d]"),
+      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Error during download [%s] Url=[%s] Response=[%d]"),
              *HttpRequest->GetVerb(),
              *HttpRequest->GetURL(),
              HttpResponse->GetResponseCode());
-      delete this;
       return;
     }
 
-    UE_LOG(LogCarla, Log, TEXT("Completed download [%s] Url=[%s] Response=[%d]"),
+    UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Completed download [%s] Url=[%s] Response=[%d]"),
            *HttpRequest->GetVerb(),
            *HttpRequest->GetURL(),
            HttpResponse->GetResponseCode());
 
-    HttpRequest->OnProcessRequestComplete().Unbind();
-
-    FString CurrentFile = FPaths::ProjectContentDir() + "CustomMaps/" + Filename + "/OpenDrive/";
+    FString CurrentFile = FPaths::ProjectContentDir() + "CustomMaps/" + (Filename) + "/OpenDrive/";
+    UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FHttpDownloader::RequestComplete CurrentFile %s."), *CurrentFile);
 
     // We will use this FileManager to deal with the file.
     IPlatformFile &FileManager = FPlatformFileManager::Get().GetPlatformFile();
@@ -116,14 +122,14 @@ void FHttpDownloader::RequestComplete(FHttpRequestPtr HttpRequest, FHttpResponse
     // We use the LoadFileToString to load the file into
     if (FFileHelper::SaveStringToFile(StringToWrite, *CurrentFile, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
     {
-      UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Sucsesfuly Written "));
+      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: Sucsesfuly Written "));
+      DelegateToCall.ExecuteIfBound();
     }
     else
     {
-      UE_LOG(LogCarla, Warning, TEXT("FileManipulation: Failed to write FString to file."));
+      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: Failed to write FString to file."));
+      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: CurrentFile %s."), *CurrentFile);
     }
   }
-  DelegateToCall.ExecuteIfBound();
-
   delete this;
 }

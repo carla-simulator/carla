@@ -40,11 +40,9 @@ rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
 if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
 
-set RECAST_HASH=22dfcb
-set RECAST_COMMIT=22dfcb46204df1a07f696ae3d9efc76f718ea531
-set RECAST_SRC=recast-%RECAST_HASH%-src
+set RECAST_SRC=recast-src
 set RECAST_SRC_DIR=%BUILD_DIR%%RECAST_SRC%\
-set RECAST_INSTALL=recast-%RECAST_HASH%-install
+set RECAST_INSTALL=recast-install
 set RECAST_INSTALL_DIR=%BUILD_DIR%%RECAST_INSTALL%\
 set RECAST_BUILD_DIR=%RECAST_SRC_DIR%build\
 set RECAST_BASENAME=%RECAST_SRC%
@@ -58,7 +56,7 @@ if not exist "%RECAST_SRC_DIR%" (
 
     call git clone https://github.com/carla-simulator/recastnavigation.git "%RECAST_SRC_DIR:~0,-1%"
     cd "%RECAST_SRC_DIR%"
-    call git reset --hard %RECAST_COMMIT%
+    call git checkout carla
     cd ..
     if %errorlevel% neq 0 goto error_git
 ) else (
