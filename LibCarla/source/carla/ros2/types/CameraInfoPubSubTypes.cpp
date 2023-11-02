@@ -31,7 +31,7 @@ namespace sensor_msgs {
     namespace msg {
         CameraInfoPubSubType::CameraInfoPubSubType()
         {
-            setName("sensor_msgs::msg::CameraInfo");
+            setName("sensor_msgs::msg::dds_::CameraInfo_");
             auto type_size = CameraInfo::getMaxCdrSerializedSize();
             type_size += eprosima::fastcdr::Cdr::alignment(type_size, 4); /* possible submessage alignment */
             m_typeSize = static_cast<uint32_t>(type_size) + 4; /*encapsulation*/

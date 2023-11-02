@@ -46,19 +46,13 @@ using namespace eprosima::fastcdr::exception;
 carla_msgs::msg::CollisionEvent::CollisionEvent()
 {
     // std_msgs::msg::Header m_header
-
     // unsigned long m_other_actor_id
     m_other_actor_id = 0;
     // geometry_msgs::msg::Vector3 m_normal_impulse
-
-
 }
 
 carla_msgs::msg::CollisionEvent::~CollisionEvent()
 {
-
-
-
 }
 
 carla_msgs::msg::CollisionEvent::CollisionEvent(
@@ -80,7 +74,6 @@ carla_msgs::msg::CollisionEvent::CollisionEvent(
 carla_msgs::msg::CollisionEvent& carla_msgs::msg::CollisionEvent::operator =(
         const CollisionEvent& x)
 {
-
     m_header = x.m_header;
     m_other_actor_id = x.m_other_actor_id;
     m_normal_impulse = x.m_normal_impulse;
@@ -91,7 +84,6 @@ carla_msgs::msg::CollisionEvent& carla_msgs::msg::CollisionEvent::operator =(
 carla_msgs::msg::CollisionEvent& carla_msgs::msg::CollisionEvent::operator =(
         CollisionEvent&& x) noexcept
 {
-
     m_header = std::move(x.m_header);
     m_other_actor_id = x.m_other_actor_id;
     m_normal_impulse = std::move(x.m_normal_impulse);
@@ -102,7 +94,6 @@ carla_msgs::msg::CollisionEvent& carla_msgs::msg::CollisionEvent::operator =(
 bool carla_msgs::msg::CollisionEvent::operator ==(
         const CollisionEvent& x) const
 {
-
     return (m_header == x.m_header && m_other_actor_id == x.m_other_actor_id && m_normal_impulse == x.m_normal_impulse);
 }
 
@@ -125,31 +116,23 @@ size_t carla_msgs::msg::CollisionEvent::getCdrSerializedSize(
 {
     (void)data;
     size_t initial_alignment = current_alignment;
-
-
     current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-
     current_alignment += geometry_msgs::msg::Vector3::getCdrSerializedSize(data.normal_impulse(), current_alignment);
-
     return current_alignment - initial_alignment;
 }
 
 void carla_msgs::msg::CollisionEvent::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
-
     scdr << m_header;
     scdr << m_other_actor_id;
     scdr << m_normal_impulse;
-
 }
 
 void carla_msgs::msg::CollisionEvent::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
-
     dcdr >> m_header;
     dcdr >> m_other_actor_id;
     dcdr >> m_normal_impulse;
@@ -192,6 +175,7 @@ std_msgs::msg::Header& carla_msgs::msg::CollisionEvent::header()
 {
     return m_header;
 }
+
 /*!
  * @brief This function sets a value in member other_actor_id
  * @param _other_actor_id New value for member other_actor_id
@@ -257,7 +241,6 @@ geometry_msgs::msg::Vector3& carla_msgs::msg::CollisionEvent::normal_impulse()
 {
     return m_normal_impulse;
 }
-
 
 size_t carla_msgs::msg::CollisionEvent::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
