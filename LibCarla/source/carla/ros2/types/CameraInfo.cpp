@@ -175,23 +175,23 @@ size_t sensor_msgs::msg::CameraInfo::getCdrSerializedSize(
 
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
-    if (data.K().size() > 0)
+    if (data.k().size() > 0)
     {
-        current_alignment += (data.K().size() * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
+        current_alignment += (data.k().size() * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
     }
 
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
-    if (data.R().size() > 0)
+    if (data.r().size() > 0)
     {
-        current_alignment += (data.R().size() * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
+        current_alignment += (data.r().size() * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
     }
 
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
-    if (data.P().size() > 0)
+    if (data.p().size() > 0)
     {
-        current_alignment += (data.P().size() * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
+        current_alignment += (data.p().size() * 8) + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
     }
 
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
@@ -403,115 +403,114 @@ std::vector<double>& sensor_msgs::msg::CameraInfo::D()
 }
 
 /*!
- * @brief This function copies the value in member K
- * @param _K New value to be copied in member K
+ * @brief This function copies the value in member k
+ * @param _k New value to be copied in member k
  */
-void sensor_msgs::msg::CameraInfo::K(
-        const std::vector<double>& _K)
+void sensor_msgs::msg::CameraInfo::k(
+        const std::array<double, 9>& _k)
 {
-    m_k = _K;
+    m_k = _k;
 }
 
 /*!
- * @brief This function moves the value in member K
- * @param _K New value to be moved in member K
+ * @brief This function moves the value in member k
+ * @param _k New value to be moved in member k
  */
-void sensor_msgs::msg::CameraInfo::K(
-        std::vector<double>&& _K)
+void sensor_msgs::msg::CameraInfo::k(
+        std::array<double, 9>&& _k)
 {
-    m_k = std::move(_K);
+    m_k = std::move(_k);
 }
 
 /*!
- * @brief This function returns a constant reference to member K
- * @return Constant reference to member K
+ * @brief This function returns a constant reference to member k
+ * @return Constant reference to member k
  */
-const std::vector<double>& sensor_msgs::msg::CameraInfo::K() const
-{
-    return m_k;
-}
-
-/*!
- * @brief This function returns a reference to member K
- * @return Reference to member K
- */
-std::vector<double>& sensor_msgs::msg::CameraInfo::K()
+const std::array<double, 9>& sensor_msgs::msg::CameraInfo::k() const
 {
     return m_k;
 }
 
 /*!
- * @brief This function copies the value in member R
- * @param _R New value to be copied in member R
+ * @brief This function returns a reference to member k
+ * @return Reference to member k
  */
-void sensor_msgs::msg::CameraInfo::R(
-        const std::vector<double>& _R)
+std::array<double, 9>& sensor_msgs::msg::CameraInfo::k()
 {
-    m_r = _R;
+    return m_k;
+}
+/*!
+ * @brief This function copies the value in member r
+ * @param _r New value to be copied in member r
+ */
+void sensor_msgs::msg::CameraInfo::r(
+        const std::array<double, 9>& _r)
+{
+    m_r = _r;
 }
 
 /*!
- * @brief This function moves the value in member R
- * @param _R New value to be moved in member R
+ * @brief This function moves the value in member r
+ * @param _r New value to be moved in member r
  */
-void sensor_msgs::msg::CameraInfo::R(
-        std::vector<double>&& _R)
+void sensor_msgs::msg::CameraInfo::r(
+        std::array<double, 9>&& _r)
 {
-    m_r = std::move(_R);
+    m_r = std::move(_r);
 }
 
 /*!
- * @brief This function returns a constant reference to member R
- * @return Constant reference to member R
+ * @brief This function returns a constant reference to member r
+ * @return Constant reference to member r
  */
-const std::vector<double>& sensor_msgs::msg::CameraInfo::R() const
+const std::array<double, 9>& sensor_msgs::msg::CameraInfo::r() const
 {
     return m_r;
 }
 
 /*!
- * @brief This function returns a reference to member R
- * @return Reference to member R
+ * @brief This function returns a reference to member r
+ * @return Reference to member r
  */
-std::vector<double>& sensor_msgs::msg::CameraInfo::R()
+std::array<double, 9>& sensor_msgs::msg::CameraInfo::r()
 {
     return m_r;
 }
 
 /*!
- * @brief This function copies the value in member P
- * @param _P New value to be copied in member P
+ * @brief This function copies the value in member p
+ * @param _p New value to be copied in member p
  */
-void sensor_msgs::msg::CameraInfo::P(
-        const std::vector<double>& _P)
+void sensor_msgs::msg::CameraInfo::p(
+        const std::array<double, 12>& _p)
 {
-    m_p = _P;
+    m_p = _p;
 }
 
 /*!
- * @brief This function moves the value in member P
- * @param _P New value to be moved in member P
+ * @brief This function moves the value in member p
+ * @param _p New value to be moved in member p
  */
-void sensor_msgs::msg::CameraInfo::P(
-        std::vector<double>&& _P)
+void sensor_msgs::msg::CameraInfo::p(
+        std::array<double, 12>&& _p)
 {
-    m_p = std::move(_P);
+    m_p = std::move(_p);
 }
 
 /*!
- * @brief This function returns a constant reference to member P
- * @return Constant reference to member P
+ * @brief This function returns a constant reference to member p
+ * @return Constant reference to member p
  */
-const std::vector<double>& sensor_msgs::msg::CameraInfo::P() const
+const std::array<double, 12>& sensor_msgs::msg::CameraInfo::p() const
 {
     return m_p;
 }
 
 /*!
- * @brief This function returns a reference to member P
- * @return Reference to member P
+ * @brief This function returns a reference to member p
+ * @return Reference to member p
  */
-std::vector<double>& sensor_msgs::msg::CameraInfo::P()
+std::array<double, 12>& sensor_msgs::msg::CameraInfo::p()
 {
     return m_p;
 }

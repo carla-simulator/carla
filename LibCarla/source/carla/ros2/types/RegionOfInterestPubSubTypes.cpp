@@ -31,7 +31,7 @@ namespace sensor_msgs {
     namespace msg {
         RegionOfInterestPubSubType::RegionOfInterestPubSubType()
         {
-            setName("sensor_msgs::msg::RegionOfInterest");
+            setName("sensor_msgs::msg::dds_::RegionOfInterest_");
             auto type_size = RegionOfInterest::getMaxCdrSerializedSize();
             type_size += eprosima::fastcdr::Cdr::alignment(type_size, 4); /* possible submessage alignment */
             m_typeSize = static_cast<uint32_t>(type_size) + 4; /*encapsulation*/

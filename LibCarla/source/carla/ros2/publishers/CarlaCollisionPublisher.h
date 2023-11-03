@@ -26,7 +26,7 @@ namespace ros2 {
 
       bool Init();
       bool Publish();
-      void SetData(int32_t seconds, uint32_t nanoseconds, uint32_t actor_id, const uint8_t* data);
+      void SetData(int32_t seconds, uint32_t nanoseconds, uint32_t actor_id, float x, float y, float z);
       const char* type() const override { return "collision"; }
 
     private:

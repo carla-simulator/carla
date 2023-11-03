@@ -243,83 +243,83 @@ namespace sensor_msgs {
              * @brief This function copies the value in member K
              * @param _K New value to be copied in member K
              */
-            eProsima_user_DllExport void K(
-                    const std::vector<double>& _K);
+            eProsima_user_DllExport void k(
+                    const std::array<double, 9>& _k);
 
-            /*!
-             * @brief This function moves the value in member K
-             * @param _K New value to be moved in member K
-             */
-            eProsima_user_DllExport void K(
-                    std::vector<double>&& _K);
+        /*!
+        * @brief This function moves the value in member k
+        * @param _k New value to be moved in member k
+        */
+        eProsima_user_DllExport void k(
+                std::array<double, 9>&& _k);
 
-            /*!
-             * @brief This function returns a constant reference to member K
-             * @return Constant reference to member K
-             */
-            eProsima_user_DllExport const std::vector<double>& K() const;
+        /*!
+        * @brief This function returns a constant reference to member k
+        * @return Constant reference to member k
+        */
+        eProsima_user_DllExport const std::array<double, 9>& k() const;
 
-            /*!
-             * @brief This function returns a reference to member K
-             * @return Reference to member K
-             */
-            eProsima_user_DllExport std::vector<double>& K();
-            /*!
-             * @brief This function copies the value in member R
-             * @param _R New value to be copied in member R
-             */
-            eProsima_user_DllExport void R(
-                    const std::vector<double>& _R);
+        /*!
+        * @brief This function returns a reference to member k
+        * @return Reference to member k
+        */
+        eProsima_user_DllExport std::array<double, 9>& k();
+        /*!
+        * @brief This function copies the value in member r
+        * @param _r New value to be copied in member r
+        */
+        eProsima_user_DllExport void r(
+                const std::array<double, 9>& _r);
 
-            /*!
-             * @brief This function moves the value in member R
-             * @param _R New value to be moved in member R
-             */
-            eProsima_user_DllExport void R(
-                    std::vector<double>&& _R);
+        /*!
+        * @brief This function moves the value in member r
+        * @param _r New value to be moved in member r
+        */
+        eProsima_user_DllExport void r(
+                std::array<double, 9>&& _r);
 
-            /*!
-             * @brief This function returns a constant reference to member R
-             * @return Constant reference to member R
-             */
-            eProsima_user_DllExport const std::vector<double>& R() const;
+        /*!
+        * @brief This function returns a constant reference to member r
+        * @return Constant reference to member r
+        */
+        eProsima_user_DllExport const std::array<double, 9>& r() const;
 
-            /*!
-             * @brief This function returns a reference to member R
-             * @return Reference to member R
-             */
-            eProsima_user_DllExport std::vector<double>& R();
-            /*!
-             * @brief This function copies the value in member P
-             * @param _P New value to be copied in member P
-             */
-            eProsima_user_DllExport void P(
-                    const std::vector<double>& _P);
+        /*!
+        * @brief This function returns a reference to member r
+        * @return Reference to member r
+        */
+        eProsima_user_DllExport std::array<double, 9>& r();
+        /*!
+        * @brief This function copies the value in member p
+        * @param _p New value to be copied in member p
+        */
+        eProsima_user_DllExport void p(
+                const std::array<double, 12>& _p);
 
-            /*!
-             * @brief This function moves the value in member P
-             * @param _P New value to be moved in member P
-             */
-            eProsima_user_DllExport void P(
-                    std::vector<double>&& _P);
+        /*!
+        * @brief This function moves the value in member p
+        * @param _p New value to be moved in member p
+        */
+        eProsima_user_DllExport void p(
+                std::array<double, 12>&& _p);
 
-            /*!
-             * @brief This function returns a constant reference to member P
-             * @return Constant reference to member P
-             */
-            eProsima_user_DllExport const std::vector<double>& P() const;
+        /*!
+        * @brief This function returns a constant reference to member p
+        * @return Constant reference to member p
+        */
+        eProsima_user_DllExport const std::array<double, 12>& p() const;
 
-            /*!
-             * @brief This function returns a reference to member P
-             * @return Reference to member P
-             */
-            eProsima_user_DllExport std::vector<double>& P();
-            /*!
-             * @brief This function sets a value in member binning_x
-             * @param _binning_x New value for member binning_x
-             */
-            eProsima_user_DllExport void binning_x(
-                    uint32_t _binning_x);
+        /*!
+        * @brief This function returns a reference to member p
+        * @return Reference to member p
+        */
+        eProsima_user_DllExport std::array<double, 12>& p();
+        /*!
+        * @brief This function sets a value in member binning_x
+        * @param _binning_x New value for member binning_x
+        */
+        eProsima_user_DllExport void binning_x(
+                uint32_t _binning_x);
 
             /*!
              * @brief This function returns the value of member binning_x
@@ -433,17 +433,17 @@ namespace sensor_msgs {
                     eprosima::fastcdr::Cdr& cdr) const;
 
         private:
-            std_msgs::msg::Header m_header;
-            uint32_t m_height;
-            uint32_t m_width;
-            std::string m_distortion_model;
-            std::vector<double> m_d;
-            std::vector<double> m_k;
-            std::vector<double> m_r;
-            std::vector<double> m_p;
-            uint32_t m_binning_x;
-            uint32_t m_binning_y;
-            sensor_msgs::msg::RegionOfInterest m_roi;
+        std_msgs::msg::Header m_header;
+        uint32_t m_height;
+        uint32_t m_width;
+        std::string m_distortion_model;
+        std::vector<double> m_d;
+        std::array<double, 9> m_k;
+        std::array<double, 9> m_r;
+        std::array<double, 12> m_p;
+        uint32_t m_binning_x;
+        uint32_t m_binning_y;
+        sensor_msgs::msg::RegionOfInterest m_roi;
         };
     } // namespace msg
 } // namespace sensor_msgs

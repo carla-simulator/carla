@@ -150,12 +150,9 @@ namespace ros2 {
     return false;
   }
 
-void CarlaCollisionPublisher::SetData(int32_t seconds, uint32_t nanoseconds, uint32_t actor_id, const uint8_t* data) {
-    const size_t vector3_size = 3 * sizeof(float);
-    std::vector<float> vector_data;
-    vector_data.resize(3);
-    std::memcpy(&vector_data[0], &data[0], vector3_size);
-    SetData(seconds, nanoseconds, actor_id, std::move(vector_data));
+void CarlaCollisionPublisher::SetData(int32_t seconds, uint32_t nanoseconds, uint32_t actor_id, float x, float y, float z) {
+    std::vector<float> vector_data ;
+    SetData(seconds, nanoseconds, actor_id, {x, y, z});
   }
 
   void CarlaCollisionPublisher::SetData(int32_t seconds, uint32_t nanoseconds, uint32_t actor_id, std::vector<float>&& data) {

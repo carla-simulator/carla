@@ -821,7 +821,7 @@ void ROS2::ProcessDataFromCollisionSensor(
   auto sensors = GetOrCreateSensor(ESensors::CollisionSensor, stream_id, actor);
   if (sensors.first) {
     std::shared_ptr<CarlaCollisionPublisher> publisher = std::dynamic_pointer_cast<CarlaCollisionPublisher>(sensors.first);
-    publisher->SetData(_seconds, _nanoseconds, other_actor, (const uint8_t*)&impulse);
+    publisher->SetData(_seconds, _nanoseconds, other_actor, impulse.x, impulse.y, impulse.z);
     publisher->Publish();
   }
   if (sensors.second) {
