@@ -161,9 +161,9 @@ namespace ros2 {
         const float ty = *translation++;
         const float tz = *translation++;
 
-        const float rx = (*rotation++) * -1.0f;
-        const float ry = (*rotation++) * -1.0f;
-        const float rz = *rotation++;
+        const float rx = ((*rotation++) * -1.0f) * (M_PIf32 / 180.0f);
+        const float ry = ((*rotation++) * -1.0f) * (M_PIf32 / 180.0f);
+        const float rz = *rotation++ * (M_PIf32 / 180.0f);
 
         const float cr = cosf(rz * 0.5f);
         const float sr = sinf(rz * 0.5f);

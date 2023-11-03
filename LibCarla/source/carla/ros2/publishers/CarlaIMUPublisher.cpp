@@ -174,9 +174,9 @@ namespace ros2 {
 
     geometry_msgs::msg::Quaternion orientation;
 
-    const float rx = sinf(compass);
-    const float ry = cosf(compass);
-    const float rz = 0.0f;
+    const float rx = 0.0f;                           // pitch
+    const float ry = (M_PIf32 / 2.0f) - compass;     // yaw
+    const float rz = 0.0f;                           // roll
 
     const float cr = cosf(rz * 0.5f);
     const float sr = sinf(rz * 0.5f);
