@@ -64,10 +64,10 @@ void UUSDImporterWidget::ImportUSDVehicle(
   }
   // Import Wheel and suspension data
   TArray<FUSDCARLAWheelData> WheelsData = UUSDCARLAInterface::GetUSDWheelData(USDPath);
-  auto CreateVehicleWheel = 
-      [&](const FUSDCARLAWheelData& WheelData, 
+  auto CreateVehicleWheel =
+      [&](const FUSDCARLAWheelData& WheelData,
          TSubclassOf<UVehicleWheel> TemplateClass,
-         const FString &PackagePathName) 
+         const FString &PackagePathName)
       -> TSubclassOf<UVehicleWheel>
   {
     // Get a reference to the editor subsystem
@@ -161,7 +161,7 @@ bool UUSDImporterWidget::MergeStaticMeshComponents(
 }
 
 TArray<UObject*> UUSDImporterWidget::MergeMeshComponents(
-    TArray<UPrimitiveComponent*> ComponentsToMerge, 
+    TArray<UPrimitiveComponent*> ComponentsToMerge,
     const FString& DestMesh)
 {
   if(!ComponentsToMerge.Num())
@@ -275,7 +275,7 @@ FVehicleMeshParts UUSDImporterWidget::SplitVehicleParts(
     }
     else if (ComponentName.Contains("Collision"))
     {
-      
+
     }
     else
     {
@@ -286,7 +286,7 @@ FVehicleMeshParts UUSDImporterWidget::SplitVehicleParts(
       }
     }
 
-    if(ComponentName.Contains("glass") || 
+    if(ComponentName.Contains("glass") ||
        IsChildrenOf(Component, "glass"))
     {
       GlassComponents.Add(Component);
@@ -330,7 +330,7 @@ FMergedVehicleMeshParts UUSDImporterWidget::GenerateVehicleMeshes(
     const FVehicleMeshParts& VehicleMeshParts, const FString& DestPath)
 {
   FMergedVehicleMeshParts Result;
-  auto MergePart = 
+  auto MergePart =
       [](TArray<UPrimitiveComponent*> Components, const FString& DestMeshPath)
       -> UStaticMesh*
       {
@@ -430,7 +430,7 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     UWorld* World,
     UClass* BaseClass,
     USkeletalMesh* NewSkeletalMesh,
-    const FString &DestPath, 
+    const FString &DestPath,
     const FMergedVehicleMeshParts& VehicleMeshes,
     const FWheelTemplates& WheelTemplates)
 {
@@ -468,11 +468,11 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
   }
 
   // Get the skeletal mesh and modify it to match the vehicle parameters
-  USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>( 
+  USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(
       TemplateActor->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
   if(!SkeletalMeshComponent)
   {
-    UE_LOG(LogCarlaTools, Log, TEXT("Skeletal mesh component not found")); 
+    UE_LOG(LogCarlaTools, Log, TEXT("Skeletal mesh component not found"));
     return nullptr;
   }
   USkeletalMesh* SkeletalMesh = SkeletalMeshComponent->SkeletalMesh;
@@ -506,7 +506,7 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     ULocalLightComponent * LightComponent = NewObject<ULocalLightComponent>(TemplateActor, LightClass, FName(*FixedLightName));
     LightComponent->RegisterComponent();
     LightComponent->AttachToComponent(
-        TemplateActor->GetRootComponent(), 
+        TemplateActor->GetRootComponent(),
         FAttachmentTransformRules::KeepRelativeTransform);
     LightComponent->SetRelativeLocation(Light.Location); // Set the position of the light relative to the actor
     LightComponent->SetIntensityUnits(ELightUnits::Lumens);
@@ -514,7 +514,7 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     LightComponent->SetVolumetricScatteringIntensity(0.f);
     if (FixedLightName.Contains("high_beam"))
     {
-      USpotLightComponent* SpotLight = 
+      USpotLightComponent* SpotLight =
           Cast<USpotLightComponent>(LightComponent);
       SpotLight->SetRelativeRotation(FRotator(-1.5f, 0, 0));
       SpotLight->SetAttenuationRadius(5000.f);
@@ -525,7 +525,7 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     }
     else if (FixedLightName.Contains("low_beam"))
     {
-      USpotLightComponent* SpotLight = 
+      USpotLightComponent* SpotLight =
           Cast<USpotLightComponent>(LightComponent);
       LightComponent->SetRelativeRotation(FRotator(-3.f, 0, 0));
       LightComponent->SetAttenuationRadius(3000.f);
@@ -553,11 +553,11 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
   Setup.WheelClass = WheelTemplates.WheelRR;
   Setup.BoneName = "Wheel_Rear_Right";
   WheelSetups.Add(Setup);
-  ACarlaWheeledVehicle* CarlaVehicle = 
+  ACarlaWheeledVehicle* CarlaVehicle =
       Cast<ACarlaWheeledVehicle>(TemplateActor);
   if(CarlaVehicle)
   {
-    UWheeledVehicleMovementComponent4W* MovementComponent = 
+    UWheeledVehicleMovementComponent4W* MovementComponent =
         Cast<UWheeledVehicleMovementComponent4W>(
             CarlaVehicle->GetVehicleMovementComponent());
     MovementComponent->WheelSetups = WheelSetups;
@@ -582,12 +582,12 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
 }
 
 bool UUSDImporterWidget::EditSkeletalMeshBones(
-    USkeletalMesh* NewSkeletalMesh, 
+    USkeletalMesh* NewSkeletalMesh,
     const TMap<FString, FTransform> &NewBoneTransforms)
 {
   if(!NewSkeletalMesh)
   {
-    UE_LOG(LogCarlaTools, Log, TEXT("Skeletal mesh invalid"));  
+    UE_LOG(LogCarlaTools, Log, TEXT("Skeletal mesh invalid"));
     return false;
   }
   FReferenceSkeleton& ReferenceSkeleton = NewSkeletalMesh->RefSkeleton;
@@ -599,7 +599,7 @@ bool UUSDImporterWidget::EditSkeletalMeshBones(
     int32 BoneIdx = SkeletonModifier.FindBoneIndex(FName(*BoneName));
     if (BoneIdx == INDEX_NONE)
     {
-      UE_LOG(LogCarlaTools, Log, TEXT("Bone %s not found"), *BoneName);  
+      UE_LOG(LogCarlaTools, Log, TEXT("Bone %s not found"), *BoneName);
     }
     UE_LOG(LogCarlaTools, Log, TEXT("Bone %s corresponds to index %d"), *BoneName, BoneIdx);
     SkeletonModifier.UpdateRefPoseTransform(BoneIdx, BoneTransform);
@@ -608,7 +608,7 @@ bool UUSDImporterWidget::EditSkeletalMeshBones(
   NewSkeletalMesh->MarkPackageDirty();
   UPackage* Package = NewSkeletalMesh->GetOutermost();
   return UPackage::SavePackage(
-      Package, NewSkeletalMesh, 
-      EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, 
+      Package, NewSkeletalMesh,
+      EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
       *(Package->GetName()), GError, nullptr, true, true, SAVE_NoError);
 }

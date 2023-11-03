@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 rem BAT script that downloads and generates
 rem rpclib, gtest and boost libraries for CARLA (carla.org).
