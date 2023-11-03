@@ -195,6 +195,7 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs && ... Strings)
 {
   Def.Id = JoinStrings(TEXT("."), std::forward<TStrs>(Strings) ...).ToLower();
   Def.Tags = JoinStrings(TEXT(","), std::forward<TStrs>(Strings) ...).ToLower();
+
   // each actor gets an actor role name attribute (empty by default)
   FActorVariation ActorRole;
   ActorRole.Id = TEXT("role_name");
@@ -202,6 +203,14 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs && ... Strings)
   ActorRole.RecommendedValues = { TEXT("default") };
   ActorRole.bRestrictToRecommended = false;
   Def.Variations.Emplace(ActorRole);
+
+  // ROS2
+  FActorVariation Var;
+  Var.Id = TEXT("ros_name");
+  Var.Type = EActorAttributeType::String;
+  Var.RecommendedValues = { Def.Id };
+  Var.bRestrictToRecommended = false;
+  Def.Variations.Emplace(Var);
 }
 
 static void AddRecommendedValuesForActorRoleName(
@@ -270,15 +279,6 @@ FActorDefinition UActorBlueprintFunctionLibrary::MakeGenericDefinition(
 {
   FActorDefinition Definition;
   FillIdAndTags(Definition, Category, Type, Id);
-
-  // ROS
-  FActorVariation Var;
-  Var.Id = TEXT("ros_name");
-  Var.Type = EActorAttributeType::String;
-  Var.RecommendedValues = { Definition.Id };
-  Var.bRestrictToRecommended = false;
-  Definition.Variations.Emplace(Var);
-
   return Definition;
 }
 
@@ -308,8 +308,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     bool &Success,
     FActorDefinition &Definition)
 {
-  Definition = MakeGenericDefinition(TEXT("sensor"), TEXT("camera"), Id);
-
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), Id);
   AddRecommendedValuesForSensorRoleNames(Definition);
   AddVariationsForSensor(Definition);
 
@@ -667,7 +666,7 @@ FActorDefinition UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition()
 
 void UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition(bool &Success, FActorDefinition &Definition)
 {
-  Definition = MakeGenericDefinition(TEXT("sensor"), TEXT("camera"), TEXT("normals"));
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), TEXT("normals"));
   AddRecommendedValuesForSensorRoleNames(Definition);
   AddVariationsForSensor(Definition);
 
@@ -755,7 +754,7 @@ void UActorBlueprintFunctionLibrary::MakeIMUDefinition(
     bool &Success,
     FActorDefinition &Definition)
 {
-  Definition = MakeGenericDefinition(TEXT("sensor"), TEXT("other"), TEXT("imu"));
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("imu"));
   AddVariationsForSensor(Definition);
 
   // - Noise seed --------------------------------
@@ -853,7 +852,7 @@ void UActorBlueprintFunctionLibrary::MakeRadarDefinition(
     bool &Success,
     FActorDefinition &Definition)
 {
-  Definition = MakeGenericDefinition(TEXT("sensor"), TEXT("other"), TEXT("radar"));
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("radar"));
   AddVariationsForSensor(Definition);
 
   FActorVariation HorizontalFOV;
@@ -912,7 +911,7 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
     bool &Success,
     FActorDefinition &Definition)
 {
-  Definition = MakeGenericDefinition(TEXT("sensor"), TEXT("lidar"), Id);
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("lidar"), Id);
   AddRecommendedValuesForSensorRoleNames(Definition);
   AddVariationsForSensor(Definition);
   // Number of channels.
@@ -1028,7 +1027,7 @@ void UActorBlueprintFunctionLibrary::MakeGnssDefinition(
     bool &Success,
     FActorDefinition &Definition)
 {
-  Definition = MakeGenericDefinition(TEXT("sensor"), TEXT("other"), TEXT("gnss"));
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("gnss"));
   AddVariationsForSensor(Definition);
 
   // - Noise seed --------------------------------
@@ -1092,7 +1091,7 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     FActorDefinition &Definition)
 {
   /// @todo We need to validate here the params.
-  Definition = MakeGenericDefinition(TEXT("vehicle"), Parameters.Make, Parameters.Model);
+  FillIdAndTags(Definition, TEXT("vehicle"), Parameters.Make, Parameters.Model);
   AddRecommendedValuesForActorRoleName(Definition,
       {TEXT("autopilot"), TEXT("scenario"), TEXT("ego_vehicle")});
   Definition.Class = Parameters.Class;
@@ -1210,7 +1209,7 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
     FActorDefinition &Definition)
 {
   /// @todo We need to validate here the params.
-  Definition = MakeGenericDefinition(TEXT("walker"),  TEXT("pedestrian"), Parameters.Id);
+  FillIdAndTags(Definition, TEXT("walker"),  TEXT("pedestrian"), Parameters.Id);
   AddRecommendedValuesForActorRoleName(Definition, {TEXT("pedestrian")});
   Definition.Class = Parameters.Class;
 
@@ -1290,7 +1289,7 @@ void UActorBlueprintFunctionLibrary::MakeTriggerDefinition(
     bool &Success,
     FActorDefinition &Definition)
 {
-  Definition = MakeGenericDefinition(TEXT("static"), TEXT("trigger"), Id);
+  FillIdAndTags(Definition, TEXT("static"), TEXT("trigger"), Id);
   AddVariationsForTrigger(Definition);
   Success = CheckActorDefinition(Definition);
   check(Success);
@@ -1302,7 +1301,7 @@ void UActorBlueprintFunctionLibrary::MakePropDefinition(
     FActorDefinition &Definition)
 {
   /// @todo We need to validate here the params.
-  Definition = MakeGenericDefinition(TEXT("static"),  TEXT("prop"), Parameters.Name);
+  FillIdAndTags(Definition, TEXT("static"),  TEXT("prop"), Parameters.Name);
   AddRecommendedValuesForActorRoleName(Definition, {TEXT("prop")});
 
   auto GetSize = [](EPropSize Value) {
