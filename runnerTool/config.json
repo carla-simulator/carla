@@ -1,0 +1,5 @@
+{"PATH_TO_CARLA_ROOT": "/home/kilianhullen/repos/carla/Dist", 
+"PATH_TO_SCENARIO_RUNNER_ROOT": "/home/kilianhullen/repos/carla/runnerTool", 
+"PATH_TO_XOSC_FILES": "./scenarios", 
+"PATH_TO_PYTHON_ENV": "/usr/bin/python3",
+"CARLA_VERSION": "0.9.13"}

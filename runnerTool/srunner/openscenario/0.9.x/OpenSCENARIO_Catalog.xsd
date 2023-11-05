@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    
+    <xsd:include schemaLocation="OpenSCENARIO_TypeDefs.xsd"/>
+    
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/xml.xsd"/>
+    
+    <xsd:annotation>
+        <xsd:documentation>
+            XML Schema Definition for OpenSCENARIO Catalog XML files - Version Draft 0.9.1, (c)2017 by VIRES Simulationstechnologie GmbH, Germany
+        </xsd:documentation>
+    </xsd:annotation>
+    
+    <xsd:element name="OpenSCENARIO">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="FileHeader"  type="OSCFileHeader"/>
+                
+                <xsd:element name="Catalog">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="Vehicle"                 type="OSCVehicle"               minOccurs="0" maxOccurs="unbounded"/>
+                            <xsd:element name="Driver"                  type="OSCDriver"                minOccurs="0" maxOccurs="unbounded"/>
+                            <xsd:element name="Pedestrian"              type="OSCPedestrian"            minOccurs="0" maxOccurs="unbounded"/>
+                            <xsd:element name="PedestrianController"    type="OSCPedestrianController"  minOccurs="0" maxOccurs="unbounded"/>
+                            <xsd:element name="MiscObject"              type="OSCMiscObject"            minOccurs="0" maxOccurs="unbounded"/>
+                            <xsd:element name="Environment"             type="OSCEnvironment"           minOccurs="0" maxOccurs="unbounded"/>
+                            <xsd:element name="Maneuver"                type="OSCManeuver"              minOccurs="0" maxOccurs="unbounded"/>
+                            <xsd:element name="Trajectory"              type="OSCTrajectory"            minOccurs="0" maxOccurs="unbounded"/>
+                            <xsd:element name="Route"                   type="OSCRoute"                 minOccurs="0" maxOccurs="unbounded"/>
+                        </xsd:sequence>
+                        <xsd:attribute name="name" type="xsd:string"/>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    
+</xsd:schema>

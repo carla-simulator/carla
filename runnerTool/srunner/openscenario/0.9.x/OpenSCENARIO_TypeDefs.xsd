@@ -1,0 +1,1457 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/xml.xsd"/>
+    
+    <xsd:annotation>
+        <xsd:documentation>
+            XML Schema Type Definitions for OpenSCENARIO XML files - Version Draft 0.9.1, (c)2017 by VIRES Simulationstechnologie GmbH, Germany
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <xsd:complexType name="OSCParameterDeclaration">
+        <xsd:sequence>
+            <xsd:element name="Parameter" minOccurs="0" maxOccurs="unbounded">
+                <xsd:complexType>
+                    <xsd:attribute name="name"  type="xsd:string"               use="required"/>
+                    <xsd:attribute name="type"  type="Enum_OSC_Parameter_type"  use="required"/>
+                    <xsd:attribute name="value" type="xsd:string"               use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCFile">
+        <xsd:attribute name="filepath"  type="xsd:string" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCDirectory">
+        <xsd:attribute name="path"  type="xsd:string" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCCatalogs">
+        <xsd:all>
+            <xsd:element name="VehicleCatalog">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Directory"   type="OSCDirectory"/>
+                    </xsd:all>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="DriverCatalog">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Directory"   type="OSCDirectory"/>
+                    </xsd:all>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="PedestrianCatalog">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Directory"   type="OSCDirectory"/>
+                    </xsd:all>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="PedestrianControllerCatalog">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Directory"   type="OSCDirectory"/>
+                    </xsd:all>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="MiscObjectCatalog">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Directory"   type="OSCDirectory"/>
+                    </xsd:all>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="EnvironmentCatalog">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Directory"   type="OSCDirectory"/>
+                    </xsd:all>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="ManeuverCatalog">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Directory"   type="OSCDirectory"/>
+                    </xsd:all>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="TrajectoryCatalog">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Directory"   type="OSCDirectory"/>
+                    </xsd:all>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="RouteCatalog">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Directory"   type="OSCDirectory"/>
+                    </xsd:all>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:all>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCConditionGroup">
+        <xsd:sequence>
+            <xsd:element name="Condition" type="OSCCondition" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCCatalogReference">
+        <xsd:sequence>
+            <xsd:element name="OSCParameterAssignment" minOccurs="0"/>
+        </xsd:sequence>
+        <xsd:attribute name="catalogName"   type="xsd:string" use="required"/>
+        <xsd:attribute name="entryName"     type="xsd:string" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCParameterAssignment">
+        <xsd:sequence>
+            <xsd:element name="Parameter">
+                <xsd:complexType>
+                    <xsd:attribute name="name"  type="xsd:string" use="required"/>
+                    <xsd:attribute name="value" type="xsd:string" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCUserDataList">
+        <xsd:sequence>
+            <xsd:element name="UserData" minOccurs="0" maxOccurs="unbounded">
+                <xsd:complexType>
+                    <xsd:attribute name="code"  type="xsd:string" use="required"/>
+                    <xsd:attribute name="value" type="xsd:string" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCFileHeader">
+        <xsd:attribute name="revMajor"      type="xsd:unsignedShort" use="required"/>
+        <xsd:attribute name="revMinor"      type="xsd:unsignedShort" use="required"/>
+        <xsd:attribute name="date"          type="xsd:dateTime" use="required"/>
+        <xsd:attribute name="description"   type="xsd:string" use="required"/>
+        <xsd:attribute name="author"        type="xsd:string" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCPedestrian">
+        <xsd:all>
+            <xsd:element name="ParameterDeclaration" type="OSCParameterDeclaration" minOccurs="0"/>
+            <xsd:element name="BoundingBox" type="OSCBoundingBox"/>
+            <xsd:element name="Properties" type="OSCProperties"/>
+        </xsd:all>
+        <xsd:attribute name="model"     type="xsd:string" use="required"/>
+        <xsd:attribute name="mass"      type="xsd:double" use="required"/>
+        <xsd:attribute name="name"      type="xsd:string" use="required"/>
+        <xsd:attribute name="category"  type="Enum_Pedestrian_category" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCVehicle">
+        <xsd:all>
+            <xsd:element name="ParameterDeclaration" type="OSCParameterDeclaration" minOccurs="0"/>
+            <xsd:element name="BoundingBox" type="OSCBoundingBox"/>
+            <xsd:element name="Performance">
+                <xsd:complexType>
+                    <xsd:attribute name="maxSpeed"          type="xsd:double" use="required"/>
+                    <xsd:attribute name="maxDeceleration"   type="xsd:double" use="required"/>
+                    <xsd:attribute name="mass"              type="xsd:double" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Axles">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="Front" type="OSCAxle"/>
+                        <xsd:element name="Rear" type="OSCAxle"/>
+                        <xsd:element name="Additional" type="OSCAxle" minOccurs="0" maxOccurs="unbounded"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Properties" type="OSCProperties"/>
+        </xsd:all>
+        <xsd:attribute name="name"      type="xsd:string" use="required"/>
+        <xsd:attribute name="category"  type="Enum_Vehicle_category" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCAxle">
+        <xsd:attribute name="maxSteering"   type="xsd:double" use="required"/>
+        <xsd:attribute name="wheelDiameter" type="xsd:double" use="required"/>
+        <xsd:attribute name="trackWidth"    type="xsd:double" use="required"/>
+        <xsd:attribute name="positionX"     type="xsd:double" use="required"/>
+        <xsd:attribute name="positionZ"     type="xsd:double" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCMiscObject">
+        <xsd:all>
+            <xsd:element name="ParameterDeclaration" type="OSCParameterDeclaration" minOccurs="0"/>
+            <xsd:element name="BoundingBox" type="OSCBoundingBox"/>
+            <xsd:element name="Properties" type="OSCProperties"/>
+        </xsd:all>
+        <xsd:attribute name="category"  type="Enum_MiscObject_category" use="required"/>
+        <xsd:attribute name="mass"      type="xsd:double" use="required"/>
+        <xsd:attribute name="name"      type="xsd:string" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCCondition">
+        <xsd:choice>
+            <xsd:element name="ByEntity">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="TriggeringEntities">
+                            <xsd:complexType>
+                                <xsd:sequence>
+                                    <xsd:element name="Entity" maxOccurs="unbounded">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="name" type="xsd:string" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:sequence>
+                                <xsd:attribute name="rule" type="Enum_TriggeringEntities_rule" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="EntityCondition">
+                            <xsd:complexType>
+                                <xsd:choice>
+                                    <xsd:element name="EndOfRoad">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="duration" type="xsd:double" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="Collision">
+                                        <xsd:complexType>
+                                            <xsd:choice>
+                                                <xsd:element name="ByEntity">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="name" type="xsd:string" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                                <xsd:element name="ByType ">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="type" type="OSCObjectType" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                            </xsd:choice>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="Offroad">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="duration" type="xsd:double" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="TimeHeadway">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="entity"        type="xsd:string" use="required"/>
+                                            <xsd:attribute name="value"         type="xsd:double" use="required"/>
+                                            <xsd:attribute name="freespace"     type="xsd:boolean" use="required"/>
+                                            <xsd:attribute name="alongRoute"    type="xsd:boolean" use="required"/>
+                                            <xsd:attribute name="rule"          type="Enum_rule" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="TimeToCollision">
+                                        <xsd:complexType>
+                                            <xsd:all>
+                                                <xsd:element name="Target">
+                                                    <xsd:complexType>
+                                                        <xsd:choice>
+                                                            <xsd:element name="Position" type="OSCPosition"/>
+                                                            <xsd:element name="Entity">
+                                                                <xsd:complexType>
+                                                                    <xsd:attribute name="name" type="xsd:string" use="required"/>
+                                                                </xsd:complexType>
+                                                            </xsd:element>
+                                                        </xsd:choice>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                            </xsd:all>
+                                            <xsd:attribute name="value"         type="xsd:double" use="required"/>
+                                            <xsd:attribute name="freespace"     type="xsd:boolean" use="required"/>
+                                            <xsd:attribute name="alongRoute"    type="xsd:boolean" use="required"/>
+                                            <xsd:attribute name="rule"          type="Enum_rule" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="Acceleration">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="value" type="xsd:double" use="required"/>
+                                            <xsd:attribute name="rule"  type="Enum_rule" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="StandStill">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="duration" type="xsd:double" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="Speed">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="value" type="xsd:double" use="required"/>
+                                            <xsd:attribute name="rule"  type="Enum_rule" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="RelativeSpeed">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="entity"    type="xsd:string" use="required"/>
+                                            <xsd:attribute name="value"     type="xsd:double" use="required"/>
+                                            <xsd:attribute name="rule"      type="Enum_rule" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="TraveledDistance">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="value"     type="xsd:double" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="ReachPosition">
+                                        <xsd:complexType>
+                                            <xsd:all>
+                                                <xsd:element name="Position" type="OSCPosition"/>
+                                            </xsd:all>
+                                            <xsd:attribute name="tolerance" type="xsd:double" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="Distance">
+                                        <xsd:complexType>
+                                            <xsd:all>
+                                                <xsd:element name="Position" type="OSCPosition"/>
+                                            </xsd:all>
+                                            <xsd:attribute name="value"         type="xsd:double" use="required"/>
+                                            <xsd:attribute name="freespace"     type="xsd:boolean" use="required"/>
+                                            <xsd:attribute name="alongRoute"    type="xsd:boolean" use="required"/>
+                                            <xsd:attribute name="rule"          type="Enum_rule" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="RelativeDistance">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="entity"    type="xsd:string" use="required"/>
+                                            <xsd:attribute name="type"      type="Enum_RelativeDistance_type" use="required"/>
+                                            <xsd:attribute name="value"     type="xsd:double" use="required"/>
+                                            <xsd:attribute name="freespace" type="xsd:boolean" use="required"/>
+                                            <xsd:attribute name="rule"      type="Enum_rule" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:choice>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:all>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="ByState">
+                <xsd:complexType>
+                    <xsd:choice>
+                        <xsd:element name="AtStart">
+                            <xsd:complexType>
+                                <xsd:attribute name="type"  type="Enum_Story_Element_type" use="required"/>
+                                <xsd:attribute name="name"  type="xsd:string" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="AfterTermination">
+                            <xsd:complexType>
+                                <xsd:attribute name="type"  type="Enum_Story_Element_type" use="required"/>
+                                <xsd:attribute name="name"  type="xsd:string" use="required"/>
+                                <xsd:attribute name="rule"  type="Enum_AfterTermination_rule" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Command">
+                            <xsd:complexType>
+                                <xsd:attribute name="name" type="xsd:string" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Signal">
+                            <xsd:complexType>
+                                <xsd:attribute name="name"  type="xsd:string" use="required"/>
+                                <xsd:attribute name="state" type="xsd:string" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Controller">
+                            <xsd:complexType>
+                                <xsd:attribute name="name"  type="xsd:string" use="required"/>
+                                <xsd:attribute name="state" type="xsd:string" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:choice>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="ByValue">
+                <xsd:complexType>
+                    <xsd:choice>
+                        <xsd:element name="Parameter">
+                            <xsd:complexType>
+                                <xsd:attribute name="name"  type="xsd:string" use="required"/>
+                                <xsd:attribute name="value" type="xsd:string" use="required"/>
+                                <xsd:attribute name="rule"  type="Enum_rule" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="TimeOfDay">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="Time">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="hour"  type="xsd:unsignedInt" use="required"/>
+                                            <xsd:attribute name="min"   type="xsd:unsignedInt" use="required"/>
+                                            <xsd:attribute name="sec"   type="xsd:double" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="Date">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="day"   type="xsd:unsignedInt" use="required"/>
+                                            <xsd:attribute name="month" type="xsd:unsignedInt" use="required"/>
+                                            <xsd:attribute name="year"  type="xsd:unsignedInt" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:all>
+                                <xsd:attribute name="rule"  type="Enum_rule" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="SimulationTime">
+                            <xsd:complexType>
+                                <xsd:attribute name="value" type="xsd:double" use="required"/>
+                                <xsd:attribute name="rule"  type="Enum_rule" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:choice>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:choice>
+        <xsd:attribute name="name"  type="xsd:string" use="required"/>
+        <xsd:attribute name="delay" type="xsd:double" use="required"/>
+        <xsd:attribute name="edge"  type="Enum_Condition_edge" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:simpleType name="OSCObjectType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="pedestrian" />
+            <xsd:enumeration value="vehicle" />
+            <xsd:enumeration value="miscellaneous" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:complexType name="OSCPrivateAction">
+        <xsd:choice>
+            <xsd:element name="Longitudinal">
+                <xsd:complexType>
+                    <xsd:choice>
+                        <xsd:element name="Speed">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="Dynamics">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="shape"     type="Enum_Dynamics_shape" use="required"/>
+                                            <xsd:attribute name="rate"      type="xsd:double" use="optional"/>
+                                            <xsd:attribute name="time"      type="xsd:double" use="optional"/>
+                                            <xsd:attribute name="distance"  type="xsd:double" use="optional"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="Target">
+                                        <xsd:complexType>
+                                            <xsd:choice>
+                                                <xsd:element name="Relative">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="object"        type="xsd:string" use="required"/>
+                                                        <xsd:attribute name="value"         type="xsd:double" use="required"/>
+                                                        <xsd:attribute name="valueType"     type="Enum_Speed_Target_valueType" use="required"/>
+                                                        <xsd:attribute name="continuous"    type="xsd:boolean" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                                <xsd:element name="Absolute">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="value"  type="xsd:double" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                            </xsd:choice>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:all>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Distance">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="Dynamics">
+                                        <xsd:complexType>
+                                            <xsd:choice>
+                                                <xsd:element name="None"/>
+                                                <xsd:element name="Limited">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="maxAcceleration"   type="xsd:double" use="required"/>
+                                                        <xsd:attribute name="maxDeceleration"   type="xsd:double" use="required"/>
+                                                        <xsd:attribute name="maxSpeed"          type="xsd:double" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                            </xsd:choice>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:all>
+                                <xsd:attribute name="object"    type="xsd:string"   use="required"/>
+                                <xsd:attribute name="distance"  type="xsd:double"   use="optional"/>
+                                <xsd:attribute name="timeGap"   type="xsd:double"   use="optional"/>
+                                <xsd:attribute name="freespace" type="xsd:boolean"  use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:choice>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Lateral">
+                <xsd:complexType>
+                    <xsd:choice>
+                        <xsd:element name="LaneChange">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="Dynamics">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="time"      type="xsd:double" use="optional"/>
+                                            <xsd:attribute name="distance"  type="xsd:double" use="optional"/>
+                                            <xsd:attribute name="shape"     type="Enum_Dynamics_shape" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="Target">
+                                        <xsd:complexType>
+                                            <xsd:choice>
+                                                <xsd:element name="Relative">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="object"    type="xsd:string" use="required"/>
+                                                        <xsd:attribute name="value"     type="xsd:double" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                                <xsd:element name="Absolute">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="value"  type="xsd:double" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                            </xsd:choice>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:all>
+                                <xsd:attribute name="targetLaneOffset" type="xsd:double" use="optional"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="LaneOffset">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="Dynamics">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="maxLateralAcc" type="xsd:double"/>
+                                            <xsd:attribute name="duration"      type="xsd:double"/>
+                                            <xsd:attribute name="shape"         type="Enum_Dynamics_shape" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="Target">
+                                        <xsd:complexType>
+                                            <xsd:choice>
+                                                <xsd:element name="Relative">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="object"    type="xsd:string" use="required"/>
+                                                        <xsd:attribute name="value"     type="xsd:double" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                                <xsd:element name="Absolute">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="value"  type="xsd:double" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                            </xsd:choice>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:all>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Distance">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="Dynamics">
+                                        <xsd:complexType>
+                                            <xsd:choice>
+                                                <xsd:element name="None"/>
+                                                <xsd:element name="Limited">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="maxAcceleration"   type="xsd:double" use="required"/>
+                                                        <xsd:attribute name="maxDeceleration"   type="xsd:double" use="required"/>
+                                                        <xsd:attribute name="maxSpeed"          type="xsd:double" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                            </xsd:choice>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:all>
+                                <xsd:attribute name="object"    type="xsd:string" use="required"/>
+                                <xsd:attribute name="distance"  type="xsd:double"/>
+                                <xsd:attribute name="freespace" type="xsd:boolean" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:choice>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Visibility">
+                <xsd:complexType>
+                    <xsd:attribute name="graphics"  type="xsd:boolean" use="required"/>
+                    <xsd:attribute name="traffic"   type="xsd:boolean" use="required"/>
+                    <xsd:attribute name="sensors"   type="xsd:boolean" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Meeting">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Position" type="OSCPosition"/>
+                    </xsd:all>
+                    <xsd:attribute name="mode"          type="Enum_Meeting_Position_mode" use="required"/>
+                    <xsd:attribute name="timingOffset"  type="xsd:double" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Autonomous">
+                <xsd:complexType>
+                    <xsd:attribute name="activate"  type="xsd:boolean" use="required"/>
+                    <xsd:attribute name="domain"    type="Enum_Controller_domain" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Controller">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Assign">
+                            <xsd:complexType>
+                                <xsd:choice>
+                                    <xsd:element name="Driver"                  type="OSCDriver"/>
+                                    <xsd:element name="PedestrianController"    type="OSCPedestrianController"/>
+                                    <xsd:element name="CatalogReference"        type="OSCCatalogReference"/>
+                                </xsd:choice>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Override">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="Throttle">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="value"     type="xsd:double"   use="required"/>
+                                            <xsd:attribute name="active"    type="xsd:boolean"  use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="Brake">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="value"     type="xsd:double"   use="required"/>
+                                            <xsd:attribute name="active"    type="xsd:boolean"  use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="Clutch">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="value"     type="xsd:double"   use="required"/>
+                                            <xsd:attribute name="active"    type="xsd:boolean"  use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="ParkingBrake">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="value"     type="xsd:double"   use="required"/>
+                                            <xsd:attribute name="active"    type="xsd:boolean"  use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="SteeringWheel">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="value"     type="xsd:double"   use="required"/>
+                                            <xsd:attribute name="active"    type="xsd:boolean"  use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="Gear">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="number"    type="xsd:double"   use="required"/>
+                                            <xsd:attribute name="active"    type="xsd:boolean"  use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:all>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:all>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Position" type="OSCPosition"/>
+            <xsd:element name="Routing">
+                <xsd:complexType>
+                    <xsd:choice>
+                        <xsd:element name="FollowRoute">
+                            <xsd:complexType>
+                                <xsd:choice>
+                                    <xsd:element name="Route"               type="OSCRoute"/>
+                                    <xsd:element name="CatalogReference"    type="OSCCatalogReference"/>
+                                </xsd:choice>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="FollowTrajectory">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="Trajectory"          type="OSCTrajectory"        minOccurs="0"/> <!--todo: only one of Trajectory or CatalogReference is allowed -->
+                                    <xsd:element name="CatalogReference"    type="OSCCatalogReference"  minOccurs="0"/> <!--todo: only one of Trajectory or CatalogReference is allowed -->
+                                    <xsd:element name="Longitudinal">
+                                        <xsd:complexType>
+                                            <xsd:choice>
+                                                <xsd:element name="None"/>
+                                                <xsd:element name="Timing">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="domain"    type="Enum_domain_absolute_relative" use="required"/>
+                                                        <xsd:attribute name="scale"     type="xsd:double" use="required"/>
+                                                        <xsd:attribute name="offset"    type="xsd:double" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                            </xsd:choice>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="Lateral">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="purpose" type="Enum_Lateral_purpose" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:all>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="AcquirePosition">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="Position" type="OSCPosition"/>
+                                </xsd:all>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:choice>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:choice>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCUserDefinedAction">
+        <xsd:choice>
+            <xsd:element name="Command" type="xsd:string"/>
+            <xsd:element name="Script">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="OSCParameterAssignment" minOccurs="0"/>
+                    </xsd:all>
+                    <xsd:attribute name="name"      type="xsd:string" use="required"/>
+                    <xsd:attribute name="file"      type="xsd:string" use="required"/>
+                    <xsd:attribute name="execution" type="Enum_Script_execution" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:choice>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCGlobalAction">
+        <xsd:choice>
+            <xsd:element name="SetEnvironment">
+                <xsd:complexType>
+                    <xsd:choice>
+                        <xsd:element name="Environment"         type="OSCEnvironment"/>
+                        <xsd:element name="CatalogReference"    type="OSCCatalogReference"/>
+                    </xsd:choice>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Entity">
+                <xsd:complexType>
+                    <xsd:choice>
+                        <xsd:element name="Add">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="Position" type="OSCPosition"/>
+                                </xsd:all>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Delete"/>
+                    </xsd:choice>
+                    <xsd:attribute name="name" type="xsd:string" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Parameter">
+                <xsd:complexType>
+                    <xsd:choice>
+                        <xsd:element name="Set">
+                            <xsd:complexType>
+                                <xsd:attribute name="value" type="xsd:string" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Modify">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="Rule">
+                                        <xsd:complexType>
+                                            <xsd:choice>
+                                                <xsd:element name="Add">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="value" type="xsd:double" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                                <xsd:element name="Multiply">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="value" type="xsd:double" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                            </xsd:choice>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:all>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:choice>
+                    <xsd:attribute name="name" type="xsd:string" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Infrastructure">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Signal">
+                            <xsd:complexType>
+                                <xsd:choice>
+                                    <xsd:element name="SetController">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="name"  type="xsd:string" use="required"/>
+                                            <xsd:attribute name="state" type="xsd:string" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="SetState">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="name"  type="xsd:string" use="required"/>
+                                            <xsd:attribute name="state" type="xsd:string" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:choice>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:all>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Traffic">
+                <xsd:complexType>
+                    <xsd:choice>
+                        <xsd:element name="Source">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="Position"            type="OSCPosition"/>
+                                    <xsd:element name="TrafficDefinition"   type="OSCTrafficDefinition"/>
+                                </xsd:all>
+                                <xsd:attribute name="rate"      type="xsd:double" use="required"/>
+                                <xsd:attribute name="radius"    type="xsd:double" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Sink">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="Position"            type="OSCPosition"/>
+                                    <xsd:element name="TrafficDefinition"   type="OSCTrafficDefinition"/>
+                                </xsd:all>
+                                <xsd:attribute name="rate"      type="xsd:double" use="required"/>
+                                <xsd:attribute name="radius"    type="xsd:double" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Swarm">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="CentralObject">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="name" type="xsd:string" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="TrafficDefinition"   type="OSCTrafficDefinition"/>
+                                </xsd:all>
+                                <xsd:attribute name="semiMajorAxis" type="xsd:double" use="required"/>
+                                <xsd:attribute name="semiMinorAxis" type="xsd:double" use="required"/>
+                                <xsd:attribute name="innerRadius"   type="xsd:double" use="required"/>
+                                <xsd:attribute name="offset"        type="xsd:double" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Jam">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="Position"            type="OSCPosition"/>
+                                    <xsd:element name="TrafficDefinition"   type="OSCTrafficDefinition"/>
+                                </xsd:all>
+                                <xsd:attribute name="direction" type="xsd:string" use="required"/>
+                                <xsd:attribute name="speed"     type="xsd:double" use="required"/>
+                                <xsd:attribute name="length"    type="xsd:double" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:choice>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:choice>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCManeuver">
+        <xsd:sequence>
+            <xsd:element name="ParameterDeclaration" type="OSCParameterDeclaration" minOccurs="0"/>
+            <xsd:element name="Event" maxOccurs="unbounded">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="Action" maxOccurs="unbounded">
+                            <xsd:complexType>
+                                <xsd:choice>
+                                    <xsd:element name="Global"      type="OSCGlobalAction"/>
+                                    <xsd:element name="UserDefined" type="OSCUserDefinedAction"/>
+                                    <xsd:element name="Private"     type="OSCPrivateAction"/>
+                                </xsd:choice>
+                                <xsd:attribute name="name" type="xsd:string" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="StartConditions">
+                            <xsd:complexType>
+                                <xsd:sequence>
+                                    <xsd:element name="ConditionGroup" type="OSCConditionGroup" maxOccurs="unbounded"/>
+                                </xsd:sequence>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:sequence>
+                    <xsd:attribute name="name"      type="xsd:string" use="required"/>
+                    <xsd:attribute name="priority"  type="Enum_event_priority" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+        <xsd:attribute name="name" type="xsd:string" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCTrafficDefinition">
+        <xsd:all>
+            <xsd:element name="VehicleDistribution">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="Vehicle" maxOccurs="unbounded">
+                            <xsd:complexType>
+                                <xsd:attribute name="category"      type="xsd:string" use="required"/>
+                                <xsd:attribute name="percentage"    type="xsd:double" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="DriverDistribution">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="Driver" maxOccurs="unbounded">
+                            <xsd:complexType>
+                                <xsd:attribute name="name"      type="xsd:string" use="required"/>
+                                <xsd:attribute name="percentage"    type="xsd:double" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:all>
+        <xsd:attribute name="name" type="xsd:string" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCEnvironment">
+        <xsd:all>
+            <xsd:element name="ParameterDeclaration" type="OSCParameterDeclaration" minOccurs="0"/>
+            <xsd:element name="TimeOfDay">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Time">
+                            <xsd:complexType>
+                                <xsd:attribute name="hour"  type="xsd:unsignedInt" use="required"/>
+                                <xsd:attribute name="min"   type="xsd:unsignedInt" use="required"/>
+                                <xsd:attribute name="sec"   type="xsd:double" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Date">
+                            <xsd:complexType>
+                                <xsd:attribute name="day"   type="xsd:unsignedInt" use="required"/>
+                                <xsd:attribute name="month" type="xsd:unsignedInt" use="required"/>
+                                <xsd:attribute name="year"  type="xsd:unsignedInt" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:all>
+                    <xsd:attribute name="animation" type="xsd:boolean" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Weather">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Sun">
+                            <xsd:complexType>
+                                <xsd:attribute name="intensity" type="xsd:double" use="required"/>
+                                <xsd:attribute name="azimuth"   type="xsd:double" use="required"/>
+                                <xsd:attribute name="elevation" type="xsd:double" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Fog">
+                            <xsd:complexType>
+                                <xsd:all>
+                                    <xsd:element name="BoundingBox" type="OSCBoundingBox" minOccurs="0"/>
+                                </xsd:all>
+                                <xsd:attribute name="visualRange" type="xsd:double" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Precipitation">
+                            <xsd:complexType>
+                                <xsd:attribute name="type"      type="Enum_Precipitation_type" use="required"/>
+                                <xsd:attribute name="intensity" type="xsd:double" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:all>
+                    <xsd:attribute name="cloudState" type="Enum_cloudState" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="RoadCondition">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="Effect" minOccurs="0" maxOccurs="unbounded">
+                            <xsd:complexType>
+                                <xsd:attribute name="name"      type="xsd:string" use="required"/>
+                                <xsd:attribute name="intensity" type="xsd:double" use="required"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:sequence>
+                    <xsd:attribute name="frictionScale" type="xsd:double" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:all>
+        <xsd:attribute name="name"  type="xsd:string" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCPedestrianController">
+        <xsd:all>
+            <xsd:element name="ParameterDeclaration" type="OSCParameterDeclaration" minOccurs="0"/>
+            <xsd:element name="Description" type="OSCPersonDescription"/>
+        </xsd:all>
+        <xsd:attribute name="name" type="xsd:string" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCDriver">
+        <xsd:all>
+            <xsd:element name="ParameterDeclaration" type="OSCParameterDeclaration" minOccurs="0"/>
+            <xsd:element name="Description" type="OSCPersonDescription"/>
+        </xsd:all>
+        <xsd:attribute name="name" type="xsd:string" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCPersonDescription">
+        <xsd:sequence>
+            <xsd:element name="Properties" type="OSCProperties"/>
+        </xsd:sequence>
+        <xsd:attribute name="weight"        type="xsd:double" use="required"/>
+        <xsd:attribute name="height"        type="xsd:double" use="required"/>
+        <xsd:attribute name="eyeDistance"   type="xsd:double" use="required"/>
+        <xsd:attribute name="age"           type="xsd:double" use="required"/>
+        <xsd:attribute name="sex"           type="Enum_sex"   use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCRoute">
+        <xsd:sequence>
+            <xsd:element name="ParameterDeclaration" type="OSCParameterDeclaration" minOccurs="0"/>
+            <xsd:element name="Waypoint" minOccurs="2" maxOccurs="unbounded">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="Position" type="OSCPosition"/>
+                    </xsd:sequence>
+                    <xsd:attribute name="strategy"  type="Enum_Route_strategy" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+        <xsd:attribute name="name"      type="xsd:string" use="required"/>
+        <xsd:attribute name="closed"    type="xsd:boolean" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCTrajectory">
+        <xsd:sequence>
+            <xsd:element name="ParameterDeclaration" type="OSCParameterDeclaration" minOccurs="0"/>
+            <xsd:element name="Vertex" minOccurs="2" maxOccurs="unbounded">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="Position" type="OSCPosition"/>
+                        <xsd:element name="Shape">
+                            <xsd:complexType>
+                                <xsd:choice>
+                                    <xsd:element name="Polyline"/>
+                                    <xsd:element name="Clothoid">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="curvature"     type="xsd:double" use="required"/>
+                                            <xsd:attribute name="curvatureDot"  type="xsd:double" use="required"/>
+                                            <xsd:attribute name="length"        type="xsd:double" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="Spline">
+                                        <xsd:complexType>
+                                            <xsd:sequence>
+                                                <xsd:element name="ControlPoint1">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="status"    type="xsd:string" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                                <xsd:element name="ControlPoint2">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="status"    type="xsd:string" use="required"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                            </xsd:sequence>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:choice>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:sequence>
+                    <xsd:attribute name="reference" type="xsd:double" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+        <xsd:attribute name="name"      type="xsd:string" use="required"/>
+        <xsd:attribute name="closed"    type="xsd:boolean" use="required"/>
+        <xsd:attribute name="domain"    type="Enum_domain_time_distance" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCPosition">
+        <xsd:choice>
+            <xsd:element name="World">
+                <xsd:complexType>
+                    <xsd:attribute name="x"  type="xsd:double" use="required"/>
+                    <xsd:attribute name="y"  type="xsd:double" use="required"/>
+                    <xsd:attribute name="z"  type="xsd:double" use="optional"/>
+                    <xsd:attribute name="h"  type="xsd:double" use="optional"/>
+                    <xsd:attribute name="p"  type="xsd:double" use="optional"/>
+                    <xsd:attribute name="r"  type="xsd:double" use="optional"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="RelativeWorld">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Orientation" type="OSCOrientation" minOccurs="0"/>
+                    </xsd:all>
+                    <xsd:attribute name="object"    type="xsd:string" use="required"/>
+                    <xsd:attribute name="dx"        type="xsd:double" use="required"/>
+                    <xsd:attribute name="dy"        type="xsd:double" use="required"/>
+                    <xsd:attribute name="dz"        type="xsd:double" use="optional"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="RelativeObject">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Orientation" type="OSCOrientation" minOccurs="0"/>
+                    </xsd:all>
+                    <xsd:attribute name="object"    type="xsd:string" use="required"/>
+                    <xsd:attribute name="dx"        type="xsd:double" use="required"/>
+                    <xsd:attribute name="dy"        type="xsd:double" use="required"/>
+                    <xsd:attribute name="dz"        type="xsd:double" use="optional"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Road">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Orientation" type="OSCOrientation" minOccurs="0"/>
+                    </xsd:all>
+                    <xsd:attribute name="roadId"    type="xsd:string" use="required"/>
+                    <xsd:attribute name="s"         type="xsd:double" use="required"/>
+                    <xsd:attribute name="t"         type="xsd:double" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="RelativeRoad">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Orientation" type="OSCOrientation" minOccurs="0"/>
+                    </xsd:all>
+                    <xsd:attribute name="object"    type="xsd:string" use="required"/>
+                    <xsd:attribute name="ds"        type="xsd:double" use="required"/>
+                    <xsd:attribute name="dt"        type="xsd:double" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Lane">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Orientation" type="OSCOrientation" minOccurs="0"/>
+                    </xsd:all>
+                    <xsd:attribute name="roadId"    type="xsd:string" use="required"/>
+                    <xsd:attribute name="laneId"    type="xsd:int" use="required"/>
+                    <xsd:attribute name="offset"    type="xsd:double" use="optional"/>
+                    <xsd:attribute name="s"         type="xsd:double" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="RelativeLane">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="Orientation" type="OSCOrientation" minOccurs="0"/>
+                    </xsd:all>
+                    <xsd:attribute name="object"    type="xsd:string"   use="required"/>
+                    <xsd:attribute name="dLane"     type="xsd:int"      use="required"/>
+                    <xsd:attribute name="ds"        type="xsd:double"   use="required"/>
+                    <xsd:attribute name="offset"    type="xsd:double"   use="optional"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Route">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="RouteRef">
+                            <xsd:complexType>
+                                <xsd:choice>
+                                    <xsd:element name="Route"               type="OSCRoute"/>
+                                    <xsd:element name="CatalogReference"    type="OSCCatalogReference"/>
+                                </xsd:choice>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Orientation" type="OSCOrientation" minOccurs="0"/>
+                        <xsd:element name="Position">
+                            <xsd:complexType>
+                                <xsd:choice>
+                                    <xsd:element name="Current">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="object"    type="xsd:string"   use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="RoadCoord">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="pathS" type="xsd:double" use="required"/>
+                                            <xsd:attribute name="t"     type="xsd:double" use="required"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="LaneCoord">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="pathS"         type="xsd:double" use="required"/>
+                                            <xsd:attribute name="laneId"        type="xsd:int" use="required"/>
+                                            <xsd:attribute name="laneOffset"    type="xsd:double" use="optional"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:choice>
+                            </xsd:complexType>
+                        </xsd:element>
+                    </xsd:all>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:choice>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCBoundingBox">
+        <xsd:all>
+            <xsd:element name="Center">
+                <xsd:complexType>
+                    <xsd:attribute name="x"  type="xsd:double" use="required"/>
+                    <xsd:attribute name="y"  type="xsd:double" use="required"/>
+                    <xsd:attribute name="z"  type="xsd:double" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Dimension">
+                <xsd:complexType>
+                    <xsd:attribute name="width"  type="xsd:double" use="required"/>
+                    <xsd:attribute name="length" type="xsd:double" use="required"/>
+                    <xsd:attribute name="height" type="xsd:double" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:all>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCProperties">
+        <xsd:sequence>
+            <xsd:element name="Property" minOccurs="0" maxOccurs="unbounded">
+                <xsd:complexType>
+                    <xsd:attribute name="name"  type="xsd:string" use="required"/>
+                    <xsd:attribute name="value" type="xsd:string" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="File" type="OSCFile" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    
+    <xsd:complexType name="OSCOrientation">
+        <xsd:attribute name="type"  type="Enum_Orientation_type" use="optional"/>
+        <xsd:attribute name="h"     type="xsd:double" use="optional"/>
+        <xsd:attribute name="p"     type="xsd:double" use="optional"/>
+        <xsd:attribute name="r"     type="xsd:double" use="optional"/>
+    </xsd:complexType>
+    
+    
+    <!-- **************************************************************
+    ************************ Enumerations ************************
+    ************************************************************** -->
+    
+    <xsd:simpleType name="Enum_Route_strategy">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="fastest" />
+            <xsd:enumeration value="shortest" />
+            <xsd:enumeration value="leastIntersections" />
+            <xsd:enumeration value="random" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_sex">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="male" />
+            <xsd:enumeration value="female" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_Precipitation_type">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="dry" />
+            <xsd:enumeration value="rain" />
+            <xsd:enumeration value="snow" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_cloudState">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="skyOff" />
+            <xsd:enumeration value="free" />
+            <xsd:enumeration value="cloudy" />
+            <xsd:enumeration value="overcast" />
+            <xsd:enumeration value="rainy" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_Orientation_type">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="relative" />
+            <xsd:enumeration value="absolute" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_domain_time_distance">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="time" />
+            <xsd:enumeration value="distance" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_domain_absolute_relative">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="absolute" />
+            <xsd:enumeration value="relative" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_event_priority">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="overwrite" />
+            <xsd:enumeration value="following" />
+            <xsd:enumeration value="skip" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_Script_execution">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="single" />
+            <xsd:enumeration value="continuous" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_Dynamics_shape">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="linear" />
+            <xsd:enumeration value="cubic" />
+            <xsd:enumeration value="sinusoidal" />
+            <xsd:enumeration value="step" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_Speed_Target_valueType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="delta" />
+            <xsd:enumeration value="factor" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_Meeting_Position_mode">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="straight" />
+            <xsd:enumeration value="route" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_Controller_domain">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="longitudinal" />
+            <xsd:enumeration value="lateral" />
+            <xsd:enumeration value="both" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_Lateral_purpose">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="position" />
+            <xsd:enumeration value="steering" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_Condition_edge">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="rising" />
+            <xsd:enumeration value="falling" />
+            <xsd:enumeration value="any" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_TriggeringEntities_rule">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="any" />
+            <xsd:enumeration value="all" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_rule">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="greater_than" />
+            <xsd:enumeration value="less_than" />
+            <xsd:enumeration value="equal_to" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_RelativeDistance_type">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="longitudinal" />
+            <xsd:enumeration value="lateral" />
+            <xsd:enumeration value="inertial" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_Story_Element_type">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="act" />
+            <xsd:enumeration value="scene" />
+            <xsd:enumeration value="maneuver" />
+            <xsd:enumeration value="event" />
+            <xsd:enumeration value="action" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_AfterTermination_rule">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="end" />
+            <xsd:enumeration value="cancel" />
+            <xsd:enumeration value="any" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_MiscObject_category">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="barrier" />
+            <xsd:enumeration value="guardRail" />
+            <xsd:enumeration value="other" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_Vehicle_category">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="car" />
+            <xsd:enumeration value="van" />
+            <xsd:enumeration value="truck" />
+            <xsd:enumeration value="trailer" />
+            <xsd:enumeration value="semitrailer" />
+            <xsd:enumeration value="bus" />
+            <xsd:enumeration value="motorbike" />
+            <xsd:enumeration value="bicycle" />
+            <xsd:enumeration value="train" />
+            <xsd:enumeration value="tram" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_Pedestrian_category">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="pedestrian" />
+            <xsd:enumeration value="wheelchair" />
+            <xsd:enumeration value="animal" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_ByCondition_actor">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="triggeringEntity" />
+            <xsd:enumeration value="anyEntity" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <xsd:simpleType name="Enum_OSC_Parameter_type">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="integer" />
+            <xsd:enumeration value="double" />
+            <xsd:enumeration value="string" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+</xsd:schema>
