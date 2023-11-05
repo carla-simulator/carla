@@ -122,6 +122,8 @@ class RunnerTool(object):
         self.port = args.port
         self.low_quality = args.lowQuality
 
+        self.operating_system = args.os
+
     def get_config(self):
         ''' 
         Loads required user specified paths from config.json file.
@@ -237,7 +239,10 @@ class RunnerTool(object):
                 self.log.create_entry("INFO: Changing renderquality when carla is already running is not possible! Keeping old settings.")
         except Exception:
             self.log.create_entry("INFO: Carla not Running, Starting exe..")
-            self.carla_exe = subprocess.Popen(self.config["PATH_TO_CARLA_ROOT"]+"/CarlaUE4.exe -quality-level={quality}".format(quality=quality))
+            if self.operating_system == "windows":
+                self.carla_exe = subprocess.Popen(self.config["PATH_TO_CARLA_ROOT"]+"/CarlaUE4.exe")
+            else:
+                self.carla_exe = subprocess.Popen(self.config["PATH_TO_CARLA_ROOT"]+"/CarlaUE4.sh")
             time.sleep(10)
             client = carla.Client(self.host, self.port) 
             world = client.get_world()
@@ -643,7 +648,7 @@ def main():
     parser.add_argument('--sortMaps', action="store_true", help='Sorts xosc files in dir by map name and plays them in ascending order')
     parser.add_argument('--timeout', default=200, type=int, help='Stops scenario on timeout in seconds and runs next scenario (default: 200)')
     parser.add_argument('--debug', action="store_true", help='prints scenario_runner.py stdout and stderr to console')
-
+    parser.add_argument('--os', default="ubuntu", type=str, help ="what operating system is used")
     arguments = parser.parse_args()
 
     runner_tool = RunnerTool(arguments)
