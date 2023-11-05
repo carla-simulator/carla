@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<scenarios>
+    <scenario name="StationaryObjectCrossing_1" type="StationaryObjectCrossing" town="Town02">
+        <ego_vehicle x="7.63" y="109.91" z="1.22" yaw="359" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="DynamicObjectCrossing_1" type="DynamicObjectCrossing" town="Town02">
+        <ego_vehicle x="7.63" y="109.91" z="1.22" yaw="359" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="StationaryObjectCrossing_2" type="StationaryObjectCrossing" town="Town02">
+        <ego_vehicle x="180.93" y="105.31" z="1.22" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="DynamicObjectCrossing_2" type="DynamicObjectCrossing" town="Town02">
+        <ego_vehicle x="180.93" y="105.31" z="1.22" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="StationaryObjectCrossing_3" type="StationaryObjectCrossing" town="Town03">
+        <ego_vehicle x="239.39" y="113.42" z="2.36" yaw="270" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="DynamicObjectCrossing_3" type="DynamicObjectCrossing" town="Town03">
+        <ego_vehicle x="110" y="129" z="1" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="StationaryObjectCrossing_4" type="StationaryObjectCrossing" town="Town03">
+        <ego_vehicle x="232.36" y="113.29" z="2.46" yaw="90" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="DynamicObjectCrossing_4" type="DynamicObjectCrossing" town="Town03">
+        <ego_vehicle x="232.36" y="113.29" z="2.46" yaw="90" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="StationaryObjectCrossing_5" type="StationaryObjectCrossing" town="Town04">
+        <ego_vehicle x="156.27" y="18.7" z="10.31" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="DynamicObjectCrossing_5" type="DynamicObjectCrossing" town="Town04">
+        <ego_vehicle x="151.8" y="17.7" z="10.31" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="StationaryObjectCrossing_6" type="StationaryObjectCrossing" town="Town05">
+        <ego_vehicle x="-150.70" y="204.97" z="9.65" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="DynamicObjectCrossing_6" type="DynamicObjectCrossing" town="Town05">
+        <ego_vehicle x="-150.70" y="204.97" z="9.65" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="StationaryObjectCrossing_7" type="StationaryObjectCrossing" town="Town05">
+        <ego_vehicle x="149.0" y="-104.4" z="0.1" yaw="90" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="DynamicObjectCrossing_7" type="DynamicObjectCrossing" town="Town05">
+        <ego_vehicle x="149.0" y="-108.4" z="0.1" yaw="90" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="StationaryObjectCrossing_8" type="StationaryObjectCrossing" town="Town05">
+        <ego_vehicle x="138.2" y="116.4" z="0.1" yaw="130" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="DynamicObjectCrossing_8" type="DynamicObjectCrossing" town="Town05">
+        <ego_vehicle x="138.2" y="116.4" z="0.1" yaw="130" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="DynamicObjectCrossing_9" type="DynamicObjectCrossing" town="Town03">
+        <ego_vehicle x="90" y="129" z="1" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="ConstructionSetupCrossing" type="ConstructionSetupCrossing" town="Town02">
+        <ego_vehicle x="7.63" y="109.91" z="1.22" yaw="359" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+
+</scenarios>

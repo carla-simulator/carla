@@ -1,0 +1,326 @@
+<?xml version="1.0"?>
+<OpenSCENARIO>
+  <FileHeader revMajor="1" revMinor="0" date="2020-03-24T12:00:00" description="CARLA:CyclistCrossing" author=""/>
+  <ParameterDeclarations/>
+  <CatalogLocations/>
+  <RoadNetwork>
+    <LogicFile filepath="Town01"/>
+    <SceneGraphFile filepath=""/>
+  </RoadNetwork>
+  <Entities>
+    <ScenarioObject name="hero">
+      <Vehicle name="vehicle.tesla.model3" vehicleCategory="car">
+        <ParameterDeclarations/>
+        <Performance maxSpeed="69.444" maxAcceleration="200" maxDeceleration="10.0"/>
+        <BoundingBox>
+          <Center x="1.5" y="0.0" z="0.9"/>
+          <Dimensions width="2.1" length="4.5" height="1.8"/>
+        </BoundingBox>
+        <Axles>
+          <FrontAxle maxSteering="0.5" wheelDiameter="0.6" trackWidth="1.8" positionX="3.1" positionZ="0.3"/>
+          <RearAxle maxSteering="0.0" wheelDiameter="0.6" trackWidth="1.8" positionX="0.0" positionZ="0.3"/>
+        </Axles>
+        <Properties>
+          <Property name="type" value="ego_vehicle"/>
+        </Properties>
+      </Vehicle>
+    </ScenarioObject>
+    <ScenarioObject name="adversary">
+      <Vehicle name="vehicle.diamondback.century" vehicleCategory="bicycle">
+        <ParameterDeclarations/>
+        <Performance maxSpeed="69.444" maxAcceleration="200" maxDeceleration="10.0"/>
+        <BoundingBox>
+          <Center x="1.5" y="0.0" z="0.9"/>
+          <Dimensions width="2.1" length="4.5" height="1.8"/>
+        </BoundingBox>
+        <Axles>
+          <FrontAxle maxSteering="0.5" wheelDiameter="0.6" trackWidth="1.8" positionX="3.1" positionZ="0.3"/>
+          <RearAxle maxSteering="0.0" wheelDiameter="0.6" trackWidth="1.8" positionX="0.0" positionZ="0.3"/>
+        </Axles>
+        <Properties>
+          <Property name="type" value="simulation"/>
+        </Properties>
+      </Vehicle>
+    </ScenarioObject>
+  </Entities>
+  <Storyboard>
+    <Init>
+      <Actions>
+        <GlobalAction>
+          <EnvironmentAction>
+            <Environment name="Environment1">
+              <TimeOfDay animation="false" dateTime="2019-06-25T12:00:00"/>
+              <Weather cloudState="free">
+                <Sun intensity="0.85" azimuth="0" elevation="1.31"/>
+                <Fog visualRange="100000.0"/>
+                <Precipitation precipitationType="dry" intensity="0.0"/>
+              </Weather>
+              <RoadCondition frictionScaleFactor="1.0"/>
+            </Environment>
+          </EnvironmentAction>
+        </GlobalAction>
+        <Private entityRef="hero">
+          <PrivateAction>
+            <TeleportAction>
+              <Position>
+                <WorldPosition x="130" y="55" z="0" h="3.14159265359"/>
+              </Position>
+            </TeleportAction>
+          </PrivateAction>
+          <PrivateAction>
+            <ControllerAction>
+              <AssignControllerAction>
+                <Controller name="HeroAgent">
+                  <Properties>
+                    <Property name="module" value="external_control"/>
+                  </Properties>
+                </Controller>
+              </AssignControllerAction>
+              <OverrideControllerValueAction>
+                <Throttle value="0" active="false"/>
+                <Brake value="0" active="false"/>
+                <Clutch value="0" active="false"/>
+                <ParkingBrake value="0" active="false"/>
+                <SteeringWheel value="0" active="false"/>
+                <Gear number="0" active="false"/>
+              </OverrideControllerValueAction>
+            </ControllerAction>
+          </PrivateAction>
+        </Private>
+        <Private entityRef="adversary">
+          <PrivateAction>
+            <TeleportAction>
+              <Position>
+                <WorldPosition x="95.5" y="41" z="0.2" h="3.14159265359"/>
+              </Position>
+            </TeleportAction>
+          </PrivateAction>
+          <PrivateAction>
+            <ControllerAction>
+              <AssignControllerAction>
+                <Controller name="AdversaryAgent">
+                  <Properties>
+                    <Property name="module" value="vehicle_longitudinal_control"/>
+                  </Properties>
+                </Controller>
+              </AssignControllerAction>
+              <OverrideControllerValueAction>
+                <Throttle value="0" active="false"/>
+                <Brake value="0" active="false"/>
+                <Clutch value="0" active="false"/>
+                <ParkingBrake value="0" active="false"/>
+                <SteeringWheel value="0" active="false"/>
+                <Gear number="0" active="false"/>
+              </OverrideControllerValueAction>
+            </ControllerAction>
+          </PrivateAction>
+        </Private>
+      </Actions>
+    </Init>
+    <Story name="MyStory">
+      <Act name="Behavior">
+        <ManeuverGroup maximumExecutionCount="1" name="ManeuverSequence">
+          <Actors selectTriggeringEntities="false">
+            <EntityRef entityRef="adversary"/>
+          </Actors>
+          <Maneuver name="CyclistCrossingManeuver">
+            <Event name="CyclistStartsWalking" priority="overwrite">
+              <Action name="CyclistStartsWalking">
+                <PrivateAction>
+                  <LongitudinalAction>
+                    <SpeedAction>
+                      <SpeedActionDynamics dynamicsShape="step" value="1.5" dynamicsDimension="distance"/>
+                      <SpeedActionTarget>
+                        <AbsoluteTargetSpeed value="2.0"/>
+                      </SpeedActionTarget>
+                    </SpeedAction>
+                  </LongitudinalAction>
+                </PrivateAction>
+              </Action>
+              <StartTrigger>
+                <ConditionGroup>
+                  <Condition name="StartCondition" delay="0" conditionEdge="rising">
+                    <ByEntityCondition>
+                      <TriggeringEntities triggeringEntitiesRule="any">
+                        <EntityRef entityRef="hero"/>
+                      </TriggeringEntities>
+                      <EntityCondition>
+                        <RelativeDistanceCondition entityRef="adversary" relativeDistanceType="cartesianDistance" value="14.0" freespace="false" rule="lessThan"/>
+                      </EntityCondition>
+                    </ByEntityCondition>
+                  </Condition>
+                </ConditionGroup>
+              </StartTrigger>
+            </Event>
+            <Event name="CyclistStopsAndWaits" priority="overwrite">
+              <Action name="CyclistStopsAndWaits">
+                <PrivateAction>
+                  <LongitudinalAction>
+                    <SpeedAction>
+                      <SpeedActionDynamics dynamicsShape="step" value="10" dynamicsDimension="time"/>
+                      <SpeedActionTarget>
+                        <AbsoluteTargetSpeed value="0.0"/>
+                      </SpeedActionTarget>
+                    </SpeedAction>
+                  </LongitudinalAction>
+                </PrivateAction>
+              </Action>
+              <StartTrigger>
+                <ConditionGroup>
+                  <Condition name="StartCondition" delay="0" conditionEdge="rising">
+                    <ByEntityCondition>
+                      <TriggeringEntities triggeringEntitiesRule="any">
+                        <EntityRef entityRef="adversary"/>
+                      </TriggeringEntities>
+                      <EntityCondition>
+                        <StandStillCondition duration="0.1"/>
+                      </EntityCondition>
+                    </ByEntityCondition>
+                  </Condition>
+                  <Condition name="AfterCyclistStartsWalking" delay="0" conditionEdge="rising">
+                    <ByValueCondition>
+                      <StoryboardElementStateCondition storyboardElementType="action" storyboardElementRef="CyclistStartsWalking" state="completeState"/>
+                    </ByValueCondition>
+                  </Condition>
+                </ConditionGroup>
+              </StartTrigger>
+            </Event>
+            <Event name="CyclistWalksAway" priority="overwrite">
+              <Action name="CyclistStartsWalkingAway">
+                <PrivateAction>
+                  <LongitudinalAction>
+                    <SpeedAction>
+                      <SpeedActionDynamics dynamicsShape="step" value="6.5" dynamicsDimension="distance"/>
+                      <SpeedActionTarget>
+                        <AbsoluteTargetSpeed value="2.0"/>
+                      </SpeedActionTarget>
+                    </SpeedAction>
+                  </LongitudinalAction>
+                </PrivateAction>
+              </Action>
+              <StartTrigger>
+                <ConditionGroup>
+                  <Condition name="StartCondition" delay="0" conditionEdge="rising">
+                    <ByEntityCondition>
+                      <TriggeringEntities triggeringEntitiesRule="any">
+                        <EntityRef entityRef="hero"/>
+                      </TriggeringEntities>
+                      <EntityCondition>
+                        <StandStillCondition duration="0.1"/>
+                      </EntityCondition>
+                    </ByEntityCondition>
+                  </Condition>
+                  <Condition name="AfterCyclistStopsAndWaits" delay="0" conditionEdge="rising">
+                    <ByValueCondition>
+                      <StoryboardElementStateCondition storyboardElementType="action" storyboardElementRef="CyclistStopsAndWaits" state="completeState"/>
+                    </ByValueCondition>
+                  </Condition>
+                </ConditionGroup>
+              </StartTrigger>
+            </Event>
+            <Event name="CyclistWaits" priority="overwrite">
+              <Action name="CyclistWaits">
+                <PrivateAction>
+                  <LongitudinalAction>
+                    <SpeedAction>
+                      <SpeedActionDynamics dynamicsShape="step" value="10" dynamicsDimension="time"/>
+                      <SpeedActionTarget>
+                        <AbsoluteTargetSpeed value="0.0"/>
+                      </SpeedActionTarget>
+                    </SpeedAction>
+                  </LongitudinalAction>
+                </PrivateAction>
+              </Action>
+              <StartTrigger>
+                <ConditionGroup>
+                  <Condition name="StartCondition" delay="0" conditionEdge="rising">
+                    <ByEntityCondition>
+                      <TriggeringEntities triggeringEntitiesRule="any">
+                        <EntityRef entityRef="adversary"/>
+                      </TriggeringEntities>
+                      <EntityCondition>
+                        <StandStillCondition duration="0.1"/>
+                      </EntityCondition>
+                    </ByEntityCondition>
+                  </Condition>
+                  <Condition name="AfterCyclistStartsWalking" delay="0" conditionEdge="rising">
+                    <ByValueCondition>
+                      <StoryboardElementStateCondition storyboardElementType="action" storyboardElementRef="CyclistStartsWalkingAway" state="completeState"/>
+                    </ByValueCondition>
+                  </Condition>
+                </ConditionGroup>
+              </StartTrigger>
+            </Event>
+          </Maneuver>
+        </ManeuverGroup>
+        <StartTrigger>
+          <ConditionGroup>
+            <Condition name="OverallStartCondition" delay="0" conditionEdge="rising">
+              <ByEntityCondition>
+                <TriggeringEntities triggeringEntitiesRule="any">
+                  <EntityRef entityRef="hero"/>
+                </TriggeringEntities>
+                <EntityCondition>
+                  <TraveledDistanceCondition value="10.0"/>
+                </EntityCondition>
+              </ByEntityCondition>
+            </Condition>
+          </ConditionGroup>
+        </StartTrigger>
+        <StopTrigger>
+          <ConditionGroup>
+            <Condition name="EndCondition" delay="0" conditionEdge="rising">
+              <ByEntityCondition>
+                <TriggeringEntities triggeringEntitiesRule="any">
+                  <EntityRef entityRef="hero"/>
+                </TriggeringEntities>
+                <EntityCondition>
+                  <TraveledDistanceCondition value="200.0"/>
+                </EntityCondition>
+              </ByEntityCondition>
+            </Condition>
+          </ConditionGroup>
+        </StopTrigger>
+      </Act>
+    </Story>
+    <StopTrigger>
+      <ConditionGroup>
+        <Condition name="criteria_RunningStopTest" delay="0" conditionEdge="rising">
+          <ByValueCondition>
+            <ParameterCondition parameterRef="" value="" rule="lessThan"/>
+          </ByValueCondition>
+        </Condition>
+        <Condition name="criteria_RunningRedLightTest" delay="0" conditionEdge="rising">
+          <ByValueCondition>
+            <ParameterCondition parameterRef="" value="" rule="lessThan"/>
+          </ByValueCondition>
+        </Condition>
+        <Condition name="criteria_WrongLaneTest" delay="0" conditionEdge="rising">
+          <ByValueCondition>
+            <ParameterCondition parameterRef="" value="" rule="lessThan"/>
+          </ByValueCondition>
+        </Condition>
+        <Condition name="criteria_OnSidewalkTest" delay="0" conditionEdge="rising">
+          <ByValueCondition>
+            <ParameterCondition parameterRef="" value="" rule="lessThan"/>
+          </ByValueCondition>
+        </Condition>
+        <Condition name="criteria_KeepLaneTest" delay="0" conditionEdge="rising">
+          <ByValueCondition>
+            <ParameterCondition parameterRef="" value="" rule="lessThan"/>
+          </ByValueCondition>
+        </Condition>
+        <Condition name="criteria_CollisionTest" delay="0" conditionEdge="rising">
+          <ByValueCondition>
+            <ParameterCondition parameterRef="" value="" rule="lessThan"/>
+          </ByValueCondition>
+        </Condition>
+        <Condition name="criteria_DrivenDistanceTest" delay="0" conditionEdge="rising">
+          <ByValueCondition>
+            <ParameterCondition parameterRef="distance_success" value="100" rule="lessThan"/>
+          </ByValueCondition>
+        </Condition>
+      </ConditionGroup>
+    </StopTrigger>
+  </Storyboard>
+</OpenSCENARIO>

@@ -1,0 +1,7 @@
+{
+    "PATH_TO_CARLA_ROOT": "C:/Users/kilia/Desktop/CARLA_0.9.14/WindowsNoEditor",
+    "PATH_TO_SCENARIO_RUNNER_ROOT": "C:/Users/kilia/OneDrive - bwedu/Studium/7. Semester HWS 2023/Hiwi-Job InES/runnterTool",
+    "PATH_TO_XOSC_FILES": "./scenarios",
+    "PATH_TO_PYTHON_ENV": "INSERT_PC:/Users/kilia/AppData/Local/Programs/Python/Python311",
+    "CARLA_VERSION": "0.9.14"
+}
