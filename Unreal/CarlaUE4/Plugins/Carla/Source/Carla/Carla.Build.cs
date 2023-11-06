@@ -9,6 +9,7 @@ public class Carla : ModuleRules
   bool UsingCarSim = false;
   bool UsingChrono = false;
   bool UsingPytorch = false;
+  bool UsingRos2 = false;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
@@ -50,6 +51,14 @@ public class Carla : ModuleRules
         UsingPytorch = true;
         PublicDefinitions.Add("WITH_PYTORCH");
         PrivateDefinitions.Add("WITH_PYTORCH");
+      }
+
+      if (line.Contains("Ros2 ON"))
+      {
+        Console.WriteLine("Enabling ros2");
+        UsingRos2 = true;
+        PublicDefinitions.Add("WITH_ROS2");
+        PrivateDefinitions.Add("WITH_ROS2");
       }
     }
 
@@ -236,7 +245,7 @@ public class Carla : ModuleRules
       if (UsingPytorch)
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_pytorch")));
-        
+
         string LibTorchPath = LibCarlaInstallPath;
         PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libonnx_proto.a"));
         PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libfbgemm.a"));
@@ -307,6 +316,17 @@ public class Carla : ModuleRules
         PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libpython3.9.so");
       }
 
+      if (UsingRos2)
+      {
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds")));
+
+        string LibFastDDSPath = LibCarlaInstallPath;
+        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfoonathan_memory-0.7.3.so"));
+        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastcdr.so"));
+        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastrtps.so"));
+        PublicAdditionalLibraries.Add("stdc++");
+      }
+
 
       //OsmToODR
       PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libc.so");
@@ -317,7 +337,7 @@ public class Carla : ModuleRules
 
     }
     bEnableExceptions = true;
-    
+
     // Include path.
     string LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
 

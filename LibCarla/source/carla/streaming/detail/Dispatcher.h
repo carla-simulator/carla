@@ -40,8 +40,30 @@ namespace detail {
     bool RegisterSession(std::shared_ptr<Session> session);
 
     void DeregisterSession(std::shared_ptr<Session> session);
-    
+
     token_type GetToken(stream_id_type sensor_id);
+
+    void EnableForROS(stream_id_type sensor_id) {
+      auto search = _stream_map.find(sensor_id);
+      if (search != _stream_map.end()) {
+        search->second->EnableForROS();
+      }
+    }
+
+    void DisableForROS(stream_id_type sensor_id) {
+      auto search = _stream_map.find(sensor_id);
+      if (search != _stream_map.end()) {
+        search->second->DisableForROS();
+      }
+    }
+
+    bool IsEnabledForROS(stream_id_type sensor_id) {
+      auto search = _stream_map.find(sensor_id);
+      if (search != _stream_map.end()) {
+        return search->second->IsEnabledForROS();
+      }
+      return false;
+    }
 
   private:
 

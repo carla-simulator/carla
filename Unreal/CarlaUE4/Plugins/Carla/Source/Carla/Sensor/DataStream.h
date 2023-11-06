@@ -55,6 +55,12 @@ public:
     return Stream->token();
   }
 
+  uint64_t GetSensorType()
+  {
+    check(Stream.has_value());
+    return Stream->get_stream_id();
+  }
+
   bool AreClientsListening()
   {
     check(Stream.has_value());
