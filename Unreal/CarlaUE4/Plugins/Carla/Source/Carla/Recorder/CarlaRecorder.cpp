@@ -17,6 +17,8 @@
 #include "Carla/Walker/WalkerControl.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Components/BoxComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "VehicleAnimInstance.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/rpc/VehicleLightState.h"
@@ -73,6 +75,11 @@ void ACarlaRecorder::SetReplayerIgnoreHero(bool IgnoreHero)
   Replayer.SetIgnoreHero(IgnoreHero);
 }
 
+void ACarlaRecorder::SetReplayerIgnoreSpectator(bool IgnoreSpectator)
+{
+  Replayer.SetIgnoreSpectator(IgnoreSpectator);
+}
+
 void ACarlaRecorder::StopReplayer(bool KeepActors)
 {
   Replayer.Stop(KeepActors);
@@ -111,6 +118,7 @@ void ACarlaRecorder::Ticking(float DeltaSeconds)
           AddActorPosition(View);
           AddVehicleAnimation(View);
           AddVehicleLight(View);
+          AddVehicleWheelsAnimation(View);
           if (bAdditionalData)
           {
             AddActorKinematics(View);
@@ -194,6 +202,58 @@ void ACarlaRecorder::AddVehicleAnimation(FCarlaActor *CarlaActor)
   AddAnimVehicle(Record);
 }
 
+void ACarlaRecorder::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
+{
+  check(CarlaActor != nullptr)
+  if (CarlaActor->IsPendingKill())
+    return;
+  if (CarlaActor->GetActorType() != FCarlaActor::ActorType::Vehicle)
+    return;
+
+  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+  if (CarlaVehicle == nullptr)
+    return;
+
+  USkeletalMeshComponent* SkeletalMesh = CarlaVehicle->GetMesh();
+  if (SkeletalMesh == nullptr)
+    return;
+
+  UVehicleAnimInstance* VehicleAnim = Cast<UVehicleAnimInstance>(SkeletalMesh->GetAnimInstance());
+  if (VehicleAnim == nullptr)
+    return;
+
+  const UWheeledVehicleMovementComponent* WheeledVehicleMovementComponent = VehicleAnim->GetWheeledVehicleMovementComponent();
+  if (WheeledVehicleMovementComponent == nullptr)
+    return;
+
+  CarlaRecorderAnimWheels Record;
+  Record.DatabaseId = CarlaActor->GetActorId();
+  Record.WheelValues.reserve(WheeledVehicleMovementComponent->Wheels.Num());
+
+  uint8 i = 0;
+  for (auto Wheel : WheeledVehicleMovementComponent->Wheels)
+  {
+    WheelInfo Info;
+    Info.Location = static_cast<EVehicleWheelLocation>(i);
+    Info.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(Info.Location);
+    Info.TireRotation = Wheel->GetRotationAngle();
+    Record.WheelValues.push_back(Info);
+    ++i;
+  }
+
+  AddAnimVehicleWheels(Record);
+
+  if (CarlaVehicle->IsTwoWheeledVehicle())
+  {
+    AddAnimBiker(CarlaRecorderAnimBiker
+    {
+      CarlaActor->GetActorId(),
+      WheeledVehicleMovementComponent->GetForwardSpeed(),
+      WheeledVehicleMovementComponent->GetEngineRotationSpeed() / WheeledVehicleMovementComponent->GetEngineMaxRotationSpeed()
+    });
+  }
+}
+
 void ACarlaRecorder::AddWalkerAnimation(FCarlaActor *CarlaActor)
 {
   check(CarlaActor != nullptr);
@@ -260,6 +320,7 @@ void ACarlaRecorder::AddActorKinematics(FCarlaActor *CarlaActor)
    };
    AddKinematics(Kinematic);
 }
+
 void ACarlaRecorder::AddActorBoundingBox(FCarlaActor *CarlaActor)
 {
   check(CarlaActor != nullptr);
@@ -331,7 +392,7 @@ void ACarlaRecorder::AddActorBones(FCarlaActor *CarlaActor)
 
   CarlaRecorderWalkerBones Walker;
   Walker.DatabaseId = CarlaActor->GetActorId();
-  for (auto &Bone : Bones.BoneTransforms) 
+  for (auto &Bone : Bones.BoneTransforms)
   {
     FString Name = Bone.Get<0>();
     auto Transforms = Bone.Get<1>();
@@ -417,6 +478,8 @@ void ACarlaRecorder::Clear(void)
   PhysicsControls.Clear();
   TrafficLightTimes.Clear();
   WalkersBones.Clear();
+  Wheels.Clear();
+  Bikers.Clear();
 }
 
 void ACarlaRecorder::Write(double DeltaSeconds)
@@ -443,6 +506,8 @@ void ACarlaRecorder::Write(double DeltaSeconds)
   Walkers.Write(File);
   LightVehicles.Write(File);
   LightScenes.Write(File);
+  Wheels.Write(File);
+  Bikers.Write(File);
 
   // additional info
   if (bAdditionalData)
@@ -555,11 +620,27 @@ void ACarlaRecorder::AddAnimVehicle(const CarlaRecorderAnimVehicle &Vehicle)
   }
 }
 
+void ACarlaRecorder::AddAnimVehicleWheels(const CarlaRecorderAnimWheels &VehicleWheels)
+{
+  if (Enabled)
+  {
+    Wheels.Add(VehicleWheels);
+  }
+}
+
 void ACarlaRecorder::AddAnimWalker(const CarlaRecorderAnimWalker &Walker)
 {
   if (Enabled)
   {
     Walkers.Add(Walker);
+  }
+}
+
+void ACarlaRecorder::AddAnimBiker(const CarlaRecorderAnimBiker &Biker)
+{
+  if (Enabled)
+  {
+    Bikers.Add(Biker);
   }
 }
 

@@ -195,6 +195,7 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs && ... Strings)
 {
   Def.Id = JoinStrings(TEXT("."), std::forward<TStrs>(Strings) ...).ToLower();
   Def.Tags = JoinStrings(TEXT(","), std::forward<TStrs>(Strings) ...).ToLower();
+
   // each actor gets an actor role name attribute (empty by default)
   FActorVariation ActorRole;
   ActorRole.Id = TEXT("role_name");
@@ -202,6 +203,14 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs && ... Strings)
   ActorRole.RecommendedValues = { TEXT("default") };
   ActorRole.bRestrictToRecommended = false;
   Def.Variations.Emplace(ActorRole);
+
+  // ROS2
+  FActorVariation Var;
+  Var.Id = TEXT("ros_name");
+  Var.Type = EActorAttributeType::String;
+  Var.RecommendedValues = { Def.Id };
+  Var.bRestrictToRecommended = false;
+  Def.Variations.Emplace(Var);
 }
 
 static void AddRecommendedValuesForActorRoleName(
@@ -383,7 +392,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation Gamma;
     Gamma.Id = TEXT("gamma");
     Gamma.Type = EActorAttributeType::Float;
-    Gamma.RecommendedValues = { TEXT("2.4") };
+    Gamma.RecommendedValues = { TEXT("2.2") };
     Gamma.bRestrictToRecommended = false;
 
     // Motion Blur
@@ -1541,7 +1550,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         Description.Variations["enable_postprocess_effects"],
         true));
     Camera->SetTargetGamma(
-        RetrieveActorAttributeToFloat("gamma", Description.Variations, 2.4f));
+        RetrieveActorAttributeToFloat("gamma", Description.Variations, 2.2f));
     Camera->SetMotionBlurIntensity(
         RetrieveActorAttributeToFloat("motion_blur_intensity", Description.Variations, 0.5f));
     Camera->SetMotionBlurMaxDistortion(

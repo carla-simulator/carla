@@ -11,11 +11,15 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "BaseVegetationActor.h"
+#include "Vehicle/CarlaWheeledVehicle.h"
 #include <unordered_set>
 #include <vector>
-#include "carla/rpc/String.h"
 #include <cmath>
 #include <sstream>
+
+#include <compiler/disable-ue4-macros.h>
+#include "carla/rpc/String.h"
+#include <compiler/enable-ue4-macros.h>
 
 #define SPRINGVEGETATIONLOGS 0
 #define SOLVERLOGS 0

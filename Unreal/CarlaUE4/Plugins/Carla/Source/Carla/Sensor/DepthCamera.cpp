@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "Carla/Sensor/DepthCamera.h"
 
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+
 #include "Carla/Sensor/PixelReader.h"
 
 FActorDefinition ADepthCamera::GetSensorDefinition()

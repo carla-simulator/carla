@@ -38,12 +38,15 @@ namespace multigpu {
     Router(void);
     explicit Router(uint16_t port);
     ~Router();
-    
+
     void Write(MultiGPUCommand id, Buffer &&buffer);
     std::future<SessionInfo> WriteToNext(MultiGPUCommand id, Buffer &&buffer);
+    std::future<SessionInfo> WriteToOne(std::weak_ptr<Primary> server, MultiGPUCommand id, Buffer &&buffer);
     void Stop();
 
     void SetCallbacks();
+    void SetNewConnectionCallback(std::function<void(void)>);
+
     void AsyncRun(size_t worker_threads);
 
     boost::asio::ip::tcp::endpoint GetLocalEndpoint() const;
@@ -56,11 +59,13 @@ namespace multigpu {
       return _commander;
     }
 
+    std::weak_ptr<Primary> GetNextServer();
+
   private:
     void ConnectSession(std::shared_ptr<Primary> session);
     void DisconnectSession(std::shared_ptr<Primary> session);
     void ClearSessions();
-    
+
     // mutex and thread pool must be at the beginning to be destroyed last
     std::mutex                              _mutex;
     ThreadPool                              _pool;
@@ -68,8 +73,9 @@ namespace multigpu {
     std::vector<std::shared_ptr<Primary>>   _sessions;
     std::shared_ptr<Listener>               _listener;
     uint32_t                                _next;
-    std::unordered_map<Primary *, std::shared_ptr<std::promise<SessionInfo>>>   _promises;
+    std::unordered_map<Primary *, std::shared_ptr<std::promise<SessionInfo>>> _promises;
     PrimaryCommands                         _commander;
+    std::function<void(void)>               _callback;
   };
 
 } // namespace multigpu

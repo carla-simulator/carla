@@ -8,13 +8,14 @@ DOC_STRING="Download and install the required libraries for carla."
 
 USAGE_STRING="Usage: $0 [--python-version=VERSION]"
 
-OPTS=`getopt -o h --long help,chrono,pytorch,python-version: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,chrono,ros2,pytorch,python-version: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
 PY_VERSION_LIST=3
 USE_CHRONO=false
 USE_PYTORCH=false
+USE_ROS2=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -26,6 +27,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --pytorch )
       USE_PYTORCH=true;
+      shift ;;
+    --ros2 )
+      USE_ROS2=true;
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -41,24 +45,13 @@ done
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang --version | head -n 1 | sed -r 's/^([^.]+).*$/\1/; s/^[^0-9]*([0-9]+).*$/\1/')")
-
-if [ -z "$CARLA_LLVM_VERSION_MAJOR" ] ; then
-  fatal_error "Failed to retrieve the installed version of the clang compiler."
-else
-  echo "Using clang-$CARLA_LLVM_VERSION_MAJOR as the CARLA compiler."
-fi
-
 source $(dirname "$0")/Environment.sh
 
-command -v /usr/bin/clang++-$CARLA_LLVM_VERSION_MAJOR >/dev/null 2>&1 || {
-  echo >&2 "clang-$CARLA_LLVM_VERSION_MAJOR is required, but it's not installed.";
-  exit 1;
-}
+export CC="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang"
+export CXX="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++"
+export PATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin:$PATH"
 
-CXX_TAG=c$CARLA_LLVM_VERSION_MAJOR
-export CC=/usr/bin/clang-$CARLA_LLVM_VERSION_MAJOR
-export CXX=/usr/bin/clang++-$CARLA_LLVM_VERSION_MAJOR
+CXX_TAG=c10
 
 # Convert comma-separated string to array of unique elements.
 IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
@@ -66,53 +59,9 @@ IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
 mkdir -p ${CARLA_BUILD_FOLDER}
 pushd ${CARLA_BUILD_FOLDER} >/dev/null
 
-# ==============================================================================
-# -- Get and compile libc++ ----------------------------------------------------
-# ==============================================================================
-
-LLVM_BASENAME=llvm-8.0
-
-LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
-LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
-
-if [[ -d "${LLVM_BASENAME}-install" ]] ; then
-  log "${LLVM_BASENAME} already installed."
-else
-  rm -Rf ${LLVM_BASENAME}-source ${LLVM_BASENAME}-build
-
-  log "Retrieving libc++."
-
-  # TODO URGENT: These links are out of date! LLVM has moved to https://github.com/llvm/llvm-project.
-  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
-  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
-  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
-
-  log "Compiling libc++."
-
-  mkdir -p ${LLVM_BASENAME}-build
-
-  pushd ${LLVM_BASENAME}-build >/dev/null
-
-  cmake -G "Ninja" \
-      -DLIBCXX_ENABLE_EXPERIMENTAL_LIBRARY=OFF \
-      -DLIBCXX_INSTALL_EXPERIMENTAL_LIBRARY=OFF \
-      -DLLVM_ENABLE_EH=OFF \
-      -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX="../${LLVM_BASENAME}-install" \
-      ../${LLVM_BASENAME}-source
-
-  ninja cxx
-
-  ninja install-libcxx
-
-  ninja install-libcxxabi
-
-  popd >/dev/null
-
-  rm -Rf ${LLVM_BASENAME}-source ${LLVM_BASENAME}-build
-
-fi
-
-unset LLVM_BASENAME
+LLVM_INCLUDE="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
+LLVM_LIBPATH="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
+UNREAL_HOSTED_CFLAGS="--sysroot=$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/"
 
 # ==============================================================================
 # -- Get boost includes --------------------------------------------------------
@@ -125,11 +74,10 @@ BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
 
 for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
-
   SHOULD_BUILD_BOOST=true
   PYTHON_VERSION=$(/usr/bin/env python${PY_VERSION} -V 2>&1)
-  LIB_NAME=${PYTHON_VERSION:7:3}
-  LIB_NAME=${LIB_NAME//.}
+  LIB_NAME=$(cut -d . -f 1,2 <<< "$PYTHON_VERSION" | tr -d .)
+  LIB_NAME=${LIB_NAME:7}
   if [[ -d "${BOOST_BASENAME}-install" ]] ; then
     if [ -f "${BOOST_BASENAME}-install/lib/libboost_python${LIB_NAME}.a" ] ; then
       SHOULD_BUILD_BOOST=false
@@ -157,7 +105,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     pushd ${BOOST_BASENAME}-source >/dev/null
 
-    BOOST_TOOLSET="clang-$CARLA_LLVM_VERSION_MAJOR.0"
+    BOOST_TOOLSET="clang-10.0"
     BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
     py3="/usr/bin/env python${PY_VERSION}"
@@ -230,7 +178,7 @@ else
   pushd ${RPCLIB_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS ${UNREAL_HOSTED_CFLAGS}" \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libcxx-install" \
       ../${RPCLIB_BASENAME}-source
 
@@ -294,7 +242,7 @@ else
   pushd ${GTEST_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -fno-exceptions" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -fno-exceptions ${UNREAL_HOSTED_CFLAGS}" \
       -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libcxx-install" \
       ../${GTEST_BASENAME}-source
 
@@ -331,9 +279,7 @@ unset GTEST_BASENAME
 # -- Get Recast&Detour and compile it with libc++ ------------------------------
 # ==============================================================================
 
-RECAST_HASH=0b13b0
-RECAST_COMMIT=0b13b0d288ac96fdc5347ee38299511c6e9400db
-RECAST_BASENAME=recast-${RECAST_HASH}-${CXX_TAG}
+RECAST_BASENAME=recast-${CXX_TAG}
 
 RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
 RECAST_LIBPATH=${PWD}/${RECAST_BASENAME}-install/lib
@@ -353,7 +299,7 @@ else
 
   pushd ${RECAST_BASENAME}-source >/dev/null
 
-  git reset --hard ${RECAST_COMMIT}
+  git checkout carla
 
   popd >/dev/null
 
@@ -377,10 +323,6 @@ else
   popd >/dev/null
 
   rm -Rf ${RECAST_BASENAME}-source ${RECAST_BASENAME}-build
-
-  # move headers inside 'recast' folder
-  mkdir -p "${PWD}/${RECAST_BASENAME}-install/include/recast"
-  mv "${PWD}/${RECAST_BASENAME}-install/include/"*h "${PWD}/${RECAST_BASENAME}-install/include/recast/"
 
 fi
 
@@ -437,9 +379,11 @@ XERCESC_REPO=https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-${XERCE
 
 XERCESC_SRC_DIR=${XERCESC_BASENAME}-source
 XERCESC_INSTALL_DIR=${XERCESC_BASENAME}-install
+XERCESC_INSTALL_SERVER_DIR=${XERCESC_BASENAME}-install-server
 XERCESC_LIB=${XERCESC_INSTALL_DIR}/lib/libxerces-c.a
+XERCESC_SERVER_LIB=${XERCESC_INSTALL_SERVER_DIR}/lib/libxerces-c.a
 
-if [[ -d ${XERCESC_INSTALL_DIR} ]] ; then
+if [[ -d ${XERCESC_INSTALL_DIR} &&  -d ${XERCESC_INSTALL_SERVER_DIR} ]] ; then
   log "Xerces-c already installed."
 else
   log "Retrieving xerces-c."
@@ -472,12 +416,32 @@ else
 
   popd >/dev/null
 
+  mkdir -p ${XERCESC_INSTALL_SERVER_DIR}
+
+  pushd ${XERCESC_SRC_DIR}/build >/dev/null
+
+  cmake -G "Ninja" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -fPIC -w -I${LLVM_INCLUDE} -L${LLVM_LIBPATH}" \
+      -DCMAKE_INSTALL_PREFIX="../../${XERCESC_INSTALL_SERVER_DIR}" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_SHARED_LIBS=OFF \
+      -Dtranscoder=gnuiconv \
+      -Dnetwork=OFF \
+      ..
+  ninja
+  ninja install
+
+  popd >/dev/null
+
   rm -Rf ${XERCESC_BASENAME}.tar.gz
   rm -Rf ${XERCESC_SRC_DIR}
 fi
 
 mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 cp ${XERCESC_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+
+mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+cp -p ${XERCESC_SERVER_LIB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
 
 # ==============================================================================
 # -- Get Eigen headers 3.1.0 (CARLA dependency) -------------------------------------
@@ -569,7 +533,7 @@ if ${USE_CHRONO} ; then
     pushd ${CHRONO_SRC_DIR}/build >/dev/null
 
     cmake -G "Ninja" \
-        -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH} -Wno-unused-command-line-argument" \
+        -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH} -Wno-unused-command-line-argument ${UNREAL_HOSTED_CFLAGS}" \
         -DEIGEN3_INCLUDE_DIR="../../${EIGEN_INCLUDE}" \
         -DCMAKE_INSTALL_PREFIX="../../${CHRONO_INSTALL_DIR}" \
         -DCMAKE_BUILD_TYPE=Release \
@@ -602,6 +566,7 @@ SQLITE_INSTALL_DIR=sqlite-install
 
 SQLITE_INCLUDE_DIR=${PWD}/${SQLITE_INSTALL_DIR}/include
 SQLITE_LIB=${PWD}/${SQLITE_INSTALL_DIR}/lib/libsqlite3.a
+SQLITE_FULL_LIB=${PWD}/${SQLITE_INSTALL_DIR}/lib/
 SQLITE_EXE=${PWD}/${SQLITE_INSTALL_DIR}/bin/sqlite3
 
 if [[ -d ${SQLITE_INSTALL_DIR} ]] ; then
@@ -618,7 +583,7 @@ else
 
   pushd ${SQLITE_SOURCE_DIR} >/dev/null
 
-  export CFLAGS="-fPIC"
+  export CFLAGS="-fPIC -w"
   ./configure --prefix=${PWD}/../sqlite-install/
   make
   make install
@@ -632,6 +597,9 @@ fi
 mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 cp ${SQLITE_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 
+mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+cp -p -r ${SQLITE_FULL_LIB} ${LIBCARLA_INSTALL_SERVER_FOLDER}
+
 # ==============================================================================
 # -- Get and compile PROJ ------------------------------------------------------
 # ==============================================================================
@@ -642,10 +610,13 @@ PROJ_REPO=https://download.osgeo.org/proj/${PROJ_VERSION}.tar.gz
 PROJ_TAR=${PROJ_VERSION}.tar.gz
 PROJ_SRC_DIR=proj-src
 PROJ_INSTALL_DIR=proj-install
+PROJ_INSTALL_SERVER_DIR=proj-install-server
 PROJ_INSTALL_DIR_FULL=${PWD}/${PROJ_INSTALL_DIR}
+PROJ_INSTALL_SERVER_DIR_FULL=${PWD}/${PROJ_INSTALL_SERVER_DIR}
 PROJ_LIB=${PROJ_INSTALL_DIR_FULL}/lib/libproj.a
+PROJ_SERVER_LIB=${PROJ_INSTALL_SERVER_DIR_FULL}/lib/libproj.a
 
-if [[ -d ${PROJ_INSTALL_DIR} ]] ; then
+if [[ -d ${PROJ_INSTALL_DIR} && -d ${PROJ_INSTALL_SERVER_DIR_FULL} ]] ; then
   log "PROJ already installed."
 else
   log "Retrieving PROJ"
@@ -655,8 +626,8 @@ else
   tar -xzf ${PROJ_TAR}
   mv ${PROJ_VERSION} ${PROJ_SRC_DIR}
 
-  mkdir ${PROJ_SRC_DIR}/build
-  mkdir ${PROJ_INSTALL_DIR}
+  mkdir -p ${PROJ_SRC_DIR}/build
+  mkdir -p ${PROJ_INSTALL_DIR}
 
   pushd ${PROJ_SRC_DIR}/build >/dev/null
 
@@ -674,12 +645,33 @@ else
 
   popd >/dev/null
 
+  mkdir -p ${PROJ_INSTALL_SERVER_DIR}
+
+  pushd ${PROJ_SRC_DIR}/build >/dev/null
+
+  cmake -G "Ninja" .. \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}"  \
+      -DSQLITE3_INCLUDE_DIR=${SQLITE_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_LIB} \
+      -DEXE_SQLITE3=${SQLITE_EXE} \
+      -DENABLE_TIFF=OFF -DENABLE_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF \
+      -DCMAKE_BUILD_TYPE=Release -DBUILD_PROJINFO=OFF \
+      -DBUILD_CCT=OFF -DBUILD_CS2CS=OFF -DBUILD_GEOD=OFF -DBUILD_GIE=OFF \
+      -DBUILD_PROJ=OFF -DBUILD_TESTING=OFF \
+      -DCMAKE_INSTALL_PREFIX=${PROJ_INSTALL_SERVER_DIR_FULL}
+  ninja
+  ninja install
+
+  popd >/dev/null
+
   rm -Rf ${PROJ_TAR}
   rm -Rf ${PROJ_SRC_DIR}
 
 fi
 
 cp ${PROJ_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+
+mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+cp -p ${PROJ_SERVER_LIB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
 
 # ==============================================================================
 # -- Get and compile patchelf --------------------------------------------------
@@ -724,7 +716,7 @@ mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
 cp ${PATCHELF_EXE} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
 
 # ==============================================================================
-# -- Download libtorch and dependencies --------------------------------------------------
+# -- Download libtorch and dependencies ----------------------------------------
 # ==============================================================================
 
 if ${USE_PYTORCH} ; then
@@ -794,13 +786,90 @@ if ${USE_PYTORCH} ; then
   cp -p ${LIBTORCH_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p ${LIBTORCHSCATTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p ${LIBTORCHCLUSTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-  
+
   mkdir -p ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   cp -p ${LIBTORCH_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   cp -p ${LIBTORCHSCATTER_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   cp -p ${LIBTORCHCLUSTER_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
 fi
 
+# ==============================================================================
+# -- Download Fast DDS and dependencies ----------------------------------------
+# ==============================================================================
+
+FASTDDS_BASENAME=fast-dds
+FASTDDS_INSTALL_DIR=${PWD}/${FASTDDS_BASENAME}-install
+FASTDDS_INCLUDE=${FASTDDS_INSTALL_DIR}/include
+FASTDDS_LIB=${FASTDDS_INSTALL_DIR}/lib
+if ${USE_ROS2} ; then
+  function build_fastdds_extension {
+    LIB_SOURCE=$1
+    LIB_REPO=$2
+    LIB_BRANCH=$3
+    if [[ ! -d ${LIB_SOURCE} ]] ; then
+      mkdir -p ${LIB_SOURCE}
+      log "${LIB_REPO}"
+      git clone --depth 1 --branch ${LIB_BRANCH} ${LIB_REPO} ${LIB_SOURCE}
+      mkdir -p ${LIB_SOURCE}/build
+    fi
+  }
+  if [[ ! -d ${FASTDDS_INSTALL_DIR} ]] ; then
+    mkdir -p ${FASTDDS_INSTALL_DIR}
+    log "Build foonathan memory vendor"
+    FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan-memory-vendor
+    FOONATHAN_MEMORY_VENDOR_SOURCE_DIR=${PWD}/${FOONATHAN_MEMORY_VENDOR_BASENAME}-source
+    FOONATHAN_MEMORY_VENDOR_REPO="https://github.com/eProsima/foonathan_memory_vendor.git"
+    FOONATHAN_MEMORY_VENDOR_BRANCH=master
+    build_fastdds_extension ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR} "${FOONATHAN_MEMORY_VENDOR_REPO}" "${FOONATHAN_MEMORY_VENDOR_BRANCH}"
+    pushd ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}/build >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DBUILD_SHARED_LIBS=ON \
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}
+
+    log "Build fast cdr"
+    FAST_CDR_BASENAME=fast-cdr
+    FAST_CDR_SOURCE_DIR=${PWD}/${FAST_CDR_BASENAME}-source
+    FAST_CDR_REPO="https://github.com/eProsima/Fast-CDR.git"
+    FAST_CDR_BRANCH=1.1.x
+    build_fastdds_extension ${FAST_CDR_SOURCE_DIR} "${FAST_CDR_REPO}" "${FAST_CDR_BRANCH}"
+    pushd ${FAST_CDR_SOURCE_DIR}/build >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${FAST_CDR_SOURCE_DIR}
+
+    log "Build fast dds"
+    FAST_DDS_LIB_BASENAME=fast-dds-lib
+    FAST_DDS_LIB_SOURCE_DIR=${PWD}/${FAST_DDS_LIB_BASENAME}-source
+    FAST_DDS_LIB_REPO="https://github.com/eProsima/Fast-DDS.git"
+    FAST_DDS_LIB_BRANCH=2.11.2
+    build_fastdds_extension ${FAST_DDS_LIB_SOURCE_DIR} "${FAST_DDS_LIB_REPO}" "${FAST_DDS_LIB_BRANCH}"
+    pushd ${FAST_DDS_LIB_SOURCE_DIR}/build >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DCMAKE_CXX_FLAGS=-latomic \
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+       \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${FAST_DDS_LIB_SOURCE_DIR}
+
+    mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+    cp -p ${FASTDDS_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  fi
+fi
 
 # ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
@@ -851,9 +920,9 @@ cp ${LIBSTDCPP_TOOLCHAIN_FILE}.gen ${LIBCPP_TOOLCHAIN_FILE}.gen
 cat >>${LIBCPP_TOOLCHAIN_FILE}.gen <<EOL
 
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -isystem ${LLVM_INCLUDE}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -isystem ${LLVM_INCLUDE} ${UNREAL_HOSTED_CFLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions" CACHE STRING "" FORCE)
-set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -L${LLVM_LIBPATH}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -L${LLVM_LIBPATH} ${UNREAL_HOSTED_CFLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -lc++ -lc++abi" CACHE STRING "" FORCE)
 EOL
 
@@ -880,6 +949,8 @@ endif ()
 add_definitions(-DLIBCARLA_TEST_CONTENT_FOLDER="${LIBCARLA_TEST_CONTENT_FOLDER}")
 
 set(BOOST_INCLUDE_PATH "${BOOST_INCLUDE}")
+set(FASTDDS_INCLUDE_PATH "${FASTDDS_INCLUDE}")
+set(FASTDDS_LIB_PATH "${FASTDDS_LIB}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Server")
   # Here libraries linking libc++.
@@ -889,6 +960,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBCXX_LIBPATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBCXX_LIBPATH}")
+elseif (CMAKE_BUILD_TYPE STREQUAL "ros2")
+  list(APPEND CMAKE_PREFIX_PATH "${FASTDDS_INSTALL_DIR}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Pytorch")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCH_PATH}")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHSCATTER_INSTALL_DIR}")

@@ -174,7 +174,7 @@ def get_actor_blueprints(world, filter, generation):
     try:
         int_generation = int(generation)
         # Check if generation is in available generations
-        if int_generation in [1, 2]:
+        if int_generation in [1, 2, 3]:
             bps = [x for x in bps if int(x.get_attribute('generation')) == int_generation]
             return bps
         else:
@@ -244,7 +244,10 @@ class World(object):
         cam_index = self.camera_manager.index if self.camera_manager is not None else 0
         cam_pos_index = self.camera_manager.transform_index if self.camera_manager is not None else 0
         # Get a random blueprint.
-        blueprint = random.choice(get_actor_blueprints(self.world, self._actor_filter, self._actor_generation))
+        blueprint_list = get_actor_blueprints(self.world, self._actor_filter, self._actor_generation)
+        if not blueprint_list:
+            raise ValueError("Couldn't find any blueprints with the specified filters")
+        blueprint = random.choice(blueprint_list)
         blueprint.set_attribute('role_name', self.actor_role_name)
         if blueprint.has_attribute('terramechanics'):
             blueprint.set_attribute('terramechanics', 'true')
@@ -597,7 +600,7 @@ class KeyboardControl(object):
     def _parse_vehicle_keys(self, keys, milliseconds):
         if keys[K_UP] or keys[K_w]:
             if not self._ackermann_enabled:
-                self._control.throttle = min(self._control.throttle + 0.01, 1.00)
+                self._control.throttle = min(self._control.throttle + 0.1, 1.00)
             else:
                 self._ackermann_control.speed += round(milliseconds * 0.005, 2) * self._ackermann_reverse
         else:

@@ -30,6 +30,10 @@ namespace low_level {
 
     using protocol_type = typename underlying_server::protocol_type;
 
+    using token_type = carla::streaming::detail::token_type;
+
+    using stream_id = carla::streaming::detail::stream_id_type;
+
     template <typename InternalEPType, typename ExternalEPType>
     explicit Server(
         boost::asio::io_context &io_context,
@@ -73,8 +77,20 @@ namespace low_level {
       _server.SetSynchronousMode(is_synchro);
     }
 
-    carla::streaming::detail::token_type GetToken(carla::streaming::detail::stream_id_type sensor_id) {
+    token_type GetToken(stream_id sensor_id) {
       return _dispatcher.GetToken(sensor_id);
+    }
+
+    void EnableForROS(stream_id sensor_id) {
+      _dispatcher.EnableForROS(sensor_id);
+    }
+
+    void DisableForROS(stream_id sensor_id) {
+      _dispatcher.DisableForROS(sensor_id);
+    }
+
+    bool IsEnabledForROS(stream_id sensor_id) {
+      return _dispatcher.IsEnabledForROS(sensor_id);
     }
 
   private:

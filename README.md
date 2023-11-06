@@ -21,7 +21,13 @@ If you want to benchmark your model in the same conditions as in our CoRL’17
 paper, check out
 [Benchmarking](https://github.com/carla-simulator/driving-benchmarks).
 
+Linux:
 * [**Get CARLA overnight build**](http://carla-releases.s3.amazonaws.com/Linux/Dev/CARLA_Latest.tar.gz)
+* [**Get AdditionalMaps overnight build**](http://carla-releases.s3.amazonaws.com/Linux/Dev/AdditionalMaps_Latest.tar.gz)
+
+Windows:
+* [**Get CARLA overnight build**](http://carla-releases.s3.amazonaws.com/Windows/Dev/CARLA_Latest.zip)
+* [**Get AdditionalMaps overnight build**](http://carla-releases.s3.amazonaws.com/Windows/Dev/AdditionalMaps_Latest.zip)
 
 ### Recommended system
 

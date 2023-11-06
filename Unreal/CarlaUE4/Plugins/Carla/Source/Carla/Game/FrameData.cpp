@@ -8,14 +8,28 @@
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Actor/CarlaActor.h"
 #include "Carla/Game/CarlaEngine.h"
-#include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Traffic/TrafficLightController.h"
+#include "Carla/Traffic/TrafficLightGroup.h"
+#include "Carla/MapGen/LargeMapManager.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/Settings/CarlaSettings.h"
+#include "Carla/Lights/CarlaLightSubsystem.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include "carla/rpc/VehicleLightState.h"
+#include <compiler/enable-ue4-macros.h>
 
 
-void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData)
+void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, bool bIncludeActorsAgain)
 {
   Episode = ThisEpisode;
   // PlatformTime.UpdateTime();
   const FActorRegistry &Registry = Episode->GetActorRegistry();
+
+  if (bIncludeActorsAgain)
+  {
+    AddExistingActors();
+  }
 
   // through all actors in registry
   for (auto It = Registry.begin(); It != Registry.end(); ++It)
@@ -35,6 +49,7 @@ void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData)
         AddActorPosition(View);
         AddVehicleAnimation(View);
         AddVehicleLight(View);
+        AddVehicleWheelsAnimation(View);
         if (bAdditionalData)
         {
           AddActorKinematics(View);
@@ -75,7 +90,8 @@ void FFrameData::PlayFrameData(
         EventAdd.Description,
         EventAdd.DatabaseId,
         false,
-        true);
+        true,
+        MappedId);
     switch (Result.first)
     {
       // actor not created
@@ -87,12 +103,14 @@ void FFrameData::PlayFrameData(
       case 1:
         // mapping id (recorded Id is a new Id in replayer)
         MappedId[OldId] = Result.second;
+        UE_LOG(LogCarla, Log, TEXT("actor created"));
         break;
 
       // actor reused from existing
       case 2:
         // mapping id (say desired Id is mapped to what)
         MappedId[OldId] = Result.second;
+        UE_LOG(LogCarla, Log, TEXT("actor reused"));
         break;
     }
   }
@@ -128,11 +146,25 @@ void FFrameData::PlayFrameData(
     ProcessReplayerAnimVehicle(Vehicle);
   }
 
+  for (const CarlaRecorderAnimWheels &AnimWheel : Wheels.GetVehicleWheels())
+  {
+    CarlaRecorderAnimWheels Wheels = AnimWheel;
+    Wheels.DatabaseId = MappedId[Wheels.DatabaseId];
+    ProcessReplayerAnimVehicleWheels(Wheels);
+  }
+
   for (const CarlaRecorderAnimWalker &AnimWalker : Walkers.GetWalkers())
   {
     CarlaRecorderAnimWalker Walker = AnimWalker;
     Walker.DatabaseId = MappedId[Walker.DatabaseId];
     ProcessReplayerAnimWalker(Walker);
+  }
+
+  for (const CarlaRecorderAnimBiker &AnimBiker : Bikers.GetBikers())
+  {
+    CarlaRecorderAnimBiker Biker = AnimBiker;
+    Biker.DatabaseId = MappedId[Biker.DatabaseId];
+    ProcessReplayerAnimBiker(Biker);
   }
 
   for (const CarlaRecorderLightVehicle &LightVehicle : LightVehicles.GetLightVehicles())
@@ -159,7 +191,9 @@ void FFrameData::Clear()
   Positions.Clear();
   States.Clear();
   Vehicles.Clear();
+  Wheels.Clear();
   Walkers.Clear();
+  Bikers.Clear();
   LightVehicles.Clear();
   LightScenes.Clear();
   Kinematics.Clear();
@@ -178,12 +212,15 @@ void FFrameData::Write(std::ostream& OutStream)
   Positions.Write(OutStream);
   States.Write(OutStream);
   Vehicles.Write(OutStream);
+  Wheels.Write(OutStream);
   Walkers.Write(OutStream);
+  Bikers.Write(OutStream);
   LightVehicles.Write(OutStream);
   LightScenes.Write(OutStream);
   TrafficLightTimes.Write(OutStream);
   FrameCounter.Write(OutStream);
 }
+
 void FFrameData::Read(std::istream& InStream)
 {
   Clear();
@@ -229,6 +266,16 @@ void FFrameData::Read(std::istream& InStream)
         Walkers.Read(InStream);
         break;
 
+      // walker animation
+      case static_cast<char>(CarlaRecorderPacketId::AnimVehicleWheels):
+        Wheels.Read(InStream);
+        break;
+
+      // walker animation
+      case static_cast<char>(CarlaRecorderPacketId::AnimBiker):
+        Bikers.Read(InStream);
+        break;
+
       // vehicle light animation
       case static_cast<char>(CarlaRecorderPacketId::VehicleLight):
         LightVehicles.Read(InStream);
@@ -257,7 +304,8 @@ void FFrameData::CreateRecorderEventAdd(
     uint32_t DatabaseId,
     uint8_t Type,
     const FTransform &Transform,
-    FActorDescription ActorDescription)
+    FActorDescription ActorDescription,
+    bool bAddOtherRelatedInfo)
 {
   CarlaRecorderActorDescription Description;
   Description.UId = ActorDescription.UId;
@@ -289,8 +337,18 @@ void FFrameData::CreateRecorderEventAdd(
   };
   AddEvent(std::move(RecEvent));
 
-  FCarlaActor* CarlaActor = Episode->FindCarlaActor(DatabaseId);
+  if (!bAddOtherRelatedInfo)
+  {
+    return;
+  }
+
   // Other events related to spawning actors
+  FCarlaActor* CarlaActor = Episode->FindCarlaActor(DatabaseId);
+  if (!CarlaActor)
+  {
+    return;
+  }
+  
   // check if it is a vehicle to get initial physics control
   ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
   if (Vehicle)
@@ -332,7 +390,6 @@ void FFrameData::AddActorPosition(FCarlaActor *CarlaActor)
   });
 }
 
-
 void FFrameData::AddVehicleAnimation(FCarlaActor *CarlaActor)
 {
   check(CarlaActor != nullptr);
@@ -354,6 +411,58 @@ void FFrameData::AddVehicleAnimation(FCarlaActor *CarlaActor)
   Record.bHandbrake = Control.bHandBrake;
   Record.Gear = Control.Gear;
   AddAnimVehicle(Record);
+}
+
+void FFrameData::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
+{
+  check(CarlaActor != nullptr)
+  if (CarlaActor->IsPendingKill())
+    return;
+  if (CarlaActor->GetActorType() != FCarlaActor::ActorType::Vehicle)
+    return;
+
+  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+  if (CarlaVehicle == nullptr)
+    return;
+
+  USkeletalMeshComponent* SkeletalMesh = CarlaVehicle->GetMesh();
+  if (SkeletalMesh == nullptr)
+    return;
+
+  UVehicleAnimInstance* VehicleAnim = Cast<UVehicleAnimInstance>(SkeletalMesh->GetAnimInstance());
+  if (VehicleAnim == nullptr)
+    return;
+
+  const UWheeledVehicleMovementComponent* WheeledVehicleMovementComponent = VehicleAnim->GetWheeledVehicleMovementComponent();
+  if (WheeledVehicleMovementComponent == nullptr)
+    return;
+
+  CarlaRecorderAnimWheels Record;
+  Record.DatabaseId = CarlaActor->GetActorId();
+  Record.WheelValues.reserve(WheeledVehicleMovementComponent->Wheels.Num());
+
+  uint8 i = 0;
+  for (auto Wheel : WheeledVehicleMovementComponent->Wheels)
+  {
+    WheelInfo Info;
+    Info.Location = static_cast<EVehicleWheelLocation>(i);
+    Info.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(Info.Location);
+    Info.TireRotation = Wheel->GetRotationAngle();
+    Record.WheelValues.push_back(Info);
+    ++i;
+  }
+
+  AddAnimVehicleWheels(Record);
+
+  if (CarlaVehicle->IsTwoWheeledVehicle())
+  {
+    AddAnimBiker(CarlaRecorderAnimBiker
+    {
+      CarlaActor->GetActorId(),
+      WheeledVehicleMovementComponent->GetForwardSpeed(),
+      WheeledVehicleMovementComponent->GetEngineRotationSpeed() / WheeledVehicleMovementComponent->GetEngineMaxRotationSpeed()
+    });
+  }
 }
 
 void FFrameData::AddWalkerAnimation(FCarlaActor *CarlaActor)
@@ -422,6 +531,7 @@ void FFrameData::AddActorKinematics(FCarlaActor *CarlaActor)
    };
    AddKinematics(Kinematic);
 }
+
 void FFrameData::AddActorBoundingBox(FCarlaActor *CarlaActor)
 {
   check(CarlaActor != nullptr);
@@ -473,7 +583,6 @@ void FFrameData::AddTrafficLightTime(const ATrafficLightBase& TrafficLight)
   };
   TrafficLightTimes.Add(TrafficLightTime);
 }
-
 
 void FFrameData::AddPosition(const CarlaRecorderPosition &Position)
 {
@@ -547,6 +656,16 @@ void FFrameData::AddAnimVehicle(const CarlaRecorderAnimVehicle &Vehicle)
   Vehicles.Add(Vehicle);
 }
 
+void FFrameData::AddAnimVehicleWheels(const CarlaRecorderAnimWheels &VehicleWheels)
+{
+  Wheels.Add(VehicleWheels);
+}
+
+void FFrameData::AddAnimBiker(const CarlaRecorderAnimBiker &Biker)
+{
+  Bikers.Add(Biker);
+}
+
 void FFrameData::AddAnimWalker(const CarlaRecorderAnimWalker &Walker)
 {
   Walkers.Add(Walker);
@@ -587,12 +706,13 @@ void FFrameData::GetFrameCounter()
 }
 
 // create or reuse an actor for replaying
-std::pair<int, FCarlaActor*> FFrameData::TryToCreateReplayerActor(
+std::pair<int, FCarlaActor*> FFrameData::CreateOrReuseActor(
     FVector &Location,
     FVector &Rotation,
     FActorDescription &ActorDesc,
     uint32_t DesiredId,
-    bool SpawnSensors)
+    bool SpawnSensors,
+    std::unordered_map<uint32_t, uint32_t>& MappedId)
 {
   check(Episode != nullptr);
 
@@ -603,6 +723,7 @@ std::pair<int, FCarlaActor*> FFrameData::TryToCreateReplayerActor(
     if (CarlaActor != nullptr)
     {
       // reuse that actor
+      UE_LOG(LogCarla, Log, TEXT("TrafficLight found"));
       return std::pair<int, FCarlaActor*>(2, CarlaActor);
     }
     else
@@ -629,6 +750,21 @@ std::pair<int, FCarlaActor*> FFrameData::TryToCreateReplayerActor(
         return std::pair<int, FCarlaActor*>(2, CarlaActor);
       }
     }
+    else if (MappedId.find(DesiredId) != MappedId.end() && Episode->GetActorRegistry().Contains(MappedId[DesiredId]))
+    {
+      auto* CarlaActor = Episode->FindCarlaActor(MappedId[DesiredId]);
+      const FActorDescription *desc = &CarlaActor->GetActorInfo()->Description;
+      if (desc->Id == ActorDesc.Id)
+      {
+        // we don't need to create, actor of same type already exist
+        // relocate
+        FRotator Rot = FRotator::MakeFromEuler(Rotation);
+        FTransform Trans2(Rot, Location, FVector(1, 1, 1));
+        CarlaActor->SetActorGlobalTransform(Trans2);
+        return std::pair<int, FCarlaActor*>(2, CarlaActor);
+      }
+    }
+    // create new actor
     // create the transform
     FRotator Rot = FRotator::MakeFromEuler(Rotation);
     FTransform Trans(Rot, FVector(0, 0, 100000), FVector(1, 1, 1));
@@ -648,7 +784,7 @@ std::pair<int, FCarlaActor*> FFrameData::TryToCreateReplayerActor(
     }
     else
     {
-      UE_LOG(LogCarla, Log, TEXT("Actor could't be created by replayer"));
+      UE_LOG(LogCarla, Log, TEXT("Actor could't be created"));
       return std::pair<int, FCarlaActor*>(0, Result.Value);
     }
   }
@@ -666,7 +802,8 @@ std::pair<int, uint32_t> FFrameData::ProcessReplayerEventAdd(
     CarlaRecorderActorDescription Description,
     uint32_t DesiredId,
     bool bIgnoreHero,
-    bool ReplaySensors)
+    bool ReplaySensors,
+    std::unordered_map<uint32_t, uint32_t>& MappedId)
 {
   check(Episode != nullptr);
   FActorDescription ActorDesc;
@@ -687,12 +824,13 @@ std::pair<int, uint32_t> FFrameData::ProcessReplayerEventAdd(
       IsHero = true;
   }
 
-  auto result = TryToCreateReplayerActor(
+  auto result = CreateOrReuseActor(
       Location,
       Rotation,
       ActorDesc,
       DesiredId,
-      ReplaySensors);
+      ReplaySensors,
+      MappedId);
 
   if (result.first != 0)
   {
@@ -866,6 +1004,29 @@ void FFrameData::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle)
   }
 }
 
+void FFrameData::ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels VehicleAnimWheels)
+{
+  check(Episode != nullptr)
+  FCarlaActor *CarlaActor = Episode->FindCarlaActor(VehicleAnimWheels.DatabaseId);
+  if (CarlaActor == nullptr)
+    return;
+  if (CarlaActor->GetActorType() != FCarlaActor::ActorType::Vehicle)
+    return;
+  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+  check(CarlaVehicle != nullptr)
+  USkeletalMeshComponent* SkeletalMesh = CarlaVehicle->GetMesh();
+  check(SkeletalMesh != nullptr)
+  UVehicleAnimInstance* VehicleAnim = Cast<UVehicleAnimInstance>(SkeletalMesh->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+
+  for (uint32_t i = 0; i < VehicleAnimWheels.WheelValues.size(); ++i)
+  {
+    const WheelInfo& Element = VehicleAnimWheels.WheelValues[i];
+    VehicleAnim->SetWheelRotYaw(static_cast<uint8>(Element.Location), Element.SteeringAngle);
+    VehicleAnim->SetWheelPitchAngle(static_cast<uint8>(Element.Location), Element.TireRotation);
+  }
+}
+
 // set the lights for vehicles
 void FFrameData::ProcessReplayerLightVehicle(CarlaRecorderLightVehicle LightVehicle)
 {
@@ -905,6 +1066,19 @@ void FFrameData::ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker)
 {
   SetWalkerSpeed(Walker.DatabaseId, Walker.Speed);
 }
+
+void FFrameData::ProcessReplayerAnimBiker(CarlaRecorderAnimBiker Biker)
+{
+  check(Episode != nullptr);
+  FCarlaActor * CarlaActor = Episode->FindCarlaActor(Biker.DatabaseId);
+  if (CarlaActor == nullptr)
+    return;
+  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+  check(CarlaVehicle != nullptr)
+  CarlaVehicle->SetSpeedAnim(Biker.ForwardSpeed);
+  CarlaVehicle->SetRotationAnim(Biker.EngineRotation);
+}
+
 
 // replay finish
 bool FFrameData::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, std::unordered_map<uint32_t, bool> &IsHero)
@@ -1024,4 +1198,24 @@ FCarlaActor *FFrameData::FindTrafficLightAt(FVector Location)
   }
   // actor not found
   return nullptr;
+}
+
+void FFrameData::AddExistingActors(void)
+{
+  // registring all existing actors in first frame
+  FActorRegistry Registry = Episode->GetActorRegistry();
+  for (auto& It : Registry)
+  {
+    const FCarlaActor* CarlaActor = It.Value.Get();
+    if (CarlaActor != nullptr)
+    {
+      // create event
+      CreateRecorderEventAdd(
+          CarlaActor->GetActorId(),
+          static_cast<uint8_t>(CarlaActor->GetActorType()),
+          CarlaActor->GetActorGlobalTransform(),
+          CarlaActor->GetActorInfo()->Description,
+          false);
+    }
+  }
 }

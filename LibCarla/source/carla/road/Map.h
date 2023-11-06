@@ -15,6 +15,8 @@
 #include "carla/road/element/Waypoint.h"
 #include "carla/road/MapData.h"
 #include "carla/road/RoadTypes.h"
+#include "carla/road/MeshFactory.h"
+#include "carla/geom/Vector3D.h"
 #include "carla/rpc/OpendriveGenerationParameters.h"
 
 #include <boost/optional.hpp>
@@ -159,10 +161,29 @@ namespace road {
     std::vector<std::unique_ptr<geom::Mesh>> GenerateChunkedMesh(
         const rpc::OpendriveGenerationParameters& params) const;
 
+    std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>>
+      GenerateOrderedChunkedMeshInLocations( const rpc::OpendriveGenerationParameters& params,
+                                             const geom::Vector3D& minpos,
+                                             const geom::Vector3D& maxpos) const;
+
     /// Buids a mesh of all crosswalks based on the OpenDRIVE
     geom::Mesh GetAllCrosswalkMesh() const;
 
+    std::vector<std::pair<geom::Transform, std::string>> GetTreesTransform(
+      const geom::Vector3D& minpos,
+      const geom::Vector3D& maxpos,
+      float distancebetweentrees,
+      float distancefromdrivinglineborder,
+      float s_offset = 0) const;
+
     geom::Mesh GenerateWalls(const double distance, const float wall_height) const;
+
+    /// Buids a list of meshes related with LineMarkings
+    std::vector<std::unique_ptr<geom::Mesh>> GenerateLineMarkings(
+      const rpc::OpendriveGenerationParameters& params,
+      const geom::Vector3D& minpos,
+      const geom::Vector3D& maxpos,
+      std::vector<std::string>& outinfo ) const;
 
     const std::unordered_map<SignId, std::unique_ptr<Signal>>& GetSignals() const {
       return _data.GetSignals();
@@ -171,6 +192,8 @@ namespace road {
     const std::unordered_map<ContId, std::unique_ptr<Controller>>& GetControllers() const {
       return _data.GetControllers();
     }
+
+    std::vector<carla::geom::BoundingBox> GetJunctionsBoundingBoxes() const;
 
 #ifdef LIBCARLA_WITH_GTEST
     MapData &GetMap() {
@@ -201,6 +224,38 @@ private:
         geom::Transform &current_transform,
         Waypoint &current_waypoint,
         Waypoint &next_waypoint);
+
+public:
+    inline float GetZPosInDeformation(float posx, float posy) const;
+
+    std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>
+      GenerateRoadsMultithreaded( const carla::geom::MeshFactory& mesh_factory,
+        const std::vector<RoadId>& RoadsID,
+        const size_t index,
+        const size_t number_of_roads_per_thread) const;
+
+    void GenerateJunctions(const carla::geom::MeshFactory& mesh_factory,
+      const rpc::OpendriveGenerationParameters& params,
+      const geom::Vector3D& minpos,
+      const geom::Vector3D& maxpos,
+      std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>*
+      juntion_out_mesh_list) const;
+
+    void GenerateSingleJunction(const carla::geom::MeshFactory& mesh_factory,
+      const JuncId Id,
+      std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>>*
+      junction_out_mesh_list) const;
+
+    // Return list of junction ID which are between those positions
+    std::vector<JuncId> FilterJunctionsByPosition(
+      const geom::Vector3D& minpos,
+      const geom::Vector3D& maxpos) const;
+    // Return list of roads ID which are between those positions
+    std::vector<RoadId> FilterRoadsByPosition(
+      const geom::Vector3D& minpos,
+      const geom::Vector3D& maxpos ) const;
+
+    std::unique_ptr<geom::Mesh> SDFToMesh(const road::Junction& jinput, const std::vector<geom::Vector3D>& sdfinput, int grid_cells_per_dim) const;
   };
 
 } // namespace road

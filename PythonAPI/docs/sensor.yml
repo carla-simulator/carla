@@ -49,6 +49,18 @@
       doc: >
         Commands the sensor to stop listening for data.
     # --------------------------------------
+    - def_name: enable_for_ros
+      doc: >
+        Commands the sensor to be processed to be able to publish in ROS2 without any listen to it.
+    # --------------------------------------
+    - def_name: disable_for_ros
+      doc: >
+        Commands the sensor to not be processed for publishing in ROS2 if there is no any listen to it.
+    # --------------------------------------
+    - def_name: is_enabled_for_ros
+      doc: >
+        Returns if the sensor is enabled or not to publish in ROS2 if there is no any listen to it.
+    # --------------------------------------
     - def_name: listen_to_gbuffer
       params:
       - param_name: gbuffer_id

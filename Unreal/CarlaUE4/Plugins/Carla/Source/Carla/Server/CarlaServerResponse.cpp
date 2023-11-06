@@ -6,7 +6,7 @@
 
 #include "CarlaServerResponse.h"
 
-FString GetStringError(ECarlaServerResponse Response)
+FString CarlaGetStringError(ECarlaServerResponse Response)
 {
   switch (Response)
   {

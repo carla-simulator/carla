@@ -11,6 +11,7 @@
 #include "Carla/Server/CarlaServer.h"
 #include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/Util/NonCopyable.h"
+#include "Carla/Game/FrameData.h"
 
 #include "Misc/CoreDelegates.h"
 
@@ -19,12 +20,12 @@
 #include <carla/multigpu/primaryCommands.h>
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
+#include <carla/ros2/ROS2.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <mutex>
 
 class UCarlaSettings;
-class FFrameData;
 struct FEpisodeSettings;
 
 class FCarlaEngine : private NonCopyable
@@ -69,12 +70,22 @@ public:
   static uint64_t UpdateFrameCounter()
   {
     FCarlaEngine::FrameCounter += 1;
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+      ROS2->SetFrame(FCarlaEngine::FrameCounter);
+    #endif
     return FCarlaEngine::FrameCounter;
   }
 
   static void ResetFrameCounter(uint64_t Value = 0)
   {
     FCarlaEngine::FrameCounter = Value;
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+      ROS2->SetFrame(FCarlaEngine::FrameCounter);
+    #endif
   }
 
   std::shared_ptr<carla::multigpu::Router> GetSecondaryServer()
@@ -115,12 +126,16 @@ private:
   FDelegateHandle OnEpisodeSettingsChangeHandle;
 
   bool bIsPrimaryServer = true;
+  bool bNewConnection = false;
 
   std::unordered_map<uint32_t, uint32_t> MappedId;
 
   std::shared_ptr<carla::multigpu::Router>    SecondaryServer;
   std::shared_ptr<carla::multigpu::Secondary> Secondary;
- 
+
   std::vector<FFrameData> FramesToProcess;
   std::mutex FrameToProcessMutex;
 };
+
+// Note: this has a circular dependency with FCarlaEngine; it must be included late.
+#include "Sensor/AsyncDataStreamImpl.h"

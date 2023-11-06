@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 rem BAT script that downloads and generates
 rem rpclib, gtest and boost libraries for CARLA (carla.org).
@@ -32,6 +32,7 @@ set CARLA_DEPENDENCIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\Carla
 set CARLA_BINARIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\Binaries\Win64
 set CARLA_PYTHON_DEPENDENCIES=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 set USE_CHRONO=false
+set USE_ROS2=false
 
 :arg-parse
 if not "%1"=="" (
@@ -44,18 +45,27 @@ if not "%1"=="" (
     if "%1"=="--chrono" (
         set USE_CHRONO=true
     )
+    if "%1"=="--ros2" (
+        set USE_ROS2=true
+    )
+    if "%1" == "--generator" (
+        set GENERATOR=%2
+        shift
+    )
     if "%1"=="-h" (
         goto help
     )
     if "%1"=="--help" (
         goto help
     )
+
     shift
     goto :arg-parse
 )
 
 rem If not defined, use Visual Studio 2019 as tool set
 if "%TOOLSET%" == "" set TOOLSET=msvc-14.2
+if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
 
 rem If is not set, set the number of parallel jobs to the number of CPU threads
 if "%NUMBER_OF_ASYNC_JOBS%" == "" set NUMBER_OF_ASYNC_JOBS=%NUMBER_OF_PROCESSORS%
@@ -68,6 +78,7 @@ set INSTALLATION_DIR=%INSTALLATION_DIR:/=\%
 
 echo %FILE_N% Asynchronous jobs:  %NUMBER_OF_ASYNC_JOBS%
 echo %FILE_N% Boost toolset:      %TOOLSET%
+echo %FILE_N% Generator:          %GENERATOR%
 echo %FILE_N% Install directory:  "%INSTALLATION_DIR%"
 
 if not exist "%CONTENT_DIR%" (
@@ -121,7 +132,8 @@ rem ============================================================================
 
 echo %FILE_N% Installing rpclib...
 call "%INSTALLERS_DIR%install_rpclib.bat"^
- --build-dir "%INSTALLATION_DIR%"
+ --build-dir "%INSTALLATION_DIR%"^
+ --generator %GENERATOR%
 
 if %errorlevel% neq 0 goto failed
 
@@ -136,7 +148,8 @@ rem ============================================================================
 
 echo %FILE_N% Installing Google Test...
 call "%INSTALLERS_DIR%install_gtest.bat"^
- --build-dir "%INSTALLATION_DIR%"
+ --build-dir "%INSTALLATION_DIR%"^
+ --generator %GENERATOR%
 
 if %errorlevel% neq 0 goto failed
 
@@ -152,7 +165,8 @@ rem ============================================================================
 
 echo %FILE_N% Installing "Recast & Detour"...
 call "%INSTALLERS_DIR%install_recast.bat"^
- --build-dir "%INSTALLATION_DIR%"
+ --build-dir "%INSTALLATION_DIR%"^
+ --generator %GENERATOR%
 
 if %errorlevel% neq 0 goto failed
 
@@ -162,6 +176,26 @@ if not defined install_recast (
     goto failed
 ) else (
     set RECAST_INSTALL_DIR=%install_recast:\=/%
+)
+
+rem ============================================================================
+rem -- Download and install Fast-DDS (for ROS2)---------------------------------
+rem ============================================================================
+
+if %USE_ROS2% == true (
+    echo %FILE_N% Installing "Fast-DDS"...
+    call "%INSTALLERS_DIR%install_fastDDS.bat"^
+    --build-dir "%INSTALLATION_DIR%"
+
+    if %errorlevel% neq 0 goto failed
+
+    if not defined install_dds (
+
+        echo %FILE_N% Failed while installing "Fast-DDS".
+        goto failed
+    ) else (
+        set FASTDDS_INSTALL_DIR=%install_dds:\=/%
+    )
 )
 
 rem ============================================================================
@@ -188,17 +222,19 @@ rem ============================================================================
 
 echo %FILE_N% Installing Xercesc...
 call "%INSTALLERS_DIR%install_xercesc.bat"^
- --build-dir "%INSTALLATION_DIR%"
+ --build-dir "%INSTALLATION_DIR%"^
+ --generator %GENERATOR%
 copy %INSTALLATION_DIR%\xerces-c-3.2.3-install\lib\xerces-c_3.lib %CARLA_PYTHON_DEPENDENCIES%\lib
+copy %INSTALLATION_DIR%\xerces-c-3.2.3-install\lib\xerces-c_3.lib %CARLA_DEPENDENCIES_FOLDER%\lib
 
 rem ============================================================================
 rem -- Download and install Sqlite3 --------------------------------------------
 rem ============================================================================
-
 echo %FILE_N% Installing Sqlite3
 call "%INSTALLERS_DIR%install_sqlite3.bat"^
  --build-dir "%INSTALLATION_DIR%"
 copy %INSTALLATION_DIR%\sqlite3-install\lib\sqlite3.lib %CARLA_PYTHON_DEPENDENCIES%\lib
+copy %INSTALLATION_DIR%\sqlite3-install\lib\sqlite3.lib %CARLA_DEPENDENCIES_FOLDER%\lib
 
 rem ============================================================================
 rem -- Download and install PROJ --------------------------------------------
@@ -206,8 +242,10 @@ rem ============================================================================
 
 echo %FILE_N% Installing PROJ
 call "%INSTALLERS_DIR%install_proj.bat"^
- --build-dir "%INSTALLATION_DIR%"
+ --build-dir "%INSTALLATION_DIR%"^
+ --generator %GENERATOR%
 copy %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_PYTHON_DEPENDENCIES%\lib
+copy %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_DEPENDENCIES_FOLDER%\lib
 
 rem ============================================================================
 rem -- Download and install Eigen ----------------------------------------------
@@ -225,7 +263,8 @@ rem ============================================================================
 if %USE_CHRONO% == true (
     echo %FILE_N% Installing Chrono...
     call "%INSTALLERS_DIR%install_chrono.bat"^
-     --build-dir "%INSTALLATION_DIR%"
+     --build-dir "%INSTALLATION_DIR%" ^
+     --generator %GENERATOR%
 
     if not exist "%CARLA_DEPENDENCIES_FOLDER%" (
         mkdir "%CARLA_DEPENDENCIES_FOLDER%"
@@ -244,6 +283,80 @@ if %USE_CHRONO% == true (
     copy "%INSTALLATION_DIR%chrono-install\lib\*.lib" "%CARLA_DEPENDENCIES_FOLDER%lib\*.lib" > NUL
     copy "%INSTALLATION_DIR%chrono-install\bin\*.dll" "%CARLA_DEPENDENCIES_FOLDER%dll\*.dll" > NUL
     xcopy /Y /S /I "%INSTALLATION_DIR%eigen-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
+)
+
+REM ==============================================================================
+REM -- Download Fast DDS and dependencies ----------------------------------------
+REM ==============================================================================
+
+SET FASTDDS_BASENAME=fast-dds
+SET FASTDDS_INSTALL_DIR=%CD%\%FASTDDS_BASENAME%-install
+SET FASTDDS_INCLUDE=%FASTDDS_INSTALL_DIR%\include
+SET FASTDDS_LIB=%FASTDDS_INSTALL_DIR%\lib
+IF "%USE_ROS2%"=="true" (
+
+  :build_fastdds_extension
+  SET LIB_SOURCE=%1
+  SET LIB_REPO=%2
+  SET CMAKE_FLAGS=%3
+
+  IF NOT EXIST "%LIB_SOURCE%" (
+    mkdir "%LIB_SOURCE%"
+    echo %LIB_REPO%
+    git clone %LIB_REPO% %LIB_SOURCE%
+    mkdir "%LIB_SOURCE%\build"
+  )
+
+  IF NOT EXIST "%FASTDDS_INSTALL_DIR%" (
+    mkdir "%FASTDDS_INSTALL_DIR%"
+    echo Build foonathan memory vendor
+    SET FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan-memory-vendor
+    SET FOONATHAN_MEMORY_VENDOR_SOURCE_DIR=%CD%\%FOONATHAN_MEMORY_VENDOR_BASENAME%-source
+    SET FOONATHAN_MEMORY_VENDOR_REPO="https://github.com/eProsima/foonathan_memory_vendor.git"
+    SET FOONATHAN_MEMORY_VENDOR_CMAKE_FLAGS=-DBUILD_SHARED_LIBS=ON
+    CALL :build_fastdds_extension "%FOONATHAN_MEMORY_VENDOR_SOURCE_DIR%" "%FOONATHAN_MEMORY_VENDOR_REPO%"
+    pushd "%FOONATHAN_MEMORY_VENDOR_SOURCE_DIR%\build" >nul
+    cmake -G "Ninja" ^
+      -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR%" ^
+      -DBUILD_SHARED_LIBS=ON ^
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" ^
+      ..
+    ninja
+    ninja install
+    popd >nul
+    rmdir /s /q "%FOONATHAN_MEMORY_VENDOR_SOURCE_DIR%"
+
+    echo Build fast cdr
+    SET FAST_CDR_BASENAME=fast-cdr
+    SET FAST_CDR_SOURCE_DIR=%CD%\%FAST_CDR_BASENAME%-source
+    SET FAST_CDR_REPO="https://github.com/eProsima/Fast-CDR.git"
+    CALL :build_fastdds_extension "%FAST_CDR_SOURCE_DIR%" "%FAST_CDR_REPO%"
+    pushd "%FAST_CDR_SOURCE_DIR%\build" >nul
+    cmake -G "Ninja" ^
+      -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR%" ^
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" ^
+      ..
+    ninja
+    ninja install
+    popd >nul
+    rmdir /s /q "%FAST_CDR_SOURCE_DIR%"
+
+    echo Build fast dds
+    SET FAST_DDS_LIB_BASENAME=fast-dds-lib
+    SET FAST_DDS_LIB_SOURCE_DIR=%CD%\%FAST_DDS_LIB_BASENAME%-source
+    SET FAST_DDS_LIB_REPO="https://github.com/eProsima/Fast-DDS.git"
+    CALL :build_fastdds_extension "%FAST_DDS_LIB_SOURCE_DIR%" "%FAST_DDS_LIB_REPO%"
+    pushd "%FAST_DDS_LIB_SOURCE_DIR%\build" >nul
+    cmake -G "Ninja" ^
+      -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR%" ^
+      -DCMAKE_CXX_FLAGS=-latomic ^
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" ^
+      ..
+    ninja
+    ninja install
+    popd >nul
+    rmdir /
+  )
 )
 
 rem ============================================================================
@@ -347,6 +460,7 @@ rem ============================================================================
     echo                               Visual Studio 2015 -^> msvc-14.0
     echo                               Visual Studio 2017 -^> msvc-14.1
     echo                               Visual Studio 2019 -^> msvc-14.2 *
+    echo                               Visual Studio 2022 -^> msvc-14.3
     goto good_exit
 
 :error_cl

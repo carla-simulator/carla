@@ -25,8 +25,7 @@
 * __Blueprint:__ sensor.other.collision
 * __Output:__ [carla.CollisionEvent](python_api.md#carla.CollisionEvent) per collision.
 
-This sensor registers an event each time its parent actor collisions against something in the world. Several collisions may be detected during a single simulation step.
-To ensure that collisions with any kind of object are detected, the server creates "fake" actors for elements such as buildings or bushes so the semantic tag can be retrieved to identify it.
+This sensor registers an event each time its parent actor collides against something in the world. Each collision sensor produces one collision event per collision per frame. Multiple collision events may be produced in a single frame by collisions with multiple other actors. To ensure that collisions with any kind of object are detected, the server creates "fake" actors for elements such as buildings or bushes so the semantic tag can be retrieved to identify it.
 
 Collision detectors do not have any configurable attribute.
 
@@ -238,7 +237,7 @@ for location in lidar_measurement:
     print(location)
 ```
 
-The information of the LIDAR measurement is enconded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by the following formula.
+The information of the LIDAR measurement is encoded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by the following formula.
 <br>
 ![LidarIntensityComputation](img/lidar_intensity.jpg)
 
@@ -709,7 +708,7 @@ This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it
 
 ```py
 ...
-raw_image.save_to_disk("path/to/save/converted/image",carla.cityScapesPalette)
+raw_image.save_to_disk("path/to/save/converted/image",carla.ColorConverter.cityScapesPalette)
 ```
 
 The following tags are currently available:

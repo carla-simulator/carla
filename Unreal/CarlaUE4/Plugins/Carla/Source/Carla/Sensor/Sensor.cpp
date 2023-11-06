@@ -12,6 +12,8 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Game/CarlaStatics.h"
 
+#include "Engine/CollisionProfile.h"
+
 ASensor::ASensor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -32,6 +34,9 @@ void ASensor::BeginPlay()
 
 void ASensor::Set(const FActorDescription &Description)
 {
+  // make a copy
+  SensorDescription = Description;
+
   // set the tick interval of the sensor
   if (Description.Variations.Contains("sensor_tick"))
   {
@@ -39,6 +44,16 @@ void ASensor::Set(const FActorDescription &Description)
         UActorBlueprintFunctionLibrary::ActorAttributeToFloat(Description.Variations["sensor_tick"],
         0.0f));
   }
+}
+
+boost::optional<FActorAttribute> ASensor::GetAttribute(const FString Name)
+{
+  if (SensorDescription.Variations.Contains(Name))
+  {
+    return SensorDescription.Variations[Name];
+  }
+  else
+    return {};
 }
 
 void ASensor::Tick(const float DeltaTime)
@@ -98,14 +113,12 @@ void ASensor::PostActorCreated()
 void ASensor::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
   Super::EndPlay(EndPlayReason);
-  
+
   // close all sessions associated to the sensor stream
   auto *GameInstance = UCarlaStatics::GetGameInstance(GetEpisode().GetWorld());
   auto &StreamingServer = GameInstance->GetServer().GetStreamingServer();
   auto StreamId = carla::streaming::detail::token_type(Stream.GetToken()).get_stream_id();
   StreamingServer.CloseStream(StreamId);
-
-  Stream = FDataStream();
 
   UCarlaEpisode* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
   if(Episode)
