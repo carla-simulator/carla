@@ -91,6 +91,7 @@ TArray<FUSDCARLAWheelData> UUSDCARLAInterface::GetUSDWheelData(const FString& Pa
     if(!WheelPrim)
     {
       UE_LOG(LogOmniverseUsd, Warning, TEXT("Wheel prim fail"));
+      return false;
     }
     pxr::UsdRelationship WheelRelationship;
     pxr::UsdRelationship TireRelationship;
@@ -155,7 +156,15 @@ TArray<FUSDCARLAWheelData> UUSDCARLAInterface::GetUSDWheelData(const FString& Pa
 
     return true;
   };
-  FUSDCARLAWheelData Wheel0, Wheel1, Wheel2, Wheel3;
+  // default wheel values, overriden by ParseWheelData if physx data is present
+  FUSDCARLAWheelData Wheel0 = 
+      {8.f, 16.f, 0.61f, 0.f, 0.f, 0.1f, 0.f, 20.f, 3000.f}; // front left
+  FUSDCARLAWheelData Wheel1 = 
+      {8.f, 16.f, 0.61f, 0.f, 0.f, 0.1f, 0.f, 20.f, 3000.f}; // front right
+  FUSDCARLAWheelData Wheel2 = 
+      {8.f, 16.f, 0.f,   0.f, 5.f, 0.1f, 0.f, 20.f, 3000.f}; // rear left
+  FUSDCARLAWheelData Wheel3 = 
+      {8.f, 16.f, 0.f,   0.f, 5.f, 0.1f, 0.f, 20.f, 3000.f}; // rear right
   ParseWheelData("wheel_0", Wheel0);
   ParseWheelData("wheel_1", Wheel1);
   ParseWheelData("wheel_2", Wheel2);
