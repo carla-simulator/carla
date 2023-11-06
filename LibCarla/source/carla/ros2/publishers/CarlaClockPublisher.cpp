@@ -4,7 +4,7 @@
 
 #include <string>
 
-#include "carla/ros2/types/TimePubSubTypes.h"
+#include "carla/ros2/types/ClockPubSubTypes.h"
 #include "carla/ros2/listeners/CarlaListener.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
@@ -34,9 +34,9 @@ namespace ros2 {
     efd::Publisher* _publisher { nullptr };
     efd::Topic* _topic { nullptr };
     efd::DataWriter* _datawriter { nullptr };
-    efd::TypeSupport _type { new builtin_interfaces::msg::TimePubSubType() };
+    efd::TypeSupport _type { new rosgraph::msg::ClockPubSubType() };
     CarlaListener _listener {};
-    builtin_interfaces::msg::Time _time {};
+    rosgraph::msg::Clock _clock {};
   };
 
   bool CarlaClockPublisher::Init() {
@@ -82,7 +82,7 @@ namespace ros2 {
 
   bool CarlaClockPublisher::Publish() {
     eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
-    eprosima::fastrtps::types::ReturnCode_t rcode = _impl->_datawriter->write(&_impl->_time, instance_handle);
+    eprosima::fastrtps::types::ReturnCode_t rcode = _impl->_datawriter->write(&_impl->_clock, instance_handle);
     if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
         return true;
     }
@@ -143,8 +143,8 @@ namespace ros2 {
   }
 
   void CarlaClockPublisher::SetData(int32_t sec, uint32_t nanosec) {
-    _impl->_time.sec(sec);
-    _impl->_time.nanosec(nanosec);
+    _impl->_clock.clock().sec(sec);
+    _impl->_clock.clock().nanosec(nanosec);
   }
 
   CarlaClockPublisher::CarlaClockPublisher(const char* ros_name, const char* parent) :
