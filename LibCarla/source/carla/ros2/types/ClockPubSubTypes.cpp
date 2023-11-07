@@ -31,7 +31,7 @@ namespace rosgraph {
     namespace msg {
         ClockPubSubType::ClockPubSubType()
         {
-            setName("rosgraph::msg::dds_::Clock_");
+            setName("rosgraph_msgs::msg::dds_::Clock_");
             auto type_size = Clock::getMaxCdrSerializedSize();
             type_size += eprosima::fastcdr::Cdr::alignment(type_size, 4); /* possible submessage alignment */
             m_typeSize = static_cast<uint32_t>(type_size) + 4; /*encapsulation*/
