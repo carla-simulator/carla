@@ -29,20 +29,20 @@ using InstanceHandle_t = eprosima::fastrtps::rtps::InstanceHandle_t;
 
 namespace carla_msgs {
     namespace msg {
-        CollisionEventPubSubType::CollisionEventPubSubType()
+        CarlaCollisionEventPubSubType::CarlaCollisionEventPubSubType()
         {
-            setName("carla_msgs::msg::dds_::CollisionEvent_");
-            auto type_size = CollisionEvent::getMaxCdrSerializedSize();
+            setName("carla_msgs::msg::dds_::CarlaCollisionEvent_");
+            auto type_size = CarlaCollisionEvent::getMaxCdrSerializedSize();
             type_size += eprosima::fastcdr::Cdr::alignment(type_size, 4); /* possible submessage alignment */
             m_typeSize = static_cast<uint32_t>(type_size) + 4; /*encapsulation*/
-            m_isGetKeyDefined = CollisionEvent::isKeyDefined();
-            size_t keyLength = CollisionEvent::getKeyMaxCdrSerializedSize() > 16 ?
-                    CollisionEvent::getKeyMaxCdrSerializedSize() : 16;
+            m_isGetKeyDefined = CarlaCollisionEvent::isKeyDefined();
+            size_t keyLength = CarlaCollisionEvent::getKeyMaxCdrSerializedSize() > 16 ?
+                    CarlaCollisionEvent::getKeyMaxCdrSerializedSize() : 16;
             m_keyBuffer = reinterpret_cast<unsigned char*>(malloc(keyLength));
             memset(m_keyBuffer, 0, keyLength);
         }
 
-        CollisionEventPubSubType::~CollisionEventPubSubType()
+        CarlaCollisionEventPubSubType::~CarlaCollisionEventPubSubType()
         {
             if (m_keyBuffer != nullptr)
             {
@@ -50,11 +50,11 @@ namespace carla_msgs {
             }
         }
 
-        bool CollisionEventPubSubType::serialize(
+        bool CarlaCollisionEventPubSubType::serialize(
                 void* data,
                 SerializedPayload_t* payload)
         {
-            CollisionEvent* p_type = static_cast<CollisionEvent*>(data);
+            CarlaCollisionEvent* p_type = static_cast<CarlaCollisionEvent*>(data);
 
             // Object that manages the raw buffer.
             eprosima::fastcdr::FastBuffer fastbuffer(reinterpret_cast<char*>(payload->data), payload->max_size);
@@ -79,14 +79,14 @@ namespace carla_msgs {
             return true;
         }
 
-        bool CollisionEventPubSubType::deserialize(
+        bool CarlaCollisionEventPubSubType::deserialize(
                 SerializedPayload_t* payload,
                 void* data)
         {
             try
             {
                 //Convert DATA to pointer of your type
-                CollisionEvent* p_type = static_cast<CollisionEvent*>(data);
+                CarlaCollisionEvent* p_type = static_cast<CarlaCollisionEvent*>(data);
 
                 // Object that manages the raw buffer.
                 eprosima::fastcdr::FastBuffer fastbuffer(reinterpret_cast<char*>(payload->data), payload->length);
@@ -109,28 +109,28 @@ namespace carla_msgs {
             return true;
         }
 
-        std::function<uint32_t()> CollisionEventPubSubType::getSerializedSizeProvider(
+        std::function<uint32_t()> CarlaCollisionEventPubSubType::getSerializedSizeProvider(
                 void* data)
         {
             return [data]() -> uint32_t
                    {
-                       return static_cast<uint32_t>(type::getCdrSerializedSize(*static_cast<CollisionEvent*>(data))) +
+                       return static_cast<uint32_t>(type::getCdrSerializedSize(*static_cast<CarlaCollisionEvent*>(data))) +
                               4u /*encapsulation*/;
                    };
         }
 
-        void* CollisionEventPubSubType::createData()
+        void* CarlaCollisionEventPubSubType::createData()
         {
-            return reinterpret_cast<void*>(new CollisionEvent());
+            return reinterpret_cast<void*>(new CarlaCollisionEvent());
         }
 
-        void CollisionEventPubSubType::deleteData(
+        void CarlaCollisionEventPubSubType::deleteData(
                 void* data)
         {
-            delete(reinterpret_cast<CollisionEvent*>(data));
+            delete(reinterpret_cast<CarlaCollisionEvent*>(data));
         }
 
-        bool CollisionEventPubSubType::getKey(
+        bool CarlaCollisionEventPubSubType::getKey(
                 void* data,
                 InstanceHandle_t* handle,
                 bool force_md5)
@@ -140,16 +140,16 @@ namespace carla_msgs {
                 return false;
             }
 
-            CollisionEvent* p_type = static_cast<CollisionEvent*>(data);
+            CarlaCollisionEvent* p_type = static_cast<CarlaCollisionEvent*>(data);
 
             // Object that manages the raw buffer.
             eprosima::fastcdr::FastBuffer fastbuffer(reinterpret_cast<char*>(m_keyBuffer),
-                    CollisionEvent::getKeyMaxCdrSerializedSize());
+                    CarlaCollisionEvent::getKeyMaxCdrSerializedSize());
 
             // Object that serializes the data.
             eprosima::fastcdr::Cdr ser(fastbuffer, eprosima::fastcdr::Cdr::BIG_ENDIANNESS);
             p_type->serializeKey(ser);
-            if (force_md5 || CollisionEvent::getKeyMaxCdrSerializedSize() > 16)
+            if (force_md5 || CarlaCollisionEvent::getKeyMaxCdrSerializedSize() > 16)
             {
                 m_md5.init();
                 m_md5.update(m_keyBuffer, static_cast<unsigned int>(ser.getSerializedDataLength()));

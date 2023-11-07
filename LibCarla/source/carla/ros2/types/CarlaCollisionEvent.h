@@ -68,64 +68,64 @@ class Cdr;
 namespace carla_msgs {
     namespace msg {
         /*!
-         * @brief This class represents the structure CollisionEvent defined by the user in the IDL file.
+         * @brief This class represents the structure CarlaCollisionEvent defined by the user in the IDL file.
          * @ingroup CARLACOLLISIONEVENT
          */
-        class CollisionEvent
+        class CarlaCollisionEvent
         {
         public:
 
             /*!
              * @brief Default constructor.
              */
-            eProsima_user_DllExport CollisionEvent();
+            eProsima_user_DllExport CarlaCollisionEvent();
 
             /*!
              * @brief Default destructor.
              */
-            eProsima_user_DllExport ~CollisionEvent();
+            eProsima_user_DllExport ~CarlaCollisionEvent();
 
             /*!
              * @brief Copy constructor.
-             * @param x Reference to the object carla_msgs::msg::CollisionEvent that will be copied.
+             * @param x Reference to the object carla_msgs::msg::CarlaCollisionEvent that will be copied.
              */
-            eProsima_user_DllExport CollisionEvent(
-                    const CollisionEvent& x);
+            eProsima_user_DllExport CarlaCollisionEvent(
+                    const CarlaCollisionEvent& x);
 
             /*!
              * @brief Move constructor.
-             * @param x Reference to the object carla_msgs::msg::CollisionEvent that will be copied.
+             * @param x Reference to the object carla_msgs::msg::CarlaCollisionEvent that will be copied.
              */
-            eProsima_user_DllExport CollisionEvent(
-                    CollisionEvent&& x) noexcept;
+            eProsima_user_DllExport CarlaCollisionEvent(
+                    CarlaCollisionEvent&& x) noexcept;
 
             /*!
              * @brief Copy assignment.
-             * @param x Reference to the object carla_msgs::msg::CollisionEvent that will be copied.
+             * @param x Reference to the object carla_msgs::msg::CarlaCollisionEvent that will be copied.
              */
-            eProsima_user_DllExport CollisionEvent& operator =(
-                    const CollisionEvent& x);
+            eProsima_user_DllExport CarlaCollisionEvent& operator =(
+                    const CarlaCollisionEvent& x);
 
             /*!
              * @brief Move assignment.
-             * @param x Reference to the object carla_msgs::msg::CollisionEvent that will be copied.
+             * @param x Reference to the object carla_msgs::msg::CarlaCollisionEvent that will be copied.
              */
-            eProsima_user_DllExport CollisionEvent& operator =(
-                    CollisionEvent&& x) noexcept;
+            eProsima_user_DllExport CarlaCollisionEvent& operator =(
+                    CarlaCollisionEvent&& x) noexcept;
 
             /*!
              * @brief Comparison operator.
-             * @param x carla_msgs::msg::CollisionEvent object to compare.
+             * @param x carla_msgs::msg::CarlaCollisionEvent object to compare.
              */
             eProsima_user_DllExport bool operator ==(
-                    const CollisionEvent& x) const;
+                    const CarlaCollisionEvent& x) const;
 
             /*!
              * @brief Comparison operator.
-             * @param x carla_msgs::msg::CollisionEvent object to compare.
+             * @param x carla_msgs::msg::CarlaCollisionEvent object to compare.
              */
             eProsima_user_DllExport bool operator !=(
-                    const CollisionEvent& x) const;
+                    const CarlaCollisionEvent& x) const;
 
             /*!
              * @brief This function copies the value in member header
@@ -213,7 +213,7 @@ namespace carla_msgs {
              * @return Serialized size.
              */
             eProsima_user_DllExport static size_t getCdrSerializedSize(
-                    const carla_msgs::msg::CollisionEvent& data,
+                    const carla_msgs::msg::CarlaCollisionEvent& data,
                     size_t current_alignment = 0);
 
             /*!
