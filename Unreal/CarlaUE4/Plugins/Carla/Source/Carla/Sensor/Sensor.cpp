@@ -34,6 +34,9 @@ void ASensor::BeginPlay()
 
 void ASensor::Set(const FActorDescription &Description)
 {
+  // make a copy
+  SensorDescription = Description;
+
   // set the tick interval of the sensor
   if (Description.Variations.Contains("sensor_tick"))
   {
@@ -41,6 +44,16 @@ void ASensor::Set(const FActorDescription &Description)
         UActorBlueprintFunctionLibrary::ActorAttributeToFloat(Description.Variations["sensor_tick"],
         0.0f));
   }
+}
+
+boost::optional<FActorAttribute> ASensor::GetAttribute(const FString Name)
+{
+  if (SensorDescription.Variations.Contains(Name))
+  {
+    return SensorDescription.Variations[Name];
+  }
+  else
+    return {};
 }
 
 void ASensor::Tick(const float DeltaTime)

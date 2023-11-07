@@ -118,7 +118,7 @@ public:
   carla::streaming::Server StreamingServer;
 
   carla::streaming::Stream BroadcastStream;
-  
+
   std::shared_ptr<carla::multigpu::Router> SecondaryServer;
 
   UCarlaEpisode *Episode = nullptr;
@@ -733,6 +733,26 @@ void FCarlaServer::FPimpl::BindActions()
     CarlaActor->SetAttachmentType(InAttachmentType);
     ParentCarlaActor->AddChildren(CarlaActor->GetActorId());
 
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+    {
+      FCarlaActor* CurrentActor = ParentCarlaActor;
+      while(CurrentActor)
+      {
+        for (const auto &Attr : CurrentActor->GetActorInfo()->Description.Variations)
+        {
+          if (Attr.Key == "ros_name")
+          {
+            const std::string value = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
+            ROS2->AddActorParentRosName(static_cast<void*>(CarlaActor->GetActor()), static_cast<void*>(CurrentActor->GetActor()));
+          }
+        }
+        CurrentActor = Episode->FindCarlaActor(CurrentActor->GetParent());
+      }
+    }
+    #endif
+
     // Only is possible to attach if the actor has been really spawned and
     // is not in dormant state
     if(!ParentCarlaActor->IsDormant())
@@ -807,13 +827,108 @@ void FCarlaServer::FPimpl::BindActions()
     {
       // multi-gpu
       UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in secondary server"), sensor_id, *Desc);
-      return SecondaryServer->GetCommander().SendGetToken(sensor_id);
+      return SecondaryServer->GetCommander().GetToken(sensor_id);
     }
     else
     {
       // single-gpu
       UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in primary server"), sensor_id, *Desc);
       return StreamingServer.GetToken(sensor_id);
+    }
+  };
+
+  BIND_SYNC(enable_sensor_for_ros) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+                                 R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    bool ForceInPrimary = false;
+
+    // check for the world observer (always in primary server)
+    if (sensor_id == 1)
+    {
+      ForceInPrimary = true;
+    }
+
+    // collision sensor always in primary server in multi-gpu
+    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
+    if (Desc == "" || Desc == "sensor.other.collision")
+    {
+      ForceInPrimary = true;
+    }
+
+    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
+    {
+      // multi-gpu
+      SecondaryServer->GetCommander().EnableForROS(sensor_id);
+    }
+    else
+    {
+      // single-gpu
+      StreamingServer.EnableForROS(sensor_id);
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(disable_sensor_for_ros) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+                                 R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    bool ForceInPrimary = false;
+
+    // check for the world observer (always in primary server)
+    if (sensor_id == 1)
+    {
+      ForceInPrimary = true;
+    }
+
+    // collision sensor always in primary server in multi-gpu
+    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
+    if (Desc == "" || Desc == "sensor.other.collision")
+    {
+      ForceInPrimary = true;
+    }
+
+    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
+    {
+      // multi-gpu
+      SecondaryServer->GetCommander().DisableForROS(sensor_id);
+    }
+    else
+    {
+      // single-gpu
+      StreamingServer.DisableForROS(sensor_id);
+    }
+    return R<void>::Success();
+  };
+
+BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+                                 R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    bool ForceInPrimary = false;
+
+    // check for the world observer (always in primary server)
+    if (sensor_id == 1)
+    {
+      ForceInPrimary = true;
+    }
+
+    // collision sensor always in primary server in multi-gpu
+    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
+    if (Desc == "" || Desc == "sensor.other.collision")
+    {
+      ForceInPrimary = true;
+    }
+
+    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
+    {
+      // multi-gpu
+      return SecondaryServer->GetCommander().IsEnabledForROS(sensor_id);
+    }
+    else
+    {
+      // single-gpu
+      return StreamingServer.IsEnabledForROS(sensor_id);
     }
   };
 
@@ -2601,12 +2716,12 @@ FDataStream FCarlaServer::OpenStream() const
   return Pimpl->StreamingServer.MakeStream();
 }
 
-std::shared_ptr<carla::multigpu::Router> FCarlaServer::GetSecondaryServer() 
+std::shared_ptr<carla::multigpu::Router> FCarlaServer::GetSecondaryServer()
 {
   return Pimpl->GetSecondaryServer();
 }
 
-carla::streaming::Server &FCarlaServer::GetStreamingServer() 
+carla::streaming::Server &FCarlaServer::GetStreamingServer()
 {
   return Pimpl->StreamingServer;
 }

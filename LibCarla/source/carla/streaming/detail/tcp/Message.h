@@ -8,6 +8,7 @@
 
 #include "carla/ListView.h"
 #include "carla/Buffer.h"
+#include "carla/BufferView.h"
 #include "carla/Debug.h"
 #include "carla/NonCopyable.h"
 #include "carla/streaming/detail/Types.h"
@@ -44,19 +45,19 @@ namespace tcp {
     MessageTmpl(size_t) {}
 
     template <typename... Buffers>
-    MessageTmpl(size_t size, Buffer &&buffer, Buffers &&... buffers)
-      : MessageTmpl(size, std::move(buffers)...) {
+    MessageTmpl(size_t size, SharedBufferView buffer, Buffers... buffers)
+      : MessageTmpl(size, buffers...) {
       ++_number_of_buffers;
-      _total_size += buffer.size();
-      _buffer_views[1u + size - _number_of_buffers] = buffer.cbuffer();
-      _buffers[size - _number_of_buffers] = std::move(buffer);
+      _total_size += buffer->size();
+      _buffer_views[1u + size - _number_of_buffers] = buffer->cbuffer();
+      _buffers[size - _number_of_buffers] = buffer;
     }
 
   public:
 
     template <typename... Buffers>
-    MessageTmpl(Buffer &&buf, Buffers &&... buffers)
-      : MessageTmpl(sizeof...(Buffers) + 1u, std::move(buf), std::move(buffers)...) {
+    MessageTmpl(SharedBufferView buf, Buffers... buffers)
+      : MessageTmpl(sizeof...(Buffers) + 1u, buf, buffers...) {
       static_assert(sizeof...(Buffers) < max_size(), "Too many buffers!");
       _buffer_views[0u] = boost::asio::buffer(&_total_size, sizeof(_total_size));
     }
@@ -81,7 +82,7 @@ namespace tcp {
 
     message_size_type _total_size = 0u;
 
-    std::array<Buffer, MaxNumberOfBuffers> _buffers;
+    std::array<SharedBufferView, MaxNumberOfBuffers> _buffers;
 
     std::array<boost::asio::const_buffer, MaxNumberOfBuffers + 1u> _buffer_views;
   };

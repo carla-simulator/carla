@@ -44,7 +44,7 @@ pipeline
                             steps
                             {
                                 sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
-                                sh 'make setup ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
+                                sh 'make setup ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono --ros2"'
                             }
                         }
                         stage('ubuntu build')
@@ -53,7 +53,7 @@ pipeline
                             {
                                 sh 'make LibCarla'
                                 sh 'make PythonAPI ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
-                                sh 'make CarlaUE4Editor ARGS="--chrono"'
+                                sh 'make CarlaUE4Editor ARGS="--chrono --ros2"'
                                 sh 'make plugins'
                                 sh 'make examples'
                             }
@@ -94,7 +94,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make package ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
+                                sh 'make package ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono --ros2"'
                                 sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }

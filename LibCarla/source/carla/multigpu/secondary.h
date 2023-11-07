@@ -59,11 +59,11 @@ namespace multigpu {
     }
 
     template <typename... Buffers>
-    static auto MakeMessage(Buffers &&... buffers) {
+    static auto MakeMessage(Buffers... buffers) {
       static_assert(
-          are_same<Buffer, Buffers...>::value,
-          "This function only accepts arguments of type Buffer.");
-      return std::make_shared<const carla::streaming::detail::tcp::Message>(std::move(buffers)...);
+          are_same<SharedBufferView, Buffers...>::value,
+          "This function only accepts arguments of type BufferView.");
+      return std::make_shared<const carla::streaming::detail::tcp::Message>(buffers...);
     }
 
   private:
