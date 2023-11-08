@@ -87,29 +87,8 @@ namespace ros2 {
     return true;
   }
 
-  static bool CompareDouble(double value, double cmp_value) {
-    const double result = abs(value) - abs(cmp_value);
-    if (result < 0.001)
-        return true;
-    return false;
-  }
-
   bool CarlaTransformPublisher::Publish() {
     eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
-
-    const double qx = _impl->_transform.transforms()[0].transform().rotation().x();
-    const double qy = _impl->_transform.transforms()[0].transform().rotation().y();
-    const double qz = _impl->_transform.transforms()[0].transform().rotation().z();
-    const double qw = _impl->_transform.transforms()[0].transform().rotation().w();
-
-    bool q1 = CompareDouble(qx, 0.0);
-    bool q2 = CompareDouble(qy, 0.0);
-    bool q3 = CompareDouble(qz, 0.0);
-    bool q4 = CompareDouble(qw, 0.0);
-
-    if (q1 && q2 && q3 && q4)
-        _impl->_transform.transforms()[0].transform().rotation().w(1.0);
-
     eprosima::fastrtps::types::ReturnCode_t rcode = _impl->_datawriter->write(&_impl->_transform, instance_handle);
     if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
         return true;
