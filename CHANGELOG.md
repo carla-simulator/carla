@@ -21,6 +21,7 @@
   * Collisions detected by the CollisionSensor no longer generate more than one event per frame.
   * Fixed segfaults in Python API due to incorrect GIL locking under Python 3.10.
   * Added API function to load a map only if it is different from the current one.
+  * Fixed a bug in the TrafficManager causing vehicles that reached an ending lane to have abnormal behavior while lane changing.
 
 ## CARLA 0.9.14
 
