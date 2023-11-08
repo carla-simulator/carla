@@ -50,22 +50,22 @@ pipeline
                             steps
                             {
                                 sh 'make plugins'
-                                sh 'make package.rss ARGS="--python-version=2,3.7"'
+                                sh 'make package.rss ARGS="--python-version=3.7"'
                             }
-                            post 
+                            post
                             {
-                                always 
+                                always
                                 {
                                     archiveArtifacts 'Dist/*.tar.gz'
                                 }
                             }
                         }
                     }
-                    post 
+                    post
                     {
-                        always 
-                        { 
-                            deleteDir() 
+                        always
+                        {
+                            deleteDir()
 
                             node('master')
                             {
