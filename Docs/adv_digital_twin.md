@@ -15,8 +15,9 @@
 
 The __Digital Twin Tool__ enables procedural generation of unique 3D environments based on road networks derived from the [OpenStreetMap](https://www.openstreetmap.org) (OSM) service. Through the Digital Twin Tool interface in CARLA's Unreal Engine editor a user can select a region of map from OSM and download the road network as the basis for a new CARLA map. The tool then fills the spaces between the roads with procedurally generated 3D buildings that adjust to the layout of the road, creating a realistic 3D road environment with high variability.
 
-!!! note
-	This tool requires the [Houdini Unreal Engine plugin](https://www.sidefx.com/products/houdini-engine/plug-ins/unreal-plug-in/). In order to use this tool, you will need to have access to a license for the plugin.
+## Building the OSM renderer
+
+Before using the Digital Twin tool you will need to build the OSM renderer. Run `make osmrenderer` inside the CARLA root directory. You may need to upgrade your version of CMake to v3.2 or above in order for this to work.  
 
 ## Downloading and preparing OSM map data
 
