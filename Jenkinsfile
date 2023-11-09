@@ -96,7 +96,6 @@ pipeline
                             {
                                 sh 'make package ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
                                 sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
-                                sh 'make package ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --archive-sufix=ROS2 --chrono --ros2"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
                             post
@@ -107,6 +106,21 @@ pipeline
                                     stash includes: 'Dist/CARLA*.tar.gz', name: 'ubuntu_package'
                                     // stash includes: 'Dist/AdditionalMaps*.tar.gz', name: 'ubuntu_package2'
                                     stash includes: 'Examples/', name: 'ubuntu_examples'
+                                }
+                            }
+                        }
+                        stage('ubuntu package with ROS2')
+                        {
+                            steps
+                            {
+                                sh 'rm Dist/CARLA*.tar.gz'
+                                sh 'make package ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --archive-sufix=ROS2 --chrono --ros2"'
+                            }
+                            post
+                            {
+                                always
+                                {
+                                    archiveArtifacts 'Dist/CARLA*.tar.gz'
                                 }
                                 success
                                 {
