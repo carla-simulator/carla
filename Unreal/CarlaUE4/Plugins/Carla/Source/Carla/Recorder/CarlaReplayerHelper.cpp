@@ -8,24 +8,24 @@
 #include "Carla/Recorder/CarlaReplayerHelper.h"
 
 #include "Carla/Actor/ActorDescription.h"
-#include "Carla/Actor/CarlaActor.h"
 #include "Carla/Actor/ActorRegistry.h"
-#include "Carla/Vehicle/WheeledVehicleAIController.h"
-#include "Carla/Walker/WalkerControl.h"
-#include "Carla/Walker/WalkerController.h"
+#include "Carla/Actor/ActorSpawnResult.h"
+#include "Carla/Actor/CarlaActor.h"
+#include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Lights/CarlaLight.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
-#include "Carla/Actor/ActorSpawnResult.h"
-#include "Carla/Game/CarlaEpisode.h"
-#include "Carla/Traffic/TrafficSignBase.h"
+#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Traffic/TrafficLightController.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
+#include "Carla/Traffic/TrafficSignBase.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
-#include "Engine/StaticMeshActor.h"
-#include "Carla/Game/CarlaStatics.h"
-#include "Carla/MapGen/LargeMapManager.h"
+#include "Carla/Vehicle/WheeledVehicleAIController.h"
+#include "Carla/Walker/WalkerControl.h"
+#include "Carla/Walker/WalkerController.h"
 #include "Components/BoxComponent.h"
+#include "Engine/StaticMeshActor.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/VehicleLightState.h>
@@ -179,6 +179,7 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
     CarlaRecorderActorDescription Description,
     uint32_t DesiredId,
     bool bIgnoreHero,
+    bool bIgnoreSpectator,
     bool ReplaySensors)
 {
   check(Episode != nullptr);
@@ -200,6 +201,13 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
       IsHero = true;
   }
 
+  // check to ignore Hero or Spectator
+  if ((bIgnoreHero && IsHero) || 
+      (bIgnoreSpectator && ActorDesc.Id.StartsWith("spectator")))
+  {
+    return std::make_pair(3, 0);
+  }
+
   auto result = TryToCreateReplayerActor(
       Location,
       Rotation,
@@ -210,20 +218,26 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
   if (result.first != 0)
   {
     // disable physics and autopilot on vehicles
-    if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle)
+    if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle ||
+        result.second->GetActorType() == FCarlaActor::ActorType::Walker)
     {
       // ignore hero ?
       if (!(bIgnoreHero && IsHero))
       {
         // disable physics
         SetActorSimulatePhysics(result.second, false);
-        // disable autopilot
-        SetActorAutopilot(result.second, false, false);
+        // disable collisions
+        result.second->GetActor()->SetActorEnableCollision(false);
+        // disable autopilot for vehicles
+        if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle)
+          SetActorAutopilot(result.second, false, false);
       }
       else
       {
-        // reenable physics just in case
+        // enable physics just in case
         SetActorSimulatePhysics(result.second, true);
+        // enable collisions
+        result.second->GetActor()->SetActorEnableCollision(true);
       }
     }
     return std::make_pair(result.first, result.second->GetActorId());
@@ -309,6 +323,29 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
     return true;
   }
   return false;
+}
+
+void CarlaReplayerHelper::ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels VehicleAnimWheels)
+{
+  check(Episode != nullptr)
+  FCarlaActor *CarlaActor = Episode->FindCarlaActor(VehicleAnimWheels.DatabaseId);
+  if (CarlaActor == nullptr)
+    return;
+  if (CarlaActor->GetActorType() != FCarlaActor::ActorType::Vehicle)
+    return;
+  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+  check(CarlaVehicle != nullptr)
+  USkeletalMeshComponent* SkeletalMesh = CarlaVehicle->GetMesh();
+  check(SkeletalMesh != nullptr)
+  UVehicleAnimInstance* VehicleAnim = Cast<UVehicleAnimInstance>(SkeletalMesh->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+
+  for (uint32_t i = 0; i < VehicleAnimWheels.WheelValues.size(); ++i)
+  {
+    const WheelInfo& Element = VehicleAnimWheels.WheelValues[i];
+    VehicleAnim->SetWheelRotYaw(static_cast<uint8>(Element.Location), Element.SteeringAngle);
+    VehicleAnim->SetWheelPitchAngle(static_cast<uint8>(Element.Location), Element.TireRotation);
+  }
 }
 
 // reposition the camera
@@ -417,6 +454,46 @@ void CarlaReplayerHelper::ProcessReplayerLightScene(CarlaRecorderLightScene Ligh
 void CarlaReplayerHelper::ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker)
 {
   SetWalkerSpeed(Walker.DatabaseId, Walker.Speed);
+}
+
+void CarlaReplayerHelper::ProcessReplayerAnimBiker(CarlaRecorderAnimBiker Biker)
+{
+  check(Episode != nullptr);
+  FCarlaActor * CarlaActor = Episode->FindCarlaActor(Biker.DatabaseId);
+  if (CarlaActor == nullptr)
+    return;
+  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+  check(CarlaVehicle != nullptr)
+  CarlaVehicle->SetSpeedAnim(Biker.ForwardSpeed);
+  CarlaVehicle->SetRotationAnim(Biker.EngineRotation);
+}
+
+// set walker bones
+void CarlaReplayerHelper::ProcessReplayerWalkerBones(const CarlaRecorderWalkerBones &WalkerBones)
+{
+  check(Episode != nullptr);
+
+  FCarlaActor* CarlaActor = Episode->FindCarlaActor(WalkerBones.DatabaseId);
+  if (!CarlaActor) return;
+
+  AActor* Actor = CarlaActor->GetActor();
+  auto Walker = Cast<APawn>(Actor);
+  if (!Walker) return;
+
+  AWalkerController *Controller = Cast<AWalkerController>(Walker->GetController());
+  if (!Controller) return;
+
+  // build bones structure
+  FWalkerBoneControlIn BonesIn;
+  for (const auto &Bone : WalkerBones.Bones)
+  {
+    FTransform Trans(FRotator::MakeFromEuler(Bone.Rotation), Bone.Location, FVector(1, 1, 1));
+    BonesIn.BoneTransforms.Add(Bone.Name, Trans);
+  }
+
+  // set the pose and blend
+  Controller->SetBonesTransform(BonesIn);
+  Controller->BlendPose(1.0f);
 }
 
 // replay finish

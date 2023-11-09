@@ -18,12 +18,15 @@
 #include <type_traits>
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
+#include <compiler/enable-ue4-macros.h>
 #include "Containers/Array.h"
+#include <compiler/disable-ue4-macros.h>
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
 namespace carla {
 
   class BufferPool;
+  class BufferView;
 
   /// A piece of raw data.
   ///
@@ -358,6 +361,7 @@ namespace carla {
     void ReuseThisBuffer();
 
     friend class BufferPool;
+    friend class BufferView;
 
     std::weak_ptr<BufferPool> _parent_pool;
 

@@ -225,6 +225,8 @@ public:
 
   virtual ECarlaServerResponse SetActorSimulatePhysics(bool bEnabled);
 
+  virtual ECarlaServerResponse SetActorCollisions(bool bEnabled);
+
   virtual ECarlaServerResponse SetActorEnableGravity(bool bEnabled);
 
   // Vehicle functions
@@ -239,6 +241,11 @@ public:
   }
 
   virtual ECarlaServerResponse GetPhysicsControl(FVehiclePhysicsControl&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetFailureState(carla::rpc::VehicleFailureState&)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -408,6 +415,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse SetActorDead()
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse FreezeTrafficLight(bool)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -471,6 +483,8 @@ public:
   virtual ECarlaServerResponse DisableActorConstantVelocity() final;
 
   virtual ECarlaServerResponse GetPhysicsControl(FVehiclePhysicsControl& PhysicsControl) final;
+
+  virtual ECarlaServerResponse GetFailureState(carla::rpc::VehicleFailureState&) final;
 
   virtual ECarlaServerResponse GetVehicleLightState(FVehicleLightState& LightState) final;
 
@@ -594,12 +608,14 @@ public:
   virtual ECarlaServerResponse GetWalkerControl(FWalkerControl&) final;
 
   virtual ECarlaServerResponse GetBonesTransform(FWalkerBoneControlOut&) final;
-  
+
   virtual ECarlaServerResponse SetBonesTransform(const FWalkerBoneControlIn&) final;
 
   virtual ECarlaServerResponse BlendPose(float Blend);
 
   virtual ECarlaServerResponse GetPoseFromAnimation();
+
+  virtual ECarlaServerResponse SetActorDead();
 };
 
 class FOtherActor : public FCarlaActor

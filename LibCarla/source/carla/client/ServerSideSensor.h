@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/client/Sensor.h"
+#include <bitset>
 
 namespace carla {
 namespace client {
@@ -33,8 +34,27 @@ namespace client {
     /// Return whether this Sensor instance is currently listening to the
     /// associated sensor in the simulator.
     bool IsListening() const override {
-      return _is_listening;
+      return listening_mask.test(0);
     }
+
+    /// Listen fr
+    void ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback);
+
+    /// Stop listening for a specific gbuffer stream.
+    void StopGBuffer(uint32_t GBufferId);
+
+    inline bool IsListeningGBuffer(uint32_t id) const {
+      return listening_mask.test(id + 1);
+    }
+
+    /// Enable this sensor for ROS2 publishing
+    void EnableForROS();
+
+    /// Disable this sensor for ROS2 publishing
+    void DisableForROS();
+
+    /// Return if the sensor is publishing for ROS2
+    bool IsEnabledForROS();
 
     /// @copydoc Actor::Destroy()
     ///
@@ -43,7 +63,7 @@ namespace client {
 
   private:
 
-    bool _is_listening = false;
+    std::bitset<16> listening_mask;
   };
 
 } // namespace client

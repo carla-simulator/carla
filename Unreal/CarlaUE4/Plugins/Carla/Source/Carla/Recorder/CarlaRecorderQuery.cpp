@@ -4,7 +4,11 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "CarlaRecorderQuery.h"
+
 #include "CarlaRecorderHelpers.h"
+
+#include "CarlaRecorder.h"
 
 #include <ctime>
 #include <sstream>
@@ -86,7 +90,6 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
   // parse only frames
   while (File)
   {
-
     // get header
     if (!ReadHeader())
     {
@@ -197,7 +200,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           for (i = 0; i < Total; ++i)
           {
             Position.Read(File);
-            Info << "  Id: " << Position.DatabaseId << " Location: (" << Position.Location.X << ", " << Position.Location.Y << ", " << Position.Location.Z << ") Rotation (" <<  Position.Rotation.X << ", " << Position.Rotation.Y << ", " << Position.Rotation.Z << ")" << std::endl;
+            Info << "  Id: " << Position.DatabaseId << " Location: (" << Position.Location.X << ", " << Position.Location.Y << ", " << Position.Location.Z << ") Rotation: (" <<  Position.Rotation.X << ", " << Position.Rotation.Y << ", " << Position.Rotation.Z << ")" << std::endl;
           }
         }
         else
@@ -240,7 +243,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           for (i = 0; i < Total; ++i)
           {
             Vehicle.Read(File);
-            Info << "  Id: " << Vehicle.DatabaseId << " Steering: " << Vehicle.Steering << " Throttle: " << Vehicle.Throttle << " Brake " << Vehicle.Brake << " Handbrake: " << Vehicle.bHandbrake << " Gear: " << Vehicle.Gear << std::endl;
+            Info << "  Id: " << Vehicle.DatabaseId << " Steering: " << Vehicle.Steering << " Throttle: " << Vehicle.Throttle << " Brake: " << Vehicle.Brake << " Handbrake: " << Vehicle.bHandbrake << " Gear: " << Vehicle.Gear << std::endl;
           }
         }
         else
@@ -517,7 +520,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           SkipPacket();
         break;
 
-        case static_cast<char>(CarlaRecorderPacketId::TrafficLightTime):
+      case static_cast<char>(CarlaRecorderPacketId::TrafficLightTime):
         if (bShowAll)
         {
           ReadValue<uint16_t>(File, Total);
@@ -542,8 +545,37 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           SkipPacket();
         break;
 
+      case static_cast<char>(CarlaRecorderPacketId::WalkerBones):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+
+          Info << " Walkers Bones: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            WalkerBones.Clear();
+            WalkerBones.Read(File);
+            Info << "  Id: " << WalkerBones.DatabaseId << "\n";
+            for (const auto &Bone : WalkerBones.Bones)
+            {
+              Info << "     Bone: \"" << TCHAR_TO_UTF8(*Bone.Name) << "\" relative: " << "Loc("
+                   << Bone.Location.X << ", " << Bone.Location.Y << ", " << Bone.Location.Z << ") Rot(" 
+                   << Bone.Rotation.X << ", " << Bone.Rotation.Y << ", " << Bone.Rotation.Z << ")\n";
+            }
+          }
+          Info << std::endl;
+        }
+        else
+          SkipPacket();
+        break;
+
         // frame end
-        case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
+      case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
         // do nothing, it is empty
         break;
 

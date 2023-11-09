@@ -43,7 +43,8 @@ namespace detail {
     /// messages sent through the stream are big and have (approximately) the
     /// same size.
     Buffer MakeBuffer() {
-      return _shared_state->MakeBuffer();
+      auto state = _shared_state;
+      return state->MakeBuffer();
     }
 
     /// Flush @a buffers down the stream. No copies are made.
@@ -59,6 +60,11 @@ namespace detail {
       buffer.copy_from(data);
       Write(std::move(buffer));
       return *this;
+    }
+
+    bool AreClientsListening()
+    {
+      return _shared_state ? _shared_state->AreClientsListening() : false;
     }
 
   private:

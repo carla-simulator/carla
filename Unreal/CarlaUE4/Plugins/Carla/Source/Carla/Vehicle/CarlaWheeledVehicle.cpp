@@ -10,6 +10,8 @@
 #include "MovementComponents/DefaultMovementComponent.h"
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "UObject/UObjectGlobals.h"
+#include "DrawDebugHelpers.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 #include "PhysXPublic.h"
 #include "PhysXVehicleManager.h"
@@ -23,6 +25,7 @@
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Util/EmptyActor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
+#include "Carla/Vegetation/VegetationManager.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 // =============================================================================
@@ -41,9 +44,7 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl->Deactivate();
 
   GetVehicleMovementComponent()->bReverseAsBrake = false;
-
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
-
 }
 
 ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
@@ -197,6 +198,60 @@ void ACarlaWheeledVehicle::BeginPlay()
     // Update physics in the Ackermann Controller
     AckermannController.UpdateVehiclePhysics(this);
   }
+
+  AddReferenceToManager();
+}
+
+bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::IsInVehicleRange);
+
+  return FoliageBoundingBox.IsInside(Location);
+}
+
+void ACarlaWheeledVehicle::UpdateDetectionBox()
+{
+  const FTransform GlobalTransform = GetActorTransform();
+  const FVector Vec { DetectionSize, DetectionSize, DetectionSize };
+  FBox Box = FBox(-Vec, Vec);
+  const FTransform NonScaledTransform(GlobalTransform.GetRotation(), GlobalTransform.GetLocation(), {1.0f, 1.0f, 1.0f});
+  FoliageBoundingBox = Box.TransformBy(NonScaledTransform);
+}
+
+const TArray<int32> ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const
+{  
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle);
+  return Component->GetInstancesOverlappingBox(FoliageBoundingBox);
+}
+
+FBox ACarlaWheeledVehicle::GetDetectionBox() const
+{  
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::GetDetectionBox);
+  return FoliageBoundingBox;
+}
+
+float ACarlaWheeledVehicle::GetDetectionSize() const
+{
+  return DetectionSize;
+}
+
+void ACarlaWheeledVehicle::DrawFoliageBoundingBox() const
+{
+  const FVector& Center = FoliageBoundingBox.GetCenter();
+  const FVector& Extent = FoliageBoundingBox.GetExtent();
+  const FQuat& Rotation = GetActorQuat();
+  DrawDebugBox(GetWorld(), Center, Extent, Rotation, FColor::Magenta, false, 0.0f, 0, 5.0f);
+}
+
+FBoxSphereBounds ACarlaWheeledVehicle::GetBoxSphereBounds() const
+{
+  ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
+  if (LargeMap)
+  {
+    FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
+    return VehicleBounds->CalcBounds(GlobalTransform);
+  }
+  return VehicleBounds->CalcBounds(GetActorTransform());
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
@@ -342,8 +397,6 @@ void ACarlaWheeledVehicle::SetWheelsFrictionScale(TArray<float> &WheelsFrictionS
     }
   }
 }
-
-
 
 FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
 {
@@ -525,6 +578,8 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
     UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
           GetVehicleMovement());
     check(Vehicle4W != nullptr);
+
+    
 
     // Engine Setup
     Vehicle4W->EngineSetup.TorqueCurve.EditorCurveData = PhysicsControl.TorqueCurve;
@@ -732,6 +787,7 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
 
   // Update physics in the Ackermann Controller
   AckermannController.UpdateVehiclePhysics(this);
+  
 }
 
 void ACarlaWheeledVehicle::ActivateVelocityControl(const FVector &Velocity)
@@ -771,8 +827,26 @@ void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
 
 void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState &LightState)
 {
-  InputControl.LightState = LightState;
-  RefreshLightState(LightState);
+  if (LightState.Position != InputControl.LightState.Position ||
+      LightState.LowBeam != InputControl.LightState.LowBeam ||
+      LightState.HighBeam != InputControl.LightState.HighBeam ||
+      LightState.Brake != InputControl.LightState.Brake ||
+      LightState.RightBlinker != InputControl.LightState.RightBlinker ||
+      LightState.LeftBlinker != InputControl.LightState.LeftBlinker ||
+      LightState.Reverse != InputControl.LightState.Reverse ||
+      LightState.Fog != InputControl.LightState.Fog ||
+      LightState.Interior != InputControl.LightState.Interior ||
+      LightState.Special1 != InputControl.LightState.Special1 ||
+      LightState.Special2 != InputControl.LightState.Special2)
+  {
+    InputControl.LightState = LightState;
+    RefreshLightState(LightState);
+  }
+}
+
+void ACarlaWheeledVehicle::SetFailureState(const carla::rpc::VehicleFailureState &InFailureState)
+{
+  FailureState = InFailureState;
 }
 
 void ACarlaWheeledVehicle::SetCarlaMovementComponent(UBaseCarlaMovementComponent* MovementComponent)
@@ -878,6 +952,8 @@ FVector ACarlaWheeledVehicle::GetVelocity() const
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   ShowDebugTelemetry(false);
+  Super::EndPlay(EndPlayReason);
+  RemoveReferenceToManager();
 }
 
 void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {
@@ -956,4 +1032,93 @@ void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
   DoorComponent->SetWorldTransform(DoorInitialTransform);
   DoorComponent->AttachToComponent(
       GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+}
+
+void ACarlaWheeledVehicle::ApplyRolloverBehavior()
+{
+  auto roll = GetVehicleTransform().Rotator().Roll;
+
+  // The angular velocity reduction is applied in 4 stages, to improve its smoothness.
+  // Case 4 starts the timer to set the rollover flag, so users are notified.
+  switch (RolloverBehaviorTracker) {
+    case 0: CheckRollover(roll, std::make_pair(130.0, 230.0));      break;
+    case 1: CheckRollover(roll, std::make_pair(140.0, 220.0));      break;
+    case 2: CheckRollover(roll, std::make_pair(150.0, 210.0));      break;
+    case 3: CheckRollover(roll, std::make_pair(160.0, 200.0));      break;
+    case 4:
+      GetWorld()->GetTimerManager().SetTimer(TimerHandler, this, &ACarlaWheeledVehicle::SetRolloverFlag, RolloverFlagTime);
+      RolloverBehaviorTracker += 1;
+      break;
+    case 5: break;
+    default:
+      RolloverBehaviorTracker = 5;
+  }
+
+  // In case the vehicle recovers, reset the rollover tracker
+  if (RolloverBehaviorTracker > 0 && -30 < roll && roll < 30){
+    RolloverBehaviorTracker = 0;
+    FailureState = carla::rpc::VehicleFailureState::None;
+  }
+}
+
+void ACarlaWheeledVehicle::CheckRollover(const float roll, const std::pair<float, float> threshold_roll){
+  if (threshold_roll.first < roll && roll < threshold_roll.second){
+    auto RootComponent = Cast<UPrimitiveComponent>(GetRootComponent());
+    auto angular_velocity = RootComponent->GetPhysicsAngularVelocityInDegrees();
+    RootComponent->SetPhysicsAngularVelocity((1 - RolloverBehaviorForce) * angular_velocity);
+    RolloverBehaviorTracker += 1;
+  }
+}
+
+void ACarlaWheeledVehicle::SetRolloverFlag(){
+  // Make sure the vehicle hasn't recovered since the timer started
+  if (RolloverBehaviorTracker >= 4) {
+    FailureState = carla::rpc::VehicleFailureState::Rollover;
+  }
+}
+
+carla::rpc::VehicleFailureState ACarlaWheeledVehicle::GetFailureState() const{
+  return FailureState;
+}
+
+void ACarlaWheeledVehicle::AddReferenceToManager()
+{
+  const UObject* World = GetWorld();
+  TArray<AActor*> ActorsInLevel;
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), ActorsInLevel);
+  for (AActor* Actor : ActorsInLevel)
+  {
+    AVegetationManager* Manager = Cast<AVegetationManager>(Actor);
+    if (!IsValid(Manager))
+      continue;
+    Manager->AddVehicle(this);
+    return;
+  }
+}
+
+void ACarlaWheeledVehicle::RemoveReferenceToManager()
+{
+  const UObject* World = GetWorld();
+  TArray<AActor*> ActorsInLevel;
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), ActorsInLevel);
+  for (AActor* Actor : ActorsInLevel)
+  {
+    AVegetationManager* Manager = Cast<AVegetationManager>(Actor);
+    if (!IsValid(Manager))
+      continue;
+    Manager->RemoveVehicle(this);
+    return;
+  }
+}
+
+FRotator ACarlaWheeledVehicle::GetPhysicsConstraintAngle(
+    UPhysicsConstraintComponent* Component)
+{
+  return Component->ConstraintInstance.AngularRotationOffset;
+}
+
+void ACarlaWheeledVehicle::SetPhysicsConstraintAngle(
+    UPhysicsConstraintComponent* Component, const FRotator &NewAngle)
+{
+  Component->ConstraintInstance.AngularRotationOffset = NewAngle;
 }

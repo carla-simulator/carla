@@ -9,6 +9,8 @@
 
 #include "ConstructorHelpers.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Actor/ActorBlueprintFunctionLibrary.h"
 
 bool AShaderBasedSensor::AddPostProcessingMaterial(const FString &Path)
 {

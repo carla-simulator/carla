@@ -101,7 +101,7 @@
       type: int
       doc: >
         Vehicle actor affected by the command.
-    - var_name: control
+    - var_name: physics_control
       type: carla.VehiclePhysicsControl
       doc: >
         Physics control to be applied.
@@ -113,7 +113,7 @@
         type: carla.Actor or int
         doc: > 
           Actor or its ID to whom the command will be applied to. 
-      - param_name: control
+      - param_name: physics_control
         type: carla.VehiclePhysicsControl
     # --------------------------------------
 
@@ -141,6 +141,32 @@
           Actor or its ID to whom the command will be applied to. 
       - param_name: control
         type: carla.VehicleControl
+    # --------------------------------------
+
+  - class_name: ApplyVehicleAckermannControl
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">apply_ackermann_control()</font>__ in carla.Vehicle. Applies a certain akermann control to a vehicle.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Vehicle actor affected by the command.
+    - var_name: control
+      type: carla.AckermannVehicleControl
+      doc: >
+        Vehicle ackermann control to be applied.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: control
+        type: carla.AckermannVehicleControl
     # --------------------------------------
 
   - class_name: ApplyWalkerControl

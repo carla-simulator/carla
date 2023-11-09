@@ -7,6 +7,9 @@
 #include "Carla.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Actor/ActorData.h"
+#include "Carla/Actor/ActorRegistry.h"
+#include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaEngine.h"
 
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Traffic/TrafficLightComponent.h"
@@ -61,6 +64,9 @@ static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRe
           state.vehicle_data.has_traffic_light = false;
         }
       }
+      // Get the failure state by checking the rollover one as it is the only one currently implemented.
+      // This will have to be expanded once more states are added
+      state.vehicle_data.failure_state = Vehicle->GetFailureState();
     }
   }
 
@@ -365,6 +371,10 @@ void FWorldObserver::BroadcastTick(
     bool PendingLightUpdates)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
+
+  if (!Stream.IsStreamReady())
+    return;
+
   auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetElapsedGameTime());
 
   carla::Buffer buffer = FWorldObserver_Serialize(
@@ -374,5 +384,5 @@ void FWorldObserver::BroadcastTick(
       MapChange,
       PendingLightUpdates);
 
-  AsyncStream.Send(*this, std::move(buffer));
+  AsyncStream.SerializeAndSend(*this, std::move(buffer));
 }

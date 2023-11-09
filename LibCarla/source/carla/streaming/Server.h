@@ -8,6 +8,7 @@
 
 #include "carla/ThreadPool.h"
 #include "carla/streaming/detail/tcp/Server.h"
+#include "carla/streaming/detail/Types.h"
 #include "carla/streaming/low_level/Server.h"
 
 #include <boost/asio/io_context.hpp>
@@ -20,6 +21,8 @@ namespace streaming {
   class Server {
     using underlying_server = low_level::Server<detail::tcp::Server>;
     using protocol_type = low_level::Server<detail::tcp::Server>::protocol_type;
+    using token_type = carla::streaming::detail::token_type;
+    using stream_id = carla::streaming::detail::stream_id_type;
   public:
 
     explicit Server(uint16_t port)
@@ -52,6 +55,10 @@ namespace streaming {
       return _server.MakeStream();
     }
 
+    void CloseStream(carla::streaming::detail::stream_id_type id) {
+      return _server.CloseStream(id);
+    }
+
     void Run() {
       _pool.Run();
     }
@@ -62,6 +69,22 @@ namespace streaming {
 
     void SetSynchronousMode(bool is_synchro) {
       _server.SetSynchronousMode(is_synchro);
+    }
+
+    token_type GetToken(stream_id sensor_id) {
+      return _server.GetToken(sensor_id);
+    }
+
+    void EnableForROS(stream_id sensor_id) {
+      _server.EnableForROS(sensor_id);
+    }
+
+    void DisableForROS(stream_id sensor_id) {
+      _server.DisableForROS(sensor_id);
+    }
+
+    bool IsEnabledForROS(stream_id sensor_id) {
+      return _server.IsEnabledForROS(sensor_id);
     }
 
   private:

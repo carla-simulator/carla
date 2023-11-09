@@ -1,5 +1,6 @@
 #include "Carla.h"
 #include "TaggedComponent.h"
+#include "ConstructorHelpers.h"
 
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "SkeletalRenderPublic.h"
@@ -17,6 +18,7 @@ UTaggedComponent::UTaggedComponent(const FObjectInitializer& ObjectInitializer) 
 
   TaggedMaterial = TaggedMaterialObject.Object;
   PrimaryComponentTick.bCanEverTick = true;
+  PrimaryComponentTick.bStartWithTickEnabled = false;
 }
 
 void UTaggedComponent::OnRegister()

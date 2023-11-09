@@ -50,6 +50,14 @@ namespace geom {
        return std::sqrt(SquaredLength());
     }
 
+    float SquaredLength2D() const {
+      return x * x + y * y;
+    }
+
+    float Length2D() const {
+      return std::sqrt(SquaredLength2D());
+    }
+
     Vector3D Abs() const {
        return Vector3D(abs(x), abs(y), abs(z));
     }
@@ -93,6 +101,13 @@ namespace geom {
     friend Vector3D operator-(Vector3D lhs, const Vector3D &rhs) {
       lhs -= rhs;
       return lhs;
+    }
+
+    Vector3D& operator-=(const float f) {
+      x -= f;
+      y -= f;
+      z -= f;
+      return *this;
     }
 
     Vector3D &operator*=(float rhs) {

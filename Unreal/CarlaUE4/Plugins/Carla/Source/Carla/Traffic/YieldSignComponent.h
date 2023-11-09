@@ -23,7 +23,7 @@ public:
 private:
 
   void GenerateYieldBox(const FTransform BoxTransform,
-      float BoxSize);
+      const FVector BoxSize);
 
   void GenerateCheckBox(const FTransform BoxTransform,
       float BoxSize);

@@ -27,9 +27,15 @@ if not "%1"=="" (
     if "%1"=="--help" (
         goto help
     )
+    if "%1"=="--generator" (
+        set GENERATOR=%2
+        shift
+    )
     shift
     goto :arg-parse
 )
+
+if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
 
 rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
@@ -51,7 +57,8 @@ set XERCESC_TEMP_FILE=%XERCESC_TEMP_FOLDER%-src.zip
 rem ../xerces-c-x.x.x-src.zip
 set XERCESC_TEMP_FILE_DIR=%BUILD_DIR%%XERCESC_TEMP_FILE%
 
-set XERCESC_REPO=https://downloads.apache.org/xerces/c/3/sources/xerces-c-%XERCESC_VERSION%.zip
+set XERCESC_REPO=https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-%XERCESC_VERSION%.zip
+set XERCESC_BACKUP_REPO=https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/xerces-c-%XERCESC_VERSION%.zip
 
 rem ../xerces-c-x.x.x-source/
 set XERCESC_SRC_DIR=%BUILD_DIR%%XERCESC_BASENAME%-%XERCESC_VERSION%-source\
@@ -73,8 +80,7 @@ if not exist "%XERCESC_SRC_DIR%" (
     )
     if not exist "%XERCESC_TEMP_FILE_DIR%" (
         echo %FILE_N% Using %XERCESC_BASENAME% from backup.
-        goto error_download
-        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/xerces-c-%XERCESC_VERSION%-src.zip', '%XERCESC_TEMP_FILE_DIR%')"
+        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%XERCESC_BACKUP_REPO%', '%XERCESC_TEMP_FILE_DIR%')"
     )
     if %errorlevel% neq 0 goto error_download
     rem Extract the downloaded library
@@ -115,7 +121,13 @@ if not exist "%XERCESC_INSTALL_DIR%include" (
     mkdir "%XERCESC_INSTALL_DIR%include"
 )
 
-cmake .. -G "Visual Studio 16 2019" -A x64^
+echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
+    set PLATFORM=-A x64
+) || (
+    set PLATFORM=
+)
+
+cmake .. -G %GENERATOR% %PLATFORM%^
   -DCMAKE_INSTALL_PREFIX="%XERCESC_INSTALL_DIR:\=/%"^
   -DBUILD_SHARED_LIBS=OFF^
   "%BUILD_DIR%%XERCESC_BASENAME%-%XERCESC_VERSION%-source"

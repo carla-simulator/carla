@@ -9,7 +9,9 @@
 #include "carla/MsgPack.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
-#  include "Carla/Weather/WeatherParameters.h"
+#include <compiler/enable-ue4-macros.h>
+#include "Carla/Weather/WeatherParameters.h"
+#include <compiler/disable-ue4-macros.h>
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
 namespace carla {
@@ -63,7 +65,7 @@ namespace rpc {
         float in_scattering_intensity,
         float in_mie_scattering_scale,
         float in_rayleigh_scattering_scale,
-        bool in_dust_storm)
+        float in_dust_storm)
       : cloudiness(in_cloudiness),
         precipitation(in_precipitation),
         precipitation_deposits(in_precipitation_deposits),
@@ -92,7 +94,7 @@ namespace rpc {
     float scattering_intensity = 0.0f;
     float mie_scattering_scale = 0.0f;
     float rayleigh_scattering_scale = 0.0331f;
-    bool dust_storm = false;
+    float dust_storm = 0.0f;
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 

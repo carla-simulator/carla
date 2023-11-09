@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Sensor/InstanceSegmentationCamera.h"
 #include "Carla/Game/TaggedComponent.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
 #include "Carla/Sensor/PixelReader.h"
 
@@ -62,6 +63,6 @@ void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickTyp
     SceneCapture->ShowOnlyComponents.Emplace(Component);
   }
 
-  FPixelReader::SendPixelsInRenderThread(*this);
+  FPixelReader::SendPixelsInRenderThread<AInstanceSegmentationCamera, FColor>(*this);
 
 }

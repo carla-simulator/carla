@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "Carla/Server/CarlaServer.h"
+#include "Carla/Server/CarlaServerResponse.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
 #include "EngineUtils.h"
 
@@ -18,6 +19,7 @@
 #include "Carla/Walker/WalkerBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
@@ -28,6 +30,7 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
+#include <carla/multigpu/router.h>
 #include <carla/Version.h>
 #include <carla/rpc/AckermannControllerSettings.h>
 #include <carla/rpc/Actor.h>
@@ -40,7 +43,7 @@
 #include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/EpisodeInfo.h>
 #include <carla/rpc/EpisodeSettings.h>
-#include "carla/rpc/LabelledPoint.h"
+#include <carla/rpc/LabelledPoint.h>
 #include <carla/rpc/LightState.h>
 #include <carla/rpc/MapInfo.h>
 #include <carla/rpc/MapLayer.h>
@@ -61,12 +64,13 @@
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
-#include <carla/streaming/Server.h>
+#include <carla/streaming/detail/Types.h>
 #include <carla/rpc/Texture.h>
 #include <carla/rpc/MaterialParameter.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <vector>
+#include <atomic>
 #include <map>
 #include <tuple>
 
@@ -91,12 +95,19 @@ class FCarlaServer::FPimpl
 {
 public:
 
-  FPimpl(uint16_t RPCPort, uint16_t StreamingPort)
+  FPimpl(uint16_t RPCPort, uint16_t StreamingPort, uint16_t SecondaryPort)
     : Server(RPCPort),
       StreamingServer(StreamingPort),
       BroadcastStream(StreamingServer.MakeStream())
   {
+    // we need to create shared_ptr from the router for some handlers to live
+    SecondaryServer = std::make_shared<carla::multigpu::Router>(SecondaryPort);
+    SecondaryServer->SetCallbacks();
     BindActions();
+  }
+
+  std::shared_ptr<carla::multigpu::Router> GetSecondaryServer() {
+    return SecondaryServer;
   }
 
   /// Map of pairs < port , ip > with all the Traffic Managers active in the simulation
@@ -108,9 +119,11 @@ public:
 
   carla::streaming::Stream BroadcastStream;
 
+  std::shared_ptr<carla::multigpu::Router> SecondaryServer;
+
   UCarlaEpisode *Episode = nullptr;
 
-  size_t TickCuesReceived = 0u;
+  std::atomic_size_t TickCuesReceived { 0u };
 
 private:
 
@@ -155,7 +168,7 @@ carla::rpc::ResponseError RespondError(
     const ECarlaServerResponse& Error,
     const FString& ExtraInfo = "")
 {
-  return RespondError(FuncName, GetStringError(Error), ExtraInfo);
+  return RespondError(FuncName, CarlaGetStringError(Error), ExtraInfo);
 }
 
 class ServerBinder
@@ -253,8 +266,9 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(tick_cue) << [this]() -> R<uint64_t>
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(TickCueReceived);
-    ++TickCuesReceived;
-    return FCarlaEngine::GetFrameCounter();
+    auto Current = FCarlaEngine::GetFrameCounter();
+    (void)TickCuesReceived.fetch_add(1, std::memory_order_release);
+    return Current + 1;
   };
 
   // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -293,7 +307,10 @@ void FCarlaServer::FPimpl::BindActions()
 
     if(!Episode->LoadNewEpisode(cr::ToFString(map_name), reset_settings))
     {
-      RESPOND_ERROR("map not found");
+      FString Str(TEXT("Map '"));
+      Str += cr::ToFString(map_name);
+      Str += TEXT("' not found");
+      RESPOND_ERROR_FSTRING(Str);
     }
 
     return R<void>::Success();
@@ -525,6 +542,18 @@ void FCarlaServer::FPimpl::BindActions()
     REQUIRE_CARLA_EPISODE();
     Episode->ApplySettings(settings);
     StreamingServer.SetSynchronousMode(settings.synchronous_mode);
+
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    if (LargeMap)
+    {
+      LargeMap->ConsiderSpectatorAsEgo(settings.spectator_as_ego);
+    }
+
     return FCarlaEngine::GetFrameCounter();
   };
 
@@ -704,6 +733,26 @@ void FCarlaServer::FPimpl::BindActions()
     CarlaActor->SetAttachmentType(InAttachmentType);
     ParentCarlaActor->AddChildren(CarlaActor->GetActorId());
 
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+    {
+      FCarlaActor* CurrentActor = ParentCarlaActor;
+      while(CurrentActor)
+      {
+        for (const auto &Attr : CurrentActor->GetActorInfo()->Description.Variations)
+        {
+          if (Attr.Key == "ros_name")
+          {
+            const std::string value = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
+            ROS2->AddActorParentRosName(static_cast<void*>(CarlaActor->GetActor()), static_cast<void*>(CurrentActor->GetActor()));
+          }
+        }
+        CurrentActor = Episode->FindCarlaActor(CurrentActor->GetParent());
+      }
+    }
+    #endif
+
     // Only is possible to attach if the actor has been really spawned and
     // is not in dormant state
     if(!ParentCarlaActor->IsDormant())
@@ -753,6 +802,134 @@ void FCarlaServer::FPimpl::BindActions()
         );
     }
     return GEngine->Exec(Episode->GetWorld(), UTF8_TO_TCHAR(cmd.c_str()));
+  };
+
+  BIND_SYNC(get_sensor_token) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+                                 R<carla::streaming::Token>
+  {
+    REQUIRE_CARLA_EPISODE();
+    bool ForceInPrimary = false;
+
+    // check for the world observer (always in primary server)
+    if (sensor_id == 1)
+    {
+      ForceInPrimary = true;
+    }
+
+    // collision sensor always in primary server in multi-gpu
+    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
+    if (Desc == "" || Desc == "sensor.other.collision")
+    {
+      ForceInPrimary = true;
+    }
+
+    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
+    {
+      // multi-gpu
+      UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in secondary server"), sensor_id, *Desc);
+      return SecondaryServer->GetCommander().GetToken(sensor_id);
+    }
+    else
+    {
+      // single-gpu
+      UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in primary server"), sensor_id, *Desc);
+      return StreamingServer.GetToken(sensor_id);
+    }
+  };
+
+  BIND_SYNC(enable_sensor_for_ros) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+                                 R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    bool ForceInPrimary = false;
+
+    // check for the world observer (always in primary server)
+    if (sensor_id == 1)
+    {
+      ForceInPrimary = true;
+    }
+
+    // collision sensor always in primary server in multi-gpu
+    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
+    if (Desc == "" || Desc == "sensor.other.collision")
+    {
+      ForceInPrimary = true;
+    }
+
+    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
+    {
+      // multi-gpu
+      SecondaryServer->GetCommander().EnableForROS(sensor_id);
+    }
+    else
+    {
+      // single-gpu
+      StreamingServer.EnableForROS(sensor_id);
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(disable_sensor_for_ros) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+                                 R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    bool ForceInPrimary = false;
+
+    // check for the world observer (always in primary server)
+    if (sensor_id == 1)
+    {
+      ForceInPrimary = true;
+    }
+
+    // collision sensor always in primary server in multi-gpu
+    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
+    if (Desc == "" || Desc == "sensor.other.collision")
+    {
+      ForceInPrimary = true;
+    }
+
+    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
+    {
+      // multi-gpu
+      SecondaryServer->GetCommander().DisableForROS(sensor_id);
+    }
+    else
+    {
+      // single-gpu
+      StreamingServer.DisableForROS(sensor_id);
+    }
+    return R<void>::Success();
+  };
+
+BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+                                 R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    bool ForceInPrimary = false;
+
+    // check for the world observer (always in primary server)
+    if (sensor_id == 1)
+    {
+      ForceInPrimary = true;
+    }
+
+    // collision sensor always in primary server in multi-gpu
+    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
+    if (Desc == "" || Desc == "sensor.other.collision")
+    {
+      ForceInPrimary = true;
+    }
+
+    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
+    {
+      // multi-gpu
+      return SecondaryServer->GetCommander().IsEnabledForROS(sensor_id);
+    }
+    else
+    {
+      // single-gpu
+      return StreamingServer.IsEnabledForROS(sensor_id);
+    }
   };
 
   // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1325,6 +1502,55 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(set_actor_collisions) << [this](
+      cr::ActorId ActorId,
+      bool bEnabled) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "set_actor_collisions",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->SetActorCollisions(bEnabled);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_actor_collisions",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_actor_dead) << [this](
+      cr::ActorId ActorId) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "set_actor_dead",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->SetActorDead();
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_actor_dead",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
   BIND_SYNC(set_actor_enable_gravity) << [this](
       cr::ActorId ActorId,
       bool bEnabled) -> R<void>
@@ -1499,9 +1725,9 @@ void FCarlaServer::FPimpl::BindActions()
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    
+
     std::vector<carla::rpc::BoneTransformDataOut> BoneData;
-    for (auto Bone : Bones.BoneTransforms) 
+    for (auto Bone : Bones.BoneTransforms)
     {
       carla::rpc::BoneTransformDataOut Data;
       Data.bone_name = std::string(TCHAR_TO_UTF8(*Bone.Get<0>()));
@@ -1537,7 +1763,7 @@ void FCarlaServer::FPimpl::BindActions()
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    
+
     return R<void>::Success();
   };
 
@@ -1563,7 +1789,7 @@ void FCarlaServer::FPimpl::BindActions()
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    
+
     return R<void>::Success();
   };
 
@@ -1588,7 +1814,7 @@ void FCarlaServer::FPimpl::BindActions()
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    
+
     return R<void>::Success();
   };
 
@@ -1973,7 +2199,7 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
-    if (CarlaActor)
+    if (!CarlaActor)
     {
       return RespondError(
           "get_light_boxes",
@@ -2003,6 +2229,107 @@ void FCarlaServer::FPimpl::BindActions()
           TrafficLight, Result, OutTag,
           static_cast<uint8>(carla::rpc::CityObjectLabel::TrafficLight));
       return MakeVectorFromTArray<cg::BoundingBox>(Result);
+    }
+  };
+
+  // ~~ GBuffer tokens ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  BIND_SYNC(get_gbuffer_token) << [this](const cr::ActorId ActorId, uint32_t GBufferId) -> R<std::vector<unsigned char>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor)
+    {
+      return RespondError(
+          "get_gbuffer_token",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    if (CarlaActor->IsDormant())
+    {
+      return RespondError(
+          "get_gbuffer_token",
+          ECarlaServerResponse::FunctionNotAvailiableWhenDormant,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ASceneCaptureSensor* Sensor = Cast<ASceneCaptureSensor>(CarlaActor->GetActor());
+    if (!Sensor)
+    {
+      return RespondError(
+        "get_gbuffer_token",
+        ECarlaServerResponse::ActorTypeMismatch,
+        " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    switch (GBufferId)
+    {
+      case 0:
+      {
+        const auto &Token = Sensor->CameraGBuffers.SceneColor.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 1:
+      {
+        const auto &Token = Sensor->CameraGBuffers.SceneDepth.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 2:
+      {
+          const auto& Token = Sensor->CameraGBuffers.SceneStencil.GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 3:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferA.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 4:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferB.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 5:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferC.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 6:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferD.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 7:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferE.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 8:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferF.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 9:
+      {
+        const auto &Token = Sensor->CameraGBuffers.Velocity.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 10:
+      {
+        const auto &Token = Sensor->CameraGBuffers.SSAO.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 11:
+      {
+          const auto& Token = Sensor->CameraGBuffers.CustomDepth.GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 12:
+      {
+          const auto& Token = Sensor->CameraGBuffers.CustomStencil.GetToken();
+          return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      default:
+        UE_LOG(LogCarla, Error, TEXT("Requested invalid GBuffer ID %u"), GBufferId);
+        return {};
     }
   };
 
@@ -2082,6 +2409,13 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     Episode->GetRecorder()->SetReplayerIgnoreHero(ignore_hero);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_replayer_ignore_spectator) << [this](bool ignore_spectator) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->GetRecorder()->SetReplayerIgnoreSpectator(ignore_spectator);
     return R<void>::Success();
   };
 
@@ -2212,6 +2546,18 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(update_day_night_cycle) << [this]
+    (std::string client, const bool active) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    if(World) {
+      UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
+      CarlaLightSubsystem->SetDayNightCycle(active);
+    }
+    return R<void>::Success();
+  };
+
 
   // ~~ Ray Casting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2270,18 +2616,23 @@ void FCarlaServer::FPimpl::BindActions()
 
 FCarlaServer::FCarlaServer() : Pimpl(nullptr) {}
 
-FCarlaServer::~FCarlaServer() {}
+FCarlaServer::~FCarlaServer() {
+  Stop();
+}
 
-FDataMultiStream FCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingPort)
+FDataMultiStream FCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingPort, uint16_t SecondaryPort)
 {
-  Pimpl = MakeUnique<FPimpl>(RPCPort, StreamingPort);
+  Pimpl = MakeUnique<FPimpl>(RPCPort, StreamingPort, SecondaryPort);
   StreamingPort = Pimpl->StreamingServer.GetLocalEndpoint().port();
+  SecondaryPort = Pimpl->SecondaryServer->GetLocalEndpoint().port();
+
   UE_LOG(
       LogCarlaServer,
       Log,
-      TEXT("Initialized CarlaServer: Ports(rpc=%d, streaming=%d)"),
+      TEXT("Initialized CarlaServer: Ports(rpc=%d, streaming=%d, secondary=%d)"),
       RPCPort,
-      StreamingPort);
+      StreamingPort,
+      SecondaryPort);
   return Pimpl->BroadcastStream;
 }
 
@@ -2302,26 +2653,32 @@ void FCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
 {
   check(Pimpl != nullptr);
   /// @todo Define better the number of threads each server gets.
-  int32_t RPCThreads = std::max(2u, NumberOfWorkerThreads / 2u);
-  int32_t StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
+  int ThreadsPerServer = std::max(2u, NumberOfWorkerThreads / 3u);
+  int32_t RPCThreads;
+  int32_t StreamingThreads;
+  int32_t SecondaryThreads;
 
   UE_LOG(LogCarla, Log, TEXT("FCommandLine %s"), FCommandLine::Get());
 
   if(!FParse::Value(FCommandLine::Get(), TEXT("-RPCThreads="), RPCThreads))
   {
-    RPCThreads = std::max(2u, NumberOfWorkerThreads / 2u);
+    RPCThreads = ThreadsPerServer;
   }
   if(!FParse::Value(FCommandLine::Get(), TEXT("-StreamingThreads="), StreamingThreads))
   {
-    StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
+    StreamingThreads = ThreadsPerServer;
+  }
+  if(!FParse::Value(FCommandLine::Get(), TEXT("-SecondaryThreads="), SecondaryThreads))
+  {
+    SecondaryThreads = ThreadsPerServer;
   }
 
-  UE_LOG(LogCarla, Log, TEXT("FCarlaServer AsyncRun %d, RPCThreads %d, StreamingThreads %d"),
-        NumberOfWorkerThreads, RPCThreads, StreamingThreads);
+  UE_LOG(LogCarla, Log, TEXT("FCarlaServer AsyncRun %d, RPCThreads %d, StreamingThreads %d, SecondaryThreads %d"),
+        NumberOfWorkerThreads, RPCThreads, StreamingThreads, SecondaryThreads);
 
   Pimpl->Server.AsyncRun(RPCThreads);
   Pimpl->StreamingServer.AsyncRun(StreamingThreads);
-
+  Pimpl->SecondaryServer->AsyncRun(SecondaryThreads);
 }
 
 void FCarlaServer::RunSome(uint32 Milliseconds)
@@ -2330,24 +2687,41 @@ void FCarlaServer::RunSome(uint32 Milliseconds)
   Pimpl->Server.SyncRunFor(carla::time_duration::milliseconds(Milliseconds));
 }
 
+void FCarlaServer::Tick()
+{
+  (void)Pimpl->TickCuesReceived.fetch_add(1, std::memory_order_release);
+}
+
 bool FCarlaServer::TickCueReceived()
 {
-  if (Pimpl->TickCuesReceived > 0u)
-  {
-    --(Pimpl->TickCuesReceived);
-    return true;
-  }
-  return false;
+  auto k = Pimpl->TickCuesReceived.fetch_sub(1, std::memory_order_acquire);
+  bool flag = (k > 0);
+  if (!flag)
+    (void)Pimpl->TickCuesReceived.fetch_add(1, std::memory_order_release);
+  return flag;
 }
 
 void FCarlaServer::Stop()
 {
-  check(Pimpl != nullptr);
-  Pimpl->Server.Stop();
+  if (Pimpl)
+  {
+    Pimpl->Server.Stop();
+    Pimpl->SecondaryServer->Stop();
+  }
 }
 
 FDataStream FCarlaServer::OpenStream() const
 {
   check(Pimpl != nullptr);
   return Pimpl->StreamingServer.MakeStream();
+}
+
+std::shared_ptr<carla::multigpu::Router> FCarlaServer::GetSecondaryServer()
+{
+  return Pimpl->GetSecondaryServer();
+}
+
+carla::streaming::Server &FCarlaServer::GetStreamingServer()
+{
+  return Pimpl->StreamingServer;
 }

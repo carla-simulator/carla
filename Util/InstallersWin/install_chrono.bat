@@ -2,7 +2,7 @@ REM @echo off
 setlocal
 
 rem BAT script that downloads and installs a ready to use
-rem x64 xerces-c build for CARLA (carla.org).
+rem x64 chrono for CARLA (carla.org).
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 
 set LOCAL_PATH=%~dp0
@@ -27,6 +27,10 @@ if not "%1"=="" (
     if "%1"=="--help" (
         goto help
     )
+    if "%1"=="--generator" (
+        set GENERATOR=%2
+        shift
+    )
     shift
     goto :arg-parse
 )
@@ -34,6 +38,7 @@ if not "%1"=="" (
 rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
 if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
+if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
 
 rem ============================================================================
 rem -- Get Eigen (Chrono dependency) -------------------------------------------
@@ -49,7 +54,7 @@ set EIGEN_INCLUDE=%EIGEN_INSTALL_DIR%\include
 set EIGEN_TEMP_FILE=eigen-%EIGEN_VERSION%.zip
 set EIGEN_TEMP_FILE_DIR=%BUILD_DIR%eigen-%EIGEN_VERSION%.zip
 
-if not exist "%EIGEN_INSTALL_DIR%" (
+if not exist "%EIGEN_SRC_DIR%" (
     if not exist "%EIGEN_TEMP_FILE_DIR%" (
         echo %FILE_N% Retrieving %EIGEN_TEMP_FILE_DIR%.
         powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%EIGEN_REPO%', '%EIGEN_TEMP_FILE_DIR%')"
@@ -61,17 +66,18 @@ if not exist "%EIGEN_INSTALL_DIR%" (
     if %errorlevel% neq 0 goto error_extracting
     echo %EIGEN_SRC_DIR%
 
-    if not exist "%EIGEN_INSTALL_DIR%" (
-        mkdir %EIGEN_INSTALL_DIR%
-        mkdir %EIGEN_INCLUDE%
-        mkdir %EIGEN_INCLUDE%\unsupported
-    )
-    move "%EIGEN_SRC_DIR%\Eigen" "%EIGEN_INCLUDE%\"
-    move "%EIGEN_SRC_DIR%\unsupported\Eigen" "%EIGEN_INCLUDE%\unsupported\"
-
     del %EIGEN_TEMP_FILE_DIR%
-    echo here1
 )
+
+if not exist "%EIGEN_INSTALL_DIR%" (
+    mkdir %EIGEN_INSTALL_DIR%
+    mkdir %EIGEN_INCLUDE%
+    mkdir %EIGEN_INCLUDE%\unsupported
+    mkdir %EIGEN_INCLUDE%\Eigen
+)
+
+xcopy /q /Y /S /I "%EIGEN_SRC_DIR%\Eigen" "%EIGEN_INCLUDE%\Eigen"
+xcopy /q /Y /S /I "%EIGEN_SRC_DIR%\unsupported\Eigen" "%EIGEN_INCLUDE%\unsupported\Eigen"
 
 rem ============================================================================
 rem -- Get Chrono -------------------------------------------
@@ -95,8 +101,14 @@ if not exist %CHRONO_INSTALL_DIR% (
 
     cd "%CHRONO_BUILD_DIR%"
 
+    echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
+        set PLATFORM=-A x64
+    ) || (
+        set PLATFORM=
+    )
+
     echo %FILE_N% Compiling Chrono.
-    cmake -G "Visual Studio 16 2019" -A x64^
+    cmake -G %GENERATOR% %PLATFORM%^
         -DCMAKE_BUILD_TYPE=Release^
         -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
         -DEIGEN3_INCLUDE_DIR="%EIGEN_INCLUDE%"^

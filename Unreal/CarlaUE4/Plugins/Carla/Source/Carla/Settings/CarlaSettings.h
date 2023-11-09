@@ -82,8 +82,15 @@ public:
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere, meta = (EditCondition = bUseNetworking))
   uint32 RPCPort = 2000u;
 
-  /// Optional setting for the secondary port.
-  TOptional<uint32> StreamingPort;
+  /// setting for the streaming port.
+  uint32 StreamingPort = 2001u;
+
+  /// setting for the secondary servers port.
+  uint32 SecondaryPort = 2002u;
+
+  /// setting for the IP and Port of the primary server to connect.
+  std::string PrimaryIP = "";
+  uint32      PrimaryPort = 2002u;
 
   /// In synchronous mode, CARLA waits every tick until the control from the
   /// client is received.
@@ -144,6 +151,14 @@ public:
       config,
       DisplayName = "Road Materials List for EPIC Quality")
   TArray<FStaticMaterial> EpicRoadMaterials;
+
+  /// Enable ROS2
+  UPROPERTY(Category = "Quality Settings/ROS2",
+      BlueprintReadOnly,
+      EditAnywhere,
+      config,
+      DisplayName = "Enable ROS2")
+  bool ROS2 = false;
 
   /// @}
 };

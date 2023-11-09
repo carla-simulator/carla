@@ -33,7 +33,6 @@ In this section you will find details of system requirements, minor and major so
 * __An adequate GPU.__ CARLA aims for realistic simulations, so the server needs at least a 6 GB GPU although 8 GB is recommended. A dedicated GPU is highly recommended for machine learning. 
 * __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Make sure that these ports are not blocked by firewalls or any other applications. 
 
-
 !!! Warning
     __If you are upgrading from CARLA 0.9.12 to 0.9.13__: you must first upgrade the CARLA fork of the UE4 engine to the latest version. See the [__Unreal Engine__](#unreal-engine) section for details on upgrading UE4
 
@@ -81,6 +80,9 @@ Get the 2019 version of Visual Studio from [here](https://developerinsider.co/do
 
 !!! Important
     Other Visual Studio versions may cause conflict. Even if these have been uninstalled, some registers may persist. To completely clean Visual Studio from the computer, go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`  
+
+!!! Note
+    It is also possible to use Visual Studio 2022 using the above steps and substituting the Windows 8.1 SDK for the Windows 11/10 SDK. To override the default Visual Studio 2019 Generator in CMake, specify GENERATOR="Visual Studio 17 2022" when using the makefile commands (see [table](build_windows.md#other-make-commands)). You may specify any generator that works with the build commands as specific in the build scripts, for a full list run `cmake -G` (Ninja has been tested to work for building LibCarla so far).
 
 ##### Unreal Engine
 

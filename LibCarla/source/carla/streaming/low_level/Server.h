@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/streaming/detail/Dispatcher.h"
+#include "carla/streaming/detail/Types.h"
 #include "carla/streaming/Stream.h"
 
 #include <boost/asio/io_context.hpp>
@@ -28,6 +29,10 @@ namespace low_level {
     using underlying_server = T;
 
     using protocol_type = typename underlying_server::protocol_type;
+
+    using token_type = carla::streaming::detail::token_type;
+
+    using stream_id = carla::streaming::detail::stream_id_type;
 
     template <typename InternalEPType, typename ExternalEPType>
     explicit Server(
@@ -64,8 +69,28 @@ namespace low_level {
       return _dispatcher.MakeStream();
     }
 
+    void CloseStream(carla::streaming::detail::stream_id_type id) {
+      return _dispatcher.CloseStream(id);
+    }
+
     void SetSynchronousMode(bool is_synchro) {
       _server.SetSynchronousMode(is_synchro);
+    }
+
+    token_type GetToken(stream_id sensor_id) {
+      return _dispatcher.GetToken(sensor_id);
+    }
+
+    void EnableForROS(stream_id sensor_id) {
+      _dispatcher.EnableForROS(sensor_id);
+    }
+
+    void DisableForROS(stream_id sensor_id) {
+      _dispatcher.DisableForROS(sensor_id);
+    }
+
+    bool IsEnabledForROS(stream_id sensor_id) {
+      return _dispatcher.IsEnabledForROS(sensor_id);
     }
 
   private:
@@ -77,6 +102,7 @@ namespace low_level {
         }
       };
       auto on_session_closed = [this](auto session) {
+        log_debug("on_session_closed called");
         _dispatcher.DeregisterSession(session);
       };
       _server.Listen(on_session_opened, on_session_closed);

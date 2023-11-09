@@ -13,7 +13,6 @@ namespace rpc {
 
   std::ostream &operator<<(std::ostream &out, const WeatherParameters &weather) {
     out << "WeatherParameters(cloudiness=" << std::to_string(weather.cloudiness)
-        << ", cloudiness=" << std::to_string(weather.cloudiness)
         << ", precipitation=" << std::to_string(weather.precipitation)
         << ", precipitation_deposits=" << std::to_string(weather.precipitation_deposits)
         << ", wind_intensity=" << std::to_string(weather.wind_intensity)
@@ -38,7 +37,7 @@ void export_weather() {
   namespace cr = carla::rpc;
 
   auto cls = class_<cr::WeatherParameters>("WeatherParameters")
-    .def(init<float, float, float, float, float, float, float, float, float, float, float, float, float, bool>(
+    .def(init<float, float, float, float, float, float, float, float, float, float, float, float, float, float>(
         (arg("cloudiness")=0.0f,
          arg("precipitation")=0.0f,
          arg("precipitation_deposits")=0.0f,
@@ -52,7 +51,7 @@ void export_weather() {
          arg("scattering_intensity")=0.0f,
          arg("mie_scattering_scale")=0.0f,
          arg("rayleigh_scattering_scale")=0.0331f,
-         arg("dust_storm")=false)))
+         arg("dust_storm")=0.0f)))
     .def_readwrite("cloudiness", &cr::WeatherParameters::cloudiness)
     .def_readwrite("precipitation", &cr::WeatherParameters::precipitation)
     .def_readwrite("precipitation_deposits", &cr::WeatherParameters::precipitation_deposits)

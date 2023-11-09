@@ -224,6 +224,12 @@ file(GLOB libcarla_carla_streaming_low_level_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_streaming_low_level_sources}")
 install(FILES ${libcarla_carla_streaming_low_level_sources} DESTINATION include/carla/streaming/low_level)
 
+file(GLOB libcarla_carla_multigpu_sources
+    "${libcarla_source_path}/carla/multigpu/*.cpp"
+    "${libcarla_source_path}/carla/multigpu/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_multigpu_sources}")
+install(FILES ${libcarla_carla_multigpu_sources} DESTINATION include/carla/multigpu)
+
 file(GLOB libcarla_odr_spiral_sources
     "${libcarla_source_thirdparty_path}/odrSpiral/*.cpp"
     "${libcarla_source_thirdparty_path}/odrSpiral/*.h")
@@ -247,6 +253,12 @@ file(GLOB libcarla_carla_trafficmanager_sources
     "${libcarla_source_path}/carla/trafficmanager/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_trafficmanager_sources}")
 install(FILES ${libcarla_carla_trafficmanager_sources} DESTINATION include/carla/trafficmanager)
+
+file(GLOB libcarla_carla_ros2_sources
+    "${libcarla_source_path}/carla/ros2/*.cpp"
+    "${libcarla_source_path}/carla/ros2/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_ros2_sources}")
+install(FILES ${libcarla_carla_ros2_sources} DESTINATION include/carla/ros2)
 
 # ==============================================================================
 # Create targets for debug and release in the same build type.

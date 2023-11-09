@@ -195,6 +195,7 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs && ... Strings)
 {
   Def.Id = JoinStrings(TEXT("."), std::forward<TStrs>(Strings) ...).ToLower();
   Def.Tags = JoinStrings(TEXT(","), std::forward<TStrs>(Strings) ...).ToLower();
+
   // each actor gets an actor role name attribute (empty by default)
   FActorVariation ActorRole;
   ActorRole.Id = TEXT("role_name");
@@ -202,6 +203,14 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs && ... Strings)
   ActorRole.RecommendedValues = { TEXT("default") };
   ActorRole.bRestrictToRecommended = false;
   Def.Variations.Emplace(ActorRole);
+
+  // ROS2
+  FActorVariation Var;
+  Var.Id = TEXT("ros_name");
+  Var.Type = EActorAttributeType::String;
+  Var.RecommendedValues = { Def.Id };
+  Var.bRestrictToRecommended = false;
+  Def.Variations.Emplace(Var);
 }
 
 static void AddRecommendedValuesForActorRoleName(
@@ -383,7 +392,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation Gamma;
     Gamma.Id = TEXT("gamma");
     Gamma.Type = EActorAttributeType::Float;
-    Gamma.RecommendedValues = { TEXT("2.4") };
+    Gamma.RecommendedValues = { TEXT("2.2") };
     Gamma.bRestrictToRecommended = false;
 
     // Motion Blur
@@ -1120,10 +1129,29 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
   StickyControl.RecommendedValues.Emplace(TEXT("true"));
   Definition.Variations.Emplace(StickyControl);
 
+  FActorVariation TerramechanicsAttribute;
+  TerramechanicsAttribute.Id = TEXT("terramechanics");
+  TerramechanicsAttribute.Type = EActorAttributeType::Bool;
+  TerramechanicsAttribute.bRestrictToRecommended = false;
+  TerramechanicsAttribute.RecommendedValues.Emplace(TEXT("false"));
+  Definition.Variations.Emplace(TerramechanicsAttribute);
+
   Definition.Attributes.Emplace(FActorAttribute{
     TEXT("object_type"),
     EActorAttributeType::String,
     Parameters.ObjectType});
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("base_type"),
+    EActorAttributeType::String,
+    Parameters.BaseType});
+  Success = CheckActorDefinition(Definition);
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("special_type"),
+    EActorAttributeType::String,
+    Parameters.SpecialType});
+  Success = CheckActorDefinition(Definition);
 
   Definition.Attributes.Emplace(FActorAttribute{
     TEXT("number_of_wheels"),
@@ -1135,6 +1163,18 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     TEXT("generation"),
     EActorAttributeType::Int,
     FString::FromInt(Parameters.Generation)});
+  Success = CheckActorDefinition(Definition);
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("has_dynamic_doors"),
+    EActorAttributeType::Bool,
+    Parameters.HasDynamicDoors ? TEXT("true") : TEXT("false")});
+  Success = CheckActorDefinition(Definition);
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("has_lights"),
+    EActorAttributeType::Bool,
+    Parameters.HasLights ? TEXT("true") : TEXT("false")});
   Success = CheckActorDefinition(Definition);
 }
 
@@ -1510,7 +1550,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         Description.Variations["enable_postprocess_effects"],
         true));
     Camera->SetTargetGamma(
-        RetrieveActorAttributeToFloat("gamma", Description.Variations, 2.4f));
+        RetrieveActorAttributeToFloat("gamma", Description.Variations, 2.2f));
     Camera->SetMotionBlurIntensity(
         RetrieveActorAttributeToFloat("motion_blur_intensity", Description.Variations, 0.5f));
     Camera->SetMotionBlurMaxDistortion(

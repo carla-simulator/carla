@@ -22,9 +22,13 @@ static void SetTimeout(carla::client::Client &client, double seconds) {
 }
 
 static auto GetAvailableMaps(const carla::client::Client &self) {
-  carla::PythonUtil::ReleaseGIL unlock;
   boost::python::list result;
-  for (const auto &str : self.GetAvailableMaps()) {
+  std::vector<std::string> maps;
+  {
+    carla::PythonUtil::ReleaseGIL unlock;
+    maps = self.GetAvailableMaps();
+  }
+  for (const auto &str : maps) {
     result.append(str);
   }
   return result;
@@ -187,7 +191,7 @@ void export_client() {
   ;
 
   class_<cc::Client>("Client",
-      init<std::string, uint16_t, size_t>((arg("host"), arg("port"), arg("worker_threads")=0u)))
+      init<std::string, uint16_t, size_t>((arg("host")="127.0.0.1", arg("port")=2000, arg("worker_threads")=0u)))
     .def("set_timeout", &::SetTimeout, (arg("seconds")))
     .def("get_client_version", &cc::Client::GetClientVersion)
     .def("get_server_version", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerVersion))
@@ -198,6 +202,7 @@ void export_client() {
     .def("request_file", &cc::Client::RequestFile, (arg("name")))
     .def("reload_world", CONST_CALL_WITHOUT_GIL_1(cc::Client, ReloadWorld, bool), (arg("reset_settings")=true))
     .def("load_world", CONST_CALL_WITHOUT_GIL_3(cc::Client, LoadWorld, std::string, bool, rpc::MapLayer), (arg("map_name"), arg("reset_settings")=true, arg("map_layers")=rpc::MapLayer::All))
+    .def("load_world_if_different", &cc::Client::LoadWorldIfDifferent, (arg("map_name"), arg("reset_settings")=true, arg("map_layers")=rpc::MapLayer::All))
     .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_3(cc::Client, GenerateOpenDriveWorld, std::string,
         rpc::OpendriveGenerationParameters, bool), (arg("opendrive"), arg("parameters")=rpc::OpendriveGenerationParameters(),
         arg("reset_settings")=true))
@@ -210,6 +215,7 @@ void export_client() {
     .def("stop_replayer", &cc::Client::StopReplayer, (arg("keep_actors")))
     .def("set_replayer_time_factor", &cc::Client::SetReplayerTimeFactor, (arg("time_factor")))
     .def("set_replayer_ignore_hero", &cc::Client::SetReplayerIgnoreHero, (arg("ignore_hero")))
+    .def("set_replayer_ignore_spectator", &cc::Client::SetReplayerIgnoreSpectator, (arg("ignore_spectator")))
     .def("apply_batch", &ApplyBatchCommands, (arg("commands"), arg("do_tick")=false))
     .def("apply_batch_sync", &ApplyBatchCommandsSync, (arg("commands"), arg("do_tick")=false))
     .def("get_trafficmanager", CONST_CALL_WITHOUT_GIL_1(cc::Client, GetInstanceTM, uint16_t), (arg("port")=ctm::TM_DEFAULT_PORT))

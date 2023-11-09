@@ -4,15 +4,20 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#pragma once
-
 #include "Carla.h"
+#include "Carla/Actor/ActorData.h"
 #include "Carla/Actor/ActorRegistry.h"
 
 #include "Carla/Game/Tagger.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Sensor/Sensor.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include "carla/streaming/Token.h"
+#include "carla/streaming/detail/Token.h"
+#include <compiler/enable-ue4-macros.h>
+
 
 namespace crp = carla::rpc;
 
@@ -51,7 +56,7 @@ static FCarlaActor::ActorType FActorRegistry_GetActorType(const AActor *Actor)
   }
 }
 
-static FString GetRelevantTagAsString(const TSet<crp::CityObjectLabel> &SemanticTags)
+FString CarlaGetRelevantTagAsString(const TSet<crp::CityObjectLabel> &SemanticTags)
 {
   for (auto &&Tag : SemanticTags)
   {
@@ -149,7 +154,7 @@ TSharedPtr<FCarlaActor> FActorRegistry::MakeCarlaActor(
   if (Info->Description.Id.IsEmpty())
   {
     // This is a fake actor, let's fake the id based on their semantic tags.
-    Info->Description.Id = TEXT("static.") + GetRelevantTagAsString(Info->SemanticTags);
+    Info->Description.Id = TEXT("static.") + CarlaGetRelevantTagAsString(Info->SemanticTags);
   }
 
   Info->SerializedData.id = Id;
@@ -230,4 +235,22 @@ void FActorRegistry::WakeActorUp(FCarlaActor::IdType Id, UCarlaEpisode* CarlaEpi
   {
     WakeActorUp(ChildId, CarlaEpisode);
   }
+}
+
+FString FActorRegistry::GetDescriptionFromStream(carla::streaming::detail::stream_id_type Id)
+{
+  for (auto &Item : ActorDatabase)
+  {
+    // check for a sensor
+    ASensor *Sensor = Cast<ASensor>(Item.Value->GetActor());
+    if (Sensor == nullptr) continue;
+
+    carla::streaming::detail::token_type token(Sensor->GetToken());
+    if (token.get_stream_id() == Id)
+    {
+      const FActorInfo *Info = Item.Value->GetActorInfo();
+      return Info->Description.Id;
+    }
+  }
+  return FString("");
 }

@@ -5,6 +5,8 @@
 
 FROM nvidia/vulkan:1.1.121-cuda-10.1--ubuntu18.04
 
+RUN apt-key adv --fetch-keys "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub"
+
 RUN packages='libsdl2-2.0 xserver-xorg libvulkan1 libomp5' && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y $packages --no-install-recommends
 
 RUN useradd -m carla
