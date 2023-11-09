@@ -44,7 +44,7 @@ pipeline
                             steps
                             {
                                 sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
-                                sh 'make setup ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono --ros2"'
+                                sh 'make setup ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
                             }
                         }
                         stage('ubuntu build')
@@ -53,7 +53,7 @@ pipeline
                             {
                                 sh 'make LibCarla'
                                 sh 'make PythonAPI ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
-                                sh 'make CarlaUE4Editor ARGS="--chrono --ros2"'
+                                sh 'make CarlaUE4Editor ARGS="--chrono"'
                                 sh 'make plugins'
                                 sh 'make examples'
                             }
@@ -106,21 +106,6 @@ pipeline
                                     stash includes: 'Dist/CARLA*.tar.gz', name: 'ubuntu_package'
                                     // stash includes: 'Dist/AdditionalMaps*.tar.gz', name: 'ubuntu_package2'
                                     stash includes: 'Examples/', name: 'ubuntu_examples'
-                                }
-                            }
-                        }
-                        stage('ubuntu package with ROS2')
-                        {
-                            steps
-                            {
-                                sh 'rm Dist/CARLA*.tar.gz'
-                                sh 'make package ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --archive-sufix=ROS2 --chrono --ros2"'
-                            }
-                            post
-                            {
-                                always
-                                {
-                                    archiveArtifacts 'Dist/CARLA*.tar.gz'
                                 }
                                 success
                                 {
