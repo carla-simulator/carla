@@ -23,6 +23,7 @@ Below, you will find in depth documentation on the many extensive features of CA
 
 ## Custom Maps
 
+[__Digital Twin Tool__](adv_digital_twin.md) — A procedural map generation tool that uses OpenStreetMap data  
 [__Overview of custom maps in CARLA__](tuto_M_custom_map_overview.md) — An overview of the process and options involved in adding a custom, standard sized map.   
 [__Create a map in RoadRunner__](tuto_M_generate_map.md) — How to generate a customs, standard sized map in RoadRunner.  
 [__Import map in CARLA package__](tuto_M_add_map_package.md) How to import a map in a CARLA package.  

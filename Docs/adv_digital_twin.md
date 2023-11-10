@@ -17,42 +17,40 @@ The __Digital Twin Tool__ enables procedural generation of unique 3D environment
 
 ## Building the OSM renderer
 
-Before using the Digital Twin tool you will need to build the OSM renderer. Run `make osmrenderer` inside the CARLA root directory. You may need to upgrade your version of CMake to v3.2 or above in order for this to work.  
+If you are using Linux, you have the option of using the OSM renderer in the CARLA interface to navigate a large OSM map region that you have downloaded. You first need to build the OSM renderer. Run `make osmrenderer` inside the CARLA root directory. You may need to upgrade your version of CMake to v3.2 or above in order for this to work. This will create two folders in your build directory called `libosmcout-source` and `libosmcout-build`. Windows users do not have the option of using the OSM renderer and must use directly a URL. 
 
 ## Downloading and preparing OSM map data
 
 ![osm_website](img/osm_export.png)
 
-In a web-browser, go to the [OpenStreetMap website](https:/www.openstreetmap.org) and choose an area of the map which you would like to use. Define your region and then export the data as an `.osm` file. Alternatively, you could use other tools based on the OpenStreetMap service such as [GeoFabrik](https://download.geofabrik.de/), which allows specific map regions such as states or territories to be extracted from the OSM data. 
+In a web-browser, go to the [OpenStreetMap website](https:/www.openstreetmap.org) and choose an area of the map which you would like to use. Define your region and then export the data as an `.osm` file, or you can use a URL, as explained later. Alternatively, you could use other tools based on the OpenStreetMap service such as [GeoFabrik](https://download.geofabrik.de/), which allows specific map regions such as states or territories to be extracted from the OSM data.
 
-Once you have downloaded the OSM file, you then need to process it to allow the data to be loaded in the CARLA editor. Run one of the following commands, depending on your OS:
+There are two ways to use the OSM data. Using a URL or downloading an OSM file: 
 
-Linux:
+### Using a URL
+
+In the [OpenStreetMap website](https:/www.openstreetmap.org) website, navigate to an area of interest, then press `Export`, you may also want to use the `Manually select a different area` option. Then, right click on `Overpass API` and select `Copy link` from the context menu. You must ensure that the file will be no bigger than 1 Gb. Take this link and paste it into the URL field of the interface.
+
+### Downloading an OSM file and navigating in the interface
+
+This option is only available to Linux users. You may download a larger region of map, for example an entire state or territory, then use the OSM interface in CARLA to navigate the map using the arrow and zoom buttons. Download your desired region of OSM data as a `.osm` file, then place this file in the `{CARLA_ROOT}/Build/libosmcout-source/maps/` folder. Open a terminal inside this folder and run the following command:
 
 ```sh
-{CARLA_ROOT}/maps/build.sh <path_to_osm_file>
+cd {CARLA_ROOT}/Build/libosmcout-source/maps/
+./build.sh <path_to_osm_file>
 ```
-
-Windows:
-
-```sh
-.\Import.exe --typefile "C:CARLA_ROOT\Build\libosmscout-source\stylesheets\map.ost" 
-   --destinationDirectory "<destination_of_processed_osm_data>"
-   "<path_to_osm_file>"
-```
-
 
 ## OpenStreetMap browser
 
 To open the OSM browser, open the content browser and navigate to `CarlaToolsContent/OnroadMapGenerator`. Right click on *UW_OnRoadMainWidget* and select *Launch Editor Utility Widget* from the context menu. This will open the tool's interface. 
 
-![osm_interface_open](img/open_digital_twin_tool.png)
+![osm_interface_open](img/digital_twins_widget.png)
 
-The interface enables browsing of a region of OSM map that has been downloaded from the OSM database and baked. First, you should enter the directory location where you stored the processed OSM data in the previous step in the *Select OSM Database* field in the interface.
+The interface enables browsing of a region of OSM map that has been downloaded from the OSM database and baked. First, you should enter the directory location where you stored the processed OSM data in the previous step in the *Select OSM Database* field in the interface. If you are using a URL directly, paste it into the `OSM URL` field, you will not be able to use the navigator in this case. 
 
-![osm_interface](img/digital_twin_tool.png)
+![osm_interface](img/digital_twins_interface.png)
 
-Use the directional arrows and the zoom icons to navigate the map and find a part of the road network you want to turn into a CARLA map. The square region you see in the preview will be the extent of your map. Press *generate* to start the procedural generation process. 
+Use the directional arrows and the zoom icons to navigate the map and find a part of the road network you want to turn into a CARLA map. The square region you see in the preview will be the extent of your map. Enter an appropriate name in the `File Name` field and then press *generate* to start the procedural generation process. The map generation process may take several minutes, or more if you are using a large region.
 
 ## Procedural environment generation
 
