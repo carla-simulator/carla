@@ -28,7 +28,8 @@ nav:
   - 'Custom assets': 'custom_assets_tutorials.md'
 
 - Resources:
-  - 'Python API': 'python_api.md'  
+  - 'Python API': 'python_api.md'
+  - 'Catalogue': 'catalogue.md'  
   - 'C++ reference': 'ref_cpp.md'
   - 'Blueprint library': 'bp_library.md'  
   - 'Tutorials': 'tutorials.md'
@@ -43,7 +44,7 @@ nav:
   - 'OpenDRIVE': 'adv_opendrive.md'
   - 'PTV Vissim': 'adv_ptv.md'
   - 'RSS': 'adv_rss.md'
-  - 'ROS': 'https://carla.readthedocs.io/projects/ros-bridge/en/latest/'
+  - 'ROS': https://carla.readthedocs.io/projects/ros-bridge/en/latest/
   - 'Scenic': 'tuto_G_scenic.md'
   - 'SUMO': 'adv_sumo.md'
 

@@ -236,6 +236,13 @@ namespace detail {
         rpc::ActorId actor,
         bool enabled);
 
+    void SetActorCollisions(
+        rpc::ActorId actor,
+        bool enabled);
+
+    void SetActorDead(
+        rpc::ActorId actor);
+
     void SetActorEnableGravity(
         rpc::ActorId actor,
         bool enabled);
@@ -362,6 +369,8 @@ namespace detail {
 
     void SetReplayerIgnoreHero(bool ignore_hero);
 
+    void SetReplayerIgnoreSpectator(bool ignore_spectator);
+
     void StopReplayer(bool keep_actors);
 
     void SubscribeToStream(
@@ -374,6 +383,12 @@ namespace detail {
         std::function<void(Buffer)> callback);
 
     void UnSubscribeFromStream(const streaming::Token &token);
+
+    void EnableForROS(const streaming::Token &token);
+
+    void DisableForROS(const streaming::Token &token);
+
+    bool IsEnabledForROS(const streaming::Token &token);
 
     void UnSubscribeFromGBuffer(
         rpc::ActorId ActorId,

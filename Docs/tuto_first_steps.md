@@ -12,6 +12,9 @@ In this tutorial, we will cover a standard workflow in CARLA, from launching the
 * [__Adding NPCs__](#adding-npcs)  
 * [__Add sensors__](#add-sensors)  
 * [__Animate vehicles__](#animate-vehicles-with-traffic-manager)  
+* [__Assign a vehicle as the Ego Vehicle__](#assign-a-vehicle-as-the-ego-vehicle)
+* [__Choose your map__](#choose-your-map) 
+* [__Choose your vehicles__](#choose-your-vehicles) 
 
 
 ## Launching CARLA and connecting the client
@@ -118,7 +121,7 @@ spawn_points = world.get_map().get_spawn_points()
 # Spawn 50 vehicles randomly distributed throughout the map 
 # for each spawn point, we choose a random vehicle from the blueprint library
 for i in range(0,50):
-    world.try_spawn_actor(random.choice(vehicle_blueprints), random.choice(spawn_points)))
+    world.try_spawn_actor(random.choice(vehicle_blueprints), random.choice(spawn_points))
 ```
 
 Now we should also add a vehicle that will be the centerpoint of our simulation. To train an autonomous agent we need to simulate a the vehicle that it the autonomous agent will control. In CARLA parlance, we often refer to this vehicle as the "Ego vehicle". 
@@ -173,3 +176,76 @@ for vehicle in world.get_actors().filter('*vehicle*'):
 Now your simulation is running, with numerous vehicles driving around the map and a camera recording data from one of those vehicles. This data can then be used to feed a machine learning algorithm for training an autonomous driving agent. The Traffic manager has many functions for customising traffic behaviour, learn more [__here__](tuto_G_traffic_manager.md).
 
 This is the most basic possible set up for a simulation, now you can go into further details deeper into documentation about the many extra sensors you can use to generate data, and the many other features of CARLA that can make your simulations more detailed and more realistic. 
+
+---
+
+## Assign a vehicle as the Ego Vehicle
+
+The __Ego Vehicle__ is an important concept to bear in mind when using CARLA. The Ego Vehicle refers to the vehicle that will be the focus of the simulation. In most CARLA use cases it's likely to be the vehicle to which you will attach your sensors and/or the vehicle that your autonomous driving machine learning stack will control. It is important because it serves as the basis for some simulation operations that help improve the efficiency of the simulation, like for example:
+
+* __Loading map tiles for Large Maps__: Large Maps (like Town 12) are made up of tiles to that are only loaded when needed to improve CARLA performance. The position of the Ego Vehicle dictates which tiles are used. Only the tiles nearest the Ego Vehicle will be loaded.
+
+* __Hybrid Physics Mode__: if your simulation contains a lot of vehicles controlled by the Traffic Manager, calculating physics for all of these vehicles is very computationally expensive. The [Hybrid Physics Mode](adv_traffic_manager.md#hybrid-physics-mode) enables physics calculation to be limited to the vehicles in the vicinity of the Ego Vehicle, hence saving computing resources.
+
+To define the Ego Vehicle, you should set the `role_name` attribute of the vehicle [carla.Actor](python_api.md#carlaactor) object's [blueprint](python_api.md#carlaactorblueprint) when you are spawning your Ego Vehicle:
+
+```py
+
+ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz_2020')
+
+ego_bp.set_attribute('role_name', 'hero')
+
+ego_vehicle = world.spawn_actor(ego_bp, random.choice(spawn_points))
+
+```
+---
+## Choose your map
+
+![maps_montage](../img/catalogue/maps/maps_montage.webp)
+
+CARLA comes loaded with several pre-made maps focused on providing a diversity of features. The maps present a range of environments such as urban, rural and residential. There are also differing architectural styles and also a multitude of different road layouts from unmarked rural roads to multi-lane highways. Browse the map guides in the [catalogue](catalogue.md) or in the table below. 
+
+| Town       | Summary |
+| -----------| ------  |
+| [__Town01__](map_town01.md)  | A small, simple town with a river and several bridges.|
+| [__Town02__](map_town02.md) | A small simple town with a mixture of residential and commercial buildings.|
+| [__Town03__](map_town03.md) | A larger, urban map with a roundabout and large junctions.|
+| [__Town04__](map_town04.md) | A small town embedded in the mountains with a special "figure of 8" *infinite* highway.|
+| [__Town05__](map_town05.md) | Squared-grid town with cross junctions and a bridge. It has multiple lanes per direction. Useful to perform lane changes.  |
+| [__Town06__](map_town06.md) | Long many lane highways with many highway entrances and exits. It also has a [**Michigan left**](<https://en.wikipedia.org/wiki/Michigan_left>). |
+| [__Town07__](map_town07.md) | A rural environment with narrow roads, corn, barns and hardly any traffic lights. |
+| **Town08** | Secret "unseen" town used for the [Leaderboard](https://leaderboard.carla.org/) challenge |
+| **Town09** | Secret "unseen" town used for the [Leaderboard](https://leaderboard.carla.org/) challenge |
+| [__Town10__](map_town10.md) | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade.|
+| __Town11__ | A Large Map that is undecorated.|
+| [__Town12__](map_town12.md) | A Large Map with numerous different regions, including high-rise, residential and rural environments.|
+
+You can browse the available maps in your CARLA installation:
+
+```py
+client.get_available_maps()
+```
+
+This will include maps that you have built yourself or imported.
+
+When you choose a map, load it like so:
+
+```py
+client.load_world('Town03_Opt')
+```
+
+---
+
+## Choose your vehicles
+
+
+![vehicles_overview](../img/catalogue/vehicles/vehicle_montage.webp)
+
+CARLA provides a library of vehicles to fill your simulation with traffic. Browse the vehicle models in the [CARLA vehicle catalogue](catalogue_vehicles.md). 
+
+You can see all available vehicle blueprints by filtering the blueprint library. 
+
+```py
+for bp in world.get_blueprint_library().filter('vehicle'):
+    print(bp.id)
+```

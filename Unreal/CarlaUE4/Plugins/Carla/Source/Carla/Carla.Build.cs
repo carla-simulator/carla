@@ -9,6 +9,7 @@ public class Carla : ModuleRules
   bool UsingCarSim = false;
   bool UsingChrono = false;
   bool UsingPytorch = false;
+  bool UsingRos2 = false;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
@@ -51,6 +52,14 @@ public class Carla : ModuleRules
         PublicDefinitions.Add("WITH_PYTORCH");
         PrivateDefinitions.Add("WITH_PYTORCH");
       }
+
+      if (line.Contains("Ros2 ON"))
+      {
+        Console.WriteLine("Enabling ros2");
+        UsingRos2 = true;
+        PublicDefinitions.Add("WITH_ROS2");
+        PrivateDefinitions.Add("WITH_ROS2");
+      }
     }
 
     PublicIncludePaths.AddRange(
@@ -72,7 +81,8 @@ public class Carla : ModuleRules
         "RenderCore",
         "RHI",
         "Renderer",
-        "ProceduralMeshComponent"
+        "ProceduralMeshComponent",
+        "MeshDescription"
         // ... add other public dependencies that you statically link with here ...
       }
       );
@@ -94,6 +104,8 @@ public class Carla : ModuleRules
         "CoreUObject",
         "Engine",
         "Foliage",
+        "HTTP",
+        "StaticMeshDescription",
         "ImageWriteQueue",
         "Json",
         "JsonUtilities",
@@ -201,6 +213,13 @@ public class Carla : ModuleRules
         AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoModels_robot.dll");
         bUseRTTI = true;
       }
+
+      //OsmToODR
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "sqlite3.lib"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "xerces-c_3.lib"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "proj.lib"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "osm2odr.lib"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "zlibstatic.lib"));
     }
     else
     {
@@ -215,23 +234,18 @@ public class Carla : ModuleRules
       }
       if (UsingChrono)
       {
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so.1"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so.1.0"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so.1"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so.1.0"));
         AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine.so"));
         AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine_vehicle.so"));
         AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_vehicle.so"));
         AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_robot.so"));
+
         bUseRTTI = true;
       }
 
       if (UsingPytorch)
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_pytorch")));
-        
+
         string LibTorchPath = LibCarlaInstallPath;
         PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libonnx_proto.a"));
         PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libfbgemm.a"));
@@ -301,7 +315,26 @@ public class Carla : ModuleRules
         PublicAdditionalLibraries.Add("stdc++");
         PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libpython3.9.so");
       }
-      
+
+      if (UsingRos2)
+      {
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds")));
+
+        string LibFastDDSPath = LibCarlaInstallPath;
+        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfoonathan_memory-0.7.3.so"));
+        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastcdr.so"));
+        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastrtps.so"));
+        PublicAdditionalLibraries.Add("stdc++");
+      }
+
+
+      //OsmToODR
+      PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libc.so");
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libsqlite3.so"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libxerces-c.a"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libproj.a"));
+      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libosm2odr.a"));
+
     }
     bEnableExceptions = true;
 

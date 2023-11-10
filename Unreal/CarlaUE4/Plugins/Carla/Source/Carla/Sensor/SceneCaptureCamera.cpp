@@ -9,6 +9,8 @@
 #include "Carla/Game/CarlaEngine.h"
 #include <chrono>
 
+#include "Actor/ActorBlueprintFunctionLibrary.h"
+
 #include "Runtime/RenderCore/Public/RenderingThread.h"
 
 FActorDefinition ASceneCaptureCamera::GetSensorDefinition()

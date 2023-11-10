@@ -15,12 +15,16 @@ LAUNCH_UE4_EDITOR=false
 USE_CARSIM=false
 USE_CHRONO=false
 USE_PYTORCH=false
+USE_UNITY=true
+USE_ROS2=false
+
 EDITOR_FLAGS=""
+USE_HOUDINI=false
 
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,editor-flags: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,ros2,no-unity,editor-flags: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -60,6 +64,15 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --pytorch )
       USE_PYTORCH=true;
+      shift ;;
+    --ros2 )
+      USE_ROS2=true;
+      shift ;;
+    --no-unity )
+      USE_UNITY=false
+      shift ;;
+    --with-houdini )
+      USE_HOUDINI=true;
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -124,6 +137,22 @@ if ${REMOVE_INTERMEDIATE} ; then
 fi
 
 # ==============================================================================
+# -- Download Houdini Plugin for Unreal Engine ---------------------------------
+# ==============================================================================
+
+HOUDINI_PLUGIN_REPO=https://github.com/sideeffects/HoudiniEngineForUnreal.git
+HOUDINI_PLUGIN_PATH=Plugins/HoudiniEngine
+HOUDINI_PLUGIN_COMMIT=55b6a16cdf274389687fce3019b33e3b6e92a914
+HOUDINI_PATCH=${CARLA_UTIL_FOLDER}/Patches/houdini_patch.txt
+if [[ ! -d ${HOUDINI_PLUGIN_PATH} ]] ; then
+  git clone ${HOUDINI_PLUGIN_REPO} ${HOUDINI_PLUGIN_PATH}
+  pushd ${HOUDINI_PLUGIN_PATH} >/dev/null
+  git checkout ${HOUDINI_PLUGIN_COMMIT}
+  git apply ${HOUDINI_PATCH}
+  popd >/dev/null
+fi
+
+# ==============================================================================
 # -- Build CarlaUE4 ------------------------------------------------------------
 # ==============================================================================
 
@@ -147,6 +176,17 @@ if ${BUILD_CARLAUE4} ; then
   else
     OPTIONAL_MODULES_TEXT="Pytorch OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
+  if ${USE_ROS2} ; then
+    OPTIONAL_MODULES_TEXT="Ros2 ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  else
+    OPTIONAL_MODULES_TEXT="Ros2 OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  fi
+  if ${USE_UNITY} ; then
+    OPTIONAL_MODULES_TEXT="Unity ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  else
+    OPTIONAL_MODULES_TEXT="Unity OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  fi
+  OPTIONAL_MODULES_TEXT="Fast_dds ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
   echo ${OPTIONAL_MODULES_TEXT} > ${PWD}/Config/OptionalModules.ini
 
   if [ ! -f Makefile ]; then

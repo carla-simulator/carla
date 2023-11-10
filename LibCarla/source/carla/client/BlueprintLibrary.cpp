@@ -33,6 +33,37 @@ namespace client {
     return SharedPtr<BlueprintLibrary>{new BlueprintLibrary(result)};
   }
 
+  SharedPtr<BlueprintLibrary> BlueprintLibrary::FilterByAttribute(
+      const std::string &name, const std::string& value) const {
+    map_type result;
+
+    for (auto &pair : _blueprints) {
+      if (!pair.second.ContainsAttribute(name))
+        continue;
+      const ActorAttribute &Attribute = pair.second.GetAttribute(name);
+      const std::vector<std::string> &Values = Attribute.GetRecommendedValues();
+      if (Values.empty())
+      {
+        const std::string &AttributeValue = Attribute.GetValue();
+        if (value == AttributeValue)
+          result.emplace(pair);
+      }
+      else
+      {
+        for (const std::string &Value : Values)
+        {
+          if (Value == value)
+          {
+            result.emplace(pair);
+            break;
+          }
+        }
+      }
+
+    }
+    return SharedPtr<BlueprintLibrary>{new BlueprintLibrary(result)};
+  }
+
   BlueprintLibrary::const_pointer BlueprintLibrary::Find(const std::string &key) const {
     auto it = _blueprints.find(key);
     return it != _blueprints.end() ? &it->second : nullptr;

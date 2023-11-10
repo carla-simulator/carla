@@ -14,7 +14,9 @@
 #include "Carla/Recorder/CarlaRecorderLightScene.h"
 #include "Carla/Recorder/CarlaRecorderLightVehicle.h"
 #include "Carla/Recorder/CarlaRecorderAnimVehicle.h"
+#include "Carla/Recorder/CarlaRecorderAnimVehicleWheels.h"
 #include "Carla/Recorder/CarlaRecorderAnimWalker.h"
+#include "Carla/Recorder/CarlaRecorderAnimBiker.h"
 #include "Carla/Recorder/CarlaRecorderCollision.h"
 #include "Carla/Recorder/CarlaRecorderEventAdd.h"
 #include "Carla/Recorder/CarlaRecorderEventDel.h"
@@ -23,8 +25,15 @@
 #include "Carla/Recorder/CarlaRecorderInfo.h"
 #include "Carla/Recorder/CarlaRecorderPosition.h"
 #include "Carla/Recorder/CarlaRecorderFrameCounter.h"
+#include "Carla/Recorder/CarlaRecorderState.h"
+#include "Carla/Actor/ActorDescription.h"
+#include "Carla/Lights/CarlaLight.h"
+#include "Carla/Traffic/TrafficLightBase.h"
+#include "Carla/Traffic/TrafficSignBase.h"
+
 
 #include <sstream>
+#include <unordered_map>
 
 class UCarlaEpisode;
 class FCarlaActor;
@@ -41,7 +50,9 @@ class FFrameData
   CarlaRecorderPositions Positions;
   CarlaRecorderStates States;
   CarlaRecorderAnimVehicles Vehicles;
+  CarlaRecorderAnimVehicleWheels Wheels;
   CarlaRecorderAnimWalkers Walkers;
+  CarlaRecorderAnimBikers Bikers;
   CarlaRecorderLightVehicles LightVehicles;
   CarlaRecorderLightScenes LightScenes;
   CarlaRecorderActorsKinematics Kinematics;
@@ -89,7 +100,9 @@ private:
   void AddPosition(const CarlaRecorderPosition &Position);
   void AddState(const CarlaRecorderStateTrafficLight &State);
   void AddAnimVehicle(const CarlaRecorderAnimVehicle &Vehicle);
+  void AddAnimVehicleWheels(const CarlaRecorderAnimWheels &VehicleWheels);
   void AddAnimWalker(const CarlaRecorderAnimWalker &Walker);
+  void AddAnimBiker(const CarlaRecorderAnimBiker &Biker);
   void AddLightVehicle(const CarlaRecorderLightVehicle &LightVehicle);
   void AddEventLightSceneChanged(const UCarlaLight* Light);
   void AddKinematics(const CarlaRecorderKinematics &ActorKinematics);
@@ -100,7 +113,9 @@ private:
 
   void AddActorPosition(FCarlaActor *CarlaActor);
   void AddWalkerAnimation(FCarlaActor *CarlaActor);
+  void AddBikerAnimation(FCarlaActor *CarlaActor);
   void AddVehicleAnimation(FCarlaActor *CarlaActor);
+  void AddVehicleWheelsAnimation(FCarlaActor *CarlaActor);
   void AddTrafficLightState(FCarlaActor *CarlaActor);
   void AddVehicleLight(FCarlaActor *CarlaActor);
   void AddActorKinematics(FCarlaActor *CarlaActor);
@@ -139,6 +154,10 @@ private:
   void ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle);
   // set the animation for walkers
   void ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker);
+  // set the animation for Vehicles Wheels
+  void ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels Vehicle);
+  // set the animation for bikers
+  void ProcessReplayerAnimBiker(CarlaRecorderAnimBiker Biker);
   // set the vehicle light
   void ProcessReplayerLightVehicle(CarlaRecorderLightVehicle LightVehicle);
   // set scene lights

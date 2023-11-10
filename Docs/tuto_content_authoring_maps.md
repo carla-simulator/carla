@@ -4,7 +4,9 @@ CARLA comes with a generous compliment of assets for creating driving simulation
 
 In this tutorial we will cover the process of creating a simple map for use with CARLA. We will use two software packages to create parts of the map. We will create the road network using [__RoadRunner__](https://es.mathworks.com/products/roadrunner.html) and then add assets to the map through the [__Unreal Editor__](https://www.unrealengine.com/en-US/features/the-unreal-editor).
 
-* __[Prerequisites](#prerequisites)__   
+* __[Prerequisites](#prerequisites)__  
+* __[Large maps](#large-maps)__
+* __[Digital Twin Tool](#digital-twin-tool)__
 * __[RoadRunner](#create-a-road-network-using-roadrunner)__  
 * __[Importing into CARLA](#importing-your-road-network-into-carla)__
 * __[Importing assets](#importing-assets-and-adding-them-to-the-map)__
@@ -27,6 +29,13 @@ In this tutorial we will cover the process of creating a simple map for use with
 
 To follow this guide, you will need to build CARLA from source, so that you may use the Unreal Editor. Follow the [__build instructions__](build_carla.md) for your relevant operating system. You will also need a licensed copy of RoadRunner. You may also need a 3D modelling application such as Maya, 3DS Max or Blender to create 3D assets for your custom maps. You should ensure you have completed all the steps to build CARLA and ensure that the Unreal Editor is working, this could take some time to build the application. If you want to create 3D assets for your map, you should use an appropriate 3D design application such as Blender, Maya, 3DsMax or Modo. 
 
+## Large Maps
+
+The following text details the procedures for creating and decorating a standard map. From version 0.9.12, CARLA has the Large Maps functionality. Large maps are bigger in scale than standard maps, and can be up to 100 km<sup>2</sup> in size. Large maps work in a slightly different way to standard maps, because of hardware limitations, even in high end graphics cards. Large maps are split up into tiles, and only the tiles needed immediately (i.e. those closest to the Ego vehicle) are loaded during the simulation. Other tiles sit dormant until the data is needed. This facilitates the highest performance for CARLA simulations. Most of the details that follow are similar when building a Large Map, but there are some additional steps. Please follow [this guide](content_authoring_large_maps.md) to build a Large Map for CARLA.
+
+## Digital Twin Tool
+
+CARLA offers a procedural map generation tool, which ingests road network data from OpenStreetMap and decorates the map procedurally with buildings and vegetation. Read about how to use the tool [here](adv_digital_twin.md).
 
 ## Create a road network using RoadRunner
 
@@ -37,6 +46,22 @@ Open RoadRunner and create a new scene. Choose the Road Plan Tool and right clic
 For the purpose of this tutorial we use a simple oval road with a junction in the middle. For building more advanced networks please refer to the [__roadrunner documentation__](https://es.mathworks.com/products/roadrunner.html).
 
 ![roadrunner_road](img/tuto_content_authoring_maps/simple_crossroads.png)
+
+Once you have made your map in RoadRunner you will be able to export it. Be aware that __the road layout cannot be modified after it has been exported.__ Before exporting, ensure that:
+
+- The map is centered at (0,0) to ensure the map can be visualized correctly in Unreal Engine.
+- The map definition is correct.
+- The map validation is correct, paying close attention to connections and geometries.
+
+
+>>>>![CheckGeometry](../img/check_geometry.jpg)
+
+Once the map is ready, click on the `OpenDRIVE Preview Tool` button to visualize the OpenDRIVE road network and give everything one last check.
+
+>>>>![checkopen](../img/check_open.jpg)
+
+!!! note
+    _OpenDrive Preview Tool_ makes it easier to test the integrity of the map. If there are any errors with junctions, click on `Maneuver Tool`, and `Rebuild Maneuver Roads`.
 
 Once you have created your desired road network, in the RoadRunner menu bar choose `File > Export > Carla (.fbx, .xodr, .rrdata, .xml)` and export to an appropriate location. 
 
