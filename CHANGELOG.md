@@ -1,6 +1,7 @@
 ## CARLA 0.9.15
 
   * Added Digital Twins feature version 0.1. Now you can create your own map based on OpenStreetMaps
+  * Added compatibility with SymReady Assets, using NVIDIA Omniverse
   * Added new maps: Town13 (is a large map) and Town15
   * The spectator will be used to load tiles and actor in Large Maps when no other actors with the rolename 'ego_vehicle' or 'hero' are present. Added the `spectator_as_ego` to the `carla.WorldSettings()` to allow users to disable this behavior.
   * Add keyword arguments for `carla.TrafficManager` Python API functions
