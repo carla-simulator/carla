@@ -34,8 +34,9 @@ BUILD_OPTION_RELEASE=false
 BUILD_OPTION_DUMMY=false
 BUILD_RSS_VARIANT=false
 USE_PYTORCH=false
+USE_ROS2=false
 
-OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss,pytorch,carsim -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss,pytorch,carsim,ros2 -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -66,6 +67,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --pytorch )
       USE_PYTORCH=true;
+      shift ;;
+    --ros2 )
+      USE_ROS2=true;
       shift ;;
     --rss )
       BUILD_RSS_VARIANT=true;
@@ -132,6 +136,10 @@ function build_libcarla {
   elif [ $1 == Pytorch ] ; then
     M_TOOLCHAIN=${LIBSTDCPP_TOOLCHAIN_FILE}
     M_BUILD_FOLDER=${LIBCARLA_BUILD_PYTORCH_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
+    M_INSTALL_FOLDER=${LIBCARLA_INSTALL_SERVER_FOLDER}
+  elif [ $1 == ros2 ] ; then
+    M_TOOLCHAIN=${LIBSTDCPP_TOOLCHAIN_FILE}
+    M_BUILD_FOLDER=${LIBCARLA_FASTDDS_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
     M_INSTALL_FOLDER=${LIBCARLA_INSTALL_SERVER_FOLDER}
   elif [ $1 == ClientRSS ] ; then
     BUILD_TYPE='Client'
@@ -208,6 +216,10 @@ if { ${BUILD_SERVER} && ${BUILD_OPTION_RELEASE}; }; then
   build_libcarla Server Release
   if ${USE_PYTORCH} ; then
     build_libcarla Pytorch Release
+  fi
+
+  if ${USE_ROS2} ; then
+    build_libcarla ros2 Release
   fi
 
 fi
