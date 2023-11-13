@@ -62,7 +62,7 @@ namespace tcp {
           boost::asio::post(_strand.context(), [=]() { callback(self); });
         } else {
           log_error("session", _session_id, ": error retrieving stream id :", ec.message());
-          CloseNow();
+          CloseNow(ec);
         }
       };
 
@@ -93,7 +93,7 @@ namespace tcp {
           // ignore this message
           log_debug("session", _session_id, ": connection too slow: message discarded");
           return;
-        }      
+        }
       }
       _is_writing = true;
 
@@ -101,7 +101,7 @@ namespace tcp {
         _is_writing = false;
         if (ec) {
           log_info("session", _session_id, ": error sending data :", ec.message());
-          CloseNow();
+          CloseNow(ec);
         } else {
           DEBUG_ONLY(log_debug("session", _session_id, ": successfully sent", bytes, "bytes"));
           DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type) + message->size());
@@ -137,12 +137,15 @@ namespace tcp {
     }
   }
 
-  void ServerSession::CloseNow() {
+  void ServerSession::CloseNow(boost::system::error_code ec) {
     _deadline.cancel();
-    if (_socket.is_open()) {
-      boost::system::error_code ec;
-      _socket.shutdown(boost::asio::socket_base::shutdown_both, ec);
-      _socket.close();
+    if (!ec)
+    {
+      if (_socket.is_open()) {
+        boost::system::error_code ec2;
+        _socket.shutdown(boost::asio::socket_base::shutdown_both, ec2);
+        _socket.close();
+      }
     }
     _on_closed(shared_from_this());
     log_debug("session", _session_id, "closed");

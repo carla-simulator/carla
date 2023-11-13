@@ -22,9 +22,13 @@ static void SetTimeout(carla::client::Client &client, double seconds) {
 }
 
 static auto GetAvailableMaps(const carla::client::Client &self) {
-  carla::PythonUtil::ReleaseGIL unlock;
   boost::python::list result;
-  for (const auto &str : self.GetAvailableMaps()) {
+  std::vector<std::string> maps;
+  {
+    carla::PythonUtil::ReleaseGIL unlock;
+    maps = self.GetAvailableMaps();
+  }
+  for (const auto &str : maps) {
     result.append(str);
   }
   return result;
@@ -198,6 +202,7 @@ void export_client() {
     .def("request_file", &cc::Client::RequestFile, (arg("name")))
     .def("reload_world", CONST_CALL_WITHOUT_GIL_1(cc::Client, ReloadWorld, bool), (arg("reset_settings")=true))
     .def("load_world", CONST_CALL_WITHOUT_GIL_3(cc::Client, LoadWorld, std::string, bool, rpc::MapLayer), (arg("map_name"), arg("reset_settings")=true, arg("map_layers")=rpc::MapLayer::All))
+    .def("load_world_if_different", &cc::Client::LoadWorldIfDifferent, (arg("map_name"), arg("reset_settings")=true, arg("map_layers")=rpc::MapLayer::All))
     .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_3(cc::Client, GenerateOpenDriveWorld, std::string,
         rpc::OpendriveGenerationParameters, bool), (arg("opendrive"), arg("parameters")=rpc::OpendriveGenerationParameters(),
         arg("reset_settings")=true))

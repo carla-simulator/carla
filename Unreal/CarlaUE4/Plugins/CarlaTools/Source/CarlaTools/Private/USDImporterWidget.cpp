@@ -30,6 +30,7 @@
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "BlueprintEditor.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "EditorStaticMeshLibrary.h"
 
 
 void UUSDImporterWidget::ImportUSDProp(
@@ -64,14 +65,14 @@ void UUSDImporterWidget::ImportUSDVehicle(
   }
   // Import Wheel and suspension data
   TArray<FUSDCARLAWheelData> WheelsData = UUSDCARLAInterface::GetUSDWheelData(USDPath);
-  auto CreateVehicleWheel = 
-      [&](const FUSDCARLAWheelData& WheelData, 
+  auto CreateVehicleWheel =
+      [&](const FUSDCARLAWheelData& WheelData,
          TSubclassOf<UVehicleWheel> TemplateClass,
-         const FString &PackagePathName) 
+         const FString &PackagePathName)
       -> TSubclassOf<UVehicleWheel>
   {
     // Get a reference to the editor subsystem
-    constexpr float MToCM = 0.01f;
+    constexpr float MToCM = 100.f;
     constexpr float RadToDeg = 360.f/3.14159265359f;
     FString BlueprintName =  FPaths::GetBaseFilename(PackagePathName);
     FString BlueprintPath = FPaths::GetPath(PackagePathName);
@@ -161,7 +162,7 @@ bool UUSDImporterWidget::MergeStaticMeshComponents(
 }
 
 TArray<UObject*> UUSDImporterWidget::MergeMeshComponents(
-    TArray<UPrimitiveComponent*> ComponentsToMerge, 
+    TArray<UPrimitiveComponent*> ComponentsToMerge,
     const FString& DestMesh)
 {
   if(!ComponentsToMerge.Num())
@@ -275,7 +276,7 @@ FVehicleMeshParts UUSDImporterWidget::SplitVehicleParts(
     }
     else if (ComponentName.Contains("Collision"))
     {
-      
+
     }
     else
     {
@@ -286,7 +287,7 @@ FVehicleMeshParts UUSDImporterWidget::SplitVehicleParts(
       }
     }
 
-    if(ComponentName.Contains("glass") || 
+    if(ComponentName.Contains("glass") ||
        IsChildrenOf(Component, "glass"))
     {
       GlassComponents.Add(Component);
@@ -330,7 +331,7 @@ FMergedVehicleMeshParts UUSDImporterWidget::GenerateVehicleMeshes(
     const FVehicleMeshParts& VehicleMeshParts, const FString& DestPath)
 {
   FMergedVehicleMeshParts Result;
-  auto MergePart = 
+  auto MergePart =
       [](TArray<UPrimitiveComponent*> Components, const FString& DestMeshPath)
       -> UStaticMesh*
       {
@@ -430,6 +431,7 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     UWorld* World,
     UClass* BaseClass,
     USkeletalMesh* NewSkeletalMesh,
+    UPhysicsAsset* NewPhysicsAsset,
     const FString &DestPath, 
     const FMergedVehicleMeshParts& VehicleMeshes,
     const FWheelTemplates& WheelTemplates)
@@ -468,11 +470,11 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
   }
 
   // Get the skeletal mesh and modify it to match the vehicle parameters
-  USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>( 
+  USkeletalMeshComponent* SkeletalMeshComponent = Cast<USkeletalMeshComponent>(
       TemplateActor->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
   if(!SkeletalMeshComponent)
   {
-    UE_LOG(LogCarlaTools, Log, TEXT("Skeletal mesh component not found")); 
+    UE_LOG(LogCarlaTools, Log, TEXT("Skeletal mesh component not found"));
     return nullptr;
   }
   USkeletalMesh* SkeletalMesh = SkeletalMeshComponent->SkeletalMesh;
@@ -506,7 +508,7 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     ULocalLightComponent * LightComponent = NewObject<ULocalLightComponent>(TemplateActor, LightClass, FName(*FixedLightName));
     LightComponent->RegisterComponent();
     LightComponent->AttachToComponent(
-        TemplateActor->GetRootComponent(), 
+        TemplateActor->GetRootComponent(),
         FAttachmentTransformRules::KeepRelativeTransform);
     LightComponent->SetRelativeLocation(Light.Location); // Set the position of the light relative to the actor
     LightComponent->SetIntensityUnits(ELightUnits::Lumens);
@@ -514,7 +516,7 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     LightComponent->SetVolumetricScatteringIntensity(0.f);
     if (FixedLightName.Contains("high_beam"))
     {
-      USpotLightComponent* SpotLight = 
+      USpotLightComponent* SpotLight =
           Cast<USpotLightComponent>(LightComponent);
       SpotLight->SetRelativeRotation(FRotator(-1.5f, 0, 0));
       SpotLight->SetAttenuationRadius(5000.f);
@@ -525,7 +527,7 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     }
     else if (FixedLightName.Contains("low_beam"))
     {
-      USpotLightComponent* SpotLight = 
+      USpotLightComponent* SpotLight =
           Cast<USpotLightComponent>(LightComponent);
       LightComponent->SetRelativeRotation(FRotator(-3.f, 0, 0));
       LightComponent->SetAttenuationRadius(3000.f);
@@ -538,6 +540,16 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     TemplateActor->AddInstanceComponent(LightComponent);
     UE_LOG(LogCarlaTools, Log, TEXT("Spawn Light %s, %s, %s"), *Light.Name, *Light.Location.ToString(), *Light.Color.ToString());
   }
+  // set the wheel radius
+  UVehicleWheel* WheelDefault;
+  WheelDefault = WheelTemplates.WheelFL->GetDefaultObject<UVehicleWheel>();
+  WheelDefault->ShapeRadius = VehicleMeshes.WheelFL->GetBounds().SphereRadius;
+  WheelDefault = WheelTemplates.WheelFR->GetDefaultObject<UVehicleWheel>();
+  WheelDefault->ShapeRadius = VehicleMeshes.WheelFR->GetBounds().SphereRadius;
+  WheelDefault = WheelTemplates.WheelRL->GetDefaultObject<UVehicleWheel>();
+  WheelDefault->ShapeRadius = VehicleMeshes.WheelRL->GetBounds().SphereRadius;
+  WheelDefault = WheelTemplates.WheelRR->GetDefaultObject<UVehicleWheel>();
+  WheelDefault->ShapeRadius = VehicleMeshes.WheelRR->GetBounds().SphereRadius;
   // assign generated wheel types
   TArray<FWheelSetup> WheelSetups;
   FWheelSetup Setup;
@@ -553,11 +565,11 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
   Setup.WheelClass = WheelTemplates.WheelRR;
   Setup.BoneName = "Wheel_Rear_Right";
   WheelSetups.Add(Setup);
-  ACarlaWheeledVehicle* CarlaVehicle = 
+  ACarlaWheeledVehicle* CarlaVehicle =
       Cast<ACarlaWheeledVehicle>(TemplateActor);
   if(CarlaVehicle)
   {
-    UWheeledVehicleMovementComponent4W* MovementComponent = 
+    UWheeledVehicleMovementComponent4W* MovementComponent =
         Cast<UWheeledVehicleMovementComponent4W>(
             CarlaVehicle->GetVehicleMovementComponent());
     MovementComponent->WheelSetups = WheelSetups;
@@ -566,7 +578,12 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
   {
     UE_LOG(LogCarlaTools, Error, TEXT("Null CarlaVehicle"));
   }
-
+  // Set the vehicle collision in the new physicsasset object
+  UEditorStaticMeshLibrary::AddSimpleCollisions(
+      VehicleMeshes.Body, EScriptingCollisionShapeType::NDOP26);
+  CopyCollisionToPhysicsAsset(NewPhysicsAsset, VehicleMeshes.Body);
+  // assign the physics asset to the skeletal mesh
+  NewSkeletalMesh->PhysicsAsset = NewPhysicsAsset;
   // Create the new blueprint vehicle
   FKismetEditorUtilities::FCreateBlueprintFromActorParams Params;
   Params.bReplaceActor = false;
@@ -582,12 +599,12 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
 }
 
 bool UUSDImporterWidget::EditSkeletalMeshBones(
-    USkeletalMesh* NewSkeletalMesh, 
+    USkeletalMesh* NewSkeletalMesh,
     const TMap<FString, FTransform> &NewBoneTransforms)
 {
   if(!NewSkeletalMesh)
   {
-    UE_LOG(LogCarlaTools, Log, TEXT("Skeletal mesh invalid"));  
+    UE_LOG(LogCarlaTools, Log, TEXT("Skeletal mesh invalid"));
     return false;
   }
   FReferenceSkeleton& ReferenceSkeleton = NewSkeletalMesh->RefSkeleton;
@@ -599,7 +616,7 @@ bool UUSDImporterWidget::EditSkeletalMeshBones(
     int32 BoneIdx = SkeletonModifier.FindBoneIndex(FName(*BoneName));
     if (BoneIdx == INDEX_NONE)
     {
-      UE_LOG(LogCarlaTools, Log, TEXT("Bone %s not found"), *BoneName);  
+      UE_LOG(LogCarlaTools, Log, TEXT("Bone %s not found"), *BoneName);
     }
     UE_LOG(LogCarlaTools, Log, TEXT("Bone %s corresponds to index %d"), *BoneName, BoneIdx);
     SkeletonModifier.UpdateRefPoseTransform(BoneIdx, BoneTransform);
@@ -608,7 +625,19 @@ bool UUSDImporterWidget::EditSkeletalMeshBones(
   NewSkeletalMesh->MarkPackageDirty();
   UPackage* Package = NewSkeletalMesh->GetOutermost();
   return UPackage::SavePackage(
-      Package, NewSkeletalMesh, 
-      EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, 
+      Package, NewSkeletalMesh,
+      EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
       *(Package->GetName()), GError, nullptr, true, true, SAVE_NoError);
+}
+
+void UUSDImporterWidget::CopyCollisionToPhysicsAsset(
+    UPhysicsAsset* PhysicsAssetToEdit, UStaticMesh* StaticMesh)
+{
+  UE_LOG(LogCarlaTools, Log, TEXT("Num bodysetups %d"), PhysicsAssetToEdit->SkeletalBodySetups.Num());
+  UBodySetup* BodySetupPhysicsAsset = 
+      PhysicsAssetToEdit->SkeletalBodySetups[
+          PhysicsAssetToEdit->FindBodyIndex(FName("Vehicle_Base"))];
+  UBodySetup* BodySetupStaticMesh = StaticMesh->BodySetup;
+  BodySetupPhysicsAsset->AggGeom = BodySetupStaticMesh->AggGeom;
+
 }

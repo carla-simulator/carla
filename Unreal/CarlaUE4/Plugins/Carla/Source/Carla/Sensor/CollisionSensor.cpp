@@ -77,7 +77,7 @@ void ACollisionSensor::OnCollisionEvent(
   const auto &Episode = GetEpisode();
   constexpr float TO_METERS = 1e-2;
   NormalImpulse *= TO_METERS;
-  GetDataStream(*this).Send(
+  GetDataStream(*this).SerializeAndSend(
       *this,
       Episode.SerializeActor(Actor),
       Episode.SerializeActor(OtherActor),
@@ -88,4 +88,24 @@ void ACollisionSensor::OnCollisionEvent(
   }
 
   CollisionRegistry.emplace_back(CurrentFrame, Actor, OtherActor);
+
+  // ROS2
+  #if defined(WITH_ROS2)
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (ROS2->IsEnabled())
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
+    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
+    AActor* ParentActor = GetAttachParentActor();
+    if (ParentActor)
+    {
+      FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
+      ROS2->ProcessDataFromCollisionSensor(0, StreamId, LocalTransformRelativeToParent, OtherActor->GetUniqueID(), carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z}, this);
+    }
+    else
+    {
+      ROS2->ProcessDataFromCollisionSensor(0, StreamId, GetActorTransform(), OtherActor->GetUniqueID(), carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z}, this);
+    }
+  }
+  #endif
 }
