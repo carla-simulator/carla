@@ -1,11 +1,11 @@
 # SimReady content with NVIDIA Omniverse
 
-NVIDIA's [__SimReady__](#simready-content-from-nvidias-omniverse) specification supports the preparation of __3D content that is purpose-built for simulation__ to help streamline content creation pipelines for simulating 3D virtual environments for machine learning purposes in robotics and autonomous driving. Through the Omniverse Unreal Engine plugin now integrated into CARLA users can import, in just a few clicks, SimReady content such as vehicles already configured with working lights, doors and wheels and props ready for use instantaneously to decorate CARLA maps. CARLA's Omniverse integration boasts to significantly accelerate your environment building pipeline and opens the door to a whole world of applications in the [__Omniverse ecosystem__](https://www.nvidia.com/en-us/omniverse/ecosystem/). 
+NVIDIA's [__SimReady__](https://developer.nvidia.com/omniverse/simready-assets) specification supports the preparation of __3D content that is purpose-built for simulation__ to help streamline content creation pipelines for simulating 3D virtual environments for machine learning purposes in robotics and autonomous driving. Through the Omniverse Unreal Engine plugin now integrated into CARLA users can import, in just a few clicks, SimReady content such as vehicles already configured with working lights, doors and wheels and props ready for use instantaneously to decorate CARLA maps. CARLA's Omniverse integration boasts to significantly accelerate your environment building pipeline and opens the door to a whole world of applications in the [__Omniverse ecosystem__](https://www.nvidia.com/en-us/omniverse/ecosystem/). 
 
-!! note
+!!! note
     The Omniverse Unreal Engine Connector is currently only available in Windows.
 
-Follow these stesps to start using Omniverse and using SimReady content in CARLA:
+Follow these steps to start using Omniverse and using SimReady content in CARLA:
 
 Before anything else, you should first [install NVIDIA Omniverse](https://docs.omniverse.nvidia.com/install-guide/latest/index.html)
 
