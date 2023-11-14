@@ -133,12 +133,10 @@ def get_speed_of_vehicle_ahead(ego_vehicle):
 def get_curvature_at_location(vehicle_location):
     # Find the nearest waypoint corresponding to the vehicle's location
     waypoint = map.get_waypoint(vehicle_location)
+    # Get the curvature at the waypoint
+    
 
-    # Access the curvature information from the waypoint in radians per meter
-    curvature_radians_per_meter = waypoint.lane_change if waypoint.lane_change is not None else 0.0
-
-    # Convert curvature to degrees per meter
-    curvature_degrees_per_meter = curvature_radians_per_meter # * (180.0 / math.pi)
+    
 
     return curvature_degrees_per_meter
 
