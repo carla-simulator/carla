@@ -63,3 +63,4 @@ Before anything else, you should first [install NVIDIA Omniverse](https://docs.o
 9. You should see the vehicle show up in the engine within the folder that you specified in the *Import destination* field
 10. Open another map scene (it may have opened a new scene with the imported data) a *Save Content* prompt should appear. Uncheck the *Untitled* scene, and click on *Save selected* to save new content
 11. The vehicle is now usable within CARLA and will be available through the Python API
+
