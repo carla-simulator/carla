@@ -5,6 +5,8 @@ import carla
 import time
 import numpy as np
 import pandas as pd
+from math import sin, radians, sqrt
+from itertools import product
 
 # Initialize CARLA client and connect to the simulator
 client = carla.Client('localhost', 2000)
@@ -18,7 +20,7 @@ map = world.get_map()
 ego_vehicle_bp = world.get_blueprint_library().find('vehicle.audi.a2')
 
 
-spawn_points = world.get_map().get_spawn_points()
+'''spawn_points = world.get_map().get_spawn_points()
 number_of_spawn_points = len(spawn_points)
 
 if 0 < number_of_spawn_points:
@@ -29,7 +31,27 @@ if 0 < number_of_spawn_points:
 else: 
     logging.warning('Could not find any spawn points')
 
+print(ego_vehicle.get_location())'''
+
+actor_list = []
+
+for actor in actor_list:
+    actor.destroy()
+actor_list = []
+
+
+blueprint_library = world.get_blueprint_library()
+spawn_points = world.get_map().get_spawn_points()
+print(world.get_actors())
+
+
+ego_vehicle = world.get_actor(31)
+#second_vehicle = world.get_actor(153)
 print(ego_vehicle.get_location())
+
+
+
+
 
  # Create a camera sensor and attach it to the ego vehicle
 camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
@@ -110,6 +132,7 @@ def get_lateral_acceleration(ego_vehicle, current_time, previous_time):
 
     return lateral_acceleration, current_yaw
 
+
 def get_dist_to_lane_center(ego_vehicle):
     ego_location = ego_vehicle.get_location()
     waypoint = world.get_map().get_waypoint(ego_location)
@@ -118,8 +141,31 @@ def get_dist_to_lane_center(ego_vehicle):
 
     return dist_to_lane_center
 
-def get_speed_of_vehicle_ahead(ego_vehicle):
+
+def get_speed_of_vehicle_ahead(ego_waypoint, max_distance=10):
     #camera_data = camera_sensor.listen()
+    actor_locations = [(get_speed(actor), map.get_waypoint(actor.get_location()).transform.location) for actor in world.get_actors()]
+    for i in range(1, max_distance + 1):
+        next_waypoint = ego_waypoint.next(i)[0]
+        for actor_speed, actor_location in actor_locations:
+            if actor_location.distance(next_waypoint.transform.location) < 1:
+                return actor_speed
+            
+    return None
+            
+
+def get_speed_of_vehicle_ahead_efficient(ego_waypoint, max_distance=10):
+    #camera_data = camera_sensor.listen()
+    actor_locations = [(get_speed(actor), map.get_waypoint(actor.get_location()).transform.location) for actor in world.get_actors()]
+
+    for i, actor_speed, actor_location in product(range(1, max_distance + 1), *zip(*actor_locations)):
+        next_waypoint = ego_waypoint.next(i)[0]
+        distance = actor_location.distance(next_waypoint.transform.location)
+        if distance < 1:
+            return actor_speed
+
+    # Return a default value if no valid speed is found
+    return None
     
     #TODO
 
@@ -134,13 +180,26 @@ def get_curvature_at_location(vehicle_location):
     # Find the nearest waypoint corresponding to the vehicle's location
     waypoint = map.get_waypoint(vehicle_location)
     # Get the curvature at the waypoint
-    
+    curvature_coeff = get_curvature_coeff(waypoint, 1)
 
-    
-
-    return curvature_degrees_per_meter
+    return curvature_coeff
 
 
+def get_curvature_coeff(ego_waypoint, route_distance):
+    previous_waypoint = ego_waypoint.previous(route_distance)[0]
+    next_waypoint = ego_waypoint.next(route_distance)[0]
+    _transform = next_waypoint.transform
+    _location, _rotation  = _transform.location, _transform.rotation
+    x1, y1 = _location.x, _location.y
+    yaw1 = _rotation.yaw
+
+    _transform = previous_waypoint.transform
+    _location, _rotation  = _transform.location, _transform.rotation
+    x2, y2 = _location.x, _location.y
+    yaw2 = _rotation.yaw
+
+    c = 2*sin(radians((yaw1-yaw2)/2)) / sqrt((x1-x2)**2 + (y1-y2)**2)
+    return c
 
 
 # Create an empty list to store the data as dictionaries
@@ -155,10 +214,10 @@ time_interval = 1.0 #for acceleration, in s
 
 try:
     # Set the ego vehicle on autopilot
-    ego_vehicle.set_autopilot(True)
+    #ego_vehicle.set_autopilot(True)
 
     while True:
-        follow_car(ego_vehicle, world)
+        #follow_car(ego_vehicle, world)
 
         #returns the current speed of the ego vehicle in m/s
         speed = get_speed(ego_vehicle)
@@ -172,7 +231,9 @@ try:
 
         dist_to_lane_center = get_dist_to_lane_center(ego_vehicle) #in m #TODO needs to be tested with manual car
 
-        speed_vehicle_ahead = get_speed_of_vehicle_ahead(ego_vehicle) #TODO
+        ego_location = ego_vehicle.get_location()
+        waypoint = world.get_map().get_waypoint(ego_location)
+        speed_vehicle_ahead = get_speed_of_vehicle_ahead(waypoint) #TODO
 
         # Get and print the curvature at the ego vehicle's location in degrees per meter
         curvature_degrees_per_meter = get_curvature_at_location(ego_vehicle.get_location()) #TODO
@@ -180,7 +241,6 @@ try:
         #print({'Speed (m/s)': speed, '\nAcceleration (m/s^2)': acceleration, '\nSteering Angle' : steering_angle, '\nLateral Acceleration' : lateral_acceleration})
         #print('\nCurvature at Ego Vehicle Location (Degrees/m): ' + str(curvature_degrees_per_meter))
      
-        print("\n")
 
 
         # Append the data as a dictionary to the list
@@ -188,6 +248,8 @@ try:
                           'Lateral Acceleration (m/s^2)\t\t' : lateral_acceleration, 'Distance to lane center (m)\t\t' : dist_to_lane_center,\
                             'Speed of vehicle ahead (m/s)\t\t' : speed_vehicle_ahead,\
                             'Road Curvature at Ego Vehicle Location (Degrees/m)\t\t' : curvature_degrees_per_meter})
+        
+        print(speed)
         
 
         previous_speed = speed  # Update the previous speed value
