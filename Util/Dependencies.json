@@ -1,66 +1,135 @@
 [
     {
         "name" : "boost",
-        "version" : "1.80.0",
-        "urls" :
+        "from" :
         [
-            "https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.zip",
-            "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_1_80_0.zip"
+            {
+                "url": "https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.zip",
+                "type": "download"
+            },
+            {
+                "url": "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_1_80_0.zip",
+                "type": "download"
+            }
         ]
     },
     {
         "name" : "chrono",
-        "version" : "6.0.0",
-        "urls" : [ "https://github.com/projectchrono/chrono.git" ]
+        "from" :
+        [
+            {
+                "url" : "https://github.com/projectchrono/chrono.git",
+                "type" : "git",
+                "tag-or-branch" : "8.0.0"
+            }
+        ]
     },
     {
         "name" : "eigen",
-        "version" : "3.3.7",
-        "urls" : [ "https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.zip" ]
+        "from" :
+        [
+            {
+                "url" : "https://gitlab.com/libeigen/eigen.git",
+                "type" : "git",
+                "branch" : "3.4.0"
+            }
+        ]
     },
     {
         "name" : "libpng",
-        "version" : "1.2.37",
-        "urls" : [ "http://downloads.sourceforge.net/gnuwin32/libpng-1.2.37-src.zip" ]
+        "from" :
+        [
+            {
+                "url" : "https://github.com/glennrp/libpng.git",
+                "type" : "git",
+                "tag-or-branch" : "v1.6.40"
+            }
+        ]
     },
     {
         "name" : "proj",
-        "version" : "7.2.1",
-        "urls" : [ "https://download.osgeo.org/proj/proj-7.2.1.tar.gz" ]
+        "from" :
+        [
+            {
+                "url" : "https://download.osgeo.org/proj/proj-7.2.1.tar.gz",
+                "type" : "download"
+            },
+            {
+                "url" : "https://github.com/madler/zlib.git",
+                "type" : "git"
+            }
+        ]
     },
     {
         "name" : "gtest",
-        "version" : "1.8.1",
-        "urls" : [ "https://github.com/google/googletest.git" ]
+        "from" :
+        [
+            {
+                "url" : "https://github.com/google/googletest.git",
+                "type" : "git",
+                "tag-or-branch" : "v1.14.0"
+            }
+        ]
     },
     {
         "name" : "zlib",
-        "version" : "latest",
-        "urls" :
+        "from" :
         [
-            "https://zlib.net/current/zlib.tar.gz"
+            {
+                "url" : "https://zlib.net/current/zlib.tar.gz",
+                "type" : "download"
+            }
         ]
     },
     {
         "name" : "xercesc",
-        "version" : "3.2.3",
-        "urls" :
+        "from" :
         [
-            "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.3.zip",
-            "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/xerces-c-3.2.3.zip"
+            {
+                "url" : "https://github.com/apache/xerces-c.git",
+                "type" : "git",
+                "tag-or-branch" : "v3.2.4"
+            },
+            {
+                "url" : "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.3.zip",
+                "type" : "download"
+            },
+            {
+                "url" : "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/xerces-c-3.2.3.zip",
+                "type" : "download"
+            }
         ]
     },
     {
         "name" : "sqlite",
-        "urls" : [ "https://www.sqlite.org/2021/sqlite-amalgamation-3340100.zip" ]
+        "from" :
+        [
+            {
+                "url" : "https://www.sqlite.org/2021/sqlite-amalgamation-3340100.zip",
+                "type" : "download"
+            }
+        ]
     },
     {
         "name" : "rpclib",
-        "version" : "v2.2.1_c5",
-        "urls" : [ "https://github.com/carla-simulator/rpclib.git" ]
+        "from" :
+        [
+            {
+                "url" : "https://github.com/rpclib/rpclib.git",
+                "type" : "git",
+                "tag-or-branch" : "v2.3.0"
+            }
+        ]
     },
     {
         "name" : "recast",
-        "urls" : [ "https://github.com/carla-simulator/recastnavigation.git" ]
+        "from" :
+        [
+            {
+                "url" : "https://github.com/recastnavigation/recastnavigation.git",
+                "type" : "git",
+                "tag-or-branch" : "1.6.0"
+            }
+        ]
     }
 ]
