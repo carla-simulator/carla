@@ -14,36 +14,39 @@ option (LIBCARLA_PYTORCH_ENABLE "Whether to enable pytorch." OFF)
 option (PYTHON_API "Whether to build the CARLA Python API." ON)
 option (LIBCARLA_CLIENT_RSS "Whether to enable RSS components (ad-rss-lib)" OFF)
 option (LIBCARLA_INSTALL "Whether to install LibCarla and all of its dependencies." ON)
-option (OSM_ENABLE "" OFF)
+option (OSM_ENABLE "" ON)
+
+set (CARLA_WORKSPACE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+set (CARLA_BUILD_PATH ${CMAKE_CURRENT_BINARY_DIR})
 
 set (LIBCARLA_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/LibCarla/source)
 set (LIBCARLA_THIRD_PARTY_SOURCE_PATH ${LIBCARLA_SOURCE_PATH}/third-party)
 set (PYTHONAPI_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/PythonAPI)
 
-set (BOOST_INCLUDE_PATH ${CMAKE_CURRENT_BINARY_DIR}/boost-install/include)
-set (BOOST_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/boost-install/lib)
-set (CHRONO_INCLUDE_PATH ${CMAKE_CURRENT_BINARY_DIR}/chrono-install/include)
-set (CHRONO_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/chrono-install/lib)
-set (EIGEN_INCLUDE_PATH ${CMAKE_CURRENT_BINARY_DIR}/eigen-install/include)
-set (EIGEN_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/eigen-install/lib)
-set (GOOGLETEST_INCLUDE_PATH ${CMAKE_CURRENT_BINARY_DIR}/gtest-install/include)
-set (GOOGLETEST_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/gtest-install/lib)
-set (LIBPNG_INCLUDE_PATH ${CMAKE_CURRENT_BINARY_DIR}/libpng-install/include)
-set (LIBPNG_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/libpng-install/lib)
-set (PROJ_INCLUDE_PATH ${CMAKE_CURRENT_BINARY_DIR}/proj-install/include)
-set (PROJ_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/proj-install/lib)
-set (RECAST_INCLUDE_PATH ${CMAKE_CURRENT_BINARY_DIR}/recast-install/include)
-set (RECAST_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/recast-install/lib)
-set (RPCLIB_INCLUDE_PATH ${CMAKE_CURRENT_BINARY_DIR}/rpclib-install/include)
-set (RPCLIB_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/rpclib-install/lib)
-set (SQLITE_INCLUDE_PATH ${CMAKE_CURRENT_BINARY_DIR}/sqlite-install/include)
-set (SQLITE_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/sqlite-install/lib)
-set (XERCESC_INCLUDE_PATH ${CMAKE_CURRENT_BINARY_DIR}/xercesc-install/include)
-set (XERCESC_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/xercesc-install/lib)
-set (ZLIB_INCLUDE_PATH ${CMAKE_CURRENT_BINARY_DIR}/zlib-install/include)
-set (ZLIB_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/zlib-install/lib)
-set (ZLIB_INCLUDE_PATH ${CMAKE_CURRENT_BINARY_DIR}/zlib-source)
-set (ZLIB_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/zlib-build)
+set (BOOST_INCLUDE_PATH ${CARLA_BUILD_PATH}/boost-install/include)
+set (BOOST_LIBRARY_PATH ${CARLA_BUILD_PATH}/boost-install/lib)
+set (CHRONO_INCLUDE_PATH ${CARLA_BUILD_PATH}/chrono-install/include)
+set (CHRONO_LIBRARY_PATH ${CARLA_BUILD_PATH}/chrono-install/lib)
+set (EIGEN_INCLUDE_PATH ${CARLA_BUILD_PATH}/eigen-install/include)
+set (EIGEN_LIBRARY_PATH ${CARLA_BUILD_PATH}/eigen-install/lib)
+set (GOOGLETEST_INCLUDE_PATH ${CARLA_BUILD_PATH}/gtest-install/include)
+set (GOOGLETEST_LIBRARY_PATH ${CARLA_BUILD_PATH}/gtest-install/lib)
+set (LIBPNG_INCLUDE_PATH ${CARLA_BUILD_PATH}/libpng-install/include)
+set (LIBPNG_LIBRARY_PATH ${CARLA_BUILD_PATH}/libpng-install/lib)
+set (PROJ_INCLUDE_PATH ${CARLA_BUILD_PATH}/proj-install/include)
+set (PROJ_LIBRARY_PATH ${CARLA_BUILD_PATH}/proj-install/lib)
+set (RECAST_INCLUDE_PATH ${CARLA_BUILD_PATH}/recast-install/include)
+set (RECAST_LIBRARY_PATH ${CARLA_BUILD_PATH}/recast-install/lib)
+set (RPCLIB_INCLUDE_PATH ${CARLA_BUILD_PATH}/rpclib-install/include)
+set (RPCLIB_LIBRARY_PATH ${CARLA_BUILD_PATH}/rpclib-install/lib)
+set (SQLITE_INCLUDE_PATH ${CARLA_BUILD_PATH}/sqlite-install/include)
+set (SQLITE_LIBRARY_PATH ${CARLA_BUILD_PATH}/sqlite-install/lib)
+set (XERCESC_INCLUDE_PATH ${CARLA_BUILD_PATH}/xercesc-install/include)
+set (XERCESC_LIBRARY_PATH ${CARLA_BUILD_PATH}/xercesc-install/lib)
+set (ZLIB_INCLUDE_PATH ${CARLA_BUILD_PATH}/zlib-install/include)
+set (ZLIB_LIBRARY_PATH ${CARLA_BUILD_PATH}/zlib-install/lib)
+set (ZLIB_INCLUDE_PATH ${CARLA_BUILD_PATH}/zlib-source)
+set (ZLIB_LIBRARY_PATH ${CARLA_BUILD_PATH}/zlib-build)
 
 add_compile_definitions (BOOST_ERROR_CODE_HEADER_ONLY)
 add_compile_definitions (LIBCARLA_IMAGE_WITH_PNG_SUPPORT)
@@ -54,17 +57,23 @@ if (WIN32)
     add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
 endif ()
 
+
+
 if (LIBCARLA_SERVER)
+
+    project (LibCarla-Server)
+
     set (LIBCARLA_SERVER_INCLUDE_PATHS
         ${LIBCARLA_SOURCE_PATH}
         ${BOOST_INCLUDE_PATH}
         ${RPCLIB_INCLUDE_PATH})
+
     add_compile_definitions (BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY)
-    add_compile_options (/EHsc)
     add_compile_definitions (ASIO_NO_EXCEPTIONS)
     add_compile_definitions (BOOST_NO_EXCEPTIONS)
     add_compile_definitions (LIBCARLA_NO_EXCEPTIONS)
     add_compile_definitions (PUGIXML_NO_EXCEPTIONS)
+
     file(GLOB LIBCARLA_SERVER_SOURCES
         ${LIBCARLA_SOURCE_PATH}/carla/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/Buffer.cpp
@@ -97,6 +106,7 @@ if (LIBCARLA_SERVER)
         ${LIBCARLA_SOURCE_PATH}/carla/streaming/low_level/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.cpp
+
         ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/odrSpiral/*.cpp
         ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/odrSpiral/*.h
         ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/moodycamel/*.cpp
@@ -104,18 +114,27 @@ if (LIBCARLA_SERVER)
         ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.cpp
         ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.hpp
     )
+
     add_library (LibCarla-Server STATIC ${LIBCARLA_SERVER_SOURCES})
+
+    target_compile_options (LibCarla-Server PRIVATE /EHsc)
     target_include_directories (LibCarla-Server PRIVATE ${LIBCARLA_SERVER_INCLUDE_PATHS})
+
 endif ()
 
+
+
 if (LIBCARLA_CLIENT)
+
     project (LibCarla-Client)
+
     set (LIBCARLA_CLIENT_INCLUDE_PATHS
         ${LIBCARLA_SOURCE_PATH}
         ${BOOST_INCLUDE_PATH}
         ${RPCLIB_INCLUDE_PATH}
         ${RECAST_INCLUDE_PATH}
         ${LIBPNG_INCLUDE_PATH})
+
     file (GLOB LIBCARLA_CLIENT_SOURCES
         ${LIBCARLA_SOURCE_PATH}/carla/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/*.cpp
@@ -176,16 +195,37 @@ if (LIBCARLA_CLIENT)
         ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.hpp
         ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.h
     )
+
     add_library (LibCarla-Client STATIC ${LIBCARLA_CLIENT_SOURCES})
+
     target_include_directories (LibCarla-Client PRIVATE ${LIBCARLA_CLIENT_INCLUDE_PATHS})
+
 endif ()
 
-if (LIBCARLA_INSTALL)
-    file (GLOB_RECURSE LIBCARLA_HEADERS ${LIBCARLA_SOURCE_PATH}/**/*.h,*.hpp)
-    set (LIBCARLA_HEADERS_RELATIVE)
-    foreach (HEADER LIBCARLA_HEADERS)
-        cmake_path (RELATIVE_PATH HEADER BASE_DIRECTORY ${LIBCARLA_SOURCE_PATH} OUTPUT_VARIABLE HEADER_RELATIVE)
-        list (APPEND LIBCARLA_HEADERS_RELATIVE HEADER_RELATIVE)
-    endforeach ()
-    install (FILES LIBCARLA_HEADERS DESTINATION LIBCARLA_HEADERS_RELATIVE)
+
+
+if (OSM_ENABLE)
+
+    project (OsmMapRenderer)
+
+    set (OSM_RENDERER_PATH ${CARLA_WORKSPACE_PATH}/osm-world-renderer)
+
+    add_compile_definitions (_USE_MATH_DEFINES)
+
+    add_library (
+        OsmRenderer
+        ${OSM_RENDERER_PATH}/OsmRenderer/src/OsmRenderer.cpp
+        ${OSM_RENDERER_PATH}/OsmRenderer/src/MapDrawer.cpp
+        ${OSM_RENDERER_PATH}/OsmRenderer/src/MapRasterizer.cpp)
+
+    target_include_directories (
+        OsmRenderer PUBLIC ${OSM_RENDERER_PATH}/OsmRenderer/include)
+
+    add_executable (osm-world-renderer ${OSM_RENDERER_PATH}/OsmRenderer/main.cpp)
+    target_link_libraries (osm-world-renderer PRIVATE OsmRenderer)
+    target_link_libraries (osm-world-renderer PRIVATE osmscout)
+    target_link_libraries (osm-world-renderer PRIVATE osmscout_map)
+    target_link_libraries (osm-world-renderer PRIVATE osmscout_map_svg)
+    target_link_libraries (osm-world-renderer PRIVATE lunasvg)
+
 endif ()

@@ -3,63 +3,49 @@ from argparse import ArgumentParser
 from pathlib import Path
 import subprocess, tarfile, zipfile, requests, psutil, shutil, glob, json, sys, os
 
-def TestForExecutablePresence(name):
-	if os.name == 'nt':
-		return subprocess.call(
-			[ 'where', name ],
-			stdout = subprocess.PIPE,
-			stderr = subprocess.PIPE,
-			shell = True) == 0
-	else:
-		return subprocess.call(
-			[ 'whereis', name ],
-			stdout = subprocess.PIPE,
-			stderr = subprocess.PIPE,
-			shell = True) == 0
-
-def FindExistingExecutable(candidates : list):
+def FindExecutable(candidates : list):
 	for e in candidates:
-		if TestForExecutablePresence(e):
+		ec = subprocess.call(
+			[ 'where' if os.name == 'nt' else 'whereis', e ],
+			stdout = subprocess.PIPE,
+			stderr = subprocess.PIPE,
+			shell = True)
+		if ec == 0:
 			return e
 	return None
 
-c_compiler_list = [
+c_compiler = FindExecutable([
 	'clang-cl',
 	'cl'
 ] if os.name == 'nt' else [
 	'clang',
 	'gcc'
-]
+])
 
-cpp_compiler_list = [
+cpp_compiler = FindExecutable([
 	'clang-cl',
 	'cl'
 ] if os.name == 'nt' else [
 	'clang++',
 	'g++'
-]
+])
 
-linker_list = [
+linker = FindExecutable([
 	'llvm-link',
 	'link'
 ] if os.name == 'nt' else [
 	'lld',
 	'ld'
-]
+])
 
-library_list = [
+lib = FindExecutable([
 	'llvm-lib',
 	'lib',
 	'llvm-ar'
 ] if os.name == 'nt' else [
 	'llvm-ar',
 	'ar'
-]
-
-c_compiler = FindExistingExecutable(c_compiler_list)
-cpp_compiler = FindExistingExecutable(cpp_compiler_list)
-linker = FindExistingExecutable(linker_list)
-lib = FindExistingExecutable(library_list)
+])
 
 # Basic paths
 workspace_path = Path(__file__).parent.resolve()
@@ -119,25 +105,174 @@ parallelism = psutil.cpu_count(logical = True)
 force_sequential = False
 cmake_generator = 'Ninja'
 
-readthedocs_build_url = 'http://carla.readthedocs.io/en/latest/' + (
-	'how_to_build_on_windows/' if os.name == "nt" else 'build_linux/'
-)
-
-error_message = (
-	f'\n'
-	f'Ok, an error ocurred, don\'t panic!\n'
-	f'We have different platforms where you can find some help:\n'
-	f'\n'
-	f'- Make sure you have read the documentation:\n'
-	f'    {readthedocs_build_url}\n'
-	f'\n'
-	f'- If the problem persists, submit an issue on our GitHub page:\n'
-	f'    https://github.com/carla-simulator/carla/issues\n'
-	f'\n'
-	f'- Or just use our Discord server!\n'
-	f'    We\'ll be glad to help you there:\n'
-	f'    https://discord.gg/42KJdRj\n'
-)
+dependencies = {
+    'boost' :
+	{
+        'from' :
+        [
+            {
+                'url': 'https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.zip',
+                'type': 'download'
+            },
+            {
+                'url': 'https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_1_83_0.zip',
+                'type': 'download'
+            }
+        ]
+    },
+    'chrono' :
+	{
+        'from' :
+        [
+            {
+                'url' : 'https://github.com/projectchrono/chrono.git',
+                'type' : 'git',
+                'tag-or-branch' : '8.0.0'
+            }
+        ]
+    },
+    'eigen' :
+	{
+        'from' :
+        [
+            {
+                'url' : 'https://gitlab.com/libeigen/eigen.git',
+                'type' : 'git',
+                'branch' : '3.4.0'
+            }
+        ]
+    },
+    'libpng' :
+	{
+        'from' :
+        [
+            {
+                'url' : 'https://github.com/glennrp/libpng.git',
+                'type' : 'git',
+                'tag-or-branch' : 'v1.6.40'
+            }
+        ]
+    },
+    'proj' :
+	{
+        'from' :
+        [
+            {
+                'url' : 'https://download.osgeo.org/proj/proj-7.2.1.tar.gz',
+                'type' : 'download'
+            },
+            {
+                'url' : 'https://github.com/madler/zlib.git',
+                'type' : 'git'
+            }
+        ]
+    },
+    'gtest' :
+	{
+        'from' :
+        [
+            {
+                'url' : 'https://github.com/google/googletest.git',
+                'type' : 'git',
+                'tag-or-branch' : 'v1.14.0'
+            }
+        ]
+    },
+    'zlib' :
+	{
+        'from' :
+        [
+            {
+                'url' : 'https://zlib.net/current/zlib.tar.gz',
+                'type' : 'download'
+            }
+        ]
+    },
+    'xercesc' :
+	{
+        'from' :
+        [
+            {
+                'url' : 'https://github.com/apache/xerces-c.git',
+                'type' : 'git',
+                'tag-or-branch' : 'v3.2.4'
+            },
+            {
+                'url' : 'https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.3.zip',
+                'type' : 'download'
+            },
+            {
+                'url' : 'https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/xerces-c-3.2.3.zip',
+                'type' : 'download'
+            }
+        ]
+    },
+    'sqlite' :
+	{
+        'from' :
+        [
+            {
+                'url' : 'https://www.sqlite.org/2021/sqlite-amalgamation-3340100.zip',
+                'type' : 'download'
+            }
+        ]
+    },
+    'rpclib' :
+	{
+        'from' :
+        [
+            {
+                'url' : 'https://github.com/rpclib/rpclib.git',
+                'type' : 'git',
+                'tag-or-branch' : 'v2.3.0'
+            }
+        ]
+    },
+    'recast' :
+	{
+        'from' :
+        [
+            {
+                'url' : 'https://github.com/recastnavigation/recastnavigation.git',
+                'type' : 'git',
+                'tag-or-branch' : '1.6.0'
+            }
+        ]
+    },
+	'libosmscout' :
+	{
+		'from' :
+		[
+			{
+				'url' : 'https://github.com/Framstag/libosmscout.git',
+				'type' : 'git',
+				'tag-or-branch' : 'master'
+			}
+		]
+	},
+	'lunasvg' :
+	{
+		'from' :
+		[
+			{
+				'url' : 'https://github.com/sammycage/lunasvg.git',
+				'type' : 'git',
+				'tag-or-branch' : 'master'
+			}
+		]
+	},
+	'sumo' :
+	{
+		'from' :
+		[
+			{
+				'url' : 'https://github.com/carla-simulator/sumo.git',
+				'type' : 'git',
+				'tag-or-branch' : 'carla_osm2odr'
+			}
+		]
+	}
+}
 
 
 
@@ -148,17 +283,17 @@ class ConfigureContext:
 		self.futures = []
 		self.arg = arg
 	
-	def Dispatch(self, callable, arg = None):
-		if arg is None:
+	def Dispatch(self, callable, *arg):
+		if len(arg) == 0:
 			if force_sequential:
 				callable()
 			else:
 				self.futures.append(self.pool.submit(callable))
 		else:
 			if force_sequential:
-				callable(arg)
+				callable(*arg)
 			else:
-				self.futures.append(self.pool.submit(callable, arg))
+				self.futures.append(self.pool.submit(callable, *arg))
 	
 	def Wait(self):
 		if len(self.futures) == 0 or force_sequential:
@@ -195,15 +330,34 @@ def LaunchSubprocess(
 			stderr = subprocess.PIPE,
 			cwd = working_directory)
 
+def LaunchSubprocessImmediate(
+		cmd : list,
+		display_output : bool = False,
+		working_directory : Path = None):
+	sp = LaunchSubprocess(cmd, display_output, working_directory)
+	try:
+		sp.check_returncode()
+	except:
+		stdout = sp.stdout.decode() if sp.stdout else ''
+		stderr = sp.stderr.decode() if sp.stderr else ''
+		error_message = (
+			f'Failed to run task {cmd}.\n'
+			f' stdout:\n'
+			f' {stdout}\n'
+			f' stderr:\n'
+			f' {stderr}\n'
+		)
+		print(error_message)
+
 
 
 def UpdateGitRepository(path : Path, url : str, branch : str = None):
 	if path.exists():
-		LaunchSubprocess([
+		LaunchSubprocessImmediate([
 			'git',
 			'-C', str(path),
 			'pull'
-		]).check_returncode()
+		])
 	else:
 		cmd = [
 			'git',
@@ -216,7 +370,7 @@ def UpdateGitRepository(path : Path, url : str, branch : str = None):
 			cmd.append(branch)
 		cmd.append(url)
 		cmd.append(path.stem)
-		LaunchSubprocess(cmd).check_returncode()
+		LaunchSubprocessImmediate(cmd)
 
 
 
@@ -256,8 +410,7 @@ def DownloadDependency(name : str, path : Path, url : str):
 
 
 
-def UpdateDependency(dep : dict):
-	name = dep['name']
+def UpdateDependency(name : str, dep : dict):
 	download_path = build_path / f'{name}-source'
 	sources = dep.get('from', [])
 	assert type(sources) == type([])
@@ -283,23 +436,23 @@ def UpdateDependency(dep : dict):
 
 def ConfigureLibCarlaClient():
 	cmd = [ 'cmake' ]
-	return LaunchSubprocess(cmd)
+	return LaunchSubprocessImmediate(cmd)
 
 
 
 def ConfigureLibCarlaServer():
 	cmd = [ 'cmake' ]
-	return LaunchSubprocess(cmd)
+	return LaunchSubprocessImmediate(cmd)
 
 
 
 def BuildLibCarlaClient():
-	ConfigureLibCarlaClient().check_returncode()
+	ConfigureLibCarlaClient()
 
 
 
 def BuildLibCarlaServer():
-	ConfigureLibCarlaServer().check_returncode()
+	ConfigureLibCarlaServer()
 
 
 
@@ -315,11 +468,11 @@ def BuildLibCarlaMain(c : ConfigureContext):
 
 def BuildCarlaUEMain():
 	if os.name == 'nt':
-		LaunchSubprocess([
+		LaunchSubprocessImmediate([
 			ue_workspace_path / 'Engine' / 'Build' / 'BatchFiles' / 'Build.bat',
 			'CarlaUE4', 'Win64', 'Development', '-WaitMutex', '-FromMsBuild',
 			carla_ue_path / 'CarlaUE4.uproject'
-		]).check_returncode()
+		])
 	else:
 		pass
 
@@ -364,26 +517,36 @@ def SetupUnrealEngine(c : ConfigureContext):
 
 
 def UpdateDependencies(c : ConfigureContext):
-	dependencies = []
-	with open(dependency_list_file_path, 'r') as file:
-		dependencies = json.load(file)
-	for dep in dependencies:
-		name = dep['name']
+	for name, dep in dependencies.items():
 		Log(f'Updating {name}.')
 		try:
-			c.Dispatch(UpdateDependency, dep)
+			c.Dispatch(UpdateDependency, name, dep)
 		except Exception as err:
 			Log(f'Failed to update "{name}": {err}')
 
 
 
+def GetDefaultCMakeConfigureCommandLine(source_path : Path, build_path : Path) -> list:
+	return [
+		'cmake',
+		'-G', cmake_generator,
+		'-S', source_path,
+		'-B', build_path,
+		'-DCMAKE_C_COMPILER=' + c_compiler,
+		'-DCMAKE_CXX_COMPILER=' + cpp_compiler,
+		'-DCMAKE_BUILD_TYPE=Release',
+		'-DCMAKE_CXX_FLAGS_RELEASE="/MD"'
+	]
+
+
+
 def DefaultBuild(path : Path):
-	LaunchSubprocess([ 'cmake', '--build', path ], display_output = True).check_returncode()
+	LaunchSubprocessImmediate([ 'cmake', '--build', path ], display_output = True)
 
 
 
 def DefaultInstall(path : Path, prefix : Path):
-	LaunchSubprocess([ 'cmake', '--install', path, '--prefix', prefix ], display_output = True).check_returncode()
+	LaunchSubprocessImmediate([ 'cmake', '--install', path, '--prefix', prefix ], display_output = True)
 
 
 
@@ -399,12 +562,12 @@ boost_b2_path = boost_source_path / f'b2{executable_extension}'
 def ConfigureBoost():
 	if boost_b2_path.exists():
 		return
-	LaunchSubprocess(
+	LaunchSubprocessImmediate(
 		[ boost_source_path / f'bootstrap{shell_script_extension}' ],
-		working_directory = boost_source_path).check_returncode()
+		working_directory = boost_source_path)
 
 def BuildBoost():
-	LaunchSubprocess([
+	LaunchSubprocessImmediate([
 		boost_b2_path,
 		f'-j{parallelism}',
 		'--layout=system',
@@ -424,7 +587,7 @@ def BuildBoost():
 		f'--libdir={boost_library_path}',
 		f'--includedir={boost_include_path}',
 		'install'
-	], display_output = True, working_directory = boost_source_path).check_returncode()
+	], display_output = True, working_directory = boost_source_path)
 
 
 
@@ -445,19 +608,13 @@ chrono_build_path = build_path / 'chrono-build'
 chrono_install_path = build_path / 'chrono-install'
 
 def ConfigureChrono():
-	LaunchSubprocess([
-		'cmake',
-		'-G', cmake_generator,
-		'-S', chrono_source_path,
-		'-B', chrono_build_path,
-		'-DCMAKE_C_COMPILER=' + c_compiler,
-		'-DCMAKE_CXX_COMPILER=' + cpp_compiler,
-		'-DCMAKE_BUILD_TYPE=Release',
-		'-DCMAKE_CXX_FLAGS_RELEASE="/MD"',
+	cmd = GetDefaultCMakeConfigureCommandLine(chrono_source_path, chrono_build_path)
+	cmd.extend([
 		f'-DEIGEN3_INCLUDE_DIR={eigen_source_path}',
 		'-DENABLE_MODULE_VEHICLE=ON',
 		chrono_source_path
-	]).check_returncode()
+	])
+	return LaunchSubprocessImmediate(cmd)
 
 def BuildChrono():
 	return DefaultBuild(chrono_build_path)
@@ -469,17 +626,11 @@ gtest_build_path = build_path / 'gtest-build'
 gtest_install_path = build_path / 'gtest-install'
 
 def ConfigureGTest():
-	LaunchSubprocess([
-		'cmake',
-		'-G', cmake_generator,
-		'-S', gtest_source_path,
-		'-B', gtest_build_path,
-		'-DCMAKE_C_COMPILER=' + c_compiler,
-		'-DCMAKE_CXX_COMPILER=' + cpp_compiler,
-		'-DCMAKE_BUILD_TYPE=Release',
-		'-DCMAKE_CXX_FLAGS_RELEASE="/MD"',
+	cmd = GetDefaultCMakeConfigureCommandLine(gtest_source_path, gtest_build_path)
+	cmd.extend([
 		gtest_source_path
-	]).check_returncode()
+	])
+	return LaunchSubprocessImmediate(cmd)
 
 def BuildGTest():
 	return DefaultBuild(gtest_build_path)
@@ -492,17 +643,11 @@ zlib_install_path = build_path / 'zlib-install'
 zlib_library_path = zlib_build_path / f'zlib{library_extension}'
 
 def ConfigureZLib():
-	LaunchSubprocess([
-		'cmake',
-		'-G', cmake_generator,
-		'-S', zlib_source_path,
-		'-B', zlib_build_path,
-		'-DCMAKE_C_COMPILER=' + c_compiler,
-		'-DCMAKE_CXX_COMPILER=' + cpp_compiler,
-		'-DCMAKE_BUILD_TYPE=Release',
-		'-DCMAKE_CXX_FLAGS_RELEASE="/MD"',
+	cmd = GetDefaultCMakeConfigureCommandLine(zlib_source_path, zlib_build_path)
+	cmd.extend([
 		zlib_source_path
-	]).check_returncode()
+	])
+	return LaunchSubprocessImmediate(cmd)
 
 def BuildZLib():
 	return DefaultBuild(zlib_build_path)
@@ -514,22 +659,16 @@ libpng_build_path = build_path / 'libpng-build'
 libpng_install_path = build_path / 'libpng-install'
 
 def ConfigureLibPNG():
-	LaunchSubprocess([
-		'cmake',
-		'-G', cmake_generator,
-		'-S', libpng_source_path,
-		'-B', libpng_build_path,
-		'-DCMAKE_C_COMPILER=' + c_compiler,
-		'-DCMAKE_CXX_COMPILER=' + cpp_compiler,
-		'-DCMAKE_BUILD_TYPE=Release',
-		'-DCMAKE_CXX_FLAGS_RELEASE="/MD"',
+	cmd = GetDefaultCMakeConfigureCommandLine(libpng_source_path, libpng_build_path)
+	cmd.extend([
 		'-DPNG_TESTS=OFF',
 		'-DPNG_TOOLS=OFF',
 		'-DPNG_BUILD_ZLIB=ON',
 		f'-DZLIB_INCLUDE_DIRS={zlib_source_path};{zlib_build_path}',
 		f'-DZLIB_LIBRARIES={zlib_library_path}',
 		libpng_source_path
-	]).check_returncode()
+	])
+	return LaunchSubprocessImmediate(cmd)
 
 def BuildLibPNG():
 	return DefaultBuild(libpng_build_path)
@@ -555,7 +694,7 @@ def BuildSQLite():
 			cmd.extend(sqlite_sources)
 			cmd.append('-o')
 			cmd.append(sqlite_executable_path)
-			LaunchSubprocess(cmd).check_returncode()
+			LaunchSubprocessImmediate(cmd)
 		if not sqlite_library_path.exists():
 			cmd = [
 				c_compiler,
@@ -564,7 +703,7 @@ def BuildSQLite():
 			cmd.extend(sqlite_sources)
 			cmd.append('-o')
 			cmd.append(sqlite_library_path)
-			LaunchSubprocess(cmd).check_returncode()
+			LaunchSubprocessImmediate(cmd)
 	else:
 		pass
 
@@ -575,15 +714,8 @@ proj_build_path = build_path / 'proj-build'
 proj_install_path = build_path / 'proj-install'
 
 def ConfigureProj():
-	LaunchSubprocess([
-		'cmake',
-		'-G', cmake_generator,
-		'-S', proj_source_path,
-		'-B', proj_build_path,
-		'-DCMAKE_C_COMPILER=' + c_compiler,
-		'-DCMAKE_CXX_COMPILER=' + cpp_compiler,
-		'-DCMAKE_BUILD_TYPE=Release',
-		'-DCMAKE_CXX_FLAGS_RELEASE="/MD"',
+	cmd = GetDefaultCMakeConfigureCommandLine(proj_source_path, proj_build_path)
+	cmd.extend([
 		f'-DSQLITE3_INCLUDE_DIR={sqlite_source_path}',
 		f'-DSQLITE3_LIBRARY={sqlite_library_path}',
 		f'-DEXE_SQLITE3={sqlite_executable_path}',
@@ -602,7 +734,8 @@ def ConfigureProj():
 		'-DBUILD_PROJ=OFF',
 		'-DBUILD_TESTING=OFF',
 		proj_source_path
-	]).check_returncode()
+	])
+	return LaunchSubprocessImmediate(cmd)
 
 def BuildProj():
 	return DefaultBuild(proj_build_path)
@@ -614,20 +747,14 @@ recast_build_path = build_path / 'recast-build'
 recast_install_path = build_path / 'recast-install'
 
 def ConfigureRecast():
-	LaunchSubprocess([
-		'cmake',
-		'-G', cmake_generator,
-		'-S', recast_source_path,
-		'-B', recast_build_path,
-		'-DCMAKE_C_COMPILER=' + c_compiler,
-		'-DCMAKE_CXX_COMPILER=' + cpp_compiler,
-		'-DCMAKE_CXX_FLAGS_RELEASE="/MD"',
-		'-DCMAKE_BUILD_TYPE=Release',
+	cmd = GetDefaultCMakeConfigureCommandLine(recast_source_path, recast_build_path)
+	cmd.extend([
 		'-DRECASTNAVIGATION_DEMO=OFF',
 		'-DRECASTNAVIGATION_TESTS=OFF',
 		'-DRECASTNAVIGATION_EXAMPLES=OFF',
 		recast_source_path
-	]).check_returncode()
+	])
+	return LaunchSubprocessImmediate(cmd)
 
 def BuildRecast():
 	return DefaultBuild(recast_build_path)
@@ -639,15 +766,8 @@ rpclib_build_path = build_path / 'rpclib-build'
 rpclib_install_path = build_path / 'rpclib-install'
 
 def ConfigureRPCLib():
-	LaunchSubprocess([
-		'cmake',
-		'-G', cmake_generator,
-		'-S', rpclib_source_path,
-		'-B', rpclib_build_path,
-		'-DCMAKE_C_COMPILER=' + c_compiler,
-		'-DCMAKE_CXX_COMPILER=' + cpp_compiler,
-		'-DCMAKE_CXX_FLAGS_RELEASE="/MD"',
-		'-DCMAKE_BUILD_TYPE=Release',
+	cmd = GetDefaultCMakeConfigureCommandLine(rpclib_source_path, rpclib_build_path)
+	cmd.extend([
 		'-DRPCLIB_BUILD_TESTS=OFF',
 		'-DRPCLIB_GENERATE_COMPDB=OFF',
 		'-DRPCLIB_BUILD_EXAMPLES=OFF',
@@ -655,7 +775,8 @@ def ConfigureRPCLib():
 		'-DRPCLIB_ENABLE_COVERAGE=OFF',
 		'-DRPCLIB_MSVC_STATIC_RUNTIME=OFF',
 		rpclib_source_path
-	]).check_returncode()
+	])
+	return LaunchSubprocessImmediate(cmd)
 
 def BuildRPCLib():
 	return DefaultBuild(rpclib_build_path)
@@ -667,20 +788,75 @@ xercesc_build_path = build_path / 'xercesc-build'
 xercesc_install_path = build_path / 'xercesc-install'
 
 def ConfigureXercesc():
-	LaunchSubprocess([
-		'cmake',
-		'-G', cmake_generator,
-		'-S', xercesc_source_path,
-		'-B', xercesc_build_path,
-		'-DCMAKE_C_COMPILER=' + c_compiler,
-		'-DCMAKE_CXX_COMPILER=' + cpp_compiler,
-		'-DCMAKE_CXX_FLAGS_RELEASE="/MD"',
-		'-DCMAKE_BUILD_TYPE=Release',
+	cmd = GetDefaultCMakeConfigureCommandLine(xercesc_source_path, xercesc_build_path)
+	cmd.extend([
 		xercesc_source_path
-	]).check_returncode()
+	])
+	return LaunchSubprocessImmediate(cmd)
 
 def BuildXercesc():
 	return DefaultBuild(xercesc_build_path)
+
+
+
+libosmscout_source_path = build_path / 'libosmscout-source'
+libosmscout_build_path = build_path / 'libosmscout-build'
+libosmscout_install_path = build_path / 'libosmscout-install'
+
+def ConfigureLibOSMScout():
+	cmd = GetDefaultCMakeConfigureCommandLine(libosmscout_source_path, libosmscout_build_path)
+	cmd.extend([
+		'-DOSMSCOUT_BUILD_TOOL_STYLEEDITOR=OFF',
+		'-DOSMSCOUT_BUILD_TOOL_OSMSCOUT2=OFF',
+		'-DOSMSCOUT_BUILD_TESTS=OFF',
+		'-DOSMSCOUT_BUILD_CLIENT_QT=OFF',
+		'-DOSMSCOUT_BUILD_DEMOS=OFF',
+		libosmscout_source_path
+	])
+	return LaunchSubprocessImmediate(cmd)
+
+def BuildLibOSMScout():
+	return DefaultBuild(libosmscout_build_path)
+
+
+
+lunasvg_source_path = build_path / 'lunasvg-source'
+lunasvg_build_path = build_path / 'lunasvg-build'
+lunasvg_install_path = build_path / 'lunasvg-install'
+
+def ConfigureLunaSVG():
+	cmd = GetDefaultCMakeConfigureCommandLine(lunasvg_source_path, lunasvg_build_path)
+	cmd.extend([
+		lunasvg_source_path
+	])
+	return LaunchSubprocessImmediate(cmd)
+
+def BuildLunaSVG():
+	return DefaultBuild(lunasvg_build_path)
+
+
+
+sumo_source_path = build_path / 'sumo-source'
+sumo_build_path = build_path / 'sumo-build'
+sumo_install_path = build_path / 'sumo-install'
+
+def ConfigureSUMO():
+	cmd = GetDefaultCMakeConfigureCommandLine(sumo_source_path, sumo_build_path)
+	xercesc_library = glob.glob(xercesc_install_path / 'lib' / f'*{library_extension}', recursive = True)[0]
+	cmd.extend([
+		'-DSUMO_LIBRARIES=OFF',
+		f'-DZLIB_INCLUDE_DIR={zlib_source_path}',
+		f'-DZLIB_LIBRARY={zlib_install_path}/zlib{library_extension}',
+        f'-DPROJ_INCLUDE_DIR={proj_install_path}/include',
+        f'-DPROJ_LIBRARY={proj_install_path}/lib/proj{library_extension}',
+        f'-DXercesC_INCLUDE_DIR={xercesc_install_path}/include',
+        f'-DXercesC_LIBRARY={xercesc_library}',
+		sumo_source_path
+	])
+	return LaunchSubprocessImmediate(cmd)
+
+def BuildSUMO():
+	return DefaultBuild(sumo_build_path)
 
 
 
@@ -689,7 +865,6 @@ def BuildDependencies(c : ConfigureContext):
 	c.Dispatch(BuildSQLite)
 	Log('--- CONFIGURING ZLIB ---')
 	c.Dispatch(ConfigureZLib)
-	c.Wait()
 	Log('--- BUILDING ZLIB ---')
 	c.Dispatch(BuildZLib)
 	Log('--- CONFIGURING BOOST ---')
@@ -698,7 +873,6 @@ def BuildDependencies(c : ConfigureContext):
 	c.Dispatch(ConfigureGTest)
 	Log('--- CONFIGURING LIBPNG ---')
 	c.Dispatch(ConfigureLibPNG)
-	c.Wait()
 	Log('--- CONFIGURING PROJ ---')
 	c.Dispatch(ConfigureProj)
 	Log('--- CONFIGURING RECAST ---')
@@ -707,6 +881,12 @@ def BuildDependencies(c : ConfigureContext):
 	c.Dispatch(ConfigureRPCLib)
 	Log('--- CONFIGURING XERCES-C ---')
 	c.Dispatch(ConfigureXercesc)
+	Log('--- CONFIGURING LIBOSMSCOUT ---')
+	c.Dispatch(ConfigureLibOSMScout)
+	Log('--- CONFIGURING LUNASVG ---')
+	c.Dispatch(ConfigureLunaSVG)
+	Log('--- CONFIGURING SUMO ---')
+	c.Dispatch(ConfigureSUMO)
 	if c.arg.use_chrono:
 		Log('--- CONFIGURING CHRONO ---')
 		c.Dispatch(ConfigureChrono)
@@ -725,6 +905,12 @@ def BuildDependencies(c : ConfigureContext):
 	BuildRPCLib()
 	Log('--- BUILDING XERCESC ---')
 	BuildXercesc()
+	Log('--- BUILDING LUNASVG ---')
+	BuildLunaSVG()
+	Log('--- BUILDING LIBOSMSCOUT ---')
+	BuildLibOSMScout()
+	Log('--- BUILDING SUMO ---')
+	BuildSUMO()
 	if c.arg.use_chrono:
 		Log('--- BUILDING CHRONO ---')
 		BuildChrono()
@@ -735,6 +921,7 @@ def BuildDependencies(c : ConfigureContext):
 	DefaultInstall(recast_build_path, recast_install_path)
 	DefaultInstall(rpclib_build_path, rpclib_install_path)
 	DefaultInstall(xercesc_build_path, xercesc_install_path)
+	DefaultInstall(libosmscout_build_path, libosmscout_install_path)
 	if c.arg.use_chrono:
 		DefaultInstall(chrono_build_path, chrono_install_path)
 
@@ -868,5 +1055,21 @@ if __name__ == '__main__':
 		Main()
 	except Exception as err:
 		Log(err)
-		Log(error_message)
+		URL_SUFFIX = 'how_to_build_on_windows/\n' if os.name == "nt" else 'build_linux/\n'
+		ERROR_MESSAGE = (
+			'\n'
+			'Ok, an error ocurred, don\'t panic!\n'
+			'We have different platforms where you can find some help:\n'
+			'\n'
+			'- Make sure you have read the documentation:\n'
+			f'    https://carla.readthedocs.io/en/latest/{URL_SUFFIX}'
+			'\n'
+			'- If the problem persists, submit an issue on our GitHub page:\n'
+			'    https://github.com/carla-simulator/carla/issues\n'
+			'\n'
+			'- Or just use our Discord server!\n'
+			'    We\'ll be glad to help you there:\n'
+			'    https://discord.gg/42KJdRj\n'
+		)
+		Log(ERROR_MESSAGE)
 		exit(-1)
