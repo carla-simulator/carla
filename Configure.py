@@ -5,9 +5,17 @@ import subprocess, tarfile, zipfile, requests, psutil, shutil, glob, json, sys, 
 
 def TestForExecutablePresence(name):
 	if os.name == 'nt':
-		return subprocess.call([ 'where', name ], shell = True) == 0
+		return subprocess.call(
+			[ 'where', name ],
+			stdout = subprocess.PIPE,
+			stderr = subprocess.PIPE,
+			shell = True) == 0
 	else:
-		return subprocess.call([ 'whereis', name ], shell = True) == 0
+		return subprocess.call(
+			[ 'whereis', name ],
+			stdout = subprocess.PIPE,
+			stderr = subprocess.PIPE,
+			shell = True) == 0
 
 def FindExistingExecutable(candidates : list):
 	for e in candidates:
@@ -108,7 +116,7 @@ omniverse_plugin_path = ue_workspace_path / 'Engine' / 'Plugins' / 'Marketplace'
 omniverse_patch_path = util_path / 'Patches' / 'omniverse_4.26'
 # Script settings
 parallelism = psutil.cpu_count(logical = True)
-force_sequential = True
+force_sequential = False
 cmake_generator = 'Ninja'
 
 readthedocs_build_url = 'http://carla.readthedocs.io/en/latest/' + (
