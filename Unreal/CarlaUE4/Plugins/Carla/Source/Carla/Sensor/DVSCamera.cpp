@@ -12,6 +12,13 @@
 #include "Carla.h"
 #include "Carla/Util/RandomEngine.h"
 #include "Carla/Sensor/DVSCamera.h"
+#include "Actor/ActorBlueprintFunctionLibrary.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include "carla/ros2/ROS2.h"
+#include <carla/Buffer.h>
+#include <carla/BufferView.h>
+#include <compiler/enable-ue4-macros.h>
 
 static float FColorToGrayScaleFloat(FColor Color)
 {
@@ -151,13 +158,51 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
   /** DVS Simulator **/
   ADVSCamera::DVSEventArray events = this->Simulation(DeltaTime);
 
+  auto Stream = GetDataStream(*this);
+  auto Buff = Stream.PopBufferFromPool();
+
+  // serialize data
+  carla::Buffer BufferReady(carla::sensor::SensorRegistry::Serialize(*this, events, std::move(Buff)));
+  carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(BufferReady));
+
+  // ROS2
+  #if defined(WITH_ROS2)
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (ROS2->IsEnabled())
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
+    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
+    {
+      // get resolution of camera
+      int W = -1, H = -1;
+      float Fov = -1.0f;
+      auto WidthOpt = GetAttribute("image_size_x");
+      if (WidthOpt.has_value())
+        W = FCString::Atoi(*WidthOpt->Value);
+      auto HeightOpt = GetAttribute("image_size_y");
+      if (HeightOpt.has_value())
+        H = FCString::Atoi(*HeightOpt->Value);
+      auto FovOpt = GetAttribute("fov");
+      if (FovOpt.has_value())
+        Fov = FCString::Atof(*FovOpt->Value);
+      AActor* ParentActor = GetAttachParentActor();
+      if (ParentActor)
+      {
+        FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
+        ROS2->ProcessDataFromDVS(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, BufView, W, H, Fov, this);
+      }
+      else
+      {
+        ROS2->ProcessDataFromDVS(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), BufView, W, H, Fov, this);
+      }
+    }
+  }
+  #endif
   if (events.size() > 0)
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ADVSCamera Stream Send");
     /** Send the events **/
-    auto Stream = GetDataStream(*this);
-    auto Buffer = Stream.PopBufferFromPool();
-    Stream.Send(*this, events, std::move(Buffer));
+    Stream.Send(*this, BufView);
   }
 }
 

@@ -412,6 +412,14 @@ namespace detail {
     _pimpl->CallAndWait<void>("set_actor_simulate_physics", actor, enabled);
   }
 
+  void Client::SetActorCollisions(rpc::ActorId actor, const bool enabled) {
+    _pimpl->CallAndWait<void>("set_actor_collisions", actor, enabled);
+  }
+
+  void Client::SetActorDead(rpc::ActorId actor) {
+    _pimpl->AsyncCall("set_actor_dead", actor);
+  }
+
   void Client::SetActorEnableGravity(rpc::ActorId actor, const bool enabled) {
     _pimpl->AsyncCall("set_actor_enable_gravity", actor, enabled);
   }
@@ -574,6 +582,10 @@ namespace detail {
     _pimpl->AsyncCall("set_replayer_ignore_hero", ignore_hero);
   }
 
+  void Client::SetReplayerIgnoreSpectator(bool ignore_spectator) {
+    _pimpl->AsyncCall("set_replayer_ignore_spectator", ignore_spectator);
+  }
+
   void Client::SubscribeToStream(
       const streaming::Token &token,
       std::function<void(Buffer)> callback) {
@@ -584,6 +596,21 @@ namespace detail {
 
   void Client::UnSubscribeFromStream(const streaming::Token &token) {
     _pimpl->streaming_client.UnSubscribe(token);
+  }
+
+  void Client::EnableForROS(const streaming::Token &token) {
+    carla::streaming::detail::token_type thisToken(token);
+    _pimpl->AsyncCall("enable_sensor_for_ros", thisToken.get_stream_id());
+  }
+
+  void Client::DisableForROS(const streaming::Token &token) {
+    carla::streaming::detail::token_type thisToken(token);
+    _pimpl->AsyncCall("disable_sensor_for_ros", thisToken.get_stream_id());
+  }
+
+  bool Client::IsEnabledForROS(const streaming::Token &token) {
+    carla::streaming::detail::token_type thisToken(token);
+    return _pimpl->CallAndWait<bool>("is_sensor_enabled_for_ros", thisToken.get_stream_id());
   }
 
   void Client::SubscribeToGBuffer(

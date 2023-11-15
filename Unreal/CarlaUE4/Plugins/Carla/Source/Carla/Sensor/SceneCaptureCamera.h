@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Carla/Actor/ActorDefinition.h"
+#include "Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/ShaderBasedSensor.h"
 

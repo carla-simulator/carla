@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Tagger.h"
 #include "TaggedComponent.h"
+#include "Vehicle/CarlaWheeledVehicle.h"
 
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -213,6 +214,7 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
 
     TaggedComponent->SetColor(Color);
     TaggedComponent->MarkRenderStateDirty();
+    TaggedComponent->SetComponentTickEnabled(true);
 
   }
 }

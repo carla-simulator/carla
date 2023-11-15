@@ -61,7 +61,8 @@ def get_libcarla_extensions():
                 '-Wpessimizing-move', '-Wold-style-cast', '-Wnull-dereference',
                 '-Wduplicate-enum', '-Wnon-virtual-dtor', '-Wheader-hygiene',
                 '-Wconversion', '-Wfloat-overflow-conversion',
-                '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT'
+                '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT',
+                '-stdlib=libstdc++'
             ]
             if is_rss_variant_enabled():
                 extra_compile_args += ['-DLIBCARLA_RSS_ENABLED']
@@ -162,7 +163,7 @@ with open("README.md") as f:
 
 setup(
     name='carla',
-    version='0.9.14',
+    version='0.9.15',
     package_dir={'': 'source'},
     packages=['carla'],
     ext_modules=get_libcarla_extensions(),

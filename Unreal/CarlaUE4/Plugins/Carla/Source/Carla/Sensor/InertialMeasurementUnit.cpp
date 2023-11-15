@@ -13,6 +13,7 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
+#include "carla/ros2/ROS2.h"
 #include <compiler/enable-ue4-macros.h>
 
 #include <limits>
@@ -183,13 +184,36 @@ float AInertialMeasurementUnit::ComputeCompass()
 
 void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(AInertialMeasurementUnit::PostPhysTick);
+  carla::geom::Vector3D Accelerometer = ComputeAccelerometer(DeltaTime);
+  carla::geom::Vector3D Gyroscope = ComputeGyroscope();
+  float Compass = ComputeCompass();
+
   auto Stream = GetDataStream(*this);
-  Stream.Send(
-      *this,
-      ComputeAccelerometer(DeltaTime),
-      ComputeGyroscope(),
-      ComputeCompass());
+
+  // ROS2
+  #if defined(WITH_ROS2)
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (ROS2->IsEnabled())
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
+    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
+    AActor* ParentActor = GetAttachParentActor();
+    if (ParentActor)
+    {
+      FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
+      ROS2->ProcessDataFromIMU(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, Accelerometer, Gyroscope, Compass, this);
+    }
+    else
+    {
+      ROS2->ProcessDataFromIMU(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), Accelerometer, Gyroscope, Compass, this);
+    }
+  }
+  #endif
+
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(AInertialMeasurementUnit::PostPhysTick);
+    Stream.SerializeAndSend(*this, Accelerometer, Gyroscope, Compass);
+  }
 }
 
 void AInertialMeasurementUnit::SetAccelerationStandardDeviation(const FVector &Vec)

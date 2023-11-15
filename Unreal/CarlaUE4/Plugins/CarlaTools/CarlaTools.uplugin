@@ -18,7 +18,7 @@
 		{
 			"Name": "CarlaTools",
 			"Type": "Editor",
-			"LoadingPhase": "PostEngineInit"
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
@@ -32,6 +32,14 @@
 		},
 		{
 			"Name": "PhysXVehicles",
+			"Enabled": true
+		},
+		{
+			"Name": "ProceduralMeshComponent",
+			"Enabled": true
+		},
+    {
+			"Name": "StreetMap",
 			"Enabled": true
 		}
 	]

@@ -2,7 +2,7 @@
 
 ### Latest Release
 
-- [CARLA 0.9.14](https://github.com/carla-simulator/carla/releases/tag/0.9.14/) - [Documentation](https://carla.readthedocs.io/en/0.9.14/)
+- [CARLA 0.9.15](https://github.com/carla-simulator/carla/releases/tag/0.9.15/) - [Documentation](https://carla.readthedocs.io/en/0.9.15/)
 
 ### Nightly build
 
@@ -10,13 +10,16 @@
 > branch. It contains the very latest fixes and features that will be part of the
 > next release, but also some experimental changes. Use at your own risk!
 
-- [CARLA Nightly Build (Linux)](https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/Dev/CARLA_Latest.tar.gz)  
-- [CARLA Nightly Build (Windows)](https://carla-releases.s3.eu-west-3.amazonaws.com/Windows/Dev/CARLA_Latest.zip)  
+- [CARLA Nightly Build (Linux)](https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/Dev/CARLA_Latest.tar.gz)
+- [AdditionalMaps Nightly Build (Linux)](https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/Dev/AdditionalMaps_Latest.tar.gz)
+- [CARLA Nightly Build (Windows)](https://carla-releases.s3.eu-west-3.amazonaws.com/Windows/Dev/CARLA_Latest.zip)
+- [AdditionalMaps Nightly Build (Windows)](https://carla-releases.s3.eu-west-3.amazonaws.com/Windows/Dev/AdditionalMaps_Latest.zip)
 
 ### Versions 0.9.x
 
 > Here are the previous versions of CARLA with links to the specific documentation for each version:
 
+- [CARLA 0.9.14](https://github.com/carla-simulator/carla/releases/tag/0.9.14/) - [Documentation](https://carla.readthedocs.io/en/0.9.14/)
 - [CARLA 0.9.13](https://github.com/carla-simulator/carla/releases/tag/0.9.13/) - [Documentation](https://carla.readthedocs.io/en/0.9.13/)
 - [CARLA 0.9.12](https://github.com/carla-simulator/carla/releases/tag/0.9.12/) - [Documentation](https://carla.readthedocs.io/en/0.9.12/)
 - [CARLA 0.9.11](https://github.com/carla-simulator/carla/releases/tag/0.9.11/) - [Documentation](https://carla.readthedocs.io/en/0.9.11/)

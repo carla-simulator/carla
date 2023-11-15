@@ -225,6 +225,8 @@ public:
 
   virtual ECarlaServerResponse SetActorSimulatePhysics(bool bEnabled);
 
+  virtual ECarlaServerResponse SetActorCollisions(bool bEnabled);
+
   virtual ECarlaServerResponse SetActorEnableGravity(bool bEnabled);
 
   // Vehicle functions
@@ -409,6 +411,11 @@ public:
   }
 
   virtual ECarlaServerResponse GetPoseFromAnimation()
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetActorDead()
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -607,6 +614,8 @@ public:
   virtual ECarlaServerResponse BlendPose(float Blend);
 
   virtual ECarlaServerResponse GetPoseFromAnimation();
+
+  virtual ECarlaServerResponse SetActorDead();
 };
 
 class FOtherActor : public FCarlaActor

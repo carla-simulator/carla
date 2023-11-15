@@ -16,6 +16,7 @@
 #include "CarlaRecorderLightScene.h"
 #include "CarlaRecorderLightVehicle.h"
 #include "CarlaRecorderAnimWalker.h"
+#include "CarlaRecorderAnimVehicle.h"
 #include "CarlaRecorderCollision.h"
 #include "CarlaRecorderEventAdd.h"
 #include "CarlaRecorderEventDel.h"

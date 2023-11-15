@@ -81,7 +81,7 @@ namespace multigpu {
         if (!self) return;
         if (ec) {
           log_error("session ", self->_session_id, ": error sending data: ", ec.message());
-          self->CloseNow();
+          self->CloseNow(ec);
         } else {
           // DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type) + message->size());
         }
@@ -94,7 +94,7 @@ namespace multigpu {
           boost::asio::bind_executor(self->_strand, handle_sent));
     });
   }
-  
+
   void Primary::Write(std::string text) {
     std::weak_ptr<Primary> weak = shared_from_this();
     boost::asio::post(_strand, [=]() {
@@ -175,10 +175,10 @@ namespace multigpu {
 
   void Primary::Close() {
     std::weak_ptr<Primary> weak = shared_from_this();
-    boost::asio::post(_strand, [weak]() { 
+    boost::asio::post(_strand, [weak]() {
       auto self = weak.lock();
       if (!self) return;
-      self->CloseNow(); 
+      self->CloseNow();
     });
   }
 
@@ -200,14 +200,18 @@ namespace multigpu {
     }
   }
 
-  void Primary::CloseNow() {
+  void Primary::CloseNow(boost::system::error_code ec) {
     _deadline.cancel();
-    if (_socket.is_open()) {
-      boost::system::error_code ec;
-      _socket.shutdown(boost::asio::socket_base::shutdown_both, ec);
-      _socket.close();
-      _on_closed(shared_from_this());
+    if (!ec)
+    {
+      if (_socket.is_open()) {
+        boost::system::error_code ec2;
+        _socket.shutdown(boost::asio::socket_base::shutdown_both, ec2);
+        _socket.close();
+      }
     }
+    _on_closed(shared_from_this());
+    log_debug("session", _session_id, "closed");
   }
 
 } // namespace multigpu

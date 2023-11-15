@@ -180,6 +180,11 @@ namespace traffic_manager {
       // Setting segment predecessors and successors.
       SegmentId waypoint_segment_id = GetSegmentId(connection.first);
       SegmentId successor_segment_id = GetSegmentId(connection.second);
+      if (waypoint_segment_id == successor_segment_id){
+        // If both topology waypoints are at the same segment, ignore them.
+        // This happens at lanes that have either no successor or predecessor connections.
+        continue;
+      }
       using SegIdVectorPair = std::pair<std::vector<SegmentId>, std::vector<SegmentId>>;
       SegIdVectorPair &connection_first = segment_topology[waypoint_segment_id];
       SegIdVectorPair &connection_second = segment_topology[successor_segment_id];
@@ -226,7 +231,10 @@ namespace traffic_manager {
     assert(_world_map != nullptr && "No map reference found.");
     auto raw_dense_topology = _world_map->GenerateWaypoints(MAP_RESOLUTION);
     for (auto &waypoint_ptr: raw_dense_topology) {
-      segment_map[GetSegmentId(waypoint_ptr)].emplace_back(std::make_shared<SimpleWaypoint>(waypoint_ptr));
+      if (waypoint_ptr->GetLaneWidth() > MIN_LANE_WIDTH){
+        // Avoid making the vehicles move through very narrow lanes
+        segment_map[GetSegmentId(waypoint_ptr)].emplace_back(std::make_shared<SimpleWaypoint>(waypoint_ptr));
+      }
     }
 
     // 3. Processing waypoints.
@@ -347,7 +355,7 @@ namespace traffic_manager {
         if (neighbour) {
           swp->SetNextWaypoint(neighbour->GetNextWaypoint());
           for (auto next_waypoint : neighbour->GetNextWaypoint()) {
-            next_waypoint->SetPreviousWaypoint({swp});
+            next_waypoint->SetPreviousWaypoint({swp}); 
           }
         }
       }
