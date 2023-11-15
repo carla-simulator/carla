@@ -18,21 +18,9 @@ For example
 
 **./CarlaUE4.sh --nullrhi**
 
-<<<<<<< HEAD
-```sh
-./CarlaUE4.sh -nullrhi
-```
-
-The primary server will use, by default, the port 2002 to listen for secondary servers. If you need to listen on another port, then you can change it with the port flag:
-
-```sh
-./CarlaUE4.sh -nullrhi -carla-primary-port=3002
-```
-=======
 The primary server will use by default the port 2002 to listen for secondary servers. If you need to listen on another port, then you can change it with the flag
 
 **./CarlaUE4.sh --nullrhi -carla-primary-port=3002**
->>>>>>> remotes/origin/dev
 
 ## Secondary servers
 
