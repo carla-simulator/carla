@@ -46,7 +46,7 @@ geometry_msgs::msg::Quaternion::Quaternion()
     // double m_z
     m_z = 0.0;
     // double m_w
-    m_w = 0.0;
+    m_w = 1.0;
 }
 
 geometry_msgs::msg::Quaternion::~Quaternion()

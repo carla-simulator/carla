@@ -35,9 +35,9 @@ namespace ros2 {
     efd::Publisher* _publisher { nullptr };
     efd::Topic* _topic { nullptr };
     efd::DataWriter* _datawriter { nullptr };
-    efd::TypeSupport _type { new carla_msgs::msg::CollisionEventPubSubType() };
+    efd::TypeSupport _type { new carla_msgs::msg::CarlaCollisionEventPubSubType() };
     CarlaListener _listener {};
-    carla_msgs::msg::CollisionEvent _event {};
+    carla_msgs::msg::CarlaCollisionEvent _event {};
   };
 
   bool CarlaCollisionPublisher::Init() {

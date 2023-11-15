@@ -41,18 +41,18 @@ namespace carla_msgs
     {
 
         /*!
-         * @brief This class represents the TopicDataType of the type CollisionEvent defined by the user in the IDL file.
+         * @brief This class represents the TopicDataType of the type CarlaCollisionEvent defined by the user in the IDL file.
          * @ingroup CARLACOLLISIONEVENT
          */
-        class CollisionEventPubSubType : public eprosima::fastdds::dds::TopicDataType
+        class CarlaCollisionEventPubSubType : public eprosima::fastdds::dds::TopicDataType
         {
         public:
 
-            typedef CollisionEvent type;
+            typedef CarlaCollisionEvent type;
 
-            eProsima_user_DllExport CollisionEventPubSubType();
+            eProsima_user_DllExport CarlaCollisionEventPubSubType();
 
-            eProsima_user_DllExport virtual ~CollisionEventPubSubType() override;
+            eProsima_user_DllExport virtual ~CarlaCollisionEventPubSubType() override;
 
             eProsima_user_DllExport virtual bool serialize(
                     void* data,
