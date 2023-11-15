@@ -5,7 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/geom/Simplification.h"
-#include "simplify/Simplify.h"
+#include <third-party/simplify/Simplify.h>
 
 namespace carla {
 namespace geom {

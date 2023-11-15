@@ -37,7 +37,14 @@ namespace carla {
     }
 
     /// Post a task to the pool.
-    template <typename FunctorT, typename ResultT = typename std::result_of<FunctorT()>::type>
+    template <
+      typename FunctorT,
+#if __cplusplus < 201703L
+      typename ResultT = typename std::result_of_t<FunctorT()>
+#else
+      typename ResultT = typename std::invoke_result_t<FunctorT()>
+#endif
+    >
     std::future<ResultT> Post(FunctorT &&functor) {
       auto task = std::packaged_task<ResultT()>(std::forward<FunctorT>(functor));
       auto future = task.get_future();

@@ -11,7 +11,7 @@
 #include "carla/geom/GeoLocation.h"
 #include "carla/road/MapBuilder.h"
 
-#include <pugixml/pugixml.hpp>
+#include <third-party/pugixml/pugixml.hpp>
 
 #include <limits>
 #include <string>

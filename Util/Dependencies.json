@@ -4,11 +4,11 @@
         "from" :
         [
             {
-                "url": "https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.zip",
+                "url": "https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.zip",
                 "type": "download"
             },
             {
-                "url": "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_1_80_0.zip",
+                "url": "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_1_83_0.zip",
                 "type": "download"
             }
         ]

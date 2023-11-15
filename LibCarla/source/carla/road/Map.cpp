@@ -20,7 +20,7 @@
 #include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/road/element/RoadInfoSignal.h"
 
-#include "marchingcube/MeshReconstruction.h"
+#include <third-party/marchingcube/MeshReconstruction.h>
 
 #include <vector>
 #include <unordered_map>
@@ -1155,7 +1155,7 @@ namespace road {
       std::thread neworker(
         [this, &write_mutex, &mesh_factory, &road_out_mesh_list, i, num_roads_per_thread]() {
         std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current =
-          std::move(GenerateRoadsMultithreaded(mesh_factory, i, num_roads_per_thread));
+          GenerateRoadsMultithreaded(mesh_factory, i, num_roads_per_thread);
         std::lock_guard<std::mutex> guard(write_mutex);
         for ( auto&& pair : Current ) {
           if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end()) {
@@ -1286,7 +1286,7 @@ namespace road {
       mesh_factory.GenerateLaneMarkForRoad(pair.second, LineMarks, outinfo);
     }
 
-    return std::move(LineMarks);
+    return LineMarks;
   }
 
   std::vector<carla::geom::BoundingBox> Map::GetJunctionsBoundingBoxes() const {

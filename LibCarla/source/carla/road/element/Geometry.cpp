@@ -15,7 +15,7 @@
 #include <boost/array.hpp>
 #include <boost/math/tools/rational.hpp>
 
-#include <odrSpiral/odrSpiral.h>
+#include <third-party/odrSpiral/odrSpiral.h>
 
 #include <algorithm>
 #include <cmath>

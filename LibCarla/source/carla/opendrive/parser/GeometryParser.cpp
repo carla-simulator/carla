@@ -8,7 +8,7 @@
 
 #include "carla/road/MapBuilder.h"
 
-#include <pugixml/pugixml.hpp>
+#include <third-party/pugixml/pugixml.hpp>
 
 namespace carla {
 namespace opendrive {
@@ -115,7 +115,7 @@ namespace parser {
     }
 
     // map_builder calls
-    for (auto const geo : geometry) {
+    for (const auto& geo : geometry) {
       carla::road::Road *road = map_builder.GetRoad(geo.road_id);
       if (geo.type == "line") {
         map_builder.AddRoadGeometryLine(road, geo.s, geo.x, geo.y, geo.hdg, geo.length);

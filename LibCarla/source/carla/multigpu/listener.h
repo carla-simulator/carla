@@ -51,7 +51,7 @@ namespace multigpu {
     void Listen(callback_function_type on_session_opened, 
                 callback_function_type on_session_closed,
                 callback_function_type_response on_response) {
-      boost::asio::post(_io_context, [=]() {
+      boost::asio::post(_io_context, [=, this]() {
         OpenSession(
             _timeout,
             std::move(on_session_opened),

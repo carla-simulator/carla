@@ -53,9 +53,9 @@ namespace multigpu {
     }
   };
 
-    _acceptor.async_accept(session->_socket, [=](error_code ec) {
+    _acceptor.async_accept(session->_socket, [=, this](error_code ec) {
       // Handle query and open a new session immediately.
-      boost::asio::post(_io_context, [=]() { handle_query(ec); });
+      boost::asio::post(_io_context, [ec, handle_query]() { handle_query(ec); });
       OpenSession(timeout, on_opened, on_closed, on_response);
     });
   }

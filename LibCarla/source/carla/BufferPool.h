@@ -12,7 +12,7 @@
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wold-style-cast"
 #endif
-#include "moodycamel/ConcurrentQueue.h"
+#include <third-party/moodycamel/ConcurrentQueue.h>
 #if defined(__clang__)
 #  pragma clang diagnostic pop
 #endif
@@ -20,7 +20,6 @@
 #include <memory>
 
 namespace carla {
-
   /// A pool of Buffer. Buffers popped from this pool automatically return to
   /// the pool on destruction so the allocated memory can be reused.
   ///

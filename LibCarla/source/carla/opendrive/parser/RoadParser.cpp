@@ -11,7 +11,7 @@
 #include "carla/road/MapBuilder.h"
 #include "carla/road/RoadTypes.h"
 
-#include <pugixml/pugixml.hpp>
+#include <third-party/pugixml/pugixml.hpp>
 
 namespace carla {
 namespace opendrive {
@@ -256,7 +256,7 @@ namespace parser {
     // test print
     /*
        printf("Roads: %d\n", roads.size());
-       for (auto const r : roads) {
+       for (const auto& r : roads) {
        printf("Road: %d\n", r.id);
        printf("  Name: %s\n", r.name.c_str());
        printf("  Length: %e\n", r.length);
@@ -264,18 +264,18 @@ namespace parser {
        printf("  Predecessor: %d\n", r.predecessor);
        printf("  Successor: %d\n", r.successor);
        printf("  Speed: %d\n", r.speed.size());
-       for (auto const s : r.speed) {
+       for (const auto& s : r.speed) {
         printf("    S offset: %e\n", s.s);
         printf("    Type: %s\n", s.type.c_str());
         printf("    Max: %e\n", s.max);
         printf("    Unit: %s\n", s.unit.c_str());
        }
        printf("LaneSections: %d\n", r.sections.size());
-       for (auto const s : r.sections) {
+       for (const auto& s : r.sections) {
         printf("    S offset: %e\n", s.s);
         printf("    a,b,c,d: %e,%e,%e,%e\n", s.a, s.b, s.c, s.d);
         printf("    Lanes: %d\n", s.lanes.size());
-        for (auto const l : s.lanes) {
+        for (const auto& l : s.lanes) {
           printf("      Id: %d\n", l.id);
           printf("      Type: %s\n", l.type.c_str());
           printf("      Level: %d\n", l.level);
@@ -287,7 +287,7 @@ namespace parser {
      */
 
     // map_builder calls
-    for (auto const r : roads) {
+    for (const auto& r : roads) {
       carla::road::Road *road = map_builder.AddRoad(r.id,
           r.name,
           r.length,
@@ -296,22 +296,22 @@ namespace parser {
           r.successor);
 
       // type speed
-      for (auto const s : r.speed) {
+      for (const auto& s : r.speed) {
         map_builder.CreateRoadSpeed(road, s.s, s.type, s.max, s.unit);
       }
 
       // section offsets
-      for (auto const s : r.section_offsets) {
+      for (const auto& s : r.section_offsets) {
         map_builder.CreateSectionOffset(road, s.s, s.a, s.b, s.c, s.d);
       }
 
       // lane sections
       road::SectionId i = 0;
-      for (auto const s : r.sections) {
+      for (const auto& s : r.sections) {
         carla::road::LaneSection *section = map_builder.AddRoadSection(road, i++, s.s);
 
         // lanes
-        for (auto const l : s.lanes) {
+        for (const auto& l : s.lanes) {
           /*carla::road::Lane *lane = */ map_builder.AddRoadSectionLane(section, l.id,
               static_cast<uint32_t>(l.type), l.level, l.predecessor, l.successor);
         }

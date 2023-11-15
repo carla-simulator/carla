@@ -3,10 +3,55 @@ from argparse import ArgumentParser
 from pathlib import Path
 import subprocess, tarfile, zipfile, requests, psutil, shutil, glob, json, sys, os
 
-c_compiler = 'clang-cl' if os.name == 'nt' else 'clang'
-cpp_compiler = 'clang-cl' if os.name == 'nt' else 'clang'
-linker = 'llvm-link' if os.name == 'nt' else 'lld'
-lib = 'llvm-lib' if os.name == 'nt' else 'llvm-ar'
+def TestForExecutablePresence(name):
+	if os.name == 'nt':
+		return subprocess.call([ 'where', name ], shell = True) == 0
+	else:
+		return subprocess.call([ 'whereis', name ], shell = True) == 0
+
+def FindExistingExecutable(candidates : list):
+	for e in candidates:
+		if TestForExecutablePresence(e):
+			return e
+	return None
+
+c_compiler_list = [
+	'clang-cl',
+	'cl'
+] if os.name == 'nt' else [
+	'clang',
+	'gcc'
+]
+
+cpp_compiler_list = [
+	'clang-cl',
+	'cl'
+] if os.name == 'nt' else [
+	'clang++',
+	'g++'
+]
+
+linker_list = [
+	'llvm-link',
+	'link'
+] if os.name == 'nt' else [
+	'lld',
+	'ld'
+]
+
+library_list = [
+	'llvm-lib',
+	'lib',
+	'llvm-ar'
+] if os.name == 'nt' else [
+	'llvm-ar',
+	'ar'
+]
+
+c_compiler = FindExistingExecutable(c_compiler_list)
+cpp_compiler = FindExistingExecutable(cpp_compiler_list)
+linker = FindExistingExecutable(linker_list)
+lib = FindExistingExecutable(library_list)
 
 # Basic paths
 workspace_path = Path(__file__).parent.resolve()
@@ -63,10 +108,12 @@ omniverse_plugin_path = ue_workspace_path / 'Engine' / 'Plugins' / 'Marketplace'
 omniverse_patch_path = util_path / 'Patches' / 'omniverse_4.26'
 # Script settings
 parallelism = psutil.cpu_count(logical = True)
-force_sequential = False
+force_sequential = True
 cmake_generator = 'Ninja'
 
-readthedocs_build_url = 'http://carla.readthedocs.io/en/latest/' + 'how_to_build_on_windows/' if os.name == "nt" else 'build_linux/'
+readthedocs_build_url = 'http://carla.readthedocs.io/en/latest/' + (
+	'how_to_build_on_windows/' if os.name == "nt" else 'build_linux/'
+)
 
 error_message = (
 	f'\n'
@@ -192,7 +239,8 @@ def DownloadDependency(name : str, path : Path, url : str):
 		entries = [ file for file in extract_path.iterdir() ]
 		if len(entries) == 1 and entries[0].is_dir():
 			Path(entries[0]).rename(path)
-			extract_path.rmdir()
+			if extract_path.exists():
+				extract_path.rmdir()
 		else:
 			extract_path.rename(path)
 	except Exception as err:
@@ -322,9 +370,12 @@ def UpdateDependencies(c : ConfigureContext):
 
 
 def DefaultBuild(path : Path):
-	LaunchSubprocess(
-		['cmake', '--build', path ],
-		display_output = True).check_returncode()
+	LaunchSubprocess([ 'cmake', '--build', path ], display_output = True).check_returncode()
+
+
+
+def DefaultInstall(path : Path, prefix : Path):
+	LaunchSubprocess([ 'cmake', '--install', path, '--prefix', prefix ], display_output = True).check_returncode()
 
 
 
@@ -333,6 +384,7 @@ boost_toolset_short = 'vc142'
 boost_source_path = build_path / 'boost-source'
 boost_build_path = build_path / 'boost-build'
 boost_install_path = build_path / 'boost-install'
+boost_include_path = boost_install_path / 'include'
 boost_library_path = boost_install_path / 'lib'
 boost_b2_path = boost_source_path / f'b2{executable_extension}'
 
@@ -344,20 +396,17 @@ def ConfigureBoost():
 		working_directory = boost_source_path).check_returncode()
 
 def BuildBoost():
-	# B2 potentially recompiles:
-	if boost_build_path.exists():
-		return
 	LaunchSubprocess([
 		boost_b2_path,
 		f'-j{parallelism}',
-		'--layout=versioned',
+		'--layout=system',
 		f'--build-dir={boost_build_path}', # ???
 		'--with-system',
 		'--with-filesystem',
 		'--with-python',
 		'--with-date_time',
-		# 'architecture=x86',
-		# 'address-model=64',
+		'architecture=x86',
+		'address-model=64',
 		f'toolset={boost_toolset}',
 		'variant=release',
 		'link=static',
@@ -365,7 +414,7 @@ def BuildBoost():
 		'threading=multi',
 		f'--prefix={boost_build_path}',
 		f'--libdir={boost_library_path}',
-		f'--includedir={boost_source_path}',
+		f'--includedir={boost_include_path}',
 		'install'
 	], display_output = True, working_directory = boost_source_path).check_returncode()
 
@@ -491,17 +540,23 @@ def BuildSQLite():
 
 	if os.name == 'nt' and 'clang' in c_compiler:
 		if not sqlite_executable_path.exists():
-			LaunchSubprocess([
+			cmd = [
 				c_compiler,
 				f'-fuse-ld={linker}', '-march=native', '/O2', '/MD', '/EHsc',
-				f'/Fe"{sqlite_executable_path}"'
-			] + sqlite_sources).check_returncode()
+			]
+			cmd.extend(sqlite_sources)
+			cmd.append('-o')
+			cmd.append(sqlite_executable_path)
+			LaunchSubprocess(cmd).check_returncode()
 		if not sqlite_library_path.exists():
-			LaunchSubprocess([
+			cmd = [
 				c_compiler,
-				f'-fuse-ld={lib}', '-march=native', '/c', '/O2', '/MD', '/EHsc',
-				'-o', sqlite_library_path
-			] + sqlite_sources).check_returncode()
+				f'-fuse-ld={lib}', '-march=native', '/O2', '/MD', '/EHsc',
+			]
+			cmd.extend(sqlite_sources)
+			cmd.append('-o')
+			cmd.append(sqlite_library_path)
+			LaunchSubprocess(cmd).check_returncode()
 	else:
 		pass
 
@@ -613,12 +668,6 @@ def ConfigureXercesc():
 		'-DCMAKE_CXX_COMPILER=' + cpp_compiler,
 		'-DCMAKE_CXX_FLAGS_RELEASE="/MD"',
 		'-DCMAKE_BUILD_TYPE=Release',
-		'-DRPCLIB_BUILD_TESTS=OFF',
-		'-DRPCLIB_GENERATE_COMPDB=OFF',
-		'-DRPCLIB_BUILD_EXAMPLES=OFF',
-		'-DRPCLIB_ENABLE_LOGGING=OFF',
-		'-DRPCLIB_ENABLE_COVERAGE=OFF',
-		'-DRPCLIB_MSVC_STATIC_RUNTIME=OFF',
 		xercesc_source_path
 	]).check_returncode()
 
@@ -650,8 +699,9 @@ def BuildDependencies(c : ConfigureContext):
 	c.Dispatch(ConfigureRPCLib)
 	Log('--- CONFIGURING XERCES-C ---')
 	c.Dispatch(ConfigureXercesc)
-	Log('--- CONFIGURING CHRONO ---')
-	c.Dispatch(ConfigureChrono)
+	if c.arg.use_chrono:
+		Log('--- CONFIGURING CHRONO ---')
+		c.Dispatch(ConfigureChrono)
 	c.Wait()
 	Log('--- BUILDING BOOST ---')
 	BuildBoost()
@@ -667,9 +717,18 @@ def BuildDependencies(c : ConfigureContext):
 	BuildRPCLib()
 	Log('--- BUILDING XERCESC ---')
 	BuildXercesc()
-	Log('--- BUILDING CHRONO ---')
-	BuildChrono()
-	pass
+	if c.arg.use_chrono:
+		Log('--- BUILDING CHRONO ---')
+		BuildChrono()
+	c.Wait()
+	DefaultInstall(gtest_build_path, gtest_install_path)
+	DefaultInstall(libpng_build_path, libpng_install_path)
+	DefaultInstall(proj_build_path, proj_install_path)
+	DefaultInstall(recast_build_path, recast_install_path)
+	DefaultInstall(rpclib_build_path, rpclib_install_path)
+	DefaultInstall(xercesc_build_path, xercesc_install_path)
+	if c.arg.use_chrono:
+		DefaultInstall(chrono_build_path, chrono_install_path)
 
 
 
@@ -715,6 +774,7 @@ def ParseCommandLine():
 		'-clean',
 		action='store_true',
 		help = 'Clean build files.')
+	
 	# LibCarla
 	
 	arg_parser.add_argument(
@@ -726,6 +786,7 @@ def ParseCommandLine():
 		'-skip-libcarla-server',
 		action='store_true',
 		help = 'Whether to skip the libcarla server.')
+	
 	# Carla UE:
 	
 	arg_parser.add_argument(
