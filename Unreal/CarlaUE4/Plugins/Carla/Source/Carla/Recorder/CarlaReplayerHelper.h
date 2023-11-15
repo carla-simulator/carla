@@ -13,6 +13,7 @@
 #include "CarlaRecorderAnimVehicle.h"
 #include "CarlaRecorderLightVehicle.h"
 #include "CarlaRecorderLightScene.h"
+#include "CarlaRecorderDoorVehicle.h"	
 
 #include <unordered_map>
 
@@ -57,6 +58,9 @@ public:
 
   // set the animation for walkers
   void ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker);
+
+  // set the openings and closing of vehicle doors
+  void ProcessReplayerDoorVehicle(CarlaRecorderDoorVehicle DoorVehicle);
 
   // set the vehicle light
   void ProcessReplayerLightVehicle(CarlaRecorderLightVehicle LightVehicle);

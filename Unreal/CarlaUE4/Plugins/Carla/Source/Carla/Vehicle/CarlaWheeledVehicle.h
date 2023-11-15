@@ -404,6 +404,9 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void CloseDoorPhys(const EVehicleDoor DoorIdx);
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void RecordDoorChange(const EVehicleDoor DoorIdx, const bool bIsOpen); 
+
   virtual FVector GetVelocity() const override;
 
 //-----CARSIM--------------------------------

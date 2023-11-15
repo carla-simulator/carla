@@ -149,6 +149,8 @@ private:
   void ProcessLightVehicle(void);
   void ProcessLightScene(void);
 
+  void ProcessDoorVehicle(void);
+
   void ProcessWalkerBones(void);
   
   // positions
