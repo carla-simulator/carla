@@ -382,7 +382,7 @@ def LaunchSubprocess(
 
 def LaunchSubprocessImmediate(
 		cmd : list,
-		display_output : bool = False,
+		display_output : bool,
 		working_directory : Path = None):
 	sp = LaunchSubprocess(cmd, display_output, working_directory)
 	try:
@@ -480,7 +480,7 @@ def BuildLibCarlaMain(c : Context):
 		f'-DBUILD_LIBCARLA_CLIENT={"ON" if c.args.build_libcarla_client else "OFF"}',
 		f'-DBUILD_OSM_WORLD_RENDERER={"ON" if c.args.build_osm_world_renderer else "OFF"}',
 		f'-DLIBCARLA_PYTORCH={"OFF" if c.args.skip_libcarla_pytorch else "ON"}'))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-libcarla', [ 'configure-libcarla' ], BUILD_PATH))
+	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-libcarla', [], BUILD_PATH))
 	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-libcarla', [ 'build-libcarla' ], BUILD_PATH))
 
 def BuildCarlaUECore(c : Context):
@@ -560,7 +560,7 @@ def BuildAndInstallBoost():
 		f'--libdir={BOOST_LIBRARY_PATH}',
 		f'--includedir={BOOST_INCLUDE_PATH}',
 		'install'
-	], display_output = True, working_directory = BOOST_SOURCE_PATH)
+	], working_directory = BOOST_SOURCE_PATH)
 
 def BuildSQLite():
 	SQLITE_BUILD_PATH.mkdir(exist_ok = True)
@@ -716,40 +716,40 @@ def BuildDependencies(c : Context):
 	# Build:
 
 	c.task_graph.sequential = True
-	c.task_graph.Add(Task('build-boost', [ 'configure-boost' ], BuildAndInstallBoost))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-zlib', [ 'configure-zlib' ], ZLIB_BUILD_PATH))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-gtest', [ 'configure-gtest' ], GTEST_BUILD_PATH))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-libpng', [ 'configure-libpng' ], LIBPNG_BUILD_PATH))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-proj', [ 'configure-proj' ], PROJ_BUILD_PATH))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-recast', [ 'configure-recast' ], RECAST_BUILD_PATH))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-rpclib', [ 'configure-rpclib' ], RPCLIB_BUILD_PATH))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-xercesc', [ 'configure-xercesc' ], XERCESC_BUILD_PATH))
+	c.task_graph.Add(Task('build-boost', [], BuildAndInstallBoost))
+	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-zlib', [], ZLIB_BUILD_PATH))
+	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-gtest', [], GTEST_BUILD_PATH))
+	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-libpng', [], LIBPNG_BUILD_PATH))
+	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-proj', [], PROJ_BUILD_PATH))
+	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-recast', [], RECAST_BUILD_PATH))
+	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-rpclib', [], RPCLIB_BUILD_PATH))
+	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-xercesc', [], XERCESC_BUILD_PATH))
 	if c.args.build_osm_world_renderer:
-		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-lunasvg', [ 'configure-lunasvg' ], LUNASVG_BUILD_PATH))
-		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-libosmscout', [ 'configure-libosmscout' ], LIBOSMSCOUT_BUILD_PATH))
+		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-lunasvg', [], LUNASVG_BUILD_PATH))
+		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-libosmscout', [], LIBOSMSCOUT_BUILD_PATH))
 	if c.args.build_osm2odr:
-		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [ 'configure-sumo' ], SUMO_BUILD_PATH))
+		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [], SUMO_BUILD_PATH))
 	if c.args.enable_chrono:
-		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-chrono', [ 'configure-chrono' ], CHRONO_BUILD_PATH))
+		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-chrono', [], CHRONO_BUILD_PATH))
 	c.task_graph.Execute()
 	c.task_graph.sequential = False
 		
 	# Install:
 
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-zlib', [ 'build-zlib' ], ZLIB_BUILD_PATH, ZLIB_INSTALL_PATH))
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-gtest', [ 'build-gtest' ], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-libpng', [ 'build-libpng' ], LIBPNG_BUILD_PATH, LIBPNG_INSTALL_PATH))
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [ 'build-proj' ], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-recast', [ 'build-recast' ], RECAST_BUILD_PATH, RECAST_INSTALL_PATH))
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-rpclib', [ 'build-rpclib' ], RPCLIB_BUILD_PATH, RPCLIB_INSTALL_PATH))
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-xercesc', [ 'build-xercesc' ], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
+	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-zlib', [], ZLIB_BUILD_PATH, ZLIB_INSTALL_PATH))
+	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-gtest', [], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
+	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-libpng', [], LIBPNG_BUILD_PATH, LIBPNG_INSTALL_PATH))
+	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
+	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-recast', [], RECAST_BUILD_PATH, RECAST_INSTALL_PATH))
+	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-rpclib', [], RPCLIB_BUILD_PATH, RPCLIB_INSTALL_PATH))
+	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-xercesc', [], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
 	if c.args.build_osm_world_renderer:
-		c.task_graph.Add(Task.CreateCMakeInstallDefault('install-lunasvg', [ 'build-lunasvg' ], LUNASVG_BUILD_PATH, LUNASVG_INSTALL_PATH))
-		c.task_graph.Add(Task.CreateCMakeInstallDefault('install-libosmscout', [ 'build-libosmscout' ], LIBOSMSCOUT_BUILD_PATH, LIBOSMSCOUT_INSTALL_PATH))
+		c.task_graph.Add(Task.CreateCMakeInstallDefault('install-lunasvg', [], LUNASVG_BUILD_PATH, LUNASVG_INSTALL_PATH))
+		c.task_graph.Add(Task.CreateCMakeInstallDefault('install-libosmscout', [], LIBOSMSCOUT_BUILD_PATH, LIBOSMSCOUT_INSTALL_PATH))
 	if c.args.build_osm2odr:
-		c.task_graph.Add(Task.CreateCMakeInstallDefault('install-sumo', [ 'build-sumo' ], SUMO_BUILD_PATH, SUMO_INSTALL_PATH))
+		c.task_graph.Add(Task.CreateCMakeInstallDefault('install-sumo', [], SUMO_BUILD_PATH, SUMO_INSTALL_PATH))
 	if c.args.enable_chrono:
-		c.task_graph.Add(Task.CreateCMakeInstallDefault('install-chrono', [ 'build-chrono' ], CHRONO_BUILD_PATH, CHRONO_INSTALL_PATH))
+		c.task_graph.Add(Task.CreateCMakeInstallDefault('install-chrono', [], CHRONO_BUILD_PATH, CHRONO_INSTALL_PATH))
 	c.task_graph.Execute()
 
 
