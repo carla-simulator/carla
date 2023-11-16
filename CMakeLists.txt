@@ -8,45 +8,46 @@ set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option (LIBCARLA_CLIENT "Whether to build the LibCarla client." ON)
-option (LIBCARLA_SERVER "Whether to build the LibCarla server." ON)
-option (LIBCARLA_PYTORCH_ENABLE "Whether to enable pytorch." OFF)
-option (PYTHON_API "Whether to build the CARLA Python API." ON)
-option (LIBCARLA_CLIENT_RSS "Whether to enable RSS components (ad-rss-lib)" OFF)
-option (LIBCARLA_INSTALL "Whether to install LibCarla and all of its dependencies." ON)
-option (OSM_ENABLE "" ON)
+option (BUILD_LIBCARLA_CLIENT "Whether to build the LibCarla client." ON)
+option (BUILD_LIBCARLA_SERVER "Whether to build the LibCarla server." ON)
+option (ENABLE_LIBCARLA_PYTORCH "Whether to enable pytorch." OFF)
+option (BUILD_PYTHON_API "Whether to build the CARLA Python API." ON)
+option (ENABLE_LIBCARLA_CLIENT_RSS "Whether to enable RSS components (ad-rss-lib)" OFF)
+option (INSTALL_LIBCARLA "Whether to install LibCarla and all of its dependencies." ON)
+option (BUILD_OSM_WORLD_RENDERER "" ON)
 
 set (CARLA_WORKSPACE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 set (CARLA_BUILD_PATH ${CMAKE_CURRENT_BINARY_DIR})
+set (CARLA_DEPENDENCIES_PATH ${CMAKE_CURRENT_BINARY_DIR}/Dependencies)
 
 set (LIBCARLA_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/LibCarla/source)
 set (LIBCARLA_THIRD_PARTY_SOURCE_PATH ${LIBCARLA_SOURCE_PATH}/third-party)
 set (PYTHONAPI_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/PythonAPI)
 
-set (BOOST_INCLUDE_PATH ${CARLA_BUILD_PATH}/boost-install/include)
-set (BOOST_LIBRARY_PATH ${CARLA_BUILD_PATH}/boost-install/lib)
-set (CHRONO_INCLUDE_PATH ${CARLA_BUILD_PATH}/chrono-install/include)
-set (CHRONO_LIBRARY_PATH ${CARLA_BUILD_PATH}/chrono-install/lib)
-set (EIGEN_INCLUDE_PATH ${CARLA_BUILD_PATH}/eigen-install/include)
-set (EIGEN_LIBRARY_PATH ${CARLA_BUILD_PATH}/eigen-install/lib)
-set (GOOGLETEST_INCLUDE_PATH ${CARLA_BUILD_PATH}/gtest-install/include)
-set (GOOGLETEST_LIBRARY_PATH ${CARLA_BUILD_PATH}/gtest-install/lib)
-set (LIBPNG_INCLUDE_PATH ${CARLA_BUILD_PATH}/libpng-install/include)
-set (LIBPNG_LIBRARY_PATH ${CARLA_BUILD_PATH}/libpng-install/lib)
-set (PROJ_INCLUDE_PATH ${CARLA_BUILD_PATH}/proj-install/include)
-set (PROJ_LIBRARY_PATH ${CARLA_BUILD_PATH}/proj-install/lib)
-set (RECAST_INCLUDE_PATH ${CARLA_BUILD_PATH}/recast-install/include)
-set (RECAST_LIBRARY_PATH ${CARLA_BUILD_PATH}/recast-install/lib)
-set (RPCLIB_INCLUDE_PATH ${CARLA_BUILD_PATH}/rpclib-install/include)
-set (RPCLIB_LIBRARY_PATH ${CARLA_BUILD_PATH}/rpclib-install/lib)
-set (SQLITE_INCLUDE_PATH ${CARLA_BUILD_PATH}/sqlite-install/include)
-set (SQLITE_LIBRARY_PATH ${CARLA_BUILD_PATH}/sqlite-install/lib)
-set (XERCESC_INCLUDE_PATH ${CARLA_BUILD_PATH}/xercesc-install/include)
-set (XERCESC_LIBRARY_PATH ${CARLA_BUILD_PATH}/xercesc-install/lib)
-set (ZLIB_INCLUDE_PATH ${CARLA_BUILD_PATH}/zlib-install/include)
-set (ZLIB_LIBRARY_PATH ${CARLA_BUILD_PATH}/zlib-install/lib)
-set (ZLIB_INCLUDE_PATH ${CARLA_BUILD_PATH}/zlib-source)
-set (ZLIB_LIBRARY_PATH ${CARLA_BUILD_PATH}/zlib-build)
+set (BOOST_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/boost-install/include)
+set (BOOST_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/boost-install/lib)
+set (CHRONO_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/chrono-install/include)
+set (CHRONO_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/chrono-install/lib)
+set (EIGEN_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/eigen-install/include)
+set (EIGEN_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/eigen-install/lib)
+set (GOOGLETEST_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/gtest-install/include)
+set (GOOGLETEST_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/gtest-install/lib)
+set (LIBPNG_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/libpng-install/include)
+set (LIBPNG_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/libpng-install/lib)
+set (PROJ_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/proj-install/include)
+set (PROJ_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/proj-install/lib)
+set (RECAST_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/recast-install/include)
+set (RECAST_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/recast-install/lib)
+set (RPCLIB_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/rpclib-install/include)
+set (RPCLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/rpclib-install/lib)
+set (SQLITE_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/sqlite-install/include)
+set (SQLITE_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/sqlite-install/lib)
+set (XERCESC_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/xercesc-install/include)
+set (XERCESC_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/xercesc-install/lib)
+set (ZLIB_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-install/include)
+set (ZLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-install/lib)
+set (ZLIB_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-source)
+set (ZLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-build)
 
 add_compile_definitions (BOOST_ERROR_CODE_HEADER_ONLY)
 add_compile_definitions (LIBCARLA_IMAGE_WITH_PNG_SUPPORT)
@@ -59,7 +60,7 @@ endif ()
 
 
 
-if (LIBCARLA_SERVER)
+if (BUILD_LIBCARLA_SERVER)
 
     project (LibCarla-Server)
 
@@ -115,16 +116,19 @@ if (LIBCARLA_SERVER)
         ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.hpp
     )
 
-    add_library (LibCarla-Server STATIC ${LIBCARLA_SERVER_SOURCES})
+    add_library (
+        LibCarla-Server STATIC ${LIBCARLA_SERVER_SOURCES})
 
-    target_compile_options (LibCarla-Server PRIVATE /EHsc)
-    target_include_directories (LibCarla-Server PRIVATE ${LIBCARLA_SERVER_INCLUDE_PATHS})
+    target_compile_options (
+        LibCarla-Server PRIVATE /EHsc)
+    target_include_directories (
+        LibCarla-Server PRIVATE ${LIBCARLA_SERVER_INCLUDE_PATHS})
 
 endif ()
 
 
 
-if (LIBCARLA_CLIENT)
+if (BUILD_LIBCARLA_CLIENT)
 
     project (LibCarla-Client)
 
@@ -204,7 +208,7 @@ endif ()
 
 
 
-if (OSM_ENABLE)
+if (BUILD_OSM_WORLD_RENDERER)
 
     project (OsmMapRenderer)
 
