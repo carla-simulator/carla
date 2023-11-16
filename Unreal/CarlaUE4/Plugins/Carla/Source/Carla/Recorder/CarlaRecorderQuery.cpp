@@ -16,9 +16,10 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/VehicleLightState.h>
-#include <carla/Vehicle/CarlaWheeledVehicle.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <compiler/enable-ue4-macros.h>
+
+#include <Carla/Vehicle/CarlaWheeledVehicle.h>
 
 inline bool CarlaRecorderQuery::ReadHeader(void)
 {
