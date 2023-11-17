@@ -5,6 +5,52 @@ import subprocess, tarfile, zipfile, requests, psutil, shutil, glob, json, sys, 
 
 FORCE_SEQUENTIAL = False
 
+CARLA_VERSION_MAJOR = 0
+CARLA_VERSION_MINOR = 9
+CARLA_VERSION_PATCH = 14
+CARLA_VERSION_STRING = f'{CARLA_VERSION_MAJOR}.{CARLA_VERSION_MINOR}.{CARLA_VERSION_PATCH}'
+# Basic paths
+WORKSPACE_PATH = Path(__file__).parent.resolve()
+LIBCARLA_ROOT_PATH = WORKSPACE_PATH / 'LibCarla'
+PYTHON_API_PATH = WORKSPACE_PATH / 'PythonAPI'
+EXAMPLES_PATH = WORKSPACE_PATH / 'Examples'
+BUILD_PATH = WORKSPACE_PATH / 'Build'
+LIBCARLA_INSTALL_PATH = BUILD_PATH
+DEPENDENCIES_PATH = BUILD_PATH / 'Dependencies'
+DIST_PATH = WORKSPACE_PATH / 'Dist'
+UTIL_PATH = WORKSPACE_PATH / 'Util'
+DOCKER_UTILS_PATH = UTIL_PATH / 'DockerUtils'
+BUILD_TOOLS_PATH = UTIL_PATH / 'BuildTools'
+# UE plugin
+CARLA_UE_PATH = WORKSPACE_PATH / 'Unreal' / 'CarlaUE4'
+CARLA_UE_PLUGIN_ROOT_PATH = CARLA_UE_PATH / 'Plugins'
+CARLA_UE_PLUGIN_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'Carla'
+CARLA_UE_PLUGIN_DEPENDENCIES_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'CarlaDependencies'
+# PythonAPI
+PYTHON_API_SOURCE_PATH = PYTHON_API_PATH / 'carla'
+# LibCarla
+LIBCARLA_BUILD_PATH = BUILD_PATH
+LIBCARLA_TEST_CONTENT_PATH = BUILD_PATH / 'test-content'
+# Misc
+TEST_RESULTS_PATH = BUILD_PATH / 'test-results'
+LIBSTDCPP_TOOLCHAIN_PATH = BUILD_PATH / 'LibStdCppToolChain.cmake'
+LIBCPP_TOOLCHAIN_PATH = BUILD_PATH / 'LibCppToolChain.cmake'
+EXE_EXT = '.exe' if os.name == 'nt' else ''
+LIB_EXT = '.lib' if os.name == 'nt' else '.a'
+OBJ_EXT = '.obj' if os.name == 'nt' else '.o'
+SHELL_EXT = '.bat' if os.name == 'nt' else ''
+# Unreal Engine
+UE_WORKSPACE_PATH = Path(os.getenv('UE4_ROOT', ''))
+if not UE_WORKSPACE_PATH.exists():
+	print('Could not find Unreal Engine workspace. Please set the environment variable UE4_ROOT as specified in the docs.')
+	exit(-1)
+# Omniverse
+NV_OMNIVERSE_PLUGIN_PATH = UE_WORKSPACE_PATH / 'Engine' / 'Plugins' / 'Marketplace' / 'NVIDIA' / 'Omniverse'
+NV_OMNIVERSE_PATCH_PATH = UTIL_PATH / 'Patches' / 'omniverse_4.26'
+# Script settings
+DEFAULT_PARALLELISM = psutil.cpu_count(logical = True)
+CMAKE_GENERATOR = 'Ninja'
+
 # Script types
 
 class Download:
@@ -46,7 +92,8 @@ class Task:
 			in_edges : list,
 			source_path : Path,
 			build_path : Path,
-			*args):
+			*args,
+			install_path : Path = None):
 		cmd = [
 			'cmake',
 			'-G', CMAKE_GENERATOR,
@@ -55,8 +102,10 @@ class Task:
 			'-DCMAKE_C_COMPILER=' + c_compiler,
 			'-DCMAKE_CXX_COMPILER=' + cpp_compiler,
 			'-DCMAKE_BUILD_TYPE=Release',
-			'-DCMAKE_CXX_FLAGS_RELEASE="/MD"'
+			'-DCMAKE_CXX_FLAGS_RELEASE="/MD"',
 		]
+		if install_path != None:
+			cmd.append('-DCMAKE_INSTALL_PREFIX=' + str(install_path))
 		cmd.extend([ *args ])
 		cmd.append(source_path)
 		return Task.CreateSubprocessTask(name, in_edges, cmd)
@@ -104,21 +153,26 @@ class TaskGraph:
 			self.sources.append(task.name)
 		self.task_map[task.name] = self.tasks[-1]
 
-	def Execute(self):
-		for e in self.tasks:
-			for in_edge in e.in_edges:
-				self.task_map[in_edge].out_edges.append(e)
-		for e in self.sources:
-			task = self.task_map.get(e, None)
-			assert task != None and type(task) is Task
+	def Execute(self, sequential : bool = False):
+		prior_sequential = self.sequential
+		try:
+			self.sequential = sequential
+			for e in self.tasks:
+				for in_edge in e.in_edges:
+					self.task_map[in_edge].out_edges.append(e)
+			for e in self.sources:
+				task = self.task_map.get(e, None)
+				assert task != None and type(task) is Task
+				if not self.sequential:
+					self.futures.append(self.pool.submit(task.Run))
+				else:
+					task.Run()
 			if not self.sequential:
-				self.futures.append(self.pool.submit(task.Run))
-			else:
-				task.Run()
-		if not self.sequential:
-			for e in as_completed(self.futures):
-				e.result()
-		self.Reset()
+				for e in as_completed(self.futures):
+					e.result()
+		finally:
+			self.sequential = prior_sequential
+			self.Reset()
 
 class Context:
 	def __init__(self, args, parallelism):
@@ -134,9 +188,6 @@ DEFAULT_DEPENDENCIES = [
 		Download('https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.zip'),
 		Download('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_1_83_0.zip')),
 	Dependency(
-		'chrono',
-		GitRepository('https://github.com/projectchrono/chrono.git', tag = '8.0.0')),
-	Dependency(
 		'eigen',
 		GitRepository('https://gitlab.com/libeigen/eigen.git', tag = '3.4.0')),
 	Dependency(
@@ -151,8 +202,8 @@ DEFAULT_DEPENDENCIES = [
 		GitRepository('https://github.com/google/googletest.git', tag = 'v1.14.0')),
 	Dependency(
 		'zlib',
-		Download('https://zlib.net/current/zlib.tar.gz'),
-		GitRepository('https://github.com/madler/zlib.git', tag = 'v1.3')),
+		GitRepository('https://github.com/madler/zlib.git'),
+		Download('https://zlib.net/current/zlib.tar.gz')),
 	Dependency(
 		'xercesc',
 		GitRepository('https://github.com/apache/xerces-c.git', tag = 'v3.2.4'),
@@ -169,6 +220,12 @@ DEFAULT_DEPENDENCIES = [
 		GitRepository('https://github.com/recastnavigation/recastnavigation.git', tag = 'v1.6.0')),
 ]
 
+CHRONO_DEPENDENCIES = [
+	Dependency(
+		'chrono',
+		GitRepository('https://github.com/projectchrono/chrono.git', tag = '8.0.0'))
+]
+
 OSM_WORLD_RENDERER_DEPENDENCIES = [
 	Dependency(
 		'libosmscout',
@@ -181,8 +238,15 @@ OSM_WORLD_RENDERER_DEPENDENCIES = [
 OSM2ODR_DEPENDENCIES = [
 	Dependency(
 		'sumo',
-		GitRepository('https://github.com/carla-simulator/sumo.git')),
+		GitRepository('https://github.com/carla-simulator/sumo.git', tag = 'carla_osm2odr')),
 ]
+
+DEPENDENCY_MAP = {
+	**{ e.name : e for e in DEFAULT_DEPENDENCIES },
+	**{ e.name : e for e in CHRONO_DEPENDENCIES },
+	**{ e.name : e for e in OSM_WORLD_RENDERER_DEPENDENCIES },
+	**{ e.name : e for e in OSM2ODR_DEPENDENCIES }
+}
 
 def FindExecutable(candidates : list):
 	for e in candidates:
@@ -228,52 +292,6 @@ lib = FindExecutable([
 	'ar'
 ])
 
-# Basic paths
-WORKSPACE_PATH = Path(__file__).parent.resolve()
-LIBCARLA_ROOT_PATH = WORKSPACE_PATH / 'LibCarla'
-PYTHON_API_PATH = WORKSPACE_PATH / 'PythonAPI'
-EXAMPLES_PATH = WORKSPACE_PATH / 'Examples'
-BUILD_PATH = WORKSPACE_PATH / 'Build'
-LIBCARLA_INSTALL_PATH = BUILD_PATH
-DEPENDENCIES_PATH = BUILD_PATH / 'Dependencies'
-DIST_PATH = WORKSPACE_PATH / 'Dist'
-UTIL_PATH = WORKSPACE_PATH / 'Util'
-DOCKER_UTILS_PATH = UTIL_PATH / 'DockerUtils'
-BUILD_TOOLS_PATH = UTIL_PATH / 'BuildTools'
-# UE plugin
-CARLA_UE_PATH = WORKSPACE_PATH / 'Unreal' / 'CarlaUE4'
-CARLA_UE_PLUGIN_ROOT_PATH = CARLA_UE_PATH / 'Plugins'
-CARLA_UE_PLUGIN_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'Carla'
-CARLA_UE_PLUGIN_DEPENDENCIES_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'CarlaDependencies'
-# PythonAPI
-PYTHON_API_SOURCE_PATH = PYTHON_API_PATH / 'carla'
-# LibCarla
-LIBCARLA_BUILD_PATH = BUILD_PATH
-LIBCARLA_TEST_CONTENT_PATH = BUILD_PATH / 'test-content'
-# OSM2ODR
-OSM2ODR_BUILD_PATH = BUILD_PATH / 'libosm2dr-build'
-OSM2ODR_BUILD_PATH_SERVER = BUILD_PATH / 'libosm2dr-build-server'
-OSM2ODR_SOURCE_PATH = BUILD_PATH / 'libosm2dr-source'
-# Misc
-TEST_RESULTS_PATH = BUILD_PATH / 'test-results'
-LIBSTDCPP_TOOLCHAIN_PATH = BUILD_PATH / 'LibStdCppToolChain.cmake'
-LIBCPP_TOOLCHAIN_PATH = BUILD_PATH / 'LibCppToolChain.cmake'
-EXE_EXT = '.exe' if os.name == 'nt' else ''
-LIB_EXT = '.lib' if os.name == 'nt' else '.a'
-OBJ_EXT = '.obj' if os.name == 'nt' else '.o'
-SHELL_EXT = '.bat' if os.name == 'nt' else ''
-# Unreal Engine
-UE_WORKSPACE_PATH = Path(os.getenv('UE4_ROOT', ''))
-if not UE_WORKSPACE_PATH.exists():
-	print('Could not find Unreal Engine workspace. Please set the environment variable UE4_ROOT as specified in the docs.')
-	exit(-1)
-# Omniverse
-NV_OMNIVERSE_PLUGIN_PATH = UE_WORKSPACE_PATH / 'Engine' / 'Plugins' / 'Marketplace' / 'NVIDIA' / 'Omniverse'
-NV_OMNIVERSE_PATCH_PATH = UTIL_PATH / 'Patches' / 'omniverse_4.26'
-# Script settings
-DEFAULT_PARALLELISM = psutil.cpu_count(logical = True)
-CMAKE_GENERATOR = 'Ninja'
-
 # Dependency paths
 BOOST_TOOLSET = 'msvc-14.2'
 BOOST_TOOLSET_SHORT = 'vc142'
@@ -287,6 +305,7 @@ BOOST_B2_PATH = BOOST_SOURCE_PATH / f'b2{EXE_EXT}'
 EIGEN_SOURCE_PATH = DEPENDENCIES_PATH / 'eigen-source'
 EIGEN_BUILD_PATH = DEPENDENCIES_PATH / 'eigen-build'
 EIGEN_INSTALL_PATH = DEPENDENCIES_PATH / 'eigen-install'
+EIGEN_INCLUDE_PATH = EIGEN_INSTALL_PATH / 'include'
 
 CHRONO_SOURCE_PATH = DEPENDENCIES_PATH / 'chrono-source'
 CHRONO_BUILD_PATH = DEPENDENCIES_PATH / 'chrono-build'
@@ -295,49 +314,59 @@ CHRONO_INSTALL_PATH = DEPENDENCIES_PATH / 'chrono-install'
 GTEST_SOURCE_PATH = DEPENDENCIES_PATH / 'gtest-source'
 GTEST_BUILD_PATH = DEPENDENCIES_PATH / 'gtest-build'
 GTEST_INSTALL_PATH = DEPENDENCIES_PATH / 'gtest-install'
+GTEST_INCLUDE_PATH = GTEST_INSTALL_PATH / 'include'
 
 ZLIB_SOURCE_PATH = DEPENDENCIES_PATH / 'zlib-source'
 ZLIB_BUILD_PATH = DEPENDENCIES_PATH / 'zlib-build'
 ZLIB_INSTALL_PATH = DEPENDENCIES_PATH / 'zlib-install'
-ZLIB_LIBRARY_PATH = ZLIB_BUILD_PATH / f'zlib{LIB_EXT}'
+ZLIB_INCLUDE_PATH = ZLIB_INSTALL_PATH / 'include'
+ZLIB_LIBRARY_PATH = ZLIB_INSTALL_PATH / 'lib' / f'zlib{LIB_EXT}'
 
 LIBPNG_SOURCE_PATH = DEPENDENCIES_PATH / 'libpng-source'
 LIBPNG_BUILD_PATH = DEPENDENCIES_PATH / 'libpng-build'
 LIBPNG_INSTALL_PATH = DEPENDENCIES_PATH / 'libpng-install'
+LIBPNG_INCLUDE_PATH = LIBPNG_INSTALL_PATH / 'include'
 
 SQLITE_SOURCE_PATH = DEPENDENCIES_PATH / 'sqlite-source'
 SQLITE_BUILD_PATH = DEPENDENCIES_PATH / 'sqlite-build'
-SQLITE_INSTALL_PATH = DEPENDENCIES_PATH / 'sqlite-install'
 SQLITE_EXECUTABLE_PATH = SQLITE_BUILD_PATH / f'sqlite{EXE_EXT}'
 SQLITE_LIBRARY_PATH = SQLITE_BUILD_PATH / f'sqlite{LIB_EXT}'
+SQLITE_INCLUDE_PATH = SQLITE_SOURCE_PATH
 
 PROJ_SOURCE_PATH = DEPENDENCIES_PATH / 'proj-source'
 PROJ_BUILD_PATH = DEPENDENCIES_PATH / 'proj-build'
 PROJ_INSTALL_PATH = DEPENDENCIES_PATH / 'proj-install'
+PROJ_INCLUDE_PATH = PROJ_INSTALL_PATH / 'include'
 
 RECAST_SOURCE_PATH = DEPENDENCIES_PATH / 'recast-source'
 RECAST_BUILD_PATH = DEPENDENCIES_PATH / 'recast-build'
 RECAST_INSTALL_PATH = DEPENDENCIES_PATH / 'recast-install'
+RECAST_INCLUDE_PATH = RECAST_INSTALL_PATH / 'include'
 
 RPCLIB_SOURCE_PATH = DEPENDENCIES_PATH / 'rpclib-source'
 RPCLIB_BUILD_PATH = DEPENDENCIES_PATH / 'rpclib-build'
 RPCLIB_INSTALL_PATH = DEPENDENCIES_PATH / 'rpclib-install'
+RPCLIB_INCLUDE_PATH = RPCLIB_INSTALL_PATH / 'include'
 
 XERCESC_SOURCE_PATH = DEPENDENCIES_PATH / 'xercesc-source'
 XERCESC_BUILD_PATH = DEPENDENCIES_PATH / 'xercesc-build'
 XERCESC_INSTALL_PATH = DEPENDENCIES_PATH / 'xercesc-install'
+XERCESC_INCLUDE_PATH = XERCESC_INSTALL_PATH / 'include'
 
 LIBOSMSCOUT_SOURCE_PATH = DEPENDENCIES_PATH / 'libosmscout-source'
 LIBOSMSCOUT_BUILD_PATH = DEPENDENCIES_PATH / 'libosmscout-build'
 LIBOSMSCOUT_INSTALL_PATH = DEPENDENCIES_PATH / 'libosmscout-install'
+LIBOSMSCOUT_INCLUDE_PATH = LIBOSMSCOUT_INSTALL_PATH / 'include'
 
 LUNASVG_SOURCE_PATH = DEPENDENCIES_PATH / 'lunasvg-source'
 LUNASVG_BUILD_PATH = DEPENDENCIES_PATH / 'lunasvg-build'
 LUNASVG_INSTALL_PATH = DEPENDENCIES_PATH / 'lunasvg-install'
+LUNASVG_INCLUDE_PATH = LUNASVG_INSTALL_PATH / 'include'
 
 SUMO_SOURCE_PATH = DEPENDENCIES_PATH / 'sumo-source'
 SUMO_BUILD_PATH = DEPENDENCIES_PATH / 'sumo-build'
 SUMO_INSTALL_PATH = DEPENDENCIES_PATH / 'sumo-install'
+SUMO_INCLUDE_PATH = SUMO_INSTALL_PATH / 'include'
 
 houdini_url = 'https://github.com/sideeffects/HoudiniEngineForUnreal.git'
 houdini_plugin_path = CARLA_UE_PLUGIN_ROOT_PATH / 'HoudiniEngine'
@@ -504,8 +533,83 @@ def BuildCarlaUEMain(c : Context):
 	c.task_graph.Add(Task('build-carla_ue', [], BuildCarlaUECore, c))
 
 def BuildPythonAPIMain(c : Context):
-	Log('Building Python API')
-	pass
+	import setuptools
+
+	library_paths = []
+	libraries = []
+	extra_compile_args = [
+        '/experimental:external', '/external:W0', '/external:I', 'dependencies/include/system',
+        '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB',
+        '/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0600', '/DHAVE_SNPRINTF',
+        '/DLIBCARLA_WITH_PYTHON_SUPPORT', '-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true', '/MD']
+	extra_link_args = []
+
+	dependency_patterns = [
+		f'{BUILD_PATH}/**/LibCarla-Client{LIB_EXT}',
+		f'{BOOST_INSTALL_PATH}/**/libboost_python{sys.version_info.major}{sys.version_info.minor}{LIB_EXT}',
+		f'{BOOST_INSTALL_PATH}/**/libboost_filesystem{LIB_EXT}',
+        f'{RPCLIB_INSTALL_PATH}/**/rpc{LIB_EXT}',
+        f'{LIBPNG_INSTALL_PATH}/**/libpng*{LIB_EXT}',
+		f'{ZLIB_BUILD_PATH}/**/zlib{LIB_EXT}',
+        f'{RECAST_INSTALL_PATH}/**/Recast{LIB_EXT}',
+		f'{RECAST_INSTALL_PATH}/**/Detour{LIB_EXT}',
+		f'{RECAST_INSTALL_PATH}/**/DetourCrowd{LIB_EXT}',
+        f'{XERCESC_INSTALL_PATH}/**/xerces-c*{LIB_EXT}',
+		f'{SQLITE_BUILD_PATH}/**/sqlite*{LIB_EXT}',
+        f'{PROJ_INSTALL_PATH}/**/proj{LIB_EXT}',
+		f'{SUMO_INSTALL_PATH}/**/osm2odr{LIB_EXT}'
+	]
+
+	include_paths = [
+		LIBCARLA_ROOT_PATH,
+		BOOST_INCLUDE_PATH,
+		RPCLIB_INCLUDE_PATH,
+		LIBPNG_INCLUDE_PATH,
+		ZLIB_INCLUDE_PATH,
+		RECAST_INCLUDE_PATH,
+		XERCESC_INCLUDE_PATH,
+		SQLITE_INCLUDE_PATH,
+		PROJ_INCLUDE_PATH,
+		SUMO_INCLUDE_PATH,
+	]
+
+	for d in dependency_patterns:
+		candidates = glob.glob(d, recursive = True)
+		assert len(candidates) != 0
+		extra_link_args.append(candidates[0])
+	
+	depends = [ e for e in os.walk(PYTHON_API_SOURCE_PATH / 'libcarla') ]
+
+	extensions = [ setuptools.Extension(
+		'carla.libcarla',
+        sources = [ str(PYTHON_API_SOURCE_PATH / 'source' / 'libcarla' / 'libcarla.cpp') ],
+        include_dirs = include_paths,
+        library_dirs = library_paths,
+        libraries = libraries,
+        extra_compile_args = extra_compile_args,
+        extra_link_args = extra_link_args,
+        language = 'c++14',
+        depends = depends) ]
+	
+	readme = ''
+	with open(WORKSPACE_PATH / 'README.md', 'r') as file:
+		readme = file.read()
+
+	setuptools.setup(
+    	name = 'carla',
+    	version = CARLA_VERSION_STRING,
+    	package_dir = { '': 'source' },
+    	packages = ['carla'],
+    	ext_modules = extensions,
+    	license = 'MIT License' if not c.args.enable_rss else 'LGPL-v2.1-only License',
+    	description = 'Python API for communicating with the CARLA server.',
+    	long_description = readme,
+    	long_description_content_type = 'text/markdown',
+    	url = 'https://github.com/carla-simulator/carla',
+    	author = 'The CARLA team',
+    	author_email = 'carla.simulator@gmail.com',
+    	include_package_data = True
+	)
 
 def SetupUnrealEngine(c : Context):
 	Log('Setting up Unreal Engine.')
@@ -528,6 +632,8 @@ def UpdateDependencies(c : Context):
 		unique_dependencies.update(OSM_WORLD_RENDERER_DEPENDENCIES)
 	if c.args.build_osm2odr:
 		unique_dependencies.update(OSM2ODR_DEPENDENCIES)
+	if c.args.enable_chrono:
+		unique_dependencies.update(CHRONO_DEPENDENCIES)
 	for dep in unique_dependencies:
 		name = dep.name
 		c.task_graph.Add(Task(f'update-{name}', [], UpdateDependency, dep))
@@ -568,19 +674,13 @@ def BuildSQLite():
 	sqlite_sources = glob.glob(f'{SQLITE_SOURCE_PATH}/**/*.c', recursive = True)
 	if os.name == 'nt' and 'clang' in c_compiler:
 		if not SQLITE_EXECUTABLE_PATH.exists():
-			cmd = [
-				c_compiler,
-				f'-fuse-ld={linker}', '-march=native', '/O2', '/MD', '/EHsc',
-			]
+			cmd = [ c_compiler, f'-fuse-ld={linker}', '-march=native', '/O2', '/MD', '/EHsc' ]
 			cmd.extend(sqlite_sources)
 			cmd.append('-o')
 			cmd.append(SQLITE_EXECUTABLE_PATH)
 			LaunchSubprocessImmediate(cmd)
 		if not SQLITE_LIBRARY_PATH.exists():
-			cmd = [
-				c_compiler,
-				f'-fuse-ld={lib}', '-march=native', '/O2', '/MD', '/EHsc',
-			]
+			cmd = [ c_compiler, f'-fuse-ld={lib}', '-march=native', '/O2', '/MD', '/EHsc' ]
 			cmd.extend(sqlite_sources)
 			cmd.append('-o')
 			cmd.append(SQLITE_LIBRARY_PATH)
@@ -603,7 +703,8 @@ def BuildDependencies(c : Context):
 		'configure-zlib',
 		[],
 		ZLIB_SOURCE_PATH,
-		ZLIB_BUILD_PATH))
+		ZLIB_BUILD_PATH,
+		install_path = ZLIB_INSTALL_PATH)) # ZLib determines where to install during configure.
 
 	c.task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-gtest',
@@ -619,7 +720,7 @@ def BuildDependencies(c : Context):
 		'-DPNG_TESTS=OFF',
 		'-DPNG_TOOLS=OFF',
 		'-DPNG_BUILD_ZLIB=ON',
-		f'-DZLIB_INCLUDE_DIRS={ZLIB_SOURCE_PATH};{ZLIB_BUILD_PATH}',
+		f'-DZLIB_INCLUDE_DIRS={ZLIB_INCLUDE_PATH}',
 		f'-DZLIB_LIBRARIES={ZLIB_LIBRARY_PATH}'))
 
 	c.task_graph.Add(Task.CreateCMakeConfigureDefault(
@@ -696,13 +797,23 @@ def BuildDependencies(c : Context):
 			[],
 			SUMO_SOURCE_PATH,
 			SUMO_BUILD_PATH,
-			'-DSUMO_LIBRARIES=OFF',
-			f'-DZLIB_INCLUDE_DIR={ZLIB_SOURCE_PATH}',
-			f'-DZLIB_LIBRARY={ZLIB_INSTALL_PATH}/zlib{LIB_EXT}',
+			f'-DZLIB_INCLUDE_DIR={ZLIB_INCLUDE_PATH}',
+			f'-DZLIB_LIBRARY={ZLIB_LIBRARY_PATH}',
         	f'-DPROJ_INCLUDE_DIR={PROJ_INSTALL_PATH}/include',
         	f'-DPROJ_LIBRARY={PROJ_INSTALL_PATH}/lib/proj{LIB_EXT}',
         	f'-DXercesC_INCLUDE_DIR={XERCESC_INSTALL_PATH}/include',
-        	f'-DXercesC_LIBRARY={FindXercesC()}'))
+        	f'-DXercesC_LIBRARY={FindXercesC()}',
+			'-DSUMO_LIBRARIES=OFF',
+			# '-DPROFILING=OFF',
+			# '-DPPROF=OFF',
+			# '-DCOVERAGE=OFF',
+			# '-DSUMO_UTILS=OFF',
+			# '-DFMI=OFF',
+			# '-DNETEDIT=OFF',
+			# '-DENABLE_JAVA_BINDINGS=OFF',
+			# '-DENABLE_CS_BINDINGS=OFF',
+			# '-DCCACHE_SUPPORT=OFF',
+		))
 
 	if c.args.enable_chrono:
 		c.task_graph.Add(Task.CreateCMakeConfigureDefault(
@@ -712,11 +823,10 @@ def BuildDependencies(c : Context):
 			CHRONO_BUILD_PATH,
 			f'-DEIGEN3_INCLUDE_DIR={EIGEN_SOURCE_PATH}',
 			'-DENABLE_MODULE_VEHICLE=ON'))
+		
 	c.task_graph.Execute()
 
 	# Build:
-
-	c.task_graph.sequential = True
 	c.task_graph.Add(Task('build-boost', [], BuildAndInstallBoost))
 	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-zlib', [], ZLIB_BUILD_PATH))
 	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-gtest', [], GTEST_BUILD_PATH))
@@ -732,11 +842,10 @@ def BuildDependencies(c : Context):
 		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [], SUMO_BUILD_PATH))
 	if c.args.enable_chrono:
 		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-chrono', [], CHRONO_BUILD_PATH))
-	c.task_graph.Execute()
-	c.task_graph.sequential = False
+	c.task_graph.Execute(True)
 		
 	# Install:
-
+	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-zlib', [], ZLIB_BUILD_PATH, ZLIB_INSTALL_PATH))
 	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-gtest', [], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
 	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-libpng', [], LIBPNG_BUILD_PATH, LIBPNG_INSTALL_PATH))
 	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
@@ -756,7 +865,6 @@ def BuildDependencies(c : Context):
 
 def ParseCommandLine():
 	arg_parser = ArgumentParser(description = __doc__)
-
 	BUILD_LIBCARLA_CLIENT_OVERRIDE = True
 	BUILD_LIBCARLA_SERVER_OVERRIDE = True
 	BUILD_LIBCARLA_PYTORCH_OVERRIDE = True
@@ -764,139 +872,114 @@ def ParseCommandLine():
 	BUILD_CARLA_UE_OVERRIDE = False
 	UPDATE_DEPENDENCIES_OVERRIDE = True
 	BUILD_DEPENDENCIES_OVERRIDE = True
-	BUILD_OSM2ODR_OVERRIDE = False
+	BUILD_OSM2ODR_OVERRIDE = True
 	BUILD_OSM_WORLD_RENDERER_OVERRIDE = False
 	BUILD_PACKAGE_OVERRIDE = True
 	CLEAN_OVERRIDE = False
-	
 	arg_parser.add_argument(
 		'-build-libcarla-client',
 		action='store_true',
 		default = BUILD_LIBCARLA_CLIENT_OVERRIDE,
 		help = 'Whether to build LibCarla Client.')
-	
 	arg_parser.add_argument(
 		'-build-libcarla-server',
 		action='store_true',
 		default = BUILD_LIBCARLA_SERVER_OVERRIDE,
 		help = 'Whether to build LibCarla Server.')
-	
 	arg_parser.add_argument(
 		'-build-libcarla-pytorch',
 		action='store_true',
 		default = BUILD_LIBCARLA_PYTORCH_OVERRIDE,
 		help = 'Whether to build LibCarla-PyTorch.')
-	
 	arg_parser.add_argument(
 		'-build-python-api',
 		action='store_true',
 		default = BUILD_PYTHON_API_OVERRIDE,
 		help = 'Whether to build the CARLA Python API.')
-	
 	arg_parser.add_argument(
 		'-build-carla-unreal',
 		action='store_true',
 		default = BUILD_CARLA_UE_OVERRIDE,
 		help = 'Build to build the Unreal Engine Carla backend.')
-	
 	arg_parser.add_argument(
 		'-update-dependencies',
 		action='store_true',
 		default = UPDATE_DEPENDENCIES_OVERRIDE,
 		help = 'Whether to update the CARLA dependencies.')
-	
 	arg_parser.add_argument(
 		'-build-dependencies',
 		action='store_true',
 		default = BUILD_DEPENDENCIES_OVERRIDE,
 		help = 'Whether to build the CARLA dependencies.')
-	
 	arg_parser.add_argument(
 		'-build-osm-world-renderer',
 		action='store_true',
 		default = BUILD_OSM_WORLD_RENDERER_OVERRIDE,
 		help = 'Whether to build OSM World Renderer.')
-	
 	arg_parser.add_argument(
 		'-build-osm2odr',
 		action='store_true',
 		default = BUILD_OSM2ODR_OVERRIDE,
 		help = 'Whether to build OSM2ODR.')
-	
 	arg_parser.add_argument(
 		'-package',
 		action='store_true',
 		default = BUILD_PACKAGE_OVERRIDE,
 		help = 'Whether to package Carla.')
-	
 	arg_parser.add_argument(
 		'-clean',
 		action='store_true',
 		default = CLEAN_OVERRIDE,
 		help = 'Clean build files.')
-	
-	# Carla UE:
-	
+	arg_parser.add_argument(
+		'-enable-rss',
+		action='store_true',
+		help = 'Whether to enable "RSS".')
 	arg_parser.add_argument(
 		'-enable-carsim',
 		action='store_true',
 		help = 'Whether to enable plugin "CarSim".')
-	
 	arg_parser.add_argument(
 		'-enable-chrono',
 		action='store_true',
 		help = 'Whether to enable plugin "Chrono".')
-	
 	arg_parser.add_argument(
 		'-enable-unity',
 		action='store_true',
 		help = 'Whether to enable plugin "Unity".')
-	
 	arg_parser.add_argument(
 		'-enable-omniverse',
 		action='store_true',
 		help = 'Whether to enable plugin "NVIDIA Omniverse".')
-	
 	return arg_parser.parse_args()
 
 
 
 def Main():
 	Log('Started.')
-
 	BUILD_PATH.mkdir(exist_ok = True)
 	DEPENDENCIES_PATH.mkdir(exist_ok = True)
-	
 	arg = ParseCommandLine()
 	c = Context(arg, DEFAULT_PARALLELISM)
-
 	if arg.clean:
 		try:
 			shutil.rmtree(BUILD_PATH)
 		finally:
 			Log(f'Failed to remove {BUILD_PATH}.')
 			exit(-1)
-
 	if arg.update_dependencies or True:
 		UpdateDependencies(c)
-		
 	for ext in [ '*.tmp', '*.zip', '*.tar.gz' ]:
 		for e in DEPENDENCIES_PATH.glob(ext):
 			e.unlink(missing_ok = True)
-	
 	if arg.build_dependencies or True:
 		BuildDependencies(c)
-
 	BuildLibCarlaMain(c)
-
 	if arg.build_python_api:
 		BuildPythonAPIMain(c)
-
 	if arg.build_carla_unreal:
 		BuildCarlaUEMain(c)
-	
 	c.task_graph.Execute()
-	
 	Log('Done.')
 
 if __name__ == '__main__':

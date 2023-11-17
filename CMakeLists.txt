@@ -10,7 +10,7 @@ set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option (BUILD_LIBCARLA_CLIENT "Whether to build the LibCarla client." ON)
 option (BUILD_LIBCARLA_SERVER "Whether to build the LibCarla server." ON)
-option (ENABLE_LIBCARLA_PYTORCH "Whether to enable pytorch." OFF)
+option (ENABLE_LIBCARLA_PYTORCH "Whether to enable LibCarla-PyTorch." OFF)
 option (BUILD_PYTHON_API "Whether to build the CARLA Python API." ON)
 option (ENABLE_LIBCARLA_CLIENT_RSS "Whether to enable RSS components (ad-rss-lib)" OFF)
 option (INSTALL_LIBCARLA "Whether to install LibCarla and all of its dependencies." ON)
