@@ -25,6 +25,7 @@
   * Fixed bug causing the `FPixelReader::SavePixelsToDisk(PixelData, FilePath)` function to crash due to pixel array not set correctly.
   * Fixed segfaults in Python API due to incorrect GIL locking under Python 3.10.
   * Fixed the import script, where could use any other TilesInfo.txt if the destination folder has many
+  * Added vehicle doors to the recorder
 
 ## CARLA 0.9.14
 
