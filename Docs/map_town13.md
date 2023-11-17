@@ -5,7 +5,7 @@
 Town 13 is a Large Map with dimensions of 10x10 km<sup>2</sup>. It is divided into 36 tiles, most with dimensions of 2x2 km<sup>2</sup> (some edge tiles are smaller). There are numerous contrasting regions to the city including urban, residential and rural areas, along with a large highway system surrounding the city with a ringroad. The architectural styles reflect those of many medium to large cities across North America.  
 
 !!! note
-    Town 13 has been designed as an adjunct to Town 13, such that they can serve as a __train-test pair__. The towns share many common features, but also many differences in the styles of buildings, road textures, pavement textures and also vegetation. Using one of the pair to produce training data and then using the other for testing is ideal for exposing overfitting issues that might be arising while developing an AD stack.
+    Town 13 has been designed as an adjunct to Town 12, such that they can serve as a __train-test pair__. The towns share many common features, but also many differences in the styles of buildings, road textures, pavement textures and also vegetation. Using one of the pair to produce training data and then using the other for testing is ideal for exposing overfitting issues that might be arising while developing an AD stack.
 
 ## Navigator
 
