@@ -19,7 +19,6 @@
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <compiler/enable-ue4-macros.h>
 
-
 #include <Carla/Vehicle/CarlaWheeledVehicle.h>
 
 inline bool CarlaRecorderQuery::ReadHeader(void)
@@ -312,7 +311,6 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
               Info << " All " << std::endl;
           }
         }
-            
         else
           SkipPacket();
         break;

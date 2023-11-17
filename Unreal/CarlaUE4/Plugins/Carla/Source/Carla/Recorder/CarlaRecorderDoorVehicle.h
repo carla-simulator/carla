@@ -41,6 +41,5 @@ public:
   const std::vector<CarlaRecorderDoorVehicle>& GetDoorVehicles();
 
 private:
-
   std::vector<CarlaRecorderDoorVehicle> Vehicles;
 };

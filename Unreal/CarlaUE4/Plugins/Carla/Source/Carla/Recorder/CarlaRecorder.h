@@ -144,7 +144,6 @@ public:
 
   void AddDoorVehicle(const CarlaRecorderDoorVehicle &DoorVehicle);
 
-
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
   {
