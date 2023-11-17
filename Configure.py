@@ -234,6 +234,7 @@ LIBCARLA_ROOT_PATH = WORKSPACE_PATH / 'LibCarla'
 PYTHON_API_PATH = WORKSPACE_PATH / 'PythonAPI'
 EXAMPLES_PATH = WORKSPACE_PATH / 'Examples'
 BUILD_PATH = WORKSPACE_PATH / 'Build'
+LIBCARLA_INSTALL_PATH = BUILD_PATH
 DEPENDENCIES_PATH = BUILD_PATH / 'Dependencies'
 DIST_PATH = WORKSPACE_PATH / 'Dist'
 UTIL_PATH = WORKSPACE_PATH / 'Util'
@@ -382,7 +383,7 @@ def LaunchSubprocess(
 
 def LaunchSubprocessImmediate(
 		cmd : list,
-		display_output : bool,
+		display_output : bool = False,
 		working_directory : Path = None):
 	sp = LaunchSubprocess(cmd, display_output, working_directory)
 	try:
@@ -479,9 +480,9 @@ def BuildLibCarlaMain(c : Context):
 		f'-DBUILD_LIBCARLA_SERVER={"ON" if c.args.build_libcarla_server else "OFF"}',
 		f'-DBUILD_LIBCARLA_CLIENT={"ON" if c.args.build_libcarla_client else "OFF"}',
 		f'-DBUILD_OSM_WORLD_RENDERER={"ON" if c.args.build_osm_world_renderer else "OFF"}',
-		f'-DLIBCARLA_PYTORCH={"OFF" if c.args.skip_libcarla_pytorch else "ON"}'))
+		f'-DLIBCARLA_PYTORCH={"ON" if c.args.build_libcarla_pytorch else "OFF"}'))
 	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-libcarla', [], BUILD_PATH))
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-libcarla', [ 'build-libcarla' ], BUILD_PATH))
+	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-libcarla', [ 'build-libcarla' ], BUILD_PATH, LIBCARLA_INSTALL_PATH))
 
 def BuildCarlaUECore(c : Context):
 	if os.name == 'nt':
@@ -500,7 +501,7 @@ def BuildCarlaUEMain(c : Context):
 	# c.args.enable_unity
 	if c.args.enable_omniverse:
 		c.task_graph.Add(Task('install-nv_omniverse', [], InstallNVIDIAOmniverse))
-	c.task_graph.Add(Task('build-carla_ue', [], BuildCarlaUECore))
+	c.task_graph.Add(Task('build-carla_ue', [], BuildCarlaUECore, c))
 
 def BuildPythonAPIMain(c : Context):
 	Log('Building Python API')
@@ -736,7 +737,6 @@ def BuildDependencies(c : Context):
 		
 	# Install:
 
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-zlib', [], ZLIB_BUILD_PATH, ZLIB_INSTALL_PATH))
 	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-gtest', [], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
 	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-libpng', [], LIBPNG_BUILD_PATH, LIBPNG_INSTALL_PATH))
 	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
@@ -759,8 +759,9 @@ def ParseCommandLine():
 
 	BUILD_LIBCARLA_CLIENT_OVERRIDE = True
 	BUILD_LIBCARLA_SERVER_OVERRIDE = True
+	BUILD_LIBCARLA_PYTORCH_OVERRIDE = True
 	BUILD_PYTHON_API_OVERRIDE = True
-	BUILD_CARLA_UE_OVERRIDE = True
+	BUILD_CARLA_UE_OVERRIDE = False
 	UPDATE_DEPENDENCIES_OVERRIDE = True
 	BUILD_DEPENDENCIES_OVERRIDE = True
 	BUILD_OSM2ODR_OVERRIDE = False
@@ -779,6 +780,12 @@ def ParseCommandLine():
 		action='store_true',
 		default = BUILD_LIBCARLA_SERVER_OVERRIDE,
 		help = 'Whether to build LibCarla Server.')
+	
+	arg_parser.add_argument(
+		'-build-libcarla-pytorch',
+		action='store_true',
+		default = BUILD_LIBCARLA_PYTORCH_OVERRIDE,
+		help = 'Whether to build LibCarla-PyTorch.')
 	
 	arg_parser.add_argument(
 		'-build-python-api',
@@ -887,6 +894,8 @@ def Main():
 
 	if arg.build_carla_unreal:
 		BuildCarlaUEMain(c)
+	
+	c.task_graph.Execute()
 	
 	Log('Done.')
 
