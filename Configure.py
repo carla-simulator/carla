@@ -533,83 +533,20 @@ def BuildCarlaUEMain(c : Context):
 	c.task_graph.Add(Task('build-carla_ue', [], BuildCarlaUECore, c))
 
 def BuildPythonAPIMain(c : Context):
-	import setuptools
-
-	library_paths = []
-	libraries = []
-	extra_compile_args = [
-        '/experimental:external', '/external:W0', '/external:I', 'dependencies/include/system',
-        '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB',
-        '/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0600', '/DHAVE_SNPRINTF',
-        '/DLIBCARLA_WITH_PYTHON_SUPPORT', '-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true', '/MD']
-	extra_link_args = []
-
-	dependency_patterns = [
-		f'{BUILD_PATH}/**/LibCarla-Client{LIB_EXT}',
-		f'{BOOST_INSTALL_PATH}/**/libboost_python{sys.version_info.major}{sys.version_info.minor}{LIB_EXT}',
-		f'{BOOST_INSTALL_PATH}/**/libboost_filesystem{LIB_EXT}',
-        f'{RPCLIB_INSTALL_PATH}/**/rpc{LIB_EXT}',
-        f'{LIBPNG_INSTALL_PATH}/**/libpng*{LIB_EXT}',
-		f'{ZLIB_BUILD_PATH}/**/zlib{LIB_EXT}',
-        f'{RECAST_INSTALL_PATH}/**/Recast{LIB_EXT}',
-		f'{RECAST_INSTALL_PATH}/**/Detour{LIB_EXT}',
-		f'{RECAST_INSTALL_PATH}/**/DetourCrowd{LIB_EXT}',
-        f'{XERCESC_INSTALL_PATH}/**/xerces-c*{LIB_EXT}',
-		f'{SQLITE_BUILD_PATH}/**/sqlite*{LIB_EXT}',
-        f'{PROJ_INSTALL_PATH}/**/proj{LIB_EXT}',
-		f'{SUMO_INSTALL_PATH}/**/osm2odr{LIB_EXT}'
-	]
-
-	include_paths = [
-		LIBCARLA_ROOT_PATH,
-		BOOST_INCLUDE_PATH,
-		RPCLIB_INCLUDE_PATH,
-		LIBPNG_INCLUDE_PATH,
-		ZLIB_INCLUDE_PATH,
-		RECAST_INCLUDE_PATH,
-		XERCESC_INCLUDE_PATH,
-		SQLITE_INCLUDE_PATH,
-		PROJ_INCLUDE_PATH,
-		SUMO_INCLUDE_PATH,
-	]
-
-	for d in dependency_patterns:
-		candidates = glob.glob(d, recursive = True)
-		assert len(candidates) != 0
-		extra_link_args.append(candidates[0])
-	
-	depends = [ e for e in os.walk(PYTHON_API_SOURCE_PATH / 'libcarla') ]
-
-	extensions = [ setuptools.Extension(
-		'carla.libcarla',
-        sources = [ str(PYTHON_API_SOURCE_PATH / 'source' / 'libcarla' / 'libcarla.cpp') ],
-        include_dirs = include_paths,
-        library_dirs = library_paths,
-        libraries = libraries,
-        extra_compile_args = extra_compile_args,
-        extra_link_args = extra_link_args,
-        language = 'c++14',
-        depends = depends) ]
-	
-	readme = ''
-	with open(WORKSPACE_PATH / 'README.md', 'r') as file:
-		readme = file.read()
-
-	setuptools.setup(
-    	name = 'carla',
-    	version = CARLA_VERSION_STRING,
-    	package_dir = { '': 'source' },
-    	packages = ['carla'],
-    	ext_modules = extensions,
-    	license = 'MIT License' if not c.args.enable_rss else 'LGPL-v2.1-only License',
-    	description = 'Python API for communicating with the CARLA server.',
-    	long_description = readme,
-    	long_description_content_type = 'text/markdown',
-    	url = 'https://github.com/carla-simulator/carla',
-    	author = 'The CARLA team',
-    	author_email = 'carla.simulator@gmail.com',
-    	include_package_data = True
-	)
+	setup_content = ''
+	with open(PYTHON_API_SOURCE_PATH / 'setup.py.txt', 'r') as file:
+		setup_content = file.read()
+	setup_content = setup_content.format_map(globals())
+	if os.name == 'nt':
+		setup_content = setup_content.replace(os.sep, '/')
+	with open(PYTHON_API_SOURCE_PATH / 'setup.py', 'w') as file:
+		file.write(setup_content)
+	LaunchSubprocessImmediate([
+		sys.executable,
+		PYTHON_API_SOURCE_PATH / 'setup.py',
+		'bdist_egg',
+		'bdist_wheel'
+	], working_directory = PYTHON_API_SOURCE_PATH)
 
 def SetupUnrealEngine(c : Context):
 	Log('Setting up Unreal Engine.')
@@ -647,6 +584,9 @@ def ConfigureBoost():
 		working_directory = BOOST_SOURCE_PATH)
 
 def BuildAndInstallBoost():
+	if BOOST_INSTALL_PATH.exists():
+		Log(f'Currently we test for whether "{BOOST_INSTALL_PATH}" exists to detect whether recompilation of boost. If a rebuild is needed delete it.')
+		return
 	LaunchSubprocessImmediate([
 		BOOST_B2_PATH,
 		f'-j{DEFAULT_PARALLELISM}',
