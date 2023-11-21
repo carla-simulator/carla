@@ -16,10 +16,6 @@ environmental conditions.
 
 [![CARLA Video](Docs/img/0_9_15_thumbnail.webp)](https://www.youtube.com/watch?v=q4V9GYjA1pE )
 
-If you want to benchmark your model in the same conditions as in our CoRL’17
-paper, check out
-[Benchmarking](https://github.com/carla-simulator/driving-benchmarks).
-
 Linux:
 * [**Get CARLA overnight build**](http://carla-releases.s3.amazonaws.com/Linux/Dev/CARLA_Latest.tar.gz)
 * [**Get AdditionalMaps overnight build**](http://carla-releases.s3.amazonaws.com/Linux/Dev/AdditionalMaps_Latest.tar.gz)
@@ -36,7 +32,7 @@ Windows:
 * Ubuntu 20.04
 
 ## CARLA Ecosystem
-Repositories associated to the CARLA simulation platform:
+Repositories associated with the CARLA simulation platform:
 
 * [**CARLA Autonomous Driving leaderboard**](https://leaderboard.carla.org/): Automatic platform to validate Autonomous Driving stacks
 * [**Scenario_Runner**](https://github.com/carla-simulator/scenario_runner): Engine to execute traffic scenarios in CARLA 0.9.X
@@ -87,7 +83,7 @@ Also, clone the [CARLA fork of the Unreal Engine](https://github.com/CarlaUnreal
 git clone --depth 1 -b carla https://github.com/CarlaUnreal/UnrealEngine.git .
 ```
 
-Once you have cloned the repositories, follow the instructions for [building in Linux][buildlinuxlink] or [building in Windows][buildwindowslink]:
+Once you have cloned the repositories, follow the instructions for [building in Linux][buildlinuxlink] or [building in Windows][buildwindowslink].
 
 [buildlinuxlink]: https://carla.readthedocs.io/en/latest/build_linux/
 [buildwindowslink]: https://carla.readthedocs.io/en/latest/build_windows/
