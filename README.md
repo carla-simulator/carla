@@ -31,6 +31,17 @@ Windows:
 * NVIDIA RTX 3070 / NVIDIA RTX 3080 / NVIDIA RTX 4090
 * Ubuntu 20.04
 
+## Documentation
+
+The CARLA documentation is hosted on [ReadTheDocs](https://carla.readthedocs.io/en/latest/). Please see the following key links:
+
+- [Building on Linux](https://carla.readthedocs.io/en/latest/build_linux/)
+- [Building on Windows](https://carla.readthedocs.io/en/latest/build_windows/)
+- [First steps](https://carla.readthedocs.io/en/latest/tuto_first_steps/)
+- [CARLA asset catalogue](https://carla.readthedocs.io/en/latest/catalogue/)
+- [Python API reference](https://carla.readthedocs.io/en/latest/python_api/)
+- [Blueprint library](https://carla.readthedocs.io/en/latest/bp_library/)
+
 ## CARLA Ecosystem
 Repositories associated with the CARLA simulation platform:
 
