@@ -28,7 +28,7 @@ if (BUILD_RSS_VARIANT)
   install(FILES ${proj_lib} DESTINATION lib)
   list(APPEND ADRSS_LIBS ${proj_lib})
 
-  # as long as the libosm2dr uses the same odrSprial interface it is enough to copy the built static library
+  # as long as the libosm2odr uses the same odrSprial interface it is enough to copy the built static library
   set(odr_lib ${ADRSS_INSTALL_DIR}/../src/ad-rss-lib/dependencies/map/dependencies/odrSpiral/lib/libodrSpiral.a)
   install(FILES ${odr_lib} DESTINATION lib)
   list(APPEND ADRSS_LIBS ${odr_lib})
