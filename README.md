@@ -75,15 +75,33 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 Building CARLA
 --------------
 
-Use `git clone` or download the project from this page. Note that the master branch contains the most recent release of CARLA with the latest fixes and features.
+Clone the repository locally from GitHub:
 
-Then follow the instructions at [How to build on Linux][buildlinuxlink] or [How to build on Windows][buildwindowslink].  
-The Linux build needs for an UE patch to solve some visualization issues regarding Vulkan. Those already working with a Linux build should install the patch and make the UE build again using the following commands.  
 ```sh
-# Download and install the UE patch  
-cd ~/UnrealEngine_4.24
-wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt ~/430667-13636743-patch.txt
-patch --strip=4 < ~/430667-13636743-patch.txt
+git clone https://github.com/carla-simulator/carla.git .
+```
+
+Also, clone the [CARLA fork of the Unreal Engine](https://github.com/CarlaUnreal/UnrealEngine) into an appropriate location:
+
+```sh
+git clone --depth 1 -b carla https://github.com/CarlaUnreal/UnrealEngine.git .
+```
+
+Install the prerequisites (these are for Ubuntu 20.04):
+
+```sh
+sudo apt-add-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main"
+sudo apt-get update
+sudo apt-get install build-essential clang-10 lld-10 g++-7 cmake ninja-build libvulkan1 python python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git
+sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-10/bin/clang++ 180 &&
+sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-10/bin/clang 180
+```
+
+For other versions please consult [the build instructions for Linux][buildlinuxlink] or [for Windows][buildwindowslink]:
+
+Build Unreal Engine first, inside the directory where you cloned UE:
+
+```sh
 # Build UE
 ./Setup.sh && ./GenerateProjectFiles.sh && make
 ```
