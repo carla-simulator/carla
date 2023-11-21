@@ -99,8 +99,8 @@ class Task:
 			'-G', CMAKE_GENERATOR,
 			'-S', source_path,
 			'-B', build_path,
-			'-DCMAKE_C_COMPILER=' + c_compiler,
-			'-DCMAKE_CXX_COMPILER=' + cpp_compiler,
+			'-DCMAKE_C_COMPILER=' + C_COMPILER,
+			'-DCMAKE_CXX_COMPILER=' + CPP_COMPILER,
 			'-DCMAKE_BUILD_TYPE=Release',
 			'-DCMAKE_CXX_FLAGS_RELEASE="/MD"',
 		]
@@ -152,24 +152,35 @@ class TaskGraph:
 		if len(task.in_edges) == 0:
 			self.sources.append(task.name)
 		self.task_map[task.name] = self.tasks[-1]
+	
+	def Validate(self):
+		return True
 
 	def Execute(self, sequential : bool = False):
+		assert self.Validate()
 		prior_sequential = self.sequential
 		try:
 			self.sequential = sequential
+
+			done = {}
+			todo = self.sources
+			while len(done) != self.tasks:
+				for e in todo:
+					if not self.sequential:
+						self.futures.append(self.pool.submit(task.Run))
+					else:
+						task.Run()
+
 			for e in self.tasks:
 				for in_edge in e.in_edges:
 					self.task_map[in_edge].out_edges.append(e)
 			for e in self.sources:
 				task = self.task_map.get(e, None)
 				assert task != None and type(task) is Task
-				if not self.sequential:
-					self.futures.append(self.pool.submit(task.Run))
-				else:
-					task.Run()
+				Log(f'Running "{task.name}".')
+				
 			if not self.sequential:
-				for e in as_completed(self.futures):
-					e.result()
+				return [ e.result() for e in as_completed(self.futures) ]
 		finally:
 			self.sequential = prior_sequential
 			self.Reset()
@@ -259,7 +270,7 @@ def FindExecutable(candidates : list):
 			return e
 	return None
 
-c_compiler = FindExecutable([
+C_COMPILER = FindExecutable([
 	'clang-cl',
 	'cl'
 ] if os.name == 'nt' else [
@@ -267,7 +278,7 @@ c_compiler = FindExecutable([
 	'gcc'
 ])
 
-cpp_compiler = FindExecutable([
+CPP_COMPILER = FindExecutable([
 	'clang-cl',
 	'cl'
 ] if os.name == 'nt' else [
@@ -275,7 +286,7 @@ cpp_compiler = FindExecutable([
 	'g++'
 ])
 
-linker = FindExecutable([
+LINKER = FindExecutable([
 	'llvm-link',
 	'link'
 ] if os.name == 'nt' else [
@@ -283,7 +294,7 @@ linker = FindExecutable([
 	'ld'
 ])
 
-lib = FindExecutable([
+LIB = FindExecutable([
 	'llvm-lib',
 	'lib',
 	'llvm-ar'
@@ -310,78 +321,90 @@ EIGEN_INCLUDE_PATH = EIGEN_INSTALL_PATH / 'include'
 CHRONO_SOURCE_PATH = DEPENDENCIES_PATH / 'chrono-source'
 CHRONO_BUILD_PATH = DEPENDENCIES_PATH / 'chrono-build'
 CHRONO_INSTALL_PATH = DEPENDENCIES_PATH / 'chrono-install'
+CHRONO_INCLUDE_PATH = CHRONO_INSTALL_PATH / 'include'
+CHRONO_LIBRARY_PATH = CHRONO_INSTALL_PATH / 'lib'
 
 GTEST_SOURCE_PATH = DEPENDENCIES_PATH / 'gtest-source'
 GTEST_BUILD_PATH = DEPENDENCIES_PATH / 'gtest-build'
 GTEST_INSTALL_PATH = DEPENDENCIES_PATH / 'gtest-install'
 GTEST_INCLUDE_PATH = GTEST_INSTALL_PATH / 'include'
+GTEST_LIBRARY_PATH = GTEST_INSTALL_PATH / 'lib'
 
 ZLIB_SOURCE_PATH = DEPENDENCIES_PATH / 'zlib-source'
 ZLIB_BUILD_PATH = DEPENDENCIES_PATH / 'zlib-build'
 ZLIB_INSTALL_PATH = DEPENDENCIES_PATH / 'zlib-install'
 ZLIB_INCLUDE_PATH = ZLIB_INSTALL_PATH / 'include'
-ZLIB_LIBRARY_PATH = ZLIB_INSTALL_PATH / 'lib' / f'zlib{LIB_EXT}'
+ZLIB_LIBRARY_PATH = ZLIB_INSTALL_PATH / 'lib'
+ZLIB_LIB_PATH = ZLIB_LIBRARY_PATH / f'zlib{LIB_EXT}'
 
 LIBPNG_SOURCE_PATH = DEPENDENCIES_PATH / 'libpng-source'
 LIBPNG_BUILD_PATH = DEPENDENCIES_PATH / 'libpng-build'
 LIBPNG_INSTALL_PATH = DEPENDENCIES_PATH / 'libpng-install'
 LIBPNG_INCLUDE_PATH = LIBPNG_INSTALL_PATH / 'include'
+LIBPNG_LIBRARY_PATH = LIBPNG_INSTALL_PATH / 'lib'
 
 SQLITE_SOURCE_PATH = DEPENDENCIES_PATH / 'sqlite-source'
 SQLITE_BUILD_PATH = DEPENDENCIES_PATH / 'sqlite-build'
-SQLITE_EXECUTABLE_PATH = SQLITE_BUILD_PATH / f'sqlite{EXE_EXT}'
-SQLITE_LIBRARY_PATH = SQLITE_BUILD_PATH / f'sqlite{LIB_EXT}'
+SQLITE_LIBRARY_PATH = SQLITE_BUILD_PATH
 SQLITE_INCLUDE_PATH = SQLITE_SOURCE_PATH
+SQLITE_LIB_PATH = SQLITE_BUILD_PATH / f'sqlite{LIB_EXT}'
+SQLITE_EXE_PATH = SQLITE_BUILD_PATH / f'sqlite{EXE_EXT}'
 
 PROJ_SOURCE_PATH = DEPENDENCIES_PATH / 'proj-source'
 PROJ_BUILD_PATH = DEPENDENCIES_PATH / 'proj-build'
 PROJ_INSTALL_PATH = DEPENDENCIES_PATH / 'proj-install'
 PROJ_INCLUDE_PATH = PROJ_INSTALL_PATH / 'include'
+PROJ_LIBRARY_PATH = PROJ_INSTALL_PATH / 'lib'
 
 RECAST_SOURCE_PATH = DEPENDENCIES_PATH / 'recast-source'
 RECAST_BUILD_PATH = DEPENDENCIES_PATH / 'recast-build'
 RECAST_INSTALL_PATH = DEPENDENCIES_PATH / 'recast-install'
 RECAST_INCLUDE_PATH = RECAST_INSTALL_PATH / 'include'
+RECAST_LIBRARY_PATH = RECAST_INSTALL_PATH / 'lib'
 
 RPCLIB_SOURCE_PATH = DEPENDENCIES_PATH / 'rpclib-source'
 RPCLIB_BUILD_PATH = DEPENDENCIES_PATH / 'rpclib-build'
 RPCLIB_INSTALL_PATH = DEPENDENCIES_PATH / 'rpclib-install'
 RPCLIB_INCLUDE_PATH = RPCLIB_INSTALL_PATH / 'include'
+RPCLIB_LIBRARY_PATH = RPCLIB_INSTALL_PATH / 'lib'
 
 XERCESC_SOURCE_PATH = DEPENDENCIES_PATH / 'xercesc-source'
 XERCESC_BUILD_PATH = DEPENDENCIES_PATH / 'xercesc-build'
 XERCESC_INSTALL_PATH = DEPENDENCIES_PATH / 'xercesc-install'
+XERCESC_LIBRARY_PATH = XERCESC_INSTALL_PATH / 'lib'
 XERCESC_INCLUDE_PATH = XERCESC_INSTALL_PATH / 'include'
 
 LIBOSMSCOUT_SOURCE_PATH = DEPENDENCIES_PATH / 'libosmscout-source'
 LIBOSMSCOUT_BUILD_PATH = DEPENDENCIES_PATH / 'libosmscout-build'
 LIBOSMSCOUT_INSTALL_PATH = DEPENDENCIES_PATH / 'libosmscout-install'
 LIBOSMSCOUT_INCLUDE_PATH = LIBOSMSCOUT_INSTALL_PATH / 'include'
+LIBOSMSCOUT_LIBRARY_PATH = LIBOSMSCOUT_INSTALL_PATH / 'lib'
 
 LUNASVG_SOURCE_PATH = DEPENDENCIES_PATH / 'lunasvg-source'
 LUNASVG_BUILD_PATH = DEPENDENCIES_PATH / 'lunasvg-build'
 LUNASVG_INSTALL_PATH = DEPENDENCIES_PATH / 'lunasvg-install'
 LUNASVG_INCLUDE_PATH = LUNASVG_INSTALL_PATH / 'include'
+LUNASVG_LIBRARY_PATH = LUNASVG_INSTALL_PATH / 'lib'
 
 SUMO_SOURCE_PATH = DEPENDENCIES_PATH / 'sumo-source'
 SUMO_BUILD_PATH = DEPENDENCIES_PATH / 'sumo-build'
 SUMO_INSTALL_PATH = DEPENDENCIES_PATH / 'sumo-install'
 SUMO_INCLUDE_PATH = SUMO_INSTALL_PATH / 'include'
+SUMO_LIBRARY_PATH = SUMO_INSTALL_PATH / 'lib'
 
-houdini_url = 'https://github.com/sideeffects/HoudiniEngineForUnreal.git'
-houdini_plugin_path = CARLA_UE_PLUGIN_ROOT_PATH / 'HoudiniEngine'
-houdini_commit_hash = '55b6a16cdf274389687fce3019b33e3b6e92a914'
-houdini_patch_path = UTIL_PATH / 'Patches' / 'houdini_patch.txt'
+HOUDINI_URL = 'https://github.com/sideeffects/HoudiniEngineForUnreal.git'
+HOUDINI_PLUGIN_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'HoudiniEngine'
+HOUDINI_COMMIT_HASH = '55b6a16cdf274389687fce3019b33e3b6e92a914'
+HOUDINI_PATCH_PATH = UTIL_PATH / 'Patches' / 'houdini_patch.txt'
 
-URL_SUFFIX = 'how_to_build_on_windows/\n' if os.name == "nt" else 'build_linux/\n'
-
+READTHEDOCS_URL_SUFFIX = 'how_to_build_on_windows/\n' if os.name == "nt" else 'build_linux/\n'
 ERROR_MESSAGE = (
 	'\n'
 	'Ok, an error ocurred, don\'t panic!\n'
 	'We have different platforms where you can find some help:\n'
 	'\n'
 	'- Make sure you have read the documentation:\n'
-	f'    https://carla.readthedocs.io/en/latest/{URL_SUFFIX}'
+	f'    https://carla.readthedocs.io/en/latest/{READTHEDOCS_URL_SUFFIX}'
 	'\n'
 	'- If the problem persists, submit an issue on our GitHub page:\n'
 	'    https://github.com/carla-simulator/carla/issues\n'
@@ -510,10 +533,10 @@ def BuildLibCarlaMain(c : Context):
 		f'-DBUILD_LIBCARLA_CLIENT={"ON" if c.args.build_libcarla_client else "OFF"}',
 		f'-DBUILD_OSM_WORLD_RENDERER={"ON" if c.args.build_osm_world_renderer else "OFF"}',
 		f'-DLIBCARLA_PYTORCH={"ON" if c.args.build_libcarla_pytorch else "OFF"}'))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-libcarla', [], BUILD_PATH))
+	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-libcarla', [ 'configure-libcarla' ], BUILD_PATH))
 	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-libcarla', [ 'build-libcarla' ], BUILD_PATH, LIBCARLA_INSTALL_PATH))
 
-def BuildCarlaUECore(c : Context):
+def BuildCarlaUECore():
 	if os.name == 'nt':
 		LaunchSubprocessImmediate([
 			UE_WORKSPACE_PATH / 'Engine' / 'Build' / 'BatchFiles' / 'Build.bat',
@@ -530,9 +553,9 @@ def BuildCarlaUEMain(c : Context):
 	# c.args.enable_unity
 	if c.args.enable_omniverse:
 		c.task_graph.Add(Task('install-nv_omniverse', [], InstallNVIDIAOmniverse))
-	c.task_graph.Add(Task('build-carla_ue', [], BuildCarlaUECore, c))
+	c.task_graph.Add(Task('build-carla_ue', [], BuildCarlaUECore))
 
-def BuildPythonAPIMain(c : Context):
+def BuildPythonAPICore():
 	setup_content = ''
 	with open(PYTHON_API_SOURCE_PATH / 'setup.py.txt', 'r') as file:
 		setup_content = file.read()
@@ -547,6 +570,9 @@ def BuildPythonAPIMain(c : Context):
 		'bdist_egg',
 		'bdist_wheel'
 	], working_directory = PYTHON_API_SOURCE_PATH)
+
+def BuildPythonAPIMain(c : Context):
+	c.task_graph.Add(Task('build-python-api', [ 'install-libcarla' ], BuildPythonAPICore))
 
 def SetupUnrealEngine(c : Context):
 	Log('Setting up Unreal Engine.')
@@ -585,7 +611,7 @@ def ConfigureBoost():
 
 def BuildAndInstallBoost():
 	if BOOST_INSTALL_PATH.exists():
-		Log(f'Currently we test for whether "{BOOST_INSTALL_PATH}" exists to detect whether recompilation of boost. If a rebuild is needed delete it.')
+		Log(f'Currently we test for whether "{BOOST_INSTALL_PATH}" exists to detect whether recompilation of boost. If a rebuild is needed, delete it.')
 		return
 	LaunchSubprocessImmediate([
 		BOOST_B2_PATH,
@@ -612,18 +638,18 @@ def BuildAndInstallBoost():
 def BuildSQLite():
 	SQLITE_BUILD_PATH.mkdir(exist_ok = True)
 	sqlite_sources = glob.glob(f'{SQLITE_SOURCE_PATH}/**/*.c', recursive = True)
-	if os.name == 'nt' and 'clang' in c_compiler:
-		if not SQLITE_EXECUTABLE_PATH.exists():
-			cmd = [ c_compiler, f'-fuse-ld={linker}', '-march=native', '/O2', '/MD', '/EHsc' ]
+	if os.name == 'nt' and 'clang' in C_COMPILER:
+		if not SQLITE_EXE_PATH.exists():
+			cmd = [ C_COMPILER, f'-fuse-ld={LINKER}', '-march=native', '/O2', '/MD', '/EHsc' ]
 			cmd.extend(sqlite_sources)
 			cmd.append('-o')
-			cmd.append(SQLITE_EXECUTABLE_PATH)
+			cmd.append(SQLITE_EXE_PATH)
 			LaunchSubprocessImmediate(cmd)
-		if not SQLITE_LIBRARY_PATH.exists():
-			cmd = [ c_compiler, f'-fuse-ld={lib}', '-march=native', '/O2', '/MD', '/EHsc' ]
+		if not SQLITE_LIB_PATH.exists():
+			cmd = [ C_COMPILER, f'-fuse-ld={LIB}', '-march=native', '/O2', '/MD', '/EHsc' ]
 			cmd.extend(sqlite_sources)
 			cmd.append('-o')
-			cmd.append(SQLITE_LIBRARY_PATH)
+			cmd.append(SQLITE_LIB_PATH)
 			LaunchSubprocessImmediate(cmd)
 	else:
 		pass
@@ -635,9 +661,13 @@ def BuildDependencies(c : Context):
 
 	# Configure:
 
-	c.task_graph.Add(Task('build-sqlite', [], BuildSQLite))
-
-	c.task_graph.Add(Task('configure-boost', [], ConfigureBoost))
+	c.task_graph.Add(Task('build-sqlite',
+		[],
+		BuildSQLite))
+	
+	c.task_graph.Add(Task('configure-boost',
+		[],
+		ConfigureBoost))
 
 	c.task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-zlib',
@@ -661,7 +691,7 @@ def BuildDependencies(c : Context):
 		'-DPNG_TOOLS=OFF',
 		'-DPNG_BUILD_ZLIB=ON',
 		f'-DZLIB_INCLUDE_DIRS={ZLIB_INCLUDE_PATH}',
-		f'-DZLIB_LIBRARIES={ZLIB_LIBRARY_PATH}'))
+		f'-DZLIB_LIBRARIES={ZLIB_LIB_PATH}'))
 
 	c.task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-proj',
@@ -669,8 +699,8 @@ def BuildDependencies(c : Context):
 		PROJ_SOURCE_PATH,
 		PROJ_BUILD_PATH,
 		f'-DSQLITE3_INCLUDE_DIR={SQLITE_SOURCE_PATH}',
-		f'-DSQLITE3_LIBRARY={SQLITE_LIBRARY_PATH}',
-		f'-DEXE_SQLITE3={SQLITE_EXECUTABLE_PATH}',
+		f'-DSQLITE3_LIBRARY={SQLITE_LIB_PATH}',
+		f'-DEXE_SQLITE3={SQLITE_EXE_PATH}',
 		'-DWIN32_LEAN_AND_MEAN=1',
 		'-DVC_EXTRALEAN=1',
 		'-DNOMINMAX=1',

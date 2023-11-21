@@ -1,20 +1,62 @@
 cmake_minimum_required (VERSION 3.12.0)
 
+set (CARLA_VERSION_MAJOR 0)
+set (CARLA_VERSION_MINOR 9)
+set (CARLA_VERSION_PATCH 14)
+
 project (CARLA)
 
-set (CARLA_VERSION)
+include (CheckCCompilerFlag)
+include (CheckCXXCompilerFlag)
 
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option (BUILD_LIBCARLA_CLIENT "Whether to build the LibCarla client." ON)
-option (BUILD_LIBCARLA_SERVER "Whether to build the LibCarla server." ON)
-option (ENABLE_LIBCARLA_PYTORCH "Whether to enable LibCarla-PyTorch." OFF)
-option (BUILD_PYTHON_API "Whether to build the CARLA Python API." ON)
-option (ENABLE_LIBCARLA_CLIENT_RSS "Whether to enable RSS components (ad-rss-lib)" OFF)
-option (INSTALL_LIBCARLA "Whether to install LibCarla and all of its dependencies." ON)
-option (BUILD_OSM_WORLD_RENDERER "" ON)
+option (
+    BUILD_LIBCARLA_CLIENT
+    "Build the LibCarla client."
+    ON)
+
+option (
+    BUILD_LIBCARLA_SERVER
+    "Build the LibCarla server."
+    ON)
+
+option (
+    ENABLE_LIBCARLA_PYTORCH
+    "Enable LibCarla-PyTorch."
+    OFF)
+
+option (
+    BUILD_PYTHON_API
+    "Build the CARLA Python API."
+    ON)
+
+option (
+    ENABLE_LIBCARLA_CLIENT_RSS
+    "Enable RSS components (ad-rss-lib)"
+    OFF)
+
+option (
+    INSTALL_LIBCARLA
+    "Install LibCarla and all of its dependencies."
+    ON)
+
+option (
+    BUILD_OSM_WORLD_RENDERER
+    "Build OSM World Renderer."
+    ON)
+
+option (
+    ENABLE_RTTI
+    "Enable C++ RTTI."
+    ON)
+
+option (
+    ENABLE_EXCEPTIONS
+    "Enable C++ Exceptions."
+    ON)
 
 set (CARLA_WORKSPACE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 set (CARLA_BUILD_PATH ${CMAKE_CURRENT_BINARY_DIR})
@@ -49,13 +91,29 @@ set (ZLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-install/lib)
 set (ZLIB_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-source)
 set (ZLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-build)
 
-add_compile_definitions (BOOST_ERROR_CODE_HEADER_ONLY)
-add_compile_definitions (LIBCARLA_IMAGE_WITH_PNG_SUPPORT)
+set (
+    CARLA_COMMON_DEFINITIONS
+    BOOST_ERROR_CODE_HEADER_ONLY
+    LIBCARLA_IMAGE_WITH_PNG_SUPPORT
+)
 
 if (WIN32)
     # https://learn.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=msvc-170
-    add_compile_definitions (_WIN32_WINNT=0x0A00) # Windows 10
-    add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
+    list (APPEND CARLA_COMMON_DEFINITIONS _WIN32_WINNT=0x0A00) # Windows 10
+    list (APPEND CARLA_COMMON_DEFINITIONS _CRT_SECURE_NO_WARNINGS)
+endif ()
+
+if (ENABLE_EXCEPTIONS)
+else ()
+    list (APPEND CARLA_COMMON_DEFINITIONS ASIO_NO_EXCEPTIONS)
+    list (APPEND CARLA_COMMON_DEFINITIONS BOOST_NO_EXCEPTIONS)
+    list (APPEND CARLA_COMMON_DEFINITIONS LIBCARLA_NO_EXCEPTIONS)
+    list (APPEND CARLA_COMMON_DEFINITIONS PUGIXML_NO_EXCEPTIONS)
+endif ()
+
+if (ENABLE_RTTI)
+else ()
+    list (APPEND CARLA_COMMON_DEFINITIONS BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY)
 endif ()
 
 
@@ -67,13 +125,8 @@ if (BUILD_LIBCARLA_SERVER)
     set (LIBCARLA_SERVER_INCLUDE_PATHS
         ${LIBCARLA_SOURCE_PATH}
         ${BOOST_INCLUDE_PATH}
-        ${RPCLIB_INCLUDE_PATH})
-
-    add_compile_definitions (BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY)
-    add_compile_definitions (ASIO_NO_EXCEPTIONS)
-    add_compile_definitions (BOOST_NO_EXCEPTIONS)
-    add_compile_definitions (LIBCARLA_NO_EXCEPTIONS)
-    add_compile_definitions (PUGIXML_NO_EXCEPTIONS)
+        ${RPCLIB_INCLUDE_PATH}
+    )
 
     file(GLOB LIBCARLA_SERVER_SOURCES
         ${LIBCARLA_SOURCE_PATH}/carla/*.h
@@ -117,13 +170,22 @@ if (BUILD_LIBCARLA_SERVER)
     )
 
     add_library (
-        LibCarla-Server STATIC ${LIBCARLA_SERVER_SOURCES})
+        LibCarla-Server STATIC ${LIBCARLA_SERVER_SOURCES}
+    )
 
     target_compile_options (
-        LibCarla-Server PRIVATE /EHsc)
-    target_include_directories (
-        LibCarla-Server PRIVATE ${LIBCARLA_SERVER_INCLUDE_PATHS})
+        LibCarla-Server PRIVATE /EHsc
+    )
 
+    target_include_directories (
+        LibCarla-Server PRIVATE ${LIBCARLA_SERVER_INCLUDE_PATHS}
+    )
+    
+    target_compile_definitions (
+        LibCarla-Server PRIVATE
+        ${CARLA_COMMON_DEFINITIONS}
+    )
+    
 endif ()
 
 
@@ -137,7 +199,8 @@ if (BUILD_LIBCARLA_CLIENT)
         ${BOOST_INCLUDE_PATH}
         ${RPCLIB_INCLUDE_PATH}
         ${RECAST_INCLUDE_PATH}
-        ${LIBPNG_INCLUDE_PATH})
+        ${LIBPNG_INCLUDE_PATH}
+    )
 
     file (GLOB LIBCARLA_CLIENT_SOURCES
         ${LIBCARLA_SOURCE_PATH}/carla/*.h
@@ -200,10 +263,19 @@ if (BUILD_LIBCARLA_CLIENT)
         ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.h
     )
 
-    add_library (LibCarla-Client STATIC ${LIBCARLA_CLIENT_SOURCES})
+    add_library (
+        LibCarla-Client STATIC ${LIBCARLA_CLIENT_SOURCES}
+    )
 
-    target_include_directories (LibCarla-Client PRIVATE ${LIBCARLA_CLIENT_INCLUDE_PATHS})
+    target_include_directories (
+        LibCarla-Client PRIVATE ${LIBCARLA_CLIENT_INCLUDE_PATHS}
+    )
 
+    target_compile_definitions (
+        LibCarla-Client PRIVATE
+        ${CARLA_COMMON_DEFINITIONS}
+    )
+    
 endif ()
 
 
@@ -214,22 +286,33 @@ if (BUILD_OSM_WORLD_RENDERER)
 
     set (OSM_RENDERER_PATH ${CARLA_WORKSPACE_PATH}/osm-world-renderer)
 
-    add_compile_definitions (_USE_MATH_DEFINES)
-
     add_library (
-        OsmRenderer
+        LibOSMRenderer
         ${OSM_RENDERER_PATH}/OsmRenderer/src/OsmRenderer.cpp
         ${OSM_RENDERER_PATH}/OsmRenderer/src/MapDrawer.cpp
-        ${OSM_RENDERER_PATH}/OsmRenderer/src/MapRasterizer.cpp)
+        ${OSM_RENDERER_PATH}/OsmRenderer/src/MapRasterizer.cpp
+    )
 
     target_include_directories (
-        OsmRenderer PUBLIC ${OSM_RENDERER_PATH}/OsmRenderer/include)
+        LibOSMRenderer PUBLIC
+        ${OSM_RENDERER_PATH}/OsmRenderer/include
+    )
 
-    add_executable (osm-world-renderer ${OSM_RENDERER_PATH}/OsmRenderer/main.cpp)
-    target_link_libraries (osm-world-renderer PRIVATE OsmRenderer)
-    target_link_libraries (osm-world-renderer PRIVATE osmscout)
-    target_link_libraries (osm-world-renderer PRIVATE osmscout_map)
-    target_link_libraries (osm-world-renderer PRIVATE osmscout_map_svg)
-    target_link_libraries (osm-world-renderer PRIVATE lunasvg)
+    add_executable (
+        OSMWorldRenderer
+        ${OSM_RENDERER_PATH}/OsmRenderer/main.cpp
+    )
+
+    target_link_libraries (OSMWorldRenderer PRIVATE LibOSMRenderer)
+    target_link_libraries (OSMWorldRenderer PRIVATE osmscout)
+    target_link_libraries (OSMWorldRenderer PRIVATE osmscout_map)
+    target_link_libraries (OSMWorldRenderer PRIVATE osmscout_map_svg)
+    target_link_libraries (OSMWorldRenderer PRIVATE lunasvg)
+
+    target_compile_definitions (
+        OSMWorldRenderer PRIVATE
+        _USE_MATH_DEFINES
+        ${CARLA_COMMON_DEFINITIONS}
+    )
 
 endif ()
