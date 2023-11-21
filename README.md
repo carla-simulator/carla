@@ -14,7 +14,7 @@ validation of autonomous driving systems. In addition to open-source code and pr
 vehicles) that were created for this purpose and can be used freely. The simulation platform supports flexible specification of sensor suites and
 environmental conditions.
 
-[![CARLA Video](Docs/img/video_thumbnail_0910.jpg)](https://www.youtube.com/watch?v=7jej46ALVRE)
+[![CARLA Video](Docs/img/0_9_15_thumbnail.webp)](https://www.youtube.com/watch?v=q4V9GYjA1pE )
 
 If you want to benchmark your model in the same conditions as in our CoRL’17
 paper, check out
@@ -31,8 +31,8 @@ Windows:
 ### Recommended system
 
 * Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD ryzen 7 / AMD ryzen 9
-* +16 GB RAM memory 
-* NVIDIA RTX 2070 / NVIDIA RTX 2080 / NVIDIA RTX 3070, NVIDIA RTX 3080 / NVIDIA RTX 4090
+* +32 GB RAM memory 
+* NVIDIA RTX 3070 / NVIDIA RTX 3080 / NVIDIA RTX 4090
 * Ubuntu 20.04
 
 ## CARLA Ecosystem
@@ -75,7 +75,7 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 Building CARLA
 --------------
 
-Clone the repository locally from GitHub:
+Clone this repository locally from GitHub:
 
 ```sh
 git clone https://github.com/carla-simulator/carla.git .
@@ -87,30 +87,10 @@ Also, clone the [CARLA fork of the Unreal Engine](https://github.com/CarlaUnreal
 git clone --depth 1 -b carla https://github.com/CarlaUnreal/UnrealEngine.git .
 ```
 
-Install the prerequisites (these are for Ubuntu 20.04):
-
-```sh
-sudo apt-add-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main"
-sudo apt-get update
-sudo apt-get install build-essential clang-10 lld-10 g++-7 cmake ninja-build libvulkan1 python python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git
-sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-10/bin/clang++ 180 &&
-sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-10/bin/clang 180
-```
-
-For other versions please consult [the build instructions for Linux][buildlinuxlink] or [for Windows][buildwindowslink]:
-
-Build Unreal Engine first, inside the directory where you cloned UE:
-
-```sh
-# Build UE
-./Setup.sh && ./GenerateProjectFiles.sh && make
-```
-
-Unfortunately we don't have official instructions to build on Mac yet, please check the progress at [issue #150][issue150].
+Once you have cloned the repositories, follow the instructions for [building in Linux][buildlinuxlink] or [building in Windows][buildwindowslink]:
 
 [buildlinuxlink]: https://carla.readthedocs.io/en/latest/build_linux/
 [buildwindowslink]: https://carla.readthedocs.io/en/latest/build_windows/
-[issue150]: https://github.com/carla-simulator/carla/issues/150
 
 Contributing
 ------------
