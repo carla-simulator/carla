@@ -1,83 +1,425 @@
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from argparse import ArgumentParser
 from pathlib import Path
-import subprocess, tarfile, zipfile, requests, psutil, shutil, glob, json, sys, os
+import subprocess, tarfile, zipfile, argparse, requests, psutil, shutil, glob, sys, os
 
-FORCE_SEQUENTIAL = False
-
-CARLA_VERSION_MAJOR = 0
-CARLA_VERSION_MINOR = 9
-CARLA_VERSION_PATCH = 14
-CARLA_VERSION_STRING = f'{CARLA_VERSION_MAJOR}.{CARLA_VERSION_MINOR}.{CARLA_VERSION_PATCH}'
-# Basic paths
+# Constants:
 WORKSPACE_PATH = Path(__file__).parent.resolve()
-LIBCARLA_ROOT_PATH = WORKSPACE_PATH / 'LibCarla'
-PYTHON_API_PATH = WORKSPACE_PATH / 'PythonAPI'
+PYTHON_API_PATH = WORKSPACE_PATH / 'PythonAPI' / 'carla'
 EXAMPLES_PATH = WORKSPACE_PATH / 'Examples'
-BUILD_PATH = WORKSPACE_PATH / 'Build'
-LIBCARLA_INSTALL_PATH = BUILD_PATH
-DEPENDENCIES_PATH = BUILD_PATH / 'Dependencies'
-DIST_PATH = WORKSPACE_PATH / 'Dist'
 UTIL_PATH = WORKSPACE_PATH / 'Util'
 DOCKER_UTILS_PATH = UTIL_PATH / 'DockerUtils'
-BUILD_TOOLS_PATH = UTIL_PATH / 'BuildTools'
-# UE plugin
+PATCHES_PATH = UTIL_PATH / 'Patches'
 CARLA_UE_PATH = WORKSPACE_PATH / 'Unreal' / 'CarlaUE4'
 CARLA_UE_PLUGIN_ROOT_PATH = CARLA_UE_PATH / 'Plugins'
 CARLA_UE_PLUGIN_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'Carla'
 CARLA_UE_PLUGIN_DEPENDENCIES_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'CarlaDependencies'
-# PythonAPI
-PYTHON_API_SOURCE_PATH = PYTHON_API_PATH / 'carla'
-# LibCarla
-LIBCARLA_BUILD_PATH = BUILD_PATH
-LIBCARLA_TEST_CONTENT_PATH = BUILD_PATH / 'test-content'
+CARLA_UE_CONTENT_PATH = CARLA_UE_PATH / 'Content'
+CARLA_UE_CONTENT_CARLA_PATH = CARLA_UE_CONTENT_PATH / 'Carla'
+CARLA_UE_CONTENT_VERSIONS_FILE_PATH = WORKSPACE_PATH / 'Util' / 'ContentVersions.json'
+FALLBACK_CARLA_VERSION_STRING = '0.9.14'
+LOGICAL_PROCESSOR_COUNT = psutil.cpu_count(logical = True)
+DEFAULT_PARALLELISM = LOGICAL_PROCESSOR_COUNT + (2 if LOGICAL_PROCESSOR_COUNT >= 8 else 0)
+READTHEDOCS_URL_SUFFIX = 'how_to_build_on_windows/\n' if os.name == "nt" else 'build_linux/\n'
+DEFAULT_ERROR_MESSAGE = (
+	'\n'
+	'Ok, an error ocurred, don\'t panic!\n'
+	'We have different platforms where you can find some help:\n'
+	'\n'
+	'- Make sure you have read the documentation:\n'
+	f'    https://carla.readthedocs.io/en/latest/{READTHEDOCS_URL_SUFFIX}'
+	'\n'
+	'- If the problem persists, submit an issue on our GitHub page:\n'
+	'    https://github.com/carla-simulator/carla/issues\n'
+	'\n'
+	'- Or just use our Discord server!\n'
+	'    We\'ll be glad to help you there:\n'
+	'    https://discord.gg/42KJdRj\n'
+)
+
+def FindExecutable(candidates : list):
+	for e in candidates:
+		ec = subprocess.call(
+			[ 'where' if os.name == 'nt' else 'whereis', e ],
+			stdout = subprocess.PIPE,
+			stderr = subprocess.PIPE,
+			shell = True)
+		if ec == 0:
+			return e
+	return None
+
+DEFAULT_C_COMPILER = FindExecutable([
+	'clang-cl',
+	'cl'
+] if os.name == 'nt' else [
+	'clang',
+	'gcc'
+])
+
+DEFAULT_CPP_COMPILER = FindExecutable([
+	'clang-cl',
+	'cl'
+] if os.name == 'nt' else [
+	'clang++',
+	'g++'
+])
+
+DEFAULT_LINKER = FindExecutable([
+	'llvm-link',
+	'link'
+] if os.name == 'nt' else [
+	'lld',
+	'ld'
+])
+
+DEFAULT_LIB = FindExecutable([
+	'llvm-lib',
+	'lib',
+	'llvm-ar'
+] if os.name == 'nt' else [
+	'llvm-ar',
+	'ar'
+])
+
+argp = argparse.ArgumentParser(description = __doc__)
+def AddDirective(name : str, help : str):
+	argp.add_argument(f'--{name}', action = 'store_true', help = help)
+def AddStringOption(name : str, default : str, help : str):
+	argp.add_argument(f'--{name}', type = str, default = default, help = f'{help} (default = "{default}").')
+def AddIntOption(name : str, default : int, help : str):
+	argp.add_argument(f'--{name}', type = int, default = default, help = f'{help} (default = {default}).')
+AddDirective(
+	'launch',
+	'Build all required modules and open the CarlaUE4 project in the Unreal Engine editor.')
+AddDirective(
+	'launch-only',
+	'Open the CARLA Unreal Engine project in the editor, skipping all build steps.')
+AddDirective(
+	'import',
+	f'Import maps and assets from "{WORKSPACE_PATH / "Import"}" into Unreal.')
+AddDirective(
+	'package',
+	'Build a packaged version of CARLA ready for distribution.')
+AddDirective(
+	'docs',
+	'Build the CARLA documentation, through Doxygen.')
+AddDirective(
+	'clean',
+	'Delete all build files.')
+AddDirective(
+	'rebuild',
+	'Delete all build files and recompiles.')
+AddDirective(
+	'check-libcarla',
+	'Run unit the test suites for LibCarla')
+AddDirective(
+	'check-python-api',
+	'Run unit the test suites for PythonAPI')
+AddDirective(
+	'check',
+	'Run unit the test suites for LibCarla and PythonAPI')
+AddDirective(
+	'carla-ue',
+	'Build the CARLA Unreal Engine plugin and project.')
+AddDirective(
+	'python-api',
+	'Build the CARLA Python API.')
+AddDirective(
+	'libcarla-client',
+	'Build the LibCarla Client module.')
+AddDirective(
+	'libcarla-server',
+	'Build the LibCarla Server module.')
+AddDirective(
+	'update-dependencies',
+	'Download all project dependencies.')
+AddDirective(
+	'build-dependencies',
+	'Build all project dependencies.')
+AddDirective(
+	'configure-sequential',
+	'Whether to disable parallelism in the configuration script.')
+AddDirective(
+	'save-logs',
+	'Whether to save logs.')
+AddDirective(
+	'pytorch',
+	'Whether to enable PyTorch.')
+AddDirective(
+	'chrono',
+	'Whether to enable Chrono.')
+AddDirective(
+	'osm2odr',
+	'Whether to enable OSM2ODR.')
+AddDirective(
+	'osm-world-renderer',
+	'Whether to enable OSM World Renderer.')
+AddDirective(
+	'nv-omniverse',
+	'Whether to enable the NVIDIA Omniverse Plugin.')
+AddDirective(
+	'march-native',
+	'Whether to add "-march=native" to C/C++ flags.')
+AddDirective(
+	'rss',
+	'Whether to enable RSS.')
+AddIntOption(
+	'parallelism',
+	DEFAULT_PARALLELISM,
+	'Set the configure/build parallelism.')
+AddIntOption(
+	'c-standard',
+	11,
+	'Set the target C standard.')
+AddIntOption(
+	'cpp-standard',
+	14,
+	'Set the target C++ standard.')
+AddStringOption(
+	'c-compiler',
+	DEFAULT_C_COMPILER,
+	'Set the target C compiler.')
+AddStringOption(
+	'cpp-compiler',
+	DEFAULT_CPP_COMPILER,
+	'Set the target C++ compiler.')
+AddStringOption(
+	'linker',
+	DEFAULT_LINKER,
+	'Set the target linker.')
+AddStringOption(
+	'ar',
+	DEFAULT_LIB,
+	'Set the target ar/lib tool.')
+AddStringOption(
+	'version',
+	FALLBACK_CARLA_VERSION_STRING,
+	'Set the CARLA version.')
+AddStringOption(
+	'generator',
+	'Ninja',
+	'Set the CMake generator.')
+AddStringOption(
+	'build-path',
+	WORKSPACE_PATH / 'Build',
+	'Set the CARLA build path.')
+AddStringOption(
+	'ue-path',
+	os.getenv(
+		'UNREAL_ENGINE_PATH',
+		'<Could not automatically infer Unreal Engine source path using the "UNREAL_ENGINE_PATH" environment variable>'),
+	'Set the path of Unreal Engine.')
+ARGV = argp.parse_args()
+
+# Root paths:
+CARLA_VERSION_STRING = ARGV.version
+BUILD_PATH = ARGV.build_path
+LOG_PATH = BUILD_PATH / 'BuildLogs'
+if ARGV.save_logs:
+	LOG_PATH.mkdir(exist_ok = True)
+DEPENDENCIES_PATH = BUILD_PATH / 'Dependencies'
+LIBCARLA_BUILD_PATH = BUILD_PATH / 'libcarla-build'
+LIBCARLA_INSTALL_PATH = BUILD_PATH / 'libcarla-install'
+# Language options
+C_COMPILER = ARGV.c_compiler
+CPP_COMPILER = ARGV.cpp_compiler
+LINKER = ARGV.linker
+LIB = ARGV.ar
+C_STANDARD = ARGV.c_standard
+CPP_STANDARD = ARGV.cpp_standard
 # Misc
-TEST_RESULTS_PATH = BUILD_PATH / 'test-results'
-LIBSTDCPP_TOOLCHAIN_PATH = BUILD_PATH / 'LibStdCppToolChain.cmake'
-LIBCPP_TOOLCHAIN_PATH = BUILD_PATH / 'LibCppToolChain.cmake'
 EXE_EXT = '.exe' if os.name == 'nt' else ''
 LIB_EXT = '.lib' if os.name == 'nt' else '.a'
 OBJ_EXT = '.obj' if os.name == 'nt' else '.o'
 SHELL_EXT = '.bat' if os.name == 'nt' else ''
 # Unreal Engine
-UE_WORKSPACE_PATH = Path(os.getenv('UE4_ROOT', ''))
-if not UE_WORKSPACE_PATH.exists():
-	print('Could not find Unreal Engine workspace. Please set the environment variable UE4_ROOT as specified in the docs.')
-	exit(-1)
-# Omniverse
-NV_OMNIVERSE_PLUGIN_PATH = UE_WORKSPACE_PATH / 'Engine' / 'Plugins' / 'Marketplace' / 'NVIDIA' / 'Omniverse'
-NV_OMNIVERSE_PATCH_PATH = UTIL_PATH / 'Patches' / 'omniverse_4.26'
-# Script settings
-DEFAULT_PARALLELISM = psutil.cpu_count(logical = True)
-CMAKE_GENERATOR = 'Ninja'
+UNREAL_ENGINE_PATH = Path(ARGV.ue_path)
+# Dependencies:
+# Boost
+BOOST_TOOLSET = 'msvc-14.2'
+BOOST_TOOLSET_SHORT = 'vc142'
+BOOST_SOURCE_PATH = DEPENDENCIES_PATH / 'boost-source'
+BOOST_BUILD_PATH = DEPENDENCIES_PATH / 'boost-build'
+BOOST_INSTALL_PATH = DEPENDENCIES_PATH / 'boost-install'
+BOOST_INCLUDE_PATH = BOOST_INSTALL_PATH / 'include'
+BOOST_LIBRARY_PATH = BOOST_INSTALL_PATH / 'lib'
+BOOST_B2_PATH = BOOST_SOURCE_PATH / f'b2{EXE_EXT}'
+# Eigen
+EIGEN_SOURCE_PATH = DEPENDENCIES_PATH / 'eigen-source'
+EIGEN_BUILD_PATH = DEPENDENCIES_PATH / 'eigen-build'
+EIGEN_INSTALL_PATH = DEPENDENCIES_PATH / 'eigen-install'
+EIGEN_INCLUDE_PATH = EIGEN_INSTALL_PATH / 'include'
+# Chrono
+CHRONO_SOURCE_PATH = DEPENDENCIES_PATH / 'chrono-source'
+CHRONO_BUILD_PATH = DEPENDENCIES_PATH / 'chrono-build'
+CHRONO_INSTALL_PATH = DEPENDENCIES_PATH / 'chrono-install'
+CHRONO_INCLUDE_PATH = CHRONO_INSTALL_PATH / 'include'
+CHRONO_LIBRARY_PATH = CHRONO_INSTALL_PATH / 'lib'
+# Google Test
+GTEST_SOURCE_PATH = DEPENDENCIES_PATH / 'gtest-source'
+GTEST_BUILD_PATH = DEPENDENCIES_PATH / 'gtest-build'
+GTEST_INSTALL_PATH = DEPENDENCIES_PATH / 'gtest-install'
+GTEST_INCLUDE_PATH = GTEST_INSTALL_PATH / 'include'
+GTEST_LIBRARY_PATH = GTEST_INSTALL_PATH / 'lib'
+# ZLib
+ZLIB_SOURCE_PATH = DEPENDENCIES_PATH / 'zlib-source'
+ZLIB_BUILD_PATH = DEPENDENCIES_PATH / 'zlib-build'
+ZLIB_INSTALL_PATH = DEPENDENCIES_PATH / 'zlib-install'
+ZLIB_INCLUDE_PATH = ZLIB_INSTALL_PATH / 'include'
+ZLIB_LIBRARY_PATH = ZLIB_INSTALL_PATH / 'lib'
+ZLIB_LIB_PATH = ZLIB_LIBRARY_PATH / f'zlib{LIB_EXT}'
+# LibPNG
+LIBPNG_SOURCE_PATH = DEPENDENCIES_PATH / 'libpng-source'
+LIBPNG_BUILD_PATH = DEPENDENCIES_PATH / 'libpng-build'
+LIBPNG_INSTALL_PATH = DEPENDENCIES_PATH / 'libpng-install'
+LIBPNG_INCLUDE_PATH = LIBPNG_INSTALL_PATH / 'include'
+LIBPNG_LIBRARY_PATH = LIBPNG_INSTALL_PATH / 'lib'
+# SQLite
+SQLITE_SOURCE_PATH = DEPENDENCIES_PATH / 'sqlite-source'
+SQLITE_BUILD_PATH = DEPENDENCIES_PATH / 'sqlite-build'
+SQLITE_LIBRARY_PATH = SQLITE_BUILD_PATH
+SQLITE_INCLUDE_PATH = SQLITE_SOURCE_PATH
+SQLITE_LIB_PATH = SQLITE_BUILD_PATH / f'sqlite{LIB_EXT}'
+SQLITE_EXE_PATH = SQLITE_BUILD_PATH / f'sqlite{EXE_EXT}'
+# Proj
+PROJ_SOURCE_PATH = DEPENDENCIES_PATH / 'proj-source'
+PROJ_BUILD_PATH = DEPENDENCIES_PATH / 'proj-build'
+PROJ_INSTALL_PATH = DEPENDENCIES_PATH / 'proj-install'
+PROJ_INCLUDE_PATH = PROJ_INSTALL_PATH / 'include'
+PROJ_LIBRARY_PATH = PROJ_INSTALL_PATH / 'lib'
+# Recast & Detour
+RECAST_SOURCE_PATH = DEPENDENCIES_PATH / 'recast-source'
+RECAST_BUILD_PATH = DEPENDENCIES_PATH / 'recast-build'
+RECAST_INSTALL_PATH = DEPENDENCIES_PATH / 'recast-install'
+RECAST_INCLUDE_PATH = RECAST_INSTALL_PATH / 'include'
+RECAST_LIBRARY_PATH = RECAST_INSTALL_PATH / 'lib'
+# RPCLib
+RPCLIB_SOURCE_PATH = DEPENDENCIES_PATH / 'rpclib-source'
+RPCLIB_BUILD_PATH = DEPENDENCIES_PATH / 'rpclib-build'
+RPCLIB_INSTALL_PATH = DEPENDENCIES_PATH / 'rpclib-install'
+RPCLIB_INCLUDE_PATH = RPCLIB_INSTALL_PATH / 'include'
+RPCLIB_LIBRARY_PATH = RPCLIB_INSTALL_PATH / 'lib'
+# Xerces-C
+XERCESC_SOURCE_PATH = DEPENDENCIES_PATH / 'xercesc-source'
+XERCESC_BUILD_PATH = DEPENDENCIES_PATH / 'xercesc-build'
+XERCESC_INSTALL_PATH = DEPENDENCIES_PATH / 'xercesc-install'
+XERCESC_LIBRARY_PATH = XERCESC_INSTALL_PATH / 'lib'
+XERCESC_INCLUDE_PATH = XERCESC_INSTALL_PATH / 'include'
+# LibOSMScout
+LIBOSMSCOUT_SOURCE_PATH = DEPENDENCIES_PATH / 'libosmscout-source'
+LIBOSMSCOUT_BUILD_PATH = DEPENDENCIES_PATH / 'libosmscout-build'
+LIBOSMSCOUT_INSTALL_PATH = DEPENDENCIES_PATH / 'libosmscout-install'
+LIBOSMSCOUT_INCLUDE_PATH = LIBOSMSCOUT_INSTALL_PATH / 'include'
+LIBOSMSCOUT_LIBRARY_PATH = LIBOSMSCOUT_INSTALL_PATH / 'lib'
+# LunaSVG
+LUNASVG_SOURCE_PATH = DEPENDENCIES_PATH / 'lunasvg-source'
+LUNASVG_BUILD_PATH = DEPENDENCIES_PATH / 'lunasvg-build'
+LUNASVG_INSTALL_PATH = DEPENDENCIES_PATH / 'lunasvg-install'
+LUNASVG_INCLUDE_PATH = LUNASVG_INSTALL_PATH / 'include'
+LUNASVG_LIBRARY_PATH = LUNASVG_INSTALL_PATH / 'lib'
+# SUMO
+SUMO_SOURCE_PATH = DEPENDENCIES_PATH / 'sumo-source'
+SUMO_BUILD_PATH = DEPENDENCIES_PATH / 'sumo-build'
+SUMO_INSTALL_PATH = DEPENDENCIES_PATH / 'sumo-install'
+SUMO_INCLUDE_PATH = SUMO_INSTALL_PATH / 'include'
+SUMO_LIBRARY_PATH = SUMO_INSTALL_PATH / 'lib'
+# Houdini
+HOUDINI_URL = 'https://github.com/sideeffects/HoudiniEngineForUnreal.git'
+HOUDINI_PLUGIN_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'HoudiniEngine'
+HOUDINI_COMMIT_HASH = '55b6a16cdf274389687fce3019b33e3b6e92a914'
+HOUDINI_PATCH_PATH = PATCHES_PATH / 'houdini_patch.txt'
+# Nvidia Omniverse
+NV_OMNIVERSE_PLUGIN_PATH = UNREAL_ENGINE_PATH / 'Engine' / 'Plugins' / 'Marketplace' / 'NVIDIA' / 'Omniverse'
+NV_OMNIVERSE_PATCH_PATH = PATCHES_PATH / 'omniverse_4.26'
 
-# Script types
+ENABLE_RSS = ARGV.rss
+
+# Basic IO functions:
+
+def Log(message):
+	message = str(message)
+	message += '\n'
+	print(message, end='')
+
+def LaunchSubprocess(
+		cmd : list,
+		display_output : bool = False,
+		working_directory : Path = None):
+	stdstream_value = None if display_output or ARGV.configure_sequential else subprocess.PIPE
+	return subprocess.run(
+		cmd,
+		stdout = stdstream_value,
+		stderr = stdstream_value,
+		cwd = working_directory)
+
+def LaunchSubprocessImmediate(
+		cmd : list,
+		display_output : bool = False,
+		working_directory : Path = None,
+		log_name : str = None):
+	sp = LaunchSubprocess(cmd, display_output, working_directory)
+	log_content = None
+	try:
+		sp.check_returncode()
+	except:
+		stdout = sp.stdout.decode() if sp.stdout else ''
+		stderr = sp.stderr.decode() if sp.stderr else ''
+		log_content = (
+			f' stdout:\n'
+			f' {stdout}\n'
+			f' stderr:\n'
+			f' {stderr}\n'
+		)
+		error_message = (
+			f'Failed to run task {cmd}.\n' +
+			log_content
+		)
+		print(error_message)
+	finally:
+		if ARGV.save_logs and log_name != None:
+			if log_content == None:
+				stdout = sp.stdout.decode() if sp.stdout else ''
+				stderr = sp.stderr.decode() if sp.stderr else ''
+				log_content = (
+					f' stdout:\n'
+					f' {stdout}\n'
+					f' stderr:\n'
+					f' {stderr}\n'
+				)
+			with open(LOG_PATH / (log_name + '.log'), 'w') as file:
+				file.write(log_content)
+
+# Convenience classes for listing dependencies:
 
 class Download:
-	def __init__(self, url):
+
+	def __init__(self, url : str):
 		self.url = url
 
+
+
 class GitRepository:
-	def __init__(self, url, tag : str = None):
+
+	def __init__(self, url : str, tag : str = None):
 		self.url = url
 		self.tag = tag
 
+
+
 class Dependency:
-	def __init__(
-			self,
-			name : str,
-			*sources):
+
+	def __init__(self, name : str, *sources):
 		self.name = name
-		self.sources = [ e for e in sources ]
-		assert all(type(e) is Download or type(e) is GitRepository for e in self.sources)
+		self.sources = [ *sources ]
+		assert all(
+			type(e) is Download or
+			type(e) is GitRepository
+			for e in self.sources)
+
+
 
 class Task:
-	def __init__(
-			self,
-			name : str,
-			in_edge_names : list,
-			body,
-			*args):
+
+	def __init__(self, name : str, in_edge_names : list, body, *args):
 		self.name = name
 		self.body = body
 		self.args = args
@@ -85,31 +427,27 @@ class Task:
 		self.in_edge_names = in_edge_names
 		self.in_edges = []
 		self.out_edges = [] # Filled right before task graph execution.
+		self.done = False
 
 	def CreateSubprocessTask(name : str, in_edges : list, command : list):
-		return Task(name, in_edges, LaunchSubprocessImmediate, command)
+		return Task(name, in_edges, LaunchSubprocessImmediate, command, False, None, name)
 	
-	def CreateCMakeConfigureDefaultCommandLine(
-			source_path : Path,
-			build_path : Path):
+	def CreateCMakeConfigureDefaultCommandLine(source_path : Path, build_path : Path):
+		cpp_flags_release = '/MD'
+		if ARGV.march_native:
+			cpp_flags_release += ' -march=native'
 		return [
 			'cmake',
-			'-G', CMAKE_GENERATOR,
+			'-G', ARGV.generator,
 			'-S', source_path,
 			'-B', build_path,
 			'-DCMAKE_C_COMPILER=' + C_COMPILER,
 			'-DCMAKE_CXX_COMPILER=' + CPP_COMPILER,
 			'-DCMAKE_BUILD_TYPE=Release',
-			'-DCMAKE_CXX_FLAGS_RELEASE="/MD"',
+			f'-DCMAKE_CXX_FLAGS_RELEASE={cpp_flags_release}',
 		]
 
-	def CreateCMakeConfigureDefault(
-			name : str,
-			in_edges : list,
-			source_path : Path,
-			build_path : Path,
-			*args,
-			install_path : Path = None):
+	def CreateCMakeConfigureDefault(name : str, in_edges : list, source_path : Path, build_path : Path, *args, install_path : Path = None):
 		cmd = Task.CreateCMakeConfigureDefaultCommandLine(source_path, build_path)
 		if install_path != None:
 			cmd.append('-DCMAKE_INSTALL_PREFIX=' + str(install_path))
@@ -117,21 +455,12 @@ class Task:
 		cmd.append(source_path)
 		return Task.CreateSubprocessTask(name, in_edges, cmd)
 
-	def CreateCMakeBuildDefault(
-			name : str,
-			in_edges : list,
-			build_path : Path,
-			*args):
+	def CreateCMakeBuildDefault(name : str, in_edges : list, build_path : Path, *args):
 		cmd = [ 'cmake', '--build', build_path ]
 		cmd.extend([ *args ])
 		return Task.CreateSubprocessTask(name, in_edges, cmd)
 	
-	def CreateCMakeInstallDefault(
-			name : str,
-			in_edges : list,
-			build_path : Path,
-			install_path : Path,
-			*args):
+	def CreateCMakeInstallDefault(name : str, in_edges : list, build_path : Path, install_path : Path, *args):
 		cmd = [ 'cmake', '--install', build_path, '--prefix', install_path ]
 		cmd.extend([ *args ])
 		return Task.CreateSubprocessTask(name, in_edges, cmd)
@@ -139,9 +468,12 @@ class Task:
 	def Run(self):
 		self.body(*self.args)
 
+
+
 class TaskGraph:
-	def __init__(self, parallelism : int = None):
-		self.sequential = FORCE_SEQUENTIAL
+
+	def __init__(self, parallelism : int = ARGV.parallelism):
+		self.sequential = ARGV.configure_sequential
 		self.parallelism = parallelism
 		self.pool = ProcessPoolExecutor(parallelism)
 		self.tasks = []
@@ -153,11 +485,12 @@ class TaskGraph:
 		self.sources = []
 		self.task_map = {}
 
-	def Add(self, task):
+	def Add(self, task : Task):
 		self.tasks.append(task)
 		if len(task.in_edge_names) == 0:
 			self.sources.append(task.name)
 		self.task_map[task.name] = self.tasks[-1]
+		return task
 	
 	def Validate(self):
 		return True
@@ -184,6 +517,7 @@ class TaskGraph:
 			future_map = {}
 			task_queue = deque()
 			active_count = 0
+			done_count = 0
 
 			def UpdateOutEdges(task):
 				nonlocal task_queue
@@ -199,12 +533,16 @@ class TaskGraph:
 			def Flush():
 				nonlocal futures
 				nonlocal future_map
+				nonlocal done_count
 				nonlocal active_count
 				if active_count != 0:
 					for e in as_completed(futures):
 						task = future_map.get(e, None)
 						assert task != None
+						task.done = True
+						Log(f'{task.name} - done')
 						UpdateOutEdges(task)
+						done_count += 1
 					active_count = 0
 					futures = []
 
@@ -212,7 +550,7 @@ class TaskGraph:
 			while len(task_queue) != 0:
 				while len(task_queue) != 0 and active_count < self.parallelism:
 					task = task_queue.popleft()
-					Log(f'Running "{task.name}".')
+					Log(f'{task.name} - start')
 					if not self.sequential:
 						active_count += 1
 						future = self.pool.submit(task.Run)
@@ -220,19 +558,26 @@ class TaskGraph:
 						futures.append(future)
 					else:
 						task.Run()
+						Log(f'{task.name} - done')
+						task.done = True
+						done_count += 1
 						UpdateOutEdges(task)
 				Flush()
 			Flush()
+
+			if done_count != len(self.tasks):
+				pending_tasks = []
+				for e in self.tasks:
+					if not e.done:
+						pending_tasks.append(e)
+				Log(f'{len(self.tasks) - done_count} did not complete: {pending_tasks}.')
+				assert False
 					
 		finally:
 			self.sequential = prior_sequential
 			self.Reset()
 
-class Context:
-	def __init__(self, args, parallelism):
-		self.task_graph = TaskGraph(parallelism)
-		self.args = args
-		pass
+
 
 # Constants:
 
@@ -301,199 +646,6 @@ DEPENDENCY_MAP = {
 	**{ e.name : e for e in OSM_WORLD_RENDERER_DEPENDENCIES },
 	**{ e.name : e for e in OSM2ODR_DEPENDENCIES }
 }
-
-def FindExecutable(candidates : list):
-	for e in candidates:
-		ec = subprocess.call(
-			[ 'where' if os.name == 'nt' else 'whereis', e ],
-			stdout = subprocess.PIPE,
-			stderr = subprocess.PIPE,
-			shell = True)
-		if ec == 0:
-			return e
-	return None
-
-C_COMPILER = FindExecutable([
-	'clang-cl',
-	'cl'
-] if os.name == 'nt' else [
-	'clang',
-	'gcc'
-])
-
-CPP_COMPILER = FindExecutable([
-	'clang-cl',
-	'cl'
-] if os.name == 'nt' else [
-	'clang++',
-	'g++'
-])
-
-LINKER = FindExecutable([
-	'llvm-link',
-	'link'
-] if os.name == 'nt' else [
-	'lld',
-	'ld'
-])
-
-LIB = FindExecutable([
-	'llvm-lib',
-	'lib',
-	'llvm-ar'
-] if os.name == 'nt' else [
-	'llvm-ar',
-	'ar'
-])
-
-# Dependency paths
-BOOST_TOOLSET = 'msvc-14.2'
-BOOST_TOOLSET_SHORT = 'vc142'
-BOOST_SOURCE_PATH = DEPENDENCIES_PATH / 'boost-source'
-BOOST_BUILD_PATH = DEPENDENCIES_PATH / 'boost-build'
-BOOST_INSTALL_PATH = DEPENDENCIES_PATH / 'boost-install'
-BOOST_INCLUDE_PATH = BOOST_INSTALL_PATH / 'include'
-BOOST_LIBRARY_PATH = BOOST_INSTALL_PATH / 'lib'
-BOOST_B2_PATH = BOOST_SOURCE_PATH / f'b2{EXE_EXT}'
-
-EIGEN_SOURCE_PATH = DEPENDENCIES_PATH / 'eigen-source'
-EIGEN_BUILD_PATH = DEPENDENCIES_PATH / 'eigen-build'
-EIGEN_INSTALL_PATH = DEPENDENCIES_PATH / 'eigen-install'
-EIGEN_INCLUDE_PATH = EIGEN_INSTALL_PATH / 'include'
-
-CHRONO_SOURCE_PATH = DEPENDENCIES_PATH / 'chrono-source'
-CHRONO_BUILD_PATH = DEPENDENCIES_PATH / 'chrono-build'
-CHRONO_INSTALL_PATH = DEPENDENCIES_PATH / 'chrono-install'
-CHRONO_INCLUDE_PATH = CHRONO_INSTALL_PATH / 'include'
-CHRONO_LIBRARY_PATH = CHRONO_INSTALL_PATH / 'lib'
-
-GTEST_SOURCE_PATH = DEPENDENCIES_PATH / 'gtest-source'
-GTEST_BUILD_PATH = DEPENDENCIES_PATH / 'gtest-build'
-GTEST_INSTALL_PATH = DEPENDENCIES_PATH / 'gtest-install'
-GTEST_INCLUDE_PATH = GTEST_INSTALL_PATH / 'include'
-GTEST_LIBRARY_PATH = GTEST_INSTALL_PATH / 'lib'
-
-ZLIB_SOURCE_PATH = DEPENDENCIES_PATH / 'zlib-source'
-ZLIB_BUILD_PATH = DEPENDENCIES_PATH / 'zlib-build'
-ZLIB_INSTALL_PATH = DEPENDENCIES_PATH / 'zlib-install'
-ZLIB_INCLUDE_PATH = ZLIB_INSTALL_PATH / 'include'
-ZLIB_LIBRARY_PATH = ZLIB_INSTALL_PATH / 'lib'
-ZLIB_LIB_PATH = ZLIB_LIBRARY_PATH / f'zlib{LIB_EXT}'
-
-LIBPNG_SOURCE_PATH = DEPENDENCIES_PATH / 'libpng-source'
-LIBPNG_BUILD_PATH = DEPENDENCIES_PATH / 'libpng-build'
-LIBPNG_INSTALL_PATH = DEPENDENCIES_PATH / 'libpng-install'
-LIBPNG_INCLUDE_PATH = LIBPNG_INSTALL_PATH / 'include'
-LIBPNG_LIBRARY_PATH = LIBPNG_INSTALL_PATH / 'lib'
-
-SQLITE_SOURCE_PATH = DEPENDENCIES_PATH / 'sqlite-source'
-SQLITE_BUILD_PATH = DEPENDENCIES_PATH / 'sqlite-build'
-SQLITE_LIBRARY_PATH = SQLITE_BUILD_PATH
-SQLITE_INCLUDE_PATH = SQLITE_SOURCE_PATH
-SQLITE_LIB_PATH = SQLITE_BUILD_PATH / f'sqlite{LIB_EXT}'
-SQLITE_EXE_PATH = SQLITE_BUILD_PATH / f'sqlite{EXE_EXT}'
-
-PROJ_SOURCE_PATH = DEPENDENCIES_PATH / 'proj-source'
-PROJ_BUILD_PATH = DEPENDENCIES_PATH / 'proj-build'
-PROJ_INSTALL_PATH = DEPENDENCIES_PATH / 'proj-install'
-PROJ_INCLUDE_PATH = PROJ_INSTALL_PATH / 'include'
-PROJ_LIBRARY_PATH = PROJ_INSTALL_PATH / 'lib'
-
-RECAST_SOURCE_PATH = DEPENDENCIES_PATH / 'recast-source'
-RECAST_BUILD_PATH = DEPENDENCIES_PATH / 'recast-build'
-RECAST_INSTALL_PATH = DEPENDENCIES_PATH / 'recast-install'
-RECAST_INCLUDE_PATH = RECAST_INSTALL_PATH / 'include'
-RECAST_LIBRARY_PATH = RECAST_INSTALL_PATH / 'lib'
-
-RPCLIB_SOURCE_PATH = DEPENDENCIES_PATH / 'rpclib-source'
-RPCLIB_BUILD_PATH = DEPENDENCIES_PATH / 'rpclib-build'
-RPCLIB_INSTALL_PATH = DEPENDENCIES_PATH / 'rpclib-install'
-RPCLIB_INCLUDE_PATH = RPCLIB_INSTALL_PATH / 'include'
-RPCLIB_LIBRARY_PATH = RPCLIB_INSTALL_PATH / 'lib'
-
-XERCESC_SOURCE_PATH = DEPENDENCIES_PATH / 'xercesc-source'
-XERCESC_BUILD_PATH = DEPENDENCIES_PATH / 'xercesc-build'
-XERCESC_INSTALL_PATH = DEPENDENCIES_PATH / 'xercesc-install'
-XERCESC_LIBRARY_PATH = XERCESC_INSTALL_PATH / 'lib'
-XERCESC_INCLUDE_PATH = XERCESC_INSTALL_PATH / 'include'
-
-LIBOSMSCOUT_SOURCE_PATH = DEPENDENCIES_PATH / 'libosmscout-source'
-LIBOSMSCOUT_BUILD_PATH = DEPENDENCIES_PATH / 'libosmscout-build'
-LIBOSMSCOUT_INSTALL_PATH = DEPENDENCIES_PATH / 'libosmscout-install'
-LIBOSMSCOUT_INCLUDE_PATH = LIBOSMSCOUT_INSTALL_PATH / 'include'
-LIBOSMSCOUT_LIBRARY_PATH = LIBOSMSCOUT_INSTALL_PATH / 'lib'
-
-LUNASVG_SOURCE_PATH = DEPENDENCIES_PATH / 'lunasvg-source'
-LUNASVG_BUILD_PATH = DEPENDENCIES_PATH / 'lunasvg-build'
-LUNASVG_INSTALL_PATH = DEPENDENCIES_PATH / 'lunasvg-install'
-LUNASVG_INCLUDE_PATH = LUNASVG_INSTALL_PATH / 'include'
-LUNASVG_LIBRARY_PATH = LUNASVG_INSTALL_PATH / 'lib'
-
-SUMO_SOURCE_PATH = DEPENDENCIES_PATH / 'sumo-source'
-SUMO_BUILD_PATH = DEPENDENCIES_PATH / 'sumo-build'
-SUMO_INSTALL_PATH = DEPENDENCIES_PATH / 'sumo-install'
-SUMO_INCLUDE_PATH = SUMO_INSTALL_PATH / 'include'
-SUMO_LIBRARY_PATH = SUMO_INSTALL_PATH / 'lib'
-
-HOUDINI_URL = 'https://github.com/sideeffects/HoudiniEngineForUnreal.git'
-HOUDINI_PLUGIN_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'HoudiniEngine'
-HOUDINI_COMMIT_HASH = '55b6a16cdf274389687fce3019b33e3b6e92a914'
-HOUDINI_PATCH_PATH = UTIL_PATH / 'Patches' / 'houdini_patch.txt'
-
-READTHEDOCS_URL_SUFFIX = 'how_to_build_on_windows/\n' if os.name == "nt" else 'build_linux/\n'
-ERROR_MESSAGE = (
-	'\n'
-	'Ok, an error ocurred, don\'t panic!\n'
-	'We have different platforms where you can find some help:\n'
-	'\n'
-	'- Make sure you have read the documentation:\n'
-	f'    https://carla.readthedocs.io/en/latest/{READTHEDOCS_URL_SUFFIX}'
-	'\n'
-	'- If the problem persists, submit an issue on our GitHub page:\n'
-	'    https://github.com/carla-simulator/carla/issues\n'
-	'\n'
-	'- Or just use our Discord server!\n'
-	'    We\'ll be glad to help you there:\n'
-	'    https://discord.gg/42KJdRj\n'
-)
-
-def Log(message):
-	message = str(message)
-	message += '\n'
-	print(message, end='')
-
-def LaunchSubprocess(
-		cmd : list,
-		display_output : bool = False,
-		working_directory : Path = None):
-	
-	if display_output or FORCE_SEQUENTIAL:
-		return subprocess.run(cmd, cwd = working_directory)
-	else:
-		return subprocess.run(
-			cmd,
-			stdout = subprocess.PIPE,
-			stderr = subprocess.PIPE,
-			cwd = working_directory)
-
-def LaunchSubprocessImmediate(
-		cmd : list,
-		display_output : bool = False,
-		working_directory : Path = None):
-	sp = LaunchSubprocess(cmd, display_output, working_directory)
-	try:
-		sp.check_returncode()
-	except:
-		stdout = sp.stdout.decode() if sp.stdout else ''
-		stderr = sp.stderr.decode() if sp.stderr else ''
-		error_message = (
-			f'Failed to run task {cmd}.\n'
-			f' stdout:\n'
-			f' {stdout}\n'
-			f' stderr:\n'
-			f' {stderr}\n'
-		)
-		print(error_message)
 
 def UpdateGitRepository(path : Path, url : str, branch : str = None):
 	if path.exists():
@@ -569,54 +721,61 @@ def UpdateDependency(dep : Dependency):
 	Log(f'Failed to update dependency "{name}".')
 	assert False
 
-def BuildLibCarlaMain(c : Context):
-	c.task_graph.Add(Task.CreateCMakeConfigureDefault('configure-libcarla', [], WORKSPACE_PATH, BUILD_PATH,
-		f'-DBUILD_LIBCARLA_SERVER={"ON" if c.args.build_libcarla_server else "OFF"}',
-		f'-DBUILD_LIBCARLA_CLIENT={"ON" if c.args.build_libcarla_client else "OFF"}',
-		f'-DBUILD_OSM_WORLD_RENDERER={"ON" if c.args.build_osm_world_renderer else "OFF"}',
-		f'-DLIBCARLA_PYTORCH={"ON" if c.args.build_libcarla_pytorch else "OFF"}'))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-libcarla', [ 'configure-libcarla' ], BUILD_PATH))
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-libcarla', [ 'build-libcarla' ], BUILD_PATH, LIBCARLA_INSTALL_PATH))
+def BuildLibCarlaMain(task_graph : TaskGraph):
+	task_graph.Add(Task.CreateCMakeConfigureDefault(
+		'configure-libcarla',
+		[],
+		WORKSPACE_PATH,
+		LIBCARLA_BUILD_PATH,
+		f'-DCARLA_DEPENDENCIES_PATH={DEPENDENCIES_PATH}',
+		f'-DBUILD_LIBCARLA_SERVER={"ON" if ARGV.libcarla_server else "OFF"}',
+		f'-DBUILD_LIBCARLA_CLIENT={"ON" if ARGV.libcarla_client else "OFF"}',
+		f'-DBUILD_OSM_WORLD_RENDERER={"ON" if ARGV.osm_world_renderer else "OFF"}',
+		f'-DLIBCARLA_PYTORCH={"ON" if ARGV.pytorch else "OFF"}'))
+	task_graph.Add(Task.CreateCMakeBuildDefault(
+		'build-libcarla',
+		[ 'configure-libcarla' ],
+		LIBCARLA_BUILD_PATH))
+	task_graph.Add(Task.CreateCMakeInstallDefault(
+		'install-libcarla',
+		[ 'build-libcarla' ],
+		LIBCARLA_BUILD_PATH,
+		LIBCARLA_INSTALL_PATH))
 
-def BuildCarlaUECore():
+def BuildCarlaUEMain():
+	assert UNREAL_ENGINE_PATH.exists()
 	if os.name == 'nt':
 		LaunchSubprocessImmediate([
-			UE_WORKSPACE_PATH / 'Engine' / 'Build' / 'BatchFiles' / 'Build.bat',
+			UNREAL_ENGINE_PATH / 'Engine' / 'Build' / 'BatchFiles' / 'Build.bat',
 			'CarlaUE4', 'Win64', 'Development', '-WaitMutex', '-FromMsBuild',
 			CARLA_UE_PATH / 'CarlaUE4.uproject'
 		])
 	else:
 		pass
 
-def BuildCarlaUEMain(c : Context):
+def BuildCarlaUE(task_graph : TaskGraph):
 	Log('Building Carla Unreal Engine Editor')
-	# c.args.enable_carsim
-	# c.args.enable_chrono
-	# c.args.enable_unity
-	if c.args.enable_omniverse:
-		c.task_graph.Add(Task('install-nv_omniverse', [], InstallNVIDIAOmniverse))
-	c.task_graph.Add(Task('build-carla_ue', [], BuildCarlaUECore))
+	if ARGV.nv_omniverse:
+		task_graph.Add(Task('install-nv-omniverse', [], InstallNVIDIAOmniverse))
+	task_graph.Add(Task('build-carla-ue', [], BuildCarlaUEMain))
 
-def BuildPythonAPICore():
-	setup_content = ''
-	with open(PYTHON_API_SOURCE_PATH / 'setup.py.txt', 'r') as file:
-		setup_content = file.read()
-	setup_content = setup_content.format_map(globals())
+def BuildPythonAPIMain():
+	content = ''
+	with open(PYTHON_API_PATH / 'setup.py.in', 'r') as file:
+		content = file.read()
+	content = content.format_map(globals())
 	if os.name == 'nt':
-		setup_content = setup_content.replace(os.sep, '/')
-	with open(PYTHON_API_SOURCE_PATH / 'setup.py', 'w') as file:
-		file.write(setup_content)
+		content = content.replace(os.sep, '/')
+	with open(PYTHON_API_PATH / 'setup.py', 'w') as file:
+		file.write(content)
 	LaunchSubprocessImmediate([
-		sys.executable,
-		PYTHON_API_SOURCE_PATH / 'setup.py',
-		'bdist_egg',
-		'bdist_wheel'
-	], working_directory = PYTHON_API_SOURCE_PATH)
+		sys.executable, 'setup.py', 'bdist_wheel', 'bdist_egg'
+	], working_directory = PYTHON_API_PATH)
 
-def BuildPythonAPIMain(c : Context):
-	c.task_graph.Add(Task('build-python-api', [ 'install-libcarla' ], BuildPythonAPICore))
+def BuildPythonAPI(task_graph : TaskGraph):
+	task_graph.Add(Task('build-python-api', [ 'install-libcarla' ], BuildPythonAPIMain))
 
-def SetupUnrealEngine(c : Context):
+def SetupUnrealEngine(task_graph : TaskGraph):
 	Log('Setting up Unreal Engine.')
 
 def InstallNVIDIAOmniverse():
@@ -631,18 +790,18 @@ def InstallNVIDIAOmniverse():
 	for src, dst in files:
 		shutil.copyfile(src, dst)
 
-def UpdateDependencies(c : Context):
+def UpdateDependencies(task_graph : TaskGraph):
 	unique_dependencies = set(DEFAULT_DEPENDENCIES)
-	if c.args.build_osm_world_renderer:
+	if ARGV.osm_world_renderer:
 		unique_dependencies.update(OSM_WORLD_RENDERER_DEPENDENCIES)
-	if c.args.build_osm2odr:
+	if ARGV.osm2odr:
 		unique_dependencies.update(OSM2ODR_DEPENDENCIES)
-	if c.args.enable_chrono:
+	if ARGV.chrono:
 		unique_dependencies.update(CHRONO_DEPENDENCIES)
 	for dep in unique_dependencies:
 		name = dep.name
-		c.task_graph.Add(Task(f'update-{name}', [], UpdateDependency, dep))
-	c.task_graph.Execute()
+		task_graph.Add(Task(f'update-{name}', [], UpdateDependency, dep))
+	task_graph.Execute()
 
 def ConfigureBoost():
 	if BOOST_B2_PATH.exists():
@@ -657,7 +816,7 @@ def BuildAndInstallBoost():
 		return
 	LaunchSubprocessImmediate([
 		BOOST_B2_PATH,
-		f'-j{DEFAULT_PARALLELISM}',
+		f'-j{ARGV.parallelism}',
 		'architecture=x86',
 		'address-model=64',
 		f'toolset={BOOST_TOOLSET}',
@@ -682,13 +841,27 @@ def BuildSQLite():
 	sqlite_sources = glob.glob(f'{SQLITE_SOURCE_PATH}/**/*.c', recursive = True)
 	if os.name == 'nt' and 'clang' in C_COMPILER:
 		if not SQLITE_EXE_PATH.exists():
-			cmd = [ C_COMPILER, f'-fuse-ld={LINKER}', '-march=native', '/O2', '/MD', '/EHsc' ]
+			cmd = [
+				C_COMPILER,
+				f'-fuse-ld={LINKER}',
+				'-march=native',
+				'/O2',
+				'/MD',
+				'/EHsc'
+			]
 			cmd.extend(sqlite_sources)
 			cmd.append('-o')
 			cmd.append(SQLITE_EXE_PATH)
 			LaunchSubprocessImmediate(cmd)
 		if not SQLITE_LIB_PATH.exists():
-			cmd = [ C_COMPILER, f'-fuse-ld={LIB}', '-march=native', '/O2', '/MD', '/EHsc' ]
+			cmd = [
+				C_COMPILER,
+				f'-fuse-ld={LIB}',
+				'-march=native',
+				'/O2',
+				'/MD',
+				'/EHsc'
+			]
 			cmd.extend(sqlite_sources)
 			cmd.append('-o')
 			cmd.append(SQLITE_LIB_PATH)
@@ -725,32 +898,26 @@ def ConfigureSUMO():
 	])
 	LaunchSubprocessImmediate(cmd)
 
-def BuildDependencies(c : Context):
-
+def BuildDependencies(task_graph : TaskGraph):
 	# Configure:
 
-	c.task_graph.Add(Task('build-sqlite',
-		[],
-		BuildSQLite))
-	
-	c.task_graph.Add(Task('configure-boost',
-		[],
-		ConfigureBoost))
+	task_graph.Add(Task('build-sqlite', [], BuildSQLite))
+	task_graph.Add(Task('configure-boost', [], ConfigureBoost))
 
-	c.task_graph.Add(Task.CreateCMakeConfigureDefault(
+	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-zlib',
 		[],
 		ZLIB_SOURCE_PATH,
 		ZLIB_BUILD_PATH,
 		install_path = ZLIB_INSTALL_PATH)) # ZLib determines where to install during configure.
 
-	c.task_graph.Add(Task.CreateCMakeConfigureDefault(
+	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-gtest',
 		[],
 		GTEST_SOURCE_PATH,
 		GTEST_BUILD_PATH))
 
-	c.task_graph.Add(Task.CreateCMakeConfigureDefault(
+	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-libpng',
 		[],
 		LIBPNG_SOURCE_PATH,
@@ -761,7 +928,7 @@ def BuildDependencies(c : Context):
 		f'-DZLIB_INCLUDE_DIRS={ZLIB_INCLUDE_PATH}',
 		f'-DZLIB_LIBRARIES={ZLIB_LIB_PATH}'))
 
-	c.task_graph.Add(Task.CreateCMakeConfigureDefault(
+	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-proj',
 		[],
 		PROJ_SOURCE_PATH,
@@ -784,7 +951,7 @@ def BuildDependencies(c : Context):
 		'-DBUILD_PROJ=OFF',
 		'-DBUILD_TESTING=OFF'))
 
-	c.task_graph.Add(Task.CreateCMakeConfigureDefault(
+	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-recast',
 		[],
 		RECAST_SOURCE_PATH,
@@ -793,7 +960,7 @@ def BuildDependencies(c : Context):
 		'-DRECASTNAVIGATION_TESTS=OFF',
 		'-DRECASTNAVIGATION_EXAMPLES=OFF'))
 
-	c.task_graph.Add(Task.CreateCMakeConfigureDefault(
+	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-rpclib',
 		[],
 		RPCLIB_SOURCE_PATH,
@@ -805,14 +972,14 @@ def BuildDependencies(c : Context):
 		'-DRPCLIB_ENABLE_COVERAGE=OFF',
 		'-DRPCLIB_MSVC_STATIC_RUNTIME=OFF'))
 
-	c.task_graph.Add(Task.CreateCMakeConfigureDefault(
+	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-xercesc',
 		[],
 		XERCESC_SOURCE_PATH,
 		XERCESC_BUILD_PATH))
 
-	if c.args.build_osm_world_renderer:
-		c.task_graph.Add(Task.CreateCMakeConfigureDefault(
+	if ARGV.osm_world_renderer:
+		task_graph.Add(Task.CreateCMakeConfigureDefault(
 			'configure-libosmscout',
 			[],
 			LIBOSMSCOUT_SOURCE_PATH,
@@ -823,14 +990,14 @@ def BuildDependencies(c : Context):
 			'-DOSMSCOUT_BUILD_CLIENT_QT=OFF',
 			'-DOSMSCOUT_BUILD_DEMOS=OFF'))
 
-		c.task_graph.Add(Task.CreateCMakeConfigureDefault(
+		task_graph.Add(Task.CreateCMakeConfigureDefault(
 			'configure-lunasvg',
 			[],
 			LUNASVG_SOURCE_PATH,
 			LUNASVG_BUILD_PATH))
 
-	if c.args.enable_chrono:
-		c.task_graph.Add(Task.CreateCMakeConfigureDefault(
+	if ARGV.chrono:
+		task_graph.Add(Task.CreateCMakeConfigureDefault(
 			'configure-chrono',
 			[],
 			CHRONO_SOURCE_PATH,
@@ -838,168 +1005,80 @@ def BuildDependencies(c : Context):
 			f'-DEIGEN3_INCLUDE_DIR={EIGEN_SOURCE_PATH}',
 			'-DENABLE_MODULE_VEHICLE=ON'))
 		
-	c.task_graph.Execute()
+	task_graph.Execute()
 
 	# Build:
-	c.task_graph.Add(Task('build-boost', [], BuildAndInstallBoost))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-zlib', [], ZLIB_BUILD_PATH))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-gtest', [], GTEST_BUILD_PATH))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-libpng', [], LIBPNG_BUILD_PATH))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-proj', [], PROJ_BUILD_PATH))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-recast', [], RECAST_BUILD_PATH))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-rpclib', [], RPCLIB_BUILD_PATH))
-	c.task_graph.Add(Task.CreateCMakeBuildDefault('build-xercesc', [], XERCESC_BUILD_PATH))
-	if c.args.build_osm_world_renderer:
-		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-lunasvg', [], LUNASVG_BUILD_PATH))
-		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-libosmscout', [], LIBOSMSCOUT_BUILD_PATH))
-	if c.args.build_osm2odr:
-		c.task_graph.Add(Task('configure-sumo', [ 'build-xercesc' ], ConfigureSUMO))
-		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [ 'configure-sumo' ], SUMO_BUILD_PATH))
-	if c.args.enable_chrono:
-		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-chrono', [], CHRONO_BUILD_PATH))
-	c.task_graph.Execute(sequential = True) # The underlying build system should already parallelize.
+	task_graph.Add(Task('build-boost', [], BuildAndInstallBoost))
+	task_graph.Add(Task.CreateCMakeBuildDefault('build-zlib', [], ZLIB_BUILD_PATH))
+	task_graph.Add(Task.CreateCMakeBuildDefault('build-gtest', [], GTEST_BUILD_PATH))
+	task_graph.Add(Task.CreateCMakeBuildDefault('build-libpng', [], LIBPNG_BUILD_PATH))
+	task_graph.Add(Task.CreateCMakeBuildDefault('build-proj', [], PROJ_BUILD_PATH))
+	task_graph.Add(Task.CreateCMakeBuildDefault('build-recast', [], RECAST_BUILD_PATH))
+	task_graph.Add(Task.CreateCMakeBuildDefault('build-rpclib', [], RPCLIB_BUILD_PATH))
+	task_graph.Add(Task.CreateCMakeBuildDefault('build-xercesc', [], XERCESC_BUILD_PATH))
+	if ARGV.osm_world_renderer:
+		task_graph.Add(Task.CreateCMakeBuildDefault('build-lunasvg', [], LUNASVG_BUILD_PATH))
+		task_graph.Add(Task.CreateCMakeBuildDefault('build-libosmscout', [], LIBOSMSCOUT_BUILD_PATH))
+	if ARGV.osm2odr:
+		task_graph.Add(Task('configure-sumo', [ 'build-xercesc' ], ConfigureSUMO))
+		task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [ 'configure-sumo' ], SUMO_BUILD_PATH))
+	if ARGV.chrono:
+		task_graph.Add(Task.CreateCMakeBuildDefault('build-chrono', [], CHRONO_BUILD_PATH))
+	task_graph.Execute(sequential = True) # The underlying build system should already parallelize.
 		
 	# Install:
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-zlib', [], ZLIB_BUILD_PATH, ZLIB_INSTALL_PATH))
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-gtest', [], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-libpng', [], LIBPNG_BUILD_PATH, LIBPNG_INSTALL_PATH))
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-recast', [], RECAST_BUILD_PATH, RECAST_INSTALL_PATH))
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-rpclib', [], RPCLIB_BUILD_PATH, RPCLIB_INSTALL_PATH))
-	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-xercesc', [], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
-	if c.args.build_osm_world_renderer:
-		c.task_graph.Add(Task.CreateCMakeInstallDefault('install-lunasvg', [], LUNASVG_BUILD_PATH, LUNASVG_INSTALL_PATH))
-		c.task_graph.Add(Task.CreateCMakeInstallDefault('install-libosmscout', [], LIBOSMSCOUT_BUILD_PATH, LIBOSMSCOUT_INSTALL_PATH))
-	if c.args.build_osm2odr:
-		c.task_graph.Add(Task.CreateCMakeInstallDefault('install-sumo', [], SUMO_BUILD_PATH, SUMO_INSTALL_PATH))
-	if c.args.enable_chrono:
-		c.task_graph.Add(Task.CreateCMakeInstallDefault('install-chrono', [], CHRONO_BUILD_PATH, CHRONO_INSTALL_PATH))
+	task_graph.Add(Task.CreateCMakeInstallDefault('install-zlib', [], ZLIB_BUILD_PATH, ZLIB_INSTALL_PATH))
+	task_graph.Add(Task.CreateCMakeInstallDefault('install-gtest', [], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
+	task_graph.Add(Task.CreateCMakeInstallDefault('install-libpng', [], LIBPNG_BUILD_PATH, LIBPNG_INSTALL_PATH))
+	task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
+	task_graph.Add(Task.CreateCMakeInstallDefault('install-recast', [], RECAST_BUILD_PATH, RECAST_INSTALL_PATH))
+	task_graph.Add(Task.CreateCMakeInstallDefault('install-rpclib', [], RPCLIB_BUILD_PATH, RPCLIB_INSTALL_PATH))
+	task_graph.Add(Task.CreateCMakeInstallDefault('install-xercesc', [], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
+	if ARGV.osm_world_renderer:
+		task_graph.Add(Task.CreateCMakeInstallDefault('install-lunasvg', [], LUNASVG_BUILD_PATH, LUNASVG_INSTALL_PATH))
+		task_graph.Add(Task.CreateCMakeInstallDefault('install-libosmscout', [], LIBOSMSCOUT_BUILD_PATH, LIBOSMSCOUT_INSTALL_PATH))
+	if ARGV.osm2odr:
+		task_graph.Add(Task.CreateCMakeInstallDefault('install-sumo', [], SUMO_BUILD_PATH, SUMO_INSTALL_PATH))
+	if ARGV.chrono:
+		task_graph.Add(Task.CreateCMakeInstallDefault('install-chrono', [], CHRONO_BUILD_PATH, CHRONO_INSTALL_PATH))
 
 
-
-def ParseCommandLine():
-	arg_parser = ArgumentParser(description = __doc__)
-	BUILD_LIBCARLA_CLIENT_OVERRIDE = True
-	BUILD_LIBCARLA_SERVER_OVERRIDE = True
-	BUILD_LIBCARLA_PYTORCH_OVERRIDE = True
-	BUILD_PYTHON_API_OVERRIDE = True
-	BUILD_CARLA_UE_OVERRIDE = False
-	UPDATE_DEPENDENCIES_OVERRIDE = True
-	BUILD_DEPENDENCIES_OVERRIDE = True
-	BUILD_OSM2ODR_OVERRIDE = True
-	BUILD_OSM_WORLD_RENDERER_OVERRIDE = False
-	BUILD_PACKAGE_OVERRIDE = True
-	CLEAN_OVERRIDE = False
-	arg_parser.add_argument(
-		'-build-libcarla-client',
-		action='store_true',
-		default = BUILD_LIBCARLA_CLIENT_OVERRIDE,
-		help = 'Whether to build LibCarla Client.')
-	arg_parser.add_argument(
-		'-build-libcarla-server',
-		action='store_true',
-		default = BUILD_LIBCARLA_SERVER_OVERRIDE,
-		help = 'Whether to build LibCarla Server.')
-	arg_parser.add_argument(
-		'-build-libcarla-pytorch',
-		action='store_true',
-		default = BUILD_LIBCARLA_PYTORCH_OVERRIDE,
-		help = 'Whether to build LibCarla-PyTorch.')
-	arg_parser.add_argument(
-		'-build-python-api',
-		action='store_true',
-		default = BUILD_PYTHON_API_OVERRIDE,
-		help = 'Whether to build the CARLA Python API.')
-	arg_parser.add_argument(
-		'-build-carla-unreal',
-		action='store_true',
-		default = BUILD_CARLA_UE_OVERRIDE,
-		help = 'Build to build the Unreal Engine Carla backend.')
-	arg_parser.add_argument(
-		'-update-dependencies',
-		action='store_true',
-		default = UPDATE_DEPENDENCIES_OVERRIDE,
-		help = 'Whether to update the CARLA dependencies.')
-	arg_parser.add_argument(
-		'-build-dependencies',
-		action='store_true',
-		default = BUILD_DEPENDENCIES_OVERRIDE,
-		help = 'Whether to build the CARLA dependencies.')
-	arg_parser.add_argument(
-		'-build-osm-world-renderer',
-		action='store_true',
-		default = BUILD_OSM_WORLD_RENDERER_OVERRIDE,
-		help = 'Whether to build OSM World Renderer.')
-	arg_parser.add_argument(
-		'-build-osm2odr',
-		action='store_true',
-		default = BUILD_OSM2ODR_OVERRIDE,
-		help = 'Whether to build OSM2ODR.')
-	arg_parser.add_argument(
-		'-package',
-		action='store_true',
-		default = BUILD_PACKAGE_OVERRIDE,
-		help = 'Whether to package Carla.')
-	arg_parser.add_argument(
-		'-clean',
-		action='store_true',
-		default = CLEAN_OVERRIDE,
-		help = 'Clean build files.')
-	arg_parser.add_argument(
-		'-enable-rss',
-		action='store_true',
-		help = 'Whether to enable "RSS".')
-	arg_parser.add_argument(
-		'-enable-carsim',
-		action='store_true',
-		help = 'Whether to enable plugin "CarSim".')
-	arg_parser.add_argument(
-		'-enable-chrono',
-		action='store_true',
-		help = 'Whether to enable plugin "Chrono".')
-	arg_parser.add_argument(
-		'-enable-unity',
-		action='store_true',
-		help = 'Whether to enable plugin "Unity".')
-	arg_parser.add_argument(
-		'-enable-omniverse',
-		action='store_true',
-		help = 'Whether to enable plugin "NVIDIA Omniverse".')
-	return arg_parser.parse_args()
-
-
-
-def Main():
-	Log('Started.')
-	BUILD_PATH.mkdir(exist_ok = True)
-	DEPENDENCIES_PATH.mkdir(exist_ok = True)
-	arg = ParseCommandLine()
-	c = Context(arg, DEFAULT_PARALLELISM)
-	if arg.clean:
-		try:
-			shutil.rmtree(BUILD_PATH)
-		finally:
-			Log(f'Failed to remove {BUILD_PATH}.')
-			exit(-1)
-	if arg.update_dependencies or True:
-		UpdateDependencies(c)
-	for ext in [ '*.tmp', '*.zip', '*.tar.gz' ]:
-		for e in DEPENDENCIES_PATH.glob(ext):
-			e.unlink(missing_ok = True)
-	if arg.build_dependencies or True:
-		BuildDependencies(c)
-	BuildLibCarlaMain(c)
-	if arg.build_python_api:
-		BuildPythonAPIMain(c)
-	if arg.build_carla_unreal:
-		BuildCarlaUEMain(c)
-	c.task_graph.Execute()
-	Log('Done.')
 
 if __name__ == '__main__':
 	try:
-		Main()
+		BUILD_PATH.mkdir(exist_ok = True)
+		DEPENDENCIES_PATH.mkdir(exist_ok = True)
+		task_graph = TaskGraph(ARGV.parallelism)
+
+		if ARGV.clean or ARGV.rebuild:
+			try:
+				shutil.rmtree(BUILD_PATH)
+			finally:
+				Log(f'Failed to remove {BUILD_PATH}.')
+				exit(-1)
+
+		if ARGV.update_dependencies:
+			UpdateDependencies(task_graph)
+
+		# Clean temporary archive files that may be from a previous script invocation.
+		for ext in [ '*.tmp', '*.zip', '*.tar.gz' ]:
+			for e in DEPENDENCIES_PATH.glob(ext):
+				e.unlink(missing_ok = True)
+
+		if ARGV.build_dependencies:
+			BuildDependencies(task_graph)
+
+		if ARGV.libcarla_client or ARGV.libcarla_server or True:
+			BuildLibCarlaMain(task_graph)
+
+		if ARGV.python_api or True:
+			BuildPythonAPI(task_graph)
+
+		if ARGV.carla_ue:
+			BuildCarlaUE(task_graph)
+
+		task_graph.Execute()
 	except Exception as err:
 		Log(err)
-		Log(ERROR_MESSAGE)
+		Log(DEFAULT_ERROR_MESSAGE)
 		exit(-1)

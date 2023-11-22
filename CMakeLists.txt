@@ -3,8 +3,15 @@ cmake_minimum_required (VERSION 3.12.0)
 set (CARLA_VERSION_MAJOR 0)
 set (CARLA_VERSION_MINOR 9)
 set (CARLA_VERSION_PATCH 14)
+set (CARLA_VERSION ${CARLA_VERSION_MAJOR}.${CARLA_VERSION_MINOR}.${CARLA_VERSION_PATCH})
 
-project (CARLA)
+project (
+    CARLA
+    VERSION ${CARLA_VERSION}
+    LANGUAGES CXX
+    DESCRIPTION "Open-source simulator for autonomous driving research."
+    HOMEPAGE_URL "https://carla.org/"
+)
 
 include (CheckCCompilerFlag)
 include (CheckCXXCompilerFlag)
@@ -60,7 +67,9 @@ option (
 
 set (CARLA_WORKSPACE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 set (CARLA_BUILD_PATH ${CMAKE_CURRENT_BINARY_DIR})
-set (CARLA_DEPENDENCIES_PATH ${CMAKE_CURRENT_BINARY_DIR}/Dependencies)
+if (NOT CARLA_DEPENDENCIES_PATH)
+    set (CARLA_DEPENDENCIES_PATH ${CMAKE_CURRENT_BINARY_DIR}/Dependencies)
+endif ()
 
 set (LIBCARLA_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/LibCarla/source)
 set (LIBCARLA_THIRD_PARTY_SOURCE_PATH ${LIBCARLA_SOURCE_PATH}/third-party)
@@ -99,7 +108,7 @@ set (
 
 if (WIN32)
     # https://learn.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=msvc-170
-    list (APPEND CARLA_COMMON_DEFINITIONS _WIN32_WINNT=0x0A00) # Windows 10
+    list (APPEND CARLA_COMMON_DEFINITIONS _WIN32_WINNT=0x0601) # Windows 10
     list (APPEND CARLA_COMMON_DEFINITIONS _CRT_SECURE_NO_WARNINGS)
 endif ()
 
@@ -124,7 +133,7 @@ endif ()
 
 if (BUILD_LIBCARLA_SERVER)
 
-    project (LibCarla-Server)
+    project (libcarla-server)
 
     set (LIBCARLA_SERVER_INCLUDE_PATHS
         ${LIBCARLA_SOURCE_PATH}
@@ -174,19 +183,19 @@ if (BUILD_LIBCARLA_SERVER)
     )
 
     add_library (
-        LibCarla-Server STATIC ${LIBCARLA_SERVER_SOURCES}
+        libcarla-server STATIC ${LIBCARLA_SERVER_SOURCES}
     )
 
     target_compile_options (
-        LibCarla-Server PRIVATE /EHsc
+        libcarla-server PRIVATE /EHsc
     )
 
     target_include_directories (
-        LibCarla-Server PRIVATE ${LIBCARLA_SERVER_INCLUDE_PATHS}
+        libcarla-server PRIVATE ${LIBCARLA_SERVER_INCLUDE_PATHS}
     )
     
     target_compile_definitions (
-        LibCarla-Server PRIVATE
+        libcarla-server PRIVATE
         ${CARLA_COMMON_DEFINITIONS}
     )
     
@@ -196,7 +205,7 @@ endif ()
 
 if (BUILD_LIBCARLA_CLIENT)
 
-    project (LibCarla-Client)
+    project (libcarla-client)
 
     set (LIBCARLA_CLIENT_INCLUDE_PATHS
         ${LIBCARLA_SOURCE_PATH}
@@ -268,15 +277,15 @@ if (BUILD_LIBCARLA_CLIENT)
     )
 
     add_library (
-        LibCarla-Client STATIC ${LIBCARLA_CLIENT_SOURCES}
+        libcarla-client STATIC ${LIBCARLA_CLIENT_SOURCES}
     )
 
     target_include_directories (
-        LibCarla-Client PRIVATE ${LIBCARLA_CLIENT_INCLUDE_PATHS}
+        libcarla-client PRIVATE ${LIBCARLA_CLIENT_INCLUDE_PATHS}
     )
 
     target_compile_definitions (
-        LibCarla-Client PRIVATE
+        libcarla-client PRIVATE
         ${CARLA_COMMON_DEFINITIONS}
     )
     
