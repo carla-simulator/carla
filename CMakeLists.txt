@@ -116,7 +116,11 @@ else ()
     list (APPEND CARLA_COMMON_DEFINITIONS BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY)
 endif ()
 
-
+if (BUILD_LIBCARLA_SERVER OR BUILD_LIBCARLA_CLIENT)
+    configure_file (
+        ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in
+        ${LIBCARLA_SOURCE_PATH}/carla/Version.h)
+endif ()
 
 if (BUILD_LIBCARLA_SERVER)
 

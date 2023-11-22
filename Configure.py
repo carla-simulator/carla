@@ -89,14 +89,10 @@ class Task:
 	def CreateSubprocessTask(name : str, in_edges : list, command : list):
 		return Task(name, in_edges, LaunchSubprocessImmediate, command)
 	
-	def CreateCMakeConfigureDefault(
-			name : str,
-			in_edges : list,
+	def CreateCMakeConfigureDefaultCommandLine(
 			source_path : Path,
-			build_path : Path,
-			*args,
-			install_path : Path = None):
-		cmd = [
+			build_path : Path):
+		return [
 			'cmake',
 			'-G', CMAKE_GENERATOR,
 			'-S', source_path,
@@ -106,6 +102,15 @@ class Task:
 			'-DCMAKE_BUILD_TYPE=Release',
 			'-DCMAKE_CXX_FLAGS_RELEASE="/MD"',
 		]
+
+	def CreateCMakeConfigureDefault(
+			name : str,
+			in_edges : list,
+			source_path : Path,
+			build_path : Path,
+			*args,
+			install_path : Path = None):
+		cmd = Task.CreateCMakeConfigureDefaultCommandLine(source_path, build_path)
 		if install_path != None:
 			cmd.append('-DCMAKE_INSTALL_PREFIX=' + str(install_path))
 		cmd.extend([ *args ])
@@ -150,7 +155,7 @@ class TaskGraph:
 
 	def Add(self, task):
 		self.tasks.append(task)
-		if len(task.in_edges) == 0:
+		if len(task.in_edge_names) == 0:
 			self.sources.append(task.name)
 		self.task_map[task.name] = self.tasks[-1]
 	
@@ -158,56 +163,66 @@ class TaskGraph:
 		return True
 
 	def Execute(self, sequential : bool = False):
+		if len(self.tasks) == 0:
+			return
 		from collections import deque
 		assert self.Validate()
 		prior_sequential = self.sequential
+		self.sequential = sequential
 		try:
-			for e in self.tasks:
-				for in_edge_name in e.in_edge_names:
+			for task in self.tasks:
+				for in_edge_name in task.in_edge_names:
 					in_edge = self.task_map.get(in_edge_name, None)
 					assert in_edge != None
-					e.in_edges.append(in_edge)
-			for e in self.tasks:
-				for in_edge_name in e.in_edge_names:
-					out_edge = self.task_map.get(in_edge_name, None)
-					assert out_edge != None
-					out_edge.out_edges.append(e)
+					task.in_edges.append(in_edge)
+			for task in self.tasks:
+				for in_edge_name in task.in_edge_names:
+					in_edge = self.task_map.get(in_edge_name, None)
+					assert in_edge != None
+					in_edge.out_edges.append(task)
 			futures = []
 			future_map = {}
 			task_queue = deque()
 			active_count = 0
 
 			def UpdateOutEdges(task):
+				nonlocal task_queue
+				assert len(task.in_edges) == len(task.in_edge_names)
+				if len(task.out_edges) == 0:
+					return
 				for out in task.out_edges:
+					assert out.in_edge_done_count < len(out.in_edges)
 					out.in_edge_done_count += 1
 					if out.in_edge_done_count == len(out.in_edges):
 						task_queue.append(out)
+			
+			def Flush():
+				nonlocal futures
+				nonlocal future_map
+				nonlocal active_count
+				if active_count != 0:
+					for e in as_completed(futures):
+						task = future_map.get(e, None)
+						assert task != None
+						UpdateOutEdges(task)
+					active_count = 0
+					futures = []
 
 			task_queue.extend([ self.task_map[e] for e in self.sources ])
 			while len(task_queue) != 0:
 				while len(task_queue) != 0 and active_count < self.parallelism:
-					active_count += 1
-					task = task_queue.pop()
+					task = task_queue.popleft()
+					Log(f'Running "{task.name}".')
 					if not self.sequential:
+						active_count += 1
 						future = self.pool.submit(task.Run)
 						future_map[future] = task
 						futures.append(future)
 					else:
 						task.Run()
 						UpdateOutEdges(task)
-				if active_count != 0:
-					for e in as_completed(futures):
-						task = future_map.get(e, None)
-						assert task != None
-						UpdateOutEdges(task)
-						active_count -= 1
-			if active_count != 0:
-				for e in as_completed(futures):
-					task = future_map.get(e, None)
-					assert task != None
-					UpdateOutEdges(task)
-					active_count -= 1
-
+				Flush()
+			Flush()
 					
 		finally:
 			self.sequential = prior_sequential
@@ -537,7 +552,6 @@ def DownloadDependency(name : str, path : Path, url : str):
 
 def UpdateDependency(dep : Dependency):
 	name = dep.name
-	Log(f'Updating {name}.')
 	download_path = DEPENDENCIES_PATH / f'{name}-source'
 	for source in dep.sources:
 		try:
@@ -685,6 +699,32 @@ def BuildSQLite():
 def FindXercesC():
 	return glob.glob(f'{XERCESC_INSTALL_PATH}/**/xerces-c*{LIB_EXT}', recursive=True)[0]
 
+def ConfigureSUMO():
+	cmd = Task.CreateCMakeConfigureDefaultCommandLine(
+		SUMO_SOURCE_PATH,
+		SUMO_BUILD_PATH)
+	cmd.extend([
+		SUMO_SOURCE_PATH,
+		SUMO_BUILD_PATH,
+		f'-DZLIB_INCLUDE_DIR={ZLIB_INCLUDE_PATH}',
+		f'-DZLIB_LIBRARY={ZLIB_LIBRARY_PATH}',
+        f'-DPROJ_INCLUDE_DIR={PROJ_INSTALL_PATH}/include',
+        f'-DPROJ_LIBRARY={PROJ_INSTALL_PATH}/lib/proj{LIB_EXT}',
+        f'-DXercesC_INCLUDE_DIR={XERCESC_INSTALL_PATH}/include',
+        f'-DXercesC_LIBRARY={FindXercesC()}',
+		'-DSUMO_LIBRARIES=OFF',
+		# '-DPROFILING=OFF',
+		# '-DPPROF=OFF',
+		# '-DCOVERAGE=OFF',
+		# '-DSUMO_UTILS=OFF',
+		# '-DFMI=OFF',
+		# '-DNETEDIT=OFF',
+		# '-DENABLE_JAVA_BINDINGS=OFF',
+		# '-DENABLE_CS_BINDINGS=OFF',
+		# '-DCCACHE_SUPPORT=OFF',
+	])
+	LaunchSubprocessImmediate(cmd)
+
 def BuildDependencies(c : Context):
 
 	# Configure:
@@ -789,30 +829,6 @@ def BuildDependencies(c : Context):
 			LUNASVG_SOURCE_PATH,
 			LUNASVG_BUILD_PATH))
 
-	if c.args.build_osm2odr:
-		c.task_graph.Add(Task.CreateCMakeConfigureDefault(
-			'configure-sumo',
-			[],
-			SUMO_SOURCE_PATH,
-			SUMO_BUILD_PATH,
-			f'-DZLIB_INCLUDE_DIR={ZLIB_INCLUDE_PATH}',
-			f'-DZLIB_LIBRARY={ZLIB_LIBRARY_PATH}',
-        	f'-DPROJ_INCLUDE_DIR={PROJ_INSTALL_PATH}/include',
-        	f'-DPROJ_LIBRARY={PROJ_INSTALL_PATH}/lib/proj{LIB_EXT}',
-        	f'-DXercesC_INCLUDE_DIR={XERCESC_INSTALL_PATH}/include',
-        	f'-DXercesC_LIBRARY={FindXercesC()}',
-			'-DSUMO_LIBRARIES=OFF',
-			# '-DPROFILING=OFF',
-			# '-DPPROF=OFF',
-			# '-DCOVERAGE=OFF',
-			# '-DSUMO_UTILS=OFF',
-			# '-DFMI=OFF',
-			# '-DNETEDIT=OFF',
-			# '-DENABLE_JAVA_BINDINGS=OFF',
-			# '-DENABLE_CS_BINDINGS=OFF',
-			# '-DCCACHE_SUPPORT=OFF',
-		))
-
 	if c.args.enable_chrono:
 		c.task_graph.Add(Task.CreateCMakeConfigureDefault(
 			'configure-chrono',
@@ -837,10 +853,11 @@ def BuildDependencies(c : Context):
 		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-lunasvg', [], LUNASVG_BUILD_PATH))
 		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-libosmscout', [], LIBOSMSCOUT_BUILD_PATH))
 	if c.args.build_osm2odr:
-		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [], SUMO_BUILD_PATH))
+		c.task_graph.Add(Task('configure-sumo', [ 'build-xercesc' ], ConfigureSUMO))
+		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [ 'configure-sumo' ], SUMO_BUILD_PATH))
 	if c.args.enable_chrono:
 		c.task_graph.Add(Task.CreateCMakeBuildDefault('build-chrono', [], CHRONO_BUILD_PATH))
-	c.task_graph.Execute(True)
+	c.task_graph.Execute(sequential = True) # The underlying build system should already parallelize.
 		
 	# Install:
 	c.task_graph.Add(Task.CreateCMakeInstallDefault('install-zlib', [], ZLIB_BUILD_PATH, ZLIB_INSTALL_PATH))
@@ -857,7 +874,6 @@ def BuildDependencies(c : Context):
 		c.task_graph.Add(Task.CreateCMakeInstallDefault('install-sumo', [], SUMO_BUILD_PATH, SUMO_INSTALL_PATH))
 	if c.args.enable_chrono:
 		c.task_graph.Add(Task.CreateCMakeInstallDefault('install-chrono', [], CHRONO_BUILD_PATH, CHRONO_INSTALL_PATH))
-	c.task_graph.Execute()
 
 
 
