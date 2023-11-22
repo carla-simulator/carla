@@ -75,13 +75,15 @@ class Task:
 	def __init__(
 			self,
 			name : str,
-			in_edges : list,
+			in_edge_names : list,
 			body,
 			*args):
 		self.name = name
 		self.body = body
 		self.args = args
-		self.in_edges = in_edges
+		self.in_edge_done_count = 0
+		self.in_edge_names = in_edge_names
+		self.in_edges = []
 		self.out_edges = [] # Filled right before task graph execution.
 
 	def CreateSubprocessTask(name : str, in_edges : list, command : list):
@@ -135,14 +137,13 @@ class Task:
 class TaskGraph:
 	def __init__(self, parallelism : int = None):
 		self.sequential = FORCE_SEQUENTIAL
+		self.parallelism = parallelism
 		self.pool = ProcessPoolExecutor(parallelism)
-		self.futures = []
 		self.tasks = []
 		self.sources = []
 		self.task_map = {}
 	
 	def Reset(self):
-		self.futures = []
 		self.tasks = []
 		self.sources = []
 		self.task_map = {}
@@ -157,30 +158,57 @@ class TaskGraph:
 		return True
 
 	def Execute(self, sequential : bool = False):
+		from collections import deque
 		assert self.Validate()
 		prior_sequential = self.sequential
 		try:
-			self.sequential = sequential
+			for e in self.tasks:
+				for in_edge_name in e.in_edge_names:
+					in_edge = self.task_map.get(in_edge_name, None)
+					assert in_edge != None
+					e.in_edges.append(in_edge)
+			for e in self.tasks:
+				for in_edge_name in e.in_edge_names:
+					out_edge = self.task_map.get(in_edge_name, None)
+					assert out_edge != None
+					out_edge.out_edges.append(e)
+			futures = []
+			future_map = {}
+			task_queue = deque()
+			active_count = 0
 
-			done = {}
-			todo = self.sources
-			while len(done) != self.tasks:
-				for e in todo:
+			def UpdateOutEdges(task):
+				for out in task.out_edges:
+					out.in_edge_done_count += 1
+					if out.in_edge_done_count == len(out.in_edges):
+						task_queue.append(out)
+
+			task_queue.extend([ self.task_map[e] for e in self.sources ])
+			while len(task_queue) != 0:
+				while len(task_queue) != 0 and active_count < self.parallelism:
+					active_count += 1
+					task = task_queue.pop()
 					if not self.sequential:
-						self.futures.append(self.pool.submit(task.Run))
+						future = self.pool.submit(task.Run)
+						future_map[future] = task
+						futures.append(future)
 					else:
 						task.Run()
+						UpdateOutEdges(task)
+				if active_count != 0:
+					for e in as_completed(futures):
+						task = future_map.get(e, None)
+						assert task != None
+						UpdateOutEdges(task)
+						active_count -= 1
+			if active_count != 0:
+				for e in as_completed(futures):
+					task = future_map.get(e, None)
+					assert task != None
+					UpdateOutEdges(task)
+					active_count -= 1
 
-			for e in self.tasks:
-				for in_edge in e.in_edges:
-					self.task_map[in_edge].out_edges.append(e)
-			for e in self.sources:
-				task = self.task_map.get(e, None)
-				assert task != None and type(task) is Task
-				Log(f'Running "{task.name}".')
-				
-			if not self.sequential:
-				return [ e.result() for e in as_completed(self.futures) ]
+					
 		finally:
 			self.sequential = prior_sequential
 			self.Reset()
