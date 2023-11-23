@@ -21,6 +21,7 @@ compile_command = [
     '{CPP_COMPILER}',
     '/c',
     '/std:c++{CPP_STANDARD}',
+    '/I', '{LIBCARLA_SOURCE_PATH}',
     '/I', '{BOOST_INCLUDE_PATH}',
     '/I', '{RPCLIB_INCLUDE_PATH}',
     '/I', '{LIBPNG_INCLUDE_PATH}',
@@ -29,6 +30,14 @@ compile_command = [
     '/I', '{XERCESC_INCLUDE_PATH}',
     '/I', '{SQLITE_INCLUDE_PATH}',
     '/I', '{PROJ_INCLUDE_PATH}',
+    '/DBOOST_ALL_NO_LIB',
+    '/DBOOST_PYTHON_STATIC_LIB',
+    '/DBOOST_ERROR_CODE_HEADER_ONLY',
+    '/D_WIN32_WINNT=0x0600',
+    '/DHAVE_SNPRINTF',
+    '/DLIBCARLA_WITH_PYTHON_SUPPORT',
+    '/DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true',
+    '/MD',
     PYTHON_API_PATH / 'source' / 'libcarla' / 'libcarla.cpp',
     f'/Fo{{PYTHON_API_AMALGAMATED_OBJECT_PATH}}',
 ] if os.name == 'nt' else [
@@ -40,8 +49,12 @@ subprocess.run(
 ).check_returncode()
 
 sources = []
-include_paths = []
+
+include_paths = [
+]
+
 library_paths = []
+
 link_libraries = [
     sorted(glob.glob(str('{BOOST_INSTALL_PATH}/lib/libboost_python*{LIB_EXT}'), recursive = True))[0],
     sorted(glob.glob(str('{BOOST_INSTALL_PATH}/lib/libboost_filesystem*{LIB_EXT}'), recursive = True))[0],

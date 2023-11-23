@@ -4,6 +4,8 @@ import subprocess, tarfile, zipfile, argparse, requests, psutil, shutil, glob, s
 
 # Constants:
 WORKSPACE_PATH = Path(__file__).parent.resolve()
+LIBCARLA_PATH = WORKSPACE_PATH / 'LibCarla'
+LIBCARLA_SOURCE_PATH = LIBCARLA_PATH / 'source'
 PYTHON_API_PATH = WORKSPACE_PATH / 'PythonAPI' / 'carla'
 EXAMPLES_PATH = WORKSPACE_PATH / 'Examples'
 UTIL_PATH = WORKSPACE_PATH / 'Util'
@@ -765,7 +767,7 @@ def BuildPythonAPIMain():
 		content = file.read()
 	content = content.format_map(globals())
 	if os.name == 'nt':
-		content = content.replace(os.sep, '/')
+		content = content.replace(os.sep, '\\\\')
 	with open(PYTHON_API_PATH / 'setup.py', 'w') as file:
 		file.write(content)
 	LaunchSubprocessImmediate([
