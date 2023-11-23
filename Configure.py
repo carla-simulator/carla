@@ -1,8 +1,12 @@
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
-import subprocess, tarfile, zipfile, argparse, requests, psutil, shutil, glob, sys, os
+import subprocess, tarfile, zipfile, argparse, requests, psutil, shutil, glob, json, sys, os
 
 # Constants:
+EXE_EXT = '.exe' if os.name == 'nt' else ''
+LIB_EXT = '.lib' if os.name == 'nt' else '.a'
+OBJ_EXT = '.obj' if os.name == 'nt' else '.o'
+SHELL_EXT = '.bat' if os.name == 'nt' else ''
 WORKSPACE_PATH = Path(__file__).parent.resolve()
 LIBCARLA_PATH = WORKSPACE_PATH / 'LibCarla'
 LIBCARLA_SOURCE_PATH = LIBCARLA_PATH / 'source'
@@ -50,45 +54,45 @@ def FindExecutable(candidates : list):
 	return None
 
 DEFAULT_C_COMPILER = FindExecutable([
+	'cl',
 	'clang-cl',
-	'cl'
 ] if os.name == 'nt' else [
 	'clang',
-	'gcc'
+	'gcc',
 ])
 
 DEFAULT_CPP_COMPILER = FindExecutable([
+	'cl',
 	'clang-cl',
-	'cl'
 ] if os.name == 'nt' else [
 	'clang++',
-	'g++'
+	'g++',
 ])
 
 DEFAULT_LINKER = FindExecutable([
+	'link',
 	'llvm-link',
-	'link'
 ] if os.name == 'nt' else [
 	'lld',
-	'ld'
+	'ld',
 ])
 
 DEFAULT_LIB = FindExecutable([
-	'llvm-lib',
 	'lib',
+	'llvm-lib',
 	'llvm-ar'
 ] if os.name == 'nt' else [
 	'llvm-ar',
-	'ar'
+	'ar',
 ])
 
 argp = argparse.ArgumentParser(description = __doc__)
 def AddDirective(name : str, help : str):
 	argp.add_argument(f'--{name}', action = 'store_true', help = help)
 def AddStringOption(name : str, default : str, help : str):
-	argp.add_argument(f'--{name}', type = str, default = default, help = f'{help} (default = "{default}").')
+	argp.add_argument(f'--{name}', type = str, default = str(default), help = f'{help} (default = "{default}").')
 def AddIntOption(name : str, default : int, help : str):
-	argp.add_argument(f'--{name}', type = int, default = default, help = f'{help} (default = {default}).')
+	argp.add_argument(f'--{name}', type = int, default = int(default), help = f'{help} (default = {default}).')
 AddDirective(
 	'launch',
 	'Build all required modules and open the CarlaUE4 project in the Unreal Engine editor.')
@@ -132,10 +136,10 @@ AddDirective(
 	'libcarla-server',
 	'Build the LibCarla Server module.')
 AddDirective(
-	'update-dependencies',
+	'update-deps',
 	'Download all project dependencies.')
 AddDirective(
-	'build-dependencies',
+	'build-deps',
 	'Build all project dependencies.')
 AddDirective(
 	'configure-sequential',
@@ -210,16 +214,29 @@ AddStringOption(
 		'UNREAL_ENGINE_PATH',
 		'<Could not automatically infer Unreal Engine source path using the "UNREAL_ENGINE_PATH" environment variable>'),
 	'Set the path of Unreal Engine.')
-ARGV = argp.parse_args()
 
+
+def SyncArgs():
+	argv = argparse.Namespace()
+	if __name__ == '__main__':
+		argv = argp.parse_args()
+		with open(WORKSPACE_PATH / 'ConfigureOptions.json', 'w') as file:
+			json.dump(argv.__dict__, file)
+	else:
+		with open(WORKSPACE_PATH / 'ConfigureOptions.json', 'r') as file:
+			argv.__dict__ = json.load(file)
+	return argv
+
+ARGV = SyncArgs()
 ENABLE_CHRONO = ARGV.chrono
 ENABLE_OSM2ODR = ARGV.osm2odr or ARGV.python_api
 ENABLE_OSM_WORLD_RENDERER = ARGV.osm_world_renderer
 ENABLE_LIBCARLA = ARGV.libcarla_client or ARGV.libcarla_server or ARGV.python_api
+ENABLE_PYTHON_API = ARGV.python_api
 ENABLE_NVIDIA_OMNIVERSE = ARGV.nv_omniverse
-UPDATE_DEPENDENCIES = ARGV.update_dependencies
-BUILD_DEPENDENCIES = ARGV.build_dependencies
-
+UPDATE_DEPENDENCIES = ARGV.update_deps or True
+BUILD_DEPENDENCIES = ARGV.build_deps or True
+PARALLELISM = ARGV.parallelism
 # Root paths:
 CARLA_VERSION_STRING = ARGV.version
 BUILD_PATH = Path(ARGV.build_path)
@@ -236,17 +253,13 @@ LINKER = ARGV.linker
 LIB = ARGV.ar
 C_STANDARD = ARGV.c_standard
 CPP_STANDARD = ARGV.cpp_standard
-# Misc
-EXE_EXT = '.exe' if os.name == 'nt' else ''
-LIB_EXT = '.lib' if os.name == 'nt' else '.a'
-OBJ_EXT = '.obj' if os.name == 'nt' else '.o'
-SHELL_EXT = '.bat' if os.name == 'nt' else ''
+C_COMPILER_CLI_TYPE = 'msvc' if 'cl' in C_COMPILER else 'gnu'
+CPP_COMPILER_CLI_TYPE = 'msvc' if 'cl' in CPP_COMPILER else 'gnu'
 # Unreal Engine
 UNREAL_ENGINE_PATH = Path(ARGV.ue_path)
 # Dependencies:
 # Boost
 BOOST_TOOLSET = 'msvc-14.2'
-BOOST_TOOLSET_SHORT = 'vc142'
 BOOST_SOURCE_PATH = DEPENDENCIES_PATH / 'boost-source'
 BOOST_BUILD_PATH = DEPENDENCIES_PATH / 'boost-build'
 BOOST_INSTALL_PATH = DEPENDENCIES_PATH / 'boost-install'
@@ -335,10 +348,7 @@ SUMO_LIBRARY_PATH = SUMO_INSTALL_PATH / 'lib'
 # Nvidia Omniverse
 NV_OMNIVERSE_PLUGIN_PATH = UNREAL_ENGINE_PATH / 'Engine' / 'Plugins' / 'Marketplace' / 'NVIDIA' / 'Omniverse'
 NV_OMNIVERSE_PATCH_PATH = PATCHES_PATH / 'omniverse_4.26'
-
 ENABLE_RSS = ARGV.rss
-
-
 
 # Basic IO functions:
 
@@ -481,7 +491,7 @@ class Task:
 
 class TaskGraph:
 
-	def __init__(self, parallelism : int = ARGV.parallelism):
+	def __init__(self, parallelism : int = PARALLELISM):
 		self.sequential = ARGV.configure_sequential
 		self.parallelism = parallelism
 		self.pool = ProcessPoolExecutor(parallelism)
@@ -591,62 +601,79 @@ class TaskGraph:
 # Constants:
 
 DEFAULT_DEPENDENCIES = [
+
 	Dependency(
 		'boost',
 		Download('https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.zip'),
 		Download('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_1_83_0.zip')),
+
 	Dependency(
 		'eigen',
 		GitRepository('https://gitlab.com/libeigen/eigen.git', tag = '3.4.0')),
+
 	Dependency(
 		'libpng',
 		GitRepository('https://github.com/glennrp/libpng.git', tag = 'v1.6.40')),
+
 	Dependency(
 		'proj',
 		GitRepository('https://github.com/OSGeo/PROJ.git', tag = '9.3.0'),
 		Download('https://download.osgeo.org/proj/proj-9.3.0.tar.gz')),
+
 	Dependency(
 		'gtest',
 		GitRepository('https://github.com/google/googletest.git', tag = 'v1.14.0')),
+
 	Dependency(
 		'zlib',
 		GitRepository('https://github.com/madler/zlib.git'),
 		Download('https://zlib.net/current/zlib.tar.gz')),
+
 	Dependency(
 		'xercesc',
 		GitRepository('https://github.com/apache/xerces-c.git', tag = 'v3.2.4'),
 		Download('https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.3.zip'),
 		Download('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/xerces-c-3.2.3.zip')),
+
 	Dependency(
 		'sqlite',
 		Download('https://www.sqlite.org/2021/sqlite-amalgamation-3340100.zip')),
+
 	Dependency(
 		'rpclib',
 		GitRepository('https://github.com/rpclib/rpclib.git', tag = 'v2.3.0')),
+
 	Dependency(
 		'recast',
 		GitRepository('https://github.com/recastnavigation/recastnavigation.git', tag = 'v1.6.0')),
 ]
 
 CHRONO_DEPENDENCIES = [
+
 	Dependency(
 		'chrono',
-		GitRepository('https://github.com/projectchrono/chrono.git', tag = '8.0.0'))
+		GitRepository('https://github.com/projectchrono/chrono.git', tag = '8.0.0')),
+
 ]
 
 OSM_WORLD_RENDERER_DEPENDENCIES = [
+
 	Dependency(
 		'libosmscout',
 		GitRepository('https://github.com/Framstag/libosmscout.git')),
+
 	Dependency(
 		'lunasvg',
 		GitRepository('https://github.com/sammycage/lunasvg.git')),
+
 ]
 
 OSM2ODR_DEPENDENCIES = [
+
 	Dependency(
 		'sumo',
 		GitRepository('https://github.com/carla-simulator/sumo.git', tag = 'carla_osm2odr')),
+
 ]
 
 DEPENDENCY_MAP = {
@@ -801,14 +828,14 @@ def InstallNVIDIAOmniverse():
 
 def UpdateDependencies(task_graph : TaskGraph):
 	DEPENDENCIES_PATH.mkdir(exist_ok = True)
-	unique_dependencies = set(DEFAULT_DEPENDENCIES)
+	unique_deps = set(DEFAULT_DEPENDENCIES)
 	if ENABLE_OSM_WORLD_RENDERER:
-		unique_dependencies.update(OSM_WORLD_RENDERER_DEPENDENCIES)
+		unique_deps.update(OSM_WORLD_RENDERER_DEPENDENCIES)
 	if ENABLE_OSM2ODR:
-		unique_dependencies.update(OSM2ODR_DEPENDENCIES)
+		unique_deps.update(OSM2ODR_DEPENDENCIES)
 	if ENABLE_CHRONO:
-		unique_dependencies.update(CHRONO_DEPENDENCIES)
-	for dep in unique_dependencies:
+		unique_deps.update(CHRONO_DEPENDENCIES)
+	for dep in unique_deps:
 		name = dep.name
 		task_graph.Add(Task(f'update-{name}', [], UpdateDependency, dep))
 	task_graph.Execute()
@@ -829,14 +856,9 @@ def ConfigureBoost():
 		working_directory = BOOST_SOURCE_PATH)
 
 def BuildAndInstallBoost():
-	if BOOST_INSTALL_PATH.exists():
-		Log(
-			f'Currently we look for "{BOOST_INSTALL_PATH}" to decide whether to run "configure-boost"\n'
-			'If a rebuild is needed, delete it.')
-		return
 	LaunchSubprocessImmediate([
 		BOOST_B2_PATH,
-		f'-j{ARGV.parallelism}',
+		f'-j{PARALLELISM}',
 		'architecture=x86',
 		'address-model=64',
 		f'toolset={BOOST_TOOLSET}',
@@ -861,29 +883,35 @@ def BuildSQLite():
 	sqlite_sources = glob.glob(f'{SQLITE_SOURCE_PATH}/**/*.c', recursive = True)
 	if os.name == 'nt' and 'clang' in C_COMPILER:
 		if not SQLITE_EXE_PATH.exists():
-			cmd = [
-				C_COMPILER,
-				f'-fuse-ld={LINKER}',
-				'-march=native',
+			cmd = [ C_COMPILER ]
+			if C_COMPILER_CLI_TYPE == 'gnu':
+				cmd.extend([
+					f'-fuse-ld={LINKER}',
+					'-march=native',
+				])
+			cmd.extend([
 				'/O2',
 				'/MD',
-				'/EHsc'
-			]
+				'/EHsc',
+			])
 			cmd.extend(sqlite_sources)
-			cmd.append('-o')
+			cmd.append('/Fe:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o')
 			cmd.append(SQLITE_EXE_PATH)
 			LaunchSubprocessImmediate(cmd)
 		if not SQLITE_LIB_PATH.exists():
-			cmd = [
-				C_COMPILER,
-				f'-fuse-ld={LIB}',
-				'-march=native',
+			cmd = [ C_COMPILER ]
+			if C_COMPILER_CLI_TYPE == 'gnu':
+				cmd.extend([
+					f'-fuse-ld={LINKER}',
+					'-march=native',
+				])
+			cmd.extend([
 				'/O2',
 				'/MD',
-				'/EHsc'
-			]
+				'/EHsc',
+			])
 			cmd.extend(sqlite_sources)
-			cmd.append('-o')
+			cmd.append('/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o')
 			cmd.append(SQLITE_LIB_PATH)
 			LaunchSubprocessImmediate(cmd)
 	else:
@@ -954,7 +982,7 @@ def BuildDependencies(task_graph : TaskGraph):
 		f'-DZLIB_LIBRARIES={ZLIB_LIB_PATH}'))
 	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-proj',
-		[],
+		[ 'build-sqlite' ],
 		PROJ_SOURCE_PATH,
 		PROJ_BUILD_PATH,
 		f'-DSQLITE3_INCLUDE_DIR={SQLITE_SOURCE_PATH}',
@@ -1068,7 +1096,7 @@ def Clean():
 
 if __name__ == '__main__':
 	try:
-		task_graph = TaskGraph(ARGV.parallelism)
+		task_graph = TaskGraph(PARALLELISM)
 		if ARGV.clean or ARGV.rebuild:
 			Clean()
 		BUILD_PATH.mkdir(exist_ok = True)
@@ -1079,7 +1107,7 @@ if __name__ == '__main__':
 			BuildDependencies(task_graph)
 		if ENABLE_LIBCARLA:
 			BuildLibCarlaMain(task_graph)
-		if ARGV.python_api or True:
+		if ENABLE_PYTHON_API:
 			BuildPythonAPI(task_graph)
 		if ARGV.carla_ue:
 			BuildCarlaUE(task_graph)
