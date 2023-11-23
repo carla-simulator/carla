@@ -2,25 +2,36 @@
 
 # Synkrotron simulation solutions
 
-Synkrotron provides advanced solutions for autonomous driving  simulation built on top of CARLA. Its product suite Oasis supports ​a broad range of applications including scenario generation, sensor modelling,  ​traffic simulation and data management. Based on a flexible architecture Oasis ​can be deployed on the cloud at scale, or in a developer's local environment for prototyping.
+Synkrotron provides advanced solutions for autonomous driving  simulation built on top of CARLA. Synkrotron's product suite OASIS supports ​a broad range of applications including scenario generation, sensor modelling,  ​traffic simulation and data management. Based on a flexible architecture OASIS ​can be deployed on the cloud at scale, or in a developer's local environment for prototyping.
 
 ---
 
-# __OASIS platform__
-
 <img src="../img/oasis_logo.png" alt= “synkrotron_logo” style="display: block; margin-left: auto; margin-right: auto; width: 70%;">
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
+    <iframe src="https://www.youtube.com/embed/6qvojiwPL4I" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+</div>  
+
+<br>
 
 ## [__OASIS simulation platform__](https://www.synkrotron.ai/sim.html)
 
-Oasis Sim is a full-fledged scalable simulation platform with CARLA at its core. It supports the complete life-cycle of AD simulation: scenario import & editing with a graphical user interface, sensor configuration, distributed task management as well as diagnosis through rich simulation data and logs. Both cloud and local deployment are available through containerized ​packaging. Comprehensive APIs are exposed for integration with DevOps too. You can [request a trial](https://synkrotron.ai/contact.html) from Synkrotron.
+OASIS Sim is a fully-fledged, scalable simulation platform with CARLA at its core. It supports the complete life-cycle of AD simulation: 
+
+- scenario import & editing with a graphical user interface
+- sensor configuration
+- distributed task management
+- diagnosis through rich simulation data and logs 
+
+Both cloud and local deployment are available through containerized ​packaging. Comprehensive APIs are exposed for integration with DevOps too. You can [request a trial](https://synkrotron.ai/contact.html) from Synkrotron.
 
 ## [__OASIS data platform__](https://www.synkrotron.ai/data.html)
 
-Oasis Data is a platform for managing the high volume of data flowing through the autonomous driving R&D pipeline. Data-driven development of AD systems are made possible with Oasis Data via the following functionalities,:
+OASIS Data is a platform for managing the high volume of data flowing through the autonomous driving R&D pipeline. Data-driven development of AD systems are made possible with OASIS Data via the following functionalities:
 
 * data acquisition and anonymization 
-* multi-stage filtering based on structured (CAN bus signals, active-safety triggering, etc.) and unstructured (sensor readings) 
-* information mapping and environment reconstruction with lidar and/or vision-only strategy
+* multi-stage filtering based on structured data (CAN bus signals, active-safety triggering, etc.) and unstructured data (sensor readings)
+* information mapping and environment reconstruction with LIDAR and/or vision-only strategy
 * auto-labeling of data with pre-trained perception models
 * scenario tagging and reconstruction with OpenX format output
 
@@ -39,7 +50,6 @@ In addition to the complete solutions introduced above, Synkrotron also offers t
 | __Sensor model__: physics models for camera  | Supports CMOS simulations and outputs 12bit raw sensor data, for customers who develop ISP algorithms or who has ECUs that need raw data from camera instead of RGBs |
 | __Static scene creation__ | Combined HD mapping, 3D asset development and procedural modeling to create 3D static scenes/digital twins for users |
 | __Dynamic scenario reconstruction__ | On top of static scenes, also detect and track various traffic participants from user's road-test data; the recovered trajectories/behaviors are turned into OpenScenario 1.0 files and can be re-simulated in CARLA |
-
 
 
 
