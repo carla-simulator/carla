@@ -8,45 +8,64 @@
 
 from setuptools import setup, Extension
 from pathlib import Path
-import subprocess, glob, os
+import subprocess, glob, sys, os
 
 PYTHON_API_PATH = Path(__file__).parent
-PYTHON_API_INTERMEDIATE_PATH = PYTHON_API_PATH / 'Intermediate'
+PYTHON_API_INTERMEDIATE_PATH = PYTHON_API_PATH / 'temp'
 LICENSE = 'MIT License' if not {ENABLE_RSS} else 'LGPL-v2.1-only License'
 
 PYTHON_API_INTERMEDIATE_PATH.mkdir(exist_ok = True)
 PYTHON_API_AMALGAMATED_OBJECT_PATH = PYTHON_API_INTERMEDIATE_PATH / 'libcarla{OBJ_EXT}'
+PYTHON_INCLUDE_PATH = (Path(sys.executable).parent / 'include').resolve()
 
-compile_command = [
-    '{CPP_COMPILER}',
-    '/c',
-    '/std:c++{CPP_STANDARD}',
-    '/I', '{LIBCARLA_SOURCE_PATH}',
-    '/I', '{BOOST_INCLUDE_PATH}',
-    '/I', '{RPCLIB_INCLUDE_PATH}',
-    '/I', '{LIBPNG_INCLUDE_PATH}',
-    '/I', '{ZLIB_INCLUDE_PATH}',
-    '/I', '{RECAST_INCLUDE_PATH}',
-    '/I', '{XERCESC_INCLUDE_PATH}',
-    '/I', '{SQLITE_INCLUDE_PATH}',
-    '/I', '{PROJ_INCLUDE_PATH}',
-    '/DBOOST_ALL_NO_LIB',
-    '/DBOOST_PYTHON_STATIC_LIB',
-    '/DBOOST_ERROR_CODE_HEADER_ONLY',
-    '/D_WIN32_WINNT=0x0600',
-    '/DHAVE_SNPRINTF',
-    '/DLIBCARLA_WITH_PYTHON_SUPPORT',
-    '/DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true',
-    '/MD',
+CPP_STANDARD_DIRECTIVE = '/std:' if os.name == 'nt' else '-std'
+INCLUDE_PREFIX = '/I' if os.name == 'nt' else '-I'
+DEFINE_PREFIX = '/D' if os.name == 'nt' else '-D'
+
+amalgamate_compile_command = [ '{CPP_COMPILER}' ]
+amalgamate_compile_command.extend([
+    '/c' if os.name == 'nt' else '-c',
+    CPP_STANDARD_DIRECTIVE + 'c++{CPP_STANDARD}',
+    INCLUDE_PREFIX, '{LIBCARLA_SOURCE_PATH}',
+    INCLUDE_PREFIX, '{BOOST_INCLUDE_PATH}',
+    INCLUDE_PREFIX, '{RPCLIB_INCLUDE_PATH}',
+    INCLUDE_PREFIX, '{LIBPNG_INCLUDE_PATH}',
+    INCLUDE_PREFIX, '{ZLIB_INCLUDE_PATH}',
+    INCLUDE_PREFIX, '{RECAST_INCLUDE_PATH}',
+    INCLUDE_PREFIX, '{XERCESC_INCLUDE_PATH}',
+    INCLUDE_PREFIX, '{SQLITE_INCLUDE_PATH}',
+    INCLUDE_PREFIX, '{PROJ_INCLUDE_PATH}',
+    INCLUDE_PREFIX, '{SUMO_INCLUDE_PATH}',
+    INCLUDE_PREFIX, f'{{PYTHON_INCLUDE_PATH}}',
+    DEFINE_PREFIX + 'BOOST_ALL_NO_LIB',
+    DEFINE_PREFIX + 'BOOST_NO_EXCEPTIONS',
+    DEFINE_PREFIX + 'BOOST_PYTHON_STATIC_LIB',
+    DEFINE_PREFIX + 'BOOST_ERROR_CODE_HEADER_ONLY',
+    DEFINE_PREFIX + 'LIBCARLA_WITH_PYTHON_SUPPORT',
+    DEFINE_PREFIX + 'LIBCARLA_IMAGE_WITH_PNG_SUPPORT=true',
+])
+
+if os.name == 'nt':
+    amalgamate_compile_command.extend([
+        DEFINE_PREFIX + '_WIN32_WINNT=0x0600',
+        DEFINE_PREFIX + 'HAVE_SNPRINTF',
+        DEFINE_PREFIX + '_CRT_SECURE_NO_WARNINGS',
+        '/EHsc',
+        '/MD',
+    ])
+else:
+    pass
+
+amalgamate_compile_command.extend([
     PYTHON_API_PATH / 'source' / 'libcarla' / 'libcarla.cpp',
-    f'/Fo{{PYTHON_API_AMALGAMATED_OBJECT_PATH}}',
-] if os.name == 'nt' else [
-
-]
+    ('/Fo' if os.name == 'nt' else '-o') + str(PYTHON_API_AMALGAMATED_OBJECT_PATH),
+])
 
 subprocess.run(
-    compile_command
+    amalgamate_compile_command
 ).check_returncode()
+
+
 
 sources = []
 
@@ -69,6 +88,15 @@ link_libraries = [
     sorted(glob.glob(str('{SQLITE_BUILD_PATH}/sqlite*{LIB_EXT}'), recursive = True))[0],
     sorted(glob.glob(str('{PROJ_INSTALL_PATH}/lib/proj{LIB_EXT}'), recursive = True))[0],
 ]
+
+if os.name == 'nt':
+    link_libraries.extend([
+        'shlwapi.lib',
+        'Advapi32.lib',
+        'ole32.lib',
+        'shell32.lib'
+    ])
+
 compile_flags = []
 link_flags = []
 dependencies = []
@@ -76,13 +104,11 @@ dependencies = []
 carla_extensions = [
     Extension(
         name = 'libcarla.carla',
-        sources = sources,
-        include_dirs = include_paths,
-        library_dirs = library_paths,
+        sources = [],
         libraries = link_libraries,
         extra_compile_args = compile_flags,
         extra_link_args = link_flags,
-        extra_objects = [],
+        extra_objects = [ str(PYTHON_API_AMALGAMATED_OBJECT_PATH) ],
         language = f'c++{CPP_STANDARD}',
         depends = dependencies)
 ]

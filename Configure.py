@@ -324,16 +324,13 @@ SUMO_BUILD_PATH = DEPENDENCIES_PATH / 'sumo-build'
 SUMO_INSTALL_PATH = DEPENDENCIES_PATH / 'sumo-install'
 SUMO_INCLUDE_PATH = SUMO_INSTALL_PATH / 'include'
 SUMO_LIBRARY_PATH = SUMO_INSTALL_PATH / 'lib'
-# Houdini
-HOUDINI_URL = 'https://github.com/sideeffects/HoudiniEngineForUnreal.git'
-HOUDINI_PLUGIN_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'HoudiniEngine'
-HOUDINI_COMMIT_HASH = '55b6a16cdf274389687fce3019b33e3b6e92a914'
-HOUDINI_PATCH_PATH = PATCHES_PATH / 'houdini_patch.txt'
 # Nvidia Omniverse
 NV_OMNIVERSE_PLUGIN_PATH = UNREAL_ENGINE_PATH / 'Engine' / 'Plugins' / 'Marketplace' / 'NVIDIA' / 'Omniverse'
 NV_OMNIVERSE_PATCH_PATH = PATCHES_PATH / 'omniverse_4.26'
 
 ENABLE_RSS = ARGV.rss
+
+
 
 # Basic IO functions:
 
@@ -391,6 +388,8 @@ def LaunchSubprocessImmediate(
 				file.write(log_content)
 
 # Convenience classes for listing dependencies:
+
+
 
 class Download:
 
