@@ -212,9 +212,17 @@ AddStringOption(
 	'Set the path of Unreal Engine.')
 ARGV = argp.parse_args()
 
+ENABLE_CHRONO = ARGV.chrono
+ENABLE_OSM2ODR = ARGV.osm2odr or ARGV.python_api
+ENABLE_OSM_WORLD_RENDERER = ARGV.osm_world_renderer
+ENABLE_LIBCARLA = ARGV.libcarla_client or ARGV.libcarla_server or ARGV.python_api
+ENABLE_NVIDIA_OMNIVERSE = ARGV.nv_omniverse
+UPDATE_DEPENDENCIES = ARGV.update_dependencies
+BUILD_DEPENDENCIES = ARGV.build_dependencies
+
 # Root paths:
 CARLA_VERSION_STRING = ARGV.version
-BUILD_PATH = ARGV.build_path
+BUILD_PATH = Path(ARGV.build_path)
 LOG_PATH = BUILD_PATH / 'BuildLogs'
 if ARGV.save_logs:
 	LOG_PATH.mkdir(exist_ok = True)
@@ -731,7 +739,7 @@ def BuildLibCarlaMain(task_graph : TaskGraph):
 		f'-DCARLA_DEPENDENCIES_PATH={DEPENDENCIES_PATH}',
 		f'-DBUILD_LIBCARLA_SERVER={"ON" if ARGV.libcarla_server else "OFF"}',
 		f'-DBUILD_LIBCARLA_CLIENT={"ON" if ARGV.libcarla_client else "OFF"}',
-		f'-DBUILD_OSM_WORLD_RENDERER={"ON" if ARGV.osm_world_renderer else "OFF"}',
+		f'-DBUILD_OSM_WORLD_RENDERER={"ON" if ENABLE_OSM_WORLD_RENDERER else "OFF"}',
 		f'-DLIBCARLA_PYTORCH={"ON" if ARGV.pytorch else "OFF"}'))
 	task_graph.Add(Task.CreateCMakeBuildDefault(
 		'build-libcarla',
@@ -756,7 +764,7 @@ def BuildCarlaUEMain():
 
 def BuildCarlaUE(task_graph : TaskGraph):
 	Log('Building Carla Unreal Engine Editor')
-	if ARGV.nv_omniverse:
+	if ENABLE_NVIDIA_OMNIVERSE:
 		task_graph.Add(Task('install-nv-omniverse', [], InstallNVIDIAOmniverse))
 	task_graph.Add(Task('build-carla-ue', [], BuildCarlaUEMain))
 
@@ -792,17 +800,26 @@ def InstallNVIDIAOmniverse():
 		shutil.copyfile(src, dst)
 
 def UpdateDependencies(task_graph : TaskGraph):
+	DEPENDENCIES_PATH.mkdir(exist_ok = True)
 	unique_dependencies = set(DEFAULT_DEPENDENCIES)
-	if ARGV.osm_world_renderer:
+	if ENABLE_OSM_WORLD_RENDERER:
 		unique_dependencies.update(OSM_WORLD_RENDERER_DEPENDENCIES)
-	if ARGV.osm2odr:
+	if ENABLE_OSM2ODR:
 		unique_dependencies.update(OSM2ODR_DEPENDENCIES)
-	if ARGV.chrono:
+	if ENABLE_CHRONO:
 		unique_dependencies.update(CHRONO_DEPENDENCIES)
 	for dep in unique_dependencies:
 		name = dep.name
 		task_graph.Add(Task(f'update-{name}', [], UpdateDependency, dep))
 	task_graph.Execute()
+
+def CleanDownloadsMain():
+	for ext in [ '*.tmp', '*.zip', '*.tar.gz' ]:
+		for e in DEPENDENCIES_PATH.glob(ext):
+			e.unlink(missing_ok = True)
+
+def CleanDownloads(task_graph : TaskGraph):
+	task_graph.Add(Task('clean-downloads', [], CleanDownloadsMain))
 
 def ConfigureBoost():
 	if BOOST_B2_PATH.exists():
@@ -813,7 +830,9 @@ def ConfigureBoost():
 
 def BuildAndInstallBoost():
 	if BOOST_INSTALL_PATH.exists():
-		Log(f'Currently we test for whether "{BOOST_INSTALL_PATH}" exists to detect whether recompilation of boost. If a rebuild is needed, delete it.')
+		Log(
+			f'Currently we look for "{BOOST_INSTALL_PATH}" to decide whether to run "configure-boost"\n'
+			'If a rebuild is needed, delete it.')
 		return
 	LaunchSubprocessImmediate([
 		BOOST_B2_PATH,
@@ -901,23 +920,28 @@ def ConfigureSUMO():
 
 def BuildDependencies(task_graph : TaskGraph):
 	# Configure:
-
 	task_graph.Add(Task('build-sqlite', [], BuildSQLite))
 	task_graph.Add(Task('configure-boost', [], ConfigureBoost))
-
 	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-zlib',
 		[],
 		ZLIB_SOURCE_PATH,
 		ZLIB_BUILD_PATH,
-		install_path = ZLIB_INSTALL_PATH)) # ZLib determines where to install during configure.
-
+		install_path = ZLIB_INSTALL_PATH))
+	task_graph.Add(Task.CreateCMakeBuildDefault(
+		'build-zlib',
+		[ 'configure-zlib' ],
+		ZLIB_BUILD_PATH))
+	task_graph.Add(Task.CreateCMakeInstallDefault(
+		'install-zlib',
+		[ 'build-zlib' ],
+		ZLIB_BUILD_PATH,
+		ZLIB_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-gtest',
 		[],
 		GTEST_SOURCE_PATH,
 		GTEST_BUILD_PATH))
-
 	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-libpng',
 		[],
@@ -928,7 +952,6 @@ def BuildDependencies(task_graph : TaskGraph):
 		'-DPNG_BUILD_ZLIB=ON',
 		f'-DZLIB_INCLUDE_DIRS={ZLIB_INCLUDE_PATH}',
 		f'-DZLIB_LIBRARIES={ZLIB_LIB_PATH}'))
-
 	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-proj',
 		[],
@@ -951,7 +974,6 @@ def BuildDependencies(task_graph : TaskGraph):
 		'-DBUILD_GIE=OFF',
 		'-DBUILD_PROJ=OFF',
 		'-DBUILD_TESTING=OFF'))
-
 	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-recast',
 		[],
@@ -960,7 +982,6 @@ def BuildDependencies(task_graph : TaskGraph):
 		'-DRECASTNAVIGATION_DEMO=OFF',
 		'-DRECASTNAVIGATION_TESTS=OFF',
 		'-DRECASTNAVIGATION_EXAMPLES=OFF'))
-
 	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-rpclib',
 		[],
@@ -972,14 +993,12 @@ def BuildDependencies(task_graph : TaskGraph):
 		'-DRPCLIB_ENABLE_LOGGING=OFF',
 		'-DRPCLIB_ENABLE_COVERAGE=OFF',
 		'-DRPCLIB_MSVC_STATIC_RUNTIME=OFF'))
-
 	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-xercesc',
 		[],
 		XERCESC_SOURCE_PATH,
 		XERCESC_BUILD_PATH))
-
-	if ARGV.osm_world_renderer:
+	if ENABLE_OSM_WORLD_RENDERER:
 		task_graph.Add(Task.CreateCMakeConfigureDefault(
 			'configure-libosmscout',
 			[],
@@ -990,14 +1009,12 @@ def BuildDependencies(task_graph : TaskGraph):
 			'-DOSMSCOUT_BUILD_TESTS=OFF',
 			'-DOSMSCOUT_BUILD_CLIENT_QT=OFF',
 			'-DOSMSCOUT_BUILD_DEMOS=OFF'))
-
 		task_graph.Add(Task.CreateCMakeConfigureDefault(
 			'configure-lunasvg',
 			[],
 			LUNASVG_SOURCE_PATH,
 			LUNASVG_BUILD_PATH))
-
-	if ARGV.chrono:
+	if ENABLE_CHRONO:
 		task_graph.Add(Task.CreateCMakeConfigureDefault(
 			'configure-chrono',
 			[],
@@ -1005,79 +1022,67 @@ def BuildDependencies(task_graph : TaskGraph):
 			CHRONO_BUILD_PATH,
 			f'-DEIGEN3_INCLUDE_DIR={EIGEN_SOURCE_PATH}',
 			'-DENABLE_MODULE_VEHICLE=ON'))
-		
 	task_graph.Execute()
-
 	# Build:
 	task_graph.Add(Task('build-boost', [], BuildAndInstallBoost))
-	task_graph.Add(Task.CreateCMakeBuildDefault('build-zlib', [], ZLIB_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-gtest', [], GTEST_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-libpng', [], LIBPNG_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-proj', [], PROJ_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-recast', [], RECAST_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-rpclib', [], RPCLIB_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-xercesc', [], XERCESC_BUILD_PATH))
-	if ARGV.osm_world_renderer:
+	if ENABLE_OSM_WORLD_RENDERER:
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-lunasvg', [], LUNASVG_BUILD_PATH))
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-libosmscout', [], LIBOSMSCOUT_BUILD_PATH))
-	if ARGV.osm2odr:
+	if ENABLE_OSM2ODR:
 		task_graph.Add(Task('configure-sumo', [ 'build-xercesc' ], ConfigureSUMO))
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [ 'configure-sumo' ], SUMO_BUILD_PATH))
-	if ARGV.chrono:
+	if ENABLE_CHRONO:
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-chrono', [], CHRONO_BUILD_PATH))
 	task_graph.Execute(sequential = True) # The underlying build system should already parallelize.
-		
 	# Install:
-	task_graph.Add(Task.CreateCMakeInstallDefault('install-zlib', [], ZLIB_BUILD_PATH, ZLIB_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-gtest', [], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-libpng', [], LIBPNG_BUILD_PATH, LIBPNG_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-recast', [], RECAST_BUILD_PATH, RECAST_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-rpclib', [], RPCLIB_BUILD_PATH, RPCLIB_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-xercesc', [], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
-	if ARGV.osm_world_renderer:
+	if ENABLE_OSM_WORLD_RENDERER:
 		task_graph.Add(Task.CreateCMakeInstallDefault('install-lunasvg', [], LUNASVG_BUILD_PATH, LUNASVG_INSTALL_PATH))
 		task_graph.Add(Task.CreateCMakeInstallDefault('install-libosmscout', [], LIBOSMSCOUT_BUILD_PATH, LIBOSMSCOUT_INSTALL_PATH))
-	if ARGV.osm2odr:
+	if ENABLE_OSM2ODR:
 		task_graph.Add(Task.CreateCMakeInstallDefault('install-sumo', [], SUMO_BUILD_PATH, SUMO_INSTALL_PATH))
-	if ARGV.chrono:
+	if ENABLE_CHRONO:
 		task_graph.Add(Task.CreateCMakeInstallDefault('install-chrono', [], CHRONO_BUILD_PATH, CHRONO_INSTALL_PATH))
+
+def Clean():
+	if not BUILD_PATH.exists():
+		return
+	try:
+		shutil.rmtree(BUILD_PATH)
+	finally:
+		Log(f'Failed to remove {BUILD_PATH}.')
+		exit(-1)
 
 
 
 if __name__ == '__main__':
 	try:
-		BUILD_PATH.mkdir(exist_ok = True)
-		DEPENDENCIES_PATH.mkdir(exist_ok = True)
 		task_graph = TaskGraph(ARGV.parallelism)
-
 		if ARGV.clean or ARGV.rebuild:
-			try:
-				shutil.rmtree(BUILD_PATH)
-			finally:
-				Log(f'Failed to remove {BUILD_PATH}.')
-				exit(-1)
-
-		if ARGV.update_dependencies:
+			Clean()
+		BUILD_PATH.mkdir(exist_ok = True)
+		if UPDATE_DEPENDENCIES:
 			UpdateDependencies(task_graph)
-
-		# Clean temporary archive files that may be from a previous script invocation.
-		for ext in [ '*.tmp', '*.zip', '*.tar.gz' ]:
-			for e in DEPENDENCIES_PATH.glob(ext):
-				e.unlink(missing_ok = True)
-
-		if ARGV.build_dependencies:
+		CleanDownloads(task_graph)
+		if BUILD_DEPENDENCIES:
 			BuildDependencies(task_graph)
-
-		if ARGV.libcarla_client or ARGV.libcarla_server or True:
+		if ENABLE_LIBCARLA:
 			BuildLibCarlaMain(task_graph)
-
 		if ARGV.python_api or True:
 			BuildPythonAPI(task_graph)
-
 		if ARGV.carla_ue:
 			BuildCarlaUE(task_graph)
-
 		task_graph.Execute()
 	except Exception as err:
 		Log(err)

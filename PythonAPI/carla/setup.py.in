@@ -8,7 +8,7 @@
 
 from setuptools import setup, Extension
 from pathlib import Path
-import subprocess, glob, sys, os
+import subprocess, glob, time, sys, os
 
 PYTHON_API_PATH = Path(__file__).parent
 PYTHON_API_INTERMEDIATE_PATH = PYTHON_API_PATH / 'temp'
@@ -18,7 +18,7 @@ PYTHON_API_INTERMEDIATE_PATH.mkdir(exist_ok = True)
 PYTHON_API_AMALGAMATED_OBJECT_PATH = PYTHON_API_INTERMEDIATE_PATH / 'libcarla{OBJ_EXT}'
 PYTHON_INCLUDE_PATH = (Path(sys.executable).parent / 'include').resolve()
 
-CPP_STANDARD_DIRECTIVE = '/std:' if os.name == 'nt' else '-std'
+CPP_STANDARD_DIRECTIVE = '/std:' if os.name == 'nt' else '-std='
 INCLUDE_PREFIX = '/I' if os.name == 'nt' else '-I'
 DEFINE_PREFIX = '/D' if os.name == 'nt' else '-D'
 
@@ -62,50 +62,60 @@ amalgamate_compile_command.extend([
 ])
 
 subprocess.run(
-    amalgamate_compile_command
+    amalgamate_compile_command,
+    shell = True
 ).check_returncode()
 
-
+while not PYTHON_API_AMALGAMATED_OBJECT_PATH.exists():
+    time.sleep(0.1)
 
 sources = []
+include_paths = []
+link_libraries = []
 
-include_paths = [
+compile_flags = [
+    '/experimental:external',
+    '/external:W0',
+    '/external:I',
 ]
 
-library_paths = []
+link_flags = [
+    sorted(glob.glob(str(Path('{BOOST_INSTALL_PATH}') / 'lib' / 'libboost_python*{LIB_EXT}'), recursive = True))[0],
+    sorted(glob.glob(str(Path('{BOOST_INSTALL_PATH}') / 'lib' / 'libboost_filesystem*{LIB_EXT}'), recursive = True))[0],
+    sorted(glob.glob(str(Path('{RPCLIB_INSTALL_PATH}') / 'lib' / 'rpc{LIB_EXT}'), recursive = True))[0],
+    sorted(glob.glob(str(Path('{LIBCARLA_BUILD_PATH}') / 'libcarla-client{LIB_EXT}'), recursive = True))[0],
+    sorted(glob.glob(str(Path('{LIBPNG_INSTALL_PATH}') / 'lib' / 'libpng*{LIB_EXT}'), recursive = True))[0],
+    sorted(glob.glob(str(Path('{ZLIB_INSTALL_PATH}') / 'lib' / 'zlib{LIB_EXT}'), recursive = True))[0],
+    sorted(glob.glob(str(Path('{RECAST_INSTALL_PATH}') / 'lib' / 'Recast{LIB_EXT}'), recursive = True))[0],
+    sorted(glob.glob(str(Path('{RECAST_INSTALL_PATH}') / 'lib' / 'Detour{LIB_EXT}'), recursive = True))[0],
+    sorted(glob.glob(str(Path('{RECAST_INSTALL_PATH}') / 'lib' / 'DetourCrowd{LIB_EXT}'), recursive = True))[0],
+    sorted(glob.glob(str(Path('{XERCESC_INSTALL_PATH}') / 'lib' / 'xerces-c*{LIB_EXT}'), recursive = True))[0],
+    sorted(glob.glob(str(Path('{PROJ_INSTALL_PATH}') / 'lib' / 'proj{LIB_EXT}'), recursive = True))[0],
+    sorted(glob.glob(str(Path('{SQLITE_BUILD_PATH}') / 'sqlite*{LIB_EXT}'), recursive = True))[0],
+]
 
-link_libraries = [
-    sorted(glob.glob(str('{BOOST_INSTALL_PATH}/lib/libboost_python*{LIB_EXT}'), recursive = True))[0],
-    sorted(glob.glob(str('{BOOST_INSTALL_PATH}/lib/libboost_filesystem*{LIB_EXT}'), recursive = True))[0],
-    sorted(glob.glob(str('{RPCLIB_INSTALL_PATH}/lib/rpc{LIB_EXT}'), recursive = True))[0],
-    sorted(glob.glob(str('{LIBCARLA_BUILD_PATH}/libcarla-client{LIB_EXT}'), recursive = True))[0],
-    sorted(glob.glob(str('{LIBPNG_INSTALL_PATH}/lib/libpng*{LIB_EXT}'), recursive = True))[0],
-    sorted(glob.glob(str('{ZLIB_INSTALL_PATH}/lib/zlib{LIB_EXT}'), recursive = True))[0],
-    sorted(glob.glob(str('{RECAST_INSTALL_PATH}/lib/Recast{LIB_EXT}'), recursive = True))[0],
-    sorted(glob.glob(str('{RECAST_INSTALL_PATH}/lib/Detour{LIB_EXT}'), recursive = True))[0],
-    sorted(glob.glob(str('{RECAST_INSTALL_PATH}/lib/DetourCrowd{LIB_EXT}'), recursive = True))[0],
-    sorted(glob.glob(str('{XERCESC_INSTALL_PATH}/lib/xerces-c*{LIB_EXT}'), recursive = True))[0],
-    sorted(glob.glob(str('{SQLITE_BUILD_PATH}/sqlite*{LIB_EXT}'), recursive = True))[0],
-    sorted(glob.glob(str('{PROJ_INSTALL_PATH}/lib/proj{LIB_EXT}'), recursive = True))[0],
+library_paths = [
+    str(Path(e).parent) for e in link_flags
 ]
 
 if os.name == 'nt':
-    link_libraries.extend([
+    link_flags.extend([
         'shlwapi.lib',
         'Advapi32.lib',
         'ole32.lib',
         'shell32.lib'
     ])
 
-compile_flags = []
-link_flags = []
-dependencies = []
+dependencies = glob.glob(str(
+    PYTHON_API_PATH / 'source' / 'libcarla' / '*.cpp'),
+    recursive = True)
 
 carla_extensions = [
     Extension(
         name = 'libcarla.carla',
         sources = [],
         libraries = link_libraries,
+        library_dirs = library_paths,
         extra_compile_args = compile_flags,
         extra_link_args = link_flags,
         extra_objects = [ str(PYTHON_API_AMALGAMATED_OBJECT_PATH) ],

@@ -20,7 +20,7 @@
 #include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/road/element/RoadInfoSignal.h"
 
-#include "marchingcube/MeshReconstruction.h"
+#include <third-party/marchingcube/MeshReconstruction.h>
 
 #include <vector>
 #include <unordered_map>
