@@ -33,7 +33,9 @@
 #include "CarlaRecorderState.h"
 #include "CarlaRecorderVisualTime.h"
 #include "CarlaRecorderWalkerBones.h"
+#include "CarlaRecorderDoorVehicle.h"
 #include "CarlaReplayer.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include "CarlaRecorder.generated.h"
 
@@ -67,6 +69,7 @@ enum class CarlaRecorderPacketId : uint8_t
   FrameCounter,
   WalkerBones,
   VisualTime,
+  VehicleDoor,
   AnimVehicleWheels,
   AnimBiker
 };
@@ -136,6 +139,10 @@ public:
   void AddTrafficLightTime(const ATrafficLightBase& TrafficLight);
 
   void AddActorBones(FCarlaActor *CarlaActor);
+
+  void AddVehicleDoor(const ACarlaWheeledVehicle& Vehicle, const EVehicleDoor SDoors, bool bIsOpen);
+
+  void AddDoorVehicle(const CarlaRecorderDoorVehicle &DoorVehicle);
 
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
@@ -208,6 +215,7 @@ private:
   CarlaRecorderTrafficLightTimes TrafficLightTimes;
   CarlaRecorderWalkersBones WalkersBones;
   CarlaRecorderVisualTime VisualTime;
+  CarlaRecorderDoorVehicles DoorVehicles;
 
   // replayer
   CarlaReplayer Replayer;

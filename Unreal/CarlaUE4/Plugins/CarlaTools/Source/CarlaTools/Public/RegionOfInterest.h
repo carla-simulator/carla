@@ -20,8 +20,8 @@ UENUM(BlueprintType)
 enum ERegionOfInterestType
 {
   NONE_REGION,
-  TERRAIN_REGION,      
-  WATERBODIES_REGION,  // Not Supported yet 
+  TERRAIN_REGION,
+  WATERBODIES_REGION,  // Not Supported yet
   VEGETATION_REGION,
   MISC_SPREADED_ACTORS_REGION,
   MISC_SPECIFIC_LOCATION_ACTORS_REGION,
@@ -47,7 +47,7 @@ struct CARLATOOLS_API FRoiTile
   int Y;
 
 public:
-  FRoiTile() : X(-1), Y(-1) 
+  FRoiTile() : X(-1), Y(-1)
   {};
 
   FRoiTile(int X, int Y)
@@ -108,7 +108,7 @@ FORCEINLINE uint32 GetTypeHash(const FRoiTile& Thing)
 }
 
 /**
- * 
+ *
  */
 USTRUCT(BlueprintType)
 struct CARLATOOLS_API FCarlaRegionOfInterest
@@ -141,8 +141,8 @@ struct CARLATOOLS_API FCarlaRegionOfInterest
   template <typename R>
   static FORCEINLINE bool IsTileInRegionsSet(FRoiTile RoiTile, TMap<FRoiTile, R> RoisMap)
   {
-    static_assert(TIsDerivedFrom<R, FCarlaRegionOfInterest>::IsDerived, 
-        "ROIs Map Value type is not an URegionOfInterest derived type.");   
+    static_assert(TIsDerivedFrom<R, FCarlaRegionOfInterest>::IsDerived,
+        "ROIs Map Value type is not an URegionOfInterest derived type.");
     return RoisMap.Contains(RoiTile);
   }
 
@@ -154,7 +154,7 @@ struct CARLATOOLS_API FCarlaRegionOfInterest
     {
       return false;
     }
-    
+
     // Checking if the two regions have the same tiles.
     TMap<FRoiTile, int> TileCount;
     for(FRoiTile Tile : Other.TilesList)
@@ -191,7 +191,7 @@ struct CARLATOOLS_API FVegetationROI : public FCarlaRegionOfInterest
 
   UPROPERTY(BlueprintReadWrite)
   TArray<UProceduralFoliageSpawner*> FoliageSpawners;
-  
+
   FVegetationROI() : FCarlaRegionOfInterest()
   {
     this->FoliageSpawners.Empty();
@@ -230,12 +230,12 @@ struct CARLATOOLS_API FTerrainROI : public FCarlaRegionOfInterest
   UPROPERTY(BlueprintReadWrite)
   UTextureRenderTarget2D* RoiHeightmapRenderTarget;
 
-  FTerrainROI() : FCarlaRegionOfInterest(), RoiMaterialInstance()
+  FTerrainROI() : FCarlaRegionOfInterest(), RoiMaterialInstance(), RoiHeightmapRenderTarget()
   {}
 
   /**
  * This function checks if a tile is on the boundary of a region of interest
- * 
+ *
  * @param RoiTile The tile we're checking
  * @param RoisMap The map of RoiTiles to Rois.
  * @param OutUp Is there a tile above this one?
@@ -276,7 +276,7 @@ struct CARLATOOLS_API FMiscSpreadedActorsROI : public FCarlaRegionOfInterest
   {}
 };
 
-/// A struct that is used to store the information of a region of interest that is used to 
+/// A struct that is used to store the information of a region of interest that is used to
 /// spawn actors in specific locations.
 USTRUCT(BlueprintType)
 struct CARLATOOLS_API FMiscSpecificLocationActorsROI : public FCarlaRegionOfInterest
@@ -295,7 +295,11 @@ struct CARLATOOLS_API FMiscSpecificLocationActorsROI : public FCarlaRegionOfInte
   UPROPERTY(BlueprintReadWrite)
   float MaxRotationRange;
 
-  FMiscSpecificLocationActorsROI() : FCarlaRegionOfInterest(), ActorClass(), ActorLocation(0.0f)
+  FMiscSpecificLocationActorsROI() : FCarlaRegionOfInterest(),
+    ActorClass(),
+    ActorLocation(0.0f),
+    MinRotationRange(0.0f),
+    MaxRotationRange(0.0f)
   {}
 };
 

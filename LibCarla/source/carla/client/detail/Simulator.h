@@ -360,7 +360,7 @@ namespace detail {
         GarbageCollectionPolicy gc = GarbageCollectionPolicy::Inherit);
 
     bool DestroyActor(Actor &actor);
-    
+
     bool DestroyActor(ActorId actor_id)
     {
       return _client.DestroyActor(actor_id);
@@ -630,6 +630,12 @@ namespace detail {
         std::function<void(SharedPtr<sensor::SensorData>)> callback);
 
     void UnSubscribeFromSensor(Actor &sensor);
+
+    void EnableForROS(const Sensor &sensor);
+
+    void DisableForROS(const Sensor &sensor);
+
+    bool IsEnabledForROS(const Sensor &sensor);
 
     void SubscribeToGBuffer(
         Actor & sensor,

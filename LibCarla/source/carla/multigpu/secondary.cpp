@@ -33,10 +33,10 @@ namespace multigpu {
       _strand(_pool.io_context()),
       _connection_timer(_pool.io_context()),
       _buffer_pool(std::make_shared<BufferPool>()) {
-        
+
       _commander.set_callback(callback);
     }
-  
+
 
   Secondary::Secondary(
     std::string ip,
@@ -92,7 +92,7 @@ namespace multigpu {
         // This forces not using Nagle's algorithm.
         // Improves the sync mode velocity on Linux by a factor of ~3.
         self->_socket.set_option(boost::asio::ip::tcp::no_delay(true));
-        
+
         log_info("secondary server: connected to ", self->_endpoint);
 
         self->ReadData();
@@ -157,9 +157,10 @@ namespace multigpu {
           boost::asio::bind_executor(self->_strand, handle_sent));
     });
   }
-  
+
   void Secondary::Write(Buffer buffer) {
-    auto message = Secondary::MakeMessage(std::move(buffer));
+    auto view_data = carla::BufferView::CreateFrom(std::move(buffer));
+    auto message = Secondary::MakeMessage(view_data);
 
     DEBUG_ASSERT(message != nullptr);
     DEBUG_ASSERT(!message->empty());
@@ -186,7 +187,7 @@ namespace multigpu {
           boost::asio::bind_executor(self->_strand, handle_sent));
     });
   }
-  
+
   void Secondary::Write(std::string text) {
     std::weak_ptr<Secondary> weak = shared_from_this();
     boost::asio::post(_strand, [=]() {
@@ -211,7 +212,7 @@ namespace multigpu {
           self->_socket,
           boost::asio::buffer(&this_size, sizeof(this_size)),
           boost::asio::bind_executor(self->_strand, handle_sent));
-      
+
       // send characters
       boost::asio::async_write(
           self->_socket,
