@@ -378,6 +378,14 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
           SkipPacket();
         break;
 
+      // vehicle door animation
+      case static_cast<char>(CarlaRecorderPacketId::VehicleDoor):
+        if (bFrameFound)
+          ProcessDoorVehicle();
+        else
+          SkipPacket();
+        break;
+
       // scene lights animation
       case static_cast<char>(CarlaRecorderPacketId::SceneLight):
         if (bFrameFound)
@@ -645,6 +653,25 @@ void CarlaReplayer::ProcessLightVehicle(void)
     if (!(IgnoreHero && IsHeroMap[LightVehicle.DatabaseId]))
     {
       Helper.ProcessReplayerLightVehicle(LightVehicle);
+    }
+  }
+}
+
+void CarlaReplayer::ProcessDoorVehicle(void)
+{
+  uint16_t Total;
+  CarlaRecorderDoorVehicle DoorVehicle;
+
+  // read Total walkers
+  ReadValue<uint16_t>(File, Total);
+  for (uint16_t i = 0; i < Total; ++i)
+  {
+    DoorVehicle.Read(File);
+    DoorVehicle.DatabaseId = MappedId[DoorVehicle.DatabaseId];
+    // check if ignore this actor
+    if (!(IgnoreHero && IsHeroMap[DoorVehicle.DatabaseId]))
+    {
+      Helper.ProcessReplayerDoorVehicle(DoorVehicle);
     }
   }
 }
