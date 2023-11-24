@@ -16,7 +16,7 @@ project (
 include (CheckCCompilerFlag)
 include (CheckCXXCompilerFlag)
 
-set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -71,6 +71,10 @@ if (NOT CARLA_DEPENDENCIES_PATH)
     set (CARLA_DEPENDENCIES_PATH ${CMAKE_CURRENT_BINARY_DIR}/Dependencies)
 endif ()
 
+configure_file (
+    ${CARLA_WORKSPACE_PATH}/.clangd.in
+    ${CARLA_WORKSPACE_PATH}/.clangd)
+
 set (LIBCARLA_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/LibCarla/source)
 set (LIBCARLA_THIRD_PARTY_SOURCE_PATH ${LIBCARLA_SOURCE_PATH}/third-party)
 set (PYTHONAPI_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/PythonAPI)
@@ -97,8 +101,6 @@ set (XERCESC_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/xercesc-install/include)
 set (XERCESC_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/xercesc-install/lib)
 set (ZLIB_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-install/include)
 set (ZLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-install/lib)
-set (ZLIB_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-source)
-set (ZLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-build)
 
 set (
     CARLA_COMMON_DEFINITIONS
@@ -188,9 +190,6 @@ if (BUILD_LIBCARLA_SERVER)
         ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/streaming/low_level/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.h
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/odrSpiral/*.h
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/moodycamel/*.h
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.hpp
     )
 
     file (

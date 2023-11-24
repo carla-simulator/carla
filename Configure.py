@@ -87,6 +87,9 @@ DEFAULT_LIB = FindExecutable([
 	'ar',
 ])
 
+DEFAULT_C_STANDARD = 11
+DEFAULT_CPP_STANDARD = 17
+
 argp = argparse.ArgumentParser(description = __doc__)
 def AddDirective(name : str, help : str):
 	argp.add_argument(f'--{name}', action = 'store_true', help = help)
@@ -184,11 +187,11 @@ AddIntOption(
 	'Set the configure/build parallelism.')
 AddIntOption(
 	'c-standard',
-	11,
+	DEFAULT_C_STANDARD,
 	'Set the target C standard.')
 AddIntOption(
 	'cpp-standard',
-	14,
+	DEFAULT_CPP_STANDARD,
 	'Set the target C++ standard.')
 AddStringOption(
 	'c-compiler',
