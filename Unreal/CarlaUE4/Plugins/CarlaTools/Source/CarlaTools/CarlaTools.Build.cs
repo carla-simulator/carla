@@ -3,209 +3,208 @@
 using System;
 using System.IO;
 using UnrealBuildTool;
+using EpicGames.Core;
+using System.Linq;
+using System.Diagnostics;
 
-public class CarlaTools : ModuleRules
+public class CarlaTools :
+	ModuleRules
 {
-  bool UsingHoudini = true;
-  bool bUsingOmniverseConnector = false;
-  private bool IsWindows(ReadOnlyTargetRules Target)
-  {
-    return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
-  }
+    [CommandLine("-houdini")]
+    bool EnableHoudini = false;
 
-	public CarlaTools(ReadOnlyTargetRules Target) : base(Target)
-	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+    [CommandLine("-nv-omniverse")]
+    bool EnableNVIDIAOmniverse = false;
 
-    // PrivatePCHHeaderFile = "Carla.h";
+    [CommandLine("-carla-install-path")]
+    string CarlaInstallPath = null;
 
-    if (IsWindows(Target))
+    [CommandLine("-carla-dependencies-install-path")]
+    string CarlaDependenciesPath = null;
+
+
+
+    public static string FindLibrary(string SearchPath, params string[] Patterns)
     {
-      bEnableExceptions = true;
-    }
-
-    string CarlaPluginPath = Path.GetFullPath( ModuleDirectory );
-    string ConfigDir =  Path.GetFullPath(Path.Combine(CarlaPluginPath, "../../../../Config/"));
-    string OptionalModulesFile = Path.Combine(ConfigDir, "OptionalModules.ini");
-    string[] text = System.IO.File.ReadAllLines(OptionalModulesFile);
-    foreach (string line in text)
-    {
-      if (line.Contains("Omniverse ON"))
-      {
-        Console.WriteLine("Enabling OmniverseConnector");
-        bUsingOmniverseConnector = true;
-        PublicDefinitions.Add("WITH_OMNIVERSE");
-        PrivateDefinitions.Add("WITH_OMNIVERSE");
-      }
-    }
-
-		PublicIncludePaths.AddRange(
-			new string[] {
-				// ... add public include paths required here ...
-			}
-			);
-
-
-		PrivateIncludePaths.AddRange(
-			new string[] {
-				// ... add other private include paths required here ...
-			}
-			);
-
-
-		PublicDependencyModuleNames.AddRange(
-			new string[]
-			{
-        "Core",
-        "ProceduralMeshComponent",
-        "MeshDescription",
-        "RawMesh",
-        "AssetTools"
-				// ... add other public dependencies that you statically link with here ...
-			}
-			);
-
-
-		PrivateDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"CoreUObject",
-				"Engine",
-				"Slate",
-				"SlateCore",
-				"UnrealEd",
-				"Blutility",
-				"UMG",
-				"EditorScriptingUtilities",
-				"Landscape",
-				"Foliage",
-				"FoliageEdit",
-        "MeshMergeUtilities",
-				"Carla",
-        "StaticMeshDescription",
-				"PhysXVehicles",
-        "Json",
-        "JsonUtilities",
-        "Networking",
-        "Sockets",
-        "HTTP",
-        "RHI",
-        "RenderCore",
-        "MeshMergeUtilities",
-        "StreetMapImporting",
-        "StreetMapRuntime"
-				// ... add private dependencies that you statically link with here ...
-			}
-			);
-    if(UsingHoudini)
-    {
-      PrivateDependencyModuleNames.AddRange(
-        new string[]
+        foreach (var Pattern in Patterns)
         {
-          "HoudiniEngine",
-          "HoudiniEngineEditor",
-          "HoudiniEngineRuntime"
-        });
+            var Candidates = Directory.GetFiles(SearchPath, Pattern);
+            if (Candidates.Length == 0)
+                continue;
+            Array.Sort(Candidates);
+            return Candidates[0];
+        }
+        return null;
     }
-    if(bUsingOmniverseConnector)
+
+    public CarlaTools(ReadOnlyTargetRules Target) :
+		base(Target)
     {
-      PrivateDependencyModuleNames.AddRange(
-        new string[]
+        bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
+        var DirectoryInfo = new DirectoryInfo(ModuleDirectory);
+        for (int i = 0; i != 6; ++i)
+            DirectoryInfo = DirectoryInfo.Parent;
+        var WorkspacePath = DirectoryInfo.ToString();
+        Debug.Assert(Directory.Exists(WorkspacePath));
+
+        if (CarlaInstallPath == null)
         {
-          "OmniverseUSD",
-          "OmniverseRuntime"
-        });
-    }
+            Console.WriteLine("-carla-install-path was not specified, inferring...");
+            CarlaInstallPath = Path.Combine(WorkspacePath, "Install", "libcarla");
+            Debug.Assert(Directory.Exists(CarlaInstallPath), "Could not infer CARLA install directory.");
+        }
 
-		DynamicallyLoadedModuleNames.AddRange(
-			new string[]
+        if (CarlaDependenciesPath == null)
+        {
+            Console.WriteLine("-carla-dependencies-path was not specified, inferring...");
+            CarlaDependenciesPath = Path.Combine(WorkspacePath, "Build", "Dependencies");
+            Debug.Assert(Directory.Exists(CarlaDependenciesPath), "Could not infer CARLA dependencies directory.");
+        }
+
+		bEnableExceptions = bEnableExceptions || IsWindows;
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        // PrivatePCHHeaderFile = "Carla.h";
+
+        // PublicIncludePaths.AddRange(new string[] { });
+        // PrivateIncludePaths.AddRange(new string[] { });
+
+        PublicDependencyModuleNames.AddRange(new string[]
+        {
+            "Core",
+            "ProceduralMeshComponent",
+            "MeshDescription",
+            "RawMesh",
+            "AssetTools"
+		});
+
+        PrivateDependencyModuleNames.AddRange(new string[]
+		{
+			"CoreUObject",
+			"Engine",
+			"Slate",
+			"SlateCore",
+			"UnrealEd",
+			"Blutility",
+			"UMG",
+			"EditorScriptingUtilities",
+			"Landscape",
+			"Foliage",
+			"FoliageEdit",
+			"MeshMergeUtilities",
+			"Carla",
+			"StaticMeshDescription",
+			"ChaosVehicles",
+			"Json",
+			"JsonUtilities",
+			"Networking",
+			"Sockets",
+			"HTTP",
+			"RHI",
+			"RenderCore",
+			"MeshMergeUtilities",
+			"StreetMapImporting",
+			"StreetMapRuntime"
+		});
+
+		if (EnableHoudini)
+		{
+			PrivateDependencyModuleNames.AddRange(new string[]
 			{
-				// ... add any modules that your module loads dynamically here ...
-			}
-			);
-		AddCarlaServerDependency(Target);
-	}
+				"HoudiniEngine",
+				"HoudiniEngineEditor",
+				"HoudiniEngineRuntime"
+			});
+		}
 
-  private bool UseDebugLibs(ReadOnlyTargetRules Target)
-  {
-    if (IsWindows(Target))
-    {
-      // In Windows, Unreal uses the Release C++ Runtime (CRT) even in debug
-      // mode, so unless we recompile the engine we cannot link the debug
-      // libraries.
-      return false;
-    }
-    else
-    {
-      return false;
-    }
-  }
-
-  delegate string ADelegate(string s);
-
-  private void AddBoostLibs(string LibPath)
-  {
-    string [] files = Directory.GetFiles(LibPath, "*boost*.lib");
-    foreach (string file in files)
-    {
-      PublicAdditionalLibraries.Add(file);
-    }
-  }
-
-
-	private void AddCarlaServerDependency(ReadOnlyTargetRules Target)
-	{
-		string LibCarlaInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../../Carla/CarlaDependencies"));
-
-		ADelegate GetLibName = (string BaseName) => {
-			if (IsWindows(Target))
+		if (EnableNVIDIAOmniverse)
+		{
+			PrivateDependencyModuleNames.AddRange(new string[]
 			{
-				return BaseName + ".lib";
-			}
-			else
-			{
-				return "lib" + BaseName + ".a";
-			}
-		};
+				"OmniverseUSD",
+				"OmniverseRuntime"
+			});
+		}
 
-    // Link dependencies.
-    if (IsWindows(Target))
-    {
-      AddBoostLibs(Path.Combine(LibCarlaInstallPath, "lib"));
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
+        // DynamicallyLoadedModuleNames.AddRange(new string[] { });
 
-      if (UseDebugLibs(Target))
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
-      }
-      else
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
-      }
+        var LibraryPrefix = IsWindows ? "" : "lib";
+        var LibrarySuffix = IsWindows ? ".lib" : ".a";
+
+        Func<string, string> GetLibraryName = name =>
+        {
+            return LibraryPrefix + name + LibrarySuffix;
+        };
+
+        var LibCarlaInstallPath = CarlaInstallPath;
+        var DependenciesInstallPath = CarlaDependenciesPath;
+        // LibCarla
+        var LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
+        var LibCarlaLibPath = Path.Combine(LibCarlaInstallPath, "lib");
+        var LibCarlaServerPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-server"));
+        var LibCarlaClientPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-client"));
+        // Boost
+        var BoostInstallPath = Path.Combine(DependenciesInstallPath, "boost-install");
+        var BoostLibPath = Path.Combine(BoostInstallPath, "lib");
+        var BoostLibraryPatterns = new string[]
+        {
+            GetLibraryName("*boost_asio*"),
+            GetLibraryName("*boost_python*"),
+        };
+        var BoostLibraries =
+            from Pattern in BoostLibraryPatterns
+            select FindLibrary(BoostLibPath, Pattern);
+        // Chrono
+        var ChronoInstallPath = Path.Combine(DependenciesInstallPath, "chrono-install");
+        var ChronoLibPath = Path.Combine(ChronoInstallPath, "lib");
+        var ChronoLibraryNames = new string[]
+        {
+            "ChronoEngine",
+            "ChronoEngine_vehicle",
+            "ChronoModels_vehicle",
+            "ChronoModels_robot",
+        };
+        var ChronoLibraries =
+            from Name in ChronoLibraryNames
+            select FindLibrary(Name);
+        // SQLite
+        var SQLiteBuildPath = Path.Combine(DependenciesInstallPath, "sqlite-build");
+        var SQLiteLibrary = FindLibrary(SQLiteBuildPath, GetLibraryName("sqlite*"));
+        // RPCLib
+        var RPCLibInstallPath = Path.Combine(DependenciesInstallPath, "rpclib-install");
+        var RPCLibPath = Path.Combine(RPCLibInstallPath, "lib");
+        var RPCLibraryPath = FindLibrary(RPCLibPath, "rpc");
+        // Xerces-C
+        var XercesCInstallPath = Path.Combine(DependenciesInstallPath, "xercesc-install");
+        var XercesCLibPath = Path.Combine(XercesCInstallPath, "lib");
+        var XercesCLibrary = FindLibrary(XercesCLibPath, "xercesc*");
+        // Proj
+        var ProjInstallPath = Path.Combine(DependenciesInstallPath, "proj-install");
+        var ProjLibPath = Path.Combine(ProjInstallPath, "lib");
+        var ProjLibrary = FindLibrary(ProjLibPath, "proj*");
+        // SUMO (OSM2ODR)
+        var SUMOInstallPath = Path.Combine(DependenciesInstallPath, "sumo-install");
+        var SUMOLibPath = Path.Combine(SUMOInstallPath, "lib");
+        var SUMOLibrary = FindLibrary(SUMOLibPath, "sumo*");
+        // ZLib
+        var ZLibInstallPath = Path.Combine(DependenciesInstallPath, "zlib-install");
+        var ZLibLibPath = Path.Combine(ZLibInstallPath, "lib");
+        var ZLibLibrary = FindLibrary(ZLibLibPath, "zlib*");
+
+        PublicAdditionalLibraries.Add(LibCarlaServerPath);
+        PublicAdditionalLibraries.Add(LibCarlaClientPath);
+		PublicAdditionalLibraries.Add(RPCLibraryPath);
+		PublicAdditionalLibraries.AddRange(BoostLibraries);
+		
+		PublicIncludePaths.Add(LibCarlaIncludePath);
+
+		PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
+        PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
+        if (!bEnableExceptions)
+        {
+            PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
+            PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
+            PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
+            PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+        }
     }
-    else
-    {
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
-      if (UseDebugLibs(Target))
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
-      }
-      else
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
-      }
-    }
-    // Include path.
-    string LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
-
-    PublicIncludePaths.Add(LibCarlaIncludePath);
-    PrivateIncludePaths.Add(LibCarlaIncludePath);
-
-    PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
-    PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
-    // PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
-    PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
-    PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
-    PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
-	}
 }

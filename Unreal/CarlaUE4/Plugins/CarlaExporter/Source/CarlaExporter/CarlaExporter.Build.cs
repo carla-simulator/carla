@@ -6,58 +6,37 @@
 
 using UnrealBuildTool;
 
-public class CarlaExporter : ModuleRules
+public class CarlaExporter :
+	ModuleRules
 {
-  public CarlaExporter(ReadOnlyTargetRules Target) : base(Target)
-  {
-    PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+	public CarlaExporter(ReadOnlyTargetRules Target) :
+		base(Target)
+	{
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-    PublicIncludePaths.AddRange(
-      new string[] {
-        // ... add public include paths required here ...
-      }
-      );
+        // PublicIncludePaths.AddRange(new string[] { });
 
+        // PrivateIncludePaths.AddRange(new string[] { });
 
-    PrivateIncludePaths.AddRange(
-      new string[] {
-        // ... add other private include paths required here ...
-      }
-      );
+        PublicDependencyModuleNames.AddRange(new string[]
+		{
+			"Core",
+		});
 
+		PrivateDependencyModuleNames.AddRange(new string[]
+		{
+			"Projects",
+			"InputCore",
+			"UnrealEd",
+			"LevelEditor",
+			"CoreUObject",
+			"Engine",
+			"Slate",
+			"SlateCore",
+			"Chaos",
+			"EditorStyle",
+		});
 
-    PublicDependencyModuleNames.AddRange(
-      new string[]
-      {
-        "Core",
-        // ... add other public dependencies that you statically link with here ...
-      }
-      );
-
-
-    PrivateDependencyModuleNames.AddRange(
-      new string[]
-      {
-        "Projects",
-        "InputCore",
-        "UnrealEd",
-        "LevelEditor",
-        "CoreUObject",
-        "Engine",
-        "Slate",
-        "SlateCore",
-        "Physx",
-        "EditorStyle"
-        // ... add private dependencies that you statically link with here ...
-      }
-      );
-
-
-    DynamicallyLoadedModuleNames.AddRange(
-      new string[]
-      {
-        // ... add any modules that your module loads dynamically here ...
-      }
-      );
-  }
+		// DynamicallyLoadedModuleNames.AddRange(new string[] { });
+	}
 }

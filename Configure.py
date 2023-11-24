@@ -4,6 +4,7 @@ import subprocess, tarfile, zipfile, argparse, requests, psutil, shutil, glob, j
 
 # Constants:
 EXE_EXT = '.exe' if os.name == 'nt' else ''
+LIB_PREFIX = '' if os.name == 'nt' else 'lib'
 LIB_EXT = '.lib' if os.name == 'nt' else '.a'
 OBJ_EXT = '.obj' if os.name == 'nt' else '.o'
 SHELL_EXT = '.bat' if os.name == 'nt' else ''
@@ -154,6 +155,15 @@ AddDirective(
 	'chrono',
 	'Whether to enable Chrono.')
 AddDirective(
+	'carsim',
+	'Whether to enable CarSim')
+AddDirective(
+	'ros2',
+	'Whether to enable ROS2')
+AddDirective(
+	'unity-build',
+	'Whether to enable Unity Build for Unreal Engine projects.')
+AddDirective(
 	'osm2odr',
 	'Whether to enable OSM2ODR.')
 AddDirective(
@@ -229,7 +239,6 @@ def SyncArgs():
 
 ARGV = SyncArgs()
 SEQUENTIAL = ARGV.configure_sequential
-ENABLE_CHRONO = ARGV.chrono
 ENABLE_OSM2ODR = ARGV.osm2odr or ARGV.python_api
 ENABLE_OSM_WORLD_RENDERER = ARGV.osm_world_renderer
 ENABLE_PYTHON_API = ARGV.python_api
@@ -240,7 +249,14 @@ ENABLE_LIBCARLA = any([
 	ENABLE_LIBCARLA_CLIENT,
 	ENABLE_LIBCARLA_SERVER,
 ])
+
+ENABLE_CARSIM = ARGV.carsim
+ENABLE_CHRONO = ARGV.chrono
+ENABLE_ROS2 = ARGV.ros2
+ENABLE_UNITY_BUILD = ARGV.unity_build
 ENABLE_NVIDIA_OMNIVERSE = ARGV.nv_omniverse
+ENABLE_RSS = ARGV.rss
+
 UPDATE_DEPENDENCIES = ARGV.update_deps
 BUILD_DEPENDENCIES = ARGV.build_deps
 PARALLELISM = ARGV.parallelism
@@ -249,8 +265,8 @@ CARLA_VERSION_STRING = ARGV.version
 BUILD_PATH = Path(ARGV.build_path)
 LOG_PATH = BUILD_PATH / 'BuildLogs'
 DEPENDENCIES_PATH = BUILD_PATH / 'Dependencies'
-LIBCARLA_BUILD_PATH = BUILD_PATH / 'libcarla-build'
-LIBCARLA_INSTALL_PATH = BUILD_PATH / 'libcarla-install'
+LIBCARLA_BUILD_PATH = BUILD_PATH / 'LibCarla'
+LIBCARLA_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'LibCarla'
 # Language options
 C_COMPILER = ARGV.c_compiler
 CPP_COMPILER = ARGV.cpp_compiler
@@ -302,7 +318,7 @@ ZLIB_BUILD_PATH = DEPENDENCIES_PATH / 'zlib-build'
 ZLIB_INSTALL_PATH = DEPENDENCIES_PATH / 'zlib-install'
 ZLIB_INCLUDE_PATH = ZLIB_INSTALL_PATH / 'include'
 ZLIB_LIBRARY_PATH = ZLIB_INSTALL_PATH / 'lib'
-ZLIB_LIB_PATH = ZLIB_LIBRARY_PATH / f'zlib{LIB_EXT}'
+ZLIB_LIB_PATH = ZLIB_LIBRARY_PATH / f'{LIB_PREFIX}zlib{LIB_EXT}'
 # LibPNG
 LIBPNG_SOURCE_PATH = DEPENDENCIES_PATH / 'libpng-source'
 LIBPNG_BUILD_PATH = DEPENDENCIES_PATH / 'libpng-build'
@@ -314,7 +330,7 @@ SQLITE_SOURCE_PATH = DEPENDENCIES_PATH / 'sqlite-source'
 SQLITE_BUILD_PATH = DEPENDENCIES_PATH / 'sqlite-build'
 SQLITE_LIBRARY_PATH = SQLITE_BUILD_PATH
 SQLITE_INCLUDE_PATH = SQLITE_SOURCE_PATH
-SQLITE_LIB_PATH = SQLITE_BUILD_PATH / f'sqlite{LIB_EXT}'
+SQLITE_LIB_PATH = SQLITE_BUILD_PATH / f'{LIB_PREFIX}sqlite{LIB_EXT}'
 SQLITE_EXE_PATH = SQLITE_BUILD_PATH / f'sqlite{EXE_EXT}'
 # Proj
 PROJ_SOURCE_PATH = DEPENDENCIES_PATH / 'proj-source'
@@ -361,7 +377,13 @@ SUMO_LIBRARY_PATH = SUMO_INSTALL_PATH / 'lib'
 # Nvidia Omniverse
 NV_OMNIVERSE_PLUGIN_PATH = UNREAL_ENGINE_PATH / 'Engine' / 'Plugins' / 'Marketplace' / 'NVIDIA' / 'Omniverse'
 NV_OMNIVERSE_PATCH_PATH = PATCHES_PATH / 'omniverse_4.26'
-ENABLE_RSS = ARGV.rss
+
+CARLA_UE_OPTIONAL_MODULES = (
+	f'CarSim {"ON" if ENABLE_CARSIM else "OFF"}\n'
+	f'Chrono {"ON" if ENABLE_CHRONO else "OFF"}\n'
+	f'Ros2 {"ON" if ENABLE_ROS2 else "OFF"}\n'
+	f'Unity {"ON" if ENABLE_UNITY_BUILD else "OFF"}\n'
+)
 
 # Basic IO functions:
 
@@ -784,23 +806,6 @@ def BuildLibCarlaMain(task_graph : TaskGraph):
 		LIBCARLA_BUILD_PATH,
 		LIBCARLA_INSTALL_PATH))
 
-def BuildCarlaUEMain():
-	assert UNREAL_ENGINE_PATH.exists()
-	if os.name == 'nt':
-		LaunchSubprocessImmediate([
-			UNREAL_ENGINE_PATH / 'Engine' / 'Build' / 'BatchFiles' / 'Build.bat',
-			'CarlaUE4', 'Win64', 'Development', '-WaitMutex', '-FromMsBuild',
-			CARLA_UE_PATH / 'CarlaUE4.uproject'
-		])
-	else:
-		pass
-
-def BuildCarlaUE(task_graph : TaskGraph):
-	Log('Building Carla Unreal Engine Editor')
-	if ENABLE_NVIDIA_OMNIVERSE:
-		task_graph.Add(Task('install-nv-omniverse', [], InstallNVIDIAOmniverse))
-	task_graph.Add(Task('build-carla-ue', [], BuildCarlaUEMain))
-
 def BuildPythonAPIMain():
 	content = ''
 	with open(PYTHON_API_PATH / 'setup.py.in', 'r') as file:
@@ -818,7 +823,47 @@ def BuildPythonAPI(task_graph : TaskGraph):
 	task_graph.Add(Task('build-python-api', [ 'install-libcarla' ], BuildPythonAPIMain))
 
 def SetupUnrealEngine(task_graph : TaskGraph):
-	Log('Setting up Unreal Engine.')
+	pass
+
+def BuildCarlaUEMain():
+	assert UNREAL_ENGINE_PATH.exists()
+	unreal_build_tool_args = []
+	if ENABLE_CARSIM:
+		unreal_build_tool_args.append('-carsim')
+	if ENABLE_CHRONO:
+		unreal_build_tool_args.append('-chrono')
+	if ENABLE_ROS2:
+		unreal_build_tool_args.append('-ros2')
+	if ENABLE_UNITY_BUILD:
+		unreal_build_tool_args.append('-unity-build')
+	if ENABLE_NVIDIA_OMNIVERSE:
+		unreal_build_tool_args.append('-nv-omniverse')
+	if os.name == 'nt':
+		LaunchSubprocessImmediate([
+			UNREAL_ENGINE_PATH / 'Engine' / 'Build' / 'BatchFiles' / 'Build.bat',
+			'CarlaUE4Editor',
+			'Win64',
+			'Development',
+			'-WaitMutex',
+			'-FromMsBuild',
+			CARLA_UE_PATH / 'CarlaUE4.uproject',
+		], log_name = 'build-carla-ue-editor')
+		LaunchSubprocessImmediate([
+			UNREAL_ENGINE_PATH / 'Engine' / 'Build' / 'BatchFiles' / 'Build.bat',
+			'CarlaUE4',
+			'Win64',
+			'Development',
+			'-WaitMutex',
+			'-FromMsBuild',
+			CARLA_UE_PATH / 'CarlaUE4.uproject',
+		], log_name = 'build-carla-ue')
+	else:
+		pass
+
+def BuildCarlaUE(task_graph : TaskGraph):
+	if ENABLE_NVIDIA_OMNIVERSE:
+		task_graph.Add(Task('install-nv-omniverse', [], InstallNVIDIAOmniverse))
+	task_graph.Add(Task('build-carla-ue', [ 'build-python-api' ], BuildCarlaUEMain))
 
 def InstallNVIDIAOmniverse():
 	filename = 'USDCarlaInterface'
@@ -967,7 +1012,7 @@ def BuildSQLite():
 			LaunchSubprocessImmediate(cmd, log_name = 'build-sqlite-lib')
 
 def FindXercesC():
-	return glob.glob(f'{XERCESC_INSTALL_PATH}/**/xerces-c*{LIB_EXT}', recursive=True)[0]
+	return glob.glob(f'{XERCESC_INSTALL_PATH}/**/{LIB_PREFIX}xerces-c*{LIB_EXT}', recursive=True)[0]
 
 def ConfigureSUMO():
 	cmd = Task.CreateCMakeConfigureDefaultCommandLine(
@@ -979,7 +1024,7 @@ def ConfigureSUMO():
 		f'-DZLIB_INCLUDE_DIR={ZLIB_INCLUDE_PATH}',
 		f'-DZLIB_LIBRARY={ZLIB_LIBRARY_PATH}',
         f'-DPROJ_INCLUDE_DIR={PROJ_INSTALL_PATH}/include',
-        f'-DPROJ_LIBRARY={PROJ_INSTALL_PATH}/lib/proj{LIB_EXT}',
+        f'-DPROJ_LIBRARY={PROJ_INSTALL_PATH}/lib/{LIB_PREFIX}proj{LIB_EXT}',
         f'-DXercesC_INCLUDE_DIR={XERCESC_INSTALL_PATH}/include',
         f'-DXercesC_LIBRARY={FindXercesC()}',
 		'-DSUMO_LIBRARIES=OFF',

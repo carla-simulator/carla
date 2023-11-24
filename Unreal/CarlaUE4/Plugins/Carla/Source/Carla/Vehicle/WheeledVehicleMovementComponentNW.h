@@ -9,11 +9,6 @@
 #include "Curves/CurveFloat.h"
 #include "WheeledVehicleMovementComponentNW.generated.h"
 
-namespace physx
-{
-	class PxVehicleWheelData;
-}
-
 USTRUCT()
 struct FVehicleNWWheelDifferentialData
 {
@@ -145,9 +140,11 @@ class CARLA_API UWheeledVehicleMovementComponentNW : public UWheeledVehicleMovem
 
 protected:
 
+#if 0 // @CARLAUE5
 	virtual const void* GetTireData(physx::PxVehicleWheels* Wheels, UVehicleWheel* Wheel);
 	virtual const int32 GetWheelShapeMapping(physx::PxVehicleWheels* Wheels, uint32 Wheel);
 	virtual const physx::PxVehicleWheelData GetWheelData(physx::PxVehicleWheels* Wheels, uint32 Wheel);
+#endif
 
 	/** Allocate and setup the PhysX vehicle */
 	virtual void SetupVehicle() override;

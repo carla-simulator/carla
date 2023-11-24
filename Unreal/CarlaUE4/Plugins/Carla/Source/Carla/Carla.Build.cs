@@ -2,353 +2,425 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using UnrealBuildTool;
+using EpicGames.Core;
+using System.Diagnostics;
 
-public class Carla : ModuleRules
+public class Carla :
+	ModuleRules
 {
-  bool UsingCarSim = false;
-  bool UsingChrono = false;
-  bool UsingPytorch = false;
-  bool UsingRos2 = false;
-  private bool IsWindows(ReadOnlyTargetRules Target)
-  {
-    return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
-  }
+	[CommandLine("-carsim")]
+	bool EnableCarSim = false;
 
-  public Carla(ReadOnlyTargetRules Target) : base(Target)
-  {
-    PrivatePCHHeaderFile = "Carla.h";
+    [CommandLine("-chrono")]
+    bool EnableChrono = false;
 
-    if (IsWindows(Target))
+    [CommandLine("-pytorch")]
+    bool EnablePytorch = false;
+
+    [CommandLine("-ros2")]
+    bool EnableRos2 = false;
+
+    [CommandLine("-carla-install-path")]
+    string CarlaInstallPath = null;
+
+    [CommandLine("-carla-dependencies-path")]
+    string CarlaDependenciesPath = null;
+
+
+
+	public static string FindLibrary(string SearchPath, params string[] Patterns)
+	{
+		foreach (var Pattern in Patterns)
+		{
+			var Candidates = Directory.GetFiles(SearchPath, Pattern);
+			if (Candidates.Length == 0)
+				continue;
+			Array.Sort(Candidates);
+			return Candidates[0];
+		}
+		return null;
+	}
+
+    public Carla(ReadOnlyTargetRules Target) :
+		base(Target)
     {
-      bEnableExceptions = true;
+		var DirectoryInfo = new DirectoryInfo(ModuleDirectory);
+		for (int i = 0; i != 6; ++i)
+			DirectoryInfo = DirectoryInfo.Parent;
+		var WorkspacePath = DirectoryInfo.ToString();
+		Debug.Assert(Directory.Exists(WorkspacePath));
+
+        if (CarlaInstallPath == null)
+		{
+			Console.WriteLine("-carla-install-path was not specified, inferring...");
+			CarlaInstallPath = Path.Combine(WorkspacePath, "Install", "libcarla");
+			Debug.Assert(Directory.Exists(CarlaInstallPath), "Could not infer CARLA install directory.");
+        }
+
+		if (CarlaDependenciesPath == null)
+        {
+            Console.WriteLine("-carla-dependencies-path was not specified, inferring...");
+            CarlaDependenciesPath = Path.Combine(WorkspacePath, "Build", "Dependencies");
+            Debug.Assert(Directory.Exists(CarlaDependenciesPath), "Could not infer CARLA dependencies directory.");
+        }
+
+        bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
+
+		bEnableExceptions = bEnableExceptions || IsWindows;
+		PrivatePCHHeaderFile = "Carla.h";
+
+		if (EnableCarSim)
+		{
+			PublicDefinitions.Add("WITH_CARSIM");
+			PrivateDefinitions.Add("WITH_CARSIM");
+		}
+
+		if (EnableChrono)
+		{
+			PublicDefinitions.Add("WITH_CHRONO");
+			PrivateDefinitions.Add("WITH_CHRONO");
+		}
+
+		if (EnablePytorch)
+		{
+			PublicDefinitions.Add("WITH_PYTORCH");
+			PrivateDefinitions.Add("WITH_PYTORCH");
+		}
+
+		if (EnableRos2)
+		{
+			PublicDefinitions.Add("WITH_ROS2");
+			PrivateDefinitions.Add("WITH_ROS2");
+		}
+
+		// PublicIncludePaths.AddRange(new string[] { });
+		// PrivateIncludePaths.AddRange(new string[] { });
+
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
+			"Core",
+			"RenderCore",
+			"RHI",
+			"Renderer",
+			"ProceduralMeshComponent",
+			"MeshDescription"
+		});
+
+		if (EnableCarSim)
+		{
+			PublicDependencyModuleNames.Add("CarSim");
+		}
+
+		if (Target.Type == TargetType.Editor)
+		{
+			PublicDependencyModuleNames.Add("UnrealEd");
+		}
+
+		PrivateDependencyModuleNames.AddRange(new string[]
+		{
+			"AIModule",
+			"AssetRegistry",
+			"CoreUObject",
+			"Engine",
+			"Foliage",
+			"HTTP",
+			"StaticMeshDescription",
+			"ImageWriteQueue",
+			"Json",
+			"JsonUtilities",
+			"Landscape",
+			"Chaos",
+			"ChaosVehicles",
+			"ChaosVehicleLib",
+			"Slate",
+			"SlateCore",
+			"PhysicsCore"
+		});
+
+		if (EnableCarSim)
+		{
+			PrivateDependencyModuleNames.Add("CarSim");
+			PrivateIncludePathModuleNames.Add("CarSim");
+		}
+
+        // DynamicallyLoadedModuleNames.AddRange(new string[] { });
+
+        var LibraryPrefix = IsWindows ? "" : "lib";
+        var LibrarySuffix = IsWindows ? ".lib" : ".a";
+
+		Func<string, string> GetLibraryName = name =>
+		{
+			return LibraryPrefix + name + LibrarySuffix;
+		};
+
+		var LibCarlaInstallPath = CarlaInstallPath;
+		var DependenciesInstallPath = CarlaDependenciesPath;
+        // LibCarla
+        var LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
+		var LibCarlaLibPath = Path.Combine(LibCarlaInstallPath, "lib");
+		var LibCarlaServerPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-server"));
+		var LibCarlaClientPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-client"));
+        // Boost
+        var BoostInstallPath = Path.Combine(DependenciesInstallPath, "boost-install");
+		var BoostLibPath = Path.Combine(BoostInstallPath, "lib");
+		var BoostLibraryPatterns = new string[]
+		{
+			GetLibraryName("*boost_asio*"),
+            GetLibraryName("*boost_python*"),
+		};
+		var BoostLibraries =
+			from Pattern in BoostLibraryPatterns
+            select FindLibrary(BoostLibPath, Pattern);
+        // Chrono
+        var ChronoInstallPath = Path.Combine(DependenciesInstallPath, "chrono-install");
+		var ChronoLibPath = Path.Combine(ChronoInstallPath, "lib");
+		var ChronoLibraryNames = new string[]
+		{
+			"ChronoEngine",
+			"ChronoEngine_vehicle",
+			"ChronoModels_vehicle",
+			"ChronoModels_robot",
+		};
+		var ChronoLibraries =
+			from Name in ChronoLibraryNames
+			select FindLibrary(Name);
+        // SQLite
+        var SQLiteBuildPath = Path.Combine(DependenciesInstallPath, "sqlite-build");
+		var SQLiteLibrary = FindLibrary(SQLiteBuildPath, GetLibraryName("sqlite*"));
+		// RPCLib
+        var RPCLibInstallPath = Path.Combine(DependenciesInstallPath, "rpclib-install");
+        var RPCLibPath = Path.Combine(RPCLibInstallPath, "lib");
+        var RPCLibraryPath = FindLibrary(RPCLibPath, "rpc");
+        // Xerces-C
+        var XercesCInstallPath = Path.Combine(DependenciesInstallPath, "xercesc-install");
+		var XercesCLibPath = Path.Combine(XercesCInstallPath, "lib");
+		var XercesCLibrary = FindLibrary(XercesCLibPath, "xercesc*");
+        // Proj
+        var ProjInstallPath = Path.Combine(DependenciesInstallPath, "proj-install");
+		var ProjLibPath = Path.Combine(ProjInstallPath, "lib");
+		var ProjLibrary = FindLibrary(ProjLibPath, "proj*");
+        // SUMO (OSM2ODR)
+        var SUMOInstallPath = Path.Combine(DependenciesInstallPath, "sumo-install");
+		var SUMOLibPath = Path.Combine(SUMOInstallPath, "lib");
+		var SUMOLibrary = FindLibrary(SUMOLibPath, "sumo*");
+        // ZLib
+        var ZLibInstallPath = Path.Combine(DependenciesInstallPath, "zlib-install");
+		var ZLibLibPath = Path.Combine(ZLibInstallPath, "lib");
+        var ZLibLibrary = FindLibrary(ZLibLibPath, "zlib*");
+
+		PublicAdditionalLibraries.AddRange(BoostLibraries);
+        PublicAdditionalLibraries.AddRange(ChronoLibraries);
+        PublicAdditionalLibraries.AddRange(new string[]
+		{
+			SQLiteLibrary,
+			RPCLibraryPath,
+			XercesCLibrary,
+			ProjLibrary,
+			SUMOLibrary,
+			ZLibLibrary,
+		});
+
+        PublicIncludePaths.Add(LibCarlaIncludePath);
+
+        PrivateIncludePaths.Add(LibCarlaIncludePath);
+
+        PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
+        PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
+        if (!bEnableExceptions)
+        {
+            PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
+            PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
+            PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+            PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
+        }
     }
 
-    // Read config about carsim
-    string CarlaPluginPath = Path.GetFullPath( ModuleDirectory );
-    string ConfigDir =  Path.GetFullPath(Path.Combine(CarlaPluginPath, "../../../../Config/"));
-    string OptionalModulesFile = Path.Combine(ConfigDir, "OptionalModules.ini");
-    string[] text = System.IO.File.ReadAllLines(OptionalModulesFile);
-    foreach (string line in text)
-    {
-      if (line.Contains("CarSim ON"))
-      {
-        Console.WriteLine("Enabling carsim");
-        UsingCarSim = true;
-        PublicDefinitions.Add("WITH_CARSIM");
-        PrivateDefinitions.Add("WITH_CARSIM");
-      }
-      if (line.Contains("Chrono ON"))
-      {
-        Console.WriteLine("Enabling chrono");
-        UsingChrono = true;
-        PublicDefinitions.Add("WITH_CHRONO");
-        PrivateDefinitions.Add("WITH_CHRONO");
-      }
-      if (line.Contains("Pytorch ON"))
-      {
-        Console.WriteLine("Enabling pytorch");
-        UsingPytorch = true;
-        PublicDefinitions.Add("WITH_PYTORCH");
-        PrivateDefinitions.Add("WITH_PYTORCH");
-      }
+#if false
+	private void AddDynamicLibrary(string library)
+	{
+		PublicAdditionalLibraries.Add(library);
+		RuntimeDependencies.Add(library);
+		PublicDelayLoadDLLs.Add(library);
+	}
 
-      if (line.Contains("Ros2 ON"))
-      {
-        Console.WriteLine("Enabling ros2");
-        UsingRos2 = true;
-        PublicDefinitions.Add("WITH_ROS2");
-        PrivateDefinitions.Add("WITH_ROS2");
-      }
-    }
+	private void AddDllDependency(string PathToFolder, string DllName)
+	{
+		string Source = Path.Combine(PathToFolder, DllName);
+		string Destination = Path.Combine("$(BinaryOutputDir)", DllName);
+		RuntimeDependencies.Add(Destination, Source);
+	}
 
-    PublicIncludePaths.AddRange(
-      new string[] {
-        // ... add public include paths required here ...
-      }
-      );
+	private void AddCarlaServerDependency(ReadOnlyTargetRules Target)
+	{
+		string LibCarlaInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../CarlaDependencies"));
 
-    PrivateIncludePaths.AddRange(
-      new string[] {
-        // ... add other private include paths required here ...
-      }
-      );
+		// Link dependencies.
+		if (IsWindows)
+		{
+            foreach (string file in Directory.GetFiles(Path.Combine(LibCarlaInstallPath, "lib"), "*boost*.lib"))
+                PublicAdditionalLibraries.Add(file);
 
-    PublicDependencyModuleNames.AddRange(
-      new string[]
-      {
-        "Core",
-        "RenderCore",
-        "RHI",
-        "Renderer",
-        "ProceduralMeshComponent",
-        "MeshDescription"
-        // ... add other public dependencies that you statically link with here ...
-      }
-      );
-    if (UsingCarSim)
-    {
-      PublicDependencyModuleNames.AddRange(new string[] { "CarSim" });
-    }
+            PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
 
-	 if (Target.Type == TargetType.Editor)
-	 {
-		PublicDependencyModuleNames.AddRange(new string[] { "UnrealEd" });
-	 }
+			if (UseDebugLibs(Target))
+			{
+				PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
+			}
+			else
+			{
+				PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
+			}
+			if (EnableChrono)
+			{
+				PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoEngine")));
+				PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoEngine_vehicle")));
+				PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoModels_vehicle")));
+				PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoModels_robot")));
+				AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoEngine.dll");
+				AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoEngine_vehicle.dll");
+				AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoModels_vehicle.dll");
+				AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoModels_robot.dll");
+				bUseRTTI = true;
+			}
 
-    PrivateDependencyModuleNames.AddRange(
-      new string[]
-      {
-        "AIModule",
-        "AssetRegistry",
-        "CoreUObject",
-        "Engine",
-        "Foliage",
-        "HTTP",
-        "StaticMeshDescription",
-        "ImageWriteQueue",
-        "Json",
-        "JsonUtilities",
-        "Landscape",
-        "PhysX",
-        "PhysXVehicles",
-        "PhysXVehicleLib",
-        "Slate",
-        "SlateCore",
-        "PhysicsCore"
-        // ... add private dependencies that you statically link with here ...
-      }
-      );
-    if (UsingCarSim)
-    {
-      PrivateDependencyModuleNames.AddRange(new string[] { "CarSim" });
-      PrivateIncludePathModuleNames.AddRange(new string[] { "CarSim" });
-    }
+			//OsmToODR
+			PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "sqlite3.lib"));
+			PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "xerces-c_3.lib"));
+			PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "proj.lib"));
+			PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "osm2odr.lib"));
+			PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "zlibstatic.lib"));
+		}
+		else
+		{
+			PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
+			if (UseDebugLibs(Target))
+			{
+				PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
+			}
+			else
+			{
+				PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
+			}
+			if (EnableChrono)
+			{
+				AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine.so"));
+				AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine_vehicle.so"));
+				AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_vehicle.so"));
+				AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_robot.so"));
 
+				bUseRTTI = true;
+			}
 
-    DynamicallyLoadedModuleNames.AddRange(
-      new string[]
-      {
-        // ... add any modules that your module loads dynamically here ...
-      }
-      );
+			if (EnablePytorch)
+			{
+				PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_pytorch")));
 
-    AddCarlaServerDependency(Target);
-  }
+				string LibTorchPath = LibCarlaInstallPath;
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libonnx_proto.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libfbgemm.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libgloo.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libXNNPACK.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libprotobuf-lite.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libprotobuf.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libasmjit.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libcpuinfo_internals.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libclog.a"));
+				// PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libbreakpad_common.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libbenchmark.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libtensorpipe.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libpytorch_qnnpack.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libtensorpipe_cuda.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libnnpack_reference_layers.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libgmock.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libdnnl.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libpthreadpool.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libcpuinfo.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libqnnpack.a"));
+				// PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libbreakpad.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libkineto.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libprotoc.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libgtest.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libgmock_main.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libgtest_main.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libbenchmark_main.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libfmt.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libtensorpipe_uv.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libfoxi_loader.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libgloo_cuda.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libnnpack.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libcaffe2_protos.a"));
+				PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libonnx.a"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libnnapi_backend.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libbackend_with_compiler.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libcaffe2_nvrtc.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch_cuda_cpp.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libc10_cuda.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorchbind_test.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libjitbackend_test.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libc10.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch_cuda.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch_global_deps.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch_cpu.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libshm.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch_cuda_cu.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorchscatter.so"));
+				AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorchcluster.so"));
+				// AddDynamicLibrary("/usr/local/cuda/lib64/stubs/libcuda.so");
+				// AddDynamicLibrary("/usr/local/cuda/lib64/libnvrtc.so");
+				// AddDynamicLibrary("/usr/local/cuda/lib64/libnvToolsExt.so");
+				// AddDynamicLibrary("/usr/local/cuda/lib64/libcudart.so");
+				// AddDynamicLibrary("/usr/lib/llvm-10/lib/libgomp.so");
+				PublicAdditionalLibraries.Add("/usr/local/cuda/lib64/stubs/libcuda.so");
+				PublicAdditionalLibraries.Add("/usr/local/cuda/lib64/libnvrtc.so");
+				PublicAdditionalLibraries.Add("/usr/local/cuda/lib64/libnvToolsExt.so");
+				PublicAdditionalLibraries.Add("/usr/local/cuda/lib64/libcudart.so");
+				PublicAdditionalLibraries.Add("/usr/lib/llvm-10/lib/libgomp.so");
+				RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libcudart-a7b20f20.so.11.0"));
+				RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libgomp-a34b3233.so.1"));
+				RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libnvrtc-builtins-4730a239.so.11.3"));
+				RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libnvrtc-1ea278b5.so.11.2"));
+				RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libnvToolsExt-24de1d56.so.1"));
+				PublicAdditionalLibraries.Add("stdc++");
+				PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libpython3.9.so");
+			}
 
-  private bool UseDebugLibs(ReadOnlyTargetRules Target)
-  {
-    if (IsWindows(Target))
-    {
-      // In Windows, Unreal uses the Release C++ Runtime (CRT) even in debug
-      // mode, so unless we recompile the engine we cannot link the debug
-      // libraries.
-      return false;
-    }
-    else
-    {
-      return false;
-    }
-  }
+			if (EnableRos2)
+			{
+				PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds")));
 
-  private void AddDynamicLibrary(string library)
-  {
-    PublicAdditionalLibraries.Add(library);
-    RuntimeDependencies.Add(library);
-    PublicDelayLoadDLLs.Add(library);
-  }
-  private void AddDllDependency(string PathToFolder, string DllName)
-  {
-    string Source = Path.Combine(PathToFolder, DllName);
-    string Destination = Path.Combine("$(BinaryOutputDir)", DllName);
-    RuntimeDependencies.Add(Destination, Source);
-  }
-
-  delegate string ADelegate(string s);
-
-  private void AddBoostLibs(string LibPath)
-  {
-    string [] files = Directory.GetFiles(LibPath, "*boost*.lib");
-    foreach (string file in files) PublicAdditionalLibraries.Add(file);
-  }
-
-  private void AddCarlaServerDependency(ReadOnlyTargetRules Target)
-  {
-    string LibCarlaInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../CarlaDependencies"));
-
-    ADelegate GetLibName = (string BaseName) => {
-      if (IsWindows(Target))
-      {
-        return BaseName + ".lib";
-      }
-      else
-      {
-        return "lib" + BaseName + ".a";
-      }
-    };
-
-    // Link dependencies.
-    if (IsWindows(Target))
-    {
-      AddBoostLibs(Path.Combine(LibCarlaInstallPath, "lib"));
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
-
-      if (UseDebugLibs(Target))
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
-      }
-      else
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
-      }
-      if (UsingChrono)
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoEngine")));
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoEngine_vehicle")));
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoModels_vehicle")));
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoModels_robot")));
-        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoEngine.dll");
-        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoEngine_vehicle.dll");
-        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoModels_vehicle.dll");
-        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoModels_robot.dll");
-        bUseRTTI = true;
-      }
-
-      //OsmToODR
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "sqlite3.lib"));
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "xerces-c_3.lib"));
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "proj.lib"));
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "osm2odr.lib"));
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "zlibstatic.lib"));
-    }
-    else
-    {
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
-      if (UseDebugLibs(Target))
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
-      }
-      else
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
-      }
-      if (UsingChrono)
-      {
-        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine.so"));
-        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine_vehicle.so"));
-        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_vehicle.so"));
-        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_robot.so"));
-
-        bUseRTTI = true;
-      }
-
-      if (UsingPytorch)
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_pytorch")));
-
-        string LibTorchPath = LibCarlaInstallPath;
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libonnx_proto.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libfbgemm.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libgloo.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libXNNPACK.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libprotobuf-lite.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libprotobuf.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libasmjit.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libcpuinfo_internals.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libclog.a"));
-        // PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libbreakpad_common.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libbenchmark.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libtensorpipe.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libpytorch_qnnpack.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libtensorpipe_cuda.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libnnpack_reference_layers.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libgmock.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libdnnl.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libpthreadpool.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libcpuinfo.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libqnnpack.a"));
-        // PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libbreakpad.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libkineto.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libprotoc.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libgtest.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libgmock_main.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libgtest_main.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libbenchmark_main.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libfmt.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libtensorpipe_uv.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libfoxi_loader.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libgloo_cuda.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libnnpack.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libcaffe2_protos.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libonnx.a"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libnnapi_backend.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libbackend_with_compiler.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libcaffe2_nvrtc.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch_cuda_cpp.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libc10_cuda.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorchbind_test.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libjitbackend_test.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libc10.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch_cuda.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch_global_deps.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch_cpu.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libshm.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch_cuda_cu.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorchscatter.so"));
-        AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorchcluster.so"));
-        // AddDynamicLibrary("/usr/local/cuda/lib64/stubs/libcuda.so");
-        // AddDynamicLibrary("/usr/local/cuda/lib64/libnvrtc.so");
-        // AddDynamicLibrary("/usr/local/cuda/lib64/libnvToolsExt.so");
-        // AddDynamicLibrary("/usr/local/cuda/lib64/libcudart.so");
-        // AddDynamicLibrary("/usr/lib/llvm-10/lib/libgomp.so");
-        PublicAdditionalLibraries.Add("/usr/local/cuda/lib64/stubs/libcuda.so");
-        PublicAdditionalLibraries.Add("/usr/local/cuda/lib64/libnvrtc.so");
-        PublicAdditionalLibraries.Add("/usr/local/cuda/lib64/libnvToolsExt.so");
-        PublicAdditionalLibraries.Add("/usr/local/cuda/lib64/libcudart.so");
-        PublicAdditionalLibraries.Add("/usr/lib/llvm-10/lib/libgomp.so");
-        RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libcudart-a7b20f20.so.11.0"));
-        RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libgomp-a34b3233.so.1"));
-        RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libnvrtc-builtins-4730a239.so.11.3"));
-        RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libnvrtc-1ea278b5.so.11.2"));
-        RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libnvToolsExt-24de1d56.so.1"));
-        PublicAdditionalLibraries.Add("stdc++");
-        PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libpython3.9.so");
-      }
-
-      if (UsingRos2)
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds")));
-
-        string LibFastDDSPath = LibCarlaInstallPath;
-        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfoonathan_memory-0.7.3.so"));
-        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastcdr.so"));
-        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastrtps.so"));
-        PublicAdditionalLibraries.Add("stdc++");
-      }
+				string LibFastDDSPath = LibCarlaInstallPath;
+				AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfoonathan_memory-0.7.3.so"));
+				AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastcdr.so"));
+				AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastrtps.so"));
+				PublicAdditionalLibraries.Add("stdc++");
+			}
 
 
-      //OsmToODR
-      PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libc.so");
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libsqlite3.so"));
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libxerces-c.a"));
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libproj.a"));
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libosm2odr.a"));
+			//OsmToODR
+			PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libc.so");
+			PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libsqlite3.so"));
+			PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libxerces-c.a"));
+			PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libproj.a"));
+			PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libosm2odr.a"));
 
-    }
-    bEnableExceptions = true;
+		}
+		bEnableExceptions = true;
 
-    // Include path.
-    string LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
+		// Include path.
+		string LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
 
-    PublicIncludePaths.Add(LibCarlaIncludePath);
-    PrivateIncludePaths.Add(LibCarlaIncludePath);
+		PublicIncludePaths.Add(LibCarlaIncludePath);
+		PrivateIncludePaths.Add(LibCarlaIncludePath);
 
-    PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
-    PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
-    PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
-    PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
-    PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
-    PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
-  }
+		PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
+		PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
+		PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+		PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
+		PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
+		PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
+	}
+#endif
 }

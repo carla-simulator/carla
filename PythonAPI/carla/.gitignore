@@ -1,4 +1,5 @@
 *.egg-info
+setup.py
 build
 dependencies
 dist

@@ -4,32 +4,24 @@ using UnrealBuildTool;
 using System.Collections.Generic;
 using System;
 using System.IO;
+using EpicGames.Core;
 
-public class CarlaUE4EditorTarget : TargetRules
+public class CarlaUE4EditorTarget :
+    TargetRules
 {
-	public CarlaUE4EditorTarget(TargetInfo Target) : base(Target)
-	{
-		Type = TargetType.Editor;
-		ExtraModuleNames.Add("CarlaUE4");
+    [CommandLine("-unity-build")]
+    bool EnableUnityBuild = false;
 
-		string ConfigDir = Path.GetDirectoryName(ProjectFile.ToString()) + "/Config/";
-		string OptionalModulesFile = Path.Combine(ConfigDir, "OptionalModules.ini");
-		string[] text = System.IO.File.ReadAllLines(OptionalModulesFile);
+    public CarlaUE4EditorTarget(TargetInfo Target) :
+        base(Target)
+    {
+        Type = TargetType.Editor;
 
-		bool UnityOn = true;
+        ExtraModuleNames.Add("CarlaUE4");
 
-		foreach (string line in text) {
-			if (line.Contains("Unity OFF"))
-			{
-				UnityOn = false;
-			}
-		}
-
-		if (!UnityOn) {
-			Console.WriteLine("Disabling unity");
-			bUseUnityBuild = false;
-			bForceUnityBuild = false;
-			bUseAdaptiveUnityBuild = false;
-		}
-	}
+        Console.WriteLine("Unity build is disabled.");
+        bUseUnityBuild = EnableUnityBuild;
+        bForceUnityBuild = EnableUnityBuild;
+        bUseAdaptiveUnityBuild = EnableUnityBuild;
+    }
 }

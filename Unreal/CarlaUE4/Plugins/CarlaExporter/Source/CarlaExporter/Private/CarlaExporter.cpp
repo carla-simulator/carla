@@ -15,14 +15,9 @@
 #include "Components/InstancedStaticMeshComponent.h"
 #include "PhysicsEngine/BodySetup.h"
 #include "PhysicsEngine/ConvexElem.h"
-#include "PxTriangleMesh.h"
-#include "PxVec3.h"
 #include "LevelEditor.h"
 #include "EngineUtils.h"
-#include "PhysXPublic.h"
 #include "PhysicsPublic.h"
-#include "PhysXIncludes.h"
-#include "PxSimpleTypes.h"
 #include <fstream>
 #include <sstream>
 

@@ -13,19 +13,22 @@
 	"CanContainContent": true,
 	"IsBetaVersion": true,
 	"Installed": true,
-	"Modules": [
+	"Modules":
+	[
 		{
 			"Name": "Carla",
 			"Type": "Runtime",
 			"LoadingPhase": "PreDefault",
-			"AdditionalDependencies": [
+			"AdditionalDependencies":
+			[
 				"Engine"
 			]
 		}
 	],
-	"Plugins": [
+	"Plugins":
+	[
 		{
-			"Name": "PhysXVehicles",
+			"Name": "ChaosVehicles",
 			"Enabled": true
 		},
 		{

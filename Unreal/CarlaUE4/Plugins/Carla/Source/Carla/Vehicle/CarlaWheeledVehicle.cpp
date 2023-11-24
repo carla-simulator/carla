@@ -13,8 +13,7 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-#include "PhysXPublic.h"
-#include "PhysXVehicleManager.h"
+#if 0 // @CARLAUE5
 #include "TireConfig.h"
 #include "VehicleWheel.h"
 
@@ -1134,3 +1133,4 @@ void ACarlaWheeledVehicle::SetPhysicsConstraintAngle(
 {
   Component->ConstraintInstance.AngularRotationOffset = NewAngle;
 }
+#endif

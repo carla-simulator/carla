@@ -53,6 +53,7 @@ TArray<FUSDCARLALight> UUSDCARLAInterface::GetUSDLights(const FString& Path)
 
 TArray<FUSDCARLAWheelData> UUSDCARLAInterface::GetUSDWheelData(const FString& Path)
 {
+#if 0 // @CARLAUE5
   pxr::UsdStageRefPtr Stage = 
       FOmniverseUSDHelper::LoadUSDStageFromPath(Path);
 
@@ -171,4 +172,5 @@ TArray<FUSDCARLAWheelData> UUSDCARLAInterface::GetUSDWheelData(const FString& Pa
   ParseWheelData("wheel_3", Wheel3);
 
   return {Wheel0, Wheel1, Wheel2, Wheel3};
+#endif
 }

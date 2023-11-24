@@ -6,14 +6,12 @@
 
 #include "WheeledVehicleMovementComponentNW.h"
 #include "PhysicsPublic.h"
-#include "PhysXPublic.h"
-#include "PhysXVehicleManager.h"
 #include "Components/PrimitiveComponent.h"
 #include "Logging/MessageLog.h"
 
 UWheeledVehicleMovementComponentNW::UWheeledVehicleMovementComponentNW(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	// grab default values from physx
+#if 0 // @CARLAUE5
 	PxVehicleEngineData DefEngineData;
 	EngineSetup.MOI = DefEngineData.mMOI;
 	EngineSetup.MaxRPM = OmegaToRPM(DefEngineData.mMaxOmega);
@@ -65,11 +63,13 @@ UWheeledVehicleMovementComponentNW::UWheeledVehicleMovementComponentNW(const FOb
 	DifferentialSetup.SetNum(NbrWheels);
 
 	IdleBrakeInput = 10;
+#endif
 }
 
 #if WITH_EDITOR
 void UWheeledVehicleMovementComponentNW::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
 {
+#if 0 // @CARLAUE5
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 	const FName PropertyName = PropertyChangedEvent.Property ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 
@@ -99,9 +99,11 @@ void UWheeledVehicleMovementComponentNW::PostEditChangeProperty(struct FProperty
 			SteeringCurve.GetRichCurve()->UpdateOrAddKey(SteerKeys[KeyIdx].Time, NewValue);
 		}
 	}
+#endif
 }
 #endif
 
+#if 0 // @CARLAUE5
 static void GetVehicleDifferentialNWSetup(const TArray<FVehicleNWWheelDifferentialData>& Setup, PxVehicleDifferentialNWData& PxSetup)
 {
 	for (int32 i = 0; i < Setup.Num(); ++i)
@@ -109,9 +111,11 @@ static void GetVehicleDifferentialNWSetup(const TArray<FVehicleNWWheelDifferenti
 		PxSetup.setDrivenWheel(i, Setup[i].bDriven);
 	}
 }
+#endif
 
 float FVehicleNWEngineData::FindPeakTorque() const
 {
+#if 0 // @CARLAUE5
 	// Find max torque
 	float PeakTorque = 0.0f;
 	TArray<FRichCurveKey> TorqueKeys = TorqueCurve.GetRichCurveConst()->GetCopyOfKeys();
@@ -121,8 +125,10 @@ float FVehicleNWEngineData::FindPeakTorque() const
 		PeakTorque = FMath::Max(PeakTorque, Key.Value);
 	}
 	return PeakTorque;
+#endif
 }
 
+#if 0 // @CARLAUE5
 static void GetVehicleEngineSetup(const FVehicleNWEngineData& Setup, PxVehicleEngineData& PxSetup)
 {
 	PxSetup.mMOI = M2ToCm2(Setup.MOI);
@@ -169,12 +175,18 @@ static void GetVehicleAutoBoxSetup(const FVehicleNWTransmissionData& Setup, PxVe
 	PxSetup.setLatency(Setup.GearAutoBoxLatency);
 
 }
+#endif
 
 int32 UWheeledVehicleMovementComponentNW::GetCustomGearBoxNumForwardGears() const
 {
+#if 0 // @CARLAUE5
 	return TransmissionSetup.ForwardGears.Num();
+#else
+	return 0;
+#endif
 }
 
+#if 0 // @CARLAUE5
 void SetupDriveHelper(const UWheeledVehicleMovementComponentNW* VehicleData, const PxVehicleWheelsSimData* PWheelsSimData, PxVehicleDriveSimDataNW& DriveData)
 {
 	PxVehicleDifferentialNWData DifferentialSetup;
@@ -198,9 +210,11 @@ void SetupDriveHelper(const UWheeledVehicleMovementComponentNW* VehicleData, con
 	GetVehicleAutoBoxSetup(VehicleData->TransmissionSetup, AutoBoxSetup);
 	DriveData.setAutoBoxData(AutoBoxSetup);
 }
+#endif
 
 void UWheeledVehicleMovementComponentNW::SetupVehicle()
 {
+#if 0 // @CARLAUE5
 	if (!UpdatedPrimitive)
 	{
 		return;
@@ -267,11 +281,12 @@ void UWheeledVehicleMovementComponentNW::SetupVehicle()
 	PVehicleDrive = PVehicleDriveNW;
 
 	SetUseAutoGears(TransmissionSetup.bUseGearAutoBox);
-
+#endif
 }
 
 void UWheeledVehicleMovementComponentNW::UpdateSimulation(float DeltaTime)
 {
+#if 0 // @CARLAUE5
 	if (PVehicleDrive == nullptr)
 		return;
 
@@ -309,10 +324,12 @@ void UWheeledVehicleMovementComponentNW::UpdateSimulation(float DeltaTime)
 		PxVehicleDriveNW* PVehicleDriveNW = (PxVehicleDriveNW*)PVehicleDrive;
 		PxVehicleDriveNWSmoothAnalogRawInputsAndSetAnalogInputs(SmoothData, SpeedSteerLookup, RawInputData, DeltaTime, false, *PVehicleDriveNW);
 	});
+#endif
 }
 
 void UWheeledVehicleMovementComponentNW::UpdateEngineSetup(const FVehicleNWEngineData& NewEngineSetup)
 {
+#if 0 // @CARLAUE5
 	if (PVehicleDrive)
 	{
 		PxVehicleEngineData EngineData;
@@ -321,10 +338,12 @@ void UWheeledVehicleMovementComponentNW::UpdateEngineSetup(const FVehicleNWEngin
 		PxVehicleDriveNW* PVehicleDriveNW = (PxVehicleDriveNW*)PVehicleDrive;
 		PVehicleDriveNW->mDriveSimData.setEngineData(EngineData);
 	}
+#endif
 }
 
 void UWheeledVehicleMovementComponentNW::UpdateDifferentialSetup(const TArray<FVehicleNWWheelDifferentialData>& NewDifferentialSetup)
 {
+#if 0 // @CARLAUE5
 	if (PVehicleDrive)
 	{
 		PxVehicleDifferentialNWData DifferentialData;
@@ -333,10 +352,12 @@ void UWheeledVehicleMovementComponentNW::UpdateDifferentialSetup(const TArray<FV
 		PxVehicleDriveNW* PVehicleDriveNW = (PxVehicleDriveNW*)PVehicleDrive;
 		PVehicleDriveNW->mDriveSimData.setDiffData(DifferentialData);
 	}
+#endif
 }
 
 void UWheeledVehicleMovementComponentNW::UpdateTransmissionSetup(const FVehicleNWTransmissionData& NewTransmissionSetup)
 {
+#if 0 // @CARLAUE5
 	if (PVehicleDrive)
 	{
 		PxVehicleGearsData GearData;
@@ -349,8 +370,10 @@ void UWheeledVehicleMovementComponentNW::UpdateTransmissionSetup(const FVehicleN
 		PVehicleDriveNW->mDriveSimData.setGearsData(GearData);
 		PVehicleDriveNW->mDriveSimData.setAutoBoxData(AutoBoxData);
 	}
+#endif
 }
 
+#if 0 // @CARLAUE5
 void BackwardsConvertCm2ToM2NW(float& val, float defaultValue)
 {
 	if (val != defaultValue)
@@ -358,9 +381,11 @@ void BackwardsConvertCm2ToM2NW(float& val, float defaultValue)
 		val = Cm2ToM2(val);
 	}
 }
+#endif
 
 void UWheeledVehicleMovementComponentNW::Serialize(FArchive& Ar)
 {
+#if 0 // @CARLAUE5
 	Super::Serialize(Ar);
 	if (Ar.IsLoading() && Ar.UE4Ver() < VER_UE4_VEHICLES_UNIT_CHANGE)
 	{
@@ -383,14 +408,18 @@ void UWheeledVehicleMovementComponentNW::Serialize(FArchive& Ar)
 		BackwardsConvertCm2ToM2NW(EngineSetup.MOI, DefEngineData.mMOI);
 		BackwardsConvertCm2ToM2NW(TransmissionSetup.ClutchStrength, DefClutchData.mStrength);
 	}
+#endif
 }
 
 void UWheeledVehicleMovementComponentNW::ComputeConstants()
 {
 	Super::ComputeConstants();
+#if 0 // @CARLAUE5
 	MaxEngineRPM = EngineSetup.MaxRPM;
+#endif
 }
 
+#if 0 // @CARLAUE5
 const void* UWheeledVehicleMovementComponentNW::GetTireData(physx::PxVehicleWheels* InWheels, UVehicleWheel* InWheel)
 {
 	const void* realShaderData = &InWheels->mWheelsSimData.getTireData((PxU32)InWheel->WheelIndex);
@@ -408,3 +437,4 @@ const physx::PxVehicleWheelData UWheeledVehicleMovementComponentNW::GetWheelData
 	const physx::PxVehicleWheelData WheelData = InWheels->mWheelsSimData.getWheelData((physx::PxU32)InWheel);
 	return WheelData;
 }
+#endif
