@@ -71,7 +71,7 @@ amalgamate_compile_command.extend([
 ])
 amalgamate_compile_command.append(PYTHON_API_AMALGAMATED_OBJECT_PATH)
 
-print(f'Building "{PYTHON_API_AMALGAMATED_OBJECT_PATH}".')
+print(f'Building "{{PYTHON_API_AMALGAMATED_OBJECT_PATH}}".')
 subprocess.run(
     amalgamate_compile_command,
     shell = True

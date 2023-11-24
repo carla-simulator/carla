@@ -232,8 +232,14 @@ SEQUENTIAL = ARGV.configure_sequential
 ENABLE_CHRONO = ARGV.chrono
 ENABLE_OSM2ODR = ARGV.osm2odr or ARGV.python_api
 ENABLE_OSM_WORLD_RENDERER = ARGV.osm_world_renderer
-ENABLE_LIBCARLA = ARGV.libcarla_client or ARGV.libcarla_server or ARGV.python_api
 ENABLE_PYTHON_API = ARGV.python_api
+ENABLE_LIBCARLA_CLIENT = ARGV.libcarla_client
+ENABLE_LIBCARLA_SERVER = ARGV.libcarla_server
+ENABLE_LIBCARLA = any([
+	ENABLE_PYTHON_API,
+	ENABLE_LIBCARLA_CLIENT,
+	ENABLE_LIBCARLA_SERVER,
+])
 ENABLE_NVIDIA_OMNIVERSE = ARGV.nv_omniverse
 UPDATE_DEPENDENCIES = ARGV.update_deps
 BUILD_DEPENDENCIES = ARGV.build_deps
@@ -263,11 +269,14 @@ LIB_IS_AR = 'ar' in LIB
 UNREAL_ENGINE_PATH = Path(ARGV.ue_path)
 # Dependencies:
 # Boost
-BOOST_TOOLSET = 'msvc-14.2'
+BOOST_VERSION = (1, 83, 0)
+BOOST_VERSION_MAJOR, BOOST_VERSION_MINOR, BOOST_VERSION_PATCH = BOOST_VERSION
+BOOST_VERSION_STRING = f'{BOOST_VERSION_MAJOR}.{BOOST_VERSION_MINOR}.{BOOST_VERSION_PATCH}'
+BOOST_TOOLSET = 'msvc-14.3'
 BOOST_SOURCE_PATH = DEPENDENCIES_PATH / 'boost-source'
 BOOST_BUILD_PATH = DEPENDENCIES_PATH / 'boost-build'
 BOOST_INSTALL_PATH = DEPENDENCIES_PATH / 'boost-install'
-BOOST_INCLUDE_PATH = BOOST_INSTALL_PATH / 'include'
+BOOST_INCLUDE_PATH = BOOST_INSTALL_PATH / 'include' / f'boost-{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}'
 BOOST_LIBRARY_PATH = BOOST_INSTALL_PATH / 'lib'
 BOOST_B2_PATH = BOOST_SOURCE_PATH / f'b2{EXE_EXT}'
 # Eigen
@@ -612,8 +621,8 @@ DEFAULT_DEPENDENCIES = [
 
 	Dependency(
 		'boost',
-		Download('https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.zip'),
-		Download('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_1_83_0.zip')),
+		Download(f'https://boostorg.jfrog.io/artifactory/main/release/{BOOST_VERSION_STRING}/source/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip'),
+		Download(f'https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip')),
 
 	Dependency(
 		'eigen',
@@ -874,7 +883,7 @@ def BuildAndInstallBoost():
 		'link=static',
 		'runtime-link=shared',
 		'threading=multi',
-		'--layout=system',
+		'--layout=versioned',
 		'--with-system',
 		'--with-filesystem',
 		'--with-python',
@@ -882,7 +891,7 @@ def BuildAndInstallBoost():
 		f'--build-dir={BOOST_BUILD_PATH}',
 		f'--prefix={BOOST_INSTALL_PATH}',
 		f'--libdir={BOOST_LIBRARY_PATH}',
-		f'--includedir={BOOST_INCLUDE_PATH}',
+		f'--includedir={BOOST_INCLUDE_PATH.parent}',
 		'install'
 	], working_directory = BOOST_SOURCE_PATH)
 
