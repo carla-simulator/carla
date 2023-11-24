@@ -50,6 +50,7 @@ _out*
 _site
 core
 profiler.csv
+ArgsSync.json
 
 .clangd
 .cache/

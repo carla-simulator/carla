@@ -23,7 +23,7 @@ INCLUDE_PREFIX = '/I' if os.name == 'nt' else '-I'
 DEFINE_PREFIX = '/D' if os.name == 'nt' else '-D'
 
 definitions = [
-    # DEFINE_PREFIX + 'BOOST_ALL_NO_LIB',
+    DEFINE_PREFIX + 'BOOST_ALL_NO_LIB',
     DEFINE_PREFIX + 'BOOST_NO_EXCEPTIONS',
     DEFINE_PREFIX + 'BOOST_PYTHON_STATIC_LIB',
     DEFINE_PREFIX + 'BOOST_ERROR_CODE_HEADER_ONLY',
@@ -60,15 +60,18 @@ if os.name == 'nt':
     amalgamate_compile_command.extend([
         '/EHsc',
         '/MD',
+        '/bigobj',
     ])
 else:
     pass
 
 amalgamate_compile_command.extend([
     PYTHON_API_PATH / 'source' / 'libcarla' / 'libcarla.cpp',
-    ('/Fo' if os.name == 'nt' else '-o') + str(PYTHON_API_AMALGAMATED_OBJECT_PATH),
+    '/Fo:' if os.name == 'nt' else '-o',
 ])
+amalgamate_compile_command.append(PYTHON_API_AMALGAMATED_OBJECT_PATH)
 
+print(f'Building "{PYTHON_API_AMALGAMATED_OBJECT_PATH}".')
 subprocess.run(
     amalgamate_compile_command,
     shell = True

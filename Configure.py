@@ -95,10 +95,10 @@ def AddIntOption(name : str, default : int, help : str):
 	argp.add_argument(f'--{name}', type = int, default = int(default), help = f'{help} (default = {default}).')
 AddDirective(
 	'launch',
-	'Build all required modules and open the CarlaUE4 project in the Unreal Engine editor.')
+	'Build and open the CarlaUE4 project in the Unreal Engine editor.')
 AddDirective(
 	'launch-only',
-	'Open the CARLA Unreal Engine project in the editor, skipping all build steps.')
+	'Open the CARLA project in the Unreal Engine editor, skipping all build steps.')
 AddDirective(
 	'import',
 	f'Import maps and assets from "{WORKSPACE_PATH / "Import"}" into Unreal.')
@@ -145,8 +145,8 @@ AddDirective(
 	'configure-sequential',
 	'Whether to disable parallelism in the configuration script.')
 AddDirective(
-	'save-logs',
-	'Whether to save logs.')
+	'no-log',
+	'Whether to disable saving logs.')
 AddDirective(
 	'pytorch',
 	'Whether to enable PyTorch.')
@@ -164,7 +164,7 @@ AddDirective(
 	'Whether to enable the NVIDIA Omniverse Plugin.')
 AddDirective(
 	'march-native',
-	'Whether to add "-march=native" to C/C++ flags.')
+	'Whether to add "-march=native" to C/C++ compile flags.')
 AddDirective(
 	'rss',
 	'Whether to enable RSS.')
@@ -199,7 +199,7 @@ AddStringOption(
 AddStringOption(
 	'version',
 	FALLBACK_CARLA_VERSION_STRING,
-	'Set the CARLA version.')
+	'Override the CARLA version.')
 AddStringOption(
 	'generator',
 	'Ninja',
@@ -215,34 +215,33 @@ AddStringOption(
 		'<Could not automatically infer Unreal Engine source path using the "UNREAL_ENGINE_PATH" environment variable>'),
 	'Set the path of Unreal Engine.')
 
-
+ARGS_SYNC_PATH = WORKSPACE_PATH / 'ArgsSync.json'
 def SyncArgs():
 	argv = argparse.Namespace()
 	if __name__ == '__main__':
 		argv = argp.parse_args()
-		with open(WORKSPACE_PATH / 'ConfigureOptions.json', 'w') as file:
+		with open(ARGS_SYNC_PATH, 'w') as file:
 			json.dump(argv.__dict__, file)
 	else:
-		with open(WORKSPACE_PATH / 'ConfigureOptions.json', 'r') as file:
+		with open(ARGS_SYNC_PATH, 'r') as file:
 			argv.__dict__ = json.load(file)
 	return argv
 
 ARGV = SyncArgs()
+SEQUENTIAL = ARGV.configure_sequential
 ENABLE_CHRONO = ARGV.chrono
 ENABLE_OSM2ODR = ARGV.osm2odr or ARGV.python_api
 ENABLE_OSM_WORLD_RENDERER = ARGV.osm_world_renderer
 ENABLE_LIBCARLA = ARGV.libcarla_client or ARGV.libcarla_server or ARGV.python_api
 ENABLE_PYTHON_API = ARGV.python_api
 ENABLE_NVIDIA_OMNIVERSE = ARGV.nv_omniverse
-UPDATE_DEPENDENCIES = ARGV.update_deps or True
-BUILD_DEPENDENCIES = ARGV.build_deps or True
+UPDATE_DEPENDENCIES = ARGV.update_deps
+BUILD_DEPENDENCIES = ARGV.build_deps
 PARALLELISM = ARGV.parallelism
 # Root paths:
 CARLA_VERSION_STRING = ARGV.version
 BUILD_PATH = Path(ARGV.build_path)
 LOG_PATH = BUILD_PATH / 'BuildLogs'
-if ARGV.save_logs:
-	LOG_PATH.mkdir(exist_ok = True)
 DEPENDENCIES_PATH = BUILD_PATH / 'Dependencies'
 LIBCARLA_BUILD_PATH = BUILD_PATH / 'libcarla-build'
 LIBCARLA_INSTALL_PATH = BUILD_PATH / 'libcarla-install'
@@ -255,6 +254,11 @@ C_STANDARD = ARGV.c_standard
 CPP_STANDARD = ARGV.cpp_standard
 C_COMPILER_CLI_TYPE = 'msvc' if 'cl' in C_COMPILER else 'gnu'
 CPP_COMPILER_CLI_TYPE = 'msvc' if 'cl' in CPP_COMPILER else 'gnu'
+C_COMPILER_IS_CLANG = 'clang' in C_COMPILER
+CPP_COMPILER_IS_CLANG = 'clang' in CPP_COMPILER
+C_ENABLE_MARCH_NATIVE = ARGV.march_native and C_COMPILER_CLI_TYPE == 'gnu'
+CPP_ENABLE_MARCH_NATIVE = ARGV.march_native and CPP_COMPILER_CLI_TYPE == 'gnu'
+LIB_IS_AR = 'ar' in LIB
 # Unreal Engine
 UNREAL_ENGINE_PATH = Path(ARGV.ue_path)
 # Dependencies:
@@ -361,7 +365,7 @@ def LaunchSubprocess(
 		cmd : list,
 		display_output : bool = False,
 		working_directory : Path = None):
-	stdstream_value = None if display_output or ARGV.configure_sequential else subprocess.PIPE
+	stdstream_value = None if display_output or SEQUENTIAL else subprocess.PIPE
 	return subprocess.run(
 		cmd,
 		stdout = stdstream_value,
@@ -392,7 +396,7 @@ def LaunchSubprocessImmediate(
 		)
 		print(error_message)
 	finally:
-		if ARGV.save_logs and log_name != None:
+		if not ARGV.no_log and log_name != None:
 			if log_content == None:
 				stdout = sp.stdout.decode() if sp.stdout else ''
 				stderr = sp.stderr.decode() if sp.stderr else ''
@@ -453,7 +457,7 @@ class Task:
 	
 	def CreateCMakeConfigureDefaultCommandLine(source_path : Path, build_path : Path):
 		cpp_flags_release = '/MD'
-		if ARGV.march_native:
+		if CPP_ENABLE_MARCH_NATIVE:
 			cpp_flags_release += ' -march=native'
 		return [
 			'cmake',
@@ -492,9 +496,8 @@ class Task:
 class TaskGraph:
 
 	def __init__(self, parallelism : int = PARALLELISM):
-		self.sequential = ARGV.configure_sequential
+		self.sequential = SEQUENTIAL
 		self.parallelism = parallelism
-		self.pool = ProcessPoolExecutor(parallelism)
 		self.tasks = []
 		self.sources = []
 		self.task_map = {}
@@ -527,11 +530,13 @@ class TaskGraph:
 					in_edge = self.task_map.get(in_edge_name, None)
 					assert in_edge != None
 					task.in_edges.append(in_edge)
+
 			for task in self.tasks:
 				for in_edge_name in task.in_edge_names:
 					in_edge = self.task_map.get(in_edge_name, None)
 					assert in_edge != None
 					in_edge.out_edges.append(task)
+
 			futures = []
 			future_map = {}
 			task_queue = deque()
@@ -555,34 +560,37 @@ class TaskGraph:
 				nonlocal done_count
 				nonlocal active_count
 				if active_count != 0:
-					for e in as_completed(futures):
-						task = future_map.get(e, None)
-						assert task != None
-						task.done = True
-						Log(f'{task.name} - done')
-						UpdateOutEdges(task)
-						done_count += 1
+					done = [ e for e in as_completed(futures) ]
+					done_tasks = [ future_map[e] for e in done ]
+					for e in done_tasks:
+						e.done = True
+						Log(f'{e.name} - done')
+						UpdateOutEdges(e)
+					assert active_count == len(done_tasks)
+					done_count += len(done_tasks)
 					active_count = 0
+					future_map = {}
 					futures = []
 
 			task_queue.extend([ self.task_map[e] for e in self.sources ])
-			while len(task_queue) != 0:
-				while len(task_queue) != 0 and active_count < self.parallelism:
-					task = task_queue.popleft()
-					Log(f'{task.name} - start')
-					if not self.sequential:
-						active_count += 1
-						future = self.pool.submit(task.Run)
-						future_map[future] = task
-						futures.append(future)
-					else:
-						task.Run()
-						Log(f'{task.name} - done')
-						task.done = True
-						done_count += 1
-						UpdateOutEdges(task)
+			with ProcessPoolExecutor(self.parallelism) as pool:
+				while len(task_queue) != 0:
+					while len(task_queue) != 0 and active_count < self.parallelism:
+						task = task_queue.popleft()
+						Log(f'{task.name} - start')
+						if not self.sequential:
+							active_count += 1
+							future = pool.submit(task.Run)
+							future_map[future] = task
+							futures.append(future)
+						else:
+							task.Run()
+							Log(f'{task.name} - done')
+							task.done = True
+							done_count += 1
+							UpdateOutEdges(task)
+					Flush()
 				Flush()
-			Flush()
 
 			if done_count != len(self.tasks):
 				pending_tasks = []
@@ -881,41 +889,84 @@ def BuildAndInstallBoost():
 def BuildSQLite():
 	SQLITE_BUILD_PATH.mkdir(exist_ok = True)
 	sqlite_sources = glob.glob(f'{SQLITE_SOURCE_PATH}/**/*.c', recursive = True)
-	if os.name == 'nt' and 'clang' in C_COMPILER:
-		if not SQLITE_EXE_PATH.exists():
-			cmd = [ C_COMPILER ]
-			if C_COMPILER_CLI_TYPE == 'gnu':
-				cmd.extend([
-					f'-fuse-ld={LINKER}',
-					'-march=native',
-				])
-			cmd.extend([
-				'/O2',
-				'/MD',
-				'/EHsc',
-			])
-			cmd.extend(sqlite_sources)
-			cmd.append('/Fe:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o')
+	sqlite_sources = [ Path(e) for e in sqlite_sources ]
+	if not SQLITE_EXE_PATH.exists():
+		cmd = [ C_COMPILER ]
+		cmd.extend([
+			f'-std=c{C_STANDARD}',
+			f'-fuse-ld={LINKER}',
+			'-O2',
+		] if C_COMPILER_CLI_TYPE == 'gnu' else [
+			f'/std:c{C_STANDARD}',
+			'/O2',
+			'/Qvec',
+			'/MD',
+			'/EHsc',
+		])
+		if C_ENABLE_MARCH_NATIVE:
+			cmd.append('-march=native')
+		cmd.extend(sqlite_sources)
+		if C_COMPILER_CLI_TYPE == 'msvc':
+			cmd.append(f'/Fe{SQLITE_EXE_PATH}')
+		else:
+			cmd.append('-o')
 			cmd.append(SQLITE_EXE_PATH)
-			LaunchSubprocessImmediate(cmd)
-		if not SQLITE_LIB_PATH.exists():
-			cmd = [ C_COMPILER ]
-			if C_COMPILER_CLI_TYPE == 'gnu':
-				cmd.extend([
-					f'-fuse-ld={LINKER}',
-					'-march=native',
-				])
+		LaunchSubprocessImmediate(cmd, log_name = 'build-sqlite-exe')
+	if not SQLITE_LIB_PATH.exists():
+		if C_COMPILER_IS_CLANG:
+			cmd = [
+				C_COMPILER,
+				f'-fuse-ld={LIB}',
+			]
 			cmd.extend([
+				f'-std=c{C_STANDARD}',
+				'-march=native',
+				'-O2',
+			] if C_COMPILER_CLI_TYPE == 'gnu' else [
+				f'/std:c{C_STANDARD}',
 				'/O2',
+				'/Qvec',
 				'/MD',
 				'/EHsc',
 			])
+			if C_ENABLE_MARCH_NATIVE:
+				cmd.append('-march=native')
 			cmd.extend(sqlite_sources)
 			cmd.append('/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o')
 			cmd.append(SQLITE_LIB_PATH)
-			LaunchSubprocessImmediate(cmd)
-	else:
-		pass
+			LaunchSubprocessImmediate(
+				cmd,
+				log_name = 'build-sqlite-lib')
+		else:
+			objs = []
+			for e in sqlite_sources:
+				cmd = [
+					C_COMPILER,
+					'-c' if C_COMPILER_CLI_TYPE == 'gnu' else '/c',
+				]
+				cmd.extend([
+					f'-std=c{C_STANDARD}',
+					'-march=native',
+					'-O2',
+				] if C_COMPILER_CLI_TYPE == 'gnu' else [
+					f'/std:c{C_STANDARD}',
+					'/O2',
+					'/Qvec',
+					'/MD',
+					'/EHsc',
+				])
+				cmd.append(e)
+				obj_path = SQLITE_BUILD_PATH / f'{e.name}{OBJ_EXT}'
+				cmd.append('/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o')
+				cmd.append(obj_path)
+				LaunchSubprocessImmediate(cmd, log_name = f'build-sqlite-{e.stem}')
+				objs.append(obj_path)
+			cmd = [
+				LIB,
+				f'/OUT:{SQLITE_LIB_PATH}',
+			]
+			cmd.extend(objs)
+			LaunchSubprocessImmediate(cmd, log_name = 'build-sqlite-lib')
 
 def FindXercesC():
 	return glob.glob(f'{XERCESC_INSTALL_PATH}/**/xerces-c*{LIB_EXT}', recursive=True)[0]
@@ -1100,6 +1151,8 @@ if __name__ == '__main__':
 		if ARGV.clean or ARGV.rebuild:
 			Clean()
 		BUILD_PATH.mkdir(exist_ok = True)
+		if not ARGV.no_log:
+			LOG_PATH.mkdir(exist_ok = True)
 		if UPDATE_DEPENDENCIES:
 			UpdateDependencies(task_graph)
 		CleanDownloads(task_graph)
@@ -1116,3 +1169,8 @@ if __name__ == '__main__':
 		Log(err)
 		Log(DEFAULT_ERROR_MESSAGE)
 		exit(-1)
+	finally:
+		try:
+			ARGS_SYNC_PATH.unlink(missing_ok = True)
+		finally:
+			pass
