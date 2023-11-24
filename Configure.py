@@ -613,10 +613,6 @@ class TaskGraph:
 			self.sequential = prior_sequential
 			self.Reset()
 
-
-
-# Constants:
-
 DEFAULT_DEPENDENCIES = [
 
 	Dependency(
@@ -692,13 +688,6 @@ OSM2ODR_DEPENDENCIES = [
 		GitRepository('https://github.com/carla-simulator/sumo.git', tag = 'carla_osm2odr')),
 
 ]
-
-DEPENDENCY_MAP = {
-	**{ e.name : e for e in DEFAULT_DEPENDENCIES },
-	**{ e.name : e for e in CHRONO_DEPENDENCIES },
-	**{ e.name : e for e in OSM_WORLD_RENDERER_DEPENDENCIES },
-	**{ e.name : e for e in OSM2ODR_DEPENDENCIES }
-}
 
 def UpdateGitRepository(path : Path, url : str, branch : str = None):
 	if path.exists():
