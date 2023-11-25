@@ -244,10 +244,12 @@ ARGV = SyncArgs()
 SEQUENTIAL = ARGV.configure_sequential
 ENABLE_OSM2ODR = ARGV.osm2odr or ARGV.python_api
 ENABLE_OSM_WORLD_RENDERER = ARGV.osm_world_renderer
+ENABLE_CARLA_UE = ARGV.carla_ue
 ENABLE_PYTHON_API = ARGV.python_api
 ENABLE_LIBCARLA_CLIENT = ARGV.libcarla_client
 ENABLE_LIBCARLA_SERVER = ARGV.libcarla_server
 ENABLE_LIBCARLA = any([
+	ENABLE_CARLA_UE,
 	ENABLE_PYTHON_API,
 	ENABLE_LIBCARLA_CLIENT,
 	ENABLE_LIBCARLA_SERVER,
@@ -445,25 +447,17 @@ def LaunchSubprocessImmediate(
 
 # Convenience classes for listing dependencies:
 
-
-
 class Download:
-
 	def __init__(self, url : str):
 		self.url = url
 
-
-
 class GitRepository:
-
-	def __init__(self, url : str, tag : str = None):
+	def __init__(self, url : str, tag : str = None, commit : str = None):
 		self.url = url
 		self.tag = tag
-
-
+		self.commit = commit
 
 class Dependency:
-
 	def __init__(self, name : str, *sources):
 		self.name = name
 		self.sources = [ *sources ]
@@ -471,6 +465,77 @@ class Dependency:
 			type(e) is Download or
 			type(e) is GitRepository
 			for e in self.sources)
+
+class DependencyUEPlugin(Dependency):
+	def __init__(self, name: str, *sources):
+		super().__init__(name, *sources)
+
+DEFAULT_DEPENDENCIES = [
+	Dependency(
+		'boost',
+		Download(f'https://boostorg.jfrog.io/artifactory/main/release/{BOOST_VERSION_STRING}/source/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip'),
+		Download(f'https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip')),
+	Dependency(
+		'eigen',
+		GitRepository('https://gitlab.com/libeigen/eigen.git', tag = '3.4.0')),
+	Dependency(
+		'libpng',
+		GitRepository('https://github.com/glennrp/libpng.git', tag = 'v1.6.40')),
+	Dependency(
+		'proj',
+		GitRepository('https://github.com/OSGeo/PROJ.git', tag = '9.3.0'),
+		Download('https://download.osgeo.org/proj/proj-9.3.0.tar.gz')),
+	Dependency(
+		'gtest',
+		GitRepository('https://github.com/google/googletest.git', tag = 'v1.14.0')),
+	Dependency(
+		'zlib',
+		GitRepository('https://github.com/madler/zlib.git'),
+		Download('https://zlib.net/current/zlib.tar.gz')),
+	Dependency(
+		'xercesc',
+		GitRepository('https://github.com/apache/xerces-c.git', tag = 'v3.2.4'),
+		Download('https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.3.zip'),
+		Download('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/xerces-c-3.2.3.zip')),
+	Dependency(
+		'sqlite',
+		Download('https://www.sqlite.org/2021/sqlite-amalgamation-3340100.zip')),
+	Dependency(
+		'rpclib',
+		GitRepository('https://github.com/rpclib/rpclib.git', tag = 'v2.3.0')),
+	Dependency(
+		'recast',
+		GitRepository('https://github.com/carla-simulator/recastnavigation.git', tag = 'carla')),
+]
+
+CHRONO_DEPENDENCIES = [
+	Dependency(
+		'chrono',
+		GitRepository('https://github.com/projectchrono/chrono.git', tag = '8.0.0')),
+]
+
+OSM_WORLD_RENDERER_DEPENDENCIES = [
+	Dependency(
+		'libosmscout',
+		GitRepository('https://github.com/Framstag/libosmscout.git')),
+	Dependency(
+		'lunasvg',
+		GitRepository('https://github.com/sammycage/lunasvg.git')),
+]
+
+OSM2ODR_DEPENDENCIES = [
+	Dependency(
+		'sumo',
+		GitRepository('https://github.com/carla-simulator/sumo.git', tag = 'carla_osm2odr')),
+]
+
+CARLA_UE_DEPENDENCIES = [
+	DependencyUEPlugin(
+		'StreetMap',
+		GitRepository(
+			'https://github.com/carla-simulator/StreetMap.git',
+			tag = 'ue5.3')),
+]
 
 
 
@@ -508,8 +573,7 @@ class Task:
 		cmd = Task.CreateCMakeConfigureDefaultCommandLine(source_path, build_path)
 		if install_path != None:
 			cmd.append('-DCMAKE_INSTALL_PREFIX=' + str(install_path))
-		cmd.extend([ *args ])
-		cmd.append(source_path)
+		cmd.extend([ *args, source_path ])
 		return Task.CreateSubprocessTask(name, in_edges, cmd)
 
 	def CreateCMakeBuildDefault(name : str, in_edges : list, build_path : Path, *args):
@@ -638,102 +702,18 @@ class TaskGraph:
 			self.sequential = prior_sequential
 			self.Reset()
 
-DEFAULT_DEPENDENCIES = [
-
-	Dependency(
-		'boost',
-		Download(f'https://boostorg.jfrog.io/artifactory/main/release/{BOOST_VERSION_STRING}/source/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip'),
-		Download(f'https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip')),
-
-	Dependency(
-		'eigen',
-		GitRepository('https://gitlab.com/libeigen/eigen.git', tag = '3.4.0')),
-
-	Dependency(
-		'libpng',
-		GitRepository('https://github.com/glennrp/libpng.git', tag = 'v1.6.40')),
-
-	Dependency(
-		'proj',
-		GitRepository('https://github.com/OSGeo/PROJ.git', tag = '9.3.0'),
-		Download('https://download.osgeo.org/proj/proj-9.3.0.tar.gz')),
-
-	Dependency(
-		'gtest',
-		GitRepository('https://github.com/google/googletest.git', tag = 'v1.14.0')),
-
-	Dependency(
-		'zlib',
-		GitRepository('https://github.com/madler/zlib.git'),
-		Download('https://zlib.net/current/zlib.tar.gz')),
-
-	Dependency(
-		'xercesc',
-		GitRepository('https://github.com/apache/xerces-c.git', tag = 'v3.2.4'),
-		Download('https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.3.zip'),
-		Download('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/xerces-c-3.2.3.zip')),
-
-	Dependency(
-		'sqlite',
-		Download('https://www.sqlite.org/2021/sqlite-amalgamation-3340100.zip')),
-
-	Dependency(
-		'rpclib',
-		GitRepository('https://github.com/rpclib/rpclib.git', tag = 'v2.3.0')),
-
-	Dependency(
-		'recast',
-		GitRepository('https://github.com/recastnavigation/recastnavigation.git', tag = 'v1.6.0')),
-]
-
-CHRONO_DEPENDENCIES = [
-
-	Dependency(
-		'chrono',
-		GitRepository('https://github.com/projectchrono/chrono.git', tag = '8.0.0')),
-
-]
-
-OSM_WORLD_RENDERER_DEPENDENCIES = [
-
-	Dependency(
-		'libosmscout',
-		GitRepository('https://github.com/Framstag/libosmscout.git')),
-
-	Dependency(
-		'lunasvg',
-		GitRepository('https://github.com/sammycage/lunasvg.git')),
-
-]
-
-OSM2ODR_DEPENDENCIES = [
-
-	Dependency(
-		'sumo',
-		GitRepository('https://github.com/carla-simulator/sumo.git', tag = 'carla_osm2odr')),
-
-]
-
-def UpdateGitRepository(path : Path, url : str, branch : str = None):
+def UpdateGitRepository(path : Path, url : str, branch : str = None, commit : str = None):
 	if path.exists():
-		LaunchSubprocessImmediate([
-			'git',
-			'-C', str(path),
-			'pull'
-		])
+		LaunchSubprocessImmediate([ 'git', '-C', str(path), 'pull' ])
 	else:
-		cmd = [
-			'git',
-			'-C', str(path.parent),
-			'clone',
-			'--depth', '1', '--single-branch'
-		]
+		cmd = [ 'git', '-C', str(path.parent), 'clone', '--depth', '1', '--single-branch' ]
 		if branch != None:
-			cmd.append('-b')
-			cmd.append(branch)
-		cmd.append(url)
-		cmd.append(path.stem)
+			cmd.extend([ '-b', branch ])
+		cmd.extend([ url, path.stem ])
 		LaunchSubprocessImmediate(cmd)
+	if commit != None:
+		LaunchSubprocessImmediate([ 'git', '-C', str(path), 'fetch' ])
+		LaunchSubprocessImmediate([ 'git', '-C', str(path), 'checkout', commit ])
 
 def DownloadDependency(name : str, path : Path, url : str):
 	# Download:
@@ -771,12 +751,14 @@ def DownloadDependency(name : str, path : Path, url : str):
 
 def UpdateDependency(dep : Dependency):
 	name = dep.name
+	
 	download_path = DEPENDENCIES_PATH / f'{name}-source'
+	if type(dep) is DependencyUEPlugin: # Override download path if we're dealing with an Unreal Engine Plugin.
+		download_path = CARLA_UE_PLUGIN_ROOT_PATH / name
 	for source in dep.sources:
 		try:
 			if type(source) is GitRepository:
-				branch = source.tag
-				UpdateGitRepository(download_path, source.url, branch)
+				UpdateGitRepository(download_path, source.url, source.tag, source.commit)
 			elif type(source) is Download:
 				if download_path.exists():
 					Log(f'Dependency "{name}" already present. Delete "{download_path}" if you wish for it to be downloaded again.')
@@ -788,101 +770,11 @@ def UpdateDependency(dep : Dependency):
 	Log(f'Failed to update dependency "{name}".')
 	assert False
 
-def BuildLibCarlaMain(task_graph : TaskGraph):
-	task_graph.Add(Task.CreateCMakeConfigureDefault(
-		'configure-libcarla',
-		[],
-		WORKSPACE_PATH,
-		LIBCARLA_BUILD_PATH,
-		f'-DCARLA_DEPENDENCIES_PATH={DEPENDENCIES_PATH}',
-		f'-DBUILD_LIBCARLA_SERVER={"ON" if ARGV.libcarla_server else "OFF"}',
-		f'-DBUILD_LIBCARLA_CLIENT={"ON" if ARGV.libcarla_client else "OFF"}',
-		f'-DBUILD_OSM_WORLD_RENDERER={"ON" if ENABLE_OSM_WORLD_RENDERER else "OFF"}',
-		f'-DLIBCARLA_PYTORCH={"ON" if ARGV.pytorch else "OFF"}'))
-	task_graph.Add(Task.CreateCMakeBuildDefault(
-		'build-libcarla',
-		[ 'configure-libcarla' ],
-		LIBCARLA_BUILD_PATH))
-	task_graph.Add(Task.CreateCMakeInstallDefault(
-		'install-libcarla',
-		[ 'build-libcarla' ],
-		LIBCARLA_BUILD_PATH,
-		LIBCARLA_INSTALL_PATH))
-
-def BuildPythonAPIMain():
-	content = ''
-	with open(PYTHON_API_PATH / 'setup.py.in', 'r') as file:
-		content = file.read()
-	content = content.format_map(globals())
-	if os.name == 'nt':
-		content = content.replace(os.sep, '\\\\')
-	with open(PYTHON_API_PATH / 'setup.py', 'w') as file:
-		file.write(content)
-	LaunchSubprocessImmediate([
-		sys.executable, 'setup.py', 'bdist_wheel', 'bdist_egg'
-	], working_directory = PYTHON_API_PATH)
-
-def BuildPythonAPI(task_graph : TaskGraph):
-	task_graph.Add(Task('build-python-api', [ 'install-libcarla' ], BuildPythonAPIMain))
-
-def SetupUnrealEngine(task_graph : TaskGraph):
-	pass
-
-def BuildCarlaUEMain():
-	assert UNREAL_ENGINE_PATH.exists()
-	unreal_build_tool_args = []
-	if ENABLE_CARSIM:
-		unreal_build_tool_args.append('-carsim')
-	if ENABLE_CHRONO:
-		unreal_build_tool_args.append('-chrono')
-	if ENABLE_ROS2:
-		unreal_build_tool_args.append('-ros2')
-	if ENABLE_UNITY_BUILD:
-		unreal_build_tool_args.append('-unity-build')
-	if ENABLE_NVIDIA_OMNIVERSE:
-		unreal_build_tool_args.append('-nv-omniverse')
-	if os.name == 'nt':
-		LaunchSubprocessImmediate([
-			UNREAL_ENGINE_PATH / 'Engine' / 'Build' / 'BatchFiles' / 'Build.bat',
-			'CarlaUE4Editor',
-			'Win64',
-			'Development',
-			'-WaitMutex',
-			'-FromMsBuild',
-			CARLA_UE_PATH / 'CarlaUE4.uproject',
-		], log_name = 'build-carla-ue-editor')
-		LaunchSubprocessImmediate([
-			UNREAL_ENGINE_PATH / 'Engine' / 'Build' / 'BatchFiles' / 'Build.bat',
-			'CarlaUE4',
-			'Win64',
-			'Development',
-			'-WaitMutex',
-			'-FromMsBuild',
-			CARLA_UE_PATH / 'CarlaUE4.uproject',
-		], log_name = 'build-carla-ue')
-	else:
-		pass
-
-def BuildCarlaUE(task_graph : TaskGraph):
-	if ENABLE_NVIDIA_OMNIVERSE:
-		task_graph.Add(Task('install-nv-omniverse', [], InstallNVIDIAOmniverse))
-	task_graph.Add(Task('build-carla-ue', [ 'build-python-api' ], BuildCarlaUEMain))
-
-def InstallNVIDIAOmniverse():
-	filename = 'USDCarlaInterface'
-	header = f'{filename}.h'
-	source = f'{filename}.cpp'
-	omniverse_usd_path = NV_OMNIVERSE_PLUGIN_PATH / 'Source' / 'OmniverseUSD'
-	files = [
-		[ omniverse_usd_path / 'Public' / header, NV_OMNIVERSE_PATCH_PATH / header ],
-		[ omniverse_usd_path / 'Private' / source, NV_OMNIVERSE_PATCH_PATH / source ],
-	]
-	for src, dst in files:
-		shutil.copyfile(src, dst)
-
 def UpdateDependencies(task_graph : TaskGraph):
 	DEPENDENCIES_PATH.mkdir(exist_ok = True)
 	unique_deps = set(DEFAULT_DEPENDENCIES)
+	if ENABLE_CARLA_UE:
+		unique_deps.update(CARLA_UE_DEPENDENCIES)
 	if ENABLE_OSM_WORLD_RENDERER:
 		unique_deps.update(OSM_WORLD_RENDERER_DEPENDENCIES)
 	if ENABLE_OSM2ODR:
@@ -955,8 +847,7 @@ def BuildSQLite():
 		if C_COMPILER_CLI_TYPE == 'msvc':
 			cmd.append(f'/Fe{SQLITE_EXE_PATH}')
 		else:
-			cmd.append('-o')
-			cmd.append(SQLITE_EXE_PATH)
+			cmd.extend([ '-o', SQLITE_EXE_PATH ])
 		LaunchSubprocessImmediate(cmd, log_name = 'build-sqlite-exe')
 	if not SQLITE_LIB_PATH.exists():
 		if C_COMPILER_IS_CLANG:
@@ -978,8 +869,7 @@ def BuildSQLite():
 			if C_ENABLE_MARCH_NATIVE:
 				cmd.append('-march=native')
 			cmd.extend(sqlite_sources)
-			cmd.append('/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o')
-			cmd.append(SQLITE_LIB_PATH)
+			cmd.extend([ '/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o', SQLITE_LIB_PATH ])
 			LaunchSubprocessImmediate(
 				cmd,
 				log_name = 'build-sqlite-lib')
@@ -1001,10 +891,8 @@ def BuildSQLite():
 					'/MD',
 					'/EHsc',
 				])
-				cmd.append(e)
 				obj_path = SQLITE_BUILD_PATH / f'{e.name}{OBJ_EXT}'
-				cmd.append('/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o')
-				cmd.append(obj_path)
+				cmd.extend([ e, '/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o', obj_path ])
 				LaunchSubprocessImmediate(cmd, log_name = f'build-sqlite-{e.stem}')
 				objs.append(obj_path)
 			cmd = [
@@ -1014,10 +902,8 @@ def BuildSQLite():
 			cmd.extend(objs)
 			LaunchSubprocessImmediate(cmd, log_name = 'build-sqlite-lib')
 
-def FindXercesC():
-	return glob.glob(f'{XERCESC_INSTALL_PATH}/**/{LIB_PREFIX}xerces-c*{LIB_EXT}', recursive=True)[0]
-
 def ConfigureSUMO():
+	xercesc_path = glob.glob(f'{XERCESC_INSTALL_PATH}/**/{LIB_PREFIX}xerces-c*{LIB_EXT}', recursive=True)[0]
 	cmd = Task.CreateCMakeConfigureDefaultCommandLine(
 		SUMO_SOURCE_PATH,
 		SUMO_BUILD_PATH)
@@ -1029,7 +915,7 @@ def ConfigureSUMO():
         f'-DPROJ_INCLUDE_DIR={PROJ_INSTALL_PATH}/include',
         f'-DPROJ_LIBRARY={PROJ_INSTALL_PATH}/lib/{LIB_PREFIX}proj{LIB_EXT}',
         f'-DXercesC_INCLUDE_DIR={XERCESC_INSTALL_PATH}/include',
-        f'-DXercesC_LIBRARY={FindXercesC()}',
+        f'-DXercesC_LIBRARY={xercesc_path}',
 		'-DSUMO_LIBRARIES=OFF',
 		# '-DPROFILING=OFF',
 		# '-DPPROF=OFF',
@@ -1179,6 +1065,99 @@ def BuildDependencies(task_graph : TaskGraph):
 		task_graph.Add(Task.CreateCMakeInstallDefault('install-sumo', [], SUMO_BUILD_PATH, SUMO_INSTALL_PATH))
 	if ENABLE_CHRONO:
 		task_graph.Add(Task.CreateCMakeInstallDefault('install-chrono', [], CHRONO_BUILD_PATH, CHRONO_INSTALL_PATH))
+	task_graph.Execute()
+
+def BuildLibCarlaMain(task_graph : TaskGraph):
+	task_graph.Add(Task.CreateCMakeConfigureDefault(
+		'configure-libcarla',
+		[],
+		WORKSPACE_PATH,
+		LIBCARLA_BUILD_PATH,
+		f'-DCARLA_DEPENDENCIES_PATH={DEPENDENCIES_PATH}',
+		f'-DBUILD_LIBCARLA_SERVER={"ON" if ARGV.libcarla_server else "OFF"}',
+		f'-DBUILD_LIBCARLA_CLIENT={"ON" if ARGV.libcarla_client else "OFF"}',
+		f'-DBUILD_OSM_WORLD_RENDERER={"ON" if ENABLE_OSM_WORLD_RENDERER else "OFF"}',
+		f'-DLIBCARLA_PYTORCH={"ON" if ARGV.pytorch else "OFF"}'))
+	task_graph.Add(Task.CreateCMakeBuildDefault(
+		'build-libcarla',
+		[ 'configure-libcarla' ],
+		LIBCARLA_BUILD_PATH))
+	task_graph.Add(Task.CreateCMakeInstallDefault(
+		'install-libcarla',
+		[ 'build-libcarla' ],
+		LIBCARLA_BUILD_PATH,
+		LIBCARLA_INSTALL_PATH))
+
+def BuildPythonAPIMain():
+	content = ''
+	with open(PYTHON_API_PATH / 'setup.py.in', 'r') as file:
+		content = file.read()
+	content = content.format_map(globals())
+	if os.name == 'nt':
+		content = content.replace(os.sep, '\\\\')
+	with open(PYTHON_API_PATH / 'setup.py', 'w') as file:
+		file.write(content)
+	LaunchSubprocessImmediate([
+		sys.executable, 'setup.py', 'bdist_wheel', 'bdist_egg'
+	], working_directory = PYTHON_API_PATH)
+
+def BuildPythonAPI(task_graph : TaskGraph):
+	task_graph.Add(Task('build-python-api', [ 'install-libcarla' ], BuildPythonAPIMain))
+
+def SetupUnrealEngine(task_graph : TaskGraph):
+	pass
+
+def BuildCarlaUEMain():
+	assert UNREAL_ENGINE_PATH.exists()
+	unreal_build_tool_args = []
+	if ENABLE_CARSIM:
+		unreal_build_tool_args.append('-carsim')
+	if ENABLE_CHRONO:
+		unreal_build_tool_args.append('-chrono')
+	if ENABLE_ROS2:
+		unreal_build_tool_args.append('-ros2')
+	if ENABLE_UNITY_BUILD:
+		unreal_build_tool_args.append('-unity-build')
+	if ENABLE_NVIDIA_OMNIVERSE:
+		unreal_build_tool_args.append('-nv-omniverse')
+	if os.name == 'nt':
+		LaunchSubprocessImmediate([
+			UNREAL_ENGINE_PATH / 'Engine' / 'Build' / 'BatchFiles' / 'Build.bat',
+			'CarlaUE4Editor',
+			'Win64',
+			'Development',
+			'-WaitMutex',
+			'-FromMsBuild',
+			CARLA_UE_PATH / 'CarlaUE4.uproject',
+		], log_name = 'build-carla-ue-editor')
+		LaunchSubprocessImmediate([
+			UNREAL_ENGINE_PATH / 'Engine' / 'Build' / 'BatchFiles' / 'Build.bat',
+			'CarlaUE4',
+			'Win64',
+			'Development',
+			'-WaitMutex',
+			'-FromMsBuild',
+			CARLA_UE_PATH / 'CarlaUE4.uproject',
+		], log_name = 'build-carla-ue')
+	else:
+		pass
+
+def BuildCarlaUE(task_graph : TaskGraph):
+	if ENABLE_NVIDIA_OMNIVERSE:
+		task_graph.Add(Task('install-nv-omniverse', [], InstallNVIDIAOmniverse))
+	task_graph.Add(Task('build-carla-ue', [ 'build-python-api' ], BuildCarlaUEMain))
+
+def InstallNVIDIAOmniverse():
+	filename = 'USDCarlaInterface'
+	header = f'{filename}.h'
+	source = f'{filename}.cpp'
+	omniverse_usd_path = NV_OMNIVERSE_PLUGIN_PATH / 'Source' / 'OmniverseUSD'
+	files = [
+		[ omniverse_usd_path / 'Public' / header, NV_OMNIVERSE_PATCH_PATH / header ],
+		[ omniverse_usd_path / 'Private' / source, NV_OMNIVERSE_PATCH_PATH / source ],
+	]
+	for src, dst in files:
+		shutil.copyfile(src, dst)
 
 def Clean():
 	if not BUILD_PATH.exists():

@@ -16,13 +16,13 @@ struct FWheelTemplates
 {
   GENERATED_BODY()
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Wheel")
-  TSubclassOf<UVehicleWheel> WheelFR;
+  TSubclassOf<UChaosVehicleWheel> WheelFR;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Wheel")
-  TSubclassOf<UVehicleWheel> WheelFL;
+  TSubclassOf<UChaosVehicleWheel> WheelFL;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Wheel")
-  TSubclassOf<UVehicleWheel> WheelRR;
+  TSubclassOf<UChaosVehicleWheel> WheelRR;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Wheel")
-  TSubclassOf<UVehicleWheel> WheelRL;
+  TSubclassOf<UChaosVehicleWheel> WheelRL;
 };
 
 USTRUCT(BlueprintType)

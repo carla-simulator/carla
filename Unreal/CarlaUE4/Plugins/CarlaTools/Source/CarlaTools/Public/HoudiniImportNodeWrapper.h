@@ -5,12 +5,10 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
-
+#ifdef CARLA_HOUDINI_ENABLED
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
-
 #include "HoudiniPublicAPIProcessHDANode.h"
-
 #include "HoudiniImportNodeWrapper.generated.h"
 
 // Delegate type for output pins on the node.
@@ -63,3 +61,4 @@ private:
   UHoudiniPublicAPIProcessHDANode* HDANode;
 
 };
+#endif

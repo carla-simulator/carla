@@ -267,7 +267,6 @@ if (BUILD_LIBCARLA_CLIENT)
         ${LIBCARLA_SOURCE_PATH}/carla/road/object/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/road/signal/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/rpc/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/rss/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/data/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/s11n/*.h
@@ -278,6 +277,19 @@ if (BUILD_LIBCARLA_CLIENT)
         ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/trafficmanager/*.h
     )
+
+    if (ENABLE_LIBCARLA_CLIENT_RSS)
+        file (
+            GLOB
+            LIBCARLA_CLIENT_HEADERS_RSS
+            ${LIBCARLA_SOURCE_PATH}/carla/rss/*.h
+        )
+        list (
+            APPEND
+            LIBCARLA_CLIENT_HEADERS
+            ${LIBCARLA_CLIENT_HEADERS_RSS}
+        )
+    endif ()
 
     file (
         GLOB
@@ -306,7 +318,6 @@ if (BUILD_LIBCARLA_CLIENT)
         ${LIBCARLA_SOURCE_PATH}/carla/road/object/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/road/signal/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/rpc/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/rss/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/data/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/s11n/*.cpp
@@ -317,6 +328,19 @@ if (BUILD_LIBCARLA_CLIENT)
         ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/trafficmanager/*.cpp
     )
+
+    if (ENABLE_LIBCARLA_CLIENT_RSS)
+        file (
+            GLOB
+            LIBCARLA_CLIENT_SOURCES_RSS
+            ${LIBCARLA_SOURCE_PATH}/carla/rss/*.cpp
+        )
+        list (
+            APPEND
+            LIBCARLA_CLIENT_SOURCES
+            ${LIBCARLA_CLIENT_SOURCES_RSS}
+        )
+    endif ()
 
     file (
         GLOB

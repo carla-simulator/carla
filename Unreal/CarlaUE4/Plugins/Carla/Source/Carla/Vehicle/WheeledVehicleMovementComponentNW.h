@@ -112,7 +112,7 @@ struct FVehicleNWTransmissionData
 };
 
 UCLASS(ClassGroup = (Physics), meta = (BlueprintSpawnableComponent), hidecategories = (PlanarMovement, "Components|Movement|Planar", Activation, "Components|Activation"))
-class CARLA_API UWheeledVehicleMovementComponentNW : public UWheeledVehicleMovementComponent
+class CARLA_API UWheeledVehicleMovementComponentNW : public UChaosWheeledVehicleMovementComponent
 {
 	GENERATED_UCLASS_BODY()
 

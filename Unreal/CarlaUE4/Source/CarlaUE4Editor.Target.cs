@@ -1,13 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 using UnrealBuildTool;
-using System.Collections.Generic;
 using System;
-using System.IO;
 using EpicGames.Core;
 
-public class CarlaUE4EditorTarget :
-    TargetRules
+public class CarlaUE4EditorTarget : TargetRules
 {
     [CommandLine("-unity-build")]
     bool EnableUnityBuild = false;
