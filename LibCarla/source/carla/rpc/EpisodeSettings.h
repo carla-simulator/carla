@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -15,7 +15,7 @@
 #include <compiler/disable-ue4-macros.h>
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace carla {
 namespace rpc {
@@ -31,7 +31,7 @@ namespace rpc {
 
     bool no_rendering_mode = false;
 
-    boost::optional<double> fixed_delta_seconds;
+    std::optional<double> fixed_delta_seconds;
 
     bool substepping = true;
 
@@ -74,7 +74,7 @@ namespace rpc {
       : synchronous_mode(synchronous_mode),
         no_rendering_mode(no_rendering_mode),
         fixed_delta_seconds(
-            fixed_delta_seconds > 0.0 ? fixed_delta_seconds : boost::optional<double>{}),
+            fixed_delta_seconds > 0.0 ? fixed_delta_seconds : std::optional<double>{}),
         substepping(substepping),
         max_substep_delta_time(max_substep_delta_time),
         max_substeps(max_substeps),

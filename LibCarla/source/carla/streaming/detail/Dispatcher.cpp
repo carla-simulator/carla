@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -35,7 +35,7 @@ namespace detail {
   }
 
   carla::streaming::Stream Dispatcher::MakeStream() {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::scoped_lock<std::mutex> lock(_mutex);
     ++_cached_token._token.stream_id; // id zero only happens in overflow.
     log_debug("New stream:", _cached_token._token.stream_id);
     std::shared_ptr<MultiStreamState> ptr;
@@ -58,7 +58,7 @@ namespace detail {
   }
 
   void Dispatcher::CloseStream(carla::streaming::detail::stream_id_type id) {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::scoped_lock<std::mutex> lock(_mutex);
     log_debug("Calling CloseStream for ", id);
     auto search = _stream_map.find(id);
     if (search != _stream_map.end()) {
@@ -73,7 +73,7 @@ namespace detail {
 
   bool Dispatcher::RegisterSession(std::shared_ptr<Session> session) {
     DEBUG_ASSERT(session != nullptr);
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::scoped_lock<std::mutex> lock(_mutex);
     auto search = _stream_map.find(session->get_stream_id());
     if (search != _stream_map.end()) {
       auto stream_state = search->second;
@@ -90,7 +90,7 @@ namespace detail {
 
   void Dispatcher::DeregisterSession(std::shared_ptr<Session> session) {
     DEBUG_ASSERT(session != nullptr);
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::scoped_lock<std::mutex> lock(_mutex);
     log_debug("Calling DeregisterSession for ", session->get_stream_id());
     auto search = _stream_map.find(session->get_stream_id());
     if (search != _stream_map.end()) {
@@ -104,7 +104,7 @@ namespace detail {
   }
   
   token_type Dispatcher::GetToken(stream_id_type sensor_id) {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::scoped_lock<std::mutex> lock(_mutex);
     log_debug("Searching sensor id: ", sensor_id);
     auto search = _stream_map.find(sensor_id);
     if (search != _stream_map.end()) {

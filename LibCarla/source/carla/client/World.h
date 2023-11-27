@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -29,7 +29,7 @@
 #include "carla/rpc/Texture.h"
 #include "carla/rpc/MaterialParameter.h"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace carla {
 namespace client {
@@ -76,7 +76,7 @@ namespace client {
     rpc::VehicleLightStateList GetVehiclesLightStates() const;
 
     /// Get a random location from the pedestrians navigation mesh
-    boost::optional<geom::Location> GetRandomLocationFromNavigation() const;
+    std::optional<geom::Location> GetRandomLocationFromNavigation() const;
 
     /// Return the spectator actor. The spectator controls the view in the
     /// simulator window.
@@ -177,10 +177,10 @@ namespace client {
       std::vector<uint64_t> env_objects_ids,
       bool enable) const;
 
-    boost::optional<rpc::LabelledPoint> ProjectPoint(
+    std::optional<rpc::LabelledPoint> ProjectPoint(
         geom::Location location, geom::Vector3D direction, float search_distance = 10000.f) const;
 
-    boost::optional<rpc::LabelledPoint> GroundProjection(
+    std::optional<rpc::LabelledPoint> GroundProjection(
         geom::Location location, float search_distance = 10000.0) const;
 
     std::vector<rpc::LabelledPoint> CastRay(

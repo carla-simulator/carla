@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 // Copyright (c) 2019 Intel Corporation
 //

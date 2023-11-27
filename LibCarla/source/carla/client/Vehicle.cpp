@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -117,7 +117,7 @@ namespace client {
 
   SharedPtr<TrafficLight> Vehicle::GetTrafficLight() const {
     auto id = GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.traffic_light_id;
-    return boost::static_pointer_cast<TrafficLight>(GetWorld().GetActor(id));
+    return std::static_pointer_cast<TrafficLight>(GetWorld().GetActor(id));
   }
 
   void Vehicle::EnableCarSim(std::string simfile_path) {

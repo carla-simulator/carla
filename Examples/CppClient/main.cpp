@@ -99,7 +99,7 @@ int main(int argc, const char *argv[]) {
     // Spawn the vehicle.
     auto actor = world.SpawnActor(blueprint, transform);
     std::cout << "Spawned " << actor->GetDisplayId() << '\n';
-    auto vehicle = boost::static_pointer_cast<cc::Vehicle>(actor);
+    auto vehicle = std::static_pointer_cast<cc::Vehicle>(actor);
 
     // Apply control to vehicle.
     cc::Vehicle::Control control;
@@ -124,11 +124,11 @@ int main(int argc, const char *argv[]) {
         cg::Location{-5.5f, 0.0f, 2.8f},   // x, y, z.
         cg::Rotation{-15.0f, 0.0f, 0.0f}}; // pitch, yaw, roll.
     auto cam_actor = world.SpawnActor(*camera_bp, camera_transform, actor.get());
-    auto camera = boost::static_pointer_cast<cc::Sensor>(cam_actor);
+    auto camera = std::static_pointer_cast<cc::Sensor>(cam_actor);
 
     // Register a callback to save images to disk.
     camera->Listen([](auto data) {
-        auto image = boost::static_pointer_cast<csd::Image>(data);
+        auto image = std::static_pointer_cast<csd::Image>(data);
         EXPECT_TRUE(image != nullptr);
         SaveSemSegImageToDisk(*image);
     });

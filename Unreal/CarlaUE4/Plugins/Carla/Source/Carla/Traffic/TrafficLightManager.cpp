@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -247,7 +247,7 @@ void ATrafficLightManager::RegisterLightComponentGenerated(UTrafficLightComponen
   }
 }
 
-const boost::optional<carla::road::Map>& ATrafficLightManager::GetMap()
+const std::optional<carla::road::Map>& ATrafficLightManager::GetMap()
 {
   return UCarlaStatics::GetGameMode(GetWorld())->GetMap();
 }

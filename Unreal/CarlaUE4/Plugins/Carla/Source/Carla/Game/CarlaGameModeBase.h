@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -10,7 +10,7 @@
 #include "GameFramework/GameModeBase.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <boost/optional.hpp>
+#include <optional>
 #include <carla/rpc/Texture.h>
 #include <carla/rpc/MaterialParameter.h>
 #include <compiler/enable-ue4-macros.h>
@@ -46,7 +46,7 @@ public:
     return *Episode;
   }
 
-  const boost::optional<carla::road::Map>& GetMap() const {
+  const std::optional<carla::road::Map>& GetMap() const {
     return Map;
   }
 
@@ -180,7 +180,7 @@ private:
 
   FDelegateHandle OnEpisodeSettingsChangeHandle;
 
-  boost::optional<carla::road::Map> Map;
+  std::optional<carla::road::Map> Map;
 
   int PendingLevelsToLoad = 0;
   int PendingLevelsToUnLoad = 0;

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -22,10 +22,10 @@
 #pragma warning(push)
 #pragma warning(disable:4583)
 #pragma warning(disable:4582)
-#include <boost/variant2/variant.hpp>
+#include <variant>
 #pragma warning(pop)
 #else
-#include <boost/variant2/variant.hpp>
+#include <variant>
 #endif
 
 namespace carla {
@@ -61,7 +61,7 @@ namespace rpc {
           parent(parent) {}
       ActorDescription description;
       geom::Transform transform;
-      boost::optional<ActorId> parent;
+      std::optional<ActorId> parent;
       std::vector<Command> do_after;
       MSGPACK_DEFINE_ARRAY(description, transform, parent, do_after);
     };
@@ -281,7 +281,7 @@ namespace rpc {
       MSGPACK_DEFINE_ARRAY(actor, traffic_light_state);
     };
 
-    using CommandType = boost::variant2::variant<
+    using CommandType = std::variant<
         SpawnActor,
         DestroyActor,
         ApplyVehicleControl,

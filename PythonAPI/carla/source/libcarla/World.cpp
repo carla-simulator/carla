@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -143,7 +143,7 @@ void export_world() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cc::ActorList, boost::shared_ptr<cc::ActorList>>("ActorList", no_init)
+  class_<cc::ActorList, std::shared_ptr<cc::ActorList>>("ActorList", no_init)
     .def("find", &cc::ActorList::Find, (arg("id")))
     .def("filter", &cc::ActorList::Filter, (arg("wildcard_pattern")))
     .def("__getitem__", &cc::ActorList::at)
@@ -178,7 +178,7 @@ void export_world() {
         },
         +[](cr::EpisodeSettings &self, object value) {
           double fds = (value == object{} ? 0.0 : extract<double>(value));
-          self.fixed_delta_seconds = fds > 0.0 ? fds : boost::optional<double>{};
+          self.fixed_delta_seconds = fds > 0.0 ? fds : std::optional<double>{};
         })
     .def_readwrite("tile_stream_distance", &cr::EpisodeSettings::tile_stream_distance)
     .def_readwrite("actor_active_distance", &cr::EpisodeSettings::actor_active_distance)

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -373,7 +373,7 @@ void export_sensor_data() {
       .add_property("fov", &FakeImage::FOV)
       .add_property("raw_data", &GetRawDataAsBuffer<FakeImage>);
 
-  class_<cs::SensorData, boost::noncopyable, boost::shared_ptr<cs::SensorData>>("SensorData", no_init)
+  class_<cs::SensorData, boost::noncopyable, std::shared_ptr<cs::SensorData>>("SensorData", no_init)
     .add_property("frame", &cs::SensorData::GetFrame)
     .add_property("frame_number", &cs::SensorData::GetFrame) // deprecated.
     .add_property("timestamp", &cs::SensorData::GetTimestamp)
@@ -405,7 +405,7 @@ void export_sensor_data() {
     .value("CustomStencil", 12)
   ;
 
-  class_<csd::Image, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::Image>>("Image", no_init)
+  class_<csd::Image, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::Image>>("Image", no_init)
     .add_property("width", &csd::Image::GetWidth)
     .add_property("height", &csd::Image::GetHeight)
     .add_property("fov", &csd::Image::GetFOVAngle)
@@ -423,7 +423,7 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<csd::OpticalFlowImage, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::OpticalFlowImage>>("OpticalFlowImage", no_init)
+  class_<csd::OpticalFlowImage, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::OpticalFlowImage>>("OpticalFlowImage", no_init)
     .add_property("width", &csd::OpticalFlowImage::GetWidth)
     .add_property("height", &csd::OpticalFlowImage::GetHeight)
     .add_property("fov", &csd::OpticalFlowImage::GetFOVAngle)
@@ -440,7 +440,7 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<csd::LidarMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::LidarMeasurement>>("LidarMeasurement", no_init)
+  class_<csd::LidarMeasurement, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::LidarMeasurement>>("LidarMeasurement", no_init)
     .add_property("horizontal_angle", &csd::LidarMeasurement::GetHorizontalAngle)
     .add_property("channels", &csd::LidarMeasurement::GetChannelCount)
     .add_property("raw_data", &GetRawDataAsBuffer<csd::LidarMeasurement>)
@@ -457,7 +457,7 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<csd::SemanticLidarMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::SemanticLidarMeasurement>>("SemanticLidarMeasurement", no_init)
+  class_<csd::SemanticLidarMeasurement, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::SemanticLidarMeasurement>>("SemanticLidarMeasurement", no_init)
     .add_property("horizontal_angle", &csd::SemanticLidarMeasurement::GetHorizontalAngle)
     .add_property("channels", &csd::SemanticLidarMeasurement::GetChannelCount)
     .add_property("raw_data", &GetRawDataAsBuffer<csd::SemanticLidarMeasurement>)
@@ -474,41 +474,41 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<csd::CollisionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::CollisionEvent>>("CollisionEvent", no_init)
+  class_<csd::CollisionEvent, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::CollisionEvent>>("CollisionEvent", no_init)
     .add_property("actor", &csd::CollisionEvent::GetActor)
     .add_property("other_actor", &csd::CollisionEvent::GetOtherActor)
     .add_property("normal_impulse", CALL_RETURNING_COPY(csd::CollisionEvent, GetNormalImpulse))
     .def(self_ns::str(self_ns::self))
   ;
 
-    class_<csd::ObstacleDetectionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::ObstacleDetectionEvent>>("ObstacleDetectionEvent", no_init)
+    class_<csd::ObstacleDetectionEvent, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::ObstacleDetectionEvent>>("ObstacleDetectionEvent", no_init)
     .add_property("actor", &csd::ObstacleDetectionEvent::GetActor)
     .add_property("other_actor", &csd::ObstacleDetectionEvent::GetOtherActor)
     .add_property("distance", CALL_RETURNING_COPY(csd::ObstacleDetectionEvent, GetDistance))
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<csd::LaneInvasionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::LaneInvasionEvent>>("LaneInvasionEvent", no_init)
+  class_<csd::LaneInvasionEvent, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::LaneInvasionEvent>>("LaneInvasionEvent", no_init)
     .add_property("actor", &csd::LaneInvasionEvent::GetActor)
     .add_property("crossed_lane_markings", CALL_RETURNING_LIST(csd::LaneInvasionEvent, GetCrossedLaneMarkings))
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<csd::GnssMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::GnssMeasurement>>("GnssMeasurement", no_init)
+  class_<csd::GnssMeasurement, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::GnssMeasurement>>("GnssMeasurement", no_init)
     .add_property("latitude", &csd::GnssMeasurement::GetLatitude)
     .add_property("longitude", &csd::GnssMeasurement::GetLongitude)
     .add_property("altitude", &csd::GnssMeasurement::GetAltitude)
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<csd::IMUMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::IMUMeasurement>>("IMUMeasurement", no_init)
+  class_<csd::IMUMeasurement, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::IMUMeasurement>>("IMUMeasurement", no_init)
     .add_property("accelerometer", &csd::IMUMeasurement::GetAccelerometer)
     .add_property("gyroscope", &csd::IMUMeasurement::GetGyroscope)
     .add_property("compass", &csd::IMUMeasurement::GetCompass)
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<csd::RadarMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::RadarMeasurement>>("RadarMeasurement", no_init)
+  class_<csd::RadarMeasurement, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::RadarMeasurement>>("RadarMeasurement", no_init)
     .add_property("raw_data", &GetRawDataAsBuffer<csd::RadarMeasurement>)
     .def("get_detection_count", &csd::RadarMeasurement::GetDetectionAmount)
     .def("__len__", &csd::RadarMeasurement::size)
@@ -552,7 +552,7 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<csd::DVSEventArray, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::DVSEventArray>>("DVSEventArray", no_init)
+  class_<csd::DVSEventArray, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::DVSEventArray>>("DVSEventArray", no_init)
     .add_property("width", &csd::DVSEventArray::GetWidth)
     .add_property("height", &csd::DVSEventArray::GetHeight)
     .add_property("fov", &csd::DVSEventArray::GetFOVAngle)

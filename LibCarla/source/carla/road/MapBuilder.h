@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -10,7 +10,7 @@
 #include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/element/RoadInfoSignal.h"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <map>
 
@@ -20,7 +20,7 @@ namespace road {
   class MapBuilder {
   public:
 
-    boost::optional<Map> Build();
+    std::optional<Map> Build();
 
     // called from road parser
     carla::road::Road *AddRoad(

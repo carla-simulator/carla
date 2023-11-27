@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -17,7 +17,7 @@ namespace command_impl {
     return in;
   }
 
-  carla::rpc::ActorId Convert(const boost::shared_ptr<carla::client::Actor> &actor) {
+  carla::rpc::ActorId Convert(const std::shared_ptr<carla::client::Actor> &actor) {
     return actor->GetId();
   }
 

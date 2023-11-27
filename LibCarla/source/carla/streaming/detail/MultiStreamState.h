@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -46,7 +46,7 @@ namespace detail {
       }
 
       // try write multiple stream
-      std::lock_guard<std::mutex> lock(_mutex);
+      std::scoped_lock<std::mutex> lock(_mutex);
       if (_sessions.size() > 0) {
         auto message = Session::MakeMessage(buffers...);
         for (auto &s : _sessions) {
@@ -80,7 +80,7 @@ namespace detail {
 
     void ConnectSession(std::shared_ptr<Session> session) final {
       DEBUG_ASSERT(session != nullptr);
-      std::lock_guard<std::mutex> lock(_mutex);
+      std::scoped_lock<std::mutex> lock(_mutex);
       _sessions.emplace_back(std::move(session));
       log_debug("Connecting multistream sessions:", _sessions.size());
       if (_sessions.size() == 1) {
@@ -93,7 +93,7 @@ namespace detail {
 
     void DisconnectSession(std::shared_ptr<Session> session) final {
       DEBUG_ASSERT(session != nullptr);
-      std::lock_guard<std::mutex> lock(_mutex);
+      std::scoped_lock<std::mutex> lock(_mutex);
       log_debug("Calling DisconnectSession for ", session->get_stream_id());
       if (_sessions.size() == 0) return;
       if (_sessions.size() == 1) {
@@ -117,7 +117,7 @@ namespace detail {
     }
 
     void ClearSessions() final {
-      std::lock_guard<std::mutex> lock(_mutex);
+      std::scoped_lock<std::mutex> lock(_mutex);
       for (auto &s : _sessions) {
         if (s != nullptr) {
           s->Close();

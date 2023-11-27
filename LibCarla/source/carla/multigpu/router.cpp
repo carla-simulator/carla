@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -53,7 +53,7 @@ void Router::SetCallbacks() {
     [=](std::shared_ptr<carla::multigpu::Primary> session, carla::Buffer buffer) {
       auto self = weak.lock();
       if (!self) return;
-      std::lock_guard<std::mutex> lock(self->_mutex);
+      std::scoped_lock<std::mutex> lock(self->_mutex);
       auto prom =self-> _promises.find(session.get());
       if (prom != self->_promises.end()) {
         log_info("Got data from secondary (with promise): ", buffer.size());
@@ -85,7 +85,7 @@ boost::asio::ip::tcp::endpoint Router::GetLocalEndpoint() const {
 
 void Router::ConnectSession(std::shared_ptr<Primary> session) {
   DEBUG_ASSERT(session != nullptr);
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   _sessions.emplace_back(std::move(session));
   log_info("Connected secondary servers:", _sessions.size());
   // run external callback for new connections
@@ -95,7 +95,7 @@ void Router::ConnectSession(std::shared_ptr<Primary> session) {
 
 void Router::DisconnectSession(std::shared_ptr<Primary> session) {
   DEBUG_ASSERT(session != nullptr);
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   if (_sessions.size() == 0) return;
   _sessions.erase(
       std::remove(_sessions.begin(), _sessions.end(), session),
@@ -104,7 +104,7 @@ void Router::DisconnectSession(std::shared_ptr<Primary> session) {
 }
 
 void Router::ClearSessions() {
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   _sessions.clear();
   log_info("Disconnecting all secondary servers");
 }
@@ -121,7 +121,7 @@ void Router::Write(MultiGPUCommand id, Buffer &&buffer) {
   auto message = Primary::MakeMessage(view_header, view_data);
 
   // write to multiple servers
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   for (auto &s : _sessions) {
     if (s != nullptr) {
       s->Write(message);
@@ -144,7 +144,7 @@ std::future<SessionInfo> Router::WriteToNext(MultiGPUCommand id, Buffer &&buffer
   auto response = std::make_shared<std::promise<SessionInfo>>();
 
   // write to the next server only
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   if (_next >= _sessions.size()) {
     _next = 0;
   }
@@ -176,7 +176,7 @@ std::future<SessionInfo> Router::WriteToOne(std::weak_ptr<Primary> server, Multi
   auto response = std::make_shared<std::promise<SessionInfo>>();
 
   // write to the specific server only
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   auto s = server.lock();
   if (s) {
     _promises[s.get()] = response;
@@ -186,7 +186,7 @@ std::future<SessionInfo> Router::WriteToOne(std::weak_ptr<Primary> server, Multi
 }
 
 std::weak_ptr<Primary> Router::GetNextServer() {
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   if (_next >= _sessions.size()) {
     _next = 0;
   }

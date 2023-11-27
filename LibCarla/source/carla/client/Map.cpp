@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -45,7 +45,7 @@ namespace client {
   const geom::Location &location,
   bool project_to_road,
   int32_t lane_type) const {
-    boost::optional<road::element::Waypoint> waypoint;
+    std::optional<road::element::Waypoint> waypoint;
     if (project_to_road) {
       waypoint = _map.GetClosestWaypointOnRoad(location, lane_type);
     } else {
@@ -60,7 +60,7 @@ namespace client {
       carla::road::RoadId road_id,
       carla::road::LaneId lane_id,
       float s) const {
-    boost::optional<road::element::Waypoint> waypoint;
+    std::optional<road::element::Waypoint> waypoint;
     waypoint = _map.GetWaypoint(road_id, lane_id, s);
     return waypoint.has_value() ?
         SharedPtr<Waypoint>(new Waypoint{shared_from_this(), *waypoint}) :

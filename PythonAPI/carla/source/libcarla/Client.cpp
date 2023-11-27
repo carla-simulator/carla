@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -92,10 +92,10 @@ static auto ApplyBatchCommandsSync(
         CommandType::CommandType& cmd_type = cmds[i].command;
 
         // check SpawnActor command
-        if (const auto *maybe_spawn_actor_cmd = boost::variant2::get_if<carla::rpc::Command::SpawnActor>(&cmd_type)) {
+        if (const auto *maybe_spawn_actor_cmd = std::get_if<carla::rpc::Command::SpawnActor>(&cmd_type)) {
           // check inside 'do_after'
           for (auto &cmd : maybe_spawn_actor_cmd->do_after) {
-            if (const auto *maybe_set_autopilot_command = boost::variant2::get_if<carla::rpc::Command::SetAutopilot>(&cmd.command)) {
+            if (const auto *maybe_set_autopilot_command = std::get_if<carla::rpc::Command::SetAutopilot>(&cmd.command)) {
               tm_port = maybe_set_autopilot_command->tm_port;
               autopilotValue = maybe_set_autopilot_command->enabled;
               isAutopilot = true;
@@ -103,7 +103,7 @@ static auto ApplyBatchCommandsSync(
           }
         }
         // check SetAutopilot command
-        else if (const auto *maybe_set_autopilot_command = boost::variant2::get_if<carla::rpc::Command::SetAutopilot>(&cmd_type)) {
+        else if (const auto *maybe_set_autopilot_command = std::get_if<carla::rpc::Command::SetAutopilot>(&cmd_type)) {
           tm_port = maybe_set_autopilot_command->tm_port;
           autopilotValue = maybe_set_autopilot_command->enabled;
           isAutopilot = true;

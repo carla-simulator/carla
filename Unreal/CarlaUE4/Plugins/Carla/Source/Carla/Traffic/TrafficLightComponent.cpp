@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -42,7 +42,7 @@ void UTrafficLightComponent::InitializeSign(const carla::road::Map &Map)
           continue;
 
         carla::road::element::Waypoint signal_waypoint;
-        boost::optional<carla::road::element::Waypoint> opt_signal_waypoint = Map.GetWaypoint(
+        std::optional<carla::road::element::Waypoint> opt_signal_waypoint = Map.GetWaypoint(
             RoadId, lane, SignalReference->GetS());
         if(opt_signal_waypoint){
           signal_waypoint = opt_signal_waypoint.get();

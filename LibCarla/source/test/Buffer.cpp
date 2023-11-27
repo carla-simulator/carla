@@ -1,13 +1,10 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Buffer.h"
-
-#include <boost/random/independent_bits.hpp>
-
 #include <climits>
 #include <random>
 
@@ -17,7 +14,7 @@ namespace buffer {
   shared_buffer make_random(size_t size) {
     if (size == 0u)
       return make_empty();
-    using random_bytes_engine = boost::random::independent_bits_engine<
+    using random_bytes_engine = std::independent_bits_engine<
         std::random_device,
         CHAR_BIT,
         unsigned char>;

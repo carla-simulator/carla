@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -9,15 +9,15 @@
 #include "carla/Exception.h"
 #include "carla/Time.h"
 
-#include <boost/optional.hpp>
+#include <optional>
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4583)
 #pragma warning(disable:4582)
-#include <boost/variant2/variant.hpp>
+#include <variant>
 #pragma warning(pop)
 #else
-#include <boost/variant2/variant.hpp>
+#include <variant>
 #endif
 
 #include <condition_variable>
@@ -49,7 +49,7 @@ namespace detail {
     /// simultaneously.
     ///
     /// @return empty optional if the timeout is met.
-    boost::optional<T> WaitFor(time_duration timeout);
+    std::optional<T> WaitFor(time_duration timeout);
 
     /// Set the value and notify all waiting threads.
     template <typename T2>
@@ -71,7 +71,7 @@ namespace detail {
 
     struct mapped_type {
       bool should_wait;
-      boost::variant2::variant<SharedException, T> value;
+      std::variant<SharedException, T> value;
     };
 
     std::map<const char *, mapped_type> _map;
@@ -110,7 +110,7 @@ namespace detail {
 } // namespace detail
 
   template <typename T>
-  boost::optional<T> RecurrentSharedFuture<T>::WaitFor(time_duration timeout) {
+  std::optional<T> RecurrentSharedFuture<T>::WaitFor(time_duration timeout) {
     std::unique_lock<std::mutex> lock(_mutex);
     auto &r = _map[&detail::thread_tag];
     r.should_wait = true;
@@ -118,15 +118,15 @@ namespace detail {
       return {};
     }
     if (r.value.index() == 0) {
-      throw_exception(boost::variant2::get<SharedException>(r.value));
+      throw_exception(std::get<SharedException>(r.value));
     }
-    return boost::variant2::get<T>(std::move(r.value));
+    return std::get<T>(std::move(r.value));
   }
 
   template <typename T>
   template <typename T2>
   void RecurrentSharedFuture<T>::SetValue(const T2 &value) {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::scoped_lock<std::mutex> lock(_mutex);
     for (auto &pair : _map) {
       pair.second.should_wait = false;
       pair.second.value = value;

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -10,10 +10,10 @@
 #pragma warning(push)
 #pragma warning(disable:4583)
 #pragma warning(disable:4582)
-#include <boost/variant2/variant.hpp>
+#include <variant>
 #pragma warning(pop)
 #else
-#include <boost/variant2/variant.hpp>
+#include <variant>
 #endif
 
 #include "carla/rpc/ActorId.h"
@@ -52,7 +52,7 @@ namespace nav {
     };
 
     /// walker event variant
-    using WalkerEvent = boost::variant2::variant<WalkerEventIgnore, WalkerEventWait, WalkerEventStopAndCheck>;
+    using WalkerEvent = std::variant<WalkerEventIgnore, WalkerEventWait, WalkerEventStopAndCheck>;
 
     /// visitor class
     class WalkerEventVisitor {

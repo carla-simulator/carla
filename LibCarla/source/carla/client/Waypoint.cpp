@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -145,18 +145,18 @@ namespace client {
     return nullptr;
   }
 
-  boost::optional<road::element::LaneMarking> Waypoint::GetRightLaneMarking() const {
+  std::optional<road::element::LaneMarking> Waypoint::GetRightLaneMarking() const {
     if (_mark_record.first != nullptr) {
       return road::element::LaneMarking(*_mark_record.first);
     }
-    return boost::optional<road::element::LaneMarking>{};
+    return std::optional<road::element::LaneMarking>{};
   }
 
-  boost::optional<road::element::LaneMarking> Waypoint::GetLeftLaneMarking() const {
+  std::optional<road::element::LaneMarking> Waypoint::GetLeftLaneMarking() const {
     if (_mark_record.second != nullptr) {
       return road::element::LaneMarking(*_mark_record.second);
     }
-    return boost::optional<road::element::LaneMarking>{};
+    return std::optional<road::element::LaneMarking>{};
   }
 
   template <typename EnumT>

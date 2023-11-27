@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -7,10 +7,11 @@
 #pragma once
 
 #include "carla/Debug.h"
-
-#include <boost/date_time/posix_time/posix_time_types.hpp>
-
 #include <chrono>
+
+#if __has_include(<boost/date_time/posix_time/posix_time_types.hpp>)
+#include <boost/date_time/posix_time/posix_time_types.hpp>
+#endif
 
 namespace carla {
 
@@ -36,16 +37,19 @@ namespace carla {
           DEBUG_ASSERT(count >= 0);
           return static_cast<size_t>(count);
         }()) {}
-
-    time_duration(boost::posix_time::time_duration timeout)
-      : time_duration(std::chrono::milliseconds(timeout.total_milliseconds())) {}
-
     time_duration(const time_duration &) = default;
     time_duration &operator=(const time_duration &) = default;
+
+#if __has_include(<boost/date_time/posix_time/posix_time_types.hpp>)
+    time_duration(boost::posix_time::time_duration timeout)
+      : time_duration(std::chrono::milliseconds(timeout.total_milliseconds()))
+    {
+    }
 
     boost::posix_time::time_duration to_posix_time() const {
       return boost::posix_time::milliseconds(_milliseconds);
     }
+#endif
 
     constexpr auto to_chrono() const {
       return std::chrono::milliseconds(_milliseconds);

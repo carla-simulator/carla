@@ -184,6 +184,8 @@ public class CarlaTools :
             return Candidates;
         };
 
+        Func<string, string> GetIncludePath = name => Path.Combine(DependenciesInstallPath, name + "-install", "include");
+
         // LibCarla
         var LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
         var LibCarlaLibPath = Path.Combine(LibCarlaInstallPath, "lib");
@@ -215,6 +217,14 @@ public class CarlaTools :
         });
 
         PublicIncludePaths.Add(LibCarlaIncludePath);
+        PublicIncludePaths.AddRange(new string[]
+        {
+            GetIncludePath("boost"),
+            GetIncludePath("rpclib"),
+            GetIncludePath("xercesc"),
+            GetIncludePath("sumo"),
+            GetIncludePath("zlib"),
+        });
 
         PrivateIncludePaths.Add(LibCarlaIncludePath);
 

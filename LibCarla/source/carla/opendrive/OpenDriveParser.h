@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -8,7 +8,7 @@
 
 #include "carla/road/Map.h"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <string>
 
@@ -18,7 +18,7 @@ namespace opendrive {
   class OpenDriveParser {
   public:
 
-    static boost::optional<road::Map> Load(const std::string &opendrive);
+    static std::optional<road::Map> Load(const std::string &opendrive);
   };
 
 } // namespace opendrive

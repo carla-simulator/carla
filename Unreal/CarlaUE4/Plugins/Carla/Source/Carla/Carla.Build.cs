@@ -176,6 +176,8 @@ public class Carla :
 			return Candidates;
         };
 
+        Func<string, string> GetIncludePath = name => Path.Combine(DependenciesInstallPath, name + "-install", "include");
+
         // LibCarla
         var LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
 		var LibCarlaLibPath = Path.Combine(LibCarlaInstallPath, "lib");
@@ -225,8 +227,15 @@ public class Carla :
         }
 
         PublicIncludePaths.Add(LibCarlaIncludePath);
-
-        PrivateIncludePaths.Add(LibCarlaIncludePath);
+        PublicIncludePaths.Add(LibCarlaIncludePath);
+        PublicIncludePaths.AddRange(new string[]
+        {
+            GetIncludePath("boost"),
+            GetIncludePath("rpclib"),
+            GetIncludePath("xercesc"),
+            GetIncludePath("sumo"),
+            GetIncludePath("zlib"),
+        });
 
         PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
         PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");

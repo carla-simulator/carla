@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -16,7 +16,7 @@ namespace detail {
   void ActorVariant::MakeActor(EpisodeProxy episode) const {
     _value = detail::ActorFactory::MakeActor(
         episode,
-        boost::variant2::get<rpc::Actor>(std::move(_value)),
+        std::get<rpc::Actor>(std::move(_value)),
         GarbageCollectionPolicy::Disabled);
   }
 

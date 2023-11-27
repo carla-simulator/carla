@@ -54,7 +54,7 @@ void RssSensor::Listen(CallbackFunctionType callback) {
     return;
   }
 
-  auto vehicle = boost::dynamic_pointer_cast<carla::client::Vehicle>(GetParent());
+  auto vehicle = std::dynamic_pointer_cast<carla::client::Vehicle>(GetParent());
   if (vehicle == nullptr) {
     throw_exception(std::runtime_error(GetDisplayId() + ": parent is not a vehicle"));
     return;
@@ -89,7 +89,7 @@ void RssSensor::Listen(CallbackFunctionType callback) {
         std::make_shared<::carla::rss::RssCheck>(max_steering_angle, _rss_actor_constellation_callback, GetParent());
   }
 
-  auto self = boost::static_pointer_cast<RssSensor>(shared_from_this());
+  auto self = std::static_pointer_cast<RssSensor>(shared_from_this());
 
   _last_processed_frame=0u;
   log_debug(GetDisplayId(), ": subscribing to tick event");
@@ -115,10 +115,10 @@ void RssSensor::Stop() {
   if ( bool(_rss_check) ) {
     _rss_check->GetLogger()->info("RssSensor stopping");
   }
-  // don't remove the braces since they protect the lock_guard
+  // don't remove the braces since they protect the scoped_lock
   {
      // ensure there is no processing anymore when deleting rss_check object
-    const std::lock_guard<std::mutex> lock(_processing_lock);
+    const std::scoped_lock<std::mutex> lock(_processing_lock);
 
     if ( bool(_rss_check) ) {
       _rss_check->GetLogger()->info("RssSensor delete checker");

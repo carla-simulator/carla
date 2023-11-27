@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -26,7 +26,7 @@ namespace traffic_manager {
 
     void AddEntry(const std::pair<Key, Value> &entry) {
 
-      std::lock_guard<std::mutex> lock(map_mutex);
+      std::scoped_lock<std::mutex> lock(map_mutex);
       const Key& key = entry.first;
       if (map.find(key) != map.end()) {
         map.at(key) = entry.second;
@@ -37,19 +37,19 @@ namespace traffic_manager {
 
     bool Contains(const Key &key) const {
 
-      std::lock_guard<std::mutex> lock(map_mutex);
+      std::scoped_lock<std::mutex> lock(map_mutex);
       return map.find(key) != map.end();
     }
 
     const Value &GetValue(const Key &key) const {
 
-      std::lock_guard<std::mutex> lock(map_mutex);
+      std::scoped_lock<std::mutex> lock(map_mutex);
       return map.at(key);
     }
 
     void RemoveEntry(const Key &key) {
 
-      std::lock_guard<std::mutex> lock(map_mutex);
+      std::scoped_lock<std::mutex> lock(map_mutex);
       map.erase(key);
     }
 

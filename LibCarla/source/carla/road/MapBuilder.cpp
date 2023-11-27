@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -35,7 +35,7 @@ using namespace carla::road::element;
 namespace carla {
 namespace road {
 
-  boost::optional<Map> MapBuilder::Build() {
+  std::optional<Map> MapBuilder::Build() {
 
     CreatePointersBetweenRoadSegments();
     RemoveZeroLaneValiditySignalReferences();
@@ -1057,9 +1057,9 @@ void MapBuilder::CreateController(
         continue;
       }
       if(closest_waypoint_to_signal) {
-        auto road_transform = map.ComputeTransform(closest_waypoint_to_signal.get());
+        auto road_transform = map.ComputeTransform(closest_waypoint_to_signal.value());
         auto distance_to_road = (road_transform.location -signal_position).Length();
-        double lane_width = map.GetLaneWidth(closest_waypoint_to_signal.get());
+        double lane_width = map.GetLaneWidth(closest_waypoint_to_signal.value());
         int displacement_direction = 1;
         int iter = 0;
         int MaxIter = 10;
@@ -1071,11 +1071,11 @@ void MapBuilder::CreateController(
                 "overlaps a driving lane. Moving out of the road...");
           }
 
-          auto right_waypoint = map.GetRight(closest_waypoint_to_signal.get());
-          auto right_lane_type = (right_waypoint) ? map.GetLaneType(right_waypoint.get()) : carla::road::Lane::LaneType::None;
+          auto right_waypoint = map.GetRight(closest_waypoint_to_signal.value());
+          auto right_lane_type = (right_waypoint) ? map.GetLaneType(right_waypoint.value()) : carla::road::Lane::LaneType::None;
 
-          auto left_waypoint = map.GetLeft(closest_waypoint_to_signal.get());
-          auto left_lane_type = (left_waypoint) ? map.GetLaneType(left_waypoint.get()) : carla::road::Lane::LaneType::None;
+          auto left_waypoint = map.GetLeft(closest_waypoint_to_signal.value());
+          auto left_lane_type = (left_waypoint) ? map.GetLaneType(left_waypoint.value()) : carla::road::Lane::LaneType::None;
 
           if (right_lane_type != carla::road::Lane::LaneType::Driving) {
             displacement_direction = 1;
@@ -1093,9 +1093,9 @@ void MapBuilder::CreateController(
               map.GetClosestWaypointOnRoad(signal_position,
               static_cast<int32_t>(carla::road::Lane::LaneType::Shoulder) |  static_cast<int32_t>(carla::road::Lane::LaneType::Driving));
           distance_to_road =
-              (map.ComputeTransform(closest_waypoint_to_signal.get()).location -
+              (map.ComputeTransform(closest_waypoint_to_signal.value()).location -
               signal_position).Length();
-          lane_width = map.GetLaneWidth(closest_waypoint_to_signal.get());
+          lane_width = map.GetLaneWidth(closest_waypoint_to_signal.value());
           iter++;
         }
         if(iter == MaxIter) {

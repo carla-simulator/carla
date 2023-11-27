@@ -154,7 +154,7 @@ void export_ad_rss() {
       .def_readwrite("actor_dynamics", &carla::rss::ActorConstellationResult::actor_dynamics)
       .def(self_ns::str(self_ns::self));
 
-  class_<carla::rss::ActorConstellationData, boost::noncopyable, boost::shared_ptr<carla::rss::ActorConstellationData>>(
+  class_<carla::rss::ActorConstellationData, boost::noncopyable, std::shared_ptr<carla::rss::ActorConstellationData>>(
       "RssActorConstellationData", no_init)
       .def_readonly("ego_match_object", &carla::rss::ActorConstellationData::ego_match_object)
       .def_readonly("ego_route", &carla::rss::ActorConstellationData::ego_route)
@@ -176,7 +176,7 @@ void export_ad_rss() {
       .value("Off", carla::rss::RoadBoundariesMode::Off)
       .value("On", carla::rss::RoadBoundariesMode::On);
 
-  class_<csd::RssResponse, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::RssResponse>>(
+  class_<csd::RssResponse, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::RssResponse>>(
       "RssResponse", no_init)
       .add_property("response_valid", &csd::RssResponse::GetResponseValid)
       .add_property("proper_response", CALL_RETURNING_COPY(csd::RssResponse, GetProperResponse))
@@ -186,7 +186,7 @@ void export_ad_rss() {
       .add_property("ego_dynamics_on_route", CALL_RETURNING_COPY(csd::RssResponse, GetEgoDynamicsOnRoute))
       .def(self_ns::str(self_ns::self));
 
-  class_<cc::RssSensor, bases<cc::Sensor>, boost::noncopyable, boost::shared_ptr<cc::RssSensor>>("RssSensor", no_init)
+  class_<cc::RssSensor, bases<cc::Sensor>, boost::noncopyable, std::shared_ptr<cc::RssSensor>>("RssSensor", no_init)
       .add_property("ego_vehicle_dynamics", &GetEgoVehicleDynamics, &cc::RssSensor::SetEgoVehicleDynamics)
       .add_property("other_vehicle_dynamics", &GetOtherVehicleDynamics, &cc::RssSensor::SetOtherVehicleDynamics)
       .add_property("pedestrian_dynamics", &GetPedestrianDynamics, &cc::RssSensor::SetPedestrianDynamics)
@@ -201,7 +201,7 @@ void export_ad_rss() {
       .def("set_map_log_level", &cc::RssSensor::SetMapLogLevel, (arg("map_log_level")))
       .def(self_ns::str(self_ns::self));
 
-  class_<carla::rss::RssRestrictor, boost::noncopyable, boost::shared_ptr<carla::rss::RssRestrictor>>("RssRestrictor",
+  class_<carla::rss::RssRestrictor, boost::noncopyable, std::shared_ptr<carla::rss::RssRestrictor>>("RssRestrictor",
                                                                                                       no_init)
       .def(init<>())
       .def("restrict_vehicle_control", &carla::rss::RssRestrictor::RestrictVehicleControl,

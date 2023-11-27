@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -74,28 +74,28 @@ TEST(msgpack, actor) {
 TEST(msgpack, variant) {
   using mp = carla::MsgPack;
 
-  boost::variant2::variant<bool, float, std::string> var;
+  std::variant<bool, float, std::string> var;
 
   var = true;
   auto result = mp::UnPack<decltype(var)>(mp::Pack(var));
   ASSERT_EQ(result.index(), 0);
-  ASSERT_EQ(boost::variant2::get<bool>(result), true);
+  ASSERT_EQ(std::get<bool>(result), true);
 
   var = 42.0f;
   result = mp::UnPack<decltype(var)>(mp::Pack(var));
   ASSERT_EQ(result.index(), 1);
-  ASSERT_EQ(boost::variant2::get<float>(result), 42.0f);
+  ASSERT_EQ(std::get<float>(result), 42.0f);
 
   var = std::string("hola!");
   result = mp::UnPack<decltype(var)>(mp::Pack(var));
   ASSERT_EQ(result.index(), 2);
-  ASSERT_EQ(boost::variant2::get<std::string>(result), "hola!");
+  ASSERT_EQ(std::get<std::string>(result), "hola!");
 }
 
 TEST(msgpack, optional) {
   using mp = carla::MsgPack;
 
-  boost::optional<float> var;
+  std::optional<float> var;
 
   auto result = mp::UnPack<decltype(var)>(mp::Pack(var));
   ASSERT_FALSE(result.has_value());

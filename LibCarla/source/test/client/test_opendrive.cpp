@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -33,7 +33,7 @@ using namespace util;
 const std::string BASE_PATH = LIBCARLA_TEST_CONTENT_FOLDER "/OpenDrive/";
 
 // Road Elevation
-static void test_road_elevation(const pugi::xml_document &xml, boost::optional<Map>& map) {
+static void test_road_elevation(const pugi::xml_document &xml, std::optional<Map>& map) {
   pugi::xml_node open_drive_node = xml.child("OpenDRIVE");
 
   for (pugi::xml_node road_node : open_drive_node.children("road")) {
@@ -57,7 +57,7 @@ static void test_road_elevation(const pugi::xml_document &xml, boost::optional<M
 }
 
 // Geometry
-static void test_geometry(const pugi::xml_document &xml, boost::optional<Map>& map) {
+static void test_geometry(const pugi::xml_document &xml, std::optional<Map>& map) {
   pugi::xml_node open_drive_node = xml.child("OpenDRIVE");
 
   for (pugi::xml_node road_node : open_drive_node.children("road")) {
@@ -114,7 +114,7 @@ static auto get_total_road_marks(
   return std::make_pair(total_road_mark, total_road_mark_parser);
 }
 
-static void test_roads(const pugi::xml_document &xml, boost::optional<Map>& map) {
+static void test_roads(const pugi::xml_document &xml, std::optional<Map>& map) {
   pugi::xml_node open_drive_node = xml.child("OpenDRIVE");
 
   // Check total Roads
@@ -169,7 +169,7 @@ static void test_roads(const pugi::xml_document &xml, boost::optional<Map>& map)
 }
 
 // Junctions
-static void test_junctions(const pugi::xml_document &xml, boost::optional<Map>& map) {
+static void test_junctions(const pugi::xml_document &xml, std::optional<Map>& map) {
   pugi::xml_node open_drive_node = xml.child("OpenDRIVE");
 
   // Check total number of junctions
@@ -203,7 +203,7 @@ static void test_junctions(const pugi::xml_document &xml, boost::optional<Map>& 
   }
 }
 
-static void test_road_links(boost::optional<Map>& map) {
+static void test_road_links(std::optional<Map>& map) {
 
   // process all roads, sections and lanes
   for (auto &road : map->GetMap().GetRoads()) {

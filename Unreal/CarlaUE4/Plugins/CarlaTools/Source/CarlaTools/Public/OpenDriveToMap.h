@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
 
@@ -10,7 +10,7 @@
 #include "EditorUtilityObject.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <boost/optional.hpp>
+#include <optional>
 #include <carla/road/Map.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -191,24 +191,24 @@ private:
   UFUNCTION(BlueprintCallable)
   void LoadMap();
 
-  void GenerateAll(const boost::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
-  void GenerateRoadMesh(const boost::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
-  void GenerateSpawnPoints(const boost::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
-  void GenerateTreePositions(const boost::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
-  void GenerateLaneMarks(const boost::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
+  void GenerateAll(const std::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
+  void GenerateRoadMesh(const std::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
+  void GenerateSpawnPoints(const std::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
+  void GenerateTreePositions(const std::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
+  void GenerateLaneMarks(const std::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
 
   carla::rpc::OpendriveGenerationParameters opg_parameters;
-  boost::optional<carla::road::Map> CarlaMap;
+  std::optional<carla::road::Map> CarlaMap;
 
   FTransform GetSnappedPosition(FTransform Origin);
 
   float GetHeightForLandscape(FVector Origin);
 
-  float DistanceToLaneBorder(const boost::optional<carla::road::Map>& CarlaMap,
+  float DistanceToLaneBorder(const std::optional<carla::road::Map>& CarlaMap,
       FVector &location,
       int32_t lane_type = static_cast<int32_t>(carla::road::Lane::LaneType::Driving)) const;
 
-  bool IsInRoad(const boost::optional<carla::road::Map>& ParamCarlaMap,
+  bool IsInRoad(const std::optional<carla::road::Map>& ParamCarlaMap,
         FVector &location) const;
 
   void InitTextureData();

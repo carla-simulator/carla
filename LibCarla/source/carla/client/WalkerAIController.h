@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -9,7 +9,7 @@
 #include "carla/client/Actor.h"
 #include "carla/geom/Vector3D.h"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace carla {
 namespace client {
@@ -23,7 +23,7 @@ namespace client {
 
     void Stop();
 
-    boost::optional<geom::Location> GetRandomLocation();
+    std::optional<geom::Location> GetRandomLocation();
 
     void GoToLocation(const carla::geom::Location &destination);
 

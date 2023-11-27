@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -125,7 +125,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
               GetCurrentEpisode()->GetFrameData().Read(InStream);
               {
                 TRACE_CPUPROFILER_EVENT_SCOPE_STR("FramesToProcess.emplace_back");
-                std::lock_guard<std::mutex> Lock(FrameToProcessMutex);
+                std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
                 FramesToProcess.emplace_back(GetCurrentEpisode()->GetFrameData());
               }
             }
@@ -318,7 +318,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
         if (FramesToProcess.size())
         {
           TRACE_CPUPROFILER_EVENT_SCOPE_STR("FramesToProcess.PlayFrameData");
-          std::lock_guard<std::mutex> Lock(FrameToProcessMutex);
+          std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
           FramesToProcess.front().PlayFrameData(CurrentEpisode, MappedId);
           FramesToProcess.erase(FramesToProcess.begin()); // remove first element
         }

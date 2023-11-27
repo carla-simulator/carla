@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -60,7 +60,7 @@ namespace detail {
     void write_to_file(std::ios_base::openmode mode, Args &&... args) {
       if (!_filename.empty()) {
         static std::mutex MUTEX;
-        std::lock_guard<std::mutex> guard(MUTEX);
+        std::scoped_lock<std::mutex> guard(MUTEX);
         std::ofstream file(_filename, mode);
         write_csv_to_stream(file, std::forward<Args>(args)...);
         file << std::endl;

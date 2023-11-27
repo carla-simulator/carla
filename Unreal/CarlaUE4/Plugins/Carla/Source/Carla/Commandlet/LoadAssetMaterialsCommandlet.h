@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -99,7 +99,7 @@ private:
   //UPROPERTY()
   //TSet<FVector> WaypointsUsedForDecals;
 
-  boost::optional<carla::road::Map> XODRMap;
+  std::optional<carla::road::Map> XODRMap;
 
   /// Gets the first .Package.json file found in Unreal Content Directory with
   /// @a PackageName

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -162,7 +162,7 @@ namespace road {
   // -- Map: Geometry ----------------------------------------------------------
   // ===========================================================================
 
-  boost::optional<Waypoint> Map::GetClosestWaypointOnRoad(
+  std::optional<Waypoint> Map::GetClosestWaypointOnRoad(
       const geom::Location &pos,
       int32_t lane_type) const {
     std::vector<Rtree::TreeElement> query_result =
@@ -173,7 +173,7 @@ namespace road {
         });
 
     if (query_result.size() == 0) {
-      return boost::optional<Waypoint>{};
+      return std::optional<Waypoint>{};
     }
 
     Rtree::BSegment segment = query_result.front().first;
@@ -209,10 +209,10 @@ namespace road {
     }
   }
 
-  boost::optional<Waypoint> Map::GetWaypoint(
+  std::optional<Waypoint> Map::GetWaypoint(
       const geom::Location &pos,
       int32_t lane_type) const {
-    boost::optional<Waypoint> w = GetClosestWaypointOnRoad(pos, lane_type);
+    std::optional<Waypoint> w = GetClosestWaypointOnRoad(pos, lane_type);
 
     if (!w.has_value()) {
       return w;
@@ -227,10 +227,10 @@ namespace road {
       return w;
     }
 
-    return boost::optional<Waypoint>{};
+    return std::optional<Waypoint>{};
   }
 
-  boost::optional<Waypoint> Map::GetWaypoint(
+  std::optional<Waypoint> Map::GetWaypoint(
       RoadId road_id,
       LaneId lane_id,
       float s) const {
@@ -243,13 +243,13 @@ namespace road {
 
     // check the road
     if (!_data.ContainsRoad(waypoint.road_id)) {
-      return boost::optional<Waypoint>{};
+      return std::optional<Waypoint>{};
     }
     const Road &road = _data.GetRoad(waypoint.road_id);
 
     // check the 's' distance
     if (s < 0.0f || s >= road.GetLength()) {
-      return boost::optional<Waypoint>{};
+      return std::optional<Waypoint>{};
     }
 
     // check the section
@@ -264,7 +264,7 @@ namespace road {
 
     // check the lane id
     if (!lane_found) {
-      return boost::optional<Waypoint>{};
+      return std::optional<Waypoint>{};
     }
 
     return waypoint;
@@ -623,17 +623,17 @@ namespace road {
     return result;
   }
 
-  boost::optional<Waypoint> Map::GetRight(Waypoint waypoint) const {
+  std::optional<Waypoint> Map::GetRight(Waypoint waypoint) const {
     RELEASE_ASSERT(waypoint.lane_id != 0);
     if (waypoint.lane_id > 0) {
       ++waypoint.lane_id;
     } else {
       --waypoint.lane_id;
     }
-    return IsLanePresent(_data, waypoint) ? waypoint : boost::optional<Waypoint>{};
+    return IsLanePresent(_data, waypoint) ? waypoint : std::optional<Waypoint>{};
   }
 
-  boost::optional<Waypoint> Map::GetLeft(Waypoint waypoint) const {
+  std::optional<Waypoint> Map::GetLeft(Waypoint waypoint) const {
     RELEASE_ASSERT(waypoint.lane_id != 0);
     if (std::abs(waypoint.lane_id) == 1) {
       waypoint.lane_id *= -1;
@@ -642,7 +642,7 @@ namespace road {
     } else {
       ++waypoint.lane_id;
     }
-    return IsLanePresent(_data, waypoint) ? waypoint : boost::optional<Waypoint>{};
+    return IsLanePresent(_data, waypoint) ? waypoint : std::optional<Waypoint>{};
   }
 
   std::vector<Waypoint> Map::GenerateWaypoints(const double distance) const {
@@ -1162,7 +1162,7 @@ namespace road {
         [this, &write_mutex, &mesh_factory, &RoadsIDToGenerate, &road_out_mesh_list, i, num_roads_per_thread]() {
         std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current =
           std::move(GenerateRoadsMultithreaded(mesh_factory, RoadsIDToGenerate,i, num_roads_per_thread ));
-        std::lock_guard<std::mutex> guard(write_mutex);
+        std::scoped_lock<std::mutex> guard(write_mutex);
         for ( auto&& pair : Current ) {
           if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end()) {
             road_out_mesh_list[pair.first].insert(road_out_mesh_list[pair.first].end(),
@@ -1382,7 +1382,7 @@ namespace road {
           GenerateSingleJunction(mesh_factory, JunctionsToGenerate[junctionindex], &junctionsofthisthread);
         }
         std::cout << "Generated Junctions between  " << std::to_string(i * num_junctions_per_thread) << " and " << std::to_string(minimum) << std::endl;
-        std::lock_guard<std::mutex> guard(write_mutex);
+        std::scoped_lock<std::mutex> guard(write_mutex);
         for ( auto&& pair : junctionsofthisthread ) {
           if ((*junction_out_mesh_list).find(pair.first) != (*junction_out_mesh_list).end()) {
             (*junction_out_mesh_list)[pair.first].insert((*junction_out_mesh_list)[pair.first].end(),
@@ -1460,7 +1460,7 @@ namespace road {
     auto junctionsdf = [this, OffsetPerCell, CubeSize, MinOffset, junctionid](MeshReconstruction::Vec3 const& pos)
     {
       geom::Vector3D worldloc(pos.x, pos.y, pos.z);
-      boost::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(worldloc), 0x1 << 1);
+      std::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(worldloc), 0x1 << 1);
       if (CheckingWaypoint) {
         if ( pos.z < 0.2) {
           return 0.0;
@@ -1468,7 +1468,7 @@ namespace road {
           return -abs(pos.z);
         }
       }
-      boost::optional<element::Waypoint> InRoadWaypoint = GetClosestWaypointOnRoad(geom::Location(worldloc), 0x1 << 1);
+      std::optional<element::Waypoint> InRoadWaypoint = GetClosestWaypointOnRoad(geom::Location(worldloc), 0x1 << 1);
       geom::Transform InRoadWPTransform = ComputeTransform(*InRoadWaypoint);
 
       geom::Vector3D director = geom::Location(worldloc) - (InRoadWPTransform.location);
@@ -1508,10 +1508,10 @@ namespace road {
     }
 
     for (auto& cv : out_mesh.GetVertices() ) {
-      boost::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(cv), 0x1 << 1);
+      std::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(cv), 0x1 << 1);
       if (!CheckingWaypoint)
       {
-        boost::optional<element::Waypoint> InRoadWaypoint = GetClosestWaypointOnRoad(geom::Location(cv), 0x1 << 1);
+        std::optional<element::Waypoint> InRoadWaypoint = GetClosestWaypointOnRoad(geom::Location(cv), 0x1 << 1);
         geom::Transform InRoadWPTransform = ComputeTransform(*InRoadWaypoint);
 
         geom::Vector3D director = geom::Location(cv) - (InRoadWPTransform.location);
@@ -1543,9 +1543,9 @@ namespace road {
             for (auto&& lane_pair : lane_section.GetLanes()) {
               const auto& lane = lane_pair.second;
               if ( lane.GetType() == road::Lane::LaneType::Sidewalk ) {
-                boost::optional<element::Waypoint> sw =
+                std::optional<element::Waypoint> sw =
                   GetWaypoint(road.GetId(), lane_pair.first, lane.GetDistance() + (lane.GetLength() * 0.5f));
-                if( GetWaypoint(ComputeTransform(*sw).location).get_ptr () == nullptr ){
+                if (!GetWaypoint(ComputeTransform(*sw).location).has_value()){
                   sidewalk_lane_meshes.push_back(mesh_factory.GenerateSidewalk(lane));
                 }
               }

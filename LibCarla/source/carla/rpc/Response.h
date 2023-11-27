@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -9,16 +9,16 @@
 #include "carla/MsgPack.h"
 #include "carla/MsgPackAdaptors.h"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4583)
 #pragma warning(disable:4582)
-#include <boost/variant2/variant.hpp>
+#include <variant>
 #pragma warning(pop)
 #else
-#include <boost/variant2/variant.hpp>
+#include <variant>
 #endif
 
 #include <string>
@@ -77,17 +77,17 @@ namespace rpc {
 
     const error_type &GetError() const {
       DEBUG_ASSERT(HasError());
-      return boost::variant2::get<error_type>(_data);
+      return std::get<error_type>(_data);
     }
 
     value_type &Get() {
       DEBUG_ASSERT(!HasError());
-      return boost::variant2::get<value_type>(_data);
+      return std::get<value_type>(_data);
     }
 
     const value_type &Get() const {
       DEBUG_ASSERT(!HasError());
-      return boost::variant2::get<value_type>(_data);
+      return std::get<value_type>(_data);
     }
 
     operator bool() const {
@@ -98,7 +98,7 @@ namespace rpc {
 
   private:
 
-    boost::variant2::variant<error_type, value_type> _data;
+    std::variant<error_type, value_type> _data;
   };
 
   template <>
@@ -143,7 +143,7 @@ namespace rpc {
 
     Response(success_flag) {}
 
-    boost::optional<error_type> _data;
+    std::optional<error_type> _data;
   };
 
 } // namespace rpc

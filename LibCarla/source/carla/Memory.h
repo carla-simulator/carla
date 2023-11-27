@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -6,28 +6,26 @@
 
 #pragma once
 
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
+#include <memory>
+#include <utility>
 
 namespace carla {
 
-  /// Use this SharedPtr (boost::shared_ptr) to keep compatibility with
+  /// Use this SharedPtr (std::shared_ptr) to keep compatibility with
   /// boost::python, but it would be nice if in the future we can make a Python
   /// adaptor for std::shared_ptr.
   template <typename T>
-  using SharedPtr = boost::shared_ptr<T>;
+  using SharedPtr = std::shared_ptr<T>;
 
   template <typename T>
-  using WeakPtr = boost::weak_ptr<T>;
+  using WeakPtr = std::weak_ptr<T>;
 
   template <typename T>
-  using EnableSharedFromThis = boost::enable_shared_from_this<T>;
+  using EnableSharedFromThis = std::enable_shared_from_this<T>;
 
   template <typename T, typename... Args>
   static inline auto MakeShared(Args &&... args) {
-    return boost::make_shared<T>(std::forward<Args>(args)...);
+    return std::make_shared<T>(std::forward<Args>(args)...);
   }
 
 } // namespace carla

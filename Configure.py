@@ -472,6 +472,12 @@ class DependencyUEPlugin(Dependency):
 
 DEFAULT_DEPENDENCIES = [
 	Dependency(
+		'boost-asio',
+		GitRepository('https://github.com/boostorg/asio.git')),
+	Dependency(
+		'boost-python',
+		GitRepository('https://github.com/boostorg/python.git')),
+	Dependency(
 		'boost',
 		Download(f'https://boostorg.jfrog.io/artifactory/main/release/{BOOST_VERSION_STRING}/source/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip'),
 		Download(f'https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip')),

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -271,7 +271,7 @@ namespace nav {
         // build the visitor structure
         WalkerEventVisitor visitor(this, id, delta);
         // run the event
-        return boost::variant2::visit(visitor, rp.event);
+        return std::visit(visitor, rp.event);
     }
 
     void WalkerManager::GetAllTrafficLightWaypoints() {
@@ -289,7 +289,7 @@ namespace nav {
             if (actor.description.id == "traffic.traffic_light") {
                 // get the TL actor
                 SharedPtr<carla::client::TrafficLight> tl =
-                    boost::static_pointer_cast<carla::client::TrafficLight>(world.GetActor(actor.id));
+                    std::static_pointer_cast<carla::client::TrafficLight>(world.GetActor(actor.id));
                 // get the waypoints where the TL affects
                 std::vector<SharedPtr<carla::client::Waypoint>> list = tl->GetStopWaypoints();
                 for (auto &way : list) {

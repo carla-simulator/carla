@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -61,10 +61,10 @@ namespace detail {
     void Tick(std::shared_ptr<Episode> episode);
 
     // Get Random location in nav mesh
-    boost::optional<geom::Location> GetRandomLocation() {
+    std::optional<geom::Location> GetRandomLocation() {
       geom::Location random_location(0, 0, 0);
       if (_nav.GetRandomLocation(random_location))
-        return boost::optional<geom::Location>(random_location);
+        return std::optional<geom::Location>(random_location);
       else
         return {};
     }

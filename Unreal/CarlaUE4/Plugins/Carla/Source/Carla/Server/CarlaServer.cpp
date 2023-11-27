@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -2468,8 +2468,8 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
               [id](auto &s) { s.actor = id; });
           for (auto command : c.do_after)
           {
-            boost::variant2::visit(set_id, command.command);
-            boost::variant2::visit(self, command.command);
+            std::visit(set_id, command.command);
+            std::visit(self, command.command);
           }
           return id;
         }
@@ -2511,7 +2511,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     result.reserve(commands.size());
     for (const auto &command : commands)
     {
-      result.emplace_back(boost::variant2::visit(command_visitor, command.command));
+      result.emplace_back(std::visit(command_visitor, command.command));
     }
     if (do_tick_cue)
     {

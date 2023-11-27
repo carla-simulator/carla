@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -315,7 +315,7 @@ void export_lightmanager() {
       .def_readwrite("active", &cc::LightState::_active)
     ;
 
-    class_<cc::Light, boost::shared_ptr<cc::Light>>("Light", no_init)
+    class_<cc::Light, std::shared_ptr<cc::Light>>("Light", no_init)
       .add_property("color", &cc::Light::GetColor)
       .add_property("id", &cc::Light::GetId)
       .add_property("intensity", &cc::Light::GetIntensity)
@@ -331,7 +331,7 @@ void export_lightmanager() {
       .def("turn_off", &cc::Light::TurnOff)
     ;
 
-    class_<cc::LightManager, boost::shared_ptr<cc::LightManager>>("LightManager", no_init)
+    class_<cc::LightManager, std::shared_ptr<cc::LightManager>>("LightManager", no_init)
       .def("get_all_lights", CALL_RETURNING_LIST_1(cc::LightManager, GetAllLights, cr::LightState::LightGroup), (args("light_group") = cr::LightState::LightGroup::None ))
       .def("turn_on", &LightManagerTurnOn, (arg("lights")))
       .def("turn_off", &LightManagerTurnOff, (arg("lights")))

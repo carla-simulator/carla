@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -167,7 +167,7 @@ void export_blueprint() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cc::BlueprintLibrary, boost::noncopyable, boost::shared_ptr<cc::BlueprintLibrary>>("BlueprintLibrary", no_init)
+  class_<cc::BlueprintLibrary, boost::noncopyable, std::shared_ptr<cc::BlueprintLibrary>>("BlueprintLibrary", no_init)
     .def("find", +[](const cc::BlueprintLibrary &self, const std::string &key) -> cc::ActorBlueprint {
       return self.at(key);
     }, (arg("id")))

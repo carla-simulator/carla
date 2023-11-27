@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -264,7 +264,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
             "synchronous mode and substepping are enabled but the number of substeps is not valid. "
             "Please be aware that this value needs to be in the range [1-16].");
       }
-      double n_substeps = settings.fixed_delta_seconds.get() / settings.max_substep_delta_time;
+      double n_substeps = settings.fixed_delta_seconds.value() / settings.max_substep_delta_time;
 
       if (n_substeps > static_cast<double>(settings.max_substeps)) {
         log_warning(
@@ -320,7 +320,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     nav->UnregisterWalker(walker->GetId(), controller.GetId());
   }
 
-  boost::optional<geom::Location> Simulator::GetRandomLocationFromNavigation() {
+  std::optional<geom::Location> Simulator::GetRandomLocationFromNavigation() {
     DEBUG_ASSERT(_episode != nullptr);
     auto nav = _episode->CreateNavigationIfMissing();
     return nav->GetRandomLocation();

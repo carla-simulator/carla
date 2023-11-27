@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -19,7 +19,7 @@
 #include "carla/geom/Vector3D.h"
 #include "carla/rpc/OpendriveGenerationParameters.h"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <vector>
 
@@ -51,15 +51,15 @@ namespace road {
     /// -- Geometry ------------------------------------------------------------
     /// ========================================================================
 
-    boost::optional<element::Waypoint> GetClosestWaypointOnRoad(
+    std::optional<element::Waypoint> GetClosestWaypointOnRoad(
         const geom::Location &location,
         int32_t lane_type = static_cast<int32_t>(Lane::LaneType::Driving)) const;
 
-    boost::optional<element::Waypoint> GetWaypoint(
+    std::optional<element::Waypoint> GetWaypoint(
         const geom::Location &location,
         int32_t lane_type = static_cast<int32_t>(Lane::LaneType::Driving)) const;
 
-    boost::optional<element::Waypoint> GetWaypoint(
+    std::optional<element::Waypoint> GetWaypoint(
         RoadId road_id,
         LaneId lane_id,
         float s) const;
@@ -124,10 +124,10 @@ namespace road {
     std::vector<Waypoint> GetPrevious(Waypoint waypoint, double distance) const;
 
     /// Return a waypoint at the lane of @a waypoint's right lane.
-    boost::optional<Waypoint> GetRight(Waypoint waypoint) const;
+    std::optional<Waypoint> GetRight(Waypoint waypoint) const;
 
     /// Return a waypoint at the lane of @a waypoint's left lane.
-    boost::optional<Waypoint> GetLeft(Waypoint waypoint) const;
+    std::optional<Waypoint> GetLeft(Waypoint waypoint) const;
 
     /// Generate all the waypoints in @a map separated by @a approx_distance.
     std::vector<Waypoint> GenerateWaypoints(double approx_distance) const;

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -16,10 +16,10 @@
 #pragma warning(push)
 #pragma warning(disable:4583)
 #pragma warning(disable:4582)
-#include <boost/variant2/variant.hpp>
+#include <variant>
 #pragma warning(pop)
 #else
-#include <boost/variant2/variant.hpp>
+#include <variant>
 #endif
 
 namespace carla {
@@ -51,11 +51,11 @@ namespace detail {
         MakeActor(episode);
       }
       DEBUG_ASSERT(_value.index() == 1u);
-      return boost::variant2::get<SharedPtr<client::Actor>>(_value);
+      return std::get<SharedPtr<client::Actor>>(_value);
     }
 
     const rpc::Actor &Serialize() const {
-      return boost::variant2::visit(Visitor(), _value);
+      return std::visit(Visitor(), _value);
     }
 
     ActorId GetId() const {
@@ -91,7 +91,7 @@ namespace detail {
 
     void MakeActor(EpisodeProxy episode) const;
 
-    mutable boost::variant2::variant<rpc::Actor, SharedPtr<client::Actor>> _value;
+    mutable std::variant<rpc::Actor, SharedPtr<client::Actor>> _value;
   };
 
 } // namespace detail

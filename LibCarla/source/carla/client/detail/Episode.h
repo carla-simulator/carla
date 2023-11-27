@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -54,13 +54,13 @@ namespace detail {
       _actors.Insert(std::move(actor));
     }
 
-    boost::optional<rpc::Actor> GetActorById(ActorId id);
+    std::optional<rpc::Actor> GetActorById(ActorId id);
 
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &actor_ids);
 
     std::vector<rpc::Actor> GetActors();
 
-    boost::optional<WorldSnapshot> WaitForState(time_duration timeout) {
+    std::optional<WorldSnapshot> WaitForState(time_duration timeout) {
       return _snapshot.WaitFor(timeout);
     }
 

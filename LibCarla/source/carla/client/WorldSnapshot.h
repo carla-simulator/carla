@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -10,7 +10,7 @@
 #include "carla/client/ActorSnapshot.h"
 #include "carla/client/detail/EpisodeState.h"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace carla {
 namespace client {
@@ -41,7 +41,7 @@ namespace client {
     }
 
     /// Find an ActorSnapshot by id.
-    boost::optional<ActorSnapshot> Find(ActorId actor_id) const {
+    std::optional<ActorSnapshot> Find(ActorId actor_id) const {
       return _state->GetActorSnapshotIfPresent(actor_id);
     }
 

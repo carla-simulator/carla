@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -17,10 +17,10 @@
 #pragma warning(push)
 #pragma warning(disable:4583)
 #pragma warning(disable:4582)
-#include <boost/variant2/variant.hpp>
+#include <variant>
 #pragma warning(pop)
 #else
-#include <boost/variant2/variant.hpp>
+#include <variant>
 #endif
 
 namespace carla {
@@ -62,7 +62,7 @@ namespace rpc {
       MSGPACK_DEFINE_ARRAY(location, text, draw_shadow);
     };
 
-    boost::variant2::variant<Point, Line, Arrow, Box, String> primitive;
+    std::variant<Point, Line, Arrow, Box, String> primitive;
 
     Color color = {255u, 0u, 0u};
 

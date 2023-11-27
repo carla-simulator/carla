@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -41,7 +41,7 @@ namespace client {
     return _episode.Lock()->GetVehiclesLightStates();
   }
 
-  boost::optional<geom::Location> World::GetRandomLocationFromNavigation() const {
+  std::optional<geom::Location> World::GetRandomLocationFromNavigation() const {
     return _episode.Lock()->GetRandomLocationFromNavigation();
   }
 
@@ -68,7 +68,7 @@ namespace client {
       for (auto i = 0u; i < number_of_attemps; i++) {
         const auto curr_snapshot = GetSnapshot();
 
-        const double error = abs(new_settings.fixed_delta_seconds.get() - curr_snapshot.GetTimestamp().delta_seconds);
+        const double error = abs(new_settings.fixed_delta_seconds.value() - curr_snapshot.GetTimestamp().delta_seconds);
         if (error < std::numeric_limits<float>::epsilon())
           tics_correct++;
 
@@ -237,7 +237,7 @@ namespace client {
     _episode.Lock()->EnableEnvironmentObjects(env_objects_ids, enable);
   }
 
-  boost::optional<rpc::LabelledPoint> World::ProjectPoint(
+  std::optional<rpc::LabelledPoint> World::ProjectPoint(
       geom::Location location, geom::Vector3D direction, float search_distance) const {
     auto result = _episode.Lock()->ProjectPoint(location, direction, search_distance);
     if (result.first) {
@@ -246,7 +246,7 @@ namespace client {
     return {};
   }
 
-  boost::optional<rpc::LabelledPoint> World::GroundProjection(
+  std::optional<rpc::LabelledPoint> World::GroundProjection(
       geom::Location location, float search_distance) const {
     const geom::Vector3D DownVector(0,0,-1);
     return ProjectPoint(location, DownVector, search_distance);

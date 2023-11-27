@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -27,7 +27,7 @@ namespace profiler {
   public:
 
     ~LifetimeProfiler() {
-      std::lock_guard<std::mutex> lock(_mutex);
+      std::scoped_lock<std::mutex> lock(_mutex);
       if (!_objects.empty()) {
         log("WARNING! the following objects were not destructed.");
         for (const auto &item : _objects) {
@@ -41,12 +41,12 @@ namespace profiler {
 #if LIBCARLA_LOG_LEVEL <= LIBCARLA_LOG_LEVEL_DEBUG
       log('+', display_name);
 #endif
-      std::lock_guard<std::mutex> lock(_mutex);
+      std::scoped_lock<std::mutex> lock(_mutex);
       _objects.emplace(object, std::move(display_name));
     }
 
     void Deregister(void *object) {
-      std::lock_guard<std::mutex> lock(_mutex);
+      std::scoped_lock<std::mutex> lock(_mutex);
       auto it = _objects.find(object);
       DEBUG_ASSERT(it != _objects.end());
 #if LIBCARLA_LOG_LEVEL <= LIBCARLA_LOG_LEVEL_DEBUG

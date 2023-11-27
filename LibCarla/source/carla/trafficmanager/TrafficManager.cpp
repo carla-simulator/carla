@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -43,7 +43,7 @@ TrafficManager::TrafficManager(
 }
 
 void TrafficManager::Release() {
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   for(auto& tm : _tm_map) {
     tm.second->Release();
     TrafficManagerBase *base_ptr = tm.second;
@@ -53,14 +53,14 @@ void TrafficManager::Release() {
 }
 
 void TrafficManager::Reset() {
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   for(auto& tm : _tm_map) {
     tm.second->Reset();
   }
 }
 
 void TrafficManager::Tick() {
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   for(auto& tm : _tm_map) {
     tm.second->SynchronousTick();
   }
@@ -68,7 +68,7 @@ void TrafficManager::Tick() {
 
 void TrafficManager::ShutDown() {
   TrafficManagerBase* tm_ptr = GetTM(_port);
-  std::lock_guard<std::mutex> lock(_mutex);
+  std::scoped_lock<std::mutex> lock(_mutex);
   auto it = _tm_map.find(_port);
   if (it != _tm_map.end()) {
     _tm_map.erase(it);

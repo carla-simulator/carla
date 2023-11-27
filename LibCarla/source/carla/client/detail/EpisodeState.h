@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -14,7 +14,7 @@
 #include "carla/geom/Vector3DInt.h"
 #include "carla/sensor/data/RawEpisodeState.h"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <memory>
 #include <unordered_map>
@@ -70,8 +70,8 @@ namespace detail {
       return state;
     }
 
-    boost::optional<ActorSnapshot> GetActorSnapshotIfPresent(ActorId id) const {
-      boost::optional<ActorSnapshot> state;
+    std::optional<ActorSnapshot> GetActorSnapshotIfPresent(ActorId id) const {
+      std::optional<ActorSnapshot> state;
       CopyActorSnapshotIfPresent(id, state);
       return state;
     }

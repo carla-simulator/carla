@@ -245,7 +245,7 @@ void ALSM::UpdateData(const bool hybrid_physics_mode, const Actor &vehicle,
   }
 
   // Updated kinematic state object.
-  auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(vehicle);
+  auto vehicle_ptr = std::static_pointer_cast<cc::Vehicle>(vehicle);
   KinematicState kinematic_state{vehicle_location, vehicle_rotation,
                                   vehicle_velocity, vehicle_ptr->GetSpeedLimit(),
                                   enable_physics, vehicle->IsDormant(), cg::Location()};
@@ -288,7 +288,7 @@ void ALSM::UpdateUnregisteredActorsData() {
 
     bool state_entry_not_present = !simulation_state.ContainsActor(actor_id);
     if (type_id.front() == 'v') {
-      auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(actor_ptr);
+      auto vehicle_ptr = std::static_pointer_cast<cc::Vehicle>(actor_ptr);
       kinematic_state.speed_limit = vehicle_ptr->GetSpeedLimit();
 
       tl_state = {vehicle_ptr->GetTrafficLightState(), vehicle_ptr->IsAtTrafficLight()};
@@ -316,7 +316,7 @@ void ALSM::UpdateUnregisteredActorsData() {
       }
     }
     else if (type_id.front() == 'w') {
-      auto walker_ptr = boost::static_pointer_cast<cc::Walker>(actor_ptr);
+      auto walker_ptr = std::static_pointer_cast<cc::Walker>(actor_ptr);
 
       if (state_entry_not_present) {
         dimensions = walker_ptr->GetBoundingBox().extent;

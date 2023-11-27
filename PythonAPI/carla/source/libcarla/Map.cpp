@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -154,7 +154,7 @@ void export_map() {
   // -- Map --------------------------------------------------------------------
   // ===========================================================================
 
-  class_<cc::Map, boost::noncopyable, boost::shared_ptr<cc::Map>>("Map", no_init)
+  class_<cc::Map, boost::noncopyable, std::shared_ptr<cc::Map>>("Map", no_init)
     .def(init<std::string, std::string>((arg("name"), arg("xodr_content"))))
     .add_property("name", CALL_RETURNING_COPY(cc::Map, GetName))
     .def("get_spawn_points", CALL_RETURNING_LIST(cc::Map, GetRecommendedSpawnPoints))
@@ -185,7 +185,7 @@ void export_map() {
     .add_property("width", &cre::LaneMarking::width)
   ;
 
-  class_<cc::Waypoint, boost::noncopyable, boost::shared_ptr<cc::Waypoint>>("Waypoint", no_init)
+  class_<cc::Waypoint, boost::noncopyable, std::shared_ptr<cc::Waypoint>>("Waypoint", no_init)
     .add_property("id", &cc::Waypoint::GetId)
     .add_property("transform", CALL_RETURNING_COPY(cc::Waypoint, GetTransform))
     .add_property("is_intersection", &cc::Waypoint::IsJunction) // deprecated
@@ -212,7 +212,7 @@ void export_map() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cc::Junction, boost::noncopyable, boost::shared_ptr<cc::Junction>>("Junction", no_init)
+  class_<cc::Junction, boost::noncopyable, std::shared_ptr<cc::Junction>>("Junction", no_init)
     .add_property("id", &cc::Junction::GetId)
     .add_property("bounding_box", &cc::Junction::GetBoundingBox)
     .def("get_waypoints", &GetJunctionWaypoints)
@@ -256,7 +256,7 @@ void export_map() {
     .add_static_property("RecomendedSpeedEnd", &cr::SignalType::RecomendedSpeedEnd)
   ;
 
-  class_<cc::Landmark, boost::noncopyable, boost::shared_ptr<cc::Landmark>>("Landmark", no_init)
+  class_<cc::Landmark, boost::noncopyable, std::shared_ptr<cc::Landmark>>("Landmark", no_init)
     .add_property("road_id", &cc::Landmark::GetRoadId)
     .add_property("distance", &cc::Landmark::GetDistance)
     .add_property("s", &cc::Landmark::GetS)

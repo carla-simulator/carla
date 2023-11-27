@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -144,7 +144,7 @@ namespace client {
   }
 
   void LaneInvasionSensor::Listen(CallbackFunctionType callback) {
-    auto vehicle = boost::dynamic_pointer_cast<Vehicle>(GetParent());
+    auto vehicle = std::dynamic_pointer_cast<Vehicle>(GetParent());
     if (vehicle == nullptr) {
       log_error(GetDisplayId(), ": not attached to a vehicle");
       return;

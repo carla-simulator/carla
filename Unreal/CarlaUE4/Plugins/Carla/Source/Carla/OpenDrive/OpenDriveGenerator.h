@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -10,7 +10,7 @@
 #include "ProceduralMeshComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <boost/optional.hpp>
+#include <optional>
 #include "carla/road/Map.h"
 #include <compiler/enable-ue4-macros.h>
 

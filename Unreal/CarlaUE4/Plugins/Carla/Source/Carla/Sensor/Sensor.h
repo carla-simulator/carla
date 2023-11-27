@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -35,7 +35,7 @@ public:
 
   virtual void Set(const FActorDescription &Description);
 
-  boost::optional<FActorAttribute> GetAttribute(const FString Name);
+  std::optional<FActorAttribute> GetAttribute(const FString Name);
 
   virtual void BeginPlay();
 

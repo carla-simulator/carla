@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -39,12 +39,7 @@ namespace carla {
     /// Post a task to the pool.
     template <
       typename FunctorT,
-#if __cplusplus < 201703L
-      typename ResultT = typename std::result_of_t<FunctorT()>
-#else
-      typename ResultT = typename std::invoke_result_t<FunctorT()>
-#endif
-    >
+      typename ResultT = typename std::invoke_result_t<FunctorT()>>
     std::future<ResultT> Post(FunctorT &&functor) {
       auto task = std::packaged_task<ResultT()>(std::forward<FunctorT>(functor));
       auto future = task.get_future();

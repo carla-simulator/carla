@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -387,7 +387,7 @@ private:
     uint16_t port);
 
   TrafficManagerBase* GetTM(uint16_t port) const {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::scoped_lock<std::mutex> lock(_mutex);
     auto it = _tm_map.find(port);
     if (it != _tm_map.end()) {
       return it->second;

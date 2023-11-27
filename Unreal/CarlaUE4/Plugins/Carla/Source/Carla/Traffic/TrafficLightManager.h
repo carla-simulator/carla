@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -30,7 +30,7 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Traffic Light Manager")
   void RegisterLightComponentGenerated(UTrafficLightComponent * TrafficLight);
 
-  const boost::optional<carla::road::Map> &GetMap();
+  const std::optional<carla::road::Map> &GetMap();
 
   UFUNCTION(BlueprintCallable, Category = "Traffic Light Manager")
   ATrafficLightGroup* GetTrafficGroup(int JunctionId);

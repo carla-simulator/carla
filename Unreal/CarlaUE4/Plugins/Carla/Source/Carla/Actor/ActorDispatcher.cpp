@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -211,7 +211,7 @@ FCarlaActor* UActorDispatcher::RegisterActor(
           {
             AActor *UEActor = reinterpret_cast<AActor *>(Actor);
             ActorROS2Handler Handler(UEActor, RosName);
-            boost::variant2::visit(Handler, Data);
+            std::visit(Handler, Data);
           });
         }
       }

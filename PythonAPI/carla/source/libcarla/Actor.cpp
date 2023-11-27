@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -89,7 +89,7 @@ void export_actor() {
       .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cc::Actor, boost::noncopyable, boost::shared_ptr<cc::Actor>>("Actor", no_init)
+  class_<cc::Actor, boost::noncopyable, std::shared_ptr<cc::Actor>>("Actor", no_init)
   // work-around, force return copy to resolve Actor instead of ActorState.
       .add_property("id", CALL_RETURNING_COPY(cc::Actor, GetId))
       .add_property("type_id", CALL_RETURNING_COPY(cc::Actor, GetTypeId))
@@ -170,7 +170,7 @@ void export_actor() {
     .value("TirePuncture", cr::VehicleFailureState::TirePuncture)
   ;
 
-  class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle",
+  class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, std::shared_ptr<cc::Vehicle>>("Vehicle",
       no_init)
       .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
       .def("apply_ackermann_control", &cc::Vehicle::ApplyAckermannControl, (arg("control")))
@@ -198,7 +198,7 @@ void export_actor() {
       .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cc::Walker, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Walker>>("Walker", no_init)
+  class_<cc::Walker, bases<cc::Actor>, boost::noncopyable, std::shared_ptr<cc::Walker>>("Walker", no_init)
       .def("apply_control", &ApplyControl<cr::WalkerControl>, (arg("control")))
       .def("get_control", &cc::Walker::GetWalkerControl)
       .def("get_bones", &cc::Walker::GetBonesTransform)
@@ -210,7 +210,7 @@ void export_actor() {
       .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cc::WalkerAIController, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::WalkerAIController>>("WalkerAIController", no_init)
+  class_<cc::WalkerAIController, bases<cc::Actor>, boost::noncopyable, std::shared_ptr<cc::WalkerAIController>>("WalkerAIController", no_init)
     .def("start", &cc::WalkerAIController::Start)
     .def("stop", &cc::WalkerAIController::Stop)
     .def("go_to_location", &cc::WalkerAIController::GoToLocation, (arg("destination")))
@@ -218,7 +218,7 @@ void export_actor() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cc::TrafficSign, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::TrafficSign>>(
+  class_<cc::TrafficSign, bases<cc::Actor>, boost::noncopyable, std::shared_ptr<cc::TrafficSign>>(
       "TrafficSign",
       no_init)
       .add_property("trigger_volume", CALL_RETURNING_COPY(cc::TrafficSign, GetTriggerVolume))
@@ -232,7 +232,7 @@ void export_actor() {
       .value("Unknown", cr::TrafficLightState::Unknown)
   ;
 
-  class_<cc::TrafficLight, bases<cc::TrafficSign>, boost::noncopyable, boost::shared_ptr<cc::TrafficLight>>(
+  class_<cc::TrafficLight, bases<cc::TrafficSign>, boost::noncopyable, std::shared_ptr<cc::TrafficLight>>(
       "TrafficLight",
       no_init)
       .add_property("state", &cc::TrafficLight::GetState)
