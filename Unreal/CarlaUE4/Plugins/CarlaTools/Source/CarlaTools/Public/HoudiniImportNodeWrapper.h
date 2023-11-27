@@ -5,7 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
-#ifdef CARLA_HOUDINI_ENABLED
+/*
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
 #include "HoudiniPublicAPIProcessHDANode.h"
@@ -62,3 +62,4 @@ private:
 
 };
 #endif
+*/

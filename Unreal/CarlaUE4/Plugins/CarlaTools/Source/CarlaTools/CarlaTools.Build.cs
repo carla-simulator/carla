@@ -16,6 +16,9 @@ public class CarlaTools :
     [CommandLine("-nv-omniverse")]
     bool EnableNVIDIAOmniverse = false;
 
+    [CommandLine("-unity")]
+    bool EnableUnityBuild = false;
+
     [CommandLine("-carla-install-path")]
     string CarlaInstallPath = null;
 
@@ -83,6 +86,21 @@ public class CarlaTools :
 		bEnableExceptions = bEnableExceptions || IsWindows;
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         // PrivatePCHHeaderFile = "Carla.h";
+
+        Action<string, bool> LogBuildFlagStatus = (name, enabled) =>
+        {
+            Console.WriteLine(
+                string.Format(
+                    "{0} is {1}.",
+                    name,
+                    enabled ? "enabled" : "disabled"));
+        };
+
+        LogBuildFlagStatus("Houdini support", EnableHoudini);
+        LogBuildFlagStatus("NVIDIA Omniverse support", EnableNVIDIAOmniverse);
+        LogBuildFlagStatus("Unity build", EnableUnityBuild);
+
+        bUseUnity = EnableUnityBuild;
 
         // PublicIncludePaths.AddRange(new string[] { });
         // PrivateIncludePaths.AddRange(new string[] { });
@@ -203,13 +221,10 @@ public class CarlaTools :
         PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
         PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
 
-        if (!bEnableExceptions)
-        {
-            PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
-            PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
-            PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
-            PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
-        }
+        PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
+        PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
+        PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+        PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
 
         if (EnableHoudini)
             PublicDefinitions.Add("CARLA_HOUDINI_ENABLED");

@@ -22,6 +22,9 @@ public class Carla :
     [CommandLine("-ros2")]
     bool EnableRos2 = false;
 
+    [CommandLine("-unity")]
+    bool EnableUnityBuild = false;
+
     [CommandLine("-carla-install-path")]
     string CarlaInstallPath = null;
 
@@ -61,9 +64,26 @@ public class Carla :
         bEnableExceptions = bEnableExceptions || IsWindows;
 		PrivatePCHHeaderFile = "Carla.h";
 
-		if (EnableCarSim)
+		Action<string, bool> LogBuildFlagStatus = (name, enabled) =>
 		{
-			PublicDefinitions.Add("WITH_CARSIM");
+			Console.WriteLine(
+				string.Format(
+					"{0} is {1}.",
+					name,
+					enabled ? "enabled" : "disabled"));
+		};
+
+        LogBuildFlagStatus("CarSim support", EnableCarSim);
+        LogBuildFlagStatus("Chrono support", EnableChrono);
+        LogBuildFlagStatus("PyTorch support", EnablePytorch);
+        LogBuildFlagStatus("ROS2 support", EnableRos2);
+        LogBuildFlagStatus("Unity build", EnableUnityBuild);
+
+        bUseUnity = EnableUnityBuild;
+
+        if (EnableCarSim)
+		{
+            PublicDefinitions.Add("WITH_CARSIM");
 			PrivateDefinitions.Add("WITH_CARSIM");
 		}
 
@@ -80,15 +100,15 @@ public class Carla :
 		}
 
 		if (EnableRos2)
-		{
-			PublicDefinitions.Add("WITH_ROS2");
+        {
+            PublicDefinitions.Add("WITH_ROS2");
 			PrivateDefinitions.Add("WITH_ROS2");
 		}
 
-		// PublicIncludePaths.AddRange(new string[] { });
-		// PrivateIncludePaths.AddRange(new string[] { });
+        // PublicIncludePaths.AddRange(new string[] { });
+        // PrivateIncludePaths.AddRange(new string[] { });
 
-		PublicDependencyModuleNames.AddRange(new string[]
+        PublicDependencyModuleNames.AddRange(new string[]
 		{
 			"Core",
 			"RenderCore",
@@ -211,13 +231,10 @@ public class Carla :
         PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
         PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
 
-        if (!bEnableExceptions)
-        {
-            PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
-            PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
-            PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
-            PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
-        }
+        PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
+        PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
+        PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+        PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
     }
 
 #if false

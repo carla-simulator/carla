@@ -118,15 +118,15 @@ class CARLA_API UWheeledVehicleMovementComponentNW : public UChaosWheeledVehicle
 
 		/** Engine */
 	UPROPERTY(EditAnywhere, Category = MechanicalSetup)
-	FVehicleNWEngineData EngineSetup;
+	FVehicleNWEngineData EngineSetupEXT;
 
 	/** Differential */
 	UPROPERTY(EditAnywhere, Category = MechanicalSetup)
-	TArray<FVehicleNWWheelDifferentialData> DifferentialSetup;
+	TArray<FVehicleNWWheelDifferentialData> DifferentialSetupEXT;
 
 	/** Transmission data */
 	UPROPERTY(EditAnywhere, Category = MechanicalSetup)
-	FVehicleNWTransmissionData TransmissionSetup;
+	FVehicleNWTransmissionData TransmissionSetupEXT;
 
 	/** Maximum steering versus forward speed (km/h) */
 	UPROPERTY(EditAnywhere, Category = SteeringSetup)

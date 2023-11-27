@@ -58,12 +58,12 @@ option (
 option (
     ENABLE_RTTI
     "Enable C++ RTTI."
-    ON)
+    OFF)
 
 option (
     ENABLE_EXCEPTIONS
     "Enable C++ Exceptions."
-    ON)
+    OFF)
 
 set (CARLA_WORKSPACE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 set (CARLA_BUILD_PATH ${CMAKE_CURRENT_BINARY_DIR})
@@ -190,6 +190,7 @@ if (BUILD_LIBCARLA_SERVER)
         ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/streaming/low_level/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.h
+        ${LIBCARLA_SOURCE_PATH}/compiler/*.h
     )
 
     file (
@@ -224,7 +225,7 @@ if (BUILD_LIBCARLA_SERVER)
     )
 
     install (TARGETS carla-server DESTINATION lib)
-    
+
     foreach (HEADER ${LIBCARLA_SERVER_HEADERS})
         cmake_path (GET HEADER PARENT_PATH HEADER_PARENT)
         cmake_path (RELATIVE_PATH HEADER_PARENT BASE_DIRECTORY ${LIBCARLA_SOURCE_PATH}/carla OUTPUT_VARIABLE HEADER_RELATIVE)
@@ -276,6 +277,7 @@ if (BUILD_LIBCARLA_CLIENT)
         ${LIBCARLA_SOURCE_PATH}/carla/streaming/low_level/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/trafficmanager/*.h
+        ${LIBCARLA_SOURCE_PATH}/compiler/*.h
     )
 
     if (ENABLE_LIBCARLA_CLIENT_RSS)

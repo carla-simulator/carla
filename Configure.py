@@ -984,7 +984,8 @@ def BuildDependencies(task_graph : TaskGraph):
 		'-DBUILD_GEOD=OFF',
 		'-DBUILD_GIE=OFF',
 		'-DBUILD_PROJ=OFF',
-		'-DBUILD_TESTING=OFF'))
+		'-DBUILD_TESTING=OFF',
+		install_path = PROJ_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-recast',
 		[],
