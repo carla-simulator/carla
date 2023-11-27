@@ -309,17 +309,17 @@ void RssSensor::TickRssSensor(const client::Timestamp &timestamp, CallbackFuncti
 
     auto const settings = GetWorld().GetSettings();
     if ( settings.synchronous_mode ) {
-      _rss_check->GetLogger()->trace("RssSensor[{}] sync-tick", timestamp.frame);
+      _rss_check->GetLogger()->info("RssSensor[{}] sync-tick", timestamp.frame);
       TickRssSensorThreadLocked(timestamp, actors, callback);
     }
     else {
       // store the future to prevent the destructor of the future from blocked waiting
-      _rss_check->GetLogger()->trace("RssSensor[{}] async-tick", timestamp.frame);
+      _rss_check->GetLogger()->info("RssSensor[{}] async-tick", timestamp.frame);
       _tick_future = std::async(&RssSensor::TickRssSensorThreadLocked, this, timestamp, actors, callback);
     }
   } else {
     if (bool(_rss_check)){
-      _rss_check->GetLogger()->debug("RssSensor[{}] tick dropped", timestamp.frame);
+      _rss_check->GetLogger()->info("RssSensor[{}] tick dropped", timestamp.frame);
     }
   }
 }

@@ -1,5 +1,5 @@
-## Latest
-
+## Latest Changes
+ * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
   * Added vehicle doors to the recorder
 
 ## CARLA 0.9.15
