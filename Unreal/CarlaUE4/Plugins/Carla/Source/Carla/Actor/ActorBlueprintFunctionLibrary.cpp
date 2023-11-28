@@ -195,6 +195,7 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs && ... Strings)
 {
   Def.Id = JoinStrings(TEXT("."), std::forward<TStrs>(Strings) ...).ToLower();
   Def.Tags = JoinStrings(TEXT(","), std::forward<TStrs>(Strings) ...).ToLower();
+
   // each actor gets an actor role name attribute (empty by default)
   FActorVariation ActorRole;
   ActorRole.Id = TEXT("role_name");
@@ -202,6 +203,14 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs && ... Strings)
   ActorRole.RecommendedValues = { TEXT("default") };
   ActorRole.bRestrictToRecommended = false;
   Def.Variations.Emplace(ActorRole);
+
+  // ROS2
+  FActorVariation Var;
+  Var.Id = TEXT("ros_name");
+  Var.Type = EActorAttributeType::String;
+  Var.RecommendedValues = { Def.Id };
+  Var.bRestrictToRecommended = false;
+  Def.Variations.Emplace(Var);
 }
 
 static void AddRecommendedValuesForActorRoleName(

@@ -21,6 +21,18 @@ if (BUILD_RSS_VARIANT)
   install(FILES ${spdlog_file} DESTINATION lib)
   list(APPEND ADRSS_LIBS ${spdlog_file})
 
+  set(proj_include_dir ${ADRSS_INSTALL_DIR}/../../proj-install/include)
+  set(proj_lib ${ADRSS_INSTALL_DIR}/../../proj-install/lib/libproj.a)
+  install(DIRECTORY ${proj_include_dir} DESTINATION include/system)
+  list(APPEND ADRSS_INCLUDE_DIRS ${proj_include_dir})
+  install(FILES ${proj_lib} DESTINATION lib)
+  list(APPEND ADRSS_LIBS ${proj_lib})
+
+  # as long as the libosm2odr uses the same odrSprial interface it is enough to copy the built static library
+  set(odr_lib ${ADRSS_INSTALL_DIR}/../src/ad-rss-lib/dependencies/map/dependencies/odrSpiral/lib/libodrSpiral.a)
+  install(FILES ${odr_lib} DESTINATION lib)
+  list(APPEND ADRSS_LIBS ${odr_lib})
+
   foreach(ad_lib ad_physics ad_rss ad_map_access ad_map_opendrive_reader ad_rss_map_integration)
     set(${ad_lib}_file ${ADRSS_INSTALL_DIR}/${ad_lib}/lib/lib${ad_lib}.a)
     install(FILES ${${ad_lib}_file} DESTINATION lib)
@@ -253,6 +265,12 @@ file(GLOB libcarla_carla_trafficmanager_sources
     "${libcarla_source_path}/carla/trafficmanager/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_trafficmanager_sources}")
 install(FILES ${libcarla_carla_trafficmanager_sources} DESTINATION include/carla/trafficmanager)
+
+file(GLOB libcarla_carla_ros2_sources
+    "${libcarla_source_path}/carla/ros2/*.cpp"
+    "${libcarla_source_path}/carla/ros2/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_ros2_sources}")
+install(FILES ${libcarla_carla_ros2_sources} DESTINATION include/carla/ros2)
 
 # ==============================================================================
 # Create targets for debug and release in the same build type.

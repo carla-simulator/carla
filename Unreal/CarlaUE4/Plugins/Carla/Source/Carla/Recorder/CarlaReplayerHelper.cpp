@@ -416,6 +416,24 @@ void CarlaReplayerHelper::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Ve
   }
 }
 
+// set the openings and closings of vehicle doors
+void CarlaReplayerHelper::ProcessReplayerDoorVehicle(CarlaRecorderDoorVehicle DoorVehicle)
+{
+  check(Episode != nullptr);
+  FCarlaActor * CarlaActor = Episode->FindCarlaActor(DoorVehicle.DatabaseId);
+  if (CarlaActor)
+  {
+    ACarlaWheeledVehicle * Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+    if (Vehicle) {
+      if(DoorVehicle.bIsOpen){
+        Vehicle->OpenDoor(static_cast<EVehicleDoor>(DoorVehicle.Doors));
+      }else{
+        Vehicle->CloseDoor(static_cast<EVehicleDoor>(DoorVehicle.Doors));
+      }
+    }
+  }
+}
+
 // set the lights for vehicles
 void CarlaReplayerHelper::ProcessReplayerLightVehicle(CarlaRecorderLightVehicle LightVehicle)
 {
