@@ -62,6 +62,8 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 LLVM_INCLUDE="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
 LLVM_LIBPATH="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
 UNREAL_HOSTED_CFLAGS="--sysroot=$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/"
+UNREAL_HOSTED_LINKER_FLAGS="--sysroot=$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/ -L${LLVM_LIBPATH} -L$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/usr/lib"
+
 
 # ==============================================================================
 # -- Get boost includes --------------------------------------------------------
@@ -793,83 +795,6 @@ if ${USE_PYTORCH} ; then
   cp -p ${LIBTORCHCLUSTER_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
 fi
 
-# ==============================================================================
-# -- Download Fast DDS and dependencies ----------------------------------------
-# ==============================================================================
-
-FASTDDS_BASENAME=fast-dds
-FASTDDS_INSTALL_DIR=${PWD}/${FASTDDS_BASENAME}-install
-FASTDDS_INCLUDE=${FASTDDS_INSTALL_DIR}/include
-FASTDDS_LIB=${FASTDDS_INSTALL_DIR}/lib
-if ${USE_ROS2} ; then
-  function build_fastdds_extension {
-    LIB_SOURCE=$1
-    LIB_REPO=$2
-    LIB_BRANCH=$3
-    if [[ ! -d ${LIB_SOURCE} ]] ; then
-      mkdir -p ${LIB_SOURCE}
-      log "${LIB_REPO}"
-      git clone --depth 1 --branch ${LIB_BRANCH} ${LIB_REPO} ${LIB_SOURCE}
-      mkdir -p ${LIB_SOURCE}/build
-    fi
-  }
-  if [[ ! -d ${FASTDDS_INSTALL_DIR} ]] ; then
-    mkdir -p ${FASTDDS_INSTALL_DIR}
-    log "Build foonathan memory vendor"
-    FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan-memory-vendor
-    FOONATHAN_MEMORY_VENDOR_SOURCE_DIR=${PWD}/${FOONATHAN_MEMORY_VENDOR_BASENAME}-source
-    FOONATHAN_MEMORY_VENDOR_REPO="https://github.com/eProsima/foonathan_memory_vendor.git"
-    FOONATHAN_MEMORY_VENDOR_BRANCH=master
-    build_fastdds_extension ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR} "${FOONATHAN_MEMORY_VENDOR_REPO}" "${FOONATHAN_MEMORY_VENDOR_BRANCH}"
-    pushd ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}/build >/dev/null
-    cmake -G "Ninja" \
-      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
-      -DBUILD_SHARED_LIBS=ON \
-      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
-      ..
-    ninja
-    ninja install
-    popd >/dev/null
-    rm -Rf ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}
-
-    log "Build fast cdr"
-    FAST_CDR_BASENAME=fast-cdr
-    FAST_CDR_SOURCE_DIR=${PWD}/${FAST_CDR_BASENAME}-source
-    FAST_CDR_REPO="https://github.com/eProsima/Fast-CDR.git"
-    FAST_CDR_BRANCH=1.1.x
-    build_fastdds_extension ${FAST_CDR_SOURCE_DIR} "${FAST_CDR_REPO}" "${FAST_CDR_BRANCH}"
-    pushd ${FAST_CDR_SOURCE_DIR}/build >/dev/null
-    cmake -G "Ninja" \
-      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
-      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
-      ..
-    ninja
-    ninja install
-    popd >/dev/null
-    rm -Rf ${FAST_CDR_SOURCE_DIR}
-
-    log "Build fast dds"
-    FAST_DDS_LIB_BASENAME=fast-dds-lib
-    FAST_DDS_LIB_SOURCE_DIR=${PWD}/${FAST_DDS_LIB_BASENAME}-source
-    FAST_DDS_LIB_REPO="https://github.com/eProsima/Fast-DDS.git"
-    FAST_DDS_LIB_BRANCH=2.11.2
-    build_fastdds_extension ${FAST_DDS_LIB_SOURCE_DIR} "${FAST_DDS_LIB_REPO}" "${FAST_DDS_LIB_BRANCH}"
-    pushd ${FAST_DDS_LIB_SOURCE_DIR}/build >/dev/null
-    cmake -G "Ninja" \
-      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
-      -DCMAKE_CXX_FLAGS=-latomic \
-      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
-       \
-      ..
-    ninja
-    ninja install
-    popd >/dev/null
-    rm -Rf ${FAST_DDS_LIB_SOURCE_DIR}
-
-    mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-    cp -p ${FASTDDS_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-  fi
-fi
 
 # ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
@@ -919,12 +844,136 @@ cp ${LIBSTDCPP_TOOLCHAIN_FILE}.gen ${LIBCPP_TOOLCHAIN_FILE}.gen
 
 cat >>${LIBCPP_TOOLCHAIN_FILE}.gen <<EOL
 
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++ -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -isystem ${LLVM_INCLUDE} ${UNREAL_HOSTED_CFLAGS}" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions" CACHE STRING "" FORCE)
-set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -L${LLVM_LIBPATH} ${UNREAL_HOSTED_CFLAGS}" CACHE STRING "" FORCE)
-set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -lc++ -lc++abi" CACHE STRING "" FORCE)
+set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} ${UNREAL_HOSTED_LINKER_FLAGS} -lc++ -lc++abi" CACHE STRING "" FORCE)
+set(CMAKE_SHARED_LINKER_FLAGS "\${CMAKE_SHARED_LINKER_FLAGS} ${UNREAL_HOSTED_LINKER_FLAGS} -lc++ -lc++abi" CACHE STRING "" FORCE)
+set(CMAKE_EXE_LINKER_FLAGS "\${CMAKE_EXE_LINKER_FLAGS} ${UNREAL_HOSTED_LINKER_FLAGS} -lc++ -lc++abi" CACHE STRING "" FORCE)
+
 EOL
+
+move_if_changed "${LIBCPP_TOOLCHAIN_FILE}.gen" "${LIBCPP_TOOLCHAIN_FILE}"
+move_if_changed "${LIBSTDCPP_TOOLCHAIN_FILE}.gen" "${LIBSTDCPP_TOOLCHAIN_FILE}"
+
+
+# ==============================================================================
+# -- Download Fast DDS and dependencies ----------------------------------------
+# ==============================================================================
+
+FASTDDS_BASENAME=fast-dds
+FASTDDS_INSTALL_DIR=${PWD}/${FASTDDS_BASENAME}-install
+FASTDDS_INCLUDE=${FASTDDS_INSTALL_DIR}/include
+FASTDDS_LIB=${FASTDDS_INSTALL_DIR}/lib
+if ${USE_ROS2} ; then
+  function build_fastdds_extension {
+    LIB_SOURCE=$1
+    LIB_REPO=$2
+    LIB_BRANCH=$3
+    if [[ ! -d ${LIB_SOURCE} ]] ; then
+      mkdir -p ${LIB_SOURCE}
+      log "${LIB_REPO}"
+      git clone --depth 1 --branch ${LIB_BRANCH} ${LIB_REPO} ${LIB_SOURCE}
+      mkdir -p ${LIB_SOURCE}/build
+    fi
+  }
+  if [[ ! -d ${FASTDDS_INSTALL_DIR} ]] ; then
+
+    mkdir -p ${FASTDDS_INSTALL_DIR}
+    log "Build foonathan memory vendor"
+    FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan-memory-vendor
+    FOONATHAN_MEMORY_VENDOR_SOURCE_DIR=${PWD}/${FOONATHAN_MEMORY_VENDOR_BASENAME}-source
+    FOONATHAN_MEMORY_VENDOR_REPO="https://github.com/eProsima/foonathan_memory_vendor.git"
+    FOONATHAN_MEMORY_VENDOR_BRANCH=master
+    build_fastdds_extension ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR} "${FOONATHAN_MEMORY_VENDOR_REPO}" "${FOONATHAN_MEMORY_VENDOR_BRANCH}"
+    pushd ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}/build >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DCMAKE_TOOLCHAIN_FILE="${LIBCPP_TOOLCHAIN_FILE}" \
+      -DBUILD_SHARED_LIBS=ON \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}
+
+    log "Build fast dds"
+    FAST_DDS_LIB_BASENAME=fast-dds-lib
+    FAST_DDS_LIB_SOURCE_DIR=${PWD}/${FAST_DDS_LIB_BASENAME}-source
+    FAST_DDS_LIB_REPO="https://github.com/eProsima/Fast-DDS.git"
+    FAST_DDS_LIB_BRANCH=2.11.2
+    build_fastdds_extension ${FAST_DDS_LIB_SOURCE_DIR} "${FAST_DDS_LIB_REPO}" "${FAST_DDS_LIB_BRANCH}"
+    pushd ${FAST_DDS_LIB_SOURCE_DIR} >/dev/null
+    git submodule update --init
+    popd >/dev/null
+
+    log "fast dds: Build asio"
+    pushd ${FAST_DDS_LIB_SOURCE_DIR}/thirdparty/asio/asio >/dev/null
+    ./autogen.sh
+    # since ASIO is header only installation, we don't care about flags from LIBCPP_TOOLCHAIN_FILE (let the tests etc. build on host settings for now...)
+    ./configure  --prefix="${FASTDDS_INSTALL_DIR}" 
+    make -j 15 install
+    popd >/dev/null
+
+    log "fast dds: Build tinyxml2"
+    mkdir -p ${FAST_DDS_LIB_SOURCE_DIR}/build/tinyxml2
+    pushd ${FAST_DDS_LIB_SOURCE_DIR}/build/tinyxml2 >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DCMAKE_TOOLCHAIN_FILE="${LIBCPP_TOOLCHAIN_FILE}" \
+      -DBUILD_TESTING=OFF \
+      ../../thirdparty/tinyxml2
+    ninja
+    ninja install
+    popd >/dev/null
+
+    log "fast dds: Build fast cdr"
+    mkdir -p ${FAST_DDS_LIB_SOURCE_DIR}/build/fastcdr
+    pushd ${FAST_DDS_LIB_SOURCE_DIR}/build/fastcdr >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DCMAKE_TOOLCHAIN_FILE="${LIBCPP_TOOLCHAIN_FILE}" \
+      ../../thirdparty/fastcdr
+    ninja
+    ninja install
+    popd >/dev/null
+
+    log "fast dds: Build fast dds itself"
+    mkdir -p ${FAST_DDS_LIB_SOURCE_DIR}/build/fastdds
+    pushd ${FAST_DDS_LIB_SOURCE_DIR}/build/fastdds >/dev/null
+    # we have to tweak the sources a bit to be able to compile with our boost and without EXCEPTIONS
+    if [[ -e ${FAST_DDS_LIB_SOURCE_DIR}/thirdparty/boost/include/boost ]]; then
+      # remove their boost includes, but keep their entry point
+      rm -rf ${FAST_DDS_LIB_SOURCE_DIR}/thirdparty/boost/include/boost
+      # ensure the find boost compiles without exceptions
+      sed -i s/"CXX_STANDARD 11"/"CXX_STANDARD 11\n         COMPILE_DEFINITIONS \"-DBOOST_NO_EXCEPTIONS\""/ ${FAST_DDS_LIB_SOURCE_DIR}/cmake/modules/FindThirdpartyBoost.cmake
+      sed -i s/"class ThirdpartyBoostCompileTest"/"#ifdef BOOST_NO_EXCEPTIONS\nnamespace boost {void throw_exception(std::exception const \& e) {}}\n#endif\nclass ThirdpartyBoostCompileTest"/ ${FAST_DDS_LIB_SOURCE_DIR}/thirdparty/boost/test/ThirdpartyBoostCompile_test.cpp
+    fi
+    UE4_OPENSSL_INCLUDE=${UE4_ROOT}/Engine/Source/ThirdParty/OpenSSL/1.1.1c/include/Linux/x86_64-unknown-linux-gnu
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DCMAKE_TOOLCHAIN_FILE="${LIBCPP_TOOLCHAIN_FILE}" \
+      -DCMAKE_MODULE_PATH="${FASTDDS_INSTALL_DIR}" \
+      -DBUILD_TESTING=OFF \
+      -DCOMPILE_EXAMPLES=OFF \
+      -DCOMPILE_TOOLS=OFF \
+      -DTHIRDPARTY_Asio=ON \
+      -DTHIRDPARTY_fastcdr=ON \
+      -DTHIRDPARTY_TinyXML2=ON \
+      -DCMAKE_CXX_FLAGS="-latomic -I${UE4_OPENSSL_INCLUDE}" \
+      -DTHIRDPARTY_BOOST_INCLUDE_DIR="${BOOST_INCLUDE};${FAST_DDS_LIB_SOURCE_DIR}/thirdparty/boost/include" \
+      ../..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${FAST_DDS_LIB_SOURCE_DIR}
+
+    mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+    cp -p ${FASTDDS_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  fi
+fi
+
+
+
 
 # -- CMAKE_CONFIG_FILE ---------------------------------------------------------
 
@@ -989,10 +1038,6 @@ else
   echo "add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true)" >> ${CMAKE_CONFIG_FILE}.gen
 fi
 
-# -- Move files ----------------------------------------------------------------
-
-move_if_changed "${LIBSTDCPP_TOOLCHAIN_FILE}.gen" "${LIBSTDCPP_TOOLCHAIN_FILE}"
-move_if_changed "${LIBCPP_TOOLCHAIN_FILE}.gen" "${LIBCPP_TOOLCHAIN_FILE}"
 move_if_changed "${CMAKE_CONFIG_FILE}.gen" "${CMAKE_CONFIG_FILE}"
 
 # ==============================================================================
@@ -1000,5 +1045,6 @@ move_if_changed "${CMAKE_CONFIG_FILE}.gen" "${CMAKE_CONFIG_FILE}"
 # ==============================================================================
 
 popd >/dev/null
+
 
 log "Success!"

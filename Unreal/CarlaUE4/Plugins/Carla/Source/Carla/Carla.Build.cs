@@ -324,7 +324,6 @@ public class Carla : ModuleRules
         AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfoonathan_memory-0.7.3.so"));
         AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastcdr.so"));
         AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastrtps.so"));
-        PublicAdditionalLibraries.Add("stdc++");
       }
 
 

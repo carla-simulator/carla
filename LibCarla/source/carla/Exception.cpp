@@ -54,4 +54,19 @@ namespace detail {
 } // namespace detail
 } // namespace clmdep_asio
 
+namespace asio {
+namespace detail {
+
+  template <typename Exception>
+  void throw_exception(const Exception& e) {
+    carla::throw_exception(e);
+  }
+
+  template void throw_exception<std::bad_cast>(const std::bad_cast &);
+  template void throw_exception<std::exception>(const std::exception &);
+  template void throw_exception<std::system_error>(const std::system_error &);
+
+} // namespace detail
+} // namespace asio
+
 #endif // ASIO_NO_EXCEPTIONS

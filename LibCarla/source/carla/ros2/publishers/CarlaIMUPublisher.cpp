@@ -23,7 +23,6 @@
 #include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
 #include <fastdds/dds/publisher/DataWriterListener.hpp>
 
-
 namespace carla {
 namespace ros2 {
   namespace efd = eprosima::fastdds::dds;
@@ -175,7 +174,7 @@ namespace ros2 {
     geometry_msgs::msg::Quaternion orientation;
 
     const float rx = 0.0f;                           // pitch
-    const float ry = (M_PIf32 / 2.0f) - compass;     // yaw
+    const float ry = (M_PI_2l) - compass;     // yaw
     const float rz = 0.0f;                           // roll
 
     const float cr = cosf(rz * 0.5f);
