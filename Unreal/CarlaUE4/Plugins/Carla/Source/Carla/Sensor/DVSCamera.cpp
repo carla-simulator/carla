@@ -4,14 +4,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-
-#include <random>
-#include <cmath>
-#include <algorithm>
-
+#include "Carla/Sensor/DVSCamera.h"
 #include "Carla.h"
 #include "Carla/Util/RandomEngine.h"
-#include "Carla/Sensor/DVSCamera.h"
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 
 #include <compiler/disable-ue4-macros.h>
@@ -19,6 +14,10 @@
 #include <carla/Buffer.h>
 #include <carla/BufferView.h>
 #include <compiler/enable-ue4-macros.h>
+
+#include <random>
+#include <cmath>
+#include <algorithm>
 
 static float FColorToGrayScaleFloat(FColor Color)
 {

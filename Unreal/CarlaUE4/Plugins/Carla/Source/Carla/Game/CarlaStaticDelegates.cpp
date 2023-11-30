@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
+#include "Carla.h"
 
 FCarlaStaticDelegates::FOnEpisodeSettingsChange FCarlaStaticDelegates::OnEpisodeSettingsChange;

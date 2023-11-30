@@ -4,8 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "CarlaRecorder.h"
 #include "CarlaRecorderEventAdd.h"
+#include "CarlaRecorder.h"
 #include "CarlaRecorderHelpers.h"
 
 void CarlaRecorderEventAdd::Write(std::ostream &OutFile) const

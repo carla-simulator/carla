@@ -5,6 +5,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+
+#if 0 // @CARLAUE5
+#include "TireConfig.h"
+#include "VehicleWheel.h"
+
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
 #include "MovementComponents/DefaultMovementComponent.h"
@@ -12,10 +18,6 @@
 #include "UObject/UObjectGlobals.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
-
-#if 0 // @CARLAUE5
-#include "TireConfig.h"
-#include "VehicleWheel.h"
 
 #include "Carla.h"
 #include "Carla/Game/CarlaHUD.h"
@@ -25,7 +27,6 @@
 #include "Carla/Util/EmptyActor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Vegetation/VegetationManager.h"
-#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------

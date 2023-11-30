@@ -4,13 +4,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "Carla/Sensor/WorldObserver.h"
+#include "Carla.h"
 #include "Carla/Actor/ActorData.h"
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaEngine.h"
-
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Traffic/TrafficLightComponent.h"
 #include "Carla/Traffic/TrafficLightController.h"
@@ -18,9 +17,7 @@
 #include "Carla/Traffic/TrafficSignBase.h"
 #include "Carla/Traffic/SignComponent.h"
 #include "Carla/Walker/WalkerController.h"
-
 #include "CoreGlobals.h"
-
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/String.h>
 #include <carla/sensor/SensorRegistry.h>

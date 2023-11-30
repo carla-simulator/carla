@@ -4,15 +4,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "Carla/Util/ObjectRegister.h"
-
+#include "Carla.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
-
 #include "InstancedFoliageActor.h"
 #include "GameFramework/Character.h"
-
 #if WITH_EDITOR
 #include "FileHelper.h"
 #include "Paths.h"

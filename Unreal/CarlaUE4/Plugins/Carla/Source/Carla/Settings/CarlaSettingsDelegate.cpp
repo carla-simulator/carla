@@ -1,10 +1,14 @@
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
+#include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla.h"
 #include "Game/CarlaGameInstance.h"
-#include "Carla/Settings/CarlaSettingsDelegate.h"
-
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Settings/CarlaSettings.h"
-
 #include "Async.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/DirectionalLight.h"

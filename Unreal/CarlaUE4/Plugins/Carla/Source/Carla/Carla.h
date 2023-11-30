@@ -5,8 +5,8 @@
 #pragma once
 
 
-#include "Util/NonCopyable.h"
 #include "Logging/LogMacros.h"
+#include "Util/NonCopyable.h"
 #include "Modules/ModuleInterface.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCarla, Log, All);

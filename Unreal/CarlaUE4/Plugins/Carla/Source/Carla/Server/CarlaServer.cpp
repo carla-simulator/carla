@@ -4,12 +4,11 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "Carla/Server/CarlaServer.h"
+#include "Carla.h"
 #include "Carla/Server/CarlaServerResponse.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
 #include "EngineUtils.h"
-
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Util/NavigationMesh.h"
@@ -27,7 +26,6 @@
 #include "CarlaServerResponse.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Misc/FileHelper.h"
-
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
 #include <carla/multigpu/router.h>

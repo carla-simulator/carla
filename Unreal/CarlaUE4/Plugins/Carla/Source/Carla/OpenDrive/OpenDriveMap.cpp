@@ -4,8 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "Carla/OpenDrive/OpenDriveMap.h"
+#include "Carla.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>

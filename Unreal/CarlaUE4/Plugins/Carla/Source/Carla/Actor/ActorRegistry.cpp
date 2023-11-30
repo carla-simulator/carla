@@ -4,9 +4,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "Carla/Actor/ActorRegistry.h"
 #include "Carla.h"
 #include "Carla/Actor/ActorData.h"
-#include "Carla/Actor/ActorRegistry.h"
 
 #include "Carla/Game/Tagger.h"
 #include "Carla/Traffic/TrafficLightBase.h"

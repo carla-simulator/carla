@@ -4,10 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Kismet/KismetMathLibrary.h"
-
 #include "VehicleVelocityControl.h"
-
+#include "Kismet/KismetMathLibrary.h"
 
 UVehicleVelocityControl::UVehicleVelocityControl()
 {

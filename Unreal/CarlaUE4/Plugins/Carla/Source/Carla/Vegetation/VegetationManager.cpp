@@ -4,10 +4,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "Carla/Vegetation/VegetationManager.h"
 #include "ProceduralFoliageVolume.h"
 #include "ProceduralFoliageComponent.h"
-
-#include "Carla/Vegetation/VegetationManager.h"
 #include "Carla/Vegetation/SpringBasedVegetationComponent.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Game/TaggedComponent.h"

@@ -4,14 +4,11 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <PxScene.h>
-
-#include "Carla.h"
 #include "Carla/Sensor/Radar.h"
+#include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
-
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
 #include "carla/ros2/ROS2.h"

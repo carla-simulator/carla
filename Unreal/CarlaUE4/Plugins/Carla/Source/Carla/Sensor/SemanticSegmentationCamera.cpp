@@ -4,11 +4,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "Carla/Sensor/SemanticSegmentationCamera.h"
-
+#include "Carla.h"
 #include "Actor/ActorBlueprintFunctionLibrary.h"
-
 #include "Carla/Sensor/PixelReader.h"
 
 FActorDefinition ASemanticSegmentationCamera::GetSensorDefinition()

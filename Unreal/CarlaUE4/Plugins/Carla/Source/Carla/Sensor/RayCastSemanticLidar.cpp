@@ -4,11 +4,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <PxScene.h>
-#include <cmath>
+#include "Carla/Sensor/RayCastSemanticLidar.h"
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
-#include "Carla/Sensor/RayCastSemanticLidar.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
@@ -19,6 +17,7 @@
 #include "Engine/CollisionProfile.h"
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
+#include <cmath>
 
 namespace crp = carla::rpc;
 

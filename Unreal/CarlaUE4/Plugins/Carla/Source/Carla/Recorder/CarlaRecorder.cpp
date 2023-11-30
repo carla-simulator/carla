@@ -4,6 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "CarlaRecorder.h"
 #include "Carla.h"
 #include "Carla/Actor/ActorDescription.h"
 #include "Carla/Actor/ActorRegistry.h"
@@ -24,7 +25,6 @@
 #include "carla/rpc/VehicleLightState.h"
 #include <compiler/enable-ue4-macros.h>
 
-#include "CarlaRecorder.h"
 #include "CarlaReplayerHelper.h"
 
 #include <ctime>

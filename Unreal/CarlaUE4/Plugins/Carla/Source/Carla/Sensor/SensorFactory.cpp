@@ -4,22 +4,18 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "Carla/Sensor/SensorFactory.h"
-
+#include "Carla.h"
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Sensor/Sensor.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
-
 #include <compiler/disable-ue4-macros.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <compiler/enable-ue4-macros.h>
-
 #define LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES
 #include <carla/sensor/SensorRegistry.h>
 #undef LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES
-
 #include <type_traits>
 
 // =============================================================================

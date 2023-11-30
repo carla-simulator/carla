@@ -2,8 +2,8 @@
 // de Barcelona (UAB). This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "FrictionTrigger.h"
+#include "Carla.h"
 #include "Vehicle/CarlaWheeledVehicle.h"
 
 AFrictionTrigger::AFrictionTrigger(const FObjectInitializer &ObjectInitializer)

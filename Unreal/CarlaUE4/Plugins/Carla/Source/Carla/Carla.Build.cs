@@ -37,6 +37,18 @@ public class Carla :
 		base(Target)
     {
         bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
+
+        bLegacyPublicIncludePaths = false;
+        ModuleIncludePathWarningLevel = WarningLevel.Warning;
+        ModuleIncludeSubdirectoryWarningLevel = WarningLevel.Warning;
+        ShadowVariableWarningLevel = WarningLevel.Warning;
+        UnsafeTypeCastWarningLevel = WarningLevel.Warning;
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        CppStandard = CppStandardVersion.Cpp20;
+        bEnableExceptions = bEnableExceptions || IsWindows;
+        bUseUnity = EnableUnityBuild;
+        PrivatePCHHeaderFile = "Carla.h";
+
         var DirectoryInfo = new DirectoryInfo(ModuleDirectory);
         for (int i = 0; i != 6; ++i)
             DirectoryInfo = DirectoryInfo.Parent;
@@ -61,9 +73,6 @@ public class Carla :
             Console.WriteLine("Using \"" + CarlaDependenciesPath + "\" as the CARLA depenencies install path.");
         }
 
-        bEnableExceptions = bEnableExceptions || IsWindows;
-		PrivatePCHHeaderFile = "Carla.h";
-
 		Action<string, bool> LogBuildFlagStatus = (name, enabled) =>
 		{
 			Console.WriteLine(
@@ -78,8 +87,6 @@ public class Carla :
         LogBuildFlagStatus("PyTorch support", EnablePytorch);
         LogBuildFlagStatus("ROS2 support", EnableRos2);
         LogBuildFlagStatus("Unity build", EnableUnityBuild);
-
-        bUseUnity = EnableUnityBuild;
 
         if (EnableCarSim)
 		{
@@ -226,9 +233,9 @@ public class Carla :
 			PublicAdditionalLibraries.AddRange(ChronoLibraries);
         }
 
-        PublicIncludePaths.Add(LibCarlaIncludePath);
-        PublicIncludePaths.Add(LibCarlaIncludePath);
-        PublicIncludePaths.AddRange(new string[]
+        PrivateIncludePaths.Add(LibCarlaIncludePath);
+        PrivateIncludePaths.Add(LibCarlaIncludePath);
+        PrivateIncludePaths.AddRange(new string[]
         {
             GetIncludePath("boost"),
             GetIncludePath("rpclib"),
@@ -237,13 +244,12 @@ public class Carla :
             GetIncludePath("zlib"),
         });
 
-        PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
-        PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
-
-        PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
-        PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
-        PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
-        PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
+        PrivateDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
+        PrivateDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
+        PrivateDefinitions.Add("ASIO_NO_EXCEPTIONS");
+        PrivateDefinitions.Add("BOOST_NO_EXCEPTIONS");
+        PrivateDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+        PrivateDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
     }
 
 #if false

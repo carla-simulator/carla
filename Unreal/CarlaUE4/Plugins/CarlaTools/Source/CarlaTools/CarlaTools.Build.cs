@@ -59,6 +59,18 @@ public class CarlaTools :
 		base(Target)
     {
         bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
+
+        bLegacyPublicIncludePaths = false;
+        ModuleIncludePathWarningLevel = WarningLevel.Warning;
+        ModuleIncludeSubdirectoryWarningLevel = WarningLevel.Warning;
+        ShadowVariableWarningLevel = WarningLevel.Warning;
+        UnsafeTypeCastWarningLevel = WarningLevel.Warning;
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        CppStandard = CppStandardVersion.Cpp20;
+        bEnableExceptions = bEnableExceptions || IsWindows;
+        bUseUnity = EnableUnityBuild;
+        CppStandard = CppStandardVersion.Cpp20;
+
         var DirectoryInfo = new DirectoryInfo(ModuleDirectory);
         for (int i = 0; i != 6; ++i)
             DirectoryInfo = DirectoryInfo.Parent;
@@ -83,8 +95,6 @@ public class CarlaTools :
             Console.WriteLine("Using \"" + CarlaDependenciesPath + "\" as the CARLA depenencies install path.");
         }
 
-		bEnableExceptions = bEnableExceptions || IsWindows;
-        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         // PrivatePCHHeaderFile = "Carla.h";
 
         Action<string, bool> LogBuildFlagStatus = (name, enabled) =>
@@ -99,8 +109,6 @@ public class CarlaTools :
         LogBuildFlagStatus("Houdini support", EnableHoudini);
         LogBuildFlagStatus("NVIDIA Omniverse support", EnableNVIDIAOmniverse);
         LogBuildFlagStatus("Unity build", EnableUnityBuild);
-
-        bUseUnity = EnableUnityBuild;
 
         // PublicIncludePaths.AddRange(new string[] { });
         // PrivateIncludePaths.AddRange(new string[] { });
@@ -215,9 +223,8 @@ public class CarlaTools :
             FindLibraries("sumo", "*osm2odr")[0],
             FindLibraries("zlib", "zlib*")[0],
         });
-
-        PublicIncludePaths.Add(LibCarlaIncludePath);
-        PublicIncludePaths.AddRange(new string[]
+        PrivateIncludePaths.Add(LibCarlaIncludePath);
+        PrivateIncludePaths.AddRange(new string[]
         {
             GetIncludePath("boost"),
             GetIncludePath("rpclib"),
@@ -225,18 +232,14 @@ public class CarlaTools :
             GetIncludePath("sumo"),
             GetIncludePath("zlib"),
         });
-
         PrivateIncludePaths.Add(LibCarlaIncludePath);
-
-        PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
-        PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
-
-        PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
-        PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
-        PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
-        PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
-
+        PrivateDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
+        PrivateDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
+        PrivateDefinitions.Add("ASIO_NO_EXCEPTIONS");
+        PrivateDefinitions.Add("BOOST_NO_EXCEPTIONS");
+        PrivateDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+        PrivateDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
         if (EnableHoudini)
-            PublicDefinitions.Add("CARLA_HOUDINI_ENABLED");
+            PrivateDefinitions.Add("CARLA_HOUDINI_ENABLED");
     }
 }

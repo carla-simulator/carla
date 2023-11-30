@@ -4,11 +4,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "Carla/Settings/CarlaSettings.h"
-
+#include "Carla.h"
 #include "Carla/Util/IniFile.h"
-
 #include "CommandLine.h"
 #include "Engine/DirectionalLight.h"
 #include "Engine/Engine.h"

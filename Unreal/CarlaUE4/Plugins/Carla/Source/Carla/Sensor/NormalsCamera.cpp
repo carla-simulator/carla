@@ -4,11 +4,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "Carla/Sensor/NormalsCamera.h"
-
+#include "Carla.h"
 #include "Carla/Sensor/PixelReader.h"
-
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
 FActorDefinition ANormalsCamera::GetSensorDefinition()

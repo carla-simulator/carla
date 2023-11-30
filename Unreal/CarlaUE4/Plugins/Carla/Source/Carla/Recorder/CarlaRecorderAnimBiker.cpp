@@ -4,8 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "CarlaRecorder.h"
 #include "CarlaRecorderAnimBiker.h"
+#include "CarlaRecorder.h"
 #include "CarlaRecorderHelpers.h"
 
 void CarlaRecorderAnimBiker::Write(std::ostream &OutFile) const

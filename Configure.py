@@ -23,7 +23,7 @@ CARLA_UE_PLUGIN_DEPENDENCIES_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'CarlaDependenci
 CARLA_UE_CONTENT_PATH = CARLA_UE_PATH / 'Content'
 CARLA_UE_CONTENT_CARLA_PATH = CARLA_UE_CONTENT_PATH / 'Carla'
 CARLA_UE_CONTENT_VERSIONS_FILE_PATH = WORKSPACE_PATH / 'Util' / 'ContentVersions.json'
-FALLBACK_CARLA_VERSION_STRING = '0.9.14'
+FALLBACK_CARLA_VERSION_STRING = '0.9.15'
 LOGICAL_PROCESSOR_COUNT = psutil.cpu_count(logical = True)
 DEFAULT_PARALLELISM = LOGICAL_PROCESSOR_COUNT + (2 if LOGICAL_PROCESSOR_COUNT >= 8 else 0)
 READTHEDOCS_URL_SUFFIX = 'how_to_build_on_windows/\n' if os.name == "nt" else 'build_linux/\n'
@@ -88,140 +88,140 @@ DEFAULT_LIB = FindExecutable([
 ])
 
 DEFAULT_C_STANDARD = 11
-DEFAULT_CPP_STANDARD = 17
+DEFAULT_CPP_STANDARD = 20
 
 argp = argparse.ArgumentParser(description = __doc__)
-def AddDirective(name : str, help : str):
+def AddCommandLineFlag(name : str, help : str):
 	argp.add_argument(f'--{name}', action = 'store_true', help = help)
-def AddStringOption(name : str, default : str, help : str):
+def AddCommandLineStringFlag(name : str, default : str, help : str):
 	argp.add_argument(f'--{name}', type = str, default = str(default), help = f'{help} (default = "{default}").')
-def AddIntOption(name : str, default : int, help : str):
+def AddCommandLineIntegerFlag(name : str, default : int, help : str):
 	argp.add_argument(f'--{name}', type = int, default = int(default), help = f'{help} (default = {default}).')
-AddDirective(
+AddCommandLineFlag(
 	'launch',
 	'Build and open the CarlaUE4 project in the Unreal Engine editor.')
-AddDirective(
+AddCommandLineFlag(
 	'launch-only',
 	'Open the CARLA project in the Unreal Engine editor, skipping all build steps.')
-AddDirective(
+AddCommandLineFlag(
 	'import',
 	f'Import maps and assets from "{WORKSPACE_PATH / "Import"}" into Unreal.')
-AddDirective(
+AddCommandLineFlag(
 	'package',
 	'Build a packaged version of CARLA ready for distribution.')
-AddDirective(
+AddCommandLineFlag(
 	'docs',
 	'Build the CARLA documentation, through Doxygen.')
-AddDirective(
+AddCommandLineFlag(
 	'clean',
 	'Delete all build files.')
-AddDirective(
+AddCommandLineFlag(
 	'rebuild',
 	'Delete all build files and recompiles.')
-AddDirective(
+AddCommandLineFlag(
 	'check-libcarla',
 	'Run unit the test suites for LibCarla')
-AddDirective(
+AddCommandLineFlag(
 	'check-python-api',
 	'Run unit the test suites for PythonAPI')
-AddDirective(
+AddCommandLineFlag(
 	'check',
 	'Run unit the test suites for LibCarla and PythonAPI')
-AddDirective(
+AddCommandLineFlag(
 	'carla-ue',
 	'Build the CARLA Unreal Engine plugin and project.')
-AddDirective(
+AddCommandLineFlag(
 	'python-api',
 	'Build the CARLA Python API.')
-AddDirective(
+AddCommandLineFlag(
 	'libcarla-client',
 	'Build the LibCarla Client module.')
-AddDirective(
+AddCommandLineFlag(
 	'libcarla-server',
 	'Build the LibCarla Server module.')
-AddDirective(
+AddCommandLineFlag(
 	'update-deps',
 	'Download all project dependencies.')
-AddDirective(
+AddCommandLineFlag(
 	'build-deps',
 	'Build all project dependencies.')
-AddDirective(
+AddCommandLineFlag(
 	'configure-sequential',
 	'Whether to disable parallelism in the configuration script.')
-AddDirective(
+AddCommandLineFlag(
 	'no-log',
 	'Whether to disable saving logs.')
-AddDirective(
+AddCommandLineFlag(
 	'pytorch',
 	'Whether to enable PyTorch.')
-AddDirective(
+AddCommandLineFlag(
 	'chrono',
 	'Whether to enable Chrono.')
-AddDirective(
+AddCommandLineFlag(
 	'carsim',
 	'Whether to enable CarSim')
-AddDirective(
+AddCommandLineFlag(
 	'ros2',
 	'Whether to enable ROS2')
-AddDirective(
+AddCommandLineFlag(
 	'unity-build',
 	'Whether to enable Unity Build for Unreal Engine projects.')
-AddDirective(
+AddCommandLineFlag(
 	'osm2odr',
 	'Whether to enable OSM2ODR.')
-AddDirective(
+AddCommandLineFlag(
 	'osm-world-renderer',
 	'Whether to enable OSM World Renderer.')
-AddDirective(
+AddCommandLineFlag(
 	'nv-omniverse',
 	'Whether to enable the NVIDIA Omniverse Plugin.')
-AddDirective(
+AddCommandLineFlag(
 	'march-native',
 	'Whether to add "-march=native" to C/C++ compile flags.')
-AddDirective(
+AddCommandLineFlag(
 	'rss',
 	'Whether to enable RSS.')
-AddIntOption(
+AddCommandLineIntegerFlag(
 	'parallelism',
 	DEFAULT_PARALLELISM,
 	'Set the configure/build parallelism.')
-AddIntOption(
+AddCommandLineIntegerFlag(
 	'c-standard',
 	DEFAULT_C_STANDARD,
 	'Set the target C standard.')
-AddIntOption(
+AddCommandLineIntegerFlag(
 	'cpp-standard',
 	DEFAULT_CPP_STANDARD,
 	'Set the target C++ standard.')
-AddStringOption(
+AddCommandLineStringFlag(
 	'c-compiler',
 	DEFAULT_C_COMPILER,
 	'Set the target C compiler.')
-AddStringOption(
+AddCommandLineStringFlag(
 	'cpp-compiler',
 	DEFAULT_CPP_COMPILER,
 	'Set the target C++ compiler.')
-AddStringOption(
+AddCommandLineStringFlag(
 	'linker',
 	DEFAULT_LINKER,
 	'Set the target linker.')
-AddStringOption(
+AddCommandLineStringFlag(
 	'ar',
 	DEFAULT_LIB,
 	'Set the target ar/lib tool.')
-AddStringOption(
+AddCommandLineStringFlag(
 	'version',
 	FALLBACK_CARLA_VERSION_STRING,
 	'Override the CARLA version.')
-AddStringOption(
+AddCommandLineStringFlag(
 	'generator',
 	'Ninja',
 	'Set the CMake generator.')
-AddStringOption(
+AddCommandLineStringFlag(
 	'build-path',
 	WORKSPACE_PATH / 'Build',
 	'Set the CARLA build path.')
-AddStringOption(
+AddCommandLineStringFlag(
 	'ue-path',
 	os.getenv(
 		'UNREAL_ENGINE_PATH',
@@ -241,6 +241,7 @@ def SyncArgs():
 	return argv
 
 ARGV = SyncArgs()
+
 SEQUENTIAL = ARGV.configure_sequential
 ENABLE_OSM2ODR = ARGV.osm2odr or ARGV.python_api
 ENABLE_OSM_WORLD_RENDERER = ARGV.osm_world_renderer
@@ -382,13 +383,6 @@ SUMO_LIBRARY_PATH = SUMO_INSTALL_PATH / 'lib'
 # Nvidia Omniverse
 NV_OMNIVERSE_PLUGIN_PATH = UNREAL_ENGINE_PATH / 'Engine' / 'Plugins' / 'Marketplace' / 'NVIDIA' / 'Omniverse'
 NV_OMNIVERSE_PATCH_PATH = PATCHES_PATH / 'omniverse_4.26'
-
-CARLA_UE_OPTIONAL_MODULES = (
-	f'CarSim {"ON" if ENABLE_CARSIM else "OFF"}\n'
-	f'Chrono {"ON" if ENABLE_CHRONO else "OFF"}\n'
-	f'Ros2 {"ON" if ENABLE_ROS2 else "OFF"}\n'
-	f'Unity {"ON" if ENABLE_UNITY_BUILD else "OFF"}\n'
-)
 
 # Basic IO functions:
 
@@ -546,14 +540,13 @@ CARLA_UE_DEPENDENCIES = [
 
 
 class Task:
-
-	def __init__(self, name : str, in_edge_names : list, body, *args):
+	def __init__(self, name : str, in_edges : list, body, *args):
+		assert all([ type(e) == Task for e in in_edges ])
 		self.name = name
 		self.body = body
 		self.args = args
 		self.in_edge_done_count = 0
-		self.in_edge_names = in_edge_names
-		self.in_edges = []
+		self.in_edges = in_edges
 		self.out_edges = [] # Filled right before task graph execution.
 		self.done = False
 
@@ -613,7 +606,7 @@ class TaskGraph:
 
 	def Add(self, task : Task):
 		self.tasks.append(task)
-		if len(task.in_edge_names) == 0:
+		if len(task.in_edges) == 0:
 			self.sources.append(task.name)
 		self.task_map[task.name] = self.tasks[-1]
 		return task
@@ -630,26 +623,15 @@ class TaskGraph:
 		self.sequential = sequential
 		try:
 			for task in self.tasks:
-				for in_edge_name in task.in_edge_names:
-					in_edge = self.task_map.get(in_edge_name, None)
-					assert in_edge != None
-					task.in_edges.append(in_edge)
-
-			for task in self.tasks:
-				for in_edge_name in task.in_edge_names:
-					in_edge = self.task_map.get(in_edge_name, None)
+				for in_edge in task.in_edges:
 					assert in_edge != None
 					in_edge.out_edges.append(task)
 
-			futures = []
-			future_map = {}
 			task_queue = deque()
 			active_count = 0
 			done_count = 0
 
-			def UpdateOutEdges(task):
-				nonlocal task_queue
-				assert len(task.in_edges) == len(task.in_edge_names)
+			def UpdateOutEdges(task_queue, task):
 				if len(task.out_edges) == 0:
 					return
 				for out in task.out_edges:
@@ -658,9 +640,7 @@ class TaskGraph:
 					if out.in_edge_done_count == len(out.in_edges):
 						task_queue.append(out)
 			
-			def Flush():
-				nonlocal futures
-				nonlocal future_map
+			def Flush(task_queue, futures, future_map):
 				nonlocal done_count
 				nonlocal active_count
 				if active_count != 0:
@@ -669,7 +649,7 @@ class TaskGraph:
 					for e in done_tasks:
 						e.done = True
 						Log(f'{e.name} - done')
-						UpdateOutEdges(e)
+						UpdateOutEdges(task_queue, e)
 					assert active_count == len(done_tasks)
 					done_count += len(done_tasks)
 					active_count = 0
@@ -678,6 +658,8 @@ class TaskGraph:
 
 			task_queue.extend([ self.task_map[e] for e in self.sources ])
 			with ProcessPoolExecutor(self.parallelism) as pool:
+				futures = []
+				future_map = {}
 				while len(task_queue) != 0:
 					while len(task_queue) != 0 and active_count < self.parallelism:
 						task = task_queue.popleft()
@@ -693,8 +675,8 @@ class TaskGraph:
 							task.done = True
 							done_count += 1
 							UpdateOutEdges(task)
-					Flush()
-				Flush()
+					Flush(task_queue, futures, future_map)
+			gc.collect()
 
 			if done_count != len(self.tasks):
 				pending_tasks = []
@@ -787,10 +769,9 @@ def UpdateDependencies(task_graph : TaskGraph):
 		unique_deps.update(OSM2ODR_DEPENDENCIES)
 	if ENABLE_CHRONO:
 		unique_deps.update(CHRONO_DEPENDENCIES)
-	for dep in unique_deps:
-		name = dep.name
-		task_graph.Add(Task(f'update-{name}', [], UpdateDependency, dep))
-	task_graph.Execute()
+	return [
+		Task(f'update-{dep.name}', [], UpdateDependency, dep) for dep in unique_deps
+	]
 
 def CleanDownloadsMain():
 	for ext in [ '*.tmp', '*.zip', '*.tar.gz' ]:
@@ -798,7 +779,7 @@ def CleanDownloadsMain():
 			e.unlink(missing_ok = True)
 
 def CleanDownloads(task_graph : TaskGraph):
-	task_graph.Add(Task('clean-downloads', [], CleanDownloadsMain))
+	return task_graph.Add(Task('clean-downloads', [], CleanDownloadsMain))
 
 def ConfigureBoost():
 	if BOOST_B2_PATH.exists():
@@ -937,21 +918,21 @@ def ConfigureSUMO():
 
 def BuildDependencies(task_graph : TaskGraph):
 	# Configure:
-	task_graph.Add(Task('build-sqlite', [], BuildSQLite))
+	build_sqlite = task_graph.Add(Task('build-sqlite', [], BuildSQLite))
 	task_graph.Add(Task('configure-boost', [], ConfigureBoost))
-	task_graph.Add(Task.CreateCMakeConfigureDefault(
+	configure_zlib = task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-zlib',
 		[],
 		ZLIB_SOURCE_PATH,
 		ZLIB_BUILD_PATH,
 		install_path = ZLIB_INSTALL_PATH))
-	task_graph.Add(Task.CreateCMakeBuildDefault(
+	build_zlib = task_graph.Add(Task.CreateCMakeBuildDefault(
 		'build-zlib',
-		[ 'configure-zlib' ],
+		[ configure_zlib ],
 		ZLIB_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeInstallDefault(
 		'install-zlib',
-		[ 'build-zlib' ],
+		[ build_zlib ],
 		ZLIB_BUILD_PATH,
 		ZLIB_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeConfigureDefault(
@@ -971,7 +952,7 @@ def BuildDependencies(task_graph : TaskGraph):
 		f'-DZLIB_LIBRARIES={ZLIB_LIB_PATH}'))
 	task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-proj',
-		[ 'build-sqlite' ],
+		[ build_sqlite ],
 		PROJ_SOURCE_PATH,
 		PROJ_BUILD_PATH,
 		f'-DSQLITE3_INCLUDE_DIR={SQLITE_SOURCE_PATH}',
@@ -1048,13 +1029,13 @@ def BuildDependencies(task_graph : TaskGraph):
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-proj', [], PROJ_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-recast', [], RECAST_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-rpclib', [], RPCLIB_BUILD_PATH))
-	task_graph.Add(Task.CreateCMakeBuildDefault('build-xercesc', [], XERCESC_BUILD_PATH))
+	build_xercesc = task_graph.Add(Task.CreateCMakeBuildDefault('build-xercesc', [], XERCESC_BUILD_PATH))
 	if ENABLE_OSM_WORLD_RENDERER:
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-lunasvg', [], LUNASVG_BUILD_PATH))
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-libosmscout', [], LIBOSMSCOUT_BUILD_PATH))
 	if ENABLE_OSM2ODR:
-		task_graph.Add(Task('configure-sumo', [ 'build-xercesc' ], ConfigureSUMO))
-		task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [ 'configure-sumo' ], SUMO_BUILD_PATH))
+		configure_sumo = task_graph.Add(Task('configure-sumo', [ build_xercesc ], ConfigureSUMO))
+		task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [ configure_sumo ], SUMO_BUILD_PATH))
 	if ENABLE_CHRONO:
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-chrono', [], CHRONO_BUILD_PATH))
 	task_graph.Execute(sequential = True) # The underlying build system should already parallelize.
@@ -1075,7 +1056,7 @@ def BuildDependencies(task_graph : TaskGraph):
 	task_graph.Execute()
 
 def BuildLibCarlaMain(task_graph : TaskGraph):
-	task_graph.Add(Task.CreateCMakeConfigureDefault(
+	configure_libcarla = task_graph.Add(Task.CreateCMakeConfigureDefault(
 		'configure-libcarla',
 		[],
 		WORKSPACE_PATH,
@@ -1085,13 +1066,13 @@ def BuildLibCarlaMain(task_graph : TaskGraph):
 		f'-DBUILD_LIBCARLA_CLIENT={"ON" if ARGV.libcarla_client else "OFF"}',
 		f'-DBUILD_OSM_WORLD_RENDERER={"ON" if ENABLE_OSM_WORLD_RENDERER else "OFF"}',
 		f'-DLIBCARLA_PYTORCH={"ON" if ARGV.pytorch else "OFF"}'))
-	task_graph.Add(Task.CreateCMakeBuildDefault(
+	build_libcarla = task_graph.Add(Task.CreateCMakeBuildDefault(
 		'build-libcarla',
-		[ 'configure-libcarla' ],
+		[ configure_libcarla ],
 		LIBCARLA_BUILD_PATH))
-	task_graph.Add(Task.CreateCMakeInstallDefault(
+	return task_graph.Add(Task.CreateCMakeInstallDefault(
 		'install-libcarla',
-		[ 'build-libcarla' ],
+		[ build_libcarla ],
 		LIBCARLA_BUILD_PATH,
 		LIBCARLA_INSTALL_PATH))
 
@@ -1109,7 +1090,8 @@ def BuildPythonAPIMain():
 	], working_directory = PYTHON_API_PATH)
 
 def BuildPythonAPI(task_graph : TaskGraph):
-	task_graph.Add(Task('build-python-api', [ 'install-libcarla' ], BuildPythonAPIMain))
+	install_libcarla = task_graph.task_map.get('install-libcarla')
+	task_graph.Add(Task('build-python-api', [ install_libcarla ], BuildPythonAPIMain))
 
 def SetupUnrealEngine(task_graph : TaskGraph):
 	pass
@@ -1152,7 +1134,12 @@ def BuildCarlaUEMain():
 def BuildCarlaUE(task_graph : TaskGraph):
 	if ENABLE_NVIDIA_OMNIVERSE:
 		task_graph.Add(Task('install-nv-omniverse', [], InstallNVIDIAOmniverse))
-	task_graph.Add(Task('build-carla-ue', [ 'build-python-api' ], BuildCarlaUEMain))
+	dependencies = []
+	if ENABLE_LIBCARLA:
+		dependencies.append(task_graph.task_map.get('install-libcarla'))
+	if ENABLE_PYTHON_API:
+		dependencies.append(task_graph.task_map.get('build-python-api'))
+	task_graph.Add(Task('build-carla-ue', dependencies, BuildCarlaUEMain))
 
 def InstallNVIDIAOmniverse():
 	filename = 'USDCarlaInterface'
@@ -1194,7 +1181,7 @@ if __name__ == '__main__':
 			BuildLibCarlaMain(task_graph)
 		if ENABLE_PYTHON_API:
 			BuildPythonAPI(task_graph)
-		if ARGV.carla_ue:
+		if ENABLE_CARLA_UE:
 			BuildCarlaUE(task_graph)
 		task_graph.Execute()
 	except Exception as err:
@@ -1206,3 +1193,4 @@ if __name__ == '__main__':
 			ARGS_SYNC_PATH.unlink(missing_ok = True)
 		finally:
 			pass
+	exit(0)

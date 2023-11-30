@@ -4,8 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "Carla/AI/AIControllerFactory.h"
+#include "Carla.h"
 
 #include "Carla/AI/WalkerAIController.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"

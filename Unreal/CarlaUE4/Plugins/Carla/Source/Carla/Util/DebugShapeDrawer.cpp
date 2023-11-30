@@ -4,15 +4,13 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "Carla/Util/DebugShapeDrawer.h"
+#include "Carla.h"
 #include "Carla/Game/CarlaHUD.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/MapGen/LargeMapManager.h"
-
 #include "DrawDebugHelpers.h"
 #include "Components/LineBatchComponent.h"
-
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/String.h>
