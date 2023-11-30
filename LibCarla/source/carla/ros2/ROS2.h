@@ -155,12 +155,15 @@ void ProcessDataFromCollisionSensor(
   uint32_t _nanoseconds { 0 };
   std::unordered_map<void *, std::string> _actor_ros_name;
   std::unordered_map<void *, std::vector<void*> > _actor_parent_ros_name;
-  std::shared_ptr<CarlaEgoVehicleControlSubscriber> _controller;
   std::shared_ptr<CarlaClockPublisher> _clock_publisher;
   std::unordered_map<void *, std::shared_ptr<CarlaPublisher>> _publishers;
   std::unordered_map<void *, std::shared_ptr<CarlaTransformPublisher>> _transforms;
   std::unordered_set<carla::streaming::detail::stream_id_type> _publish_stream;
-  std::unordered_map<void *, ActorCallback> _actor_callbacks;
+  struct EgoVehicleActor {
+    std::shared_ptr<CarlaEgoVehicleControlSubscriber> _controller;
+    ActorCallback _actor_callback;
+  };
+  std::unordered_map<void *, EgoVehicleActor> _ego_vehicles;
 };
 
 } // namespace ros2

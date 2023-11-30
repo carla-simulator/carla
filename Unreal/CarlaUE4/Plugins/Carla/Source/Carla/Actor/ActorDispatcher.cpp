@@ -187,8 +187,8 @@ FCarlaActor* UActorDispatcher::RegisterActor(
       if (RosName == id) {
         if(RosName.find("vehicle") != std::string::npos)
         {
-          std::string VehicleName = "vehicle" + std::to_string(View->GetActorId());
-          ROS2->AddActorRosName(static_cast<void*>(&Actor), VehicleName);
+          RosName = "vehicle" + std::to_string(View->GetActorId());
+          ROS2->AddActorRosName(static_cast<void*>(&Actor), RosName);
         }
         else
         {
@@ -202,10 +202,10 @@ FCarlaActor* UActorDispatcher::RegisterActor(
         ROS2->AddActorRosName(static_cast<void*>(&Actor), RosName);
       }
 
-      // vehicle controller for hero
+      // vehicle controller for hero vehicles
       for (auto &&Attr : Description.Variations)
       {
-        if (Attr.Key == "role_name" && (Attr.Value.Value == "hero" || Attr.Value.Value == "ego"))
+        if (Attr.Key == "role_name" && (Attr.Value.Value.starts_with("hero") || Attr.Value.Value.starts_with("ego")))
         {
           ROS2->AddActorCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
           {

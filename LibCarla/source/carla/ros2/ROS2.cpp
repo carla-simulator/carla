@@ -80,20 +80,21 @@ void ROS2::Enable(bool enable) {
 void ROS2::SetFrame(uint64_t frame) {
   _frame = frame;
    //log_info("ROS2 new frame: ", _frame);
-   if (_controller) {
-    void* actor = _controller->GetVehicle();
-    if (_controller->IsAlive()) {
-      if (_controller->HasNewMessage()) {
-        auto it = _actor_callbacks.find(actor);
-        if (it != _actor_callbacks.end()) {
-          VehicleControl control = _controller->GetMessage();
-          it->second(actor, control);
-        }
+   std::vector<void*> actors_to_be_removed;
+   for(auto &ego_vehicle: _ego_vehicles) {
+    void* actor = ego_vehicle.first;
+    if (ego_vehicle.second._controller->IsAlive()) {
+      if (ego_vehicle.second._controller->HasNewMessage()) {
+        VehicleControl control = ego_vehicle.second._controller->GetMessage();
+        ego_vehicle.second._actor_callback(actor, control);
       }
     } else {
-      RemoveActorCallback(actor);
+      actors_to_be_removed.push_back(actor);
     }
    }
+  for(auto &actor: actors_to_be_removed) {
+    RemoveActorCallback(actor);
+  }
 }
 
 void ROS2::SetTimestamp(double timestamp) {
@@ -172,16 +173,17 @@ std::string ROS2::GetActorParentRosName(void *actor) {
 }
 
 void ROS2::AddActorCallback(void* actor, std::string ros_name, ActorCallback callback) {
-  _actor_callbacks.insert({actor, std::move(callback)});
-
-  _controller.reset();
-  _controller = std::make_shared<CarlaEgoVehicleControlSubscriber>(actor, ros_name.c_str());
-  _controller->Init();
+  EgoVehicleActor ego_vehicle({ std::make_shared<CarlaEgoVehicleControlSubscriber>(actor, ros_name.c_str()), std::move(callback)});
+  auto insert_result = _ego_vehicles.insert({actor, ego_vehicle});
+  if ( !insert_result.second ) {
+    insert_result.first->second._controller.reset();
+    insert_result.first->second = std::move(ego_vehicle);
+  }
+  insert_result.first->second._controller->Init();
 }
 
 void ROS2::RemoveActorCallback(void* actor) {
-  _controller.reset();
-  _actor_callbacks.erase(actor);
+  _ego_vehicles.erase(actor);
 }
 
 std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> ROS2::GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor) {
@@ -839,7 +841,9 @@ void ROS2::Shutdown() {
     element.second.reset();
   }
   _clock_publisher.reset();
-  _controller.reset();
+  for(auto &ego_vehicle: _ego_vehicles) {
+    ego_vehicle.second._controller.reset();
+  }
   _enabled = false;
 }
 
