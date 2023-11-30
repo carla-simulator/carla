@@ -17,6 +17,9 @@ install(DIRECTORY "${libcarla_source_path}/compiler" DESTINATION include)
 file(GLOB libcarla_carla_headers "${libcarla_source_path}/carla/*.h")
 install(FILES ${libcarla_carla_headers} DESTINATION include/carla)
 
+file(GLOB libcarla_carla_headers "${libcarla_source_path}/carla/exception/*.h")
+install(FILES ${libcarla_carla_headers} DESTINATION include/carla/exception)
+
 file(GLOB libcarla_carla_geom_headers "${libcarla_source_path}/carla/geom/*.h")
 install(FILES ${libcarla_carla_geom_headers} DESTINATION include/carla/geom)
 
@@ -89,7 +92,6 @@ endif()
 file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/*.h"
     "${libcarla_source_path}/carla/Buffer.cpp"
-    "${libcarla_source_path}/carla/Exception.cpp"
     "${libcarla_source_path}/carla/geom/*.cpp"
     "${libcarla_source_path}/carla/geom/*.h"
     "${libcarla_source_path}/carla/opendrive/*.cpp"
@@ -131,31 +133,52 @@ file(GLOB libcarla_server_sources
 # Create targets for debug and release in the same build type.
 # ==============================================================================
 
+# remove LIBCARLA_NO_EXCEPTIONS from directory properties
+get_directory_property(server_COMPILE_DEFINITIONS COMPILE_DEFINITIONS)
+message("${server_COMPILE_DEFINITIONS}")
+list(FILTER server_COMPILE_DEFINITIONS EXCLUDE REGEX [[^LIBCARLA_NO_EXCEPTIONS$]])
+set_directory_properties(PROPERTIES COMPILE_DEFINITIONS "${server_COMPILE_DEFINITIONS}")
+
 if (LIBCARLA_BUILD_RELEASE)
 
   add_library(carla_server STATIC ${libcarla_server_sources})
+  add_library(carla_server_exception SHARED
+      "${libcarla_source_path}/carla/exception/Exception.cpp")
 
-  target_include_directories(carla_server SYSTEM PRIVATE
-      "${BOOST_INCLUDE_PATH}"
-      "${RPCLIB_INCLUDE_PATH}")
+  foreach (carla_server_lib carla_server carla_server_exception)
+    target_include_directories(${carla_server_lib} SYSTEM PRIVATE
+        "${BOOST_INCLUDE_PATH}"
+        "${RPCLIB_INCLUDE_PATH}")
 
-  install(TARGETS carla_server DESTINATION lib OPTIONAL)
+    install(TARGETS ${carla_server_lib} DESTINATION lib OPTIONAL)
 
-  set_target_properties(carla_server PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
+    set_target_properties(${carla_server_lib} PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
+  endforeach()
+
+  # add LIBCARLA_NO_EXCEPTIONS to the carla_server lib
+  target_compile_definitions(carla_server PUBLIC LIBCARLA_NO_EXCEPTIONS)
 
 endif()
 
 if (LIBCARLA_BUILD_DEBUG)
 
   add_library(carla_server_debug STATIC ${libcarla_server_sources})
+  add_library(carla_server_exception_debug SHARED
+      "${libcarla_source_path}/carla/exception/Exception.cpp")
 
-  target_include_directories(carla_server_debug SYSTEM PRIVATE
-      "${BOOST_INCLUDE_PATH}"
-      "${RPCLIB_INCLUDE_PATH}")
+  foreach (carla_server_lib carla_server_debug carla_server_exception_debug)
 
-  install(TARGETS carla_server_debug DESTINATION lib OPTIONAL)
+    target_include_directories(${carla_server_lib} SYSTEM PRIVATE
+        "${BOOST_INCLUDE_PATH}"
+        "${RPCLIB_INCLUDE_PATH}")
 
-  set_target_properties(carla_server_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
-  target_compile_definitions(carla_server_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+    install(TARGETS ${carla_server_lib} DESTINATION lib OPTIONAL)
+
+    set_target_properties(${carla_server_lib} PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
+    target_compile_definitions(${carla_server_lib} PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+  endforeach()
+
+  # add LIBCARLA_NO_EXCEPTIONS to the carla_server lib
+  target_compile_definitions(carla_server_debug PUBLIC LIBCARLA_NO_EXCEPTIONS)
 
 endif()

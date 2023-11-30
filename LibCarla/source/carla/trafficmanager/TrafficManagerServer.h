@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/client/Actor.h"
 #include "carla/client/detail/ActorVariant.h"
 #include "carla/rpc/Server.h"

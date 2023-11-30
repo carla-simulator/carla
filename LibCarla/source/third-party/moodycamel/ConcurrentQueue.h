@@ -160,7 +160,7 @@ namespace moodycamel { namespace details {
 
 // ~~~ @begin Modified for CARLA ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#include <carla/Exception.h>
+#include <carla/exception/Exception.h>
 
 #if (defined(LIBCARLA_NO_EXCEPTIONS) && defined(MOODYCAMEL_EXCEPTIONS_ENABLED))
 #  undef MOODYCAMEL_EXCEPTIONS_ENABLED

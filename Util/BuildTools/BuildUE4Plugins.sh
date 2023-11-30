@@ -14,10 +14,9 @@ END
 REMOVE_INTERMEDIATE=false
 BUILD_STREETMAP=false
 GIT_PULL=true
-CURRENT_STREETMAP_COMMIT=5bae647f8b433ed703ce0adba2ca0d1b08471d9c
+CURRENT_STREETMAP_COMMIT=260273d6b7c3f28988cda31fd33441de7e272958
 STREETMAP_BRANCH=master
-#STREETMAP_REPO=https://github.com/carla-simulator/StreetMap.git
-STREETMAP_REPO=https://github.com/berndgassmann/carla-StreetMap.git
+STREETMAP_REPO=https://github.com/carla-simulator/StreetMap.git
 
 OPTS=`getopt -o h --long build,rebuild,clean, -n 'parse-options' -- "$@"`
 

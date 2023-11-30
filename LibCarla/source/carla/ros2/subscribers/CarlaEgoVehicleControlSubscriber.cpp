@@ -1,10 +1,12 @@
-#define _GLIBCXX_USE_CXX11_ABI 0
+// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "CarlaEgoVehicleControlSubscriber.h"
 
 #include "carla/ros2/types/CarlaEgoVehicleControl.h"
 #include "carla/ros2/types/CarlaEgoVehicleControlPubSubTypes.h"
-#include "carla/ros2/listeners/CarlaSubscriberListener.h"
+#include "carla/ros2/listeners/CarlaSubscriberListenerImpl.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
 #include <fastdds/dds/subscriber/Subscriber.hpp>
@@ -82,7 +84,7 @@ namespace ros2 {
     }
 
     efd::DataReaderQos rqos = efd::DATAREADER_QOS_DEFAULT;
-    efd::DataReaderListener* listener = (efd::DataReaderListener*)_impl->_listener._impl.get();
+    efd::DataReaderListener* listener = static_cast<efd::DataReaderListener*>(_impl->_listener._impl.get());
     _impl->_datareader = _impl->_subscriber->create_datareader(_impl->_topic, rqos, listener);
     if (_impl->_datareader == nullptr) {
         std::cerr << "Failed to create DataReader" << std::endl;

@@ -98,6 +98,12 @@ file(GLOB libcarla_carla_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_sources}")
 install(FILES ${libcarla_carla_sources} DESTINATION include/carla)
 
+file(GLOB libcarla_carla_exception_sources
+    "${libcarla_source_path}/carla/exception/*.cpp"
+    "${libcarla_source_path}/carla/exception/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_exception_sources}")
+install(FILES ${libcarla_carla_exception_sources} DESTINATION include/carla/exception)
+
 file(GLOB libcarla_carla_client_sources
     "${libcarla_source_path}/carla/client/*.cpp"
     "${libcarla_source_path}/carla/client/*.h")

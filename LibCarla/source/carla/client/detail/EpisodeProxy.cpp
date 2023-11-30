@@ -6,7 +6,7 @@
 
 #include "carla/client/detail/EpisodeProxy.h"
 
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/client/detail/Simulator.h"
 
 #include <exception>

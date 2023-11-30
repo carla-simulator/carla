@@ -7,7 +7,7 @@
 #include "carla/road/element/Geometry.h"
 
 #include "carla/Debug.h"
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
 #include "carla/geom/Vector2D.h"

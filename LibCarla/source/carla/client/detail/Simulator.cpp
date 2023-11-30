@@ -7,7 +7,7 @@
 #include "carla/client/detail/Simulator.h"
 
 #include "carla/Debug.h"
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/Logging.h"
 #include "carla/RecurrentSharedFuture.h"
 #include "carla/client/BlueprintLibrary.h"

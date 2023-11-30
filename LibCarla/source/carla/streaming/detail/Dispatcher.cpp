@@ -6,7 +6,7 @@
 
 #include "carla/streaming/detail/Dispatcher.h"
 
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/Logging.h"
 #include "carla/streaming/detail/MultiStreamState.h"
 

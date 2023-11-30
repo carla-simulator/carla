@@ -6,7 +6,7 @@
 
 #include "carla/sensor/data/LaneInvasionEvent.h"
 
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/client/detail/Simulator.h"
 
 namespace carla {

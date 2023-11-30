@@ -6,7 +6,7 @@
 
 #include "carla/streaming/detail/Token.h"
 
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 
 #include <cstring>
 #include <exception>

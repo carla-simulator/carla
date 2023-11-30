@@ -6,7 +6,7 @@
 
 #include "carla/client/detail/Client.h"
 
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/Version.h"
 #include "carla/client/FileTransfer.h"
 #include "carla/client/TimeoutException.h"

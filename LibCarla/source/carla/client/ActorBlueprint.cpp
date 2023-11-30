@@ -6,7 +6,7 @@
 
 #include "carla/client/ActorBlueprint.h"
 
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/StringUtil.h"
 
 #include <algorithm>

@@ -125,7 +125,7 @@ IMPLEMENT_MODULE(FCarlaModule, Carla)
 // =============================================================================
 
 #include <compiler/disable-ue4-macros.h>
-#include <carla/Exception.h>
+#include <carla/exception/Exception.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <exception>

@@ -1,6 +1,9 @@
-#define _GLIBCXX_USE_CXX11_ABI 0
+// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "CarlaListener.h"
+#include "CarlaListenerImpl.h"
 #include <iostream>
 
 #include <fastdds/dds/publisher/DataWriterListener.hpp>
@@ -10,17 +13,6 @@ namespace carla {
 namespace ros2 {
 
   namespace efd = eprosima::fastdds::dds;
-
-    class CarlaListenerImpl : public efd::DataWriterListener {
-      public:
-      void on_publication_matched(
-              efd::DataWriter* writer,
-              const efd::PublicationMatchedStatus& info) override;
-
-
-      int _matched {0};
-      bool _first_connected {false};
-    };
 
     void CarlaListenerImpl::on_publication_matched(efd::DataWriter* writer, const efd::PublicationMatchedStatus& info)
     {

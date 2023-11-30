@@ -6,7 +6,7 @@
 
 #ifdef LIBCARLA_NO_EXCEPTIONS
 
-#include <carla/Exception.h>
+#include <carla/exception/Exception.h>
 #include <carla/Logging.h>
 
 #include <exception>

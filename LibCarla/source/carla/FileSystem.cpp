@@ -6,7 +6,7 @@
 
 #include "carla/FileSystem.h"
 
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/StringUtil.h"
 
 #include <boost/filesystem/operations.hpp>

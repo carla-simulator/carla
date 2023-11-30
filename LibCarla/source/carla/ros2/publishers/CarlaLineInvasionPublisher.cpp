@@ -1,11 +1,13 @@
-#define _GLIBCXX_USE_CXX11_ABI 0
+// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "CarlaLineInvasionPublisher.h"
 
 #include <string>
 
 #include "carla/ros2/types/CarlaLineInvasionPubSubTypes.h"
-#include "carla/ros2/listeners/CarlaListener.h"
+#include "carla/ros2/listeners/CarlaListenerImpl.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
 #include <fastdds/dds/publisher/Publisher.hpp>
@@ -76,7 +78,7 @@ namespace ros2 {
 
     efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
     wqos.endpoint().history_memory_policy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-    efd::DataWriterListener* listener = (efd::DataWriterListener*)_impl->_listener._impl.get();
+    efd::DataWriterListener* listener = static_cast<efd::DataWriterListener*>(_impl->_listener._impl.get());
     _impl->_datawriter = _impl->_publisher->create_datawriter(_impl->_topic, wqos, listener);
     if (_impl->_datawriter == nullptr) {
         std::cerr << "Failed to create DataWriter" << std::endl;

@@ -1045,6 +1045,4 @@ move_if_changed "${CMAKE_CONFIG_FILE}.gen" "${CMAKE_CONFIG_FILE}"
 # ==============================================================================
 
 popd >/dev/null
-
-
 log "Success!"

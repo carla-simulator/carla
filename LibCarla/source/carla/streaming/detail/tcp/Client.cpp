@@ -8,7 +8,7 @@
 
 #include "carla/BufferPool.h"
 #include "carla/Debug.h"
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/Logging.h"
 #include "carla/Time.h"
 

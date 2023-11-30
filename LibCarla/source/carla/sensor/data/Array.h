@@ -7,7 +7,7 @@
 #pragma once
 
 #include "carla/Debug.h"
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/sensor/SensorData.h"
 
 #include <exception>

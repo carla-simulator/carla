@@ -6,7 +6,7 @@
 
 #include "carla/sensor/s11n/NoopSerializer.h"
 
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 
 namespace carla {
 namespace sensor {

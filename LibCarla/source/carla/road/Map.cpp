@@ -5,7 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/road/Map.h"
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/geom/Math.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/road/MeshFactory.h"

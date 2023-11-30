@@ -8,7 +8,7 @@
 
 #include "carla/Buffer.h"
 #include "carla/Debug.h"
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/Logging.h"
 
 #include <boost/asio/buffer.hpp>

@@ -21,7 +21,7 @@ file(GLOB libcarla_fastdds_sources
   "${libcarla_source_path}/carla/ros2/listeners/*.cpp"
   "${libcarla_source_path}/carla/ros2/types/*.cpp")
 
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fPIC -D_GLIBCXX_USE_CXX11_ABI=0 " CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3" CACHE STRING "" FORCE)
 
 # ==============================================================================
 # Create targets for debug and release in the same build type.
@@ -45,7 +45,7 @@ endif()
 if (LIBCARLA_BUILD_DEBUG)
 
   add_library(carla_fastdds_debug STATIC ${libcarla_fastdds_sources})
- target_include_directories(carla_fastdds_debug SYSTEM PRIVATE
+  target_include_directories(carla_fastdds_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
   install(TARGETS carla_fastdds_debug DESTINATION lib)

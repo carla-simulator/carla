@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 
 #include <stdexcept>
 

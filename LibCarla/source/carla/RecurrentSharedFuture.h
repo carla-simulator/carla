@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/Time.h"
 
 #include <boost/optional.hpp>

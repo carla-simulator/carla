@@ -196,10 +196,12 @@ public class Carla : ModuleRules
       if (UseDebugLibs(Target))
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
+        AddDllDependency(Path.Combine(LibCarlaInstallPath, "lib"), "carla_server_exception_debug.dll");
       }
       else
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
+        AddDllDependency(Path.Combine(LibCarlaInstallPath, "lib"), "carla_server_exception_debug.dll");
       }
       if (UsingChrono)
       {
@@ -227,10 +229,12 @@ public class Carla : ModuleRules
       if (UseDebugLibs(Target))
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
+        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libcarla_server_exception_debug.so"));
       }
       else
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
+        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libcarla_server_exception.so"));
       }
       if (UsingChrono)
       {

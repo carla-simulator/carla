@@ -6,7 +6,7 @@
 
 #include "carla/road/element/LaneMarking.h"
 
-#include "carla/Exception.h"
+#include "carla/exception/Exception.h"
 #include "carla/StringUtil.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
 
