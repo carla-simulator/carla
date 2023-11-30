@@ -8,6 +8,7 @@
 #include "Logging/LogMacros.h"
 #include "Util/NonCopyable.h"
 #include "Modules/ModuleInterface.h"
+#include "Stats/Stats.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCarla, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);

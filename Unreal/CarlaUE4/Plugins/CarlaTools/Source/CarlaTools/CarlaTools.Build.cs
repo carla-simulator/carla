@@ -16,9 +16,6 @@ public class CarlaTools :
     [CommandLine("-nv-omniverse")]
     bool EnableNVIDIAOmniverse = false;
 
-    [CommandLine("-unity")]
-    bool EnableUnityBuild = false;
-
     [CommandLine("-carla-install-path")]
     string CarlaInstallPath = null;
 
@@ -26,6 +23,12 @@ public class CarlaTools :
     string CarlaDependenciesPath = null;
 
 
+
+    private static void LogFlagStatus(string name, bool value)
+    {
+        var state = value ? "enabled" : "disabled";
+        Console.WriteLine(string.Format("{0} is {1}.", name, state));
+    }
 
     public static string FindLibrary(string SearchPath, params string[] Patterns)
     {
@@ -58,18 +61,8 @@ public class CarlaTools :
     public CarlaTools(ReadOnlyTargetRules Target) :
 		base(Target)
     {
-        bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
-
-        bLegacyPublicIncludePaths = false;
-        ModuleIncludePathWarningLevel = WarningLevel.Warning;
-        ModuleIncludeSubdirectoryWarningLevel = WarningLevel.Warning;
-        ShadowVariableWarningLevel = WarningLevel.Warning;
-        UnsafeTypeCastWarningLevel = WarningLevel.Warning;
-        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-        CppStandard = CppStandardVersion.Cpp20;
-        bEnableExceptions = bEnableExceptions || IsWindows;
-        bUseUnity = EnableUnityBuild;
-        CppStandard = CppStandardVersion.Cpp20;
+        LogFlagStatus("Houdini support", EnableHoudini);
+        LogFlagStatus("NVIDIA Omniverse support", EnableNVIDIAOmniverse);
 
         var DirectoryInfo = new DirectoryInfo(ModuleDirectory);
         for (int i = 0; i != 6; ++i)
@@ -95,20 +88,11 @@ public class CarlaTools :
             Console.WriteLine("Using \"" + CarlaDependenciesPath + "\" as the CARLA depenencies install path.");
         }
 
+        bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
+
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        bEnableExceptions = bEnableExceptions || IsWindows;
         // PrivatePCHHeaderFile = "Carla.h";
-
-        Action<string, bool> LogBuildFlagStatus = (name, enabled) =>
-        {
-            Console.WriteLine(
-                string.Format(
-                    "{0} is {1}.",
-                    name,
-                    enabled ? "enabled" : "disabled"));
-        };
-
-        LogBuildFlagStatus("Houdini support", EnableHoudini);
-        LogBuildFlagStatus("NVIDIA Omniverse support", EnableNVIDIAOmniverse);
-        LogBuildFlagStatus("Unity build", EnableUnityBuild);
 
         // PublicIncludePaths.AddRange(new string[] { });
         // PrivateIncludePaths.AddRange(new string[] { });
@@ -152,8 +136,8 @@ public class CarlaTools :
 		});
 
 		if (EnableHoudini)
-		{
-			PrivateDependencyModuleNames.AddRange(new string[]
+        {
+            PrivateDependencyModuleNames.AddRange(new string[]
 			{
 				"HoudiniEngine",
 				"HoudiniEngineEditor",
@@ -162,15 +146,22 @@ public class CarlaTools :
 		}
 
 		if (EnableNVIDIAOmniverse)
-		{
-			PrivateDependencyModuleNames.AddRange(new string[]
+        {
+            PublicDefinitions.Add("WITH_OMNIVERSE");
+            PrivateDefinitions.Add("WITH_OMNIVERSE");
+
+            PrivateDependencyModuleNames.AddRange(new string[]
 			{
 				"OmniverseUSD",
 				"OmniverseRuntime"
 			});
 		}
-
-        // DynamicallyLoadedModuleNames.AddRange(new string[] { });
+        PrivateDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
+        PrivateDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
+        PrivateDefinitions.Add("ASIO_NO_EXCEPTIONS");
+        PrivateDefinitions.Add("BOOST_NO_EXCEPTIONS");
+        PrivateDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+        PrivateDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
 
         var LibraryPrefix = IsWindows ? "" : "lib";
         var LibrarySuffix = IsWindows ? ".lib" : ".a";
@@ -233,13 +224,5 @@ public class CarlaTools :
             GetIncludePath("zlib"),
         });
         PrivateIncludePaths.Add(LibCarlaIncludePath);
-        PrivateDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
-        PrivateDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
-        PrivateDefinitions.Add("ASIO_NO_EXCEPTIONS");
-        PrivateDefinitions.Add("BOOST_NO_EXCEPTIONS");
-        PrivateDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
-        PrivateDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
-        if (EnableHoudini)
-            PrivateDefinitions.Add("CARLA_HOUDINI_ENABLED");
     }
 }

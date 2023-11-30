@@ -7,7 +7,13 @@ using EpicGames.Core;
 public class CarlaUE4Target : TargetRules
 {
     [CommandLine("-unity-build")]
-    bool EnableUnityBuild = false;
+    bool EnableUnityBuild = true;
+
+    private static void LogFlagStatus(string name, bool value)
+    {
+        var state = value ? "enabled" : "disabled";
+        Console.WriteLine(string.Format("{0} is {1}.", name, state));
+    }
 
     public CarlaUE4Target(TargetInfo Target) :
         base(Target)
@@ -16,7 +22,8 @@ public class CarlaUE4Target : TargetRules
         
         ExtraModuleNames.Add("CarlaUE4");
 
-        Console.WriteLine("Unity build is disabled.");
+        LogFlagStatus("Unity build", EnableUnityBuild);
+        
         bUseUnityBuild = EnableUnityBuild;
         bForceUnityBuild = EnableUnityBuild;
         bUseAdaptiveUnityBuild = EnableUnityBuild;

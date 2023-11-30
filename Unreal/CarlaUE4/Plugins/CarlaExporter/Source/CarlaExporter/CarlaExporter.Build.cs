@@ -6,22 +6,14 @@
 
 using UnrealBuildTool;
 
-public class CarlaExporter :
-	ModuleRules
+public class CarlaExporter : ModuleRules
 {
 	public CarlaExporter(ReadOnlyTargetRules Target) :
 		base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        // PublicIncludePaths.AddRange(new string[] { });
-
-        // PrivateIncludePaths.AddRange(new string[] { });
-
-        PublicDependencyModuleNames.AddRange(new string[]
-		{
-			"Core",
-		});
+		PublicDependencyModuleNames.Add("Core");
 
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
@@ -36,7 +28,5 @@ public class CarlaExporter :
 			"Chaos",
 			"EditorStyle",
 		});
-
-		// DynamicallyLoadedModuleNames.AddRange(new string[] { });
 	}
 }

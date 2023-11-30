@@ -1,10 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+using EpicGames.Core;
+using System;
 using UnrealBuildTool;
 
 public class CarlaUE4 : ModuleRules
 {
-	public CarlaUE4(ReadOnlyTargetRules Target) : base(Target)
+	[CommandLine("-slate-ui")]
+	bool EnableSlateUI = false;
+
+    [CommandLine("-online-subsys")]
+    bool EnableOnlineSubSys = false;
+
+    private static void LogFlagStatus(string name, bool value)
+    {
+        var state = value ? "enabled" : "disabled";
+        Console.WriteLine(string.Format("{0} is {1}.", name, state));
+    }
+
+    public CarlaUE4(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PrivatePCHHeaderFile = "CarlaUE4.h";
 
@@ -19,14 +33,16 @@ public class CarlaUE4 : ModuleRules
 		if (Target.Type == TargetType.Editor)
             PublicDependencyModuleNames.Add("UnrealEd");
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+        LogFlagStatus("Slate UI", EnableSlateUI);
 
-		// Uncomment if you are using Slate UI
-		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+        if (EnableSlateUI)
+            PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 
-		// Uncomment if you are using online features
-		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
+        LogFlagStatus("Online Subsystem", EnableOnlineSubSys);
 
-		// To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
-	}
+        if (EnableOnlineSubSys)
+			PrivateDependencyModuleNames.Add("OnlineSubsystem");
+
+        // To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
+    }
 }

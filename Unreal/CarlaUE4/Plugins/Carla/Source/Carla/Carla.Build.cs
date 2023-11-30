@@ -22,9 +22,6 @@ public class Carla :
     [CommandLine("-ros2")]
     bool EnableRos2 = false;
 
-    [CommandLine("-unity")]
-    bool EnableUnityBuild = false;
-
     [CommandLine("-carla-install-path")]
     string CarlaInstallPath = null;
 
@@ -38,16 +35,8 @@ public class Carla :
     {
         bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
 
-        bLegacyPublicIncludePaths = false;
-        ModuleIncludePathWarningLevel = WarningLevel.Warning;
-        ModuleIncludeSubdirectoryWarningLevel = WarningLevel.Warning;
-        ShadowVariableWarningLevel = WarningLevel.Warning;
-        UnsafeTypeCastWarningLevel = WarningLevel.Warning;
-        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-        CppStandard = CppStandardVersion.Cpp20;
-        bEnableExceptions = bEnableExceptions || IsWindows;
-        bUseUnity = EnableUnityBuild;
         PrivatePCHHeaderFile = "Carla.h";
+		bEnableExceptions = bEnableExceptions || IsWindows;
 
         var DirectoryInfo = new DirectoryInfo(ModuleDirectory);
         for (int i = 0; i != 6; ++i)
@@ -86,7 +75,6 @@ public class Carla :
         LogBuildFlagStatus("Chrono support", EnableChrono);
         LogBuildFlagStatus("PyTorch support", EnablePytorch);
         LogBuildFlagStatus("ROS2 support", EnableRos2);
-        LogBuildFlagStatus("Unity build", EnableUnityBuild);
 
         if (EnableCarSim)
 		{
