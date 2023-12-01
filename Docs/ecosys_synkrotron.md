@@ -9,7 +9,7 @@ Synkrotron provides advanced solutions for autonomous driving  simulation built 
 <img src="../img/oasis_logo.png" alt= “synkrotron_logo” style="display: block; margin-left: auto; margin-right: auto; width: 70%;">
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
-    <iframe src="https://www.youtube.com/embed/6qvojiwPL4I" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+    <iframe src="https://www.youtube.com/embed/YRI67aar3S0" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
 </div>  
 
 <br>
