@@ -298,7 +298,7 @@ BOOST_TOOLSET = 'msvc-14.3'
 BOOST_SOURCE_PATH = DEPENDENCIES_PATH / 'boost-source'
 BOOST_BUILD_PATH = DEPENDENCIES_PATH / 'boost-build'
 BOOST_INSTALL_PATH = DEPENDENCIES_PATH / 'boost-install'
-BOOST_INCLUDE_PATH = BOOST_INSTALL_PATH / 'include' / f'boost-{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}'
+BOOST_INCLUDE_PATH = BOOST_INSTALL_PATH / 'include'
 BOOST_LIBRARY_PATH = BOOST_INSTALL_PATH / 'lib'
 BOOST_B2_PATH = BOOST_SOURCE_PATH / f'b2{EXE_EXT}'
 # Eigen
@@ -393,51 +393,29 @@ def Log(message):
 
 def LaunchSubprocess(
 		cmd : list,
-		display_output : bool = False,
-		working_directory : Path = None):
-	stdstream_value = None if display_output or SEQUENTIAL else subprocess.PIPE
+		working_directory : Path = None,
+		log = None):
 	return subprocess.run(
 		cmd,
-		stdout = stdstream_value,
-		stderr = stdstream_value,
+		stdout = log,
+		stderr = log,
 		cwd = working_directory)
 
 def LaunchSubprocessImmediate(
 		cmd : list,
-		display_output : bool = False,
 		working_directory : Path = None,
 		log_name : str = None):
-	sp = LaunchSubprocess(cmd, display_output, working_directory)
-	log_content = None
-	try:
-		sp.check_returncode()
-	except:
-		stdout = sp.stdout.decode() if sp.stdout else ''
-		stderr = sp.stderr.decode() if sp.stderr else ''
-		log_content = (
-			f' stdout:\n'
-			f' {stdout}\n'
-			f' stderr:\n'
-			f' {stderr}\n'
-		)
-		error_message = (
-			f'Failed to run task {cmd}.\n' +
-			log_content
-		)
-		print(error_message)
-	finally:
-		if not ARGV.no_log and log_name != None:
-			if log_content == None:
-				stdout = sp.stdout.decode() if sp.stdout else ''
-				stderr = sp.stderr.decode() if sp.stderr else ''
-				log_content = (
-					f' stdout:\n'
-					f' {stdout}\n'
-					f' stderr:\n'
-					f' {stderr}\n'
-				)
-			with open(LOG_PATH / (log_name + '.log'), 'w') as file:
-				file.write(log_content)
+	sp = None
+	if not ARGV.no_log and log_name != None:
+		with open(LOG_PATH / f'{log_name}.log', 'w') as file:
+			sp = subprocess.run(
+				cmd,
+				cwd = working_directory,
+				stdout = file,
+				stderr = file)
+	else:
+		sp = subprocess.run(cmd, cwd = working_directory)
+	sp.check_returncode()
 
 # Convenience classes for listing dependencies:
 
@@ -446,9 +424,9 @@ class Download:
 		self.url = url
 
 class GitRepository:
-	def __init__(self, url : str, tag : str = None, commit : str = None):
+	def __init__(self, url : str, tag_or_branch : str = None, commit : str = None):
 		self.url = url
-		self.tag = tag
+		self.tag_or_branch = tag_or_branch
 		self.commit = commit
 
 class Dependency:
@@ -465,36 +443,36 @@ class DependencyUEPlugin(Dependency):
 		super().__init__(name, *sources)
 
 DEFAULT_DEPENDENCIES = [
-	Dependency(
-		'boost-asio',
-		GitRepository('https://github.com/boostorg/asio.git')),
-	Dependency(
-		'boost-python',
-		GitRepository('https://github.com/boostorg/python.git')),
+#	Dependency(
+#		'boost-asio',
+#		GitRepository('https://github.com/boostorg/asio.git')),
+#	Dependency(
+#		'boost-python',
+#		GitRepository('https://github.com/boostorg/python.git')),
 	Dependency(
 		'boost',
 		Download(f'https://boostorg.jfrog.io/artifactory/main/release/{BOOST_VERSION_STRING}/source/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip'),
 		Download(f'https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip')),
 	Dependency(
 		'eigen',
-		GitRepository('https://gitlab.com/libeigen/eigen.git', tag = '3.4.0')),
+		GitRepository('https://gitlab.com/libeigen/eigen.git', tag_or_branch = '3.4.0')),
 	Dependency(
 		'libpng',
-		GitRepository('https://github.com/glennrp/libpng.git', tag = 'v1.6.40')),
+		GitRepository('https://github.com/glennrp/libpng.git', tag_or_branch = 'v1.6.40')),
 	Dependency(
 		'proj',
-		GitRepository('https://github.com/OSGeo/PROJ.git', tag = '9.3.0'),
+		GitRepository('https://github.com/OSGeo/PROJ.git', tag_or_branch = '9.3.0'),
 		Download('https://download.osgeo.org/proj/proj-9.3.0.tar.gz')),
 	Dependency(
 		'gtest',
-		GitRepository('https://github.com/google/googletest.git', tag = 'v1.14.0')),
+		GitRepository('https://github.com/google/googletest.git', tag_or_branch = 'v1.14.0')),
 	Dependency(
 		'zlib',
 		GitRepository('https://github.com/madler/zlib.git'),
 		Download('https://zlib.net/current/zlib.tar.gz')),
 	Dependency(
 		'xercesc',
-		GitRepository('https://github.com/apache/xerces-c.git', tag = 'v3.2.4'),
+		GitRepository('https://github.com/apache/xerces-c.git', tag_or_branch = 'v3.2.4'),
 		Download('https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.3.zip'),
 		Download('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/xerces-c-3.2.3.zip')),
 	Dependency(
@@ -502,16 +480,16 @@ DEFAULT_DEPENDENCIES = [
 		Download('https://www.sqlite.org/2021/sqlite-amalgamation-3340100.zip')),
 	Dependency(
 		'rpclib',
-		GitRepository('https://github.com/rpclib/rpclib.git', tag = 'v2.3.0')),
+		GitRepository('https://github.com/rpclib/rpclib.git', tag_or_branch = 'v2.3.0')),
 	Dependency(
 		'recast',
-		GitRepository('https://github.com/carla-simulator/recastnavigation.git', tag = 'carla')),
+		GitRepository('https://github.com/carla-simulator/recastnavigation.git', tag_or_branch = 'carla')),
 ]
 
 CHRONO_DEPENDENCIES = [
 	Dependency(
 		'chrono',
-		GitRepository('https://github.com/projectchrono/chrono.git', tag = '8.0.0')),
+		GitRepository('https://github.com/projectchrono/chrono.git', tag_or_branch = '8.0.0')),
 ]
 
 OSM_WORLD_RENDERER_DEPENDENCIES = [
@@ -526,7 +504,7 @@ OSM_WORLD_RENDERER_DEPENDENCIES = [
 OSM2ODR_DEPENDENCIES = [
 	Dependency(
 		'sumo',
-		GitRepository('https://github.com/carla-simulator/sumo.git', tag = 'carla_osm2odr')),
+		GitRepository('https://github.com/carla-simulator/sumo.git', tag_or_branch = 'carla_osm2odr')),
 ]
 
 CARLA_UE_DEPENDENCIES = [
@@ -534,7 +512,7 @@ CARLA_UE_DEPENDENCIES = [
 		'StreetMap',
 		GitRepository(
 			'https://github.com/carla-simulator/StreetMap.git',
-			tag = 'ue5.3')),
+			tag_or_branch = 'ue5.3')),
 ]
 
 
@@ -551,7 +529,7 @@ class Task:
 		self.done = False
 
 	def CreateSubprocessTask(name : str, in_edges : list, command : list):
-		return Task(name, in_edges, LaunchSubprocessImmediate, command, False, None, name)
+		return Task(name, in_edges, LaunchSubprocessImmediate, command, None, name)
 	
 	def CreateCMakeConfigureDefaultCommandLine(source_path : Path, build_path : Path):
 		cpp_flags_release = '/MD'
@@ -607,7 +585,7 @@ class TaskGraph:
 	def Add(self, task : Task):
 		self.tasks.append(task)
 		if len(task.in_edges) == 0:
-			self.sources.append(task.name)
+			self.sources.append(task)
 		self.task_map[task.name] = self.tasks[-1]
 		return task
 	
@@ -631,7 +609,8 @@ class TaskGraph:
 			active_count = 0
 			done_count = 0
 
-			def UpdateOutEdges(task_queue, task):
+			def UpdateOutEdges(task):
+				nonlocal task_queue
 				if len(task.out_edges) == 0:
 					return
 				for out in task.out_edges:
@@ -640,7 +619,9 @@ class TaskGraph:
 					if out.in_edge_done_count == len(out.in_edges):
 						task_queue.append(out)
 			
-			def Flush(task_queue, futures, future_map):
+			def Flush():
+				nonlocal futures
+				nonlocal future_map
 				nonlocal done_count
 				nonlocal active_count
 				if active_count != 0:
@@ -649,14 +630,15 @@ class TaskGraph:
 					for e in done_tasks:
 						e.done = True
 						Log(f'{e.name} - done')
-						UpdateOutEdges(task_queue, e)
+						UpdateOutEdges(e)
 					assert active_count == len(done_tasks)
 					done_count += len(done_tasks)
 					active_count = 0
 					future_map = {}
 					futures = []
 
-			task_queue.extend([ self.task_map[e] for e in self.sources ])
+			assert len(set(self.sources)) == len(self.sources)
+			task_queue.extend(self.sources)
 			with ProcessPoolExecutor(self.parallelism) as pool:
 				futures = []
 				future_map = {}
@@ -675,8 +657,7 @@ class TaskGraph:
 							task.done = True
 							done_count += 1
 							UpdateOutEdges(task)
-					Flush(task_queue, futures, future_map)
-			gc.collect()
+					Flush()
 
 			if done_count != len(self.tasks):
 				pending_tasks = []
@@ -746,7 +727,7 @@ def UpdateDependency(dep : Dependency):
 	for source in dep.sources:
 		try:
 			if type(source) is GitRepository:
-				UpdateGitRepository(download_path, source.url, source.tag, source.commit)
+				UpdateGitRepository(download_path, source.url, source.tag_or_branch, source.commit)
 			elif type(source) is Download:
 				if download_path.exists():
 					Log(f'Dependency "{name}" already present. Delete "{download_path}" if you wish for it to be downloaded again.')
@@ -789,6 +770,7 @@ def ConfigureBoost():
 		working_directory = BOOST_SOURCE_PATH)
 
 def BuildAndInstallBoost():
+
 	LaunchSubprocessImmediate([
 		BOOST_B2_PATH,
 		f'-j{PARALLELISM}',
@@ -807,9 +789,18 @@ def BuildAndInstallBoost():
 		f'--build-dir={BOOST_BUILD_PATH}',
 		f'--prefix={BOOST_INSTALL_PATH}',
 		f'--libdir={BOOST_LIBRARY_PATH}',
-		f'--includedir={BOOST_INCLUDE_PATH.parent}',
+		f'--includedir={BOOST_INCLUDE_PATH}',
 		'install'
-	], working_directory = BOOST_SOURCE_PATH)
+	],
+	working_directory = BOOST_SOURCE_PATH,
+	log_name = 'build-boost')
+	if (BOOST_INCLUDE_PATH / 'boost').exists():
+		return
+	candidates = glob.glob(f'{BOOST_INCLUDE_PATH}/**/boost', recursive = True)
+	candidates.sort()
+	boost_path = Path(candidates[0])
+	shutil.move(boost_path, BOOST_INCLUDE_PATH / 'boost')
+	boost_path.parent.rmdir()
 
 def BuildSQLite():
 	SQLITE_BUILD_PATH.mkdir(exist_ok = True)
@@ -1022,6 +1013,7 @@ def BuildDependencies(task_graph : TaskGraph):
 			f'-DEIGEN3_INCLUDE_DIR={EIGEN_SOURCE_PATH}',
 			'-DENABLE_MODULE_VEHICLE=ON'))
 	task_graph.Execute()
+
 	# Build:
 	task_graph.Add(Task('build-boost', [], BuildAndInstallBoost))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-gtest', [], GTEST_BUILD_PATH))
@@ -1039,6 +1031,7 @@ def BuildDependencies(task_graph : TaskGraph):
 	if ENABLE_CHRONO:
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-chrono', [], CHRONO_BUILD_PATH))
 	task_graph.Execute(sequential = True) # The underlying build system should already parallelize.
+
 	# Install:
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-gtest', [], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-libpng', [], LIBPNG_BUILD_PATH, LIBPNG_INSTALL_PATH))

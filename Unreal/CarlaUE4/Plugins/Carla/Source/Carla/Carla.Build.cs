@@ -184,6 +184,7 @@ public class Carla :
 			GetLibraryName("*boost_asio*"),
             GetLibraryName("*boost_python*"),
 		};
+		var BoostIncludePath = Path.Combine(DependenciesInstallPath, "boost-install", "include");
         var BoostLibraries =
 			from Pattern in BoostLibraryPatterns
 			from Candidate in FindLibraries("boost", Pattern)
@@ -221,7 +222,6 @@ public class Carla :
 			PublicAdditionalLibraries.AddRange(ChronoLibraries);
         }
 
-        PrivateIncludePaths.Add(LibCarlaIncludePath);
         PrivateIncludePaths.Add(LibCarlaIncludePath);
         PrivateIncludePaths.AddRange(new string[]
         {

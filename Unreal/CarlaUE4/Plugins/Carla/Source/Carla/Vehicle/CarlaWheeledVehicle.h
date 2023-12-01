@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "WheeledVehicle.h"
+#include "WheeledVehiclePawn.h"
 
 #include "Vehicle/AckermannController.h"
 #include "Vehicle/AckermannControllerSettings.h"
