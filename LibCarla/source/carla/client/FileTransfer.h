@@ -12,6 +12,7 @@
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
+#include <stdint.h>
 
 namespace carla {
 namespace client {
