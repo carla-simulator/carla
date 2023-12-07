@@ -163,7 +163,7 @@ if __name__ == "__main__":
                 if junction.id == 1368: # traffic light junction logic
                     if ego_on_highway: # already on highway traffic light junction logic
                         street_type = "Highway traffic light"
-                        starting_wp = get_clostest_starting_waypoint(wps, ego_location)
+                        starting_wp = get_closest_starting_waypoint(wps, ego_location)
                         wps = remove_wps(starting_wp, wps)
                         intial_wp = ego_waypoint
                     else: # entrying highway traffic light jucntion
@@ -174,7 +174,7 @@ if __name__ == "__main__":
                     street_type = "Junction ahead"
                     intial_wp = ego_waypoint
 
-                junction_shape, lanes_all_junction, junction_roads_junction, yaw, = getJunctionShape(
+                junction_shape, lanes_all_junction, junction_roads_junction, yaw, = get_Junction_Shape(
                     ego_vehicle, intial_wp, wps, road_lane_ids, direction_angle, world_map
                 )
 
@@ -217,7 +217,7 @@ if __name__ == "__main__":
                     junction = get_junction_ahead(ego_waypoint, 80)
 
                     wps = junction.get_waypoints(carla.LaneType().Driving)
-                    closest_waypoint = get_clostest_starting_waypoint(wps, ego_location)
+                    closest_waypoint = get_closest_starting_waypoint(wps, ego_location)
                     wps = prepare_waypoints(closest_waypoint, wps, ego_waypoint)
                     highway_shape = get_highway_shape(wps, junction, ego_waypoint)
 
