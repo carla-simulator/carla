@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<scenarios>
+    <scenario name="SignalizedJunctionRightTurn_1" type="SignalizedJunctionRightTurn" town="Town03">
+        <ego_vehicle x="-2.8" y="-182.8" z="0.5" yaw="90" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="SignalizedJunctionRightTurn_2" type="SignalizedJunctionRightTurn" town="Town04">
+        <ego_vehicle x="244.7" y="-249.4" z="0.5" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="SignalizedJunctionRightTurn_3" type="SignalizedJunctionRightTurn" town="Town04">
+        <ego_vehicle x="246" y="-311" z="0.1" yaw="-179" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="SignalizedJunctionRightTurn_4" type="SignalizedJunctionRightTurn" town="Town05">
+        <ego_vehicle x="-54.9" y="25.3" z="0.1" yaw="90" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="SignalizedJunctionRightTurn_5" type="SignalizedJunctionRightTurn" town="Town05">
+        <ego_vehicle x="-25.7" y="95" z="0.0" yaw="1" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="SignalizedJunctionRightTurn_6" type="SignalizedJunctionRightTurn" town="Town05">
+        <ego_vehicle x="72.2" y="-5.6" z="0.0" yaw="-180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="SignalizedJunctionRightTurn_7" type="SignalizedJunctionRightTurn" town="Town05">
+        <ego_vehicle x="-170.3" y="94.9" z="0.0" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+</scenarios>

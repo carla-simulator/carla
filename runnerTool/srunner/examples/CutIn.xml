@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<scenarios>
+    <!-- scenario name MUST contain 'left' or 'right', defines whether car comes from left or right lane-->
+    <scenario name="CutInFrom_left_Lane" type="CutIn" town="Town04">
+        <ego_vehicle x="284.4" y="16.4" z="2.5" yaw="180" model="vehicle.lincoln.mkz_2017" />
+	    <other_actor x="324.2" y="20.7" z="-100" yaw="180" model="vehicle.tesla.model3" />
+        <weather cloudiness="0" precipitation="0" precipitation_deposits="0" wind_intensity="0" sun_azimuth_angle="0" sun_altitude_angle="75" />
+    </scenario>
+    <scenario name="CutInFrom_right_Lane" type="CutIn" town="Town04">
+        <ego_vehicle x="284.4" y="16.4" z="2.5" yaw="180" model="vehicle.lincoln.mkz_2017" />
+	    <other_actor x="336.6" y="14.4" z="-100" yaw="180" model="vehicle.tesla.model3" />
+        <weather cloudiness="0" precipitation="0" precipitation_deposits="0" wind_intensity="0" sun_azimuth_angle="0" sun_altitude_angle="75" />
+    </scenario>
+</scenarios>

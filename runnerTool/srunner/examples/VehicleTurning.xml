@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<scenarios>
+    <scenario name="VehicleTurningRight_1" type="VehicleTurningRight" town="Town01">
+        <ego_vehicle x="130" y="55" z="0" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="VehicleTurningLeft_1" type="VehicleTurningLeft" town="Town01">
+        <ego_vehicle x="130" y="55" z="0" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+     <scenario name="VehicleTurningRight_2" type="VehicleTurningRight" town="Town01">
+        <ego_vehicle x="132" y="195.5" z="0" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="VehicleTurningLeft_2" type="VehicleTurningLeft" town="Town01">
+        <ego_vehicle x="132" y="195.5" z="0" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="VehicleTurningRight_3" type="VehicleTurningRight" town="Town01">
+        <ego_vehicle x="282.5" y="199.4" z="0" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="VehicleTurningLeft_3" type="VehicleTurningLeft" town="Town01">
+        <ego_vehicle x="282.5" y="199.4" z="0" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="VehicleTurningRight_4" type="VehicleTurningRight" town="Town02">
+        <ego_vehicle x="30.1" y="187.4" z="0.22" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="VehicleTurningLeft_4" type="VehicleTurningLeft" town="Town02">
+        <ego_vehicle x="30.1" y="187.4" z="0.22" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="VehicleTurningRight_5" type="VehicleTurningRight" town="Town02">
+        <ego_vehicle x="90" y="237.1" z="0.22" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="VehicleTurningLeft_5" type="VehicleTurningLeft" town="Town02">
+        <ego_vehicle x="87.5" y="237.1" z="0.22" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="VehicleTurningRight_6" type="VehicleTurningRight" town="Town02">
+        <ego_vehicle x="146.2" y="191.7" z="0.22" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="VehicleTurningLeft_6" type="VehicleTurningLeft" town="Town02">
+        <ego_vehicle x="146.2" y="191.7" z="0.22" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="VehicleTurningRight_7" type="VehicleTurningRight" town="Town03">
+        <ego_vehicle x="-74.32" y="-50" z="0.5" yaw="270" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="VehicleTurningLeft_7" type="VehicleTurningLeft" town="Town03">
+        <ego_vehicle x="-74.32" y="-50" z="0.5" yaw="270" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="VehicleTurningRight_8" type="VehicleTurningRight" town="Town04">
+        <ego_vehicle x="255.2" y="-300.4" z="0.5" yaw="90" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="VehicleTurningLeft_8" type="VehicleTurningLeft" town="Town04">
+        <ego_vehicle x="255.2" y="-300.4" z="0.5" yaw="90" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+</scenarios>

@@ -827,6 +827,9 @@ def initialize_error_dataframe():
 
     col_names.append("location")
     col_names.append("error")
+    col_names.append("fname")
+    col_names.append("line")
+    col_names.append("exc_type")
 
     return pd.DataFrame(columns=col_names)
 
