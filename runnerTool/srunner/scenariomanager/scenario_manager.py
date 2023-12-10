@@ -200,6 +200,9 @@ class ScenarioManager(object):
                         #self.reset_camera(world.get_actor(self.ego_vehicles[0].id),world.get_spectator())
 
                 snapshot = world.get_snapshot()
+
+                #TODO: adding our (or at least my code) here
+                
                 if snapshot:
                     timestamp = snapshot.timestamp
             if timestamp:
@@ -229,7 +232,7 @@ class ScenarioManager(object):
 
             self._watchdog.update()
 
-            if self._debug_mode:
+            if self._debug_mode or True: #TODO: remove True
                 print("\n--------- Tick ---------\n")
 
             # Update game time and actor information

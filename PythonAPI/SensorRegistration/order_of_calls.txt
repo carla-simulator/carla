@@ -1,0 +1,6 @@
+./CarlaUE4.sh
+generate_traffic.py
+manual_control.py
+test_script_04.py -> to see id of ego vehicle
+change id of ego vehicle in collect_data
+collect_data.py 
