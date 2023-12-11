@@ -1070,6 +1070,8 @@ def detect_ego_before_junction(
         columns = int(
             (8 - min([len(lanes_all["left"]), len(lanes_all["right"])])) / 2
         )  # min number of lanes of right/left
+    if columns == 0:
+        columns = 2
 
     # determine column of ego in matrix = c
     if ego_wp.next(int(distance_to_junc / columns))[
@@ -2056,10 +2058,6 @@ def detect_cars_inside_junction(key_value_pairs, ego_vehicle, junction_waypoints
         traffic_light_entry_right = True
     else:
         traffic_light_entry_right = False
-                    
-    # Check ego vehicle direction: if north or south => inner junction grid must be rotated by 90 degrees.
-    if check_flipping_rows_and_columns(ego_vehicle):
-        rows, columns = columns, rows
     
     # divide junction bounding boxes and check if cars are inside
     boxes = divide_bounding_box_into_boxes(junction_waypoints)
@@ -2578,7 +2576,7 @@ def check_wp_parallel_to_entry_exit(wp, entry_wps, exit_wps, right_lane_end_wp, 
     Returns:
         bool: Boolean indicating if the given waypoint is parallel to entry/exit, if True then we found the entry/exit.
     """
-    # now we have to check if wp is in parallel to entry/exit, depending on exit / entry type
+    # we have to check if wp is in parallel to entry/exit, depending on exit / entry type
     if highway_shape[0] in [
         "entry_and_exit",
         "single_exit",
@@ -2625,16 +2623,16 @@ def search_entry_or_exit(
     exit_entry_found,
     matrix,
     highway_shape,
-    wps, # TODO
     entry_wps,
     exit_wps,
     degree,
     junction_id,
     right_lane_end_wp,
-    right_lane_start_wp,
     ghost=False,
     on_entry=False):
-    """_summary_
+    """This function searches for the entry or exit in front on highway. If ego is exiting/entrying a fixed static matrix is used.
+    Otherwise, when ego is on highway, the function looks behind & in front to find entry / exit. The idea is to go a certain distance to the front/back
+    and then check if right lane is already curved.
 
     Args:
         world_map (carla.Map): The map representing the environment.
@@ -2644,10 +2642,7 @@ def search_entry_or_exit(
         matrix (list): Matrix with a tuple (key, value) for each lane with the key indicating the road id and lane id of the lane "roadID_laneID".
             Example format: [('1_-2', [0,0,0,1,0,0,0,0]), ...]
         highway_shape (tuple): Tuple containing highway_type, number of straight highway lanes, entry waypoint tuple and/ exit waypoint tuple.
-            Format: (highway_type: string, straight_lanes: int, entry_wps: ([wp,..], [wp,..]), exit_wps: ([wp,..], [wp,..]))        
-        
-        # TODO: need wps? 
-        
+            Format: (highway_type: string, straight_lanes: int, entry_wps: ([wp,..], [wp,..]), exit_wps: ([wp,..], [wp,..]))                
         entry_wps (tuple): Tuple with lists of start and end waypoints of the entry.
             Format: ([start_wp, start_wp..], [end_wp, end_wp..])
         exit_wps (tuple): Tuple with lists of start and end waypoints of the exit.
@@ -2655,7 +2650,6 @@ def search_entry_or_exit(
         degree (int): Angle threshold depending on curve type to determine how far car is on entry/exit curve
         junction_id (int): The identifier of the current junction object.
         right_lane_end_wp (carla.Waypoint): End waypoint with highest absolute lande_id -> right (most out) lane
-        right_lane_start_wp (carla.Waypoint): Start waypoint with highest absolute lande_id -> right (most out) lane
         ghost (bool): Ghost mode when ego is exiting/entrying a highway - fix a location of an imaginary vehicle on highway to correctly build matrix from this ghost perspective.
         on_entry (bool): Indicating if ego is on an entry or exit lane
 
@@ -2680,8 +2674,6 @@ def search_entry_or_exit(
     if ghost:
         matrix, col_entryExit = static_entry_exit_matrix(matrix, highway_shape[0], on_entry)
         return True, col_entryExit, matrix
-
-    # TODO: possible external function? get_initial_wp
     
     # get the initial waypoint for the search: from this point we look infront/behind for entry/exit
     initial_wp = get_initial_wp_for_entry_or_exit_detection(highway_shape, ego_waypoint, direction)
@@ -2693,7 +2685,7 @@ def search_entry_or_exit(
     elif direction == "behind": # Look behind
         z = (
             -1
-        )  # column help in matrix; -1 because in list is first value only a threshold to see when junction too far behind
+        )  # column help in matrix; -1 because in col_distances list, when looking behind, is first value only a threshold to see when junction too far behind
         if highway_shape[0] in [
             "entry_and_exit"
         ]:  # special because entry & exit are very close compared to normal column distance in matrix
@@ -2703,6 +2695,7 @@ def search_entry_or_exit(
         else:
             col_distances = [55, 35, 15, 6]
     
+    # iterate through column distances find entry/exit
     col_entryExit = None
     for i, col_distance in enumerate(
         col_distances
@@ -2894,13 +2887,11 @@ def update_matrix(
         exit_entry_found,
         matrix,
         highway_shape,
-        wps,
         entry_wps,
         exit_wps,
         degree,
         junction.id,
         right_lane_end_wp,
-        right_lane_start_wp,
         ghost,
         on_entry,
     )
@@ -2913,13 +2904,11 @@ def update_matrix(
             exit_entry_found,
             matrix,
             highway_shape,
-            wps,
             entry_wps,
             exit_wps,
             degree,
             junction.id,
             right_lane_end_wp,
-            right_lane_start_wp,
             ghost,
             on_entry
         )
