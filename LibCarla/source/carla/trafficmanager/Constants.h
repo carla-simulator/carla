@@ -105,6 +105,7 @@ static const float MAX_WPT_RADIANS = 0.087f;  // 5º
 static float const DELTA = 25.0f;
 static float const Z_DELTA = 500.0f;
 static float const STRAIGHT_DEG = 19.0f;
+static const double MIN_LANE_WIDTH = 1.0f;
 } // namespace Map
 
 namespace TrafficLight {

@@ -1019,6 +1019,8 @@ void ACarlaWheeledVehicle::OpenDoorPhys(const EVehicleDoor DoorIdx)
   {
     (*CollisionDisable)->InitComponentConstraint();
   }
+
+  RecordDoorChange(DoorIdx, true);
 }
 
 void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
@@ -1032,6 +1034,16 @@ void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
   DoorComponent->SetWorldTransform(DoorInitialTransform);
   DoorComponent->AttachToComponent(
       GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+  RecordDoorChange(DoorIdx, false);
+}
+
+void ACarlaWheeledVehicle::RecordDoorChange(const EVehicleDoor DoorIdx, bool bIsOpen)
+{
+  auto * Recorder = UCarlaStatics::GetRecorder(GetWorld());
+  if (Recorder && Recorder->IsEnabled())
+  {
+      Recorder->AddVehicleDoor(*this, DoorIdx, bIsOpen);
+  }
 }
 
 void ACarlaWheeledVehicle::ApplyRolloverBehavior()

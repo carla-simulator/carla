@@ -51,11 +51,11 @@ namespace multigpu {
         Listener::callback_function_type_response on_response);
 
     template <typename... Buffers>
-    static auto MakeMessage(Buffers &&... buffers) {
+    static auto MakeMessage(Buffers... buffers) {
       static_assert(
-          are_same<Buffer, Buffers...>::value,
-          "This function only accepts arguments of type Buffer.");
-      return std::make_shared<const carla::streaming::detail::tcp::Message>(std::move(buffers)...);
+          are_same<SharedBufferView, Buffers...>::value,
+          "This function only accepts arguments of type BufferView.");
+      return std::make_shared<const carla::streaming::detail::tcp::Message>(buffers...);
     }
 
     /// Writes some data to the socket.
@@ -69,8 +69,8 @@ namespace multigpu {
 
     /// Writes some data to the socket.
     template <typename... Buffers>
-    void Write(Buffers &&... buffers) {
-      Write(MakeMessage(std::move(buffers)...));
+    void Write(Buffers... buffers) {
+      Write(MakeMessage(buffers...));
     }
 
     /// Post a job to close the session.

@@ -30,6 +30,7 @@
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "BlueprintEditor.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "EditorStaticMeshLibrary.h"
 
 
 void UUSDImporterWidget::ImportUSDProp(
@@ -71,7 +72,7 @@ void UUSDImporterWidget::ImportUSDVehicle(
       -> TSubclassOf<UVehicleWheel>
   {
     // Get a reference to the editor subsystem
-    constexpr float MToCM = 0.01f;
+    constexpr float MToCM = 100.f;
     constexpr float RadToDeg = 360.f/3.14159265359f;
     FString BlueprintName =  FPaths::GetBaseFilename(PackagePathName);
     FString BlueprintPath = FPaths::GetPath(PackagePathName);
@@ -430,7 +431,8 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     UWorld* World,
     UClass* BaseClass,
     USkeletalMesh* NewSkeletalMesh,
-    const FString &DestPath,
+    UPhysicsAsset* NewPhysicsAsset,
+    const FString &DestPath, 
     const FMergedVehicleMeshParts& VehicleMeshes,
     const FWheelTemplates& WheelTemplates)
 {
@@ -538,6 +540,16 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     TemplateActor->AddInstanceComponent(LightComponent);
     UE_LOG(LogCarlaTools, Log, TEXT("Spawn Light %s, %s, %s"), *Light.Name, *Light.Location.ToString(), *Light.Color.ToString());
   }
+  // set the wheel radius
+  UVehicleWheel* WheelDefault;
+  WheelDefault = WheelTemplates.WheelFL->GetDefaultObject<UVehicleWheel>();
+  WheelDefault->ShapeRadius = VehicleMeshes.WheelFL->GetBounds().SphereRadius;
+  WheelDefault = WheelTemplates.WheelFR->GetDefaultObject<UVehicleWheel>();
+  WheelDefault->ShapeRadius = VehicleMeshes.WheelFR->GetBounds().SphereRadius;
+  WheelDefault = WheelTemplates.WheelRL->GetDefaultObject<UVehicleWheel>();
+  WheelDefault->ShapeRadius = VehicleMeshes.WheelRL->GetBounds().SphereRadius;
+  WheelDefault = WheelTemplates.WheelRR->GetDefaultObject<UVehicleWheel>();
+  WheelDefault->ShapeRadius = VehicleMeshes.WheelRR->GetBounds().SphereRadius;
   // assign generated wheel types
   TArray<FWheelSetup> WheelSetups;
   FWheelSetup Setup;
@@ -566,7 +578,12 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
   {
     UE_LOG(LogCarlaTools, Error, TEXT("Null CarlaVehicle"));
   }
-
+  // Set the vehicle collision in the new physicsasset object
+  UEditorStaticMeshLibrary::AddSimpleCollisions(
+      VehicleMeshes.Body, EScriptingCollisionShapeType::NDOP26);
+  CopyCollisionToPhysicsAsset(NewPhysicsAsset, VehicleMeshes.Body);
+  // assign the physics asset to the skeletal mesh
+  NewSkeletalMesh->PhysicsAsset = NewPhysicsAsset;
   // Create the new blueprint vehicle
   FKismetEditorUtilities::FCreateBlueprintFromActorParams Params;
   Params.bReplaceActor = false;
@@ -611,4 +628,16 @@ bool UUSDImporterWidget::EditSkeletalMeshBones(
       Package, NewSkeletalMesh,
       EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
       *(Package->GetName()), GError, nullptr, true, true, SAVE_NoError);
+}
+
+void UUSDImporterWidget::CopyCollisionToPhysicsAsset(
+    UPhysicsAsset* PhysicsAssetToEdit, UStaticMesh* StaticMesh)
+{
+  UE_LOG(LogCarlaTools, Log, TEXT("Num bodysetups %d"), PhysicsAssetToEdit->SkeletalBodySetups.Num());
+  UBodySetup* BodySetupPhysicsAsset = 
+      PhysicsAssetToEdit->SkeletalBodySetups[
+          PhysicsAssetToEdit->FindBodyIndex(FName("Vehicle_Base"))];
+  UBodySetup* BodySetupStaticMesh = StaticMesh->BodySetup;
+  BodySetupPhysicsAsset->AggGeom = BodySetupStaticMesh->AggGeom;
+
 }

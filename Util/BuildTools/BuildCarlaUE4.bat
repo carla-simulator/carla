@@ -25,6 +25,8 @@ set CHRONO_STATE="Chrono OFF"
 set UNITY_STATE="Unity ON"
 set AT_LEAST_WRITE_OPTIONALMODULES=false
 set EDITOR_FLAGS=""
+set USE_ROS2=false
+set ROS2_STATE="Ros2 OFF"
 
 :arg-parse
 echo %1
@@ -47,6 +49,9 @@ if not "%1"=="" (
     )
     if "%1"=="--chrono" (
         set USE_CHRONO=true
+    )
+    if "%1"=="--ros2" (
+        set USE_ROS2=true
     )
     if "%1"=="--no-unity" (
         set USE_UNITY=false
@@ -161,12 +166,17 @@ if %USE_CHRONO% == true (
 ) else (
     set CHRONO_STATE="Chrono OFF"
 )
+if %USE_ROS2% == true (
+    set ROS2_STATE="Ros2 ON"
+) else (
+    set ROS2_STATE="Ros2 OFF"
+)
 if %USE_UNITY% == true (
     set UNITY_STATE="Unity ON"
 ) else (
     set UNITY_STATE="Unity OFF"
 )
-set OPTIONAL_MODULES_TEXT=%CARSIM_STATE% %CHRONO_STATE% %OMNIVERSE_PLUGIN_INSTALLED% %UNITY_STATE%
+set OPTIONAL_MODULES_TEXT=%CARSIM_STATE% %CHRONO_STATE% %ROS2_STATE% %OMNIVERSE_PLUGIN_INSTALLED% %UNITY_STATE%
 echo %OPTIONAL_MODULES_TEXT% > "%ROOT_PATH%Unreal/CarlaUE4/Config/OptionalModules.ini"
 
 

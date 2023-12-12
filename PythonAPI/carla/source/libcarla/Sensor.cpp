@@ -38,6 +38,9 @@ void export_sensor() {
     .def("listen_to_gbuffer", &SubscribeToGBuffer, (arg("gbuffer_id"), arg("callback")))
     .def("is_listening_gbuffer", &cc::ServerSideSensor::IsListeningGBuffer, (arg("gbuffer_id")))
     .def("stop_gbuffer", &cc::ServerSideSensor::StopGBuffer, (arg("gbuffer_id")))
+    .def("enable_for_ros", &cc::ServerSideSensor::EnableForROS)
+    .def("disable_for_ros", &cc::ServerSideSensor::DisableForROS)
+    .def("is_enabled_for_ros", &cc::ServerSideSensor::IsEnabledForROS)
     .def(self_ns::str(self_ns::self))
   ;
 
