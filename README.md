@@ -22,17 +22,17 @@ paper, check out
 [Benchmarking](https://github.com/carla-simulator/driving-benchmarks).
 
 Linux:
-* [**Get CARLA overnight build**](http://carla-releases.s3.amazonaws.com/Linux/Dev/CARLA_Latest.tar.gz)
-* [**Get AdditionalMaps overnight build**](http://carla-releases.s3.amazonaws.com/Linux/Dev/AdditionalMaps_Latest.tar.gz)
+* [**Get CARLA overnight build**](https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/Dev/CARLA_Latest.tar.gz)
+* [**Get AdditionalMaps overnight build**](https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/Dev/AdditionalMaps_Latest.tar.gz)
 
 Windows:
-* [**Get CARLA overnight build**](http://carla-releases.s3.amazonaws.com/Windows/Dev/CARLA_Latest.zip)
-* [**Get AdditionalMaps overnight build**](http://carla-releases.s3.amazonaws.com/Windows/Dev/AdditionalMaps_Latest.zip)
+* [**Get CARLA overnight build**](https://carla-releases.s3.us-east-005.backblazeb2.com/Windows/Dev/CARLA_Latest.zip)
+* [**Get AdditionalMaps overnight build**](https://carla-releases.s3.us-east-005.backblazeb2.com/Windows/Dev/AdditionalMaps_Latest.zip)
 
 ### Recommended system
 
 * Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD ryzen 7 / AMD ryzen 9
-* +16 GB RAM memory 
+* +16 GB RAM memory
 * NVIDIA RTX 2070 / NVIDIA RTX 2080 / NVIDIA RTX 3070, NVIDIA RTX 3080
 * Ubuntu 18.04
 
@@ -76,12 +76,12 @@ Building CARLA
 
 Use `git clone` or download the project from this page. Note that the master branch contains the most recent release of CARLA with the latest fixes and features.
 
-Then follow the instruction at [How to build on Linux][buildlinuxlink] or [How to build on Windows][buildwindowslink].  
-The Linux build needs for an UE patch to solve some visualization issues regarding Vulkan. Those already working with a Linux build should install the patch and make the UE build again using the following commands.  
+Then follow the instruction at [How to build on Linux][buildlinuxlink] or [How to build on Windows][buildwindowslink].
+The Linux build needs for an UE patch to solve some visualization issues regarding Vulkan. Those already working with a Linux build should install the patch and make the UE build again using the following commands.
 ```sh
-# Download and install the UE patch  
+# Download and install the UE patch
 cd ~/UnrealEngine_4.24
-wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt ~/430667-13636743-patch.txt
+wget https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/UE_Patch/430667-13636743-patch.txt ~/430667-13636743-patch.txt
 patch --strip=4 < ~/430667-13636743-patch.txt
 # Build UE
 ./Setup.sh && ./GenerateProjectFiles.sh && make
@@ -108,26 +108,26 @@ If you run into problems, check our
 
 CARLA Talks
 ------
-The team creates some additional content for users, besides the docs. This is a great way to cover different subjects such as detailed explanations for a specific module, latest improvements in a feature, future work and much more.  
+The team creates some additional content for users, besides the docs. This is a great way to cover different subjects such as detailed explanations for a specific module, latest improvements in a feature, future work and much more.
 
-__CARLA Talks 2020 (May):__  
+__CARLA Talks 2020 (May):__
 
-*   __General__  
-	*   Art improvements: environment and rendering — [video](https://youtu.be/ZZaHevsz8W8) | [slides](https://drive.google.com/file/d/1l9Ztaq0Q8fNN5YPU4-5vL13eZUwsQl5P/view?usp=sharing)  
+*   __General__
+	*   Art improvements: environment and rendering — [video](https://youtu.be/ZZaHevsz8W8) | [slides](https://drive.google.com/file/d/1l9Ztaq0Q8fNN5YPU4-5vL13eZUwsQl5P/view?usp=sharing)
 	*   Core implementations: synchrony, snapshots and landmarks — [video](https://youtu.be/nyyTLmphqY4) | [slides](https://drive.google.com/file/d/1yaOwf1419qWZqE1gTSrrknsWOhawEWh_/view?usp=sharing)
-	*   Data ingestion — [video](https://youtu.be/mHiUUZ4xC9o) | [slides](https://drive.google.com/file/d/10uNBAMreKajYimIhwCqSYXjhfVs2bX31/view?usp=sharing)  
-	*   Pedestrians and their implementation — [video](https://youtu.be/Uoz2ihDwaWA) | [slides](https://drive.google.com/file/d/1Tsosin7BLP1k558shtbzUdo2ZXVKy5CB/view?usp=sharing)  
-	*   Sensors in CARLA — [video](https://youtu.be/T8qCSet8WK0) | [slides](https://drive.google.com/file/d/1UO8ZAIOp-1xaBzcFMfn_IoipycVkUo4q/view?usp=sharing)  
-*   __Modules__  
-	*   Improvements in the Traffic Manager — [video](https://youtu.be/n9cufaJ17eA) | [slides](https://drive.google.com/file/d/1R9uNZ6pYHSZoEBxs2vYK7swiriKbbuxo/view?usp=sharing)  
-	*   Integration of autoware and ROS — [video](https://youtu.be/ChIgcC2scwU) | [slides](https://drive.google.com/file/d/1uO6nBaFirrllb08OeqGAMVLApQ6EbgAt/view?usp=sharing)  
-	*   Introducing ScenarioRunner — [video](https://youtu.be/dcnnNJowqzM) | [slides](https://drive.google.com/file/d/1zgoH_kLOfIw117FJGm2IVZZAIRw9U2Q0/view?usp=sharing)  
-	*   OpenSCENARIO support — [slides](https://drive.google.com/file/d/1g6ATxZRTWEdstiZwfBN1_T_x_WwZs0zE/view?usp=sharing)  
-*   __Features__  
-	*   Co-Simulations with SUMO and PTV-Vissim — [video](https://youtu.be/PuFSbj1PU94) | [slides](https://drive.google.com/file/d/10DgMNUBqKqWBrdiwBiAIT4DdR9ObCquI/view?usp=sharing)  
-	*   Integration of RSS-lib — [slides](https://drive.google.com/file/d/1whREmrCv67fOMipgCk6kkiW4VPODig0A/view?usp=sharing)  
-	*   The External Sensor Interface (ESI) — [video](https://youtu.be/5hXHPV9FIeY) | [slides](https://drive.google.com/file/d/1VWFaEoS12siW6NtQDUkm44BVO7tveRbJ/view?usp=sharing)  
-	*   The OpenDRIVE Standalone Mode — [video](https://youtu.be/U25GhofVV1Q) | [slides](https://drive.google.com/file/d/1D5VsgfX7dmgPWn7UtDDid3-OdS1HI4pY/view?usp=sharing)  
+	*   Data ingestion — [video](https://youtu.be/mHiUUZ4xC9o) | [slides](https://drive.google.com/file/d/10uNBAMreKajYimIhwCqSYXjhfVs2bX31/view?usp=sharing)
+	*   Pedestrians and their implementation — [video](https://youtu.be/Uoz2ihDwaWA) | [slides](https://drive.google.com/file/d/1Tsosin7BLP1k558shtbzUdo2ZXVKy5CB/view?usp=sharing)
+	*   Sensors in CARLA — [video](https://youtu.be/T8qCSet8WK0) | [slides](https://drive.google.com/file/d/1UO8ZAIOp-1xaBzcFMfn_IoipycVkUo4q/view?usp=sharing)
+*   __Modules__
+	*   Improvements in the Traffic Manager — [video](https://youtu.be/n9cufaJ17eA) | [slides](https://drive.google.com/file/d/1R9uNZ6pYHSZoEBxs2vYK7swiriKbbuxo/view?usp=sharing)
+	*   Integration of autoware and ROS — [video](https://youtu.be/ChIgcC2scwU) | [slides](https://drive.google.com/file/d/1uO6nBaFirrllb08OeqGAMVLApQ6EbgAt/view?usp=sharing)
+	*   Introducing ScenarioRunner — [video](https://youtu.be/dcnnNJowqzM) | [slides](https://drive.google.com/file/d/1zgoH_kLOfIw117FJGm2IVZZAIRw9U2Q0/view?usp=sharing)
+	*   OpenSCENARIO support — [slides](https://drive.google.com/file/d/1g6ATxZRTWEdstiZwfBN1_T_x_WwZs0zE/view?usp=sharing)
+*   __Features__
+	*   Co-Simulations with SUMO and PTV-Vissim — [video](https://youtu.be/PuFSbj1PU94) | [slides](https://drive.google.com/file/d/10DgMNUBqKqWBrdiwBiAIT4DdR9ObCquI/view?usp=sharing)
+	*   Integration of RSS-lib — [slides](https://drive.google.com/file/d/1whREmrCv67fOMipgCk6kkiW4VPODig0A/view?usp=sharing)
+	*   The External Sensor Interface (ESI) — [video](https://youtu.be/5hXHPV9FIeY) | [slides](https://drive.google.com/file/d/1VWFaEoS12siW6NtQDUkm44BVO7tveRbJ/view?usp=sharing)
+	*   The OpenDRIVE Standalone Mode — [video](https://youtu.be/U25GhofVV1Q) | [slides](https://drive.google.com/file/d/1D5VsgfX7dmgPWn7UtDDid3-OdS1HI4pY/view?usp=sharing)
 
 Licenses
 -------
