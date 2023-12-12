@@ -222,6 +222,16 @@ public class Carla :
 			PublicAdditionalLibraries.AddRange(ChronoLibraries);
         }
 
+        PublicIncludePaths.Add(LibCarlaIncludePath);
+        PublicIncludePaths.AddRange(new string[]
+        {
+            GetIncludePath("boost"),
+            GetIncludePath("rpclib"),
+            GetIncludePath("xercesc"),
+            GetIncludePath("sumo"),
+            GetIncludePath("zlib"),
+        });
+
         PrivateIncludePaths.Add(LibCarlaIncludePath);
         PrivateIncludePaths.AddRange(new string[]
         {

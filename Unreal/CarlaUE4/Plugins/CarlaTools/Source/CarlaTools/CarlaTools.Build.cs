@@ -22,8 +22,6 @@ public class CarlaTools :
     [CommandLine("-carla-dependencies-install-path")]
     string CarlaDependenciesPath = null;
 
-
-
     private static void LogFlagStatus(string name, bool value)
     {
         var state = value ? "enabled" : "disabled";

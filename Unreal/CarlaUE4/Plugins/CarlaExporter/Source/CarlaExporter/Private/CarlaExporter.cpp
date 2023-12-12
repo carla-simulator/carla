@@ -191,6 +191,8 @@ void FCarlaExporterModule::PluginButtonClicked()
 
 int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName, UBodySetup *body, FTransform &CompTransform, AreaType Area, int32 Offset)
 {
+// @CARLAUE
+#if 0
   if (!body) return 0;
 
   constexpr float TO_METERS = 0.01f;
@@ -373,6 +375,9 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
     }
   }
   return TotalVerticesAdded;
+#else
+    return 0;
+#endif
 }
 
 void FCarlaExporterModule::AddMenuExtension(FMenuBuilder& Builder)

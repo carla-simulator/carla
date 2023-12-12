@@ -6,7 +6,8 @@
 
 using UnrealBuildTool;
 
-public class CarlaExporter : ModuleRules
+public class CarlaExporter :
+	ModuleRules
 {
 	public CarlaExporter(ReadOnlyTargetRules Target) :
 		base(Target)

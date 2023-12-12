@@ -18,14 +18,18 @@ public class CarlaUE4Target : TargetRules
     public CarlaUE4Target(TargetInfo Target) :
         base(Target)
     {
+        DefaultBuildSettings = BuildSettingsVersion.Latest;
         Type = TargetType.Game;
         
         ExtraModuleNames.Add("CarlaUE4");
 
         LogFlagStatus("Unity build", EnableUnityBuild);
-        
-        bUseUnityBuild = EnableUnityBuild;
-        bForceUnityBuild = EnableUnityBuild;
-        bUseAdaptiveUnityBuild = EnableUnityBuild;
+
+        if (!EnableUnityBuild)
+        {
+            bUseUnityBuild =
+            bForceUnityBuild =
+            bUseAdaptiveUnityBuild = false;
+        }
     }
 }
