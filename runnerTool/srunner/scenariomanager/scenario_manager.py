@@ -203,6 +203,7 @@ class ScenarioManager(object):
 
                 #TODO: adding our (or at least my code) here
                 
+
                 if snapshot:
                     timestamp = snapshot.timestamp
             if timestamp:
@@ -232,7 +233,8 @@ class ScenarioManager(object):
 
             self._watchdog.update()
 
-            if self._debug_mode or True: #TODO: remove True
+
+            if self._debug_mode:
                 print("\n--------- Tick ---------\n")
 
             # Update game time and actor information

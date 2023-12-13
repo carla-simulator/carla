@@ -1,6 +1,7 @@
 {
-"PATH_TO_CARLA_ROOT": "/home/kilianhullen/repos/carla/Dist", 
-"PATH_TO_SCENARIO_RUNNER_ROOT": "/home/kilianhullen/repos/carla/runnerTool", 
-"PATH_TO_XOSC_FILES": "./scenarios", 
-"PATH_TO_PYTHON_ENV": "/usr/bin/python3",
+
+"PATH_TO_CARLA_ROOT": "/home/janpaul/repos/carla/Dist/CARLA_Shipping_f38eea6e-dirty", 
+"PATH_TO_SCENARIO_RUNNER_ROOT": "/home/janpaul/repos/carla/runnerTool", 
+"PATH_TO_XOSC_FILES": "/home/janpaul/repos/carla/runnerTool/scenarios", 
+"PATH_TO_PYTHON_ENV": "/usr/bin",
 "CARLA_VERSION": "0.9.13"}
