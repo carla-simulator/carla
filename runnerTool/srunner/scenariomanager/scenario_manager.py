@@ -200,6 +200,10 @@ class ScenarioManager(object):
                         #self.reset_camera(world.get_actor(self.ego_vehicles[0].id),world.get_spectator())
 
                 snapshot = world.get_snapshot()
+
+                #TODO: adding our (or at least my code) here
+                
+
                 if snapshot:
                     timestamp = snapshot.timestamp
             if timestamp:
@@ -228,6 +232,7 @@ class ScenarioManager(object):
             self._timestamp_last_run = timestamp.elapsed_seconds
 
             self._watchdog.update()
+
 
             if self._debug_mode:
                 print("\n--------- Tick ---------\n")

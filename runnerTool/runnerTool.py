@@ -284,6 +284,7 @@ class RunnerTool(object):
 
         folder_addr = conf["PATH_TO_XOSC_FILES"]
         file_list = self.get_xosc(self.sort_maps)
+
         self.log.create_entry("INFO: Found scenarios in directory:\n" + '\t\n'.join([x for x in file_list if ".xosc" in x]))
         for file in file_list:
             if ".xosc" in file:
@@ -294,6 +295,7 @@ class RunnerTool(object):
                         self.set_agent(openscenario)          
                     # Building subprocess command. (Subprocess is executed in new cmd terminal, thus python env root is required.)
                     cmd = """cd \"{runner_root}\"\
+
                                 && {python_root}/python3 scenario_runner.py --openscenario \"{file}\" --reloadWorld --json --outputDir \"{result_path}\"{speed} {camera}
                             """.format(runner_root= conf["PATH_TO_SCENARIO_RUNNER_ROOT"],
                                        python_root=conf["PATH_TO_PYTHON_ENV"],
@@ -303,6 +305,7 @@ class RunnerTool(object):
                                        camera=self.set_camera_perspective())
                                        
                     try:
+
                         if self.debug:
                             result = subprocess.Popen(cmd, shell=True, start_new_session=True)
                             result.wait(timeout=self.timeout)
