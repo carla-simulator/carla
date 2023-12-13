@@ -930,8 +930,23 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             std::pair<geom::Vector3D, geom::Vector3D> edges =
               lane.GetCornerPositions(s_current, road_param.extra_lane_width);
 
-            geom::Vector3D director = edges.second - edges.first;
-            director /= director.Length();
+            geom::Vector3D director;
+            if (lane.GetWidth(s_current) != 0) {
+              director = edges.second - edges.first;
+              director /= director.Length(); 
+            } else {
+              const std::map<road::LaneId, road::Lane> & lanes = lane_section.GetLanes();
+              for (const auto& lane_pair : lanes) {
+                if (lane_pair.second.GetWidth(s_current) != 0) {
+                  std::pair<geom::Vector3D, geom::Vector3D> another_edge =
+                    lane_pair.second.GetCornerPositions(s_current, road_param.extra_lane_width);
+                  director = another_edge.second - another_edge.first;
+                  director /= director.Length();
+                  break;
+                }
+              }
+            }
+
             geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
 
             out_mesh.AddVertex(edges.first);
@@ -944,8 +959,22 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
 
             edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
 
-            director = edges.second - edges.first;
-            director /= director.Length();
+            if (lane.GetWidth(s_current) != 0) {
+              director = edges.second - edges.first;
+              director /= director.Length(); 
+            } else {
+              const std::map<road::LaneId, road::Lane> & lanes = lane_section.GetLanes();
+              for (const auto& lane_pair : lanes) {
+                if (lane_pair.second.GetWidth(s_current) != 0) {
+                  std::pair<geom::Vector3D, geom::Vector3D> another_edge =
+                    lane_pair.second.GetCornerPositions(s_current, road_param.extra_lane_width);
+                  director = another_edge.second - another_edge.first;
+                  director /= director.Length(); 
+                  break;
+                }
+              }
+            }
+            
             endmarking = edges.first + director * lane_mark_info.width;
 
             out_mesh.AddVertex(edges.first);
