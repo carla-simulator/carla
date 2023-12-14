@@ -159,14 +159,14 @@ pipeline
                                 }
                             }
                         }
-                        /*
+                        
                         stage('ubuntu deploy dev')
                         {
-                            when { branch "dev"; }
+                            when { expression { true } or branch "dev"; }
                             steps
                             {
                                 sh 'git checkout .'
-                                sh 'make deploy ARGS="--replace-latest"'
+                                //sh 'make deploy ARGS="--replace-latest"'
                             }
                         }
                         stage('ubuntu deploy master')
@@ -175,12 +175,12 @@ pipeline
                             steps
                             {
                                 sh 'git checkout .'
-                                sh 'make deploy ARGS="--replace-latest --docker-push"'
+                                //sh 'make deploy ARGS="--replace-latest --docker-push"'
                             }
                         }
                         stage('ubuntu Doxygen')
                         {
-                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
+                            when { expression { true } or anyOf { branch "master"; branch "dev"; buildingTag() } }
                             steps
                             {
                                 sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
@@ -192,12 +192,14 @@ pipeline
                                 '''
                                 sh 'make docs'
                                 sh 'cp -rf ./Doxygen ~/carla-simulator.github.io/'
+                                /*
                                 sh '''
                                     cd ~/carla-simulator.github.io
                                     git add Doxygen
                                     git commit -m "Updated c++ docs" || true
                                     git push
                                 '''
+                                */
                             }
                             post
                             {
@@ -228,7 +230,7 @@ pipeline
                         }
                     }
                 }
-                /*
+                
                 stage('windows')
                 {
                     agent { label "windows" }
@@ -319,7 +321,7 @@ pipeline
                                 bat """
                                     call ../setEnv64.bat
                                     git checkout .
-                                    make deploy ARGS="--replace-latest"
+                                    REM make deploy ARGS="--replace-latest"
                                 """
                             }
                         }
@@ -341,11 +343,11 @@ pipeline
                                     jenkinsLib.DeleteWindowsBuildNode(JOB_ID)
                                 }
                             }
-                            
+                            */
                         }
                     }
                 }
-                */
+                
             }
         }
     }
