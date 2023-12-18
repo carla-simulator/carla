@@ -189,7 +189,7 @@ pipeline
                         }
                         stage('ubuntu Doxygen')
                         {
-                            when { true or anyOf { branch "master"; branch "dev"; buildingTag() } }
+                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
                             steps
                             {
                                 sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
