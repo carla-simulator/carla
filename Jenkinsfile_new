@@ -162,7 +162,7 @@ pipeline
                         
                         stage('ubuntu deploy dev')
                         {
-                            when { expression { true } or branch "dev"; }
+                            when { true or branch "dev"; }
                             steps
                             {
                                 sh 'git checkout .'
@@ -180,7 +180,7 @@ pipeline
                         }
                         stage('ubuntu Doxygen')
                         {
-                            when { expression { true } or anyOf { branch "master"; branch "dev"; buildingTag() } }
+                            when { true or anyOf { branch "master"; branch "dev"; buildingTag() } }
                             steps
                             {
                                 sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
