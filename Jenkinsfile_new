@@ -160,17 +160,19 @@ pipeline
                             }
                         }
                         
-                        stage('ubuntu deploy dev')
+                        stage('TEST: ubuntu deploy sim')
                         {
-                            // TESTING
                             when { branch "ruben/Jenkins_migrate"; }
                             steps
                             {
                                 sh 'git checkout .'
                                 //sh 'make deploy ARGS="--replace-latest"'
                             }
-                            // END TESTING
 
+                        }
+
+                        stage('ubuntu deploy dev')
+                        {
                             when { branch "dev"; }
                             steps
                             {
@@ -187,6 +189,39 @@ pipeline
                                 //sh 'make deploy ARGS="--replace-latest --docker-push"'
                             }
                         }
+
+                        stage('TEST: ubuntu Doxygen')
+                        {
+                            when { branch "ruben/Jenkins_migrate" }
+                            steps
+                            {
+                                sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
+                                sh '''
+                                    cd ~/carla-simulator.github.io
+                                    git remote set-url origin git@docs:carla-simulator/carla-simulator.github.io.git
+                                    git fetch
+                                    git checkout -B master origin/master
+                                '''
+                                sh 'make docs'
+                                sh 'cp -rf ./Doxygen ~/carla-simulator.github.io/'
+                                /*
+                                sh '''
+                                    cd ~/carla-simulator.github.io
+                                    git add Doxygen
+                                    git commit -m "Updated c++ docs" || true
+                                    git push
+                                '''
+                                */
+                            }
+                            post
+                            {
+                                always
+                                {
+                                    deleteDir()
+                                }
+                            }
+                        }
+
                         stage('ubuntu Doxygen')
                         {
                             when { anyOf { branch "master"; branch "dev"; buildingTag() } }
