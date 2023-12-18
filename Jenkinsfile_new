@@ -162,7 +162,16 @@ pipeline
                         
                         stage('ubuntu deploy dev')
                         {
-                            when { true or branch "dev"; }
+                            // TESTING
+                            when { branch "ruben/Jenkins_migrate"; }
+                            steps
+                            {
+                                sh 'git checkout .'
+                                //sh 'make deploy ARGS="--replace-latest"'
+                            }
+                            // END TESTING
+
+                            when { branch "dev"; }
                             steps
                             {
                                 sh 'git checkout .'
