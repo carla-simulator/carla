@@ -34,7 +34,8 @@ import pkg_resources
 def set_global_variables():
     ''' [RUNNERTOOL] Sets variables required to run scenario_manager'''
     try:
-        with open('config.json', 'r') as openfile:
+        print(os.getcwd())
+        with open("/home/janpaul/repos/carla/runnerTool/config.json", 'r') as openfile:
             vars = json.load(openfile)
 
         os.environ["CARLA_ROOT"] = vars["PATH_TO_CARLA_ROOT"]
@@ -473,6 +474,8 @@ class ScenarioRunner(object):
                 self.finished = False
                 result = self._load_and_run_scenario(config)
 
+                input("Press Enter to continue...")
+
             self._cleanup()
         return result
 
@@ -542,7 +545,7 @@ def main():
     """
     main function
     """
-
+#/python3 scenario_runner.py --openscenario \"{file}\" --reloadWorld --json --outputDir \"{result_path}\"{speed} {camera}
     description = ("CARLA Scenario Runner: Setup, Run and Evaluate scenarios using CARLA\n"
                    "Current version: " + VERSION)
 

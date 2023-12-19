@@ -295,8 +295,7 @@ class RunnerTool(object):
                         self.set_agent(openscenario)          
                     # Building subprocess command. (Subprocess is executed in new cmd terminal, thus python env root is required.)
                     cmd = """cd \"{runner_root}\"\
-
-                                && {python_root}/python3 scenario_runner.py --openscenario \"{file}\" --reloadWorld --json --outputDir \"{result_path}\"{speed} {camera}
+                                & {python_root}/python3 scenario_runner.py --openscenario \"{file}\" --reloadWorld --json --outputDir \"{result_path}\"{speed} {camera}
                             """.format(runner_root= conf["PATH_TO_SCENARIO_RUNNER_ROOT"],
                                        python_root=conf["PATH_TO_PYTHON_ENV"],
                                        file=openscenario, 
@@ -305,8 +304,7 @@ class RunnerTool(object):
                                        camera=self.set_camera_perspective())
                                        
                     try:
-
-                        if self.debug:
+                        if True: #self.debug:
                             result = subprocess.Popen(cmd, shell=True, start_new_session=True)
                             result.wait(timeout=self.timeout)
                         else:
@@ -323,7 +321,7 @@ class RunnerTool(object):
                 except Exception as e:
                     self.log.create_entry("ERROR: An error occured while running scenario {s_name}.".format(s_name=file))
                     self.log.create_entry(e)
-
+            input("Press Enter to continue...")
         self.create_results_overview()
 
     def print_subprocess_output(self, result: subprocess):
