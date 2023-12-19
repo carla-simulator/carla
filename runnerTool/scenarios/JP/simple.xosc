@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <OpenSCENARIO>
-  <FileHeader revMajor="1" revMinor="0" date="2023-12-04T11:18:13" description="CARLA:ego_avoiding_emergency_brake" author="ScenarioBuilderTM" />
+  <FileHeader revMajor="1" revMinor="0" date="2023-12-19T09:04:54" description="CARLA:simple" author="ScenarioBuilderTM" />
   <ParameterDeclarations />
   <CatalogLocations />
   <RoadNetwork>
@@ -26,7 +26,7 @@
         </Properties>
       </Vehicle>
     </ScenarioObject>
-    <ScenarioObject name="Adversary 43">
+    <ScenarioObject name="Adversary 1">
       <Vehicle name="vehicle.audi.tt" vehicleCategory="car">
         <ParameterDeclarations />
         <Performance maxSpeed="69.444" maxAcceleration="200" maxDeceleration="10.0" />
@@ -40,7 +40,7 @@
         </Axles>
         <Properties>
           <Property name="type" value="simulation" />
-          <Property name="color" value="60,0,204" />
+          <Property name="color" value="205,151,0" />
         </Properties>
       </Vehicle>
     </ScenarioObject>
@@ -84,7 +84,7 @@
           <PrivateAction>
             <TeleportAction>
               <Position>
-                <WorldPosition x="8.31" y="-32.94" z="0.3" h="-1.57" />
+                <WorldPosition x="-486.3" y="189.05" z="0.3" h="-1.56" />
               </Position>
             </TeleportAction>
           </PrivateAction>
@@ -93,17 +93,17 @@
               <SpeedAction>
                 <SpeedActionDynamics dynamicsShape="step" value="0" dynamicsDimension="time" />
                 <SpeedActionTarget>
-                  <AbsoluteTargetSpeed value="23.6111111111111" />
+                  <AbsoluteTargetSpeed value="8.33333333333333" />
                 </SpeedActionTarget>
               </SpeedAction>
             </LongitudinalAction>
           </PrivateAction>
         </Private>
-        <Private entityRef="Adversary 43">
+        <Private entityRef="Adversary 1">
           <PrivateAction>
             <TeleportAction>
               <Position>
-                <WorldPosition x="8.21" y="-57.21" z="0.3" h="-1.57" />
+                <WorldPosition x="-482.67" y="168.72" z="0.3" h="-1.56" />
               </Position>
             </TeleportAction>
           </PrivateAction>
@@ -128,12 +128,12 @@
           </Actors>
           <Maneuver name="Ego Vehicle_Maneuver">
             <Event name="AcquirePositionAction-EgoVehicle-Destination" priority="overwrite">
-              <Action name="AcquirePositionAction1085">
+              <Action name="AcquirePositionAction2">
                 <PrivateAction>
                   <RoutingAction>
                     <AcquirePositionAction>
                       <Position>
-                        <WorldPosition x="7.973" y="-118.67" z="0.3" h="-1.57" />
+                        <WorldPosition x="-486.006" y="141.696" z="0.3" h="-1.56" />
                       </Position>
                     </AcquirePositionAction>
                   </RoutingAction>
@@ -141,7 +141,7 @@
               </Action>
               <StartTrigger>
                 <ConditionGroup>
-                  <Condition name="SimulationTimeCondition1171" delay="0" conditionEdge="rising">
+                  <Condition name="SimulationTimeCondition2" delay="0" conditionEdge="rising">
                     <ByValueCondition>
                       <SimulationTimeCondition value="0" rule="greaterThan" />
                     </ByValueCondition>
@@ -154,37 +154,32 @@
         <StartTrigger />
       </Act>
     </Story>
-    <Story name="Adversary 43_Story">
-      <Act name="Adversary 43_Act">
-        <ManeuverGroup maximumExecutionCount="1" name="Adversary 43Sequence">
+    <Story name="Adversary 1_Story">
+      <Act name="Adversary 1_Act">
+        <ManeuverGroup maximumExecutionCount="1" name="Adversary 1Sequence">
           <Actors selectTriggeringEntities="false">
-            <EntityRef entityRef="Adversary 43" />
+            <EntityRef entityRef="Adversary 1" />
           </Actors>
-          <Maneuver name="Adversary 43_Maneuver">
-            <Event name="AssignRouteAction1086" priority="overwrite">
-              <Action name="AssignRouteAction1086">
+          <Maneuver name="Adversary 1_Maneuver">
+            <Event name="AssignRouteAction3" priority="overwrite">
+              <Action name="AssignRouteAction3">
                 <PrivateAction>
                   <RoutingAction>
                     <AssignRouteAction>
                       <Route name="Route" closed="false">
                         <Waypoint routeStrategy="fastest">
                           <Position>
-                            <WorldPosition x="8.214001" y="-57.211" z="0.3" h="-1.57" />
+                            <WorldPosition x="-482.674" y="168.718" z="0.3" h="-1.56" />
                           </Position>
                         </Waypoint>
                         <Waypoint routeStrategy="shortest">
                           <Position>
-                            <WorldPosition x="8.198292" y="-61.21097" z="0.3" h="0" />
+                            <WorldPosition x="-482.649" y="164.7181" z="0.3" h="0" />
                           </Position>
                         </Waypoint>
                         <Waypoint routeStrategy="fastest">
                           <Position>
-                            <WorldPosition x="8.104" y="-85.211" z="0.3" h="0" />
-                          </Position>
-                        </Waypoint>
-                        <Waypoint routeStrategy="fastest">
-                          <Position>
-                            <WorldPosition x="8.012001" y="-108.671" z="0.3" h="0" />
+                            <WorldPosition x="-482.425" y="128.719" z="0.3" h="0" />
                           </Position>
                         </Waypoint>
                       </Route>
@@ -194,7 +189,7 @@
               </Action>
               <StartTrigger>
                 <ConditionGroup>
-                  <Condition name="SimulationTimeCondition1172" delay="0" conditionEdge="rising">
+                  <Condition name="SimulationTimeCondition3" delay="0" conditionEdge="rising">
                     <ByValueCondition>
                       <SimulationTimeCondition value="0" rule="greaterThan" />
                     </ByValueCondition>
@@ -202,8 +197,8 @@
                 </ConditionGroup>
               </StartTrigger>
             </Event>
-            <Event name="StopAction1084" priority="overwrite">
-              <Action name="StopAction1084">
+            <Event name="StopAction4" priority="overwrite">
+              <Action name="StopAction4">
                 <PrivateAction>
                   <LongitudinalAction>
                     <SpeedAction>
@@ -217,25 +212,30 @@
               </Action>
               <StartTrigger>
                 <ConditionGroup>
-                  <Condition name="DistanceCondition1173" delay="0" conditionEdge="rising">
+                  <Condition name="StoryboardElementStateCondition4" delay="0" conditionEdge="rising">
+                    <ByValueCondition>
+                      <StoryboardElementStateCondition storyboardElementType="action" storyboardElementRef="AssignRouteAction3" state="completeState" />
+                    </ByValueCondition>
+                  </Condition>
+                  <Condition name="ReachPositionCondition5" delay="0" conditionEdge="rising">
                     <ByEntityCondition>
                       <TriggeringEntities triggeringEntitiesRule="any">
-                        <EntityRef entityRef="Adversary 43" />
+                        <EntityRef entityRef="Adversary 1" />
                       </TriggeringEntities>
                       <EntityCondition>
-                        <DistanceCondition freespace="false" rule="lessThan" value="5" alongRoute="true">
+                        <ReachPositionCondition tolerance="5">
                           <Position>
-                            <WorldPosition x="8.104" y="-85.211" z="0.3" h="0" />
+                            <WorldPosition x="-482.425" y="128.719" z="0.3" h="0" />
                           </Position>
-                        </DistanceCondition>
+                        </ReachPositionCondition>
                       </EntityCondition>
                     </ByEntityCondition>
                   </Condition>
                 </ConditionGroup>
               </StartTrigger>
             </Event>
-            <Event name="SpeedAction1087" priority="overwrite">
-              <Action name="SpeedAction1087">
+            <Event name="SpeedAction-OverallStartCondition" priority="overwrite">
+              <Action name="SpeedAction5">
                 <PrivateAction>
                   <LongitudinalAction>
                     <SpeedAction>
@@ -249,90 +249,15 @@
               </Action>
               <StartTrigger>
                 <ConditionGroup>
-                  <Condition name="StandStillCondition1174" delay="0" conditionEdge="rising">
+                  <Condition name="ReachPositionCondition6" delay="0" conditionEdge="rising">
                     <ByEntityCondition>
                       <TriggeringEntities triggeringEntitiesRule="any">
-                        <EntityRef entityRef="Adversary 43" />
-                      </TriggeringEntities>
-                      <EntityCondition>
-                        <StandStillCondition duration="15" />
-                      </EntityCondition>
-                    </ByEntityCondition>
-                  </Condition>
-                  <Condition name="StoryboardElementStateCondition1175" delay="0" conditionEdge="rising">
-                    <ByValueCondition>
-                      <StoryboardElementStateCondition storyboardElementType="action" storyboardElementRef="StopAction1084" state="completeState" />
-                    </ByValueCondition>
-                  </Condition>
-                </ConditionGroup>
-              </StartTrigger>
-            </Event>
-            <Event name="StopAction1088" priority="overwrite">
-              <Action name="StopAction1088">
-                <PrivateAction>
-                  <LongitudinalAction>
-                    <SpeedAction>
-                      <SpeedActionDynamics dynamicsShape="linear" value="0" dynamicsDimension="time" />
-                      <SpeedActionTarget>
-                        <AbsoluteTargetSpeed value="0" />
-                      </SpeedActionTarget>
-                    </SpeedAction>
-                  </LongitudinalAction>
-                </PrivateAction>
-              </Action>
-              <StartTrigger>
-                <ConditionGroup>
-                  <Condition name="StoryboardElementStateCondition1176" delay="0" conditionEdge="rising">
-                    <ByValueCondition>
-                      <StoryboardElementStateCondition storyboardElementType="action" storyboardElementRef="AssignRouteAction1086" state="completeState" />
-                    </ByValueCondition>
-                  </Condition>
-                  <Condition name="ReachPositionCondition1177" delay="0" conditionEdge="rising">
-                    <ByEntityCondition>
-                      <TriggeringEntities triggeringEntitiesRule="any">
-                        <EntityRef entityRef="Adversary 43" />
+                        <EntityRef entityRef="Adversary 1" />
                       </TriggeringEntities>
                       <EntityCondition>
                         <ReachPositionCondition tolerance="5">
                           <Position>
-                            <WorldPosition x="8.012001" y="-108.671" z="0.3" h="0" />
-                          </Position>
-                        </ReachPositionCondition>
-                      </EntityCondition>
-                    </ByEntityCondition>
-                  </Condition>
-                  <Condition name="StoryboardElementStateCondition1178" delay="0" conditionEdge="rising">
-                    <ByValueCondition>
-                      <StoryboardElementStateCondition storyboardElementType="action" storyboardElementRef="StopAction1084" state="completeState" />
-                    </ByValueCondition>
-                  </Condition>
-                </ConditionGroup>
-              </StartTrigger>
-            </Event>
-            <Event name="SpeedAction-OverallStartCondition" priority="overwrite">
-              <Action name="SpeedAction1089">
-                <PrivateAction>
-                  <LongitudinalAction>
-                    <SpeedAction>
-                      <SpeedActionDynamics dynamicsShape="linear" value="0" dynamicsDimension="time" />
-                      <SpeedActionTarget>
-                        <AbsoluteTargetSpeed value="22.2222222222222" />
-                      </SpeedActionTarget>
-                    </SpeedAction>
-                  </LongitudinalAction>
-                </PrivateAction>
-              </Action>
-              <StartTrigger>
-                <ConditionGroup>
-                  <Condition name="ReachPositionCondition1179" delay="0" conditionEdge="rising">
-                    <ByEntityCondition>
-                      <TriggeringEntities triggeringEntitiesRule="any">
-                        <EntityRef entityRef="Adversary 43" />
-                      </TriggeringEntities>
-                      <EntityCondition>
-                        <ReachPositionCondition tolerance="5">
-                          <Position>
-                            <WorldPosition x="8.214001" y="-57.211" z="0.3" h="0" />
+                            <WorldPosition x="-482.674" y="168.718" z="0.3" h="0" />
                           </Position>
                         </ReachPositionCondition>
                       </EntityCondition>
@@ -345,7 +270,7 @@
         </ManeuverGroup>
         <StartTrigger>
           <ConditionGroup>
-            <Condition name="SimulationTimeCondition1180" delay="0" conditionEdge="rising">
+            <Condition name="SimulationTimeCondition7" delay="0" conditionEdge="rising">
               <ByValueCondition>
                 <SimulationTimeCondition value="0" rule="greaterThan" />
               </ByValueCondition>
