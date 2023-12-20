@@ -46,44 +46,44 @@ namespace geom {
     }
 
     template <typename T>
-    static T Clamp(T a, T min = T(0), T max = T(1)) {
+    static constexpr T Clamp(T a, T min = T(0), T max = T(1)) {
       return std::min(std::max(a, min), max);
     }
 
     template <typename T>
-    static T Square(const T &a) {
+    static constexpr T Square(const T &a) {
       return a * a;
     }
 
-    static auto Cross(const Vector3D &a, const Vector3D &b) {
+    static constexpr auto Cross(const Vector3D &a, const Vector3D &b) {
       return Vector3D(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
     }
 
-    static auto Dot(const Vector3D &a, const Vector3D &b) {
+    static constexpr auto Dot(const Vector3D &a, const Vector3D &b) {
       return a.x * b.x + a.y * b.y + a.z * b.z;
     }
 
-    static auto Dot2D(const Vector3D &a, const Vector3D &b) {
+    static constexpr auto Dot2D(const Vector3D &a, const Vector3D &b) {
       return a.x * b.x + a.y * b.y;
     }
 
-    static auto DistanceSquared(const Vector3D &a, const Vector3D &b) {
+    static constexpr auto DistanceSquared(const Vector3D &a, const Vector3D &b) {
       return Square(b.x - a.x) + Square(b.y - a.y) + Square(b.z - a.z);
     }
 
-    static auto DistanceSquared2D(const Vector3D &a, const Vector3D &b) {
+    static constexpr auto DistanceSquared2D(const Vector3D &a, const Vector3D &b) {
       return Square(b.x - a.x) + Square(b.y - a.y);
     }
 
-    static auto Distance(const Vector3D &a, const Vector3D &b) {
+    inline static auto Distance(const Vector3D &a, const Vector3D &b) {
       return std::sqrt(DistanceSquared(a, b));
     }
 
-    static auto Distance2D(const Vector3D &a, const Vector3D &b) {
+    inline static auto Distance2D(const Vector3D &a, const Vector3D &b) {
       return std::sqrt(DistanceSquared2D(a, b));
     }
 
-    static float LinearLerp(float a, float b, float f) {
+    static constexpr float LinearLerp(float a, float b, float f) {
       return a * (1.0f - f) + (b * f);
     }
 

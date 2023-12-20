@@ -33,43 +33,44 @@ namespace geom {
 
     Vector3D() = default;
 
-    Vector3D(float ix, float iy, float iz)
+    constexpr Vector3D(float ix, float iy, float iz)
       : x(ix),
         y(iy),
-        z(iz) {}
+        z(iz) {
+    }
 
     // =========================================================================
     // -- Other methods --------------------------------------------------------
     // =========================================================================
 
-    float SquaredLength() const {
+    constexpr float SquaredLength() const {
       return x * x + y * y + z * z;
     }
 
-    float Length() const {
+    inline float Length() const {
        return std::sqrt(SquaredLength());
     }
 
-    float SquaredLength2D() const {
+    constexpr float SquaredLength2D() const {
       return x * x + y * y;
     }
 
-    float Length2D() const {
+    inline float Length2D() const {
       return std::sqrt(SquaredLength2D());
     }
 
-    Vector3D Abs() const {
+    constexpr Vector3D Abs() const {
        return Vector3D(abs(x), abs(y), abs(z));
     }
 
-    Vector3D MakeUnitVector() const {
+    inline Vector3D MakeUnitVector() const {
       const float length = Length();
       DEVELOPMENT_ASSERT(length > 2.0f * std::numeric_limits<float>::epsilon());
       const float k = 1.0f / length;
       return Vector3D(x * k, y * k, z * k);
     }
 
-    Vector3D MakeSafeUnitVector(const float epsilon) const  {
+    inline Vector3D MakeSafeUnitVector(const float epsilon) const {
       const float length = Length();
       const float k = (length > std::max(epsilon, 0.0f)) ? (1.0f / length) : 1.0f;
       return Vector3D(x * k, y * k, z * k);
@@ -79,67 +80,67 @@ namespace geom {
     // -- Arithmetic operators -------------------------------------------------
     // =========================================================================
 
-    Vector3D &operator+=(const Vector3D &rhs) {
+    constexpr Vector3D &operator+=(const Vector3D &rhs) {
       x += rhs.x;
       y += rhs.y;
       z += rhs.z;
       return *this;
     }
 
-    friend Vector3D operator+(Vector3D lhs, const Vector3D &rhs) {
+    constexpr friend Vector3D operator+(Vector3D lhs, const Vector3D &rhs) {
       lhs += rhs;
       return lhs;
     }
 
-    Vector3D &operator-=(const Vector3D &rhs) {
+    constexpr Vector3D &operator-=(const Vector3D &rhs) {
       x -= rhs.x;
       y -= rhs.y;
       z -= rhs.z;
       return *this;
     }
 
-    friend Vector3D operator-(Vector3D lhs, const Vector3D &rhs) {
+    constexpr friend Vector3D operator-(Vector3D lhs, const Vector3D &rhs) {
       lhs -= rhs;
       return lhs;
     }
 
-    Vector3D& operator-=(const float f) {
+    constexpr Vector3D& operator-=(const float f) {
       x -= f;
       y -= f;
       z -= f;
       return *this;
     }
 
-    Vector3D &operator*=(float rhs) {
+    constexpr Vector3D &operator*=(float rhs) {
       x *= rhs;
       y *= rhs;
       z *= rhs;
       return *this;
     }
 
-    friend Vector3D operator*(Vector3D lhs, float rhs) {
+    constexpr friend Vector3D operator*(Vector3D lhs, float rhs) {
       lhs *= rhs;
       return lhs;
     }
 
-    friend Vector3D operator*(float lhs, Vector3D rhs) {
+    constexpr friend Vector3D operator*(float lhs, Vector3D rhs) {
       rhs *= lhs;
       return rhs;
     }
 
-    Vector3D &operator/=(float rhs) {
+    constexpr Vector3D &operator/=(float rhs) {
       x /= rhs;
       y /= rhs;
       z /= rhs;
       return *this;
     }
 
-    friend Vector3D operator/(Vector3D lhs, float rhs) {
+    constexpr friend Vector3D operator/(Vector3D lhs, float rhs) {
       lhs /= rhs;
       return lhs;
     }
 
-    friend Vector3D operator/(float lhs, Vector3D rhs) {
+    constexpr friend Vector3D operator/(float lhs, Vector3D rhs) {
       rhs /= lhs;
       return rhs;
     }
@@ -148,11 +149,11 @@ namespace geom {
     // -- Comparison operators -------------------------------------------------
     // =========================================================================
 
-    bool operator==(const Vector3D &rhs) const {
+    constexpr bool operator==(const Vector3D &rhs) const {
       return (x == rhs.x) && (y == rhs.y) && (z == rhs.z);
     }
 
-    bool operator!=(const Vector3D &rhs) const {
+    constexpr bool operator!=(const Vector3D &rhs) const {
       return !(*this == rhs);
     }
 
@@ -169,16 +170,16 @@ namespace geom {
     Vector3D& operator=(const FVector &rhs) = delete;
 
     /// Return a Vector3D converted from centimeters to meters.
-    Vector3D ToMeters() const {
+    inline Vector3D ToMeters() const {
       return *this * 1e-2f;
     }
 
     /// Return a Vector3D converted from meters to centimeters.
-    Vector3D ToCentimeters() const {
+    inline Vector3D ToCentimeters() const {
       return *this * 1e2f;
     }
 
-    FVector ToFVector() const {
+    inline FVector ToFVector() const {
       return FVector{x, y, z};
     }
 

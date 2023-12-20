@@ -30,22 +30,23 @@ namespace geom {
 
     using Vector3D::Vector3D;
 
-    Location(const Vector3D &rhs) : Vector3D(rhs) {}
+    Location(Vector3D rhs) : Vector3D(rhs) {}
 
-    Location(const Vector3DInt &rhs) :
+    constexpr Location(Vector3DInt rhs) :
         Vector3D(static_cast<float>(rhs.x),
                  static_cast<float>(rhs.y),
-                 static_cast<float>(rhs.z)) {}
+                 static_cast<float>(rhs.z)) {
+    }
 
     // =========================================================================
     // -- Other methods --------------------------------------------------------
     // =========================================================================
 
-    auto DistanceSquared(const Location &loc) const {
+    constexpr auto DistanceSquared(Location loc) const {
       return Math::DistanceSquared(*this, loc);
     }
 
-    auto Distance(const Location &loc) const {
+    inline auto Distance(Location loc) const {
       return Math::Distance(*this, loc);
     }
 
@@ -53,36 +54,24 @@ namespace geom {
     // -- Arithmetic operators -------------------------------------------------
     // =========================================================================
 
-    Location &operator+=(const Location &rhs) {
+    constexpr Location &operator+=(Location rhs) {
       static_cast<Vector3D &>(*this) += rhs;
       return *this;
     }
 
-    friend Location operator+(Location lhs, const Location &rhs) {
+    constexpr friend Location operator+(Location lhs, Location rhs) {
       lhs += rhs;
       return lhs;
     }
 
-    Location &operator-=(const Location &rhs) {
+    constexpr Location &operator-=(Location rhs) {
       static_cast<Vector3D &>(*this) -= rhs;
       return *this;
     }
 
-    friend Location operator-(Location lhs, const Location &rhs) {
+    constexpr friend Location operator-(Location lhs, Location rhs) {
       lhs -= rhs;
       return lhs;
-    }
-
-    // =========================================================================
-    // -- Comparison operators -------------------------------------------------
-    // =========================================================================
-
-    bool operator==(const Location &rhs) const {
-      return static_cast<const Vector3D &>(*this) == rhs;
-    }
-
-    bool operator!=(const Location &rhs) const {
-      return !(*this == rhs);
     }
 
     // =========================================================================
@@ -100,6 +89,18 @@ namespace geom {
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
   };
+
+    // =========================================================================
+    // -- Comparison operators -------------------------------------------------
+    // =========================================================================
+
+  constexpr bool operator==(Location lhs, Location rhs) {
+    return static_cast<Vector3D>(lhs) == static_cast<Vector3D>(rhs);
+  }
+
+  constexpr bool operator!=(Location lhs, Location rhs) {
+    return !(lhs == rhs);
+  }
 
 } // namespace geom
 } // namespace carla
