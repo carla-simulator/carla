@@ -40,7 +40,7 @@ In this section you will find details of system requirements, minor and major so
 
 #### Minor installations
 
-* [__CMake__](https://cmake.org/download/) generates standard build files from simple configuration files.  
+* [__CMake__](https://cmake.org/download/) generates standard build files from simple configuration files. __We recommend you use version 3.15+__.
 * [__Git__](https://git-scm.com/downloads) is a version control system to manage CARLA repositories.  
 * [__Make__](http://gnuwin32.sourceforge.net/packages/make.htm) generates the executables. It is necessary to use __Make version 3.81__, otherwise the build may fail. If you have multiple versions of Make installed, check that you are using version 3.81 in your PATH when building CARLA. You can check your default version of Make by running `make --version`.
 * [__7Zip__](https://www.7-zip.org/) is a file compression software. This is required for automatic decompression of asset files and prevents errors during build time due to large files being extracted incorrectly or partially.
