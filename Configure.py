@@ -903,7 +903,7 @@ def ConfigureSUMO():
 		SUMO_SOURCE_PATH,
 		SUMO_BUILD_PATH,
 		f'-DZLIB_INCLUDE_DIR={ZLIB_INCLUDE_PATH}',
-		f'-DZLIB_LIBRARY={ZLIB_LIBRARY_PATH}',
+		f'-DZLIB_LIBRARY={ZLIB_LIB_PATH}',
         f'-DPROJ_INCLUDE_DIR={PROJ_INSTALL_PATH}/include',
         f'-DPROJ_LIBRARY={PROJ_INSTALL_PATH}/lib/{LIB_PREFIX}proj{LIB_EXT}',
         f'-DXercesC_INCLUDE_DIR={XERCESC_INSTALL_PATH}/include',
@@ -1027,24 +1027,30 @@ def BuildDependencies(
 			CHRONO_BUILD_PATH,
 			f'-DEIGEN3_INCLUDE_DIR={EIGEN_SOURCE_PATH}',
 			'-DENABLE_MODULE_VEHICLE=ON'))
+	
+	# SUMO requires that Proj and Xerces be built and installed before its configure step:
+	if ENABLE_OSM2ODR:
+		build_xercesc = task_graph.Add(Task.CreateCMakeBuildDefault('build-xercesc', [], XERCESC_BUILD_PATH))
+		task_graph.Add(Task.CreateCMakeInstallDefault('install-xercesc', [ build_xercesc ], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
+
 	task_graph.Execute()
 
 	# Build:
 	task_graph.Add(Task('build-boost', [], BuildAndInstallBoost))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-gtest', [], GTEST_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-libpng', [], LIBPNG_BUILD_PATH))
-	task_graph.Add(Task.CreateCMakeBuildDefault('build-proj', [], PROJ_BUILD_PATH))
-	install_proj = task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
+	build_proj = task_graph.Add(Task.CreateCMakeBuildDefault('build-proj', [], PROJ_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-recast', [], RECAST_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-rpclib', [], RPCLIB_BUILD_PATH))
-	build_xercesc = task_graph.Add(Task.CreateCMakeBuildDefault('build-xercesc', [], XERCESC_BUILD_PATH))
-	install_xercesc = task_graph.Add(Task.CreateCMakeInstallDefault('install-xercesc', [ build_xercesc ], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
+	if ENABLE_OSM2ODR:
+		install_proj = task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [ build_proj ], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
+		configure_sumo = task_graph.Add(Task('configure-sumo', [ install_proj ], ConfigureSUMO))
+		task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [ configure_sumo ], SUMO_BUILD_PATH))
+	else:
+		task_graph.Add(Task.CreateCMakeBuildDefault('build-xercesc', [], XERCESC_BUILD_PATH))
 	if ENABLE_OSM_WORLD_RENDERER:
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-lunasvg', [], LUNASVG_BUILD_PATH))
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-libosmscout', [], LIBOSMSCOUT_BUILD_PATH))
-	if ENABLE_OSM2ODR:
-		configure_sumo = task_graph.Add(Task('configure-sumo', [ install_proj, install_xercesc ], ConfigureSUMO))
-		task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [ configure_sumo ], SUMO_BUILD_PATH))
 	if ENABLE_CHRONO:
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-chrono', [], CHRONO_BUILD_PATH))
 
@@ -1060,6 +1066,9 @@ def BuildDependencies(
 		task_graph.Add(Task.CreateCMakeInstallDefault('install-libosmscout', [], LIBOSMSCOUT_BUILD_PATH, LIBOSMSCOUT_INSTALL_PATH))
 	if ENABLE_OSM2ODR:
 		task_graph.Add(Task.CreateCMakeInstallDefault('install-sumo', [], SUMO_BUILD_PATH, SUMO_INSTALL_PATH))
+	else:
+		task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
+		task_graph.Add(Task.CreateCMakeInstallDefault('install-xercesc', [], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
 	if ENABLE_CHRONO:
 		task_graph.Add(Task.CreateCMakeInstallDefault('install-chrono', [], CHRONO_BUILD_PATH, CHRONO_INSTALL_PATH))
 	task_graph.Execute()

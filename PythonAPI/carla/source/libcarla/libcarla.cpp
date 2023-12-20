@@ -62,13 +62,13 @@ static boost::python::object OptionalToPythonObject(OptionalT &optional) {
 
 // Convenient for const requests that need to make a copy of the returned value.
 #define CALL_RETURNING_COPY(cls, fn) +[](const cls &self) \
-        -> std::decay_t<std::result_of_t<decltype(&cls::fn)(cls*)>> { \
+        -> std::decay_t<std::invoke_result_t<decltype(&cls::fn), cls*>> { \
       return self.fn(); \
     }
 
 // Convenient for const requests that need to make a copy of the returned value.
 #define CALL_RETURNING_COPY_1(cls, fn, T1_) +[](const cls &self, T1_ t1) \
-        -> std::decay_t<std::result_of_t<decltype(&cls::fn)(cls*, T1_)>> { \
+        -> std::decay_t<std::invoke_result_t<decltype(&cls::fn), cls*, T1_>> { \
       return self.fn(std::forward<T1_>(t1)); \
     }
 

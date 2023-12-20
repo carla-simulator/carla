@@ -35,7 +35,7 @@ namespace rpc {
     auto BoolToStr = [](bool b) { return b ? "True" : "False"; };
     out << "WorldSettings(synchronous_mode=" << BoolToStr(settings.synchronous_mode)
         << ",no_rendering_mode=" << BoolToStr(settings.no_rendering_mode)
-        << ",fixed_delta_seconds=" << settings.fixed_delta_seconds.get()
+        << ",fixed_delta_seconds=" << settings.fixed_delta_seconds.value()
         << ",substepping=" << BoolToStr(settings.substepping)
         << ",max_substep_delta_time=" << settings.max_substep_delta_time
         << ",max_substeps=" << settings.max_substeps
