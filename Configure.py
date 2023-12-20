@@ -936,7 +936,7 @@ def BuildDependencies(
 		'build-zlib',
 		[ configure_zlib ],
 		ZLIB_BUILD_PATH))
-	task_graph.Add(Task.CreateCMakeInstallDefault(
+	install_zlib = task_graph.Add(Task.CreateCMakeInstallDefault(
 		'install-zlib',
 		[ build_zlib ],
 		ZLIB_BUILD_PATH,
@@ -1034,6 +1034,7 @@ def BuildDependencies(
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-gtest', [], GTEST_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-libpng', [], LIBPNG_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-proj', [], PROJ_BUILD_PATH))
+	install_proj = task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-recast', [], RECAST_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-rpclib', [], RPCLIB_BUILD_PATH))
 	build_xercesc = task_graph.Add(Task.CreateCMakeBuildDefault('build-xercesc', [], XERCESC_BUILD_PATH))
@@ -1042,7 +1043,7 @@ def BuildDependencies(
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-lunasvg', [], LUNASVG_BUILD_PATH))
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-libosmscout', [], LIBOSMSCOUT_BUILD_PATH))
 	if ENABLE_OSM2ODR:
-		configure_sumo = task_graph.Add(Task('configure-sumo', [ install_xercesc ], ConfigureSUMO))
+		configure_sumo = task_graph.Add(Task('configure-sumo', [ install_zlib, install_proj, install_xercesc ], ConfigureSUMO))
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [ configure_sumo ], SUMO_BUILD_PATH))
 	if ENABLE_CHRONO:
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-chrono', [], CHRONO_BUILD_PATH))
@@ -1052,7 +1053,6 @@ def BuildDependencies(
 	# Install:
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-gtest', [], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-libpng', [], LIBPNG_BUILD_PATH, LIBPNG_INSTALL_PATH))
-	task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-recast', [], RECAST_BUILD_PATH, RECAST_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-rpclib', [], RPCLIB_BUILD_PATH, RPCLIB_INSTALL_PATH))
 	if ENABLE_OSM_WORLD_RENDERER:
