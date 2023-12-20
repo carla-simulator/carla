@@ -164,7 +164,7 @@ public class CarlaTools :
         var LibraryPrefix = IsWindows ? "" : "lib";
         var LibrarySuffix = IsWindows ? ".lib" : ".a";
 
-        var LibCarlaInstallPath = CarlaInstallPath;
+        var LibCarlaInstallPath = Path.Combine(CarlaInstallPath, "LibCarla");
         var DependenciesInstallPath = CarlaDependenciesPath;
 
         Func<string, string> GetLibraryName = name =>

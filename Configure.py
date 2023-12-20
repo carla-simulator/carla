@@ -485,16 +485,17 @@ DEFAULT_DEPENDENCIES = [
     GitRepository('https://github.com/carla-simulator/recastnavigation.git', tag_or_branch = 'carla')),
 ]
 
+# @TODO: Use these instead of full boost.
 BOOST_DEPENDENCIES_EXPERIMENTAL = [
   Dependency(
-  'boost-asio',
-  GitRepository('https://github.com/boostorg/asio.git')),
+    'boost-asio',
+    GitRepository('https://github.com/boostorg/asio.git')),
   Dependency(
-  'boost-python',
-  GitRepository('https://github.com/boostorg/python.git')),
+    'boost-python',
+    GitRepository('https://github.com/boostorg/python.git')),
   Dependency(
-  'boost-gil',
-  GitRepository('https://github.com/boostorg/gil.git')),
+    'boost-gil',
+    GitRepository('https://github.com/boostorg/gil.git')),
 ]
 
 CHRONO_DEPENDENCIES = [

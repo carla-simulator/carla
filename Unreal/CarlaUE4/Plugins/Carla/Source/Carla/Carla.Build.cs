@@ -154,7 +154,7 @@ public class Carla :
         var LibraryPrefix = IsWindows ? "" : "lib";
         var LibrarySuffix = IsWindows ? ".lib" : ".a";
 
-        var LibCarlaInstallPath = CarlaInstallPath;
+        var LibCarlaInstallPath = Path.Combine(CarlaInstallPath, "LibCarla");
         var DependenciesInstallPath = CarlaDependenciesPath;
 
         Func<string, string> GetLibraryName = name =>
@@ -232,22 +232,12 @@ public class Carla :
             GetIncludePath("zlib"),
         });
 
-        PrivateIncludePaths.Add(LibCarlaIncludePath);
-        PrivateIncludePaths.AddRange(new string[]
-        {
-            GetIncludePath("boost"),
-            GetIncludePath("rpclib"),
-            GetIncludePath("xercesc"),
-            GetIncludePath("sumo"),
-            GetIncludePath("zlib"),
-        });
-
-        PrivateDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
-        PrivateDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
-        PrivateDefinitions.Add("ASIO_NO_EXCEPTIONS");
-        PrivateDefinitions.Add("BOOST_NO_EXCEPTIONS");
-        PrivateDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
-        PrivateDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
+        PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
+        PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
+        PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+        PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
+        PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
+        PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
     }
 
 #if false
