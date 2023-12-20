@@ -453,6 +453,9 @@ DEFAULT_DEPENDENCIES = [
 #	Dependency(
 #		'boost-python',
 #		GitRepository('https://github.com/boostorg/python.git')),
+#	Dependency(
+#		'boost-gil',
+#		GitRepository('https://github.com/boostorg/gil.git')),
 	Dependency(
 		'boost',
 		Download(f'https://boostorg.jfrog.io/artifactory/main/release/{BOOST_VERSION_STRING}/source/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip'),
@@ -535,7 +538,7 @@ class Task:
 	def CreateSubprocessTask(name : str, in_edges : list, command : list):
 		return Task(name, in_edges, LaunchSubprocessImmediate, command, None, name)
 	
-	def CreateCMakeConfigureDefaultCommandLine(source_path : Path, build_path : Path):
+	def CreateCMakeConfigureDefaultCommandLine(source_path : Path, build_path : Path) -> list:
 		cpp_flags_release = '/MD'
 		if CPP_ENABLE_MARCH_NATIVE:
 			cpp_flags_release += ' -march=native'
@@ -885,7 +888,13 @@ def BuildSQLite():
 			LaunchSubprocessImmediate(cmd, log_name = 'build-sqlite-lib')
 
 def ConfigureSUMO():
-	xercesc_path = glob.glob(f'{XERCESC_INSTALL_PATH}/**/{LIB_PREFIX}xerces-c*{LIB_EXT}', recursive=True)[0]
+	xercesc_path_candidates = glob.glob(f'{XERCESC_INSTALL_PATH}/**/{LIB_PREFIX}xerces-c*{LIB_EXT}', recursive=True)
+	if len(xercesc_path_candidates) == 0:
+		raise Exception('Could not configure SUMO since xerces-c could not be found.')
+	if len(xercesc_path_candidates) > 1:
+		Log('Warning: multiple xerces-c libraries found.')
+	xercesc_path_candidates.sort()
+	XERCESC_PATH = xercesc_path_candidates[0]
 	cmd = Task.CreateCMakeConfigureDefaultCommandLine(
 		SUMO_SOURCE_PATH,
 		SUMO_BUILD_PATH)
@@ -897,7 +906,7 @@ def ConfigureSUMO():
         f'-DPROJ_INCLUDE_DIR={PROJ_INSTALL_PATH}/include',
         f'-DPROJ_LIBRARY={PROJ_INSTALL_PATH}/lib/{LIB_PREFIX}proj{LIB_EXT}',
         f'-DXercesC_INCLUDE_DIR={XERCESC_INSTALL_PATH}/include',
-        f'-DXercesC_LIBRARY={xercesc_path}',
+        f'-DXercesC_LIBRARY={XERCESC_PATH}',
 		'-DSUMO_LIBRARIES=OFF',
 		# '-DPROFILING=OFF',
 		# '-DPPROF=OFF',
@@ -1027,14 +1036,16 @@ def BuildDependencies(
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-recast', [], RECAST_BUILD_PATH))
 	task_graph.Add(Task.CreateCMakeBuildDefault('build-rpclib', [], RPCLIB_BUILD_PATH))
 	build_xercesc = task_graph.Add(Task.CreateCMakeBuildDefault('build-xercesc', [], XERCESC_BUILD_PATH))
+	install_xercesc = task_graph.Add(Task.CreateCMakeInstallDefault('install-xercesc', [ build_xercesc ], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
 	if ENABLE_OSM_WORLD_RENDERER:
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-lunasvg', [], LUNASVG_BUILD_PATH))
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-libosmscout', [], LIBOSMSCOUT_BUILD_PATH))
 	if ENABLE_OSM2ODR:
-		configure_sumo = task_graph.Add(Task('configure-sumo', [ build_xercesc ], ConfigureSUMO))
+		configure_sumo = task_graph.Add(Task('configure-sumo', [ install_xercesc ], ConfigureSUMO))
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [ configure_sumo ], SUMO_BUILD_PATH))
 	if ENABLE_CHRONO:
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-chrono', [], CHRONO_BUILD_PATH))
+
 	task_graph.Execute(sequential = True) # The underlying build system should already parallelize.
 
 	# Install:
@@ -1043,7 +1054,6 @@ def BuildDependencies(
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-recast', [], RECAST_BUILD_PATH, RECAST_INSTALL_PATH))
 	task_graph.Add(Task.CreateCMakeInstallDefault('install-rpclib', [], RPCLIB_BUILD_PATH, RPCLIB_INSTALL_PATH))
-	task_graph.Add(Task.CreateCMakeInstallDefault('install-xercesc', [], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
 	if ENABLE_OSM_WORLD_RENDERER:
 		task_graph.Add(Task.CreateCMakeInstallDefault('install-lunasvg', [], LUNASVG_BUILD_PATH, LUNASVG_INSTALL_PATH))
 		task_graph.Add(Task.CreateCMakeInstallDefault('install-libosmscout', [], LIBOSMSCOUT_BUILD_PATH, LIBOSMSCOUT_INSTALL_PATH))
