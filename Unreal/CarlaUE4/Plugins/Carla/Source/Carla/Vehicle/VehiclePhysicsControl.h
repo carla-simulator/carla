@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Vehicle/WheelPhysicsControl.h"
+#include "Curves/RichCurve.h"
 #include "VehiclePhysicsControl.generated.h"
 
 USTRUCT(BlueprintType)

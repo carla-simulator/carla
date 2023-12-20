@@ -5,7 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
-#include "WheeledVehicleMovementComponent.h"
+#include "ChaosWheeledVehicleMovementComponent.h"
 #include "Curves/CurveFloat.h"
 #include "WheeledVehicleMovementComponentNW.generated.h"
 
@@ -144,7 +144,6 @@ protected:
 	virtual const void* GetTireData(physx::PxVehicleWheels* Wheels, UVehicleWheel* Wheel);
 	virtual const int32 GetWheelShapeMapping(physx::PxVehicleWheels* Wheels, uint32 Wheel);
 	virtual const physx::PxVehicleWheelData GetWheelData(physx::PxVehicleWheels* Wheels, uint32 Wheel);
-#endif
 
 	/** Allocate and setup the PhysX vehicle */
 	virtual void SetupVehicle() override;
@@ -161,4 +160,5 @@ protected:
 
 	/** update simulation data: transmission */
 	virtual void UpdateTransmissionSetup(const FVehicleNWTransmissionData& NewGearSetup);
+#endif
 };

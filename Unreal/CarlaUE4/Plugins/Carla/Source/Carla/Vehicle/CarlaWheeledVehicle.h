@@ -17,9 +17,8 @@
 #include "Vehicle/VehicleInputPriority.h"
 #include "Vehicle/VehiclePhysicsControl.h"
 #include "VehicleVelocityControl.h"
-#include "WheeledVehicleMovementComponent4W.h"
-#include "WheeledVehicleMovementComponentNW.h"
-#include "VehicleAnimInstance.h"
+#include "Vehicle/WheeledVehicleMovementComponentNW.h"
+#include "Vehicle/VehicleAnimInstance.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
 

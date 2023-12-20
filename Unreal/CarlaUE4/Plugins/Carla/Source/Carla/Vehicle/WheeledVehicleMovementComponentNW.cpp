@@ -212,9 +212,9 @@ void SetupDriveHelper(const UWheeledVehicleMovementComponentNW* VehicleData, con
 }
 #endif
 
+#if 0 // @CARLAUE5
 void UWheeledVehicleMovementComponentNW::SetupVehicle()
 {
-#if 0 // @CARLAUE5
 	if (!UpdatedPrimitive)
 	{
 		return;
@@ -281,12 +281,12 @@ void UWheeledVehicleMovementComponentNW::SetupVehicle()
 	PVehicleDrive = PVehicleDriveNW;
 
 	SetUseAutoGears(TransmissionSetup.bUseGearAutoBox);
-#endif
 }
+
 
 void UWheeledVehicleMovementComponentNW::UpdateSimulation(float DeltaTime)
 {
-#if 0 // @CARLAUE5
+
 	if (PVehicleDrive == nullptr)
 		return;
 
@@ -324,12 +324,12 @@ void UWheeledVehicleMovementComponentNW::UpdateSimulation(float DeltaTime)
 		PxVehicleDriveNW* PVehicleDriveNW = (PxVehicleDriveNW*)PVehicleDrive;
 		PxVehicleDriveNWSmoothAnalogRawInputsAndSetAnalogInputs(SmoothData, SpeedSteerLookup, RawInputData, DeltaTime, false, *PVehicleDriveNW);
 	});
-#endif
+
 }
 
 void UWheeledVehicleMovementComponentNW::UpdateEngineSetup(const FVehicleNWEngineData& NewEngineSetup)
 {
-#if 0 // @CARLAUE5
+
 	if (PVehicleDrive)
 	{
 		PxVehicleEngineData EngineData;
@@ -338,12 +338,12 @@ void UWheeledVehicleMovementComponentNW::UpdateEngineSetup(const FVehicleNWEngin
 		PxVehicleDriveNW* PVehicleDriveNW = (PxVehicleDriveNW*)PVehicleDrive;
 		PVehicleDriveNW->mDriveSimData.setEngineData(EngineData);
 	}
-#endif
+
 }
 
 void UWheeledVehicleMovementComponentNW::UpdateDifferentialSetup(const TArray<FVehicleNWWheelDifferentialData>& NewDifferentialSetup)
 {
-#if 0 // @CARLAUE5
+
 	if (PVehicleDrive)
 	{
 		PxVehicleDifferentialNWData DifferentialData;
@@ -352,12 +352,12 @@ void UWheeledVehicleMovementComponentNW::UpdateDifferentialSetup(const TArray<FV
 		PxVehicleDriveNW* PVehicleDriveNW = (PxVehicleDriveNW*)PVehicleDrive;
 		PVehicleDriveNW->mDriveSimData.setDiffData(DifferentialData);
 	}
-#endif
+
 }
 
 void UWheeledVehicleMovementComponentNW::UpdateTransmissionSetup(const FVehicleNWTransmissionData& NewTransmissionSetup)
 {
-#if 0 // @CARLAUE5
+
 	if (PVehicleDrive)
 	{
 		PxVehicleGearsData GearData;
@@ -370,8 +370,8 @@ void UWheeledVehicleMovementComponentNW::UpdateTransmissionSetup(const FVehicleN
 		PVehicleDriveNW->mDriveSimData.setGearsData(GearData);
 		PVehicleDriveNW->mDriveSimData.setAutoBoxData(AutoBoxData);
 	}
-#endif
 }
+#endif
 
 #if 0 // @CARLAUE5
 void BackwardsConvertCm2ToM2NW(float& val, float defaultValue)

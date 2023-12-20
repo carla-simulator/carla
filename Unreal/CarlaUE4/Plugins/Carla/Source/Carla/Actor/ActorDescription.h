@@ -6,8 +6,9 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
 #include "Carla/Actor/ActorAttribute.h"
-
+#include "GameFramework/Actor.h"
 #include "ActorDescription.generated.h"
 
 /// A description of a Carla Actor with all its variation.
