@@ -273,6 +273,7 @@ PARALLELISM = ARGV.parallelism
 # Root paths:
 CARLA_VERSION_STRING = ARGV.version
 BUILD_PATH = Path(ARGV.build_path)
+BUILD_TEMP_PATH = BUILD_PATH / 'Temp'
 LOG_PATH = BUILD_PATH / 'BuildLogs'
 DEPENDENCIES_PATH = BUILD_PATH / 'Dependencies'
 LIBCARLA_BUILD_PATH = BUILD_PATH / 'LibCarla'
@@ -876,7 +877,7 @@ def BuildSQLite():
 					'/MD',
 					'/EHsc',
 				])
-				obj_path = SQLITE_BUILD_PATH / f'{e.name}{OBJ_EXT}'
+				obj_path = BUILD_TEMP_PATH / f'{e.name}{OBJ_EXT}'
 				cmd.extend([ e, '/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o', obj_path ])
 				LaunchSubprocessImmediate(cmd, log_name = f'build-sqlite-{e.stem}')
 				objs.append(obj_path)
