@@ -1043,7 +1043,7 @@ def BuildDependencies(
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-lunasvg', [], LUNASVG_BUILD_PATH))
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-libosmscout', [], LIBOSMSCOUT_BUILD_PATH))
 	if ENABLE_OSM2ODR:
-		configure_sumo = task_graph.Add(Task('configure-sumo', [ install_zlib, install_proj, install_xercesc ], ConfigureSUMO))
+		configure_sumo = task_graph.Add(Task('configure-sumo', [ install_proj, install_xercesc ], ConfigureSUMO))
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [ configure_sumo ], SUMO_BUILD_PATH))
 	if ENABLE_CHRONO:
 		task_graph.Add(Task.CreateCMakeBuildDefault('build-chrono', [], CHRONO_BUILD_PATH))
