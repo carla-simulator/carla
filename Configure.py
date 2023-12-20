@@ -91,137 +91,141 @@ DEFAULT_C_STANDARD = 11
 DEFAULT_CPP_STANDARD = 20
 
 argp = argparse.ArgumentParser(description = __doc__)
-def AddCommandLineFlag(name : str, help : str):
+def AddCLIFlag(name : str, help : str):
 	argp.add_argument(f'--{name}', action = 'store_true', help = help)
-def AddCommandLineStringFlag(name : str, default : str, help : str):
+def AddCLIStringOption(name : str, default : str, help : str):
 	argp.add_argument(f'--{name}', type = str, default = str(default), help = f'{help} (default = "{default}").')
-def AddCommandLineIntegerFlag(name : str, default : int, help : str):
+def ADDCLIIntOption(name : str, default : int, help : str):
 	argp.add_argument(f'--{name}', type = int, default = int(default), help = f'{help} (default = {default}).')
-AddCommandLineFlag(
+AddCLIFlag(
 	'launch',
 	'Build and open the CarlaUE4 project in the Unreal Engine editor.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'launch-only',
 	'Open the CARLA project in the Unreal Engine editor, skipping all build steps.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'import',
 	f'Import maps and assets from "{WORKSPACE_PATH / "Import"}" into Unreal.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'package',
 	'Build a packaged version of CARLA ready for distribution.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'docs',
 	'Build the CARLA documentation, through Doxygen.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'clean',
 	'Delete all build files.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'rebuild',
 	'Delete all build files and recompiles.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'check-libcarla',
 	'Run unit the test suites for LibCarla')
-AddCommandLineFlag(
+AddCLIFlag(
 	'check-python-api',
 	'Run unit the test suites for PythonAPI')
-AddCommandLineFlag(
+AddCLIFlag(
 	'check',
 	'Run unit the test suites for LibCarla and PythonAPI')
-AddCommandLineFlag(
+AddCLIFlag(
 	'carla-ue',
 	'Build the CARLA Unreal Engine plugin and project.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'python-api',
 	'Build the CARLA Python API.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'libcarla-client',
 	'Build the LibCarla Client module.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'libcarla-server',
 	'Build the LibCarla Server module.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'update-deps',
 	'Download all project dependencies.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'build-deps',
 	'Build all project dependencies.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'configure-sequential',
 	'Whether to disable parallelism in the configuration script.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'no-log',
 	'Whether to disable saving logs.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'pytorch',
 	'Whether to enable PyTorch.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'chrono',
 	'Whether to enable Chrono.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'carsim',
 	'Whether to enable CarSim')
-AddCommandLineFlag(
+AddCLIFlag(
 	'ros2',
 	'Whether to enable ROS2')
-AddCommandLineFlag(
+AddCLIFlag(
 	'unity-build',
 	'Whether to enable Unity Build for Unreal Engine projects.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'osm2odr',
 	'Whether to enable OSM2ODR.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'osm-world-renderer',
 	'Whether to enable OSM World Renderer.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'nv-omniverse',
 	'Whether to enable the NVIDIA Omniverse Plugin.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'march-native',
 	'Whether to add "-march=native" to C/C++ compile flags.')
-AddCommandLineFlag(
+AddCLIFlag(
 	'rss',
 	'Whether to enable RSS.')
-AddCommandLineIntegerFlag(
+ADDCLIIntOption(
 	'parallelism',
 	DEFAULT_PARALLELISM,
 	'Set the configure/build parallelism.')
-AddCommandLineIntegerFlag(
+ADDCLIIntOption(
 	'c-standard',
 	DEFAULT_C_STANDARD,
 	'Set the target C standard.')
-AddCommandLineIntegerFlag(
+ADDCLIIntOption(
 	'cpp-standard',
 	DEFAULT_CPP_STANDARD,
 	'Set the target C++ standard.')
-AddCommandLineStringFlag(
+AddCLIStringOption(
 	'c-compiler',
 	DEFAULT_C_COMPILER,
 	'Set the target C compiler.')
-AddCommandLineStringFlag(
+AddCLIStringOption(
 	'cpp-compiler',
 	DEFAULT_CPP_COMPILER,
 	'Set the target C++ compiler.')
-AddCommandLineStringFlag(
+AddCLIStringOption(
 	'linker',
 	DEFAULT_LINKER,
 	'Set the target linker.')
-AddCommandLineStringFlag(
+AddCLIStringOption(
 	'ar',
 	DEFAULT_LIB,
 	'Set the target ar/lib tool.')
-AddCommandLineStringFlag(
+AddCLIStringOption(
 	'version',
 	FALLBACK_CARLA_VERSION_STRING,
 	'Override the CARLA version.')
-AddCommandLineStringFlag(
+AddCLIStringOption(
 	'generator',
 	'Ninja',
 	'Set the CMake generator.')
-AddCommandLineStringFlag(
+AddCLIStringOption(
 	'build-path',
 	WORKSPACE_PATH / 'Build',
 	'Set the CARLA build path.')
-AddCommandLineStringFlag(
+AddCLIStringOption(
+	'boost-toolset',
+	'msvc-14.3',
+	'Set the target boost toolset.')
+AddCLIStringOption(
 	'ue-path',
 	os.getenv(
 		'UNREAL_ENGINE_PATH',
@@ -294,7 +298,7 @@ UNREAL_ENGINE_PATH = Path(ARGV.ue_path)
 BOOST_VERSION = (1, 83, 0)
 BOOST_VERSION_MAJOR, BOOST_VERSION_MINOR, BOOST_VERSION_PATCH = BOOST_VERSION
 BOOST_VERSION_STRING = f'{BOOST_VERSION_MAJOR}.{BOOST_VERSION_MINOR}.{BOOST_VERSION_PATCH}'
-BOOST_TOOLSET = 'msvc-14.3'
+BOOST_TOOLSET = ARGV.boost_toolset
 BOOST_SOURCE_PATH = DEPENDENCIES_PATH / 'boost-source'
 BOOST_BUILD_PATH = DEPENDENCIES_PATH / 'boost-build'
 BOOST_INSTALL_PATH = DEPENDENCIES_PATH / 'boost-install'
@@ -909,7 +913,6 @@ def ConfigureSUMO():
 
 def BuildDependencies(
 		task_graph : TaskGraph):
-	task_graph.Execute()
 	# Configure:
 	build_sqlite = task_graph.Add(Task('build-sqlite', [], BuildSQLite))
 	task_graph.Add(Task('configure-boost', [], ConfigureBoost))
