@@ -288,11 +288,11 @@ pipeline
                             steps
                             {
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject
                                 """
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     make setup ARGS="--chrono"
                                 """
                             }
@@ -302,19 +302,19 @@ pipeline
                             steps
                             {
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     make LibCarla
                                 """
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     make PythonAPI
                                 """
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     make CarlaUE4Editor ARGS="--chrono"
                                 """
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     make plugins
                                 """
                             }
@@ -332,7 +332,7 @@ pipeline
                             steps
                             {
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     call Update.bat
                                 """
                             }
@@ -342,11 +342,11 @@ pipeline
                             steps
                             {
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     make package ARGS="--chrono"
                                 """
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate"
                                 """
                             }
@@ -362,7 +362,7 @@ pipeline
                             when { anyOf { branch "master"; branch "dev"; buildingTag() } }
                             steps {
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     git checkout .
                                     REM make deploy ARGS="--replace-latest"
                                 """
