@@ -71,7 +71,7 @@ public class CarlaTools :
         if (CarlaInstallPath == null)
         {
             Console.WriteLine("\"-carla-install-path\" was not specified, inferring...");
-            CarlaInstallPath = Path.Combine(WorkspacePath, "Install", "libcarla");
+            CarlaInstallPath = Path.Combine(WorkspacePath, "Install");
             if (!Directory.Exists(CarlaInstallPath))
                 throw new DirectoryNotFoundException("Could not infer CARLA install directory.");
             Console.WriteLine("Using \"" + CarlaInstallPath + "\" as the CARLA install path.");
@@ -85,6 +85,8 @@ public class CarlaTools :
                 throw new DirectoryNotFoundException("Could not infer CARLA dependencies directory.");
             Console.WriteLine("Using \"" + CarlaDependenciesPath + "\" as the CARLA depenencies install path.");
         }
+
+        Console.WriteLine("Current module directory: " + ModuleDirectory);
 
         bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
 
@@ -202,6 +204,9 @@ public class CarlaTools :
         var SQLiteBuildPath = Path.Combine(DependenciesInstallPath, "sqlite-build");
         var SQLiteLibrary = Directory.GetFiles(SQLiteBuildPath, GetLibraryName("sqlite*"))[0];
 
+        PublicIncludePaths.Add(ModuleDirectory);
+        PublicIncludePaths.Add(LibCarlaIncludePath);
+
         PublicAdditionalLibraries.AddRange(BoostLibraries);
         PublicAdditionalLibraries.AddRange(new string[]
         {
@@ -212,8 +217,7 @@ public class CarlaTools :
             FindLibraries("sumo", "*osm2odr")[0],
             FindLibraries("zlib", "zlib*")[0],
         });
-        PrivateIncludePaths.Add(LibCarlaIncludePath);
-        PrivateIncludePaths.AddRange(new string[]
+        PublicIncludePaths.AddRange(new string[]
         {
             GetIncludePath("boost"),
             GetIncludePath("rpclib"),
@@ -221,6 +225,5 @@ public class CarlaTools :
             GetIncludePath("sumo"),
             GetIncludePath("zlib"),
         });
-        PrivateIncludePaths.Add(LibCarlaIncludePath);
     }
 }

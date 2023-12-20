@@ -19,6 +19,7 @@ public class CarlaUE4EditorTarget : TargetRules
         base(Target)
     {
         DefaultBuildSettings = BuildSettingsVersion.Latest;
+        IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
         Type = TargetType.Editor;
 
         ExtraModuleNames.Add("CarlaUE4");

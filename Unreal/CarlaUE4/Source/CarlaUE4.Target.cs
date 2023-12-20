@@ -19,6 +19,8 @@ public class CarlaUE4Target : TargetRules
         base(Target)
     {
         DefaultBuildSettings = BuildSettingsVersion.Latest;
+        IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
+
         Type = TargetType.Game;
         
         ExtraModuleNames.Add("CarlaUE4");

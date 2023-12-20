@@ -47,7 +47,7 @@ public class Carla :
         if (CarlaInstallPath == null)
         {
             Console.WriteLine("\"-carla-install-path\" was not specified, inferring...");
-            CarlaInstallPath = Path.Combine(WorkspacePath, "Install", "libcarla");
+            CarlaInstallPath = Path.Combine(WorkspacePath, "Install");
             if (!Directory.Exists(CarlaInstallPath))
                 throw new DirectoryNotFoundException("Could not infer CARLA install directory.");
             Console.WriteLine("Using \"" + CarlaInstallPath + "\" as the CARLA install path.");
@@ -62,7 +62,9 @@ public class Carla :
             Console.WriteLine("Using \"" + CarlaDependenciesPath + "\" as the CARLA depenencies install path.");
         }
 
-		Action<string, bool> LogBuildFlagStatus = (name, enabled) =>
+        Console.WriteLine("Current module directory: " + ModuleDirectory);
+
+        Action<string, bool> LogBuildFlagStatus = (name, enabled) =>
 		{
 			Console.WriteLine(
 				string.Format(
@@ -222,6 +224,7 @@ public class Carla :
 			PublicAdditionalLibraries.AddRange(ChronoLibraries);
         }
 
+        PublicIncludePaths.Add(ModuleDirectory);
         PublicIncludePaths.Add(LibCarlaIncludePath);
         PublicIncludePaths.AddRange(new string[]
         {
