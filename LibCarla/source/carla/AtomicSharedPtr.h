@@ -42,7 +42,7 @@ namespace carla {
           expected,
           desired,
           std::memory_order_acq_rel,
-          std::memory_order_acq_rel);
+          std::memory_order_acquire);
     }
 
     AtomicSharedPtr &operator=(std::shared_ptr<T> ptr) noexcept {
