@@ -751,7 +751,7 @@ def UpdateDependencies(task_graph : TaskGraph):
 	if ENABLE_CHRONO:
 		unique_deps.update(CHRONO_DEPENDENCIES)
 	return [
-		Task(f'update-{dep.name}', [], UpdateDependency, dep) for dep in unique_deps
+		task_graph.Add(Task(f'update-{dep.name}', [], UpdateDependency, dep)) for dep in unique_deps
 	]
 
 def CleanDownloadsMain():
@@ -907,7 +907,9 @@ def ConfigureSUMO():
 	])
 	LaunchSubprocessImmediate(cmd)
 
-def BuildDependencies(task_graph : TaskGraph):
+def BuildDependencies(
+		task_graph : TaskGraph):
+	task_graph.Execute()
 	# Configure:
 	build_sqlite = task_graph.Add(Task('build-sqlite', [], BuildSQLite))
 	task_graph.Add(Task('configure-boost', [], ConfigureBoost))
