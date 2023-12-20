@@ -20,7 +20,9 @@
 #include <carla/multigpu/primaryCommands.h>
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
-#include <carla/ros2/ROS2.h>
+#if WITH_ROS2
+    #include <carla/ros2/ROS2.h>
+#endif
 #include <compiler/enable-ue4-macros.h>
 
 #include <mutex>

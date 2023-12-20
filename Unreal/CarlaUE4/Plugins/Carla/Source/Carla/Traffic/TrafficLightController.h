@@ -7,7 +7,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Object.h"
+#include "UObject/Object.h"
 #include "TrafficLightState.h"
 #include "TrafficLightComponent.h"
 #include "Containers/Map.h"

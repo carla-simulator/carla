@@ -175,16 +175,12 @@ static void GetVehicleAutoBoxSetup(const FVehicleNWTransmissionData& Setup, PxVe
 	PxSetup.setLatency(Setup.GearAutoBoxLatency);
 
 }
-#endif
 
 int32 UWheeledVehicleMovementComponentNW::GetCustomGearBoxNumForwardGears() const
 {
-#if 0 // @CARLAUE5
 	return TransmissionSetup.ForwardGears.Num();
-#else
-	return 0;
-#endif
 }
+#endif
 
 #if 0 // @CARLAUE5
 void SetupDriveHelper(const UWheeledVehicleMovementComponentNW* VehicleData, const PxVehicleWheelsSimData* PWheelsSimData, PxVehicleDriveSimDataNW& DriveData)

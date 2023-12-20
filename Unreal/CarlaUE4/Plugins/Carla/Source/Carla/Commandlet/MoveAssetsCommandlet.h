@@ -11,7 +11,7 @@
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
 
 #if WITH_EDITORONLY_DATA
-#include "AssetRegistry/Public/AssetRegistryModule.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Developer/AssetTools/Public/AssetToolsModule.h"
 #endif // WITH_EDITORONLY_DATA
 #include "MoveAssetsCommandlet.generated.h"

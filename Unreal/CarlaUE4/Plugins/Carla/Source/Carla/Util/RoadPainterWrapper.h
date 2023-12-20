@@ -8,6 +8,7 @@
 
 #include "GameFramework/Actor.h"
 #include "Materials/MaterialInstanceConstant.h"
+#include "Dom/JsonObject.h"
 #include "RoadPainterWrapper.generated.h"
 
 USTRUCT(BlueprintType)

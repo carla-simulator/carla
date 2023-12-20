@@ -13,7 +13,7 @@
 #include "Carla/Util/RandomEngine.h"
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
-#include "WheeledVehicleMovementComponent.h"
+#include "ChaosWheeledVehicleMovementComponent.h"
 
 // =============================================================================
 // -- Static local methods -----------------------------------------------------

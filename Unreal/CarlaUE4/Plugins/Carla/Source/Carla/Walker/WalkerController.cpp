@@ -24,14 +24,14 @@ void AWalkerController::OnPossess(APawn *InPawn)
 {
   Super::OnPossess(InPawn);
 
-  auto *Character = Cast<ACharacter>(InPawn);
-  if (Character == nullptr)
+  ACharacter *CurrentCharacter = Cast<ACharacter>(InPawn);
+  if (CurrentCharacter == nullptr)
   {
     UE_LOG(LogCarla, Error, TEXT("Walker is not a character!"));
     return;
   }
 
-  auto *MovementComponent = Character->GetCharacterMovement();
+  UMovementComponent *MovementComponent = CurrentCharacter->GetCharacterMovement();
   if (MovementComponent == nullptr)
   {
     UE_LOG(LogCarla, Error, TEXT("Walker missing character movement component!"));
@@ -40,7 +40,7 @@ void AWalkerController::OnPossess(APawn *InPawn)
 
   MovementComponent->MaxWalkSpeed = GetMaximumWalkSpeed();
   MovementComponent->JumpZVelocity = 500.0f;
-  Character->JumpMaxCount = 2;
+  CurrentCharacter->JumpMaxCount = 2;
 }
 
 void AWalkerController::ApplyWalkerControl(const FWalkerControl &InControl)
@@ -50,11 +50,11 @@ void AWalkerController::ApplyWalkerControl(const FWalkerControl &InControl)
 
 void AWalkerController::GetBonesTransform(FWalkerBoneControlOut &WalkerBones)
 {
-  auto *Character = GetCharacter();
-  if (!Character) return;
+  ACharacter *CurrentCharacter = GetCharacter();
+  if (!CurrentCharacter) return;
 
   TArray<USkeletalMeshComponent *> SkeletalMeshes;
-  Character->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
+  CurrentCharacter->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
   USkeletalMeshComponent *SkeletalMesh = SkeletalMeshes.IsValidIndex(0) ? SkeletalMeshes[0] : nullptr;
   if (!SkeletalMesh) return;
 
@@ -85,11 +85,11 @@ void AWalkerController::GetBonesTransform(FWalkerBoneControlOut &WalkerBones)
 
 void AWalkerController::SetBonesTransform(const FWalkerBoneControlIn &WalkerBones)
 {
-  auto *Character = GetCharacter();
-  if (!Character) return;
+  ACharacter* CurrentCharacter = GetCharacter();
+  if (!CurrentCharacter) return;
 
   TArray<USkeletalMeshComponent *> SkeletalMeshes;
-  Character->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
+  CurrentCharacter->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
   USkeletalMeshComponent *SkeletalMesh = SkeletalMeshes.IsValidIndex(0) ? SkeletalMeshes[0] : nullptr;
   if (!SkeletalMesh) return;
 
@@ -126,11 +126,11 @@ void AWalkerController::SetBonesTransform(const FWalkerBoneControlIn &WalkerBone
 
 void AWalkerController::BlendPose(float Blend)
 {
-  auto *Character = GetCharacter();
-  if (!Character) return;
+  ACharacter* CurrentCharacter = GetCharacter();
+  if (!CurrentCharacter) return;
 
   TArray<USkeletalMeshComponent *> SkeletalMeshes;
-  Character->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
+  CurrentCharacter->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
   USkeletalMeshComponent *SkeletalMesh = SkeletalMeshes.IsValidIndex(0) ? SkeletalMeshes[0] : nullptr;
   if (!SkeletalMesh) return;
 
@@ -146,11 +146,11 @@ void AWalkerController::BlendPose(float Blend)
 
 void AWalkerController::GetPoseFromAnimation()
 {
-  auto *Character = GetCharacter();
-  if (!Character) return;
+  ACharacter* CurrentCharacter = GetCharacter();
+  if (!CurrentCharacter) return;
 
   TArray<USkeletalMeshComponent *> SkeletalMeshes;
-  Character->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
+  CurrentCharacter->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
   USkeletalMeshComponent *SkeletalMesh = SkeletalMeshes.IsValidIndex(0) ? SkeletalMeshes[0] : nullptr;
   if (!SkeletalMesh) return;
 
@@ -169,13 +169,13 @@ void AWalkerController::Tick(float DeltaSeconds)
   TRACE_CPUPROFILER_EVENT_SCOPE(AWalkerController::Tick);
   Super::Tick(DeltaSeconds);
 
-  auto *Character = GetCharacter();
-  if (!Character) return;
+  ACharacter* CurrentCharacter = GetCharacter();
+  if (!CurrentCharacter) return;
 
-  Character->AddMovementInput(Control.Direction,
+  CurrentCharacter->AddMovementInput(Control.Direction,
         Control.Speed / GetMaximumWalkSpeed());
   if (Control.Jump)
   {
-    Character->Jump();
+    CurrentCharacter->Jump();
   }
 }

@@ -8,6 +8,8 @@
 
 #include "WheeledVehiclePawn.h"
 
+#include "Components/SkeletalMeshComponent.h"
+
 #include "Vehicle/AckermannController.h"
 #include "Vehicle/AckermannControllerSettings.h"
 #include "Vehicle/CarlaWheeledVehicleState.h"
@@ -18,7 +20,7 @@
 #include "Vehicle/VehiclePhysicsControl.h"
 #include "VehicleVelocityControl.h"
 #include "Vehicle/WheeledVehicleMovementComponentNW.h"
-#include "Vehicle/VehicleAnimInstance.h"
+
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
 
@@ -188,8 +190,9 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void SetSimulatePhysics(bool enabled);
 
+#if 0
   void SetWheelCollision(UWheeledVehicleMovementComponent4W *Vehicle4W, const FVehiclePhysicsControl &PhysicsControl);
-
+#endif
   void SetWheelCollisionNW(UWheeledVehicleMovementComponentNW *VehicleNW, const FVehiclePhysicsControl &PhysicsControl);
 
   void SetVehicleLightState(const FVehicleLightState &LightState);

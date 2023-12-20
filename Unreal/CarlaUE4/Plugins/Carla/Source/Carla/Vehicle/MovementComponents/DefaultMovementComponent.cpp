@@ -27,13 +27,16 @@ void UDefaultMovementComponent::ProcessControl(FVehicleControl &Control)
   MovementComponent->SetSteeringInput(Control.Steer);
   MovementComponent->SetBrakeInput(Control.Brake);
   MovementComponent->SetHandbrakeInput(Control.bHandBrake);
+#if 0 // @CARLAUE5
   if (CarlaVehicle->GetVehicleControl().bReverse != Control.bReverse)
   {
     MovementComponent->SetUseAutoGears(!Control.bReverse);
     MovementComponent->SetTargetGear(Control.bReverse ? -1 : 1, true);
+
   }
   else
   {
+
     MovementComponent->SetUseAutoGears(!Control.bManualGearShift);
     if (Control.bManualGearShift)
     {
@@ -41,6 +44,7 @@ void UDefaultMovementComponent::ProcessControl(FVehicleControl &Control)
     }
   }
   Control.Gear = MovementComponent->GetCurrentGear();
+#endif
 }
 
 // FVector GetVelocity() const override;
