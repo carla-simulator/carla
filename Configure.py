@@ -479,7 +479,7 @@ DEFAULT_DEPENDENCIES = [
     Download('https://www.sqlite.org/2021/sqlite-amalgamation-3340100.zip')),
   Dependency(
     'rpclib',
-    GitRepository('https://github.com/rpclib/rpclib.git', tag_or_branch = 'v2.3.0')),
+    GitRepository('https://github.com/carla-simulator/rpclib.git', tag_or_branch = 'carla')),
   Dependency(
     'recast',
     GitRepository('https://github.com/carla-simulator/recastnavigation.git', tag_or_branch = 'carla')),
