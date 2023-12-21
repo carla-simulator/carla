@@ -108,7 +108,7 @@ pipeline
                                     // stash includes: 'Dist/AdditionalMaps*.tar.gz', name: 'ubuntu_package2'
                                     stash includes: 'Examples/', name: 'ubuntu_examples'
                                 }
-                                success
+                                /*success
                                 {
                                     node('master')
                                     {
@@ -120,7 +120,7 @@ pipeline
                                             jenkinsLib.CreateUbuntuTestNode(JOB_ID)
                                         }
                                     }
-                                }
+                                }*/
                             }
                         }
                         stage('ubuntu smoke tests')
