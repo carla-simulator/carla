@@ -865,6 +865,7 @@ def BuildSQLite():
         log_name = 'build-sqlite-lib')
     else:
       objs = []
+      BUILD_TEMP_PATH.mkdir(exist_ok = True)
       for e in sqlite_sources:
         cmd = [
           C_COMPILER,
