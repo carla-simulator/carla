@@ -91,7 +91,7 @@ if not exist "%BOOST_SRC_DIR%" (
     )
     if not exist "%BOOST_TEMP_FILE_DIR%" (
         echo %FILE_N% Using Boost backup
-        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/%BOOST_TEMP_FILE%', '%BOOST_TEMP_FILE_DIR%')"
+        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/%BOOST_TEMP_FILE%', '%BOOST_TEMP_FILE_DIR%')"
     )
     if %errorlevel% neq 0 goto error_download
     echo %FILE_N% Extracting boost from "%BOOST_TEMP_FILE%", this can take a while...

@@ -9,6 +9,7 @@
 
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
 #include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Settings/CarlaSettings.h"
@@ -24,6 +25,7 @@
 #include <carla/multigpu/commands.h>
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
+#include <carla/ros2/ROS2.h>
 #include <carla/streaming/EndPoint.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
@@ -34,7 +36,7 @@
 // -- Static local methods -----------------------------------------------------
 // =============================================================================
 
-// init static frame counter
+// init static variables
 uint64_t FCarlaEngine::FrameCounter = 0;
 
 static uint32 FCarlaEngine_GetNumberOfThreadsForRPCServer()
@@ -61,6 +63,11 @@ FCarlaEngine::~FCarlaEngine()
 {
   if (bIsRunning)
   {
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+      ROS2->Shutdown();
+    #endif
     FWorldDelegates::OnWorldTickStart.Remove(OnPreTickHandle);
     FWorldDelegates::OnWorldPostActorTick.Remove(OnPostTickHandle);
     FCarlaStaticDelegates::OnEpisodeSettingsChange.Remove(OnEpisodeSettingsChangeHandle);
@@ -76,7 +83,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     const auto SecondaryPort = Settings.SecondaryPort;
     const auto PrimaryIP     = Settings.PrimaryIP;
     const auto PrimaryPort   = Settings.PrimaryPort;
-    
+
     auto BroadcastStream     = Server.Start(Settings.RPCPort, StreamingPort, SecondaryPort);
     Server.AsyncRun(FCarlaEngine_GetNumberOfThreadsForRPCServer());
 
@@ -99,7 +106,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     {
       // we are secondary server, connecting to primary server
       bIsPrimaryServer = false;
-      
+
       // define the commands executor (when a command comes from the primary server)
       auto CommandExecutor = [=](carla::multigpu::MultiGPUCommand Id, carla::Buffer Data) {
         struct CarlaStreamBuffer : public std::streambuf
@@ -143,7 +150,6 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             Secondary->Write(std::move(buf));
             break;
           }
-          
           case carla::multigpu::MultiGPUCommand::YOU_ALIVE:
           {
             std::string msg("Yes, I'm alive");
@@ -152,15 +158,47 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             Secondary->Write(std::move(buf));
             break;
           }
+          case carla::multigpu::MultiGPUCommand::ENABLE_ROS:
+          {
+            // get the sensor id
+            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
+            // query dispatcher
+            Server.GetStreamingServer().EnableForROS(sensor_id);
+            // return a 'true'
+            bool res = true;
+            carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
+            carla::log_info("responding ENABLE_ROS with a true");
+            Secondary->Write(std::move(buf));
+            break;
+          }
+          case carla::multigpu::MultiGPUCommand::DISABLE_ROS:
+          {
+            // get the sensor id
+            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
+            // query dispatcher
+            Server.GetStreamingServer().DisableForROS(sensor_id);
+            // return a 'true'
+            bool res = true;
+            carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
+            carla::log_info("responding DISABLE_ROS with a true");
+            Secondary->Write(std::move(buf));
+            break;
+          }
+          case carla::multigpu::MultiGPUCommand::IS_ENABLED_ROS:
+          {
+            // get the sensor id
+            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
+            // query dispatcher
+            bool res = Server.GetStreamingServer().IsEnabledForROS(sensor_id);
+            carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
+            carla::log_info("responding IS_ENABLED_ROS with: ", res);
+            Secondary->Write(std::move(buf));
+            break;
+          }
         }
       };
 
-      Secondary = std::make_shared<carla::multigpu::Secondary>(
-        PrimaryIP, 
-        PrimaryPort, 
-        CommandExecutor
-      );
-
+      Secondary = std::make_shared<carla::multigpu::Secondary>(PrimaryIP, PrimaryPort, CommandExecutor);
       Secondary->Connect();
       // set this server in synchronous mode
       bSynchronousMode = true;
@@ -171,12 +209,21 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       bIsPrimaryServer = true;
       SecondaryServer = Server.GetSecondaryServer();
       SecondaryServer->SetNewConnectionCallback([this]()
-      { 
+      {
         this->bNewConnection = true;
         UE_LOG(LogCarla, Log, TEXT("New secondary connection detected"));
       });
     }
   }
+
+  // create ROS2 manager
+  #if defined(WITH_ROS2)
+  if (Settings.ROS2)
+  {
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    ROS2->Enable(true);
+  }
+  #endif
 
   bMapChanged = true;
 }
@@ -233,7 +280,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 
     if (bIsPrimaryServer)
     {
-      if (CurrentEpisode && !bSynchronousMode && SecondaryServer->HasClientsConnected()) 
+      if (CurrentEpisode && !bSynchronousMode && SecondaryServer->HasClientsConnected())
       {
         // set synchronous mode
         CurrentSettings.bSynchronousMode = true;

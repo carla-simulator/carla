@@ -19,22 +19,16 @@
 #include "PxVec3.h"
 #include "LevelEditor.h"
 #include "EngineUtils.h"
-
+#include "PhysXPublic.h"
+#include "PhysicsPublic.h"
+#include "PhysXIncludes.h"
+#include "PxSimpleTypes.h"
 #include <fstream>
 #include <sstream>
 
 static const FName CarlaExporterTabName("CarlaExporter");
 
 #define LOCTEXT_NAMESPACE "FCarlaExporterModule"
-
-enum AreaType
-{
-  ROAD,
-  GRASS,
-  SIDEWALK,
-  CROSSWALK,
-  BLOCK
-};
 
 void FCarlaExporterModule::StartupModule()
 {
@@ -148,7 +142,7 @@ void FCarlaExporterModule::PluginButtonClicked()
           continue;
       }
 
-      f << "o " << TCHAR_TO_ANSI(*(ActorName)) << "\n";
+      f << "g " << TCHAR_TO_ANSI(*(ActorName)) << "\n";
 
       TArray<UActorComponent*> Components = TempActor->GetComponentsByClass(UStaticMeshComponent::StaticClass());
       for (auto *Component : Components)
@@ -163,49 +157,15 @@ void FCarlaExporterModule::PluginButtonClicked()
 
           for (int i=0; i<comp2->GetInstanceCount(); ++i)
           {
-            f << "g instance_" << i << "\n";
+            // f << " instance_" << i << "\n";
+            FString ObjectName = ActorName +"_"+FString::FromInt(i);
 
             // get the component position and transform
             FTransform InstanceTransform;
             comp2->GetInstanceTransform(i, InstanceTransform, true);
             FVector InstanceLocation = InstanceTransform.GetTranslation();
 
-
-            // through all convex elements
-            for (const auto &mesh : body->TriMeshes)
-            {
-              // get data
-              PxU32 nbVerts = mesh->getNbVertices();
-              const PxVec3* convexVerts = mesh->getVertices();
-              const PxU16* indexBuffer = (PxU16 *) mesh->getTriangles();
-
-              // write all vertex
-              for(PxU32 j=0;j<nbVerts;j++)
-              {
-                const PxVec3 &v = convexVerts[j];
-                FVector vec(v.x, v.y, v.z);
-                FVector vec3 = InstanceTransform.TransformVector(vec);
-                FVector world(vec3.X, vec3.Y, vec3.Z);
-
-                f << "v " << std::fixed << (InstanceLocation.X + world.X) * TO_METERS << " " << (InstanceLocation.Z + world.Z) * TO_METERS << " " << (InstanceLocation.Y + world.Y) * TO_METERS << "\n";
-              }
-              // set the material in function of the area type
-              switch (areaType)
-              {
-                case AreaType::ROAD:      f << "usemtl road"      << "\n"; break;
-                case AreaType::GRASS:     f << "usemtl grass"     << "\n"; break;
-                case AreaType::SIDEWALK:  f << "usemtl sidewalk"  << "\n"; break;
-                case AreaType::CROSSWALK: f << "usemtl crosswalk" << "\n"; break;
-                case AreaType::BLOCK:     f << "usemtl block"     << "\n"; break;
-              }
-              // write all faces
-              for (unsigned int k=0; k<mesh->getNbTriangles()*3;k+=3)
-              {
-                // inverse order for left hand
-                f << "f " << offset + indexBuffer[k+2] << " " << offset + indexBuffer[k+1] << " " << offset + indexBuffer[k] << "\n";
-              }
-              offset += nbVerts;
-            }
+            offset += WriteObjectGeom(f, ObjectName, body, InstanceTransform, areaType, offset);
           }
         }
         else
@@ -218,54 +178,205 @@ void FCarlaExporterModule::PluginButtonClicked()
           if (!body)
             continue;
 
-          f << "g " << TCHAR_TO_ANSI(*(comp->GetName())) << "\n";
+          // f << "o " << TCHAR_TO_ANSI(*(comp->GetName())) << "\n";
+          FString ObjectName = ActorName +"_"+comp->GetName();
 
           // get the component position and transform
           FTransform CompTransform = comp->GetComponentTransform();
           FVector CompLocation = CompTransform.GetTranslation();
 
-          // through all convex elements
-          for (const auto &mesh : body->TriMeshes)
-          {
-            // get data
-            PxU32 nbVerts = mesh->getNbVertices();
-            const PxVec3* convexVerts = mesh->getVertices();
-            const PxU16* indexBuffer = (PxU16 *) mesh->getTriangles();
-
-            // write all vertex
-            for(PxU32 j=0;j<nbVerts;j++)
-            {
-              const PxVec3 &v = convexVerts[j];
-              FVector vec(v.x, v.y, v.z);
-              FVector vec3 = CompTransform.TransformVector(vec);
-              FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z);
-
-              f << "v " << std::fixed << world.X * TO_METERS << " " << world.Z * TO_METERS << " " << world.Y * TO_METERS << "\n";
-            }
-            // set the material in function of the area type
-            switch (areaType)
-            {
-              case AreaType::ROAD:      f << "usemtl road"      << "\n"; break;
-              case AreaType::GRASS:     f << "usemtl grass"     << "\n"; break;
-              case AreaType::SIDEWALK:  f << "usemtl sidewalk"  << "\n"; break;
-              case AreaType::CROSSWALK: f << "usemtl crosswalk" << "\n"; break;
-              case AreaType::BLOCK:     f << "usemtl block"     << "\n"; break;
-            }
-            // write all faces
-            int k = 0;
-            for (PxU32 i=0; i<mesh->getNbTriangles(); ++i)
-            {
-              // inverse order for left hand
-              f << "f " << offset + indexBuffer[k+2] << " " << offset + indexBuffer[k+1] << " " << offset + indexBuffer[k] << "\n";
-              k += 3;
-            }
-            offset += nbVerts;
-          }
+          offset += WriteObjectGeom(f, ObjectName, body, CompTransform, areaType, offset);
         }
       }
     }
   }
   f.close();
+}
+
+int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName, UBodySetup *body, FTransform &CompTransform, AreaType Area, int32 Offset)
+{
+  if (!body) return 0;
+
+  constexpr float TO_METERS = 0.01f;
+  FVector CompLocation = CompTransform.GetTranslation();
+  int TotalVerticesAdded = 0;
+  bool Written = false;
+
+  // try to write the box collision if any
+  for (const auto &box: body->AggGeom.BoxElems)
+  {
+    // get data
+    const int32 nbVerts = 8;
+    TArray<FVector> boxVerts;
+    TArray<int32> indexBuffer;
+
+    FVector HalfExtent(box.X / 2.0f, box.Y / 2.0f, box.Z / 2.0f);
+
+    f << "o " << TCHAR_TO_ANSI(*(ObjectName +"_box")) << "\n";
+
+    // define the 8 vertices
+    boxVerts.Add(box.Center + box.Rotation.RotateVector(FVector(-HalfExtent.X, -HalfExtent.Y, -HalfExtent.Z)));
+    boxVerts.Add(box.Center + box.Rotation.RotateVector(FVector(-HalfExtent.X, -HalfExtent.Y, +HalfExtent.Z)));
+    boxVerts.Add(box.Center + box.Rotation.RotateVector(FVector(-HalfExtent.X, +HalfExtent.Y, -HalfExtent.Z)));
+    boxVerts.Add(box.Center + box.Rotation.RotateVector(FVector(-HalfExtent.X, +HalfExtent.Y, +HalfExtent.Z)));
+    boxVerts.Add(box.Center + box.Rotation.RotateVector(FVector(+HalfExtent.X, -HalfExtent.Y, -HalfExtent.Z)));
+    boxVerts.Add(box.Center + box.Rotation.RotateVector(FVector(+HalfExtent.X, -HalfExtent.Y, +HalfExtent.Z)));
+    boxVerts.Add(box.Center + box.Rotation.RotateVector(FVector(+HalfExtent.X, +HalfExtent.Y, -HalfExtent.Z)));
+    boxVerts.Add(box.Center + box.Rotation.RotateVector(FVector(+HalfExtent.X, +HalfExtent.Y, +HalfExtent.Z)));
+
+    // define the 12 faces (36 indices)
+    indexBuffer.Add(0); indexBuffer.Add(1); indexBuffer.Add(3);
+    indexBuffer.Add(0); indexBuffer.Add(3); indexBuffer.Add(2);
+    indexBuffer.Add(2); indexBuffer.Add(3); indexBuffer.Add(7);
+    indexBuffer.Add(2); indexBuffer.Add(7); indexBuffer.Add(6);
+    indexBuffer.Add(6); indexBuffer.Add(7); indexBuffer.Add(5);
+    indexBuffer.Add(6); indexBuffer.Add(5); indexBuffer.Add(4);
+    indexBuffer.Add(4); indexBuffer.Add(5); indexBuffer.Add(1);
+    indexBuffer.Add(4); indexBuffer.Add(1); indexBuffer.Add(0);
+    indexBuffer.Add(2); indexBuffer.Add(6); indexBuffer.Add(4);
+    indexBuffer.Add(2); indexBuffer.Add(4); indexBuffer.Add(0);
+    indexBuffer.Add(7); indexBuffer.Add(3); indexBuffer.Add(1);
+    indexBuffer.Add(7); indexBuffer.Add(1); indexBuffer.Add(5);
+
+    // write all vertex
+    for (int32 j=0; j<nbVerts; j++)
+    {
+      const FVector &v = boxVerts[j];
+      FVector vec(v.X, v.Y, v.Z);
+      FVector vec3 = CompTransform.TransformVector(vec);
+      FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z);
+
+      f << "v " << std::fixed << world.X * TO_METERS << " " << world.Z * TO_METERS << " " << world.Y * TO_METERS << "\n";
+    }
+    // set the material in function of the area type
+    switch (Area)
+    {
+      case AreaType::ROAD:      f << "usemtl road"      << "\n"; break;
+      case AreaType::GRASS:     f << "usemtl grass"     << "\n"; break;
+      case AreaType::SIDEWALK:  f << "usemtl sidewalk"  << "\n"; break;
+      case AreaType::CROSSWALK: f << "usemtl crosswalk" << "\n"; break;
+      case AreaType::BLOCK:     f << "usemtl block"     << "\n"; break;
+    }
+    // write all faces
+    int k = 0;
+    for (int32 i=0; i<indexBuffer.Num()/3; ++i)
+    {
+      // inverse order for left hand
+      f << "f " << Offset + indexBuffer[k+2] << " " << Offset + indexBuffer[k+1] << " " << Offset + indexBuffer[k] << "\n";
+      k += 3;
+    }
+    TotalVerticesAdded += nbVerts;
+    Offset += nbVerts;
+    Written = true;
+  }
+
+  // try to write the simple collision mesh
+  for (const auto &convex : body->AggGeom.ConvexElems)
+  {
+    // get data
+    PxConvexMesh *mesh = convex.GetConvexMesh();
+    if (!mesh) continue;
+    int32 nbVerts = mesh->getNbVertices();
+    const PxVec3* convexVerts = mesh->getVertices();
+    const PxU8* indexBuffer = (PxU8 *) mesh->getIndexBuffer();
+
+    f << "o " << TCHAR_TO_ANSI(*(ObjectName +"_convex")) << "\n";
+
+    // write all vertex
+    for (int32 j=0; j<nbVerts; j++)
+    {
+      const PxVec3 &v = convexVerts[j];
+      FVector vec(v.x, v.y, v.z);
+      FVector vec3 = CompTransform.TransformVector(vec);
+      FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z);
+
+      f << "v " << std::fixed << world.X * TO_METERS << " " << world.Z * TO_METERS << " " << world.Y * TO_METERS << "\n";
+    }
+    // set the material in function of the area type
+    switch (Area)
+    {
+      case AreaType::ROAD:      f << "usemtl road"      << "\n"; break;
+      case AreaType::GRASS:     f << "usemtl grass"     << "\n"; break;
+      case AreaType::SIDEWALK:  f << "usemtl sidewalk"  << "\n"; break;
+      case AreaType::CROSSWALK: f << "usemtl crosswalk" << "\n"; break;
+      case AreaType::BLOCK:     f << "usemtl block"     << "\n"; break;
+    }
+    // write all faces
+    for (PxU32 i=0; i<mesh->getNbPolygons(); ++i)
+    {
+      PxHullPolygon face;
+      bool status = mesh->getPolygonData(i, face);
+      const PxU8* faceIndices = indexBuffer + face.mIndexBase;
+      int faceNbVerts = face.mNbVerts;
+      for(int32 j=2; j<faceNbVerts; j++)
+      {
+        // inverse order for left hand
+        f << "f " << Offset + faceIndices[j-1] << " " << Offset + faceIndices[j] << " " << Offset + faceIndices[0] << "\n";
+      }
+    }
+    TotalVerticesAdded += nbVerts;
+    Offset += nbVerts;
+    Written = true;
+  }
+
+  if (!Written)
+  {
+    // write the mesh
+    for (const auto &mesh : body->TriMeshes)
+    {
+      // get data
+      PxU32 nbVerts = mesh->getNbVertices();
+      const PxVec3* convexVerts = mesh->getVertices();
+
+      f << "o " << TCHAR_TO_ANSI(*(ObjectName +"_mesh")) << "\n";
+
+      // write all vertex
+      for (PxU32 j=0; j<nbVerts; j++)
+      {
+        const PxVec3 &v = convexVerts[j];
+        FVector vec(v.x, v.y, v.z);
+        FVector vec3 = CompTransform.TransformVector(vec);
+        FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z);
+
+        f << "v " << std::fixed << world.X * TO_METERS << " " << world.Z * TO_METERS << " " << world.Y * TO_METERS << "\n";
+      }
+      // set the material in function of the area type
+      switch (Area)
+      {
+        case AreaType::ROAD:      f << "usemtl road"      << "\n"; break;
+        case AreaType::GRASS:     f << "usemtl grass"     << "\n"; break;
+        case AreaType::SIDEWALK:  f << "usemtl sidewalk"  << "\n"; break;
+        case AreaType::CROSSWALK: f << "usemtl crosswalk" << "\n"; break;
+        case AreaType::BLOCK:     f << "usemtl block"     << "\n"; break;
+      }
+      // write all faces
+      int k = 0;
+      // triangle indices can be of 16 or 32 bits
+      if (mesh->getTriangleMeshFlags() & PxTriangleMeshFlag::e16_BIT_INDICES)
+      {
+        PxU16 *Indices16 = (PxU16 *) mesh->getTriangles();
+        for (PxU32 i=0; i<mesh->getNbTriangles(); ++i)
+        {
+          // inverse order for left hand
+          f << "f " << Offset + Indices16[k+2] << " " << Offset + Indices16[k+1] << " " << Offset + Indices16[k] << "\n";
+          k += 3;
+        }
+      }
+      else
+      {
+        PxU32 *Indices32 = (PxU32 *) mesh->getTriangles();
+        for (PxU32 i=0; i<mesh->getNbTriangles(); ++i)
+        {
+          // inverse order for left hand
+          f << "f " << Offset + Indices32[k+2] << " " << Offset + Indices32[k+1] << " " << Offset + Indices32[k] << "\n";
+          k += 3;
+        }
+      }
+      TotalVerticesAdded += nbVerts;
+      Offset += nbVerts;
+    }
+  }
+  return TotalVerticesAdded;
 }
 
 void FCarlaExporterModule::AddMenuExtension(FMenuBuilder& Builder)

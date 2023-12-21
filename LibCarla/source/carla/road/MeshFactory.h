@@ -52,8 +52,12 @@ namespace geom {
     std::unique_ptr<Mesh> GenerateTesselated(const road::Lane& lane) const;
 
     /// Generates a mesh that defines a lane section
-    void GenerateLaneSectionOrdered(const road::LaneSection &lane_section, 
+    void GenerateLaneSectionOrdered(const road::LaneSection &lane_section,
         std::map<carla::road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& result ) const;
+
+    std::unique_ptr<Mesh> GenerateSidewalk(const road::LaneSection &lane_section) const;
+    std::unique_ptr<Mesh> GenerateSidewalk(const road::Lane &lane) const;
+    std::unique_ptr<Mesh> GenerateSidewalk(const road::Lane &lane, const double s_start, const double s_end) const;
     // -- Walls --
 
     /// Genrates a mesh representing a wall on the road corners to avoid
@@ -100,12 +104,31 @@ namespace geom {
     std::vector<std::unique_ptr<Mesh>> GenerateAllWithMaxLen(
         const road::Road &road) const;
 
-   
+
     void GenerateAllOrderedWithMaxLen(const road::Road &road,
          std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& roads) const;
 
     std::unique_ptr<Mesh> MergeAndSmooth(std::vector<std::unique_ptr<Mesh>> &lane_meshes) const;
 
+    // -- LaneMarks --
+    void GenerateLaneMarkForRoad(const road::Road& road,
+      std::vector<std::unique_ptr<Mesh>>& inout,
+      std::vector<std::string>& outinfo ) const;
+
+    // Generate for NOT center line AKA All lines but the one which id 0
+    void GenerateLaneMarksForNotCenterLine(
+      const road::LaneSection& lane_section,
+      const road::Lane& lane,
+      std::vector<std::unique_ptr<Mesh>>& inout,
+      std::vector<std::string>& outinfo ) const;
+
+    // Generate marks ONLY for line with ID 0
+    void GenerateLaneMarksForCenterLine(
+      const road::Road& road,
+      const road::LaneSection& lane_section,
+      const road::Lane& lane,
+      std::vector<std::unique_ptr<Mesh>>& inout,
+      std::vector<std::string>& outinfo ) const;
     // =========================================================================
     // -- Generation parameters ------------------------------------------------
     // =========================================================================
@@ -124,6 +147,15 @@ namespace geom {
     };
 
     RoadParameters road_param;
+
+  private:
+
+    // Calculate the points on both sides of the lane mark for the specified s_current
+    std::pair<geom::Vector3D, geom::Vector3D> ComputeEdgesForLanemark(
+      const road::LaneSection& lane_section,
+      const road::Lane& lane,
+      const double s_current,
+      const double lanemark_width) const;
 
   };
 

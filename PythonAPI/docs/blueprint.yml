@@ -327,6 +327,7 @@
       doc: >
         Filters a list of blueprints matching the `wildcard_pattern` against the id and tags of every blueprint contained in this library and returns the result as a new one. Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.
       return: carla.BlueprintLibrary
+    # -------------------------------------- 
     - def_name: filter_by_attribute
       params:
       - param_name: name

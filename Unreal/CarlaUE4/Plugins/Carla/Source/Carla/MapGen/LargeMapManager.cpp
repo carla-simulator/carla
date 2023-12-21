@@ -5,6 +5,10 @@
 #include "LargeMapManager.h"
 
 #include "Engine/WorldComposition.h"
+#include "Engine/ObjectLibrary.h"
+#include "Game/CarlaStatics.h"
+#include "Actor/ActorRegistry.h"
+#include "Game/CarlaEpisode.h"
 #include "Engine/EngineTypes.h"
 #include "Components/PrimitiveComponent.h"
 #include "Landscape.h"
@@ -427,7 +431,7 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
   GEngine->ForceGarbageCollection(true);
 
   ActorsToConsider.Reset();
-  if (Spectator)
+  if (SpectatorAsEgo && Spectator)
   {
     ActorsToConsider.Add(Spectator);
   }
@@ -593,6 +597,12 @@ ALargeMapManager::TileID ALargeMapManager::GetTileID(FDVector TileLocation) cons
   return GetTileID(TileID);
 }
 
+FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FVector Location)
+{
+  TileID TileID = GetTileID(Location);
+  return GetCarlaMapTile(TileID);
+}
+
 FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(ULevel* InLevel)
 {
   FCarlaMapTile* Tile = nullptr;
@@ -610,11 +620,11 @@ FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(ULevel* InLevel)
   return *Tile;
 }
 
-FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID)
+FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID)
 {
   TileID TileID = GetTileID(TileVectorID);
   FCarlaMapTile* Tile = MapTiles.Find(TileID);
-  return Tile;
+  return *Tile;
 }
 
 FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(TileID TileID)
@@ -728,7 +738,7 @@ void ALargeMapManager::RemovePendingActorsToRemove()
   {
     ActorsToConsider.Remove(ActorToRemove);
   }
-  if(ActorsToConsider.Num() == 0 && Spectator)
+  if(ActorsToConsider.Num() == 0 && SpectatorAsEgo && Spectator)
   {
     ActorsToConsider.Add(Spectator);
   }
@@ -777,7 +787,7 @@ void ALargeMapManager::CheckActiveActors()
 
         float DistanceSquared = (RelativeLocation - HeroLocation).SizeSquared();
 
-        if (DistanceSquared > ActorStreamingDistanceSquared)
+        if (DistanceSquared > ActorStreamingDistanceSquared && View->GetActorType() != FCarlaActor::ActorType::Sensor)
         {
           // Save to temporal container. Later will be converted to dormant
           ActiveToDormantActors.Add(Id);
@@ -1076,7 +1086,7 @@ void ALargeMapManager::PrintMapInfo()
   int LastMsgIndex = TilesDistMsgIndex;
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("\nActor Global Position: %s km"), *(FDVector(CurrentActorPosition) / (1000.0 * 100.0)).ToString()) );
-  
+
   FIntVector CurrentTile = GetTileVectorID(CurrentActorPosition);
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("\nActor Current Tile: %d_%d"), CurrentTile.X, CurrentTile.Y ));
@@ -1106,5 +1116,20 @@ void ALargeMapManager::PrintMapInfo()
 
       if (LastMsgIndex > MaxClientLocMsgIndex) break;
     }
+  }
+}
+
+void ALargeMapManager::ConsiderSpectatorAsEgo(bool _SpectatorAsEgo)
+{
+  SpectatorAsEgo = _SpectatorAsEgo;
+  if(SpectatorAsEgo && ActorsToConsider.Num() == 0 && Spectator)
+  {
+    // Activating the spectator in an empty world
+    ActorsToConsider.Add(Spectator);
+  }
+  if (!SpectatorAsEgo && ActorsToConsider.Num() == 1 && ActorsToConsider.Contains(Spectator))
+  {
+    // Deactivating the spectator in a world with no other egos
+    ActorsToConsider.Reset();
   }
 }

@@ -14,9 +14,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
-
 #include <string.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <map>
@@ -408,756 +406,755 @@ namespace Simplify
   {
     int tid, tvertex;
   };
-  std::vector<Triangle> triangles;
-  std::vector<Vertex> vertices;
-  std::vector<Ref> refs;
-  std::string mtllib;
-  std::vector<std::string> materials;
 
-  // Helper functions
-
-  double vertex_error(SymetricMatrix q, double x, double y, double z);
-  double calculate_error(int id_v1, int id_v2, vec3f &p_result);
-  bool flipped(vec3f p, int i0, int i1, Vertex &v0, Vertex &v1, std::vector<int> &deleted);
-  void update_uvs(int i0, const Vertex &v, const vec3f &p, std::vector<int> &deleted);
-  void update_triangles(int i0, Vertex &v, std::vector<int> &deleted, int &deleted_triangles);
-  void update_mesh(int iteration);
-  void compact_mesh();
-  //
-  // Main simplification function
-  //
-  // target_count  : target nr. of triangles
-  // agressiveness : sharpness to increase the threshold.
-  //                 5..8 are good numbers
-  //                 more iterations yield higher quality
-  //
-
-  void simplify_mesh(int target_count, double agressiveness = 7, bool verbose = false)
+  class SimplificationObject
   {
-    // init
-    loopi(0, triangles.size())
+  public:
+    std::vector<Triangle> triangles;
+    std::vector<Vertex> vertices;
+    std::vector<Ref> refs;
+    std::string mtllib;
+    std::vector<std::string> materials;
+
+    // Helper functions
+
+    //
+    // Main simplification function
+    //
+    // target_count  : target nr. of triangles
+    // agressiveness : sharpness to increase the threshold.
+    //                 5..8 are good numbers
+    //                 more iterations yield higher quality
+    //
+
+    void simplify_mesh(int target_count, double agressiveness = 7, bool verbose = false)
     {
-      triangles[i].deleted = 0;
-    }
-
-    // main iteration loop
-    int deleted_triangles = 0;
-    std::vector<int> deleted0, deleted1;
-    int triangle_count = triangles.size();
-    // int iteration = 0;
-    // loop(iteration,0,100)
-    for (int iteration = 0; iteration < 100; iteration++)
-    {
-      if (triangle_count - deleted_triangles <= target_count)
-        break;
-
-      // update mesh once in a while
-      if (iteration % 5 == 0)
-      {
-        update_mesh(iteration);
-      }
-
-      // clear dirty flag
-      loopi(0, triangles.size()) triangles[i].dirty = 0;
-
-      //
-      // All triangles with edges below the threshold will be removed
-      //
-      // The following numbers works well for most models.
-      // If it does not, try to adjust the 3 parameters
-      //
-      double threshold = 0.000000001 * pow(double(iteration + 3), agressiveness);
-
-      // target number of triangles reached ? Then break
-      if ((verbose) && (iteration % 5 == 0))
-      {
-        printf("iteration %d - triangles %d threshold %g\n", iteration, triangle_count - deleted_triangles, threshold);
-      }
-
-      // remove vertices & mark deleted triangles
+      // init
       loopi(0, triangles.size())
       {
-        Triangle &t = triangles[i];
-        if (t.err[3] > threshold)
-          continue;
-        if (t.deleted)
-          continue;
-        if (t.dirty)
-          continue;
+        triangles[i].deleted = 0;
+      }
 
-        loopj(0, 3) if (t.err[j] < threshold)
-        {
-
-          int i0 = t.v[j];
-          Vertex &v0 = vertices[i0];
-          int i1 = t.v[(j + 1) % 3];
-          Vertex &v1 = vertices[i1];
-          // Border check
-          if (v0.border || v1.border)
-            continue;
-
-          // Compute vertex to collapse to
-          vec3f p;
-          calculate_error(i0, i1, p);
-          deleted0.resize(v0.tcount); // normals temporarily
-          deleted1.resize(v1.tcount); // normals temporarily
-          // don't remove if flipped
-          if (flipped(p, i0, i1, v0, v1, deleted0))
-            continue;
-
-          if (flipped(p, i1, i0, v1, v0, deleted1))
-            continue;
-
-          if ((t.attr & TEXCOORD) == TEXCOORD)
-          {
-            update_uvs(i0, v0, p, deleted0);
-            update_uvs(i0, v1, p, deleted1);
-          }
-
-          // not flipped, so remove edge
-          v0.p = p;
-          v0.q = v1.q + v0.q;
-          int tstart = refs.size();
-
-          update_triangles(i0, v0, deleted0, deleted_triangles);
-          update_triangles(i0, v1, deleted1, deleted_triangles);
-
-          int tcount = refs.size() - tstart;
-
-          if (tcount <= v0.tcount)
-          {
-            // save ram
-            if (tcount)
-              memcpy(&refs[v0.tstart], &refs[tstart], tcount * sizeof(Ref));
-          }
-          else
-            // append
-            v0.tstart = tstart;
-
-          v0.tcount = tcount;
-          break;
-        }
-        // done?
+      // main iteration loop
+      int deleted_triangles = 0;
+      std::vector<int> deleted0, deleted1;
+      int triangle_count = triangles.size();
+      // int iteration = 0;
+      // loop(iteration,0,100)
+      for (int iteration = 0; iteration < 100; iteration++)
+      {
         if (triangle_count - deleted_triangles <= target_count)
           break;
+
+        // update mesh once in a while
+        if (iteration % 5 == 0)
+        {
+          update_mesh(iteration);
+        }
+
+        // clear dirty flag
+        loopi(0, triangles.size()) triangles[i].dirty = 0;
+
+        //
+        // All triangles with edges below the threshold will be removed
+        //
+        // The following numbers works well for most models.
+        // If it does not, try to adjust the 3 parameters
+        //
+        double threshold = 0.000000001 * pow(double(iteration + 3), agressiveness);
+
+        // target number of triangles reached ? Then break
+        if ((verbose) && (iteration % 5 == 0))
+        {
+          printf("iteration %d - triangles %d threshold %g\n", iteration, triangle_count - deleted_triangles, threshold);
+        }
+
+        // remove vertices & mark deleted triangles
+        loopi(0, triangles.size())
+        {
+          Triangle &t = triangles[i];
+          if (t.err[3] > threshold)
+            continue;
+          if (t.deleted)
+            continue;
+          if (t.dirty)
+            continue;
+
+          loopj(0, 3) if (t.err[j] < threshold)
+          {
+
+            int i0 = t.v[j];
+            Vertex &v0 = vertices[i0];
+            int i1 = t.v[(j + 1) % 3];
+            Vertex &v1 = vertices[i1];
+            // Border check
+            if (v0.border || v1.border)
+              continue;
+
+            // Compute vertex to collapse to
+            vec3f p;
+            calculate_error(i0, i1, p);
+            deleted0.resize(v0.tcount); // normals temporarily
+            deleted1.resize(v1.tcount); // normals temporarily
+            // don't remove if flipped
+            if (flipped(p, i0, i1, v0, v1, deleted0))
+              continue;
+
+            if (flipped(p, i1, i0, v1, v0, deleted1))
+              continue;
+
+            if ((t.attr & TEXCOORD) == TEXCOORD)
+            {
+              update_uvs(i0, v0, p, deleted0);
+              update_uvs(i0, v1, p, deleted1);
+            }
+
+            // not flipped, so remove edge
+            v0.p = p;
+            v0.q = v1.q + v0.q;
+            int tstart = refs.size();
+
+            update_triangles(i0, v0, deleted0, deleted_triangles);
+            update_triangles(i0, v1, deleted1, deleted_triangles);
+
+            int tcount = refs.size() - tstart;
+
+            if (tcount <= v0.tcount)
+            {
+              // save ram
+              if (tcount)
+                memcpy(&refs[v0.tstart], &refs[tstart], tcount * sizeof(Ref));
+            }
+            else
+              // append
+              v0.tstart = tstart;
+
+            v0.tcount = tcount;
+            break;
+          }
+          // done?
+          if (triangle_count - deleted_triangles <= target_count)
+            break;
+        }
+      }
+      // clean up mesh
+      compact_mesh();
+    } // simplify_mesh()
+
+    void simplify_mesh_lossless(bool verbose = false)
+    {
+      // init
+      loopi(0, triangles.size()) triangles[i].deleted = 0;
+
+      // main iteration loop
+      int deleted_triangles = 0;
+      std::vector<int> deleted0, deleted1;
+
+      // int iteration = 0;
+      // loop(iteration,0,100)
+      for (int iteration = 0; iteration < 9999; iteration++)
+      {
+        // update mesh constantly
+        update_mesh(iteration);
+        // clear dirty flag
+        loopi(0, triangles.size()) triangles[i].dirty = 0;
+        //
+        // All triangles with edges below the threshold will be removed
+        //
+        // The following numbers works well for most models.
+        // If it does not, try to adjust the 3 parameters
+        //
+        double threshold = DBL_EPSILON; // 1.0E-3 EPS;
+        if (verbose)
+        {
+          printf("lossless iteration %d\n", iteration);
+        }
+
+        // remove vertices & mark deleted triangles
+        loopi(0, triangles.size())
+        {
+          Triangle &t = triangles[i];
+          if (t.err[3] > threshold)
+            continue;
+          if (t.deleted)
+            continue;
+          if (t.dirty)
+            continue;
+
+          loopj(0, 3) if (t.err[j] < threshold)
+          {
+            int i0 = t.v[j];
+            Vertex &v0 = vertices[i0];
+            int i1 = t.v[(j + 1) % 3];
+            Vertex &v1 = vertices[i1];
+
+            // Border check
+            if (v0.border != v1.border)
+              continue;
+
+            // Compute vertex to collapse to
+            vec3f p;
+            calculate_error(i0, i1, p);
+
+            deleted0.resize(v0.tcount); // normals temporarily
+            deleted1.resize(v1.tcount); // normals temporarily
+
+            // don't remove if flipped
+            if (flipped(p, i0, i1, v0, v1, deleted0))
+              continue;
+            if (flipped(p, i1, i0, v1, v0, deleted1))
+              continue;
+
+            if ((t.attr & TEXCOORD) == TEXCOORD)
+            {
+              update_uvs(i0, v0, p, deleted0);
+              update_uvs(i0, v1, p, deleted1);
+            }
+
+            // not flipped, so remove edge
+            v0.p = p;
+            v0.q = v1.q + v0.q;
+            int tstart = refs.size();
+
+            update_triangles(i0, v0, deleted0, deleted_triangles);
+            update_triangles(i0, v1, deleted1, deleted_triangles);
+
+            int tcount = refs.size() - tstart;
+
+            if (tcount <= v0.tcount)
+            {
+              // save ram
+              if (tcount)
+                memcpy(&refs[v0.tstart], &refs[tstart], tcount * sizeof(Ref));
+            }
+            else
+              // append
+              v0.tstart = tstart;
+
+            v0.tcount = tcount;
+            break;
+          }
+        }
+        if (deleted_triangles <= 0)
+          break;
+        deleted_triangles = 0;
+      } // for each iteration
+      // clean up mesh
+      compact_mesh();
+    } // simplify_mesh_lossless()
+
+    // Check if a triangle flips when this edge is removed
+
+    bool flipped(vec3f p, int i0, int i1, Vertex &v0, Vertex &v1, std::vector<int> &deleted)
+    {
+
+      loopk(0, v0.tcount)
+      {
+        Triangle &t = triangles[refs[v0.tstart + k].tid];
+        if (t.deleted)
+          continue;
+
+        int s = refs[v0.tstart + k].tvertex;
+        int id1 = t.v[(s + 1) % 3];
+        int id2 = t.v[(s + 2) % 3];
+
+        if (id1 == i1 || id2 == i1) // delete ?
+        {
+
+          deleted[k] = 1;
+          continue;
+        }
+        vec3f d1 = vertices[id1].p - p;
+        d1.normalize();
+        vec3f d2 = vertices[id2].p - p;
+        d2.normalize();
+        if (fabs(d1.dot(d2)) > 0.999)
+          return true;
+        vec3f n;
+        n.cross(d1, d2);
+        n.normalize();
+        deleted[k] = 0;
+        if (n.dot(t.n) < 0.2)
+          return true;
+      }
+      return false;
+    }
+
+    // update_uvs
+
+    void update_uvs(int i0, const Vertex &v, const vec3f &p, std::vector<int> &deleted)
+    {
+      loopk(0, v.tcount)
+      {
+        Ref &r = refs[v.tstart + k];
+        Triangle &t = triangles[r.tid];
+        if (t.deleted)
+          continue;
+        if (deleted[k])
+          continue;
+        vec3f p1 = vertices[t.v[0]].p;
+        vec3f p2 = vertices[t.v[1]].p;
+        vec3f p3 = vertices[t.v[2]].p;
+        t.uvs[r.tvertex] = interpolate(p, p1, p2, p3, t.uvs);
       }
     }
-    // clean up mesh
-    compact_mesh();
-  } // simplify_mesh()
 
-  void simplify_mesh_lossless(bool verbose = false)
-  {
-    // init
-    loopi(0, triangles.size()) triangles[i].deleted = 0;
+    // Update triangle connections and edge error after a edge is collapsed
 
-    // main iteration loop
-    int deleted_triangles = 0;
-    std::vector<int> deleted0, deleted1;
-    int triangle_count = triangles.size();
-    // int iteration = 0;
-    // loop(iteration,0,100)
-    for (int iteration = 0; iteration < 9999; iteration++)
+    void update_triangles(int i0, Vertex &v, std::vector<int> &deleted, int &deleted_triangles)
     {
-      // update mesh constantly
-      update_mesh(iteration);
-      // clear dirty flag
-      loopi(0, triangles.size()) triangles[i].dirty = 0;
-      //
-      // All triangles with edges below the threshold will be removed
-      //
-      // The following numbers works well for most models.
-      // If it does not, try to adjust the 3 parameters
-      //
-      double threshold = DBL_EPSILON; // 1.0E-3 EPS;
-      if (verbose)
+      vec3f p;
+      loopk(0, v.tcount)
       {
-        printf("lossless iteration %d\n", iteration);
+        Ref &r = refs[v.tstart + k];
+        Triangle &t = triangles[r.tid];
+        if (t.deleted)
+          continue;
+        if (deleted[k])
+        {
+          t.deleted = 1;
+          deleted_triangles++;
+          continue;
+        }
+        t.v[r.tvertex] = i0;
+        t.dirty = 1;
+        t.err[0] = calculate_error(t.v[0], t.v[1], p);
+        t.err[1] = calculate_error(t.v[1], t.v[2], p);
+        t.err[2] = calculate_error(t.v[2], t.v[0], p);
+        t.err[3] = min(t.err[0], min(t.err[1], t.err[2]));
+        refs.push_back(r);
+      }
+    }
+
+    // compact triangles, compute edge error and build reference list
+
+    void update_mesh(int iteration)
+    {
+      if (iteration > 0) // compact triangles
+      {
+        int dst = 0;
+        loopi(0, triangles.size()) if (!triangles[i].deleted)
+        {
+          triangles[dst++] = triangles[i];
+        }
+        triangles.resize(dst);
+      }
+      //
+
+      // Init Reference ID list
+      loopi(0, vertices.size())
+      {
+        vertices[i].tstart = 0;
+        vertices[i].tcount = 0;
       }
 
-      // remove vertices & mark deleted triangles
       loopi(0, triangles.size())
       {
         Triangle &t = triangles[i];
-        if (t.err[3] > threshold)
-          continue;
-        if (t.deleted)
-          continue;
-        if (t.dirty)
-          continue;
-
-        loopj(0, 3) if (t.err[j] < threshold)
-        {
-          int i0 = t.v[j];
-          Vertex &v0 = vertices[i0];
-          int i1 = t.v[(j + 1) % 3];
-          Vertex &v1 = vertices[i1];
-
-          // Border check
-          if (v0.border != v1.border)
-            continue;
-
-          // Compute vertex to collapse to
-          vec3f p;
-          calculate_error(i0, i1, p);
-
-          deleted0.resize(v0.tcount); // normals temporarily
-          deleted1.resize(v1.tcount); // normals temporarily
-
-          // don't remove if flipped
-          if (flipped(p, i0, i1, v0, v1, deleted0))
-            continue;
-          if (flipped(p, i1, i0, v1, v0, deleted1))
-            continue;
-
-          if ((t.attr & TEXCOORD) == TEXCOORD)
-          {
-            update_uvs(i0, v0, p, deleted0);
-            update_uvs(i0, v1, p, deleted1);
-          }
-
-          // not flipped, so remove edge
-          v0.p = p;
-          v0.q = v1.q + v0.q;
-          int tstart = refs.size();
-
-          update_triangles(i0, v0, deleted0, deleted_triangles);
-          update_triangles(i0, v1, deleted1, deleted_triangles);
-
-          int tcount = refs.size() - tstart;
-
-          if (tcount <= v0.tcount)
-          {
-            // save ram
-            if (tcount)
-              memcpy(&refs[v0.tstart], &refs[tstart], tcount * sizeof(Ref));
-          }
-          else
-            // append
-            v0.tstart = tstart;
-
-          v0.tcount = tcount;
-          break;
-        }
+        loopj(0, 3) vertices[t.v[j]].tcount++;
       }
-      if (deleted_triangles <= 0)
-        break;
-      deleted_triangles = 0;
-    } // for each iteration
-    // clean up mesh
-    compact_mesh();
-  } // simplify_mesh_lossless()
-
-  // Check if a triangle flips when this edge is removed
-
-  bool flipped(vec3f p, int i0, int i1, Vertex &v0, Vertex &v1, std::vector<int> &deleted)
-  {
-
-    loopk(0, v0.tcount)
-    {
-      Triangle &t = triangles[refs[v0.tstart + k].tid];
-      if (t.deleted)
-        continue;
-
-      int s = refs[v0.tstart + k].tvertex;
-      int id1 = t.v[(s + 1) % 3];
-      int id2 = t.v[(s + 2) % 3];
-
-      if (id1 == i1 || id2 == i1) // delete ?
-      {
-
-        deleted[k] = 1;
-        continue;
-      }
-      vec3f d1 = vertices[id1].p - p;
-      d1.normalize();
-      vec3f d2 = vertices[id2].p - p;
-      d2.normalize();
-      if (fabs(d1.dot(d2)) > 0.999)
-        return true;
-      vec3f n;
-      n.cross(d1, d2);
-      n.normalize();
-      deleted[k] = 0;
-      if (n.dot(t.n) < 0.2)
-        return true;
-    }
-    return false;
-  }
-
-  // update_uvs
-
-  void update_uvs(int i0, const Vertex &v, const vec3f &p, std::vector<int> &deleted)
-  {
-    loopk(0, v.tcount)
-    {
-      Ref &r = refs[v.tstart + k];
-      Triangle &t = triangles[r.tid];
-      if (t.deleted)
-        continue;
-      if (deleted[k])
-        continue;
-      vec3f p1 = vertices[t.v[0]].p;
-      vec3f p2 = vertices[t.v[1]].p;
-      vec3f p3 = vertices[t.v[2]].p;
-      t.uvs[r.tvertex] = interpolate(p, p1, p2, p3, t.uvs);
-    }
-  }
-
-  // Update triangle connections and edge error after a edge is collapsed
-
-  void update_triangles(int i0, Vertex &v, std::vector<int> &deleted, int &deleted_triangles)
-  {
-    vec3f p;
-    loopk(0, v.tcount)
-    {
-      Ref &r = refs[v.tstart + k];
-      Triangle &t = triangles[r.tid];
-      if (t.deleted)
-        continue;
-      if (deleted[k])
-      {
-        t.deleted = 1;
-        deleted_triangles++;
-        continue;
-      }
-      t.v[r.tvertex] = i0;
-      t.dirty = 1;
-      t.err[0] = calculate_error(t.v[0], t.v[1], p);
-      t.err[1] = calculate_error(t.v[1], t.v[2], p);
-      t.err[2] = calculate_error(t.v[2], t.v[0], p);
-      t.err[3] = min(t.err[0], min(t.err[1], t.err[2]));
-      refs.push_back(r);
-    }
-  }
-
-  // compact triangles, compute edge error and build reference list
-
-  void update_mesh(int iteration)
-  {
-    if (iteration > 0) // compact triangles
-    {
-      int dst = 0;
-      loopi(0, triangles.size()) if (!triangles[i].deleted)
-      {
-        triangles[dst++] = triangles[i];
-      }
-      triangles.resize(dst);
-    }
-    //
-
-    // Init Reference ID list
-    loopi(0, vertices.size())
-    {
-      vertices[i].tstart = 0;
-      vertices[i].tcount = 0;
-    }
-
-    loopi(0, triangles.size())
-    {
-      Triangle &t = triangles[i];
-      loopj(0, 3) vertices[t.v[j]].tcount++;
-    }
-    int tstart = 0;
-    loopi(0, vertices.size())
-    {
-      Vertex &v = vertices[i];
-      v.tstart = tstart;
-      tstart += v.tcount;
-      v.tcount = 0;
-    }
-
-    // Write References
-    refs.resize(triangles.size() * 3);
-    loopi(0, triangles.size())
-    {
-      Triangle &t = triangles[i];
-      loopj(0, 3)
-      {
-        Vertex &v = vertices[t.v[j]];
-        refs[v.tstart + v.tcount].tid = i;
-        refs[v.tstart + v.tcount].tvertex = j;
-        v.tcount++;
-      }
-    }
-
-    // Init Quadrics by Plane & Edge Errors
-    //
-    // required at the beginning ( iteration == 0 )
-    // recomputing during the simplification is not required,
-    // but mostly improves the result for closed meshes
-    //
-    if (iteration == 0)
-    {
-      // Identify boundary : vertices[].border=0,1
-
-      std::vector<int> vcount, vids;
-
-      loopi(0, vertices.size())
-          vertices[i]
-              .border = 0;
-
+      int tstart = 0;
       loopi(0, vertices.size())
       {
         Vertex &v = vertices[i];
-        vcount.clear();
-        vids.clear();
-        loopj(0, v.tcount)
-        {
-          int k = refs[v.tstart + j].tid;
-          Triangle &t = triangles[k];
-          loopk(0, 3)
-          {
-            int ofs = 0, id = t.v[k];
-            while (ofs < vcount.size())
-            {
-              if (vids[ofs] == id)
-                break;
-              ofs++;
-            }
-            if (ofs == vcount.size())
-            {
-              vcount.push_back(1);
-              vids.push_back(id);
-            }
-            else
-              vcount[ofs]++;
-          }
-        }
-        loopj(0, vcount.size()) if (vcount[j] == 1)
-            vertices[vids[j]]
-                .border = 1;
+        v.tstart = tstart;
+        tstart += v.tcount;
+        v.tcount = 0;
       }
-      // initialize errors
+
+      // Write References
+      refs.resize(triangles.size() * 3);
+      loopi(0, triangles.size())
+      {
+        Triangle &t = triangles[i];
+        loopj(0, 3)
+        {
+          Vertex &v = vertices[t.v[j]];
+          refs[v.tstart + v.tcount].tid = i;
+          refs[v.tstart + v.tcount].tvertex = j;
+          v.tcount++;
+        }
+      }
+
+      // Init Quadrics by Plane & Edge Errors
+      //
+      // required at the beginning ( iteration == 0 )
+      // recomputing during the simplification is not required,
+      // but mostly improves the result for closed meshes
+      //
+      if (iteration == 0)
+      {
+        // Identify boundary : vertices[].border=0,1
+
+        std::vector<int> vcount, vids;
+
+        loopi(0, vertices.size())
+            vertices[i]
+                .border = 0;
+
+        loopi(0, vertices.size())
+        {
+          Vertex &v = vertices[i];
+          vcount.clear();
+          vids.clear();
+          loopj(0, v.tcount)
+          {
+            int k = refs[v.tstart + j].tid;
+            Triangle &t = triangles[k];
+            loopk(0, 3)
+            {
+              int ofs = 0, id = t.v[k];
+              while (ofs < vcount.size())
+              {
+                if (vids[ofs] == id)
+                  break;
+                ofs++;
+              }
+              if (ofs == vcount.size())
+              {
+                vcount.push_back(1);
+                vids.push_back(id);
+              }
+              else
+                vcount[ofs]++;
+            }
+          }
+          loopj(0, vcount.size()) if (vcount[j] == 1)
+              vertices[vids[j]]
+                  .border = 1;
+        }
+        // initialize errors
+        loopi(0, vertices.size())
+            vertices[i]
+                .q = SymetricMatrix(0.0);
+
+        loopi(0, triangles.size())
+        {
+          Triangle &t = triangles[i];
+          vec3f n, p[3];
+          loopj(0, 3) p[j] = vertices[t.v[j]].p;
+          n.cross(p[1] - p[0], p[2] - p[0]);
+          n.normalize();
+          t.n = n;
+          loopj(0, 3) vertices[t.v[j]].q =
+              vertices[t.v[j]].q + SymetricMatrix(n.x, n.y, n.z, -n.dot(p[0]));
+        }
+        loopi(0, triangles.size())
+        {
+          // Calc Edge Error
+          Triangle &t = triangles[i];
+          vec3f p;
+          loopj(0, 3) t.err[j] = calculate_error(t.v[j], t.v[(j + 1) % 3], p);
+          t.err[3] = min(t.err[0], min(t.err[1], t.err[2]));
+        }
+      }
+    }
+
+    // Finally compact mesh before exiting
+
+    void compact_mesh()
+    {
+      int dst = 0;
       loopi(0, vertices.size())
-          vertices[i]
-              .q = SymetricMatrix(0.0);
-
-      loopi(0, triangles.size())
+      {
+        vertices[i].tcount = 0;
+      }
+      loopi(0, triangles.size()) if (!triangles[i].deleted)
       {
         Triangle &t = triangles[i];
-        vec3f n, p[3];
-        loopj(0, 3) p[j] = vertices[t.v[j]].p;
-        n.cross(p[1] - p[0], p[2] - p[0]);
-        n.normalize();
-        t.n = n;
-        loopj(0, 3) vertices[t.v[j]].q =
-            vertices[t.v[j]].q + SymetricMatrix(n.x, n.y, n.z, -n.dot(p[0]));
+        triangles[dst++] = t;
+        loopj(0, 3) vertices[t.v[j]].tcount = 1;
+      }
+      triangles.resize(dst);
+      dst = 0;
+      loopi(0, vertices.size()) if (vertices[i].tcount)
+      {
+        vertices[i].tstart = dst;
+        vertices[dst].p = vertices[i].p;
+        dst++;
       }
       loopi(0, triangles.size())
       {
-        // Calc Edge Error
         Triangle &t = triangles[i];
-        vec3f p;
-        loopj(0, 3) t.err[j] = calculate_error(t.v[j], t.v[(j + 1) % 3], p);
-        t.err[3] = min(t.err[0], min(t.err[1], t.err[2]));
+        loopj(0, 3) t.v[j] = vertices[t.v[j]].tstart;
       }
+      vertices.resize(dst);
     }
-  }
 
-  // Finally compact mesh before exiting
+    // Error between vertex and Quadric
 
-  void compact_mesh()
-  {
-    int dst = 0;
-    loopi(0, vertices.size())
+    double vertex_error(SymetricMatrix q, double x, double y, double z)
     {
-      vertices[i].tcount = 0;
+      return q[0] * x * x + 2 * q[1] * x * y + 2 * q[2] * x * z + 2 * q[3] * x + q[4] * y * y + 2 * q[5] * y * z + 2 * q[6] * y + q[7] * z * z + 2 * q[8] * z + q[9];
     }
-    loopi(0, triangles.size()) if (!triangles[i].deleted)
+
+    // Error for one edge
+
+    double calculate_error(int id_v1, int id_v2, vec3f &p_result)
     {
-      Triangle &t = triangles[i];
-      triangles[dst++] = t;
-      loopj(0, 3) vertices[t.v[j]].tcount = 1;
+      // compute interpolated vertex
+
+      SymetricMatrix q = vertices[id_v1].q + vertices[id_v2].q;
+      bool border = vertices[id_v1].border & vertices[id_v2].border;
+      double error = 0;
+      double det = q.det(0, 1, 2, 1, 4, 5, 2, 5, 7);
+      if (det != 0 && !border)
+      {
+
+        // q_delta is invertible
+        p_result.x = -1 / det * (q.det(1, 2, 3, 4, 5, 6, 5, 7, 8)); // vx = A41/det(q_delta)
+        p_result.y = 1 / det * (q.det(0, 2, 3, 1, 5, 6, 2, 7, 8));  // vy = A42/det(q_delta)
+        p_result.z = -1 / det * (q.det(0, 1, 3, 1, 4, 6, 2, 5, 8)); // vz = A43/det(q_delta)
+
+        error = vertex_error(q, p_result.x, p_result.y, p_result.z);
+      }
+      else
+      {
+        // det = 0 -> try to find best result
+        vec3f p1 = vertices[id_v1].p;
+        vec3f p2 = vertices[id_v2].p;
+        vec3f p3 = (p1 + p2) / 2;
+        double error1 = vertex_error(q, p1.x, p1.y, p1.z);
+        double error2 = vertex_error(q, p2.x, p2.y, p2.z);
+        double error3 = vertex_error(q, p3.x, p3.y, p3.z);
+        error = min(error1, min(error2, error3));
+        if (error1 == error)
+          p_result = p1;
+        if (error2 == error)
+          p_result = p2;
+        if (error3 == error)
+          p_result = p3;
+      }
+      return error;
     }
-    triangles.resize(dst);
-    dst = 0;
-    loopi(0, vertices.size()) if (vertices[i].tcount)
+
+    char *trimwhitespace(char *str)
     {
-      vertices[i].tstart = dst;
-      vertices[dst].p = vertices[i].p;
-      dst++;
-    }
-    loopi(0, triangles.size())
-    {
-      Triangle &t = triangles[i];
-      loopj(0, 3) t.v[j] = vertices[t.v[j]].tstart;
-    }
-    vertices.resize(dst);
-  }
+      char *end;
 
-  // Error between vertex and Quadric
+      // Trim leading space
+      while (isspace((unsigned char)*str))
+        str++;
 
-  double vertex_error(SymetricMatrix q, double x, double y, double z)
-  {
-    return q[0] * x * x + 2 * q[1] * x * y + 2 * q[2] * x * z + 2 * q[3] * x + q[4] * y * y + 2 * q[5] * y * z + 2 * q[6] * y + q[7] * z * z + 2 * q[8] * z + q[9];
-  }
+      if (*str == 0) // All spaces?
+        return str;
 
-  // Error for one edge
+      // Trim trailing space
+      end = str + strlen(str) - 1;
+      while (end > str && isspace((unsigned char)*end))
+        end--;
 
-  double calculate_error(int id_v1, int id_v2, vec3f &p_result)
-  {
-    // compute interpolated vertex
+      // Write new null terminator
+      *(end + 1) = 0;
 
-    SymetricMatrix q = vertices[id_v1].q + vertices[id_v2].q;
-    bool border = vertices[id_v1].border & vertices[id_v2].border;
-    double error = 0;
-    double det = q.det(0, 1, 2, 1, 4, 5, 2, 5, 7);
-    if (det != 0 && !border)
-    {
-
-      // q_delta is invertible
-      p_result.x = -1 / det * (q.det(1, 2, 3, 4, 5, 6, 5, 7, 8)); // vx = A41/det(q_delta)
-      p_result.y = 1 / det * (q.det(0, 2, 3, 1, 5, 6, 2, 7, 8));  // vy = A42/det(q_delta)
-      p_result.z = -1 / det * (q.det(0, 1, 3, 1, 4, 6, 2, 5, 8)); // vz = A43/det(q_delta)
-
-      error = vertex_error(q, p_result.x, p_result.y, p_result.z);
-    }
-    else
-    {
-      // det = 0 -> try to find best result
-      vec3f p1 = vertices[id_v1].p;
-      vec3f p2 = vertices[id_v2].p;
-      vec3f p3 = (p1 + p2) / 2;
-      double error1 = vertex_error(q, p1.x, p1.y, p1.z);
-      double error2 = vertex_error(q, p2.x, p2.y, p2.z);
-      double error3 = vertex_error(q, p3.x, p3.y, p3.z);
-      error = min(error1, min(error2, error3));
-      if (error1 == error)
-        p_result = p1;
-      if (error2 == error)
-        p_result = p2;
-      if (error3 == error)
-        p_result = p3;
-    }
-    return error;
-  }
-
-  char *trimwhitespace(char *str)
-  {
-    char *end;
-
-    // Trim leading space
-    while (isspace((unsigned char)*str))
-      str++;
-
-    if (*str == 0) // All spaces?
       return str;
-
-    // Trim trailing space
-    end = str + strlen(str) - 1;
-    while (end > str && isspace((unsigned char)*end))
-      end--;
-
-    // Write new null terminator
-    *(end + 1) = 0;
-
-    return str;
-  }
-
-  // Option : Load OBJ
-  void load_obj(const char *filename, bool process_uv = false)
-  {
-    vertices.clear();
-    triangles.clear();
-    // printf ( "Loading Objects %s ... \n",filename);
-    FILE *fn;
-    if (filename == NULL)
-      return;
-    if ((char)filename[0] == 0)
-      return;
-    if ((fn = fopen(filename, "rb")) == NULL)
-    {
-      printf("File %s not found!\n", filename);
-      return;
     }
-    char line[1000];
-    memset(line, 0, 1000);
-    int vertex_cnt = 0;
-    int material = -1;
-    std::map<std::string, int> material_map;
-    std::vector<vec3f> uvs;
-    std::vector<std::vector<int>> uvMap;
 
-    while (fgets(line, 1000, fn) != NULL)
+    // Option : Load OBJ
+    void load_obj(const char *filename, bool process_uv = false)
     {
-      Vertex v;
-      vec3f uv;
+      vertices.clear();
+      triangles.clear();
+      // printf ( "Loading Objects %s ... \n",filename);
+      FILE *fn;
+      if (filename == NULL)
+        return;
+      if ((char)filename[0] == 0)
+        return;
+      if ((fn = fopen(filename, "rb")) == NULL)
+      {
+        printf("File %s not found!\n", filename);
+        return;
+      }
+      char line[1000];
+      memset(line, 0, 1000);
+      int vertex_cnt = 0;
+      int material = -1;
+      std::map<std::string, int> material_map;
+      std::vector<vec3f> uvs;
+      std::vector<std::vector<int>> uvMap;
 
-      if (strncmp(line, "mtllib", 6) == 0)
+      while (fgets(line, 1000, fn) != NULL)
       {
-        mtllib = trimwhitespace(&line[7]);
-      }
-      if (strncmp(line, "usemtl", 6) == 0)
-      {
-        std::string usemtl = trimwhitespace(&line[7]);
-        if (material_map.find(usemtl) == material_map.end())
-        {
-          material_map[usemtl] = materials.size();
-          materials.push_back(usemtl);
-        }
-        material = material_map[usemtl];
-      }
+        Vertex v;
+        vec3f uv;
 
-      if (line[0] == 'v' && line[1] == 't')
-      {
-        if (line[2] == ' ')
-          if (sscanf(line, "vt %lf %lf",
-                     &uv.x, &uv.y) == 2)
+        if (strncmp(line, "mtllib", 6) == 0)
+        {
+          mtllib = trimwhitespace(&line[7]);
+        }
+        if (strncmp(line, "usemtl", 6) == 0)
+        {
+          std::string usemtl = trimwhitespace(&line[7]);
+          if (material_map.find(usemtl) == material_map.end())
           {
-            uv.z = 0;
-            uvs.push_back(uv);
+            material_map[usemtl] = materials.size();
+            materials.push_back(usemtl);
           }
-          else if (sscanf(line, "vt %lf %lf %lf",
-                          &uv.x, &uv.y, &uv.z) == 3)
-          {
-            uvs.push_back(uv);
-          }
-      }
-      else if (line[0] == 'v')
-      {
-        if (line[1] == ' ')
-          if (sscanf(line, "v %lf %lf %lf",
-                     &v.p.x, &v.p.y, &v.p.z) == 3)
-          {
-            vertices.push_back(v);
-          }
-      }
-      int integers[9];
-      if (line[0] == 'f')
-      {
-        Triangle t;
-        bool tri_ok = false;
-        bool has_uv = false;
+          material = material_map[usemtl];
+        }
 
-        if (sscanf(line, "f %d %d %d",
-                   &integers[0], &integers[1], &integers[2]) == 3)
+        if (line[0] == 'v' && line[1] == 't')
         {
-          tri_ok = true;
+          if (line[2] == ' ')
+            if (sscanf(line, "vt %lf %lf",
+                       &uv.x, &uv.y) == 2)
+            {
+              uv.z = 0;
+              uvs.push_back(uv);
+            }
+            else if (sscanf(line, "vt %lf %lf %lf",
+                            &uv.x, &uv.y, &uv.z) == 3)
+            {
+              uvs.push_back(uv);
+            }
         }
-        else if (sscanf(line, "f %d// %d// %d//",
-                        &integers[0], &integers[1], &integers[2]) == 3)
+        else if (line[0] == 'v')
         {
-          tri_ok = true;
+          if (line[1] == ' ')
+            if (sscanf(line, "v %lf %lf %lf",
+                       &v.p.x, &v.p.y, &v.p.z) == 3)
+            {
+              vertices.push_back(v);
+            }
         }
-        else if (sscanf(line, "f %d//%d %d//%d %d//%d",
-                        &integers[0], &integers[3],
-                        &integers[1], &integers[4],
-                        &integers[2], &integers[5]) == 6)
+        int integers[9];
+        if (line[0] == 'f')
         {
-          tri_ok = true;
-        }
-        else if (sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d",
-                        &integers[0], &integers[6], &integers[3],
-                        &integers[1], &integers[7], &integers[4],
-                        &integers[2], &integers[8], &integers[5]) == 9)
-        {
-          tri_ok = true;
-          has_uv = true;
-        }
-        else // Add Support for v/vt only meshes
-          if (sscanf(line, "f %d/%d %d/%d %d/%d",
-                     &integers[0], &integers[6],
-                     &integers[1], &integers[7],
-                     &integers[2], &integers[8]) == 6)
+          Triangle t;
+          bool tri_ok = false;
+          bool has_uv = false;
+
+          if (sscanf(line, "f %d %d %d",
+                     &integers[0], &integers[1], &integers[2]) == 3)
+          {
+            tri_ok = true;
+          }
+          else if (sscanf(line, "f %d// %d// %d//",
+                          &integers[0], &integers[1], &integers[2]) == 3)
+          {
+            tri_ok = true;
+          }
+          else if (sscanf(line, "f %d//%d %d//%d %d//%d",
+                          &integers[0], &integers[3],
+                          &integers[1], &integers[4],
+                          &integers[2], &integers[5]) == 6)
+          {
+            tri_ok = true;
+          }
+          else if (sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d",
+                          &integers[0], &integers[6], &integers[3],
+                          &integers[1], &integers[7], &integers[4],
+                          &integers[2], &integers[8], &integers[5]) == 9)
           {
             tri_ok = true;
             has_uv = true;
           }
-          else
+          else // Add Support for v/vt only meshes
+            if (sscanf(line, "f %d/%d %d/%d %d/%d",
+                       &integers[0], &integers[6],
+                       &integers[1], &integers[7],
+                       &integers[2], &integers[8]) == 6)
+            {
+              tri_ok = true;
+              has_uv = true;
+            }
+            else
+            {
+              printf("unrecognized sequence\n");
+              printf("%s\n", line);
+              while (1)
+                ;
+            }
+          if (tri_ok)
           {
-            printf("unrecognized sequence\n");
-            printf("%s\n", line);
-            while (1)
-              ;
-          }
-        if (tri_ok)
-        {
-          t.v[0] = integers[0] - 1 - vertex_cnt;
-          t.v[1] = integers[1] - 1 - vertex_cnt;
-          t.v[2] = integers[2] - 1 - vertex_cnt;
-          t.attr = 0;
+            t.v[0] = integers[0] - 1 - vertex_cnt;
+            t.v[1] = integers[1] - 1 - vertex_cnt;
+            t.v[2] = integers[2] - 1 - vertex_cnt;
+            t.attr = 0;
 
-          if (process_uv && has_uv)
-          {
-            std::vector<int> indices;
-            indices.push_back(integers[6] - 1 - vertex_cnt);
-            indices.push_back(integers[7] - 1 - vertex_cnt);
-            indices.push_back(integers[8] - 1 - vertex_cnt);
-            uvMap.push_back(indices);
-            t.attr |= TEXCOORD;
-          }
+            if (process_uv && has_uv)
+            {
+              std::vector<int> indices;
+              indices.push_back(integers[6] - 1 - vertex_cnt);
+              indices.push_back(integers[7] - 1 - vertex_cnt);
+              indices.push_back(integers[8] - 1 - vertex_cnt);
+              uvMap.push_back(indices);
+              t.attr |= TEXCOORD;
+            }
 
-          t.material = material;
-          // geo.triangles.push_back ( tri );
-          triangles.push_back(t);
-          // state_before = state;
-          // state ='f';
+            t.material = material;
+            // geo.triangles.push_back ( tri );
+            triangles.push_back(t);
+            // state_before = state;
+            // state ='f';
+          }
         }
       }
-    }
 
-    if (process_uv && uvs.size())
-    {
-      loopi(0, triangles.size())
+      if (process_uv && uvs.size())
       {
-        loopj(0, 3)
-            triangles[i]
-                .uvs[j] = uvs[uvMap[i][j]];
+        loopi(0, triangles.size())
+        {
+          loopj(0, 3)
+              triangles[i]
+                  .uvs[j] = uvs[uvMap[i][j]];
+        }
       }
-    }
 
-    fclose(fn);
+      fclose(fn);
 
-    // printf("load_obj: vertices = %lu, triangles = %lu, uvs = %lu\n", vertices.size(), triangles.size(), uvs.size() );
-  } // load_obj()
+      // printf("load_obj: vertices = %lu, triangles = %lu, uvs = %lu\n", vertices.size(), triangles.size(), uvs.size() );
+    } // load_obj()
 
-  // Optional : Store as OBJ
+    // Optional : Store as OBJ
 
-  void write_obj(const char *filename)
-  {
-    FILE *file = fopen(filename, "w");
-    int cur_material = -1;
-    bool has_uv = (triangles.size() && (triangles[0].attr & TEXCOORD) == TEXCOORD);
-
-    if (!file)
+    void write_obj(const char *filename)
     {
-      printf("write_obj: can't write data file \"%s\".\n", filename);
-      exit(0);
-    }
-    if (!mtllib.empty())
-    {
-      fprintf(file, "mtllib %s\n", mtllib.c_str());
-    }
-    loopi(0, vertices.size())
-    {
-      // fprintf(file, "v %lf %lf %lf\n", vertices[i].p.x,vertices[i].p.y,vertices[i].p.z);
-      fprintf(file, "v %g %g %g\n", vertices[i].p.x, vertices[i].p.y, vertices[i].p.z); // more compact: remove trailing zeros
-    }
-    if (has_uv)
-    {
-      loopi(0, triangles.size()) if (!triangles[i].deleted)
+      FILE *file = fopen(filename, "w");
+      int cur_material = -1;
+      bool has_uv = (triangles.size() && (triangles[0].attr & TEXCOORD) == TEXCOORD);
+
+      if (!file)
       {
-        fprintf(file, "vt %g %g\n", triangles[i].uvs[0].x, triangles[i].uvs[0].y);
-        fprintf(file, "vt %g %g\n", triangles[i].uvs[1].x, triangles[i].uvs[1].y);
-        fprintf(file, "vt %g %g\n", triangles[i].uvs[2].x, triangles[i].uvs[2].y);
+        printf("write_obj: can't write data file \"%s\".\n", filename);
+        exit(0);
       }
-    }
-    int uv = 1;
-    loopi(0, triangles.size()) if (!triangles[i].deleted)
-    {
+      if (!mtllib.empty())
+      {
+        fprintf(file, "mtllib %s\n", mtllib.c_str());
+      }
+      loopi(0, vertices.size())
+      {
+        // fprintf(file, "v %lf %lf %lf\n", vertices[i].p.x,vertices[i].p.y,vertices[i].p.z);
+        fprintf(file, "v %g %g %g\n", vertices[i].p.x, vertices[i].p.y, vertices[i].p.z); // more compact: remove trailing zeros
+      }
       if (has_uv)
       {
-        fprintf(file, "f %d/%d %d/%d %d/%d\n", triangles[i].v[0] + 1, uv, triangles[i].v[1] + 1, uv + 1, triangles[i].v[2] + 1, uv + 2);
-        uv += 3;
+        loopi(0, triangles.size()) if (!triangles[i].deleted)
+        {
+          fprintf(file, "vt %g %g\n", triangles[i].uvs[0].x, triangles[i].uvs[0].y);
+          fprintf(file, "vt %g %g\n", triangles[i].uvs[1].x, triangles[i].uvs[1].y);
+          fprintf(file, "vt %g %g\n", triangles[i].uvs[2].x, triangles[i].uvs[2].y);
+        }
       }
-      else
+      int uv = 1;
+      loopi(0, triangles.size()) if (!triangles[i].deleted)
       {
-        fprintf(file, "f %d %d %d\n", triangles[i].v[0] + 1, triangles[i].v[1] + 1, triangles[i].v[2] + 1);
+        if (has_uv)
+        {
+          fprintf(file, "f %d/%d %d/%d %d/%d\n", triangles[i].v[0] + 1, uv, triangles[i].v[1] + 1, uv + 1, triangles[i].v[2] + 1, uv + 2);
+          uv += 3;
+        }
+        else
+        {
+          fprintf(file, "f %d %d %d\n", triangles[i].v[0] + 1, triangles[i].v[1] + 1, triangles[i].v[2] + 1);
+        }
+        // fprintf(file, "f %d// %d// %d//\n", triangles[i].v[0]+1, triangles[i].v[1]+1, triangles[i].v[2]+1); //more compact: remove trailing zeros
       }
-      // fprintf(file, "f %d// %d// %d//\n", triangles[i].v[0]+1, triangles[i].v[1]+1, triangles[i].v[2]+1); //more compact: remove trailing zeros
+      fclose(file);
     }
-    fclose(file);
-  }
-};
+  };
+
+}
 ///////////////////////////////////////////

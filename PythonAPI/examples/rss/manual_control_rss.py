@@ -135,6 +135,7 @@ class World(object):
 
     def __init__(self, carla_world, args):
         self.world = carla_world
+        self.sync = args.sync
         self.actor_role_name = args.rolename
         self.dim = (args.width, args.height)
         try:
@@ -161,10 +162,7 @@ class World(object):
             sys.exit(1)
 
         self.restart()
-        self.world_tick_id = self.world.on_tick(self.on_world_tick)
-
-    def on_world_tick(self, world_snapshot):
-        self.hud.on_world_tick(world_snapshot)
+        self.world_tick_id = self.world.on_tick(self.hud.on_world_tick)
 
     def toggle_pause(self):
         settings = self.world.get_settings()
@@ -234,6 +232,11 @@ class World(object):
         self.rss_bounding_box_visualizer = RssBoundingBoxVisualizer(self.dim, self.world, self.camera.sensor)
         self.rss_sensor = RssSensor(self.player, self.world,
                                     self.rss_unstructured_scene_visualizer, self.rss_bounding_box_visualizer, self.hud.rss_state_visualizer)
+
+        if self.sync:
+            self.world.tick()
+        else:
+            self.world.wait_for_tick()
 
     def tick(self, clock):
         self.hud.tick(self.player, clock)
@@ -384,7 +387,7 @@ class VehicleControl(object):
         print('\nReceived signal {}. Trigger stopping...'.format(signum))
         VehicleControl.signal_received = True
 
-    def parse_events(self, world, clock):
+    def parse_events(self, world, clock, sync_mode):
         if VehicleControl.signal_received:
             print('\nAccepted signal. Stopping loop...')
             return True
@@ -806,13 +809,27 @@ def game_loop(args):
             (args.width, args.height),
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
-        world = World(client.get_world(), args)
+        sim_world = client.get_world()
+        original_settings = sim_world.get_settings()
+        settings = sim_world.get_settings()
+        if args.sync != settings.synchronous_mode:
+            args.sync = True
+            settings.synchronous_mode = True
+            settings.fixed_delta_seconds = 0.05
+            sim_world.apply_settings(settings)
+
+            traffic_manager = client.get_trafficmanager()
+            traffic_manager.set_synchronous_mode(True)
+
+        world = World(sim_world, args)
         controller = VehicleControl(world, args.autopilot)
 
         clock = pygame.time.Clock()
         while True:
+            if args.sync:
+                sim_world.tick()
             clock.tick_busy_loop(60)
-            if controller.parse_events(world, clock):
+            if controller.parse_events(world, clock, args.sync):
                 return
             world.tick(clock)
             world.render(display)
@@ -875,6 +892,10 @@ def main():
         '--externalActor',
         action='store_true',
         help='attaches to externally created actor by role name')
+    argparser.add_argument(
+        '--sync',
+        action='store_true',
+        help='Activate synchronous mode execution')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]

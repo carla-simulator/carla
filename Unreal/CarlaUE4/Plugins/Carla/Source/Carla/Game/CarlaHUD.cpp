@@ -6,6 +6,8 @@
 
 #include "CarlaHUD.h"
 
+#include "GameFramework/PlayerController.h"
+
 void ACarlaHUD::DrawHUD()
 {
   Super::DrawHUD();

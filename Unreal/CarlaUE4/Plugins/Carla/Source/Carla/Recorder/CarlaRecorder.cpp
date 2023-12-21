@@ -17,6 +17,8 @@
 #include "Carla/Walker/WalkerControl.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Components/BoxComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "VehicleAnimInstance.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/rpc/VehicleLightState.h"
@@ -207,50 +209,42 @@ void ACarlaRecorder::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
     return;
   if (CarlaActor->GetActorType() != FCarlaActor::ActorType::Vehicle)
     return;
+
   ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-  check(CarlaVehicle != nullptr)
+  if (CarlaVehicle == nullptr)
+    return;
+
   USkeletalMeshComponent* SkeletalMesh = CarlaVehicle->GetMesh();
-  check(SkeletalMesh != nullptr)
+  if (SkeletalMesh == nullptr)
+    return;
+
   UVehicleAnimInstance* VehicleAnim = Cast<UVehicleAnimInstance>(SkeletalMesh->GetAnimInstance());
-  check(VehicleAnim != nullptr)
+  if (VehicleAnim == nullptr)
+    return;
+
   const UWheeledVehicleMovementComponent* WheeledVehicleMovementComponent = VehicleAnim->GetWheeledVehicleMovementComponent();
-  check(WheeledVehicleMovementComponent != nullptr)
+  if (WheeledVehicleMovementComponent == nullptr)
+    return;
 
   CarlaRecorderAnimWheels Record;
   Record.DatabaseId = CarlaActor->GetActorId();
+  Record.WheelValues.reserve(WheeledVehicleMovementComponent->Wheels.Num());
 
-  WheelInfo FL;
-  FL.Location = EVehicleWheelLocation::FL_Wheel;
-  FL.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(FL.Location);
-  FL.TireRotation = WheeledVehicleMovementComponent->Wheels[static_cast<uint8>(FL.Location)]->GetRotationAngle();
-
-  WheelInfo FR;
-  FR.Location = EVehicleWheelLocation::FR_Wheel;
-  FR.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(FR.Location);
-  FR.TireRotation = WheeledVehicleMovementComponent->Wheels[static_cast<uint8>(FR.Location)]->GetRotationAngle();
-
-  WheelInfo BL;
-  BL.Location = EVehicleWheelLocation::BL_Wheel;
-  BL.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(BL.Location);
-  BL.TireRotation = WheeledVehicleMovementComponent->Wheels[static_cast<uint8>(BL.Location)]->GetRotationAngle();
-
-  WheelInfo BR;
-  BR.Location = EVehicleWheelLocation::BR_Wheel;
-  BR.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(BR.Location);
-  BR.TireRotation = WheeledVehicleMovementComponent->Wheels[static_cast<uint8>(BR.Location)]->GetRotationAngle();
-
-  Record.WheelValues.reserve(4);
-  Record.WheelValues.push_back(FL);
-  Record.WheelValues.push_back(FR);
-  Record.WheelValues.push_back(BL);
-  Record.WheelValues.push_back(BR);
+  uint8 i = 0;
+  for (auto Wheel : WheeledVehicleMovementComponent->Wheels)
+  {
+    WheelInfo Info;
+    Info.Location = static_cast<EVehicleWheelLocation>(i);
+    Info.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(Info.Location);
+    Info.TireRotation = Wheel->GetRotationAngle();
+    Record.WheelValues.push_back(Info);
+    ++i;
+  }
 
   AddAnimVehicleWheels(Record);
 
   if (CarlaVehicle->IsTwoWheeledVehicle())
   {
-
-
     AddAnimBiker(CarlaRecorderAnimBiker
     {
       CarlaActor->GetActorId(),
@@ -308,6 +302,15 @@ void ACarlaRecorder::AddVehicleLight(FCarlaActor *CarlaActor)
   LightVehicle.DatabaseId = CarlaActor->GetActorId();
   LightVehicle.State = carla::rpc::VehicleLightState(LightState).light_state;
   AddLightVehicle(LightVehicle);
+}
+
+void ACarlaRecorder::AddVehicleDoor(const ACarlaWheeledVehicle &Vehicle, const EVehicleDoor SDoors, bool bIsOpen)
+{
+  CarlaRecorderDoorVehicle DoorVehicle;
+  DoorVehicle.DatabaseId = Episode->GetActorRegistry().FindCarlaActor(&Vehicle)->GetActorId();
+  DoorVehicle.Doors = static_cast<CarlaRecorderDoorVehicle::VehicleDoorType>(SDoors);
+  DoorVehicle.bIsOpen = bIsOpen;
+  AddDoorVehicle(DoorVehicle);
 }
 
 void ACarlaRecorder::AddActorKinematics(FCarlaActor *CarlaActor)
@@ -484,6 +487,7 @@ void ACarlaRecorder::Clear(void)
   PhysicsControls.Clear();
   TrafficLightTimes.Clear();
   WalkersBones.Clear();
+  DoorVehicles.Clear();
   Wheels.Clear();
   Bikers.Clear();
 }
@@ -502,6 +506,7 @@ void ACarlaRecorder::Write(double DeltaSeconds)
   EventsDel.Write(File);
   EventsParent.Write(File);
   Collisions.Write(File);
+  DoorVehicles.Write(File);
 
   // positions and states
   Positions.Write(File);
@@ -655,6 +660,14 @@ void ACarlaRecorder::AddLightVehicle(const CarlaRecorderLightVehicle &LightVehic
   if (Enabled)
   {
     LightVehicles.Add(LightVehicle);
+  }
+}
+
+void ACarlaRecorder::AddDoorVehicle(const CarlaRecorderDoorVehicle &DoorVehicle)
+{
+  if (Enabled)
+  {
+    DoorVehicles.Add(DoorVehicle);
   }
 }
 
