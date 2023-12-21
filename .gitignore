@@ -42,7 +42,6 @@ Unreal/CarlaUE4/Plugins/HoudiniEngine
 .idea
 .tags*
 .vs
-.vscode
 __pycache__
 _benchmarks_results
 _images*
