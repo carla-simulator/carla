@@ -9,6 +9,7 @@
 #include "CoreGlobals.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/ImageWriteQueue/Public/ImagePixelData.h"
+#include "RHIDefinitions.h"
 
 #ifdef _WIN32
   #define WIN32_LEAN_AND_MEAN

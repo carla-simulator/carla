@@ -524,7 +524,7 @@ CARLA_UE_DEPENDENCIES = [
     'StreetMap',
     GitRepository(
       'https://github.com/carla-simulator/StreetMap.git',
-      tag_or_branch = 'ue5.3')),
+      tag_or_branch = 'UE5Native')),
 ]
 
 

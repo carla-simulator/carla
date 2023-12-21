@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
+#include "EngineMinimal.h"
+
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCarlaTools, Log, All);
 

@@ -37,9 +37,10 @@ void AWalkerController::OnPossess(APawn *InPawn)
     UE_LOG(LogCarla, Error, TEXT("Walker missing character movement component!"));
     return;
   }
-
-  MovementComponent->MaxWalkSpeed = GetMaximumWalkSpeed();
-  MovementComponent->JumpZVelocity = 500.0f;
+#if 0 //@ Carla UE5
+ // MovementComponent->MaxWalkSpeed = GetMaximumWalkSpeed();
+ // MovementComponent->JumpZVelocity = 500.0f;
+#endif
   CurrentCharacter->JumpMaxCount = 2;
 }
 
