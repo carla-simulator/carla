@@ -16,13 +16,10 @@
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "Engine/StreamableManager.h"
 #include "Engine/StaticMeshActor.h"
+#include "Engine/Blueprint.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Engine/DecalActor.h"
 #include "Components/DecalComponent.h"
-
-#ifdef GetObject
-    #undef GetObject
-#endif
 
 ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
 {
@@ -39,7 +36,7 @@ ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
   static ConstructorHelpers::FObjectFinder<UBlueprint> RoadPainterBlueprint(TEXT(
     "Blueprint'/Game/Carla/Blueprints/LevelDesign/RoadPainterPreset.RoadPainterPreset'"));
 
-  RoadPainterSubclass = (UClass*)RoadPainterBlueprint.GetObject()->GeneratedClass;
+  RoadPainterSubclass = (UClass*)RoadPainterBlueprint.Object->GeneratedClass;
 
   // Dirt
   DecalNamesMap.Add("dirt1", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_01.DI_RoadDirt_01'");

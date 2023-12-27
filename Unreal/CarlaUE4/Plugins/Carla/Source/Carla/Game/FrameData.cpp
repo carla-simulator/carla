@@ -434,7 +434,7 @@ void FFrameData::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
   if (VehicleAnim == nullptr)
     return;
 
-  auto* WheeledVehicleMovementComponent = VehicleAnim->GetVehicleMovementComponent();
+  auto* WheeledVehicleMovementComponent = VehicleAnim->GetWheeledVehicleComponent();
   if (WheeledVehicleMovementComponent == nullptr)
     return;
 
@@ -445,11 +445,11 @@ void FFrameData::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
   uint8 i = 0;
   for (auto Wheel : WheeledVehicleMovementComponent->Wheels)
   {
-    WheelInfo Info;
-    Info.Location = static_cast<EVehicleWheelLocation>(i);
-    Info.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(Info.Location);
-    Info.TireRotation = Wheel->GetRotationAngle();
-    Record.WheelValues.push_back(Info);
+    WheelInfo WInfo;
+    WInfo.Location = static_cast<EVehicleWheelLocation>(i);
+    WInfo.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(WInfo.Location);
+    WInfo.TireRotation = Wheel->GetRotationAngle();
+    Record.WheelValues.push_back(WInfo);
     ++i;
   }
 
@@ -1008,23 +1008,25 @@ void FFrameData::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle)
 void FFrameData::ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels VehicleAnimWheels)
 {
   check(Episode != nullptr)
-  FCarlaActor *CarlaActor = Episode->FindCarlaActor(VehicleAnimWheels.DatabaseId);
+  auto CarlaActor = Episode->FindCarlaActor(VehicleAnimWheels.DatabaseId);
   if (CarlaActor == nullptr)
     return;
   if (CarlaActor->GetActorType() != FCarlaActor::ActorType::Vehicle)
     return;
-  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+  auto CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
   check(CarlaVehicle != nullptr)
-  USkeletalMeshComponent* SkeletalMesh = CarlaVehicle->GetMesh();
+  auto SkeletalMesh = CarlaVehicle->GetMesh();
   check(SkeletalMesh != nullptr)
-  UVehicleAnimInstance* VehicleAnim = Cast<UVehicleAnimInstance>(SkeletalMesh->GetAnimInstance());
+  auto VehicleAnim = Cast<UVehicleAnimationInstance>(SkeletalMesh->GetAnimInstance());
   check(VehicleAnim != nullptr)
 
   for (uint32_t i = 0; i < VehicleAnimWheels.WheelValues.size(); ++i)
   {
     const WheelInfo& Element = VehicleAnimWheels.WheelValues[i];
+#if 0 // @CARLAUE5
     VehicleAnim->SetWheelRotYaw(static_cast<uint8>(Element.Location), Element.SteeringAngle);
     VehicleAnim->SetWheelPitchAngle(static_cast<uint8>(Element.Location), Element.TireRotation);
+#endif
   }
 }
 

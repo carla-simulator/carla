@@ -6,7 +6,7 @@
 
 #include "TaggedComponent.h"
 #include "Carla.h"
-#include "ConstructorHelpers.h"
+#include "UObject/ConstructorHelpers.h"
 
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "SkeletalRenderPublic.h"
@@ -116,14 +116,14 @@ FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(UStaticMeshComponent *
     return NULL;
   }
 
-  if (StaticMesh->RenderData == NULL)
+  if (StaticMesh->GetRenderData() == NULL)
   {
     UE_LOG(LogCarla, Error, TEXT("Failed to create scene proxy for static mesh component (because render data is null): %s"), *StaticMeshComponent->GetReadableName());
     return NULL;
   }
 
 
-  if (StaticMesh->RenderData->LODResources.Num() == 0)
+  if (StaticMesh->GetRenderData()->LODResources.Num() == 0)
   {
     UE_LOG(LogCarla, Error, TEXT("Failed to create scene proxy for static mesh component (because num LOD resources is 0): %s"), *StaticMeshComponent->GetReadableName());
     return NULL;
@@ -150,7 +150,7 @@ FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(USkeletalMeshComponent
 		// Only create a scene proxy if the bone count being used is supported, or if we don't have a skeleton (this is the case with destructibles)
 		int32 MinLODIndex = SkeletalMeshComponent->ComputeMinLOD();
 		int32 MaxBonesPerChunk = SkelMeshRenderData->GetMaxBonesPerSection(MinLODIndex);
-		int32 MaxSupportedNumBones = SkeletalMeshComponent->MeshObject->IsCPUSkinned() ? MAX_int32 : GetFeatureLevelMaxNumberOfBones(SceneFeatureLevel);
+		int32 MaxSupportedNumBones = MAX_int32; // @CARLAUE5 This may not be correct. Check whether it is.
 		if (MaxBonesPerChunk <= MaxSupportedNumBones)
 		{
 			return new FTaggedSkeletalMeshSceneProxy(SkeletalMeshComponent, SkelMeshRenderData, TaggedMID);
@@ -174,8 +174,7 @@ FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(UHierarchicalInstanced
 
 	if (bMeshIsValid)
 	{
-		bool bIsGrass = !MeshComponent->PerInstanceSMData.Num();
-		return new FTaggedHierarchicalStaticMeshSceneProxy(MeshComponent, bIsGrass, GetWorld()->FeatureLevel, TaggedMID);
+		return new FTaggedHierarchicalStaticMeshSceneProxy(MeshComponent, GetWorld()->FeatureLevel, TaggedMID);
 	}
 	return nullptr;
 }
@@ -304,8 +303,8 @@ FPrimitiveViewRelevance FTaggedInstancedStaticMeshSceneProxy::GetViewRelevance(c
 
 
 FTaggedHierarchicalStaticMeshSceneProxy::FTaggedHierarchicalStaticMeshSceneProxy(
-    UHierarchicalInstancedStaticMeshComponent * Component, bool bInIsGrass, ERHIFeatureLevel::Type InFeatureLevel, UMaterialInstance * MaterialInstance)
-  : FHierarchicalStaticMeshSceneProxy(bInIsGrass, Component, InFeatureLevel)
+    UHierarchicalInstancedStaticMeshComponent * Component, ERHIFeatureLevel::Type InFeatureLevel, UMaterialInstance * MaterialInstance)
+  : FHierarchicalStaticMeshSceneProxy(Component, InFeatureLevel)
 {
   TaggedMaterialInstance = MaterialInstance;
 
@@ -321,10 +320,10 @@ FTaggedHierarchicalStaticMeshSceneProxy::FTaggedHierarchicalStaticMeshSceneProxy
 
 FPrimitiveViewRelevance FTaggedHierarchicalStaticMeshSceneProxy::GetViewRelevance(const FSceneView * View) const
 {
-  FPrimitiveViewRelevance ViewRelevance = FHierarchicalStaticMeshSceneProxy::GetViewRelevance(View);
+  auto Relevance = FHierarchicalStaticMeshSceneProxy::GetViewRelevance(View);
 
-  ViewRelevance.bDrawRelevance = ViewRelevance.bDrawRelevance && !View->Family->EngineShowFlags.NotDrawTaggedComponents;
-  ViewRelevance.bShadowRelevance = false;
+  Relevance.bDrawRelevance = Relevance.bDrawRelevance && !View->Family->EngineShowFlags.NotDrawTaggedComponents;
+  Relevance.bShadowRelevance = false;
 
-  return ViewRelevance;
+  return Relevance;
 }
