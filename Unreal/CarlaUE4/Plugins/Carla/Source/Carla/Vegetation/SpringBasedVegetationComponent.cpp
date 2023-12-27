@@ -21,6 +21,22 @@
 #include "carla/rpc/String.h"
 #include <compiler/enable-ue4-macros.h>
 
+// disable warnings for eigen 3.1.0
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wdeprecated-register"
+#  pragma clang diagnostic ignored "-Wmisleading-indentation"
+#  pragma clang diagnostic ignored "-Wint-in-bool-context"
+#  pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#  pragma clang diagnostic ignored "-Wshadow"
+#endif
+#include <Eigen/Dense>
+#include <Eigen/Cholesky>
+#include <Eigen/Eigenvalues>
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#endif
+
 #define SPRINGVEGETATIONLOGS 0
 #define SOLVERLOGS 0
 #define COLLISIONLOGS 0
@@ -54,6 +70,23 @@
 #define OTHER_LOG(...)
 #endif
 
+
+
+struct FJointProperties
+{
+    float Mass = 0.0;
+    Eigen::Matrix3d InertiaTensor = Eigen::Matrix3d::Zero();
+    Eigen::Vector3d Force = Eigen::Vector3d::Zero();
+    Eigen::Vector3d Torque = Eigen::Vector3d::Zero();
+    Eigen::Vector3d FictitiousTorque = Eigen::Vector3d::Zero();
+    Eigen::Vector3d CenterOfMass = Eigen::Vector3d::Zero();
+    Eigen::Matrix3d JointToGlobalMatrix = Eigen::Matrix3d::Zero();
+    Eigen::Vector3d AngularVelocity = Eigen::Vector3d::Zero();
+    Eigen::Vector3d LinearVelocity = Eigen::Vector3d::Zero();
+    Eigen::Vector3d AngularAcceleration = Eigen::Vector3d::Zero();
+    Eigen::Vector3d LinearAcceleration = Eigen::Vector3d::Zero();
+    Eigen::Vector3d LocalAngularAcceleration = Eigen::Vector3d::Zero();
+};
 
 FRotator GetDeltaRotator(const FRotator & Rotator1, const FRotator & Rotator2)
 {

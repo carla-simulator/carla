@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/InstancedStaticMesh.h"
+#include "SkeletalMeshTypes.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 
 #include "TaggedComponent.generated.h"

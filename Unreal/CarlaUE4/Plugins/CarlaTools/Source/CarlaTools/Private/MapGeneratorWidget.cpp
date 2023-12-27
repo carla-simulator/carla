@@ -7,7 +7,7 @@
 #include "MapGeneratorWidget.h"
 
 #include "ActorFactories/ActorFactory.h"
-#include "AssetRegistryModule.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/MapGen/SoilTypeManager.h"
 #include "Carla/Weather/Weather.h"

@@ -226,6 +226,7 @@ public class Carla :
 
         PublicIncludePaths.Add(ModuleDirectory);
         PublicIncludePaths.Add(LibCarlaIncludePath);
+
         PublicIncludePaths.AddRange(new string[]
         {
             GetIncludePath("boost"),
@@ -235,12 +236,24 @@ public class Carla :
             GetIncludePath("zlib"),
         });
 
+		PrivateIncludePaths.AddRange(new string[]
+		{
+			GetIncludePath("eigen"),
+		});
+
         PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
         PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
         PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
         PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
         PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
         PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
+
+		if (IsWindows)
+        {
+            PublicDefinitions.Add("NOMINMAX");
+            PublicDefinitions.Add("VC_EXTRALEAN");
+            PublicDefinitions.Add("WIN32_LEAN_AND_MEAN");
+        }
     }
 
 #if false

@@ -34,7 +34,7 @@
 #include "PhysicsCore/Public/BodySetupEnums.h"
 #include "PhysicsEngine/BodySetup.h"
 #include "RawMesh.h"
-#include "AssetRegistryModule.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshActor.h"
 #include "MeshDescription.h"

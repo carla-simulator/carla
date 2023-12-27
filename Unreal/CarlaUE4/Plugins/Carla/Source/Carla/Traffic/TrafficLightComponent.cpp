@@ -45,7 +45,7 @@ void UTrafficLightComponent::InitializeSign(const carla::road::Map &Map)
         std::optional<carla::road::element::Waypoint> opt_signal_waypoint = Map.GetWaypoint(
             RoadId, lane, SignalReference->GetS());
         if(opt_signal_waypoint){
-          signal_waypoint = opt_signal_waypoint.get();
+          signal_waypoint = opt_signal_waypoint.value();
         }else{
           UE_LOG(LogCarla, Error, TEXT("signal_waypoint is not valid") );
           continue;

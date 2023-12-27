@@ -12,7 +12,11 @@
 #include "Carla/Sensor/ImageUtil.h"
 
 #include "Async/Async.h"
+
+#if __has_include("GBufferView.h")
+#define CARLA_HAS_GBUFFER_API
 #include "GBufferView.h"
+#endif
 
 #include <type_traits>
 
@@ -423,7 +427,9 @@ protected:
 
   void CaptureSceneExtended();
 
+#ifdef CARLA_HAS_GBUFFER_API
   virtual void SendGBufferTextures(FGBufferRequest& GBuffer);
+#endif
 
   virtual void BeginPlay() override;
 
@@ -463,6 +469,7 @@ protected:
 
 private:
 
+#ifdef CARLA_HAS_GBUFFER_API
   template <
     typename SensorT,
     typename CameraGBufferT>
@@ -528,9 +535,11 @@ private:
         ViewSize.Y,
         Self.GetFOVAngle());
   }
+#endif
 
 protected:
 
+#ifdef CARLA_HAS_GBUFFER_API
   template <typename T>
   void SendGBufferTexturesInternal(T& Self, FGBufferRequest& GBufferData)
   {
@@ -587,5 +596,6 @@ protected:
       }
     }
   }
+#endif
 
 };

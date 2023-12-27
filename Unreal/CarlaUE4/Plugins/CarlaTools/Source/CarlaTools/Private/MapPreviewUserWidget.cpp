@@ -22,13 +22,12 @@
 
 #include "Engine/Texture2D.h"
 #include "Containers/ResourceArray.h"
-#include "Containers/UnrealString.h"
 #include "Rendering/Texture2DResource.h"
 #include "RHI.h"
 #include "RHICommandList.h"
 #include "RenderingThread.h"
 #include "Misc/Timespan.h"
-#include "Containers/UnrealString.h"
+#include <Containers/UnrealString.h>
 #include "Misc/Paths.h"
 
 

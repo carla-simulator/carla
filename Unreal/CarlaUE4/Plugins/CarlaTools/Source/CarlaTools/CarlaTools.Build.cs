@@ -155,7 +155,15 @@ public class CarlaTools :
 				"OmniverseUSD",
 				"OmniverseRuntime"
 			});
-		}
+        }
+
+        if (IsWindows)
+        {
+            PublicDefinitions.Add("NOMINMAX");
+            PublicDefinitions.Add("VC_EXTRALEAN");
+            PublicDefinitions.Add("WIN32_LEAN_AND_MEAN");
+        }
+
         PrivateDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
         PrivateDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
         PrivateDefinitions.Add("ASIO_NO_EXCEPTIONS");

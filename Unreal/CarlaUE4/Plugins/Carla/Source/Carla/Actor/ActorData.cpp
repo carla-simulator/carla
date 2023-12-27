@@ -203,7 +203,7 @@ void FTrafficSignData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* 
         Actor->GetRootComponent(),
         FAttachmentTransformRules::KeepRelativeTransform);
     ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(CarlaEpisode->GetWorld());
-    SignComponent->InitializeSign(GameMode->GetMap().get());
+    SignComponent->InitializeSign(GameMode->GetMap().value());
   }
 }
 
@@ -243,7 +243,7 @@ void FTrafficLightData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode*
   Controller->RemoveCarlaActorTrafficLight(CarlaActor);
   Controller->AddTrafficLight(Component);
   ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(CarlaEpisode->GetWorld());
-  Component->InitializeSign(GameMode->GetMap().get());
+  Component->InitializeSign(GameMode->GetMap().value());
   Component->SetLightState(Controller->GetCurrentState().State);
   TrafficLight->SetPoleIndex(PoleIndex);
   TrafficLight->SetTrafficLightState(LightState);

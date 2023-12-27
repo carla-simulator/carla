@@ -157,6 +157,7 @@ if (BUILD_LIBCARLA_SERVER)
         ${LIBCARLA_SOURCE_PATH}/carla/road/object/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/road/signal/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/rpc/*.cpp
+        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/s11n/SensorHeaderSerializer.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/tcp/*.cpp
@@ -184,6 +185,7 @@ if (BUILD_LIBCARLA_SERVER)
         ${LIBCARLA_SOURCE_PATH}/carla/road/object/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/road/signal/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/rpc/*.h
+        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/s11n/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/streaming/*.h
@@ -268,6 +270,7 @@ if (BUILD_LIBCARLA_CLIENT)
         ${LIBCARLA_SOURCE_PATH}/carla/road/object/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/road/signal/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/rpc/*.h
+        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/data/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/s11n/*.h
@@ -320,6 +323,7 @@ if (BUILD_LIBCARLA_CLIENT)
         ${LIBCARLA_SOURCE_PATH}/carla/road/object/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/road/signal/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/rpc/*.cpp
+        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/data/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/s11n/*.cpp

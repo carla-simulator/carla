@@ -25,7 +25,7 @@
 #include "VehicleWheel.h"
 #include "IAssetTools.h"
 #include "AssetToolsModule.h"
-#include "AssetRegistryModule.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Factories/BlueprintFactory.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "BlueprintEditor.h"

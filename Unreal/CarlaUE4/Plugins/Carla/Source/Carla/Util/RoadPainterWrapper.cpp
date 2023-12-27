@@ -7,7 +7,7 @@
 #include "RoadPainterWrapper.h"
 
 #if WITH_EDITOR
-    #include "FileHelper.h"
+    #include "Misc/FileHelper.h"
 #endif
 #include "JsonObject.h"
 #include "JsonSerializer.h"

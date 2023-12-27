@@ -9,11 +9,14 @@
 #include "CoreGlobals.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/ImageWriteQueue/Public/ImagePixelData.h"
+#include "DataDrivenShaderPlatformInfo.h"
 #include "RHIDefinitions.h"
 
 #ifdef _WIN32
-  #define WIN32_LEAN_AND_MEAN
-  #include <D3d12.h>
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <D3d12.h>
 #endif
 
 #include "Carla/Game/CarlaEngine.h"
@@ -142,7 +145,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
 #ifdef _WIN32
             // DirectX uses additional bytes to align each row to 256 boundry,
             // so we need to remove that extra data
-            if (IsD3DPlatform(GMaxRHIShaderPlatform, false))
+            if (IsD3DPlatform(GMaxRHIShaderPlatform))
             {
               CurrentRowBytes = Align(ExpectedRowBytes, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
               if (ExpectedRowBytes != CurrentRowBytes)

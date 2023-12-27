@@ -24,7 +24,7 @@
 #include "Carla.h"
 #include "Containers/Array.h"
 #include "GameFramework/HUD.h"
-#include "WheeledVehicleMovementComponent.h"
+#include "ChaosWheeledVehicleMovementComponent.h"
 #include "CarlaHUD.generated.h"
 
 struct HUDString

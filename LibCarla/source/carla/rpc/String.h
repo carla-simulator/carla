@@ -10,7 +10,7 @@
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 #include <compiler/enable-ue4-macros.h>
-#include "UnrealString.h"
+#include <Containers/UnrealString.h>
 #include <compiler/disable-ue4-macros.h>
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 

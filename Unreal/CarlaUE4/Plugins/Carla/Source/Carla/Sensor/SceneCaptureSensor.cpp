@@ -450,98 +450,12 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
+
+#ifdef CARLA_HAS_GBUFFER_API
+  CaptureSceneExtended();
+#else
   GetCaptureComponent2D()->CaptureScene();
-
-  // // Equivalent to "CaptureComponent2D->CaptureScene" + (optional) GBuffer extraction.
-  // CaptureSceneExtended();
-}
-
-constexpr const TCHAR* GBufferNames[] =
-{
-  TEXT("SceneColor"),
-  TEXT("SceneDepth"),
-  TEXT("SceneStencil"),
-  TEXT("GBufferA"),
-  TEXT("GBufferB"),
-  TEXT("GBufferC"),
-  TEXT("GBufferD"),
-  TEXT("GBufferE"),
-  TEXT("GBufferF"),
-  TEXT("Velocity"),
-  TEXT("SSAO"),
-  TEXT("CustomDepth"),
-  TEXT("CustomStencil"),
-};
-
-template <EGBufferTextureID ID, typename T>
-static void CheckGBufferStream(T& GBufferStream, FGBufferRequest& GBuffer)
-{
-  GBufferStream.bIsUsed = GBufferStream.Stream.AreClientsListening();
-  if (GBufferStream.bIsUsed)
-    GBuffer.MarkAsRequested(ID);
-}
-
-static uint64 Prior = 0;
-
-void ASceneCaptureSensor::CaptureSceneExtended()
-{
-  auto GBufferPtr = MakeUnique<FGBufferRequest>();
-  auto& GBuffer = *GBufferPtr;
-
-  CheckGBufferStream<EGBufferTextureID::SceneColor>(CameraGBuffers.SceneColor, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::SceneDepth>(CameraGBuffers.SceneDepth, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::SceneStencil>(CameraGBuffers.SceneStencil, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::GBufferA>(CameraGBuffers.GBufferA, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::GBufferB>(CameraGBuffers.GBufferB, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::GBufferC>(CameraGBuffers.GBufferC, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::GBufferD>(CameraGBuffers.GBufferD, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::GBufferE>(CameraGBuffers.GBufferE, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::GBufferF>(CameraGBuffers.GBufferF, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::Velocity>(CameraGBuffers.Velocity, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::SSAO>(CameraGBuffers.SSAO, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::CustomDepth>(CameraGBuffers.CustomDepth, GBuffer);
-  CheckGBufferStream<EGBufferTextureID::CustomStencil>(CameraGBuffers.CustomStencil, GBuffer);
-
-  if (GBufferPtr->DesiredTexturesMask == 0)
-  {
-    // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
-    CaptureComponent2D->CaptureScene();
-    return;
-  }
-
-  if (Prior != GBufferPtr->DesiredTexturesMask)
-    UE_LOG(LogCarla, Verbose, TEXT("GBuffer selection changed (%llu)."), GBufferPtr->DesiredTexturesMask);
-
-  Prior = GBufferPtr->DesiredTexturesMask;
-  GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
-
-#define CARLA_GBUFFER_DISABLE_TAA // Temporarily disable TAA to avoid jitter.
-
-#ifdef CARLA_GBUFFER_DISABLE_TAA
-  bool bTAA = CaptureComponent2D->ShowFlags.TemporalAA;
-  if (bTAA) {
-    CaptureComponent2D->ShowFlags.TemporalAA = false;
-  }
 #endif
-
-  CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
-
-#ifdef CARLA_GBUFFER_DISABLE_TAA
-  if (bTAA) {
-    CaptureComponent2D->ShowFlags.TemporalAA = true;
-  }
-#undef CARLA_GBUFFER_DISABLE_TAA
-#endif
-
-  AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, GBuffer = MoveTemp(GBufferPtr)]() mutable
-  {
-    SendGBufferTextures(*GBuffer);
-  });
-}
-
-void ASceneCaptureSensor::SendGBufferTextures(FGBufferRequest& GBuffer)
-{
-  SendGBufferTexturesInternal(*this, GBuffer);
 }
 
 void ASceneCaptureSensor::BeginPlay()
@@ -610,6 +524,100 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
   FlushRenderingCommands();
   SCENE_CAPTURE_COUNTER = 0u;
 }
+
+#ifdef CARLA_HAS_GBUFFER_API
+
+constexpr const TCHAR* GBufferNames[] =
+{
+  TEXT("SceneColor"),
+  TEXT("SceneDepth"),
+  TEXT("SceneStencil"),
+  TEXT("GBufferA"),
+  TEXT("GBufferB"),
+  TEXT("GBufferC"),
+  TEXT("GBufferD"),
+  TEXT("GBufferE"),
+  TEXT("GBufferF"),
+  TEXT("Velocity"),
+  TEXT("SSAO"),
+  TEXT("CustomDepth"),
+  TEXT("CustomStencil"),
+};
+
+template <EGBufferTextureID ID, typename T>
+static void CheckGBufferStream(T& GBufferStream, FGBufferRequest& GBuffer)
+{
+    GBufferStream.bIsUsed = GBufferStream.Stream.AreClientsListening();
+    if (GBufferStream.bIsUsed)
+        GBuffer.MarkAsRequested(ID);
+}
+
+static uint64 Prior = 0;
+
+void ASceneCaptureSensor::CaptureSceneExtended()
+{
+    auto GBufferPtr = MakeUnique<FGBufferRequest>();
+    auto& GBuffer = *GBufferPtr;
+
+    CheckGBufferStream<EGBufferTextureID::SceneColor>(CameraGBuffers.SceneColor, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::SceneDepth>(CameraGBuffers.SceneDepth, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::SceneStencil>(CameraGBuffers.SceneStencil, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::GBufferA>(CameraGBuffers.GBufferA, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::GBufferB>(CameraGBuffers.GBufferB, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::GBufferC>(CameraGBuffers.GBufferC, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::GBufferD>(CameraGBuffers.GBufferD, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::GBufferE>(CameraGBuffers.GBufferE, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::GBufferF>(CameraGBuffers.GBufferF, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::Velocity>(CameraGBuffers.Velocity, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::SSAO>(CameraGBuffers.SSAO, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::CustomDepth>(CameraGBuffers.CustomDepth, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::CustomStencil>(CameraGBuffers.CustomStencil, GBuffer);
+
+    if (GBufferPtr->DesiredTexturesMask == 0)
+    {
+        // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
+        CaptureComponent2D->CaptureScene();
+        return;
+    }
+
+    if (Prior != GBufferPtr->DesiredTexturesMask)
+        UE_LOG(LogCarla, Verbose, TEXT("GBuffer selection changed (%llu)."), GBufferPtr->DesiredTexturesMask);
+
+    Prior = GBufferPtr->DesiredTexturesMask;
+    GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
+
+#define CARLA_GBUFFER_DISABLE_TAA // Temporarily disable TAA to avoid jitter.
+
+#ifdef CARLA_GBUFFER_DISABLE_TAA
+    bool bTAA = CaptureComponent2D->ShowFlags.TemporalAA;
+    if (bTAA) {
+        CaptureComponent2D->ShowFlags.TemporalAA = false;
+    }
+#endif
+
+    CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
+
+#ifdef CARLA_GBUFFER_DISABLE_TAA
+    if (bTAA) {
+        CaptureComponent2D->ShowFlags.TemporalAA = true;
+    }
+#undef CARLA_GBUFFER_DISABLE_TAA
+#endif
+
+    AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, GBuffer = MoveTemp(GBufferPtr)]() mutable
+        {
+            SendGBufferTextures(*GBuffer);
+        });
+}
+
+void ASceneCaptureSensor::SendGBufferTextures(FGBufferRequest& GBuffer)
+{
+    SendGBufferTexturesInternal(*this, GBuffer);
+}
+
+#endif
+
+
 
 // =============================================================================
 // -- Local static functions implementations -----------------------------------

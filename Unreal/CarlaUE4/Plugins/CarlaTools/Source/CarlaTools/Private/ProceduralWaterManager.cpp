@@ -11,7 +11,7 @@
 #include "Misc/FileHelper.h"
 #include "Misc/CString.h"
 #include "Runtime/Engine/Public/DrawDebugHelpers.h"
-#include "UnrealString.h"
+#include <Containers/UnrealString.h>
 
 #include "GameFramework/Actor.h"
 #include "Engine/World.h"

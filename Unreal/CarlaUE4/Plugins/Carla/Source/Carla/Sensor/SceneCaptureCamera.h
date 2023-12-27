@@ -28,8 +28,9 @@ public:
 
 protected:
 	
+#ifdef CARLA_HAS_GBUFFER_API
   virtual void SendGBufferTextures(FGBufferRequest& GBuffer) override;
-
+#endif
 
   void BeginPlay() override;
   void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

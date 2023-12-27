@@ -29,17 +29,17 @@ FMeshDescription UMapGenFunctionLibrary::BuildMeshDescriptionFromData(
   int32 VertexInstanceCount = Data.Triangles.Num();
   int32 PolygonCount = Data.Vertices.Num()/3;
 
-	FMeshDescription MeshDescription;
+  FMeshDescription MeshDescription;
   FStaticMeshAttributes AttributeGetter(MeshDescription);
   AttributeGetter.Register();
 
-  TPolygonGroupAttributesRef<FName> PolygonGroupNames = AttributeGetter.GetPolygonGroupMaterialSlotNames();
-  TVertexAttributesRef<FVector> VertexPositions = AttributeGetter.GetVertexPositions();
-  TVertexInstanceAttributesRef<FVector> Tangents = AttributeGetter.GetVertexInstanceTangents();
-  TVertexInstanceAttributesRef<float> BinormalSigns = AttributeGetter.GetVertexInstanceBinormalSigns();
-  TVertexInstanceAttributesRef<FVector> Normals = AttributeGetter.GetVertexInstanceNormals();
-  TVertexInstanceAttributesRef<FVector4> Colors = AttributeGetter.GetVertexInstanceColors();
-  TVertexInstanceAttributesRef<FVector2D> UVs = AttributeGetter.GetVertexInstanceUVs();
+  auto PolygonGroupNames = AttributeGetter.GetPolygonGroupMaterialSlotNames();
+  auto VertexPositions = AttributeGetter.GetVertexPositions();
+  auto Tangents = AttributeGetter.GetVertexInstanceTangents();
+  auto BinormalSigns = AttributeGetter.GetVertexInstanceBinormalSigns();
+  auto Normals = AttributeGetter.GetVertexInstanceNormals();
+  auto Colors = AttributeGetter.GetVertexInstanceColors();
+  auto UVs = AttributeGetter.GetVertexInstanceUVs();
 
   // Calculate the totals for each ProcMesh element type
   FPolygonGroupID PolygonGroupForSection;
@@ -165,13 +165,12 @@ UStaticMesh* UMapGenFunctionLibrary::CreateMesh(
     UStaticMesh* Mesh = NewObject<UStaticMesh>( Package, MeshName, RF_Public | RF_Standalone);
 
     Mesh->InitResources();
-
-    Mesh->LightingGuid = FGuid::NewGuid();
+    Mesh->SetLightingGuid(FGuid::NewGuid());
     Mesh->StaticMaterials.Add(FStaticMaterial(MaterialInstance));
     Mesh->BuildFromMeshDescriptions({ &Description }, Params);
     Mesh->CreateBodySetup();
-    Mesh->BodySetup->CollisionTraceFlag = ECollisionTraceFlag::CTF_UseComplexAsSimple;
-    Mesh->BodySetup->CreatePhysicsMeshes();
+    Mesh->GetBodySetup()->CollisionTraceFlag = ECollisionTraceFlag::CTF_UseComplexAsSimple;
+    Mesh->GetBodySetup()->CreatePhysicsMeshes();
     // Build mesh from source
     Mesh->NeverStream = false;
     TArray<UObject*> CreatedAssets;

@@ -5,7 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "CarlaRecorderHelpers.h"
-#include "UnrealString.h"
+#include <Containers/UnrealString.h>
 
 #include <fstream>
 #include <vector>

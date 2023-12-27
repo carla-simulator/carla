@@ -11,8 +11,8 @@
 #include "InstancedFoliageActor.h"
 #include "GameFramework/Character.h"
 #if WITH_EDITOR
-#include "FileHelper.h"
-#include "Paths.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 #endif // WITH_EDITOR
 
 namespace crp = carla::rpc;

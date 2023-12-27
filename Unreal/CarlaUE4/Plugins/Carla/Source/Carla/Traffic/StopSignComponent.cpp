@@ -38,7 +38,7 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
           continue;
 
         auto signal_waypoint = Map.GetWaypoint(
-            RoadId, lane, SignalReference->GetS()).get();
+            RoadId, lane, SignalReference->GetS()).value();
 
         if(Map.GetLane(signal_waypoint).GetType() != cr::Lane::LaneType::Driving)
           continue;
