@@ -43,7 +43,7 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl = CreateDefaultSubobject<UVehicleVelocityControl>(TEXT("VelocityControl"));
   VelocityControl->Deactivate();
 
-  GetVehicleMovementComponent()->bReverseAsBrake = false;
+  GetWheeledVehicleComponent()->bReverseAsBrake = false;
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
 }
 
@@ -157,7 +157,7 @@ void ACarlaWheeledVehicle::BeginPlay()
 
   float FrictionScale = 3.5f;
 
-  UChaosWheeledVehicleMovementComponent* MovementComponent = GetVehicleMovementComponent();
+  UChaosWheeledVehicleMovementComponent* MovementComponent = GetWheeledVehicleComponent();
 
   if (MovementComponent)
   {
@@ -306,7 +306,7 @@ FVector ACarlaWheeledVehicle::GetVehicleBoundingBoxExtent() const
 
 float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 {
-  const auto &Wheels = GetVehicleMovementComponent()->Wheels;
+  const auto &Wheels = GetWheeledVehicleComponent()->Wheels;
   check(Wheels.Num() > 0);
   const auto *FrontWheel = Wheels[0];
   check(FrontWheel != nullptr);
@@ -809,12 +809,12 @@ void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
 
       // Set/Unset the car movement component in HUD to show the temetry
       if (Enabled) {
-        hud->AddDebugVehicleForTelemetry(GetVehicleMovementComponent());
+        hud->AddDebugVehicleForTelemetry(GetWheeledVehicleComponent());
       }
       else{
-        if (hud->DebugVehicle == GetVehicleMovementComponent()) {
+        if (hud->DebugVehicle == GetWheeledVehicleComponent()) {
           hud->AddDebugVehicleForTelemetry(nullptr);
-          GetVehicleMovementComponent()->StopTelemetry();
+          GetWheeledVehicleComponent()->StopTelemetry();
         }
       }
 

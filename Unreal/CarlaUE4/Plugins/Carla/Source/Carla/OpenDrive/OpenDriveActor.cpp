@@ -12,7 +12,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "DrawDebugHelpers.h"
 
-#include "ConstructorHelpers.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialExpressionTextureSample.h"
 
 #include "DrawDebugHelpers.h"

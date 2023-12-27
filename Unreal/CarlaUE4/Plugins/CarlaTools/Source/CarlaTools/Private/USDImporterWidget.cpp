@@ -22,7 +22,6 @@
 #include "Components/LightComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/SpotLightComponent.h"
-#include "VehicleWheel.h"
 #include "IAssetTools.h"
 #include "AssetToolsModule.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -30,7 +29,6 @@
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "BlueprintEditor.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
-#include "EditorStaticMeshLibrary.h"
 
 
 void UUSDImporterWidget::ImportUSDProp(
@@ -541,6 +539,7 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     UE_LOG(LogCarlaTools, Log, TEXT("Spawn Light %s, %s, %s"), *Light.Name, *Light.Location.ToString(), *Light.Color.ToString());
   }
   // set the wheel radius
+#if 0 // @CARLAUE5
   UVehicleWheel* WheelDefault;
   WheelDefault = WheelTemplates.WheelFL->GetDefaultObject<UVehicleWheel>();
   WheelDefault->ShapeRadius = VehicleMeshes.WheelFL->GetBounds().SphereRadius;
@@ -571,16 +570,18 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
   {
     UWheeledVehicleMovementComponent4W* MovementComponent =
         Cast<UWheeledVehicleMovementComponent4W>(
-            CarlaVehicle->GetVehicleMovementComponent());
+            CarlaVehicle->GetWheeledVehicleComponent());
     MovementComponent->WheelSetups = WheelSetups;
   }
   else
   {
     UE_LOG(LogCarlaTools, Error, TEXT("Null CarlaVehicle"));
   }
+#endif
   // Set the vehicle collision in the new physicsasset object
-  UEditorStaticMeshLibrary::AddSimpleCollisions(
+  GEditor->GetEditorSubsystem<UStaticMeshEditorSubsystem>()->AddSimpleCollisions(
       VehicleMeshes.Body, EScriptingCollisionShapeType::NDOP26);
+
   CopyCollisionToPhysicsAsset(NewPhysicsAsset, VehicleMeshes.Body);
   // assign the physics asset to the skeletal mesh
   NewSkeletalMesh->PhysicsAsset = NewPhysicsAsset;

@@ -20,6 +20,10 @@
 #include "Engine/DecalActor.h"
 #include "Components/DecalComponent.h"
 
+#ifdef GetObject
+    #undef GetObject
+#endif
+
 ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
 {
   // Set necessary flags to run commandlet

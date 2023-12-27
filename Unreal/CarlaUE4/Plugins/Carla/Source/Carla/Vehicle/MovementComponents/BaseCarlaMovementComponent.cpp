@@ -35,7 +35,7 @@ FVector UBaseCarlaMovementComponent::GetVelocity() const
 {
   if (CarlaVehicle)
   {
-    return CarlaVehicle->AWheeledVehicle::GetVelocity();
+    return CarlaVehicle->AWheeledVehiclePawn::GetVelocity();
   }
   return FVector();
 }

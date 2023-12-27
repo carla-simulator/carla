@@ -50,8 +50,8 @@ void UCarSimManagerComponent::BeginPlay()
   CarSimMovementComponent = NewObject<UCarSimMovementComponent>(OffsetActor);
 
   carla::log_warning("Loading simfile:", carla::rpc::FromFString(SimfilePath));
-  CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(false);
-  CarlaVehicle->GetVehicleMovementComponent()->Deactivate();
+  CarlaVehicle->GetWheeledVehicleComponent()->SetComponentTickEnabled(false);
+  CarlaVehicle->GetWheeledVehicleComponent()->Deactivate();
   CarSimMovementComponent->DisableVehicle = false;
   CarSimMovementComponent->VsConfigFile = SimfilePath;
   CarSimMovementComponent->Activate();
@@ -112,8 +112,8 @@ void UCarSimManagerComponent::OnCarSimHit(AActor *Actor,
   // finish Carsim simulation
   UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
   CarlaVehicle->GetMesh()->SetPhysicsLinearVelocity(FVector(0,0,0), false, "Vehicle_Base");
-  CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(true);
-  CarlaVehicle->GetVehicleMovementComponent()->Activate();
+  CarlaVehicle->GetWheeledVehicleComponent()->SetComponentTickEnabled(true);
+  CarlaVehicle->GetWheeledVehicleComponent()->Activate();
   CarlaVehicle->GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::SimulationUpatesComponentTransform;
   auto * Bone = CarlaVehicle->GetMesh()->GetBodyInstance(NAME_None);
   if (Bone)
@@ -146,8 +146,8 @@ void UCarSimManagerComponent::OnCarSimOverlap(UPrimitiveComponent* OverlappedCom
     // finish Carsim simulation
     UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
     CarlaVehicle->GetMesh()->SetPhysicsLinearVelocity(FVector(0,0,0), false, "Vehicle_Base");
-    CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(true);
-    CarlaVehicle->GetVehicleMovementComponent()->Activate();
+    CarlaVehicle->GetWheeledVehicleComponent()->SetComponentTickEnabled(true);
+    CarlaVehicle->GetWheeledVehicleComponent()->Activate();
     CarlaVehicle->GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::SimulationUpatesComponentTransform;
     auto * Bone = CarlaVehicle->GetMesh()->GetBodyInstance(NAME_None);
     if (Bone)

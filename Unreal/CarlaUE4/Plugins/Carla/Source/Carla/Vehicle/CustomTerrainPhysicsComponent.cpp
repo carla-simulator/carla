@@ -58,7 +58,7 @@
 #include "Components/PrimitiveComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "CommandLine.h"
+#include "Misc/CommandLine.h"
 #include "Components/LineBatchComponent.h"
 #include "Math/OrientedBox.h"
 #include "Misc/DateTime.h"
@@ -186,12 +186,12 @@ FDenseTile& FDenseTile::operator=(FDenseTile&& Origin)
   
 void FDenseTile::InitializeTile(uint32_t TextureSize, float AffectedRadius, float ParticleSize, float Depth, 
     FDVector TileOrigin, FDVector TileEnd, 
-    const FString& SavePath, const FHeightMapData &HeightMap)
+    const FString& InSavePath, const FHeightMapData &HeightMap)
 {
 
   TileSize = (TileEnd.X - TileOrigin.X );
   PartialHeightMapSize = TileSize * TextureSize / (2*AffectedRadius);
-  std::string FileName = std::string(TCHAR_TO_UTF8(*( SavePath + TileOrigin.ToString() + ".tile" ) ) );
+  std::string FileName = std::string(TCHAR_TO_UTF8(*(InSavePath + TileOrigin.ToString() + ".tile" ) ) );
   
   //UE_LOG(LogCarla, Log, TEXT("Tile origin %s"), *TileOrigin.ToString() );
   if( FPaths::FileExists(FString(FileName.c_str())) )
@@ -848,15 +848,15 @@ void FSparseHighDetailMap::UpdateMaps(
 void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY)
 {
   FVector PositionTranslated;
-  PositionTranslated.X = ( Position.X * 0.01 ) + (Extension.X * 0.5f);
-  PositionTranslated.Y = (-Position.Y * 0.01 ) + ( (-Extension.Y) * 0.5f);
-  PositionTranslated.Z = ( Position.Z * 0.01 ) + (Extension.Z * 0.5f);
+  PositionTranslated.X = ( Position.X * 0.01 ) + (Extension.X * 0.5);
+  PositionTranslated.Y = (-Position.Y * 0.01 ) + ( (-Extension.Y) * 0.5);
+  PositionTranslated.Z = ( Position.Z * 0.01 ) + (Extension.Z * 0.5);
   PositionToUpdate = PositionTranslated;
 
-  double MinX = std::min( std::max( PositionTranslated.X - RadiusX, 0.0f) , static_cast<float>(Extension.X - 1.0f) );
-  double MinY = std::min( std::max( PositionTranslated.Y - RadiusY, 0.0f) , static_cast<float>(-Extension.Y + 1.0f) );
-  double MaxX = std::min( std::max( PositionTranslated.X + RadiusX, 0.0f) , static_cast<float>(Extension.X - 1.0f) );
-  double MaxY = std::min( std::max( PositionTranslated.Y + RadiusY, 0.0f) , static_cast<float>(-Extension.Y + 1.0f) );
+  auto MinX = std::min(std::max(PositionTranslated.X - RadiusX, 0.0), (Extension.X - 1.0));
+  auto MinY = std::min(std::max(PositionTranslated.Y - RadiusY, 0.0), (-Extension.Y + 1.0));
+  auto MaxX = std::min(std::max(PositionTranslated.X + RadiusX, 0.0), (Extension.X - 1.0));
+  auto MaxY = std::min(std::max(PositionTranslated.Y + RadiusY, 0.0), (-Extension.Y + 1.0));
 
   FIntVector MinVector = GetVectorTileId(FDVector(std::floor(MinX), std::floor(MinY), 0));
   FIntVector MaxVector = GetVectorTileId(FDVector(std::floor(MaxX), std::floor(MaxY), 0));
@@ -1366,7 +1366,7 @@ void UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapDataAasset(ALandscap
   int TextureHeight = Resolution;
   FString PackageName = AssetPath;
   PackageName += AssetName;
-  UPackage* Package = CreatePackage(NULL, *PackageName);
+  UPackage* Package = CreatePackage(*PackageName);
   Package->FullyLoad();
 
   UHeightMapDataAsset* HeightMapAsset = NewObject<UHeightMapDataAsset>(Package, *AssetName, RF_Public | RF_Standalone | RF_MarkAsRootSet);
@@ -2560,18 +2560,30 @@ void UCustomTerrainPhysicsComponent::SetUpWheelArrays(ACarlaWheeledVehicle *Vehi
     Position = FVector(0,0,0);
     FVector Velocity = UEFrameToSI(
         InverseTransform.TransformVector(Vehicle->GetVelocity()));
-    WheelPos = {Position.X, Position.Y, Position.Z};
+    WheelPos =
+    {
+        (float)Position.X,
+        (float)Position.Y,
+        (float)Position.Z
+    };
     // convert to SI
     WheelOrientation = {1.f, 0.f, 0.f, 0.f};
-    WheelLinearVelocity = {Velocity.X, Velocity.Y, Velocity.Z};
+    WheelLinearVelocity =
+    {
+        (float)Velocity.X,
+        (float)Velocity.Y,
+        (float)Velocity.Z
+    };
     FVector LocalAngularVelocity = InverseTransform.TransformVector(PhysAngularVelocity);
     //UE_LOG(LogCarla, Log, TEXT("Local Total AngVel: %s"), *LocalAngularVelocity.ToString());
     float ForwardSpeed = Velocity.X;
     float AngularSpeed = (ForwardSpeed/(CMToM*TireRadius));
-    WheelAngularVelocity = {
-        LocalAngularVelocity.X, 
-        AngularSpeed + LocalAngularVelocity.Y, 
-        -LocalAngularVelocity.Z};
+    WheelAngularVelocity =
+    {
+        (float)(LocalAngularVelocity.X),
+        (float)(AngularSpeed + LocalAngularVelocity.Y),
+        (float)(-LocalAngularVelocity.Z)
+    };
   }
   else
   {
@@ -2584,19 +2596,37 @@ void UCustomTerrainPhysicsComponent::SetUpWheelArrays(ACarlaWheeledVehicle *Vehi
     float ForwardSpeed = FVector::DotProduct(
         Vehicle->GetVelocity(),VehicleTransform.GetRotation().GetForwardVector());
     FVector Velocity = UEFrameToSI(Vehicle->GetVelocity());
-    WheelPos = {Position.X, Position.Y, Position.Z};
+    WheelPos =
+    {
+        (float)Position.X,
+        (float)Position.Y,
+        (float)Position.Z
+    };
     FQuat Quat = VehicleTransform.GetRotation();
     //UE_LOG(LogCarla, Log, TEXT("Quat: %s"), *Quat.ToString());
     // convert to SI
-    WheelOrientation = {Quat.W,Quat.X,-Quat.Y,Quat.Z};
-    WheelLinearVelocity = {Velocity.X, Velocity.Y, Velocity.Z};
+    WheelOrientation =
+    {
+        (float)Quat.W,
+        (float)Quat.X,
+        (float)-Quat.Y,
+        (float)Quat.Z
+    };
+    WheelLinearVelocity =
+    {
+        (float)Velocity.X,
+        (float)Velocity.Y,
+        (float)Velocity.Z
+    };
     float AngularSpeed = (ForwardSpeed)/(TireRadius);
     FVector GlobalAngulaSpeed = VehicleTransform.TransformVector(FVector(0, AngularSpeed, 0));
     PhysAngularVelocity = PhysAngularVelocity + GlobalAngulaSpeed;
-    WheelAngularVelocity = {
-        PhysAngularVelocity.X, 
-        PhysAngularVelocity.Y, 
-        -PhysAngularVelocity.Z};
+    WheelAngularVelocity =
+    {
+        (float)PhysAngularVelocity.X, 
+        (float)PhysAngularVelocity.Y, 
+        (float)-PhysAngularVelocity.Z
+    };
     //UE_LOG(LogCarla, Log, TEXT("Total AngVel: %s"), *PhysAngularVelocity.ToString());
   }
 }

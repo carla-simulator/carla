@@ -9,7 +9,7 @@
 #include "Game/CarlaGameInstance.h"
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Settings/CarlaSettings.h"
-#include "Async.h"
+#include "Async/Async.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/DirectionalLight.h"
 #include "Engine/Engine.h"
@@ -328,7 +328,7 @@ void UCarlaSettingsDelegate::SetAllActorsDrawDistance(UWorld *world, const float
   {
     return;
   }
-  AsyncTask(ENamedThreads::GameThread, [=]() {
+  AsyncTask(ENamedThreads::GameThread, [=, this]() {
     if (!world || !IsValid(world) || world->IsPendingKill())
     {
       return;

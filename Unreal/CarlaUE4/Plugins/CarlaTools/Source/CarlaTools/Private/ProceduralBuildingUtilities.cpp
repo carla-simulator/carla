@@ -151,7 +151,7 @@ void AProceduralBuildingUtilities::CookProceduralMeshToMesh(
 
   UStaticMesh* StaticMesh = NewObject<UStaticMesh>(NewPackage, *FileName, RF_Public | RF_Standalone);
   StaticMesh->InitResources();
-  StaticMesh->LightingGuid = FGuid::NewGuid();
+  StaticMesh->SetLightingGuid(FGuid::NewGuid());
 
   FStaticMeshSourceModel& SrcModel = StaticMesh->AddSourceModel();
   SrcModel.BuildSettings.bRecomputeNormals = false;
@@ -168,13 +168,13 @@ void AProceduralBuildingUtilities::CookProceduralMeshToMesh(
   if (!Mesh->bUseComplexAsSimpleCollision )
   {
     StaticMesh->CreateBodySetup();
-    UBodySetup* NewBodySetup = StaticMesh->BodySetup;
-    NewBodySetup->BodySetupGuid = FGuid::NewGuid();
-    NewBodySetup->AggGeom.ConvexElems = Mesh->ProcMeshBodySetup->AggGeom.ConvexElems;
-    NewBodySetup->bGenerateMirroredCollision = false;
-    NewBodySetup->bDoubleSidedGeometry = true;
-    NewBodySetup->CollisionTraceFlag = CTF_UseDefault;
-    NewBodySetup->CreatePhysicsMeshes();
+    UBodySetup* BodySetupPtr = StaticMesh->GetBodySetup();
+    BodySetupPtr->BodySetupGuid = FGuid::NewGuid();
+    BodySetupPtr->AggGeom.ConvexElems = Mesh->ProcMeshBodySetup->AggGeom.ConvexElems;
+    BodySetupPtr->bGenerateMirroredCollision = false;
+    BodySetupPtr->bDoubleSidedGeometry = true;
+    BodySetupPtr->CollisionTraceFlag = CTF_UseDefault;
+    BodySetupPtr->CreatePhysicsMeshes();
   }
 
   TSet<UMaterialInterface*> UniqueMaterials;
@@ -189,7 +189,7 @@ void AProceduralBuildingUtilities::CookProceduralMeshToMesh(
 
   for (auto* Material : UniqueMaterials)
   {
-    StaticMesh->StaticMaterials.Add(FStaticMaterial(Material));
+    StaticMesh->GetStaticMaterials().Add(FStaticMaterial(Material));
   }
 
   StaticMesh->ImportVersion = EImportStaticMeshVersion::LastVersion;

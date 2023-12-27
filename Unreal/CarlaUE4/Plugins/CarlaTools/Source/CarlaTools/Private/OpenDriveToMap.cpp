@@ -47,6 +47,11 @@
 #include "DrawDebugHelpers.h"
 
 #if WITH_EDITOR
+#include "IDesktopPlatform.h"
+#include "DesktopPlatformModule.h"
+
+
+
 UOpenDriveToMap::UOpenDriveToMap()
 {
   AddToRoot();

@@ -14,6 +14,7 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Settings/CarlaSettings.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
+#include "VehicleAnimationInstance.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/rpc/VehicleLightState.h"
@@ -148,9 +149,9 @@ void FFrameData::PlayFrameData(
 
   for (const CarlaRecorderAnimWheels &AnimWheel : Wheels.GetVehicleWheels())
   {
-    CarlaRecorderAnimWheels Wheels = AnimWheel;
-    Wheels.DatabaseId = MappedId[Wheels.DatabaseId];
-    ProcessReplayerAnimVehicleWheels(Wheels);
+    CarlaRecorderAnimWheels AnimWheels = AnimWheel;
+    AnimWheels.DatabaseId = MappedId[AnimWheels.DatabaseId];
+    ProcessReplayerAnimVehicleWheels(AnimWheels);
   }
 
   for (const CarlaRecorderAnimWalker &AnimWalker : Walkers.GetWalkers())
@@ -433,7 +434,7 @@ void FFrameData::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
   if (VehicleAnim == nullptr)
     return;
 
-  const UWheeledVehicleMovementComponent* WheeledVehicleMovementComponent = VehicleAnim->GetWheeledVehicleMovementComponent();
+  auto* WheeledVehicleMovementComponent = VehicleAnim->GetVehicleMovementComponent();
   if (WheeledVehicleMovementComponent == nullptr)
     return;
 

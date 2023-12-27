@@ -7,7 +7,7 @@
 #include "CityMapMeshTag.h"
 #include "Carla.h"
 
-#include "Package.h"
+#include "UObject/Package.h"
 
 #include <array>
 

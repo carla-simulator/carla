@@ -9,7 +9,7 @@
 
 #include "Carla/Sensor/PixelReader.h"
 
-#include "FileHelper.h"
+#include "Misc/FileHelper.h"
 #include "HighResScreenshot.h"
 
 #if WITH_EDITOR

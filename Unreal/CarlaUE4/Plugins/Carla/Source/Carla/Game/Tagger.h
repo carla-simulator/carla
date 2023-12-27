@@ -74,11 +74,20 @@ public:
   /// Method that computes the label corresponding to an specific object
   /// using the folder path in which it is stored
   template <typename T>
-  static crp::CityObjectLabel GetLabelByPath(const T *Object) {
+  static crp::CityObjectLabel GetLabelByPath(const T* Object)
+  {
     const FString Path = Object->GetPathName();
     TArray<FString> StringArray;
     Path.ParseIntoArray(StringArray, TEXT("/"), false);
     return (StringArray.Num() > 4 ? GetLabelByFolderName(StringArray[4]) : crp::CityObjectLabel::None);
+  }
+
+  /// Method that computes the label corresponding to an specific object
+  /// using the folder path in which it is stored
+  template <typename T>
+  static crp::CityObjectLabel GetLabelByPath(TObjectPtr<T> Object)
+  {
+      return GetLabelByPath(Object.Get());
   }
 
   static void SetStencilValue(UPrimitiveComponent &Component,

@@ -10,6 +10,9 @@
 #include "Carla/Vegetation/SpringBasedVegetationComponent.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Game/TaggedComponent.h"
+#include "Engine/Level.h"
+
+
 
 static FString GetVersionFromFString(const FString& String)
 {
@@ -489,9 +492,9 @@ void AVegetationManager::FreeTileCache(ULevel* InLevel)
 void AVegetationManager::UpdateMaterials(FTileData* Tile)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::UpdateMaterials);
-  const FTransform GlobalTransform = HeroVehicle->GetActorTransform();
-  const FLinearColor Position = GlobalTransform.GetLocation();
-  Tile->UpdateMaterialCache(Position, DebugMaterials);
+  auto GlobalTransform = HeroVehicle->GetActorTransform();
+  auto Position = GlobalTransform.GetLocation();
+  Tile->UpdateMaterialCache(FLinearColor(Position), DebugMaterials);
 }
 
 TArray<FElementsToSpawn> AVegetationManager::GetElementsToSpawn(FTileData* Tile)

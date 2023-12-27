@@ -238,7 +238,7 @@ public class Carla :
 
 		PrivateIncludePaths.AddRange(new string[]
 		{
-			GetIncludePath("eigen"),
+			Path.Combine(DependenciesInstallPath, "eigen-source"),
 		});
 
         PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
