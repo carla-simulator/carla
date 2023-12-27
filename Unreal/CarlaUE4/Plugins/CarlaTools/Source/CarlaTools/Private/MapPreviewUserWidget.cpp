@@ -4,7 +4,7 @@
 #include "MapPreviewUserWidget.h"
 
 #if PLATFORM_WINDOWS
-  #include "AllowWindowsPlatformTypes.h"
+  #include "Windows/AllowWindowsPlatformTypes.h"
 #endif
 
 #include "GenericPlatform/GenericPlatformMath.h"
@@ -17,7 +17,7 @@
 #include "SocketTypes.h"
 
 #if PLATFORM_WINDOWS
-  #include "HideWindowsPlatformTypes.h"
+  #include "Windows/HideWindowsPlatformTypes.h"
 #endif
 
 #include "Engine/Texture2D.h"

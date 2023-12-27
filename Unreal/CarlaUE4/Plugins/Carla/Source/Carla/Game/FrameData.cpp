@@ -429,7 +429,7 @@ void FFrameData::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
   if (SkeletalMesh == nullptr)
     return;
 
-  UVehicleAnimInstance* VehicleAnim = Cast<UVehicleAnimInstance>(SkeletalMesh->GetAnimInstance());
+  UVehicleAnimationInstance* VehicleAnim = Cast<UVehicleAnimationInstance>(SkeletalMesh->GetAnimInstance());
   if (VehicleAnim == nullptr)
     return;
 

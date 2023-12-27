@@ -115,17 +115,17 @@ static void GetVehicleDifferentialNWSetup(const TArray<FVehicleNWWheelDifferenti
 
 float FVehicleNWEngineData::FindPeakTorque() const
 {
-#if 0 // @CARLAUE5
 	// Find max torque
 	float PeakTorque = 0.0f;
+#if 0 // @CARLAUE5
 	TArray<FRichCurveKey> TorqueKeys = TorqueCurve.GetRichCurveConst()->GetCopyOfKeys();
 	for (int32 KeyIdx = 0; KeyIdx < TorqueKeys.Num(); ++KeyIdx)
 	{
 		FRichCurveKey& Key = TorqueKeys[KeyIdx];
 		PeakTorque = FMath::Max(PeakTorque, Key.Value);
 	}
-	return PeakTorque;
 #endif
+	return PeakTorque;
 }
 
 #if 0 // @CARLAUE5

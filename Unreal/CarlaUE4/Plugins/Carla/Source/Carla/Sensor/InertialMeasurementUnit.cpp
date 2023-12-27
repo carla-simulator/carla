@@ -45,9 +45,9 @@ void AInertialMeasurementUnit::Set(const FActorDescription &ActorDescription)
   UActorBlueprintFunctionLibrary::SetIMU(ActorDescription, this);
 }
 
-void AInertialMeasurementUnit::SetOwner(AActor *Owner)
+void AInertialMeasurementUnit::SetOwner(AActor* OwningActor)
 {
-  Super::SetOwner(Owner);
+  Super::SetOwner(OwningActor);
 }
 
 // Returns the angular velocity of Actor, expressed in the frame of Actor
@@ -76,10 +76,11 @@ const carla::geom::Vector3D AInertialMeasurementUnit::ComputeAccelerometerNoise(
   // A mean of 0.0 is used as a first parameter, the standard deviation is
   // determined by the client
   constexpr float Mean = 0.0f;
-  return carla::geom::Vector3D {
-      Accelerometer.X + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.X),
-      Accelerometer.Y + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.Y),
-      Accelerometer.Z + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.Z)
+  return carla::geom::Vector3D
+  {
+      (float)(Accelerometer.X + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.X)),
+      (float)(Accelerometer.Y + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.Y)),
+      (float)(Accelerometer.Z + RandomEngine->GetNormalDistribution(Mean, StdDevAccel.Z))
   };
 }
 
@@ -91,10 +92,11 @@ const carla::geom::Vector3D AInertialMeasurementUnit::ComputeGyroscopeNoise(
   // A mean of 0.0 is used as a first parameter.The standard deviation and the
   // bias are determined by the client
   constexpr float Mean = 0.0f;
-  return carla::geom::Vector3D {
-      Gyroscope.X + BiasGyro.X + RandomEngine->GetNormalDistribution(Mean, StdDevGyro.X),
-      Gyroscope.Y + BiasGyro.Y + RandomEngine->GetNormalDistribution(Mean, StdDevGyro.Y),
-      Gyroscope.Z + BiasGyro.Z + RandomEngine->GetNormalDistribution(Mean, StdDevGyro.Z)
+  return carla::geom::Vector3D
+  {
+      (float)(Gyroscope.X + BiasGyro.X + RandomEngine->GetNormalDistribution(Mean, StdDevGyro.X)),
+      (float)(Gyroscope.Y + BiasGyro.Y + RandomEngine->GetNormalDistribution(Mean, StdDevGyro.Y)),
+      (float)(Gyroscope.Z + BiasGyro.Z + RandomEngine->GetNormalDistribution(Mean, StdDevGyro.Z))
   };
 }
 
@@ -187,7 +189,7 @@ void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, 
   carla::geom::Vector3D Gyroscope = ComputeGyroscope();
   float Compass = ComputeCompass();
 
-  auto Stream = GetDataStream(*this);
+  auto DataStream = GetDataStream(*this);
 
   // ROS2
   #if defined(WITH_ROS2)
@@ -200,18 +202,18 @@ void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, 
     if (ParentActor)
     {
       FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromIMU(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, Accelerometer, Gyroscope, Compass, this);
+      ROS2->ProcessDataFromIMU(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, Accelerometer, Gyroscope, Compass, this);
     }
     else
     {
-      ROS2->ProcessDataFromIMU(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), Accelerometer, Gyroscope, Compass, this);
+      ROS2->ProcessDataFromIMU(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), Accelerometer, Gyroscope, Compass, this);
     }
   }
   #endif
 
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(AInertialMeasurementUnit::PostPhysTick);
-    Stream.SerializeAndSend(*this, Accelerometer, Gyroscope, Compass);
+    DataStream.SerializeAndSend(*this, Accelerometer, Gyroscope, Compass);
   }
 }
 

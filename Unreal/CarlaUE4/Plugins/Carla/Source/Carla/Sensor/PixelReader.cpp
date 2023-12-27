@@ -11,6 +11,7 @@
 #include "Async/Async.h"
 #include "HighResScreenshot.h"
 #include "Runtime/ImageWriteQueue/Public/ImageWriteQueue.h"
+#include "RHIGPUReadback.h"
 
 // =============================================================================
 // -- FPixelReader -------------------------------------------------------------

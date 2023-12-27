@@ -494,8 +494,7 @@ void ATrafficLightManager::SpawnTrafficLights()
       {
         continue;
       }
-      ATrafficLightBase * TrafficLight = GetClosestTrafficSignActor<ATrafficLightBase>(
-          *Signal.get(), GetWorld());
+      ATrafficLightBase * TrafficLight = GetClosestTrafficSignActor<ATrafficLightBase>(*Signal, GetWorld());
       if (TrafficLight)
       {
         UTrafficLightComponent *TrafficLightComponent = TrafficLight->GetTrafficLightComponent();
@@ -517,8 +516,7 @@ void ATrafficLightManager::SpawnTrafficLights()
        carla::road::SignalType::IsTrafficLight(Signal->GetType()) &&
        !SignalsToSpawn.count(SignalId))
     {
-      ATrafficLightBase * TrafficLight = GetClosestTrafficSignActor<ATrafficLightBase>(
-          *Signal.get(), GetWorld());
+      ATrafficLightBase * TrafficLight = GetClosestTrafficSignActor<ATrafficLightBase>(*Signal, GetWorld());
       if (TrafficLight)
       {
         UTrafficLightComponent *TrafficLightComponent = TrafficLight->GetTrafficLightComponent();
@@ -579,8 +577,8 @@ void ATrafficLightManager::SpawnTrafficLights()
     if (ClosestWaypointToSignal)
     {
       auto SignalDistanceToRoad =
-          (GetMap()->ComputeTransform(ClosestWaypointToSignal.get()).location - CarlaTransform.location).Length();
-      double LaneWidth = GetMap()->GetLaneWidth(ClosestWaypointToSignal.get());
+          (GetMap()->ComputeTransform(ClosestWaypointToSignal.value()).location - CarlaTransform.location).Length();
+      double LaneWidth = GetMap()->GetLaneWidth(ClosestWaypointToSignal.value());
 
       if(SignalDistanceToRoad < LaneWidth * 0.5)
       {
@@ -598,7 +596,7 @@ void ATrafficLightManager::SpawnTrafficLights()
     }
 
     RegisterLightComponentFromOpenDRIVE(TrafficLightComponent);
-    TrafficLightComponent->InitializeSign(GetMap().get());
+    TrafficLightComponent->InitializeSign(GetMap().value());
   }
 }
 
@@ -613,7 +611,7 @@ void ATrafficLightManager::SpawnSignals()
     auto &Signal = SignalPair.second;
     FString SignalType = Signal->GetType().c_str();
 
-    ATrafficSignBase * ClosestTrafficSign = GetClosestTrafficSignActor(*Signal.get(), GetWorld());
+    ATrafficSignBase * ClosestTrafficSign = GetClosestTrafficSignActor(*Signal, GetWorld());
     if (ClosestTrafficSign)
     {
       USignComponent *SignComponent;
@@ -671,15 +669,15 @@ void ATrafficLightManager::SpawnSignals()
       SignComponent->AttachToComponent(
           TrafficSign->GetRootComponent(),
           FAttachmentTransformRules::KeepRelativeTransform);
-      SignComponent->InitializeSign(GetMap().get());
+      SignComponent->InitializeSign(GetMap().value());
 
       auto ClosestWaypointToSignal =
           GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);
       if (ClosestWaypointToSignal)
       {
         auto SignalDistanceToRoad =
-            (GetMap()->ComputeTransform(ClosestWaypointToSignal.get()).location - CarlaTransform.location).Length();
-        double LaneWidth = GetMap()->GetLaneWidth(ClosestWaypointToSignal.get());
+            (GetMap()->ComputeTransform(ClosestWaypointToSignal.value()).location - CarlaTransform.location).Length();
+        double LaneWidth = GetMap()->GetLaneWidth(ClosestWaypointToSignal.value());
 
         if(SignalDistanceToRoad < LaneWidth * 0.5)
         {
@@ -728,7 +726,7 @@ void ATrafficLightManager::SpawnSignals()
       SignComponent->AttachToComponent(
           TrafficSign->GetRootComponent(),
           FAttachmentTransformRules::KeepRelativeTransform);
-      SignComponent->InitializeSign(GetMap().get());
+      SignComponent->InitializeSign(GetMap().value());
       SignComponent->SetSpeedLimit(Signal->GetValue());
 
       auto ClosestWaypointToSignal =
@@ -736,8 +734,8 @@ void ATrafficLightManager::SpawnSignals()
       if (ClosestWaypointToSignal)
       {
         auto SignalDistanceToRoad =
-            (GetMap()->ComputeTransform(ClosestWaypointToSignal.get()).location - CarlaTransform.location).Length();
-        double LaneWidth = GetMap()->GetLaneWidth(ClosestWaypointToSignal.get());
+            (GetMap()->ComputeTransform(ClosestWaypointToSignal.value()).location - CarlaTransform.location).Length();
+        double LaneWidth = GetMap()->GetLaneWidth(ClosestWaypointToSignal.value());
 
         if(SignalDistanceToRoad < LaneWidth * 0.5)
         {

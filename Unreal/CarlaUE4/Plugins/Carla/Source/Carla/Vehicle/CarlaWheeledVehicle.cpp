@@ -157,7 +157,7 @@ void ACarlaWheeledVehicle::BeginPlay()
 
   float FrictionScale = 3.5f;
 
-  UWheeledVehicleMovementComponent* MovementComponent = GetVehicleMovementComponent();
+  UChaosWheeledVehicleMovementComponent* MovementComponent = GetVehicleMovementComponent();
 
   if (MovementComponent)
   {
@@ -368,7 +368,7 @@ void ACarlaWheeledVehicle::SetHandbrakeInput(const bool Value)
 TArray<float> ACarlaWheeledVehicle::GetWheelsFrictionScale()
 {
 
-  UWheeledVehicleMovementComponent* Movement = GetVehicleMovement();
+  UChaosWheeledVehicleMovementComponent* Movement = GetVehicleMovement();
   TArray<float> WheelsFrictionScale;
   if (Movement)
   {
@@ -385,7 +385,7 @@ TArray<float> ACarlaWheeledVehicle::GetWheelsFrictionScale()
 void ACarlaWheeledVehicle::SetWheelsFrictionScale(TArray<float> &WheelsFrictionScale)
 {
 
-  UWheeledVehicleMovementComponent* Movement = GetVehicleMovement();
+  UChaosWheeledVehicleMovementComponent* Movement = GetVehicleMovement();
   if (Movement)
   {
     check(Movement != nullptr);
@@ -863,7 +863,7 @@ void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLoc
   if (bPhysicsEnabled == false)
   {
     check((uint8)WheelLocation >= 0)
-    UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+    UVehicleAnimationInstance *VehicleAnim = Cast<UVehicleAnimationInstance>(GetMesh()->GetAnimInstance());
     check(VehicleAnim != nullptr)
     VehicleAnim->SetWheelRotYaw((uint8)WheelLocation, AngleInDeg);
   }
@@ -876,7 +876,7 @@ void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLoc
 float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocation) {
 
   check((uint8)WheelLocation >= 0)
-  UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  UVehicleAnimationInstance *VehicleAnim = Cast<UVehicleAnimationInstance>(GetMesh()->GetAnimInstance());
   check(VehicleAnim != nullptr)
   check(VehicleAnim->GetWheeledVehicleMovementComponent() != nullptr)
 
@@ -896,7 +896,7 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
     return;
   }
 
-  UWheeledVehicleMovementComponent* Movement = GetVehicleMovement();
+  UChaosWheeledVehicleMovementComponent* Movement = GetVehicleMovement();
   if (Movement)
   {
     check(Movement != nullptr);
@@ -909,7 +909,7 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
     RootComponent->SetSimulatePhysics(enabled);
     RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
-    UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+    UVehicleAnimationInstance *VehicleAnim = Cast<UVehicleAnimationInstance>(GetMesh()->GetAnimInstance());
     check(VehicleAnim != nullptr)
 
     GetWorld()->GetPhysicsScene()->GetPxScene()->lockWrite();

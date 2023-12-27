@@ -11,6 +11,11 @@
 #include "Materials/MaterialInstance.h"
 #include "StaticMeshAttributes.h"
 #include "RenderingThread.h"
+#include "PhysicsEngine/BodySetup.h"
+#if WITH_EDITOR
+#include "Editor/EditorEngine.h"
+#include "Editor/Transactor.h"
+#endif
 // Carla C++ headers
 
 // Carla plugin headers
@@ -72,9 +77,9 @@ FMeshDescription UMapGenFunctionLibrary::BuildMeshDescriptionFromData(
   VertexIndexToVertexID.Reserve(NumVertex);
   for (int32 VertexIndex = 0; VertexIndex < NumVertex; ++VertexIndex)
   {
-    const FVector &Vert = Data.Vertices[VertexIndex];
-    const FVertexID VertexID = MeshDescription.CreateVertex();
-    VertexPositions[VertexID] = Vert;
+    auto &Vert = Data.Vertices[VertexIndex];
+    auto VertexID = MeshDescription.CreateVertex();
+    VertexPositions[VertexID] = FVector3f(Vert);
     VertexIndexToVertexID.Add(VertexIndex, VertexID);
   }
 
@@ -90,11 +95,11 @@ FMeshDescription UMapGenFunctionLibrary::BuildMeshDescriptionFromData(
     const FVertexInstanceID VertexInstanceID =
     MeshDescription.CreateVertexInstance(VertexID);
     IndiceIndexToVertexInstanceID.Add(IndiceIndex, VertexInstanceID);
-    Normals[VertexInstanceID] = Data.Normals[VertexIndex];
+    Normals[VertexInstanceID] = FVector3f(Data.Normals[VertexIndex]);
 
     if(ParamTangents.Num() == Data.Vertices.Num())
     {
-      Tangents[VertexInstanceID] = ParamTangents[VertexIndex].TangentX;
+        Tangents[VertexInstanceID] = FVector3f(ParamTangents[VertexIndex].TangentX);
       BinormalSigns[VertexInstanceID] =
         ParamTangents[VertexIndex].bFlipTangentY ? -1.f : 1.f;
     }else{
@@ -103,13 +108,13 @@ FMeshDescription UMapGenFunctionLibrary::BuildMeshDescriptionFromData(
     Colors[VertexInstanceID] = FLinearColor(0,0,0);
     if(Data.UV0.Num() == Data.Vertices.Num())
     {
-      UVs.Set(VertexInstanceID, 0, Data.UV0[VertexIndex]);
+      UVs.Set(VertexInstanceID, 0, FVector2f(Data.UV0[VertexIndex]));
     }else{
-      UVs.Set(VertexInstanceID, 0, FVector2D(0,0));
+      UVs.Set(VertexInstanceID, 0, FVector2f(0,0));
     }
-    UVs.Set(VertexInstanceID, 1, FVector2D(0,0));
-    UVs.Set(VertexInstanceID, 2, FVector2D(0,0));
-    UVs.Set(VertexInstanceID, 3, FVector2D(0,0));
+    UVs.Set(VertexInstanceID, 1, FVector2f(0,0));
+    UVs.Set(VertexInstanceID, 2, FVector2f(0,0));
+    UVs.Set(VertexInstanceID, 3, FVector2f(0,0));
   }
 
   for (int32 TriIdx = 0; TriIdx < NumTri; TriIdx++)
@@ -166,7 +171,7 @@ UStaticMesh* UMapGenFunctionLibrary::CreateMesh(
 
     Mesh->InitResources();
     Mesh->SetLightingGuid(FGuid::NewGuid());
-    Mesh->StaticMaterials.Add(FStaticMaterial(MaterialInstance));
+    Mesh->GetStaticMaterials().Add(FStaticMaterial(MaterialInstance));
     Mesh->BuildFromMeshDescriptions({ &Description }, Params);
     Mesh->CreateBodySetup();
     Mesh->GetBodySetup()->CollisionTraceFlag = ECollisionTraceFlag::CTF_UseComplexAsSimple;
@@ -205,14 +210,18 @@ FVector2D UMapGenFunctionLibrary::GetTransversemercProjection(float lat, float l
   return Result;
 }
 
-void UMapGenFunctionLibrary::SetThreadToSleep(float seconds){
+void UMapGenFunctionLibrary::SetThreadToSleep(float seconds)
+{
   //FGenericPlatformProcess::Sleep(seconds);
 }
 
-void UMapGenFunctionLibrary::FlushRenderingCommandsInBlueprint(){
-  FlushRenderingCommands(true);
- 	FlushPendingDeleteRHIResources_GameThread();
+void UMapGenFunctionLibrary::FlushRenderingCommandsInBlueprint()
+{
+    FlushRenderingCommands();
+    FlushPendingDeleteRHIResources_GameThread();
 }
+
+extern UNREALED_API UEditorEngine* GEditor;
 
 void UMapGenFunctionLibrary::CleanupGEngine(){
   GEngine->PerformGarbageCollectionAndCleanupActors();

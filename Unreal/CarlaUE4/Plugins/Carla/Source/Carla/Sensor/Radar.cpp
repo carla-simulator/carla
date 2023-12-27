@@ -135,6 +135,7 @@ void ARadar::SendLineTraces(float DeltaTime)
     Rays[i].Hitted = false;
   }
 
+#if 0 // @CARLAUE5
   FCriticalSection Mutex;
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
   {
@@ -163,7 +164,7 @@ void ARadar::SendLineTraces(float DeltaTime)
         FCollisionResponseParams::DefaultResponseParam
       );
 
-      const TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
+      const TWeakObjectPtr<AActor> HittedActor = OutHit.GetActor();
       if (Hitted && HittedActor.Get()) {
         Rays[idx].Hitted = true;
 
@@ -193,14 +194,14 @@ void ARadar::SendLineTraces(float DeltaTime)
       });
     }
   }
-
+#endif
 }
 
 float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation)
 {
   constexpr float TO_METERS = 1e-2;
 
-  const TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
+  const TWeakObjectPtr<AActor> HittedActor = OutHit.GetActor();
   const FVector TargetVelocity = HittedActor->GetVelocity();
   const FVector TargetLocation = OutHit.ImpactPoint;
   const FVector Direction = (TargetLocation - RadarLocation).GetSafeNormal();

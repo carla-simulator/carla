@@ -10,8 +10,8 @@
 #include "FileHelpers.h"
 #endif
 #include "Misc/FileHelper.h"
-#include "JsonObject.h"
-#include "JsonSerializer.h"
+#include "Dom/JsonObject.h"
+#include "Serialization/JsonSerializer.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "Engine/StreamableManager.h"
@@ -35,7 +35,7 @@ ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
   static ConstructorHelpers::FObjectFinder<UBlueprint> RoadPainterBlueprint(TEXT(
     "Blueprint'/Game/Carla/Blueprints/LevelDesign/RoadPainterPreset.RoadPainterPreset'"));
 
-  RoadPainterSubclass = (UClass*)RoadPainterBlueprint.Object->GeneratedClass;
+  RoadPainterSubclass = (UClass*)RoadPainterBlueprint.GetObject()->GeneratedClass;
 
   // Dirt
   DecalNamesMap.Add("dirt1", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_01.DI_RoadDirt_01'");
@@ -215,7 +215,7 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
   
         // Get the closest road waypoint from the random location calculated
         auto Wp = XODRMap->GetClosestWaypointOnRoad(DecalLocation);
-        carla::geom::Location RoadLocation = XODRMap->ComputeTransform(Wp.get()).location;
+        carla::geom::Location RoadLocation = XODRMap->ComputeTransform(Wp.value()).location;
         FVector FinalLocation(RoadLocation);
 
         // Check we don't exceed the map boundaries
@@ -223,7 +223,7 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
 
           if (FinalLocation.Y > MinYSizeCm && FinalLocation.Y < MaxYSizeCm) {
 
-            FRotator FinalRotation(XODRMap->ComputeTransform(Wp.get()).rotation);
+            FRotator FinalRotation(XODRMap->ComputeTransform(Wp.value()).rotation);
 
             // Transform the location from world coords to tile coordinates.
             // The location we get is the location of the XODR waypoint, which is in WORLD coordinates

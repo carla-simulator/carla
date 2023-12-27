@@ -19,11 +19,13 @@ void ACarlaHUD::DrawHUD()
     return;
   }
 
+#if 0 // @CARLAUE5
   if(DebugVehicle) {
     float YL = 1600.0f;
     float Y0 = 0.0f;
     DebugVehicle->DrawDebug(Canvas, YL, Y0);
   }
+#endif
 
   double Now = FPlatformTime::Seconds();
   int i = 0;

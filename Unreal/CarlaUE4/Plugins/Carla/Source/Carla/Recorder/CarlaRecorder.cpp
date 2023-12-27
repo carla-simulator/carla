@@ -19,7 +19,7 @@
 #include "Carla/Walker/WalkerController.h"
 #include "Components/BoxComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "VehicleAnimInstance.h"
+#include "VehicleAnimationInstance.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/rpc/VehicleLightState.h"
@@ -204,6 +204,7 @@ void ACarlaRecorder::AddVehicleAnimation(FCarlaActor *CarlaActor)
 
 void ACarlaRecorder::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
 {
+#if 0 // @CARLAUE5
   check(CarlaActor != nullptr)
   if (CarlaActor->IsPendingKill())
     return;
@@ -218,11 +219,11 @@ void ACarlaRecorder::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
   if (SkeletalMesh == nullptr)
     return;
 
-  UVehicleAnimInstance* VehicleAnim = Cast<UVehicleAnimInstance>(SkeletalMesh->GetAnimInstance());
+  UVehicleAnimationInstance* VehicleAnim = Cast<UVehicleAnimationInstance>(SkeletalMesh->GetAnimInstance());
   if (VehicleAnim == nullptr)
     return;
 
-  const UWheeledVehicleMovementComponent* WheeledVehicleMovementComponent = VehicleAnim->GetWheeledVehicleMovementComponent();
+  const UChaosWheeledVehicleMovementComponent* WheeledVehicleMovementComponent = VehicleAnim->GetWheeledVehicleMovementComponent();
   if (WheeledVehicleMovementComponent == nullptr)
     return;
 
@@ -252,6 +253,7 @@ void ACarlaRecorder::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
       WheeledVehicleMovementComponent->GetEngineRotationSpeed() / WheeledVehicleMovementComponent->GetEngineMaxRotationSpeed()
     });
   }
+#endif
 }
 
 void ACarlaRecorder::AddWalkerAnimation(FCarlaActor *CarlaActor)
@@ -586,9 +588,9 @@ void ACarlaRecorder::AddCollision(AActor *Actor1, AActor *Actor2)
     if (FoundActor1 != nullptr) {
       if (FoundActor1->GetActorInfo() != nullptr)
       {
-        auto Role = FoundActor1->GetActorInfo()->Description.Variations.Find("role_name");
-        if (Role != nullptr)
-          Collision.IsActor1Hero = (Role->Value == "hero");
+        auto RoleName = FoundActor1->GetActorInfo()->Description.Variations.Find("role_name");
+        if (RoleName != nullptr)
+          Collision.IsActor1Hero = (RoleName->Value == "hero");
       }
       Collision.DatabaseId1 = FoundActor1->GetActorId();
     }
@@ -601,9 +603,9 @@ void ACarlaRecorder::AddCollision(AActor *Actor1, AActor *Actor2)
     if (FoundActor2 != nullptr) {
       if (FoundActor2->GetActorInfo() != nullptr)
       {
-        auto Role = FoundActor2->GetActorInfo()->Description.Variations.Find("role_name");
-        if (Role != nullptr)
-          Collision.IsActor2Hero = (Role->Value == "hero");
+        auto RoleName = FoundActor2->GetActorInfo()->Description.Variations.Find("role_name");
+        if (RoleName != nullptr)
+          Collision.IsActor2Hero = (RoleName->Value == "hero");
       }
       Collision.DatabaseId2 = FoundActor2->GetActorId();
     }

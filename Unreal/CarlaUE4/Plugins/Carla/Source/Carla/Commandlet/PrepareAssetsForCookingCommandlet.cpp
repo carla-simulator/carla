@@ -31,7 +31,7 @@ static bool ValidateStaticMesh(UStaticMesh *Mesh)
     return false;
   }
 
-  for (int i = 0; i < Mesh->StaticMaterials.Num(); i++)
+  for (int i = 0; i < Mesh->GetStaticMaterials().Num(); i++)
   {
     UMaterialInterface *Material = Mesh->GetMaterial(i);
     const FString MaterialName = Material->GetName();
@@ -208,7 +208,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
         MeshActor->SetActorLabel(AssetName, true);
 
         // set complex collision as simple in asset
-        UBodySetup *BodySetup = MeshAsset->BodySetup;
+        UBodySetup *BodySetup = MeshAsset->GetBodySetup();
         if (BodySetup)
         {
           BodySetup->CollisionTraceFlag = CTF_UseComplexAsSimple;
@@ -223,9 +223,9 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
           // tag
           if (AssetName.Contains(SSTags::R_MARKING1) || AssetName.Contains(SSTags::R_MARKING2))
           {
-            for (int32 i = 0; i < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials.Num(); ++i)
+            for (int32 i = 0; i < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->GetStaticMaterials().Num(); ++i)
             {
-              if (MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials[i].ImportedMaterialSlotName.ToString().Contains("Yellow"))
+              if (MeshActor->GetStaticMeshComponent()->GetStaticMesh()->GetStaticMaterials()[i].ImportedMaterialSlotName.ToString().Contains("Yellow"))
               {
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, MarkingNodeYellow);
               }

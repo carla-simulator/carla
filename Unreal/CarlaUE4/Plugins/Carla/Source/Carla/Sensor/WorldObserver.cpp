@@ -248,7 +248,12 @@ static carla::geom::Vector3D FWorldObserver_GetAngularVelocity(const AActor &Act
       RootComponent != nullptr ?
           RootComponent->GetPhysicsAngularVelocityInDegrees() :
           FVector{0.0f, 0.0f, 0.0f};
-  return {AngularVelocity.X, AngularVelocity.Y, AngularVelocity.Z};
+  return
+  {
+      (float)AngularVelocity.X,
+      (float)AngularVelocity.Y,
+      (float)AngularVelocity.Z
+  };
 }
 
 static carla::geom::Vector3D FWorldObserver_GetAcceleration(
@@ -259,7 +264,12 @@ static carla::geom::Vector3D FWorldObserver_GetAcceleration(
   FVector &PreviousVelocity = View.GetActorInfo()->Velocity;
   const FVector Acceleration = (Velocity - PreviousVelocity) / DeltaSeconds;
   PreviousVelocity = Velocity;
-  return {Acceleration.X, Acceleration.Y, Acceleration.Z};
+  return
+  {
+      (float)Acceleration.X,
+      (float)Acceleration.Y,
+      (float)Acceleration.Z
+  };
 }
 
 static carla::Buffer FWorldObserver_Serialize(
@@ -326,9 +336,11 @@ static carla::Buffer FWorldObserver_Serialize(
       const FActorData* ActorData = View->GetActorData();
       Velocity = TO_METERS * ActorData->Velocity;
       AngularVelocity = carla::geom::Vector3D
-                        {ActorData->AngularVelocity.X,
-                         ActorData->AngularVelocity.Y,
-                         ActorData->AngularVelocity.Z};
+      {
+          (float)ActorData->AngularVelocity.X,
+          (float)ActorData->AngularVelocity.Y,
+          (float)ActorData->AngularVelocity.Z
+      };
       Acceleration = FWorldObserver_GetAcceleration(*View, Velocity, DeltaSeconds);
       State = FWorldObserver_GetDormantActorState(*View, Registry);
     }

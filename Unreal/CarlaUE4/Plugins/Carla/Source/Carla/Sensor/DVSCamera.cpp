@@ -157,8 +157,8 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
   /** DVS Simulator **/
   ADVSCamera::DVSEventArray events = this->Simulation(DeltaTime);
 
-  auto Stream = GetDataStream(*this);
-  auto Buff = Stream.PopBufferFromPool();
+  auto DataStream = GetDataStream(*this);
+  auto Buff = DataStream.PopBufferFromPool();
 
   // serialize data
   carla::Buffer BufferReady(carla::sensor::SensorRegistry::Serialize(*this, events, std::move(Buff)));
@@ -188,11 +188,11 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
       if (ParentActor)
       {
         FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-        ROS2->ProcessDataFromDVS(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, BufView, W, H, Fov, this);
+        ROS2->ProcessDataFromDVS(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, BufView, W, H, Fov, this);
       }
       else
       {
-        ROS2->ProcessDataFromDVS(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), BufView, W, H, Fov, this);
+        ROS2->ProcessDataFromDVS(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), BufView, W, H, Fov, this);
       }
     }
   }
@@ -201,7 +201,7 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ADVSCamera Stream Send");
     /** Send the events **/
-    Stream.Send(*this, BufView);
+    DataStream.Send(*this, BufView);
   }
 }
 

@@ -65,7 +65,9 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
   FPixelReader::SendPixelsInRenderThread<ASceneCaptureCamera, FColor>(*this);
 }
 
+#ifdef CARLA_HAS_GBUFFER_API
 void ASceneCaptureCamera::SendGBufferTextures(FGBufferRequest& GBuffer)
 {
     SendGBufferTexturesInternal(*this, GBuffer);
 }
+#endif

@@ -108,7 +108,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       bIsPrimaryServer = false;
 
       // define the commands executor (when a command comes from the primary server)
-      auto CommandExecutor = [=](carla::multigpu::MultiGPUCommand Id, carla::Buffer Data) {
+      auto CommandExecutor = [=, this](carla::multigpu::MultiGPUCommand Id, carla::Buffer Data) {
         struct CarlaStreamBuffer : public std::streambuf
         {
             CarlaStreamBuffer(char *buf, std::size_t size) { setg(buf, buf, buf + size); }

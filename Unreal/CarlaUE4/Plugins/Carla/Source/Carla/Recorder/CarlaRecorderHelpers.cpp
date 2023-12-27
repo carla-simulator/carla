@@ -67,9 +67,9 @@ void WriteFString(std::ostream &OutFile, const FString &InObj)
 // read binary data to FVector
 void ReadFVector(std::istream &InFile, FVector &OutObj)
 {
-  ReadValue<float>(InFile, OutObj.X);
-  ReadValue<float>(InFile, OutObj.Y);
-  ReadValue<float>(InFile, OutObj.Z);
+  ReadValue(InFile, OutObj.X);
+  ReadValue(InFile, OutObj.Y);
+  ReadValue(InFile, OutObj.Z);
 }
 
 // read binary data to FTransform

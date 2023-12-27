@@ -125,7 +125,7 @@ void AObstacleDetectionSensor::PostPhysTick(UWorld *World, ELevelTick TickType, 
 
   if (isHitReturned)
   {
-    OnObstacleDetectionEvent(this, HitOut.Actor.Get(), HitOut.Distance, HitOut);
+    OnObstacleDetectionEvent(this, HitOut.GetActor(), HitOut.Distance, HitOut);
   }
 }
 
@@ -137,7 +137,7 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
 {
   if ((Actor != nullptr) && (OtherActor != nullptr) && IsStreamReady())
   {
-    const auto &Episode = GetEpisode();
+      const auto& CurrentEpisode = GetEpisode();
 
     auto DataStream = GetDataStream(*this);
 
@@ -162,8 +162,8 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
     #endif
 
     DataStream.SerializeAndSend(*this,
-        Episode.SerializeActor(Actor),
-        Episode.SerializeActor(OtherActor),
+        CurrentEpisode.SerializeActor(Actor),
+        CurrentEpisode.SerializeActor(OtherActor),
         HitDistance/100.0f);
   }
 }

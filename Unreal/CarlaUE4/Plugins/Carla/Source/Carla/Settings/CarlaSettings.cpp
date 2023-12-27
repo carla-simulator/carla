@@ -7,7 +7,7 @@
 #include "Carla/Settings/CarlaSettings.h"
 #include "Carla.h"
 #include "Carla/Util/IniFile.h"
-#include "CommandLine.h"
+#include "Misc/CommandLine.h"
 #include "Engine/DirectionalLight.h"
 #include "Engine/Engine.h"
 #include "Engine/PointLight.h"
@@ -15,8 +15,8 @@
 #include "Engine/StaticMesh.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstance.h"
-#include "Package.h"
-#include "UnrealMathUtility.h"
+#include "UObject/Package.h"
+#include "Math/UnrealMathUtility.h"
 
 // INI file sections.
 #define S_CARLA_SERVER          TEXT("CARLA/Server")

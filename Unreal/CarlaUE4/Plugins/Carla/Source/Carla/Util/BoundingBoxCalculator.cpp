@@ -273,7 +273,7 @@ FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBox(const USkeletalM
 
   for(uint32 i = 0; i < NumVertices; i++)
   {
-    auto Pos = FPositionVertexBuffer.VertexPosition(i);
+    auto Pos = FVector(FPositionVertexBuffer.VertexPosition(i));
     Max = Max.ComponentMax(Pos);
     Min = Min.ComponentMin(Pos);
   }

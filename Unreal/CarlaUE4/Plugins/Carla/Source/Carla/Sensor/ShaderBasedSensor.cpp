@@ -6,7 +6,7 @@
 
 #include "Carla/Sensor/ShaderBasedSensor.h"
 #include "Carla.h"
-#include "ConstructorHelpers.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Actor/ActorBlueprintFunctionLibrary.h"

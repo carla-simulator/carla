@@ -51,8 +51,12 @@ public:
 
   virtual void DrawHUD() override;
 
-  UWheeledVehicleMovementComponent* DebugVehicle{nullptr};
-  void AddDebugVehicleForTelemetry(UWheeledVehicleMovementComponent* Veh) { DebugVehicle = Veh; }
+  UChaosWheeledVehicleMovementComponent* DebugVehicle = nullptr;
+
+  void AddDebugVehicleForTelemetry(UChaosWheeledVehicleMovementComponent* NewDebugVehiclePtr)
+  {
+      DebugVehicle = NewDebugVehiclePtr;
+  }
 
   void AddHUDString(const FString Str, const FVector Location, const FColor Color, double LifeTime);
 

@@ -57,7 +57,7 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
   double Longitude = CurrentLocation.longitude + LongitudeBias + LonError;
   double Altitude = CurrentLocation.altitude + AltitudeBias + AltError;
 
-  auto Stream = GetDataStream(*this);
+  auto DataStream = GetDataStream(*this);
 
   // ROS2
   #if defined(WITH_ROS2)
@@ -70,17 +70,17 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
     if (ParentActor)
     {
       FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
+      ROS2->ProcessDataFromGNSS(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
     }
     else
     {
-      ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
+      ROS2->ProcessDataFromGNSS(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
     }
   }
   #endif
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("AGnssSensor Stream Send");
-    Stream.SerializeAndSend(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
+    DataStream.SerializeAndSend(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
   }
 }
 

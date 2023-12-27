@@ -1,8 +1,6 @@
 // Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "OpenDriveToMap.h"
-#include "DesktopPlatform/Public/IDesktopPlatform.h"
-#include "DesktopPlatform/Public/DesktopPlatformModule.h"
 #include "Misc/FileHelper.h"
 #include "Engine/LevelBounds.h"
 #include "Engine/SceneCapture2D.h"
@@ -27,11 +25,10 @@
 #include <OSM2ODR.h>
 #include <compiler/enable-ue4-macros.h>
 
-#include "Engine/Classes/Interfaces/Interface_CollisionDataProvider.h"
 #include "Engine/TriggerBox.h"
 #include "Engine/AssetManager.h"
 #include "Factories/MaterialInstanceConstantFactoryNew.h"
-#include "PhysicsCore/Public/BodySetupEnums.h"
+#include "BodySetupEnums.h"
 #include "PhysicsEngine/BodySetup.h"
 #include "RawMesh.h"
 #include "AssetRegistry/AssetRegistryModule.h"

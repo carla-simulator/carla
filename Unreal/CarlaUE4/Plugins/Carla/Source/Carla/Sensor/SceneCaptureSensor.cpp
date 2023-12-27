@@ -13,7 +13,7 @@
 #include <atomic>
 #include <thread>
 
-static auto SCENE_CAPTURE_COUNTER = 0u;
+static int SCENE_CAPTURE_COUNTER = 0u;
 
 // =============================================================================
 // -- Local static methods -----------------------------------------------------
@@ -851,7 +851,6 @@ namespace SceneCaptureSensor_local_ns {
     ShowFlags.SetVisualizeDOF(false);
     ShowFlags.SetVisualizeHDR(false);
     ShowFlags.SetVisualizeLightCulling(false);
-    ShowFlags.SetVisualizeLPV(false);
     ShowFlags.SetVisualizeMeshDistanceFields(false);
     ShowFlags.SetVisualizeMotionBlur(false);
     ShowFlags.SetVisualizeOutOfBoundsPixels(false);

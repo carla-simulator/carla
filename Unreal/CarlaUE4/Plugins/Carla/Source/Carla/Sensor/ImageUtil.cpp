@@ -57,9 +57,6 @@ namespace ImageUtil
     case PF_G16R16:
       ConvertRawR16G16DataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
-    case PF_DepthStencil: // Depth / Stencil
-      ConvertRawD32S8DataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
-      break;
     case PF_X24_G8: // Depth Stencil
       ConvertRawR24G8DataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
       break;

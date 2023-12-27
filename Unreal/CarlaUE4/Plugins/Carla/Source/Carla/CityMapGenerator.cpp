@@ -13,7 +13,7 @@
 
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/World.h"
-#include "Paths.h"
+#include "Misc/Paths.h"
 
 #include <algorithm>
 #include <unordered_set>
