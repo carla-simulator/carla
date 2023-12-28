@@ -577,10 +577,10 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
   {
     UE_LOG(LogCarlaTools, Error, TEXT("Null CarlaVehicle"));
   }
-#endif
   // Set the vehicle collision in the new physicsasset object
   GEditor->GetEditorSubsystem<UStaticMeshEditorSubsystem>()->AddSimpleCollisions(
       VehicleMeshes.Body, EScriptingCollisionShapeType::NDOP26);
+#endif
 
   CopyCollisionToPhysicsAsset(NewPhysicsAsset, VehicleMeshes.Body);
   // assign the physics asset to the skeletal mesh
@@ -638,7 +638,7 @@ void UUSDImporterWidget::CopyCollisionToPhysicsAsset(
   UBodySetup* BodySetupPhysicsAsset = 
       PhysicsAssetToEdit->SkeletalBodySetups[
           PhysicsAssetToEdit->FindBodyIndex(FName("Vehicle_Base"))];
-  UBodySetup* BodySetupStaticMesh = StaticMesh->BodySetup;
+  UBodySetup* BodySetupStaticMesh = StaticMesh->GetBodySetup();
   BodySetupPhysicsAsset->AggGeom = BodySetupStaticMesh->AggGeom;
 
 }

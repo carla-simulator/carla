@@ -86,7 +86,8 @@ struct FShapeVisitor
     const auto ArrowTipDist = Dist - ArrowSize;
     const auto Thickness = 1e2f * Arrow.line.thickness;
 
-    World->PersistentLineBatcher->DrawLines(TArray<FBatchedLine>({
+    FBatchedLine BatchedLines[] =
+    {
         FBatchedLine(
             Begin,
             End,
@@ -121,7 +122,10 @@ struct FShapeVisitor
             Color,
             LifeTime,
             Thickness,
-            DepthPriority)}));
+            DepthPriority)
+    };
+
+    World->PersistentLineBatcher->DrawLines(TArrayView<FBatchedLine>(BatchedLines, 5));
   }
 
   void operator()(const Shape::Box &Box) const

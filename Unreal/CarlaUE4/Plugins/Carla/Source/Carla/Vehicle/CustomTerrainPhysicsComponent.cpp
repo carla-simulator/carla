@@ -1640,33 +1640,38 @@ void UCustomTerrainPhysicsComponent::DrawOrientedBox(UWorld* World, const TArray
         Point = LargeMapManager->GlobalToLocalLocation(Point);
       }
     }
-    LineBatcher->DrawLines({
-        FBatchedLine(Vertices[0], Vertices[1], 
+
+    FBatchedLine BatchedLines[] =
+    {
+        FBatchedLine(Vertices[0], Vertices[1],
             FLinearColor(0.0,0.0,1.0), LifeTime, Thickness, 0),
-        FBatchedLine(Vertices[0], Vertices[2], 
+        FBatchedLine(Vertices[0], Vertices[2],
             FLinearColor(0.0,0.0,1.0), LifeTime, Thickness, 0),
-        FBatchedLine(Vertices[2], Vertices[3], 
+        FBatchedLine(Vertices[2], Vertices[3],
             FLinearColor(0.0,0.0,1.0), LifeTime, Thickness, 0),
-        FBatchedLine(Vertices[3], Vertices[1], 
+        FBatchedLine(Vertices[3], Vertices[1],
             FLinearColor(0.0,0.0,1.0), LifeTime, Thickness, 0),
 
-        FBatchedLine(Vertices[4], Vertices[5], 
+        FBatchedLine(Vertices[4], Vertices[5],
             FLinearColor(0.0,0.0,1.0), LifeTime, Thickness, 0),
-        FBatchedLine(Vertices[4], Vertices[6], 
+        FBatchedLine(Vertices[4], Vertices[6],
             FLinearColor(0.0,0.0,1.0), LifeTime, Thickness, 0),
-        FBatchedLine(Vertices[6], Vertices[7], 
+        FBatchedLine(Vertices[6], Vertices[7],
             FLinearColor(0.0,0.0,1.0), LifeTime, Thickness, 0),
-        FBatchedLine(Vertices[7], Vertices[5], 
+        FBatchedLine(Vertices[7], Vertices[5],
             FLinearColor(0.0,0.0,1.0), LifeTime, Thickness, 0),
 
-        FBatchedLine(Vertices[0], Vertices[4], 
+        FBatchedLine(Vertices[0], Vertices[4],
             FLinearColor(0.0,0.0,1.0), LifeTime, Thickness, 0),
-        FBatchedLine(Vertices[1], Vertices[5], 
+        FBatchedLine(Vertices[1], Vertices[5],
             FLinearColor(0.0,0.0,1.0), LifeTime, Thickness, 0),
-        FBatchedLine(Vertices[2], Vertices[6], 
+        FBatchedLine(Vertices[2], Vertices[6],
             FLinearColor(0.0,0.0,1.0), LifeTime, Thickness, 0),
-        FBatchedLine(Vertices[3], Vertices[7], 
-            FLinearColor(0.0,0.0,1.0), LifeTime, Thickness, 0)});
+        FBatchedLine(Vertices[3], Vertices[7],
+            FLinearColor(0.0,0.0,1.0), LifeTime, Thickness, 0)
+    };
+
+    LineBatcher->DrawLines(TArrayView<FBatchedLine>(BatchedLines, 12));
   }
 }
 
@@ -1703,15 +1708,19 @@ void UCustomTerrainPhysicsComponent::DrawTiles(UWorld* World, const std::vector<
     V2.Z = Height;
     V3.Z = Height;
     V4.Z = Height;
-    LineBatcher->DrawLines({
-        FBatchedLine(V1, V2, 
+    FBatchedLine BatchedLines[] =
+    {
+        FBatchedLine(V1, V2,
             Color, LifeTime, Thickness, 0),
-        FBatchedLine(V2, V4, 
+        FBatchedLine(V2, V4,
             Color, LifeTime, Thickness, 0),
-        FBatchedLine(V1, V3, 
+        FBatchedLine(V1, V3,
             Color, LifeTime, Thickness, 0),
-        FBatchedLine(V3, V4, 
-            Color, LifeTime, Thickness, 0)});
+        FBatchedLine(V3, V4,
+            Color, LifeTime, Thickness, 0)
+    };
+
+    LineBatcher->DrawLines(TArrayView<FBatchedLine>(BatchedLines, 4));
     // UE_LOG(LogCarla, Log, TEXT("Drawing Tile %ld with verts %s, %s, %s, %s"),
     //     TileId, *V1.ToString(), *V2.ToString(), *V3.ToString(), *V4.ToString());
   }
