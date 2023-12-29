@@ -179,7 +179,7 @@ public class Carla :
         var LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
 		var LibCarlaLibPath = Path.Combine(LibCarlaInstallPath, "lib");
 		var LibCarlaServerPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-server"));
-		var LibCarlaClientPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-client"));
+		PublicAdditionalLibraries.AddRange(new string[]{LibCarlaServerPath});
         // Boost
 		var BoostLibraryPatterns = new string[]
 		{
