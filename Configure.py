@@ -683,7 +683,9 @@ class TaskGraph:
   def Execute(self, sequential : bool = False):
     if len(self.tasks) == 0:
       return
-    print('-- Running task graph --')
+    print(
+      '-- Running task graph --\n'
+      '')
     self.Print()
     from collections import deque
     assert self.Validate()
@@ -993,7 +995,7 @@ def ConfigureSUMO():
   if len(xercesc_path_candidates) > 1:
     Log('Warning: multiple xerces-c libraries found.')
   xercesc_path_candidates.sort()
-  XERCESC_PATH = xercesc_path_candidates[0]
+  XERCESC_LIB_PATH = xercesc_path_candidates[0]
   cmd = Task.CreateCMakeConfigureDefaultCommandLine(
     SUMO_SOURCE_PATH,
     SUMO_BUILD_PATH)
@@ -1009,8 +1011,8 @@ def ConfigureSUMO():
     f'-DPROJ_INCLUDE_DIR={PROJ_INSTALL_PATH}/include',
     f'-DPROJ_LIBRARY={PROJ_LIB_PATH}',
     f'-DXercesC_INCLUDE_DIR={XERCESC_INSTALL_PATH}/include',
-    f'-DXercesC_LIBRARY={XERCESC_PATH}',
-    '-DSUMO_LIBRARIES=OFF',
+    f'-DXercesC_LIBRARY={XERCESC_LIB_PATH}',
+    # '-DSUMO_LIBRARIES=OFF',
     # '-DPROFILING=OFF',
     # '-DPPROF=OFF',
     # '-DCOVERAGE=OFF',
