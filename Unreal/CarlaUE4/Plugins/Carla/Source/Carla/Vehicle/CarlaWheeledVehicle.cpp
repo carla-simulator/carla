@@ -7,10 +7,6 @@
 
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
-#if 0 // @CARLAUE5
-#include "TireConfig.h"
-#include "VehicleWheel.h"
-
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
 #include "MovementComponents/DefaultMovementComponent.h"
@@ -35,6 +31,7 @@
 ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer)
 {
+#if 0 // @CARLAUE5
   VehicleBounds = CreateDefaultSubobject<UBoxComponent>(TEXT("VehicleBounds"));
   VehicleBounds->SetupAttachment(RootComponent);
   VehicleBounds->SetHiddenInGame(true);
@@ -45,10 +42,12 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
 
   GetWheeledVehicleComponent()->bReverseAsBrake = false;
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
+#endif
 }
 
 ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
 
+#if 0 // @CARLAUE5
 void ACarlaWheeledVehicle::SetWheelCollision(UWheeledVehicleMovementComponent4W *Vehicle4W,
     const FVehiclePhysicsControl &PhysicsControl ) {
 
@@ -74,6 +73,7 @@ void ACarlaWheeledVehicle::SetWheelCollision(UWheeledVehicleMovementComponent4W 
   #endif
 
 }
+#endif
 
 void ACarlaWheeledVehicle::SetWheelCollisionNW(UWheeledVehicleMovementComponentNW *VehicleNW,
     const FVehiclePhysicsControl &PhysicsControl ) {
@@ -97,6 +97,7 @@ void ACarlaWheeledVehicle::SetWheelCollisionNW(UWheeledVehicleMovementComponentN
 
 void ACarlaWheeledVehicle::BeginPlay()
 {
+#if 0 // @CARLAUE5
   Super::BeginPlay();
 
   UDefaultMovementComponent::CreateDefaultMovementComponent(this);
@@ -200,6 +201,7 @@ void ACarlaWheeledVehicle::BeginPlay()
   }
 
   AddReferenceToManager();
+#endif
 }
 
 bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
@@ -306,11 +308,15 @@ FVector ACarlaWheeledVehicle::GetVehicleBoundingBoxExtent() const
 
 float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 {
+#if 0 // @CARLAUE5
   const auto &Wheels = GetWheeledVehicleComponent()->Wheels;
   check(Wheels.Num() > 0);
   const auto *FrontWheel = Wheels[0];
   check(FrontWheel != nullptr);
   return FrontWheel->SteerAngle;
+#else
+    return 0.0F;
+#endif
 }
 
 // =============================================================================
@@ -367,9 +373,9 @@ void ACarlaWheeledVehicle::SetHandbrakeInput(const bool Value)
 
 TArray<float> ACarlaWheeledVehicle::GetWheelsFrictionScale()
 {
-
+    TArray<float> WheelsFrictionScale;
+#if 0 // @CARLAUE5
   UChaosWheeledVehicleMovementComponent* Movement = GetVehicleMovement();
-  TArray<float> WheelsFrictionScale;
   if (Movement)
   {
     check(Movement != nullptr);
@@ -379,12 +385,13 @@ TArray<float> ACarlaWheeledVehicle::GetWheelsFrictionScale()
       WheelsFrictionScale.Add(Wheel->TireConfig->GetFrictionScale());
     }
   }
+#endif
   return WheelsFrictionScale;
 }
 
 void ACarlaWheeledVehicle::SetWheelsFrictionScale(TArray<float> &WheelsFrictionScale)
 {
-
+#if 0 // @CARLAUE5
   UChaosWheeledVehicleMovementComponent* Movement = GetVehicleMovement();
   if (Movement)
   {
@@ -396,12 +403,13 @@ void ACarlaWheeledVehicle::SetWheelsFrictionScale(TArray<float> &WheelsFrictionS
       Movement->Wheels[i]->TireConfig->SetFrictionScale(WheelsFrictionScale[i]);
     }
   }
+#endif
 }
 
 FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
 {
   FVehiclePhysicsControl PhysicsControl;
-
+#if 0 // @CARLAUE5
   if (!bIsNWVehicle) {
     UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
           GetVehicleMovement());
@@ -558,6 +566,7 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
     PhysicsControl.Wheels = Wheels;
 
   }
+#endif
   return PhysicsControl;
 }
 
@@ -574,6 +583,7 @@ void ACarlaWheeledVehicle::RestoreVehiclePhysicsControl()
 void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl)
 {
   LastPhysicsControl = PhysicsControl;
+#if 0 // @CARLAUE5
   if (!bIsNWVehicle) {
     UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
           GetVehicleMovement());
@@ -787,7 +797,7 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
 
   // Update physics in the Ackermann Controller
   AckermannController.UpdateVehiclePhysics(this);
-  
+#endif
 }
 
 void ACarlaWheeledVehicle::ActivateVelocityControl(const FVector &Velocity)
@@ -802,6 +812,7 @@ void ACarlaWheeledVehicle::DeactivateVelocityControl()
 
 void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
 {
+#if 0 // @CARLAUE5
   if (GetWorld()->GetFirstPlayerController())
   {
     ACarlaHUD* hud = Cast<ACarlaHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
@@ -823,6 +834,7 @@ void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
       UE_LOG(LogCarla, Warning, TEXT("ACarlaWheeledVehicle::ShowDebugTelemetry:: Cannot find HUD for debug info"));
     }
   }
+#endif
 }
 
 void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState &LightState)
@@ -860,6 +872,7 @@ void ACarlaWheeledVehicle::SetCarlaMovementComponent(UBaseCarlaMovementComponent
 
 void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLocation, float AngleInDeg) {
 
+#if 0 // @CARLAUE5
   if (bPhysicsEnabled == false)
   {
     check((uint8)WheelLocation >= 0)
@@ -871,10 +884,12 @@ void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLoc
   {
     UE_LOG(LogTemp, Warning, TEXT("Cannot set wheel steer direction. Physics are enabled."))
   }
+#endif
 }
 
 float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocation) {
 
+#if 0 // @CARLAUE5
   check((uint8)WheelLocation >= 0)
   UVehicleAnimationInstance *VehicleAnim = Cast<UVehicleAnimationInstance>(GetMesh()->GetAnimInstance());
   check(VehicleAnim != nullptr)
@@ -888,9 +903,13 @@ float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocati
   {
     return VehicleAnim->GetWheelRotAngle((uint8)WheelLocation);
   }
+#else
+    return 0.0F;
+#endif
 }
 
 void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
+#if 0 // @CARLAUE5
   if(!GetCarlaMovementComponent<UDefaultMovementComponent>())
   {
     return;
@@ -929,7 +948,7 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
 
     ResetConstraints();
   }
-
+#endif
 }
 
 void ACarlaWheeledVehicle::ResetConstraints()
@@ -1074,12 +1093,14 @@ void ACarlaWheeledVehicle::ApplyRolloverBehavior()
 }
 
 void ACarlaWheeledVehicle::CheckRollover(const float roll, const std::pair<float, float> threshold_roll){
+#if 0 // @CARLAUE5
   if (threshold_roll.first < roll && roll < threshold_roll.second){
-    auto RootComponent = Cast<UPrimitiveComponent>(GetRootComponent());
-    auto angular_velocity = RootComponent->GetPhysicsAngularVelocityInDegrees();
-    RootComponent->SetPhysicsAngularVelocity((1 - RolloverBehaviorForce) * angular_velocity);
+    auto Root = Cast<UPrimitiveComponent>(GetRootComponent());
+    auto angular_velocity = Root->GetPhysicsAngularVelocityInDegrees();
+    Root->SetPhysicsAngularVelocity((1 - RolloverBehaviorForce) * angular_velocity);
     RolloverBehaviorTracker += 1;
   }
+#endif
 }
 
 void ACarlaWheeledVehicle::SetRolloverFlag(){
@@ -1134,4 +1155,3 @@ void ACarlaWheeledVehicle::SetPhysicsConstraintAngle(
 {
   Component->ConstraintInstance.AngularRotationOffset = NewAngle;
 }
-#endif

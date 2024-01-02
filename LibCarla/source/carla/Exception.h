@@ -5,18 +5,19 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
+#include <exception>
+
+
+
+// =============================================================================
+// -- Define carla::throw_exception --------------------------------------------
+// =============================================================================
 
 #ifdef LIBCARLA_NO_EXCEPTIONS
 
-namespace std {
-
-  class exception;
-
-} // namespace std
-
-namespace carla {
-
-  /// User define function, similar to Boost throw_exception.
+namespace carla
+{
+  /// User defined function, similar to Boost throw_exception.
   ///
   /// @important Boost exceptions are also routed to this function.
   ///
@@ -25,19 +26,65 @@ namespace carla {
   /// appropriate definition. Callers of throw_exception are allowed to assume
   /// that the function never returns; therefore, if the user-defined
   /// throw_exception returns, the behavior is undefined.
-  [[ noreturn ]] void throw_exception(const std::exception &e);
+  [[noreturn]]
+  void throw_exception(const std::exception &e);
 
 } // namespace carla
 
 #else
 
-namespace carla {
-
-  template <typename T>
-  [[ noreturn ]] void throw_exception(const T &e) {
+namespace carla
+{
+  [[noreturn]]
+  inline void throw_exception(const std::exception &e)
+  {
     throw e;
   }
-
 } // namespace carla
 
 #endif // LIBCARLA_NO_EXCEPTIONS
+
+
+
+// =============================================================================
+// -- Define boost::throw_exception --------------------------------------------
+// =============================================================================
+
+#ifdef BOOST_NO_EXCEPTIONS
+#include <boost/assert/source_location.hpp>
+
+namespace boost
+{
+  [[noreturn]]
+  inline void throw_exception(const std::exception &e)
+  {
+    carla::throw_exception(e);
+  }
+
+  [[noreturn]]
+  inline void throw_exception(const std::exception &e, boost::source_location const& loc)
+  {
+    throw_exception(e);
+  }
+} // namespace boost
+#endif // BOOST_NO_EXCEPTIONS
+
+
+
+// =============================================================================
+// -- Workaround for Boost.Asio bundled with rpclib ----------------------------
+// =============================================================================
+
+#ifdef ASIO_NO_EXCEPTIONS
+namespace clmdep_asio
+{
+  namespace detail
+  {
+    [[noreturn]]
+    inline void throw_exception(const std::exception& e)
+    {
+      carla::throw_exception(e);
+    }
+  } // namespace detail
+} // namespace clmdep_asio
+#endif // ASIO_NO_EXCEPTIONS

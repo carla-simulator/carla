@@ -12,6 +12,7 @@
 
 void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0, float Lon_0)
 {
+#ifdef WITH_OSM2ODR
   IPlatformFile &FileManager = FPlatformFileManager::Get().GetPlatformFile();
 
   FString FileContent;
@@ -52,6 +53,9 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0,
   {
     UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: Failed to write FString to file."));
   }
+#else
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("UCustomFileDownloader::ConvertOSMInOpenDrive is disabled since SUMO's OSM2ODR is not enabled."));
+#endif
 }
 
 void UCustomFileDownloader::StartDownload()

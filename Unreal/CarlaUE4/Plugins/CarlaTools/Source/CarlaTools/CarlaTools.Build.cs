@@ -2,19 +2,26 @@
 
 using System;
 using System.IO;
-using UnrealBuildTool;
-using EpicGames.Core;
 using System.Linq;
 using System.Diagnostics;
+using System.Collections.Generic;
+using UnrealBuildTool;
+using EpicGames.Core;
 
 public class CarlaTools :
 	ModuleRules
 {
+    [CommandLine("-verbose")]
+    bool Verbose = true;
+
     [CommandLine("-houdini")]
     bool EnableHoudini = false;
 
     [CommandLine("-nv-omniverse")]
     bool EnableNVIDIAOmniverse = false;
+
+    [CommandLine("-osm2odr")]
+    bool EnableOSM2ODR = false;
 
     [CommandLine("-carla-install-path")]
     string CarlaInstallPath = null;
@@ -28,39 +35,17 @@ public class CarlaTools :
         Console.WriteLine(string.Format("{0} is {1}.", name, state));
     }
 
-    public static string FindLibrary(string SearchPath, params string[] Patterns)
-    {
-        foreach (var Pattern in Patterns)
-        {
-            var Candidates = Directory.GetFiles(SearchPath, Pattern);
-            if (Candidates.Length == 0)
-                continue;
-            Array.Sort(Candidates);
-            return Candidates[0];
-        }
-
-        string message = "Warning: Could not find any matches in \"";
-        message += SearchPath;
-        message += "\" for";
-        foreach (var Pattern in Patterns)
-        {
-            message += " \"";
-            message += Pattern;
-            message += "\",";
-        }
-        if (Patterns.Length != 0)
-            message.Remove(message.Length - 1, 1);
-        message += '.';
-        Console.WriteLine(message);
-
-        return "";
-    }
-
     public CarlaTools(ReadOnlyTargetRules Target) :
 		base(Target)
     {
         LogFlagStatus("Houdini support", EnableHoudini);
         LogFlagStatus("NVIDIA Omniverse support", EnableNVIDIAOmniverse);
+
+        if (EnableOSM2ODR)
+        {
+            PublicDefinitions.Add("WITH_OSM2ODR");
+            PrivateDefinitions.Add("WITH_OSM2ODR");
+        }
 
         var DirectoryInfo = new DirectoryInfo(ModuleDirectory);
         for (int i = 0; i != 6; ++i)
@@ -89,13 +74,8 @@ public class CarlaTools :
         Console.WriteLine("Current module directory: " + ModuleDirectory);
 
         bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
-
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         bEnableExceptions = bEnableExceptions || IsWindows;
-        // PrivatePCHHeaderFile = "Carla.h";
-
-        // PublicIncludePaths.AddRange(new string[] { });
-        // PrivateIncludePaths.AddRange(new string[] { });
 
         PublicDependencyModuleNames.AddRange(new string[]
         {
@@ -103,8 +83,8 @@ public class CarlaTools :
             "ProceduralMeshComponent",
             "MeshDescription",
             "RawMesh",
-            "AssetTools"
-		});
+            "AssetTools",
+        });
 
         PrivateDependencyModuleNames.AddRange(new string[]
 		{
@@ -118,8 +98,8 @@ public class CarlaTools :
 			"EditorScriptingUtilities",
 			"Landscape",
 			"Foliage",
-			"FoliageEdit",
-			"MeshMergeUtilities",
+            "FoliageEdit",
+            "MeshMergeUtilities",
 			"Carla",
 			"StaticMeshDescription",
 			"ChaosVehicles",
@@ -132,7 +112,7 @@ public class CarlaTools :
 			"RenderCore",
 			"MeshMergeUtilities",
 			"StreetMapImporting",
-			"StreetMapRuntime"
+			"StreetMapRuntime",
 		});
 
 		if (EnableHoudini)
@@ -198,33 +178,40 @@ public class CarlaTools :
         var LibCarlaLibPath = Path.Combine(LibCarlaInstallPath, "lib");
         var LibCarlaServerPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-server"));
         var LibCarlaClientPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-client"));
+
         // Boost
         var BoostLibraryPatterns = new string[]
         {
-            GetLibraryName("*boost_asio*"),
-            GetLibraryName("*boost_python*"),
+            "libboost_atomic*",
+            "libboost_date_time*",
+            "libboost_filesystem*",
+            "libboost_numpy*",
+            "libboost_python*",
+            "libboost_system*",
         };
         var BoostLibraries =
             from Pattern in BoostLibraryPatterns
-            from Candidate in FindLibraries("boost", Pattern)
-            select Candidate;
+            select FindLibraries("boost", Pattern)[0];
 
+        // SQLite
         var SQLiteBuildPath = Path.Combine(DependenciesInstallPath, "sqlite-build");
         var SQLiteLibrary = Directory.GetFiles(SQLiteBuildPath, GetLibraryName("sqlite*"))[0];
-
-        PublicIncludePaths.Add(ModuleDirectory);
-        PublicIncludePaths.Add(LibCarlaIncludePath);
-
-        PublicAdditionalLibraries.AddRange(BoostLibraries);
-        PublicAdditionalLibraries.AddRange(new string[]
+        
+        var AdditionalLibraries = new List<string>
         {
             SQLiteLibrary,
             FindLibraries("rpclib", "rpc")[0],
             FindLibraries("xercesc", "xerces-c*")[0],
             FindLibraries("proj", "proj")[0],
-            FindLibraries("sumo", "*osm2odr")[0],
             FindLibraries("zlib", "zlib*")[0],
-        });
+        };
+
+        if (EnableOSM2ODR)
+            AdditionalLibraries.Add(FindLibraries("sumo", "*osm2odr")[0]);
+
+        PublicIncludePaths.Add(ModuleDirectory);
+        PublicIncludePaths.Add(LibCarlaIncludePath);
+
         PublicIncludePaths.AddRange(new string[]
         {
             GetIncludePath("boost"),
@@ -233,5 +220,28 @@ public class CarlaTools :
             GetIncludePath("sumo"),
             GetIncludePath("zlib"),
         });
+
+        PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
+        PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
+        PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+        PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
+        PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
+        PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
+
+        if (IsWindows)
+        {
+            PublicDefinitions.Add("NOMINMAX");
+            PublicDefinitions.Add("VC_EXTRALEAN");
+            PublicDefinitions.Add("WIN32_LEAN_AND_MEAN");
+        }
+
+        if (Verbose)
+        {
+            Console.WriteLine("Additional CARLA libraries:");
+            foreach (var e in AdditionalLibraries)
+                Console.WriteLine(" - " + e);
+        }
+
+        PublicAdditionalLibraries.AddRange(AdditionalLibraries);
     }
 }

@@ -43,6 +43,8 @@ DEFAULT_ERROR_MESSAGE = (
   '  https://discord.gg/42KJdRj\n'
 )
 
+
+
 def FindExecutable(candidates : list):
   for e in candidates:
     ec = subprocess.call(
@@ -91,12 +93,16 @@ DEFAULT_C_STANDARD = 11
 DEFAULT_CPP_STANDARD = 20
 
 argp = argparse.ArgumentParser(description = __doc__)
+
 def AddCLIFlag(name : str, help : str):
   argp.add_argument(f'--{name}', action = 'store_true', help = help)
+
 def AddCLIStringOption(name : str, default : str, help : str):
   argp.add_argument(f'--{name}', type = str, default = str(default), help = f'{help} (default = "{default}").')
+
 def ADDCLIIntOption(name : str, default : int, help : str):
   argp.add_argument(f'--{name}', type = int, default = int(default), help = f'{help} (default = {default}).')
+
 AddCLIFlag(
   'launch',
   'Build and open the CarlaUE4 project in the Unreal Engine editor.')
@@ -233,6 +239,8 @@ AddCLIStringOption(
   'Set the path of Unreal Engine.')
 
 ARGS_SYNC_PATH = WORKSPACE_PATH / 'ArgsSync.json'
+
+
 def SyncArgs():
   argv = argparse.Namespace()
   if __name__ == '__main__':
@@ -296,6 +304,7 @@ LIB_IS_AR = 'ar' in LIB
 UNREAL_ENGINE_PATH = Path(ARGV.ue_path)
 # Dependencies:
 # Boost
+BOOST_USE_SUPERPROJECT = True
 BOOST_VERSION = (1, 83, 0)
 BOOST_VERSION_MAJOR, BOOST_VERSION_MINOR, BOOST_VERSION_PATCH = BOOST_VERSION
 BOOST_VERSION_STRING = f'{BOOST_VERSION_MAJOR}.{BOOST_VERSION_MINOR}.{BOOST_VERSION_PATCH}'
@@ -306,6 +315,48 @@ BOOST_INSTALL_PATH = DEPENDENCIES_PATH / 'boost-install'
 BOOST_INCLUDE_PATH = BOOST_INSTALL_PATH / 'include'
 BOOST_LIBRARY_PATH = BOOST_INSTALL_PATH / 'lib'
 BOOST_B2_PATH = BOOST_SOURCE_PATH / f'b2{EXE_EXT}'
+
+BOOST_ALGORITHM_SOURCE_PATH = DEPENDENCIES_PATH / 'boost-algorithm-source'
+BOOST_ALGORITHM_BUILD_PATH = DEPENDENCIES_PATH / 'boost-algorithm-build'
+BOOST_ALGORITHM_INSTALL_PATH = DEPENDENCIES_PATH / 'boost-algorithm-install'
+BOOST_ALGORITHM_INCLUDE_PATH = BOOST_ALGORITHM_INSTALL_PATH / 'include'
+BOOST_ALGORITHM_LIB_PATH = BOOST_ALGORITHM_INSTALL_PATH / 'lib'
+
+BOOST_ASIO_SOURCE_PATH = DEPENDENCIES_PATH / 'boost-asio-source'
+BOOST_ASIO_BUILD_PATH = DEPENDENCIES_PATH / 'boost-asio-build'
+BOOST_ASIO_INSTALL_PATH = DEPENDENCIES_PATH / 'boost-asio-install'
+BOOST_ASIO_INCLUDE_PATH = BOOST_ASIO_INSTALL_PATH / 'include'
+BOOST_ASIO_LIB_PATH = BOOST_ASIO_INSTALL_PATH / 'lib'
+
+BOOST_DATE_SOURCE_PATH = DEPENDENCIES_PATH / 'boost-date-time-source'
+BOOST_DATE_BUILD_PATH = DEPENDENCIES_PATH / 'boost-date-time-build'
+BOOST_DATE_INSTALL_PATH = DEPENDENCIES_PATH / 'boost-date-install'
+BOOST_DATE_INCLUDE_PATH = BOOST_DATE_INSTALL_PATH / 'include'
+BOOST_DATE_LIB_PATH = BOOST_DATE_INSTALL_PATH / 'lib'
+
+BOOST_GEOMETRY_SOURCE_PATH = DEPENDENCIES_PATH / 'boost-geometry-source'
+BOOST_GEOMETRY_BUILD_PATH = DEPENDENCIES_PATH / 'boost-geometry-build'
+BOOST_GEOMETRY_INSTALL_PATH = DEPENDENCIES_PATH / 'boost-geometry-install'
+BOOST_GEOMETRY_INCLUDE_PATH = BOOST_GEOMETRY_INSTALL_PATH / 'include'
+BOOST_GEOMETRY_LIB_PATH = BOOST_GEOMETRY_INSTALL_PATH / 'lib'
+
+BOOST_GIL_SOURCE_PATH = DEPENDENCIES_PATH / 'boost-gil-source'
+BOOST_GIL_BUILD_PATH = DEPENDENCIES_PATH / 'boost-gil-build'
+BOOST_GIL_INSTALL_PATH = DEPENDENCIES_PATH / 'boost-gil-install'
+BOOST_GIL_INCLUDE_PATH = BOOST_GIL_INSTALL_PATH / 'include'
+BOOST_GIL_LIB_PATH = BOOST_GIL_INSTALL_PATH / 'lib'
+
+BOOST_ITERATOR_SOURCE_PATH = DEPENDENCIES_PATH / 'boost-iterator-source'
+BOOST_ITERATOR_BUILD_PATH = DEPENDENCIES_PATH / 'boost-iterator-build'
+BOOST_ITERATOR_INSTALL_PATH = DEPENDENCIES_PATH / 'boost-iterator-install'
+BOOST_ITERATOR_INCLUDE_PATH = BOOST_ITERATOR_INSTALL_PATH / 'include'
+BOOST_ITERATOR_LIB_PATH = BOOST_ITERATOR_INSTALL_PATH / 'lib'
+
+BOOST_PYTHON_SOURCE_PATH = DEPENDENCIES_PATH / 'boost-python-source'
+BOOST_PYTHON_BUILD_PATH = DEPENDENCIES_PATH / 'boost-python-build'
+BOOST_PYTHON_INSTALL_PATH = DEPENDENCIES_PATH / 'boost-python-install'
+BOOST_PYTHON_INCLUDE_PATH = BOOST_PYTHON_INSTALL_PATH / 'include'
+BOOST_PYTHON_LIB_PATH = BOOST_PYTHON_INSTALL_PATH / 'lib'
 # Eigen
 EIGEN_SOURCE_PATH = DEPENDENCIES_PATH / 'eigen-source'
 EIGEN_BUILD_PATH = DEPENDENCIES_PATH / 'eigen-build'
@@ -391,10 +442,14 @@ NV_OMNIVERSE_PATCH_PATH = PATCHES_PATH / 'omniverse_4.26'
 
 # Basic IO functions:
 
+
+
 def Log(message):
   message = str(message)
   message += '\n'
   print(message, end='')
+
+
 
 def LaunchSubprocess(
     cmd : list,
@@ -405,6 +460,8 @@ def LaunchSubprocess(
     stdout = log,
     stderr = log,
     cwd = working_directory)
+
+
 
 def LaunchSubprocessImmediate(
     cmd : list,
@@ -421,6 +478,8 @@ def LaunchSubprocessImmediate(
   else:
     sp = subprocess.run(cmd, cwd = working_directory)
   sp.check_returncode()
+
+
 
 # Convenience classes for listing dependencies:
 
@@ -447,11 +506,9 @@ class DependencyUEPlugin(Dependency):
   def __init__(self, name: str, *sources):
     super().__init__(name, *sources)
 
+
+
 DEFAULT_DEPENDENCIES = [
-  Dependency(
-    'boost',
-    Download(f'https://boostorg.jfrog.io/artifactory/main/release/{BOOST_VERSION_STRING}/source/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip'),
-    Download(f'https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip')),
   Dependency(
     'eigen',
     GitRepository('https://gitlab.com/libeigen/eigen.git', tag_or_branch = '3.4.0')),
@@ -460,20 +517,16 @@ DEFAULT_DEPENDENCIES = [
     GitRepository('https://github.com/glennrp/libpng.git', tag_or_branch = 'v1.6.40')),
   Dependency(
     'proj',
-    GitRepository('https://github.com/OSGeo/PROJ.git', tag_or_branch = '9.3.0'),
-    Download('https://download.osgeo.org/proj/proj-9.3.0.tar.gz')),
+    GitRepository('https://github.com/OSGeo/PROJ.git', tag_or_branch = '9.3.0')),
   Dependency(
     'gtest',
     GitRepository('https://github.com/google/googletest.git', tag_or_branch = 'v1.14.0')),
   Dependency(
     'zlib',
-    GitRepository('https://github.com/madler/zlib.git'),
-    Download('https://zlib.net/current/zlib.tar.gz')),
+    GitRepository('https://github.com/madler/zlib.git'),),
   Dependency(
     'xercesc',
-    GitRepository('https://github.com/apache/xerces-c.git', tag_or_branch = 'v3.2.4'),
-    Download('https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.3.zip'),
-    Download('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/xerces-c-3.2.3.zip')),
+    GitRepository('https://github.com/apache/xerces-c.git', tag_or_branch = 'v3.2.4')),
   Dependency(
     'sqlite',
     Download('https://www.sqlite.org/2021/sqlite-amalgamation-3340100.zip')),
@@ -483,16 +536,30 @@ DEFAULT_DEPENDENCIES = [
   Dependency(
     'recast',
     GitRepository('https://github.com/carla-simulator/recastnavigation.git', tag_or_branch = 'carla')),
-]
-
-# @TODO: Use these instead of full boost.
-BOOST_DEPENDENCIES_EXPERIMENTAL = [
+] + [
+  Dependency(
+      'boost',
+      Download(f'https://boostorg.jfrog.io/artifactory/main/release/{BOOST_VERSION_STRING}/source/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip'),
+      Download(f'https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip')),
+] if BOOST_USE_SUPERPROJECT else [
+  Dependency(
+    'boost-algorithm',
+    GitRepository('https://github.com/boostorg/algorithm.git')),
   Dependency(
     'boost-asio',
     GitRepository('https://github.com/boostorg/asio.git')),
   Dependency(
+    'boost-iterator',
+    GitRepository('https://github.com/boostorg/iterator.git')),
+  Dependency(
     'boost-python',
     GitRepository('https://github.com/boostorg/python.git')),
+  Dependency(
+    'boost-geometry',
+    GitRepository('https://github.com/boostorg/geometry.git')),
+  Dependency(
+    'boost-date-time',
+    GitRepository('https://github.com/boostorg/date_time.git')),
   Dependency(
     'boost-gil',
     GitRepository('https://github.com/boostorg/gil.git')),
@@ -577,6 +644,9 @@ class Task:
   
   def Run(self):
     self.body(*self.args)
+    
+  def ToString(self):
+    return f'{[ e.name for e in self.in_edges ]} -> {self.name}'
 
 
 
@@ -604,9 +674,17 @@ class TaskGraph:
   def Validate(self):
     return True
 
+  def ToString(self):
+    return '\n'.join([ e.ToString() for e in self.tasks ])
+  
+  def Print(self):
+    print(self.ToString())
+
   def Execute(self, sequential : bool = False):
     if len(self.tasks) == 0:
       return
+    print('-- Running task graph --')
+    self.Print()
     from collections import deque
     assert self.Validate()
     prior_sequential = self.sequential
@@ -616,11 +694,9 @@ class TaskGraph:
         for in_edge in task.in_edges:
           assert in_edge != None
           in_edge.out_edges.append(task)
-
       task_queue = deque()
       active_count = 0
       done_count = 0
-
       def UpdateOutEdges(task):
         nonlocal task_queue
         if len(task.out_edges) == 0:
@@ -630,7 +706,6 @@ class TaskGraph:
           out.in_edge_done_count += 1
           if out.in_edge_done_count == len(out.in_edges):
             task_queue.append(out)
-      
       def Flush():
         nonlocal futures
         nonlocal future_map
@@ -641,14 +716,13 @@ class TaskGraph:
           done_tasks = [ future_map[e] for e in done ]
           for e in done_tasks:
             e.done = True
-            Log(f'{e.name} - done')
+            Log(f'> {task.name} - DONE')
             UpdateOutEdges(e)
           assert active_count == len(done_tasks)
           done_count += len(done_tasks)
           active_count = 0
           future_map = {}
           futures = []
-
       assert len(set(self.sources)) == len(self.sources)
       task_queue.extend(self.sources)
       with ProcessPoolExecutor(self.parallelism) as pool:
@@ -657,7 +731,7 @@ class TaskGraph:
         while len(task_queue) != 0:
           while len(task_queue) != 0 and active_count < self.parallelism:
             task = task_queue.popleft()
-            Log(f'{task.name} - start')
+            Log(f'> {task.name} - STARTED')
             if not self.sequential:
               active_count += 1
               future = pool.submit(task.Run)
@@ -665,23 +739,24 @@ class TaskGraph:
               futures.append(future)
             else:
               task.Run()
-              Log(f'{task.name} - done')
+              Log(f'> {task.name} - DONE')
               task.done = True
               done_count += 1
               UpdateOutEdges(task)
           Flush()
-
       if done_count != len(self.tasks):
         pending_tasks = []
         for e in self.tasks:
           if not e.done:
             pending_tasks.append(e)
-        Log(f'{len(self.tasks) - done_count} did not complete: {pending_tasks}.')
+        Log(f'> {len(self.tasks) - done_count} did not complete: {pending_tasks}.')
         assert False
-          
     finally:
+      print('-- Done --')
       self.sequential = prior_sequential
       self.Reset()
+
+
 
 def UpdateGitRepository(path : Path, url : str, branch : str = None, commit : str = None):
   if path.exists():
@@ -695,6 +770,8 @@ def UpdateGitRepository(path : Path, url : str, branch : str = None, commit : st
   if commit != None:
     LaunchSubprocessImmediate([ 'git', '-C', str(path), 'fetch' ])
     LaunchSubprocessImmediate([ 'git', '-C', str(path), 'checkout', commit ])
+
+
 
 def DownloadDependency(name : str, path : Path, url : str):
   # Download:
@@ -730,6 +807,8 @@ def DownloadDependency(name : str, path : Path, url : str):
   except Exception as err:
     Log(f'Failed to extract dependency "{name}": {err}')
 
+
+
 def UpdateDependency(dep : Dependency):
   name = dep.name
   
@@ -751,6 +830,8 @@ def UpdateDependency(dep : Dependency):
   Log(f'Failed to update dependency "{name}".')
   assert False
 
+
+
 def UpdateDependencies(task_graph : TaskGraph):
   DEPENDENCIES_PATH.mkdir(exist_ok = True)
   unique_deps = set(DEFAULT_DEPENDENCIES)
@@ -766,13 +847,19 @@ def UpdateDependencies(task_graph : TaskGraph):
     task_graph.Add(Task(f'update-{dep.name}', [], UpdateDependency, dep)) for dep in unique_deps
   ]
 
+
+
 def CleanDownloadsMain():
   for ext in [ '*.tmp', '*.zip', '*.tar.gz' ]:
     for e in DEPENDENCIES_PATH.glob(ext):
       e.unlink(missing_ok = True)
 
+
+
 def CleanDownloads(task_graph : TaskGraph):
   return task_graph.Add(Task('clean-downloads', [], CleanDownloadsMain))
+
+
 
 def ConfigureBoost():
   if BOOST_B2_PATH.exists():
@@ -780,6 +867,8 @@ def ConfigureBoost():
   LaunchSubprocessImmediate(
     [ BOOST_SOURCE_PATH / f'bootstrap{SHELL_EXT}' ],
     working_directory = BOOST_SOURCE_PATH)
+
+
 
 def BuildAndInstallBoost():
 
@@ -805,7 +894,7 @@ def BuildAndInstallBoost():
     'install'
   ],
   working_directory = BOOST_SOURCE_PATH,
-  log_name = 'build-boost')
+  log_name = 'boost-build')
   if (BOOST_INCLUDE_PATH / 'boost').exists():
     return
   candidates = glob.glob(f'{BOOST_INCLUDE_PATH}/**/boost', recursive = True)
@@ -813,6 +902,8 @@ def BuildAndInstallBoost():
   boost_path = Path(candidates[0])
   shutil.move(boost_path, BOOST_INCLUDE_PATH / 'boost')
   boost_path.parent.rmdir()
+
+
 
 def BuildSQLite():
   SQLITE_BUILD_PATH.mkdir(exist_ok = True)
@@ -838,7 +929,7 @@ def BuildSQLite():
       cmd.append(f'/Fe{SQLITE_EXE_PATH}')
     else:
       cmd.extend([ '-o', SQLITE_EXE_PATH ])
-    LaunchSubprocessImmediate(cmd, log_name = 'build-sqlite-exe')
+    LaunchSubprocessImmediate(cmd, log_name = 'sqlite-exe-build')
   if not SQLITE_LIB_PATH.exists():
     if C_COMPILER_IS_CLANG:
       cmd = [
@@ -862,7 +953,7 @@ def BuildSQLite():
       cmd.extend([ '/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o', SQLITE_LIB_PATH ])
       LaunchSubprocessImmediate(
         cmd,
-        log_name = 'build-sqlite-lib')
+        log_name = 'sqlite-lib-build')
     else:
       objs = []
       BUILD_TEMP_PATH.mkdir(exist_ok = True)
@@ -884,14 +975,16 @@ def BuildSQLite():
         ])
         obj_path = BUILD_TEMP_PATH / f'{e.name}{OBJ_EXT}'
         cmd.extend([ e, '/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o', obj_path ])
-        LaunchSubprocessImmediate(cmd, log_name = f'build-sqlite-{e.stem}')
+        LaunchSubprocessImmediate(cmd, log_name = f'sqlite-{e.stem}-build')
         objs.append(obj_path)
       cmd = [
         LIB,
         f'/OUT:{SQLITE_LIB_PATH}',
       ]
       cmd.extend(objs)
-      LaunchSubprocessImmediate(cmd, log_name = 'build-sqlite-lib')
+      LaunchSubprocessImmediate(cmd, log_name = 'sqlite-lib-build')
+
+
 
 def ConfigureSUMO():
   xercesc_path_candidates = glob.glob(f'{XERCESC_INSTALL_PATH}/**/{LIB_PREFIX}xerces-c*{LIB_EXT}', recursive=True)
@@ -904,13 +997,17 @@ def ConfigureSUMO():
   cmd = Task.CreateCMakeConfigureDefaultCommandLine(
     SUMO_SOURCE_PATH,
     SUMO_BUILD_PATH)
+  proj_candidates = glob.glob(str(PROJ_INSTALL_PATH / 'lib' / '**' / f'*proj{LIB_EXT}'), recursive = True)
+  if len(proj_candidates) == 0:
+    raise Exception('Could not configure SUMO since PROJ could not be found.')
+  PROJ_LIB_PATH = proj_candidates[0]
   cmd.extend([
     SUMO_SOURCE_PATH,
     SUMO_BUILD_PATH,
     f'-DZLIB_INCLUDE_DIR={ZLIB_INCLUDE_PATH}',
     f'-DZLIB_LIBRARY={ZLIB_LIB_PATH}',
     f'-DPROJ_INCLUDE_DIR={PROJ_INSTALL_PATH}/include',
-    f'-DPROJ_LIBRARY={PROJ_INSTALL_PATH}/lib/{LIB_PREFIX}proj{LIB_EXT}',
+    f'-DPROJ_LIBRARY={PROJ_LIB_PATH}',
     f'-DXercesC_INCLUDE_DIR={XERCESC_INSTALL_PATH}/include',
     f'-DXercesC_LIBRARY={XERCESC_PATH}',
     '-DSUMO_LIBRARIES=OFF',
@@ -926,31 +1023,91 @@ def ConfigureSUMO():
   ])
   LaunchSubprocessImmediate(cmd)
 
-def BuildDependencies(
-    task_graph : TaskGraph):
-  # Configure:
-  build_sqlite = task_graph.Add(Task('build-sqlite', [], BuildSQLite))
-  task_graph.Add(Task('configure-boost', [], ConfigureBoost))
+
+
+def BuildDependencies(task_graph : TaskGraph):
+  
+  # There are some dependencies that need sqlite to be built before configuring.
+  build_sqlite = task_graph.Add(Task('sqlite-build', [], BuildSQLite))
+
   configure_zlib = task_graph.Add(Task.CreateCMakeConfigureDefault(
     'configure-zlib',
     [],
     ZLIB_SOURCE_PATH,
     ZLIB_BUILD_PATH,
     install_path = ZLIB_INSTALL_PATH))
+  
   build_zlib = task_graph.Add(Task.CreateCMakeBuildDefault(
-    'build-zlib',
+    'zlib-build',
     [ configure_zlib ],
     ZLIB_BUILD_PATH))
-  install_zlib = task_graph.Add(Task.CreateCMakeInstallDefault(
-    'install-zlib',
+
+  # Configure step:
+
+  if BOOST_USE_SUPERPROJECT:
+    task_graph.Add(Task('configure-boost', [], ConfigureBoost))
+  else:
+    task_graph.Add(Task.CreateCMakeConfigureDefault(
+      'boost-algorithm',
+      [],
+      BOOST_ALGORITHM_SOURCE_PATH,
+      BOOST_ALGORITHM_BUILD_PATH,
+      install_path = BOOST_ALGORITHM_INSTALL_PATH))
+
+    task_graph.Add(Task.CreateCMakeConfigureDefault(
+      'boost-asio',
+      [],
+      BOOST_ASIO_SOURCE_PATH,
+      BOOST_ASIO_BUILD_PATH,
+      install_path = BOOST_ASIO_INSTALL_PATH))
+
+    task_graph.Add(Task.CreateCMakeConfigureDefault(
+      'boost-date',
+      [],
+      BOOST_DATE_SOURCE_PATH,
+      BOOST_DATE_BUILD_PATH,
+      install_path = BOOST_DATE_INSTALL_PATH))
+
+    task_graph.Add(Task.CreateCMakeConfigureDefault(
+      'boost-geometry',
+      [],
+      BOOST_GEOMETRY_SOURCE_PATH,
+      BOOST_GEOMETRY_BUILD_PATH,
+      install_path = BOOST_GEOMETRY_INSTALL_PATH))
+
+    task_graph.Add(Task.CreateCMakeConfigureDefault(
+      'boost-gil',
+      [],
+      BOOST_GIL_SOURCE_PATH,
+      BOOST_GIL_BUILD_PATH,
+      install_path = BOOST_GIL_INSTALL_PATH))
+
+    task_graph.Add(Task.CreateCMakeConfigureDefault(
+      'boost-iterator',
+      [],
+      BOOST_ITERATOR_SOURCE_PATH,
+      BOOST_ITERATOR_BUILD_PATH,
+      install_path = BOOST_ITERATOR_INSTALL_PATH))
+
+    task_graph.Add(Task.CreateCMakeConfigureDefault(
+      'boost-python',
+      [],
+      BOOST_PYTHON_SOURCE_PATH,
+      BOOST_PYTHON_BUILD_PATH,
+      install_path = BOOST_PYTHON_INSTALL_PATH))
+
+  task_graph.Add(Task.CreateCMakeInstallDefault(
+    'zlib-install',
     [ build_zlib ],
     ZLIB_BUILD_PATH,
     ZLIB_INSTALL_PATH))
+  
   task_graph.Add(Task.CreateCMakeConfigureDefault(
     'configure-gtest',
     [],
     GTEST_SOURCE_PATH,
     GTEST_BUILD_PATH))
+  
   task_graph.Add(Task.CreateCMakeConfigureDefault(
     'configure-libpng',
     [],
@@ -961,6 +1118,7 @@ def BuildDependencies(
     '-DPNG_BUILD_ZLIB=ON',
     f'-DZLIB_INCLUDE_DIRS={ZLIB_INCLUDE_PATH}',
     f'-DZLIB_LIBRARIES={ZLIB_LIB_PATH}'))
+  
   task_graph.Add(Task.CreateCMakeConfigureDefault(
     'configure-proj',
     [ build_sqlite ],
@@ -984,6 +1142,7 @@ def BuildDependencies(
     '-DBUILD_PROJ=OFF',
     '-DBUILD_TESTING=OFF',
     install_path = PROJ_INSTALL_PATH))
+  
   task_graph.Add(Task.CreateCMakeConfigureDefault(
     'configure-recast',
     [],
@@ -992,6 +1151,7 @@ def BuildDependencies(
     '-DRECASTNAVIGATION_DEMO=OFF',
     '-DRECASTNAVIGATION_TESTS=OFF',
     '-DRECASTNAVIGATION_EXAMPLES=OFF'))
+  
   task_graph.Add(Task.CreateCMakeConfigureDefault(
     'configure-rpclib',
     [],
@@ -1003,11 +1163,13 @@ def BuildDependencies(
     '-DRPCLIB_ENABLE_LOGGING=OFF',
     '-DRPCLIB_ENABLE_COVERAGE=OFF',
     '-DRPCLIB_MSVC_STATIC_RUNTIME=OFF'))
-  task_graph.Add(Task.CreateCMakeConfigureDefault(
+  
+  configure_xercesc = task_graph.Add(Task.CreateCMakeConfigureDefault(
     'configure-xercesc',
     [],
     XERCESC_SOURCE_PATH,
     XERCESC_BUILD_PATH))
+  
   if ENABLE_OSM_WORLD_RENDERER:
     task_graph.Add(Task.CreateCMakeConfigureDefault(
       'configure-libosmscout',
@@ -1019,11 +1181,13 @@ def BuildDependencies(
       '-DOSMSCOUT_BUILD_TESTS=OFF',
       '-DOSMSCOUT_BUILD_CLIENT_QT=OFF',
       '-DOSMSCOUT_BUILD_DEMOS=OFF'))
+    
     task_graph.Add(Task.CreateCMakeConfigureDefault(
       'configure-lunasvg',
       [],
       LUNASVG_SOURCE_PATH,
       LUNASVG_BUILD_PATH))
+    
   if ENABLE_CHRONO:
     task_graph.Add(Task.CreateCMakeConfigureDefault(
       'configure-chrono',
@@ -1033,50 +1197,83 @@ def BuildDependencies(
       f'-DEIGEN3_INCLUDE_DIR={EIGEN_SOURCE_PATH}',
       '-DENABLE_MODULE_VEHICLE=ON'))
   
-  # SUMO requires that Proj and Xerces be built and installed before its configure step:
   if ENABLE_OSM2ODR:
-    build_xercesc = task_graph.Add(Task.CreateCMakeBuildDefault('build-xercesc', [], XERCESC_BUILD_PATH))
-    task_graph.Add(Task.CreateCMakeInstallDefault('install-xercesc', [ build_xercesc ], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
+    # SUMO requires that Proj and Xerces be built and installed before its configure step:
+    build_xercesc = task_graph.Add(Task.CreateCMakeBuildDefault(
+      'xercesc-build',
+      [ configure_xercesc ],
+      XERCESC_BUILD_PATH))
+    
+    task_graph.Add(Task.CreateCMakeInstallDefault(
+      'xercesc-install',
+      [ build_xercesc ],
+      XERCESC_BUILD_PATH,
+      XERCESC_INSTALL_PATH))
 
+  # We wait for all pending tasks to finish here, then we'll switch to sequential task execution for the build step.
   task_graph.Execute()
 
   # Build:
-  task_graph.Add(Task('build-boost', [], BuildAndInstallBoost))
-  task_graph.Add(Task.CreateCMakeBuildDefault('build-gtest', [], GTEST_BUILD_PATH))
-  task_graph.Add(Task.CreateCMakeBuildDefault('build-libpng', [], LIBPNG_BUILD_PATH))
-  build_proj = task_graph.Add(Task.CreateCMakeBuildDefault('build-proj', [], PROJ_BUILD_PATH))
-  task_graph.Add(Task.CreateCMakeBuildDefault('build-recast', [], RECAST_BUILD_PATH))
-  task_graph.Add(Task.CreateCMakeBuildDefault('build-rpclib', [], RPCLIB_BUILD_PATH))
-  if ENABLE_OSM2ODR:
-    install_proj = task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [ build_proj ], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
-    configure_sumo = task_graph.Add(Task('configure-sumo', [ install_proj ], ConfigureSUMO))
-    task_graph.Add(Task.CreateCMakeBuildDefault('build-sumo', [ configure_sumo ], SUMO_BUILD_PATH))
+  
+  if BOOST_USE_SUPERPROJECT:
+    task_graph.Add(Task('boost-build', [], BuildAndInstallBoost))
   else:
-    task_graph.Add(Task.CreateCMakeBuildDefault('build-xercesc', [], XERCESC_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('boost-algorithm-build', [], BOOST_ALGORITHM_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('boost-asio-build', [], BOOST_ASIO_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('boost-date-build', [], BOOST_DATE_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('boost-geometry-build', [], BOOST_GEOMETRY_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('boost-gil-build', [], BOOST_GIL_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('boost-iterator-build', [], BOOST_ITERATOR_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('boost-python-build', [], BOOST_PYTHON_BUILD_PATH))
+
+  task_graph.Add(Task.CreateCMakeBuildDefault('gtest-build', [], GTEST_BUILD_PATH))
+  task_graph.Add(Task.CreateCMakeBuildDefault('libpng-build', [], LIBPNG_BUILD_PATH))
+  build_proj = task_graph.Add(Task.CreateCMakeBuildDefault('proj-build', [], PROJ_BUILD_PATH))
+  task_graph.Add(Task.CreateCMakeBuildDefault('recast-build', [], RECAST_BUILD_PATH))
+  task_graph.Add(Task.CreateCMakeBuildDefault('rpclib-build', [], RPCLIB_BUILD_PATH))
+
+  if ENABLE_OSM2ODR:
+    install_proj = task_graph.Add(Task.CreateCMakeInstallDefault('proj-install', [ build_proj ], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
+    configure_sumo = task_graph.Add(Task('configure-sumo', [ install_proj ], ConfigureSUMO))
+    task_graph.Add(Task.CreateCMakeBuildDefault('sumo-build', [ configure_sumo ], SUMO_BUILD_PATH))
+  else:
+    task_graph.Add(Task.CreateCMakeBuildDefault('xercesc-build', [], XERCESC_BUILD_PATH))
+
   if ENABLE_OSM_WORLD_RENDERER:
-    task_graph.Add(Task.CreateCMakeBuildDefault('build-lunasvg', [], LUNASVG_BUILD_PATH))
-    task_graph.Add(Task.CreateCMakeBuildDefault('build-libosmscout', [], LIBOSMSCOUT_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('lunasvg-build', [], LUNASVG_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('libosmscout-build', [], LIBOSMSCOUT_BUILD_PATH))
+
   if ENABLE_CHRONO:
-    task_graph.Add(Task.CreateCMakeBuildDefault('build-chrono', [], CHRONO_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('chrono-build', [], CHRONO_BUILD_PATH))
 
   task_graph.Execute(sequential = True) # The underlying build system should already parallelize.
 
   # Install:
-  task_graph.Add(Task.CreateCMakeInstallDefault('install-gtest', [], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
-  task_graph.Add(Task.CreateCMakeInstallDefault('install-libpng', [], LIBPNG_BUILD_PATH, LIBPNG_INSTALL_PATH))
-  task_graph.Add(Task.CreateCMakeInstallDefault('install-recast', [], RECAST_BUILD_PATH, RECAST_INSTALL_PATH))
-  task_graph.Add(Task.CreateCMakeInstallDefault('install-rpclib', [], RPCLIB_BUILD_PATH, RPCLIB_INSTALL_PATH))
+  if not BOOST_USE_SUPERPROJECT:
+    task_graph.Add(Task.CreateCMakeBuildDefault('boost-algorithm-install', [], BOOST_ALGORITHM_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('boost-asio-install', [], BOOST_ASIO_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('boost-date-install', [], BOOST_DATE_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('boost-geometry-install', [], BOOST_GEOMETRY_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('boost-gil-install', [], BOOST_GIL_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('boost-iterator-install', [], BOOST_ITERATOR_BUILD_PATH))
+    task_graph.Add(Task.CreateCMakeBuildDefault('boost-python-install', [], BOOST_PYTHON_BUILD_PATH))
+  task_graph.Add(Task.CreateCMakeInstallDefault('gtest-install', [], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
+  task_graph.Add(Task.CreateCMakeInstallDefault('libpng-install', [], LIBPNG_BUILD_PATH, LIBPNG_INSTALL_PATH))
+  task_graph.Add(Task.CreateCMakeInstallDefault('recast-install', [], RECAST_BUILD_PATH, RECAST_INSTALL_PATH))
+  task_graph.Add(Task.CreateCMakeInstallDefault('rpclib-install', [], RPCLIB_BUILD_PATH, RPCLIB_INSTALL_PATH))
   if ENABLE_OSM_WORLD_RENDERER:
-    task_graph.Add(Task.CreateCMakeInstallDefault('install-lunasvg', [], LUNASVG_BUILD_PATH, LUNASVG_INSTALL_PATH))
-    task_graph.Add(Task.CreateCMakeInstallDefault('install-libosmscout', [], LIBOSMSCOUT_BUILD_PATH, LIBOSMSCOUT_INSTALL_PATH))
+    task_graph.Add(Task.CreateCMakeInstallDefault('lunasvg-install', [], LUNASVG_BUILD_PATH, LUNASVG_INSTALL_PATH))
+    task_graph.Add(Task.CreateCMakeInstallDefault('libosmscout-install', [], LIBOSMSCOUT_BUILD_PATH, LIBOSMSCOUT_INSTALL_PATH))
   if ENABLE_OSM2ODR:
-    task_graph.Add(Task.CreateCMakeInstallDefault('install-sumo', [], SUMO_BUILD_PATH, SUMO_INSTALL_PATH))
+    task_graph.Add(Task.CreateCMakeInstallDefault('sumo-install', [], SUMO_BUILD_PATH, SUMO_INSTALL_PATH))
   else:
-    task_graph.Add(Task.CreateCMakeInstallDefault('install-proj', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
-    task_graph.Add(Task.CreateCMakeInstallDefault('install-xercesc', [], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
+    task_graph.Add(Task.CreateCMakeInstallDefault('proj-install', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
+    task_graph.Add(Task.CreateCMakeInstallDefault('xercesc-install', [], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
   if ENABLE_CHRONO:
-    task_graph.Add(Task.CreateCMakeInstallDefault('install-chrono', [], CHRONO_BUILD_PATH, CHRONO_INSTALL_PATH))
+    task_graph.Add(Task.CreateCMakeInstallDefault('chrono-install', [], CHRONO_BUILD_PATH, CHRONO_INSTALL_PATH))
   task_graph.Execute()
+
+
 
 def BuildLibCarlaMain(task_graph : TaskGraph):
   configure_libcarla = task_graph.Add(Task.CreateCMakeConfigureDefault(
@@ -1090,14 +1287,16 @@ def BuildLibCarlaMain(task_graph : TaskGraph):
     f'-DBUILD_OSM_WORLD_RENDERER={"ON" if ENABLE_OSM_WORLD_RENDERER else "OFF"}',
     f'-DLIBCARLA_PYTORCH={"ON" if ARGV.pytorch else "OFF"}'))
   build_libcarla = task_graph.Add(Task.CreateCMakeBuildDefault(
-    'build-libcarla',
+    'libcarla-build',
     [ configure_libcarla ],
     LIBCARLA_BUILD_PATH))
   return task_graph.Add(Task.CreateCMakeInstallDefault(
-    'install-libcarla',
+    'libcarla-install',
     [ build_libcarla ],
     LIBCARLA_BUILD_PATH,
     LIBCARLA_INSTALL_PATH))
+
+
 
 def BuildPythonAPIMain():
   content = ''
@@ -1112,12 +1311,18 @@ def BuildPythonAPIMain():
     sys.executable, 'setup.py', 'bdist_wheel', 'bdist_egg'
   ], working_directory = PYTHON_API_PATH)
 
+
+
 def BuildPythonAPI(task_graph : TaskGraph):
-  install_libcarla = task_graph.task_map.get('install-libcarla')
-  task_graph.Add(Task('build-python-api', [ install_libcarla ], BuildPythonAPIMain))
+  install_libcarla = task_graph.task_map.get('libcarla-install')
+  task_graph.Add(Task('python-api-build', [ install_libcarla ], BuildPythonAPIMain))
+
+
 
 def SetupUnrealEngine(task_graph : TaskGraph):
   pass
+
+
 
 def BuildCarlaUEMain():
   assert UNREAL_ENGINE_PATH.exists()
@@ -1141,19 +1346,23 @@ def BuildCarlaUEMain():
       '-WaitMutex',
       '-FromMsBuild',
       CARLA_UE_PATH / 'CarlaUE4.uproject',
-    ], log_name = 'build-carla-ue-editor')
+    ], log_name = 'carla-ue-editor-build')
   else:
     pass
 
+
+
 def BuildCarlaUE(task_graph : TaskGraph):
   if ENABLE_NVIDIA_OMNIVERSE:
-    task_graph.Add(Task('install-nv-omniverse', [], InstallNVIDIAOmniverse))
+    task_graph.Add(Task('nv-omniverse-install', [], InstallNVIDIAOmniverse))
   dependencies = []
   if ENABLE_LIBCARLA:
-    dependencies.append(task_graph.task_map.get('install-libcarla'))
+    dependencies.append(task_graph.task_map.get('libcarla-install'))
   if ENABLE_PYTHON_API:
-    dependencies.append(task_graph.task_map.get('build-python-api'))
-  task_graph.Add(Task('build-carla-ue', dependencies, BuildCarlaUEMain))
+    dependencies.append(task_graph.task_map.get('python-api-build'))
+  task_graph.Add(Task('carla-ue-build', dependencies, BuildCarlaUEMain))
+
+
 
 def InstallNVIDIAOmniverse():
   filename = 'USDCarlaInterface'
@@ -1166,6 +1375,8 @@ def InstallNVIDIAOmniverse():
   ]
   for src, dst in files:
     shutil.copyfile(src, dst)
+
+
 
 def Clean():
   if not BUILD_PATH.exists():
