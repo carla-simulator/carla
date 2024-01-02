@@ -517,7 +517,7 @@ DEFAULT_DEPENDENCIES = [
     GitRepository('https://github.com/glennrp/libpng.git', tag_or_branch = 'v1.6.40')),
   Dependency(
     'proj',
-    GitRepository('https://github.com/OSGeo/PROJ.git', tag_or_branch = '9.3.0')),
+    GitRepository('https://github.com/OSGeo/PROJ.git', tag_or_branch = '7.2.1')),
   Dependency(
     'gtest',
     GitRepository('https://github.com/google/googletest.git', tag_or_branch = 'v1.14.0')),
