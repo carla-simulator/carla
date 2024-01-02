@@ -1142,6 +1142,15 @@ def BuildCarlaUEMain():
       '-FromMsBuild',
       CARLA_UE_PATH / 'CarlaUE4.uproject',
     ], log_name = 'build-carla-ue-editor')
+    LaunchSubprocessImmediate([
+      UNREAL_ENGINE_PATH / 'Engine' / 'Build' / 'BatchFiles' / 'Build.bat',
+      'CarlaUE4',
+      'Win64',
+      'Development',
+      '-WaitMutex',
+      '-FromMsBuild',
+      CARLA_UE_PATH / 'CarlaUE4.uproject',
+    ], log_name = 'build-carla-ue')
   else:
     pass
 
