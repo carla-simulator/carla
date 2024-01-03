@@ -137,6 +137,9 @@ AddCLIFlag(
   'carla-ue',
   'Build the CARLA Unreal Engine plugin and project.')
 AddCLIFlag(
+  'update-ue-assets',
+  'Download the CARLA Unreal Engine assets.')
+AddCLIFlag(
   'python-api',
   'Build the CARLA Python API.')
 AddCLIFlag(
@@ -277,6 +280,7 @@ ENABLE_RSS = ARGV.rss
 
 UPDATE_DEPENDENCIES = ARGV.update_deps
 BUILD_DEPENDENCIES = ARGV.build_deps
+UPDATE_CARLA_UE_ASSETS = ARGV.update_ue_assets
 PARALLELISM = ARGV.parallelism
 # Root paths:
 CARLA_VERSION_STRING = ARGV.version
@@ -476,7 +480,11 @@ def LaunchSubprocessImmediate(
         stdout = file,
         stderr = file)
   else:
-    sp = subprocess.run(cmd, cwd = working_directory)
+    sp = subprocess.run(
+      cmd,
+      cwd = working_directory,
+      stdout = subprocess.PIPE,
+      stderr = subprocess.PIPE)
   sp.check_returncode()
 
 
@@ -592,6 +600,15 @@ CARLA_UE_DEPENDENCIES = [
     GitRepository(
       'https://github.com/carla-simulator/StreetMap.git',
       tag_or_branch = 'UE5Native')),
+]
+
+CARLA_UE_ASSETS_DEPENDENCIES = [
+  Dependency(
+    'Carla',
+    GitRepository(
+      'https://MarcelPi@bitbucket.org/carla-simulator/carla-content.git',
+      tag_or_branch = 'marcel/5.3' # @CARLAUE5 This branch should be removed once merged.
+    ))
 ]
 
 
@@ -1327,6 +1344,17 @@ def SetupUnrealEngine(task_graph : TaskGraph):
 
 
 
+def UpdateCarlaUEAssets(task_graph : TaskGraph):
+  CARLA_UE_CONTENT_CARLA_PATH.mkdir(
+    parents = True,
+    exist_ok = True)
+  return [ 
+    task_graph.Add(UpdateDependency, e)
+    for e in CARLA_UE_ASSETS_DEPENDENCIES
+  ]
+    
+
+
 def BuildCarlaUEMain():
   assert UNREAL_ENGINE_PATH.exists()
   unreal_build_tool_args = []
@@ -1409,6 +1437,8 @@ if __name__ == '__main__':
       BuildLibCarlaMain(task_graph)
     if ENABLE_PYTHON_API:
       BuildPythonAPI(task_graph)
+    if UPDATE_CARLA_UE_ASSETS:
+      UpdateCarlaUEAssets(task_graph)
     if ENABLE_CARLA_UE:
       BuildCarlaUE(task_graph)
     task_graph.Execute()
