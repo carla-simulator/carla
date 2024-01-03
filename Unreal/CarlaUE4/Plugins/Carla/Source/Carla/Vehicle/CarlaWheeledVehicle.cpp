@@ -31,12 +31,12 @@
 ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer)
 {
-#if 0 // @CARLAUE5
   VehicleBounds = CreateDefaultSubobject<UBoxComponent>(TEXT("VehicleBounds"));
   VehicleBounds->SetupAttachment(RootComponent);
   VehicleBounds->SetHiddenInGame(true);
   VehicleBounds->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
 
+#if 0 // @CARLAUE5
   VelocityControl = CreateDefaultSubobject<UVehicleVelocityControl>(TEXT("VelocityControl"));
   VelocityControl->Deactivate();
 
