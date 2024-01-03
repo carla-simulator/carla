@@ -21,7 +21,7 @@ public class CarlaTools :
     bool EnableNVIDIAOmniverse = false;
 
     [CommandLine("-osm2odr")]
-    bool EnableOSM2ODR = false;
+    bool EnableOSM2ODR = true;
 
     [CommandLine("-carla-install-path")]
     string CarlaInstallPath = null;
@@ -102,7 +102,6 @@ public class CarlaTools :
             "MeshMergeUtilities",
 			"Carla",
 			"StaticMeshDescription",
-			"ChaosVehicles",
 			"Json",
 			"JsonUtilities",
 			"Networking",
@@ -113,7 +112,9 @@ public class CarlaTools :
 			"MeshMergeUtilities",
 			"StreetMapImporting",
 			"StreetMapRuntime",
-		});
+            "Chaos",
+            "ChaosVehicles"
+        });
 
 		if (EnableHoudini)
         {
@@ -180,6 +181,10 @@ public class CarlaTools :
         var LibCarlaClientPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-client"));
 
         // Boost
+
+        var BoostIncludePath = Path.Combine(DependenciesInstallPath, "boost-install", "include");
+        var BoostLibraries = new List<string>();
+
         var BoostLibraryPatterns = new string[]
         {
             "libboost_atomic*",
@@ -189,9 +194,13 @@ public class CarlaTools :
             "libboost_python*",
             "libboost_system*",
         };
-        var BoostLibraries =
-            from Pattern in BoostLibraryPatterns
-            select FindLibraries("boost", Pattern)[0];
+
+        foreach (var Pattern in BoostLibraryPatterns)
+        {
+            var Candidates = FindLibraries("boost", Pattern);
+            if (Candidates.Length != 0)
+                BoostLibraries.Add(Candidates[0]);
+        }
 
         // SQLite
         var SQLiteBuildPath = Path.Combine(DependenciesInstallPath, "sqlite-build");
@@ -203,7 +212,7 @@ public class CarlaTools :
             FindLibraries("rpclib", "rpc")[0],
             FindLibraries("xercesc", "xerces-c*")[0],
             FindLibraries("proj", "proj")[0],
-            FindLibraries("zlib", "zlib*")[0],
+            FindLibraries("zlib", "zlibstatic*")[0],
         };
 
         if (EnableOSM2ODR)
@@ -214,6 +223,7 @@ public class CarlaTools :
 
         PublicIncludePaths.AddRange(new string[]
         {
+            BoostIncludePath,
             GetIncludePath("boost"),
             GetIncludePath("rpclib"),
             GetIncludePath("xercesc"),

@@ -27,7 +27,7 @@ public class Carla :
     bool EnableRos2 = false;
 
     [CommandLine("-osm2odr")]
-    bool EnableOSM2ODR = false;
+    bool EnableOSM2ODR = true;
 
     [CommandLine("-carla-install-path")]
     string CarlaInstallPath = null;
@@ -151,12 +151,12 @@ public class Carla :
 			"Json",
 			"JsonUtilities",
 			"Landscape",
-			"Chaos",
-			"ChaosVehicles",
 			"Slate",
 			"SlateCore",
-			"PhysicsCore"
-		});
+			"PhysicsCore",
+            "Chaos",
+            "ChaosVehicles"
+        });
 
 		if (EnableCarSim)
 		{
@@ -199,8 +199,12 @@ public class Carla :
         Debug.Assert(Directory.Exists(LibCarlaClientPath));
 
         // Boost
-        var BoostLibraryPatterns = new string[]
-		{
+        
+		var BoostIncludePath = Path.Combine(DependenciesInstallPath, "boost-install", "include");
+		var BoostLibraries = new List<string>();
+        
+		var BoostLibraryPatterns = new string[]
+        {
             "libboost_atomic*",
             "libboost_date_time*",
             "libboost_filesystem*",
@@ -208,10 +212,13 @@ public class Carla :
             "libboost_python*",
             "libboost_system*",
         };
-		var BoostIncludePath = Path.Combine(DependenciesInstallPath, "boost-install", "include");
-		var BoostLibraries =
-			from Pattern in BoostLibraryPatterns
-			select FindLibraries("boost", Pattern)[0];
+
+        foreach (var Pattern in BoostLibraryPatterns)
+		{
+			var Candidates = FindLibraries("boost", Pattern);
+			if (Candidates.Length != 0)
+				BoostLibraries.Add(Candidates[0]);
+        }
 
         var SQLiteBuildPath = Path.Combine(DependenciesInstallPath, "sqlite-build");
 		var SQLiteLibrary = Directory.GetFiles(SQLiteBuildPath, GetLibraryName("sqlite*"))[0];
@@ -222,7 +229,7 @@ public class Carla :
             FindLibraries("rpclib", "rpc")[0],
             FindLibraries("xercesc", "xerces-c*")[0],
             FindLibraries("proj", "proj")[0],
-            FindLibraries("zlib", "zlib*")[0],
+            FindLibraries("zlib", "zlibstatic*")[0],
         };
 		AdditionalLibraries.AddRange(BoostLibraries);
 

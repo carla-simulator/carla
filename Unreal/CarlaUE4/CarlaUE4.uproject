@@ -10,7 +10,6 @@
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
 				"Engine",
-				"ChaosVehicles",
 				"Carla",
 				"CoreUObject"
 			]

@@ -1170,7 +1170,8 @@ def BuildDependencies(task_graph : TaskGraph):
     'configure-xercesc',
     [],
     XERCESC_SOURCE_PATH,
-    XERCESC_BUILD_PATH))
+    XERCESC_BUILD_PATH,
+    '-DBUILD_SHARED_LIBS=OFF'))
   
   if ENABLE_OSM_WORLD_RENDERER:
     task_graph.Add(Task.CreateCMakeConfigureDefault(

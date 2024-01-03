@@ -30,6 +30,10 @@
     {
       "Name": "ProceduralMeshComponent",
       "Enabled": true
+    },
+    {
+      "Name": "ChaosVehiclesPlugin",
+      "Enabled": true
     }
   ]
 }

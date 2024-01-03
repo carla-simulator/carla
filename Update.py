@@ -72,5 +72,7 @@ except:
 finally:
     if intermediate_file_path.exists():
         assert intermediate_file_path.is_file()
+        print('Extracting CARLA content.')
         TarFile.open(intermediate_file_path).extractall(content_path)
         intermediate_file_path.unlink()
+        print('Done.')
