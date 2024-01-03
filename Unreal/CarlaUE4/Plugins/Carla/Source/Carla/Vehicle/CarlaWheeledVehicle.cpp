@@ -283,17 +283,26 @@ void ACarlaWheeledVehicle::AdjustVehicleBounds()
 
 float ACarlaWheeledVehicle::GetVehicleForwardSpeed() const
 {
+#if 0 // @CARLAUE5
   return BaseMovementComponent->GetVehicleForwardSpeed();
+#endif
+  return 0;
 }
 
 FVector ACarlaWheeledVehicle::GetVehicleOrientation() const
 {
+#if 0 // @CARLAUE5
   return GetVehicleTransform().GetRotation().GetForwardVector();
+#endif
+  return FVector::ForwardVector;
 }
 
 int32 ACarlaWheeledVehicle::GetVehicleCurrentGear() const
 {
-    return BaseMovementComponent->GetVehicleCurrentGear();
+#if 0 // @CARLAUE5
+  return BaseMovementComponent->GetVehicleCurrentGear();
+#endif 
+  return 0;
 }
 
 FTransform ACarlaWheeledVehicle::GetVehicleBoundingBoxTransform() const
@@ -329,8 +338,9 @@ void ACarlaWheeledVehicle::FlushVehicleControl()
     AckermannController.UpdateVehicleState(this);
     AckermannController.RunLoop(InputControl.Control);
   }
-
+#if 0 // @CARLAUE5
   BaseMovementComponent->ProcessControl(InputControl.Control);
+#endif
   InputControl.Control.bReverse = InputControl.Control.Gear < 0;
   LastAppliedControl = InputControl.Control;
   InputControl.Priority = EVehicleInputPriority::INVALID;
@@ -802,12 +812,16 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
 
 void ACarlaWheeledVehicle::ActivateVelocityControl(const FVector &Velocity)
 {
+#if 0 // @CARLAUE5
   VelocityControl->Activate(Velocity);
+#endif
 }
 
 void ACarlaWheeledVehicle::DeactivateVelocityControl()
 {
+#if 0 // @CARLAUE5
   VelocityControl->Deactivate();
+#endif
 }
 
 void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
@@ -965,7 +979,10 @@ void ACarlaWheeledVehicle::ResetConstraints()
 
 FVector ACarlaWheeledVehicle::GetVelocity() const
 {
+#if 0 // @CARLAUE5
   return BaseMovementComponent->GetVelocity();
+#endif 
+  return FVector::ZeroVector;
 }
 
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
