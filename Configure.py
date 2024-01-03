@@ -1,5 +1,6 @@
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
+from collections import deque
 import subprocess, tarfile, zipfile, argparse, requests, psutil, shutil, glob, json, sys, os
 
 # Constants:
@@ -280,7 +281,7 @@ ENABLE_RSS = ARGV.rss
 
 UPDATE_DEPENDENCIES = ARGV.update_deps
 BUILD_DEPENDENCIES = ARGV.build_deps
-UPDATE_CARLA_UE_ASSETS = ARGV.update_ue_assets
+UPDATE_CARLA_UE_ASSETS = ARGV.update_ue_assets or True
 PARALLELISM = ARGV.parallelism
 # Root paths:
 CARLA_VERSION_STRING = ARGV.version
@@ -704,7 +705,6 @@ class TaskGraph:
       '-- Running task graph --\n'
       '')
     self.Print()
-    from collections import deque
     assert self.Validate()
     prior_sequential = self.sequential
     self.sequential = sequential
@@ -828,10 +828,12 @@ def DownloadDependency(name : str, path : Path, url : str):
 
 
 
-def UpdateDependency(dep : Dependency):
+def UpdateDependency(
+    dep : Dependency,
+    download_path : Path = None):
   name = dep.name
-  
-  download_path = DEPENDENCIES_PATH / f'{name}-source'
+  if download_path == None:
+    download_path = DEPENDENCIES_PATH / f'{name}-source'
   if type(dep) is DependencyUEPlugin: # Override download path if we're dealing with an Unreal Engine Plugin.
     download_path = CARLA_UE_PLUGIN_ROOT_PATH / name
   for source in dep.sources:
@@ -863,7 +865,7 @@ def UpdateDependencies(task_graph : TaskGraph):
   if ENABLE_CHRONO:
     unique_deps.update(CHRONO_DEPENDENCIES)
   return [
-    task_graph.Add(Task(f'update-{dep.name}', [], UpdateDependency, dep)) for dep in unique_deps
+    task_graph.Add(Task(f'{dep.name}-update', [], UpdateDependency, dep)) for dep in unique_deps
   ]
 
 
@@ -1050,7 +1052,7 @@ def BuildDependencies(task_graph : TaskGraph):
   build_sqlite = task_graph.Add(Task('sqlite-build', [], BuildSQLite))
 
   configure_zlib = task_graph.Add(Task.CreateCMakeConfigureDefault(
-    'configure-zlib',
+    'zlib-configure',
     [],
     ZLIB_SOURCE_PATH,
     ZLIB_BUILD_PATH,
@@ -1064,7 +1066,7 @@ def BuildDependencies(task_graph : TaskGraph):
   # Configure step:
 
   if BOOST_USE_SUPERPROJECT:
-    task_graph.Add(Task('configure-boost', [], ConfigureBoost))
+    task_graph.Add(Task('boost-configure', [], ConfigureBoost))
   else:
     task_graph.Add(Task.CreateCMakeConfigureDefault(
       'boost-algorithm',
@@ -1122,13 +1124,13 @@ def BuildDependencies(task_graph : TaskGraph):
     ZLIB_INSTALL_PATH))
   
   task_graph.Add(Task.CreateCMakeConfigureDefault(
-    'configure-gtest',
+    'gtest-configure',
     [],
     GTEST_SOURCE_PATH,
     GTEST_BUILD_PATH))
   
   task_graph.Add(Task.CreateCMakeConfigureDefault(
-    'configure-libpng',
+    'libpng-configure',
     [],
     LIBPNG_SOURCE_PATH,
     LIBPNG_BUILD_PATH,
@@ -1139,7 +1141,7 @@ def BuildDependencies(task_graph : TaskGraph):
     f'-DZLIB_LIBRARIES={ZLIB_LIB_PATH}'))
   
   task_graph.Add(Task.CreateCMakeConfigureDefault(
-    'configure-proj',
+    'proj-configure',
     [ build_sqlite ],
     PROJ_SOURCE_PATH,
     PROJ_BUILD_PATH,
@@ -1163,7 +1165,7 @@ def BuildDependencies(task_graph : TaskGraph):
     install_path = PROJ_INSTALL_PATH))
   
   task_graph.Add(Task.CreateCMakeConfigureDefault(
-    'configure-recast',
+    'recast-configure',
     [],
     RECAST_SOURCE_PATH,
     RECAST_BUILD_PATH,
@@ -1172,7 +1174,7 @@ def BuildDependencies(task_graph : TaskGraph):
     '-DRECASTNAVIGATION_EXAMPLES=OFF'))
   
   task_graph.Add(Task.CreateCMakeConfigureDefault(
-    'configure-rpclib',
+    'rpclib-configure',
     [],
     RPCLIB_SOURCE_PATH,
     RPCLIB_BUILD_PATH,
@@ -1184,7 +1186,7 @@ def BuildDependencies(task_graph : TaskGraph):
     '-DRPCLIB_MSVC_STATIC_RUNTIME=OFF'))
   
   configure_xercesc = task_graph.Add(Task.CreateCMakeConfigureDefault(
-    'configure-xercesc',
+    'xercesc-configure',
     [],
     XERCESC_SOURCE_PATH,
     XERCESC_BUILD_PATH,
@@ -1192,7 +1194,7 @@ def BuildDependencies(task_graph : TaskGraph):
   
   if ENABLE_OSM_WORLD_RENDERER:
     task_graph.Add(Task.CreateCMakeConfigureDefault(
-      'configure-libosmscout',
+      'libosmscout-configure',
       [],
       LIBOSMSCOUT_SOURCE_PATH,
       LIBOSMSCOUT_BUILD_PATH,
@@ -1203,14 +1205,14 @@ def BuildDependencies(task_graph : TaskGraph):
       '-DOSMSCOUT_BUILD_DEMOS=OFF'))
     
     task_graph.Add(Task.CreateCMakeConfigureDefault(
-      'configure-lunasvg',
+      'lunasvg-configure',
       [],
       LUNASVG_SOURCE_PATH,
       LUNASVG_BUILD_PATH))
     
   if ENABLE_CHRONO:
     task_graph.Add(Task.CreateCMakeConfigureDefault(
-      'configure-chrono',
+      'chrono-configure',
       [],
       CHRONO_SOURCE_PATH,
       CHRONO_BUILD_PATH,
@@ -1254,7 +1256,7 @@ def BuildDependencies(task_graph : TaskGraph):
 
   if ENABLE_OSM2ODR:
     install_proj = task_graph.Add(Task.CreateCMakeInstallDefault('proj-install', [ build_proj ], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
-    configure_sumo = task_graph.Add(Task('configure-sumo', [ install_proj ], ConfigureSUMO))
+    configure_sumo = task_graph.Add(Task('sumo-configure', [ install_proj ], ConfigureSUMO))
     task_graph.Add(Task.CreateCMakeBuildDefault('sumo-build', [ configure_sumo ], SUMO_BUILD_PATH))
   else:
     task_graph.Add(Task.CreateCMakeBuildDefault('xercesc-build', [], XERCESC_BUILD_PATH))
@@ -1297,7 +1299,7 @@ def BuildDependencies(task_graph : TaskGraph):
 
 def BuildLibCarlaMain(task_graph : TaskGraph):
   configure_libcarla = task_graph.Add(Task.CreateCMakeConfigureDefault(
-    'configure-libcarla',
+    'libcarla-configure',
     [],
     WORKSPACE_PATH,
     LIBCARLA_BUILD_PATH,
@@ -1345,13 +1347,10 @@ def SetupUnrealEngine(task_graph : TaskGraph):
 
 
 def UpdateCarlaUEAssets(task_graph : TaskGraph):
-  CARLA_UE_CONTENT_CARLA_PATH.mkdir(
-    parents = True,
-    exist_ok = True)
-  return [ 
-    task_graph.Add(UpdateDependency, e)
-    for e in CARLA_UE_ASSETS_DEPENDENCIES
-  ]
+  CARLA_UE_CONTENT_PATH.mkdir(parents = True, exist_ok = True)
+  print('Cloning CARLA UE content...')
+  for e in CARLA_UE_ASSETS_DEPENDENCIES:
+    UpdateDependency(e, CARLA_UE_CONTENT_CARLA_PATH)
     
 
 
