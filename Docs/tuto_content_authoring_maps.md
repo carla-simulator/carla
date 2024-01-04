@@ -403,7 +403,7 @@ Navigate to the vegetation folder in the CARLA content library: `Carla > Static 
 
 A useful tool for trees and vegetation is the [__Unreal Engine foliage tool__](https://docs.unrealengine.com/4.27/en-US/BuildingWorlds/Foliage/). Activate the tool by selecting the `mode` from the mode dropdown in the toolbar.
 
-![foliage_tool](img/tuto_content_authoring_maps/select_foliage_tool.png)
+![foliage_tool](img/tuto_content_authoring_maps/select_foliage_tool.gif)
 
 Drag your desired foliage item into the box labeled `+ Drop Foliage Here`. Set an appropriate density in the density field, then paint into the map with your foliage item. 
 
