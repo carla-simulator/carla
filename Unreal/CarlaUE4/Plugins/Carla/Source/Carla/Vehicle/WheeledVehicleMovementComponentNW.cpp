@@ -381,8 +381,8 @@ void BackwardsConvertCm2ToM2NW(float& val, float defaultValue)
 
 void UWheeledVehicleMovementComponentNW::Serialize(FArchive& Ar)
 {
-#if 0 // @CARLAUE5
 	Super::Serialize(Ar);
+#if 0 // @CARLAUE5
 	if (Ar.IsLoading() && Ar.UE4Ver() < VER_UE4_VEHICLES_UNIT_CHANGE)
 	{
 		PxVehicleEngineData DefEngineData;

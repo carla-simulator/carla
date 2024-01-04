@@ -34,23 +34,23 @@ struct FVehicleNWEngineData
 
 	/** Maximum revolutions per minute of the engine */
 	UPROPERTY(EditAnywhere, Category = Setup, meta = (ClampMin = "0.01", UIMin = "0.01"))
-	float MaxRPM;
+	float MaxRPM = 0.0F;
 
 	/** Moment of inertia of the engine around the axis of rotation (Kgm^2). */
 	UPROPERTY(EditAnywhere, Category = Setup, meta = (ClampMin = "0.01", UIMin = "0.01"))
-	float MOI;
+	float MOI = 0.0F;
 
 	/** Damping rate of engine when full throttle is applied (Kgm^2/s) */
 	UPROPERTY(EditAnywhere, Category = Setup, AdvancedDisplay, meta = (ClampMin = "0.0", UIMin = "0.0"))
-	float DampingRateFullThrottle;
+	float DampingRateFullThrottle = 0.0F;
 
 	/** Damping rate of engine in at zero throttle when the clutch is engaged (Kgm^2/s)*/
 	UPROPERTY(EditAnywhere, Category = Setup, AdvancedDisplay, meta = (ClampMin = "0.0", UIMin = "0.0"))
-	float DampingRateZeroThrottleClutchEngaged;
+	float DampingRateZeroThrottleClutchEngaged = 0.0F;
 
 	/** Damping rate of engine in at zero throttle when the clutch is disengaged (in neutral gear) (Kgm^2/s)*/
 	UPROPERTY(EditAnywhere, Category = Setup, AdvancedDisplay, meta = (ClampMin = "0.0", UIMin = "0.0"))
-	float DampingRateZeroThrottleClutchDisengaged;
+	float DampingRateZeroThrottleClutchDisengaged = 0.0F;
 
 	/** Find the peak torque produced by the TorqueCurve */
 	float FindPeakTorque() const;
@@ -63,15 +63,15 @@ struct FVehicleNWGearData
 
 	/** Determines the amount of torque multiplication*/
 	UPROPERTY(EditAnywhere, Category = Setup)
-	float Ratio;
+	float Ratio = 0.0F;
 
 	/** Value of engineRevs/maxEngineRevs that is low enough to gear down*/
 	UPROPERTY(EditAnywhere, meta = (ClampMin = "0.0", UIMin = "0.0", ClampMax = "1.0", UIMax = "1.0"), Category = Setup)
-	float DownRatio;
+	float DownRatio = 0.0F;
 
 	/** Value of engineRevs/maxEngineRevs that is high enough to gear up*/
 	UPROPERTY(EditAnywhere, meta = (ClampMin = "0.0", UIMin = "0.0", ClampMax = "1.0", UIMax = "1.0"), Category = Setup)
-	float UpRatio;
+	float UpRatio = 0.0F;
 };
 
 USTRUCT()
@@ -80,19 +80,19 @@ struct FVehicleNWTransmissionData
 	GENERATED_USTRUCT_BODY()
 	/** Whether to use automatic transmission */
 	UPROPERTY(EditAnywhere, Category = VehicleSetup, meta = (DisplayName = "Automatic Transmission"))
-	bool bUseGearAutoBox;
+	bool bUseGearAutoBox = false;
 
 	/** Time it takes to switch gears (seconds) */
 	UPROPERTY(EditAnywhere, Category = Setup, meta = (ClampMin = "0.0", UIMin = "0.0"))
-	float GearSwitchTime;
+	float GearSwitchTime = 0.0F;
 
 	/** Minimum time it takes the automatic transmission to initiate a gear change (seconds)*/
 	UPROPERTY(EditAnywhere, Category = Setup, meta = (editcondition = "bUseGearAutoBox", ClampMin = "0.0", UIMin = "0.0"))
-	float GearAutoBoxLatency;
+	float GearAutoBoxLatency = 0.0F;
 
 	/** The final gear ratio multiplies the transmission gear ratios.*/
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = Setup)
-	float FinalRatio;
+	float FinalRatio = 0.0F;
 
 	/** Forward gear ratios (up to 30) */
 	UPROPERTY(EditAnywhere, Category = Setup, AdvancedDisplay)
@@ -100,15 +100,15 @@ struct FVehicleNWTransmissionData
 
 	/** Reverse gear ratio */
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = Setup)
-	float ReverseGearRatio;
+	float ReverseGearRatio = 0.0F;
 
 	/** Value of engineRevs/maxEngineRevs that is high enough to increment gear*/
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = Setup, meta = (ClampMin = "0.0", UIMin = "0.0", ClampMax = "1.0", UIMax = "1.0"))
-	float NeutralGearUpRatio;
+	float NeutralGearUpRatio = 0.0F;
 
 	/** Strength of clutch (Kgm^2/s)*/
 	UPROPERTY(EditAnywhere, Category = Setup, AdvancedDisplay, meta = (ClampMin = "0.0", UIMin = "0.0"))
-	float ClutchStrength;
+	float ClutchStrength = 0.0F;
 };
 
 UCLASS(ClassGroup = (Physics), meta = (BlueprintSpawnableComponent), hidecategories = (PlanarMovement, "Components|Movement|Planar", Activation, "Components|Activation"))

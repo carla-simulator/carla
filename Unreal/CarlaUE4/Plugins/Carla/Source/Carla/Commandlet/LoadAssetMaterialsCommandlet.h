@@ -27,13 +27,13 @@ struct CARLA_API FLargeMapTileData
   GENERATED_USTRUCT_BODY()
 
   UPROPERTY()
-  float FirstTileCenterX;
+  float FirstTileCenterX = 0.0F;
 
   UPROPERTY()
-  float FirstTileCenterY;
+  float FirstTileCenterY = 0.0F;
 
   UPROPERTY()
-  float Size;
+  float Size = 0.0F;
 };
 
 struct FDecalsProperties;

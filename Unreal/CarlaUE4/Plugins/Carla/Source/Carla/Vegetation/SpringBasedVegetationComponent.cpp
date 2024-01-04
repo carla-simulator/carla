@@ -1153,7 +1153,7 @@ void USpringBasedVegetationComponent::UpdateGlobalTransform()
   FTransform InitialTransform = SkeletalMesh->GetOwner()->GetActorTransform();
   FSkeletonJoint& RootJoint = Skeleton.Joints[0];
   RootJoint.GlobalTransform = RootJoint.Transform * InitialTransform;
-  RootJoint.GolbalInverseTransform = RootJoint.GlobalTransform.Inverse();
+  RootJoint.GlobalInverseTransform = RootJoint.GlobalTransform.Inverse();
   for (int i = 1; i < Skeleton.RootToEndOrder.Num(); i++)
   {
     int Id = Skeleton.RootToEndOrder[i];
@@ -1161,6 +1161,6 @@ void USpringBasedVegetationComponent::UpdateGlobalTransform()
     FSkeletonJoint& ParentJoint = Skeleton.Joints[Joint.ParentId];
     FTransform Transform = Joint.Transform * ParentJoint.GlobalTransform;
     Joint.GlobalTransform = Transform;
-    Joint.GolbalInverseTransform = Transform.Inverse();
+    Joint.GlobalInverseTransform = Transform.Inverse();
   }
 }

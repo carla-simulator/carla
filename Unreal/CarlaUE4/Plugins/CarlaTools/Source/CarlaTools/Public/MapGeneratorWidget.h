@@ -33,10 +33,10 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
   FString MapName;
 
   UPROPERTY(BlueprintReadWrite)   
-  int SizeX;
+  int SizeX = 0;
 
   UPROPERTY(BlueprintReadWrite)
-  int SizeY;
+  int SizeY = 0;
 
   UPROPERTY(BlueprintReadWrite)
   TArray<UProceduralFoliageSpawner*> FoliageSpawners;
@@ -69,10 +69,10 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
   TSubclassOf<AActor> TerramechanicsBpClass;
 
   UPROPERTY(BlueprintReadWrite)
-  float RiverChanceFactor;
+  float RiverChanceFactor = 0.0F;
 
   UPROPERTY(BlueprintReadWrite)
-  float RiverFlateningFactor;
+  float RiverFlateningFactor = 0.0F;
 };
 
 /// Struct used as container of basic tile information
@@ -88,13 +88,13 @@ struct CARLATOOLS_API FMapGeneratorTileMetaInfo
   bool bIsTiled = true;
 
   UPROPERTY(BlueprintReadWrite)   
-  int IndexX;
+  int IndexX = 0;
 
   UPROPERTY(BlueprintReadWrite)
-  int IndexY;
+  int IndexY = 0;
 
   UPROPERTY(BlueprintReadWrite)
-  bool ContainsRiver;
+  bool ContainsRiver = false;
 
   UPROPERTY(BlueprintReadWrite)
   FString RiverPreset;
@@ -107,7 +107,7 @@ struct CARLATOOLS_API FMapGeneratorWidgetState
 
   // General Fields
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  bool IsPersistentState;
+  bool IsPersistentState = false;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
   FString MapName;
@@ -120,67 +120,67 @@ struct CARLATOOLS_API FMapGeneratorWidgetState
 
   // Terrain
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainGeneralSize;
+  float TerrainGeneralSize = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainGeneralSlope;
+  float TerrainGeneralSlope = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainGeneralHeight;
+  float TerrainGeneralHeight = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainGeneralMinHeight;
+  float TerrainGeneralMinHeight = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainGeneralMaxHeight;
+  float TerrainGeneralMaxHeight = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainGeneralInvert;
+  float TerrainGeneralInvert = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainOverallSeed;
+  float TerrainOverallSeed = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainOverallScale;
+  float TerrainOverallScale = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainOverallSlope;
+  float TerrainOverallSlope = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainOverallHeight;
+  float TerrainOverallHeight = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainOverallMinHeight;
+  float TerrainOverallMinHeight = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainOverallMaxHeight;
+  float TerrainOverallMaxHeight = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainOverallInvert;
+  float TerrainOverallInvert = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainDetailedSeed;
+  float TerrainDetailedSeed = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainDetailedScale;
+  float TerrainDetailedScale = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainDetailedSlope;
+  float TerrainDetailedSlope = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainDetailedHeight;
+  float TerrainDetailedHeight = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainDetailedMinHeight;
+  float TerrainDetailedMinHeight = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainDetailedMaxHeight;
+  float TerrainDetailedMaxHeight = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  float TerrainDetailedInvert;
+  float TerrainDetailedInvert = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
-  bool bShowDetailedNoise;
+  bool bShowDetailedNoise = 0.0F;
 };
 
 USTRUCT(BlueprintType)

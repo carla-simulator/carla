@@ -231,9 +231,9 @@ struct FForceAtLocation
   GENERATED_BODY()
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FVector Force;
+  FVector Force = FVector::ZeroVector;
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  FVector Location;
+  FVector Location = FVector::ZeroVector;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

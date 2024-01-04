@@ -21,7 +21,7 @@ struct CARLA_API FSoilTerramechanicsProperties
   GENERATED_BODY()
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TEnumAsByte<ESoilTerramechanicsType> TerrainType;
+  TEnumAsByte<ESoilTerramechanicsType> TerrainType = ESoilTerramechanicsType::NONE_SOIL;
 
   const FString ToString() const
   {

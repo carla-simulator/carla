@@ -18,11 +18,11 @@ struct CARLA_API FRoadMapIntersectionResult
 
   /// Percentage of the box lying off-road.
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-  float OffRoad;
+  float OffRoad = 0.0F;
 
   /// Percentage of the box invading opposite lane (wrong direction).
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-  float OppositeLane;
+  float OppositeLane = 0.0F;
 };
 
 /// Data stored in a road map pixel. See URoadMap.

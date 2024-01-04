@@ -32,9 +32,9 @@ struct FSkeletonJoint
   GENERATED_BODY()
 
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
-  int JointId;
+  int JointId = 0;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
-  int ParentId;
+  int ParentId = 0;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FString JointName;
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
@@ -42,25 +42,25 @@ struct FSkeletonJoint
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   TArray<int> ChildrenIds;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
-  FTransform Transform; // relative to parent
+  FTransform Transform = FTransform::Identity; // relative to parent
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
-  FRotator RestingAngles; // resting angle position of springs
+  FRotator RestingAngles = FRotator::ZeroRotator; // resting angle position of springs
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   float Mass = 10.f;
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   float SpringStrength = 1000.f;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
-  FRotator AngularVelocity = FRotator(0,0,0);
+  FRotator AngularVelocity = FRotator::ZeroRotator;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
-  FRotator AngularAcceleration = FRotator(0,0,0);
+  FRotator AngularAcceleration = FRotator::ZeroRotator;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
-  FTransform GlobalTransform;
+  FTransform GlobalTransform = FTransform::Identity;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
-  FTransform GolbalInverseTransform;
+  FTransform GlobalInverseTransform = FTransform::Identity;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   TArray<FSkeletonBone> Bones;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
-  FVector ExternalForces = FVector(0,0,0);
+  FVector ExternalForces = FVector::ZeroVector;
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   float CollisionForceProportionalFactor = 1.0f;
 };

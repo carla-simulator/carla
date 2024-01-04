@@ -27,31 +27,31 @@ struct CARLATOOLS_API FProceduralRiversMetaInfo
   GENERATED_USTRUCT_BODY();
 
   UPROPERTY(BlueprintReadWrite)
-  TEnumAsByte<EWaterGenerationType> WaterGenerationType;
+  TEnumAsByte<EWaterGenerationType> WaterGenerationType = EWaterGenerationType::RIVERS;
 
   UPROPERTY(BlueprintReadWrite)
   FString WaterInfoPath;
 
   UPROPERTY(BlueprintReadWrite)
-  int CustomSampling;
+  int CustomSampling = 0;
 
   UPROPERTY(BlueprintReadWrite)
-  float CustomScaleFactor;
+  float CustomScaleFactor = 0.0F;
 
   UPROPERTY(BlueprintReadWrite)
-  float CustomRiverWidth;
+  float CustomRiverWidth = 0.0F;
 
   UPROPERTY(BlueprintReadWrite)
-  FVector CustomLocationOffset;
+  FVector CustomLocationOffset = FVector::ZeroVector;
 
   UPROPERTY(BlueprintReadWrite)
-  float CustomHeight;
+  float CustomHeight = 0.0F;
 
   UPROPERTY(BlueprintReadWrite)
-  int SizeOfLandscape;
+  int SizeOfLandscape = 0;
 
   UPROPERTY(BlueprintReadWrite)
-  int SizeOfTexture;
+  int SizeOfTexture = 0;
 };
 
 UCLASS(BlueprintType)

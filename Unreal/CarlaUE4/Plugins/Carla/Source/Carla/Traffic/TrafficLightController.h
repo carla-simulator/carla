@@ -24,10 +24,10 @@ struct FTrafficLightStage
   GENERATED_BODY()
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  float Time;
+  float Time = 0.0F;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  ETrafficLightState State;
+  ETrafficLightState State = ETrafficLightState::Off;
 };
 
 /// Maps a controller from OpenDrive.

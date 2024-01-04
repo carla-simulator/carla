@@ -32,9 +32,9 @@ struct FVehicleLight
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Light")
   FString Name;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Light")
-  FVector Location;
+  FVector Location = FVector::ZeroVector;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Light")
-  FLinearColor Color;
+  FLinearColor Color = FLinearColor::Black;
 };
 
 USTRUCT(BlueprintType)
@@ -43,25 +43,25 @@ struct CARLATOOLS_API FVehicleMeshAnchorPoints
   GENERATED_BODY();
 
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  FVector DoorFR;
+  FVector DoorFR = FVector::ZeroVector;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  FVector DoorFL;
+  FVector DoorFL = FVector::ZeroVector;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  FVector DoorRR;
+  FVector DoorRR = FVector::ZeroVector;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  FVector DoorRL;
+  FVector DoorRL = FVector::ZeroVector;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  FVector WheelFR;
+  FVector WheelFR = FVector::ZeroVector;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  FVector WheelFL;
+  FVector WheelFL = FVector::ZeroVector;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  FVector WheelRR;
+  FVector WheelRR = FVector::ZeroVector;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  FVector WheelRL;
+  FVector WheelRL = FVector::ZeroVector;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  FVector Hood;
+  FVector Hood = FVector::ZeroVector;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  FVector Trunk;
+  FVector Trunk = FVector::ZeroVector;
 
 };
 

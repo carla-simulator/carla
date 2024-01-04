@@ -321,8 +321,8 @@ struct CARLATOOLS_API FMiscWidgetState
   GENERATED_USTRUCT_BODY()
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary|Misc")
-  bool IsPersistentState;
+  bool IsPersistentState = false;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary|Misc")
-  FIntPoint InTileCoordinates;
+  FIntPoint InTileCoordinates = FIntPoint::ZeroValue;
 };
