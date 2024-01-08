@@ -262,6 +262,12 @@ class ScenarioRunner(object):
         else:
             self.world.wait_for_tick()
 
+    def _save_sensor_data(self, filename):
+        """
+        Save sensor data to file
+        """
+        self.manager.sensor_data.to_csv(filename, index=False)
+
     def _analyze_scenario(self, config):
         """
         Provide feedback about success/failure of a scenario
@@ -283,13 +289,18 @@ class ScenarioRunner(object):
         if self._args.file:
             filename = config_name + current_time + ".txt"
 
+        # save sensor data
+        sensor_data_path = json_filename[:-5] + "_sensor_data.json"
+        self._save_sensor_data(sensor_data_path)
+
         if not self.manager.analyze_scenario(self._args.output, filename, junit_filename, json_filename):
             print("All scenario tests were passed successfully!")
         else:
             print("Not all scenario tests were successful")
             if not (self._args.output or filename or junit_filename):
                 print("Please run with --output for further information")
-
+  
+    
     def _record_criteria(self, criteria, name):
         """
         Filter the JSON serializable attributes of the criterias and
@@ -435,7 +446,7 @@ class ScenarioRunner(object):
             self.manager.load_scenario(scenario, self.agent_instance)
             self.manager.run_scenario()
 
-            # Provide outputs if required
+            # Provide outputs if required (including sensor data)
             self._analyze_scenario(config)
 
             # Remove all actors, stop the recorder and save all criterias (if needed)
@@ -641,9 +652,14 @@ def main():
         traceback.print_exc()
 
     finally:
+        # save sensor data
+        arguments.outputDir # ist Results Ordner
+        scenario_runner.manager.sensor_data.to_csv("test.csv")
+        
         if scenario_runner is not None:
             scenario_runner.destroy()
             del scenario_runner
+
     return not result
 
 

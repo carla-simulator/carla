@@ -295,7 +295,7 @@ class RunnerTool(object):
                         self.set_agent(openscenario)          
                     # Building subprocess command. (Subprocess is executed in new cmd terminal, thus python env root is required.)
                     cmd = """cd \"{runner_root}\"\
-                                & {python_root}/python3 scenario_runner.py --openscenario \"{file}\" --reloadWorld --json --outputDir \"{result_path}\"{speed} {camera}
+                                && {python_root}/python scenario_runner.py --openscenario \"{file}\" --reloadWorld --json --outputDir \"{result_path}\"{speed} {camera}
                             """.format(runner_root= conf["PATH_TO_SCENARIO_RUNNER_ROOT"],
                                        python_root=conf["PATH_TO_PYTHON_ENV"],
                                        file=openscenario, 
@@ -387,7 +387,7 @@ class RunnerTool(object):
         results_dict = {}
 
         for file in file_list:
-            if ".json" in file:
+            if ".json" in file and not "sensor_data" in file:
                 scenario_results = self.results_path + "/" + file
                 with open(scenario_results, 'r') as f:
                     results_dict[file] = json.load(f)
