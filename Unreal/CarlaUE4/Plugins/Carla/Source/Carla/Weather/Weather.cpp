@@ -90,3 +90,9 @@ void AWeather::SetDayNightCycle(const bool& active)
 {
     DayNightCycle = active;
 }
+
+void AWeather::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+    Super::PostEditChangeProperty(PropertyChangedEvent);
+    ApplyWeather(Weather);
+}
