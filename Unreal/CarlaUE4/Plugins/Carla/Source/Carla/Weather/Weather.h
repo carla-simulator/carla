@@ -53,6 +53,8 @@ public:
 
 protected:
 
+  virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+
   UFUNCTION(BlueprintImplementableEvent)
   void RefreshWeather(const FWeatherParameters &WeatherParameters);
 
@@ -60,7 +62,7 @@ private:
 
   void CheckWeatherPostProcessEffects();
 
-  UPROPERTY(VisibleAnywhere)
+  UPROPERTY(EditAnywhere, Category="Parameters")
   FWeatherParameters Weather;
 
   UMaterial* PrecipitationPostProcessMaterial;
