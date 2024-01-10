@@ -94,7 +94,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     log "Retrieving boost."
     wget "https://archives.boost.io/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
     # try to use the backup boost we have in Jenkins
-    if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ] || [! echo "${BOOST_SHA256SUM} ${BOOST_PACKAGE_BASENAME}.tar.gz" | sha256sum -c --status]] ; then
+    if [ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ] || [[ $(sha256sum "${BOOST_PACKAGE_BASENAME}.tar.gz") != "${BOOST_SHA256SUM}" ]] ; then
       log "Using boost backup"
       wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
     fi
