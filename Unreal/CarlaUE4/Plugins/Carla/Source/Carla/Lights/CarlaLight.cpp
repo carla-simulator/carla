@@ -22,19 +22,19 @@ void UCarlaLight::BeginPlay()
 
 void UCarlaLight::RegisterLight()
 {
-  if(bRegistered)
+  if ((flags & ECarlaLightFlags::Registered) != ECarlaLightFlags())
   {
     return;
   }
 
   UWorld *World = GetWorld();
-  if(World)
+  if (World != nullptr)
   {
     UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
     CarlaLightSubsystem->RegisterLight(this);
   }
   RegisterLightWithWeather();
-  bRegistered = true;
+  flags |= ECarlaLightFlags::Registered;
 }
 
 void UCarlaLight::OnComponentDestroyed(bool bDestroyingHierarchy)
@@ -78,14 +78,14 @@ FLinearColor UCarlaLight::GetLightColor() const
 
 void UCarlaLight::SetLightOn(bool bOn)
 {
-  bLightOn = bOn;
+  flags |= ECarlaLightFlags::TurnedOn;
   UpdateLights();
   RecordLightChange();
 }
 
 bool UCarlaLight::GetLightOn() const
 {
-  return bLightOn;
+  return (flags & ECarlaLightFlags::TurnedOn) != ECarlaLightFlags();
 }
 
 void UCarlaLight::SetLightType(ELightType Type)
@@ -105,7 +105,7 @@ carla::rpc::LightState UCarlaLight::GetLightState()
     LightIntensity,
     static_cast<carla::rpc::LightState::LightGroup>(LightType),
     LightColor,
-    bLightOn
+    GetLightOn()
   );
 
   state._id = GetId();
@@ -118,7 +118,7 @@ void UCarlaLight::SetLightState(carla::rpc::LightState LightState)
   LightIntensity = LightState._intensity;
   LightColor = LightState._color;
   LightType = static_cast<ELightType>(LightState._group);
-  bLightOn = LightState._active;
+  flags |= LightState._active ? ECarlaLightFlags::TurnedOn : ECarlaLightFlags();
   UpdateLights();
   RecordLightChange();
 }

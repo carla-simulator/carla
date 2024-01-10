@@ -52,7 +52,7 @@ FMeshDescription UMapGenFunctionLibrary::BuildMeshDescriptionFromData(
   MeshDescription.ReserveNewVertexInstances(VertexInstanceCount);
   MeshDescription.ReserveNewPolygons(PolygonCount);
   MeshDescription.ReserveNewEdges(PolygonCount * 2);
-  UVs.SetNumIndices(4);
+  UVs.SetNumChannels(4);
 
   // Create Materials
   TMap<UMaterialInterface*, FPolygonGroupID> UniqueMaterials;

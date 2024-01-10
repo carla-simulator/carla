@@ -12,6 +12,10 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+
+#include <type_traits>
+#include <utility>
+
 #include "CarlaLight.generated.h"
 
 
@@ -30,13 +34,76 @@ enum class ELightType : uint8
 
 #undef CARLA_ENUM_FROM_RPC
 
+
+
+UENUM(BlueprintType, Meta = (Bitflags))
+enum class ECarlaLightFlags : uint8
+{
+	Default		= 0 UMETA(Hidden),
+	Registered	= 1,
+	TurnedOn	= 2
+};
+
+constexpr auto operator&(ECarlaLightFlags lhs, ECarlaLightFlags rhs)
+{
+	using U = std::underlying_type_t<ECarlaLightFlags>;
+	return static_cast<ECarlaLightFlags>(static_cast<U>(lhs) & static_cast<U>(rhs));
+}
+
+constexpr auto operator|(ECarlaLightFlags lhs, ECarlaLightFlags rhs)
+{
+	using U = std::underlying_type_t<ECarlaLightFlags>;
+	return static_cast<ECarlaLightFlags>(static_cast<U>(lhs) | static_cast<U>(rhs));
+}
+
+constexpr auto operator^(ECarlaLightFlags lhs, ECarlaLightFlags rhs)
+{
+	using U = std::underlying_type_t<ECarlaLightFlags>;
+	return static_cast<ECarlaLightFlags>(static_cast<U>(lhs) ^ static_cast<U>(rhs));
+}
+
+constexpr auto operator&=(ECarlaLightFlags& lhs, ECarlaLightFlags rhs)
+{
+	lhs = lhs & rhs;
+	return lhs;
+}
+
+constexpr auto operator|=(ECarlaLightFlags& lhs, ECarlaLightFlags rhs)
+{
+	lhs = lhs | rhs;
+	return lhs;
+}
+
+constexpr auto operator^=(ECarlaLightFlags& lhs, ECarlaLightFlags rhs)
+{
+	lhs = lhs ^ rhs;
+	return lhs;
+}
+
+
+
+
+struct FCarlaLightOptions
+{
+	FLinearColor LightColor;
+
+	float LightIntensity;
+
+	ELightType LightType = ELightType::Street;
+
+};
+
+
+
+
 // Class representing a light in the scene
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class CARLA_API UCarlaLight : public UActorComponent
+class CARLA_API UCarlaLight :
+	public UActorComponent
 {
   GENERATED_BODY()
-
 public:
+
   UCarlaLight();
 
   void BeginPlay() override;
@@ -91,25 +158,24 @@ public:
   void SetId(int InId);
 
 protected:
-
+	
   UPROPERTY(EditAnywhere, Category = "Carla Light")
-  ELightType LightType = ELightType::Street;
+  FLinearColor LightColor;
 
   UPROPERTY(EditAnywhere, Category = "Carla Light")
   float LightIntensity;
 
   UPROPERTY(EditAnywhere, Category = "Carla Light")
-  FLinearColor LightColor;
-
-  UPROPERTY(EditAnywhere, Category = "Carla Light")
-  bool bLightOn;
+  ELightType LightType = ELightType::Street;
 
   UPROPERTY(EditAnywhere, Category = "Carla Light")
   int Id = -1;
 
-  private:
+  UPROPERTY(EditAnywhere, Category = "Carla Light")
+  ECarlaLightFlags flags;
+
+private:
 
   void RecordLightChange() const;
 
-  bool bRegistered = false;
 };
