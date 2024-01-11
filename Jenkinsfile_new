@@ -162,7 +162,7 @@ pipeline
                         
                         stage('TEST: ubuntu deploy sim')
                         {
-                            when { branch "ruben/Jenkins_migrate"; }
+                            when { branch "ruben/jenkins_migration"; }
                             steps
                             {
                                 sh 'git checkout .'
@@ -192,7 +192,7 @@ pipeline
 
                         stage('TEST: ubuntu Doxygen')
                         {
-                            when { branch "ruben/Jenkins_migrate" }
+                            when { branch "ruben/jenkins_migration" }
                             steps
                             {
                                 sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
