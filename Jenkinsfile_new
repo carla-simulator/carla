@@ -11,22 +11,6 @@ pipeline
 
     stages
     {
-        /*stage('Creating nodes')
-        {
-            
-            agent { label "master" }
-            steps
-            {
-                script
-                {
-                    JOB_ID = "${env.BUILD_TAG}"
-                    jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
-
-                    jenkinsLib.CreateUbuntuBuildNode(JOB_ID)
-                    jenkinsLib.CreateWindowsBuildNode(JOB_ID)
-                }
-            }
-        }*/
         stage('Building CARLA')
         {
             parallel
@@ -108,19 +92,6 @@ pipeline
                                     // stash includes: 'Dist/AdditionalMaps*.tar.gz', name: 'ubuntu_package2'
                                     stash includes: 'Examples/', name: 'ubuntu_examples'
                                 }
-                                /*success
-                                {
-                                    node('master')
-                                    {
-                                        script
-                                        {
-                                            JOB_ID = "${env.BUILD_TAG}"
-                                            jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
-
-                                            jenkinsLib.CreateUbuntuTestNode(JOB_ID)
-                                        }
-                                    }
-                                }*/
                             }
                         }
                         stage('ubuntu smoke tests')
@@ -146,16 +117,6 @@ pipeline
                                     archiveArtifacts 'CarlaUE4.log'
                                     junit 'Build/test-results/smoke-tests-*.xml'
                                     deleteDir()
-                                    /*node('master')
-                                    {
-                                        script
-                                        {
-                                            JOB_ID = "${env.BUILD_TAG}"
-                                            jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
-
-                                            jenkinsLib.DeleteUbuntuTestNode(JOB_ID)
-                                        }
-                                    }*/
                                 }
                             }
                         }
@@ -259,17 +220,6 @@ pipeline
                         always
                         {
                             deleteDir()
-
-                            /*node('master')
-                            {
-                                script
-                                {
-                                    JOB_ID = "${env.BUILD_TAG}"
-                                    jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
-
-                                    jenkinsLib.DeleteUbuntuBuildNode(JOB_ID)
-                                }
-                            }*/
                         }
                     }
                 }
@@ -375,18 +325,6 @@ pipeline
                         always
                         {
                             deleteDir()
-                            /*
-                            node('master')
-                            {
-                                script
-                                {
-                                    JOB_ID = "${env.BUILD_TAG}"
-                                    jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
-
-                                    jenkinsLib.DeleteWindowsBuildNode(JOB_ID)
-                                }
-                            }
-                            */
                         }
                     }
                 }
