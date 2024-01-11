@@ -223,9 +223,10 @@ pipeline
                         }
                     }
                 }
-                
+                /*
                 stage('windows')
                 {
+                
                     agent { label "windows" }
                     environment
                     {
@@ -327,7 +328,7 @@ pipeline
                             deleteDir()
                         }
                     }
-                }
+                }*/
                 
             }
         }
