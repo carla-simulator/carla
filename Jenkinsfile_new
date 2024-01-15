@@ -97,6 +97,7 @@ pipeline
                         stage('ubuntu smoke tests')
                         {
                             agent { label "ubuntu && gpu" }
+                            options { skipDefaultCheckout true }
                             steps
                             {
                                 unstash name: 'ubuntu_eggs'
