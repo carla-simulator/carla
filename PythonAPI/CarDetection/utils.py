@@ -457,7 +457,7 @@ def detect_surrounding_cars(
                 "1_-1": [0, 0, 0, 1, 0, 0, 0, 0],
                 "1_-2": [0, 0, 0, 0, 0, 0, 0, 0],
                 "right_inner_lane": [3, 3, 3, 3, 3, 3, 3, 3],
-                "right_outer_lane": [3, 3, 3, 3, 3, 3, 3, 3],
+                "right_outer_lane": [3, 3, 3, 3, 3, 3, 3, 3]}
         road_lane_ids (list): A list of all road-lane identifiers of the map, where each identifier is a string in the format "roadId_laneId". 
             Format: ["1_2", "2_1", "3_2"].
         world (carla.World): The game world where the simulation is running.
@@ -2824,6 +2824,228 @@ def get_right_lane_wp(wps):
             right_lane_wp = wp[0]
     return right_lane_wp
 
+def get_row_col_on_entry_or_exit(
+    distance_closest_starting_waypoint,
+    world_map,
+    car,
+    col,
+    ghost,
+    on_entry,
+    degree,
+    direction_angle,
+    highway_shape,
+    col_entryExit,
+    entry_wps,
+    exit_wps,
+    entry_city_road,
+    exit_city_road,
+    entry_city_lane_id, 
+    entry_highway_lane_id,
+    exit_highway_lane_id,
+    entry_highway_road, 
+    exit_highway_road, 
+    right_lane_start_wp, 
+    right_lane_end_wp
+):
+    """This function determines the row and column index in the matrix for a given car being on an entry/exit. This
+    depends on the type entry/exit and whether the car entrying or exiting. 
+
+    Args:
+        distance_closest_starting_waypoint (float): The distance between the car and the closest junction starting wp.
+        world_map (carla.Map): The map representing the environment.
+        car (carla.Vehicle): The vehicle object of the car.
+        col (int): Column number in matrix if car would be on normal highway lane.
+        ghost (bool): Ghost mode when ego is exiting/entrying a highway - fix a location of an imaginary vehicle on highway to correctly build matrix from this ghost perspective.
+        on_entry (bool): Indicating if ego is on an entry or exit lane
+        degree (int): Degree threshold used to determine where an entry/exit starts to curve away. Value depends on entry/exit type.
+        direction_angle (float): The angle used to determine directions from the ego vehicle.
+        highway_shape (tuple): Tuple containing highway_type, number of straight highway lanes, entry waypoint tuple and/ exit waypoint tuple.
+            Format: (highway_type: string, straight_lanes: int, entry_wps: ([wp,..], [wp,..]), exit_wps: ([wp,..], [wp,..]))
+        col_entryExit (int): Column index in the matrix of entry/exit of interest (for dual entry/exit and entry+exit the first column is returned)
+        entry_wps (tuple): Tuple with lists of start and end waypoint of the entry: ([start_wp, start_wp..], [end_wp, end_wp..])
+        exit_wps (tuple): Tuple with lists of start and end waypoint of the exit: ([start_wp, start_wp..], [end_wp, end_wp..])
+        entry_city_road (list): List with all road ids of city roads going into the entry road of the junction object.
+        exit_city_road (list): List with all road ids of city roads going out of the exit road of the junction object.
+        entry_city_lane_id (list): List with all lane ids of city roads going into the entry road of the junction object.
+        entry_highway_lane_id (list): List with all lane ids of highway roads going into the entry road of the junction object.
+        exit_highway_lane_id (list): List with all lane ids of highway roads going into the exit road of the junction object.
+        entry_highway_road (list): List with all road ids of highway roads going into the entry road of the junction object.
+        exit_highway_road (list): List with all road ids of highway roads going into the exit road of the junction object.
+        right_lane_start_wp (carla.Waypoint): Start waypoint of the right lane (entry/exit) needed for dual entry & exit surrounding cars angle calculation
+        right_lane_end_wp (carla.Waypoint): End waypoint of the right lane (entry/exit) needed for dual entry & exit surrounding cars angle calculation
+    Returns:
+        int: integer indicating the row in the matrix for the given car.
+        int: If on entry, integer indicating the column in the matrix for the given car.
+        int: If on exit, integer indicating the column in the matrix for the given car.
+        bool: Boolean indicating if the car is on the exit street of the junction object.
+    """
+    row = col_entry = col_exit = on_exit_street = None 
+    other_car_waypoint = world_map.get_waypoint(car.get_location())
+    other_car_road_id = other_car_waypoint.road_id
+    other_car_lane_id = other_car_waypoint.lane_id
+    
+    if other_car_road_id in entry_city_road + exit_city_road:
+        if distance_closest_starting_waypoint > 30:
+            return row, col_entry, col_exit, on_exit_street 
+        elif distance_closest_starting_waypoint < 15:
+            row = 6
+        else:
+            row = 7
+        if highway_shape[0] in ["entry_and_exit"]:
+            col_entry = col_entryExit + 2
+            col_exit = col_entryExit
+        elif highway_shape[0] in ["dual_entry"]:
+            entry_city_lane_id.sort()
+            # dual entry
+            if abs(other_car_lane_id) == entry_city_lane_id[0]:
+                col_entry = col_entryExit
+            elif abs(other_car_lane_id) == entry_city_lane_id[1]:
+                col_entry = col_entryExit + 1
+
+
+        elif highway_shape[0] in ["dual_exit"]:
+            entry_city_lane_id.sort()
+            # dual exit
+            if abs(other_car_lane_id) == entry_city_lane_id[0]:
+                col_entry = col_entryExit +1
+            elif abs(other_car_lane_id) == entry_city_lane_id[1]:
+                col_entry = col_entryExit
+        else:
+            col_entry = col_entryExit
+            col_exit = col_entryExit
+
+
+
+        if entry_city_road == exit_city_road:
+            if is_junction_behind(other_car_waypoint, 40):
+                check_junction = get_junction_behind(other_car_waypoint, 40)
+                road_lane_ids = get_all_road_lane_ids(world_map)
+                if is_highway_junction(car, other_car_waypoint, check_junction, road_lane_ids, direction_angle, world_map):
+                    on_exit_street = True
+                else:
+                    on_exit_street = False
+            else:
+                on_exit_street = False
+
+        else:
+            on_exit_street = False
+        return row, col_entry, col_exit, on_exit_street
+        
+    distance_junction_end = get_distance_junction_end(
+        other_car_waypoint
+    )
+    distance_junction_start = get_distance_junction_start(
+        other_car_waypoint
+    )
+    if other_car_road_id in entry_road_id + entry_highway_road: 
+        if highway_shape[0] == "dual_entry": 
+            yaw_difference = abs(
+                right_lane_end_wp.transform.rotation.yaw
+            ) - abs(
+                right_lane_end_wp.previous(distance_junction_end)[
+                    0
+                ].transform.rotation.yaw
+            )
+        else:
+            yaw_difference = abs(entry_wps[1][0].transform.rotation.yaw) - abs(
+                entry_wps[1][0]
+                .previous(distance_junction_end)[0]
+                .transform.rotation.yaw
+            )
+    elif other_car_road_id in exit_road_id + exit_highway_road: 
+        if highway_shape[0] == "dual_exit":
+            yaw_difference = abs(
+                right_lane_start_wp.transform.rotation.yaw
+            ) - abs(
+                right_lane_start_wp.next(distance_junction_start)[
+                    0
+                ].transform.rotation.yaw
+            )
+        else:
+
+            yaw_difference = abs(exit_wps[0][0].transform.rotation.yaw) - abs(
+                exit_wps[0][0]
+                .next(distance_junction_start)[0]
+                .transform.rotation.yaw
+            )
+    try:
+        already_in_curve = abs(yaw_difference) > degree
+        already_after_curve = abs(yaw_difference) > degree * 2
+    except UnboundLocalError:
+        already_after_curve = False
+        already_in_curve = False
+    if not on_entry:
+        if already_after_curve:
+            row = 7
+        elif already_in_curve:
+
+            row = 6
+        else:
+            row = 5
+    else:
+        row = 5
+
+    if already_in_curve:
+        if highway_shape[0] in ["entry_and_exit"]:
+            col_entry = col_entryExit + 2
+            col_exit = col_entryExit
+        elif highway_shape[0] in ["dual_entry"]:
+            # dual entry
+            entry_road_id = [
+                x for _, x in sorted(zip(entry_highway_lane_id, entry_road_id))
+            ]
+            entry_highway_lane_id.sort()
+            if other_car_road_id == entry_road_id[0]:
+                col_entry = col_entryExit
+            elif other_car_road_id == entry_road_id[1]:
+                col_entry = col_entryExit + 1
+        elif highway_shape[0] in ["dual_exit"]:
+            # dual exit
+            exit_road_id = [
+                x for _, x in sorted(zip(exit_highway_lane_id, exit_road_id))
+            ]
+            exit_highway_lane_id.sort()
+            if other_car_road_id == exit_road_id[0]:
+                col_exit = col_entryExit + 1
+            elif other_car_road_id == exit_road_id[1]:
+                col_exit = col_entryExit  # + 1
+        else:
+            col_entry = col_entryExit
+            col_exit = col_entryExit
+    else:
+        if (highway_shape[1] == 3) and (col <= (col_entryExit + 1)):
+            col_entry = col_entryExit + 2
+            col_exit = col_entryExit
+        else:
+            if highway_shape[0] in ["dual_entry"]:
+                # dual entry
+                entry_road_id = [
+                    x
+                    for _, x in sorted(
+                        zip(entry_highway_lane_id, entry_road_id)
+                    )
+                ]
+                entry_highway_lane_id.sort()
+                if other_car_road_id == entry_road_id[0]:
+                    row = row - 1
+            elif highway_shape[0] in ["dual_exit"]:
+                # dual exit
+                exit_road_id = [
+                    x
+                    for _, x in sorted(zip(exit_highway_lane_id, exit_road_id))
+                ]
+                exit_highway_lane_id.sort()
+                if other_car_road_id == exit_road_id[0]:
+                    row = row - 1
+            col_entry = col
+        col_exit = col
+
+    # if on exit lane, don't jump back! 
+    if ghost and not on_entry:
+        col_exit = 3
+    return row, col_entry, col_exit, on_exit_street
+
+
 def update_matrix(
     world_map,
     ego_vehicle,
@@ -2837,12 +3059,14 @@ def update_matrix(
     ghost=False,
     on_entry = False,
 ):
-    """_summary_
+    """The function updates the matrix with. First, it searches for an exit/entry and adds it
+    to the matrix. Then, it iterates over all cars in its radius and adds them to the matrix in 
+    the correct cell.
 
     Args:
         world_map (carla.Map): The map representing the environment.
         ego_vehicle (carla.Vehicle): The vehicle object of the ego vehicle.
-        ego_vehicle_location (carla.Location): The location object of the ego vehicle.
+        ego_location (carla.Location): The location object of the ego vehicle.
         highway_shape (tuple): Tuple containing highway_type, number of straight highway lanes, entry waypoint tuple and/ exit waypoint tuple.
             Format: (highway_type: string, straight_lanes: int, entry_wps: ([wp,..], [wp,..]), exit_wps: ([wp,..], [wp,..]))
         wps (list): List with a list for each cluster of waypoints
@@ -2857,8 +3081,20 @@ def update_matrix(
         on_entry (bool): Indicating if ego is on an entry or exit lane
 
     Returns:
-        _type_: _description_
+        matrix (collections.OrderedDict): An ordered dictionary representing the city matrix. The keys for existing lanes are the lane IDs in the format "road_id_lane_id". 
+            For non-existing lanes different placeholder exist, e.g.  left_outer_lane, left_inner_lane, No_4th_lane, No_opposing_direction.
+            The values indicate whether a vehicle is present: 0 - No vehicle, 1 - Ego vehicle, 2 - other car, 3 - No road.
+            Format example: {
+                "left_outer_lane": [3, 3, 3, 3, 3, 3, 3, 3],
+                "left_inner_lane": [3, 3, 3, 3, 3, 3, 3, 3],
+                "1_2": [0, 0, 0, 0, 0, 0, 2, 0],
+                "1_1": [0, 0, 0, 0, 0, 0, 0, 0],
+                "1_-1": [0, 0, 0, 1, 0, 0, 0, 0],
+                "1_-2": [0, 2, 0, 0, 0, 0, 0, 0],
+                "right_inner_lane": [3, 3, 3, 3, 0, 3, 3, 3],
+                "right_outer_lane": [3, 3, 3, 3, 2, 3, 3, 3]}
     """
+    
     # If main highway road consists of 3 straight lanes, then we have to add 1 row representing the entry/exit lane
     if highway_shape[1] == 3 and sum (matrix[list(matrix.keys())[5]]) == 24:
         matrix[list(matrix.keys())[5]] = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -2990,178 +3226,44 @@ def update_matrix(
                 continue
             
             distance_closest_starting_waypoint = distance(get_closest_starting_waypoint(junction.get_waypoints(carla.LaneType().Driving), car.get_location()).transform.location, car.get_location())
-            if other_car_road_id in entry_city_road + exit_city_road:
-                if distance_closest_starting_waypoint > 30:
-                    continue
-                elif distance_closest_starting_waypoint < 15:
-                    row = 6
-                else:
-                    row = 7
-                if highway_shape[0] in ["entry_and_exit"]:
-                    col_entry = col_entryExit + 2
-                    col_exit = col_entryExit
-                elif highway_shape[0] in ["dual_entry"]:
-                    entry_city_lane_id.sort()
-                    # dual entry
-                    if abs(other_car_lane_id) == entry_city_lane_id[0]:
-                        col_entry = col_entryExit
-                    elif abs(other_car_lane_id) == entry_city_lane_id[1]:
-                        col_entry = col_entryExit + 1
-
-
-                elif highway_shape[0] in ["dual_exit"]:
-                    entry_city_lane_id.sort()
-                    # dual exit
-                    if abs(other_car_lane_id) == entry_city_lane_id[0]:
-                        col_entry = col_entryExit +1
-                    elif abs(other_car_lane_id) == entry_city_lane_id[1]:
-                        col_entry = col_entryExit
-                else:
-                    col_entry = col_entryExit
-                    col_exit = col_entryExit
             
-
-
-                if entry_city_road == exit_city_road:
-                    if is_junction_behind(other_car_waypoint, 40):
-                        check_junction = get_junction_behind(other_car_waypoint, 40)
-                        road_lane_ids = get_all_road_lane_ids(world_map)
-                        if is_highway_junction(car, other_car_waypoint, check_junction, road_lane_ids, direction_angle, world_map):
-                            on_exit_street = True
-                        else:
-                            on_exit_street = False
-                    else:
-                        on_exit_street = False
-
-                else:
-                    on_exit_street = False
-                if (other_car_road_id in entry_city_road) and (col_entry < 8) and not on_exit_street:
-                    insert_in_matrix(matrix, car, ego_vehicle, col_entry, row)
-                elif (other_car_road_id in exit_city_road) and (col_exit < 8) and on_exit_street:
-                    insert_in_matrix(matrix, car, ego_vehicle, col_exit, row)
+            # get coordinates of other car in matrix
+            row, col_entry, col_exit, on_exit_street  = get_row_col_on_entry_or_exit(
+                distance_closest_starting_waypoint,
+                world_map,
+                car,
+                col,
+                ghost,
+                on_entry,
+                degree,
+                direction_angle,
+                highway_shape,
+                col_entryExit,
+                entry_wps,
+                exit_wps,
+                entry_city_road,
+                exit_city_road,
+                entry_city_lane_id, 
+                entry_highway_lane_id,
+                exit_highway_lane_id,
+                entry_highway_road, 
+                exit_highway_road, 
+                right_lane_start_wp, 
+                right_lane_end_wp)
+            
+            if row is None:
                 continue
-                
-            distance_junction_end = get_distance_junction_end(
-                other_car_waypoint
-            )
-            distance_junction_start = get_distance_junction_start(
-                other_car_waypoint
-            )
-            if other_car_road_id in entry_road_id + entry_highway_road:
-                if highway_shape[0] == "dual_entry": 
-                    yaw_difference = abs(
-                        right_lane_end_wp.transform.rotation.yaw
-                    ) - abs(
-                        right_lane_end_wp.previous(distance_junction_end)[
-                            0
-                        ].transform.rotation.yaw
-                    )
-                else:
-                    yaw_difference = abs(entry_wps[1][0].transform.rotation.yaw) - abs(
-                        entry_wps[1][0]
-                        .previous(distance_junction_end)[0]
-                        .transform.rotation.yaw
-                    )
-            elif other_car_road_id in exit_road_id + exit_highway_road:
-                if highway_shape[0] == "dual_exit":
-                    yaw_difference = abs(
-                        right_lane_start_wp.transform.rotation.yaw
-                    ) - abs(
-                        right_lane_start_wp.next(distance_junction_start)[
-                            0
-                        ].transform.rotation.yaw
-                    )
-                else:
-
-                    yaw_difference = abs(exit_wps[0][0].transform.rotation.yaw) - abs(
-                        exit_wps[0][0]
-                        .next(distance_junction_start)[0]
-                        .transform.rotation.yaw
-                    )
-            try:
-                already_in_curve = abs(yaw_difference) > degree
-                already_after_curve = abs(yaw_difference) > degree * 2
-            except UnboundLocalError:
-                already_after_curve = False
-                already_in_curve = False
-            if not on_entry:
-                if already_after_curve:
-                    row = 7
-                elif already_in_curve:
-
-                    row = 6
-                else:
-                    row = 5
-            else:
-                row = 5
-
-            if already_in_curve:
-                if highway_shape[0] in ["entry_and_exit"]:
-                    col_entry = col_entryExit + 2
-                    col_exit = col_entryExit
-                elif highway_shape[0] in ["dual_entry"]:
-                    # dual entry
-                    entry_road_id = [
-                        x for _, x in sorted(zip(entry_highway_lane_id, entry_road_id))
-                    ]
-                    entry_highway_lane_id.sort()
-                    if other_car_road_id == entry_road_id[0]:
-                        col_entry = col_entryExit
-                    elif other_car_road_id == entry_road_id[1]:
-                        col_entry = col_entryExit + 1
-                elif highway_shape[0] in ["dual_exit"]:
-                    # dual exit
-                    exit_road_id = [
-                        x for _, x in sorted(zip(exit_highway_lane_id, exit_road_id))
-                    ]
-                    exit_highway_lane_id.sort()
-                    if other_car_road_id == exit_road_id[0]:
-                        col_exit = col_entryExit + 1
-                    elif other_car_road_id == exit_road_id[1]:
-                        col_exit = col_entryExit  # + 1
-                else:
-                    col_entry = col_entryExit
-                    col_exit = col_entryExit
-            else:
-                if (highway_shape[1] == 3) and (col <= (col_entryExit + 1)):
-                    col_entry = col_entryExit + 2
-                    col_exit = col_entryExit
-                else:
-                    if highway_shape[0] in ["dual_entry"]:
-                        # dual entry
-                        entry_road_id = [
-                            x
-                            for _, x in sorted(
-                                zip(entry_highway_lane_id, entry_road_id)
-                            )
-                        ]
-                        entry_highway_lane_id.sort()
-                        if other_car_road_id == entry_road_id[0]:
-                            row = row - 1
-                    elif highway_shape[0] in ["dual_exit"]:
-                        # dual exit
-                        exit_road_id = [
-                            x
-                            for _, x in sorted(zip(exit_highway_lane_id, exit_road_id))
-                        ]
-                        exit_highway_lane_id.sort()
-                        if other_car_road_id == exit_road_id[0]:
-                            row = row - 1
-                    col_entry = col
-                col_exit = col
             
-            # if on exit lane, don't jump back! 
-            if ghost and not on_entry:
-                col_exit = 3
-
             entry_streets = entry_road_id + entry_highway_road
             exit_streets = exit_road_id + exit_highway_road
-            if (other_car_road_id in entry_streets) and (col_entry < 8):
+            if (other_car_road_id in entry_city_road) and (col_entry < 8) and not on_exit_street:
                 insert_in_matrix(matrix, car, ego_vehicle, col_entry, row)
-
+            elif (other_car_road_id in exit_city_road) and (col_exit < 8) and on_exit_street:
+                insert_in_matrix(matrix, car, ego_vehicle, col_exit, row)
+            elif (other_car_road_id in entry_streets) and (col_entry < 8):
+                insert_in_matrix(matrix, car, ego_vehicle, col_entry, row)
             elif (other_car_road_id in exit_streets) and (col_exit < 8):
                 insert_in_matrix(matrix, car, ego_vehicle, col_exit, row)
-
 
     return dict(matrix)
 
