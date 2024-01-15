@@ -190,13 +190,13 @@ def get_ego_direction_lanes(ego_vehicle, road_lane_ids, world_map):
                                              to the ego vehicle's current lane.
     """
     ego_vehicle_location = ego_vehicle.get_location()
-    ego_vehilce_waypoint = world_map.get_waypoint(ego_vehicle_location)
-    ego_vehilce_lane_id = str(ego_vehilce_waypoint.lane_id)
-    ego_vehilce_road_id = str(ego_vehilce_waypoint.road_id)
+    ego_vehicle_waypoint = world_map.get_waypoint(ego_vehicle_location)
+    ego_vehicle_lane_id = str(ego_vehicle_waypoint.lane_id)
+    ego_vehicle_road_id = str(ego_vehicle_waypoint.road_id)
 
     lanes = []
     for id in road_lane_ids:
-        if ego_vehilce_road_id == id.split("_")[0]:
+        if ego_vehicle_road_id == id.split("_")[0]:
             lanes.append(id.split("_")[1])
     lanes.sort()
     lanes = [int(id) for id in lanes]
@@ -217,7 +217,7 @@ def get_ego_direction_lanes(ego_vehicle, road_lane_ids, world_map):
     other_direction = []
     ego_direction = []
     for direction in lanes_splitted:
-        if int(ego_vehilce_lane_id) in direction:
+        if int(ego_vehicle_lane_id) in direction:
             ego_direction = direction
         else:
             other_direction = direction
@@ -2099,7 +2099,21 @@ def detect_cars_inside_junction(key_value_pairs, ego_vehicle, junction_waypoints
 
 
 def is_highway_junction(ego_vehicle, ego_wp, junction, road_lane_ids, direction_angle, world_map):
-    lanes_all, junction_roads = get_all_lanes(
+    """This function checks if the junction is a highway junction.
+
+    Args:
+        ego_vehicle (carla.Vehicle): The vehicle object of the ego vehicle.
+        ego_wp (carla.Waypoint): Waypoint object of ego vehicle.
+        junction (carla.Junction): Junction object to be tested if it is on highway.
+        road_lane_ids (list): A list of all road-lane identifiers of the map, where each identifier is a string in the format "roadId_laneId". 
+            Format: ["1_2", "2_1", "3_2"].
+        direction_angle (float): The angle used to determine directions from the ego vehicle.
+        world_map (carla.Map): The map representing the environment.
+
+    Returns:
+        bool: Boolean indicating if the considered junction is a highway junction.
+    """
+    lanes_all, _ = get_all_lanes(
         ego_vehicle, ego_wp, junction.get_waypoints(carla.LaneType().Driving), road_lane_ids, direction_angle, world_map
     )
 
@@ -2880,17 +2894,24 @@ def get_row_col_on_entry_or_exit(
         bool: Boolean indicating if the car is on the exit street of the junction object.
     """
     row = col_entry = col_exit = on_exit_street = None 
+    
+    # get other car wp, road&lane id
     other_car_waypoint = world_map.get_waypoint(car.get_location())
     other_car_road_id = other_car_waypoint.road_id
     other_car_lane_id = other_car_waypoint.lane_id
     
+    # 1. Case: car is on city road
     if other_car_road_id in entry_city_road + exit_city_road:
+        # determine row based on how far away car is from junction
         if distance_closest_starting_waypoint > 30:
+            # ignore cars on city road if they are too far away
             return row, col_entry, col_exit, on_exit_street 
         elif distance_closest_starting_waypoint < 15:
             row = 6
         else:
             row = 7
+        
+        # get col_entry and col_exit
         if highway_shape[0] in ["entry_and_exit"]:
             col_entry = col_entryExit + 2
             col_exit = col_entryExit
@@ -2901,8 +2922,6 @@ def get_row_col_on_entry_or_exit(
                 col_entry = col_entryExit
             elif abs(other_car_lane_id) == entry_city_lane_id[1]:
                 col_entry = col_entryExit + 1
-
-
         elif highway_shape[0] in ["dual_exit"]:
             entry_city_lane_id.sort()
             # dual exit
@@ -2914,8 +2933,7 @@ def get_row_col_on_entry_or_exit(
             col_entry = col_entryExit
             col_exit = col_entryExit
 
-
-
+        # check if car is on a city road after exiting 
         if entry_city_road == exit_city_road:
             if is_junction_behind(other_car_waypoint, 40):
                 check_junction = get_junction_behind(other_car_waypoint, 40)
@@ -2926,17 +2944,18 @@ def get_row_col_on_entry_or_exit(
                     on_exit_street = False
             else:
                 on_exit_street = False
-
         else:
             on_exit_street = False
         return row, col_entry, col_exit, on_exit_street
-        
+    
+    
     distance_junction_end = get_distance_junction_end(
         other_car_waypoint
     )
     distance_junction_start = get_distance_junction_start(
         other_car_waypoint
     )
+    # 2. Case: car is on entry or already on highway after entrying
     if other_car_road_id in entry_road_id + entry_highway_road: 
         if highway_shape[0] == "dual_entry": 
             yaw_difference = abs(
@@ -2952,6 +2971,7 @@ def get_row_col_on_entry_or_exit(
                 .previous(distance_junction_end)[0]
                 .transform.rotation.yaw
             )
+    # 3. Case: car is on exit or still on highway road before exiting
     elif other_car_road_id in exit_road_id + exit_highway_road: 
         if highway_shape[0] == "dual_exit":
             yaw_difference = abs(
@@ -2962,12 +2982,13 @@ def get_row_col_on_entry_or_exit(
                 ].transform.rotation.yaw
             )
         else:
-
             yaw_difference = abs(exit_wps[0][0].transform.rotation.yaw) - abs(
                 exit_wps[0][0]
                 .next(distance_junction_start)[0]
                 .transform.rotation.yaw
             )
+    # For case 2 and 3: get row
+    #  -> Check if car is already in entry/exit curve, bc. the further away in the curve, the farther away is the car in the matrix
     try:
         already_in_curve = abs(yaw_difference) > degree
         already_after_curve = abs(yaw_difference) > degree * 2
@@ -2985,6 +3006,8 @@ def get_row_col_on_entry_or_exit(
     else:
         row = 5
 
+    # For case 2 and 3: get column
+    #  -> depends on the col_entryExit and type of entry/exit and if car is already in curves
     if already_in_curve:
         if highway_shape[0] in ["entry_and_exit"]:
             col_entry = col_entryExit + 2
@@ -3254,6 +3277,7 @@ def update_matrix(
             if row is None:
                 continue
             
+            # insert car in matrix based on row&col and if car is on highway, on entry/exit or on city road
             entry_streets = entry_road_id + entry_highway_road
             exit_streets = exit_road_id + exit_highway_road
             if (other_car_road_id in entry_city_road) and (col_entry < 8) and not on_exit_street:
@@ -3316,6 +3340,67 @@ def get_waypoint_on_highway_junction(
     )
 
     return closest_waypoint, new_bbx_location
+
+# Highway exits
+def get_location_x_units_to_left(ego_vehicle, x):
+    """
+    Returns location that is 'x' units to the left of the ego vehicle. Takes into account the ego vehicle's current location and
+    orientation to determine the target location.
+
+    Args:
+        ego_vehicle (carla.Vehicle): The ego vehicle for which the target location is calculated.
+        x (int): The number of units to the left of the ego vehicle for the target location.
+
+    Returns:
+        carla.Location: The calculated target location 'x' units to the left of the ego vehicle.
+    """
+    location = ego_vehicle.get_location()
+    transform = ego_vehicle.get_transform()
+
+    # create a vector to the left of the ego vehicle
+    ego_forward_vector = transform.get_forward_vector()
+    left_vector = carla.Vector3D(x=-ego_forward_vector.y, y=ego_forward_vector.x, z=ego_forward_vector.z)
+
+    # get target location
+    target_location = location - left_vector * x
+    target_location = carla.Location(target_location.x, target_location.y, target_location.z)
+    return target_location
+
+
+def angle_between_vectors(a, b):
+    dot = a.x * b.x + a.y * b.y
+    mag_a = math.sqrt(a.x**2 + a.y**2)
+    mag_b = math.sqrt(b.x**2 + b.y**2)
+    cos_theta = dot / (mag_a * mag_b)
+    theta = math.acos(cos_theta)
+    return math.degrees(theta)
+
+
+def check_ego_exit_highway(ego_vehicle, ego_waypoint, highway_forward_vector, highway_shape, current_lanes):
+    """This function determines if ego vehicle is exiting the highway based on forward vector, number of lanes and highway shape.
+
+    Args:
+        ego_vehicle (carla.Vehicle): Ego vehicle object.
+        ego_waypoint (carla.Waypoint): Ego vehicle waypoint object.
+        highway_forward_vector (carla.Vector3D): Forwad vector of ego on highway.
+        highway_shape (tuple): Tuple containing highway_type, number of straight highway lanes, entry waypoint tuple and/ exit waypoint tuple.
+            Format: (highway_type: string, straight_lanes: int, entry_wps: ([wp,..], [wp,..]), exit_wps: ([wp,..], [wp,..]))
+        current_lanes (list): list with lane_ids of current road of ego
+
+    Returns:
+        bool: Indicates if ego vehicle is exiting the highway.
+    """
+    if highway_forward_vector and "exit" in highway_shape[0] and highway_shape[0] != "dual_exit":
+        if (ego_waypoint.lane_id == max(current_lanes, key=abs) or len(current_lanes) <=2) and angle_between_vectors(ego_vehicle.get_transform().get_forward_vector(), highway_forward_vector) >= 8:
+            return True
+        else:
+            return False
+    else: 
+        return False
+
+
+
+
 
 #####################
 # Functions not in use
@@ -3408,56 +3493,6 @@ def safe_data(ego_vehicle, matrix, street_type, df):
         return df
 
 
-
-
-
-
-# Highway exits
-
-def get_location_x_units_to_left(ego_vehicle, x):
-    """
-    Returns location that is 'x' units to the left of the ego vehicle. Takes into account the ego vehicle's current location and
-    orientation to determine the target location.
-
-    Args:
-        ego_vehicle (carla.Vehicle): The ego vehicle for which the target location is calculated.
-        x (int): The number of units to the left of the ego vehicle for the target location.
-
-    Returns:
-        carla.Location: The calculated target location 'x' units to the left of the ego vehicle.
-    """
-    location = ego_vehicle.get_location()
-    transform = ego_vehicle.get_transform()
-
-    # create a vector to the left of the ego vehicle
-    ego_forward_vector = transform.get_forward_vector()
-    left_vector = carla.Vector3D(x=-ego_forward_vector.y, y=ego_forward_vector.x, z=ego_forward_vector.z)
-
-    # get target location
-    target_location = location - left_vector * x
-    target_location = carla.Location(target_location.x, target_location.y, target_location.z)
-    return target_location
-
-
-def angle_between_vectors(a, b):
-    dot = a.x * b.x + a.y * b.y
-    mag_a = math.sqrt(a.x**2 + a.y**2)
-    mag_b = math.sqrt(b.x**2 + b.y**2)
-    cos_theta = dot / (mag_a * mag_b)
-    theta = math.acos(cos_theta)
-    return math.degrees(theta)
-
-
-def check_ego_exit_highway(ego_vehicle, ego_waypoint, highway_forward_vector, highway_shape, current_lanes):
-    if highway_forward_vector and "exit" in highway_shape[0] and highway_shape[0] != "dual_exit":
-        if (ego_waypoint.lane_id == max(current_lanes, key=abs) or len(current_lanes) <=2) and angle_between_vectors(ego_vehicle.get_transform().get_forward_vector(), highway_forward_vector) >= 8:
-            return True
-        else:
-            return False
-    else: 
-        return False
-
-
 ###########################################################
 ##################### Get Sensor data #####################
 ###########################################################
@@ -3500,7 +3535,6 @@ def get_dist_to_lane_center(ego_vehicle, world):
     waypoint = world.get_map().get_waypoint(ego_location)
     lane_location = waypoint.transform.location
     dist_to_lane_center = math.sqrt((lane_location.x - ego_location.x) **2 + (lane_location.y - ego_location.y) ** 2)
-
     return dist_to_lane_center
 
 
@@ -3512,8 +3546,7 @@ def get_speed_of_vehicle_ahead(ego_waypoint, world, max_distance=10):
         next_waypoint = ego_waypoint.next(i)[0]
         for actor_speed, actor_location in actor_locations:
             if actor_location.distance(next_waypoint.transform.location) < 1:
-                return actor_speed
-            
+                return actor_speed 
     return None
             
 
@@ -3589,7 +3622,6 @@ params_car_detection = {
     "junction_roads_junction": None,
     "lanes_all_junction": None,
     "yaw": None,
-
 }
 def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, junction, same_junction, on_junction, junctions_detected, wps, junction_old, wps_old, 
                              highway_shape_old, highway_shape, wrong_shape, junction_shape, matrix, junction_id, 
@@ -3816,7 +3848,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
             matrix, cars_on_entryExit = detect_surrounding_cars(
                 ego_location, ego_vehicle, matrix, road_lane_ids, world, radius, ego_on_highway, highway_shape
             )
-            # update matrix with highway entry/exit detection
+            # update matrix with highway entry/exit detection (including other cars)
             if not highway_shape is None and (highway_shape[0] != "normal_highway" or wrong_shape):
                 matrix = update_matrix(world_map, ego_vehicle, ego_location, highway_shape, wps, matrix, junction, cars_on_entryExit, direction_angle) 
                 if not junction_old is None and junction_old.id != junction.id:
@@ -3828,26 +3860,28 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
         street_type = "On highway exit"
         # print("Street type:", street_type)
         
+        # reset forward vector
         if highway_forward_vector and distance(highway_forward_location, ego_location) > 60:
             highway_forward_vector = None
             highway_forward_location = None
         
         junction = ego_waypoint.get_junction()
         if not junction:
-            # update parameter
+            # update parameter and call car detection function again in current tick for correct detection
             exit_over = True
             params_snapshot = locals().copy()
             params = update_params(params, params_snapshot)
-            # print("Exit over") 
             return get_car_detection_matrix(**params, ego_vehicle=ego_vehicle, world=world)
 
         junction_id_skip = junction.id
 
+        # get highway shape
         wps = junction.get_waypoints(carla.LaneType().Driving)
         closest_waypoint, middle_location = get_waypoint_on_highway_junction(junction, ego_waypoint, ego_location, wps, world_map)
         wps = prepare_waypoints(closest_waypoint, wps, world_map)
         highway_shape = get_highway_shape(wps, junction, ego_waypoint, world_map)
 
+        # update control parameters and save old junction objects 
         on_entry = True
         if (highway_shape is None) and (not junction_old is None):
             same_junction = False
@@ -3855,7 +3889,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
             wps = wps_old
             highway_shape = highway_shape_old
 
-
+        # create matrix, add other cars on highway, and add highway entry/exit detection
         matrix = create_basic_matrix(middle_location, road_lane_ids, world_map, ghost=True)
         if matrix:
             matrix, cars_on_entryExit = detect_surrounding_cars(
@@ -3870,7 +3904,6 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
 
     # 5. Highway entry
     elif (is_junction_ahead(ego_waypoint, 20) or (len(current_lanes) <= 1 and ego_waypoint.is_junction)) and highway_junction and street_type in  ["Non highway street", "On junction", "On highway entry", "On highway exit"]:
-
         street_type = "On highway entry"
         # print("Street type:", street_type)
         on_entry = True
@@ -3880,19 +3913,20 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
             junction = ego_waypoint.get_junction()
         junction_id_skip = junction.id
 
+        # get highway shape
         wps = junction.get_waypoints(carla.LaneType().Driving)
         closest_waypoint, middle_location = get_waypoint_on_highway_junction(junction, ego_waypoint, ego_location, wps, world_map)
         wps = prepare_waypoints(closest_waypoint, wps, world_map)
         highway_shape = get_highway_shape(wps, junction, ego_waypoint, world_map)
 
-        on_entry = True
+        # update control parameters and save old junction objects 
         if (highway_shape is None) and (not junction_old is None):
             same_junction = False
             junction = junction_old
             wps = wps_old
             highway_shape = highway_shape_old
 
-
+        # create matrix, add other cars on highway, and add highway entry/exit detection
         matrix = create_basic_matrix(middle_location, road_lane_ids, world_map, ghost=True)
         if matrix:
             matrix, cars_on_entryExit = detect_surrounding_cars(
@@ -3904,19 +3938,22 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
 
     # 6. Normal Road
     else:
+        # reset control parameters
         highway_forward_vector = None
         highway_forward_location = None
         on_junction = False
         junction_old = None
         on_entry = False
         same_junction = False
+        
         if ego_on_highway:
             street_type = "On highway"
         else:
             street_type = "Non highway street"
         # print("Street type:", street_type)
+        
         matrix = create_basic_matrix(ego_location, road_lane_ids, world_map)
-        # special road (gas station)
+        # special road (gas station), fix 
         if "Town04" in world_map.name and ego_waypoint.road_id in  [467, 477]:
             matrix = collections.OrderedDict([("468_-1", [0, 0, 0, 0, 0, 0, 0, 0]) if k == 'No_opposing_direction' else (k, v) for k, v in matrix.items()])
         elif "Town04" in world_map.name and ego_waypoint.road_id == 468:
