@@ -24,7 +24,7 @@ pipeline
                     }
                     stages
                     {
-                        stage('ubuntu setup')
+                        /*stage('ubuntu setup')
                         {
                             steps
                             {
@@ -151,19 +151,13 @@ pipeline
                                 //sh 'make deploy ARGS="--replace-latest --docker-push"'
                             }
                         }
-
+                        */
                         stage('TEST: ubuntu Doxygen')
                         {
                             when { branch "ruben/jenkins_migration" }
                             steps
                             {
-                                sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
-                                sh '''
-                                    cd ~/carla-simulator.github.io
-                                    git remote set-url origin git@docs:carla-simulator/carla-simulator.github.io.git
-                                    git fetch
-                                    git checkout -B master origin/master
-                                '''
+                                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'github_token_as_pwd_2', url: 'https://github.com/carla-simulator/carla-simulator.github.io.git']])
                                 sh 'make docs'
                                 sh 'cp -rf ./Doxygen ~/carla-simulator.github.io/'
                                 /*
