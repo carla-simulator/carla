@@ -157,7 +157,7 @@ pipeline
                             when { branch "ruben/jenkins_migration" }
                             steps
                             {
-                                checkout scmGit(branches: [[name: '*/master']], extensions: [checkoutOption(120)], userRemoteConfigs: [[credentialsId: 'github_token_as_pwd_2', url: 'https://github.com/carla-simulator/carla-simulator.github.io.git']])
+                                checkout scmGit(branches: [[name: '*/master']], extensions: [checkoutOption(120), cloneOptions(noTags:false, reference:'', shallow: false, timeout:120)], userRemoteConfigs: [[credentialsId: 'github_token_as_pwd_2', url: 'https://github.com/carla-simulator/carla-simulator.github.io.git']])
                                 sh 'make docs'
                                 sh 'cp -rf ./Doxygen ~/carla-simulator.github.io/'
                                 /*
