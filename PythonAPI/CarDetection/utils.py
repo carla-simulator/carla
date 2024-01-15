@@ -429,7 +429,7 @@ def create_basic_matrix(ego_vehicle_location, road_lane_ids, world_map, ghost=Fa
     return matrix
 
 
-def detect_surronding_cars(
+def detect_surrounding_cars(
     ego_location,
     ego_vehicle,
     matrix,
@@ -2641,9 +2641,9 @@ def search_entry_or_exit(
     right_lane_end_wp,
     ghost=False,
     on_entry=False):
-    """This function searches for the entry or exit in front on highway. If ego is exiting/entrying a fixed static matrix is used.
+    """This function searches for the entry or exit in front/behind on highway. If ego is exiting/entrying, a fixed static matrix is used.
     Otherwise, when ego is on highway, the function looks behind & in front to find entry / exit. The idea is to go a certain distance to the front/back
-    and then check if right lane is already curved.
+    and then check if right lane (entry/exit lane) is already curved.
 
     Args:
         world_map (carla.Map): The map representing the environment.
@@ -2664,7 +2664,7 @@ def search_entry_or_exit(
         ghost (bool): Ghost mode when ego is exiting/entrying a highway - fix a location of an imaginary vehicle on highway to correctly build matrix from this ghost perspective.
         on_entry (bool): Indicating if ego is on an entry or exit lane
 
-    Returns:
+    Returns: 
         bool: Indicating if the entry/exit was found already.
         int: Column index in the matrix of entry/exit of interest (for dual entry/exit and entry+exit the first column is returned)
         matrix (list): Updated matrix with a tuple (key, value) for each lane with the key indicating the road id and lane id of the lane "roadID_laneID".
@@ -2727,7 +2727,7 @@ def search_entry_or_exit(
                 # j = 0
                 continue
             
-            # get next waypoint infront/back to be checked if it is parallel to entry/exit 
+            # get next waypoint infront/back to be checked if it is parallel to entry/exit, i.e. if we go to the right lane (entry/exit lane) check if it is already curved 
             wp = get_next_wp_to_check_if_already_entry_or_exit(direction, initial_wp, col_distance, j, highway_shape)
             
             # waypoint can only be parallel to entry/exit if it is on the junction object            
@@ -2745,33 +2745,39 @@ def search_entry_or_exit(
 
                 # if wp is parallel to entry/exit, update matrix
                 if wp_is_parallel_to_entry_exit:
-                    if highway_shape[0] in ["traffic_light_junction_entry_left"]:
-                        matrix[0][1][z + i] = 0
-                        matrix[1][1][z + i] = 0
-                    else:
-                        matrix[6][1][z + i] = 0
-                        matrix[7][1][z + i] = 0
+                    # i: index of col_distance - defines number of cols to look behind/infront until entry/exit, 
+                    # z: helper - corrects index of col_distance to index of matrix, depending on direction
                     col_entryExit = z + i
+                    
+                    if highway_shape[0] in ["traffic_light_junction_entry_left"]:
+                        # special case bc. entry comes from left side with traffic light 
+                        matrix[0][1][col_entryExit] = 0
+                        matrix[1][1][col_entryExit] = 0
+                    else:
+                        matrix[6][1][col_entryExit] = 0
+                        matrix[7][1][col_entryExit] = 0
+                    
+                    # add second lane, if dual entry/exit or entry+exit
                     if (
-                        z + i + 1 < 8
+                        col_entryExit + 1 < 8
                     ):  # case: curve is 70m infront (last column in matrix)
                         if highway_shape[0] in ["entry_and_exit"]:
                             if highway_shape[1] == 3:
-                                matrix[5][1][z + i + 1] = 3
+                                matrix[5][1][col_entryExit + 1] = 3
                             # add entry, if closer than 70m
-                            if z + i + 2 < 8:
-                                matrix[6][1][z + i + 2] = 0
-                                matrix[7][1][z + i + 2] = 0
+                            if col_entryExit + 2 < 8:
+                                matrix[6][1][col_entryExit + 2] = 0
+                                matrix[7][1][col_entryExit + 2] = 0
                         elif highway_shape[0] in ["dual_entry"]:
-                            matrix[6][1][z + i + 1] = 0
-                            matrix[7][1][z + i + 1] = 0
+                            matrix[6][1][col_entryExit + 1] = 0
+                            matrix[7][1][col_entryExit + 1] = 0
                         elif highway_shape[0] in ["dual_exit"]:
-                            matrix[6][1][z + i + 1] = 0
-                            matrix[7][1][z + i + 1] = 0
-                    if (z + i - 1 >= 0):
+                            matrix[6][1][col_entryExit + 1] = 0
+                            matrix[7][1][col_entryExit + 1] = 0
+                    if (col_entryExit - 1 >= 0):
                         if highway_shape[0] in ["traffic_light_junction_entry_right"]:
-                            matrix[6][1][z + i - 1] = 0
-                            matrix[7][1][z + i - 1] = 0
+                            matrix[6][1][col_entryExit - 1] = 0
+                            matrix[7][1][col_entryExit - 1] = 0
                     exit_entry_found = True
                     break
     return exit_entry_found, col_entryExit, matrix
@@ -2924,7 +2930,7 @@ def update_matrix(
             on_entry
         )
 
-    # get road ids of: entry/exit, city road before and highway road after junction object
+    # get road & lane ids of: entry/exit, city road before and highway road after junction object
     entry_road_id = []
     exit_road_id = []
     entry_city_road = []
@@ -2935,24 +2941,22 @@ def update_matrix(
     exit_highway_road = []
     entry_highway_lane_id = []
     exit_highway_lane_id = []
-
     if entry_wps:
-        for entry_wp in entry_wps[0]:
+        for entry_wp in entry_wps[0]: # all start wps of highway entry
             entry_city_road.append(entry_wp.previous(3)[0].road_id)
             entry_city_lane_id.append(abs(entry_wp.previous(3)[0].lane_id))
             entry_road_id.append(entry_wp.road_id)
-        for entry_wp in entry_wps[1]:
+        for entry_wp in entry_wps[1]: # all end wps of highway entry
             entry_highway_road.append(entry_wp.next(3)[0].road_id)
             entry_highway_lane_id.append(abs(entry_wp.next(3)[0].lane_id))
     if exit_wps:
-        for exit_wp in exit_wps[1]:
+        for exit_wp in exit_wps[1]: # all start wps of highway exit
             exit_city_road.append(exit_wp.next(3)[0].road_id)
             exit_city_lane_id.append(abs(exit_wp.next(3)[0].road_id))
             exit_road_id.append(exit_wp.road_id)
-        for exit_wp in exit_wps[0]:
+        for exit_wp in exit_wps[0]: # all end wps of highway exit
             exit_highway_road.append(exit_wp.previous(3)[0].road_id)
             exit_highway_lane_id.append(abs(exit_wp.previous(3)[0].lane_id))
-
 
     # detect surrounding cars on exit/entry
     for car in cars_on_entryExit:
@@ -2969,23 +2973,27 @@ def update_matrix(
 
         # matrix = list(matrix)
         if matrix:
+            # check if ego vehicle is already in matrix
             ego_already_in_matrix = False
             for key, row in matrix:
                 if 1 in row:
                     ego_already_in_matrix = True
             if (ego_already_in_matrix and car.id == ego_vehicle.id):
                 continue
+            
             other_car_waypoint = world_map.get_waypoint(car.get_location())
             other_car_road_id = other_car_waypoint.road_id
             other_car_lane_id = other_car_waypoint.lane_id
             
+            # if ego is not on entry/exit, then ignore cars that are in the radius but are on the city road before entry/exit junction object
             if other_car_road_id in entry_city_road + exit_city_road and not on_entry:
                 continue
-            distance_clostest_starting_waypoint = distance(get_closest_starting_waypoint(junction.get_waypoints(carla.LaneType().Driving), car.get_location()).transform.location, car.get_location())
+            
+            distance_closest_starting_waypoint = distance(get_closest_starting_waypoint(junction.get_waypoints(carla.LaneType().Driving), car.get_location()).transform.location, car.get_location())
             if other_car_road_id in entry_city_road + exit_city_road:
-                if distance_clostest_starting_waypoint > 30:
+                if distance_closest_starting_waypoint > 30:
                     continue
-                elif distance_clostest_starting_waypoint < 15:
+                elif distance_closest_starting_waypoint < 15:
                     row = 6
                 else:
                     row = 7
@@ -3153,6 +3161,7 @@ def update_matrix(
 
             elif (other_car_road_id in exit_streets) and (col_exit < 8):
                 insert_in_matrix(matrix, car, ego_vehicle, col_exit, row)
+
 
     return dict(matrix)
 
@@ -3702,7 +3711,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
         
         if matrix:
             # detect other cars and insert them into matrix
-            matrix, cars_on_entryExit = detect_surronding_cars(
+            matrix, cars_on_entryExit = detect_surrounding_cars(
                 ego_location, ego_vehicle, matrix, road_lane_ids, world, radius, ego_on_highway, highway_shape
             )
             # update matrix with highway entry/exit detection
@@ -3747,7 +3756,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
 
         matrix = create_basic_matrix(middle_location, road_lane_ids, world_map, ghost=True)
         if matrix:
-            matrix, cars_on_entryExit = detect_surronding_cars(
+            matrix, cars_on_entryExit = detect_surrounding_cars(
                 middle_location, ego_vehicle, matrix, road_lane_ids, world, radius, True, highway_shape, ghost=True
             )
 
@@ -3784,7 +3793,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
 
         matrix = create_basic_matrix(middle_location, road_lane_ids, world_map, ghost=True)
         if matrix:
-            matrix, cars_on_entryExit = detect_surronding_cars(
+            matrix, cars_on_entryExit = detect_surrounding_cars(
                 middle_location, ego_vehicle, matrix, road_lane_ids, world, radius, True, highway_shape, ghost=True
             )
 
@@ -3812,7 +3821,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
             matrix = collections.OrderedDict([("467_1", [0, 0, 0, 0, 0, 0, 0, 0]) if k == 'No_opposing_direction' else (k, v) for k, v in matrix.items()])        
         
         if matrix:
-            matrix, _ = detect_surronding_cars(
+            matrix, _ = detect_surrounding_cars(
                 ego_location, ego_vehicle, matrix, road_lane_ids, world, radius, ego_on_highway, highway_shape
             )
     
