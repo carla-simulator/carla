@@ -952,10 +952,12 @@ def BuildSQLite():
       cmd.extend([ '-o', SQLITE_EXE_PATH ])
     LaunchSubprocessImmediate(cmd, log_name = 'sqlite-exe-build')
   if not SQLITE_LIB_PATH.exists():
-    if C_COMPILER_IS_CLANG:
+    objs = []
+    BUILD_TEMP_PATH.mkdir(exist_ok = True)
+    for e in sqlite_sources:
       cmd = [
         C_COMPILER,
-        f'-fuse-ld={LIB}',
+        '-c' if C_COMPILER_CLI_TYPE == 'gnu' else '/c',
       ]
       cmd.extend([
         f'-std=c{C_STANDARD}',
@@ -968,42 +970,15 @@ def BuildSQLite():
         '/MD',
         '/EHsc',
       ])
-      if C_ENABLE_MARCH_NATIVE:
-        cmd.append('-march=native')
-      cmd.extend(sqlite_sources)
-      cmd.extend([ '/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o', SQLITE_LIB_PATH ])
-      LaunchSubprocessImmediate(
-        cmd,
-        log_name = 'sqlite-lib-build')
-    else:
-      objs = []
-      BUILD_TEMP_PATH.mkdir(exist_ok = True)
-      for e in sqlite_sources:
-        cmd = [
-          C_COMPILER,
-          '-c' if C_COMPILER_CLI_TYPE == 'gnu' else '/c',
-        ]
-        cmd.extend([
-          f'-std=c{C_STANDARD}',
-          '-march=native',
-          '-O2',
-        ] if C_COMPILER_CLI_TYPE == 'gnu' else [
-          f'/std:c{C_STANDARD}',
-          '/O2',
-          '/Qvec',
-          '/MD',
-          '/EHsc',
-        ])
-        obj_path = BUILD_TEMP_PATH / f'{e.name}{OBJ_EXT}'
-        cmd.extend([ e, '/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o', obj_path ])
-        LaunchSubprocessImmediate(cmd, log_name = f'sqlite-{e.stem}-build')
-        objs.append(obj_path)
-      cmd = [
-        LIB,
-        f'/OUT:{SQLITE_LIB_PATH}',
-      ]
-      cmd.extend(objs)
-      LaunchSubprocessImmediate(cmd, log_name = 'sqlite-lib-build')
+      obj_path = BUILD_TEMP_PATH / f'{e.name}{OBJ_EXT}'
+      cmd.extend([ e, '/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o', obj_path ])
+      LaunchSubprocessImmediate(cmd, log_name = f'sqlite-{e.stem}-build')
+      objs.append(obj_path)
+    cmd = [
+      LIB,
+      f'/OUT:{SQLITE_LIB_PATH}',
+    ]
+    LaunchSubprocessImmediate(cmd, log_name = 'sqlite-lib-build')
 
 
 
