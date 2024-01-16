@@ -5,7 +5,8 @@ CARLA comes with a generous compliment of assets for creating driving simulation
 In this tutorial we will cover the process of creating a simple map for use with CARLA. We will use two software packages to create parts of the map. We will create the road network using [__RoadRunner__](https://es.mathworks.com/products/roadrunner.html) and then add assets to the map through the [__Unreal Editor__](https://www.unrealengine.com/en-US/features/the-unreal-editor).
 
 * __[Prerequisites](#prerequisites)__  
-* __[Large maps](#large-maps)__  
+* __[Large maps](#large-maps)__
+* __[Digital Twin Tool](#digital-twin-tool)__
 * __[RoadRunner](#create-a-road-network-using-roadrunner)__  
 * __[Importing into CARLA](#importing-your-road-network-into-carla)__
 * __[Importing assets](#importing-assets-and-adding-them-to-the-map)__
@@ -31,6 +32,11 @@ To follow this guide, you will need to build CARLA from source, so that you may 
 ## Large Maps
 
 The following text details the procedures for creating and decorating a standard map. From version 0.9.12, CARLA has the Large Maps functionality. Large maps are bigger in scale than standard maps, and can be up to 100 km<sup>2</sup> in size. Large maps work in a slightly different way to standard maps, because of hardware limitations, even in high end graphics cards. Large maps are split up into tiles, and only the tiles needed immediately (i.e. those closest to the Ego vehicle) are loaded during the simulation. Other tiles sit dormant until the data is needed. This facilitates the highest performance for CARLA simulations. Most of the details that follow are similar when building a Large Map, but there are some additional steps. Please follow [this guide](content_authoring_large_maps.md) to build a Large Map for CARLA.
+
+## Digital Twin Tool
+
+CARLA offers a procedural map generation tool, which ingests road network data from OpenStreetMap and decorates the map procedurally with buildings and vegetation. Read about how to use the tool [here](adv_digital_twin.md).
+
 ## Create a road network using RoadRunner
 
 Open RoadRunner and create a new scene. Choose the Road Plan Tool and right click in the workspace to drop the first control point for the road. Click and drag elsewhere in the workspace to extend the road. 
@@ -397,7 +403,7 @@ Navigate to the vegetation folder in the CARLA content library: `Carla > Static 
 
 A useful tool for trees and vegetation is the [__Unreal Engine foliage tool__](https://docs.unrealengine.com/4.27/en-US/BuildingWorlds/Foliage/). Activate the tool by selecting the `mode` from the mode dropdown in the toolbar.
 
-![foliage_tool](img/tuto_content_authoring_maps/select_foliage_tool.png)
+![foliage_tool](img/tuto_content_authoring_maps/select_foliage_tool.gif)
 
 Drag your desired foliage item into the box labeled `+ Drop Foliage Here`. Set an appropriate density in the density field, then paint into the map with your foliage item. 
 

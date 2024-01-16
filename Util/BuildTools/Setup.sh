@@ -8,13 +8,14 @@ DOC_STRING="Download and install the required libraries for carla."
 
 USAGE_STRING="Usage: $0 [--python-version=VERSION]"
 
-OPTS=`getopt -o h --long help,chrono,pytorch,python-version: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,chrono,ros2,pytorch,python-version: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
 PY_VERSION_LIST=3
 USE_CHRONO=false
 USE_PYTORCH=false
+USE_ROS2=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -26,6 +27,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --pytorch )
       USE_PYTORCH=true;
+      shift ;;
+    --ros2 )
+      USE_ROS2=true;
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -57,6 +61,7 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 
 LLVM_INCLUDE="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
 LLVM_LIBPATH="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
+UNREAL_HOSTED_CFLAGS="--sysroot=$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/"
 
 # ==============================================================================
 # -- Get boost includes --------------------------------------------------------
@@ -90,7 +95,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     # try to use the backup boost we have in Jenkins
     if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ]] ; then
       log "Using boost backup"
-      wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+      wget "https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
     fi
 
     log "Extracting boost for Python ${PY_VERSION}."
@@ -173,7 +178,7 @@ else
   pushd ${RPCLIB_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS ${UNREAL_HOSTED_CFLAGS}" \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libcxx-install" \
       ../${RPCLIB_BASENAME}-source
 
@@ -237,7 +242,7 @@ else
   pushd ${GTEST_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -fno-exceptions" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -fno-exceptions ${UNREAL_HOSTED_CFLAGS}" \
       -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libcxx-install" \
       ../${GTEST_BASENAME}-source
 
@@ -274,9 +279,7 @@ unset GTEST_BASENAME
 # -- Get Recast&Detour and compile it with libc++ ------------------------------
 # ==============================================================================
 
-RECAST_HASH=22dfcb
-RECAST_COMMIT=22dfcb46204df1a07f696ae3d9efc76f718ea531
-RECAST_BASENAME=recast-${RECAST_HASH}-${CXX_TAG}
+RECAST_BASENAME=recast-${CXX_TAG}
 
 RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
 RECAST_LIBPATH=${PWD}/${RECAST_BASENAME}-install/lib
@@ -296,7 +299,7 @@ else
 
   pushd ${RECAST_BASENAME}-source >/dev/null
 
-  git reset --hard ${RECAST_COMMIT}
+  git checkout carla
 
   popd >/dev/null
 
@@ -389,7 +392,7 @@ else
   # try to use the backup boost we have in Jenkins
   if [[ ! -f "${XERCESC_BASENAME}.tar.gz" ]] ; then
     log "Using xerces backup"
-    wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${XERCESC_BASENAME}.tar.gz" || true
+    wget "https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/${XERCESC_BASENAME}.tar.gz" || true
   fi
 
   log "Extracting xerces-c."
@@ -530,7 +533,7 @@ if ${USE_CHRONO} ; then
     pushd ${CHRONO_SRC_DIR}/build >/dev/null
 
     cmake -G "Ninja" \
-        -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH} -Wno-unused-command-line-argument" \
+        -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH} -Wno-unused-command-line-argument ${UNREAL_HOSTED_CFLAGS}" \
         -DEIGEN3_INCLUDE_DIR="../../${EIGEN_INCLUDE}" \
         -DCMAKE_INSTALL_PREFIX="../../${CHRONO_INSTALL_DIR}" \
         -DCMAKE_BUILD_TYPE=Release \
@@ -713,7 +716,7 @@ mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
 cp ${PATCHELF_EXE} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
 
 # ==============================================================================
-# -- Download libtorch and dependencies --------------------------------------------------
+# -- Download libtorch and dependencies ----------------------------------------
 # ==============================================================================
 
 if ${USE_PYTORCH} ; then
@@ -783,13 +786,90 @@ if ${USE_PYTORCH} ; then
   cp -p ${LIBTORCH_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p ${LIBTORCHSCATTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p ${LIBTORCHCLUSTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-  
+
   mkdir -p ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   cp -p ${LIBTORCH_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   cp -p ${LIBTORCHSCATTER_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   cp -p ${LIBTORCHCLUSTER_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
 fi
 
+# ==============================================================================
+# -- Download Fast DDS and dependencies ----------------------------------------
+# ==============================================================================
+
+FASTDDS_BASENAME=fast-dds
+FASTDDS_INSTALL_DIR=${PWD}/${FASTDDS_BASENAME}-install
+FASTDDS_INCLUDE=${FASTDDS_INSTALL_DIR}/include
+FASTDDS_LIB=${FASTDDS_INSTALL_DIR}/lib
+if ${USE_ROS2} ; then
+  function build_fastdds_extension {
+    LIB_SOURCE=$1
+    LIB_REPO=$2
+    LIB_BRANCH=$3
+    if [[ ! -d ${LIB_SOURCE} ]] ; then
+      mkdir -p ${LIB_SOURCE}
+      log "${LIB_REPO}"
+      git clone --depth 1 --branch ${LIB_BRANCH} ${LIB_REPO} ${LIB_SOURCE}
+      mkdir -p ${LIB_SOURCE}/build
+    fi
+  }
+  if [[ ! -d ${FASTDDS_INSTALL_DIR} ]] ; then
+    mkdir -p ${FASTDDS_INSTALL_DIR}
+    log "Build foonathan memory vendor"
+    FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan-memory-vendor
+    FOONATHAN_MEMORY_VENDOR_SOURCE_DIR=${PWD}/${FOONATHAN_MEMORY_VENDOR_BASENAME}-source
+    FOONATHAN_MEMORY_VENDOR_REPO="https://github.com/eProsima/foonathan_memory_vendor.git"
+    FOONATHAN_MEMORY_VENDOR_BRANCH=master
+    build_fastdds_extension ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR} "${FOONATHAN_MEMORY_VENDOR_REPO}" "${FOONATHAN_MEMORY_VENDOR_BRANCH}"
+    pushd ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}/build >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DBUILD_SHARED_LIBS=ON \
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}
+
+    log "Build fast cdr"
+    FAST_CDR_BASENAME=fast-cdr
+    FAST_CDR_SOURCE_DIR=${PWD}/${FAST_CDR_BASENAME}-source
+    FAST_CDR_REPO="https://github.com/eProsima/Fast-CDR.git"
+    FAST_CDR_BRANCH=1.1.x
+    build_fastdds_extension ${FAST_CDR_SOURCE_DIR} "${FAST_CDR_REPO}" "${FAST_CDR_BRANCH}"
+    pushd ${FAST_CDR_SOURCE_DIR}/build >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${FAST_CDR_SOURCE_DIR}
+
+    log "Build fast dds"
+    FAST_DDS_LIB_BASENAME=fast-dds-lib
+    FAST_DDS_LIB_SOURCE_DIR=${PWD}/${FAST_DDS_LIB_BASENAME}-source
+    FAST_DDS_LIB_REPO="https://github.com/eProsima/Fast-DDS.git"
+    FAST_DDS_LIB_BRANCH=2.11.2
+    build_fastdds_extension ${FAST_DDS_LIB_SOURCE_DIR} "${FAST_DDS_LIB_REPO}" "${FAST_DDS_LIB_BRANCH}"
+    pushd ${FAST_DDS_LIB_SOURCE_DIR}/build >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DCMAKE_CXX_FLAGS=-latomic \
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+       \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${FAST_DDS_LIB_SOURCE_DIR}
+
+    mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+    cp -p ${FASTDDS_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  fi
+fi
 
 # ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
@@ -840,9 +920,9 @@ cp ${LIBSTDCPP_TOOLCHAIN_FILE}.gen ${LIBCPP_TOOLCHAIN_FILE}.gen
 cat >>${LIBCPP_TOOLCHAIN_FILE}.gen <<EOL
 
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -isystem ${LLVM_INCLUDE}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -isystem ${LLVM_INCLUDE} ${UNREAL_HOSTED_CFLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions" CACHE STRING "" FORCE)
-set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -L${LLVM_LIBPATH}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -L${LLVM_LIBPATH} ${UNREAL_HOSTED_CFLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -lc++ -lc++abi" CACHE STRING "" FORCE)
 EOL
 
@@ -869,6 +949,8 @@ endif ()
 add_definitions(-DLIBCARLA_TEST_CONTENT_FOLDER="${LIBCARLA_TEST_CONTENT_FOLDER}")
 
 set(BOOST_INCLUDE_PATH "${BOOST_INCLUDE}")
+set(FASTDDS_INCLUDE_PATH "${FASTDDS_INCLUDE}")
+set(FASTDDS_LIB_PATH "${FASTDDS_LIB}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Server")
   # Here libraries linking libc++.
@@ -878,6 +960,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBCXX_LIBPATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBCXX_LIBPATH}")
+elseif (CMAKE_BUILD_TYPE STREQUAL "ros2")
+  list(APPEND CMAKE_PREFIX_PATH "${FASTDDS_INSTALL_DIR}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Pytorch")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCH_PATH}")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHSCATTER_INSTALL_DIR}")

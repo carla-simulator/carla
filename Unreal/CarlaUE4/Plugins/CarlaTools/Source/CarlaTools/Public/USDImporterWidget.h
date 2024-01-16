@@ -7,6 +7,7 @@
 #include "Animation/Skeleton.h"
 #include "VehicleWheel.h"
 #include "Materials/MaterialInterface.h"
+#include "PhysicsEngine/PhysicsAsset.h"
 
 #include "USDImporterWidget.generated.h"
 
@@ -165,6 +166,7 @@ public:
       UWorld* World,
       UClass* BaseClass,
       USkeletalMesh* NewSkeletalMesh,
+      UPhysicsAsset* NewPhysicsAsset,
       const FString &DestPath,
       const FMergedVehicleMeshParts& VehicleMeshes,
       const FWheelTemplates& WheelTemplates);
@@ -172,5 +174,8 @@ public:
   static bool EditSkeletalMeshBones(
       USkeletalMesh* Skeleton,
       const TMap<FString, FTransform> &NewBoneTransforms);
+  UFUNCTION(BlueprintCallable, Category="USD Importer")
+  static void CopyCollisionToPhysicsAsset(
+      UPhysicsAsset* PhysicsAssetToEdit, UStaticMesh* StaticMesh);
 
 };

@@ -53,13 +53,6 @@ struct FCameraGBufferUint8
   {
     return {};
   }
-
-  /// Return if the stream is ready or not
-  bool IsStreamReady()
-  {
-    return Stream.IsStreamReady();
-  }
-
   /// Return the FDataStream associated with this sensor.
   ///
   /// You need to provide a reference to self, this is necessary for template
@@ -102,13 +95,6 @@ struct FCameraGBufferFloat
   {
     return {};
   }
-
-  /// Return if the stream is ready or not
-  bool IsStreamReady()
-  {
-    return Stream.IsStreamReady();
-  }
-
   /// Return the FDataStream associated with this sensor.
   ///
   /// You need to provide a reference to self, this is necessary for template
@@ -525,25 +511,22 @@ private:
         for (auto& Pixel : Pixels)
           Pixel = PixelType::Black;
       }
-      if (CameraGBuffer.IsStreamReady())
-      {
-        auto GBufferStream = CameraGBuffer.GetDataStream(Self);
-        auto Buffer = GBufferStream.PopBufferFromPool();
-        Buffer.copy_from(
-          carla::sensor::SensorRegistry::get<CameraGBufferT*>::type::header_offset,
-          Pixels);
-        if (Buffer.empty()) {
-          return;
-        }
-        SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
-        TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
-        GBufferStream.Send(
-          CameraGBuffer,
-          std::move(Buffer),
-          ViewSize.X,
-          ViewSize.Y,
-          Self.GetFOVAngle());
+      auto GBufferStream = CameraGBuffer.GetDataStream(Self);
+      auto Buffer = GBufferStream.PopBufferFromPool();
+      Buffer.copy_from(
+        carla::sensor::SensorRegistry::get<CameraGBufferT*>::type::header_offset,
+        Pixels);
+      if (Buffer.empty()) {
+        return;
       }
+      SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
+      GBufferStream.SerializeAndSend(
+        CameraGBuffer,
+        std::move(Buffer),
+        ViewSize.X,
+        ViewSize.Y,
+        Self.GetFOVAngle());
   }
 
 protected:

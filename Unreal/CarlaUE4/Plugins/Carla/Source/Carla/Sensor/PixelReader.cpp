@@ -24,7 +24,7 @@ void FPixelReader::WritePixelsToBuffer(
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR("WritePixelsToBuffer");
   check(IsInRenderingThread());
-  
+
   auto RenderResource =
       static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
   FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
@@ -38,8 +38,8 @@ void FPixelReader::WritePixelsToBuffer(
   EPixelFormat BackBufferPixelFormat = Texture->GetFormat();
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("EnqueueCopy");
-    BackBufferReadback->EnqueueCopy(RHICmdList, 
-                                    Texture, 
+    BackBufferReadback->EnqueueCopy(RHICmdList,
+                                    Texture,
                                     FResolveRect(0, 0, BackBufferSize.X, BackBufferSize.Y));
   }
 
@@ -55,7 +55,7 @@ void FPixelReader::WritePixelsToBuffer(
     RHICmdList.GetRenderQueryResult(Query, OldAbsTime, true);
   }
 
-  AsyncTask(ENamedThreads::ActualRenderingThread, [=, Readback=std::move(BackBufferReadback)]() mutable {
+  AsyncTask(ENamedThreads::HighTaskPriority, [=, Readback=std::move(BackBufferReadback)]() mutable {
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
       while (!Readback->IsReady())
@@ -63,18 +63,21 @@ void FPixelReader::WritePixelsToBuffer(
         std::this_thread::yield();
       }
     }
-    
-    FPixelFormatInfo PixelFormat = GPixelFormats[BackBufferPixelFormat];
-    uint32 ExpectedRowBytes = BackBufferSize.X * PixelFormat.BlockBytes;
-    int32 Size = (BackBufferSize.Y * (PixelFormat.BlockBytes * BackBufferSize.X));
-    void* LockedData = Readback->Lock(Size);
-    if (LockedData)
+
     {
-      FuncForSending(LockedData, Size, Offset, ExpectedRowBytes);
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("Readback data");
+      FPixelFormatInfo PixelFormat = GPixelFormats[BackBufferPixelFormat];
+      uint32 ExpectedRowBytes = BackBufferSize.X * PixelFormat.BlockBytes;
+      int32 Size = (BackBufferSize.Y * (PixelFormat.BlockBytes * BackBufferSize.X));
+      void* LockedData = Readback->Lock(Size);
+      if (LockedData)
+      {
+        FuncForSending(LockedData, Size, Offset, ExpectedRowBytes);
+      }
+      Readback->Unlock();
+      Readback.reset();
     }
-    Readback->Unlock();
-    Readback.reset();
-  });  
+  });
 }
 
 bool FPixelReader::WritePixelsToArray(

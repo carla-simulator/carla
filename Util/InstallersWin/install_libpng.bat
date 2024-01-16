@@ -81,7 +81,7 @@ if not exist "%LIBPNG_SRC_DIR%" (
     )
     if not exist "%LIBPNG_TEMP_FILE_DIR%" (
         echo %FILE_N% Using %LIBPNG_BASENAME% from backup.
-        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/libpng-%LIBPNG_VERSION%-src.zip', '%LIBPNG_TEMP_FILE_DIR%')"
+        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/libpng-%LIBPNG_VERSION%-src.zip', '%LIBPNG_TEMP_FILE_DIR%')"
     )
     if %errorlevel% neq 0 goto error_download
     rem Extract the downloaded library

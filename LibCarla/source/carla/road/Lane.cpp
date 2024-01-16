@@ -58,8 +58,10 @@ namespace road {
   double Lane::GetWidth(const double s) const {
     RELEASE_ASSERT(s <= GetRoad()->GetLength());
     const auto width_info = GetInfo<element::RoadInfoLaneWidth>(s);
-    RELEASE_ASSERT(width_info != nullptr);
-    return width_info->GetPolynomial().Evaluate(s);
+    if(width_info != nullptr){
+      return width_info->GetPolynomial().Evaluate(s);
+    }
+    return 0.0f;
   }
 
   bool Lane::IsStraight() const {

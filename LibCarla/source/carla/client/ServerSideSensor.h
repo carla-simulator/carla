@@ -47,6 +47,15 @@ namespace client {
       return listening_mask.test(id + 1);
     }
 
+    /// Enable this sensor for ROS2 publishing
+    void EnableForROS();
+
+    /// Disable this sensor for ROS2 publishing
+    void DisableForROS();
+
+    /// Return if the sensor is publishing for ROS2
+    bool IsEnabledForROS();
+
     /// @copydoc Actor::Destroy()
     ///
     /// Additionally stop listening.
@@ -55,7 +64,6 @@ namespace client {
   private:
 
     std::bitset<16> listening_mask;
-
   };
 
 } // namespace client
