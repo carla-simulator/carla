@@ -168,6 +168,8 @@ public class CarlaTools :
             var InstallPath = Path.Combine(DependenciesInstallPath, name + "-install");
             var LibPath = Path.Combine(InstallPath, "lib");
             var Candidates = Directory.GetFiles(LibPath, GetLibraryName(pattern));
+            if (Candidates.Length == 0)
+                throw new FileNotFoundException(string.Format("Could not find any matching libraries for \"{0}\" using pattern \"{1}\"", name, pattern));
             Array.Sort(Candidates);
             return Candidates;
         };
@@ -202,17 +204,22 @@ public class CarlaTools :
                 BoostLibraries.Add(Candidates[0]);
         }
 
-        // SQLite
         var SQLiteBuildPath = Path.Combine(DependenciesInstallPath, "sqlite-build");
-        var SQLiteLibrary = Directory.GetFiles(SQLiteBuildPath, GetLibraryName("sqlite*"))[0];
-        
+        var SQLiteLibraryCandidates = Directory.GetFiles(SQLiteBuildPath, GetLibraryName("sqlite*"));
+        if (SQLiteLibraryCandidates.Length == 0)
+            throw new FileNotFoundException("Could not find any matching libraries for SQLite");
+        var RPCLibCandidates = FindLibraries("rpclib", "rpc");
+        var XercesCCandidates = FindLibraries("xercesc", "xerces-c*");
+        var PROJCandidates = FindLibraries("proj", "proj");
+        var ZlibCandidates = FindLibraries("zlib", "zlibstatic*");
+
         var AdditionalLibraries = new List<string>
         {
-            SQLiteLibrary,
-            FindLibraries("rpclib", "rpc")[0],
-            FindLibraries("xercesc", "xerces-c*")[0],
-            FindLibraries("proj", "proj")[0],
-            FindLibraries("zlib", "zlibstatic*")[0],
+            SQLiteLibraryCandidates[0],
+            RPCLibCandidates[0],
+            XercesCCandidates[0],
+            PROJCandidates[0],
+            ZlibCandidates[0],
         };
 
         if (EnableOSM2ODR)

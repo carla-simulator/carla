@@ -58,16 +58,16 @@ def FindExecutable(candidates : list):
   return None
 
 DEFAULT_C_COMPILER = FindExecutable([
-  'cl',
   'clang-cl',
+  'cl',
 ] if os.name == 'nt' else [
   'clang',
   'gcc',
 ])
 
 DEFAULT_CPP_COMPILER = FindExecutable([
-  'cl',
   'clang-cl',
+  'cl',
 ] if os.name == 'nt' else [
   'clang++',
   'g++',
@@ -607,7 +607,7 @@ CARLA_UE_ASSETS_DEPENDENCIES = [
   Dependency(
     'Carla',
     GitRepository(
-      'https://MarcelPi@bitbucket.org/carla-simulator/carla-content.git',
+      'https://bitbucket.org/carla-simulator/carla-content.git',
       tag_or_branch = 'marcel/5.3' # @CARLAUE5 This branch should be removed once merged.
     ))
 ]
