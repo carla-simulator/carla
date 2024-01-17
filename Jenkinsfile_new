@@ -152,54 +152,53 @@ pipeline
                             }
                         }
                         */
-                        stage('TEST: ubuntu Doxygen')
+
+                        stage('TEST: ubuntu Doxygen generation')
+                        {
+                            when { branch "ruben/jenkins_migration" }
+                            steps
+                            {
+                                sh 'make docs'
+                                sh 'tar -czf carla_doc.tar.gz ./Doxygen'
+                                stash includes: 'carla_doc.tar.gz', name: 'carla_docs'
+                                sh 'cp -rf ./Doxygen ~/carla-simulator.github.io/'
+                                /*
+                                sh '''
+                                    cd ~/carla-simulator.github.io
+                                    git add Doxygen
+                                    git commit -m "Updated c++ docs" || true
+                                    git push
+                                '''
+                                */
+                            }
+                        }
+
+                        stage('TEST: ubuntu Doxygen generation')
+                        {
+                            when { branch "ruben/jenkins_migration" }
+                            steps
+                            {
+                                sh 'make docs'
+                                sh 'tar -czf carla_doc.tar.gz ./Doxygen'
+                                stash includes: 'carla_doc.tar.gz', name: 'carla_docs'
+                            }
+                        }
+
+                        stage('TEST: ubuntu Doxygen upload')
                         {
                             when { branch "ruben/jenkins_migration" }
                             steps
                             {
                                 checkout scmGit(branches: [[name: '*/master']], extensions: [checkoutOption(120), cloneOption(noTags:false, reference:'', shallow: false, timeout:120)], userRemoteConfigs: [[credentialsId: 'github_token_as_pwd_2', url: 'https://github.com/carla-simulator/carla-simulator.github.io.git']])
-                                sh 'make docs'
-                                sh 'cp -rf ./Doxygen ~/carla-simulator.github.io/'
-                                /*
+                                unstash name: 'carla_docs'
+                                
                                 sh '''
-                                    cd ~/carla-simulator.github.io
+                                    tar -xvzf carla.doc.tar.gz
+                                    ls
                                     git add Doxygen
                                     git commit -m "Updated c++ docs" || true
-                                    git push
                                 '''
-                                */
-                            }
-                            post
-                            {
-                                always
-                                {
-                                    deleteDir()
-                                }
-                            }
-                        }
-
-                        stage('ubuntu Doxygen')
-                        {
-                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
-                            steps
-                            {
-                                sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
-                                sh '''
-                                    cd ~/carla-simulator.github.io
-                                    git remote set-url origin git@docs:carla-simulator/carla-simulator.github.io.git
-                                    git fetch
-                                    git checkout -B master origin/master
-                                '''
-                                sh 'make docs'
-                                sh 'cp -rf ./Doxygen ~/carla-simulator.github.io/'
-                                /*
-                                sh '''
-                                    cd ~/carla-simulator.github.io
-                                    git add Doxygen
-                                    git commit -m "Updated c++ docs" || true
-                                    git push
-                                '''
-                                */
+                                // don't forgive git push
                             }
                             post
                             {
