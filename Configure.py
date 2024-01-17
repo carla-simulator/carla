@@ -4,6 +4,7 @@ from collections import deque
 import subprocess, tarfile, zipfile, argparse, requests, psutil, shutil, glob, json, sys, os
 
 # Constants:
+FALLBACK_CARLA_VERSION_STRING = '0.9.15'
 EXE_EXT = '.exe' if os.name == 'nt' else ''
 LIB_PREFIX = '' if os.name == 'nt' else 'lib'
 LIB_EXT = '.lib' if os.name == 'nt' else '.a'
@@ -24,7 +25,6 @@ CARLA_UE_PLUGIN_DEPENDENCIES_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'CarlaDependenci
 CARLA_UE_CONTENT_PATH = CARLA_UE_PATH / 'Content'
 CARLA_UE_CONTENT_CARLA_PATH = CARLA_UE_CONTENT_PATH / 'Carla'
 CARLA_UE_CONTENT_VERSIONS_FILE_PATH = WORKSPACE_PATH / 'Util' / 'ContentVersions.json'
-FALLBACK_CARLA_VERSION_STRING = '0.9.15'
 LOGICAL_PROCESSOR_COUNT = psutil.cpu_count(logical = True)
 DEFAULT_PARALLELISM = LOGICAL_PROCESSOR_COUNT + (2 if LOGICAL_PROCESSOR_COUNT >= 8 else 0)
 READTHEDOCS_URL_SUFFIX = 'how_to_build_on_windows/\n' if os.name == "nt" else 'build_linux/\n'
@@ -281,7 +281,7 @@ ENABLE_RSS = ARGV.rss
 
 UPDATE_DEPENDENCIES = ARGV.update_deps
 BUILD_DEPENDENCIES = ARGV.build_deps
-UPDATE_CARLA_UE_ASSETS = ARGV.update_ue_assets or True
+UPDATE_CARLA_UE_ASSETS = ARGV.update_ue_assets
 PARALLELISM = ARGV.parallelism
 # Root paths:
 CARLA_VERSION_STRING = ARGV.version
@@ -696,14 +696,12 @@ class TaskGraph:
     return '\n'.join([ e.ToString() for e in self.tasks ])
   
   def Print(self):
-    print(self.ToString())
+    Log(self.ToString())
 
   def Execute(self, sequential : bool = False):
     if len(self.tasks) == 0:
       return
-    print(
-      '-- Running task graph --\n'
-      '')
+    Log('-- Running task graph --')
     self.Print()
     assert self.Validate()
     prior_sequential = self.sequential
@@ -771,7 +769,7 @@ class TaskGraph:
         Log(f'> {len(self.tasks) - done_count} did not complete: {pending_tasks}.')
         assert False
     finally:
-      print('-- Done --')
+      Log('-- Done --')
       self.sequential = prior_sequential
       self.Reset()
 
@@ -1323,7 +1321,7 @@ def SetupUnrealEngine(task_graph : TaskGraph):
 
 def UpdateCarlaUEAssets(task_graph : TaskGraph):
   CARLA_UE_CONTENT_PATH.mkdir(parents = True, exist_ok = True)
-  print('Cloning CARLA UE content...')
+  Log('Cloning CARLA UE content...')
   for e in CARLA_UE_ASSETS_DEPENDENCIES:
     UpdateDependency(e, CARLA_UE_CONTENT_CARLA_PATH)
     

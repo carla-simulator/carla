@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using UnrealBuildTool;
 using EpicGames.Core;
-using Microsoft.Extensions.FileSystemGlobbing.Internal;
 using System.Xml.Linq;
 
 public class Carla :
