@@ -161,26 +161,6 @@ pipeline
                                 sh 'make docs'
                                 sh 'tar -czf carla_doc.tar.gz ./Doxygen'
                                 stash includes: 'carla_doc.tar.gz', name: 'carla_docs'
-                                sh 'cp -rf ./Doxygen ~/carla-simulator.github.io/'
-                                /*
-                                sh '''
-                                    cd ~/carla-simulator.github.io
-                                    git add Doxygen
-                                    git commit -m "Updated c++ docs" || true
-                                    git push
-                                '''
-                                */
-                            }
-                        }
-
-                        stage('TEST: ubuntu Doxygen generation')
-                        {
-                            when { branch "ruben/jenkins_migration" }
-                            steps
-                            {
-                                sh 'make docs'
-                                sh 'tar -czf carla_doc.tar.gz ./Doxygen'
-                                stash includes: 'carla_doc.tar.gz', name: 'carla_docs'
                             }
                         }
 
