@@ -173,7 +173,7 @@ pipeline
                                 unstash name: 'carla_docs'
                                 
                                 sh '''
-                                    tar -xvzf carla.doc.tar.gz
+                                    tar -xvzf carla_doc.tar.gz
                                     ls
                                     git add Doxygen
                                     git commit -m "Updated c++ docs" || true
