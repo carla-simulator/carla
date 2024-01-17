@@ -979,6 +979,7 @@ def BuildSQLite():
       LIB,
       f'/OUT:{SQLITE_LIB_PATH}',
     ]
+    cmd.extend(objs)
     LaunchSubprocessImmediate(cmd, log_name = 'sqlite-lib-build')
 
 
