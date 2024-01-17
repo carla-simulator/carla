@@ -969,7 +969,10 @@ def BuildSQLite():
         '/EHsc',
       ])
       obj_path = BUILD_TEMP_PATH / f'{e.name}{OBJ_EXT}'
-      cmd.extend([ e, '/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o', obj_path ])
+      if C_COMPILER_CLI_TYPE:
+        cmd.extend([ e, f'/Fo:"{obj_path}"' ])
+      else:
+        cmd.extend([ e, '-o', obj_path ])
       LaunchSubprocessImmediate(cmd, log_name = f'sqlite-{e.stem}-build')
       objs.append(obj_path)
     cmd = [
