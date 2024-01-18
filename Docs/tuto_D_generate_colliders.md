@@ -67,7 +67,7 @@ __4.3__ Press `Compile` in the toolbar above and save the changes.
 ## Physics colliders
 
 !!! Important
-    This tutorial is based on a [contribution](https://bitbucket.org/yankagan/carla-content/wiki/Home) made by __[yankagan](https://github.com/yankagan)__! The contributor also wants to aknowledge __Francisco E__ for the tutorial on [how to import custom collisions in UE](https://www.youtube.com/watch?v=SEH4f0HrCDM).  
+    This tutorial is based on a [contribution](https://bitbucket.org/yankagan/carla-content/wiki/Home) made by __[yankagan](https://github.com/yankagan)__! The contributor also wants to acknowledge __Francisco E__ for the tutorial on [how to import custom collisions in UE](https://www.youtube.com/watch?v=SEH4f0HrCDM).  
 
 [This video](https://www.youtube.com/watch?v=CXK2M2cNQ4Y) shows the results achieved after following this tutorial.  
 
