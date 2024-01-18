@@ -97,7 +97,6 @@ pipeline
                         stage('ubuntu smoke tests')
                         {
                             agent { label "ubuntu && gpu" }
-                            options { skipDefaultCheckout true }
                             steps
                             {
                                 unstash name: 'ubuntu_eggs'
@@ -173,7 +172,6 @@ pipeline
                                 
                                 sh '''
                                     tar -xvzf carla_doc.tar.gz
-                                    ls
                                     git add Doxygen
                                     git commit -m "Updated c++ docs" || true
                                 '''
