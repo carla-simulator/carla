@@ -4,6 +4,7 @@ from collections import deque
 import subprocess, tarfile, zipfile, argparse, requests, psutil, shutil, glob, json, sys, os
 
 # Constants:
+FALLBACK_CARLA_VERSION_STRING = '0.9.15'
 EXE_EXT = '.exe' if os.name == 'nt' else ''
 LIB_PREFIX = '' if os.name == 'nt' else 'lib'
 LIB_EXT = '.lib' if os.name == 'nt' else '.a'
@@ -24,7 +25,6 @@ CARLA_UE_PLUGIN_DEPENDENCIES_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'CarlaDependenci
 CARLA_UE_CONTENT_PATH = CARLA_UE_PATH / 'Content'
 CARLA_UE_CONTENT_CARLA_PATH = CARLA_UE_CONTENT_PATH / 'Carla'
 CARLA_UE_CONTENT_VERSIONS_FILE_PATH = WORKSPACE_PATH / 'Util' / 'ContentVersions.json'
-FALLBACK_CARLA_VERSION_STRING = '0.9.15'
 LOGICAL_PROCESSOR_COUNT = psutil.cpu_count(logical = True)
 DEFAULT_PARALLELISM = LOGICAL_PROCESSOR_COUNT + (2 if LOGICAL_PROCESSOR_COUNT >= 8 else 0)
 READTHEDOCS_URL_SUFFIX = 'how_to_build_on_windows/\n' if os.name == "nt" else 'build_linux/\n'
@@ -58,16 +58,16 @@ def FindExecutable(candidates : list):
   return None
 
 DEFAULT_C_COMPILER = FindExecutable([
-  'cl',
   'clang-cl',
+  'cl',
 ] if os.name == 'nt' else [
   'clang',
   'gcc',
 ])
 
 DEFAULT_CPP_COMPILER = FindExecutable([
-  'cl',
   'clang-cl',
+  'cl',
 ] if os.name == 'nt' else [
   'clang++',
   'g++',
@@ -281,7 +281,7 @@ ENABLE_RSS = ARGV.rss
 
 UPDATE_DEPENDENCIES = ARGV.update_deps
 BUILD_DEPENDENCIES = ARGV.build_deps
-UPDATE_CARLA_UE_ASSETS = ARGV.update_ue_assets or True
+UPDATE_CARLA_UE_ASSETS = ARGV.update_ue_assets
 PARALLELISM = ARGV.parallelism
 # Root paths:
 CARLA_VERSION_STRING = ARGV.version
@@ -607,7 +607,7 @@ CARLA_UE_ASSETS_DEPENDENCIES = [
   Dependency(
     'Carla',
     GitRepository(
-      'https://MarcelPi@bitbucket.org/carla-simulator/carla-content.git',
+      'https://bitbucket.org/carla-simulator/carla-content.git',
       tag_or_branch = 'marcel/5.3' # @CARLAUE5 This branch should be removed once merged.
     ))
 ]
@@ -696,14 +696,12 @@ class TaskGraph:
     return '\n'.join([ e.ToString() for e in self.tasks ])
   
   def Print(self):
-    print(self.ToString())
+    Log(self.ToString())
 
   def Execute(self, sequential : bool = False):
     if len(self.tasks) == 0:
       return
-    print(
-      '-- Running task graph --\n'
-      '')
+    Log('-- Running task graph --')
     self.Print()
     assert self.Validate()
     prior_sequential = self.sequential
@@ -771,7 +769,7 @@ class TaskGraph:
         Log(f'> {len(self.tasks) - done_count} did not complete: {pending_tasks}.')
         assert False
     finally:
-      print('-- Done --')
+      Log('-- Done --')
       self.sequential = prior_sequential
       self.Reset()
 
@@ -952,10 +950,12 @@ def BuildSQLite():
       cmd.extend([ '-o', SQLITE_EXE_PATH ])
     LaunchSubprocessImmediate(cmd, log_name = 'sqlite-exe-build')
   if not SQLITE_LIB_PATH.exists():
-    if C_COMPILER_IS_CLANG:
+    objs = []
+    BUILD_TEMP_PATH.mkdir(exist_ok = True)
+    for e in sqlite_sources:
       cmd = [
         C_COMPILER,
-        f'-fuse-ld={LIB}',
+        '-c' if C_COMPILER_CLI_TYPE == 'gnu' else '/c',
       ]
       cmd.extend([
         f'-std=c{C_STANDARD}',
@@ -968,42 +968,19 @@ def BuildSQLite():
         '/MD',
         '/EHsc',
       ])
-      if C_ENABLE_MARCH_NATIVE:
-        cmd.append('-march=native')
-      cmd.extend(sqlite_sources)
-      cmd.extend([ '/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o', SQLITE_LIB_PATH ])
-      LaunchSubprocessImmediate(
-        cmd,
-        log_name = 'sqlite-lib-build')
-    else:
-      objs = []
-      BUILD_TEMP_PATH.mkdir(exist_ok = True)
-      for e in sqlite_sources:
-        cmd = [
-          C_COMPILER,
-          '-c' if C_COMPILER_CLI_TYPE == 'gnu' else '/c',
-        ]
-        cmd.extend([
-          f'-std=c{C_STANDARD}',
-          '-march=native',
-          '-O2',
-        ] if C_COMPILER_CLI_TYPE == 'gnu' else [
-          f'/std:c{C_STANDARD}',
-          '/O2',
-          '/Qvec',
-          '/MD',
-          '/EHsc',
-        ])
-        obj_path = BUILD_TEMP_PATH / f'{e.name}{OBJ_EXT}'
-        cmd.extend([ e, '/Fo:' if C_COMPILER_CLI_TYPE == 'msvc' else '-o', obj_path ])
-        LaunchSubprocessImmediate(cmd, log_name = f'sqlite-{e.stem}-build')
-        objs.append(obj_path)
-      cmd = [
-        LIB,
-        f'/OUT:{SQLITE_LIB_PATH}',
-      ]
-      cmd.extend(objs)
-      LaunchSubprocessImmediate(cmd, log_name = 'sqlite-lib-build')
+      obj_path = BUILD_TEMP_PATH / f'{e.name}{OBJ_EXT}'
+      if C_COMPILER_CLI_TYPE:
+        cmd.extend([ e, f'/Fo{obj_path}' ])
+      else:
+        cmd.extend([ e, '-o', obj_path ])
+      LaunchSubprocessImmediate(cmd, log_name = f'sqlite-{e.stem}-build')
+      objs.append(obj_path)
+    cmd = [
+      LIB,
+      f'/OUT:{SQLITE_LIB_PATH}',
+    ]
+    cmd.extend(objs)
+    LaunchSubprocessImmediate(cmd, log_name = 'sqlite-lib-build')
 
 
 
@@ -1348,7 +1325,7 @@ def SetupUnrealEngine(task_graph : TaskGraph):
 
 def UpdateCarlaUEAssets(task_graph : TaskGraph):
   CARLA_UE_CONTENT_PATH.mkdir(parents = True, exist_ok = True)
-  print('Cloning CARLA UE content...')
+  Log('Cloning CARLA UE content...')
   for e in CARLA_UE_ASSETS_DEPENDENCIES:
     UpdateDependency(e, CARLA_UE_CONTENT_CARLA_PATH)
     

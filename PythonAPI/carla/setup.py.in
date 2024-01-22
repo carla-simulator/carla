@@ -148,6 +148,7 @@ setup(
     license = LICENSE,
     description = 'Python API for communicating with the CARLA server.',
     long_description = readme,
+    long_description_content_type = 'text/markdown',
     url = 'https://github.com/carla-simulator/carla',
     author = 'The CARLA team',
     author_email = 'carla.simulator@gmail.com',

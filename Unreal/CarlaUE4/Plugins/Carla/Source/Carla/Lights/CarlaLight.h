@@ -40,7 +40,7 @@ UENUM(BlueprintType, Meta = (Bitflags))
 enum class ECarlaLightFlags : uint8
 {
 	Default		= 0 UMETA(Hidden),
-	Registered	= 1,
+	Registered	= 1 UMETA(Hidden),
 	TurnedOn	= 2
 };
 
