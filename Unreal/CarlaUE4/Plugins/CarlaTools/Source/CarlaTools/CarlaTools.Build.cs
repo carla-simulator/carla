@@ -199,9 +199,9 @@ public class CarlaTools :
             
         if (IsWindows)
         {
-            foreach (var Pattern in BoostLibraryPatterns)
+            for (int i = 0; i != BoostLibraryPatterns.Length; ++i)
             {
-                Pattern = "lib" + Pattern;
+                BoostLibraryPatterns[i] = "lib" + BoostLibraryPatterns[i];
             }
         }
 
