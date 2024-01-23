@@ -1000,8 +1000,6 @@ def ConfigureSUMO():
     raise Exception('Could not configure SUMO since PROJ could not be found.')
   PROJ_LIB_PATH = proj_candidates[0]
   cmd.extend([
-    SUMO_SOURCE_PATH,
-    SUMO_BUILD_PATH,
     f'-DZLIB_INCLUDE_DIR={ZLIB_INCLUDE_PATH}',
     f'-DZLIB_LIBRARY={ZLIB_LIB_PATH}',
     f'-DPROJ_INCLUDE_DIR={PROJ_INSTALL_PATH}/include',
@@ -1046,49 +1044,49 @@ def BuildDependencies(task_graph : TaskGraph):
     task_graph.Add(Task('boost-configure', [], ConfigureBoost))
   else:
     task_graph.Add(Task.CreateCMakeConfigureDefault(
-      'boost-algorithm',
+      'boost-algorithm-configure',
       [],
       BOOST_ALGORITHM_SOURCE_PATH,
       BOOST_ALGORITHM_BUILD_PATH,
       install_path = BOOST_ALGORITHM_INSTALL_PATH))
 
     task_graph.Add(Task.CreateCMakeConfigureDefault(
-      'boost-asio',
+      'boost-asio-configure',
       [],
       BOOST_ASIO_SOURCE_PATH,
       BOOST_ASIO_BUILD_PATH,
       install_path = BOOST_ASIO_INSTALL_PATH))
 
     task_graph.Add(Task.CreateCMakeConfigureDefault(
-      'boost-date',
+      'boost-date-time-configure',
       [],
       BOOST_DATE_SOURCE_PATH,
       BOOST_DATE_BUILD_PATH,
       install_path = BOOST_DATE_INSTALL_PATH))
 
     task_graph.Add(Task.CreateCMakeConfigureDefault(
-      'boost-geometry',
+      'boost-geometry-configure',
       [],
       BOOST_GEOMETRY_SOURCE_PATH,
       BOOST_GEOMETRY_BUILD_PATH,
       install_path = BOOST_GEOMETRY_INSTALL_PATH))
 
     task_graph.Add(Task.CreateCMakeConfigureDefault(
-      'boost-gil',
+      'boost-gil-configure',
       [],
       BOOST_GIL_SOURCE_PATH,
       BOOST_GIL_BUILD_PATH,
       install_path = BOOST_GIL_INSTALL_PATH))
 
     task_graph.Add(Task.CreateCMakeConfigureDefault(
-      'boost-iterator',
+      'boost-iterator-configure',
       [],
       BOOST_ITERATOR_SOURCE_PATH,
       BOOST_ITERATOR_BUILD_PATH,
       install_path = BOOST_ITERATOR_INSTALL_PATH))
 
     task_graph.Add(Task.CreateCMakeConfigureDefault(
-      'boost-python',
+      'boost-python-configure',
       [],
       BOOST_PYTHON_SOURCE_PATH,
       BOOST_PYTHON_BUILD_PATH,
@@ -1306,9 +1304,10 @@ def BuildPythonAPIMain():
     content = content.replace(os.sep, '\\\\')
   with open(PYTHON_API_PATH / 'setup.py', 'w') as file:
     file.write(content)
-  LaunchSubprocessImmediate([
-    sys.executable, 'setup.py', 'bdist_wheel', 'bdist_egg'
-  ], working_directory = PYTHON_API_PATH)
+  LaunchSubprocessImmediate(
+    [ sys.executable, 'setup.py', 'bdist_egg', 'bdist_wheel' ],
+    working_directory = PYTHON_API_PATH,
+    log_name = 'python-api-build')
 
 
 

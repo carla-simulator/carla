@@ -147,12 +147,18 @@ void UTrafficLightComponent::SetFrozenGroup(bool InFreeze)
 
 ATrafficLightGroup* UTrafficLightComponent::GetGroup()
 {
-  return TrafficLightController->GetGroup();
+  return
+    TrafficLightController != nullptr ?
+        TrafficLightController->GetGroup() :
+        nullptr;
 }
 
 const ATrafficLightGroup* UTrafficLightComponent::GetGroup() const
 {
-  return TrafficLightController->GetGroup();
+  return
+    TrafficLightController != nullptr ?
+        TrafficLightController->GetGroup() :
+        nullptr;
 }
 
 UTrafficLightController* UTrafficLightComponent::GetController()

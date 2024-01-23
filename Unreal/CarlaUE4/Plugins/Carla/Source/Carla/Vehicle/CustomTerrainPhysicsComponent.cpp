@@ -1,10 +1,8 @@
-// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
-
-#undef CreateDirectory
 
 #include "CustomTerrainPhysicsComponent.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
@@ -72,6 +70,9 @@
 #include <compiler/disable-ue4-macros.h>
 #include "carla/rpc/String.h"
 #include <compiler/enable-ue4-macros.h>
+
+#undef CreateDirectory
+
 
 
 constexpr float MToCM = 100.f;

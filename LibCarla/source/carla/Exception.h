@@ -55,13 +55,13 @@ namespace carla
 
 namespace boost
 {
-  [[noreturn]]
+  BOOST_NORETURN
   inline void throw_exception(const std::exception &e)
   {
     carla::throw_exception(e);
   }
 
-  [[noreturn]]
+  BOOST_NORETURN
   inline void throw_exception(const std::exception &e, boost::source_location const& loc)
   {
     throw_exception(e);

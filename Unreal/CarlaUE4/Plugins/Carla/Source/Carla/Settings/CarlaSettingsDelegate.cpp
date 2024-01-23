@@ -136,7 +136,8 @@ void UCarlaSettingsDelegate::ApplyQualityLevelPreRestart()
     ULocalPlayer *player = playercontroller->GetLocalPlayer();
     if (player)
     {
-      player->ViewportClient->bDisableWorldRendering = CarlaSettings->bDisableRendering;
+        // @CARLAUE5
+      // player->ViewportClient->bDisableWorldRendering = CarlaSettings->bDisableRendering;
     }
     // if we already have a hud class:
     AHUD *hud = playercontroller->GetHUD();

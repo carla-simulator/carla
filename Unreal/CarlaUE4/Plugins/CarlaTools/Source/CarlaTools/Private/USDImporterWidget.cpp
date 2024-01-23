@@ -65,9 +65,9 @@ void UUSDImporterWidget::ImportUSDVehicle(
   TArray<FUSDCARLAWheelData> WheelsData = UUSDCARLAInterface::GetUSDWheelData(USDPath);
   auto CreateVehicleWheel =
       [&](const FUSDCARLAWheelData& WheelData,
-         TSubclassOf<UVehicleWheel> TemplateClass,
+         TSubclassOf<UChaosVehicleWheel> TemplateClass,
          const FString &PackagePathName)
-      -> TSubclassOf<UVehicleWheel>
+      -> TSubclassOf<UChaosVehicleWheel>
   {
     // Get a reference to the editor subsystem
     constexpr float MToCM = 100.f;
@@ -86,7 +86,7 @@ void UUSDImporterWidget::ImportUSDVehicle(
     // Modify the new Blueprint
     NewBlueprint->Modify();
     // Edit the default object for the new Blueprint
-    UVehicleWheel* Result = Cast<UVehicleWheel>(NewBlueprint->GeneratedClass->ClassDefaultObject);
+    UChaosVehicleWheel* Result = Cast<UChaosVehicleWheel>(NewBlueprint->GeneratedClass->ClassDefaultObject);
     Result->MaxBrakeTorque = MToCM*WheelData.MaxBrakeTorque;
     if (WheelData.MaxHandBrakeTorque != 0)
     {
@@ -540,18 +540,18 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
   }
   // set the wheel radius
 #if 0 // @CARLAUE5
-  UVehicleWheel* WheelDefault;
-  WheelDefault = WheelTemplates.WheelFL->GetDefaultObject<UVehicleWheel>();
+  UChaosVehicleWheel* WheelDefault;
+  WheelDefault = WheelTemplates.WheelFL->GetDefaultObject<UChaosVehicleWheel>();
   WheelDefault->ShapeRadius = VehicleMeshes.WheelFL->GetBounds().SphereRadius;
-  WheelDefault = WheelTemplates.WheelFR->GetDefaultObject<UVehicleWheel>();
+  WheelDefault = WheelTemplates.WheelFR->GetDefaultObject<UChaosVehicleWheel>();
   WheelDefault->ShapeRadius = VehicleMeshes.WheelFR->GetBounds().SphereRadius;
-  WheelDefault = WheelTemplates.WheelRL->GetDefaultObject<UVehicleWheel>();
+  WheelDefault = WheelTemplates.WheelRL->GetDefaultObject<UChaosVehicleWheel>();
   WheelDefault->ShapeRadius = VehicleMeshes.WheelRL->GetBounds().SphereRadius;
-  WheelDefault = WheelTemplates.WheelRR->GetDefaultObject<UVehicleWheel>();
+  WheelDefault = WheelTemplates.WheelRR->GetDefaultObject<UChaosVehicleWheel>();
   WheelDefault->ShapeRadius = VehicleMeshes.WheelRR->GetBounds().SphereRadius;
   // assign generated wheel types
-  TArray<FWheelSetup> WheelSetups;
-  FWheelSetup Setup;
+  TArray<FChaosWheelSetup> WheelSetups;
+  FChaosWheelSetup Setup;
   Setup.WheelClass = WheelTemplates.WheelFL;
   Setup.BoneName = "Wheel_Front_Left";
   WheelSetups.Add(Setup);
@@ -570,7 +570,7 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
   {
     UWheeledVehicleMovementComponent4W* MovementComponent =
         Cast<UWheeledVehicleMovementComponent4W>(
-            CarlaVehicle->GetWheeledVehicleComponent());
+            CarlaVehicle->GetVehicleMovementComponent());
     MovementComponent->WheelSetups = WheelSetups;
   }
   else

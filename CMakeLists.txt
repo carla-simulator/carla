@@ -222,7 +222,7 @@ if (BUILD_LIBCARLA_SERVER)
     )
     
     target_compile_definitions (
-        carla-server PRIVATE
+        carla-server PUBLIC
         ${CARLA_COMMON_DEFINITIONS}
     )
 
@@ -369,7 +369,7 @@ if (BUILD_LIBCARLA_CLIENT)
     )
 
     target_compile_definitions (
-        carla-client PRIVATE
+        carla-client PUBLIC
         ${CARLA_COMMON_DEFINITIONS}
     )
     
@@ -415,7 +415,7 @@ if (BUILD_OSM_WORLD_RENDERER)
     target_link_libraries (OSMWorldRenderer PRIVATE lunasvg)
 
     target_compile_definitions (
-        OSMWorldRenderer PRIVATE
+        OSMWorldRenderer PUBLIC
         _USE_MATH_DEFINES
         ${CARLA_COMMON_DEFINITIONS}
     )

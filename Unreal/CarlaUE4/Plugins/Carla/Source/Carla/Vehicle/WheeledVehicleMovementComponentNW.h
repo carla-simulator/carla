@@ -112,7 +112,8 @@ struct FVehicleNWTransmissionData
 };
 
 UCLASS(ClassGroup = (Physics), meta = (BlueprintSpawnableComponent), hidecategories = (PlanarMovement, "Components|Movement|Planar", Activation, "Components|Activation"))
-class CARLA_API UWheeledVehicleMovementComponentNW : public UChaosWheeledVehicleMovementComponent
+class CARLA_API UWheeledVehicleMovementComponentNW :
+	public UChaosWheeledVehicleMovementComponent
 {
 	GENERATED_UCLASS_BODY()
 
@@ -141,7 +142,7 @@ class CARLA_API UWheeledVehicleMovementComponentNW : public UChaosWheeledVehicle
 protected:
 
 #if 0 // @CARLAUE5
-	virtual const void* GetTireData(physx::PxVehicleWheels* Wheels, UVehicleWheel* Wheel);
+	virtual const void* GetTireData(physx::PxVehicleWheels* Wheels, UChaosVehicleWheel* Wheel);
 	virtual const int32 GetWheelShapeMapping(physx::PxVehicleWheels* Wheels, uint32 Wheel);
 	virtual const physx::PxVehicleWheelData GetWheelData(physx::PxVehicleWheels* Wheels, uint32 Wheel);
 

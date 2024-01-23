@@ -48,7 +48,6 @@ amalgamate_compile_command.extend([
     INCLUDE_PREFIX, '{SUMO_INCLUDE_PATH}',
     INCLUDE_PREFIX, f'{{PYTHON_INCLUDE_PATH}}',
 ])
-amalgamate_compile_command.extend(definitions)
 
 if os.name == 'nt':
     windows_definitions = [
@@ -57,7 +56,6 @@ if os.name == 'nt':
         DEFINE_PREFIX + '_CRT_SECURE_NO_WARNINGS',
     ]
     definitions.extend(windows_definitions)
-    amalgamate_compile_command.extend(windows_definitions)
     amalgamate_compile_command.extend([
         '/EHsc',
         '/MD',
@@ -66,20 +64,20 @@ if os.name == 'nt':
 else:
     pass
 
-amalgamate_compile_command.extend([
-    PYTHON_API_PATH / 'source' / 'libcarla' / 'libcarla.cpp',
-    '/Fo:' if os.name == 'nt' else '-o',
-])
-amalgamate_compile_command.append(PYTHON_API_AMALGAMATED_OBJECT_PATH)
+amalgamate_compile_command.extend(definitions)
+amalgamate_compile_command.append(PYTHON_API_PATH / 'source' / 'libcarla' / 'libcarla.cpp')
+
+if os.name == 'nt':
+    amalgamate_compile_command.append(f'/Fo{{PYTHON_API_AMALGAMATED_OBJECT_PATH}}')
+else:
+    amalgamate_compile_command.extend([ '-o', PYTHON_API_AMALGAMATED_OBJECT_PATH])
 
 print(f'Building "{{PYTHON_API_AMALGAMATED_OBJECT_PATH}}".')
+
 subprocess.run(
     amalgamate_compile_command,
     shell = True
 ).check_returncode()
-
-while not PYTHON_API_AMALGAMATED_OBJECT_PATH.exists():
-    time.sleep(0.1)
 
 sources = []
 include_paths = []
@@ -104,6 +102,7 @@ link_flags = [
     sorted(glob.glob(str(Path('{RECAST_INSTALL_PATH}') / 'lib' / 'DetourCrowd{LIB_EXT}'), recursive = True))[0],
     sorted(glob.glob(str(Path('{XERCESC_INSTALL_PATH}') / 'lib' / 'xerces-c*{LIB_EXT}'), recursive = True))[0],
     sorted(glob.glob(str(Path('{PROJ_INSTALL_PATH}') / 'lib' / 'proj{LIB_EXT}'), recursive = True))[0],
+    sorted(glob.glob(str(Path('{SUMO_INSTALL_PATH}') / 'lib' / 'osm2odr*{LIB_EXT}'), recursive = True))[0],
     sorted(glob.glob(str(Path('{SQLITE_BUILD_PATH}') / 'sqlite*{LIB_EXT}'), recursive = True))[0],
 ]
 
@@ -124,7 +123,7 @@ dependencies = glob.glob(str(
 
 carla_extensions = [
     Extension(
-        name = 'libcarla.carla',
+        name = 'carla.libcarla',
         sources = [],
         libraries = link_libraries,
         library_dirs = library_paths,
