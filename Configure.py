@@ -630,7 +630,9 @@ class Task:
     return Task(name, in_edges, LaunchSubprocessImmediate, command, None, name)
   
   def CreateCMakeConfigureDefaultCommandLine(source_path : Path, build_path : Path) -> list:
-    cpp_flags_release = '/MD'
+    cpp_flags_release = ''
+    if os.name == 'nt':
+      cpp_flags_release = '/MD'
     if CPP_ENABLE_MARCH_NATIVE:
       cpp_flags_release += ' -march=native'
     cmd = [
