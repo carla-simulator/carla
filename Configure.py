@@ -885,7 +885,8 @@ def ConfigureBoost():
     return
   LaunchSubprocessImmediate(
     [ BOOST_SOURCE_PATH / f'bootstrap{SHELL_EXT}' ],
-    working_directory = BOOST_SOURCE_PATH)
+    working_directory = BOOST_SOURCE_PATH,
+    log_name = 'boost-configure')
 
 
 
