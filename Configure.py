@@ -9,7 +9,7 @@ EXE_EXT = '.exe' if os.name == 'nt' else ''
 LIB_PREFIX = '' if os.name == 'nt' else 'lib'
 LIB_EXT = '.lib' if os.name == 'nt' else '.a'
 OBJ_EXT = '.obj' if os.name == 'nt' else '.o'
-SHELL_EXT = '.bat' if os.name == 'nt' else ''
+SHELL_EXT = '.bat' if os.name == 'nt' else '.sh'
 WORKSPACE_PATH = Path(__file__).parent.resolve()
 LIBCARLA_PATH = WORKSPACE_PATH / 'LibCarla'
 LIBCARLA_SOURCE_PATH = LIBCARLA_PATH / 'source'
