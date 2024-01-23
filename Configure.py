@@ -7,7 +7,7 @@ import subprocess, tarfile, zipfile, argparse, requests, psutil, shutil, glob, j
 FALLBACK_CARLA_VERSION_STRING = '0.9.15'
 EXE_EXT = '.exe' if os.name == 'nt' else ''
 LIB_PREFIX = '' if os.name == 'nt' else 'lib'
-LIB_EXT = '.lib' if os.name == 'nt' else '.a'
+LIB_EXT = '.lib' if os.name == 'nt' else '.so'
 OBJ_EXT = '.obj' if os.name == 'nt' else '.o'
 SHELL_EXT = '.bat' if os.name == 'nt' else '.sh'
 WORKSPACE_PATH = Path(__file__).parent.resolve()
@@ -386,7 +386,7 @@ ZLIB_BUILD_PATH = DEPENDENCIES_PATH / 'zlib-build'
 ZLIB_INSTALL_PATH = DEPENDENCIES_PATH / 'zlib-install'
 ZLIB_INCLUDE_PATH = ZLIB_INSTALL_PATH / 'include'
 ZLIB_LIBRARY_PATH = ZLIB_INSTALL_PATH / 'lib'
-ZLIB_LIB_PATH = ZLIB_LIBRARY_PATH / (f'zlibstatic{LIB_EXT}' if os.name == 'nt' else 'libz.a')
+ZLIB_LIB_PATH = ZLIB_LIBRARY_PATH / (f'zlibstatic{LIB_EXT}' if os.name == 'nt' else f'libz{LIB_EXT}')
 # LibPNG
 LIBPNG_SOURCE_PATH = DEPENDENCIES_PATH / 'libpng-source'
 LIBPNG_BUILD_PATH = DEPENDENCIES_PATH / 'libpng-build'
