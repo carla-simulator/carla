@@ -386,7 +386,7 @@ ZLIB_BUILD_PATH = DEPENDENCIES_PATH / 'zlib-build'
 ZLIB_INSTALL_PATH = DEPENDENCIES_PATH / 'zlib-install'
 ZLIB_INCLUDE_PATH = ZLIB_INSTALL_PATH / 'include'
 ZLIB_LIBRARY_PATH = ZLIB_INSTALL_PATH / 'lib'
-ZLIB_LIB_PATH = ZLIB_LIBRARY_PATH / (f'zlib{LIB_EXT}' if os.name == 'nt' else 'libz.a')
+ZLIB_LIB_PATH = ZLIB_LIBRARY_PATH / (f'zlibstatic{LIB_EXT}' if os.name == 'nt' else 'libz.a')
 # LibPNG
 LIBPNG_SOURCE_PATH = DEPENDENCIES_PATH / 'libpng-source'
 LIBPNG_BUILD_PATH = DEPENDENCIES_PATH / 'libpng-build'
