@@ -1,7 +1,7 @@
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from collections import deque
-import subprocess, tarfile, zipfile, argparse, requests, psutil, shutil, glob, json, sys, os
+import subprocess, tarfile, zipfile, argparse, requests, psutil, shutil, glob, json, sys, os, stat
 
 # Constants:
 FALLBACK_CARLA_VERSION_STRING = '0.9.15'
@@ -883,10 +883,20 @@ def CleanDownloads(task_graph : TaskGraph):
 def ConfigureBoost():
   if BOOST_B2_PATH.exists():
     return
+  bootstrap_file_path = BOOST_SOURCE_PATH / f'bootstrap{SHELL_EXT}'
+  log_name = 'boost-configure'
+  if os.name != 'nt':
+    try:
+      os.chmod(bootstrap_file_path, stat.S_IEXEC | stat.S_IREAD)
+      os.chmod(BOOST_SOURCE_PATH / 'tools/build/src/engine/build.sh', stat.S_IEXEC | stat.S_IREAD)
+    except Exception as e:
+      with open(LOG_PATH / f'{log_name}.log', 'w') as log_file:
+        log_file.write(f"Cannot give permisions: {str(e)}")
+  
   LaunchSubprocessImmediate(
-    [ BOOST_SOURCE_PATH / f'bootstrap{SHELL_EXT}' ],
+    [ bootstrap_file_path ],
     working_directory = BOOST_SOURCE_PATH,
-    log_name = 'boost-configure')
+    log_name = log_name)
 
 
 
@@ -1407,6 +1417,7 @@ if __name__ == '__main__':
     if UPDATE_DEPENDENCIES:
       UpdateDependencies(task_graph)
     CleanDownloads(task_graph)
+    task_graph.Execute()
     if BUILD_DEPENDENCIES:
       BuildDependencies(task_graph)
     if ENABLE_LIBCARLA:
