@@ -299,8 +299,8 @@ LINKER = ARGV.linker
 LIB = ARGV.ar
 C_STANDARD = ARGV.c_standard
 CPP_STANDARD = ARGV.cpp_standard
-C_COMPILER_CLI_TYPE = 'msvc' if 'cl' in C_COMPILER else 'gnu'
-CPP_COMPILER_CLI_TYPE = 'msvc' if 'cl' in CPP_COMPILER else 'gnu'
+C_COMPILER_CLI_TYPE = 'msvc' if ('cl' in C_COMPILER and os.name == 'nt') else 'gnu'
+CPP_COMPILER_CLI_TYPE = 'msvc' if ('cl' in CPP_COMPILER and os.name == 'nt') else 'gnu'
 C_COMPILER_IS_CLANG = 'clang' in C_COMPILER
 CPP_COMPILER_IS_CLANG = 'clang' in CPP_COMPILER
 C_ENABLE_MARCH_NATIVE = ARGV.march_native and C_COMPILER_CLI_TYPE == 'gnu'
