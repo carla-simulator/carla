@@ -7,302 +7,293 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using UnrealBuildTool;
 using EpicGames.Core;
-using System.Xml.Linq;
 
 public class Carla :
-	ModuleRules
+  ModuleRules
 {
-    [CommandLine("-verbose")]
-    bool Verbose = true;
+  [CommandLine("-verbose")]
+  bool Verbose = true;
 
-    [CommandLine("-carsim")]
-	bool EnableCarSim = false;
+  [CommandLine("-carsim")]
+  bool EnableCarSim = false;
 
-    [CommandLine("-chrono")]
-    bool EnableChrono = false;
+  [CommandLine("-chrono")]
+  bool EnableChrono = false;
 
-    [CommandLine("-pytorch")]
-    bool EnablePytorch = false;
+  [CommandLine("-pytorch")]
+  bool EnablePytorch = false;
 
-    [CommandLine("-ros2")]
-    bool EnableRos2 = false;
+  [CommandLine("-ros2")]
+  bool EnableRos2 = false;
 
-    [CommandLine("-osm2odr")]
-    bool EnableOSM2ODR = true;
+  [CommandLine("-osm2odr")]
+  bool EnableOSM2ODR = true;
 
-    [CommandLine("-carla-install-path")]
-    string CarlaInstallPath = null;
+  [CommandLine("-carla-install-path")]
+  string CarlaInstallPath = null;
 
-    [CommandLine("-carla-dependencies-path")]
-    string CarlaDependenciesPath = null;
+  [CommandLine("-carla-dependencies-path")]
+  string CarlaDependenciesPath = null;
 
 
 
-    public Carla(ReadOnlyTargetRules Target) :
-		base(Target)
+  public Carla(ReadOnlyTargetRules Target) :
+  base(Target)
+  {
+    bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
+
+    PrivatePCHHeaderFile = "Carla.h";
+    bEnableExceptions = bEnableExceptions || IsWindows;
+
+    var DirectoryInfo = new DirectoryInfo(ModuleDirectory);
+    for (int i = 0; i != 6; ++i)
+      DirectoryInfo = DirectoryInfo.Parent;
+    var WorkspacePath = DirectoryInfo.ToString();
+    Debug.Assert(WorkspacePath != null && !Directory.Exists(WorkspacePath));
+
+    if (CarlaInstallPath == null)
     {
-        bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
+      Console.WriteLine("\"-carla-install-path\" was not specified, inferring...");
+      CarlaInstallPath = Path.Combine(WorkspacePath, "Install");
+      if (!Directory.Exists(CarlaInstallPath))
+        throw new DirectoryNotFoundException("Could not infer CARLA install directory.");
+      Console.WriteLine("Using \"" + CarlaInstallPath + "\" as the CARLA install path.");
+    }
 
-        PrivatePCHHeaderFile = "Carla.h";
-		bEnableExceptions = bEnableExceptions || IsWindows;
+    if (CarlaDependenciesPath == null)
+    {
+      Console.WriteLine("\"-carla-dependencies-path\" was not specified, inferring...");
+      CarlaDependenciesPath = Path.Combine(WorkspacePath, "Build", "Dependencies");
+      if (!Directory.Exists(CarlaDependenciesPath))
+        throw new DirectoryNotFoundException("Could not infer CARLA dependencies directory.");
+      Console.WriteLine("Using \"" + CarlaDependenciesPath + "\" as the CARLA depenencies install path.");
+    }
 
-        var DirectoryInfo = new DirectoryInfo(ModuleDirectory);
-        for (int i = 0; i != 6; ++i)
-            DirectoryInfo = DirectoryInfo.Parent;
-        var WorkspacePath = DirectoryInfo.ToString();
-        Debug.Assert(WorkspacePath != null && !Directory.Exists(WorkspacePath));
+    Console.WriteLine("Current module directory: " + ModuleDirectory);
 
-        if (CarlaInstallPath == null)
-        {
-            Console.WriteLine("\"-carla-install-path\" was not specified, inferring...");
-            CarlaInstallPath = Path.Combine(WorkspacePath, "Install");
-            if (!Directory.Exists(CarlaInstallPath))
-                throw new DirectoryNotFoundException("Could not infer CARLA install directory.");
-            Console.WriteLine("Using \"" + CarlaInstallPath + "\" as the CARLA install path.");
-        }
+    Action<string, bool> LogBuildFlagStatus = (name, enabled) =>
+    {
+      Console.WriteLine(
+        string.Format(
+          "{0} is {1}.",
+          name,
+          enabled ? "enabled" : "disabled"));
+    };
 
-        if (CarlaDependenciesPath == null)
-        {
-            Console.WriteLine("\"-carla-dependencies-path\" was not specified, inferring...");
-            CarlaDependenciesPath = Path.Combine(WorkspacePath, "Build", "Dependencies");
-            if (!Directory.Exists(CarlaDependenciesPath))
-                throw new DirectoryNotFoundException("Could not infer CARLA dependencies directory.");
-            Console.WriteLine("Using \"" + CarlaDependenciesPath + "\" as the CARLA depenencies install path.");
-        }
+    LogBuildFlagStatus("CarSim support", EnableCarSim);
+    LogBuildFlagStatus("Chrono support", EnableChrono);
+    LogBuildFlagStatus("PyTorch support", EnablePytorch);
+    LogBuildFlagStatus("ROS2 support", EnableRos2);
 
-        Console.WriteLine("Current module directory: " + ModuleDirectory);
+    if (EnableCarSim)
+    {
+      PublicDefinitions.Add("WITH_CARSIM");
+      PrivateDefinitions.Add("WITH_CARSIM");
+    }
 
-        Action<string, bool> LogBuildFlagStatus = (name, enabled) =>
-		{
-			Console.WriteLine(
-				string.Format(
-					"{0} is {1}.",
-					name,
-					enabled ? "enabled" : "disabled"));
-		};
+    if (EnableChrono)
+    {
+      PublicDefinitions.Add("WITH_CHRONO");
+      PrivateDefinitions.Add("WITH_CHRONO");
+    }
 
-        LogBuildFlagStatus("CarSim support", EnableCarSim);
-        LogBuildFlagStatus("Chrono support", EnableChrono);
-        LogBuildFlagStatus("PyTorch support", EnablePytorch);
-        LogBuildFlagStatus("ROS2 support", EnableRos2);
+    if (EnablePytorch)
+    {
+      PublicDefinitions.Add("WITH_PYTORCH");
+      PrivateDefinitions.Add("WITH_PYTORCH");
+    }
 
-        if (EnableCarSim)
-		{
-            PublicDefinitions.Add("WITH_CARSIM");
-			PrivateDefinitions.Add("WITH_CARSIM");
-		}
+    if (EnableRos2)
+    {
+      PublicDefinitions.Add("WITH_ROS2");
+      PrivateDefinitions.Add("WITH_ROS2");
+    }
 
-		if (EnableChrono)
-		{
-			PublicDefinitions.Add("WITH_CHRONO");
-			PrivateDefinitions.Add("WITH_CHRONO");
-		}
+    if (EnableOSM2ODR)
+    {
+      PublicDefinitions.Add("WITH_OSM2ODR");
+      PrivateDefinitions.Add("WITH_OSM2ODR");
+    }
 
-		if (EnablePytorch)
-		{
-			PublicDefinitions.Add("WITH_PYTORCH");
-			PrivateDefinitions.Add("WITH_PYTORCH");
-		}
+    // PublicIncludePaths.AddRange(new string[] { });
+    // PrivateIncludePaths.AddRange(new string[] { });
 
-		if (EnableRos2)
-        {
-            PublicDefinitions.Add("WITH_ROS2");
-			PrivateDefinitions.Add("WITH_ROS2");
-		}
+    PublicDependencyModuleNames.AddRange(new string[]
+{
+      "Core",
+      "RenderCore",
+      "RHI",
+      "Renderer",
+      "ProceduralMeshComponent",
+      "MeshDescription"
+});
 
-        if (EnableOSM2ODR)
-        {
-            PublicDefinitions.Add("WITH_OSM2ODR");
-            PrivateDefinitions.Add("WITH_OSM2ODR");
-        }
+    if (EnableCarSim)
+    {
+      PublicDependencyModuleNames.Add("CarSim");
+    }
 
-        // PublicIncludePaths.AddRange(new string[] { });
-        // PrivateIncludePaths.AddRange(new string[] { });
+    if (Target.Type == TargetType.Editor)
+    {
+      PublicDependencyModuleNames.Add("UnrealEd");
+    }
 
-        PublicDependencyModuleNames.AddRange(new string[]
-		{
-			"Core",
-			"RenderCore",
-			"RHI",
-			"Renderer",
-			"ProceduralMeshComponent",
-			"MeshDescription"
-		});
+    PrivateDependencyModuleNames.AddRange(new string[]
+    {
+      "AIModule",
+      "AssetRegistry",
+      "CoreUObject",
+      "Engine",
+      "Foliage",
+      "HTTP",
+      "StaticMeshDescription",
+      "ImageWriteQueue",
+      "Json",
+      "JsonUtilities",
+      "Landscape",
+      "Slate",
+      "SlateCore",
+      "PhysicsCore",
+      "Chaos",
+      "ChaosVehicles"
+    });
 
-		if (EnableCarSim)
-		{
-			PublicDependencyModuleNames.Add("CarSim");
-		}
+    if (EnableCarSim)
+    {
+      PrivateDependencyModuleNames.Add("CarSim");
+      PrivateIncludePathModuleNames.Add("CarSim");
+    }
 
-		if (Target.Type == TargetType.Editor)
-		{
-			PublicDependencyModuleNames.Add("UnrealEd");
-		}
+    // DynamicallyLoadedModuleNames.AddRange(new string[] { });
 
-		PrivateDependencyModuleNames.AddRange(new string[]
-		{
-			"AIModule",
-			"AssetRegistry",
-			"CoreUObject",
-			"Engine",
-			"Foliage",
-			"HTTP",
-			"StaticMeshDescription",
-			"ImageWriteQueue",
-			"Json",
-			"JsonUtilities",
-			"Landscape",
-			"Slate",
-			"SlateCore",
-			"PhysicsCore",
-            "Chaos",
-            "ChaosVehicles"
-        });
+    var LibraryPrefix = IsWindows ? "" : "lib";
+    var LibrarySuffix = IsWindows ? ".lib" : ".a";
 
-		if (EnableCarSim)
-		{
-			PrivateDependencyModuleNames.Add("CarSim");
-			PrivateIncludePathModuleNames.Add("CarSim");
-		}
+    var LibCarlaInstallPath = Path.Combine(CarlaInstallPath, "LibCarla");
+    var DependenciesInstallPath = CarlaDependenciesPath;
 
-        // DynamicallyLoadedModuleNames.AddRange(new string[] { });
+    Func<string, string> GetLibraryName = name =>
+    {
+      return LibraryPrefix + name + LibrarySuffix;
+    };
 
-        var LibraryPrefix = IsWindows ? "" : "lib";
-        var LibrarySuffix = IsWindows ? ".lib" : ".a";
+    Func<string, string, string[]> FindLibraries = (name, pattern) =>
+    {
+      var InstallPath = Path.Combine(DependenciesInstallPath, name + "-install");
+      var LibPath = Path.Combine(InstallPath, "lib");
+      var Candidates = Directory.GetFiles(LibPath, GetLibraryName(pattern));
+      if (Candidates.Length == 0)
+        Console.WriteLine(string.Format("Could not find any matching libraries for \"{0}\" using pattern \"{1}\"", name, pattern));
+      Array.Sort(Candidates);
+      return Candidates;
+    };
 
-        var LibCarlaInstallPath = Path.Combine(CarlaInstallPath, "LibCarla");
-        var DependenciesInstallPath = CarlaDependenciesPath;
+    Func<string, string> GetIncludePath = name => Path.Combine(DependenciesInstallPath, name + "-install", "include");
 
-        Func<string, string> GetLibraryName = name =>
-		{
-			return LibraryPrefix + name + LibrarySuffix;
-		};
+    // LibCarla
+    var LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
+    var LibCarlaLibPath = Path.Combine(LibCarlaInstallPath, "lib");
+    var LibCarlaServerPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-server"));
+    var LibCarlaClientPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-client"));
+    Debug.Assert(Directory.Exists(LibCarlaServerPath));
+    Debug.Assert(Directory.Exists(LibCarlaClientPath));
 
-		Func<string, string, string[]> FindLibraries = (name, pattern) =>
-        {
-            var InstallPath = Path.Combine(DependenciesInstallPath, name + "-install");
-            var LibPath = Path.Combine(InstallPath, "lib");
-            var Candidates = Directory.GetFiles(LibPath, GetLibraryName(pattern));
-			if (Candidates.Length == 0)
-                throw new FileNotFoundException(string.Format("Could not find any matching libraries for \"{0}\" using pattern \"{1}\"", name, pattern));
-			Array.Sort(Candidates);
-			return Candidates;
-        };
+    // Boost
 
-        Func<string, string> GetIncludePath = name => Path.Combine(DependenciesInstallPath, name + "-install", "include");
+    var BoostIncludePath = Path.Combine(DependenciesInstallPath, "boost-install", "include");
+    var BoostLibraries = new List<string>();
 
-        // LibCarla
-        var LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
-		var LibCarlaLibPath = Path.Combine(LibCarlaInstallPath, "lib");
-		var LibCarlaServerPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-server"));
-        var LibCarlaClientPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-client"));
-		Debug.Assert(Directory.Exists(LibCarlaServerPath));
-        Debug.Assert(Directory.Exists(LibCarlaClientPath));
+    var BoostLibraryPatterns = new string[]
+    {
+        "libboost_atomic*",
+        "libboost_date_time*",
+        "libboost_filesystem*",
+        "libboost_numpy*",
+        "libboost_python*",
+        "libboost_system*",
+    };
 
-        // Boost
-        
-		var BoostIncludePath = Path.Combine(DependenciesInstallPath, "boost-install", "include");
-		var BoostLibraries = new List<string>();
-        
-		var BoostLibraryPatterns = new string[]
-        {
-            "libboost_atomic*",
-            "libboost_date_time*",
-            "libboost_filesystem*",
-            "libboost_numpy*",
-            "libboost_python*",
-            "libboost_system*",
-        };
+    foreach (var Pattern in BoostLibraryPatterns)
+    {
+      var Candidates = FindLibraries("boost", Pattern);
+      if (Candidates.Length != 0)
+        BoostLibraries.Add(Candidates[0]);
+    }
 
-        foreach (var Pattern in BoostLibraryPatterns)
-		{
-			var Candidates = FindLibraries("boost", Pattern);
-			if (Candidates.Length != 0)
-				BoostLibraries.Add(Candidates[0]);
-        }
+    var SQLiteBuildPath = Path.Combine(DependenciesInstallPath, "sqlite-build");
+    var SQLiteLibrary = Directory.GetFiles(SQLiteBuildPath, GetLibraryName("sqlite*"))[0];
+    var AdditionalLibraries = new List<string>
+      {
+          LibCarlaServerPath,
+          SQLiteLibrary,
+          FindLibraries("rpclib", "rpc")[0],
+          FindLibraries("xercesc", "xerces-c*")[0],
+          FindLibraries("proj", "proj")[0],
+          FindLibraries("zlib", "zlibstatic*")[0],
+      };
+    AdditionalLibraries.AddRange(BoostLibraries);
 
-        var SQLiteBuildPath = Path.Combine(DependenciesInstallPath, "sqlite-build");
-		var SQLiteLibraryCandidates = Directory.GetFiles(SQLiteBuildPath, GetLibraryName("sqlite*"));
-        if (SQLiteLibraryCandidates.Length == 0)
-            throw new FileNotFoundException("Could not find any matching libraries for SQLite");
-		var RPCLibCandidates = FindLibraries("rpclib", "rpc");
-		var XercesCCandidates = FindLibraries("xercesc", "xerces-c*");
-		var PROJCandidates = FindLibraries("proj", "proj");
-		var ZlibCandidates = FindLibraries("zlib", "zlibstatic*");
+    if (EnableOSM2ODR)
+      AdditionalLibraries.Add(FindLibraries("sumo", "*osm2odr")[0]);
 
-		var AdditionalLibraries = new List<string>
-        {
-            LibCarlaServerPath,
-			SQLiteLibraryCandidates[0],
-            RPCLibCandidates[0],
-            XercesCCandidates[0],
-            PROJCandidates[0],
-            ZlibCandidates[0],
-        };
+    if (EnableChrono)
+    {
+      // Chrono
+      var ChronoInstallPath = Path.Combine(DependenciesInstallPath, "chrono-install");
+      var ChronoLibPath = Path.Combine(ChronoInstallPath, "lib");
+      var ChronoLibraryNames = new string[]
+      {
+        "ChronoEngine",
+        "ChronoEngine_vehicle",
+        "ChronoModels_vehicle",
+        "ChronoModels_robot",
+      };
+      var ChronoLibraries =
+        from Name in ChronoLibraryNames
+        select FindLibraries(ChronoLibPath, GetLibraryName(Name))[0];
+      AdditionalLibraries.AddRange(ChronoLibraries);
+    }
 
-		AdditionalLibraries.AddRange(BoostLibraries);
+    PublicIncludePaths.Add(ModuleDirectory);
+    PublicIncludePaths.Add(LibCarlaIncludePath);
 
-		if (EnableOSM2ODR)
-			AdditionalLibraries.Add(FindLibraries("sumo", "*osm2odr")[0]);
-
-        if (EnableChrono)
-        {
-            // Chrono
-            var ChronoInstallPath = Path.Combine(DependenciesInstallPath, "chrono-install");
-            var ChronoLibPath = Path.Combine(ChronoInstallPath, "lib");
-            var ChronoLibraryNames = new string[]
-            {
-				"ChronoEngine",
-				"ChronoEngine_vehicle",
-				"ChronoModels_vehicle",
-				"ChronoModels_robot",
-            };
-			var ChronoLibraries =
-				from Name in ChronoLibraryNames
-				select FindLibraries(ChronoLibPath, GetLibraryName(Name))[0];
-            AdditionalLibraries.AddRange(ChronoLibraries);
-        }
-
-        PublicIncludePaths.Add(ModuleDirectory);
-        PublicIncludePaths.Add(LibCarlaIncludePath);
-
-        PublicIncludePaths.AddRange(new string[]
-        {
+    PublicIncludePaths.AddRange(new string[]
+    {
             GetIncludePath("boost"),
             GetIncludePath("rpclib"),
             GetIncludePath("xercesc"),
             GetIncludePath("sumo"),
             GetIncludePath("zlib"),
-        });
+    });
 
-		PrivateIncludePaths.AddRange(new string[]
-		{
-			Path.Combine(DependenciesInstallPath, "eigen-source"),
-		});
+    PrivateIncludePaths.AddRange(new string[]
+    {
+      Path.Combine(DependenciesInstallPath, "eigen-source"),
+    });
 
-        PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
-        PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
-        PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
-        PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
-        PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
-        PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
+    PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
+    PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
+    PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+    PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
+    PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
+    PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
 
-        if (IsWindows)
-        {
-            PublicDefinitions.Add("NOMINMAX");
-            PublicDefinitions.Add("VC_EXTRALEAN");
-            PublicDefinitions.Add("WIN32_LEAN_AND_MEAN");
-        }
-
-        if (Verbose)
-        {
-            Console.WriteLine("Additional CARLA libraries:");
-            foreach (var e in AdditionalLibraries)
-                Console.WriteLine(" - " + e);
-        }
-
-        PublicAdditionalLibraries.AddRange(AdditionalLibraries);
+    if (IsWindows)
+    {
+      PublicDefinitions.Add("NOMINMAX");
+      PublicDefinitions.Add("VC_EXTRALEAN");
+      PublicDefinitions.Add("WIN32_LEAN_AND_MEAN");
     }
+
+    if (Verbose)
+    {
+      Console.WriteLine("Additional CARLA libraries:");
+      foreach (var e in AdditionalLibraries)
+        Console.WriteLine(" - " + e);
+    }
+
+    PublicAdditionalLibraries.AddRange(AdditionalLibraries);
+  }
 
 #if false
 	private void AddDynamicLibrary(string library)
