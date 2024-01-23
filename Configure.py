@@ -633,7 +633,7 @@ class Task:
     cpp_flags_release = '/MD'
     if CPP_ENABLE_MARCH_NATIVE:
       cpp_flags_release += ' -march=native'
-    return [
+    cmd = [
       'cmake',
       '-G', ARGV.generator,
       '-S', source_path,
@@ -643,6 +643,9 @@ class Task:
       '-DCMAKE_BUILD_TYPE=Release',
       f'-DCMAKE_CXX_FLAGS_RELEASE={cpp_flags_release}',
     ]
+    if os.name != 'nt':
+      cmd.append('-DPOSITION_INDEPENDENT_CODE=ON')
+    return cmd
 
   def CreateCMakeConfigureDefault(name : str, in_edges : list, source_path : Path, build_path : Path, *args, install_path : Path = None):
     cmd = Task.CreateCMakeConfigureDefaultCommandLine(source_path, build_path)
