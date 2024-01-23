@@ -7,7 +7,7 @@ import subprocess, tarfile, zipfile, argparse, requests, psutil, shutil, glob, j
 FALLBACK_CARLA_VERSION_STRING = '0.9.15'
 EXE_EXT = '.exe' if os.name == 'nt' else ''
 LIB_PREFIX = '' if os.name == 'nt' else 'lib'
-LIB_EXT = '.lib' if os.name == 'nt' else '.so'
+LIB_EXT = '.lib' if os.name == 'nt' else '.a'
 OBJ_EXT = '.obj' if os.name == 'nt' else '.o'
 SHELL_EXT = '.bat' if os.name == 'nt' else '.sh'
 WORKSPACE_PATH = Path(__file__).parent.resolve()
@@ -1012,7 +1012,7 @@ def ConfigureSUMO():
   cmd = Task.CreateCMakeConfigureDefaultCommandLine(
     SUMO_SOURCE_PATH,
     SUMO_BUILD_PATH)
-  proj_candidates = glob.glob(str(PROJ_INSTALL_PATH / 'lib' / '**' / f'*proj{LIB_EXT}'), recursive = True)
+  proj_candidates = glob.glob(str(PROJ_INSTALL_PATH / 'lib' / '**' / f'*{LIB_PREFIX}proj{LIB_EXT}'), recursive = True)
   if len(proj_candidates) == 0:
     raise Exception('Could not configure SUMO since PROJ could not be found.')
   PROJ_LIB_PATH = proj_candidates[0]
@@ -1127,6 +1127,7 @@ def BuildDependencies(task_graph : TaskGraph):
     LIBPNG_SOURCE_PATH,
     LIBPNG_BUILD_PATH,
     '-DPNG_TESTS=OFF',
+    '-DPNG_SHARED=OFF',
     '-DPNG_TOOLS=OFF',
     '-DPNG_BUILD_ZLIB=ON',
     f'-DZLIB_INCLUDE_DIRS={ZLIB_INCLUDE_PATH}',
