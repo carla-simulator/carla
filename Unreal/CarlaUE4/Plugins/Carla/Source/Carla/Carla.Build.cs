@@ -205,13 +205,21 @@ public class Carla :
 
     var BoostLibraryPatterns = new string[]
     {
-        "libboost_atomic*",
-        "libboost_date_time*",
-        "libboost_filesystem*",
-        "libboost_numpy*",
-        "libboost_python*",
-        "libboost_system*",
+        "boost_atomic*",
+        "boost_date_time*",
+        "boost_filesystem*",
+        "boost_numpy*",
+        "boost_python*",
+        "boost_system*",
     };
+
+    if (IsWindows)
+    {
+      foreach (var Pattern in BoostLibraryPatterns)
+      {
+        Pattern = "lib" + Pattern;
+      }
+    }
 
     foreach (var Pattern in BoostLibraryPatterns)
     {
