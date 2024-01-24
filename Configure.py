@@ -2,6 +2,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from collections import deque
 import subprocess, tarfile, zipfile, argparse, requests, psutil, shutil, glob, json, sys, os, stat
+from distutils.spawn import find_executable
 
 # Constants:
 FALLBACK_CARLA_VERSION_STRING = '0.9.15'
@@ -48,15 +49,23 @@ DEFAULT_ERROR_MESSAGE = (
 
 
 def FindExecutable(candidates : list):
-  for e in candidates:
-    ec = subprocess.call(
-      [ 'where' if os.name == 'nt' else 'whereis', e ],
-      stdout = subprocess.PIPE,
-      stderr = subprocess.PIPE,
-      shell = True)
-    if ec == 0:
-      return e
-  return None
+  if os.name == 'nt':
+    # TODO: test if find_executable(e) works properly for windows and unify windows and linux code if works
+    for e in candidates:
+      ec = subprocess.call(
+        [ 'where' if os.name == 'nt' else 'whereis', e ],
+        stdout = subprocess.PIPE,
+        stderr = subprocess.PIPE,
+        shell = True)
+      if ec == 0:
+        return e
+    return None
+  else:
+    for e in candidates:
+      find_executable(e)
+      if e:
+        return e
+    return None    
 
 DEFAULT_C_COMPILER = FindExecutable([
   'cl',
