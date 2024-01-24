@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<scenarios>
+    <scenario name="FollowLeadingVehicle_1" type="FollowLeadingVehicle" town="Town01">
+        <ego_vehicle x="107" y="133" z="0.5" yaw="0" model="vehicle.lincoln.mkz_2017" />
+        <weather cloudiness="0" precipitation="0" precipitation_deposits="0" wind_intensity="0" sun_azimuth_angle="0" sun_altitude_angle="75" />
+    </scenario>
+    <scenario name="FollowLeadingVehicleWithObstacle_1" type="FollowLeadingVehicleWithObstacle" town="Town01">
+        <ego_vehicle x="107" y="133.5" z="0.5" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicle_2" type="FollowLeadingVehicle" town="Town01">
+        <ego_vehicle x="105" y="199.1" z="0.5" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicleWithObstacle_2" type="FollowLeadingVehicleWithObstacle" town="Town01">
+        <ego_vehicle x="105" y="199.1" z="0.5" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicle_3" type="FollowLeadingVehicle" town="Town02">
+        <ego_vehicle x="28.7" y="302.5" z="0.4" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicleWithObstacle_3" type="FollowLeadingVehicleWithObstacle" town="Town02">
+        <ego_vehicle x="28.7" y="302.5" z="0.4" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicle_4" type="FollowLeadingVehicle" town="Town03">
+        <ego_vehicle x="120" y="193" z="3" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicleWithObstacle_4" type="FollowLeadingVehicleWithObstacle" town="Town03">
+        <ego_vehicle x="150" y="193.2" z="3" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicle_5" type="FollowLeadingVehicle" town="Town04">
+        <ego_vehicle x="-326.2  " y="435.8" z="0" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicleWithObstacle_5" type="FollowLeadingVehicleWithObstacle" town="Town04">
+        <ego_vehicle x="-337  " y="435.8" z="5.5" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicle_6" type="FollowLeadingVehicle" town="Town04">
+        <ego_vehicle x="44.8" y="-98.3" z="0" yaw="-18" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicleWithObstacle_6" type="FollowLeadingVehicleWithObstacle" town="Town04">
+        <ego_vehicle x="44.8" y="-98.3" z="0" yaw="-18" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicle_7" type="FollowLeadingVehicle" town="Town04">
+        <ego_vehicle x="178" y="-395.8" z="0" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicleWithObstacle_7" type="FollowLeadingVehicleWithObstacle" town="Town04">
+        <ego_vehicle x="178" y="-395.8" z="0" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicle_8" type="FollowLeadingVehicle" town="Town05">
+        <ego_vehicle x="170.6" y="-182" z="0" yaw="-136" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicleWithObstacle_8" type="FollowLeadingVehicleWithObstacle" town="Town05">
+         <ego_vehicle x="170.6" y="-182.0" z="0" yaw="-137" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicle_9" type="FollowLeadingVehicle" town="Town05">
+        <ego_vehicle x="-150" y="-190" z="11" yaw="1" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicleWithObstacle_9" type="FollowLeadingVehicleWithObstacle" town="Town05">
+        <ego_vehicle x="-150" y="-190" z="11" yaw="1" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicle_10" type="FollowLeadingVehicle" town="Town05">
+        <ego_vehicle x="-141" y="208.5" z="9" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicleWithObstacle_10" type="FollowLeadingVehicleWithObstacle" town="Town05">
+        <ego_vehicle x="-141" y="208.5" z="9" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicle_11" type="FollowLeadingVehicle" town="Town02">
+        <ego_vehicle x="137" y="105.3" z="0.4" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="FollowLeadingVehicleWithObstacle_11" type="FollowLeadingVehicleWithObstacle" town="Town02">
+        <ego_vehicle x="137" y="105.3" z="0.4" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+</scenarios>

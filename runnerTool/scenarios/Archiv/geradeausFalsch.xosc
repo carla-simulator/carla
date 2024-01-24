@@ -1,0 +1,467 @@
+<?xml version="1.0"?>
+<OpenSCENARIO>
+  <FileHeader revMajor="1" revMinor="0" date="2022-09-24T12:00:00" description="CARLA:OurScenario3" author="ScenarioBuilderTM" />
+  <ParameterDeclarations />
+  <CatalogLocations />
+  <RoadNetwork>
+    <LogicFile filepath="Town10HD" />
+    <SceneGraphFile filepath="" />
+  </RoadNetwork>
+  <Entities>
+    <ScenarioObject name="hero">
+      <Vehicle name="vehicle.nissan.micra" vehicleCategory="car">
+        <ParameterDeclarations />
+        <Performance maxSpeed="69.444" maxAcceleration="200" maxDeceleration="10.0" />
+        <BoundingBox>
+          <Center x="1.5" y="0.0" z="0.9" />
+          <Dimensions width="2.1" length="4.5" height="1.8" />
+        </BoundingBox>
+        <Axles>
+          <FrontAxle maxSteering="0.5" wheelDiameter="0.6" trackWidth="1.8" positionX="3.1" positionZ="0.3" />
+          <RearAxle maxSteering="0.0" wheelDiameter="0.6" trackWidth="1.8" positionX="0.0" positionZ="0.3" />
+        </Axles>
+        <Properties>
+          <Property name="type" value="ego_vehicle" />
+        </Properties>
+      </Vehicle>
+    </ScenarioObject>
+    <ScenarioObject name="adversary1">
+      <Vehicle name="vehicle.audi.tt" vehicleCategory="car">
+        <ParameterDeclarations />
+        <Performance maxSpeed="69.444" maxAcceleration="200" maxDeceleration="10.0" />
+        <BoundingBox>
+          <Center x="1.5" y="0.0" z="0.9" />
+          <Dimensions width="2.1" length="4.5" height="1.8" />
+        </BoundingBox>
+        <Axles>
+          <FrontAxle maxSteering="0.5" wheelDiameter="0.6" trackWidth="1.8" positionX="3.1" positionZ="0.3" />
+          <RearAxle maxSteering="0.0" wheelDiameter="0.6" trackWidth="1.8" positionX="0.0" positionZ="0.3" />
+        </Axles>
+        <Properties>
+          <Property name="type" value="simulation" />
+        </Properties>
+      </Vehicle>
+    </ScenarioObject>
+    <ScenarioObject name="adversary2">
+      <Vehicle name="vehicle.volkswagen.t2" vehicleCategory="car">
+        <ParameterDeclarations />
+        <Performance maxSpeed="69.444" maxAcceleration="200" maxDeceleration="10.0" />
+        <BoundingBox>
+          <Center x="1.5" y="0.0" z="0.9" />
+          <Dimensions width="2.1" length="4.5" height="1.8" />
+        </BoundingBox>
+        <Axles>
+          <FrontAxle maxSteering="0.5" wheelDiameter="0.6" trackWidth="1.8" positionX="3.1" positionZ="0.3" />
+          <RearAxle maxSteering="0.0" wheelDiameter="0.6" trackWidth="1.8" positionX="0.0" positionZ="0.3" />
+        </Axles>
+        <Properties>
+          <Property name="type" value="simulation" />
+        </Properties>
+      </Vehicle>
+    </ScenarioObject>
+    <ScenarioObject name="adversary3">
+      <Vehicle name="vehicle.audi.tt" vehicleCategory="car">
+        <ParameterDeclarations />
+        <Performance maxSpeed="69.444" maxAcceleration="200" maxDeceleration="10.0" />
+        <BoundingBox>
+          <Center x="1.5" y="0.0" z="0.9" />
+          <Dimensions width="2.1" length="4.5" height="1.8" />
+        </BoundingBox>
+        <Axles>
+          <FrontAxle maxSteering="0.5" wheelDiameter="0.6" trackWidth="1.8" positionX="3.1" positionZ="0.3" />
+          <RearAxle maxSteering="0.0" wheelDiameter="0.6" trackWidth="1.8" positionX="0.0" positionZ="0.3" />
+        </Axles>
+        <Properties>
+          <Property name="type" value="simulation" />
+        </Properties>
+      </Vehicle>
+    </ScenarioObject>
+   
+  </Entities>
+  <Storyboard>
+    <Init>
+      <Actions>
+        <GlobalAction>
+          <EnvironmentAction>
+            <Environment name="Environment1">
+              <TimeOfDay animation="false" dateTime="2023-01-10T12:00:00" />
+              <Weather cloudState="free">
+                <Sun intensity="0.8" azimuth="1.5" elevation="1.3" />
+                <Fog visualRange="100000" />
+                <Precipitation precipitationType="dry" intensity="0" />
+              </Weather>
+              <RoadCondition frictionScaleFactor="1" />
+            </Environment>
+          </EnvironmentAction>
+        </GlobalAction>
+        <Private entityRef="hero">
+          <PrivateAction>
+            <ControllerAction>
+              <AssignControllerAction>
+                <Controller name="HeroAgent">
+                  <Properties>
+                    <Property name="module" value="external_control" />
+					<Property name="attach_camera" value="True"/>
+                  </Properties>
+                </Controller>
+              </AssignControllerAction>
+              <OverrideControllerValueAction>
+                <Throttle value="0" active="false" />
+                <Brake value="0" active="false" />
+                <Clutch value="0" active="false" />
+                <ParkingBrake value="0" active="false" />
+                <SteeringWheel value="0" active="false" />
+                <Gear number="0" active="false" />
+              </OverrideControllerValueAction>
+            </ControllerAction>
+          </PrivateAction>
+          <PrivateAction>
+            <TeleportAction>
+              <Position>
+                <WorldPosition x="-27.716" y="24.607" z="0.3" h="-6.28" />
+              </Position>
+            </TeleportAction>
+          </PrivateAction>
+          <PrivateAction>
+            <LongitudinalAction>
+              <SpeedAction>
+                <SpeedActionDynamics dynamicsShape="step" value="0" dynamicsDimension="time" />
+                <SpeedActionTarget>
+                  <AbsoluteTargetSpeed value="0" />
+                </SpeedActionTarget>
+              </SpeedAction>
+            </LongitudinalAction>
+          </PrivateAction>
+        </Private>
+        <Private entityRef="adversary1">
+          <PrivateAction>
+            <TeleportAction>
+              <Position>
+                <WorldPosition x="-23.726" y="28.118" z="0.3" h="-6.28" />
+              </Position>
+            </TeleportAction>
+          </PrivateAction>
+          <PrivateAction>
+            <LongitudinalAction>
+              <SpeedAction>
+                <SpeedActionDynamics dynamicsShape="step" value="0" dynamicsDimension="time" />
+                <SpeedActionTarget>
+                  <AbsoluteTargetSpeed value="10" />
+                </SpeedActionTarget>
+              </SpeedAction>
+            </LongitudinalAction>
+          </PrivateAction>
+        </Private>
+        <Private entityRef="adversary2">
+          <PrivateAction>
+            <TeleportAction>
+              <Position>
+                <WorldPosition x="-14.716" y="24.643" z="0.3" h="-6.28" />
+              </Position>
+            </TeleportAction>
+          </PrivateAction>
+          <PrivateAction>
+            <LongitudinalAction>
+              <SpeedAction>
+                <SpeedActionDynamics dynamicsShape="step" value="0" dynamicsDimension="time" />
+                <SpeedActionTarget>
+                  <AbsoluteTargetSpeed value="10" />
+                </SpeedActionTarget>
+              </SpeedAction>
+            </LongitudinalAction>
+          </PrivateAction>
+        </Private>
+        <Private entityRef="adversary3">
+          <PrivateAction>
+            <TeleportAction>
+              <Position>
+                <WorldPosition x="-5.554001" y="13.169" z="0.3" h="-3.14" />
+              </Position>
+            </TeleportAction>
+          </PrivateAction>
+          <PrivateAction>
+            <LongitudinalAction>
+              <SpeedAction>
+                <SpeedActionDynamics dynamicsShape="step" value="0" dynamicsDimension="time" />
+                <SpeedActionTarget>
+                  <AbsoluteTargetSpeed value="10" />
+                </SpeedActionTarget>
+              </SpeedAction>
+            </LongitudinalAction>
+          </PrivateAction>
+        </Private>
+       
+      </Actions>
+    </Init>
+    <Story name="adversary1_Story">
+      <Act name="adversary1_Act">
+        <ManeuverGroup maximumExecutionCount="1" name="adversary1Sequence">
+          <Actors selectTriggeringEntities="false">
+            <EntityRef entityRef="adversary1" />
+          </Actors>
+          <Maneuver name="adversary1_Maneuver">
+            <Event name="AssignRouteAction8744" priority="overwrite">
+              <Action name="AssignRouteAction8744">
+                <PrivateAction>
+                  <RoutingAction>
+                    <AssignRouteAction>
+                      <Route name="Route" closed="false">
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="-23.726" y="28.118" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="shortest">
+                          <Position>
+                            <WorldPosition x="-19.726" y="28.118" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="26.404" y="28.257" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="40.481" y="48.945" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="41.613" y="62.113" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="60.048" y="69.825" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="67.048" y="69.83401" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                      </Route>
+                    </AssignRouteAction>
+                  </RoutingAction>
+                </PrivateAction>
+              </Action>
+              <StartTrigger>
+                <ConditionGroup>
+                  <Condition name="SimulationTimeCondition29" delay="0" conditionEdge="rising">
+                    <ByValueCondition>
+                      <SimulationTimeCondition value="0" rule="greaterThan" />
+                    </ByValueCondition>
+                  </Condition>
+                </ConditionGroup>
+              </StartTrigger>
+            </Event>
+          </Maneuver>
+        </ManeuverGroup>
+        <StartTrigger />
+      </Act>
+    </Story>
+    <Story name="adversary2_Story">
+      <Act name="adversary2_Act">
+        <ManeuverGroup maximumExecutionCount="1" name="adversary2Sequence">
+          <Actors selectTriggeringEntities="false">
+            <EntityRef entityRef="adversary2" />
+          </Actors>
+          <Maneuver name="adversary2_Maneuver">
+            <Event name="AssignRouteAction8745" priority="overwrite">
+              <Action name="AssignRouteAction8745">
+                <PrivateAction>
+                  <RoutingAction>
+                    <AssignRouteAction>
+                      <Route name="Route" closed="false">
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="-14.716" y="24.643" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="shortest">
+                          <Position>
+                            <WorldPosition x="-10.716" y="24.643" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="9.274002" y="28.21" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="36.842" y="63.93099" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="5.141998" y="66.255" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="-26.858" y="66.214" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="-40.627" y="59.236" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="-41.681" y="44.706" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                      </Route>
+                    </AssignRouteAction>
+                  </RoutingAction>
+                </PrivateAction>
+              </Action>
+              <StartTrigger>
+                <ConditionGroup>
+                  <Condition name="SimulationTimeCondition30" delay="0" conditionEdge="rising">
+                    <ByValueCondition>
+                      <SimulationTimeCondition value="0" rule="greaterThan" />
+                    </ByValueCondition>
+                  </Condition>
+                </ConditionGroup>
+              </StartTrigger>
+            </Event>
+            <Event name="LaneChangeAction2081" priority="overwrite">
+              <Action name="LaneChangeAction2081">
+                <PrivateAction>
+                  <LateralAction>
+                    <LaneChangeAction>
+                      <LaneChangeActionDynamics dynamicsShape="linear" value="13" dynamicsDimension="distance" />
+                      <LaneChangeTarget>
+                        <RelativeTargetLane entityRef="adversary2" value="-1" />
+                      </LaneChangeTarget>
+                    </LaneChangeAction>
+                  </LateralAction>
+                </PrivateAction>
+              </Action>
+              <StartTrigger>
+                <ConditionGroup>
+                  <Condition name="DistanceCondition8" delay="0" conditionEdge="rising">
+                    <ByEntityCondition>
+                      <TriggeringEntities triggeringEntitiesRule="any">
+                        <EntityRef entityRef="adversary2" />
+                      </TriggeringEntities>
+                      <EntityCondition>
+                        <DistanceCondition freespace="false" rule="lessThan" value="12" alongRoute="false">
+                          <Position>
+                            <WorldPosition x="-14.716" y="24.643" z="0.3" h="0" />
+                          </Position>
+                        </DistanceCondition>
+                      </EntityCondition>
+                    </ByEntityCondition>
+                  </Condition>
+                </ConditionGroup>
+              </StartTrigger>
+            </Event>
+          </Maneuver>
+        </ManeuverGroup>
+        <StartTrigger />
+      </Act>
+    </Story>
+    <Story name="adversary3_Story">
+      <Act name="adversary3_Act">
+        <ManeuverGroup maximumExecutionCount="1" name="adversary3Sequence">
+          <Actors selectTriggeringEntities="false">
+            <EntityRef entityRef="adversary3" />
+          </Actors>
+          <Maneuver name="adversary3_Maneuver">
+            <Event name="AssignRouteAction8746" priority="overwrite">
+              <Action name="AssignRouteAction8746">
+                <PrivateAction>
+                  <RoutingAction>
+                    <AssignRouteAction>
+                      <Route name="Route" closed="false">
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="-5.554001" y="13.169" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+						<Waypoint routeStrategy="shortest">
+                          <Position>
+                            <WorldPosition x="-9.554001" y="13.169" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="-27.554" y="13.107" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="-90.575" y="12.921" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                        <Waypoint routeStrategy="fastest">
+                          <Position>
+                            <WorldPosition x="-103.149" y="-8.208" z="0.3" h="0" />
+                          </Position>
+                        </Waypoint>
+                      </Route>
+                    </AssignRouteAction>
+                  </RoutingAction>
+                </PrivateAction>
+              </Action>
+              <StartTrigger>
+                <ConditionGroup>
+                  <Condition name="SimulationTimeCondition31" delay="0" conditionEdge="rising">
+                    <ByValueCondition>
+                      <SimulationTimeCondition value="0" rule="greaterThan" />
+                    </ByValueCondition>
+                  </Condition>
+                </ConditionGroup>
+              </StartTrigger>
+            </Event>
+          </Maneuver>
+        </ManeuverGroup>
+        <StartTrigger />
+      </Act>
+    </Story>
+    <StopTrigger>
+      <ConditionGroup>
+        <Condition name="criteria_RunningStopTest" delay="0" conditionEdge="rising">
+          <ByValueCondition>
+            <ParameterCondition parameterRef="" value="" rule="lessThan"/>
+          </ByValueCondition>
+        </Condition>
+        <Condition name="criteria_RunningRedLightTest" delay="0" conditionEdge="rising">
+          <ByValueCondition>
+            <ParameterCondition parameterRef="" value="" rule="lessThan"/>
+          </ByValueCondition>
+        </Condition>
+        <Condition name="criteria_WrongLaneTest" delay="0" conditionEdge="rising">
+          <ByValueCondition>
+            <ParameterCondition parameterRef="" value="" rule="lessThan"/>
+          </ByValueCondition>
+        </Condition>
+        <Condition name="criteria_OnSidewalkTest" delay="0" conditionEdge="rising">
+          <ByValueCondition>
+            <ParameterCondition parameterRef="" value="" rule="lessThan"/>
+          </ByValueCondition>
+        </Condition>
+        <Condition name="criteria_KeepLaneTest" delay="0" conditionEdge="rising">
+          <ByValueCondition>
+            <ParameterCondition parameterRef="" value="" rule="lessThan"/>
+          </ByValueCondition>
+        </Condition>
+        <Condition name="criteria_CollisionTest" delay="0" conditionEdge="rising">
+          <ByValueCondition>
+            <ParameterCondition parameterRef="" value="" rule="lessThan"/>
+          </ByValueCondition>
+        </Condition>
+        <Condition name="criteria_DrivenDistanceTest" delay="0" conditionEdge="rising">
+          <ByValueCondition>
+            <ParameterCondition parameterRef="distance_success" value="0.01" rule="lessThan"/>
+          </ByValueCondition>
+        </Condition>
+      </ConditionGroup>
+	</StopTrigger>
+  </Storyboard>
+</OpenSCENARIO>

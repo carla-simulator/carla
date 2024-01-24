@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<scenarios>
+    <scenario name="OppositeVehicleRunningRedLight_1" type="OppositeVehicleRunningRedLight" town="Town03">
+        <ego_vehicle x="-2.8" y="-184" z="1" yaw="90" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="OppositeVehicleRunningRedLight_2" type="OppositeVehicleRunningRedLight" town="Town03">
+        <ego_vehicle x="69" y="130" z="1" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="OppositeVehicleRunningRedLight_3" type="OppositeVehicleRunningRedLight" town="Town03">
+        <ego_vehicle x="-48" y="134.7" z="1" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="OppositeVehicleRunningRedLight_4" type="OppositeVehicleRunningRedLight" town="Town04">
+        <ego_vehicle x="274.1" y="-246.2" z="0.3" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="OppositeVehicleRunningRedLight_5" type="OppositeVehicleRunningRedLight" town="Town04">
+        <ego_vehicle x="255" y="-224.4" z="0.1" yaw="90" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+</scenarios>

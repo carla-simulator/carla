@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<OpenSCENARIO>
+  <FileHeader revMajor="0" revMinor="9" date="2020-02-20" description="CARLA:PedestrianCatalog" author="Anja Sheppard"/>
+  <Catalog name="PedestrianCatalog">
+    <Pedestrian model="walker.pedestrian.0001" mass="0.0" name="Pedestrian1" pedestrianCategory="pedestrian">
+      <BoundingBox>
+        <Center x="0.0" y="0.0" z="0.0"/>
+        <Dimensions width="0.0" length="0.0" height="0.0"/>
+      </BoundingBox>
+      <Properties/>
+    </Pedestrian>
+  </Catalog>
+</OpenSCENARIO>

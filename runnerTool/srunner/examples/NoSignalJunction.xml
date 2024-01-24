@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<scenarios>
+    <scenario name="NoSignalJunctionCrossing" type="NoSignalJunctionCrossing" town="Town03">
+        <ego_vehicle x="-74.32" y="-50" z="0.5" yaw="270" model="vehicle.lincoln.mkz_2017" />
+        <other_actor x="-105" y="-136" z="0.5" yaw="0" model="vehicle.tesla.model3" />
+    </scenario>
+</scenarios>

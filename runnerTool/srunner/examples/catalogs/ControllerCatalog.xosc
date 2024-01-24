@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSCENARIO>
+  <FileHeader revMajor="1" revMinor="0" date="2020-03-20T00:00:00" description="CARLA:ControllerCatalog" author="" />
+  <Catalog name="ControllerCatalog">
+    <Controller name="ExternalControl">
+      <Properties>
+        <Property name="module" value="external_control" />
+      </Properties>
+    </Controller>
+  </Catalog>
+</OpenSCENARIO>

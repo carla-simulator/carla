@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<scenarios>
+    <scenario name="ChangeLane_1" type="ChangeLane" town="Town04">
+        <ego_vehicle x="284.4" y="16.4" z="2.5" yaw="-173" model="vehicle.lincoln.mkz_2017" />
+	<!-- spawn actors-->
+	<other_actor x="264.4" y="16.3" z="-500" yaw="-179" model="vehicle.tesla.model3" />
+	<other_actor x="184.4" y="14.9" z="-500" yaw="-176" model="vehicle.volkswagen.t2" />
+        <weather cloudiness="0" precipitation="0" precipitation_deposits="0" wind_intensity="0" sun_azimuth_angle="0" sun_altitude_angle="75" />
+    </scenario>
+    <scenario name="ChangeLane_2" type="ChangeLane" town="Town01">
+        <ego_vehicle x="107" y="133.5" z="0.5" yaw="0" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+</scenarios>

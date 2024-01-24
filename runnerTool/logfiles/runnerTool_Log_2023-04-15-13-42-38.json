@@ -1,0 +1,515 @@
+{
+    "1:  13:40:10": "INFO: Results directory found.",
+    "2:  13:40:10": "INFO: logs directory found.",
+    "3:  13:40:15": "INFO: Carla not Running, Starting exe..",
+    "4:  13:40:27": "INFO: Found scenarios in directory:\naamap6 copy.xosc\t\naamap6.xosc\t\nmap2_close.xosc",
+    "5:  13:40:27": "INFO: Running scenario -> aamap6 copy.xosc...",
+    "6:  13:41:07": "Timeout for aamap6 copy.xosc (30s) expired",
+    "7:  13:41:07": "INFO: Running scenario -> aamap6.xosc...",
+    "8:  13:41:47": "Timeout for aamap6.xosc (30s) expired",
+    "9:  13:41:47": "INFO: Running scenario -> map2_close.xosc...",
+    "10:  13:42:26": "----------------- RESULTS OVERVIEW -----------------",
+    "11:  13:42:26": "SCNEARIO NAMES | SUCCESS",
+    "12:  13:42:26": "1. map2_close | True",
+    "13:  13:42:26": "2. map2_close | True",
+    "14:  13:42:26": "3. map6 | False",
+    "15:  13:42:26": "4. map6 | False",
+    "16:  13:42:26": "5. map6 | False",
+    "17:  13:42:26": "6. map6 | False",
+    "18:  13:42:26": "7. map6 | False",
+    "19:  13:42:26": "----------------------------------------------------",
+    "20:  13:42:26": "Browse Scenario Results (enter 0 to exit, h for help)",
+    "21:  13:42:38": "Exiting results...",
+    "All_Results": {
+        "map2_close2023-04-15-13-35-00.json": {
+            "scenario": "map2_close",
+            "success": true,
+            "criteria": [
+                {
+                    "name": "RunningStopTest",
+                    "actor": "audi.tt-2805",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "RunningRedLightTest",
+                    "actor": "audi.tt-2805",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "WrongLaneTest",
+                    "actor": "audi.tt-2805",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "OnSidewalkTest",
+                    "actor": "audi.tt-2805",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CheckKeepLane",
+                    "actor": "audi.tt-2805",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CollisionTest",
+                    "actor": "audi.tt-2805",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CheckDrivenDistance",
+                    "actor": "audi.tt-2805",
+                    "optional": false,
+                    "expected": 1.0,
+                    "actual": 30.38,
+                    "success": true
+                },
+                {
+                    "name": "Duration",
+                    "actor": "all",
+                    "optional": false,
+                    "expected": 100000,
+                    "actual": 18.864125702530146,
+                    "success": true
+                }
+            ]
+        },
+        "map2_close2023-04-15-13-42-26.json": {
+            "scenario": "map2_close",
+            "success": true,
+            "criteria": [
+                {
+                    "name": "RunningStopTest",
+                    "actor": "audi.tt-337",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "RunningRedLightTest",
+                    "actor": "audi.tt-337",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "WrongLaneTest",
+                    "actor": "audi.tt-337",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "OnSidewalkTest",
+                    "actor": "audi.tt-337",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CheckKeepLane",
+                    "actor": "audi.tt-337",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CollisionTest",
+                    "actor": "audi.tt-337",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CheckDrivenDistance",
+                    "actor": "audi.tt-337",
+                    "optional": false,
+                    "expected": 1.0,
+                    "actual": 30.31,
+                    "success": true
+                },
+                {
+                    "name": "Duration",
+                    "actor": "all",
+                    "optional": false,
+                    "expected": 100000,
+                    "actual": 18.85257599502802,
+                    "success": true
+                }
+            ]
+        },
+        "map62023-04-15-13-33-28.json": {
+            "scenario": "map6",
+            "success": false,
+            "criteria": [
+                {
+                    "name": "RunningStopTest",
+                    "actor": "audi.tt-2538",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "RunningRedLightTest",
+                    "actor": "audi.tt-2538",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "WrongLaneTest",
+                    "actor": "audi.tt-2538",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "OnSidewalkTest",
+                    "actor": "audi.tt-2538",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CheckKeepLane",
+                    "actor": "audi.tt-2538",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CollisionTest",
+                    "actor": "audi.tt-2538",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 3,
+                    "success": false
+                },
+                {
+                    "name": "CheckDrivenDistance",
+                    "actor": "audi.tt-2538",
+                    "optional": false,
+                    "expected": 1.0,
+                    "actual": 40.94,
+                    "success": true
+                },
+                {
+                    "name": "Duration",
+                    "actor": "all",
+                    "optional": false,
+                    "expected": 100000,
+                    "actual": 52.94113351032138,
+                    "success": true
+                }
+            ]
+        },
+        "map62023-04-15-13-34-37.json": {
+            "scenario": "map6",
+            "success": false,
+            "criteria": [
+                {
+                    "name": "RunningStopTest",
+                    "actor": "audi.tt-2572",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "RunningRedLightTest",
+                    "actor": "audi.tt-2572",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "WrongLaneTest",
+                    "actor": "audi.tt-2572",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "OnSidewalkTest",
+                    "actor": "audi.tt-2572",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CheckKeepLane",
+                    "actor": "audi.tt-2572",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CollisionTest",
+                    "actor": "audi.tt-2572",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 4,
+                    "success": false
+                },
+                {
+                    "name": "CheckDrivenDistance",
+                    "actor": "audi.tt-2572",
+                    "optional": false,
+                    "expected": 1.0,
+                    "actual": 43.11,
+                    "success": true
+                },
+                {
+                    "name": "Duration",
+                    "actor": "all",
+                    "optional": false,
+                    "expected": 100000,
+                    "actual": 58.34458837285638,
+                    "success": true
+                }
+            ]
+        },
+        "map62023-04-15-13-39-43.json": {
+            "scenario": "map6",
+            "success": false,
+            "criteria": [
+                {
+                    "name": "RunningStopTest",
+                    "actor": "audi.tt-70",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "RunningRedLightTest",
+                    "actor": "audi.tt-70",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "WrongLaneTest",
+                    "actor": "audi.tt-70",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "OnSidewalkTest",
+                    "actor": "audi.tt-70",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CheckKeepLane",
+                    "actor": "audi.tt-70",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CollisionTest",
+                    "actor": "audi.tt-70",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 1,
+                    "success": false
+                },
+                {
+                    "name": "CheckDrivenDistance",
+                    "actor": "audi.tt-70",
+                    "optional": false,
+                    "expected": 1.0,
+                    "actual": 13.86,
+                    "success": true
+                },
+                {
+                    "name": "Duration",
+                    "actor": "all",
+                    "optional": false,
+                    "expected": 100000,
+                    "actual": 5.272269822657108,
+                    "success": true
+                }
+            ]
+        },
+        "map62023-04-15-13-41-23.json": {
+            "scenario": "map6",
+            "success": false,
+            "criteria": [
+                {
+                    "name": "RunningStopTest",
+                    "actor": "audi.tt-70",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "RunningRedLightTest",
+                    "actor": "audi.tt-70",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "WrongLaneTest",
+                    "actor": "audi.tt-70",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "OnSidewalkTest",
+                    "actor": "audi.tt-70",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CheckKeepLane",
+                    "actor": "audi.tt-70",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CollisionTest",
+                    "actor": "audi.tt-70",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 3,
+                    "success": false
+                },
+                {
+                    "name": "CheckDrivenDistance",
+                    "actor": "audi.tt-70",
+                    "optional": false,
+                    "expected": 1.0,
+                    "actual": 40.19,
+                    "success": true
+                },
+                {
+                    "name": "Duration",
+                    "actor": "all",
+                    "optional": false,
+                    "expected": 100000,
+                    "actual": 24.362495593726635,
+                    "success": true
+                }
+            ]
+        },
+        "map62023-04-15-13-42-02.json": {
+            "scenario": "map6",
+            "success": false,
+            "criteria": [
+                {
+                    "name": "RunningStopTest",
+                    "actor": "audi.tt-104",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "RunningRedLightTest",
+                    "actor": "audi.tt-104",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "WrongLaneTest",
+                    "actor": "audi.tt-104",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "OnSidewalkTest",
+                    "actor": "audi.tt-104",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CheckKeepLane",
+                    "actor": "audi.tt-104",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 0,
+                    "success": true
+                },
+                {
+                    "name": "CollisionTest",
+                    "actor": "audi.tt-104",
+                    "optional": false,
+                    "expected": 0,
+                    "actual": 4,
+                    "success": false
+                },
+                {
+                    "name": "CheckDrivenDistance",
+                    "actor": "audi.tt-104",
+                    "optional": false,
+                    "expected": 1.0,
+                    "actual": 40.79,
+                    "success": true
+                },
+                {
+                    "name": "Duration",
+                    "actor": "all",
+                    "optional": false,
+                    "expected": 100000,
+                    "actual": 27.327397979795933,
+                    "success": true
+                }
+            ]
+        }
+    }
+}

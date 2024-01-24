@@ -1,0 +1,9 @@
+mode: log                      # Either 'log' or 'playback'
+file: test.json                     # path to the file with the controls
+
+
+This is the configuration file of the human agent. This agent incorporates two modes.
+The log mode parses the controls given to the vehicle into a dictionary and records them into a .json file.
+This file can be read by the playback mode to control the vehicle in the same way, resulting in a deterministic agent.
+The file name can be chosen, and is the second argument of this config file.
+

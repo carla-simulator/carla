@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<scenarios>
+    <scenario name="OtherLeadingVehicle_1" type="OtherLeadingVehicle" town="Town04">
+        <ego_vehicle x="388.9" y="-140" z="0" yaw="90" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="OtherLeadingVehicle_2" type="OtherLeadingVehicle" town="Town04">
+        <ego_vehicle x="-510" y="88" z="0" yaw="91" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="OtherLeadingVehicle_3" type="OtherLeadingVehicle" town="Town04">
+        <ego_vehicle x="82" y="249.1" z="0" yaw="-33" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="OtherLeadingVehicle_4" type="OtherLeadingVehicle" town="Town04">
+        <ego_vehicle x="138.9" y="34.9" z="10" yaw="1" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="OtherLeadingVehicle_5" type="OtherLeadingVehicle" town="Town04">
+        <ego_vehicle x="-110" y="9.1" z="9.5" yaw="180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="OtherLeadingVehicle_6" type="OtherLeadingVehicle" town="Town04">
+        <ego_vehicle x="-12.5" y="-17" z="0" yaw="90" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="OtherLeadingVehicle_7" type="OtherLeadingVehicle" town="Town04">
+        <ego_vehicle x="125.5" y="225.1" z="0" yaw="-25" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="OtherLeadingVehicle_8" type="OtherLeadingVehicle" town="Town05">
+        <ego_vehicle x="-226.9" y="100" z="11" yaw="-88" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="OtherLeadingVehicle_9" type="OtherLeadingVehicle" town="Town05">
+        <ego_vehicle x="-10" y="191.1" z="3" yaw="-180" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+    <scenario name="OtherLeadingVehicle_10" type="OtherLeadingVehicle" town="Town05">
+        <ego_vehicle x="188.9" y="-100" z="0" yaw="90" model="vehicle.lincoln.mkz_2017" />
+    </scenario>
+</scenarios>
