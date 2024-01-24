@@ -59,16 +59,16 @@ def FindExecutable(candidates : list):
   return None
 
 DEFAULT_C_COMPILER = FindExecutable([
-  'clang-cl',
   'cl',
+  'clang-cl',
 ] if os.name == 'nt' else [
   'clang',
   'gcc',
 ])
 
 DEFAULT_CPP_COMPILER = FindExecutable([
-  'clang-cl',
   'cl',
+  'clang-cl',
 ] if os.name == 'nt' else [
   'clang++',
   'g++',
@@ -311,7 +311,7 @@ UNREAL_ENGINE_PATH = Path(ARGV.ue_path)
 # Dependencies:
 # Boost
 BOOST_USE_SUPERPROJECT = True
-BOOST_VERSION = (1, 83, 0)
+BOOST_VERSION = (1, 84, 0)
 BOOST_VERSION_MAJOR, BOOST_VERSION_MINOR, BOOST_VERSION_PATCH = BOOST_VERSION
 BOOST_VERSION_STRING = f'{BOOST_VERSION_MAJOR}.{BOOST_VERSION_MINOR}.{BOOST_VERSION_PATCH}'
 BOOST_TOOLSET = ARGV.boost_toolset
@@ -548,9 +548,8 @@ DEFAULT_DEPENDENCIES = [
     GitRepository('https://github.com/carla-simulator/recastnavigation.git', tag_or_branch = 'carla')),
 ] + [
   Dependency(
-      'boost',
-      Download(f'https://boostorg.jfrog.io/artifactory/main/release/{BOOST_VERSION_STRING}/source/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip'),
-      Download(f'https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/boost_{BOOST_VERSION_MAJOR}_{BOOST_VERSION_MINOR}_{BOOST_VERSION_PATCH}.zip')),
+    'boost',
+    Download(f'https://github.com/boostorg/boost/releases/download/boost-{BOOST_VERSION_STRING}/boost-{BOOST_VERSION_STRING}.zip')),
 ] if BOOST_USE_SUPERPROJECT else [
   Dependency(
     'boost-algorithm',
@@ -920,7 +919,6 @@ def BuildAndInstallBoost():
     'threading=multi',
     '--layout=versioned',
     '--with-system',
-    '--with-filesystem',
     '--with-python',
     '--with-date_time',
     f'--build-dir={BOOST_BUILD_PATH}',

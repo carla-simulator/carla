@@ -1,4 +1,6 @@
-cmake_minimum_required (VERSION 3.12.0)
+cmake_minimum_required (VERSION 3.20.0)
+
+cmake_policy (SET CMP0117 NEW)
 
 set (CARLA_VERSION_MAJOR 0)
 set (CARLA_VERSION_MINOR 9)
@@ -124,6 +126,7 @@ endif ()
 
 if (ENABLE_RTTI)
 else ()
+    list (APPEND CARLA_COMMON_DEFINITIONS BOOST_NO_RTTI)
     list (APPEND CARLA_COMMON_DEFINITIONS BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY)
 endif ()
 
@@ -217,7 +220,7 @@ if (BUILD_LIBCARLA_SERVER)
     )
 
     target_include_directories (
-        carla-server PRIVATE
+        carla-server PUBLIC
         ${LIBCARLA_SERVER_INCLUDE_PATHS}
     )
     
@@ -364,7 +367,7 @@ if (BUILD_LIBCARLA_CLIENT)
     )
 
     target_include_directories (
-        carla-client PRIVATE
+        carla-client PUBLIC
         ${LIBCARLA_CLIENT_INCLUDE_PATHS}
     )
 
