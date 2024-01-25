@@ -190,9 +190,7 @@ public class CarlaTools :
 
     var BoostLibraryPatterns = new string[]
     {
-            "boost_atomic*",
             "boost_date_time*",
-            "boost_filesystem*",
             "boost_numpy*",
             "boost_python*",
             "boost_system*",
@@ -215,7 +213,7 @@ public class CarlaTools :
     }
 
     var SQLiteBuildPath = Path.Combine(DependenciesInstallPath, "sqlite-build");
-    var SQLiteLibraryCandidates = Directory.GetFiles(SQLiteBuildPath, GetLibraryName("sqlite*"));
+    var SQLiteLibraryCandidates = Directory.GetFiles(SQLiteBuildPath, GetLibraryName("*sqlite*"));
     if (SQLiteLibraryCandidates.Length == 0)
       throw new FileNotFoundException("Could not find any matching libraries for SQLite");
     var RPCLibCandidates = FindLibraries("rpclib", "rpc");

@@ -177,7 +177,7 @@ public class Carla :
       var LibPath = Path.Combine(InstallPath, "lib");
       var Candidates = Directory.GetFiles(LibPath, GetLibraryName(pattern));
       if (Candidates.Length == 0)
-        Console.WriteLine(string.Format("Could not find any matching libraries for \"{0}\" using pattern \"{1}\"", name, pattern));
+        throw new FileNotFoundException(string.Format("Could not find any matching libraries for \"{0}\" using pattern \"{1}\"", name, pattern));
       Array.Sort(Candidates);
       return Candidates;
     };
@@ -198,9 +198,7 @@ public class Carla :
 
     var BoostLibraryPatterns = new string[]
     {
-        "boost_atomic*",
         "boost_date_time*",
-        "boost_filesystem*",
         "boost_numpy*",
         "boost_python*",
         "boost_system*",
@@ -215,7 +213,10 @@ public class Carla :
     }
 
     var SQLiteBuildPath = Path.Combine(DependenciesInstallPath, "sqlite-build");
-    var SQLiteLibrary = Directory.GetFiles(SQLiteBuildPath, GetLibraryName("sqlite*"))[0];
+    var SqliteCandidates = Directory.GetFiles(SQLiteBuildPath, GetLibraryName("*sqlite*"));
+    if (SqliteCandidates.Length == 0)
+      throw new FileNotFoundException(string.Format("Could not find any matching libraries for SQLite"));
+    var SQLiteLibrary = SqliteCandidates[0];
     var AdditionalLibraries = new List<string>
     {
         LibCarlaServerPath,
@@ -223,7 +224,7 @@ public class Carla :
         FindLibraries("rpclib", "rpc")[0],
         FindLibraries("xercesc", "xerces-c*")[0],
         FindLibraries("proj", "proj")[0],
-        FindLibraries("zlib", "zlibstatic*")[0],
+        FindLibraries("zlib", IsWindows ? "zlibstatic*" : "z")[0], //TODO: Fix this, note that here we have libz.a and libz.so, need to disambiguate
     };
 
     foreach (var Pattern in BoostLibraryPatterns)
