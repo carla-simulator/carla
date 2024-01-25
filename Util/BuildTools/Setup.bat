@@ -367,7 +367,7 @@ FOR /F "usebackq tokens=1,2" %%i in ("%VERSION_FILE%") do (
     set ASSETS_VERSION=%%i
     set HASH=%%j
 )
-set URL=http://carla-assets.s3.amazonaws.com/%HASH%.tar.gz
+set URL=http://carla-assets.s3.us-east-005.backblazeb2.com/%HASH%.tar.gz
 
 rem ============================================================================
 rem -- Generate CMake ----------------------------------------------------------
