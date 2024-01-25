@@ -214,11 +214,6 @@ if (BUILD_LIBCARLA_SERVER)
         ${LIBCARLA_SERVER_SOURCES_THIRD_PARTY}
     )
 
-    target_compile_options (
-        carla-server PRIVATE
-        /EHsc
-    )
-
     target_include_directories (
         carla-server PUBLIC
         ${LIBCARLA_SERVER_INCLUDE_PATHS}
