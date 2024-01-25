@@ -4,10 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <rpc/config.h>
-#include <rpc/rpc_error.h>
-
-#include <sstream>
+#include "PythonAPI.h"
 
 void translator(const rpc::rpc_error &e) {
   std::stringstream ss;
@@ -20,7 +17,5 @@ void translator(const rpc::rpc_error &e) {
 
 void export_exception() {
   using namespace boost::python;
-  namespace cc = carla::client;
-
   register_exception_translator<rpc::rpc_error>(translator);
 }

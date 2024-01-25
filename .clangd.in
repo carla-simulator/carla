@@ -1,2 +1,0 @@
-CompileFlags:
-  CompilationDatabase: ${CARLA_BUILD_PATH}

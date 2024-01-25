@@ -4,10 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <carla/PythonUtil.h>
-#include <carla/client/Actor.h>
-#include <carla/client/ActorList.h>
-#include <carla/client/World.h>
+#include "PythonAPI.h"
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 

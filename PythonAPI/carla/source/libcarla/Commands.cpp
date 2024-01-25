@@ -4,9 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <carla/PythonUtil.h>
-#include <carla/rpc/Command.h>
-#include <carla/rpc/CommandResponse.h>
+#include "PythonAPI.h"
 
 #define TM_DEFAULT_PORT     8000
 
@@ -17,25 +15,25 @@ namespace command_impl {
     return in;
   }
 
-  carla::rpc::ActorId Convert(const std::shared_ptr<carla::client::Actor> &actor) {
+  static auto Convert(const std::shared_ptr<carla::client::Actor> &actor) {
     return actor->GetId();
   }
 
-  carla::rpc::ActorDescription Convert(const carla::client::ActorBlueprint &blueprint) {
+  static auto Convert(const carla::client::ActorBlueprint &blueprint) {
     return blueprint.MakeActorDescription();
   }
 
   template <typename... ArgsT>
-  static boost::python::object CustomInit(boost::python::object self, ArgsT... args) {
+  static auto CustomInit(boost::python::object self, ArgsT... args) {
     return self.attr("__init__")(Convert(args)...);
   }
 
   template <typename... ArgsT>
-  static boost::python::object CustomSpawnActorInit(boost::python::object self, ArgsT... args) {
+  static auto CustomSpawnActorInit(boost::python::object self, ArgsT... args) {
     return self.attr("__init__")(carla::rpc::Command::SpawnActor{Convert(args)...});
   }
 
-  static carla::rpc::Command::SpawnActor Then(
+  static auto Then(
       carla::rpc::Command::SpawnActor &self,
       carla::rpc::Command command) {
     self.do_after.push_back(command);

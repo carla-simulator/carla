@@ -4,78 +4,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <carla/client/BlueprintLibrary.h>
-#include <carla/client/ActorBlueprint.h>
+#include "PythonAPI.h"
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-
-#include <ostream>
-
-namespace carla {
-
-namespace sensor {
-namespace data {
-
-  std::ostream &operator<<(std::ostream &out, const Color &color) {
-    out << "Color(" << std::to_string(color.r)
-        << ',' << std::to_string(color.g)
-        << ',' << std::to_string(color.b)
-        << ',' << std::to_string(color.a) << ')';
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const OpticalFlowPixel &color) {
-    out << "Color(" << std::to_string(color.x)
-        << ',' << std::to_string(color.y) << ')';
-    return out;
-  }
-
-} // namespace data
-} // namespace sensor
-
-namespace client {
-
-  std::ostream &operator<<(std::ostream &out, const ActorAttribute &attr) {
-    using Type = carla::rpc::ActorAttributeType;
-    static_assert(static_cast<uint8_t>(Type::SIZE) == 5u, "Please update this function.");
-    out << "ActorAttribute(id=" << attr.GetId();
-    switch (attr.GetType()) {
-      case Type::Bool:
-        out << ",type=bool,value=" << (attr.As<bool>() ? "True" : "False");
-        break;
-      case Type::Int:
-        out << ",type=int,value=" << attr.As<int>();
-        break;
-      case Type::Float:
-        out << ",type=float,value=" << attr.As<float>();
-        break;
-      case Type::String:
-        out << ",type=str,value=" << attr.As<std::string>();
-        break;
-      case Type::RGBColor:
-        out << ",type=Color,value=" << attr.As<sensor::data::Color>();
-        break;
-      default:
-        out << ",INVALID";
-    }
-    if (!attr.IsModifiable()) {
-      out << "(const)";
-    }
-    out << ')';
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const ActorBlueprint &bp) {
-    out << "ActorBlueprint(id=" << bp.GetId() << ",tags=" << bp.GetTags() << ')';
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const BlueprintLibrary &blueprints) {
-    return PrintList(out, blueprints);
-  }
-
-} // namespace client
-} // namespace carla
 
 void export_blueprint() {
   using namespace boost::python;

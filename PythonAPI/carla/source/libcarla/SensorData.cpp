@@ -4,33 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <carla/PythonUtil.h>
-#include <carla/image/ImageConverter.h>
-#include <carla/image/ImageIO.h>
-#include <carla/image/ImageView.h>
-#include <carla/pointcloud/PointCloudIO.h>
-#include <carla/sensor/SensorData.h>
-#include <carla/sensor/data/CollisionEvent.h>
-#include <carla/sensor/data/IMUMeasurement.h>
-#include <carla/sensor/data/ObstacleDetectionEvent.h>
-#include <carla/sensor/data/Image.h>
-#include <carla/sensor/data/LaneInvasionEvent.h>
-#include <carla/sensor/data/LidarMeasurement.h>
-#include <carla/sensor/data/SemanticLidarMeasurement.h>
-#include <carla/sensor/data/GnssMeasurement.h>
-#include <carla/sensor/data/RadarMeasurement.h>
-#include <carla/sensor/data/DVSEventArray.h>
-
-#include <carla/sensor/data/RadarData.h>
-
+#include "PythonAPI.h"
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-
-#include <ostream>
-#include <iostream>
-#include <cmath>
-#include <vector>
-#include <algorithm>
-#include <thread>
 
 namespace carla {
 namespace sensor {

@@ -1,0 +1,7 @@
+[build-system]
+requires = [ 'scikit-build-core' ]
+build-backend = 'scikit_build_core.build'
+
+[project]
+name = 'carla'
+version = '${CARLA_VERSION}'

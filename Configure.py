@@ -192,6 +192,9 @@ AddCLIFlag(
 AddCLIFlag(
   'rss',
   'Whether to enable RSS.')
+AddCLIFlag(
+  'verbose',
+  'Display extra build information.')
 ADDCLIIntOption(
   'parallelism',
   DEFAULT_PARALLELISM,
@@ -262,10 +265,18 @@ ARGV = SyncArgs()
 SEQUENTIAL = ARGV.configure_sequential
 ENABLE_OSM2ODR = ARGV.osm2odr or ARGV.python_api
 ENABLE_OSM_WORLD_RENDERER = ARGV.osm_world_renderer
-ENABLE_CARLA_UE = ARGV.carla_ue
-ENABLE_PYTHON_API = ARGV.python_api
-ENABLE_LIBCARLA_CLIENT = ARGV.libcarla_client
-ENABLE_LIBCARLA_SERVER = ARGV.libcarla_server
+ENABLE_CARLA_UE = ARGV.carla_ue or True
+ENABLE_PYTHON_API = ARGV.python_api or True
+ENABLE_LIBCARLA_CLIENT = any([
+  ARGV.libcarla_client,
+  ENABLE_PYTHON_API,
+  ENABLE_CARLA_UE
+])
+ENABLE_LIBCARLA_SERVER = any([
+  ARGV.libcarla_server,
+  ENABLE_PYTHON_API,
+  ENABLE_CARLA_UE
+])
 ENABLE_LIBCARLA = any([
   ENABLE_CARLA_UE,
   ENABLE_PYTHON_API,
@@ -482,12 +493,14 @@ def LaunchSubprocessImmediate(
         stdout = file,
         stderr = file)
   else:
+    PIPE = None if ARGV.verbose else subprocess.PIPE
     sp = subprocess.run(
       cmd,
       cwd = working_directory,
-      stdout = subprocess.PIPE,
-      stderr = subprocess.PIPE)
+      stdout = PIPE,
+      stderr = PIPE)
   sp.check_returncode()
+  assert sp.returncode == 0
 
 
 
@@ -681,6 +694,11 @@ class TaskGraph:
     self.tasks = []
     self.sources = []
     self.task_map = {}
+    self.done_count = 0
+    self.active_count = 0
+    self.futures = None
+    self.future_map = None
+    self.task_queue = None
   
   def Reset(self):
     self.tasks = []
@@ -691,8 +709,13 @@ class TaskGraph:
     self.tasks.append(task)
     if len(task.in_edges) == 0:
       self.sources.append(task)
-    self.task_map[task.name] = self.tasks[-1]
+    self.task_map[task.name] = task
     return task
+  
+  def GetTaskByName(self, name : str):
+    r = self.task_map.get(name, None)
+    assert r != None
+    return r
   
   def Validate(self):
     return True
@@ -702,80 +725,81 @@ class TaskGraph:
   
   def Print(self):
     Log(self.ToString())
+  
+  def CheckOutEdges(self, task : Task):
+    if len(task.out_edges) == 0:
+      return
+    for out in task.out_edges:
+      assert out.in_edge_done_count < len(out.in_edges)
+      out.in_edge_done_count += 1
+      if out.in_edge_done_count == len(out.in_edges):
+        self.task_queue.append(out)
+
+  def Flush(self):
+    if self.active_count != 0:
+      done = [ e for e in as_completed(self.futures) ]
+      done_tasks = [ self.future_map[e] for e in done ]
+      for e in done_tasks:
+        e.done = True
+        Log(f'> {e.name} - DONE')
+        self.CheckOutEdges(e)
+      assert self.active_count == len(done_tasks)
+      self.done_count += len(done_tasks)
+      self.active_count = 0
+      self.future_map = {}
+      self.futures = []
+    
+  def ExecuteImpl(self):
+    for task in self.tasks:
+      for in_edge in task.in_edges:
+        assert in_edge != None
+        in_edge.out_edges.append(task)
+    self.task_queue = deque()
+    self.active_count = 0
+    self.done_count = 0
+    assert len(set(self.sources)) == len(self.sources)
+    self.task_queue.extend(self.sources)
+    with ProcessPoolExecutor(self.parallelism) as pool:
+      self.futures = []
+      self.future_map = {}
+      while len(self.task_queue) != 0:
+        while len(self.task_queue) != 0 and self.active_count < self.parallelism:
+          task = self.task_queue.popleft()
+          Log(f'> {task.name} - STARTED')
+          if not self.sequential:
+            self.active_count += 1
+            future = pool.submit(task.Run)
+            self.future_map[future] = task
+            self.futures.append(future)
+          else:
+            task.Run()
+            Log(f'> {task.name} - DONE')
+            task.done = True
+            self.done_count += 1
+            self.CheckOutEdges(task)
+        self.Flush()
 
   def Execute(self, sequential : bool = False):
     if len(self.tasks) == 0:
       return
     Log('-- Running task graph --')
-    self.Print()
+    if ARGV.verbose:
+      self.Print()
     assert self.Validate()
-    prior_sequential = self.sequential
+    Log('-- Started --')
+    SEQ_PRIOR = self.sequential
     self.sequential = sequential
     try:
-      for task in self.tasks:
-        for in_edge in task.in_edges:
-          assert in_edge != None
-          in_edge.out_edges.append(task)
-      task_queue = deque()
-      active_count = 0
-      done_count = 0
-      def UpdateOutEdges(task):
-        nonlocal task_queue
-        if len(task.out_edges) == 0:
-          return
-        for out in task.out_edges:
-          assert out.in_edge_done_count < len(out.in_edges)
-          out.in_edge_done_count += 1
-          if out.in_edge_done_count == len(out.in_edges):
-            task_queue.append(out)
-      def Flush():
-        nonlocal futures
-        nonlocal future_map
-        nonlocal done_count
-        nonlocal active_count
-        if active_count != 0:
-          done = [ e for e in as_completed(futures) ]
-          done_tasks = [ future_map[e] for e in done ]
-          for e in done_tasks:
-            e.done = True
-            Log(f'> {task.name} - DONE')
-            UpdateOutEdges(e)
-          assert active_count == len(done_tasks)
-          done_count += len(done_tasks)
-          active_count = 0
-          future_map = {}
-          futures = []
-      assert len(set(self.sources)) == len(self.sources)
-      task_queue.extend(self.sources)
-      with ProcessPoolExecutor(self.parallelism) as pool:
-        futures = []
-        future_map = {}
-        while len(task_queue) != 0:
-          while len(task_queue) != 0 and active_count < self.parallelism:
-            task = task_queue.popleft()
-            Log(f'> {task.name} - STARTED')
-            if not self.sequential:
-              active_count += 1
-              future = pool.submit(task.Run)
-              future_map[future] = task
-              futures.append(future)
-            else:
-              task.Run()
-              Log(f'> {task.name} - DONE')
-              task.done = True
-              done_count += 1
-              UpdateOutEdges(task)
-          Flush()
-      if done_count != len(self.tasks):
-        pending_tasks = []
-        for e in self.tasks:
-          if not e.done:
-            pending_tasks.append(e)
-        Log(f'> {len(self.tasks) - done_count} did not complete: {pending_tasks}.')
-        assert False
+      self.ExecuteImpl()
+    except Exception as e:
+      Log(e)
+      Log('-- FAILED --')
     finally:
+      if self.done_count != len(self.tasks):
+        pending_tasks = filter(self.tasks, lambda e: e.done)
+        Log(f'> {len(self.tasks) - self.done_count} did not complete: {pending_tasks}.')
       Log('-- Done --')
-      self.sequential = prior_sequential
+      self.sequential = SEQ_PRIOR
       self.Reset()
 
 
@@ -906,7 +930,6 @@ def ConfigureBoost():
 
 
 def BuildAndInstallBoost():
-
   LaunchSubprocessImmediate([
     BOOST_B2_PATH,
     f'-j{PARALLELISM}',
@@ -1295,8 +1318,10 @@ def BuildLibCarlaMain(task_graph : TaskGraph):
     WORKSPACE_PATH,
     LIBCARLA_BUILD_PATH,
     f'-DCARLA_DEPENDENCIES_PATH={DEPENDENCIES_PATH}',
-    f'-DBUILD_LIBCARLA_SERVER={"ON" if ARGV.libcarla_server else "OFF"}',
-    f'-DBUILD_LIBCARLA_CLIENT={"ON" if ARGV.libcarla_client else "OFF"}',
+    f'-DBUILD_CARLA_SERVER={"ON" if ARGV.libcarla_server else "OFF"}',
+    f'-DBUILD_CARLA_CLIENT={"ON" if ARGV.libcarla_client else "OFF"}',
+    f'-DBUILD_PYTHON_API={"ON" if ARGV.python_api else "OFF"}',
+    f'-DENABLE_RSS={"ON" if ARGV.rss else "OFF"}',
     f'-DBUILD_OSM_WORLD_RENDERER={"ON" if ENABLE_OSM_WORLD_RENDERER else "OFF"}',
     f'-DLIBCARLA_PYTORCH={"ON" if ARGV.pytorch else "OFF"}'))
   build_libcarla = task_graph.Add(Task.CreateCMakeBuildDefault(
@@ -1308,28 +1333,6 @@ def BuildLibCarlaMain(task_graph : TaskGraph):
     [ build_libcarla ],
     LIBCARLA_BUILD_PATH,
     LIBCARLA_INSTALL_PATH))
-
-
-
-def BuildPythonAPIMain():
-  content = ''
-  with open(PYTHON_API_PATH / 'setup.py.in', 'r') as file:
-    content = file.read()
-  content = content.format_map(globals())
-  if os.name == 'nt':
-    content = content.replace(os.sep, '\\\\')
-  with open(PYTHON_API_PATH / 'setup.py', 'w') as file:
-    file.write(content)
-  LaunchSubprocessImmediate(
-    [ sys.executable, 'setup.py', 'bdist_egg', 'bdist_wheel' ],
-    working_directory = PYTHON_API_PATH,
-    log_name = 'python-api-build')
-
-
-
-def BuildPythonAPI(task_graph : TaskGraph):
-  install_libcarla = task_graph.task_map.get('libcarla-install')
-  task_graph.Add(Task('python-api-build', [ install_libcarla ], BuildPythonAPIMain))
 
 
 
@@ -1379,9 +1382,7 @@ def BuildCarlaUE(task_graph : TaskGraph):
     task_graph.Add(Task('nv-omniverse-install', [], InstallNVIDIAOmniverse))
   dependencies = []
   if ENABLE_LIBCARLA:
-    dependencies.append(task_graph.task_map.get('libcarla-install'))
-  if ENABLE_PYTHON_API:
-    dependencies.append(task_graph.task_map.get('python-api-build'))
+    dependencies.append(task_graph.GetTaskByName('libcarla-install'))
   task_graph.Add(Task('carla-ue-build', dependencies, BuildCarlaUEMain))
 
 
@@ -1412,6 +1413,7 @@ def Clean():
 
 
 if __name__ == '__main__':
+  task_graph = None
   try:
     task_graph = TaskGraph(PARALLELISM)
     if ARGV.clean or ARGV.rebuild:
@@ -1427,8 +1429,6 @@ if __name__ == '__main__':
       BuildDependencies(task_graph)
     if ENABLE_LIBCARLA:
       BuildLibCarlaMain(task_graph)
-    if ENABLE_PYTHON_API:
-      BuildPythonAPI(task_graph)
     if UPDATE_CARLA_UE_ASSETS:
       UpdateCarlaUEAssets(task_graph)
     if ENABLE_CARLA_UE:
@@ -1436,6 +1436,10 @@ if __name__ == '__main__':
     task_graph.Execute()
   except Exception as err:
     Log(err)
+    if task_graph:
+      Log('Last running tasks:')
+      for k, v in task_graph.future_map:
+        Log(f' - "{k}"')
     Log(DEFAULT_ERROR_MESSAGE)
     exit(-1)
   finally:

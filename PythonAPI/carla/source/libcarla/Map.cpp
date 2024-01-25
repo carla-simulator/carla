@@ -4,33 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <carla/FileSystem.h>
-#include <carla/PythonUtil.h>
-#include <carla/client/Junction.h>
-#include <carla/client/Map.h>
-#include <carla/client/Waypoint.h>
-#include <carla/road/element/LaneMarking.h>
-#include <carla/client/Landmark.h>
-#include <carla/road/SignalType.h>
-
-#include <ostream>
-#include <fstream>
-
-namespace carla {
-namespace client {
-
-  std::ostream &operator<<(std::ostream &out, const Map &map) {
-    out << "Map(name=" << map.GetName() << ')';
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Waypoint &waypoint) {
-    out << "Waypoint(" << waypoint.GetTransform() << ')';
-    return out;
-  }
-
-} // namespace client
-} // namespace carla
+#include "PythonAPI.h"
 
 static void SaveOpenDriveToDisk(const carla::client::Map &self, std::string path) {
   carla::PythonUtil::ReleaseGIL unlock;

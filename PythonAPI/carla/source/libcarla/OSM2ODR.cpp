@@ -4,6 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "PythonAPI.h"
 #include <OSM2ODR.h>
 
 // Empty class to emulate the namespace in the PythonAPI

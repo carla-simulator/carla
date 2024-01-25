@@ -4,34 +4,14 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <carla/client/Actor.h>
-#include <carla/client/TrafficLight.h>
-#include <carla/client/Vehicle.h>
-#include <carla/client/Walker.h>
-#include <carla/client/WalkerAIController.h>
-#include <carla/rpc/TrafficLightState.h>
-#include <carla/trafficmanager/TrafficManager.h>
+#include "PythonAPI.h"
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-#include <ostream>
-#include <iostream>
-
 namespace ctm = carla::traffic_manager;
 
-namespace carla {
-namespace client {
-
-  std::ostream &operator<<(std::ostream &out, const Actor &actor) {
-    out << "Actor(id=" << actor.GetId() << ", type=" << actor.GetTypeId() << ')';
-    return out;
-  }
-
-} // namespace client
-} // namespace carla
-
 template<class T>
-boost::python::list StdVectorToPyList(const std::vector<T> &vec) {
+static auto StdVectorToPyList(const std::vector<T> &vec) {
   boost::python::list l;
   for (auto &e : vec) {
     l.append(e);
@@ -39,7 +19,7 @@ boost::python::list StdVectorToPyList(const std::vector<T> &vec) {
   return l;
 }
 
-static boost::python::list GetSemanticTags(const carla::client::Actor &self) {
+static auto GetSemanticTags(const carla::client::Actor &self) {
   const std::vector<uint8_t> &tags = self.GetSemanticTags();
   return StdVectorToPyList(tags);
 }

@@ -4,13 +4,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <chrono>
-#include <memory>
+#include "PythonAPI.h"
 
-#include "carla/PythonUtil.h"
 #include "boost/python/suite/indexing/vector_indexing_suite.hpp"
-
-#include "carla/client/LightManager.h"
 
 namespace cc = carla::client;
 namespace cr = carla::rpc;

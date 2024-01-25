@@ -1,6 +1,5 @@
 *.egg-info
-setup.py
+pyproject.toml
 build
 dependencies
 dist
-temp/

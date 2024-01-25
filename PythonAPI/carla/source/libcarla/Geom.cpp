@@ -4,81 +4,10 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <carla/geom/BoundingBox.h>
-#include <carla/geom/GeoLocation.h>
-#include <carla/geom/Location.h>
-#include <carla/geom/Rotation.h>
-#include <carla/geom/Transform.h>
-#include <carla/geom/Vector2D.h>
-#include <carla/geom/Vector3D.h>
+#include "PythonAPI.h"
 
 #include <boost/python/implicit.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-
-#include <ostream>
-
-namespace carla {
-namespace geom {
-
-  template <typename T>
-  static void WriteVector2D(std::ostream &out, const char *name, const T &vector2D) {
-    out << name
-        << "(x=" << std::to_string(vector2D.x)
-        << ", y=" << std::to_string(vector2D.y) << ')';
-  }
-
-  template <typename T>
-  static void WriteVector3D(std::ostream &out, const char *name, const T &vector3D) {
-    out << name
-        << "(x=" << std::to_string(vector3D.x)
-        << ", y=" << std::to_string(vector3D.y)
-        << ", z=" << std::to_string(vector3D.z) << ')';
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Vector2D &vector2D) {
-    WriteVector2D(out, "Vector2D", vector2D);
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Vector3D &vector3D) {
-    WriteVector3D(out, "Vector3D", vector3D);
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Location &location) {
-    WriteVector3D(out, "Location", location);
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Rotation &rotation) {
-    out << "Rotation(pitch=" << std::to_string(rotation.pitch)
-        << ", yaw=" << std::to_string(rotation.yaw)
-        << ", roll=" << std::to_string(rotation.roll) << ')';
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Transform &transform) {
-    out << "Transform(" << transform.location << ", " << transform.rotation << ')';
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const BoundingBox &box) {
-    out << "BoundingBox(" << box.location << ", ";
-    WriteVector3D(out, "Extent", box.extent);
-    out << ", " << box.rotation;
-    out << ')';
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const GeoLocation &geo_location) {
-    out << "GeoLocation(latitude=" << std::to_string(geo_location.latitude)
-        << ", longitude=" << std::to_string(geo_location.longitude)
-        << ", altitude=" << std::to_string(geo_location.altitude) << ')';
-    return out;
-  }
-
-} // namespace geom
-} // namespace carla
 
 static void TransformList(const carla::geom::Transform &self, boost::python::list &list) {
   auto length = boost::python::len(list);
