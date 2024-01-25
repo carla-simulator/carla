@@ -127,7 +127,7 @@ pipeline
                             steps
                             {
                                 sh 'git checkout .'
-                                //sh 'make deploy ARGS="--replace-latest"'
+                                sh 'make deploy ARGS="--test"'
                             }
 
                         }
@@ -138,7 +138,7 @@ pipeline
                             steps
                             {
                                 sh 'git checkout .'
-                                //sh 'make deploy ARGS="--replace-latest"'
+                                sh 'make deploy ARGS="--replace-latest"'
                             }
                         }
                         stage('ubuntu deploy master')
@@ -147,13 +147,13 @@ pipeline
                             steps
                             {
                                 sh 'git checkout .'
-                                //sh 'make deploy ARGS="--replace-latest --docker-push"'
+                                sh 'make deploy ARGS="--replace-latest --docker-push"'
                             }
                         }
 
-                        stage('TEST: ubuntu Doxygen generation')
+                        stage('ubuntu Doxygen generation')
                         {
-                            when { branch "ruben/jenkins_migration" }
+                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
                             steps
                             {
                                 sh 'make docs'
@@ -162,9 +162,9 @@ pipeline
                             }
                         }
 
-                        stage('TEST: ubuntu Doxygen upload')
+                        stage('ubuntu Doxygen upload')
                         {
-                            when { branch "ruben/jenkins_migration" }
+                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
                             steps
                             {
                                 checkout scmGit(branches: [[name: '*/master']], extensions: [checkoutOption(120), cloneOption(noTags:false, reference:'', shallow: false, timeout:120)], userRemoteConfigs: [[credentialsId: 'github_token_as_pwd_2', url: 'https://github.com/carla-simulator/carla-simulator.github.io.git']])
@@ -174,8 +174,9 @@ pipeline
                                     tar -xvzf carla_doc.tar.gz
                                     git add Doxygen
                                     git commit -m "Updated c++ docs" || true
+                                    git push
+
                                 '''
-                                // don't forget git push
                             }
                             post
                             {
