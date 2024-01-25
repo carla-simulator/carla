@@ -175,7 +175,7 @@ pipeline
                                     git add Doxygen
                                     git commit -m "Updated c++ docs" || true
                                 '''
-                                // don't forgive git push
+                                // don't forget git push
                             }
                             post
                             {
