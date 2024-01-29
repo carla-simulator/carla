@@ -170,12 +170,14 @@ pipeline
                                 checkout scmGit(branches: [[name: '*/master']], extensions: [checkoutOption(120), cloneOption(noTags:false, reference:'', shallow: false, timeout:120)], userRemoteConfigs: [[credentialsId: 'github_token_as_pwd_2', url: 'https://github.com/carla-simulator/carla-simulator.github.io.git']])
                                 unstash name: 'carla_docs'
                                 
-                                sh '''
-                                    tar -xvzf carla_doc.tar.gz
-                                    git add Doxygen
-                                    git commit -m "Updated c++ docs" || true
-                                    git push
-                                '''
+                                withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
+                                    sh '''
+                                        tar -xvzf carla_doc.tar.gz
+                                        git add Doxygen
+                                        git commit -m "Updated c++ docs" || true
+                                        git push
+                                    '''
+                                }
                             }
                             post
                             {
@@ -203,13 +205,14 @@ pipeline
                             {
                                 checkout scmGit(branches: [[name: '*/ruben/jenkins_migration']], extensions: [checkoutOption(120), cloneOption(noTags:false, reference:'', shallow: false, timeout:120)], userRemoteConfigs: [[credentialsId: 'github_token_as_pwd_2', url: 'https://github.com/carla-simulator/carla-simulator.github.io.git']])
                                 unstash name: 'carla_docs'
-                                
-                                sh '''
-                                    tar -xvzf carla_doc.tar.gz
-                                    git add Doxygen
-                                    git commit -m "Updated c++ docs" || true
-                                    git push
-                                '''
+                                withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
+                                    sh '''
+                                        tar -xvzf carla_doc.tar.gz
+                                        git add Doxygen
+                                        git commit -m "Updated c++ docs" || true
+                                        git push
+                                    '''
+                                }
                             }
                             post
                             {
