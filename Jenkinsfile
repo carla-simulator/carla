@@ -175,7 +175,40 @@ pipeline
                                     git add Doxygen
                                     git commit -m "Updated c++ docs" || true
                                     git push
+                                '''
+                            }
+                            post
+                            {
+                                always
+                                {
+                                    deleteDir()
+                                }
+                            }
+                        }
+                        stage('TEST: ubuntu Doxygen generation')
+                        {
+                            when { branch "ruben/jenkins_migration"; }
+                            steps
+                            {
+                                sh 'make docs'
+                                sh 'tar -czf carla_doc.tar.gz ./Doxygen'
+                                stash includes: 'carla_doc.tar.gz', name: 'carla_docs'
+                            }
+                        }
 
+                        stage('TEST: ubuntu Doxygen upload')
+                        {
+                            when { branch "ruben/jenkins_migration"; }
+                            steps
+                            {
+                                checkout scmGit(branches: [[name: '*/ruben/jenkins_migration']], extensions: [checkoutOption(120), cloneOption(noTags:false, reference:'', shallow: false, timeout:120)], userRemoteConfigs: [[credentialsId: 'github_token_as_pwd_2', url: 'https://github.com/carla-simulator/carla-simulator.github.io.git']])
+                                unstash name: 'carla_docs'
+                                
+                                sh '''
+                                    tar -xvzf carla_doc.tar.gz
+                                    git add Doxygen
+                                    git commit -m "Updated c++ docs" || true
+                                    git push
                                 '''
                             }
                             post
