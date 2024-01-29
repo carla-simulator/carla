@@ -53,7 +53,9 @@ public:
 
 protected:
 
+#if WITH_EDITOR
   virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 
   UFUNCTION(BlueprintImplementableEvent)
   void RefreshWeather(const FWeatherParameters &WeatherParameters);
