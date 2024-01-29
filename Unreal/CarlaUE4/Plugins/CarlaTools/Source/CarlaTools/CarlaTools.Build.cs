@@ -75,7 +75,7 @@ public class CarlaTools :
 
     bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
     PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-    bEnableExceptions = bEnableExceptions || IsWindows;
+    bEnableExceptions = true;
 
     PublicDependencyModuleNames.AddRange(new string[]
     {
