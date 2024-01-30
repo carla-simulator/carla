@@ -225,7 +225,7 @@ pipeline
                                         tar -xvzf carla_doc.tar.gz
                                         git add Doxygen
                                         git commit -m "Updated c++ docs" || true
-                                        git push
+                                        git push --set-upstream origin ruben/jenkins_migration
                                     '''
                                 }
                             }
