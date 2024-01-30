@@ -203,7 +203,20 @@ pipeline
                             when { branch "ruben/jenkins_migration"; }
                             steps
                             {
-                                checkout scmGit(branches: [[name: '*/ruben/jenkins_migration']], extensions: [checkoutOption(120), [[$class: 'LocalBranch', localBranch: "**"]], cloneOption(noTags:false, reference:'', shallow: false, timeout:120)], userRemoteConfigs: [[credentialsId: 'github_token_as_pwd_2', url: 'https://github.com/carla-simulator/carla-simulator.github.io.git']])
+                                checkout scmGit(
+                                    branches: [[name: '*/ruben/jenkins_migration']], 
+                                    extensions: [
+                                        checkoutOption(120), 
+                                        localBranch("**"), 
+                                        cloneOption(noTags:false, reference:'', shallow: false, timeout:120)
+                                    ], 
+                                    userRemoteConfigs: [
+                                        [
+                                            credentialsId: 'github_token_as_pwd_2', 
+                                            url: 'https://github.com/carla-simulator/carla-simulator.github.io.git'
+                                        ]
+                                    ]
+                                )
                                 unstash name: 'carla_docs'
                                 withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
                                     sh '''
