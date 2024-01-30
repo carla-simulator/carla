@@ -201,9 +201,9 @@ pipeline
                         stage('TEST: ubuntu Doxygen upload')
                         {
                             when { branch "ruben/jenkins_migration"; }
-                            dir('doc_repo')
+                            steps
                             {
-                                steps
+                                dir('doc_repo')
                                 {
                                     checkout scmGit(
                                         branches: [[name: '*/ruben/jenkins_migration']], 
@@ -229,15 +229,15 @@ pipeline
                                         '''
                                     }
                                 }
-                                post
+                                
+                            }
+                            post
+                            {
+                                always
                                 {
-                                    always
-                                    {
-                                        deleteDir()
-                                    }
+                                    deleteDir()
                                 }
                             }
-                            
                         }
                     }
                     post
