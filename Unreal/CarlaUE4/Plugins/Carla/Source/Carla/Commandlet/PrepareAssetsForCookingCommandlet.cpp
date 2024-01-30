@@ -16,7 +16,7 @@
 #include "Misc/FileHelper.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
-#include "HAL/PlatformFilemanager.h"
+#include "HAL/PlatformFileManager.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "Carla/MapGen/LargeMapManager.h"

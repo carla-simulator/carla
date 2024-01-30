@@ -17,7 +17,7 @@
 #include "EditorLevelLibrary.h"
 #include "FileHelpers.h"
 #include "GenericPlatform/GenericPlatformFile.h"
-#include "HAL/PlatformFilemanager.h"
+#include "HAL/PlatformFileManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Landscape.h"
