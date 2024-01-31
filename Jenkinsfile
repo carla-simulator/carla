@@ -222,6 +222,8 @@ pipeline
                                     unstash name: 'carla_docs'
                                     withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
                                         sh '''
+                                            pwd
+                                            ls -lh
                                             tar -xvzf carla_doc.tar.gz
                                             git add Doxygen
                                             git commit -m "Updated c++ docs" || true
