@@ -507,7 +507,7 @@ def detect_surrounding_cars(
     world_map = world.get_map()
     ego_vehicle_waypoint = world_map.get_waypoint(ego_location)
     ego_vehicle_road_id = ego_vehicle_waypoint.road_id
-    
+    lanes_exist_futher = lanes_existed_before = False
     # Get all surrounding cars in specified radius
     surrounding_cars = []
     for actor in world.get_actors():
@@ -2847,6 +2847,8 @@ def get_row_col_on_entry_or_exit(
     col_entryExit,
     entry_wps,
     exit_wps,
+    entry_road_id, 
+    exit_road_id,
     entry_city_road,
     exit_city_road,
     entry_city_lane_id, 
@@ -3185,7 +3187,7 @@ def update_matrix(
         )
 
     # get road & lane ids of: entry/exit, city road before and highway road after junction object
-    entry_road_id = []
+    entry_road_id = [] 
     exit_road_id = []
     entry_city_road = []
     exit_city_road = []
@@ -3259,6 +3261,8 @@ def update_matrix(
                 col_entryExit,
                 entry_wps,
                 exit_wps,
+                entry_road_id, 
+                exit_road_id,
                 entry_city_road,
                 exit_city_road,
                 entry_city_lane_id, 
@@ -3774,7 +3778,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
     if (ego_waypoint.is_junction and not highway_junction and get_junction_ahead(ego_waypoint, distance_to_junc) and ("Town04" in world_map.name and (get_junction_ahead(ego_waypoint, distance_to_junc).id not in [459, 870] or ego_waypoint.get_junction().id in [483, 870, 1249]))) \
         or ("Town04" in world_map.name and ego_waypoint.is_junction and junction and junction.id == 1368): 
         street_type = "On junction"
-        # print("Street type:", street_type)
+        #print("Street type:", street_type)
         
         # if junction_shape already detected (should be when ego was before junction), detect other cars
         if junction_shape: 
@@ -3809,7 +3813,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
         or ("Town04" in world_map.name and ego_waypoint.road_id in [2, 593, 3, 12, 13, 879, 880, 886, 467, 477, 468] and get_junction_ahead(ego_waypoint.next(20)[0], distance_to_junc) and get_junction_ahead(ego_waypoint.next(20)[0], distance_to_junc).id not in [459, 870] and not highway_junction) \
             or ("Town04" in world_map.name and junction and junction.id == 1368 and is_junction_ahead(ego_waypoint, distance_to_junc)):
         street_type = "Junction ahead"
-        
+        #print("Street type:", street_type)
         # special case: gas station junctions --> if junction ahead is 459 or 870 update junction bc. the junction objects are too close due to gas station
         if "Town04" in world_map.name and get_junction_ahead(ego_waypoint, distance_to_junc) and get_junction_ahead(ego_waypoint, distance_to_junc).id in [459, 870]:
             junction = get_junction_ahead(ego_waypoint.next(20)[0], distance_to_junc)
@@ -3846,7 +3850,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
         )
 
         if junction_shape != "Error":
-            # print("Street type:", street_type)
+            #print("Street type:", street_type)
             
             # detect ego and insert it into matrix
             matrix = detect_ego_before_junction(
@@ -3880,7 +3884,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
     # 3. Highway entry/exit in front or behind
     elif (is_junction_ahead(ego_waypoint, 80) or (is_junction_behind(ego_waypoint, 40) and street_type == "Highway with entry/exit")) and not on_entry and highway_junction and ego_on_highway and junction_id_skip != junction.id and not check_ego_exit_highway(ego_vehicle, ego_waypoint, highway_forward_vector, highway_shape, current_lanes):
         street_type = "Highway with entry/exit"
-        # print("Street type:", street_type)
+        #print("Street type:", street_type)
         
         # Save ego forward vector for checking if ego is exiting highway: exiting if deviation from forward vector too high
         if distance(ego_location, junction.bounding_box.location) < 30 and not forward_vector_set:
@@ -3933,7 +3937,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
     # 4. ego exiting Highway
     elif check_ego_exit_highway(ego_vehicle, ego_waypoint, highway_forward_vector, highway_shape, current_lanes) and not exit_over:
         street_type = "On highway exit"
-        # print("Street type:", street_type)
+        #print("Street type:", street_type)
         
         # reset forward vector
         if highway_forward_vector and distance(highway_forward_location, ego_location) > 60:
@@ -3946,7 +3950,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
             exit_over = True
             params_snapshot = locals().copy()
             params = update_params(params, params_snapshot)
-            return get_car_detection_matrix(**params, ego_vehicle=ego_vehicle, world=world)
+            return get_car_detection_matrix(**params, ego_vehicle=ego_vehicle, ego_waypoint=ego_waypoint, ego_location=ego_location, world=world)
 
         junction_id_skip = junction.id
 
@@ -3980,7 +3984,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
     # 5. Highway entry
     elif (is_junction_ahead(ego_waypoint, 20) or (len(current_lanes) <= 1 and ego_waypoint.is_junction)) and highway_junction and street_type in  ["Non highway street", "On junction", "On highway entry", "On highway exit"]:
         street_type = "On highway entry"
-        # print("Street type:", street_type)
+        #print("Street type:", street_type)
         on_entry = True
         
         junction = get_junction_ahead(ego_waypoint, 20)
@@ -4025,7 +4029,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
             street_type = "On highway"
         else:
             street_type = "Non highway street"
-        # print("Street type:", street_type)
+        #print("Street type:", street_type)
         
         matrix = create_basic_matrix(ego_location, road_lane_ids, world_map)
         # special road (gas station), fix 

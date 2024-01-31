@@ -20,7 +20,7 @@ def main(config = None):
     # Load original Scenario
     repo_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
     xosc_file = os.path.join(repo_dir, "runnerTool/scenarios/", scenarioFolder, xosc_file_name)
-
+    print(xosc_file)
 
     # Setup Carla
     client = carla.Client("localhost", 2000)
@@ -36,13 +36,14 @@ def main(config = None):
         world_map = world.get_map()
         for intensity in config["intensity_levels"]:
             # Define the directory path
-            dir_path = os.path.join(repo_dir, scenarioFolder, f"intensity_{str(intensity)}")
+            dir_path = os.path.join(repo_dir, "runnerTool/scenarios/", scenarioFolder, f"intensity_{str(intensity)}")
 
             # Check if the directory exists, if not create it
             if not os.path.exists(dir_path):
                 os.makedirs(dir_path)
 
             change(root, world_map, config=config, intensity=intensity)
+            print(os.path.join(dir_path, f"modified_{i}.xosc"))
             # Save
             tree.write(os.path.join(dir_path, f"modified_{i}.xosc"))
 

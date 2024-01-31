@@ -15,9 +15,22 @@ This library encompasses functions to collect the following sensor data from a v
 
 ## Usage
 
+### Quickstart with [example python notebook ](/PythonAPI/SensorDataCollection/car_detection_playground.ipynb): 
+1. Package runterladen +  conda env python 3.8
+2. carla library installieren: carla/Dist/CARLA_Shipping_f38eea6e-dirty/LinuxNoEditor/PythonAPI/carla/dist/carla-0.9.14-cp38-cp38-linux_x86_64.whl
+3. Start Caral Server
+4. Load map: python3 repos/carla/PythonAPI/util/config.py --map=Town04
+5. Start manual Car: python3 repos/carla/PythonAPI/examples/manual_control.py
+
+For more detailed installation guide refer to the [Carla ReadMe](https://github.com/carla-simulator/carla).
+ 
+
+### General usage:
 To use the data collection functions, simply import all functions from the utils.py script. Then, create a game loop and call the desired functions to get the sensor data for every tick. Some functions need to track additional information in each tick, which must be initialized in the beginning and updated in the end of the every iteration of the game loop.
 
 See sub-sections for more details.
+
+## Sensor Data Functions
 
 ### Speed
 

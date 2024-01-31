@@ -290,7 +290,7 @@ class ScenarioRunner(object):
             filename = config_name + current_time + ".txt"
 
         # save sensor data
-        sensor_data_path = json_filename[:-5] + "_sensor_data.json"
+        sensor_data_path = json_filename[:-5] + "_sensor_data.csv"
         self._save_sensor_data(sensor_data_path)
 
         if not self.manager.analyze_scenario(self._args.output, filename, junit_filename, json_filename):

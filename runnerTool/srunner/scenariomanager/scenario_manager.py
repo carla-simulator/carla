@@ -34,7 +34,7 @@ from srunner.scenariomanager.watchdog import Watchdog
 
 from srunner.scenariomanager.actorcontrols.visualizer import Visualizer
 
-from PythonAPI.CarDetection.utils import *
+from PythonAPI.SensorDataCollection.utils import *
 
 class ScenarioManager(object):
 
