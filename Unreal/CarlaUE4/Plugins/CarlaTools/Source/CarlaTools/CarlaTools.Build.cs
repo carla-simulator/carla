@@ -75,7 +75,7 @@ public class CarlaTools :
 
     bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
     PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-    bEnableExceptions = bEnableExceptions || IsWindows;
+    bEnableExceptions = true;
 
     PublicDependencyModuleNames.AddRange(new string[]
     {
@@ -190,9 +190,7 @@ public class CarlaTools :
 
     var BoostLibraryPatterns = new string[]
     {
-            "boost_atomic*",
             "boost_date_time*",
-            "boost_filesystem*",
             "boost_numpy*",
             "boost_python*",
             "boost_system*",
@@ -215,13 +213,13 @@ public class CarlaTools :
     }
 
     var SQLiteBuildPath = Path.Combine(DependenciesInstallPath, "sqlite-build");
-    var SQLiteLibraryCandidates = Directory.GetFiles(SQLiteBuildPath, GetLibraryName("sqlite*"));
+    var SQLiteLibraryCandidates = Directory.GetFiles(SQLiteBuildPath, GetLibraryName("*sqlite*"));
     if (SQLiteLibraryCandidates.Length == 0)
       throw new FileNotFoundException("Could not find any matching libraries for SQLite");
     var RPCLibCandidates = FindLibraries("rpclib", "rpc");
     var XercesCCandidates = FindLibraries("xercesc", "xerces-c*");
     var PROJCandidates = FindLibraries("proj", "proj");
-    var ZlibCandidates = FindLibraries("zlib", "zlibstatic*");
+    var ZlibCandidates = FindLibraries("zlib", IsWindows ? "zlibstatic*" : "z"); //TODO: Fix this, note that here we have libz.a and libz.so, need to disambiguate
 
     var AdditionalLibraries = new List<string>
     {

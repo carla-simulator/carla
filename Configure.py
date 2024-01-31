@@ -1004,16 +1004,19 @@ def BuildSQLite():
         '/EHsc',
       ])
       obj_path = BUILD_TEMP_PATH / f'{e.name}{OBJ_EXT}'
-      if C_COMPILER_CLI_TYPE:
+      if C_COMPILER_CLI_TYPE != 'gnu':
         cmd.extend([ e, f'/Fo{obj_path}' ])
       else:
         cmd.extend([ e, '-o', obj_path ])
       LaunchSubprocessImmediate(cmd, log_name = f'sqlite-{e.stem}-build')
       objs.append(obj_path)
     cmd = [
-      LIB,
-      f'/OUT:{SQLITE_LIB_PATH}',
+      LIB
     ]
+    if os.name == 'nt':
+      cmd.append(f'/OUT:{SQLITE_LIB_PATH}')
+    else:
+      cmd.extend(['rsc', SQLITE_LIB_PATH])
     cmd.extend(objs)
     LaunchSubprocessImmediate(cmd, log_name = 'sqlite-lib-build')
 
