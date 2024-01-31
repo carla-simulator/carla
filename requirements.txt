@@ -1,2 +1,3 @@
 psutil
 requests
+scikit-build-core

@@ -22,7 +22,20 @@ macro (carla_string_option NAME DESCRIPTION VALUE)
     set (${NAME} ${VALUE} CACHE STRING ${DESCRIPTION})
 endmacro ()
 
-carla_string_option (CARLA_DEPENDENCIES_PATH "Where to build CARLA dependencies." ${CARLA_BUILD_PATH}/Dependencies)
+carla_string_option (
+    CARLA_DEPENDENCIES_PATH
+    "Where to build CARLA dependencies."
+    ${CARLA_BUILD_PATH}/Dependencies)
+
+carla_string_option (
+    CARLA_DEPENDENCIES_INSTALL_PREFIX
+    "Where to install CARLA dependencies."
+    ${CMAKE_CURRENT_SOURCE_DIR}/Install)
+
+set (
+    CMAKE_INSTALL_PREFIX
+    ${CARLA_DEPENDENCIES_INSTALL_PREFIX}
+)
 
 option (BUILD_CARLA_CLIENT "Build the LibCarla client." OFF)
 option (BUILD_CARLA_SERVER "Build the LibCarla server." OFF)
@@ -52,45 +65,26 @@ set (LIBCARLA_SOURCE_PATH ${CARLA_WORKSPACE_PATH}/LibCarla/source)
 set (LIBCARLA_THIRD_PARTY_SOURCE_PATH ${LIBCARLA_SOURCE_PATH}/third-party)
 set (PYTHON_API_PATH ${CARLA_WORKSPACE_PATH}/PythonAPI)
 
-if (ENABLE_OSM2ODR)
-    set (SUMO_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/sumo-install/include)
-    set (SUMO_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/sumo-install/lib)
-endif ()
-set (EIGEN_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/eigen-install/include)
-set (EIGEN_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/eigen-install/lib)
-set (CHRONO_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/chrono-install/include)
-set (CHRONO_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/chrono-install/lib)
-
 set (EXTERNAL_DEPENDENCY_LIST)
 
 macro (carla_declare_git_dependency NAME URL TAG)
-    # ExternalProject_Add(
-    #     ${NAME}
-    #     GIT_REPOSITORY ${URL}
-    #     GIT_TAG ${TAG}
-    #     GIT_SHALLOW TRUE
-    #     PREFIX ${CARLA_DEPENDENCIES_PATH}
-    #     INSTALL_DIR ${CARLA_DEPENDENCIES_PATH}/Install/${NAME}
-    #     SOURCE_DIR ${CARLA_DEPENDENCIES_PATH}/Source/${NAME}
-    #     BINARY_DIR ${CARLA_DEPENDENCIES_PATH}/Build/${NAME}
-    #     TMP_DIR ${CARLA_DEPENDENCIES_PATH}/Intermediate/${NAME}
-    #     STAMP_DIR ${CARLA_DEPENDENCIES_PATH}/Stamp/${NAME}
-    #     ${ARGN})
-    # list (APPEND EXTERNAL_DEPENDENCY_LIST ${NAME})
+    ExternalProject_Add (
+        ${NAME}
+        GIT_REPOSITORY ${URL}
+        GIT_TAG ${TAG}
+        GIT_SHALLOW TRUE
+        ${ARGN}
+    )
+    list (APPEND EXTERNAL_DEPENDENCY_LIST ${NAME})
 endmacro ()
 
 macro (carla_declare_download_dependency NAME URL)
-    #FetchContent_Declare(
-    #    ${NAME}
-    #    URL ${URL}
-    #    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    #    INSTALL_DIR ${CARLA_DEPENDENCIES_PATH}/Install/${NAME}
-    #    SOURCE_DIR ${CARLA_DEPENDENCIES_PATH}/Source/${NAME}
-    #    BINARY_DIR ${CARLA_DEPENDENCIES_PATH}/Build/${NAME}
-    #    TMP_DIR ${CARLA_DEPENDENCIES_PATH}/Intermediate/${NAME}
-    #    STAMP_DIR ${CARLA_DEPENDENCIES_PATH}/Stamp/${NAME}
-    #    ${ARGN})
-    #FetchContent_MakeAvailable(${NAME})
+    FetchContent_Declare (
+        ${NAME}
+        URL ${URL}
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+        ${ARGN})
+    FetchContent_MakeAvailable (${NAME})
 endmacro ()
 
 if (WIN32)
@@ -113,37 +107,45 @@ function (carla_find_library OUT_RESULT PATTERN)
     return (PROPAGATE ${OUT_RESULT})
 endfunction ()
 
+set (CARLA_DEFAULT_DEPENDENCY_ARGS)
 
-
+if (CMAKE_C_COMPILER)
+    list (APPEND CARLA_DEFAULT_DEPENDENCY_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER})
+endif ()
+if (CMAKE_INSTALL_PREFIX)
+    list (APPEND CARLA_DEFAULT_DEPENDENCY_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX})
+endif ()
+if (CMAKE_CXX_COMPILER)
+    list (APPEND CARLA_DEFAULT_DEPENDENCY_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER})
+endif ()
+if (CMAKE_BUILD_TYPE)
+    list (APPEND CARLA_DEFAULT_DEPENDENCY_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
+endif ()
 
 # --- BOOST ---
 
 carla_string_option (CARLA_BOOST_TAG "Target boost git tag." boost-1.84.0)
 
-carla_declare_git_dependency(
+set (
+    REQUIRED_BOOST_LIBRARIES
+    algorithm
+    python
+    iterator
+    asio
+)
+
+carla_declare_git_dependency (
     boost
     https://github.com/boostorg/boost.git
     ${CARLA_BOOST_TAG}
-    GIT_SUBMODULES
-        system
-        algorithm
-        python
-        gil
-        iterator
-        assert
-        date_time
-        asio
-        geometry
-        cmake
+    INSTALL_COMMAND ""
     CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        ${CARLA_DEFAULT_DEPENDENCY_ARGS}
+        -DBOOST_INCLUDE_LIBRARIES="${REQUIRED_BOOST_LIBRARIES}"
         -DBOOST_ENABLE_PYTHON=ON)
 
-set (BOOST_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/boost-install/include)
-set (BOOST_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/boost-install/lib)
+set (BOOST_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/Install/boost/include)
+set (BOOST_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/Install/boost/lib)
 
 
 
@@ -151,19 +153,21 @@ set (BOOST_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/boost-install/lib)
 
 carla_string_option (CARLA_ZLIB_TAG "Target zlib git tag." v1.3.1)
 
-carla_declare_git_dependency(
+carla_declare_git_dependency (
     zlib
     https://github.com/madler/zlib.git
     ${CARLA_ZLIB_TAG}
     CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        ${CARLA_DEFAULT_DEPENDENCY_ARGS}
         -DBUILD_SHARED_LIBS=OFF)
 
-set (ZLIB_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-install/include)
-set (ZLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-install/lib)
+set (ZLIB_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/Install/zlib/include)
+set (ZLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/Install/zlib/lib)
+set (
+    ZLIB_INCLUDE_PATHS
+    ${CARLA_DEPENDENCIES_PATH}/Source/zlib
+    ${CARLA_DEPENDENCIES_PATH}/Build/zlib
+)
 
 
 
@@ -171,25 +175,23 @@ set (ZLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-install/lib)
 
 carla_string_option (CARLA_LIBPNG_TAG "Target libpng git tag." v1.6.40)
 
-carla_declare_git_dependency(
+carla_declare_git_dependency (
     libpng
     https://github.com/glennrp/libpng.git
     ${CARLA_LIBPNG_TAG}
+    INSTALL_COMMAND ""
+    DEPENDS
+        zlib
     CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        ${CARLA_DEFAULT_DEPENDENCY_ARGS}
         -DPNG_TESTS=OFF
         -DPNG_SHARED=OFF
-        -DPNG_TOOLS=OFF
-        -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_PATHS}
-        -DZLIB_LIBRARIES=${ZLIB_LIBRARIES})
+        -DPNG_TOOLS=OFF)
 
-# add_dependencies (libpng zlib)
+add_dependencies (libpng zlib)
 
-set (LIBPNG_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/libpng-install/include)
-set (LIBPNG_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/libpng-install/lib)
+set (LIBPNG_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/Install/libpng/include)
+set (LIBPNG_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/Install/libpng/lib)
 
 
 
@@ -201,27 +203,23 @@ carla_string_option (CARLA_SQLITE_VERSION_PATCH "Target SQLite version" 0000)
 
 set (SQLITE_TAG ${CARLA_SQLITE_VERSION_MAJOR}${CARLA_SQLITE_VERSION_MINOR}${CARLA_SQLITE_VERSION_PATCH})
 
-carla_declare_download_dependency(
+carla_declare_download_dependency (
     sqlite3
-    https://www.sqlite.org/2024/sqlite-amalgamation-${SQLITE_TAG}.zip)
+    https://www.sqlite.org/2024/sqlite-amalgamation-${SQLITE_TAG}.zip
+)
 
-set (SQLITE_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/sqlite-source)
-set (SQLITE_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/sqlite-build)
-
-#[[
 add_library (
-    sqlite3-lib STATIC
-    ${SQLITE3_SOURCE_PATH}/sqlite3.h
-    ${SQLITE3_SOURCE_PATH}/sqlite3.c
+    libsqlite3 STATIC
+    ${sqlite3_SOURCE_DIR}/sqlite3.h
+    ${sqlite3_SOURCE_DIR}/sqlite3.c
 )
 
 add_executable (
-    sqlite3-exe
-    ${SQLITE3_SOURCE_PATH}/shell.c
+    sqlite3
+    ${sqlite3_SOURCE_DIR}/shell.c
 )
 
-target_link_libraries (sqlite3-exe PRIVATE sqlite3-lib)
-]]
+target_link_libraries (sqlite3 PRIVATE libsqlite3)
 
 
 
@@ -229,18 +227,16 @@ target_link_libraries (sqlite3-exe PRIVATE sqlite3-lib)
 
 carla_string_option (CARLA_PROJ_TAG "Target PROJ git tag." 7.2.1)
 
-carla_declare_git_dependency(
+carla_declare_git_dependency (
     proj
     https://github.com/OSGeo/PROJ.git
     ${CARLA_PROJ_TAG}
+    INSTALL_COMMAND ""
     CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DSQLITE3_INCLUDE_DIR=${SQLITE3_SOURCE_PATH}
-        -DSQLITE3_LIBRARY=$<TARGET_FILE:sqlite3-lib>
-        -DEXE_SQLITE3=$<TARGET_FILE:sqlite3-exe>
+        ${CARLA_DEFAULT_DEPENDENCY_ARGS}
+        -DSQLITE3_INCLUDE_DIR=${sqlite3_SOURCE_DIR}
+        -DSQLITE3_LIBRARY=$<TARGET_FILE:libsqlite3>
+        -DEXE_SQLITE3=$<TARGET_FILE:sqlite3>
         -DWIN32_LEAN_AND_MEAN=1
         -DVC_EXTRALEAN=1
         -DNOMINMAX=1
@@ -256,10 +252,10 @@ carla_declare_git_dependency(
         -DBUILD_PROJ=OFF
         -DBUILD_TESTING=OFF)
 
-# add_dependencies (proj sqlite3-lib)
+add_dependencies (proj libsqlite3)
 
-set (PROJ_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/proj-install/include)
-set (PROJ_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/proj-install/lib)
+set (PROJ_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/Install/proj/include)
+set (PROJ_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/Install/proj/lib)
 
 
 
@@ -267,18 +263,18 @@ set (PROJ_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/proj-install/lib)
 
 carla_string_option (CARLA_GTEST_TAG "Target googletest git tag." v1.14.0)
 
-carla_declare_git_dependency(
+carla_declare_git_dependency (
     gtest
     https://github.com/google/googletest.git
     ${CARLA_GTEST_TAG}
+    INSTALL_COMMAND ""
     CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+        ${CARLA_DEFAULT_DEPENDENCY_ARGS}
         -DBUILD_GMOCK=OFF
-        -DINSTALL_GTEST=OFF
         -DGTEST_HAS_ABSL=OFF)
 
-set (GOOGLETEST_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/gtest-install/include)
-set (GOOGLETEST_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/gtest-install/lib)
+set (GOOGLETEST_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/Install/gtest/include)
+set (GOOGLETEST_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/Install/gtest/lib)
 
 
 
@@ -286,19 +282,17 @@ set (GOOGLETEST_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/gtest-install/lib)
 
 carla_string_option (CARLA_XERCESC_TAG "Target xerces-c git tag." v3.2.4)
 
-carla_declare_git_dependency(
+carla_declare_git_dependency (
     xercesc
     https://github.com/apache/xerces-c.git
     ${CARLA_XERCESC_TAG}
+    INSTALL_COMMAND ""
     CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        ${CARLA_DEFAULT_DEPENDENCY_ARGS}
         -DBUILD_SHARED_LIBS=OFF)
 
-set (XERCESC_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/xercesc-install/include)
-set (XERCESC_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/xercesc-install/lib)
+set (XERCESC_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/Install/xercesc/include)
+set (XERCESC_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/Install/xercesc/lib)
 
 
 
@@ -306,15 +300,13 @@ set (XERCESC_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/xercesc-install/lib)
 
 carla_string_option (CARLA_RPCLIB_TAG "Target rpclib git tag." carla)
 
-carla_declare_git_dependency(
+carla_declare_git_dependency (
     rpclib
     https://github.com/carla-simulator/rpclib.git
     ${CARLA_RPCLIB_TAG}
+    INSTALL_COMMAND ""
     CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        ${CARLA_DEFAULT_DEPENDENCY_ARGS}
         -DRPCLIB_BUILD_TESTS=OFF
         -DRPCLIB_GENERATE_COMPDB=OFF
         -DRPCLIB_BUILD_EXAMPLES=OFF
@@ -322,8 +314,8 @@ carla_declare_git_dependency(
         -DRPCLIB_ENABLE_COVERAGE=OFF
         -DRPCLIB_MSVC_STATIC_RUNTIME=OFF)
 
-set (RPCLIB_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/rpclib-install/include)
-set (RPCLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/rpclib-install/lib)
+set (RPCLIB_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/Install/rpclib/include)
+set (RPCLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/Install/rpclib/lib)
 
 
 
@@ -331,21 +323,19 @@ set (RPCLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/rpclib-install/lib)
 
 carla_string_option (CARLA_RECAST_TAG "Target recastnavigation git tag." carla)
 
-carla_declare_git_dependency(
+carla_declare_git_dependency (
     recastnavigation
     https://github.com/carla-simulator/recastnavigation.git
     ${CARLA_RECAST_TAG}
+    INSTALL_COMMAND ""
     CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        ${CARLA_DEFAULT_DEPENDENCY_ARGS}
         -DRECASTNAVIGATION_DEMO=OFF
         -DRECASTNAVIGATION_TESTS=OFF
         -DRECASTNAVIGATION_EXAMPLES=OFF)
 
-set (RECAST_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/recast-install/include)
-set (RECAST_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/recast-install/lib)
+set (RECAST_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/Install/recast/include)
+set (RECAST_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/Install/recast/lib)
 
 
 
@@ -702,6 +692,7 @@ if (BUILD_PYTHON_API)
     project (carla-python-api)
 
     set (Python_USE_STATIC_LIBS ON)
+
     find_package (
         Python
         COMPONENTS
@@ -748,6 +739,10 @@ if (BUILD_PYTHON_API)
         ${PYTHON_API_SOURCES}
         WITH_SOABI)
     
+    if (EXTERNAL_DEPENDENCY_LIST)
+        add_dependencies (carla-python-api ${EXTERNAL_DEPENDENCY_LIST})
+    endif ()
+
     target_compile_definitions (
         carla-python-api
         PRIVATE
@@ -765,17 +760,17 @@ if (BUILD_PYTHON_API)
         ${PYTHON_API_SOURCE_PATH}
         ${SUMO_INCLUDE_PATH})
     
-    carla_find_library (BOOST_LIBRARY ${CARLA_DEPENDENCIES_PATH}/boost-install/lib/*boost_python*${LIB_EXT})
-    carla_find_library (RPCLIB_LIBRARY ${CARLA_DEPENDENCIES_PATH}/rpclib-install/lib/*rpc*${LIB_EXT})
-    carla_find_library (LIBPNG_LIBRARY ${CARLA_DEPENDENCIES_PATH}/libpng-install/lib/*libpng*_static*${LIB_EXT})
-    carla_find_library (ZLIB_LIBRARY ${CARLA_DEPENDENCIES_PATH}/zlib-install/lib/*zlib${LIB_EXT})
-    carla_find_library (RECAST_LIBRARY ${CARLA_DEPENDENCIES_PATH}/recast-install/lib/*Recast${LIB_EXT})
-    carla_find_library (DETOUR_LIBRARY ${CARLA_DEPENDENCIES_PATH}/recast-install/lib/*Detour${LIB_EXT})
-    carla_find_library (DETOURCROWD_LIBRARY ${CARLA_DEPENDENCIES_PATH}/recast-install/lib/*DetourCrowd${LIB_EXT})
-    carla_find_library (XERCESC_LIBRARY ${CARLA_DEPENDENCIES_PATH}/xercesc-install/lib/*xerces-c*${LIB_EXT})
-    carla_find_library (OSM2ODR_LIBRARY ${CARLA_DEPENDENCIES_PATH}/sumo-install/lib/*osm2odr${LIB_EXT})
-    carla_find_library (SQLITE_LIBRARY ${CARLA_DEPENDENCIES_PATH}/sqlite-build/*sqlite*${LIB_EXT})
-    carla_find_library (PROJ_LIBRARY ${CARLA_DEPENDENCIES_PATH}/proj-install/lib/*proj${LIB_EXT})
+    # carla_find_library (BOOST_LIBRARY ${CARLA_DEPENDENCIES_PATH}/Install/boost/lib/*boost_python*${LIB_EXT})
+    # carla_find_library (RPCLIB_LIBRARY ${CARLA_DEPENDENCIES_PATH}/Install/rpclib/lib/*rpc*${LIB_EXT})
+    # carla_find_library (LIBPNG_LIBRARY ${CARLA_DEPENDENCIES_PATH}/Install/libpng/lib/*libpng*_static*${LIB_EXT})
+    # carla_find_library (ZLIB_LIBRARY ${CARLA_DEPENDENCIES_PATH}/Install/zlib/lib/*zlib${LIB_EXT})
+    # carla_find_library (RECAST_LIBRARY ${CARLA_DEPENDENCIES_PATH}/Install/recast/lib/*Recast${LIB_EXT})
+    # carla_find_library (DETOUR_LIBRARY ${CARLA_DEPENDENCIES_PATH}/Install/recast/lib/*Detour${LIB_EXT})
+    # carla_find_library (DETOURCROWD_LIBRARY ${CARLA_DEPENDENCIES_PATH}/Install/recast/lib/*DetourCrowd${LIB_EXT})
+    # carla_find_library (XERCESC_LIBRARY ${CARLA_DEPENDENCIES_PATH}/Install/xercesc/lib/*xerces-c*${LIB_EXT})
+    # carla_find_library (OSM2ODR_LIBRARY ${CARLA_DEPENDENCIES_PATH}/Install/sumo/lib/*osm2odr${LIB_EXT})
+    # carla_find_library (SQLITE_LIBRARY ${CARLA_DEPENDENCIES_PATH}/Build/sqlite/*sqlite*${LIB_EXT})
+    # carla_find_library (PROJ_LIBRARY ${CARLA_DEPENDENCIES_PATH}/Install/proj/lib/*proj${LIB_EXT})
 
     set (
         PYTHON_API_LIBRARY_DEPENDENCIES

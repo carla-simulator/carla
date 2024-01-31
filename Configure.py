@@ -262,8 +262,8 @@ ARGV = SyncArgs()
 SEQUENTIAL = ARGV.configure_sequential
 ENABLE_OSM2ODR = ARGV.osm2odr or ARGV.python_api
 ENABLE_OSM_WORLD_RENDERER = ARGV.osm_world_renderer
-ENABLE_CARLA_UE = ARGV.carla_ue or True
-ENABLE_PYTHON_API = ARGV.python_api or True
+ENABLE_CARLA_UE = ARGV.carla_ue
+ENABLE_PYTHON_API = ARGV.python_api
 ENABLE_LIBCARLA_CLIENT = any([
   ARGV.libcarla_client,
   ENABLE_PYTHON_API,
