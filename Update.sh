@@ -41,8 +41,8 @@ done
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-MAX_PARALLELL_DOWNLOADS=1
-MAX_CONNECTIONS_PER_SERVER=1
+MAX_PARALLELL_DOWNLOADS=16
+MAX_CONNECTIONS_PER_SERVER=16
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pushd "$SCRIPT_DIR" >/dev/null
