@@ -3778,7 +3778,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
     if (ego_waypoint.is_junction and not highway_junction and get_junction_ahead(ego_waypoint, distance_to_junc) and ("Town04" in world_map.name and (get_junction_ahead(ego_waypoint, distance_to_junc).id not in [459, 870] or ego_waypoint.get_junction().id in [483, 870, 1249]))) \
         or ("Town04" in world_map.name and ego_waypoint.is_junction and junction and junction.id == 1368): 
         street_type = "On junction"
-        #print("Street type:", street_type)
+        print("Street type:", street_type)
         
         # if junction_shape already detected (should be when ego was before junction), detect other cars
         if junction_shape: 
@@ -3850,7 +3850,7 @@ def get_car_detection_matrix(ego_vehicle, ego_waypoint, ego_location, world, jun
         )
 
         if junction_shape != "Error":
-            #print("Street type:", street_type)
+            print("Street type:", street_type)
             
             # detect ego and insert it into matrix
             matrix = detect_ego_before_junction(
