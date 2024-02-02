@@ -452,7 +452,7 @@ To export the map as part of a complete CARLA package, such that the map is avai
 +MapsToCook=(FilePath="/Game/Carla/Maps/MyMap")
 ```
 
-In the `[/Script/UnrealEd.ProjectPackagingSettings]` section, preferably next to the other `MapsToCook(...)` entries. Then run `make package` command to build a package containing your map. The exported CARLA package with your map will be saved in the `Dist` folder on Linux and the `/Build/UE4Carla/` folder on Windows.
+This line should be added in the `[/Script/UnrealEd.ProjectPackagingSettings]` section, preferably next to the other `MapsToCook(...)` entries. Then run `make package` command to build a package containing your map. The exported CARLA package with your map will be saved in the `Dist` folder on Linux and the `/Build/UE4Carla/` folder on Windows.
 
 ---
 
