@@ -737,7 +737,7 @@ The following tags are currently available (Note, tags changed from version 0.9.
 | `19`           | Bicycle        | `(119, 11, 32)`   | Bicylces      |
 | `20`           | Static         | `(110, 190, 160)`            | Elements in the scene and props that are immovable. <br> E.g. fire hydrants, fixed benches, fountains, bus stops, etc.    |
 | `21`           | Dynamic        | `(170, 120, 50)`             | Elements whose position is susceptible to change over time. <br> E.g. Movable trash bins, buggies, bags, wheelchairs, animals, etc.         |
-| `22`           | Other          | `(55, 90, 80)`    | Everything that does not belong to any other category.  |
+| `22`           | Other          | `(55, 90, 80)`    | Other objects   |
 | `23`           | Water          | `(45, 60, 150)`  | Horizontal water surfaces. <br> E.g. Lakes, sea, rivers.   |
 | `24`           | RoadLine       | `(157, 234, 50)`             | The markings on the road.    |
 | `25`           | Ground         | `(81, 0, 81)`    | Any horizontal ground-level structures that does not match any other category. For example areas shared by vehicles and pedestrians, or flat roundabouts delimited from the road by a curb.        |
