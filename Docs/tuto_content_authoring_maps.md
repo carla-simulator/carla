@@ -23,7 +23,7 @@ In this tutorial we will cover the process of creating a simple map for use with
 * __[Trees and vegetation](#trees-and-vegetation)__
     * [Foliage tool](#foliage-tool)
 * __[Exporting a map](#exporting-a-map)__
-    * [Exporting a map as a separate package](#exporting-a-map-as-a-single-map-package-for-import-into-a-standalone-packaged-carla-installation)
+    * [Exporting a map as a separate package](#exporting-a-map-as-a-separate-package)
     * [Exporting a map as part of a complete CARLA package](#exporting-a-map-as-part-of-a-complete-carla-package)
 
 
