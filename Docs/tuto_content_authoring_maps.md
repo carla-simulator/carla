@@ -431,7 +431,7 @@ The `<mapPackage>` must point to a json file located in `CARLA_ROOT/Unreal/Carla
 {
   "maps": [
     {
-        "path": "/Game/Carla/Maps/MyMap",
+        "path": "/Game/Carla/Maps/",
         "name": "MyMap",
         "use_carla_materials": true
       }
