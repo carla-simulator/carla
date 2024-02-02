@@ -23,6 +23,8 @@ In this tutorial we will cover the process of creating a simple map for use with
 * __[Trees and vegetation](#trees-and-vegetation)__
     * [Foliage tool](#foliage-tool)
 * __[Exporting a map](#exporting-a-map)__
+    * [Exporting a map as a separate package](#exporting-a-map-as-a-single-map-package-for-import-into-a-standalone-packaged-carla-installation)
+    * [Exporting a map as part of a complete CARLA package](#exporting-a-map-as-part-of-a-complete-carla-package)
 
 
 
@@ -415,6 +417,8 @@ Drag your desired foliage item into the box labeled `+ Drop Foliage Here`. Set a
 
 ## Exporting a map
 
+### Exporting a map as a separate package
+
 To export a map as a map package that can be ingested into a standalone CARLA package installation, use the `make package` command as follows:
 
 ```sh
@@ -436,7 +440,19 @@ The `<mapPackage>` must point to a json file located in `CARLA_ROOT/Unreal/Carla
 }
 ```
 
-Your map should be saved as `MyMap.umap` file in the `CARLA_ROOT/Unreal/CarlaUE4/Content/Carla/Maps` directory. 
+Your map should have been saved as `MyMap.umap` file in the `CARLA_ROOT/Unreal/CarlaUE4/Content/Carla/Maps` directory. 
+
+The exported map archive will be saved in the `Dist` folder on Linux and the `/Build/UE4Carla/` folder on Windows.
+
+### Exporting a map as part of a complete CARLA package
+
+To export the map as part of a complete CARLA package, such that the map is available on launch of the package, include the following line in the `DefaultGame.ini` file in `CARLA_ROOT/Unreal/CarlaUE4/Config/`:
+
+```
++MapsToCook=(FilePath="/Game/Carla/Maps/MyMap")
+```
+
+In the `[/Script/UnrealEd.ProjectPackagingSettings]` section, preferably next to the other `MapsToCook(...)` entries. Then run `make package` command to build a package containing your map. The exported CARLA package with your map will be saved in the `Dist` folder on Linux and the `/Build/UE4Carla/` folder on Windows.
 
 ---
 
