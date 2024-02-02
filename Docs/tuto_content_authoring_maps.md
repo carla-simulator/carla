@@ -22,6 +22,7 @@ In this tutorial we will cover the process of creating a simple map for use with
     * [Next steps](#next-steps)
 * __[Trees and vegetation](#trees-and-vegetation)__
     * [Foliage tool](#foliage-tool)
+* __[Exporting a map](#exporting-a-map)__
 
 
 
@@ -408,6 +409,36 @@ A useful tool for trees and vegetation is the [__Unreal Engine foliage tool__](h
 Drag your desired foliage item into the box labeled `+ Drop Foliage Here`. Set an appropriate density in the density field, then paint into the map with your foliage item. 
 
 ![foliage_paint](img/tuto_content_authoring_maps/foliage_paint.gif)
+
+
+---
+
+## Exporting a map
+
+To export a map as a map package that can be ingested into a standalone CARLA package installation, use the `make package` command as follows:
+
+```sh
+make package ARGS="--packages=<mapPackage>"
+```
+
+The `<mapPackage>` must point to a json file located in `CARLA_ROOT/Unreal/CarlaUE4/Content/Carla/Config` named *mapPackage.json* which has the following structure:
+
+```json
+{
+  "maps": [
+    {
+        "path": "/Game/Carla/Maps/MyMap",
+        "name": "MyMap",
+        "use_carla_materials": true
+      }
+  ],
+  "props": []
+}
+```
+
+Your map should be saved as `MyMap.umap` file in the `CARLA_ROOT/Unreal/CarlaUE4/Content/Carla/Maps` directory. 
+
+---
 
 ## Next steps
 
