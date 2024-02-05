@@ -943,9 +943,10 @@ def BuildSQLite():
   if not SQLITE_EXE_PATH.exists():
     cmd = [ C_COMPILER ]
     cmd.extend([
-      f'-std=c{C_STANDARD}',
+      f'-std=c89',
       f'-fuse-ld={LINKER}',
       '-O2',
+      '-Wno-error=int-conversion',
     ] if C_COMPILER_CLI_TYPE == 'gnu' else [
       f'/std:c{C_STANDARD}',
       '/O2',
@@ -970,9 +971,10 @@ def BuildSQLite():
         '-c' if C_COMPILER_CLI_TYPE == 'gnu' else '/c',
       ]
       cmd.extend([
-        f'-std=c{C_STANDARD}',
+        f'-std=c89',
         '-march=native',
         '-O2',
+        '-Wno-error=int-conversion',
       ] if C_COMPILER_CLI_TYPE == 'gnu' else [
         f'/std:c{C_STANDARD}',
         '/O2',
