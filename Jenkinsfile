@@ -121,6 +121,7 @@ pipeline
                             }
                         }
                         
+                        /*
                         stage('TEST: ubuntu deploy sim')
                         {
                             when { branch "ruben/jenkins_migration"; }
@@ -131,6 +132,7 @@ pipeline
                             }
 
                         }
+                        */
 
                         stage('ubuntu deploy dev')
                         {
@@ -167,26 +169,38 @@ pipeline
                             when { anyOf { branch "master"; branch "dev"; buildingTag() } }
                             steps
                             {
-                                checkout scmGit(branches: [[name: '*/master']], extensions: [checkoutOption(120), cloneOption(noTags:false, reference:'', shallow: false, timeout:120)], userRemoteConfigs: [[credentialsId: 'github_token_as_pwd_2', url: 'https://github.com/carla-simulator/carla-simulator.github.io.git']])
-                                unstash name: 'carla_docs'
-                                
-                                withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
-                                    sh '''
-                                        tar -xvzf carla_doc.tar.gz
-                                        git add Doxygen
-                                        git commit -m "Updated c++ docs" || true
-                                        git push
-                                    '''
-                                }
-                            }
-                            post
-                            {
-                                always
+                                dir('doc_repo')
                                 {
-                                    deleteDir()
+                                    checkout scmGit(
+                                        branches: [[name: '*/master']], 
+                                        extensions: [
+                                            checkoutOption(120), 
+                                            localBranch("**"), 
+                                            cloneOption(noTags:false, reference:'', shallow: false, timeout:120)
+                                        ], 
+                                        userRemoteConfigs: 
+                                        [
+                                            [
+                                                credentialsId: 'github_token_as_pwd_2', 
+                                                url: 'https://github.com/carla-simulator/carla-simulator.github.io.git'
+                                            ]
+                                        ]
+                                    )
+                                    unstash name: 'carla_docs'
+                                    withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) 
+                                    {
+                                        sh '''
+                                            tar -xvzf carla_doc.tar.gz
+                                            git add Doxygen
+                                            git commit -m "Updated c++ docs" || true
+                                            git push --set-upstream origin master
+                                        '''
+                                    }
                                 }
+                                
                             }
                         }
+                        /*
                         stage('TEST: ubuntu Doxygen generation')
                         {
                             when { branch "ruben/jenkins_migration"; }
@@ -197,50 +211,50 @@ pipeline
                                 stash includes: 'carla_doc.tar.gz', name: 'carla_docs'
                             }
                         }
-
-                        stage('TEST: ubuntu Doxygen upload')
-                        {
-                            when { branch "ruben/jenkins_migration"; }
-                            steps
-                            {
-                                dir('doc_repo')
-                                {
-                                    checkout scmGit(
-                                        branches: [[name: '*/ruben/jenkins_migration']], 
-                                        extensions: [
-                                            checkoutOption(120), 
-                                            localBranch("**"), 
-                                            cloneOption(noTags:false, reference:'', shallow: false, timeout:120)
-                                        ], 
-                                        userRemoteConfigs: [
-                                            [
-                                                credentialsId: 'github_token_as_pwd_2', 
-                                                url: 'https://github.com/carla-simulator/carla-simulator.github.io.git'
-                                            ]
-                                        ]
-                                    )
-                                    unstash name: 'carla_docs'
-                                    withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
-                                        sh '''
-                                            pwd
-                                            ls -lh
-                                            tar -xvzf carla_doc.tar.gz
-                                            git add Doxygen
-                                            git commit -m "Updated c++ docs" || true
-                                            git push --set-upstream origin ruben/jenkins_migration
-                                        '''
-                                    }
-                                }
-                                
-                            }
-                            post
-                            {
-                                always
-                                {
-                                    deleteDir()
-                                }
-                            }
-                        }
+                        */
+                        
+                        // stage('TEST: ubuntu Doxygen upload')
+                        // {
+                        //     when { branch "ruben/jenkins_migration"; }
+                        //     steps
+                        //     {
+                        //         dir('doc_repo')
+                        //         {
+                        //             checkout scmGit(
+                        //                 branches: [[name: '*/ruben/jenkins_migration']], 
+                        //                 extensions: [
+                        //                     checkoutOption(120), 
+                        //                     localBranch("**"), 
+                        //                     cloneOption(noTags:false, reference:'', shallow: false, timeout:120)
+                        //                 ], 
+                        //                 userRemoteConfigs: [
+                        //                     [
+                        //                         credentialsId: 'github_token_as_pwd_2', 
+                        //                         url: 'https://github.com/carla-simulator/carla-simulator.github.io.git'
+                        //                     ]
+                        //                 ]
+                        //             )
+                        //             unstash name: 'carla_docs'
+                        //             withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
+                        //                 sh '''
+                        //                     pwd
+                        //                     ls -lh
+                        //                     tar -xvzf carla_doc.tar.gz
+                        //                     git add Doxygen
+                        //                     git commit -m "Updated c++ docs" || true
+                        //                     git push --set-upstream origin ruben/jenkins_migration
+                        //                 '''
+                        //             }
+                        //         }      
+                        //     }
+                        //     post
+                        //     {
+                        //         always
+                        //         {
+                        //             deleteDir()
+                        //         }
+                        //     }
+                        // }
                     }
                     post
                     {
