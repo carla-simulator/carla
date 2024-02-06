@@ -17,7 +17,7 @@ pipeline
             {
                 stage('ubuntu')
                 {
-                    agent { label "ubuntu" }
+                    agent { label "gpu" }
                     environment
                     {
                         UE4_ROOT = '/home/jenkins/UnrealEngine_4.26'
@@ -96,7 +96,6 @@ pipeline
                         }
                         stage('ubuntu smoke tests')
                         {
-                            agent { label "ubuntu && gpu" }
                             steps
                             {
                                 unstash name: 'ubuntu_eggs'
