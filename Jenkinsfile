@@ -11,28 +11,13 @@ pipeline
 
     stages
     {
-        stage('Creating nodes')
-        {
-            agent { label "master" }
-            steps
-            {
-                script
-                {
-                    JOB_ID = "${env.BUILD_TAG}"
-                    jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
-
-                    jenkinsLib.CreateUbuntuBuildNode(JOB_ID)
-                    jenkinsLib.CreateWindowsBuildNode(JOB_ID)
-                }
-            }
-        }
         stage('Building CARLA')
         {
             parallel
             {
                 stage('ubuntu')
                 {
-                    agent { label "ubuntu && build && ${JOB_ID}" }
+                    agent { label "ubuntu" }
                     environment
                     {
                         UE4_ROOT = '/home/jenkins/UnrealEngine_4.26'
@@ -44,7 +29,7 @@ pipeline
                             steps
                             {
                                 sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
-                                sh 'make setup ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
+                                sh 'make setup ARGS="--python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
                             }
                         }
                         stage('ubuntu build')
@@ -52,7 +37,7 @@ pipeline
                             steps
                             {
                                 sh 'make LibCarla'
-                                sh 'make PythonAPI ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
+                                sh 'make PythonAPI ARGS="--python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"'
                                 sh 'make CarlaUE4Editor ARGS="--chrono"'
                                 sh 'make plugins'
                                 sh 'make examples'
@@ -72,7 +57,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make check ARGS="--all --xml --python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
+                                sh 'make check ARGS="--all --xml --python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"'
                             }
                             post
                             {
@@ -94,8 +79,8 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make package ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
-                                sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
+                                sh 'make package ARGS="--python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
+                                sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
                             post
@@ -107,24 +92,11 @@ pipeline
                                     // stash includes: 'Dist/AdditionalMaps*.tar.gz', name: 'ubuntu_package2'
                                     stash includes: 'Examples/', name: 'ubuntu_examples'
                                 }
-                                success
-                                {
-                                    node('master')
-                                    {
-                                        script
-                                        {
-                                            JOB_ID = "${env.BUILD_TAG}"
-                                            jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
-
-                                            jenkinsLib.CreateUbuntuTestNode(JOB_ID)
-                                        }
-                                    }
-                                }
                             }
                         }
                         stage('ubuntu smoke tests')
                         {
-                            agent { label "ubuntu && gpu && ${JOB_ID}" }
+                            agent { label "ubuntu && gpu" }
                             steps
                             {
                                 unstash name: 'ubuntu_eggs'
@@ -135,7 +107,7 @@ pipeline
                                 sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
                                 // sh 'tar -xvzf Dist/AdditionalMaps*.tar.gz -C Dist/'
                                 sh 'DISPLAY= ./Dist/CarlaUE4.sh -nullrhi -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
-                                sh 'make smoke_tests ARGS="--xml --python-version=3.7 --target-wheel-platform=manylinux_2_27_x86_64"'
+                                sh 'make smoke_tests ARGS="--xml --python-version=3.8 --target-wheel-platform=manylinux_2_27_x86_64"'
                                 sh 'make run-examples ARGS="localhost 3654"'
                             }
                             post
@@ -145,19 +117,21 @@ pipeline
                                     archiveArtifacts 'CarlaUE4.log'
                                     junit 'Build/test-results/smoke-tests-*.xml'
                                     deleteDir()
-                                    node('master')
-                                    {
-                                        script
-                                        {
-                                            JOB_ID = "${env.BUILD_TAG}"
-                                            jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
-
-                                            jenkinsLib.DeleteUbuntuTestNode(JOB_ID)
-                                        }
-                                    }
                                 }
                             }
                         }
+                        
+                        stage('TEST: ubuntu deploy sim')
+                        {
+                            when { branch "ruben/jenkins_migration"; }
+                            steps
+                            {
+                                sh 'git checkout .'
+                                sh 'make deploy ARGS="--test"'
+                            }
+
+                        }
+
                         stage('ubuntu deploy dev')
                         {
                             when { branch "dev"; }
@@ -176,26 +150,88 @@ pipeline
                                 sh 'make deploy ARGS="--replace-latest --docker-push"'
                             }
                         }
-                        stage('ubuntu Doxygen')
+
+                        stage('ubuntu Doxygen generation')
                         {
                             when { anyOf { branch "master"; branch "dev"; buildingTag() } }
                             steps
                             {
-                                sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
-                                sh '''
-                                    cd ~/carla-simulator.github.io
-                                    git remote set-url origin git@docs:carla-simulator/carla-simulator.github.io.git
-                                    git fetch
-                                    git checkout -B master origin/master
-                                '''
                                 sh 'make docs'
-                                sh 'cp -rf ./Doxygen ~/carla-simulator.github.io/'
-                                sh '''
-                                    cd ~/carla-simulator.github.io
-                                    git add Doxygen
-                                    git commit -m "Updated c++ docs" || true
-                                    git push
-                                '''
+                                sh 'tar -czf carla_doc.tar.gz ./Doxygen'
+                                stash includes: 'carla_doc.tar.gz', name: 'carla_docs'
+                            }
+                        }    
+                        
+                        stage('ubuntu Doxygen upload')
+                        {
+                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
+                            steps
+                            {
+                                checkout scmGit(branches: [[name: '*/master']], extensions: [checkoutOption(120), cloneOption(noTags:false, reference:'', shallow: false, timeout:120)], userRemoteConfigs: [[credentialsId: 'github_token_as_pwd_2', url: 'https://github.com/carla-simulator/carla-simulator.github.io.git']])
+                                unstash name: 'carla_docs'
+                                
+                                withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
+                                    sh '''
+                                        tar -xvzf carla_doc.tar.gz
+                                        git add Doxygen
+                                        git commit -m "Updated c++ docs" || true
+                                        git push
+                                    '''
+                                }
+                            }
+                            post
+                            {
+                                always
+                                {
+                                    deleteDir()
+                                }
+                            }
+                        }
+                        stage('TEST: ubuntu Doxygen generation')
+                        {
+                            when { branch "ruben/jenkins_migration"; }
+                            steps
+                            {
+                                sh 'make docs'
+                                sh 'tar -czf carla_doc.tar.gz ./Doxygen'
+                                stash includes: 'carla_doc.tar.gz', name: 'carla_docs'
+                            }
+                        }
+
+                        stage('TEST: ubuntu Doxygen upload')
+                        {
+                            when { branch "ruben/jenkins_migration"; }
+                            steps
+                            {
+                                dir('doc_repo')
+                                {
+                                    checkout scmGit(
+                                        branches: [[name: '*/ruben/jenkins_migration']], 
+                                        extensions: [
+                                            checkoutOption(120), 
+                                            localBranch("**"), 
+                                            cloneOption(noTags:false, reference:'', shallow: false, timeout:120)
+                                        ], 
+                                        userRemoteConfigs: [
+                                            [
+                                                credentialsId: 'github_token_as_pwd_2', 
+                                                url: 'https://github.com/carla-simulator/carla-simulator.github.io.git'
+                                            ]
+                                        ]
+                                    )
+                                    unstash name: 'carla_docs'
+                                    withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
+                                        sh '''
+                                            pwd
+                                            ls -lh
+                                            tar -xvzf carla_doc.tar.gz
+                                            git add Doxygen
+                                            git commit -m "Updated c++ docs" || true
+                                            git push --set-upstream origin ruben/jenkins_migration
+                                        '''
+                                    }
+                                }
+                                
                             }
                             post
                             {
@@ -211,23 +247,14 @@ pipeline
                         always
                         {
                             deleteDir()
-
-                            node('master')
-                            {
-                                script
-                                {
-                                    JOB_ID = "${env.BUILD_TAG}"
-                                    jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
-
-                                    jenkinsLib.DeleteUbuntuBuildNode(JOB_ID)
-                                }
-                            }
                         }
                     }
                 }
+                /*
                 stage('windows')
                 {
-                    agent { label "windows && build && ${JOB_ID}" }
+                
+                    agent { label "windows" }
                     environment
                     {
                         UE4_ROOT = 'C:\\UE_4.26'
@@ -239,11 +266,11 @@ pipeline
                             steps
                             {
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject
                                 """
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     make setup ARGS="--chrono"
                                 """
                             }
@@ -253,19 +280,19 @@ pipeline
                             steps
                             {
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     make LibCarla
                                 """
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     make PythonAPI
                                 """
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     make CarlaUE4Editor ARGS="--chrono"
                                 """
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     make plugins
                                 """
                             }
@@ -283,7 +310,7 @@ pipeline
                             steps
                             {
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     call Update.bat
                                 """
                             }
@@ -293,11 +320,11 @@ pipeline
                             steps
                             {
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     make package ARGS="--chrono"
                                 """
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate"
                                 """
                             }
@@ -307,37 +334,29 @@ pipeline
                                 }
                             }
                         }
+                        
                         stage('windows deploy')
                         {
                             when { anyOf { branch "master"; branch "dev"; buildingTag() } }
                             steps {
                                 bat """
-                                    call ../setEnv64.bat
+                                    call C:\\Users\\jenkins\\setEnv64.bat
                                     git checkout .
-                                    make deploy ARGS="--replace-latest"
+                                    REM make deploy ARGS="--replace-latest"
                                 """
                             }
                         }
+                        
                     }
                     post
                     {
                         always
                         {
                             deleteDir()
-
-                            node('master')
-                            {
-                                script
-                                {
-                                    JOB_ID = "${env.BUILD_TAG}"
-                                    jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
-
-                                    jenkinsLib.DeleteWindowsBuildNode(JOB_ID)
-                                }
-                            }
                         }
                     }
-                }
+                }*/
+                
             }
         }
     }
