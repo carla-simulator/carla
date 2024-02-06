@@ -54,13 +54,6 @@ Python_add_library(
     WITH_SOABI
 )
 
-if (EXTERNAL_DEPENDENCY_LIST)
-    add_dependencies (
-      carla-python-api
-      ${EXTERNAL_DEPENDENCY_LIST}
-    )
-endif ()
-
 target_compile_definitions (
     carla-python-api
     PRIVATE

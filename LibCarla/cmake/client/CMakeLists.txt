@@ -9,7 +9,7 @@ if (BUILD_RSS_VARIANT)
   set(ADRSS_INCLUDE_DIRS)
   set(ADRSS_LIBS)
 
-  find_package(spdlog CONFIG REQUIRED
+  find_package (spdlog CONFIG REQUIRED
     HINTS ${ADRSS_INSTALL_DIR}/spdlog/)
   get_target_property(spdlog_include_dirs spdlog::spdlog INTERFACE_INCLUDE_DIRECTORIES)
   get_target_property(spdlog_file spdlog::spdlog LOCATION)

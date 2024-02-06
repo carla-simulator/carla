@@ -13,10 +13,10 @@ file(GLOB libcarla_pytorch_sources
     "${libcarla_source_path}/carla/pytorch/*.cpp")
 
 set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
-find_package(Torch REQUIRED)
-find_package(TorchScatter REQUIRED)
-find_package(TorchCluster REQUIRED)
-find_package(Python3 REQUIRED)
+find_package (Torch REQUIRED)
+find_package (TorchScatter REQUIRED)
+find_package (TorchCluster REQUIRED)
+find_package (Python3 REQUIRED)
 
 set(PYTORCH_CPP_STD_INCLUDES "/usr/include/c++/7")
 

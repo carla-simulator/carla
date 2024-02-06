@@ -6,6 +6,17 @@ configure_file (
   ${LIBCARLA_SOURCE_PATH}/carla/Version.h
 )
 
+if (BUILD_CARLA_SERVER OR BUILD_CARLA_CLIENT)
+  find_package (
+    Boost
+    ${CARLA_BOOST_VERSION} EXACT
+  )
+  
+  if (NOT ${Boost_FOUND})
+    include (${CARLA_WORKSPACE_PATH}/CMake/BuildBoost.cmake)
+  endif ()
+endif ()
+
 if (BUILD_CARLA_SERVER)
 
     project (
@@ -82,12 +93,16 @@ if (BUILD_CARLA_SERVER)
         ${LIBCARLA_SERVER_SOURCES_THIRD_PARTY}
     )
 
-    if (EXTERNAL_DEPENDENCY_LIST)
-        add_dependencies (carla-server ${EXTERNAL_DEPENDENCY_LIST})
-    endif ()
-
+    target_link_libraries (
+      carla-server PRIVATE
+      Boost::asio
+      Boost::algorithm
+      Boost::assert
+    )
+    
     target_include_directories (
       carla-server PRIVATE
+      ${Boost_INCLUDE_DIRS}
       ${LIBCARLA_SOURCE_PATH}
     )
 
@@ -240,10 +255,18 @@ if (BUILD_CARLA_CLIENT)
         ${LIBCARLA_CLIENT_HEADERS_THIRD_PARTY}
         ${LIBCARLA_CLIENT_SOURCES_THIRD_PARTY}
     )
-
-    if (EXTERNAL_DEPENDENCY_LIST)
-        add_dependencies (carla-client ${EXTERNAL_DEPENDENCY_LIST})
-    endif ()
+    
+    target_include_directories (
+      carla-client PRIVATE
+      ${Boost_INCLUDE_DIRS}
+    )
+    
+    target_link_libraries (
+      carla-client PRIVATE
+      Boost::asio
+      Boost::algorithm
+      Boost::assert
+    )
     
     target_include_directories (
       carla-client PRIVATE

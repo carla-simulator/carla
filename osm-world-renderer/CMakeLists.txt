@@ -16,13 +16,6 @@ add_library (
     ${OSM_RENDERER_PATH}/OsmRenderer/src/MapRasterizer.cpp
 )
 
-if (EXTERNAL_DEPENDENCY_LIST)
-    add_dependencies (
-      lib-osm-map-renderer
-      ${EXTERNAL_DEPENDENCY_LIST}
-    )
-endif ()
-
 target_include_directories (
     lib-osm-map-renderer PUBLIC
     ${OSM_RENDERER_PATH}/OsmRenderer/include

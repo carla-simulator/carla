@@ -76,7 +76,7 @@ install(FILES ${libcarla_carla_ros2_headers} DESTINATION include/carla/ros2)
 
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
 
-if(WIN32)
+if (WIN32)
   file(GLOB boostlibs
       "${BOOST_LIB_PATH}/libboost_date_time-*-mt-*.lib"
       "${BOOST_LIB_PATH}/libboost_system-*-mt-*.lib"
