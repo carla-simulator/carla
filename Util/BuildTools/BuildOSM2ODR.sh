@@ -79,6 +79,7 @@ if ${BUILD_OSM2ODR} ; then
   # [ ! -d ${OSM2ODR_BUILD_FOLDER} ] && mkdir ${OSM2ODR_BUILD_FOLDER}
   if ${GIT_PULL} ; then
     if [ ! -d ${OSM2ODR_SOURCE_FOLDER} ] ; then
+      echo "git clone -b ${OSM2ODR_BRANCH} ${OSM2ODR_REPO} ${OSM2ODR_SOURCE_FOLDER}"
       git clone -b ${OSM2ODR_BRANCH} ${OSM2ODR_REPO} ${OSM2ODR_SOURCE_FOLDER}
     fi
     cd ${OSM2ODR_SOURCE_FOLDER}
