@@ -223,11 +223,13 @@ public class CarlaTools :
 
     var AdditionalLibraries = new List<string>
     {
+        LibCarlaServerPath,
         SQLiteLibraryCandidates[0],
         RPCLibCandidates[0],
         XercesCCandidates[0],
         PROJCandidates[0],
         ZlibCandidates[0],
+        "/home/xsole/programing/UnrealEngine5_carla_clang16/Engine/Source/ThirdParty/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu/libc++.a",
     };
 
     if (EnableOSM2ODR)
