@@ -202,11 +202,13 @@ pipeline
                             when { branch "ruben/jenkins_migration"; }
                             steps
                             {
-                                dir('doc_repo')
+                                
+                                dir('${env.WORKSPACE}/doc_repo')
                                 {
                                     checkout scmGit(
                                         branches: [[name: '*/ruben/jenkins_migration']], 
                                         extensions: [
+                                            cleanBeforeCheckout(),
                                             checkoutOption(120), 
                                             localBranch("**"), 
                                             cloneOption(noTags:false, reference:'', shallow: false, timeout:120)
@@ -232,20 +234,6 @@ pipeline
                                 }
                                 
                             }
-                            post
-                            {
-                                always
-                                {
-                                    deleteDir()
-                                }
-                            }
-                        }
-                    }
-                    post
-                    {
-                        always
-                        {
-                            deleteDir()
                         }
                     }
                 }
