@@ -115,7 +115,6 @@ pipeline
                                 {
                                     archiveArtifacts 'CarlaUE4.log'
                                     junit 'Build/test-results/smoke-tests-*.xml'
-                                    deleteDir()
                                 }
                             }
                         }
@@ -176,13 +175,6 @@ pipeline
                                         git commit -m "Updated c++ docs" || true
                                         git push
                                     '''
-                                }
-                            }
-                            post
-                            {
-                                always
-                                {
-                                    deleteDir()
                                 }
                             }
                         }
