@@ -24,55 +24,100 @@ pipeline
                     }
                     stages
                     {
-                        stage('ubuntu setup')
+                        parallel
                         {
-                            steps
+                            stage('generate libs')
                             {
-                                sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
-                                sh 'make setup ARGS="--python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
-                            }
-                        }
-                        stage('ubuntu build')
-                        {
-                            steps
-                            {
-                                sh 'make LibCarla'
-                                sh 'make PythonAPI ARGS="--python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"'
-                                sh 'make CarlaUE4Editor ARGS="--chrono"'
-                                sh 'make plugins'
-                                sh 'make examples'
-                            }
-                            post
-                            {
-                                always
+                                stages
                                 {
-                                    archiveArtifacts 'PythonAPI/carla/dist/*.egg'
-                                    archiveArtifacts 'PythonAPI/carla/dist/*.whl'
+                                    stage('ubuntu setup')
+                                    {
+                                        steps
+                                        {
+                                            sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
+                                            sh 'make setup ARGS="--python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
+                                        }
+                                    }
+                                    stage('ubuntu build')
+                                    {
+                                        steps
+                                        {
+                                            sh 'make LibCarla'
+                                            sh 'make PythonAPI ARGS="--python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"'
+                                            sh 'make CarlaUE4Editor ARGS="--chrono"'
+                                            sh 'make plugins'
+                                            sh 'make examples'
+                                        }
+                                        post
+                                        {
+                                            always
+                                            {
+                                                archiveArtifacts 'PythonAPI/carla/dist/*.egg'
+                                                archiveArtifacts 'PythonAPI/carla/dist/*.whl'
+                                            }
+                                        }
+                                    }
+                                    stage('ubuntu unit tests')
+                                    {
+                                        steps
+                                        {
+                                            sh 'make check ARGS="--all --xml --python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"'
+                                        }
+                                        post
+                                        {
+                                            always
+                                            {
+                                                junit 'Build/test-results/*.xml'
+                                                archiveArtifacts 'profiler.csv'
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                        }
-                        stage('ubuntu unit tests')
-                        {
-                            steps
+                            stage('Download additional resources')
                             {
-                                sh 'make check ARGS="--all --xml --python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"'
-                            }
-                            post
-                            {
-                                always
+                                stages
                                 {
-                                    junit 'Build/test-results/*.xml'
-                                    archiveArtifacts 'profiler.csv'
+                                    stage('TEST: Checkout Doxygen repo')
+                                    {
+                                        when { branch "ruben/jenkins_migration"; }
+                                        steps
+                                        {
+                                            
+                                            dir('${env.WORKSPACE}/doc_repo')
+                                            {
+                                                checkout scmGit(
+                                                    branches: [[name: '*/ruben/jenkins_migration']], 
+                                                    extensions: [
+                                                        cleanBeforeCheckout(),
+                                                        checkoutOption(120), 
+                                                        localBranch("**"), 
+                                                        cloneOption(noTags:false, reference:'', shallow: false, timeout:120)
+                                                    ], 
+                                                    userRemoteConfigs: [
+                                                        [
+                                                            credentialsId: 'github_token_as_pwd_2', 
+                                                            url: 'https://github.com/carla-simulator/carla-simulator.github.io.git'
+                                                        ]
+                                                    ]
+                                                )
+                                            }
+                                            
+                                        }
+                                    }
+
+                                    stage('ubuntu retrieve content')
+                                    {
+                                        steps
+                                        {
+                                            sh './Update.sh'
+                                        }
+                                    }
                                 }
                             }
+
                         }
-                        stage('ubuntu retrieve content')
-                        {
-                            steps
-                            {
-                                sh './Update.sh'
-                            }
-                        }
+                        
                         stage('ubuntu package')
                         {
                             steps
@@ -182,24 +227,8 @@ pipeline
                             when { branch "ruben/jenkins_migration"; }
                             steps
                             {
-                                
                                 dir('${env.WORKSPACE}/doc_repo')
                                 {
-                                    checkout scmGit(
-                                        branches: [[name: '*/ruben/jenkins_migration']], 
-                                        extensions: [
-                                            cleanBeforeCheckout(),
-                                            checkoutOption(120), 
-                                            localBranch("**"), 
-                                            cloneOption(noTags:false, reference:'', shallow: false, timeout:120)
-                                        ], 
-                                        userRemoteConfigs: [
-                                            [
-                                                credentialsId: 'github_token_as_pwd_2', 
-                                                url: 'https://github.com/carla-simulator/carla-simulator.github.io.git'
-                                            ]
-                                        ]
-                                    )
                                     unstash name: 'carla_docs'
                                     withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
                                         sh '''
