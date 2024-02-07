@@ -28,6 +28,7 @@ pipeline
                         {
                             steps
                             {
+                                sh 'echo "Current workspace is ${env.WORKSPACE}"'
                                 sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
                                 sh 'make setup ARGS="--python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
                             }
@@ -195,7 +196,7 @@ pipeline
                             steps
                             {
                                 
-                                dir('${env.WORKSPACE}/doc_repo')
+                                dir("${env.WORKSPACE}/doc_repo")
                                 {
                                     checkout scmGit(
                                         branches: [[name: '*/ruben/jenkins_migration']], 
