@@ -16,7 +16,7 @@
 #include "Misc/FileHelper.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
-#include "HAL/PlatformFilemanager.h"
+#include "HAL/PlatformFileManager.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "Carla/MapGen/LargeMapManager.h"
@@ -223,15 +223,15 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
           // tag
           if (AssetName.Contains(SSTags::R_MARKING1) || AssetName.Contains(SSTags::R_MARKING2))
           {
-            for (int32 i = 0; i < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->GetStaticMaterials().Num(); ++i)
+            for (int32 materialIndex = 0; materialIndex < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->GetStaticMaterials().Num(); ++materialIndex)
             {
-              if (MeshActor->GetStaticMeshComponent()->GetStaticMesh()->GetStaticMaterials()[i].ImportedMaterialSlotName.ToString().Contains("Yellow"))
+              if (MeshActor->GetStaticMeshComponent()->GetStaticMesh()->GetStaticMaterials()[materialIndex].ImportedMaterialSlotName.ToString().Contains("Yellow"))
               {
-                MeshActor->GetStaticMeshComponent()->SetMaterial(i, MarkingNodeYellow);
+                MeshActor->GetStaticMeshComponent()->SetMaterial(materialIndex, MarkingNodeYellow);
               }
               else
               {
-                MeshActor->GetStaticMeshComponent()->SetMaterial(i, MarkingNodeWhite);
+                MeshActor->GetStaticMeshComponent()->SetMaterial(materialIndex, MarkingNodeWhite);
               }
             }
           }

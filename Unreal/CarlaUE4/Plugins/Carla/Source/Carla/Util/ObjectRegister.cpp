@@ -131,7 +131,8 @@ void UObjectRegister::RegisterEnvironmentObject(
     uint8 Tag)
 {
   const FString ActorName = Actor->GetName();
-  const char* ActorNameChar = TCHAR_TO_ANSI(*ActorName);
+  auto ActorNameAnsichar = StringCast<ANSICHAR>(*ActorName);
+  const char* ActorNameChar = ActorNameAnsichar.Get();
 
   FEnvironmentObject EnvironmentObject;
   EnvironmentObject.Transform = Actor->GetActorTransform();

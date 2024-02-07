@@ -75,7 +75,7 @@ public class CarlaTools :
 
     bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
     PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-    bEnableExceptions = bEnableExceptions || IsWindows;
+    bEnableExceptions = true;
 
     PublicDependencyModuleNames.AddRange(new string[]
     {
@@ -219,7 +219,7 @@ public class CarlaTools :
     var RPCLibCandidates = FindLibraries("rpclib", "rpc");
     var XercesCCandidates = FindLibraries("xercesc", "xerces-c*");
     var PROJCandidates = FindLibraries("proj", "proj");
-    var ZlibCandidates = FindLibraries("zlib", "zlibstatic*");
+    var ZlibCandidates = FindLibraries("zlib", IsWindows ? "zlibstatic*" : "z"); //TODO: Fix this, note that here we have libz.a and libz.so, need to disambiguate
 
     var AdditionalLibraries = new List<string>
     {

@@ -15,7 +15,7 @@
 #include "Carla/MapGen/SoilTypeManager.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
-#include "HAL/PlatformFilemanager.h"
+#include "HAL/PlatformFileManager.h"
 #include "HAL/RunnableThread.h"
 #include "Misc/Paths.h"
 #include "Engine/World.h"
@@ -43,7 +43,7 @@
 
 
 #include "Carla/Game/CarlaStatics.h"
-#include "HAL/PlatformFilemanager.h"
+#include "HAL/PlatformFileManager.h"
 #include "HAL/RunnableThread.h"
 #include "Misc/Paths.h"
 #include "Engine/World.h"

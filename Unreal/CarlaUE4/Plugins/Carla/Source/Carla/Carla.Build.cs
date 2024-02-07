@@ -41,7 +41,7 @@ public class Carla :
     bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
 
     PrivatePCHHeaderFile = "Carla.h";
-    bEnableExceptions = bEnableExceptions || IsWindows;
+    bEnableExceptions = true;
 
     var DirectoryInfo = new DirectoryInfo(ModuleDirectory);
     for (int i = 0; i != 6; ++i)
