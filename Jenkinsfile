@@ -13,7 +13,7 @@ pipeline
     {
         stage('Building CARLA')
         {
-            parallel
+            //parallel
             {
                 stage('ubuntu')
                 {
