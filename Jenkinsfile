@@ -227,7 +227,8 @@ pipeline
                             when { branch "ruben/jenkins_migration"; }
                             steps
                             {
-                                dir('${env.WORKSPACE}/doc_repo')
+                                
+                                dir("${env.WORKSPACE}/doc_repo")
                                 {
                                     unstash name: 'carla_docs'
                                     withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
