@@ -56,6 +56,8 @@ pipeline
                                                 {
                                                     archiveArtifacts 'PythonAPI/carla/dist/*.egg'
                                                     archiveArtifacts 'PythonAPI/carla/dist/*.whl'
+                                                    stash includes: 'PythonAPI/carla/dist/*.egg', name: 'ubuntu_eggs'
+                                                    stash includes: 'PythonAPI/carla/dist/*.whl', name: 'ubuntu_wheels'
                                                 }
                                             }
                                         }
@@ -134,115 +136,158 @@ pipeline
                                 always
                                 {
                                     archiveArtifacts 'Dist/*.tar.gz'
+                                    stash includes: 'Dist/CARLA*.tar.gz', name: 'ubuntu_package'
+                                    stash includes: 'Examples/', name: 'ubuntu_examples'
                                 }
                             }
                         }
-                        stage('ubuntu smoke tests')
+
+                        stage('Testing and documentation')
                         {
-                            steps
+                            parallel
                             {
-                                sh 'DISPLAY= ./Dist/CarlaUE4.sh -nullrhi -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
-                                sh 'make smoke_tests ARGS="--xml --python-version=3.8 --target-wheel-platform=manylinux_2_27_x86_64"'
-                                sh 'make run-examples ARGS="localhost 3654"'
-                            }
-                            post
-                            {
-                                always
+                                stage('Testing')
                                 {
-                                    archiveArtifacts 'CarlaUE4.log'
-                                    junit 'Build/test-results/smoke-tests-*.xml'
-                                }
-                            }
-                        }
-                        
-                        stage('TEST: ubuntu deploy sim')
-                        {
-                            when { branch "ruben/jenkins_migration"; }
-                            steps
-                            {
-                                sh 'git checkout .'
-                                sh 'make deploy ARGS="--test"'
-                            }
-
-                        }
-
-                        stage('ubuntu deploy dev')
-                        {
-                            when { branch "dev"; }
-                            steps
-                            {
-                                sh 'git checkout .'
-                                sh 'make deploy ARGS="--replace-latest"'
-                            }
-                        }
-                        stage('ubuntu deploy master')
-                        {
-                            when { anyOf { branch "master"; buildingTag() } }
-                            steps
-                            {
-                                sh 'git checkout .'
-                                sh 'make deploy ARGS="--replace-latest --docker-push"'
-                            }
-                        }
-
-                        stage('ubuntu Doxygen generation')
-                        {
-                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
-                            steps
-                            {
-                                sh 'make docs'
-                                sh 'tar -czf carla_doc.tar.gz ./Doxygen'
-                                stash includes: 'carla_doc.tar.gz', name: 'carla_docs'
-                            }
-                        }    
-                        
-                        stage('ubuntu Doxygen upload')
-                        {
-                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
-                            steps
-                            {
-                                checkout scmGit(branches: [[name: '*/master']], extensions: [checkoutOption(120), cloneOption(noTags:false, reference:'', shallow: false, timeout:120)], userRemoteConfigs: [[credentialsId: 'github_token_as_pwd_2', url: 'https://github.com/carla-simulator/carla-simulator.github.io.git']])
-                                unstash name: 'carla_docs'
-                                
-                                withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
-                                    sh '''
-                                        tar -xvzf carla_doc.tar.gz
-                                        git add Doxygen
-                                        git commit -m "Updated c++ docs" || true
-                                        git push
-                                    '''
-                                }
-                            }
-                        }
-                        stage('TEST: ubuntu Doxygen generation')
-                        {
-                            when { branch "ruben/jenkins_migration"; }
-                            steps
-                            {
-                                sh 'make docs'
-                                sh 'tar -czf carla_doc.tar.gz ./Doxygen'
-                                stash includes: 'carla_doc.tar.gz', name: 'carla_docs'
-                            }
-                        }
-
-                        stage('TEST: ubuntu Doxygen upload')
-                        {
-                            when { branch "ruben/jenkins_migration"; }
-                            steps
-                            {
-                                dir('doc_repo')
-                                {
-                                    unstash name: 'carla_docs'
-                                    withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
-                                        sh '''
-                                            tar -xvzf carla_doc.tar.gz
-                                            git add Doxygen
-                                            git commit -m "Updated c++ docs" || true
-                                            git push --set-upstream origin ruben/jenkins_migration
-                                        '''
+                                    stages
+                                    {
+                                        stage('ubuntu smoke tests')
+                                        {
+                                            steps
+                                            {
+                                                unstash name: 'ubuntu_eggs'
+                                                unstash name: 'ubuntu_wheels'
+                                                unstash name: 'ubuntu_package'
+                                                unstash name: 'ubuntu_examples'
+                                                sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
+                                                sh 'DISPLAY= ./Dist/CarlaUE4.sh -nullrhi -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                                                sh 'make smoke_tests ARGS="--xml --python-version=3.8 --target-wheel-platform=manylinux_2_27_x86_64"'
+                                                sh 'make run-examples ARGS="localhost 3654"'
+                                            }
+                                            post
+                                            {
+                                                always
+                                                {
+                                                    archiveArtifacts 'CarlaUE4.log'
+                                                    junit 'Build/test-results/smoke-tests-*.xml'
+                                                }
+                                            }
+                                        }
                                     }
                                 }
-                                
+                                stage('Generate documentation')
+                                {
+                                    stages
+                                    {
+                                        stage('ubuntu Doxygen generation')
+                                        {
+                                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
+                                            steps
+                                            {
+                                                sh 'make docs'
+                                                sh 'tar -czf carla_doc.tar.gz ./Doxygen'
+                                                stash includes: 'carla_doc.tar.gz', name: 'carla_docs'
+                                            }
+                                        }
+
+                                        stage('TEST: ubuntu Doxygen generation')
+                                        {
+                                            when { branch "ruben/jenkins_migration"; }
+                                            steps
+                                            {
+                                                sh 'make docs'
+                                                sh 'tar -czf carla_doc.tar.gz ./Doxygen'
+                                                stash includes: 'carla_doc.tar.gz', name: 'carla_docs'
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        stage('Deployment and documentation publishing')
+                        {
+                            parallel
+                            {
+                                stage('Release Deployment')
+                                {
+                                    stages
+                                    {
+                                        stage('TEST: ubuntu deploy sim')
+                                        {
+                                            when { branch "ruben/jenkins_migration"; }
+                                            steps
+                                            {
+                                                sh 'git checkout .'
+                                                sh 'make deploy ARGS="--test"'
+                                            }
+
+                                        }
+
+                                        stage('ubuntu deploy dev')
+                                        {
+                                            when { branch "dev"; }
+                                            steps
+                                            {
+                                                sh 'git checkout .'
+                                                sh 'make deploy ARGS="--replace-latest"'
+                                            }
+                                        }
+                                        stage('ubuntu deploy master')
+                                        {
+                                            when { anyOf { branch "master"; buildingTag() } }
+                                            steps
+                                            {
+                                                sh 'git checkout .'
+                                                sh 'make deploy ARGS="--replace-latest --docker-push"'
+                                            }
+                                        }
+                                    }
+                                }
+                                stage('Publish documentation')
+                                {
+                                    stages
+                                    {
+                                        stage('ubuntu Doxygen upload')
+                                        {
+                                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
+                                            steps
+                                            {
+                                                checkout scmGit(branches: [[name: '*/master']], extensions: [checkoutOption(120), cloneOption(noTags:false, reference:'', shallow: false, timeout:120)], userRemoteConfigs: [[credentialsId: 'github_token_as_pwd_2', url: 'https://github.com/carla-simulator/carla-simulator.github.io.git']])
+                                                unstash name: 'carla_docs'
+                                                
+                                                withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
+                                                    sh '''
+                                                        tar -xvzf carla_doc.tar.gz
+                                                        git add Doxygen
+                                                        git commit -m "Updated c++ docs" || true
+                                                        git push
+                                                    '''
+                                                }
+                                            }
+                                        }
+                                        stage('TEST: ubuntu Doxygen upload')
+                                        {
+                                            when { branch "ruben/jenkins_migration"; }
+                                            steps
+                                            {
+                                                dir('doc_repo')
+                                                {
+                                                    unstash name: 'carla_docs'
+                                                    withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
+                                                        sh '''
+                                                            tar -xvzf carla_doc.tar.gz
+                                                            git add Doxygen
+                                                            git commit -m "Updated c++ docs" || true
+                                                            git push --set-upstream origin ruben/jenkins_migration
+                                                        '''
+                                                    }
+                                                }
+                                                
+                                            }
+                                        }
+
+                                    }
+                                }
                             }
                         }
                     }
