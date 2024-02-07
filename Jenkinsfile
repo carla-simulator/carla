@@ -11,8 +11,8 @@ pipeline
 
     stages
     {
-        stage('Building CARLA')
-        {
+        //stage('Building CARLA')
+        //{
             //parallel
             //{
                 stage('ubuntu')
@@ -355,6 +355,6 @@ pipeline
                 }*/
                 
             //}
-        }
+        //}
     }
 }
