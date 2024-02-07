@@ -84,7 +84,7 @@ pipeline
                                         steps
                                         {
                                             
-                                            dir('${env.WORKSPACE}/doc_repo')
+                                            dir('doc_repo')
                                             {
                                                 checkout scmGit(
                                                     branches: [[name: '*/ruben/jenkins_migration']], 
@@ -227,14 +227,11 @@ pipeline
                             when { branch "ruben/jenkins_migration"; }
                             steps
                             {
-                                
-                                dir("${env.WORKSPACE}/doc_repo")
+                                dir('doc_repo')
                                 {
                                     unstash name: 'carla_docs'
                                     withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
                                         sh '''
-                                            pwd
-                                            ls -lh
                                             tar -xvzf carla_doc.tar.gz
                                             git add Doxygen
                                             git commit -m "Updated c++ docs" || true
