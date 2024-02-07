@@ -14,7 +14,7 @@ pipeline
         stage('Building CARLA')
         {
             //parallel
-            {
+            //{
                 stage('ubuntu')
                 {
                     agent { label "gpu" }
@@ -354,7 +354,7 @@ pipeline
                     }
                 }*/
                 
-            }
+            //}
         }
     }
 }
