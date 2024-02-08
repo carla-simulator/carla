@@ -1021,6 +1021,15 @@ void ACarlaWheeledVehicle::OpenDoorPhys(const EVehicleDoor DoorIdx)
   }
 
   RecordDoorChange(DoorIdx, true);
+
+  // Wait until door is max opened to recalculate its bounds.
+  float TimeNeededToHaveItOpened = (AngleLimit + Constraint->ConstraintInstance.AngularRotationOffset.Yaw) / (DoorOpenStrength > 0.f ? DoorOpenStrength : 1.f);
+  TimeNeededToHaveItOpened = TimeNeededToHaveItOpened < 0.f ? TimeNeededToHaveItOpened * -1.f : TimeNeededToHaveItOpened;
+  FTimerHandle DoorMaxOpenRangeTimerHandle;
+  GetWorldTimerManager().SetTimer(DoorMaxOpenRangeTimerHandle, [this]()
+  {
+    AdjustVehicleBounds();
+  }, TimeNeededToHaveItOpened, false);
 }
 
 void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
@@ -1035,6 +1044,8 @@ void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
   DoorComponent->AttachToComponent(
       GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
   RecordDoorChange(DoorIdx, false);
+
+  AdjustVehicleBounds();
 }
 
 void ACarlaWheeledVehicle::RecordDoorChange(const EVehicleDoor DoorIdx, bool bIsOpen)
