@@ -214,7 +214,7 @@ if (BUILD_LIBCARLA_SERVER)
         ${LIBCARLA_SERVER_HEADERS_THIRD_PARTY}
         ${LIBCARLA_SERVER_SOURCES_THIRD_PARTY}
     )
-    target_link_libraries(carla-server PUBLIC /home/xsole/programing/UnrealEngine5_carla_clang16/Engine/Source/ThirdParty/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu/libc++.a)
+    
     target_include_directories (
         carla-server PUBLIC
         ${LIBCARLA_SERVER_INCLUDE_PATHS}

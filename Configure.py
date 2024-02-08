@@ -59,24 +59,21 @@ DEFAULT_C_COMPILER = FindExecutable([
   'cl',
   'clang-cl',
 ] if os.name == 'nt' else [
-  'clang',
-  'gcc',
+  'clang-16',
 ])
 
 DEFAULT_CPP_COMPILER = FindExecutable([
   'cl',
   'clang-cl',
 ] if os.name == 'nt' else [
-  'clang++',
-  'g++',
+  'clang++-16',
 ])
 
 DEFAULT_LINKER = FindExecutable([
   'link',
   'llvm-link',
 ] if os.name == 'nt' else [
-  'lld',
-  'ld',
+  'lld-16',
 ])
 
 DEFAULT_LIB = FindExecutable([
@@ -84,8 +81,7 @@ DEFAULT_LIB = FindExecutable([
   'llvm-lib',
   'llvm-ar'
 ] if os.name == 'nt' else [
-  'llvm-ar',
-  'ar',
+  'llvm-ar-16',
 ])
 
 DEFAULT_C_STANDARD = 11
@@ -165,6 +161,9 @@ AddCLIFlag(
 AddCLIFlag(
   'chrono',
   'Whether to enable Chrono.')
+AddCLIFlag(
+  'gtest',
+  'Whether to enable gtest.')
 AddCLIFlag(
   'carsim',
   'Whether to enable CarSim')
@@ -257,7 +256,8 @@ def SyncArgs():
 ARGV = SyncArgs()
 
 SEQUENTIAL = ARGV.configure_sequential
-ENABLE_OSM2ODR = ARGV.osm2odr or ARGV.python_api
+ENABLE_OSM2ODR = ARGV.osm2odr
+ENABLE_GTEST = ARGV.gtest
 ENABLE_OSM_WORLD_RENDERER = ARGV.osm_world_renderer
 ENABLE_CARLA_UE = ARGV.carla_ue
 ENABLE_PYTHON_API = ARGV.python_api
@@ -291,9 +291,17 @@ LIBCARLA_BUILD_PATH = BUILD_PATH / 'LibCarla'
 LIBCARLA_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'LibCarla'
 # Language options
 C_COMPILER = ARGV.c_compiler
+if not C_COMPILER:
+  print("Error C Compiler not found")
 CPP_COMPILER = ARGV.cpp_compiler
+if not CPP_COMPILER:
+  print("Error CPP Compiler not found")
 LINKER = ARGV.linker
+if not LINKER:
+  print("Error LINKER not found")
 LIB = ARGV.ar
+if not LIB:
+  print("Error AR not found")
 C_STANDARD = ARGV.c_standard
 CPP_STANDARD = ARGV.cpp_standard
 C_COMPILER_CLI_TYPE = 'msvc' if ('cl' in C_COMPILER and os.name == 'nt') else 'gnu'
@@ -522,18 +530,10 @@ DEFAULT_DEPENDENCIES = [
   Dependency(
     'libpng',
     GitRepository('https://github.com/glennrp/libpng.git', tag_or_branch = 'v1.6.40')),
-  Dependency(
-    'proj',
-    GitRepository('https://github.com/OSGeo/PROJ.git', tag_or_branch = '7.2.1')),
-  Dependency(
-    'gtest',
-    GitRepository('https://github.com/google/googletest.git', tag_or_branch = 'v1.14.0')),
+  
   Dependency(
     'zlib',
     GitRepository('https://github.com/madler/zlib.git'),),
-  Dependency(
-    'xercesc',
-    GitRepository('https://github.com/apache/xerces-c.git', tag_or_branch = 'v3.2.4')),
   Dependency(
     'sqlite',
     Download('https://www.sqlite.org/2021/sqlite-amalgamation-3340100.zip')),
@@ -571,6 +571,11 @@ DEFAULT_DEPENDENCIES = [
     GitRepository('https://github.com/boostorg/gil.git')),
 ]
 
+if ENABLE_GTEST:
+  DEFAULT_DEPENDENCIES.append(Dependency(
+      'gtest',
+      GitRepository('https://github.com/google/googletest.git', tag_or_branch = 'v1.14.0')))
+
 CHRONO_DEPENDENCIES = [
   Dependency(
     'chrono',
@@ -587,6 +592,12 @@ OSM_WORLD_RENDERER_DEPENDENCIES = [
 ]
 
 OSM2ODR_DEPENDENCIES = [
+  Dependency(
+    'proj',
+    GitRepository('https://github.com/OSGeo/PROJ.git', tag_or_branch = '7.2.1')),
+  Dependency(
+    'xercesc',
+    GitRepository('https://github.com/apache/xerces-c.git', tag_or_branch = 'v3.2.4')),
   Dependency(
     'sumo',
     GitRepository('https://github.com/carla-simulator/sumo.git', tag_or_branch = 'carla_osm2odr')),
@@ -642,7 +653,10 @@ class Task:
       f'-DCMAKE_CXX_FLAGS_RELEASE={cpp_flags_release}',
     ]
     if os.name != 'nt':
-      cmd.append('-DPOSITION_INDEPENDENT_CODE=ON')
+      cmd.append('-DCMAKE_POSITION_INDEPENDENT_CODE=ON')
+      CPP_ABI_VERSIONS = f'-fuse-ld={LINKER} -nostdinc++ -nostdlib++'
+      CPP_LINK_FLAGS = f'-isystem {UNREAL_ENGINE_PATH}/Engine/Source/ThirdParty/Unix/LibCxx/include/c++/v1 -L {UNREAL_ENGINE_PATH}/Engine/Source/ThirdParty/Unix/LibCxx/lib/ -L {UNREAL_ENGINE_PATH}/Engine/Source/ThirdParty/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu/ -Wl,-rpath,{UNREAL_ENGINE_PATH}/Engine/Source/ThirdParty/Unix/LibCxx/lib -lc++'
+      cmd.append(f'-DCMAKE_CXX_FLAGS={CPP_ABI_VERSIONS} {CPP_LINK_FLAGS}')
     return cmd
 
   def CreateCMakeConfigureDefault(name : str, in_edges : list, source_path : Path, build_path : Path, *args, install_path : Path = None):
@@ -975,6 +989,15 @@ def BuildSQLite():
         '-march=native',
         '-O2',
         '-Wno-error=int-conversion',
+        '-fPIC',
+        '-nostdinc++',
+        '-nostdlib++',
+        '-isystem',
+        f'{UNREAL_ENGINE_PATH}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/x86_64-unknown-linux-gnu/usr/include/',
+        '-L', 
+        f'{UNREAL_ENGINE_PATH}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/x86_64-unknown-linux-gnu/usr/lib64',
+        f'-Wl,-rpath,{UNREAL_ENGINE_PATH}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/x86_64-unknown-linux-gnu/usr/lib64',
+        '-lc',
       ] if C_COMPILER_CLI_TYPE == 'gnu' else [
         f'/std:c{C_STANDARD}',
         '/O2',
@@ -1034,7 +1057,7 @@ def ConfigureSUMO():
     # '-DENABLE_CS_BINDINGS=OFF',
     # '-DCCACHE_SUPPORT=OFF',
   ])
-  LaunchSubprocessImmediate(cmd)
+  LaunchSubprocessImmediate(cmd, log_name='sumo-configure')
 
 
 
@@ -1114,12 +1137,13 @@ def BuildDependencies(task_graph : TaskGraph):
     [ build_zlib ],
     ZLIB_BUILD_PATH,
     ZLIB_INSTALL_PATH))
-  
-  task_graph.Add(Task.CreateCMakeConfigureDefault(
-    'gtest-configure',
-    [],
-    GTEST_SOURCE_PATH,
-    GTEST_BUILD_PATH))
+
+  if ENABLE_GTEST:  
+    task_graph.Add(Task.CreateCMakeConfigureDefault(
+      'gtest-configure',
+      [],
+      GTEST_SOURCE_PATH,
+      GTEST_BUILD_PATH))
   
   task_graph.Add(Task.CreateCMakeConfigureDefault(
     'libpng-configure',
@@ -1132,30 +1156,6 @@ def BuildDependencies(task_graph : TaskGraph):
     '-DPNG_BUILD_ZLIB=ON',
     f'-DZLIB_INCLUDE_DIRS={ZLIB_INCLUDE_PATH}',
     f'-DZLIB_LIBRARIES={ZLIB_LIB_PATH}'))
-  
-  task_graph.Add(Task.CreateCMakeConfigureDefault(
-    'proj-configure',
-    [ build_sqlite ],
-    PROJ_SOURCE_PATH,
-    PROJ_BUILD_PATH,
-    f'-DSQLITE3_INCLUDE_DIR={SQLITE_SOURCE_PATH}',
-    f'-DSQLITE3_LIBRARY={SQLITE_LIB_PATH}',
-    f'-DEXE_SQLITE3={SQLITE_EXE_PATH}',
-    '-DWIN32_LEAN_AND_MEAN=1',
-    '-DVC_EXTRALEAN=1',
-    '-DNOMINMAX=1',
-    '-DENABLE_TIFF=OFF',
-    '-DENABLE_CURL=OFF',
-    '-DBUILD_SHARED_LIBS=OFF',
-    '-DBUILD_PROJSYNC=OFF',
-    '-DBUILD_PROJINFO=OFF',
-    '-DBUILD_CCT=OFF',
-    '-DBUILD_CS2CS=OFF',
-    '-DBUILD_GEOD=OFF',
-    '-DBUILD_GIE=OFF',
-    '-DBUILD_PROJ=OFF',
-    '-DBUILD_TESTING=OFF',
-    install_path = PROJ_INSTALL_PATH))
   
   task_graph.Add(Task.CreateCMakeConfigureDefault(
     'recast-configure',
@@ -1176,14 +1176,8 @@ def BuildDependencies(task_graph : TaskGraph):
     '-DRPCLIB_BUILD_EXAMPLES=OFF',
     '-DRPCLIB_ENABLE_LOGGING=OFF',
     '-DRPCLIB_ENABLE_COVERAGE=OFF',
-    '-DRPCLIB_MSVC_STATIC_RUNTIME=OFF'))
-  
-  configure_xercesc = task_graph.Add(Task.CreateCMakeConfigureDefault(
-    'xercesc-configure',
-    [],
-    XERCESC_SOURCE_PATH,
-    XERCESC_BUILD_PATH,
-    '-DBUILD_SHARED_LIBS=OFF'))
+    '-DRPCLIB_MSVC_STATIC_RUNTIME=OFF',
+    '-DCMAKE_POSITION_INDEPENDENT_CODE=ON'))
   
   if ENABLE_OSM_WORLD_RENDERER:
     task_graph.Add(Task.CreateCMakeConfigureDefault(
@@ -1213,6 +1207,37 @@ def BuildDependencies(task_graph : TaskGraph):
       '-DENABLE_MODULE_VEHICLE=ON'))
   
   if ENABLE_OSM2ODR:
+    task_graph.Add(Task.CreateCMakeConfigureDefault(
+      'proj-configure',
+      [ build_sqlite ],
+      PROJ_SOURCE_PATH,
+      PROJ_BUILD_PATH,
+      f'-DSQLITE3_INCLUDE_DIR={SQLITE_SOURCE_PATH}',
+      f'-DSQLITE3_LIBRARY={SQLITE_LIB_PATH}',
+      f'-DEXE_SQLITE3={SQLITE_EXE_PATH}',
+      '-DWIN32_LEAN_AND_MEAN=1',
+      '-DVC_EXTRALEAN=1',
+      '-DNOMINMAX=1',
+      '-DENABLE_TIFF=OFF',
+      '-DENABLE_CURL=OFF',
+      '-DBUILD_SHARED_LIBS=OFF',
+      '-DBUILD_PROJSYNC=OFF',
+      '-DBUILD_PROJINFO=OFF',
+      '-DBUILD_CCT=OFF',
+      '-DBUILD_CS2CS=OFF',
+      '-DBUILD_GEOD=OFF',
+      '-DBUILD_GIE=OFF',
+      '-DBUILD_PROJ=OFF',
+      '-DBUILD_TESTING=OFF',
+      install_path = PROJ_INSTALL_PATH))
+    
+    configure_xercesc = task_graph.Add(Task.CreateCMakeConfigureDefault(
+    'xercesc-configure',
+    [],
+    XERCESC_SOURCE_PATH,
+    XERCESC_BUILD_PATH,
+    '-DBUILD_SHARED_LIBS=OFF'))
+    
     # SUMO requires that Proj and Xerces be built and installed before its configure step:
     build_xercesc = task_graph.Add(Task.CreateCMakeBuildDefault(
       'xercesc-build',
@@ -1241,17 +1266,17 @@ def BuildDependencies(task_graph : TaskGraph):
     task_graph.Add(Task.CreateCMakeBuildDefault('boost-iterator-build', [], BOOST_ITERATOR_BUILD_PATH))
     task_graph.Add(Task.CreateCMakeBuildDefault('boost-python-build', [], BOOST_PYTHON_BUILD_PATH))
 
-  task_graph.Add(Task.CreateCMakeBuildDefault('gtest-build', [], GTEST_BUILD_PATH))
+  if ENABLE_GTEST:
+    task_graph.Add(Task.CreateCMakeBuildDefault('gtest-build', [], GTEST_BUILD_PATH))
   task_graph.Add(Task.CreateCMakeBuildDefault('libpng-build', [], LIBPNG_BUILD_PATH))
-  build_proj = task_graph.Add(Task.CreateCMakeBuildDefault('proj-build', [], PROJ_BUILD_PATH))
   task_graph.Add(Task.CreateCMakeBuildDefault('recast-build', [], RECAST_BUILD_PATH))
   task_graph.Add(Task.CreateCMakeBuildDefault('rpclib-build', [], RPCLIB_BUILD_PATH))
 
   if ENABLE_OSM2ODR:
+    build_proj = task_graph.Add(Task.CreateCMakeBuildDefault('proj-build', [], PROJ_BUILD_PATH))
     install_proj = task_graph.Add(Task.CreateCMakeInstallDefault('proj-install', [ build_proj ], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
     configure_sumo = task_graph.Add(Task('sumo-configure', [ install_proj ], ConfigureSUMO))
     task_graph.Add(Task.CreateCMakeBuildDefault('sumo-build', [ configure_sumo ], SUMO_BUILD_PATH))
-  else:
     task_graph.Add(Task.CreateCMakeBuildDefault('xercesc-build', [], XERCESC_BUILD_PATH))
 
   if ENABLE_OSM_WORLD_RENDERER:
@@ -1272,7 +1297,8 @@ def BuildDependencies(task_graph : TaskGraph):
     task_graph.Add(Task.CreateCMakeBuildDefault('boost-gil-install', [], BOOST_GIL_BUILD_PATH))
     task_graph.Add(Task.CreateCMakeBuildDefault('boost-iterator-install', [], BOOST_ITERATOR_BUILD_PATH))
     task_graph.Add(Task.CreateCMakeBuildDefault('boost-python-install', [], BOOST_PYTHON_BUILD_PATH))
-  task_graph.Add(Task.CreateCMakeInstallDefault('gtest-install', [], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
+  if ENABLE_GTEST:
+    task_graph.Add(Task.CreateCMakeInstallDefault('gtest-install', [], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
   task_graph.Add(Task.CreateCMakeInstallDefault('libpng-install', [], LIBPNG_BUILD_PATH, LIBPNG_INSTALL_PATH))
   task_graph.Add(Task.CreateCMakeInstallDefault('recast-install', [], RECAST_BUILD_PATH, RECAST_INSTALL_PATH))
   task_graph.Add(Task.CreateCMakeInstallDefault('rpclib-install', [], RPCLIB_BUILD_PATH, RPCLIB_INSTALL_PATH))
@@ -1281,7 +1307,6 @@ def BuildDependencies(task_graph : TaskGraph):
     task_graph.Add(Task.CreateCMakeInstallDefault('libosmscout-install', [], LIBOSMSCOUT_BUILD_PATH, LIBOSMSCOUT_INSTALL_PATH))
   if ENABLE_OSM2ODR:
     task_graph.Add(Task.CreateCMakeInstallDefault('sumo-install', [], SUMO_BUILD_PATH, SUMO_INSTALL_PATH))
-  else:
     task_graph.Add(Task.CreateCMakeInstallDefault('proj-install', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
     task_graph.Add(Task.CreateCMakeInstallDefault('xercesc-install', [], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
   if ENABLE_CHRONO:

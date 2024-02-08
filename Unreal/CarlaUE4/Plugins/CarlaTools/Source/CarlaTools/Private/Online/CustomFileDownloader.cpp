@@ -8,7 +8,9 @@
 #include "Http.h"
 #include "Misc/FileHelper.h"
 
+#ifdef WITH_OSM2ODR
 #include <OSM2ODR.h>
+#endif
 
 void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0, float Lon_0)
 {
