@@ -109,6 +109,33 @@ pipeline
                                                 
                                             }
                                         }
+                                        stage('Checkout Doxygen repo')
+                                        {
+                                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
+                                            steps
+                                            {
+                                                
+                                                dir('doc_repo')
+                                                {
+                                                    checkout scmGit(
+                                                        branches: [[name: '*/master']], 
+                                                        extensions: [
+                                                            cleanBeforeCheckout(),
+                                                            checkoutOption(120), 
+                                                            localBranch("**"), 
+                                                            cloneOption(noTags:false, reference:'', shallow: false, timeout:120)
+                                                        ], 
+                                                        userRemoteConfigs: [
+                                                            [
+                                                                credentialsId: 'github_token_as_pwd_2', 
+                                                                url: 'https://github.com/carla-simulator/carla-simulator.github.io.git'
+                                                            ]
+                                                        ]
+                                                    )
+                                                }
+                                                
+                                            }
+                                        }
 
                                         stage('ubuntu retrieve content')
                                         {
@@ -252,17 +279,19 @@ pipeline
                                             when { anyOf { branch "master"; branch "dev"; buildingTag() } }
                                             steps
                                             {
-                                                checkout scmGit(branches: [[name: '*/master']], extensions: [checkoutOption(120), cloneOption(noTags:false, reference:'', shallow: false, timeout:120)], userRemoteConfigs: [[credentialsId: 'github_token_as_pwd_2', url: 'https://github.com/carla-simulator/carla-simulator.github.io.git']])
-                                                unstash name: 'carla_docs'
-                                                
-                                                withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
-                                                    sh '''
-                                                        tar -xvzf carla_doc.tar.gz
-                                                        git add Doxygen
-                                                        git commit -m "Updated c++ docs" || true
-                                                        git push
-                                                    '''
+                                                dir('doc_repo')
+                                                {
+                                                    unstash name: 'carla_docs'
+                                                    withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
+                                                        sh '''
+                                                            tar -xvzf carla_doc.tar.gz
+                                                            git add Doxygen
+                                                            git commit -m "Updated c++ docs" || true
+                                                            git push --set-upstream origin ruben/jenkins_migration
+                                                        '''
+                                                    }
                                                 }
+                                                
                                             }
                                         }
                                         stage('TEST: ubuntu Doxygen upload')
