@@ -655,8 +655,8 @@ class Task:
     if os.name != 'nt':
       cmd.append('-DCMAKE_POSITION_INDEPENDENT_CODE=ON')
       CPP_ABI_VERSIONS = f'-fuse-ld={LINKER} -nostdinc++ -nostdlib++'
-      CPP_LINK_FLAGS = f'-isystem {UNREAL_ENGINE_PATH}/Engine/Source/ThirdParty/Unix/LibCxx/include/c++/v1 -L {UNREAL_ENGINE_PATH}/Engine/Source/ThirdParty/Unix/LibCxx/lib/ -L {UNREAL_ENGINE_PATH}/Engine/Source/ThirdParty/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu/ -Wl,-rpath,{UNREAL_ENGINE_PATH}/Engine/Source/ThirdParty/Unix/LibCxx/lib -lc++'
-      cmd.append(f'-DCMAKE_CXX_FLAGS={CPP_ABI_VERSIONS} {CPP_LINK_FLAGS}')
+      CPP_LIB= f'-isystem {UNREAL_ENGINE_PATH}/Engine/Source/ThirdParty/Unix/LibCxx/include/c++/v1 -L {UNREAL_ENGINE_PATH}/Engine/Source/ThirdParty/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu/ -lc++'
+      cmd.append(f'-DCMAKE_CXX_FLAGS={CPP_ABI_VERSIONS} {CPP_LIB}')
     return cmd
 
   def CreateCMakeConfigureDefault(name : str, in_edges : list, source_path : Path, build_path : Path, *args, install_path : Path = None):
@@ -996,7 +996,6 @@ def BuildSQLite():
         f'{UNREAL_ENGINE_PATH}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/x86_64-unknown-linux-gnu/usr/include/',
         '-L', 
         f'{UNREAL_ENGINE_PATH}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/x86_64-unknown-linux-gnu/usr/lib64',
-        f'-Wl,-rpath,{UNREAL_ENGINE_PATH}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/x86_64-unknown-linux-gnu/usr/lib64',
         '-lc',
       ] if C_COMPILER_CLI_TYPE == 'gnu' else [
         f'/std:c{C_STANDARD}',
