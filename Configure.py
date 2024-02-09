@@ -290,18 +290,18 @@ DEPENDENCIES_PATH = BUILD_PATH / 'Dependencies'
 LIBCARLA_BUILD_PATH = BUILD_PATH / 'LibCarla'
 LIBCARLA_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'LibCarla'
 # Language options
-C_COMPILER = ARGV.c_compiler
+C_COMPILER = FindExecutable([ARGV.c_compiler])
 if not C_COMPILER:
-  print("Error C Compiler not found")
-CPP_COMPILER = ARGV.cpp_compiler
+  sys.exit(f"Error C Compiler not found: {ARGV.c_compiler}")
+CPP_COMPILER = FindExecutable([ARGV.cpp_compiler])
 if not CPP_COMPILER:
-  print("Error CPP Compiler not found")
-LINKER = ARGV.linker
+  sys.exit(f"Error CPP Compiler not found: {ARGV.cpp_compiler}")
+LINKER = FindExecutable([ARGV.linker])
 if not LINKER:
-  print("Error LINKER not found")
-LIB = ARGV.ar
+  sys.exit(f"Error LINKER not found: {ARGV.linker}")
+LIB = FindExecutable([ARGV.ar])
 if not LIB:
-  print("Error AR not found")
+  sys.exit(f"Error AR not found {ARGV.ar}")
 C_STANDARD = ARGV.c_standard
 CPP_STANDARD = ARGV.cpp_standard
 C_COMPILER_CLI_TYPE = 'msvc' if ('cl' in C_COMPILER and os.name == 'nt') else 'gnu'
