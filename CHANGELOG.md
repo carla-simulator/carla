@@ -1,6 +1,7 @@
 ## Latest Changes
  * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
   * Added vehicle doors to the recorder
+  * Fixed bug in python agents when vehicle list was empty causing a check on all vehicles (BasicAgent.py) and detected pedestrians as vehicles if no pedestrains are present (BehaviourAgent.py) 
 
 ## CARLA 0.9.15
 
