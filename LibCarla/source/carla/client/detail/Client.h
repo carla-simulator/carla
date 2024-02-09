@@ -88,6 +88,7 @@ namespace detail {
 
     void DestroyTrafficManager(uint16_t port) const;
 
+
     void SetTimeout(time_duration timeout);
 
     time_duration GetTimeout() const;
@@ -231,6 +232,14 @@ namespace detail {
     void AddActorTorque(
         rpc::ActorId actor,
         const geom::Vector3D &vector);
+
+    geom::Transform GetActorComponentWorldTransform(
+        rpc::ActorId actor,
+        const std::string componentName);
+
+    geom::Transform GetActorComponentRelativeTransform(
+        rpc::ActorId actor,
+        const std::string componentName);
 
     void SetActorSimulatePhysics(
         rpc::ActorId actor,
