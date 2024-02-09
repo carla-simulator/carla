@@ -22,7 +22,6 @@
 #include <carla/geom/Simplification.h>
 #include <carla/road/Deformation.h>
 #include <carla/rpc/String.h>
-#include <OSM2ODR.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "Engine/TriggerBox.h"

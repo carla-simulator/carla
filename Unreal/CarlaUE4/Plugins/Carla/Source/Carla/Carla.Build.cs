@@ -40,6 +40,8 @@ public class Carla :
   {
     bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
 
+    EnableOSM2ODR = IsWindows;
+
     PrivatePCHHeaderFile = "Carla.h";
     bEnableExceptions = true;
 
@@ -222,8 +224,6 @@ public class Carla :
         LibCarlaServerPath,
         SQLiteLibrary,
         FindLibraries("rpclib", "rpc")[0],
-        FindLibraries("xercesc", "xerces-c*")[0],
-        FindLibraries("proj", "proj")[0],
         FindLibraries("zlib", IsWindows ? "zlibstatic*" : "z")[0], //TODO: Fix this, note that here we have libz.a and libz.so, need to disambiguate
     };
 
@@ -234,8 +234,12 @@ public class Carla :
         AdditionalLibraries.Add(Candidates[0]);
     }
 
-    if (EnableOSM2ODR)
+    if (EnableOSM2ODR) {
+      var XercesCCandidates = FindLibraries("xercesc", "xerces-c*");
+      AdditionalLibraries.Add(XercesCCandidates[0]);
+      AdditionalLibraries.Add(FindLibraries("proj", "proj")[0]);
       AdditionalLibraries.Add(FindLibraries("sumo", "*osm2odr")[0]);
+    }
 
     if (EnableChrono)
     {
@@ -261,11 +265,14 @@ public class Carla :
       LibCarlaIncludePath,
       GetIncludePath("boost"),
       GetIncludePath("rpclib"),
-      GetIncludePath("xercesc"),
-      GetIncludePath("sumo"),
       GetIncludePath("zlib"),
       Path.Combine(DependenciesInstallPath, "eigen-source"),
     });
+
+    if (EnableOSM2ODR) {
+      PublicIncludePaths.Add(GetIncludePath("xercesc"));
+      PublicIncludePaths.Add(GetIncludePath("sumo"));
+    }
     
     PublicDefinitions.AddRange(new string[]
     {

@@ -41,6 +41,10 @@ public class CarlaTools :
     LogFlagStatus("Houdini support", EnableHoudini);
     LogFlagStatus("NVIDIA Omniverse support", EnableNVIDIAOmniverse);
 
+    bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
+    
+    EnableOSM2ODR = IsWindows;
+
     if (EnableOSM2ODR)
     {
       PrivateDefinitions.Add("WITH_OSM2ODR");
@@ -73,7 +77,6 @@ public class CarlaTools :
 
     Console.WriteLine("Current module directory: " + ModuleDirectory);
 
-    bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
     PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
     bEnableExceptions = true;
 
@@ -217,21 +220,22 @@ public class CarlaTools :
     if (SQLiteLibraryCandidates.Length == 0)
       throw new FileNotFoundException("Could not find any matching libraries for SQLite");
     var RPCLibCandidates = FindLibraries("rpclib", "rpc");
-    var XercesCCandidates = FindLibraries("xercesc", "xerces-c*");
-    var PROJCandidates = FindLibraries("proj", "proj");
     var ZlibCandidates = FindLibraries("zlib", IsWindows ? "zlibstatic*" : "z"); //TODO: Fix this, note that here we have libz.a and libz.so, need to disambiguate
 
     var AdditionalLibraries = new List<string>
     {
+        LibCarlaServerPath,
         SQLiteLibraryCandidates[0],
         RPCLibCandidates[0],
-        XercesCCandidates[0],
-        PROJCandidates[0],
         ZlibCandidates[0],
     };
 
-    if (EnableOSM2ODR)
+    if (EnableOSM2ODR) {
+      var XercesCCandidates = FindLibraries("xercesc", "xerces-c*");
+      AdditionalLibraries.Add(XercesCCandidates[0]);
+      AdditionalLibraries.Add(FindLibraries("proj", "proj")[0]);
       AdditionalLibraries.Add(FindLibraries("sumo", "*osm2odr")[0]);
+    }
 
     PublicIncludePaths.Add(ModuleDirectory);
     PublicIncludePaths.Add(LibCarlaIncludePath);
@@ -241,10 +245,13 @@ public class CarlaTools :
             BoostIncludePath,
             GetIncludePath("boost"),
             GetIncludePath("rpclib"),
-            GetIncludePath("xercesc"),
-            GetIncludePath("sumo"),
             GetIncludePath("zlib"),
     });
+
+    if (EnableOSM2ODR) {
+      PublicIncludePaths.Add(GetIncludePath("xercesc"));
+      PublicIncludePaths.Add(GetIncludePath("sumo"));
+    }
 
     PrivateDefinitions.Add("ASIO_NO_EXCEPTIONS");
     PrivateDefinitions.Add("BOOST_NO_EXCEPTIONS");
