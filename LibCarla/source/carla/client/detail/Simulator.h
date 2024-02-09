@@ -438,6 +438,14 @@ namespace detail {
       return GetActorSnapshot(actor).acceleration;
     }
 
+    geom::Transform GetActorComponentWorldTransform(const Actor &actor, const std::string componentName) {
+      return _client.GetActorComponentWorldTransform(actor.GetId(), componentName);
+    }
+
+    geom::Transform GetActorComponentRelativeTransform(const Actor &actor, std::string componentName) {
+      return _client.GetActorComponentRelativeTransform(actor.GetId(), componentName);
+    }
+
     void SetActorLocation(Actor &actor, const geom::Location &location) {
       _client.SetActorLocation(actor.GetId(), location);
     }
