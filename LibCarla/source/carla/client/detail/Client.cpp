@@ -408,6 +408,14 @@ namespace detail {
     _pimpl->AsyncCall("add_actor_torque", actor, vector);
   }
 
+  geom::Transform Client::GetActorComponentWorldTransform(rpc::ActorId actor, const std::string componentName) {
+    return _pimpl->CallAndWait<geom::Transform>("get_actor_component_world_transform", actor, componentName);
+  }
+
+  geom::Transform Client::GetActorComponentRelativeTransform(rpc::ActorId actor, const std::string componentName) {
+    return _pimpl->CallAndWait<geom::Transform>("get_actor_component_relative_transform", actor, componentName);
+  }
+
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {
     _pimpl->CallAndWait<void>("set_actor_simulate_physics", actor, enabled);
   }
