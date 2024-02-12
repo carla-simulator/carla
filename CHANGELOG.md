@@ -1,6 +1,7 @@
 ## Latest Changes
  * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
-  * Added vehicle doors to the recorder
+   * Added vehicle doors to the recorder
+ * Added functions to get actor' components transform
 
 ## CARLA 0.9.15
 
