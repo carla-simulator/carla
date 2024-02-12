@@ -323,6 +323,13 @@ pipeline
                         }
                     }
                 }
+                post
+                {
+                    always
+                    {
+                        deleteDir()
+                    }
+                }
                 /*
                 stage('windows')
                 {
