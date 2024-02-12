@@ -92,7 +92,6 @@ compile_flags.extend(definitions)
 
 link_flags = [
     sorted(glob.glob(str(Path('{BOOST_INSTALL_PATH}') / 'lib' / 'libboost_python*{LIB_EXT}'), recursive = True))[0],
-    sorted(glob.glob(str(Path('{BOOST_INSTALL_PATH}') / 'lib' / 'libboost_filesystem*{LIB_EXT}'), recursive = True))[0],
     sorted(glob.glob(str(Path('{RPCLIB_INSTALL_PATH}') / 'lib' / 'rpc{LIB_EXT}'), recursive = True))[0],
     sorted(glob.glob(str(Path('{LIBCARLA_BUILD_PATH}') / '*carla-client{LIB_EXT}'), recursive = True))[0],
     sorted(glob.glob(str(Path('{LIBPNG_INSTALL_PATH}') / 'lib' / 'libpng*{LIB_EXT}'), recursive = True))[0],
