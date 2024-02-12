@@ -189,12 +189,14 @@ pipeline
                                                 sh 'DISPLAY= ./Dist/CarlaUE4.sh -nullrhi -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
                                                 sh 'make smoke_tests ARGS="--xml --python-version=3.8 --target-wheel-platform=manylinux_2_27_x86_64"'
                                                 sh 'make run-examples ARGS="localhost 3654"'
+                                                sh 'tar -czf CarlaUE_logs.tar.gz Unreal/CarlaUE4/Saved/Logs/'
                                             }
                                             post
                                             {
                                                 always
                                                 {
                                                     archiveArtifacts 'CarlaUE4.log'
+                                                    archiveArtifacts 'CarlaUE_logs.tar.gz'
                                                     junit 'Build/test-results/smoke-tests-*.xml'
                                                 }
                                             }
