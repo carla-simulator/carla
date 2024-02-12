@@ -322,12 +322,12 @@ pipeline
                             }
                         }
                     }
-                }
-                post
-                {
-                    always
+                    post
                     {
-                        deleteDir()
+                        always
+                        {
+                            deleteDir()
+                        }
                     }
                 }
                 /*
