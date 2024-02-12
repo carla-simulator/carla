@@ -99,11 +99,8 @@ def ADDCLIIntOption(name : str, default : int, help : str):
   argp.add_argument(f'--{name}', type = int, default = int(default), help = f'{help} (default = {default}).')
 
 AddCLIFlag(
-  'launch',
-  'Build and open the CarlaUE4 project in the Unreal Engine editor.')
-AddCLIFlag(
-  'launch-only',
-  'Open the CARLA project in the Unreal Engine editor, skipping all build steps.')
+  'all',
+  'Build all targets.')
 AddCLIFlag(
   'import',
   f'Import maps and assets from "{WORKSPACE_PATH / "Import"}" into Unreal.')
@@ -256,13 +253,13 @@ def SyncArgs():
 ARGV = SyncArgs()
 
 SEQUENTIAL = ARGV.configure_sequential
-ENABLE_OSM2ODR = ARGV.osm2odr
+ENABLE_OSM2ODR = ARGV.osm2odr or ARGV.all
 ENABLE_GTEST = ARGV.gtest
-ENABLE_OSM_WORLD_RENDERER = ARGV.osm_world_renderer
-ENABLE_CARLA_UE = ARGV.carla_ue
-ENABLE_PYTHON_API = ARGV.python_api
-ENABLE_LIBCARLA_CLIENT = ARGV.libcarla_client
-ENABLE_LIBCARLA_SERVER = ARGV.libcarla_server
+ENABLE_OSM_WORLD_RENDERER = ARGV.osm_world_renderer or ARGV.all
+ENABLE_CARLA_UE = ARGV.carla_ue or ARGV.all
+ENABLE_PYTHON_API = ARGV.python_api or ARGV.all
+ENABLE_LIBCARLA_CLIENT = ARGV.libcarla_client or ARGV.all
+ENABLE_LIBCARLA_SERVER = ARGV.libcarla_server or ARGV.all
 ENABLE_LIBCARLA = any([
   ENABLE_CARLA_UE,
   ENABLE_PYTHON_API,
@@ -277,9 +274,9 @@ ENABLE_UNITY_BUILD = ARGV.unity_build
 ENABLE_NVIDIA_OMNIVERSE = ARGV.nv_omniverse
 ENABLE_RSS = ARGV.rss
 
-UPDATE_DEPENDENCIES = ARGV.update_deps
-BUILD_DEPENDENCIES = ARGV.build_deps
-UPDATE_CARLA_UE_ASSETS = ARGV.update_ue_assets
+UPDATE_DEPENDENCIES = ARGV.update_deps or ARGV.all
+BUILD_DEPENDENCIES = ARGV.build_deps or ARGV.all
+UPDATE_CARLA_UE_ASSETS = ARGV.update_ue_assets or ARGV.all
 PARALLELISM = ARGV.parallelism
 # Root paths:
 CARLA_VERSION_STRING = ARGV.version
