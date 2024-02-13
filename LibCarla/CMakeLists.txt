@@ -108,7 +108,7 @@ if (BUILD_CARLA_SERVER)
       Boost::asio
       Boost::algorithm
       Boost::assert
-      rpclib::rpc
+      rpc
     )
     
     target_include_directories (
@@ -271,7 +271,7 @@ if (BUILD_CARLA_CLIENT)
       Boost::asio
       Boost::algorithm
       Boost::assert
-      rpclib::rpc
+      rpc
     )
     
     target_include_directories (
