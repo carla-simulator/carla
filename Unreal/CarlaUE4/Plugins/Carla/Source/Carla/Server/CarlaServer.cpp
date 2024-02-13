@@ -1364,7 +1364,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     }
   };
 
-  BIND_SYNC(get_actor_bone_world_transform) << [this](
+  BIND_SYNC(get_actor_bone_world_transforms) << [this](
       cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
   {
     REQUIRE_CARLA_EPISODE();
@@ -1400,7 +1400,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     }
   };
 
-  BIND_SYNC(get_actor_bone_relative_transform) << [this](
+  BIND_SYNC(get_actor_bone_relative_transforms) << [this](
       cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
   {
     REQUIRE_CARLA_EPISODE();
