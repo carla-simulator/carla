@@ -416,6 +416,22 @@ namespace detail {
     return _pimpl->CallAndWait<geom::Transform>("get_actor_component_relative_transform", actor, componentName);
   }
 
+  std::vector<geom::Transform> GetActorBoneWorldTransforms(rpc::ActorId actor) {
+    return _pimpl->CallAndWait<std::vector<geom::Transform>>("get_actor_bone_world_transforms", actor);
+  }
+
+  std::vector<geom::Transform> GetActorBoneRelativeTransforms(rpc::ActorId actor) {
+    return _pimpl->CallAndWait<std::vector<geom::Transform>>("get_actor_bone_relative_transforms", actor);
+  }
+
+  std::vector<std::string> GetActorComponentNames(rpc::ActorId actor) {
+    return _pimpl->CallAndWait<std::vector<std::string>>("get_actor_component_names", actor);
+  }
+
+  std::vector<std::string> GetActorBoneNames(rpc::ActorId actor) {
+    return _pimpl->CallAndWait<std::vector<std::string>>("get_actor_bone_names", actor);
+  }  
+
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {
     _pimpl->CallAndWait<void>("set_actor_simulate_physics", actor, enabled);
   }

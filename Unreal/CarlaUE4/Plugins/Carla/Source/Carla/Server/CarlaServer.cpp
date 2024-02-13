@@ -9,6 +9,8 @@
 #include "Carla/Server/CarlaServerResponse.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
 #include "EngineUtils.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
 
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
@@ -1361,6 +1363,148 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       return cr::Transform(ComponentRelativeTransform);
     }
   };
+
+  BIND_SYNC(get_actor_bone_world_transform) << [this](
+      cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_bone_world_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<FTransform> BoneWorldTransforms;
+      USkeletalMeshComponent* SkeletalMeshComponent = CarlaActor->GetActor()->GetMesh();
+      if(!SkeletalMeshComponent)
+      {
+        return RespondError(
+            "get_actor_bone_world_transforms",
+            ECarlaServerResponse::ComponentNotFound,
+            " Component Name: SkeletalMeshComponent ");
+      }
+      else
+      {
+        const int32 NumBones = SkeletalMeshComponent->GetNumBones();
+        for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+        {
+          FTransform BoneTransform = SkeletalMeshComponent->GetBoneTransform(BoneIndex);
+          BoneWorldTransforms.Add(BoneTransform);  
+        }
+        return MakeVectorFromArray<cr::Transform>(BoneWorldTransforms);
+      }
+    }
+  };
+
+  BIND_SYNC(get_actor_bone_relative_transform) << [this](
+      cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_bone_relative_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<FTransform> BoneRelativeTransforms;
+      USkeletalMeshComponent* SkeletalMeshComponent = CarlaActor->GetActor()->GetMesh();
+      if(!SkeletalMeshComponent)
+      {
+        return RespondError(
+            "get_actor_bone_relative_transforms",
+            ECarlaServerResponse::ComponentNotFound,
+            " Component Name: SkeletalMeshComponent ");
+      }
+      else
+      {
+        const int32 NumBones = SkeletalMeshComponent->GetNumBones();
+        for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+        {
+          FTransform BoneTransform = SkeletalMeshComponent->GetBoneTransform(BoneIndex, EBoneSpaces::ComponentSpace);
+          BoneRelativeTransforms.Add(BoneTransform);  
+        }
+        return MakeVectorFromArray<cr::Transform>(BoneRelativeTransforms);
+      }
+    }
+  };
+
+  BIND_SYNC(get_actor_component_names) << [this](
+      cr::ActorId ActorId) -> R<std::vector<std::string>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_component_names",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);
+      std::vector<std::string> ComponentNames;
+      for(auto Cmp : Components)
+      {
+        FString ComponentName = Cmp->GetName();
+        ComponentNames.push_back(ComponentName.c_str());
+      }  
+      return ComponentNames; 
+    }
+  }
+
+  BIND_SYNC(get_actor_bone_names) << [this](
+      cr::ActorId ActorId) -> R<std::vector<std::string>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_component_relative_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      USkeletalMeshComponent* SkeletalMeshComponent = CarlaActor->GetActor()->GetMesh();
+      if(!SkeletalMeshComponent)   
+      {
+        return RespondError(
+            "get_actor_bone_relative_transforms",
+            ECarlaServerResponse::ComponentNotFound,
+            " Component Name: SkeletalMeshComponent ");    
+      }  
+      else
+      {
+        const int32 NumBones = SkeletalMeshComponent->GetNumBones();
+        std::vector<std::string> BoneNames;
+        for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+        {
+          const USkeleton* Skeleton = SkeletalMeshComponent->Skeleton;
+          if (Skeleton)
+          {
+              const int32 NumBones = Skeleton->GetReferenceSkeleton().GetNum();
+              for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+              {
+                  FName BoneName = Skeleton->GetReferenceSkeleton().GetBoneName(BoneIndex);
+                  BoneNames.Add(FString(BoneName).c_str());
+              }
+          }
+        }
+        return MakeVectorFromArray<std::string>(BoneNames);
+      }
+    }
+  }
 
   BIND_SYNC(get_physics_control) << [this](
       cr::ActorId ActorId) -> R<cr::VehiclePhysicsControl>
