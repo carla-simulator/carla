@@ -22,13 +22,7 @@ if (BUILD_CARLA_SERVER OR BUILD_CARLA_CLIENT)
     include (${CARLA_WORKSPACE_PATH}/CMake/BuildBoost.cmake)
   endif ()
   
-  find_package (
-    rpclib
-    ${CARLA_BOOST_VERSION} EXACT
-  )
-  if (NOT ${RPCLIB_FOUND})
-    include (${CARLA_WORKSPACE_PATH}/CMake/BuildRPCLib.cmake)
-  endif ()
+  include (${CARLA_WORKSPACE_PATH}/CMake/BuildRPCLib.cmake)
 endif ()
 
 
