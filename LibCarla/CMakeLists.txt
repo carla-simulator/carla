@@ -1,6 +1,9 @@
 set (LIBCARLA_SOURCE_PATH ${CARLA_WORKSPACE_PATH}/LibCarla/source)
 set (LIBCARLA_THIRD_PARTY_SOURCE_PATH ${LIBCARLA_SOURCE_PATH}/third-party)
 
+set (CARLA_PYTHON_VERSION_MAJOR 3)
+set (CARLA_PYTHON_VERSION_MINOR 8)
+
 configure_file (
   ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in
   ${LIBCARLA_SOURCE_PATH}/carla/Version.h
@@ -10,12 +13,25 @@ if (BUILD_CARLA_SERVER OR BUILD_CARLA_CLIENT)
   find_package (
     Boost
     ${CARLA_BOOST_VERSION} EXACT
+    COMPONENTS
+      system
+      python${CARLA_PYTHON_VERSION_MAJOR}${CARLA_PYTHON_VERSION_MINOR}
   )
-  
+
   if (NOT ${Boost_FOUND})
     include (${CARLA_WORKSPACE_PATH}/CMake/BuildBoost.cmake)
   endif ()
+  
+  find_package (
+    rpclib
+    ${CARLA_BOOST_VERSION} EXACT
+  )
+  if (NOT ${RPCLIB_FOUND})
+    include (${CARLA_WORKSPACE_PATH}/CMake/BuildRPCLib.cmake)
+  endif ()
 endif ()
+
+
 
 if (BUILD_CARLA_SERVER)
 
@@ -94,15 +110,15 @@ if (BUILD_CARLA_SERVER)
     )
 
     target_link_libraries (
-      carla-server PRIVATE
+      carla-server
       Boost::asio
       Boost::algorithm
       Boost::assert
+      rpclib::rpc
     )
     
     target_include_directories (
       carla-server PRIVATE
-      ${Boost_INCLUDE_DIRS}
       ${LIBCARLA_SOURCE_PATH}
     )
 
@@ -256,16 +272,12 @@ if (BUILD_CARLA_CLIENT)
         ${LIBCARLA_CLIENT_SOURCES_THIRD_PARTY}
     )
     
-    target_include_directories (
-      carla-client PRIVATE
-      ${Boost_INCLUDE_DIRS}
-    )
-    
     target_link_libraries (
-      carla-client PRIVATE
+      carla-client
       Boost::asio
       Boost::algorithm
       Boost::assert
+      rpclib::rpc
     )
     
     target_include_directories (

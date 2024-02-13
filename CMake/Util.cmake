@@ -8,13 +8,12 @@ macro (carla_declare_git_dependency NAME URL TAG)
     GIT_TAG ${TAG}
     GIT_PROGRESS ON
     GIT_SHALLOW ON
+    FIND_PACKAGE_ARGS
+      NAMES ${NAME}
     ${ARGN}
   )
+  message ("Downloading \"${NAME}\"")
   FetchContent_MakeAvailable(${NAME})
-
-  add_subdirectory (
-    ${${NAME}_SOURCE_DIR}
-    ${${NAME}_BINARY_DIR})
 endmacro ()
 
 macro (carla_declare_download_dependency NAME URL)
