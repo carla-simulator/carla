@@ -60,6 +60,10 @@ namespace client {
     /// acceleration calculated after the actor's velocity.
     geom::Vector3D GetAcceleration() const;
 
+    geom::Transform GetComponentWorldTransform(const std::string componentName) const;
+
+    geom::Transform GetComponentRelativeTransform(const std::string componentName) const;
+
     /// Teleport the actor to @a location.
     void SetLocation(const geom::Location &location);
 

@@ -422,10 +422,10 @@ Drag your desired foliage item into the box labeled `+ Drop Foliage Here`. Set a
 To export a map as a map package that can be ingested into a standalone CARLA package installation, use the `make package` command as follows:
 
 ```sh
-make package ARGS="--packages=<mapPackage>"
+make package ARGS="--packages=<mapName>"
 ```
 
-The `<mapPackage>` must point to a json file located in `CARLA_ROOT/Unreal/CarlaUE4/Content/Carla/Config` named *mapPackage.json* which has the following structure:
+The `<mapName>` must point to a json file located in `CARLA_ROOT/Unreal/CarlaUE4/Content/Carla/Config` named *mapName.Package.json* which has the following structure:
 
 ```json
 {

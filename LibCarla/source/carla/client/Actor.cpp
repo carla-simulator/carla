@@ -32,6 +32,14 @@ namespace client {
     return GetEpisode().Lock()->GetActorAcceleration(*this);
   }
 
+  geom::Transform Actor::GetComponentWorldTransform(const std::string componentName) const {
+    return GetEpisode().Lock()->GetActorComponentWorldTransform(*this, componentName);
+  }
+
+  geom::Transform Actor::GetComponentRelativeTransform(const std::string componentName) const {
+    return GetEpisode().Lock()->GetActorComponentRelativeTransform(*this, componentName);
+  }
+
   void Actor::SetLocation(const geom::Location &location) {
     GetEpisode().Lock()->SetActorLocation(*this, location);
   }

@@ -1274,6 +1274,94 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     return R<void>::Success();
   };
 
+  BIND_SYNC(get_actor_component_world_transform) << [this](
+      cr::ActorId ActorId,
+      const std::string componentName) -> R<cr::Transform>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_component_world_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);
+
+      USceneComponent* Component;
+      for(auto Cmp : Components)
+      {
+        if(USceneComponent* SCMP = Cast<USceneComponent>(Cmp))
+        {
+          if(SCMP->GetName() == componentName.c_str())
+          {
+            Component = SCMP;
+            break;
+          }
+        }
+      }
+
+      if(!Component)
+      {
+        return RespondError(
+            "get_actor_component_world_transform",
+            ECarlaServerResponse::ComponentNotFound,
+            " Component Name: " + FString(componentName.c_str()));
+      }
+
+      FTransform ComponentWorldTransform = Component->GetComponentTransform();
+      return cr::Transform(ComponentWorldTransform);
+    }
+  };
+
+  BIND_SYNC(get_actor_component_relative_transform) << [this](
+      cr::ActorId ActorId,
+      const std::string componentName) -> R<cr::Transform>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_component_relative_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);
+
+      USceneComponent* Component;
+      for(auto Cmp : Components)
+      {
+        if(USceneComponent* SCMP = Cast<USceneComponent>(Cmp))
+        {
+          if(SCMP->GetName() == componentName.c_str())
+          {
+            Component = SCMP;
+            break;
+          }
+        }
+      }
+
+      if(!Component)
+      {
+        return RespondError(
+            "get_actor_component_world_transform",
+            ECarlaServerResponse::ComponentNotFound,
+            " Component Name: " + FString(componentName.c_str()));
+      }
+
+      FTransform ComponentRelativeTransform = Component->GetRelativeTransform();
+      return cr::Transform(ComponentRelativeTransform);
+    }
+  };
+
   BIND_SYNC(get_physics_control) << [this](
       cr::ActorId ActorId) -> R<cr::VehiclePhysicsControl>
   {
