@@ -88,7 +88,6 @@ namespace detail {
 
     void DestroyTrafficManager(uint16_t port) const;
 
-
     void SetTimeout(time_duration timeout);
 
     time_duration GetTimeout() const;
