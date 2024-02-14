@@ -17,6 +17,7 @@
 #include <carla/rpc/OpendriveGenerationParameters.h>
 #include <compiler/enable-ue4-macros.h>
 
+#include "Actor/ActorDefinition.h"
 #include "CarlaGameInstance.generated.h"
 
 class UCarlaSettings;
@@ -113,6 +114,9 @@ public:
     return &CarlaEngine;
   }
 
+  UFUNCTION(BlueprintCallable)
+  void StartSpawningCameras();
+
 private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
@@ -130,5 +134,32 @@ private:
 
   UPROPERTY()
   FString _MapPath;
+
+  // Camera debug code
+  FTimerHandle SpawnDelayedCameraTimerHandle;
+
+  FTimerHandle SpawnCameraTimerHandle;
+
+  FTimerHandle ResetSpawnDelayedCameraTimerHandle;
+
+  float SpawnRate = 2.f;
+  
+  float InitialDelay = 10.f;
+  
+  int NumCameras = 8;
+  
+  void SpawnMultipleSensorCameras();
+
+  void SpawnSensorCamera();
+
+  void InvalidateDelayedCameraTimerHandle();
+  
+  void GenerateSensorActorDescription(FActorDescription& ActorDescription) const;
+  
+  void SpawnCameraActor(const FTransform &Transform, FActorDescription ThisActorDescription);
+
+  const FActorDefinition* GetActorDefinitionByClass(const TSubclassOf<AActor> ActorClass);
+  
+  TArray<const FActorDefinition*> SensorsDefinitionsToSpawn;
 
 };

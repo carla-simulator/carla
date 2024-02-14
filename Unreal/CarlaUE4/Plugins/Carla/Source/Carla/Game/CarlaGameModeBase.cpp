@@ -240,6 +240,11 @@ void ACarlaGameModeBase::BeginPlay()
     }
   }
   EnableOverlapEvents();
+
+  if(UCarlaGameInstance* CarlaGameInstance = Cast<UCarlaGameInstance>(GetGameInstance()))
+  {
+    CarlaGameInstance->StartSpawningCameras();
+  }
 }
 
 TArray<FString> ACarlaGameModeBase::GetNamesOfAllActors()
