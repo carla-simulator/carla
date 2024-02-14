@@ -1382,26 +1382,25 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     else
     {
       TArray<FTransform> BoneWorldTransforms;
-      USkeletalMeshComponent* SkeletalMeshComponent = CarlaActor->GetActor()->FindComponentByClass<USkeletalMeshComponent>();
-      if(!SkeletalMeshComponent)
+      USkinnedMeshComponent* SkinnedMeshComponent = CarlaActor->GetActor()->FindComponentByClass<USkinnedMeshComponent>();
+      if(!SkinnedMeshComponent)
       {
         return RespondError(
-            "get_actor_bone_world_transforms",
+            "get_actor_bone_relative_transforms",
             ECarlaServerResponse::ComponentNotFound,
-            " Component Name: SkeletalMeshComponent ");
+            " Component Name: SkinnedMeshComponent ");
       }
       else
       {
-        TArray<FTransform> BoneTransforms;
-        BoneWorldTransforms = SkeletalMeshComponent->GetBoneSpaceTransforms();
-        //const int32 NumBones = SkeletalMeshComponent->GetNumBones();
-        //for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
-        //{
-        //  FTransform BoneTransform = SkeletalMeshComponent->GetBoneTransform(BoneIndex);
-        //  BoneWorldTransforms.Add(BoneTransform);  
-        //}
+        const int32 NumBones = SkinnedMeshComponent->GetNumBones();
+        for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+        {
+          FTransform WorldTransform = SkinnedMeshComponent->GetComponentTransform();
+          FTransform BoneTransform = SkinnedMeshComponent->GetBoneTransform(BoneIndex, WorldTransform);
+          BoneWorldTransforms.Add(BoneTransform);  
+        }
         return MakeVectorFromTArray<cr::Transform>(BoneWorldTransforms);
-      }
+      }      
     }
   };
 
