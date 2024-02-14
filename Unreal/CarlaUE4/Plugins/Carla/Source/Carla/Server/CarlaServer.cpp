@@ -10,7 +10,10 @@
 #include "Carla/Traffic/TrafficLightGroup.h"
 #include "EngineUtils.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/SkinnedMeshComponent.h"
+#include "Components/SceneComponent.h"
 #include "Engine/SkeletalMesh.h"
+#include "Animation/Skeleton.h"
 
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
@@ -1379,7 +1382,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     else
     {
       TArray<FTransform> BoneWorldTransforms;
-      USkeletalMeshComponent* SkeletalMeshComponent = CarlaActor->GetActor()->GetMesh();
+      USkeletalMeshComponent* SkeletalMeshComponent = CarlaActor->GetActor()->FindComponentByClass<USkeletalMeshComponent>();
       if(!SkeletalMeshComponent)
       {
         return RespondError(
@@ -1389,13 +1392,15 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       }
       else
       {
-        const int32 NumBones = SkeletalMeshComponent->GetNumBones();
-        for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
-        {
-          FTransform BoneTransform = SkeletalMeshComponent->GetBoneTransform(BoneIndex);
-          BoneWorldTransforms.Add(BoneTransform);  
-        }
-        return MakeVectorFromArray<cr::Transform>(BoneWorldTransforms);
+        TArray<FTransform> BoneTransforms;
+        BoneWorldTransforms = SkeletalMeshComponent->GetBoneSpaceTransforms();
+        //const int32 NumBones = SkeletalMeshComponent->GetNumBones();
+        //for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+        //{
+        //  FTransform BoneTransform = SkeletalMeshComponent->GetBoneTransform(BoneIndex);
+        //  BoneWorldTransforms.Add(BoneTransform);  
+        //}
+        return MakeVectorFromTArray<cr::Transform>(BoneWorldTransforms);
       }
     }
   };
@@ -1415,23 +1420,23 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     else
     {
       TArray<FTransform> BoneRelativeTransforms;
-      USkeletalMeshComponent* SkeletalMeshComponent = CarlaActor->GetActor()->GetMesh();
-      if(!SkeletalMeshComponent)
+      USkinnedMeshComponent* SkinnedMeshComponent = CarlaActor->GetActor()->FindComponentByClass<USkinnedMeshComponent>();
+      if(!SkinnedMeshComponent)
       {
         return RespondError(
             "get_actor_bone_relative_transforms",
             ECarlaServerResponse::ComponentNotFound,
-            " Component Name: SkeletalMeshComponent ");
+            " Component Name: SkinnedMeshComponent ");
       }
       else
       {
-        const int32 NumBones = SkeletalMeshComponent->GetNumBones();
+        const int32 NumBones = SkinnedMeshComponent->GetNumBones();
         for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
         {
-          FTransform BoneTransform = SkeletalMeshComponent->GetBoneTransform(BoneIndex, EBoneSpaces::ComponentSpace);
+          FTransform BoneTransform = SkinnedMeshComponent->GetBoneTransform(BoneIndex, FTransform::Identity);
           BoneRelativeTransforms.Add(BoneTransform);  
         }
-        return MakeVectorFromArray<cr::Transform>(BoneRelativeTransforms);
+        return MakeVectorFromTArray<cr::Transform>(BoneRelativeTransforms);
       }
     }
   };
@@ -1456,11 +1461,11 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       for(auto Cmp : Components)
       {
         FString ComponentName = Cmp->GetName();
-        ComponentNames.push_back(ComponentName.c_str());
+        ComponentNames.push_back(TCHAR_TO_UTF8(*ComponentName));
       }  
       return ComponentNames; 
     }
-  }
+  };
 
   BIND_SYNC(get_actor_bone_names) << [this](
       cr::ActorId ActorId) -> R<std::vector<std::string>>
@@ -1476,35 +1481,29 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     }
     else
     {
-      USkeletalMeshComponent* SkeletalMeshComponent = CarlaActor->GetActor()->GetMesh();
-      if(!SkeletalMeshComponent)   
+      USkinnedMeshComponent* SkinnedMeshComponent = CarlaActor->GetActor()->FindComponentByClass<USkinnedMeshComponent>();
+      if(!SkinnedMeshComponent)   
       {
         return RespondError(
             "get_actor_bone_relative_transforms",
             ECarlaServerResponse::ComponentNotFound,
-            " Component Name: SkeletalMeshComponent ");    
+            " Component Name: SkinnedMeshComponent ");    
       }  
       else
       {
-        const int32 NumBones = SkeletalMeshComponent->GetNumBones();
-        std::vector<std::string> BoneNames;
-        for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+        TArray<FName> BoneNames;
+        SkinnedMeshComponent->GetBoneNames(BoneNames);
+        TArray<std::string> StringBoneNames;
+        for (const FName& Name : BoneNames)
         {
-          const USkeleton* Skeleton = SkeletalMeshComponent->Skeleton;
-          if (Skeleton)
-          {
-              const int32 NumBones = Skeleton->GetReferenceSkeleton().GetNum();
-              for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
-              {
-                  FName BoneName = Skeleton->GetReferenceSkeleton().GetBoneName(BoneIndex);
-                  BoneNames.Add(FString(BoneName).c_str());
-              }
-          }
+            FString FBoneName = Name.ToString();
+            std::string StringBoneName = TCHAR_TO_UTF8(*FBoneName);
+            StringBoneNames.Add(StringBoneName);
         }
-        return MakeVectorFromArray<std::string>(BoneNames);
+        return MakeVectorFromTArray<std::string>(StringBoneNames);
       }
     }
-  }
+  };
 
   BIND_SYNC(get_physics_control) << [this](
       cr::ActorId ActorId) -> R<cr::VehiclePhysicsControl>

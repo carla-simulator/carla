@@ -40,19 +40,19 @@ namespace client {
     return GetEpisode().Lock()->GetActorComponentRelativeTransform(*this, componentName);
   }
 
-  std::vector<geom::Transform> GetBoneWorldTransforms() const {
+  std::vector<geom::Transform> Actor::GetBoneWorldTransforms() const {
     return GetEpisode().Lock()->GetActorBoneWorldTransforms(*this);
   }
 
-  std::vector<geom::Transform> GetBoneRelativeTransforms() const {
+  std::vector<geom::Transform> Actor::GetBoneRelativeTransforms() const {
     return GetEpisode().Lock()->GetActorBoneRelativeTransforms(*this);
   }
 
-  std::vector<std::string> GetComponentNames() const {
+  std::vector<std::string> Actor::GetComponentNames() const {
     return GetEpisode().Lock()->GetActorComponentNames(*this);
   }
 
-  std::vector<std::string> GetBoneNames() const {
+  std::vector<std::string> Actor::GetBoneNames() const {
     return GetEpisode().Lock()->GetActorBoneNames(*this);
   } 
 

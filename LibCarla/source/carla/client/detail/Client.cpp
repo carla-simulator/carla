@@ -416,24 +416,24 @@ namespace detail {
     return _pimpl->CallAndWait<geom::Transform>("get_actor_component_relative_transform", actor, componentName);
   }
 
-  std::vector<geom::Transform> GetActorBoneWorldTransforms(rpc::ActorId actor) {
+  std::vector<geom::Transform> Client::GetActorBoneWorldTransforms(rpc::ActorId actor) {
     using return_t = std::vector<geom::Transform>;
-    return _pimpl->CallAndWait<return_t>>("get_actor_bone_world_transforms", actor);
+    return _pimpl->CallAndWait<return_t>("get_actor_bone_world_transforms", actor);
   }
 
-  std::vector<geom::Transform> GetActorBoneRelativeTransforms(rpc::ActorId actor) {
+  std::vector<geom::Transform> Client::GetActorBoneRelativeTransforms(rpc::ActorId actor) {
     using return_t = std::vector<geom::Transform>;
-    return _pimpl->CallAndWait<return_t>>("get_actor_bone_relative_transforms", actor);
+    return _pimpl->CallAndWait<return_t>("get_actor_bone_relative_transforms", actor);
   }
 
-  std::vector<std::string> GetActorComponentNames(rpc::ActorId actor) {
+  std::vector<std::string> Client::GetActorComponentNames(rpc::ActorId actor) {
     using return_t = std::vector<std::string>;
-    return _pimpl->CallAndWait<return_t>>("get_actor_component_names", actor);
+    return _pimpl->CallAndWait<return_t>("get_actor_component_names", actor);
   }
 
-  std::vector<std::string> GetActorBoneNames(rpc::ActorId actor) {
+  std::vector<std::string> Client::GetActorBoneNames(rpc::ActorId actor) {
     using return_t = std::vector<std::string>;
-    return _pimpl->CallAndWait<return_t>>("get_actor_bone_names", actor);
+    return _pimpl->CallAndWait<return_t>("get_actor_bone_names", actor);
   }  
 
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {

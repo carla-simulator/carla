@@ -68,7 +68,7 @@ namespace client {
 
     std::vector<geom::Transform> GetBoneRelativeTransforms() const;
 
-    std::vector<std::string> GetComponentNames() const;
+    std::vector<std::string> GetComponentNames() const; 
 
     std::vector<std::string> GetBoneNames() const;
 
