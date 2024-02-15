@@ -91,6 +91,9 @@ public:
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   FString Url;
 
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  FString LocalFilePath;
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
   FVector2D OriginGeoCoordinates;
 
