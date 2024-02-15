@@ -204,6 +204,7 @@ void ACarlaGameModeBase::BeginPlay()
 
   Episode->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
+  OnEpisodeInitialisedDelegate.Broadcast(Episode);
 
   if (Episode->Weather != nullptr)
   {
@@ -240,11 +241,6 @@ void ACarlaGameModeBase::BeginPlay()
     }
   }
   EnableOverlapEvents();
-
-  if(UCarlaGameInstance* CarlaGameInstance = Cast<UCarlaGameInstance>(GetGameInstance()))
-  {
-    CarlaGameInstance->StartSpawningCameras();
-  }
 }
 
 TArray<FString> ACarlaGameModeBase::GetNamesOfAllActors()
