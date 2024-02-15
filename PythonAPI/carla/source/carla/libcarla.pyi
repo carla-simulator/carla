@@ -467,7 +467,7 @@ class ActorBlueprint():
     # endregion
 
     # region Dunder Methods
-    def __iter__(self):
+    def __iter__(self) -> Iterator[ActorAttribute]:
         """Iterate over the `carla.ActorAttribute` that this blueprint has.
         """
         ...
@@ -515,7 +515,7 @@ class ActorList():
         """Returns the actor corresponding to pos position in the list."""
         ...
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Actor]:
         """Iterate over the `carla.Actor` contained in the list."""
         ...
 
@@ -656,7 +656,7 @@ class BlueprintLibrary():
         """Returns the blueprint stored in `pos` position inside the data structure containing them.
         """
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[ActorBlueprint]:
         """Iterate over the `carla.ActorBlueprint` stored in the library."""
 
     def __len__(self):
@@ -3672,6 +3672,7 @@ class Vehicle(Actor):
     """One of the most important groups of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these actors is provided in `carla.BlueprintLibrary` to facilitate differente requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the `traffic manager`."""
 
     # region Instance Variables
+    @property
     def bounding_box() -> BoundingBox:
         """Bounding box containing the geometry of the vehicle. Its location and rotation are relative to the vehicle it is attached to."""
     # endregion
@@ -4737,7 +4738,7 @@ class World():
     def get_actors(self, actor_ids: list = None) -> ActorList:
         """Retrieves a list of `carla.Actor` elements, either using a list of IDs provided or just listing everyone on stage. If an ID does not correspond with any actor, it will be excluded from the list returned, meaning that both the list of IDs and the list of actors may have different lengths."""
 
-    def get_blueprint_library(self) -> list[BlueprintLibrary]:
+    def get_blueprint_library(self) -> BlueprintLibrary:
         """Returns a list of actor blueprints available to ease the spawn of these into the world."""
 
     def get_environment_objects(self, object_type: CityObjectLabel = CityObjectLabel.Any) -> list[EnvironmentObject]:
