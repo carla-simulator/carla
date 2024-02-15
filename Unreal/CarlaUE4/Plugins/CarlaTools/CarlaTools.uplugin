@@ -38,11 +38,7 @@
 			"Name": "ProceduralMeshComponent",
 			"Enabled": true
 		},
-        {
-			"Name": "HoudiniEngine",
-			"Enabled": true
-		},
-        {
+    {
 			"Name": "StreetMap",
 			"Enabled": true
 		}
