@@ -10,6 +10,7 @@ class ASensor;
 class USceneComponent;
 class UCarlaEpisode;
 
+
 USTRUCT(BlueprintType)
 struct FSensorTuple
 {
@@ -23,6 +24,7 @@ struct FSensorTuple
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int Amount = 1;
 };
+
 
 UCLASS(Blueprintable)
 class CARLA_API ASensorSpawnerActor : public AActor

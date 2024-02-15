@@ -6,6 +6,8 @@
 #include "Game/CarlaGameModeBase.h"
 #include "Sensor/Sensor.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogSensorSpawnerActor, Verbose, All);
+
 ASensorSpawnerActor::ASensorSpawnerActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
@@ -17,7 +19,6 @@ ASensorSpawnerActor::ASensorSpawnerActor()
 void ASensorSpawnerActor::BeginPlay()
 {
   Super::BeginPlay();
-
   
   // Wait for the CarlaEpisode initialisation. It is done on CarlaGameMode BeginPlay().
   if(ACarlaGameModeBase* CarlaGameMode = Cast<ACarlaGameModeBase>(UGameplayStatics::GetGameMode(GetWorld())))
@@ -42,7 +43,7 @@ void ASensorSpawnerActor::SpawnSensors()
   // Check if we are doing a delayed spawn. If so, don't do nothing.
   if(!SensorsToSpawnCopy.IsEmpty())
   {
-    UE_LOG(LogTemp, Warning, TEXT("Warning: ASensorSpawnerActor::SpawnSensors - Delayed spawn already in progress, wait until it ends"));
+    UE_LOG(LogSensorSpawnerActor, Warning, TEXT("Warning: ASensorSpawnerActor::SpawnSensors - Delayed spawn already in progress, wait until it ends"));
     return;
   }
   
@@ -89,10 +90,7 @@ void ASensorSpawnerActor::SpawnSensorActor(const FActorDescription& SensorDescri
     FTransform Transform;
     GetRandomTransform(Transform);
     
-    TPair<EActorSpawnResultStatus, FCarlaActor*> SpawnPair = CarlaEpisode->SpawnActorWithInfo(Transform, SensorDescription);
-    
-    UE_LOG(LogTemp, Log, TEXT("ASensorSpawnerActor::SpawnSensorActor: Id: %s, SpawnResult: %s, Valid: %s"), *SensorDescription.Id,
-      *FString::FromInt(static_cast<uint8>(SpawnPair.Key)), SpawnPair.Value ? TEXT("true") : TEXT("false"));
+    CarlaEpisode->SpawnActorWithInfo(Transform, SensorDescription);
   }
 }
 
