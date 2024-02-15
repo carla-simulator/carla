@@ -124,6 +124,14 @@
 		{
 			"Name": "HairStrands",
 			"Enabled": true
+		},
+		{
+			"Name": "HoudiniEngine",
+			"Enabled": true
+		},
+		{
+			"Name": "StreetMap",
+			"Enabled": true
 		}
 	]
 }

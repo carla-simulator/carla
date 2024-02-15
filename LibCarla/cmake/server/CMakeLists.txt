@@ -1,17 +1,6 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(libcarla-server)
 
-# Install libc++ shared libraries.
-file(GLOB LibCXX_Libraries "${LLVM_LIB_PATH}/libc++*")
-install(FILES ${LibCXX_Libraries} DESTINATION lib)
-
-# Install rpclib.
-install(DIRECTORY "${RPCLIB_INCLUDE_PATH}/rpc" DESTINATION include)
-file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
-install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
-
-# Install headers.
-
 install(DIRECTORY "${libcarla_source_path}/compiler" DESTINATION include)
 
 file(GLOB libcarla_carla_headers "${libcarla_source_path}/carla/*.h")
@@ -71,8 +60,19 @@ install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/
 file(GLOB libcarla_carla_multigpu_headers "${libcarla_source_path}/carla/multigpu/*.h")
 install(FILES ${libcarla_carla_multigpu_headers} DESTINATION include/carla/multigpu)
 
-file(GLOB libcarla_carla_ros2_headers "${libcarla_source_path}/carla/ros2/*.h")
-install(FILES ${libcarla_carla_ros2_headers} DESTINATION include/carla/ros2)
+if (LIBCARLA_USE_ROS)
+  # only install the required public interface headers
+  foreach(dir "/" "/types/" )
+    file(GLOB libcarla_carla_ros2_public_headers 
+      "${libcarla_source_path}/carla/ros2${dir}*.h"
+    )
+    install(FILES ${libcarla_carla_ros2_public_headers} DESTINATION include/carla/ros2${dir})
+  endforeach()
+
+  if(NOT WIN32)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3" CACHE STRING "" FORCE)
+  endif()
+endif()
 
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
 
@@ -118,8 +118,6 @@ file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/streaming/low_level/*.h"
     "${libcarla_source_path}/carla/multigpu/*.h"
     "${libcarla_source_path}/carla/multigpu/*.cpp"
-    "${libcarla_source_path}/carla/ros2/*.h"
-    "${libcarla_source_path}/carla/ros2/*.cpp"
     "${libcarla_source_thirdparty_path}/odrSpiral/*.cpp"
     "${libcarla_source_thirdparty_path}/odrSpiral/*.h"
     "${libcarla_source_thirdparty_path}/moodycamel/*.cpp"
@@ -127,13 +125,27 @@ file(GLOB libcarla_server_sources
     "${libcarla_source_thirdparty_path}/pugixml/*.cpp"
     "${libcarla_source_thirdparty_path}/pugixml/*.hpp")
 
+
+set(libcarla_ros_sources "")
+if (LIBCARLA_USE_ROS)
+  file(GLOB libcarla_ros_sources
+   "${libcarla_source_path}/carla/ros2/*.cpp"
+   "${libcarla_source_path}/carla/ros2/listeners/*.cpp"
+   "${libcarla_source_path}/carla/ros2/publishers/*.cpp"
+   "${libcarla_source_path}/carla/ros2/subscribers/*.cpp"
+   "${libcarla_source_path}/carla/ros2/types/*.cpp")
+endif()
+
 # ==============================================================================
 # Create targets for debug and release in the same build type.
 # ==============================================================================
 
 if (LIBCARLA_BUILD_RELEASE)
 
-  add_library(carla_server STATIC ${libcarla_server_sources})
+  add_library(carla_server STATIC 
+    ${libcarla_server_sources}
+    ${libcarla_ros_sources}
+  )
 
   target_include_directories(carla_server SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
@@ -143,11 +155,20 @@ if (LIBCARLA_BUILD_RELEASE)
 
   set_target_properties(carla_server PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
 
+  if (LIBCARLA_USE_ROS)
+    target_include_directories(carla_server SYSTEM PRIVATE
+      "${FASTDDS_INCLUDE_PATH}")
+    target_link_directories(carla_server PRIVATE ${FASTDDS_LIB_PATH})
+    target_link_libraries(carla_server fastrtps fastcdr)
+  endif()
 endif()
 
 if (LIBCARLA_BUILD_DEBUG)
 
-  add_library(carla_server_debug STATIC ${libcarla_server_sources})
+  add_library(carla_server_debug STATIC 
+    ${libcarla_server_sources}
+    ${libcarla_ros_sources}
+  )
 
   target_include_directories(carla_server_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
@@ -158,4 +179,10 @@ if (LIBCARLA_BUILD_DEBUG)
   set_target_properties(carla_server_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
   target_compile_definitions(carla_server_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
 
+  if (LIBCARLA_USE_ROS)
+    target_include_directories(carla_server_debug SYSTEM PRIVATE
+     "${FASTDDS_INCLUDE_PATH}")
+     target_link_directories(carla_server_debug PRIVATE ${FASTDDS_LIB_PATH})
+     target_link_libraries(carla_server_debug fastrtps fastcdr)
+  endif()
 endif()

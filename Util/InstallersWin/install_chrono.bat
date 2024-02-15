@@ -14,6 +14,7 @@ echo %FILE_N% [Batch params]: %*
 rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
+set GENERATOR=""
 
 :arg-parse
 if not "%1"=="" (
@@ -39,6 +40,11 @@ rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
 if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
 if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
+echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
+    set PLATFORM=-A x64
+) || (
+    set PLATFORM=
+)
 
 rem ============================================================================
 rem -- Get Eigen (Chrono dependency) -------------------------------------------
@@ -100,12 +106,6 @@ if not exist %CHRONO_INSTALL_DIR% (
     mkdir %CHRONO_INSTALL_DIR%
 
     cd "%CHRONO_BUILD_DIR%"
-
-    echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
-        set PLATFORM=-A x64
-    ) || (
-        set PLATFORM=
-    )
 
     echo %FILE_N% Compiling Chrono.
     cmake -G %GENERATOR% %PLATFORM%^

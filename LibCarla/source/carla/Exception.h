@@ -6,13 +6,9 @@
 
 #pragma once
 
+#include <exception>
+
 #ifdef LIBCARLA_NO_EXCEPTIONS
-
-namespace std {
-
-  class exception;
-
-} // namespace std
 
 namespace carla {
 

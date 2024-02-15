@@ -14,14 +14,14 @@
 #ifdef BOOST_NO_EXCEPTIONS
 
 namespace boost {
-
+  
   void throw_exception(const std::exception &e) {
     carla::throw_exception(e);
   }
 
   void throw_exception(
       const std::exception &e,
-      boost::source_location const & loc) {
+      boost::source_location const & ) {
     throw_exception(e);
   }
 
@@ -54,4 +54,33 @@ namespace detail {
 } // namespace detail
 } // namespace clmdep_asio
 
+namespace asio {
+namespace detail {
+
+  template <typename Exception>
+  void throw_exception(const Exception& e) {
+    carla::throw_exception(e);
+  }
+
+  template void throw_exception<std::bad_cast>(const std::bad_cast &);
+  template void throw_exception<std::exception>(const std::exception &);
+  template void throw_exception<std::system_error>(const std::system_error &);
+
+} // namespace detail
+} // namespace asio
+
 #endif // ASIO_NO_EXCEPTIONS
+
+#ifndef LIBCARLA_NO_EXCEPTIONS
+
+namespace carla {
+  template
+#ifndef __clang__
+  // clang doesn't support C++11 attributes in template explicit instantiation, since attributes in each case cannot be changed here
+  // MSVC requires it (might be a bit too conservative and requires the attributes also in explicit instanciation)
+  [[ noreturn ]]
+#endif
+  void throw_exception<std::exception>(const std::exception &);
+}
+
+#endif

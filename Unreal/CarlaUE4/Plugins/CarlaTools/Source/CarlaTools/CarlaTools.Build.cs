@@ -4,22 +4,18 @@ using System;
 using System.IO;
 using UnrealBuildTool;
 
-public class CarlaTools : ModuleRules
+public class CarlaTools : CarlaRules
 {
   bool UsingHoudini = true;
   bool bUsingOmniverseConnector = false;
-  private bool IsWindows(ReadOnlyTargetRules Target)
-  {
-    return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
-  }
 
-	public CarlaTools(ReadOnlyTargetRules Target) : base(Target)
+	public CarlaTools(ReadOnlyTargetRules Target) : base(Target, "../../../Carla/CarlaDependencies")
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
     // PrivatePCHHeaderFile = "Carla.h";
 
-    if (IsWindows(Target))
+    if (IsWindows())
     {
       bEnableExceptions = true;
     }
@@ -37,6 +33,13 @@ public class CarlaTools : ModuleRules
         PublicDefinitions.Add("WITH_OMNIVERSE");
         PrivateDefinitions.Add("WITH_OMNIVERSE");
       }
+
+      if (line.Contains("Ros2 ON"))
+      {
+        Console.WriteLine("Enabling ros2");
+        UsingRos2 = true;
+      }
+
     }
 
 		PublicIncludePaths.AddRange(
@@ -123,78 +126,32 @@ public class CarlaTools : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
-		AddCarlaServerDependency(Target);
+		AddCarlaServerDependency();
 	}
 
-  private bool UseDebugLibs(ReadOnlyTargetRules Target)
-  {
-    if (IsWindows(Target))
-    {
-      // In Windows, Unreal uses the Release C++ Runtime (CRT) even in debug
-      // mode, so unless we recompile the engine we cannot link the debug
-      // libraries.
-      return false;
-    }
-    else
-    {
-      return false;
-    }
-  }
-
-  delegate string ADelegate(string s);
-
-  private void AddBoostLibs(string LibPath)
-  {
-    string [] files = Directory.GetFiles(LibPath, "*boost*.lib");
-    foreach (string file in files)
-    {
-      PublicAdditionalLibraries.Add(file);
-    }
-  }
-
-
-	private void AddCarlaServerDependency(ReadOnlyTargetRules Target)
+  
+	private void AddCarlaServerDependency()
 	{
-		string LibCarlaInstallPath = Path.GetFullPath(Path.Combine(ModuleDirectory, "../../../Carla/CarlaDependencies"));
-
-		ADelegate GetLibName = (string BaseName) => {
-			if (IsWindows(Target))
-			{
-				return BaseName + ".lib";
-			}
-			else
-			{
-				return "lib" + BaseName + ".a";
-			}
-		};
 
     // Link dependencies.
-    if (IsWindows(Target))
+    if (IsWindows())
     {
-      AddBoostLibs(Path.Combine(LibCarlaInstallPath, "lib"));
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
-
-      if (UseDebugLibs(Target))
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
-      }
-      else
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
-      }
+      AddBoostLibs();
+    }
+    AddStaticLibrary("rpc");
+    if (UseDebugLibs())
+    {
+      AddStaticLibrary("carla_server_debug");
     }
     else
     {
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
-      if (UseDebugLibs(Target))
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
-      }
-      else
-      {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
-      }
+      AddStaticLibrary("carla_server");
     }
+
+    addOsmToODR();
+
+    addROS2();
+
     // Include path.
     string LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
 
@@ -203,7 +160,7 @@ public class CarlaTools : ModuleRules
 
     PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
     PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
-    // PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
+    PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
     PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
     PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
     PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");

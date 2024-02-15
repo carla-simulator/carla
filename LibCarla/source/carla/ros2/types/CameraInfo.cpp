@@ -26,6 +26,10 @@ char dummy;
 }  // namespace
 #endif  // _WIN32
 
+// ensure that cmath header is not included elsewhere before to enable the math definitions on Win32
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include "CameraInfo.h"
 #include <fastcdr/Cdr.h>
 
@@ -33,7 +37,6 @@ char dummy;
 using namespace eprosima::fastcdr::exception;
 
 #include <utility>
-#include <cmath>
 
 #define builtin_interfaces_msg_Time_max_cdr_typesize 8ULL;
 #define sensor_msgs_msg_CameraInfo_max_cdr_typesize 3793ULL;
