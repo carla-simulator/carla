@@ -240,7 +240,7 @@ unset BOOST_BASENAME
 
 
 # ==============================================================================
-# -- Get rpclib and compile it for server (libc++) and libstdc++ -----------------------
+# -- Get rpclib and compile it for server (libc++) and client (libstdc++) ------
 # ==============================================================================
 
 RPCLIB_PATCH=v2.2.1_c5
@@ -1029,10 +1029,6 @@ if ${USE_ROS2} ; then
     popd >/dev/null
 
     rm -Rf ${FASTDDS_BASENAME}-source ${FASTDDS_BASENAME}-server-build
-
-    # for achieving copyless transport of Images and PointCloud2 data we had to integrate vector allocator template support
-    # therefore, delete the original file (see LibCarla/source/carla/ros2/ros_types/fastcdr/Cdr.h)
-    rm -f ${FASTDDS_SERVER_INCLUDE}/fastcdr/Cdr.h
   fi
 
   cp -pr ${FASTDDS_SERVER_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/

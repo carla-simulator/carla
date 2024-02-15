@@ -47,9 +47,6 @@ public class CarlaRules : ModuleRules
     foreach (string file in files) PublicAdditionalLibraries.Add(file);
   }
 
-  /**
-     Desire would be to add static libraries in a non-transient manner to just link, but don't pull their dependencies again
-  */
   protected void AddStaticLibrary(string LibBaseName, string LinkBasePath = "", string LibPrefix = "", string LibPostfix = "") {
     string linkBasePath = LinkBasePath;
     if ( linkBasePath == "" )
