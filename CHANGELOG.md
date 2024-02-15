@@ -1,6 +1,7 @@
 ## Latest Changes
- * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
+  * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
   * Added vehicle doors to the recorder
+  * Creating SensorSpawnerActor to spawn custom sensors in the editor.
 
 ## CARLA 0.9.15
 
