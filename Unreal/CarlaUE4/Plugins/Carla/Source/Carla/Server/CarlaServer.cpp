@@ -706,7 +706,8 @@ void FCarlaServer::FPimpl::BindActions()
       cr::ActorDescription Description,
       const cr::Transform &Transform,
       cr::ActorId ParentId,
-      cr::AttachmentType InAttachmentType) -> R<cr::Actor>
+      cr::AttachmentType InAttachmentType,
+      const std::string& socket_name) -> R<cr::Actor>
   {
     REQUIRE_CARLA_EPISODE();
 
@@ -760,7 +761,8 @@ void FCarlaServer::FPimpl::BindActions()
       Episode->AttachActors(
           CarlaActor->GetActor(),
           ParentCarlaActor->GetActor(),
-          static_cast<EAttachmentType>(InAttachmentType));
+          static_cast<EAttachmentType>(InAttachmentType),
+          FString(socket_name.c_str()));
     }
     else
     {
@@ -2545,7 +2547,8 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
             c.description,
             c.transform,
             *c.parent,
-            cr::AttachmentType::Rigid) :
+            cr::AttachmentType::Rigid,
+            c.socket_name) :
         spawn_actor(c.description, c.transform);
         if (!result.HasError())
         {

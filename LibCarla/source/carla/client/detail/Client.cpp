@@ -326,11 +326,12 @@ namespace detail {
     return _pimpl->CallAndWait<rpc::Actor>("spawn_actor", description, transform);
   }
 
-  rpc::Actor Client::SpawnActorWithParent(
+    rpc::Actor Client::SpawnActorWithParent(
       const rpc::ActorDescription &description,
       const geom::Transform &transform,
       rpc::ActorId parent,
-      rpc::AttachmentType attachment_type) {
+      rpc::AttachmentType attachment_type,
+      const std::string& socket_name) {
 
       if (attachment_type == rpc::AttachmentType::SpringArm ||
           attachment_type == rpc::AttachmentType::SpringArmGhost)
@@ -348,7 +349,8 @@ namespace detail {
         description,
         transform,
         parent,
-        attachment_type);
+        attachment_type,
+        socket_name);
   }
 
   bool Client::DestroyActor(rpc::ActorId actor) {

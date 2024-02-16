@@ -180,7 +180,8 @@ namespace detail {
         const rpc::ActorDescription &description,
         const geom::Transform &transform,
         rpc::ActorId parent,
-        rpc::AttachmentType attachment_type);
+        rpc::AttachmentType attachment_type,
+        const std::string& socket_name = "");
 
     bool DestroyActor(rpc::ActorId actor);
 

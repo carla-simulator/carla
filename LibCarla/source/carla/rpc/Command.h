@@ -18,6 +18,8 @@
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/WalkerControl.h"
 
+#include <string>
+
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4583)
@@ -59,11 +61,17 @@ namespace rpc {
         : description(std::move(description)),
           transform(transform),
           parent(parent) {}
+      SpawnActor(ActorDescription description, const geom::Transform &transform, ActorId parent, const std::string& bone)
+        : description(std::move(description)),
+          transform(transform),
+          parent(parent),
+          socket_name(bone) {}
       ActorDescription description;
       geom::Transform transform;
       boost::optional<ActorId> parent;
       std::vector<Command> do_after;
-      MSGPACK_DEFINE_ARRAY(description, transform, parent, do_after);
+      std::string socket_name;
+      MSGPACK_DEFINE_ARRAY(description, transform, parent, do_after, socket_name);
     };
 
     struct DestroyActor : CommandBase<DestroyActor> {
