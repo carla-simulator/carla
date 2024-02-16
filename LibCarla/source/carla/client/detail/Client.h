@@ -252,6 +252,12 @@ namespace detail {
     std::vector<std::string> GetActorBoneNames(
         rpc::ActorId actor);
 
+    std::vector<geom::Transform> GetActorSocketWorldTransforms(
+        rpc::ActorId actor);
+
+    std::vector<geom::Transform> GetActorSocketRelativeTransforms(
+        rpc::ActorId actor);
+
     void SetActorSimulatePhysics(
         rpc::ActorId actor,
         bool enabled);

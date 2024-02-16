@@ -56,6 +56,14 @@ namespace client {
     return GetEpisode().Lock()->GetActorBoneNames(*this);
   } 
 
+  std::vector<geom::Transform> Actor::GetSocketWorldTransforms() const {
+    return GetEpisode().Lock()->GetActorSocketWorldTransforms(*this);
+  }
+
+  std::vector<geom::Transform> Actor::GetSocketRelativeTransforms() const {
+    return GetEpisode().Lock()->GetActorSocketRelativeTransforms(*this);
+  }
+
   void Actor::SetLocation(const geom::Location &location) {
     GetEpisode().Lock()->SetActorLocation(*this, location);
   }

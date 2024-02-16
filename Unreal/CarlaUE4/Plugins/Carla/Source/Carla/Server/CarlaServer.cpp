@@ -13,7 +13,7 @@
 #include "Components/SkinnedMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "Engine/SkeletalMesh.h"
-#include "Animation/Skeleton.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
@@ -1382,8 +1382,9 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     else
     {
       TArray<FTransform> BoneWorldTransforms;
-      USkinnedMeshComponent* SkinnedMeshComponent = CarlaActor->GetActor()->FindComponentByClass<USkinnedMeshComponent>();
-      if(!SkinnedMeshComponent)
+      TArray<USkinnedMeshComponent*> SkinnedMeshComponents;
+      CarlaActor->GetActor()->GetComponents<USkinnedMeshComponent>(SkinnedMeshComponents);
+      if(!SkinnedMeshComponents[0])
       {
         return RespondError(
             "get_actor_bone_relative_transforms",
@@ -1392,12 +1393,15 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       }
       else
       {
-        const int32 NumBones = SkinnedMeshComponent->GetNumBones();
-        for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+        for(USkinnedMeshComponent* SkinnedMeshComponent : SkinnedMeshComponents)
         {
-          FTransform WorldTransform = SkinnedMeshComponent->GetComponentTransform();
-          FTransform BoneTransform = SkinnedMeshComponent->GetBoneTransform(BoneIndex, WorldTransform);
-          BoneWorldTransforms.Add(BoneTransform);  
+          const int32 NumBones = SkinnedMeshComponent->GetNumBones();
+          for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+          {
+            FTransform WorldTransform = SkinnedMeshComponent->GetComponentTransform();
+            FTransform BoneTransform = SkinnedMeshComponent->GetBoneTransform(BoneIndex, WorldTransform);
+            BoneWorldTransforms.Add(BoneTransform);  
+          }
         }
         return MakeVectorFromTArray<cr::Transform>(BoneWorldTransforms);
       }      
@@ -1419,8 +1423,9 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     else
     {
       TArray<FTransform> BoneRelativeTransforms;
-      USkinnedMeshComponent* SkinnedMeshComponent = CarlaActor->GetActor()->FindComponentByClass<USkinnedMeshComponent>();
-      if(!SkinnedMeshComponent)
+      TArray<USkinnedMeshComponent*> SkinnedMeshComponents;
+      CarlaActor->GetActor()->GetComponents<USkinnedMeshComponent>(SkinnedMeshComponents);
+      if(!SkinnedMeshComponents[0])
       {
         return RespondError(
             "get_actor_bone_relative_transforms",
@@ -1429,11 +1434,14 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       }
       else
       {
-        const int32 NumBones = SkinnedMeshComponent->GetNumBones();
-        for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+        for(USkinnedMeshComponent* SkinnedMeshComponent : SkinnedMeshComponents)
         {
-          FTransform BoneTransform = SkinnedMeshComponent->GetBoneTransform(BoneIndex, FTransform::Identity);
-          BoneRelativeTransforms.Add(BoneTransform);  
+          const int32 NumBones = SkinnedMeshComponent->GetNumBones();
+          for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+          {
+            FTransform BoneTransform = SkinnedMeshComponent->GetBoneTransform(BoneIndex, FTransform::Identity);
+            BoneRelativeTransforms.Add(BoneTransform);  
+          }
         }
         return MakeVectorFromTArray<cr::Transform>(BoneRelativeTransforms);
       }
@@ -1495,12 +1503,78 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
         TArray<std::string> StringBoneNames;
         for (const FName& Name : BoneNames)
         {
-            FString FBoneName = Name.ToString();
-            std::string StringBoneName = TCHAR_TO_UTF8(*FBoneName);
-            StringBoneNames.Add(StringBoneName);
+          FString FBoneName = Name.ToString();
+          std::string StringBoneName = TCHAR_TO_UTF8(*FBoneName);
+          StringBoneNames.Add(StringBoneName);
         }
         return MakeVectorFromTArray<std::string>(StringBoneNames);
       }
+    }
+  };
+
+  BIND_SYNC(get_actor_socket_world_transforms) << [this](
+      cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_component_relative_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<FTransform> SocketWorldTransforms;
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);     
+      for(UActorComponent* ActorComponent : Components)
+      {
+        if(USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent))
+        {
+          const TArray<FName>& SocketNames = SceneComponent->GetAllSocketNames();        
+          for (const FName& SocketName : SocketNames)
+          {
+            FTransform SocketTransform = SceneComponent->GetSocketTransform(SocketName);
+            SocketWorldTransforms.Add(SocketTransform);
+          }
+        }
+      }
+      return MakeVectorFromTArray<cr::Transform>(SocketWorldTransforms);   
+    }
+  };
+
+  BIND_SYNC(get_actor_socket_relative_transforms) << [this](
+      cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_component_relative_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<FTransform> SocketRelativeTransforms;
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);     
+      for(UActorComponent* ActorComponent : Components)
+      {
+        if(USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent))
+        {
+          const TArray<FName>& SocketNames = SceneComponent->GetAllSocketNames();        
+          for (const FName& SocketName : SocketNames)
+          {
+            FTransform SocketTransform = SceneComponent->GetSocketTransform(SocketName, ERelativeTransformSpace::RTS_Actor);
+            SocketRelativeTransforms.Add(SocketTransform);
+          }
+        }
+      }
+      return MakeVectorFromTArray<cr::Transform>(SocketRelativeTransforms);
     }
   };
 

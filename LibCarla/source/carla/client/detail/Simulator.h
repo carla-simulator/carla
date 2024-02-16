@@ -462,6 +462,14 @@ namespace detail {
       return _client.GetActorBoneNames(actor.GetId());
     }     
 
+    std::vector<geom::Transform> GetActorSocketWorldTransforms(const Actor &actor) {
+      return _client.GetActorSocketWorldTransforms(actor.GetId());
+    }
+
+    std::vector<geom::Transform> GetActorSocketRelativeTransforms(const Actor &actor) {
+      return _client.GetActorSocketRelativeTransforms(actor.GetId());
+    }
+
     void SetActorLocation(Actor &actor, const geom::Location &location) {
       _client.SetActorLocation(actor.GetId(), location);
     }
