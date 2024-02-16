@@ -43,6 +43,8 @@ protected:
 	// Called when the game starts or when spawned.
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaSeconds) override;
+
 	// Root
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Components")
 	USceneComponent* SceneComp;
@@ -67,6 +69,18 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
 	FVector MinSpawnLocation {-120000.f, -110000.f, 9300.f};
 
+	// Enables that all SceneCaptures cameras save captures to /Saved/SensorSpawnerCaptures folder.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config|SceneCapture")
+	bool bSaveCameraToDisk = false;
+
+	// How often ticking is done and a SceneCapture image is taken.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config|SceneCapture")
+	float TickInterval = 1.f;
+
+	// Amount of time each camera takes captures.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin=1.f), Category="Config|SceneCapture")
+	float CaptureTime = 30.f;
+	
 	
 private:
 	UFUNCTION()
@@ -74,13 +88,18 @@ private:
 
 	UFUNCTION()
 	void SpawnSensorsDelayed();
+
+	UFUNCTION()
+	void RemoveSceneCaptureCameras();
+
+	void StartSavingCapturesToDisk(const AActor* Actor);
 	
 	void GenerateSensorActorDescription(const FActorDefinition* Definition, FActorDescription& SensorDescription) const;
 
 	// Gets a transform with a random location between MaxSpawnLocation and MinSpawnLocation.
 	void GetRandomTransform(FTransform &Transform) const;
   
-	void SpawnSensorActor(const FActorDescription& SensorDescription) const;
+	void SpawnSensorActor(const FActorDescription& SensorDescription);
 
 	const FActorDefinition* GetActorDefinitionByClass(const TSubclassOf<AActor> ActorClass) const;
 
@@ -89,9 +108,15 @@ private:
 	UPROPERTY()
 	UCarlaEpisode* CarlaEpisode;
 
-	// Used for delayed spawn
+	// Used for delayed spawn.
 	FTimerHandle SpawnSensorsDelayedTimerHandle;
 	
-	// Used for delayed spawn
+	// Used for delayed spawn. Track cameras taking pictures on tick.
 	TArray<FSensorTuple> SensorsToSpawnCopy;
+	
+	// Track cameras saving pictures on tick.
+	TArray<const class ASceneCaptureCamera*> SceneCaptureCameras;
+	
+	// Path to the /Saved/SensorSpawnerCaptures project folder.
+	FString SaveImagePath;
 };

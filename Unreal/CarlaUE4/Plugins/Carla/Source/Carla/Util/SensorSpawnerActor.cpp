@@ -4,14 +4,17 @@
 #include "Util/SensorSpawnerActor.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Game/CarlaGameModeBase.h"
+#include "Sensor/SceneCaptureCamera.h"
 #include "Sensor/Sensor.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogSensorSpawnerActor, Verbose, All);
 
 ASensorSpawnerActor::ASensorSpawnerActor()
 {
-	PrimaryActorTick.bCanEverTick = false;
-
+	PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.bStartWithTickEnabled = false;
+  PrimaryActorTick.TickInterval = TickInterval;
+  
   SceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComp"));
   RootComponent = SceneComp;
 }
@@ -19,13 +22,18 @@ ASensorSpawnerActor::ASensorSpawnerActor()
 void ASensorSpawnerActor::BeginPlay()
 {
   Super::BeginPlay();
-  
+
   // Wait for the CarlaEpisode initialisation. It is done on CarlaGameMode BeginPlay().
   if(ACarlaGameModeBase* CarlaGameMode = Cast<ACarlaGameModeBase>(UGameplayStatics::GetGameMode(GetWorld())))
   {
     CarlaGameMode->OnEpisodeInitialisedDelegate.AddDynamic(this, &ASensorSpawnerActor::OnEpisodeInitialised);
   }
+
+  SetActorTickInterval(TickInterval);
+  SaveImagePath = FPaths::ProjectSavedDir() + "/SensorSpawnerCaptures/" + FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp());
 }
+
+
 
 void ASensorSpawnerActor::OnEpisodeInitialised(UCarlaEpisode* InitialisedEpisode)
 {
@@ -83,14 +91,19 @@ const FActorDefinition* ASensorSpawnerActor::GetActorDefinitionByClass(const TSu
   return ActorDefinition;
 }
 
-void ASensorSpawnerActor::SpawnSensorActor(const FActorDescription& SensorDescription) const
+void ASensorSpawnerActor::SpawnSensorActor(const FActorDescription& SensorDescription)
 {
   if(IsValid(CarlaEpisode))
   {
     FTransform Transform;
     GetRandomTransform(Transform);
     
-    CarlaEpisode->SpawnActorWithInfo(Transform, SensorDescription);
+    const TPair<EActorSpawnResultStatus, FCarlaActor*> SpawnResult = CarlaEpisode->SpawnActorWithInfo(Transform, SensorDescription);
+    
+    if(bSaveCameraToDisk && SpawnResult.Value)
+    {
+      StartSavingCapturesToDisk(SpawnResult.Value->GetActor());
+    }
   }
 }
 
@@ -143,5 +156,42 @@ void ASensorSpawnerActor::SpawnSensorsDelayed()
   if(SensorsToSpawnCopy[0].Amount <= 0)
   {
     SensorsToSpawnCopy.RemoveAt(0);
+  }
+}
+
+void ASensorSpawnerActor::Tick(float DeltaSeconds)
+{
+  Super::Tick(DeltaSeconds);
+
+  for(const ASceneCaptureCamera* CaptureCamera : SceneCaptureCameras)
+  {
+    if(CaptureCamera)
+    {
+      CaptureCamera->SaveCaptureToDisk(SaveImagePath + "/" + CaptureCamera->GetName() + "/" + FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp()) + ".png" );
+    }
+  }
+}
+
+void ASensorSpawnerActor::RemoveSceneCaptureCameras()
+{
+  if(SceneCaptureCameras.IsValidIndex(0))
+  {
+    SceneCaptureCameras.RemoveAt(0);
+  }
+
+  if(SceneCaptureCameras.IsEmpty())
+  {
+    SetActorTickEnabled(false);
+  }
+}
+
+void ASensorSpawnerActor::StartSavingCapturesToDisk(const AActor* Actor)
+{
+  if(const ASceneCaptureCamera* CaptureCamera = Cast<ASceneCaptureCamera>(Actor))
+  {
+    SceneCaptureCameras.Add(CaptureCamera);
+    SetActorTickEnabled(true);
+    FTimerHandle CaptureTimerHandle;
+    GetWorldTimerManager().SetTimer(CaptureTimerHandle, this, &ASensorSpawnerActor::RemoveSceneCaptureCameras, CaptureTime);
   }
 }
