@@ -3,7 +3,9 @@
  * Added vehicle doors to the recorder
  * Added functions to get actor' components transform
  * Fixed bug in python agents when vehicle list was empty causing a check on all vehicles (BasicAgent.py) and detected pedestrians as vehicles if no pedestrains are present (BehaviourAgent.py) 
-
+ * Added functions to get actor' bones transforms
+ * Added functions to get actor' bones and components names
+ * Added functions to get actor' sockets transforms
 
 ## CARLA 0.9.15
 
