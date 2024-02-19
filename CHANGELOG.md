@@ -1,6 +1,7 @@
 ## Latest Changes
  * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
-   * Added vehicle doors to the recorder
+ * Added vehicle doors to the recorder
+ * Adjusted vehicle BoundingBox when the vehicle opens the doors.
  * Added functions to get actor' components transform
  * Added functions to get actor' bones transforms
  * Added functions to get actor' bones and components names
