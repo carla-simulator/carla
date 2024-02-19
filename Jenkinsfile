@@ -24,6 +24,16 @@ pipeline
                     }
                     stages
                     {
+                        stage('stash dependencies')
+                        {
+                            agent{ label 'master' }
+                            options{skipDefaultCheckout()} 
+                            steps
+                            {
+                                pwd()
+                                sh "ls -la ${pwd()}"
+                            }
+                        }
                         stage('prepare environment')
                         {
                             parallel
