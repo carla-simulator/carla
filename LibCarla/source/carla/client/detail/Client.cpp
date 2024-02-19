@@ -416,6 +416,36 @@ namespace detail {
     return _pimpl->CallAndWait<geom::Transform>("get_actor_component_relative_transform", actor, componentName);
   }
 
+  std::vector<geom::Transform> Client::GetActorBoneWorldTransforms(rpc::ActorId actor) {
+    using return_t = std::vector<geom::Transform>;
+    return _pimpl->CallAndWait<return_t>("get_actor_bone_world_transforms", actor);
+  }
+
+  std::vector<geom::Transform> Client::GetActorBoneRelativeTransforms(rpc::ActorId actor) {
+    using return_t = std::vector<geom::Transform>;
+    return _pimpl->CallAndWait<return_t>("get_actor_bone_relative_transforms", actor);
+  }
+
+  std::vector<std::string> Client::GetActorComponentNames(rpc::ActorId actor) {
+    using return_t = std::vector<std::string>;
+    return _pimpl->CallAndWait<return_t>("get_actor_component_names", actor);
+  }
+
+  std::vector<std::string> Client::GetActorBoneNames(rpc::ActorId actor) {
+    using return_t = std::vector<std::string>;
+    return _pimpl->CallAndWait<return_t>("get_actor_bone_names", actor);
+  }  
+
+  std::vector<geom::Transform> Client::GetActorSocketWorldTransforms(rpc::ActorId actor) {
+    using return_t = std::vector<geom::Transform>;
+    return _pimpl->CallAndWait<return_t>("get_actor_socket_world_transforms", actor);
+  }
+
+  std::vector<geom::Transform> Client::GetActorSocketRelativeTransforms(rpc::ActorId actor) {
+    using return_t = std::vector<geom::Transform>;
+    return _pimpl->CallAndWait<return_t>("get_actor_socket_relative_transforms", actor);
+  }
+
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {
     _pimpl->CallAndWait<void>("set_actor_simulate_physics", actor, enabled);
   }
