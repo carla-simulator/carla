@@ -1,4 +1,4 @@
-  * Fixed waypoint.next and previous causing loops when connecting two opposite-direction lanes.
+  * Fixed waypoint.next and .previous causing loops when two opposite-direction lanes follow each other in the map.
 
 ## CARLA 0.9.15
 
