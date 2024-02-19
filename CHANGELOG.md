@@ -2,6 +2,9 @@
  * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
    * Added vehicle doors to the recorder
  * Added functions to get actor' components transform
+ * Added functions to get actor' bones transforms
+ * Added functions to get actor' bones and components names
+ * Added functions to get actor' sockets transforms
 
 ## CARLA 0.9.15
 

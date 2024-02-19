@@ -9,6 +9,11 @@
 #include "Carla/Server/CarlaServerResponse.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
 #include "EngineUtils.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/SkinnedMeshComponent.h"
+#include "Components/SceneComponent.h"
+#include "Engine/SkeletalMesh.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
@@ -1361,6 +1366,217 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
 
       FTransform ComponentRelativeTransform = Component->GetRelativeTransform();
       return cr::Transform(ComponentRelativeTransform);
+    }
+  };
+
+  BIND_SYNC(get_actor_bone_world_transforms) << [this](
+      cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_bone_world_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<FTransform> BoneWorldTransforms;
+      TArray<USkinnedMeshComponent*> SkinnedMeshComponents;
+      CarlaActor->GetActor()->GetComponents<USkinnedMeshComponent>(SkinnedMeshComponents);
+      if(!SkinnedMeshComponents[0])
+      {
+        return RespondError(
+            "get_actor_bone_relative_transforms",
+            ECarlaServerResponse::ComponentNotFound,
+            " Component Name: SkinnedMeshComponent ");
+      }
+      else
+      {
+        for(USkinnedMeshComponent* SkinnedMeshComponent : SkinnedMeshComponents)
+        {
+          const int32 NumBones = SkinnedMeshComponent->GetNumBones();
+          for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+          {
+            FTransform WorldTransform = SkinnedMeshComponent->GetComponentTransform();
+            FTransform BoneTransform = SkinnedMeshComponent->GetBoneTransform(BoneIndex, WorldTransform);
+            BoneWorldTransforms.Add(BoneTransform);  
+          }
+        }
+        return MakeVectorFromTArray<cr::Transform>(BoneWorldTransforms);
+      }      
+    }
+  };
+
+  BIND_SYNC(get_actor_bone_relative_transforms) << [this](
+      cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_bone_relative_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<FTransform> BoneRelativeTransforms;
+      TArray<USkinnedMeshComponent*> SkinnedMeshComponents;
+      CarlaActor->GetActor()->GetComponents<USkinnedMeshComponent>(SkinnedMeshComponents);
+      if(!SkinnedMeshComponents[0])
+      {
+        return RespondError(
+            "get_actor_bone_relative_transforms",
+            ECarlaServerResponse::ComponentNotFound,
+            " Component Name: SkinnedMeshComponent ");
+      }
+      else
+      {
+        for(USkinnedMeshComponent* SkinnedMeshComponent : SkinnedMeshComponents)
+        {
+          const int32 NumBones = SkinnedMeshComponent->GetNumBones();
+          for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+          {
+            FTransform BoneTransform = SkinnedMeshComponent->GetBoneTransform(BoneIndex, FTransform::Identity);
+            BoneRelativeTransforms.Add(BoneTransform);  
+          }
+        }
+        return MakeVectorFromTArray<cr::Transform>(BoneRelativeTransforms);
+      }
+    }
+  };
+
+  BIND_SYNC(get_actor_component_names) << [this](
+      cr::ActorId ActorId) -> R<std::vector<std::string>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_component_names",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);
+      std::vector<std::string> ComponentNames;
+      for(auto Cmp : Components)
+      {
+        FString ComponentName = Cmp->GetName();
+        ComponentNames.push_back(TCHAR_TO_UTF8(*ComponentName));
+      }  
+      return ComponentNames; 
+    }
+  };
+
+  BIND_SYNC(get_actor_bone_names) << [this](
+      cr::ActorId ActorId) -> R<std::vector<std::string>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_component_relative_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      USkinnedMeshComponent* SkinnedMeshComponent = CarlaActor->GetActor()->FindComponentByClass<USkinnedMeshComponent>();
+      if(!SkinnedMeshComponent)   
+      {
+        return RespondError(
+            "get_actor_bone_relative_transforms",
+            ECarlaServerResponse::ComponentNotFound,
+            " Component Name: SkinnedMeshComponent ");    
+      }  
+      else
+      {
+        TArray<FName> BoneNames;
+        SkinnedMeshComponent->GetBoneNames(BoneNames);
+        TArray<std::string> StringBoneNames;
+        for (const FName& Name : BoneNames)
+        {
+          FString FBoneName = Name.ToString();
+          std::string StringBoneName = TCHAR_TO_UTF8(*FBoneName);
+          StringBoneNames.Add(StringBoneName);
+        }
+        return MakeVectorFromTArray<std::string>(StringBoneNames);
+      }
+    }
+  };
+
+  BIND_SYNC(get_actor_socket_world_transforms) << [this](
+      cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_component_relative_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<FTransform> SocketWorldTransforms;
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);     
+      for(UActorComponent* ActorComponent : Components)
+      {
+        if(USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent))
+        {
+          const TArray<FName>& SocketNames = SceneComponent->GetAllSocketNames();        
+          for (const FName& SocketName : SocketNames)
+          {
+            FTransform SocketTransform = SceneComponent->GetSocketTransform(SocketName);
+            SocketWorldTransforms.Add(SocketTransform);
+          }
+        }
+      }
+      return MakeVectorFromTArray<cr::Transform>(SocketWorldTransforms);   
+    }
+  };
+
+  BIND_SYNC(get_actor_socket_relative_transforms) << [this](
+      cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_component_relative_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<FTransform> SocketRelativeTransforms;
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);     
+      for(UActorComponent* ActorComponent : Components)
+      {
+        if(USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent))
+        {
+          const TArray<FName>& SocketNames = SceneComponent->GetAllSocketNames();        
+          for (const FName& SocketName : SocketNames)
+          {
+            FTransform SocketTransform = SceneComponent->GetSocketTransform(SocketName, ERelativeTransformSpace::RTS_Actor);
+            SocketRelativeTransforms.Add(SocketTransform);
+          }
+        }
+      }
+      return MakeVectorFromTArray<cr::Transform>(SocketRelativeTransforms);
     }
   };
 
