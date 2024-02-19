@@ -16,6 +16,8 @@
 #include "EditorLevelLibrary.h"
 #include "MapGen/LargeMapManager.h"
 
+
+
 DEFINE_LOG_CATEGORY(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet);
 
 
@@ -42,41 +44,33 @@ int32 USetProperPositionForWorldPartitionCommandlet::Main(const FString &Params)
   ParseCommandLine(*Params, Tokens, Switches, ParamsMap );
 
   FString BaseLevelName = ParamsMap["BaseLevelName"];
-  FIntVector CurrentTilesInXY = FIntVector(FCString::Atof(*ParamsMap["CTileX"]),FCString::Atof(*ParamsMap["CTileY"]), 0);
-
   UEditorLevelLibrary::LoadLevel(*BaseLevelName);
-  UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Warning, TEXT("Valid Map loaded"));
-  UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Warning, TEXT("MapName %s"), *BaseLevelName);
+  UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Warning, TEXT("Valid Map loaded, MapName %s"), *BaseLevelName);
 
   AActor* QueryActor = UGameplayStatics::GetActorOfClass( GEditor->GetEditorWorldContext().World(), ALargeMapManager::StaticClass());
   if (QueryActor != nullptr) {
     ALargeMapManager* LmManager = Cast<ALargeMapManager>(QueryActor);
-    FIntVector NumTilesInXY = LmManager->GetNumTilesInXY();
-    float TileSize = LmManager->GetTileSize();
-    FVector Tile0Offset = LmManager->GetTile0Offset();
-
-    FCarlaMapTile& CarlaTile = LmManager->GetCarlaMapTile(CurrentTilesInXY);
-    UEditorLevelLibrary::SaveCurrentLevel();
-
-    UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Warning, TEXT("Current Tile is %s"), *(CurrentTilesInXY.ToString()));
+    
+    const FIntVector NumTilesInXY = LmManager->GetNumTilesInXY();
+    const float TileSize = LmManager->GetTileSize();
     UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Warning, TEXT("NumTilesInXY is %s"), *(NumTilesInXY.ToString()));
     UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Warning, TEXT("TileSize is %f"), (TileSize));
-    UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Warning, TEXT("Tile0Offset is %s"), *(Tile0Offset.ToString()));
-    UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Warning, TEXT("Tile Name is %s"), *(CarlaTile.Name));
-
-    UEditorLevelLibrary::LoadLevel(CarlaTile.Name);
-
-    FVector MinPosition = FVector(CurrentTilesInXY.X * TileSize, CurrentTilesInXY.Y * -TileSize, 0.0f);
-    FVector MaxPosition = FVector((CurrentTilesInXY.X + 1.0f) * TileSize, (CurrentTilesInXY.Y + 1.0f) * -TileSize, 0.0f);
-
-
-    TArray<AActor*> FoundActors;
-    UGameplayStatics::GetAllActorsOfClass(GEditor->GetEditorWorldContext().World(), AActor::StaticClass(), FoundActors);
-
-    for (AActor* CA : FoundActors) 
+    
+    UEditorLevelLibrary::SaveCurrentLevel();
+    
+    for(int TileX = 0; TileX < NumTilesInXY.X; TileX++)
     {
-      CA->AddActorWorldOffset(MinPosition, false, nullptr, ETeleportType::ResetPhysics);
+      for(int TileY = 0; TileY < NumTilesInXY.Y; TileY++)
+      {
+        if(TileX != 0 || TileY != 0)
+        {
+          UEditorLevelLibrary::LoadLevel(*BaseLevelName);
+          UEditorLevelLibrary::SaveCurrentLevel();
+          ProcessTile(FIntVector(TileX, TileY, 0), TileSize);
+        }
+      }
     }
+
   }
   else {
     UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Error, TEXT("Largemapmanager not found "));
@@ -86,6 +80,31 @@ int32 USetProperPositionForWorldPartitionCommandlet::Main(const FString &Params)
   UEditorLevelLibrary::SaveCurrentLevel();
 
   return 0;
+}
+
+void USetProperPositionForWorldPartitionCommandlet::ProcessTile(const FIntVector CurrentTilesInXY, const float TileSize)
+{
+  AActor* QueryActor = UGameplayStatics::GetActorOfClass( GEditor->GetEditorWorldContext().World(), ALargeMapManager::StaticClass());
+  if (QueryActor != nullptr)
+  {
+    ALargeMapManager* LmManager = Cast<ALargeMapManager>(QueryActor);
+    UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Warning, TEXT("Current Tile is %s"), *(CurrentTilesInXY.ToString()));
+    const FCarlaMapTile& CarlaTile = LmManager->GetCarlaMapTile(CurrentTilesInXY);
+  
+    UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Warning, TEXT("Tile Name is %s"), *(CarlaTile.Name));
+    UEditorLevelLibrary::LoadLevel(CarlaTile.Name);
+
+    const FVector MinPosition = FVector(CurrentTilesInXY.X * TileSize, CurrentTilesInXY.Y * -TileSize, 0.0f);
+
+    TArray<AActor*> FoundActors;
+    UGameplayStatics::GetAllActorsOfClass(GEditor->GetEditorWorldContext().World(), AActor::StaticClass(), FoundActors);
+    for (AActor* CA : FoundActors) 
+    {
+      CA->AddActorWorldOffset(MinPosition, false, nullptr, ETeleportType::ResetPhysics);
+    }
+
+    UEditorLevelLibrary::SaveCurrentLevel();
+  }
 }
 
 #endif

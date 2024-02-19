@@ -38,5 +38,7 @@ public:
 
   virtual int32 Main(const FString &Params) override;
 
+  void ProcessTile(const FIntVector CurrentTilesInXY, const float TileSize);
+
 #endif // WITH_EDITORONLY_DATA
 };
