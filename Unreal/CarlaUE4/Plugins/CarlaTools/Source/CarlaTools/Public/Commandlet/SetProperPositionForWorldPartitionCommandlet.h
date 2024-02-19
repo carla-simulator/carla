@@ -15,7 +15,7 @@
 
 #include "OpenDriveToMap.h"
 
-#include "SetProperPositionForWorldPartition.generated.h"
+#include "SetProperPositionForWorldPartitionCommandlet.generated.h"
 
 // Each commandlet should generate only 1 Tile
 
@@ -23,7 +23,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogCarlaToolsMapSetProperPositionForWorldPartitionCo
 
 
 UCLASS()
-class CARLATOOLS_API USetProperPositionForWorldPartition
+class CARLATOOLS_API USetProperPositionForWorldPartitionCommandlet
   : public UCommandlet
 {
   GENERATED_BODY()
@@ -31,16 +31,12 @@ class CARLATOOLS_API USetProperPositionForWorldPartition
 public:
 
   /// Default constructor.
-  USetProperPositionForWorldPartition();
-  USetProperPositionForWorldPartition(const FObjectInitializer &);
+  USetProperPositionForWorldPartitionCommandlet();
+  USetProperPositionForWorldPartitionCommandlet(const FObjectInitializer &);
 
 #if WITH_EDITORONLY_DATA
 
   virtual int32 Main(const FString &Params) override;
 
 #endif // WITH_EDITORONLY_DATA
-  UPROPERTY()
-  UOpenDriveToMap* OpenDriveMap;
-  UPROPERTY()
-  UClass* OpenDriveClass;
 };
