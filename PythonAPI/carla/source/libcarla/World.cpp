@@ -11,6 +11,8 @@
 #include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/ObjectLabel.h>
 
+#include <string>
+
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 namespace carla {
@@ -293,15 +295,17 @@ void export_world() {
         const cc::ActorBlueprint &blueprint, \
         const cg::Transform &transform, \
         cc::Actor *parent, \
-        cr::AttachmentType attachment_type) { \
+        cr::AttachmentType attachment_type, \
+        const std::string& bone) { \
       carla::PythonUtil::ReleaseGIL unlock; \
-      return self.fn(blueprint, transform, parent, attachment_type); \
+      return self.fn(blueprint, transform, parent, attachment_type, bone); \
     }, \
     ( \
       arg("blueprint"), \
       arg("transform"), \
       arg("attach_to")=carla::SharedPtr<cc::Actor>(), \
-      arg("attachment_type")=cr::AttachmentType::Rigid)
+      arg("attachment_type")=cr::AttachmentType::Rigid, \
+      arg("bone")=std::string())
 
   class_<cc::World>("World", no_init)
     .add_property("id", &cc::World::GetId)

@@ -357,7 +357,8 @@ namespace detail {
         const geom::Transform &transform,
         Actor *parent = nullptr,
         rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid,
-        GarbageCollectionPolicy gc = GarbageCollectionPolicy::Inherit);
+        GarbageCollectionPolicy gc = GarbageCollectionPolicy::Inherit,
+        const std::string& socket_name = "");
 
     bool DestroyActor(Actor &actor);
 

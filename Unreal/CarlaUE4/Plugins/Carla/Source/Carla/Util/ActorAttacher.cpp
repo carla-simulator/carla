@@ -96,7 +96,8 @@ static void UActorAttacher_AttachActorsWithSpringArmGhost(
 void UActorAttacher::AttachActors(
     AActor *Child,
     AActor *Parent,
-    const EAttachmentType AttachmentType)
+    const EAttachmentType AttachmentType,
+    const FString& SocketName)
 {
   check(Child != nullptr);
   check(Parent != nullptr);
@@ -104,7 +105,7 @@ void UActorAttacher::AttachActors(
   switch (AttachmentType)
   {
     case EAttachmentType::Rigid:
-      Child->AttachToActor(Parent, FAttachmentTransformRules::KeepRelativeTransform);
+      Child->AttachToActor(Parent, FAttachmentTransformRules::KeepRelativeTransform, FName(*SocketName));
       break;
     case EAttachmentType::SpringArm:
       UActorAttacher_AttachActorsWithSpringArm(Child, Parent);
