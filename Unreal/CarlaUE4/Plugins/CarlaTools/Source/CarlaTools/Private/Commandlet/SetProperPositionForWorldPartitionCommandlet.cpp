@@ -71,7 +71,7 @@ int32 USetProperPositionForWorldPartitionCommandlet::Main(const FString &Params)
 
 
     TArray<AActor*> FoundActors;
-    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), FoundActors);
+    UGameplayStatics::GetAllActorsOfClass(GEditor->GetEditorWorldContext().World(), AActor::StaticClass(), FoundActors);
 
     for (AActor* CA : FoundActors) 
     {
