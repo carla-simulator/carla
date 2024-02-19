@@ -1297,7 +1297,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       TArray<UActorComponent*> Components;
       CarlaActor->GetActor()->GetComponents(Components);
 
-      USceneComponent* Component;
+      USceneComponent* Component = nullptr;
       for(auto Cmp : Components)
       {
         if(USceneComponent* SCMP = Cast<USceneComponent>(Cmp))
@@ -1341,7 +1341,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       TArray<UActorComponent*> Components;
       CarlaActor->GetActor()->GetComponents(Components);
 
-      USceneComponent* Component;
+      USceneComponent* Component = nullptr;
       for(auto Cmp : Components)
       {
         if(USceneComponent* SCMP = Cast<USceneComponent>(Cmp))
