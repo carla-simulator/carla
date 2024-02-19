@@ -6,6 +6,9 @@
 
 #include "Commandlet/SetProperPositionForWorldPartitionCommandlet.h"
 
+#include <iostream>
+#include <fstream>
+
 #if WITH_EDITOR
 #include "FileHelpers.h"
 #endif
@@ -79,7 +82,7 @@ int32 USetProperPositionForWorldPartitionCommandlet::Main(const FString &Params)
     UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Error, TEXT("Largemapmanager not found "));
   }
 
-  UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
+  //UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
   UEditorLevelLibrary::SaveCurrentLevel();
 
   return 0;

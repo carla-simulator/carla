@@ -23,13 +23,13 @@ argparser.add_argument(
     help='String to put as arguments')
 args = argparser.parse_args()
 
-arguments = args.paramstring
+arguments = args.paramstring.split()
 
 if os.name == "nt":
     sys_name = "Win64"
     editor_path = "%s/Engine/Binaries/%s/UnrealEditor" % (ue4_path, sys_name)
     command = [editor_path, uproject_path, run]
-    command.extend(arguments)
+    command = command + arguments 
     print("Commandlet:", command)
     print("Arguments:", arguments)
     subprocess.check_call(command, shell=True)
