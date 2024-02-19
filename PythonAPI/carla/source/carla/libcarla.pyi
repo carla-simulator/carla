@@ -101,7 +101,7 @@ class Actor():
         ...
 
     @property
-    def parent() -> ["Actor"]:
+    def parent() -> Union["Actor", None]:
         """Actors may be attached to a parent actor that they will follow around. This is said actor."""
         ...
 
