@@ -342,19 +342,21 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   // -- General operations with actors -----------------------------------------
   // ===========================================================================
 
-  SharedPtr<Actor> Simulator::SpawnActor(
+    SharedPtr<Actor> Simulator::SpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent,
       rpc::AttachmentType attachment_type,
-      GarbageCollectionPolicy gc) {
+      GarbageCollectionPolicy gc,
+      const std::string& socket_name) {
     rpc::Actor actor;
     if (parent != nullptr) {
       actor = _client.SpawnActorWithParent(
           blueprint.MakeActorDescription(),
           transform,
           parent->GetId(),
-          attachment_type);
+          attachment_type,
+          socket_name);
     } else {
       actor = _client.SpawnActor(
           blueprint.MakeActorDescription(),
