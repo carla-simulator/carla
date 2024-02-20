@@ -216,6 +216,9 @@ private:
 
   void InitTextureData();
 
+  void ImportXODR();
+  void ImportOSM();
+
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;
   UPROPERTY()

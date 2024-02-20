@@ -166,47 +166,20 @@ void UOpenDriveToMap::CreateMap()
 
     FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
     FileDownloader->StartDownload();
-  }else{
-    if(LocalFilePath.Contains(".xodr"))
-    {
-      IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
-      FString MyFileDestination = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/OpenDrive/" + MapName + ".xodr";
-
-      if(FileManager.CopyFile(  *MyFileDestination, *LocalFilePath,
-                                  EPlatformFileRead::None,
-                                  EPlatformFileWrite::None))
-      {
-        UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FilePaths: File Copied!"));
-        FilePath = MyFileDestination;
-        LoadMap();
-      }
-      else
-      {
-        UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("FilePaths local xodr file not copied: File not Copied!"));
-      }
-    }
-    else if(LocalFilePath.Contains(".osm"))
-    {
-      IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
-      FString MyFileDestination = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/OpenDrive/" + MapName + ".osm";
-
-      if(FileManager.CopyFile(  *MyFileDestination, *LocalFilePath,
-                                  EPlatformFileRead::None,
-                                  EPlatformFileWrite::None))
-      {
-        UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FilePaths: File Copied!"));
-        ConvertOSMInOpenDrive();
-      }
-      else
-      {
-        UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("FilePaths local osm file not copied: File not Copied!"));
-      }
-    }
-    else
-    {
-      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("URL and Local FilePath are Empty") );
-    }
   }
+  else if(LocalFilePath.EndsWith(".xodr"))
+  {
+    ImportXODR();
+  }
+  else if(LocalFilePath.EndsWith(".osm"))
+  {
+    ImportOSM();
+  }
+  else
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("URL and Local FilePath are Empty. URL: %s  Local FilePath: %s"), *Url, *LocalFilePath );
+  }
+
 }
 
 void UOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGridSectionSize)
@@ -923,6 +896,41 @@ bool UOpenDriveToMap::IsInRoad(
     }
   }
   return false;
+}
+
+void UOpenDriveToMap::ImportXODR(){
+  IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+  FString MyFileDestination = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/OpenDrive/" + MapName + ".xodr";
+
+  if(FileManager.CopyFile(  *MyFileDestination, *LocalFilePath,
+                              EPlatformFileRead::None,
+                              EPlatformFileWrite::None))
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Verbose, TEXT("FilePaths: File Copied!"));
+    FilePath = MyFileDestination;
+    LoadMap();
+  }
+  else
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("FilePaths local xodr file not copied: File not Copied!"));
+  }
+}
+
+void UOpenDriveToMap::ImportOSM(){
+  IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+  FString MyFileDestination = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/OpenDrive/" + MapName + ".osm";
+
+  if(FileManager.CopyFile(  *MyFileDestination, *LocalFilePath,
+                              EPlatformFileRead::None,
+                              EPlatformFileWrite::None))
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Verbose, TEXT("FilePaths: File Copied!"));
+    ConvertOSMInOpenDrive();
+  }
+  else
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("FilePaths local osm file not copied: File not Copied!"));
+  }
 }
 
 void UOpenDriveToMap::MoveActorsToSubLevels(TArray<AActor*> ActorsToMove)
