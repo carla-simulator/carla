@@ -6,6 +6,7 @@
  * Added functions to get actor' bones and components names
  * Added functions to get actor' sockets transforms
  * make PythonAPI Windows: Fixed incompatibility issue with Anaconda due `py` command.
+ * Extended debug drawing functions to allow drawing primitives on HUD layer
 
 ## CARLA 0.9.15
 
