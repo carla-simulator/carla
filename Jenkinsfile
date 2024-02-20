@@ -31,6 +31,7 @@ pipeline
                             steps
                             {
                                 sh "echo ${BRANCH_NAME}"
+                                sh "set"
                                 sh "cp ../../Build_Linux.tar.gz ."
                                 stash includes: 'Build_Linux.tar.gz', name: 'build_cache'
                             }
