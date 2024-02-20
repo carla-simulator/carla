@@ -26,7 +26,7 @@ pipeline
                     {
                         stage('stash dependencies')
                         {
-                            agent{ label 'master' }
+                            agent{ label 'cache' }
                             options{skipDefaultCheckout()} 
                             steps
                             {
