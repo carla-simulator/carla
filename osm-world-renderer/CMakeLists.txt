@@ -4,35 +4,37 @@ project (
   VERSION ${CARLA_VERSION}
 )
 
-set (
-  OSM_RENDERER_PATH
-  ${CARLA_WORKSPACE_PATH}/osm-world-renderer
-)
+set (OSM_RENDERER_SOURCE_PATH ${CARLA_WORKSPACE_PATH}/osm-world-renderer/OsmRenderer)
 
 add_library (
     lib-osm-map-renderer
-    ${OSM_RENDERER_PATH}/OsmRenderer/src/OsmRenderer.cpp
-    ${OSM_RENDERER_PATH}/OsmRenderer/src/MapDrawer.cpp
-    ${OSM_RENDERER_PATH}/OsmRenderer/src/MapRasterizer.cpp
+    ${OSM_RENDERER_SOURCE_PATH}/src/OsmRenderer.cpp
+    ${OSM_RENDERER_SOURCE_PATH}/src/MapDrawer.cpp
+    ${OSM_RENDERER_SOURCE_PATH}/src/MapRasterizer.cpp
+)
+
+target_link_libraries (
+  lib-osm-map-renderer PUBLIC
+  OSMScout::OSMScout
+  OSMScout::Map
+  OSMScout2
+  lunasvg
+  carla-server
 )
 
 target_include_directories (
     lib-osm-map-renderer PUBLIC
-    ${OSM_RENDERER_PATH}/OsmRenderer/include
+    ${OSM_RENDERER_SOURCE_PATH}/include
 )
 
 add_executable (
     osm-world-renderer
-    ${OSM_RENDERER_PATH}/OsmRenderer/main.cpp
+    ${OSM_RENDERER_SOURCE_PATH}/main.cpp
 )
 
 target_link_libraries (
-  osm-world-renderer PRIVATE
+  osm-world-renderer
   lib-osm-map-renderer
-  osmscout
-  osmscout_map
-  osmscout_map_svg
-  lunasvg
 )
 
 target_compile_definitions (

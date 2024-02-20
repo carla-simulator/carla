@@ -9,24 +9,6 @@ configure_file (
   ${LIBCARLA_SOURCE_PATH}/carla/Version.h
 )
 
-if (BUILD_CARLA_SERVER OR BUILD_CARLA_CLIENT)
-  find_package (
-    Boost
-    ${CARLA_BOOST_VERSION} EXACT
-    COMPONENTS
-      system
-      python${CARLA_PYTHON_VERSION_MAJOR}${CARLA_PYTHON_VERSION_MINOR}
-  )
-
-  if (NOT ${Boost_FOUND})
-    include (${CARLA_WORKSPACE_PATH}/CMake/BuildBoost.cmake)
-  endif ()
-  
-  include (${CARLA_WORKSPACE_PATH}/CMake/BuildRPCLib.cmake)
-endif ()
-
-
-
 if (BUILD_CARLA_SERVER)
 
     project (
@@ -49,12 +31,25 @@ if (BUILD_CARLA_SERVER)
         ${LIBCARLA_SOURCE_PATH}/carla/road/object/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/road/signal/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/rpc/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/s11n/SensorHeaderSerializer.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/tcp/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.cpp
     )
+
+    if (ENABLE_ROS2)
+      file (
+        GLOB
+        LIBCARLA_SERVER_SOURCES_ROS2
+        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.cpp
+      )
+      list (
+        JOIN
+        LIBCARLA_SERVER_SOURCES
+        LIBCARLA_SERVER_SOURCES_ROS2
+        LIBCARLA_SERVER_SOURCES
+      )
+    endif ()
 
     file (
         GLOB
@@ -77,7 +72,6 @@ if (BUILD_CARLA_SERVER)
         ${LIBCARLA_SOURCE_PATH}/carla/road/object/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/road/signal/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/rpc/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/s11n/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/streaming/*.h
@@ -86,6 +80,20 @@ if (BUILD_CARLA_SERVER)
         ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.h
         ${LIBCARLA_SOURCE_PATH}/compiler/*.h
     )
+    
+    if (ENABLE_ROS2)
+      file (
+        GLOB
+        LIBCARLA_SERVER_HEADERS_ROS2
+        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.h
+      )
+      list (
+        JOIN
+        LIBCARLA_SERVER_HEADERS
+        LIBCARLA_SERVER_HEADERS_ROS2
+        LIBCARLA_SERVER_HEADERS
+      )
+    endif ()
 
     file (
         GLOB
@@ -96,7 +104,7 @@ if (BUILD_CARLA_SERVER)
     )
 
     add_library (
-        carla-server STATIC
+        carla-server
         ${LIBCARLA_SERVER_HEADERS}
         ${LIBCARLA_SERVER_SOURCES}
         ${LIBCARLA_SERVER_HEADERS_THIRD_PARTY}
@@ -104,20 +112,27 @@ if (BUILD_CARLA_SERVER)
     )
 
     target_link_libraries (
-      carla-server
+      carla-server PRIVATE
       Boost::asio
+      Boost::geometry
       Boost::algorithm
       Boost::assert
+      Boost::gil
+      RecastNavigation::Recast
+      RecastNavigation::Detour
+      RecastNavigation::DetourCrowd
+      png_static
+      zlibstatic
       rpc
     )
     
     target_include_directories (
-      carla-server PRIVATE
+      carla-server PUBLIC
       ${LIBCARLA_SOURCE_PATH}
     )
 
     target_compile_definitions (
-        carla-server PRIVATE
+        carla-server PUBLIC
         ${CARLA_COMMON_DEFINITIONS}
         ${CARLA_EXCEPTION_DEFINITIONS}
         ${CARLA_RTTI_DEFINITIONS}
@@ -173,7 +188,6 @@ if (BUILD_CARLA_CLIENT)
         ${LIBCARLA_SOURCE_PATH}/carla/road/object/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/road/signal/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/rpc/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/data/*.h
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/s11n/*.h
@@ -185,6 +199,20 @@ if (BUILD_CARLA_CLIENT)
         ${LIBCARLA_SOURCE_PATH}/carla/trafficmanager/*.h
         ${LIBCARLA_SOURCE_PATH}/compiler/*.h
     )
+    
+    if (ENABLE_ROS2)
+      file (
+        GLOB
+        LIBCARLA_CLIENT_HEADERS_ROS2
+        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.h
+      )
+      list (
+        JOIN
+        LIBCARLA_CLIENT_HEADERS
+        LIBCARLA_CLIENT_HEADERS_ROS2
+        LIBCARLA_CLIENT_HEADERS
+      )
+    endif ()
 
     if (ENABLE_RSS)
         file (
@@ -226,7 +254,6 @@ if (BUILD_CARLA_CLIENT)
         ${LIBCARLA_SOURCE_PATH}/carla/road/object/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/road/signal/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/rpc/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/data/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/sensor/s11n/*.cpp
@@ -237,6 +264,20 @@ if (BUILD_CARLA_CLIENT)
         ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.cpp
         ${LIBCARLA_SOURCE_PATH}/carla/trafficmanager/*.cpp
     )
+    
+    if (ENABLE_ROS2)
+      file (
+        GLOB
+        LIBCARLA_CLIENT_SOURCES_ROS2
+        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.cpp
+      )
+      list (
+        JOIN
+        LIBCARLA_CLIENT_SOURCES
+        LIBCARLA_CLIENT_SOURCES_ROS2
+        LIBCARLA_CLIENT_SOURCES
+      )
+    endif ()
 
     if (ENABLE_RSS)
         file (
@@ -259,30 +300,36 @@ if (BUILD_CARLA_CLIENT)
     )
 
     add_library (
-        carla-client STATIC
+        carla-client
         ${LIBCARLA_CLIENT_HEADERS}
         ${LIBCARLA_CLIENT_SOURCES}
         ${LIBCARLA_CLIENT_HEADERS_THIRD_PARTY}
         ${LIBCARLA_CLIENT_SOURCES_THIRD_PARTY}
     )
-    
+
     target_link_libraries (
-      carla-client
+      carla-client PUBLIC
       Boost::asio
       Boost::algorithm
+      Boost::geometry
       Boost::assert
+      Boost::gil
+      RecastNavigation::Recast
+      RecastNavigation::Detour
+      RecastNavigation::DetourCrowd
+      png_static
+      zlibstatic
       rpc
     )
     
     target_include_directories (
-      carla-client PRIVATE
+      carla-client PUBLIC
       ${LIBCARLA_SOURCE_PATH}
     )
 
     target_compile_definitions (
-        carla-client PRIVATE
+        carla-client PUBLIC
         ${CARLA_COMMON_DEFINITIONS}
-        ${CARLA_EXCEPTION_DEFINITIONS}
         ${CARLA_RTTI_DEFINITIONS}
     )
     

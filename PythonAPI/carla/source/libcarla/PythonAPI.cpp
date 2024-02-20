@@ -24,14 +24,16 @@ extern void export_lightmanager();
 #ifdef LIBCARLA_RSS_ENABLED
 extern void export_ad_rss();
 #endif
+#ifdef CARLA_PYTHON_API_HAS_OSM2ODR
 extern void export_osm2odr();
+#endif
 
-BOOST_PYTHON_MODULE(libcarla) {
+BOOST_PYTHON_MODULE(carla) {
   using namespace boost::python;
 #if PY_MAJOR_VERSION < 3 || PY_MINOR_VERSION < 7
   PyEval_InitThreads();
 #endif
-  scope().attr("__path__") = "libcarla";
+  scope().attr("__path__") = "carla";
   export_geom();
   export_control();
   export_blueprint();
@@ -47,8 +49,10 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_commands();
   export_trafficmanager();
   export_lightmanager();
-  #ifdef LIBCARLA_RSS_ENABLED
+#ifdef LIBCARLA_RSS_ENABLED
   export_ad_rss();
-  #endif
+#endif
+#ifdef CARLA_PYTHON_API_HAS_OSM2ODR
   export_osm2odr();
+#endif
 }

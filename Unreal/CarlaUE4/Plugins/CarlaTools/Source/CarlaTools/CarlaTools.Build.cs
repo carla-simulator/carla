@@ -1,10 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 using System;
-using System.IO;
-using System.Linq;
-using System.Diagnostics;
-using System.Collections.Generic;
 using UnrealBuildTool;
 using EpicGames.Core;
 
@@ -12,7 +8,7 @@ public class CarlaTools :
   ModuleRules
 {
   [CommandLine("-verbose")]
-  bool Verbose = true;
+  bool Verbose = false;
 
   [CommandLine("-houdini")]
   bool EnableHoudini = false;
@@ -21,73 +17,48 @@ public class CarlaTools :
   bool EnableNVIDIAOmniverse = false;
 
   [CommandLine("-osm2odr")]
-  bool EnableOSM2ODR = true;
+  bool EnableOSM2ODR = false;
 
-  [CommandLine("-carla-install-path")]
-  string CarlaInstallPath = null;
 
-  [CommandLine("-carla-dependencies-install-path")]
-  string CarlaDependenciesPath = null;
-
-  private static void LogFlagStatus(string name, bool value)
-  {
-    var state = value ? "enabled" : "disabled";
-    Console.WriteLine(string.Format("{0} is {1}.", name, state));
-  }
 
   public CarlaTools(ReadOnlyTargetRules Target) :
-  base(Target)
+    base(Target)
   {
-    LogFlagStatus("Houdini support", EnableHoudini);
-    LogFlagStatus("NVIDIA Omniverse support", EnableNVIDIAOmniverse);
-
-    if (EnableOSM2ODR)
-    {
-      PrivateDefinitions.Add("WITH_OSM2ODR");
-      PrivateDefinitions.Add("WITH_OSM2ODR");
-    }
-
-    var DirectoryInfo = new DirectoryInfo(ModuleDirectory);
-    for (int i = 0; i != 6; ++i)
-      DirectoryInfo = DirectoryInfo.Parent;
-    var WorkspacePath = DirectoryInfo.ToString();
-    Debug.Assert(WorkspacePath != null && !Directory.Exists(WorkspacePath));
-
-    if (CarlaInstallPath == null)
-    {
-      Console.WriteLine("\"-carla-install-path\" was not specified, inferring...");
-      CarlaInstallPath = Path.Combine(WorkspacePath, "Install");
-      if (!Directory.Exists(CarlaInstallPath))
-        throw new DirectoryNotFoundException("Could not infer CARLA install directory.");
-      Console.WriteLine("Using \"" + CarlaInstallPath + "\" as the CARLA install path.");
-    }
-
-    if (CarlaDependenciesPath == null)
-    {
-      Console.WriteLine("\"-carla-dependencies-path\" was not specified, inferring...");
-      CarlaDependenciesPath = Path.Combine(WorkspacePath, "Build", "Dependencies");
-      if (!Directory.Exists(CarlaDependenciesPath))
-        throw new DirectoryNotFoundException("Could not infer CARLA dependencies directory.");
-      Console.WriteLine("Using \"" + CarlaDependenciesPath + "\" as the CARLA depenencies install path.");
-    }
-
-    Console.WriteLine("Current module directory: " + ModuleDirectory);
-
     bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
+
     PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
     bEnableExceptions = true;
+    
+    Action<bool, string, string> TestOptionalFeature = (enable, name, definition) =>
+    {
+      if (enable)
+        PrivateDefinitions.Add(name);
+      Console.WriteLine(string.Format("{0} is {1}.", name, enable ? "enabled" : "disabled"));
+    };
+    
+    Action<string> AddIncludeDirectories = (str) =>
+    {
+      if (str.Length == 0)
+        return;
+      var paths = str.Split(';');
+      if (paths.Length == 0)
+        return;
+      PublicIncludePaths.AddRange(paths);
+    };
+
+    TestOptionalFeature(EnableOSM2ODR, "OSM2ODR support", "WITH_OSM2ODR");
 
     PublicDependencyModuleNames.AddRange(new string[]
     {
-            "Core",
-            "ProceduralMeshComponent",
-            "MeshDescription",
-            "RawMesh",
-            "AssetTools",
+      "Core",
+      "ProceduralMeshComponent",
+      "MeshDescription",
+      "RawMesh",
+      "AssetTools",
     });
 
     PrivateDependencyModuleNames.AddRange(new string[]
-{
+    {
       "CoreUObject",
       "Engine",
       "Slate",
@@ -98,8 +69,8 @@ public class CarlaTools :
       "EditorScriptingUtilities",
       "Landscape",
       "Foliage",
-            "FoliageEdit",
-            "MeshMergeUtilities",
+      "FoliageEdit",
+      "MeshMergeUtilities",
       "Carla",
       "StaticMeshDescription",
       "Json",
@@ -112,18 +83,18 @@ public class CarlaTools :
       "MeshMergeUtilities",
       "StreetMapImporting",
       "StreetMapRuntime",
-            "Chaos",
-            "ChaosVehicles"
+      "Chaos",
+      "ChaosVehicles"
     });
 
     if (EnableHoudini)
     {
       PrivateDependencyModuleNames.AddRange(new string[]
-{
+      {
         "HoudiniEngine",
         "HoudiniEngineEditor",
         "HoudiniEngineRuntime"
-});
+      });
     }
 
     if (EnableNVIDIAOmniverse)
@@ -132,10 +103,10 @@ public class CarlaTools :
       PrivateDefinitions.Add("WITH_OMNIVERSE");
 
       PrivateDependencyModuleNames.AddRange(new string[]
-{
+      {
         "OmniverseUSD",
         "OmniverseRuntime"
-});
+      });
     }
 
     if (IsWindows)
@@ -153,106 +124,45 @@ public class CarlaTools :
     PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
     PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
 
-    var LibraryPrefix = IsWindows ? "" : "lib";
-    var LibrarySuffix = IsWindows ? ".lib" : ".a";
-
-    var LibCarlaInstallPath = Path.Combine(CarlaInstallPath, "LibCarla");
-    var DependenciesInstallPath = CarlaDependenciesPath;
-
-    Func<string, string> GetLibraryName = name =>
-    {
-      return LibraryPrefix + name + LibrarySuffix;
-    };
-
-    Func<string, string, string[]> FindLibraries = (name, pattern) =>
-    {
-      var InstallPath = Path.Combine(DependenciesInstallPath, name + "-install");
-      var LibPath = Path.Combine(InstallPath, "lib");
-      var Candidates = Directory.GetFiles(LibPath, GetLibraryName(pattern));
-      if (Candidates.Length == 0)
-        throw new FileNotFoundException(string.Format("Could not find any matching libraries for \"{0}\" using pattern \"{1}\"", name, pattern));
-      Array.Sort(Candidates);
-      return Candidates;
-    };
-
-    Func<string, string> GetIncludePath = name => Path.Combine(DependenciesInstallPath, name + "-install", "include");
-
-    // LibCarla
-    var LibCarlaIncludePath = Path.Combine(LibCarlaInstallPath, "include");
-    var LibCarlaLibPath = Path.Combine(LibCarlaInstallPath, "lib");
-    var LibCarlaServerPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-server"));
-    var LibCarlaClientPath = Path.Combine(LibCarlaLibPath, GetLibraryName("carla-client"));
-
-    // Boost
-
-    var BoostIncludePath = Path.Combine(DependenciesInstallPath, "boost-install", "include");
-    var BoostLibraries = new List<string>();
-
-    var BoostLibraryPatterns = new string[]
-    {
-            "boost_date_time*",
-            "boost_numpy*",
-            "boost_python*",
-            "boost_system*",
-    };
-
-    if (IsWindows)
-    {
-      for (int i = 0; i != BoostLibraryPatterns.Length; ++i)
-      {
-        BoostLibraryPatterns[i] = "lib" + BoostLibraryPatterns[i];
-      }
-    }
-
-
-    foreach (var Pattern in BoostLibraryPatterns)
-    {
-      var Candidates = FindLibraries("boost", Pattern);
-      if (Candidates.Length != 0)
-        BoostLibraries.Add(Candidates[0]);
-    }
-
-    var SQLiteBuildPath = Path.Combine(DependenciesInstallPath, "sqlite-build");
-    var SQLiteLibraryCandidates = Directory.GetFiles(SQLiteBuildPath, GetLibraryName("*sqlite*"));
-    if (SQLiteLibraryCandidates.Length == 0)
-      throw new FileNotFoundException("Could not find any matching libraries for SQLite");
-    var RPCLibCandidates = FindLibraries("rpclib", "rpc");
-    var XercesCCandidates = FindLibraries("xercesc", "xerces-c*");
-    var PROJCandidates = FindLibraries("proj", "proj");
-    var ZlibCandidates = FindLibraries("zlib", IsWindows ? "zlibstatic*" : "z"); //TODO: Fix this, note that here we have libz.a and libz.so, need to disambiguate
-
-    var AdditionalLibraries = new List<string>
-    {
-        SQLiteLibraryCandidates[0],
-        RPCLibCandidates[0],
-        XercesCCandidates[0],
-        PROJCandidates[0],
-        ZlibCandidates[0],
-    };
-
     if (EnableOSM2ODR)
-      AdditionalLibraries.Add(FindLibraries("sumo", "*osm2odr")[0]);
-
-    PublicIncludePaths.Add(ModuleDirectory);
-    PublicIncludePaths.Add(LibCarlaIncludePath);
-
-    PublicIncludePaths.AddRange(new string[]
     {
-            BoostIncludePath,
-            GetIncludePath("boost"),
-            GetIncludePath("rpclib"),
-            GetIncludePath("xercesc"),
-            GetIncludePath("sumo"),
-            GetIncludePath("zlib"),
-    });
+      // @TODO
+      PublicAdditionalLibraries.Add("");
+    }
+    
+    PublicIncludePaths.Add(ModuleDirectory);
+    AddIncludeDirectories("F:/Carla/out/build/x64-Release/_deps/boost-src/libs/asio/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/align/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/assert/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/config/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/core/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/static_assert/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/throw_exception/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/context/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/mp11/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/pool/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/integer/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/type_traits/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/winapi/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/predef/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/smart_ptr/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/move/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/coroutine/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/exception/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/tuple/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/system/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/variant2/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/utility/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/io/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/preprocessor/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/date_time/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/algorithm/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/array/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/bind/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/concept_check/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/function/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/iterator/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/detail/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/function_types/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/mpl/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/fusion/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/container_hash/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/describe/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/typeof/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/functional/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/optional/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/range/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/conversion/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/regex/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/unordered/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/lexical_cast/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/container/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/intrusive/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/numeric/conversion/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/tokenizer/include");
+    AddIncludeDirectories("F:/Carla/out/build/x64-Release/_deps/boost-src/libs/python/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/align/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/assert/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/config/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/core/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/static_assert/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/throw_exception/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/bind/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/conversion/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/smart_ptr/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/move/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/type_traits/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/detail/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/preprocessor/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/foreach/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/iterator/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/concept_check/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/function_types/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/mpl/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/predef/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/utility/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/io/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/fusion/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/container_hash/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/describe/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/mp11/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/tuple/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/typeof/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/functional/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/function/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/optional/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/range/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/array/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/regex/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/lexical_cast/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/container/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/intrusive/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/integer/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/numeric/conversion/include;C:/Users/Marce/AppData/Local/Programs/Python/Python38/include");
+    AddIncludeDirectories("F:/Carla/out/build/x64-Release/_deps/boost-src/libs/python/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/config/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/core/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/assert/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/static_assert/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/throw_exception/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/detail/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/preprocessor/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/type_traits/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/mpl/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/predef/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/utility/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/io/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/python/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/align/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/bind/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/conversion/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/smart_ptr/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/move/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/foreach/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/iterator/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/concept_check/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/function_types/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/fusion/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/container_hash/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/describe/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/mp11/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/tuple/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/typeof/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/functional/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/function/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/optional/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/range/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/array/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/regex/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/lexical_cast/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/container/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/intrusive/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/integer/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/numeric/conversion/include;C:/Users/Marce/AppData/Local/Programs/Python/Python38/include;C:/Users/Marce/AppData/Local/Programs/Python/Python38/Lib/site-packages/numpy/core/include");
+    AddIncludeDirectories("F:/Carla/out/build/x64-Release/_deps/boost-src/libs/geometry/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/algorithm/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/array/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/assert/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/config/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/core/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/static_assert/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/throw_exception/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/bind/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/concept_check/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/preprocessor/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/type_traits/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/exception/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/smart_ptr/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/move/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/tuple/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/function/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/iterator/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/detail/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/function_types/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/mpl/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/predef/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/utility/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/io/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/fusion/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/container_hash/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/describe/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/mp11/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/typeof/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/functional/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/optional/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/range/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/conversion/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/regex/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/unordered/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/any/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/type_index/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/container/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/intrusive/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/endian/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/integer/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/lexical_cast/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/numeric/conversion/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/math/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/random/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/dynamic_bitset/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/system/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/variant2/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/winapi/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/multiprecision/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/polygon/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/qvm/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/rational/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/serialization/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/spirit/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/phoenix/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/proto/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/pool/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/thread/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/atomic/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/chrono/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/ratio/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/date_time/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/tokenizer/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/variant/include");
+    AddIncludeDirectories("F:/Carla/out/build/x64-Release/_deps/boost-src/libs/gil/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/assert/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/config/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/concept_check/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/preprocessor/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/static_assert/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/type_traits/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/container_hash/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/describe/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/mp11/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/core/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/throw_exception/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/filesystem/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/detail/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/io/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/iterator/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/function_types/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/mpl/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/predef/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/utility/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/fusion/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/tuple/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/typeof/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/functional/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/function/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/bind/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/optional/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/move/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/smart_ptr/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/system/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/variant2/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/winapi/include;F:/Carla/out/build/x64-Release/_deps/boost-src/libs/integer/include");
+    AddIncludeDirectories("F:/Carla/out/build/x64-Release/_deps/eigen-src");
+      
+    PublicAdditionalLibraries.Add("F:/Carla/out/build/x64-Release/LibCarla/carla-server.lib");
+    AddIncludeDirectories("F:/Carla/LibCarla/source");
 
-    PrivateDefinitions.Add("ASIO_NO_EXCEPTIONS");
-    PrivateDefinitions.Add("BOOST_NO_EXCEPTIONS");
-    PrivateDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
-    PrivateDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
-    PrivateDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
-    PrivateDefinitions.Add("BOOST_NO_RTTI");
-    PrivateDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
+    PublicAdditionalLibraries.Add("F:/Carla/out/build/x64-Release/_deps/zlib-build/zlibstatic.lib");
+    AddIncludeDirectories("F:/Carla/out/build/x64-Release/_deps/zlib-build;F:/Carla/out/build/x64-Release/_deps/zlib-src");
+
+    PublicAdditionalLibraries.Add("F:/Carla/out/build/x64-Release/_deps/libpng-build/libpng16_static.lib");
+    AddIncludeDirectories("");
+
+    PublicAdditionalLibraries.Add("F:/Carla/out/build/x64-Release/_deps/rpclib-build/rpc.lib");
+    AddIncludeDirectories("F:/Carla/out/build/x64-Release/_deps/rpclib-src/include");
+
+    PublicAdditionalLibraries.Add("F:/Carla/out/build/x64-Release/libsqlite3.lib");
+    PublicIncludePaths.Add("F:/Carla/out/build/x64-Release/_deps/sqlite3-src");
+
+    PublicDefinitions.AddRange(new string[]
+    {
+      "ASIO_NO_EXCEPTIONS",
+      "BOOST_NO_EXCEPTIONS",
+      "LIBCARLA_NO_EXCEPTIONS",
+      "PUGIXML_NO_EXCEPTIONS",
+      "BOOST_DISABLE_ABI_HEADERS",
+      "BOOST_NO_RTTI",
+      "BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY",
+    });
 
     if (IsWindows)
     {
@@ -260,14 +170,5 @@ public class CarlaTools :
       PrivateDefinitions.Add("VC_EXTRALEAN");
       PrivateDefinitions.Add("WIN32_LEAN_AND_MEAN");
     }
-
-    if (Verbose)
-    {
-      Console.WriteLine("Additional CARLA libraries:");
-      foreach (var e in AdditionalLibraries)
-        Console.WriteLine(" - " + e);
-    }
-
-    PublicAdditionalLibraries.AddRange(AdditionalLibraries);
   }
 }

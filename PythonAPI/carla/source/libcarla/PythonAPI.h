@@ -90,6 +90,11 @@
 #include <type_traits>
 #include <vector>
 
+
+#if __has_include(<OSM2ODR.h>)
+  #define CARLA_PYTHON_API_HAS_OSM2ODR
+#endif
+
 template <typename OptionalT>
 boost::python::object OptionalToPythonObject(OptionalT &optional) {
   return optional.has_value() ? boost::python::object(*optional) : boost::python::object();

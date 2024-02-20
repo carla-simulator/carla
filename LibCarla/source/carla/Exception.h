@@ -27,7 +27,7 @@ namespace carla
   /// that the function never returns; therefore, if the user-defined
   /// throw_exception returns, the behavior is undefined.
   [[noreturn]]
-  void throw_exception(const std::exception &e);
+  extern void throw_exception(const std::exception &e);
 
 } // namespace carla
 

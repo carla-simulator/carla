@@ -8,11 +8,14 @@
 #include "Http.h"
 #include "Misc/FileHelper.h"
 
-#include <OSM2ODR.h>
+#if defined(WITH_OSM2ODR) && __has_include(<OSM2ODR.h>)
+  #define HAS_OSM2ODR
+  #include <OSM2ODR.h>
+#endif
 
 void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0, float Lon_0)
 {
-#ifdef WITH_OSM2ODR
+#ifdef HAS_OSM2ODR
   IPlatformFile &FileManager = FPlatformFileManager::Get().GetPlatformFile();
 
   FString FileContent;
@@ -54,7 +57,17 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0,
     UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("FileManipulation: Failed to write FString to file."));
   }
 #else
-    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("UCustomFileDownloader::ConvertOSMInOpenDrive is disabled since SUMO's OSM2ODR is not enabled."));
+#ifndef WITH_OSM2ODR
+  UE_LOG(
+    LogCarlaToolsMapGenerator,
+    Error,
+    TEXT("UCustomFileDownloader::ConvertOSMInOpenDrive is disabled since SUMO's OSM2ODR is not enabled."));
+#else
+  UE_LOG(
+    LogCarlaToolsMapGenerator,
+    Error,
+    TEXT("UCustomFileDownloader::ConvertOSMInOpenDrive is disabled since SUMO's OSM2ODR is not available."));
+#endif
 #endif
 }
 

@@ -5,6 +5,9 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "PythonAPI.h"
+
+#ifdef CARLA_PYTHON_API_HAS_OSM2ODR
+
 #include <OSM2ODR.h>
 
 // Empty class to emulate the namespace in the PythonAPI
@@ -50,3 +53,9 @@ void export_osm2odr() {
       .staticmethod("convert")
   ;
 }
+
+#else
+
+#pragma message("WARNING: Building CARLA PythonAPI without OSM2ODR support.")
+
+#endif

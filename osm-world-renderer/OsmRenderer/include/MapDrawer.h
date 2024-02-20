@@ -5,15 +5,19 @@
 #include <string>
 #include <memory>
 
-#include "MapRasterizer.h"
+#include <MapRasterizer.h>
 
 #include <osmscout/GeoCoord.h>
 #include <osmscout/Database.h>
 #include <osmscoutmap/MapService.h>
 #include <osmscout/BasemapDatabase.h>
+
 #if defined(_MSC_VER)
-    #include <osmscout/projection/MercatorProjection.h>
+  #include <osmscout/projection/MercatorProjection.h>
 #endif
+
+
+
 class MapDrawer
 {
 public:

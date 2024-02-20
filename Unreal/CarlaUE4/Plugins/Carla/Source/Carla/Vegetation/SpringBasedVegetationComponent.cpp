@@ -18,7 +18,7 @@
 #include <sstream>
 
 #include <compiler/disable-ue4-macros.h>
-#include "carla/rpc/String.h"
+#include <carla/rpc/String.h>
 #include <compiler/enable-ue4-macros.h>
 
 // disable warnings for eigen 3.1.0
@@ -74,38 +74,38 @@
 
 struct FJointProperties
 {
-    float Mass = 0.0;
-    Eigen::Matrix3d InertiaTensor = Eigen::Matrix3d::Zero();
-    Eigen::Vector3d Force = Eigen::Vector3d::Zero();
-    Eigen::Vector3d Torque = Eigen::Vector3d::Zero();
-    Eigen::Vector3d FictitiousTorque = Eigen::Vector3d::Zero();
-    Eigen::Vector3d CenterOfMass = Eigen::Vector3d::Zero();
-    Eigen::Matrix3d JointToGlobalMatrix = Eigen::Matrix3d::Zero();
-    Eigen::Vector3d AngularVelocity = Eigen::Vector3d::Zero();
-    Eigen::Vector3d LinearVelocity = Eigen::Vector3d::Zero();
-    Eigen::Vector3d AngularAcceleration = Eigen::Vector3d::Zero();
-    Eigen::Vector3d LinearAcceleration = Eigen::Vector3d::Zero();
-    Eigen::Vector3d LocalAngularAcceleration = Eigen::Vector3d::Zero();
+  float Mass = 0.0;
+  Eigen::Matrix3d InertiaTensor = Eigen::Matrix3d::Zero();
+  Eigen::Vector3d Force = Eigen::Vector3d::Zero();
+  Eigen::Vector3d Torque = Eigen::Vector3d::Zero();
+  Eigen::Vector3d FictitiousTorque = Eigen::Vector3d::Zero();
+  Eigen::Vector3d CenterOfMass = Eigen::Vector3d::Zero();
+  Eigen::Matrix3d JointToGlobalMatrix = Eigen::Matrix3d::Zero();
+  Eigen::Vector3d AngularVelocity = Eigen::Vector3d::Zero();
+  Eigen::Vector3d LinearVelocity = Eigen::Vector3d::Zero();
+  Eigen::Vector3d AngularAcceleration = Eigen::Vector3d::Zero();
+  Eigen::Vector3d LinearAcceleration = Eigen::Vector3d::Zero();
+  Eigen::Vector3d LocalAngularAcceleration = Eigen::Vector3d::Zero();
 };
 
-FRotator GetDeltaRotator(const FRotator & Rotator1, const FRotator & Rotator2)
+FRotator GetDeltaRotator(const FRotator& Rotator1, const FRotator& Rotator2)
 {
   float HalfCircle = 180.f;
   float FullCircle = 360.f;
   auto GetDeltaAngle = [&](float Angle1, float Angle2) -> float
-  {
-    if (Angle1 < 0)
     {
-      Angle1 = FullCircle + Angle1;
-    }
-    if (Angle2 < 0)
-    {
-      Angle2 = FullCircle + Angle2;
-    }
-    float Diff = fmod( Angle1 - Angle2 + HalfCircle , FullCircle) - HalfCircle;
-    return Diff < -HalfCircle ? Diff + FullCircle : Diff;
-  };
-  
+      if (Angle1 < 0)
+      {
+        Angle1 = FullCircle + Angle1;
+      }
+      if (Angle2 < 0)
+      {
+        Angle2 = FullCircle + Angle2;
+      }
+      float Diff = fmod(Angle1 - Angle2 + HalfCircle, FullCircle) - HalfCircle;
+      return Diff < -HalfCircle ? Diff + FullCircle : Diff;
+    };
+
   return FRotator(
     GetDeltaAngle(Rotator1.Pitch, Rotator2.Pitch),
     GetDeltaAngle(Rotator1.Yaw, Rotator2.Yaw),
@@ -146,8 +146,8 @@ static Eigen::Matrix3d ToEigenMatrix(const FMatrix& Matrix) // Matrix[row][colum
 {
   Eigen::Matrix3d EigenMatrix;
   EigenMatrix << Matrix.M[0][0], Matrix.M[0][1], -Matrix.M[0][2],
-                 Matrix.M[1][0], Matrix.M[1][1], -Matrix.M[1][2],
-                 Matrix.M[2][0], Matrix.M[2][1], -Matrix.M[2][2];
+    Matrix.M[1][0], Matrix.M[1][1], -Matrix.M[1][2],
+    Matrix.M[2][0], Matrix.M[2][1], -Matrix.M[2][2];
   return EigenMatrix.transpose();
 }
 static Eigen::Matrix3d ToEigenMatrix(const FTransform& Transform)
@@ -158,16 +158,16 @@ static Eigen::Matrix3d ToEigenMatrix(const FTransform& Transform)
 static Eigen::Vector3d RotatorToEigenVector(const FRotator& Rotator)
 {
   return Eigen::Vector3d(
-      FMath::DegreesToRadians(Rotator.Roll),
-      FMath::DegreesToRadians(Rotator.Pitch),
-      -FMath::DegreesToRadians(Rotator.Yaw));
+    FMath::DegreesToRadians(Rotator.Roll),
+    FMath::DegreesToRadians(Rotator.Pitch),
+    -FMath::DegreesToRadians(Rotator.Yaw));
 }
 static FRotator EigenVectorToRotator(const Eigen::Vector3d& Vector)
 {
   return FRotator(
-      FMath::RadiansToDegrees(Vector(1)),
-      -FMath::RadiansToDegrees(Vector(2)),
-      FMath::RadiansToDegrees(Vector(0)));
+    FMath::RadiansToDegrees(Vector(1)),
+    -FMath::RadiansToDegrees(Vector(2)),
+    FMath::RadiansToDegrees(Vector(0)));
 }
 
 void FSkeletonHierarchy::Clear()
@@ -234,7 +234,7 @@ void FSkeletonHierarchy::ComputeEndJoints()
   EndToRootOrder.Empty();
   FString IdOrder = "";
   FString NameOrder = "";
-  for(int i = RootToEndOrder.Num() - 1; i >= 0; i--)
+  for (int i = RootToEndOrder.Num() - 1; i >= 0; i--)
   {
     int Id = RootToEndOrder[i];
     EndToRootOrder.Add(Id);
@@ -252,7 +252,7 @@ void FSkeletonHierarchy::AddForce(const FString& BoneName, const FVector& Force)
   TRACE_CPUPROFILER_EVENT_SCOPE(FSkeletonHierarchy::AddForce);
   for (FSkeletonJoint& Joint : Joints)
   {
-    if(Joint.JointName == BoneName)
+    if (Joint.JointName == BoneName)
     {
       Joint.ExternalForces += Force;
     }
@@ -263,7 +263,7 @@ void FSkeletonHierarchy::ClearExternalForces()
   TRACE_CPUPROFILER_EVENT_SCOPE(FSkeletonHierarchy::ClearExternalForces);
   for (FSkeletonJoint& Joint : Joints)
   {
-    Joint.ExternalForces = FVector(0,0,0);
+    Joint.ExternalForces = FVector(0, 0, 0);
   }
 }
 
@@ -291,25 +291,25 @@ void USpringBasedVegetationComponent::GenerateSkeletonHierarchy()
   {
     FName& BoneName = BoneNames[i];
     FString BoneNameString = BoneName.ToString();
-    bool bIsFixedJoint = FixedJointsList.Contains(BoneNameString) || 
-        (DebugJointsToSimulate.Num() && !DebugJointsToSimulate.Contains(BoneNameString));
+    bool bIsFixedJoint = FixedJointsList.Contains(BoneNameString) ||
+      (DebugJointsToSimulate.Num() && !DebugJointsToSimulate.Contains(BoneNameString));
     FName ParentBoneName = SkeletalMesh->GetParentBone(BoneName);
     int32 ParentIndex = SkeletalMesh->GetBoneIndex(ParentBoneName);
-    Skeleton.Joints.Add(FSkeletonJoint{i, ParentIndex, BoneNameString, bIsFixedJoint});
+    Skeleton.Joints.Add(FSkeletonJoint{ i, ParentIndex, BoneNameString, bIsFixedJoint });
     OTHER_LOG(Log, "Added bone %s with id %d and parent %d", *BoneNameString, i, ParentIndex);
   }
 
   Skeleton.ComputeChildrenJointsAndBones();
   Skeleton.ComputeEndJoints();
 
-    // Get resting pose for bones
-  auto *AnimInst = SkeletalMesh->GetAnimInstance();
+  // Get resting pose for bones
+  auto* AnimInst = SkeletalMesh->GetAnimInstance();
   if (!AnimInst)
   {
     OTHER_LOG(Error, "Could not get animation instance.");
     return;
   }
-  UWalkerAnim *WalkerAnim = Cast<UWalkerAnim>(AnimInst);
+  UWalkerAnim* WalkerAnim = Cast<UWalkerAnim>(AnimInst);
   if (!WalkerAnim)
   {
     OTHER_LOG(Error, "Could not get UWalkerAnim.");
@@ -323,19 +323,19 @@ void USpringBasedVegetationComponent::GenerateSkeletonHierarchy()
   // copy pose
   WalkerAnim->Snap = TempSnapshot;
 
-  for (int i=0; i<Skeleton.Joints.Num(); ++i)
+  for (int i = 0; i < Skeleton.Joints.Num(); ++i)
   {
     FSkeletonJoint& Joint = Skeleton.Joints[i];
     FTransform JointTransform = SkeletalMesh->GetSocketTransform(FName(*Joint.JointName), ERelativeTransformSpace::RTS_ParentBoneSpace);
     Joint.Transform = JointTransform;
     Joint.RestingAngles = JointTransform.Rotator();
     OTHER_LOG(Log, "Getting info for bone %s, %f, %f, %f, %f", *Joint.JointName, Joint.RestingAngles.Pitch, Joint.RestingAngles.Yaw, Joint.RestingAngles.Roll);
-    if(i > 0)
+    if (i > 0)
     {
       FSkeletonJoint& ParentJoint = Skeleton.Joints[Joint.ParentId];
-      FVector BoneCOM = Joint.Transform.GetLocation()*0.5f;
+      FVector BoneCOM = Joint.Transform.GetLocation() * 0.5f;
       float BoneLength = Joint.Transform.GetLocation().Size();
-      ParentJoint.Bones.Add({10, BoneLength, BoneCOM});
+      ParentJoint.Bones.Add({ 10, BoneLength, BoneCOM });
     }
   }
 
@@ -361,14 +361,14 @@ void USpringBasedVegetationComponent::BeginPlay()
   }
 
   ABaseVegetationActor* BaseVegetation = Cast<ABaseVegetationActor>(GetOwner());
-  if(BaseVegetation)
+  if (BaseVegetation)
   {
     BaseVegetation->SetParametersToComponent();
   }
 
   // set callbacks
   SkeletalMesh->OnComponentHit.AddDynamic(this, &USpringBasedVegetationComponent::OnCollisionEvent);
-  
+
   if (!Skeleton.Joints.Num())
   {
     GenerateSkeletonHierarchy();
@@ -376,7 +376,7 @@ void USpringBasedVegetationComponent::BeginPlay()
 
   UpdateGlobalTransform();
   GenerateCollisionCapsules();
-  if(bAutoComputeStrength)
+  if (bAutoComputeStrength)
   {
     ComputeSpringStrengthForBranches();
   }
@@ -405,9 +405,9 @@ void USpringBasedVegetationComponent::GenerateCollisionCapsules()
       Capsule->RegisterComponent();
       // create rotation from z direction to align the capsule
       FRotator BoneRotation = UKismetMathLibrary::MakeRotFromZ(Bone.CenterOfMass.GetSafeNormal());
-      FTransform CapsuleTransform(BoneRotation, Bone.CenterOfMass, FVector(1,1,1));
+      FTransform CapsuleTransform(BoneRotation, Bone.CenterOfMass, FVector(1, 1, 1));
       Capsule->SetRelativeTransform(CapsuleTransform);
-      Capsule->SetCapsuleHalfHeight(Bone.Length*0.5f);
+      Capsule->SetCapsuleHalfHeight(Bone.Length * 0.5f);
       Capsule->SetCapsuleRadius(CapsuleRadius);
       if (Joint.bIsStatic)
       {
@@ -422,7 +422,7 @@ void USpringBasedVegetationComponent::GenerateCollisionCapsules()
         Capsule->OnComponentBeginOverlap.AddDynamic(this, &USpringBasedVegetationComponent::OnBeginOverlapEvent);
         Capsule->OnComponentEndOverlap.AddDynamic(this, &USpringBasedVegetationComponent::OnEndOverlapEvent);
       }
-      
+
       BoneCapsules.Add(Capsule);
       CapsuleToJointId.Add(Capsule, Joint.JointId);
     }
@@ -435,7 +435,7 @@ void USpringBasedVegetationComponent::ComputeSpringStrengthForBranches()
   FTransform RootTransform = Skeleton.GetRootJoint().GlobalTransform;
   FVector RootLocation = RootTransform.GetLocation();
   // FVector TreeAxis = RootTransform.GetRotation().GetUpVector();
-  FVector TreeAxis = FVector(0,0,1);
+  FVector TreeAxis = FVector(0, 0, 1);
   for (FSkeletonJoint& Joint : Skeleton.Joints)
   {
     FVector JointLocation = Joint.GlobalTransform.GetLocation();
@@ -444,8 +444,8 @@ void USpringBasedVegetationComponent::ComputeSpringStrengthForBranches()
     float VerticalDistance = FVector::Distance(ClosestPoint, RootLocation);
 
     Joint.SpringStrength = FMath::Max(
-          BaseSpringStrength - HorizontalFallof*HorizontalDistance - VerticalFallof*VerticalDistance,
-          MinSpringStrength);
+      BaseSpringStrength - HorizontalFallof * HorizontalDistance - VerticalFallof * VerticalDistance,
+      MinSpringStrength);
 
     OTHER_LOG(Log, "Joint: %s, location %s, Strength %f", *Joint.JointName, *JointLocation.ToString(), Joint.SpringStrength);
   }
@@ -462,14 +462,14 @@ void USpringBasedVegetationComponent::EndPlay(const EEndPlayReason::Type EndPlay
 
 // Compute a single joint properties (Center of Mass, Inertia, Forces and Torque)
 void USpringBasedVegetationComponent::ComputePerJointProperties(
-    std::vector<FJointProperties>& JointLocalPropertiesList,
-    std::vector<FJointProperties>& JointPropertiesList)
+  std::vector<FJointProperties>& JointLocalPropertiesList,
+  std::vector<FJointProperties>& JointPropertiesList)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::ComputePerJointProperties);
-  for(FSkeletonJoint& Joint : Skeleton.Joints)
+  for (FSkeletonJoint& Joint : Skeleton.Joints)
   {
     FJointProperties& Properties = JointLocalPropertiesList[Joint.JointId];
-    Eigen::Vector3d JointGlobalPosition = ToEigenVector(Joint.GlobalTransform.GetLocation())/100.f;
+    Eigen::Vector3d JointGlobalPosition = ToEigenVector(Joint.GlobalTransform.GetLocation()) / 100.f;
     Properties.JointToGlobalMatrix = ToEigenMatrix(Joint.GlobalTransform);
     JointPropertiesList[Joint.JointId].JointToGlobalMatrix = Properties.JointToGlobalMatrix;
     if (!Joint.Bones.Num())
@@ -479,13 +479,13 @@ void USpringBasedVegetationComponent::ComputePerJointProperties(
     {
       Properties.Mass += Bone.Mass;
       FVector GlobalCenterOfMass = Joint.GlobalTransform.TransformPositionNoScale(Bone.CenterOfMass);
-      Properties.CenterOfMass += Bone.Mass*ToEigenVector(GlobalCenterOfMass)/100.f;
+      Properties.CenterOfMass += Bone.Mass * ToEigenVector(GlobalCenterOfMass) / 100.f;
     }
-    Properties.CenterOfMass = Properties.CenterOfMass/Properties.Mass;
+    Properties.CenterOfMass = Properties.CenterOfMass / Properties.Mass;
 
     // force
-    Eigen::Vector3d GravityForce = ToEigenVector(Gravity)/100.f; // world space gravity
-    Properties.Force = Properties.Mass * GravityForce + ToEigenVector(Joint.ExternalForces)/100.f;
+    Eigen::Vector3d GravityForce = ToEigenVector(Gravity) / 100.f; // world space gravity
+    Properties.Force = Properties.Mass * GravityForce + ToEigenVector(Joint.ExternalForces) / 100.f;
     // torque
     Properties.Torque = (Properties.CenterOfMass - JointGlobalPosition).cross(Properties.Force);
     // inertia tensor
@@ -494,25 +494,25 @@ void USpringBasedVegetationComponent::ComputePerJointProperties(
       if (Bone.Length < 1)
         continue;
       float CylinderRadius = 0.1f;
-      float CylinderHeight = Bone.Length/100.f;
+      float CylinderHeight = Bone.Length / 100.f;
       Eigen::Matrix3d LocalCylinderInertia;
       LocalCylinderInertia <<
-              0.5 * Bone.Mass*CylinderRadius*CylinderRadius, 0.f, 0.f,
-              0.f, 1.f/12.f * Bone.Mass*(3*CylinderRadius*CylinderRadius + CylinderHeight*CylinderHeight), 0.f,
-              0.f, 0.f, 1.f/12.f * Bone.Mass*(3*CylinderRadius*CylinderRadius + CylinderHeight*CylinderHeight);
-      Eigen::Vector3d BoneVector = ToEigenVector(Bone.CenterOfMass)/100.f;
+        0.5 * Bone.Mass * CylinderRadius * CylinderRadius, 0.f, 0.f,
+        0.f, 1.f / 12.f * Bone.Mass * (3 * CylinderRadius * CylinderRadius + CylinderHeight * CylinderHeight), 0.f,
+        0.f, 0.f, 1.f / 12.f * Bone.Mass * (3 * CylinderRadius * CylinderRadius + CylinderHeight * CylinderHeight);
+      Eigen::Vector3d BoneVector = ToEigenVector(Bone.CenterOfMass) / 100.f;
       Eigen::Vector3d LocalV1 = BoneVector.normalized();
-      Eigen::Vector3d LocalV2 = LocalV1.cross(Eigen::Vector3d(0,1,0));
+      Eigen::Vector3d LocalV2 = LocalV1.cross(Eigen::Vector3d(0, 1, 0));
       if (LocalV2.norm() == 0)
-        LocalV2 = LocalV1.cross(Eigen::Vector3d(0,0,1));
+        LocalV2 = LocalV1.cross(Eigen::Vector3d(0, 0, 1));
       LocalV2.normalize();
       Eigen::Vector3d LocalV3 = LocalV1.cross(LocalV2);
       Eigen::Matrix3d LocalToJointMatrix;
       LocalToJointMatrix << LocalV1, LocalV2, LocalV3;
-      Eigen::Matrix3d JointSpaceInertia = LocalToJointMatrix*LocalCylinderInertia*(LocalToJointMatrix.transpose());
-      Properties.InertiaTensor += Properties.JointToGlobalMatrix*JointSpaceInertia*Properties.JointToGlobalMatrix.transpose();
-      Eigen::Vector3d BoneCenterWorldSpace = ToEigenVector(Joint.GlobalTransform.TransformPositionNoScale(Bone.CenterOfMass))/100.0;
-      Properties.InertiaTensor += Properties.Mass*OuterProduct(Properties.CenterOfMass - BoneCenterWorldSpace, Properties.CenterOfMass - BoneCenterWorldSpace);
+      Eigen::Matrix3d JointSpaceInertia = LocalToJointMatrix * LocalCylinderInertia * (LocalToJointMatrix.transpose());
+      Properties.InertiaTensor += Properties.JointToGlobalMatrix * JointSpaceInertia * Properties.JointToGlobalMatrix.transpose();
+      Eigen::Vector3d BoneCenterWorldSpace = ToEigenVector(Joint.GlobalTransform.TransformPositionNoScale(Bone.CenterOfMass)) / 100.0;
+      Properties.InertiaTensor += Properties.Mass * OuterProduct(Properties.CenterOfMass - BoneCenterWorldSpace, Properties.CenterOfMass - BoneCenterWorldSpace);
     }
     ACC_LOG(Log, "Local Joint: %s \n Inertia \n %s \n Force \n %s \n Torque \n %s \n COM: \n %s \n Mass %f", *Joint.JointName, *EigenToFString(Properties.InertiaTensor), *EigenToFString(Properties.Force), *EigenToFString(Properties.Torque), *EigenToFString(Properties.CenterOfMass), Properties.Mass);
   }
@@ -520,8 +520,8 @@ void USpringBasedVegetationComponent::ComputePerJointProperties(
 
 // Compute accumulated properties (Center of Mass, Inertia, Forces and Torque)
 void USpringBasedVegetationComponent::ComputeCompositeBodyContribution(
-    std::vector<FJointProperties>& JointLocalPropertiesList,
-    std::vector<FJointProperties>& JointPropertiesList)
+  std::vector<FJointProperties>& JointLocalPropertiesList,
+  std::vector<FJointProperties>& JointPropertiesList)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::ComputeCompositeBodyContribution);
   for (int Id : Skeleton.EndToRootOrder)
@@ -535,21 +535,21 @@ void USpringBasedVegetationComponent::ComputeCompositeBodyContribution(
       continue;
     }
 
-    Eigen::Vector3d CenterOfMass = JointLocalProperties.Mass*JointLocalProperties.CenterOfMass;
+    Eigen::Vector3d CenterOfMass = JointLocalProperties.Mass * JointLocalProperties.CenterOfMass;
     // compute COM and accumulate mass
     JointProperties.Mass = JointLocalProperties.Mass;
-    for(int ChildrenId : Joint.ChildrenIds)
+    for (int ChildrenId : Joint.ChildrenIds)
     {
       FSkeletonJoint& ChildrenJoint = Skeleton.Joints[ChildrenId];
       FJointProperties& ChildrenProperties = JointPropertiesList[ChildrenId];
-      CenterOfMass += ChildrenProperties.Mass*ChildrenProperties.CenterOfMass;
+      CenterOfMass += ChildrenProperties.Mass * ChildrenProperties.CenterOfMass;
       JointProperties.Mass += ChildrenProperties.Mass;
     }
     JointProperties.CenterOfMass = CenterOfMass / JointProperties.Mass;
 
     // compute forces
     JointProperties.Force = JointLocalProperties.Force;
-    for(int ChildrenId : Joint.ChildrenIds)
+    for (int ChildrenId : Joint.ChildrenIds)
     {
       FSkeletonJoint& ChildrenJoint = Skeleton.Joints[ChildrenId];
       FJointProperties& ChildrenProperties = JointPropertiesList[ChildrenId];
@@ -558,32 +558,32 @@ void USpringBasedVegetationComponent::ComputeCompositeBodyContribution(
 
     // compute torque
     JointProperties.Torque = JointLocalProperties.Torque;
-    for(int ChildrenId : Joint.ChildrenIds)
+    for (int ChildrenId : Joint.ChildrenIds)
     {
       FSkeletonJoint& ChildrenJoint = Skeleton.Joints[ChildrenId];
       FJointProperties& ChildrenProperties = JointPropertiesList[ChildrenId];
-      Eigen::Vector3d ChildrenJointGlobalPosition = ToEigenVector(ChildrenJoint.GlobalTransform.GetLocation())/100.f;
-      Eigen::Vector3d ParentJointGlobalPosition = ToEigenVector(Joint.GlobalTransform.GetLocation())/100.f;
+      Eigen::Vector3d ChildrenJointGlobalPosition = ToEigenVector(ChildrenJoint.GlobalTransform.GetLocation()) / 100.f;
+      Eigen::Vector3d ParentJointGlobalPosition = ToEigenVector(Joint.GlobalTransform.GetLocation()) / 100.f;
       JointProperties.Torque += ChildrenProperties.Torque + (ChildrenJointGlobalPosition - ParentJointGlobalPosition).cross(ChildrenProperties.Force);
     }
 
     // compute inertia tensor
-    JointProperties.InertiaTensor = JointLocalProperties.InertiaTensor + JointLocalProperties.Mass*OuterProduct(JointProperties.CenterOfMass - JointLocalProperties.CenterOfMass, JointProperties.CenterOfMass - JointLocalProperties.CenterOfMass);
-    for(int ChildrenId : Joint.ChildrenIds)
+    JointProperties.InertiaTensor = JointLocalProperties.InertiaTensor + JointLocalProperties.Mass * OuterProduct(JointProperties.CenterOfMass - JointLocalProperties.CenterOfMass, JointProperties.CenterOfMass - JointLocalProperties.CenterOfMass);
+    for (int ChildrenId : Joint.ChildrenIds)
     {
       FSkeletonJoint& ChildrenJoint = Skeleton.Joints[ChildrenId];
       FJointProperties& ChildrenProperties = JointPropertiesList[ChildrenId];
       Eigen::Vector3d ChildrenToCenterOfMass = JointProperties.CenterOfMass - ChildrenProperties.CenterOfMass;
 
-      JointProperties.InertiaTensor += ChildrenProperties.InertiaTensor + ChildrenProperties.Mass*OuterProduct(ChildrenToCenterOfMass, ChildrenToCenterOfMass);
+      JointProperties.InertiaTensor += ChildrenProperties.InertiaTensor + ChildrenProperties.Mass * OuterProduct(ChildrenToCenterOfMass, ChildrenToCenterOfMass);
     }
     ACC_LOG(Log, "Accumulated Joint: %s \n Inertia \n %s \n Force \n %s \n Torque \n %s \n COM: \n %s \n Mass %f", *Joint.JointName, *EigenToFString(JointProperties.InertiaTensor), *EigenToFString(JointProperties.Force), *EigenToFString(JointProperties.Torque), *EigenToFString(JointProperties.CenterOfMass), JointProperties.Mass);
   }
 }
 
 void USpringBasedVegetationComponent::ComputeFictitiousForces(
-    std::vector<FJointProperties>& JointLocalPropertiesList,
-    std::vector<FJointProperties>& JointPropertiesList)
+  std::vector<FJointProperties>& JointLocalPropertiesList,
+  std::vector<FJointProperties>& JointPropertiesList)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::ComputeFictitiousForces);
   // fictitious forces
@@ -601,43 +601,43 @@ void USpringBasedVegetationComponent::ComputeFictitiousForces(
     Eigen::Matrix3d GlobalToJointMatrix = JointToGlobalMatrix.transpose();
     Eigen::Matrix3d ParentJointToGlobalMatrix = ParentProperties.JointToGlobalMatrix;
     Eigen::Matrix3d GlobalToParentJointMatrix = ParentJointToGlobalMatrix.transpose();
-    Eigen::Vector3d JointGlobalPosition = ToEigenVector(Joint.GlobalTransform.GetLocation())/100.f;
-    Eigen::Vector3d ParentJointGlobalPosition = ToEigenVector(ParentJoint.GlobalTransform.GetLocation())/100.f;
+    Eigen::Vector3d JointGlobalPosition = ToEigenVector(Joint.GlobalTransform.GetLocation()) / 100.f;
+    Eigen::Vector3d ParentJointGlobalPosition = ToEigenVector(ParentJoint.GlobalTransform.GetLocation()) / 100.f;
 
     JointProperties.AngularVelocity = ParentProperties.AngularVelocity
-        + ParentJointToGlobalMatrix*RotatorToEigenVector(ParentJoint.AngularVelocity);
+      + ParentJointToGlobalMatrix * RotatorToEigenVector(ParentJoint.AngularVelocity);
     JointProperties.LinearVelocity = ParentProperties.LinearVelocity
-        + ParentProperties.AngularVelocity.cross(JointGlobalPosition - ParentJointGlobalPosition);
+      + ParentProperties.AngularVelocity.cross(JointGlobalPosition - ParentJointGlobalPosition);
     JointProperties.AngularAcceleration = ParentProperties.AngularAcceleration
-        + ParentJointToGlobalMatrix*RotatorToEigenVector(ParentJoint.AngularAcceleration)
-        + ParentProperties.AngularVelocity.cross(JointProperties.AngularVelocity);
+      + ParentJointToGlobalMatrix * RotatorToEigenVector(ParentJoint.AngularAcceleration)
+      + ParentProperties.AngularVelocity.cross(JointProperties.AngularVelocity);
     JointProperties.LinearAcceleration = ParentProperties.LinearAcceleration
-        + ParentProperties.LinearAcceleration.cross(JointGlobalPosition - ParentJointGlobalPosition)
-        + ParentProperties.AngularVelocity.cross(JointProperties.AngularVelocity - ParentProperties.AngularVelocity);
-    
+      + ParentProperties.LinearAcceleration.cross(JointGlobalPosition - ParentJointGlobalPosition)
+      + ParentProperties.AngularVelocity.cross(JointProperties.AngularVelocity - ParentProperties.AngularVelocity);
+
     Eigen::Vector3d CompositeCenterOfMass = JointProperties.CenterOfMass;
     Eigen::Vector3d CompositeLinearVelocity = JointProperties.LinearVelocity
-        + JointProperties.AngularVelocity.cross(CompositeCenterOfMass - JointGlobalPosition);
+      + JointProperties.AngularVelocity.cross(CompositeCenterOfMass - JointGlobalPosition);
     Eigen::Vector3d CompositeLinearAcceleration = JointProperties.LinearAcceleration
-        + JointProperties.AngularAcceleration.cross(CompositeCenterOfMass - JointGlobalPosition)
-        + JointProperties.AngularVelocity.cross(CompositeLinearVelocity - JointProperties.LinearVelocity);
-        
+      + JointProperties.AngularAcceleration.cross(CompositeCenterOfMass - JointGlobalPosition)
+      + JointProperties.AngularVelocity.cross(CompositeLinearVelocity - JointProperties.LinearVelocity);
+
     Eigen::Vector3d TotalForces = -Joint.Mass * JointProperties.LinearAcceleration;
     Eigen::Vector3d TotalTorque = (CompositeCenterOfMass - JointGlobalPosition).cross(TotalForces);
-    JointProperties.FictitiousTorque = GlobalToJointMatrix*TotalTorque;
+    JointProperties.FictitiousTorque = GlobalToJointMatrix * TotalTorque;
 
     FICT_LOG(Log, "Joint: %s \n Position \n %s \n Velocity \n %s \n Acceleration \n %s \n Fictitious forces: \n %s", *Joint.JointName, *EigenToFString(CompositeCenterOfMass), *EigenToFString(CompositeLinearVelocity), *EigenToFString(CompositeLinearAcceleration), *EigenToFString(JointProperties.FictitiousTorque));
   }
 }
 
 void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
-    std::vector<FJointProperties>& JointLocalPropertiesList,
-    std::vector<FJointProperties>& JointPropertiesList)
+  std::vector<FJointProperties>& JointLocalPropertiesList,
+  std::vector<FJointProperties>& JointPropertiesList)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::ResolveContactsAndCollisions);
 
   // set all joints that can rest
-  for (auto &Joint : JointCollisionList)
+  for (auto& Joint : JointCollisionList)
   {
     Joint.CanRest = true;
   }
@@ -655,16 +655,16 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
     const FVector PrimitiveVelocity = Primitive->GetComponentVelocity();
     const Eigen::Vector3d ColliderVelocity = ToEigenVector(PrimitiveVelocity) / 100.f;
     const FVector Impulse = (Primitive->GetMass() * PrimitiveVelocity);
-    const Eigen::Vector3d CollisionImpulse = 0*ToEigenVector(Impulse) / 100.f;
+    const Eigen::Vector3d CollisionImpulse = 0 * ToEigenVector(Impulse) / 100.f;
     TArray<UPrimitiveComponent*>& CollidingCapsules = ActorCapsules.Value;
     for (UPrimitiveComponent* Capsule : CollidingCapsules)
-    { 
+    {
       TRACE_CPUPROFILER_EVENT_SCOPE(CapsuleLoop);
       if (!IsValid(Capsule))
         continue;
       const FVector CapsuleLocation = Capsule->GetComponentLocation();
       FVector PrimitiveLocation = Primitive->GetComponentLocation();
-      PrimitiveLocation = PrimitiveLocation + Primitive->GetUpVector()*VehicleCenterZOffset;
+      PrimitiveLocation = PrimitiveLocation + Primitive->GetUpVector() * VehicleCenterZOffset;
       FVector ClosestPointOnCapsule;
       float DistanceOnCapsule;
       FHitResult HitResult;
@@ -675,10 +675,10 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
         TRACE_CPUPROFILER_EVENT_SCOPE(ColliderPenetrationDistance);
         DistanceOnCapsule = Capsule->GetClosestPointOnCollision(PrimitiveLocation, ClosestPointOnCapsule);
         FVector LineDirection = (ClosestPointOnCapsule - PrimitiveLocation).GetSafeNormal();
-        FVector LineTraceStart = ClosestPointOnCapsule + LineTraceMaxDistance*LineDirection;
+        FVector LineTraceStart = ClosestPointOnCapsule + LineTraceMaxDistance * LineDirection;
         FVector LineTraceEnd = ClosestPointOnCapsule;
         HitFound = Primitive->LineTraceComponent(HitResult,
-            LineTraceStart, LineTraceEnd, FCollisionQueryParams());
+          LineTraceStart, LineTraceEnd, FCollisionQueryParams());
         ClosestPointOnCollider = HitResult.Location;
         DistanceToCollider = (ClosestPointOnCollider - ClosestPointOnCapsule).Size();
         if (DebugEnableVisualization)
@@ -686,7 +686,7 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
           DrawDebugLine(GetWorld(), LineTraceStart, LineTraceEnd, FColor::Orange, false, 0.1f, 0.0f, 1.f);
         }
       }
-      if(!HitFound)
+      if (!HitFound)
       {
         continue;
       }
@@ -700,7 +700,7 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
         DrawDebugSphere(GetWorld(), ClosestPointOnCollider, DEBUG_SPHERE_SIZE, 64, FColor(255, 0, 255, 255));
         DrawDebugSphere(GetWorld(), CapsuleLocation, DEBUG_SPHERE_SIZE, 64, FColor(255, 255, 255, 255));
         DrawDebugSphere(GetWorld(), PrimitiveLocation, DEBUG_SPHERE_SIZE, 64, FColor(255, 255, 255, 255));
-      } 
+      }
 
       const int JointId = CapsuleToJointId[Capsule];
       const FSkeletonJoint& Joint = Skeleton.Joints[JointId];
@@ -711,12 +711,12 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       const Eigen::Vector3d PointOnCapsulePosition = ToEigenVector(ClosestPointOnCapsule) / 100.f;
       const Eigen::Vector3d ColliderPosition = ToEigenVector(ClosestPointOnCollider) / 100.f;
       Eigen::Vector3d CollisionTorque = Eigen::Vector3d::Zero();
-      
+
       // Contact forces due to spring strength
       const FRotator CurrRotator = Joint.Transform.Rotator();
       const FRotator RestRotator = Joint.RestingAngles;
-      const FRotator DeltaRotator = 
-          GetDeltaRotator(CurrRotator, RestRotator);
+      const FRotator DeltaRotator =
+        GetDeltaRotator(CurrRotator, RestRotator);
       const Eigen::Vector3d SpringTorque = Joint.SpringStrength * RotatorToEigenVector(DeltaRotator);
       const Eigen::Vector3d JointCapsuleVector = JointGlobalPosition - CapsulePosition;
       const Eigen::Vector3d RepulsionForce = SpringTorque.cross(JointCapsuleVector) * JointCapsuleVector.squaredNorm();
@@ -730,10 +730,10 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       // float ProportionalConstant = 1.f/(FMath::Pow(ForceMaxDistance, ForceDistanceFalloffExponent));
       // ForceFactor = 1.f - ProportionalConstant * FMath::Pow(DistanceOnCapsule, ForceDistanceFalloffExponent);
       // from eq f = a*d^p, f: ForceFactor, a: ProportionalConstant, p: ForceDistanceFalloffExponent, d: DistanceToCollider
-      float ProportionalConstant = 1.f/(FMath::Pow(ForceMaxDistance, ForceDistanceFalloffExponent));
+      float ProportionalConstant = 1.f / (FMath::Pow(ForceMaxDistance, ForceDistanceFalloffExponent));
       ForceFactor = ProportionalConstant * FMath::Pow(DistanceToCollider, ForceDistanceFalloffExponent);
       ForceFactor = FMath::Clamp(ForceFactor, MinForceFactor, 1.f);
-      
+
       // const Eigen::Vector3d OverlappingForces = (ColliderPosition - CapsulePosition).normalized() * CollisionForceParameter * ForceFactor;
       // const Eigen::Vector3d OverlappingForces = (ColliderPosition - PointOnCapsulePosition).normalized() * CollisionForceParameter * ForceFactor;
       float Factor = 1.0f - ((JointCollision.Iteration / 100.0f) * RestFactor);
@@ -743,18 +743,17 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       JointProperties.Torque += CollisionTorque;
       // COLLISION_LOG(Log, "Joint: %s \n ProjectedSpeed %f, ProportionalFactor %f \n RepulsionForce %s \n", *Joint.JointName,ProjectedSpeed,ProportionalFactor,*EigenToFString(RepulsionForce),*EigenToFString(CollisionTorque));
       //UE_LOG(LogCarla, Display, TEXT("DistanceToCollider: %f, ForceFactor: %f"), DistanceToCollider, ForceFactor);
-      
+
       // block forces to go to rest angles
       int TempId = JointId;
       do
       {
         FJointCollision& TempJointCollision = JointCollisionList[TempId];
         TempJointCollision.CanRest = false;
-        
-        FSkeletonJoint &TempJoint = Skeleton.Joints[TempId];
+
+        FSkeletonJoint& TempJoint = Skeleton.Joints[TempId];
         TempId = TempJoint.ParentId;
-      }
-      while (TempId != -1);
+      } while (TempId != -1);
 
       if (DebugEnableVisualization)
       {
@@ -764,20 +763,20 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
         const FVector End = Primitive->GetComponentLocation();
         const FColor LineColor(FColor::Green);
         DrawDebugLine(GetWorld(), Start, End, LineColor, false, 0.1f, 0.0f, 1.f);
-        DrawDebugLine(GetWorld(), ClosestPointOnCollider, ClosestPointOnCollider+RepulsionForceUE.GetSafeNormal()*20.f, FColor::Red, false, 0.1f, 0.0f, 1.f);
-        FVector UEOverlapForces = ToUnrealVector(OverlappingForces)*100.f;
-        DrawDebugLine(GetWorld(), ClosestPointOnCapsule, ClosestPointOnCapsule+UEOverlapForces.GetSafeNormal()*20.f, FColor::Turquoise, false, 0.1f, 0.0f, 1.f);
-        FVector UECOM = ToUnrealVector(JointProperties.CenterOfMass )*100.f;
+        DrawDebugLine(GetWorld(), ClosestPointOnCollider, ClosestPointOnCollider + RepulsionForceUE.GetSafeNormal() * 20.f, FColor::Red, false, 0.1f, 0.0f, 1.f);
+        FVector UEOverlapForces = ToUnrealVector(OverlappingForces) * 100.f;
+        DrawDebugLine(GetWorld(), ClosestPointOnCapsule, ClosestPointOnCapsule + UEOverlapForces.GetSafeNormal() * 20.f, FColor::Turquoise, false, 0.1f, 0.0f, 1.f);
+        FVector UECOM = ToUnrealVector(JointProperties.CenterOfMass) * 100.f;
         DrawDebugSphere(GetWorld(), UECOM, DEBUG_SPHERE_SIZE, 64, FColor::Emerald);
-        FVector UEJointPos = ToUnrealVector(JointGlobalPosition )*100.f;
+        FVector UEJointPos = ToUnrealVector(JointGlobalPosition) * 100.f;
         DrawDebugSphere(GetWorld(), UEJointPos, DEBUG_SPHERE_SIZE, 64, FColor::Purple);
         DrawDebugLine(GetWorld(), ClosestPointOnCapsule, UEJointPos, FColor::Cyan, false, 0.1f, 0.0f, 1.f);
       }
     }
   }
 
-    // reset iteration
-  for (auto &Joint : JointCollisionList)
+  // reset iteration
+  for (auto& Joint : JointCollisionList)
   {
     if (Joint.CanRest)
     {
@@ -797,8 +796,8 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
 }
 
 void USpringBasedVegetationComponent::SolveEquationOfMotion(
-    std::vector<FJointProperties>& JointPropertiesList,
-    float DeltaTime)
+  std::vector<FJointProperties>& JointPropertiesList,
+  float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::SolveEquationOfMotion);
   // solver
@@ -828,35 +827,35 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
         }
       }
     }
-    
+
     float Mass = JointProperties.Mass;
-    Eigen::Vector3d CenterToJoint = JointProperties.CenterOfMass - ToEigenVector(Joint.GlobalTransform.GetLocation())/100.f;
+    Eigen::Vector3d CenterToJoint = JointProperties.CenterOfMass - ToEigenVector(Joint.GlobalTransform.GetLocation()) / 100.f;
     Eigen::Matrix3d GlobalToJointMatrix = JointProperties.JointToGlobalMatrix.transpose();
-    Eigen::Matrix3d JointSpaceIntertiaTensor = JointProperties.Mass*OuterProduct(CenterToJoint, CenterToJoint)
-        + GlobalToJointMatrix*JointProperties.InertiaTensor*GlobalToJointMatrix.transpose();
-    Eigen::Vector3d Torque = GlobalToJointMatrix*JointProperties.Torque + JointProperties.FictitiousTorque;
+    Eigen::Matrix3d JointSpaceIntertiaTensor = JointProperties.Mass * OuterProduct(CenterToJoint, CenterToJoint)
+      + GlobalToJointMatrix * JointProperties.InertiaTensor * GlobalToJointMatrix.transpose();
+    Eigen::Vector3d Torque = GlobalToJointMatrix * JointProperties.Torque + JointProperties.FictitiousTorque;
     // build differential equation
     Eigen::Matrix3d I = JointSpaceIntertiaTensor;
     float SpringStrength = Joint.SpringStrength;
     float beta = Beta;
     float alpha = Alpha;
     Eigen::Matrix3d K;
-    K << SpringStrength*SpringStrengthMulFactor.X,0.f,0.f,
-         0.f,SpringStrength*SpringStrengthMulFactor.Y,0.f,
-         0.f,0.f,SpringStrength*SpringStrengthMulFactor.Z;
-    Eigen::LLT<Eigen::Matrix3d> lltofI (I);
+    K << SpringStrength * SpringStrengthMulFactor.X, 0.f, 0.f,
+      0.f, SpringStrength* SpringStrengthMulFactor.Y, 0.f,
+      0.f, 0.f, SpringStrength* SpringStrengthMulFactor.Z;
+    Eigen::LLT<Eigen::Matrix3d> lltofI(I);
     Eigen::Matrix3d L = lltofI.matrixL();
     Eigen::Matrix3d Linv = L.inverse();
-    Eigen::EigenSolver<Eigen::Matrix3d> EigenDecomposition(Linv*K*Linv.transpose());
+    Eigen::EigenSolver<Eigen::Matrix3d> EigenDecomposition(Linv * K * Linv.transpose());
     Eigen::Matrix3d Lambda = EigenDecomposition.eigenvalues().real().asDiagonal();
     Eigen::Matrix3d X = EigenDecomposition.eigenvectors().real();
     // Eigen::Matrix3d Lambda = U.transpose()*K*U;
-    Eigen::Matrix3d U = Linv.transpose()*X;
+    Eigen::Matrix3d U = Linv.transpose() * X;
     // Eigen::Matrix3d Uinv = U.inverse();
-    Eigen::Matrix3d Uinv = X.transpose()*L.transpose();
-    Eigen::Vector3d Coeffsb = Eigen::Vector3d(alpha,alpha,alpha) + beta*Lambda*Eigen::Vector3d(1,1,1);
-    Eigen::Vector3d Coeffsk = Lambda*Eigen::Vector3d(1,1,1);
-    Eigen::Vector3d Coeffsf = U.transpose()*Torque;
+    Eigen::Matrix3d Uinv = X.transpose() * L.transpose();
+    Eigen::Vector3d Coeffsb = Eigen::Vector3d(alpha, alpha, alpha) + beta * Lambda * Eigen::Vector3d(1, 1, 1);
+    Eigen::Vector3d Coeffsk = Lambda * Eigen::Vector3d(1, 1, 1);
+    Eigen::Vector3d Coeffsf = U.transpose() * Torque;
     FString StringI = EigenToFString(I);
     FString StringTorque = EigenToFString(Torque);
     FString StringU = EigenToFString(U);
@@ -868,22 +867,22 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     FRotator CurrRotator = Joint.Transform.Rotator();
     FRotator RestRotator = Joint.RestingAngles;
     FRotator AngularVelocity = Joint.AngularVelocity;
-    FRotator DeltaRotator = 
-        GetDeltaRotator(CurrRotator, RestRotator);
+    FRotator DeltaRotator =
+      GetDeltaRotator(CurrRotator, RestRotator);
     if (!JointCollision.CanRest)
     {
       float Factor = 1.0f - ((JointCollision.Iteration / 100.0f) * RestFactor);
       // DeltaRotator *= Factor;
       AngularVelocity *= Factor;
     }
-    Eigen::Vector3d InitialTheta = Uinv*RotatorToEigenVector(DeltaRotator);
-    Eigen::Vector3d InitialThetaVelocity = Uinv*RotatorToEigenVector(AngularVelocity);
+    Eigen::Vector3d InitialTheta = Uinv * RotatorToEigenVector(DeltaRotator);
+    Eigen::Vector3d InitialThetaVelocity = Uinv * RotatorToEigenVector(AngularVelocity);
     SOLVER_LOG(Log, "Old angle for joint %s, %s", *Joint.JointName, *CurrRotator.ToString());
     SOLVER_LOG(Log, "InitialTheta \n %s", *EigenToFString(InitialTheta));
-    Eigen::Vector3d NewTheta (0.f,0.f,0.f);
-    Eigen::Vector3d NewThetaVelocity (0.f,0.f,0.f);
-    Eigen::Vector3d NewThetaAccel (0.f,0.f,0.f);
-    Eigen::Vector3d Discriminant = Coeffsb.cwiseProduct(Coeffsb) - 4*Coeffsk;
+    Eigen::Vector3d NewTheta(0.f, 0.f, 0.f);
+    Eigen::Vector3d NewThetaVelocity(0.f, 0.f, 0.f);
+    Eigen::Vector3d NewThetaAccel(0.f, 0.f, 0.f);
+    Eigen::Vector3d Discriminant = Coeffsb.cwiseProduct(Coeffsb) - 4 * Coeffsk;
     // 1st row
     for (int i = 0; i < 3; i++)
     {
@@ -894,7 +893,7 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
       double theta0 = InitialTheta(i);
 
       SOLVER_LOG(Log, "Bone %s, component %d, b %f, k %f, f %f, discriminant %f, theta0 %f", *Joint.JointName, i, b, k, f, discriminant, theta0);
-      if(k == 0)
+      if (k == 0)
       {
         NewTheta(i) = theta0;
         SOLVER_LOG(Log, "In Bone %s, K is 0 in component %d", *Joint.JointName, i);
@@ -905,38 +904,38 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
       float angularaccel = 0;
       if (discriminant > 0)
       {
-        double r1 = (-b + FMath::Sqrt(discriminant))*0.5f;
-        double r2 = (-b - FMath::Sqrt(discriminant))*0.5f;
-        double c1 = (r2*(theta0 - f/k) - dtheta0)/(r2-r1);
-        double c2 = (dtheta0 - c1*r1)/r2;
-        deltatheta = c1*std::exp(r1*DeltaTime) + c2*std::exp(r2*DeltaTime) + f/k;
-        angularvelocity = c1*r1*std::exp(r1*DeltaTime) + c2*r2*std::exp(r2*DeltaTime);
+        double r1 = (-b + FMath::Sqrt(discriminant)) * 0.5f;
+        double r2 = (-b - FMath::Sqrt(discriminant)) * 0.5f;
+        double c1 = (r2 * (theta0 - f / k) - dtheta0) / (r2 - r1);
+        double c2 = (dtheta0 - c1 * r1) / r2;
+        deltatheta = c1 * std::exp(r1 * DeltaTime) + c2 * std::exp(r2 * DeltaTime) + f / k;
+        angularvelocity = c1 * r1 * std::exp(r1 * DeltaTime) + c2 * r2 * std::exp(r2 * DeltaTime);
         SOLVER_LOG(Log, "r1 %f, r2 %f, c1 %f, c2 %f, deltatheta %f", r1, r2, c1, c2, deltatheta);
       }
       else if (discriminant == 0)
       {
-        double r = -b/2.f;
-        double c1 = theta0 - f/k;
-        double c2 = dtheta0 - c1*r;
-        deltatheta = (c1 + c2*DeltaTime)*std::exp(r*DeltaTime) + f/k;
-        angularvelocity = (c1*r + c2 + c2*r*DeltaTime)*std::exp(r*DeltaTime);
+        double r = -b / 2.f;
+        double c1 = theta0 - f / k;
+        double c2 = dtheta0 - c1 * r;
+        deltatheta = (c1 + c2 * DeltaTime) * std::exp(r * DeltaTime) + f / k;
+        angularvelocity = (c1 * r + c2 + c2 * r * DeltaTime) * std::exp(r * DeltaTime);
         SOLVER_LOG(Log, "r %f, c1 %f, c2 %f, deltatheta %f", r, c1, c2, deltatheta);
       }
       else
       {
-        double gamma = -b/2.f;
-        double mu = FMath::Sqrt(FMath::Abs(discriminant))/2.f;
-        double c1 = theta0 - f/k;
-        double c2 = (c1*gamma - dtheta0)/mu;
+        double gamma = -b / 2.f;
+        double mu = FMath::Sqrt(FMath::Abs(discriminant)) / 2.f;
+        double c1 = theta0 - f / k;
+        double c2 = (c1 * gamma - dtheta0) / mu;
         deltatheta =
-            c1*std::exp(gamma*DeltaTime)*std::cos(mu*DeltaTime) +
-            c2*std::exp(gamma*DeltaTime)*std::sin(mu*DeltaTime) + f/k;
+          c1 * std::exp(gamma * DeltaTime) * std::cos(mu * DeltaTime) +
+          c2 * std::exp(gamma * DeltaTime) * std::sin(mu * DeltaTime) + f / k;
         angularvelocity =
-            c1*std::exp(gamma*DeltaTime)*(gamma*std::cos(mu*DeltaTime) + mu*std::sin(mu*DeltaTime)) +
-            c2*std::exp(gamma*DeltaTime)*(gamma*std::sin(mu*DeltaTime) - mu*std::cos(mu*DeltaTime));
+          c1 * std::exp(gamma * DeltaTime) * (gamma * std::cos(mu * DeltaTime) + mu * std::sin(mu * DeltaTime)) +
+          c2 * std::exp(gamma * DeltaTime) * (gamma * std::sin(mu * DeltaTime) - mu * std::cos(mu * DeltaTime));
         SOLVER_LOG(Log, "gamma %f, mu %f, c1 %f, c2 %f, deltatheta %f", gamma, mu, c1, c2, deltatheta);
       }
-      angularaccel = f - b*angularvelocity - k*deltatheta;
+      angularaccel = f - b * angularvelocity - k * deltatheta;
       if (!FMath::IsNaN(deltatheta))
       {
         NewTheta(i) = deltatheta;
@@ -950,25 +949,25 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
         }
       }
     }
-    Eigen::Vector3d FinalNewTheta = U*NewTheta;
-    Eigen::Vector3d FinalNewThetaVelocity = U*NewThetaVelocity;
-    Eigen::Vector3d FinalNewThetaAccel = U*NewThetaAccel;
+    Eigen::Vector3d FinalNewTheta = U * NewTheta;
+    Eigen::Vector3d FinalNewThetaVelocity = U * NewThetaVelocity;
+    Eigen::Vector3d FinalNewThetaAccel = U * NewThetaAccel;
 
     auto NewPitch = FMath::RadiansToDegrees(FinalNewTheta(1));
     auto NewYaw = FMath::RadiansToDegrees(FinalNewTheta(2));
     auto NewRoll = FMath::RadiansToDegrees(FinalNewTheta(0));
-    
+
     FRotator NewAngularVelocity = EigenVectorToRotator(FinalNewThetaVelocity);
     FRotator NewAngularAccel = EigenVectorToRotator(FinalNewThetaAccel);
 
     FRotator NewAngle(
-            RestRotator.Pitch + NewPitch,
-            RestRotator.Yaw - NewYaw,
-            RestRotator.Roll + NewRoll);
+      RestRotator.Pitch + NewPitch,
+      RestRotator.Yaw - NewYaw,
+      RestRotator.Roll + NewRoll);
     SOLVER_LOG(Log, "FinalNewTheta \n %s \n FinalNewThetaVelocity \n %s \n FinalNewThetaAccel \n %s",
-        *EigenToFString(FinalNewTheta), *EigenToFString(FinalNewThetaVelocity), *EigenToFString(FinalNewThetaAccel));
+      *EigenToFString(FinalNewTheta), *EigenToFString(FinalNewThetaVelocity), *EigenToFString(FinalNewThetaAccel));
     SOLVER_LOG(Log, "New angle %s, new angular velocity %s, new angular accel %s",
-        *NewAngle.ToString(), *NewAngularVelocity.ToString(), *NewAngularAccel.ToString());
+      *NewAngle.ToString(), *NewAngularVelocity.ToString(), *NewAngularAccel.ToString());
     Joint.Transform.SetRotation(NewAngle.Quaternion());
     Joint.AngularVelocity = NewAngularVelocity;
     Joint.AngularAcceleration = NewAngularAccel;
@@ -976,9 +975,9 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
 }
 
 void USpringBasedVegetationComponent::TickComponent(
-    float DeltaTime,
-    enum ELevelTick TickType,
-    FActorComponentTickFunction * ThisTickFunction)
+  float DeltaTime,
+  enum ELevelTick TickType,
+  FActorComponentTickFunction* ThisTickFunction)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::TickComponent);
   Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -1008,17 +1007,17 @@ void USpringBasedVegetationComponent::TickComponent(
 }
 
 void USpringBasedVegetationComponent::OnCollisionEvent(
-    UPrimitiveComponent* HitComponent,
-    AActor* OtherActor,
-    UPrimitiveComponent* OtherComponent,
-    FVector NormalImpulse,
-    const FHitResult& Hit)
+  UPrimitiveComponent* HitComponent,
+  AActor* OtherActor,
+  UPrimitiveComponent* OtherComponent,
+  FVector NormalImpulse,
+  const FHitResult& Hit)
 {
   // prevent self collision
   if (OtherActor == GetOwner())
     return;
   // prevent collision with other tree actors
-  if(OtherActor->GetComponentByClass(USpringBasedVegetationComponent::StaticClass()) != nullptr)
+  if (OtherActor->GetComponentByClass(USpringBasedVegetationComponent::StaticClass()) != nullptr)
     return;
   ACarlaWheeledVehicle* Vehicle = nullptr;
   if (DebugEnableAllCollisions)
@@ -1037,18 +1036,18 @@ void USpringBasedVegetationComponent::OnCollisionEvent(
 }
 
 void USpringBasedVegetationComponent::OnBeginOverlapEvent(
-    UPrimitiveComponent* OverlapComponent,
-    AActor* OtherActor,
-    UPrimitiveComponent* OtherComponent,
-    int32 OtherBodyIndex,
-    bool bFromSweep,
-    const FHitResult& SweepResult)
+  UPrimitiveComponent* OverlapComponent,
+  AActor* OtherActor,
+  UPrimitiveComponent* OtherComponent,
+  int32 OtherBodyIndex,
+  bool bFromSweep,
+  const FHitResult& SweepResult)
 {
   // prevent self collision
   if (OtherActor == GetOwner())
     return;
   // prevent collision with other tree actors
-  if(OtherActor->GetComponentByClass(USpringBasedVegetationComponent::StaticClass()) != nullptr)
+  if (OtherActor->GetComponentByClass(USpringBasedVegetationComponent::StaticClass()) != nullptr)
     return;
   ACarlaWheeledVehicle* Vehicle = nullptr;
   if (DebugEnableAllCollisions)
@@ -1062,7 +1061,7 @@ void USpringBasedVegetationComponent::OnBeginOverlapEvent(
     if (!IsValid(Vehicle))
       return;
   }
-  
+
   if (!OverlappingActors.Contains(OtherActor))
   {
     OverlappingActors.Add(OtherActor);
@@ -1075,16 +1074,16 @@ void USpringBasedVegetationComponent::OnBeginOverlapEvent(
 }
 
 void USpringBasedVegetationComponent::OnEndOverlapEvent(
-    UPrimitiveComponent* OverlapComponent,
-    AActor* OtherActor,
-    UPrimitiveComponent* OtherComponent,
-    int32 OtherBodyIndex)
+  UPrimitiveComponent* OverlapComponent,
+  AActor* OtherActor,
+  UPrimitiveComponent* OtherComponent,
+  int32 OtherBodyIndex)
 {
   // prevent self collision
   if (OtherActor == GetOwner())
     return;
   // prevent collision with other tree actors
-  if(OtherActor->GetComponentByClass(USpringBasedVegetationComponent::StaticClass()) != nullptr)
+  if (OtherActor->GetComponentByClass(USpringBasedVegetationComponent::StaticClass()) != nullptr)
     return;
   ACarlaWheeledVehicle* Vehicle = nullptr;
   if (DebugEnableAllCollisions)
@@ -1116,9 +1115,9 @@ void USpringBasedVegetationComponent::UpdateSkeletalMesh()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(USpringBasedVegetationComponent::UpdateSkeletalMesh);
   // get the walker animation class
-  auto *AnimInst = SkeletalMesh->GetAnimInstance();
+  auto* AnimInst = SkeletalMesh->GetAnimInstance();
   if (!AnimInst) return;
-  UWalkerAnim *WalkerAnim = Cast<UWalkerAnim>(AnimInst);
+  UWalkerAnim* WalkerAnim = Cast<UWalkerAnim>(AnimInst);
   if (!WalkerAnim) return;
 
   // if pose is empty, then get a first version
@@ -1129,7 +1128,7 @@ void USpringBasedVegetationComponent::UpdateSkeletalMesh()
   }
 
   TMap<FName, FTransform> JointsMap;
-  for (int i=0; i<Skeleton.Joints.Num(); ++i)
+  for (int i = 0; i < Skeleton.Joints.Num(); ++i)
   {
     FSkeletonJoint& Joint = Skeleton.Joints[i];
     FName JointName = FName(*Joint.JointName);
@@ -1137,9 +1136,9 @@ void USpringBasedVegetationComponent::UpdateSkeletalMesh()
   }
 
   // assign common bones
-  for (int i=0; i<WalkerAnim->Snap.BoneNames.Num(); ++i)
+  for (int i = 0; i < WalkerAnim->Snap.BoneNames.Num(); ++i)
   {
-    FTransform *Trans = JointsMap.Find(WalkerAnim->Snap.BoneNames[i]);
+    FTransform* Trans = JointsMap.Find(WalkerAnim->Snap.BoneNames[i]);
     if (Trans)
     {
       WalkerAnim->Snap.LocalTransforms[i] = *Trans;
