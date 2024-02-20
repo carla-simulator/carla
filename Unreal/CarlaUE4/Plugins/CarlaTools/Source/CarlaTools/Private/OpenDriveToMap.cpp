@@ -533,7 +533,7 @@ void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& Param
   {
     GenerateRoadMesh(ParamCarlaMap, MinLocation, MaxLocation);
     GenerateLaneMarks(ParamCarlaMap, MinLocation, MaxLocation);
-    GenerateSpawnPoints(ParamCarlaMap);
+    GenerateSpawnPoints(ParamCarlaMap, MinLocation, MaxLocation);
     CreateTerrain(12800, 256);
     GenerateTreePositions(ParamCarlaMap, MinLocation, MaxLocation);
     GenerationFinished(MinLocation, MaxLocation);
