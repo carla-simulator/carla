@@ -186,7 +186,8 @@ else
   git clone -b ${RPCLIB_PATCH} https://github.com/carla-simulator/rpclib.git ${RPCLIB_BASENAME}-source
 
   end_download_time=$(date +%s)
-  echo "Elapsed Time downloading rpclib: $(($end-$start)) seconds"
+
+  echo "Elapsed Time downloading rpclib: $(($end_download_time-$start_download_time)) seconds"
   log "Building rpclib with libc++."
 
   # rpclib does not use any cmake 3.9 feature.
