@@ -154,16 +154,32 @@ void UOpenDriveToMap::CreateMap()
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Map Name Is Empty") );
     return;
   }
-  if ( !IsValid(FileDownloader) )
+
+  if( !Url.IsEmpty() ) {
+    if ( !IsValid(FileDownloader) )
+    {
+      FileDownloader = NewObject<UCustomFileDownloader>();
+    }
+
+    FileDownloader->ResultFileName = MapName;
+    FileDownloader->Url = Url;
+
+    FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
+    FileDownloader->StartDownload();
+  }
+  else if(LocalFilePath.EndsWith(".xodr"))
   {
-    FileDownloader = NewObject<UCustomFileDownloader>();
+    ImportXODR();
+  }
+  else if(LocalFilePath.EndsWith(".osm"))
+  {
+    ImportOSM();
+  }
+  else
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("URL and Local FilePath are Empty. URL: %s  Local FilePath: %s"), *Url, *LocalFilePath );
   }
 
-  FileDownloader->ResultFileName = MapName;
-  FileDownloader->Url = Url;
-
-  FileDownloader->DownloadDelegate.BindUObject( this, &UOpenDriveToMap::ConvertOSMInOpenDrive );
-  FileDownloader->StartDownload();
 }
 
 void UOpenDriveToMap::CreateTerrain( const int MeshGridSize, const float MeshGridSectionSize)
@@ -490,7 +506,7 @@ void UOpenDriveToMap::GenerateAll(const boost::optional<carla::road::Map>& Param
   {
     GenerateRoadMesh(ParamCarlaMap, MinLocation, MaxLocation);
     GenerateLaneMarks(ParamCarlaMap, MinLocation, MaxLocation);
-    //GenerateSpawnPoints(ParamCarlaMap);
+    GenerateSpawnPoints(ParamCarlaMap, MinLocation, MaxLocation);
     CreateTerrain(12800, 256);
     GenerateTreePositions(ParamCarlaMap, MinLocation, MaxLocation);
     GenerationFinished(MinLocation, MaxLocation);
@@ -714,10 +730,14 @@ void UOpenDriveToMap::GenerateSpawnPoints( const boost::optional<carla::road::Ma
   for (const auto &Wp : Waypoints)
   {
     const FTransform Trans = ParamCarlaMap->ComputeTransform(Wp);
-    AVehicleSpawnPoint *Spawner = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AVehicleSpawnPoint>();
-    Spawner->SetActorRotation(Trans.GetRotation());
-    Spawner->SetActorLocation(Trans.GetTranslation() + FVector(0.f, 0.f, SpawnersHeight));
-    ActorsToMove.Add(Spawner);
+    if( Trans.GetLocation().X >= MinLocation.X && Trans.GetLocation().Y >= MinLocation.Y &&
+        Trans.GetLocation().X <= MaxLocation.X && Trans.GetLocation().Y <= MaxLocation.Y)
+    {
+      AVehicleSpawnPoint *Spawner = UEditorLevelLibrary::GetEditorWorld()->SpawnActor<AVehicleSpawnPoint>();
+      Spawner->SetActorRotation(Trans.GetRotation());
+      Spawner->SetActorLocation(Trans.GetTranslation() + FVector(0.f, 0.f, SpawnersHeight));
+      ActorsToMove.Add(Spawner);
+    }
   }
 }
 
@@ -876,6 +896,41 @@ bool UOpenDriveToMap::IsInRoad(
     }
   }
   return false;
+}
+
+void UOpenDriveToMap::ImportXODR(){
+  IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+  FString MyFileDestination = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/OpenDrive/" + MapName + ".xodr";
+
+  if(FileManager.CopyFile(  *MyFileDestination, *LocalFilePath,
+                              EPlatformFileRead::None,
+                              EPlatformFileWrite::None))
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Verbose, TEXT("FilePaths: File Copied!"));
+    FilePath = MyFileDestination;
+    LoadMap();
+  }
+  else
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("FilePaths local xodr file not copied: File not Copied!"));
+  }
+}
+
+void UOpenDriveToMap::ImportOSM(){
+  IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+  FString MyFileDestination = FPaths::ProjectContentDir() + "CustomMaps/" + MapName + "/OpenDrive/" + MapName + ".osm";
+
+  if(FileManager.CopyFile(  *MyFileDestination, *LocalFilePath,
+                              EPlatformFileRead::None,
+                              EPlatformFileWrite::None))
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Verbose, TEXT("FilePaths: File Copied!"));
+    ConvertOSMInOpenDrive();
+  }
+  else
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("FilePaths local osm file not copied: File not Copied!"));
+  }
 }
 
 void UOpenDriveToMap::MoveActorsToSubLevels(TArray<AActor*> ActorsToMove)
