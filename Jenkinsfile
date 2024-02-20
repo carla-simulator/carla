@@ -171,7 +171,7 @@ pipeline
                                 sh 'make package ARGS="--python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
                                 sh '''
                                     #!/bin/bash
-                                    if [[ "${BRANCH_NAME:0:3}" != "PR-" ]]; then
+                                    if [ "${BRANCH_NAME}" != "PR-*" ]; then
                                         make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"'
                                     fi
                                 '''
