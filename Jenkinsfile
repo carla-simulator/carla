@@ -30,6 +30,7 @@ pipeline
                             options{skipDefaultCheckout()} 
                             steps
                             {
+                                sh "echo ${BRANCH_NAME}"
                                 sh "cp ../../Build_Linux.tar.gz ."
                                 stash includes: 'Build_Linux.tar.gz', name: 'build_cache'
                             }
@@ -167,7 +168,11 @@ pipeline
                             steps
                             {
                                 sh 'make package ARGS="--python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
-                                sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"'
+                                sh '''
+                                    if [[ "${BRANCH_NAME:0:3}" != "PR_" ]]; then
+                                        make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"'
+                                    fi
+                                '''
                                 sh 'make examples ARGS="localhost 3654"'
                             }
                             post
