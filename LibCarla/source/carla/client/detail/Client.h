@@ -179,7 +179,8 @@ namespace detail {
         const rpc::ActorDescription &description,
         const geom::Transform &transform,
         rpc::ActorId parent,
-        rpc::AttachmentType attachment_type);
+        rpc::AttachmentType attachment_type,
+        const std::string& socket_name = "");
 
     bool DestroyActor(rpc::ActorId actor);
 
@@ -231,6 +232,32 @@ namespace detail {
     void AddActorTorque(
         rpc::ActorId actor,
         const geom::Vector3D &vector);
+
+    geom::Transform GetActorComponentWorldTransform(
+        rpc::ActorId actor,
+        const std::string componentName);
+
+    geom::Transform GetActorComponentRelativeTransform(
+        rpc::ActorId actor,
+        const std::string componentName);
+
+    std::vector<geom::Transform> GetActorBoneWorldTransforms(
+        rpc::ActorId actor);
+    
+    std::vector<geom::Transform> GetActorBoneRelativeTransforms(
+        rpc::ActorId actor);
+
+    std::vector<std::string> GetActorComponentNames(
+        rpc::ActorId actor);         
+
+    std::vector<std::string> GetActorBoneNames(
+        rpc::ActorId actor);
+
+    std::vector<geom::Transform> GetActorSocketWorldTransforms(
+        rpc::ActorId actor);
+
+    std::vector<geom::Transform> GetActorSocketRelativeTransforms(
+        rpc::ActorId actor);
 
     void SetActorSimulatePhysics(
         rpc::ActorId actor,

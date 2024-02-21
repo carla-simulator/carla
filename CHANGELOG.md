@@ -1,6 +1,13 @@
 ## Latest Changes
  * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
-  * Added vehicle doors to the recorder
+ * Added vehicle doors to the recorder
+ * Added functions to get actor' components transform
+ * Added posibility to Digital Twins to work with local files (osm and xodr)
+ * Enable proper material merging for Building in Digital Twins
+ * Added functions to get actor' bones transforms
+ * Added functions to get actor' bones and components names
+ * Added functions to get actor' sockets transforms
+ * make PythonAPI Windows: Fixed incompatibility issue with Anaconda due `py` command.
 
 ## CARLA 0.9.15
 
