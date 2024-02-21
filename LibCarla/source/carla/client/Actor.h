@@ -64,6 +64,18 @@ namespace client {
 
     geom::Transform GetComponentRelativeTransform(const std::string componentName) const;
 
+    std::vector<geom::Transform> GetBoneWorldTransforms() const;
+
+    std::vector<geom::Transform> GetBoneRelativeTransforms() const;
+
+    std::vector<std::string> GetComponentNames() const; 
+
+    std::vector<std::string> GetBoneNames() const;
+
+    std::vector<geom::Transform> GetSocketWorldTransforms() const;
+
+    std::vector<geom::Transform> GetSocketRelativeTransforms() const;
+
     /// Teleport the actor to @a location.
     void SetLocation(const geom::Location &location);
 
