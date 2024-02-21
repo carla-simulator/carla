@@ -115,12 +115,6 @@ carla_dependency_add (
   ${CARLA_XERCESC_TAG}
 )
 
-carla_dependency_add (
-  rpclib
-  https://github.com/carla-simulator/rpclib.git
-  ${CARLA_RPCLIB_TAG}
-)
-
 if (BUILD_OSM_WORLD_RENDERER)
   carla_dependency_add (
     lunasvg
