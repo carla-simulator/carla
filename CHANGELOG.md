@@ -8,6 +8,7 @@
  * Added functions to get actor' bones and components names
  * Added functions to get actor' sockets transforms
  * make PythonAPI Windows: Fixed incompatibility issue with Anaconda due `py` command.
+ * Added function to get actor' sockets names
 
 ## CARLA 0.9.15
 
