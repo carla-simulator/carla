@@ -16,6 +16,7 @@
 #include "Engine/LocalPlayer.h"
 #include "Engine/PostProcessVolume.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/GameViewportClient.h"
 #include "GameFramework/HUD.h"
 #include "InstancedFoliageActor.h"
 #include "Kismet/GameplayStatics.h"
@@ -135,10 +136,7 @@ void UCarlaSettingsDelegate::ApplyQualityLevelPreRestart()
   {
     ULocalPlayer *player = playercontroller->GetLocalPlayer();
     if (player)
-    {
-        // @CARLAUE5
-      // player->ViewportClient->bDisableWorldRendering = CarlaSettings->bDisableRendering;
-    }
+      player->ViewportClient->bDisableWorldRendering = CarlaSettings->bDisableRendering;
     // if we already have a hud class:
     AHUD *hud = playercontroller->GetHUD();
     if (hud)

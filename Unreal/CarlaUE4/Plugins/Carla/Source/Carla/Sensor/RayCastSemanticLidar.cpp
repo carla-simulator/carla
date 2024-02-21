@@ -125,8 +125,6 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
   ResetRecordedHits(ChannelCount, PointsToScanWithOneLaser);
   PreprocessRays(ChannelCount, PointsToScanWithOneLaser);
 
-#if 0 // @CARLAUE5
-  GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
     ParallelFor(ChannelCount, [&](int32 idxChannel) {
@@ -149,8 +147,6 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
       };
     });
   }
-  GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
-#endif
 
   FTransform ActorTransf = GetTransform();
   ComputeAndSaveDetections(ActorTransf);
@@ -248,8 +244,8 @@ bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float Ho
   const auto Range = Description.Range;
   FVector EndTrace = Range * UKismetMathLibrary::GetForwardVector(ResultRot) + LidarBodyLoc;
 
-#if 0 // @CARLAUE5
-  GetWorld()->ParallelLineTraceSingleByChannel(
+  // @CARLAUE5: WE CAN PROBABLY IMPROVE THIS
+  GetWorld()->LineTraceSingleByChannel(
     HitInfo,
     LidarBodyLoc,
     EndTrace,
@@ -257,7 +253,6 @@ bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float Ho
     TraceParams,
     FCollisionResponseParams::DefaultResponseParam
   );
-#endif
 
   if (HitInfo.bBlockingHit) {
     HitResult = HitInfo;

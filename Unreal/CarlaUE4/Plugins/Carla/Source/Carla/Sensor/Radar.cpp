@@ -10,8 +10,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 #include <compiler/disable-ue4-macros.h>
-#include "carla/geom/Math.h"
-#include "carla/ros2/ROS2.h"
+#include <carla/geom/Math.h>
+#include <carla/ros2/ROS2.h>
 #include <compiler/enable-ue4-macros.h>
 
 FActorDefinition ARadar::GetSensorDefinition()
@@ -135,9 +135,6 @@ void ARadar::SendLineTraces(float DeltaTime)
     Rays[i].Hitted = false;
   }
 
-#if 0 // @CARLAUE5
-  FCriticalSection Mutex;
-  GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
     ParallelFor(NumPoints, [&](int32 idx) {
@@ -155,7 +152,8 @@ void ARadar::SendLineTraces(float DeltaTime)
         MaxRy * Radius * Sin
       });
 
-      const bool Hitted = GetWorld()->ParallelLineTraceSingleByChannel(
+      // @CARLAUE5: WE CAN PROBABLY IMPROVE THE PERFORMANCE OF THIS:
+      const bool Hitted = GetWorld()->LineTraceSingleByChannel(
         OutHit,
         RadarLocation,
         EndLocation,
@@ -181,20 +179,21 @@ void ARadar::SendLineTraces(float DeltaTime)
       }
     });
   }
-  GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
 
   // Write the detections in the output structure
-  for (auto& ray : Rays) {
-    if (ray.Hitted) {
-      RadarData.WriteDetection({
-        ray.RelativeVelocity,
-        ray.AzimuthAndElevation.X,
-        ray.AzimuthAndElevation.Y,
-        ray.Distance
+  for (auto& ray : Rays)
+  {
+    if (ray.Hitted)
+    {
+      RadarData.WriteDetection(
+      {
+        (float)ray.RelativeVelocity,
+        (float)ray.AzimuthAndElevation.X,
+        (float)ray.AzimuthAndElevation.Y,
+        (float)ray.Distance
       });
     }
   }
-#endif
 }
 
 float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation)
