@@ -170,9 +170,16 @@ pipeline
                             {
                                 sh 'make package ARGS="--python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
                                 sh '''
-                                    if [ "${BRANCH_NAME}" != "PR-*" ]; then
+                                    prefix="PR-"
+                                    case "$BRANCH_NAME" in
+                                    ("$prefix"*)
+                                        echo "This is a pull request, skipping complete package"
+                                        ;;
+                                    (*)
+                                        echo "Generating complete package"
                                         make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"
-                                    fi
+                                        ;;
+                                    esac
                                 '''
                                 sh 'make examples ARGS="localhost 3654"'
                             }
