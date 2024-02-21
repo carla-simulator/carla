@@ -24,6 +24,18 @@ pipeline
                     }
                     stages
                     {
+                        stage('stash dependencies')
+                        {
+                            agent{ label 'cache' }
+                            options{skipDefaultCheckout()} 
+                            steps
+                            {
+                                sh "echo ${BRANCH_NAME}"
+                                sh "set"
+                                sh "cp ../../Build_Linux.tar.gz ."
+                                stash includes: 'Build_Linux.tar.gz', name: 'build_cache'
+                            }
+                        }
                         stage('prepare environment')
                         {
                             parallel
@@ -36,6 +48,8 @@ pipeline
                                         {
                                             steps
                                             {
+                                                unstash name: 'build_cache'
+                                                sh 'tar -xvzf Build_Linux.tar.gz'
                                                 sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
                                                 sh 'make setup ARGS="--python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
                                             }
@@ -155,7 +169,11 @@ pipeline
                             steps
                             {
                                 sh 'make package ARGS="--python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
-                                sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"'
+                                sh '''
+                                    if [ "${BRANCH_NAME}" != "PR-*" ]; then
+                                        make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"
+                                    fi
+                                '''
                                 sh 'make examples ARGS="localhost 3654"'
                             }
                             post
