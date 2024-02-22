@@ -1,7 +1,6 @@
 cmake_minimum_required (VERSION 3.20.0)
 
 cmake_policy (SET CMP0097 NEW)
-cmake_policy (SET CMP0140 NEW)
 cmake_policy (SET CMP0077 OLD)
 
 set (CARLA_VERSION_MAJOR 0)
