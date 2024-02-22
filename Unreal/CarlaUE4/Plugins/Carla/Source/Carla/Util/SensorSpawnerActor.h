@@ -46,7 +46,7 @@ protected:
 	virtual void Tick(float DeltaSeconds) override;
 
 	// Root
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Components")
+	UPROPERTY(BlueprintReadOnly, Category="Components")
 	USceneComponent* SceneComp;
 	
 	// Array with sensors to spawn
@@ -72,6 +72,10 @@ protected:
 	// Enables that all SceneCaptures cameras save captures to /Saved/SensorSpawnerCaptures folder.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config|SceneCapture")
 	bool bSaveCameraToDisk = false;
+
+	// Subclass of ASceneCaptureSensor that we are going to save the images to disk. SceneCaptureCamera by default. Set to nullptr to capture all ASceneCaptureSensor subclasses.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config|SceneCapture")
+	TSubclassOf<class ASceneCaptureSensor> SensorClassToCapture;
 
 	// How often ticking is done and a SceneCapture image is taken.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config|SceneCapture")
@@ -115,7 +119,7 @@ private:
 	TArray<FSensorTuple> SensorsToSpawnCopy;
 	
 	// Track cameras saving pictures on tick.
-	TArray<const class ASceneCaptureCamera*> SceneCaptureCameras;
+	TArray<const class ASceneCaptureSensor*> SceneCaptureSensor;
 	
 	// Path to the /Saved/SensorSpawnerCaptures project folder.
 	FString SaveImagePath;
