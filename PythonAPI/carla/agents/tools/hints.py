@@ -4,7 +4,6 @@ if sys.version_info < (3, 6):
     from collections import namedtuple
     ObstacleDetectionResult = namedtuple('ObstacleDetectionResult', ['obstacle_was_found', 'obstacle', 'distance'])
     TrafficLightDetectionResult = namedtuple('TrafficLightDetectionResult', ['traffic_light_was_found', 'traffic_light'])
-    print("Python version is less than 3.6")
 else:
     #from agents.tools.hints import ObstacleDetectionResult, TrafficLightDetectionResult
     from typing import NamedTuple, Union
