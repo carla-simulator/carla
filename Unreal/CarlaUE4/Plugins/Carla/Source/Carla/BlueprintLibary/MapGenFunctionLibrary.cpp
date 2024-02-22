@@ -221,11 +221,13 @@ void UMapGenFunctionLibrary::FlushRenderingCommandsInBlueprint()
     FlushPendingDeleteRHIResources_GameThread();
 }
 
+#if WITH_EDITOR
 extern UNREALED_API UEditorEngine* GEditor;
+#endif
 
 void UMapGenFunctionLibrary::CleanupGEngine(){
-  GEngine->PerformGarbageCollectionAndCleanupActors();
 #if WITH_EDITOR
+  GEngine->PerformGarbageCollectionAndCleanupActors();
   FText TransResetText(FText::FromString("Clean up after Move actors to sublevels"));
   if ( GEditor->Trans )
   {

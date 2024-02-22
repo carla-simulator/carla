@@ -799,7 +799,11 @@ void FCarlaServer::FPimpl::BindActions()
           result.Contains(FString(TEXT("Error")))
         );
     }
-    return GEngine->Exec(Episode->GetWorld(), UTF8_TO_TCHAR(cmd.c_str()));
+    bool success = false;
+#if WITH_EDITOR
+    success = GEngine->Exec(Episode->GetWorld(), UTF8_TO_TCHAR(cmd.c_str()));
+#endif
+    return success;
   };
 
   BIND_SYNC(get_sensor_token) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
