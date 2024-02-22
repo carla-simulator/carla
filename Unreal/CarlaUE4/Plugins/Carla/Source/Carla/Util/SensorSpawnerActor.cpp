@@ -36,8 +36,6 @@ void ASensorSpawnerActor::BeginPlay()
   SaveImagePath = FPaths::ProjectSavedDir() + "/SensorSpawnerCaptures/" + FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp());
 }
 
-
-
 void ASensorSpawnerActor::OnEpisodeInitialised(UCarlaEpisode* InitialisedEpisode)
 {
   if(IsValid(InitialisedEpisode))
