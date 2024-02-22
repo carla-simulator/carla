@@ -41,6 +41,7 @@ public class Carla :
     bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
 
     EnableOSM2ODR = IsWindows;
+    EnableRos2 = !IsWindows;
 
     PrivatePCHHeaderFile = "Carla.h";
     bEnableExceptions = true;
