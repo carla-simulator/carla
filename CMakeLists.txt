@@ -45,6 +45,13 @@ include (CheckCXXCompilerFlag)
 include (FetchContent)
 include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
 
+macro (carla_two_step_configure_file DESTINATION SOURCE)
+  # Configure-time step; evaluate variables:
+  configure_file (${SOURCE} ${DESTINATION})
+  # Generate-time step; evaluate generator expressions:
+  file (GENERATE OUTPUT ${DESTINATION} INPUT ${DESTINATION})
+endmacro ()
+
 set (
   CMAKE_INSTALL_PREFIX
   ${CARLA_DEPENDENCIES_INSTALL_PREFIX}
@@ -108,22 +115,7 @@ else ()
   list (APPEND CARLA_EXCEPTION_DEFINITIONS PUGIXML_NO_EXCEPTIONS)
 endif ()
 
-set (CARLA_RTTI_DEFINITIONS)
-
 add_compile_definitions (_USE_MATH_DEFINES)
-
-if (ENABLE_RTTI)
-else ()
-  list (
-    APPEND
-    CARLA_RTTI_DEFINITIONS
-    BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY
-  )
-endif ()
-
-if (BUILD_PYTHON_API)
-  set (BOOST_ENABLE_PYTHON ${BUILD_PYTHON_API})
-endif ()
 
 include (${CARLA_WORKSPACE_PATH}/CMake/CarlaDependencies.cmake)
 
@@ -138,13 +130,6 @@ endif ()
 if (BUILD_PYTHON_API)
   add_subdirectory (PythonAPI)
 endif ()
-
-macro (carla_two_step_configure_file DESTINATION SOURCE)
-  # Configure-time step; evaluate variables:
-  configure_file (${SOURCE} ${DESTINATION})
-  # Generate-time step; evaluate generator expressions:
-  file (GENERATE OUTPUT ${DESTINATION} INPUT ${DESTINATION})
-endmacro ()
 
 carla_two_step_configure_file (
   ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUE4/Plugins/Carla/Source/Carla/Carla.Build.cs

@@ -79,6 +79,10 @@ include_directories (${libpng_SOURCE_DIR} ${libpng_BINARY_DIR}) # HACK
 
 
 
+if (BUILD_PYTHON_API)
+  set (BOOST_ENABLE_PYTHON ${BUILD_PYTHON_API})
+endif ()
+
 carla_dependency_add (
   boost
   https://github.com/boostorg/boost.git

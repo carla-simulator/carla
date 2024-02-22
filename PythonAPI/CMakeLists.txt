@@ -19,12 +19,6 @@ set (PYTHON_API_SOURCE_PATH ${PYTHON_API_CARLA_PATH}/source/libcarla)
 
 file (
   GENERATE
-  OUTPUT ${PYTHON_API_PATH}/examples/util/find_carla.py
-  INPUT ${PYTHON_API_PATH}/examples/util/find_carla.py.in
-)
-
-file (
-  GENERATE
   OUTPUT ${PYTHON_API_PATH}/carla/pyproject.toml
   INPUT ${PYTHON_API_PATH}/carla/pyproject.toml.in
 )

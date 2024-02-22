@@ -4,10 +4,21 @@ set (LIBCARLA_THIRD_PARTY_SOURCE_PATH ${LIBCARLA_SOURCE_PATH}/third-party)
 set (CARLA_PYTHON_VERSION_MAJOR 3)
 set (CARLA_PYTHON_VERSION_MINOR 8)
 
-configure_file (
-  ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in
+carla_two_step_configure_file (
   ${LIBCARLA_SOURCE_PATH}/carla/Version.h
+  ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in
 )
+
+set (CARLA_RTTI_DEFINITIONS)
+
+if (ENABLE_RTTI)
+else ()
+  list (
+    APPEND
+    CARLA_RTTI_DEFINITIONS
+    BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY
+  )
+endif ()
 
 if (BUILD_CARLA_SERVER)
 
