@@ -44,10 +44,9 @@ if (BUILD_CARLA_SERVER)
         ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.cpp
       )
       list (
-        JOIN
+        APPEND
         LIBCARLA_SERVER_SOURCES
-        LIBCARLA_SERVER_SOURCES_ROS2
-        LIBCARLA_SERVER_SOURCES
+        ${LIBCARLA_SERVER_SOURCES_ROS2}
       )
     endif ()
 
@@ -88,10 +87,9 @@ if (BUILD_CARLA_SERVER)
         ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.h
       )
       list (
-        JOIN
+        APPEND
         LIBCARLA_SERVER_HEADERS
-        LIBCARLA_SERVER_HEADERS_ROS2
-        LIBCARLA_SERVER_HEADERS
+        ${LIBCARLA_SERVER_HEADERS_ROS2}
       )
     endif ()
 
@@ -207,10 +205,9 @@ if (BUILD_CARLA_CLIENT)
         ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.h
       )
       list (
-        JOIN
+        APPEND
         LIBCARLA_CLIENT_HEADERS
-        LIBCARLA_CLIENT_HEADERS_ROS2
-        LIBCARLA_CLIENT_HEADERS
+        ${LIBCARLA_CLIENT_HEADERS_ROS2}
       )
     endif ()
 
@@ -272,10 +269,9 @@ if (BUILD_CARLA_CLIENT)
         ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.cpp
       )
       list (
-        JOIN
+        APPEND
         LIBCARLA_CLIENT_SOURCES
-        LIBCARLA_CLIENT_SOURCES_ROS2
-        LIBCARLA_CLIENT_SOURCES
+        ${LIBCARLA_CLIENT_SOURCES_ROS2}
       )
     endif ()
 
