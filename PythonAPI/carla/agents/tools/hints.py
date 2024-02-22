@@ -1,3 +1,9 @@
+"""
+Module to add high-level semantic return types for obstacle and traffic light detection results via named tuples.
+
+The code is compatible with Python 2.7, <3.6 and >=3.6. The later uses the typed version of named tuples.
+"""
+
 
 import sys
 if sys.version_info < (3, 6):
