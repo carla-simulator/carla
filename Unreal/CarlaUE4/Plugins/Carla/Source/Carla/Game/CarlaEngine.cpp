@@ -383,11 +383,12 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
 
   bSynchronousMode = Settings.bSynchronousMode;
 
+#if WITH_EDITOR
   if (GEngine && GEngine->GameViewport)
   {
     GEngine->GameViewport->bDisableWorldRendering = Settings.bNoRenderingMode;
   }
-
+#endif
   FCarlaEngine_SetFixedDeltaSeconds(Settings.FixedDeltaSeconds);
 
   // Setting parameters for physics substepping

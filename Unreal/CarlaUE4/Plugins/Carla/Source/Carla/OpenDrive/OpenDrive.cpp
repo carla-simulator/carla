@@ -169,7 +169,10 @@ UOpenDriveMap *UOpenDrive::LoadOpenDriveMap(const FString &MapName)
 
 UOpenDriveMap *UOpenDrive::LoadCurrentOpenDriveMap(const UObject *WorldContextObject)
 {
-  UWorld *World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+  UWorld *World = nullptr;
+#if WITH_EDITOR
+  GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+#endif
   return World != nullptr ?
       LoadOpenDriveMap(World->GetMapName()) :
       nullptr;
