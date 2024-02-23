@@ -11,10 +11,10 @@ if sys.version_info < (3, 6):
     ObstacleDetectionResult = namedtuple('ObstacleDetectionResult', ['obstacle_was_found', 'obstacle', 'distance'])
     TrafficLightDetectionResult = namedtuple('TrafficLightDetectionResult', ['traffic_light_was_found', 'traffic_light'])
 else:
-    #from agents.tools.hints import ObstacleDetectionResult, TrafficLightDetectionResult
     from typing import NamedTuple, Union
     from carla import Actor, TrafficLight
     """
+    # Python 3.6+
     class ObstacleDetectionResult(NamedTuple):
         obstacle_was_found : bool
         obstacle : Union[Actor, None]
