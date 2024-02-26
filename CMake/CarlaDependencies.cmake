@@ -68,7 +68,12 @@ set (PNG_SHARED OFF)
 set (PNG_TOOLS OFF)
 set (PNG_BUILD_ZLIB ON)
 set (ZLIB_INCLUDE_DIR ${zlib_SOURCE_DIR})
-set (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlib.lib)
+if (WIN32)
+  set (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlibstatic.lib)
+else ()
+  set (ZLIB_LIBRARY ${zlib_BINARY_DIR}/libz.a)
+endif ()
+
 carla_dependency_add (
   libpng
   https://github.com/glennrp/libpng.git
@@ -89,6 +94,9 @@ carla_dependency_add (
   ${CARLA_BOOST_TAG}
 )
 
+set (EIGEN_BUILD_PKGCONFIG OFF)
+set (BUILD_TESTING OFF)
+set (EIGEN_BUILD_DOC OFF)
 carla_dependency_add (
   eigen
   https://gitlab.com/libeigen/eigen.git
@@ -107,17 +115,24 @@ carla_dependency_add (
   ${CARLA_RECAST_TAG}
 )
 
-# carla_dependency_add (
-#   proj
-#   https://github.com/OSGeo/PROJ.git
-#   ${CARLA_PROJ_TAG}
-# )
+if (ENABLE_OSM2ODR)
+  set (BUILD_TESTING OFF)
+  set (ENABLE_TIFF OFF)
+  set (ENABLE_CURL OFF)
+  carla_dependency_add (
+    proj
+    https://github.com/OSGeo/PROJ.git
+    ${CARLA_PROJ_TAG}
+  )
+endif ()
 
-carla_dependency_add (
-  xercesc
-  https://github.com/apache/xerces-c.git
-  ${CARLA_XERCESC_TAG}
-)
+if (ENABLE_OSM2ODR)
+  carla_dependency_add (
+    xercesc
+    https://github.com/apache/xerces-c.git
+    ${CARLA_XERCESC_TAG}
+  )
+endif ()
 
 if (BUILD_OSM_WORLD_RENDERER)
   carla_dependency_add (

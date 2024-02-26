@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "PythonAPI.h"
+#include <PythonAPI.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -169,7 +169,7 @@ void export_world() {
     .def_readwrite("deterministic_ragdolls", &cr::EpisodeSettings::deterministic_ragdolls)
     .add_property("fixed_delta_seconds",
         +[](const cr::EpisodeSettings &self) {
-          return OptionalToPythonObject(self.fixed_delta_seconds);
+          return OptionalToPyObject(self.fixed_delta_seconds);
         },
         +[](cr::EpisodeSettings &self, object value) {
           double fds = (value == object{} ? 0.0 : extract<double>(value));
@@ -343,13 +343,13 @@ void export_world() {
     .def("apply_float_color_texture_to_object", &cc::World::ApplyFloatColorTextureToObject, (arg("object_name"), arg("material_parameter"), arg("texture")))
     .def("apply_textures_to_object", &cc::World::ApplyTexturesToObject, (arg("object_name"), arg("diffuse_texture"), arg("emissive_texture"), arg("normal_texture"), arg("ao_roughness_metallic_emissive_texture")))
     .def("apply_color_texture_to_objects", +[](cc::World &self, boost::python::list &list, const cr::MaterialParameter& parameter, const cr::TextureColor& Texture) {
-        self.ApplyColorTextureToObjects(PythonLitstToVector<std::string>(list), parameter, Texture);
+        self.ApplyColorTextureToObjects(PyListToVector<std::string>(list), parameter, Texture);
       }, (arg("objects_name_list"), arg("material_parameter"), arg("texture")))
     .def("apply_float_color_texture_to_objects", +[](cc::World &self, boost::python::list &list, const cr::MaterialParameter& parameter, const cr::TextureFloatColor& Texture) {
-        self.ApplyFloatColorTextureToObjects(PythonLitstToVector<std::string>(list), parameter, Texture);
+        self.ApplyFloatColorTextureToObjects(PyListToVector<std::string>(list), parameter, Texture);
       }, (arg("objects_name_list"), arg("material_parameter"), arg("texture")))
     .def("apply_textures_to_objects", +[](cc::World &self, boost::python::list &list, const cr::TextureColor& diffuse_texture, const cr::TextureFloatColor& emissive_texture, const cr::TextureFloatColor& normal_texture, const cr::TextureFloatColor& ao_roughness_metallic_emissive_texture) {
-        self.ApplyTexturesToObjects(PythonLitstToVector<std::string>(list), diffuse_texture, emissive_texture, normal_texture, ao_roughness_metallic_emissive_texture);
+        self.ApplyTexturesToObjects(PyListToVector<std::string>(list), diffuse_texture, emissive_texture, normal_texture, ao_roughness_metallic_emissive_texture);
       }, (arg("objects_name_list"), arg("diffuse_texture"), arg("emissive_texture"), arg("normal_texture"), arg("ao_roughness_metallic_emissive_texture")))
     .def(self_ns::str(self_ns::self))
   ;

@@ -96,8 +96,10 @@
 #endif
 
 template <typename OptionalT>
-boost::python::object OptionalToPythonObject(OptionalT &optional) {
-  return optional.has_value() ? boost::python::object(*optional) : boost::python::object();
+static auto OptionalToPyObject(OptionalT &optional) {
+  return optional.has_value() ?
+    boost::python::object(*optional) :
+    boost::python::object();
 }
 
 // Convenient for requests without arguments.
@@ -156,12 +158,11 @@ boost::python::object OptionalToPythonObject(OptionalT &optional) {
     }
 
 template<typename T>
-std::vector<T> PythonLitstToVector(boost::python::list &input) {
+std::vector<T> PyListToVector(boost::python::list &input) {
   std::vector<T> result;
-  boost::python::ssize_t list_size = boost::python::len(input);
-  for (boost::python::ssize_t i = 0; i < list_size; ++i) {
+  auto list_size = boost::python::len(input);
+  for (decltype(list_size) i = 0; i < list_size; ++i)
     result.emplace_back(boost::python::extract<T>(input[i]));
-  }
   return result;
 }
 
@@ -203,22 +204,22 @@ std::vector<T> PythonLitstToVector(boost::python::list &input) {
 
 #define CALL_RETURNING_OPTIONAL(cls, fn) +[](const cls &self) { \
       auto optional = self.fn(); \
-      return OptionalToPythonObject(optional); \
+      return OptionalToPyObject(optional); \
     }
 
 #define CALL_RETURNING_OPTIONAL_1(cls, fn, T1_) +[](const cls &self, T1_ t1) { \
       auto optional = self.fn(std::forward<T1_>(t1)); \
-      return OptionalToPythonObject(optional); \
+      return OptionalToPyObject(optional); \
     }
 
 #define CALL_RETURNING_OPTIONAL_2(cls, fn, T1_, T2_) +[](const cls &self, T1_ t1, T2_ t2) { \
       auto optional = self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2)); \
-      return OptionalToPythonObject(optional); \
+      return OptionalToPyObject(optional); \
     }
 
 #define CALL_RETURNING_OPTIONAL_3(cls, fn, T1_, T2_, T3_) +[](const cls &self, T1_ t1, T2_ t2, T3_ t3) { \
       auto optional = self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3)); \
-      return OptionalToPythonObject(optional); \
+      return OptionalToPyObject(optional); \
     }
 
 #define CALL_RETURNING_OPTIONAL_WITHOUT_GIL(cls, fn) +[](const cls &self) { \
@@ -228,12 +229,12 @@ std::vector<T> PythonLitstToVector(boost::python::list &input) {
     }
 
 template <typename T>
-void PrintListItem_(std::ostream &out, const T &item) {
+void PrintListItem(std::ostream &out, const T &item) {
   out << item;
 }
 
 template <typename T>
-void PrintListItem_(std::ostream &out, const carla::SharedPtr<T> &item) {
+void PrintListItem(std::ostream &out, const carla::SharedPtr<T> &item) {
   if (item == nullptr) {
     out << "nullptr";
   } else {
@@ -242,14 +243,14 @@ void PrintListItem_(std::ostream &out, const carla::SharedPtr<T> &item) {
 }
 
 template <typename Iterable>
-inline std::ostream &PrintList(std::ostream &out, const Iterable &list) {
+std::ostream &PrintList(std::ostream &out, const Iterable &list) {
   out << '[';
   if (!list.empty()) {
     auto it = list.begin();
-    PrintListItem_(out, *it);
+    PrintListItem(out, *it);
     for (++it; it != list.end(); ++it) {
       out << ", ";
-      PrintListItem_(out, *it);
+      PrintListItem(out, *it);
     }
   }
   out << ']';
@@ -257,18 +258,16 @@ inline std::ostream &PrintList(std::ostream &out, const Iterable &list) {
 }
 
 namespace std {
-
   template <typename T>
-  inline std::ostream &operator<<(std::ostream &out, const std::vector<T> &vector_of_stuff) {
+  inline std::ostream& operator<<(std::ostream& out, const std::vector<T>& vector_of_stuff) {
     return PrintList(out, vector_of_stuff);
   }
 
   template <typename T, typename H>
-  inline std::ostream &operator<<(std::ostream &out, const std::pair<T,H> &data) {
+  inline std::ostream& operator<<(std::ostream& out, const std::pair<T, H>& data) {
     out << "(" << data.first << "," << data.second << ")";
     return out;
   }
-
 } // namespace std
 
 namespace carla {
@@ -332,9 +331,6 @@ namespace geom {
   }
 
 } // namespace geom
-} // namespace carla
-
-namespace carla {
 
 namespace sensor {
 namespace data {
@@ -398,9 +394,7 @@ namespace client {
   }
 
 } // namespace client
-} // namespace carla
 
-namespace carla {
 namespace client {
 
   inline std::ostream &operator<<(std::ostream &out, const Actor &actor) {
@@ -409,9 +403,7 @@ namespace client {
   }
 
 } // namespace client
-} // namespace carla
 
-namespace carla {
 namespace rpc {
 
   inline auto boolalpha(bool b) {
@@ -523,9 +515,7 @@ namespace rpc {
   }
 
 } // namespace rpc
-} // namespace carla
 
-namespace carla {
 namespace client {
 
   inline std::ostream &operator<<(std::ostream &out, const Map &map) {

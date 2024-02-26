@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "PythonAPI.h"
+#include <PythonAPI.h>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 namespace carla {
@@ -300,29 +300,49 @@ static FakeImage ColorCodedFlow (
 
 template <typename T>
 static std::string SaveImageToDisk(T &self, std::string path, EColorConverter cc) {
+  std::string r;
   carla::PythonUtil::ReleaseGIL unlock;
   using namespace carla::image;
+  puts("ImageView::MakeView.");
   auto view = ImageView::MakeView(self);
+  puts("ImageIO::WriteView.");
+  try
+  {
   switch (cc) {
     case EColorConverter::Raw:
-      return ImageIO::WriteView(
+      r = ImageIO::WriteView(
           std::move(path),
           view);
+      break;
     case EColorConverter::Depth:
-      return ImageIO::WriteView(
+      r = ImageIO::WriteView(
           std::move(path),
           ImageView::MakeColorConvertedView(view, ColorConverter::Depth()));
+      break;
     case EColorConverter::LogarithmicDepth:
-      return ImageIO::WriteView(
+      r = ImageIO::WriteView(
           std::move(path),
           ImageView::MakeColorConvertedView(view, ColorConverter::LogarithmicDepth()));
+      break;
     case EColorConverter::CityScapesPalette:
-      return ImageIO::WriteView(
+      r = ImageIO::WriteView(
           std::move(path),
           ImageView::MakeColorConvertedView(view, ColorConverter::CityScapesPalette()));
+      break;
     default:
       throw std::invalid_argument("invalid color converter!");
   }
+  }
+  catch (std::exception& e)
+  {
+    puts(e.what());
+  }
+  catch (...)
+  {
+    puts("Exception thrown");
+  }
+  puts("Done.");
+  return r;
 }
 
 template <typename T>

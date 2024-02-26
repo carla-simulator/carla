@@ -36,9 +36,6 @@
 
 /* ====== INCLUSIONS ====== */
 #include <stdio.h>
-// Edit to original file-----
-#define _USE_MATH_DEFINES // Enable windows compatibility
-// --------------------------
 #include <math.h>
 
 /* ====== LOCAL VARIABLES ====== */

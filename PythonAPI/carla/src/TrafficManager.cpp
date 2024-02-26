@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "PythonAPI.h"
+#include <PythonAPI.h>
 #include "boost/python/suite/indexing/vector_indexing_suite.hpp"
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
@@ -45,7 +45,7 @@ std::vector<uint8_t> RoadOptionToUint(boost::python::list input) {
 }
 
 void InterSetCustomPath(carla::traffic_manager::TrafficManager& self, const ActorPtr &actor, boost::python::list input, bool empty_buffer) {
-  self.SetCustomPath(actor, PythonLitstToVector<carla::geom::Location>(input), empty_buffer);
+  self.SetCustomPath(actor, PyListToVector<carla::geom::Location>(input), empty_buffer);
 }
 
 void InterSetImportedRoute(carla::traffic_manager::TrafficManager& self, const ActorPtr &actor, boost::python::list input, bool empty_buffer) {

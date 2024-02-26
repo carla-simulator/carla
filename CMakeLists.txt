@@ -41,10 +41,10 @@ set (
 
 include (CheckCCompilerFlag)
 include (CheckCXXCompilerFlag)
-include (FetchContent)
 include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
 
 macro (carla_two_step_configure_file DESTINATION SOURCE)
+  message ("Configuring file \"${DESTINATION}\"")
   # Configure-time step; evaluate variables:
   configure_file (${SOURCE} ${DESTINATION})
   # Generate-time step; evaluate generator expressions:

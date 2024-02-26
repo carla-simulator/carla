@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "PythonAPI.h"
+#include <PythonAPI.h>
 
 static void SubscribeToStream(carla::client::Sensor &self, boost::python::object callback) {
   self.Listen(MakeCallback(std::move(callback)));

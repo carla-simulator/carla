@@ -40,7 +40,7 @@
 #  pragma clang diagnostic ignored "-Wunused-parameter"
 #endif
 
-#if LIBCARLA_IMAGE_WITH_PNG_SUPPORT == true
+#if LIBCARLA_IMAGE_WITH_PNG_SUPPORT
 #  ifndef png_infopp_NULL
 #    define png_infopp_NULL (png_infopp)NULL
 #  endif // png_infopp_NULL
@@ -58,11 +58,11 @@
 #  endif
 #endif
 
-#if LIBCARLA_IMAGE_WITH_JPEG_SUPPORT == true
+#if LIBCARLA_IMAGE_WITH_JPEG_SUPPORT
 #  include <boost/gil/extension/io/jpeg.hpp>
 #endif
 
-#if LIBCARLA_IMAGE_WITH_TIFF_SUPPORT == true
+#if LIBCARLA_IMAGE_WITH_TIFF_SUPPORT
 #  include <boost/gil/extension/io/tiff.hpp>
 #endif
 

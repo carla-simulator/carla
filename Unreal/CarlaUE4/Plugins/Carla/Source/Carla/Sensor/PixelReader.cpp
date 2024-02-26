@@ -18,7 +18,7 @@
 // =============================================================================
 
 void FPixelReader::WritePixelsToBuffer(
-    const UTextureRenderTarget2D &RenderTarget,
+    UTextureRenderTarget2D &RenderTarget,
     uint32 Offset,
     FRHICommandListImmediate &RHICmdList,
     FPixelReader::Payload FuncForSending)

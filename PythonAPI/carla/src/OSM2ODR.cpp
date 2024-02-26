@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "PythonAPI.h"
+#include <PythonAPI.h>
 
 #ifdef CARLA_PYTHON_API_HAS_OSM2ODR
 
@@ -22,10 +22,10 @@ namespace osm2odr {
     return out;
   }
   void SetOsmWayTypes(OSM2ODRSettings& self, boost::python::list input) {
-    self.osm_highways_types = PythonLitstToVector<std::string>(input);
+    self.osm_highways_types = PyListToVector<std::string>(input);
   }
   void SetTLExcludedWayTypes(OSM2ODRSettings& self, boost::python::list input) {
-    self.tl_excluded_highways_types = PythonLitstToVector<std::string>(input);
+    self.tl_excluded_highways_types = PyListToVector<std::string>(input);
   }
 }
 

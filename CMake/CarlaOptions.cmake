@@ -40,7 +40,7 @@ option (
 option (
   ENABLE_OSM2ODR
   "Enable OSM2ODR."
-  ON
+  OFF
 )
 
 option (
