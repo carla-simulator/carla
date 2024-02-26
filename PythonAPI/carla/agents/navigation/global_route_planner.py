@@ -45,8 +45,15 @@ class GlobalRoutePlanner(object):
         """
         route_trace = []
         route = self._path_search(origin, destination)
-        current_waypoint = self._wmap.get_waypoint(origin)
-        destination_waypoint = self._wmap.get_waypoint(destination)
+        if not isinstance(origin, carla.Waypoint):
+            current_waypoint = self._wmap.get_waypoint(origin)
+        else:
+            current_waypoint = origin
+        if not isinstance(destination, carla.Waypoint):
+            destination_waypoint = self._wmap.get_waypoint(destination)
+        else:
+            destination_waypoint = destination
+            destination = destination_waypoint.transform.location
 
         for i in range(len(route) - 1):
             road_option = self._turn_decision(i, route)
@@ -267,7 +274,10 @@ class GlobalRoutePlanner(object):
         This function finds the road segment that a given location
         is part of, returning the edge it belongs to
         """
-        waypoint = self._wmap.get_waypoint(location)
+        if isinstance(location, carla.Location):
+            waypoint = self._wmap.get_waypoint(location)
+        else:
+            waypoint = location
         edge = None
         try:
             edge = self._road_id_to_edge[waypoint.road_id][waypoint.section_id][waypoint.lane_id]
