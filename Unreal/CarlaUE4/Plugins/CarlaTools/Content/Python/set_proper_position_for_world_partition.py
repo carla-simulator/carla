@@ -7,7 +7,7 @@ import subprocess
 
 
 """Generic function for running a commandlet with its arguments."""
-ue4_path = os.environ["UE4_ROOT"]
+ue4_path = os.environ["UE5_ROOT"]
 uproject_path = unreal.Paths.project_dir() + ("CarlaUE4.uproject")
 run = "-run=%s" % ("SetProperPositionForWorldPartitionCommandlet")
 

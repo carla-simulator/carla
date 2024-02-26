@@ -44,8 +44,8 @@ int32 USetProperPositionForWorldPartitionCommandlet::Main(const FString &Params)
   ParseCommandLine(*Params, Tokens, Switches, ParamsMap );
 
   FString BaseLevelName = ParamsMap["BaseLevelName"];
+  FIntVector CurrentTilesInXY = FIntVector(FCString::Atof(*ParamsMap["CTileX"]), FCString::Atof(*ParamsMap["CTileY"]), 0);
   UEditorLevelLibrary::LoadLevel(*BaseLevelName);
-  UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Warning, TEXT("Valid Map loaded, MapName %s"), *BaseLevelName);
 
   AActor* QueryActor = UGameplayStatics::GetActorOfClass( GEditor->GetEditorWorldContext().World(), ALargeMapManager::StaticClass());
   if (QueryActor != nullptr) {
@@ -58,19 +58,9 @@ int32 USetProperPositionForWorldPartitionCommandlet::Main(const FString &Params)
     
     UEditorLevelLibrary::SaveCurrentLevel();
     
-    for(int TileX = 0; TileX < NumTilesInXY.X; TileX++)
-    {
-      for(int TileY = 0; TileY < NumTilesInXY.Y; TileY++)
-      {
-        if(TileX != 0 || TileY != 0)
-        {
-          UEditorLevelLibrary::LoadLevel(*BaseLevelName);
-          UEditorLevelLibrary::SaveCurrentLevel();
-          ProcessTile(FIntVector(TileX, TileY, 0), TileSize);
-        }
-      }
-    }
-
+    UEditorLevelLibrary::LoadLevel(*BaseLevelName);
+    ProcessTile(FIntVector(CurrentTilesInXY.X, CurrentTilesInXY.Y, 0), TileSize);
+    UEditorLevelLibrary::SaveCurrentLevel();
   }
   else {
     UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Error, TEXT("Largemapmanager not found "));
