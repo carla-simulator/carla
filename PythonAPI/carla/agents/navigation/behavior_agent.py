@@ -193,6 +193,8 @@ class BehaviorAgent(BasicAgent):
 
         return walker_state, walker, distance
 
+    _epsilon = np.nextafter(0., 1.)
+
     def car_following_manager(self, vehicle, distance, debug=False):
         """
         Module in charge of car-following behaviors when there's
@@ -206,7 +208,7 @@ class BehaviorAgent(BasicAgent):
 
         vehicle_speed = get_speed(vehicle)
         delta_v = max(1, (self._speed - vehicle_speed) / 3.6)
-        ttc = distance / delta_v if delta_v != 0 else distance / np.nextafter(0., 1.)
+        ttc = distance / delta_v if delta_v != 0 else distance / self._epsilon
 
         # Under safety time distance, slow down.
         if self._behavior.safety_time > ttc > 0.0:
