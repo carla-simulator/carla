@@ -448,6 +448,22 @@ SUMO_LIBRARY_PATH = SUMO_INSTALL_PATH / 'lib'
 NV_OMNIVERSE_PLUGIN_PATH = UNREAL_ENGINE_PATH / 'Engine' / 'Plugins' / 'Marketplace' / 'NVIDIA' / 'Omniverse'
 NV_OMNIVERSE_PATCH_PATH = PATCHES_PATH / 'omniverse_4.26'
 
+# Foonathan memory vendor
+FOONATHAN_MEMORY_VENDOR_SOURCE_PATH = DEPENDENCIES_PATH / 'foonathan-memory-vendor-source'
+FOONATHAN_MEMORY_VENDOR_BUILD_PATH = DEPENDENCIES_PATH / 'foonathan-memory-vendor-build'
+FOONATHAN_MEMORY_VENDOR_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'fast-dds-install'
+
+# Fast-cdr
+FAST_CDR_SOURCE_PATH = DEPENDENCIES_PATH / 'fast-cdr-source'
+FAST_CDR_BUILD_PATH = DEPENDENCIES_PATH / 'fast-cdr-build'
+FAST_CDR_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'fast-dds-install'
+FAST_CDR_LIBRARY_PATH = FAST_CDR_INSTALL_PATH / 'lib'
+
+# Fast-dds
+FAST_DDS_SOURCE_PATH = DEPENDENCIES_PATH / 'fast-dds-source'
+FAST_DDS_BUILD_PATH = DEPENDENCIES_PATH / 'fast-dds-build'
+FAST_DDS_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'fast-dds-install'
+
 # Basic IO functions:
 
 
@@ -598,6 +614,18 @@ OSM2ODR_DEPENDENCIES = [
   Dependency(
     'sumo',
     GitRepository('https://github.com/carla-simulator/sumo.git', tag_or_branch = 'carla_osm2odr')),
+]
+
+ROS2_DEPENDENCIES = [
+  Dependency(
+    'foonathan-memory-vendor',
+    GitRepository('https://github.com/eProsima/foonathan_memory_vendor.git', tag_or_branch = 'master')),
+  Dependency(
+    'fast-cdr',
+    GitRepository('https://github.com/eProsima/Fast-CDR.git', tag_or_branch = '1.1.x')),
+  Dependency(
+    'fast-dds',
+    GitRepository('https://github.com/eProsima/Fast-DDS.git', tag_or_branch = '2.11.2')),
 ]
 
 CARLA_UE_DEPENDENCIES = [
@@ -790,16 +818,19 @@ class TaskGraph:
 
 def UpdateGitRepository(path : Path, url : str, branch : str = None, commit : str = None):
   if path.exists():
-    LaunchSubprocessImmediate([ 'git', '-C', str(path), 'pull' ])
+    LaunchSubprocessImmediate([ 'git', '-C', str(path), 'pull' ],
+                              log_name=os.path.basename(path))
   else:
     cmd = [ 'git', '-C', str(path.parent), 'clone', '--depth', '1', '--single-branch' ]
     if branch != None:
       cmd.extend([ '-b', branch ])
     cmd.extend([ url, path.stem ])
-    LaunchSubprocessImmediate(cmd)
+    LaunchSubprocessImmediate(cmd, log_name=os.path.basename(path))
   if commit != None:
-    LaunchSubprocessImmediate([ 'git', '-C', str(path), 'fetch' ])
-    LaunchSubprocessImmediate([ 'git', '-C', str(path), 'checkout', commit ])
+    LaunchSubprocessImmediate([ 'git', '-C', str(path), 'fetch' ],
+                              log_name=os.path.basename(path))
+    LaunchSubprocessImmediate([ 'git', '-C', str(path), 'checkout', commit ],
+                              log_name=os.path.basename(path))
 
 
 
@@ -875,6 +906,8 @@ def UpdateDependencies(task_graph : TaskGraph):
     unique_deps.update(OSM2ODR_DEPENDENCIES)
   if ENABLE_CHRONO:
     unique_deps.update(CHRONO_DEPENDENCIES)
+  if ENABLE_ROS2:
+    unique_deps.update(ROS2_DEPENDENCIES)
   return [
     task_graph.Add(Task(f'{dep.name}-update', [], UpdateDependency, dep)) for dep in unique_deps
   ]
@@ -1245,6 +1278,23 @@ def BuildDependencies(task_graph : TaskGraph):
       [ build_xercesc ],
       XERCESC_BUILD_PATH,
       XERCESC_INSTALL_PATH))
+  
+  if ENABLE_ROS2:
+    task_graph.Add(Task.CreateCMakeConfigureDefault(
+      'foonathan-memory-vendor-configure',
+      [],
+      FOONATHAN_MEMORY_VENDOR_SOURCE_PATH,
+      FOONATHAN_MEMORY_VENDOR_BUILD_PATH,
+      '-DBUILD_SHARED_LIBS=ON',
+      #'-DCMAKE_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"',
+      install_path=FOONATHAN_MEMORY_VENDOR_INSTALL_PATH))
+    task_graph.Add(Task.CreateCMakeConfigureDefault(
+      'fast-cdr-configure',
+      [],
+      FAST_CDR_SOURCE_PATH,
+      FAST_CDR_BUILD_PATH,
+      #'-DCMAKE_CXX_FLAGS"-D_GLIBCXX_USE_CXX11_ABI=0"',
+      install_path=FAST_CDR_INSTALL_PATH))
 
   # We wait for all pending tasks to finish here, then we'll switch to sequential task execution for the build step.
   task_graph.Execute()
@@ -1282,6 +1332,16 @@ def BuildDependencies(task_graph : TaskGraph):
   if ENABLE_CHRONO:
     task_graph.Add(Task.CreateCMakeBuildDefault('chrono-build', [], CHRONO_BUILD_PATH))
 
+  if ENABLE_ROS2:
+      task_graph.Add(Task.CreateCMakeBuildDefault(
+        'foonathan-memory-vendor-build',
+        [],
+        FOONATHAN_MEMORY_VENDOR_BUILD_PATH))
+      task_graph.Add(Task.CreateCMakeBuildDefault(
+        'fast-cdr-build',
+        [],
+        FAST_CDR_BUILD_PATH))
+
   task_graph.Execute(sequential = True) # The underlying build system should already parallelize.
 
   # Install:
@@ -1307,6 +1367,42 @@ def BuildDependencies(task_graph : TaskGraph):
     task_graph.Add(Task.CreateCMakeInstallDefault('xercesc-install', [], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
   if ENABLE_CHRONO:
     task_graph.Add(Task.CreateCMakeInstallDefault('chrono-install', [], CHRONO_BUILD_PATH, CHRONO_INSTALL_PATH))
+  if ENABLE_ROS2:
+    task_graph.Add(Task.CreateCMakeInstallDefault(
+      'foonathan-memory-vendor-install',
+      [],
+      FOONATHAN_MEMORY_VENDOR_BUILD_PATH,
+      FOONATHAN_MEMORY_VENDOR_INSTALL_PATH))
+    task_graph.Add(Task.CreateCMakeInstallDefault(
+      'fast-cdr-install',
+      [],
+      FAST_CDR_BUILD_PATH,
+      FAST_CDR_INSTALL_PATH))
+    task_graph.Execute()
+    task_graph.Add(Task.CreateCMakeConfigureDefault(
+      'fast-dds-configure',
+      [],
+      FAST_DDS_SOURCE_PATH,
+      FAST_DDS_BUILD_PATH,
+      #'-DCMAKE_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"',
+      '-DCMAKE_CXX_FLAGS=-latomic',
+      #'-DCMAKE_CXX_FLAGS=-I{BOOST_INCLUDE_PATH} -latomic',
+      #f'-DAsio_INCLUDE_DIR={BOOST_INCLUDE_PATH}/boost',
+      f'-DTHIRDPARTY_Asio=FORCE',
+      f'-DTHIRDPARTY_TinyXML2=FORCE',
+      f'-DCMAKE_LIBRARY_PATH={FAST_CDR_INSTALL_PATH}',
+      install_path=FAST_DDS_INSTALL_PATH))
+    task_graph.Execute()
+    task_graph.Add(Task.CreateCMakeBuildDefault(
+      'fast-dds-build',
+      [],
+      FAST_DDS_BUILD_PATH))
+    task_graph.Execute()
+    task_graph.Add(Task.CreateCMakeInstallDefault(
+      'fast-dds-install',
+      [],
+      FAST_DDS_BUILD_PATH,
+      FAST_DDS_INSTALL_PATH))
   task_graph.Execute()
 
 
@@ -1321,7 +1417,8 @@ def BuildLibCarlaMain(task_graph : TaskGraph):
     f'-DBUILD_LIBCARLA_SERVER={"ON" if ARGV.libcarla_server else "OFF"}',
     f'-DBUILD_LIBCARLA_CLIENT={"ON" if ARGV.libcarla_client else "OFF"}',
     f'-DBUILD_OSM_WORLD_RENDERER={"ON" if ENABLE_OSM_WORLD_RENDERER else "OFF"}',
-    f'-DLIBCARLA_PYTORCH={"ON" if ARGV.pytorch else "OFF"}'))
+    f'-DLIBCARLA_PYTORCH={"ON" if ARGV.pytorch else "OFF"}',
+    f'-DBUILD_LIBCARLA_ROS2_NATIVE=ON'))
   build_libcarla = task_graph.Add(Task.CreateCMakeBuildDefault(
     'libcarla-build',
     [ configure_libcarla ],
