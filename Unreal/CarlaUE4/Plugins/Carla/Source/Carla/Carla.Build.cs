@@ -38,6 +38,13 @@ public class Carla :
   public Carla(ReadOnlyTargetRules Target) :
   base(Target)
   {
+    void AddDynamicLibrary(string library)
+    {
+      PublicAdditionalLibraries.Add(library);
+      RuntimeDependencies.Add(library);
+      PublicDelayLoadDLLs.Add(library);
+    }
+
     bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
 
     EnableOSM2ODR = IsWindows;
@@ -60,7 +67,7 @@ public class Carla :
         throw new DirectoryNotFoundException("Could not infer CARLA install directory.");
       Console.WriteLine("Using \"" + CarlaInstallPath + "\" as the CARLA install path.");
     }
-
+    
     if (CarlaDependenciesPath == null)
     {
       Console.WriteLine("\"-carla-dependencies-path\" was not specified, inferring...");
@@ -258,6 +265,17 @@ public class Carla :
         from Name in ChronoLibraryNames
         select FindLibraries(ChronoLibPath, GetLibraryName(Name))[0];
       AdditionalLibraries.AddRange(ChronoLibraries);
+    }
+
+    if (EnableRos2)
+    {
+      AdditionalLibraries.Add(Path.Combine(LibCarlaLibPath, GetLibraryName("carla-ros2-native")));
+      string LibFastDDSPath = Path.Combine(CarlaInstallPath, "fast-dds-install");
+      AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfoonathan_memory-0.7.3.so"));
+      AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastcdr.so"));
+      AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastrtps.so"));
+
+      //AddDynamicLibrary("/home/xsole/programing/UnrealEngine5_carla/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/aarch64-unknown-linux-gnueabi/lib/libstdc++.so.6");
     }
 
     PublicIncludePaths.AddRange(new string[]
