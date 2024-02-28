@@ -4,22 +4,26 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla/Sensor/ImageUtil.h"
-#include "Runtime/RHI/Public/RHISurfaceDataConversion.h"
-#include "Carla/Carla.h"
+#include <Carla/Sensor/ImageUtil.h>
+#include <Carla/Sensor/ShaderBasedSensor.h>
+#include <Carla/Carla.h>
+#include <Runtime/RHI/Public/RHISurfaceDataConversion.h>
+#include <Runtime/ImageWriteQueue/Public/ImageWriteQueue.h>
+#include <HighResScreenshot.h>
+#include <RHIGPUReadback.h>
 
 
 
 namespace ImageUtil
 {
-  void DecodePixelsByFormat(
-      void* PixelData,
-      int32 SourcePitch,
-      FIntPoint SourceExtent,
-      FIntPoint DestinationExtent,
-      EPixelFormat Format,
-      FReadSurfaceDataFlags Flags,
-      TArrayView<FLinearColor> Out)
+  bool DecodePixelsByFormat(
+    const void* PixelData,
+    int32 SourcePitch,
+    FIntPoint SourceExtent,
+    FIntPoint DestinationExtent,
+    EPixelFormat Format,
+    FReadSurfaceDataFlags Flags,
+    TArrayView<FLinearColor> Out)
   {
     SourcePitch *= GPixelFormats[Format].BlockBytes;
     auto OutPixelCount = DestinationExtent.X * DestinationExtent.Y;
@@ -69,19 +73,19 @@ namespace ImageUtil
       break;
     default:
       UE_LOG(LogCarla, Warning, TEXT("Unsupported format %llu"), (unsigned long long)Format);
-      check(false);
-      break;
+      return false;
     }
+    return true;
   }
 
-  void DecodePixelsByFormat(
-      void* PixelData,
-      int32 SourcePitch,
-      FIntPoint SourceExtent,
-      FIntPoint DestinationExtent,
-      EPixelFormat Format,
-      FReadSurfaceDataFlags Flags,
-      TArrayView<FColor> Out)
+  bool DecodePixelsByFormat(
+    const void* PixelData,
+    int32 SourcePitch,
+    FIntPoint SourceExtent,
+    FIntPoint DestinationExtent,
+    EPixelFormat Format,
+    FReadSurfaceDataFlags Flags,
+    TArrayView<FColor> Out)
   {
     SourcePitch *= GPixelFormats[Format].BlockBytes;
     auto OutPixelCount = DestinationExtent.X * DestinationExtent.Y;
@@ -137,8 +141,202 @@ namespace ImageUtil
       break;
     default:
       UE_LOG(LogCarla, Warning, TEXT("Unsupported format %llu"), (unsigned long long)Format);
-      check(false);
-      break;
+      return false;
     }
+    return true;
+  }
+
+  bool ReadImageData(
+    UTextureRenderTarget2D& RenderTarget,
+    TArray<FColor>& Out)
+  {
+    check(IsInGameThread());
+    auto Resource = RenderTarget.GameThread_GetRenderTargetResource();
+    FReadSurfaceDataFlags ReadFlags(RCM_UNorm);
+    ReadFlags.SetLinearToGamma(true);
+    return Resource->ReadPixels(Out, ReadFlags);
+  }
+
+  bool ReadImageData(
+    UTextureRenderTarget2D& RenderTarget,
+    TArray64<FColor>& Out)
+  {
+    auto Resource = RenderTarget.GameThread_GetRenderTargetResource();
+    FReadSurfaceDataFlags ReadFlags(RCM_UNorm);
+    ReadFlags.SetLinearToGamma(true);
+    Out.SetNum(RenderTarget.GetSurfaceWidth() * RenderTarget.GetSurfaceHeight());
+    return Resource->ReadPixelsPtr(Out.GetData(), ReadFlags);
+  }
+
+  TUniquePtr<TImagePixelData<FColor>> ReadImageData(
+    UTextureRenderTarget2D& RenderTarget)
+  {
+    const auto Size = FIntPoint(
+      RenderTarget.GetSurfaceWidth(),
+      RenderTarget.GetSurfaceHeight());
+    auto PixelData = MakeUnique<TImagePixelData<FColor>>(Size);
+    ReadImageData(RenderTarget, PixelData->Pixels);
+    return TUniquePtr<TImagePixelData<FColor>>();
+  }
+
+  TFuture<bool> SaveImageData(
+    UTextureRenderTarget2D& RenderTarget,
+    const FStringView& Path)
+  {
+    return SaveImageData(ReadImageData(RenderTarget), Path);
+  }
+
+  TFuture<bool> SaveImageData(
+    TUniquePtr<TImagePixelData<FColor>> Data,
+    const FStringView& Path)
+  {
+    auto& HighResScreenshotConfig = GetHighResScreenshotConfig();
+    auto ImageTask = MakeUnique<FImageWriteTask>();
+    ImageTask->PixelData = MoveTemp(Data);
+    ImageTask->Filename = Path;
+    ImageTask->Format = EImageFormat::PNG;
+    ImageTask->CompressionQuality = (int32)EImageCompressionQuality::Default;
+    ImageTask->bOverwriteFile = true;
+    ImageTask->PixelPreProcessors.Add(TAsyncAlphaWrite<FColor>(255));
+    return HighResScreenshotConfig.ImageWriteQueue->Enqueue(MoveTemp(ImageTask));
+  }
+
+  static void ReadImageDataAsyncCommand(
+    UTextureRenderTarget2D& RenderTarget,
+    ReadImageDataAsyncCallback&& Callback)
+  {
+    static thread_local auto RenderQueryPool = RHICreateRenderQueryPool(RQT_AbsoluteTime);
+
+    auto& CmdList = FRHICommandListImmediate::Get();
+    auto Resource = static_cast<FTextureRenderTarget2DResource*>(
+      RenderTarget.Resource);
+    auto Texture = Resource->GetRenderTargetTexture();
+    if (Texture == nullptr)
+      return;
+    auto Readback = MakeUnique<FRHIGPUTextureReadback>(TEXT("ReadImageData-Readback"));
+    auto Size = Texture->GetSizeXY();
+    auto Format = Texture->GetFormat();
+    auto ResolveRect = FResolveRect();
+    Readback->EnqueueCopy(CmdList, Texture, ResolveRect);
+
+    auto Query = RenderQueryPool->AllocateQuery();
+    CmdList.EndRenderQuery(Query.GetQuery());
+    CmdList.ImmediateFlush(EImmediateFlushType::FlushRHIThread);
+    uint64 DeltaTime;
+    RHIGetRenderQueryResult(Query.GetQuery(), DeltaTime, true);
+    Query.ReleaseQuery();
+
+    AsyncTask(ENamedThreads::HighTaskPriority, [
+      Readback = MoveTemp(Readback),
+      Callback = std::move(Callback),
+      Size, Format]
+    {
+      while (!Readback->IsReady())
+        std::this_thread::yield();
+      int32 RowPitch, BufferHeight;
+      auto Mapping = Readback->Lock(RowPitch, &BufferHeight);
+      if (Mapping != nullptr)
+        Callback(Mapping, RowPitch, BufferHeight, Format, Size);
+      Readback->Unlock();
+    });
+  }
+
+  bool ReadImageDataAsync(
+    UTextureRenderTarget2D& RenderTarget,
+    ReadImageDataAsyncCallback&& Callback)
+  {
+    if (IsInRenderingThread())
+    {
+      ReadImageDataAsyncCommand(
+        RenderTarget,
+        std::move(Callback));
+    }
+    else
+    {
+      ENQUEUE_RENDER_COMMAND(ReadImageDataAsyncCmd)([
+        &RenderTarget,
+        Callback = std::move(Callback)
+      ](auto& CmdList) mutable
+      {
+        ReadImageDataAsyncCommand(
+          RenderTarget,
+          std::move(Callback));
+      });
+    }
+    return true;
+  }
+
+  bool ReadSensorImageDataAsync(
+    AShaderBasedSensor& Sensor,
+    ReadImageDataAsyncCallback&& Callback)
+  {
+    TArray<FColor> Pixels;
+    auto RenderTarget = Sensor.GetCaptureRenderTarget();
+    if (RenderTarget == nullptr)
+      return false;
+    return ReadImageDataAsync(
+      *RenderTarget,
+      std::move(Callback));
+  }
+
+
+  bool ReadImageDataAsyncFColor(
+    UTextureRenderTarget2D& RenderTarget,
+    ReadImageDataAsyncCallbackFColor&& Callback)
+  {
+    return ReadImageDataAsync(RenderTarget, [Callback = std::move(Callback)](
+      const void* Mapping,
+      size_t RowPitch,
+      size_t BufferHeight,
+      EPixelFormat Format,
+      FIntPoint Size) -> bool
+    {
+      FReadSurfaceDataFlags Flags;
+      TArray<FColor> Pixels;
+      Pixels.SetNum(Size.X * Size.Y);
+      if (!DecodePixelsByFormat(Mapping, RowPitch, Size, Size, Format, Flags, Pixels))
+        return false;
+      return Callback(Pixels, Size);
+    });
+  }
+
+  bool ReadSensorImageDataAsyncFColor(
+    AShaderBasedSensor& Sensor,
+    ReadImageDataAsyncCallbackFColor&& Callback)
+  {
+    auto RenderTarget = Sensor.GetCaptureRenderTarget();
+    if (RenderTarget == nullptr)
+      return false;
+    return ReadImageDataAsyncFColor(*RenderTarget, std::move(Callback));
+  }
+
+  bool ReadImageDataAsyncFLinearColor(
+    UTextureRenderTarget2D& RenderTarget,
+    ReadImageDataAsyncCallbackFLinearColor&& Callback)
+  {
+    return ReadImageDataAsync(RenderTarget, [Callback = std::move(Callback)](
+      const void* Mapping,
+      size_t RowPitch,
+      size_t BufferHeight,
+      EPixelFormat Format,
+      FIntPoint Size) -> bool
+      {
+        FReadSurfaceDataFlags Flags;
+        TArray<FLinearColor> Pixels;
+        Pixels.SetNum(Size.X * Size.Y);
+        if (!DecodePixelsByFormat(Mapping, RowPitch, Size, Size, Format, Flags, Pixels))
+          return false;
+        return Callback(Pixels, Size);
+      });
+  }
+
+  bool ReadSensorImageDataAsyncFLinearColor(
+    AShaderBasedSensor& Sensor,
+    ReadImageDataAsyncCallbackFLinearColor&& Callback)
+  {
+    auto RenderTarget = Sensor.GetCaptureRenderTarget();
+    if (RenderTarget == nullptr)
+      return false;
+    return ReadImageDataAsyncFLinearColor(*RenderTarget, std::move(Callback));
   }
 }

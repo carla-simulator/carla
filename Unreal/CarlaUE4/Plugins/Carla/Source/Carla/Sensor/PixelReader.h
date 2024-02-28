@@ -108,9 +108,6 @@ void FPixelReader::SendPixelsInRenderThread(TSensor& Sensor, bool use16BitFormat
   /// Blocks until the render thread has finished all it's tasks.
   Sensor.EnqueueRenderSceneImmediate();
   FlushRenderingCommands();
-  SavePixelsToDisk(
-    *Sensor.CaptureRenderTarget,
-    TEXT("F:\\Carla\\PythonAPI\\examples\\_out\\image.png"));
 
   // Enqueue a command in the render-thread that will write the image buffer to
   // the data stream. The stream is created in the capture thus executed in the

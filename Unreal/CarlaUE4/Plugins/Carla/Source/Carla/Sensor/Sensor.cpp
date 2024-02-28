@@ -4,15 +4,15 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla/Sensor/Sensor.h"
-#include "Carla.h"
-#include "Carla/Sensor/SensorManager.h"
-
-#include "Carla/Actor/ActorDescription.h"
-#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
-#include "Carla/Game/CarlaStatics.h"
-
-#include "Engine/CollisionProfile.h"
+#include <Carla/Sensor/Sensor.h>
+#include <Carla.h>
+#include <Carla/Sensor/SensorManager.h>
+#include <Carla/Actor/ActorDescription.h>
+#include <Carla/Actor/ActorBlueprintFunctionLibrary.h>
+#include <Carla/Game/CarlaStatics.h>
+#include <Engine/CollisionProfile.h>
+#include <Carla/Sensor/ImageUtil.h>
+#include <Carla/Sensor/ShaderBasedSensor.h>
 
 ASensor::ASensor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)

@@ -14,6 +14,13 @@
 
 #include "GameFramework/Actor.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/Logging.h>
+#include <carla/Buffer.h>
+#include <carla/BufferView.h>
+#include <carla/sensor/SensorRegistry.h>
+#include <compiler/enable-ue4-macros.h>
+
 #include "Sensor.generated.h"
 
 struct FActorDescription;
@@ -106,10 +113,70 @@ protected:
   ///
   /// You need to provide a reference to self, this is necessary for template
   /// deduction.
-  template <typename SensorT>
-  FAsyncDataStream GetDataStream(const SensorT &Self)
+  template <typename SensorType>
+  FAsyncDataStream GetDataStream(SensorType&& Self)
   {
-    return Stream.MakeAsyncDataStream(Self, GetEpisode().GetElapsedGameTime());
+    return Stream.MakeAsyncDataStream<std::remove_cvref_t<SensorType>>(
+      std::forward<SensorType>(Self),
+      GetEpisode().GetElapsedGameTime());
+  }
+
+  template <
+    typename SensorType,
+    typename PixelType>
+  static void SendImageDataToClient(
+    SensorType&& Sensor,
+    TArrayView<PixelType> Pixels)
+  {
+    auto Stream = Sensor.GetDataStream(Sensor);
+    Stream.SetFrameNumber(FCarlaEngine::GetFrameCounter());
+    auto Buffer = Stream.PopBufferFromPool();
+    Buffer.copy_from(0, boost::asio::buffer(Pixels.GetData(), Pixels.Num() * sizeof(FColor)));
+    if (!Buffer.data())
+      return;
+    carla::Buffer BufferReady(
+      std::move(
+        carla::sensor::SensorRegistry::Serialize(
+          Sensor,
+          std::move(Buffer))));
+    auto BufferView =
+      carla::BufferView::CreateFrom(
+        std::move(BufferReady));
+#if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send PixelReader");
+      auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
+      auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, StreamId, BufView]()
+      {
+        // get resolution of camera
+        int W = -1, H = -1;
+        float Fov = -1.0f;
+        auto WidthOpt = Sensor.GetAttribute("image_size_x");
+        if (WidthOpt.has_value())
+          W = FCString::Atoi(*WidthOpt->Value);
+        auto HeightOpt = Sensor.GetAttribute("image_size_y");
+        if (HeightOpt.has_value())
+          H = FCString::Atoi(*HeightOpt->Value);
+        auto FovOpt = Sensor.GetAttribute("fov");
+        if (FovOpt.has_value())
+          Fov = FCString::Atof(*FovOpt->Value);
+        // send data to ROS2
+        AActor* ParentActor = Sensor.GetAttachParentActor();
+        if (ParentActor)
+        {
+          FTransform LocalTransformRelativeToParent = Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
+          ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, W, H, Fov, BufView, &Sensor);
+        }
+        else
+        {
+          ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), W, H, Fov, BufView, &Sensor);
+        }
+      });
+    }
+#endif
+    Stream.Send(Sensor, BufferView);
   }
 
   /// Seed of the pseudo-random engine.

@@ -27,5 +27,13 @@ ANormalsCamera::ANormalsCamera(const FObjectInitializer &ObjectInitializer)
 void ANormalsCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ANormalsCamera::PostPhysTick);
-  FPixelReader::SendPixelsInRenderThread<ANormalsCamera, FColor>(*this);
+  
+
+  ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this](
+    TArrayView<const FColor> Pixels,
+    FIntPoint Size) -> bool
+  {
+    SendImageDataToClient(*this, Pixels);
+    return true;
+  });
 }

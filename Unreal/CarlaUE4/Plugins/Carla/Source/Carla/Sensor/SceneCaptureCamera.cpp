@@ -62,7 +62,14 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
       TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(*ProfilerText);
     }
   );
-  FPixelReader::SendPixelsInRenderThread<ASceneCaptureCamera, FColor>(*this);
+  
+  ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this](
+    TArrayView<const FColor> Pixels,
+    FIntPoint Size) -> bool
+  {
+    SendImageDataToClient(*this, Pixels);
+    return true;
+  });
 }
 
 #ifdef CARLA_HAS_GBUFFER_API
