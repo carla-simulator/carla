@@ -130,5 +130,5 @@ private:
 
   UPROPERTY()
   FString _MapPath;
-
+  
 };

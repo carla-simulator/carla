@@ -204,6 +204,7 @@ void ACarlaGameModeBase::BeginPlay()
 
   Episode->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
+  OnEpisodeInitialisedDelegate.Broadcast(Episode);
 
   if (Episode->Weather != nullptr)
   {

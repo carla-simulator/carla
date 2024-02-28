@@ -59,24 +59,21 @@ DEFAULT_C_COMPILER = FindExecutable([
   'cl',
   'clang-cl',
 ] if os.name == 'nt' else [
-  'clang',
-  'gcc',
+  'clang-16',
 ])
 
 DEFAULT_CPP_COMPILER = FindExecutable([
   'cl',
   'clang-cl',
 ] if os.name == 'nt' else [
-  'clang++',
-  'g++',
+  'clang++-16',
 ])
 
 DEFAULT_LINKER = FindExecutable([
   'link',
   'llvm-link',
 ] if os.name == 'nt' else [
-  'lld',
-  'ld',
+  'lld-16',
 ])
 
 DEFAULT_LIB = FindExecutable([
@@ -84,8 +81,7 @@ DEFAULT_LIB = FindExecutable([
   'llvm-lib',
   'llvm-ar'
 ] if os.name == 'nt' else [
-  'llvm-ar',
-  'ar',
+  'llvm-ar-16',
 ])
 
 DEFAULT_C_STANDARD = 11
@@ -103,11 +99,8 @@ def ADDCLIIntOption(name : str, default : int, help : str):
   argp.add_argument(f'--{name}', type = int, default = int(default), help = f'{help} (default = {default}).')
 
 AddCLIFlag(
-  'launch',
-  'Build and open the CarlaUE4 project in the Unreal Engine editor.')
-AddCLIFlag(
-  'launch-only',
-  'Open the CARLA project in the Unreal Engine editor, skipping all build steps.')
+  'all',
+  'Build all targets.')
 AddCLIFlag(
   'import',
   f'Import maps and assets from "{WORKSPACE_PATH / "Import"}" into Unreal.')
@@ -166,6 +159,9 @@ AddCLIFlag(
   'chrono',
   'Whether to enable Chrono.')
 AddCLIFlag(
+  'gtest',
+  'Whether to enable gtest.')
+AddCLIFlag(
   'carsim',
   'Whether to enable CarSim')
 AddCLIFlag(
@@ -189,9 +185,6 @@ AddCLIFlag(
 AddCLIFlag(
   'rss',
   'Whether to enable RSS.')
-AddCLIFlag(
-  'verbose',
-  'Display extra build information.')
 ADDCLIIntOption(
   'parallelism',
   DEFAULT_PARALLELISM,
@@ -260,20 +253,13 @@ def SyncArgs():
 ARGV = SyncArgs()
 
 SEQUENTIAL = ARGV.configure_sequential
-ENABLE_OSM2ODR = ARGV.osm2odr or ARGV.python_api
-ENABLE_OSM_WORLD_RENDERER = ARGV.osm_world_renderer
-ENABLE_CARLA_UE = ARGV.carla_ue
-ENABLE_PYTHON_API = ARGV.python_api
-ENABLE_LIBCARLA_CLIENT = any([
-  ARGV.libcarla_client,
-  ENABLE_PYTHON_API,
-  ENABLE_CARLA_UE
-])
-ENABLE_LIBCARLA_SERVER = any([
-  ARGV.libcarla_server,
-  ENABLE_PYTHON_API,
-  ENABLE_CARLA_UE
-])
+ENABLE_OSM2ODR = ARGV.osm2odr or ARGV.all
+ENABLE_GTEST = ARGV.gtest
+ENABLE_OSM_WORLD_RENDERER = ARGV.osm_world_renderer or ARGV.all
+ENABLE_CARLA_UE = ARGV.carla_ue or ARGV.all
+ENABLE_PYTHON_API = ARGV.python_api or ARGV.all
+ENABLE_LIBCARLA_CLIENT = ARGV.libcarla_client or ARGV.all
+ENABLE_LIBCARLA_SERVER = ARGV.libcarla_server or ARGV.all
 ENABLE_LIBCARLA = any([
   ENABLE_CARLA_UE,
   ENABLE_PYTHON_API,
@@ -288,9 +274,9 @@ ENABLE_UNITY_BUILD = ARGV.unity_build
 ENABLE_NVIDIA_OMNIVERSE = ARGV.nv_omniverse
 ENABLE_RSS = ARGV.rss
 
-UPDATE_DEPENDENCIES = ARGV.update_deps
-BUILD_DEPENDENCIES = ARGV.build_deps
-UPDATE_CARLA_UE_ASSETS = ARGV.update_ue_assets
+UPDATE_DEPENDENCIES = ARGV.update_deps or ARGV.all
+BUILD_DEPENDENCIES = ARGV.build_deps or ARGV.all
+UPDATE_CARLA_UE_ASSETS = ARGV.update_ue_assets or ARGV.all
 PARALLELISM = ARGV.parallelism
 # Root paths:
 CARLA_VERSION_STRING = ARGV.version
@@ -301,10 +287,18 @@ DEPENDENCIES_PATH = BUILD_PATH / 'Dependencies'
 LIBCARLA_BUILD_PATH = BUILD_PATH / 'LibCarla'
 LIBCARLA_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'LibCarla'
 # Language options
-C_COMPILER = ARGV.c_compiler
-CPP_COMPILER = ARGV.cpp_compiler
-LINKER = ARGV.linker
-LIB = ARGV.ar
+C_COMPILER = FindExecutable([ARGV.c_compiler])
+if not C_COMPILER:
+  sys.exit(f"Error C Compiler not found: {ARGV.c_compiler}")
+CPP_COMPILER = FindExecutable([ARGV.cpp_compiler])
+if not CPP_COMPILER:
+  sys.exit(f"Error CPP Compiler not found: {ARGV.cpp_compiler}")
+LINKER = FindExecutable([ARGV.linker])
+if not LINKER:
+  sys.exit(f"Error LINKER not found: {ARGV.linker}")
+LIB = FindExecutable([ARGV.ar])
+if not LIB:
+  sys.exit(f"Error AR not found {ARGV.ar}")
 C_STANDARD = ARGV.c_standard
 CPP_STANDARD = ARGV.cpp_standard
 C_COMPILER_CLI_TYPE = 'msvc' if ('cl' in C_COMPILER and os.name == 'nt') else 'gnu'
@@ -490,14 +484,12 @@ def LaunchSubprocessImmediate(
         stdout = file,
         stderr = file)
   else:
-    PIPE = None if ARGV.verbose else subprocess.PIPE
     sp = subprocess.run(
       cmd,
       cwd = working_directory,
-      stdout = PIPE,
-      stderr = PIPE)
+      stdout = subprocess.PIPE,
+      stderr = subprocess.PIPE)
   sp.check_returncode()
-  assert sp.returncode == 0
 
 
 
@@ -535,18 +527,10 @@ DEFAULT_DEPENDENCIES = [
   Dependency(
     'libpng',
     GitRepository('https://github.com/glennrp/libpng.git', tag_or_branch = 'v1.6.40')),
-  Dependency(
-    'proj',
-    GitRepository('https://github.com/OSGeo/PROJ.git', tag_or_branch = '7.2.1')),
-  Dependency(
-    'gtest',
-    GitRepository('https://github.com/google/googletest.git', tag_or_branch = 'v1.14.0')),
+  
   Dependency(
     'zlib',
     GitRepository('https://github.com/madler/zlib.git'),),
-  Dependency(
-    'xercesc',
-    GitRepository('https://github.com/apache/xerces-c.git', tag_or_branch = 'v3.2.4')),
   Dependency(
     'sqlite',
     Download('https://www.sqlite.org/2021/sqlite-amalgamation-3340100.zip')),
@@ -584,6 +568,11 @@ DEFAULT_DEPENDENCIES = [
     GitRepository('https://github.com/boostorg/gil.git')),
 ]
 
+if ENABLE_GTEST:
+  DEFAULT_DEPENDENCIES.append(Dependency(
+      'gtest',
+      GitRepository('https://github.com/google/googletest.git', tag_or_branch = 'v1.14.0')))
+
 CHRONO_DEPENDENCIES = [
   Dependency(
     'chrono',
@@ -600,6 +589,12 @@ OSM_WORLD_RENDERER_DEPENDENCIES = [
 ]
 
 OSM2ODR_DEPENDENCIES = [
+  Dependency(
+    'proj',
+    GitRepository('https://github.com/OSGeo/PROJ.git', tag_or_branch = '7.2.1')),
+  Dependency(
+    'xercesc',
+    GitRepository('https://github.com/apache/xerces-c.git', tag_or_branch = 'v3.2.4')),
   Dependency(
     'sumo',
     GitRepository('https://github.com/carla-simulator/sumo.git', tag_or_branch = 'carla_osm2odr')),
@@ -655,7 +650,10 @@ class Task:
       f'-DCMAKE_CXX_FLAGS_RELEASE={cpp_flags_release}',
     ]
     if os.name != 'nt':
-      cmd.append('-DPOSITION_INDEPENDENT_CODE=ON')
+      cmd.append('-DCMAKE_POSITION_INDEPENDENT_CODE=ON')
+      CPP_ABI_VERSIONS = f'-fuse-ld={LINKER} -nostdinc++ -nostdlib++'
+      CPP_LIB= f'-isystem {UNREAL_ENGINE_PATH}/Engine/Source/ThirdParty/Unix/LibCxx/include/c++/v1 -L {UNREAL_ENGINE_PATH}/Engine/Source/ThirdParty/Unix/LibCxx/lib/Unix/x86_64-unknown-linux-gnu/ -lc++'
+      cmd.append(f'-DCMAKE_CXX_FLAGS={CPP_ABI_VERSIONS} {CPP_LIB}')
     return cmd
 
   def CreateCMakeConfigureDefault(name : str, in_edges : list, source_path : Path, build_path : Path, *args, install_path : Path = None):
@@ -691,11 +689,6 @@ class TaskGraph:
     self.tasks = []
     self.sources = []
     self.task_map = {}
-    self.done_count = 0
-    self.active_count = 0
-    self.futures = None
-    self.future_map = None
-    self.task_queue = None
   
   def Reset(self):
     self.tasks = []
@@ -706,13 +699,8 @@ class TaskGraph:
     self.tasks.append(task)
     if len(task.in_edges) == 0:
       self.sources.append(task)
-    self.task_map[task.name] = task
+    self.task_map[task.name] = self.tasks[-1]
     return task
-  
-  def GetTaskByName(self, name : str):
-    r = self.task_map.get(name, None)
-    assert r != None
-    return r
   
   def Validate(self):
     return True
@@ -722,81 +710,80 @@ class TaskGraph:
   
   def Print(self):
     Log(self.ToString())
-  
-  def CheckOutEdges(self, task : Task):
-    if len(task.out_edges) == 0:
-      return
-    for out in task.out_edges:
-      assert out.in_edge_done_count < len(out.in_edges)
-      out.in_edge_done_count += 1
-      if out.in_edge_done_count == len(out.in_edges):
-        self.task_queue.append(out)
-
-  def Flush(self):
-    if self.active_count != 0:
-      done = [ e for e in as_completed(self.futures) ]
-      done_tasks = [ self.future_map[e] for e in done ]
-      for e in done_tasks:
-        e.done = True
-        Log(f'> {e.name} - DONE')
-        self.CheckOutEdges(e)
-      assert self.active_count == len(done_tasks)
-      self.done_count += len(done_tasks)
-      self.active_count = 0
-      self.future_map = {}
-      self.futures = []
-    
-  def ExecuteImpl(self):
-    for task in self.tasks:
-      for in_edge in task.in_edges:
-        assert in_edge != None
-        in_edge.out_edges.append(task)
-    self.task_queue = deque()
-    self.active_count = 0
-    self.done_count = 0
-    assert len(set(self.sources)) == len(self.sources)
-    self.task_queue.extend(self.sources)
-    with ProcessPoolExecutor(self.parallelism) as pool:
-      self.futures = []
-      self.future_map = {}
-      while len(self.task_queue) != 0:
-        while len(self.task_queue) != 0 and self.active_count < self.parallelism:
-          task = self.task_queue.popleft()
-          Log(f'> {task.name} - STARTED')
-          if not self.sequential:
-            self.active_count += 1
-            future = pool.submit(task.Run)
-            self.future_map[future] = task
-            self.futures.append(future)
-          else:
-            task.Run()
-            Log(f'> {task.name} - DONE')
-            task.done = True
-            self.done_count += 1
-            self.CheckOutEdges(task)
-        self.Flush()
 
   def Execute(self, sequential : bool = False):
     if len(self.tasks) == 0:
       return
     Log('-- Running task graph --')
-    if ARGV.verbose:
-      self.Print()
+    self.Print()
     assert self.Validate()
-    Log('-- Started --')
-    SEQ_PRIOR = self.sequential
+    prior_sequential = self.sequential
     self.sequential = sequential
     try:
-      self.ExecuteImpl()
-    except Exception as e:
-      Log(e)
-      Log('-- FAILED --')
+      for task in self.tasks:
+        for in_edge in task.in_edges:
+          assert in_edge != None
+          in_edge.out_edges.append(task)
+      task_queue = deque()
+      active_count = 0
+      done_count = 0
+      def UpdateOutEdges(task):
+        nonlocal task_queue
+        if len(task.out_edges) == 0:
+          return
+        for out in task.out_edges:
+          assert out.in_edge_done_count < len(out.in_edges)
+          out.in_edge_done_count += 1
+          if out.in_edge_done_count == len(out.in_edges):
+            task_queue.append(out)
+      def Flush():
+        nonlocal futures
+        nonlocal future_map
+        nonlocal done_count
+        nonlocal active_count
+        if active_count != 0:
+          done = [ e for e in as_completed(futures) ]
+          done_tasks = [ future_map[e] for e in done ]
+          for e in done_tasks:
+            e.done = True
+            Log(f'> {task.name} - DONE')
+            UpdateOutEdges(e)
+          assert active_count == len(done_tasks)
+          done_count += len(done_tasks)
+          active_count = 0
+          future_map = {}
+          futures = []
+      assert len(set(self.sources)) == len(self.sources)
+      task_queue.extend(self.sources)
+      with ProcessPoolExecutor(self.parallelism) as pool:
+        futures = []
+        future_map = {}
+        while len(task_queue) != 0:
+          while len(task_queue) != 0 and active_count < self.parallelism:
+            task = task_queue.popleft()
+            Log(f'> {task.name} - STARTED')
+            if not self.sequential:
+              active_count += 1
+              future = pool.submit(task.Run)
+              future_map[future] = task
+              futures.append(future)
+            else:
+              task.Run()
+              Log(f'> {task.name} - DONE')
+              task.done = True
+              done_count += 1
+              UpdateOutEdges(task)
+          Flush()
+      if done_count != len(self.tasks):
+        pending_tasks = []
+        for e in self.tasks:
+          if not e.done:
+            pending_tasks.append(e)
+        Log(f'> {len(self.tasks) - done_count} did not complete: {pending_tasks}.')
+        assert False
     finally:
-      if self.done_count != len(self.tasks):
-        pending_tasks = filter(self.tasks, lambda e: e.done)
-        Log(f'> {len(self.tasks) - self.done_count} did not complete: {pending_tasks}.')
       Log('-- Done --')
-      self.sequential = SEQ_PRIOR
+      self.sequential = prior_sequential
       self.Reset()
 
 
@@ -927,6 +914,7 @@ def ConfigureBoost():
 
 
 def BuildAndInstallBoost():
+
   LaunchSubprocessImmediate([
     BOOST_B2_PATH,
     f'-j{PARALLELISM}',
@@ -966,9 +954,10 @@ def BuildSQLite():
   if not SQLITE_EXE_PATH.exists():
     cmd = [ C_COMPILER ]
     cmd.extend([
-      f'-std=c{C_STANDARD}',
+      f'-std=c89',
       f'-fuse-ld={LINKER}',
       '-O2',
+      '-Wno-error=int-conversion',
     ] if C_COMPILER_CLI_TYPE == 'gnu' else [
       f'/std:c{C_STANDARD}',
       '/O2',
@@ -993,9 +982,18 @@ def BuildSQLite():
         '-c' if C_COMPILER_CLI_TYPE == 'gnu' else '/c',
       ]
       cmd.extend([
-        f'-std=c{C_STANDARD}',
+        f'-std=c89',
         '-march=native',
         '-O2',
+        '-Wno-error=int-conversion',
+        '-fPIC',
+        '-nostdinc++',
+        '-nostdlib++',
+        '-isystem',
+        f'{UNREAL_ENGINE_PATH}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/x86_64-unknown-linux-gnu/usr/include/',
+        '-L', 
+        f'{UNREAL_ENGINE_PATH}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/x86_64-unknown-linux-gnu/usr/lib64',
+        '-lc',
       ] if C_COMPILER_CLI_TYPE == 'gnu' else [
         f'/std:c{C_STANDARD}',
         '/O2',
@@ -1055,7 +1053,7 @@ def ConfigureSUMO():
     # '-DENABLE_CS_BINDINGS=OFF',
     # '-DCCACHE_SUPPORT=OFF',
   ])
-  LaunchSubprocessImmediate(cmd)
+  LaunchSubprocessImmediate(cmd, log_name='sumo-configure')
 
 
 
@@ -1135,12 +1133,13 @@ def BuildDependencies(task_graph : TaskGraph):
     [ build_zlib ],
     ZLIB_BUILD_PATH,
     ZLIB_INSTALL_PATH))
-  
-  task_graph.Add(Task.CreateCMakeConfigureDefault(
-    'gtest-configure',
-    [],
-    GTEST_SOURCE_PATH,
-    GTEST_BUILD_PATH))
+
+  if ENABLE_GTEST:  
+    task_graph.Add(Task.CreateCMakeConfigureDefault(
+      'gtest-configure',
+      [],
+      GTEST_SOURCE_PATH,
+      GTEST_BUILD_PATH))
   
   task_graph.Add(Task.CreateCMakeConfigureDefault(
     'libpng-configure',
@@ -1153,30 +1152,6 @@ def BuildDependencies(task_graph : TaskGraph):
     '-DPNG_BUILD_ZLIB=ON',
     f'-DZLIB_INCLUDE_DIRS={ZLIB_INCLUDE_PATH}',
     f'-DZLIB_LIBRARIES={ZLIB_LIB_PATH}'))
-  
-  task_graph.Add(Task.CreateCMakeConfigureDefault(
-    'proj-configure',
-    [ build_sqlite ],
-    PROJ_SOURCE_PATH,
-    PROJ_BUILD_PATH,
-    f'-DSQLITE3_INCLUDE_DIR={SQLITE_SOURCE_PATH}',
-    f'-DSQLITE3_LIBRARY={SQLITE_LIB_PATH}',
-    f'-DEXE_SQLITE3={SQLITE_EXE_PATH}',
-    '-DWIN32_LEAN_AND_MEAN=1',
-    '-DVC_EXTRALEAN=1',
-    '-DNOMINMAX=1',
-    '-DENABLE_TIFF=OFF',
-    '-DENABLE_CURL=OFF',
-    '-DBUILD_SHARED_LIBS=OFF',
-    '-DBUILD_PROJSYNC=OFF',
-    '-DBUILD_PROJINFO=OFF',
-    '-DBUILD_CCT=OFF',
-    '-DBUILD_CS2CS=OFF',
-    '-DBUILD_GEOD=OFF',
-    '-DBUILD_GIE=OFF',
-    '-DBUILD_PROJ=OFF',
-    '-DBUILD_TESTING=OFF',
-    install_path = PROJ_INSTALL_PATH))
   
   task_graph.Add(Task.CreateCMakeConfigureDefault(
     'recast-configure',
@@ -1197,14 +1172,8 @@ def BuildDependencies(task_graph : TaskGraph):
     '-DRPCLIB_BUILD_EXAMPLES=OFF',
     '-DRPCLIB_ENABLE_LOGGING=OFF',
     '-DRPCLIB_ENABLE_COVERAGE=OFF',
-    '-DRPCLIB_MSVC_STATIC_RUNTIME=OFF'))
-  
-  configure_xercesc = task_graph.Add(Task.CreateCMakeConfigureDefault(
-    'xercesc-configure',
-    [],
-    XERCESC_SOURCE_PATH,
-    XERCESC_BUILD_PATH,
-    '-DBUILD_SHARED_LIBS=OFF'))
+    '-DRPCLIB_MSVC_STATIC_RUNTIME=OFF',
+    '-DCMAKE_POSITION_INDEPENDENT_CODE=ON'))
   
   if ENABLE_OSM_WORLD_RENDERER:
     task_graph.Add(Task.CreateCMakeConfigureDefault(
@@ -1234,6 +1203,37 @@ def BuildDependencies(task_graph : TaskGraph):
       '-DENABLE_MODULE_VEHICLE=ON'))
   
   if ENABLE_OSM2ODR:
+    task_graph.Add(Task.CreateCMakeConfigureDefault(
+      'proj-configure',
+      [ build_sqlite ],
+      PROJ_SOURCE_PATH,
+      PROJ_BUILD_PATH,
+      f'-DSQLITE3_INCLUDE_DIR={SQLITE_SOURCE_PATH}',
+      f'-DSQLITE3_LIBRARY={SQLITE_LIB_PATH}',
+      f'-DEXE_SQLITE3={SQLITE_EXE_PATH}',
+      '-DWIN32_LEAN_AND_MEAN=1',
+      '-DVC_EXTRALEAN=1',
+      '-DNOMINMAX=1',
+      '-DENABLE_TIFF=OFF',
+      '-DENABLE_CURL=OFF',
+      '-DBUILD_SHARED_LIBS=OFF',
+      '-DBUILD_PROJSYNC=OFF',
+      '-DBUILD_PROJINFO=OFF',
+      '-DBUILD_CCT=OFF',
+      '-DBUILD_CS2CS=OFF',
+      '-DBUILD_GEOD=OFF',
+      '-DBUILD_GIE=OFF',
+      '-DBUILD_PROJ=OFF',
+      '-DBUILD_TESTING=OFF',
+      install_path = PROJ_INSTALL_PATH))
+    
+    configure_xercesc = task_graph.Add(Task.CreateCMakeConfigureDefault(
+    'xercesc-configure',
+    [],
+    XERCESC_SOURCE_PATH,
+    XERCESC_BUILD_PATH,
+    '-DBUILD_SHARED_LIBS=OFF'))
+    
     # SUMO requires that Proj and Xerces be built and installed before its configure step:
     build_xercesc = task_graph.Add(Task.CreateCMakeBuildDefault(
       'xercesc-build',
@@ -1262,17 +1262,17 @@ def BuildDependencies(task_graph : TaskGraph):
     task_graph.Add(Task.CreateCMakeBuildDefault('boost-iterator-build', [], BOOST_ITERATOR_BUILD_PATH))
     task_graph.Add(Task.CreateCMakeBuildDefault('boost-python-build', [], BOOST_PYTHON_BUILD_PATH))
 
-  task_graph.Add(Task.CreateCMakeBuildDefault('gtest-build', [], GTEST_BUILD_PATH))
+  if ENABLE_GTEST:
+    task_graph.Add(Task.CreateCMakeBuildDefault('gtest-build', [], GTEST_BUILD_PATH))
   task_graph.Add(Task.CreateCMakeBuildDefault('libpng-build', [], LIBPNG_BUILD_PATH))
-  build_proj = task_graph.Add(Task.CreateCMakeBuildDefault('proj-build', [], PROJ_BUILD_PATH))
   task_graph.Add(Task.CreateCMakeBuildDefault('recast-build', [], RECAST_BUILD_PATH))
   task_graph.Add(Task.CreateCMakeBuildDefault('rpclib-build', [], RPCLIB_BUILD_PATH))
 
   if ENABLE_OSM2ODR:
+    build_proj = task_graph.Add(Task.CreateCMakeBuildDefault('proj-build', [], PROJ_BUILD_PATH))
     install_proj = task_graph.Add(Task.CreateCMakeInstallDefault('proj-install', [ build_proj ], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
     configure_sumo = task_graph.Add(Task('sumo-configure', [ install_proj ], ConfigureSUMO))
     task_graph.Add(Task.CreateCMakeBuildDefault('sumo-build', [ configure_sumo ], SUMO_BUILD_PATH))
-  else:
     task_graph.Add(Task.CreateCMakeBuildDefault('xercesc-build', [], XERCESC_BUILD_PATH))
 
   if ENABLE_OSM_WORLD_RENDERER:
@@ -1293,7 +1293,8 @@ def BuildDependencies(task_graph : TaskGraph):
     task_graph.Add(Task.CreateCMakeBuildDefault('boost-gil-install', [], BOOST_GIL_BUILD_PATH))
     task_graph.Add(Task.CreateCMakeBuildDefault('boost-iterator-install', [], BOOST_ITERATOR_BUILD_PATH))
     task_graph.Add(Task.CreateCMakeBuildDefault('boost-python-install', [], BOOST_PYTHON_BUILD_PATH))
-  task_graph.Add(Task.CreateCMakeInstallDefault('gtest-install', [], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
+  if ENABLE_GTEST:
+    task_graph.Add(Task.CreateCMakeInstallDefault('gtest-install', [], GTEST_BUILD_PATH, GTEST_INSTALL_PATH))
   task_graph.Add(Task.CreateCMakeInstallDefault('libpng-install', [], LIBPNG_BUILD_PATH, LIBPNG_INSTALL_PATH))
   task_graph.Add(Task.CreateCMakeInstallDefault('recast-install', [], RECAST_BUILD_PATH, RECAST_INSTALL_PATH))
   task_graph.Add(Task.CreateCMakeInstallDefault('rpclib-install', [], RPCLIB_BUILD_PATH, RPCLIB_INSTALL_PATH))
@@ -1302,7 +1303,6 @@ def BuildDependencies(task_graph : TaskGraph):
     task_graph.Add(Task.CreateCMakeInstallDefault('libosmscout-install', [], LIBOSMSCOUT_BUILD_PATH, LIBOSMSCOUT_INSTALL_PATH))
   if ENABLE_OSM2ODR:
     task_graph.Add(Task.CreateCMakeInstallDefault('sumo-install', [], SUMO_BUILD_PATH, SUMO_INSTALL_PATH))
-  else:
     task_graph.Add(Task.CreateCMakeInstallDefault('proj-install', [], PROJ_BUILD_PATH, PROJ_INSTALL_PATH))
     task_graph.Add(Task.CreateCMakeInstallDefault('xercesc-install', [], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
   if ENABLE_CHRONO:
@@ -1318,10 +1318,8 @@ def BuildLibCarlaMain(task_graph : TaskGraph):
     WORKSPACE_PATH,
     LIBCARLA_BUILD_PATH,
     f'-DCARLA_DEPENDENCIES_PATH={DEPENDENCIES_PATH}',
-    f'-DBUILD_CARLA_SERVER={"ON" if ARGV.libcarla_server else "OFF"}',
-    f'-DBUILD_CARLA_CLIENT={"ON" if ARGV.libcarla_client else "OFF"}',
-    f'-DBUILD_PYTHON_API={"ON" if ARGV.python_api else "OFF"}',
-    f'-DENABLE_RSS={"ON" if ARGV.rss else "OFF"}',
+    f'-DBUILD_LIBCARLA_SERVER={"ON" if ARGV.libcarla_server else "OFF"}',
+    f'-DBUILD_LIBCARLA_CLIENT={"ON" if ARGV.libcarla_client else "OFF"}',
     f'-DBUILD_OSM_WORLD_RENDERER={"ON" if ENABLE_OSM_WORLD_RENDERER else "OFF"}',
     f'-DLIBCARLA_PYTORCH={"ON" if ARGV.pytorch else "OFF"}'))
   build_libcarla = task_graph.Add(Task.CreateCMakeBuildDefault(
@@ -1333,6 +1331,28 @@ def BuildLibCarlaMain(task_graph : TaskGraph):
     [ build_libcarla ],
     LIBCARLA_BUILD_PATH,
     LIBCARLA_INSTALL_PATH))
+
+
+
+def BuildPythonAPIMain():
+  content = ''
+  with open(PYTHON_API_PATH / 'setup.py.in', 'r') as file:
+    content = file.read()
+  content = content.format_map(globals())
+  if os.name == 'nt':
+    content = content.replace(os.sep, '\\\\')
+  with open(PYTHON_API_PATH / 'setup.py', 'w') as file:
+    file.write(content)
+  LaunchSubprocessImmediate(
+    [ sys.executable, 'setup.py', 'bdist_egg', 'bdist_wheel' ],
+    working_directory = PYTHON_API_PATH,
+    log_name = 'python-api-build')
+
+
+
+def BuildPythonAPI(task_graph : TaskGraph):
+  install_libcarla = task_graph.task_map.get('libcarla-install')
+  task_graph.Add(Task('python-api-build', [ install_libcarla ], BuildPythonAPIMain))
 
 
 
@@ -1382,7 +1402,9 @@ def BuildCarlaUE(task_graph : TaskGraph):
     task_graph.Add(Task('nv-omniverse-install', [], InstallNVIDIAOmniverse))
   dependencies = []
   if ENABLE_LIBCARLA:
-    dependencies.append(task_graph.GetTaskByName('libcarla-install'))
+    dependencies.append(task_graph.task_map.get('libcarla-install'))
+  if ENABLE_PYTHON_API:
+    dependencies.append(task_graph.task_map.get('python-api-build'))
   task_graph.Add(Task('carla-ue-build', dependencies, BuildCarlaUEMain))
 
 
@@ -1413,7 +1435,6 @@ def Clean():
 
 
 if __name__ == '__main__':
-  task_graph = None
   try:
     task_graph = TaskGraph(PARALLELISM)
     if ARGV.clean or ARGV.rebuild:
@@ -1429,6 +1450,8 @@ if __name__ == '__main__':
       BuildDependencies(task_graph)
     if ENABLE_LIBCARLA:
       BuildLibCarlaMain(task_graph)
+    if ENABLE_PYTHON_API:
+      BuildPythonAPI(task_graph)
     if UPDATE_CARLA_UE_ASSETS:
       UpdateCarlaUEAssets(task_graph)
     if ENABLE_CARLA_UE:
@@ -1436,10 +1459,6 @@ if __name__ == '__main__':
     task_graph.Execute()
   except Exception as err:
     Log(err)
-    if task_graph:
-      Log('Last running tasks:')
-      for k, v in task_graph.future_map:
-        Log(f' - "{k}"')
     Log(DEFAULT_ERROR_MESSAGE)
     exit(-1)
   finally:

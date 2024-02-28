@@ -428,8 +428,9 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
     LoadCarlaMapTile(InAssetsPath + "/" + AssetData.AssetName.ToString(), TileId);
   }
   ObjectLibrary->ConditionalBeginDestroy();
+#if WITH_EDITOR
   GEngine->ForceGarbageCollection(true);
-
+#endif
   ActorsToConsider.Reset();
   if (SpectatorAsEgo && Spectator)
   {
@@ -1059,6 +1060,7 @@ void ALargeMapManager::DumpTilesTable() const
 
 void ALargeMapManager::PrintMapInfo()
 {
+#if WITH_EDITOR
   UWorld* World = GetWorld();
 
   FDVector CurrentActorPosition;
@@ -1117,6 +1119,7 @@ void ALargeMapManager::PrintMapInfo()
       if (LastMsgIndex > MaxClientLocMsgIndex) break;
     }
   }
+#endif
 }
 
 void ALargeMapManager::ConsiderSpectatorAsEgo(bool _SpectatorAsEgo)
