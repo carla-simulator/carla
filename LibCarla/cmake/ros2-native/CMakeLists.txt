@@ -41,6 +41,8 @@ target_compile_definitions (
     BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
 )
 
+target_link_libraries(carla-ros2-native /home/xsole/programing/carlaUE5/Install/fast-dds-install/lib/libfastrtps.so /home/xsole/programing/carlaUE5/Install/fast-dds-install/lib/libfastcdr.so)
+
 install (TARGETS carla-ros2-native DESTINATION lib)
 
 #foreach (HEADER ${LIBCARLA_SERVER_HEADERS})
