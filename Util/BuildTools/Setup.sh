@@ -97,7 +97,7 @@ set(CMAKE_CXX_COMPILER ${CXX})
 
 # disable -Werror since the boost 1.72 doesn't compile with ad_rss without warnings (i.e. the geometry headers)
 set(CMAKE_C_FLAGS "\${CMAKE_C_FLAGS} -fPIC" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++17 -pthread -fPIC" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wdeprecated -Wshadow -Wuninitialized -Wunreachable-code" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wpessimizing-move -Wold-style-cast -Wnull-dereference" CACHE STRING "" FORCE)
@@ -105,7 +105,7 @@ set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wduplicate-enum -Wnon-virtual-dtor -Wh
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wconversion -Wfloat-overflow-conversion" CACHE STRING "" FORCE)
 
 # @todo These flags need to be compatible with setup.py compilation.
-set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++17 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY" CACHE STRING "" FORCE)
 EOL
 
 # -- LIBCPP_TOOLCHAIN_FILE -----------------------------------------------------
@@ -119,7 +119,7 @@ set(BUILD_STATIC_LIBS ON)
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_C_FLAGS "\${CMAKE_C_FLAGS} -fPIC" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS "\${CMAKE_C_FLAGS} ${UNREAL_HOSTED_CFLAGS}" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -stdlib=libc++ -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++17 -fPIC -stdlib=libc++ -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} ${UNREAL_HOSTED_CFLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_SHARED_LINKER_FLAGS "\${CMAKE_SHARED_LINKER_FLAGS} ${UNREAL_HOSTED_LINKER_FLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_EXE_LINKER_FLAGS "\${CMAKE_EXE_LINKER_FLAGS} ${UNREAL_HOSTED_LINKER_FLAGS}" CACHE STRING "" FORCE)
@@ -203,7 +203,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     pushd ${BOOST_BASENAME}-source >/dev/null
 
     BOOST_TOOLSET="clang-10.0"
-    BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
+    BOOST_CFLAGS="-fPIC -std=c++17 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
     py3="/usr/bin/env python${PY_VERSION}"
     py3_root=`${py3} -c "import sys; print(sys.prefix)"`
@@ -287,7 +287,7 @@ else
   mkdir -p ${RPCLIB_BASENAME}-client-build
   pushd ${RPCLIB_BASENAME}-client-build >/dev/null
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++17" \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-client-install" \
       ../${RPCLIB_BASENAME}-source
   ninja
@@ -348,7 +348,7 @@ else
   mkdir -p ${GTEST_BASENAME}-client-build
   pushd ${GTEST_BASENAME}-client-build >/dev/null
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14" \
+      -DCMAKE_CXX_FLAGS="-std=c++17" \
       -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-client-install" \
       ../${GTEST_BASENAME}-source
   ninja
@@ -395,7 +395,7 @@ else
   mkdir -p ${RECAST_BASENAME}-client-build
   pushd ${RECAST_BASENAME}-client-build >/dev/null
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
+      -DCMAKE_CXX_FLAGS="-std=c++17 -fPIC" \
       -DCMAKE_INSTALL_PREFIX="../${RECAST_BASENAME}-client-install" \
       -DRECASTNAVIGATION_DEMO=False \
       -DRECASTNAVIGATION_TEST=False \
@@ -525,7 +525,7 @@ else
   pushd ${XERCESC_BASENAME}-client-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -w" \
+      -DCMAKE_CXX_FLAGS="-std=c++17 -fPIC -w" \
       -DCMAKE_INSTALL_PREFIX="../${XERCESC_BASENAME}-client-install" \
       -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_SHARED_LIBS=OFF \
@@ -765,7 +765,7 @@ else
   pushd ${PROJ_BASENAME}-client-build >/dev/null
   cmake -G "Ninja" \
       -DCMAKE_C_FLAGS="-fPIC" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
+      -DCMAKE_CXX_FLAGS="-std=c++17 -fPIC" \
       -DSQLITE3_INCLUDE_DIR=${SQLITE_CLIENT_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_CLIENT_LIB} \
       -DEXE_SQLITE3=${SQLITE_EXE} \
       -DENABLE_TIFF=OFF -DENABLE_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF \
@@ -1029,6 +1029,10 @@ if ${USE_ROS2} ; then
     popd >/dev/null
 
     rm -Rf ${FASTDDS_BASENAME}-source ${FASTDDS_BASENAME}-server-build
+
+    # for achieving copyless transport of Images and PointCloud2 data we had to integrate vector allocator template support
+    # therefore, delete the original file
+    rm -f ${FASTDDS_SERVER_INCLUDE}/fastcdr/Cdr.h
   fi
 
   cp -pr ${FASTDDS_SERVER_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/

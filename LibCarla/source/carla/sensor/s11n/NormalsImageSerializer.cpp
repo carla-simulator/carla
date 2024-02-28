@@ -11,8 +11,8 @@ namespace carla {
   namespace sensor {
     namespace s11n {
 
-      SharedPtr<SensorData> NormalsImageSerializer::Deserialize(RawData &&data) {
-        auto image = SharedPtr<data::NormalsImage>(new data::NormalsImage{std::move(data)});
+      SharedPtr<SensorData> NormalsImageSerializer::Deserialize(RawData DESERIALIZE_DECL_DATA(data)) {
+        auto image = SharedPtr<data::NormalsImage>(new data::NormalsImage{DESERIALIZE_MOVE_DATA(data)});
         return image;
       }
 

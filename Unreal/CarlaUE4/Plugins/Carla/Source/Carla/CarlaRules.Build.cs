@@ -8,6 +8,7 @@ public class CarlaRules : ModuleRules
 {
   protected string LibCarlaInstallPath;
   protected bool UsingRos2 = false;
+  protected bool Debug = false;
 
   public CarlaRules(ReadOnlyTargetRules Target, string LibCarlaInstallPathRelativeToModule) : base(Target)
   {
@@ -30,7 +31,7 @@ public class CarlaRules : ModuleRules
     }
     else
     {
-      return false;
+      return Debug;
     }
   }
 

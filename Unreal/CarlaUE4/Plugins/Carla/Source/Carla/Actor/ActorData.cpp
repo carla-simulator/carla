@@ -125,7 +125,7 @@ void FVehicleData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* Carl
   }
   else
   {
-    Vehicle->ApplyVehicleAckermannControl(AckermannControl, EVehicleInputPriority::Client);
+    Vehicle->ApplyVehicleAckermannControl(AckermannControl);
   }
   Vehicle->SetVehicleLightState(LightState);
   auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());

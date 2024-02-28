@@ -46,16 +46,6 @@ void ASensor::Set(const FActorDescription &Description)
   }
 }
 
-boost::optional<FActorAttribute> ASensor::GetAttribute(const FString Name)
-{
-  if (SensorDescription.Variations.Contains(Name))
-  {
-    return SensorDescription.Variations[Name];
-  }
-  else
-    return {};
-}
-
 void ASensor::Tick(const float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASensor::Tick);

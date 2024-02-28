@@ -65,7 +65,7 @@ namespace multigpu {
     ReadData();
   }
 
-  void Primary::Write(std::shared_ptr<const carla::streaming::detail::tcp::Message> message) {
+  void Primary::Write(std::shared_ptr<const carla::streaming::detail::Message> message) {
     DEBUG_ASSERT(message != nullptr);
     DEBUG_ASSERT(!message->empty());
     std::weak_ptr<Primary> weak = shared_from_this();

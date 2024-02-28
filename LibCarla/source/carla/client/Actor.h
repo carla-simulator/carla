@@ -9,6 +9,9 @@
 #include "carla/Debug.h"
 #include "carla/Memory.h"
 #include "carla/client/detail/ActorState.h"
+#include "carla/geom/Acceleration.h"
+#include "carla/geom/AngularVelocity.h"
+#include "carla/geom/Velocity.h"
 #include "carla/profiler/LifetimeProfiled.h"
 
 namespace carla {
@@ -46,19 +49,19 @@ namespace client {
     ///
     /// @note This function does not call the simulator, it returns the
     /// velocity received in the last tick.
-    geom::Vector3D GetVelocity() const;
+    geom::Velocity GetVelocity() const;
 
     /// Return the current 3D angular velocity of the actor.
     ///
     /// @note This function does not call the simulator, it returns the
     /// angular velocity received in the last tick.
-    geom::Vector3D GetAngularVelocity() const;
+    geom::AngularVelocity GetAngularVelocity() const;
 
     /// Return the current 3D acceleration of the actor.
     ///
     /// @note This function does not call the simulator, it returns the
     /// acceleration calculated after the actor's velocity.
-    geom::Vector3D GetAcceleration() const;
+    geom::Acceleration GetAcceleration() const;
 
     geom::Transform GetComponentWorldTransform(const std::string componentName) const;
 

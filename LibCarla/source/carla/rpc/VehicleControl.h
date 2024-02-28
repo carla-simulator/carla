@@ -29,14 +29,16 @@ namespace rpc {
         bool in_hand_brake,
         bool in_reverse,
         bool in_manual_gear_shift,
-        int32_t in_gear)
+        int32_t in_gear,
+        float in_timestamp)
       : throttle(in_throttle),
         steer(in_steer),
         brake(in_brake),
         hand_brake(in_hand_brake),
         reverse(in_reverse),
         manual_gear_shift(in_manual_gear_shift),
-        gear(in_gear) {}
+        gear(in_gear),
+        timestamp(in_timestamp) {}
 
     float throttle = 0.0f;
     float steer = 0.0f;
@@ -45,6 +47,7 @@ namespace rpc {
     bool reverse = false;
     bool manual_gear_shift = false;
     int32_t gear = 0;
+    float timestamp = 0.f;
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
@@ -55,7 +58,8 @@ namespace rpc {
         hand_brake(Control.bHandBrake),
         reverse(Control.bReverse),
         manual_gear_shift(Control.bManualGearShift),
-        gear(Control.Gear) {}
+        gear(Control.Gear),
+        timestamp(Control.Timestamp) {}
 
     operator FVehicleControl() const {
       FVehicleControl Control;
@@ -66,6 +70,7 @@ namespace rpc {
       Control.bReverse = reverse;
       Control.bManualGearShift = manual_gear_shift;
       Control.Gear = gear;
+      Control.Timestamp = timestamp;
       return Control;
     }
 
@@ -79,7 +84,8 @@ namespace rpc {
           hand_brake != rhs.hand_brake ||
           reverse != rhs.reverse ||
           manual_gear_shift != rhs.manual_gear_shift ||
-          gear != rhs.gear;
+          gear != rhs.gear ||
+          timestamp != rhs.timestamp;
     }
 
     bool operator==(const VehicleControl &rhs) const {
@@ -93,8 +99,10 @@ namespace rpc {
         hand_brake,
         reverse,
         manual_gear_shift,
-        gear);
+        gear,
+        timestamp);
   };
 
 } // namespace rpc
 } // namespace carla
+

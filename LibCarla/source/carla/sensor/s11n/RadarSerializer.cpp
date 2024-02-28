@@ -12,9 +12,9 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
-  SharedPtr<SensorData> RadarSerializer::Deserialize(RawData &&data) {
+  SharedPtr<SensorData> RadarSerializer::Deserialize(RawData DESERIALIZE_DECL_DATA(data)) {
     return SharedPtr<data::RadarMeasurement>(
-        new data::RadarMeasurement{std::move(data)});
+        new data::RadarMeasurement{DESERIALIZE_MOVE_DATA(data)});
   }
 
 } // namespace s11n

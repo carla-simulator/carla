@@ -24,7 +24,7 @@ namespace detail {
   using StreamMap = std::unordered_map<stream_id_type, std::shared_ptr<MultiStreamState>>;
 
   /// Keeps the mapping between streams and sessions.
-  class Dispatcher {
+  class Dispatcher  {
   public:
 
     template <typename Protocol, typename EndPointType>
@@ -42,28 +42,6 @@ namespace detail {
     void DeregisterSession(std::shared_ptr<Session> session);
 
     token_type GetToken(stream_id_type sensor_id);
-
-    void EnableForROS(stream_id_type sensor_id) {
-      auto search = _stream_map.find(sensor_id);
-      if (search != _stream_map.end()) {
-        search->second->EnableForROS();
-      }
-    }
-
-    void DisableForROS(stream_id_type sensor_id) {
-      auto search = _stream_map.find(sensor_id);
-      if (search != _stream_map.end()) {
-        search->second->DisableForROS();
-      }
-    }
-
-    bool IsEnabledForROS(stream_id_type sensor_id) {
-      auto search = _stream_map.find(sensor_id);
-      if (search != _stream_map.end()) {
-        return search->second->IsEnabledForROS();
-      }
-      return false;
-    }
 
   private:
 

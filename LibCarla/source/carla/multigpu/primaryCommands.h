@@ -9,7 +9,7 @@
 // #include "carla/Logging.h"
 #include "carla/multigpu/commands.h"
 #include "carla/multigpu/primary.h"
-#include "carla/streaming/detail/tcp/Message.h"
+#include "carla/streaming/detail/Message.h"
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
 

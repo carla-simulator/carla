@@ -42,7 +42,7 @@ namespace s11n {
     template <typename Sensor>
     static Buffer Serialize(const Sensor &sensor, const DVSEventArray &events, Buffer &&output);
 
-    static SharedPtr<SensorData> Deserialize(RawData &&data);
+    static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
   };
 
   template <typename Sensor>

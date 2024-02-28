@@ -50,6 +50,10 @@ namespace geom {
        return std::sqrt(SquaredLength());
     }
 
+    double ExactLength() const {
+       return std::sqrt(double(x) * x + double(y) * y + double(z) * z);
+    }
+
     float SquaredLength2D() const {
       return x * x + y * y;
     }
@@ -62,18 +66,42 @@ namespace geom {
        return Vector3D(abs(x), abs(y), abs(z));
     }
 
-    Vector3D MakeUnitVector() const {
-      const float length = Length();
+    Vector3D MakeUnitVectorLengthInput(const double length) const {
+      // float introduces too much of an error as we want to achieve an error less than a centimeter
       DEVELOPMENT_ASSERT(length > 2.0f * std::numeric_limits<float>::epsilon());
-      const float k = 1.0f / length;
-      return Vector3D(x * k, y * k, z * k);
+      const double k = 1.0 / length;
+      Vector3D result(float(x * k), float(y * k), float(z * k));
+      return result.EnsureUnitVector();
+    }
+
+    Vector3D MakeUnitVector() const {
+      return MakeUnitVectorLengthInput(ExactLength());
     }
 
     Vector3D MakeSafeUnitVector(const float epsilon) const  {
-      const float length = Length();
-      const float k = (length > std::max(epsilon, 0.0f)) ? (1.0f / length) : 1.0f;
-      return Vector3D(x * k, y * k, z * k);
+      // float introduces too much of an error as we want to achieve an error less than a centimeter
+      const double length = ExactLength();
+      const double k = (length > std::max(epsilon, 0.0f)) ? (1.0 / length) : 1.0;
+      Vector3D result(float(x * k), float(y * k), float(z * k));
+      return result.EnsureUnitVector();
     }
+
+    Vector3D EnsureUnitVector() const {
+        if (fabs(ExactLength()-1.0) > 0.01) {
+          log_warning(std::setprecision(8), "vector (", x, " ,", y, " ,",  z ,")is expected to be a unit vector, but actuall has a length of", fabs(ExactLength()));
+          auto result = MakeUnitVector();
+          log_warning(std::setprecision(8), "retring to make unit vector results in (", result.x, " ,", result.y, " ,",  result.z ,") with length of", fabs(result.ExactLength()));
+          return result;
+        }
+        return *this;
+    }
+
+    std::pair<Vector3D, double> GetUnitVectorAndLength() const {
+      const auto length = ExactLength();
+      const auto unit_vector = MakeUnitVectorLengthInput(length);
+      return std::make_pair(unit_vector, length);
+    }
+
 
     // =========================================================================
     // -- Arithmetic operators -------------------------------------------------

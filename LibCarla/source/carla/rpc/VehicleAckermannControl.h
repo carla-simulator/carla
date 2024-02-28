@@ -25,18 +25,21 @@ namespace rpc {
         float in_steer_speed,
         float in_speed,
         float in_acceleration,
-        float in_jerk)
+        float in_jerk,
+        float in_timestamp)
       : steer(in_steer),
         steer_speed(in_steer_speed),
         speed(in_speed),
         acceleration(in_acceleration),
-        jerk(in_jerk) {}
+        jerk(in_jerk),
+        timestamp(in_timestamp) {}
 
     float steer = 0.0f;
     float steer_speed = 0.0f;
     float speed = 0.0f;
     float acceleration = 0.0f;
     float jerk = 0.0f;
+    float timestamp = 0.f;
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
@@ -45,7 +48,8 @@ namespace rpc {
         steer_speed(Control.SteerSpeed),
         speed(Control.Speed),
         acceleration(Control.Acceleration),
-        jerk(Control.Jerk) {}
+        jerk(Control.Jerk),
+        timestamp(Control.Timestamp) {}
 
     operator FVehicleAckermannControl() const {
       FVehicleAckermannControl Control;
@@ -54,6 +58,7 @@ namespace rpc {
       Control.Speed = speed;
       Control.Acceleration = acceleration;
       Control.Jerk = jerk;
+      Control.Timestamp = timestamp;
       return Control;
     }
 
@@ -65,7 +70,8 @@ namespace rpc {
           steer_speed != rhs.steer_speed ||
           speed != rhs.speed ||
           acceleration != rhs.acceleration ||
-          jerk != rhs.jerk;
+          jerk != rhs.jerk ||
+          timestamp != rhs.timestamp;
     }
 
     bool operator==(const VehicleAckermannControl &rhs) const {
@@ -77,7 +83,8 @@ namespace rpc {
         steer_speed,
         speed,
         acceleration,
-        jerk);
+        jerk,
+        timestamp);
   };
 
 } // namespace rpc

@@ -49,6 +49,12 @@ public class Carla : CarlaRules
         Console.WriteLine("Enabling ros2");
         UsingRos2 = true;
       }
+
+      if (line.Contains("Debug ON"))
+      {
+        Console.WriteLine("Enabling debug build");
+        Debug = true;
+      }
     }
 
     PublicIncludePaths.AddRange(

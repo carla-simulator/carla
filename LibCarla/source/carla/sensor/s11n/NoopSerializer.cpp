@@ -12,7 +12,8 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
-  SharedPtr<SensorData> NoopSerializer::Deserialize(RawData &&) {
+  SharedPtr<SensorData> NoopSerializer::Deserialize(RawData DESERIALIZE_DECL_DATA(data)) {
+    (void)data;
     throw_exception(std::runtime_error("NoopSerializer: Invalid data received."));
   }
 

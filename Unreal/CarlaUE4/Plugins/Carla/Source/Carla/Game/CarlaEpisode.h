@@ -22,7 +22,6 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/geom/BoundingBox.h>
 #include <carla/geom/GeoLocation.h>
-#include <carla/ros2/ROS2.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/OpendriveGenerationParameters.h>
@@ -170,7 +169,7 @@ public:
   ///
   /// If the actor is not found or is pending kill, the returned view is
   /// invalid.
-  FCarlaActor* FindCarlaActor(FCarlaActor::IdType ActorId)
+  FCarlaActor* FindCarlaActor(FCarlaActor::IdType ActorId) const
   {
     return ActorDispatcher->GetActorRegistry().FindCarlaActor(ActorId);
   }
@@ -356,17 +355,7 @@ private:
 
   bool SetActorDead(FCarlaActor &CarlaActor);
 
-  void TickTimers(float DeltaSeconds)
-  {
-    ElapsedGameTime += DeltaSeconds;
-    SetVisualGameTime(VisualGameTime + DeltaSeconds);
-    #if defined(WITH_ROS2)
-    auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled())
-      ROS2->SetTimestamp(GetElapsedGameTime());
-    #endif
-
-  }
+  void TickTimers(float DeltaSeconds);
 
   const uint64 Id = 0u;
 

@@ -58,6 +58,8 @@ if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_OSM2ODR}; }; then
   fatal_error "Nothing selected to be done."
 fi
 
+OSM2ODR_BASENAME=${CARLA_BUILD_FOLDER}/osm2odr
+
 # ==============================================================================
 # -- Clean intermediate files --------------------------------------------------
 # ==============================================================================
@@ -66,7 +68,8 @@ if ${REMOVE_INTERMEDIATE} ; then
 
   log "Cleaning intermediate files and folders."
 
-  rm -Rf ${OSM2ODR_BASENAME}-client-build*
+  rm -Rf ${OSM2ODR_BASENAME}-client-build* ${OSM2ODR_BASENAME}-server-build*
+  rm -Rf ${OSM2ODR_BASENAME}-server-install* ${OSM2ODR_BASENAME}-client-install*
 
 fi
 
@@ -79,7 +82,6 @@ if ${BUILD_OSM2ODR} ; then
   export CXX="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++"
   export PATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin:$PATH"
 
-  OSM2ODR_BASENAME=${CARLA_BUILD_FOLDER}/osm2odr
   if [[ -d ${OSM2ODR_BASENAME}-client-install && -d ${OSM2ODR_BASENAME}-server-install ]] ; then
     log "OSM2ODR already installed."
   else

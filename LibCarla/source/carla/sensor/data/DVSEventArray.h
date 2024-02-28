@@ -25,8 +25,8 @@ namespace data {
 
     friend Serializer;
 
-    explicit DVSEventArray(RawData &&data)
-      : Super(Serializer::header_offset, std::move(data)) {
+    explicit DVSEventArray(RawData DESERIALIZE_DECL_DATA(data))
+      : Super(Serializer::header_offset, DESERIALIZE_MOVE_DATA(data)) {
     }
 
   private:

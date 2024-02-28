@@ -13,6 +13,9 @@ struct CARLA_API FWalkerControl
 {
   GENERATED_BODY()
 
+  UPROPERTY(Category = "Vehicle Control", EditAnywhere, BlueprintReadWrite)
+  float Timestamp = 0.0f;
+
   UPROPERTY(Category = "Walker Control", EditAnywhere, BlueprintReadWrite)
   FVector Direction = {1.0f, 0.0f, 0.0f};
 

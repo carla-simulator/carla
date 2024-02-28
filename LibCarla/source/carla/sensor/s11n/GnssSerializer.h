@@ -36,7 +36,8 @@ namespace s11n {
       return MsgPack::Pack(geo_location);
     }
 
-    static SharedPtr<SensorData> Deserialize(RawData &&data);
+    static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
+
   };
 
 } // namespace s11n

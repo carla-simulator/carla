@@ -41,7 +41,8 @@ namespace s11n {
     static Buffer Serialize(const Sensor &sensor, Buffer &&bitmap, 
         uint32_t ImageWidth, uint32_t ImageHeight, float FovAngle);
 
-    static SharedPtr<SensorData> Deserialize(RawData &&data);
+    static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
+
   };
 
   template <typename Sensor>

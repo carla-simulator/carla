@@ -17,6 +17,7 @@ namespace carla {
 namespace geom {
 
   class Rotation;
+  class Quaternion;
 
   class Math {
   public:
@@ -31,6 +32,12 @@ namespace geom {
     static constexpr T Pi2() {
       static_assert(std::is_floating_point<T>::value, "type must be floating point");
       return static_cast<T>(static_cast<T>(2) * Pi<T>());
+    }
+
+    template <typename T>
+    static constexpr T Pi_2() {
+      static_assert(std::is_floating_point<T>::value, "type must be floating point");
+      return static_cast<T>(static_cast<T>(0.5) * Pi<T>());
     }
 
     template <typename T>
@@ -124,8 +131,88 @@ namespace geom {
     /// Compute the unit vector pointing towards the Y-axis of @a rotation.
     static Vector3D GetUpVector(const Rotation &rotation);
 
+    /// Compute the unit vector pointing towards the X-axis of @a quaternion.
+    static Vector3D GetForwardVector(const Quaternion &quaternion);
+
+    /// Compute the unit vector pointing towards the Y-axis of @a quaternion.
+    static Vector3D GetRightVector(const Quaternion &quaternion);
+
+    /// Compute the unit vector pointing towards the Y-axis of @a quaternion.
+    static Vector3D GetUpVector(const Quaternion &quaternion);
+
     // Helper function to generate a vector of consecutive integers from a to b
     static std::vector<int> GenerateRange(int a, int b);
+
+    /** Returns the cosine of the angle between the two unit vectors
+     * 
+     * This is based on the DotProduct() of the vectors
+     * (a * b)/(||a|| * ||b||)= cos(phi)
+     * 
+     * Be aware: use this optimized function if you are sure that vectors a_unit and b_unit are actually a unit vectors!
+     *
+     * \param a_unit must be a unit vector
+     * \param b_unit must be a unit vector
+     * 
+     * \returns The cosine of the angle between the two given unit vectors
+     */
+    static float CosineVectorAngleFromUnitVectors(Vector3D const &a_unit, Vector3D const &b_unit)
+    {
+        auto a = a_unit.EnsureUnitVector();
+        auto b = b_unit.EnsureUnitVector();
+        return Dot(a, b);
+    }
+
+    /** Returns the cosine of the angle between the two vectors
+     * 
+     * This is based on the DotProduct() of the vectors
+     * (a * b)/(||a|| * ||b||)= cos(phi)
+     * 
+     * \param a just a vector
+     * \param b another vector
+     * 
+     * \returns The cosine of the angle between the two given vectors
+     */
+    static float CosineVectorAngle(Vector3D const &a, Vector3D const &b)
+    {
+      return CosineVectorAngleFromUnitVectors(a.MakeUnitVector(), b.MakeUnitVector());
+    }
+
+    /** Returns the signbit of the cosine of the angle between vector \c a and unit vector \c b_unit
+     * 
+     * This is based on the DotProdcut() of the vectors
+     * a⋅(b/||b||)=||a|| cos(phi)
+     * 
+     * \param a just a vector
+     * \param b_unit must be a unit vector
+     * 
+     * \returns the signbit of the cosine of the angle between a vector and a unit vectors (Be aware: +0.f returns \c false, -0.f returns \c true)
+     * \retval \c false The vectors are pointing within the same half plane (||phi|| <= M_PI_2) i.e. pointing into "same direction"
+     * \retval \c true The vectors are pointing  the same half plane (||phi|| >= M_PI_2) i.e. pointing into "opposite direction"
+     * 
+     * Be aware: use this optimized function if you are sure that vector b_unit is actually a unit vector!
+     */
+    static bool SignBitCosineAngleFromUnitVector(Vector3D const &a, Vector3D const &b_unit)
+    {
+      auto b = b_unit.EnsureUnitVector();
+      return std::signbit(Dot(a, b));
+    }
+
+    /** Returns the signbit of the cosine of the angle between two vectors
+     * 
+     * This is based on the DotProdcut() of the vectors
+     * a⋅(b/||b||)=||a|| cos(phi)
+     * 
+     * \param a just a vector
+     * \param b another vector
+     * 
+     * \returns the signbit of the cosine of the angle between the two vectors (Be aware: +0.f returns \c false, -0.f returns \c true)
+     * \retval \c false The vectors are pointing within the same half plane (||phi|| <= M_PI_2) i.e. pointing into "same direction"
+     * \retval \c true The vectors are pointing  the same half plane (||phi|| >= M_PI_2) i.e. pointing into "opposite direction"
+     */
+    static bool SignBitCosineAngle(Vector3D const &a, Vector3D const &b)
+    {
+      return SignBitCosineAngleFromUnitVector(a, b.MakeUnitVector());
+    }
 
   };
 } // namespace geom

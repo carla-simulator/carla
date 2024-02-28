@@ -1,0 +1,3 @@
+[submodule "LibCarla/source/carla/ros2/carla_msgs"]
+	path = LibCarla/source/carla/ros2/carla_msgs
+	url = https://github.com/berndgassmann/ros-carla-msgs

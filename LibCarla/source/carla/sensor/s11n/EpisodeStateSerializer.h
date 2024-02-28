@@ -54,7 +54,8 @@ namespace s11n {
       return std::move(buffer);
     }
 
-    static SharedPtr<SensorData> Deserialize(RawData &&data);
+    static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
+
   };
 
 } // namespace s11n

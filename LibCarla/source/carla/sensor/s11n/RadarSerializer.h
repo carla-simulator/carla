@@ -34,7 +34,8 @@ namespace s11n {
         const data::RadarData &measurement,
         Buffer &&output);
 
-    static SharedPtr<SensorData> Deserialize(RawData &&data);
+    static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
+
   };
 
   template <typename Sensor>

@@ -8,17 +8,42 @@
 #include "Carla/Actor/ActorDispatcher.h"
 
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
-#include "Carla/Actor/ActorROS2Handler.h"
 #include "Carla/Actor/CarlaActorFactory.h"
+#include "Carla/Util/BoundingBoxCalculator.h"
 
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/VehicleControl.h"
 
 #include "GameFramework/Controller.h"
 
-#include <compiler/disable-ue4-macros.h>
-#include "carla/ros2/ROS2.h"
-#include <compiler/enable-ue4-macros.h>
+#if defined(WITH_ROS2)
+#  include <compiler/disable-ue4-macros.h>
+#  include "carla/ros2/ROS2.h"
+#  include "carla/ros2/types/PublisherSensorType.h"
+#  include "carla/ros2/types/SensorActorDefinition.h"
+#  include "carla/ros2/types/VehicleActorDefinition.h"
+#  include "carla/ros2/types/WalkerActorDefinition.h"
+#  include "carla/ros2/types/TrafficSignActorDefinition.h"
+#  include "carla/ros2/types/TrafficLightActorDefinition.h"
+#  include <compiler/enable-ue4-macros.h>
+
+#  include "Carla/Sensor/CollisionSensor.h"
+#  include "Carla/Sensor/DepthCamera.h"
+#  include "Carla/Sensor/NormalsCamera.h"
+#  include "Carla/Sensor/DVSCamera.h"
+#  include "Carla/Sensor/GnssSensor.h"
+#  include "Carla/Sensor/InertialMeasurementUnit.h"
+#  include "Carla/Sensor/LaneInvasionSensor.h"
+#  include "Carla/Sensor/ObstacleDetectionSensor.h"
+#  include "Carla/Sensor/OpticalFlowCamera.h"
+#  include "Carla/Sensor/Radar.h"
+#  include "Carla/Sensor/RayCastLidar.h"
+#  include "Carla/Sensor/RayCastSemanticLidar.h"
+#  include "Carla/Sensor/RssSensor.h"
+#  include "Carla/Sensor/SceneCaptureCamera.h"
+#  include "Carla/Sensor/SemanticSegmentationCamera.h"
+#  include "Carla/Sensor/InstanceSegmentationCamera.h"
+#endif
 
 void UActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
 {
@@ -159,6 +184,130 @@ bool UActorDispatcher::DestroyActor(FCarlaActor::IdType ActorId)
   return true;
 }
 
+#if defined(WITH_ROS2)
+carla::ros2::types::PublisherSensorType GetPublisherSensorType(ASensor * Sensor) { 
+      // map the Ue4 sensors to their ESensor type and stream_id
+  carla::ros2::types::PublisherSensorType SensorType = carla::ros2::types::PublisherSensorType::Unknown;
+  if ( dynamic_cast<ACollisionSensor *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::CollisionSensor;
+  } else if ( dynamic_cast<ADepthCamera *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::DepthCamera;
+  } else if ( dynamic_cast<ANormalsCamera *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::NormalsCamera;
+  } else if ( dynamic_cast<ADVSCamera *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::DVSCamera;
+  } else if ( dynamic_cast<AGnssSensor *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::GnssSensor;
+  } else if ( dynamic_cast<AInertialMeasurementUnit *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::InertialMeasurementUnit;
+  } else if ( dynamic_cast<ALaneInvasionSensor *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::LaneInvasionSensor;
+  } else if ( dynamic_cast<AObstacleDetectionSensor *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::ObstacleDetectionSensor;
+  } else if ( dynamic_cast<AOpticalFlowCamera *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::OpticalFlowCamera;
+  } else if ( dynamic_cast<ARadar *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::Radar;
+  // BE CAREFUL: FIRST CHECK ARayCastLidar, because that's derived from RayCastSemanticLidar!!
+  } else if ( dynamic_cast<ARayCastLidar *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::RayCastLidar;
+  } else if ( dynamic_cast<ARayCastSemanticLidar *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::RayCastSemanticLidar;
+  } else if ( dynamic_cast<ARssSensor *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::RssSensor;
+  } else if ( dynamic_cast<ASceneCaptureCamera *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::SceneCaptureCamera;
+  } else if ( dynamic_cast<ASemanticSegmentationCamera *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::SemanticSegmentationCamera;
+  } else if ( dynamic_cast<AInstanceSegmentationCamera *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::InstanceSegmentationCamera;
+  } else if ( dynamic_cast<FCameraGBufferUint8 *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::CameraGBufferUint8;
+  } else if ( dynamic_cast<FCameraGBufferFloat *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::CameraGBufferFloat;
+  } else {
+     // not derived from ASensor, is initialized in each case separately
+     //carla::ros2::types::PublisherSensorType::WorldObserver
+
+     carla::log_error("Getcarla::ros2::types::PublisherSensorType : invalid sensor type");
+  }
+  return SensorType;
+}
+
+void RegisterActorROS2(FCarlaActor* CarlaActor, carla::ros2::types::ActorNameDefinition ActorNameDefinition) {
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (ROS2->IsEnabled())
+  {
+    auto *Sensor = Cast<ASensor>(CarlaActor->GetActor());
+    auto *Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+    auto *Walker = Cast<AWalkerBase>(CarlaActor->GetActor());
+    auto *TrafficLight = Cast<ATrafficLightBase>(CarlaActor->GetActor());
+    auto *TrafficSign = Cast<ATrafficSignBase>(CarlaActor->GetActor());
+    if ( Sensor != nullptr ) {
+      auto SensorActorDefinition = std::make_shared<carla::ros2::types::SensorActorDefinition>(
+        ActorNameDefinition,
+        GetPublisherSensorType(Sensor),
+        carla::streaming::detail::token_type(Sensor->GetToken()).get_stream_id());
+      ROS2->AddSensorUe(SensorActorDefinition);
+    }
+    else if (Vehicle != nullptr ) {
+      FVehiclePhysicsControl PhysicsControl;
+      CarlaActor->GetPhysicsControl(PhysicsControl);
+
+      auto VehicleActorDefinition = std::make_shared<carla::ros2::types::VehicleActorDefinition>(
+        carla::ros2::types::ActorDefinition(ActorNameDefinition,
+          CarlaActor->GetActorInfo()->BoundingBox,
+          carla::ros2::types::Polygon()),
+          PhysicsControl);
+      auto SkeletalMeshComponent = Vehicle->GetMesh();
+      if (SkeletalMeshComponent != nullptr) {
+        VehicleActorDefinition->vertex_polygon.SetGlobalVertices(UBoundingBoxCalculator::GetSkeletalMeshVertices(SkeletalMeshComponent->SkeletalMesh));
+      }
+
+      carla::ros2::types::VehicleControlCallback VehicleControlCallback = [Vehicle](carla::ros2::types::VehicleControl const &Source) -> void {
+        EVehicleInputPriority InputPriority = EVehicleInputPriority(Source.ControlPriority());
+        if ( InputPriority <= EVehicleInputPriority::User) {
+          // priority at least on User level, but allow multiple input prios to allow e.g. manual overrides
+          InputPriority = EVehicleInputPriority::User;
+        }
+        Vehicle->ApplyVehicleControl(Source.GetVehicleControl(), InputPriority);
+      };
+
+      carla::ros2::types::VehicleAckermannControlCallback VehicleAckermannControlCallback = [Vehicle](carla::ros2::types::VehicleAckermannControl const &Source) -> void {
+        Vehicle->ApplyVehicleAckermannControl(Source.GetVehicleAckermannControl());
+      };
+
+      ROS2->AddVehicleUe(VehicleActorDefinition, VehicleControlCallback, VehicleAckermannControlCallback);
+    }
+    else if ( Walker != nullptr ) {
+      auto WalkerActorDefinition = std::make_shared<carla::ros2::types::WalkerActorDefinition>(
+          carla::ros2::types::ActorDefinition(ActorNameDefinition,
+                            CarlaActor->GetActorInfo()->BoundingBox,
+                carla::ros2::types::Polygon()));
+      auto SkeletalMeshComponent = Walker->GetMesh();
+      if (SkeletalMeshComponent != nullptr) {
+        WalkerActorDefinition->vertex_polygon.SetGlobalVertices(UBoundingBoxCalculator::GetSkeletalMeshVertices(SkeletalMeshComponent->SkeletalMesh));
+      }
+
+      auto WalkerController = Cast<AWalkerController>(Walker->GetController());
+      carla::ros2::types::WalkerControlCallback walker_control_callback = [WalkerController](carla::ros2::types::WalkerControl const &Source) -> void {
+        WalkerController->ApplyWalkerControl(Source.GetWalkerControl());
+      };
+
+      ROS2->AddWalkerUe(WalkerActorDefinition, walker_control_callback);
+    }
+    else if ( TrafficLight != nullptr ) {
+      auto TrafficLightActorDefinition = std::make_shared<carla::ros2::types::TrafficLightActorDefinition>(ActorNameDefinition);
+      ROS2->AddTrafficLightUe(TrafficLightActorDefinition);
+    }
+    else if ( TrafficSign != nullptr ) {
+      auto TrafficSignActorDefinition = std::make_shared<carla::ros2::types::TrafficSignActorDefinition>(ActorNameDefinition);
+      ROS2->AddTrafficSignUe(TrafficSignActorDefinition);
+    }
+  }
+}
+#endif
+
 FCarlaActor* UActorDispatcher::RegisterActor(
     AActor &Actor, FActorDescription Description,
     FActorRegistry::IdType DesiredId)
@@ -169,53 +318,15 @@ FCarlaActor* UActorDispatcher::RegisterActor(
     // TODO: support external actor destruction
     Actor.OnDestroyed.AddDynamic(this, &UActorDispatcher::OnActorDestroyed);
 
-    // ROS2 mapping of actor->ros_name
     #if defined(WITH_ROS2)
-    auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled())
-    {
-      // actor ros_name
-      std::string RosName;
-      for (auto &&Attr : Description.Variations)
-      {
-        if (Attr.Key == "ros_name")
-        {
-          RosName = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
-        }
-      }
-      const std::string id = std::string(TCHAR_TO_UTF8(*Description.Id));
-      if (RosName == id) {
-        if(RosName.find("vehicle") != std::string::npos)
-        {
-          std::string VehicleName = "vehicle" + std::to_string(View->GetActorId());
-          ROS2->AddActorRosName(static_cast<void*>(&Actor), VehicleName);
-        }
-        else
-        {
-          size_t pos = RosName.find_last_of('.');
-          if (pos != std::string::npos) {
-            std::string lastToken = RosName.substr(pos + 1) + "__";
-            ROS2->AddActorRosName(static_cast<void*>(&Actor), lastToken);
-          }
-        }
-      } else {
-        ROS2->AddActorRosName(static_cast<void*>(&Actor), RosName);
-      }
-
-      // vehicle controller for hero
-      for (auto &&Attr : Description.Variations)
-      {
-        if (Attr.Key == "role_name" && (Attr.Value.Value == "hero" || Attr.Value.Value == "ego"))
-        {
-          ROS2->AddActorCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
-          {
-            AActor *UEActor = reinterpret_cast<AActor *>(Actor);
-            ActorROS2Handler Handler(UEActor, RosName);
-            boost::variant2::visit(Handler, Data);
-          });
-        }
-      }
-    }
+    carla::ros2::types::ActorNameDefinition ActorNameDefinition(
+      View->GetActorId(),
+      std::string(TCHAR_TO_UTF8(*View->GetActorInfo()->Description.Id)),
+      std::string(TCHAR_TO_UTF8(*Description.GetAttribute("ros_name").Value)),
+      std::string(TCHAR_TO_UTF8(*Description.GetAttribute("role_name").Value)),
+      std::string(TCHAR_TO_UTF8(*Description.GetAttribute("object_type").Value)),
+      std::string(TCHAR_TO_UTF8(*Description.GetAttribute("base_type").Value)));
+    RegisterActorROS2(View, ActorNameDefinition);
     #endif
   }
   return View;
@@ -236,17 +347,20 @@ void UActorDispatcher::OnActorDestroyed(AActor *Actor)
   FCarlaActor* CarlaActor = Registry.FindCarlaActor(Actor);
   if (CarlaActor)
   {
+    auto const ActorId = CarlaActor->GetActorId();
+
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+    {
+      ROS2->RemoveActor(ActorId);
+    }
+    #endif
+
     if (CarlaActor->IsActive())
     {
-      Registry.Deregister(CarlaActor->GetActorId());
+      Registry.Deregister(ActorId);
     }
   }
 
-  #if defined(WITH_ROS2)
-  auto ROS2 = carla::ros2::ROS2::GetInstance();
-  if (ROS2->IsEnabled())
-  {
-    ROS2->RemoveActorRosName(reinterpret_cast<void *>(Actor));
-  }
-  #endif
 }

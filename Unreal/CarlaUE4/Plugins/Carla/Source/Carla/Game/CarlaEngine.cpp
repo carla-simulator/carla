@@ -25,7 +25,10 @@
 #include <carla/multigpu/commands.h>
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
-#include <carla/ros2/ROS2.h>
+#if defined(WITH_ROS2)
+#  include <carla/ros2/ROS2.h>
+#  include "carla/ros2/types/SensorActorDefinition.h"
+#endif
 #include <carla/streaming/EndPoint.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
@@ -65,8 +68,10 @@ FCarlaEngine::~FCarlaEngine()
   {
     #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled())
-      ROS2->Shutdown();
+    if (ROS2->IsEnabled()) {
+      UE_LOG(LogCarla, Log, TEXT("DISABLE ROS"));
+      ROS2->Disable();
+    }
     #endif
     FWorldDelegates::OnWorldTickStart.Remove(OnPreTickHandle);
     FWorldDelegates::OnWorldPostActorTick.Remove(OnPostTickHandle);
@@ -77,7 +82,16 @@ FCarlaEngine::~FCarlaEngine()
 void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
-  if (!bIsRunning)
+  if ( bIsRunning) {
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled()) {
+      UE_LOG(LogCarla, Log, TEXT("ROS2:: NotifyEndGame"));
+      ROS2->NotifyEndGame();
+    }
+    #endif
+  }
+  else
   {
     const auto StreamingPort = Settings.StreamingPort;
     const auto SecondaryPort = Settings.SecondaryPort;
@@ -158,43 +172,6 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             Secondary->Write(std::move(buf));
             break;
           }
-          case carla::multigpu::MultiGPUCommand::ENABLE_ROS:
-          {
-            // get the sensor id
-            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
-            // query dispatcher
-            Server.GetStreamingServer().EnableForROS(sensor_id);
-            // return a 'true'
-            bool res = true;
-            carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
-            carla::log_info("responding ENABLE_ROS with a true");
-            Secondary->Write(std::move(buf));
-            break;
-          }
-          case carla::multigpu::MultiGPUCommand::DISABLE_ROS:
-          {
-            // get the sensor id
-            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
-            // query dispatcher
-            Server.GetStreamingServer().DisableForROS(sensor_id);
-            // return a 'true'
-            bool res = true;
-            carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
-            carla::log_info("responding DISABLE_ROS with a true");
-            Secondary->Write(std::move(buf));
-            break;
-          }
-          case carla::multigpu::MultiGPUCommand::IS_ENABLED_ROS:
-          {
-            // get the sensor id
-            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
-            // query dispatcher
-            bool res = Server.GetStreamingServer().IsEnabledForROS(sensor_id);
-            carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
-            carla::log_info("responding IS_ENABLED_ROS with: ", res);
-            Secondary->Write(std::move(buf));
-            break;
-          }
         }
       };
 
@@ -214,18 +191,26 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
         UE_LOG(LogCarla, Log, TEXT("New secondary connection detected"));
       });
     }
-  }
 
-  // create ROS2 manager
-  #if defined(WITH_ROS2)
-  if (Settings.ROS2)
-  {
-    auto ROS2 = carla::ros2::ROS2::GetInstance();
-    ROS2->Enable(true);
+    #if defined(WITH_ROS2)
+    if (Settings.ROS2) {
+      // create ROS2 manager
+      UE_LOG(LogCarla, Log, TEXT("ENABLE ROS"));
+      auto ROS2 = carla::ros2::ROS2::GetInstance();
+      ROS2->Enable(&Server, carla::streaming::detail::token_type(WorldObserver.GetToken()).get_stream_id());
+    }
+    #endif
   }
-  #endif
 
   bMapChanged = true;
+
+  #if defined(WITH_ROS2)
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (ROS2->IsEnabled()) {
+    UE_LOG(LogCarla, Log, TEXT("ROS2:: NotifyInitGame"));
+    ROS2->NotifyInitGame();
+  }
+  #endif
 }
 
 void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
@@ -261,13 +246,30 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
 
+  #if defined(WITH_ROS2)
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (ROS2->IsEnabled()) {
+    UE_LOG(LogCarla, Log, TEXT("ROS2:: NotifyBeginEpisode"));
+    ROS2->NotifyBeginEpisode();
+  }
+  #endif
+
   Server.NotifyBeginEpisode(Episode);
 
   Episode.bIsPrimaryServer = bIsPrimaryServer;
+
 }
 
 void FCarlaEngine::NotifyEndEpisode()
 {
+  #if defined(WITH_ROS2)
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (ROS2->IsEnabled()) {
+    UE_LOG(LogCarla, Log, TEXT("ROS2:: NotifyEndEpisode"));
+    ROS2->NotifyEndEpisode();
+  }
+  #endif
+
   Server.NotifyEndEpisode();
   CurrentEpisode = nullptr;
 }
@@ -277,7 +279,13 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   if (TickType == ELevelTick::LEVELTICK_All)
   {
-
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled()) 
+    {
+      ROS2->PreTickAction();
+    }
+    #endif
     if (bIsPrimaryServer)
     {
       if (CurrentEpisode && !bSynchronousMode && SecondaryServer->HasClientsConnected())
@@ -334,6 +342,13 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
   // tick the recorder/replayer system
   if (GetCurrentEpisode())
   {
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled()) 
+    {
+      ROS2->PostTickAction();
+    }
+    #endif
     if (bIsPrimaryServer)
     {
       if (SecondaryServer->HasClientsConnected()) {
@@ -373,6 +388,8 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
     // send the worldsnapshot
     WorldObserver.BroadcastTick(*CurrentEpisode, DeltaSeconds, bMapChanged, LightUpdatePending);
     CurrentEpisode->GetSensorManager().PostPhysTick(World, TickType, DeltaSeconds);
+
+
     ResetSimulationState();
   }
 }

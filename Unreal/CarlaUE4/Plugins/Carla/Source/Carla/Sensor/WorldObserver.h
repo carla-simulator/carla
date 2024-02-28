@@ -44,6 +44,8 @@ public:
     return {};
   }
 
+  /// Dummy. Required for compatibility with other sensors only.
+  AActor * 	GetAttachParentActor() const { return nullptr; }
 private:
 
   FDataMultiStream Stream;

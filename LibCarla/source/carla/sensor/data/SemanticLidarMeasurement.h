@@ -26,8 +26,8 @@ namespace data {
 
     friend Serializer;
 
-    explicit SemanticLidarMeasurement(RawData &&data)
-      : Super(std::move(data), [](const RawData &d) {
+    explicit SemanticLidarMeasurement(RawData DESERIALIZE_DECL_DATA(data))
+      : Super(DESERIALIZE_MOVE_DATA(data), [](const RawData &d) {
       return Serializer::GetHeaderOffset(d);
     }) {}
 

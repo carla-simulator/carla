@@ -8,6 +8,7 @@
 
 #include "carla/Logging.h"
 #include "carla/client/ActorSnapshot.h"
+#include "carla/client/ActorList.h"
 #include "carla/client/Waypoint.h"
 #include "carla/client/World.h"
 #include "carla/client/detail/Simulator.h"
@@ -282,14 +283,12 @@ namespace nav {
         carla::client::World world = _simulator.lock()->GetWorld();
 
         _traffic_lights.clear();
-        std::vector<carla::rpc::Actor> actors = _simulator.lock()->GetAllTheActorsInTheEpisode();
-        for (auto actor : actors) {
-            carla::client::ActorSnapshot snapshot = _simulator.lock()->GetActorSnapshot(actor.id);
+        for (auto actor : *world.GetActors()) {
             // check traffic lights only
-            if (actor.description.id == "traffic.traffic_light") {
+            if (actor->GetTypeId() == "traffic.traffic_light") {
                 // get the TL actor
                 SharedPtr<carla::client::TrafficLight> tl =
-                    boost::static_pointer_cast<carla::client::TrafficLight>(world.GetActor(actor.id));
+                    boost::static_pointer_cast<carla::client::TrafficLight>(actor);
                 // get the waypoints where the TL affects
                 std::vector<SharedPtr<carla::client::Waypoint>> list = tl->GetStopWaypoints();
                 for (auto &way : list) {
