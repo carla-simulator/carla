@@ -390,55 +390,6 @@ endif ()
 
 
 
-if (BUILD_LIBCARLA_ROS2_NATIVE)
-    project (carla-ros2-native)
-
-    file (
-        GLOB
-        LIBCARLA_ROS2_SOURCES
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/publishers/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/subscribers/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/listeners/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/types/*.cpp
-    )
-
-    file (
-        GLOB
-        LIBCARLA_ROS2_HEADERS
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/publishers/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/subscribers/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/listeners/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/types/*.h
-    )
-
-    add_library (
-        carla-ros2-native STATIC
-        ${LIBCARLA_ROS2_HEADERS}
-        ${LIBCARLA_ROS2_SOURCES}
-    )
-
-    target_include_directories (
-        carla-ros2-native PUBLIC
-        ${LIBCARLA_SOURCE_PATH}
-        ${CARLA_INSTALL_PATH}/fast-dds-install/include
-    )
-
-    target_compile_definitions (
-        carla-ros2-native PUBLIC
-        ${CARLA_COMMON_DEFINITIONS}
-        WITH_ROS2
-        #_GLIBCXX_USE_CXX11_ABI=0
-    )
-
-    install (TARGETS carla-ros2-native DESTINATION lib)
-
-    #foreach (HEADER ${LIBCARLA_SERVER_HEADERS})
-    #    cmake_path (GET HEADER PARENT_PATH HEADER_PARENT)
-    #    cmake_path (RELATIVE_PATH HEADER_PARENT BASE_DIRECTORY ${LIBCARLA_SOURCE_PATH}/carla OUTPUT_VARIABLE HEADER_RELATIVE)
-    #    install (FILES ${HEADER} DESTINATION include/carla/${HEADER_RELATIVE})
-    #endforeach ()
-endif()
-
 
 
 if (BUILD_OSM_WORLD_RENDERER)

@@ -1,0 +1,50 @@
+cmake_minimum_required (VERSION 3.20.0)
+
+project (carla-ros2-native)
+
+set (CARLA_WORKSPACE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+set (LIBCARLA_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../source)
+
+file (
+    GLOB
+    LIBCARLA_ROS2_SOURCES
+    ${LIBCARLA_SOURCE_PATH}/carla/ros2/publishers/*.cpp
+    ${LIBCARLA_SOURCE_PATH}/carla/ros2/subscribers/*.cpp
+    ${LIBCARLA_SOURCE_PATH}/carla/ros2/listeners/*.cpp
+    ${LIBCARLA_SOURCE_PATH}/carla/ros2/types/*.cpp
+)
+
+file (
+    GLOB
+    LIBCARLA_ROS2_HEADERS
+    ${LIBCARLA_SOURCE_PATH}/carla/ros2/publishers/*.h
+    ${LIBCARLA_SOURCE_PATH}/carla/ros2/subscribers/*.h
+    ${LIBCARLA_SOURCE_PATH}/carla/ros2/listeners/*.h
+    ${LIBCARLA_SOURCE_PATH}/carla/ros2/types/*.h
+)
+
+add_library (
+    carla-ros2-native SHARED
+    ${LIBCARLA_ROS2_HEADERS}
+    ${LIBCARLA_ROS2_SOURCES}
+)
+
+target_include_directories (
+    carla-ros2-native SYSTEM PRIVATE
+    ${LIBCARLA_SOURCE_PATH}
+    ${FASTDDS_INCLUDE_PATH}
+    ${BOOST_INCLUDE_PATH}
+)
+
+target_compile_definitions (
+    carla-ros2-native PUBLIC
+    BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
+)
+
+install (TARGETS carla-ros2-native DESTINATION lib)
+
+#foreach (HEADER ${LIBCARLA_SERVER_HEADERS})
+#    cmake_path (GET HEADER PARENT_PATH HEADER_PARENT)
+#    cmake_path (RELATIVE_PATH HEADER_PARENT BASE_DIRECTORY ${LIBCARLA_SOURCE_PATH}/carla OUTPUT_VARIABLE HEADER_RELATIVE)
+#    install (FILES ${HEADER} DESTINATION include/carla/${HEADER_RELATIVE})
+#endforeach ()
