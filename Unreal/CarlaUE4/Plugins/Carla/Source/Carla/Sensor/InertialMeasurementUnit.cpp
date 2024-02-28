@@ -185,9 +185,9 @@ float AInertialMeasurementUnit::ComputeCompass()
 
 void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  carla::geom::Vector3D Accelerometer = ComputeAccelerometer(DeltaTime);
-  carla::geom::Vector3D Gyroscope = ComputeGyroscope();
-  float Compass = ComputeCompass();
+  AccelerometerValue = ComputeAccelerometer(DeltaTime);
+  GyroscopeValue = ComputeGyroscope();
+  CompassValue = ComputeCompass();
 
   auto DataStream = GetDataStream(*this);
 
@@ -202,18 +202,18 @@ void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, 
     if (ParentActor)
     {
       FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromIMU(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, Accelerometer, Gyroscope, Compass, this);
+      ROS2->ProcessDataFromIMU(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, AccelerometerValue, GyroscopeValue, CompassValue, this);
     }
     else
     {
-      ROS2->ProcessDataFromIMU(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), Accelerometer, Gyroscope, Compass, this);
+      ROS2->ProcessDataFromIMU(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), AccelerometerValue, GyroscopeValue, CompassValue, this);
     }
   }
   #endif
 
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(AInertialMeasurementUnit::PostPhysTick);
-    DataStream.SerializeAndSend(*this, Accelerometer, Gyroscope, Compass);
+    DataStream.SerializeAndSend(*this, AccelerometerValue, GyroscopeValue, CompassValue);
   }
 }
 
@@ -245,6 +245,21 @@ const FVector &AInertialMeasurementUnit::GetGyroscopeStandardDeviation() const
 const FVector &AInertialMeasurementUnit::GetGyroscopeBias() const
 {
   return BiasGyro;
+}
+
+const carla::geom::Vector3D& AInertialMeasurementUnit::GetAccelerometerValue() const
+{
+  return AccelerometerValue;
+}
+
+const carla::geom::Vector3D& AInertialMeasurementUnit::GetGyroscopeValue() const
+{
+  return GyroscopeValue;
+}
+
+float AInertialMeasurementUnit::GetCompassValue() const
+{
+  return CompassValue;
 }
 
 void AInertialMeasurementUnit::BeginPlay()
