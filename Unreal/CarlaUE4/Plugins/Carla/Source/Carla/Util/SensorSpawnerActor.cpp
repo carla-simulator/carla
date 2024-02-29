@@ -6,6 +6,7 @@
 #include "Game/CarlaGameModeBase.h"
 #include "Sensor/SceneCaptureCamera.h"
 #include "Sensor/Sensor.h"
+#include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogSensorSpawnerActor, Verbose, All);
 
@@ -17,6 +18,8 @@ ASensorSpawnerActor::ASensorSpawnerActor()
   
   SceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComp"));
   RootComponent = SceneComp;
+
+  SensorClassToCapture = ASceneCaptureCamera::StaticClass();
 }
 
 void ASensorSpawnerActor::BeginPlay()
@@ -32,8 +35,6 @@ void ASensorSpawnerActor::BeginPlay()
   SetActorTickInterval(TickInterval);
   SaveImagePath = FPaths::ProjectSavedDir() + "/SensorSpawnerCaptures/" + FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp());
 }
-
-
 
 void ASensorSpawnerActor::OnEpisodeInitialised(UCarlaEpisode* InitialisedEpisode)
 {
@@ -163,23 +164,23 @@ void ASensorSpawnerActor::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);
 
-  for(const ASceneCaptureCamera* CaptureCamera : SceneCaptureCameras)
+  for(const ASceneCaptureSensor* CaptureSensor : SceneCaptureSensor)
   {
-    if(CaptureCamera)
+    if(CaptureSensor)
     {
-      CaptureCamera->SaveCaptureToDisk(SaveImagePath + "/" + CaptureCamera->GetName() + "/" + FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp()) + ".png" );
+      CaptureSensor->SaveCaptureToDisk(SaveImagePath + "/" + CaptureSensor->GetName() + "/" + FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp()) + ".png" );
     }
   }
 }
 
 void ASensorSpawnerActor::RemoveSceneCaptureCameras()
 {
-  if(SceneCaptureCameras.IsValidIndex(0))
+  if(SceneCaptureSensor.IsValidIndex(0))
   {
-    SceneCaptureCameras.RemoveAt(0);
+    SceneCaptureSensor.RemoveAt(0);
   }
 
-  if(SceneCaptureCameras.IsEmpty())
+  if(SceneCaptureSensor.IsEmpty())
   {
     SetActorTickEnabled(false);
   }
@@ -187,11 +188,14 @@ void ASensorSpawnerActor::RemoveSceneCaptureCameras()
 
 void ASensorSpawnerActor::StartSavingCapturesToDisk(const AActor* Actor)
 {
-  if(const ASceneCaptureCamera* CaptureCamera = Cast<ASceneCaptureCamera>(Actor))
+  if(const ASceneCaptureSensor* CaptureSensor = Cast<ASceneCaptureSensor>(Actor))
   {
-    SceneCaptureCameras.Add(CaptureCamera);
-    SetActorTickEnabled(true);
-    FTimerHandle CaptureTimerHandle;
-    GetWorldTimerManager().SetTimer(CaptureTimerHandle, this, &ASensorSpawnerActor::RemoveSceneCaptureCameras, CaptureTime);
+    if(SensorClassToCapture == CaptureSensor->GetClass() || SensorClassToCapture == nullptr)
+    {
+      SceneCaptureSensor.Add(CaptureSensor);
+      SetActorTickEnabled(true);
+      FTimerHandle CaptureTimerHandle;
+      GetWorldTimerManager().SetTimer(CaptureTimerHandle, this, &ASensorSpawnerActor::RemoveSceneCaptureCameras, CaptureTime);
+    }
   }
 }

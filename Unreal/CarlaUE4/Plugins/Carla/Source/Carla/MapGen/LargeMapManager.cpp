@@ -429,7 +429,7 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
   }
   ObjectLibrary->ConditionalBeginDestroy();
 #if WITH_EDITOR
-  GetWorld()->ForceGarbageCollection(true);
+  GEngine->ForceGarbageCollection(true);
 #endif
   ActorsToConsider.Reset();
   if (SpectatorAsEgo && Spectator)
