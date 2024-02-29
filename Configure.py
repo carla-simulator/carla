@@ -1311,7 +1311,6 @@ def BuildDependencies(task_graph : TaskGraph):
       FOONATHAN_MEMORY_VENDOR_SOURCE_PATH,
       FOONATHAN_MEMORY_VENDOR_BUILD_PATH,
       '-DBUILD_SHARED_LIBS=ON',
-      #'-DCMAKE_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"',
       install_path=FOONATHAN_MEMORY_VENDOR_INSTALL_PATH))
     task_graph.Add(Task.CreateCMakeConfigureGxxABI(
       'fast-cdr-configure',
@@ -1409,10 +1408,7 @@ def BuildDependencies(task_graph : TaskGraph):
       [],
       FAST_DDS_SOURCE_PATH,
       FAST_DDS_BUILD_PATH,
-      #'-DCMAKE_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"',
       '-DCMAKE_CXX_FLAGS=-latomic',
-      #'-DCMAKE_CXX_FLAGS=-I{BOOST_INCLUDE_PATH} -latomic',
-      #f'-DAsio_INCLUDE_DIR={BOOST_INCLUDE_PATH}/boost',
       f'-DTHIRDPARTY_Asio=FORCE',
       f'-DTHIRDPARTY_TinyXML2=FORCE',
       f'-DCMAKE_LIBRARY_PATH={FAST_CDR_INSTALL_PATH}',

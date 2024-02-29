@@ -269,22 +269,11 @@ public class Carla :
 
     if (EnableRos2)
     {
-      AdditionalLibraries.Add(Path.Combine(LibCarlaLibPath, "libcarla-ros2-native.so"));
-      RuntimeDependencies.Add(Path.Combine(LibCarlaLibPath, "libcarla-ros2-native.so"));
+      AddDynamicLibrary(Path.Combine(LibCarlaLibPath, "libcarla-ros2-native.so"));
       string LibFastDDSPath = Path.Combine(CarlaInstallPath, "fast-dds-install");
-      AdditionalLibraries.Add(Path.Combine(LibFastDDSPath, "lib", "libfoonathan_memory-0.7.3.so"));
-      RuntimeDependencies.Add(Path.Combine(LibFastDDSPath, "lib", "libfoonathan_memory-0.7.3.so"));
-      AdditionalLibraries.Add(Path.Combine(LibFastDDSPath, "lib", "libfastcdr.so"));
-      RuntimeDependencies.Add(Path.Combine(LibFastDDSPath, "lib", "libfastcdr.so"));
-      AdditionalLibraries.Add(Path.Combine(LibFastDDSPath, "lib", "libfastrtps.so"));
-      RuntimeDependencies.Add(Path.Combine(LibFastDDSPath, "lib", "libfastrtps.so"));
-
-      //AdditionalLibraries.Add("/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.so");
-      //PublicIncludePaths.Add("/usr/include/c++/7");
-      //PublicAdditionalLibraries.Add("stdc++");
-      //AddDynamicLibrary(
-
-      //AddDynamicLibrary("/home/xsole/programing/UnrealEngine5_carla/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/aarch64-unknown-linux-gnueabi/lib/libstdc++.so.6");
+      AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfoonathan_memory-0.7.3.so"));
+      AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastcdr.so"));
+      AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastrtps.so"));
     }
 
     PublicIncludePaths.AddRange(new string[]

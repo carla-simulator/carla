@@ -44,9 +44,3 @@ target_compile_definitions (
 target_link_libraries(carla-ros2-native /home/xsole/programing/carlaUE5/Install/fast-dds-install/lib/libfastrtps.so /home/xsole/programing/carlaUE5/Install/fast-dds-install/lib/libfastcdr.so)
 
 install (TARGETS carla-ros2-native DESTINATION lib)
-
-#foreach (HEADER ${LIBCARLA_SERVER_HEADERS})
-#    cmake_path (GET HEADER PARENT_PATH HEADER_PARENT)
-#    cmake_path (RELATIVE_PATH HEADER_PARENT BASE_DIRECTORY ${LIBCARLA_SOURCE_PATH}/carla OUTPUT_VARIABLE HEADER_RELATIVE)
-#    install (FILES ${HEADER} DESTINATION include/carla/${HEADER_RELATIVE})
-#endforeach ()

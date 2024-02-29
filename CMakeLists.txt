@@ -390,8 +390,6 @@ endif ()
 
 
 
-
-
 if (BUILD_OSM_WORLD_RENDERER)
 
     project (OsmMapRenderer)
