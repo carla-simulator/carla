@@ -65,7 +65,7 @@ class Actor():
     https://carla.readthedocs.io/en/latest/bp_library/
     """
 
-    # region Instnce Variables
+    # region Instance Variables
     @property
     def attributes() -> dict:
         """A dictionary containing the attributes of the blueprint this actor was based on.
@@ -195,7 +195,7 @@ class Actor():
 
     # region Getters
     def get_acceleration(self) -> Vector3D:
-        """Returns the actor's 3D acceleration vector the client recieved during last tick. 
+        """Returns the actor's 3D acceleration vector the client received during last tick. 
 
         The method does not call the simulator.
 
@@ -205,7 +205,7 @@ class Actor():
         ...
 
     def get_angular_velocity(self) -> Vector3D:
-        """Returns the actor's angular velocity vector the client recieved during last tick.
+        """Returns the actor's angular velocity vector the client received during last tick.
 
         The method does not call the simulator.
 
@@ -215,7 +215,7 @@ class Actor():
         ...
 
     def get_location(self) -> Location:
-        """Returns the actor's location the client recieved during last tick. 
+        """Returns the actor's location the client received during last tick. 
 
         The method does not call the simulator.
 
@@ -227,7 +227,7 @@ class Actor():
         ...
 
     def get_transform(self) -> Transform:
-        """Returns the actor's transform (location and rotation) the client recieved during last tick.
+        """Returns the actor's transform (location and rotation) the client received during last tick.
 
         The method does not call the simulator.
 
@@ -238,7 +238,7 @@ class Actor():
         """
 
     def get_velocity(self) -> Vector3D:
-        """Returns the actor's velocity vector the client recieved during last tick.
+        """Returns the actor's velocity vector the client received during last tick.
 
         The method does not call the simulator.
 
@@ -588,7 +588,7 @@ class ActorState(Enum):
 
 
 class AttachmentType(Enum):
-    """Class that defines attachment options between an actor and its parent. When spawning actors, these can be attached to another actor so their position changes accordingly. This is specially useful for sensors. The snipet in `carla.World.spawn_actor` shows some sensors being attached to a car when spawned.
+    """Class that defines attachment options between an actor and its parent. When spawning actors, these can be attached to another actor so their position changes accordingly. This is specially useful for sensors. The snippet in `carla.World.spawn_actor` shows some sensors being attached to a car when spawned.
 
     + Note that the attachment type is declared as an enum within the class."""
 
@@ -669,7 +669,7 @@ class BlueprintLibrary():
 
 
 class BoundingBox():
-    """Bounding boxes contain the geometry of an actor or an element in the scene. They can be used by `carla.DebugHelper` or a `carla.Client` to draw their shapes for debugging. Check out the snipet in `carla.DebugHelper.draw_box` where a snapshot of the world is used to draw bounding boxes for traffic lights.
+    """Bounding boxes contain the geometry of an actor or an element in the scene. They can be used by `carla.DebugHelper` or a `carla.Client` to draw their shapes for debugging. Check out the snippet in `carla.DebugHelper.draw_box` where a snapshot of the world is used to draw bounding boxes for traffic lights.
     """
 
     # region Instance Variables
@@ -695,7 +695,7 @@ class BoundingBox():
 
     # region Methods
     def __init__(self, location: Location, extent: Vector3D) -> BoundingBox:
-        """Bounding boxes contain the geometry of an actor or an element in the scene. They can be used by `carla.DebugHelper` or a `carla.Client` to draw their shapes for debugging. Check out the snipet in `carla.DebugHelper.draw_box` where a snapshot of the world is used to draw bounding boxes for traffic lights.
+        """Bounding boxes contain the geometry of an actor or an element in the scene. They can be used by `carla.DebugHelper` or a `carla.Client` to draw their shapes for debugging. Check out the snippet in `carla.DebugHelper.draw_box` where a snapshot of the world is used to draw bounding boxes for traffic lights.
 
         Args:
             `location (Location)`: Center of the box, relative to its parent.\n
@@ -1052,7 +1052,7 @@ class Color():
 
 
 class ColorConverter(Enum):
-    """Class that defines conversion patterns that can be applied to a `carla.Image` in order to show information provided by `carla.Sensor`. Depth conversions cause a loss of accuracy, as sensors detect depth as float that is then converted to a grayscale value between 0 and 255. Take a look at the snipet in `carla.Sensor.listen` to see an example of how to create and save image data for `sensor.camera.semantic_segmentation`.
+    """Class that defines conversion patterns that can be applied to a `carla.Image` in order to show information provided by `carla.Sensor`. Depth conversions cause a loss of accuracy, as sensors detect depth as float that is then converted to a grayscale value between 0 and 255. Take a look at the snippet in `carla.Sensor.listen` to see an example of how to create and save image data for `sensor.camera.semantic_segmentation`.
     """
 
     # region Instance Variables
@@ -1146,7 +1146,7 @@ class DVSEventArray():
 
 
 class DebugHelper():
-    """Helper class part of `carla.World` that defines methods for creating debug shapes. By default, shapes last one second. They can be permanent, but take into account the resources needed to do so. Take a look at the snipets available for this class to learn how to debug easily in CARLA."""
+    """Helper class part of `carla.World` that defines methods for creating debug shapes. By default, shapes last one second. They can be permanent, but take into account the resources needed to do so. Take a look at the snippets available for this class to learn how to debug easily in CARLA."""
 
     # region Methods
     def draw_arrow(self, begin: Location, end: Location, thickness=0.1, arrow_size=0.1, color: Color = (255, 0, 0), life_time=-1.0):
@@ -1163,7 +1163,7 @@ class DebugHelper():
         ...
 
     def draw_box(self, box: BoundingBox, rotation: Rotation, thickness=0.1, color: Color = (255, 0, 0), life_time=-1.0):
-        """Draws a box, ussually to act for object colliders.
+        """Draws a box, usually to act for object colliders.
 
         Args:
             box (BoundingBox): Object containing a location and the length of a box for every axis.
@@ -1524,7 +1524,7 @@ class Image(SensorData):
     def __getitem__(self, pos=int) -> Color: ...
 
     def __iter__(self) -> Iterator[Color]:
-        """terate over the `carla.Color` that form the image."""
+        """Iterate over the `carla.Color` that form the image."""
         ...
 
     def __len__(self) -> int: ...
@@ -1740,13 +1740,13 @@ class LandmarkType(Enum):
     CityEnd = "311",
     Highway = "330",
     DeadEnd = "357",
-    RecomendedSpeed = "380",
-    RecomendedSpeedEnd = "381",
+    RecomendedSpeed = "380", # NOTE: Wrong Spelling, but is named like this internally!
+    RecomendedSpeedEnd = "381", # NOTE: Wrong Spelling, but is named like this internally!
     # endregion
 
 
 class LaneChange(Enum):
-    """Class that defines the permission to turn either left, right, both or none (meaning only going straight is allowed). This information is stored for every `carla.Waypoint` according to the OpenDRIVE file. The snipet in `carla.Map.get_waypoint` shows how a waypoint can be used to learn which turns are permitted."""
+    """Class that defines the permission to turn either left, right, both or none (meaning only going straight is allowed). This information is stored for every `carla.Waypoint` according to the OpenDRIVE file. The snippet in `carla.Map.get_waypoint` shows how a waypoint can be used to learn which turns are permitted."""
 
     # region Instance Variables
     NONE = 0,
@@ -1817,7 +1817,7 @@ class LaneMarkingColor(Enum):
 
 
 class LaneMarkingType(Enum):
-    """Class that defines the lane marking types accepted by OpenDRIVE 1.4. The snipet in `carla.Map.get_waypoint` shows how a waypoint can be used to retrieve the information about adjacent lane markings.
+    """Class that defines the lane marking types accepted by OpenDRIVE 1.4. The snippet in `carla.Map.get_waypoint` shows how a waypoint can be used to retrieve the information about adjacent lane markings.
 
     + Note on double types: Lane markings are defined under the OpenDRIVE standard that determines whereas a line will be considered "BrokenSolid" or "SolidBroken". For each road there is a center lane marking, defined from left to right regarding the lane's directions. The rest of the lane markings are defined in order from the center lane to the closest outside of the road.
     """
@@ -1838,7 +1838,7 @@ class LaneMarkingType(Enum):
 
 
 class LaneType(Enum):
-    """Class that defines the possible lane types accepted by OpenDRIVE 1.4. This standards define the road information. The snipet in `carla.Map.get_waypoint` makes use of a waypoint to get the current and adjacent lane types."""
+    """Class that defines the possible lane types accepted by OpenDRIVE 1.4. This standards define the road information. The snippet in `carla.Map.get_waypoint` makes use of a waypoint to get the current and adjacent lane types."""
 
     # region Instance Variables
     Any = -2,
@@ -2464,7 +2464,7 @@ class MaterialParameter(Enum):
     Normal = 0,
     """The Normal map of the object. Present in all objects."""
     AO_Roughness_Metallic_Emissive = 1,
-    """A texture where each color channel represent a property of the material (R: Ambien oclusion, G: Roughness, B: Metallic, A: Emissive/Height map in some objects)."""
+    """A texture where each color channel represent a property of the material (R: Ambient occlusion, G: Roughness, B: Metallic, A: Emissive/Height map in some objects)."""
     Diffuse = 2,
     """The Diffuse texture of the object. Present in all objects."""
     Emissive = 3,
@@ -2534,7 +2534,7 @@ class OpendriveGenerationParameters():
 
     @property
     def enable_pedestrian_navigation() -> bool:
-        """If `True`, Pedestrian navigation will be enabled using Recast tool. For very large maps it is recomended to disable this option. Default is `True`."""
+        """If `True`, Pedestrian navigation will be enabled using Recast tool. For very large maps it is recommended to disable this option. Default is `True`."""
         ...
     # endregion
 
@@ -3066,7 +3066,7 @@ class TextureFloatColor():
 
 
 class Timestamp():
-    """Class that contains time information for simulated data. This information is automatically retrieved as part of the `carla.WorldSnapshot` the client gets on every frame, but might also be used in many other situations such as a `carla.Sensor` retrieveing data."""
+    """Class that contains time information for simulated data. This information is automatically retrieved as part of the `carla.WorldSnapshot` the client gets on every frame, but might also be used in many other situations such as a `carla.Sensor` retrieving data."""
 
     # region Instance Variables
     @property
@@ -3212,7 +3212,7 @@ class TrafficLight(TrafficSign):
 
 
 class TrafficLightState(Enum):
-    """All possible states for traffic lights. These can either change at a specific time step or be changed manually. The snipet in `carla.TrafficLight.set_state` changes the state of a traffic light on the fly."""
+    """All possible states for traffic lights. These can either change at a specific time step or be changed manually. The snippet in `carla.TrafficLight.set_state` changes the state of a traffic light on the fly."""
     Red = 0,
     Yellow = 1,
     Green = 2,
@@ -3667,7 +3667,7 @@ class Vector3D():
 
 
 class Vehicle(Actor):
-    """One of the most important groups of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these actors is provided in `carla.BlueprintLibrary` to facilitate differente requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the `traffic manager`."""
+    """One of the most important groups of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these actors is provided in `carla.BlueprintLibrary` to facilitate different requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the `traffic manager`."""
 
     # region Instance Variables
     @property
