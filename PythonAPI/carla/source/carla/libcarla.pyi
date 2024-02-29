@@ -1563,14 +1563,13 @@ class LabelledPoint():
     """Class that represent a position in space with a semantic label."""
 
     # region Instance Variables
-    # TODO 类型未定义
     @property
     def location() -> Location:
         """Position in 3D space."""
         ...
 
     @property
-    def label():
+    def label() -> CityObjectLabel:
         """Semantic tag of the point."""
         ...
     # endregion
