@@ -11,10 +11,20 @@ It must not be modified and is for reference only!
 """
 
 from __future__ import print_function
+import os
 import sys
+# Get the absolute path of the current file
+file_path = os.path.abspath(__file__)
+# Go up three levels
+for i in range(4):
+    file_path = os.path.dirname(file_path)  # Goes up one level
+# Add this path to sys.path
+sys.path.append(file_path)
+
 import time
 import carla
 import py_trees
+import traceback
 
 from srunner.autoagents.agent_wrapper import AgentWrapper
 from srunner.scenariomanager.carla_data_provider import CarlaDataProvider
@@ -24,6 +34,7 @@ from srunner.scenariomanager.watchdog import Watchdog
 
 from srunner.scenariomanager.actorcontrols.visualizer import Visualizer
 
+from PythonAPI.SensorDataCollection.utils import *
 
 class ScenarioManager(object):
 
@@ -72,6 +83,10 @@ class ScenarioManager(object):
 
         self._visualizer = None
 
+        # Sensor data collection: pre initialization of parameters for car detections
+        self.params_car_detection = params_car_detection
+        # Sensor data collection: pre initialization of dataframe
+        self.sensor_data = initialize_dataframe()
 
     def _reset(self):
         """
@@ -189,6 +204,13 @@ class ScenarioManager(object):
         self._watchdog.start()
         self._running = True
 
+        # Sensor data collection: pre initialization
+        matrix, speed, acceleration, steering_angle, lateral_acceleration, current_yaw, dist_to_lane_center, speed_vehicle_ahead, curvature_degrees_per_meter, leading_vehicle = None, None, None, None, None, None, None, None, None, None
+        previous_speed, previous_yaw = 0, 0  # Store the previous speed value in m/s and yaw angle value
+        previous_time = time.time_ns()
+        ego_vehicle = self.ego_vehicles[0] # NOTE: only one ego vehicle is supported
+        world_map = CarlaDataProvider.get_map()
+
         #k = 0
         while self._running:
             timestamp = None
@@ -201,8 +223,63 @@ class ScenarioManager(object):
 
                 snapshot = world.get_snapshot()
 
-                #TODO: adding our (or at least my code) here
+                ################ Sensor data collection: ################
+                # update ego location and waypoint
+                ego_location = ego_vehicle.get_location()
+                ego_waypoint = world_map.get_waypoint(ego_location)
                 
+                # create car detection matrix and update parameters
+                try:
+                    matrix, self.params_car_detection = get_car_detection_matrix(**self.params_car_detection, ego_vehicle=ego_vehicle, ego_waypoint=ego_waypoint, ego_location=ego_location, world=world)
+                except Exception as e:
+                    print(f'ERROR: In get_car_detection_matrix: \n{e}')
+                    print(f'Traceback:')
+                    traceback.print_exc()
+
+                current_time = time.time_ns()         
+                # get other sensor data
+                try:
+                    speed = get_speed(ego_vehicle)
+                    acceleration = get_acceleration(speed, previous_speed, current_time, previous_time)
+                    steering_angle = get_steering_angle(ego_vehicle) #TODO angle in degree or radians?
+                    lateral_acceleration, current_yaw = get_lateral_acceleration(ego_vehicle, speed, previous_yaw, current_time, previous_time)
+                    dist_to_lane_center = get_dist_to_lane_center(ego_vehicle, world) #in m #TODO needs to be tested with manual car
+                    speed_vehicle_ahead = get_speed_of_vehicle_ahead(ego_waypoint, world) 
+                    curvature_degrees_per_meter = get_curvature_at_location(ego_location, world) 
+                    # save temporary data for next tick
+                    previous_speed = speed  
+                    previous_time = current_time
+                    previous_yaw = current_yaw  #
+                except Exception as e:
+                    print(f'ERROR: In getting sensor data: \n{e}')
+                    print("Traceback:")
+                    print(traceback.print_exc())
+
+                # # print sensor data
+                # print("matrix:")
+                # if matrix:
+                #     for key, value in matrix.items():
+                #         print(value)
+                # else:
+                #     print("-- None --")
+                # print("speed", speed)
+                # print("acceleration", acceleration)
+                # print("steering_angle", steering_angle)
+                # print("lateral_acceleration", lateral_acceleration)
+                # print("dist_to_lane_center", dist_to_lane_center)
+                # print("speed_vehicle_ahead", speed_vehicle_ahead)
+                # print("curvature_degrees_per_meter", curvature_degrees_per_meter)
+                
+                # save sensor data in dataframe
+                row_data = get_row(matrix)
+                row_data["speed"] = speed
+                row_data["acceleration"] = acceleration
+                row_data["steering_angle"] = steering_angle
+                row_data["lateral_acceleration"] = lateral_acceleration
+                row_data["dist_to_lane_center"] = dist_to_lane_center
+                row_data["speed_vehicle_ahead"] = speed_vehicle_ahead
+                row_data["curvature_degrees_per_meter"] = curvature_degrees_per_meter
+                self.sensor_data = self.sensor_data._append(row_data, ignore_index=True)
 
                 if snapshot:
                     timestamp = snapshot.timestamp

@@ -193,13 +193,14 @@ def main():
         world.apply_settings(settings)
 
         blueprints = get_actor_blueprints(world, args.filterv, args.generationv)
+
         blueprintsWalkers = get_actor_blueprints(world, args.filterw, args.generationw)
 
         if args.safe:
             blueprints = [x for x in blueprints if x.get_attribute('base_type') == 'car']
 
         blueprints = sorted(blueprints, key=lambda bp: bp.id)
-
+        blueprints = [x for x in blueprints if not "gazelle" in x.tags and "diamondback" not in x.tags and not "crossbike" in x.tags]
         spawn_points = world.get_map().get_spawn_points()
         number_of_spawn_points = len(spawn_points)
 

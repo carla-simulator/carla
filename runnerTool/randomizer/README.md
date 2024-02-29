@@ -19,7 +19,7 @@ and weather conditions.
 
 ## Usage
 1. **Setting Up the Scenario:**
-   - Create a new folder containing your original scenario (e.g. "MyScenario") in runnerTool/scenarios/ if not already existing 
+   - Create a new folder containing your original scenarios (e.g. "MyScenario") in runnerTool/scenarios/ if not already existing 
 
 2. **Running the Randomizer:**
    - In the config.py script:
