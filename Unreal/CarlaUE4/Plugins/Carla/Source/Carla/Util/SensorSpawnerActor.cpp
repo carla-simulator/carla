@@ -2,6 +2,8 @@
 
 
 #include "Util/SensorSpawnerActor.h"
+
+#include "JsonFileManagerLibrary.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Game/CarlaGameModeBase.h"
 #include "Sensor/SceneCaptureCamera.h"
@@ -13,13 +15,13 @@ DEFINE_LOG_CATEGORY_STATIC(LogSensorSpawnerActor, Verbose, All);
 ASensorSpawnerActor::ASensorSpawnerActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
-  PrimaryActorTick.bStartWithTickEnabled = false;
-  PrimaryActorTick.TickInterval = TickInterval;
+  PrimaryActorTick.bStartWithTickEnabled = true;
   
   SceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComp"));
   RootComponent = SceneComp;
+  SaveImagePath = FPaths::ProjectSavedDir() + "SensorSpawnerCaptures/";
 
-  SensorClassToCapture = ASceneCaptureCamera::StaticClass();
+  SensorClassToCapture = nullptr;
 }
 
 void ASensorSpawnerActor::BeginPlay()
@@ -32,8 +34,8 @@ void ASensorSpawnerActor::BeginPlay()
     CarlaGameMode->OnEpisodeInitialisedDelegate.AddDynamic(this, &ASensorSpawnerActor::OnEpisodeInitialised);
   }
 
-  SetActorTickInterval(TickInterval);
-  SaveImagePath = FPaths::ProjectSavedDir() + "/SensorSpawnerCaptures/" + FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp());
+  SaveImagePath = SaveImagePath + FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp());
+  bRecordingData = bSaveDataAtBeginPlay;
 }
 
 void ASensorSpawnerActor::OnEpisodeInitialised(UCarlaEpisode* InitialisedEpisode)
@@ -72,10 +74,20 @@ void ASensorSpawnerActor::SpawnSensors()
       
       for(int i = 0; i < SensorStruct.Amount; i++)
       {
-        SpawnSensorActor(SensorDescription);
+        SpawnSensorActor(SensorDescription, SensorStruct.bAttachToActor);
       }
     }
   }
+}
+
+void ASensorSpawnerActor::StartRecordingSensorData()
+{
+  bRecordingData = true;
+}
+
+void ASensorSpawnerActor::StopRecordingSensorData()
+{
+  bRecordingData = false;
 }
 
 const FActorDefinition* ASensorSpawnerActor::GetActorDefinitionByClass(const TSubclassOf<AActor> ActorClass) const
@@ -92,7 +104,7 @@ const FActorDefinition* ASensorSpawnerActor::GetActorDefinitionByClass(const TSu
   return ActorDefinition;
 }
 
-void ASensorSpawnerActor::SpawnSensorActor(const FActorDescription& SensorDescription)
+void ASensorSpawnerActor::SpawnSensorActor(const FActorDescription& SensorDescription, bool bAttachToActor)
 {
   if(IsValid(CarlaEpisode))
   {
@@ -100,10 +112,16 @@ void ASensorSpawnerActor::SpawnSensorActor(const FActorDescription& SensorDescri
     GetRandomTransform(Transform);
     
     const TPair<EActorSpawnResultStatus, FCarlaActor*> SpawnResult = CarlaEpisode->SpawnActorWithInfo(Transform, SensorDescription);
-    
-    if(bSaveCameraToDisk && SpawnResult.Value)
+
+    // After spawn handle other logic if spawn was success.
+    if(SpawnResult.Value)
     {
-      StartSavingCapturesToDisk(SpawnResult.Value->GetActor());
+      AddSensorToSaveDataArray(SpawnResult.Value->GetActor());
+
+      if(bAttachToActor)
+      {
+        AttachSensorToActor(SpawnResult.Value->GetActor());
+      }
     }
   }
 }
@@ -149,7 +167,7 @@ void ASensorSpawnerActor::SpawnSensorsDelayed()
   {
     FActorDescription SensorDescription;
     GenerateSensorActorDescription(SensorDefinition, SensorDescription);
-    SpawnSensorActor(SensorDescription);
+    SpawnSensorActor(SensorDescription, SensorsToSpawnCopy[0].bAttachToActor);
   }
 
   SensorsToSpawnCopy[0].Amount--;
@@ -160,42 +178,71 @@ void ASensorSpawnerActor::SpawnSensorsDelayed()
   }
 }
 
-void ASensorSpawnerActor::Tick(float DeltaSeconds)
+void ASensorSpawnerActor::AddSensorToSaveDataArray(AActor* Actor)
 {
-  Super::Tick(DeltaSeconds);
-
-  for(const ASceneCaptureSensor* CaptureSensor : SceneCaptureSensor)
+  if(ASensor* CaptureSensor = Cast<ASensor>(Actor))
   {
-    if(CaptureSensor)
+    if(SensorClassToCapture == CaptureSensor->GetClass() || SensorClassToCapture == nullptr)
     {
-      CaptureSensor->SaveCaptureToDisk(SaveImagePath + "/" + CaptureSensor->GetName() + "/" + FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp()) + ".png" );
+      SpawnedSensorsArray.Add(CaptureSensor);
     }
   }
 }
 
-void ASensorSpawnerActor::RemoveSceneCaptureCameras()
+void ASensorSpawnerActor::Tick(float DeltaSeconds)
 {
-  if(SceneCaptureSensor.IsValidIndex(0))
-  {
-    SceneCaptureSensor.RemoveAt(0);
-  }
+  Super::Tick(DeltaSeconds);
 
-  if(SceneCaptureSensor.IsEmpty())
+  if(bRecordingData)
   {
-    SetActorTickEnabled(false);
+    SaveSensorData(DeltaSeconds);
   }
 }
 
-void ASensorSpawnerActor::StartSavingCapturesToDisk(const AActor* Actor)
+void ASensorSpawnerActor::SaveSensorData(float DeltaSeconds)
 {
-  if(const ASceneCaptureSensor* CaptureSensor = Cast<ASceneCaptureSensor>(Actor))
+  const FString FrameNumber = FString::Printf(TEXT("%lld"), UKismetSystemLibrary::GetFrameCount());
+  for(ASensor* CurrentSensor : SpawnedSensorsArray)
   {
-    if(SensorClassToCapture == CaptureSensor->GetClass() || SensorClassToCapture == nullptr)
+    if(ASceneCaptureSensor* CaptureSensor = Cast<ASceneCaptureSensor>(CurrentSensor))
     {
-      SceneCaptureSensor.Add(CaptureSensor);
-      SetActorTickEnabled(true);
-      FTimerHandle CaptureTimerHandle;
-      GetWorldTimerManager().SetTimer(CaptureTimerHandle, this, &ASensorSpawnerActor::RemoveSceneCaptureCameras, CaptureTime);
+      const FString FinalPath = FPaths::Combine(SaveImagePath, CaptureSensor->GetName(), FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp()) + "-Frame_" + FrameNumber + ".png");
+      CaptureSensor->EnqueueRenderSceneImmediate();
+      CaptureSensor->SaveCaptureToDisk(FinalPath);
+      continue;
+    }
+
+    if(const AInertialMeasurementUnit* IMUSensor = Cast<AInertialMeasurementUnit>(CurrentSensor))
+    {
+      const FVector Accelerometer = IMUSensor->GetAccelerometerValue().ToFVector();
+      const FVector Gyroscope = IMUSensor->GetGyroscopeValue().ToFVector();
+      float Compass = IMUSensor->GetCompassValue();
+      Compass = FMath::RadiansToDegrees(Compass);
+
+      const FString FilePath = FPaths::Combine(SaveImagePath, IMUSensor->GetName(), IMUSensor->GetName() + ".json");
+      UJsonFileManagerLibrary::SaveIMUDataToJson(FilePath, Accelerometer, Gyroscope, Compass, FrameNumber);
+      continue;
+    }
+
+    if(const AGnssSensor* GnssSensor = Cast<AGnssSensor>(CurrentSensor))
+    {
+      const FString FilePath = FPaths::Combine(SaveImagePath, GnssSensor->GetName(), GnssSensor->GetName() + ".json");
+      UJsonFileManagerLibrary::SaveGnssDataToJson(FilePath, GnssSensor->GetAltitudeValue(), GnssSensor->GetLatitudeValue(), GnssSensor->GetLongitudeValue(), FrameNumber);
+    }
+  }
+}
+
+void ASensorSpawnerActor::AttachSensorToActor(AActor* SensorActor)
+{
+  const UWorld* World = GetWorld();
+  if(SensorActor && GetWorld() && AttachActorClass)
+  {
+    AActor* SensorAttachParent = UGameplayStatics::GetActorOfClass(World, AttachActorClass);
+    if(SensorAttachParent)
+    {
+      SensorActor->AttachToActor(SensorAttachParent, FAttachmentTransformRules::KeepWorldTransform);
+      SensorActor->SetOwner(SensorAttachParent);
+      SensorActor->SetActorRelativeTransform(FTransform::Identity);
     }
   }
 }

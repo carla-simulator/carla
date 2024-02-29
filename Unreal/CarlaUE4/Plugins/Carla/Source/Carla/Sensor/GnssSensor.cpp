@@ -53,9 +53,9 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
   const float AltError = RandomEngine->GetNormalDistribution(0.0f, AltitudeDeviation);
 
   // Apply the noise to the sensor
-  double Latitude = CurrentLocation.latitude + LatitudeBias + LatError;
-  double Longitude = CurrentLocation.longitude + LongitudeBias + LonError;
-  double Altitude = CurrentLocation.altitude + AltitudeBias + AltError;
+  LatitudeValue = CurrentLocation.latitude + LatitudeBias + LatError;
+  LongitudeValue = CurrentLocation.longitude + LongitudeBias + LonError;
+  AltitudeValue = CurrentLocation.altitude + AltitudeBias + AltError;
 
   auto DataStream = GetDataStream(*this);
 
@@ -70,17 +70,17 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
     if (ParentActor)
     {
       FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromGNSS(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
+      ROS2->ProcessDataFromGNSS(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, carla::geom::GeoLocation{LatitudeValue, LongitudeValue, AltitudeValue}, this);
     }
     else
     {
-      ROS2->ProcessDataFromGNSS(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
+      ROS2->ProcessDataFromGNSS(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), carla::geom::GeoLocation{LatitudeValue, LongitudeValue, AltitudeValue}, this);
     }
   }
   #endif
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("AGnssSensor Stream Send");
-    DataStream.SerializeAndSend(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
+    DataStream.SerializeAndSend(*this, carla::geom::GeoLocation{LatitudeValue, LongitudeValue, AltitudeValue});
   }
 }
 
@@ -138,6 +138,21 @@ float AGnssSensor::GetLongitudeBias() const
 float AGnssSensor::GetAltitudeBias() const
 {
   return AltitudeBias;
+}
+
+double AGnssSensor::GetLatitudeValue() const
+{
+  return LatitudeValue;
+}
+
+double AGnssSensor::GetLongitudeValue() const
+{
+  return LongitudeValue;
+}
+
+double AGnssSensor::GetAltitudeValue() const
+{
+  return AltitudeValue;
 }
 
 void AGnssSensor::BeginPlay()

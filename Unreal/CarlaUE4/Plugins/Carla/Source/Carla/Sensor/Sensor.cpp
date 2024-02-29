@@ -22,6 +22,11 @@ ASensor::ASensor(const FObjectInitializer &ObjectInitializer)
   Mesh->bHiddenInGame = true;
   Mesh->CastShadow = false;
   RootComponent = Mesh;
+
+  // JoseM - Property defined to enable PhysTick when playing in editor without clients.
+#if WITH_EDITOR
+  bPhysTickInEditor = true;
+#endif
 }
 
 void ASensor::BeginPlay()
@@ -76,7 +81,9 @@ void ASensor::Tick(const float DeltaTime)
       bClientsListening = true;
     }
   }
-  if(!bClientsListening)
+  
+  // JoseM - Commented to be able to calculate sensors PostPhysTick() from the editor if no client is present.
+  if(!bClientsListening && !bPhysTickInEditor)
   {
     return;
   }

@@ -123,6 +123,9 @@ protected:
   UPROPERTY()
   bool bIsActive = false;
 
+  // JoseM - Property defined to enable PhysTick when playing in editor without clients.
+  bool bPhysTickInEditor = false;
+
 private:
 
   FDataStream Stream;
