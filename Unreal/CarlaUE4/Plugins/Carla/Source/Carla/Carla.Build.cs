@@ -43,6 +43,7 @@ public class Carla :
       PublicAdditionalLibraries.Add(library);
       RuntimeDependencies.Add(library);
       PublicDelayLoadDLLs.Add(library);
+      Console.WriteLine("Dynamic Library Added: " + library);
     }
 
     bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
@@ -269,11 +270,11 @@ public class Carla :
 
     if (EnableRos2)
     {
-      AddDynamicLibrary(Path.Combine(LibCarlaLibPath, "libcarla-ros2-native.so"));
-      string LibFastDDSPath = Path.Combine(CarlaInstallPath, "fast-dds-install");
-      AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfoonathan_memory-0.7.3.so"));
-      AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastcdr.so"));
-      AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastrtps.so"));
+      string LibRos2NativePath = Path.Combine(CarlaInstallPath, "LibRos2Native", "lib");
+      AddDynamicLibrary(Path.Combine(LibRos2NativePath, "libcarla-ros2-native.so"));
+      AddDynamicLibrary(Path.Combine(LibRos2NativePath, "libfoonathan_memory-0.7.3.so"));
+      AddDynamicLibrary(Path.Combine(LibRos2NativePath, "libfastcdr.so"));
+      AddDynamicLibrary(Path.Combine(LibRos2NativePath, "libfastrtps.so"));
     }
 
     PublicIncludePaths.AddRange(new string[]

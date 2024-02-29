@@ -23,24 +23,22 @@ file (
     ${LIBCARLA_SOURCE_PATH}/carla/ros2/types/*.h
 )
 
-add_library (
-    carla-ros2-native SHARED
+add_library (carla-ros2-native SHARED
     ${LIBCARLA_ROS2_HEADERS}
     ${LIBCARLA_ROS2_SOURCES}
 )
 
-target_include_directories (
-    carla-ros2-native SYSTEM PRIVATE
+target_include_directories (carla-ros2-native SYSTEM PRIVATE
     ${LIBCARLA_SOURCE_PATH}
     ${FASTDDS_INCLUDE_PATH}
     ${BOOST_INCLUDE_PATH}
 )
 
-target_compile_definitions (
-    carla-ros2-native PUBLIC
+target_compile_definitions (carla-ros2-native PUBLIC
     BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
 )
 
-target_link_libraries(carla-ros2-native /home/xsole/programing/carlaUE5/Install/fast-dds-install/lib/libfastrtps.so /home/xsole/programing/carlaUE5/Install/fast-dds-install/lib/libfastcdr.so)
+target_link_libraries(carla-ros2-native
+    ${FASTDDS_LIBRARY_PATH}/libfastrtps.so)
 
 install (TARGETS carla-ros2-native DESTINATION lib)
