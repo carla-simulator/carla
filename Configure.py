@@ -1499,31 +1499,6 @@ def BuildRos2NativeMain(task_graph : TaskGraph):
   task_graph.Execute(sequential=True)
 
 
-def BuildRos2NativeMain(task_graph : TaskGraph):
-  ROS2_NATIVE_BUILD_PATH = DEPENDENCIES_PATH / 'ros2-native-build'
-  configure_step = task_graph.Add(Task.CreateCMakeConfigureGxxABI(
-    'ros2-naitve-configure',
-    [],
-    WORKSPACE_PATH / 'LibCarla' / 'cmake' / 'ros2-native',
-    ROS2_NATIVE_BUILD_PATH,
-    f'-DFASTDDS_INCLUDE_PATH={ROS2_NATIVE_INSTALL_PATH}/include',
-    f'-DFASTDDS_LIBRARY_PATH={ROS2_NATIVE_INSTALL_PATH}/lib',
-    f'-DBOOST_INCLUDE_PATH={BOOST_INCLUDE_PATH}',
-    '-DCMAKE_CXX_FLAGS=-isystem /usr/include/c++/7',
-    install_path=ROS2_NATIVE_INSTALL_PATH))
-  build_step = task_graph.Add(Task.CreateCMakeBuildDefault(
-    'ros2-naitve-build',
-    [ configure_step ],
-    ROS2_NATIVE_BUILD_PATH))
-  task_graph.Add(Task.CreateCMakeInstallDefault(
-    'ros2-naitve-install',
-    [ build_step ],
-    ROS2_NATIVE_BUILD_PATH,
-    ROS2_NATIVE_INSTALL_PATH))
-  task_graph.Execute(sequential=True)
-
-
-
 def BuildPythonAPIMain():
   content = ''
   with open(PYTHON_API_PATH / 'setup.py.in', 'r') as file:
