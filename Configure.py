@@ -287,6 +287,8 @@ DEPENDENCIES_PATH = BUILD_PATH / 'Dependencies'
 LIBCARLA_BUILD_PATH = BUILD_PATH / 'LibCarla'
 LIBCARLA_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'LibCarla'
 ROS2_NATIVE_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'LibRos2Native'
+CARLA_PLUGIN_DEPLOY_PATH = WORKSPACE_PATH / 'Unreal' / 'CarlaUE4' / 'Plugins' / 'Carla' / 'Binaries' / ('Win64' if os.name == 'nt' else 'Linux')
+ROS2_NATIVE_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'LibRos2Native'
 # Language options
 C_COMPILER = FindExecutable([ARGV.c_compiler])
 if not C_COMPILER:
@@ -725,6 +727,12 @@ class Task:
   def CreateCMakeInstallDefault(name : str, in_edges : list, build_path : Path, install_path : Path, *args):
     cmd = [ 'cmake', '--install', build_path, '--prefix', install_path ]
     cmd.extend([ *args ])
+    return Task.CreateSubprocessTask(name, in_edges, cmd)
+  
+  def CreateDeploySharedLibrariesDefault(name : str, in_edges : list, install_paths : Path, deploy_path : Path):
+    if not os.path.exists(deploy_path):
+      os.makedirs(deploy_path)
+    cmd = ['cmake', '-E', 'copy'] + install_paths + [deploy_path]
     return Task.CreateSubprocessTask(name, in_edges, cmd)
   
   def Run(self):
@@ -1450,6 +1458,44 @@ def BuildLibCarlaMain(task_graph : TaskGraph):
     [ build_libcarla ],
     LIBCARLA_BUILD_PATH,
     LIBCARLA_INSTALL_PATH))
+  task_graph.Execute(sequential=True)
+
+
+def BuildRos2NativeMain(task_graph : TaskGraph):
+  ROS2_NATIVE_BUILD_PATH = DEPENDENCIES_PATH / 'ros2-native-build'
+  configure_step = task_graph.Add(Task.CreateCMakeConfigureGxxABI(
+    'ros2-naitve-configure',
+    [],
+    WORKSPACE_PATH / 'LibCarla' / 'cmake' / 'ros2-native',
+    ROS2_NATIVE_BUILD_PATH,
+    f'-DFASTDDS_INCLUDE_PATH={ROS2_NATIVE_INSTALL_PATH}/include',
+    f'-DFASTDDS_LIBRARY_PATH={ROS2_NATIVE_INSTALL_PATH}/lib',
+    f'-DBOOST_INCLUDE_PATH={BOOST_INCLUDE_PATH}',
+    '-DCMAKE_CXX_FLAGS=-isystem /usr/include/c++/7',
+    install_path=ROS2_NATIVE_INSTALL_PATH ))
+  build_step = task_graph.Add(Task.CreateCMakeBuildDefault(
+    'ros2-naitve-build',
+    [ configure_step ],
+    ROS2_NATIVE_BUILD_PATH))
+  install_step = task_graph.Add(Task.CreateCMakeInstallDefault(
+    'ros2-naitve-install',
+    [ build_step ],
+    ROS2_NATIVE_BUILD_PATH,
+    ROS2_NATIVE_INSTALL_PATH))
+  task_graph.Add(Task.CreateDeploySharedLibrariesDefault(
+    'ros2-naitve-deploy-shared-libs',
+    [ install_step ],
+    [
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libcarla-ros2-native.so',
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libfastcdr.so',
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libfastcdr.so.1',
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libfastcdr.so.1.1.1',
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libfastrtps.so',
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libfastrtps.so.2.11',
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libfastrtps.so.2.11.2',
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libfoonathan_memory-0.7.3.so'
+    ],
+    CARLA_PLUGIN_DEPLOY_PATH)),
   task_graph.Execute(sequential=True)
 
 
