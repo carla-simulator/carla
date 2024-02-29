@@ -67,6 +67,11 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   SceneCaptureSensor_local_ns::SetCameraDefaultOverrides(*CaptureComponent2D);
 
   ++SCENE_CAPTURE_COUNTER;
+
+  // JoseM - PhysTick disabled temporary to CaptureSensors because it crashes the editor.
+#if WITH_EDITOR
+  bPhysTickInEditor = false;
+#endif
 }
 
 void ASceneCaptureSensor::Set(const FActorDescription &Description)

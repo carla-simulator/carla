@@ -126,13 +126,14 @@ TSharedPtr<FJsonObject> UJsonFileManagerLibrary::VectorToJsonObject(const FVecto
 }
 
 bool UJsonFileManagerLibrary::SaveIMUDataToJson(const FString& JsonFilePath, const FVector& Accelerometer,
-                                                const FVector& Gyroscope, float Compass)
+                                                const FVector& Gyroscope, float Compass, const FString& FrameNumber)
 {
   TArray<TSharedPtr<FJsonValue>> ArrayValue;
   TSharedPtr<FJsonObject> JsonDataObject = GetSensorJsonData(JsonFilePath, ArrayValue);
 
   // Accelerometer and Gyroscope
   const TSharedPtr<FJsonObject> IMUDataObject = MakeShared<FJsonObject>();
+  IMUDataObject->SetStringField(TEXT("Frame"), FrameNumber);
   IMUDataObject->SetObjectField(TEXT("Accelerometer"), VectorToJsonObject(Accelerometer));
   IMUDataObject->SetObjectField( TEXT("Gyroscope"), VectorToJsonObject(Gyroscope));
 
@@ -151,12 +152,13 @@ bool UJsonFileManagerLibrary::SaveIMUDataToJson(const FString& JsonFilePath, con
 }
 
 bool UJsonFileManagerLibrary::SaveGnssDataToJson(const FString& JsonFilePath, double Altitude, double Latitude,
-  double Longitude)
+  double Longitude, const FString& FrameNumber)
 {
   TArray<TSharedPtr<FJsonValue>> ArrayValue;
   TSharedPtr<FJsonObject> JsonDataObject = GetSensorJsonData(JsonFilePath, ArrayValue);
   
   const TSharedPtr<FJsonObject> IMUDataObject = MakeShared<FJsonObject>();
+  IMUDataObject->SetStringField(TEXT("Frame"), FrameNumber);
   IMUDataObject->SetStringField(TEXT("Altitude"), FString::SanitizeFloat(Altitude));
   IMUDataObject->SetStringField( TEXT("Latitude"), FString::SanitizeFloat(Latitude));
   IMUDataObject->SetStringField(TEXT("Longitude"), FString::SanitizeFloat(Longitude));

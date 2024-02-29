@@ -201,11 +201,12 @@ void ASensorSpawnerActor::Tick(float DeltaSeconds)
 
 void ASensorSpawnerActor::SaveSensorData(float DeltaSeconds) const
 {
+  const FString FrameNumber = FString::Printf(TEXT("%lld"), UKismetSystemLibrary::GetFrameCount());
   for(const ASensor* CurrentSensor : SpawnedSensorsArray)
   {
     if(const ASceneCaptureSensor* CaptureSensor = Cast<ASceneCaptureSensor>(CurrentSensor))
     {
-      const FString FinalPath = FPaths::Combine(SaveImagePath, CaptureSensor->GetName(), FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp()) + ".png");
+      const FString FinalPath = FPaths::Combine(SaveImagePath, CaptureSensor->GetName(), FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp()) + "-Frame_" + FrameNumber + ".png");
       CaptureSensor->SaveCaptureToDisk(FinalPath);
       continue;
     }
@@ -218,14 +219,14 @@ void ASensorSpawnerActor::SaveSensorData(float DeltaSeconds) const
       Compass = FMath::RadiansToDegrees(Compass);
 
       const FString FilePath = FPaths::Combine(SaveImagePath, IMUSensor->GetName(), IMUSensor->GetName() + ".json");
-      UJsonFileManagerLibrary::SaveIMUDataToJson(FilePath, Accelerometer, Gyroscope, Compass);
+      UJsonFileManagerLibrary::SaveIMUDataToJson(FilePath, Accelerometer, Gyroscope, Compass, FrameNumber);
       continue;
     }
 
     if(const AGnssSensor* GnssSensor = Cast<AGnssSensor>(CurrentSensor))
     {
       const FString FilePath = FPaths::Combine(SaveImagePath, GnssSensor->GetName(), GnssSensor->GetName() + ".json");
-      UJsonFileManagerLibrary::SaveGnssDataToJson(FilePath, GnssSensor->GetAltitudeValue(), GnssSensor->GetLatitudeValue(), GnssSensor->GetLongitudeValue());
+      UJsonFileManagerLibrary::SaveGnssDataToJson(FilePath, GnssSensor->GetAltitudeValue(), GnssSensor->GetLatitudeValue(), GnssSensor->GetLongitudeValue(), FrameNumber);
     }
   }
 }

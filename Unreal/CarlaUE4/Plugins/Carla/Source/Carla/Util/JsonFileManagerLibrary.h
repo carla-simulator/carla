@@ -33,9 +33,9 @@ public:
 
   static TSharedPtr<FJsonObject> VectorToJsonObject(const FVector& Vector);
 
-  static bool SaveIMUDataToJson(const FString& JsonFilePath, const FVector& Accelerometer, const FVector& Gyroscope, float Compass);
+  static bool SaveIMUDataToJson(const FString& JsonFilePath, const FVector& Accelerometer, const FVector& Gyroscope, float Compass, const FString& FrameNumber);
 
-  static bool SaveGnssDataToJson(const FString& JsonFilePath, double Altitude, double Latitude, double Longitude);
+  static bool SaveGnssDataToJson(const FString& JsonFilePath, double Altitude, double Latitude, double Longitude, const FString& FrameNumber);
 
 
 protected:
