@@ -286,7 +286,7 @@ LOG_PATH = BUILD_PATH / 'BuildLogs'
 DEPENDENCIES_PATH = BUILD_PATH / 'Dependencies'
 LIBCARLA_BUILD_PATH = BUILD_PATH / 'LibCarla'
 LIBCARLA_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'LibCarla'
-FAST_DDS_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'fast-dds-install'
+ROS2_NATIVE_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'LibRos2Native'
 # Language options
 C_COMPILER = FindExecutable([ARGV.c_compiler])
 if not C_COMPILER:
@@ -452,17 +452,18 @@ NV_OMNIVERSE_PATCH_PATH = PATCHES_PATH / 'omniverse_4.26'
 # Foonathan memory vendor
 FOONATHAN_MEMORY_VENDOR_SOURCE_PATH = DEPENDENCIES_PATH / 'foonathan-memory-vendor-source'
 FOONATHAN_MEMORY_VENDOR_BUILD_PATH = DEPENDENCIES_PATH / 'foonathan-memory-vendor-build'
-FOONATHAN_MEMORY_VENDOR_INSTALL_PATH = FAST_DDS_INSTALL_PATH
+FOONATHAN_MEMORY_VENDOR_INSTALL_PATH = ROS2_NATIVE_INSTALL_PATH
 
 # Fast-cdr
 FAST_CDR_SOURCE_PATH = DEPENDENCIES_PATH / 'fast-cdr-source'
 FAST_CDR_BUILD_PATH = DEPENDENCIES_PATH / 'fast-cdr-build'
-FAST_CDR_INSTALL_PATH = FAST_DDS_INSTALL_PATH
+FAST_CDR_INSTALL_PATH = ROS2_NATIVE_INSTALL_PATH
 FAST_CDR_LIBRARY_PATH = FAST_CDR_INSTALL_PATH / 'lib'
 
 # Fast-dds
 FAST_DDS_SOURCE_PATH = DEPENDENCIES_PATH / 'fast-dds-source'
 FAST_DDS_BUILD_PATH = DEPENDENCIES_PATH / 'fast-dds-build'
+FAST_DDS_INSTALL_PATH = ROS2_NATIVE_INSTALL_PATH
 
 # Basic IO functions:
 
@@ -1444,11 +1445,12 @@ def BuildLibCarlaMain(task_graph : TaskGraph):
     'libcarla-build',
     [ configure_libcarla ],
     LIBCARLA_BUILD_PATH))
-  return task_graph.Add(Task.CreateCMakeInstallDefault(
+  task_graph.Add(Task.CreateCMakeInstallDefault(
     'libcarla-install',
     [ build_libcarla ],
     LIBCARLA_BUILD_PATH,
     LIBCARLA_INSTALL_PATH))
+  task_graph.Execute(sequential=True)
 
 
 def BuildRos2NativeMain(task_graph : TaskGraph):
@@ -1458,19 +1460,21 @@ def BuildRos2NativeMain(task_graph : TaskGraph):
     [],
     WORKSPACE_PATH / 'LibCarla' / 'cmake' / 'ros2-native',
     ROS2_NATIVE_BUILD_PATH,
-    f'-DFASTDDS_INCLUDE_PATH={FAST_DDS_INSTALL_PATH}/include',
+    f'-DFASTDDS_INCLUDE_PATH={ROS2_NATIVE_INSTALL_PATH}/include',
+    f'-DFASTDDS_LIBRARY_PATH={ROS2_NATIVE_INSTALL_PATH}/lib',
     f'-DBOOST_INCLUDE_PATH={BOOST_INCLUDE_PATH}',
     '-DCMAKE_CXX_FLAGS=-isystem /usr/include/c++/7',
-    install_path=LIBCARLA_INSTALL_PATH))
+    install_path=ROS2_NATIVE_INSTALL_PATH))
   build_step = task_graph.Add(Task.CreateCMakeBuildDefault(
     'ros2-naitve-build',
     [ configure_step ],
     ROS2_NATIVE_BUILD_PATH))
-  return task_graph.Add(Task.CreateCMakeInstallDefault(
+  task_graph.Add(Task.CreateCMakeInstallDefault(
     'ros2-naitve-install',
     [ build_step ],
     ROS2_NATIVE_BUILD_PATH,
-    LIBCARLA_INSTALL_PATH))
+    ROS2_NATIVE_INSTALL_PATH))
+  task_graph.Execute(sequential=True)
 
 
 
@@ -1590,10 +1594,8 @@ if __name__ == '__main__':
       BuildDependencies(task_graph)
     if ENABLE_LIBCARLA:
       BuildLibCarlaMain(task_graph)
-      task_graph.Execute(sequential=True)
     if ENABLE_ROS2:
       BuildRos2NativeMain(task_graph)
-      task_graph.Execute(sequential=True)
     if ENABLE_PYTHON_API:
       BuildPythonAPI(task_graph)
     if UPDATE_CARLA_UE_ASSETS:
