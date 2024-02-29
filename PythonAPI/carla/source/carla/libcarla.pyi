@@ -1136,7 +1136,7 @@ class DVSEventArray():
     # region Dunder Methods
     def __getitem__(self, pos: int): ...
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[DVSEvent]:
         """Iterate over the `carla.DVSEvent` retrieved as data."""
 
     def __len__(self): ...
