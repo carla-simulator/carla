@@ -178,9 +178,9 @@ void ASensorSpawnerActor::SpawnSensorsDelayed()
   }
 }
 
-void ASensorSpawnerActor::AddSensorToSaveDataArray(const AActor* Actor)
+void ASensorSpawnerActor::AddSensorToSaveDataArray(AActor* Actor)
 {
-  if(const ASensor* CaptureSensor = Cast<ASensor>(Actor))
+  if(ASensor* CaptureSensor = Cast<ASensor>(Actor))
   {
     if(SensorClassToCapture == CaptureSensor->GetClass() || SensorClassToCapture == nullptr)
     {
@@ -199,14 +199,15 @@ void ASensorSpawnerActor::Tick(float DeltaSeconds)
   }
 }
 
-void ASensorSpawnerActor::SaveSensorData(float DeltaSeconds) const
+void ASensorSpawnerActor::SaveSensorData(float DeltaSeconds)
 {
   const FString FrameNumber = FString::Printf(TEXT("%lld"), UKismetSystemLibrary::GetFrameCount());
-  for(const ASensor* CurrentSensor : SpawnedSensorsArray)
+  for(ASensor* CurrentSensor : SpawnedSensorsArray)
   {
-    if(const ASceneCaptureSensor* CaptureSensor = Cast<ASceneCaptureSensor>(CurrentSensor))
+    if(ASceneCaptureSensor* CaptureSensor = Cast<ASceneCaptureSensor>(CurrentSensor))
     {
       const FString FinalPath = FPaths::Combine(SaveImagePath, CaptureSensor->GetName(), FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp()) + "-Frame_" + FrameNumber + ".png");
+      CaptureSensor->EnqueueRenderSceneImmediate();
       CaptureSensor->SaveCaptureToDisk(FinalPath);
       continue;
     }

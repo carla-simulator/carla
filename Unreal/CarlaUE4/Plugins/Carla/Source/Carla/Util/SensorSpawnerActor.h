@@ -114,9 +114,9 @@ private:
 
   const FActorDefinition* GetActorDefinitionByClass(const TSubclassOf<AActor> ActorClass) const;
 
-  void AddSensorToSaveDataArray(const AActor* Actor);
+  void AddSensorToSaveDataArray(AActor* Actor);
   
-  void SaveSensorData(float DeltaSeconds) const;
+  void SaveSensorData(float DeltaSeconds);
 
   void AttachSensorToActor(AActor* SensorActor);
   
@@ -132,6 +132,6 @@ private:
   TArray<FSensorTuple> SensorsToSpawnCopy;
 
   // Track cameras saving pictures on tick.
-  TArray<const class ASensor*> SpawnedSensorsArray;
+  TArray<class ASensor*> SpawnedSensorsArray;
   
 };
