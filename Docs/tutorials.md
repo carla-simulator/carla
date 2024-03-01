@@ -41,5 +41,5 @@ Here you will find the multitude of tutorials available to help you understand h
 
 ## Video tutorials
 
-[__Fundamentals__](https://www.youtube.com/watch?v=pONr1R1dy88) — Learn the fundamental concepts of CARLA and start your first script. [__CODE__](https://carla-releases.s3.eu-west-3.amazonaws.com/Docs/Fundamentals.ipynb)  
-[__An in depth look at CARLA's sensors__](https://www.youtube.com/watch?v=om8klsBj4rc) — An in depth look at CARLA's sensors and how to use them. [__CODE__](https://carla-releases.s3.eu-west-3.amazonaws.com/Docs/Sensors_code.zip)
+[__Fundamentals__](https://www.youtube.com/watch?v=pONr1R1dy88) — Learn the fundamental concepts of CARLA and start your first script. [__CODE__](https://carla-releases.s3.us-east-005.backblazeb2.com/Docs/Fundamentals.ipynb)  
+[__An in depth look at CARLA's sensors__](https://www.youtube.com/watch?v=om8klsBj4rc) — An in depth look at CARLA's sensors and how to use them. [__CODE__](https://carla-releases.s3.us-east-005.backblazeb2.com/Docs/Sensors_code.zip)
