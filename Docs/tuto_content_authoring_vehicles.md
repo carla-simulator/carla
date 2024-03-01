@@ -53,7 +53,7 @@ For ease and consistency we recommend that you divide the vehicle into the follo
 - __Lights__: Headlights, indicator lights, etc.
 - __LightGlass_Ext__: A layer of glass that allows visibility from the outside to the inside of the light.
 - __LightGlass_Int__: A layer of glass that allows visibility from the inside to the outside of the light.
-- __LicensePlate__: A rectangular plane of 29x12 cm. You can use the CARLA provided `.fbx` for best results, download it [here](https://carla-assets.s3.eu-west-3.amazonaws.com/fbx/LicensePlate.rar). The texture will be assigned automatically in Unreal Engine.
+- __LicensePlate__: A rectangular plane of 29x12 cm. You can use the CARLA provided `.fbx` for best results, download it [here](https://carla-assets.s3.us-east-005.backblazeb2.com/fbx/LicensePlate.rar). The texture will be assigned automatically in Unreal Engine.
 - __Interior__: Any other details that don't fit in the above sections can go into _Interior_.
 
 Materials should be named using the format `M_CarPart_CarName`, e.g, `M_Bodywork_Mustang`.
