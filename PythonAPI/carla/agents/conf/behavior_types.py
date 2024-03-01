@@ -3,8 +3,11 @@
 
 """ This module contains the different parameters sets for each behavior. """
 
+from dataclasses import dataclass
+from agents.conf.agent_settings_backend import SimpleBehaviorAgentSettings
 
-class Cautious(object):
+@dataclass
+class Cautious(SimpleBehaviorAgentSettings):
     """Class for Cautious agent."""
     max_speed = 40
     speed_lim_dist = 6
@@ -14,8 +17,8 @@ class Cautious(object):
     braking_distance = 6
     tailgate_counter = 0
 
-
-class Normal(object):
+@dataclass
+class Normal(SimpleBehaviorAgentSettings):
     """Class for Normal agent."""
     max_speed = 50
     speed_lim_dist = 3
@@ -25,8 +28,8 @@ class Normal(object):
     braking_distance = 5
     tailgate_counter = 0
 
-
-class Aggressive(object):
+@dataclass
+class Aggressive(SimpleBehaviorAgentSettings):
     """Class for Aggressive agent."""
     max_speed = 70
     speed_lim_dist = 1
