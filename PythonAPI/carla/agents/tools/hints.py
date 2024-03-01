@@ -11,10 +11,10 @@ if sys.version_info < (3, 6):
     ObstacleDetectionResult = namedtuple('ObstacleDetectionResult', ['obstacle_was_found', 'obstacle', 'distance'])
     TrafficLightDetectionResult = namedtuple('TrafficLightDetectionResult', ['traffic_light_was_found', 'traffic_light'])
 else:
-    from typing import NamedTuple, Union
+    from typing import NamedTuple, Union, TYPE_CHECKING
     from carla import Actor, TrafficLight
     """
-    # Python 3.6+
+    # Python 3.6+, incompatible with Python 2.7 syntax
     class ObstacleDetectionResult(NamedTuple):
         obstacle_was_found : bool
         obstacle : Union[Actor, None]
@@ -25,5 +25,10 @@ else:
         traffic_light_was_found : bool
         traffic_light : Union[TrafficLight, None]
     """
-    ObstacleDetectionResult = NamedTuple('ObstacleDetectionResult', [('obstacle_was_found', bool), ('obstacle', Union[Actor, None]), ('distance', float)])
+    if TYPE_CHECKING:
+        from typing import Literal
+        ObstacleDetectionResult = NamedTuple('ObstacleDetectionResult', [('obstacle_was_found', bool), ('obstacle', Union[Actor, None]), ('distance', Union[float, Literal[-1]])])
+    else:
+        ObstacleDetectionResult = NamedTuple('ObstacleDetectionResult', [('obstacle_was_found', bool), ('obstacle', Union[Actor, None]), ('distance', float)])
+    
     TrafficLightDetectionResult = NamedTuple('TrafficLightDetectionResult', [('traffic_light_was_found', bool), ('traffic_light', Union[TrafficLight, None])])
