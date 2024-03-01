@@ -11,6 +11,8 @@ import numpy as np
 import carla
 from agents.tools.misc import get_speed
 
+STEERING_UPDATE_SPEED = 0.1
+ERROR_BUFFER_LENGTH = 10
 
 class VehiclePIDController():
     """
@@ -19,70 +21,69 @@ class VehiclePIDController():
     low level control a vehicle from client side
     """
 
-
-    def __init__(self, vehicle, args_lateral, args_longitudinal, offset=0, max_throttle=0.75, max_brake=0.3,
-                 max_steering=0.8):
+    def __init__(self, vehicle: carla.Vehicle, config):
         """
         Constructor method.
 
         :param vehicle: actor to apply to local planner logic onto
-        :param args_lateral: dictionary of arguments to set the lateral PID controller
+        :param config (BasicAgentSettings): configuration parameters for the agent (must contain a planner attribute).
+        
+        config.planner.lateral_control_dict: dictionary of arguments to set the lateral PID controller
         using the following semantics:
             K_P -- Proportional term
             K_D -- Differential term
             K_I -- Integral term
-        :param args_longitudinal: dictionary of arguments to set the longitudinal
+        
+        config.planner.longitudinal_control_dict: dictionary of arguments to set the longitudinal
         PID controller using the following semantics:
             K_P -- Proportional term
             K_D -- Differential term
             K_I -- Integral term
-        :param offset: If different than zero, the vehicle will drive displaced from the center line.
+        
+        config.planner.offset: If different than zero, the vehicle will drive displaced from the center line.
         Positive values imply a right offset while negative ones mean a left one. Numbers high enough
         to cause the vehicle to drive through other lanes might break the controller.
         """
-
-        self.max_brake = max_brake
-        self.max_throt = max_throttle
-        self.max_steer = max_steering
+        
+        self.config = config
 
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
         self.past_steering = self._vehicle.get_control().steer
-        self._lon_controller = PIDLongitudinalController(self._vehicle, **args_longitudinal)
-        self._lat_controller = PIDLateralController(self._vehicle, offset, **args_lateral)
+        self._lon_controller = PIDLongitudinalController(vehicle, config)
+        self._lat_controller = PIDLateralController(vehicle, config)
 
-    def run_step(self, target_speed, waypoint):
+    def run_step(self, waypoint):
         """
         Execute one step of control invoking both lateral and longitudinal
         PID controllers to reach a target waypoint
         at a given target_speed.
 
-            :param target_speed: desired vehicle speed
             :param waypoint: target location encoded as a waypoint
             :return: distance (in meters) to the waypoint
         """
-
-        acceleration = self._lon_controller.run_step(target_speed)
+        
+        acceleration = self._lon_controller.run_step()
         current_steering = self._lat_controller.run_step(waypoint)
         control = carla.VehicleControl()
         if acceleration >= 0.0:
-            control.throttle = min(acceleration, self.max_throt)
+            control.throttle = min(acceleration, self.config.controls.max_throttle)
             control.brake = 0.0
         else:
             control.throttle = 0.0
-            control.brake = min(abs(acceleration), self.max_brake)
+            control.brake = min(abs(acceleration), self.config.controls.max_brake)
 
         # Steering regulation: changes cannot happen abruptly, can't steer too much.
 
-        if current_steering > self.past_steering + 0.1:
-            current_steering = self.past_steering + 0.1
-        elif current_steering < self.past_steering - 0.1:
-            current_steering = self.past_steering - 0.1
+        if current_steering > self.past_steering + STEERING_UPDATE_SPEED:
+            current_steering = self.past_steering + STEERING_UPDATE_SPEED
+        elif current_steering < self.past_steering - STEERING_UPDATE_SPEED:
+            current_steering = self.past_steering - STEERING_UPDATE_SPEED
 
         if current_steering >= 0:
-            steering = min(self.max_steer, current_steering)
+            steering = min(self.config.controls.max_steering, current_steering)
         else:
-            steering = max(-self.max_steer, current_steering)
+            steering = max(-self.config.controls.max_steering, current_steering)
 
         control.steer = steering
         control.hand_brake = False
@@ -90,7 +91,6 @@ class VehiclePIDController():
         self.past_steering = steering
 
         return control
-
 
     def change_longitudinal_PID(self, args_longitudinal):
         """Changes the parameters of the PIDLongitudinalController"""
@@ -110,65 +110,59 @@ class PIDLongitudinalController():
     PIDLongitudinalController implements longitudinal control using a PID.
     """
 
-    def __init__(self, vehicle, K_P=1.0, K_I=0.0, K_D=0.0, dt=0.03):
+    def __init__(self, vehicle, config):
         """
         Constructor method.
 
             :param vehicle: actor to apply to local planner logic onto
-            :param K_P: Proportional term
-            :param K_D: Differential term
-            :param K_I: Integral term
-            :param dt: time differential in seconds
+            :param config (BasicAgentSettings): configuration parameters for the agent.
         """
         self._vehicle = vehicle
-        self._k_p = K_P
-        self._k_i = K_I
-        self._k_d = K_D
-        self._dt = dt
-        self._error_buffer = deque(maxlen=10)
-
-    def run_step(self, target_speed, debug=False):
+        self.config = config
+        self._error_buffer = deque(maxlen=ERROR_BUFFER_LENGTH)
+        
+    def run_step(self, debug=False):
         """
         Execute one step of longitudinal control to reach a given target speed.
 
-            :param target_speed: target speed in Km/h
-            :param debug: boolean for debugging
+        Assumes the config.live_info was updated with the current speed before 
+        calling this function.
+
+            :param debug: boolean for debugging. Prints the current speed.
             :return: throttle control
         """
-        current_speed = get_speed(self._vehicle)
 
         if debug:
-            print('Current speed = {}'.format(current_speed))
+            print('Current speed = {}'.format(self.config.live_info.current_speed))
 
-        return self._pid_control(target_speed, current_speed)
+        return self._pid_control()
 
-    def _pid_control(self, target_speed, current_speed):
+    def _pid_control(self):
         """
         Estimate the throttle/brake of the vehicle based on the PID equations
 
-            :param target_speed:  target speed in Km/h
-            :param current_speed: current speed of the vehicle in Km/h
             :return: throttle/brake control
         """
 
-        error = target_speed - current_speed
+        target_speed = self.config.speed.target_speed
+        error = target_speed - self.config.live_info.current_speed
         self._error_buffer.append(error)
 
         if len(self._error_buffer) >= 2:
-            _de = (self._error_buffer[-1] - self._error_buffer[-2]) / self._dt
-            _ie = sum(self._error_buffer) * self._dt
+            _de = (self._error_buffer[-1] - self._error_buffer[-2]) / self.config.planner.dt
+            _ie = sum(self._error_buffer) * self.config.planner.dt
         else:
             _de = 0.0
             _ie = 0.0
 
-        return np.clip((self._k_p * error) + (self._k_d * _de) + (self._k_i * _ie), -1.0, 1.0)
+        return np.clip((self.config.planner.longitudinal_control_dict.K_P * error) + (self.config.planner.longitudinal_control_dict.K_D * _de) + (self.config.planner.longitudinal_control_dict.K_I * _ie), -1.0, 1.0)
 
     def change_parameters(self, K_P, K_I, K_D, dt):
         """Changes the PID parameters"""
-        self._k_p = K_P
-        self._k_i = K_I
-        self._k_d = K_D
-        self._dt = dt
+        self.config.planner.longitudinal_control_dict.K_P = K_P
+        self.config.planner.longitudinal_control_dict.K_I = K_I
+        self.config.planner.longitudinal_control_dict.K_D = K_D
+        self.config.planner.dt = dt
 
 
 class PIDLateralController():
@@ -176,7 +170,7 @@ class PIDLateralController():
     PIDLateralController implements lateral control using a PID.
     """
 
-    def __init__(self, vehicle, offset=0, K_P=1.0, K_I=0.0, K_D=0.0, dt=0.03):
+    def __init__(self, vehicle, config):
         """
         Constructor method.
 
@@ -189,17 +183,13 @@ class PIDLateralController():
             :param dt: time differential in seconds
         """
         self._vehicle = vehicle
-        self._k_p = K_P
-        self._k_i = K_I
-        self._k_d = K_D
-        self._dt = dt
-        self._offset = offset
-        self._e_buffer = deque(maxlen=10)
+        self.config = config
+        self._e_buffer = deque(maxlen=ERROR_BUFFER_LENGTH)
 
     def run_step(self, waypoint):
         """
         Execute one step of lateral control to steer
-        the vehicle towards a certain waypoin.
+        the vehicle towards a certain waypoint.
 
             :param waypoint: target waypoint
             :return: steering control in the range [-1, 1] where:
@@ -208,9 +198,9 @@ class PIDLateralController():
         """
         return self._pid_control(waypoint, self._vehicle.get_transform())
 
-    def set_offset(self, offset):
+    def set_offset(self, offset: float):
         """Changes the offset"""
-        self._offset = offset
+        self.config.planner.offset = offset
 
     def _pid_control(self, waypoint, vehicle_transform):
         """
@@ -226,12 +216,12 @@ class PIDLateralController():
         v_vec = np.array([v_vec.x, v_vec.y, 0.0])
 
         # Get the vector vehicle-target_wp
-        if self._offset != 0:
+        if self.config.planner.offset != 0:
             # Displace the wp to the side
             w_tran = waypoint.transform
             r_vec = w_tran.get_right_vector()
-            w_loc = w_tran.location + carla.Location(x=self._offset*r_vec.x,
-                                                         y=self._offset*r_vec.y)
+            w_loc = w_tran.location + carla.Location(x=self.config.planner.offset*r_vec.x,
+                                                     y=self.config.planner.offset*r_vec.y)
         else:
             w_loc = waypoint.transform.location
 
@@ -250,17 +240,17 @@ class PIDLateralController():
 
         self._e_buffer.append(_dot)
         if len(self._e_buffer) >= 2:
-            _de = (self._e_buffer[-1] - self._e_buffer[-2]) / self._dt
-            _ie = sum(self._e_buffer) * self._dt
+            _de = (self._e_buffer[-1] - self._e_buffer[-2]) / self.config.planner.dt
+            _ie = sum(self._e_buffer) * self.config.planner.dt
         else:
             _de = 0.0
             _ie = 0.0
 
-        return np.clip((self._k_p * _dot) + (self._k_d * _de) + (self._k_i * _ie), -1.0, 1.0)
+        return np.clip((self.config.planner.lateral_control_dict.K_P * _dot) + (self.config.planner.lateral_control_dict.K_D * _de) + (self.config.planner.lateral_control_dict.K_I * _ie), -1.0, 1.0)
 
     def change_parameters(self, K_P, K_I, K_D, dt):
         """Changes the PID parameters"""
-        self._k_p = K_P
-        self._k_i = K_I
-        self._k_d = K_D
-        self._dt = dt
+        self.config.planner.lateral_control_dict.K_P = K_P
+        self.config.planner.lateral_control_dict.K_I = K_I
+        self.config.planner.lateral_control_dict.K_D = K_D
+        self.config.planner.dt = dt
