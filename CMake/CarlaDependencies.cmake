@@ -3,6 +3,15 @@ include (ExternalProject)
 
 
 
+# These checks may be incomplete:
+
+if (LINUX)
+  set (THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package (Threads REQUIRED)
+endif ()
+
+
+
 string (REPLACE "." "" CARLA_SQLITE_TAG ${CARLA_SQLITE_VERSION})
 
 FetchContent_Declare (
@@ -10,7 +19,6 @@ FetchContent_Declare (
   URL https://www.sqlite.org/2024/sqlite-amalgamation-${CARLA_SQLITE_TAG}.zip
 )
 FetchContent_MakeAvailable (sqlite3)
-set (SQLITE_SOURCE_DIR ${sqlite3_SOURCE_DIR})
 
 add_library (
   libsqlite3 STATIC
@@ -22,6 +30,11 @@ add_executable (
   sqlite3
   ${sqlite3_SOURCE_DIR}/shell.c
 )
+
+if (LINUX)
+  target_link_libraries (libsqlite3 PRIVATE ${CMAKE_DL_LIBS})
+  target_link_libraries (libsqlite3 PRIVATE Threads::Threads)
+endif ()
 
 target_link_libraries (
   sqlite3 PRIVATE
@@ -38,14 +51,14 @@ macro (carla_dependency_add NAME URL TAG)
     ${NAME}
     GIT_REPOSITORY ${URL}
     GIT_TAG ${TAG}
-    GIT_PROGRESS ON
-    GIT_SHALLOW ON
+    OVERRIDE_FIND_PACKAGE
   )
   list (APPEND CARLA_DEPENDENCIES ${NAME})
 endmacro ()
 
 macro (carla_dependencies_make_available)
-  FetchContent_MakeAvailable (${CARLA_DEPENDENCIES})
+  FetchContent_MakeAvailable (
+    ${CARLA_DEPENDENCIES})
   set (CARLA_DEPENDENCIES)
 endmacro ()
 
@@ -55,6 +68,7 @@ endmacro ()
 
 
 
+set (ZLIB_BUILD_EXAMPLES OFF)
 carla_dependency_add (
   zlib
   https://github.com/madler/zlib.git
@@ -66,8 +80,7 @@ include_directories (${zlib_SOURCE_DIR} ${zlib_BINARY_DIR}) # HACK
 set (PNG_TESTS OFF)
 set (PNG_SHARED OFF)
 set (PNG_TOOLS OFF)
-set (PNG_BUILD_ZLIB ON)
-set (ZLIB_INCLUDE_DIR ${zlib_SOURCE_DIR})
+set (PNG_BUILD_ZLIB OFF)
 if (WIN32)
   set (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlibstatic${CARLA_DEBUG_AFFIX}.lib)
 else ()
