@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 3.20.0)
 
 cmake_policy (SET CMP0097 NEW)
 cmake_policy (SET CMP0091 NEW)
+cmake_policy (SET CMP0135 NEW)
 cmake_policy (SET CMP0077 OLD)
 
 set (CARLA_VERSION_MAJOR 0)
@@ -108,6 +109,10 @@ endif ()
 
 if (BUILD_PYTHON_API)
   add_subdirectory (PythonAPI)
+endif ()
+
+if (BUILD_CARLA_UE)
+  add_subdirectory (Unreal)
 endif ()
 
 carla_two_step_configure_file (

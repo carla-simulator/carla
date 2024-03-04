@@ -16,9 +16,11 @@
 
 #include "GameFramework/Controller.h"
 
-#include <compiler/disable-ue4-macros.h>
-#include "carla/ros2/ROS2.h"
-#include <compiler/enable-ue4-macros.h>
+#ifdef WITH_ROS2
+  #include <compiler/disable-ue4-macros.h>
+  #include "carla/ros2/ROS2.h"
+  #include <compiler/enable-ue4-macros.h>
+#endif
 
 void UActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
 {
@@ -170,7 +172,7 @@ FCarlaActor* UActorDispatcher::RegisterActor(
     Actor.OnDestroyed.AddDynamic(this, &UActorDispatcher::OnActorDestroyed);
 
     // ROS2 mapping of actor->ros_name
-    #if defined(WITH_ROS2)
+    #ifdef WITH_ROS2
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
     {
@@ -242,7 +244,7 @@ void UActorDispatcher::OnActorDestroyed(AActor *Actor)
     }
   }
 
-  #if defined(WITH_ROS2)
+  #ifdef WITH_ROS2
   auto ROS2 = carla::ros2::ROS2::GetInstance();
   if (ROS2->IsEnabled())
   {

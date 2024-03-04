@@ -12,6 +12,8 @@ endif ()
 
 
 
+set (CARLA_DEPENDENCIES_INSTALL_PATH)
+
 string (REPLACE "." "" CARLA_SQLITE_TAG ${CARLA_SQLITE_VERSION})
 
 FetchContent_Declare (
@@ -49,6 +51,9 @@ macro (carla_dependency_add NAME URL TAG)
   message ("Fetching ${NAME}...")
   FetchContent_Declare(
     ${NAME}
+    GIT_SUBMODULES_RECURSE ON
+    GIT_SHALLOW ON
+    GIT_PROGRESS ON
     GIT_REPOSITORY ${URL}
     GIT_TAG ${TAG}
     OVERRIDE_FIND_PACKAGE
@@ -80,13 +85,14 @@ include_directories (${zlib_SOURCE_DIR} ${zlib_BINARY_DIR}) # HACK
 set (PNG_TESTS OFF)
 set (PNG_SHARED OFF)
 set (PNG_TOOLS OFF)
-set (PNG_BUILD_ZLIB OFF)
+set (PNG_BUILD_ZLIB ON)
 if (WIN32)
   set (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlibstatic${CARLA_DEBUG_AFFIX}.lib)
 else ()
   set (ZLIB_LIBRARY ${zlib_BINARY_DIR}/libz.a)
 endif ()
-
+set (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
+set (ZLIB_LIBRARIES ${ZLIB_LIBRARY})
 carla_dependency_add (
   libpng
   https://github.com/glennrp/libpng.git

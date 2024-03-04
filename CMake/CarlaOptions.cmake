@@ -32,6 +32,12 @@ option (
 )
 
 option (
+  BUILD_CARLA_UE
+  "Build the Carla Unreal Engine project."
+  OFF
+)
+
+option (
   ENABLE_ROS2
   "Enable ROS2."
   OFF
@@ -73,19 +79,27 @@ option (
   OFF
 )
 
-# ==== Build/Install path options ====
-
 carla_string_option (
-  CARLA_DEPENDENCIES_PATH
-  "Where to build CARLA dependencies."
-  ${CMAKE_CURRENT_BINARY_DIR}/Dependencies
+  CARLA_UNREAL_ENGINE_PATH
+  "Path to the CARLA fork of Unreal Engine"
+  ""
 )
 
-carla_string_option (
-  CARLA_DEPENDENCIES_INSTALL_PREFIX
-  "Where to install CARLA dependencies."
-  ${CMAKE_CURRENT_SOURCE_DIR}/Install
-)
+if (EXISTS ${CARLA_UNREAL_ENGINE_PATH})
+  set (CARLA_HAS_UNREAL_ENGINE_PATH ON)
+else ()
+  set (CARLA_HAS_UNREAL_ENGINE_PATH OFF)
+endif ()
+
+if (${BUILD_CARLA_UE})
+  if (${CARLA_HAS_UNREAL_ENGINE_PATH})
+    message ("Carla UE project successfully added to build. (UE path: ${CARLA_UNREAL_ENGINE_PATH})")
+  else ()
+    message (
+      FATAL_ERROR
+      "Could not add UE project to build since the option CARLA_UNREAL_ENGINE_PATH is not set to a valid path (\"${CARLA_UNREAL_ENGINE_PATH}\"). Please set it to point to the root path of your CARLA Unreal Engine installation.")
+  endif ()
+endif ()
 
 # ==== DEPENDENCIES ====
 
