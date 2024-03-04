@@ -156,9 +156,10 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
 #ifdef CARLA_TAGGER_EXTRA_LOG
     UE_LOG(LogCarla, Log, TEXT("    - Color: %s"), *Color.ToString());
 #endif // CARLA_TAGGER_EXTRA_LOG
-
+    TaggedComponent->DetailMode = EDetailMode::DM_Epic;
     TaggedComponent->SetColor(Color);
     TaggedComponent->MarkRenderStateDirty();
+    TaggedComponent->SetComponentTickEnabled(true);
   }
 
   // Iterate skeletal meshes.
@@ -211,7 +212,7 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
 #ifdef CARLA_TAGGER_EXTRA_LOG
     UE_LOG(LogCarla, Log, TEXT("    - Color: %s"), *Color.ToString());
 #endif // CARLA_TAGGER_EXTRA_LOG
-
+    TaggedComponent->DetailMode = EDetailMode::DM_Epic;
     TaggedComponent->SetColor(Color);
     TaggedComponent->MarkRenderStateDirty();
     TaggedComponent->SetComponentTickEnabled(true);
