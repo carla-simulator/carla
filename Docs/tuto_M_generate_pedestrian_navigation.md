@@ -86,8 +86,6 @@ __7.__ Test the pedestrian navigation by starting a simulation and running the e
 
 If you have any questions about the process, then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions).
 
-
-
 <div class="build-buttons">
 <p>
 <a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
