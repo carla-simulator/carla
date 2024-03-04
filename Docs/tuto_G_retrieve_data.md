@@ -476,7 +476,7 @@ depth_cam.listen(lambda image: image.save_to_disk('tutorial/new_depth_output/%.6
 
 ### Semantic segmentation camera
 
-The [semantic segmentation camera](ref_sensors.md#semantic-segmentation-camera) renders elements in scene with a different color depending on how these have been tagged. The tags are created by the simulator depending on the path of the asset used for spawning. For example, meshes tagged as `Pedestrians` are spawned with content stored in `Unreal/CarlaUE4/Content/Static/Pedestrians`.  
+The [semantic segmentation camera](ref_sensors.md#semantic-segmentation-camera) renders elements in scene with a different color depending on how these have been tagged. The tags are created by the simulator depending on the path of the asset used for spawning. For example, meshes tagged as `Pedestrians` are spawned with content stored in `Unreal/CarlaUnreal/Content/Static/Pedestrians`.  
 
 The output is an image, as any camera, but each pixel contains the tag encoded in the red channel. This original image must be converted using __ColorConverter.CityScapesPalette__. New tags can be created, read more in the [documentation](ref_sensors.md#semantic-segmentation-camera).  
 
@@ -682,7 +682,7 @@ python3 no_rendering_mode.py --no-rendering
 
 ### Start recording
 
-The [__recorder__](adv_recorder.md) can be started at anytime. The script does it at the very beginning, in order to capture everything, including the spawning of the first actors. If no path is detailed, the log will be saved into `CarlaUE4/Saved`. 
+The [__recorder__](adv_recorder.md) can be started at anytime. The script does it at the very beginning, in order to capture everything, including the spawning of the first actors. If no path is detailed, the log will be saved into `CarlaUnreal/Saved`. 
 
 ```py
 # --------------
@@ -737,7 +737,7 @@ So far, a simulation has been recorded. Now, it is time to examine the recording
 It is time to run a new simulation. 
 
 ```sh
-./CarlaUE4.sh
+./CarlaUnreal.sh
 ```
 To reenact the simulation, [choose a fragment](#choose-a-fragment) and run the script containing the code for the playback.  
 

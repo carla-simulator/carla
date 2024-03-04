@@ -43,7 +43,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
+                                sh 'git update-index --skip-worktree Unreal/CarlaUnreal/CarlaUnreal.uproject'
                                 sh 'make setup ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
                             }
                         }
@@ -134,7 +134,7 @@ pipeline
                                 unstash name: 'ubuntu_examples'
                                 sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
                                 // sh 'tar -xvzf Dist/AdditionalMaps*.tar.gz -C Dist/'
-                                sh 'DISPLAY= ./Dist/CarlaUE4.sh -nullrhi -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                                sh 'DISPLAY= ./Dist/CarlaUnreal.sh -nullrhi -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUnreal.log &'
                                 sh 'make smoke_tests ARGS="--xml --python-version=3.7 --target-wheel-platform=manylinux_2_27_x86_64"'
                                 sh 'make run-examples ARGS="localhost 3654"'
                             }
@@ -142,7 +142,7 @@ pipeline
                             {
                                 always
                                 {
-                                    archiveArtifacts 'CarlaUE4.log'
+                                    archiveArtifacts 'CarlaUnreal.log'
                                     junit 'Build/test-results/smoke-tests-*.xml'
                                     deleteDir()
                                     node('master')
@@ -240,7 +240,7 @@ pipeline
                             {
                                 bat """
                                     call ../setEnv64.bat
-                                    git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject
+                                    git update-index --skip-worktree Unreal/CarlaUnreal/CarlaUnreal.uproject
                                 """
                                 bat """
                                     call ../setEnv64.bat

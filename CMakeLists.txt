@@ -38,7 +38,7 @@ set (
 
 set (
   CARLA_UNREAL_PLUGINS_PATH
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUE4/Plugins
+  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins
 )
 
 include (CheckCCompilerFlag)
@@ -116,11 +116,11 @@ if (BUILD_CARLA_UE)
 endif ()
 
 carla_two_step_configure_file (
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUE4/Plugins/Carla/Source/Carla/Carla.Build.cs
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUE4/Plugins/Carla/Source/Carla/Carla.Build.cs.in
+  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins/Carla/Source/Carla/Carla.Build.cs
+  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins/Carla/Source/Carla/Carla.Build.cs.in
 )
 
 carla_two_step_configure_file (
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUE4/Plugins/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUE4/Plugins/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs.in
+  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs
+  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs.in
 )

@@ -1,5 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "CarlaUE4.h"
+#include "CarlaUnreal.h"
 
-IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, CarlaUE4, "CarlaUE4" );
+IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, CarlaUnreal, "CarlaUnreal" );

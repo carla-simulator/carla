@@ -159,7 +159,7 @@ The recorder file includes information regarding many different elements.
 
 ### Recording
 
-To start recording there is only need for a file name. Using `\`, `/` or `:` characters in the file name will define it as an absolute path. If no path is detailed, the file will be saved in `CarlaUE4/Saved`.  
+To start recording there is only need for a file name. Using `\`, `/` or `:` characters in the file name will define it as an absolute path. If no path is detailed, the file will be saved in `CarlaUnreal/Saved`.  
 
 ```py
 client.start_recorder("/home/carla/recording01.log")
@@ -210,13 +210,13 @@ The recorder saves all of the data in a custom binary file format specified in [
 CARLA offers a number of options regarding rendering quality and efficiency. At the most basic level, CARLA offers two quality options to enable operation on both high and low spec hardware with the best results:
 
 ### Epic mode
-`./CarlaUE4.sh -quality-level=Epic`
+`./CarlaUnreal.sh -quality-level=Epic`
 
 ![Epic mode screenshot](img/rendering_quality_epic.jpg)
 *Epic mode screenshot*
 
 ### Low mode
-`./CarlaUE4.sh -quality-level=Low`
+`./CarlaUnreal.sh -quality-level=Low`
 
 ![Low mode screenshot](img/rendering_quality_low.jpg)
 *Low mode screenshot*

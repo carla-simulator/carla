@@ -29,7 +29,7 @@ The recorder file includes information regarding many different elements.
 *   __Pedestrians__ — position and orientation, and linear and angular velocity.  
 *   __Lights__ — Light states from buildings, streets, and vehicles.
 
-To start recording there is only need for a file name. Using `\`, `/` or `:` characters in the file name will define it as an absolute path. If no path is detailed, the file will be saved in `CarlaUE4/Saved`.  
+To start recording there is only need for a file name. Using `\`, `/` or `:` characters in the file name will define it as an absolute path. If no path is detailed, the file will be saved in `CarlaUnreal/Saved`.  
 
 ```py
 client.start_recorder("/home/carla/recording01.log")

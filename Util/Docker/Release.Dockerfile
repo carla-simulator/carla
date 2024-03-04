@@ -17,5 +17,5 @@ USER carla
 WORKDIR /home/carla
 
 # you can also run CARLA in offscreen mode with -RenderOffScreen
-# CMD /bin/bash CarlaUE4.sh -RenderOffScreen
-CMD /bin/bash CarlaUE4.sh
+# CMD /bin/bash CarlaUnreal.sh -RenderOffScreen
+CMD /bin/bash CarlaUnreal.sh

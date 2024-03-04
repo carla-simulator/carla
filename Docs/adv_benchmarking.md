@@ -140,9 +140,9 @@ python -m pip install GPUtil
 1. Start CARLA:
 
         # Linux:
-        ./CarlaUE4.sh
+        ./CarlaUnreal.sh
         # Windows:
-        CarlaUE4.exe
+        CarlaUnreal.exe
         # Source:
         make launch
 

@@ -23,7 +23,7 @@ public class CarlaUE4Target : TargetRules
 
         Type = TargetType.Game;
         
-        ExtraModuleNames.Add("CarlaUE4");
+        ExtraModuleNames.Add("CarlaUnreal");
 
         LogFlagStatus("Unity build", EnableUnityBuild);
 

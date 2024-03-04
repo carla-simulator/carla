@@ -223,7 +223,7 @@
       - param_name: filename
         type: str
         doc: >
-          Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUE4/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.
+          Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUnreal/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.
       - param_name: additional_data
         type: bool
         default: False
@@ -235,7 +235,7 @@
     - def_name: stop_recorder
       params:
       doc: >
-        Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUE4/Saved/`.
+        Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUnreal/Saved/`.
     # --------------------------------------
     - def_name: get_available_maps
       params:

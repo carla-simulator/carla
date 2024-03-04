@@ -6,7 +6,7 @@ import shutil
 import json
 
 WORKSPACE_PATH = Path(__file__).parent.resolve()
-CONTENT_PARENT_PATH = WORKSPACE_PATH / 'Unreal' / 'CarlaUE4' / 'Content'
+CONTENT_PARENT_PATH = WORKSPACE_PATH / 'Unreal' / 'CarlaUnreal' / 'Content'
 INTERMEDIATE_FILE_PATH = CONTENT_PARENT_PATH / f'Carla.tar.gz'
 CONTENT_PATH = CONTENT_PARENT_PATH / 'Carla'
 CONTENT_VERSION_FILE_PATH = WORKSPACE_PATH / 'Util' / 'ContentVersions.json'

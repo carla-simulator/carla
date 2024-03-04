@@ -110,10 +110,10 @@ if ${DO_CARLA_RELEASE} ; then
   pushd "${CARLAUE4_ROOT_FOLDER}" >/dev/null
 
   if ${USE_CARSIM} ; then
-    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject" -e
+    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUnreal.uproject" -e
     echo "CarSim ON" > ${PWD}/Config/CarSimConfig.ini
   else
-    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject"
+    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUnreal.uproject"
     echo "CarSim OFF" > ${PWD}/Config/CarSimConfig.ini
   fi
 
@@ -123,7 +123,7 @@ if ${DO_CARLA_RELEASE} ; then
   mkdir -p ${RELEASE_BUILD_FOLDER}
 
   ${UE4_ROOT}/Engine/Build/BatchFiles/RunUAT.sh BuildCookRun \
-      -project="${PWD}/CarlaUE4.uproject" \
+      -project="${PWD}/CarlaUnreal.uproject" \
       -nocompileeditor -nop4 -cook -stage -archive -package -iterate \
       -clientconfig=${PACKAGE_CONFIG} -ue4exe=UE4Editor \
       -prereqs -targetplatform=Linux -build -utf8output \
@@ -181,12 +181,12 @@ if ${DO_CARLA_RELEASE} ; then
     copy_if_changed "./Plugins/" "${DESTINATION}/Plugins/"
   fi
 
-  if [ -d "./Unreal/CarlaUE4/Plugins/Carla/CarlaDependencies/lib" ] ; then
-    cp -r "./Unreal/CarlaUE4/Plugins/Carla/CarlaDependencies/lib" "${DESTINATION}/CarlaUE4/Plugins/Carla/CarlaDependencies"
+  if [ -d "./Unreal/CarlaUnreal/Plugins/Carla/CarlaDependencies/lib" ] ; then
+    cp -r "./Unreal/CarlaUnreal/Plugins/Carla/CarlaDependencies/lib" "${DESTINATION}/CarlaUnreal/Plugins/Carla/CarlaDependencies"
   fi
 
-  copy_if_changed "./Unreal/CarlaUE4/Content/Carla/HDMaps/*.pcd" "${DESTINATION}/HDMaps/"
-  copy_if_changed "./Unreal/CarlaUE4/Content/Carla/HDMaps/Readme.md" "${DESTINATION}/HDMaps/README"
+  copy_if_changed "./Unreal/CarlaUnreal/Content/Carla/HDMaps/*.pcd" "${DESTINATION}/HDMaps/"
+  copy_if_changed "./Unreal/CarlaUnreal/Content/Carla/HDMaps/Readme.md" "${DESTINATION}/HDMaps/README"
 
   popd >/dev/null
 
@@ -207,7 +207,7 @@ if ${DO_CARLA_RELEASE} && ${DO_TARBALL} ; then
 
   rm -f ./Manifest_NonUFSFiles_Linux.txt
   rm -f ./Manifest_UFSFiles_Linux.txt
-  rm -Rf ./CarlaUE4/Saved
+  rm -Rf ./CarlaUnreal/Saved
   rm -Rf ./Engine/Saved
 
   tar -czf ${DESTINATION} *
@@ -265,7 +265,7 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
   pushd "${CARLAUE4_ROOT_FOLDER}" > /dev/null
 
   # Prepare cooking of package
-  ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
+  ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUnreal.uproject" \
       -run=PrepareAssetsForCooking -PackageName=${PACKAGE_NAME} -OnlyPrepareMaps=false
 
   PACKAGE_FILE=$(<${PACKAGE_PATH_FILE})
@@ -280,7 +280,7 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
   for MAP in "${MAP_LIST[@]}"; do
     if (($(($TOTAL+${#MAP})) > $MAX_STRINGLENGTH)); then
       echo "Cooking $MAP_STRING"
-      ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
+      ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUnreal.uproject" \
           -run=cook -map="${MAP_STRING}" -cooksinglepackage -targetplatform="LinuxNoEditor" \
           -OutputDir="${BUILD_FOLDER}" -iterate
       MAP_STRING=""
@@ -290,7 +290,7 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
     TOTAL=$(($TOTAL+${#MAP}))
   done
   if (($TOTAL > 0)); then
-    ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
+    ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUnreal.uproject" \
         -run=cook -map="${MAP_STRING}" -cooksinglepackage -targetplatform="LinuxNoEditor" \
         -OutputDir="${BUILD_FOLDER}" -iterate
   fi
@@ -305,7 +305,7 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
   pushd "${BUILD_FOLDER}" > /dev/null
 
-  SUBST_PATH="${BUILD_FOLDER}/CarlaUE4"
+  SUBST_PATH="${BUILD_FOLDER}/CarlaUnreal"
   SUBST_FILE="${PACKAGE_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
 
   # Copy the package config file to package
@@ -345,10 +345,10 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
     done
   done
 
-  rm -Rf "./CarlaUE4/Metadata"
-  rm -Rf "./CarlaUE4/Plugins"
-  rm -Rf "./CarlaUE4/Content/${PACKAGE_NAME}/Maps/${PROPS_MAP_NAME}"
-  rm -f "./CarlaUE4/AssetRegistry.bin"
+  rm -Rf "./CarlaUnreal/Metadata"
+  rm -Rf "./CarlaUnreal/Plugins"
+  rm -Rf "./CarlaUnreal/Content/${PACKAGE_NAME}/Maps/${PROPS_MAP_NAME}"
+  rm -f "./CarlaUnreal/AssetRegistry.bin"
 
   if ${DO_TARBALL} ; then
 

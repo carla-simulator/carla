@@ -192,7 +192,7 @@ The method to start a CARLA server depends on the installation method you used a
 ```sh
     cd /opt/carla-simulator/bin/
 
-    ./CarlaUE4.sh
+    ./CarlaUnreal.sh
 ```
 
 - Linux package installation:
@@ -200,7 +200,7 @@ The method to start a CARLA server depends on the installation method you used a
 ```sh
     cd path/to/carla/root
 
-    ./CarlaUE4.sh
+    ./CarlaUnreal.sh
 ```
 
 - Windows package installation:
@@ -208,7 +208,7 @@ The method to start a CARLA server depends on the installation method you used a
 ```sh
     cd path/to/carla/root
 
-    CarlaUE4.exe
+    CarlaUnreal.exe
 ```
 
 A window containing a view over the city will pop up. This is the _spectator view_. To fly around the city use the mouse and `WASD` keys, holding down the right mouse button to control the direction. 
@@ -234,7 +234,7 @@ This is the server simulator which is now running and waiting for a client to co
 There are some configuration options available when launching CARLA and they can be used as follows:
 
 ```sh
-    ./CarlaUE4.sh -carla-rpc-port=3000
+    ./CarlaUnreal.sh -carla-rpc-port=3000
 ```
 
 * `-carla-rpc-port=N` Listen for client connections at port `N`. Streaming port is set to `N+1` by default.  

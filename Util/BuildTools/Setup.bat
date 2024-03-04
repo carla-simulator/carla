@@ -27,9 +27,9 @@ rem ============================================================================
 set BOOST_VERSION=1.80.0
 set INSTALLERS_DIR=%ROOT_PATH:/=\%Util\InstallersWin\
 set VERSION_FILE=%ROOT_PATH:/=\%Util\ContentVersions.txt
-set CONTENT_DIR=%ROOT_PATH:/=\%Unreal\CarlaUE4\Content\Carla\
-set CARLA_DEPENDENCIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies\
-set CARLA_BINARIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\Binaries\Win64
+set CONTENT_DIR=%ROOT_PATH:/=\%Unreal\CarlaUnreal\Content\Carla\
+set CARLA_DEPENDENCIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUnreal\Plugins\Carla\CarlaDependencies\
+set CARLA_BINARIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUnreal\Plugins\Carla\Binaries\Win64
 set CARLA_PYTHON_DEPENDENCIES=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 set USE_CHRONO=false
 set USE_ROS2=false

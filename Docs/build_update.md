@@ -41,16 +41,16 @@ git pull origin master
 git checkout master
 make clean
 git pull origin master
-#   Erase the content in `Unreal\CarlaUE4\Content\Carla`.
+#   Erase the content in `Unreal\CarlaUnreal\Content\Carla`.
 #   Go to `\Util\ContentVersions.txt`.
 #   Download the latest content.
-#   Extract the new content in `Unreal\CarlaUE4\Content\Carla`. 
+#   Extract the new content in `Unreal\CarlaUnreal\Content\Carla`. 
 
 
 # Get development assets. 
 #   Delete the `/Carla` folder containing previous assets. 
 #   Go to the main carla folder.
-git clone https://bitbucket.org/carla-simulator/carla-content Unreal/CarlaUE4/Content/Carla
+git clone https://bitbucket.org/carla-simulator/carla-content Unreal/CarlaUnreal/Content/Carla
 
 ```
 </details>
@@ -122,10 +122,10 @@ __Linux.__
 
 __Windows.__  
 
-__1.__ Erase the previous content in `Unreal\CarlaUE4\Content\Carla`.  
+__1.__ Erase the previous content in `Unreal\CarlaUnreal\Content\Carla`.  
 __2.__ Go to `\Util\ContentVersions.txt`.  
 __3.__ Download the content for `latest`.  
-__4.__ Extract the new content in `Unreal\CarlaUE4\Content\Carla`.  
+__4.__ Extract the new content in `Unreal\CarlaUnreal\Content\Carla`.  
 
 !!! Note
     In order to work with that the CARLA team is devleoping, go to __get development assets__ below. 
@@ -148,7 +148,7 @@ In order to handle this repository it is advisted to install [git-lfs][gitlfslin
 To clone the repository, __go to the main CARLA directory__ and run the following command.  
 
 ```sh
-git clone https://bitbucket.org/carla-simulator/carla-content Unreal/CarlaUE4/Content/Carla
+git clone https://bitbucket.org/carla-simulator/carla-content Unreal/CarlaUnreal/Content/Carla
 ```
 
 !!! Warning

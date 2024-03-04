@@ -11,11 +11,11 @@ Use the following commands:
 
     launch:
 
-        Compile CarlaUE4 project and launch it in Unreal Engine's Editor.
+        Compile CarlaUnreal project and launch it in Unreal Engine's Editor.
 
     launch-only:
 
-        Launch CarlaUE4 project in Unreal Engine's Editor, but skip building
+        Launch CarlaUnreal project in Unreal Engine's Editor, but skip building
         step (assume the project is already built).
 
     import:
@@ -73,7 +73,7 @@ for developers:
 
     CarlaUE4Editor:
 
-        Build CarlaUE4 project, but do not launch the editor.
+        Build CarlaUnreal project, but do not launch the editor.
 
     PythonAPI(.2|.3):
 

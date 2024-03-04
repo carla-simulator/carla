@@ -47,7 +47,7 @@ make import  ARGS="--package=<package_name>"
 make import  ARGS="--no-carla-materials"
 ```
 
-A folder will be created in `Unreal/CarlaUE4/Content` with the name of your map package. It will contain config files, overdrive information, static asset information and navigation information.
+A folder will be created in `Unreal/CarlaUnreal/Content` with the name of your map package. It will contain config files, overdrive information, static asset information and navigation information.
 
 ---
 

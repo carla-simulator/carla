@@ -19,7 +19,7 @@ EXAMPLES_PATH = WORKSPACE_PATH / 'Examples'
 UTIL_PATH = WORKSPACE_PATH / 'Util'
 DOCKER_UTILS_PATH = UTIL_PATH / 'DockerUtils'
 PATCHES_PATH = UTIL_PATH / 'Patches'
-CARLA_UE_PATH = WORKSPACE_PATH / 'Unreal' / 'CarlaUE4'
+CARLA_UE_PATH = WORKSPACE_PATH / 'Unreal' / 'CarlaUnreal'
 CARLA_UE_PLUGIN_ROOT_PATH = CARLA_UE_PATH / 'Plugins'
 CARLA_UE_PLUGIN_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'Carla'
 CARLA_UE_PLUGIN_DEPENDENCIES_PATH = CARLA_UE_PLUGIN_ROOT_PATH / 'CarlaDependencies'
@@ -1390,7 +1390,7 @@ def BuildCarlaUEMain():
       'Development',
       '-WaitMutex',
       '-FromMsBuild',
-      CARLA_UE_PATH / 'CarlaUE4.uproject',
+      CARLA_UE_PATH / 'CarlaUnreal.uproject',
     ], log_name = 'carla-ue-editor-build')
   else:
     pass

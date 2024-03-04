@@ -4,7 +4,7 @@ using EpicGames.Core;
 using System;
 using UnrealBuildTool;
 
-public class CarlaUE4 : ModuleRules
+public class CarlaUnreal : ModuleRules
 {
 	[CommandLine("-slate-ui")]
 	bool EnableSlateUI = false;
@@ -18,9 +18,9 @@ public class CarlaUE4 : ModuleRules
         Console.WriteLine(string.Format("{0} is {1}.", name, state));
     }
 
-    public CarlaUE4(ReadOnlyTargetRules Target) : base(Target)
+    public CarlaUnreal(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PrivatePCHHeaderFile = "CarlaUE4.h";
+		PrivatePCHHeaderFile = "CarlaUnreal.h";
 
 		PublicDependencyModuleNames.AddRange(new string[]
 		{

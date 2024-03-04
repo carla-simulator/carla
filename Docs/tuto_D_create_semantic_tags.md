@@ -34,7 +34,7 @@ __Open the Unreal Engine Editor__ and go to `Carla/Static`. Create a new folder 
 
 ### 3. Create two-way correspondence between UE and the code tag
 
-__3.1. Open `Tagger.cpp`__ in `Unreal/CarlaUE4/Plugins/Carla/Source/Carla/Game`. Go to __`GetLabelByFolderName`__ Add the your tag by the end of the list. The string being compared is the name of the UE folder used in [__2.__](#2-create-the-ue-folder-for-assets), so use the exact same name here.  
+__3.1. Open `Tagger.cpp`__ in `Unreal/CarlaUnreal/Plugins/Carla/Source/Carla/Game`. Go to __`GetLabelByFolderName`__ Add the your tag by the end of the list. The string being compared is the name of the UE folder used in [__2.__](#2-create-the-ue-folder-for-assets), so use the exact same name here.  
 
 ![tagger_cpp](img/tuto_D_create_semantic_tags/03_tagger_cpp.jpg)
 

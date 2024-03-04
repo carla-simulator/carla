@@ -57,8 +57,8 @@ rem ============================================================================
 
 rem Set the visual studio solution directory
 rem
-set CARLA_PLUGINS_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\
-set CARLA_STREETMAP_PLUGINS_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\StreetMap\
+set CARLA_PLUGINS_PATH=%ROOT_PATH:/=\%Unreal\CarlaUnreal\Plugins\
+set CARLA_STREETMAP_PLUGINS_PATH=%ROOT_PATH:/=\%Unreal\CarlaUnreal\Plugins\StreetMap\
 
 rem Build STREETMAP
 

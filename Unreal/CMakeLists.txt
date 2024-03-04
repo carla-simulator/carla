@@ -16,12 +16,12 @@ endif ()
 
 set (
   CARLA_UE_PATH
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUE4
+  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal
 )
 
 set (
   CARLA_UE_PROJECT_PATH
-  ${CARLA_UE_PATH}/CarlaUE4.uproject
+  ${CARLA_UE_PATH}/CarlaUnreal.uproject
 )
 
 add_custom_target (

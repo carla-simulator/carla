@@ -15,9 +15,9 @@ Dependencies/
 Install/
 Plugins/
 
-!Unreal/CarlaUE4/Plugins
-Unreal/CarlaUE4/Plugins/Streetmap
-Unreal/CarlaUE4/Plugins/HoudiniEngine
+!Unreal/CarlaUnreal/Plugins
+Unreal/CarlaUnreal/Plugins/Streetmap
+Unreal/CarlaUnreal/Plugins/HoudiniEngine
 
 /ExportedMaps
 /Import/*

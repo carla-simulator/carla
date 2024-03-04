@@ -119,11 +119,11 @@ rem ============================================================================
 if %DO_PACKAGE%==true (
 
     if %USE_CARSIM% == true (
-        py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -e
-        echo CarSim ON > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
+        py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUnreal/CarlaUnreal.uproject" -e
+        echo CarSim ON > "%ROOT_PATH%Unreal/CarlaUnreal/Config/CarSimConfig.ini"
     ) else (
-        py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
-        echo CarSim OFF > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
+        py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUnreal/CarlaUnreal.uproject"
+        echo CarSim OFF > "%ROOT_PATH%Unreal/CarlaUnreal/Config/CarSimConfig.ini"
     )
 
     if not exist "!BUILD_FOLDER!" mkdir "!BUILD_FOLDER!"
@@ -134,24 +134,24 @@ if %DO_PACKAGE%==true (
         Development^
         -WaitMutex^
         -FromMsBuild^
-        "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
+        "%ROOT_PATH%Unreal/CarlaUnreal/CarlaUnreal.uproject"
 
     if errorlevel 1 goto error_build_editor
 
     echo "%UE4_ROOT%\Engine\Build\BatchFiles\Build.bat"^
-        CarlaUE4^
+        CarlaUnreal^
         Win64^
         %PACKAGE_CONFIG%^
         -WaitMutex^
         -FromMsBuild^
-        "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
+        "%ROOT_PATH%Unreal/CarlaUnreal/CarlaUnreal.uproject"
     call "%UE4_ROOT%\Engine\Build\BatchFiles\Build.bat"^
-        CarlaUE4^
+        CarlaUnreal^
         Win64^
         %PACKAGE_CONFIG%^
         -WaitMutex^
         -FromMsBuild^
-        "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
+        "%ROOT_PATH%Unreal/CarlaUnreal/CarlaUnreal.uproject"
 
     if errorlevel 1 goto error_build
 
@@ -162,7 +162,7 @@ if %DO_PACKAGE%==true (
         -Platform=Win64^
         -installed^
         -nop4^
-        -project="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"^
+        -project="%ROOT_PATH%Unreal/CarlaUnreal/CarlaUnreal.uproject"^
         -cook^
         -stage^
         -build^
@@ -178,7 +178,7 @@ if %DO_PACKAGE%==true (
         -Platform=Win64^
         -installed^
         -nop4^
-        -project="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"^
+        -project="%ROOT_PATH%Unreal/CarlaUnreal/CarlaUnreal.uproject"^
         -cook^
         -stage^
         -build^
@@ -215,8 +215,8 @@ if %DO_COPY_FILES%==true (
     echo f | xcopy /y "!XCOPY_FROM!PythonAPI\util\*.py"                             "!XCOPY_TO!PythonAPI\util\"
     echo d | xcopy /y /s "!XCOPY_FROM!PythonAPI\util\opendrive"                     "!XCOPY_TO!PythonAPI\util\opendrive"
     echo f | xcopy /y "!XCOPY_FROM!PythonAPI\util\requirements.txt"                 "!XCOPY_TO!PythonAPI\util\"
-    echo f | xcopy /y "!XCOPY_FROM!Unreal\CarlaUE4\Content\Carla\HDMaps\*.pcd"      "!XCOPY_TO!HDMaps\"
-    echo f | xcopy /y "!XCOPY_FROM!Unreal\CarlaUE4\Content\Carla\HDMaps\Readme.md"  "!XCOPY_TO!HDMaps\README"
+    echo f | xcopy /y "!XCOPY_FROM!Unreal\CarlaUnreal\Content\Carla\HDMaps\*.pcd"      "!XCOPY_TO!HDMaps\"
+    echo f | xcopy /y "!XCOPY_FROM!Unreal\CarlaUnreal\Content\Carla\HDMaps\Readme.md"  "!XCOPY_TO!HDMaps\README"
     if exist "!XCOPY_FROM!Plugins" (
         echo d | xcopy /y /s "!XCOPY_FROM!Plugins"                                  "!XCOPY_TO!Plugins"
     )
@@ -234,7 +234,7 @@ if %DO_PACKAGE%==true if %DO_TARBALL%==true (
     if exist "!SRC_PATH!Manifest_NonUFSFiles_Win64.txt" del /Q "!SRC_PATH!Manifest_NonUFSFiles_Win64.txt"
     if exist "!SRC_PATH!Manifest_DebugFiles_Win64.txt" del /Q "!SRC_PATH!Manifest_DebugFiles_Win64.txt"
     if exist "!SRC_PATH!Manifest_UFSFiles_Win64.txt" del /Q "!SRC_PATH!Manifest_UFSFiles_Win64.txt"
-    if exist "!SRC_PATH!CarlaUE4/Saved" rmdir /S /Q "!SRC_PATH!CarlaUE4/Saved"
+    if exist "!SRC_PATH!CarlaUnreal/Saved" rmdir /S /Q "!SRC_PATH!CarlaUnreal/Saved"
     if exist "!SRC_PATH!Engine/Saved" rmdir /S /Q "!SRC_PATH!Engine/Saved"
 
     set DST_ZIP=%DESTINATION_ZIP:/=\%
@@ -262,7 +262,7 @@ rem -- Cook other packages -----------------------------------------------------
 rem ==============================================================================
 
 rem Set some file locations
-set CARLAUE4_ROOT_FOLDER=%ROOT_PATH%Unreal/CarlaUE4
+set CARLAUE4_ROOT_FOLDER=%ROOT_PATH%Unreal/CarlaUnreal
 set PACKAGE_PATH_FILE=%CARLAUE4_ROOT_FOLDER%/Content/PackagePath.txt
 set MAP_LIST_FILE=%CARLAUE4_ROOT_FOLDER%/Content/MapPaths.txt
 
@@ -306,7 +306,7 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
         REM # Prepare cooking of package
         echo Prepare cooking of package: !PACKAGE_NAME!
         call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe "^
-        "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject"^
+        "%CARLAUE4_ROOT_FOLDER%/CarlaUnreal.uproject"^
         -run=PrepareAssetsForCooking^
         -PackageName=!PACKAGE_NAME!^
         -OnlyPrepareMaps=false
@@ -319,7 +319,7 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
             REM # Cook maps
             echo Cooking: %%a
             call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe "^
-            "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject"^
+            "%CARLAUE4_ROOT_FOLDER%/CarlaUnreal.uproject"^
             -run=cook^
             -map="%%a"^
             -targetplatform="WindowsNoEditor"^
@@ -340,7 +340,7 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
 
         pushd "!BUILD_FOLDER!"
 
-        set SUBST_PATH=!BUILD_FOLDER!CarlaUE4
+        set SUBST_PATH=!BUILD_FOLDER!CarlaUnreal
 
         REM Copy the package config file to package
         set TARGET="!SUBST_PATH!\Content\Carla\Config\"
@@ -353,7 +353,7 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
         set MAPS_TO_COOK=!MAPS_TO_COOK:+=^
 
         !
-        set BASE_CONTENT=%INSTALLATION_DIR:/=\%..\Unreal\CarlaUE4\Content
+        set BASE_CONTENT=%INSTALLATION_DIR:/=\%..\Unreal\CarlaUnreal\Content
         for /f "tokens=1 delims=+" %%a in ("!MAPS_TO_COOK!") do (
 
             REM Get path and name of map
@@ -366,7 +366,7 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
 
             REM # copy the OpenDrive file
             set SRC=!BASE_CONTENT!!MAP_FOLDER!\OpenDrive\!MAP_NAME!.xodr
-            set TRG=!BUILD_FOLDER!\CarlaUE4\Content\!MAP_FOLDER!\OpenDrive\
+            set TRG=!BUILD_FOLDER!\CarlaUnreal\Content\!MAP_FOLDER!\OpenDrive\
             if exist "!SRC!" (
                 mkdir "!TRG!"
                 copy "!SRC!" "!TRG!"
@@ -374,7 +374,7 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
 
             REM # copy the navigation file
             set SRC=!BASE_CONTENT!!MAP_FOLDER!\Nav\!MAP_NAME!.bin
-            set TRG=!BUILD_FOLDER!\CarlaUE4\Content\!MAP_FOLDER!\Nav\
+            set TRG=!BUILD_FOLDER!\CarlaUnreal\Content\!MAP_FOLDER!\Nav\
             if exist "!SRC!" (
                 mkdir "!TRG!"
                 copy "!SRC!" "!TRG!"
@@ -382,17 +382,17 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
 
             REM # copy the traffic manager map file
             set SRC=!BASE_CONTENT!!MAP_FOLDER!\TM\!MAP_NAME!.bin
-            set TRG=!BUILD_FOLDER!\CarlaUE4\Content\!MAP_FOLDER!\TM\
+            set TRG=!BUILD_FOLDER!\CarlaUnreal\Content\!MAP_FOLDER!\TM\
             if exist "!SRC!" (
                 mkdir "!TRG!"
                 copy "!SRC!" "!TRG!"
             )
         )
 
-        rmdir /S /Q "!BUILD_FOLDER!\CarlaUE4\Metadata"
-        rmdir /S /Q "!BUILD_FOLDER!\CarlaUE4\Plugins"
-        REM del "!BUILD_FOLDER!\CarlaUE4\Content\!PACKAGE_NAME!/Maps/!PROPS_MAP_NAME!"
-        del "!BUILD_FOLDER!\CarlaUE4\AssetRegistry.bin"
+        rmdir /S /Q "!BUILD_FOLDER!\CarlaUnreal\Metadata"
+        rmdir /S /Q "!BUILD_FOLDER!\CarlaUnreal\Plugins"
+        REM del "!BUILD_FOLDER!\CarlaUnreal\Content\!PACKAGE_NAME!/Maps/!PROPS_MAP_NAME!"
+        del "!BUILD_FOLDER!\CarlaUnreal\AssetRegistry.bin"
 
         if %DO_TARBALL%==true (
 
@@ -463,7 +463,7 @@ rem ============================================================================
 
 :error_build
     echo.
-    echo %FILE_N% [ERROR] There was a problem while building the CarlaUE4.
+    echo %FILE_N% [ERROR] There was a problem while building the CarlaUnreal.
     echo           [ERROR] Please read the screen log for more information.
     goto bad_exit
 

@@ -22,7 +22,7 @@ public class CarlaUE4EditorTarget : TargetRules
         IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
         Type = TargetType.Editor;
 
-        ExtraModuleNames.Add("CarlaUE4");
+        ExtraModuleNames.Add("CarlaUnreal");
 
         LogFlagStatus("Unity build", EnableUnityBuild);
 
