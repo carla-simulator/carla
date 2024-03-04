@@ -1438,6 +1438,7 @@ def BuildDependencies(task_graph : TaskGraph):
 
 
 def BuildLibCarlaMain(task_graph : TaskGraph):
+  ROS2_FLAGS = f'-DCMAKE_CXXFLAGS="-DWITH_ROS2"' if ENABLE_ROS2 else ''
   configure_libcarla = task_graph.Add(Task.CreateCMakeConfigureDefault(
     'libcarla-configure',
     [],
@@ -1448,7 +1449,7 @@ def BuildLibCarlaMain(task_graph : TaskGraph):
     f'-DBUILD_LIBCARLA_CLIENT={"ON" if ARGV.libcarla_client else "OFF"}',
     f'-DBUILD_OSM_WORLD_RENDERER={"ON" if ENABLE_OSM_WORLD_RENDERER else "OFF"}',
     f'-DLIBCARLA_PYTORCH={"ON" if ARGV.pytorch else "OFF"}',
-    f'-DCMAKE_CXXFLAGS="-DWITH_ROS2"'))
+    ROS2_FLAGS))
   build_libcarla = task_graph.Add(Task.CreateCMakeBuildDefault(
     'libcarla-build',
     [ configure_libcarla ],
