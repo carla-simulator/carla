@@ -95,7 +95,13 @@ class BehaviorAgent(BasicAgent):
         """
         actor_list = self._world.get_actors()
         lights_list = actor_list.filter("*traffic_light*")
-        affected, _ = self._affected_by_traffic_light(lights_list)
+        if self.config.obstacles.dynamic_threshold_by_speed:
+            # Basic agent setting:
+            max_tlight_distance = self.config.obstacles.base_tlight_threshold + self.config.obstacles.detection_speed_ratio * self.config.live_info.current_speed
+        else:
+            # Behavior setting:
+            max_tlight_distance = self.config.obstacles.base_tlight_threshold
+        affected, _ = self._affected_by_traffic_light(lights_list, max_distance=max_tlight_distance)
 
         return affected
 
@@ -301,7 +307,7 @@ class BehaviorAgent(BasicAgent):
         elif self._incoming_waypoint.is_junction and (self._incoming_direction in [RoadOption.LEFT, RoadOption.RIGHT]):
             target_speed = min([
                 self.config.speed.max_speed,
-                self.config.live_info.current_speed_limit - 5])
+                self.config.live_info.current_speed_limit - self.config.speed.intersection_speed_decrease])
             self._local_planner.set_speed(target_speed)
             control = self._local_planner.run_step(debug=debug)
 
