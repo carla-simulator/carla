@@ -608,8 +608,10 @@ class SimpleConfig(object):
                 overwrites[name] = {k: getattr(self, k) for k in matching}
             keys -= matching
         if len(keys) != 0:
+            overwrites.update({k: v for k,v in simple_overwrites.items() if k in keys})
             # TODO: turn into a warning and find way to include these keys in the config anyway!
-            raise ValueError(f"Unmatched keys {keys} in {self.__class__.__name__} not contained in base {self._base_settings.__name__}")
+            #raise ValueError(f"Unmatched keys {keys} in {self.__class__.__name__} not contained in base {self._base_settings.__name__}")
+            print("Warning: Unmatched keys", keys, "in", self.__class__.__name__, "not contained in base", self._base_settings.__name__) # TODO: remove later, left here for testing.
         return self._base_settings(overwrites=overwrites)
         # TODO: could add new keys after post-processing.
 
