@@ -17,7 +17,7 @@ from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.tools.misc import (get_speed, is_within_distance,
                                get_trafficlight_trigger_location,
                                compute_distance)
-from agents.conf.agent_settings_backend import BasicAgentSettings
+from agents.conf.agent_settings_backend import BasicAgentSettings, SimpleBasicAgentSettings
 
 from agents.tools.hints import ObstacleDetectionResult, TrafficLightDetectionResult
 
@@ -54,6 +54,9 @@ class BasicAgent(object):
             self._map = self._world.get_map()
         self._last_traffic_light = None
 
+        if isinstance(opt_dict, dict):
+            opt_dict = SimpleBasicAgentSettings(overwrites=opt_dict)
+            
         self.config = opt_dict
 
         # Initialize the planners
