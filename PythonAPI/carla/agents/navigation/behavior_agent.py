@@ -284,7 +284,7 @@ class BehaviorAgent(BasicAgent):
                     self._vehicle.bounding_box.extent.y, self._vehicle.bounding_box.extent.x)
 
             # Emergency brake if the car is very close.
-            if distance < self.config.distance.braking_distance:
+            if distance < self.config.distance.emergency_braking_distance:
                 return self.emergency_stop()
 
         # 2.2: Car following behaviors
@@ -298,7 +298,7 @@ class BehaviorAgent(BasicAgent):
                     self._vehicle.bounding_box.extent.y, self._vehicle.bounding_box.extent.x)
 
             # Emergency brake if the car is very close.
-            if distance < self.config.distance.braking_distance:
+            if distance < self.config.distance.emergency_braking_distance:
                 return self.emergency_stop()
             else:
                 control = self.car_following_manager(vehicle, distance)
