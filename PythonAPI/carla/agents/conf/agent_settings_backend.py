@@ -406,7 +406,7 @@ class BasicAgentObstacleSettings(AgentConfig):
     Usage: max_tlight_distance  = base_tlight_threshold  + detection_speed_ratio * vehicle_speed
     """
     
-    dynamic_threshold_by_speed : bool = True
+    use_dynamic_speed_threshold : bool = True
     """
     Whether to add a dynamic threshold based on the vehicle speed to the base threshold.
     

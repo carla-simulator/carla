@@ -95,7 +95,7 @@ class BehaviorAgent(BasicAgent):
         """
         actor_list = self._world.get_actors()
         lights_list = actor_list.filter("*traffic_light*")
-        if self.config.obstacles.dynamic_threshold_by_speed:
+        if self.config.obstacles.use_dynamic_speed_threshold:
             # Basic agent setting:
             max_tlight_distance = self.config.obstacles.base_tlight_threshold + self.config.obstacles.detection_speed_ratio * self.config.live_info.current_speed
         else:
