@@ -83,6 +83,7 @@ class ConstantVelocityAgent(BasicAgent):
         lights_list = actor_list.filter("*traffic_light*")
 
         vehicle_speed = self._vehicle.get_velocity().length()
+        self.config.live_info.current_speed = vehicle_speed
 
         max_vehicle_distance = self.config.obstacles.base_vehicle_threshold + vehicle_speed
         affected_by_vehicle, adversary, _ = self._vehicle_obstacle_detected(vehicle_list, max_vehicle_distance)
@@ -94,8 +95,14 @@ class ConstantVelocityAgent(BasicAgent):
                 hazard_speed = vehicle_velocity.dot(adversary.get_velocity()) / vehicle_velocity.length()
             hazard_detected = True
 
+
         # Check if the vehicle is affected by a red traffic light
-        max_tlight_distance = self.config.obstacles.base_tlight_threshold + self.config.distance.distance_ratio * vehicle_speed
+        if self.config.obstacles.dynamic_threshold_by_speed:
+            # Basic agent setting:
+            max_tlight_distance = self.config.obstacles.base_tlight_threshold + self.config.obstacles.detection_speed_ratio * vehicle_speed
+        else:
+            # Behavior setting:
+            max_tlight_distance = self.config.obstacles.base_tlight_threshold
         affected_by_tlight, _ = self._affected_by_traffic_light(lights_list, max_tlight_distance)
         if affected_by_tlight:
             hazard_speed = 0

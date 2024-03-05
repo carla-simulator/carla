@@ -185,7 +185,13 @@ class BasicAgent(object):
             hazard_detected = True
 
         # Check if the vehicle is affected by a red traffic light
-        max_tlight_distance = self.config.obstacles.base_tlight_threshold + self.config.obstacles.detection_speed_ratio * vehicle_speed
+        if self.config.obstacles.dynamic_threshold_by_speed:
+            # Basic agent setting:
+            max_tlight_distance = self.config.obstacles.base_tlight_threshold + self.config.obstacles.detection_speed_ratio * self.config.live_info.current_speed
+        else:
+            # Behavior setting:
+            max_tlight_distance = self.config.obstacles.base_tlight_threshold
+        
         affected_by_tlight, _ = self._affected_by_traffic_light(self._lights_list, max_tlight_distance)
         if affected_by_tlight:
             hazard_detected = True

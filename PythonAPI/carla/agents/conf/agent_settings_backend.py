@@ -420,7 +420,16 @@ class BasicAgentObstacleSettings(AgentConfig):
     USAGE: max_tlight_distance  = base_tlight_threshold  + detection_speed_ratio * vehicle_speed
     """
     
+    dynamic_threshold_by_speed : bool = True
+    """
+    Whether to add a dynamic threshold based on the vehicle speed to the base threshold.
+    
+    Usage: base_threshold + dynamic_threshold_by_speed * vehicle_speed
+    """
+    
     detection_angles : BasicAgentObstacleDetectionAngles = field(default_factory=BasicAgentObstacleDetectionAngles)
+    """Defines detection angles used when checking for obstacles."""
+    
 
 @dataclass
 class BehaviorAgentObstacleSettings(BasicAgentObstacleSettings):
