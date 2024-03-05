@@ -7,9 +7,15 @@ from typing import ClassVar, Dict, Optional, Tuple, Type, Union
 import carla
 from agents.navigation.local_planner import RoadOption
 
-MISSING = "???" 
+__all__ = ["AgentConfig", 
+           "SimpleConfig", 
+           "BasicAgentSettings", 
+           "BehaviorAgentSettings", 
+           "SimpleBasicAgentSettings", 
+           "SimpleBehaviorAgentSettings"
+        ]
 
-# TODO: Behaviour _tailgate_counter is not implemented in the settings.
+MISSING = "???" 
 
 # ---------------------
 # Helper methods
@@ -22,14 +28,14 @@ class class_or_instance_method:
         self.__wrapped__ = call
         self._wrapper = lambda x : x # TODO: functools.partial and functools.wraps shadow the signature, this reveals it again.
 
-    def __get__(self, instance : Union[None,"AgentConfig"], owner : Type["AgentConfig"]):
+    def __get__(self, instance : Union[None, "AgentConfig"], owner : Type["AgentConfig"]):
         if instance is None:  # called on class 
             return self._wrapper(partial(self.__wrapped__, owner))
         return self._wrapper(partial(self.__wrapped__, instance)) # called on instance
 
 
 # ---------------------
-# Configs
+# Base Classes
 # ---------------------
 
 class AgentConfig:
@@ -75,7 +81,7 @@ class AgentConfig:
                 else:
                     setattr(self, key, value)
             else:
-                print(f"Key {key} not found in {self.__class__.__name__} options.")
+                print(f"Warning: Key '{key}' not found in {self.__class__.__name__} default options. Consider updating or creating a new class to avoid this message.")
 
 # ---------------------
 # Live Info
@@ -615,6 +621,10 @@ class SimpleConfig(object):
         return self._base_settings(overwrites=overwrites)
         # TODO: could add new keys after post-processing.
 
+
+# ---------------------
+# Final Settings
+# ---------------------
 
 @dataclass
 class BasicAgentSettings(AgentConfig):
