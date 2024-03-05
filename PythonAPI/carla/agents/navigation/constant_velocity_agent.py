@@ -12,6 +12,7 @@ It can also make use of the global route planner to follow a specifed route
 import carla
 
 from agents.navigation.basic_agent import BasicAgent
+from agents.conf.agent_settings_backend import BasicAgentSettings
 
 class ConstantVelocityAgent(BasicAgent):
     """
@@ -21,22 +22,19 @@ class ConstantVelocityAgent(BasicAgent):
     wait for a bit, and then start again.
     """
 
-    def __init__(self, vehicle, target_speed=20, opt_dict={}, map_inst=None, grp_inst=None):
+    def __init__(self, vehicle, opt_dict=BasicAgentSettings(), map_inst=None, grp_inst=None):
         """
         Initialization the agent parameters, the local and the global planner.
 
             :param vehicle: actor to apply to agent logic onto
-            :param target_speed: speed (in Km/h) at which the vehicle will move
             :param opt_dict: dictionary in case some of its parameters want to be changed.
                 This also applies to parameters related to the LocalPlanner.
             :param map_inst: carla.Map instance to avoid the expensive call of getting it.
             :param grp_inst: GlobalRoutePlanner instance to avoid the expensive call of getting it.
         """
-        super().__init__(vehicle, target_speed, opt_dict=opt_dict, map_inst=map_inst, grp_inst=grp_inst)
+        super().__init__(vehicle, opt_dict=opt_dict, map_inst=map_inst, grp_inst=grp_inst)
 
         self._use_basic_behavior = False  # Whether or not to use the BasicAgent behavior when the constant velocity is down
-        self._target_speed = target_speed / 3.6  # [m/s]
-        self._current_speed = vehicle.get_velocity().length()  # [m/s]
         self._constant_velocity_stop_time = None
         self._collision_sensor = None
 
@@ -49,12 +47,7 @@ class ConstantVelocityAgent(BasicAgent):
 
         self.is_constant_velocity_active = True
         self._set_collision_sensor()
-        self._set_constant_velocity(target_speed)
-
-    def set_target_speed(self, speed):
-        """Changes the target speed of the agent [km/h]"""
-        self._target_speed = speed / 3.6
-        self._local_planner.set_speed(speed)
+        self._set_constant_velocity(self.config.speed.target_speed / 3.6)
 
     def stop_constant_velocity(self):
         """Stops the constant velocity behavior"""
@@ -65,7 +58,7 @@ class ConstantVelocityAgent(BasicAgent):
     def restart_constant_velocity(self):
         """Public method to restart the constant velocity"""
         self.is_constant_velocity_active = True
-        self._set_constant_velocity(self._target_speed)
+        self._set_constant_velocity(self.config.speed.target_speed / 3.6)
 
     def _set_constant_velocity(self, speed):
         """Forces the agent to drive at the specified speed"""
@@ -91,7 +84,7 @@ class ConstantVelocityAgent(BasicAgent):
 
         vehicle_speed = self._vehicle.get_velocity().length()
 
-        max_vehicle_distance = self._base_vehicle_threshold + vehicle_speed
+        max_vehicle_distance = self.config.obstacles.base_vehicle_threshold + vehicle_speed
         affected_by_vehicle, adversary, _ = self._vehicle_obstacle_detected(vehicle_list, max_vehicle_distance)
         if affected_by_vehicle:
             vehicle_velocity = self._vehicle.get_velocity()
@@ -102,7 +95,7 @@ class ConstantVelocityAgent(BasicAgent):
             hazard_detected = True
 
         # Check if the vehicle is affected by a red traffic light
-        max_tlight_distance = self._base_tlight_threshold + 0.3 * vehicle_speed
+        max_tlight_distance = self.config.obstacles.base_tlight_threshold + self.config.distance.distance_ratio * vehicle_speed
         affected_by_tlight, _ = self._affected_by_traffic_light(lights_list, max_tlight_distance)
         if affected_by_tlight:
             hazard_speed = 0
@@ -112,9 +105,9 @@ class ConstantVelocityAgent(BasicAgent):
         # still useful to apply it so that the vehicle isn't moving with static wheels
         control = self._local_planner.run_step()
         if hazard_detected:
-            self._set_constant_velocity(hazard_speed)
+            self._set_constant_velocity(hazard_speed / 3.6)
         else:
-            self._set_constant_velocity(self._target_speed)
+            self._set_constant_velocity(self.config.speed.target_speed / 3.6)
 
         return control
 
