@@ -136,6 +136,10 @@ class SimpleConfig(object):
         overwrites = {}
         for name, base in self._base_settings.__annotations__.items():
             if not isinstance(base, type) or not issubclass(base, AgentConfig): # First out non AgentConfig attributes
+                if name in keys:
+                    overwrites[name] = simple_overwrites[name] # if updating a top level attribute
+                    keys.remove(name)
+                    removed_keys.add(name)
                 continue
             matching = keys.intersection(base.__dataclass_fields__.keys()) # keys that match from the simple config to the real nested config
             if len(matching) > 0:
@@ -145,8 +149,8 @@ class SimpleConfig(object):
                 keys -= matching
                 removed_keys.update(matching)
         if len(keys) != 0:
-            overwrites.update({k: v for k,v in simple_overwrites.items() if k in keys})
-            print("Warning: Unmatched keys", keys, "in", self.__class__.__name__, "not contained in base", self._base_settings.__name__) # TODO: remove later, left here for testing.
+            overwrites.update({k: v for k,v in simple_overwrites.items() if k in keys}) # Add them to the top level
+            print("Warning: Unmatched keys", keys, "in", self.__class__.__name__, "not contained in base", self._base_settings.__name__+".", "Adding them to the top-level of the settings.") # TODO: remove later, left here for testing.
         return self._base_settings(overwrites=overwrites)
         # TODO: could add new keys after post-processing.
         
