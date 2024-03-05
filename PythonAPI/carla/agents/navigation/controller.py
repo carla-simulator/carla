@@ -11,6 +11,10 @@ import numpy as np
 import carla
 from agents.tools.misc import get_speed
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from PythonAPI.carla.agents.conf.agent_settings_backend import BasicAgentSettings
+
 STEERING_UPDATE_SPEED = 0.1
 ERROR_BUFFER_LENGTH = 10
 
@@ -186,7 +190,7 @@ class PIDLateralController():
         self.config = config
         self._e_buffer = deque(maxlen=ERROR_BUFFER_LENGTH)
 
-    def run_step(self, waypoint):
+    def run_step(self, waypoint: carla.Waypoint):
         """
         Execute one step of lateral control to steer
         the vehicle towards a certain waypoint.
@@ -202,7 +206,7 @@ class PIDLateralController():
         """Changes the offset"""
         self.config.planner.offset = offset
 
-    def _pid_control(self, waypoint, vehicle_transform):
+    def _pid_control(self, waypoint: carla.Waypoint, vehicle_transform: carla.Transform):
         """
         Estimate the steering angle of the vehicle based on the PID equations
 

@@ -9,6 +9,7 @@ waypoints and avoiding other vehicles. The agent also responds to traffic lights
 traffic signs, and has different possible configurations. """
 
 import random
+from typing import Union
 import numpy as np
 import carla
 from agents.navigation.basic_agent import BasicAgent
@@ -30,8 +31,9 @@ class BehaviorAgent(BasicAgent):
     and keeping it in a certain range. Finally, different sets of behaviors
     are encoded in the agent, from cautious to a more aggressive ones.
     """
+    config : BehaviorAgentSettings
 
-    def __init__(self, vehicle, behavior='normal', opt_dict={}, map_inst=None, grp_inst=None):
+    def __init__(self, vehicle, behavior: Union[str, AgentConfig]='normal', opt_dict={}, map_inst=None, grp_inst=None):
         """
         Constructor method.
 

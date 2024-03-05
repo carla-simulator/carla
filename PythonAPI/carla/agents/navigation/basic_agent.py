@@ -70,7 +70,7 @@ class BasicAgent(object):
         # Dictionary mapping a traffic light to a Waypoint corresponding to its trigger volume location
         self._lights_map: "dict[int, carla.Waypoint]" = {}
 
-    def add_emergency_stop(self, control):
+    def add_emergency_stop(self, control: carla.VehicleControl):
         """
         Overwrites the throttle a brake values of a control to perform an emergency stop.
         The steering is kept the same to avoid going out of the lane when stopping during turns
@@ -108,7 +108,7 @@ class BasicAgent(object):
         """Get method for protected member local planner"""
         return self._global_planner
 
-    def set_destination(self, end_location, start_location=None):
+    def set_destination(self, end_location: carla.Location, start_location=None):
         """
         This method creates a list of waypoints between a starting and ending location,
         based on the route returned by the global router, and adds it to the local planner.
@@ -146,7 +146,7 @@ class BasicAgent(object):
             clean_queue=clean_queue
         )
 
-    def trace_route(self, start_waypoint, end_waypoint):
+    def trace_route(self, start_waypoint: carla.Waypoint, end_waypoint: carla.Waypoint):
         """
         Calculates the shortest route between a starting and ending waypoint.
 
