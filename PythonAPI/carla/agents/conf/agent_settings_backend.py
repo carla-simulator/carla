@@ -39,6 +39,12 @@ class class_or_instance_method:
 # ---------------------
 
 class AgentConfig:
+    """
+    Base interface for the agent settings. 
+    
+    Handling the initialization from a nested dataclass and merges in the changes
+    from the overwrites options.
+    """
     overwrites: "Optional[Dict[str, Union[dict, AgentConfig]]]" = None
     
     @classmethod
@@ -84,7 +90,6 @@ class AgentConfig:
                 print(f"Warning: Key '{key}' not found in {self.__class__.__name__} default options. Consider updating or creating a new class to avoid this message.")
 
 
-    
 class SimpleConfig(object):
     """
     A class that allows a more simple way to initialize settings.
