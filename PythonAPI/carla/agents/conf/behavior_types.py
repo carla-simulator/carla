@@ -15,7 +15,7 @@ class Cautious(SimpleBehaviorAgentSettings):
     safety_time = 3
     min_proximity_threshold = 12
     braking_distance = 6
-    tailgate_counter = 0
+    avoid_tailgators = True
 
 @dataclass
 class Normal(SimpleBehaviorAgentSettings):
@@ -26,7 +26,7 @@ class Normal(SimpleBehaviorAgentSettings):
     safety_time = 3
     min_proximity_threshold = 10
     braking_distance = 5
-    tailgate_counter = 0
+    avoid_tailgators = True
 
 @dataclass
 class Aggressive(SimpleBehaviorAgentSettings):
@@ -37,4 +37,4 @@ class Aggressive(SimpleBehaviorAgentSettings):
     safety_time = 3
     min_proximity_threshold = 8
     braking_distance = 4
-    tailgate_counter = -1
+    avoid_tailgators = False

@@ -62,8 +62,10 @@ class BehaviorAgent(BasicAgent):
         else:
             raise TypeError("Behavior must be a string or a subclass of AgentConfig or a SimpleConfig") # TODO: maybe raise a warning instead and assume user passed a fitting structure.
         
-        if not hasattr(self.config, 'tailgate_counter'): # TODO: maybe use an attribute here instead, or choose another option.
-            self.config.tailgate_counter = 0
+        if self.config.avoid_tailgators:
+            self._tailgate_counter = 0
+        else:
+            self._tailgate_counter = -1 # Does not trigger the == 0 condition.
         
         super().__init__(vehicle, opt_dict=self.config, map_inst=map_inst, grp_inst=grp_inst)
 
@@ -122,7 +124,7 @@ class BehaviorAgent(BasicAgent):
                 if not new_vehicle_state:
                     print("Tailgating, moving to the right!")
                     end_waypoint = self._local_planner.target_waypoint
-                    self.config.tailgate_counter = 200
+                    self._tailgate_counter = 200
                     self.set_destination(end_waypoint.transform.location,
                                          right_wpt.transform.location)
             elif left_turn == carla.LaneChange.Left and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
@@ -131,7 +133,7 @@ class BehaviorAgent(BasicAgent):
                 if not new_vehicle_state:
                     print("Tailgating, moving to the left!")
                     end_waypoint = self._local_planner.target_waypoint
-                    self.config.tailgate_counter = 200
+                    self._tailgate_counter = 200
                     self.set_destination(end_waypoint.transform.location,
                                          left_wpt.transform.location)
 
@@ -167,7 +169,7 @@ class BehaviorAgent(BasicAgent):
             # Check for tailgating
             if not vehicle_state and self._direction == RoadOption.LANEFOLLOW \
                     and not waypoint.is_junction and self.config.live_info.current_speed > 10 \
-                    and self.config.tailgate_counter == 0:
+                    and self._tailgate_counter == 0:
                 self._tailgating(waypoint, vehicle_list)
 
         return vehicle_state, vehicle, distance
@@ -255,8 +257,8 @@ class BehaviorAgent(BasicAgent):
         self._update_information()
 
         control = None
-        if self.config.tailgate_counter > 0:
-            self.config.tailgate_counter -= 1
+        if self._tailgate_counter > 0:
+            self._tailgate_counter -= 1
 
         ego_vehicle_loc = self._vehicle.get_location()
         ego_vehicle_wp = self._map.get_waypoint(ego_vehicle_loc)
