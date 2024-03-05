@@ -67,6 +67,7 @@ class AgentConfig:
         self._clean_options()
         if self.overwrites is None:
             return
+        # Merge the overwrite dict into the correct ones.
         for key, value in self.overwrites.items():
             if key in self.__annotations__:
                 if issubclass(self.__annotations__[key], AgentConfig):
@@ -84,8 +85,8 @@ class AgentConfig:
 class LiveInfo(AgentConfig):
     current_speed : float = MISSING
     current_speed_limit : float = MISSING
-    velocity_vector : "carla.Vector3D" = MISSING
     direction : RoadOption = MISSING
+    velocity_vector : "carla.Vector3D" = MISSING
     
     # NOTE: Not ported to OmegaConf
     @property
@@ -99,8 +100,7 @@ class LiveInfo(AgentConfig):
 # ---------------------
 # Speed
 # ---------------------    
-    
-    
+
 @dataclass
 class BasicAgentSpeedSettings(AgentConfig):
     target_speed: float = 20
@@ -135,7 +135,7 @@ class BehaviorAgentSpeedSettings(BasicAgentSpeedSettings):
     From normal behavior. This supersedes the target_speed when following the BehaviorAgent logic."""
     
     # CASE A
-    speed_decrease : float = 12
+    speed_decrease : float = 10
     """other_vehicle_speed"""
     
     safety_time : float = 3
@@ -146,7 +146,7 @@ class BehaviorAgentSpeedSettings(BasicAgentSpeedSettings):
     """Implement als variable, currently hard_coded"""
 
     # All Cases
-    speed_lim_dist : float = 6
+    speed_lim_dist : float = 3
     """
     Difference to speed limit.
     NOTE: For negative values the car drives above speed limit
@@ -201,10 +201,10 @@ class BehaviorAgentDistanceSettings(BasicAgentDistanceSettings):
     automatic_proximity_threshold = {RoadOption.CHANGELANELEFT: 2, "same_lane" : 3, "right_lane" : 2}
     """
     
-    min_proximity_threshold : float = 12
+    min_proximity_threshold : float = 10
     """Range in which cars are detected. NOTE: Speed limit overwrites"""
     
-    braking_distance : float = 6
+    braking_distance : float = 5
     """Emergency Stop Distance Trigger"""
     
 
