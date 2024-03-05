@@ -72,7 +72,7 @@ class BasicAgent(object):
         # Dictionary mapping a traffic light to a Waypoint corresponding to its trigger volume location
         self._lights_map: "dict[int, carla.Waypoint]" = {}
 
-    def add_emergency_stop(self, control):
+    def add_emergency_stop(self, control: carla.VehicleControl):
         """
         Overwrites the throttle a brake values of a control to perform an emergency stop.
         The steering is kept the same to avoid going out of the lane when stopping during turns
@@ -124,7 +124,6 @@ class BasicAgent(object):
             :param start_location (carla.Location): starting location of the route
             :param clean_queue (bool): Whether to clear or append to the currently planned route
         """
-        #TODO: This needs an overhaul to be done. Currently start_location is not used
         if not start_location:
             if clean_queue and self._local_planner.target_waypoint:
                 # Plan from the waypoint in front of the vehicle onwards
@@ -155,7 +154,7 @@ class BasicAgent(object):
             clean_queue=clean_queue
         )
 
-    def trace_route(self, start_waypoint, end_waypoint):
+    def trace_route(self, start_waypoint: carla.Waypoint, end_waypoint: carla.Waypoint):
         """
         Calculates the shortest route between a starting and ending waypoint.
 

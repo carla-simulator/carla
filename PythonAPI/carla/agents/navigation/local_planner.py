@@ -8,11 +8,14 @@
 from enum import IntEnum
 from collections import deque
 import random
+from typing import TYPE_CHECKING
 
 import carla
 from agents.navigation.controller import VehiclePIDController
 from agents.tools.misc import draw_waypoints, get_speed
 
+if TYPE_CHECKING:
+    from agents.conf.agent_settings_backend import BasicAgentSettings
 
 class RoadOption(IntEnum):
     """
@@ -39,8 +42,8 @@ class LocalPlanner(object):
     When multiple paths are available (intersections) this local planner makes a random choice,
     unless a given global plan has already been specified.
     """
-
-    def __init__(self, vehicle, opt_dict={}, map_inst=None):
+    
+    def __init__(self, vehicle: carla.Actor, opt_dict: "BasicAgentSettings", map_inst: carla.Map = None):
         """
         :param vehicle: actor to apply to local planner logic onto
         :param opt_dict: dictionary of arguments with different parameters:
@@ -56,7 +59,7 @@ class LocalPlanner(object):
         :param map_inst: carla.Map instance to avoid the expensive call of getting it.
         """
         self._vehicle = vehicle
-        self._world = self._vehicle.get_world()
+        self._world : carla.World = self._vehicle.get_world()
         if map_inst:
             if isinstance(map_inst, carla.Map):
                 self._map = map_inst
@@ -67,10 +70,10 @@ class LocalPlanner(object):
             self._map = self._world.get_map()
 
         self._vehicle_controller = None
-        self.target_waypoint = None
-        self.target_road_option = None
+        self.target_waypoint: carla.Waypoint = None
+        self.target_road_option: RoadOption = None
 
-        self._waypoints_queue = deque(maxlen=10000)
+        self._waypoints_queue: "deque[tuple[carla.Waypoint, RoadOption]]" = deque(maxlen=10000)
         self._min_waypoint_queue_length = 100
         self._stop_waypoint_creation = False
 
