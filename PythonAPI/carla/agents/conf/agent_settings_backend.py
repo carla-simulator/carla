@@ -262,10 +262,8 @@ class BehaviorAgentDistanceSettings(BasicAgentDistanceSettings):
     """
     Collision Avoidance -----
 
-    Distance in which for vehicles are checked
-    max(min_proximity_threshold, self._speed_limit / (2 if LANE CHANGE else 3 ) )
-    TODO: The secondary speed limit is hardcoded, make adjustable and optional
-    automatic_proximity_threshold = {RoadOption.CHANGELANELEFT: 2, "same_lane" : 3, "right_lane" : 2}
+    Distance in which for vehicles are checked:
+    usage: max_distance = max(min_proximity_threshold, self._speed_limit / (2 if <LANE CHANGE> else 3 ) )
     """
     
     min_proximity_threshold : float = 10
@@ -312,6 +310,7 @@ class AutopilotLaneChangeSettings(AgentConfig):
     Adjust probability that in each timestep the actor will perform a left/right lane change, 
     dependent on lane change availability.
     """
+    
     random_right_lanechange_percentage : float = 0.1
     """
     Adjust probability that in each timestep the actor will perform a left/right lane change, 
@@ -387,31 +386,33 @@ class BasicAgentObstacleSettings(AgentConfig):
     """
     Base distance to traffic lights to check if they affect the vehicle
         
-    USAGE: max_vehicle_distance = base_vehicle_threshold + detection_speed_ratio * vehicle_speed
-    USAGE: max_tlight_distance  = base_tlight_threshold  + detection_speed_ratio * vehicle_speed
+    Usage: max_vehicle_distance = base_vehicle_threshold + detection_speed_ratio * vehicle_speed
+    Usage: max_tlight_distance  = base_tlight_threshold  + detection_speed_ratio * vehicle_speed
     """
     
     base_vehicle_threshold : float = 5.0
     """
     Base distance to vehicles to check if they affect the vehicle
             
-    USAGE: max_vehicle_distance = base_vehicle_threshold + detection_speed_ratio * vehicle_speed
-    USAGE: max_tlight_distance  = base_tlight_threshold  + detection_speed_ratio * vehicle_speed
+    Usage: max_vehicle_distance = base_vehicle_threshold + detection_speed_ratio * vehicle_speed
+    Usage: max_tlight_distance  = base_tlight_threshold  + detection_speed_ratio * vehicle_speed
     """
 
     detection_speed_ratio : float = 1.0
     """
     Increases detection range based on speed
     
-    USAGE: max_vehicle_distance = base_vehicle_threshold + detection_speed_ratio * vehicle_speed
-    USAGE: max_tlight_distance  = base_tlight_threshold  + detection_speed_ratio * vehicle_speed
+    Usage: max_vehicle_distance = base_vehicle_threshold + detection_speed_ratio * vehicle_speed
+    Usage: max_tlight_distance  = base_tlight_threshold  + detection_speed_ratio * vehicle_speed
     """
     
     dynamic_threshold_by_speed : bool = True
     """
     Whether to add a dynamic threshold based on the vehicle speed to the base threshold.
     
-    Usage: base_threshold + dynamic_threshold_by_speed * vehicle_speed
+    Usage: base_threshold + detection_speed_ratio * vehicle_speed
+    
+    #NOTE: Currently only applied to traffic lights
     """
     
     detection_angles : BasicAgentObstacleDetectionAngles = field(default_factory=BasicAgentObstacleDetectionAngles)
