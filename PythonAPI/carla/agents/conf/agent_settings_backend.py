@@ -254,20 +254,7 @@ class AutopilotSpeedSettings(AgentConfig):
 
 @dataclass
 class BasicAgentDistanceSettings(AgentConfig):
-    """
-    Calculation of the minimum distance for # XXX
-    min_distance = base_min_distance + distance_ratio * vehicle_speed 
-    
-    see local_planner.py `run_step`
-    """
-    
-    base_min_distance : float = 3.0
-    """
-    Base value of the distance to keep
-    """
-    
-    distance_ratio : float = 0.5
-    """Increases minimum distance multiplied by speed"""
+    pass
     
 
 @dataclass
@@ -554,6 +541,16 @@ class BasicAgentPlannerSettings(AgentConfig):
     
     Used with the Waypoint.next(sampling_radius) and distance between waypoints.
     """
+    
+    min_distance_next_waypoint : float = 3.0
+    """
+    Removes waypoints from the queue that are too close to the vehicle.
+    
+    Usage: min_distance = min_distance_next_waypoint + next_waypoint_distance_ratio * vehicle_speed 
+    """
+    
+    next_waypoint_distance_ratio : float = 0.5
+    """Increases the minimum distance to the next waypoint based on the vehicles speed."""
 
 
 @dataclass

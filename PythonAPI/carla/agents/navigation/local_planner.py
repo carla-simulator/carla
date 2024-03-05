@@ -197,7 +197,7 @@ class LocalPlanner(object):
         veh_location = self._vehicle.get_location()
         self.config.live_info.current_speed = get_speed(self._vehicle) # km/h # Could be removed if we assume that it was updated beforehand by the agent.
         vehicle_speed = self.config.live_info.current_speed / 3.6 # km/h -> m/s
-        self._min_distance = self.config.distance.base_min_distance + self.config.distance.distance_ratio * vehicle_speed
+        self._min_distance = self.config.planner.min_distance_next_waypoint + self.config.planner.next_waypoint_distance_ratio * vehicle_speed
 
         num_waypoint_removed = 0
         for waypoint, _ in self._waypoints_queue:
