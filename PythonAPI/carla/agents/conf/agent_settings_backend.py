@@ -271,7 +271,7 @@ class BehaviorAgentDistanceSettings(BasicAgentDistanceSettings):
     min_proximity_threshold : float = 10
     """Range in which cars are detected. NOTE: Speed limit overwrites"""
     
-    braking_distance : float = 5
+    emergency_braking_distance : float = 5
     """Emergency Stop Distance Trigger"""
     
 
