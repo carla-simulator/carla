@@ -31,7 +31,7 @@ class BehaviorAgent(BasicAgent):
     are encoded in the agent, from cautious to a more aggressive ones.
     """
 
-    def __init__(self, vehicle, behavior='normal', opt_dict=BehaviorAgentSettings(), map_inst=None, grp_inst=None):
+    def __init__(self, vehicle, behavior='normal', opt_dict={}, map_inst=None, grp_inst=None):
         """
         Constructor method.
 
@@ -39,30 +39,31 @@ class BehaviorAgent(BasicAgent):
             :param behavior: type of agent to apply
         """
 
-        super().__init__(vehicle, opt_dict=opt_dict, map_inst=map_inst, grp_inst=grp_inst)
         self._look_ahead_steps = 0
-
-        # Vehicle information
-        self.config = None
 
         # Parameters for agent behavior
         if isinstance(behavior, str):
             if behavior == 'cautious':
-                self.config = Cautious()
+                self.config = Cautious(overwrites=opt_dict)
 
             elif behavior == 'normal':
-                self.config = Normal()
+                self.config = Normal(overwrites=opt_dict)
 
             elif behavior == 'aggressive':
-                self.config = Aggressive()
+                self.config = Aggressive(overwrites=opt_dict)
         elif isinstance(behavior, AgentConfig):
             self.config = behavior
+            if opt_dict:
+                print("Warning: opt_dict is ignored when behavior is an instance of AgentConfig. Initialize the settings with the updates parameters beforehand.") # TODO: maybe can call update.
         elif isinstance(behavior, type) and issubclass(behavior, (AgentConfig, SimpleConfig)):
-            self.config = behavior()
+            self.config = behavior(opt_dict)
         else:
-            raise TypeError("Behavior must be a string or a subclass of AgentConfig or a SimpleConfig")
-        if not hasattr(self.config, "tailgate_counter"): # TODO: maybe use an attribute here instead, or choose another option.
+            raise TypeError("Behavior must be a string or a subclass of AgentConfig or a SimpleConfig") # TODO: maybe raise a warning instead and assume user passed a fitting structure.
+        
+        if not hasattr(self.config, 'tailgate_counter'): # TODO: maybe use an attribute here instead, or choose another option.
             self.config.tailgate_counter = 0
+        
+        super().__init__(vehicle, opt_dict=self.config, map_inst=map_inst, grp_inst=grp_inst)
 
 
     def _update_information(self):
