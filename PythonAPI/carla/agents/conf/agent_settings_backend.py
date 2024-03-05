@@ -260,10 +260,12 @@ class BasicAgentDistanceSettings(AgentConfig):
 @dataclass
 class BehaviorAgentDistanceSettings(BasicAgentDistanceSettings):
     """
-    Collision Avoidance -----
+    Collision Avoidance
+    -------------------
 
-    Distance in which for vehicles are checked:
-    usage: max_distance = max(min_proximity_threshold, self._speed_limit / (2 if <LANE CHANGE> else 3 ) )
+    Distance in which for vehicles are checked.
+    
+    Usage: max_distance = max(min_proximity_threshold, self._speed_limit / (2 if <LANE CHANGE> else 3 ) )
     """
     
     min_proximity_threshold : float = 10
@@ -581,6 +583,8 @@ class BehaviorAgentEmergencySettings(BasicAgentEmergencySettings):
 
 
 # ---------------------
+# Final Settings
+# ---------------------
 
 @dataclass
 class AutopilotBehavior(AgentConfig):
@@ -625,7 +629,7 @@ class AutopilotBehavior(AgentConfig):
     The distance is in meters and will affect the minimum moving distance. It is computed from front to back of the vehicle objects. 
     """
 
-    vehicle_percentage_speed_difference : float = 30
+    vehicle_percentage_speed_difference : float = 30 # in percent
     """
     Sets the difference the vehicle's intended speed and its current speed limit. 
     Speed limits can be exceeded by setting the percentage to a negative value. 
@@ -641,13 +645,7 @@ class AutopilotBehavior(AgentConfig):
 
     update_vehicle_lights : bool = False
     """Sets if the Traffic Manager is responsible of updating the vehicle lights, or not."""
-    
 
-
-
-# ---------------------
-# Final Settings
-# ---------------------
 
 @dataclass
 class BasicAgentSettings(AgentConfig):
@@ -661,6 +659,7 @@ class BasicAgentSettings(AgentConfig):
     planner : BasicAgentPlannerSettings = field(default_factory=BasicAgentPlannerSettings, init=False)
     emergency : BasicAgentEmergencySettings = field(default_factory=BasicAgentEmergencySettings, init=False)
         
+    
 @dataclass
 class BehaviorAgentSettings(AgentConfig):
     overwrites : Optional[Dict[str, dict]] = field(default_factory=dict, repr=False) # type: Optional[Dict[str, Union[dict|AgentConfig]]]
@@ -673,7 +672,7 @@ class BehaviorAgentSettings(AgentConfig):
     planner : BehaviorAgentPlannerSettings = field(default_factory=BehaviorAgentPlannerSettings, init=False)
     emergency : BehaviorAgentEmergencySettings = field(default_factory=BehaviorAgentEmergencySettings, init=False)
     avoid_tailgators : bool = True
- 
+
 @dataclass
 class SimpleBasicAgentSettings(SimpleConfig, LiveInfo, BasicAgentSpeedSettings, BasicAgentDistanceSettings, BasicAgentLaneChangeSettings, BasicAgentObstacleSettings, BasicAgentControllerSettings, BasicAgentPlannerSettings, BasicAgentEmergencySettings):
     _base_settings :ClassVar[BasicAgentSettings] = BasicAgentSettings
