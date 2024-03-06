@@ -75,11 +75,7 @@ void AWheelParentClassFixer::FixWheelClassesParentActor()
       
       FixedPath += "." + LastPartOfPath + "'";
 
-      if (LastPartOfPath.StartsWith("BP") && (LastPartOfPath.Contains("FW") || LastPartOfPath.Contains("RW") || 
-                                                LastPartOfPath.Contains("MRW") || LastPartOfPath.Contains("MLW") ||
-                                                LastPartOfPath.Contains("RRW") || LastPartOfPath.Contains("RLW") ||
-                                                LastPartOfPath.Contains("FRW") || LastPartOfPath.Contains("FLW") ||
-                                                LastPartOfPath.Contains("Wheel")))
+      if (LastPartOfPath.StartsWith("BP") && ((LastPartOfPath.Contains("FW") || LastPartOfPath.Contains("RW")) || LastPartOfPath.Contains("Wheel")))
       {
         UObject* Obj = UEditorAssetLibrary::LoadAsset(FixedPath);
         UBlueprint* BP = Cast<UBlueprint>(Obj);
@@ -103,6 +99,6 @@ void AWheelParentClassFixer::FixWheelClassesParentActor()
   }
   else
   {
-    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Path don´t exist!");
+    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Path donï¿½t exist!");
   }
 }

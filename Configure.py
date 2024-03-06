@@ -1314,6 +1314,12 @@ def BuildDependencies(task_graph : TaskGraph):
       XERCESC_INSTALL_PATH))
   
   if ENABLE_ROS2:
+    #HACK: Prevent find_package() detect foonathan-memory-vendor library when ros2 is installed in the system.
+    #      foonathan-memory-vendor does not build if is already installed in the system and there are no cmake arguments to prvent this behavioud in foonathan-memory-vendor.
+    def is_ros_system_install_path(path):
+      return any(ros_folder in path for ros_folder in ['/ros/', '/ros2/'])
+    os.environ['PATH'] = ':'.join([path for path in os.environ['PATH'].split(':') if not is_ros_system_install_path(path)])
+    
     task_graph.Add(Task.CreateCMakeConfigureGxxABI(
       'foonathan-memory-vendor-configure',
       [],
