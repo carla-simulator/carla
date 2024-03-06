@@ -116,7 +116,7 @@ void ABlueprintParentClassFixer::FixBlueprints()
       ReferencePath += "'";
 
       //If the names filters is not empty, make the cast and change the blueprint parent class of the blueprint or animation blueprint
-      if (ContainsStringCondition.Num() > 0)
+      if (ContainsStringCondition.Num() > 0 && !PathToSearchClassOn.IsEmpty())
       {
         for (FString CurrentString : ContainsStringCondition)
         {
