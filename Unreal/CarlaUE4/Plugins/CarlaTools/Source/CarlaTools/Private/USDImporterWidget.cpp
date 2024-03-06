@@ -475,7 +475,7 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
     UE_LOG(LogCarlaTools, Log, TEXT("Skeletal mesh component not found"));
     return nullptr;
   }
-  USkeletalMesh* SkeletalMesh = SkeletalMeshComponent->SkeletalMesh;
+  USkeletalMesh* SkeletalMesh = SkeletalMeshComponent->GetSkeletalMeshAsset();
   TMap<FString, FTransform> NewBoneTransform = {
     {"Wheel_Front_Left", FTransform(VehicleMeshes.Anchors.WheelFL)},
     {"Wheel_Front_Right", FTransform(VehicleMeshes.Anchors.WheelFR)},
@@ -584,7 +584,7 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
 
   CopyCollisionToPhysicsAsset(NewPhysicsAsset, VehicleMeshes.Body);
   // assign the physics asset to the skeletal mesh
-  NewSkeletalMesh->PhysicsAsset = NewPhysicsAsset;
+  NewSkeletalMesh->SetPhysicsAsset(NewPhysicsAsset);
   // Create the new blueprint vehicle
   FKismetEditorUtilities::FCreateBlueprintFromActorParams Params;
   Params.bReplaceActor = false;
@@ -608,8 +608,8 @@ bool UUSDImporterWidget::EditSkeletalMeshBones(
     UE_LOG(LogCarlaTools, Log, TEXT("Skeletal mesh invalid"));
     return false;
   }
-  FReferenceSkeleton& ReferenceSkeleton = NewSkeletalMesh->RefSkeleton;
-  FReferenceSkeletonModifier SkeletonModifier(ReferenceSkeleton, NewSkeletalMesh->Skeleton);
+  FReferenceSkeleton& ReferenceSkeleton = NewSkeletalMesh->GetRefSkeleton();
+  FReferenceSkeletonModifier SkeletonModifier(ReferenceSkeleton, NewSkeletalMesh->GetSkeleton());
   for (auto& Element : NewBoneTransforms)
   {
     const FString& BoneName = Element.Key;
@@ -625,10 +625,16 @@ bool UUSDImporterWidget::EditSkeletalMeshBones(
 
   NewSkeletalMesh->MarkPackageDirty();
   UPackage* Package = NewSkeletalMesh->GetOutermost();
-  return UPackage::SavePackage(
-      Package, NewSkeletalMesh,
-      EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-      *(Package->GetName()), GError, nullptr, true, true, SAVE_NoError);
+  FSavePackageArgs SaveArgs;
+  SaveArgs.TopLevelFlags =
+      EObjectFlags::RF_Public | EObjectFlags::RF_Standalone;
+  SaveArgs.Error = GError;
+  SaveArgs.bForceByteSwapping = true;
+  SaveArgs.bWarnOfLongFilename = true;
+  SaveArgs.SaveFlags = SAVE_NoError;
+
+  return UPackage::SavePackage(Package, NewSkeletalMesh, *(Package->GetName()),
+                               SaveArgs);
 }
 
 void UUSDImporterWidget::CopyCollisionToPhysicsAsset(
