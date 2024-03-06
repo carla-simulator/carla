@@ -35,6 +35,8 @@
 #include "Engine/StaticMeshActor.h"
 #include "MeshDescription.h"
 #include "Subsystems/UnrealEditorSubsystem.h"
+#include "LevelEditorSubsystem.h"
+
 #include "ProceduralMeshConversion.h"
 
 #include "ContentBrowserModule.h"
@@ -280,8 +282,11 @@ void UOpenDriveToMap::GenerateTileStandalone(){
 
   ExecuteTileCommandlet();
 
+  UWorld* World = GEditor->GetEditorWorldContext().World();
+  ULevelEditorSubsystem* LevelSubsystem = GEditor->GetEditorSubsystem<ULevelEditorSubsystem>();
+
   UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
-  UEditorLevelLibrary::SaveCurrentLevel();
+  LevelSubsystem->SaveCurrentLevel();
 
 }
 
@@ -308,9 +313,11 @@ void UOpenDriveToMap::GenerateTile(){
     MapName = FPaths::GetCleanFilename(FilePath);
     MapName.RemoveFromEnd(".xodr", ESearchCase::Type::IgnoreCase);
     UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("MapName %s"), *MapName);
-    UEditorLevelLibrary::LoadLevel(*BaseLevelName);
 
     UWorld* World = GEditor->GetEditorWorldContext().World();
+    ULevelEditorSubsystem* LevelSubsystem = GEditor->GetEditorSubsystem<ULevelEditorSubsystem>();
+
+    LevelSubsystem->LoadLevel(*BaseLevelName);
 
     AActor* QueryActor = UGameplayStatics::GetActorOfClass(
                             World,
@@ -323,7 +330,7 @@ void UOpenDriveToMap::GenerateTile(){
       Tile0Offset = LmManager->GetTile0Offset();
 
       FCarlaMapTile& CarlaTile =  LmManager->GetCarlaMapTile(CurrentTilesInXY);
-      UEditorLevelLibrary::SaveCurrentLevel();
+      LevelSubsystem->SaveCurrentLevel();
 
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Current Tile is %s"), *( CurrentTilesInXY.ToString() ) );
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("NumTilesInXY is %s"), *( NumTilesInXY.ToString() ) );
@@ -331,7 +338,7 @@ void UOpenDriveToMap::GenerateTile(){
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Tile0Offset is %s"), *( Tile0Offset.ToString() ) );
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Tile Name is %s"), *(CarlaTile.Name) );
 
-      UEditorLevelLibrary::LoadLevel(CarlaTile.Name);
+      LevelSubsystem->LoadLevel(CarlaTile.Name);
 
       MinPosition = FVector(CurrentTilesInXY.X * TileSize, CurrentTilesInXY.Y * -TileSize, 0.0f);
       MaxPosition = FVector((CurrentTilesInXY.X + 1.0f ) * TileSize, (CurrentTilesInXY.Y + 1.0f) * -TileSize, 0.0f);
@@ -347,7 +354,7 @@ void UOpenDriveToMap::GenerateTile(){
     }
 
     UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
-    UEditorLevelLibrary::SaveCurrentLevel();
+    LevelSubsystem->SaveCurrentLevel();
     RemoveFromRoot();
   }
 }
@@ -365,9 +372,12 @@ bool UOpenDriveToMap::GoNextTile(){
 }
 
 void UOpenDriveToMap::ReturnToMainLevel(){
+  UWorld* World = GEditor->GetEditorWorldContext().World();
+  ULevelEditorSubsystem* LevelSubsystem = GEditor->GetEditorSubsystem<ULevelEditorSubsystem>();
+
   Landscapes.Empty();
   FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
-  UEditorLevelLibrary::LoadLevel(*BaseLevelName);
+  LevelSubsystem->LoadLevel(*BaseLevelName);
 }
 
 void UOpenDriveToMap::CorrectPositionForAllActorsInCurrentTile(){
@@ -767,7 +777,7 @@ void UOpenDriveToMap::GenerateTreePositions( const std::optional<carla::road::Ma
 
 float UOpenDriveToMap::GetHeight(float PosX, float PosY, bool bDrivingLane){
   if( DefaultHeightmap ){
-    const FColor* FormatedImageData = static_cast<const FColor*>( DefaultHeightmap->PlatformData->Mips[0].BulkData.LockReadOnly());
+    const FColor* FormatedImageData = static_cast<const FColor*>( DefaultHeightmap->GetPlatformData()->Mips[0].BulkData.LockReadOnly());
 
     int32 TextureSizeX = DefaultHeightmap->GetSizeX();
     int32 TextureSizeY = DefaultHeightmap->GetSizeY();
@@ -799,7 +809,7 @@ float UOpenDriveToMap::GetHeight(float PosX, float PosY, bool bDrivingLane){
     //UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("PixelColor %s "), *WorldEndPosition.ToString() );
     //UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Reading Pixel X: %d Y %d Total Size X %d Y %d"), PixelX, PixelY, TextureSizeX, TextureSizeY );
 
-    DefaultHeightmap->PlatformData->Mips[0].BulkData.Unlock();
+    DefaultHeightmap->GetPlatformData()->Mips[0].BulkData.Unlock();
 
     float LandscapeHeight = ( (PixelColor.R/255.0f ) * ( MaxHeight - MinHeight ) ) + MinHeight;
 
@@ -907,11 +917,12 @@ void UOpenDriveToMap::MoveActorsToSubLevels(TArray<AActor*> ActorsToMove)
   AActor* QueryActor = UGameplayStatics::GetActorOfClass(
                                 World,
                                 ALargeMapManager::StaticClass() );
+  ULevelEditorSubsystem* LevelSubsystem = GEditor->GetEditorSubsystem<ULevelEditorSubsystem>();
 
   if( QueryActor != nullptr ){
     ALargeMapManager* LmManager = Cast<ALargeMapManager>(QueryActor);
     if( LmManager ){
-      UEditorLevelLibrary::SaveCurrentLevel();
+      LevelSubsystem->SaveCurrentLevel();
       UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(ActorsToMove, LmManager);
     }
   }

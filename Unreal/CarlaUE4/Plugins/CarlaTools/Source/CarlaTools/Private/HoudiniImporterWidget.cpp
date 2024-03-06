@@ -20,6 +20,7 @@ void UHoudiniImporterWidget::CreateSubLevels(ALargeMapManager* LargeMapManager)
 
 void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Actors, ALargeMapManager* LargeMapManager)
 {
+#if WITH_EDITOR
   TMap<FCarlaMapTile*, TArray<AActor*>> ActorsToMove;
   for (AActor* Actor : Actors)
   {
@@ -72,7 +73,7 @@ void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Ac
       continue;
     }
 
-    UWorld* World = UEditorLevelLibrary::GetEditorWorld();
+    UWorld* World = GEditor->GetEditorWorldContext().World();
     ULevelStreamingDynamic* StreamingLevel = Tile->StreamingLevel;
     StreamingLevel->bShouldBlockOnLoad = true;
     StreamingLevel->SetShouldBeVisible(true);
@@ -86,11 +87,13 @@ void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Ac
     FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
     UEditorLevelUtils::RemoveLevelFromWorld(Level->GetLoadedLevel());
   }
+#endif
 }
 
 void UHoudiniImporterWidget::ForceStreamingLevelsToUnload( ALargeMapManager* LargeMapManager )
 {
-  UWorld* World = UEditorLevelLibrary::GetGameWorld();
+#if WITH_EDITOR
+  UWorld* World = GEditor->GetEditorWorldContext().World();
 
   FIntVector NumTilesInXY  = LargeMapManager->GetNumTilesInXY();
 
@@ -108,7 +111,7 @@ void UHoudiniImporterWidget::ForceStreamingLevelsToUnload( ALargeMapManager* Lar
       UEditorLevelUtils::RemoveLevelFromWorld(Level->GetLoadedLevel());
     }
   }
-
+#endif
 }
 
 void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ULevelStreaming* Level)
