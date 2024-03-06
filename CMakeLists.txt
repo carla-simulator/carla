@@ -114,13 +114,3 @@ endif ()
 if (BUILD_CARLA_UE)
   add_subdirectory (Unreal)
 endif ()
-
-carla_two_step_configure_file (
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins/Carla/Source/Carla/Carla.Build.cs
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins/Carla/Source/Carla/Carla.Build.cs.in
-)
-
-carla_two_step_configure_file (
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs.in
-)

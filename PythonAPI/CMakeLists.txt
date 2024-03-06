@@ -81,7 +81,6 @@ target_compile_definitions (
   ${CARLA_COMMON_DEFINITIONS}
   ${CARLA_RTTI_DEFINITIONS}
   BOOST_ALL_NO_LIB
-  BOOST_PYTHON_STATIC_LINK
   LIBCARLA_WITH_PYTHON_SUPPORT
 )
 
@@ -101,6 +100,8 @@ endif ()
 add_custom_target (
   carla-python-api-symlink
   ALL
+  COMMENT
+    "Creating CARLA PythonAPI .PYD/.SO symlink..."
   COMMAND
     ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE:carla-python-api> ${PYTHON_API_PATH}/examples/carla${PYD_EXT}
 )

@@ -257,11 +257,11 @@ carla_string_option (
 carla_string_option (
   CARLA_STREETMAP_VERSION
   "Target StreetMap version."
-  UE5Native
+  ue5.3
 )
 
 carla_string_option (
   CARLA_STREETMAP_TAG
   "Target StreetMap git tag."
-  ${CARLA_LIBOSMSCOUT_VERSION}
+  ${CARLA_STREETMAP_VERSION}
 )
