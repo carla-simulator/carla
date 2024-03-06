@@ -57,6 +57,7 @@ macro (carla_dependency_add NAME URL TAG)
     GIT_REPOSITORY ${URL}
     GIT_TAG ${TAG}
     OVERRIDE_FIND_PACKAGE
+    ${ARGN}
   )
   list (APPEND CARLA_DEPENDENCIES ${NAME})
 endmacro ()
@@ -166,6 +167,15 @@ if (BUILD_OSM_WORLD_RENDERER)
     libosmscout
     https://github.com/Framstag/libosmscout.git
     ${CARLA_LIBOSMSCOUT_TAG}
+  )
+endif ()
+
+if (BUILD_CARLA_UE)
+  carla_dependency_add (
+    StreetMap
+    https://github.com/carla-simulator/StreetMap.git
+    ${CARLA_STREETMAP_TAG}
+    SOURCE_DIR ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins/StreetMap
   )
 endif ()
 

@@ -1385,7 +1385,7 @@ def BuildCarlaUEMain():
   if os.name == 'nt':
     LaunchSubprocessImmediate([
       UNREAL_ENGINE_PATH / 'Engine' / 'Build' / 'BatchFiles' / 'Build.bat',
-      'CarlaUE4Editor',
+      'CarlaUnrealEditor',
       'Win64',
       'Development',
       '-WaitMutex',

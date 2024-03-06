@@ -59,13 +59,13 @@
 	"build_systems":
 	[
 		{
-			"name": "CARLA - make CarlaUE4Editor",
+			"name": "CARLA - make CarlaUnrealEditor",
 			"working_dir": "${project_path}/..",
 			"file_regex": "(Unreal\\/CarlaUnreal\\/[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
 			"syntax": "Packages/Makefile/Make Output.sublime-syntax",
 			"linux":
 			{
-				"shell_cmd": "CARLA_BUILD_NO_COLOR=true make CarlaUE4Editor"
+				"shell_cmd": "CARLA_BUILD_NO_COLOR=true make CarlaUnrealEditor"
 			}
 		},
 		{

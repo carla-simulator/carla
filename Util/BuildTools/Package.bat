@@ -129,7 +129,7 @@ if %DO_PACKAGE%==true (
     if not exist "!BUILD_FOLDER!" mkdir "!BUILD_FOLDER!"
 
     call "%UE4_ROOT%\Engine\Build\BatchFiles\Build.bat"^
-        CarlaUE4Editor^
+        CarlaUnrealEditor^
         Win64^
         Development^
         -WaitMutex^
@@ -457,7 +457,7 @@ rem ============================================================================
 
 :error_build_editor
     echo.
-    echo %FILE_N% [ERROR] There was a problem while building the CarlaUE4Editor.
+    echo %FILE_N% [ERROR] There was a problem while building the CarlaUnrealEditor.
     echo           [ERROR] Please read the screen log for more information.
     goto bad_exit
 

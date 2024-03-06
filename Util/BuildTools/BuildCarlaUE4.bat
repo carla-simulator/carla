@@ -184,7 +184,7 @@ if %BUILD_UE4_EDITOR% == true (
     echo %FILE_N% Building Unreal Editor...
 
     call "%UE4_ROOT%Engine\Build\BatchFiles\Build.bat"^
-        CarlaUE4Editor^
+        CarlaUnrealEditor^
         Win64^
         Development^
         -WaitMutex^

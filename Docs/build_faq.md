@@ -386,7 +386,7 @@ CARLA forum</a>
 > This happens from time to time due to Linux updates. There is a special target in the Makefile for this issue. It takes a long time but fixes the issue:
 >
 >      make hard-clean
->      make CarlaUE4Editor
+>      make CarlaUnrealEditor
 
 <!-- ======================================================================= -->
 

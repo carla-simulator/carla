@@ -53,7 +53,7 @@ pipeline
                             {
                                 sh 'make LibCarla'
                                 sh 'make PythonAPI ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
-                                sh 'make CarlaUE4Editor ARGS="--chrono"'
+                                sh 'make CarlaUnrealEditor ARGS="--chrono"'
                                 sh 'make plugins'
                                 sh 'make examples'
                             }
@@ -262,7 +262,7 @@ pipeline
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make CarlaUE4Editor ARGS="--chrono"
+                                    make CarlaUnrealEditor ARGS="--chrono"
                                 """
                                 bat """
                                     call ../setEnv64.bat

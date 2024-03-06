@@ -2,7 +2,7 @@
 
 * [__Setup__](#setup)  
 * [__LibCarla__](#libcarla)  
-* [__CarlaUE4 and Carla plugin__](#carlaue4-and-carla-plugin)  
+* [__CarlaUnreal and Carla plugin__](#carlaue4-and-carla-plugin)  
 * [__PythonAPI__](#pythonapi)
     - [Versions 0.9.12+](#versions-0912)
     - [Versions prior to 0.9.12](#versions-prior-to-0912)
@@ -65,7 +65,7 @@ Both compiled at the same step with Unreal Engine build tool. They require the `
 Command
 
 ```sh
-make CarlaUE4Editor
+make CarlaUnrealEditor
 ```
 
 To launch Unreal Engine's Editor run

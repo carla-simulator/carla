@@ -71,7 +71,7 @@ for developers:
 
         Build (and run) the C++ client examples.
 
-    CarlaUE4Editor:
+    CarlaUnrealEditor:
 
         Build CarlaUnreal project, but do not launch the editor.
 
@@ -83,7 +83,7 @@ for developers:
 
         Build LibCarla, "Server" and/or "Client" configurations.
 
-    clean.(LibCarla|PythonAPI|CarlaUE4Editor)
+    clean.(LibCarla|PythonAPI|CarlaUnrealEditor)
 
         Remove intermediate build files for the specific module.
 

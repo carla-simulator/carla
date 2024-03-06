@@ -250,3 +250,18 @@ carla_string_option (
   "Target libosmscout git tag."
   ${CARLA_LIBOSMSCOUT_VERSION}
 )
+
+
+# ==== STREETMAP ====
+
+carla_string_option (
+  CARLA_STREETMAP_VERSION
+  "Target StreetMap version."
+  UE5Native
+)
+
+carla_string_option (
+  CARLA_STREETMAP_TAG
+  "Target StreetMap git tag."
+  ${CARLA_LIBOSMSCOUT_VERSION}
+)

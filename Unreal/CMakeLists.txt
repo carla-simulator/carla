@@ -24,33 +24,29 @@ set (
   ${CARLA_UE_PATH}/CarlaUnreal.uproject
 )
 
-add_custom_target (
-  carla-ue-generate-project-files
-  ALL
-  DEPENDS
-    carla-server
-  COMMENT
-    "Generating Carla UE project files..."
+execute_process (
   COMMAND
     ${CARLA_UE_GENERATE_PROJECT_SCRIPT}
     -project=${CARLA_UE_PROJECT_PATH}
     -game
     -engine
     -makefiles
+  RESULT_VARIABLE
+    GENERATE_RPJECT_FILES_RESULT
 )
 
-add_custom_target (
-  carla-ue-build
-  ALL
-  DEPENDS
-    carla-ue-generate-project-files
-  COMMENT
-    "Building Carla UE..."
-  COMMAND
-    make -C ${CARLA_UE_PROJECT_PATH} CarlaUE4Editor
-)
+if (NOT ${GENERATE_RPJECT_FILES_RESULT})
+  message (
+    FATAL_ERROR
+    "Could not generate Unreal Engine project files."
+  )
+endif ()
 
 file (
   MAKE_DIRECTORY
   ${CARLA_UE_PATH}/Content/Carla/ExportedMaps
+)
+
+add_subdirectory (
+  CarlaUnreal
 )

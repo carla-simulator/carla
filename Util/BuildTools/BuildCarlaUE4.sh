@@ -114,7 +114,7 @@ if ${HARD_CLEAN} ; then
 
   log "Doing a \"hard\" clean of the Unreal Engine project."
 
-  make CarlaUE4Editor ARGS=-clean
+  make CarlaUnrealEditor ARGS=-clean
 
 fi
 
@@ -200,7 +200,7 @@ if ${BUILD_CARLAUE4} ; then
   fi
 
   log "Build CarlaUnreal project."
-  make CarlaUE4Editor
+  make CarlaUnrealEditor
 
   #Providing the user with the ExportedMaps folder
   EXPORTED_MAPS="${CARLAUE4_ROOT_FOLDER}/Content/Carla/ExportedMaps"
