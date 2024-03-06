@@ -75,7 +75,11 @@ void AWheelParentClassFixer::FixWheelClassesParentActor()
       
       FixedPath += "." + LastPartOfPath + "'";
 
-      if (LastPartOfPath.StartsWith("BP") && (LastPartOfPath.Contains("FW") || LastPartOfPath.Contains("RW")) || LastPartOfPath.Contains("Wheel"))
+      if (LastPartOfPath.StartsWith("BP") && (LastPartOfPath.Contains("FW") || LastPartOfPath.Contains("RW") || 
+                                                LastPartOfPath.Contains("MRW") || LastPartOfPath.Contains("MLW") ||
+                                                LastPartOfPath.Contains("RRW") || LastPartOfPath.Contains("RLW") ||
+                                                LastPartOfPath.Contains("FRW") || LastPartOfPath.Contains("FLW") ||
+                                                LastPartOfPath.Contains("Wheel")))
       {
         UObject* Obj = UEditorAssetLibrary::LoadAsset(FixedPath);
         UBlueprint* BP = Cast<UBlueprint>(Obj);
