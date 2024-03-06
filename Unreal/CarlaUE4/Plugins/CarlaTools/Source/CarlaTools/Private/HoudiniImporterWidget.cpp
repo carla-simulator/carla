@@ -10,7 +10,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "FileHelpers.h"
-#include "EditorLevelLibrary.h"
 #include "Components/PrimitiveComponent.h"
 
 void UHoudiniImporterWidget::CreateSubLevels(ALargeMapManager* LargeMapManager)
