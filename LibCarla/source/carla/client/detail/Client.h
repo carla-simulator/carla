@@ -148,6 +148,10 @@ namespace detail {
     rpc::WeatherParameters GetWeatherParameters();
 
     void SetWeatherParameters(const rpc::WeatherParameters &weather);
+    
+    float GetIMUISensorGravity();
+
+    void SetIMUISensorGravity( float NewIMUISensorGravity );
 
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 

@@ -266,6 +266,14 @@ namespace detail {
   void Client::SetWeatherParameters(const rpc::WeatherParameters &weather) {
     _pimpl->AsyncCall("set_weather_parameters", weather);
   }
+  
+  float Client::GetIMUISensorGravity() {
+    return _pimpl->CallAndWait<float>("get_imui_gravity");
+  }
+
+  void Client::SetIMUISensorGravity(float NewIMUISensorGravity) {
+    _pimpl->AsyncCall("set_imui_gravity", NewIMUISensorGravity);
+  }
 
   std::vector<rpc::Actor> Client::GetActorsById(
       const std::vector<ActorId> &ids) {
