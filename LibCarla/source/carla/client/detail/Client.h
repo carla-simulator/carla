@@ -148,8 +148,8 @@ namespace detail {
     rpc::WeatherParameters GetWeatherParameters();
 
     void SetWeatherParameters(const rpc::WeatherParameters &weather);
-    
-    float GetIMUISensorGravity();
+
+    float GetIMUISensorGravity() const;
 
     void SetIMUISensorGravity( float NewIMUISensorGravity );
 
@@ -247,12 +247,12 @@ namespace detail {
 
     std::vector<geom::Transform> GetActorBoneWorldTransforms(
         rpc::ActorId actor);
-    
+
     std::vector<geom::Transform> GetActorBoneRelativeTransforms(
         rpc::ActorId actor);
 
     std::vector<std::string> GetActorComponentNames(
-        rpc::ActorId actor);         
+        rpc::ActorId actor);
 
     std::vector<std::string> GetActorBoneNames(
         rpc::ActorId actor);
