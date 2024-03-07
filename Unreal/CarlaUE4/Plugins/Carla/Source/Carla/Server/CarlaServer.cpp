@@ -1595,7 +1595,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     else
     {
       TArray<FName> SocketNames;
-      TArray<std::string> StringSocketNames;
+      std::vector<std::string> StringSocketNames;
       TArray<UActorComponent*> Components;
       CarlaActor->GetActor()->GetComponents(Components);     
       for(UActorComponent* ActorComponent : Components)
@@ -1607,11 +1607,11 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           {
             FString FSocketName = Name.ToString();
             std::string StringSocketName = TCHAR_TO_UTF8(*FSocketName);
-            StringSocketNames.Add(StringSocketName);
+            StringSocketNames.push_back(StringSocketName);
           }              
         }
       }
-      return MakeVectorFromTArray<std::string>(StringSocketNames);      
+      return StringSocketNames;      
     }
   };
 
