@@ -29,7 +29,7 @@ CARLA_UE_CONTENT_VERSIONS_FILE_PATH = WORKSPACE_PATH / 'Util' / 'ContentVersions
 LOGICAL_PROCESSOR_COUNT = psutil.cpu_count(logical = True)
 DEFAULT_PARALLELISM = LOGICAL_PROCESSOR_COUNT + (2 if LOGICAL_PROCESSOR_COUNT >= 8 else 0)
 READTHEDOCS_URL_SUFFIX = 'how_to_build_on_windows/\n' if os.name == "nt" else 'build_linux/\n'
-DEFAULT_BOOST_TOOLSET = 'msvc-14.3' if os.name == 'nt' else 'clang'
+DEFAULT_BOOST_TOOLSET = 'msvc-14.3' if os.name == 'nt' else 'clang-16'
 DEFAULT_ERROR_MESSAGE = (
   '\n'
   'Ok, an error ocurred, don\'t panic!\n'
