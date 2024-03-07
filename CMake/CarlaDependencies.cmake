@@ -48,7 +48,7 @@ target_link_libraries (
 set (CARLA_DEPENDENCIES)
 
 macro (carla_dependency_add NAME URL TAG)
-  message ("Fetching ${NAME}...")
+  message ("Downloading+building ${NAME}...")
   FetchContent_Declare(
     ${NAME}
     GIT_SUBMODULES_RECURSE ON
@@ -69,12 +69,12 @@ macro (carla_dependencies_make_available)
 endmacro ()
 
 macro (carla_fetchcontent_option NAME VALUE)
-  set (${NAME} ${VALUE} CACHE INTERNAL "")
+  set (${NAME} ${VALUE})
 endmacro ()
 
 
 
-set (ZLIB_BUILD_EXAMPLES OFF)
+carla_fetchcontent_option (ZLIB_BUILD_EXAMPLES OFF)
 carla_dependency_add (
   zlib
   https://github.com/madler/zlib.git
@@ -83,17 +83,17 @@ carla_dependency_add (
 carla_dependencies_make_available ()
 include_directories (${zlib_SOURCE_DIR} ${zlib_BINARY_DIR}) # HACK
 
-set (PNG_TESTS OFF)
-set (PNG_SHARED OFF)
-set (PNG_TOOLS OFF)
-set (PNG_BUILD_ZLIB ON)
+carla_fetchcontent_option (PNG_TESTS OFF)
+carla_fetchcontent_option (PNG_SHARED OFF)
+carla_fetchcontent_option (PNG_TOOLS OFF)
+carla_fetchcontent_option (PNG_BUILD_ZLIB ON)
 if (WIN32)
-  set (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlibstatic${CARLA_DEBUG_AFFIX}.lib)
+  carla_fetchcontent_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlibstatic${CARLA_DEBUG_AFFIX}.lib)
 else ()
-  set (ZLIB_LIBRARY ${zlib_BINARY_DIR}/libz.a)
+  carla_fetchcontent_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/libz.a)
 endif ()
-set (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
-set (ZLIB_LIBRARIES ${ZLIB_LIBRARY})
+carla_fetchcontent_option (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
+carla_fetchcontent_option (ZLIB_LIBRARIES ${ZLIB_LIBRARY})
 carla_dependency_add (
   libpng
   https://github.com/glennrp/libpng.git
@@ -104,19 +104,22 @@ include_directories (${libpng_SOURCE_DIR} ${libpng_BINARY_DIR}) # HACK
 
 
 
+carla_fetchcontent_option (BOOST_ENABLE_MPI OFF)
+carla_fetchcontent_option (BOOST_LOCALE_WITH_ICU OFF)
+carla_fetchcontent_option (BOOST_LOCALE_WITH_ICONV OFF)
+carla_fetchcontent_option (BOOST_EXCLUDE_LIBRARIES "iostreams;locale;fiber;log")
 if (BUILD_PYTHON_API)
-  set (BOOST_ENABLE_PYTHON ${BUILD_PYTHON_API})
+carla_fetchcontent_option (BOOST_ENABLE_PYTHON ${BUILD_PYTHON_API})
 endif ()
-
 carla_dependency_add (
   boost
   https://github.com/boostorg/boost.git
   ${CARLA_BOOST_TAG}
 )
 
-set (EIGEN_BUILD_PKGCONFIG OFF)
-set (BUILD_TESTING OFF)
-set (EIGEN_BUILD_DOC OFF)
+carla_fetchcontent_option (EIGEN_BUILD_PKGCONFIG OFF)
+carla_fetchcontent_option (BUILD_TESTING OFF)
+carla_fetchcontent_option (EIGEN_BUILD_DOC OFF)
 carla_dependency_add (
   eigen
   https://gitlab.com/libeigen/eigen.git
@@ -129,6 +132,7 @@ carla_dependency_add (
   ${CARLA_RPCLIB_TAG}
 )
 
+carla_fetchcontent_option (RECASTNAVIGATION_BUILDER OFF)
 carla_dependency_add (
   recastnavigation
   https://github.com/carla-simulator/recastnavigation.git
@@ -136,9 +140,9 @@ carla_dependency_add (
 )
 
 if (ENABLE_OSM2ODR)
-  set (BUILD_TESTING OFF)
-  set (ENABLE_TIFF OFF)
-  set (ENABLE_CURL OFF)
+  carla_fetchcontent_option (BUILD_TESTING OFF)
+  carla_fetchcontent_option (ENABLE_TIFF OFF)
+  carla_fetchcontent_option (ENABLE_CURL OFF)
   carla_dependency_add (
     proj
     https://github.com/OSGeo/PROJ.git

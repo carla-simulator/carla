@@ -39,9 +39,8 @@ carla_two_step_configure_file (
   ${CARLA_UE_PLUGINS_PATH}/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs.in
 )
 
-add_custom_target (
-  carla-ue-generate-project-files
-  ALL
+add_custom_command (
+  OUTPUT ${CARLA_UE_PATH}/CMakeLists.txt
   COMMENT
     "Generating UE project files for CARLA..."
   COMMAND
@@ -53,18 +52,50 @@ add_custom_target (
 )
 
 add_custom_target (
-  carla-ue-build
-  ALL
-  DEPENDS
-    carla-ue-generate-project-files
+  carla-ue-generate-project-files
+  DEPENDS ${CARLA_UE_PATH}/CMakeLists.txt
+)
+
+add_custom_command (
+  OUTPUT carla-ue-configure.stamp
+  COMMAND
+    ${CMAKE_COMMAND} -E touch carla-ue-configure.stamp
   COMMENT
-    "Building CARLA UE..."
+    "Configuring Carla Unreal..."
   COMMAND
     ${CMAKE_COMMAND}
-      -S ${CARLA_UE_PATH}
-      -B ${CMAKE_CURRENT_BINARY_DIR}
-      -G ${CMAKE_GENERATOR}
-      -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -S ${CARLA_UE_PATH}
+    -G ${CMAKE_GENERATOR}
+    -B ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+add_custom_target (
+  carla-ue-configure
+  DEPENDS
+    carla-ue-configure.stamp
+    carla-ue-generate-project-files
+)
+
+add_custom_command (
+  OUTPUT carla-ue.stamp
+  VERBATIM
+  COMMAND
+    ${CMAKE_COMMAND} -E touch carla-ue.stamp
+  COMMENT
+    "Building Carla Unreal..."
+  COMMAND
+    ${CMAKE_COMMAND}
+      --build ${CMAKE_CURRENT_BINARY_DIR}
+      --target CarlaUnrealEditor
+      --verbose
+)
+
+add_custom_target (
+  carla-ue
+  ALL
+  DEPENDS
+    carla-ue-configure
+    carla-ue.stamp
 )
 
 file (

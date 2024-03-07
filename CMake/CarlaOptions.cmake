@@ -4,7 +4,6 @@ endmacro ()
 
 # ==== Common target flags ====
 
-set (BUILD_SHARED_LIBS OFF)
 set (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option (

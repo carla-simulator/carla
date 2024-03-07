@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.20.0)
+cmake_minimum_required (VERSION 3.28.0)
 
 cmake_policy (SET CMP0097 NEW)
 cmake_policy (SET CMP0091 NEW)
@@ -41,6 +41,15 @@ set (
   ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins
 )
 
+if (NOT WIN32)
+  set (THREADS_PREFER_PTHREAD_FLAG ON)
+  set (CMAKE_THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package (
+    Threads
+    REQUIRED
+  )
+endif ()
+
 include (CheckCCompilerFlag)
 include (CheckCXXCompilerFlag)
 include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
@@ -52,17 +61,6 @@ macro (carla_two_step_configure_file DESTINATION SOURCE)
   # Generate-time step; evaluate generator expressions:
   file (GENERATE OUTPUT ${DESTINATION} INPUT ${DESTINATION})
 endmacro ()
-
-set (
-  CMAKE_INSTALL_PREFIX
-  ${CARLA_DEPENDENCIES_INSTALL_PREFIX}
-)
-
-if (WIN32)
-  set (LIB_EXT .lib)
-else ()
-  set (LIB_EXT .a)
-endif ()
 
 if (WIN32)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -97,7 +95,9 @@ else ()
   list (APPEND CARLA_EXCEPTION_DEFINITIONS PUGIXML_NO_EXCEPTIONS)
 endif ()
 
-include (${CARLA_WORKSPACE_PATH}/CMake/CarlaDependencies.cmake)
+include (
+  ${CARLA_WORKSPACE_PATH}/CMake/CarlaDependencies.cmake
+)
 
 if (BUILD_CARLA_CLIENT OR BUILD_CARLA_SERVER)
   add_subdirectory (LibCarla)

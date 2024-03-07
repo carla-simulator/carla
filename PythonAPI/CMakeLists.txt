@@ -4,15 +4,6 @@ project (
   VERSION ${CARLA_VERSION}
 )
 
-find_package (
-  Python
-  COMPONENTS
-    Interpreter
-    Development.Module
-    Development.Embed
-  REQUIRED
-)
-    
 set (PYTHON_API_PATH ${CARLA_WORKSPACE_PATH}/PythonAPI)
 set (PYTHON_API_CARLA_PATH ${PYTHON_API_PATH}/carla)
 
@@ -49,7 +40,17 @@ if (ENABLE_RSS)
   list (APPEND PYTHON_API_SOURCES ${PYTHON_API_CARLA_PATH}/src/AdRss.cpp)
 endif ()
 
-Python_add_library (
+find_package (
+  Python3
+  COMPONENTS
+    Interpreter
+    Development.Module
+    Development.Embed
+    Development.SABIModule
+  REQUIRED
+)
+
+Python3_add_library (
   carla-python-api MODULE WITH_SOABI
   ${PYTHON_API_SOURCES}
 )
@@ -96,14 +97,23 @@ else ()
   set (PYD_EXT .so)
 endif ()
 
-# If this command fails, enable developer mode if on Windows.
-add_custom_target (
-  carla-python-api-symlink
-  ALL
+set (
+  CARLA_PYTHON_API_SYMLINK_PATH
+  ${PYTHON_API_PATH}/examples/carla${PYD_EXT}
+)
+
+add_custom_command (
+  OUTPUT ${CARLA_PYTHON_API_SYMLINK_PATH}
   COMMENT
     "Creating CARLA PythonAPI .PYD/.SO symlink..."
   COMMAND
     ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE:carla-python-api> ${PYTHON_API_PATH}/examples/carla${PYD_EXT}
+)
+
+# If this command fails, enable developer mode if on Windows.
+add_custom_target (
+  carla-python-api-symlink
+  DEPENDS ${CARLA_PYTHON_API_SYMLINK_PATH}
 )
 
 add_dependencies (
