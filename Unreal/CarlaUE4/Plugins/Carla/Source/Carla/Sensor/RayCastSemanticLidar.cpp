@@ -19,6 +19,8 @@
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 #include <cmath>
 
+#include "PhysicsEngine/PhysicsObjectExternalInterface.h"
+
 namespace crp = carla::rpc;
 
 FActorDefinition ARayCastSemanticLidar::GetSensorDefinition()
@@ -125,8 +127,8 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
   ResetRecordedHits(ChannelCount, PointsToScanWithOneLaser);
   PreprocessRays(ChannelCount, PointsToScanWithOneLaser);
 
-#if 0 // @CARLAUE5
-  GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
+  //GetWorld()->GetPhysicsScene()-> GetPxScene()->lockRead();
+  auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(GetWorld()->GetPhysicsScene());
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
     ParallelFor(ChannelCount, [&](int32 idxChannel) {
@@ -149,8 +151,8 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
       };
     });
   }
-  GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
-#endif
+  //GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
+  LockedPhysObject.Release();
 
   FTransform ActorTransf = GetTransform();
   ComputeAndSaveDetections(ActorTransf);
@@ -248,8 +250,9 @@ bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float Ho
   const auto Range = Description.Range;
   FVector EndTrace = Range * UKismetMathLibrary::GetForwardVector(ResultRot) + LidarBodyLoc;
 
-#if 0 // @CARLAUE5
-  GetWorld()->ParallelLineTraceSingleByChannel(
+
+//#if 0 // @CARLAUE5
+  GetWorld()->LineTraceSingleByChannel(
     HitInfo,
     LidarBodyLoc,
     EndTrace,
@@ -257,7 +260,7 @@ bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float Ho
     TraceParams,
     FCollisionResponseParams::DefaultResponseParam
   );
-#endif
+//#endif
 
   if (HitInfo.bBlockingHit) {
     HitResult = HitInfo;

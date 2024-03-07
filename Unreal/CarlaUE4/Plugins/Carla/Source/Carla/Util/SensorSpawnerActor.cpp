@@ -9,6 +9,7 @@
 #include "Sensor/SceneCaptureCamera.h"
 #include "Sensor/Sensor.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sensor/RayCastLidar.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogSensorSpawnerActor, Verbose, All);
 
@@ -228,6 +229,14 @@ void ASensorSpawnerActor::SaveSensorData(float DeltaSeconds)
     {
       const FString FilePath = FPaths::Combine(SaveImagePath, GnssSensor->GetName(), GnssSensor->GetName() + ".json");
       UJsonFileManagerLibrary::SaveGnssDataToJson(FilePath, GnssSensor->GetAltitudeValue(), GnssSensor->GetLatitudeValue(), GnssSensor->GetLongitudeValue(), FrameNumber);
+    }
+
+    if(const ARayCastLidar* LidarSensor = Cast<ARayCastLidar>(CurrentSensor))
+    {
+      const int64 TimeInSeconds = static_cast<uint64>(UKismetSystemLibrary::GetGameTimeInSeconds(GetWorld()));
+      const FString SecondsNumber = FString::Printf(TEXT("%lld"), TimeInSeconds);
+      const FString FilePath = FPaths::Combine(SaveImagePath, LidarSensor->GetName(), LidarSensor->GetName() + "-SecondsNumber_" + SecondsNumber + ".xyz");
+      UJsonFileManagerLibrary::SaveLidarDataToXYZ(FilePath, LidarSensor->FinalPoints);
     }
   }
 }

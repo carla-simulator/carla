@@ -167,6 +167,32 @@ bool UJsonFileManagerLibrary::SaveGnssDataToJson(const FString& JsonFilePath, do
   return bWriteSuccess;
 }
 
+bool UJsonFileManagerLibrary::SaveLidarDataToXYZ(const FString& FilePath, const TArray<float>& PointArray)
+{
+  FString DataToWrite;
+  const bool bReadSuccess = UJsonFileManagerLibrary::ReadStringFromFile(FilePath, DataToWrite);
+  if(!bReadSuccess)
+  {
+    DataToWrite = "";
+  }
+  
+  for(SIZE_T i = 0; i < PointArray.Num(); i+=4)
+  {
+    if(PointArray.IsValidIndex(i+2))
+    {
+      DataToWrite += FString::SanitizeFloat(PointArray[i]) + " " + FString::SanitizeFloat(PointArray[i+1]) + " " + FString::SanitizeFloat(PointArray[i+2]) + LINE_TERMINATOR;
+    }
+  }
+  
+  const bool bWriteSuccess = UJsonFileManagerLibrary::WriteStringFromFile(FilePath, DataToWrite);
+  if(!bWriteSuccess)
+  {
+    return false;
+  }
+  
+  return true;
+}
+
 TSharedPtr<FJsonObject> UJsonFileManagerLibrary::GetSensorJsonData(const FString& JsonFilePath, TArray<TSharedPtr<FJsonValue>>& ArrayValue)
 {
   TSharedPtr<FJsonObject> JsonObject = MakeShared<FJsonObject>();
