@@ -10,6 +10,7 @@
  * make PythonAPI Windows: Fixed incompatibility issue with Anaconda due `py` command.
  * Added function to get actor' sockets names
  * Fixed bug in python agents when vehicle list was empty causing a check on all vehicles (BasicAgent.py) and detected pedestrians as vehicles if no pedestrains are present (BehaviourAgent.py) 
+ * Added possibility to change gravity variable in imui sensor for the accelerometer
 
 ## CARLA 0.9.15
 

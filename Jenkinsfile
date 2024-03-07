@@ -170,9 +170,17 @@ pipeline
                             {
                                 sh 'make package ARGS="--python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
                                 sh '''
-                                    if [ "${BRANCH_NAME}" != "PR-*" ]; then
+                                    prefix="PR-"
+                                    case "$BRANCH_NAME" in
+                                    ("$prefix"*)
+                                        echo "This is a pull request, skipping complete package"
+                                        ;;
+                                    (*)
+                                        echo "Generating complete package"
                                         make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"
-                                    fi
+                                        tar -czf CarlaUE4_logs.tar.gz Unreal/CarlaUE4/Saved/Logs/
+                                        ;;
+                                    esac
                                 '''
                                 sh 'make examples ARGS="localhost 3654"'
                             }
@@ -181,6 +189,8 @@ pipeline
                                 always
                                 {
                                     archiveArtifacts 'Dist/*.tar.gz'
+                                    archiveArtifacts artifacts:'CarlaUE4_logs.tar.gz',
+                                        allowEmptyArchive: true
                                     stash includes: 'Dist/CARLA*.tar.gz', name: 'ubuntu_package'
                                     stash includes: 'Examples/', name: 'ubuntu_examples'
                                 }
@@ -212,9 +222,7 @@ pipeline
                                             {
                                                 always
                                                 {
-                                                    sh 'tar -czf CarlaUE4_logs.tar.gz Unreal/CarlaUE4/Saved/Logs/'
                                                     archiveArtifacts 'CarlaUE4.log'
-                                                    archiveArtifacts 'CarlaUE4_logs.tar.gz'
                                                     junit 'Build/test-results/smoke-tests-*.xml'
                                                 }
                                             }
