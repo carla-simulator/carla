@@ -250,7 +250,7 @@ namespace detail {
     }
 
     uint64_t SetEpisodeSettings(const rpc::EpisodeSettings &settings);
-
+    
     rpc::WeatherParameters GetWeatherParameters() {
       return _client.GetWeatherParameters();
     }
@@ -259,6 +259,14 @@ namespace detail {
       _client.SetWeatherParameters(weather);
     }
 
+    float GetIMUISensorGravity() {
+      return _client.GetIMUISensorGravity();
+    }
+
+    void SetIMUISensorGravity(float NewIMUISensorGravity) {
+      _client.SetIMUISensorGravity(NewIMUISensorGravity);
+    }
+    
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
