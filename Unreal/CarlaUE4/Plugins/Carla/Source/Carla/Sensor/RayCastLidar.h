@@ -37,6 +37,8 @@ public:
 
   virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime);
 
+  TArray<float> FinalPoints;
+
 private:
   /// Compute the received intensity of the point
   float ComputeIntensity(const FSemanticDetection& RawDetection) const;
