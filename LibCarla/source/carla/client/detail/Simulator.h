@@ -250,7 +250,7 @@ namespace detail {
     }
 
     uint64_t SetEpisodeSettings(const rpc::EpisodeSettings &settings);
-    
+
     rpc::WeatherParameters GetWeatherParameters() {
       return _client.GetWeatherParameters();
     }
@@ -266,7 +266,7 @@ namespace detail {
     void SetIMUISensorGravity(float NewIMUISensorGravity) {
       _client.SetIMUISensorGravity(NewIMUISensorGravity);
     }
-    
+
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
@@ -469,7 +469,7 @@ namespace detail {
 
     std::vector<std::string> GetActorBoneNames(const Actor &actor) {
       return _client.GetActorBoneNames(actor.GetId());
-    }     
+    }
 
     std::vector<geom::Transform> GetActorSocketWorldTransforms(const Actor &actor) {
       return _client.GetActorSocketWorldTransforms(actor.GetId());
