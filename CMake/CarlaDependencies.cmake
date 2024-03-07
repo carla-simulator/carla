@@ -107,11 +107,16 @@ if (BUILD_PYTHON_API)
   set (BOOST_ENABLE_PYTHON ${BUILD_PYTHON_API})
 endif ()
 
-carla_dependency_add (
+set (BOOST_VERSION 1.84.0)
+FetchContent_Declare(
   boost
-  https://github.com/boostorg/boost.git
-  ${CARLA_BOOST_TAG}
+  GIT_SUBMODULES_RECURSE ON
+  GIT_SHALLOW ON
+  GIT_PROGRESS ON
+  URL https://github.com/boostorg/boost/releases/download/boost-${BOOST_VERSION}/boost-${BOOST_VERSION}.zip
+  OVERRIDE_FIND_PACKAGE
 )
+list (APPEND CARLA_DEPENDENCIES boost)
 
 set (EIGEN_BUILD_PKGCONFIG OFF)
 set (BUILD_TESTING OFF)
