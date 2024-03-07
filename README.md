@@ -19,17 +19,17 @@ environmental conditions.
 ### Download CARLA
 
 Linux:
-* [**Get CARLA overnight build**](http://carla-releases.s3.amazonaws.com/Linux/Dev/CARLA_Latest.tar.gz)
-* [**Get AdditionalMaps overnight build**](http://carla-releases.s3.amazonaws.com/Linux/Dev/AdditionalMaps_Latest.tar.gz)
+* [**Get CARLA overnight build**](https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/Dev/CARLA_Latest.tar.gz)
+* [**Get AdditionalMaps overnight build**](https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/Dev/AdditionalMaps_Latest.tar.gz)
 
 Windows:
-* [**Get CARLA overnight build**](http://carla-releases.s3.amazonaws.com/Windows/Dev/CARLA_Latest.zip)
-* [**Get AdditionalMaps overnight build**](http://carla-releases.s3.amazonaws.com/Windows/Dev/AdditionalMaps_Latest.zip)
+* [**Get CARLA overnight build**](https://carla-releases.s3.us-east-005.backblazeb2.com/Windows/Dev/CARLA_Latest.zip)
+* [**Get AdditionalMaps overnight build**](https://carla-releases.s3.us-east-005.backblazeb2.com/Windows/Dev/AdditionalMaps_Latest.zip)
 
 ### Recommended system
 
 * Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD ryzen 7 / AMD ryzen 9
-* +32 GB RAM memory 
+* +32 GB RAM memory
 * NVIDIA RTX 3070 / NVIDIA RTX 3080 / NVIDIA RTX 4090
 * Ubuntu 20.04
 
@@ -54,7 +54,7 @@ Repositories associated with the CARLA simulation platform:
 * [**Conditional Imitation-Learning**](https://github.com/felipecode/coiltraine): Training and testing Conditional Imitation Learning models in CARLA
 * [**AutoWare AV stack**](https://github.com/carla-simulator/carla-autoware): Bridge to connect AutoWare AV stack to CARLA
 * [**Reinforcement-Learning**](https://github.com/carla-simulator/reinforcement-learning): Code for running Conditional Reinforcement Learning models in CARLA
-* [**RoadRunner**](https://www.mathworks.com/products/roadrunner.html): MATLAB GUI based application to create road networks in OpenDrive format 
+* [**RoadRunner**](https://www.mathworks.com/products/roadrunner.html): MATLAB GUI based application to create road networks in OpenDrive format
 * [**Map Editor**](https://github.com/carla-simulator/carla-map-editor): Standalone GUI application to enhance RoadRunner maps with traffic lights and traffic signs information
 
 
