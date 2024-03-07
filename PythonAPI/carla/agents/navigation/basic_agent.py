@@ -345,12 +345,14 @@ class BasicAgent(object):
                 return None
 
             return Polygon(route_bb)
-
+      
         if self._ignore_vehicles:
             return (False, None, -1)
 
-        if not vehicle_list:
+        if vehicle_list is None:
             vehicle_list = self._world.get_actors().filter("*vehicle*")
+        if len(vehicle_list) == 0:
+            return (False, None, -1)
 
         if not max_distance:
             max_distance = self._base_vehicle_threshold
