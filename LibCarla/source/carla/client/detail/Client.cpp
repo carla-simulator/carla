@@ -266,8 +266,8 @@ namespace detail {
   void Client::SetWeatherParameters(const rpc::WeatherParameters &weather) {
     _pimpl->AsyncCall("set_weather_parameters", weather);
   }
-  
-  float Client::GetIMUISensorGravity() {
+
+  float Client::GetIMUISensorGravity() const {
     return _pimpl->CallAndWait<float>("get_imui_gravity");
   }
 
@@ -444,7 +444,7 @@ namespace detail {
   std::vector<std::string> Client::GetActorBoneNames(rpc::ActorId actor) {
     using return_t = std::vector<std::string>;
     return _pimpl->CallAndWait<return_t>("get_actor_bone_names", actor);
-  }  
+  }
 
   std::vector<geom::Transform> Client::GetActorSocketWorldTransforms(rpc::ActorId actor) {
     using return_t = std::vector<geom::Transform>;

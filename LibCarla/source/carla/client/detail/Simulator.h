@@ -259,7 +259,7 @@ namespace detail {
       _client.SetWeatherParameters(weather);
     }
 
-    float GetIMUISensorGravity() {
+    float GetIMUISensorGravity() const {
       return _client.GetIMUISensorGravity();
     }
 
