@@ -235,8 +235,9 @@ void ASensorSpawnerActor::SaveSensorData(float DeltaSeconds)
     {
       const int64 TimeInSeconds = static_cast<uint64>(UKismetSystemLibrary::GetGameTimeInSeconds(GetWorld()));
       const FString SecondsNumber = FString::Printf(TEXT("%lld"), TimeInSeconds);
-      const FString FilePath = FPaths::Combine(SaveImagePath, LidarSensor->GetName(), LidarSensor->GetName() + "-SecondsNumber_" + SecondsNumber + ".xyz");
-      UJsonFileManagerLibrary::SaveLidarDataToXYZ(FilePath, LidarSensor->FinalPoints);
+      const FString FilePath = FPaths::Combine(SaveImagePath, LidarSensor->GetName(), LidarSensor->GetName() + "-SecondsNumber_" + SecondsNumber + ".ply");
+      UJsonFileManagerLibrary::SaveLidarDataToPly(FilePath, LidarSensor->GetTestPointCloud(), 4); 
+      //UJsonFileManagerLibrary::SaveLidarDataToXYZ(FilePath, LidarSensor->FinalPoints);
     }
   }
 }
