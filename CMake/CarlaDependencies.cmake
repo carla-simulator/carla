@@ -222,7 +222,7 @@ if (BUILD_CARLA_UE)
     https://github.com/carla-simulator/StreetMap.git
     https://github.com/carla-simulator/StreetMap/archive/refs/heads/${CARLA_STREETMAP_TAG}.zip
     ${CARLA_STREETMAP_TAG}
-    DOWNLOAD_DIR ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins
+    SOURCE_DIR ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins/StreetMap
   )
 endif ()
 
