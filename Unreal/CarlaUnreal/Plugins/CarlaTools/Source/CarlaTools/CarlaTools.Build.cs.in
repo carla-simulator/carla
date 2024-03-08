@@ -10,9 +10,6 @@ public class CarlaTools :
   [CommandLine("-verbose")]
   bool Verbose = false;
 
-  [CommandLine("-houdini")]
-  bool EnableHoudini = false;
-
   [CommandLine("-nv-omniverse")]
   bool EnableNVIDIAOmniverse = false;
 
@@ -86,16 +83,6 @@ public class CarlaTools :
       "Chaos",
       "ChaosVehicles"
     });
-
-    if (EnableHoudini)
-    {
-      PrivateDependencyModuleNames.AddRange(new string[]
-      {
-        "HoudiniEngine",
-        "HoudiniEngineEditor",
-        "HoudiniEngineRuntime"
-      });
-    }
 
     if (EnableNVIDIAOmniverse)
     {
