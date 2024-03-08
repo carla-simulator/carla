@@ -25,7 +25,7 @@ SUMO is ready to run the co-simulations. There are some examples in `Co-Simulati
 Run a CARLA simulation with __Town04__.  
 ```sh
 cd ~/carla
-./CarlaUE4.sh
+./CarlaUnreal.sh
 cd PythonAPI/util
 python3 config.py --map Town04
 ```

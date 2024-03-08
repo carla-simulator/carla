@@ -59,7 +59,7 @@ __2.__ Double check your mesh names. Mesh names should start with any of the app
 
 ![ue_meshes](../img/ue_meshes.jpg) 
 
-__3.__ Press `ctrl + A` to select everything and export the map by selecting `File` -> `Carla Exporter`. A `<mapName>.obj` file will be created in `Unreal/CarlaUE4/Saved`.
+__3.__ Press `ctrl + A` to select everything and export the map by selecting `File` -> `Carla Exporter`. A `<mapName>.obj` file will be created in `Unreal/CarlaUnreal/Saved`.
 
 __4.__ Move the `<mapName>.obj` and the `<mapName>.xodr` to `Util/DockerUtils/dist`.  
 

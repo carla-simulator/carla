@@ -699,7 +699,7 @@ __2.__ Run the simulation using `python3 config.py --fps=10`.
 *   __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
 This camera classifies every object in sight by displaying it in a different color according to its tags (e.g., pedestrians in a different color than vehicles).
-When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUE4/Content/Static/Pedestrians` are tagged as `Pedestrian`.
+When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUnreal/Content/Static/Pedestrians` are tagged as `Pedestrian`.
 
 ![ImageSemanticSegmentation](img/ref_sensors_semantic.jpg)
 
@@ -750,7 +750,7 @@ The following tags are currently available:
 *   __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
 This camera classifies every object in the field of view both by class and also by instance ID. 
-When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUE4/Content/Static/Pedestrians` are tagged as `Pedestrian`.
+When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUnreal/Content/Static/Pedestrians` are tagged as `Pedestrian`.
 
 ![ImageInstanceSegmentation](img/instance_segmentation.png)
 

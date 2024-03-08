@@ -11,7 +11,7 @@ Use the following commands:
 
     launch:
 
-        Compile CarlaUE4 project and launch it in Unreal Engine's Editor.
+        Compile CarlaUnreal project and launch it in Unreal Engine's Editor.
 
     package:
 

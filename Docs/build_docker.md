@@ -51,13 +51,13 @@ __CARLA 0.9.12__
 To run CARLA with a display:
 
 ```
-sudo docker run --privileged --gpus all --net=host -e DISPLAY=$DISPLAY carlasim/carla:0.9.12 /bin/bash ./CarlaUE4.sh
+sudo docker run --privileged --gpus all --net=host -e DISPLAY=$DISPLAY carlasim/carla:0.9.12 /bin/bash ./CarlaUnreal.sh
 ```
 
 To run CARLA in off-screen mode:
 
 ```
-sudo docker run --privileged --gpus all --net=host -v /tmp/.X11-unix:/tmp/.X11-unix:rw carlasim/carla:0.9.12 /bin/bash ./CarlaUE4.sh -RenderOffScreen
+sudo docker run --privileged --gpus all --net=host -v /tmp/.X11-unix:/tmp/.X11-unix:rw carlasim/carla:0.9.12 /bin/bash ./CarlaUnreal.sh -RenderOffScreen
 ```
 
 __CARLA 0.9.7 to 0.9.11__
@@ -65,7 +65,7 @@ __CARLA 0.9.7 to 0.9.11__
 To run CARLA using Vulkan:
 
 ```sh
-sudo docker run --privileged --gpus all --net=host -e DISPLAY=$DISPLAY -e SDL_VIDEODRIVER=x11 -v /tmp/.X11-unix:/tmp/.X11-unix:rw carlasim/carla:0.9.11 /bin/bash ./CarlaUE4.sh -vulkan <-additonal-carla-flags>
+sudo docker run --privileged --gpus all --net=host -e DISPLAY=$DISPLAY -e SDL_VIDEODRIVER=x11 -v /tmp/.X11-unix:/tmp/.X11-unix:rw carlasim/carla:0.9.11 /bin/bash ./CarlaUnreal.sh -vulkan <-additonal-carla-flags>
 ```
 
 !!! Note
@@ -74,7 +74,7 @@ sudo docker run --privileged --gpus all --net=host -e DISPLAY=$DISPLAY -e SDL_VI
 To run CARLA using OpenGL:
 
 ```sh
-docker run -e DISPLAY=$DISPLAY --net=host --gpus all --runtime=nvidia carlasim/carla:<version> /bin/bash CarlaUE4.sh -opengl <-additonal-carla-flags>
+docker run -e DISPLAY=$DISPLAY --net=host --gpus all --runtime=nvidia carlasim/carla:<version> /bin/bash CarlaUnreal.sh -opengl <-additonal-carla-flags>
 ```
 
 __3. (Optional) Configure Docker flags.__

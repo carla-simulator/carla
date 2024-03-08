@@ -21,5 +21,6 @@ Config/CarSimConfig.ini
 *.code-workspace
 .idea
 .vscode
+.ignore
 CMakeLists.txt
 Makefile

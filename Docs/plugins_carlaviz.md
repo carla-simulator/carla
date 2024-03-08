@@ -63,7 +63,7 @@ CARLA up to 0.9.9 (included) is set to be single-stream. For later versions, mul
 
 __1. Run CARLA.__
 
-*   __a) In a CARLA package__ — Go to the CARLA folder and start the simulation with `CarlaUE4.exe` (Windows) or `./CarlaUE4.sh` (Linux).  
+*   __a) In a CARLA package__ — Go to the CARLA folder and start the simulation with `CarlaUnreal.exe` (Windows) or `./CarlaUnreal.sh` (Linux).  
 
 *   __b) In a build from source__ — Go to the CARLA folder, run the UE editor with `make launch` and press `Play`.  
 

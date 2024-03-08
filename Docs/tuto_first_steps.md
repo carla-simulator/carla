@@ -23,7 +23,7 @@ CARLA can be launched using the command line using the executable in Windows or 
 
 ```sh
 cd /carla/root
-./CarlaUE4.sh
+./CarlaUnreal.sh
 ```
  
 To manipulate CARLA through the Python API, we need to connect the Python client to the server through an open port. The client controls the simulator through the [__client and world objects__](foundations.md#world-and-client) Open a Python notebook or create a new script, then add the following code to the start of the script or the main function:

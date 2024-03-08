@@ -4,7 +4,7 @@ using UnrealBuildTool;
 using System;
 using EpicGames.Core;
 
-public class CarlaUE4Target : TargetRules
+public class CarlaUnrealTarget : TargetRules
 {
     [CommandLine("-unity-build")]
     bool EnableUnityBuild = true;
@@ -15,7 +15,7 @@ public class CarlaUE4Target : TargetRules
         Console.WriteLine(string.Format("{0} is {1}.", name, state));
     }
 
-    public CarlaUE4Target(TargetInfo Target) :
+    public CarlaUnrealTarget(TargetInfo Target) :
         base(Target)
     {
         DefaultBuildSettings = BuildSettingsVersion.Latest;
@@ -23,7 +23,7 @@ public class CarlaUE4Target : TargetRules
 
         Type = TargetType.Game;
         
-        ExtraModuleNames.Add("CarlaUE4");
+        ExtraModuleNames.Add("CarlaUnreal");
 
         LogFlagStatus("Unity build", EnableUnityBuild);
 

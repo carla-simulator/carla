@@ -116,7 +116,7 @@ namespace detail {
       std::string opendrive,
       const rpc::OpendriveGenerationParameters & params, bool reset_settings) {
     // The "OpenDriveMap" is an ".umap" located in:
-    // "carla/Unreal/CarlaUE4/Content/Carla/Maps/"
+    // "carla/Unreal/CarlaUnreal/Content/Carla/Maps/"
     // It will load the last sended OpenDRIVE by client's "LoadOpenDriveEpisode()"
     constexpr auto custom_opendrive_map = "OpenDriveMap";
     _client.CopyOpenDriveToServer(std::move(opendrive), params);

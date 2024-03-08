@@ -4,7 +4,7 @@
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
 
-DOC_STRING="Build and launch CarlaUE4."
+DOC_STRING="Build and launch CarlaUnreal."
 
 USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--opengl]"
 
@@ -103,7 +103,7 @@ fi
 pushd "${CARLAUE4_ROOT_FOLDER}" >/dev/null
 
 # ==============================================================================
-# -- Clean CarlaUE4 ------------------------------------------------------------
+# -- Clean CarlaUnreal ------------------------------------------------------------
 # ==============================================================================
 
 if ${HARD_CLEAN} ; then
@@ -114,7 +114,7 @@ if ${HARD_CLEAN} ; then
 
   log "Doing a \"hard\" clean of the Unreal Engine project."
 
-  make CarlaUE4Editor ARGS=-clean
+  make CarlaUnrealEditor ARGS=-clean
 
 fi
 
@@ -153,17 +153,17 @@ if [[ ! -d ${HOUDINI_PLUGIN_PATH} ]] ; then
 fi
 
 # ==============================================================================
-# -- Build CarlaUE4 ------------------------------------------------------------
+# -- Build CarlaUnreal ------------------------------------------------------------
 # ==============================================================================
 
 if ${BUILD_CARLAUE4} ; then
 
   OPTIONAL_MODULES_TEXT=""
   if ${USE_CARSIM} ; then
-    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject" -e
+    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUnreal.uproject" -e
     OPTIONAL_MODULES_TEXT="CarSim ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
   else
-    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject"
+    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUnreal.uproject"
     OPTIONAL_MODULES_TEXT="CarSim OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
   if ${USE_CHRONO} ; then
@@ -194,13 +194,13 @@ if ${BUILD_CARLAUE4} ; then
     # This command fails sometimes but normally we can continue anyway.
     set +e
     log "Generate Unreal project files."
-    ${UE4_ROOT}/GenerateProjectFiles.sh -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
+    ${UE4_ROOT}/GenerateProjectFiles.sh -project="${PWD}/CarlaUnreal.uproject" -game -engine -makefiles
     set -e
 
   fi
 
-  log "Build CarlaUE4 project."
-  make CarlaUE4Editor
+  log "Build CarlaUnreal project."
+  make CarlaUnrealEditor
 
   #Providing the user with the ExportedMaps folder
   EXPORTED_MAPS="${CARLAUE4_ROOT_FOLDER}/Content/Carla/ExportedMaps"
@@ -216,7 +216,7 @@ fi
 if ${LAUNCH_UE4_EDITOR} ; then
 
   log "Launching UE4Editor..."
-  ${GDB} ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject" ${RHI} ${EDITOR_FLAGS}
+  ${GDB} ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUnreal.uproject" ${RHI} ${EDITOR_FLAGS}
 
 else
 

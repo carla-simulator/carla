@@ -5,18 +5,18 @@ help:
 
 launch: LibCarla.server.release osm2odr downloadplugins
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUE4Plugins.sh --build $(ARGS)
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build --launch $(ARGS)
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUnreal.sh --build --launch $(ARGS)
 
 launch-only:
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --launch $(ARGS)
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUnreal.sh --launch $(ARGS)
 
-import: CarlaUE4Editor PythonAPI
+import: CarlaUnrealEditor PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Import.sh $(ARGS)
 
-package: CarlaUE4Editor PythonAPI
+package: CarlaUnrealEditor PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
 
-package.rss: CarlaUE4Editor PythonAPI.rss.rebuild
+package.rss: CarlaUnrealEditor PythonAPI.rss.rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
 
 docs:
@@ -27,23 +27,23 @@ clean.LibCarla:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
 clean.PythonAPI:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
-clean.CarlaUE4Editor:
+clean.CarlaUnrealEditor:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUE4Plugins.sh --clean $(ARGS)
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --clean
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUnreal.sh --clean
 clean.osm2odr:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --clean
-clean: clean.CarlaUE4Editor clean.PythonAPI clean.LibCarla clean.osm2odr
+clean: clean.CarlaUnrealEditor clean.PythonAPI clean.LibCarla clean.osm2odr
 
 rebuild: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild $(ARGS)
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUE4Plugins.sh --rebuild $(ARGS)
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --rebuild $(ARGS)
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUnreal.sh --rebuild $(ARGS)
 
 hard-clean:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUE4Plugins.sh --clean $(ARGS)
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --hard-clean
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUnreal.sh --hard-clean
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --clean
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
@@ -83,9 +83,9 @@ examples:
 run-examples:
 	@for D in ${CARLA_EXAMPLES_FOLDER}/*; do [ -d "$${D}" ] && make -C $${D} run.only; done
 
-CarlaUE4Editor: LibCarla.server.release osm2odr downloadplugins
+CarlaUnrealEditor: LibCarla.server.release osm2odr downloadplugins
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUE4Plugins.sh --build $(ARGS)
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build $(ARGS)
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUnreal.sh --build $(ARGS)
 
 .PHONY: PythonAPI
 PythonAPI: LibCarla.client.release osm2odr

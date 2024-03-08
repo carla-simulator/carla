@@ -31,13 +31,13 @@ The simulation runs significantly faster in __Low__ mode. This is helpful in sit
 The images below compare both modes. The flag used is the same for Windows and Linux. There is no equivalent option when working with the build, but the UE editor has its own quality settings. Go to `Settings/Engine Scalability Settings` for a greater customization of the desired quality. 
 
 #### Epic mode
-`./CarlaUE4.sh -quality-level=Epic`
+`./CarlaUnreal.sh -quality-level=Epic`
 
 ![Epic mode screenshot](img/rendering_quality_epic.jpg)
 *Epic mode screenshot*
 
 #### Low mode
-`./CarlaUE4.sh -quality-level=Low`
+`./CarlaUnreal.sh -quality-level=Low`
 
 ![Low mode screenshot](img/rendering_quality_low.jpg)
 *Low mode screenshot*
@@ -45,7 +45,7 @@ The images below compare both modes. The flag used is the same for Windows and L
 <br>
 
 !!! Important
-    The issue that made Epic mode show an abnormal whiteness has been fixed. If the problem persists, delete `GameUserSettings.ini`. It is saving previous settings, and will be generated again in the next run. __Ubuntu path:__ `  ~/.config/Epic/CarlaUE4/Saved/Config/LinuxNoEditor/` __Windows path:__ `<Package folder>\WindowsNoEditor\CarlaUE4\Saved\Config\WindowsNoEditor\`
+    The issue that made Epic mode show an abnormal whiteness has been fixed. If the problem persists, delete `GameUserSettings.ini`. It is saving previous settings, and will be generated again in the next run. __Ubuntu path:__ `  ~/.config/Epic/CarlaUnreal/Saved/Config/LinuxNoEditor/` __Windows path:__ `<Package folder>\WindowsNoEditor\CarlaUnreal\Saved\Config\WindowsNoEditor\`
 
 ---
 ## No-rendering mode
@@ -97,7 +97,7 @@ It is important to understand the distinction between __no-rendering mode__ and 
 To start CARLA in off-screen mode, run the following command:
 
 ```sh
-./CarlaUE4.sh -RenderOffScreen
+./CarlaUnreal.sh -RenderOffScreen
 ```
 
 ### Setting off-screen mode (Versions prior to 0.9.12)
@@ -108,7 +108,7 @@ __Using OpenGL__, you can run in off-screen mode in Linux by running the followi
 
 ```sh
 # Linux
-DISPLAY= ./CarlaUE4.sh -opengl
+DISPLAY= ./CarlaUnreal.sh -opengl
 ```
 
 __Vulkan__ requires extra steps because it needs to communicate to the display X server using the X11 network protocol to work properly. The following steps will guide you on how to set up an Ubuntu 18.04 machine without a display so that CARLA can run with Vulkan.
@@ -152,7 +152,7 @@ sudo X :0 &
 __7. Run CARLA:__
 
 ```sh
-DISPLAY=:0.GPU ./CarlaUE4.sh -vulkan
+DISPLAY=:0.GPU ./CarlaUnreal.sh -vulkan
 ```
 
 CARLA provides a Dockerfile that performs all the above steps [here](https://github.com/carla-simulator/carla/blob/0.9.12/Util/Docker/Release.Dockerfile).

@@ -51,7 +51,7 @@ python3 config.py -x opendrive/TownBig.xodr
     __[client.generate_opendrive_world()](python_api.md#carla.Client.generate_opendrive_world)__ uses __content of the OpenDRIVE file parsed as string__. On the contrary, __`config.py`__ script needs __the path to the `.xodr` file__. 
 
 !!! Note
-	If you experience the error	`opendrive could not be correctly parsed`, ensure that there are write permissions on the `CarlaUE4/Content/Carla/Maps/OpenDrive/` directory. This is required by the server to parse the `xodr` file correctly.
+	If you experience the error	`opendrive could not be correctly parsed`, ensure that there are write permissions on the `CarlaUnreal/Content/Carla/Maps/OpenDrive/` directory. This is required by the server to parse the `xodr` file correctly.
 
 ---
 ## Mesh generation

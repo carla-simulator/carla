@@ -1,26 +1,69 @@
+#[[
+
+  Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma
+  de Barcelona (UAB).
+  
+  This work is licensed under the terms of the MIT license.
+  For a copy, see <https://opensource.org/licenses/MIT>.
+
+]]
+
 include (FetchContent)
-include (ExternalProject)
+
+set (CARLA_DEPENDENCIES_PENDING)
+
+macro (carla_dependency_add NAME TAG ARCHIVE_URL GIT_URL)
+  if (PREFER_CLONE)
+    message ("Cloning ${NAME}...")
+    FetchContent_Declare(
+      ${NAME}
+      GIT_REPOSITORY ${GIT_URL}
+      GIT_TAG ${TAG}
+      GIT_SUBMODULES_RECURSE ON
+      GIT_SHALLOW ON
+      GIT_PROGRESS ON
+      OVERRIDE_FIND_PACKAGE
+      ${ARGN}
+    )
+    list (APPEND CARLA_DEPENDENCIES_PENDING ${NAME})
+  else ()
+    message ("Downloading ${NAME}...")
+    FetchContent_Declare(
+      ${NAME}
+      URL ${ARCHIVE_URL}
+      OVERRIDE_FIND_PACKAGE
+      ${ARGN}
+    )
+    list (APPEND CARLA_DEPENDENCIES_PENDING ${NAME})
+  endif ()
+endmacro ()
+
+macro (carla_dependencies_make_available)
+  FetchContent_MakeAvailable (
+    ${CARLA_DEPENDENCIES_PENDING})
+  set (CARLA_DEPENDENCIES_PENDING)
+endmacro ()
+
+macro (carla_fetchcontent_option NAME VALUE)
+  set (${NAME} ${VALUE} CACHE INTERNAL "")
+endmacro ()
 
 
 
-# These checks may be incomplete:
+# ==== SQLITE3 ====
 
-if (LINUX)
-  set (THREADS_PREFER_PTHREAD_FLAG ON)
-  find_package (Threads REQUIRED)
-endif ()
-
-
-
-set (CARLA_DEPENDENCIES_INSTALL_PATH)
+set (THREADS_PREFER_PTHREAD_FLAG ON)
+find_package (Threads REQUIRED)
 
 string (REPLACE "." "" CARLA_SQLITE_TAG ${CARLA_SQLITE_VERSION})
 
-FetchContent_Declare (
+carla_dependency_add (
   sqlite3
-  URL https://www.sqlite.org/2024/sqlite-amalgamation-${CARLA_SQLITE_TAG}.zip
+  ${CARLA_SQLITE_TAG}
+  https://www.sqlite.org/2024/sqlite-amalgamation-${CARLA_SQLITE_TAG}.zip
+  ""
 )
-FetchContent_MakeAvailable (sqlite3)
+carla_dependencies_make_available ()
 
 add_library (
   libsqlite3 STATIC
@@ -43,200 +86,144 @@ target_link_libraries (
   libsqlite3
 )
 
+# ==== ZLIB ====
 
-
-set (CARLA_DEPENDENCIES)
-
-macro (carla_dependency_add NAME URL TAG)
-  message ("Fetching ${NAME}...")
-  FetchContent_Declare(
-    ${NAME}
-    GIT_SUBMODULES_RECURSE ON
-    GIT_SHALLOW ON
-    GIT_PROGRESS ON
-    GIT_REPOSITORY ${URL}
-    GIT_TAG ${TAG}
-    OVERRIDE_FIND_PACKAGE
-  )
-  list (APPEND CARLA_DEPENDENCIES ${NAME})
-endmacro ()
-
-macro (carla_dependencies_make_available)
-  FetchContent_MakeAvailable (
-    ${CARLA_DEPENDENCIES})
-  set (CARLA_DEPENDENCIES)
-endmacro ()
-
-macro (carla_fetchcontent_option NAME VALUE)
-  set (${NAME} ${VALUE} CACHE INTERNAL "")
-endmacro ()
-
-
-
-set (ZLIB_BUILD_EXAMPLES OFF)
+carla_fetchcontent_option (ZLIB_BUILD_EXAMPLES OFF)
 carla_dependency_add (
   zlib
-  https://github.com/madler/zlib.git
   ${CARLA_ZLIB_TAG}
+  https://github.com/madler/zlib/archive/refs/tags/${CARLA_ZLIB_TAG}.zip
+  https://github.com/madler/zlib.git
 )
 carla_dependencies_make_available ()
-include_directories (${zlib_SOURCE_DIR} ${zlib_BINARY_DIR}) # HACK
+include_directories (${zlib_SOURCE_DIR} ${zlib_BINARY_DIR}) # @TODO HACK
 
-set (PNG_TESTS OFF)
-set (PNG_SHARED OFF)
-set (PNG_TOOLS OFF)
-set (PNG_BUILD_ZLIB ON)
+# ==== LIBPNG ====
+
+carla_fetchcontent_option (PNG_TESTS OFF)
+carla_fetchcontent_option (PNG_SHARED OFF)
+carla_fetchcontent_option (PNG_TOOLS OFF)
+carla_fetchcontent_option (PNG_BUILD_ZLIB ON)
 if (WIN32)
-  set (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlibstatic${CARLA_DEBUG_AFFIX}.lib)
+  carla_fetchcontent_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlibstatic${CARLA_DEBUG_AFFIX}.lib)
 else ()
-  set (ZLIB_LIBRARY ${zlib_BINARY_DIR}/libz.a)
+  carla_fetchcontent_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/libz.a)
 endif ()
-set (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
-set (ZLIB_LIBRARIES ${ZLIB_LIBRARY})
+carla_fetchcontent_option (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
+carla_fetchcontent_option (ZLIB_LIBRARIES ${ZLIB_LIBRARY})
 carla_dependency_add (
   libpng
-  https://github.com/glennrp/libpng.git
   ${CARLA_LIBPNG_TAG}
+  https://github.com/pnggroup/libpng/archive/refs/tags/${CARLA_LIBPNG_TAG}.zip
+  https://github.com/glennrp/libpng.git
 )
 carla_dependencies_make_available ()
-include_directories (${libpng_SOURCE_DIR} ${libpng_BINARY_DIR}) # HACK
+include_directories (${libpng_SOURCE_DIR} ${libpng_BINARY_DIR}) # @TODO HACK
 
 
 
-if (BUILD_PYTHON_API)
-  set (BOOST_ENABLE_PYTHON ${BUILD_PYTHON_API})
-endif ()
+# ==== BOOST ====
 
-carla_dependency_add (
+carla_fetchcontent_option (BOOST_ENABLE_PYTHON ${BUILD_PYTHON_API})
+carla_fetchcontent_option (BOOST_ENABLE_MPI OFF)
+carla_fetchcontent_option (BOOST_LOCALE_WITH_ICU OFF)
+carla_fetchcontent_option (BOOST_LOCALE_WITH_ICONV OFF)
+carla_fetchcontent_option (BOOST_EXCLUDE_LIBRARIES "iostreams;locale;fiber;log")
+carla_dependency_add(
   boost
-  https://github.com/boostorg/boost.git
   ${CARLA_BOOST_TAG}
+  https://github.com/boostorg/boost/releases/download/${CARLA_BOOST_TAG}/${CARLA_BOOST_TAG}.zip
+  https://github.com/boostorg/boost.git
 )
 
-set (EIGEN_BUILD_PKGCONFIG OFF)
-set (BUILD_TESTING OFF)
-set (EIGEN_BUILD_DOC OFF)
+# ==== EIGEN ====
+
+carla_fetchcontent_option (EIGEN_BUILD_PKGCONFIG OFF)
+carla_fetchcontent_option (BUILD_TESTING OFF)
+carla_fetchcontent_option (EIGEN_BUILD_DOC OFF)
 carla_dependency_add (
   eigen
-  https://gitlab.com/libeigen/eigen.git
   ${CARLA_EIGEN_TAG}
+  https://gitlab.com/libeigen/eigen/-/archive/${CARLA_EIGEN_TAG}/eigen-${CARLA_EIGEN_TAG}.tar.gz
+  https://gitlab.com/libeigen/eigen.git
 )
+
+# ==== RPCLIB ====
 
 carla_dependency_add (
   rpclib
-  https://github.com/carla-simulator/rpclib.git
   ${CARLA_RPCLIB_TAG}
+  https://github.com/carla-simulator/rpclib/archive/refs/heads/${CARLA_RPCLIB_TAG}.zip
+  https://github.com/carla-simulator/rpclib.git
 )
 
+# ==== RECAST ====
+
+carla_fetchcontent_option (RECASTNAVIGATION_BUILDER OFF)
 carla_dependency_add (
   recastnavigation
-  https://github.com/carla-simulator/recastnavigation.git
   ${CARLA_RECAST_TAG}
+  https://github.com/carla-simulator/recastnavigation/archive/refs/heads/${CARLA_RECAST_TAG}.zip
+  https://github.com/carla-simulator/recastnavigation.git
 )
 
+# ==== PROJ ====
+
 if (ENABLE_OSM2ODR)
-  set (BUILD_TESTING OFF)
-  set (ENABLE_TIFF OFF)
-  set (ENABLE_CURL OFF)
+  carla_fetchcontent_option (BUILD_TESTING OFF)
+  carla_fetchcontent_option (ENABLE_TIFF OFF)
+  carla_fetchcontent_option (ENABLE_CURL OFF)
   carla_dependency_add (
     proj
+    https://github.com/OSGeo/PROJ/archive/refs/tags/${CARLA_PROJ_TAG}.zip
     https://github.com/OSGeo/PROJ.git
     ${CARLA_PROJ_TAG}
   )
 endif ()
 
+# ==== XERCESC ====
+
 if (ENABLE_OSM2ODR)
   carla_dependency_add (
     xercesc
+    https://github.com/apache/xerces-c/archive/refs/tags/${CARLA_XERCESC_TAG}.zip
     https://github.com/apache/xerces-c.git
     ${CARLA_XERCESC_TAG}
   )
 endif ()
 
+# ==== LUNASVG ====
+
 if (BUILD_OSM_WORLD_RENDERER)
   carla_dependency_add (
     lunasvg
+    https://github.com/sammycage/lunasvg/archive/refs/tags/${CARLA_LUNASVG_TAG}.zip
     https://github.com/sammycage/lunasvg.git
     ${CARLA_LUNASVG_TAG}
   )
 endif ()
 
+# ==== LIBOSMSCOUT ====
+
 if (BUILD_OSM_WORLD_RENDERER)
   carla_dependency_add (
     libosmscout
+    https://github.com/Framstag/libosmscout/archive/refs/tags/${CARLA_LIBOSMSCOUT_TAG}.zip
     https://github.com/Framstag/libosmscout.git
     ${CARLA_LIBOSMSCOUT_TAG}
   )
 endif ()
 
-# carla_dependency_add (
-#   gtest
-#   https://github.com/google/googletest.git
-#   ${CARLA_GTEST_TAG}
-# )
+# ==== STREETMAP ====
+
+if (BUILD_CARLA_UE)
+  carla_dependency_add (
+    StreetMap
+    https://github.com/carla-simulator/StreetMap.git
+    https://github.com/carla-simulator/StreetMap/archive/refs/heads/${CARLA_STREETMAP_TAG}.zip
+    ${CARLA_STREETMAP_TAG}
+    DOWNLOAD_DIR ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins
+  )
+endif ()
 
 carla_dependencies_make_available ()
-
-#[[
-
-ExternalProject_Add (
-  recastnavigation
-  GIT_REPOSITORY https://github.com/carla-simulator/recastnavigation.git
-  GIT_TAG ${CARLA_RECAST_TAG}
-)
-
-ExternalProject_Add (
-  proj
-  GIT_REPOSITORY https://github.com/OSGeo/PROJ.git
-  GIT_TAG ${CARLA_PROJ_TAG}
-  CMAKE_ARGS
-    -DSQLITE3_INCLUDE_DIR=${sqlite3_SOURCE_DIR}
-    -DSQLITE3_LIBRARY=$<TARGET_FILE:libsqlite3>
-    -DEXE_SQLITE3=$<TARGET_FILE:sqlite3>
-    -DENABLE_TIFF=OFF
-    -DENABLE_CURL=OFF
-    -DBUILD_SHARED_LIBS=OFF
-    -DBUILD_PROJSYNC=OFF
-    -DBUILD_PROJINFO=OFF
-    -DBUILD_CCT=OFF
-    -DBUILD_CS2CS=OFF
-    -DBUILD_GEOD=OFF
-    -DBUILD_GIE=OFF
-    -DBUILD_PROJ=OFF
-    -DBUILD_TESTING=OFF
-)
-
-add_dependencies (proj sqlite3 libsqlite3)
-
-ExternalProject_Add (
-  xercesc
-  GIT_REPOSITORY https://github.com/apache/xerces-c.git
-  GIT_TAG ${CARLA_XERCESC_TAG}
-)
-
-ExternalProject_Add (
-  libpng
-  GIT_REPOSITORY https://github.com/glennrp/libpng.git
-  GIT_TAG ${CARLA_LIBPNG_TAG}
-  CMAKE_ARGS
-    -DCMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}
-    -DPNG_TESTS=OFF
-    -DPNG_SHARED=OFF
-    -DPNG_TOOLS=OFF
-)
-
-ExternalProject_Add (
-  lunasvg
-  GIT_REPOSITORY https://github.com/sammycage/lunasvg.git
-)
-
-ExternalProject_Add (
-  libosmscout
-  GIT_REPOSITORY https://github.com/Framstag/libosmscout.git
-)
-
-ExternalProject_Add (
-  gtest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG ${CARLA_GTEST_TAG}
-)]]

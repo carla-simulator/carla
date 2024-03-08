@@ -44,7 +44,7 @@ done
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pushd "$SCRIPT_DIR" >/dev/null
 
-CONTENT_FOLDER="${SCRIPT_DIR}/Unreal/CarlaUE4/Content/Carla"
+CONTENT_FOLDER="${SCRIPT_DIR}/Unreal/CarlaUnreal/Content/Carla"
 
 CONTENT_ID=$(tac $SCRIPT_DIR/Util/ContentVersions.txt | egrep -m 1 . | rev | cut -d' ' -f1 | rev)
 CONTENT_LINK=http://carla-assets.s3.amazonaws.com/${CONTENT_ID}.tar.gz
@@ -82,7 +82,7 @@ if $SKIP_DOWNLOAD ; then
   echo
   echo "  ${CONTENT_LINK}"
   echo
-  echo "and extract it under Unreal/CarlaUE4/Content/Carla."
+  echo "and extract it under Unreal/CarlaUnreal/Content/Carla."
   exit 0
 fi
 

@@ -2,6 +2,21 @@ project (
   carla-ue
 )
 
+set (
+  CARLA_UE_PATH
+  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal
+)
+
+set (
+  CARLA_UE_PLUGINS_PATH
+  ${CARLA_UE_PATH}/Plugins
+)
+
+set (
+  CARLA_UE_PROJECT_PATH
+  ${CARLA_UE_PATH}/CarlaUnreal.uproject
+)
+
 if (WIN32)
   set (
     CARLA_UE_GENERATE_PROJECT_SCRIPT
@@ -14,43 +29,116 @@ else ()
   )
 endif ()
 
-set (
-  CARLA_UE_PATH
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUE4
-)
 
-set (
-  CARLA_UE_PROJECT_PATH
-  ${CARLA_UE_PATH}/CarlaUE4.uproject
-)
 
-add_custom_target (
-  carla-ue-generate-project-files
-  ALL
-  DEPENDS
-    carla-server
+add_custom_command (
+  OUTPUT ${CARLA_UE_PATH}/CMakeLists.txt
   COMMENT
-    "Generating Carla UE project files..."
+    "Generating UE project files for CARLA..."
   COMMAND
     ${CARLA_UE_GENERATE_PROJECT_SCRIPT}
     -project=${CARLA_UE_PROJECT_PATH}
     -game
     -engine
-    -makefiles
+    -CMakefile
 )
 
 add_custom_target (
-  carla-ue-build
+  carla-ue-generate-project-files
+  DEPENDS ${CARLA_UE_PATH}/CMakeLists.txt
+)
+
+
+
+if (CMAKE_TOOLCHAIN_FILE)
+  cmake_path (
+    ABSOLUTE_PATH CMAKE_TOOLCHAIN_FILE
+    BASE_DIRECTORY ${CARLA_WORKSPACE_PATH}
+    NORMALIZE
+    OUTPUT_VARIABLE TOOLCHAIN_FILE
+  )
+  set (TOOLCHAIN_FILE_OPTION --toolchain=${TOOLCHAIN_FILE})
+else ()
+  set (TOOLCHAIN_FILE_OPTION)
+endif ()
+
+
+
+add_custom_command (
+  OUTPUT carla-ue-configure.stamp
+  COMMENT
+    "Configuring Carla Unreal..."
+  COMMAND
+    ${CMAKE_COMMAND} -E touch carla-ue-configure.stamp
+  COMMAND
+    ${CMAKE_COMMAND}
+    -S ${CARLA_UE_PATH}
+    -G ${CMAKE_GENERATOR}
+    -B ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+add_custom_target (
+  carla-ue-configure
+  DEPENDS
+    carla-ue-configure.stamp
+    carla-ue-generate-project-files
+)
+
+
+
+add_custom_command (
+  OUTPUT carla-ue.stamp
+  COMMENT
+    "Building Carla Unreal..."
+  COMMAND
+    ${CMAKE_COMMAND} -E touch carla-ue.stamp
+  COMMAND
+    ${CMAKE_COMMAND}
+      --build ${CMAKE_CURRENT_BINARY_DIR}
+      --target CarlaUnrealEditor
+      --verbose
+)
+
+add_custom_target (
+  carla-ue
   ALL
   DEPENDS
-    carla-ue-generate-project-files
-  COMMENT
-    "Building Carla UE..."
-  COMMAND
-    make -C ${CARLA_UE_PROJECT_PATH} CarlaUE4Editor
+    carla-ue-configure
+    carla-ue.stamp
 )
+
+
+
+add_custom_target (
+  launch-only
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Linux/UnrealEditor
+    ${CARLA_UE_PROJECT_PATH}
+    -${CARLA_UNREAL_RHI}
+)
+
+
+
+add_custom_target (
+  launch
+  DEPENDS
+    carla-ue
+    launch-only
+)
+
+
 
 file (
   MAKE_DIRECTORY
   ${CARLA_UE_PATH}/Content/Carla/ExportedMaps
+)
+
+carla_two_step_configure_file (
+  ${CARLA_UE_PLUGINS_PATH}/Carla/Source/Carla/Carla.Build.cs
+  ${CARLA_UE_PLUGINS_PATH}/Carla/Source/Carla/Carla.Build.cs.in
+)
+
+carla_two_step_configure_file (
+  ${CARLA_UE_PLUGINS_PATH}/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs
+  ${CARLA_UE_PLUGINS_PATH}/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs.in
 )

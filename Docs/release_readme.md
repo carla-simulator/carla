@@ -11,7 +11,7 @@ How to run CARLA
 Launch a terminal in this folder and execute the simulator by running
 
 ```sh
- ./CarlaUE4.sh
+ ./CarlaUnreal.sh
 ```
 
 this will launch a window with a view over the city. This is the "spectator"

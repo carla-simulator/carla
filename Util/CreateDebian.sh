@@ -61,17 +61,17 @@ fi
 ./ImportAssets.sh
 
 # Removing unnecessary files
-rm CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping.debug
-rm CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping.sym
+rm CarlaUnreal/Binaries/Linux/CarlaUnreal-Linux-Shipping.debug
+rm CarlaUnreal/Binaries/Linux/CarlaUnreal-Linux-Shipping.sym
 
 # ==================================================================================================
 # -- Debian package --------------------------------------------------------------------------------
 # ==================================================================================================
-# Updating CarlaUE4.sh script
-rm CarlaUE4.sh
-cat >> CarlaUE4.sh <<EOF
+# Updating CarlaUnreal.sh script
+rm CarlaUnreal.sh
+cat >> CarlaUnreal.sh <<EOF
 #!/bin/sh
-"/opt/carla-simulator/CarlaUE4/Binaries/Linux/CarlaUE4-Linux-Shipping" CarlaUE4 \$@
+"/opt/carla-simulator/CarlaUnreal/Binaries/Linux/CarlaUnreal-Linux-Shipping" CarlaUnreal \$@
 EOF
 
 # Making debian package to install Carla in /opt folder
@@ -83,9 +83,9 @@ binary:
 
 install:
 	mkdir -p \$(DESTDIR)/opt/carla-simulator/bin
-	cp CarlaUE4.sh \$(DESTDIR)/opt/carla-simulator/bin
+	cp CarlaUnreal.sh \$(DESTDIR)/opt/carla-simulator/bin
 	cp ImportAssets.sh \$(DESTDIR)/opt/carla-simulator
-	cp -r CarlaUE4 \$(DESTDIR)/opt/carla-simulator
+	cp -r CarlaUnreal \$(DESTDIR)/opt/carla-simulator
 	cp -r Engine \$(DESTDIR)/opt/carla-simulator
 	cp -r Import \$(DESTDIR)/opt/carla-simulator
 	cp -r PythonAPI \$(DESTDIR)/opt/carla-simulator
@@ -146,7 +146,7 @@ mkdir -p "\$SITEDIR"
 PYTHON2_EGG=\$(ls /opt/carla-simulator/PythonAPI/carla/dist | grep py2.)
 echo "/opt/carla-simulator/PythonAPI/carla/dist/\$PYTHON2_EGG\n/opt/carla-simulator/PythonAPI/carla/" > "\$SITEDIR/carla.pth"
 
-chmod +x /opt/carla-simulator/bin/CarlaUE4.sh
+chmod +x /opt/carla-simulator/bin/CarlaUnreal.sh
 
 set -e
 

@@ -8,7 +8,7 @@ import subprocess
 
 """Generic function for running a commandlet with its arguments."""
 ue4_path = os.environ["UE4_ROOT"]
-uproject_path = unreal.Paths.project_dir() + ("CarlaUE4.uproject")
+uproject_path = unreal.Paths.project_dir() + ("CarlaUnreal.uproject")
 run = "-run=%s" % ("GenerateTileCommandlet")
 
 print("Before any Commandlet:")

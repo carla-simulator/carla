@@ -5,7 +5,7 @@ rem -- Set up environment ------------------------------------------------------
 rem ============================================================================
 
 set SCRIPT_DIR=%~dp0
-set CONTENT_FOLDER=%SCRIPT_DIR%Unreal/CarlaUE4/Content/Carla
+set CONTENT_FOLDER=%SCRIPT_DIR%Unreal/CarlaUnreal/Content/Carla
 set VERSION_FILE=%CONTENT_FOLDER%/.version
 set CONTENT_VERSIONS=%SCRIPT_DIR%/Util/ContentVersions.txt
 

@@ -1,4 +1,14 @@
-cmake_minimum_required (VERSION 3.20.0)
+#[[
+
+  Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma
+  de Barcelona (UAB).
+  
+  This work is licensed under the terms of the MIT license.
+  For a copy, see <https://opensource.org/licenses/MIT>.
+
+]]
+
+cmake_minimum_required (VERSION 3.28.0)
 
 cmake_policy (SET CMP0097 NEW)
 cmake_policy (SET CMP0091 NEW)
@@ -40,13 +50,28 @@ set (
 
 set (
   CARLA_UNREAL_PLUGINS_PATH
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUE4/Plugins
+  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins
 )
 
 include (CheckCCompilerFlag)
 include (CheckCXXCompilerFlag)
+include (CheckLinkerFlag)
+
 include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
 
+if (LINUX)
+  check_linker_flag (
+    CXX
+    -lpthread
+    HAS_PTHREAD
+  )
+  if (HAS_PTHREAD)
+    add_link_options (-lpthread)
+  endif ()
+endif ()
+
+# Similar to configure_file, but also expands variables
+# that are set at generate time, like generator expressions.
 macro (carla_two_step_configure_file DESTINATION SOURCE)
   message ("Configuring file \"${DESTINATION}\"")
   # Configure-time step; evaluate variables:
@@ -55,16 +80,9 @@ macro (carla_two_step_configure_file DESTINATION SOURCE)
   file (GENERATE OUTPUT ${DESTINATION} INPUT ${DESTINATION})
 endmacro ()
 
-set (
-  CMAKE_INSTALL_PREFIX
-  ${CARLA_DEPENDENCIES_INSTALL_PREFIX}
-)
 
-if (WIN32)
-  set (LIB_EXT .lib)
-else ()
-  set (LIB_EXT .a)
-endif ()
+
+set (CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 if (WIN32)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -75,6 +93,8 @@ if (WIN32)
     set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
   endif ()
 endif ()
+
+
 
 set (
   CARLA_COMMON_DEFINITIONS
@@ -90,6 +110,7 @@ if (WIN32)
 endif ()
 
 set (CARLA_EXCEPTION_DEFINITIONS)
+
 if (ENABLE_EXCEPTIONS)
   # Nothing
 else ()
@@ -99,7 +120,11 @@ else ()
   list (APPEND CARLA_EXCEPTION_DEFINITIONS PUGIXML_NO_EXCEPTIONS)
 endif ()
 
+
+
 include (${CARLA_WORKSPACE_PATH}/CMake/CarlaDependencies.cmake)
+
+
 
 if (BUILD_CARLA_CLIENT OR BUILD_CARLA_SERVER)
   add_subdirectory (LibCarla)
@@ -116,13 +141,3 @@ endif ()
 if (BUILD_CARLA_UE)
   add_subdirectory (Unreal)
 endif ()
-
-carla_two_step_configure_file (
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUE4/Plugins/Carla/Source/Carla/Carla.Build.cs
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUE4/Plugins/Carla/Source/Carla/Carla.Build.cs.in
-)
-
-carla_two_step_configure_file (
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUE4/Plugins/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUE4/Plugins/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs.in
-)

@@ -11,11 +11,11 @@ Use the following commands:
 
     launch:
 
-        Compile CarlaUE4 project and launch it in Unreal Engine's Editor.
+        Compile CarlaUnreal project and launch it in Unreal Engine's Editor.
 
     launch-only:
 
-        Launch CarlaUE4 project in Unreal Engine's Editor, but skip building
+        Launch CarlaUnreal project in Unreal Engine's Editor, but skip building
         step (assume the project is already built).
 
     import:
@@ -71,9 +71,9 @@ for developers:
 
         Build (and run) the C++ client examples.
 
-    CarlaUE4Editor:
+    CarlaUnrealEditor:
 
-        Build CarlaUE4 project, but do not launch the editor.
+        Build CarlaUnreal project, but do not launch the editor.
 
     PythonAPI(.2|.3):
 
@@ -83,7 +83,7 @@ for developers:
 
         Build LibCarla, "Server" and/or "Client" configurations.
 
-    clean.(LibCarla|PythonAPI|CarlaUE4Editor)
+    clean.(LibCarla|PythonAPI|CarlaUnrealEditor)
 
         Remove intermediate build files for the specific module.
 

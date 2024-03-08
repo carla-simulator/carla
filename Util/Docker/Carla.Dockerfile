@@ -10,7 +10,7 @@ RUN cd /home/carla/ && \
   else git clone --depth 1 --branch $GIT_BRANCH https://github.com/carla-simulator/carla.git; fi && \
   cd /home/carla/carla && \
   ./Update.sh && \
-  make CarlaUE4Editor && \
+  make CarlaUnrealEditor && \
   make PythonAPI && \
   make build.utils && \
   make package && \

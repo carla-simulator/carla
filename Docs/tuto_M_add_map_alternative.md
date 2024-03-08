@@ -15,12 +15,12 @@ The RoadRunner software from MathWorks provides plugins for Unreal Engine to hel
 
 __1.__ The plugins are available for download from the [MathWorks website](https://www.mathworks.com/help/roadrunner/ug/Downloading-Plugins.html). MathWorks also has a [full tutorial](https://www.mathworks.com/help/roadrunner/ug/Exporting-to-CARLA.html), similar to this one, on how to import maps to CARLA using the plugins.
 
-__2.__ Extract the contents of the downloaded folder and move the folders `RoadRunnerImporter`, `RoadRunnerCarlaIntegration` and `RoadRunnerMaterials` to `<carla>/Unreal/CarlaUE4/Plugins/`.
+__2.__ Extract the contents of the downloaded folder and move the folders `RoadRunnerImporter`, `RoadRunnerCarlaIntegration` and `RoadRunnerMaterials` to `<carla>/Unreal/CarlaUnreal/Plugins/`.
 
 __3.__ Rebuild the plugin following the instructions below:  
 
 *   __On Windows.__  
-	* Right-click the `.uproject` file in `<carla>/Unreal/CarlaUE4` and select `Generate Visual Studio project files`.  
+	* Right-click the `.uproject` file in `<carla>/Unreal/CarlaUnreal` and select `Generate Visual Studio project files`.  
 	* In the root folder of CARLA, run the command:
 
 ```sh
@@ -30,7 +30,7 @@ make launch
 *   __On Linux.__  
 	* Run the following command:  
 ```sh
-UE4_ROOT/GenerateProjectFiles.sh -project="carla/Unreal/CarlaUE4/CarlaUE4.uproject" -game -engine
+UE4_ROOT/GenerateProjectFiles.sh -project="carla/Unreal/CarlaUnreal/CarlaUnreal.uproject" -game -engine
 ```
 
 __4.__ In the Unreal Engine window, make sure the checkbox is selected for both plugins `Edit > Plugins`. 
@@ -67,7 +67,7 @@ This method of importing maps can be used with generic `.fbx` and `.xodr` files.
 
 To import a map manually to Unreal Engine:
 
-__1.__ In your system's file explorer, copy the `.xodr` file to `<carla-root>/Unreal/CarlaUE4/Content/Carla/Maps/OpenDrive`.
+__1.__ In your system's file explorer, copy the `.xodr` file to `<carla-root>/Unreal/CarlaUnreal/Content/Carla/Maps/OpenDrive`.
 
 __2.__ Open the Unreal Engine editor by running `make launch` in the carla root directory. In the _Content Browser_ of the editor, navigate to `Content/Carla/Maps/BaseMap` and duplicate the `BaseMap`. This will provide a blank map with the default sky and lighting objects.
 
@@ -145,7 +145,7 @@ __14.__ In the _Modes_ panel, search for the __Open Drive Actor__ and drag it in
 
 >>![ue_opendrive_actor](../img/ue_opendrive_actor.jpg)
 
-__15.__ In the _Details_ panel, check `Add Spawners` and then click on the box beside `Generate Routes`. This will find the `.xodr` file with the same map name in the `<carla-root>/Unreal/CarlaUE4/Content/Carla/Maps/OpenDrive` directory and use it to generate a series of _RoutePlanner_ and _VehicleSpawnPoint_ actors.
+__15.__ In the _Details_ panel, check `Add Spawners` and then click on the box beside `Generate Routes`. This will find the `.xodr` file with the same map name in the `<carla-root>/Unreal/CarlaUnreal/Content/Carla/Maps/OpenDrive` directory and use it to generate a series of _RoutePlanner_ and _VehicleSpawnPoint_ actors.
 
 >>![ue_generate_routes](../img/ue_generate_routes.png)
 
