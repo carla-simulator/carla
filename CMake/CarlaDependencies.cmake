@@ -112,6 +112,7 @@ carla_dependency_add_zip(
   boost
   https://github.com/boostorg/boost/releases/download/${CARLA_BOOST_TAG}/${CARLA_BOOST_TAG}.zip
 )
+list (APPEND CARLA_DEPENDENCIES boost)
 
 set (EIGEN_BUILD_PKGCONFIG OFF)
 set (BUILD_TESTING OFF)
