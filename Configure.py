@@ -29,7 +29,7 @@ CARLA_UE_CONTENT_VERSIONS_FILE_PATH = WORKSPACE_PATH / 'Util' / 'ContentVersions
 LOGICAL_PROCESSOR_COUNT = psutil.cpu_count(logical = True)
 DEFAULT_PARALLELISM = LOGICAL_PROCESSOR_COUNT + (2 if LOGICAL_PROCESSOR_COUNT >= 8 else 0)
 READTHEDOCS_URL_SUFFIX = 'how_to_build_on_windows/\n' if os.name == "nt" else 'build_linux/\n'
-DEFAULT_BOOST_TOOLSET = 'msvc-14.3' if os.name == 'nt' else 'clang'
+DEFAULT_BOOST_TOOLSET = 'msvc-14.3' if os.name == 'nt' else 'clang-16'
 DEFAULT_ERROR_MESSAGE = (
   '\n'
   'Ok, an error ocurred, don\'t panic!\n'
@@ -1314,6 +1314,12 @@ def BuildDependencies(task_graph : TaskGraph):
       XERCESC_INSTALL_PATH))
   
   if ENABLE_ROS2:
+    #HACK: Prevent find_package() detect foonathan-memory-vendor library when ros2 is installed in the system.
+    #      foonathan-memory-vendor does not build if is already installed in the system and there are no cmake arguments to prvent this behavioud in foonathan-memory-vendor.
+    def is_ros_system_install_path(path):
+      return any(ros_folder in path for ros_folder in ['/ros/', '/ros2/'])
+    os.environ['PATH'] = ':'.join([path for path in os.environ['PATH'].split(':') if not is_ros_system_install_path(path)])
+    
     task_graph.Add(Task.CreateCMakeConfigureGxxABI(
       'foonathan-memory-vendor-configure',
       [],

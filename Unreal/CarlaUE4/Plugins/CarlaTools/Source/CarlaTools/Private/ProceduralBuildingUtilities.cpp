@@ -15,6 +15,7 @@
 #include "ProceduralMeshComponent.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/SavePackage.h"
 
 void AProceduralBuildingUtilities::GenerateImpostorTexture(const FVector& BuildingSize)
 {
@@ -127,15 +128,17 @@ void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& D
       ScreenAreaSize,
       true);
 
-  UPackage::SavePackage(NewPackage,
-      AssetsToSync[0],
-      EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-      *FileName,
-      GError,
-      nullptr,
-      true,
-      true,
-      SAVE_NoError);
+  FSavePackageArgs SaveArgs;
+  SaveArgs.TopLevelFlags = EObjectFlags::RF_Public |
+                           EObjectFlags::RF_Standalone;
+  SaveArgs.Error = GError;
+  SaveArgs.bForceByteSwapping = true;
+  SaveArgs.bWarnOfLongFilename = true;
+  SaveArgs.SaveFlags = SAVE_NoError;
+
+  UPackage::SavePackage(NewPackage, AssetsToSync[0],
+      *FileName, SaveArgs);
+
 }
 
 void AProceduralBuildingUtilities::CookProceduralMeshToMesh(
@@ -197,15 +200,18 @@ void AProceduralBuildingUtilities::CookProceduralMeshToMesh(
   StaticMesh->PostEditChange();
   FAssetRegistryModule::AssetCreated(StaticMesh);
 
+  FSavePackageArgs SaveArgs;
+  SaveArgs.TopLevelFlags =
+      EObjectFlags::RF_Public | EObjectFlags::RF_Standalone;
+  SaveArgs.Error = GError;
+  SaveArgs.bForceByteSwapping = true;
+  SaveArgs.bWarnOfLongFilename = true;
+  SaveArgs.SaveFlags = SAVE_NoError;
+
   UPackage::SavePackage(NewPackage,
       StaticMesh,
-      EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
       *FileName,
-      GError,
-      nullptr,
-      true,
-      true,
-      SAVE_NoError);
+      SaveArgs);
 }
 
 UMaterialInstanceConstant* AProceduralBuildingUtilities::GenerateBuildingMaterialAsset(
@@ -232,8 +238,15 @@ UMaterialInstanceConstant* AProceduralBuildingUtilities::GenerateBuildingMateria
   const FString PackageFileName = FPackageName::LongPackageNameToFilename(
       PackageName, 
       ".uasset");
-  UPackage::SavePackage(NewPackage, DuplicatedMaterial, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-      *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+  FSavePackageArgs SaveArgs;
+  SaveArgs.TopLevelFlags =
+      EObjectFlags::RF_Public | EObjectFlags::RF_Standalone;
+  SaveArgs.Error = GError;
+  SaveArgs.bForceByteSwapping = true;
+  SaveArgs.bWarnOfLongFilename = true;
+  SaveArgs.SaveFlags = SAVE_NoError;
+
+  UPackage::SavePackage(NewPackage, DuplicatedMaterial, *PackageFileName, SaveArgs);
 
   return DuplicatedMaterial;
 }

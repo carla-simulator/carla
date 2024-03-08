@@ -82,15 +82,15 @@ public class CarlaTools :
 
     PublicDependencyModuleNames.AddRange(new string[]
     {
-            "Core",
-            "ProceduralMeshComponent",
-            "MeshDescription",
-            "RawMesh",
-            "AssetTools",
+      "Core",
+      "ProceduralMeshComponent",
+      "MeshDescription",
+      "RawMesh",
+      "AssetTools",
     });
 
     PrivateDependencyModuleNames.AddRange(new string[]
-{
+    { 
       "CoreUObject",
       "Engine",
       "Slate",
@@ -101,8 +101,8 @@ public class CarlaTools :
       "EditorScriptingUtilities",
       "Landscape",
       "Foliage",
-            "FoliageEdit",
-            "MeshMergeUtilities",
+      "FoliageEdit",
+      "MeshMergeUtilities",
       "Carla",
       "StaticMeshDescription",
       "Json",
@@ -115,18 +115,19 @@ public class CarlaTools :
       "MeshMergeUtilities",
       "StreetMapImporting",
       "StreetMapRuntime",
-            "Chaos",
-            "ChaosVehicles"
+      "Chaos",
+      "ChaosVehicles",
+      "LevelEditor",
     });
 
     if (EnableHoudini)
     {
       PrivateDependencyModuleNames.AddRange(new string[]
-{
+      {
         "HoudiniEngine",
         "HoudiniEngineEditor",
         "HoudiniEngineRuntime"
-});
+      });
     }
 
     if (EnableNVIDIAOmniverse)
@@ -135,10 +136,10 @@ public class CarlaTools :
       PrivateDefinitions.Add("WITH_OMNIVERSE");
 
       PrivateDependencyModuleNames.AddRange(new string[]
-{
+      {
         "OmniverseUSD",
         "OmniverseRuntime"
-});
+      });
     }
 
     if (IsWindows)
