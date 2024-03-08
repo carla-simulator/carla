@@ -10,17 +10,50 @@ if (LINUX)
   find_package (Threads REQUIRED)
 endif ()
 
+set (CARLA_DEPENDENCIES)
 
+macro (carla_dependency_add_git NAME URL TAG)
+  message ("Fetching ${NAME}...")
+  FetchContent_Declare(
+    ${NAME}
+    GIT_SUBMODULES_RECURSE ON
+    GIT_SHALLOW ON
+    GIT_PROGRESS ON
+    GIT_REPOSITORY ${URL}
+    GIT_TAG ${TAG}
+    OVERRIDE_FIND_PACKAGE
+  )
+  list (APPEND CARLA_DEPENDENCIES ${NAME})
+endmacro ()
+
+macro (carla_dependency_add_zip NAME URL)
+  FetchContent_Declare(
+    ${NAME}
+    URL ${URL}
+    OVERRIDE_FIND_PACKAGE
+  )
+  list (APPEND CARLA_DEPENDENCIES ${NAME})
+endmacro ()
+
+macro (carla_dependencies_make_available)
+  FetchContent_MakeAvailable (
+    ${CARLA_DEPENDENCIES})
+  set (CARLA_DEPENDENCIES)
+endmacro ()
+
+macro (carla_fetchcontent_option NAME VALUE)
+  set (${NAME} ${VALUE} CACHE INTERNAL "")
+endmacro ()
 
 set (CARLA_DEPENDENCIES_INSTALL_PATH)
 
 string (REPLACE "." "" CARLA_SQLITE_TAG ${CARLA_SQLITE_VERSION})
 
-FetchContent_Declare (
+carla_dependency_add_zip (
   sqlite3
-  URL https://www.sqlite.org/2024/sqlite-amalgamation-${CARLA_SQLITE_TAG}.zip
+  https://www.sqlite.org/2024/sqlite-amalgamation-${CARLA_SQLITE_TAG}.zip
 )
-FetchContent_MakeAvailable (sqlite3)
+carla_dependencies_make_available ()
 
 add_library (
   libsqlite3 STATIC
@@ -43,106 +76,66 @@ target_link_libraries (
   libsqlite3
 )
 
-
-
-set (CARLA_DEPENDENCIES)
-
-macro (carla_dependency_add NAME URL TAG)
-  message ("Downloading+building ${NAME}...")
-  FetchContent_Declare(
-    ${NAME}
-    GIT_SUBMODULES_RECURSE ON
-    GIT_SHALLOW ON
-    GIT_PROGRESS ON
-    GIT_REPOSITORY ${URL}
-    GIT_TAG ${TAG}
-    OVERRIDE_FIND_PACKAGE
-    ${ARGN}
-  )
-  list (APPEND CARLA_DEPENDENCIES ${NAME})
-endmacro ()
-
-macro (carla_dependencies_make_available)
-  FetchContent_MakeAvailable (
-    ${CARLA_DEPENDENCIES})
-  set (CARLA_DEPENDENCIES)
-endmacro ()
-
-macro (carla_fetchcontent_option NAME VALUE)
-  set (${NAME} ${VALUE})
-endmacro ()
-
-
-
-carla_fetchcontent_option (ZLIB_BUILD_EXAMPLES OFF)
-carla_dependency_add (
+set (ZLIB_BUILD_EXAMPLES OFF)
+carla_dependency_add_zip (
   zlib
-  https://github.com/madler/zlib.git
-  ${CARLA_ZLIB_TAG}
+  https://github.com/madler/zlib/archive/refs/tags/${CARLA_ZLIB_TAG}.zip
 )
 carla_dependencies_make_available ()
 include_directories (${zlib_SOURCE_DIR} ${zlib_BINARY_DIR}) # HACK
 
-carla_fetchcontent_option (PNG_TESTS OFF)
-carla_fetchcontent_option (PNG_SHARED OFF)
-carla_fetchcontent_option (PNG_TOOLS OFF)
-carla_fetchcontent_option (PNG_BUILD_ZLIB ON)
+set (PNG_TESTS OFF)
+set (PNG_SHARED OFF)
+set (PNG_TOOLS OFF)
+set (PNG_BUILD_ZLIB ON)
 if (WIN32)
-  carla_fetchcontent_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlibstatic${CARLA_DEBUG_AFFIX}.lib)
+  set (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlibstatic${CARLA_DEBUG_AFFIX}.lib)
 else ()
-  carla_fetchcontent_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/libz.a)
+  set (ZLIB_LIBRARY ${zlib_BINARY_DIR}/libz.a)
 endif ()
-carla_fetchcontent_option (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
-carla_fetchcontent_option (ZLIB_LIBRARIES ${ZLIB_LIBRARY})
-carla_dependency_add (
+set (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
+set (ZLIB_LIBRARIES ${ZLIB_LIBRARY})
+carla_dependency_add_zip (
   libpng
-  https://github.com/glennrp/libpng.git
-  ${CARLA_LIBPNG_TAG}
+  https://github.com/pnggroup/libpng/archive/refs/tags/${CARLA_LIBPNG_TAG}.zip
 )
 carla_dependencies_make_available ()
 include_directories (${libpng_SOURCE_DIR} ${libpng_BINARY_DIR}) # HACK
 
 
 
-carla_fetchcontent_option (BOOST_ENABLE_MPI OFF)
-carla_fetchcontent_option (BOOST_LOCALE_WITH_ICU OFF)
-carla_fetchcontent_option (BOOST_LOCALE_WITH_ICONV OFF)
-carla_fetchcontent_option (BOOST_EXCLUDE_LIBRARIES "iostreams;locale;fiber;log")
 if (BUILD_PYTHON_API)
-carla_fetchcontent_option (BOOST_ENABLE_PYTHON ${BUILD_PYTHON_API})
+  set (BOOST_ENABLE_PYTHON ${BUILD_PYTHON_API})
 endif ()
-carla_dependency_add (
+
+carla_dependency_add_zip(
   boost
-  https://github.com/boostorg/boost.git
-  ${CARLA_BOOST_TAG}
+  https://github.com/boostorg/boost/releases/download/${CARLA_BOOST_TAG}/${CARLA_BOOST_TAG}.zip
 )
+list (APPEND CARLA_DEPENDENCIES boost)
 
-carla_fetchcontent_option (EIGEN_BUILD_PKGCONFIG OFF)
-carla_fetchcontent_option (BUILD_TESTING OFF)
-carla_fetchcontent_option (EIGEN_BUILD_DOC OFF)
-carla_dependency_add (
+set (EIGEN_BUILD_PKGCONFIG OFF)
+set (BUILD_TESTING OFF)
+set (EIGEN_BUILD_DOC OFF)
+carla_dependency_add_zip (
   eigen
-  https://gitlab.com/libeigen/eigen.git
-  ${CARLA_EIGEN_TAG}
+  https://gitlab.com/libeigen/eigen/-/archive/${CARLA_EIGEN_TAG}/eigen-${CARLA_EIGEN_TAG}.tar.gz
 )
 
-carla_dependency_add (
+carla_dependency_add_zip (
   rpclib
-  https://github.com/carla-simulator/rpclib.git
-  ${CARLA_RPCLIB_TAG}
+  https://github.com/carla-simulator/rpclib/archive/refs/heads/${CARLA_RPCLIB_TAG}.zip
 )
 
-carla_fetchcontent_option (RECASTNAVIGATION_BUILDER OFF)
-carla_dependency_add (
+carla_dependency_add_zip (
   recastnavigation
-  https://github.com/carla-simulator/recastnavigation.git
-  ${CARLA_RECAST_TAG}
+  https://github.com/carla-simulator/recastnavigation/archive/refs/heads/${CARLA_RECAST_TAG}.zip
 )
 
 if (ENABLE_OSM2ODR)
-  carla_fetchcontent_option (BUILD_TESTING OFF)
-  carla_fetchcontent_option (ENABLE_TIFF OFF)
-  carla_fetchcontent_option (ENABLE_CURL OFF)
+  set (BUILD_TESTING OFF)
+  set (ENABLE_TIFF OFF)
+  set (ENABLE_CURL OFF)
   carla_dependency_add (
     proj
     https://github.com/OSGeo/PROJ.git
@@ -171,15 +164,6 @@ if (BUILD_OSM_WORLD_RENDERER)
     libosmscout
     https://github.com/Framstag/libosmscout.git
     ${CARLA_LIBOSMSCOUT_TAG}
-  )
-endif ()
-
-if (BUILD_CARLA_UE)
-  carla_dependency_add (
-    StreetMap
-    https://github.com/carla-simulator/StreetMap.git
-    ${CARLA_STREETMAP_TAG}
-    SOURCE_DIR ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins/StreetMap
   )
 endif ()
 
