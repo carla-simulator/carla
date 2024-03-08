@@ -1,4 +1,14 @@
-set (UE_ROOT /home/marcel/CarlaUnrealEngine5)
+#[[
+
+  Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma
+  de Barcelona (UAB).
+  
+  This work is licensed under the terms of the MIT license.
+  For a copy, see <https://opensource.org/licenses/MIT>.
+
+]]
+
+set (UE_ROOT /home/marcel/CarlaUnrealEngine5) # @TODO
 
 # set (UE_ROOT ${CARLA_UNREAL_ENGINE_PATH} CACHE PATH "")
 message ("UE_ROOT=${UE_ROOT}")

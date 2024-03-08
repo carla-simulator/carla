@@ -2,18 +2,6 @@ project (
   carla-ue
 )
 
-if (WIN32)
-  set (
-    CARLA_UE_GENERATE_PROJECT_SCRIPT
-    ${CARLA_UNREAL_ENGINE_PATH}/GenerateProjectFiles.bat
-  )
-else ()
-  set (
-    CARLA_UE_GENERATE_PROJECT_SCRIPT
-    ${CARLA_UNREAL_ENGINE_PATH}/GenerateProjectFiles.sh
-  )
-endif ()
-
 set (
   CARLA_UE_PATH
   ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal
@@ -29,15 +17,19 @@ set (
   ${CARLA_UE_PATH}/CarlaUnreal.uproject
 )
 
-carla_two_step_configure_file (
-  ${CARLA_UE_PLUGINS_PATH}/Carla/Source/Carla/Carla.Build.cs
-  ${CARLA_UE_PLUGINS_PATH}/Carla/Source/Carla/Carla.Build.cs.in
-)
+if (WIN32)
+  set (
+    CARLA_UE_GENERATE_PROJECT_SCRIPT
+    ${CARLA_UNREAL_ENGINE_PATH}/GenerateProjectFiles.bat
+  )
+else ()
+  set (
+    CARLA_UE_GENERATE_PROJECT_SCRIPT
+    ${CARLA_UNREAL_ENGINE_PATH}/GenerateProjectFiles.sh
+  )
+endif ()
 
-carla_two_step_configure_file (
-  ${CARLA_UE_PLUGINS_PATH}/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs
-  ${CARLA_UE_PLUGINS_PATH}/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs.in
-)
+
 
 add_custom_command (
   OUTPUT ${CARLA_UE_PATH}/CMakeLists.txt
@@ -56,12 +48,28 @@ add_custom_target (
   DEPENDS ${CARLA_UE_PATH}/CMakeLists.txt
 )
 
+
+
+if (CMAKE_TOOLCHAIN_FILE)
+  cmake_path (
+    ABSOLUTE_PATH CMAKE_TOOLCHAIN_FILE
+    BASE_DIRECTORY ${CARLA_WORKSPACE_PATH}
+    NORMALIZE
+    OUTPUT_VARIABLE TOOLCHAIN_FILE
+  )
+  set (TOOLCHAIN_FILE_OPTION --toolchain=${TOOLCHAIN_FILE})
+else ()
+  set (TOOLCHAIN_FILE_OPTION)
+endif ()
+
+
+
 add_custom_command (
   OUTPUT carla-ue-configure.stamp
-  COMMAND
-    ${CMAKE_COMMAND} -E touch carla-ue-configure.stamp
   COMMENT
     "Configuring Carla Unreal..."
+  COMMAND
+    ${CMAKE_COMMAND} -E touch carla-ue-configure.stamp
   COMMAND
     ${CMAKE_COMMAND}
     -S ${CARLA_UE_PATH}
@@ -76,13 +84,14 @@ add_custom_target (
     carla-ue-generate-project-files
 )
 
+
+
 add_custom_command (
   OUTPUT carla-ue.stamp
-  VERBATIM
-  COMMAND
-    ${CMAKE_COMMAND} -E touch carla-ue.stamp
   COMMENT
     "Building Carla Unreal..."
+  COMMAND
+    ${CMAKE_COMMAND} -E touch carla-ue.stamp
   COMMAND
     ${CMAKE_COMMAND}
       --build ${CMAKE_CURRENT_BINARY_DIR}
@@ -98,7 +107,38 @@ add_custom_target (
     carla-ue.stamp
 )
 
+
+
+add_custom_target (
+  launch-only
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Linux/UnrealEditor
+    ${CARLA_UE_PROJECT_PATH}
+    -${CARLA_UNREAL_RHI}
+)
+
+
+
+add_custom_target (
+  launch
+  DEPENDS
+    carla-ue
+    launch-only
+)
+
+
+
 file (
   MAKE_DIRECTORY
   ${CARLA_UE_PATH}/Content/Carla/ExportedMaps
+)
+
+carla_two_step_configure_file (
+  ${CARLA_UE_PLUGINS_PATH}/Carla/Source/Carla/Carla.Build.cs
+  ${CARLA_UE_PLUGINS_PATH}/Carla/Source/Carla/Carla.Build.cs.in
+)
+
+carla_two_step_configure_file (
+  ${CARLA_UE_PLUGINS_PATH}/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs
+  ${CARLA_UE_PLUGINS_PATH}/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs.in
 )
