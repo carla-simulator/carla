@@ -109,6 +109,10 @@ void AWheeledVehicleAIController::OnPossess(APawn *aPawn)
   Vehicle = Cast<ACarlaWheeledVehicle>(aPawn);
   check(Vehicle != nullptr);
   MaximumSteerAngle = Vehicle->GetMaximumSteerAngle();
+  if (MaximumSteerAngle > 0.0f) {
+    UE_LOG(LogCarla, Error, TEXT("MaximumSteerAngle > 0.0f")); 
+  }
+
   ConfigureAutopilot(bAutopilotEnabled);
 
   if (RoadMap == nullptr)
