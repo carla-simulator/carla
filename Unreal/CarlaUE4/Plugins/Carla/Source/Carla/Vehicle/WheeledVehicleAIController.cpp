@@ -109,7 +109,6 @@ void AWheeledVehicleAIController::OnPossess(APawn *aPawn)
   Vehicle = Cast<ACarlaWheeledVehicle>(aPawn);
   check(Vehicle != nullptr);
   MaximumSteerAngle = Vehicle->GetMaximumSteerAngle();
-  check(MaximumSteerAngle > 0.0f);
   ConfigureAutopilot(bAutopilotEnabled);
 
   if (RoadMap == nullptr)
