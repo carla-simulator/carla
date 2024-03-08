@@ -7,3 +7,5 @@ Build/
 Doxygen/
 Dist/
 out/
+
+CMakeSettings.json
