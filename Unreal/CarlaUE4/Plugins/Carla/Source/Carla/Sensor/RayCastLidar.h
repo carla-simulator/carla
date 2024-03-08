@@ -37,7 +37,7 @@ public:
 
   virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime);
 
-  TArray<float> FinalPoints;
+  const TArray<float>& GetTestPointCloud() const { return TestPointCloud; };
 
 private:
   /// Compute the received intensity of the point
@@ -61,4 +61,6 @@ private:
   /// beta = (1 - dropoff_zero_intensity)
   float DropOffAlpha;
   float DropOffBeta;
+
+  TArray<float> TestPointCloud;
 };

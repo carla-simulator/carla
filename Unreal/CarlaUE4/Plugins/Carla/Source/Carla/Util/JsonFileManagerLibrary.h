@@ -39,6 +39,8 @@ public:
 
   static bool SaveLidarDataToXYZ(const FString& FilePath, const TArray<float>& PointArray);
 
+  static bool SaveLidarDataToPly(const FString& FilePath, const TArray<float>& PointArray, int ArrayElementSize);
+
 
 protected:
   static TSharedPtr<FJsonObject> GetSensorJsonData(const FString& JsonFilePath, TArray<TSharedPtr<FJsonValue>>& ArrayValue);
