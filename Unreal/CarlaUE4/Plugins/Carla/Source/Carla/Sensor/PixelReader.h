@@ -121,7 +121,8 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
       if (!Sensor.IsPendingKill())
       {
         FPixelReader::Payload FuncForSending =
-          [&Sensor, Frame = FCarlaEngine::GetFrameCounter(), Conversor = std::move(Conversor)](void *LockedData, uint32 Size, uint32 Offset, uint32 ExpectedRowBytes)
+          [&Sensor, Frame = FCarlaEngine::GetFrameCounter(), Conversor = std::move(Conversor)]
+          (void *LockedData, uint32 Size, uint32 Offset, uint32 ExpectedRowBytes)
           {
             if (Sensor.IsPendingKill()) return;
 
@@ -218,19 +219,25 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
                 }
                 #endif
 
-                // network
-                SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
-                TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
-                Stream.Send(Sensor, BufView);
+                if (Sensor.AreClientsListening()) 
+                {
+                  // network
+                  SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
+                  TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
+                  Stream.Send(Sensor, BufView);
+                }
               }
             }
           };
 
-          WritePixelsToBuffer(
-              *Sensor.CaptureRenderTarget,
-              carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
-              InRHICmdList,
-              std::move(FuncForSending));
+          if (Sensor.AreClientsListening()) 
+          {
+            WritePixelsToBuffer(
+                *Sensor.CaptureRenderTarget,
+                carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
+                InRHICmdList,
+                std::move(FuncForSending));
+          }
         }
       }
     );

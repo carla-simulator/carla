@@ -82,11 +82,6 @@ void ASensor::Tick(const float DeltaTime)
     }
   }
   
-  // JoseM - Commented to be able to calculate sensors PostPhysTick() from the editor if no client is present.
-  if(!bClientsListening && !bPhysTickInEditor)
-  {
-    return;
-  }
   ReadyToTick = true;
   PrePhysTick(DeltaTime);
 }
