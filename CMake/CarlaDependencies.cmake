@@ -216,7 +216,7 @@ endif ()
 
 # ==== STREETMAP ====
 
-if (BUILD_CARLA_UE)
+if (BUILD_CARLA_UNREAL)
   carla_dependency_add (
     StreetMap
     https://github.com/carla-simulator/StreetMap.git

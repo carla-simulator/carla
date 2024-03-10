@@ -33,7 +33,7 @@ option (
 )
 
 option (
-  BUILD_CARLA_UE
+  BUILD_CARLA_UNREAL
   "Build the Carla Unreal Engine project."
   OFF
 )

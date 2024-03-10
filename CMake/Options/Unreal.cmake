@@ -39,7 +39,7 @@ else ()
   set (CARLA_HAS_UNREAL_ENGINE_PATH OFF)
 endif ()
 
-if (${BUILD_CARLA_UE})
+if (${BUILD_CARLA_UNREAL})
   if (${CARLA_HAS_UNREAL_ENGINE_PATH})
     message ("Carla UE project successfully added to build. (UE path: ${CARLA_UNREAL_ENGINE_PATH})")
   else ()
@@ -48,3 +48,9 @@ if (${BUILD_CARLA_UE})
       "Could not add UE project to build since the option CARLA_UNREAL_ENGINE_PATH is not set to a valid path (\"${CARLA_UNREAL_ENGINE_PATH}\"). Please set it to point to the root path of your CARLA Unreal Engine installation.")
   endif ()
 endif ()
+
+carla_string_option (
+  CARLA_LAUNCH_ARGS
+  "CMake-style semicolon-separated list of arguments to pass when launching the Unreal Editor with CARLA."
+  ""
+)

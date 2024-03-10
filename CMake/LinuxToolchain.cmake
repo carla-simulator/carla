@@ -8,9 +8,8 @@
 
 ]]
 
-set (UE_ROOT /home/marcel/CarlaUnrealEngine5) # @TODO
+set (UE_ROOT ${CARLA_UNREAL_ENGINE_PATH}) # @TODO
 
-# set (UE_ROOT ${CARLA_UNREAL_ENGINE_PATH} CACHE PATH "")
 message ("UE_ROOT=${UE_ROOT}")
 
 set (ARCH ${CMAKE_HOST_SYSTEM_PROCESSOR})

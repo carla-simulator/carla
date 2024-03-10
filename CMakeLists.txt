@@ -59,6 +59,10 @@ include (CheckLinkerFlag)
 
 include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
 
+if (LINUX AND BUILD_CARLA_UNREAL)
+  include (${CARLA_WORKSPACE_PATH}/CMake/LinuxToolchain.cmake)
+endif ()
+
 if (LINUX)
   check_linker_flag (
     CXX
@@ -138,6 +142,6 @@ if (BUILD_PYTHON_API)
   add_subdirectory (PythonAPI)
 endif ()
 
-if (BUILD_CARLA_UE)
+if (BUILD_CARLA_UNREAL)
   add_subdirectory (Unreal)
 endif ()

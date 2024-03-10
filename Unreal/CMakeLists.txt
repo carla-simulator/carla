@@ -41,6 +41,9 @@ add_custom_command (
     -game
     -engine
     -CMakefile
+  # Remember to add this on most Unreal-related commands,
+  # otherwise nothing is printed while running the command:
+  USES_TERMINAL
 )
 
 add_custom_target (
@@ -75,6 +78,7 @@ add_custom_command (
     -S ${CARLA_UE_PATH}
     -G ${CMAKE_GENERATOR}
     -B ${CMAKE_CURRENT_BINARY_DIR}
+  USES_TERMINAL
 )
 
 add_custom_target (
@@ -97,6 +101,7 @@ add_custom_command (
       --build ${CMAKE_CURRENT_BINARY_DIR}
       --target CarlaUnrealEditor
       --verbose
+  USES_TERMINAL
 )
 
 add_custom_target (
@@ -115,6 +120,8 @@ add_custom_target (
     ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Linux/UnrealEditor
     ${CARLA_UE_PROJECT_PATH}
     -${CARLA_UNREAL_RHI}
+    ${LAUNCH_ARGS}
+  USES_TERMINAL
 )
 
 
