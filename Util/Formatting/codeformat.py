@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
 #
-# Copyright (c) 2017-2020 Intel Corporation
+# Copyright (c) 2017-2024 Intel Corporation
 #
-# Helper script for code formatting using clang-format-3.9 and autopep
+# Helper script for code formatting using clang-format-14 and autopep
 
 import argparse
 import filecmp
@@ -207,7 +207,7 @@ class CodeFormat:
 
     def parseCommandLine(self):
         parser = argparse.ArgumentParser(
-            description="Helper script for code formatting. Copyright 2017-2018 Intel Corporation.")
+            description="Helper script for code formatting.")
         parser.add_argument("input", nargs="+",
                             help="files or directories to process")
         parser.add_argument("-v", "--verify", action="store_true",

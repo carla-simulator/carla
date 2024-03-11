@@ -132,8 +132,9 @@ if (LIBCARLA_BUILD_RELEASE)
 
   if (LIBCARLA_USE_ROS)
     target_include_directories(carla_server SYSTEM PRIVATE
-      "${FASTDDS_INCLUDE_PATH}"
-      "${libcarla_source_path}/carla/ros2/ros_types")
+     # first the ros_types allowing overrides of fastdds headers
+     "${libcarla_source_path}/carla/ros2/ros_types"
+     "${FASTDDS_INCLUDE_PATH}")
     target_link_directories(carla_server PRIVATE ${FASTDDS_LIB_PATH})
     target_link_libraries(carla_server fastrtps fastcdr)
     target_compile_definitions(carla_server PUBLIC -DWITH_ROS2)
@@ -158,8 +159,9 @@ if (LIBCARLA_BUILD_DEBUG)
 
   if (LIBCARLA_USE_ROS)
     target_include_directories(carla_server_debug SYSTEM PRIVATE
-     "${FASTDDS_INCLUDE_PATH}"
-     "${libcarla_source_path}/carla/ros2/ros_types")
+     # first the ros_types allowing overrides of fastdds headers
+     "${libcarla_source_path}/carla/ros2/ros_types"
+     "${FASTDDS_INCLUDE_PATH}")
      target_link_directories(carla_server_debug PRIVATE ${FASTDDS_LIB_PATH})
      target_link_libraries(carla_server_debug fastrtps fastcdr)
      target_compile_definitions(carla_server_debug PUBLIC -DWITH_ROS2)
