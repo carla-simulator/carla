@@ -14,10 +14,32 @@ option (
   OFF
 )
 
+cmake_path (
+  CONVERT
+  $ENV{CARLA_UNREAL_ENGINE_PATH}
+  TO_CMAKE_PATH_LIST
+  CARLA_UNREAL_ENGINE_PATH_DEFAULT
+  NORMALIZE
+)
+
 carla_string_option (
   CARLA_UNREAL_ENGINE_PATH
   "Path to the CARLA fork of Unreal Engine."
-  ""
+  "${CARLA_UNREAL_ENGINE_PATH_DEFAULT}"
+)
+
+message ("Using \"${CARLA_UNREAL_ENGINE_PATH}\" as Unreal Engine root path.")
+
+if (EXISTS ${CARLA_UNREAL_ENGINE_PATH})
+  set (CARLA_HAS_UNREAL_ENGINE_PATH ON)
+else ()
+  set (CARLA_HAS_UNREAL_ENGINE_PATH OFF)
+endif ()
+
+option (
+  BUILD_CARLA_UNREAL
+  "Build the Carla Unreal Engine project."
+  ${CARLA_HAS_UNREAL_ENGINE_PATH}
 )
 
 if (WIN32)
@@ -32,12 +54,6 @@ carla_string_option (
   "vulkan"
   "${CARLA_UNREAL_RHI_DEFAULT}"
 )
-
-if (EXISTS ${CARLA_UNREAL_ENGINE_PATH})
-  set (CARLA_HAS_UNREAL_ENGINE_PATH ON)
-else ()
-  set (CARLA_HAS_UNREAL_ENGINE_PATH OFF)
-endif ()
 
 if (${BUILD_CARLA_UNREAL})
   if (${CARLA_HAS_UNREAL_ENGINE_PATH})

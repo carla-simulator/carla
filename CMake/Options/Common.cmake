@@ -33,12 +33,6 @@ option (
 )
 
 option (
-  BUILD_CARLA_UNREAL
-  "Build the Carla Unreal Engine project."
-  OFF
-)
-
-option (
   ENABLE_ROS2
   "Enable ROS2."
   OFF
