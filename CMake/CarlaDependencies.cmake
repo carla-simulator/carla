@@ -128,9 +128,24 @@ carla_fetchcontent_option (BOOST_ENABLE_PYTHON ${BUILD_PYTHON_API})
 carla_fetchcontent_option (BOOST_ENABLE_MPI OFF)
 carla_fetchcontent_option (BOOST_LOCALE_WITH_ICU OFF)
 carla_fetchcontent_option (BOOST_LOCALE_WITH_ICONV OFF)
+set (
+  BOOST_EXCLUDED_PROJECTS
+  iostreams
+  locale
+  redis
+  timer
+  wave
+  url
+  mysql
+  stacktrace
+  contract
+  fiber
+  log
+  program_options
+)
 carla_fetchcontent_option (
   BOOST_EXCLUDE_LIBRARIES
-  "iostreams;redis;mysql;locale;stacktrace;contract;fiber;log;program_options")
+  "${BOOST_EXCLUDED_PROJECTS}")
 carla_dependency_add(
   boost
   ${CARLA_BOOST_TAG}

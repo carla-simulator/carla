@@ -51,7 +51,6 @@ endif ()
 carla_string_option (
   CARLA_UNREAL_RHI
   "Target CARLA Unreal Engine RHI."
-  "vulkan"
   "${CARLA_UNREAL_RHI_DEFAULT}"
 )
 

@@ -19,13 +19,21 @@ set (
 
 if (WIN32)
   set (
-    CARLA_UE_GENERATE_PROJECT_SCRIPT
+    CARLA_UE_GENERATE_PROJECT_FILES_COMMAND
     ${CARLA_UNREAL_ENGINE_PATH}/GenerateProjectFiles.bat
+    -project=${CARLA_UE_PROJECT_PATH}
+    -CMakefile
+    -game
+    -engine
   )
 else ()
   set (
-    CARLA_UE_GENERATE_PROJECT_SCRIPT
+    CARLA_UE_GENERATE_PROJECT_FILES_COMMAND
     ${CARLA_UNREAL_ENGINE_PATH}/GenerateProjectFiles.sh
+    -project=${CARLA_UE_PROJECT_PATH}
+    -CMakefile
+    -game
+    -engine
   )
 endif ()
 
@@ -35,12 +43,10 @@ add_custom_command (
   OUTPUT ${CARLA_UE_PATH}/CMakeLists.txt
   COMMENT
     "Generating UE project files for CARLA..."
+  DEPENDS
+    carla-server
   COMMAND
-    ${CARLA_UE_GENERATE_PROJECT_SCRIPT}
-    -project=${CARLA_UE_PROJECT_PATH}
-    -game
-    -engine
-    -CMakefile
+    ${CARLA_UE_GENERATE_PROJECT_FILES_COMMAND}
   # Remember to add this on most Unreal-related commands,
   # otherwise nothing is printed while running the command:
   USES_TERMINAL
@@ -48,7 +54,8 @@ add_custom_command (
 
 add_custom_target (
   carla-ue-generate-project-files
-  DEPENDS ${CARLA_UE_PATH}/CMakeLists.txt
+  DEPENDS
+    ${CARLA_UE_PATH}/CMakeLists.txt
 )
 
 
@@ -71,14 +78,17 @@ add_custom_command (
   OUTPUT carla-ue-configure.stamp
   COMMENT
     "Configuring Carla Unreal..."
-  COMMAND
-    ${CMAKE_COMMAND} -E touch carla-ue-configure.stamp
+  DEPENDS
+    carla-ue-generate-project-files
   COMMAND
     ${CMAKE_COMMAND}
-    -S ${CARLA_UE_PATH}
-    -G ${CMAKE_GENERATOR}
-    -B ${CMAKE_CURRENT_BINARY_DIR}
-    ${TOOLCHAIN_FILE_OPTION}
+      -S ${CARLA_UE_PATH}
+      -G ${CMAKE_GENERATOR}
+      -B ${CMAKE_CURRENT_BINARY_DIR}
+      ${TOOLCHAIN_FILE_OPTION}
+  COMMAND
+    ${CMAKE_COMMAND}
+      -E touch carla-ue-configure.stamp
   USES_TERMINAL
 )
 
@@ -86,7 +96,6 @@ add_custom_target (
   carla-ue-configure
   DEPENDS
     carla-ue-configure.stamp
-    carla-ue-generate-project-files
 )
 
 
@@ -95,22 +104,21 @@ add_custom_command (
   OUTPUT carla-ue.stamp
   COMMENT
     "Building Carla Unreal..."
-  COMMAND
-    ${CMAKE_COMMAND} -E touch carla-ue.stamp
+  DEPENDS
+    carla-ue-configure
   COMMAND
     ${CMAKE_COMMAND}
       --build ${CMAKE_CURRENT_BINARY_DIR}
       --target CarlaUnrealEditor
-      --verbose
+  COMMAND
+    ${CMAKE_COMMAND}
+      -E touch carla-ue.stamp
   USES_TERMINAL
 )
 
 add_custom_target (
   carla-ue
-  ALL
   DEPENDS
-    carla-server
-    carla-ue-configure
     carla-ue.stamp
 )
 
@@ -133,9 +141,9 @@ add_custom_target (
   launch-only
   COMMAND
     ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
-    ${CARLA_UE_PROJECT_PATH}
-    -${CARLA_UNREAL_RHI}
-    ${LAUNCH_ARGS}
+      ${CARLA_UE_PROJECT_PATH}
+      -${CARLA_UNREAL_RHI}
+      ${LAUNCH_ARGS}
   USES_TERMINAL
 )
 
