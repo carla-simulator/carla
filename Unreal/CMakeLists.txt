@@ -78,6 +78,7 @@ add_custom_command (
     -S ${CARLA_UE_PATH}
     -G ${CMAKE_GENERATOR}
     -B ${CMAKE_CURRENT_BINARY_DIR}
+    ${TOOLCHAIN_FILE_OPTION}
   USES_TERMINAL
 )
 
@@ -108,6 +109,7 @@ add_custom_target (
   carla-ue
   ALL
   DEPENDS
+    carla-server
     carla-ue-configure
     carla-ue.stamp
 )
