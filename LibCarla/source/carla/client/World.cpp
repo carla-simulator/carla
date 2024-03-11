@@ -90,6 +90,15 @@ namespace client {
   void World::SetWeather(const rpc::WeatherParameters &weather) {
     _episode.Lock()->SetWeatherParameters(weather);
   }
+  
+  float World::GetIMUISensorGravity() const {
+    return _episode.Lock()->GetIMUISensorGravity();
+  }
+
+  void World::SetIMUISensorGravity(float NewIMUISensorGravity) {
+    _episode.Lock()->SetIMUISensorGravity(NewIMUISensorGravity);
+  }
+  
 
   WorldSnapshot World::GetSnapshot() const {
     return _episode.Lock()->GetWorldSnapshot();

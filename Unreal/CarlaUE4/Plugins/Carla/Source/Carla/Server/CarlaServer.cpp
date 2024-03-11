@@ -664,6 +664,31 @@ void FCarlaServer::FPimpl::BindActions()
     Weather->ApplyWeather(weather);
     return R<void>::Success();
   };
+  
+  // -- IMUI Gravity ---------------------------------------------------------
+  
+  BIND_SYNC(get_imui_gravity) << [this]() -> R<float>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (GameMode == nullptr)
+    {
+      RESPOND_ERROR("get_imui_gravity error: unable to get carla gamemode");
+    }
+    return GameMode->IMUISensorGravity;
+  };
+
+  BIND_SYNC(set_imui_gravity) << [this](float newimuigravity) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (GameMode == nullptr)
+    {
+      RESPOND_ERROR("get_imui_gravity error: unable to get carla gamemode");
+    }
+    GameMode->IMUISensorGravity = newimuigravity;
+    return R<void>::Success();
+  };
 
   // ~~ Actor operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

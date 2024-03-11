@@ -267,6 +267,14 @@ namespace detail {
     _pimpl->AsyncCall("set_weather_parameters", weather);
   }
 
+  float Client::GetIMUISensorGravity() const {
+    return _pimpl->CallAndWait<float>("get_imui_gravity");
+  }
+
+  void Client::SetIMUISensorGravity(float NewIMUISensorGravity) {
+    _pimpl->AsyncCall("set_imui_gravity", NewIMUISensorGravity);
+  }
+
   std::vector<rpc::Actor> Client::GetActorsById(
       const std::vector<ActorId> &ids) {
     using return_t = std::vector<rpc::Actor>;
@@ -436,7 +444,7 @@ namespace detail {
   std::vector<std::string> Client::GetActorBoneNames(rpc::ActorId actor) {
     using return_t = std::vector<std::string>;
     return _pimpl->CallAndWait<return_t>("get_actor_bone_names", actor);
-  }  
+  }
 
   std::vector<geom::Transform> Client::GetActorSocketWorldTransforms(rpc::ActorId actor) {
     using return_t = std::vector<geom::Transform>;
