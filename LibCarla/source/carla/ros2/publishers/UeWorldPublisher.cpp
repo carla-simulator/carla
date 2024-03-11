@@ -13,6 +13,7 @@ UeWorldPublisher::UeWorldPublisher(ROS2ServerInterface& carla_server,
                                    std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition)
   : UePublisherBaseSensor(sensor_actor_definition, std::make_shared<TransformPublisher>()),
     _carla_server(carla_server),
+    _carla_status_publisher(std::make_shared<CarlaStatusPublisher>()),
     _clock_publisher(std::make_shared<ClockPublisher>()),
     _map_publisher(std::make_shared<MapPublisher>()),
     _objects_publisher(std::make_shared<ObjectsPublisher>()),
@@ -20,7 +21,8 @@ UeWorldPublisher::UeWorldPublisher(ROS2ServerInterface& carla_server,
 
 bool UeWorldPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
   _domain_participant_impl = domain_participant;
-  _initialized = _clock_publisher->Init(domain_participant) && _map_publisher->Init(domain_participant) &&
+  _initialized = _carla_status_publisher->Init(domain_participant) &&
+                 _clock_publisher->Init(domain_participant) && _map_publisher->Init(domain_participant) &&
                  _objects_publisher->Init(domain_participant) && _traffic_lights_publisher->Init(domain_participant) &&
                  _transform_publisher->Init(domain_participant);
   return _initialized;
@@ -59,6 +61,9 @@ void UeWorldPublisher::PostTickAction() {
   }
   _transform_publisher->Publish();
 
+  if (_carla_status_publisher->SubsribersConnected()) {
+    _carla_status_publisher->Publish();
+  }
   if (_objects_publisher->SubsribersConnected()) {
     _objects_publisher->Publish();
   }
@@ -190,6 +195,14 @@ void UeWorldPublisher::UpdateSensorData(
   _clock_publisher->UpdateData(_timestamp.time());
 
   _episode_header = *header_view(buffer_view);
+
+  carla_msgs::msg::CarlaStatus status;
+  //status.header(sensor_header);
+  status.frame(_frame);
+  status.fixed_delta_seconds(_episode_header.delta_seconds);
+  auto episode_settings = _carla_server.call_get_episode_settings();
+  status.synchronous_mode(episode_settings.Get().synchronous_mode);
+  _carla_status_publisher->UpdateCarlaStatus(status);
 
   if (_episode_header.simulation_state & carla::sensor::s11n::EpisodeStateSerializer::MapChange) {
     _map_publisher->UpdateData(_carla_server.call_get_map_data().Get());

@@ -126,17 +126,19 @@ public:
 
   std::atomic_size_t TickCuesReceived { 0u };
 
-  carla::rpc::Response<std::vector<carla::rpc::ActorDefinition> > call_get_actor_definitions() ;
-  carla::rpc::Response<carla::rpc::MapInfo> call_get_map_info() ;
-  carla::rpc::Response<std::string> call_get_map_data() ;
-  carla::rpc::Response<carla::rpc::Actor> call_spawn_actor(carla::rpc::ActorDescription Description, const carla::rpc::Transform &Transform) ;
+  carla::rpc::Response<std::vector<carla::rpc::ActorDefinition> > call_get_actor_definitions();
+  carla::rpc::Response<carla::rpc::EpisodeSettings> call_get_episode_settings();
+  carla::rpc::Response<uint64_t> call_set_episode_settings(carla::rpc::EpisodeSettings const &settings);
+  carla::rpc::Response<carla::rpc::MapInfo> call_get_map_info();
+  carla::rpc::Response<std::string> call_get_map_data();
+  carla::rpc::Response<carla::rpc::Actor> call_spawn_actor(carla::rpc::ActorDescription Description, const carla::rpc::Transform &Transform);
   carla::rpc::Response<carla::rpc::Actor> call_spawn_actor_with_parent(
     carla::rpc::ActorDescription Description,
     const carla::rpc::Transform &Transform,
     carla::rpc::ActorId ParentId,
     carla::rpc::AttachmentType InAttachmentType,
-    const std::string& socket_name) ;
-  carla::rpc::Response<bool> call_destroy_actor(carla::rpc::ActorId ActorId) ;
+    const std::string& socket_name);
+  carla::rpc::Response<bool> call_destroy_actor(carla::rpc::ActorId ActorId);
 private:
 
   void BindActions();
@@ -538,28 +540,14 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_episode_settings) << [this]() -> R<cr::EpisodeSettings>
   {
     REQUIRE_CARLA_EPISODE();
-    return cr::EpisodeSettings{Episode->GetSettings()};
+    return call_get_episode_settings();
   };
 
   BIND_SYNC(set_episode_settings) << [this](
       const cr::EpisodeSettings &settings) -> R<uint64_t>
   {
     REQUIRE_CARLA_EPISODE();
-    Episode->ApplySettings(settings);
-    StreamingServer.SetSynchronousMode(settings.synchronous_mode);
-
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    if (!GameMode)
-    {
-      RESPOND_ERROR("unable to find CARLA game mode");
-    }
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    if (LargeMap)
-    {
-      LargeMap->ConsiderSpectatorAsEgo(settings.spectator_as_ego);
-    }
-
-    return FCarlaEngine::GetFrameCounter();
+    return call_set_episode_settings(settings);
   };
 
   BIND_SYNC(get_actor_definitions) <<  [this]() -> R<std::vector<carla::rpc::ActorDefinition>>
@@ -2754,6 +2742,31 @@ carla::rpc::Response<std::vector<carla::rpc::ActorDefinition> > FCarlaServer::FP
   return MakeVectorFromTArray<carla::rpc::ActorDefinition>(Episode->GetActorDefinitions());
 }
 
+
+carla::rpc::Response<carla::rpc::EpisodeSettings> FCarlaServer::FPimpl::call_get_episode_settings()
+{
+  return carla::rpc::EpisodeSettings{Episode->GetSettings()};
+}
+
+carla::rpc::Response<uint64_t> FCarlaServer::FPimpl::call_set_episode_settings(carla::rpc::EpisodeSettings const &settings)
+{
+  Episode->ApplySettings(settings);
+  StreamingServer.SetSynchronousMode(settings.synchronous_mode);
+
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+  if (!GameMode)
+  {
+    RESPOND_ERROR("unable to find CARLA game mode");
+  }
+  ALargeMapManager* LargeMap = GameMode->GetLMManager();
+  if (LargeMap)
+  {
+    LargeMap->ConsiderSpectatorAsEgo(settings.spectator_as_ego);
+  }
+
+  return FCarlaEngine::GetFrameCounter();
+}
+
 carla::rpc::Response<carla::rpc::MapInfo> FCarlaServer::FPimpl::call_get_map_info() {
   ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
   const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
@@ -3016,3 +3029,14 @@ carla::rpc::Response<bool> FCarlaServer::call_destroy_actor(carla::rpc::ActorId 
 {
   return Pimpl->call_destroy_actor(ActorId);
 }
+
+carla::rpc::Response<carla::rpc::EpisodeSettings> FCarlaServer::call_get_episode_settings()
+{
+  return Pimpl->call_get_episode_settings();
+}
+
+carla::rpc::Response<uint64_t> FCarlaServer::call_set_episode_settings(carla::rpc::EpisodeSettings const &settings)
+{
+  return Pimpl->call_set_episode_settings(settings);
+}
+

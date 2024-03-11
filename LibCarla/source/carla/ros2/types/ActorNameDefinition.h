@@ -44,11 +44,11 @@ struct ActorNameDefinition {
 namespace std {
 
 inline std::string to_string(carla::ros2::types::ActorNameDefinition const &actor_definition) {
-  return "ActorName(actor_id=" + std::to_string(actor_definition.id) + " type_id=" + actor_definition.type_id;
-  +" ros_name=" + actor_definition.ros_name;
-  +" role_name=" + actor_definition.role_name;
-  +" object_type=" + actor_definition.object_type;
-  +" base_type=" + actor_definition.base_type + ")";
+  return "ActorName(actor_id=" + std::to_string(actor_definition.id) + " type_id=" + actor_definition.type_id
+    +" ros_name=" + actor_definition.ros_name
+    +" role_name=" + actor_definition.role_name
+    +" object_type=" + actor_definition.object_type
+    +" base_type=" + actor_definition.base_type + ")";
 }
 
 }  // namespace std

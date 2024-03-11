@@ -62,6 +62,8 @@ public:
   }
 
   carla::rpc::Response<std::vector<carla::rpc::ActorDefinition> > call_get_actor_definitions() override;
+  carla::rpc::Response<carla::rpc::EpisodeSettings> call_get_episode_settings() override;
+  carla::rpc::Response<uint64_t> call_set_episode_settings(carla::rpc::EpisodeSettings const &settings) override;
   carla::rpc::Response<carla::rpc::MapInfo> call_get_map_info() override;
   carla::rpc::Response<std::string> call_get_map_data() override;
   carla::rpc::Response<carla::rpc::Actor> call_spawn_actor(carla::rpc::ActorDescription Description, const carla::rpc::Transform &Transform) override;

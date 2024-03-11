@@ -237,7 +237,7 @@ ROS2NameRegistry::CreateTopicAndFrameLocked(ROS2NameRegistry::KeyType const& key
   // no valid individualization yet, use actor id
   if (individual_name.empty()) {
     auto const actor_id_string = "actor_" + number_to_three_letter_string(actor_definition->id);
-    if (!IsTopicNameAvailable(topic_and_frame, actor_id_string)) {
+    if (IsTopicNameAvailable(topic_and_frame, actor_id_string)) {
       individual_name = actor_id_string;
     }
   }

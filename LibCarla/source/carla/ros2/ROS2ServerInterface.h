@@ -10,6 +10,7 @@
 #include "carla/rpc/ActorDefinition.h"
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/AttachmentType.h"
+#include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/MapInfo.h"
 #include "carla/rpc/Response.h"
 #include "carla/rpc/Transform.h"
@@ -28,6 +29,8 @@ public:
   // Those have to be explicitly callable functions instead of lambdas
   virtual std::shared_ptr<carla::streaming::detail::Dispatcher> GetDispatcher() = 0;
   virtual carla::rpc::Response<std::vector<carla::rpc::ActorDefinition> > call_get_actor_definitions() = 0;
+  virtual carla::rpc::Response<carla::rpc::EpisodeSettings> call_get_episode_settings() = 0;
+  virtual carla::rpc::Response<uint64_t> call_set_episode_settings(carla::rpc::EpisodeSettings const &settings) = 0;
   virtual carla::rpc::Response<carla::rpc::MapInfo> call_get_map_info() = 0;
   virtual carla::rpc::Response<std::string> call_get_map_data() = 0;
   virtual carla::rpc::Response<carla::rpc::Actor> call_spawn_actor(carla::rpc::ActorDescription Description,

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "carla/ros2/ROS2ServerInterface.h"
+#include "carla/ros2/publishers/CarlaStatusPublisher.h"
 #include "carla/ros2/publishers/ClockPublisher.h"
 #include "carla/ros2/publishers/MapPublisher.h"
 #include "carla/ros2/publishers/ObjectPublisher.h"
@@ -158,6 +159,7 @@ private:
 
   ROS2ServerInterface &_carla_server;
   // publisher
+  std::shared_ptr<CarlaStatusPublisher> _carla_status_publisher;
   std::shared_ptr<ClockPublisher> _clock_publisher;
   std::shared_ptr<MapPublisher> _map_publisher;
   std::shared_ptr<ObjectsPublisher> _objects_publisher;
