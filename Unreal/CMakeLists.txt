@@ -66,8 +66,8 @@ add_custom_target (
     ${CARLA_UE_PATH}/CMakeLists.txt
 )
 
-add_dependencies (
-  carla-unreal-generate-project-files
+set (
+  UE_DEPENDENCIES
   carla-server
   libsqlite3
   Boost::asio
@@ -78,6 +78,19 @@ add_dependencies (
   Eigen3::Eigen
   zlibstatic
   png_static
+)
+
+if (BUILD_PYTHON_API)
+  list (
+    APPEND
+    UE_DEPENDENCIES
+    carla-python-api
+  )
+endif ()
+
+add_dependencies (
+  carla-unreal-generate-project-files
+  ${UE_DEPENDENCIES}
 )
 
 
