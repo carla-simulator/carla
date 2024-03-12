@@ -74,7 +74,6 @@ add_dependencies (
   Eigen3::Eigen
   zlibstatic
   png_static
-  rpclib::rpc
 )
 
 
