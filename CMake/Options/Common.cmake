@@ -83,7 +83,7 @@ option (
 option (
   ENABLE_ALL_WARNINGS
   "Whether to emit extra build warnings."
-  ON
+  OFF
 )
 
 option (
