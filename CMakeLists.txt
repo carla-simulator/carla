@@ -59,10 +59,6 @@ include (CheckLinkerFlag)
 
 include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
 
-if (LINUX AND BUILD_CARLA_UNREAL)
-  include (${CARLA_WORKSPACE_PATH}/CMake/LinuxToolchain.cmake)
-endif ()
-
 if (LINUX)
   check_linker_flag (
     CXX

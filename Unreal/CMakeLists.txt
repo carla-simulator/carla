@@ -65,6 +65,16 @@ add_custom_target (
 add_dependencies (
   carla-ue-generate-project-files
   carla-server
+  libsqlite3
+  Boost::asio
+  Boost::python
+  Boost::numpy
+  Boost::geometry
+  Boost::gil
+  Eigen3::Eigen
+  zlibstatic
+  png_static
+  rpclib::rpc
 )
 
 
