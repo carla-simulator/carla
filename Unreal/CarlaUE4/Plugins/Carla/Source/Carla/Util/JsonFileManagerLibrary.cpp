@@ -176,12 +176,18 @@ bool UJsonFileManagerLibrary::SaveLidarDataToXYZ(const FString& FilePath, const 
   {
     DataToWrite = "";
   }
+
+  FString LineTerminator = "\n";
+
+#if PLATFORM_WINDOWS
+  LineTerminator = LINE_TERMINATOR;
+#endif  
   
   for(SIZE_T i = 0; i < PointArray.Num(); i+=4)
   {
     if(PointArray.IsValidIndex(i+2))
     {
-      DataToWrite += FString::SanitizeFloat(PointArray[i]) + " " + FString::SanitizeFloat(PointArray[i+1]) + " " + FString::SanitizeFloat(PointArray[i+2]) + LINE_TERMINATOR;
+      DataToWrite += FString::SanitizeFloat(PointArray[i]) + " " + FString::SanitizeFloat(PointArray[i+1]) + " " + FString::SanitizeFloat(PointArray[i+2]) + LineTerminator;
     }
   }
   
@@ -203,39 +209,28 @@ bool UJsonFileManagerLibrary::SaveLidarDataToPly(const FString& FilePath, const 
     DataToWrite = "";
   }
 
-  if(DataToWrite.IsEmpty())
-  {
-    // Create header if no data exist
-    DataToWrite += FString("ply") + LINE_TERMINATOR +
-      FString("format ascii 1.0") + LINE_TERMINATOR +
-      FString("element vertex ") + FString::FromInt(PointArray.Num()/ArrayElementSize) + LINE_TERMINATOR +
-      FString("property float x") + LINE_TERMINATOR +
-      FString("property float y") + LINE_TERMINATOR +
-      FString("property float z") + LINE_TERMINATOR +
-      FString("property float intensity") + LINE_TERMINATOR +
-      FString("end_header") + LINE_TERMINATOR;
-  }
-  else
-  {
-    // Update VertexNumber if other data exist. Get file vertex number.
-    const FString SubString = UKismetStringLibrary::GetSubstring(DataToWrite, 38, 15); // 38 is the value where start de num vertex
-    FString LeftS, RightS;
-    UKismetStringLibrary::Split(SubString, LINE_TERMINATOR, LeftS, RightS);
-    int VertexNumber = FCString::Atoi(*LeftS);
-    VertexNumber += (PointArray.Num()/ArrayElementSize);
+  FString LineTerminator = "\n";
 
-    // Updates VertexNumber adding the file vertex number of data to add.
-    FString LeftFS, RightFS;
-    UKismetStringLibrary::Split(DataToWrite, "element vertex " + LeftS, LeftFS, RightFS);
-    DataToWrite = LeftFS + "element vertex " + FString::FromInt(VertexNumber) + RightFS;
-  }
+#if PLATFORM_WINDOWS
+  LineTerminator = LINE_TERMINATOR;
+#endif  
+
+  // Create header if no data exist
+  DataToWrite += FString("ply") + LineTerminator +
+    FString("format ascii 1.0") + LineTerminator +
+    FString("element vertex ") + FString::FromInt(PointArray.Num()/ArrayElementSize) + LineTerminator +
+    FString("property float32 x") + LineTerminator +
+    FString("property float32 y") + LineTerminator +
+    FString("property float32 z") + LineTerminator +
+    FString("property float32 I") + LineTerminator +
+    FString("end_header") + LineTerminator;
   
   for(SIZE_T i = 0; i < PointArray.Num(); i+=4)
   {
     if(PointArray.IsValidIndex(i+3))
     {
-      // Negate Y to convert to left handed.
-      DataToWrite += FString::SanitizeFloat(PointArray[i]) + " " + FString::SanitizeFloat(-PointArray[i+1]) + " " + FString::SanitizeFloat(PointArray[i+2]) + " " + FString::SanitizeFloat(PointArray[i+3]) + LINE_TERMINATOR;
+      // As Unreal is right handed, some visualizers will see the PointCloud Y axis inverted. If we want to get a left handed mesh output, it is necessary to negate the Y.
+      DataToWrite += FString::SanitizeFloat(PointArray[i]) + " " + FString::SanitizeFloat(PointArray[i+1]) + " " + FString::SanitizeFloat(PointArray[i+2]) + " " + FString::SanitizeFloat(PointArray[i+3]) + LineTerminator;
     }
   }
   

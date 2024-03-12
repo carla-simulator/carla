@@ -233,11 +233,8 @@ void ASensorSpawnerActor::SaveSensorData(float DeltaSeconds)
 
     if(const ARayCastLidar* LidarSensor = Cast<ARayCastLidar>(CurrentSensor))
     {
-      const int64 TimeInSeconds = static_cast<uint64>(UKismetSystemLibrary::GetGameTimeInSeconds(GetWorld()));
-      const FString SecondsNumber = FString::Printf(TEXT("%lld"), TimeInSeconds);
-      const FString FilePath = FPaths::Combine(SaveImagePath, LidarSensor->GetName(), LidarSensor->GetName() + "-SecondsNumber_" + SecondsNumber + ".ply");
+      const FString FilePath = FPaths::Combine(SaveImagePath, LidarSensor->GetName(), FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp()) + "-Frame_" + FrameNumber + ".ply");
       UJsonFileManagerLibrary::SaveLidarDataToPly(FilePath, LidarSensor->GetTestPointCloud(), 4); 
-      //UJsonFileManagerLibrary::SaveLidarDataToXYZ(FilePath, LidarSensor->FinalPoints);
     }
   }
 }
