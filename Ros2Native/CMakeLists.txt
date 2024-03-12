@@ -4,11 +4,11 @@ project(carla-ros2-native-project)
 
 include (ExternalProject)
 
-set (PROJECT_CMAKE_FLAGS -DCMAKE_CXX_COMPILER=/usr/bin/g++-7 -DCMAKE_C_COMPILER=/usr/bin/gcc-7 -DCMAKE_CXX_FLAGS_RELEASE=-D_GLIBCXX_USE_CXX11_ABI=0 -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/../../install)
+set (PROJECT_CMAKE_FLAGS -DCMAKE_CXX_COMPILER=/usr/bin/g++-7 -DCMAKE_C_COMPILER=/usr/bin/gcc-7 -DCMAKE_CXX_FLAGS_RELEASE=-D_GLIBCXX_USE_CXX11_ABI=0 -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/install)
 
 ExternalProject_add (
   foonathan_memory
-  URL https://github.com/xavisolesoft/carla_foonathan_memory_vendor/archive/refs/heads/master.zip
+  URL https://github.com/eProsima/foonathan_memory_vendor/archive/refs/heads/master.zip
   CMAKE_ARGS ${PROJECT_CMAKE_FLAGS} -DBUILD_SHARED_LIBS=ON -DFOONATHAN_MEMORY_FORCE_VENDORED_BUILD=ON
 )
 
@@ -42,8 +42,13 @@ ExternalProject_add (
 )
 
 ExternalProject_Add(
-  carla-ros2-native
+  carla-ros2-native-lib
   DEPENDS fastdds
-  SOURCE_DIR ${CMAKE_SOURCE_DIR}/LibCarlaRos2Native
+  SOURCE_DIR ${PROJECT_SOURCE_DIR}/LibCarlaRos2Native
   CMAKE_ARGS ${PROJECT_CMAKE_FLAGS} -DBOOST_INCLUDE_PATH=${BOOST_INCLUDE_PATH}
+)
+
+add_custom_target (
+  carla-ros2-native
+  DEPENDS carla-ros2-native-lib
 )
