@@ -80,14 +80,6 @@ set (
   png_static
 )
 
-if (BUILD_PYTHON_API)
-  list (
-    APPEND
-    UE_DEPENDENCIES
-    carla-python-api
-  )
-endif ()
-
 add_dependencies (
   carla-unreal-generate-project-files
   ${UE_DEPENDENCIES}
@@ -189,6 +181,19 @@ set (
   ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
 )
 
+set (
+  LAUNCH_DEPENDENCIES
+  carla-unreal
+)
+
+if (BUILD_PYTHON_API)
+  list (
+    APPEND
+    LAUNCH_DEPENDENCIES
+    carla-python-api
+  )
+endif ()
+
 add_custom_target (
   launch
   COMMENT
@@ -204,7 +209,7 @@ add_custom_target (
 
 add_dependencies (
   launch
-  carla-unreal
+  ${LAUNCH_DEPENDENCIES}
 )
 
 
