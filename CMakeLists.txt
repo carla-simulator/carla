@@ -138,6 +138,16 @@ if (BUILD_OSM_WORLD_RENDERER)
   add_subdirectory (osm-world-renderer)
 endif ()
 
+if (ENABLE_ROS2)
+  include (ExternalProject)
+  ExternalProject_add (
+    carla-ros2-native
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/CMake/Ros2Native
+    INSTALL_COMMAND ""
+    CMAKE_ARGS -DBOOST_INCLUDE_PATH=${CMAKE_BINARY_DIR}/_deps/boost-src/libs
+  )
+endif ()
+
 if (BUILD_PYTHON_API)
   add_subdirectory (PythonAPI)
 endif ()
