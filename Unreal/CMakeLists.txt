@@ -25,6 +25,7 @@ if (WIN32)
     -CMakefile
     -game
     -engine
+    -progress
   )
 else ()
   set (
@@ -34,28 +35,36 @@ else ()
     -CMakefile
     -game
     -engine
+    -progress
   )
 endif ()
+
+set (CMAKE_NINJA_FORCE_RESPONSE_FILE ON)
 
 
 
 add_custom_command (
-  OUTPUT ${CARLA_UE_PATH}/CMakeLists.txt
+  OUTPUT
+    ${CARLA_UE_PATH}/CMakeLists.txt
   COMMENT
     "Generating UE project files for CARLA..."
-  DEPENDS
-    carla-server
   COMMAND
     ${CARLA_UE_GENERATE_PROJECT_FILES_COMMAND}
   # Remember to add this on most Unreal-related commands,
   # otherwise nothing is printed while running the command:
   USES_TERMINAL
+  VERBATIM
 )
 
 add_custom_target (
   carla-ue-generate-project-files
   DEPENDS
     ${CARLA_UE_PATH}/CMakeLists.txt
+)
+
+add_dependencies (
+  carla-ue-generate-project-files
+  carla-server
 )
 
 
@@ -75,21 +84,20 @@ endif ()
 
 
 add_custom_command (
-  OUTPUT carla-ue-configure.stamp
+  OUTPUT
+    ${CMAKE_CURRENT_BINARY_DIR}/carla-ue-configure.stamp
   COMMENT
     "Configuring Carla Unreal..."
-  DEPENDS
-    carla-ue-generate-project-files
   COMMAND
     ${CMAKE_COMMAND}
       -S ${CARLA_UE_PATH}
-      -G ${CMAKE_GENERATOR}
       -B ${CMAKE_CURRENT_BINARY_DIR}
       ${TOOLCHAIN_FILE_OPTION}
   COMMAND
     ${CMAKE_COMMAND}
       -E touch carla-ue-configure.stamp
   USES_TERMINAL
+  VERBATIM
 )
 
 add_custom_target (
@@ -98,14 +106,18 @@ add_custom_target (
     carla-ue-configure.stamp
 )
 
+add_dependencies (
+  carla-ue-configure
+  carla-ue-generate-project-files
+)
+
 
 
 add_custom_command (
-  OUTPUT carla-ue.stamp
+  OUTPUT
+    ${CMAKE_CURRENT_BINARY_DIR}/carla-ue.stamp
   COMMENT
     "Building Carla Unreal..."
-  DEPENDS
-    carla-ue-configure
   COMMAND
     ${CMAKE_COMMAND}
       --build ${CMAKE_CURRENT_BINARY_DIR}
@@ -114,12 +126,18 @@ add_custom_command (
     ${CMAKE_COMMAND}
       -E touch carla-ue.stamp
   USES_TERMINAL
+  VERBATIM
 )
 
 add_custom_target (
   carla-ue
   DEPENDS
     carla-ue.stamp
+)
+
+add_dependencies (
+  carla-ue
+  carla-ue-configure
 )
 
 
@@ -139,21 +157,35 @@ endif ()
 
 add_custom_target (
   launch-only
+  COMMENT
+    "Launching Carla Unreal..."
   COMMAND
     ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
       ${CARLA_UE_PROJECT_PATH}
       -${CARLA_UNREAL_RHI}
       ${LAUNCH_ARGS}
   USES_TERMINAL
+  VERBATIM
 )
 
 
 
 add_custom_target (
   launch
-  DEPENDS
-    carla-ue
-    launch-only
+  COMMENT
+    "Launching Carla Unreal..."
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
+      ${CARLA_UE_PROJECT_PATH}
+      -${CARLA_UNREAL_RHI}
+      ${LAUNCH_ARGS}
+  USES_TERMINAL
+  VERBATIM
+)
+
+add_dependencies (
+  launch
+  carla-ue
 )
 
 
