@@ -107,17 +107,23 @@ set (
 )
 
 add_custom_command (
-  OUTPUT ${CARLA_PYTHON_API_SYMLINK_PATH}
+  OUTPUT
+    ${CARLA_PYTHON_API_SYMLINK_PATH}
   COMMENT
     "Creating CARLA PythonAPI .PYD/.SO symlink..."
   COMMAND
-    ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE:carla-python-api> ${PYTHON_API_PATH}/examples/carla${PYD_EXT}
+    ${CMAKE_COMMAND}
+      -E
+      create_symlink
+      $<TARGET_FILE:carla-python-api>
+      ${PYTHON_API_PATH}/examples/carla${PYD_EXT}
 )
 
 # If this command fails, enable developer mode if on Windows.
 add_custom_target (
   carla-python-api-symlink
-  DEPENDS ${CARLA_PYTHON_API_SYMLINK_PATH}
+  DEPENDS
+    ${CARLA_PYTHON_API_SYMLINK_PATH}
 )
 
 add_dependencies (
