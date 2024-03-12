@@ -106,9 +106,12 @@ set (
 )
 
 if (WIN32)
-    # https://learn.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=msvc-170
+  add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
+endif ()
+
+if (WIN32)
+  # https://learn.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=msvc-170
   list (APPEND CARLA_COMMON_DEFINITIONS _WIN32_WINNT=0x0601) # --- Windows 10 ---
-  list (APPEND CARLA_COMMON_DEFINITIONS _CRT_SECURE_NO_WARNINGS)
   list (APPEND CARLA_COMMON_DEFINITIONS HAVE_SNPRINTF)
   list (APPEND CARLA_COMMON_DEFINITIONS _USE_MATH_DEFINES)
 endif ()
