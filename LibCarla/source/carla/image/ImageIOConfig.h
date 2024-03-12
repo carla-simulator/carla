@@ -12,27 +12,15 @@
 #include "carla/image/BoostGil.h"
 
 #ifndef LIBCARLA_IMAGE_WITH_PNG_SUPPORT
-#  if defined(__has_include) && __has_include("png.h")
-#    define LIBCARLA_IMAGE_WITH_PNG_SUPPORT true
-#  else
-#    define LIBCARLA_IMAGE_WITH_PNG_SUPPORT false
-#  endif
+  #define LIBCARLA_IMAGE_WITH_PNG_SUPPORT false
 #endif
 
 #ifndef LIBCARLA_IMAGE_WITH_JPEG_SUPPORT
-#  if defined(__has_include) && __has_include("jpeglib.h")
-#    define LIBCARLA_IMAGE_WITH_JPEG_SUPPORT true
-#  else
-#    define LIBCARLA_IMAGE_WITH_JPEG_SUPPORT false
-#  endif
+  #define LIBCARLA_IMAGE_WITH_JPEG_SUPPORT false
 #endif
 
 #ifndef LIBCARLA_IMAGE_WITH_TIFF_SUPPORT
-#  if defined(__has_include) && __has_include("tiffio.h")
-#    define LIBCARLA_IMAGE_WITH_TIFF_SUPPORT true
-#  else
-#    define LIBCARLA_IMAGE_WITH_TIFF_SUPPORT false
-#  endif
+  #define LIBCARLA_IMAGE_WITH_TIFF_SUPPORT false
 #endif
 
 #if defined(__clang__)
