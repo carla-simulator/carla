@@ -1,7 +1,11 @@
 project (
   carla-python-api
-  LANGUAGES CXX
-  VERSION ${CARLA_VERSION}
+  VERSION
+    ${CARLA_VERSION}
+  LANGUAGES
+    CXX
+  DESCRIPTION
+    "Python API for communicating with the CARLA server."
 )
 
 set (PYTHON_API_PATH ${CARLA_WORKSPACE_PATH}/PythonAPI)

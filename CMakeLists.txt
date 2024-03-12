@@ -28,13 +28,16 @@ set (
 
 project (
   CARLA
-  VERSION ${CARLA_VERSION}
+  VERSION
+    ${CARLA_VERSION}
   LANGUAGES
     C
     CXX
     ASM # This is required by some dependencies, such as LibPNG.
-  DESCRIPTION "Open-source simulator for autonomous driving research."
-  HOMEPAGE_URL https://carla.org
+  DESCRIPTION
+    "Open-source simulator for autonomous driving research."
+  HOMEPAGE_URL
+    https://carla.org
 )
 
 set (CMAKE_CXX_STANDARD 20)
@@ -56,8 +59,9 @@ set (
 include (CheckCCompilerFlag)
 include (CheckCXXCompilerFlag)
 include (CheckLinkerFlag)
-
 include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
+include (${CARLA_WORKSPACE_PATH}/CMake/Warnings.cmake)
+include (${CARLA_WORKSPACE_PATH}/CMake/Errors.cmake)
 
 if (LINUX)
   check_linker_flag (
@@ -120,11 +124,7 @@ else ()
   list (APPEND CARLA_EXCEPTION_DEFINITIONS PUGIXML_NO_EXCEPTIONS)
 endif ()
 
-
-
 include (${CARLA_WORKSPACE_PATH}/CMake/CarlaDependencies.cmake)
-
-
 
 if (BUILD_CARLA_CLIENT OR BUILD_CARLA_SERVER)
   add_subdirectory (LibCarla)

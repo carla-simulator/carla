@@ -79,3 +79,15 @@ option (
   "Whether to clone dependencies instead of directly downloading a compressed archive."
   OFF
 )
+
+option (
+  ENABLE_ALL_WARNINGS
+  "Whether to emit extra build warnings."
+  ON
+)
+
+option (
+  ENABLE_WARNINGS_TO_ERRORS
+  "Whether to convert build warnings to errors."
+  OFF
+)
