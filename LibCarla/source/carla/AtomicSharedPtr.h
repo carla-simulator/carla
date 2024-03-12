@@ -7,7 +7,6 @@
 #pragma once
 
 #include <memory>
-#include <atomic>
 
 namespace carla {
 
@@ -26,7 +25,7 @@ namespace carla {
     AtomicSharedPtr(AtomicSharedPtr &&) = delete;
 
     void store(std::shared_ptr<T> ptr) noexcept {
-      _ptr.store(ptr, std::memory_order_release);
+      std::atomic_store_explicit(&_ptr, ptr, std::memory_order_release);
     }
 
     void reset(std::shared_ptr<T> ptr = nullptr) noexcept {
@@ -34,12 +33,13 @@ namespace carla {
     }
 
     std::shared_ptr<T> load() const noexcept {
-      return _ptr.load(std::memory_order_acquire);
+      return std::atomic_load_explicit(&_ptr, std::memory_order_acquire);
     }
 
     bool compare_exchange(std::shared_ptr<T> *expected, std::shared_ptr<T> desired) noexcept {
-      return _ptr.compare_exchange_strong(
-          *expected,
+      return std::atomic_compare_exchange_strong_explicit(
+          &_ptr,
+          expected,
           desired,
           std::memory_order_acq_rel,
           std::memory_order_acq_rel);
@@ -59,7 +59,7 @@ namespace carla {
 
   private:
 
-    std::atomic<std::shared_ptr<T>> _ptr;
+    std::shared_ptr<T> _ptr;
   };
 
 } // namespace carla
