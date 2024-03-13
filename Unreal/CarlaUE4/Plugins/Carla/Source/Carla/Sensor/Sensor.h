@@ -63,6 +63,11 @@ public:
     return Stream.IsStreamReady();
   }
 
+  bool AreClientsListening()
+  { 
+    return Stream.AreClientsListening();
+  }
+
   void Tick(const float DeltaTime) final;
 
   virtual void PrePhysTick(float DeltaSeconds) {}
