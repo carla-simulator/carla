@@ -91,3 +91,9 @@ option (
   "Whether to convert build warnings to errors."
   OFF
 )
+
+carla_string_option (
+  LIBCARLA_IMAGE_SUPPORTED_FORMATS
+  "Semicolon-separated list of supported image formats by LibCarla."
+  "png"
+)
