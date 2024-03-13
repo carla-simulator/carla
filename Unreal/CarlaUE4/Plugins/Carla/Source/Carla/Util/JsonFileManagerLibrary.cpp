@@ -168,37 +168,6 @@ bool UJsonFileManagerLibrary::SaveGnssDataToJson(const FString& JsonFilePath, do
   return bWriteSuccess;
 }
 
-bool UJsonFileManagerLibrary::SaveLidarDataToXYZ(const FString& FilePath, const TArray<float>& PointArray)
-{
-  FString DataToWrite;
-  const bool bReadSuccess = UJsonFileManagerLibrary::ReadStringFromFile(FilePath, DataToWrite);
-  if(!bReadSuccess)
-  {
-    DataToWrite = "";
-  }
-
-  FString LineTerminator = "\n";
-
-#if PLATFORM_WINDOWS
-  LineTerminator = LINE_TERMINATOR;
-#endif  
-  
-  for(SIZE_T i = 0; i < PointArray.Num(); i+=4)
-  {
-    if(PointArray.IsValidIndex(i+2))
-    {
-      DataToWrite += FString::SanitizeFloat(PointArray[i]) + " " + FString::SanitizeFloat(PointArray[i+1]) + " " + FString::SanitizeFloat(PointArray[i+2]) + LineTerminator;
-    }
-  }
-  
-  const bool bWriteSuccess = UJsonFileManagerLibrary::WriteStringFromFile(FilePath, DataToWrite);
-  if(!bWriteSuccess)
-  {
-    return false;
-  }
-  
-  return true;
-}
 
 bool UJsonFileManagerLibrary::SaveLidarDataToPly(const FString& FilePath, const TArray<float>& PointArray, int ArrayElementSize)
 {
