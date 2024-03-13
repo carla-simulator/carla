@@ -29,7 +29,7 @@ CARLA_UE_CONTENT_VERSIONS_FILE_PATH = WORKSPACE_PATH / 'Util' / 'ContentVersions
 LOGICAL_PROCESSOR_COUNT = psutil.cpu_count(logical = True)
 DEFAULT_PARALLELISM = LOGICAL_PROCESSOR_COUNT + (2 if LOGICAL_PROCESSOR_COUNT >= 8 else 0)
 READTHEDOCS_URL_SUFFIX = 'how_to_build_on_windows/\n' if os.name == "nt" else 'build_linux/\n'
-DEFAULT_BOOST_TOOLSET = 'msvc-14.3' if os.name == 'nt' else 'clang'
+DEFAULT_BOOST_TOOLSET = 'msvc-14.3' if os.name == 'nt' else 'clang-16'
 DEFAULT_ERROR_MESSAGE = (
   '\n'
   'Ok, an error ocurred, don\'t panic!\n'
@@ -286,6 +286,9 @@ LOG_PATH = BUILD_PATH / 'BuildLogs'
 DEPENDENCIES_PATH = BUILD_PATH / 'Dependencies'
 LIBCARLA_BUILD_PATH = BUILD_PATH / 'LibCarla'
 LIBCARLA_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'LibCarla'
+ROS2_NATIVE_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'LibRos2Native'
+CARLA_PLUGIN_DEPLOY_PATH = WORKSPACE_PATH / 'Unreal' / 'CarlaUE4' / 'Plugins' / 'Carla' / 'Binaries' / ('Win64' if os.name == 'nt' else 'Linux')
+ROS2_NATIVE_INSTALL_PATH = WORKSPACE_PATH / 'Install' / 'LibRos2Native'
 # Language options
 C_COMPILER = FindExecutable([ARGV.c_compiler])
 if not C_COMPILER:
@@ -448,6 +451,22 @@ SUMO_LIBRARY_PATH = SUMO_INSTALL_PATH / 'lib'
 NV_OMNIVERSE_PLUGIN_PATH = UNREAL_ENGINE_PATH / 'Engine' / 'Plugins' / 'Marketplace' / 'NVIDIA' / 'Omniverse'
 NV_OMNIVERSE_PATCH_PATH = PATCHES_PATH / 'omniverse_4.26'
 
+# Foonathan memory vendor
+FOONATHAN_MEMORY_VENDOR_SOURCE_PATH = DEPENDENCIES_PATH / 'foonathan-memory-vendor-source'
+FOONATHAN_MEMORY_VENDOR_BUILD_PATH = DEPENDENCIES_PATH / 'foonathan-memory-vendor-build'
+FOONATHAN_MEMORY_VENDOR_INSTALL_PATH = ROS2_NATIVE_INSTALL_PATH
+
+# Fast-cdr
+FAST_CDR_SOURCE_PATH = DEPENDENCIES_PATH / 'fast-cdr-source'
+FAST_CDR_BUILD_PATH = DEPENDENCIES_PATH / 'fast-cdr-build'
+FAST_CDR_INSTALL_PATH = ROS2_NATIVE_INSTALL_PATH
+FAST_CDR_LIBRARY_PATH = FAST_CDR_INSTALL_PATH / 'lib'
+
+# Fast-dds
+FAST_DDS_SOURCE_PATH = DEPENDENCIES_PATH / 'fast-dds-source'
+FAST_DDS_BUILD_PATH = DEPENDENCIES_PATH / 'fast-dds-build'
+FAST_DDS_INSTALL_PATH = ROS2_NATIVE_INSTALL_PATH
+
 # Basic IO functions:
 
 
@@ -600,6 +619,18 @@ OSM2ODR_DEPENDENCIES = [
     GitRepository('https://github.com/carla-simulator/sumo.git', tag_or_branch = 'carla_osm2odr')),
 ]
 
+ROS2_DEPENDENCIES = [
+  Dependency(
+    'foonathan-memory-vendor',
+    GitRepository('https://github.com/eProsima/foonathan_memory_vendor.git', tag_or_branch = 'master')),
+  Dependency(
+    'fast-cdr',
+    GitRepository('https://github.com/eProsima/Fast-CDR.git', tag_or_branch = '1.1.x')),
+  Dependency(
+    'fast-dds',
+    GitRepository('https://github.com/eProsima/Fast-DDS.git', tag_or_branch = '2.11.2')),
+]
+
 CARLA_UE_DEPENDENCIES = [
   DependencyUEPlugin(
     'StreetMap',
@@ -662,6 +693,31 @@ class Task:
       cmd.append('-DCMAKE_INSTALL_PREFIX=' + str(install_path))
     cmd.extend([ *args, source_path ])
     return Task.CreateSubprocessTask(name, in_edges, cmd)
+  
+  def CreateCMakeConfigureGxxABICommandLine(source_path : Path, build_path : Path) -> list:
+    if os.name == 'nt':
+      raise NotImplementedError("ConfigureGxxABICommandLine is still not implemented/tested on Windows.")
+      cpp_flags_release = '/MD'
+    cmd = [
+      'cmake',
+      '-G', 'Ninja',
+      '-S', source_path,
+      '-B', build_path,
+      '-DCMAKE_C_COMPILER=gcc',
+      '-DCMAKE_CXX_COMPILER=g++-7',
+      '-DCMAKE_BUILD_TYPE=Release',
+      '-DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0"',
+    ]
+    if os.name != 'nt':
+      cmd.append('-DCMAKE_POSITION_INDEPENDENT_CODE=ON')
+    return cmd
+
+  def CreateCMakeConfigureGxxABI(name : str, in_edges : list, source_path : Path, build_path : Path, *args, install_path : Path = None):
+    cmd = Task.CreateCMakeConfigureGxxABICommandLine(source_path, build_path)
+    if install_path != None:
+      cmd.append('-DCMAKE_INSTALL_PREFIX=' + str(install_path))
+    cmd.extend([ *args, source_path ])
+    return Task.CreateSubprocessTask(name, in_edges, cmd)
 
   def CreateCMakeBuildDefault(name : str, in_edges : list, build_path : Path, *args):
     cmd = [ 'cmake', '--build', build_path ]
@@ -671,6 +727,12 @@ class Task:
   def CreateCMakeInstallDefault(name : str, in_edges : list, build_path : Path, install_path : Path, *args):
     cmd = [ 'cmake', '--install', build_path, '--prefix', install_path ]
     cmd.extend([ *args ])
+    return Task.CreateSubprocessTask(name, in_edges, cmd)
+  
+  def CreateDeploySharedLibrariesDefault(name : str, in_edges : list, install_paths : Path, deploy_path : Path):
+    if not os.path.exists(deploy_path):
+      os.makedirs(deploy_path)
+    cmd = ['cmake', '-E', 'copy'] + install_paths + [deploy_path]
     return Task.CreateSubprocessTask(name, in_edges, cmd)
   
   def Run(self):
@@ -790,16 +852,19 @@ class TaskGraph:
 
 def UpdateGitRepository(path : Path, url : str, branch : str = None, commit : str = None):
   if path.exists():
-    LaunchSubprocessImmediate([ 'git', '-C', str(path), 'pull' ])
+    LaunchSubprocessImmediate([ 'git', '-C', str(path), 'pull' ],
+                              log_name=os.path.basename(path))
   else:
     cmd = [ 'git', '-C', str(path.parent), 'clone', '--depth', '1', '--single-branch' ]
     if branch != None:
       cmd.extend([ '-b', branch ])
     cmd.extend([ url, path.stem ])
-    LaunchSubprocessImmediate(cmd)
+    LaunchSubprocessImmediate(cmd, log_name=os.path.basename(path))
   if commit != None:
-    LaunchSubprocessImmediate([ 'git', '-C', str(path), 'fetch' ])
-    LaunchSubprocessImmediate([ 'git', '-C', str(path), 'checkout', commit ])
+    LaunchSubprocessImmediate([ 'git', '-C', str(path), 'fetch' ],
+                              log_name=os.path.basename(path))
+    LaunchSubprocessImmediate([ 'git', '-C', str(path), 'checkout', commit ],
+                              log_name=os.path.basename(path))
 
 
 
@@ -875,6 +940,8 @@ def UpdateDependencies(task_graph : TaskGraph):
     unique_deps.update(OSM2ODR_DEPENDENCIES)
   if ENABLE_CHRONO:
     unique_deps.update(CHRONO_DEPENDENCIES)
+  if ENABLE_ROS2:
+    unique_deps.update(ROS2_DEPENDENCIES)
   return [
     task_graph.Add(Task(f'{dep.name}-update', [], UpdateDependency, dep)) for dep in unique_deps
   ]
@@ -1245,6 +1312,28 @@ def BuildDependencies(task_graph : TaskGraph):
       [ build_xercesc ],
       XERCESC_BUILD_PATH,
       XERCESC_INSTALL_PATH))
+  
+  if ENABLE_ROS2:
+    #HACK: Prevent find_package() detect foonathan-memory-vendor library when ros2 is installed in the system.
+    #      foonathan-memory-vendor does not build if is already installed in the system and there are no cmake arguments to prvent this behavioud in foonathan-memory-vendor.
+    def is_ros_system_install_path(path):
+      return any(ros_folder in path for ros_folder in ['/ros/', '/ros2/'])
+    os.environ['PATH'] = ':'.join([path for path in os.environ['PATH'].split(':') if not is_ros_system_install_path(path)])
+    
+    task_graph.Add(Task.CreateCMakeConfigureGxxABI(
+      'foonathan-memory-vendor-configure',
+      [],
+      FOONATHAN_MEMORY_VENDOR_SOURCE_PATH,
+      FOONATHAN_MEMORY_VENDOR_BUILD_PATH,
+      '-DBUILD_SHARED_LIBS=ON',
+      install_path=FOONATHAN_MEMORY_VENDOR_INSTALL_PATH))
+    task_graph.Add(Task.CreateCMakeConfigureGxxABI(
+      'fast-cdr-configure',
+      [],
+      FAST_CDR_SOURCE_PATH,
+      FAST_CDR_BUILD_PATH,
+      #'-DCMAKE_CXX_FLAGS"-D_GLIBCXX_USE_CXX11_ABI=0"',
+      install_path=FAST_CDR_INSTALL_PATH))
 
   # We wait for all pending tasks to finish here, then we'll switch to sequential task execution for the build step.
   task_graph.Execute()
@@ -1282,6 +1371,16 @@ def BuildDependencies(task_graph : TaskGraph):
   if ENABLE_CHRONO:
     task_graph.Add(Task.CreateCMakeBuildDefault('chrono-build', [], CHRONO_BUILD_PATH))
 
+  if ENABLE_ROS2:
+      task_graph.Add(Task.CreateCMakeBuildDefault(
+        'foonathan-memory-vendor-build',
+        [],
+        FOONATHAN_MEMORY_VENDOR_BUILD_PATH))
+      task_graph.Add(Task.CreateCMakeBuildDefault(
+        'fast-cdr-build',
+        [],
+        FAST_CDR_BUILD_PATH))
+
   task_graph.Execute(sequential = True) # The underlying build system should already parallelize.
 
   # Install:
@@ -1307,11 +1406,45 @@ def BuildDependencies(task_graph : TaskGraph):
     task_graph.Add(Task.CreateCMakeInstallDefault('xercesc-install', [], XERCESC_BUILD_PATH, XERCESC_INSTALL_PATH))
   if ENABLE_CHRONO:
     task_graph.Add(Task.CreateCMakeInstallDefault('chrono-install', [], CHRONO_BUILD_PATH, CHRONO_INSTALL_PATH))
+  if ENABLE_ROS2:
+    task_graph.Add(Task.CreateCMakeInstallDefault(
+      'foonathan-memory-vendor-install',
+      [],
+      FOONATHAN_MEMORY_VENDOR_BUILD_PATH,
+      FOONATHAN_MEMORY_VENDOR_INSTALL_PATH))
+    task_graph.Add(Task.CreateCMakeInstallDefault(
+      'fast-cdr-install',
+      [],
+      FAST_CDR_BUILD_PATH,
+      FAST_CDR_INSTALL_PATH))
+    task_graph.Execute()
+    task_graph.Add(Task.CreateCMakeConfigureGxxABI(
+      'fast-dds-configure',
+      [],
+      FAST_DDS_SOURCE_PATH,
+      FAST_DDS_BUILD_PATH,
+      '-DCMAKE_CXX_FLAGS=-latomic',
+      f'-DTHIRDPARTY_Asio=FORCE',
+      f'-DTHIRDPARTY_TinyXML2=FORCE',
+      f'-DCMAKE_LIBRARY_PATH={FAST_CDR_INSTALL_PATH}',
+      install_path=FAST_DDS_INSTALL_PATH))
+    task_graph.Execute()
+    task_graph.Add(Task.CreateCMakeBuildDefault(
+      'fast-dds-build',
+      [],
+      FAST_DDS_BUILD_PATH))
+    task_graph.Execute()
+    task_graph.Add(Task.CreateCMakeInstallDefault(
+      'fast-dds-install',
+      [],
+      FAST_DDS_BUILD_PATH,
+      FAST_DDS_INSTALL_PATH))
   task_graph.Execute()
 
 
 
 def BuildLibCarlaMain(task_graph : TaskGraph):
+  ROS2_FLAGS = f'-DCMAKE_CXXFLAGS="-DWITH_ROS2"' if ENABLE_ROS2 else ''
   configure_libcarla = task_graph.Add(Task.CreateCMakeConfigureDefault(
     'libcarla-configure',
     [],
@@ -1321,17 +1454,56 @@ def BuildLibCarlaMain(task_graph : TaskGraph):
     f'-DBUILD_LIBCARLA_SERVER={"ON" if ARGV.libcarla_server else "OFF"}',
     f'-DBUILD_LIBCARLA_CLIENT={"ON" if ARGV.libcarla_client else "OFF"}',
     f'-DBUILD_OSM_WORLD_RENDERER={"ON" if ENABLE_OSM_WORLD_RENDERER else "OFF"}',
-    f'-DLIBCARLA_PYTORCH={"ON" if ARGV.pytorch else "OFF"}'))
+    f'-DLIBCARLA_PYTORCH={"ON" if ARGV.pytorch else "OFF"}',
+    ROS2_FLAGS))
   build_libcarla = task_graph.Add(Task.CreateCMakeBuildDefault(
     'libcarla-build',
     [ configure_libcarla ],
     LIBCARLA_BUILD_PATH))
-  return task_graph.Add(Task.CreateCMakeInstallDefault(
+  task_graph.Add(Task.CreateCMakeInstallDefault(
     'libcarla-install',
     [ build_libcarla ],
     LIBCARLA_BUILD_PATH,
     LIBCARLA_INSTALL_PATH))
+  task_graph.Execute(sequential=True)
 
+
+def BuildRos2NativeMain(task_graph : TaskGraph):
+  ROS2_NATIVE_BUILD_PATH = DEPENDENCIES_PATH / 'ros2-native-build'
+  configure_step = task_graph.Add(Task.CreateCMakeConfigureGxxABI(
+    'ros2-naitve-configure',
+    [],
+    WORKSPACE_PATH / 'LibCarla' / 'cmake' / 'ros2-native',
+    ROS2_NATIVE_BUILD_PATH,
+    f'-DFASTDDS_INCLUDE_PATH={ROS2_NATIVE_INSTALL_PATH}/include',
+    f'-DFASTDDS_LIBRARY_PATH={ROS2_NATIVE_INSTALL_PATH}/lib',
+    f'-DBOOST_INCLUDE_PATH={BOOST_INCLUDE_PATH}',
+    '-DCMAKE_CXX_FLAGS=-isystem /usr/include/c++/7',
+    install_path=ROS2_NATIVE_INSTALL_PATH ))
+  build_step = task_graph.Add(Task.CreateCMakeBuildDefault(
+    'ros2-naitve-build',
+    [ configure_step ],
+    ROS2_NATIVE_BUILD_PATH))
+  install_step = task_graph.Add(Task.CreateCMakeInstallDefault(
+    'ros2-naitve-install',
+    [ build_step ],
+    ROS2_NATIVE_BUILD_PATH,
+    ROS2_NATIVE_INSTALL_PATH))
+  task_graph.Add(Task.CreateDeploySharedLibrariesDefault(
+    'ros2-naitve-deploy-shared-libs',
+    [ install_step ],
+    [
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libcarla-ros2-native.so',
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libfastcdr.so',
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libfastcdr.so.1',
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libfastcdr.so.1.1.1',
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libfastrtps.so',
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libfastrtps.so.2.11',
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libfastrtps.so.2.11.2',
+      ROS2_NATIVE_INSTALL_PATH / 'lib' / 'libfoonathan_memory-0.7.3.so'
+    ],
+    CARLA_PLUGIN_DEPLOY_PATH)),
+  task_graph.Execute(sequential=True)
 
 
 def BuildPythonAPIMain():
@@ -1450,6 +1622,8 @@ if __name__ == '__main__':
       BuildDependencies(task_graph)
     if ENABLE_LIBCARLA:
       BuildLibCarlaMain(task_graph)
+    if ENABLE_ROS2:
+      BuildRos2NativeMain(task_graph)
     if ENABLE_PYTHON_API:
       BuildPythonAPI(task_graph)
     if UPDATE_CARLA_UE_ASSETS:
