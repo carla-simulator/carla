@@ -4,7 +4,8 @@ project(carla-ros2-native-project)
 
 include (ExternalProject)
 
-set (PROJECT_CMAKE_FLAGS -DCMAKE_CXX_COMPILER=/usr/bin/g++-7 -DCMAKE_C_COMPILER=/usr/bin/gcc-7 -DCMAKE_CXX_FLAGS_RELEASE=-D_GLIBCXX_USE_CXX11_ABI=0 -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/install)
+set (PROJECT_INSTALL_PATH ${CMAKE_CURRENT_BINARY_DIR}/install)
+set (PROJECT_CMAKE_FLAGS -DCMAKE_CXX_COMPILER=/usr/bin/g++-7 -DCMAKE_C_COMPILER=/usr/bin/gcc-7 -DCMAKE_CXX_FLAGS_RELEASE=-D_GLIBCXX_USE_CXX11_ABI=0 -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH})
 
 ExternalProject_add (
   foonathan_memory
@@ -46,6 +47,16 @@ ExternalProject_Add(
   DEPENDS fastdds
   SOURCE_DIR ${PROJECT_SOURCE_DIR}/LibCarlaRos2Native
   CMAKE_ARGS ${PROJECT_CMAKE_FLAGS} -DBOOST_INCLUDE_PATH=${BOOST_INCLUDE_PATH}
+)
+
+set (CARLA_PLUGIN_BINARY_PATH ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Plugins/Carla/Binaries/Linux)
+add_custom_command(
+    TARGET carla-ros2-native-lib
+    POST_BUILD
+    COMMAND cmake -E make_directory ${CARLA_PLUGIN_BINARY_PATH}
+    COMMAND ${CMAKE_COMMAND} -E copy
+      ${PROJECT_INSTALL_PATH}/lib/*.so*
+      ${CARLA_PLUGIN_BINARY_PATH}
 )
 
 add_custom_target (

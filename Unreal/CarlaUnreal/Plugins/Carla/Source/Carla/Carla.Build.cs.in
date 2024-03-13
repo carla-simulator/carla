@@ -1,7 +1,9 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
 using System;
+using System.IO;
 using UnrealBuildTool;
+using System.Diagnostics;
 using EpicGames.Core;
 
 public class Carla :
@@ -30,6 +32,14 @@ public class Carla :
   public Carla(ReadOnlyTargetRules Target) :
     base(Target)
   {
+    void AddDynamicLibrary(string library)
+    {
+      PublicAdditionalLibraries.Add(library);
+      RuntimeDependencies.Add(library);
+      PublicDelayLoadDLLs.Add(library);
+      Console.WriteLine("Dynamic Library Added: " + library);
+    }
+
     bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
 
     PrivatePCHHeaderFile = "Carla.h";
@@ -141,15 +151,25 @@ public class Carla :
       };
     }
 
-    if (EnableRos2)
+    if (EnableRos2 || true)
     {
       PrivateDefinitions.Add("WITH_ROS2");
       PrivateDefinitions.Add("WITH_ROS2");
 
-      PublicAdditionalLibraries.Add("$<TARGET_FILE:carla-ros2-native>");
-      PublicAdditionalLibraries.Add("$<TARGET_FILE:foonathan_memory-0.7.3>");
-      PublicAdditionalLibraries.Add("$<TARGET_FILE:fastcdr>");
-      PublicAdditionalLibraries.Add("$<TARGET_FILE:fastrtps>");
+      var DirectoryInfo = new DirectoryInfo(ModuleDirectory);
+      for (int i = 0; i != 6; ++i)
+      {
+        DirectoryInfo = DirectoryInfo.Parent;
+      }
+      var WorkspacePath = DirectoryInfo.ToString();
+      Debug.Assert(WorkspacePath != null && !Directory.Exists(WorkspacePath));
+
+      //TODO: "Build" folder is configurable via cmake, so should be parametrizable via cmd argument
+      string LibRos2NativePath = Path.Combine(WorkspacePath, "Build", "Ros2Native", "install", "lib");
+      AddDynamicLibrary(Path.Combine(LibRos2NativePath, "libcarla-ros2-native.so"));
+      AddDynamicLibrary(Path.Combine(LibRos2NativePath, "libfoonathan_memory-0.7.3.so"));
+      AddDynamicLibrary(Path.Combine(LibRos2NativePath, "libfastcdr.so"));
+      AddDynamicLibrary(Path.Combine(LibRos2NativePath, "libfastrtps.so"));
     }
 
     PublicDefinitions.AddRange(new string[]
