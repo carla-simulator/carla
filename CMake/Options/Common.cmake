@@ -94,6 +94,6 @@ option (
 
 carla_string_option (
   LIBCARLA_IMAGE_SUPPORTED_FORMATS
-  "Semicolon-separated list of supported image formats by LibCarla."
+  "Semicolon-separated list of supported image formats by LibCarla. Available formats: png, jpeg, tiff"
   "png"
 )
