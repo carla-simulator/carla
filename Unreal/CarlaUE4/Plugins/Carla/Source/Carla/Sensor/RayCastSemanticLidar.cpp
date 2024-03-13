@@ -127,7 +127,6 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
   ResetRecordedHits(ChannelCount, PointsToScanWithOneLaser);
   PreprocessRays(ChannelCount, PointsToScanWithOneLaser);
 
-  //GetWorld()->GetPhysicsScene()-> GetPxScene()->lockRead();
   auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(GetWorld()->GetPhysicsScene());
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
@@ -151,7 +150,6 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
       };
     });
   }
-  //GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
   LockedPhysObject.Release();
 
   FTransform ActorTransf = GetTransform();
@@ -251,8 +249,7 @@ bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float Ho
   FVector EndTrace = Range * UKismetMathLibrary::GetForwardVector(ResultRot) + LidarBodyLoc;
 
 
-//#if 0 // @CARLAUE5
-  GetWorld()->LineTraceSingleByChannel(
+  GetWorld()->ParallelLineTraceSingleByChannel(
     HitInfo,
     LidarBodyLoc,
     EndTrace,
@@ -260,7 +257,6 @@ bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float Ho
     TraceParams,
     FCollisionResponseParams::DefaultResponseParam
   );
-//#endif
 
   if (HitInfo.bBlockingHit) {
     HitResult = HitInfo;
