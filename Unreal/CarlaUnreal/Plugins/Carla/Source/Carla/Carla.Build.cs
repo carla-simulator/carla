@@ -3,6 +3,7 @@
 using System;
 using UnrealBuildTool;
 using EpicGames.Core;
+using System.IO;
 
 public class Carla :
   ModuleRules
@@ -101,27 +102,14 @@ public class Carla :
       PublicDependencyModuleNames.Add("UnrealEd");
       
     PublicIncludePaths.Add(ModuleDirectory);
-    AddIncludeDirectories("$<TARGET_PROPERTY:Boost::asio,INTERFACE_INCLUDE_DIRECTORIES>");
-    AddIncludeDirectories("$<TARGET_PROPERTY:Boost::python,INTERFACE_INCLUDE_DIRECTORIES>");
-    AddIncludeDirectories("$<TARGET_PROPERTY:Boost::numpy,INTERFACE_INCLUDE_DIRECTORIES>");
-    AddIncludeDirectories("$<TARGET_PROPERTY:Boost::geometry,INTERFACE_INCLUDE_DIRECTORIES>");
-    AddIncludeDirectories("$<TARGET_PROPERTY:Boost::gil,INTERFACE_INCLUDE_DIRECTORIES>");
-    AddIncludeDirectories("$<TARGET_PROPERTY:Eigen3::Eigen,INTERFACE_INCLUDE_DIRECTORIES>");
-      
-    PublicAdditionalLibraries.Add("$<TARGET_FILE:carla-server>");
-    AddIncludeDirectories("$<TARGET_PROPERTY:carla-server,INTERFACE_INCLUDE_DIRECTORIES>");
 
-    PublicAdditionalLibraries.Add("$<TARGET_FILE:zlibstatic>");
-    AddIncludeDirectories("$<TARGET_PROPERTY:zlibstatic,INTERFACE_INCLUDE_DIRECTORIES>");
+    foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Includes.def")).Split(';'))
+      if (Path.Length != 0)
+        PublicIncludePaths.Add(Path);
 
-    PublicAdditionalLibraries.Add("$<TARGET_FILE:png_static>");
-    AddIncludeDirectories("$<TARGET_PROPERTY:png_static,INTERFACE_INCLUDE_DIRECTORIES>");
-
-    PublicAdditionalLibraries.Add("$<TARGET_FILE:rpc>");
-    AddIncludeDirectories("$<TARGET_PROPERTY:rpc,INTERFACE_INCLUDE_DIRECTORIES>");
-
-    PublicAdditionalLibraries.Add("$<TARGET_FILE:libsqlite3>");
-    PublicIncludePaths.Add("@sqlite3_SOURCE_DIR@");
+    foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Libraries.def")).Split(';'))
+      if (Path.Length != 0)
+        PublicAdditionalLibraries.Add(Path);
 
     if (EnableOSM2ODR)
     {
