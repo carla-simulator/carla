@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <stdint.h>
 #include <sys/stat.h>
 
 namespace carla {
