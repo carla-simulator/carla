@@ -173,7 +173,7 @@ elseif (APPLE)
   set (EXE_EXT)
   set (UE_SYSTEM_NAME Mac)
 else ()
-  message (FATAL_ERROR "Unknown target system.")
+  carla_error ("Unknown target system.")
 endif ()
 
 set (

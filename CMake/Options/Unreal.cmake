@@ -28,7 +28,7 @@ carla_string_option (
   "${CARLA_UNREAL_ENGINE_PATH_INFERRED}"
 )
 
-message (
+carla_message (
   "Using \"${CARLA_UNREAL_ENGINE_PATH}\" as Unreal Engine root path."
 )
 
@@ -57,11 +57,10 @@ carla_string_option (
 )
 
 if (${BUILD_CARLA_UNREAL} AND ${CARLA_HAS_UNREAL_ENGINE_PATH})
-  message (
+  carla_message (
     "Carla UE project successfully added to build. (UE path: ${CARLA_UNREAL_ENGINE_PATH})")
 else ()
-  message (
-    FATAL_ERROR
+  carla_error (
     "Could not add UE project to build since the option CARLA_UNREAL_ENGINE_PATH"
     "is not set to a valid path (\"${CARLA_UNREAL_ENGINE_PATH}\")."
     "Please set it to point to the root path of your CARLA Unreal Engine installation."
