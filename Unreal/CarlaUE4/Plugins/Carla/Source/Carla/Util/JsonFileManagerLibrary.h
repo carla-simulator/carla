@@ -37,8 +37,6 @@ public:
 
   static bool SaveGnssDataToJson(const FString& JsonFilePath, double Altitude, double Latitude, double Longitude, const FString& FrameNumber);
 
-  static bool SaveLidarDataToXYZ(const FString& FilePath, const TArray<float>& PointArray);
-
   static bool SaveLidarDataToPly(const FString& FilePath, const TArray<float>& PointArray, int ArrayElementSize);
 
 

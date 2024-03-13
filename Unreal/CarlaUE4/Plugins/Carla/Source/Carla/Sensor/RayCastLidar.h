@@ -37,7 +37,7 @@ public:
 
   virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime);
 
-  const TArray<float>& GetTestPointCloud() const { return TestPointCloud; };
+  const TArray<float>& GetTestPointCloud() const { return PointCloudLidarData; };
 
 private:
   /// Compute the received intensity of the point
@@ -62,5 +62,9 @@ private:
   float DropOffAlpha;
   float DropOffBeta;
 
-  TArray<float> TestPointCloud;
+  // Way to access PointCloud data from the server.
+  TArray<float> PointCloudLidarData;
+
+  void PointCloudResetMemory();
+  void PointCloudWritePointSync(const FDetection& Detection);
 };
