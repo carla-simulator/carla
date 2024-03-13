@@ -101,6 +101,8 @@ public:
     return *Episode;
   }
 
+  void SetSavingDataToDisk(bool bSavingData) { bSavingDataToDisk = bSavingData; }
+
 protected:
 
   void PostActorCreated() override;
@@ -128,8 +130,8 @@ protected:
   UPROPERTY()
   bool bIsActive = false;
 
-  // JoseM - Property defined to enable PhysTick when playing in editor without clients.
-  bool bPhysTickInEditor = false;
+  // Property used when testing with SensorSpawnerActor in editor.
+  bool bSavingDataToDisk = false;
 
 private:
 

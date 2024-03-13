@@ -84,11 +84,27 @@ void ASensorSpawnerActor::SpawnSensors()
 void ASensorSpawnerActor::StartRecordingSensorData()
 {
   bRecordingData = true;
+
+  for(ASensor* CurrentSensor : SpawnedSensorsArray)
+  {
+    if(CurrentSensor)
+    {
+      CurrentSensor->SetSavingDataToDisk(bRecordingData);
+    }
+  }
 }
 
 void ASensorSpawnerActor::StopRecordingSensorData()
 {
   bRecordingData = false;
+
+  for(ASensor* CurrentSensor : SpawnedSensorsArray)
+  {
+    if(CurrentSensor)
+    {
+      CurrentSensor->SetSavingDataToDisk(bRecordingData);
+    }
+  }
 }
 
 const FActorDefinition* ASensorSpawnerActor::GetActorDefinitionByClass(const TSubclassOf<AActor> ActorClass) const
@@ -186,6 +202,7 @@ void ASensorSpawnerActor::AddSensorToSaveDataArray(AActor* Actor)
     if(SensorClassToCapture == CaptureSensor->GetClass() || SensorClassToCapture == nullptr)
     {
       SpawnedSensorsArray.Add(CaptureSensor);
+      CaptureSensor->SetSavingDataToDisk(bRecordingData);
     }
   }
 }
