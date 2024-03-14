@@ -841,7 +841,7 @@ class Client():
             `World`\n
         """
 
-    def reload_world(self, reset_settings=True):
+    def reload_world(self, reset_settings=True) -> World:
         """Reload the current world, note that a new world is created with default settings using the same map. All actors present in the world will be destroyed, but traffic manager instances will stay alive.
 
         Args:
@@ -849,6 +849,9 @@ class Client():
 
         Raises:
             `RuntimeError` when corresponding.
+        
+        Returns:
+            `World`\n
         """
 
     def replay_file(self, name: str, start: float, duration: float, follow_id: int, replay_sensors: bool):
