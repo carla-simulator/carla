@@ -23,6 +23,10 @@ set (
   ${CARLA_UE_PATH}/CarlaUnreal.uproject
 )
 
+if (ENABLE_ROS2)
+  set (LAUNCH_ARGS ${LAUNCH_ARGS} --ros2)
+endif()
+
 if (WIN32)
   set (
     CARLA_UE_GENERATE_PROJECT_FILES_COMMAND

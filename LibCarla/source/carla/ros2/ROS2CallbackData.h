@@ -16,6 +16,7 @@
 #include <boost/variant2/variant.hpp>
 #endif
 
+#include <variant>
 #include <functional>
 
 namespace carla {
