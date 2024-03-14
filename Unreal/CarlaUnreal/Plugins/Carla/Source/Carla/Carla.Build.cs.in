@@ -65,7 +65,6 @@ public class Carla :
     TestOptionalFeature(EnableCarSim, "CarSim support", "WITH_CARSIM");
     TestOptionalFeature(EnableChrono, "Chrono support", "WITH_CHRONO");
     TestOptionalFeature(EnablePytorch, "PyTorch support", "WITH_PYTORCH");
-    TestOptionalFeature(EnableRos2, "ROS2 support", "WITH_ROS2");
     TestOptionalFeature(EnableOSM2ODR, "OSM2ODR support", "WITH_OSM2ODR");
 
     PrivateDependencyModuleNames.AddRange(new string[]
