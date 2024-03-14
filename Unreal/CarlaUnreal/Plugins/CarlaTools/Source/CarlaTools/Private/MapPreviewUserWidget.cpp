@@ -110,7 +110,7 @@ void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FStri
           Region.Width = Texture->GetSizeX();
           Region.Height = Texture->GetSizeY();
 
-          FTexture2DResource* Resource = (FTexture2DResource*)Texture->Resource;
+          FTexture2DResource* Resource = (FTexture2DResource*)Texture->GetResource();
           RHIUpdateTexture2D(Resource->GetTexture2DRHI(), 0, Region, Region.Width * sizeof(uint8_t) * 4, &NewData[0]);
         }
       );

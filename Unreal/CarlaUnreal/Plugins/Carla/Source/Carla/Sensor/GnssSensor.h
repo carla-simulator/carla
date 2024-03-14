@@ -51,6 +51,10 @@ public:
   float GetLongitudeBias() const;
   float GetAltitudeBias() const;
 
+  double GetLatitudeValue() const;
+  double GetLongitudeValue() const;
+  double GetAltitudeValue() const;
+
 protected:
 
   virtual void BeginPlay() override;
@@ -66,4 +70,8 @@ private:
   float LatitudeBias;
   float LongitudeBias;
   float AltitudeBias;
+
+  double LatitudeValue;
+  double LongitudeValue;
+  double AltitudeValue;
 };
