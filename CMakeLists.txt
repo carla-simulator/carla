@@ -75,11 +75,7 @@ include (${CARLA_WORKSPACE_PATH}/CMake/Warnings.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Errors.cmake)
 
 if (LINUX)
-  check_linker_flag (
-    CXX
-    -lpthread
-    HAS_PTHREAD
-  )
+  check_linker_flag (CXX -lpthread HAS_PTHREAD)
   if (HAS_PTHREAD)
     add_link_options (-lpthread)
   endif ()
@@ -114,10 +110,13 @@ endif ()
 
 
 
-set (
-  CARLA_COMMON_DEFINITIONS
-  LIBCARLA_IMAGE_WITH_PNG_SUPPORT=true
-)
+set (CARLA_COMMON_DEFINITIONS)
+
+foreach (FORMAT ${LIBCARLA_IMAGE_SUPPORTED_FORMATS})
+  carla_message ("Enabling CARLA support \"${FORMAT}\".")
+  string (TOUPPER "${FORMAT}" FORMAT_UPPERCASE)
+  list (APPEND CARLA_COMMON_DEFINITIONS LIBCARLA_IMAGE_SUPPORT_${FORMAT_UPPERCASE}=1)
+endforeach ()
 
 if (WIN32)
   add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
@@ -125,7 +124,7 @@ endif ()
 
 if (WIN32)
   # https://learn.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=msvc-170
-  list (APPEND CARLA_COMMON_DEFINITIONS _WIN32_WINNT=0x0601) # --- Windows 10 ---
+  list (APPEND CARLA_COMMON_DEFINITIONS _WIN32_WINNT=0x0601) # <- Windows 10
   list (APPEND CARLA_COMMON_DEFINITIONS HAVE_SNPRINTF)
   list (APPEND CARLA_COMMON_DEFINITIONS _USE_MATH_DEFINES)
 endif ()
