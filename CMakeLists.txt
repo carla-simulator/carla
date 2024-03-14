@@ -8,7 +8,10 @@
 
 ]]
 
-cmake_minimum_required (VERSION 3.28.0)
+cmake_minimum_required (
+  VERSION
+  3.28.0
+)
 
 cmake_policy (SET CMP0097 NEW)
 cmake_policy (SET CMP0091 NEW)
@@ -28,13 +31,16 @@ set (
 
 project (
   CARLA
-  VERSION ${CARLA_VERSION}
+  VERSION
+    ${CARLA_VERSION}
   LANGUAGES
     C
     CXX
     ASM # This is required by some dependencies, such as LibPNG.
-  DESCRIPTION "Open-source simulator for autonomous driving research."
-  HOMEPAGE_URL https://carla.org
+  DESCRIPTION
+    "Open-source simulator for autonomous driving research."
+  HOMEPAGE_URL
+    https://carla.org
 )
 
 set (CMAKE_CXX_STANDARD 20)
@@ -53,11 +59,20 @@ set (
   ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins
 )
 
+macro (carla_message)
+  message (STATUS "CARLA: " ${ARGN})
+endmacro ()
+
+macro (carla_error)
+  message (FATAL_ERROR ${ARGN})
+endmacro ()
+
 include (CheckCCompilerFlag)
 include (CheckCXXCompilerFlag)
 include (CheckLinkerFlag)
-
 include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
+include (${CARLA_WORKSPACE_PATH}/CMake/Warnings.cmake)
+include (${CARLA_WORKSPACE_PATH}/CMake/Errors.cmake)
 
 if (LINUX)
   check_linker_flag (
@@ -73,7 +88,10 @@ endif ()
 # Similar to configure_file, but also expands variables
 # that are set at generate time, like generator expressions.
 macro (carla_two_step_configure_file DESTINATION SOURCE)
-  message ("Configuring file \"${DESTINATION}\"")
+  message (
+    STATUS
+    "Configuring file \"${DESTINATION}\""
+  )
   # Configure-time step; evaluate variables:
   configure_file (${SOURCE} ${DESTINATION})
   # Generate-time step; evaluate generator expressions:
@@ -102,9 +120,12 @@ set (
 )
 
 if (WIN32)
-    # https://learn.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=msvc-170
+  add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
+endif ()
+
+if (WIN32)
+  # https://learn.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=msvc-170
   list (APPEND CARLA_COMMON_DEFINITIONS _WIN32_WINNT=0x0601) # --- Windows 10 ---
-  list (APPEND CARLA_COMMON_DEFINITIONS _CRT_SECURE_NO_WARNINGS)
   list (APPEND CARLA_COMMON_DEFINITIONS HAVE_SNPRINTF)
   list (APPEND CARLA_COMMON_DEFINITIONS _USE_MATH_DEFINES)
 endif ()
@@ -120,11 +141,7 @@ else ()
   list (APPEND CARLA_EXCEPTION_DEFINITIONS PUGIXML_NO_EXCEPTIONS)
 endif ()
 
-
-
 include (${CARLA_WORKSPACE_PATH}/CMake/CarlaDependencies.cmake)
-
-
 
 if (BUILD_CARLA_CLIENT OR BUILD_CARLA_SERVER)
   add_subdirectory (LibCarla)

@@ -1,16 +1,21 @@
 project (
   osm-map-renderer
-  LANGUAGES CXX
-  VERSION ${CARLA_VERSION}
+  LANGUAGES 
+    CXX
+  VERSION
+    ${CARLA_VERSION}
 )
 
-set (OSM_RENDERER_SOURCE_PATH ${CARLA_WORKSPACE_PATH}/osm-world-renderer/OsmRenderer)
+set (
+  OSM_RENDERER_SOURCE_PATH
+  ${CARLA_WORKSPACE_PATH}/osm-world-renderer/OsmRenderer
+)
 
 add_library (
-    lib-osm-map-renderer
-    ${OSM_RENDERER_SOURCE_PATH}/src/OsmRenderer.cpp
-    ${OSM_RENDERER_SOURCE_PATH}/src/MapDrawer.cpp
-    ${OSM_RENDERER_SOURCE_PATH}/src/MapRasterizer.cpp
+  lib-osm-map-renderer
+  ${OSM_RENDERER_SOURCE_PATH}/src/OsmRenderer.cpp
+  ${OSM_RENDERER_SOURCE_PATH}/src/MapDrawer.cpp
+  ${OSM_RENDERER_SOURCE_PATH}/src/MapRasterizer.cpp
 )
 
 target_link_libraries (
@@ -23,22 +28,22 @@ target_link_libraries (
 )
 
 target_include_directories (
-    lib-osm-map-renderer PUBLIC
-    ${OSM_RENDERER_SOURCE_PATH}/include
+  lib-osm-map-renderer PUBLIC
+  ${OSM_RENDERER_SOURCE_PATH}/include
 )
 
 add_executable (
-    osm-world-renderer
-    ${OSM_RENDERER_SOURCE_PATH}/main.cpp
+  osm-world-renderer
+  ${OSM_RENDERER_SOURCE_PATH}/main.cpp
 )
 
 target_link_libraries (
-  osm-world-renderer
+  osm-world-renderer PRIVATE
   lib-osm-map-renderer
 )
 
 target_compile_definitions (
-    osm-world-renderer PRIVATE
-    _USE_MATH_DEFINES
-    ${CARLA_COMMON_DEFINITIONS}
+  osm-world-renderer PRIVATE
+  _USE_MATH_DEFINES
+  ${CARLA_COMMON_DEFINITIONS}
 )

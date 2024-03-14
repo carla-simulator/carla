@@ -80,6 +80,18 @@ option (
   OFF
 )
 
+option (
+  ENABLE_ALL_WARNINGS
+  "Whether to emit extra build warnings."
+  OFF
+)
+
+option (
+  ENABLE_WARNINGS_TO_ERRORS
+  "Whether to convert build warnings to errors."
+  OFF
+)
+
 carla_string_option (
   GCC_COMPILER
   "gcc compiler used by some CARLA extensions."

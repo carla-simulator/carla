@@ -1,5 +1,11 @@
 project (
-  carla-ue
+  carla-unreal
+  VERSION
+    ${CARLA_VERSION}
+  LANGUAGES
+    CXX
+  DESCRIPTION
+    "Open-source simulator for autonomous driving research."
 )
 
 set (
@@ -43,8 +49,6 @@ else ()
   )
 endif ()
 
-set (CMAKE_NINJA_FORCE_RESPONSE_FILE ON)
-
 
 
 add_custom_command (
@@ -61,13 +65,13 @@ add_custom_command (
 )
 
 add_custom_target (
-  carla-ue-generate-project-files
+  carla-unreal-generate-project-files
   DEPENDS
     ${CARLA_UE_PATH}/CMakeLists.txt
 )
 
-add_dependencies (
-  carla-ue-generate-project-files
+set (
+  UE_DEPENDENCIES
   carla-server
   libsqlite3
   Boost::asio
@@ -80,6 +84,11 @@ add_dependencies (
   png_static
 )
 
+add_dependencies (
+  carla-unreal-generate-project-files
+  ${UE_DEPENDENCIES}
+)
+
 
 
 if (CMAKE_TOOLCHAIN_FILE)
@@ -89,7 +98,10 @@ if (CMAKE_TOOLCHAIN_FILE)
     NORMALIZE
     OUTPUT_VARIABLE TOOLCHAIN_FILE
   )
-  set (TOOLCHAIN_FILE_OPTION --toolchain=${TOOLCHAIN_FILE})
+  set (
+    TOOLCHAIN_FILE_OPTION
+    --toolchain=${TOOLCHAIN_FILE}
+  )
 else ()
   set (TOOLCHAIN_FILE_OPTION)
 endif ()
@@ -98,7 +110,7 @@ endif ()
 
 add_custom_command (
   OUTPUT
-    ${CMAKE_CURRENT_BINARY_DIR}/carla-ue-configure.stamp
+    ${CMAKE_CURRENT_BINARY_DIR}/carla-unreal-configure.stamp
   COMMENT
     "Configuring Carla Unreal..."
   COMMAND
@@ -108,27 +120,27 @@ add_custom_command (
       ${TOOLCHAIN_FILE_OPTION}
   COMMAND
     ${CMAKE_COMMAND}
-      -E touch carla-ue-configure.stamp
+      -E touch carla-unreal-configure.stamp
   USES_TERMINAL
   VERBATIM
 )
 
 add_custom_target (
-  carla-ue-configure
+  carla-unreal-configure
   DEPENDS
-    carla-ue-configure.stamp
+    carla-unreal-configure.stamp
 )
 
 add_dependencies (
-  carla-ue-configure
-  carla-ue-generate-project-files
+  carla-unreal-configure
+  carla-unreal-generate-project-files
 )
 
 
 
 add_custom_command (
   OUTPUT
-    ${CMAKE_CURRENT_BINARY_DIR}/carla-ue.stamp
+    ${CMAKE_CURRENT_BINARY_DIR}/carla-unreal.stamp
   COMMENT
     "Building Carla Unreal..."
   COMMAND
@@ -137,58 +149,61 @@ add_custom_command (
       --target CarlaUnrealEditor
   COMMAND
     ${CMAKE_COMMAND}
-      -E touch carla-ue.stamp
+      -E touch carla-unreal.stamp
   USES_TERMINAL
   VERBATIM
 )
 
 add_custom_target (
-  carla-ue
+  carla-unreal
   DEPENDS
-    carla-ue.stamp
+    carla-unreal.stamp
 )
 
 add_dependencies (
-  carla-ue
-  carla-ue-configure
+  carla-unreal
+  carla-unreal-configure
 )
 
 
 
 if (WIN32)
   set (EXE_EXT .exe)
-else ()
-  set (EXE_EXT)
-endif ()
-
-if (WIN32)
   set (UE_SYSTEM_NAME Win64)
 elseif (LINUX)
+  set (EXE_EXT)
   set (UE_SYSTEM_NAME Linux)
+elseif (APPLE)
+  set (EXE_EXT)
+  set (UE_SYSTEM_NAME Mac)
 else ()
+  carla_error ("Unknown target system.")
 endif ()
 
-add_custom_target (
-  launch-only
-  COMMENT
-    "Launching Carla Unreal..."
-  COMMAND
-    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
-      ${CARLA_UE_PROJECT_PATH}
-      -${CARLA_UNREAL_RHI}
-      ${LAUNCH_ARGS}
-  USES_TERMINAL
-  VERBATIM
+set (
+  UNREAL_EDITOR_PATH
+  ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
 )
 
+set (
+  LAUNCH_DEPENDENCIES
+  carla-unreal
+)
 
+if (BUILD_PYTHON_API)
+  list (
+    APPEND
+    LAUNCH_DEPENDENCIES
+    carla-python-api
+  )
+endif ()
 
 add_custom_target (
   launch
   COMMENT
     "Launching Carla Unreal..."
   COMMAND
-    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
+    ${UNREAL_EDITOR_PATH}
       ${CARLA_UE_PROJECT_PATH}
       -${CARLA_UNREAL_RHI}
       ${LAUNCH_ARGS}
@@ -198,7 +213,7 @@ add_custom_target (
 
 add_dependencies (
   launch
-  carla-ue
+  ${LAUNCH_DEPENDENCIES}
 )
 
 

@@ -24,8 +24,10 @@ if (BUILD_CARLA_SERVER)
 
   project (
     carla-server
-    LANGUAGES CXX
-    VERSION ${CARLA_VERSION}
+    LANGUAGES
+      CXX
+    VERSION
+      ${CARLA_VERSION}
   )
 
   file (
@@ -160,8 +162,10 @@ if (BUILD_CARLA_CLIENT)
 
   project (
     carla-client
-    LANGUAGES CXX
-    VERSION ${CARLA_VERSION}
+    LANGUAGES
+      CXX
+    VERSION
+      ${CARLA_VERSION}
   )
 
   file (
