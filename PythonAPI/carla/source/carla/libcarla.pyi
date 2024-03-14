@@ -827,7 +827,7 @@ class Client():
             `reset_settings (bool, optional)`: Option to reset the episode setting to default values, set to false to keep the current settings. This is useful to keep sync mode when changing map and to keep deterministic scenarios. Defaults to True.\n
         """
 
-    def load_world(self, map_name: str, reset_settings=True, map_layers=MapLayer.All):
+    def load_world(self, map_name: str, reset_settings=True, map_layers=MapLayer.All) -> World:
         """Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.
 
         + Warning: `map_layers` are only available for "Opt" maps
@@ -836,6 +836,9 @@ class Client():
             `map_name (str)`: Name of the map to be used in this world. Accepts both full paths and map names,e.g. `'/Game/Carla/Maps/Town01'` or `'Town01'`. Remember that these paths are dynamic.\n
             `reset_settings (bool, optional)`: Option to reset the episode setting to default values, set to false to keep the current settings. This is useful to keep sync mode when changing map and to keep deterministic scenarios. Defaults to True.\n
             `map_layers (MapLayer, optional)`: Layers of the map that will be loaded. This parameter works like a flag mask. Defaults to MapLayer.All.\n
+        
+        Returns:
+            `World`\n
         """
 
     def reload_world(self, reset_settings=True):
