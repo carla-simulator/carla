@@ -151,6 +151,11 @@ if (BUILD_OSM_WORLD_RENDERER)
   add_subdirectory (osm-world-renderer)
 endif ()
 
+if (ENABLE_ROS2)
+  set (BOOST_INCLUDE_PATH ${CMAKE_BINARY_DIR}/_deps/boost-src/libs)
+  add_subdirectory (Ros2Native)
+endif()
+
 if (BUILD_PYTHON_API)
   add_subdirectory (PythonAPI)
 endif ()
