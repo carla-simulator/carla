@@ -194,19 +194,6 @@ if (BUILD_CARLA_CLIENT)
     ${LIBCARLA_SOURCE_PATH}/carla/trafficmanager/*.h
     ${LIBCARLA_SOURCE_PATH}/compiler/*.h
   )
-  
-  if (ENABLE_ROS2)
-    file (
-      GLOB
-      LIBCARLA_CLIENT_HEADERS_ROS2
-      ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.h
-    )
-    list (
-      APPEND
-      LIBCARLA_CLIENT_HEADERS
-      ${LIBCARLA_CLIENT_HEADERS_ROS2}
-    )
-  endif ()
 
   if (ENABLE_RSS)
     file (
@@ -258,19 +245,6 @@ if (BUILD_CARLA_CLIENT)
     ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.cpp
     ${LIBCARLA_SOURCE_PATH}/carla/trafficmanager/*.cpp
   )
-  
-  if (ENABLE_ROS2)
-    file (
-      GLOB
-      LIBCARLA_CLIENT_SOURCES_ROS2
-      ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.cpp
-    )
-    list (
-      APPEND
-      LIBCARLA_CLIENT_SOURCES
-      ${LIBCARLA_CLIENT_SOURCES_ROS2}
-    )
-  endif ()
 
   if (ENABLE_RSS)
       file (
