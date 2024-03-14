@@ -694,15 +694,12 @@ class BoundingBox():
     # endregion
 
     # region Methods
-    def __init__(self, location: Location, extent: Vector3D) -> BoundingBox:
+    def __init__(self, location: Location, extent: Vector3D):
         """Bounding boxes contain the geometry of an actor or an element in the scene. They can be used by `carla.DebugHelper` or a `carla.Client` to draw their shapes for debugging. Check out the snippet in `carla.DebugHelper.draw_box` where a snapshot of the world is used to draw bounding boxes for traffic lights.
 
         Args:
             `location (Location)`: Center of the box, relative to its parent.\n
             `extent (Vector3D)`: Vector containing half the size of the box for every axis.\n
-
-        Returns:
-            `BoundingBox`\n
         """
         ...
 
@@ -782,16 +779,13 @@ class Client():
     """
     # region Methods
 
-    def __init__(self, host="127.0.0.1", port=2000, worker_threads=0) -> Client:
+    def __init__(self, host="127.0.0.1", port=2000, worker_threads=0):
         """Client constructor.
 
         Args:
             `host (str, optional)`: IP address where a CARLA Simulator instance is running. Defaults to "127.0.0.1".\n
             `port (int, optional)`: TCP port where the CARLA Simulator instance is running. Defaults to 2000 and the subsequent 2001.\n
             `worker_threads (int, optional)`: Number of working threads used for background updates. If 0, use all available concurrency. Defaults to 0.\n
-
-        Returns:
-            `Client`: _description_\n
         """
 
     def apply_batch(self, commands: list[command]):
@@ -1039,7 +1033,7 @@ class Color():
     # endregion
 
     # region Methods
-    def __init__(self, r=0, g=0, b=0, a=255) -> Color:
+    def __init__(self, r=0, g=0, b=0, a=255):
         """Initializes a color, black by default.
 
         Args:
@@ -1280,7 +1274,7 @@ class FloatColor():
     # endregion
 
     # region Methods
-    def __init__(self, r=.0, g=.0, b=.0, a=1.0) -> FloatColor:
+    def __init__(self, r=.0, g=.0, b=.0, a=1.0):
         """Initializes a color, black by default.
 
         Args:
@@ -1288,9 +1282,6 @@ class FloatColor():
             g (float, optional): Green color. Defaults to .0.
             b (float, optional): Blue color. Defaults to .0.
             a (float, optional): Alpha channel. Defaults to 1.0.
-
-        Returns:
-            FloatColor
         """
         ...
     # endregion
@@ -1372,16 +1363,13 @@ class GearPhysicsControl():
     # endregion
 
     # region Methods
-    def __init__(self, ratio=1.0, down_ratio=0.5, up_ratio=0.65) -> GearPhysicsControl:
+    def __init__(self, ratio=1.0, down_ratio=0.5, up_ratio=0.65):
         """Class that provides access to vehicle transmission details by defining a gear and when to run on it. This will be later used by `carla.VehiclePhysicsControl` to help simulate physics.
 
         Args:
             `ratio (float, optional)`: The transmission ratio of the gear. Defaults to 1.0.\n
             `down_ratio (float, optional)`: Quotient between current RPM and MaxRPM where the autonomous gear box should shift down. Defaults to 0.5.\n
             `up_ratio (float, optional)`: Quotient between current RPM and MaxRPM where the autonomous gear box should shift up. Defaults to 0.65.\n
-
-        Returns:
-            `GearPhysicsControl`\n
         """
         ...
     # endregion
@@ -1414,7 +1402,7 @@ class GeoLocation():
     # endregion
 
     # region Methods
-    def __init__(self, latitude=0.0, longitude=0.0, altitude=0.0) -> GeoLocation:
+    def __init__(self, latitude=0.0, longitude=0.0, altitude=0.0):
         """Class that contains geographical coordinates simulated data. The `carla.Map` can convert simulation locations by using the tag in the OpenDRIVE file.
 
         Args:
@@ -2241,7 +2229,7 @@ class LightState():
     # endregion
 
     # region Methods
-    def __init__(self, intensity=0.0, color=Color, group=LightGroup.NONE, active=False) -> LightState:
+    def __init__(self, intensity=0.0, color=Color, group=LightGroup.NONE, active=False):
         """This class represents all the light variables except the identifier and the location, which are should to be static. Using this class allows to manage all the parametrization of the light in one call.
 
         Args:
@@ -2268,16 +2256,13 @@ class Location(Vector3D):
     # endregion
 
     # region Methods
-    def __init__(self, x=0.0, y=0.0, z=0.0) -> Location:
+    def __init__(self, x=0.0, y=0.0, z=0.0):
         """Represents a spot in the world.
 
         Args:
             `x (float, optional)`: Distance from origin to spot on X axis (meter). Defaults to 0.0.\n
             `y (float, optional)`: Distance from origin to spot on Y axis (meter). Defaults to 0.0.\n
             `z (float, optional)`: Distance from origin to spot on Z axis (meter). Defaults to 0.0.\n
-
-        Returns:
-            `Location`\n
         """
         ...
 
@@ -2321,7 +2306,7 @@ class Map():
     # endregion
 
     # region Methods
-    def __init__(self, name: str, xodr_content: str) -> list[Transform]:
+    def __init__(self, name: str, xodr_content: str):
         """Constructor for this class. Though a map is automatically generated when initializing the world, using this method in no-rendering mode facilitates working with an .xodr without any CARLA server running.
 
         Args:
@@ -2601,7 +2586,7 @@ class OpticalFlowPixel():
     # endregion
 
     # region Methods
-    def __init__(self, x=.0, y=.0) -> OpticalFlowPixel:
+    def __init__(self, x=.0, y=.0):
         """Initializes the Optical Flow Pixel. Zero by default.
 
         Args:
@@ -2796,7 +2781,7 @@ class Rotation():
     # endregion
 
     # region Methods
-    def __init__(self, pitch=.0, yaw=.0, roll=.0) -> Rotation:
+    def __init__(self, pitch=.0, yaw=.0, roll=.0):
         """+ Warning: The declaration order is different in CARLA (pitch,yaw,roll), and in the Unreal Engine Editor (roll,pitch,yaw). When working in a build from source, don't mix up the axes' rotations.
 
         Args:
@@ -3019,7 +3004,7 @@ class TextureColor():
     # endregion
 
     # region Methods
-    def __init__(self, width: int, height: int) -> TextureColor:
+    def __init__(self, width: int, height: int):
         """Initializes a the texture with a `(width, height)` size.
 
         Args:
@@ -3089,7 +3074,7 @@ class Timestamp():
     # endregion
 
     # region Methods
-    def __init__(self, frame: int, elapsed_seconds: float, delta_seconds: float, platform_timestamp: float) -> Timestamp: ...
+    def __init__(self, frame: int, elapsed_seconds: float, delta_seconds: float, platform_timestamp: float): ...
     # endregion
 
     # region Dunder Methods
@@ -3511,7 +3496,7 @@ class Transform():
     # endregion
 
     # region Methods
-    def __init__(self, location: Location, rotation: Rotation) -> Transform: ...
+    def __init__(self, location: Location, rotation: Rotation): ...
 
     def transform(self, in_point: Location):
         """Translates a 3D point from local to global coordinates using the current transformation as frame of reference.
@@ -3570,7 +3555,7 @@ class Vector2D():
     # endregion
 
     # region Methods
-    def __init__(self, x=0.0, y=0.0) -> Vector2D: ...
+    def __init__(self, x=0.0, y=0.0): ...
 
     def length(self) -> float:
         """Computes the length of the vector."""
@@ -3619,7 +3604,7 @@ class Vector3D():
     # endregion
 
     # region Methods
-    def __init__(self, x=0.0, y=0.0, z=0.0) -> Vector3D: ...
+    def __init__(self, x=0.0, y=0.0, z=0.0): ...
 
     def cross(self, vector: Vector3D) -> Vector3D:
         """Computes the cross product between two vectors.
@@ -3844,7 +3829,7 @@ class VehicleAckermannControl():
     # endregion
 
     # region Methods
-    def __init__(self, steer=0.0, steer_speed=0.0, speed=0.0, acceleration=0.0, jerk=0.0) -> VehicleAckermannControl: ...
+    def __init__(self, steer=0.0, steer_speed=0.0, speed=0.0, acceleration=0.0, jerk=0.0): ...
     # endregion
 
     # region Dunder Methods
@@ -4208,7 +4193,7 @@ class WalkerBoneControlIn():
     # endregion
 
     # region Methods
-    def __init__(self, bone_transforms: list[tuple[str, Transform]]) -> WalkerBoneControlIn:
+    def __init__(self, bone_transforms: list[tuple[str, Transform]]):
         """Initializes an object containing moves to be applied on tick. These are listed with the name of the bone and the transform that will be applied to it.
 
         Args:
@@ -4261,7 +4246,7 @@ class WalkerControl():
     # endregion
 
     # region Methods
-    def __init__(self, direction=[1.0, 0.0, 0.0], speed=0.0, jump=False) -> WalkerControl:
+    def __init__(self, direction=[1.0, 0.0, 0.0], speed=0.0, jump=False):
         """This class defines specific directions that can be commanded to a `carla.Walker` to control it via script.
 
         Args:
@@ -4999,7 +4984,7 @@ class command():
         # endregion
 
         # region Methods
-        def __init__(self, actor: Union[Actor, int], impulse: Vector3D) -> command.ApplyAngularImpulse:
+        def __init__(self, actor: Union[Actor, int], impulse: Vector3D):
             """Applies an angular impulse to an actor.
 
             Args:
