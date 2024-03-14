@@ -4690,7 +4690,7 @@ class World():
         + Note: If no tick is received in synchronous mode, the simulation will freeze. Also, if many ticks are received from different clients, there may be synchronization issues. Please read the docs about synchronous mode to learn more.
 
         Args:
-            `seconds (float, optional)`: Maximum time the server should wait for a tick (meters). Defaults to 10.0.\n
+            `seconds (float, optional)`: Maximum time the server should wait for a tick. Defaults to 10.0.\n
 
         Returns:
             `int`\n
@@ -4722,7 +4722,7 @@ class World():
         """This method is used in asynchronous mode. It makes the client wait for a server tick. When the next frame is computed, the server will tick and return a snapshot describing the new state of the world.
 
         Args:
-            `seconds (float, optional)`: Maximum time the server should wait for a tick (meters). Defaults to 10.0.\n
+            `seconds (float, optional)`: Maximum time the server should wait for a tick. Defaults to 10.0.\n
 
         Returns:
             `WorldSnapshot`\n
