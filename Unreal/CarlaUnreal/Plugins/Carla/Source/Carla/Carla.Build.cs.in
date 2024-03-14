@@ -156,20 +156,12 @@ public class Carla :
       PrivateDefinitions.Add("WITH_ROS2");
       PrivateDefinitions.Add("WITH_ROS2");
 
-      var DirectoryInfo = new DirectoryInfo(ModuleDirectory);
-      for (int i = 0; i != 6; ++i)
-      {
-        DirectoryInfo = DirectoryInfo.Parent;
-      }
-      var WorkspacePath = DirectoryInfo.ToString();
-      Debug.Assert(WorkspacePath != null && !Directory.Exists(WorkspacePath));
-
-      //TODO: "Build" folder is configurable via cmake, so should be parametrizable via cmd argument
-      string LibRos2NativePath = Path.Combine(WorkspacePath, "Build", "Ros2Native", "install", "lib");
-      AddDynamicLibrary(Path.Combine(LibRos2NativePath, "libcarla-ros2-native.so"));
-      AddDynamicLibrary(Path.Combine(LibRos2NativePath, "libfoonathan_memory-0.7.3.so"));
-      AddDynamicLibrary(Path.Combine(LibRos2NativePath, "libfastcdr.so"));
-      AddDynamicLibrary(Path.Combine(LibRos2NativePath, "libfastrtps.so"));
+      string CarlaPluginSourcePath = Path.GetFullPath(ModuleDirectory);
+      string CarlaPluginBinariesLinuxPath = Path.Combine(CarlaPluginSourcePath, "..", "..", "Binaries", "Linux");
+      AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libcarla-ros2-native.so"));
+      AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libfoonathan_memory-0.7.3.so"));
+      AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so"));
+      AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so"));
     }
 
     PublicDefinitions.AddRange(new string[]

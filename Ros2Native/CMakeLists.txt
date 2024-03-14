@@ -2,10 +2,11 @@ cmake_minimum_required (VERSION 3.28.0)
 
 project(carla-ros2-native-project)
 
+include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
 include (ExternalProject)
 
 set (PROJECT_INSTALL_PATH ${CMAKE_CURRENT_BINARY_DIR}/install)
-set (PROJECT_CMAKE_FLAGS -DCMAKE_CXX_COMPILER=/usr/bin/g++-7 -DCMAKE_C_COMPILER=/usr/bin/gcc-7 -DCMAKE_CXX_FLAGS_RELEASE=-D_GLIBCXX_USE_CXX11_ABI=0 -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH})
+set (PROJECT_CMAKE_FLAGS -DCMAKE_CXX_COMPILER=${GXX_COMPILER} -DCMAKE_C_COMPILER=${GCC_COMPILER} -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=-D_GLIBCXX_USE_CXX11_ABI=0 -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH})
 
 ExternalProject_add (
   foonathan_memory
@@ -19,27 +20,14 @@ ExternalProject_add (
   CMAKE_ARGS ${PROJECT_CMAKE_FLAGS}
 )
 
-ExternalProject_add (
-  asio
-  URL https://github.com/chriskohlhoff/asio/archive/b84e6c16b2ea907dbad94206b7510d85aafc0b42.zip
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ""
-  INSTALL_COMMAND ""
-)
-ExternalProject_Get_property (asio SOURCE_DIR)
-set (ASIO_SOURCE_DIR ${SOURCE_DIR})
-
-ExternalProject_add (
-  tinyxml2
-  URL https://github.com/leethomason/tinyxml2/archive/8c8293ba8969a46947606a93ff0cb5a083aab47a.zip
-  CMAKE_ARGS ${PROJECT_CMAKE_FLAGS}
-)
-
+# Note: We are using GIT_REPOSITORY instead URL for fastdds because fastdss contains submodules
+#       and we need the .git folders to download the submodules
 ExternalProject_add (
   fastdds
-  URL https://github.com/eProsima/Fast-DDS/archive/refs/heads/2.11.2.zip
-  CMAKE_ARGS ${PROJECT_CMAKE_FLAGS} -DAsio_INCLUDE_DIR=${ASIO_SOURCE_DIR}/asio/include
-  DEPENDS foonathan_memory fastcdr asio tinyxml2
+  GIT_REPOSITORY https://github.com/eProsima/Fast-DDS.git
+  GIT_TAG 2.11.2
+  CMAKE_ARGS ${PROJECT_CMAKE_FLAGS} -DTHIRDPARTY_Asio=FORCE -DTHIRDPARTY_TinyXML2=FORCE
+  DEPENDS foonathan_memory fastcdr
 )
 
 ExternalProject_Add(

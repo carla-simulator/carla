@@ -79,3 +79,15 @@ option (
   "Whether to clone dependencies instead of directly downloading a compressed archive."
   OFF
 )
+
+carla_string_option (
+  GCC_COMPILER
+  "gcc compiler used by some CARLA extensions."
+  /usr/bin/gcc-7
+)
+
+carla_string_option (
+  GXX_COMPILER
+  "g++ compiler used by some CARLA extensions."
+  /usr/bin/g++-7
+)
