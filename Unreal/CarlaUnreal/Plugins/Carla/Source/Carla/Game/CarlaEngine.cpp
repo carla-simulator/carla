@@ -218,7 +218,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
 
   // create ROS2 manager
   #if defined(WITH_ROS2)
-    if (Settings.ROS2)
+  if (Settings.ROS2
   {
     UE_LOG(LogCarla, Log, TEXT("ROS2: Creating ROS2 Instance..."));
     auto ROS2 = carla::ros2::ROS2::GetInstance();
