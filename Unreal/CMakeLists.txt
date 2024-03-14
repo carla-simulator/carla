@@ -275,11 +275,19 @@ add_custom_target (
 
 add_custom_target (
   launch
+  COMMENT
+    "Launching Carla Unreal..."
+  COMMAND
+    ${UNREAL_EDITOR_PATH}
+      ${CARLA_UE_PROJECT_PATH}
+      -${CARLA_UNREAL_RHI}
+      ${LAUNCH_ARGS}
+  USES_TERMINAL
+  VERBATIM
 )
 
 add_dependencies (
   launch
-  launch-only
   ${LAUNCH_DEPENDENCIES}
 )
 
