@@ -1,7 +1,9 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
 using System;
+using System.IO;
 using UnrealBuildTool;
+using System.Diagnostics;
 using EpicGames.Core;
 using System.IO;
 
@@ -21,7 +23,7 @@ public class Carla :
   bool EnablePytorch = false;
 
   [CommandLine("-ros2")]
-  bool EnableRos2 = false;
+  bool EnableRos2 = "${ENABLE_ROS2}".Equals("ON");
 
   [CommandLine("-osm2odr")]
   bool EnableOSM2ODR = false;
@@ -31,6 +33,14 @@ public class Carla :
   public Carla(ReadOnlyTargetRules Target) :
     base(Target)
   {
+    void AddDynamicLibrary(string library)
+    {
+      PublicAdditionalLibraries.Add(library);
+      RuntimeDependencies.Add(library);
+      PublicDelayLoadDLLs.Add(library);
+      Console.WriteLine("Dynamic Library Added: " + library);
+    }
+
     bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
 
     PrivatePCHHeaderFile = "Carla.h";
@@ -56,7 +66,6 @@ public class Carla :
     TestOptionalFeature(EnableCarSim, "CarSim support", "WITH_CARSIM");
     TestOptionalFeature(EnableChrono, "Chrono support", "WITH_CHRONO");
     TestOptionalFeature(EnablePytorch, "PyTorch support", "WITH_PYTORCH");
-    TestOptionalFeature(EnableRos2, "ROS2 support", "WITH_ROS2");
     TestOptionalFeature(EnableOSM2ODR, "OSM2ODR support", "WITH_OSM2ODR");
 
     PrivateDependencyModuleNames.AddRange(new string[]
@@ -127,6 +136,19 @@ public class Carla :
         "ChronoModels_vehicle",
         "ChronoModels_robot",
       };
+    }
+
+    if (EnableRos2)
+    {
+      PrivateDefinitions.Add("WITH_ROS2");
+      PrivateDefinitions.Add("WITH_ROS2");
+
+      string CarlaPluginSourcePath = Path.GetFullPath(ModuleDirectory);
+      string CarlaPluginBinariesLinuxPath = Path.Combine(CarlaPluginSourcePath, "..", "..", "Binaries", "Linux");
+      AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libcarla-ros2-native.so"));
+      AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libfoonathan_memory-0.7.3.so"));
+      AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so"));
+      AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so"));
     }
 
     PublicDefinitions.AddRange(new string[]

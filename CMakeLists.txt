@@ -88,7 +88,10 @@ endif ()
 # Similar to configure_file, but also expands variables
 # that are set at generate time, like generator expressions.
 macro (carla_two_step_configure_file DESTINATION SOURCE)
-  carla_message ("Configuring file \"${DESTINATION}\"")
+  message (
+    STATUS
+    "Configuring file \"${DESTINATION}\""
+  )
   # Configure-time step; evaluate variables:
   configure_file (${SOURCE} ${DESTINATION})
   # Generate-time step; evaluate generator expressions:
@@ -147,6 +150,11 @@ endif ()
 if (BUILD_OSM_WORLD_RENDERER)
   add_subdirectory (osm-world-renderer)
 endif ()
+
+if (ENABLE_ROS2)
+  set (BOOST_INCLUDE_PATH ${CMAKE_BINARY_DIR}/_deps/boost-src/libs)
+  add_subdirectory (Ros2Native)
+endif()
 
 if (BUILD_PYTHON_API)
   add_subdirectory (PythonAPI)
