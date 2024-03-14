@@ -22,7 +22,7 @@ public class Carla :
   bool EnablePytorch = false;
 
   [CommandLine("-ros2")]
-  bool EnableRos2 = false;
+  bool EnableRos2 = "${ENABLE_ROS2}".Equals("ON");
 
   [CommandLine("-osm2odr")]
   bool EnableOSM2ODR = false;
@@ -151,7 +151,7 @@ public class Carla :
       };
     }
 
-    if (EnableRos2 || true)
+    if (EnableRos2)
     {
       PrivateDefinitions.Add("WITH_ROS2");
       PrivateDefinitions.Add("WITH_ROS2");

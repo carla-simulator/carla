@@ -228,7 +228,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
   } else {
     UE_LOG(LogCarla, Log, TEXT("ROS2: ROS2 enabled..."));
   }
-  #elif
+  #else
     UE_LOG(LogCarla, Log, TEXT("ROS2: ROS2 extension not build..."));
   #endif
 
