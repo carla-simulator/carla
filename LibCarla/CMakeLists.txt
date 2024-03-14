@@ -147,7 +147,11 @@ if (BUILD_CARLA_SERVER)
     ${CARLA_RTTI_DEFINITIONS}
     ${CARLA_ROS2_DEFINITIONS}
   )
-  
+
+  if (ENABLE_ROS2)
+    add_dependencies (carla-server carla-ros2-native)
+  endif ()
+
 endif ()
 
 
