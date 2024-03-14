@@ -143,6 +143,7 @@ set (
   wave
   url
   mysql
+  nowide
   stacktrace
   contract
   fiber

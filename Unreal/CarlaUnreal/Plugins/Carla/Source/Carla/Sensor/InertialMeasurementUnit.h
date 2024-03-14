@@ -63,6 +63,12 @@ public:
 
   const FVector &GetGyroscopeBias() const;
 
+  const carla::geom::Vector3D& GetAccelerometerValue() const;
+
+  const carla::geom::Vector3D& GetGyroscopeValue() const;
+
+  float GetCompassValue() const;
+
   /// Based on OpenDRIVE's lon and lat, North is in (0.0f, -1.0f, 0.0f)
   static const FVector CarlaNorthVector;
 
@@ -85,4 +91,13 @@ private:
   /// Used to compute the acceleration
   float PrevDeltaTime;
 
+  /// Accelerometer value calculated after each PostPhysTick
+  carla::geom::Vector3D AccelerometerValue;
+
+  /// Gyroscope value calculated after each PostPhysTick
+  carla::geom::Vector3D GyroscopeValue;
+
+  /// Magnetometer value calculated after each PostPhysTick
+  float CompassValue;
+	
 };

@@ -70,6 +70,11 @@ public:
     return Stream.IsStreamReady();
   }
 
+  bool AreClientsListening()
+  { 
+    return Stream.AreClientsListening();
+  }
+
   void Tick(const float DeltaTime) final;
 
   virtual void PrePhysTick(float DeltaSeconds) {}
@@ -102,6 +107,8 @@ public:
     check(Episode != nullptr);
     return *Episode;
   }
+
+  void SetSavingDataToDisk(bool bSavingData) { bSavingDataToDisk = bSavingData; }
 
 protected:
 
@@ -189,6 +196,9 @@ protected:
 
   UPROPERTY()
   bool bIsActive = false;
+
+  // Property used when testing with SensorSpawnerActor in editor.
+  bool bSavingDataToDisk = false;
 
 private:
 

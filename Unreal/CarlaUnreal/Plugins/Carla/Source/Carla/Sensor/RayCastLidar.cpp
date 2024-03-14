@@ -150,12 +150,26 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
       PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
 
     LidarData.ResetMemory(PointsPerChannel);
+#if WITH_EDITOR
+    if(bSavingDataToDisk)
+    {
+      PointCloudResetMemory();
+    }
+#endif
 
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
       for (auto& hit : RecordedHits[idxChannel]) {
         FDetection Detection = ComputeDetection(hit, SensorTransform);
         if (PostprocessDetection(Detection))
+        {
           LidarData.WritePointSync(Detection);
+#if WITH_EDITOR
+          if(bSavingDataToDisk)
+          {
+            PointCloudWritePointSync(Detection);
+          }
+#endif
+        }
         else
           PointsPerChannel[idxChannel]--;
       }
@@ -163,3 +177,17 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
 
     LidarData.WriteChannelCount(PointsPerChannel);
   }
+
+void ARayCastLidar::PointCloudResetMemory()
+{
+  PointCloudLidarData.Empty();
+  PointCloudLidarData.Reserve(static_cast<uint32_t>(std::accumulate(PointsPerChannel.begin(), PointsPerChannel.end(), 0)) * 4);
+}
+
+void ARayCastLidar::PointCloudWritePointSync(const FDetection& Detection)
+{
+  PointCloudLidarData.Emplace(Detection.point.x);
+  PointCloudLidarData.Emplace(Detection.point.y);
+  PointCloudLidarData.Emplace(Detection.point.z);
+  PointCloudLidarData.Emplace(Detection.intensity);
+}

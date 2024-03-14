@@ -18,6 +18,7 @@
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 #include <cmath>
+#include "PhysicsEngine/PhysicsObjectExternalInterface.h"
 
 namespace crp = carla::rpc;
 
@@ -125,6 +126,7 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
   ResetRecordedHits(ChannelCount, PointsToScanWithOneLaser);
   PreprocessRays(ChannelCount, PointsToScanWithOneLaser);
 
+  auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(GetWorld()->GetPhysicsScene());
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
     ParallelFor(ChannelCount, [&](int32 idxChannel) {
@@ -147,6 +149,7 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
       };
     });
   }
+  LockedPhysObject.Release();
 
   FTransform ActorTransf = GetTransform();
   ComputeAndSaveDetections(ActorTransf);
@@ -243,9 +246,8 @@ bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float Ho
 
   const auto Range = Description.Range;
   FVector EndTrace = Range * UKismetMathLibrary::GetForwardVector(ResultRot) + LidarBodyLoc;
-
-  // @CARLAUE5: WE CAN PROBABLY IMPROVE THIS
-  GetWorld()->LineTraceSingleByChannel(
+  
+  GetWorld()->ParallelLineTraceSingleByChannel(
     HitInfo,
     LidarBodyLoc,
     EndTrace,

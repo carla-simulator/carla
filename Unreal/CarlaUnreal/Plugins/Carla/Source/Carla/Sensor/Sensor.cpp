@@ -76,10 +76,7 @@ void ASensor::Tick(const float DeltaTime)
       bClientsListening = true;
     }
   }
-  if(!bClientsListening)
-  {
-    return;
-  }
+  
   ReadyToTick = true;
   PrePhysTick(DeltaTime);
 }
