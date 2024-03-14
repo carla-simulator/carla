@@ -14,7 +14,10 @@ set (CARLA_DEPENDENCIES_PENDING)
 
 macro (carla_dependency_add NAME TAG ARCHIVE_URL GIT_URL)
   if (PREFER_CLONE)
-    carla_message ("Cloning ${NAME}...")
+    message (
+      STATUS
+      "Cloning ${NAME}..."
+    )
     FetchContent_Declare(
       ${NAME}
       GIT_REPOSITORY ${GIT_URL}
@@ -27,7 +30,10 @@ macro (carla_dependency_add NAME TAG ARCHIVE_URL GIT_URL)
     )
     list (APPEND CARLA_DEPENDENCIES_PENDING ${NAME})
   else ()
-    carla_message ("Downloading ${NAME}...")
+    message (
+      STATUS
+      "Downloading ${NAME}..."
+    )
     FetchContent_Declare(
       ${NAME}
       URL ${ARCHIVE_URL}

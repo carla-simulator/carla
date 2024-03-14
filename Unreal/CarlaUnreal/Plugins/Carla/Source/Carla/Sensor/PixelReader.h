@@ -39,34 +39,34 @@ class FPixelReader
 {
 public:
 
-  using Payload = std::function<void(void*, uint32, uint32, uint32)>;
+  using Payload = std::function<void(void *, uint32, uint32, uint32)>;
 
   /// Copy the pixels in @a RenderTarget into @a BitMap.
   ///
   /// @pre To be called from game-thread.
   static bool WritePixelsToArray(
-    UTextureRenderTarget2D& RenderTarget,
-    TArray<FColor>& BitMap);
+      UTextureRenderTarget2D &RenderTarget,
+      TArray<FColor> &BitMap);
 
   /// Dump the pixels in @a RenderTarget.
   ///
   /// @pre To be called from game-thread.
   static TUniquePtr<TImagePixelData<FColor>> DumpPixels(
-    UTextureRenderTarget2D& RenderTarget);
+      UTextureRenderTarget2D &RenderTarget);
 
   /// Asynchronously save the pixels in @a RenderTarget to disk.
   ///
   /// @pre To be called from game-thread.
   static TFuture<bool> SavePixelsToDisk(
-    UTextureRenderTarget2D& RenderTarget,
-    const FString& FilePath);
+      UTextureRenderTarget2D &RenderTarget,
+      const FString &FilePath);
 
   /// Asynchronously save the pixels in @a PixelData to disk.
   ///
   /// @pre To be called from game-thread.
   static TFuture<bool> SavePixelsToDisk(
-    TUniquePtr<TImagePixelData<FColor>> PixelData,
-    const FString& FilePath);
+      TUniquePtr<TImagePixelData<FColor>> PixelData,
+      const FString &FilePath);
 
   /// Convenience function to enqueue a render command that sends the pixels
   /// down the @a Sensor's data stream. It expects a sensor derived from
@@ -77,16 +77,16 @@ public:
   ///
   /// @pre To be called from game-thread.
   template <typename TSensor, typename TPixel>
-  static void SendPixelsInRenderThread(TSensor& Sensor, bool use16BitFormat = false, std::function<TArray<TPixel>(void*, uint32)> Conversor = {});
+  static void SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat = false, std::function<TArray<TPixel>(void *, uint32)> Conversor = {});
 
   /// Copy the pixels in @a RenderTarget into @a Buffer.
   ///
   /// @pre To be called from render-thread.
   static void WritePixelsToBuffer(
-    UTextureRenderTarget2D& RenderTarget,
-    uint32 Offset,
-    FRHICommandListImmediate& InRHICmdList,
-    FPixelReader::Payload FuncForSending);
+      const UTextureRenderTarget2D &RenderTarget,
+      uint32 Offset,
+      FRHICommandListImmediate &InRHICmdList,
+      FPixelReader::Payload FuncForSending);
 
 };
 
@@ -95,7 +95,7 @@ public:
 // =============================================================================
 
 template <typename TSensor, typename TPixel>
-void FPixelReader::SendPixelsInRenderThread(TSensor& Sensor, bool use16BitFormat, std::function<TArray<TPixel>(void*, uint32)> Conversor)
+void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat, std::function<TArray<TPixel>(void *, uint32)> Conversor)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FPixelReader::SendPixelsInRenderThread);
   check(Sensor.CaptureRenderTarget != nullptr);
@@ -107,134 +107,138 @@ void FPixelReader::SendPixelsInRenderThread(TSensor& Sensor, bool use16BitFormat
 
   /// Blocks until the render thread has finished all it's tasks.
   Sensor.EnqueueRenderSceneImmediate();
-  FlushRenderingCommands();
 
   // Enqueue a command in the render-thread that will write the image buffer to
   // the data stream. The stream is created in the capture thus executed in the
   // game-thread.
   ENQUEUE_RENDER_COMMAND(FWritePixels_SendPixelsInRenderThread)
-    (
-      [&Sensor, use16BitFormat, Conversor = std::move(Conversor)](auto& InRHICmdList) mutable
+  (
+    [&Sensor, use16BitFormat, Conversor = std::move(Conversor)](auto &InRHICmdList) mutable
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("FWritePixels_SendPixelsInRenderThread");
+
+      /// @todo Can we make sure the sensor is not going to be destroyed?
+      if (!Sensor.IsPendingKill())
       {
-        TRACE_CPUPROFILER_EVENT_SCOPE_STR("FWritePixels_SendPixelsInRenderThread");
+        FPixelReader::Payload FuncForSending =
+          [&Sensor, Frame = FCarlaEngine::GetFrameCounter(), Conversor = std::move(Conversor)]
+          (void *LockedData, uint32 Size, uint32 Offset, uint32 ExpectedRowBytes)
+          {
+            if (Sensor.IsPendingKill()) return;
 
-        /// @todo Can we make sure the sensor is not going to be destroyed?
-        if (!Sensor.IsPendingKill())
-        {
-          FPixelReader::Payload FuncForSending =
-            [&Sensor, Frame = FCarlaEngine::GetFrameCounter(), Conversor = std::move(Conversor)](void* LockedData, uint32 Size, uint32 Offset, uint32 ExpectedRowBytes)
+            TArray<TPixel> Converted;
+
+            // optional conversion of data
+            if (Conversor)
             {
-              if (Sensor.IsPendingKill()) return;
+              TRACE_CPUPROFILER_EVENT_SCOPE_STR("Data conversion");
+              Converted = Conversor(LockedData, Size);
+              LockedData = reinterpret_cast<void *>(Converted.GetData());
+              Size = Converted.Num() * Converted.GetTypeSize();
+            }
 
-              TArray<TPixel> Converted;
+            auto Stream = Sensor.GetDataStream(Sensor);
+            Stream.SetFrameNumber(Frame);
+            auto Buffer = Stream.PopBufferFromPool();
 
-              // optional conversion of data
-              if (Conversor)
-              {
-                TRACE_CPUPROFILER_EVENT_SCOPE_STR("Data conversion");
-                Converted = Conversor(LockedData, Size);
-                LockedData = reinterpret_cast<void*>(Converted.GetData());
-                Size = Converted.Num() * Converted.GetTypeSize();
-              }
-
-              auto Stream = Sensor.GetDataStream(Sensor);
-              Stream.SetFrameNumber(Frame);
-              auto Buffer = Stream.PopBufferFromPool();
-
-              uint32 CurrentRowBytes = ExpectedRowBytes;
+            uint32 CurrentRowBytes = ExpectedRowBytes;
 
 #ifdef _WIN32
-              // DirectX uses additional bytes to align each row to 256 boundry,
-              // so we need to remove that extra data
-              if (IsD3DPlatform(GMaxRHIShaderPlatform))
+            // DirectX uses additional bytes to align each row to 256 boundry,
+            // so we need to remove that extra data when sending to the client
+            if (IsD3DPlatform(GMaxRHIShaderPlatform) && Sensor.AreClientsListening())
+            {
+              CurrentRowBytes = Align(ExpectedRowBytes, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+              if (ExpectedRowBytes != CurrentRowBytes)
               {
-                CurrentRowBytes = Align(ExpectedRowBytes, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
-                if (ExpectedRowBytes != CurrentRowBytes)
+                TRACE_CPUPROFILER_EVENT_SCOPE_STR("Buffer Copy (windows, row by row)");
+                Buffer.reset(Offset + Size);
+                auto DstRow = Buffer.begin() + Offset;
+                const uint8 *SrcRow = reinterpret_cast<uint8 *>(LockedData);
+                uint32 i = 0;
+                while (i < Size)
                 {
-                  TRACE_CPUPROFILER_EVENT_SCOPE_STR("Buffer Copy (windows, row by row)");
-                  Buffer.reset(Offset + Size);
-                  auto DstRow = Buffer.begin() + Offset;
-                  const uint8* SrcRow = reinterpret_cast<uint8*>(LockedData);
-                  uint32 i = 0;
-                  while (i < Size)
-                  {
-                    FMemory::Memcpy(DstRow, SrcRow, ExpectedRowBytes);
-                    DstRow += ExpectedRowBytes;
-                    SrcRow += CurrentRowBytes;
-                    i += ExpectedRowBytes;
-                  }
+                  FMemory::Memcpy(DstRow, SrcRow, ExpectedRowBytes);
+                  DstRow += ExpectedRowBytes;
+                  SrcRow += CurrentRowBytes;
+                  i += ExpectedRowBytes;
                 }
               }
+            }
 #endif // _WIN32
 
-              if (ExpectedRowBytes == CurrentRowBytes)
-              {
-                check(ExpectedRowBytes == CurrentRowBytes);
-                TRACE_CPUPROFILER_EVENT_SCOPE_STR("Buffer Copy");
-                Buffer.copy_from(Offset, boost::asio::buffer(LockedData, Size));
-              }
+            if (ExpectedRowBytes == CurrentRowBytes)
+            {
+              check(ExpectedRowBytes == CurrentRowBytes);
+              TRACE_CPUPROFILER_EVENT_SCOPE_STR("Buffer Copy");
+              Buffer.copy_from(Offset, boost::asio::buffer(LockedData, Size));
+            }
 
+            {
+              // send
+              TRACE_CPUPROFILER_EVENT_SCOPE_STR("Sending buffer");
+              if(Buffer.data())
               {
-                // send
-                TRACE_CPUPROFILER_EVENT_SCOPE_STR("Sending buffer");
-                if (Buffer.data())
+                // serialize data
+                carla::Buffer BufferReady(std::move(carla::sensor::SensorRegistry::Serialize(Sensor, std::move(Buffer))));
+                carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(BufferReady));
+
+                // ROS2
+                #if defined(WITH_ROS2)
+                auto ROS2 = carla::ros2::ROS2::GetInstance();
+                if (ROS2->IsEnabled())
                 {
-                  // serialize data
-                  carla::Buffer BufferReady(std::move(carla::sensor::SensorRegistry::Serialize(Sensor, std::move(Buffer))));
-                  carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(BufferReady));
-
-                  // ROS2
-#if defined(WITH_ROS2)
-                  auto ROS2 = carla::ros2::ROS2::GetInstance();
-                  if (ROS2->IsEnabled())
+                  TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send PixelReader");
+                  auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
+                  auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, StreamId, BufView]()
                   {
-                    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send PixelReader");
-                    auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
-                    auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, StreamId, BufView]()
-                      {
-                        // get resolution of camera
-                        int W = -1, H = -1;
-                        float Fov = -1.0f;
-                        auto WidthOpt = Sensor.GetAttribute("image_size_x");
-                        if (WidthOpt.has_value())
-                          W = FCString::Atoi(*WidthOpt->Value);
-                        auto HeightOpt = Sensor.GetAttribute("image_size_y");
-                        if (HeightOpt.has_value())
-                          H = FCString::Atoi(*HeightOpt->Value);
-                        auto FovOpt = Sensor.GetAttribute("fov");
-                        if (FovOpt.has_value())
-                          Fov = FCString::Atof(*FovOpt->Value);
-                        // send data to ROS2
-                        AActor* ParentActor = Sensor.GetAttachParentActor();
-                        if (ParentActor)
-                        {
-                          FTransform LocalTransformRelativeToParent = Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-                          ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, W, H, Fov, BufView, &Sensor);
-                        }
-                        else
-                        {
-                          ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), W, H, Fov, BufView, &Sensor);
-                        }
-                      });
-                  }
-#endif
+                    // get resolution of camera
+                    int W = -1, H = -1;
+                    float Fov = -1.0f;
+                    auto WidthOpt = Sensor.GetAttribute("image_size_x");
+                    if (WidthOpt.has_value())
+                      W = FCString::Atoi(*WidthOpt->Value);
+                    auto HeightOpt = Sensor.GetAttribute("image_size_y");
+                    if (HeightOpt.has_value())
+                      H = FCString::Atoi(*HeightOpt->Value);
+                    auto FovOpt = Sensor.GetAttribute("fov");
+                    if (FovOpt.has_value())
+                      Fov = FCString::Atof(*FovOpt->Value);
+                    // send data to ROS2
+                    AActor* ParentActor = Sensor.GetAttachParentActor();
+                    if (ParentActor)
+                    {
+                      FTransform LocalTransformRelativeToParent = Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
+                      ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, W, H, Fov, BufView, &Sensor);
+                    }
+                    else
+                    {
+                      ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), W, H, Fov, BufView, &Sensor);
+                    }
+                  });
+                }
+                #endif
 
+                if (Sensor.AreClientsListening()) 
+                {
                   // network
                   SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
                   TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
                   Stream.Send(Sensor, BufView);
                 }
               }
-            };
+            }
+          };
 
           WritePixelsToBuffer(
-            *Sensor.CaptureRenderTarget,
-            carla::sensor::SensorRegistry::get<TSensor*>::type::header_offset,
-            InRHICmdList,
-            std::move(FuncForSending));
+              *Sensor.CaptureRenderTarget,
+              carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
+              InRHICmdList,
+              std::move(FuncForSending));
+          
         }
       }
-  );
+    );
 
   // Blocks until the render thread has finished all it's tasks
   Sensor.WaitForRenderThreadToFinish();

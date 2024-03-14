@@ -70,6 +70,11 @@ public:
     return Stream.IsStreamReady();
   }
 
+  bool AreClientsListening()
+  { 
+    return Stream.AreClientsListening();
+  }
+
   void Tick(const float DeltaTime) final;
 
   virtual void PrePhysTick(float DeltaSeconds) {}
@@ -102,6 +107,8 @@ public:
     check(Episode != nullptr);
     return *Episode;
   }
+
+  void SetSavingDataToDisk(bool bSavingData) { bSavingDataToDisk = bSavingData; }
 
 protected:
 
@@ -148,7 +155,7 @@ protected:
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send PixelReader");
       auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
-      auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, StreamId, BufView]()
+      auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, StreamId, BufferView]()
       {
         // get resolution of camera
         int W = -1, H = -1;
@@ -167,11 +174,11 @@ protected:
         if (ParentActor)
         {
           FTransform LocalTransformRelativeToParent = Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-          ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, W, H, Fov, BufView, &Sensor);
+          ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, W, H, Fov, BufferView, &Sensor);
         }
         else
         {
-          ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), W, H, Fov, BufView, &Sensor);
+          ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), W, H, Fov, BufferView, &Sensor);
         }
       });
     }
@@ -189,6 +196,9 @@ protected:
 
   UPROPERTY()
   bool bIsActive = false;
+
+  // Property used when testing with SensorSpawnerActor in editor.
+  bool bSavingDataToDisk = false;
 
 private:
 

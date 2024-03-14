@@ -23,6 +23,10 @@ set (
   ${CARLA_UE_PATH}/CarlaUnreal.uproject
 )
 
+if (ENABLE_ROS2)
+  set (LAUNCH_ARGS ${LAUNCH_ARGS} --ros2)
+endif()
+
 if (WIN32)
   set (
     CARLA_UE_GENERATE_PROJECT_FILES_COMMAND
@@ -194,8 +198,10 @@ if (BUILD_PYTHON_API)
   )
 endif ()
 
+
+
 add_custom_target (
-  launch
+  launch-only
   COMMENT
     "Launching Carla Unreal..."
   COMMAND
@@ -207,8 +213,15 @@ add_custom_target (
   VERBATIM
 )
 
+
+
+add_custom_target (
+  launch
+)
+
 add_dependencies (
   launch
+  launch-only
   ${LAUNCH_DEPENDENCIES}
 )
 

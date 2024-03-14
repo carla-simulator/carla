@@ -220,9 +220,16 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
   #if defined(WITH_ROS2)
   if (Settings.ROS2)
   {
+    UE_LOG(LogCarla, Log, TEXT("ROS2: Creating ROS2 Instance..."));
     auto ROS2 = carla::ros2::ROS2::GetInstance();
+    UE_LOG(LogCarla, Log, TEXT("ROS2: Enabling ROS2..."));
     ROS2->Enable(true);
+    UE_LOG(LogCarla, Log, TEXT("ROS2: ROS2 enabled..."));
+  } else {
+    UE_LOG(LogCarla, Log, TEXT("ROS2: ROS2 enabled..."));
   }
+  #else
+    UE_LOG(LogCarla, Log, TEXT("ROS2: ROS2 extension not build..."));
   #endif
 
   bMapChanged = true;
