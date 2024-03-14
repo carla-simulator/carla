@@ -83,7 +83,7 @@ public:
   ///
   /// @pre To be called from render-thread.
   static void WritePixelsToBuffer(
-      const UTextureRenderTarget2D &RenderTarget,
+      UTextureRenderTarget2D &RenderTarget,
       uint32 Offset,
       FRHICommandListImmediate &InRHICmdList,
       FPixelReader::Payload FuncForSending);

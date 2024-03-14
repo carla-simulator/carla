@@ -19,6 +19,16 @@ set (
 )
 
 set (
+  CARLA_UE_CARLA_PATH
+  ${CARLA_UE_PLUGINS_PATH}/Carla
+)
+
+set (
+  CARLA_UE_CARLA_TOOLS_PATH
+  ${CARLA_UE_PLUGINS_PATH}/CarlaTools
+)
+
+set (
   CARLA_UE_PROJECT_PATH
   ${CARLA_UE_PATH}/CarlaUnreal.uproject
 )
@@ -35,7 +45,6 @@ if (WIN32)
     -CMakefile
     -game
     -engine
-    -progress
   )
 else ()
   set (
@@ -45,7 +54,6 @@ else ()
     -CMakefile
     -game
     -engine
-    -progress
   )
 endif ()
 
@@ -82,7 +90,47 @@ set (
   Eigen3::Eigen
   zlibstatic
   png_static
+  rpc
 )
+
+set (
+  CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH
+  ${CMAKE_CURRENT_BINARY_DIR}/Includes.inc
+)
+
+set (
+  CARLA_UNREAL_INCLUDE_PATHS
+  ${sqlite3_SOURCE_DIR}
+)
+
+foreach (UE_DEP ${UE_DEPENDENCIES})
+  list (
+    APPEND
+    CARLA_UNREAL_INCLUDE_PATHS
+    "$<TARGET_PROPERTY:${UE_DEP},INTERFACE_INCLUDE_DIRECTORIES>"
+  )
+endforeach ()
+
+set (
+  CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH
+  ${CMAKE_CURRENT_BINARY_DIR}/Libraries.inc
+)
+
+set (
+  CARLA_UNREAL_LIBRARIES
+  $<TARGET_FILE:libsqlite3>
+)
+
+foreach (UE_DEP ${UE_DEPENDENCIES})
+  get_target_property (UE_DEP_TYPE ${UE_DEP} TYPE)
+  if (NOT ("${UE_DEP_TYPE}" STREQUAL "INTERFACE_LIBRARY"))
+    list (
+      APPEND
+      CARLA_UNREAL_LIBRARIES
+      "$<TARGET_FILE:${UE_DEP}>"
+    )
+  endif ()
+endforeach ()
 
 add_dependencies (
   carla-unreal-generate-project-files
@@ -93,10 +141,13 @@ add_dependencies (
 
 if (CMAKE_TOOLCHAIN_FILE)
   cmake_path (
-    ABSOLUTE_PATH CMAKE_TOOLCHAIN_FILE
-    BASE_DIRECTORY ${CARLA_WORKSPACE_PATH}
+    ABSOLUTE_PATH
+      CMAKE_TOOLCHAIN_FILE
+    BASE_DIRECTORY
+      ${CARLA_WORKSPACE_PATH}
     NORMALIZE
-    OUTPUT_VARIABLE TOOLCHAIN_FILE
+    OUTPUT_VARIABLE
+      TOOLCHAIN_FILE
   )
   set (
     TOOLCHAIN_FILE_OPTION
@@ -110,17 +161,23 @@ endif ()
 
 add_custom_command (
   OUTPUT
-    ${CMAKE_CURRENT_BINARY_DIR}/carla-unreal-configure.stamp
+    ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
+    ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
   COMMENT
     "Configuring Carla Unreal..."
+  COMMAND ${CMAKE_COMMAND} -E rm -f ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
+  COMMAND ${CMAKE_COMMAND} -E echo "${CARLA_UNREAL_INCLUDE_PATHS}" >> ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
+  COMMAND ${CMAKE_COMMAND} -E copy ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Includes.def
+  COMMAND ${CMAKE_COMMAND} -E copy ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Includes.def
+  COMMAND ${CMAKE_COMMAND} -E rm -f ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
+  COMMAND ${CMAKE_COMMAND} -E echo "${CARLA_UNREAL_LIBRARIES}" >> ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
+  COMMAND ${CMAKE_COMMAND} -E copy ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Libraries.def
+  COMMAND ${CMAKE_COMMAND} -E copy ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Libraries.def
   COMMAND
     ${CMAKE_COMMAND}
       -S ${CARLA_UE_PATH}
       -B ${CMAKE_CURRENT_BINARY_DIR}
       ${TOOLCHAIN_FILE_OPTION}
-  COMMAND
-    ${CMAKE_COMMAND}
-      -E touch carla-unreal-configure.stamp
   USES_TERMINAL
   VERBATIM
 )
@@ -128,7 +185,8 @@ add_custom_command (
 add_custom_target (
   carla-unreal-configure
   DEPENDS
-    carla-unreal-configure.stamp
+    ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
+    ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
 )
 
 add_dependencies (
@@ -217,11 +275,19 @@ add_custom_target (
 
 add_custom_target (
   launch
+  COMMENT
+    "Launching Carla Unreal..."
+  COMMAND
+    ${UNREAL_EDITOR_PATH}
+      ${CARLA_UE_PROJECT_PATH}
+      -${CARLA_UNREAL_RHI}
+      ${LAUNCH_ARGS}
+  USES_TERMINAL
+  VERBATIM
 )
 
 add_dependencies (
   launch
-  launch-only
   ${LAUNCH_DEPENDENCIES}
 )
 
@@ -230,14 +296,4 @@ add_dependencies (
 file (
   MAKE_DIRECTORY
   ${CARLA_UE_PATH}/Content/Carla/ExportedMaps
-)
-
-carla_two_step_configure_file (
-  ${CARLA_UE_PLUGINS_PATH}/Carla/Source/Carla/Carla.Build.cs
-  ${CARLA_UE_PLUGINS_PATH}/Carla/Source/Carla/Carla.Build.cs.in
-)
-
-carla_two_step_configure_file (
-  ${CARLA_UE_PLUGINS_PATH}/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs
-  ${CARLA_UE_PLUGINS_PATH}/CarlaTools/Source/CarlaTools/CarlaTools.Build.cs.in
 )
