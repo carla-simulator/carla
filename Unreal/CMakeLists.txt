@@ -198,8 +198,10 @@ if (BUILD_PYTHON_API)
   )
 endif ()
 
+
+
 add_custom_target (
-  launch
+  launch-only
   COMMENT
     "Launching Carla Unreal..."
   COMMAND
@@ -211,8 +213,15 @@ add_custom_target (
   VERBATIM
 )
 
+
+
+add_custom_target (
+  launch
+)
+
 add_dependencies (
   launch
+  launch-only
   ${LAUNCH_DEPENDENCIES}
 )
 
