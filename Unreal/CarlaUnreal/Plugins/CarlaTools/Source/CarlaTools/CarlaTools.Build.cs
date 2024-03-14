@@ -49,6 +49,7 @@ public class CarlaTools :
     PublicDependencyModuleNames.AddRange(new string[]
     {
       "Core",
+      "LevelEditor",
       "ProceduralMeshComponent",
       "MeshDescription",
       "RawMesh",
