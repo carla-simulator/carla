@@ -34,7 +34,7 @@ def get_libcarla_extensions():
     if os.name == "posix":
         import distro
 
-        supported = ["ubuntu", "debian", "deepin"]
+        supported_dists = ["ubuntu", "debian", "deepin"]
         linux_distro = distro.id().lower()
         if linux_distro in supported:
             pwd = os.path.dirname(os.path.realpath(__file__))
