@@ -34,8 +34,9 @@ def get_libcarla_extensions():
     if os.name == "posix":
         import distro
 
-        linux_distro = distro.linux_distribution()[0]
-        if linux_distro.lower() in ["ubuntu", "debian", "deepin"]:
+        supported = ["ubuntu", "debian", "deepin"]
+        linux_distro = distro.id().lower()
+        if linux_distro in supported:
             pwd = os.path.dirname(os.path.realpath(__file__))
             pylib = "libboost_python%d%d.a" % (sys.version_info.major,
                                                sys.version_info.minor)
@@ -101,7 +102,7 @@ def get_libcarla_extensions():
             # extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
             extra_link_args += ['-lstdc++']
         else:
-            raise NotImplementedError
+            raise NotImplementedError(linux_distro + " not in supported posix platforms: " + str(supported_dists))
     elif os.name == "nt":
         pwd = os.path.dirname(os.path.realpath(__file__))
         pylib = 'libboost_python%d%d' % (
