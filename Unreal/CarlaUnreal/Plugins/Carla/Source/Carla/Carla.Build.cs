@@ -5,7 +5,6 @@ using System.IO;
 using UnrealBuildTool;
 using System.Diagnostics;
 using EpicGames.Core;
-using System.IO;
 
 public class Carla :
   ModuleRules
@@ -23,7 +22,7 @@ public class Carla :
   bool EnablePytorch = false;
 
   [CommandLine("-ros2")]
-  bool EnableRos2 = "${ENABLE_ROS2}".Equals("ON");
+  bool EnableRos2 = false;
 
   [CommandLine("-osm2odr")]
   bool EnableOSM2ODR = false;
@@ -41,6 +40,19 @@ public class Carla :
       Console.WriteLine("Dynamic Library Added: " + library);
     }
 
+    foreach (var option in File.ReadAllText(Path.Combine(PluginDirectory, "Options.def")).Split(';'))
+    {
+      string optionTrimmed = option.Trim();
+      if (optionTrimmed.Equals("ROS2"))
+      {
+        EnableRos2 = true;
+      }
+      else if(optionTrimmed.Equals("OSM2ODR"))
+      {
+        EnableOSM2ODR = true;
+      }
+    }
+
     bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
 
     PrivatePCHHeaderFile = "Carla.h";
@@ -49,7 +61,7 @@ public class Carla :
     Action<bool, string, string> TestOptionalFeature = (enable, name, definition) =>
     {
       if (enable)
-        PrivateDefinitions.Add(name);
+        PrivateDefinitions.Add(definition);
       Console.WriteLine(string.Format("{0} is {1}.", name, enable ? "enabled" : "disabled"));
     };
     
@@ -140,8 +152,7 @@ public class Carla :
 
     if (EnableRos2)
     {
-      PrivateDefinitions.Add("WITH_ROS2");
-      PrivateDefinitions.Add("WITH_ROS2");
+      TestOptionalFeature(EnableRos2, "Ros2 support", "WITH_ROS2");
 
       string CarlaPluginSourcePath = Path.GetFullPath(ModuleDirectory);
       string CarlaPluginBinariesLinuxPath = Path.Combine(CarlaPluginSourcePath, "..", "..", "Binaries", "Linux");
