@@ -1208,7 +1208,7 @@ void FCarlaServer::FPimpl::BindActions()
     if (!CarlaActor)
     {
       return RespondError(
-          "get_actor_bone_world_transform",
+          "get_actor_bone_world_transforms",
           ECarlaServerResponse::ActorNotFound,
           " Actor Id: " + FString::FromInt(ActorId));
     }
@@ -1220,7 +1220,7 @@ void FCarlaServer::FPimpl::BindActions()
       if(!SkinnedMeshComponents[0])
       {
         return RespondError(
-            "get_actor_bone_relative_transforms",
+            "get_actor_bone_world_transforms",
             ECarlaServerResponse::ComponentNotFound,
             " Component Name: SkinnedMeshComponent ");
       }
@@ -1249,7 +1249,7 @@ void FCarlaServer::FPimpl::BindActions()
     if (!CarlaActor)
     {
       return RespondError(
-          "get_actor_bone_relative_transform",
+          "get_actor_bone_relative_transforms",
           ECarlaServerResponse::ActorNotFound,
           " Actor Id: " + FString::FromInt(ActorId));
     }
@@ -1315,7 +1315,7 @@ void FCarlaServer::FPimpl::BindActions()
     if (!CarlaActor)
     {
       return RespondError(
-          "get_actor_component_relative_transform",
+          "get_actor_bone_names",
           ECarlaServerResponse::ActorNotFound,
           " Actor Id: " + FString::FromInt(ActorId));
     }
@@ -1325,7 +1325,7 @@ void FCarlaServer::FPimpl::BindActions()
       if(!SkinnedMeshComponent)   
       {
         return RespondError(
-            "get_actor_bone_relative_transforms",
+            "get_actor_bone_names",
             ECarlaServerResponse::ComponentNotFound,
             " Component Name: SkinnedMeshComponent ");    
       }  
@@ -1353,7 +1353,7 @@ void FCarlaServer::FPimpl::BindActions()
     if (!CarlaActor)
     {
       return RespondError(
-          "get_actor_component_relative_transform",
+          "get_actor_socket_world_transforms",
           ECarlaServerResponse::ActorNotFound,
           " Actor Id: " + FString::FromInt(ActorId));
     }
@@ -1386,7 +1386,7 @@ void FCarlaServer::FPimpl::BindActions()
     if (!CarlaActor)
     {
       return RespondError(
-          "get_actor_component_relative_transform",
+          "get_actor_socket_relative_transforms",
           ECarlaServerResponse::ActorNotFound,
           " Actor Id: " + FString::FromInt(ActorId));
     }
@@ -1408,6 +1408,41 @@ void FCarlaServer::FPimpl::BindActions()
         }
       }
       return MakeVectorFromTArray<cr::Transform>(SocketRelativeTransforms);
+    }
+  };
+
+  BIND_SYNC(get_actor_socket_names) << [this](
+      cr::ActorId ActorId) -> R<std::vector<std::string>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_socket_names",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<FName> SocketNames;
+      std::vector<std::string> StringSocketNames;
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);     
+      for(UActorComponent* ActorComponent : Components)
+      {
+        if(USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent))
+        {
+          SocketNames = SceneComponent->GetAllSocketNames();    
+          for (const FName& Name : SocketNames)
+          {
+            FString FSocketName = Name.ToString();
+            std::string StringSocketName = TCHAR_TO_UTF8(*FSocketName);
+            StringSocketNames.push_back(StringSocketName);
+          }              
+        }
+      }
+      return StringSocketNames;      
     }
   };
 
