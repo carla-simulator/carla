@@ -14,6 +14,8 @@
 #include "carla/ros2/ROS2.h"
 #include <compiler/enable-ue4-macros.h>
 
+#include "PhysicsEngine/PhysicsObjectExternalInterface.h"
+
 FActorDefinition ARadar::GetSensorDefinition()
 {
   return UActorBlueprintFunctionLibrary::MakeRadarDefinition();
@@ -135,9 +137,8 @@ void ARadar::SendLineTraces(float DeltaTime)
     Rays[i].Hitted = false;
   }
 
-#if 0 // @CARLAUE5
-  FCriticalSection Mutex;
-  GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
+  FCriticalSection Mutex; // ToDo: Investigate
+  auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(GetWorld()->GetPhysicsScene());
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
     ParallelFor(NumPoints, [&](int32 idx) {
@@ -181,20 +182,19 @@ void ARadar::SendLineTraces(float DeltaTime)
       }
     });
   }
-  GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
+  LockedPhysObject.Release();
 
   // Write the detections in the output structure
   for (auto& ray : Rays) {
     if (ray.Hitted) {
       RadarData.WriteDetection({
         ray.RelativeVelocity,
-        ray.AzimuthAndElevation.X,
-        ray.AzimuthAndElevation.Y,
+        UKismetMathLibrary::Conv_DoubleToFloat(ray.AzimuthAndElevation.X),
+        UKismetMathLibrary::Conv_DoubleToFloat(ray.AzimuthAndElevation.Y),
         ray.Distance
       });
     }
   }
-#endif
 }
 
 float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation)

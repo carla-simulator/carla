@@ -107,6 +107,11 @@ void ASensorSpawnerActor::StopRecordingSensorData()
   }
 }
 
+void ASensorSpawnerActor::ToggleRadarVisibility()
+{
+  bRadarVisibility = !bRadarVisibility;
+}
+
 const FActorDefinition* ASensorSpawnerActor::GetActorDefinitionByClass(const TSubclassOf<AActor> ActorClass) const
 {
   if(!ActorClass || !IsValid(CarlaEpisode))
@@ -215,6 +220,11 @@ void ASensorSpawnerActor::Tick(float DeltaSeconds)
   {
     SaveSensorData(DeltaSeconds);
   }
+
+  if(bRadarVisibility)
+  {
+    DrawRadarSensorPoints();
+  }
 }
 
 void ASensorSpawnerActor::SaveSensorData(float DeltaSeconds)
@@ -253,6 +263,13 @@ void ASensorSpawnerActor::SaveSensorData(float DeltaSeconds)
       const FString FilePath = FPaths::Combine(SaveImagePath, LidarSensor->GetName(), FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp()) + "-Frame_" + FrameNumber + ".ply");
       UJsonFileManagerLibrary::SaveLidarDataToPly(FilePath, LidarSensor->GetTestPointCloud(), 4); 
     }
+
+    if(const ARadar* RadarSensor = Cast<ARadar>(CurrentSensor))
+    {
+      const FString FilePath = FPaths::Combine(SaveImagePath, RadarSensor->GetName(), FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp()) + "-Frame_" + FrameNumber + ".ply");
+      // ToDo: Jose - Get Radar detections and send to Save method.
+      //UJsonFileManagerLibrary::SaveRadarDataToJson(FilePath, DataDetections, FrameNumber); 
+    }
   }
 }
 
@@ -267,6 +284,17 @@ void ASensorSpawnerActor::AttachSensorToActor(AActor* SensorActor)
       SensorActor->AttachToActor(SensorAttachParent, FAttachmentTransformRules::KeepWorldTransform);
       SensorActor->SetOwner(SensorAttachParent);
       SensorActor->SetActorRelativeTransform(FTransform::Identity);
+    }
+  }
+}
+
+void ASensorSpawnerActor::DrawRadarSensorPoints() const
+{
+  for(const ASensor* CurrentSensor : SpawnedSensorsArray)
+  {
+    if(const ARadar* RadarSensor = Cast<ARadar>(CurrentSensor))
+    {
+      // ToDo: Jose - Get Radar sensor data and draw in screen in the same way that is done in manual_control.py
     }
   }
 }

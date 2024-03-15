@@ -37,6 +37,9 @@ public:
 
   static bool SaveGnssDataToJson(const FString& JsonFilePath, double Altitude, double Latitude, double Longitude, const FString& FrameNumber);
 
+  // ToDo: Modify the parameter and add a reference to an FVector of a struct that contains the Velocity, Azimuth, Altitude and Depth.
+  static bool SaveRadarDataToJson(const FString& JsonFilePath, float Velocity, float Azimuth, float Altitude, float Depth, const FString& FrameNumber);
+
   static bool SaveLidarDataToPly(const FString& FilePath, const TArray<float>& PointArray, int ArrayElementSize);
 
 

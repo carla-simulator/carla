@@ -168,6 +168,23 @@ bool UJsonFileManagerLibrary::SaveGnssDataToJson(const FString& JsonFilePath, do
   return bWriteSuccess;
 }
 
+bool UJsonFileManagerLibrary::SaveRadarDataToJson(const FString& JsonFilePath, float Velocity, float Azimuth,
+  float Altitude, float Depth, const FString& FrameNumber)
+{
+  TArray<TSharedPtr<FJsonValue>> ArrayValue;
+  TSharedPtr<FJsonObject> JsonDataObject = GetSensorJsonData(JsonFilePath, ArrayValue);
+  
+  const TSharedPtr<FJsonObject> RadarDataObject = MakeShared<FJsonObject>();
+  RadarDataObject->SetStringField(TEXT("Frame"), FrameNumber);
+  RadarDataObject->SetStringField(TEXT("Velocity"), FString::SanitizeFloat(Velocity));
+  RadarDataObject->SetStringField( TEXT("Azimuth"), FString::SanitizeFloat(Azimuth));
+  RadarDataObject->SetStringField(TEXT("Altitude"), FString::SanitizeFloat(Altitude));
+  RadarDataObject->SetStringField(TEXT("Depth"), FString::SanitizeFloat(Depth));
+
+  const bool bWriteSuccess = SaveSensorJsonData(JsonFilePath, RadarDataObject, JsonDataObject, ArrayValue);
+  return bWriteSuccess;
+}
+
 
 bool UJsonFileManagerLibrary::SaveLidarDataToPly(const FString& FilePath, const TArray<float>& PointArray, int ArrayElementSize)
 {
