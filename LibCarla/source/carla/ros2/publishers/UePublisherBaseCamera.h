@@ -140,6 +140,7 @@ protected:
         return "mono8";
       case UePublisherBaseCamera::Encoding::MONO16:
         return "mono16";
+      default:
         carla::throw_exception(std::invalid_argument("UePublisherBaseCamera::to_string encoding " +
                                                      std::to_string(int(encoding())) + " not found"));
     }
@@ -160,6 +161,7 @@ protected:
       case UePublisherBaseCamera::Encoding::RGBA16:
       case UePublisherBaseCamera::Encoding::BGRA16:
         return 4u;
+      default:
         carla::throw_exception(std::invalid_argument("UePublisherBaseCamera::pixel_size_in_byte encoding " +
                                                      std::to_string(int(encoding())) + " not found"));
     }
@@ -179,6 +181,7 @@ protected:
       case UePublisherBaseCamera::Encoding::BGRA16:
       case UePublisherBaseCamera::Encoding::MONO16:
         return 2u;
+      default:
         carla::throw_exception(std::invalid_argument("UePublisherBaseCamera::pixel_size_in_byte encoding " +
                                                      std::to_string(int(encoding())) + " not found"));
     }

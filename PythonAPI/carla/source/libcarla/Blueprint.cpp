@@ -4,8 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <carla/actor/BlueprintLibrary.h>
-#include <carla/actor/ActorBlueprint.h>
+#include <carla/actors/BlueprintLibrary.h>
+#include <carla/actors/ActorBlueprint.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -33,7 +33,7 @@ namespace data {
 } // namespace data
 } // namespace sensor
 
-namespace actor {
+namespace actors {
 
   std::ostream &operator<<(std::ostream &out, const ActorAttribute &attr) {
     using Type = carla::rpc::ActorAttributeType;
@@ -74,7 +74,7 @@ namespace actor {
     return PrintList(out, blueprints);
   }
 
-} // namespace actor
+} // namespace actors
 } // namespace carla
 
 void export_blueprint() {

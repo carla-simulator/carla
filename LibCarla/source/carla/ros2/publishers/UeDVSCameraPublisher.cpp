@@ -49,7 +49,7 @@ void UeDVSCameraPublisher::UpdateSensorData(
   SetPointCloudData(buffer_view);
 }
 
-void UeDVSCameraPublisher::SetImageData(std::vector<DVSEventConst, DVSEventVectorAllocator> &data_vector_view) {
+void UeDVSCameraPublisher::SetImageData(std::vector<DVSEvent, DVSEventVectorAllocator> &data_vector_view) {
   std::vector<uint8_t> im_data(image_size(), 0u);
   for (size_t i = 0; i < data_vector_view.size(); ++i) {
     uint32_t index = (data_vector_view[i].y * width() + data_vector_view[i].x) * num_channels() +
@@ -64,29 +64,29 @@ void UeDVSCameraPublisher::SetPointCloudData(carla::SharedBufferView &buffer_vie
 
   sensor_msgs::msg::PointField descriptor1;
   descriptor1.name("x");
-  descriptor1.offset(offsetof(DVSEventConst, x));
+  descriptor1.offset(offsetof(DVSEvent, x));
   descriptor1.datatype(sensor_msgs::msg::PointField__UINT16);
   descriptor1.count(1);
   sensor_msgs::msg::PointField descriptor2;
   descriptor2.name("y");
-  descriptor2.offset(offsetof(DVSEventConst, y));
+  descriptor2.offset(offsetof(DVSEvent, y));
   descriptor2.datatype(sensor_msgs::msg::PointField__UINT16);
   descriptor2.count(1);
   sensor_msgs::msg::PointField descriptor3;
   descriptor3.name("t");
-  descriptor3.offset(offsetof(DVSEventConst, t));
+  descriptor3.offset(offsetof(DVSEvent, t));
   descriptor3.datatype(
       sensor_msgs::msg::PointField__FLOAT64);  // PointField__INT64 is not existing, but would be required here!!
   descriptor3.count(1);
   sensor_msgs::msg::PointField descriptor4;
   descriptor3.name("pol");
-  descriptor3.offset(offsetof(DVSEventConst, pol));
+  descriptor3.offset(offsetof(DVSEvent, pol));
   descriptor3.datatype(sensor_msgs::msg::PointField__INT8);
   descriptor3.count(1);
 
   DEBUG_ASSERT_EQ(num_channels(), 4);
-  DEBUG_ASSERT_EQ(sizeof(DVSEventConst), 2 * sizeof(uint16_t) + sizeof(double) + sizeof(int8_t));
-  const uint32_t point_size = sizeof(DVSEventConst);
+  DEBUG_ASSERT_EQ(sizeof(DVSEvent), 2 * sizeof(uint16_t) + sizeof(double) + sizeof(int8_t));
+  const uint32_t point_size = sizeof(DVSEvent);
   _point_cloud->Message().width(width());
   _point_cloud->Message().height(height());
   _point_cloud->Message().is_bigendian(false);

@@ -5,7 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <carla/PythonUtil.h>
-#include <carla/actor/ActorBlueprint.h>
+#include <carla/actors/ActorBlueprint.h>
 #include <carla/client/Actor.h>
 #include <carla/client/ActorList.h>
 #include <carla/client/World.h>

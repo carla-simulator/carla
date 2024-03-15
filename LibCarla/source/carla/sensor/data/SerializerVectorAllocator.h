@@ -24,9 +24,9 @@ namespace data {
   {
   public:
     using std::allocator<T>::allocator;
-    typedef typename std::allocator<T>::size_type size_type;
-    typedef typename std::allocator<T>::pointer pointer;
-    typedef typename std::allocator<T>::const_pointer const_pointer;
+    using pointer = typename std::allocator_traits<std::allocator<T>>::pointer;
+    using size_type = typename std::allocator_traits<std::allocator<T>>::size_type;
+    using const_pointer = typename std::allocator_traits<std::allocator<T>>::const_pointer;
 
     pointer allocate(size_type n, const void *hint=0)
     {

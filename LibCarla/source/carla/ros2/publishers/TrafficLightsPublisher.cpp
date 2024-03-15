@@ -60,11 +60,11 @@ void TrafficLightsPublisher::UpdateTrafficLightInfo(carla_msgs::msg::CarlaTraffi
 }
 
 void TrafficLightsPublisher::RemoveTrafficLight(carla::rpc::ActorId actor) {
-  std::remove_if(
+  (void)std::remove_if(
       _traffic_light_status->Message().traffic_lights().begin(),
       _traffic_light_status->Message().traffic_lights().end(),
       [actor](carla_msgs::msg::CarlaTrafficLightStatus const traffic_light) { return traffic_light.id() == actor; });
-  std::remove_if(
+  (void)std::remove_if(
       _traffic_light_info->Message().traffic_lights().begin(), _traffic_light_info->Message().traffic_lights().end(),
       [actor](carla_msgs::msg::CarlaTrafficLightInfo const traffic_light) { return traffic_light.id() == actor; });
 }

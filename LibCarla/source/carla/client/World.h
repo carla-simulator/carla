@@ -34,7 +34,7 @@
 
 namespace carla {
 
-namespace actor {
+namespace actors {
   class ActorBlueprint;
   class BlueprintLibrary;
 }
@@ -74,7 +74,7 @@ namespace client {
 
     /// Return the list of blueprints available in this world. This blueprints
     /// can be used to spawning actor into the world.
-    SharedPtr<actor::BlueprintLibrary> GetBlueprintLibrary() const;
+    SharedPtr<actors::BlueprintLibrary> GetBlueprintLibrary() const;
 
     /// Returns a list of pairs where the firts element is the vehicle ID
     /// and the second one is the light state
@@ -120,7 +120,7 @@ namespace client {
     /// transform. If a @a parent is provided, the actor is attached to
     /// @a parent.
     SharedPtr<Actor> SpawnActor(
-        const actor::ActorBlueprint &blueprint,
+        const actors::ActorBlueprint &blueprint,
         const geom::Transform &transform,
         Actor *parent = nullptr,
         rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid,
@@ -129,7 +129,7 @@ namespace client {
     /// Same as SpawnActor but return nullptr on failure instead of throwing an
     /// exception.
     SharedPtr<Actor> TrySpawnActor(
-        const actor::ActorBlueprint &blueprint,
+        const actors::ActorBlueprint &blueprint,
         const geom::Transform &transform,
         Actor *parent = nullptr,
         rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid,

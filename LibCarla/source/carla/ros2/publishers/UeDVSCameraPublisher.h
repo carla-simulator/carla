@@ -49,20 +49,20 @@ protected:
   }
 
 private:
-  using DVSEventConst = carla::sensor::data::DVSEvent const;
+  using DVSEvent = carla::sensor::data::DVSEvent;
   using DVSHeaderConst = carla::sensor::s11n::DVSEventArraySerializer::DVSHeader const;
-  using DVSEventVectorAllocator = carla::sensor::data::SerializerVectorAllocator<DVSEventConst>;
+  using DVSEventVectorAllocator = carla::sensor::data::SerializerVectorAllocator<DVSEvent>;
 
   std::shared_ptr<DVSHeaderConst> header_view(const carla::SharedBufferView buffer_view) {
     return std::shared_ptr<DVSHeaderConst>(buffer_view, reinterpret_cast<DVSHeaderConst *>(buffer_view.get()->data()));
   }
 
-  std::vector<DVSEventConst, DVSEventVectorAllocator> vector_view(const carla::SharedBufferView buffer_view) {
-    return carla::sensor::data::buffer_data_accessed_by_vector<DVSEventConst>(
+  std::vector<DVSEvent, DVSEventVectorAllocator> vector_view(const carla::SharedBufferView buffer_view) {
+    return carla::sensor::data::buffer_data_accessed_by_vector<DVSEvent>(
         buffer_view, carla::sensor::s11n::DVSEventArraySerializer::header_offset);
   }
 
-  void SetImageData(std::vector<DVSEventConst, DVSEventVectorAllocator> &data_vector_view);
+  void SetImageData(std::vector<DVSEvent, DVSEventVectorAllocator> &data_vector_view);
   void SetPointCloudData(carla::SharedBufferView &buffer_view);
 
   std::shared_ptr<UePointCloudFromBufferPublisherImpl> _point_cloud;

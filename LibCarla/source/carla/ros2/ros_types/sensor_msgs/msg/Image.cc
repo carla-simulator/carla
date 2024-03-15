@@ -22,7 +22,7 @@
 #ifdef _WIN32
 // Remove linker warning LNK4221 on Visual Studio
 namespace {
-char dummy;
+//char dummy;
 }  // namespace
 #endif  // _WIN32
 

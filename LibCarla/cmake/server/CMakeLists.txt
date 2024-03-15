@@ -4,7 +4,7 @@ project(libcarla-server)
 install(DIRECTORY "${libcarla_source_path}/compiler" DESTINATION include)
 
 foreach(dir "" 
-            "actor/"
+            "actors/"
             "geom/"
             "opendrive/" "opendrive/parser/"
             "profiler/"
@@ -65,7 +65,7 @@ set(libcarla_server_sources
   )
 # then the globs on the folders to add as a whole
 foreach(dir 
-      "actor"
+      "actors"
       "geom"
       "opendrive" "opendrive/parser" 
       "profiler"

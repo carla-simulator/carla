@@ -35,7 +35,7 @@
 
 namespace carla {
 
-namespace actor {
+namespace actors {
   class ActorBlueprint;
   class BlueprintLibrary;
 }
@@ -241,7 +241,7 @@ namespace detail {
       _episode->AddPendingException(e);
     }
 
-    SharedPtr<actor::BlueprintLibrary> GetBlueprintLibrary();
+    SharedPtr<actors::BlueprintLibrary> GetBlueprintLibrary();
 
     /// Returns a list of pairs where the firts element is the vehicle ID
     /// and the second one is the light state
@@ -365,7 +365,7 @@ namespace detail {
     /// actor. If @gc is GarbageCollectionPolicy::Inherit, the default garbage
     /// collection policy is used.
     SharedPtr<Actor> SpawnActor(
-        const actor::ActorBlueprint &blueprint,
+        const actors::ActorBlueprint &blueprint,
         const geom::Transform &transform,
         Actor *parent = nullptr,
         rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid,

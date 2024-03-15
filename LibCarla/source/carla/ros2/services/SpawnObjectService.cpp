@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <random>
 
-#include "carla/actor/BlueprintLibrary.h"
+#include "carla/actors/BlueprintLibrary.h"
 #include "carla/ros2/impl/fastdds/DdsServiceImpl.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
@@ -55,13 +55,13 @@ carla_msgs::srv::SpawnObject_Response SpawnObjectService::SpawnObject(
   }
 
   auto blueprints =
-      carla::actor::BlueprintLibrary(_carla_server.call_get_actor_definitions().Get()).Filter(request.type());
+      carla::actors::BlueprintLibrary(_carla_server.call_get_actor_definitions().Get()).Filter(request.type());
   if (blueprints->empty()) {
     response.error_string("SpawnObjectService: failed to retrieve matching blueprint");
     response.id(0);
     return response;
   } else {
-    std::vector<carla::actor::ActorBlueprint> blueprint_result;
+    std::vector<carla::actors::ActorBlueprint> blueprint_result;
     std::sample(blueprints->begin(), blueprints->end(), blueprint_result.begin(), 1,
                 std::mt19937{std::random_device{}()});
     if (blueprint_result.size() == 0) {

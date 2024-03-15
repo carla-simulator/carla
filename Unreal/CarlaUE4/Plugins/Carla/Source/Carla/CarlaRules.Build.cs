@@ -160,6 +160,7 @@ public class CarlaRules : ModuleRules
         AddStaticLibrary( "fastcdr");
         AddStaticLibrary( "fastrtps");
       }
+      PublicIncludePaths.Add(Path.Combine(LibCarlaInstallPath, "include", "carla", "ros2", "ros_types"));
       PrivateIncludePaths.Add(Path.Combine(LibCarlaInstallPath, "include", "carla", "ros2", "ros_types"));
       PublicDefinitions.Add("WITH_ROS2");
       PrivateDefinitions.Add("WITH_ROS2");

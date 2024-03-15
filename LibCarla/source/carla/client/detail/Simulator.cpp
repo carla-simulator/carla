@@ -10,7 +10,7 @@
 #include "carla/Exception.h"
 #include "carla/Logging.h"
 #include "carla/RecurrentSharedFuture.h"
-#include "carla/actor/BlueprintLibrary.h"
+#include "carla/actors/BlueprintLibrary.h"
 #include "carla/client/FileTransfer.h"
 #include "carla/client/Map.h"
 #include "carla/client/Sensor.h"
@@ -239,9 +239,9 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   // -- Access to global objects in the episode --------------------------------
   // ===========================================================================
 
-  SharedPtr<actor::BlueprintLibrary> Simulator::GetBlueprintLibrary() {
+  SharedPtr<actors::BlueprintLibrary> Simulator::GetBlueprintLibrary() {
     auto defs = _client.GetActorDefinitions();
-    return MakeShared<actor::BlueprintLibrary>(std::move(defs));
+    return MakeShared<actors::BlueprintLibrary>(std::move(defs));
   }
 
   rpc::VehicleLightStateList Simulator::GetVehiclesLightStates() {
@@ -343,7 +343,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   // ===========================================================================
 
     SharedPtr<Actor> Simulator::SpawnActor(
-      const actor::ActorBlueprint &blueprint,
+      const actors::ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent,
       rpc::AttachmentType attachment_type,

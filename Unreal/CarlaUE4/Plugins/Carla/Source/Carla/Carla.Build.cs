@@ -146,6 +146,8 @@ public class Carla : CarlaRules
     }
     if (IsWindows())
     {
+       PublicAdditionalLibraries.Add("shlwapi.lib");
+
       AddBoostLibs();
       if (UsingChrono)
       {

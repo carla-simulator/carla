@@ -359,15 +359,15 @@ static carla::Buffer FWorldObserver_Serialize(
     }
     ActorTransform = View->GetActorGlobalTransform();
 
-    ActorDynamicState info = {
-      .id = View->GetActorId(),
-      .actor_state = View->GetActorState(),
-      .transform = carla::geom::Transform(ActorTransform),
-      .quaternion = carla::geom::Quaternion(ActorTransform.GetRotation()),
-      .velocity = carla::geom::Vector3D(Velocity.X, Velocity.Y, Velocity.Z),
-      .angular_velocity = AngularVelocity,
-      .acceleration = Acceleration,
-      .state = State,
+    ActorDynamicState info{
+      View->GetActorId(),
+      View->GetActorState(),
+      carla::geom::Transform(ActorTransform),
+      carla::geom::Quaternion(ActorTransform.GetRotation()),
+      carla::geom::Vector3D(Velocity.X, Velocity.Y, Velocity.Z),
+      AngularVelocity,
+      Acceleration,
+      State,
     };
 
     write_data(info);

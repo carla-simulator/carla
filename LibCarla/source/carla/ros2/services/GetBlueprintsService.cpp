@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-#include "carla/actor/BlueprintLibrary.h"
+#include "carla/actors/BlueprintLibrary.h"
 #include "carla/ros2/impl/fastdds/DdsServiceImpl.h"
 
 namespace carla {
@@ -33,7 +33,7 @@ carla_msgs::srv::GetBlueprints_Response GetBlueprintsService::GetBlueprints(
   if (filter == "") {
     filter = "*";
   }
-  auto blueprints = carla::actor::BlueprintLibrary(_carla_server.call_get_actor_definitions().Get()).Filter(filter);
+  auto blueprints = carla::actors::BlueprintLibrary(_carla_server.call_get_actor_definitions().Get()).Filter(filter);
   response.blueprints().reserve(blueprints->size());
   for (auto const &blueprint : *blueprints) {
     response.blueprints().push_back(blueprint.GetId());

@@ -10,14 +10,14 @@
 #include "carla/Iterator.h"
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
-#include "carla/actor/ActorBlueprint.h"
+#include "carla/actors/ActorBlueprint.h"
 
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
 
 namespace carla {
-namespace actor {
+namespace actors {
 
   /// @todo Works as a list but its actually a map. We should assess the use
   /// cases and reconsider this implementation.
@@ -84,5 +84,5 @@ namespace actor {
     map_type _blueprints;
   };
 
-} // namespace actor
+} // namespace actors
 } // namespace carla

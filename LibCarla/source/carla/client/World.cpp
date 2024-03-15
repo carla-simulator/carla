@@ -8,7 +8,7 @@
 
 #include "carla/Logging.h"
 #include "carla/client/Actor.h"
-#include "carla/actor/ActorBlueprint.h"
+#include "carla/actors/ActorBlueprint.h"
 #include "carla/client/ActorList.h"
 #include "carla/client/detail/Simulator.h"
 #include "carla/StringUtil.h"
@@ -33,7 +33,7 @@ namespace client {
     _episode.Lock()->UnloadLevelLayer(map_layers);
   }
 
-  SharedPtr<actor::BlueprintLibrary> World::GetBlueprintLibrary() const {
+  SharedPtr<actors::BlueprintLibrary> World::GetBlueprintLibrary() const {
     return _episode.Lock()->GetBlueprintLibrary();
   }
 
@@ -125,7 +125,7 @@ namespace client {
   }
 
   SharedPtr<Actor> World::SpawnActor(
-      const actor::ActorBlueprint &blueprint,
+      const actors::ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent_actor,
       rpc::AttachmentType attachment_type,
@@ -134,7 +134,7 @@ namespace client {
   }
 
   SharedPtr<Actor> World::TrySpawnActor(
-      const actor::ActorBlueprint &blueprint,
+      const actors::ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent_actor,
       rpc::AttachmentType attachment_type,

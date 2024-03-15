@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include "carla/ros2/ros_types/carla_msgs/msg/CarlaVehicleStatus.h"
 #include "carla/ros2/types/ActorDefinition.h"
 #include "carla/ros2/types/VehicleAckermannControl.h"

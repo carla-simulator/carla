@@ -4,14 +4,14 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/actor/ActorAttribute.h"
+#include "carla/actors/ActorAttribute.h"
 
 #include "carla/Exception.h"
 #include "carla/Logging.h"
 #include "carla/StringUtil.h"
 
 namespace carla {
-namespace actor {
+namespace actors {
 
 #define LIBCARLA_THROW_INVALID_VALUE(message) throw_exception(InvalidAttributeValue(GetId() + ": " + message));
 #define LIBCARLA_THROW_BAD_VALUE_CAST(type) \
@@ -103,5 +103,5 @@ namespace actor {
 #undef LIBCARLA_THROW_BAD_VALUE_CAST
 #undef LIBCARLA_THROW_INVALID_VALUE
 
-} // namespace actor
+} // namespace actors
 } // namespace carla

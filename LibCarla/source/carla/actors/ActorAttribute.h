@@ -14,7 +14,7 @@
 #include <type_traits>
 
 namespace carla {
-namespace actor {
+namespace actors {
 
   // ===========================================================================
   // -- InvalidAttributeValue --------------------------------------------------
@@ -237,5 +237,5 @@ namespace actor {
     return rhs.operator==(*this);
   }
 
-} // namespace actor
+} // namespace actors
 } // namespace carla
