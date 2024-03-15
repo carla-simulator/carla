@@ -9,6 +9,8 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
+#include "PhysicsEngine/PhysicsObjectExternalInterface.h"
+
 #include <compiler/disable-ue4-macros.h>
 #include <carla/geom/Math.h>
 #include <carla/ros2/ROS2.h>
@@ -59,6 +61,10 @@ void ARadar::SetPointsPerSecond(int NewPointsPerSecond)
   RadarData.SetResolution(PointsPerSecond);
 }
 
+const carla::sensor::data::RadarData& ARadar::GetRadarData() const{
+  return RadarData;
+}
+
 void ARadar::BeginPlay()
 {
   Super::BeginPlay();
@@ -81,7 +87,7 @@ void ARadar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
   auto ROS2 = carla::ros2::ROS2::GetInstance();
   if (ROS2->IsEnabled())
   {
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ARadar::PostPhysTick ROS2 Send");
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
     AActor* ParentActor = GetAttachParentActor();
     if (ParentActor)
@@ -135,6 +141,7 @@ void ARadar::SendLineTraces(float DeltaTime)
     Rays[i].Hitted = false;
   }
 
+  auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(GetWorld()->GetPhysicsScene());
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
     ParallelFor(NumPoints, [&](int32 idx) {
@@ -152,8 +159,7 @@ void ARadar::SendLineTraces(float DeltaTime)
         MaxRy * Radius * Sin
       });
 
-      // @CARLAUE5: WE CAN PROBABLY IMPROVE THE PERFORMANCE OF THIS:
-      const bool Hitted = GetWorld()->LineTraceSingleByChannel(
+      const bool Hitted = GetWorld()->ParallelLineTraceSingleByChannel(
         OutHit,
         RadarLocation,
         EndLocation,
@@ -179,7 +185,8 @@ void ARadar::SendLineTraces(float DeltaTime)
       }
     });
   }
-
+  LockedPhysObject.Release();
+  
   // Write the detections in the output structure
   for (auto& ray : Rays)
   {
@@ -187,10 +194,10 @@ void ARadar::SendLineTraces(float DeltaTime)
     {
       RadarData.WriteDetection(
       {
-        (float)ray.RelativeVelocity,
-        (float)ray.AzimuthAndElevation.X,
-        (float)ray.AzimuthAndElevation.Y,
-        (float)ray.Distance
+        ray.RelativeVelocity,
+        UKismetMathLibrary::Conv_DoubleToFloat(ray.AzimuthAndElevation.X),
+        UKismetMathLibrary::Conv_DoubleToFloat(ray.AzimuthAndElevation.Y),
+        ray.Distance
       });
     }
   }

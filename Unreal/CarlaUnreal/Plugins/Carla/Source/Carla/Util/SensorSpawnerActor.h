@@ -48,6 +48,8 @@ public:
   UFUNCTION(BlueprintCallable, CallInEditor, Category="Config")
   void StopRecordingSensorData();
 
+  UFUNCTION(BlueprintCallable, CallInEditor, Category="Config")
+  void ToggleRadarVisibility();
 
 protected:
   // Called when the game starts or when spawned.
@@ -95,10 +97,20 @@ protected:
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config|SaveData")
   FString SaveImagePath;
 
-  
+  // cm/s
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config|Radar")
+  float VelocityRange = 0.075;
+
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config|Radar")
+  float PointSize = 15.0f;
+
+
+
 private:
   bool bRecordingData = false;
-  
+
+  bool bRadarVisibility = false;
+
   UFUNCTION()
   void OnEpisodeInitialised(UCarlaEpisode* InitialisedEpisode);
 
@@ -120,6 +132,8 @@ private:
 
   void AttachSensorToActor(AActor* SensorActor);
   
+  void DrawRadarSensorPoints() const;
+
   UPROPERTY()
   UCarlaEpisode* CarlaEpisode;
 

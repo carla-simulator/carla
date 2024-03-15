@@ -8,6 +8,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Sensor/Radar.h"
 #include "JsonFileManagerLibrary.generated.h"
 
 class FJsonValue;
@@ -17,6 +18,8 @@ UCLASS()
 class CARLA_API UJsonFileManagerLibrary : public UBlueprintFunctionLibrary
 {
   GENERATED_BODY()
+
+  using FRadarData = carla::sensor::data::RadarData;
 
 public:
   static bool ReadStringFromFile(const FString& FilePath, FString& DataRead);
@@ -36,6 +39,9 @@ public:
   static bool SaveIMUDataToJson(const FString& JsonFilePath, const FVector& Accelerometer, const FVector& Gyroscope, float Compass, const FString& FrameNumber);
 
   static bool SaveGnssDataToJson(const FString& JsonFilePath, double Altitude, double Latitude, double Longitude, const FString& FrameNumber);
+
+  // ToDo: Modify the parameter and add a reference to an FVector of a struct that contains the Velocity, Azimuth, Altitude and Depth.
+  static bool SaveRadarDataToJson(const FString& JsonFilePath, const FRadarData& Rays, const FString& FrameNumber);
 
   static bool SaveLidarDataToPly(const FString& FilePath, const TArray<float>& PointArray, int ArrayElementSize);
 

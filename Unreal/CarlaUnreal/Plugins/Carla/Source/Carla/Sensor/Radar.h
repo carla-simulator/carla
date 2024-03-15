@@ -44,6 +44,7 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Radar")
   void SetPointsPerSecond(int NewPointsPerSecond);
 
+  const FRadarData& GetRadarData() const;
 protected:
 
   void BeginPlay() override;
@@ -54,13 +55,13 @@ protected:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Detection")
   float Range;
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Detection")
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Detection")
   float HorizontalFOV;
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Detection")
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Detection")
   float VerticalFOV;
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Detection")
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Detection")
   int PointsPerSecond;
 
 private:
