@@ -243,3 +243,23 @@ bool UJsonFileManagerLibrary::SaveSensorJsonData(const FString& JsonFilePath,
   return bWriteSuccess;
 }
 
+bool UJsonFileManagerLibrary::SaveRadarDataToJson(const FString& JsonFilePath, 
+  const FRadarData& Rays, const FString& FrameNumber)
+{
+  TArray<TSharedPtr<FJsonValue>> ArrayValue;
+  TSharedPtr<FJsonObject> JsonDataObject = GetSensorJsonData(JsonFilePath, ArrayValue);
+  bool bWriteSuccess = true;
+  for( auto& var : Rays.GetDetections() )
+  {
+    const TSharedPtr<FJsonObject> RadarDataObject = MakeShared<FJsonObject>();
+    RadarDataObject->SetStringField(TEXT("Frame"), FrameNumber);
+    RadarDataObject->SetStringField(TEXT("Velocity"), FString::SanitizeFloat(var.velocity));
+    RadarDataObject->SetStringField( TEXT("Azimuth"), FString::SanitizeFloat(var.azimuth));
+    RadarDataObject->SetStringField(TEXT("Altitude"), FString::SanitizeFloat(var.altitude));
+    RadarDataObject->SetStringField(TEXT("Depth"), FString::SanitizeFloat(var.depth));
+    bWriteSuccess &= SaveSensorJsonData(JsonFilePath, RadarDataObject, JsonDataObject, ArrayValue);
+  }
+
+  return bWriteSuccess;
+}
+

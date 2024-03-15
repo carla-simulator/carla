@@ -107,6 +107,11 @@ void ASensorSpawnerActor::StopRecordingSensorData()
   }
 }
 
+void ASensorSpawnerActor::ToggleRadarVisibility()
+{
+  bRadarVisibility = !bRadarVisibility;
+}
+
 const FActorDefinition* ASensorSpawnerActor::GetActorDefinitionByClass(const TSubclassOf<AActor> ActorClass) const
 {
   if(!ActorClass || !IsValid(CarlaEpisode))
@@ -215,11 +220,15 @@ void ASensorSpawnerActor::Tick(float DeltaSeconds)
   {
     SaveSensorData(DeltaSeconds);
   }
+  if(bRadarVisibility)
+  {
+    DrawRadarSensorPoints();
+  }
 }
 
 void ASensorSpawnerActor::SaveSensorData(float DeltaSeconds)
 {
-  const FString FrameNumber = FString::Printf(TEXT("%lld"), UKismetSystemLibrary::GetFrameCount());
+  const FString FrameNumber = FString::Printf(TEXT("%lld"), FCarlaEngine::GetFrameCounter());
   for(ASensor* CurrentSensor : SpawnedSensorsArray)
   {
     if(ASceneCaptureSensor* CaptureSensor = Cast<ASceneCaptureSensor>(CurrentSensor))
@@ -253,6 +262,12 @@ void ASensorSpawnerActor::SaveSensorData(float DeltaSeconds)
       const FString FilePath = FPaths::Combine(SaveImagePath, LidarSensor->GetName(), FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp()) + "-Frame_" + FrameNumber + ".ply");
       UJsonFileManagerLibrary::SaveLidarDataToPly(FilePath, LidarSensor->GetTestPointCloud(), 4); 
     }
+
+    if(const ARadar* RadarSensor = Cast<ARadar>(CurrentSensor))
+    {
+      const FString FilePath = FPaths::Combine(SaveImagePath, RadarSensor->GetName(), FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp()) + "-Frame_" + FrameNumber + ".json");
+      UJsonFileManagerLibrary::SaveRadarDataToJson(FilePath, RadarSensor->GetRadarData(), FrameNumber); 
+    }
   }
 }
 
@@ -267,6 +282,38 @@ void ASensorSpawnerActor::AttachSensorToActor(AActor* SensorActor)
       SensorActor->AttachToActor(SensorAttachParent, FAttachmentTransformRules::KeepWorldTransform);
       SensorActor->SetOwner(SensorAttachParent);
       SensorActor->SetActorRelativeTransform(FTransform::Identity);
+    }
+  }
+}
+
+void ASensorSpawnerActor::DrawRadarSensorPoints() const
+{
+  float velocity_range = VelocityRange; // m/s
+  for(const ASensor* CurrentSensor : SpawnedSensorsArray)
+  {
+    if(const ARadar* RadarSensor = Cast<ARadar>(CurrentSensor))
+    {
+      FRotator CurrentRot = RadarSensor->GetActorRotation(); 
+      for( auto& detect : RadarSensor->GetRadarData().GetDetections() )
+      {
+        float Azi = FMath::RadiansToDegrees(detect.azimuth);
+        float Alt = FMath::RadiansToDegrees(detect.altitude);
+
+        FVector FWVector( (detect.depth - 0.25f) * 100.0f, 0.f, 0.f);
+        FTransform SensorTransform(FRotator(CurrentRot.Pitch + Alt,
+                                            CurrentRot.Yaw + Azi,
+                                            CurrentRot.Roll));
+
+        FWVector = SensorTransform.GetRotation().RotateVector(FWVector);
+
+        float Norm_velocity = detect.velocity / velocity_range; 
+        FColor ColorPoint;
+        ColorPoint.R = FMath::Clamp(Norm_velocity, 0.0f, 1.0f) * 255;
+        ColorPoint.G = FMath::Clamp(  1.0f - abs(Norm_velocity), 0.0f, 1.0f) * 255;
+        ColorPoint.B = FMath::Clamp(abs(- 1.0f - Norm_velocity), 0.0f, 1.0f) * 255;
+        
+        DrawDebugPoint(GetWorld(), RadarSensor->GetActorLocation() + FWVector , PointSize, ColorPoint, false, 0.06);
+      }
     }
   }
 }
