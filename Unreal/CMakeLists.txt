@@ -72,14 +72,10 @@ add_custom_command (
   VERBATIM
 )
 
-add_custom_target (
-  carla-unreal-generate-project-files
-  DEPENDS
-    ${CARLA_UE_PATH}/CMakeLists.txt
-)
+
 
 set (
-  UE_DEPENDENCIES
+  UE_DEPENDENCIES_ORDER_ONLY
   carla-server
   libsqlite3
   Boost::asio
@@ -93,10 +89,20 @@ set (
   rpc
 )
 
-set (
-  CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH
-  ${CMAKE_CURRENT_BINARY_DIR}/Includes.inc
-)
+set (UE_DEPENDENCIES ${UE_DEPENDENCIES_ORDER_ONLY})
+
+if (BUILD_CARLA_CLIENT)
+  list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-client)
+endif ()
+if (BUILD_PYTHON_API)
+  list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-python-api)
+endif ()
+
+
+
+set (CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH ${CMAKE_CURRENT_BINARY_DIR}/Includes.inc)
+set (CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH ${CMAKE_CURRENT_BINARY_DIR}/Libraries.inc)
+set (CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH ${CMAKE_CURRENT_BINARY_DIR}/Options.inc)
 
 set (
   CARLA_UNREAL_INCLUDE_PATHS
@@ -110,11 +116,6 @@ foreach (UE_DEP ${UE_DEPENDENCIES})
     "$<TARGET_PROPERTY:${UE_DEP},INTERFACE_INCLUDE_DIRECTORIES>"
   )
 endforeach ()
-
-set (
-  CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH
-  ${CMAKE_CURRENT_BINARY_DIR}/Libraries.inc
-)
 
 set (
   CARLA_UNREAL_LIBRARIES
@@ -131,11 +132,6 @@ foreach (UE_DEP ${UE_DEPENDENCIES})
     )
   endif ()
 endforeach ()
-
-set (
-  CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH
-  ${CMAKE_CURRENT_BINARY_DIR}/Options.inc
-)
 
 set (UNREAL_PROJECT_OPTIONS)
 
@@ -154,11 +150,6 @@ if (ENABLE_OSM2ODR)
     "OSM2ODR"
   )
 endif()
-
-add_dependencies (
-  carla-unreal-generate-project-files
-  ${UE_DEPENDENCIES}
-)
 
 
 
@@ -182,10 +173,24 @@ endif ()
 
 
 
+add_custom_target (
+  carla-unreal-generate-project-files
+  DEPENDS
+    ${CARLA_UE_PATH}/CMakeLists.txt
+)
+
+add_dependencies (
+  carla-unreal-generate-project-files
+  ${UE_DEPENDENCIES_ORDER_ONLY}
+)
+
+
+
 add_custom_command (
   OUTPUT
     ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
     ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
+    ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
   COMMENT
     "Configuring Carla Unreal..."
   COMMAND ${CMAKE_COMMAND} -E rm -f ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
@@ -214,13 +219,15 @@ add_custom_target (
   DEPENDS
     ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
     ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
+    ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
 )
 
 add_dependencies (
   carla-unreal-configure
-  carla-unreal-generate-project-files
+  ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
+list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-unreal-configure)
 
 
 add_custom_command (
@@ -247,8 +254,10 @@ add_custom_target (
 
 add_dependencies (
   carla-unreal
-  carla-unreal-configure
+  ${UE_DEPENDENCIES_ORDER_ONLY}
 )
+
+list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-unreal)
 
 
 
@@ -269,19 +278,6 @@ set (
   UNREAL_EDITOR_PATH
   ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
 )
-
-set (
-  LAUNCH_DEPENDENCIES
-  carla-unreal
-)
-
-if (BUILD_PYTHON_API)
-  list (
-    APPEND
-    LAUNCH_DEPENDENCIES
-    carla-python-api
-  )
-endif ()
 
 
 
@@ -315,9 +311,8 @@ add_custom_target (
 
 add_dependencies (
   launch
-  ${LAUNCH_DEPENDENCIES}
+  ${UE_DEPENDENCIES_ORDER_ONLY}
 )
-
 
 
 file (

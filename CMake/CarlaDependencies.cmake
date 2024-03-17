@@ -135,24 +135,17 @@ carla_fetchcontent_option (BOOST_ENABLE_MPI OFF)
 carla_fetchcontent_option (BOOST_LOCALE_WITH_ICU OFF)
 carla_fetchcontent_option (BOOST_LOCALE_WITH_ICONV OFF)
 set (
-  BOOST_EXCLUDED_PROJECTS
-  iostreams
-  locale
-  redis
-  timer
-  wave
-  url
-  mysql
-  nowide
-  stacktrace
-  contract
-  fiber
-  log
-  program_options
+  BOOST_INCLUDED_PROJECTS
+  asio
+  iterator
+  python
+  date_time
+  geometry
+  gil
+  container
+  variant2
 )
-carla_fetchcontent_option (
-  BOOST_EXCLUDE_LIBRARIES
-  "${BOOST_EXCLUDED_PROJECTS}")
+carla_fetchcontent_option (BOOST_INCLUDE_LIBRARIES "${BOOST_INCLUDED_PROJECTS}")
 carla_dependency_add(
   boost
   ${CARLA_BOOST_TAG}

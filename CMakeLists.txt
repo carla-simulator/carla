@@ -67,6 +67,8 @@ macro (carla_error)
   message (FATAL_ERROR ${ARGN})
 endmacro ()
 
+carla_message ("CARLA is set to be built using the ${CMAKE_BUILD_TYPE} cmake build type.")
+
 include (CheckCCompilerFlag)
 include (CheckCXXCompilerFlag)
 include (CheckLinkerFlag)
