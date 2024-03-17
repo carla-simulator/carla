@@ -479,6 +479,10 @@ namespace detail {
       return _client.GetActorSocketRelativeTransforms(actor.GetId());
     }
 
+    std::vector<std::string> GetActorSocketNames(const Actor &actor) {
+      return _client.GetActorSocketNames(actor.GetId());
+    }    
+
     void SetActorLocation(Actor &actor, const geom::Location &location) {
       _client.SetActorLocation(actor.GetId(), location);
     }
