@@ -59,6 +59,29 @@ Python3_add_library (
   ${PYTHON_API_SOURCES}
 )
 
+if (WIN32)
+  set (PYD_EXT .pyd)
+else ()
+  set (PYD_EXT .so)
+endif ()
+
+set (
+  CARLA_PYTHON_API_SYMLINK_PATH
+  ${PYTHON_API_PATH}/examples/carla${PYD_EXT}
+)
+
+add_custom_command (
+  TARGET
+    carla-python-api
+  POST_BUILD
+  COMMAND
+    ${CMAKE_COMMAND}
+      -E
+      create_symlink
+      $<TARGET_FILE:carla-python-api>
+      ${CARLA_PYTHON_API_SYMLINK_PATH}
+)
+
 target_include_directories (
   carla-python-api PRIVATE
   ${PYTHON_API_CARLA_PATH}/include
@@ -93,40 +116,4 @@ target_include_directories (
   carla-python-api PRIVATE
   ${PYTHON_API_CARLA_PATH}/src
   ${LIBCARLA_SOURCE_PATH}
-)
-
-if (WIN32)
-  set (PYD_EXT .pyd)
-else ()
-  set (PYD_EXT .so)
-endif ()
-
-set (
-  CARLA_PYTHON_API_SYMLINK_PATH
-  ${PYTHON_API_PATH}/examples/carla${PYD_EXT}
-)
-
-add_custom_command (
-  OUTPUT
-    ${CARLA_PYTHON_API_SYMLINK_PATH}
-  COMMENT
-    "Creating CARLA PythonAPI .PYD/.SO symlink..."
-  COMMAND
-    ${CMAKE_COMMAND}
-      -E
-      copy
-      $<TARGET_FILE:carla-python-api>
-      ${PYTHON_API_PATH}/examples/carla${PYD_EXT}
-)
-
-# If this command fails, enable developer mode if on Windows.
-add_custom_target (
-  carla-python-api-symlink
-  DEPENDS
-    ${CARLA_PYTHON_API_SYMLINK_PATH}
-)
-
-add_dependencies (
-  carla-python-api-symlink
-  carla-python-api
 )
