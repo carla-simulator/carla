@@ -291,7 +291,7 @@ void ASensorSpawnerActor::DrawRadarSensorPoints() const
   float velocity_range = VelocityRange; // m/s
   for(const ASensor* CurrentSensor : SpawnedSensorsArray)
   {
-    if(const ARadar* RadarSensor = Cast<ARadar>(CurrentSensor))
+    if(const ARadar* RadarSensor = Cast<ARadar>(CurrentSensor); CurrentSensor)
     {
       FRotator CurrentRot = RadarSensor->GetActorRotation(); 
       for( auto& detect : RadarSensor->GetRadarData().GetDetections() )
@@ -309,7 +309,7 @@ void ASensorSpawnerActor::DrawRadarSensorPoints() const
         float Norm_velocity = detect.velocity / velocity_range; 
         FColor ColorPoint;
         ColorPoint.R = FMath::Clamp(Norm_velocity, 0.0f, 1.0f) * 255;
-        ColorPoint.G = FMath::Clamp(  1.0f - abs(Norm_velocity), 0.0f, 1.0f) * 255;
+        ColorPoint.G = FMath::Clamp( 1.0f - abs(Norm_velocity), 0.0f, 1.0f) * 255;
         ColorPoint.B = FMath::Clamp(abs(- 1.0f - Norm_velocity), 0.0f, 1.0f) * 255;
         
         DrawDebugPoint(GetWorld(), RadarSensor->GetActorLocation() + FWVector , PointSize, ColorPoint, false, 0.06);
