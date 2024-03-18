@@ -114,7 +114,7 @@ add_custom_command (
   COMMAND
     ${CMAKE_COMMAND}
       -E
-      create_symlink
+      copy
       $<TARGET_FILE:carla-python-api>
       ${PYTHON_API_PATH}/examples/carla${PYD_EXT}
 )
