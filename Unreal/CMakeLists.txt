@@ -184,6 +184,12 @@ add_dependencies (
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
+list (
+  APPEND
+  UE_DEPENDENCIES_ORDER_ONLY
+  carla-unreal-generate-project-files
+)
+
 
 
 add_custom_command (
