@@ -27,7 +27,8 @@ ASemanticSegmentationCamera::ASemanticSegmentationCamera(
 void ASemanticSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASemanticSegmentationCamera::PostPhysTick);
-  
+
+  EnqueueRenderSceneImmediate();
   ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this](
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool

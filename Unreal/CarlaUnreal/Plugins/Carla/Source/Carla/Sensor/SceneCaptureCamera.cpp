@@ -62,7 +62,8 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
       TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(*ProfilerText);
     }
   );
-  
+
+  EnqueueRenderSceneImmediate();
   ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this](
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
