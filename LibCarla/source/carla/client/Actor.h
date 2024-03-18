@@ -76,6 +76,8 @@ namespace client {
 
     std::vector<geom::Transform> GetSocketRelativeTransforms() const;
 
+    std::vector<std::string> GetSocketNames() const;     
+
     /// Teleport the actor to @a location.
     void SetLocation(const geom::Location &location);
 

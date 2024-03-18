@@ -263,6 +263,9 @@ namespace detail {
     std::vector<geom::Transform> GetActorSocketRelativeTransforms(
         rpc::ActorId actor);
 
+    std::vector<std::string> GetActorSocketNames(
+        rpc::ActorId actor);
+
     void SetActorSimulatePhysics(
         rpc::ActorId actor,
         bool enabled);
