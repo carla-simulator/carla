@@ -8,8 +8,6 @@
 
 ]]
 
-include (${CMAKE_CURRENT_SOURCE_DIR}/Util.cmake)
-
 set (UE_ROOT $ENV{CARLA_UNREAL_ENGINE_PATH})
 
 if (NOT UE_ROOT)
@@ -22,7 +20,7 @@ if ("${UE_ROOT}" STREQUAL "")
 endif ()
 
 if (NOT EXISTS ${UE_ROOT})
-	carla_error ("The specified Carla Unreal Engine 5 path does not exist (\"${UE_ROOT}\").")
+	message (FATAL_ERROR "The specified Carla Unreal Engine 5 path does not exist (\"${UE_ROOT}\").")
 endif ()
 
 set (ARCH ${CMAKE_HOST_SYSTEM_PROCESSOR})
