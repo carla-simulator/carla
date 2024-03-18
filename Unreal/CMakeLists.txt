@@ -100,9 +100,20 @@ endif ()
 
 
 
-set (CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH ${CMAKE_CURRENT_BINARY_DIR}/Includes.inc)
-set (CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH ${CMAKE_CURRENT_BINARY_DIR}/Libraries.inc)
-set (CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH ${CMAKE_CURRENT_BINARY_DIR}/Options.inc)
+set (
+  CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH
+  ${CMAKE_CURRENT_BINARY_DIR}/Includes.inc
+)
+
+set (
+  CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH
+  ${CMAKE_CURRENT_BINARY_DIR}/Libraries.inc
+)
+
+set (
+  CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH
+  ${CMAKE_CURRENT_BINARY_DIR}/Options.inc
+)
 
 set (
   CARLA_UNREAL_INCLUDE_PATHS
@@ -233,7 +244,11 @@ add_dependencies (
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
-list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-unreal-configure)
+list (
+  APPEND
+  UE_DEPENDENCIES_ORDER_ONLY
+  carla-unreal-configure
+)
 
 
 add_custom_command (
@@ -263,7 +278,11 @@ add_dependencies (
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
-list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-unreal)
+list (
+  APPEND
+  UE_DEPENDENCIES_ORDER_ONLY
+  carla-unreal
+)
 
 
 
