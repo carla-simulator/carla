@@ -27,6 +27,12 @@ option (
 )
 
 option (
+  BUILD_LIBCARLA_TESTS
+  "Build LibCarla tests."
+  ON
+)
+
+option (
   ENABLE_PYTORCH
   "Enable PyTorch for CARLA."
   OFF
