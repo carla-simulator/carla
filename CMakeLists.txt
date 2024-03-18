@@ -59,22 +59,15 @@ set (
   ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins
 )
 
-macro (carla_message)
-  message (STATUS "CARLA: " ${ARGN})
-endmacro ()
-
-macro (carla_error)
-  message (FATAL_ERROR ${ARGN})
-endmacro ()
-
-carla_message ("CARLA is set to be built using the ${CMAKE_BUILD_TYPE} cmake build type.")
-
 include (CheckCCompilerFlag)
 include (CheckCXXCompilerFlag)
 include (CheckLinkerFlag)
+include (${CARLA_WORKSPACE_PATH}/CMake/Util.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Warnings.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Errors.cmake)
+
+carla_message ("CARLA is set to be built using the ${CMAKE_BUILD_TYPE} cmake build type.")
 
 if (LINUX)
   check_linker_flag (CXX -lpthread HAS_PTHREAD)

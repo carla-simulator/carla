@@ -8,6 +8,8 @@
 
 ]]
 
+include (${CMAKE_CURRENT_SOURCE_DIR}/Util.cmake)
+
 set (UE_ROOT $ENV{CARLA_UNREAL_ENGINE_PATH})
 
 if (NOT UE_ROOT)
