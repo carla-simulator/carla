@@ -10,19 +10,25 @@
 
 option (
   BUILD_CARLA_CLIENT
-  "Build the LibCarla client."
+  "Build the CARLA client."
   ON
 )
 
 option (
   BUILD_CARLA_SERVER
-  "Build the LibCarla server."
+  "Build the CARLA server."
   ON
 )
 
 option (
-  ENABLE_LIBCARLA_PYTORCH
-  "Enable LibCarla-PyTorch."
+  BUILD_EXAMPLES
+  "Build CARLA examples."
+  ON
+)
+
+option (
+  ENABLE_PYTORCH
+  "Enable PyTorch for CARLA."
   OFF
 )
 

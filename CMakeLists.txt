@@ -157,3 +157,7 @@ endif ()
 if (BUILD_CARLA_UNREAL)
   add_subdirectory (Unreal)
 endif ()
+
+if (BUILD_EXAMPLES)
+  add_subdirectory (Examples)
+endif ()

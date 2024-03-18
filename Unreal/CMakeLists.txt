@@ -240,7 +240,7 @@ add_custom_command (
   OUTPUT
     ${CMAKE_CURRENT_BINARY_DIR}/carla-unreal.stamp
   COMMENT
-    "Building Carla Unreal..."
+    "Building CarlaUnrealEditor..."
   COMMAND
     ${CMAKE_COMMAND}
       --build ${CMAKE_CURRENT_BINARY_DIR}
