@@ -38,14 +38,7 @@ ExternalProject_Add(
 )
 
 set (CARLA_PLUGIN_BINARY_PATH ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Plugins/Carla/Binaries/Linux)
-add_custom_command(
-    TARGET carla-ros2-native-lib
-    POST_BUILD
-    COMMAND cmake -E make_directory ${CARLA_PLUGIN_BINARY_PATH}
-    COMMAND ${CMAKE_COMMAND} -E copy
-      ${PROJECT_INSTALL_PATH}/lib/*.so*
-      ${CARLA_PLUGIN_BINARY_PATH}
-)
+make_directory(${CARLA_PLUGIN_BINARY_PATH})
 
 add_custom_target (
   carla-ros2-native
