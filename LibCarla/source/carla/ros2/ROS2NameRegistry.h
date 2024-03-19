@@ -39,7 +39,6 @@ public:
     std::string _frame_id = "";
   };
 
-
   carla::rpc::ActorId ParentActorId(ActorId const child_id) const {
     std::lock_guard<std::mutex> lock(access_mutex);
     carla::rpc::ActorId parent_actor_id = 0;
@@ -53,8 +52,7 @@ public:
   /*!
     @brief returns the shortest common prefix of all registered topic names for this actor_id
   */
-  std::string TopicPrefix(ActorId const actor_id) ;
-
+  std::string TopicPrefix(ActorId const actor_id);
 
   std::string FrameId(ROS2NameRecord const* record) {
     std::lock_guard<std::mutex> lock(access_mutex);

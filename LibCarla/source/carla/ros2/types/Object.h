@@ -18,8 +18,8 @@
 #include "carla/ros2/types/WalkerActorDefinition.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/sensor/data/ActorDynamicState.h"
-#include "derived_object_msgs/msg/Object.h"
 #include "carla_msgs/msg/CarlaActorInfo.h"
+#include "derived_object_msgs/msg/Object.h"
 
 namespace carla {
 namespace ros2 {
@@ -41,19 +41,15 @@ public:
   explicit Object(std::shared_ptr<carla::ros2::types::VehicleActorDefinition> vehicle_actor_definition)
     : _actor_name_definition(
           std::static_pointer_cast<carla::ros2::types::ActorNameDefinition>(vehicle_actor_definition)) {
-
-    if (_actor_name_definition->base_type == "Bus" || _actor_name_definition->base_type == "Truck" ) {
+    if (_actor_name_definition->base_type == "Bus" || _actor_name_definition->base_type == "Truck") {
       _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_TRUCK;
-    }
-    else if (_actor_name_definition->base_type == "car" || _actor_name_definition->base_type == "van") {
+    } else if (_actor_name_definition->base_type == "car" || _actor_name_definition->base_type == "van") {
       _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_CAR;
-    }
-    else if (_actor_name_definition->base_type == "motorcycle") {
+    } else if (_actor_name_definition->base_type == "motorcycle") {
       _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_MOTORCYCLE;
     } else if (_actor_name_definition->base_type == "bicycle") {
       _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_BIKE;
-    }
-    else {
+    } else {
       // as long as we don't have the concrete information within a blueprint ...
       // we estimate the class based on the vehicle mass (motorbikes are also 4wheeled vehicles!)
       if (vehicle_actor_definition->vehicle_physics_control.mass > 2000.f) {
@@ -67,14 +63,13 @@ public:
         TODO: update Blueprint masses to more realistic values */
       else if (vehicle_actor_definition->vehicle_physics_control.mass > 100.f) {
         _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_MOTORCYCLE;
-      } 
-      else {
+      } else {
         _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_BIKE;
       }
-      carla::log_warning("Unknown Vehicle Object[", _actor_name_definition->type_id, "] id: ", _actor_name_definition->id,
-                      " object_type: ", _actor_name_definition->object_type,
-                      " base_type: ", _actor_name_definition->base_type,
-                      " mass: ", vehicle_actor_definition->vehicle_physics_control.mass, " ROS-class: ", _classification);
+      carla::log_warning(
+          "Unknown Vehicle Object[", _actor_name_definition->type_id, "] id: ", _actor_name_definition->id,
+          " object_type: ", _actor_name_definition->object_type, " base_type: ", _actor_name_definition->base_type,
+          " mass: ", vehicle_actor_definition->vehicle_physics_control.mass, " ROS-class: ", _classification);
     }
   }
   /**

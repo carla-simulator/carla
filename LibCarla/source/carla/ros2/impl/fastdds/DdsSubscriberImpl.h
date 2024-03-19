@@ -28,7 +28,7 @@ public:
   DdsSubscriberImpl() = default;
 
   virtual ~DdsSubscriberImpl() {
-    carla::log_warning("DdsSubscriberImpl[", _topic->get_name(), "]::Destructor()");
+    carla::log_info("DdsSubscriberImpl[", _topic->get_name(), "]::Destructor()");
 
     if (_datareader) {
       _subscriber->delete_datareader(_datareader);
@@ -46,44 +46,11 @@ public:
     }
   }
 
-  bool Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant, std::string topic_name, ROS2QoS tqos,
-            eprosima::fastdds::dds::SubscriberQos subqos = eprosima::fastdds::dds::SUBSCRIBER_QOS_DEFAULT,
-            eprosima::fastdds::dds::DataReaderQos rqos = eprosima::fastdds::dds::DATAREADER_QOS_DEFAULT) {
-    carla::log_warning("DdsSubscriberImpl[", topic_name, "]::Init()");
-
-    _participant = domain_participant->GetDomainParticipant();
-    if (_participant == nullptr) {
-      carla::log_error("DdsSubscriberImpl[", topic_name, "]::Init(): Invalid Participant");
-      return false;
-    }
-
-    if (_type == nullptr) {
-      carla::log_error("DdsSubscriberImpl[", topic_name, "]::Init(): Invalid TypeSupport");
-      return false;
-    }
-
-    _type.register_type(_participant);
-
-    _subscriber = _participant->create_subscriber(subqos, nullptr);
-    if (_subscriber == nullptr) {
-      carla::log_error("DdsSubscriberImpl[", topic_name, "]::Init(): Failed to create Subscriber");
-      return false;
-    }
-
-    _topic = _participant->create_topic(topic_name, _type->getName(), carla::ros2::TopicQos(tqos));
-    if (_topic == nullptr) {
-      carla::log_error("DdsSubscriberImpl[", topic_name, "]::Init(): Failed to create Topic");
-      return false;
-    }
-
-    eprosima::fastdds::dds::DataReaderListener* listener =
-        static_cast<eprosima::fastdds::dds::DataReaderListener*>(this);
-    _datareader = _subscriber->create_datareader(_topic, rqos, listener);
-    if (_datareader == nullptr) {
-      carla::log_error("DdsSubscriberImpl[", topic_name, "]::Init(): Failed to create DataReader");
-      return false;
-    }
-    return true;
+  bool Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant, std::string topic_name, ROS2QoS qos) {
+    auto subqos = SubscriberQos(qos);
+    auto rqos = DataReaderQos(qos);
+    auto tqos = TopicQos(qos);
+    return InitInternal(domain_participant, topic_name, tqos, subqos, rqos);
   }
 
   void on_subscription_matched(eprosima::fastdds::dds::DataReader*,
@@ -128,11 +95,52 @@ public:
     return _message;
   }
 
+  bool InitInternal(std::shared_ptr<DdsDomainParticipantImpl> domain_participant, std::string topic_name,
+                    eprosima::fastdds::dds::TopicQos const& tqos, eprosima::fastdds::dds::SubscriberQos const& subqos,
+                    eprosima::fastdds::dds::DataReaderQos const& rqos) {
+    carla::log_info("DdsSubscriberImpl[", topic_name, "]::Init()");
+
+    _participant = domain_participant->GetDomainParticipant();
+    if (_participant == nullptr) {
+      carla::log_error("DdsSubscriberImpl[", topic_name, "]::Init(): Invalid Participant");
+      return false;
+    }
+
+    if (_type == nullptr) {
+      carla::log_error("DdsSubscriberImpl[", topic_name, "]::Init(): Invalid TypeSupport");
+      return false;
+    }
+
+    _type.register_type(_participant);
+
+    _subscriber = _participant->create_subscriber(subqos);
+    if (_subscriber == nullptr) {
+      carla::log_error("DdsSubscriberImpl[", topic_name, "]::Init(): Failed to create Subscriber");
+      return false;
+    }
+
+    _topic = _participant->create_topic(topic_name, _type->getName(), tqos);
+    if (_topic == nullptr) {
+      carla::log_error("DdsSubscriberImpl[", topic_name, "]::Init(): Failed to create Topic");
+      return false;
+    }
+
+    eprosima::fastdds::dds::DataReaderListener* listener =
+        static_cast<eprosima::fastdds::dds::DataReaderListener*>(this);
+    _datareader = _subscriber->create_datareader(_topic, rqos, listener);
+    if (_datareader == nullptr) {
+      carla::log_error("DdsSubscriberImpl[", topic_name, "]::Init(): Failed to create DataReader");
+      return false;
+    }
+    return true;
+  }
+
   eprosima::fastdds::dds::DomainParticipant* _participant{nullptr};
   eprosima::fastdds::dds::Subscriber* _subscriber{nullptr};
   eprosima::fastdds::dds::Topic* _topic{nullptr};
   eprosima::fastdds::dds::DataReader* _datareader{nullptr};
   eprosima::fastdds::dds::TypeSupport _type{new MESSAGE_PUB_TYPE()};
+
   MESSAGE_TYPE _message{};
   int _matched{0};
   bool _first_connected{false};

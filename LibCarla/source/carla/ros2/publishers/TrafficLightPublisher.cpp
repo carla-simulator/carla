@@ -19,10 +19,10 @@ TrafficLightPublisher::TrafficLightPublisher(
     _traffic_light_status(std::make_shared<TrafficLightStatusPublisherImpl>()),
     _traffic_light_object_publisher(std::make_shared<ObjectPublisher>(*this, objects_publisher)),
     _traffic_lights_publisher(traffic_lights_publisher) {
-    // prefill some traffic_light info data
-    _traffic_light_info->Message().id(traffic_light_actor_definition->id);
-    // TODO: add respective data to actor definitions
-    //         _traffic_light_info->Message().trigger_volume(??);
+  // prefill some traffic_light info data
+  _traffic_light_info->Message().id(traffic_light_actor_definition->id);
+  // TODO: add respective data to actor definitions
+  //         _traffic_light_info->Message().trigger_volume(??);
 }
 
 bool TrafficLightPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {

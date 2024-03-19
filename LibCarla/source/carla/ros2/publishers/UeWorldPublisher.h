@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "carla/ros2/ROS2ServerInterface.h"
 #include "carla/ros2/ROS2NameRegistry.h"
+#include "carla/ros2/ROS2ServerInterface.h"
 #include "carla/ros2/publishers/CarlaActorListPublisher.h"
 #include "carla/ros2/publishers/CarlaStatusPublisher.h"
 #include "carla/ros2/publishers/ClockPublisher.h"
@@ -35,8 +35,7 @@ namespace ros2 {
  */
 class UeWorldPublisher : public UePublisherBaseSensor {
 public:
-  UeWorldPublisher(ROS2ServerInterface &carla_server,
-                  std::shared_ptr<ROS2NameRegistry> name_registry,
+  UeWorldPublisher(ROS2ServerInterface &carla_server, std::shared_ptr<ROS2NameRegistry> name_registry,
                    std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition);
   virtual ~UeWorldPublisher() = default;
 

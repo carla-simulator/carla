@@ -10,8 +10,7 @@
 namespace carla {
 namespace ros2 {
 
-using CarlaStatusPublisherImpl =
-    DdsPublisherImpl<carla_msgs::msg::CarlaStatus, carla_msgs::msg::CarlaStatusPubSubType>;
+using CarlaStatusPublisherImpl = DdsPublisherImpl<carla_msgs::msg::CarlaStatus, carla_msgs::msg::CarlaStatusPubSubType>;
 
 class CarlaStatusPublisher : public PublisherBaseSensor {
 public:

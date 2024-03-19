@@ -9,8 +9,7 @@
 namespace carla {
 namespace ros2 {
 
-UeWorldPublisher::UeWorldPublisher(ROS2ServerInterface& carla_server,
-                                   std::shared_ptr<ROS2NameRegistry> name_registry,
+UeWorldPublisher::UeWorldPublisher(ROS2ServerInterface& carla_server, std::shared_ptr<ROS2NameRegistry> name_registry,
                                    std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition)
   : UePublisherBaseSensor(sensor_actor_definition, std::make_shared<TransformPublisher>()),
     _carla_server(carla_server),
@@ -25,10 +24,9 @@ UeWorldPublisher::UeWorldPublisher(ROS2ServerInterface& carla_server,
 bool UeWorldPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
   _domain_participant_impl = domain_participant;
   _initialized = _carla_status_publisher->Init(domain_participant) &&
-                 _carla_actor_list_publisher->Init(domain_participant) &&
-                 _clock_publisher->Init(domain_participant) && _map_publisher->Init(domain_participant) &&
-                 _objects_publisher->Init(domain_participant) && _traffic_lights_publisher->Init(domain_participant) &&
-                 _transform_publisher->Init(domain_participant);
+                 _carla_actor_list_publisher->Init(domain_participant) && _clock_publisher->Init(domain_participant) &&
+                 _map_publisher->Init(domain_participant) && _objects_publisher->Init(domain_participant) &&
+                 _traffic_lights_publisher->Init(domain_participant) && _transform_publisher->Init(domain_participant);
   return _initialized;
 }
 
@@ -68,7 +66,7 @@ void UeWorldPublisher::PostTickAction() {
   if (_carla_status_publisher->SubsribersConnected()) {
     _carla_status_publisher->Publish();
   }
-  if ( _carla_actor_list_publisher->SubsribersConnected()) {
+  if (_carla_actor_list_publisher->SubsribersConnected()) {
     _carla_actor_list_publisher->Publish();
   }
   if (_objects_publisher->SubsribersConnected()) {
@@ -273,10 +271,10 @@ void UeWorldPublisher::UpdateSensorData(
     }
   }
 
-  if ( _objects_changed ) {
-    _objects_changed=false;
+  if (_objects_changed) {
+    _objects_changed = false;
     carla_msgs::msg::CarlaActorList actor_list;
-    for (auto const &object: _objects) {
+    for (auto const& object : _objects) {
       actor_list.actors().push_back(object.second->carla_actor_info(_name_registry));
     }
     _carla_actor_list_publisher->UpdateCarlaActorList(actor_list);
