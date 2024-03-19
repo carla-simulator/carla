@@ -9,3 +9,4 @@ Dist/
 out/
 
 CMakeSettings.json
+cmake*
