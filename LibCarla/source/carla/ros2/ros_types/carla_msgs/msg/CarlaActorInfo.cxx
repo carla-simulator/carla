@@ -36,15 +36,21 @@ using namespace eprosima::fastcdr::exception;
 
 carla_msgs::msg::CarlaActorInfo::CarlaActorInfo()
 {
-    // m_id com.eprosima.idl.parser.typecode.PrimitiveTypeCode@b59d31
+    // m_id com.eprosima.idl.parser.typecode.PrimitiveTypeCode@11e21d0e
     m_id = 0;
-    // m_parent_id com.eprosima.idl.parser.typecode.PrimitiveTypeCode@62fdb4a6
+    // m_parent_id com.eprosima.idl.parser.typecode.PrimitiveTypeCode@1dd02175
     m_parent_id = 0;
-    // m_type com.eprosima.idl.parser.typecode.StringTypeCode@11e21d0e
+    // m_type com.eprosima.idl.parser.typecode.StringTypeCode@31206beb
     m_type ="";
-    // m_rolename com.eprosima.idl.parser.typecode.StringTypeCode@1dd02175
+    // m_rosname com.eprosima.idl.parser.typecode.StringTypeCode@3e77a1ed
+    m_rosname ="";
+    // m_rolename com.eprosima.idl.parser.typecode.StringTypeCode@3ffcd140
     m_rolename ="";
-    // m_topic_prefix com.eprosima.idl.parser.typecode.StringTypeCode@31206beb
+    // m_object_type com.eprosima.idl.parser.typecode.StringTypeCode@23bb8443
+    m_object_type ="";
+    // m_base_type com.eprosima.idl.parser.typecode.StringTypeCode@1176dcec
+    m_base_type ="";
+    // m_topic_prefix com.eprosima.idl.parser.typecode.StringTypeCode@120d6fe6
     m_topic_prefix ="";
 
 }
@@ -55,6 +61,9 @@ carla_msgs::msg::CarlaActorInfo::~CarlaActorInfo()
 
 
 
+
+
+
 }
 
 carla_msgs::msg::CarlaActorInfo::CarlaActorInfo(
@@ -63,7 +72,10 @@ carla_msgs::msg::CarlaActorInfo::CarlaActorInfo(
     m_id = x.m_id;
     m_parent_id = x.m_parent_id;
     m_type = x.m_type;
+    m_rosname = x.m_rosname;
     m_rolename = x.m_rolename;
+    m_object_type = x.m_object_type;
+    m_base_type = x.m_base_type;
     m_topic_prefix = x.m_topic_prefix;
 }
 
@@ -73,7 +85,10 @@ carla_msgs::msg::CarlaActorInfo::CarlaActorInfo(
     m_id = x.m_id;
     m_parent_id = x.m_parent_id;
     m_type = std::move(x.m_type);
+    m_rosname = std::move(x.m_rosname);
     m_rolename = std::move(x.m_rolename);
+    m_object_type = std::move(x.m_object_type);
+    m_base_type = std::move(x.m_base_type);
     m_topic_prefix = std::move(x.m_topic_prefix);
 }
 
@@ -84,7 +99,10 @@ carla_msgs::msg::CarlaActorInfo& carla_msgs::msg::CarlaActorInfo::operator =(
     m_id = x.m_id;
     m_parent_id = x.m_parent_id;
     m_type = x.m_type;
+    m_rosname = x.m_rosname;
     m_rolename = x.m_rolename;
+    m_object_type = x.m_object_type;
+    m_base_type = x.m_base_type;
     m_topic_prefix = x.m_topic_prefix;
 
     return *this;
@@ -97,7 +115,10 @@ carla_msgs::msg::CarlaActorInfo& carla_msgs::msg::CarlaActorInfo::operator =(
     m_id = x.m_id;
     m_parent_id = x.m_parent_id;
     m_type = std::move(x.m_type);
+    m_rosname = std::move(x.m_rosname);
     m_rolename = std::move(x.m_rolename);
+    m_object_type = std::move(x.m_object_type);
+    m_base_type = std::move(x.m_base_type);
     m_topic_prefix = std::move(x.m_topic_prefix);
 
     return *this;
@@ -107,7 +128,7 @@ bool carla_msgs::msg::CarlaActorInfo::operator ==(
         const CarlaActorInfo& x) const
 {
 
-    return (m_id == x.m_id && m_parent_id == x.m_parent_id && m_type == x.m_type && m_rolename == x.m_rolename && m_topic_prefix == x.m_topic_prefix);
+    return (m_id == x.m_id && m_parent_id == x.m_parent_id && m_type == x.m_type && m_rosname == x.m_rosname && m_rolename == x.m_rolename && m_object_type == x.m_object_type && m_base_type == x.m_base_type && m_topic_prefix == x.m_topic_prefix);
 }
 
 bool carla_msgs::msg::CarlaActorInfo::operator !=(
@@ -127,6 +148,12 @@ size_t carla_msgs::msg::CarlaActorInfo::getMaxCdrSerializedSize(
 
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + 255 + 1;
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + 255 + 1;
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + 255 + 1;
 
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + 255 + 1;
 
@@ -154,7 +181,13 @@ size_t carla_msgs::msg::CarlaActorInfo::getCdrSerializedSize(
 
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.type().size() + 1;
 
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.rosname().size() + 1;
+
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.rolename().size() + 1;
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.object_type().size() + 1;
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.base_type().size() + 1;
 
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.topic_prefix().size() + 1;
 
@@ -169,7 +202,10 @@ void carla_msgs::msg::CarlaActorInfo::serialize(
     scdr << m_id;
     scdr << m_parent_id;
     scdr << m_type;
+    scdr << m_rosname;
     scdr << m_rolename;
+    scdr << m_object_type;
+    scdr << m_base_type;
     scdr << m_topic_prefix;
 
 }
@@ -181,7 +217,10 @@ void carla_msgs::msg::CarlaActorInfo::deserialize(
     dcdr >> m_id;
     dcdr >> m_parent_id;
     dcdr >> m_type;
+    dcdr >> m_rosname;
     dcdr >> m_rolename;
+    dcdr >> m_object_type;
+    dcdr >> m_base_type;
     dcdr >> m_topic_prefix;
 }
 
@@ -279,6 +318,43 @@ std::string& carla_msgs::msg::CarlaActorInfo::type()
     return m_type;
 }
 /*!
+ * @brief This function copies the value in member rosname
+ * @param _rosname New value to be copied in member rosname
+ */
+void carla_msgs::msg::CarlaActorInfo::rosname(
+        const std::string& _rosname)
+{
+    m_rosname = _rosname;
+}
+
+/*!
+ * @brief This function moves the value in member rosname
+ * @param _rosname New value to be moved in member rosname
+ */
+void carla_msgs::msg::CarlaActorInfo::rosname(
+        std::string&& _rosname)
+{
+    m_rosname = std::move(_rosname);
+}
+
+/*!
+ * @brief This function returns a constant reference to member rosname
+ * @return Constant reference to member rosname
+ */
+const std::string& carla_msgs::msg::CarlaActorInfo::rosname() const
+{
+    return m_rosname;
+}
+
+/*!
+ * @brief This function returns a reference to member rosname
+ * @return Reference to member rosname
+ */
+std::string& carla_msgs::msg::CarlaActorInfo::rosname()
+{
+    return m_rosname;
+}
+/*!
  * @brief This function copies the value in member rolename
  * @param _rolename New value to be copied in member rolename
  */
@@ -314,6 +390,80 @@ const std::string& carla_msgs::msg::CarlaActorInfo::rolename() const
 std::string& carla_msgs::msg::CarlaActorInfo::rolename()
 {
     return m_rolename;
+}
+/*!
+ * @brief This function copies the value in member object_type
+ * @param _object_type New value to be copied in member object_type
+ */
+void carla_msgs::msg::CarlaActorInfo::object_type(
+        const std::string& _object_type)
+{
+    m_object_type = _object_type;
+}
+
+/*!
+ * @brief This function moves the value in member object_type
+ * @param _object_type New value to be moved in member object_type
+ */
+void carla_msgs::msg::CarlaActorInfo::object_type(
+        std::string&& _object_type)
+{
+    m_object_type = std::move(_object_type);
+}
+
+/*!
+ * @brief This function returns a constant reference to member object_type
+ * @return Constant reference to member object_type
+ */
+const std::string& carla_msgs::msg::CarlaActorInfo::object_type() const
+{
+    return m_object_type;
+}
+
+/*!
+ * @brief This function returns a reference to member object_type
+ * @return Reference to member object_type
+ */
+std::string& carla_msgs::msg::CarlaActorInfo::object_type()
+{
+    return m_object_type;
+}
+/*!
+ * @brief This function copies the value in member base_type
+ * @param _base_type New value to be copied in member base_type
+ */
+void carla_msgs::msg::CarlaActorInfo::base_type(
+        const std::string& _base_type)
+{
+    m_base_type = _base_type;
+}
+
+/*!
+ * @brief This function moves the value in member base_type
+ * @param _base_type New value to be moved in member base_type
+ */
+void carla_msgs::msg::CarlaActorInfo::base_type(
+        std::string&& _base_type)
+{
+    m_base_type = std::move(_base_type);
+}
+
+/*!
+ * @brief This function returns a constant reference to member base_type
+ * @return Constant reference to member base_type
+ */
+const std::string& carla_msgs::msg::CarlaActorInfo::base_type() const
+{
+    return m_base_type;
+}
+
+/*!
+ * @brief This function returns a reference to member base_type
+ * @return Reference to member base_type
+ */
+std::string& carla_msgs::msg::CarlaActorInfo::base_type()
+{
+    return m_base_type;
 }
 /*!
  * @brief This function copies the value in member topic_prefix
@@ -372,7 +522,7 @@ void carla_msgs::msg::CarlaActorInfo::serializeKey(
         eprosima::fastcdr::Cdr& scdr) const
 {
     (void) scdr;
-         
+            
 }
 
 

@@ -1,7 +1,9 @@
 To update the types within this folder one has to:
 
-  * ```git clone https://github.com/carla-simulator/ros-carla-msgs carla_msgs```
-  * install ROS2 on the system and all message dependencies of the carla_msgs
+  
+  * Checkout the ros2/carla_msgs submodule
+    ```git submodule update --init```
+  * install ROS2 on the system and all message dependencies of the carla_msgs (see ros2/carla_msgs docu)
   * in case the carla msg files are changed:
     - build the ROS2 package of the carla_msgs
     - copy the idl files from the build folder into the respective carla_msgs folder

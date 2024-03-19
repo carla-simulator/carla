@@ -187,6 +187,31 @@ namespace carla_msgs {
              */
             eProsima_user_DllExport std::string& type();
             /*!
+             * @brief This function copies the value in member rosname
+             * @param _rosname New value to be copied in member rosname
+             */
+            eProsima_user_DllExport void rosname(
+                    const std::string& _rosname);
+
+            /*!
+             * @brief This function moves the value in member rosname
+             * @param _rosname New value to be moved in member rosname
+             */
+            eProsima_user_DllExport void rosname(
+                    std::string&& _rosname);
+
+            /*!
+             * @brief This function returns a constant reference to member rosname
+             * @return Constant reference to member rosname
+             */
+            eProsima_user_DllExport const std::string& rosname() const;
+
+            /*!
+             * @brief This function returns a reference to member rosname
+             * @return Reference to member rosname
+             */
+            eProsima_user_DllExport std::string& rosname();
+            /*!
              * @brief This function copies the value in member rolename
              * @param _rolename New value to be copied in member rolename
              */
@@ -211,6 +236,56 @@ namespace carla_msgs {
              * @return Reference to member rolename
              */
             eProsima_user_DllExport std::string& rolename();
+            /*!
+             * @brief This function copies the value in member object_type
+             * @param _object_type New value to be copied in member object_type
+             */
+            eProsima_user_DllExport void object_type(
+                    const std::string& _object_type);
+
+            /*!
+             * @brief This function moves the value in member object_type
+             * @param _object_type New value to be moved in member object_type
+             */
+            eProsima_user_DllExport void object_type(
+                    std::string&& _object_type);
+
+            /*!
+             * @brief This function returns a constant reference to member object_type
+             * @return Constant reference to member object_type
+             */
+            eProsima_user_DllExport const std::string& object_type() const;
+
+            /*!
+             * @brief This function returns a reference to member object_type
+             * @return Reference to member object_type
+             */
+            eProsima_user_DllExport std::string& object_type();
+            /*!
+             * @brief This function copies the value in member base_type
+             * @param _base_type New value to be copied in member base_type
+             */
+            eProsima_user_DllExport void base_type(
+                    const std::string& _base_type);
+
+            /*!
+             * @brief This function moves the value in member base_type
+             * @param _base_type New value to be moved in member base_type
+             */
+            eProsima_user_DllExport void base_type(
+                    std::string&& _base_type);
+
+            /*!
+             * @brief This function returns a constant reference to member base_type
+             * @return Constant reference to member base_type
+             */
+            eProsima_user_DllExport const std::string& base_type() const;
+
+            /*!
+             * @brief This function returns a reference to member base_type
+             * @return Reference to member base_type
+             */
+            eProsima_user_DllExport std::string& base_type();
             /*!
              * @brief This function copies the value in member topic_prefix
              * @param _topic_prefix New value to be copied in member topic_prefix
@@ -299,7 +374,10 @@ namespace carla_msgs {
             uint32_t m_id;
             uint32_t m_parent_id;
             std::string m_type;
+            std::string m_rosname;
             std::string m_rolename;
+            std::string m_object_type;
+            std::string m_base_type;
             std::string m_topic_prefix;
         };
     } // namespace msg

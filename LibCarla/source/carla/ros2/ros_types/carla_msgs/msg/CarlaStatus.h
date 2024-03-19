@@ -22,6 +22,7 @@
 #ifndef _FAST_DDS_GENERATED_CARLA_MSGS_MSG_CARLASTATUS_H_
 #define _FAST_DDS_GENERATED_CARLA_MSGS_MSG_CARLASTATUS_H_
 
+#include "std_msgs/msg/Header.h"
 
 #include <stdint.h>
 #include <array>
@@ -123,6 +124,31 @@ namespace carla_msgs {
             eProsima_user_DllExport bool operator !=(
                     const CarlaStatus& x) const;
 
+            /*!
+             * @brief This function copies the value in member header
+             * @param _header New value to be copied in member header
+             */
+            eProsima_user_DllExport void header(
+                    const std_msgs::msg::Header& _header);
+
+            /*!
+             * @brief This function moves the value in member header
+             * @param _header New value to be moved in member header
+             */
+            eProsima_user_DllExport void header(
+                    std_msgs::msg::Header&& _header);
+
+            /*!
+             * @brief This function returns a constant reference to member header
+             * @return Constant reference to member header
+             */
+            eProsima_user_DllExport const std_msgs::msg::Header& header() const;
+
+            /*!
+             * @brief This function returns a reference to member header
+             * @return Reference to member header
+             */
+            eProsima_user_DllExport std_msgs::msg::Header& header();
             /*!
              * @brief This function sets a value in member frame
              * @param _frame New value for member frame
@@ -259,6 +285,7 @@ namespace carla_msgs {
 
         private:
 
+            std_msgs::msg::Header m_header;
             uint64_t m_frame;
             float m_fixed_delta_seconds;
             bool m_synchronous_mode;

@@ -252,7 +252,7 @@ void ROS2::CreateSensorUePublisher(UeSensor &sensor) {
           std::make_shared<UeISCameraPublisher>(sensor.sensor_actor_definition, _transform_publisher));
     } break;
     case types::PublisherSensorType::WorldObserver: {
-      _world_publisher = std::make_shared<UeWorldPublisher>(*_carla_server, sensor.sensor_actor_definition);
+      _world_publisher = std::make_shared<UeWorldPublisher>(*_carla_server, _name_registry, sensor.sensor_actor_definition);
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(_world_publisher);
     } break;
 

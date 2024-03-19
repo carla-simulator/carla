@@ -5,6 +5,8 @@
 #pragma once
 
 #include "carla/ros2/ROS2ServerInterface.h"
+#include "carla/ros2/ROS2NameRegistry.h"
+#include "carla/ros2/publishers/CarlaActorListPublisher.h"
 #include "carla/ros2/publishers/CarlaStatusPublisher.h"
 #include "carla/ros2/publishers/ClockPublisher.h"
 #include "carla/ros2/publishers/MapPublisher.h"
@@ -34,6 +36,7 @@ namespace ros2 {
 class UeWorldPublisher : public UePublisherBaseSensor {
 public:
   UeWorldPublisher(ROS2ServerInterface &carla_server,
+                  std::shared_ptr<ROS2NameRegistry> name_registry,
                    std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition);
   virtual ~UeWorldPublisher() = default;
 
@@ -119,6 +122,7 @@ private:
   carla::ros2::types::Timestamp _timestamp{};
   uint64_t _frame{0u};
   carla::sensor::s11n::EpisodeStateSerializer::Header _episode_header;
+  bool _objects_changed{false};
   std::unordered_map<ActorId, std::shared_ptr<carla::ros2::types::Object>> _objects;
 
   struct UeVehicle {
@@ -158,8 +162,10 @@ private:
   std::shared_ptr<DdsDomainParticipantImpl> _domain_participant_impl;
 
   ROS2ServerInterface &_carla_server;
+  std::shared_ptr<ROS2NameRegistry> _name_registry;
   // publisher
   std::shared_ptr<CarlaStatusPublisher> _carla_status_publisher;
+  std::shared_ptr<CarlaActorListPublisher> _carla_actor_list_publisher;
   std::shared_ptr<ClockPublisher> _clock_publisher;
   std::shared_ptr<MapPublisher> _map_publisher;
   std::shared_ptr<ObjectsPublisher> _objects_publisher;

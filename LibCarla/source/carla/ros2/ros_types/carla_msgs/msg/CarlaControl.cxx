@@ -40,7 +40,7 @@ using namespace eprosima::fastcdr::exception;
 
 carla_msgs::msg::CarlaControl::CarlaControl()
 {
-    // m_command com.eprosima.idl.parser.typecode.PrimitiveTypeCode@683dbc2c
+    // m_command com.eprosima.idl.parser.typecode.PrimitiveTypeCode@a1cdc6d
     m_command = 0;
 
 }

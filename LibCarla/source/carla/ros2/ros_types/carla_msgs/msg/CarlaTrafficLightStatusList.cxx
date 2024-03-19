@@ -36,7 +36,7 @@ using namespace eprosima::fastcdr::exception;
 
 carla_msgs::msg::CarlaTrafficLightStatusList::CarlaTrafficLightStatusList()
 {
-    // m_traffic_lights com.eprosima.idl.parser.typecode.SequenceTypeCode@4659191b
+    // m_traffic_lights com.eprosima.idl.parser.typecode.SequenceTypeCode@506ae4d4
 
 
 }

@@ -39,6 +39,23 @@ public:
     std::string _frame_id = "";
   };
 
+
+  carla::rpc::ActorId ParentActorId(ActorId const child_id) const {
+    std::lock_guard<std::mutex> lock(access_mutex);
+    carla::rpc::ActorId parent_actor_id = 0;
+    auto find_result = parent_map.find(child_id);
+    if (find_result != parent_map.end()) {
+      parent_actor_id = find_result->second;
+    }
+    return parent_actor_id;
+  }
+
+  /*!
+    @brief returns the shortest common prefix of all registered topic names for this actor_id
+  */
+  std::string TopicPrefix(ActorId const actor_id) ;
+
+
   std::string FrameId(ROS2NameRecord const* record) {
     std::lock_guard<std::mutex> lock(access_mutex);
     return GetTopicAndFrameLocked(record)._frame_id;
@@ -95,7 +112,7 @@ private:
   void UpdateTopicAndFrameLocked(carla::rpc::ActorId actor_id);
   std::map<KeyType, TopicAndFrame>::iterator CreateTopicAndFrameLocked(KeyType const& key);
 
-  std::mutex access_mutex;
+  mutable std::mutex access_mutex;
   std::set<ROS2NameRecord const*> record_set;
   std::map<carla::rpc::ActorId, carla::rpc::ActorId> parent_map;
   std::map<KeyType, TopicAndFrame> topic_and_frame_map;

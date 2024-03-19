@@ -157,9 +157,7 @@ namespace geom {
      */
     static float CosineVectorAngleFromUnitVectors(Vector3D const &a_unit, Vector3D const &b_unit)
     {
-        auto a = a_unit.EnsureUnitVector();
-        auto b = b_unit.EnsureUnitVector();
-        return Dot(a, b);
+        return Dot(a_unit, b_unit);
     }
 
     /** Returns the cosine of the angle between the two vectors
@@ -193,8 +191,7 @@ namespace geom {
      */
     static bool SignBitCosineAngleFromUnitVector(Vector3D const &a, Vector3D const &b_unit)
     {
-      auto b = b_unit.EnsureUnitVector();
-      return std::signbit(Dot(a, b));
+      return std::signbit(Dot(a, b_unit));
     }
 
     /** Returns the signbit of the cosine of the angle between two vectors

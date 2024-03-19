@@ -36,7 +36,7 @@ using namespace eprosima::fastcdr::exception;
 
 carla_msgs::msg::CarlaActorList::CarlaActorList()
 {
-    // m_actors com.eprosima.idl.parser.typecode.SequenceTypeCode@14ec4505
+    // m_actors com.eprosima.idl.parser.typecode.SequenceTypeCode@5906ebcb
 
 
 }

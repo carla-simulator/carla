@@ -70,6 +70,37 @@ void ROS2NameRegistry::AttachActors(ActorId const child_id, ActorId const parent
   UpdateTopicAndFrameLocked(child_id);
 }
 
+std::string ROS2NameRegistry::TopicPrefix(ActorId const actor_id) {
+  std::lock_guard<std::mutex> lock(access_mutex);
+  std::string result_topic_name = "";
+  for (auto& record : record_set) {
+    auto const actor_definition = record->_actor_name_definition;
+    if (actor_definition->id == actor_id) {
+      auto const topic_name = GetTopicAndFrameLocked(KeyType(record))._topic_name;
+      if ( result_topic_name.empty() ) {
+        result_topic_name = topic_name;
+      }
+      else {
+        auto iter_a=result_topic_name.begin();
+        auto iter_b=topic_name.begin();
+        while(iter_a!=result_topic_name.end() && iter_b!=topic_name.end() && (*iter_a == *iter_b)) { }
+        if ( iter_a==result_topic_name.end() ) {
+          // result_topic_name is already shortest common prefix
+        }
+        else if ( iter_b==topic_name.end() ) {
+          // topic_name is new shortest common prefix
+          result_topic_name = topic_name;
+        }
+        else {
+          result_topic_name = {result_topic_name.begin(), iter_a};
+        }
+      }
+    }
+  }
+  return result_topic_name;
+}
+
+
 ROS2NameRegistry::TopicAndFrame const& ROS2NameRegistry::GetTopicAndFrameLocked(ROS2NameRecord const* record) {
   return GetTopicAndFrameLocked(KeyType(record));
 }

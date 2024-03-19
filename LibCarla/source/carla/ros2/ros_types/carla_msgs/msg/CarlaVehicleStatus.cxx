@@ -39,23 +39,23 @@ using namespace eprosima::fastcdr::exception;
 
 carla_msgs::msg::CarlaVehicleStatus::CarlaVehicleStatus()
 {
-    // m_header com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@350aac89
+    // m_header com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@4a83a74a
 
-    // m_pose com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@1c5920df
+    // m_pose com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@1349883
 
-    // m_twist com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@17f9d882
+    // m_twist com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@4b29d1d2
 
-    // m_velocity com.eprosima.idl.parser.typecode.PrimitiveTypeCode@79e4c792
+    // m_velocity com.eprosima.idl.parser.typecode.PrimitiveTypeCode@7f485fda
     m_velocity = 0.0;
-    // m_acceleration com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@196a42c3
+    // m_acceleration com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@28261e8e
 
-    // m_orientation com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@4c60d6e9
+    // m_orientation com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@d737b89
 
-    // m_active_control_type com.eprosima.idl.parser.typecode.PrimitiveTypeCode@15043a2f
+    // m_active_control_type com.eprosima.idl.parser.typecode.PrimitiveTypeCode@8519cb4
     m_active_control_type = 0;
-    // m_last_applied_vehicle_control com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@4a83a74a
+    // m_last_applied_vehicle_control com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@35dab4eb
 
-    // m_last_applied_ackermann_control com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@1349883
+    // m_last_applied_ackermann_control com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@2d901eb0
 
 
 }

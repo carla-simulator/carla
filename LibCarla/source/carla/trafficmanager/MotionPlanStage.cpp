@@ -245,10 +245,10 @@ void MotionPlanStage::Update(const unsigned long index) {
         cg::Transform target_base_transform = teleport_target->GetTransform();
         cg::Location target_base_location = target_base_transform.location;
         cg::Vector3D target_heading = target_base_transform.GetForwardVector();
-        cg::Vector3D correct_heading = (target_base_location - vehicle_location).MakeSafeUnitVector(EPSILON);
+        cg::Vector3D correct_heading = (target_base_location - vehicle_location).MakeUnitVector(EPSILON);
 
         if (vehicle_location.Distance(target_base_location) < target_displacement) {
-          cg::Location teleportation_location = vehicle_location + cg::Location(target_heading.MakeSafeUnitVector(EPSILON) * target_displacement);
+          cg::Location teleportation_location = vehicle_location + cg::Location(target_heading.MakeUnitVector(EPSILON) * target_displacement);
           teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
         }
         else {

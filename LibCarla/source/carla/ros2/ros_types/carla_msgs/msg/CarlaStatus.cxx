@@ -36,13 +36,15 @@ using namespace eprosima::fastcdr::exception;
 
 carla_msgs::msg::CarlaStatus::CarlaStatus()
 {
-    // m_frame com.eprosima.idl.parser.typecode.PrimitiveTypeCode@7e5afaa6
+    // m_header com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@fba92d3
+
+    // m_frame com.eprosima.idl.parser.typecode.PrimitiveTypeCode@71238fc2
     m_frame = 0;
-    // m_fixed_delta_seconds com.eprosima.idl.parser.typecode.PrimitiveTypeCode@63a12c68
+    // m_fixed_delta_seconds com.eprosima.idl.parser.typecode.PrimitiveTypeCode@2a54a73f
     m_fixed_delta_seconds = 0.0;
-    // m_synchronous_mode com.eprosima.idl.parser.typecode.PrimitiveTypeCode@28f3b248
+    // m_synchronous_mode com.eprosima.idl.parser.typecode.PrimitiveTypeCode@16a0ee18
     m_synchronous_mode = false;
-    // m_synchronous_mode_running com.eprosima.idl.parser.typecode.PrimitiveTypeCode@1b1426f4
+    // m_synchronous_mode_running com.eprosima.idl.parser.typecode.PrimitiveTypeCode@3d6f0054
     m_synchronous_mode_running = false;
 
 }
@@ -52,11 +54,13 @@ carla_msgs::msg::CarlaStatus::~CarlaStatus()
 
 
 
+
 }
 
 carla_msgs::msg::CarlaStatus::CarlaStatus(
         const CarlaStatus& x)
 {
+    m_header = x.m_header;
     m_frame = x.m_frame;
     m_fixed_delta_seconds = x.m_fixed_delta_seconds;
     m_synchronous_mode = x.m_synchronous_mode;
@@ -66,6 +70,7 @@ carla_msgs::msg::CarlaStatus::CarlaStatus(
 carla_msgs::msg::CarlaStatus::CarlaStatus(
         CarlaStatus&& x)
 {
+    m_header = std::move(x.m_header);
     m_frame = x.m_frame;
     m_fixed_delta_seconds = x.m_fixed_delta_seconds;
     m_synchronous_mode = x.m_synchronous_mode;
@@ -76,6 +81,7 @@ carla_msgs::msg::CarlaStatus& carla_msgs::msg::CarlaStatus::operator =(
         const CarlaStatus& x)
 {
 
+    m_header = x.m_header;
     m_frame = x.m_frame;
     m_fixed_delta_seconds = x.m_fixed_delta_seconds;
     m_synchronous_mode = x.m_synchronous_mode;
@@ -88,6 +94,7 @@ carla_msgs::msg::CarlaStatus& carla_msgs::msg::CarlaStatus::operator =(
         CarlaStatus&& x)
 {
 
+    m_header = std::move(x.m_header);
     m_frame = x.m_frame;
     m_fixed_delta_seconds = x.m_fixed_delta_seconds;
     m_synchronous_mode = x.m_synchronous_mode;
@@ -100,7 +107,7 @@ bool carla_msgs::msg::CarlaStatus::operator ==(
         const CarlaStatus& x) const
 {
 
-    return (m_frame == x.m_frame && m_fixed_delta_seconds == x.m_fixed_delta_seconds && m_synchronous_mode == x.m_synchronous_mode && m_synchronous_mode_running == x.m_synchronous_mode_running);
+    return (m_header == x.m_header && m_frame == x.m_frame && m_fixed_delta_seconds == x.m_fixed_delta_seconds && m_synchronous_mode == x.m_synchronous_mode && m_synchronous_mode_running == x.m_synchronous_mode_running);
 }
 
 bool carla_msgs::msg::CarlaStatus::operator !=(
@@ -115,6 +122,7 @@ size_t carla_msgs::msg::CarlaStatus::getMaxCdrSerializedSize(
     size_t initial_alignment = current_alignment;
 
 
+    current_alignment += std_msgs::msg::Header::getMaxCdrSerializedSize(current_alignment);
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
 
 
@@ -139,6 +147,7 @@ size_t carla_msgs::msg::CarlaStatus::getCdrSerializedSize(
     size_t initial_alignment = current_alignment;
 
 
+    current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
 
 
@@ -159,6 +168,7 @@ void carla_msgs::msg::CarlaStatus::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
 
+    scdr << m_header;
     scdr << m_frame;
     scdr << m_fixed_delta_seconds;
     scdr << m_synchronous_mode;
@@ -170,12 +180,50 @@ void carla_msgs::msg::CarlaStatus::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
 
+    dcdr >> m_header;
     dcdr >> m_frame;
     dcdr >> m_fixed_delta_seconds;
     dcdr >> m_synchronous_mode;
     dcdr >> m_synchronous_mode_running;
 }
 
+/*!
+ * @brief This function copies the value in member header
+ * @param _header New value to be copied in member header
+ */
+void carla_msgs::msg::CarlaStatus::header(
+        const std_msgs::msg::Header& _header)
+{
+    m_header = _header;
+}
+
+/*!
+ * @brief This function moves the value in member header
+ * @param _header New value to be moved in member header
+ */
+void carla_msgs::msg::CarlaStatus::header(
+        std_msgs::msg::Header&& _header)
+{
+    m_header = std::move(_header);
+}
+
+/*!
+ * @brief This function returns a constant reference to member header
+ * @return Constant reference to member header
+ */
+const std_msgs::msg::Header& carla_msgs::msg::CarlaStatus::header() const
+{
+    return m_header;
+}
+
+/*!
+ * @brief This function returns a reference to member header
+ * @return Reference to member header
+ */
+std_msgs::msg::Header& carla_msgs::msg::CarlaStatus::header()
+{
+    return m_header;
+}
 /*!
  * @brief This function sets a value in member frame
  * @param _frame New value for member frame
@@ -308,7 +356,7 @@ void carla_msgs::msg::CarlaStatus::serializeKey(
         eprosima::fastcdr::Cdr& scdr) const
 {
     (void) scdr;
-        
+         
 }
 
 

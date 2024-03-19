@@ -36,9 +36,9 @@ using namespace eprosima::fastcdr::exception;
 
 carla_msgs::msg::CarlaBoundingBox::CarlaBoundingBox()
 {
-    // m_center com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@40ef3420
+    // m_center com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@384ad17b
 
-    // m_size com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@40ef3420
+    // m_size com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@384ad17b
 
 
 }

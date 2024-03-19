@@ -36,11 +36,11 @@ using namespace eprosima::fastcdr::exception;
 
 carla_msgs::msg::CarlaTrafficLightInfo::CarlaTrafficLightInfo()
 {
-    // m_id com.eprosima.idl.parser.typecode.PrimitiveTypeCode@20ccf40b
+    // m_id com.eprosima.idl.parser.typecode.PrimitiveTypeCode@a530d0a
     m_id = 0;
-    // m_transform com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@2fb3536e
+    // m_transform com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@1a18644
 
-    // m_trigger_volume com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@7205765b
+    // m_trigger_volume com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@5acf93bb
 
 
 }

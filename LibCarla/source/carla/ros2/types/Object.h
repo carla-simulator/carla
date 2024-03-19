@@ -7,6 +7,7 @@
 #include <limits>
 
 #include "carla/geom/BoundingBox.h"
+#include "carla/ros2/ROS2NameRegistry.h"
 #include "carla/ros2/types/AcceleratedMovement.h"
 #include "carla/ros2/types/Polygon.h"
 #include "carla/ros2/types/Timestamp.h"
@@ -18,6 +19,7 @@
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/sensor/data/ActorDynamicState.h"
 #include "derived_object_msgs/msg/Object.h"
+#include "carla_msgs/msg/CarlaActorInfo.h"
 
 namespace carla {
 namespace ros2 {
@@ -39,26 +41,41 @@ public:
   explicit Object(std::shared_ptr<carla::ros2::types::VehicleActorDefinition> vehicle_actor_definition)
     : _actor_name_definition(
           std::static_pointer_cast<carla::ros2::types::ActorNameDefinition>(vehicle_actor_definition)) {
-    // as long as we don't have the concrete information within the blueprints ...
-    // we estimate the class based on the vehicle mass (number of wheels seems to be also 4 for motorbikes!)
-    if (vehicle_actor_definition->vehicle_physics_control.mass > 2000.f) {
+
+    if (_actor_name_definition->base_type == "Bus" || _actor_name_definition->base_type == "Truck" ) {
       _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_TRUCK;
     }
-    /* microlino has 513kg */
-    else if (vehicle_actor_definition->vehicle_physics_control.mass > 500.f) {
+    else if (_actor_name_definition->base_type == "car" || _actor_name_definition->base_type == "van") {
       _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_CAR;
     }
-    /* gazelle bike has 150 (ok, when 130kg person is sitting on it ;-), but yamaha 140kg how should that work out??
-       TODO: update Blueprint masses to more realistic values */
-    else if (vehicle_actor_definition->vehicle_physics_control.mass > 151.f) {
+    else if (_actor_name_definition->base_type == "motorcycle") {
       _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_MOTORCYCLE;
-    } else {
+    } else if (_actor_name_definition->base_type == "bicycle") {
       _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_BIKE;
     }
-    carla::log_info("Creating Vehicle Object[", _actor_name_definition->type_id, "] id: ", _actor_name_definition->id,
-                    " object_type: ", _actor_name_definition->object_type,
-                    " base_type: ", _actor_name_definition->base_type,
-                    " mass: ", vehicle_actor_definition->vehicle_physics_control.mass, " ROS-class: ", _classification);
+    else {
+      // as long as we don't have the concrete information within a blueprint ...
+      // we estimate the class based on the vehicle mass (motorbikes are also 4wheeled vehicles!)
+      if (vehicle_actor_definition->vehicle_physics_control.mass > 2000.f) {
+        _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_TRUCK;
+      }
+      /* microlino has 513kg */
+      else if (vehicle_actor_definition->vehicle_physics_control.mass > 500.f) {
+        _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_CAR;
+      }
+      /* gazelle bike has 150 (ok, when 130kg person is sitting on it ;-), but yamaha 140kg how should that work out??
+        TODO: update Blueprint masses to more realistic values */
+      else if (vehicle_actor_definition->vehicle_physics_control.mass > 100.f) {
+        _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_MOTORCYCLE;
+      } 
+      else {
+        _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_BIKE;
+      }
+      carla::log_warning("Unknown Vehicle Object[", _actor_name_definition->type_id, "] id: ", _actor_name_definition->id,
+                      " object_type: ", _actor_name_definition->object_type,
+                      " base_type: ", _actor_name_definition->base_type,
+                      " mass: ", vehicle_actor_definition->vehicle_physics_control.mass, " ROS-class: ", _classification);
+    }
   }
   /**
    * The representation of an object in the sense of derived_object_msgs::msg::Object.
@@ -147,6 +164,21 @@ public:
     object.classification_certainty(255u);
     object.classification_age(_classification_age);
     return object;
+  }
+
+  carla_msgs::msg::CarlaActorInfo carla_actor_info(std::shared_ptr<ROS2NameRegistry> name_registry) const {
+    carla_msgs::msg::CarlaActorInfo actor_info;
+    actor_info.id(_actor_name_definition->id);
+    actor_info.parent_id(name_registry->ParentActorId(_actor_name_definition->id));
+    actor_info.type(_actor_name_definition->type_id);
+    actor_info.rosname(_actor_name_definition->ros_name);
+    actor_info.rolename(_actor_name_definition->role_name);
+    actor_info.object_type(_actor_name_definition->object_type);
+    actor_info.base_type(_actor_name_definition->base_type);
+    auto topic_prefix = name_registry->TopicPrefix(_actor_name_definition->id);
+    // remove "rt" prefix
+    actor_info.topic_prefix(topic_prefix.substr(3));
+    return actor_info;
   }
 
   carla::ros2::types::Timestamp const& Timestamp() const {

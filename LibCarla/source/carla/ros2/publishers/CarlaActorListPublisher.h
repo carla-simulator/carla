@@ -4,19 +4,19 @@
 
 #pragma once
 
-#include "carla/ros2/publishers/PublisherBaseSensor.h"
-#include "carla_msgs/msg/CarlaStatusPubSubTypes.h"
+#include "carla/ros2/publishers/PublisherBase.h"
+#include "carla_msgs/msg/CarlaActorListPubSubTypes.h"
 
 namespace carla {
 namespace ros2 {
 
-using CarlaStatusPublisherImpl =
-    DdsPublisherImpl<carla_msgs::msg::CarlaStatus, carla_msgs::msg::CarlaStatusPubSubType>;
+using CarlaActorListPublisherImpl =
+    DdsPublisherImpl<carla_msgs::msg::CarlaActorList, carla_msgs::msg::CarlaActorListPubSubType>;
 
-class CarlaStatusPublisher : public PublisherBaseSensor {
+class CarlaActorListPublisher : public PublisherBase {
 public:
-  CarlaStatusPublisher();
-  virtual ~CarlaStatusPublisher() = default;
+  CarlaActorListPublisher();
+  virtual ~CarlaActorListPublisher() = default;
 
   /**
    * Implements ROS2NameRecord::Init() interface
@@ -32,10 +32,10 @@ public:
    */
   bool SubsribersConnected() const override;
 
-  void UpdateCarlaStatus(const carla_msgs::msg::CarlaStatus& status, const builtin_interfaces::msg::Time& stamp);
+  void UpdateCarlaActorList(const carla_msgs::msg::CarlaActorList& actor_list);
 
 private:
-  std::shared_ptr<CarlaStatusPublisherImpl> _impl;
+  std::shared_ptr<CarlaActorListPublisherImpl> _impl;
 };
 }  // namespace ros2
 }  // namespace carla

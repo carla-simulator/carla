@@ -36,23 +36,23 @@ using namespace eprosima::fastcdr::exception;
 
 carla_msgs::msg::CarlaWeatherParameters::CarlaWeatherParameters()
 {
-    // m_cloudiness com.eprosima.idl.parser.typecode.PrimitiveTypeCode@17fc391b
+    // m_cloudiness com.eprosima.idl.parser.typecode.PrimitiveTypeCode@23e84203
     m_cloudiness = 0.0;
-    // m_precipitation com.eprosima.idl.parser.typecode.PrimitiveTypeCode@2b30a42c
+    // m_precipitation com.eprosima.idl.parser.typecode.PrimitiveTypeCode@19932c16
     m_precipitation = 0.0;
-    // m_precipitation_deposits com.eprosima.idl.parser.typecode.PrimitiveTypeCode@609e8838
+    // m_precipitation_deposits com.eprosima.idl.parser.typecode.PrimitiveTypeCode@73eb439a
     m_precipitation_deposits = 0.0;
-    // m_wind_intensity com.eprosima.idl.parser.typecode.PrimitiveTypeCode@359df09a
+    // m_wind_intensity com.eprosima.idl.parser.typecode.PrimitiveTypeCode@514646ef
     m_wind_intensity = 0.0;
-    // m_fog_density com.eprosima.idl.parser.typecode.PrimitiveTypeCode@43df23d3
+    // m_fog_density com.eprosima.idl.parser.typecode.PrimitiveTypeCode@305ffe9e
     m_fog_density = 0.0;
-    // m_fog_distance com.eprosima.idl.parser.typecode.PrimitiveTypeCode@6d60fe40
+    // m_fog_distance com.eprosima.idl.parser.typecode.PrimitiveTypeCode@302c971f
     m_fog_distance = 0.0;
-    // m_wetness com.eprosima.idl.parser.typecode.PrimitiveTypeCode@792b749c
+    // m_wetness com.eprosima.idl.parser.typecode.PrimitiveTypeCode@1972e513
     m_wetness = 0.0;
-    // m_sun_azimuth_angle com.eprosima.idl.parser.typecode.PrimitiveTypeCode@23e84203
+    // m_sun_azimuth_angle com.eprosima.idl.parser.typecode.PrimitiveTypeCode@7ae0a9ec
     m_sun_azimuth_angle = 0.0;
-    // m_sun_altitude_angle com.eprosima.idl.parser.typecode.PrimitiveTypeCode@19932c16
+    // m_sun_altitude_angle com.eprosima.idl.parser.typecode.PrimitiveTypeCode@35841320
     m_sun_altitude_angle = 0.0;
 
 }

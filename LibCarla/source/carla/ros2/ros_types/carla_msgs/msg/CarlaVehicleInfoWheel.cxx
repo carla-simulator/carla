@@ -36,19 +36,19 @@ using namespace eprosima::fastcdr::exception;
 
 carla_msgs::msg::CarlaVehicleInfoWheel::CarlaVehicleInfoWheel()
 {
-    // m_tire_friction com.eprosima.idl.parser.typecode.PrimitiveTypeCode@173ed316
+    // m_tire_friction com.eprosima.idl.parser.typecode.PrimitiveTypeCode@563f38c4
     m_tire_friction = 0.0;
-    // m_damping_rate com.eprosima.idl.parser.typecode.PrimitiveTypeCode@25ce9dc4
+    // m_damping_rate com.eprosima.idl.parser.typecode.PrimitiveTypeCode@543295b0
     m_damping_rate = 0.0;
-    // m_max_steer_angle com.eprosima.idl.parser.typecode.PrimitiveTypeCode@74ea2410
+    // m_max_steer_angle com.eprosima.idl.parser.typecode.PrimitiveTypeCode@54422e18
     m_max_steer_angle = 0.0;
-    // m_radius com.eprosima.idl.parser.typecode.PrimitiveTypeCode@17f62e33
+    // m_radius com.eprosima.idl.parser.typecode.PrimitiveTypeCode@117159c0
     m_radius = 0.0;
-    // m_max_brake_torque com.eprosima.idl.parser.typecode.PrimitiveTypeCode@76b1e9b8
+    // m_max_brake_torque com.eprosima.idl.parser.typecode.PrimitiveTypeCode@3e27ba32
     m_max_brake_torque = 0.0;
-    // m_max_handbrake_torque com.eprosima.idl.parser.typecode.PrimitiveTypeCode@27406a17
+    // m_max_handbrake_torque com.eprosima.idl.parser.typecode.PrimitiveTypeCode@7ef82753
     m_max_handbrake_torque = 0.0;
-    // m_position com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@2af004b
+    // m_position com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@3b0fe47a
 
 
 }
