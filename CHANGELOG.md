@@ -11,7 +11,8 @@
  * Added function to get actor' sockets names
  * Fixed bug in python agents when vehicle list was empty causing a check on all vehicles (BasicAgent.py) and detected pedestrians as vehicles if no pedestrains are present (BehaviourAgent.py) 
  * Added possibility to change gravity variable in imui sensor for the accelerometer
- * Integrated ROS2 native support
+ * Fixed ROS2 native extension build error when ROS2 is installed in the system.
+ * Integrated ROS2 native extension
 
 ## CARLA 0.9.15
 
