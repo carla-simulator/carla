@@ -125,7 +125,7 @@ static void EnableEnvironmentObjects(
 
 void export_world() {
   using namespace boost::python;
-  namespace ca = carla::actor;
+  namespace ca = carla::actors;
   namespace cc = carla::client;
   namespace cg = carla::geom;
   namespace cr = carla::rpc;

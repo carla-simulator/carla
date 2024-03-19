@@ -79,7 +79,7 @@ namespace actors {
 
 void export_blueprint() {
   using namespace boost::python;
-  namespace ca = carla::actor;
+  namespace ca = carla::actors;
   namespace crpc = carla::rpc;
   namespace csd = carla::sensor::data;
 

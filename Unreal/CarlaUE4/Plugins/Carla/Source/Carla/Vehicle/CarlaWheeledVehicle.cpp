@@ -474,8 +474,8 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
         PhysicsWheel.LatStiffValue = PTireData.mLatStiffY;
         PhysicsWheel.LongStiffValue = PTireData.mLongitudinalStiffnessPerUnitGravity;
       } else {
-        if (i < LastPhysicsControl.Wheels.Num()) {
-          PhysicsWheel = LastPhysicsControl.Wheels[i];
+        if (i < LastAppliedPhysicsControl.Wheels.Num()) {
+          PhysicsWheel = LastAppliedPhysicsControl.Wheels[i];
         }
       }
 
@@ -558,8 +558,8 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
         PhysicsWheel.LatStiffValue = PTireData.mLatStiffY;
         PhysicsWheel.LongStiffValue = PTireData.mLongitudinalStiffnessPerUnitGravity;
       } else {
-        if (i < LastPhysicsControl.Wheels.Num()) {
-          PhysicsWheel = LastPhysicsControl.Wheels[i];
+        if (i < LastAppliedPhysicsControl.Wheels.Num()) {
+          PhysicsWheel = LastAppliedPhysicsControl.Wheels[i];
         }
       }
 

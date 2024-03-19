@@ -21,7 +21,7 @@ namespace command_impl {
     return actor->GetId();
   }
 
-  carla::rpc::ActorDescription Convert(const carla::actor::ActorBlueprint &blueprint) {
+  carla::rpc::ActorDescription Convert(const carla::actors::ActorBlueprint &blueprint) {
     return blueprint.MakeActorDescription();
   }
 
@@ -46,7 +46,7 @@ namespace command_impl {
 
 void export_commands() {
   using namespace boost::python;
-  namespace ca = carla::actor;
+  namespace ca = carla::actors;
   namespace cc = carla::client;
   namespace cg = carla::geom;
   namespace cr = carla::rpc;
