@@ -89,7 +89,7 @@ option (
 option (
   PREFER_CLONE
   "Whether to clone dependencies instead of directly downloading a compressed archive."
-  OFF
+  ON
 )
 
 option (

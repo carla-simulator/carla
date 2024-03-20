@@ -153,7 +153,7 @@ protected:
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
     {
-      TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send PixelReader");
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 SendImageDataToClient");
       auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
       auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, StreamId, BufferView]()
       {

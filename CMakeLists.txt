@@ -15,7 +15,8 @@ cmake_minimum_required (
 
 cmake_policy (SET CMP0097 NEW)
 cmake_policy (SET CMP0091 NEW)
-cmake_policy (SET CMP0077 OLD)
+cmake_policy (SET CMP0074 NEW)
+cmake_policy (SET CMP0077 NEW)
 if (${CMAKE_MINOR_VERSION} GREATER_EQUAL 24)
   cmake_policy (SET CMP0135 NEW)
 endif ()
@@ -67,7 +68,11 @@ include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Warnings.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Errors.cmake)
 
-carla_message ("CARLA is set to be built using the ${CMAKE_BUILD_TYPE} cmake build type.")
+if (NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+  carla_warning (
+    "CARLA is not set to be built in Release mode. This may cause issues when building CarlaUnrealEditor."
+  )
+endif ()
 
 if (LINUX)
   check_linker_flag (CXX -lpthread HAS_PTHREAD)
@@ -79,10 +84,7 @@ endif ()
 # Similar to configure_file, but also expands variables
 # that are set at generate time, like generator expressions.
 macro (carla_two_step_configure_file DESTINATION SOURCE)
-  message (
-    STATUS
-    "Configuring file \"${DESTINATION}\""
-  )
+  carla_message ("Configuring file ${DESTINATION}")
   # Configure-time step; evaluate variables:
   configure_file (${SOURCE} ${DESTINATION})
   # Generate-time step; evaluate generator expressions:
@@ -108,7 +110,7 @@ endif ()
 set (CARLA_COMMON_DEFINITIONS)
 
 foreach (FORMAT ${LIBCARLA_IMAGE_SUPPORTED_FORMATS})
-  carla_message ("Enabling CARLA support \"${FORMAT}\".")
+  carla_message ("Enabling CARLA image support for \"${FORMAT}\".")
   string (TOUPPER "${FORMAT}" FORMAT_UPPERCASE)
   list (APPEND CARLA_COMMON_DEFINITIONS LIBCARLA_IMAGE_SUPPORT_${FORMAT_UPPERCASE}=1)
 endforeach ()

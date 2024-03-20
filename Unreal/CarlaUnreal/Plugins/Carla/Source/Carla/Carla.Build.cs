@@ -40,6 +40,7 @@ public class Carla :
       Console.WriteLine("Dynamic Library Added: " + library);
     }
 
+    Console.WriteLine("PluginDirectory: " + PluginDirectory);
     foreach (var option in File.ReadAllText(Path.Combine(PluginDirectory, "Options.def")).Split(';'))
     {
       string optionTrimmed = option.Trim();
@@ -126,11 +127,11 @@ public class Carla :
 
     foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Includes.def")).Split(';'))
       if (Path.Length != 0)
-        PublicIncludePaths.Add(Path);
+        PublicIncludePaths.Add(Path.Trim());
 
     foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Libraries.def")).Split(';'))
       if (Path.Length != 0)
-        PublicAdditionalLibraries.Add(Path);
+        PublicAdditionalLibraries.Add(Path.Trim());
 
     if (EnableOSM2ODR)
     {

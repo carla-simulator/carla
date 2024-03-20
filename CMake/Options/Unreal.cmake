@@ -28,10 +28,7 @@ carla_string_option (
   "${CARLA_UNREAL_ENGINE_PATH_INFERRED}"
 )
 
-message (
-  STATUS
-  "Using \"${CARLA_UNREAL_ENGINE_PATH}\" as Unreal Engine root path."
-)
+carla_message ("Using ${CARLA_UNREAL_ENGINE_PATH} as Unreal Engine root path.")
 
 if (EXISTS ${CARLA_UNREAL_ENGINE_PATH})
   set (CARLA_HAS_UNREAL_ENGINE_PATH ON)
@@ -58,8 +55,7 @@ carla_string_option (
 )
 
 if (${BUILD_CARLA_UNREAL} AND ${CARLA_HAS_UNREAL_ENGINE_PATH})
-  message (
-    STATUS
+  carla_message (
     "Carla UE project successfully added to build. (UE path: ${CARLA_UNREAL_ENGINE_PATH})"
   )
 else ()
