@@ -36,7 +36,11 @@ set -e
 sudo echo "Got super powers..."
 
 echo "Installing Ubuntu Pacakges..."
-sudo apt-get install retry
+if ! command -v retry &> /dev/null
+then
+    sudo apt update
+    sudo apt-get install retry
+fi
 retry --until=success --times=12 --delay=300 -- y | sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu focal main universe"
 retry --until=success --times=12 --delay=300 -- sudo apt-get update
 retry --until=success --times=12 --delay=300 -- sudo apt-get install build-essential make g++-7 ninja-build libvulkan1 python3 python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl libtool rsync libxml2-dev git git-lfs
