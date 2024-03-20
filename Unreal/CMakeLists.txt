@@ -425,5 +425,6 @@ add_custom_target (
 
 add_dependencies (
   launch
+  CarlaUnrealEditor
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
