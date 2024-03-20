@@ -8,8 +8,10 @@
  * Added functions to get actor' bones and components names
  * Added functions to get actor' sockets transforms
  * make PythonAPI Windows: Fixed incompatibility issue with Anaconda due `py` command.
+ * Added function to get actor' sockets names
  * Fixed bug in python agents when vehicle list was empty causing a check on all vehicles (BasicAgent.py) and detected pedestrians as vehicles if no pedestrains are present (BehaviourAgent.py) 
- * Fixed the bug of crash when importing openstreetmap in the Digital Twin tool
+ * Added possibility to change gravity variable in imui sensor for the accelerometer
+ * Fixed ROS2 native extension build error when ROS2 is installed in the system.
 
 ## CARLA 0.9.15
 
@@ -38,6 +40,8 @@
   * Fixed bug causing the `FPixelReader::SavePixelsToDisk(PixelData, FilePath)` function to crash due to pixel array not set correctly.
   * Fixed segfaults in Python API due to incorrect GIL locking under Python 3.10.
   * Fixed the import script, where could use any other TilesInfo.txt if the destination folder has many
+  * Fixed PythonAPI not installing on Debian due to deprecated function of distro in setup.py. Less ambiguous error for other posix platforms.
+
 
 ## CARLA 0.9.14
 

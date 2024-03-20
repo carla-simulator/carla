@@ -65,7 +65,7 @@
       - param_name: opendrive
         type: str
         doc: >
-          Content of an OpenDRIVE file as `string`, __not the path to the `.xodr`__.
+          Content of an ASAM OpenDRIVE file as `string`, __not the path to the `.xodr`__.
       - param_name: parameters
         type: carla.OpendriveGenerationParameters
         default: (2.0, 50.0, 1.0, 0.6, true, true)
@@ -732,7 +732,7 @@
   - class_name: OpendriveGenerationParameters
     # - DESCRIPTION ------------------------
     doc: >
-      This class defines the parameters used when generating a world using an OpenDRIVE file.
+      This class defines the parameters used when generating a world using an ASAM OpenDRIVE file.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: vertex_distance
