@@ -63,6 +63,7 @@ void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickTyp
     SceneCapture->ShowOnlyComponents.Emplace(Component);
   }
 
+#if 0
   ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this](
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
@@ -70,4 +71,7 @@ void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickTyp
     SendImageDataToClient(*this, Pixels);
     return true;
   });
+#else
+  FPixelReader::SendPixelsInRenderThread(*this);
+#endif
 }
