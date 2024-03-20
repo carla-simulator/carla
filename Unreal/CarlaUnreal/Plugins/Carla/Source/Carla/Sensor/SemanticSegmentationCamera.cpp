@@ -37,6 +37,6 @@ void ASemanticSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickTyp
     return true;
   });
 #else
-  FPixelReader::SendPixelsInRenderThread(*this);
+  FPixelReader::SendPixelsInRenderThread<ASemanticSegmentationCamera, FColor>(*this);
 #endif
 }

@@ -37,26 +37,6 @@ if (ENABLE_ROS2)
   set (LAUNCH_ARGS ${LAUNCH_ARGS} --ros2)
 endif()
 
-if (WIN32)
-  set (
-    CARLA_UE_GENERATE_PROJECT_FILES_COMMAND
-    ${CARLA_UNREAL_ENGINE_PATH}/GenerateProjectFiles.bat
-    -project=${CARLA_UE_PROJECT_PATH}
-    -CMakefile
-    -game
-    -engine
-  )
-else ()
-  set (
-    CARLA_UE_GENERATE_PROJECT_FILES_COMMAND
-    ${CARLA_UNREAL_ENGINE_PATH}/GenerateProjectFiles.sh
-    -project=${CARLA_UE_PROJECT_PATH}
-    -CMakefile
-    -game
-    -engine
-  )
-endif ()
-
 
 
 set (
@@ -149,39 +129,33 @@ endif()
 
 
 
-add_custom_command (
-  OUTPUT
-    ${CARLA_UE_PATH}/CMakeLists.txt
-    ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
-    ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
-    ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
-  
-  COMMENT
-    "Generating UE project files for CARLA..."
-  
-  COMMAND ${CMAKE_COMMAND} -E rm -f ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
-  COMMAND ${CMAKE_COMMAND} -E echo "${CARLA_UNREAL_INCLUDE_PATHS}" >> ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
-  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Includes.def
-  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Includes.def
-
-  COMMAND ${CMAKE_COMMAND} -E rm -f ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
-  COMMAND ${CMAKE_COMMAND} -E echo "${CARLA_UNREAL_LIBRARIES}" >> ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
-  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Libraries.def
-  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Libraries.def
-
-  COMMAND ${CMAKE_COMMAND} -E rm -f ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
-  COMMAND ${CMAKE_COMMAND} -E echo "${CARLA_UNREAL_OPTIONS}" >> ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
-  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Options.def
-  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
-
-  COMMAND
-    ${CARLA_UE_GENERATE_PROJECT_FILES_COMMAND}
-  
-  # Remember to add this on most Unreal-related commands,
-  # otherwise nothing is printed while running the command:
-  USES_TERMINAL
-  VERBATIM
-)
+if (WIN32)
+  set (
+    CARLA_UE_GENERATE_PROJECT_FILES_COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/GenerateProjectFiles.bat
+      -project=${CARLA_UE_PROJECT_PATH}
+      -CMakefile
+      -game
+      -engine
+  )
+  set (
+    CARLA_UE_BUILD_COMMAND_PREFIX
+      ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat
+  )
+else ()
+  set (
+    CARLA_UE_GENERATE_PROJECT_FILES_COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/GenerateProjectFiles.sh
+    -project=${CARLA_UE_PROJECT_PATH}
+    -CMakefile
+    -game
+    -engine
+  )
+  set (
+    CARLA_UE_BUILD_COMMAND_PREFIX
+      ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.sh
+  )
+endif ()
 
 
 
@@ -205,89 +179,46 @@ endif ()
 
 
 
-add_custom_target (
-  carla-unreal-generate-project-files
-  DEPENDS
-    ${CARLA_UE_PATH}/CMakeLists.txt
-)
-
-add_dependencies (
-  carla-unreal-generate-project-files
-  ${UE_DEPENDENCIES_ORDER_ONLY}
-)
-
-list (
-  APPEND
-  UE_DEPENDENCIES_ORDER_ONLY
-  carla-unreal-generate-project-files
-)
-
-
-
 add_custom_command (
   OUTPUT
-    carla-unreal-configure.stamp
-  COMMENT
-    "Configuring Carla Unreal..."
-  COMMAND
-    ${CMAKE_COMMAND}
-      -S ${CARLA_UE_PATH}
-      -B ${CMAKE_CURRENT_BINARY_DIR}
-      ${TOOLCHAIN_FILE_OPTION}
-  USES_TERMINAL
-  VERBATIM
+    ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
+    ${CARLA_UE_CARLA_PATH}/Includes.def
+    ${CARLA_UE_CARLA_TOOLS_PATH}/Includes.def
+    ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
+    ${CARLA_UE_CARLA_PATH}/Libraries.def
+    ${CARLA_UE_CARLA_TOOLS_PATH}/Libraries.def
+    ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
+    ${CARLA_UE_CARLA_PATH}/Options.def
+    ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
+  
+  COMMAND ${CMAKE_COMMAND} -E rm -f ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
+  COMMAND ${CMAKE_COMMAND} -E echo "${CARLA_UNREAL_INCLUDE_PATHS}" >> ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
+  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Includes.def
+  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Includes.def
+
+  COMMAND ${CMAKE_COMMAND} -E rm -f ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
+  COMMAND ${CMAKE_COMMAND} -E echo "${CARLA_UNREAL_LIBRARIES}" >> ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
+  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Libraries.def
+  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Libraries.def
+
+  COMMAND ${CMAKE_COMMAND} -E rm -f ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
+  COMMAND ${CMAKE_COMMAND} -E echo "${CARLA_UNREAL_OPTIONS}" >> ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
+  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Options.def
+  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
 )
 
 add_custom_target (
   carla-unreal-configure
   DEPENDS
-    carla-unreal-configure.stamp
-)
-
-add_dependencies (
-  carla-unreal-configure
-  ${UE_DEPENDENCIES_ORDER_ONLY}
-)
-
-list (
-  APPEND
-  UE_DEPENDENCIES_ORDER_ONLY
-  carla-unreal-configure
-)
-
-
-
-add_custom_command (
-  OUTPUT
-    ${CMAKE_CURRENT_BINARY_DIR}/carla-unreal.stamp
-  COMMENT
-    "Building CarlaUnrealEditor..."
-  COMMAND
-    ${CMAKE_COMMAND}
-      --build ${CMAKE_CURRENT_BINARY_DIR}
-      --target CarlaUnrealEditor
-  COMMAND
-    ${CMAKE_COMMAND}
-      -E touch carla-unreal.stamp
-  USES_TERMINAL
-  VERBATIM
-)
-
-add_custom_target (
-  carla-unreal
-  DEPENDS
-    carla-unreal.stamp
-)
-
-add_dependencies (
-  carla-unreal
-  ${UE_DEPENDENCIES_ORDER_ONLY}
-)
-
-list (
-  APPEND
-  UE_DEPENDENCIES_ORDER_ONLY
-  carla-unreal
+    ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
+    ${CARLA_UE_CARLA_PATH}/Includes.def
+    ${CARLA_UE_CARLA_TOOLS_PATH}/Includes.def
+    ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
+    ${CARLA_UE_CARLA_PATH}/Libraries.def
+    ${CARLA_UE_CARLA_TOOLS_PATH}/Libraries.def
+    ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
+    ${CARLA_UE_CARLA_PATH}/Options.def
+    ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
 )
 
 
@@ -312,15 +243,170 @@ set (
 
 
 
+set (
+  CARLA_LAUNCH_COMMAND
+    ${UNREAL_EDITOR_PATH}
+      ${CARLA_UE_PROJECT_PATH}
+      -${CARLA_UNREAL_RHI}
+      ${LAUNCH_ARGS}
+)
+
 add_custom_target (
   launch-only
   COMMENT
     "Launching Carla Unreal..."
   COMMAND
-    ${UNREAL_EDITOR_PATH}
-      ${CARLA_UE_PROJECT_PATH}
-      -${CARLA_UNREAL_RHI}
-      ${LAUNCH_ARGS}
+    ${CARLA_LAUNCH_COMMAND}
+  USES_TERMINAL
+  VERBATIM
+)
+
+
+
+file (
+  MAKE_DIRECTORY
+  ${CARLA_UE_PATH}/Content/Carla/ExportedMaps
+)
+
+
+
+
+add_custom_target (
+  CarlaUnreal-${UE_SYSTEM_NAME}-Debug
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    CarlaUnreal
+    ${UE_SYSTEM_NAME}
+    Debug
+    -project=${CARLA_UE_PROJECT_PATH}
+    -game
+    -buildscw
+  USES_TERMINAL
+  VERBATIM
+)
+
+add_custom_target (
+  CarlaUnreal-${UE_SYSTEM_NAME}-DebugGame
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    CarlaUnreal
+    ${UE_SYSTEM_NAME}
+    DebugGame
+    -project=${CARLA_UE_PROJECT_PATH}
+    -game
+    -buildscw
+  USES_TERMINAL
+  VERBATIM
+)
+
+add_custom_target (
+  CarlaUnreal-${UE_SYSTEM_NAME}-Test
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    CarlaUnreal
+    ${UE_SYSTEM_NAME}
+    Test
+    -project=${CARLA_UE_PROJECT_PATH}
+    -game
+    -buildscw
+  USES_TERMINAL
+  VERBATIM
+)
+
+add_custom_target (
+  CarlaUnreal-${UE_SYSTEM_NAME}-Shipping
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    CarlaUnreal
+    ${UE_SYSTEM_NAME}
+    Shipping
+    -project=${CARLA_UE_PROJECT_PATH}
+    -game
+    -buildscw
+  USES_TERMINAL
+  VERBATIM
+)
+
+add_custom_target (
+  CarlaUnreal
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    CarlaUnreal
+    ${UE_SYSTEM_NAME}
+    Development
+    -project=${CARLA_UE_PROJECT_PATH}
+    -game
+    -buildscw
+  USES_TERMINAL
+  VERBATIM
+)
+
+add_custom_target (
+  CarlaUnrealEditor-${UE_SYSTEM_NAME}-Debug
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    CarlaUnrealEditor
+    ${UE_SYSTEM_NAME}
+    Debug
+    -project=${CARLA_UE_PROJECT_PATH}
+    -game
+    -buildscw
+  USES_TERMINAL
+  VERBATIM
+)
+
+add_custom_target (
+  CarlaUnrealEditor-${UE_SYSTEM_NAME}-DebugGame
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    CarlaUnrealEditor
+    ${UE_SYSTEM_NAME}
+    DebugGame
+    -project=${CARLA_UE_PROJECT_PATH}
+    -game
+    -buildscw
+  USES_TERMINAL
+  VERBATIM
+)
+
+add_custom_target (
+  CarlaUnrealEditor-${UE_SYSTEM_NAME}-Test
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    CarlaUnrealEditor
+    ${UE_SYSTEM_NAME}
+    Test
+    -project=${CARLA_UE_PROJECT_PATH}
+    -game
+    -buildscw
+  USES_TERMINAL
+  VERBATIM
+)
+
+add_custom_target (
+  CarlaUnrealEditor-${UE_SYSTEM_NAME}-Shipping
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    CarlaUnrealEditor
+    ${UE_SYSTEM_NAME}
+    Shipping
+    -project=${CARLA_UE_PROJECT_PATH}
+    -game
+    -buildscw
+  USES_TERMINAL
+  VERBATIM
+)
+
+add_custom_target (
+  CarlaUnrealEditor
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    CarlaUnrealEditor
+    ${UE_SYSTEM_NAME}
+    Development
+    -project=${CARLA_UE_PROJECT_PATH}
+    -game
+    -buildscw
   USES_TERMINAL
   VERBATIM
 )
@@ -332,10 +418,7 @@ add_custom_target (
   COMMENT
     "Launching Carla Unreal..."
   COMMAND
-    ${UNREAL_EDITOR_PATH}
-      ${CARLA_UE_PROJECT_PATH}
-      -${CARLA_UNREAL_RHI}
-      ${LAUNCH_ARGS}
+    ${CARLA_LAUNCH_COMMAND}
   USES_TERMINAL
   VERBATIM
 )
@@ -343,10 +426,4 @@ add_custom_target (
 add_dependencies (
   launch
   ${UE_DEPENDENCIES_ORDER_ONLY}
-)
-
-
-file (
-  MAKE_DIRECTORY
-  ${CARLA_UE_PATH}/Content/Carla/ExportedMaps
 )

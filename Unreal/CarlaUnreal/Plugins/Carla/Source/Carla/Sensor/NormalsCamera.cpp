@@ -37,6 +37,6 @@ void ANormalsCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float Delt
     return true;
   });
 #else
-  FPixelReader::SendPixelsInRenderThread(*this);
+  FPixelReader::SendPixelsInRenderThread<ANormalsCamera, FColor>(*this);
 #endif
 }
