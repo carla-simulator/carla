@@ -228,7 +228,7 @@ add_custom_command (
   COMMAND ${CMAKE_COMMAND} -E echo "${CARLA_UNREAL_OPTIONS}" >> ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
   COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Options.def
   COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
-  
+
   USES_TERMINAL
   VERBATIM
 )
@@ -249,127 +249,17 @@ file (
 
 
 add_custom_target (
-  CarlaUnreal-${UE_SYSTEM_NAME}-Debug
-  COMMAND
-    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
-    CarlaUnreal
-    ${UE_SYSTEM_NAME}
-    Debug
-    -project=${CARLA_UE_PROJECT_PATH}
-    -game
-    -buildscw
-  USES_TERMINAL
-  VERBATIM
-)
-
-add_custom_target (
-  CarlaUnreal-${UE_SYSTEM_NAME}-DebugGame
-  COMMAND
-    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
-    CarlaUnreal
-    ${UE_SYSTEM_NAME}
-    DebugGame
-    -project=${CARLA_UE_PROJECT_PATH}
-    -game
-    -buildscw
-  USES_TERMINAL
-  VERBATIM
-)
-
-add_custom_target (
-  CarlaUnreal-${UE_SYSTEM_NAME}-Test
-  COMMAND
-    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
-    CarlaUnreal
-    ${UE_SYSTEM_NAME}
-    Test
-    -project=${CARLA_UE_PROJECT_PATH}
-    -game
-    -buildscw
-  USES_TERMINAL
-  VERBATIM
-)
-
-add_custom_target (
-  CarlaUnreal-${UE_SYSTEM_NAME}-Shipping
-  COMMAND
-    ${CARLA_UE_BUILD_COMMAND_PREFIX}
-    CarlaUnreal
-    ${UE_SYSTEM_NAME}
-    Shipping
-    -project=${CARLA_UE_PROJECT_PATH}
-    -game
-    -buildscw
-  USES_TERMINAL
-  VERBATIM
-)
-
-add_custom_target (
   CarlaUnreal
   COMMAND
     ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnreal
     ${UE_SYSTEM_NAME}
-    Development
+    ${CARLA_UNREAL_BUILD_TYPE}
     -project=${CARLA_UE_PROJECT_PATH}
     -game
     -buildscw
-  USES_TERMINAL
-  VERBATIM
-)
-
-add_custom_target (
-  CarlaUnrealEditor-${UE_SYSTEM_NAME}-Debug
-  COMMAND
-    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
-    CarlaUnrealEditor
-    ${UE_SYSTEM_NAME}
-    Debug
-    -project=${CARLA_UE_PROJECT_PATH}
-    -game
-    -buildscw
-  USES_TERMINAL
-  VERBATIM
-)
-
-add_custom_target (
-  CarlaUnrealEditor-${UE_SYSTEM_NAME}-DebugGame
-  COMMAND
-    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
-    CarlaUnrealEditor
-    ${UE_SYSTEM_NAME}
-    DebugGame
-    -project=${CARLA_UE_PROJECT_PATH}
-    -game
-    -buildscw
-  USES_TERMINAL
-  VERBATIM
-)
-
-add_custom_target (
-  CarlaUnrealEditor-${UE_SYSTEM_NAME}-Test
-  COMMAND
-    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
-    CarlaUnrealEditor
-    ${UE_SYSTEM_NAME}
-    Test
-    -project=${CARLA_UE_PROJECT_PATH}
-    -game
-    -buildscw
-  USES_TERMINAL
-  VERBATIM
-)
-
-add_custom_target (
-  CarlaUnrealEditor-${UE_SYSTEM_NAME}-Shipping
-  COMMAND
-    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
-    CarlaUnrealEditor
-    ${UE_SYSTEM_NAME}
-    Shipping
-    -project=${CARLA_UE_PROJECT_PATH}
-    -game
-    -buildscw
+  DEPENDS
+    ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
   USES_TERMINAL
   VERBATIM
 )
@@ -380,24 +270,15 @@ add_custom_target (
     ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnrealEditor
     ${UE_SYSTEM_NAME}
-    Development
+    ${CARLA_UNREAL_BUILD_TYPE}
     -project=${CARLA_UE_PROJECT_PATH}
     -game
     -buildscw
+  DEPENDS
+    ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
   USES_TERMINAL
   VERBATIM
 )
-
-add_dependencies (CarlaUnreal-${UE_SYSTEM_NAME}-Debug carla-unreal-configure)
-add_dependencies (CarlaUnreal-${UE_SYSTEM_NAME}-DebugGame carla-unreal-configure)
-add_dependencies (CarlaUnreal-${UE_SYSTEM_NAME}-Test carla-unreal-configure)
-add_dependencies (CarlaUnreal-${UE_SYSTEM_NAME}-Shipping carla-unreal-configure)
-add_dependencies (CarlaUnreal carla-unreal-configure)
-add_dependencies (CarlaUnrealEditor-${UE_SYSTEM_NAME}-Debug carla-unreal-configure)
-add_dependencies (CarlaUnrealEditor-${UE_SYSTEM_NAME}-DebugGame carla-unreal-configure)
-add_dependencies (CarlaUnrealEditor-${UE_SYSTEM_NAME}-Test carla-unreal-configure)
-add_dependencies (CarlaUnrealEditor-${UE_SYSTEM_NAME}-Shipping carla-unreal-configure)
-add_dependencies (CarlaUnrealEditor carla-unreal-configure)
 
 
 
