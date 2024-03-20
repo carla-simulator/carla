@@ -34,6 +34,7 @@ void ADepthCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaS
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ADepthCamera::PostPhysTick);
 
+#if 0
   ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this](
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
@@ -41,4 +42,7 @@ void ADepthCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaS
     SendImageDataToClient(*this, Pixels);
     return true;
   });
+#else
+  FPixelReader::SendPixelsInRenderThread(*this);
+#endif
 }

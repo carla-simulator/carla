@@ -450,7 +450,6 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
-
 #ifdef CARLA_HAS_GBUFFER_API
   CaptureSceneExtended();
 #else
@@ -515,7 +514,6 @@ void ASceneCaptureSensor::PrePhysTick(float DeltaSeconds)
 
 void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  EnqueueRenderSceneImmediate();
   Super::PostPhysTick(World, TickType, DeltaTime);
 }
 

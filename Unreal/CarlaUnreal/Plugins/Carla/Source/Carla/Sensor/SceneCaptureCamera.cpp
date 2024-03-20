@@ -63,6 +63,7 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
     }
   );
 
+#if 0
   ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this](
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
@@ -70,6 +71,9 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
     SendImageDataToClient(*this, Pixels);
     return true;
   });
+#else
+  FPixelReader::SendPixelsInRenderThread(*this);
+#endif
 }
 
 #ifdef CARLA_HAS_GBUFFER_API
