@@ -100,8 +100,14 @@ include_directories (
   ${zlib_SOURCE_DIR}
   ${zlib_BINARY_DIR}
 ) # @TODO HACK
-# carla_dependency_option (ZLIB_LIBRARY $<TARGET_FILE:zlibstatic>)
-# carla_dependency_option (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
+
+if (WIN32)
+  carla_fetchcontent_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlibstatic${CARLA_DEBUG_AFFIX}.lib)
+else ()
+  carla_fetchcontent_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/libz.a)
+endif ()
+carla_fetchcontent_option (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
+carla_fetchcontent_option (ZLIB_LIBRARIES ${ZLIB_LIBRARY})
 
 # ==== LIBPNG ====
 
