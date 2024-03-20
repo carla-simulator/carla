@@ -37,6 +37,24 @@ if (ENABLE_ROS2)
   set (LAUNCH_ARGS ${LAUNCH_ARGS} --ros2)
 endif()
 
+if (WIN32)
+  set (EXE_EXT .exe)
+  set (UE_SYSTEM_NAME Win64)
+elseif (LINUX)
+  set (EXE_EXT)
+  set (UE_SYSTEM_NAME Linux)
+elseif (APPLE)
+  set (EXE_EXT)
+  set (UE_SYSTEM_NAME Mac)
+else ()
+  carla_error ("Unknown target system.")
+endif ()
+
+set (
+  UNREAL_EDITOR_PATH
+  ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
+)
+
 
 
 set (
@@ -153,7 +171,7 @@ else ()
   )
   set (
     CARLA_UE_BUILD_COMMAND_PREFIX
-      ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.sh
+      ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/${UE_SYSTEM_NAME}/Build.sh
   )
 endif ()
 
@@ -219,26 +237,6 @@ add_custom_target (
     ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
     ${CARLA_UE_CARLA_PATH}/Options.def
     ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
-)
-
-
-
-if (WIN32)
-  set (EXE_EXT .exe)
-  set (UE_SYSTEM_NAME Win64)
-elseif (LINUX)
-  set (EXE_EXT)
-  set (UE_SYSTEM_NAME Linux)
-elseif (APPLE)
-  set (EXE_EXT)
-  set (UE_SYSTEM_NAME Mac)
-else ()
-  carla_error ("Unknown target system.")
-endif ()
-
-set (
-  UNREAL_EDITOR_PATH
-  ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
 )
 
 
