@@ -516,6 +516,7 @@ void ASceneCaptureSensor::PrePhysTick(float DeltaSeconds)
 void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
   Super::PostPhysTick(World, TickType, DeltaTime);
+  EnqueueRenderSceneImmediate();
 }
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
