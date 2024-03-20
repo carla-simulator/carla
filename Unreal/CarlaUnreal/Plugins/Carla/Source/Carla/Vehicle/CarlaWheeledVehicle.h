@@ -95,6 +95,13 @@ public:
   /// @{
 public:
 
+  /// Get chaos wheeled vehicle movement component casted
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  UChaosWheeledVehicleMovementComponent* GetChaosWheeledVehicleMovementComponent() const
+  {
+    return Cast<UChaosWheeledVehicleMovementComponent>(GetVehicleMovement());
+  }
+  
   /// Vehicle control currently applied to this vehicle.
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   const FVehicleControl &GetVehicleControl() const
@@ -190,10 +197,7 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void SetSimulatePhysics(bool enabled);
 
-#if 0
-  void SetWheelCollision(UWheeledVehicleMovementComponent4W *Vehicle4W, const FVehiclePhysicsControl &PhysicsControl);
-#endif
-  void SetWheelCollisionNW(UWheeledVehicleMovementComponentNW *VehicleNW, const FVehiclePhysicsControl &PhysicsControl);
+  void SetWheelCollisionNW(UChaosWheeledVehicleMovementComponent *VehicleNW, const FVehiclePhysicsControl &PhysicsControl);
 
   void SetVehicleLightState(const FVehicleLightState &LightState);
 
