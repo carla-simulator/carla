@@ -170,16 +170,19 @@ protected:
         if (FovOpt.has_value())
           Fov = FCString::Atof(*FovOpt->Value);
         // send data to ROS2
-        AActor* ParentActor = Sensor.GetAttachParentActor();
-        if (ParentActor)
-        {
-          FTransform LocalTransformRelativeToParent = Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-          ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, W, H, Fov, BufferView, &Sensor);
-        }
-        else
-        {
-          ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), W, H, Fov, BufferView, &Sensor);
-        }
+        auto ParentActor = Sensor.GetAttachParentActor();
+        auto Transform =
+          ParentActor ?
+          Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) :
+          Stream.GetSensorTransform();
+        ROS2->ProcessDataFromCamera(
+          Stream.GetSensorType(),
+          StreamId,
+          Transform,
+          W, H,
+          Fov,
+          BufferView,
+          &Sensor);
       });
     }
 #endif
