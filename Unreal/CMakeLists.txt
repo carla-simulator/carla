@@ -209,6 +209,7 @@ set (
     ${CARLA_UE_CARLA_PATH}/Options.def
     ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
 )
+
 add_custom_command (
   OUTPUT
     ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
@@ -227,6 +228,9 @@ add_custom_command (
   COMMAND ${CMAKE_COMMAND} -E echo "${CARLA_UNREAL_OPTIONS}" >> ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
   COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Options.def
   COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
+  
+  USES_TERMINAL
+  VERBATIM
 )
 
 add_custom_target (
