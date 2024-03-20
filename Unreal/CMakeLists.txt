@@ -197,8 +197,8 @@ endif ()
 
 
 
-add_custom_command (
-  OUTPUT
+set (
+  CARLA_UNREAL_CONFIGURE_OUTPUTS
     ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
     ${CARLA_UE_CARLA_PATH}/Includes.def
     ${CARLA_UE_CARLA_TOOLS_PATH}/Includes.def
@@ -208,6 +208,10 @@ add_custom_command (
     ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
     ${CARLA_UE_CARLA_PATH}/Options.def
     ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
+)
+add_custom_command (
+  OUTPUT
+    ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
   
   COMMAND ${CMAKE_COMMAND} -E rm -f ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
   COMMAND ${CMAKE_COMMAND} -E echo "${CARLA_UNREAL_INCLUDE_PATHS}" >> ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
@@ -228,35 +232,7 @@ add_custom_command (
 add_custom_target (
   carla-unreal-configure
   DEPENDS
-    ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
-    ${CARLA_UE_CARLA_PATH}/Includes.def
-    ${CARLA_UE_CARLA_TOOLS_PATH}/Includes.def
-    ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
-    ${CARLA_UE_CARLA_PATH}/Libraries.def
-    ${CARLA_UE_CARLA_TOOLS_PATH}/Libraries.def
-    ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
-    ${CARLA_UE_CARLA_PATH}/Options.def
-    ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
-)
-
-
-
-set (
-  CARLA_LAUNCH_COMMAND
-    ${UNREAL_EDITOR_PATH}
-      ${CARLA_UE_PROJECT_PATH}
-      -${CARLA_UNREAL_RHI}
-      ${LAUNCH_ARGS}
-)
-
-add_custom_target (
-  launch-only
-  COMMENT
-    "Launching Carla Unreal..."
-  COMMAND
-    ${CARLA_LAUNCH_COMMAND}
-  USES_TERMINAL
-  VERBATIM
+    ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
 )
 
 
@@ -265,7 +241,6 @@ file (
   MAKE_DIRECTORY
   ${CARLA_UE_PATH}/Content/Carla/ExportedMaps
 )
-
 
 
 
@@ -409,20 +384,44 @@ add_custom_target (
   VERBATIM
 )
 
+add_dependencies (CarlaUnreal-${UE_SYSTEM_NAME}-Debug carla-unreal-configure)
+add_dependencies (CarlaUnreal-${UE_SYSTEM_NAME}-DebugGame carla-unreal-configure)
+add_dependencies (CarlaUnreal-${UE_SYSTEM_NAME}-Test carla-unreal-configure)
+add_dependencies (CarlaUnreal-${UE_SYSTEM_NAME}-Shipping carla-unreal-configure)
+add_dependencies (CarlaUnreal carla-unreal-configure)
+add_dependencies (CarlaUnrealEditor-${UE_SYSTEM_NAME}-Debug carla-unreal-configure)
+add_dependencies (CarlaUnrealEditor-${UE_SYSTEM_NAME}-DebugGame carla-unreal-configure)
+add_dependencies (CarlaUnrealEditor-${UE_SYSTEM_NAME}-Test carla-unreal-configure)
+add_dependencies (CarlaUnrealEditor-${UE_SYSTEM_NAME}-Shipping carla-unreal-configure)
+add_dependencies (CarlaUnrealEditor carla-unreal-configure)
 
 
-add_custom_target (
-  launch
+
+set (
+  CARLA_LAUNCH_TARGET_OPTIONS
   COMMENT
     "Launching Carla Unreal..."
   COMMAND
-    ${CARLA_LAUNCH_COMMAND}
+    ${UNREAL_EDITOR_PATH}
+      ${CARLA_UE_PROJECT_PATH}
+      -${CARLA_UNREAL_RHI}
+      ${LAUNCH_ARGS}
   USES_TERMINAL
   VERBATIM
+)
+
+add_custom_target (
+  launch
+  ${CARLA_LAUNCH_TARGET_OPTIONS}
 )
 
 add_dependencies (
   launch
   CarlaUnrealEditor
   ${UE_DEPENDENCIES_ORDER_ONLY}
+)
+
+add_custom_target (
+  launch-only
+  ${CARLA_LAUNCH_TARGET_OPTIONS}
 )
