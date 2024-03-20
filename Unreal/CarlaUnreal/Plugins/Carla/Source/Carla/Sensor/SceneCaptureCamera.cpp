@@ -72,7 +72,7 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
     return true;
   });
 #else
-  FPixelReader::SendPixelsInRenderThread(*this);
+  FPixelReader::SendPixelsInRenderThread<ASceneCaptureCamera, FColor>(*this);
 #endif
 }
 

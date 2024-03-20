@@ -43,6 +43,6 @@ void ADepthCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaS
     return true;
   });
 #else
-  FPixelReader::SendPixelsInRenderThread(*this);
+  FPixelReader::SendPixelsInRenderThread<ADepthCamera, FColor>(*this);
 #endif
 }
