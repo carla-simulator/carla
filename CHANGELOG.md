@@ -9,6 +9,7 @@
  * Added functions to get actor' sockets transforms
  * make PythonAPI Windows: Fixed incompatibility issue with Anaconda due `py` command.
  * Fixed bug in python agents when vehicle list was empty causing a check on all vehicles (BasicAgent.py) and detected pedestrians as vehicles if no pedestrains are present (BehaviourAgent.py) 
+ * Fixed the bug of crash when importing openstreetmap in the Digital Twin tool
 
 ## CARLA 0.9.15
 

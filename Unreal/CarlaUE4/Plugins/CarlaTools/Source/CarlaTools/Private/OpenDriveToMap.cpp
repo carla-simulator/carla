@@ -293,7 +293,7 @@ AActor* UOpenDriveToMap::SpawnActorWithCheckNoCollisions(UClass* ActorClassToSpa
 void UOpenDriveToMap::GenerateTileStandalone(){
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("UOpenDriveToMap::GenerateTileStandalone Function called"));
 
-  ExecuteTileCommandlet();
+  GenerateTile();
 
   UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
   UEditorLevelLibrary::SaveCurrentLevel();
