@@ -16,6 +16,9 @@ struct CARLA_API FWheelPhysicsControl
   UPROPERTY(Category = "Wheel Tire Friction", EditAnywhere, BlueprintReadWrite)
   float TireFriction = 3.5f;
 
+  UPROPERTY(Category = "Wheel Tire Friction", EditAnywhere, BlueprintReadWrite)
+  float FrictionForceMultiplier = 3.5f;
+
   UPROPERTY(Category = "Wheel Damping Rate", EditAnywhere, BlueprintReadWrite)
   float DampingRate = 1.0f;
 
