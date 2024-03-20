@@ -274,7 +274,7 @@ file (
 add_custom_target (
   CarlaUnreal-${UE_SYSTEM_NAME}-Debug
   COMMAND
-    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnreal
     ${UE_SYSTEM_NAME}
     Debug
@@ -288,7 +288,7 @@ add_custom_target (
 add_custom_target (
   CarlaUnreal-${UE_SYSTEM_NAME}-DebugGame
   COMMAND
-    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnreal
     ${UE_SYSTEM_NAME}
     DebugGame
@@ -302,7 +302,7 @@ add_custom_target (
 add_custom_target (
   CarlaUnreal-${UE_SYSTEM_NAME}-Test
   COMMAND
-    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnreal
     ${UE_SYSTEM_NAME}
     Test
@@ -316,7 +316,7 @@ add_custom_target (
 add_custom_target (
   CarlaUnreal-${UE_SYSTEM_NAME}-Shipping
   COMMAND
-    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    ${CARLA_UE_BUILD_COMMAND_PREFIX}
     CarlaUnreal
     ${UE_SYSTEM_NAME}
     Shipping
@@ -330,7 +330,7 @@ add_custom_target (
 add_custom_target (
   CarlaUnreal
   COMMAND
-    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnreal
     ${UE_SYSTEM_NAME}
     Development
@@ -344,7 +344,7 @@ add_custom_target (
 add_custom_target (
   CarlaUnrealEditor-${UE_SYSTEM_NAME}-Debug
   COMMAND
-    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnrealEditor
     ${UE_SYSTEM_NAME}
     Debug
@@ -358,7 +358,7 @@ add_custom_target (
 add_custom_target (
   CarlaUnrealEditor-${UE_SYSTEM_NAME}-DebugGame
   COMMAND
-    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnrealEditor
     ${UE_SYSTEM_NAME}
     DebugGame
@@ -372,7 +372,7 @@ add_custom_target (
 add_custom_target (
   CarlaUnrealEditor-${UE_SYSTEM_NAME}-Test
   COMMAND
-    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnrealEditor
     ${UE_SYSTEM_NAME}
     Test
@@ -386,7 +386,7 @@ add_custom_target (
 add_custom_target (
   CarlaUnrealEditor-${UE_SYSTEM_NAME}-Shipping
   COMMAND
-    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnrealEditor
     ${UE_SYSTEM_NAME}
     Shipping
@@ -400,7 +400,7 @@ add_custom_target (
 add_custom_target (
   CarlaUnrealEditor
   COMMAND
-    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat 
+    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnrealEditor
     ${UE_SYSTEM_NAME}
     Development
