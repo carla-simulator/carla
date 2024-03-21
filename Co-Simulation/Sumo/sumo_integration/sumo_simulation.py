@@ -301,7 +301,7 @@ def _get_sumo_net(cfg_file):
     net_file = os.path.join(os.path.dirname(cfg_file), tag.get('value'))
     logging.debug('Reading net file: %s', net_file)
 
-    sumo_net = traci.sumolib.net.readNet(net_file)
+    sumo_net = sumolib.net.readNet(net_file)
     return sumo_net
 
 class SumoSimulation(object):
