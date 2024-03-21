@@ -25,7 +25,7 @@ cmake_path (
 carla_string_option (
   CARLA_UNREAL_ENGINE_PATH
   "Path to the CARLA fork of Unreal Engine."
-  ${CARLA_UNREAL_ENGINE_PATH_INFERRED}
+  "${CARLA_UNREAL_ENGINE_PATH_INFERRED}"
 )
 
 carla_message ("Using ${CARLA_UNREAL_ENGINE_PATH} as Unreal Engine root path.")
