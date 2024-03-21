@@ -258,14 +258,13 @@ add_custom_target (
     -project=${CARLA_UE_PROJECT_PATH}
     -game
     -buildscw
-  DEPENDS
-    ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
   USES_TERMINAL
   VERBATIM
 )
 
 add_dependencies (
   CarlaUnreal
+  carla-unreal-configure
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
@@ -279,14 +278,13 @@ add_custom_target (
     -project=${CARLA_UE_PROJECT_PATH}
     -game
     -buildscw
-  DEPENDS
-    ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
   USES_TERMINAL
   VERBATIM
 )
 
 add_dependencies (
   CarlaUnrealEditor
+  carla-unreal-configure
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
