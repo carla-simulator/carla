@@ -64,7 +64,6 @@ void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickTyp
     SceneCapture->ShowOnlyComponents.Emplace(Component);
   }
 
-#if 1
   auto FrameIndex = FCarlaEngine::GetFrameCounter();
   ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
     TArrayView<const FColor> Pixels,
@@ -73,7 +72,4 @@ void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickTyp
     SendImageDataToClient(*this, Pixels, FrameIndex);
     return true;
   });
-#else
-  FPixelReader::SendPixelsInRenderThread<AInstanceSegmentationCamera, FColor>(*this);
-#endif
 }
