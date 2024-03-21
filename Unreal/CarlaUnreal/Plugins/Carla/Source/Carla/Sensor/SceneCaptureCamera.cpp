@@ -65,7 +65,6 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
     }
   );
 
-#if 1
   auto FrameIndex = FCarlaEngine::GetFrameCounter();
   ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
     TArrayView<const FColor> Pixels,
@@ -74,9 +73,6 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
     SendImageDataToClient(*this, Pixels, FrameIndex);
     return true;
   });
-#else
-  FPixelReader::SendPixelsInRenderThread<ASceneCaptureCamera, FColor>(*this);
-#endif
 }
 
 #ifdef CARLA_HAS_GBUFFER_API
