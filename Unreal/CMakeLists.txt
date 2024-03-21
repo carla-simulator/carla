@@ -264,6 +264,11 @@ add_custom_target (
   VERBATIM
 )
 
+add_dependencies (
+  CarlaUnreal
+  ${UE_DEPENDENCIES_ORDER_ONLY}
+)
+
 add_custom_target (
   CarlaUnrealEditor
   COMMAND
@@ -278,6 +283,11 @@ add_custom_target (
     ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
   USES_TERMINAL
   VERBATIM
+)
+
+add_dependencies (
+  CarlaUnrealEditor
+  ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
 
@@ -303,7 +313,6 @@ add_custom_target (
 add_dependencies (
   launch
   CarlaUnrealEditor
-  ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
 add_custom_target (
