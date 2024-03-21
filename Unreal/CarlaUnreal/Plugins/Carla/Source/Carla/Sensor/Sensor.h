@@ -133,22 +133,27 @@ protected:
     typename PixelType>
   static void SendImageDataToClient(
     SensorType&& Sensor,
-    TArrayView<PixelType> Pixels)
+    TArrayView<PixelType> Pixels,
+    uint32 FrameIndex)
   {
+    using carla::sensor::SensorRegistry;
+    using SensorT = std::remove_const_t<std::remove_reference_t<SensorType>>;
+
     auto Stream = Sensor.GetDataStream(Sensor);
-    Stream.SetFrameNumber(FCarlaEngine::GetFrameCounter());
+    Stream.SetFrameNumber(FrameIndex);
     auto Buffer = Stream.PopBufferFromPool();
-    Buffer.copy_from(0, boost::asio::buffer(Pixels.GetData(), Pixels.Num() * sizeof(FColor)));
+    Buffer.copy_from(
+      carla::sensor::SensorRegistry::get<SensorT*>::type::header_offset,
+      boost::asio::buffer(
+        Pixels.GetData(),
+        Pixels.Num() * sizeof(FColor)));
     if (!Buffer.data())
       return;
-    carla::Buffer BufferReady(
-      std::move(
-        carla::sensor::SensorRegistry::Serialize(
-          Sensor,
-          std::move(Buffer))));
-    auto BufferView =
-      carla::BufferView::CreateFrom(
-        std::move(BufferReady));
+    auto Serialized = SensorRegistry::Serialize(
+      Sensor,
+      std::move(Buffer));
+    auto SerializedBuffer = carla::Buffer(std::move(Serialized));
+    auto BufferView = carla::BufferView::CreateFrom(std::move(SerializedBuffer));
 #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
@@ -186,7 +191,8 @@ protected:
       });
     }
 #endif
-    Stream.Send(Sensor, BufferView);
+    if (Sensor.AreClientsListening()) 
+      Stream.Send(Sensor, BufferView);
   }
 
   /// Seed of the pseudo-random engine.

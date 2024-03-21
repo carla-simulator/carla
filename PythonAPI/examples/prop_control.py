@@ -955,9 +955,9 @@ class CameraManager(object):
             image.convert(self.sensors[self.index][1])
             array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
             # TODO: Remove the length
-            length = image.height * image.width * 4 - array.size
-            if length > 0:
-                array = np.concatenate((array, np.zeros(length)))
+            # length = image.height * image.width * 4 - array.size
+            # if length > 0:
+            #     array = np.concatenate((array, np.zeros(length)))
             array = np.reshape(array, (image.height, image.width, 4))
             array = array[:, :, :3]
             array = array[:, :, ::-1]
