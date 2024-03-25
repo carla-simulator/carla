@@ -13,7 +13,7 @@ del /f %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win.zip
 echo Ninja Installed!!!
 
 echo Starting Content Download...
-mkdir Unreal\CarlaUnreal\Content
+if not exist "Unreal\CarlaUnreal\Content" mkdir Unreal\CarlaUnreal\Content
 start cmd /c git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla
 
 echo Switching to x64 Native Tools Command Prompt for VS 2022 command line...
