@@ -12,6 +12,25 @@ rmdir /s /q %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win
 del /f %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win.zip
 echo Ninja Installed!!!
 
+python --version 2>NUL
+if errorlevel 1 (
+    echo Installing Python 3.8.10...
+    curl -L -O https://www.python.org/ftp/python/3.8.10/python-3.8.10-amd64.exe
+    python-3.8.10-amd64.exe /quiet AppendPath=1
+    del python-3.8.10-amd64.exe
+    echo Python 3.8.10 installed!!!
+) else (
+    echo Found Python...
+    python --version
+)
+
+echo Installing Python Pacakges...
+    pip install --user numpy
+    pip install --user -Iv setuptools==47.3.1
+    pip install --user distro
+    pip install --user wheel auditwheel
+    echo Python Pacakges Installed...
+
 echo Starting Content Download...
 if not exist "Unreal\CarlaUnreal\Content" mkdir Unreal\CarlaUnreal\Content
 start cmd /c git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla
@@ -22,7 +41,7 @@ pushd ..
 echo Cloning CARLA Unreal Engine 5...
 git clone -b ue5-dev-carla https://github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla
 pushd UnrealEngine5_carla
-set /A CARLA_UNREAL_ENGINE_PATH=%cd%
+set /A CARLA_UNREAL_ENGINE_PATH=cd
 echo Setup CARLA Unreal Engine 5...
 call Setup.bat
 echo GenerateProjectFiles CARLA Unreal Engine 5...
