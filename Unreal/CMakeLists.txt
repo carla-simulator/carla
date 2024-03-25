@@ -321,6 +321,7 @@ add_custom_target (
 
 add_dependencies (
   launch
+  carla-unreal-configure
   CarlaUnrealEditor
 )
 
