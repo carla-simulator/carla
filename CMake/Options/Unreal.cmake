@@ -25,7 +25,7 @@ cmake_path (
 carla_string_option (
   CARLA_UNREAL_ENGINE_PATH
   "Path to the CARLA fork of Unreal Engine."
-  "${CARLA_UNREAL_ENGINE_PATH_INFERRED}"
+  ${CARLA_UNREAL_ENGINE_PATH_INFERRED}
 )
 
 carla_message ("Using ${CARLA_UNREAL_ENGINE_PATH} as Unreal Engine root path.")
@@ -51,7 +51,7 @@ endif ()
 carla_string_option (
   CARLA_UNREAL_RHI
   "Target CARLA Unreal Engine RHI."
-  "${CARLA_UNREAL_RHI_DEFAULT}"
+  ${CARLA_UNREAL_RHI_DEFAULT}
 )
 
 if (${BUILD_CARLA_UNREAL} AND ${CARLA_HAS_UNREAL_ENGINE_PATH})
@@ -68,13 +68,12 @@ endif ()
 
 carla_string_option (
   CARLA_LAUNCH_ARGS
-  "CMake-style semicolon-separated list of arguments to pass"
-  "when launching the Unreal Editor with CARLA."
+  "CMake-style semicolon-separated list of arguments to pass when launching the Unreal Editor with CARLA."
   ""
 )
 
 carla_string_option (
   CARLA_UNREAL_BUILD_TYPE
   "Carla Unreal-style build type (Debug/Development/Shipping)."
-  "Development"
+  Development
 )

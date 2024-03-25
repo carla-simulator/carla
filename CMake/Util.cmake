@@ -1,6 +1,6 @@
-macro (carla_message)
+function (carla_message)
   message (STATUS "CARLA: " ${ARGN})
-endmacro ()
+endfunction ()
 
 macro (carla_warning)
   message (WARNING ${ARGN})
@@ -11,5 +11,5 @@ macro (carla_error)
 endmacro ()
 
 macro (carla_string_option NAME DESCRIPTION VALUE)
-  set (${NAME} ${VALUE} CACHE STRING ${DESCRIPTION})
+  set (${NAME} "${VALUE}" CACHE STRING ${DESCRIPTION})
 endmacro ()

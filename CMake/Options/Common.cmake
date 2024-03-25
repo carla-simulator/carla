@@ -107,17 +107,17 @@ option (
 carla_string_option (
   LIBCARLA_IMAGE_SUPPORTED_FORMATS
   "Semicolon-separated list of supported image formats by LibCarla. Available formats: png, jpeg, tiff."
-  "png"
+  png
 )
 
 carla_string_option (  
   GCC_COMPILER
   "gcc compiler used by some CARLA extensions."
-  "/usr/bin/gcc-7"
+  /usr/bin/gcc-7
 )
 
 carla_string_option (
   GXX_COMPILER
   "g++ compiler used by some CARLA extensions."
-  "/usr/bin/g++-7"
+  /usr/bin/g++-7
 )
