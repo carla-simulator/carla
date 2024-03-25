@@ -1232,12 +1232,17 @@ namespace road {
             while(s_current < s_end){
               if(lane->GetWidth(s_current) != 0.0f){
                 const auto edges = lane->GetCornerPositions(s_current, 0);
+                if (edges.first == edges.second) continue;
                 geom::Vector3D director = edges.second - edges.first;
                 geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
                 geom::Transform lanetransform = lane->ComputeTransform(s_current);
                 geom::Transform treeTransform(treeposition, lanetransform.rotation);
                 const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
-                transforms.push_back(std::make_pair(treeTransform,roadinfo->GetType()));
+                if(roadinfo){
+                  transforms.push_back(std::make_pair(treeTransform, roadinfo->GetType()));
+                }else{
+                  transforms.push_back(std::make_pair(treeTransform, "urban"));
+                }
               }
               s_current += distancebetweentrees;
             }

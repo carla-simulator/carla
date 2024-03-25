@@ -761,14 +761,11 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
           case carla::road::element::LaneMarking::Type::Solid: {
             size_t currentIndex = out_mesh.GetVertices().size() + 1;
 
-            std::pair<geom::Vector3D, geom::Vector3D> edges = lane.GetCornerPositions(s_current, 0);
-
-            geom::Vector3D director = edges.second - edges.first;
-            director /= director.Length();
-            geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
+            std::pair<geom::Vector3D, geom::Vector3D> edges = 
+              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
 
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
+            out_mesh.AddVertex(edges.second);
 
             out_mesh.AddIndex(currentIndex);
             out_mesh.AddIndex(currentIndex + 1);
@@ -784,30 +781,23 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
           case carla::road::element::LaneMarking::Type::Broken: {
             size_t currentIndex = out_mesh.GetVertices().size() + 1;
 
-            std::pair<geom::Vector3D, geom::Vector3D> edges =
-              lane.GetCornerPositions(s_current, road_param.extra_lane_width);
-
-            geom::Vector3D director = edges.second - edges.first;
-            director /= director.Length();
-            geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
+            std::pair<geom::Vector3D, geom::Vector3D> edges = 
+              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
 
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
+            out_mesh.AddVertex(edges.second);
 
             s_current += road_param.resolution * 3;
             if (s_current > s_end)
             {
               s_current = s_end;
             }
-            edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
 
-            director = edges.second - edges.first;
-            director /= director.Length();
-            endmarking = edges.first + director * lane_mark_info.width;
+            edges = ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
 
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
-
+            out_mesh.AddVertex(edges.second);
+            
             out_mesh.AddIndex(currentIndex);
             out_mesh.AddIndex(currentIndex + 1);
             out_mesh.AddIndex(currentIndex + 2);
@@ -864,13 +854,12 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
       const carla::road::element::RoadInfoMarkRecord* road_info_mark = lane.GetInfo<carla::road::element::RoadInfoMarkRecord>(s_current);
       if (road_info_mark != nullptr) {
         carla::road::element::LaneMarking lane_mark_info(*road_info_mark);
-        std::pair<geom::Vector3D, geom::Vector3D> edges = lane.GetCornerPositions(s_end, 0);
-        geom::Vector3D director = edges.second - edges.first;
-        director /= director.Length();
-        geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
+        
+        std::pair<geom::Vector3D, geom::Vector3D> edges = 
+              ComputeEdgesForLanemark(lane_section, lane, s_end, lane_mark_info.width);
 
         out_mesh.AddVertex(edges.first);
-        out_mesh.AddVertex(endmarking);
+        out_mesh.AddVertex(edges.second);
       }
       inout.push_back(std::make_unique<Mesh>(out_mesh));
     }
@@ -927,29 +916,21 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
           case carla::road::element::LaneMarking::Type::Broken: {
             size_t currentIndex = out_mesh.GetVertices().size() + 1;
 
-            std::pair<geom::Vector3D, geom::Vector3D> edges =
-              lane.GetCornerPositions(s_current, road_param.extra_lane_width);
-
-            geom::Vector3D director = edges.second - edges.first;
-            director /= director.Length();
-            geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
-
+            std::pair<geom::Vector3D, geom::Vector3D> edges = 
+              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
+            
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
+            out_mesh.AddVertex(edges.second);
 
             s_current += road_param.resolution * 3;
             if (s_current > s_end) {
               s_current = s_end;
             }
 
-            edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
-
-            director = edges.second - edges.first;
-            director /= director.Length();
-            endmarking = edges.first + director * lane_mark_info.width;
+            edges = ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
 
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
+            out_mesh.AddVertex(edges.second);
 
             out_mesh.AddIndex(currentIndex);
             out_mesh.AddIndex(currentIndex + 1);
@@ -1150,6 +1131,33 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
     return std::make_unique<Mesh>(out_mesh);
   }
 
+  std::pair<geom::Vector3D, geom::Vector3D> MeshFactory::ComputeEdgesForLanemark(
+      const road::LaneSection& lane_section,
+      const road::Lane& lane,
+      const double s_current,
+      const double lanemark_width) const {
+    std::pair<geom::Vector3D, geom::Vector3D> edges =
+      lane.GetCornerPositions(s_current, road_param.extra_lane_width);
+
+    geom::Vector3D director;
+    if (edges.first != edges.second) {
+      director = edges.second - edges.first;
+      director /= director.Length(); 
+    } else {
+      const std::map<road::LaneId, road::Lane> & lanes = lane_section.GetLanes();
+      for (const auto& lane_pair : lanes) {
+        std::pair<geom::Vector3D, geom::Vector3D> another_edge =
+          lane_pair.second.GetCornerPositions(s_current, road_param.extra_lane_width);
+        if (another_edge.first != another_edge.second) {
+          director = another_edge.second - another_edge.first;
+          director /= director.Length();
+          break;
+        }
+      }
+    }
+    geom::Vector3D endmarking = edges.first + director * lanemark_width;
+    return std::make_pair(edges.first, endmarking);
+  }
 
 } // namespace geom
 } // namespace carla
