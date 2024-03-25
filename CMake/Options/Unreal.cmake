@@ -51,7 +51,7 @@ endif ()
 carla_string_option (
   CARLA_UNREAL_RHI
   "Target CARLA Unreal Engine RHI."
-  "${CARLA_UNREAL_RHI_DEFAULT}"
+  ${CARLA_UNREAL_RHI_DEFAULT}
 )
 
 if (${BUILD_CARLA_UNREAL} AND ${CARLA_HAS_UNREAL_ENGINE_PATH})
@@ -76,5 +76,5 @@ carla_string_option (
 carla_string_option (
   CARLA_UNREAL_BUILD_TYPE
   "Carla Unreal-style build type (Debug/Development/Shipping)."
-  "Development"
+  Development
 )
