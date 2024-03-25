@@ -178,6 +178,7 @@ pipeline
                                     (*)
                                         echo "Generating complete package"
                                         make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=3.8,2 --target-wheel-platform=manylinux_2_27_x86_64"
+                                        tar -czf CarlaUE4_logs.tar.gz Unreal/CarlaUE4/Saved/Logs/
                                         ;;
                                     esac
                                 '''
@@ -188,6 +189,8 @@ pipeline
                                 always
                                 {
                                     archiveArtifacts 'Dist/*.tar.gz'
+                                    archiveArtifacts artifacts:'CarlaUE4_logs.tar.gz',
+                                        allowEmptyArchive: true
                                     stash includes: 'Dist/CARLA*.tar.gz', name: 'ubuntu_package'
                                     stash includes: 'Examples/', name: 'ubuntu_examples'
                                 }
@@ -219,9 +222,7 @@ pipeline
                                             {
                                                 always
                                                 {
-                                                    sh 'tar -czf CarlaUE4_logs.tar.gz Unreal/CarlaUE4/Saved/Logs/'
                                                     archiveArtifacts 'CarlaUE4.log'
-                                                    archiveArtifacts 'CarlaUE4_logs.tar.gz'
                                                     junit 'Build/test-results/smoke-tests-*.xml'
                                                 }
                                             }

@@ -120,7 +120,8 @@ void export_actor() {
       .def("get_component_names", CALL_RETURNING_LIST(cc::Actor,GetComponentNames))
       .def("get_bone_names", CALL_RETURNING_LIST(cc::Actor,GetBoneNames))
       .def("get_socket_world_transforms", CALL_RETURNING_LIST(cc::Actor,GetSocketWorldTransforms))
-      .def("get_socket_relative_transforms", CALL_RETURNING_LIST(cc::Actor,GetSocketRelativeTransforms))      
+      .def("get_socket_relative_transforms", CALL_RETURNING_LIST(cc::Actor,GetSocketRelativeTransforms))   
+      .def("get_socket_names", CALL_RETURNING_LIST(cc::Actor,GetSocketNames))         
       .def("set_location", &cc::Actor::SetLocation, (arg("location")))
       .def("set_transform", &cc::Actor::SetTransform, (arg("transform")))
       .def("set_target_velocity", &cc::Actor::SetTargetVelocity, (arg("velocity")))
@@ -202,6 +203,7 @@ void export_actor() {
       .def("enable_carsim", &cc::Vehicle::EnableCarSim, (arg("simfile_path") = ""))
       .def("use_carsim_road", &cc::Vehicle::UseCarSimRoad, (arg("enabled")))
       .def("enable_chrono_physics", &cc::Vehicle::EnableChronoPhysics, (arg("max_substeps")=30, arg("max_substep_delta_time")=0.002, arg("vehicle_json")="", arg("powetrain_json")="", arg("tire_json")="", arg("base_json_path")=""))
+      .def("restore_physx_physics", &cc::Vehicle::RestorePhysXPhysics)
       .def("get_failure_state", &cc::Vehicle::GetFailureState)
       .def(self_ns::str(self_ns::self))
   ;
