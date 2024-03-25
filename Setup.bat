@@ -17,8 +17,7 @@ pushd UnrealEngine5_carla
 set /A CARLA_UNREAL_ENGINE_PATH=%cd%
 Setup.bat
 GenerateProjectFiles.bat
-msbuild UE5.sln /m /property:Configuration="Development Editor" /property:Platform="Win64"
-REM start "" /B /WAIT "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" UE5.sln
+start "" /B /WAIT "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" UE5.sln
 popd
 popd
 
