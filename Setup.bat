@@ -28,10 +28,7 @@ call Setup.bat
 echo GenerateProjectFiles CARLA Unreal Engine 5...
 call GenerateProjectFiles.bat
 echo Opening Visual Studio 2022...
-powershell write-host -fore Red Please Build UE5 Project following the nextlink instructions:
-echo https://dev.epicgames.com/documentation/en-us/unreal-engine/building-unreal-engine-from-source#:~:text=Set%20your%20solution%20configuration%20to%20Development%20Editor.
-start https://dev.epicgames.com/documentation/en-us/unreal-engine/building-unreal-engine-from-source#:~:text=Set%20your%20solution%20configuration%20to%20Development%20Editor.
-start "" /B /WAIT "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" UE5.sln
+start "" /B /WAIT msbuild Engine\Intermediate\ProjectFiles\UE5.vcxproj /property:Configuration="Development_Editor" /property:Platform="x64"
 popd
 popd
 
