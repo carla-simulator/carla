@@ -8,7 +8,7 @@ move %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win\ninja.exe %USER
 rmdir /s /q %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win
 del /f %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win.zip
 
-git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla
+start cmd /c git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla
 
 pushd ..
 git clone -b ue5-dev-carla https://github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla
@@ -16,7 +16,8 @@ pushd UnrealEngine5_carla
 set /A CARLA_UNREAL_ENGINE_PATH=%cd%
 Setup.bat
 GenerateProjectFiles.bat
-start "" /B /WAIT "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" UE5.sln
+msbuild UE5.sln /m /property:Configuration="Development Editor" /property:Platform="Win64"
+REM start "" /B /WAIT "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" UE5.sln
 popd
 popd
 
