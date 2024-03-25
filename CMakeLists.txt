@@ -56,6 +56,11 @@ set (
 )
 
 set (
+  CARLA_PACKAGE_PATH
+  ${CMAKE_BINARY_DIR}/Package
+)
+
+set (
   CARLA_UNREAL_PLUGINS_PATH
   ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins
 )

@@ -73,8 +73,29 @@ carla_string_option (
   ""
 )
 
+
+
+macro (carla_cmake_to_unreal_build_type OUT_VAR NAME)
+  if (${NAME} STREQUAL "Debug")
+    set (${OUT_VAR} Debug)
+  elseif (${NAME} STREQUAL "RelWithDebInfo")
+    set (${OUT_VAR} Development)
+  elseif (${NAME} STREQUAL "MinSizeRel")
+    set (${OUT_VAR} Development)
+  elseif (${NAME} STREQUAL "Release")
+    set (${OUT_VAR} Shipping)
+  else ()
+    set (${OUT_VAR} Unknown)
+  endif ()
+endmacro ()
+
+carla_cmake_to_unreal_build_type (
+  CARLA_UNREAL_BUILD_TYPE_DEFAULT
+  ${CMAKE_BUILD_TYPE}
+)
+
 carla_string_option (
   CARLA_UNREAL_BUILD_TYPE
   "Carla Unreal-style build type (Debug/Development/Shipping)."
-  Development
+  ${CARLA_UNREAL_BUILD_TYPE_DEFAULT}
 )
