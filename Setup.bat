@@ -17,7 +17,7 @@ mkdir Unreal\CarlaUnreal\Content
 start cmd /c git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla
 
 echo "Switching to x64 Native Tools Command Prompt for VS 2022 command line..."
-"%ProgramFiles%\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat"
+call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat"
 pushd ..
 echo "Cloning CARLA Unreal Engine 5..."
 git clone -b ue5-dev-carla https://github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla
