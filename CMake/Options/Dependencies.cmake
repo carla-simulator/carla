@@ -121,12 +121,14 @@ carla_string_option (
 carla_string_option (
   CARLA_ZLIB_VERSION
   "Target zlib git tag."
-  1.3.1)
+  1.3.1
+)
 
 carla_string_option (
   CARLA_ZLIB_TAG
   "Target zlib git tag."
-  v${CARLA_ZLIB_VERSION})
+  v${CARLA_ZLIB_VERSION}
+)
   
 # ==== LUNASVG ====
 
