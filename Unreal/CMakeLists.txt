@@ -58,7 +58,7 @@ set (
 
 
 set (
-  UE_DEPENDENCIES_ORDER_ONLY
+  UE_DEPENDENCIES
   carla-server
   libsqlite3
   Boost::asio
@@ -72,7 +72,10 @@ set (
   rpc
 )
 
-set (UE_DEPENDENCIES ${UE_DEPENDENCIES_ORDER_ONLY})
+set (
+  UE_DEPENDENCIES_ORDER_ONLY
+  ${UE_DEPENDENCIES}
+)
 
 if (BUILD_CARLA_CLIENT)
   list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-client)
@@ -202,9 +205,11 @@ set (
     ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
     ${CARLA_UE_CARLA_PATH}/Includes.def
     ${CARLA_UE_CARLA_TOOLS_PATH}/Includes.def
+
     ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
     ${CARLA_UE_CARLA_PATH}/Libraries.def
     ${CARLA_UE_CARLA_TOOLS_PATH}/Libraries.def
+
     ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
     ${CARLA_UE_CARLA_PATH}/Options.def
     ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
@@ -266,8 +271,11 @@ add_custom_target (
 
 add_dependencies (
   CarlaUnreal
+  carla-unreal-configure
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
+
+
 
 add_custom_target (
   CarlaUnrealEditor
@@ -287,6 +295,7 @@ add_custom_target (
 
 add_dependencies (
   CarlaUnrealEditor
+  carla-unreal-configure
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
