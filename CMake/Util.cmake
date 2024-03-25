@@ -6,9 +6,9 @@ macro (carla_warning)
   message (WARNING ${ARGN})
 endmacro ()
 
-macro (carla_error)
+function (carla_error)
   message (FATAL_ERROR ${ARGN})
-endmacro ()
+endfunction ()
 
 macro (carla_string_option NAME DESCRIPTION VALUE)
   set (${NAME} "${VALUE}" CACHE STRING ${DESCRIPTION})
