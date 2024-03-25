@@ -8,7 +8,7 @@ move %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win\ninja.exe %USER
 rmdir /s /q %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win
 del /f %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win.zip
 
-mkdir Unreal/CarlaUnreal/Content
+mkdir Unreal\CarlaUnreal\Content
 start cmd /c git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla
 
 pushd ..
