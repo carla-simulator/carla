@@ -43,6 +43,7 @@ if errorlevel 1 (
 
 
 echo Installing Python Pacakges...
+pip install --upgrade pip || exit /b
 pip install --user numpy || exit /b
 pip install --user -Iv setuptools==47.3.1 || exit /b
 pip install --user distro || exit /b
