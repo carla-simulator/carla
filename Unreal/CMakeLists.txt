@@ -55,10 +55,12 @@ set (
   ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
 )
 
-if (IS_DIRECTORY ${CARLA_UE_PATH}/Content/Carla/Blueprints)
-  carla_message ("Found CARLA Unreal Content.")
+set (CARLA_UE_CONTENT_CHECK_PATH ${CARLA_UE_PATH}/Content/Carla/Blueprints)
+if (IS_DIRECTORY ${CARLA_UE_CONTENT_CHECK_PATH})
+  carla_message ("CARLA Unreal Content - FOUND")
 else ()
-  carla_error ("Missing CARLA Unreal Content.")
+  carla_message ("CARLA Unreal Content - MISSING")
+  carla_warning ("Could not find CARLA Content, download it or running the editor will result in a crash.")
 endif ()
 
 
@@ -330,6 +332,26 @@ set (
 add_custom_target (
   launch
   ${CARLA_LAUNCH_TARGET_OPTIONS}
+)
+
+if (WIN32)
+  set (
+    PRELAUNCH_CONTENT_CHECK_COMMAND
+    if exist ${CARLA_UE_CONTENT_CHECK_PATH} (exit 0) else (exit 1)
+  )
+else ()
+  set (
+    PRELAUNCH_CONTENT_CHECK_COMMAND
+    test -d ${CARLA_UE_CONTENT_CHECK_PATH}
+  )
+endif ()
+
+add_custom_command (
+  TARGET launch PRE_BUILD
+  COMMAND ${CMAKE_COMMAND} -E echo "-- CARLA: Performing prelaunch check for CARLA Content presence..."
+  COMMAND ${PRELAUNCH_CONTENT_CHECK_COMMAND}
+  USES_TERMINAL
+  VERBATIM
 )
 
 add_dependencies (
