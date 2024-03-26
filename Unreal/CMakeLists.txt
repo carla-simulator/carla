@@ -55,6 +55,12 @@ set (
   ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
 )
 
+if (IS_DIRECTORY ${CARLA_UE_PATH}/Content/Carla)
+  carla_message ("Found CARLA Unreal Content.")
+else ()
+  carla_error ("Missing CARLA Unreal Content.")
+endif ()
+
 
 
 set (
