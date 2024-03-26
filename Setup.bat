@@ -32,7 +32,7 @@ if errorlevel 1 (
     echo Found Python - FAIL
     echo Installing Python 3.8.10...
     curl -L -O https://www.python.org/ftp/python/3.8.10/python-3.8.10-amd64.exe || exit /b
-    python-3.8.10-amd64.exe /quiet AppendPath=1 || exit /b
+    python-3.8.10-amd64.exe /passive PrependPath=1  || exit /b
     del python-3.8.10-amd64.exe
     echo Python 3.8.10 installed!!!
 ) else (
@@ -42,23 +42,24 @@ if errorlevel 1 (
 
 
 echo Installing Python Pacakges...
-pip install --user numpy || exit /b
-pip install --user -Iv setuptools==47.3.1 || exit /b
-pip install --user distro || exit /b
-pip install --user wheel auditwheel || exit /b
+set PIP_PATH=C:\Users\CARLA\AppData\Local\Programs\Python\Python38\Scripts\pip
+%PIP_PATH% install --user numpy || exit /b
+%PIP_PATH% install --user -Iv setuptools==47.3.1 || exit /b
+%PIP_PATH% install --user distro || exit /b
+%PIP_PATH% install --user wheel auditwheel || exit /b
 echo Python Pacakges Installed...
 
 
 echo Switching to x64 Native Tools Command Prompt for VS 2022 command line...
-call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat" || exit /b
+call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat"
 
 
-if exist %CARLA_UNREAL_ENGINE_PATH% (
+if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     echo Found UnrealEngine5 %CARLA_UNREAL_ENGINE_PATH% - OK
-) else ( if ( exist ..\UnrealEngine5_carla
+) else if exist ..\UnrealEngine5_carla (
     echo Found UnrealEngine5 ..\UnrealEngine5_carla - OK
     REM TODO: Check if UnrealEngine binary file exists and if not build it
-else (
+) else (
     echo Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - FAIL
     pushd ..
     echo Cloning CARLA Unreal Engine 5...
@@ -70,10 +71,10 @@ else (
     call GenerateProjectFiles.bat || exit /b
     echo Opening Visual Studio 2022...
     msbuild Engine\Intermediate\ProjectFiles\UE5.vcxproj /property:Configuration="Development_Editor" /property:Platform="x64" || exit /b
-    set "CARLA_UNREAL_ENGINE_PATH=%cd%"
+    setx "CARLA_UNREAL_ENGINE_PATH=%cd%"
     popd
     popd
-)))
+)
 
 
 echo Configuring CARLA...
