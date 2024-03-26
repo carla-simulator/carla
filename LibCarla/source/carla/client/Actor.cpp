@@ -32,6 +32,42 @@ namespace client {
     return GetEpisode().Lock()->GetActorAcceleration(*this);
   }
 
+  geom::Transform Actor::GetComponentWorldTransform(const std::string componentName) const {
+    return GetEpisode().Lock()->GetActorComponentWorldTransform(*this, componentName);
+  }
+
+  geom::Transform Actor::GetComponentRelativeTransform(const std::string componentName) const {
+    return GetEpisode().Lock()->GetActorComponentRelativeTransform(*this, componentName);
+  }
+
+  std::vector<geom::Transform> Actor::GetBoneWorldTransforms() const {
+    return GetEpisode().Lock()->GetActorBoneWorldTransforms(*this);
+  }
+
+  std::vector<geom::Transform> Actor::GetBoneRelativeTransforms() const {
+    return GetEpisode().Lock()->GetActorBoneRelativeTransforms(*this);
+  }
+
+  std::vector<std::string> Actor::GetComponentNames() const {
+    return GetEpisode().Lock()->GetActorComponentNames(*this);
+  }
+
+  std::vector<std::string> Actor::GetBoneNames() const {
+    return GetEpisode().Lock()->GetActorBoneNames(*this);
+  } 
+
+  std::vector<geom::Transform> Actor::GetSocketWorldTransforms() const {
+    return GetEpisode().Lock()->GetActorSocketWorldTransforms(*this);
+  }
+
+  std::vector<geom::Transform> Actor::GetSocketRelativeTransforms() const {
+    return GetEpisode().Lock()->GetActorSocketRelativeTransforms(*this);
+  }
+
+  std::vector<std::string> Actor::GetSocketNames() const {
+    return GetEpisode().Lock()->GetActorSocketNames(*this);
+  }  
+
   void Actor::SetLocation(const geom::Location &location) {
     GetEpisode().Lock()->SetActorLocation(*this, location);
   }
