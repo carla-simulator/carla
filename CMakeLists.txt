@@ -68,9 +68,9 @@ include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Warnings.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Errors.cmake)
 
-if (NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   carla_warning (
-    "CARLA is not set to be built in Release mode. This may cause issues when building CarlaUnrealEditor."
+    "CARLA is set to be built in Debug mode. This may cause issues when building CarlaUnrealEditor."
   )
 endif ()
 
@@ -80,16 +80,6 @@ if (LINUX)
     add_link_options (-lpthread)
   endif ()
 endif ()
-
-# Similar to configure_file, but also expands variables
-# that are set at generate time, like generator expressions.
-macro (carla_two_step_configure_file DESTINATION SOURCE)
-  carla_message ("Configuring file ${DESTINATION}")
-  # Configure-time step; evaluate variables:
-  configure_file (${SOURCE} ${DESTINATION})
-  # Generate-time step; evaluate generator expressions:
-  file (GENERATE OUTPUT ${DESTINATION} INPUT ${DESTINATION})
-endmacro ()
 
 
 

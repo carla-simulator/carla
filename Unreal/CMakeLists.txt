@@ -55,6 +55,14 @@ set (
   ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
 )
 
+set (CARLA_UE_CONTENT_CHECK_PATH ${CARLA_UE_PATH}/Content/Carla/Blueprints)
+if (IS_DIRECTORY ${CARLA_UE_CONTENT_CHECK_PATH})
+  carla_message ("CARLA Unreal Content - FOUND")
+else ()
+  carla_message ("CARLA Unreal Content - MISSING")
+  carla_warning ("Could not find CARLA Content, download it or running the editor will result in a crash.")
+endif ()
+
 
 
 set (
@@ -210,25 +218,41 @@ set (
     ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
 )
 
+
+
+file (
+  GENERATE
+  OUTPUT
+    ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
+  CONTENT
+    "${CARLA_UNREAL_INCLUDE_PATHS}"
+)
+
+file (
+  GENERATE
+  OUTPUT
+    ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
+  CONTENT
+    "${CARLA_UNREAL_LIBRARIES}"
+)
+
+file (
+  GENERATE
+  OUTPUT
+    ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
+  CONTENT
+    "${CARLA_UNREAL_OPTIONS}"
+)
+
 add_custom_command (
   OUTPUT
     ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
-  
-  COMMAND ${CMAKE_COMMAND} -E rm -f ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
-  COMMAND ${CMAKE_COMMAND} -E echo "${CARLA_UNREAL_INCLUDE_PATHS}" >> ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
-  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Includes.def
-  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Includes.def
-
-  COMMAND ${CMAKE_COMMAND} -E rm -f ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
-  COMMAND ${CMAKE_COMMAND} -E echo "${CARLA_UNREAL_LIBRARIES}" >> ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
-  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Libraries.def
-  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Libraries.def
-
-  COMMAND ${CMAKE_COMMAND} -E rm -f ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
-  COMMAND ${CMAKE_COMMAND} -E echo "${CARLA_UNREAL_OPTIONS}" >> ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
-  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Options.def
-  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
-
+  COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Includes.def
+  COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Includes.def
+  COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Libraries.def
+  COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Libraries.def
+  COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Options.def
+  COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
   USES_TERMINAL
   VERBATIM
 )
@@ -310,12 +334,40 @@ add_custom_target (
   ${CARLA_LAUNCH_TARGET_OPTIONS}
 )
 
+if (WIN32)
+  set (
+    PRELAUNCH_CONTENT_CHECK_COMMAND
+    if exist ${CARLA_UE_CONTENT_CHECK_PATH} (exit 0) else (exit 1)
+  )
+else ()
+  set (
+    PRELAUNCH_CONTENT_CHECK_COMMAND
+    test -d ${CARLA_UE_CONTENT_CHECK_PATH}
+  )
+endif ()
+
+add_custom_target (
+  prelaunch-content-check
+  COMMAND
+    ${PRELAUNCH_CONTENT_CHECK_COMMAND}
+  COMMENT
+    "Performing prelaunch check for CARLA Content presence."
+  USES_TERMINAL
+  VERBATIM
+)
+
 add_dependencies (
   launch
   CarlaUnrealEditor
+  prelaunch-content-check
 )
 
 add_custom_target (
   launch-only
   ${CARLA_LAUNCH_TARGET_OPTIONS}
+)
+
+add_dependencies (
+  launch-only
+  prelaunch-content-check
 )
