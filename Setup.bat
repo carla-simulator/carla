@@ -64,13 +64,13 @@ else (
     echo Cloning CARLA Unreal Engine 5...
     git clone -b ue5-dev-carla https://github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla || exit /b
     pushd UnrealEngine5_carla
-    set /A CARLA_UNREAL_ENGINE_PATH=cd
     echo Setup CARLA Unreal Engine 5...
     call Setup.bat || exit /b
     echo GenerateProjectFiles CARLA Unreal Engine 5...
     call GenerateProjectFiles.bat || exit /b
     echo Opening Visual Studio 2022...
     msbuild Engine\Intermediate\ProjectFiles\UE5.vcxproj /property:Configuration="Development_Editor" /property:Platform="x64" || exit /b
+    set "CARLA_UNREAL_ENGINE_PATH=%cd%"
     popd
     popd
 )))
