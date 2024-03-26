@@ -346,10 +346,12 @@ else ()
   )
 endif ()
 
-add_custom_command (
-  TARGET launch PRE_BUILD
-  COMMAND ${CMAKE_COMMAND} -E echo "-- CARLA: Performing prelaunch check for CARLA Content presence..."
-  COMMAND ${PRELAUNCH_CONTENT_CHECK_COMMAND}
+add_custom_target (
+  prelaunch-content-check
+  COMMAND
+    ${PRELAUNCH_CONTENT_CHECK_COMMAND}
+  COMMENT
+    "Performing prelaunch check for CARLA Content presence."
   USES_TERMINAL
   VERBATIM
 )
@@ -357,9 +359,15 @@ add_custom_command (
 add_dependencies (
   launch
   CarlaUnrealEditor
+  prelaunch-content-check
 )
 
 add_custom_target (
   launch-only
   ${CARLA_LAUNCH_TARGET_OPTIONS}
+)
+
+add_dependencies (
+  launch-only
+  prelaunch-content-check
 )
