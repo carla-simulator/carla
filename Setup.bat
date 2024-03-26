@@ -34,6 +34,7 @@ if errorlevel 1 (
     curl -L -O https://www.python.org/ftp/python/3.8.10/python-3.8.10-amd64.exe || exit /b
     python-3.8.10-amd64.exe /passive PrependPath=1  || exit /b
     del python-3.8.10-amd64.exe
+    set "PATH=C:\Users\CARLA\AppData\Local\Programs\Python\Python38\Scripts\;C:\Users\CARLA\AppData\Local\Programs\Python\Python38\;%PATH%"
     echo Python 3.8.10 installed!!!
 ) else (
     echo Found Python - OK
@@ -58,6 +59,8 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     echo Found UnrealEngine5 %CARLA_UNREAL_ENGINE_PATH% - OK
 ) else if exist ..\UnrealEngine5_carla (
     echo Found UnrealEngine5 ..\UnrealEngine5_carla - OK
+    set CARLA_UNREAL_ENGINE_PATH=%cd:\=\\%\\..UnrealEngine5_carla
+    setx CARLA_UNREAL_ENGINE_PATH %cd:\=\\%\\..\\UnrealEngine5_carla
     REM TODO: Check if UnrealEngine binary file exists and if not build it
 ) else (
     echo Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - FAIL
@@ -71,7 +74,8 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     call GenerateProjectFiles.bat || exit /b
     echo Opening Visual Studio 2022...
     msbuild Engine\Intermediate\ProjectFiles\UE5.vcxproj /property:Configuration="Development_Editor" /property:Platform="x64" || exit /b
-    setx "CARLA_UNREAL_ENGINE_PATH=%cd%"
+    set CARLA_UNREAL_ENGINE_PATH=%cd:\=\\%
+    setx CARLA_UNREAL_ENGINE_PATH %cd:\=\\%
     popd
     popd
 )
