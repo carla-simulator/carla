@@ -34,7 +34,7 @@ if errorlevel 1 (
     curl -L -O https://www.python.org/ftp/python/3.8.10/python-3.8.10-amd64.exe || exit /b
     python-3.8.10-amd64.exe /passive PrependPath=1  || exit /b
     del python-3.8.10-amd64.exe
-    set "PATH=C:\Users\CARLA\AppData\Local\Programs\Python\Python38\Scripts\;C:\Users\CARLA\AppData\Local\Programs\Python\Python38\;%PATH%"
+    set PATH="C:\Users\CARLA\AppData\Local\Programs\Python\Python38\Scripts\;C:\Users\CARLA\AppData\Local\Programs\Python\Python38\;%PATH%"
     echo Python 3.8.10 installed!!!
 ) else (
     echo Found Python - OK
@@ -43,11 +43,10 @@ if errorlevel 1 (
 
 
 echo Installing Python Pacakges...
-set PIP_PATH=C:\Users\CARLA\AppData\Local\Programs\Python\Python38\Scripts\pip
-%PIP_PATH% install --user numpy || exit /b
-%PIP_PATH% install --user -Iv setuptools==47.3.1 || exit /b
-%PIP_PATH% install --user distro || exit /b
-%PIP_PATH% install --user wheel auditwheel || exit /b
+pip install --user numpy || exit /b
+pip install --user -Iv setuptools==47.3.1 || exit /b
+pip install --user distro || exit /b
+pip install --user wheel auditwheel || exit /b
 echo Python Pacakges Installed...
 
 
@@ -82,20 +81,12 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
 
 
 echo Configuring CARLA...
-set COUNT=0
-:cmake_configure_command
-set /A COUNT=%COUNT%+1
 cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=%CARLA_UNREAL_ENGINE_PATH% || exit /b
-timeout /t 10
-if errorlevel 1 if %COUNT% LSS 12 goto cmake_configure_command
 
 echo Buiding CARLA...
-set COUNT=0
-:cmake_build_command
-set /A COUNT=%COUNT%+1
+
 cmake --build Build || exit /b
-timeout /t 10
-if errorlevel 1 if %COUNT% LSS 12 goto cmake_build_command
+
 
 echo Build Succesfull :)
 echo Launching Unreal Editor with CARLA...
