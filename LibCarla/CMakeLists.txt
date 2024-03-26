@@ -311,3 +311,12 @@ if (BUILD_CARLA_CLIENT)
   )
 
 endif ()
+
+add_custom_target (
+  carla-server-package
+)
+
+add_dependencies (
+  carla-server-package
+  carla-server
+)
