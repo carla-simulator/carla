@@ -6,8 +6,14 @@
 
 #include "Carla.h"
 #include "Carla/Server/CarlaServer.h"
+#include "Carla/Server/CarlaServerResponse.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
 #include "EngineUtils.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/SkinnedMeshComponent.h"
+#include "Components/SceneComponent.h"
+#include "Engine/SkeletalMesh.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
@@ -18,6 +24,7 @@
 #include "Carla/Walker/WalkerBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
@@ -116,7 +123,7 @@ public:
   carla::streaming::Server StreamingServer;
 
   carla::streaming::Stream BroadcastStream;
-  
+
   std::shared_ptr<carla::multigpu::Router> SecondaryServer;
 
   UCarlaEpisode *Episode = nullptr;
@@ -166,7 +173,7 @@ carla::rpc::ResponseError RespondError(
     const ECarlaServerResponse& Error,
     const FString& ExtraInfo = "")
 {
-  return RespondError(FuncName, GetStringError(Error), ExtraInfo);
+  return RespondError(FuncName, CarlaGetStringError(Error), ExtraInfo);
 }
 
 class ServerBinder
@@ -305,7 +312,10 @@ void FCarlaServer::FPimpl::BindActions()
 
     if(!Episode->LoadNewEpisode(cr::ToFString(map_name), reset_settings))
     {
-      RESPOND_ERROR("map not found");
+      FString Str(TEXT("Map '"));
+      Str += cr::ToFString(map_name);
+      Str += TEXT("' not found");
+      RESPOND_ERROR_FSTRING(Str);
     }
 
     return R<void>::Success();
@@ -537,6 +547,18 @@ void FCarlaServer::FPimpl::BindActions()
     REQUIRE_CARLA_EPISODE();
     Episode->ApplySettings(settings);
     StreamingServer.SetSynchronousMode(settings.synchronous_mode);
+
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    if (LargeMap)
+    {
+      LargeMap->ConsiderSpectatorAsEgo(settings.spectator_as_ego);
+    }
+
     return FCarlaEngine::GetFrameCounter();
   };
 
@@ -642,6 +664,31 @@ void FCarlaServer::FPimpl::BindActions()
     Weather->ApplyWeather(weather);
     return R<void>::Success();
   };
+  
+  // -- IMUI Gravity ---------------------------------------------------------
+  
+  BIND_SYNC(get_imui_gravity) << [this]() -> R<float>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (GameMode == nullptr)
+    {
+      RESPOND_ERROR("get_imui_gravity error: unable to get carla gamemode");
+    }
+    return GameMode->IMUISensorGravity;
+  };
+
+  BIND_SYNC(set_imui_gravity) << [this](float newimuigravity) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (GameMode == nullptr)
+    {
+      RESPOND_ERROR("get_imui_gravity error: unable to get carla gamemode");
+    }
+    GameMode->IMUISensorGravity = newimuigravity;
+    return R<void>::Success();
+  };
 
   // ~~ Actor operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -689,7 +736,8 @@ void FCarlaServer::FPimpl::BindActions()
       cr::ActorDescription Description,
       const cr::Transform &Transform,
       cr::ActorId ParentId,
-      cr::AttachmentType InAttachmentType) -> R<cr::Actor>
+      cr::AttachmentType InAttachmentType,
+      const std::string& socket_name) -> R<cr::Actor>
   {
     REQUIRE_CARLA_EPISODE();
 
@@ -716,6 +764,26 @@ void FCarlaServer::FPimpl::BindActions()
     CarlaActor->SetAttachmentType(InAttachmentType);
     ParentCarlaActor->AddChildren(CarlaActor->GetActorId());
 
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+    {
+      FCarlaActor* CurrentActor = ParentCarlaActor;
+      while(CurrentActor)
+      {
+        for (const auto &Attr : CurrentActor->GetActorInfo()->Description.Variations)
+        {
+          if (Attr.Key == "ros_name")
+          {
+            const std::string value = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
+            ROS2->AddActorParentRosName(static_cast<void*>(CarlaActor->GetActor()), static_cast<void*>(CurrentActor->GetActor()));
+          }
+        }
+        CurrentActor = Episode->FindCarlaActor(CurrentActor->GetParent());
+      }
+    }
+    #endif
+
     // Only is possible to attach if the actor has been really spawned and
     // is not in dormant state
     if(!ParentCarlaActor->IsDormant())
@@ -723,7 +791,8 @@ void FCarlaServer::FPimpl::BindActions()
       Episode->AttachActors(
           CarlaActor->GetActor(),
           ParentCarlaActor->GetActor(),
-          static_cast<EAttachmentType>(InAttachmentType));
+          static_cast<EAttachmentType>(InAttachmentType),
+          FString(socket_name.c_str()));
     }
     else
     {
@@ -790,13 +859,108 @@ void FCarlaServer::FPimpl::BindActions()
     {
       // multi-gpu
       UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in secondary server"), sensor_id, *Desc);
-      return SecondaryServer->GetCommander().SendGetToken(sensor_id);
+      return SecondaryServer->GetCommander().GetToken(sensor_id);
     }
     else
     {
       // single-gpu
       UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in primary server"), sensor_id, *Desc);
       return StreamingServer.GetToken(sensor_id);
+    }
+  };
+
+  BIND_SYNC(enable_sensor_for_ros) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+                                 R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    bool ForceInPrimary = false;
+
+    // check for the world observer (always in primary server)
+    if (sensor_id == 1)
+    {
+      ForceInPrimary = true;
+    }
+
+    // collision sensor always in primary server in multi-gpu
+    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
+    if (Desc == "" || Desc == "sensor.other.collision")
+    {
+      ForceInPrimary = true;
+    }
+
+    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
+    {
+      // multi-gpu
+      SecondaryServer->GetCommander().EnableForROS(sensor_id);
+    }
+    else
+    {
+      // single-gpu
+      StreamingServer.EnableForROS(sensor_id);
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(disable_sensor_for_ros) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+                                 R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    bool ForceInPrimary = false;
+
+    // check for the world observer (always in primary server)
+    if (sensor_id == 1)
+    {
+      ForceInPrimary = true;
+    }
+
+    // collision sensor always in primary server in multi-gpu
+    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
+    if (Desc == "" || Desc == "sensor.other.collision")
+    {
+      ForceInPrimary = true;
+    }
+
+    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
+    {
+      // multi-gpu
+      SecondaryServer->GetCommander().DisableForROS(sensor_id);
+    }
+    else
+    {
+      // single-gpu
+      StreamingServer.DisableForROS(sensor_id);
+    }
+    return R<void>::Success();
+  };
+
+BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+                                 R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    bool ForceInPrimary = false;
+
+    // check for the world observer (always in primary server)
+    if (sensor_id == 1)
+    {
+      ForceInPrimary = true;
+    }
+
+    // collision sensor always in primary server in multi-gpu
+    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
+    if (Desc == "" || Desc == "sensor.other.collision")
+    {
+      ForceInPrimary = true;
+    }
+
+    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
+    {
+      // multi-gpu
+      return SecondaryServer->GetCommander().IsEnabledForROS(sensor_id);
+    }
+    else
+    {
+      // single-gpu
+      return StreamingServer.IsEnabledForROS(sensor_id);
     }
   };
 
@@ -1142,6 +1306,340 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(get_actor_component_world_transform) << [this](
+      cr::ActorId ActorId,
+      const std::string componentName) -> R<cr::Transform>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_component_world_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);
+
+      USceneComponent* Component = nullptr;
+      for(auto Cmp : Components)
+      {
+        if(USceneComponent* SCMP = Cast<USceneComponent>(Cmp))
+        {
+          if(SCMP->GetName() == componentName.c_str())
+          {
+            Component = SCMP;
+            break;
+          }
+        }
+      }
+
+      if(!Component)
+      {
+        return RespondError(
+            "get_actor_component_world_transform",
+            ECarlaServerResponse::ComponentNotFound,
+            " Component Name: " + FString(componentName.c_str()));
+      }
+
+      FTransform ComponentWorldTransform = Component->GetComponentTransform();
+      return cr::Transform(ComponentWorldTransform);
+    }
+  };
+
+  BIND_SYNC(get_actor_component_relative_transform) << [this](
+      cr::ActorId ActorId,
+      const std::string componentName) -> R<cr::Transform>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_component_relative_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);
+
+      USceneComponent* Component = nullptr;
+      for(auto Cmp : Components)
+      {
+        if(USceneComponent* SCMP = Cast<USceneComponent>(Cmp))
+        {
+          if(SCMP->GetName() == componentName.c_str())
+          {
+            Component = SCMP;
+            break;
+          }
+        }
+      }
+
+      if(!Component)
+      {
+        return RespondError(
+            "get_actor_component_world_transform",
+            ECarlaServerResponse::ComponentNotFound,
+            " Component Name: " + FString(componentName.c_str()));
+      }
+
+      FTransform ComponentRelativeTransform = Component->GetRelativeTransform();
+      return cr::Transform(ComponentRelativeTransform);
+    }
+  };
+
+  BIND_SYNC(get_actor_bone_world_transforms) << [this](
+      cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_bone_world_transforms",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<FTransform> BoneWorldTransforms;
+      TArray<USkinnedMeshComponent*> SkinnedMeshComponents;
+      CarlaActor->GetActor()->GetComponents<USkinnedMeshComponent>(SkinnedMeshComponents);
+      if(!SkinnedMeshComponents[0])
+      {
+        return RespondError(
+            "get_actor_bone_world_transforms",
+            ECarlaServerResponse::ComponentNotFound,
+            " Component Name: SkinnedMeshComponent ");
+      }
+      else
+      {
+        for(USkinnedMeshComponent* SkinnedMeshComponent : SkinnedMeshComponents)
+        {
+          const int32 NumBones = SkinnedMeshComponent->GetNumBones();
+          for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+          {
+            FTransform WorldTransform = SkinnedMeshComponent->GetComponentTransform();
+            FTransform BoneTransform = SkinnedMeshComponent->GetBoneTransform(BoneIndex, WorldTransform);
+            BoneWorldTransforms.Add(BoneTransform);  
+          }
+        }
+        return MakeVectorFromTArray<cr::Transform>(BoneWorldTransforms);
+      }      
+    }
+  };
+
+  BIND_SYNC(get_actor_bone_relative_transforms) << [this](
+      cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_bone_relative_transforms",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<FTransform> BoneRelativeTransforms;
+      TArray<USkinnedMeshComponent*> SkinnedMeshComponents;
+      CarlaActor->GetActor()->GetComponents<USkinnedMeshComponent>(SkinnedMeshComponents);
+      if(!SkinnedMeshComponents[0])
+      {
+        return RespondError(
+            "get_actor_bone_relative_transforms",
+            ECarlaServerResponse::ComponentNotFound,
+            " Component Name: SkinnedMeshComponent ");
+      }
+      else
+      {
+        for(USkinnedMeshComponent* SkinnedMeshComponent : SkinnedMeshComponents)
+        {
+          const int32 NumBones = SkinnedMeshComponent->GetNumBones();
+          for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+          {
+            FTransform BoneTransform = SkinnedMeshComponent->GetBoneTransform(BoneIndex, FTransform::Identity);
+            BoneRelativeTransforms.Add(BoneTransform);  
+          }
+        }
+        return MakeVectorFromTArray<cr::Transform>(BoneRelativeTransforms);
+      }
+    }
+  };
+
+  BIND_SYNC(get_actor_component_names) << [this](
+      cr::ActorId ActorId) -> R<std::vector<std::string>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_component_names",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);
+      std::vector<std::string> ComponentNames;
+      for(auto Cmp : Components)
+      {
+        FString ComponentName = Cmp->GetName();
+        ComponentNames.push_back(TCHAR_TO_UTF8(*ComponentName));
+      }  
+      return ComponentNames; 
+    }
+  };
+
+  BIND_SYNC(get_actor_bone_names) << [this](
+      cr::ActorId ActorId) -> R<std::vector<std::string>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_bone_names",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      USkinnedMeshComponent* SkinnedMeshComponent = CarlaActor->GetActor()->FindComponentByClass<USkinnedMeshComponent>();
+      if(!SkinnedMeshComponent)   
+      {
+        return RespondError(
+            "get_actor_bone_names",
+            ECarlaServerResponse::ComponentNotFound,
+            " Component Name: SkinnedMeshComponent ");    
+      }  
+      else
+      {
+        TArray<FName> BoneNames;
+        SkinnedMeshComponent->GetBoneNames(BoneNames);
+        TArray<std::string> StringBoneNames;
+        for (const FName& Name : BoneNames)
+        {
+          FString FBoneName = Name.ToString();
+          std::string StringBoneName = TCHAR_TO_UTF8(*FBoneName);
+          StringBoneNames.Add(StringBoneName);
+        }
+        return MakeVectorFromTArray<std::string>(StringBoneNames);
+      }
+    }
+  };
+
+  BIND_SYNC(get_actor_socket_world_transforms) << [this](
+      cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_socket_world_transforms",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<FTransform> SocketWorldTransforms;
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);     
+      for(UActorComponent* ActorComponent : Components)
+      {
+        if(USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent))
+        {
+          const TArray<FName>& SocketNames = SceneComponent->GetAllSocketNames();        
+          for (const FName& SocketName : SocketNames)
+          {
+            FTransform SocketTransform = SceneComponent->GetSocketTransform(SocketName);
+            SocketWorldTransforms.Add(SocketTransform);
+          }
+        }
+      }
+      return MakeVectorFromTArray<cr::Transform>(SocketWorldTransforms);   
+    }
+  };
+
+  BIND_SYNC(get_actor_socket_relative_transforms) << [this](
+      cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_socket_relative_transforms",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<FTransform> SocketRelativeTransforms;
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);     
+      for(UActorComponent* ActorComponent : Components)
+      {
+        if(USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent))
+        {
+          const TArray<FName>& SocketNames = SceneComponent->GetAllSocketNames();        
+          for (const FName& SocketName : SocketNames)
+          {
+            FTransform SocketTransform = SceneComponent->GetSocketTransform(SocketName, ERelativeTransformSpace::RTS_Actor);
+            SocketRelativeTransforms.Add(SocketTransform);
+          }
+        }
+      }
+      return MakeVectorFromTArray<cr::Transform>(SocketRelativeTransforms);
+    }
+  };
+
+  BIND_SYNC(get_actor_socket_names) << [this](
+      cr::ActorId ActorId) -> R<std::vector<std::string>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_socket_names",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      TArray<FName> SocketNames;
+      std::vector<std::string> StringSocketNames;
+      TArray<UActorComponent*> Components;
+      CarlaActor->GetActor()->GetComponents(Components);     
+      for(UActorComponent* ActorComponent : Components)
+      {
+        if(USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent))
+        {
+          SocketNames = SceneComponent->GetAllSocketNames();    
+          for (const FName& Name : SocketNames)
+          {
+            FString FSocketName = Name.ToString();
+            std::string StringSocketName = TCHAR_TO_UTF8(*FSocketName);
+            StringSocketNames.push_back(StringSocketName);
+          }              
+        }
+      }
+      return StringSocketNames;      
+    }
+  };
+
   BIND_SYNC(get_physics_control) << [this](
       cr::ActorId ActorId) -> R<cr::VehiclePhysicsControl>
   {
@@ -1364,6 +1862,55 @@ void FCarlaServer::FPimpl::BindActions()
     {
       return RespondError(
           "set_actor_simulate_physics",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_actor_collisions) << [this](
+      cr::ActorId ActorId,
+      bool bEnabled) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "set_actor_collisions",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->SetActorCollisions(bEnabled);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_actor_collisions",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_actor_dead) << [this](
+      cr::ActorId ActorId) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "set_actor_dead",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->SetActorDead();
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_actor_dead",
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
@@ -1766,6 +2313,30 @@ void FCarlaServer::FPimpl::BindActions()
     {
       return RespondError(
           "enable_chrono_physics",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(restore_physx_physics) << [this](
+      cr::ActorId ActorId) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "restore_physx_physics",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->RestorePhysXPhysics();
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "restore_physx_physics",
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
@@ -2231,6 +2802,13 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(set_replayer_ignore_spectator) << [this](bool ignore_spectator) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->GetRecorder()->SetReplayerIgnoreSpectator(ignore_spectator);
+    return R<void>::Success();
+  };
+
   BIND_SYNC(stop_replayer) << [this](bool keep_actors) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
@@ -2269,7 +2847,8 @@ void FCarlaServer::FPimpl::BindActions()
             c.description,
             c.transform,
             *c.parent,
-            cr::AttachmentType::Rigid) :
+            cr::AttachmentType::Rigid,
+            c.socket_name) :
         spawn_actor(c.description, c.transform);
         if (!result.HasError())
         {
@@ -2528,12 +3107,12 @@ FDataStream FCarlaServer::OpenStream() const
   return Pimpl->StreamingServer.MakeStream();
 }
 
-std::shared_ptr<carla::multigpu::Router> FCarlaServer::GetSecondaryServer() 
+std::shared_ptr<carla::multigpu::Router> FCarlaServer::GetSecondaryServer()
 {
   return Pimpl->GetSecondaryServer();
 }
 
-carla::streaming::Server &FCarlaServer::GetStreamingServer() 
+carla::streaming::Server &FCarlaServer::GetStreamingServer()
 {
   return Pimpl->StreamingServer;
 }

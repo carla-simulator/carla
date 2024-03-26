@@ -365,7 +365,7 @@ CARLA forum</a>
 
 >In Windows it will be the default Python version for:
 
->       py -3 --version
+>       python --version
 
 >Make sure you are running your scripts with the version of Python that corresponds to your `.egg` file.
 >In Linux, you may also need to set your Python path to point to the CARLA `.egg`. To do this, run the following command:

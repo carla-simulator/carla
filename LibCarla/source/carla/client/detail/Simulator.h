@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/Debug.h"
+#include "carla/Logging.h"
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
 #include "carla/client/Actor.h"
@@ -14,12 +15,12 @@
 #include "carla/client/TrafficLight.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/Walker.h"
+#include "carla/client/World.h"
 #include "carla/client/WorldSnapshot.h"
 #include "carla/client/detail/ActorFactory.h"
 #include "carla/client/detail/Client.h"
 #include "carla/client/detail/Episode.h"
 #include "carla/client/detail/EpisodeProxy.h"
-#include "carla/client/detail/WalkerNavigation.h"
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleLightStateList.h"
@@ -40,6 +41,7 @@ namespace client {
   class Map;
   class Sensor;
   class WalkerAIController;
+  class WalkerNavigation;
 
 namespace detail {
 
@@ -93,12 +95,24 @@ namespace detail {
     /// @{
 
     /// @pre Cannot be called previous to GetCurrentEpisode.
-    auto GetCurrentEpisodeId() const {
+    auto GetCurrentEpisodeId() {
+      GetReadyCurrentEpisode();
       DEBUG_ASSERT(_episode != nullptr);
       return _episode->GetId();
     }
 
+    void GetReadyCurrentEpisode();
     EpisodeProxy GetCurrentEpisode();
+
+    /// @}
+    // =========================================================================
+    /// @name World snapshot
+    // =========================================================================
+    /// @{
+
+    World GetWorld() {
+      return World{GetCurrentEpisode()};
+    }
 
     /// @}
     // =========================================================================
@@ -245,6 +259,14 @@ namespace detail {
       _client.SetWeatherParameters(weather);
     }
 
+    float GetIMUISensorGravity() const {
+      return _client.GetIMUISensorGravity();
+    }
+
+    void SetIMUISensorGravity(float NewIMUISensorGravity) {
+      _client.SetIMUISensorGravity(NewIMUISensorGravity);
+    }
+
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
@@ -284,15 +306,15 @@ namespace detail {
     // =========================================================================
     /// @{
 
+    std::shared_ptr<WalkerNavigation> GetNavigation();
+
+    void NavigationTick();
+
     void RegisterAIController(const WalkerAIController &controller);
 
     void UnregisterAIController(const WalkerAIController &controller);
 
     boost::optional<geom::Location> GetRandomLocationFromNavigation();
-
-    std::shared_ptr<WalkerNavigation> GetNavigation() {
-      return _episode->GetNavigation();
-    }
 
     void SetPedestriansCrossFactor(float percentage);
 
@@ -343,9 +365,15 @@ namespace detail {
         const geom::Transform &transform,
         Actor *parent = nullptr,
         rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid,
-        GarbageCollectionPolicy gc = GarbageCollectionPolicy::Inherit);
+        GarbageCollectionPolicy gc = GarbageCollectionPolicy::Inherit,
+        const std::string& socket_name = "");
 
     bool DestroyActor(Actor &actor);
+
+    bool DestroyActor(ActorId actor_id)
+    {
+      return _client.DestroyActor(actor_id);
+    }
 
     ActorSnapshot GetActorSnapshot(ActorId actor_id) const {
       DEBUG_ASSERT(_episode != nullptr);
@@ -419,6 +447,42 @@ namespace detail {
       return GetActorSnapshot(actor).acceleration;
     }
 
+    geom::Transform GetActorComponentWorldTransform(const Actor &actor, const std::string componentName) {
+      return _client.GetActorComponentWorldTransform(actor.GetId(), componentName);
+    }
+
+    geom::Transform GetActorComponentRelativeTransform(const Actor &actor, std::string componentName) {
+      return _client.GetActorComponentRelativeTransform(actor.GetId(), componentName);
+    }
+
+    std::vector<geom::Transform> GetActorBoneWorldTransforms(const Actor &actor) {
+      return _client.GetActorBoneWorldTransforms(actor.GetId());
+    }
+
+    std::vector<geom::Transform> GetActorBoneRelativeTransforms(const Actor &actor) {
+      return _client.GetActorBoneRelativeTransforms(actor.GetId());
+    }
+
+    std::vector<std::string> GetActorComponentNames(const Actor &actor) {
+      return _client.GetActorComponentNames(actor.GetId());
+    }
+
+    std::vector<std::string> GetActorBoneNames(const Actor &actor) {
+      return _client.GetActorBoneNames(actor.GetId());
+    }
+
+    std::vector<geom::Transform> GetActorSocketWorldTransforms(const Actor &actor) {
+      return _client.GetActorSocketWorldTransforms(actor.GetId());
+    }
+
+    std::vector<geom::Transform> GetActorSocketRelativeTransforms(const Actor &actor) {
+      return _client.GetActorSocketRelativeTransforms(actor.GetId());
+    }
+
+    std::vector<std::string> GetActorSocketNames(const Actor &actor) {
+      return _client.GetActorSocketNames(actor.GetId());
+    }    
+
     void SetActorLocation(Actor &actor, const geom::Location &location) {
       _client.SetActorLocation(actor.GetId(), location);
     }
@@ -429,6 +493,22 @@ namespace detail {
 
     void SetActorSimulatePhysics(Actor &actor, bool enabled) {
       _client.SetActorSimulatePhysics(actor.GetId(), enabled);
+    }
+
+    void SetActorCollisions(Actor &actor, bool enabled) {
+      _client.SetActorCollisions(actor.GetId(), enabled);
+    }
+
+    void SetActorCollisions(ActorId actor_id, bool enabled) {
+      _client.SetActorCollisions(actor_id, enabled);
+    }
+
+    void SetActorDead(Actor &actor) {
+      _client.SetActorDead(actor.GetId());
+    }
+
+    void SetActorDead(ActorId actor_id) {
+      _client.SetActorDead(actor_id);
     }
 
     void SetActorEnableGravity(Actor &actor, bool enabled) {
@@ -537,6 +617,10 @@ namespace detail {
           BaseJSONPath);
     }
 
+    void RestorePhysXPhysics(Vehicle &vehicle) {
+      _client.RestorePhysXPhysics(vehicle.GetId());
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with the recorder
@@ -576,6 +660,10 @@ namespace detail {
       _client.SetReplayerIgnoreHero(ignore_hero);
     }
 
+    void SetReplayerIgnoreSpectator(bool ignore_spectator) {
+      _client.SetReplayerIgnoreSpectator(ignore_spectator);
+    }
+
     void StopReplayer(bool keep_actors) {
       _client.StopReplayer(keep_actors);
   }
@@ -591,6 +679,12 @@ namespace detail {
         std::function<void(SharedPtr<sensor::SensorData>)> callback);
 
     void UnSubscribeFromSensor(Actor &sensor);
+
+    void EnableForROS(const Sensor &sensor);
+
+    void DisableForROS(const Sensor &sensor);
+
+    bool IsEnabledForROS(const Sensor &sensor);
 
     void SubscribeToGBuffer(
         Actor & sensor,

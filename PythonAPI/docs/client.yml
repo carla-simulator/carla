@@ -65,7 +65,7 @@
       - param_name: opendrive
         type: str
         doc: >
-          Content of an OpenDRIVE file as `string`, __not the path to the `.xodr`__.
+          Content of an ASAM OpenDRIVE file as `string`, __not the path to the `.xodr`__.
       - param_name: parameters
         type: carla.OpendriveGenerationParameters
         default: (2.0, 50.0, 1.0, 0.6, true, true)
@@ -297,7 +297,7 @@
         doc: >
           New timeout value. Default is 5 seconds.
       doc: >
-        Sets the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.
+        Sets the maximum time a network call is allowed before blocking it and raising a timeout exceeded error.
      # --------------------------------------
     - def_name: set_replayer_ignore_hero
       params:
@@ -305,6 +305,13 @@
         type: bool
         doc: >
           Enables or disables playback of the hero vehicle during a playback of a recorded simulation.
+    # --------------------------------------
+    - def_name: set_replayer_ignore_spectator
+      params:
+      - param_name: ignore_spectator
+        type: bool
+        doc: >
+          Determines whether the recorded spectator movements will be replicated by the replayer.
      # --------------------------------------
     - def_name: set_files_base_folder
       params:
@@ -717,11 +724,15 @@
       doc: >
         Adjust probability that in each timestep the actor will perform a right lane change, dependent on lane change availability.
     # --------------------------------------
+    - def_name: shut_down
+      doc: >
+        Shuts down the traffic manager. 
+    # --------------------------------------
 
   - class_name: OpendriveGenerationParameters
     # - DESCRIPTION ------------------------
     doc: >
-      This class defines the parameters used when generating a world using an OpenDRIVE file.
+      This class defines the parameters used when generating a world using an ASAM OpenDRIVE file.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: vertex_distance

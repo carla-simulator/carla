@@ -181,19 +181,19 @@ void ALSM::UpdateRegisteredActorsData(const bool hybrid_physics_mode, ALSM::Idle
     if (is_respawn_vehicles) {
       track_traffic.SetHeroLocation(hero_actor_info.second->GetTransform().location);
     }
-    UpdateData(hybrid_physics_mode, max_idle_time, hero_actor_info.second, hero_actor_present, physics_radius_square);
+    UpdateData(hybrid_physics_mode, hero_actor_info.second, hero_actor_present, physics_radius_square);
   }
   // Update information for all other registered vehicles.
   for (const Actor &vehicle : vehicle_list) {
     ActorId actor_id = vehicle->GetId();
     if (hero_actors.find(actor_id) == hero_actors.end()) {
-      UpdateData(hybrid_physics_mode, max_idle_time, vehicle, hero_actor_present, physics_radius_square);
+      UpdateData(hybrid_physics_mode, vehicle, hero_actor_present, physics_radius_square);
+      UpdateIdleTime(max_idle_time, actor_id);
     }
   }
 }
 
-void ALSM::UpdateData(const bool hybrid_physics_mode,
-                      ALSM::IdleInfo &max_idle_time, const Actor &vehicle,
+void ALSM::UpdateData(const bool hybrid_physics_mode, const Actor &vehicle,
                       const bool hero_actor_present, const float physics_radius_square) {
 
   ActorId actor_id = vehicle->GetId();
@@ -264,9 +264,6 @@ void ALSM::UpdateData(const bool hybrid_physics_mode,
 
     simulation_state.AddActor(actor_id, kinematic_state, attributes, tl_state);
   }
-
-  // Updating idle time when necessary.
-  UpdateIdleTime(max_idle_time, actor_id);
 }
 
 
@@ -358,8 +355,9 @@ bool ALSM::IsVehicleStuck(const ActorId& actor_id) {
   if (idle_time.find(actor_id) != idle_time.end()) {
     double delta_idle_time = current_timestamp.elapsed_seconds - idle_time.at(actor_id);
     TrafficLightState tl_state = simulation_state.GetTLS(actor_id);
-    if ((!tl_state.at_traffic_light && tl_state.tl_state != TLS::Red && delta_idle_time >= BLOCKED_TIME_THRESHOLD)
-    || (delta_idle_time >= RED_TL_BLOCKED_TIME_THRESHOLD)) {
+    if ((delta_idle_time >= RED_TL_BLOCKED_TIME_THRESHOLD)
+    || (delta_idle_time >= BLOCKED_TIME_THRESHOLD && tl_state.tl_state != TLS::Red))
+    {
       return true;
     }
   }

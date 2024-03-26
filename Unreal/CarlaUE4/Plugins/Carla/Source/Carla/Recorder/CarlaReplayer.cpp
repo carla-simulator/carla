@@ -30,7 +30,8 @@ void CarlaReplayer::Stop(bool bKeepActors)
     Helper.ProcessReplayerFinish(bKeepActors, IgnoreHero, IsHeroMap);
   }
 
-  File.close();
+  if (File.is_open())
+    File.close();
 }
 
 bool CarlaReplayer::ReadHeader()
@@ -174,6 +175,12 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
 
   Info << "Replaying from " << TimeStart << " s - " << TimeToStop << " s (" << TotalTime << " s) at " <<
       std::setprecision(1) << std::fixed << TimeFactor << "x" << std::endl;
+
+  if (IgnoreHero)
+    Info << "Ignoring Hero vehicle" << std::endl;
+
+  if (IgnoreSpectator)
+    Info << "Ignoring Spectator camera" << std::endl;
 
   // set the follow Id
   FollowId = ThisFollowId;
@@ -339,6 +346,14 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
           SkipPacket();
         break;
 
+      // vehicle wheels animation
+      case static_cast<char>(CarlaRecorderPacketId::AnimVehicleWheels):
+        if (bFrameFound)
+          ProcessAnimVehicleWheels();
+        else
+          SkipPacket();
+        break;
+
       // walker animation
       case static_cast<char>(CarlaRecorderPacketId::AnimWalker):
         if (bFrameFound)
@@ -347,10 +362,26 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
           SkipPacket();
         break;
 
+      // biker animation
+      case static_cast<char>(CarlaRecorderPacketId::AnimBiker):
+        if (bFrameFound)
+          ProcessAnimBiker();
+        else
+          SkipPacket();
+        break;
+
       // vehicle light animation
       case static_cast<char>(CarlaRecorderPacketId::VehicleLight):
         if (bFrameFound)
           ProcessLightVehicle();
+        else
+          SkipPacket();
+        break;
+
+      // vehicle door animation
+      case static_cast<char>(CarlaRecorderPacketId::VehicleDoor):
+        if (bFrameFound)
+          ProcessDoorVehicle();
         else
           SkipPacket();
         break;
@@ -430,6 +461,7 @@ void CarlaReplayer::ProcessEventsAdd(void)
         EventAdd.Description,
         EventAdd.DatabaseId,
         IgnoreHero,
+        IgnoreSpectator,
         bReplaySensors);
 
     switch (Result.first)
@@ -450,10 +482,16 @@ void CarlaReplayer::ProcessEventsAdd(void)
         // mapping id (say desired Id is mapped to what)
         MappedId[EventAdd.DatabaseId] = Result.second;
         break;
+
+      // actor ignored (either Hero or Spectator)
+      case 3:
+        UE_LOG(LogCarla, Log, TEXT("ignoring actor from replayer (Hero or Spectator)"));
+        break;
+
     }
 
     // check to mark if actor is a hero vehicle or not
-    if (Result.first > 0)
+    if (Result.first > 0 && Result.first < 3)
     {
       // init
       IsHeroMap[Result.second] = false;
@@ -543,6 +581,25 @@ void CarlaReplayer::ProcessAnimVehicle(void)
   }
 }
 
+void CarlaReplayer::ProcessAnimVehicleWheels(void)
+{
+  uint16_t i, Total;
+
+  // read Total Vehicles
+  ReadValue<uint16_t>(File, Total);
+  for (i = 0; i < Total; ++i)
+  {
+    CarlaRecorderAnimWheels Vehicle;
+    Vehicle.Read(File);
+    Vehicle.DatabaseId = MappedId[Vehicle.DatabaseId];
+    // check if ignore this actor
+    if (!(IgnoreHero && IsHeroMap[Vehicle.DatabaseId]))
+    {
+      Helper.ProcessReplayerAnimVehicleWheels(Vehicle);
+    }
+  }
+}
+
 void CarlaReplayer::ProcessAnimWalker(void)
 {
   uint16_t i, Total;
@@ -563,6 +620,24 @@ void CarlaReplayer::ProcessAnimWalker(void)
   }
 }
 
+void CarlaReplayer::ProcessAnimBiker(void)
+{
+  uint16_t i, Total;
+  CarlaRecorderAnimBiker Biker;
+  std::stringstream Info;
+
+  ReadValue<uint16_t>(File, Total);
+  for (i = 0; i < Total; ++i)
+  {
+    Biker.Read(File);
+    Biker.DatabaseId = MappedId[Biker.DatabaseId];
+    if (!(IgnoreHero && IsHeroMap[Biker.DatabaseId]))
+    {
+      Helper.ProcessReplayerAnimBiker(Biker);
+    }
+  }
+}
+
 void CarlaReplayer::ProcessLightVehicle(void)
 {
   uint16_t Total;
@@ -578,6 +653,25 @@ void CarlaReplayer::ProcessLightVehicle(void)
     if (!(IgnoreHero && IsHeroMap[LightVehicle.DatabaseId]))
     {
       Helper.ProcessReplayerLightVehicle(LightVehicle);
+    }
+  }
+}
+
+void CarlaReplayer::ProcessDoorVehicle(void)
+{
+  uint16_t Total;
+  CarlaRecorderDoorVehicle DoorVehicle;
+
+  // read Total walkers
+  ReadValue<uint16_t>(File, Total);
+  for (uint16_t i = 0; i < Total; ++i)
+  {
+    DoorVehicle.Read(File);
+    DoorVehicle.DatabaseId = MappedId[DoorVehicle.DatabaseId];
+    // check if ignore this actor
+    if (!(IgnoreHero && IsHeroMap[DoorVehicle.DatabaseId]))
+    {
+      Helper.ProcessReplayerDoorVehicle(DoorVehicle);
     }
   }
 }
@@ -674,8 +768,9 @@ void CarlaReplayer::UpdatePositions(double Per, double DeltaTime)
   // go through each actor and update
   for (auto &Pos : CurrPos)
   {
-    // check if ignore this actor
-    if (!(IgnoreHero && IsHeroMap[Pos.DatabaseId]))
+    // check if ignore this actor (hero) or the spectator (id == 1)
+    if (!(IgnoreHero && IsHeroMap[Pos.DatabaseId]) &&
+        !(IgnoreSpectator && Pos.DatabaseId == 1))
     {
       // check if exist a previous position
       auto Result = TempMap.find(Pos.DatabaseId);

@@ -179,6 +179,7 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
     CarlaRecorderActorDescription Description,
     uint32_t DesiredId,
     bool bIgnoreHero,
+    bool bIgnoreSpectator,
     bool ReplaySensors)
 {
   check(Episode != nullptr);
@@ -200,6 +201,13 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
       IsHero = true;
   }
 
+  // check to ignore Hero or Spectator
+  if ((bIgnoreHero && IsHero) || 
+      (bIgnoreSpectator && ActorDesc.Id.StartsWith("spectator")))
+  {
+    return std::make_pair(3, 0);
+  }
+
   auto result = TryToCreateReplayerActor(
       Location,
       Rotation,
@@ -210,20 +218,26 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
   if (result.first != 0)
   {
     // disable physics and autopilot on vehicles
-    if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle)
+    if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle ||
+        result.second->GetActorType() == FCarlaActor::ActorType::Walker)
     {
       // ignore hero ?
       if (!(bIgnoreHero && IsHero))
       {
         // disable physics
         SetActorSimulatePhysics(result.second, false);
-        // disable autopilot
-        SetActorAutopilot(result.second, false, false);
+        // disable collisions
+        result.second->GetActor()->SetActorEnableCollision(false);
+        // disable autopilot for vehicles
+        if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle)
+          SetActorAutopilot(result.second, false, false);
       }
       else
       {
-        // reenable physics just in case
+        // enable physics just in case
         SetActorSimulatePhysics(result.second, true);
+        // enable collisions
+        result.second->GetActor()->SetActorEnableCollision(true);
       }
     }
     return std::make_pair(result.first, result.second->GetActorId());
@@ -311,6 +325,29 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
   return false;
 }
 
+void CarlaReplayerHelper::ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels VehicleAnimWheels)
+{
+  check(Episode != nullptr)
+  FCarlaActor *CarlaActor = Episode->FindCarlaActor(VehicleAnimWheels.DatabaseId);
+  if (CarlaActor == nullptr)
+    return;
+  if (CarlaActor->GetActorType() != FCarlaActor::ActorType::Vehicle)
+    return;
+  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+  check(CarlaVehicle != nullptr)
+  USkeletalMeshComponent* SkeletalMesh = CarlaVehicle->GetMesh();
+  check(SkeletalMesh != nullptr)
+  UVehicleAnimInstance* VehicleAnim = Cast<UVehicleAnimInstance>(SkeletalMesh->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+
+  for (uint32_t i = 0; i < VehicleAnimWheels.WheelValues.size(); ++i)
+  {
+    const WheelInfo& Element = VehicleAnimWheels.WheelValues[i];
+    VehicleAnim->SetWheelRotYaw(static_cast<uint8>(Element.Location), Element.SteeringAngle);
+    VehicleAnim->SetWheelPitchAngle(static_cast<uint8>(Element.Location), Element.TireRotation);
+  }
+}
+
 // reposition the camera
 bool CarlaReplayerHelper::SetCameraPosition(uint32_t Id, FVector Offset, FQuat Rotation)
 {
@@ -379,6 +416,24 @@ void CarlaReplayerHelper::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Ve
   }
 }
 
+// set the openings and closings of vehicle doors
+void CarlaReplayerHelper::ProcessReplayerDoorVehicle(CarlaRecorderDoorVehicle DoorVehicle)
+{
+  check(Episode != nullptr);
+  FCarlaActor * CarlaActor = Episode->FindCarlaActor(DoorVehicle.DatabaseId);
+  if (CarlaActor)
+  {
+    ACarlaWheeledVehicle * Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+    if (Vehicle) {
+      if(DoorVehicle.bIsOpen){
+        Vehicle->OpenDoor(static_cast<EVehicleDoor>(DoorVehicle.Doors));
+      }else{
+        Vehicle->CloseDoor(static_cast<EVehicleDoor>(DoorVehicle.Doors));
+      }
+    }
+  }
+}
+
 // set the lights for vehicles
 void CarlaReplayerHelper::ProcessReplayerLightVehicle(CarlaRecorderLightVehicle LightVehicle)
 {
@@ -419,11 +474,23 @@ void CarlaReplayerHelper::ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walk
   SetWalkerSpeed(Walker.DatabaseId, Walker.Speed);
 }
 
+void CarlaReplayerHelper::ProcessReplayerAnimBiker(CarlaRecorderAnimBiker Biker)
+{
+  check(Episode != nullptr);
+  FCarlaActor * CarlaActor = Episode->FindCarlaActor(Biker.DatabaseId);
+  if (CarlaActor == nullptr)
+    return;
+  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+  check(CarlaVehicle != nullptr)
+  CarlaVehicle->SetSpeedAnim(Biker.ForwardSpeed);
+  CarlaVehicle->SetRotationAnim(Biker.EngineRotation);
+}
+
 // set walker bones
 void CarlaReplayerHelper::ProcessReplayerWalkerBones(const CarlaRecorderWalkerBones &WalkerBones)
 {
   check(Episode != nullptr);
-  
+
   FCarlaActor* CarlaActor = Episode->FindCarlaActor(WalkerBones.DatabaseId);
   if (!CarlaActor) return;
 
@@ -441,7 +508,7 @@ void CarlaReplayerHelper::ProcessReplayerWalkerBones(const CarlaRecorderWalkerBo
     FTransform Trans(FRotator::MakeFromEuler(Bone.Rotation), Bone.Location, FVector(1, 1, 1));
     BonesIn.BoneTransforms.Add(Bone.Name, Trans);
   }
-  
+
   // set the pose and blend
   Controller->SetBonesTransform(BonesIn);
   Controller->BlendPose(1.0f);
