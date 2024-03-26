@@ -84,9 +84,7 @@ echo Configuring CARLA...
 cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=%CARLA_UNREAL_ENGINE_PATH% || exit /b
 
 echo Buiding CARLA...
-
 cmake --build Build || exit /b
-
 
 echo Build Succesfull :)
 echo Launching Unreal Editor with CARLA...
