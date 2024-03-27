@@ -38,8 +38,7 @@ CARLA requires many different kinds of software to run. Some are built during th
 
 ```sh
 sudo apt-get update &&
-sudo apt-get install wget software-properties-common &&
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test &&
+sudo apt-get install wget software-properties-common
 ```
 
 !!! Warning
