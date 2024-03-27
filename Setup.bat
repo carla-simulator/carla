@@ -5,7 +5,7 @@ start cmd /c git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucke
 
 echo Installing Visual Studio 2022...
 curl -L -O https://aka.ms/vs/17/release/vs_community.exe || exit /b
-vs_Community.exe --add Microsoft.VisualStudio.Workload.NativeDesktop Microsoft.VisualStudio.Workload.NativeGame Microsoft.VisualStudio.Workload.ManagedDesktop Microsoft.VisualStudio.Component.Windows10SDK.18362  Microsoft.VisualStudio.Component.VC.CMake.Project Microsoft.Net.ComponentGroup.4.8.1.DeveloperTools Microsoft.VisualStudio.Component.VC.Llvm.Clang Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang --removeProductLang Es-es --addProductLang En-us --installWhileDownloading --passive --wait || exit /b
+vs_Community.exe --add Microsoft.VisualStudio.Workload.NativeDesktop Microsoft.VisualStudio.Workload.NativeGame Microsoft.VisualStudio.Workload.ManagedDesktop Microsoft.VisualStudio.Component.Windows10SDK.18362  Microsoft.VisualStudio.Component.VC.CMake.Project Microsoft.Net.ComponentGroup.4.8.1.DeveloperTools Microsoft.VisualStudio.Component.VC.Llvm.Clang Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang --removeProductLang Es-es --addProductLang En-us --installWhileDownloading --passive --wait
 del vs_community.exe
 echo Visual Studion 2022 Installed!!!
 
@@ -34,7 +34,7 @@ if errorlevel 1 (
     curl -L -O https://www.python.org/ftp/python/3.8.10/python-3.8.10-amd64.exe || exit /b
     python-3.8.10-amd64.exe /passive PrependPath=1  || exit /b
     del python-3.8.10-amd64.exe
-    set PATH="C:\Users\CARLA\AppData\Local\Programs\Python\Python38\Scripts\;C:\Users\CARLA\AppData\Local\Programs\Python\Python38\;%PATH%"
+    set "PATH=%LocalAppData%\Programs\Python\Python38\Scripts\;%LocalAppData%\Programs\Python\Python38\;%PATH%"
     echo Python 3.8.10 installed!!!
 ) else (
     echo Found Python - OK
@@ -74,8 +74,8 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     call GenerateProjectFiles.bat || exit /b
     echo Opening Visual Studio 2022...
     msbuild Engine\Intermediate\ProjectFiles\UE5.vcxproj /property:Configuration="Development_Editor" /property:Platform="x64" || exit /b
-    set CARLA_UNREAL_ENGINE_PATH=%cd:\=\\%
-    setx CARLA_UNREAL_ENGINE_PATH %cd:\=\\%
+    set CARLA_UNREAL_ENGINE_PATH=%cd:\=\\%\\..UnrealEngine5_carla
+    setx CARLA_UNREAL_ENGINE_PATH %cd:\=\\%\\..\\UnrealEngine5_carla
     popd
     popd
 )
