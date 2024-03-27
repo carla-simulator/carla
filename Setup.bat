@@ -52,14 +52,14 @@ echo Python Pacakges Installed...
 
 
 echo Switching to x64 Native Tools Command Prompt for VS 2022 command line...
-call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat"
+call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
 
 
 if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     echo Found UnrealEngine5 %CARLA_UNREAL_ENGINE_PATH% - OK
 ) else if exist ..\UnrealEngine5_carla (
     echo Found UnrealEngine5 ..\UnrealEngine5_carla - OK
-    set CARLA_UNREAL_ENGINE_PATH=%cd:\=\\%\\..UnrealEngine5_carla
+    set CARLA_UNREAL_ENGINE_PATH=%cd:\=\\%\\..\\UnrealEngine5_carla
     setx CARLA_UNREAL_ENGINE_PATH %cd:\=\\%\\..\\UnrealEngine5_carla
     REM TODO: Check if UnrealEngine binary file exists and if not build it
 ) else (
@@ -74,7 +74,7 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     call GenerateProjectFiles.bat || exit /b
     echo Opening Visual Studio 2022...
     msbuild Engine\Intermediate\ProjectFiles\UE5.vcxproj /property:Configuration="Development_Editor" /property:Platform="x64" || exit /b
-    set CARLA_UNREAL_ENGINE_PATH=%cd:\=\\%\\..UnrealEngine5_carla
+    set CARLA_UNREAL_ENGINE_PATH=%cd:\=\\%\\..\\UnrealEngine5_carla
     setx CARLA_UNREAL_ENGINE_PATH %cd:\=\\%\\..\\UnrealEngine5_carla
     popd
     popd
