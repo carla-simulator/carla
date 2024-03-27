@@ -16,11 +16,11 @@ The parameters we can use are:
 
 For example
 
-**./CarlaUE4.sh --nullrhi**
+**./CarlaUE4.sh -nullrhi**
 
 The primary server will use by default the port 2002 to listen for secondary servers. If you need to listen on another port, then you can change it with the flag
 
-**./CarlaUE4.sh --nullrhi -carla-primary-port=3002**
+**./CarlaUE4.sh -nullrhi -carla-primary-port=3002**
 
 ## Secondary servers
 

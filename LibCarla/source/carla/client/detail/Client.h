@@ -149,6 +149,10 @@ namespace detail {
 
     void SetWeatherParameters(const rpc::WeatherParameters &weather);
 
+    float GetIMUISensorGravity() const;
+
+    void SetIMUISensorGravity( float NewIMUISensorGravity );
+
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(rpc::ActorId vehicle) const;
@@ -243,12 +247,12 @@ namespace detail {
 
     std::vector<geom::Transform> GetActorBoneWorldTransforms(
         rpc::ActorId actor);
-    
+
     std::vector<geom::Transform> GetActorBoneRelativeTransforms(
         rpc::ActorId actor);
 
     std::vector<std::string> GetActorComponentNames(
-        rpc::ActorId actor);         
+        rpc::ActorId actor);
 
     std::vector<std::string> GetActorBoneNames(
         rpc::ActorId actor);
@@ -257,6 +261,9 @@ namespace detail {
         rpc::ActorId actor);
 
     std::vector<geom::Transform> GetActorSocketRelativeTransforms(
+        rpc::ActorId actor);
+
+    std::vector<std::string> GetActorSocketNames(
         rpc::ActorId actor);
 
     void SetActorSimulatePhysics(
@@ -323,6 +330,8 @@ namespace detail {
         std::string PowertrainJSON,
         std::string TireJSON,
         std::string BaseJSONPath);
+
+    void RestorePhysXPhysics(rpc::ActorId vehicle);
 
     void ApplyControlToWalker(
         rpc::ActorId walker,

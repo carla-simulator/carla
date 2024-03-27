@@ -64,6 +64,10 @@ namespace client {
     return GetEpisode().Lock()->GetActorSocketRelativeTransforms(*this);
   }
 
+  std::vector<std::string> Actor::GetSocketNames() const {
+    return GetEpisode().Lock()->GetActorSocketNames(*this);
+  }  
+
   void Actor::SetLocation(const geom::Location &location) {
     GetEpisode().Lock()->SetActorLocation(*this, location);
   }

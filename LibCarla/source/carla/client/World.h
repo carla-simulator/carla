@@ -94,6 +94,12 @@ namespace client {
     /// Change the weather in the simulation.
     void SetWeather(const rpc::WeatherParameters &weather);
 
+    /// Get Gravity value used for IMUI Sensor accelerometer calculation
+    float GetIMUISensorGravity() const;
+    
+    /// Set Gravity value used for IMUI Sensor accelerometer calculation
+    void SetIMUISensorGravity(float NewIMUISensorGravity);
+
     /// Return a snapshot of the world at this moment.
     WorldSnapshot GetSnapshot() const;
 

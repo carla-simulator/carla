@@ -267,6 +267,14 @@ namespace detail {
     _pimpl->AsyncCall("set_weather_parameters", weather);
   }
 
+  float Client::GetIMUISensorGravity() const {
+    return _pimpl->CallAndWait<float>("get_imui_gravity");
+  }
+
+  void Client::SetIMUISensorGravity(float NewIMUISensorGravity) {
+    _pimpl->AsyncCall("set_imui_gravity", NewIMUISensorGravity);
+  }
+
   std::vector<rpc::Actor> Client::GetActorsById(
       const std::vector<ActorId> &ids) {
     using return_t = std::vector<rpc::Actor>;
@@ -436,7 +444,7 @@ namespace detail {
   std::vector<std::string> Client::GetActorBoneNames(rpc::ActorId actor) {
     using return_t = std::vector<std::string>;
     return _pimpl->CallAndWait<return_t>("get_actor_bone_names", actor);
-  }  
+  }
 
   std::vector<geom::Transform> Client::GetActorSocketWorldTransforms(rpc::ActorId actor) {
     using return_t = std::vector<geom::Transform>;
@@ -446,6 +454,11 @@ namespace detail {
   std::vector<geom::Transform> Client::GetActorSocketRelativeTransforms(rpc::ActorId actor) {
     using return_t = std::vector<geom::Transform>;
     return _pimpl->CallAndWait<return_t>("get_actor_socket_relative_transforms", actor);
+  }
+
+  std::vector<std::string> Client::GetActorSocketNames(rpc::ActorId actor) {
+    using return_t = std::vector<std::string>;
+    return _pimpl->CallAndWait<return_t>("get_actor_socket_names", actor);
   }
 
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {
@@ -513,6 +526,10 @@ namespace detail {
         PowertrainJSON,
         TireJSON,
         BaseJSONPath);
+  }
+
+  void Client::RestorePhysXPhysics(rpc::ActorId vehicle) {
+    _pimpl->AsyncCall("restore_physx_physics", vehicle);
   }
 
   void Client::ApplyControlToWalker(rpc::ActorId walker, const rpc::WalkerControl &control) {
