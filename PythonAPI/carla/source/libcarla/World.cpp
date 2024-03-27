@@ -376,7 +376,20 @@ void export_world() {
          arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
          arg("life_time")=-1.0f,
          arg("persistent_lines")=true))
+    .def("draw_hud_point", &cc::DebugHelper::DrawHUDPoint,
+        (arg("location"),
+         arg("size")=0.1f,
+         arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
+         arg("life_time")=-1.0f,
+         arg("persistent_lines")=true))
     .def("draw_line", &cc::DebugHelper::DrawLine,
+        (arg("begin"),
+         arg("end"),
+         arg("thickness")=0.1f,
+         arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
+         arg("life_time")=-1.0f,
+         arg("persistent_lines")=true))
+    .def("draw_hud_line", &cc::DebugHelper::DrawHUDLine,
         (arg("begin"),
          arg("end"),
          arg("thickness")=0.1f,
@@ -391,7 +404,22 @@ void export_world() {
          arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
          arg("life_time")=-1.0f,
          arg("persistent_lines")=true))
+    .def("draw_hud_arrow", &cc::DebugHelper::DrawHUDArrow,
+        (arg("begin"),
+         arg("end"),
+         arg("thickness")=0.1f,
+         arg("arrow_size")=0.1f,
+         arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
+         arg("life_time")=-1.0f,
+         arg("persistent_lines")=true))
     .def("draw_box", &cc::DebugHelper::DrawBox,
+        (arg("box"),
+         arg("rotation"),
+         arg("thickness")=0.1f,
+         arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
+         arg("life_time")=-1.0f,
+         arg("persistent_lines")=true))
+    .def("draw_hud_box", &cc::DebugHelper::DrawHUDBox,
         (arg("box"),
          arg("rotation"),
          arg("thickness")=0.1f,
@@ -406,4 +434,6 @@ void export_world() {
          arg("life_time")=-1.0f,
          arg("persistent_lines")=true))
   ;
+  // scope HUD = class_<cc::DebugHelper>(
+
 }

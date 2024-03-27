@@ -10,8 +10,10 @@
  * make PythonAPI Windows: Fixed incompatibility issue with Anaconda due `py` command.
  * Added function to get actor' sockets names
  * Fixed bug in python agents when vehicle list was empty causing a check on all vehicles (BasicAgent.py) and detected pedestrians as vehicles if no pedestrains are present (BehaviourAgent.py)
+ * Extended debug drawing functions to allow drawing primitives on HUD layer
  * Added possibility to change gravity variable in imui sensor for the accelerometer
  * ROS2Native: Integrated ROS2 native extension
+ * The carla server build and all depending components use the clang compiler and sysroot provided by Unreal. Therefore, no additional clang or llvm local installation is required anymore under Linux.
 
 ## CARLA 0.9.15
 
