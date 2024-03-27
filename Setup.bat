@@ -43,11 +43,11 @@ if errorlevel 1 (
 
 
 echo Installing Python Pacakges...
-pip install --upgrade pip || exit /b
-pip install --user numpy || exit /b
-pip install --user -Iv setuptools==47.3.1 || exit /b
-pip install --user distro || exit /b
-pip install --user wheel auditwheel || exit /b
+python -m pip install --upgrade pip || exit /b
+python -m pip install --user numpy || exit /b
+python -m pip install --user -Iv setuptools==47.3.1 || exit /b
+python -m pip install --user distro || exit /b
+python -m pip install --user wheel auditwheel || exit /b
 echo Python Pacakges Installed...
 
 
@@ -82,11 +82,11 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
 
 
 echo Configuring CARLA...
-cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=%CARLA_UNREAL_ENGINE_PATH% || exit /b
+call cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=%CARLA_UNREAL_ENGINE_PATH% || exit /b
 
 echo Buiding CARLA...
-cmake --build Build || exit /b
+call cmake --build Build || exit /b
 
 echo Build Succesfull :)
 echo Launching Unreal Editor with CARLA...
-cmake --build Build --target launch || exit /b
+call cmake --build Build --target launch || exit /b
