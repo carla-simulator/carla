@@ -50,10 +50,15 @@ camera.listen(image_queue.put)
 We want to take 3D points from the simulation and project them into the 2D plane of the camera. Firstly, we need to construct the camera projection matrix:
 
 ```py
-def build_projection_matrix(w, h, fov):
+def build_projection_matrix(w, h, fov, is_behind_camera=False):
     focal = w / (2.0 * np.tan(fov * np.pi / 360.0))
     K = np.identity(3)
-    K[0, 0] = K[1, 1] = focal
+
+    if is_behind_camera:
+        K[0, 0] = K[1, 1] = -focal
+    else:
+        K[0, 0] = K[1, 1] = focal
+
     K[0, 2] = w / 2.0
     K[1, 2] = h / 2.0
     return K
@@ -99,6 +104,7 @@ fov = camera_bp.get_attribute("fov").as_float()
 
 # Calculate the camera projection matrix to project from 3D -> 2D
 K = build_projection_matrix(image_w, image_h, fov)
+K_b = build_projection_matrix(image_w, image_h, fov, is_behind_camera=True)
 ```
 
 ## Bounding boxes
@@ -191,7 +197,7 @@ while True:
             forward_vec = vehicle.get_transform().get_forward_vector()
             ray = bb.location - vehicle.get_transform().location
 
-            if forward_vec.dot(ray) > 1:
+            if forward_vec.dot(ray) > 0:
                 # Cycle through the vertices
                 verts = [v for v in bb.get_world_vertices(carla.Transform())]
                 for edge in edges:
@@ -249,6 +255,11 @@ cv2.waitKey(1)
 Now we use a modified game loop to draw the vehicle bounding boxes:
 
 ```py
+def point_in_canvas(pos, img_h, img_w):
+    """Return true if point is in canvas"""
+    if (pos[0] >= 0) and (pos[0] < img_w) and (pos[1] >= 0) and (pos[1] < img_h):
+        return True
+    return False
 
 while True:
     # Retrieve and reshape the image
@@ -279,12 +290,28 @@ while True:
                 forward_vec = vehicle.get_transform().get_forward_vector()
                 ray = npc.get_transform().location - vehicle.get_transform().location
 
-                if forward_vec.dot(ray) > 1:
-                    p1 = get_image_point(bb.location, K, world_2_camera)
+                if forward_vec.dot(ray) > 0:
                     verts = [v for v in bb.get_world_vertices(npc.get_transform())]
                     for edge in edges:
                         p1 = get_image_point(verts[edge[0]], K, world_2_camera)
                         p2 = get_image_point(verts[edge[1]],  K, world_2_camera)
+
+                        p1_in_canvas = point_in_canvas(p1, image_h, image_w)
+                        p2_in_canvas = point_in_canvas(p2, image_h, image_w)
+
+                        if not p1_in_canvas and not p2_in_canvas:
+                            continue
+
+                        ray0 = verts[edge[0]] - camera.get_transform().location
+                        ray1 = verts[edge[1]] - camera.get_transform().location
+                        cam_forward_vec = camera.get_transform().get_forward_vector()
+
+                        # One of the vertex is behind the camera
+                        if not (cam_forward_vec.dot(ray0) > 0):
+                            p1 = get_image_point(verts[edge[0]], K_b, world_2_camera)
+                        if not (cam_forward_vec.dot(ray1) > 0):
+                            p2 = get_image_point(verts[edge[1]], K_b, world_2_camera)
+
                         cv2.line(img, (int(p1[0]),int(p1[1])), (int(p2[0]),int(p2[1])), (255,0,0, 255), 1)        
         
     cv2.imshow('ImageWindowName',img)
@@ -330,7 +357,7 @@ while True:
                 forward_vec = vehicle.get_transform().get_forward_vector()
                 ray = npc.get_transform().location - vehicle.get_transform().location
 
-                if forward_vec.dot(ray) > 1:
+                if forward_vec.dot(ray) > 0:
                     p1 = get_image_point(bb.location, K, world_2_camera)http://host.robots.ox.ac.uk/pascal/VOC/
                     verts = [v for v in bb.get_world_vertices(npc.get_transform())]
                     x_max = -10000
@@ -408,7 +435,7 @@ while True:
             if dist < 50:
                 forward_vec = vehicle.get_transform().get_forward_vector()
                 ray = npc.get_transform().location - vehicle.get_transform().location
-                if forward_vec.dot(ray) > 1:
+                if forward_vec.dot(ray) > 0:
                     p1 = get_image_point(bb.location, K, world_2_camera)
                     verts = [v for v in bb.get_world_vertices(npc.get_transform())]
                     x_max = -10000
