@@ -71,7 +71,7 @@ option (
 option (
   BUILD_OSM_WORLD_RENDERER
   "Build OSM World Renderer."
-  OFF
+  ON
 )
 
 option (

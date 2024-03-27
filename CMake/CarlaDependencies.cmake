@@ -12,35 +12,45 @@ include (FetchContent)
 
 set (CARLA_DEPENDENCIES_PENDING)
 
+macro (carla_dependency_add_clone NAME TAG ARCHIVE_URL GIT_URL)
+  carla_message ("Cloning ${NAME}...")
+  FetchContent_Declare (
+    ${NAME}
+    GIT_REPOSITORY ${GIT_URL}
+    GIT_TAG ${TAG}
+    GIT_SUBMODULES_RECURSE ON
+    GIT_SHALLOW ON
+    GIT_PROGRESS ON
+    OVERRIDE_FIND_PACKAGE
+    ${ARGN}
+  )
+  list (APPEND CARLA_DEPENDENCIES_PENDING ${NAME})
+endmacro ()
+
+macro (carla_dependency_add_download NAME TAG ARCHIVE_URL GIT_URL)
+  carla_message ("Downloading ${NAME}...")
+  FetchContent_Declare (
+    ${NAME}
+    URL ${ARCHIVE_URL}
+    OVERRIDE_FIND_PACKAGE
+    ${ARGN}
+  )
+  list (APPEND CARLA_DEPENDENCIES_PENDING ${NAME})
+endmacro ()
+
 macro (carla_dependency_add NAME TAG ARCHIVE_URL GIT_URL)
   if (PREFER_CLONE)
-    carla_message ("Cloning ${NAME}...")
-    FetchContent_Declare (
-      ${NAME}
-      GIT_REPOSITORY ${GIT_URL}
-      GIT_TAG ${TAG}
-      GIT_SUBMODULES_RECURSE ON
-      GIT_SHALLOW ON
-      GIT_PROGRESS ON
-      OVERRIDE_FIND_PACKAGE
-      ${ARGN}
-    )
-    list (APPEND CARLA_DEPENDENCIES_PENDING ${NAME})
+    carla_dependency_add_clone (${NAME} ${TAG} ${ARCHIVE_URL} ${GIT_URL} ${ARGN})
   else ()
-    carla_message ("Downloading ${NAME}...")
-    FetchContent_Declare (
-      ${NAME}
-      URL ${ARCHIVE_URL}
-      OVERRIDE_FIND_PACKAGE
-      ${ARGN}
-    )
-    list (APPEND CARLA_DEPENDENCIES_PENDING ${NAME})
+    carla_dependency_add_download (${NAME} ${TAG} ${ARCHIVE_URL} ${GIT_URL} ${ARGN})
   endif ()
+  list (APPEND CARLA_DEPENDENCIES_PENDING ${NAME})
 endmacro ()
 
 macro (carla_dependencies_make_available)
   FetchContent_MakeAvailable (
-    ${CARLA_DEPENDENCIES_PENDING})
+    ${CARLA_DEPENDENCIES_PENDING}
+  )
   set (CARLA_DEPENDENCIES_PENDING)
 endmacro ()
 
@@ -218,10 +228,11 @@ endif ()
 # ==== LUNASVG ====
 
 if (BUILD_OSM_WORLD_RENDERER)
+  carla_dependency_option (LUNASVG_BUILD_EXAMPLES OFF)
   carla_dependency_add (
     lunasvg
     ${CARLA_LUNASVG_TAG}
-    https://github.com/sammycage/lunasvg/archive/refs/tags/${CARLA_LUNASVG_TAG}.zip
+    https://github.com/sammycage/lunasvg/archive/refs/heads/${CARLA_LUNASVG_TAG}.zip
     https://github.com/sammycage/lunasvg.git
   )
 endif ()
@@ -229,10 +240,31 @@ endif ()
 # ==== LIBOSMSCOUT ====
 
 if (BUILD_OSM_WORLD_RENDERER)
+  carla_dependency_option (OSMSCOUT_BUILD_IMPORT OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_GPX OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_MAP_AGG OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_MAP_CAIRO OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_MAP_DIRECTX OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_MAP_GDI OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_MAP_IOSX OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_MAP_OPENGL OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_MAP_QT OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_MAP_SVG ON)
+  carla_dependency_option (OSMSCOUT_BUILD_CLIENT_QT OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_DEMOS OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_TOOL_IMPORT OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_TOOL_DUMPDATA OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_TOOL_PUBLICTRANSPORTMAP OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_TOOL_OSMSCOUT2 OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_TOOL_OSMSCOUTOPENGL OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_DOC_API OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_WEBPAGE OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_EXTERN_MATLAB OFF)
+  carla_dependency_option (OSMSCOUT_BUILD_TESTS OFF)
   carla_dependency_add (
     libosmscout
     ${CARLA_LIBOSMSCOUT_TAG}
-    https://github.com/Framstag/libosmscout/archive/refs/tags/${CARLA_LIBOSMSCOUT_TAG}.zip
+    https://github.com/Framstag/libosmscout/archive/refs/heads/${CARLA_LIBOSMSCOUT_TAG}.zip
     https://github.com/Framstag/libosmscout.git
   )
 endif ()

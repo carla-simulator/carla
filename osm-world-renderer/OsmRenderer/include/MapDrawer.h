@@ -8,9 +8,9 @@
 #include <MapRasterizer.h>
 
 #include <osmscout/GeoCoord.h>
-#include <osmscout/Database.h>
+#include <osmscout/db/Database.h>
+#include <osmscout/db/BasemapDatabase.h>
 #include <osmscoutmap/MapService.h>
-#include <osmscout/BasemapDatabase.h>
 
 #if defined(_MSC_VER)
   #include <osmscout/projection/MercatorProjection.h>
