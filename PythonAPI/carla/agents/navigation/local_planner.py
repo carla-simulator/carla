@@ -8,11 +8,14 @@
 from enum import IntEnum
 from collections import deque
 import random
+from typing import TYPE_CHECKING
 
 import carla
 from agents.navigation.controller import VehiclePIDController
 from agents.tools.misc import draw_waypoints, get_speed
 
+if TYPE_CHECKING:
+    from agents.conf.agent_settings_backend import BasicAgentSettings
 
 class RoadOption(IntEnum):
     """
@@ -39,8 +42,8 @@ class LocalPlanner(object):
     When multiple paths are available (intersections) this local planner makes a random choice,
     unless a given global plan has already been specified.
     """
-
-    def __init__(self, vehicle, opt_dict={}, map_inst=None):
+    
+    def __init__(self, vehicle: carla.Actor, opt_dict: "BasicAgentSettings", map_inst: carla.Map = None):
         """
         :param vehicle: actor to apply to local planner logic onto
         :param opt_dict: dictionary of arguments with different parameters:
@@ -56,7 +59,7 @@ class LocalPlanner(object):
         :param map_inst: carla.Map instance to avoid the expensive call of getting it.
         """
         self._vehicle = vehicle
-        self._world = self._vehicle.get_world()
+        self._world : carla.World = self._vehicle.get_world()
         if map_inst:
             if isinstance(map_inst, carla.Map):
                 self._map = map_inst
@@ -67,53 +70,14 @@ class LocalPlanner(object):
             self._map = self._world.get_map()
 
         self._vehicle_controller = None
-        self.target_waypoint = None
-        self.target_road_option = None
+        self.target_waypoint: carla.Waypoint = None
+        self.target_road_option: RoadOption = None
 
-        self._waypoints_queue = deque(maxlen=10000)
+        self._waypoints_queue: "deque[tuple[carla.Waypoint, RoadOption]]" = deque(maxlen=10000)
         self._min_waypoint_queue_length = 100
         self._stop_waypoint_creation = False
 
-        # Base parameters
-        self._dt = 1.0 / 20.0
-        self._target_speed = 20.0  # Km/h
-        self._sampling_radius = 2.0
-        self._args_lateral_dict = {'K_P': 1.95, 'K_I': 0.05, 'K_D': 0.2, 'dt': self._dt}
-        self._args_longitudinal_dict = {'K_P': 1.0, 'K_I': 0.05, 'K_D': 0, 'dt': self._dt}
-        self._max_throt = 0.75
-        self._max_brake = 0.3
-        self._max_steer = 0.8
-        self._offset = 0
-        self._base_min_distance = 3.0
-        self._distance_ratio = 0.5
-        self._follow_speed_limits = False
-
-        # Overload parameters
-        if opt_dict:
-            if 'dt' in opt_dict:
-                self._dt = opt_dict['dt']
-            if 'target_speed' in opt_dict:
-                self._target_speed = opt_dict['target_speed']
-            if 'sampling_radius' in opt_dict:
-                self._sampling_radius = opt_dict['sampling_radius']
-            if 'lateral_control_dict' in opt_dict:
-                self._args_lateral_dict = opt_dict['lateral_control_dict']
-            if 'longitudinal_control_dict' in opt_dict:
-                self._args_longitudinal_dict = opt_dict['longitudinal_control_dict']
-            if 'max_throttle' in opt_dict:
-                self._max_throt = opt_dict['max_throttle']
-            if 'max_brake' in opt_dict:
-                self._max_brake = opt_dict['max_brake']
-            if 'max_steering' in opt_dict:
-                self._max_steer = opt_dict['max_steering']
-            if 'offset' in opt_dict:
-                self._offset = opt_dict['offset']
-            if 'base_min_distance' in opt_dict:
-                self._base_min_distance = opt_dict['base_min_distance']
-            if 'distance_ratio' in opt_dict:
-                self._distance_ratio = opt_dict['distance_ratio']
-            if 'follow_speed_limits' in opt_dict:
-                self._follow_speed_limits = opt_dict['follow_speed_limits']
+        self.config = opt_dict
 
         # initializing controller
         self._init_controller()
@@ -124,13 +88,7 @@ class LocalPlanner(object):
 
     def _init_controller(self):
         """Controller initialization"""
-        self._vehicle_controller = VehiclePIDController(self._vehicle,
-                                                        args_lateral=self._args_lateral_dict,
-                                                        args_longitudinal=self._args_longitudinal_dict,
-                                                        offset=self._offset,
-                                                        max_throttle=self._max_throt,
-                                                        max_brake=self._max_brake,
-                                                        max_steering=self._max_steer)
+        self._vehicle_controller = VehiclePIDController(self._vehicle, self.config)
 
         # Compute the current vehicle waypoint
         current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
@@ -144,10 +102,10 @@ class LocalPlanner(object):
         :param speed: new target speed in Km/h
         :return:
         """
-        if self._follow_speed_limits:
+        if self.config.speed.follow_speed_limits:
             print("WARNING: The max speed is currently set to follow the speed limits. "
                   "Use 'follow_speed_limits' to deactivate this")
-        self._target_speed = speed
+        self.config.speed.target_speed = speed
 
     def follow_speed_limits(self, value=True):
         """
@@ -156,7 +114,7 @@ class LocalPlanner(object):
         :param value: bool
         :return:
         """
-        self._follow_speed_limits = value
+        self.config.speed.follow_speed_limits = value
 
     def _compute_next_waypoints(self, k=1):
         """
@@ -171,7 +129,7 @@ class LocalPlanner(object):
 
         for _ in range(k):
             last_waypoint = self._waypoints_queue[-1][0]
-            next_waypoints = list(last_waypoint.next(self._sampling_radius))
+            next_waypoints = list(last_waypoint.next(self.config.planner.sampling_radius))
 
             if len(next_waypoints) == 0:
                 break
@@ -228,8 +186,8 @@ class LocalPlanner(object):
         :param debug: boolean flag to activate waypoints debugging
         :return: control to be applied
         """
-        if self._follow_speed_limits:
-            self._target_speed = self._vehicle.get_speed_limit()
+        if self.config.speed.follow_speed_limits:
+            self.config.speed.target_speed = self._vehicle.get_speed_limit()
 
         # Add more waypoints too few in the horizon
         if not self._stop_waypoint_creation and len(self._waypoints_queue) < self._min_waypoint_queue_length:
@@ -237,8 +195,9 @@ class LocalPlanner(object):
 
         # Purge the queue of obsolete waypoints
         veh_location = self._vehicle.get_location()
-        vehicle_speed = get_speed(self._vehicle) / 3.6
-        self._min_distance = self._base_min_distance + self._distance_ratio * vehicle_speed
+        self.config.live_info.current_speed = get_speed(self._vehicle) # km/h # Could be removed if we assume that it was updated beforehand by the agent.
+        vehicle_speed = self.config.live_info.current_speed / 3.6 # km/h -> m/s
+        self._min_distance = self.config.planner.min_distance_next_waypoint + self.config.planner.next_waypoint_distance_ratio * vehicle_speed
 
         num_waypoint_removed = 0
         for waypoint, _ in self._waypoints_queue:
@@ -267,7 +226,7 @@ class LocalPlanner(object):
             control.manual_gear_shift = False
         else:
             self.target_waypoint, self.target_road_option = self._waypoints_queue[0]
-            control = self._vehicle_controller.run_step(self._target_speed, self.target_waypoint)
+            control = self._vehicle_controller.run_step(self.target_waypoint)
 
         if debug:
             draw_waypoints(self._vehicle.get_world(), [self.target_waypoint], 1.0)
