@@ -621,6 +621,10 @@ namespace detail {
           BaseJSONPath);
     }
 
+    void RestorePhysXPhysics(Vehicle &vehicle) {
+      _client.RestorePhysXPhysics(vehicle.GetId());
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with the recorder
