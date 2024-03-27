@@ -15,19 +15,18 @@
 
 namespace boost {
 
-  void throw_exception(const std::exception &e) {
-    carla::throw_exception(e);
-  }
+void throw_exception(const std::exception &e) {
+  carla::throw_exception(e);
+}
 
-  void throw_exception(
-      const std::exception &e,
-      boost::source_location const & loc) {
-    throw_exception(e);
-  }
+void throw_exception(const std::exception &e, boost::source_location const &loc) {
+  (void)loc;
+  throw_exception(e);
+}
 
-} // namespace boost
+}  // namespace boost
 
-#endif // BOOST_NO_EXCEPTIONS
+#endif  // BOOST_NO_EXCEPTIONS
 
 // =============================================================================
 // -- Workaround for Boost.Asio bundled with rpclib ----------------------------
@@ -42,16 +41,47 @@ namespace boost {
 namespace clmdep_asio {
 namespace detail {
 
-  template <typename Exception>
-  void throw_exception(const Exception& e) {
-    carla::throw_exception(e);
-  }
+template <typename Exception>
+void throw_exception(const Exception &e) {
+  carla::throw_exception(e);
+}
 
-  template void throw_exception<std::bad_cast>(const std::bad_cast &);
-  template void throw_exception<std::exception>(const std::exception &);
-  template void throw_exception<std::system_error>(const std::system_error &);
+template void throw_exception<std::bad_cast>(const std::bad_cast &e);
+template void throw_exception<std::exception>(const std::exception &e);
+template void throw_exception<std::system_error>(const std::system_error &e);
 
-} // namespace detail
-} // namespace clmdep_asio
+}  // namespace detail
+}  // namespace clmdep_asio
 
-#endif // ASIO_NO_EXCEPTIONS
+namespace asio {
+namespace detail {
+
+template <typename Exception>
+void throw_exception(const Exception &e) {
+  carla::throw_exception(e);
+}
+
+template void throw_exception<std::bad_cast>(const std::bad_cast &e);
+template void throw_exception<std::exception>(const std::exception &e);
+template void throw_exception<std::system_error>(const std::system_error &e);
+
+}  // namespace detail
+}  // namespace asio
+
+#endif  // ASIO_NO_EXCEPTIONS
+
+#ifndef LIBCARLA_NO_EXCEPTIONS
+
+namespace carla {
+template
+#ifndef __clang__
+    // clang doesn't support C++11 attributes in template explicit instantiation, since attributes in each case cannot
+    // be changed here MSVC requires it (might be a bit too conservative and requires the attributes also in explicit
+    // instanciation)
+    [[noreturn]]
+#endif
+    void
+    throw_exception<std::exception>(const std::exception &);
+}  // namespace carla
+
+#endif

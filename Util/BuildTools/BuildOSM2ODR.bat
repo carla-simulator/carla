@@ -6,6 +6,7 @@ rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 
 set LOCAL_PATH=%~dp0
 set FILE_N=-[%~n0]:
+set GENERATOR=""
 
 rem Print batch params (debug purpose)
 echo %FILE_N% [Batch params]: %*
@@ -57,6 +58,13 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
+if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
+echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
+    set PLATFORM=-A x64
+) || (
+    set PLATFORM=
+)
+
 if %REMOVE_INTERMEDIATE% == false (
     if %BUILD_OSM2ODR% == false (
         echo Nothing selected to be done.
@@ -71,12 +79,10 @@ rem ============================================================================
 rem Set the visual studio solution directory
 rem
 set OSM2ODR_VSPROJECT_PATH=%INSTALLATION_DIR:/=\%osm2odr-visualstudio\
-set OSM2ODR_SOURCE_PATH=%INSTALLATION_DIR:/=\%om2odr-source\
+set OSM2ODR_SOURCE_PATH=%INSTALLATION_DIR:/=\%osm2odr-source\
 set OSM2ODR_INSTALL_PATH=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 set OSM2ODR__SERVER_INSTALL_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies
 set CARLA_DEPENDENCIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies\
-
-if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
 
 if %REMOVE_INTERMEDIATE% == true (
     rem Remove directories
@@ -90,11 +96,12 @@ if %REMOVE_INTERMEDIATE% == true (
     )
 )
 
+
 rem Build OSM2ODR
 if %BUILD_OSM2ODR% == true (
 
     if  %GIT_PULL% == true (
-        if not exist "%OSM2ODR_SOURCE_PATH%" git clone -b %OSM2ODR_BRANCH% %OSM2ODR_REPO% %OSM2ODR_SOURCE_PATH%
+        if not exist "%OSM2ODR_SOURCE_PATH%" git clone --depth 1 -b %OSM2ODR_BRANCH% %OSM2ODR_REPO% %OSM2ODR_SOURCE_PATH%
         cd "%OSM2ODR_SOURCE_PATH%"
         git fetch
         git checkout %CURRENT_OSM2ODR_COMMIT%
@@ -103,11 +110,6 @@ if %BUILD_OSM2ODR% == true (
     if not exist "%OSM2ODR_VSPROJECT_PATH%" mkdir "%OSM2ODR_VSPROJECT_PATH%"
     cd "%OSM2ODR_VSPROJECT_PATH%"
 
-    echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
-        set PLATFORM=-A x64
-    ) || (
-        set PLATFORM=
-    )
 
     cmake -G %GENERATOR% %PLATFORM%^
         -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^

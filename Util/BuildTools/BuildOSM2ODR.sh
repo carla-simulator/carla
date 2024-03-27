@@ -14,7 +14,7 @@ END
 REMOVE_INTERMEDIATE=false
 BUILD_OSM2ODR=false
 GIT_PULL=true
-CURRENT_OSM2ODR_COMMIT=1835e1e9538d0778971acc8b19b111834aae7261
+CURRENT_OSM2ODR_COMMIT=2a490962dc54da711ab09265393a4dc2f6d31813
 OSM2ODR_BRANCH=aaron/defaultsidewalkwidth
 OSM2ODR_REPO=https://github.com/carla-simulator/sumo.git
 
@@ -51,7 +51,7 @@ source $(dirname "$0")/Environment.sh
 
 function get_source_code_checksum {
   local EXCLUDE='*__pycache__*'
-  find "${OSM2ODR_SOURCE_FOLDER}"/* \! -path "${EXCLUDE}" -print0 | sha1sum | awk '{print $1}'
+  find "${OSM2ODR_BASENAME}-source"/* \! -path "${EXCLUDE}" -print0 | sha1sum | awk '{print $1}'
 }
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_OSM2ODR}; }; then
@@ -66,7 +66,7 @@ if ${REMOVE_INTERMEDIATE} ; then
 
   log "Cleaning intermediate files and folders."
 
-  rm -Rf ${OSM2ODR_BUILD_FOLDER}*
+  rm -Rf ${OSM2ODR_BASENAME}-client-build*
 
 fi
 
@@ -75,76 +75,70 @@ fi
 # ==============================================================================
 
 if ${BUILD_OSM2ODR} ; then
-  log "Building OSM2ODR."
-  # [ ! -d ${OSM2ODR_BUILD_FOLDER} ] && mkdir ${OSM2ODR_BUILD_FOLDER}
-  if ${GIT_PULL} ; then
-    if [ ! -d ${OSM2ODR_SOURCE_FOLDER} ] ; then
-      git clone -b ${OSM2ODR_BRANCH} ${OSM2ODR_REPO} ${OSM2ODR_SOURCE_FOLDER}
-    fi
-    cd ${OSM2ODR_SOURCE_FOLDER}
-    git fetch
-    git checkout ${CURRENT_OSM2ODR_COMMIT}
-  fi
-
-  mkdir -p ${OSM2ODR_BUILD_FOLDER}
-  cd ${OSM2ODR_BUILD_FOLDER}
-
   export CC="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang"
   export CXX="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++"
   export PATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin:$PATH"
 
-  cmake ${OSM2ODR_SOURCE_FOLDER} \
-      -G "Eclipse CDT4 - Ninja" \
-      -DCMAKE_CXX_FLAGS="-stdlib=libstdc++" \
-      -DCMAKE_INSTALL_PREFIX=${LIBCARLA_INSTALL_CLIENT_FOLDER} \
-      -DPROJ_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/proj-install/include \
-      -DPROJ_LIBRARY=${CARLA_BUILD_FOLDER}/proj-install/lib/libproj.a \
-      -DXercesC_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-install/include \
-      -DXercesC_LIBRARY=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-install/lib/libxerces-c.a
+  OSM2ODR_BASENAME=${CARLA_BUILD_FOLDER}/osm2odr
+  if [[ -d ${OSM2ODR_BASENAME}-client-install && -d ${OSM2ODR_BASENAME}-server-install ]] ; then
+    log "OSM2ODR already installed."
+  else
+    rm -Rf \
+        ${OSM2ODR_BASENAME}-source \
+        ${OSM2ODR_BASENAME}-server-build ${OSM2ODR_BASENAME}-client-build \
+        ${OSM2ODR_BASENAME}-server-install ${OSM2ODR_BASENAME}-client-install
 
-  ninja osm2odr
-  ninja install
+    log "Building OSM2ODR."
+    if ${GIT_PULL} ; then
+      if [ ! -d ${OSM2ODR_BASENAME}-source ] ; then
+        git clone --depth 1 -b ${OSM2ODR_BRANCH} ${OSM2ODR_REPO} ${OSM2ODR_BASENAME}-source
+      fi
+      pushd ${OSM2ODR_BASENAME}-source >/dev/null
+      git fetch
+      git checkout ${CURRENT_OSM2ODR_COMMIT}
+      popd >/dev/null
+    fi
 
-  mkdir -p ${OSM2ODR_SERVER_BUILD_FOLDER}
-  cd ${OSM2ODR_SERVER_BUILD_FOLDER}
+    mkdir -p ${OSM2ODR_BASENAME}-client-build
+    pushd ${OSM2ODR_BASENAME}-client-build >/dev/null
 
-  LLVM_BASENAME=llvm-8.0
-  LLVM_INCLUDE="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
-  LLVM_LIBPATH="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
+    cmake ${OSM2ODR_BASENAME}-source \
+        -G "Eclipse CDT4 - Ninja" \
+        -DCMAKE_CXX_FLAGS="-stdlib=libstdc++" \
+        -DCMAKE_INSTALL_PREFIX=${OSM2ODR_BASENAME}-client-install \
+        -DOSM2ODR_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/proj-client-install/include \
+        -DOSM2ODR_LIBRARY=${CARLA_BUILD_FOLDER}/proj-client-install/lib/libproj.a \
+        -DXercesC_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-client-install/include \
+        -DXercesC_LIBRARY=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-client-install/lib/libxerces-c.a
 
-  echo $LLVM_INCLUDE
-  echo $LLVM_LIBPATH
+    ninja osm2odr
+    ninja install
+    popd >/dev/null
 
-  cmake ${OSM2ODR_SOURCE_FOLDER} \
-      -G "Eclipse CDT4 - Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH}" \
-      -DCMAKE_INSTALL_PREFIX=${LIBCARLA_INSTALL_SERVER_FOLDER} \
-      -DPROJ_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/proj-install-server/include \
-      -DPROJ_LIBRARY=${CARLA_BUILD_FOLDER}/proj-install-server/lib/libproj.a \
-      -DXercesC_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-install-server/include \
-      -DXercesC_LIBRARY=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-install-server/lib/libxerces-c.a
+    mkdir -p ${OSM2ODR_BASENAME}-server-build
+    pushd ${OSM2ODR_BASENAME}-server-build >/dev/null
 
-  ninja osm2odr
-  ninja install
+    cmake ${OSM2ODR_BASENAME}-source \
+        -G "Eclipse CDT4 - Ninja" \
+        -DCMAKE_INSTALL_PREFIX=${OSM2ODR_BASENAME}-server-install \
+        -DCMAKE_TOOLCHAIN_FILE="${LIBCPP_TOOLCHAIN_FILE}" \
+        -DOSM2ODR_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/proj-server-install/include \
+        -DOSM2ODR_LIBRARY=${CARLA_BUILD_FOLDER}/proj-server-install/lib/libproj.so \
+        -DXercesC_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-server-install/include \
+        -DXercesC_LIBRARY=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-server-install/lib/libxerces-c.so
 
-  mkdir -p ${OSM2ODR_SERVER_BUILD_FOLDER}
-  cd ${OSM2ODR_SERVER_BUILD_FOLDER}
+    ninja osm2odr
+    ninja install
+    popd >/dev/null
 
-  LLVM_BASENAME=llvm-8.0
-  LLVM_INCLUDE="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
-  LLVM_LIBPATH="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
+    rm -Rf ${OSM2ODR_BASENAME}-server-build ${OSM2ODR_BASENAME}-client-build
+  fi
 
-  cmake ${OSM2ODR_SOURCE_FOLDER} \
-      -G "Eclipse CDT4 - Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH}" \
-      -DCMAKE_INSTALL_PREFIX=${LIBCARLA_INSTALL_SERVER_FOLDER} \
-      -DPROJ_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/proj-install-server/include \
-      -DPROJ_LIBRARY=${CARLA_BUILD_FOLDER}/proj-install-server/lib/libproj.a \
-      -DXercesC_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-install-server/include \
-      -DXercesC_LIBRARY=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-install-server/lib/libxerces-c.a
+  cp -p -r ${OSM2ODR_BASENAME}-server-install/include/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+  cp -p ${OSM2ODR_BASENAME}-server-install/lib/*.a ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib
 
-  ninja osm2odr
-  ninja install
+  cp -p -r ${OSM2ODR_BASENAME}-client-install/include/* ${LIBCARLA_INSTALL_CLIENT_FOLDER}/include/
+  cp -p ${OSM2ODR_BASENAME}-client-install/lib/*.a ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib
 
 fi
 

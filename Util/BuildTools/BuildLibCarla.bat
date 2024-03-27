@@ -15,11 +15,13 @@ rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
 set DOC_STRING=Build LibCarla.
-set USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--server] [--client] [--clean]
+set USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--server] [--client] [--clean] [--ros2]
 
 set REMOVE_INTERMEDIATE=false
 set BUILD_SERVER=false
 set BUILD_CLIENT=false
+set M_ROS2=OFF
+set GENERATOR=""
 
 :arg-parse
 if not "%1"=="" (
@@ -33,6 +35,9 @@ if not "%1"=="" (
     )
     if "%1"=="--client" (
         set BUILD_CLIENT=true
+    )
+    if "%1"=="--ros2" (
+        set M_ROS2=ON
     )
     if "%1"=="--clean" (
         set REMOVE_INTERMEDIATE=true
@@ -73,7 +78,11 @@ rem
 set LIBCARLA_VSPROJECT_PATH=%INSTALLATION_DIR:/=\%libcarla-visualstudio\
 
 if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
-
+echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
+    set PLATFORM=-A x64
+) || (
+    set PLATFORM=
+)
 
 set LIBCARLA_SERVER_INSTALL_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies\
 set LIBCARLA_CLIENT_INSTALL_PATH=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
@@ -104,12 +113,6 @@ if %REMOVE_INTERMEDIATE% == true (
 if not exist "%LIBCARLA_VSPROJECT_PATH%" mkdir "%LIBCARLA_VSPROJECT_PATH%"
 cd "%LIBCARLA_VSPROJECT_PATH%"
 
-echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
-    set PLATFORM=-A x64
-) || (
-    set PLATFORM=
-)
-
 rem For some reason the findstr above sets an errorlevel even if it finds the string in this batch file.
 set errorlevel=0
 
@@ -121,6 +124,7 @@ if %BUILD_SERVER% == true (
       -DCMAKE_BUILD_TYPE=Server^
       -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
       -DCMAKE_INSTALL_PREFIX="%LIBCARLA_SERVER_INSTALL_PATH:\=/%"^
+      -DLIBCARLA_USE_ROS="%M_ROS2%"^
       "%ROOT_PATH%"
 
     if %errorlevel% neq 0 goto error_cmake

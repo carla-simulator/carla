@@ -1,5 +1,9 @@
 #define _GLIBCXX_USE_CXX11_ABI 0
 
+// ensure that cmath header is not included elsewhere before to enable the math definitions on Win32
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include "CarlaTransformPublisher.h"
 
 #include <string>
@@ -161,9 +165,9 @@ namespace ros2 {
         const float ty = *translation++;
         const float tz = *translation++;
 
-        const float rx = ((*rotation++) * -1.0f) * (M_PIf32 / 180.0f);
-        const float ry = ((*rotation++) * -1.0f) * (M_PIf32 / 180.0f);
-        const float rz = *rotation++ * (M_PIf32 / 180.0f);
+        const float rx = ((*rotation++) * -1.0f) * (float(M_PI) / 180.0f);
+        const float ry = ((*rotation++) * -1.0f) * (float(M_PI) / 180.0f);
+        const float rz = *rotation++ * (float(M_PI) / 180.0f);
 
         const float cr = cosf(rz * 0.5f);
         const float sr = sinf(rz * 0.5f);
