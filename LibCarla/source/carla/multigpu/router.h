@@ -7,7 +7,7 @@
 #pragma once
 
 // #include "carla/Logging.h"
-#include "carla/streaming/detail/tcp/Message.h"
+#include "carla/streaming/detail/Message.h"
 #include "carla/ThreadPool.h"
 #include "carla/multigpu/primary.h"
 #include "carla/multigpu/primaryCommands.h"

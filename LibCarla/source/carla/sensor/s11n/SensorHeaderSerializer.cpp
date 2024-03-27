@@ -13,7 +13,7 @@ namespace sensor {
 namespace s11n {
 
   static_assert(
-      SensorHeaderSerializer::header_offset == 3u * 8u + 6u * 4u,
+      SensorHeaderSerializer::header_offset == 3u * 8u + /* 2x Transform */  2u * 6u * 4u + /* quaternion */ 4u * 4u,
       "Header size missmatch");
 
   static Buffer PopBufferFromPool() {
@@ -25,12 +25,17 @@ namespace s11n {
       const uint64_t index,
       const uint64_t frame,
       double timestamp,
-      const rpc::Transform transform) {
+      const rpc::Transform &transform,
+      const rpc::Transform &sensor_relative_transform,
+      const rpc::Quaternion &sensor_relative_transform_quaternion
+      ) {
     Header h;
     h.sensor_type = index;
     h.frame = frame;
     h.timestamp = timestamp;
     h.sensor_transform = transform;
+    h.sensor_relative_transform = sensor_relative_transform;
+    h.sensor_relative_transform_quaternion = sensor_relative_transform_quaternion;
     auto buffer = PopBufferFromPool();
     buffer.copy_from(reinterpret_cast<const unsigned char *>(&h), sizeof(h));
     return buffer;

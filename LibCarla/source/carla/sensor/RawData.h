@@ -8,7 +8,7 @@
 
 #include "carla/Buffer.h"
 #include "carla/sensor/s11n/SensorHeaderSerializer.h"
-#include "carla/ros2/ROS2.h"
+#include "carla/sensor/Deserializer.h"
 
 #include <cstdint>
 #include <iterator>
@@ -89,11 +89,14 @@ namespace sensor {
 
     template <typename... Items>
     friend class CompositeSerializer;
-    friend class carla::ros2::ROS2;
 
-    RawData(Buffer &&buffer) : _buffer(std::move(buffer)) {}
+    RawData(Buffer DESERIALIZE_DECL_DATA(buffer)) : _buffer(DESERIALIZE_MOVE_DATA(buffer)) {}
 
+#if defined(CARLA_SERVER_BUILD)
+    Buffer const &_buffer;
+#else
     Buffer _buffer;
+#endif
   };
 
 } // namespace sensor

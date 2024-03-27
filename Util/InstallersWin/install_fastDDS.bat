@@ -14,7 +14,11 @@ rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
+
 set DEL_SRC=false
+set BOOST_VERSION="unknown"
+set FASTDDS_INSTALL_DIR=""
+set GENERATOR=""
 
 :arg-parse
 if not "%1"=="" (
@@ -27,9 +31,32 @@ if not "%1"=="" (
         set DEL_SRC=true
     )
 
+    if "%1"=="--boost-version" (
+        set BOOST_VERSION=%2
+        shift
+    )
+
+    if "%1"=="--install-dir" (
+        set FASTDDS_INSTALL_DIR=%2
+        shift
+    )
+
+    if "%1"=="--generator" (
+        set GENERATOR=%2
+        shift
+    )
+
     shift
     goto :arg-parse
 )
+
+if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
+echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
+    set PLATFORM=-A x64
+) || (
+    set PLATFORM=
+)
+echo "%GENERATOR%" "%PLATFORM%"
 
 rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
@@ -37,10 +64,15 @@ if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
 
 set FASTDDS_SRC=fastDDS-src
 set FASTDDS_SRC_DIR=%BUILD_DIR%%FASTDDS_SRC%\
-set FASTDDS_INSTALL=fastDDS-install
-set FASTDDS_INSTALL_DIR=%BUILD_DIR%%FASTDDS_INSTALL%\
-set FASTDDS_BUILD_DIR=%FASTDDS_SRC_DIR%build\
+if "%FASTDDS_INSTALL_DIR%" == "" (
+    set FASTDDS_INSTALL=fastDDS-install
+    set FASTDDS_INSTALL_DIR=%BUILD_DIR%%FASTDDS_INSTALL%\
+)
+set FASTDDS_BUILD_DIR=%FASTDDS_SRC_DIR%build\fastdds
 set FASTDDS_BASENAME=%FASTDDS_SRC%
+set FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan-memory-vendor
+set FOONATHAN_MEMORY_VENDOR_SOURCE_DIR=%FASTDDS_SRC_DIR%\thirdparty\foonathan-memory-vendor
+set FOONATHAN_MEMORY_VENDOR_BUILD_DIR=%FASTDDS_SRC_DIR%build\foonathan-memory-vendor
 
 if exist "%FASTDDS_INSTALL_DIR%" (
     goto already_build
@@ -49,86 +81,86 @@ if exist "%FASTDDS_INSTALL_DIR%" (
 if not exist "%FASTDDS_SRC_DIR%" (
     echo %FILE_N% Cloning "Fast-DDS"
 
-    call git clone https://github.com/eProsima/Fast-DDS.git "%FASTDDS_SRC_DIR:~0,-1%"
-    call git submodule init
-    call git submodule update
+    git clone --depth 1 --branch 2.11.2 https://github.com/eProsima/Fast-DDS.git "%FASTDDS_SRC_DIR:~0,-1%"
     if %errorlevel% neq 0 goto error_git
+    git submodule init
+    if %errorlevel% neq 0 goto error_git
+    git submodule update
+    if %errorlevel% neq 0 goto error_git
+    git clone --depth 1 --branch master https://github.com/eProsima/foonathan_memory_vendor.git "%FOONATHAN_MEMORY_VENDOR_SOURCE_DIR%"
 ) else (
     echo %FILE_N% Not cloning "Fast-DDS" because already exists a folder called "%FASTDDS_SRC%".
 )
 
-echo Compiling fastCDR dependency...
-
-if not exist "%FASTDDS_SRC_DIR%/thirdparty/fastcdr/build" (
-    echo %FILE_N% Creating "%FASTDDS_SRC_DIR%/thirdparty/fastcdr/build"
-    cd "%FASTDDS_SRC_DIR%/thirdparty/fastcdr"
-    mkdir build
-    cd ../../
+if not exist "%FOONATHAN_MEMORY_VENDOR_BUILD_DIR%" (
+    echo %FILE_N% Creating "%FOONATHAN_MEMORY_VENDOR_BUILD_DIR%"
+    mkdir "%FOONATHAN_MEMORY_VENDOR_BUILD_DIR%"
 )
+cd "%FOONATHAN_MEMORY_VENDOR_BUILD_DIR%"
 
-cd "%FASTDDS_SRC_DIR%/thirdparty/fastcdr/build"
-echo %FILE_N% Generating build...
-
-cmake .. -G "Visual Studio 16 2019" -A x64^
+echo %FILE_N% Generating build: foonathan memory vendor ...
+cmake -G %GENERATOR% %PLATFORM%^
     -DCMAKE_BUILD_TYPE=Release^
     -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
     -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR:\=/%"^
-    -DCMAKE_CXX_FLAGS=/D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING
+    -DBUILD_STATIC_LIBS=ON^
+    -DBUILD_SHARED_LIBS=OFF^
+    -DCMAKE_CXX_FLAGS="/DBOOST_NO_EXCEPTIONS /DASIO_NO_EXCEPTIONS"^
+    "%FOONATHAN_MEMORY_VENDOR_SOURCE_DIR%"
 if %errorlevel%  neq 0 goto error_cmake
 
-echo %FILE_N% Building...
+echo %FILE_N% Building foonathan memory vendor... 
 cmake --build . --config Release --target install
 
-if errorlevel  neq 0 goto error_install
+if exist "%FASTDDS_SRC_DIR%\thirdparty\boost\include\boost" (
+    echo %FILE_N% Preparing fastdds boost ... 
+    @REM remove their boost includes, but keep their entry point
+    rd /s /q "%FASTDDS_SRC_DIR%\thirdparty\boost\include\boost"
+    @REM  ensure the find boost compiles without exceptions
+    sed -i s/"CXX_STANDARD 11"/"CXX_STANDARD 11\n         COMPILE_DEFINITIONS \"-DBOOST_NO_EXCEPTIONS\""/ "%FASTDDS_SRC_DIR%\cmake\modules\FindThirdpartyBoost.cmake"
+    sed -i s/"class ThirdpartyBoostCompileTest"/"#ifdef BOOST_NO_EXCEPTIONS\nnamespace boost {void throw_exception(std::exception const \& e) {}}\n#endif\nclass ThirdpartyBoostCompileTest"/ "%FASTDDS_SRC_DIR%\thirdparty\boost\test\ThirdpartyBoostCompile_test.cpp"
+)
 
-cd ../../..
-
-@REM echo Compiling asio dependency...
-
-@REM if not exist "%FASTDDS_SRC_DIR%/thirdparty/asio/asio/build" (
-@REM     echo %FILE_N% Creating "%FASTDDS_SRC_DIR%/thirdparty/asio/asio/build"
-@REM     cd "%FASTDDS_SRC_DIR%/thirdparty/asio/asio"
-@REM     mkdir build
-@REM     cd ../../
-@REM )
-
-@REM cd "%FASTDDS_SRC_DIR%/thirdparty/asio/asio/build"
-@REM echo %FILE_N% Generating build...
-
-@REM cmake .. -G "Visual Studio 16 2019" -A x64^
-@REM     -DCMAKE_BUILD_TYPE=Release^
-@REM     -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
-@REM     -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR:\=/%"^
-@REM     -DCMAKE_CXX_FLAGS=/D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING
-@REM if %errorlevel%  neq 0 goto error_cmake
-
-@REM echo %FILE_N% Building...
-@REM cmake --build . --config Release --target install
-
-@REM if errorlevel  neq 0 goto error_install
-
-@REM cd ../../../..
+if exist "%FASTDDS_SRC_DIR%\src\cpp\utils\StringMatching.cpp" (
+    echo %FILE_N% Patching fastdds ... 
+    sed -i s/"defined(__cplusplus_winrt)"/"(1)"/ "%FASTDDS_SRC_DIR%\src\cpp\utils\StringMatching.cpp"
+    sed -i s/"replace_all(pattern"/"replace_all(path"/ "%FASTDDS_SRC_DIR%\src\cpp\utils\StringMatching.cpp"
+)
 
 if not exist "%FASTDDS_BUILD_DIR%" (
     echo %FILE_N% Creating "%FASTDDS_BUILD_DIR%"
     mkdir "%FASTDDS_BUILD_DIR%"
 )
-
 cd "%FASTDDS_BUILD_DIR%"
-echo %FILE_N% Generating build...
+echo %FILE_N% Generating build: fastdds ...
 
-cmake .. -G "Visual Studio 16 2019" -A x64^
+cmake -G %GENERATOR% %PLATFORM%^
     -DCMAKE_BUILD_TYPE=Release^
     -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
     -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR:\=/%"^
-    -DCMAKE_CXX_FLAGS=/D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING^
+    -DCMAKE_MODULE_PATH="%FASTDDS_INSTALL_DIR:\=/%"^
+    -DBUILD_STATIC_LIBS=ON^
+    -DBUILD_SHARED_LIBS=OFF^
+    -DBUILD_TESTING=OFF^
+    -DCOMPILE_EXAMPLES=OFF^
+    -DCOMPILE_TOOLS=OFF^
+    -DTHIRDPARTY_Asio=FORCE^
+    -DTHIRDPARTY_fastcdr=FORCE^
+    -DTHIRDPARTY_TinyXML2=FORCE^
+    -DTHIRDPARTY_BOOST_INCLUDE_DIR="%BUILD_DIR%boost-%BOOST_VERSION%-install\include;%FASTDDS_SRC_DIR%\thirdparty\boost\include"^
+    -DCMAKE_CXX_FLAGS="/D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING /DBOOST_NO_EXCEPTIONS /DASIO_NO_EXCEPTIONS"^
     "%FASTDDS_SRC_DIR%"
 if %errorlevel%  neq 0 goto error_cmake
 
-echo %FILE_N% Building...
+echo %FILE_N% Building fastdds...
 cmake --build . --config Release --target install
 
-if errorlevel  neq 0 goto error_install
+if %errorlevel%  neq 0 goto error_install
+
+rem copy asio header files as they are not copied automatically by the above build, but we need those for handling the asio-exceptions
+copy %FASTDDS_SRC_DIR%thirdparty\asio\asio\include\asio.hpp %INSTALLATION_DIR%fastDDS-install\include\ > NUL
+xcopy /Y /S /I  %FASTDDS_SRC_DIR%thirdparty\asio\asio\include\asio\* %INSTALLATION_DIR%fastDDS-install\include\asio\* > NUL
+if %errorlevel%  neq 0 goto error_install
 
 rem Remove the downloaded Fast-DDS source because is no more needed
 if %DEL_SRC% == true (
@@ -179,7 +211,7 @@ rem ============================================================================
 
 :good_exit
     echo %FILE_N% Exiting...
-    endlocal & set install_recast=%FASTDDS_INSTALL_DIR%
+    endlocal & set install_dds=%FASTDDS_INSTALL_DIR%
     exit /b 0
 
 :bad_exit

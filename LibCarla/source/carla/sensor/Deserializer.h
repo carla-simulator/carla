@@ -9,6 +9,16 @@
 #include "carla/Buffer.h"
 #include "carla/Memory.h"
 
+#if defined(CARLA_SERVER_BUILD)
+# define DESERIALIZE_MOVE_DATA(data)  data
+# define DESERIALIZE_DECL_DATA(data)  const &data
+# define DESERIALIZE_FORWARD_DATA(type, data)  std::forward<type const>(data)
+#else
+# define DESERIALIZE_MOVE_DATA(data)  std::move(data)
+# define DESERIALIZE_DECL_DATA(data)  &&data
+# define DESERIALIZE_FORWARD_DATA(type, data)  std::forward<type>(data)
+#endif
+
 namespace carla {
 namespace sensor {
 
@@ -22,7 +32,7 @@ namespace sensor {
   class Deserializer {
   public:
 
-    static SharedPtr<SensorData> Deserialize(Buffer &&buffer);
+    static SharedPtr<SensorData> Deserialize(Buffer DESERIALIZE_DECL_DATA(buffer));
   };
 
 } // namespace sensor

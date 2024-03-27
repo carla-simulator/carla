@@ -7,6 +7,10 @@ launch: LibCarla.server.release osm2odr downloadplugins
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUE4Plugins.sh --build $(ARGS)
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build --launch $(ARGS)
 
+launch.debug: LibCarla.server.debug osm2odr downloadplugins
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUE4Plugins.sh --build $(ARGS)
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build --debug --launch $(ARGS)
+
 launch-only:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --launch $(ARGS)
 

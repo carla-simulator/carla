@@ -11,6 +11,9 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/rpc/String.h>
+#if defined(WITH_ROS2)
+#  include <carla/ros2/ROS2.h>
+#endif
 #include <compiler/enable-ue4-macros.h>
 
 #include "Carla/Sensor/Sensor.h"
@@ -301,6 +304,12 @@ void UCarlaEpisode::AttachActors(
 
   UActorAttacher::AttachActors(Child, Parent, InAttachmentType, SocketName);
 
+  #if defined(WITH_ROS2)
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (ROS2->IsEnabled()) {
+    ROS2->AttachActors(FindCarlaActor(Child)->GetActorId(), FindCarlaActor(Parent)->GetActorId());
+  }
+  #endif 
   if (bIsPrimaryServer)
   {
     GetFrameData().AddEvent(
@@ -469,3 +478,10 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
 
   return result;
 }
+
+void UCarlaEpisode::TickTimers(float DeltaSeconds)
+{
+  ElapsedGameTime += DeltaSeconds;
+  SetVisualGameTime(VisualGameTime + DeltaSeconds);
+}
+  

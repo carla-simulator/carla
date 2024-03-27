@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/geom/Transform.h"
+#include "carla/geom/Quaternion.h"
 
 namespace carla {
 namespace rpc {
@@ -14,6 +15,9 @@ namespace rpc {
   using Rotation = geom::Rotation;
 
   using Transform = geom::Transform;
+
+  using Location = geom::Location;
+  using Quaternion = geom::Quaternion;
 
 } // namespace rpc
 } // namespace carla

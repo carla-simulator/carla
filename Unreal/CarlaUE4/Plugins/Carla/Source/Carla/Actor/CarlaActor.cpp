@@ -73,6 +73,10 @@ FSensorActor::FSensorActor(
   Type = ActorType::Sensor;
   ActorData = MakeShared<FActorSensorData>();
 }
+
+ASensor* FSensorActor::GetSensor() { return dynamic_cast<ASensor*>(GetActor()); }
+
+
 FTrafficSignActor::FTrafficSignActor(
     IdType ActorId,
     AActor* Actor,
@@ -863,7 +867,7 @@ ECarlaServerResponse FVehicleActor::ApplyAckermannControlToVehicle(
     {
       return ECarlaServerResponse::NotAVehicle;
     }
-    Vehicle->ApplyVehicleAckermannControl(AckermannControl, Priority);
+    Vehicle->ApplyVehicleAckermannControl(AckermannControl);
   }
   return ECarlaServerResponse::Success;
 }

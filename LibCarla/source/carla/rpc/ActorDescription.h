@@ -6,12 +6,13 @@
 
 #pragma once
 
+
+#include <vector>
+
 #include "carla/MsgPack.h"
 #include "carla/rpc/ActorAttribute.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/String.h"
-
-#include <vector>
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 #include <compiler/enable-ue4-macros.h>

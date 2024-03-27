@@ -17,7 +17,7 @@ float DeviationCrossProduct(const cg::Location &reference_location,
                             const cg::Vector3D &heading_vector,
                             const cg::Location &target_location) {
   cg::Vector3D next_vector = target_location - reference_location;
-  next_vector = next_vector.MakeSafeUnitVector(EPSILON);
+  next_vector = next_vector.MakeUnitVector(EPSILON);
   const float cross_z = heading_vector.x * next_vector.y - heading_vector.y * next_vector.x;
   return cross_z;
 }
@@ -27,9 +27,9 @@ float DeviationDotProduct(const cg::Location &reference_location,
                           const cg::Location &target_location) {
   cg::Vector3D next_vector = target_location - reference_location;
   next_vector.z = 0.0f;
-  next_vector = next_vector.MakeSafeUnitVector(EPSILON);
+  next_vector = next_vector.MakeUnitVector(EPSILON);
   cg::Vector3D heading_vector_flat(heading_vector.x, heading_vector.y, 0);
-  heading_vector_flat = heading_vector_flat.MakeSafeUnitVector(EPSILON);
+  heading_vector_flat = heading_vector_flat.MakeUnitVector(EPSILON);
   float dot_product = cg::Math::Dot(next_vector, heading_vector_flat);
   dot_product = std::max(0.0f, std::min(dot_product, 1.0f));
   return dot_product;

@@ -12,11 +12,8 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
-  SharedPtr<SensorData> DVSEventArraySerializer::Deserialize(RawData &&data) {
-
-    auto events_array = SharedPtr<data::DVSEventArray>(new data::DVSEventArray{std::move(data)});
-
-    return events_array;
+  SharedPtr<SensorData> DVSEventArraySerializer::Deserialize(RawData DESERIALIZE_DECL_DATA(data)) {
+    return SharedPtr<data::DVSEventArray>(new data::DVSEventArray{DESERIALIZE_MOVE_DATA(data)});
   }
 
 } // namespace s11n

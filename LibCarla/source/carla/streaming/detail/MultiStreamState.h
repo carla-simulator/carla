@@ -9,7 +9,7 @@
 #include "carla/AtomicSharedPtr.h"
 #include "carla/Logging.h"
 #include "carla/streaming/detail/StreamStateBase.h"
-#include "carla/streaming/detail/tcp/Message.h"
+#include "carla/streaming/detail/Message.h"
 
 #include <mutex>
 #include <vector>
@@ -38,7 +38,7 @@ namespace detail {
       auto session = _session.load();
       if (session != nullptr) {
         auto message = Session::MakeMessage(buffers...);
-        session->Write(std::move(message));
+        session->WriteMessage(std::move(message));
         log_debug("sensor ", session->get_stream_id()," data sent");
         // Return here, _session is only valid if we have a
         // single session.
@@ -51,7 +51,7 @@ namespace detail {
         auto message = Session::MakeMessage(buffers...);
         for (auto &s : _sessions) {
           if (s != nullptr) {
-            s->Write(message);
+            s->WriteMessage(message);
             log_debug("sensor ", s->get_stream_id()," data sent ");
          }
         }
@@ -62,20 +62,8 @@ namespace detail {
       _force_active = true;
     }
 
-    void EnableForROS() {
-      _enabled_for_ros = true;
-    }
-
-    void DisableForROS() {
-      _enabled_for_ros = false;
-    }
-
-    bool IsEnabledForROS() {
-      return _enabled_for_ros;
-    }
-
     bool AreClientsListening() {
-      return (_sessions.size() > 0 || _force_active || _enabled_for_ros);
+      return (_sessions.size() > 0 || _force_active );
     }
 
     void ConnectSession(std::shared_ptr<Session> session) final {
@@ -138,7 +126,6 @@ namespace detail {
     // if there are more than one session, we use vector of sessions with mutex
     std::vector<std::shared_ptr<Session>> _sessions;
     bool _force_active {false};
-    bool _enabled_for_ros {false};
   };
 
 } // namespace detail

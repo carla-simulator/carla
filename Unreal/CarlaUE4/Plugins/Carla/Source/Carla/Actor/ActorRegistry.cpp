@@ -23,7 +23,7 @@ namespace crp = carla::rpc;
 
 FActorRegistry::IdType FActorRegistry::ID_COUNTER = 0u;
 
-static FCarlaActor::ActorType FActorRegistry_GetActorType(const AActor *Actor)
+FCarlaActor::ActorType FActorRegistry::GetActorType(const AActor *Actor)
 {
   if (!Actor)
   {
@@ -34,7 +34,7 @@ static FCarlaActor::ActorType FActorRegistry_GetActorType(const AActor *Actor)
   {
     return FCarlaActor::ActorType::Vehicle;
   }
-  else if (nullptr != Cast<ACharacter>(Actor))
+  else if (nullptr != Cast<AWalkerBase>(Actor))
   {
     return FCarlaActor::ActorType::Walker;
   }
@@ -174,7 +174,7 @@ TSharedPtr<FCarlaActor> FActorRegistry::MakeCarlaActor(
         std::begin(Token.data),
         std::end(Token.data));
   }
-  auto Type = FActorRegistry_GetActorType(&Actor);
+  auto Type = GetActorType(&Actor);
   TSharedPtr<FCarlaActor> CarlaActor =
       FCarlaActor::ConstructCarlaActor(
         Id, &Actor,

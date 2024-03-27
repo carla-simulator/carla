@@ -21,7 +21,7 @@ namespace command_impl {
     return actor->GetId();
   }
 
-  carla::rpc::ActorDescription Convert(const carla::client::ActorBlueprint &blueprint) {
+  carla::rpc::ActorDescription Convert(const carla::actors::ActorBlueprint &blueprint) {
     return blueprint.MakeActorDescription();
   }
 
@@ -46,6 +46,7 @@ namespace command_impl {
 
 void export_commands() {
   using namespace boost::python;
+  namespace ca = carla::actors;
   namespace cc = carla::client;
   namespace cg = carla::geom;
   namespace cr = carla::rpc;
@@ -72,19 +73,19 @@ void export_commands() {
   class_<cr::Command::SpawnActor>("SpawnActor")
     .def(
         "__init__",
-        &command_impl::CustomSpawnActorInit<cc::ActorBlueprint, cg::Transform>,
+        &command_impl::CustomSpawnActorInit<ca::ActorBlueprint, cg::Transform>,
         (arg("blueprint"), arg("transform")))
     .def(
         "__init__",
-        &command_impl::CustomSpawnActorInit<cc::ActorBlueprint, cg::Transform, const cr::ActorId &>,
+        &command_impl::CustomSpawnActorInit<ca::ActorBlueprint, cg::Transform, const cr::ActorId &>,
         (arg("blueprint"), arg("transform"), arg("parent_id")))
     .def(
         "__init__",
-        &command_impl::CustomSpawnActorInit<cc::ActorBlueprint, cg::Transform, ActorPtr>,
+        &command_impl::CustomSpawnActorInit<ca::ActorBlueprint, cg::Transform, ActorPtr>,
         (arg("blueprint"), arg("transform"), arg("parent")))
     .def(
         "__init__",
-        &command_impl::CustomSpawnActorInit<cc::ActorBlueprint, cg::Transform, ActorPtr, cr::AttachmentType, std::string>,
+        &command_impl::CustomSpawnActorInit<ca::ActorBlueprint, cg::Transform, ActorPtr, cr::AttachmentType, std::string>,
         (arg("blueprint"), arg("transform"), arg("parent"), arg("attachment_type"), arg("socket_name")))
     .def(init<cr::Command::SpawnActor>())
     .def_readwrite("transform", &cr::Command::SpawnActor::transform)

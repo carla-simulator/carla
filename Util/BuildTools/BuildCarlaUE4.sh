@@ -23,6 +23,7 @@ USE_HOUDINI=false
 
 GDB=
 RHI="-vulkan"
+DEBUG=false
 
 OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,ros2,no-unity,editor-flags: -n 'parse-options' -- "$@"`
 
@@ -35,6 +36,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --gdb )
       GDB="gdb --args";
+      shift ;;
+    --debug )
+      DEBUG=true;
       shift ;;
     --build )
       BUILD_CARLAUE4=true;
@@ -181,12 +185,16 @@ if ${BUILD_CARLAUE4} ; then
   else
     OPTIONAL_MODULES_TEXT="Ros2 OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
+  if ${DEBUG} ; then
+    OPTIONAL_MODULES_TEXT="Debug ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  else
+    OPTIONAL_MODULES_TEXT="Debug OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  fi
   if ${USE_UNITY} ; then
     OPTIONAL_MODULES_TEXT="Unity ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
   else
     OPTIONAL_MODULES_TEXT="Unity OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
-  OPTIONAL_MODULES_TEXT="Fast_dds ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
   echo ${OPTIONAL_MODULES_TEXT} > ${PWD}/Config/OptionalModules.ini
 
   if [ ! -f Makefile ]; then

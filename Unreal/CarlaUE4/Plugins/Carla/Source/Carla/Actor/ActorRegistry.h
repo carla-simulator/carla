@@ -96,6 +96,9 @@ public:
 
   void WakeActorUp(IdType Id, UCarlaEpisode* CarlaEpisode);
 
+  static FCarlaActor::ActorType GetActorType(const AActor *Actor);
+
+
   /// @}
   // ===========================================================================
   /// @name Range iteration support

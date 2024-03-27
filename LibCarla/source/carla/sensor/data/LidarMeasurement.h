@@ -26,8 +26,8 @@ namespace data {
 
     friend Serializer;
 
-    explicit LidarMeasurement(RawData &&data)
-      : Super(std::move(data), [](const RawData &d) {
+    explicit LidarMeasurement(RawData DESERIALIZE_DECL_DATA(data))
+      : Super(DESERIALIZE_MOVE_DATA(data), [](const RawData &d) {
       return Serializer::GetHeaderOffset(d);
     }) {}
 

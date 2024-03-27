@@ -11,8 +11,8 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
-  SharedPtr<SensorData> IMUSerializer::Deserialize(RawData &&data) {
-    return SharedPtr<SensorData>(new data::IMUMeasurement(std::move(data)));
+  SharedPtr<SensorData> IMUSerializer::Deserialize(RawData DESERIALIZE_DECL_DATA(data)) {
+    return SharedPtr<SensorData>(new data::IMUMeasurement(DESERIALIZE_MOVE_DATA(data)));
   }
 
 } // namespace s11n

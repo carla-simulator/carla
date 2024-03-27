@@ -40,33 +40,33 @@ namespace sensor {
 
     /// Deserializes a Buffer by calling the "Deserialize" function of the
     /// serializer that generated the Buffer.
-    static interpreted_type Deserialize(Buffer &&data);
+    static interpreted_type Deserialize(Buffer DESERIALIZE_DECL_DATA(data));
 
   private:
 
     template <size_t Index, typename Data>
-    static interpreted_type Deserialize_impl(Data &&data) {
+    static interpreted_type Deserialize_impl(Data DESERIALIZE_DECL_DATA(data)) {
       using Serializer = typename Super::template get_by_index<Index>::type;
-      return Serializer::Deserialize(std::forward<Data>(data));
+      return Serializer::Deserialize(DESERIALIZE_FORWARD_DATA(Data, data));
     }
 
+    // This function is equivalent to creating a switch statement with a case
+    // for each element in the map, the compiler should be able to optimize it
+    // into a jump table. See https://stackoverflow.com/a/46282159/5308925.
     template <typename Data, size_t... Is>
-    static interpreted_type Deserialize_impl(size_t i, Data &&data, std::index_sequence<Is...>) {
-      // This function is equivalent to creating a switch statement with a case
-      // for each element in the map, the compiler should be able to optimize it
-      // into a jump table. See https://stackoverflow.com/a/46282159/5308925.
+    static interpreted_type Deserialize_impl(size_t i, Data DESERIALIZE_DECL_DATA(data), std::index_sequence<Is...>) {
       interpreted_type result;
       std::initializer_list<int> ({
-          (i == Is ? (result = Deserialize_impl<Is>(std::forward<Data>(data))), 0 : 0)...
+          (i == Is ? (result = Deserialize_impl<Is>(DESERIALIZE_FORWARD_DATA(Data, data))), 0 : 0)...
       });
       return result;
     }
 
     template <typename Data>
-    static interpreted_type Deserialize(size_t index, Data &&data) {
+    static interpreted_type Deserialize(size_t index, Data DESERIALIZE_DECL_DATA(data)) {
       return Deserialize_impl(
           index,
-          std::forward<Data>(data),
+          DESERIALIZE_FORWARD_DATA(Data, data),
           std::make_index_sequence<Super::size()>());
     }
   };
@@ -85,10 +85,10 @@ namespace sensor {
 
   template <typename... Items>
   inline typename CompositeSerializer<Items...>::interpreted_type
-  CompositeSerializer<Items...>::Deserialize(Buffer &&data) {
-    RawData message{std::move(data)};
+  CompositeSerializer<Items...>::Deserialize(Buffer DESERIALIZE_DECL_DATA(data)) {
+    RawData message{DESERIALIZE_MOVE_DATA(data)};
     size_t index = message.GetSensorTypeId();
-    return Deserialize(index, std::move(message));
+    return Deserialize(index, DESERIALIZE_MOVE_DATA(message));
   }
 
 } // namespace sensor

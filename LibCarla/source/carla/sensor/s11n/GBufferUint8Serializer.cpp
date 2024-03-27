@@ -12,9 +12,8 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
-  SharedPtr<SensorData> GBufferUint8Serializer::Deserialize(RawData &&data) {
-    auto image = SharedPtr<data::Image>(new data::Image{std::move(data)});
-    return image;
+  SharedPtr<SensorData> GBufferUint8Serializer::Deserialize(RawData DESERIALIZE_DECL_DATA(data)) {
+    return SharedPtr<data::Image>(new data::Image{DESERIALIZE_MOVE_DATA(data)});
   }
 
 } // namespace s11n

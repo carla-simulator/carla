@@ -8,7 +8,7 @@
 
 #include "carla/Debug.h"
 #include "carla/sensor/data/ActorDynamicState.h"
-#include "carla/sensor/data/Array.h"
+#include "carla/sensor/data/ArrayConst.h"
 #include "carla/sensor/s11n/EpisodeStateSerializer.h"
 
 namespace carla {
@@ -16,16 +16,16 @@ namespace sensor {
 namespace data {
 
   /// State of the episode at a given frame.
-  class RawEpisodeState : public Array<ActorDynamicState> {
-    using Super = Array<ActorDynamicState>;
+  class RawEpisodeState : public ArrayConst<ActorDynamicState> {
+    using Super = ArrayConst<ActorDynamicState>;
   protected:
 
     using Serializer = s11n::EpisodeStateSerializer;
 
     friend Serializer;
 
-    explicit RawEpisodeState(RawData &&data)
-      : Super(Serializer::header_offset, std::move(data)) {}
+    explicit RawEpisodeState(RawData DESERIALIZE_DECL_DATA(data))
+      : Super(Serializer::header_offset, DESERIALIZE_MOVE_DATA(data)) {}
 
   private:
 

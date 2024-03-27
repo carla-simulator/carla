@@ -49,7 +49,8 @@ namespace s11n {
       return MsgPack::Pack(Data{self_actor, other_actor, distance});
     }
 
-    static SharedPtr<SensorData> Deserialize(RawData &&data);
+    static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
+
   };
 
 } // namespace s11n

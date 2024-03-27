@@ -12,8 +12,8 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
-  SharedPtr<SensorData> GnssSerializer::Deserialize(RawData &&data) {
-    return SharedPtr<SensorData>(new data::GnssMeasurement(std::move(data)));
+  SharedPtr<SensorData> GnssSerializer::Deserialize(RawData DESERIALIZE_DECL_DATA(data)) {
+    return SharedPtr<SensorData>(new data::GnssMeasurement(DESERIALIZE_MOVE_DATA(data)));
   }
 
 } // namespace s11n

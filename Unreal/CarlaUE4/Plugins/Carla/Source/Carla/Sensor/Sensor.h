@@ -36,7 +36,7 @@ public:
   virtual void Set(const FActorDescription &Description);
 
   boost::optional<FActorAttribute> GetAttribute(const FString Name);
-
+  
   virtual void BeginPlay();
 
   /// Replace the FDataStream associated with this sensor.
