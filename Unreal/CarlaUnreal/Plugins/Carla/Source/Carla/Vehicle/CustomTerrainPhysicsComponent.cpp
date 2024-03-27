@@ -4,6 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "UObject/SavePackage.h"
 #include "CustomTerrainPhysicsComponent.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 #include "Engine/CollisionProfile.h"
@@ -1380,7 +1381,15 @@ void UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapDataAasset(ALandscap
   // FAssetRegistryModule::AssetCreated(NewTexture);
 
   FString PackageFileName = FPackageName::LongPackageNameToFilename(PackageName, FPackageName::GetAssetPackageExtension());
-  bool bSaved = UPackage::SavePackage(Package, HeightMapAsset, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+
+  FSavePackageArgs SavePackageArgs;
+  SavePackageArgs.TopLevelFlags = EObjectFlags::RF_Public | EObjectFlags::RF_Standalone;
+  SavePackageArgs.Error = GError;
+  SavePackageArgs.bForceByteSwapping = true;
+  SavePackageArgs.bWarnOfLongFilename = true;
+  SavePackageArgs.SaveFlags = SAVE_NoError;
+
+  bool bSaved = UPackage::SavePackage(Package, HeightMapAsset, *PackageFileName, SavePackageArgs);
 }
 
 

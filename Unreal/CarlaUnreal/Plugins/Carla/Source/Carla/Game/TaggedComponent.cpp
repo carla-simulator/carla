@@ -138,12 +138,12 @@ FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(USkeletalMeshComponent
   {
     return nullptr;
   }
-  ERHIFeatureLevel::Type SceneFeatureLevel = GetWorld()->FeatureLevel;
+  ERHIFeatureLevel::Type SceneFeatureLevel = GetWorld()->GetFeatureLevel();
 	FSkeletalMeshRenderData* SkelMeshRenderData = SkeletalMeshComponent->GetSkeletalMeshRenderData();
 
 	// Only create a scene proxy for rendering if properly initialized
 	if (SkelMeshRenderData &&
-		SkelMeshRenderData->LODRenderData.IsValidIndex(SkeletalMeshComponent->PredictedLODLevel) &&
+		SkelMeshRenderData->LODRenderData.IsValidIndex(SkeletalMeshComponent->GetPredictedLODLevel()) &&
 		!SkeletalMeshComponent->bHideSkin &&
 		SkeletalMeshComponent->MeshObject)
 	{
@@ -174,7 +174,7 @@ FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(UHierarchicalInstanced
 
 	if (bMeshIsValid)
 	{
-		return new FTaggedHierarchicalStaticMeshSceneProxy(MeshComponent, GetWorld()->FeatureLevel, TaggedMID);
+		return new FTaggedHierarchicalStaticMeshSceneProxy(MeshComponent, GetWorld()->GetFeatureLevel(), TaggedMID);
 	}
 	return nullptr;
 }
@@ -194,7 +194,7 @@ FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(UInstancedStaticMeshCo
 
 	if (bMeshIsValid)
 	{
-		return new FTaggedInstancedStaticMeshSceneProxy(MeshComponent, GetWorld()->FeatureLevel, TaggedMID);
+		return new FTaggedInstancedStaticMeshSceneProxy(MeshComponent, GetWorld()->GetFeatureLevel(), TaggedMID);
 	}
 	return nullptr;
 }

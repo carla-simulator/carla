@@ -60,12 +60,12 @@ ACityMapGenerator::~ACityMapGenerator() {}
 // -- Overriden from UObject ---------------------------------------------------
 // =============================================================================
 
-void ACityMapGenerator::PreSave(const ITargetPlatform *TargetPlatform)
+void ACityMapGenerator::PreSave(FObjectPreSaveContext SaveContext)
 {
 #if WITH_EDITOR
   if (bGenerateRoadMapOnSave) {
     // Generate road map only if we are not cooking.
-    FCoreUObjectDelegates::OnObjectSaved.Broadcast(this);
+    FCoreUObjectDelegates::OnObjectPreSave.Broadcast(this, SaveContext);
     if (!GIsCookerLoadingPackage) {
       check(RoadMap != nullptr);
       GenerateRoadMap();
@@ -73,7 +73,7 @@ void ACityMapGenerator::PreSave(const ITargetPlatform *TargetPlatform)
   }
 #endif // WITH_EDITOR
 
-  Super::PreSave(TargetPlatform);
+  Super::PreSave(SaveContext);
 }
 
 // =============================================================================

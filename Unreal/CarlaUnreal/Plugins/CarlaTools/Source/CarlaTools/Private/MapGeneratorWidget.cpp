@@ -4,6 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "UObject/SavePackage.h"
+
 #include "MapGeneratorWidget.h"
 
 #include "ActorFactories/ActorFactory.h"
@@ -411,6 +413,17 @@ bool UMapGeneratorWidget::GenerateWaterFromWorld(UWorld* RiversWorld, TSubclassO
   return true;
 }
 
+static auto SavePackageCommon(UPackage* InOuter, UObject* InAsset, const TCHAR* Filename)
+{
+  FSavePackageArgs SavePackageArgs;
+  SavePackageArgs.TopLevelFlags = EObjectFlags::RF_Public | EObjectFlags::RF_Standalone;
+  SavePackageArgs.Error = GError;
+  SavePackageArgs.bForceByteSwapping = true;
+  SavePackageArgs.bWarnOfLongFilename = true;
+  SavePackageArgs.SaveFlags = SAVE_NoError;
+  UPackage::SavePackage(InOuter, InAsset, Filename, SavePackageArgs);
+}
+
 UWorld* UMapGeneratorWidget::DuplicateWorld(FString BaseWorldPath, FString TargetWorldPath, const FString NewWorldName)
 {
   UWorld* DuplicateWorld;
@@ -435,10 +448,10 @@ UWorld* UMapGeneratorWidget::DuplicateWorld(FString BaseWorldPath, FString Targe
   DuplicateWorld = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
 
   const FString PackageFileName = FPackageName::LongPackageNameToFilename(
-          PackageName, 
-          FPackageName::GetMapPackageExtension());
-      UPackage::SavePackage(WorldPackage, DuplicateWorld, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-          *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+    PackageName,
+    FPackageName::GetMapPackageExtension());
+
+  SavePackageCommon(WorldPackage, DuplicateWorld, *PackageFileName);
 
   return DuplicateWorld;
 }
@@ -751,9 +764,8 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
   const FString PackageFileName = FPackageName::LongPackageNameToFilename(
       PackageName, 
       FPackageName::GetMapPackageExtension());
-  UPackage::SavePackage(BaseMapPackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-      *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
 
+  SavePackageCommon(BaseMapPackage, World, *PackageFileName);
 
   bool bLoadedSuccess = FEditorFileUtils::LoadMap(*PackageName, false, true);
     if(!bLoadedSuccess){
@@ -810,8 +822,7 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
 
   }
 
-  UPackage::SavePackage(BaseMapPackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-      *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+  SavePackageCommon(BaseMapPackage, World, *PackageFileName);
 
   return true;
 }
@@ -1082,8 +1093,8 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       const FString PackageFileName = FPackageName::LongPackageNameToFilename(
           PackageName, 
           FPackageName::GetMapPackageExtension());
-      UPackage::SavePackage(TilePackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-          *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+
+      SavePackageCommon(TilePackage, World, *PackageFileName);
 
       // TODO PROV
       FText ErrorUnloadingStr;
@@ -1200,8 +1211,15 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
         FVector(2500, 2500, 900));
 
     UActorFactory* ActorFactory = GEditor->FindActorFactoryForActorClass(AProceduralFoliageVolume::StaticClass());
-    AProceduralFoliageVolume* FoliageVolumeActor = (AProceduralFoliageVolume*) ActorFactory->CreateActor(
-        AProceduralFoliageVolume::StaticClass(), Level, Transform, InObjectFlags, InName);
+
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.ObjectFlags = InObjectFlags;
+    SpawnParams.Name = InName;
+    AProceduralFoliageVolume* FoliageVolumeActor = (AProceduralFoliageVolume*)ActorFactory->CreateActor(
+      AProceduralFoliageVolume::StaticClass(),
+      Level,
+      Transform,
+      SpawnParams);
 
     UProceduralFoliageComponent* FoliageComponent = FoliageVolumeActor->ProceduralComponent;
     FoliageComponent->FoliageSpawner = Spawner;

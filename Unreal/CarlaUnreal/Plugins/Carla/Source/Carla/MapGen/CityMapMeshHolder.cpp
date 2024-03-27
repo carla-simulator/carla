@@ -57,7 +57,7 @@ void ACityMapMeshHolder::PostInitializeComponents()
 {
   Super::PostInitializeComponents();
 
-  if(IsValid(GetLevel())&&!GetLevel()->IsPendingKill())
+  if (IsValidChecked(GetLevel()))
   {
 	 TArray<AActor*> roadpieces;
      GetAttachedActors(roadpieces);

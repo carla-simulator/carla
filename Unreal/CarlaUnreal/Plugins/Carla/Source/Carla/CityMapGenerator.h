@@ -6,11 +6,10 @@
 
 #pragma once
 
+#include "UObject/ObjectSaveContext.h"
 #include "MapGen/CityMapMeshHolder.h"
-
 #include "MapGen/DoublyConnectedEdgeList.h"
 #include "MapGen/GraphParser.h"
-
 #include "CityMapGenerator.generated.h"
 
 class URoadMap;
@@ -40,7 +39,7 @@ public:
   /// @{
 public:
 
-  virtual void PreSave(const ITargetPlatform *TargetPlatform) override;
+  virtual void PreSave(FObjectPreSaveContext SaveContext) override;
 
   /// @}
   // ===========================================================================

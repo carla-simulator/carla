@@ -4,12 +4,10 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "UObject/SavePackage.h"
 #include "PrepareAssetsForCookingCommandlet.h"
-
 #include "AssetRegistry/AssetRegistryModule.h"
-
 #include "SSTags.h"
-
 #if WITH_EDITOR
 #include "FileHelpers.h"
 #endif
@@ -475,16 +473,17 @@ bool UPrepareAssetsForCookingCommandlet::SavePackage(const FString &PackagePath,
     return false;
   }
 
+  FSavePackageArgs SavePackageArgs;
+  SavePackageArgs.TopLevelFlags = EObjectFlags::RF_Public | EObjectFlags::RF_Standalone;
+  SavePackageArgs.Error = GError;
+  SavePackageArgs.bForceByteSwapping = true;
+  SavePackageArgs.bWarnOfLongFilename = true;
+  SavePackageArgs.SaveFlags = SAVE_NoError;
   return UPackage::SavePackage(
-      Package,
-      World,
-      EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-      *PackageFileName,
-      GError,
-      nullptr,
-      true,
-      true,
-      SAVE_NoError);
+    Package,
+    World,
+    *PackageFileName,
+    SavePackageArgs);
 }
 
 void UPrepareAssetsForCookingCommandlet::GenerateMapPathsFile(

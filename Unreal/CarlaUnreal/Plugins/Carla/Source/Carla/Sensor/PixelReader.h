@@ -100,7 +100,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
   TRACE_CPUPROFILER_EVENT_SCOPE(FPixelReader::SendPixelsInRenderThread);
   check(Sensor.CaptureRenderTarget != nullptr);
 
-  if (!Sensor.HasActorBegunPlay() || Sensor.IsPendingKill())
+  if (!Sensor.HasActorBegunPlay() || !IsValid(&Sensor))
   {
     return;
   }
@@ -118,13 +118,13 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("FWritePixels_SendPixelsInRenderThread");
 
       /// @todo Can we make sure the sensor is not going to be destroyed?
-      if (!Sensor.IsPendingKill())
+      if (IsValid(&Sensor))
       {
         FPixelReader::Payload FuncForSending =
           [&Sensor, Frame = FCarlaEngine::GetFrameCounter(), Conversor = std::move(Conversor)]
           (void *LockedData, uint32 Size, uint32 Offset, uint32 ExpectedRowBytes)
           {
-            if (Sensor.IsPendingKill()) return;
+            if (!IsValid(&Sensor)) return;
 
             TArray<TPixel> Converted;
 

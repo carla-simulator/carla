@@ -677,12 +677,12 @@ FCarlaMapTile& ALargeMapManager::LoadCarlaMapTile(FString TileMapPath, TileID Ti
   StreamingLevel->LevelTransform = FTransform(TileLocation);
   StreamingLevel->PackageNameToLoad = *FullName;
 
-  if (!FPackageName::DoesPackageExist(FullName, NULL, &PackageFileName))
+  if (!FPackageName::DoesPackageExist(FullName, &PackageFileName))
   {
     LM_LOG(Error, "Level does not exist in package with FullName variable -> %s", *FullName);
   }
 
-  if (!FPackageName::DoesPackageExist(LongLevelPackageName, NULL, &PackageFileName))
+  if (!FPackageName::DoesPackageExist(LongLevelPackageName, &PackageFileName))
   {
     LM_LOG(Error, "Level does not exist in package with LongLevelPackageName variable -> %s", *LongLevelPackageName);
   }
