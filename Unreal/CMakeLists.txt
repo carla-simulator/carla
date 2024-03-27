@@ -71,7 +71,7 @@ set (
   libsqlite3
   Boost::asio
   Boost::python
-  Boost::numpy
+  # Boost::numpy
   Boost::geometry
   Boost::gil
   Eigen3::Eigen
