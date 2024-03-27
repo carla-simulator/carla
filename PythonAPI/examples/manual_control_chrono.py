@@ -324,6 +324,7 @@ class KeyboardControl(object):
     def __init__(self, world, start_in_autopilot):
         self._carsim_enabled = False
         self._carsim_road = False
+        self._chrono_enabled = False
         self._autopilot_enabled = start_in_autopilot
         if isinstance(world.player, carla.Vehicle):
             self._control = carla.VehicleControl()
@@ -417,14 +418,24 @@ class KeyboardControl(object):
                     world.camera_manager.set_sensor(current_index)
                 elif event.key == K_k and (pygame.key.get_mods() & KMOD_CTRL):
                     print("k pressed")
-                    world.player.enable_carsim()
+                    if not self._carsim_enabled:
+                        self._carsim_enabled = True
+                        world.player.enable_carsim()
+                    else:
+                        self._carsim_enabled = False
+                        world.player.restore_physx_physics()
                 elif event.key == K_o and (pygame.key.get_mods() & KMOD_CTRL):
                     print("o pressed")
-                    vehicle_json = "sedan/vehicle/Sedan_Vehicle.json"
-                    powertrain_json = "sedan/powertrain/Sedan_SimpleMapPowertrain.json"
-                    tire_json = "sedan/tire/Sedan_TMeasyTire.json"
-                    base_path = "~/carla/Build/chrono-install/share/chrono/data/vehicle/"
-                    world.player.enable_chrono_physics(5000, 0.002, vehicle_json, powertrain_json, tire_json, base_path)
+                    if not self._chrono_enabled:
+                        self._chrono_enabled = True
+                        vehicle_json = "sedan/vehicle/Sedan_Vehicle.json"
+                        powertrain_json = "sedan/powertrain/Sedan_SimpleMapPowertrain.json"
+                        tire_json = "sedan/tire/Sedan_TMeasyTire.json"
+                        base_path = "/home/adas/carla/Build/chrono-install/share/chrono/data/vehicle/"
+                        world.player.enable_chrono_physics(5000, 0.002, vehicle_json, powertrain_json, tire_json, base_path)
+                    else:
+                        self._chrono_enabled = False
+                        world.player.restore_physx_physics()
                 elif event.key == K_j and (pygame.key.get_mods() & KMOD_CTRL):
                     self._carsim_road = not self._carsim_road
                     world.player.use_carsim_road(self._carsim_road)

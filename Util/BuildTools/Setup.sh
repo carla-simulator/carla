@@ -926,6 +926,7 @@ if ${USE_ROS2} ; then
       -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
       -DBUILD_SHARED_LIBS=ON \
       -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+      -DFOONATHAN_MEMORY_FORCE_VENDORED_BUILD=ON \
       ..
     ninja
     ninja install
@@ -959,7 +960,8 @@ if ${USE_ROS2} ; then
       -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
       -DCMAKE_CXX_FLAGS=-latomic \
       -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
-       \
+      -DTHIRDPARTY_Asio=FORCE \
+      -DTHIRDPARTY_TinyXML2=FORCE \
       ..
     ninja
     ninja install

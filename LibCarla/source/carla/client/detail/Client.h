@@ -263,6 +263,9 @@ namespace detail {
     std::vector<geom::Transform> GetActorSocketRelativeTransforms(
         rpc::ActorId actor);
 
+    std::vector<std::string> GetActorSocketNames(
+        rpc::ActorId actor);
+
     void SetActorSimulatePhysics(
         rpc::ActorId actor,
         bool enabled);
@@ -327,6 +330,8 @@ namespace detail {
         std::string PowertrainJSON,
         std::string TireJSON,
         std::string BaseJSONPath);
+
+    void RestorePhysXPhysics(rpc::ActorId vehicle);
 
     void ApplyControlToWalker(
         rpc::ActorId walker,

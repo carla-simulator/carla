@@ -35,6 +35,8 @@ public:
 
   virtual float GetVehicleForwardSpeed() const;
 
+  virtual void DisableSpecialPhysics() {};
+
 protected:
 
   void DisableUE4VehiclePhysics();
