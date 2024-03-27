@@ -17,13 +17,14 @@
 #include "carla/streaming/detail/Dispatcher.h"
 
 namespace carla {
-namespace ros2 {
+namespace rpc {
 
-/// The interface to the CARLA server required from ROS2 side
-class ROS2ServerInterface {
+/// The interface to the CARLA server required from TCP and ROS2 client side.
+/// The parts only required from TPC client side are handled by lambdas directly.
+class RpcServerInterface {
 public:
-  ROS2ServerInterface() = default;
-  virtual ~ROS2ServerInterface() = default;
+  RpcServerInterface() = default;
+  virtual ~RpcServerInterface() = default;
 
   // Server functions to be called also from ROS2 interface.
   // Those have to be explicitly callable functions instead of lambdas
@@ -41,5 +42,5 @@ public:
   virtual carla::rpc::Response<bool> call_destroy_actor(carla::rpc::ActorId ActorId) = 0;
 };
 
-}  // namespace ros2
+}  // namespace rpc
 }  // namespace carla

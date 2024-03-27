@@ -13,7 +13,7 @@ namespace carla {
 namespace ros2 {
 
 GetBlueprintsService::GetBlueprintsService(
-    ROS2ServerInterface &carla_server, std::shared_ptr<carla::ros2::types::ActorNameDefinition> actor_name_definition)
+    carla::rpc::RpcServerInterface &carla_server, std::shared_ptr<carla::ros2::types::ActorNameDefinition> actor_name_definition)
   : ServiceBase(carla_server, actor_name_definition), _impl(std::make_shared<GetBlueprintsServiceImpl>()) {}
 
 bool GetBlueprintsService::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {

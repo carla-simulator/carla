@@ -20,7 +20,7 @@ using SpawnObjectServiceImpl =
 class SpawnObjectService
   : public ServiceBase<carla_msgs::srv::SpawnObject_Request, carla_msgs::srv::SpawnObject_Response> {
 public:
-  SpawnObjectService(ROS2ServerInterface &carla_server,
+  SpawnObjectService(carla::rpc::RpcServerInterface &carla_server,
                      std::shared_ptr<carla::ros2::types::ActorNameDefinition> actor_name_definition);
   virtual ~SpawnObjectService() = default;
 

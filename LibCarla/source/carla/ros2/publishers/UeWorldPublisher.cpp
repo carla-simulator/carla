@@ -9,7 +9,7 @@
 namespace carla {
 namespace ros2 {
 
-UeWorldPublisher::UeWorldPublisher(ROS2ServerInterface& carla_server, std::shared_ptr<ROS2NameRegistry> name_registry,
+UeWorldPublisher::UeWorldPublisher(carla::rpc::RpcServerInterface& carla_server, std::shared_ptr<ROS2NameRegistry> name_registry,
                                    std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition)
   : UePublisherBaseSensor(sensor_actor_definition, std::make_shared<TransformPublisher>()),
     _carla_server(carla_server),

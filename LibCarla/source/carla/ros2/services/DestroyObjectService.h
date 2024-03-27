@@ -20,7 +20,7 @@ using DestroyObjectServiceImpl =
 class DestroyObjectService
   : public ServiceBase<carla_msgs::srv::DestroyObject_Request, carla_msgs::srv::DestroyObject_Response> {
 public:
-  DestroyObjectService(ROS2ServerInterface &carla_server,
+  DestroyObjectService(carla::rpc::RpcServerInterface &carla_server,
                        std::shared_ptr<carla::ros2::types::ActorNameDefinition> actor_name_definition);
   virtual ~DestroyObjectService() = default;
 

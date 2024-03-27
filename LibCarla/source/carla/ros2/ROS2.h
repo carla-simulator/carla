@@ -8,7 +8,7 @@
 
 #include "carla/BufferView.h"
 #include "carla/ros2/ROS2NameRegistry.h"
-#include "carla/ros2/ROS2ServerInterface.h"
+#include "carla/rpc/RpcServerInterface.h"
 #include "carla/ros2/ROS2Session.h"
 #include "carla/ros2/types/SensorActorDefinition.h"
 #include "carla/ros2/types/TrafficLightActorDefinition.h"
@@ -39,7 +39,7 @@ public:
   static std::shared_ptr<ROS2> GetInstance();
 
   // starting/stopping
-  void Enable(ROS2ServerInterface* carla_server,
+  void Enable(carla::rpc::RpcServerInterface* carla_server,
               carla::streaming::detail::stream_id_type const world_observer_stream_id);
   bool IsEnabled() {
     return _enabled;
@@ -78,7 +78,7 @@ public:
 
 private:
   bool _enabled{false};
-  ROS2ServerInterface* _carla_server{nullptr};
+  carla::rpc::RpcServerInterface* _carla_server{nullptr};
   std::shared_ptr<ROS2NameRegistry> _name_registry{nullptr};
   std::shared_ptr<carla::streaming::detail::Dispatcher> _dispatcher;
   std::shared_ptr<DdsDomainParticipantImpl> _domain_participant_impl;

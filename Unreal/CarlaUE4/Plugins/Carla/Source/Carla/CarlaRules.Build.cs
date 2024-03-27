@@ -20,6 +20,16 @@ public class CarlaRules : ModuleRules
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
   }
 
+  protected bool IsLinux()
+  {
+    return (Target.Platform == UnrealTargetPlatform.Linux) || (Target.Platform == UnrealTargetPlatform.LinuxAArch64);
+  }
+
+  protected bool IsMac()
+  {
+    return (Target.Platform == UnrealTargetPlatform.Mac);
+  }
+
   protected bool UseDebugLibs()
   {
     if (IsWindows())

@@ -65,7 +65,7 @@ std::shared_ptr<ROS2> ROS2::GetInstance() {
   return _instance;
 }
 
-void ROS2::Enable(ROS2ServerInterface *carla_server,
+void ROS2::Enable(carla::rpc::RpcServerInterface *carla_server,
                   carla::streaming::detail::stream_id_type const world_observer_stream_id) {
   _enabled = true;
   _carla_server = carla_server;

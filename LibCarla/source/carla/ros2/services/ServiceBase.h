@@ -9,7 +9,7 @@
 
 #include "carla/ros2/ROS2NameRecord.h"
 #include "carla/ros2/ROS2QoS.h"
-#include "carla/ros2/ROS2ServerInterface.h"
+#include "carla/rpc/RpcServerInterface.h"
 #include "carla/ros2/services/ServiceInterface.h"
 
 namespace carla {
@@ -24,7 +24,7 @@ class DdsServiceImpl;
 template <typename REQUEST_TYPE, typename RESPONSE_TYPE>
 class ServiceBase : public ServiceInterface, public ROS2NameRecord {
 public:
-  ServiceBase(ROS2ServerInterface &carla_server,
+  ServiceBase(carla::rpc::RpcServerInterface &carla_server,
               std::shared_ptr<carla::ros2::types::ActorNameDefinition> actor_name_definition)
     : ROS2NameRecord(actor_name_definition), _carla_server(carla_server) {}
   virtual ~ServiceBase() = default;
@@ -35,7 +35,7 @@ public:
   virtual bool Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) = 0;
 
 protected:
-  ROS2ServerInterface &_carla_server;
+  carla::rpc::RpcServerInterface &_carla_server;
 };
 }  // namespace ros2
 }  // namespace carla

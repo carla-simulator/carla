@@ -20,7 +20,7 @@ using GetBlueprintsServiceImpl =
 class GetBlueprintsService
   : public ServiceBase<carla_msgs::srv::GetBlueprints_Request, carla_msgs::srv::GetBlueprints_Response> {
 public:
-  GetBlueprintsService(ROS2ServerInterface &carla_server,
+  GetBlueprintsService(carla::rpc::RpcServerInterface &carla_server,
                        std::shared_ptr<carla::ros2::types::ActorNameDefinition> actor_name_definition);
   virtual ~GetBlueprintsService() = default;
 

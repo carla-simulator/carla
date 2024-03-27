@@ -20,7 +20,7 @@
 namespace carla {
 namespace ros2 {
 
-SpawnObjectService::SpawnObjectService(ROS2ServerInterface &carla_server,
+SpawnObjectService::SpawnObjectService(carla::rpc::RpcServerInterface &carla_server,
                                        std::shared_ptr<carla::ros2::types::ActorNameDefinition> actor_name_definition)
   : ServiceBase(carla_server, actor_name_definition), _impl(std::make_shared<SpawnObjectServiceImpl>()) {}
 

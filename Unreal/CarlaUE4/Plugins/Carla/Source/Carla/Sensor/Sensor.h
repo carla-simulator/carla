@@ -35,7 +35,7 @@ public:
 
   virtual void Set(const FActorDescription &Description);
 
-  FActorAttribute GetAttribute(const FString Name) const { return SensorDescription.GetAttribute(Name); }
+  boost::optional<FActorAttribute> GetAttribute(const FString Name);
   
   virtual void BeginPlay();
 

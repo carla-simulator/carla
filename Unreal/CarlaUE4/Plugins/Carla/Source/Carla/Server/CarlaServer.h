@@ -19,12 +19,12 @@
 #include <carla/rpc/AttachmentType.h>
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Transform.h>
-#include <carla/ros2/ROS2ServerInterface.h>
+#include <carla/rpc/RpcServerInterface.h>
 #include <compiler/enable-ue4-macros.h>
 
 class UCarlaEpisode;
 
-class FCarlaServer: public carla::ros2::ROS2ServerInterface
+class FCarlaServer: public carla::rpc::RpcServerInterface
 {
 public:
 
