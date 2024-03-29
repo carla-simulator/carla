@@ -20,6 +20,7 @@
  * Added named tuples for BasicAgent.py's detection result to allow for type-hints and better semantics.
  * Added type-hint support for the PythonAPI
  * If available, use ActorIDs instead of Unreal Engine IDs for instance segmentation
+ * Synchronized actor BoundingBox between server and client
 
 ## CARLA 0.9.15
 
