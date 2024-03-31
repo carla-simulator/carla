@@ -188,7 +188,7 @@ else ()
   )
   set (
     CARLA_UE_UAT_COMMAND_PREFIX
-      ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/${UE_SYSTEM_NAME}/Build.sh
+      ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/RunUAT.sh
   )
 endif ()
 
