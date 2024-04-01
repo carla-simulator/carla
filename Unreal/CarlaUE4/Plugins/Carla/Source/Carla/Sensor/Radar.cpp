@@ -199,10 +199,6 @@ FVector2D ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVec
   V.Y *= TO_METERS;
 
 
-  // Для дебага! 
-  //UE_LOG(LogTemp, Warning, TEXT("Vf: %s"), *DV.ToString());
-  
-
 
   return V;
 }
