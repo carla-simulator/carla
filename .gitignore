@@ -4,6 +4,7 @@
 __pycache__/
 
 Build/
+Install/
 Doxygen/
 Dist/
 out/

@@ -1,5 +1,8 @@
-*.egg-info
+dist/
+build/
+dependencies/
+
 pyproject.toml
-build
-dependencies
-dist
+*.pyd
+*.so
+*.egg-info

@@ -60,6 +60,11 @@ set (
   ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins
 )
 
+set (
+  CARLA_LICENSE_FILE_PATH
+  ${CARLA_WORKSPACE_PATH}/LICENSE
+)
+
 include (CheckCCompilerFlag)
 include (CheckCXXCompilerFlag)
 include (CheckLinkerFlag)

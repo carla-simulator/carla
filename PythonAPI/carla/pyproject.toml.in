@@ -1,7 +1,43 @@
 [build-system]
-requires = [ 'scikit-build-core' ]
-build-backend = 'scikit_build_core.build'
+requires = [ 'setuptools', 'wheel' ]
+build-backend = 'setuptools.build_meta'
+
+[tool.setuptools]
+include-package-data = true
 
 [project]
 name = 'carla'
 version = '@CARLA_VERSION@'
+requires-python = '>=3.8'
+authors = [ { name = 'The CARLA team', email = 'carla.simulator@gmail.com' } ]
+description = 'Python API for communicating with the CARLA server.'
+readme = 'README.md'
+# license = 'MIT'
+keywords = [
+  'simulator',
+  'research',
+  'ai',
+  'computer-vision',
+  'deep-learning',
+  'cross-platform',
+  'deep-reinforcement-learning',
+  'artificial-intelligence',
+  'ros',
+  'self-driving-car',
+  'ue4',
+  'ue5',
+  'autonomous-driving',
+  'autonomous-vehicles',
+  'imitation-learning',
+  'unreal-engine-4',
+  'unreal-engine-5',
+  'carla',
+  'carla-simulator'
+]
+
+[project.urls]
+Homepage = 'https://carla.org/'
+Documentation = 'https://carla.readthedocs.io/en/latest/'
+Repository = 'https://github.com/carla-simulator/carla.git'
+Issues = 'https://github.com/carla-simulator/carla/issues'
+Changelog = 'https://github.com/carla-simulator/carla/blob/master/CHANGELOG.md'
