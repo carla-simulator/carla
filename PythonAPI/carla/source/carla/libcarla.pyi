@@ -5081,7 +5081,34 @@ class command():
         # endregion
 
     class ApplyTorque():
-        """Command adaptation of `set_transform()` in `carla.Actor`. Sets a new transform to an actor.
+        """
+        Command adaptation of `add_torque()` in carla.Actor. Applies a torque to an actor.
+        """
+        
+        # region Instance Variables
+        @property
+        def actor_id() -> int:
+            """Actor affected by the command."""
+            
+        @property
+        def transform() -> Vector3D:
+            """Torque applied to the actor over time (degrees)."""
+            
+        # endregion
+                
+        # region Methods
+        def __init__(self, actor: Union[Actor, int], torque: Vector3D):
+            """Sets a new transform to an actor.
+
+            Args:
+                `actor (Union[Actor, int])`: Actor or its ID to whom the command will be applied to.\n
+                `torque (Vector3D)`: Torque vector in global coordinates (degrees). 
+            """
+        # endregion
+
+    class ApplyTransform():
+        """
+        Command adaptation of `set_transform()` in `carla.Actor`. Sets a new transform to an actor.
         """
 
         # region Instance Variables
