@@ -10,7 +10,7 @@
 
 cmake_minimum_required (
   VERSION
-  3.28.0
+  3.27.2
 )
 
 cmake_policy (SET CMP0097 NEW)
@@ -73,9 +73,9 @@ include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Warnings.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Errors.cmake)
 
-if (NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   carla_warning (
-    "CARLA is not set to be built in Release mode. This may cause issues when building CarlaUnrealEditor."
+    "CARLA is set to be built in Debug mode. This may cause issues when building CarlaUnrealEditor."
   )
 endif ()
 
