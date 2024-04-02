@@ -1,0 +1,112 @@
+cmake_minimum_required (
+  VERSION @CMAKE_MAJOR_VERSION@.@CMAKE_MINOR_VERSION@
+)
+
+project (
+  carla-python-api
+  LANGUAGES CXX
+  VERSION @CARLA_VERSION@
+  DESCRIPTION
+    "Python API for communicating with the CARLA server."
+)
+
+set (CMAKE_CXX_STANDARD @CMAKE_CXX_STANDARD@)
+set (CMAKE_CXX_STANDARD_REQUIRED @CMAKE_CXX_STANDARD_REQUIRED@)
+
+set (CMAKE_C_STANDARD @CMAKE_C_STANDARD@)
+set (CMAKE_C_STANDARD_REQUIRED @CMAKE_C_STANDARD_REQUIRED@)
+
+find_package (
+  Python3
+  COMPONENTS
+    Interpreter
+    Development.Module
+    Development.Embed
+    Development.SABIModule
+  REQUIRED
+)
+
+include (@CARLA_WORKSPACE_PATH@/CMake/Util.cmake)
+
+carla_message (
+  "Python Interpreter ID: \"${Python3_INTERPRETER_ID}\""
+)
+
+set (
+  PYTHON_API_SOURCES
+  @PYTHON_API_CARLA_PATH@/src/PythonAPI.cpp
+  @PYTHON_API_CARLA_PATH@/src/Actor.cpp
+  @PYTHON_API_CARLA_PATH@/src/Blueprint.cpp
+  @PYTHON_API_CARLA_PATH@/src/Client.cpp
+  @PYTHON_API_CARLA_PATH@/src/Commands.cpp
+  @PYTHON_API_CARLA_PATH@/src/Control.cpp
+  @PYTHON_API_CARLA_PATH@/src/Exception.cpp
+  @PYTHON_API_CARLA_PATH@/src/Geometry.cpp
+  @PYTHON_API_CARLA_PATH@/src/LightManager.cpp
+  @PYTHON_API_CARLA_PATH@/src/Map.cpp
+  @PYTHON_API_CARLA_PATH@/src/Sensor.cpp
+  @PYTHON_API_CARLA_PATH@/src/SensorData.cpp
+  @PYTHON_API_CARLA_PATH@/src/Snapshot.cpp
+  @PYTHON_API_CARLA_PATH@/src/TrafficManager.cpp
+  @PYTHON_API_CARLA_PATH@/src/Weather.cpp
+  @PYTHON_API_CARLA_PATH@/src/World.cpp
+)
+if (ENABLE_OSM2ODR)
+  list (APPEND PYTHON_API_SOURCES @PYTHON_API_CARLA_PATH@/src/OSM2ODR.cpp)
+endif ()
+if (ENABLE_RSS)
+  list (APPEND PYTHON_API_SOURCES @PYTHON_API_CARLA_PATH@/src/AdRss.cpp)
+endif ()
+
+Python3_add_library (
+  carla-python-api
+  MODULE
+  WITH_SOABI
+  ${PYTHON_API_SOURCES}
+)
+
+target_include_directories (
+  carla-python-api PRIVATE
+  @PYTHON_API_CARLA_PATH@/include
+  $<TARGET_PROPERTY:carla-client,INTERFACE_INCLUDE_DIRECTORIES>
+  $<TARGET_PROPERTY:Boost::asio,INTERFACE_INCLUDE_DIRECTORIES>
+  $<TARGET_PROPERTY:Boost::python,INTERFACE_INCLUDE_DIRECTORIES>
+  $<TARGET_PROPERTY:Boost::geometry,INTERFACE_INCLUDE_DIRECTORIES>
+  $<TARGET_PROPERTY:Boost::gil,INTERFACE_INCLUDE_DIRECTORIES>
+  $<TARGET_PROPERTY:RecastNavigation::Recast,INTERFACE_INCLUDE_DIRECTORIES>
+  $<TARGET_PROPERTY:RecastNavigation::Detour,INTERFACE_INCLUDE_DIRECTORIES>
+  $<TARGET_PROPERTY:RecastNavigation::DetourCrowd,INTERFACE_INCLUDE_DIRECTORIES>
+  @libpng_SOURCE_DIR@ @libpng_BINARY_DIR@ $<TARGET_PROPERTY:png_static,INTERFACE_INCLUDE_DIRECTORIES>
+  @zlib_SOURCE_DIR@ @zlib_BINARY_DIR@ $<TARGET_PROPERTY:zlibstatic,INTERFACE_INCLUDE_DIRECTORIES>
+  $<TARGET_PROPERTY:rpc,INTERFACE_INCLUDE_DIRECTORIES>
+)
+
+target_link_libraries (
+  carla-python-api PRIVATE
+  $<TARGET_FILE:carla-client>
+  $<TARGET_FILE:RecastNavigation::Recast>
+  $<TARGET_FILE:RecastNavigation::Detour>
+  $<TARGET_FILE:RecastNavigation::DetourCrowd>
+  $<TARGET_FILE:png_static>
+  $<TARGET_FILE:zlibstatic>
+  $<TARGET_FILE:rpc>
+)
+
+target_compile_definitions (
+  carla-python-api PRIVATE
+  @CARLA_COMMON_DEFINITIONS@
+  @CARLA_RTTI_DEFINITIONS@
+  BOOST_ALL_NO_LIB
+  LIBCARLA_WITH_PYTHON_SUPPORT
+)
+
+target_include_directories (
+  carla-python-api PRIVATE
+  @PYTHON_API_CARLA_PATH@/src
+  @LIBCARLA_SOURCE_PATH@
+)
+
+install (
+  TARGETS carla-python-api
+  DESTINATION PythonAPI
+)

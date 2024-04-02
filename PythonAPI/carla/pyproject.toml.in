@@ -1,9 +1,14 @@
 [build-system]
-requires = [ 'setuptools', 'wheel' ]
-build-backend = 'setuptools.build_meta'
+requires = [ 'scikit-build-core', 'wheel' ]
+build-backend = 'scikit_build_core.build'
 
-[tool.setuptools]
-include-package-data = true
+[tool.scikit-build]
+cmake.version = '>=@CMAKE_MAJOR_VERSION@.@CMAKE_MINOR_VERSION@'
+cmake.args = [
+  '-DCMAKE_C_COMPILER=@CMAKE_C_COMPILER@',
+  '-DCMAKE_CXX_COMPILER=@CMAKE_CXX_COMPILER@',
+]
+cmake.build-type = '@CMAKE_BUILD_TYPE@'
 
 [project]
 name = 'carla'

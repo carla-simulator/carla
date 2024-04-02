@@ -318,7 +318,7 @@ add_dependencies (
 set (
   CARLA_LAUNCH_TARGET_OPTIONS
   COMMENT
-    "Launching Carla Unreal..."
+    "Launching Carla Unreal...\n"
   COMMAND
     ${UNREAL_EDITOR_PATH}
       ${CARLA_UE_PROJECT_PATH}
@@ -350,7 +350,7 @@ add_custom_target (
   COMMAND
     ${PRELAUNCH_CONTENT_CHECK_COMMAND}
   COMMENT
-    "Performing prelaunch check for CARLA Content presence."
+    "Performing prelaunch check for CARLA Content presence.\n"
   USES_TERMINAL
   VERBATIM
 )
