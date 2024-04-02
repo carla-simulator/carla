@@ -130,7 +130,7 @@ namespace geom {
     // -- UE4 methods -------------------------------------------------
     // =========================================================================
     
-    Rotation Normalize() {
+    Rotation Normalize() const {
       Rotation V0 = Rotation(*this);
 
       V0.pitch = V0.pitch - (360.0f * trunc(V0.pitch/360.0f));
