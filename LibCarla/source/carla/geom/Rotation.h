@@ -186,7 +186,7 @@ namespace geom {
       return Result;
     }
 
-    Rotation operator-(const Rotation &rhs) const{
+    Rotation operator-(const Rotation &rhs) const {
       Rotation Result;
       Result.pitch = pitch - rhs.pitch;
       Result.yaw = yaw - rhs.yaw;
