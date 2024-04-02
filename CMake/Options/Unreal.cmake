@@ -8,7 +8,7 @@
 
 ]]
 
-option (
+carla_option (
   CARLA_UNREAL_CONTENT_PREFER_CLONE
   "Whether to perform a git clone instead of a direct archive download of the CARLA Unreal assets (EXTREMELY DISCOURAGED)."
   OFF
@@ -36,7 +36,7 @@ else ()
   set (CARLA_HAS_UNREAL_ENGINE_PATH OFF)
 endif ()
 
-option (
+carla_option (
   BUILD_CARLA_UNREAL
   "Build the Carla Unreal Engine project."
   ${CARLA_HAS_UNREAL_ENGINE_PATH}
@@ -60,7 +60,7 @@ if (${BUILD_CARLA_UNREAL} AND ${CARLA_HAS_UNREAL_ENGINE_PATH})
   )
 else ()
   carla_error (
-    "Could not add UE project to build since the option CARLA_UNREAL_ENGINE_PATH"
+    "Could not add UE project to build since the carla_option CARLA_UNREAL_ENGINE_PATH"
     "is not set to a valid path (\"${CARLA_UNREAL_ENGINE_PATH}\")."
     "Please set it to point to the root path of your CARLA Unreal Engine installation."
   )
