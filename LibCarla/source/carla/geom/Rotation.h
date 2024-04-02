@@ -194,7 +194,7 @@ namespace geom {
       return Result;
     }
 
-    Rotation& operator+=(const Rotation &rhs){
+    Rotation& operator+=(const Rotation &rhs) {
       pitch += rhs.pitch;
       yaw += rhs.yaw;
       roll += rhs.roll;
