@@ -424,3 +424,13 @@ add_dependencies (
   launch-only
   prelaunch-content-check
 )
+
+add_custom_target (
+  package
+  ${CARLA_LAUNCH_TARGET_OPTIONS}
+)
+
+add_dependencies (
+  package
+  carla-unreal-package
+)
