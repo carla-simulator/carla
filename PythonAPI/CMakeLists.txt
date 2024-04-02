@@ -81,18 +81,6 @@ install (
   DESTINATION bin
 )
 
-add_custom_command (
-  TARGET
-    carla-python-api-module
-  POST_BUILD
-  COMMAND
-    ${CMAKE_COMMAND}
-      -E
-      create_symlink
-      $<TARGET_FILE:carla-python-api-module>
-      ${CARLA_PYTHON_API_SYMLINK_PATH}
-)
-
 target_include_directories (
   carla-python-api-module PRIVATE
   ${PYTHON_API_CARLA_PATH}/include
@@ -165,7 +153,7 @@ add_dependencies (
 
 add_custom_target (
   carla-python-api-install
-  COMMAND ${Python3_EXECUTABLE} -m install
+  COMMAND ${Python3_EXECUTABLE} -m pip install -e .
   WORKING_DIRECTORY
     ${PYTHON_API_CARLA_PATH}
   COMMENT
