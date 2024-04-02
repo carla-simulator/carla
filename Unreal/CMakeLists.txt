@@ -33,6 +33,15 @@ set (
   ${CARLA_UE_PATH}/CarlaUnreal.uproject
 )
 
+set (
+  CARLA_UE_CONTENT_PATH
+  ${CARLA_UE_PATH}/Content/Carla
+)
+
+if (NOT EXISTS ${CARLA_UE_CONTENT_PATH}/.git)
+  carla_error ("Missing CARLA content.")
+endif ()
+
 if (ENABLE_ROS2)
   set (LAUNCH_ARGS ${LAUNCH_ARGS} --ros2)
 endif()
@@ -55,6 +64,14 @@ set (
   ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
 )
 
+set (CARLA_UE_CONTENT_CHECK_PATH ${CARLA_UE_PATH}/Content/Carla/Blueprints)
+if (IS_DIRECTORY ${CARLA_UE_CONTENT_CHECK_PATH})
+  carla_message ("CARLA Unreal Content - FOUND")
+else ()
+  carla_message ("CARLA Unreal Content - MISSING")
+  carla_warning ("Could not find CARLA Content, download it or running the editor will result in a crash.")
+endif ()
+
 
 
 set (
@@ -63,7 +80,6 @@ set (
   libsqlite3
   Boost::asio
   Boost::python
-  Boost::numpy
   Boost::geometry
   Boost::gil
   Eigen3::Eigen
@@ -160,6 +176,10 @@ if (WIN32)
     CARLA_UE_BUILD_COMMAND_PREFIX
       ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat
   )
+  set (
+    CARLA_UE_UAT_COMMAND_PREFIX
+      ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/RunUAT.bat
+  )
 else ()
   set (
     CARLA_UE_GENERATE_PROJECT_FILES_COMMAND
@@ -172,6 +192,10 @@ else ()
   set (
     CARLA_UE_BUILD_COMMAND_PREFIX
       ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/${UE_SYSTEM_NAME}/Build.sh
+  )
+  set (
+    CARLA_UE_UAT_COMMAND_PREFIX
+      ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/RunUAT.sh
   )
 endif ()
 
@@ -265,7 +289,7 @@ file (
 
 
 add_custom_target (
-  CarlaUnreal
+  carla-unreal
   COMMAND
     ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnreal
@@ -281,12 +305,12 @@ add_custom_target (
 )
 
 add_dependencies (
-  CarlaUnreal
+  carla-unreal
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
 add_custom_target (
-  CarlaUnrealEditor
+  carla-unreal-editor
   COMMAND
     ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnrealEditor
@@ -302,7 +326,44 @@ add_custom_target (
 )
 
 add_dependencies (
-  CarlaUnrealEditor
+  carla-unreal-editor
+  ${UE_DEPENDENCIES_ORDER_ONLY}
+)
+
+add_custom_target (
+  carla-unreal-package
+  COMMAND
+    ${CARLA_UE_BUILD_COMMAND_PREFIX}
+    CarlaUnreal
+    ${UE_SYSTEM_NAME}
+    Shipping
+    -project=${CARLA_UE_PROJECT_PATH}
+    -game
+    -buildscw
+  COMMAND
+    ${CARLA_UE_UAT_COMMAND_PREFIX}
+    BuildCookRun
+    -nocompileeditor
+    -TargetPlatform=${UE_SYSTEM_NAME}
+    -Platform=${UE_SYSTEM_NAME}
+    -installed
+    -nop4
+    -project=${CARLA_UE_PROJECT_PATH}
+    -cook
+    -stage
+    -build
+    -archive
+    -archivedirectory=${CARLA_PACKAGE_PATH}/Unreal
+    -package
+    -clientconfig=Shipping
+  DEPENDS
+    ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
+    USES_TERMINAL
+    VERBATIM
+)
+
+add_dependencies (
+  carla-unreal-package
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
@@ -326,12 +387,50 @@ add_custom_target (
   ${CARLA_LAUNCH_TARGET_OPTIONS}
 )
 
+if (WIN32)
+  set (
+    PRELAUNCH_CONTENT_CHECK_COMMAND
+    if exist ${CARLA_UE_CONTENT_CHECK_PATH} (exit 0) else (exit 1)
+  )
+else ()
+  set (
+    PRELAUNCH_CONTENT_CHECK_COMMAND
+    test -d ${CARLA_UE_CONTENT_CHECK_PATH}
+  )
+endif ()
+
+add_custom_target (
+  prelaunch-content-check
+  COMMAND
+    ${PRELAUNCH_CONTENT_CHECK_COMMAND}
+  COMMENT
+    "Performing prelaunch check for CARLA Content presence."
+  USES_TERMINAL
+  VERBATIM
+)
+
 add_dependencies (
   launch
   CarlaUnrealEditor
+  prelaunch-content-check
 )
 
 add_custom_target (
   launch-only
   ${CARLA_LAUNCH_TARGET_OPTIONS}
+)
+
+add_dependencies (
+  launch-only
+  prelaunch-content-check
+)
+
+add_custom_target (
+  package
+  ${CARLA_LAUNCH_TARGET_OPTIONS}
+)
+
+add_dependencies (
+  package
+  carla-unreal-package
 )
