@@ -343,19 +343,20 @@ add_custom_target (
   COMMAND
     ${CARLA_UE_UAT_COMMAND_PREFIX}
     BuildCookRun
-    -nocompileeditor
-    -TargetPlatform=${UE_SYSTEM_NAME}
-    -Platform=${UE_SYSTEM_NAME}
-    -installed
-    -nop4
     -project=${CARLA_UE_PROJECT_PATH}
+    -nocompileeditor
+    -nop4
     -cook
     -stage
-    -build
     -archive
-    -archivedirectory=${CARLA_PACKAGE_PATH}/Unreal
     -package
+    -iterate
     -clientconfig=Shipping
+    -TargetPlatform=${UE_SYSTEM_NAME}
+    -Platform=${UE_SYSTEM_NAME}
+    -prereqs
+    -build
+    -archivedirectory=${CARLA_PACKAGE_PATH}/Unreal
   DEPENDS
     ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
     USES_TERMINAL
