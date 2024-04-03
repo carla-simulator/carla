@@ -2,6 +2,15 @@ cmake_minimum_required (
   VERSION @CMAKE_MAJOR_VERSION@.@CMAKE_MINOR_VERSION@
 )
 
+cmake_policy (SET CMP0097 NEW)
+cmake_policy (SET CMP0091 NEW)
+cmake_policy (SET CMP0074 NEW)
+cmake_policy (SET CMP0077 NEW)
+cmake_policy (SET CMP0117 NEW)
+if (${CMAKE_MINOR_VERSION} GREATER_EQUAL 24)
+  cmake_policy (SET CMP0135 NEW)
+endif ()
+
 project (
   carla-python-api
   LANGUAGES CXX
@@ -34,28 +43,38 @@ carla_message (
 
 set (
   PYTHON_API_SOURCES
-  @PYTHON_API_CARLA_PATH@/src/PythonAPI.cpp
-  @PYTHON_API_CARLA_PATH@/src/Actor.cpp
-  @PYTHON_API_CARLA_PATH@/src/Blueprint.cpp
-  @PYTHON_API_CARLA_PATH@/src/Client.cpp
-  @PYTHON_API_CARLA_PATH@/src/Commands.cpp
-  @PYTHON_API_CARLA_PATH@/src/Control.cpp
-  @PYTHON_API_CARLA_PATH@/src/Exception.cpp
-  @PYTHON_API_CARLA_PATH@/src/Geometry.cpp
-  @PYTHON_API_CARLA_PATH@/src/LightManager.cpp
-  @PYTHON_API_CARLA_PATH@/src/Map.cpp
-  @PYTHON_API_CARLA_PATH@/src/Sensor.cpp
-  @PYTHON_API_CARLA_PATH@/src/SensorData.cpp
-  @PYTHON_API_CARLA_PATH@/src/Snapshot.cpp
-  @PYTHON_API_CARLA_PATH@/src/TrafficManager.cpp
-  @PYTHON_API_CARLA_PATH@/src/Weather.cpp
-  @PYTHON_API_CARLA_PATH@/src/World.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/PythonAPI.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/Actor.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/Blueprint.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/Client.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/Commands.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/Control.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/Exception.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/Geometry.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/LightManager.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/Map.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/Sensor.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/SensorData.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/Snapshot.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/TrafficManager.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/Weather.cpp
+  @CARLA_PYTHON_API_CARLA_PATH@/src/World.cpp
 )
+
 if (ENABLE_OSM2ODR)
-  list (APPEND PYTHON_API_SOURCES @PYTHON_API_CARLA_PATH@/src/OSM2ODR.cpp)
+  list (
+    APPEND
+    PYTHON_API_SOURCES
+    @CARLA_PYTHON_API_CARLA_PATH@/src/OSM2ODR.cpp
+  )
 endif ()
+
 if (ENABLE_RSS)
-  list (APPEND PYTHON_API_SOURCES @PYTHON_API_CARLA_PATH@/src/AdRss.cpp)
+  list (
+    APPEND
+    PYTHON_API_SOURCES
+    @CARLA_PYTHON_API_CARLA_PATH@/src/AdRss.cpp
+  )
 endif ()
 
 Python3_add_library (
@@ -65,31 +84,30 @@ Python3_add_library (
   ${PYTHON_API_SOURCES}
 )
 
+file (
+  STRINGS
+  @CARLA_PYTHON_API_INCLUDE_LIST_FILE_PATH@
+  CARLA_PYTHON_API_INCLUDE_PATHS
+)
+
+file (
+  STRINGS
+  @CARLA_PYTHON_API_LINK_LIST_FILE_PATH@
+  CARLA_PYTHON_API_LINK_PATHS
+)
+
+list (REMOVE_DUPLICATES CARLA_PYTHON_API_INCLUDE_PATHS)
+list (REMOVE_DUPLICATES CARLA_PYTHON_API_LINK_PATHS)
+
 target_include_directories (
   carla-python-api PRIVATE
-  @PYTHON_API_CARLA_PATH@/include
-  $<TARGET_PROPERTY:carla-client,INTERFACE_INCLUDE_DIRECTORIES>
-  $<TARGET_PROPERTY:Boost::asio,INTERFACE_INCLUDE_DIRECTORIES>
-  $<TARGET_PROPERTY:Boost::python,INTERFACE_INCLUDE_DIRECTORIES>
-  $<TARGET_PROPERTY:Boost::geometry,INTERFACE_INCLUDE_DIRECTORIES>
-  $<TARGET_PROPERTY:Boost::gil,INTERFACE_INCLUDE_DIRECTORIES>
-  $<TARGET_PROPERTY:RecastNavigation::Recast,INTERFACE_INCLUDE_DIRECTORIES>
-  $<TARGET_PROPERTY:RecastNavigation::Detour,INTERFACE_INCLUDE_DIRECTORIES>
-  $<TARGET_PROPERTY:RecastNavigation::DetourCrowd,INTERFACE_INCLUDE_DIRECTORIES>
-  @libpng_SOURCE_DIR@ @libpng_BINARY_DIR@ $<TARGET_PROPERTY:png_static,INTERFACE_INCLUDE_DIRECTORIES>
-  @zlib_SOURCE_DIR@ @zlib_BINARY_DIR@ $<TARGET_PROPERTY:zlibstatic,INTERFACE_INCLUDE_DIRECTORIES>
-  $<TARGET_PROPERTY:rpc,INTERFACE_INCLUDE_DIRECTORIES>
+  @CARLA_PYTHON_API_CARLA_PATH@/include
+  ${CARLA_PYTHON_API_INCLUDE_PATHS}
 )
 
 target_link_libraries (
   carla-python-api PRIVATE
-  $<TARGET_FILE:carla-client>
-  $<TARGET_FILE:RecastNavigation::Recast>
-  $<TARGET_FILE:RecastNavigation::Detour>
-  $<TARGET_FILE:RecastNavigation::DetourCrowd>
-  $<TARGET_FILE:png_static>
-  $<TARGET_FILE:zlibstatic>
-  $<TARGET_FILE:rpc>
+  ${CARLA_PYTHON_API_LINK_PATHS}
 )
 
 target_compile_definitions (
@@ -102,7 +120,7 @@ target_compile_definitions (
 
 target_include_directories (
   carla-python-api PRIVATE
-  @PYTHON_API_CARLA_PATH@/src
+  @CARLA_PYTHON_API_CARLA_PATH@/src
   @LIBCARLA_SOURCE_PATH@
 )
 
