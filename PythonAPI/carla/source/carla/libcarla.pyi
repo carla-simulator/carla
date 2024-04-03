@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Callable, Iterable, Iterator, Union, overload
+from typing import Callable, Iterable, Iterator, Union, Optional, overload
 
 
 class AckermannControllerSettings():
@@ -4724,8 +4724,19 @@ class World():
     def get_actor(self, actor_id: int) -> Actor:
         """Looks up for an actor by ID and returns `None` if not found."""
 
-    def get_actors(self, actor_ids: list = None) -> ActorList:
-        """Retrieves a list of `carla.Actor` elements, either using a list of IDs provided or just listing everyone on stage. If an ID does not correspond with any actor, it will be excluded from the list returned, meaning that both the list of IDs and the list of actors may have different lengths."""
+    def get_actors(self, actor_ids: Optional["list[int]"] = None) -> ActorList:
+        """
+        Retrieves a list of `carla.Actor` elements, either using a list of IDs provided or just 
+        listing everyone on stage. If an ID does not correspond with any actor, it will be excluded 
+        from the list returned, meaning that both the list of IDs and the list of actors may have 
+        different lengths.
+        
+        Args:
+            `actor_ids (list[int], optional)`: The IDs of the actors being searched. By default it is set to None and returns every actor on scene.
+
+        Returns:
+            `ActorList`
+        """
 
     def get_blueprint_library(self) -> BlueprintLibrary:
         """Returns a list of actor blueprints available to ease the spawn of these into the world."""
