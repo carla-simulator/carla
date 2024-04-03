@@ -10,7 +10,7 @@
 
 cmake_minimum_required (
   VERSION
-  3.28.0
+  3.27.2
 )
 
 cmake_policy (SET CMP0097 NEW)
@@ -54,6 +54,11 @@ set (CMAKE_C_STANDARD_REQUIRED ON)
 set (
   CARLA_WORKSPACE_PATH
   ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+set (
+  CARLA_PACKAGE_PATH
+  ${CMAKE_BINARY_DIR}/Package
 )
 
 set (

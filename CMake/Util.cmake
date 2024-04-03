@@ -31,6 +31,12 @@ endfunction ()
 
 
 
+macro (carla_option NAME DESCRIPTION VALUE)
+  option (${NAME} ${DESCRIPTION} ${VALUE})
+  carla_message ("(option) ${NAME} : ${VALUE}")
+endmacro ()
+
 macro (carla_string_option NAME DESCRIPTION VALUE)
-  set (${NAME} "${VALUE}" CACHE STRING ${DESCRIPTION})
+  set (${NAME} "${VALUE}")
+  carla_message ("(option) ${NAME} : \"${VALUE}\"")
 endmacro ()
