@@ -487,14 +487,14 @@ class ActorList():
     """
 
     # region Methods
-    def filter(self, wildcard_pattern: str) -> list:
+    def filter(self, wildcard_pattern: str) -> ActorList:
         """Filters a list of Actors matching wildcard_pattern against their variable `type_id` (which identifies the blueprint used to spawn them). Matching follows fnmatch standard.
 
         Args:
             `wildcard_pattern (str)`\n
 
         Returns:
-            `list`\n
+            `ActorList`\n
         """
         ...
 
