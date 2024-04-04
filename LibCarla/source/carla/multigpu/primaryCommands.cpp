@@ -63,53 +63,6 @@ void PrimaryCommands::SendIsAlive() {
   log_info("response from alive command: ", response.buffer.data());
 }
 
-void PrimaryCommands::SendEnableForROS(stream_id sensor_id) {
-  // search if the sensor has been activated in any secondary server
-  auto it = _servers.find(sensor_id);
-  if (it != _servers.end()) {
-    carla::Buffer buf((carla::Buffer::value_type *) &sensor_id,
-                      (size_t) sizeof(stream_id));
-    auto fut = _router->WriteToOne(it->second, MultiGPUCommand::ENABLE_ROS, std::move(buf));
-
-    auto response = fut.get();
-    bool res = (*reinterpret_cast<bool *>(response.buffer.data()));
-  } else {
-    log_error("enable_for_ros for sensor", sensor_id, " not found on any server");
-  }
-}
-
-void PrimaryCommands::SendDisableForROS(stream_id sensor_id) {
-  // search if the sensor has been activated in any secondary server
-  auto it = _servers.find(sensor_id);
-  if (it != _servers.end()) {
-    carla::Buffer buf((carla::Buffer::value_type *) &sensor_id,
-                      (size_t) sizeof(stream_id));
-    auto fut = _router->WriteToOne(it->second, MultiGPUCommand::DISABLE_ROS, std::move(buf));
-
-    auto response = fut.get();
-    bool res = (*reinterpret_cast<bool *>(response.buffer.data()));
-  } else {
-    log_error("disable_for_ros for sensor", sensor_id, " not found on any server");
-  }
-}
-
-bool PrimaryCommands::SendIsEnabledForROS(stream_id sensor_id) {
-  // search if the sensor has been activated in any secondary server
-  auto it = _servers.find(sensor_id);
-  if (it != _servers.end()) {
-    carla::Buffer buf((carla::Buffer::value_type *) &sensor_id,
-                      (size_t) sizeof(stream_id));
-    auto fut = _router->WriteToOne(it->second, MultiGPUCommand::IS_ENABLED_ROS, std::move(buf));
-
-    auto response = fut.get();
-    bool res = (*reinterpret_cast<bool *>(response.buffer.data()));
-    return res;
-  } else {
-    log_error("is_enabled_for_ros for sensor", sensor_id, " not found on any server");
-    return false;
-  }
-}
-
 token_type PrimaryCommands::GetToken(stream_id sensor_id) {
   // search if the sensor has been activated in any secondary server
   auto it = _tokens.find(sensor_id);
@@ -128,32 +81,6 @@ token_type PrimaryCommands::GetToken(stream_id sensor_id) {
     log_debug("Using token from new activated sensor: ", token.get_stream_id(), ", ", token.get_port());
     return token;
   }
-}
-
-void PrimaryCommands::EnableForROS(stream_id sensor_id) {
-  auto it = _servers.find(sensor_id);
-  if (it != _servers.end()) {
-    SendEnableForROS(sensor_id);
-  } else {
-    // we need to activate the sensor in any server yet, and repeat
-    GetToken(sensor_id);
-    EnableForROS(sensor_id);
-  }
-}
-
-void PrimaryCommands::DisableForROS(stream_id sensor_id) {
-  auto it = _servers.find(sensor_id);
-  if (it != _servers.end()) {
-    SendDisableForROS(sensor_id);
-  }
-}
-
-bool PrimaryCommands::IsEnabledForROS(stream_id sensor_id) {
-  auto it = _servers.find(sensor_id);
-  if (it != _servers.end()) {
-    return SendIsEnabledForROS(sensor_id);
-  }
-  return false;
 }
 
 } // namespace multigpu

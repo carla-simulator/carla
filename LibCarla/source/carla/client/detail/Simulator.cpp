@@ -409,18 +409,6 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     // If in the future we need to unsubscribe from each gbuffer individually, it should be done here.
   }
 
-  void Simulator::EnableForROS(const Sensor &sensor) {
-    _client.EnableForROS(sensor.GetActorDescription().GetStreamToken());
-  }
-
-  void Simulator::DisableForROS(const Sensor &sensor) {
-    _client.DisableForROS(sensor.GetActorDescription().GetStreamToken());
-  }
-
-  bool Simulator::IsEnabledForROS(const Sensor &sensor) {
-    return _client.IsEnabledForROS(sensor.GetActorDescription().GetStreamToken());
-  }
-
   void Simulator::SubscribeToGBuffer(
       Actor &actor,
       uint32_t gbuffer_id,

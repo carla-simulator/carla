@@ -80,18 +80,6 @@ namespace client {
     listening_mask.reset(GBufferId + 1);
   }
 
-  void ServerSideSensor::EnableForROS() {
-    GetEpisode().Lock()->EnableForROS(*this);
-  }
-
-  void ServerSideSensor::DisableForROS() {
-    GetEpisode().Lock()->DisableForROS(*this);
-  }
-
-  bool ServerSideSensor::IsEnabledForROS(){
-    return GetEpisode().Lock()->IsEnabledForROS(*this);
-  }
-
   bool ServerSideSensor::Destroy() {
     log_debug("calling sensor Destroy() ", GetDisplayId());
     if (IsListening()) {

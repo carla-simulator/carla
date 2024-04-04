@@ -684,12 +684,6 @@ namespace detail {
 
     void UnSubscribeFromSensor(Actor &sensor);
 
-    void EnableForROS(const Sensor &sensor);
-
-    void DisableForROS(const Sensor &sensor);
-
-    bool IsEnabledForROS(const Sensor &sensor);
-
     void SubscribeToGBuffer(
         Actor & sensor,
         uint32_t gbuffer_id,

@@ -43,22 +43,10 @@ class PrimaryCommands {
 
     token_type GetToken(stream_id sensor_id);
 
-    void EnableForROS(stream_id sensor_id);
-
-    void DisableForROS(stream_id sensor_id);
-
-    bool IsEnabledForROS(stream_id sensor_id);
-
   private:
 
     // send to one secondary to get the token of a sensor
     token_type SendGetToken(carla::streaming::detail::stream_id_type sensor_id);
-
-    // manage ROS enable/disable of sensor
-    void SendEnableForROS(stream_id sensor_id);
-    void SendDisableForROS(stream_id sensor_id);
-    bool SendIsEnabledForROS(stream_id sensor_id);
-
 
     std::shared_ptr<Router> _router;
     std::unordered_map<stream_id, token_type> _tokens;
