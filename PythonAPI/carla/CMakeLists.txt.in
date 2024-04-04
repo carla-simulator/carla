@@ -12,7 +12,7 @@ if (${CMAKE_MINOR_VERSION} GREATER_EQUAL 24)
 endif ()
 
 project (
-  carla-python-api
+  ${SKBUILD_PROJECT_NAME}
   LANGUAGES CXX
   VERSION @CARLA_VERSION@
   DESCRIPTION
@@ -78,7 +78,7 @@ if (ENABLE_RSS)
 endif ()
 
 Python3_add_library (
-  carla-python-api
+  ${SKBUILD_PROJECT_NAME}
   MODULE
   WITH_SOABI
   ${PYTHON_API_SOURCES}
@@ -100,18 +100,18 @@ list (REMOVE_DUPLICATES CARLA_PYTHON_API_INCLUDE_PATHS)
 list (REMOVE_DUPLICATES CARLA_PYTHON_API_LINK_PATHS)
 
 target_include_directories (
-  carla-python-api PRIVATE
+  ${SKBUILD_PROJECT_NAME} PRIVATE
   @CARLA_PYTHON_API_CARLA_PATH@/include
   ${CARLA_PYTHON_API_INCLUDE_PATHS}
 )
 
 target_link_libraries (
-  carla-python-api PRIVATE
+  ${SKBUILD_PROJECT_NAME} PRIVATE
   ${CARLA_PYTHON_API_LINK_PATHS}
 )
 
 target_compile_definitions (
-  carla-python-api PRIVATE
+  ${SKBUILD_PROJECT_NAME} PRIVATE
   @CARLA_COMMON_DEFINITIONS@
   @CARLA_RTTI_DEFINITIONS@
   BOOST_ALL_NO_LIB
@@ -119,12 +119,12 @@ target_compile_definitions (
 )
 
 target_include_directories (
-  carla-python-api PRIVATE
+  ${SKBUILD_PROJECT_NAME} PRIVATE
   @CARLA_PYTHON_API_CARLA_PATH@/src
   @LIBCARLA_SOURCE_PATH@
 )
 
 install (
-  TARGETS carla-python-api
+  TARGETS ${SKBUILD_PROJECT_NAME}
   DESTINATION PythonAPI
 )
