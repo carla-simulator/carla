@@ -28,12 +28,12 @@ extern void export_ad_rss();
 extern void export_osm2odr();
 #endif
 
-BOOST_PYTHON_MODULE(carla) {
+BOOST_PYTHON_MODULE(carla_ext) {
   using namespace boost::python;
 #if PY_MAJOR_VERSION < 3 || PY_MINOR_VERSION < 7
   PyEval_InitThreads();
 #endif
-  scope().attr("__path__") = "carla";
+  // scope().attr("__path__") = "carla";
   export_geom();
   export_control();
   export_blueprint();
