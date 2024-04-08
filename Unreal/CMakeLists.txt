@@ -90,8 +90,19 @@ set (
 
 set (UE_DEPENDENCIES ${UE_DEPENDENCIES_ORDER_ONLY})
 
+if (BUILD_PYTHON_API)
+  list (
+    APPEND
+    UE_DEPENDENCIES_ORDER_ONLY
+    carla-python-api-extension
+  )
+endif ()
 if (BUILD_CARLA_CLIENT)
-  list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-client)
+  list (
+    APPEND
+    UE_DEPENDENCIES_ORDER_ONLY
+    carla-client
+  )
 endif ()
 
 
