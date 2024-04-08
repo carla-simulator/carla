@@ -5,6 +5,24 @@ project (
     "Python API for communicating with the CARLA server."
 )
 
+if (ENABLE_PEP517)
+  set (
+    CARLA_PYTHON_API_BUILD_COMMAND
+    ${Python3_EXECUTABLE} -m build --wheel
+  )
+else ()
+  file (
+    WRITE
+    ${CARLA_PYTHON_API_CARLA_PATH}/setup.py
+    "from setuptools import setup\n"
+    "setup()\n"
+  )
+  set (
+    CARLA_PYTHON_API_BUILD_COMMAND
+    ${Python3_EXECUTABLE} setup.py bdist_wheel
+  )
+endif ()
+
 add_custom_target (
   carla-python-api
   COMMAND
@@ -23,7 +41,7 @@ add_custom_target (
       $<TARGET_FILE:carla-python-api-extension>
       ${CARLA_PYTHON_API_CARLA_PATH}/carla/carla_ext${PYTHON_MODULE_EXT}
   COMMAND
-    ${Python3_EXECUTABLE} -m build --wheel
+    ${CARLA_PYTHON_API_BUILD_COMMAND}
   WORKING_DIRECTORY
     ${CARLA_PYTHON_API_CARLA_PATH}
   USES_TERMINAL
