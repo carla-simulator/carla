@@ -69,7 +69,6 @@ else ()
     ${Python3_EXECUTABLE}
     setup.py
     bdist_wheel
-    --build-base ${CMAKE_CURRENT_BINARY_DIR}
     --dist-dir ${CARLA_PYTHON_API_DIST_PATH}
   )
 endif ()
@@ -186,9 +185,8 @@ if (BUILD_PYTHON_API_WHEEL_PACKAGE)
     carla-python-api-install
     COMMAND
       ${Python3_EXECUTABLE}
-        -m pip
-        install
-        -e ${CMAKE_CURRENT_BINARY_DIR}
+        -m pip install
+        -e ${CARLA_PYTHON_API_CARLA_PATH}
     WORKING_DIRECTORY
       ${CARLA_PYTHON_API_CARLA_PATH}
     VERBATIM

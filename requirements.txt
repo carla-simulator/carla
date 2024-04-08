@@ -1,4 +1,5 @@
 psutil
 requests
-scikit_build_core
+setuptools
 wheel
+build

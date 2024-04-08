@@ -7,7 +7,6 @@ include-package-data = true
 packages = [ 'carla', 'agents' ]
 package-dir = { 'carla' = 'carla', 'agents' = 'agents' }
 package-data = { 'carla' = ['carla_ext@PYTHON_MODULE_EXT@'] }
-platforms = []
 
 [project]
 name = 'carla'
