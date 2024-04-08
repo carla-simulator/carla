@@ -356,11 +356,55 @@ add_custom_target (
     -Platform=${UE_SYSTEM_NAME}
     -prereqs
     -build
-    -archivedirectory=${CARLA_PACKAGE_PATH}/Unreal
+    -archivedirectory=${CARLA_PACKAGE_PATH}
   DEPENDS
     ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
     USES_TERMINAL
     VERBATIM
+  )
+
+set(CARLA_TARGET_PACKAGE_PATH ${CARLA_PACKAGE_PATH}/${UE_SYSTEM_NAME})
+add_custom_command(
+  TARGET carla-unreal-package
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE COPYING CARLA ADDITIONAL FILES STARTED **********"
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${CARLA_TARGET_PACKAGE_PATH}/LICENSE
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/CHANGELOG.md ${CARLA_TARGET_PACKAGE_PATH}/CHANGELOG
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/Docs/release_readme.md ${CARLA_TARGET_PACKAGE_PATH}/README
+
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/Docs/python_api.md ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/python_api.md
+  COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_BINARY_DIR}/PythonAPI/carla-python-api.cpython*${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/examples/carla${CMAKE_SHARED_LIBRARY_SUFFIX}
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/PythonAPI/carla/agents/ ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/carla/agents/
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/PythonAPI/carla/scene_layout.py ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/carla/
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/PythonAPI/carla/requirements.txt ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/carla/
+
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/examples/
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/PythonAPI/examples/*.py ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/examples/
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/examples/rss/
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/PythonAPI/examples/rss/*.py ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/examples/rss/
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/PythonAPI/examples/requirements.txt ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/examples/
+
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/util/
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/PythonAPI/util/*.py ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/util/
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/PythonAPI/util/requirements.txt ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/util/
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/PythonAPI/util/opendrive/ ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/util/opendrive/
+
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Co-Simulation/ ${CARLA_TARGET_PACKAGE_PATH}/Co-Simulation/
+
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${CARLA_TARGET_PACKAGE_PATH}/HDMaps/
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Content/Carla/HDMaps/*.pcd ${CARLA_TARGET_PACKAGE_PATH}/HDMaps/
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Content/Carla/HDMaps/Readme.md ${CARLA_TARGET_PACKAGE_PATH}/HDMaps/README
+  
+  COMMAND ${CMAKE_COMMAND} -E remove ${CARLA_TARGET_PACKAGE_PATH}/Manifest_NonUFSFiles_Linux.txt
+  COMMAND ${CMAKE_COMMAND} -E remove ${CARLA_TARGET_PACKAGE_PATH}/Manifest_UFSFiles_Linux.txt
+  COMMAND ${CMAKE_COMMAND} -E remove ${CARLA_TARGET_PACKAGE_PATH}/Manifest_DebugFiles_Linux.txt
+  COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE COPYING CARLA ADDITIONAL FILES COMPLETED **********"
+
+  COMMAND ${CMAKE_COMMAND} -E echo "********** COMPRESSING PACKAGE STARTED **********"
+  COMMAND ${CMAKE_COMMAND} -E chdir ${CARLA_TARGET_PACKAGE_PATH} cmake -E tar cfvz ${CARLA_PACKAGE_PATH}/CARLA.tar.gz ${CARLA_TARGET_PACKAGE_PATH}/*
+  COMMAND ${CMAKE_COMMAND} -E echo "********** COMPRESSING PACKAGE COMPLETED **********"
 )
 
 add_dependencies (
