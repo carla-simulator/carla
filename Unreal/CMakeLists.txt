@@ -333,35 +333,7 @@ add_dependencies (
 add_custom_target (
   carla-unreal-package
   COMMAND
-    ${CARLA_UE_BUILD_COMMAND_PREFIX}
-    CarlaUnreal
-    ${UE_SYSTEM_NAME}
-    Shipping
-    -project=${CARLA_UE_PROJECT_PATH}
-    -game
-    -buildscw
-  COMMAND
-    ${CARLA_UE_UAT_COMMAND_PREFIX}
-    BuildCookRun
-    -project=${CARLA_UE_PROJECT_PATH}
-    -nocompileeditor
-    -nop4
-    -cook
-    -stage
-    -archive
-    -package
-    -iterate
-    -clientconfig=Shipping
-    -TargetPlatform=${UE_SYSTEM_NAME}
-    -Platform=${UE_SYSTEM_NAME}
-    -prereqs
-    -build
-    -archivedirectory=${CARLA_PACKAGE_PATH}
-  DEPENDS
-    ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
-    USES_TERMINAL
-    VERBATIM
-)
+    echo HOLA)
 
 set(CARLA_TARGET_PACKAGE_PATH ${CARLA_PACKAGE_PATH}/${UE_SYSTEM_NAME})
 add_custom_command(
@@ -375,7 +347,7 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/Docs/python_api.md ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/python_api.md
   COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_BINARY_DIR}/PythonAPI/carla-python-api.cpython*${CMAKE_SHARED_LIBRARY_SUFFIX}
-    ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/examples${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/examples/carla${CMAKE_SHARED_LIBRARY_SUFFIX}
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/PythonAPI/carla/agents/ ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/carla/agents/
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/PythonAPI/carla/scene_layout.py ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/carla/
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/PythonAPI/carla/requirements.txt ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/carla/
