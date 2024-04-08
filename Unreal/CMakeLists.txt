@@ -367,7 +367,7 @@ set(CARLA_TARGET_PACKAGE_PATH ${CARLA_PACKAGE_PATH}/${UE_SYSTEM_NAME})
 add_custom_command(
   TARGET carla-unreal-package
   POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E echo "Copying additional files to package..."
+  COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE COPYING CARLA ADDITIONAL FILES STARTED **********"
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${CARLA_TARGET_PACKAGE_PATH}/LICENSE
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/CHANGELOG.md ${CARLA_TARGET_PACKAGE_PATH}/CHANGELOG
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/Docs/release_readme.md ${CARLA_TARGET_PACKAGE_PATH}/README
@@ -399,10 +399,12 @@ add_custom_command(
   
   COMMAND ${CMAKE_COMMAND} -E remove ${CARLA_TARGET_PACKAGE_PATH}/Manifest_NonUFSFiles_Linux.txt
   COMMAND ${CMAKE_COMMAND} -E remove ${CARLA_TARGET_PACKAGE_PATH}/Manifest_UFSFiles_Linux.txt
+  COMMAND ${CMAKE_COMMAND} -E remove ${CARLA_TARGET_PACKAGE_PATH}/Manifest_DebugFiles_Linux.txt
+  COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE COPYING CARLA ADDITIONAL FILES COMPLETED **********"
 
-  COMMAND ${CMAKE_COMMAND} -E echo "Compressing package..."
+  COMMAND ${CMAKE_COMMAND} -E echo "********** COMPRESSING PACKAGE STARTED **********"
   COMMAND ${CMAKE_COMMAND} -E tar cfvz ${CARLA_PACKAGE_PATH}/CARLA.tar.gz ${CARLA_TARGET_PACKAGE_PATH}/*
-  COMMAND ${CMAKE_COMMAND} -E echo "Package generated succesfully!!! ':)'"
+  COMMAND ${CMAKE_COMMAND} -E echo "********** COMPRESSING PACKAGE COMPLETED **********"
 )
 
 add_dependencies (
