@@ -42,6 +42,10 @@ public:
 
   void RunSome(uint32 Milliseconds);
 
+  void EnableSynchronousMode();
+  void DisableSynchronousMode();
+  bool IsSynchronousModeActive();
+
   void Tick();
   
   bool TickCueReceived();
@@ -74,6 +78,19 @@ public:
     carla::rpc::AttachmentType InAttachmentType,
     const std::string& socket_name) override;
   carla::rpc::Response<bool> call_destroy_actor(carla::rpc::ActorId ActorId) override;
+  carla::rpc::Response<uint64_t> call_tick(
+    carla::rpc::synchronization_client_id_type const &client_id = carla::rpc::ALL_CLIENTS, 
+    carla::rpc::synchronization_participant_id_type const&participant_id= carla::rpc::ALL_PARTICIPANTS) override;
+  carla::rpc::Response<carla::rpc::synchronization_participant_id_type> call_register_synchronization_participant(
+    carla::rpc::synchronization_client_id_type const &client_id, 
+    carla::rpc::synchronization_participant_id_type const &participant_id_hint = carla::rpc::ALL_PARTICIPANTS) override;
+  carla::rpc::Response<bool> call_deregister_synchronization_participant(
+    carla::rpc::synchronization_client_id_type const &client_id, 
+    carla::rpc::synchronization_participant_id_type const&participant_id) override;
+  carla::rpc::Response<bool> call_update_synchronization_window(
+    carla::rpc::synchronization_client_id_type const &client_id, 
+    carla::rpc::synchronization_participant_id_type const&participant_id, 
+    carla::rpc::synchronization_target_game_time const &target_game_time = carla::rpc::NO_SYNC_TARGET_GAME_TIME) override;
 
 private:
 

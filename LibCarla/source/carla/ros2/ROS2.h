@@ -8,13 +8,13 @@
 
 #include "carla/BufferView.h"
 #include "carla/ros2/ROS2NameRegistry.h"
-#include "carla/rpc/RpcServerInterface.h"
 #include "carla/ros2/ROS2Session.h"
 #include "carla/ros2/types/SensorActorDefinition.h"
 #include "carla/ros2/types/TrafficLightActorDefinition.h"
 #include "carla/ros2/types/TrafficSignActorDefinition.h"
 #include "carla/ros2/types/VehicleActorDefinition.h"
 #include "carla/ros2/types/WalkerActorDefinition.h"
+#include "carla/rpc/RpcServerInterface.h"
 #include "carla/streaming/detail/Message.h"
 
 #include <list>
@@ -66,8 +66,21 @@ public:
   void ProcessDataFromUeSensor(carla::streaming::detail::stream_id_type const stream_id,
                                std::shared_ptr<const carla::streaming::detail::Message> message);
 
+  /**
+   * Implement actions before each tick
+   */
   void PreTickAction();
+
+  /**
+   * Process incoming messages
+  */
+  void ProcessMessages();
+
+  /**
+   * Implement actions after each tick
+   */
   void PostTickAction();
+
 
   uint64_t CurrentFrame() const;
   carla::ros2::types::Timestamp const& CurrentTimestamp() const;

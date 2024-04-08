@@ -235,19 +235,16 @@ ROS2NameRegistry::CreateTopicAndFrameLocked(ROS2NameRegistry::KeyType const& key
     type = "world";
   }
   // add type
-  topic_and_frame._topic_name += "/" + type;
-  topic_and_frame._frame_id += "/" + type;
+  topic_and_frame = ExpandTopicName(topic_and_frame, type);
 
   std::string individual_name;
   if (sensor_actor_definition != nullptr) {
     // on sensors we use the sensor name as additions type prefix
     auto pos = actor_definition->ros_name.find_last_of('.');
     if (pos != std::string::npos) {
-      topic_and_frame._topic_name += "/" + actor_definition->ros_name.substr(pos + 1u);
-      topic_and_frame._frame_id += "/" + actor_definition->ros_name.substr(pos + 1u);
+      topic_and_frame = ExpandTopicName(topic_and_frame, actor_definition->ros_name.substr(pos + 1u));
     } else {
-      topic_and_frame._topic_name += "/" + actor_definition->ros_name;
-      topic_and_frame._frame_id += "/" + actor_definition->ros_name;
+      topic_and_frame = ExpandTopicName(topic_and_frame, actor_definition->ros_name);
     }
     // and use stream id as individualization
     auto const stream_id_string = "/stream_" + number_to_three_letter_string(sensor_actor_definition->stream_id);
@@ -274,9 +271,8 @@ ROS2NameRegistry::CreateTopicAndFrameLocked(ROS2NameRegistry::KeyType const& key
     std::srand(actor_definition->id);
     individual_name = "randomid_" + number_to_three_letter_string(uint32_t(std::rand()));
   }
+  topic_and_frame = ExpandTopicName(topic_and_frame, individual_name);
 
-  topic_and_frame._topic_name += "/" + individual_name;
-  topic_and_frame._frame_id += "/" + individual_name;
 
   auto insert_result = topic_and_frame_map.insert({key, topic_and_frame});
   if (!insert_result.second) {
@@ -287,8 +283,28 @@ ROS2NameRegistry::CreateTopicAndFrameLocked(ROS2NameRegistry::KeyType const& key
   return insert_result.first;
 }
 
+ROS2NameRegistry::TopicAndFrame ROS2NameRegistry::ExpandTopicName(TopicAndFrame const& topic_and_frame, std::string const& postfix) {
+  auto postfix_adapted = postfix;
+  while (postfix_adapted.front() == '/') {
+    postfix_adapted.erase(postfix_adapted.begin());
+  }
+  if ( postfix_adapted.empty()) {
+    return topic_and_frame;
+  }
+  TopicAndFrame expanded_topic_and_frame = topic_and_frame;
+  if ( expanded_topic_and_frame._frame_id.back() != '/') {
+    expanded_topic_and_frame._frame_id.push_back('/');
+  }
+  if ( expanded_topic_and_frame._topic_name.back() != '/') {
+    expanded_topic_and_frame._topic_name.push_back('/');
+  }
+  expanded_topic_and_frame._frame_id += postfix_adapted;
+  expanded_topic_and_frame._topic_name += postfix_adapted;
+  return expanded_topic_and_frame;
+}
+
 bool ROS2NameRegistry::IsTopicNameAvailable(TopicAndFrame const& topic_and_frame, std::string const& individual_name) {
-  auto topic_name_check = topic_and_frame._topic_name + "/" + individual_name;
+  auto topic_name_check = ExpandTopicName(topic_and_frame, individual_name)._topic_name;
   auto iter =
       std::find_if(topic_and_frame_map.begin(), topic_and_frame_map.end(),
                    [topic_name_check](auto const& element) { return element.second._topic_name == topic_name_check; });

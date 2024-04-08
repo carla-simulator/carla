@@ -43,9 +43,9 @@ bool TrafficLightPublisher::Publish() {
   return success;
 }
 
-bool TrafficLightPublisher::SubsribersConnected() const {
-  return _traffic_light_info->SubsribersConnected() || _traffic_light_status->SubsribersConnected() ||
-         _traffic_light_object_publisher->SubsribersConnected();
+bool TrafficLightPublisher::SubscribersConnected() const {
+  return _traffic_light_info->SubscribersConnected() || _traffic_light_status->SubscribersConnected() ||
+         _traffic_light_object_publisher->SubscribersConnected();
 }
 
 void TrafficLightPublisher::UpdateTrafficLight(std::shared_ptr<carla::ros2::types::Object> &object,

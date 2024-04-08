@@ -26,8 +26,8 @@ bool UeIMUPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_parti
 bool UeIMUPublisher::Publish() {
   return _impl->Publish();
 }
-bool UeIMUPublisher::SubsribersConnected() const {
-  return _impl->SubsribersConnected();
+bool UeIMUPublisher::SubscribersConnected() const {
+  return _impl->SubscribersConnected();
 }
 
 void UeIMUPublisher::UpdateSensorData(

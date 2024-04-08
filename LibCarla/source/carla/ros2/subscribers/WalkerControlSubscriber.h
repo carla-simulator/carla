@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "carla/ros2/subscribers/SubscriberBase.h"
+#include "carla/ros2/types/WalkerActorDefinition.h"
 #include "carla_msgs/msg/CarlaWalkerControlPubSubTypes.h"
 
 namespace carla {
@@ -18,7 +19,8 @@ using WalkerControlSubscriberImpl =
 
 class WalkerControlSubscriber : public SubscriberBase<carla_msgs::msg::CarlaWalkerControl> {
 public:
-  explicit WalkerControlSubscriber(ROS2NameRecord& parent);
+  explicit WalkerControlSubscriber(ROS2NameRecord& parent,
+                                   carla::ros2::types::WalkerControlCallback walker_control_callback);
   virtual ~WalkerControlSubscriber() = default;
 
   /**
@@ -33,6 +35,10 @@ public:
    * Implements SubscriberInterface::GetMessage() interface
    */
   const carla_msgs::msg::CarlaWalkerControl& GetMessage() override;
+  /**
+   * Implements SubscriberBase::ProcessMessages()
+   */
+  void ProcessMessages() override;
 
   /**
    * Implements ROS2NameRecord::Init() interface
@@ -41,6 +47,7 @@ public:
 
 private:
   std::shared_ptr<WalkerControlSubscriberImpl> _impl;
+  carla::ros2::types::WalkerControlCallback _walker_control_callback;
 };
 }  // namespace ros2
 }  // namespace carla

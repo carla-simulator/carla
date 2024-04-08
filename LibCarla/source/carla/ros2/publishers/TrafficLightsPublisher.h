@@ -32,9 +32,9 @@ public:
    */
   bool Publish() override;
   /**
-   * Implement PublisherInterface::SubsribersConnected interface
+   * Implement PublisherInterface::SubscribersConnected interface
    */
-  bool SubsribersConnected() const override;
+  bool SubscribersConnected() const override;
 
   void UpdateTrafficLightStatus(carla_msgs::msg::CarlaTrafficLightStatus const &traffic_light_status);
   void UpdateTrafficLightInfo(carla_msgs::msg::CarlaTrafficLightInfo const &traffic_light_info);

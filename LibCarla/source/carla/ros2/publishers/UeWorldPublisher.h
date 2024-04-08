@@ -5,7 +5,6 @@
 #pragma once
 
 #include "carla/ros2/ROS2NameRegistry.h"
-#include "carla/rpc/RpcServerInterface.h"
 #include "carla/ros2/publishers/CarlaActorListPublisher.h"
 #include "carla/ros2/publishers/CarlaStatusPublisher.h"
 #include "carla/ros2/publishers/ClockPublisher.h"
@@ -19,10 +18,12 @@
 #include "carla/ros2/publishers/VehiclePublisher.h"
 #include "carla/ros2/publishers/WalkerPublisher.h"
 #include "carla/ros2/subscribers/AckermannControlSubscriber.h"
+#include "carla/ros2/subscribers/CarlaControlSubscriber.h"
 #include "carla/ros2/subscribers/VehicleControlSubscriber.h"
 #include "carla/ros2/subscribers/WalkerControlSubscriber.h"
 #include "carla/ros2/types/Object.h"
 #include "carla/ros2/types/VehicleActorDefinition.h"
+#include "carla/rpc/RpcServerInterface.h"
 #include "carla/sensor/data/ActorDynamicState.h"
 #include "carla/sensor/s11n/EpisodeStateSerializer.h"
 
@@ -31,7 +32,14 @@ namespace ros2 {
 
 /**
  * The publisher collecting all world related publishing activities that are not explicitly defined as
+ * The publisher collecting all world related publishing activities that are not explicitly defined as
  * - clock
+ * - transform
+ * - sensor
+ * - vehicle
+ * - traffic_light
+ * - traffic_sign
+ * 
  */
 class UeWorldPublisher : public UePublisherBaseSensor {
 public:
@@ -50,9 +58,9 @@ public:
   bool Publish() override;
 
   /**
-   * Implement PublisherInterface::SubsribersConnected() interface
+   * Implement PublisherInterface::SubscribersConnected() interface
    */
-  bool SubsribersConnected() const override {
+  bool SubscribersConnected() const override {
     return true;
   }
 
@@ -60,6 +68,11 @@ public:
    * Implement actions before each tick
    */
   void PreTickAction();
+
+  /**
+   * Process incoming messages
+  */
+  void ProcessMessages();
 
   /**
    * Implement actions after each tick
@@ -130,8 +143,6 @@ private:
     std::shared_ptr<VehiclePublisher> _vehicle_publisher;
     std::shared_ptr<VehicleControlSubscriber> _vehicle_controller;
     std::shared_ptr<AckermannControlSubscriber> _vehicle_ackermann_controller;
-    carla::ros2::types::VehicleControlCallback _vehicle_control_callback;
-    carla::ros2::types::VehicleAckermannControlCallback _vehicle_ackermann_control_callback;
   };
   std::unordered_map<ActorId, UeVehicle> _vehicles;
 
@@ -169,6 +180,8 @@ private:
   std::shared_ptr<MapPublisher> _map_publisher;
   std::shared_ptr<ObjectsPublisher> _objects_publisher;
   std::shared_ptr<TrafficLightsPublisher> _traffic_lights_publisher;
+  // subscriber
+  std::shared_ptr<CarlaControlSubscriber> _carla_control_subscriber;
 
   bool _initialized{false};
 };

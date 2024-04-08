@@ -94,8 +94,6 @@ private:
 
   bool bIsRunning = false;
 
-  bool bSynchronousMode = false;
-
   bool bMapChanged = false;
 
   FCarlaServer Server;

@@ -20,8 +20,9 @@ bool MapPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_partici
 bool MapPublisher::Publish() {
   return _impl->Publish();
 }
-bool MapPublisher::SubsribersConnected() const {
-  return _impl->SubsribersConnected();
+
+bool MapPublisher::SubscribersConnected() const {
+  return _impl->SubscribersConnected();
 }
 
 void MapPublisher::UpdateData(std::string const &data) {

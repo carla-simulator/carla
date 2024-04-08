@@ -78,9 +78,9 @@ bool VehiclePublisher::Publish() {
   return success;
 }
 
-bool VehiclePublisher::SubsribersConnected() const {
-  return _vehicle_info->SubsribersConnected() || _vehicle_status->SubsribersConnected() ||
-         _vehicle_object_publisher->SubsribersConnected();
+bool VehiclePublisher::SubscribersConnected() const {
+  return _vehicle_info->SubscribersConnected() || _vehicle_status->SubscribersConnected() ||
+         _vehicle_object_publisher->SubscribersConnected();
 }
 
 void VehiclePublisher::UpdateVehicle(std::shared_ptr<carla::ros2::types::Object> &object,

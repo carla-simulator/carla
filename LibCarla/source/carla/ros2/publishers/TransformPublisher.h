@@ -28,9 +28,9 @@ public:
    */
   bool Publish() override;
   /**
-   * Implement PublisherInterface::SubsribersConnected interface
+   * Implement PublisherInterface::SubscribersConnected interface
    */
-  bool SubsribersConnected() const override;
+  bool SubscribersConnected() const override;
 
   void AddTransform(const builtin_interfaces::msg::Time &stamp, std::string name, std::string parent,
                     geometry_msgs::msg::Transform const &transform);

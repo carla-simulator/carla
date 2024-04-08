@@ -31,9 +31,9 @@ public:
    */
   bool Publish() override;
   /**
-   * Implement PublisherInterface::SubsribersConnected interface
+   * Implement PublisherInterface::SubscribersConnected interface
    */
-  bool SubsribersConnected() const override;
+  bool SubscribersConnected() const override;
 
   void UpdateWalker(std::shared_ptr<carla::ros2::types::Object> &object,
                     carla::sensor::data::ActorDynamicState const &actor_dynamic_state);

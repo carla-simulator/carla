@@ -23,8 +23,8 @@ bool ObjectsPublisher::Publish() {
   return result;
 }
 
-bool ObjectsPublisher::SubsribersConnected() const {
-  return _impl->SubsribersConnected();
+bool ObjectsPublisher::SubscribersConnected() const {
+  return _impl->SubscribersConnected();
 }
 
 void ObjectsPublisher::AddObject(std::shared_ptr<carla::ros2::types::Object> &object) {

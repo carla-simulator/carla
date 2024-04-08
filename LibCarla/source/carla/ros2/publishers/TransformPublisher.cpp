@@ -27,8 +27,8 @@ bool TransformPublisher::Publish() {
   }
   return success;
 }
-bool TransformPublisher::SubsribersConnected() const {
-  return _impl->SubsribersConnected();
+bool TransformPublisher::SubscribersConnected() const {
+  return _impl->SubscribersConnected();
 }
 
 void TransformPublisher::AddTransform(const builtin_interfaces::msg::Time &stamp, std::string name, std::string parent,

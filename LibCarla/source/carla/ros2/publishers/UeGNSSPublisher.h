@@ -31,9 +31,9 @@ public:
    */
   bool Publish() override;
   /**
-   * Implement PublisherInterface::SubsribersConnected interface
+   * Implement PublisherInterface::SubscribersConnected interface
    */
-  bool SubsribersConnected() const override;
+  bool SubscribersConnected() const override;
 
   /**
    * Implements UePublisherBaseSensor::UpdateSensorData() interface

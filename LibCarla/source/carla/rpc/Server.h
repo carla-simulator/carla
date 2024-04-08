@@ -65,6 +65,14 @@ namespace rpc {
       _server.stop();
     }
 
+    void BindOnClientConnected(::rpc::server::callback_type callback) {
+      _server.set_on_connection(callback);
+    }
+
+    void BindOnClientDisconnected(::rpc::server::callback_type callback) {
+      _server.set_on_disconnection(callback);
+    }
+
   private:
 
     boost::asio::io_context _sync_io_context;

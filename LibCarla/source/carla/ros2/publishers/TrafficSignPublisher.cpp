@@ -24,8 +24,8 @@ bool TrafficSignPublisher::Publish() {
   return _traffic_sign_object_publisher->Publish();
 }
 
-bool TrafficSignPublisher::SubsribersConnected() const {
-  return _traffic_sign_object_publisher->SubsribersConnected();
+bool TrafficSignPublisher::SubscribersConnected() const {
+  return _traffic_sign_object_publisher->SubscribersConnected();
 }
 
 void TrafficSignPublisher::UpdateTrafficSign(std::shared_ptr<carla::ros2::types::Object> &object,

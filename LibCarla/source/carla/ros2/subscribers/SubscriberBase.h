@@ -31,6 +31,11 @@ public:
    */
   virtual bool Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) = 0;
 
+  /**
+   * Process all available messages.
+   */
+  virtual void ProcessMessages() = 0;
+
   /*
    * @brief Default get_topic_qos() for subscribers
    *

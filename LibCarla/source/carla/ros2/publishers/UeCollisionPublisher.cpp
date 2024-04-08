@@ -25,8 +25,8 @@ bool UeCollisionPublisher::Publish() {
   return _impl->Publish();
 }
 
-bool UeCollisionPublisher::SubsribersConnected() const {
-  return _impl->SubsribersConnected();
+bool UeCollisionPublisher::SubscribersConnected() const {
+  return _impl->SubscribersConnected();
 }
 
 void UeCollisionPublisher::UpdateSensorData(

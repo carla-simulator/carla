@@ -26,8 +26,8 @@ bool WalkerPublisher::Publish() {
   return _walker_object_publisher->Publish();
 }
 
-bool WalkerPublisher::SubsribersConnected() const {
-  return _walker_object_publisher->SubsribersConnected();
+bool WalkerPublisher::SubscribersConnected() const {
+  return _walker_object_publisher->SubscribersConnected();
 }
 
 void WalkerPublisher::UpdateWalker(std::shared_ptr<carla::ros2::types::Object> &object,

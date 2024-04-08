@@ -299,12 +299,12 @@ void ROS2::PreTickAction() {
       CreateSensorUePublisher(ue_sensor.second);
     }
     if (ue_sensor.second.publisher != nullptr) {
-      if (ue_sensor.second.publisher->SubsribersConnected() && ue_sensor.second.session == nullptr) {
+      if (ue_sensor.second.publisher->SubscribersConnected() && ue_sensor.second.session == nullptr) {
         ue_sensor.second.session = std::make_shared<ROS2Session>(ue_sensor.first);
         log_warning("ROS2::PreTickAction[", std::to_string(*ue_sensor.second.sensor_actor_definition),
                     "]: Registering session");
         _dispatcher->RegisterSession(ue_sensor.second.session);
-      } else if (!ue_sensor.second.publisher->SubsribersConnected() && ue_sensor.second.session != nullptr) {
+      } else if (!ue_sensor.second.publisher->SubscribersConnected() && ue_sensor.second.session != nullptr) {
         log_warning("ROS2::PreTickAction[", std::to_string(*ue_sensor.second.sensor_actor_definition),
                     "]: Deregistering session");
         _dispatcher->DeregisterSession(ue_sensor.second.session);
@@ -313,11 +313,14 @@ void ROS2::PreTickAction() {
     }
   }
 
+  _world_publisher->PreTickAction();
+}
+
+void ROS2::ProcessMessages() {
   for (auto service : _services) {
     service->CheckRequest();
   }
-
-  _world_publisher->PreTickAction();
+  _world_publisher->ProcessMessages();
 }
 
 void ROS2::PostTickAction() {

@@ -28,8 +28,8 @@ bool UePublisherBasePointCloud<HEADER_TYPE, DATA_TYPE>::Publish() {
 }
 
 template <class HEADER_TYPE, class DATA_TYPE>
-bool UePublisherBasePointCloud<HEADER_TYPE, DATA_TYPE>::SubsribersConnected() const {
-  return _point_cloud->SubsribersConnected();
+bool UePublisherBasePointCloud<HEADER_TYPE, DATA_TYPE>::SubscribersConnected() const {
+  return _point_cloud->SubscribersConnected();
 }
 
 template <class HEADER_TYPE, class DATA_TYPE>

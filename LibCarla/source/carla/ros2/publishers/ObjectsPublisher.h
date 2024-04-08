@@ -29,9 +29,9 @@ public:
    */
   bool Publish() override;
   /**
-   * Implement PublisherInterface::SubsribersConnected interface
+   * Implement PublisherInterface::SubscribersConnected interface
    */
-  bool SubsribersConnected() const override;
+  bool SubscribersConnected() const override;
 
   void AddObject(std::shared_ptr<carla::ros2::types::Object> &object);
 

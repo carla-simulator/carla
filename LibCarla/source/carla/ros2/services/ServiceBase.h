@@ -9,8 +9,8 @@
 
 #include "carla/ros2/ROS2NameRecord.h"
 #include "carla/ros2/ROS2QoS.h"
-#include "carla/rpc/RpcServerInterface.h"
 #include "carla/ros2/services/ServiceInterface.h"
+#include "carla/rpc/RpcServerInterface.h"
 
 namespace carla {
 namespace ros2 {

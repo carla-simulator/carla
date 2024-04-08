@@ -48,7 +48,7 @@ public:
   /**
    * Should return \c true in case there are subscribers connected to the publisher.
    */
-  virtual bool SubsribersConnected() const = 0;
+  virtual bool SubscribersConnected() const = 0;
 };
 }  // namespace ros2
 }  // namespace carla

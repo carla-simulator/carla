@@ -21,8 +21,8 @@ bool UeGNSSPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_part
 bool UeGNSSPublisher::Publish() {
   return _impl->Publish();
 }
-bool UeGNSSPublisher::SubsribersConnected() const {
-  return _impl->SubsribersConnected();
+bool UeGNSSPublisher::SubscribersConnected() const {
+  return _impl->SubscribersConnected();
 }
 
 void UeGNSSPublisher::UpdateSensorData(

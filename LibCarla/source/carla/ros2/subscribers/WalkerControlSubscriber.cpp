@@ -9,8 +9,11 @@
 namespace carla {
 namespace ros2 {
 
-WalkerControlSubscriber::WalkerControlSubscriber(ROS2NameRecord& parent)
-  : SubscriberBase(parent), _impl(std::make_shared<WalkerControlSubscriberImpl>()) {}
+WalkerControlSubscriber::WalkerControlSubscriber(ROS2NameRecord& parent,
+                                                 carla::ros2::types::WalkerControlCallback walker_control_callback)
+  : SubscriberBase(parent),
+    _impl(std::make_shared<WalkerControlSubscriberImpl>()),
+    _walker_control_callback(walker_control_callback) {}
 
 bool WalkerControlSubscriber::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
   return _impl->Init(domain_participant, _parent.get_topic_name("walker_control_cmd"), get_topic_qos());
@@ -27,5 +30,12 @@ bool WalkerControlSubscriber::IsAlive() const {
 bool WalkerControlSubscriber::HasNewMessage() const {
   return _impl->HasNewMessage();
 }
+
+void WalkerControlSubscriber::ProcessMessages() {
+  while (IsAlive() && HasNewMessage()) {
+    _walker_control_callback(carla::ros2::types::WalkerControl(GetMessage()));
+  }
+}
+
 }  // namespace ros2
 }  // namespace carla

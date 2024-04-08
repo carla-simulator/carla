@@ -32,8 +32,8 @@ bool UePublisherBaseCamera<ALLOCATOR>::Publish() {
 }
 
 template <class ALLOCATOR>
-bool UePublisherBaseCamera<ALLOCATOR>::SubsribersConnected() const {
-  return _image->SubsribersConnected() || _camera_info->SubsribersConnected();
+bool UePublisherBaseCamera<ALLOCATOR>::SubscribersConnected() const {
+  return _image->SubscribersConnected() || _camera_info->SubscribersConnected();
 }
 
 template <class ALLOCATOR>

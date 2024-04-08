@@ -26,8 +26,8 @@ bool TrafficLightsPublisher::Publish() {
   return _traffic_light_info->Publish() && _traffic_light_status->Publish();
 }
 
-bool TrafficLightsPublisher::SubsribersConnected() const {
-  return _traffic_light_info->SubsribersConnected() || _traffic_light_status->SubsribersConnected();
+bool TrafficLightsPublisher::SubscribersConnected() const {
+  return _traffic_light_info->SubscribersConnected() || _traffic_light_status->SubscribersConnected();
 }
 
 void TrafficLightsPublisher::UpdateTrafficLightStatus(

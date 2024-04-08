@@ -10,7 +10,7 @@ namespace carla {
 namespace ros2 {
 
 CarlaStatusPublisher::CarlaStatusPublisher()
-  : PublisherBaseSensor(carla::ros2::types::ActorNameDefinition::CreateFromRoleName("carla_status")),
+  : PublisherBaseSensor(carla::ros2::types::ActorNameDefinition::CreateFromRoleName("status")),
     _impl(std::make_shared<CarlaStatusPublisherImpl>()) {}
 
 bool CarlaStatusPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
@@ -21,8 +21,8 @@ bool CarlaStatusPublisher::Publish() {
   return _impl->Publish();
 }
 
-bool CarlaStatusPublisher::SubsribersConnected() const {
-  return _impl->SubsribersConnected();
+bool CarlaStatusPublisher::SubscribersConnected() const {
+  return _impl->SubscribersConnected();
 }
 
 void CarlaStatusPublisher::UpdateCarlaStatus(const carla_msgs::msg::CarlaStatus& status,

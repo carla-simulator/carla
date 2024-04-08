@@ -9,8 +9,11 @@
 namespace carla {
 namespace ros2 {
 
-AckermannControlSubscriber::AckermannControlSubscriber(ROS2NameRecord& parent)
-  : SubscriberBase(parent), _impl(std::make_shared<AckermannControlSubscriberImpl>()) {}
+AckermannControlSubscriber::AckermannControlSubscriber(
+    ROS2NameRecord& parent, carla::ros2::types::VehicleAckermannControlCallback vehicle_ackermann_control_callback)
+  : SubscriberBase(parent),
+    _impl(std::make_shared<AckermannControlSubscriberImpl>()),
+    _vehicle_ackermann_control_callback(vehicle_ackermann_control_callback) {}
 
 bool AckermannControlSubscriber::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
   return _impl->Init(domain_participant, _parent.get_topic_name("vehicle_ackermann_drive_cmd"), get_topic_qos());
@@ -27,5 +30,12 @@ bool AckermannControlSubscriber::IsAlive() const {
 bool AckermannControlSubscriber::HasNewMessage() const {
   return _impl->HasNewMessage();
 }
+
+void AckermannControlSubscriber::ProcessMessages() {
+  while (IsAlive() && HasNewMessage()) {
+    _vehicle_ackermann_control_callback(carla::ros2::types::VehicleAckermannControl(GetMessage()));
+  }
+}
+
 }  // namespace ros2
 }  // namespace carla

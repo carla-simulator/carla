@@ -8,20 +8,19 @@
 #include <vector>
 
 #include "carla/ros2/subscribers/SubscriberBase.h"
-#include "carla/ros2/types/VehicleActorDefinition.h"
-#include "carla_msgs/msg/CarlaVehicleControlPubSubTypes.h"
+#include "carla/rpc/RpcServerInterface.h"
+#include "carla_msgs/msg/CarlaControlPubSubTypes.h"
 
 namespace carla {
 namespace ros2 {
 
-using VehicleControlSubscriberImpl =
-    DdsSubscriberImpl<carla_msgs::msg::CarlaVehicleControl, carla_msgs::msg::CarlaVehicleControlPubSubType>;
+using CarlaControlSubscriberImpl =
+    DdsSubscriberImpl<carla_msgs::msg::CarlaControl, carla_msgs::msg::CarlaControlPubSubType>;
 
-class VehicleControlSubscriber : public SubscriberBase<carla_msgs::msg::CarlaVehicleControl> {
+class CarlaControlSubscriber : public SubscriberBase<carla_msgs::msg::CarlaControl> {
 public:
-  explicit VehicleControlSubscriber(ROS2NameRecord& parent,
-                                    carla::ros2::types::VehicleControlCallback vehicle_control_callback);
-  virtual ~VehicleControlSubscriber() = default;
+  explicit CarlaControlSubscriber(ROS2NameRecord &parent, carla::rpc::RpcServerInterface &carla_server);
+  virtual ~CarlaControlSubscriber();
 
   /**
    * Implements SubscriberInterface::IsAlive() interface
@@ -34,8 +33,7 @@ public:
   /**
    * Implements SubscriberInterface::GetMessage() interface
    */
-  const carla_msgs::msg::CarlaVehicleControl& GetMessage() override;
-
+  const carla_msgs::msg::CarlaControl &GetMessage() override;
   /**
    * Implements SubscriberBase::ProcessMessages()
    */
@@ -47,8 +45,13 @@ public:
   bool Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) override;
 
 private:
-  std::shared_ptr<VehicleControlSubscriberImpl> _impl;
-  carla::ros2::types::VehicleControlCallback _vehicle_control_callback;
+  carla::rpc::synchronization_client_id_type ThisAsSynchronizationClient() {
+    return reinterpret_cast<carla::rpc::synchronization_client_id_type>(this);
+  }
+
+  std::shared_ptr<CarlaControlSubscriberImpl> _impl;
+  carla::rpc::RpcServerInterface &_carla_server;
+  carla::rpc::synchronization_participant_id_type _carla_control_synchronization_participant;
 };
 }  // namespace ros2
 }  // namespace carla

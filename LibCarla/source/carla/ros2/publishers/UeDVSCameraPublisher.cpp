@@ -28,8 +28,8 @@ bool UeDVSCameraPublisher::Publish() {
   return UePublisherBaseCamera::Publish() && _point_cloud->Publish();
 }
 
-bool UeDVSCameraPublisher::SubsribersConnected() const {
-  return UePublisherBaseCamera::SubsribersConnected() || _point_cloud->SubsribersConnected();
+bool UeDVSCameraPublisher::SubscribersConnected() const {
+  return UePublisherBaseCamera::SubscribersConnected() || _point_cloud->SubscribersConnected();
 }
 
 void UeDVSCameraPublisher::UpdateSensorData(

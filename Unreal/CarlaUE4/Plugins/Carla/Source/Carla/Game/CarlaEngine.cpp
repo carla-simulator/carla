@@ -178,7 +178,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       Secondary = std::make_shared<carla::multigpu::Secondary>(PrimaryIP, PrimaryPort, CommandExecutor);
       Secondary->Connect();
       // set this server in synchronous mode
-      bSynchronousMode = true;
+      Server.EnableSynchronousMode();
     }
     else
     {
@@ -288,9 +288,10 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
     #endif
     if (bIsPrimaryServer)
     {
-      if (CurrentEpisode && !bSynchronousMode && SecondaryServer->HasClientsConnected())
+      if (CurrentEpisode && !Server.IsSynchronousModeActive() && SecondaryServer->HasClientsConnected())
       {
         // set synchronous mode
+        Server.EnableSynchronousMode();
         CurrentSettings.bSynchronousMode = true;
         CurrentSettings.FixedDeltaSeconds = 1 / 20.0f;
         OnEpisodeSettingsChanged(CurrentSettings);
@@ -301,8 +302,14 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
       do
       {
         Server.RunSome(1u);
+        #if defined(WITH_ROS2)
+        if (ROS2->IsEnabled()) 
+        {
+          ROS2->ProcessMessages();
+        }
+        #endif
       }
-      while (bSynchronousMode && !Server.TickCueReceived());
+      while (Server.IsSynchronousModeActive() && !Server.TickCueReceived());
     }
     else
     {
@@ -310,6 +317,12 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
       do
       {
         Server.RunSome(1u);
+        #if defined(WITH_ROS2)
+        if (ROS2->IsEnabled()) 
+        {
+          ROS2->ProcessMessages();
+        }
+        #endif
       }
       while (!FramesToProcess.size());
     }
@@ -398,7 +411,12 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
 {
   CurrentSettings = FEpisodeSettings(Settings);
 
-  bSynchronousMode = Settings.bSynchronousMode;
+  if (Settings.bSynchronousMode ) {
+    Server.EnableSynchronousMode();
+  }
+  else {
+    Server.DisableSynchronousMode();
+  }
 
   if (GEngine && GEngine->GameViewport)
   {

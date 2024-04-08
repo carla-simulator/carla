@@ -21,8 +21,8 @@ bool CarlaActorListPublisher::Publish() {
   return _impl->Publish();
 }
 
-bool CarlaActorListPublisher::SubsribersConnected() const {
-  return _impl->SubsribersConnected();
+bool CarlaActorListPublisher::SubscribersConnected() const {
+  return _impl->SubscribersConnected();
 }
 
 void CarlaActorListPublisher::UpdateCarlaActorList(const carla_msgs::msg::CarlaActorList& status) {

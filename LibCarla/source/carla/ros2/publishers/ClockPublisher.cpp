@@ -21,8 +21,8 @@ bool ClockPublisher::Publish() {
   return _impl->Publish();
 }
 
-bool ClockPublisher::SubsribersConnected() const {
-  return _impl->SubsribersConnected();
+bool ClockPublisher::SubscribersConnected() const {
+  return _impl->SubscribersConnected();
 }
 
 void ClockPublisher::UpdateData(const builtin_interfaces::msg::Time &stamp) {
