@@ -333,7 +333,35 @@ add_dependencies (
 add_custom_target (
   carla-unreal-package
   COMMAND
-    echo HOLA)
+    ${CARLA_UE_BUILD_COMMAND_PREFIX}
+    CarlaUnreal
+    ${UE_SYSTEM_NAME}
+    Shipping
+    -project=${CARLA_UE_PROJECT_PATH}
+    -game
+    -buildscw
+  COMMAND
+    ${CARLA_UE_UAT_COMMAND_PREFIX}
+    BuildCookRun
+    -project=${CARLA_UE_PROJECT_PATH}
+    -nocompileeditor
+    -nop4
+    -cook
+    -stage
+    -archive
+    -package
+    -iterate
+    -clientconfig=Shipping
+    -TargetPlatform=${UE_SYSTEM_NAME}
+    -Platform=${UE_SYSTEM_NAME}
+    -prereqs
+    -build
+    -archivedirectory=${CARLA_PACKAGE_PATH}
+  DEPENDS
+    ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
+    USES_TERMINAL
+    VERBATIM
+  )
 
 set(CARLA_TARGET_PACKAGE_PATH ${CARLA_PACKAGE_PATH}/${UE_SYSTEM_NAME})
 add_custom_command(
