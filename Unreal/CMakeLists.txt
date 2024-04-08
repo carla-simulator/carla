@@ -356,7 +356,7 @@ add_custom_target (
     -Platform=${UE_SYSTEM_NAME}
     -prereqs
     -build
-    -archivedirectory=${CARLA_PACKAGE_PATH}/Unreal
+    -archivedirectory=${CARLA_PACKAGE_PATH}
   DEPENDS
     ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
     USES_TERMINAL
