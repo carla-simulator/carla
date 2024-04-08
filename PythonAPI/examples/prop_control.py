@@ -57,15 +57,7 @@ from __future__ import print_function
 # -- find carla module ---------------------------------------------------------
 # ==============================================================================
 
-import importlib.metadata
-
 import carla
-# carla = None
-# dist = importlib.metadata.distributions()
-# for e in dist:
-#     if e.name.lower() == 'carla':
-#         carla = importlib.import_module(e.name)
-
 from carla import ColorConverter as cc
 
 # ==============================================================================
