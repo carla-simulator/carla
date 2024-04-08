@@ -6,7 +6,7 @@ project (
     "C++ extension for the CARLA Python API."
 )
 
-carla_message ("Selected Python executable: ${Python3_EXECUTABLE} (${Python3_INTERPRETER_ID})")
+carla_message ("Selected Python executable: ${Python3_EXECUTABLE} (Interpreter ID: ${Python3_INTERPRETER_ID})")
 
 set (CARLA_PYTHON_API_EXTENSION_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 set (CARLA_PYTHON_API_INCLUDE_PATH ${CARLA_PYTHON_API_EXTENSION_PATH}/include)
@@ -63,10 +63,33 @@ if (ENABLE_RSS)
   )
 endif ()
 
+set (
+  USE_LIMITED_API
+  OFF
+)
+
+set (
+  PYTHON_API_ADD_LIBRARY_ARGS
+)
+
+if (USE_LIMITED_API)
+  list (
+    APPEND
+    PYTHON_API_ADD_LIBRARY_ARGS
+    USE_SABI ${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}
+  )
+endif ()
+
+list (
+  APPEND
+  PYTHON_API_ADD_LIBRARY_ARGS
+  WITH_SOABI
+)
+
 Python3_add_library (
   carla-python-api-extension
   MODULE
-  WITH_SOABI
+  ${PYTHON_API_ADD_LIBRARY_ARGS}
   ${PYTHON_API_SOURCES}
 )
 

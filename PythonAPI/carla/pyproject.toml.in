@@ -6,12 +6,13 @@ build-backend = 'setuptools.build_meta'
 include-package-data = true
 packages = [ 'carla', 'agents' ]
 package-dir = { 'carla' = 'carla', 'agents' = 'agents' }
-package-data = { 'carla' = ['carla@PYTHON_MODULE_EXT@'] }
+package-data = { 'carla' = ['carla_ext@PYTHON_MODULE_EXT@'] }
+platforms = []
 
 [project]
 name = 'carla'
 version = '@CARLA_VERSION@'
-requires-python = '>=3.8'
+requires-python = '>=@Python3_VERSION_MAJOR@.@Python3_VERSION_MINOR@'
 authors = [ { name = 'The CARLA team', email = 'carla.simulator@gmail.com' } ]
 description = 'Python API for communicating with the CARLA server.'
 readme = 'README.md'
