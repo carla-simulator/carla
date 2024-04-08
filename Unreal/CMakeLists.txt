@@ -266,8 +266,8 @@ add_custom_command (
   COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Libraries.def
   COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Options.def
   COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
-  USES_TERMINAL
   VERBATIM
+  USES_TERMINAL
 )
 
 add_custom_target (
@@ -297,8 +297,8 @@ add_custom_target (
     -buildscw
   DEPENDS
     ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
-  USES_TERMINAL
   VERBATIM
+  USES_TERMINAL
 )
 
 add_dependencies (
@@ -318,8 +318,8 @@ add_custom_target (
     -buildscw
   DEPENDS
     ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
-  USES_TERMINAL
   VERBATIM
+  USES_TERMINAL
 )
 
 add_dependencies (
@@ -356,8 +356,8 @@ add_custom_target (
     -archivedirectory=${CARLA_PACKAGE_PATH}/Unreal
   DEPENDS
     ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
-    USES_TERMINAL
-    VERBATIM
+  VERBATIM
+  USES_TERMINAL
 )
 
 add_dependencies (
@@ -376,8 +376,8 @@ set (
       ${CARLA_UE_PROJECT_PATH}
       -${CARLA_UNREAL_RHI}
       ${LAUNCH_ARGS}
-  USES_TERMINAL
   VERBATIM
+  USES_TERMINAL
 )
 
 add_custom_target (
@@ -403,8 +403,8 @@ add_custom_target (
     ${PRELAUNCH_CONTENT_CHECK_COMMAND}
   COMMENT
     "Performing prelaunch check for CARLA Content presence.\n"
-  USES_TERMINAL
   VERBATIM
+  USES_TERMINAL
 )
 
 add_dependencies (
