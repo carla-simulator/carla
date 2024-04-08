@@ -375,7 +375,7 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/Docs/python_api.md ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/python_api.md
   COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_BINARY_DIR}/PythonAPI/carla-python-api.cpython*${CMAKE_SHARED_LIBRARY_SUFFIX}
-    ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/carla${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/examples${CMAKE_SHARED_LIBRARY_SUFFIX}
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/PythonAPI/carla/agents/ ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/carla/agents/
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/PythonAPI/carla/scene_layout.py ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/carla/
   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/PythonAPI/carla/requirements.txt ${CARLA_TARGET_PACKAGE_PATH}/PythonAPI/carla/
