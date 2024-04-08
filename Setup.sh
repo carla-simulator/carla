@@ -66,7 +66,7 @@ else
     curl -L -O https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3-linux-x86_64.tar.gz
     sudo mkdir -p /opt
     sudo tar -xzf cmake-3.28.3-linux-x86_64.tar.gz -C /opt
-    sudo echo -e '\n#CARLA CMake 3.28.3\nPATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH' >> ~/.bashrc
+    echo -e '\n#CARLA CMake 3.28.3\nPATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH' >> ~/.bashrc
     export PATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH
     rm -rf cmake-3.28.3-linux-x86_64.tar.gz
     echo "CMake Intalled 3.28.3..."
@@ -77,7 +77,7 @@ if [ ! -z $CARLA_UNREAL_ENGINE_PATH ] && [ -d $CARLA_UNREAL_ENGINE_PATH ]; then
 elif [ -d ../UnrealEngine5_carla ]; then
     echo "Found UnrealEngine5 ../UnrealEngine5_carla - OK"
     export CARLA_UNREAL_ENGINE_PATH=$PWD/../UnrealEngine5_carla
-    sudo echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$CARLA_UNREAL_ENGINE_PATH >> ~/.bashrc
+    echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$CARLA_UNREAL_ENGINE_PATH >> ~/.bashrc
     #TODO: Check if UnrealEngine binary file exists and if not build it
 else
     echo "Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - FAIL"
@@ -91,7 +91,7 @@ else
     ./GenerateProjectFiles.sh
     echo "Build CARLA UnrealEngine5..."
     make
-    sudo echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$PWD >> ~/.bashrc
+    echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$PWD >> ~/.bashrc
     export CARLA_UNREAL_ENGINE_PATH=$PWD
     popd
     popd
