@@ -3,7 +3,7 @@ requires = [ 'scikit-build-core', 'wheel' ]
 build-backend = 'scikit_build_core.build'
 
 [tool.scikit-build]
-wheel.packages = ['src/carla']
+wheel.packages = ['carla']
 cmake.version = '>=@CMAKE_MAJOR_VERSION@.@CMAKE_MINOR_VERSION@'
 cmake.build-type = '@CMAKE_BUILD_TYPE@'
 
