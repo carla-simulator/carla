@@ -28,7 +28,7 @@ extern void export_ad_rss();
 extern void export_osm2odr();
 #endif
 
-BOOST_PYTHON_MODULE(carla_ext) {
+BOOST_PYTHON_MODULE(carla) {
   using namespace boost::python;
 #if PY_MAJOR_VERSION < 3 || PY_MINOR_VERSION < 7
   PyEval_InitThreads();

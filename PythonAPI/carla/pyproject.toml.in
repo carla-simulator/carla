@@ -1,12 +1,11 @@
 [build-system]
-requires = [ 'setuptools', 'wheel' ]
-build-backend = 'setuptools.build_meta'
+requires = [ 'scikit-build-core', 'wheel' ]
+build-backend = 'scikit_build_core.build'
 
-[tool.setuptools]
-include-package-data = true
-packages = [ 'carla', 'agents' ]
-package-dir = { 'carla' = 'carla', 'agents' = 'agents' }
-package-data = { 'carla' = ['carla_ext@PYTHON_MODULE_EXT@'] }
+[tool.scikit-build]
+wheel.packages = ['carla']
+cmake.version = '>=@CMAKE_MAJOR_VERSION@.@CMAKE_MINOR_VERSION@'
+cmake.build-type = '@CMAKE_BUILD_TYPE@'
 
 [project]
 name = 'carla'

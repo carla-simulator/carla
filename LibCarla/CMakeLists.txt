@@ -13,18 +13,6 @@ carla_two_step_configure_file (
   ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in
 )
 
-set (
-  CARLA_RTTI_DEFINITIONS
-)
-
-if (NOT ENABLE_RTTI)
-  list (
-    APPEND
-    CARLA_RTTI_DEFINITIONS
-    BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY
-  )
-endif ()
-
 if (BUILD_CARLA_SERVER)
 
   project (
