@@ -2,7 +2,6 @@ cmake_minimum_required (VERSION 3.28.0)
 
 project(carla-ros2-native-project)
 
-include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
 include (ExternalProject)
 
 set (PROJECT_INSTALL_PATH ${CMAKE_CURRENT_BINARY_DIR}/install)
