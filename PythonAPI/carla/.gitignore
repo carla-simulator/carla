@@ -1,5 +1,4 @@
-carla/
-
+CMakeLists.txt
 LICENSE
 MANIFEST.in
 setup.py
