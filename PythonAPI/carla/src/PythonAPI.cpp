@@ -33,7 +33,6 @@ BOOST_PYTHON_MODULE(carla) {
 #if PY_MAJOR_VERSION < 3 || PY_MINOR_VERSION < 7
   PyEval_InitThreads();
 #endif
-  scope().attr("__path__") = "carla";
   export_geom();
   export_control();
   export_blueprint();
