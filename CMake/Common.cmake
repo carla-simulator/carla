@@ -50,7 +50,7 @@ foreach (FORMAT ${LIBCARLA_IMAGE_SUPPORTED_FORMATS})
 endforeach ()
 
 if (WIN32)
-  # https://learn.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=msvc-170
+  # Documentation: https://learn.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=msvc-170
   list (APPEND CARLA_COMMON_DEFINITIONS _WIN32_WINNT=0x0601) # <- Windows 10
   list (APPEND CARLA_COMMON_DEFINITIONS HAVE_SNPRINTF)
   list (APPEND CARLA_COMMON_DEFINITIONS _USE_MATH_DEFINES)
