@@ -6,6 +6,9 @@ build-backend = 'scikit_build_core.build'
 wheel.packages = ['carla']
 cmake.version = '>=@CMAKE_MAJOR_VERSION@.@CMAKE_MINOR_VERSION@'
 cmake.build-type = '@CMAKE_BUILD_TYPE@'
+cmake.args = [
+  '-DCMAKE_TOOLCHAIN_FILE=@CMAKE_TOOLCHAIN_FILE@'
+]
 
 [project]
 name = 'carla'
