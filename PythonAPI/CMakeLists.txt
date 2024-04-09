@@ -8,6 +8,21 @@ find_package (
   REQUIRED
 )
 
+set (
+  PYTHON_API_DEPENDENCIES
+  carla-client
+  rpc
+  png_static
+  zlibstatic
+  Boost::asio
+  Boost::python
+  Boost::geometry
+  Boost::gil
+  RecastNavigation::Recast
+  RecastNavigation::Detour
+  RecastNavigation::DetourCrowd
+)
+
 get_target_property (Boost_asio_TARGET_NAME Boost::asio ALIASED_TARGET)
 get_target_property (Boost_python_TARGET_NAME Boost::python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR} ALIASED_TARGET)
 get_target_property (Boost_geometry_TARGET_NAME Boost::geometry ALIASED_TARGET)
@@ -91,4 +106,14 @@ add_custom_target (
     ${CARLA_PYTHON_API_CARLA_PATH}
   VERBATIM
   USES_TERMINAL
+)
+
+add_dependencies (
+  carla-python-api
+  ${PYTHON_API_DEPENDENCIES}
+)
+
+add_dependencies (
+  carla-python-api-install
+  ${PYTHON_API_DEPENDENCIES}
 )
