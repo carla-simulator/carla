@@ -139,7 +139,7 @@ Python3_add_library (
 
 install (
   TARGETS ${SKBUILD_PROJECT_NAME}
-  DESTINATION ${SKBUILD_PROJECT_NAME}
+  DESTINATION .
 )
 
 target_include_directories (
