@@ -26,6 +26,8 @@ The CARLA simulator provides 10 pre-built maps to choose from, providing a diver
 | [__Town10__](map_town10.md) | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade.|
 | [__Town11__](map_town11.md) | A Large Map that is undecorated. Serves as a proof of concept for the Large Maps feature. |
 | [__Town12__](map_town12.md) | A Large Map with numerous different regions, including high-rise, residential and rural environments.|
+| [__Town13__](map_town13.md) | A Large Map similar in scale to Town 12, but with distinct features.|
+| [__Town15__](map_town15.md) | A map based on the road layout of the Autonomous University of Barcelona. |
 
 ## Vehicles
 
