@@ -403,7 +403,7 @@ function(add_carla_ue_package_target TARGET_NAME_SUFFIX UE_BUILD_CONFIGURATION)
     COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE COPYING CARLA ADDITIONAL FILES COMPLETED **********"
 
     COMMAND ${CMAKE_COMMAND} -E echo "********** COMPRESSING PACKAGE STARTED **********"
-    COMMAND ${CMAKE_COMMAND} -E chdir ${CARLA_TARGET_PACKAGE_PATH} cmake -E tar cfvz ${CARLA_PACKAGE_PATH}/CARLA.tar.gz ${CARLA_TARGET_PACKAGE_PATH}/*
+    COMMAND ${CMAKE_COMMAND} -E chdir ${CARLA_TARGET_PACKAGE_PATH} cmake -E tar cfvz ${CARLA_PACKAGE_PATH}/CARLA${TARGET_NAME_SUFFIX}.tar.gz ${CARLA_TARGET_PACKAGE_PATH}/*
     COMMAND ${CMAKE_COMMAND} -E echo "********** COMPRESSING PACKAGE COMPLETED **********"
   )
 
@@ -426,11 +426,11 @@ endfunction()
 # Docs for UE5 build configurations:
 # https://docs.unrealengine.com/4.27/en-US/ProductionPipelines/DevelopmentSetup/BuildConfigurations/
 add_carla_ue_package_target("" Shipping)
-add_carla_ue_package_target(Shipping Shipping)
-add_carla_ue_package_target(Debug Debug)
-add_carla_ue_package_target(DebugGame DebugGame)
-add_carla_ue_package_target(Development Development)
-add_carla_ue_package_target(Test Test)
+add_carla_ue_package_target(-Shipping Shipping)
+add_carla_ue_package_target(-Debug Debug)
+add_carla_ue_package_target(-DebugGame DebugGame)
+add_carla_ue_package_target(-Development Development)
+add_carla_ue_package_target(-Test Test)
 
 
 
