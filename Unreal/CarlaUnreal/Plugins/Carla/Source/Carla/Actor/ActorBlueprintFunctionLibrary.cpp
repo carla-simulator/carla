@@ -1523,14 +1523,14 @@ FColor UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
 // editor crashing while people are testing new actor definitions.
 #if WITH_EDITOR
 #  define CARLA_ABFL_CHECK_ACTOR(ActorPtr)                    \
-  if ((ActorPtr == nullptr) || ActorPtr->IsPendingKill())     \
+  if ((ActorPtr == nullptr) || IsValid(ActorPtr))     \
   {                                                           \
     UE_LOG(LogCarla, Error, TEXT("Cannot set empty actor!")); \
     return;                                                   \
   }
 #else
 #  define CARLA_ABFL_CHECK_ACTOR(ActorPtr) \
-  check((ActorPtr != nullptr) && !ActorPtr->IsPendingKill());
+  check((ActorPtr != nullptr) && !IsValid(ActorPtr) );
 #endif // WITH_EDITOR
 
 void UActorBlueprintFunctionLibrary::SetCamera(
