@@ -2149,7 +2149,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
         else
         {
           auto Actor = View.GetActor();
-          if (!Actor->IsPendingKill())
+          if ( IsValid(Actor) )
           {
             const ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
             List.emplace_back(
