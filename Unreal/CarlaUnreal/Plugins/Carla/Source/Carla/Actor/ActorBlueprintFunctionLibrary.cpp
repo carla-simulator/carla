@@ -1530,7 +1530,7 @@ FColor UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
   }
 #else
 #  define CARLA_ABFL_CHECK_ACTOR(ActorPtr) \
-  check((ActorPtr != nullptr) && IsValid(ActorPtr) );
+  check((ActorPtr != nullptr) && IsValid(ActorPtr));
 #endif // WITH_EDITOR
 
 void UActorBlueprintFunctionLibrary::SetCamera(
