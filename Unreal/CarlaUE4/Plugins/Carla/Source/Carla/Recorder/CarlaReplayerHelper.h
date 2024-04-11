@@ -9,10 +9,14 @@
 #include "CarlaRecorderEventAdd.h"
 #include "CarlaRecorderPosition.h"
 #include "CarlaRecorderState.h"
+#include "CarlaRecorderAnimBiker.h"
 #include "CarlaRecorderAnimWalker.h"
 #include "CarlaRecorderAnimVehicle.h"
+#include "CarlaRecorderAnimVehicleWheels.h"
 #include "CarlaRecorderLightVehicle.h"
 #include "CarlaRecorderLightScene.h"
+#include "CarlaRecorderDoorVehicle.h"	
+#include "CarlaRecorderWalkerBones.h"
 
 #include <unordered_map>
 
@@ -61,6 +65,9 @@ public:
 
   // set the animation for walkers
   void ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker);
+
+  // set the openings and closing of vehicle doors
+  void ProcessReplayerDoorVehicle(CarlaRecorderDoorVehicle DoorVehicle);
 
   // set the animation for bikers
   void ProcessReplayerAnimBiker(CarlaRecorderAnimBiker Biker);

@@ -152,6 +152,11 @@
       type: float
       doc: >
         Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant. Actors within this range will be active, and actors outside will become dormant.
+    - var_name: spectator_as_ego
+      type: bool
+      doc: >
+        Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. By default, the spectator will provoke loading of neighboring tiles in the absence of an ego actor. This might be inconvenient for applications that immediately spawn an ego actor. 
+    
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -172,6 +177,35 @@
         param_units: seconds
         doc: >
           Set a fixed time-step in between frames. <code>0.0</code> means variable time-step and it is the default mode. 
+      - param_name: max_culling_distance
+        type: float
+        default: 0.0
+        param_units: meters
+        doc: >
+          Configure the max draw distance for each mesh of the level. 
+      - param_name: deterministic_ragdolls
+        type: bool
+        default: False
+        doc: >
+          Defines wether to use deterministic physics or ragdoll simulation for pedestrian deaths.
+      - param_name: tile_stream_distance
+        type: float
+        default: 3000
+        param_units: meters
+        doc: >
+          Used for large maps only. Configures the maximum distance from the hero vehicle to stream tiled maps.
+      - param_name: actor_active_distance
+        type: float
+        default: 2000
+        param_units: meters
+        doc: >
+          Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant.
+      - param_name: spectator_as_ego
+        type: bool
+        default: True
+        doc: >
+          Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. 
+        
       doc: >
         Creates an object containing desired settings that could later be applied through carla.World and its method __<font color="#7fb800">apply_settings()</font>__.
     # --------------------------------------
@@ -244,7 +278,7 @@
     instance_variables:
     - var_name: Rigid
       doc: >
-        With this fixed attatchment the object follow its parent position strictly. This is the recommended attachment to retrieve precise data from the simulation.  
+        With this fixed attachment the object follow its parent position strictly. This is the recommended attachment to retrieve precise data from the simulation.  
     - var_name: SpringArm
       doc: >
         An attachment that expands or retracts the position of the actor, depending on its parent. This attachment is only recommended to record videos from the simulation where a smooth movement is needed. SpringArms are an Unreal Engine component so [check the UE docs](https://docs.unrealengine.com/en-US/Gameplay/HowTo/UsingCameras/SpringArmComponents/index.html) to learn more about them. <br><b style="color:red;">Warning:</b> The <b>SpringArm</b> attachment presents weird behaviors when an actor is spawned with a relative translation in the Z-axis (e.g. <code>child_location = Location(0,0,2)</code>).  
@@ -756,7 +790,7 @@
         doc: >
           The maximum distance to perform the projection
       doc: >
-        Projects the specified point downwards in the scene. The functions casts a ray from location in the direction (0,0,-1) (downwards) and returns a carla.Labelled object with the first geometry this ray intersects (usually the ground). If no geometry is found in the search_distance range the function returns `None`.
+        Projects the specified point downwards in the scene. The functions casts a ray from location in the direction (0,0,-1) (downwards) and returns a carla.LabelledPoint object with the first geometry this ray intersects (usually the ground). If no geometry is found in the search_distance range the function returns `None`.
     # --------------------------------------
     - def_name: load_map_layer
       params: 
@@ -959,8 +993,140 @@
         doc: >
           Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes. 
       doc: >
-        Draws a box, ussually to act for object colliders. 
-        
+        Draws a box, usually to act for object colliders.
+
+    # --------------------------------------
+    - def_name: draw_hud_arrow
+      params:
+      - param_name: begin
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Point in the coordinate system where the arrow starts.
+      - param_name: end
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Point in the coordinate system where the arrow ends and points towards to.
+      - param_name: thickness
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Density of the line.
+      - param_name: arrow_size
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Size of the tip of the arrow.
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default.
+      - param_name: life_time
+        type: float
+        default: -1.0
+        param_units: seconds
+        doc: >
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.
+      doc: >
+        Draws an arrow on the HUD from `begin` to `end` which can only be seen server-side.
+
+    # --------------------------------------
+    - def_name: draw_hud_box
+      params:
+      - param_name: box
+        type: carla.BoundingBox
+        doc: >
+          Object containing a location and the length of a box for every axis.
+      - param_name: rotation
+        type: carla.Rotation
+        param_units: degrees (pitch,yaw,roll)
+        doc: >
+          Orientation of the box according to Unreal Engine's axis system.
+      - param_name: thickness
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Density of the lines that define the box.
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default.
+      - param_name: life_time
+        type: float
+        default: -1.0
+        param_units: seconds
+        doc: >
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.
+      doc: >
+        Draws a box on the HUD, usually to act for object colliders. The box can only be seen server-side.
+
+    # --------------------------------------
+    - def_name: draw_hud_line
+      params:
+      - param_name: begin
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Point in the coordinate system where the line starts.
+      - param_name: end
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Spot in the coordinate system where the line ends.
+      - param_name: thickness
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Density of the line.
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default.
+      - param_name: life_time
+        type: float
+        default: -1.0
+        param_units: seconds
+        doc: >
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.
+      doc: >
+        Draws a line on the HUD in between `begin` and `end`. The line can only be seen server-side.
+
+    # --------------------------------------
+    - def_name: draw_hud_point
+      params:
+      - param_name: location
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Spot in the coordinate system to center the object.
+      - param_name: size
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Density of the point.
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default.
+      - param_name: life_time
+        type: float
+        default: -1.0
+        param_units: seconds
+        doc: >
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.
+      doc: >
+        Draws a point on the HUD at `location`. The point can only be seen server-side.
+
     # --------------------------------------
     - def_name: draw_line
       params:

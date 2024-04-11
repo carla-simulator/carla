@@ -8,6 +8,7 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Game/CarlaStatics.h"
 #include "Carla/Vehicle/WheeledVehicleAIController.h"
 
 #include <compiler/disable-ue4-macros.h>

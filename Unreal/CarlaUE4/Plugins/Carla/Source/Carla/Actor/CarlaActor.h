@@ -225,6 +225,8 @@ public:
 
   virtual ECarlaServerResponse SetActorSimulatePhysics(bool bEnabled);
 
+  virtual ECarlaServerResponse SetActorCollisions(bool bEnabled);
+
   virtual ECarlaServerResponse SetActorEnableGravity(bool bEnabled);
 
   // Vehicle functions
@@ -341,6 +343,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse RestorePhysXPhysics()
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   // Traffic light functions
 
   virtual ECarlaServerResponse SetTrafficLightState(const ETrafficLightState&)
@@ -409,6 +416,11 @@ public:
   }
 
   virtual ECarlaServerResponse GetPoseFromAnimation()
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetActorDead()
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -525,6 +537,8 @@ public:
       uint64_t MaxSubsteps, float MaxSubstepDeltaTime,
       const FString& VehicleJSON, const FString& PowertrainJSON,
       const FString& TireJSON, const FString& BaseJSONPath) final;
+
+  virtual ECarlaServerResponse RestorePhysXPhysics();
 };
 
 class FSensorActor : public FCarlaActor
@@ -607,6 +621,8 @@ public:
   virtual ECarlaServerResponse BlendPose(float Blend);
 
   virtual ECarlaServerResponse GetPoseFromAnimation();
+
+  virtual ECarlaServerResponse SetActorDead();
 };
 
 class FOtherActor : public FCarlaActor

@@ -34,12 +34,13 @@ using namespace std::chrono_literals;
     return actors.GetActorsById(actor_ids);
   }
 
-  Episode::Episode(Client &client)
-    : Episode(client, client.GetEpisodeInfo()) {}
+  Episode::Episode(Client &client, std::weak_ptr<Simulator> simulator)
+    : Episode(client, client.GetEpisodeInfo(), simulator) {}
 
-  Episode::Episode(Client &client, const rpc::EpisodeInfo &info)
+  Episode::Episode(Client &client, const rpc::EpisodeInfo &info, std::weak_ptr<Simulator> simulator)
     : _client(client),
       _state(std::make_shared<EpisodeState>(info.id)),
+      _simulator(simulator),
       _token(info.token) {}
 
   Episode::~Episode() {
@@ -121,18 +122,6 @@ using namespace std::chrono_literals;
     return actor;
   }
 
-  std::shared_ptr<WalkerNavigation> Episode::CreateNavigationIfMissing() {
-    std::shared_ptr<WalkerNavigation> navigation;
-    do {
-      navigation = _navigation.load();
-      if (navigation == nullptr) {
-        auto new_navigation = std::make_shared<WalkerNavigation>(_client);
-        _navigation.compare_exchange(&navigation, new_navigation);
-      }
-    } while (navigation == nullptr);
-    return navigation;
-  }
-
   std::vector<rpc::Actor> Episode::GetActorsById(const std::vector<ActorId> &actor_ids) {
     return GetActorsById_Impl(_client, _actors, actor_ids);
   }
@@ -144,7 +133,7 @@ using namespace std::chrono_literals;
   void Episode::OnEpisodeStarted() {
     _actors.Clear();
     _on_tick_callbacks.Clear();
-    _navigation.reset();
+    _walker_navigation.reset();
     traffic_manager::TrafficManager::Release();
   }
 
@@ -160,12 +149,16 @@ using namespace std::chrono_literals;
     return false;
   }
 
-  void Episode::NavigationTick() {
-    // tick pedestrian navigation
-    auto navigation = _navigation.load();
-    if (navigation != nullptr) {
-      navigation->Tick(shared_from_this());
-    }
+  std::shared_ptr<WalkerNavigation> Episode::CreateNavigationIfMissing() {
+    std::shared_ptr<WalkerNavigation> nav;
+    do {
+      nav = _walker_navigation.load();
+      if (nav == nullptr) {
+        auto new_nav = std::make_shared<WalkerNavigation>(_simulator);
+        _walker_navigation.compare_exchange(&nav, new_nav);
+      }
+    } while (nav == nullptr);
+    return nav;
   }
 
 } // namespace detail

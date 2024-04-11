@@ -4,7 +4,11 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "CarlaRecorderQuery.h"
+
 #include "CarlaRecorderHelpers.h"
+
+#include "CarlaRecorder.h"
 
 #include <ctime>
 #include <sstream>
@@ -14,6 +18,8 @@
 #include <carla/rpc/VehicleLightState.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <compiler/enable-ue4-macros.h>
+
+#include <Carla/Vehicle/CarlaWheeledVehicle.h>
 
 inline bool CarlaRecorderQuery::ReadHeader(void)
 {
@@ -196,7 +202,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           for (i = 0; i < Total; ++i)
           {
             Position.Read(File);
-            Info << "  Id: " << Position.DatabaseId << " Location: (" << Position.Location.X << ", " << Position.Location.Y << ", " << Position.Location.Z << ") Rotation (" <<  Position.Rotation.X << ", " << Position.Rotation.Y << ", " << Position.Rotation.Z << ")" << std::endl;
+            Info << "  Id: " << Position.DatabaseId << " Location: (" << Position.Location.X << ", " << Position.Location.Y << ", " << Position.Location.Z << ") Rotation: (" <<  Position.Rotation.X << ", " << Position.Rotation.Y << ", " << Position.Rotation.Z << ")" << std::endl;
           }
         }
         else
@@ -239,7 +245,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           for (i = 0; i < Total; ++i)
           {
             Vehicle.Read(File);
-            Info << "  Id: " << Vehicle.DatabaseId << " Steering: " << Vehicle.Steering << " Throttle: " << Vehicle.Throttle << " Brake " << Vehicle.Brake << " Handbrake: " << Vehicle.bHandbrake << " Gear: " << Vehicle.Gear << std::endl;
+            Info << "  Id: " << Vehicle.DatabaseId << " Steering: " << Vehicle.Steering << " Throttle: " << Vehicle.Throttle << " Brake: " << Vehicle.Brake << " Handbrake: " << Vehicle.bHandbrake << " Gear: " << Vehicle.Gear << std::endl;
           }
         }
         else
@@ -266,6 +272,49 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
         else
           SkipPacket();
         break;
+
+      // vehicle door animations
+      case static_cast<char>(CarlaRecorderPacketId::VehicleDoor):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+          Info << " Vehicle door animations: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            DoorVehicle.Read(File);
+
+            CarlaRecorderDoorVehicle::VehicleDoorType doorVehicle;
+            doorVehicle = DoorVehicle.Doors;
+            EVehicleDoor eDoorVehicle = static_cast<EVehicleDoor>(doorVehicle);
+            std::string opened_doors_list;
+
+            Info << "  Id: " << DoorVehicle.DatabaseId << std::endl; 
+            Info << "  Doors opened: "; 
+            if (eDoorVehicle == EVehicleDoor::FL)
+              Info << " Front Left " << std::endl;
+            if (eDoorVehicle == EVehicleDoor::FR)
+              Info << " Front Right " << std::endl;
+            if (eDoorVehicle == EVehicleDoor::RL)
+              Info << " Rear Left " << std::endl;
+            if (eDoorVehicle == EVehicleDoor::RR)
+              Info << " Rear Right " << std::endl;
+            if (eDoorVehicle == EVehicleDoor::Hood)
+              Info << " Hood " << std::endl;
+            if (eDoorVehicle == EVehicleDoor::Trunk)
+              Info << " Trunk " << std::endl;
+            if (eDoorVehicle == EVehicleDoor::All)
+              Info << " All " << std::endl;
+          }
+        }
+        else
+          SkipPacket();
+        break;
+
 
       // vehicle light animations
       case static_cast<char>(CarlaRecorderPacketId::VehicleLight):

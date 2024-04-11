@@ -10,6 +10,7 @@ enum class ECarlaServerResponse
 {
   Success,
   ActorNotFound,
+  ComponentNotFound,
   ActorTypeMismatch,
   FunctionNotSupported,
   NullActor,
@@ -24,4 +25,4 @@ enum class ECarlaServerResponse
   FunctionNotAvailiableWhenDormant
 };
 
-FString GetStringError(ECarlaServerResponse Response);
+FString CarlaGetStringError(ECarlaServerResponse Response);

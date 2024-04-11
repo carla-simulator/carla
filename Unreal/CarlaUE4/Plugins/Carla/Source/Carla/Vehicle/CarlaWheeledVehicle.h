@@ -406,6 +406,9 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void CloseDoorPhys(const EVehicleDoor DoorIdx);
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void RecordDoorChange(const EVehicleDoor DoorIdx, const bool bIsOpen); 
+
   virtual FVector GetVelocity() const override;
 
 //-----CARSIM--------------------------------
@@ -420,6 +423,12 @@ public:
 
   carla::rpc::VehicleFailureState GetFailureState() const;
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  static FRotator GetPhysicsConstraintAngle(UPhysicsConstraintComponent* Component);
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  static void SetPhysicsConstraintAngle(
+      UPhysicsConstraintComponent*Component, const FRotator &NewAngle);
+ 
 private:
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)

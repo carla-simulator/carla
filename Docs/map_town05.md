@@ -24,10 +24,10 @@ In the middle of the town there is also a building under construction.
 
 ![town_05_construction](../img/catalogue/maps/town05/town05_under_construction.webp)
 
-The middle of the town has a car park.
+There is a carpark occupying one city block.
 
 ![town_05_carpark](../img/catalogue/maps/town05/town05_carpark.webp)
 
-In the middle of the town, the road extends under a commercial building.
+The road extends beneath a commercial building in one location.
 
 ![town_05_road_under_building](../img/catalogue/maps/town05/town05_under_buildings.webp)

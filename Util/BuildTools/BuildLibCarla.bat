@@ -37,6 +37,10 @@ if not "%1"=="" (
     if "%1"=="--clean" (
         set REMOVE_INTERMEDIATE=true
     )
+    if "%1"=="--generator" (
+        set GENERATOR=%2
+        shift
+    )
     if "%1"=="-h" (
         echo %DOC_STRING%
         echo %USAGE_STRING%
@@ -68,6 +72,9 @@ rem Set the visual studio solution directory
 rem
 set LIBCARLA_VSPROJECT_PATH=%INSTALLATION_DIR:/=\%libcarla-visualstudio\
 
+if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
+
+
 set LIBCARLA_SERVER_INSTALL_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies\
 set LIBCARLA_CLIENT_INSTALL_PATH=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 
@@ -97,14 +104,25 @@ if %REMOVE_INTERMEDIATE% == true (
 if not exist "%LIBCARLA_VSPROJECT_PATH%" mkdir "%LIBCARLA_VSPROJECT_PATH%"
 cd "%LIBCARLA_VSPROJECT_PATH%"
 
+echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
+    set PLATFORM=-A x64
+) || (
+    set PLATFORM=
+)
+
+rem For some reason the findstr above sets an errorlevel even if it finds the string in this batch file.
+set errorlevel=0
+
+
 rem Build libcarla server
 rem
 if %BUILD_SERVER% == true (
-    cmake -G "Visual Studio 16 2019" -A x64^
+    cmake -G %GENERATOR% %PLATFORM%^
       -DCMAKE_BUILD_TYPE=Server^
       -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
       -DCMAKE_INSTALL_PREFIX="%LIBCARLA_SERVER_INSTALL_PATH:\=/%"^
       "%ROOT_PATH%"
+
     if %errorlevel% neq 0 goto error_cmake
 
     cmake --build . --config Release --target install | findstr /V "Up-to-date:"
@@ -114,7 +132,7 @@ if %BUILD_SERVER% == true (
 rem Build libcarla client
 rem
 if %BUILD_CLIENT% == true (
-    cmake -G "Visual Studio 16 2019" -A x64^
+    cmake -G %GENERATOR% %PLATFORM%^
       -DCMAKE_BUILD_TYPE=Client^
       -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
       -DCMAKE_INSTALL_PREFIX="%LIBCARLA_CLIENT_INSTALL_PATH:\=/%"^
@@ -147,7 +165,7 @@ rem ============================================================================
 
 :error_install
     echo.
-    echo %FILE_N% [ERROR] An error ocurred while installing using Visual Studio 16 2019 Win64.
+    echo %FILE_N% [ERROR] An error ocurred while installing using %GENERATOR% Win64.
     echo           [ERROR] Possible causes:
     echo           [ERROR]  - Make sure you have Visual Studio installed.
     echo           [ERROR]  - Make sure you have the "x64 Visual C++ Toolset" in your path.

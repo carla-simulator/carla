@@ -217,6 +217,8 @@ window.addEventListener('load', function () {
         parentX.replaceChild(newX, text_coord_x);
         parentY.replaceChild(newY, text_coord_y);
 
+        //console.log(state.pX + ", " + state.pY)
+
     })
 
 })

@@ -27,9 +27,15 @@ if not "%1"=="" (
     if "%1"=="--help" (
         goto help
     )
+    if "%1"=="--generator" (
+        set GENERATOR=%2
+        shift
+    )
     shift
     goto :arg-parse
 )
+
+if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
 
 rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
@@ -52,7 +58,7 @@ rem ../xerces-c-x.x.x-src.zip
 set XERCESC_TEMP_FILE_DIR=%BUILD_DIR%%XERCESC_TEMP_FILE%
 
 set XERCESC_REPO=https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-%XERCESC_VERSION%.zip
-set XERCESC_BACKUP_REPO=https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/xerces-c-%XERCESC_VERSION%.zip
+set XERCESC_BACKUP_REPO=https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/xerces-c-%XERCESC_VERSION%.zip
 
 rem ../xerces-c-x.x.x-source/
 set XERCESC_SRC_DIR=%BUILD_DIR%%XERCESC_BASENAME%-%XERCESC_VERSION%-source\
@@ -87,7 +93,7 @@ if not exist "%XERCESC_SRC_DIR%" (
     del "%XERCESC_TEMP_FILE_DIR%"
     echo %FILE_N% Removing dir "%BUILD_DIR%manifest"
     rmdir /s/q "%BUILD_DIR%manifest"
-    
+
     echo %FILE_N% Renaming dir %XERCESC_TEMP_FOLDER_DIR% to %XERCESC_BASENAME%-%XERCESC_VERSION%-source
     rename "%XERCESC_TEMP_FOLDER_DIR%" "%XERCESC_BASENAME%-%XERCESC_VERSION%-source"
 ) else (
@@ -115,13 +121,19 @@ if not exist "%XERCESC_INSTALL_DIR%include" (
     mkdir "%XERCESC_INSTALL_DIR%include"
 )
 
-cmake .. -G "Visual Studio 16 2019" -A x64^
+echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
+    set PLATFORM=-A x64
+) || (
+    set PLATFORM=
+)
+
+cmake .. -G %GENERATOR% %PLATFORM%^
   -DCMAKE_INSTALL_PREFIX="%XERCESC_INSTALL_DIR:\=/%"^
   -DBUILD_SHARED_LIBS=OFF^
   "%BUILD_DIR%%XERCESC_BASENAME%-%XERCESC_VERSION%-source"
 if %errorlevel% neq 0 goto error_cmake
 
-cmake --build . --config Release --target install 
+cmake --build . --config Release --target install
 
 goto success
 

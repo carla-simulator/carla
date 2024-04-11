@@ -8,13 +8,14 @@ DOC_STRING="Download and install the required libraries for carla."
 
 USAGE_STRING="Usage: $0 [--python-version=VERSION]"
 
-OPTS=`getopt -o h --long help,chrono,pytorch,python-version: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,chrono,ros2,pytorch,python-version: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
 PY_VERSION_LIST=3
 USE_CHRONO=false
 USE_PYTORCH=false
+USE_ROS2=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -26,6 +27,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --pytorch )
       USE_PYTORCH=true;
+      shift ;;
+    --ros2 )
+      USE_ROS2=true;
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -57,6 +61,7 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 
 LLVM_INCLUDE="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
 LLVM_LIBPATH="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
+UNREAL_HOSTED_CFLAGS="--sysroot=$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/"
 
 # ==============================================================================
 # -- Get boost includes --------------------------------------------------------
@@ -64,6 +69,7 @@ LLVM_LIBPATH="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-u
 
 BOOST_VERSION=1.80.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
+BOOST_SHA256SUM="4b2136f98bdd1f5857f1c3dea9ac2018effe65286cf251534b6ae20cc45e1847"
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
@@ -86,15 +92,30 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
 
     log "Retrieving boost."
-    wget "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+
+    start=$(date +%s)
+    wget "https://archives.boost.io/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+    end=$(date +%s)
+    echo "Elapsed Time downloading from boost webpage: $(($end-$start)) seconds"
+
     # try to use the backup boost we have in Jenkins
-    if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ]] ; then
+    if [ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ] || [[ $(sha256sum "${BOOST_PACKAGE_BASENAME}.tar.gz") != "${BOOST_SHA256SUM}" ]] ; then
       log "Using boost backup"
-      wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+
+      start=$(date +%s)
+      wget "https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+      end=$(date +%s)
+      echo "Elapsed Time downloading from boost carla backup in backblaze: $(($end-$start)) seconds"
+
     fi
 
     log "Extracting boost for Python ${PY_VERSION}."
+
+    start=$(date +%s)
     tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
+    end=$(date +%s)
+    echo "Elapsed Time Extracting boost for Python: $(($end-$start)) seconds"
+
     mkdir -p ${BOOST_BASENAME}-install/include
     mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
 
@@ -160,8 +181,13 @@ else
 
   log "Retrieving rpclib."
 
+  start_download_time=$(date +%s)
+
   git clone -b ${RPCLIB_PATCH} https://github.com/carla-simulator/rpclib.git ${RPCLIB_BASENAME}-source
 
+  end_download_time=$(date +%s)
+
+  echo "Elapsed Time downloading rpclib: $(($end_download_time-$start_download_time)) seconds"
   log "Building rpclib with libc++."
 
   # rpclib does not use any cmake 3.9 feature.
@@ -173,7 +199,7 @@ else
   pushd ${RPCLIB_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS ${UNREAL_HOSTED_CFLAGS}" \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libcxx-install" \
       ../${RPCLIB_BASENAME}-source
 
@@ -228,7 +254,12 @@ else
 
   log "Retrieving Google Test."
 
+  start_download_time=$(date +%s)
+
   git clone --depth=1 -b release-${GTEST_VERSION} https://github.com/google/googletest.git ${GTEST_BASENAME}-source
+
+  end_download_time=$(date +%s)
+  echo "Elapsed Time downloading rpclib: $(($end-$start)) seconds"
 
   log "Building Google Test with libc++."
 
@@ -237,7 +268,7 @@ else
   pushd ${GTEST_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -fno-exceptions" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -fno-exceptions ${UNREAL_HOSTED_CFLAGS}" \
       -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libcxx-install" \
       ../${GTEST_BASENAME}-source
 
@@ -274,9 +305,7 @@ unset GTEST_BASENAME
 # -- Get Recast&Detour and compile it with libc++ ------------------------------
 # ==============================================================================
 
-RECAST_HASH=0b13b0
-RECAST_COMMIT=0b13b0d288ac96fdc5347ee38299511c6e9400db
-RECAST_BASENAME=recast-${RECAST_HASH}-${CXX_TAG}
+RECAST_BASENAME=recast-${CXX_TAG}
 
 RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
 RECAST_LIBPATH=${PWD}/${RECAST_BASENAME}-install/lib
@@ -292,11 +321,14 @@ else
 
   log "Retrieving Recast & Detour"
 
-  git clone https://github.com/carla-simulator/recastnavigation.git ${RECAST_BASENAME}-source
+  start=$(date +%s)
+
+  git clone --depth 1 -b carla https://github.com/carla-simulator/recastnavigation.git ${RECAST_BASENAME}-source
+
+  end=$(date +%s)
+  echo "Elapsed Time downloading: $(($end-$start)) seconds"
 
   pushd ${RECAST_BASENAME}-source >/dev/null
-
-  git reset --hard ${RECAST_COMMIT}
 
   popd >/dev/null
 
@@ -320,10 +352,6 @@ else
   popd >/dev/null
 
   rm -Rf ${RECAST_BASENAME}-source ${RECAST_BASENAME}-build
-
-  # move headers inside 'recast' folder
-  mkdir -p "${PWD}/${RECAST_BASENAME}-install/include/recast"
-  mv "${PWD}/${RECAST_BASENAME}-install/include/"*h "${PWD}/${RECAST_BASENAME}-install/include/recast/"
 
 fi
 
@@ -351,10 +379,18 @@ if [[ -d ${LIBPNG_INSTALL} ]] ; then
   log "Libpng already installed."
 else
   log "Retrieving libpng."
-  wget ${LIBPNG_REPO}
 
+  start=$(date +%s)
+  wget ${LIBPNG_REPO}
+  end=$(date +%s)
+  echo "Elapsed Time downloading libpng: $(($end-$start)) seconds"
+
+  start=$(date +%s)
   log "Extracting libpng."
   tar -xf libpng-${LIBPNG_VERSION}.tar.xz
+  end=$(date +%s)
+  echo "Elapsed Time Extracting libpng: $(($end-$start)) seconds"
+
   mv ${LIBPNG_BASENAME} ${LIBPNG_BASENAME}-source
 
   pushd ${LIBPNG_BASENAME}-source >/dev/null
@@ -388,16 +424,26 @@ if [[ -d ${XERCESC_INSTALL_DIR} &&  -d ${XERCESC_INSTALL_SERVER_DIR} ]] ; then
   log "Xerces-c already installed."
 else
   log "Retrieving xerces-c."
+  start=$(date +%s)
   wget ${XERCESC_REPO}
-
+  end=$(date +%s)
+  echo "Elapsed Time downloading from xerces repo: $(($end-$start)) seconds"
   # try to use the backup boost we have in Jenkins
   if [[ ! -f "${XERCESC_BASENAME}.tar.gz" ]] ; then
     log "Using xerces backup"
-    wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${XERCESC_BASENAME}.tar.gz" || true
+    start=$(date +%s)
+    wget "https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/${XERCESC_BASENAME}.tar.gz" || true
+    end=$(date +%s)
+    echo "Elapsed Time downloading from xerces backup: $(($end-$start)) seconds"
   fi
 
   log "Extracting xerces-c."
+
+  start=$(date +%s)
   tar -xzf ${XERCESC_BASENAME}.tar.gz
+  end=$(date +%s)
+  echo "Elapsed Time Extracting xerces-c: $(($end-$start)) seconds"
+
   mv ${XERCESC_BASENAME} ${XERCESC_SRC_DIR}
   mkdir -p ${XERCESC_INSTALL_DIR}
   mkdir -p ${XERCESC_SRC_DIR}/build
@@ -461,10 +507,18 @@ if [[ -d ${EIGEN_INSTALL_DIR} ]] ; then
   log "Eigen already installed."
 else
   log "Retrieving Eigen."
+
+  start=$(date +%s)
   wget ${EIGEN_REPO}
+  end=$(date +%s)
+  echo "Elapsed Time downloading from eigen repo: $(($end-$start)) seconds"
 
   log "Extracting Eigen."
+  start=$(date +%s)
   tar -xzf ${EIGEN_BASENAME}.tar.gz
+  end=$(date +%s)
+  echo "Elapsed Time Extracting EIGEN: $(($end-$start)) seconds"
+
   mv ${EIGEN_BASENAME} ${EIGEN_SRC_DIR}
   mkdir -p ${EIGEN_INCLUDE}/unsupported
   mv ${EIGEN_SRC_DIR}/Eigen ${EIGEN_INCLUDE}
@@ -496,10 +550,19 @@ if ${USE_CHRONO} ; then
     log "Eigen already installed."
   else
     log "Retrieving Eigen."
+
+    start=$(date +%s)
     wget ${EIGEN_REPO}
+    end=$(date +%s)
+    echo "Elapsed Time: $(($end-$start)) seconds"
 
     log "Extracting Eigen."
+
+    start=$(date +%s)
     tar -xzf ${EIGEN_BASENAME}.tar.gz
+    end=$(date +%s)
+    echo "Elapsed Time Extracting for Eigen: $(($end-$start)) seconds"
+
     mv ${EIGEN_BASENAME} ${EIGEN_SRC_DIR}
     mkdir -p ${EIGEN_INCLUDE}/unsupported
     mv ${EIGEN_SRC_DIR}/Eigen ${EIGEN_INCLUDE}
@@ -527,14 +590,17 @@ if ${USE_CHRONO} ; then
     log "chrono library already installed."
   else
     log "Retrieving chrono library."
+    start=$(date +%s)
     git clone --depth 1 --branch ${CHRONO_TAG} ${CHRONO_REPO} ${CHRONO_SRC_DIR}
+    end=$(date +%s)
+    echo "Elapsed Time dowloading chrono: $(($end-$start)) seconds"
 
     mkdir -p ${CHRONO_SRC_DIR}/build
 
     pushd ${CHRONO_SRC_DIR}/build >/dev/null
 
     cmake -G "Ninja" \
-        -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH} -Wno-unused-command-line-argument" \
+        -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH} -Wno-unused-command-line-argument ${UNREAL_HOSTED_CFLAGS}" \
         -DEIGEN3_INCLUDE_DIR="../../${EIGEN_INCLUDE}" \
         -DCMAKE_INSTALL_PREFIX="../../${CHRONO_INSTALL_DIR}" \
         -DCMAKE_BUILD_TYPE=Release \
@@ -574,10 +640,19 @@ if [[ -d ${SQLITE_INSTALL_DIR} ]] ; then
   log "Sqlite already installed."
 else
   log "Retrieving Sqlite3"
+
+  start=$(date +%s)
   wget ${SQLITE_REPO}
+  end=$(date +%s)
+  echo "Elapsed Time: $(($end-$start)) seconds"
 
   log "Extracting Sqlite3"
+
+  start=$(date +%s)
   tar -xzf ${SQLITE_TAR}
+  end=$(date +%s)
+  echo "Elapsed Time Extracting for SQlite: $(($end-$start)) seconds"
+
   mv ${SQLITE_VERSION} ${SQLITE_SOURCE_DIR}
 
   mkdir ${SQLITE_INSTALL_DIR}
@@ -621,10 +696,18 @@ if [[ -d ${PROJ_INSTALL_DIR} && -d ${PROJ_INSTALL_SERVER_DIR_FULL} ]] ; then
   log "PROJ already installed."
 else
   log "Retrieving PROJ"
+
+  start=$(date +%s)
   wget ${PROJ_REPO}
+  end=$(date +%s)
+  echo "Elapsed Time: $(($end-$start)) seconds"
 
   log "Extracting PROJ"
+  start=$(date +%s)
   tar -xzf ${PROJ_TAR}
+  end=$(date +%s)
+  echo "Elapsed Time Extracting for PROJ: $(($end-$start)) seconds"
+
   mv ${PROJ_VERSION} ${PROJ_SRC_DIR}
 
   mkdir -p ${PROJ_SRC_DIR}/build
@@ -692,10 +775,18 @@ if [[ -d ${PATCHELF_INSTALL_DIR} ]] ; then
   log "Patchelf already installed."
 else
   log "Retrieving patchelf"
+
+  start=$(date +%s)
   wget ${PATCHELF_REPO}
+  end=$(date +%s)
+  echo "Elapsed Time: $(($end-$start)) seconds"
 
   log "Extracting patchelf"
+  start=$(date +%s)
   tar -xzf ${PATCHELF_TAR}
+  end=$(date +%s)
+  echo "Elapsed Time Extracting patchelf: $(($end-$start)) seconds"
+
   mv patchelf-${PATCHELF_VERSION} ${PATCHELF_SOURCE_DIR}
 
   mkdir ${PATCHELF_INSTALL_DIR}
@@ -717,7 +808,7 @@ mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
 cp ${PATCHELF_EXE} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
 
 # ==============================================================================
-# -- Download libtorch and dependencies --------------------------------------------------
+# -- Download libtorch and dependencies ----------------------------------------
 # ==============================================================================
 
 if ${USE_PYTORCH} ; then
@@ -730,7 +821,12 @@ if ${USE_PYTORCH} ; then
   LIBTORCH_ZIPFILE=libtorch-shared-with-deps-1.11.0+cu113.zip
   LIBTORCH_REPO=https://download.pytorch.org/libtorch/cu113/libtorch-shared-with-deps-1.11.0%2Bcu113.zip
   if [[ ! -d ${LIBTORCH_PATH} ]] ; then
+
+    start=$(date +%s)
     wget ${LIBTORCH_REPO}
+    end=$(date +%s)
+    echo "Elapsed Time downloading LIBTORCH_REPO: $(($end-$start)) seconds"
+
     unzip ${LIBTORCH_ZIPFILE}
   fi
 
@@ -787,13 +883,95 @@ if ${USE_PYTORCH} ; then
   cp -p ${LIBTORCH_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p ${LIBTORCHSCATTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
   cp -p ${LIBTORCHCLUSTER_LIB}/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-  
+
   mkdir -p ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   cp -p ${LIBTORCH_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   cp -p ${LIBTORCHSCATTER_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
   cp -p ${LIBTORCHCLUSTER_LIB}/*.so* ${CARLAUE4_PLUGIN_ROOT_FOLDER}/Binaries/Linux/
 fi
 
+# ==============================================================================
+# -- Download Fast DDS and dependencies ----------------------------------------
+# ==============================================================================
+
+FASTDDS_BASENAME=fast-dds
+FASTDDS_INSTALL_DIR=${PWD}/${FASTDDS_BASENAME}-install
+FASTDDS_INCLUDE=${FASTDDS_INSTALL_DIR}/include
+FASTDDS_LIB=${FASTDDS_INSTALL_DIR}/lib
+if ${USE_ROS2} ; then
+  function build_fastdds_extension {
+    LIB_SOURCE=$1
+    LIB_REPO=$2
+    LIB_BRANCH=$3
+    if [[ ! -d ${LIB_SOURCE} ]] ; then
+      mkdir -p ${LIB_SOURCE}
+      log "${LIB_REPO}"
+      start=$(date +%s)
+      git clone --depth 1 --branch ${LIB_BRANCH} ${LIB_REPO} ${LIB_SOURCE}
+      end=$(date +%s)
+      echo "Elapsed Time dowloading fastdds extension: $(($end-$start)) seconds"
+      mkdir -p ${LIB_SOURCE}/build
+    fi
+  }
+  if [[ ! -d ${FASTDDS_INSTALL_DIR} ]] ; then
+    mkdir -p ${FASTDDS_INSTALL_DIR}
+    log "Build foonathan memory vendor"
+    FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan-memory-vendor
+    FOONATHAN_MEMORY_VENDOR_SOURCE_DIR=${PWD}/${FOONATHAN_MEMORY_VENDOR_BASENAME}-source
+    FOONATHAN_MEMORY_VENDOR_REPO="https://github.com/eProsima/foonathan_memory_vendor.git"
+    FOONATHAN_MEMORY_VENDOR_BRANCH=master
+    build_fastdds_extension ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR} "${FOONATHAN_MEMORY_VENDOR_REPO}" "${FOONATHAN_MEMORY_VENDOR_BRANCH}"
+    pushd ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}/build >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DBUILD_SHARED_LIBS=ON \
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+      -DFOONATHAN_MEMORY_FORCE_VENDORED_BUILD=ON \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}
+
+    log "Build fast cdr"
+    FAST_CDR_BASENAME=fast-cdr
+    FAST_CDR_SOURCE_DIR=${PWD}/${FAST_CDR_BASENAME}-source
+    FAST_CDR_REPO="https://github.com/eProsima/Fast-CDR.git"
+    FAST_CDR_BRANCH=1.1.x
+    build_fastdds_extension ${FAST_CDR_SOURCE_DIR} "${FAST_CDR_REPO}" "${FAST_CDR_BRANCH}"
+    pushd ${FAST_CDR_SOURCE_DIR}/build >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${FAST_CDR_SOURCE_DIR}
+
+    log "Build fast dds"
+    FAST_DDS_LIB_BASENAME=fast-dds-lib
+    FAST_DDS_LIB_SOURCE_DIR=${PWD}/${FAST_DDS_LIB_BASENAME}-source
+    FAST_DDS_LIB_REPO="https://github.com/eProsima/Fast-DDS.git"
+    FAST_DDS_LIB_BRANCH=2.11.2
+    build_fastdds_extension ${FAST_DDS_LIB_SOURCE_DIR} "${FAST_DDS_LIB_REPO}" "${FAST_DDS_LIB_BRANCH}"
+    pushd ${FAST_DDS_LIB_SOURCE_DIR}/build >/dev/null
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
+      -DCMAKE_CXX_FLAGS=-latomic \
+      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+      -DTHIRDPARTY_Asio=FORCE \
+      -DTHIRDPARTY_TinyXML2=FORCE \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${FAST_DDS_LIB_SOURCE_DIR}
+
+    mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+    cp -p ${FASTDDS_LIB}/*.so* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  fi
+fi
 
 # ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
@@ -844,9 +1022,9 @@ cp ${LIBSTDCPP_TOOLCHAIN_FILE}.gen ${LIBCPP_TOOLCHAIN_FILE}.gen
 cat >>${LIBCPP_TOOLCHAIN_FILE}.gen <<EOL
 
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -isystem ${LLVM_INCLUDE}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -isystem ${LLVM_INCLUDE} ${UNREAL_HOSTED_CFLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions" CACHE STRING "" FORCE)
-set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -L${LLVM_LIBPATH}" CACHE STRING "" FORCE)
+set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -L${LLVM_LIBPATH} ${UNREAL_HOSTED_CFLAGS}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -lc++ -lc++abi" CACHE STRING "" FORCE)
 EOL
 
@@ -873,6 +1051,8 @@ endif ()
 add_definitions(-DLIBCARLA_TEST_CONTENT_FOLDER="${LIBCARLA_TEST_CONTENT_FOLDER}")
 
 set(BOOST_INCLUDE_PATH "${BOOST_INCLUDE}")
+set(FASTDDS_INCLUDE_PATH "${FASTDDS_INCLUDE}")
+set(FASTDDS_LIB_PATH "${FASTDDS_LIB}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Server")
   # Here libraries linking libc++.
@@ -882,6 +1062,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBCXX_LIBPATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBCXX_LIBPATH}")
+elseif (CMAKE_BUILD_TYPE STREQUAL "ros2")
+  list(APPEND CMAKE_PREFIX_PATH "${FASTDDS_INSTALL_DIR}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Pytorch")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCH_PATH}")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHSCATTER_INSTALL_DIR}")

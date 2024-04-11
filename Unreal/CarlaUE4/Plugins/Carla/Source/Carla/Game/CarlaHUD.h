@@ -21,6 +21,7 @@
 // We can fix that by just undefining the function that conflicts with the name of the Windows API in Unicode.
 #undef DrawText
 
+#include "Carla.h"
 #include "Containers/Array.h"
 #include "GameFramework/HUD.h"
 #include "WheeledVehicleMovementComponent.h"
@@ -30,6 +31,15 @@ struct HUDString
 {
   FString Str { "" };
   FVector Location;
+  FColor Color;
+  double TimeToDie;
+};
+
+struct HUDLine
+{
+  FVector Begin;
+  FVector End;
+  float Thickness;
   FColor Color;
   double TimeToDie;
 };
@@ -54,7 +64,9 @@ public:
   void AddDebugVehicleForTelemetry(UWheeledVehicleMovementComponent* Veh) { DebugVehicle = Veh; }
 
   void AddHUDString(const FString Str, const FVector Location, const FColor Color, double LifeTime);
+  void AddHUDLine(const FVector Begin, const FVector End, const float Thickness, const FColor Color, double LifeTime);
 
 private:
   TArray<HUDString> StringList;
+  TArray<HUDLine> LineList;
 };

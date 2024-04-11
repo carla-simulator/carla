@@ -6,9 +6,16 @@
 
 #include "PrepareAssetsForCookingCommandlet.h"
 
+#include "AssetRegistry/AssetRegistryModule.h"
+
+#include "SSTags.h"
+
 #if WITH_EDITOR
 #include "FileHelpers.h"
 #endif
+#include "Misc/FileHelper.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 #include "HAL/PlatformFilemanager.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInstanceConstant.h"
@@ -27,6 +34,9 @@ static bool ValidateStaticMesh(UStaticMesh *Mesh)
   for (int i = 0; i < Mesh->StaticMaterials.Num(); i++)
   {
     UMaterialInterface *Material = Mesh->GetMaterial(i);
+    if (!Material) {
+      Material = UMaterial::GetDefaultMaterial(MD_Surface);
+    }
     const FString MaterialName = Material->GetName();
 
     if (MaterialName.Contains(TEXT("light"), ESearchCase::IgnoreCase) ||

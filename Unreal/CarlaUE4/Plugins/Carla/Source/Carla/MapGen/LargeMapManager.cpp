@@ -5,6 +5,10 @@
 #include "LargeMapManager.h"
 
 #include "Engine/WorldComposition.h"
+#include "Engine/ObjectLibrary.h"
+#include "Game/CarlaStatics.h"
+#include "Actor/ActorRegistry.h"
+#include "Game/CarlaEpisode.h"
 #include "Engine/EngineTypes.h"
 #include "Components/PrimitiveComponent.h"
 #include "Landscape.h"
@@ -427,7 +431,7 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
   GEngine->ForceGarbageCollection(true);
 
   ActorsToConsider.Reset();
-  if (Spectator)
+  if (SpectatorAsEgo && Spectator)
   {
     ActorsToConsider.Add(Spectator);
   }
@@ -734,7 +738,7 @@ void ALargeMapManager::RemovePendingActorsToRemove()
   {
     ActorsToConsider.Remove(ActorToRemove);
   }
-  if(ActorsToConsider.Num() == 0 && Spectator)
+  if(ActorsToConsider.Num() == 0 && SpectatorAsEgo && Spectator)
   {
     ActorsToConsider.Add(Spectator);
   }
@@ -1112,5 +1116,20 @@ void ALargeMapManager::PrintMapInfo()
 
       if (LastMsgIndex > MaxClientLocMsgIndex) break;
     }
+  }
+}
+
+void ALargeMapManager::ConsiderSpectatorAsEgo(bool _SpectatorAsEgo)
+{
+  SpectatorAsEgo = _SpectatorAsEgo;
+  if(SpectatorAsEgo && ActorsToConsider.Num() == 0 && Spectator)
+  {
+    // Activating the spectator in an empty world
+    ActorsToConsider.Add(Spectator);
+  }
+  if (!SpectatorAsEgo && ActorsToConsider.Num() == 1 && ActorsToConsider.Contains(Spectator))
+  {
+    // Deactivating the spectator in a world with no other egos
+    ActorsToConsider.Reset();
   }
 }

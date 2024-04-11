@@ -13,6 +13,10 @@
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include "carla/ros2/ROS2.h"
+#include <compiler/enable-ue4-macros.h>
+
 AObstacleDetectionSensor::AObstacleDetectionSensor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -132,10 +136,33 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
     float HitDistance,
     const FHitResult &Hit)
 {
-  if ((Actor != nullptr) && (OtherActor != nullptr))
+  if ((Actor != nullptr) && (OtherActor != nullptr) && IsStreamReady())
   {
     const auto &Episode = GetEpisode();
-    GetDataStream(*this).Send(*this,
+
+    auto DataStream = GetDataStream(*this);
+
+    // ROS2
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
+      auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
+      AActor* ParentActor = GetAttachParentActor();
+      if (ParentActor)
+      {
+        FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
+        ROS2->ProcessDataFromObstacleDetection(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, Actor, OtherActor, HitDistance/100.0f, this);
+      }
+      else
+      {
+        ROS2->ProcessDataFromObstacleDetection(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), Actor, OtherActor, HitDistance/100.0f, this);
+      }
+    }
+    #endif
+
+    DataStream.SerializeAndSend(*this,
         Episode.SerializeActor(Actor),
         Episode.SerializeActor(OtherActor),
         HitDistance/100.0f);
