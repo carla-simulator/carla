@@ -158,7 +158,7 @@ void UCarlaSettingsDelegate::CheckCarlaSettings(UWorld *world)
   {
     return;
   }
-  if (world == nullptr || !IsValid(world) )
+  if (!IsValid(world))
   {
     world = GetLocalWorld();
   }
