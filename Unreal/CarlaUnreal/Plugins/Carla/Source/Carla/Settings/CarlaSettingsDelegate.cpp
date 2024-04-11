@@ -126,7 +126,7 @@ void UCarlaSettingsDelegate::ApplyQualityLevelPreRestart()
 {
   CheckCarlaSettings(nullptr);
   UWorld *InWorld = CarlaSettings->GetWorld();
-  if ( !IsValid(InWorld) )
+  if (!IsValid(InWorld))
   {
     return;
   }
