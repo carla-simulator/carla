@@ -323,7 +323,7 @@ void UCarlaSettingsDelegate::SetAllActorsDrawDistance(UWorld *world, const float
   /// @TODO: use semantics to grab all actors by type
   /// (vehicles,ground,people,props) and set different distances configured in
   /// the global properties
-  if (!world || !IsValid(world))
+  if (!IsValid(world))
   {
     return;
   }
