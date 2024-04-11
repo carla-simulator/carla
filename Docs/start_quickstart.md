@@ -106,7 +106,7 @@ The package is a compressed file named __CARLA_version.number__. Download and ex
 ---
 ## Import additional assets 
 
-Each release has it's own additional package of extra assets and maps. This additional package includes the maps __Town06__, __Town07__, and __Town10__. These are stored separately to reduce the size of the build, so they can only be imported after the main package has been installed. 
+Each release has it's own additional package of extra assets and maps. This additional package includes the maps __Town06__ and __Town07__. These are stored separately to reduce the size of the build, so they can only be imported after the main package has been installed. 
 
 __1.__ [Download](https://github.com/carla-simulator/carla/blob/master/Docs/download.md) the appropriate package for your desired version of CARLA.
 
