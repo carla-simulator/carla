@@ -48,7 +48,7 @@ void UCarlaSettingsDelegate::RegisterSpawnHandler(UWorld *InWorld)
 void UCarlaSettingsDelegate::OnActorSpawned(AActor *InActor)
 {
   check(CarlaSettings != nullptr);
-  if (InActor != nullptr && IsValid(InActor) &&
+  if (IsValid(InActor) &&
       !InActor->IsA<AInstancedFoliageActor>() && // foliage culling is
                                                  // controlled per instance
       !InActor->IsA<ALandscape>() && // dont touch landscapes nor roads
