@@ -247,7 +247,7 @@ void UCarlaSettingsDelegate::SetAllRoads(
     for (int32 i = 0; i < actors.Num(); i++)
     {
       AActor *actor = actors[i];
-      if (!IsValid(actor) )
+      if (!IsValid(actor))
       {
         continue;
       }
