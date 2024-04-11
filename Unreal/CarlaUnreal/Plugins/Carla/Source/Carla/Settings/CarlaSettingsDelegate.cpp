@@ -422,7 +422,7 @@ void UCarlaSettingsDelegate::SetAllLights(
     const bool cast_shadows,
     const bool hide_non_directional) const
 {
-  if (!world || !IsValid(world))
+  if (!IsValid(world))
   {
     return;
   }
