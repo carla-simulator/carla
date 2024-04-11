@@ -427,7 +427,7 @@ void UCarlaSettingsDelegate::SetAllLights(
     return;
   }
   AsyncTask(ENamedThreads::GameThread, [=]() {
-    if (!world || !IsValid(world))
+    if (!IsValid(world))
     {
       return;
     }
