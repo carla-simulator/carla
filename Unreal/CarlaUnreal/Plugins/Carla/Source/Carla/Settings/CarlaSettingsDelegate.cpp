@@ -237,7 +237,7 @@ void UCarlaSettingsDelegate::SetAllRoads(
     return;
   }
   AsyncTask(ENamedThreads::GameThread, [=]() {
-    if (!world || !IsValid(world))
+    if (!IsValid(world))
     {
       return;
     }
