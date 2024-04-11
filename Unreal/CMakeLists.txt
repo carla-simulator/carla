@@ -337,7 +337,7 @@ function(add_carla_ue_package_target TARGET_NAME_SUFFIX UE_BUILD_CONFIGURATION)
       ${CARLA_UE_BUILD_COMMAND_PREFIX}
       CarlaUnreal
       ${UE_SYSTEM_NAME}
-      Shipping
+      ${UE_BUILD_CONFIGURATION}
       -project=${CARLA_UE_PROJECT_PATH}
       -game
       -buildscw
@@ -352,7 +352,7 @@ function(add_carla_ue_package_target TARGET_NAME_SUFFIX UE_BUILD_CONFIGURATION)
       -archive
       -package
       -iterate
-      -clientconfig=Shipping
+      -clientconfig=${UE_BUILD_CONFIGURATION}
       -TargetPlatform=${UE_SYSTEM_NAME}
       -Platform=${UE_SYSTEM_NAME}
       -prereqs
