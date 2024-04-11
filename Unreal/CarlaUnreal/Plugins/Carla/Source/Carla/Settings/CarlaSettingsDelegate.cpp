@@ -328,7 +328,7 @@ void UCarlaSettingsDelegate::SetAllActorsDrawDistance(UWorld *world, const float
     return;
   }
   AsyncTask(ENamedThreads::GameThread, [=, this]() {
-    if (!world || !IsValid(world))
+    if (!IsValid(world))
     {
       return;
     }
