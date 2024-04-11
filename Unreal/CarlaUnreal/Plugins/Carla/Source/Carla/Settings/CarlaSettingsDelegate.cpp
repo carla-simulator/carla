@@ -232,7 +232,7 @@ void UCarlaSettingsDelegate::SetAllRoads(
     const float max_draw_distance,
     const TArray<FStaticMaterial> &road_pieces_materials) const
 {
-  if (!world || !IsValid(world))
+  if (!IsValid(world))
   {
     return;
   }
