@@ -70,7 +70,13 @@
     - var_name: Sidewalks
     - var_name: TrafficSigns
     - var_name: Vegetation
-    - var_name: Vehicles
+    - var_name: Car
+    - var_name: Bus
+    - var_name: Truck
+    - var_name: Motorcycle
+    - var_name: Bicycle
+    - var_name: Rider
+    - var_name: Train
     - var_name: Walls
     - var_name: Sky
     - var_name: Ground

@@ -101,6 +101,7 @@
         doc: >
           Layers of the map that will be loaded. By default all layers are loaded.
           This parameter works like a flag mask.
+      return: carla.World
       warning: >
         `map_layers` are only available for "Opt" maps
       doc: >
