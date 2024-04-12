@@ -2412,6 +2412,11 @@ class Map():
         """
         ...
 
+    @overload
+    def get_waypoint(self, location: Location, project_to_road=False, lane_type=LaneType.Driving) -> Waypoint | None: 
+        ...
+
+    @overload
     def get_waypoint(self, location: Location, project_to_road=True, lane_type=LaneType.Driving) -> Waypoint:
         """Returns a waypoint that can be located in an exact location or translated to the center of the nearest lane. Said lane type can be defined using flags such as `LaneType.Driving & LaneType.Shoulder`.
 
@@ -2424,7 +2429,7 @@ class Map():
         """
         ...
 
-    def get_waypoint_xodr(self, road_id: int, lane_id: int, s: float) -> Waypoint:
+    def get_waypoint_xodr(self, road_id: int, lane_id: int, s: float) -> Waypoint | None:
         """Returns a waypoint if all the parameters passed are correct. Otherwise, returns `None`.
 
         Args:
