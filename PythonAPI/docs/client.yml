@@ -115,6 +115,7 @@
         doc: >
           Option to reset the episode setting to default values, set to false to keep the current settings.
           This is useful to keep sync mode when changing map and to keep deterministic scenarios.
+      return: carla.World
       raises: RuntimeError when corresponding.
       doc: >
         Reload the current world, note that a new world is created with default
