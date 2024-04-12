@@ -4089,6 +4089,11 @@ Actor affected by the command.
 
 ---
 
+## command.FutureActor<a name="command.FutureActor"></a>
+A utility object used to reference an actor that will be created in the command in the previous step, it has no parameters or methods.  
+
+---
+
 ## command.Response<a name="command.Response"></a>
 States the result of executing a command as either the ID of the actor to whom the command was applied to (when succeeded) or an error string (when failed).  actor ID, depending on whether or not the command succeeded. The method __<font color="#7fb800">apply_batch_sync()</font>__ in [carla.Client](#carla.Client) returns a list of these to summarize the execution of a batch.  
 
