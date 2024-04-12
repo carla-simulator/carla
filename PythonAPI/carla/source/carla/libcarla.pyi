@@ -853,6 +853,25 @@ class Client():
         Returns:
             `World`\n
         """
+        
+    def load_world_if_different(self, map_name: str, reset_settings=True, map_layers=MapLayer.All):
+        """"
+        Creates a new world with default settings using `map_name` map only if it is a different map 
+        from the currently loaded map.
+        Otherwise this function returns `None`. All actors in the current world will be destroyed.
+
+        Args:
+            `map_name (str)`: Name of the map to be used in this world. Accepts both full paths and map names, 
+                    e.g.'/Game/Carla/Maps/Town01' or 'Town01'. Remember that these paths are dynamic.\n
+            `reset_settings (bool, optional)`: Option to reset the episode setting to default values, set to false to keep the current settings.
+                    This is useful to keep sync mode when changing map and to keep deterministic scenarios. 
+                    Defaults to True.\n
+            `map_layers (MapLayer, optional)`: Layers of the map that will be loaded. This parameter works like a flag mask. 
+                    Defaults to MapLayer.All.\n
+
+        Returns:
+            None
+        """
 
     def replay_file(self, name: str, start: float, duration: float, follow_id: int, replay_sensors: bool):
         """Load a new world with default settings using `map_name` map. All actors present in the current world will be destroyed, but traffic manager instances will stay alive.
@@ -5283,6 +5302,9 @@ class command():
                 `actor (Union[Actor, int])`: Actor or its ID to whom the command will be applied to.\n
             """
         # endregion
+        
+    class FutureActor():
+        """A utility object used to reference an actor that will be created in the command in the previous step, it has no parameters or methods."""
 
     class Response():
         """States the result of executing a command as either the ID of the actor to whom the command was applied to (when succeeded) or an error string (when failed). actor ID, depending on whether or not the command succeeded. The method `apply_batch_sync()` in c`arla.Client` returns a list of these to summarize the execution of a batch.
