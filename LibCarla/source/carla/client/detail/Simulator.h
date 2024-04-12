@@ -259,6 +259,14 @@ namespace detail {
       _client.SetWeatherParameters(weather);
     }
 
+    float GetIMUISensorGravity() const {
+      return _client.GetIMUISensorGravity();
+    }
+
+    void SetIMUISensorGravity(float NewIMUISensorGravity) {
+      _client.SetIMUISensorGravity(NewIMUISensorGravity);
+    }
+
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
@@ -461,7 +469,7 @@ namespace detail {
 
     std::vector<std::string> GetActorBoneNames(const Actor &actor) {
       return _client.GetActorBoneNames(actor.GetId());
-    }     
+    }
 
     std::vector<geom::Transform> GetActorSocketWorldTransforms(const Actor &actor) {
       return _client.GetActorSocketWorldTransforms(actor.GetId());
@@ -470,6 +478,10 @@ namespace detail {
     std::vector<geom::Transform> GetActorSocketRelativeTransforms(const Actor &actor) {
       return _client.GetActorSocketRelativeTransforms(actor.GetId());
     }
+
+    std::vector<std::string> GetActorSocketNames(const Actor &actor) {
+      return _client.GetActorSocketNames(actor.GetId());
+    }    
 
     void SetActorLocation(Actor &actor, const geom::Location &location) {
       _client.SetActorLocation(actor.GetId(), location);
@@ -603,6 +615,10 @@ namespace detail {
           PowertrainJSON,
           TireJSON,
           BaseJSONPath);
+    }
+
+    void RestorePhysXPhysics(Vehicle &vehicle) {
+      _client.RestorePhysXPhysics(vehicle.GetId());
     }
 
     /// @}
