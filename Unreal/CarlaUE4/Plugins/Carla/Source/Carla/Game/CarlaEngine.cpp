@@ -25,7 +25,9 @@
 #include <carla/multigpu/commands.h>
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
-#include <carla/ros2/ROS2.h>
+#if defined(WITH_ROS2)
+#  include <carla/ros2/ROS2.h>
+#endif
 #include <carla/streaming/EndPoint.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>

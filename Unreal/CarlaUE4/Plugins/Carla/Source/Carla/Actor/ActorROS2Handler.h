@@ -7,7 +7,9 @@
 #pragma once
 
 #include <compiler/disable-ue4-macros.h>
-#include "carla/ros2/ROS2.h"
+#if defined(WITH_ROS2)
+#  include <carla/ros2/ROS2.h>
+#endif
 #include <compiler/enable-ue4-macros.h>
 
 /// visitor class
@@ -17,7 +19,9 @@ class ActorROS2Handler
         ActorROS2Handler() = delete;
         ActorROS2Handler(AActor *Actor, std::string RosName) : _Actor(Actor), _RosName(RosName) {};
 
+#if defined(WITH_ROS2)
         void operator()(carla::ros2::VehicleControl &Source);
+#endif
 
     private:
         AActor *_Actor {nullptr};

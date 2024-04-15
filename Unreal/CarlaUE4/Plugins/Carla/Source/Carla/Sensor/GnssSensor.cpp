@@ -13,7 +13,9 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Vector3D.h"
-#include "carla/ros2/ROS2.h"
+#if defined(WITH_ROS2)
+#  include "carla/ros2/ROS2.h"
+#endif
 #include <compiler/enable-ue4-macros.h>
 
 AGnssSensor::AGnssSensor(const FObjectInitializer &ObjectInitializer)

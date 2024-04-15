@@ -75,7 +75,7 @@ if ${REMOVE_INTERMEDIATE} ; then
   rm -Rf build dist source/carla.egg-info
 
   find source -name "*.so" -delete
-  find source -name "__pycache__" -type d -exec rm -r "{}" \;
+  find source -name "__pycache__" -type d -exec rm -rf "{}" \;
 
 fi
 

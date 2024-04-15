@@ -17,7 +17,9 @@
 #include "GameFramework/Controller.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include "carla/ros2/ROS2.h"
+#if defined(WITH_ROS2)
+#  include <carla/ros2/ROS2.h>
+#endif
 #include <compiler/enable-ue4-macros.h>
 
 void UActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)

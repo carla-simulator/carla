@@ -13,9 +13,13 @@
 #include "carla/sensor/s11n/GBufferUint8Serializer.h"
 #include "carla/sensor/s11n/GBufferFloatSerializer.h"
 #include "carla/sensor/s11n/NormalsImageSerializer.h"
-#include "carla/ros2/ROS2.h"
 
 namespace carla {
+
+namespace ros2 {
+  class ROS2;
+}
+
 namespace sensor {
 namespace data {
 

@@ -9,6 +9,7 @@
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Vehicle/VehicleControl.h"
 
+#if defined(WITH_ROS2)
 void ActorROS2Handler::operator()(carla::ros2::VehicleControl &Source)
 {
   if (!_Actor) return;
@@ -28,3 +29,4 @@ void ActorROS2Handler::operator()(carla::ros2::VehicleControl &Source)
 
   Vehicle->ApplyVehicleControl(NewControl, EVehicleInputPriority::User);
 }
+#endif

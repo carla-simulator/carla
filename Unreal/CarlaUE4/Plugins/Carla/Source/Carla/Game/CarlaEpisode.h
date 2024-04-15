@@ -22,7 +22,9 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/geom/BoundingBox.h>
 #include <carla/geom/GeoLocation.h>
-#include <carla/ros2/ROS2.h>
+#if defined(WITH_ROS2)
+#  include <carla/ros2/ROS2.h>
+#endif
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/OpendriveGenerationParameters.h>
