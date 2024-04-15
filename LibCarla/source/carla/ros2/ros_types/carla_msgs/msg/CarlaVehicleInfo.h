@@ -27,14 +27,14 @@
 
 #include <stdint.h>
 #include <array>
+#include <bitset>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <bitset>
 
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
-#define eProsima_user_DllExport __declspec( dllexport )
+#define eProsima_user_DllExport __declspec(dllexport)
 #else
 #define eProsima_user_DllExport
 #endif  // EPROSIMA_USER_DLL_EXPORT
@@ -45,498 +45,461 @@
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
 #if defined(CarlaVehicleInfo_SOURCE)
-#define CarlaVehicleInfo_DllAPI __declspec( dllexport )
+#define CarlaVehicleInfo_DllAPI __declspec(dllexport)
 #else
-#define CarlaVehicleInfo_DllAPI __declspec( dllimport )
-#endif // CarlaVehicleInfo_SOURCE
+#define CarlaVehicleInfo_DllAPI __declspec(dllimport)
+#endif  // CarlaVehicleInfo_SOURCE
 #else
 #define CarlaVehicleInfo_DllAPI
 #endif  // EPROSIMA_USER_DLL_EXPORT
 #else
 #define CarlaVehicleInfo_DllAPI
-#endif // _WIN32
+#endif  // _WIN32
 
 namespace eprosima {
 namespace fastcdr {
 class Cdr;
-} // namespace fastcdr
-} // namespace eprosima
-
+}  // namespace fastcdr
+}  // namespace eprosima
 
 namespace carla_msgs {
-    namespace msg {
-        /*!
-         * @brief This class represents the structure CarlaVehicleInfo defined by the user in the IDL file.
-         * @ingroup CARLAVEHICLEINFO
-         */
-        class CarlaVehicleInfo
-        {
-        public:
-
-            /*!
-             * @brief Default constructor.
-             */
-            eProsima_user_DllExport CarlaVehicleInfo();
-
-            /*!
-             * @brief Default destructor.
-             */
-            eProsima_user_DllExport ~CarlaVehicleInfo();
-
-            /*!
-             * @brief Copy constructor.
-             * @param x Reference to the object carla_msgs::msg::CarlaVehicleInfo that will be copied.
-             */
-            eProsima_user_DllExport CarlaVehicleInfo(
-                    const CarlaVehicleInfo& x);
-
-            /*!
-             * @brief Move constructor.
-             * @param x Reference to the object carla_msgs::msg::CarlaVehicleInfo that will be copied.
-             */
-            eProsima_user_DllExport CarlaVehicleInfo(
-                    CarlaVehicleInfo&& x);
-
-            /*!
-             * @brief Copy assignment.
-             * @param x Reference to the object carla_msgs::msg::CarlaVehicleInfo that will be copied.
-             */
-            eProsima_user_DllExport CarlaVehicleInfo& operator =(
-                    const CarlaVehicleInfo& x);
-
-            /*!
-             * @brief Move assignment.
-             * @param x Reference to the object carla_msgs::msg::CarlaVehicleInfo that will be copied.
-             */
-            eProsima_user_DllExport CarlaVehicleInfo& operator =(
-                    CarlaVehicleInfo&& x);
-
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::msg::CarlaVehicleInfo object to compare.
-             */
-            eProsima_user_DllExport bool operator ==(
-                    const CarlaVehicleInfo& x) const;
-
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::msg::CarlaVehicleInfo object to compare.
-             */
-            eProsima_user_DllExport bool operator !=(
-                    const CarlaVehicleInfo& x) const;
-
-            /*!
-             * @brief This function sets a value in member id
-             * @param _id New value for member id
-             */
-            eProsima_user_DllExport void id(
-                    uint32_t _id);
-
-            /*!
-             * @brief This function returns the value of member id
-             * @return Value of member id
-             */
-            eProsima_user_DllExport uint32_t id() const;
-
-            /*!
-             * @brief This function returns a reference to member id
-             * @return Reference to member id
-             */
-            eProsima_user_DllExport uint32_t& id();
-
-            /*!
-             * @brief This function copies the value in member type
-             * @param _type New value to be copied in member type
-             */
-            eProsima_user_DllExport void type(
-                    const std::string& _type);
-
-            /*!
-             * @brief This function moves the value in member type
-             * @param _type New value to be moved in member type
-             */
-            eProsima_user_DllExport void type(
-                    std::string&& _type);
-
-            /*!
-             * @brief This function returns a constant reference to member type
-             * @return Constant reference to member type
-             */
-            eProsima_user_DllExport const std::string& type() const;
-
-            /*!
-             * @brief This function returns a reference to member type
-             * @return Reference to member type
-             */
-            eProsima_user_DllExport std::string& type();
-            /*!
-             * @brief This function copies the value in member rolename
-             * @param _rolename New value to be copied in member rolename
-             */
-            eProsima_user_DllExport void rolename(
-                    const std::string& _rolename);
-
-            /*!
-             * @brief This function moves the value in member rolename
-             * @param _rolename New value to be moved in member rolename
-             */
-            eProsima_user_DllExport void rolename(
-                    std::string&& _rolename);
-
-            /*!
-             * @brief This function returns a constant reference to member rolename
-             * @return Constant reference to member rolename
-             */
-            eProsima_user_DllExport const std::string& rolename() const;
-
-            /*!
-             * @brief This function returns a reference to member rolename
-             * @return Reference to member rolename
-             */
-            eProsima_user_DllExport std::string& rolename();
-            /*!
-             * @brief This function copies the value in member wheels
-             * @param _wheels New value to be copied in member wheels
-             */
-            eProsima_user_DllExport void wheels(
-                    const std::vector<carla_msgs::msg::CarlaVehicleInfoWheel>& _wheels);
-
-            /*!
-             * @brief This function moves the value in member wheels
-             * @param _wheels New value to be moved in member wheels
-             */
-            eProsima_user_DllExport void wheels(
-                    std::vector<carla_msgs::msg::CarlaVehicleInfoWheel>&& _wheels);
-
-            /*!
-             * @brief This function returns a constant reference to member wheels
-             * @return Constant reference to member wheels
-             */
-            eProsima_user_DllExport const std::vector<carla_msgs::msg::CarlaVehicleInfoWheel>& wheels() const;
-
-            /*!
-             * @brief This function returns a reference to member wheels
-             * @return Reference to member wheels
-             */
-            eProsima_user_DllExport std::vector<carla_msgs::msg::CarlaVehicleInfoWheel>& wheels();
-            /*!
-             * @brief This function sets a value in member max_rpm
-             * @param _max_rpm New value for member max_rpm
-             */
-            eProsima_user_DllExport void max_rpm(
-                    float _max_rpm);
-
-            /*!
-             * @brief This function returns the value of member max_rpm
-             * @return Value of member max_rpm
-             */
-            eProsima_user_DllExport float max_rpm() const;
-
-            /*!
-             * @brief This function returns a reference to member max_rpm
-             * @return Reference to member max_rpm
-             */
-            eProsima_user_DllExport float& max_rpm();
-
-            /*!
-             * @brief This function sets a value in member moi
-             * @param _moi New value for member moi
-             */
-            eProsima_user_DllExport void moi(
-                    float _moi);
-
-            /*!
-             * @brief This function returns the value of member moi
-             * @return Value of member moi
-             */
-            eProsima_user_DllExport float moi() const;
-
-            /*!
-             * @brief This function returns a reference to member moi
-             * @return Reference to member moi
-             */
-            eProsima_user_DllExport float& moi();
-
-            /*!
-             * @brief This function sets a value in member damping_rate_full_throttle
-             * @param _damping_rate_full_throttle New value for member damping_rate_full_throttle
-             */
-            eProsima_user_DllExport void damping_rate_full_throttle(
-                    float _damping_rate_full_throttle);
-
-            /*!
-             * @brief This function returns the value of member damping_rate_full_throttle
-             * @return Value of member damping_rate_full_throttle
-             */
-            eProsima_user_DllExport float damping_rate_full_throttle() const;
-
-            /*!
-             * @brief This function returns a reference to member damping_rate_full_throttle
-             * @return Reference to member damping_rate_full_throttle
-             */
-            eProsima_user_DllExport float& damping_rate_full_throttle();
-
-            /*!
-             * @brief This function sets a value in member damping_rate_zero_throttle_clutch_engaged
-             * @param _damping_rate_zero_throttle_clutch_engaged New value for member damping_rate_zero_throttle_clutch_engaged
-             */
-            eProsima_user_DllExport void damping_rate_zero_throttle_clutch_engaged(
-                    float _damping_rate_zero_throttle_clutch_engaged);
-
-            /*!
-             * @brief This function returns the value of member damping_rate_zero_throttle_clutch_engaged
-             * @return Value of member damping_rate_zero_throttle_clutch_engaged
-             */
-            eProsima_user_DllExport float damping_rate_zero_throttle_clutch_engaged() const;
-
-            /*!
-             * @brief This function returns a reference to member damping_rate_zero_throttle_clutch_engaged
-             * @return Reference to member damping_rate_zero_throttle_clutch_engaged
-             */
-            eProsima_user_DllExport float& damping_rate_zero_throttle_clutch_engaged();
-
-            /*!
-             * @brief This function sets a value in member damping_rate_zero_throttle_clutch_disengaged
-             * @param _damping_rate_zero_throttle_clutch_disengaged New value for member damping_rate_zero_throttle_clutch_disengaged
-             */
-            eProsima_user_DllExport void damping_rate_zero_throttle_clutch_disengaged(
-                    float _damping_rate_zero_throttle_clutch_disengaged);
-
-            /*!
-             * @brief This function returns the value of member damping_rate_zero_throttle_clutch_disengaged
-             * @return Value of member damping_rate_zero_throttle_clutch_disengaged
-             */
-            eProsima_user_DllExport float damping_rate_zero_throttle_clutch_disengaged() const;
-
-            /*!
-             * @brief This function returns a reference to member damping_rate_zero_throttle_clutch_disengaged
-             * @return Reference to member damping_rate_zero_throttle_clutch_disengaged
-             */
-            eProsima_user_DllExport float& damping_rate_zero_throttle_clutch_disengaged();
-
-            /*!
-             * @brief This function sets a value in member use_gear_autobox
-             * @param _use_gear_autobox New value for member use_gear_autobox
-             */
-            eProsima_user_DllExport void use_gear_autobox(
-                    bool _use_gear_autobox);
-
-            /*!
-             * @brief This function returns the value of member use_gear_autobox
-             * @return Value of member use_gear_autobox
-             */
-            eProsima_user_DllExport bool use_gear_autobox() const;
-
-            /*!
-             * @brief This function returns a reference to member use_gear_autobox
-             * @return Reference to member use_gear_autobox
-             */
-            eProsima_user_DllExport bool& use_gear_autobox();
-
-            /*!
-             * @brief This function sets a value in member gear_switch_time
-             * @param _gear_switch_time New value for member gear_switch_time
-             */
-            eProsima_user_DllExport void gear_switch_time(
-                    float _gear_switch_time);
-
-            /*!
-             * @brief This function returns the value of member gear_switch_time
-             * @return Value of member gear_switch_time
-             */
-            eProsima_user_DllExport float gear_switch_time() const;
-
-            /*!
-             * @brief This function returns a reference to member gear_switch_time
-             * @return Reference to member gear_switch_time
-             */
-            eProsima_user_DllExport float& gear_switch_time();
-
-            /*!
-             * @brief This function sets a value in member clutch_strength
-             * @param _clutch_strength New value for member clutch_strength
-             */
-            eProsima_user_DllExport void clutch_strength(
-                    float _clutch_strength);
-
-            /*!
-             * @brief This function returns the value of member clutch_strength
-             * @return Value of member clutch_strength
-             */
-            eProsima_user_DllExport float clutch_strength() const;
-
-            /*!
-             * @brief This function returns a reference to member clutch_strength
-             * @return Reference to member clutch_strength
-             */
-            eProsima_user_DllExport float& clutch_strength();
-
-            /*!
-             * @brief This function sets a value in member mass
-             * @param _mass New value for member mass
-             */
-            eProsima_user_DllExport void mass(
-                    float _mass);
-
-            /*!
-             * @brief This function returns the value of member mass
-             * @return Value of member mass
-             */
-            eProsima_user_DllExport float mass() const;
-
-            /*!
-             * @brief This function returns a reference to member mass
-             * @return Reference to member mass
-             */
-            eProsima_user_DllExport float& mass();
-
-            /*!
-             * @brief This function sets a value in member drag_coefficient
-             * @param _drag_coefficient New value for member drag_coefficient
-             */
-            eProsima_user_DllExport void drag_coefficient(
-                    float _drag_coefficient);
-
-            /*!
-             * @brief This function returns the value of member drag_coefficient
-             * @return Value of member drag_coefficient
-             */
-            eProsima_user_DllExport float drag_coefficient() const;
-
-            /*!
-             * @brief This function returns a reference to member drag_coefficient
-             * @return Reference to member drag_coefficient
-             */
-            eProsima_user_DllExport float& drag_coefficient();
-
-            /*!
-             * @brief This function copies the value in member center_of_mass
-             * @param _center_of_mass New value to be copied in member center_of_mass
-             */
-            eProsima_user_DllExport void center_of_mass(
-                    const geometry_msgs::msg::Vector3& _center_of_mass);
-
-            /*!
-             * @brief This function moves the value in member center_of_mass
-             * @param _center_of_mass New value to be moved in member center_of_mass
-             */
-            eProsima_user_DllExport void center_of_mass(
-                    geometry_msgs::msg::Vector3&& _center_of_mass);
-
-            /*!
-             * @brief This function returns a constant reference to member center_of_mass
-             * @return Constant reference to member center_of_mass
-             */
-            eProsima_user_DllExport const geometry_msgs::msg::Vector3& center_of_mass() const;
-
-            /*!
-             * @brief This function returns a reference to member center_of_mass
-             * @return Reference to member center_of_mass
-             */
-            eProsima_user_DllExport geometry_msgs::msg::Vector3& center_of_mass();
-            /*!
-             * @brief This function copies the value in member shape
-             * @param _shape New value to be copied in member shape
-             */
-            eProsima_user_DllExport void shape(
-                    const shape_msgs::msg::SolidPrimitive& _shape);
-
-            /*!
-             * @brief This function moves the value in member shape
-             * @param _shape New value to be moved in member shape
-             */
-            eProsima_user_DllExport void shape(
-                    shape_msgs::msg::SolidPrimitive&& _shape);
-
-            /*!
-             * @brief This function returns a constant reference to member shape
-             * @return Constant reference to member shape
-             */
-            eProsima_user_DllExport const shape_msgs::msg::SolidPrimitive& shape() const;
-
-            /*!
-             * @brief This function returns a reference to member shape
-             * @return Reference to member shape
-             */
-            eProsima_user_DllExport shape_msgs::msg::SolidPrimitive& shape();
-
-            /*!
-             * @brief This function returns the maximum serialized size of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
-
-            /*!
-             * @brief This function returns the serialized size of a data depending on the buffer alignment.
-             * @param data Data which is calculated its serialized size.
-             * @param current_alignment Buffer alignment.
-             * @return Serialized size.
-             */
-            eProsima_user_DllExport static size_t getCdrSerializedSize(
-                    const carla_msgs::msg::CarlaVehicleInfo& data,
-                    size_t current_alignment = 0);
-
-
-            /*!
-             * @brief This function serializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serialize(
-                    eprosima::fastcdr::Cdr& cdr) const;
-
-            /*!
-             * @brief This function deserializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void deserialize(
-                    eprosima::fastcdr::Cdr& cdr);
-
-
-
-            /*!
-             * @brief This function returns the maximum serialized size of the Key of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
-
-            /*!
-             * @brief This function tells you if the Key has been defined for this type
-             */
-            eProsima_user_DllExport static bool isKeyDefined();
-
-            /*!
-             * @brief This function serializes the key members of an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serializeKey(
-                    eprosima::fastcdr::Cdr& cdr) const;
-
-        private:
-
-            uint32_t m_id;
-            std::string m_type;
-            std::string m_rolename;
-            std::vector<carla_msgs::msg::CarlaVehicleInfoWheel> m_wheels;
-            float m_max_rpm;
-            float m_moi;
-            float m_damping_rate_full_throttle;
-            float m_damping_rate_zero_throttle_clutch_engaged;
-            float m_damping_rate_zero_throttle_clutch_disengaged;
-            bool m_use_gear_autobox;
-            float m_gear_switch_time;
-            float m_clutch_strength;
-            float m_mass;
-            float m_drag_coefficient;
-            geometry_msgs::msg::Vector3 m_center_of_mass;
-            shape_msgs::msg::SolidPrimitive m_shape;
-        };
-    } // namespace msg
-} // namespace carla_msgs
-
-#endif // _FAST_DDS_GENERATED_CARLA_MSGS_MSG_CARLAVEHICLEINFO_H_
+namespace msg {
+/*!
+ * @brief This class represents the structure CarlaVehicleInfo defined by the user in the IDL file.
+ * @ingroup CARLAVEHICLEINFO
+ */
+class CarlaVehicleInfo {
+public:
+  /*!
+   * @brief Default constructor.
+   */
+  eProsima_user_DllExport CarlaVehicleInfo();
+
+  /*!
+   * @brief Default destructor.
+   */
+  eProsima_user_DllExport ~CarlaVehicleInfo();
+
+  /*!
+   * @brief Copy constructor.
+   * @param x Reference to the object carla_msgs::msg::CarlaVehicleInfo that will be copied.
+   */
+  eProsima_user_DllExport CarlaVehicleInfo(const CarlaVehicleInfo& x);
+
+  /*!
+   * @brief Move constructor.
+   * @param x Reference to the object carla_msgs::msg::CarlaVehicleInfo that will be copied.
+   */
+  eProsima_user_DllExport CarlaVehicleInfo(CarlaVehicleInfo&& x);
+
+  /*!
+   * @brief Copy assignment.
+   * @param x Reference to the object carla_msgs::msg::CarlaVehicleInfo that will be copied.
+   */
+  eProsima_user_DllExport CarlaVehicleInfo& operator=(const CarlaVehicleInfo& x);
+
+  /*!
+   * @brief Move assignment.
+   * @param x Reference to the object carla_msgs::msg::CarlaVehicleInfo that will be copied.
+   */
+  eProsima_user_DllExport CarlaVehicleInfo& operator=(CarlaVehicleInfo&& x);
+
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::msg::CarlaVehicleInfo object to compare.
+   */
+  eProsima_user_DllExport bool operator==(const CarlaVehicleInfo& x) const;
+
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::msg::CarlaVehicleInfo object to compare.
+   */
+  eProsima_user_DllExport bool operator!=(const CarlaVehicleInfo& x) const;
+
+  /*!
+   * @brief This function sets a value in member id
+   * @param _id New value for member id
+   */
+  eProsima_user_DllExport void id(uint32_t _id);
+
+  /*!
+   * @brief This function returns the value of member id
+   * @return Value of member id
+   */
+  eProsima_user_DllExport uint32_t id() const;
+
+  /*!
+   * @brief This function returns a reference to member id
+   * @return Reference to member id
+   */
+  eProsima_user_DllExport uint32_t& id();
+
+  /*!
+   * @brief This function copies the value in member type
+   * @param _type New value to be copied in member type
+   */
+  eProsima_user_DllExport void type(const std::string& _type);
+
+  /*!
+   * @brief This function moves the value in member type
+   * @param _type New value to be moved in member type
+   */
+  eProsima_user_DllExport void type(std::string&& _type);
+
+  /*!
+   * @brief This function returns a constant reference to member type
+   * @return Constant reference to member type
+   */
+  eProsima_user_DllExport const std::string& type() const;
+
+  /*!
+   * @brief This function returns a reference to member type
+   * @return Reference to member type
+   */
+  eProsima_user_DllExport std::string& type();
+  /*!
+   * @brief This function copies the value in member rolename
+   * @param _rolename New value to be copied in member rolename
+   */
+  eProsima_user_DllExport void rolename(const std::string& _rolename);
+
+  /*!
+   * @brief This function moves the value in member rolename
+   * @param _rolename New value to be moved in member rolename
+   */
+  eProsima_user_DllExport void rolename(std::string&& _rolename);
+
+  /*!
+   * @brief This function returns a constant reference to member rolename
+   * @return Constant reference to member rolename
+   */
+  eProsima_user_DllExport const std::string& rolename() const;
+
+  /*!
+   * @brief This function returns a reference to member rolename
+   * @return Reference to member rolename
+   */
+  eProsima_user_DllExport std::string& rolename();
+  /*!
+   * @brief This function copies the value in member wheels
+   * @param _wheels New value to be copied in member wheels
+   */
+  eProsima_user_DllExport void wheels(const std::vector<carla_msgs::msg::CarlaVehicleInfoWheel>& _wheels);
+
+  /*!
+   * @brief This function moves the value in member wheels
+   * @param _wheels New value to be moved in member wheels
+   */
+  eProsima_user_DllExport void wheels(std::vector<carla_msgs::msg::CarlaVehicleInfoWheel>&& _wheels);
+
+  /*!
+   * @brief This function returns a constant reference to member wheels
+   * @return Constant reference to member wheels
+   */
+  eProsima_user_DllExport const std::vector<carla_msgs::msg::CarlaVehicleInfoWheel>& wheels() const;
+
+  /*!
+   * @brief This function returns a reference to member wheels
+   * @return Reference to member wheels
+   */
+  eProsima_user_DllExport std::vector<carla_msgs::msg::CarlaVehicleInfoWheel>& wheels();
+  /*!
+   * @brief This function sets a value in member max_rpm
+   * @param _max_rpm New value for member max_rpm
+   */
+  eProsima_user_DllExport void max_rpm(float _max_rpm);
+
+  /*!
+   * @brief This function returns the value of member max_rpm
+   * @return Value of member max_rpm
+   */
+  eProsima_user_DllExport float max_rpm() const;
+
+  /*!
+   * @brief This function returns a reference to member max_rpm
+   * @return Reference to member max_rpm
+   */
+  eProsima_user_DllExport float& max_rpm();
+
+  /*!
+   * @brief This function sets a value in member moi
+   * @param _moi New value for member moi
+   */
+  eProsima_user_DllExport void moi(float _moi);
+
+  /*!
+   * @brief This function returns the value of member moi
+   * @return Value of member moi
+   */
+  eProsima_user_DllExport float moi() const;
+
+  /*!
+   * @brief This function returns a reference to member moi
+   * @return Reference to member moi
+   */
+  eProsima_user_DllExport float& moi();
+
+  /*!
+   * @brief This function sets a value in member damping_rate_full_throttle
+   * @param _damping_rate_full_throttle New value for member damping_rate_full_throttle
+   */
+  eProsima_user_DllExport void damping_rate_full_throttle(float _damping_rate_full_throttle);
+
+  /*!
+   * @brief This function returns the value of member damping_rate_full_throttle
+   * @return Value of member damping_rate_full_throttle
+   */
+  eProsima_user_DllExport float damping_rate_full_throttle() const;
+
+  /*!
+   * @brief This function returns a reference to member damping_rate_full_throttle
+   * @return Reference to member damping_rate_full_throttle
+   */
+  eProsima_user_DllExport float& damping_rate_full_throttle();
+
+  /*!
+   * @brief This function sets a value in member damping_rate_zero_throttle_clutch_engaged
+   * @param _damping_rate_zero_throttle_clutch_engaged New value for member damping_rate_zero_throttle_clutch_engaged
+   */
+  eProsima_user_DllExport void damping_rate_zero_throttle_clutch_engaged(
+      float _damping_rate_zero_throttle_clutch_engaged);
+
+  /*!
+   * @brief This function returns the value of member damping_rate_zero_throttle_clutch_engaged
+   * @return Value of member damping_rate_zero_throttle_clutch_engaged
+   */
+  eProsima_user_DllExport float damping_rate_zero_throttle_clutch_engaged() const;
+
+  /*!
+   * @brief This function returns a reference to member damping_rate_zero_throttle_clutch_engaged
+   * @return Reference to member damping_rate_zero_throttle_clutch_engaged
+   */
+  eProsima_user_DllExport float& damping_rate_zero_throttle_clutch_engaged();
+
+  /*!
+   * @brief This function sets a value in member damping_rate_zero_throttle_clutch_disengaged
+   * @param _damping_rate_zero_throttle_clutch_disengaged New value for member
+   * damping_rate_zero_throttle_clutch_disengaged
+   */
+  eProsima_user_DllExport void damping_rate_zero_throttle_clutch_disengaged(
+      float _damping_rate_zero_throttle_clutch_disengaged);
+
+  /*!
+   * @brief This function returns the value of member damping_rate_zero_throttle_clutch_disengaged
+   * @return Value of member damping_rate_zero_throttle_clutch_disengaged
+   */
+  eProsima_user_DllExport float damping_rate_zero_throttle_clutch_disengaged() const;
+
+  /*!
+   * @brief This function returns a reference to member damping_rate_zero_throttle_clutch_disengaged
+   * @return Reference to member damping_rate_zero_throttle_clutch_disengaged
+   */
+  eProsima_user_DllExport float& damping_rate_zero_throttle_clutch_disengaged();
+
+  /*!
+   * @brief This function sets a value in member use_gear_autobox
+   * @param _use_gear_autobox New value for member use_gear_autobox
+   */
+  eProsima_user_DllExport void use_gear_autobox(bool _use_gear_autobox);
+
+  /*!
+   * @brief This function returns the value of member use_gear_autobox
+   * @return Value of member use_gear_autobox
+   */
+  eProsima_user_DllExport bool use_gear_autobox() const;
+
+  /*!
+   * @brief This function returns a reference to member use_gear_autobox
+   * @return Reference to member use_gear_autobox
+   */
+  eProsima_user_DllExport bool& use_gear_autobox();
+
+  /*!
+   * @brief This function sets a value in member gear_switch_time
+   * @param _gear_switch_time New value for member gear_switch_time
+   */
+  eProsima_user_DllExport void gear_switch_time(float _gear_switch_time);
+
+  /*!
+   * @brief This function returns the value of member gear_switch_time
+   * @return Value of member gear_switch_time
+   */
+  eProsima_user_DllExport float gear_switch_time() const;
+
+  /*!
+   * @brief This function returns a reference to member gear_switch_time
+   * @return Reference to member gear_switch_time
+   */
+  eProsima_user_DllExport float& gear_switch_time();
+
+  /*!
+   * @brief This function sets a value in member clutch_strength
+   * @param _clutch_strength New value for member clutch_strength
+   */
+  eProsima_user_DllExport void clutch_strength(float _clutch_strength);
+
+  /*!
+   * @brief This function returns the value of member clutch_strength
+   * @return Value of member clutch_strength
+   */
+  eProsima_user_DllExport float clutch_strength() const;
+
+  /*!
+   * @brief This function returns a reference to member clutch_strength
+   * @return Reference to member clutch_strength
+   */
+  eProsima_user_DllExport float& clutch_strength();
+
+  /*!
+   * @brief This function sets a value in member mass
+   * @param _mass New value for member mass
+   */
+  eProsima_user_DllExport void mass(float _mass);
+
+  /*!
+   * @brief This function returns the value of member mass
+   * @return Value of member mass
+   */
+  eProsima_user_DllExport float mass() const;
+
+  /*!
+   * @brief This function returns a reference to member mass
+   * @return Reference to member mass
+   */
+  eProsima_user_DllExport float& mass();
+
+  /*!
+   * @brief This function sets a value in member drag_coefficient
+   * @param _drag_coefficient New value for member drag_coefficient
+   */
+  eProsima_user_DllExport void drag_coefficient(float _drag_coefficient);
+
+  /*!
+   * @brief This function returns the value of member drag_coefficient
+   * @return Value of member drag_coefficient
+   */
+  eProsima_user_DllExport float drag_coefficient() const;
+
+  /*!
+   * @brief This function returns a reference to member drag_coefficient
+   * @return Reference to member drag_coefficient
+   */
+  eProsima_user_DllExport float& drag_coefficient();
+
+  /*!
+   * @brief This function copies the value in member center_of_mass
+   * @param _center_of_mass New value to be copied in member center_of_mass
+   */
+  eProsima_user_DllExport void center_of_mass(const geometry_msgs::msg::Vector3& _center_of_mass);
+
+  /*!
+   * @brief This function moves the value in member center_of_mass
+   * @param _center_of_mass New value to be moved in member center_of_mass
+   */
+  eProsima_user_DllExport void center_of_mass(geometry_msgs::msg::Vector3&& _center_of_mass);
+
+  /*!
+   * @brief This function returns a constant reference to member center_of_mass
+   * @return Constant reference to member center_of_mass
+   */
+  eProsima_user_DllExport const geometry_msgs::msg::Vector3& center_of_mass() const;
+
+  /*!
+   * @brief This function returns a reference to member center_of_mass
+   * @return Reference to member center_of_mass
+   */
+  eProsima_user_DllExport geometry_msgs::msg::Vector3& center_of_mass();
+  /*!
+   * @brief This function copies the value in member shape
+   * @param _shape New value to be copied in member shape
+   */
+  eProsima_user_DllExport void shape(const shape_msgs::msg::SolidPrimitive& _shape);
+
+  /*!
+   * @brief This function moves the value in member shape
+   * @param _shape New value to be moved in member shape
+   */
+  eProsima_user_DllExport void shape(shape_msgs::msg::SolidPrimitive&& _shape);
+
+  /*!
+   * @brief This function returns a constant reference to member shape
+   * @return Constant reference to member shape
+   */
+  eProsima_user_DllExport const shape_msgs::msg::SolidPrimitive& shape() const;
+
+  /*!
+   * @brief This function returns a reference to member shape
+   * @return Reference to member shape
+   */
+  eProsima_user_DllExport shape_msgs::msg::SolidPrimitive& shape();
+
+  /*!
+   * @brief This function returns the maximum serialized size of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getMaxCdrSerializedSize(size_t current_alignment = 0);
+
+  /*!
+   * @brief This function returns the serialized size of a data depending on the buffer alignment.
+   * @param data Data which is calculated its serialized size.
+   * @param current_alignment Buffer alignment.
+   * @return Serialized size.
+   */
+  eProsima_user_DllExport static size_t getCdrSerializedSize(const carla_msgs::msg::CarlaVehicleInfo& data,
+                                                             size_t current_alignment = 0);
+
+  /*!
+   * @brief This function serializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serialize(eprosima::fastcdr::Cdr& cdr) const;
+
+  /*!
+   * @brief This function deserializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void deserialize(eprosima::fastcdr::Cdr& cdr);
+
+  /*!
+   * @brief This function returns the maximum serialized size of the Key of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(size_t current_alignment = 0);
+
+  /*!
+   * @brief This function tells you if the Key has been defined for this type
+   */
+  eProsima_user_DllExport static bool isKeyDefined();
+
+  /*!
+   * @brief This function serializes the key members of an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serializeKey(eprosima::fastcdr::Cdr& cdr) const;
+
+private:
+  uint32_t m_id;
+  std::string m_type;
+  std::string m_rolename;
+  std::vector<carla_msgs::msg::CarlaVehicleInfoWheel> m_wheels;
+  float m_max_rpm;
+  float m_moi;
+  float m_damping_rate_full_throttle;
+  float m_damping_rate_zero_throttle_clutch_engaged;
+  float m_damping_rate_zero_throttle_clutch_disengaged;
+  bool m_use_gear_autobox;
+  float m_gear_switch_time;
+  float m_clutch_strength;
+  float m_mass;
+  float m_drag_coefficient;
+  geometry_msgs::msg::Vector3 m_center_of_mass;
+  shape_msgs::msg::SolidPrimitive m_shape;
+};
+}  // namespace msg
+}  // namespace carla_msgs
+
+#endif  // _FAST_DDS_GENERATED_CARLA_MSGS_MSG_CARLAVEHICLEINFO_H_

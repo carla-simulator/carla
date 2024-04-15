@@ -21,19 +21,21 @@ UeWorldPublisher::UeWorldPublisher(carla::rpc::RpcServerInterface& carla_server,
     _map_publisher(std::make_shared<MapPublisher>()),
     _objects_publisher(std::make_shared<ObjectsPublisher>()),
     _traffic_lights_publisher(std::make_shared<TrafficLightsPublisher>()),
-    _carla_control_subscriber(std::make_shared<CarlaControlSubscriber>(*this, _carla_server)) {
-      
-      // overrwrite the actor name definition to make this acting a potential naming parent of others with /carla/world prefix
-      _actor_name_definition = carla::ros2::types::ActorNameDefinition::CreateFromRoleName("/");
-    }
+    _carla_control_subscriber(std::make_shared<CarlaControlSubscriber>(*this, _carla_server)),
+    _sync_subscriber(std::make_shared<CarlaSynchronizationWindowSubscriber>(*this, _carla_server)) {
+  // overrwrite the actor name definition to make this acting a potential naming parent of others with /carla/world
+  // prefix
+  _actor_name_definition = carla::ros2::types::ActorNameDefinition::CreateFromRoleName("/");
+}
 
 bool UeWorldPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
   _domain_participant_impl = domain_participant;
   _initialized = _carla_status_publisher->Init(domain_participant) &&
                  _carla_actor_list_publisher->Init(domain_participant) && _clock_publisher->Init(domain_participant) &&
                  _map_publisher->Init(domain_participant) && _objects_publisher->Init(domain_participant) &&
-                 _traffic_lights_publisher->Init(domain_participant) && _transform_publisher->Init(domain_participant) &&
-                 _carla_control_subscriber->Init(domain_participant);
+                 _traffic_lights_publisher->Init(domain_participant) &&
+                 _transform_publisher->Init(domain_participant) &&
+                 _carla_control_subscriber->Init(domain_participant) && _sync_subscriber->Init(domain_participant);
   return _initialized;
 }
 
@@ -55,12 +57,15 @@ void UeWorldPublisher::ProcessMessages() {
     return;
   }
   _carla_control_subscriber->ProcessMessages();
+  _sync_subscriber->ProcessMessages();
   for (auto& vehicle : _vehicles) {
     vehicle.second._vehicle_controller->ProcessMessages();
     vehicle.second._vehicle_ackermann_controller->ProcessMessages();
+    vehicle.second._sync_subscriber->ProcessMessages();
   }
   for (auto& walker : _walkers) {
     walker.second._walker_controller->ProcessMessages();
+    walker.second._sync_subscriber->ProcessMessages();
   }
 }
 
@@ -106,6 +111,8 @@ void UeWorldPublisher::AddVehicleUe(
       std::make_shared<VehicleControlSubscriber>(*vehicle_publisher, std::move(vehicle_control_callback));
   ue_vehicle._vehicle_ackermann_controller =
       std::make_shared<AckermannControlSubscriber>(*vehicle_publisher, std::move(vehicle_ackermann_control_callback));
+  ue_vehicle._sync_subscriber =
+      std::make_shared<CarlaSynchronizationWindowSubscriber>(*vehicle_publisher, _carla_server);
   auto vehicle_result = _vehicles.insert({vehicle_actor_definition->id, ue_vehicle});
   if (!vehicle_result.second) {
     vehicle_result.first->second = std::move(ue_vehicle);
@@ -114,6 +121,7 @@ void UeWorldPublisher::AddVehicleUe(
   vehicle_result.first->second._vehicle_publisher->Init(_domain_participant_impl);
   vehicle_result.first->second._vehicle_controller->Init(_domain_participant_impl);
   vehicle_result.first->second._vehicle_ackermann_controller->Init(_domain_participant_impl);
+  vehicle_result.first->second._sync_subscriber->Init(_domain_participant_impl);
 }
 
 void UeWorldPublisher::AddWalkerUe(std::shared_ptr<carla::ros2::types::WalkerActorDefinition> walker_actor_definition,
@@ -133,6 +141,8 @@ void UeWorldPublisher::AddWalkerUe(std::shared_ptr<carla::ros2::types::WalkerAct
   UeWalker ue_walker(walker_publisher);
   ue_walker._walker_controller =
       std::make_shared<WalkerControlSubscriber>(*walker_publisher, std::move(walker_control_callback));
+  ue_walker._sync_subscriber = std::make_shared<CarlaSynchronizationWindowSubscriber>(*walker_publisher, _carla_server);
+
   auto walker_result = _walkers.insert({walker_actor_definition->id, ue_walker});
   if (!walker_result.second) {
     walker_result.first->second = std::move(ue_walker);
@@ -140,6 +150,7 @@ void UeWorldPublisher::AddWalkerUe(std::shared_ptr<carla::ros2::types::WalkerAct
 
   walker_result.first->second._walker_publisher->Init(_domain_participant_impl);
   walker_result.first->second._walker_controller->Init(_domain_participant_impl);
+  walker_result.first->second._sync_subscriber->Init(_domain_participant_impl);
 }
 
 void UeWorldPublisher::AddTrafficLightUe(
@@ -218,7 +229,9 @@ void UeWorldPublisher::UpdateSensorData(
   status.fixed_delta_seconds(_episode_header.delta_seconds);
   auto episode_settings = _carla_server.call_get_episode_settings();
   status.synchronous_mode(episode_settings.Get().synchronous_mode);
-  _carla_status_publisher->UpdateCarlaStatus(status, _timestamp.time());
+  status.header().stamp(_timestamp.time());
+  status.header().frame_id("");
+  _carla_status_publisher->UpdateCarlaStatus(status);
 
   if (_episode_header.simulation_state & carla::sensor::s11n::EpisodeStateSerializer::MapChange) {
     _map_publisher->UpdateData(_carla_server.call_get_map_data().Get());

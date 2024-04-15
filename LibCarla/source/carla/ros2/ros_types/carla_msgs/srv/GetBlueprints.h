@@ -22,17 +22,16 @@
 #ifndef _FAST_DDS_GENERATED_CARLA_MSGS_SRV_GETBLUEPRINTS_H_
 #define _FAST_DDS_GENERATED_CARLA_MSGS_SRV_GETBLUEPRINTS_H_
 
-
 #include <stdint.h>
 #include <array>
+#include <bitset>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <bitset>
 
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
-#define eProsima_user_DllExport __declspec( dllexport )
+#define eProsima_user_DllExport __declspec(dllexport)
 #else
 #define eProsima_user_DllExport
 #endif  // EPROSIMA_USER_DLL_EXPORT
@@ -43,321 +42,280 @@
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
 #if defined(GetBlueprints_SOURCE)
-#define GetBlueprints_DllAPI __declspec( dllexport )
+#define GetBlueprints_DllAPI __declspec(dllexport)
 #else
-#define GetBlueprints_DllAPI __declspec( dllimport )
-#endif // GetBlueprints_SOURCE
+#define GetBlueprints_DllAPI __declspec(dllimport)
+#endif  // GetBlueprints_SOURCE
 #else
 #define GetBlueprints_DllAPI
 #endif  // EPROSIMA_USER_DLL_EXPORT
 #else
 #define GetBlueprints_DllAPI
-#endif // _WIN32
+#endif  // _WIN32
 
 namespace eprosima {
 namespace fastcdr {
 class Cdr;
-} // namespace fastcdr
-} // namespace eprosima
-
+}  // namespace fastcdr
+}  // namespace eprosima
 
 namespace carla_msgs {
-    namespace srv {
-        /*!
-         * @brief This class represents the structure GetBlueprints_Request defined by the user in the IDL file.
-         * @ingroup GETBLUEPRINTS
-         */
-        class GetBlueprints_Request
-        {
-        public:
+namespace srv {
+/*!
+ * @brief This class represents the structure GetBlueprints_Request defined by the user in the IDL file.
+ * @ingroup GETBLUEPRINTS
+ */
+class GetBlueprints_Request {
+public:
+  /*!
+   * @brief Default constructor.
+   */
+  eProsima_user_DllExport GetBlueprints_Request();
 
-            /*!
-             * @brief Default constructor.
-             */
-            eProsima_user_DllExport GetBlueprints_Request();
+  /*!
+   * @brief Default destructor.
+   */
+  eProsima_user_DllExport ~GetBlueprints_Request();
 
-            /*!
-             * @brief Default destructor.
-             */
-            eProsima_user_DllExport ~GetBlueprints_Request();
+  /*!
+   * @brief Copy constructor.
+   * @param x Reference to the object carla_msgs::srv::GetBlueprints_Request that will be copied.
+   */
+  eProsima_user_DllExport GetBlueprints_Request(const GetBlueprints_Request& x);
 
-            /*!
-             * @brief Copy constructor.
-             * @param x Reference to the object carla_msgs::srv::GetBlueprints_Request that will be copied.
-             */
-            eProsima_user_DllExport GetBlueprints_Request(
-                    const GetBlueprints_Request& x);
+  /*!
+   * @brief Move constructor.
+   * @param x Reference to the object carla_msgs::srv::GetBlueprints_Request that will be copied.
+   */
+  eProsima_user_DllExport GetBlueprints_Request(GetBlueprints_Request&& x);
 
-            /*!
-             * @brief Move constructor.
-             * @param x Reference to the object carla_msgs::srv::GetBlueprints_Request that will be copied.
-             */
-            eProsima_user_DllExport GetBlueprints_Request(
-                    GetBlueprints_Request&& x);
+  /*!
+   * @brief Copy assignment.
+   * @param x Reference to the object carla_msgs::srv::GetBlueprints_Request that will be copied.
+   */
+  eProsima_user_DllExport GetBlueprints_Request& operator=(const GetBlueprints_Request& x);
 
-            /*!
-             * @brief Copy assignment.
-             * @param x Reference to the object carla_msgs::srv::GetBlueprints_Request that will be copied.
-             */
-            eProsima_user_DllExport GetBlueprints_Request& operator =(
-                    const GetBlueprints_Request& x);
+  /*!
+   * @brief Move assignment.
+   * @param x Reference to the object carla_msgs::srv::GetBlueprints_Request that will be copied.
+   */
+  eProsima_user_DllExport GetBlueprints_Request& operator=(GetBlueprints_Request&& x);
 
-            /*!
-             * @brief Move assignment.
-             * @param x Reference to the object carla_msgs::srv::GetBlueprints_Request that will be copied.
-             */
-            eProsima_user_DllExport GetBlueprints_Request& operator =(
-                    GetBlueprints_Request&& x);
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::srv::GetBlueprints_Request object to compare.
+   */
+  eProsima_user_DllExport bool operator==(const GetBlueprints_Request& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::srv::GetBlueprints_Request object to compare.
-             */
-            eProsima_user_DllExport bool operator ==(
-                    const GetBlueprints_Request& x) const;
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::srv::GetBlueprints_Request object to compare.
+   */
+  eProsima_user_DllExport bool operator!=(const GetBlueprints_Request& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::srv::GetBlueprints_Request object to compare.
-             */
-            eProsima_user_DllExport bool operator !=(
-                    const GetBlueprints_Request& x) const;
+  /*!
+   * @brief This function copies the value in member filter
+   * @param _filter New value to be copied in member filter
+   */
+  eProsima_user_DllExport void filter(const std::string& _filter);
 
-            /*!
-             * @brief This function copies the value in member filter
-             * @param _filter New value to be copied in member filter
-             */
-            eProsima_user_DllExport void filter(
-                    const std::string& _filter);
+  /*!
+   * @brief This function moves the value in member filter
+   * @param _filter New value to be moved in member filter
+   */
+  eProsima_user_DllExport void filter(std::string&& _filter);
 
-            /*!
-             * @brief This function moves the value in member filter
-             * @param _filter New value to be moved in member filter
-             */
-            eProsima_user_DllExport void filter(
-                    std::string&& _filter);
+  /*!
+   * @brief This function returns a constant reference to member filter
+   * @return Constant reference to member filter
+   */
+  eProsima_user_DllExport const std::string& filter() const;
 
-            /*!
-             * @brief This function returns a constant reference to member filter
-             * @return Constant reference to member filter
-             */
-            eProsima_user_DllExport const std::string& filter() const;
+  /*!
+   * @brief This function returns a reference to member filter
+   * @return Reference to member filter
+   */
+  eProsima_user_DllExport std::string& filter();
 
-            /*!
-             * @brief This function returns a reference to member filter
-             * @return Reference to member filter
-             */
-            eProsima_user_DllExport std::string& filter();
+  /*!
+   * @brief This function returns the maximum serialized size of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the maximum serialized size of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function returns the serialized size of a data depending on the buffer alignment.
+   * @param data Data which is calculated its serialized size.
+   * @param current_alignment Buffer alignment.
+   * @return Serialized size.
+   */
+  eProsima_user_DllExport static size_t getCdrSerializedSize(const carla_msgs::srv::GetBlueprints_Request& data,
+                                                             size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the serialized size of a data depending on the buffer alignment.
-             * @param data Data which is calculated its serialized size.
-             * @param current_alignment Buffer alignment.
-             * @return Serialized size.
-             */
-            eProsima_user_DllExport static size_t getCdrSerializedSize(
-                    const carla_msgs::srv::GetBlueprints_Request& data,
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function serializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serialize(eprosima::fastcdr::Cdr& cdr) const;
 
+  /*!
+   * @brief This function deserializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void deserialize(eprosima::fastcdr::Cdr& cdr);
 
-            /*!
-             * @brief This function serializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serialize(
-                    eprosima::fastcdr::Cdr& cdr) const;
+  /*!
+   * @brief This function returns the maximum serialized size of the Key of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief This function deserializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void deserialize(
-                    eprosima::fastcdr::Cdr& cdr);
+  /*!
+   * @brief This function tells you if the Key has been defined for this type
+   */
+  eProsima_user_DllExport static bool isKeyDefined();
 
+  /*!
+   * @brief This function serializes the key members of an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serializeKey(eprosima::fastcdr::Cdr& cdr) const;
 
+private:
+  std::string m_filter;
+};
+/*!
+ * @brief This class represents the structure GetBlueprints_Response defined by the user in the IDL file.
+ * @ingroup GETBLUEPRINTS
+ */
+class GetBlueprints_Response {
+public:
+  /*!
+   * @brief Default constructor.
+   */
+  eProsima_user_DllExport GetBlueprints_Response();
 
-            /*!
-             * @brief This function returns the maximum serialized size of the Key of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
+  /*!
+   * @brief Default destructor.
+   */
+  eProsima_user_DllExport ~GetBlueprints_Response();
 
-            /*!
-             * @brief This function tells you if the Key has been defined for this type
-             */
-            eProsima_user_DllExport static bool isKeyDefined();
+  /*!
+   * @brief Copy constructor.
+   * @param x Reference to the object carla_msgs::srv::GetBlueprints_Response that will be copied.
+   */
+  eProsima_user_DllExport GetBlueprints_Response(const GetBlueprints_Response& x);
 
-            /*!
-             * @brief This function serializes the key members of an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serializeKey(
-                    eprosima::fastcdr::Cdr& cdr) const;
+  /*!
+   * @brief Move constructor.
+   * @param x Reference to the object carla_msgs::srv::GetBlueprints_Response that will be copied.
+   */
+  eProsima_user_DllExport GetBlueprints_Response(GetBlueprints_Response&& x);
 
-        private:
+  /*!
+   * @brief Copy assignment.
+   * @param x Reference to the object carla_msgs::srv::GetBlueprints_Response that will be copied.
+   */
+  eProsima_user_DllExport GetBlueprints_Response& operator=(const GetBlueprints_Response& x);
 
-            std::string m_filter;
-        };
-        /*!
-         * @brief This class represents the structure GetBlueprints_Response defined by the user in the IDL file.
-         * @ingroup GETBLUEPRINTS
-         */
-        class GetBlueprints_Response
-        {
-        public:
+  /*!
+   * @brief Move assignment.
+   * @param x Reference to the object carla_msgs::srv::GetBlueprints_Response that will be copied.
+   */
+  eProsima_user_DllExport GetBlueprints_Response& operator=(GetBlueprints_Response&& x);
 
-            /*!
-             * @brief Default constructor.
-             */
-            eProsima_user_DllExport GetBlueprints_Response();
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::srv::GetBlueprints_Response object to compare.
+   */
+  eProsima_user_DllExport bool operator==(const GetBlueprints_Response& x) const;
 
-            /*!
-             * @brief Default destructor.
-             */
-            eProsima_user_DllExport ~GetBlueprints_Response();
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::srv::GetBlueprints_Response object to compare.
+   */
+  eProsima_user_DllExport bool operator!=(const GetBlueprints_Response& x) const;
 
-            /*!
-             * @brief Copy constructor.
-             * @param x Reference to the object carla_msgs::srv::GetBlueprints_Response that will be copied.
-             */
-            eProsima_user_DllExport GetBlueprints_Response(
-                    const GetBlueprints_Response& x);
+  /*!
+   * @brief This function copies the value in member blueprints
+   * @param _blueprints New value to be copied in member blueprints
+   */
+  eProsima_user_DllExport void blueprints(const std::vector<std::string>& _blueprints);
 
-            /*!
-             * @brief Move constructor.
-             * @param x Reference to the object carla_msgs::srv::GetBlueprints_Response that will be copied.
-             */
-            eProsima_user_DllExport GetBlueprints_Response(
-                    GetBlueprints_Response&& x);
+  /*!
+   * @brief This function moves the value in member blueprints
+   * @param _blueprints New value to be moved in member blueprints
+   */
+  eProsima_user_DllExport void blueprints(std::vector<std::string>&& _blueprints);
 
-            /*!
-             * @brief Copy assignment.
-             * @param x Reference to the object carla_msgs::srv::GetBlueprints_Response that will be copied.
-             */
-            eProsima_user_DllExport GetBlueprints_Response& operator =(
-                    const GetBlueprints_Response& x);
+  /*!
+   * @brief This function returns a constant reference to member blueprints
+   * @return Constant reference to member blueprints
+   */
+  eProsima_user_DllExport const std::vector<std::string>& blueprints() const;
 
-            /*!
-             * @brief Move assignment.
-             * @param x Reference to the object carla_msgs::srv::GetBlueprints_Response that will be copied.
-             */
-            eProsima_user_DllExport GetBlueprints_Response& operator =(
-                    GetBlueprints_Response&& x);
+  /*!
+   * @brief This function returns a reference to member blueprints
+   * @return Reference to member blueprints
+   */
+  eProsima_user_DllExport std::vector<std::string>& blueprints();
 
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::srv::GetBlueprints_Response object to compare.
-             */
-            eProsima_user_DllExport bool operator ==(
-                    const GetBlueprints_Response& x) const;
+  /*!
+   * @brief This function returns the maximum serialized size of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::srv::GetBlueprints_Response object to compare.
-             */
-            eProsima_user_DllExport bool operator !=(
-                    const GetBlueprints_Response& x) const;
+  /*!
+   * @brief This function returns the serialized size of a data depending on the buffer alignment.
+   * @param data Data which is calculated its serialized size.
+   * @param current_alignment Buffer alignment.
+   * @return Serialized size.
+   */
+  eProsima_user_DllExport static size_t getCdrSerializedSize(const carla_msgs::srv::GetBlueprints_Response& data,
+                                                             size_t current_alignment = 0);
 
-            /*!
-             * @brief This function copies the value in member blueprints
-             * @param _blueprints New value to be copied in member blueprints
-             */
-            eProsima_user_DllExport void blueprints(
-                    const std::vector<std::string>& _blueprints);
+  /*!
+   * @brief This function serializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serialize(eprosima::fastcdr::Cdr& cdr) const;
 
-            /*!
-             * @brief This function moves the value in member blueprints
-             * @param _blueprints New value to be moved in member blueprints
-             */
-            eProsima_user_DllExport void blueprints(
-                    std::vector<std::string>&& _blueprints);
+  /*!
+   * @brief This function deserializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void deserialize(eprosima::fastcdr::Cdr& cdr);
 
-            /*!
-             * @brief This function returns a constant reference to member blueprints
-             * @return Constant reference to member blueprints
-             */
-            eProsima_user_DllExport const std::vector<std::string>& blueprints() const;
+  /*!
+   * @brief This function returns the maximum serialized size of the Key of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns a reference to member blueprints
-             * @return Reference to member blueprints
-             */
-            eProsima_user_DllExport std::vector<std::string>& blueprints();
+  /*!
+   * @brief This function tells you if the Key has been defined for this type
+   */
+  eProsima_user_DllExport static bool isKeyDefined();
 
-            /*!
-             * @brief This function returns the maximum serialized size of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function serializes the key members of an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serializeKey(eprosima::fastcdr::Cdr& cdr) const;
 
-            /*!
-             * @brief This function returns the serialized size of a data depending on the buffer alignment.
-             * @param data Data which is calculated its serialized size.
-             * @param current_alignment Buffer alignment.
-             * @return Serialized size.
-             */
-            eProsima_user_DllExport static size_t getCdrSerializedSize(
-                    const carla_msgs::srv::GetBlueprints_Response& data,
-                    size_t current_alignment = 0);
+private:
+  std::vector<std::string> m_blueprints;
+};
+}  // namespace srv
+}  // namespace carla_msgs
 
-
-            /*!
-             * @brief This function serializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serialize(
-                    eprosima::fastcdr::Cdr& cdr) const;
-
-            /*!
-             * @brief This function deserializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void deserialize(
-                    eprosima::fastcdr::Cdr& cdr);
-
-
-
-            /*!
-             * @brief This function returns the maximum serialized size of the Key of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
-
-            /*!
-             * @brief This function tells you if the Key has been defined for this type
-             */
-            eProsima_user_DllExport static bool isKeyDefined();
-
-            /*!
-             * @brief This function serializes the key members of an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serializeKey(
-                    eprosima::fastcdr::Cdr& cdr) const;
-
-        private:
-
-            std::vector<std::string> m_blueprints;
-        };
-    } // namespace srv
-} // namespace carla_msgs
-
-#endif // _FAST_DDS_GENERATED_CARLA_MSGS_SRV_GETBLUEPRINTS_H_
+#endif  // _FAST_DDS_GENERATED_CARLA_MSGS_SRV_GETBLUEPRINTS_H_

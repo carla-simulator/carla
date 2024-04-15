@@ -60,7 +60,13 @@ public:
     }
     _matched = info.total_count;
     if (_matched == 0) {
+      carla::log_error("DdsSubscriberImpl[", _topic->get_name(),
+                       "]::on_subscription_matched(): interface disconnected");
       _alive = false;
+    } else if (!_alive) {
+      carla::log_error("DdsSubscriberImpl[", _topic->get_name(),
+                       "]::on_subscription_matched(): interface (re-)connected");
+      _alive = true;
     }
   }
 

@@ -273,7 +273,6 @@ ROS2NameRegistry::CreateTopicAndFrameLocked(ROS2NameRegistry::KeyType const& key
   }
   topic_and_frame = ExpandTopicName(topic_and_frame, individual_name);
 
-
   auto insert_result = topic_and_frame_map.insert({key, topic_and_frame});
   if (!insert_result.second) {
     // enforce update if already there
@@ -283,19 +282,20 @@ ROS2NameRegistry::CreateTopicAndFrameLocked(ROS2NameRegistry::KeyType const& key
   return insert_result.first;
 }
 
-ROS2NameRegistry::TopicAndFrame ROS2NameRegistry::ExpandTopicName(TopicAndFrame const& topic_and_frame, std::string const& postfix) {
+ROS2NameRegistry::TopicAndFrame ROS2NameRegistry::ExpandTopicName(TopicAndFrame const& topic_and_frame,
+                                                                  std::string const& postfix) {
   auto postfix_adapted = postfix;
   while (postfix_adapted.front() == '/') {
     postfix_adapted.erase(postfix_adapted.begin());
   }
-  if ( postfix_adapted.empty()) {
+  if (postfix_adapted.empty()) {
     return topic_and_frame;
   }
   TopicAndFrame expanded_topic_and_frame = topic_and_frame;
-  if ( expanded_topic_and_frame._frame_id.back() != '/') {
+  if (expanded_topic_and_frame._frame_id.back() != '/') {
     expanded_topic_and_frame._frame_id.push_back('/');
   }
-  if ( expanded_topic_and_frame._topic_name.back() != '/') {
+  if (expanded_topic_and_frame._topic_name.back() != '/') {
     expanded_topic_and_frame._topic_name.push_back('/');
   }
   expanded_topic_and_frame._frame_id += postfix_adapted;

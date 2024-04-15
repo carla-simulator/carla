@@ -22,17 +22,16 @@
 #ifndef _FAST_DDS_GENERATED_CARLA_MSGS_MSG_CARLAWORLDINFO_H_
 #define _FAST_DDS_GENERATED_CARLA_MSGS_MSG_CARLAWORLDINFO_H_
 
-
 #include <stdint.h>
 #include <array>
+#include <bitset>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <bitset>
 
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
-#define eProsima_user_DllExport __declspec( dllexport )
+#define eProsima_user_DllExport __declspec(dllexport)
 #else
 #define eProsima_user_DllExport
 #endif  // EPROSIMA_USER_DLL_EXPORT
@@ -43,200 +42,177 @@
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
 #if defined(CarlaWorldInfo_SOURCE)
-#define CarlaWorldInfo_DllAPI __declspec( dllexport )
+#define CarlaWorldInfo_DllAPI __declspec(dllexport)
 #else
-#define CarlaWorldInfo_DllAPI __declspec( dllimport )
-#endif // CarlaWorldInfo_SOURCE
+#define CarlaWorldInfo_DllAPI __declspec(dllimport)
+#endif  // CarlaWorldInfo_SOURCE
 #else
 #define CarlaWorldInfo_DllAPI
 #endif  // EPROSIMA_USER_DLL_EXPORT
 #else
 #define CarlaWorldInfo_DllAPI
-#endif // _WIN32
+#endif  // _WIN32
 
 namespace eprosima {
 namespace fastcdr {
 class Cdr;
-} // namespace fastcdr
-} // namespace eprosima
-
+}  // namespace fastcdr
+}  // namespace eprosima
 
 namespace carla_msgs {
-    namespace msg {
-        /*!
-         * @brief This class represents the structure CarlaWorldInfo defined by the user in the IDL file.
-         * @ingroup CARLAWORLDINFO
-         */
-        class CarlaWorldInfo
-        {
-        public:
+namespace msg {
+/*!
+ * @brief This class represents the structure CarlaWorldInfo defined by the user in the IDL file.
+ * @ingroup CARLAWORLDINFO
+ */
+class CarlaWorldInfo {
+public:
+  /*!
+   * @brief Default constructor.
+   */
+  eProsima_user_DllExport CarlaWorldInfo();
 
-            /*!
-             * @brief Default constructor.
-             */
-            eProsima_user_DllExport CarlaWorldInfo();
+  /*!
+   * @brief Default destructor.
+   */
+  eProsima_user_DllExport ~CarlaWorldInfo();
 
-            /*!
-             * @brief Default destructor.
-             */
-            eProsima_user_DllExport ~CarlaWorldInfo();
+  /*!
+   * @brief Copy constructor.
+   * @param x Reference to the object carla_msgs::msg::CarlaWorldInfo that will be copied.
+   */
+  eProsima_user_DllExport CarlaWorldInfo(const CarlaWorldInfo& x);
 
-            /*!
-             * @brief Copy constructor.
-             * @param x Reference to the object carla_msgs::msg::CarlaWorldInfo that will be copied.
-             */
-            eProsima_user_DllExport CarlaWorldInfo(
-                    const CarlaWorldInfo& x);
+  /*!
+   * @brief Move constructor.
+   * @param x Reference to the object carla_msgs::msg::CarlaWorldInfo that will be copied.
+   */
+  eProsima_user_DllExport CarlaWorldInfo(CarlaWorldInfo&& x);
 
-            /*!
-             * @brief Move constructor.
-             * @param x Reference to the object carla_msgs::msg::CarlaWorldInfo that will be copied.
-             */
-            eProsima_user_DllExport CarlaWorldInfo(
-                    CarlaWorldInfo&& x);
+  /*!
+   * @brief Copy assignment.
+   * @param x Reference to the object carla_msgs::msg::CarlaWorldInfo that will be copied.
+   */
+  eProsima_user_DllExport CarlaWorldInfo& operator=(const CarlaWorldInfo& x);
 
-            /*!
-             * @brief Copy assignment.
-             * @param x Reference to the object carla_msgs::msg::CarlaWorldInfo that will be copied.
-             */
-            eProsima_user_DllExport CarlaWorldInfo& operator =(
-                    const CarlaWorldInfo& x);
+  /*!
+   * @brief Move assignment.
+   * @param x Reference to the object carla_msgs::msg::CarlaWorldInfo that will be copied.
+   */
+  eProsima_user_DllExport CarlaWorldInfo& operator=(CarlaWorldInfo&& x);
 
-            /*!
-             * @brief Move assignment.
-             * @param x Reference to the object carla_msgs::msg::CarlaWorldInfo that will be copied.
-             */
-            eProsima_user_DllExport CarlaWorldInfo& operator =(
-                    CarlaWorldInfo&& x);
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::msg::CarlaWorldInfo object to compare.
+   */
+  eProsima_user_DllExport bool operator==(const CarlaWorldInfo& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::msg::CarlaWorldInfo object to compare.
-             */
-            eProsima_user_DllExport bool operator ==(
-                    const CarlaWorldInfo& x) const;
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::msg::CarlaWorldInfo object to compare.
+   */
+  eProsima_user_DllExport bool operator!=(const CarlaWorldInfo& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::msg::CarlaWorldInfo object to compare.
-             */
-            eProsima_user_DllExport bool operator !=(
-                    const CarlaWorldInfo& x) const;
+  /*!
+   * @brief This function copies the value in member map_name
+   * @param _map_name New value to be copied in member map_name
+   */
+  eProsima_user_DllExport void map_name(const std::string& _map_name);
 
-            /*!
-             * @brief This function copies the value in member map_name
-             * @param _map_name New value to be copied in member map_name
-             */
-            eProsima_user_DllExport void map_name(
-                    const std::string& _map_name);
+  /*!
+   * @brief This function moves the value in member map_name
+   * @param _map_name New value to be moved in member map_name
+   */
+  eProsima_user_DllExport void map_name(std::string&& _map_name);
 
-            /*!
-             * @brief This function moves the value in member map_name
-             * @param _map_name New value to be moved in member map_name
-             */
-            eProsima_user_DllExport void map_name(
-                    std::string&& _map_name);
+  /*!
+   * @brief This function returns a constant reference to member map_name
+   * @return Constant reference to member map_name
+   */
+  eProsima_user_DllExport const std::string& map_name() const;
 
-            /*!
-             * @brief This function returns a constant reference to member map_name
-             * @return Constant reference to member map_name
-             */
-            eProsima_user_DllExport const std::string& map_name() const;
+  /*!
+   * @brief This function returns a reference to member map_name
+   * @return Reference to member map_name
+   */
+  eProsima_user_DllExport std::string& map_name();
+  /*!
+   * @brief This function copies the value in member opendrive
+   * @param _opendrive New value to be copied in member opendrive
+   */
+  eProsima_user_DllExport void opendrive(const std::string& _opendrive);
 
-            /*!
-             * @brief This function returns a reference to member map_name
-             * @return Reference to member map_name
-             */
-            eProsima_user_DllExport std::string& map_name();
-            /*!
-             * @brief This function copies the value in member opendrive
-             * @param _opendrive New value to be copied in member opendrive
-             */
-            eProsima_user_DllExport void opendrive(
-                    const std::string& _opendrive);
+  /*!
+   * @brief This function moves the value in member opendrive
+   * @param _opendrive New value to be moved in member opendrive
+   */
+  eProsima_user_DllExport void opendrive(std::string&& _opendrive);
 
-            /*!
-             * @brief This function moves the value in member opendrive
-             * @param _opendrive New value to be moved in member opendrive
-             */
-            eProsima_user_DllExport void opendrive(
-                    std::string&& _opendrive);
+  /*!
+   * @brief This function returns a constant reference to member opendrive
+   * @return Constant reference to member opendrive
+   */
+  eProsima_user_DllExport const std::string& opendrive() const;
 
-            /*!
-             * @brief This function returns a constant reference to member opendrive
-             * @return Constant reference to member opendrive
-             */
-            eProsima_user_DllExport const std::string& opendrive() const;
+  /*!
+   * @brief This function returns a reference to member opendrive
+   * @return Reference to member opendrive
+   */
+  eProsima_user_DllExport std::string& opendrive();
 
-            /*!
-             * @brief This function returns a reference to member opendrive
-             * @return Reference to member opendrive
-             */
-            eProsima_user_DllExport std::string& opendrive();
+  /*!
+   * @brief This function returns the maximum serialized size of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the maximum serialized size of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function returns the serialized size of a data depending on the buffer alignment.
+   * @param data Data which is calculated its serialized size.
+   * @param current_alignment Buffer alignment.
+   * @return Serialized size.
+   */
+  eProsima_user_DllExport static size_t getCdrSerializedSize(const carla_msgs::msg::CarlaWorldInfo& data,
+                                                             size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the serialized size of a data depending on the buffer alignment.
-             * @param data Data which is calculated its serialized size.
-             * @param current_alignment Buffer alignment.
-             * @return Serialized size.
-             */
-            eProsima_user_DllExport static size_t getCdrSerializedSize(
-                    const carla_msgs::msg::CarlaWorldInfo& data,
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function serializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serialize(eprosima::fastcdr::Cdr& cdr) const;
 
+  /*!
+   * @brief This function deserializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void deserialize(eprosima::fastcdr::Cdr& cdr);
 
-            /*!
-             * @brief This function serializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serialize(
-                    eprosima::fastcdr::Cdr& cdr) const;
+  /*!
+   * @brief This function returns the maximum serialized size of the Key of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief This function deserializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void deserialize(
-                    eprosima::fastcdr::Cdr& cdr);
+  /*!
+   * @brief This function tells you if the Key has been defined for this type
+   */
+  eProsima_user_DllExport static bool isKeyDefined();
 
+  /*!
+   * @brief This function serializes the key members of an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serializeKey(eprosima::fastcdr::Cdr& cdr) const;
 
+private:
+  std::string m_map_name;
+  std::string m_opendrive;
+};
+}  // namespace msg
+}  // namespace carla_msgs
 
-            /*!
-             * @brief This function returns the maximum serialized size of the Key of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
-
-            /*!
-             * @brief This function tells you if the Key has been defined for this type
-             */
-            eProsima_user_DllExport static bool isKeyDefined();
-
-            /*!
-             * @brief This function serializes the key members of an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serializeKey(
-                    eprosima::fastcdr::Cdr& cdr) const;
-
-        private:
-
-            std::string m_map_name;
-            std::string m_opendrive;
-        };
-    } // namespace msg
-} // namespace carla_msgs
-
-#endif // _FAST_DDS_GENERATED_CARLA_MSGS_MSG_CARLAWORLDINFO_H_
+#endif  // _FAST_DDS_GENERATED_CARLA_MSGS_MSG_CARLAWORLDINFO_H_

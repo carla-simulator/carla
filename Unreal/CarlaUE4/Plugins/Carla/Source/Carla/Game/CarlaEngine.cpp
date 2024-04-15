@@ -274,6 +274,7 @@ void FCarlaEngine::NotifyEndEpisode()
   CurrentEpisode = nullptr;
 }
 
+
 void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
@@ -288,16 +289,6 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
     #endif
     if (bIsPrimaryServer)
     {
-      if (CurrentEpisode && !Server.IsSynchronousModeActive() && SecondaryServer->HasClientsConnected())
-      {
-        // set synchronous mode
-        Server.EnableSynchronousMode();
-        CurrentSettings.bSynchronousMode = true;
-        CurrentSettings.FixedDeltaSeconds = 1 / 20.0f;
-        OnEpisodeSettingsChanged(CurrentSettings);
-        CurrentEpisode->ApplySettings(CurrentSettings);
-      }
-
       // process RPC commands
       do
       {
@@ -310,6 +301,18 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
         #endif
       }
       while (Server.IsSynchronousModeActive() && !Server.TickCueReceived());
+
+      if ( (CurrentEpisode && !Server.IsSynchronousModeActive() && SecondaryServer->HasClientsConnected())
+          || ( Server.IsSynchronousModeActive() && (!CurrentSettings.FixedDeltaSeconds || !CurrentSettings.bSynchronousMode) ) )
+      {
+        // ensure the delta seconds in this run are also considered
+        DeltaSeconds = 1 / 20.0f;
+        
+        CurrentSettings.bSynchronousMode = true;
+        CurrentSettings.FixedDeltaSeconds = DeltaSeconds;
+        OnEpisodeSettingsChanged(CurrentSettings);
+        CurrentEpisode->ApplySettings(CurrentSettings);
+      }
     }
     else
     {
@@ -411,10 +414,10 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
 {
   CurrentSettings = FEpisodeSettings(Settings);
 
-  if (Settings.bSynchronousMode ) {
+  if (Settings.bSynchronousMode && !Server.IsSynchronousModeActive()) {
     Server.EnableSynchronousMode();
   }
-  else {
+  else if (!Settings.bSynchronousMode && Server.IsSynchronousModeActive()) {
     Server.DisableSynchronousMode();
   }
 

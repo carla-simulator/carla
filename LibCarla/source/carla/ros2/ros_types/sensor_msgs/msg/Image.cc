@@ -22,7 +22,7 @@
 #ifdef _WIN32
 // Remove linker warning LNK4221 on Visual Studio
 namespace {
-//char dummy;
+// char dummy;
 }  // namespace
 #endif  // _WIN32
 
@@ -30,8 +30,6 @@ namespace {
 #include <fastcdr/Cdr.h>
 
 #include <utility>
-
-
 
 #define builtin_interfaces_msg_Time_max_cdr_typesize 8ULL;
 #define sensor_msgs_msg_Image_max_cdr_typesize 648ULL;
@@ -41,152 +39,129 @@ namespace {
 #define std_msgs_msg_Header_max_key_cdr_typesize 0ULL;
 
 template <typename ALLOCATOR>
-sensor_msgs::msg::ImageT<ALLOCATOR>::ImageT()
-{
-    // std_msgs::msg::Header m_header
+sensor_msgs::msg::ImageT<ALLOCATOR>::ImageT() {
+  // std_msgs::msg::Header m_header
 
-    // unsigned long m_height
-    m_height = 0;
-    // unsigned long m_width
-    m_width = 0;
-    // string m_encoding
-    m_encoding ="";
-    // uint8 m_is_bigendian
-    m_is_bigendian = 0;
-    // unsigned long m_step
-    m_step = 0;
-    // sequence<uint8> m_data
+  // unsigned long m_height
+  m_height = 0;
+  // unsigned long m_width
+  m_width = 0;
+  // string m_encoding
+  m_encoding = "";
+  // uint8 m_is_bigendian
+  m_is_bigendian = 0;
+  // unsigned long m_step
+  m_step = 0;
+  // sequence<uint8> m_data
 }
 
 template <typename ALLOCATOR>
-sensor_msgs::msg::ImageT<ALLOCATOR>::~ImageT()
-{
+sensor_msgs::msg::ImageT<ALLOCATOR>::~ImageT() {}
+
+template <typename ALLOCATOR>
+sensor_msgs::msg::ImageT<ALLOCATOR>::ImageT(const ImageT<ALLOCATOR>& x) {
+  m_header = x.m_header;
+  m_height = x.m_height;
+  m_width = x.m_width;
+  m_encoding = x.m_encoding;
+  m_is_bigendian = x.m_is_bigendian;
+  m_step = x.m_step;
+  m_data = x.m_data;
 }
 
 template <typename ALLOCATOR>
-sensor_msgs::msg::ImageT<ALLOCATOR>::ImageT(
-        const ImageT<ALLOCATOR>& x)
-{
-    m_header = x.m_header;
-    m_height = x.m_height;
-    m_width = x.m_width;
-    m_encoding = x.m_encoding;
-    m_is_bigendian = x.m_is_bigendian;
-    m_step = x.m_step;
-    m_data = x.m_data;
+sensor_msgs::msg::ImageT<ALLOCATOR>::ImageT(ImageT<ALLOCATOR>&& x) noexcept {
+  m_header = std::move(x.m_header);
+  m_height = x.m_height;
+  m_width = x.m_width;
+  m_encoding = std::move(x.m_encoding);
+  m_is_bigendian = x.m_is_bigendian;
+  m_step = x.m_step;
+  m_data = std::move(x.m_data);
 }
 
 template <typename ALLOCATOR>
-sensor_msgs::msg::ImageT<ALLOCATOR>::ImageT(
-        ImageT<ALLOCATOR>&& x) noexcept
-{
-    m_header = std::move(x.m_header);
-    m_height = x.m_height;
-    m_width = x.m_width;
-    m_encoding = std::move(x.m_encoding);
-    m_is_bigendian = x.m_is_bigendian;
-    m_step = x.m_step;
-    m_data = std::move(x.m_data);
+sensor_msgs::msg::ImageT<ALLOCATOR>& sensor_msgs::msg::ImageT<ALLOCATOR>::operator=(const ImageT<ALLOCATOR>& x) {
+  m_header = x.m_header;
+  m_height = x.m_height;
+  m_width = x.m_width;
+  m_encoding = x.m_encoding;
+  m_is_bigendian = x.m_is_bigendian;
+  m_step = x.m_step;
+  m_data = x.m_data;
+
+  return *this;
 }
 
 template <typename ALLOCATOR>
-sensor_msgs::msg::ImageT<ALLOCATOR>& sensor_msgs::msg::ImageT<ALLOCATOR>::operator =(
-        const ImageT<ALLOCATOR>& x)
-{
-    m_header = x.m_header;
-    m_height = x.m_height;
-    m_width = x.m_width;
-    m_encoding = x.m_encoding;
-    m_is_bigendian = x.m_is_bigendian;
-    m_step = x.m_step;
-    m_data = x.m_data;
+sensor_msgs::msg::ImageT<ALLOCATOR>& sensor_msgs::msg::ImageT<ALLOCATOR>::operator=(ImageT<ALLOCATOR>&& x) noexcept {
+  m_header = std::move(x.m_header);
+  m_height = x.m_height;
+  m_width = x.m_width;
+  m_encoding = std::move(x.m_encoding);
+  m_is_bigendian = x.m_is_bigendian;
+  m_step = x.m_step;
+  m_data = std::move(x.m_data);
 
-    return *this;
+  return *this;
 }
 
 template <typename ALLOCATOR>
-sensor_msgs::msg::ImageT<ALLOCATOR>& sensor_msgs::msg::ImageT<ALLOCATOR>::operator =(
-        ImageT<ALLOCATOR>&& x) noexcept
-{
-    m_header = std::move(x.m_header);
-    m_height = x.m_height;
-    m_width = x.m_width;
-    m_encoding = std::move(x.m_encoding);
-    m_is_bigendian = x.m_is_bigendian;
-    m_step = x.m_step;
-    m_data = std::move(x.m_data);
-
-    return *this;
+bool sensor_msgs::msg::ImageT<ALLOCATOR>::operator==(const ImageT<ALLOCATOR>& x) const {
+  return (m_header == x.m_header && m_height == x.m_height && m_width == x.m_width && m_encoding == x.m_encoding &&
+          m_is_bigendian == x.m_is_bigendian && m_step == x.m_step && m_data == x.m_data);
 }
 
 template <typename ALLOCATOR>
-bool sensor_msgs::msg::ImageT<ALLOCATOR>::operator ==(
-        const ImageT<ALLOCATOR>& x) const
-{
-    return (m_header == x.m_header && m_height == x.m_height && m_width == x.m_width && m_encoding == x.m_encoding && m_is_bigendian == x.m_is_bigendian && m_step == x.m_step && m_data == x.m_data);
+bool sensor_msgs::msg::ImageT<ALLOCATOR>::operator!=(const ImageT<ALLOCATOR>& x) const {
+  return !(*this == x);
 }
 
 template <typename ALLOCATOR>
-bool sensor_msgs::msg::ImageT<ALLOCATOR>::operator !=(
-        const ImageT<ALLOCATOR>& x) const
-{
-    return !(*this == x);
+size_t sensor_msgs::msg::ImageT<ALLOCATOR>::getMaxCdrSerializedSize(size_t current_alignment) {
+  static_cast<void>(current_alignment);
+  return sensor_msgs_msg_Image_max_cdr_typesize;
 }
 
 template <typename ALLOCATOR>
-size_t sensor_msgs::msg::ImageT<ALLOCATOR>::getMaxCdrSerializedSize(
-        size_t current_alignment)
-{
-    static_cast<void>(current_alignment);
-    return sensor_msgs_msg_Image_max_cdr_typesize;
+size_t sensor_msgs::msg::ImageT<ALLOCATOR>::getCdrSerializedSize(const sensor_msgs::msg::ImageT<ALLOCATOR>& data,
+                                                                 size_t current_alignment) {
+  size_t initial_alignment = current_alignment;
+  current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
+  current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+  current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+  current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.encoding().size() + 1;
+  current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
+  current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+  current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+
+  if (data.data().size() > 0) {
+    current_alignment += (data.data().size() * 1) + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
+  }
+
+  return current_alignment - initial_alignment;
 }
 
 template <typename ALLOCATOR>
-size_t sensor_msgs::msg::ImageT<ALLOCATOR>::getCdrSerializedSize(
-        const sensor_msgs::msg::ImageT<ALLOCATOR>& data,
-        size_t current_alignment)
-{
-    size_t initial_alignment = current_alignment;
-    current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
-    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.encoding().size() + 1;
-    current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-    if (data.data().size() > 0)
-    {
-        current_alignment += (data.data().size() * 1) + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-    }
-
-    return current_alignment - initial_alignment;
+void sensor_msgs::msg::ImageT<ALLOCATOR>::serialize(eprosima::fastcdr::Cdr& scdr) const {
+  scdr << m_header;
+  scdr << m_height;
+  scdr << m_width;
+  scdr << m_encoding.c_str();
+  scdr << m_is_bigendian;
+  scdr << m_step;
+  scdr << m_data;
 }
 
 template <typename ALLOCATOR>
-void sensor_msgs::msg::ImageT<ALLOCATOR>::serialize(
-        eprosima::fastcdr::Cdr& scdr) const
-{
-    scdr << m_header;
-    scdr << m_height;
-    scdr << m_width;
-    scdr << m_encoding.c_str();
-    scdr << m_is_bigendian;
-    scdr << m_step;
-    scdr << m_data;
-}
-
-template <typename ALLOCATOR>
-void sensor_msgs::msg::ImageT<ALLOCATOR>::deserialize(
-        eprosima::fastcdr::Cdr& dcdr)
-{
-    dcdr >> m_header;
-    dcdr >> m_height;
-    dcdr >> m_width;
-    dcdr >> m_encoding;
-    dcdr >> m_is_bigendian;
-    dcdr >> m_step;
-    dcdr >> m_data;
+void sensor_msgs::msg::ImageT<ALLOCATOR>::deserialize(eprosima::fastcdr::Cdr& dcdr) {
+  dcdr >> m_header;
+  dcdr >> m_height;
+  dcdr >> m_width;
+  dcdr >> m_encoding;
+  dcdr >> m_is_bigendian;
+  dcdr >> m_step;
+  dcdr >> m_data;
 }
 
 /*!
@@ -194,10 +169,8 @@ void sensor_msgs::msg::ImageT<ALLOCATOR>::deserialize(
  * @param _header New value to be copied in member header
  */
 template <typename ALLOCATOR>
-void sensor_msgs::msg::ImageT<ALLOCATOR>::header(
-        const std_msgs::msg::Header& _header)
-{
-    m_header = _header;
+void sensor_msgs::msg::ImageT<ALLOCATOR>::header(const std_msgs::msg::Header& _header) {
+  m_header = _header;
 }
 
 /*!
@@ -205,10 +178,8 @@ void sensor_msgs::msg::ImageT<ALLOCATOR>::header(
  * @param _header New value to be moved in member header
  */
 template <typename ALLOCATOR>
-void sensor_msgs::msg::ImageT<ALLOCATOR>::header(
-        std_msgs::msg::Header&& _header)
-{
-    m_header = std::move(_header);
+void sensor_msgs::msg::ImageT<ALLOCATOR>::header(std_msgs::msg::Header&& _header) {
+  m_header = std::move(_header);
 }
 
 /*!
@@ -216,9 +187,8 @@ void sensor_msgs::msg::ImageT<ALLOCATOR>::header(
  * @return Constant reference to member header
  */
 template <typename ALLOCATOR>
-const std_msgs::msg::Header& sensor_msgs::msg::ImageT<ALLOCATOR>::header() const
-{
-    return m_header;
+const std_msgs::msg::Header& sensor_msgs::msg::ImageT<ALLOCATOR>::header() const {
+  return m_header;
 }
 
 /*!
@@ -226,9 +196,8 @@ const std_msgs::msg::Header& sensor_msgs::msg::ImageT<ALLOCATOR>::header() const
  * @return Reference to member header
  */
 template <typename ALLOCATOR>
-std_msgs::msg::Header& sensor_msgs::msg::ImageT<ALLOCATOR>::header()
-{
-    return m_header;
+std_msgs::msg::Header& sensor_msgs::msg::ImageT<ALLOCATOR>::header() {
+  return m_header;
 }
 
 /*!
@@ -236,10 +205,8 @@ std_msgs::msg::Header& sensor_msgs::msg::ImageT<ALLOCATOR>::header()
  * @param _height New value for member height
  */
 template <typename ALLOCATOR>
-void sensor_msgs::msg::ImageT<ALLOCATOR>::height(
-        uint32_t _height)
-{
-    m_height = _height;
+void sensor_msgs::msg::ImageT<ALLOCATOR>::height(uint32_t _height) {
+  m_height = _height;
 }
 
 /*!
@@ -247,9 +214,8 @@ void sensor_msgs::msg::ImageT<ALLOCATOR>::height(
  * @return Value of member height
  */
 template <typename ALLOCATOR>
-uint32_t sensor_msgs::msg::ImageT<ALLOCATOR>::height() const
-{
-    return m_height;
+uint32_t sensor_msgs::msg::ImageT<ALLOCATOR>::height() const {
+  return m_height;
 }
 
 /*!
@@ -257,9 +223,8 @@ uint32_t sensor_msgs::msg::ImageT<ALLOCATOR>::height() const
  * @return Reference to member height
  */
 template <typename ALLOCATOR>
-uint32_t& sensor_msgs::msg::ImageT<ALLOCATOR>::height()
-{
-    return m_height;
+uint32_t& sensor_msgs::msg::ImageT<ALLOCATOR>::height() {
+  return m_height;
 }
 
 /*!
@@ -267,10 +232,8 @@ uint32_t& sensor_msgs::msg::ImageT<ALLOCATOR>::height()
  * @param _width New value for member width
  */
 template <typename ALLOCATOR>
-void sensor_msgs::msg::ImageT<ALLOCATOR>::width(
-        uint32_t _width)
-{
-    m_width = _width;
+void sensor_msgs::msg::ImageT<ALLOCATOR>::width(uint32_t _width) {
+  m_width = _width;
 }
 
 /*!
@@ -278,9 +241,8 @@ void sensor_msgs::msg::ImageT<ALLOCATOR>::width(
  * @return Value of member width
  */
 template <typename ALLOCATOR>
-uint32_t sensor_msgs::msg::ImageT<ALLOCATOR>::width() const
-{
-    return m_width;
+uint32_t sensor_msgs::msg::ImageT<ALLOCATOR>::width() const {
+  return m_width;
 }
 
 /*!
@@ -288,9 +250,8 @@ uint32_t sensor_msgs::msg::ImageT<ALLOCATOR>::width() const
  * @return Reference to member width
  */
 template <typename ALLOCATOR>
-uint32_t& sensor_msgs::msg::ImageT<ALLOCATOR>::width()
-{
-    return m_width;
+uint32_t& sensor_msgs::msg::ImageT<ALLOCATOR>::width() {
+  return m_width;
 }
 
 /*!
@@ -298,10 +259,8 @@ uint32_t& sensor_msgs::msg::ImageT<ALLOCATOR>::width()
  * @param _encoding New value to be copied in member encoding
  */
 template <typename ALLOCATOR>
-void sensor_msgs::msg::ImageT<ALLOCATOR>::encoding(
-        const std::string& _encoding)
-{
-    m_encoding = _encoding;
+void sensor_msgs::msg::ImageT<ALLOCATOR>::encoding(const std::string& _encoding) {
+  m_encoding = _encoding;
 }
 
 /*!
@@ -309,10 +268,8 @@ void sensor_msgs::msg::ImageT<ALLOCATOR>::encoding(
  * @param _encoding New value to be moved in member encoding
  */
 template <typename ALLOCATOR>
-void sensor_msgs::msg::ImageT<ALLOCATOR>::encoding(
-        std::string&& _encoding)
-{
-    m_encoding = std::move(_encoding);
+void sensor_msgs::msg::ImageT<ALLOCATOR>::encoding(std::string&& _encoding) {
+  m_encoding = std::move(_encoding);
 }
 
 /*!
@@ -320,9 +277,8 @@ void sensor_msgs::msg::ImageT<ALLOCATOR>::encoding(
  * @return Constant reference to member encoding
  */
 template <typename ALLOCATOR>
-const std::string& sensor_msgs::msg::ImageT<ALLOCATOR>::encoding() const
-{
-    return m_encoding;
+const std::string& sensor_msgs::msg::ImageT<ALLOCATOR>::encoding() const {
+  return m_encoding;
 }
 
 /*!
@@ -330,9 +286,8 @@ const std::string& sensor_msgs::msg::ImageT<ALLOCATOR>::encoding() const
  * @return Reference to member encoding
  */
 template <typename ALLOCATOR>
-std::string& sensor_msgs::msg::ImageT<ALLOCATOR>::encoding()
-{
-    return m_encoding;
+std::string& sensor_msgs::msg::ImageT<ALLOCATOR>::encoding() {
+  return m_encoding;
 }
 
 /*!
@@ -340,10 +295,8 @@ std::string& sensor_msgs::msg::ImageT<ALLOCATOR>::encoding()
  * @param _is_bigendian New value for member is_bigendian
  */
 template <typename ALLOCATOR>
-void sensor_msgs::msg::ImageT<ALLOCATOR>::is_bigendian(
-        uint8_t _is_bigendian)
-{
-    m_is_bigendian = _is_bigendian;
+void sensor_msgs::msg::ImageT<ALLOCATOR>::is_bigendian(uint8_t _is_bigendian) {
+  m_is_bigendian = _is_bigendian;
 }
 
 /*!
@@ -351,9 +304,8 @@ void sensor_msgs::msg::ImageT<ALLOCATOR>::is_bigendian(
  * @return Value of member is_bigendian
  */
 template <typename ALLOCATOR>
-uint8_t sensor_msgs::msg::ImageT<ALLOCATOR>::is_bigendian() const
-{
-    return m_is_bigendian;
+uint8_t sensor_msgs::msg::ImageT<ALLOCATOR>::is_bigendian() const {
+  return m_is_bigendian;
 }
 
 /*!
@@ -361,9 +313,8 @@ uint8_t sensor_msgs::msg::ImageT<ALLOCATOR>::is_bigendian() const
  * @return Reference to member is_bigendian
  */
 template <typename ALLOCATOR>
-uint8_t& sensor_msgs::msg::ImageT<ALLOCATOR>::is_bigendian()
-{
-    return m_is_bigendian;
+uint8_t& sensor_msgs::msg::ImageT<ALLOCATOR>::is_bigendian() {
+  return m_is_bigendian;
 }
 
 /*!
@@ -371,10 +322,8 @@ uint8_t& sensor_msgs::msg::ImageT<ALLOCATOR>::is_bigendian()
  * @param _step New value for member step
  */
 template <typename ALLOCATOR>
-void sensor_msgs::msg::ImageT<ALLOCATOR>::step(
-        uint32_t _step)
-{
-    m_step = _step;
+void sensor_msgs::msg::ImageT<ALLOCATOR>::step(uint32_t _step) {
+  m_step = _step;
 }
 
 /*!
@@ -382,9 +331,8 @@ void sensor_msgs::msg::ImageT<ALLOCATOR>::step(
  * @return Value of member step
  */
 template <typename ALLOCATOR>
-uint32_t sensor_msgs::msg::ImageT<ALLOCATOR>::step() const
-{
-    return m_step;
+uint32_t sensor_msgs::msg::ImageT<ALLOCATOR>::step() const {
+  return m_step;
 }
 
 /*!
@@ -392,9 +340,8 @@ uint32_t sensor_msgs::msg::ImageT<ALLOCATOR>::step() const
  * @return Reference to member step
  */
 template <typename ALLOCATOR>
-uint32_t& sensor_msgs::msg::ImageT<ALLOCATOR>::step()
-{
-    return m_step;
+uint32_t& sensor_msgs::msg::ImageT<ALLOCATOR>::step() {
+  return m_step;
 }
 
 /*!
@@ -402,10 +349,8 @@ uint32_t& sensor_msgs::msg::ImageT<ALLOCATOR>::step()
  * @param _data New value to be copied in member data
  */
 template <typename ALLOCATOR>
-void sensor_msgs::msg::ImageT<ALLOCATOR>::data(
-        const typename sensor_msgs::msg::ImageT<ALLOCATOR>::vector_type& _data)
-{
-    m_data = _data;
+void sensor_msgs::msg::ImageT<ALLOCATOR>::data(const typename sensor_msgs::msg::ImageT<ALLOCATOR>::vector_type& _data) {
+  m_data = _data;
 }
 
 /*!
@@ -413,10 +358,8 @@ void sensor_msgs::msg::ImageT<ALLOCATOR>::data(
  * @param _data New value to be moved in member data
  */
 template <typename ALLOCATOR>
-void sensor_msgs::msg::ImageT<ALLOCATOR>::data(
-        typename sensor_msgs::msg::ImageT<ALLOCATOR>::vector_type&& _data)
-{
-    m_data = std::move(_data);
+void sensor_msgs::msg::ImageT<ALLOCATOR>::data(typename sensor_msgs::msg::ImageT<ALLOCATOR>::vector_type&& _data) {
+  m_data = std::move(_data);
 }
 
 /*!
@@ -424,10 +367,8 @@ void sensor_msgs::msg::ImageT<ALLOCATOR>::data(
  * @return Constant reference to member data
  */
 template <typename ALLOCATOR>
-const typename sensor_msgs::msg::ImageT<ALLOCATOR>::vector_type& 
-sensor_msgs::msg::ImageT<ALLOCATOR>::data() const
-{
-    return m_data;
+const typename sensor_msgs::msg::ImageT<ALLOCATOR>::vector_type& sensor_msgs::msg::ImageT<ALLOCATOR>::data() const {
+  return m_data;
 }
 
 /*!
@@ -435,28 +376,22 @@ sensor_msgs::msg::ImageT<ALLOCATOR>::data() const
  * @return Reference to member data
  */
 template <typename ALLOCATOR>
-typename sensor_msgs::msg::ImageT<ALLOCATOR>::vector_type&  sensor_msgs::msg::ImageT<ALLOCATOR>::data()
-{
-    return m_data;
+typename sensor_msgs::msg::ImageT<ALLOCATOR>::vector_type& sensor_msgs::msg::ImageT<ALLOCATOR>::data() {
+  return m_data;
 }
 
 template <typename ALLOCATOR>
-size_t sensor_msgs::msg::ImageT<ALLOCATOR>::getKeyMaxCdrSerializedSize(
-        size_t current_alignment)
-{
-    static_cast<void>(current_alignment);
-    return sensor_msgs_msg_Image_max_key_cdr_typesize;
+size_t sensor_msgs::msg::ImageT<ALLOCATOR>::getKeyMaxCdrSerializedSize(size_t current_alignment) {
+  static_cast<void>(current_alignment);
+  return sensor_msgs_msg_Image_max_key_cdr_typesize;
 }
 
 template <typename ALLOCATOR>
-bool sensor_msgs::msg::ImageT<ALLOCATOR>::isKeyDefined()
-{
-    return false;
+bool sensor_msgs::msg::ImageT<ALLOCATOR>::isKeyDefined() {
+  return false;
 }
 
 template <typename ALLOCATOR>
-void sensor_msgs::msg::ImageT<ALLOCATOR>::serializeKey(
-        eprosima::fastcdr::Cdr& scdr) const
-{
-    (void) scdr;
+void sensor_msgs::msg::ImageT<ALLOCATOR>::serializeKey(eprosima::fastcdr::Cdr& scdr) const {
+  (void)scdr;
 }

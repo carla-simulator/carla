@@ -23,21 +23,21 @@
 #define _FAST_DDS_GENERATED_CARLA_MSGS_MSG_CARLAVEHICLESTATUS_H_
 
 #include "CarlaVehicleControl.h"
-#include "geometry_msgs/msg/Twist.h"
+#include "ackermann_msgs/msg/AckermannDriveStamped.h"
 #include "geometry_msgs/msg/Accel.h"
 #include "geometry_msgs/msg/Pose.h"
-#include "ackermann_msgs/msg/AckermannDriveStamped.h"
+#include "geometry_msgs/msg/Twist.h"
 
 #include <stdint.h>
 #include <array>
+#include <bitset>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <bitset>
 
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
-#define eProsima_user_DllExport __declspec( dllexport )
+#define eProsima_user_DllExport __declspec(dllexport)
 #else
 #define eProsima_user_DllExport
 #endif  // EPROSIMA_USER_DLL_EXPORT
@@ -48,374 +48,343 @@
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
 #if defined(CarlaVehicleStatus_SOURCE)
-#define CarlaVehicleStatus_DllAPI __declspec( dllexport )
+#define CarlaVehicleStatus_DllAPI __declspec(dllexport)
 #else
-#define CarlaVehicleStatus_DllAPI __declspec( dllimport )
-#endif // CarlaVehicleStatus_SOURCE
+#define CarlaVehicleStatus_DllAPI __declspec(dllimport)
+#endif  // CarlaVehicleStatus_SOURCE
 #else
 #define CarlaVehicleStatus_DllAPI
 #endif  // EPROSIMA_USER_DLL_EXPORT
 #else
 #define CarlaVehicleStatus_DllAPI
-#endif // _WIN32
+#endif  // _WIN32
 
 namespace eprosima {
 namespace fastcdr {
 class Cdr;
-} // namespace fastcdr
-} // namespace eprosima
-
+}  // namespace fastcdr
+}  // namespace eprosima
 
 namespace carla_msgs {
-    namespace msg {
-        namespace CarlaVehicleStatus_Constants {
-            const uint8_t VEHICLE_CONTROL = 0;
-            const uint8_t ACKERMANN_CONTROL = 1;
-        } // namespace CarlaVehicleStatus_Constants
-        /*!
-         * @brief This class represents the structure CarlaVehicleStatus defined by the user in the IDL file.
-         * @ingroup CARLAVEHICLESTATUS
-         */
-        class CarlaVehicleStatus
-        {
-        public:
+namespace msg {
+namespace CarlaVehicleStatus_Constants {
+const uint8_t VEHICLE_CONTROL = 0;
+const uint8_t ACKERMANN_CONTROL = 1;
+}  // namespace CarlaVehicleStatus_Constants
+/*!
+ * @brief This class represents the structure CarlaVehicleStatus defined by the user in the IDL file.
+ * @ingroup CARLAVEHICLESTATUS
+ */
+class CarlaVehicleStatus {
+public:
+  /*!
+   * @brief Default constructor.
+   */
+  eProsima_user_DllExport CarlaVehicleStatus();
 
-            /*!
-             * @brief Default constructor.
-             */
-            eProsima_user_DllExport CarlaVehicleStatus();
+  /*!
+   * @brief Default destructor.
+   */
+  eProsima_user_DllExport ~CarlaVehicleStatus();
 
-            /*!
-             * @brief Default destructor.
-             */
-            eProsima_user_DllExport ~CarlaVehicleStatus();
+  /*!
+   * @brief Copy constructor.
+   * @param x Reference to the object carla_msgs::msg::CarlaVehicleStatus that will be copied.
+   */
+  eProsima_user_DllExport CarlaVehicleStatus(const CarlaVehicleStatus& x);
 
-            /*!
-             * @brief Copy constructor.
-             * @param x Reference to the object carla_msgs::msg::CarlaVehicleStatus that will be copied.
-             */
-            eProsima_user_DllExport CarlaVehicleStatus(
-                    const CarlaVehicleStatus& x);
+  /*!
+   * @brief Move constructor.
+   * @param x Reference to the object carla_msgs::msg::CarlaVehicleStatus that will be copied.
+   */
+  eProsima_user_DllExport CarlaVehicleStatus(CarlaVehicleStatus&& x);
 
-            /*!
-             * @brief Move constructor.
-             * @param x Reference to the object carla_msgs::msg::CarlaVehicleStatus that will be copied.
-             */
-            eProsima_user_DllExport CarlaVehicleStatus(
-                    CarlaVehicleStatus&& x);
+  /*!
+   * @brief Copy assignment.
+   * @param x Reference to the object carla_msgs::msg::CarlaVehicleStatus that will be copied.
+   */
+  eProsima_user_DllExport CarlaVehicleStatus& operator=(const CarlaVehicleStatus& x);
 
-            /*!
-             * @brief Copy assignment.
-             * @param x Reference to the object carla_msgs::msg::CarlaVehicleStatus that will be copied.
-             */
-            eProsima_user_DllExport CarlaVehicleStatus& operator =(
-                    const CarlaVehicleStatus& x);
+  /*!
+   * @brief Move assignment.
+   * @param x Reference to the object carla_msgs::msg::CarlaVehicleStatus that will be copied.
+   */
+  eProsima_user_DllExport CarlaVehicleStatus& operator=(CarlaVehicleStatus&& x);
 
-            /*!
-             * @brief Move assignment.
-             * @param x Reference to the object carla_msgs::msg::CarlaVehicleStatus that will be copied.
-             */
-            eProsima_user_DllExport CarlaVehicleStatus& operator =(
-                    CarlaVehicleStatus&& x);
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::msg::CarlaVehicleStatus object to compare.
+   */
+  eProsima_user_DllExport bool operator==(const CarlaVehicleStatus& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::msg::CarlaVehicleStatus object to compare.
-             */
-            eProsima_user_DllExport bool operator ==(
-                    const CarlaVehicleStatus& x) const;
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::msg::CarlaVehicleStatus object to compare.
+   */
+  eProsima_user_DllExport bool operator!=(const CarlaVehicleStatus& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::msg::CarlaVehicleStatus object to compare.
-             */
-            eProsima_user_DllExport bool operator !=(
-                    const CarlaVehicleStatus& x) const;
+  /*!
+   * @brief This function copies the value in member header
+   * @param _header New value to be copied in member header
+   */
+  eProsima_user_DllExport void header(const std_msgs::msg::Header& _header);
 
-            /*!
-             * @brief This function copies the value in member header
-             * @param _header New value to be copied in member header
-             */
-            eProsima_user_DllExport void header(
-                    const std_msgs::msg::Header& _header);
+  /*!
+   * @brief This function moves the value in member header
+   * @param _header New value to be moved in member header
+   */
+  eProsima_user_DllExport void header(std_msgs::msg::Header&& _header);
 
-            /*!
-             * @brief This function moves the value in member header
-             * @param _header New value to be moved in member header
-             */
-            eProsima_user_DllExport void header(
-                    std_msgs::msg::Header&& _header);
+  /*!
+   * @brief This function returns a constant reference to member header
+   * @return Constant reference to member header
+   */
+  eProsima_user_DllExport const std_msgs::msg::Header& header() const;
 
-            /*!
-             * @brief This function returns a constant reference to member header
-             * @return Constant reference to member header
-             */
-            eProsima_user_DllExport const std_msgs::msg::Header& header() const;
+  /*!
+   * @brief This function returns a reference to member header
+   * @return Reference to member header
+   */
+  eProsima_user_DllExport std_msgs::msg::Header& header();
+  /*!
+   * @brief This function copies the value in member pose
+   * @param _pose New value to be copied in member pose
+   */
+  eProsima_user_DllExport void pose(const geometry_msgs::msg::Pose& _pose);
 
-            /*!
-             * @brief This function returns a reference to member header
-             * @return Reference to member header
-             */
-            eProsima_user_DllExport std_msgs::msg::Header& header();
-            /*!
-             * @brief This function copies the value in member pose
-             * @param _pose New value to be copied in member pose
-             */
-            eProsima_user_DllExport void pose(
-                    const geometry_msgs::msg::Pose& _pose);
+  /*!
+   * @brief This function moves the value in member pose
+   * @param _pose New value to be moved in member pose
+   */
+  eProsima_user_DllExport void pose(geometry_msgs::msg::Pose&& _pose);
 
-            /*!
-             * @brief This function moves the value in member pose
-             * @param _pose New value to be moved in member pose
-             */
-            eProsima_user_DllExport void pose(
-                    geometry_msgs::msg::Pose&& _pose);
+  /*!
+   * @brief This function returns a constant reference to member pose
+   * @return Constant reference to member pose
+   */
+  eProsima_user_DllExport const geometry_msgs::msg::Pose& pose() const;
 
-            /*!
-             * @brief This function returns a constant reference to member pose
-             * @return Constant reference to member pose
-             */
-            eProsima_user_DllExport const geometry_msgs::msg::Pose& pose() const;
+  /*!
+   * @brief This function returns a reference to member pose
+   * @return Reference to member pose
+   */
+  eProsima_user_DllExport geometry_msgs::msg::Pose& pose();
+  /*!
+   * @brief This function copies the value in member twist
+   * @param _twist New value to be copied in member twist
+   */
+  eProsima_user_DllExport void twist(const geometry_msgs::msg::Twist& _twist);
 
-            /*!
-             * @brief This function returns a reference to member pose
-             * @return Reference to member pose
-             */
-            eProsima_user_DllExport geometry_msgs::msg::Pose& pose();
-            /*!
-             * @brief This function copies the value in member twist
-             * @param _twist New value to be copied in member twist
-             */
-            eProsima_user_DllExport void twist(
-                    const geometry_msgs::msg::Twist& _twist);
+  /*!
+   * @brief This function moves the value in member twist
+   * @param _twist New value to be moved in member twist
+   */
+  eProsima_user_DllExport void twist(geometry_msgs::msg::Twist&& _twist);
 
-            /*!
-             * @brief This function moves the value in member twist
-             * @param _twist New value to be moved in member twist
-             */
-            eProsima_user_DllExport void twist(
-                    geometry_msgs::msg::Twist&& _twist);
+  /*!
+   * @brief This function returns a constant reference to member twist
+   * @return Constant reference to member twist
+   */
+  eProsima_user_DllExport const geometry_msgs::msg::Twist& twist() const;
 
-            /*!
-             * @brief This function returns a constant reference to member twist
-             * @return Constant reference to member twist
-             */
-            eProsima_user_DllExport const geometry_msgs::msg::Twist& twist() const;
+  /*!
+   * @brief This function returns a reference to member twist
+   * @return Reference to member twist
+   */
+  eProsima_user_DllExport geometry_msgs::msg::Twist& twist();
+  /*!
+   * @brief This function sets a value in member velocity
+   * @param _velocity New value for member velocity
+   */
+  eProsima_user_DllExport void velocity(float _velocity);
 
-            /*!
-             * @brief This function returns a reference to member twist
-             * @return Reference to member twist
-             */
-            eProsima_user_DllExport geometry_msgs::msg::Twist& twist();
-            /*!
-             * @brief This function sets a value in member velocity
-             * @param _velocity New value for member velocity
-             */
-            eProsima_user_DllExport void velocity(
-                    float _velocity);
+  /*!
+   * @brief This function returns the value of member velocity
+   * @return Value of member velocity
+   */
+  eProsima_user_DllExport float velocity() const;
 
-            /*!
-             * @brief This function returns the value of member velocity
-             * @return Value of member velocity
-             */
-            eProsima_user_DllExport float velocity() const;
+  /*!
+   * @brief This function returns a reference to member velocity
+   * @return Reference to member velocity
+   */
+  eProsima_user_DllExport float& velocity();
 
-            /*!
-             * @brief This function returns a reference to member velocity
-             * @return Reference to member velocity
-             */
-            eProsima_user_DllExport float& velocity();
+  /*!
+   * @brief This function copies the value in member acceleration
+   * @param _acceleration New value to be copied in member acceleration
+   */
+  eProsima_user_DllExport void acceleration(const geometry_msgs::msg::Accel& _acceleration);
 
-            /*!
-             * @brief This function copies the value in member acceleration
-             * @param _acceleration New value to be copied in member acceleration
-             */
-            eProsima_user_DllExport void acceleration(
-                    const geometry_msgs::msg::Accel& _acceleration);
+  /*!
+   * @brief This function moves the value in member acceleration
+   * @param _acceleration New value to be moved in member acceleration
+   */
+  eProsima_user_DllExport void acceleration(geometry_msgs::msg::Accel&& _acceleration);
 
-            /*!
-             * @brief This function moves the value in member acceleration
-             * @param _acceleration New value to be moved in member acceleration
-             */
-            eProsima_user_DllExport void acceleration(
-                    geometry_msgs::msg::Accel&& _acceleration);
+  /*!
+   * @brief This function returns a constant reference to member acceleration
+   * @return Constant reference to member acceleration
+   */
+  eProsima_user_DllExport const geometry_msgs::msg::Accel& acceleration() const;
 
-            /*!
-             * @brief This function returns a constant reference to member acceleration
-             * @return Constant reference to member acceleration
-             */
-            eProsima_user_DllExport const geometry_msgs::msg::Accel& acceleration() const;
+  /*!
+   * @brief This function returns a reference to member acceleration
+   * @return Reference to member acceleration
+   */
+  eProsima_user_DllExport geometry_msgs::msg::Accel& acceleration();
+  /*!
+   * @brief This function copies the value in member orientation
+   * @param _orientation New value to be copied in member orientation
+   */
+  eProsima_user_DllExport void orientation(const geometry_msgs::msg::Quaternion& _orientation);
 
-            /*!
-             * @brief This function returns a reference to member acceleration
-             * @return Reference to member acceleration
-             */
-            eProsima_user_DllExport geometry_msgs::msg::Accel& acceleration();
-            /*!
-             * @brief This function copies the value in member orientation
-             * @param _orientation New value to be copied in member orientation
-             */
-            eProsima_user_DllExport void orientation(
-                    const geometry_msgs::msg::Quaternion& _orientation);
+  /*!
+   * @brief This function moves the value in member orientation
+   * @param _orientation New value to be moved in member orientation
+   */
+  eProsima_user_DllExport void orientation(geometry_msgs::msg::Quaternion&& _orientation);
 
-            /*!
-             * @brief This function moves the value in member orientation
-             * @param _orientation New value to be moved in member orientation
-             */
-            eProsima_user_DllExport void orientation(
-                    geometry_msgs::msg::Quaternion&& _orientation);
+  /*!
+   * @brief This function returns a constant reference to member orientation
+   * @return Constant reference to member orientation
+   */
+  eProsima_user_DllExport const geometry_msgs::msg::Quaternion& orientation() const;
 
-            /*!
-             * @brief This function returns a constant reference to member orientation
-             * @return Constant reference to member orientation
-             */
-            eProsima_user_DllExport const geometry_msgs::msg::Quaternion& orientation() const;
+  /*!
+   * @brief This function returns a reference to member orientation
+   * @return Reference to member orientation
+   */
+  eProsima_user_DllExport geometry_msgs::msg::Quaternion& orientation();
+  /*!
+   * @brief This function sets a value in member active_control_type
+   * @param _active_control_type New value for member active_control_type
+   */
+  eProsima_user_DllExport void active_control_type(uint8_t _active_control_type);
 
-            /*!
-             * @brief This function returns a reference to member orientation
-             * @return Reference to member orientation
-             */
-            eProsima_user_DllExport geometry_msgs::msg::Quaternion& orientation();
-            /*!
-             * @brief This function sets a value in member active_control_type
-             * @param _active_control_type New value for member active_control_type
-             */
-            eProsima_user_DllExport void active_control_type(
-                    uint8_t _active_control_type);
+  /*!
+   * @brief This function returns the value of member active_control_type
+   * @return Value of member active_control_type
+   */
+  eProsima_user_DllExport uint8_t active_control_type() const;
 
-            /*!
-             * @brief This function returns the value of member active_control_type
-             * @return Value of member active_control_type
-             */
-            eProsima_user_DllExport uint8_t active_control_type() const;
+  /*!
+   * @brief This function returns a reference to member active_control_type
+   * @return Reference to member active_control_type
+   */
+  eProsima_user_DllExport uint8_t& active_control_type();
 
-            /*!
-             * @brief This function returns a reference to member active_control_type
-             * @return Reference to member active_control_type
-             */
-            eProsima_user_DllExport uint8_t& active_control_type();
+  /*!
+   * @brief This function copies the value in member last_applied_vehicle_control
+   * @param _last_applied_vehicle_control New value to be copied in member last_applied_vehicle_control
+   */
+  eProsima_user_DllExport void last_applied_vehicle_control(
+      const carla_msgs::msg::CarlaVehicleControl& _last_applied_vehicle_control);
 
-            /*!
-             * @brief This function copies the value in member last_applied_vehicle_control
-             * @param _last_applied_vehicle_control New value to be copied in member last_applied_vehicle_control
-             */
-            eProsima_user_DllExport void last_applied_vehicle_control(
-                    const carla_msgs::msg::CarlaVehicleControl& _last_applied_vehicle_control);
+  /*!
+   * @brief This function moves the value in member last_applied_vehicle_control
+   * @param _last_applied_vehicle_control New value to be moved in member last_applied_vehicle_control
+   */
+  eProsima_user_DllExport void last_applied_vehicle_control(
+      carla_msgs::msg::CarlaVehicleControl&& _last_applied_vehicle_control);
 
-            /*!
-             * @brief This function moves the value in member last_applied_vehicle_control
-             * @param _last_applied_vehicle_control New value to be moved in member last_applied_vehicle_control
-             */
-            eProsima_user_DllExport void last_applied_vehicle_control(
-                    carla_msgs::msg::CarlaVehicleControl&& _last_applied_vehicle_control);
+  /*!
+   * @brief This function returns a constant reference to member last_applied_vehicle_control
+   * @return Constant reference to member last_applied_vehicle_control
+   */
+  eProsima_user_DllExport const carla_msgs::msg::CarlaVehicleControl& last_applied_vehicle_control() const;
 
-            /*!
-             * @brief This function returns a constant reference to member last_applied_vehicle_control
-             * @return Constant reference to member last_applied_vehicle_control
-             */
-            eProsima_user_DllExport const carla_msgs::msg::CarlaVehicleControl& last_applied_vehicle_control() const;
+  /*!
+   * @brief This function returns a reference to member last_applied_vehicle_control
+   * @return Reference to member last_applied_vehicle_control
+   */
+  eProsima_user_DllExport carla_msgs::msg::CarlaVehicleControl& last_applied_vehicle_control();
+  /*!
+   * @brief This function copies the value in member last_applied_ackermann_control
+   * @param _last_applied_ackermann_control New value to be copied in member last_applied_ackermann_control
+   */
+  eProsima_user_DllExport void last_applied_ackermann_control(
+      const ackermann_msgs::msg::AckermannDriveStamped& _last_applied_ackermann_control);
 
-            /*!
-             * @brief This function returns a reference to member last_applied_vehicle_control
-             * @return Reference to member last_applied_vehicle_control
-             */
-            eProsima_user_DllExport carla_msgs::msg::CarlaVehicleControl& last_applied_vehicle_control();
-            /*!
-             * @brief This function copies the value in member last_applied_ackermann_control
-             * @param _last_applied_ackermann_control New value to be copied in member last_applied_ackermann_control
-             */
-            eProsima_user_DllExport void last_applied_ackermann_control(
-                    const ackermann_msgs::msg::AckermannDriveStamped& _last_applied_ackermann_control);
+  /*!
+   * @brief This function moves the value in member last_applied_ackermann_control
+   * @param _last_applied_ackermann_control New value to be moved in member last_applied_ackermann_control
+   */
+  eProsima_user_DllExport void last_applied_ackermann_control(
+      ackermann_msgs::msg::AckermannDriveStamped&& _last_applied_ackermann_control);
 
-            /*!
-             * @brief This function moves the value in member last_applied_ackermann_control
-             * @param _last_applied_ackermann_control New value to be moved in member last_applied_ackermann_control
-             */
-            eProsima_user_DllExport void last_applied_ackermann_control(
-                    ackermann_msgs::msg::AckermannDriveStamped&& _last_applied_ackermann_control);
+  /*!
+   * @brief This function returns a constant reference to member last_applied_ackermann_control
+   * @return Constant reference to member last_applied_ackermann_control
+   */
+  eProsima_user_DllExport const ackermann_msgs::msg::AckermannDriveStamped& last_applied_ackermann_control() const;
 
-            /*!
-             * @brief This function returns a constant reference to member last_applied_ackermann_control
-             * @return Constant reference to member last_applied_ackermann_control
-             */
-            eProsima_user_DllExport const ackermann_msgs::msg::AckermannDriveStamped& last_applied_ackermann_control() const;
+  /*!
+   * @brief This function returns a reference to member last_applied_ackermann_control
+   * @return Reference to member last_applied_ackermann_control
+   */
+  eProsima_user_DllExport ackermann_msgs::msg::AckermannDriveStamped& last_applied_ackermann_control();
 
-            /*!
-             * @brief This function returns a reference to member last_applied_ackermann_control
-             * @return Reference to member last_applied_ackermann_control
-             */
-            eProsima_user_DllExport ackermann_msgs::msg::AckermannDriveStamped& last_applied_ackermann_control();
+  /*!
+   * @brief This function returns the maximum serialized size of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the maximum serialized size of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function returns the serialized size of a data depending on the buffer alignment.
+   * @param data Data which is calculated its serialized size.
+   * @param current_alignment Buffer alignment.
+   * @return Serialized size.
+   */
+  eProsima_user_DllExport static size_t getCdrSerializedSize(const carla_msgs::msg::CarlaVehicleStatus& data,
+                                                             size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the serialized size of a data depending on the buffer alignment.
-             * @param data Data which is calculated its serialized size.
-             * @param current_alignment Buffer alignment.
-             * @return Serialized size.
-             */
-            eProsima_user_DllExport static size_t getCdrSerializedSize(
-                    const carla_msgs::msg::CarlaVehicleStatus& data,
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function serializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serialize(eprosima::fastcdr::Cdr& cdr) const;
 
+  /*!
+   * @brief This function deserializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void deserialize(eprosima::fastcdr::Cdr& cdr);
 
-            /*!
-             * @brief This function serializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serialize(
-                    eprosima::fastcdr::Cdr& cdr) const;
+  /*!
+   * @brief This function returns the maximum serialized size of the Key of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief This function deserializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void deserialize(
-                    eprosima::fastcdr::Cdr& cdr);
+  /*!
+   * @brief This function tells you if the Key has been defined for this type
+   */
+  eProsima_user_DllExport static bool isKeyDefined();
 
+  /*!
+   * @brief This function serializes the key members of an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serializeKey(eprosima::fastcdr::Cdr& cdr) const;
 
+private:
+  std_msgs::msg::Header m_header;
+  geometry_msgs::msg::Pose m_pose;
+  geometry_msgs::msg::Twist m_twist;
+  float m_velocity;
+  geometry_msgs::msg::Accel m_acceleration;
+  geometry_msgs::msg::Quaternion m_orientation;
+  uint8_t m_active_control_type;
+  carla_msgs::msg::CarlaVehicleControl m_last_applied_vehicle_control;
+  ackermann_msgs::msg::AckermannDriveStamped m_last_applied_ackermann_control;
+};
+}  // namespace msg
+}  // namespace carla_msgs
 
-            /*!
-             * @brief This function returns the maximum serialized size of the Key of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
-
-            /*!
-             * @brief This function tells you if the Key has been defined for this type
-             */
-            eProsima_user_DllExport static bool isKeyDefined();
-
-            /*!
-             * @brief This function serializes the key members of an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serializeKey(
-                    eprosima::fastcdr::Cdr& cdr) const;
-
-        private:
-
-            std_msgs::msg::Header m_header;
-            geometry_msgs::msg::Pose m_pose;
-            geometry_msgs::msg::Twist m_twist;
-            float m_velocity;
-            geometry_msgs::msg::Accel m_acceleration;
-            geometry_msgs::msg::Quaternion m_orientation;
-            uint8_t m_active_control_type;
-            carla_msgs::msg::CarlaVehicleControl m_last_applied_vehicle_control;
-            ackermann_msgs::msg::AckermannDriveStamped m_last_applied_ackermann_control;
-        };
-    } // namespace msg
-} // namespace carla_msgs
-
-#endif // _FAST_DDS_GENERATED_CARLA_MSGS_MSG_CARLAVEHICLESTATUS_H_
+#endif  // _FAST_DDS_GENERATED_CARLA_MSGS_MSG_CARLAVEHICLESTATUS_H_

@@ -202,7 +202,7 @@ public:
 
   void LogSynchronizationMap(std::string const &Reason) {
     for (auto &SynchronizationWindow: SynchronizationWindowMap) {
-      UE_LOG(LogCarla, Log, TEXT("ServerSynchronization::LogSynchronizationMap[%u:%u] = %f (%s)"), SynchronizationWindow.first, SynchronizationWindow.second.ParticipantId, SynchronizationWindow.second.TargetGameTime, Reason.c_str());
+      UE_LOG(LogCarla, Log, TEXT("ServerSynchronization::LogSynchronizationMap[%u:%u] = %f (%s)"), SynchronizationWindow.first, SynchronizationWindow.second.ParticipantId, SynchronizationWindow.second.TargetGameTime, *FString(Reason.c_str()));
     }
   }
 

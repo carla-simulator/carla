@@ -85,8 +85,8 @@ private:
   ROS2NameRegistry(ROS2NameRegistry&&) = delete;
   ROS2NameRegistry& operator=(ROS2NameRegistry&&) = delete;
 
-  bool IsTopicNameAvailable(TopicAndFrame const& topic_and_frame, std::string const & individual_name);
-  TopicAndFrame ExpandTopicName(TopicAndFrame const& topic_and_frame, std::string const & postfix);
+  bool IsTopicNameAvailable(TopicAndFrame const& topic_and_frame, std::string const& individual_name);
+  TopicAndFrame ExpandTopicName(TopicAndFrame const& topic_and_frame, std::string const& postfix);
 
   struct KeyType {
     explicit KeyType(ROS2NameRecord const* record) : _record(record), _actor_id(record->_actor_name_definition->id) {}

@@ -25,9 +25,7 @@ bool CarlaStatusPublisher::SubscribersConnected() const {
   return _impl->SubscribersConnected();
 }
 
-void CarlaStatusPublisher::UpdateCarlaStatus(const carla_msgs::msg::CarlaStatus& status,
-                                             const builtin_interfaces::msg::Time& stamp) {
-  _impl->SetMessageHeader(stamp, "");
+void CarlaStatusPublisher::UpdateCarlaStatus(const carla_msgs::msg::CarlaStatus& status) {
   _impl->Message() = status;
   _impl->SetMessageUpdated();
 }

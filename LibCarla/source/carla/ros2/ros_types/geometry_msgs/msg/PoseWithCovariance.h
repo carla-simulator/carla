@@ -28,14 +28,14 @@
 
 #include <stdint.h>
 #include <array>
+#include <bitset>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <bitset>
 
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
-#define eProsima_user_DllExport __declspec( dllexport )
+#define eProsima_user_DllExport __declspec(dllexport)
 #else
 #define eProsima_user_DllExport
 #endif  // EPROSIMA_USER_DLL_EXPORT
@@ -46,197 +46,181 @@
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
 #if defined(PoseWithCovariance_SOURCE)
-#define PoseWithCovariance_DllAPI __declspec( dllexport )
+#define PoseWithCovariance_DllAPI __declspec(dllexport)
 #else
-#define PoseWithCovariance_DllAPI __declspec( dllimport )
-#endif // PoseWithCovariance_SOURCE
+#define PoseWithCovariance_DllAPI __declspec(dllimport)
+#endif  // PoseWithCovariance_SOURCE
 #else
 #define PoseWithCovariance_DllAPI
 #endif  // EPROSIMA_USER_DLL_EXPORT
 #else
 #define PoseWithCovariance_DllAPI
-#endif // _WIN32
+#endif  // _WIN32
 
 namespace eprosima {
 namespace fastcdr {
 class Cdr;
-} // namespace fastcdr
-} // namespace eprosima
-
+}  // namespace fastcdr
+}  // namespace eprosima
 
 namespace geometry_msgs {
-    namespace msg {
-        typedef std::array<double, 36> geometry_msgs__PoseWithCovariance__double_array_36;
-        /*!
-         * @brief This class represents the structure PoseWithCovariance defined by the user in the IDL file.
-         * @ingroup POSEWITHCOVARIANCE
-         */
-        class PoseWithCovariance
-        {
-        public:
+namespace msg {
+typedef std::array<double, 36> geometry_msgs__PoseWithCovariance__double_array_36;
+/*!
+ * @brief This class represents the structure PoseWithCovariance defined by the user in the IDL file.
+ * @ingroup POSEWITHCOVARIANCE
+ */
+class PoseWithCovariance {
+public:
+  /*!
+   * @brief Default constructor.
+   */
+  eProsima_user_DllExport PoseWithCovariance();
 
-            /*!
-             * @brief Default constructor.
-             */
-            eProsima_user_DllExport PoseWithCovariance();
+  /*!
+   * @brief Default destructor.
+   */
+  eProsima_user_DllExport ~PoseWithCovariance();
 
-            /*!
-             * @brief Default destructor.
-             */
-            eProsima_user_DllExport ~PoseWithCovariance();
+  /*!
+   * @brief Copy constructor.
+   * @param x Reference to the object geometry_msgs::msg::PoseWithCovariance that will be copied.
+   */
+  eProsima_user_DllExport PoseWithCovariance(const PoseWithCovariance& x);
 
-            /*!
-             * @brief Copy constructor.
-             * @param x Reference to the object geometry_msgs::msg::PoseWithCovariance that will be copied.
-             */
-            eProsima_user_DllExport PoseWithCovariance(
-                    const PoseWithCovariance& x);
+  /*!
+   * @brief Move constructor.
+   * @param x Reference to the object geometry_msgs::msg::PoseWithCovariance that will be copied.
+   */
+  eProsima_user_DllExport PoseWithCovariance(PoseWithCovariance&& x) noexcept;
 
-            /*!
-             * @brief Move constructor.
-             * @param x Reference to the object geometry_msgs::msg::PoseWithCovariance that will be copied.
-             */
-            eProsima_user_DllExport PoseWithCovariance(
-                    PoseWithCovariance&& x) noexcept;
+  /*!
+   * @brief Copy assignment.
+   * @param x Reference to the object geometry_msgs::msg::PoseWithCovariance that will be copied.
+   */
+  eProsima_user_DllExport PoseWithCovariance& operator=(const PoseWithCovariance& x);
 
-            /*!
-             * @brief Copy assignment.
-             * @param x Reference to the object geometry_msgs::msg::PoseWithCovariance that will be copied.
-             */
-            eProsima_user_DllExport PoseWithCovariance& operator =(
-                    const PoseWithCovariance& x);
+  /*!
+   * @brief Move assignment.
+   * @param x Reference to the object geometry_msgs::msg::PoseWithCovariance that will be copied.
+   */
+  eProsima_user_DllExport PoseWithCovariance& operator=(PoseWithCovariance&& x) noexcept;
 
-            /*!
-             * @brief Move assignment.
-             * @param x Reference to the object geometry_msgs::msg::PoseWithCovariance that will be copied.
-             */
-            eProsima_user_DllExport PoseWithCovariance& operator =(
-                    PoseWithCovariance&& x) noexcept;
+  /*!
+   * @brief Comparison operator.
+   * @param x geometry_msgs::msg::PoseWithCovariance object to compare.
+   */
+  eProsima_user_DllExport bool operator==(const PoseWithCovariance& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x geometry_msgs::msg::PoseWithCovariance object to compare.
-             */
-            eProsima_user_DllExport bool operator ==(
-                    const PoseWithCovariance& x) const;
+  /*!
+   * @brief Comparison operator.
+   * @param x geometry_msgs::msg::PoseWithCovariance object to compare.
+   */
+  eProsima_user_DllExport bool operator!=(const PoseWithCovariance& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x geometry_msgs::msg::PoseWithCovariance object to compare.
-             */
-            eProsima_user_DllExport bool operator !=(
-                    const PoseWithCovariance& x) const;
+  /*!
+   * @brief This function copies the value in member pose
+   * @param _pose New value to be copied in member pose
+   */
+  eProsima_user_DllExport void pose(const geometry_msgs::msg::Pose& _pose);
 
-            /*!
-             * @brief This function copies the value in member pose
-             * @param _pose New value to be copied in member pose
-             */
-            eProsima_user_DllExport void pose(
-                    const geometry_msgs::msg::Pose& _pose);
+  /*!
+   * @brief This function moves the value in member pose
+   * @param _pose New value to be moved in member pose
+   */
+  eProsima_user_DllExport void pose(geometry_msgs::msg::Pose&& _pose);
 
-            /*!
-             * @brief This function moves the value in member pose
-             * @param _pose New value to be moved in member pose
-             */
-            eProsima_user_DllExport void pose(
-                    geometry_msgs::msg::Pose&& _pose);
+  /*!
+   * @brief This function returns a constant reference to member pose
+   * @return Constant reference to member pose
+   */
+  eProsima_user_DllExport const geometry_msgs::msg::Pose& pose() const;
 
-            /*!
-             * @brief This function returns a constant reference to member pose
-             * @return Constant reference to member pose
-             */
-            eProsima_user_DllExport const geometry_msgs::msg::Pose& pose() const;
+  /*!
+   * @brief This function returns a reference to member pose
+   * @return Reference to member pose
+   */
+  eProsima_user_DllExport geometry_msgs::msg::Pose& pose();
+  /*!
+   * @brief This function copies the value in member covariance
+   * @param _covariance New value to be copied in member covariance
+   */
+  eProsima_user_DllExport void covariance(
+      const geometry_msgs::msg::geometry_msgs__PoseWithCovariance__double_array_36& _covariance);
 
-            /*!
-             * @brief This function returns a reference to member pose
-             * @return Reference to member pose
-             */
-            eProsima_user_DllExport geometry_msgs::msg::Pose& pose();
-            /*!
-             * @brief This function copies the value in member covariance
-             * @param _covariance New value to be copied in member covariance
-             */
-            eProsima_user_DllExport void covariance(
-                    const geometry_msgs::msg::geometry_msgs__PoseWithCovariance__double_array_36& _covariance);
+  /*!
+   * @brief This function moves the value in member covariance
+   * @param _covariance New value to be moved in member covariance
+   */
+  eProsima_user_DllExport void covariance(
+      geometry_msgs::msg::geometry_msgs__PoseWithCovariance__double_array_36&& _covariance);
 
-            /*!
-             * @brief This function moves the value in member covariance
-             * @param _covariance New value to be moved in member covariance
-             */
-            eProsima_user_DllExport void covariance(
-                    geometry_msgs::msg::geometry_msgs__PoseWithCovariance__double_array_36&& _covariance);
+  /*!
+   * @brief This function returns a constant reference to member covariance
+   * @return Constant reference to member covariance
+   */
+  eProsima_user_DllExport const geometry_msgs::msg::geometry_msgs__PoseWithCovariance__double_array_36& covariance()
+      const;
 
-            /*!
-             * @brief This function returns a constant reference to member covariance
-             * @return Constant reference to member covariance
-             */
-            eProsima_user_DllExport const geometry_msgs::msg::geometry_msgs__PoseWithCovariance__double_array_36& covariance() const;
+  /*!
+   * @brief This function returns a reference to member covariance
+   * @return Reference to member covariance
+   */
+  eProsima_user_DllExport geometry_msgs::msg::geometry_msgs__PoseWithCovariance__double_array_36& covariance();
 
-            /*!
-             * @brief This function returns a reference to member covariance
-             * @return Reference to member covariance
-             */
-            eProsima_user_DllExport geometry_msgs::msg::geometry_msgs__PoseWithCovariance__double_array_36& covariance();
+  /*!
+   * @brief This function returns the maximum serialized size of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-            * @brief This function returns the maximum serialized size of an object
-            * depending on the buffer alignment.
-            * @param current_alignment Buffer alignment.
-            * @return Maximum serialized size.
-            */
-            eProsima_user_DllExport static size_t getMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function returns the serialized size of a data depending on the buffer alignment.
+   * @param data Data which is calculated its serialized size.
+   * @param current_alignment Buffer alignment.
+   * @return Serialized size.
+   */
+  eProsima_user_DllExport static size_t getCdrSerializedSize(const geometry_msgs::msg::PoseWithCovariance& data,
+                                                             size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the serialized size of a data depending on the buffer alignment.
-             * @param data Data which is calculated its serialized size.
-             * @param current_alignment Buffer alignment.
-             * @return Serialized size.
-             */
-            eProsima_user_DllExport static size_t getCdrSerializedSize(
-                    const geometry_msgs::msg::PoseWithCovariance& data,
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function serializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serialize(eprosima::fastcdr::Cdr& cdr) const;
 
-            /*!
-             * @brief This function serializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serialize(
-                    eprosima::fastcdr::Cdr& cdr) const;
+  /*!
+   * @brief This function deserializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void deserialize(eprosima::fastcdr::Cdr& cdr);
 
-            /*!
-             * @brief This function deserializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void deserialize(
-                    eprosima::fastcdr::Cdr& cdr);
+  /*!
+   * @brief This function returns the maximum serialized size of the Key of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the maximum serialized size of the Key of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function tells you if the Key has been defined for this type
+   */
+  eProsima_user_DllExport static bool isKeyDefined();
 
-            /*!
-             * @brief This function tells you if the Key has been defined for this type
-             */
-            eProsima_user_DllExport static bool isKeyDefined();
+  /*!
+   * @brief This function serializes the key members of an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serializeKey(eprosima::fastcdr::Cdr& cdr) const;
 
-            /*!
-             * @brief This function serializes the key members of an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serializeKey(
-                    eprosima::fastcdr::Cdr& cdr) const;
+private:
+  geometry_msgs::msg::Pose m_pose;
+  geometry_msgs::msg::geometry_msgs__PoseWithCovariance__double_array_36 m_covariance;
+};
+}  // namespace msg
+}  // namespace geometry_msgs
 
-        private:
-            geometry_msgs::msg::Pose m_pose;
-            geometry_msgs::msg::geometry_msgs__PoseWithCovariance__double_array_36 m_covariance;
-        };
-    } // namespace msg
-} // namespace geometry_msgs
-
-#endif // _FAST_DDS_GENERATED_GEOMETRY_MSGS_MSG_POSEWITHCOVARIANCE_H_
+#endif  // _FAST_DDS_GENERATED_GEOMETRY_MSGS_MSG_POSEWITHCOVARIANCE_H_

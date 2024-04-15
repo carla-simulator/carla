@@ -27,14 +27,14 @@
 
 #include <stdint.h>
 #include <array>
+#include <bitset>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <bitset>
 
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
-#define eProsima_user_DllExport __declspec( dllexport )
+#define eProsima_user_DllExport __declspec(dllexport)
 #else
 #define eProsima_user_DllExport
 #endif  // EPROSIMA_USER_DLL_EXPORT
@@ -45,459 +45,408 @@
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
 #if defined(SpawnObject_SOURCE)
-#define SpawnObject_DllAPI __declspec( dllexport )
+#define SpawnObject_DllAPI __declspec(dllexport)
 #else
-#define SpawnObject_DllAPI __declspec( dllimport )
-#endif // SpawnObject_SOURCE
+#define SpawnObject_DllAPI __declspec(dllimport)
+#endif  // SpawnObject_SOURCE
 #else
 #define SpawnObject_DllAPI
 #endif  // EPROSIMA_USER_DLL_EXPORT
 #else
 #define SpawnObject_DllAPI
-#endif // _WIN32
+#endif  // _WIN32
 
 namespace eprosima {
 namespace fastcdr {
 class Cdr;
-} // namespace fastcdr
-} // namespace eprosima
-
+}  // namespace fastcdr
+}  // namespace eprosima
 
 namespace carla_msgs {
-    namespace srv {
-        /*!
-         * @brief This class represents the structure SpawnObject_Request defined by the user in the IDL file.
-         * @ingroup SPAWNOBJECT
-         */
-        class SpawnObject_Request
-        {
-        public:
-
-            /*!
-             * @brief Default constructor.
-             */
-            eProsima_user_DllExport SpawnObject_Request();
-
-            /*!
-             * @brief Default destructor.
-             */
-            eProsima_user_DllExport ~SpawnObject_Request();
-
-            /*!
-             * @brief Copy constructor.
-             * @param x Reference to the object carla_msgs::srv::SpawnObject_Request that will be copied.
-             */
-            eProsima_user_DllExport SpawnObject_Request(
-                    const SpawnObject_Request& x);
-
-            /*!
-             * @brief Move constructor.
-             * @param x Reference to the object carla_msgs::srv::SpawnObject_Request that will be copied.
-             */
-            eProsima_user_DllExport SpawnObject_Request(
-                    SpawnObject_Request&& x);
-
-            /*!
-             * @brief Copy assignment.
-             * @param x Reference to the object carla_msgs::srv::SpawnObject_Request that will be copied.
-             */
-            eProsima_user_DllExport SpawnObject_Request& operator =(
-                    const SpawnObject_Request& x);
-
-            /*!
-             * @brief Move assignment.
-             * @param x Reference to the object carla_msgs::srv::SpawnObject_Request that will be copied.
-             */
-            eProsima_user_DllExport SpawnObject_Request& operator =(
-                    SpawnObject_Request&& x);
-
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::srv::SpawnObject_Request object to compare.
-             */
-            eProsima_user_DllExport bool operator ==(
-                    const SpawnObject_Request& x) const;
-
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::srv::SpawnObject_Request object to compare.
-             */
-            eProsima_user_DllExport bool operator !=(
-                    const SpawnObject_Request& x) const;
-
-            /*!
-             * @brief This function copies the value in member type
-             * @param _type New value to be copied in member type
-             */
-            eProsima_user_DllExport void type(
-                    const std::string& _type);
-
-            /*!
-             * @brief This function moves the value in member type
-             * @param _type New value to be moved in member type
-             */
-            eProsima_user_DllExport void type(
-                    std::string&& _type);
-
-            /*!
-             * @brief This function returns a constant reference to member type
-             * @return Constant reference to member type
-             */
-            eProsima_user_DllExport const std::string& type() const;
-
-            /*!
-             * @brief This function returns a reference to member type
-             * @return Reference to member type
-             */
-            eProsima_user_DllExport std::string& type();
-            /*!
-             * @brief This function copies the value in member id
-             * @param _id New value to be copied in member id
-             */
-            eProsima_user_DllExport void id(
-                    const std::string& _id);
-
-            /*!
-             * @brief This function moves the value in member id
-             * @param _id New value to be moved in member id
-             */
-            eProsima_user_DllExport void id(
-                    std::string&& _id);
-
-            /*!
-             * @brief This function returns a constant reference to member id
-             * @return Constant reference to member id
-             */
-            eProsima_user_DllExport const std::string& id() const;
-
-            /*!
-             * @brief This function returns a reference to member id
-             * @return Reference to member id
-             */
-            eProsima_user_DllExport std::string& id();
-            /*!
-             * @brief This function copies the value in member attributes
-             * @param _attributes New value to be copied in member attributes
-             */
-            eProsima_user_DllExport void attributes(
-                    const std::vector<diagnostic_msgs::msg::KeyValue>& _attributes);
-
-            /*!
-             * @brief This function moves the value in member attributes
-             * @param _attributes New value to be moved in member attributes
-             */
-            eProsima_user_DllExport void attributes(
-                    std::vector<diagnostic_msgs::msg::KeyValue>&& _attributes);
-
-            /*!
-             * @brief This function returns a constant reference to member attributes
-             * @return Constant reference to member attributes
-             */
-            eProsima_user_DllExport const std::vector<diagnostic_msgs::msg::KeyValue>& attributes() const;
-
-            /*!
-             * @brief This function returns a reference to member attributes
-             * @return Reference to member attributes
-             */
-            eProsima_user_DllExport std::vector<diagnostic_msgs::msg::KeyValue>& attributes();
-            /*!
-             * @brief This function copies the value in member transform
-             * @param _transform New value to be copied in member transform
-             */
-            eProsima_user_DllExport void transform(
-                    const geometry_msgs::msg::Pose& _transform);
-
-            /*!
-             * @brief This function moves the value in member transform
-             * @param _transform New value to be moved in member transform
-             */
-            eProsima_user_DllExport void transform(
-                    geometry_msgs::msg::Pose&& _transform);
-
-            /*!
-             * @brief This function returns a constant reference to member transform
-             * @return Constant reference to member transform
-             */
-            eProsima_user_DllExport const geometry_msgs::msg::Pose& transform() const;
-
-            /*!
-             * @brief This function returns a reference to member transform
-             * @return Reference to member transform
-             */
-            eProsima_user_DllExport geometry_msgs::msg::Pose& transform();
-            /*!
-             * @brief This function sets a value in member attach_to
-             * @param _attach_to New value for member attach_to
-             */
-            eProsima_user_DllExport void attach_to(
-                    uint32_t _attach_to);
-
-            /*!
-             * @brief This function returns the value of member attach_to
-             * @return Value of member attach_to
-             */
-            eProsima_user_DllExport uint32_t attach_to() const;
-
-            /*!
-             * @brief This function returns a reference to member attach_to
-             * @return Reference to member attach_to
-             */
-            eProsima_user_DllExport uint32_t& attach_to();
-
-            /*!
-             * @brief This function sets a value in member random_pose
-             * @param _random_pose New value for member random_pose
-             */
-            eProsima_user_DllExport void random_pose(
-                    bool _random_pose);
-
-            /*!
-             * @brief This function returns the value of member random_pose
-             * @return Value of member random_pose
-             */
-            eProsima_user_DllExport bool random_pose() const;
-
-            /*!
-             * @brief This function returns a reference to member random_pose
-             * @return Reference to member random_pose
-             */
-            eProsima_user_DllExport bool& random_pose();
-
-
-            /*!
-             * @brief This function returns the maximum serialized size of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
-
-            /*!
-             * @brief This function returns the serialized size of a data depending on the buffer alignment.
-             * @param data Data which is calculated its serialized size.
-             * @param current_alignment Buffer alignment.
-             * @return Serialized size.
-             */
-            eProsima_user_DllExport static size_t getCdrSerializedSize(
-                    const carla_msgs::srv::SpawnObject_Request& data,
-                    size_t current_alignment = 0);
-
-
-            /*!
-             * @brief This function serializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serialize(
-                    eprosima::fastcdr::Cdr& cdr) const;
-
-            /*!
-             * @brief This function deserializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void deserialize(
-                    eprosima::fastcdr::Cdr& cdr);
-
-
-
-            /*!
-             * @brief This function returns the maximum serialized size of the Key of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
-
-            /*!
-             * @brief This function tells you if the Key has been defined for this type
-             */
-            eProsima_user_DllExport static bool isKeyDefined();
-
-            /*!
-             * @brief This function serializes the key members of an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serializeKey(
-                    eprosima::fastcdr::Cdr& cdr) const;
-
-        private:
-
-            std::string m_type;
-            std::string m_id;
-            std::vector<diagnostic_msgs::msg::KeyValue> m_attributes;
-            geometry_msgs::msg::Pose m_transform;
-            uint32_t m_attach_to;
-            bool m_random_pose;
-        };
-        /*!
-         * @brief This class represents the structure SpawnObject_Response defined by the user in the IDL file.
-         * @ingroup SPAWNOBJECT
-         */
-        class SpawnObject_Response
-        {
-        public:
-
-            /*!
-             * @brief Default constructor.
-             */
-            eProsima_user_DllExport SpawnObject_Response();
-
-            /*!
-             * @brief Default destructor.
-             */
-            eProsima_user_DllExport ~SpawnObject_Response();
-
-            /*!
-             * @brief Copy constructor.
-             * @param x Reference to the object carla_msgs::srv::SpawnObject_Response that will be copied.
-             */
-            eProsima_user_DllExport SpawnObject_Response(
-                    const SpawnObject_Response& x);
-
-            /*!
-             * @brief Move constructor.
-             * @param x Reference to the object carla_msgs::srv::SpawnObject_Response that will be copied.
-             */
-            eProsima_user_DllExport SpawnObject_Response(
-                    SpawnObject_Response&& x);
-
-            /*!
-             * @brief Copy assignment.
-             * @param x Reference to the object carla_msgs::srv::SpawnObject_Response that will be copied.
-             */
-            eProsima_user_DllExport SpawnObject_Response& operator =(
-                    const SpawnObject_Response& x);
-
-            /*!
-             * @brief Move assignment.
-             * @param x Reference to the object carla_msgs::srv::SpawnObject_Response that will be copied.
-             */
-            eProsima_user_DllExport SpawnObject_Response& operator =(
-                    SpawnObject_Response&& x);
-
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::srv::SpawnObject_Response object to compare.
-             */
-            eProsima_user_DllExport bool operator ==(
-                    const SpawnObject_Response& x) const;
-
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::srv::SpawnObject_Response object to compare.
-             */
-            eProsima_user_DllExport bool operator !=(
-                    const SpawnObject_Response& x) const;
-
-            /*!
-             * @brief This function sets a value in member id
-             * @param _id New value for member id
-             */
-            eProsima_user_DllExport void id(
-                    int32_t _id);
-
-            /*!
-             * @brief This function returns the value of member id
-             * @return Value of member id
-             */
-            eProsima_user_DllExport int32_t id() const;
-
-            /*!
-             * @brief This function returns a reference to member id
-             * @return Reference to member id
-             */
-            eProsima_user_DllExport int32_t& id();
-
-            /*!
-             * @brief This function copies the value in member error_string
-             * @param _error_string New value to be copied in member error_string
-             */
-            eProsima_user_DllExport void error_string(
-                    const std::string& _error_string);
-
-            /*!
-             * @brief This function moves the value in member error_string
-             * @param _error_string New value to be moved in member error_string
-             */
-            eProsima_user_DllExport void error_string(
-                    std::string&& _error_string);
-
-            /*!
-             * @brief This function returns a constant reference to member error_string
-             * @return Constant reference to member error_string
-             */
-            eProsima_user_DllExport const std::string& error_string() const;
-
-            /*!
-             * @brief This function returns a reference to member error_string
-             * @return Reference to member error_string
-             */
-            eProsima_user_DllExport std::string& error_string();
-
-            /*!
-             * @brief This function returns the maximum serialized size of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
-
-            /*!
-             * @brief This function returns the serialized size of a data depending on the buffer alignment.
-             * @param data Data which is calculated its serialized size.
-             * @param current_alignment Buffer alignment.
-             * @return Serialized size.
-             */
-            eProsima_user_DllExport static size_t getCdrSerializedSize(
-                    const carla_msgs::srv::SpawnObject_Response& data,
-                    size_t current_alignment = 0);
-
-
-            /*!
-             * @brief This function serializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serialize(
-                    eprosima::fastcdr::Cdr& cdr) const;
-
-            /*!
-             * @brief This function deserializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void deserialize(
-                    eprosima::fastcdr::Cdr& cdr);
-
-
-
-            /*!
-             * @brief This function returns the maximum serialized size of the Key of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
-
-            /*!
-             * @brief This function tells you if the Key has been defined for this type
-             */
-            eProsima_user_DllExport static bool isKeyDefined();
-
-            /*!
-             * @brief This function serializes the key members of an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serializeKey(
-                    eprosima::fastcdr::Cdr& cdr) const;
-
-        private:
-
-            int32_t m_id;
-            std::string m_error_string;
-        };
-    } // namespace srv
-} // namespace carla_msgs
-
-#endif // _FAST_DDS_GENERATED_CARLA_MSGS_SRV_SPAWNOBJECT_H_
+namespace srv {
+/*!
+ * @brief This class represents the structure SpawnObject_Request defined by the user in the IDL file.
+ * @ingroup SPAWNOBJECT
+ */
+class SpawnObject_Request {
+public:
+  /*!
+   * @brief Default constructor.
+   */
+  eProsima_user_DllExport SpawnObject_Request();
+
+  /*!
+   * @brief Default destructor.
+   */
+  eProsima_user_DllExport ~SpawnObject_Request();
+
+  /*!
+   * @brief Copy constructor.
+   * @param x Reference to the object carla_msgs::srv::SpawnObject_Request that will be copied.
+   */
+  eProsima_user_DllExport SpawnObject_Request(const SpawnObject_Request& x);
+
+  /*!
+   * @brief Move constructor.
+   * @param x Reference to the object carla_msgs::srv::SpawnObject_Request that will be copied.
+   */
+  eProsima_user_DllExport SpawnObject_Request(SpawnObject_Request&& x);
+
+  /*!
+   * @brief Copy assignment.
+   * @param x Reference to the object carla_msgs::srv::SpawnObject_Request that will be copied.
+   */
+  eProsima_user_DllExport SpawnObject_Request& operator=(const SpawnObject_Request& x);
+
+  /*!
+   * @brief Move assignment.
+   * @param x Reference to the object carla_msgs::srv::SpawnObject_Request that will be copied.
+   */
+  eProsima_user_DllExport SpawnObject_Request& operator=(SpawnObject_Request&& x);
+
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::srv::SpawnObject_Request object to compare.
+   */
+  eProsima_user_DllExport bool operator==(const SpawnObject_Request& x) const;
+
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::srv::SpawnObject_Request object to compare.
+   */
+  eProsima_user_DllExport bool operator!=(const SpawnObject_Request& x) const;
+
+  /*!
+   * @brief This function copies the value in member type
+   * @param _type New value to be copied in member type
+   */
+  eProsima_user_DllExport void type(const std::string& _type);
+
+  /*!
+   * @brief This function moves the value in member type
+   * @param _type New value to be moved in member type
+   */
+  eProsima_user_DllExport void type(std::string&& _type);
+
+  /*!
+   * @brief This function returns a constant reference to member type
+   * @return Constant reference to member type
+   */
+  eProsima_user_DllExport const std::string& type() const;
+
+  /*!
+   * @brief This function returns a reference to member type
+   * @return Reference to member type
+   */
+  eProsima_user_DllExport std::string& type();
+  /*!
+   * @brief This function copies the value in member id
+   * @param _id New value to be copied in member id
+   */
+  eProsima_user_DllExport void id(const std::string& _id);
+
+  /*!
+   * @brief This function moves the value in member id
+   * @param _id New value to be moved in member id
+   */
+  eProsima_user_DllExport void id(std::string&& _id);
+
+  /*!
+   * @brief This function returns a constant reference to member id
+   * @return Constant reference to member id
+   */
+  eProsima_user_DllExport const std::string& id() const;
+
+  /*!
+   * @brief This function returns a reference to member id
+   * @return Reference to member id
+   */
+  eProsima_user_DllExport std::string& id();
+  /*!
+   * @brief This function copies the value in member attributes
+   * @param _attributes New value to be copied in member attributes
+   */
+  eProsima_user_DllExport void attributes(const std::vector<diagnostic_msgs::msg::KeyValue>& _attributes);
+
+  /*!
+   * @brief This function moves the value in member attributes
+   * @param _attributes New value to be moved in member attributes
+   */
+  eProsima_user_DllExport void attributes(std::vector<diagnostic_msgs::msg::KeyValue>&& _attributes);
+
+  /*!
+   * @brief This function returns a constant reference to member attributes
+   * @return Constant reference to member attributes
+   */
+  eProsima_user_DllExport const std::vector<diagnostic_msgs::msg::KeyValue>& attributes() const;
+
+  /*!
+   * @brief This function returns a reference to member attributes
+   * @return Reference to member attributes
+   */
+  eProsima_user_DllExport std::vector<diagnostic_msgs::msg::KeyValue>& attributes();
+  /*!
+   * @brief This function copies the value in member transform
+   * @param _transform New value to be copied in member transform
+   */
+  eProsima_user_DllExport void transform(const geometry_msgs::msg::Pose& _transform);
+
+  /*!
+   * @brief This function moves the value in member transform
+   * @param _transform New value to be moved in member transform
+   */
+  eProsima_user_DllExport void transform(geometry_msgs::msg::Pose&& _transform);
+
+  /*!
+   * @brief This function returns a constant reference to member transform
+   * @return Constant reference to member transform
+   */
+  eProsima_user_DllExport const geometry_msgs::msg::Pose& transform() const;
+
+  /*!
+   * @brief This function returns a reference to member transform
+   * @return Reference to member transform
+   */
+  eProsima_user_DllExport geometry_msgs::msg::Pose& transform();
+  /*!
+   * @brief This function sets a value in member attach_to
+   * @param _attach_to New value for member attach_to
+   */
+  eProsima_user_DllExport void attach_to(uint32_t _attach_to);
+
+  /*!
+   * @brief This function returns the value of member attach_to
+   * @return Value of member attach_to
+   */
+  eProsima_user_DllExport uint32_t attach_to() const;
+
+  /*!
+   * @brief This function returns a reference to member attach_to
+   * @return Reference to member attach_to
+   */
+  eProsima_user_DllExport uint32_t& attach_to();
+
+  /*!
+   * @brief This function sets a value in member random_pose
+   * @param _random_pose New value for member random_pose
+   */
+  eProsima_user_DllExport void random_pose(bool _random_pose);
+
+  /*!
+   * @brief This function returns the value of member random_pose
+   * @return Value of member random_pose
+   */
+  eProsima_user_DllExport bool random_pose() const;
+
+  /*!
+   * @brief This function returns a reference to member random_pose
+   * @return Reference to member random_pose
+   */
+  eProsima_user_DllExport bool& random_pose();
+
+  /*!
+   * @brief This function returns the maximum serialized size of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getMaxCdrSerializedSize(size_t current_alignment = 0);
+
+  /*!
+   * @brief This function returns the serialized size of a data depending on the buffer alignment.
+   * @param data Data which is calculated its serialized size.
+   * @param current_alignment Buffer alignment.
+   * @return Serialized size.
+   */
+  eProsima_user_DllExport static size_t getCdrSerializedSize(const carla_msgs::srv::SpawnObject_Request& data,
+                                                             size_t current_alignment = 0);
+
+  /*!
+   * @brief This function serializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serialize(eprosima::fastcdr::Cdr& cdr) const;
+
+  /*!
+   * @brief This function deserializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void deserialize(eprosima::fastcdr::Cdr& cdr);
+
+  /*!
+   * @brief This function returns the maximum serialized size of the Key of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(size_t current_alignment = 0);
+
+  /*!
+   * @brief This function tells you if the Key has been defined for this type
+   */
+  eProsima_user_DllExport static bool isKeyDefined();
+
+  /*!
+   * @brief This function serializes the key members of an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serializeKey(eprosima::fastcdr::Cdr& cdr) const;
+
+private:
+  std::string m_type;
+  std::string m_id;
+  std::vector<diagnostic_msgs::msg::KeyValue> m_attributes;
+  geometry_msgs::msg::Pose m_transform;
+  uint32_t m_attach_to;
+  bool m_random_pose;
+};
+/*!
+ * @brief This class represents the structure SpawnObject_Response defined by the user in the IDL file.
+ * @ingroup SPAWNOBJECT
+ */
+class SpawnObject_Response {
+public:
+  /*!
+   * @brief Default constructor.
+   */
+  eProsima_user_DllExport SpawnObject_Response();
+
+  /*!
+   * @brief Default destructor.
+   */
+  eProsima_user_DllExport ~SpawnObject_Response();
+
+  /*!
+   * @brief Copy constructor.
+   * @param x Reference to the object carla_msgs::srv::SpawnObject_Response that will be copied.
+   */
+  eProsima_user_DllExport SpawnObject_Response(const SpawnObject_Response& x);
+
+  /*!
+   * @brief Move constructor.
+   * @param x Reference to the object carla_msgs::srv::SpawnObject_Response that will be copied.
+   */
+  eProsima_user_DllExport SpawnObject_Response(SpawnObject_Response&& x);
+
+  /*!
+   * @brief Copy assignment.
+   * @param x Reference to the object carla_msgs::srv::SpawnObject_Response that will be copied.
+   */
+  eProsima_user_DllExport SpawnObject_Response& operator=(const SpawnObject_Response& x);
+
+  /*!
+   * @brief Move assignment.
+   * @param x Reference to the object carla_msgs::srv::SpawnObject_Response that will be copied.
+   */
+  eProsima_user_DllExport SpawnObject_Response& operator=(SpawnObject_Response&& x);
+
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::srv::SpawnObject_Response object to compare.
+   */
+  eProsima_user_DllExport bool operator==(const SpawnObject_Response& x) const;
+
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::srv::SpawnObject_Response object to compare.
+   */
+  eProsima_user_DllExport bool operator!=(const SpawnObject_Response& x) const;
+
+  /*!
+   * @brief This function sets a value in member id
+   * @param _id New value for member id
+   */
+  eProsima_user_DllExport void id(int32_t _id);
+
+  /*!
+   * @brief This function returns the value of member id
+   * @return Value of member id
+   */
+  eProsima_user_DllExport int32_t id() const;
+
+  /*!
+   * @brief This function returns a reference to member id
+   * @return Reference to member id
+   */
+  eProsima_user_DllExport int32_t& id();
+
+  /*!
+   * @brief This function copies the value in member error_string
+   * @param _error_string New value to be copied in member error_string
+   */
+  eProsima_user_DllExport void error_string(const std::string& _error_string);
+
+  /*!
+   * @brief This function moves the value in member error_string
+   * @param _error_string New value to be moved in member error_string
+   */
+  eProsima_user_DllExport void error_string(std::string&& _error_string);
+
+  /*!
+   * @brief This function returns a constant reference to member error_string
+   * @return Constant reference to member error_string
+   */
+  eProsima_user_DllExport const std::string& error_string() const;
+
+  /*!
+   * @brief This function returns a reference to member error_string
+   * @return Reference to member error_string
+   */
+  eProsima_user_DllExport std::string& error_string();
+
+  /*!
+   * @brief This function returns the maximum serialized size of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getMaxCdrSerializedSize(size_t current_alignment = 0);
+
+  /*!
+   * @brief This function returns the serialized size of a data depending on the buffer alignment.
+   * @param data Data which is calculated its serialized size.
+   * @param current_alignment Buffer alignment.
+   * @return Serialized size.
+   */
+  eProsima_user_DllExport static size_t getCdrSerializedSize(const carla_msgs::srv::SpawnObject_Response& data,
+                                                             size_t current_alignment = 0);
+
+  /*!
+   * @brief This function serializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serialize(eprosima::fastcdr::Cdr& cdr) const;
+
+  /*!
+   * @brief This function deserializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void deserialize(eprosima::fastcdr::Cdr& cdr);
+
+  /*!
+   * @brief This function returns the maximum serialized size of the Key of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(size_t current_alignment = 0);
+
+  /*!
+   * @brief This function tells you if the Key has been defined for this type
+   */
+  eProsima_user_DllExport static bool isKeyDefined();
+
+  /*!
+   * @brief This function serializes the key members of an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serializeKey(eprosima::fastcdr::Cdr& cdr) const;
+
+private:
+  int32_t m_id;
+  std::string m_error_string;
+};
+}  // namespace srv
+}  // namespace carla_msgs
+
+#endif  // _FAST_DDS_GENERATED_CARLA_MSGS_SRV_SPAWNOBJECT_H_

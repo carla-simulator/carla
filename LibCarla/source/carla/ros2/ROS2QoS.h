@@ -20,22 +20,41 @@ namespace ros2 {
 struct ROS2QoS {
   ROS2QoS() = default;
   ~ROS2QoS() = default;
-  ROS2QoS(const ROS2QoS&) = default;
-  ROS2QoS& operator=(const ROS2QoS&) = default;
-  ROS2QoS(ROS2QoS&&) = default;
-  ROS2QoS& operator=(ROS2QoS&&) = default;
+  ROS2QoS(const ROS2QoS &) = default;
+  ROS2QoS &operator=(const ROS2QoS &) = default;
+  ROS2QoS(ROS2QoS &&) = default;
+  ROS2QoS &operator=(ROS2QoS &&) = default;
 
-  ROS2QoS &keep_last(size_t depth){ _history = History::KEEP_LAST; _history_depth=depth; return *this; }
+  ROS2QoS &keep_last(size_t depth) {
+    _history = History::KEEP_LAST;
+    _history_depth = depth;
+    return *this;
+  }
 
-  ROS2QoS &keep_all() { _history = History::KEEP_ALL; return *this; }
+  ROS2QoS &keep_all() {
+    _history = History::KEEP_ALL;
+    return *this;
+  }
 
-  ROS2QoS &reliable() {_reliability = Reliability::RELIABLE; return *this; }
+  ROS2QoS &reliable() {
+    _reliability = Reliability::RELIABLE;
+    return *this;
+  }
 
-  ROS2QoS &best_effort() {_reliability = Reliability::BEST_EFFORT; return *this; }
+  ROS2QoS &best_effort() {
+    _reliability = Reliability::BEST_EFFORT;
+    return *this;
+  }
 
-  ROS2QoS &durability_volatile() { _durability=Durability::VOLATILE; return *this; }
+  ROS2QoS &durability_volatile() {
+    _durability = Durability::VOLATILE;
+    return *this;
+  }
 
-  ROS2QoS &transient_local()  { _durability=Durability::TRANSIENT_LOCAL; return *this; }
+  ROS2QoS &transient_local() {
+    _durability = Durability::TRANSIENT_LOCAL;
+    return *this;
+  }
 
   enum class Reliability { SYSTEM_DEFAULT, BEST_EFFORT, RELIABLE } _reliability;
 

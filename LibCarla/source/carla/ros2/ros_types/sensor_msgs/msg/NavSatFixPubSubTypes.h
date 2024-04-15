@@ -22,89 +22,74 @@
 #ifndef _FAST_DDS_GENERATED_SENSOR_MSGS_MSG_NAVSATFIX_PUBSUBTYPES_H_
 #define _FAST_DDS_GENERATED_SENSOR_MSGS_MSG_NAVSATFIX_PUBSUBTYPES_H_
 
-#include <fastdds/dds/topic/TopicDataType.hpp>
 #include <fastrtps/utils/md5.h>
+#include <fastdds/dds/topic/TopicDataType.hpp>
 
 #include "NavSatFix.h"
 
-#include "std_msgs/msg/HeaderPubSubTypes.h"
 #include "NavSatStatusPubSubTypes.h"
+#include "std_msgs/msg/HeaderPubSubTypes.h"
 
 #if !defined(GEN_API_VER) || (GEN_API_VER != 1)
-#error \
-    Generated NavSatFix is not compatible with current installed Fast DDS. Please, regenerate it with fastddsgen.
+#error Generated NavSatFix is not compatible with current installed Fast DDS. Please, regenerate it with fastddsgen.
 #endif  // GEN_API_VER
 
-namespace sensor_msgs
-{
-    namespace msg
-    {
-        typedef std::array<double, 9> sensor_msgs__NavSatFix__double_array_9;
+namespace sensor_msgs {
+namespace msg {
+typedef std::array<double, 9> sensor_msgs__NavSatFix__double_array_9;
 
-        /*!
-         * @brief This class represents the TopicDataType of the type NavSatFix defined by the user in the IDL file.
-         * @ingroup NAVSATFIX
-         */
-        class NavSatFixPubSubType : public eprosima::fastdds::dds::TopicDataType
-        {
-        public:
+/*!
+ * @brief This class represents the TopicDataType of the type NavSatFix defined by the user in the IDL file.
+ * @ingroup NAVSATFIX
+ */
+class NavSatFixPubSubType : public eprosima::fastdds::dds::TopicDataType {
+public:
+  typedef NavSatFix type;
 
-            typedef NavSatFix type;
+  eProsima_user_DllExport NavSatFixPubSubType();
 
-            eProsima_user_DllExport NavSatFixPubSubType();
+  eProsima_user_DllExport virtual ~NavSatFixPubSubType() override;
 
-            eProsima_user_DllExport virtual ~NavSatFixPubSubType() override;
+  eProsima_user_DllExport virtual bool serialize(void* data,
+                                                 eprosima::fastrtps::rtps::SerializedPayload_t* payload) override;
 
-            eProsima_user_DllExport virtual bool serialize(
-                    void* data,
-                    eprosima::fastrtps::rtps::SerializedPayload_t* payload) override;
+  eProsima_user_DllExport virtual bool deserialize(eprosima::fastrtps::rtps::SerializedPayload_t* payload,
+                                                   void* data) override;
 
-            eProsima_user_DllExport virtual bool deserialize(
-                    eprosima::fastrtps::rtps::SerializedPayload_t* payload,
-                    void* data) override;
+  eProsima_user_DllExport virtual std::function<uint32_t()> getSerializedSizeProvider(void* data) override;
 
-            eProsima_user_DllExport virtual std::function<uint32_t()> getSerializedSizeProvider(
-                    void* data) override;
+  eProsima_user_DllExport virtual bool getKey(void* data, eprosima::fastrtps::rtps::InstanceHandle_t* ihandle,
+                                              bool force_md5 = false) override;
 
-            eProsima_user_DllExport virtual bool getKey(
-                    void* data,
-                    eprosima::fastrtps::rtps::InstanceHandle_t* ihandle,
-                    bool force_md5 = false) override;
+  eProsima_user_DllExport virtual void* createData() override;
 
-            eProsima_user_DllExport virtual void* createData() override;
+  eProsima_user_DllExport virtual void deleteData(void* data) override;
 
-            eProsima_user_DllExport virtual void deleteData(
-                    void* data) override;
+#ifdef TOPIC_DATA_TYPE_API_HAS_IS_BOUNDED
+  eProsima_user_DllExport inline bool is_bounded() const override {
+    return false;
+  }
 
-        #ifdef TOPIC_DATA_TYPE_API_HAS_IS_BOUNDED
-            eProsima_user_DllExport inline bool is_bounded() const override
-            {
-                return false;
-            }
+#endif  // TOPIC_DATA_TYPE_API_HAS_IS_BOUNDED
 
-        #endif  // TOPIC_DATA_TYPE_API_HAS_IS_BOUNDED
+#ifdef TOPIC_DATA_TYPE_API_HAS_IS_PLAIN
+  eProsima_user_DllExport inline bool is_plain() const override {
+    return false;
+  }
 
-        #ifdef TOPIC_DATA_TYPE_API_HAS_IS_PLAIN
-            eProsima_user_DllExport inline bool is_plain() const override
-            {
-                return false;
-            }
+#endif  // TOPIC_DATA_TYPE_API_HAS_IS_PLAIN
 
-        #endif  // TOPIC_DATA_TYPE_API_HAS_IS_PLAIN
+#ifdef TOPIC_DATA_TYPE_API_HAS_CONSTRUCT_SAMPLE
+  eProsima_user_DllExport inline bool construct_sample(void* memory) const override {
+    (void)memory;
+    return false;
+  }
 
-        #ifdef TOPIC_DATA_TYPE_API_HAS_CONSTRUCT_SAMPLE
-            eProsima_user_DllExport inline bool construct_sample(
-                    void* memory) const override
-            {
-                (void)memory;
-                return false;
-            }
+#endif  // TOPIC_DATA_TYPE_API_HAS_CONSTRUCT_SAMPLE
+  MD5 m_md5;
+  unsigned char* m_keyBuffer;
+};
+}  // namespace msg
+}  // namespace sensor_msgs
 
-        #endif  // TOPIC_DATA_TYPE_API_HAS_CONSTRUCT_SAMPLE
-            MD5 m_md5;
-            unsigned char* m_keyBuffer;
-        };
-    }
-}
-
-#endif // _FAST_DDS_GENERATED_SENSOR_MSGS_MSG_NAVSATFIX_PUBSUBTYPES_H_
+#endif  // _FAST_DDS_GENERATED_SENSOR_MSGS_MSG_NAVSATFIX_PUBSUBTYPES_H_

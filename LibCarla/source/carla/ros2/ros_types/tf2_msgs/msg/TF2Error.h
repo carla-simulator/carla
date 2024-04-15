@@ -26,14 +26,14 @@
 
 #include <stdint.h>
 #include <array>
+#include <bitset>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <bitset>
 
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
-#define eProsima_user_DllExport __declspec( dllexport )
+#define eProsima_user_DllExport __declspec(dllexport)
 #else
 #define eProsima_user_DllExport
 #endif  // EPROSIMA_USER_DLL_EXPORT
@@ -44,197 +44,179 @@
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
 #if defined(TF2Error_SOURCE)
-#define TF2Error_DllAPI __declspec( dllexport )
+#define TF2Error_DllAPI __declspec(dllexport)
 #else
-#define TF2Error_DllAPI __declspec( dllimport )
-#endif // TF2Error_SOURCE
+#define TF2Error_DllAPI __declspec(dllimport)
+#endif  // TF2Error_SOURCE
 #else
 #define TF2Error_DllAPI
 #endif  // EPROSIMA_USER_DLL_EXPORT
 #else
 #define TF2Error_DllAPI
-#endif // _WIN32
+#endif  // _WIN32
 
 namespace eprosima {
 namespace fastcdr {
 class Cdr;
-} // namespace fastcdr
-} // namespace eprosima
-
+}  // namespace fastcdr
+}  // namespace eprosima
 
 namespace tf2_msgs {
-    namespace msg {
-        const uint8_t TF2Error__NO_ERROR = 0;
-        const uint8_t TF2Error__LOOKUP_ERROR = 1;
-        const uint8_t TF2Error__CONNECTIVITY_ERROR = 2;
-        const uint8_t TF2Error__EXTRAPOLATION_ERROR = 3;
-        const uint8_t TF2Error__INVALID_ARGUMENT_ERROR = 4;
-        const uint8_t TF2Error__TIMEOUT_ERROR = 5;
-        const uint8_t TF2Error__TRANSFORM_ERROR = 6;
-        /*!
-         * @brief This class represents the structure TF2Error defined by the user in the IDL file.
-         * @ingroup TF2ERROR
-         */
-        class TF2Error
-        {
-        public:
+namespace msg {
+const uint8_t TF2Error__NO_ERROR = 0;
+const uint8_t TF2Error__LOOKUP_ERROR = 1;
+const uint8_t TF2Error__CONNECTIVITY_ERROR = 2;
+const uint8_t TF2Error__EXTRAPOLATION_ERROR = 3;
+const uint8_t TF2Error__INVALID_ARGUMENT_ERROR = 4;
+const uint8_t TF2Error__TIMEOUT_ERROR = 5;
+const uint8_t TF2Error__TRANSFORM_ERROR = 6;
+/*!
+ * @brief This class represents the structure TF2Error defined by the user in the IDL file.
+ * @ingroup TF2ERROR
+ */
+class TF2Error {
+public:
+  /*!
+   * @brief Default constructor.
+   */
+  eProsima_user_DllExport TF2Error();
 
-            /*!
-             * @brief Default constructor.
-             */
-            eProsima_user_DllExport TF2Error();
+  /*!
+   * @brief Default destructor.
+   */
+  eProsima_user_DllExport ~TF2Error();
 
-            /*!
-             * @brief Default destructor.
-             */
-            eProsima_user_DllExport ~TF2Error();
+  /*!
+   * @brief Copy constructor.
+   * @param x Reference to the object tf2_msgs::msg::TF2Error that will be copied.
+   */
+  eProsima_user_DllExport TF2Error(const TF2Error& x);
 
-            /*!
-             * @brief Copy constructor.
-             * @param x Reference to the object tf2_msgs::msg::TF2Error that will be copied.
-             */
-            eProsima_user_DllExport TF2Error(
-                    const TF2Error& x);
+  /*!
+   * @brief Move constructor.
+   * @param x Reference to the object tf2_msgs::msg::TF2Error that will be copied.
+   */
+  eProsima_user_DllExport TF2Error(TF2Error&& x) noexcept;
 
-            /*!
-             * @brief Move constructor.
-             * @param x Reference to the object tf2_msgs::msg::TF2Error that will be copied.
-             */
-            eProsima_user_DllExport TF2Error(
-                    TF2Error&& x) noexcept;
+  /*!
+   * @brief Copy assignment.
+   * @param x Reference to the object tf2_msgs::msg::TF2Error that will be copied.
+   */
+  eProsima_user_DllExport TF2Error& operator=(const TF2Error& x);
 
-            /*!
-             * @brief Copy assignment.
-             * @param x Reference to the object tf2_msgs::msg::TF2Error that will be copied.
-             */
-            eProsima_user_DllExport TF2Error& operator =(
-                    const TF2Error& x);
+  /*!
+   * @brief Move assignment.
+   * @param x Reference to the object tf2_msgs::msg::TF2Error that will be copied.
+   */
+  eProsima_user_DllExport TF2Error& operator=(TF2Error&& x) noexcept;
 
-            /*!
-             * @brief Move assignment.
-             * @param x Reference to the object tf2_msgs::msg::TF2Error that will be copied.
-             */
-            eProsima_user_DllExport TF2Error& operator =(
-                    TF2Error&& x) noexcept;
+  /*!
+   * @brief Comparison operator.
+   * @param x tf2_msgs::msg::TF2Error object to compare.
+   */
+  eProsima_user_DllExport bool operator==(const TF2Error& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x tf2_msgs::msg::TF2Error object to compare.
-             */
-            eProsima_user_DllExport bool operator ==(
-                    const TF2Error& x) const;
+  /*!
+   * @brief Comparison operator.
+   * @param x tf2_msgs::msg::TF2Error object to compare.
+   */
+  eProsima_user_DllExport bool operator!=(const TF2Error& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x tf2_msgs::msg::TF2Error object to compare.
-             */
-            eProsima_user_DllExport bool operator !=(
-                    const TF2Error& x) const;
+  /*!
+   * @brief This function sets a value in member error
+   * @param _error New value for member error
+   */
+  eProsima_user_DllExport void error(uint8_t _error);
 
-            /*!
-             * @brief This function sets a value in member error
-             * @param _error New value for member error
-             */
-            eProsima_user_DllExport void error(
-                    uint8_t _error);
+  /*!
+   * @brief This function returns the value of member error
+   * @return Value of member error
+   */
+  eProsima_user_DllExport uint8_t error() const;
 
-            /*!
-             * @brief This function returns the value of member error
-             * @return Value of member error
-             */
-            eProsima_user_DllExport uint8_t error() const;
+  /*!
+   * @brief This function returns a reference to member error
+   * @return Reference to member error
+   */
+  eProsima_user_DllExport uint8_t& error();
 
-            /*!
-             * @brief This function returns a reference to member error
-             * @return Reference to member error
-             */
-            eProsima_user_DllExport uint8_t& error();
+  /*!
+   * @brief This function copies the value in member error_string
+   * @param _error_string New value to be copied in member error_string
+   */
+  eProsima_user_DllExport void error_string(const std::string& _error_string);
 
-            /*!
-             * @brief This function copies the value in member error_string
-             * @param _error_string New value to be copied in member error_string
-             */
-            eProsima_user_DllExport void error_string(
-                    const std::string& _error_string);
+  /*!
+   * @brief This function moves the value in member error_string
+   * @param _error_string New value to be moved in member error_string
+   */
+  eProsima_user_DllExport void error_string(std::string&& _error_string);
 
-            /*!
-             * @brief This function moves the value in member error_string
-             * @param _error_string New value to be moved in member error_string
-             */
-            eProsima_user_DllExport void error_string(
-                    std::string&& _error_string);
+  /*!
+   * @brief This function returns a constant reference to member error_string
+   * @return Constant reference to member error_string
+   */
+  eProsima_user_DllExport const std::string& error_string() const;
 
-            /*!
-             * @brief This function returns a constant reference to member error_string
-             * @return Constant reference to member error_string
-             */
-            eProsima_user_DllExport const std::string& error_string() const;
+  /*!
+   * @brief This function returns a reference to member error_string
+   * @return Reference to member error_string
+   */
+  eProsima_user_DllExport std::string& error_string();
 
-            /*!
-             * @brief This function returns a reference to member error_string
-             * @return Reference to member error_string
-             */
-            eProsima_user_DllExport std::string& error_string();
+  /*!
+   * @brief This function returns the maximum serialized size of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-            * @brief This function returns the maximum serialized size of an object
-            * depending on the buffer alignment.
-            * @param current_alignment Buffer alignment.
-            * @return Maximum serialized size.
-            */
-            eProsima_user_DllExport static size_t getMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function returns the serialized size of a data depending on the buffer alignment.
+   * @param data Data which is calculated its serialized size.
+   * @param current_alignment Buffer alignment.
+   * @return Serialized size.
+   */
+  eProsima_user_DllExport static size_t getCdrSerializedSize(const tf2_msgs::msg::TF2Error& data,
+                                                             size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the serialized size of a data depending on the buffer alignment.
-             * @param data Data which is calculated its serialized size.
-             * @param current_alignment Buffer alignment.
-             * @return Serialized size.
-             */
-            eProsima_user_DllExport static size_t getCdrSerializedSize(
-                    const tf2_msgs::msg::TF2Error& data,
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function serializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serialize(eprosima::fastcdr::Cdr& cdr) const;
 
-            /*!
-             * @brief This function serializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serialize(
-                    eprosima::fastcdr::Cdr& cdr) const;
+  /*!
+   * @brief This function deserializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void deserialize(eprosima::fastcdr::Cdr& cdr);
 
-            /*!
-             * @brief This function deserializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void deserialize(
-                    eprosima::fastcdr::Cdr& cdr);
+  /*!
+   * @brief This function returns the maximum serialized size of the Key of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the maximum serialized size of the Key of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function tells you if the Key has been defined for this type
+   */
+  eProsima_user_DllExport static bool isKeyDefined();
 
-            /*!
-             * @brief This function tells you if the Key has been defined for this type
-             */
-            eProsima_user_DllExport static bool isKeyDefined();
+  /*!
+   * @brief This function serializes the key members of an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serializeKey(eprosima::fastcdr::Cdr& cdr) const;
 
-            /*!
-             * @brief This function serializes the key members of an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serializeKey(
-                    eprosima::fastcdr::Cdr& cdr) const;
+private:
+  uint8_t m_error;
+  std::string m_error_string;
+};
+}  // namespace msg
+}  // namespace tf2_msgs
 
-        private:
-            uint8_t m_error;
-            std::string m_error_string;
-        };
-    } // namespace msg
-} // namespace tf2_msgs
-
-#endif // _FAST_DDS_GENERATED_TF2_MSGS_MSG_TF2ERROR_H_
+#endif  // _FAST_DDS_GENERATED_TF2_MSGS_MSG_TF2ERROR_H_

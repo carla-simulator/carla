@@ -31,7 +31,7 @@ public:
    */
   bool SubscribersConnected() const override;
 
-  void UpdateCarlaStatus(const carla_msgs::msg::CarlaStatus& status, const builtin_interfaces::msg::Time& stamp);
+  void UpdateCarlaStatus(const carla_msgs::msg::CarlaStatus& status);
 
 private:
   std::shared_ptr<CarlaStatusPublisherImpl> _impl;

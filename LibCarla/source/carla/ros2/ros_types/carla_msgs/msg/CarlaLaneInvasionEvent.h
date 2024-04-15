@@ -26,14 +26,14 @@
 
 #include <stdint.h>
 #include <array>
+#include <bitset>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <bitset>
 
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
-#define eProsima_user_DllExport __declspec( dllexport )
+#define eProsima_user_DllExport __declspec(dllexport)
 #else
 #define eProsima_user_DllExport
 #endif  // EPROSIMA_USER_DLL_EXPORT
@@ -44,205 +44,182 @@
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
 #if defined(CarlaLaneInvasionEvent_SOURCE)
-#define CarlaLaneInvasionEvent_DllAPI __declspec( dllexport )
+#define CarlaLaneInvasionEvent_DllAPI __declspec(dllexport)
 #else
-#define CarlaLaneInvasionEvent_DllAPI __declspec( dllimport )
-#endif // CarlaLaneInvasionEvent_SOURCE
+#define CarlaLaneInvasionEvent_DllAPI __declspec(dllimport)
+#endif  // CarlaLaneInvasionEvent_SOURCE
 #else
 #define CarlaLaneInvasionEvent_DllAPI
 #endif  // EPROSIMA_USER_DLL_EXPORT
 #else
 #define CarlaLaneInvasionEvent_DllAPI
-#endif // _WIN32
+#endif  // _WIN32
 
 namespace eprosima {
 namespace fastcdr {
 class Cdr;
-} // namespace fastcdr
-} // namespace eprosima
-
+}  // namespace fastcdr
+}  // namespace eprosima
 
 namespace carla_msgs {
-    namespace msg {
-        namespace CarlaLaneInvasionEvent_Constants {
-            const int32_t LANE_MARKING_OTHER = 0;
-            const int32_t LANE_MARKING_BROKEN = 1;
-            const int32_t LANE_MARKING_SOLID = 2;
-        } // namespace CarlaLaneInvasionEvent_Constants
-        /*!
-         * @brief This class represents the structure CarlaLaneInvasionEvent defined by the user in the IDL file.
-         * @ingroup CARLALANEINVASIONEVENT
-         */
-        class CarlaLaneInvasionEvent
-        {
-        public:
+namespace msg {
+namespace CarlaLaneInvasionEvent_Constants {
+const int32_t LANE_MARKING_OTHER = 0;
+const int32_t LANE_MARKING_BROKEN = 1;
+const int32_t LANE_MARKING_SOLID = 2;
+}  // namespace CarlaLaneInvasionEvent_Constants
+/*!
+ * @brief This class represents the structure CarlaLaneInvasionEvent defined by the user in the IDL file.
+ * @ingroup CARLALANEINVASIONEVENT
+ */
+class CarlaLaneInvasionEvent {
+public:
+  /*!
+   * @brief Default constructor.
+   */
+  eProsima_user_DllExport CarlaLaneInvasionEvent();
 
-            /*!
-             * @brief Default constructor.
-             */
-            eProsima_user_DllExport CarlaLaneInvasionEvent();
+  /*!
+   * @brief Default destructor.
+   */
+  eProsima_user_DllExport ~CarlaLaneInvasionEvent();
 
-            /*!
-             * @brief Default destructor.
-             */
-            eProsima_user_DllExport ~CarlaLaneInvasionEvent();
+  /*!
+   * @brief Copy constructor.
+   * @param x Reference to the object carla_msgs::msg::CarlaLaneInvasionEvent that will be copied.
+   */
+  eProsima_user_DllExport CarlaLaneInvasionEvent(const CarlaLaneInvasionEvent& x);
 
-            /*!
-             * @brief Copy constructor.
-             * @param x Reference to the object carla_msgs::msg::CarlaLaneInvasionEvent that will be copied.
-             */
-            eProsima_user_DllExport CarlaLaneInvasionEvent(
-                    const CarlaLaneInvasionEvent& x);
+  /*!
+   * @brief Move constructor.
+   * @param x Reference to the object carla_msgs::msg::CarlaLaneInvasionEvent that will be copied.
+   */
+  eProsima_user_DllExport CarlaLaneInvasionEvent(CarlaLaneInvasionEvent&& x);
 
-            /*!
-             * @brief Move constructor.
-             * @param x Reference to the object carla_msgs::msg::CarlaLaneInvasionEvent that will be copied.
-             */
-            eProsima_user_DllExport CarlaLaneInvasionEvent(
-                    CarlaLaneInvasionEvent&& x);
+  /*!
+   * @brief Copy assignment.
+   * @param x Reference to the object carla_msgs::msg::CarlaLaneInvasionEvent that will be copied.
+   */
+  eProsima_user_DllExport CarlaLaneInvasionEvent& operator=(const CarlaLaneInvasionEvent& x);
 
-            /*!
-             * @brief Copy assignment.
-             * @param x Reference to the object carla_msgs::msg::CarlaLaneInvasionEvent that will be copied.
-             */
-            eProsima_user_DllExport CarlaLaneInvasionEvent& operator =(
-                    const CarlaLaneInvasionEvent& x);
+  /*!
+   * @brief Move assignment.
+   * @param x Reference to the object carla_msgs::msg::CarlaLaneInvasionEvent that will be copied.
+   */
+  eProsima_user_DllExport CarlaLaneInvasionEvent& operator=(CarlaLaneInvasionEvent&& x);
 
-            /*!
-             * @brief Move assignment.
-             * @param x Reference to the object carla_msgs::msg::CarlaLaneInvasionEvent that will be copied.
-             */
-            eProsima_user_DllExport CarlaLaneInvasionEvent& operator =(
-                    CarlaLaneInvasionEvent&& x);
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::msg::CarlaLaneInvasionEvent object to compare.
+   */
+  eProsima_user_DllExport bool operator==(const CarlaLaneInvasionEvent& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::msg::CarlaLaneInvasionEvent object to compare.
-             */
-            eProsima_user_DllExport bool operator ==(
-                    const CarlaLaneInvasionEvent& x) const;
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::msg::CarlaLaneInvasionEvent object to compare.
+   */
+  eProsima_user_DllExport bool operator!=(const CarlaLaneInvasionEvent& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::msg::CarlaLaneInvasionEvent object to compare.
-             */
-            eProsima_user_DllExport bool operator !=(
-                    const CarlaLaneInvasionEvent& x) const;
+  /*!
+   * @brief This function copies the value in member header
+   * @param _header New value to be copied in member header
+   */
+  eProsima_user_DllExport void header(const std_msgs::msg::Header& _header);
 
-            /*!
-             * @brief This function copies the value in member header
-             * @param _header New value to be copied in member header
-             */
-            eProsima_user_DllExport void header(
-                    const std_msgs::msg::Header& _header);
+  /*!
+   * @brief This function moves the value in member header
+   * @param _header New value to be moved in member header
+   */
+  eProsima_user_DllExport void header(std_msgs::msg::Header&& _header);
 
-            /*!
-             * @brief This function moves the value in member header
-             * @param _header New value to be moved in member header
-             */
-            eProsima_user_DllExport void header(
-                    std_msgs::msg::Header&& _header);
+  /*!
+   * @brief This function returns a constant reference to member header
+   * @return Constant reference to member header
+   */
+  eProsima_user_DllExport const std_msgs::msg::Header& header() const;
 
-            /*!
-             * @brief This function returns a constant reference to member header
-             * @return Constant reference to member header
-             */
-            eProsima_user_DllExport const std_msgs::msg::Header& header() const;
+  /*!
+   * @brief This function returns a reference to member header
+   * @return Reference to member header
+   */
+  eProsima_user_DllExport std_msgs::msg::Header& header();
+  /*!
+   * @brief This function copies the value in member crossed_lane_markings
+   * @param _crossed_lane_markings New value to be copied in member crossed_lane_markings
+   */
+  eProsima_user_DllExport void crossed_lane_markings(const std::vector<int32_t>& _crossed_lane_markings);
 
-            /*!
-             * @brief This function returns a reference to member header
-             * @return Reference to member header
-             */
-            eProsima_user_DllExport std_msgs::msg::Header& header();
-            /*!
-             * @brief This function copies the value in member crossed_lane_markings
-             * @param _crossed_lane_markings New value to be copied in member crossed_lane_markings
-             */
-            eProsima_user_DllExport void crossed_lane_markings(
-                    const std::vector<int32_t>& _crossed_lane_markings);
+  /*!
+   * @brief This function moves the value in member crossed_lane_markings
+   * @param _crossed_lane_markings New value to be moved in member crossed_lane_markings
+   */
+  eProsima_user_DllExport void crossed_lane_markings(std::vector<int32_t>&& _crossed_lane_markings);
 
-            /*!
-             * @brief This function moves the value in member crossed_lane_markings
-             * @param _crossed_lane_markings New value to be moved in member crossed_lane_markings
-             */
-            eProsima_user_DllExport void crossed_lane_markings(
-                    std::vector<int32_t>&& _crossed_lane_markings);
+  /*!
+   * @brief This function returns a constant reference to member crossed_lane_markings
+   * @return Constant reference to member crossed_lane_markings
+   */
+  eProsima_user_DllExport const std::vector<int32_t>& crossed_lane_markings() const;
 
-            /*!
-             * @brief This function returns a constant reference to member crossed_lane_markings
-             * @return Constant reference to member crossed_lane_markings
-             */
-            eProsima_user_DllExport const std::vector<int32_t>& crossed_lane_markings() const;
+  /*!
+   * @brief This function returns a reference to member crossed_lane_markings
+   * @return Reference to member crossed_lane_markings
+   */
+  eProsima_user_DllExport std::vector<int32_t>& crossed_lane_markings();
 
-            /*!
-             * @brief This function returns a reference to member crossed_lane_markings
-             * @return Reference to member crossed_lane_markings
-             */
-            eProsima_user_DllExport std::vector<int32_t>& crossed_lane_markings();
+  /*!
+   * @brief This function returns the maximum serialized size of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the maximum serialized size of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function returns the serialized size of a data depending on the buffer alignment.
+   * @param data Data which is calculated its serialized size.
+   * @param current_alignment Buffer alignment.
+   * @return Serialized size.
+   */
+  eProsima_user_DllExport static size_t getCdrSerializedSize(const carla_msgs::msg::CarlaLaneInvasionEvent& data,
+                                                             size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the serialized size of a data depending on the buffer alignment.
-             * @param data Data which is calculated its serialized size.
-             * @param current_alignment Buffer alignment.
-             * @return Serialized size.
-             */
-            eProsima_user_DllExport static size_t getCdrSerializedSize(
-                    const carla_msgs::msg::CarlaLaneInvasionEvent& data,
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function serializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serialize(eprosima::fastcdr::Cdr& cdr) const;
 
+  /*!
+   * @brief This function deserializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void deserialize(eprosima::fastcdr::Cdr& cdr);
 
-            /*!
-             * @brief This function serializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serialize(
-                    eprosima::fastcdr::Cdr& cdr) const;
+  /*!
+   * @brief This function returns the maximum serialized size of the Key of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief This function deserializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void deserialize(
-                    eprosima::fastcdr::Cdr& cdr);
+  /*!
+   * @brief This function tells you if the Key has been defined for this type
+   */
+  eProsima_user_DllExport static bool isKeyDefined();
 
+  /*!
+   * @brief This function serializes the key members of an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serializeKey(eprosima::fastcdr::Cdr& cdr) const;
 
+private:
+  std_msgs::msg::Header m_header;
+  std::vector<int32_t> m_crossed_lane_markings;
+};
+}  // namespace msg
+}  // namespace carla_msgs
 
-            /*!
-             * @brief This function returns the maximum serialized size of the Key of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
-
-            /*!
-             * @brief This function tells you if the Key has been defined for this type
-             */
-            eProsima_user_DllExport static bool isKeyDefined();
-
-            /*!
-             * @brief This function serializes the key members of an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serializeKey(
-                    eprosima::fastcdr::Cdr& cdr) const;
-
-        private:
-
-            std_msgs::msg::Header m_header;
-            std::vector<int32_t> m_crossed_lane_markings;
-        };
-    } // namespace msg
-} // namespace carla_msgs
-
-#endif // _FAST_DDS_GENERATED_CARLA_MSGS_MSG_CARLALANEINVASIONEVENT_H_
+#endif  // _FAST_DDS_GENERATED_CARLA_MSGS_MSG_CARLALANEINVASIONEVENT_H_

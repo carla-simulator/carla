@@ -19,6 +19,7 @@
 #include "carla/ros2/publishers/WalkerPublisher.h"
 #include "carla/ros2/subscribers/AckermannControlSubscriber.h"
 #include "carla/ros2/subscribers/CarlaControlSubscriber.h"
+#include "carla/ros2/subscribers/CarlaSynchronizationWindowSubscriber.h"
 #include "carla/ros2/subscribers/VehicleControlSubscriber.h"
 #include "carla/ros2/subscribers/WalkerControlSubscriber.h"
 #include "carla/ros2/types/Object.h"
@@ -39,7 +40,7 @@ namespace ros2 {
  * - vehicle
  * - traffic_light
  * - traffic_sign
- * 
+ *
  */
 class UeWorldPublisher : public UePublisherBaseSensor {
 public:
@@ -71,7 +72,7 @@ public:
 
   /**
    * Process incoming messages
-  */
+   */
   void ProcessMessages();
 
   /**
@@ -143,6 +144,7 @@ private:
     std::shared_ptr<VehiclePublisher> _vehicle_publisher;
     std::shared_ptr<VehicleControlSubscriber> _vehicle_controller;
     std::shared_ptr<AckermannControlSubscriber> _vehicle_ackermann_controller;
+    std::shared_ptr<CarlaSynchronizationWindowSubscriber> _sync_subscriber;
   };
   std::unordered_map<ActorId, UeVehicle> _vehicles;
 
@@ -151,6 +153,7 @@ private:
       : _walker_publisher(carla_walker_publisher) {}
     std::shared_ptr<WalkerPublisher> _walker_publisher;
     std::shared_ptr<WalkerControlSubscriber> _walker_controller;
+    std::shared_ptr<CarlaSynchronizationWindowSubscriber> _sync_subscriber;
     carla::ros2::types::WalkerControlCallback _walker_control_callback;
   };
   std::unordered_map<ActorId, UeWalker> _walkers;
@@ -182,6 +185,7 @@ private:
   std::shared_ptr<TrafficLightsPublisher> _traffic_lights_publisher;
   // subscriber
   std::shared_ptr<CarlaControlSubscriber> _carla_control_subscriber;
+  std::shared_ptr<CarlaSynchronizationWindowSubscriber> _sync_subscriber;
 
   bool _initialized{false};
 };

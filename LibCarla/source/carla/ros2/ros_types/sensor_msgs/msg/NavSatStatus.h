@@ -26,14 +26,14 @@
 
 #include <stdint.h>
 #include <array>
+#include <bitset>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <bitset>
 
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
-#define eProsima_user_DllExport __declspec( dllexport )
+#define eProsima_user_DllExport __declspec(dllexport)
 #else
 #define eProsima_user_DllExport
 #endif  // EPROSIMA_USER_DLL_EXPORT
@@ -44,190 +44,174 @@
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
 #if defined(NavSatStatus_SOURCE)
-#define NavSatStatus_DllAPI __declspec( dllexport )
+#define NavSatStatus_DllAPI __declspec(dllexport)
 #else
-#define NavSatStatus_DllAPI __declspec( dllimport )
-#endif // NavSatStatus_SOURCE
+#define NavSatStatus_DllAPI __declspec(dllimport)
+#endif  // NavSatStatus_SOURCE
 #else
 #define NavSatStatus_DllAPI
 #endif  // EPROSIMA_USER_DLL_EXPORT
 #else
 #define NavSatStatus_DllAPI
-#endif // _WIN32
+#endif  // _WIN32
 
 namespace eprosima {
 namespace fastcdr {
 class Cdr;
-} // namespace fastcdr
-} // namespace eprosima
+}  // namespace fastcdr
+}  // namespace eprosima
 
 namespace sensor_msgs {
-    namespace msg {
-        const uint8_t NavSatStatus__STATUS_NO_FIX = 255;
-        const uint8_t NavSatStatus__STATUS_FIX = 0;
-        const uint8_t NavSatStatus__STATUS_SBAS_FIX = 1;
-        const uint8_t NavSatStatus__STATUS_GBAS_FIX = 2;
-        const uint16_t NavSatStatus__SERVICE_GPS = 1;
-        const uint16_t NavSatStatus__SERVICE_GLONASS = 2;
-        const uint16_t NavSatStatus__SERVICE_COMPASS = 4;
-        const uint16_t NavSatStatus__SERVICE_GALILEO = 8;
-        /*!
-         * @brief This class represents the structure NavSatStatus defined by the user in the IDL file.
-         * @ingroup NAVSATSTATUS
-         */
-        class NavSatStatus
-        {
-        public:
+namespace msg {
+const uint8_t NavSatStatus__STATUS_NO_FIX = 255;
+const uint8_t NavSatStatus__STATUS_FIX = 0;
+const uint8_t NavSatStatus__STATUS_SBAS_FIX = 1;
+const uint8_t NavSatStatus__STATUS_GBAS_FIX = 2;
+const uint16_t NavSatStatus__SERVICE_GPS = 1;
+const uint16_t NavSatStatus__SERVICE_GLONASS = 2;
+const uint16_t NavSatStatus__SERVICE_COMPASS = 4;
+const uint16_t NavSatStatus__SERVICE_GALILEO = 8;
+/*!
+ * @brief This class represents the structure NavSatStatus defined by the user in the IDL file.
+ * @ingroup NAVSATSTATUS
+ */
+class NavSatStatus {
+public:
+  /*!
+   * @brief Default constructor.
+   */
+  eProsima_user_DllExport NavSatStatus();
 
-            /*!
-             * @brief Default constructor.
-             */
-            eProsima_user_DllExport NavSatStatus();
+  /*!
+   * @brief Default destructor.
+   */
+  eProsima_user_DllExport ~NavSatStatus();
 
-            /*!
-             * @brief Default destructor.
-             */
-            eProsima_user_DllExport ~NavSatStatus();
+  /*!
+   * @brief Copy constructor.
+   * @param x Reference to the object sensor_msgs::msg::NavSatStatus that will be copied.
+   */
+  eProsima_user_DllExport NavSatStatus(const NavSatStatus& x);
 
-            /*!
-             * @brief Copy constructor.
-             * @param x Reference to the object sensor_msgs::msg::NavSatStatus that will be copied.
-             */
-            eProsima_user_DllExport NavSatStatus(
-                    const NavSatStatus& x);
+  /*!
+   * @brief Move constructor.
+   * @param x Reference to the object sensor_msgs::msg::NavSatStatus that will be copied.
+   */
+  eProsima_user_DllExport NavSatStatus(NavSatStatus&& x) noexcept;
 
-            /*!
-             * @brief Move constructor.
-             * @param x Reference to the object sensor_msgs::msg::NavSatStatus that will be copied.
-             */
-            eProsima_user_DllExport NavSatStatus(
-                    NavSatStatus&& x) noexcept;
+  /*!
+   * @brief Copy assignment.
+   * @param x Reference to the object sensor_msgs::msg::NavSatStatus that will be copied.
+   */
+  eProsima_user_DllExport NavSatStatus& operator=(const NavSatStatus& x);
 
-            /*!
-             * @brief Copy assignment.
-             * @param x Reference to the object sensor_msgs::msg::NavSatStatus that will be copied.
-             */
-            eProsima_user_DllExport NavSatStatus& operator =(
-                    const NavSatStatus& x);
+  /*!
+   * @brief Move assignment.
+   * @param x Reference to the object sensor_msgs::msg::NavSatStatus that will be copied.
+   */
+  eProsima_user_DllExport NavSatStatus& operator=(NavSatStatus&& x) noexcept;
 
-            /*!
-             * @brief Move assignment.
-             * @param x Reference to the object sensor_msgs::msg::NavSatStatus that will be copied.
-             */
-            eProsima_user_DllExport NavSatStatus& operator =(
-                    NavSatStatus&& x) noexcept;
+  /*!
+   * @brief Comparison operator.
+   * @param x sensor_msgs::msg::NavSatStatus object to compare.
+   */
+  eProsima_user_DllExport bool operator==(const NavSatStatus& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x sensor_msgs::msg::NavSatStatus object to compare.
-             */
-            eProsima_user_DllExport bool operator ==(
-                    const NavSatStatus& x) const;
+  /*!
+   * @brief Comparison operator.
+   * @param x sensor_msgs::msg::NavSatStatus object to compare.
+   */
+  eProsima_user_DllExport bool operator!=(const NavSatStatus& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x sensor_msgs::msg::NavSatStatus object to compare.
-             */
-            eProsima_user_DllExport bool operator !=(
-                    const NavSatStatus& x) const;
+  /*!
+   * @brief This function sets a value in member status
+   * @param _status New value for member status
+   */
+  eProsima_user_DllExport void status(uint8_t _status);
 
-            /*!
-             * @brief This function sets a value in member status
-             * @param _status New value for member status
-             */
-            eProsima_user_DllExport void status(
-                    uint8_t _status);
+  /*!
+   * @brief This function returns the value of member status
+   * @return Value of member status
+   */
+  eProsima_user_DllExport uint8_t status() const;
 
-            /*!
-             * @brief This function returns the value of member status
-             * @return Value of member status
-             */
-            eProsima_user_DllExport uint8_t status() const;
+  /*!
+   * @brief This function returns a reference to member status
+   * @return Reference to member status
+   */
+  eProsima_user_DllExport uint8_t& status();
 
-            /*!
-             * @brief This function returns a reference to member status
-             * @return Reference to member status
-             */
-            eProsima_user_DllExport uint8_t& status();
+  /*!
+   * @brief This function sets a value in member service
+   * @param _service New value for member service
+   */
+  eProsima_user_DllExport void service(uint16_t _service);
 
-            /*!
-             * @brief This function sets a value in member service
-             * @param _service New value for member service
-             */
-            eProsima_user_DllExport void service(
-                    uint16_t _service);
+  /*!
+   * @brief This function returns the value of member service
+   * @return Value of member service
+   */
+  eProsima_user_DllExport uint16_t service() const;
 
-            /*!
-             * @brief This function returns the value of member service
-             * @return Value of member service
-             */
-            eProsima_user_DllExport uint16_t service() const;
+  /*!
+   * @brief This function returns a reference to member service
+   * @return Reference to member service
+   */
+  eProsima_user_DllExport uint16_t& service();
 
-            /*!
-             * @brief This function returns a reference to member service
-             * @return Reference to member service
-             */
-            eProsima_user_DllExport uint16_t& service();
+  /*!
+   * @brief This function returns the maximum serialized size of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-            * @brief This function returns the maximum serialized size of an object
-            * depending on the buffer alignment.
-            * @param current_alignment Buffer alignment.
-            * @return Maximum serialized size.
-            */
-            eProsima_user_DllExport static size_t getMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function returns the serialized size of a data depending on the buffer alignment.
+   * @param data Data which is calculated its serialized size.
+   * @param current_alignment Buffer alignment.
+   * @return Serialized size.
+   */
+  eProsima_user_DllExport static size_t getCdrSerializedSize(const sensor_msgs::msg::NavSatStatus& data,
+                                                             size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the serialized size of a data depending on the buffer alignment.
-             * @param data Data which is calculated its serialized size.
-             * @param current_alignment Buffer alignment.
-             * @return Serialized size.
-             */
-            eProsima_user_DllExport static size_t getCdrSerializedSize(
-                    const sensor_msgs::msg::NavSatStatus& data,
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function serializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serialize(eprosima::fastcdr::Cdr& cdr) const;
 
-            /*!
-             * @brief This function serializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serialize(
-                    eprosima::fastcdr::Cdr& cdr) const;
+  /*!
+   * @brief This function deserializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void deserialize(eprosima::fastcdr::Cdr& cdr);
 
-            /*!
-             * @brief This function deserializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void deserialize(
-                    eprosima::fastcdr::Cdr& cdr);
+  /*!
+   * @brief This function returns the maximum serialized size of the Key of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the maximum serialized size of the Key of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function tells you if the Key has been defined for this type
+   */
+  eProsima_user_DllExport static bool isKeyDefined();
 
-            /*!
-             * @brief This function tells you if the Key has been defined for this type
-             */
-            eProsima_user_DllExport static bool isKeyDefined();
+  /*!
+   * @brief This function serializes the key members of an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serializeKey(eprosima::fastcdr::Cdr& cdr) const;
 
-            /*!
-             * @brief This function serializes the key members of an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serializeKey(
-                    eprosima::fastcdr::Cdr& cdr) const;
+private:
+  uint8_t m_status;
+  uint16_t m_service;
+};
+}  // namespace msg
+}  // namespace sensor_msgs
 
-        private:
-            uint8_t m_status;
-            uint16_t m_service;
-        };
-    } // namespace msg
-} // namespace sensor_msgs
-
-#endif // _FAST_DDS_GENERATED_SENSOR_MSGS_MSG_NAVSATSTATUS_H_
+#endif  // _FAST_DDS_GENERATED_SENSOR_MSGS_MSG_NAVSATSTATUS_H_

@@ -22,17 +22,16 @@
 #ifndef _FAST_DDS_GENERATED_CARLA_MSGS_SRV_DESTROYOBJECT_H_
 #define _FAST_DDS_GENERATED_CARLA_MSGS_SRV_DESTROYOBJECT_H_
 
-
 #include <stdint.h>
 #include <array>
+#include <bitset>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <bitset>
 
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
-#define eProsima_user_DllExport __declspec( dllexport )
+#define eProsima_user_DllExport __declspec(dllexport)
 #else
 #define eProsima_user_DllExport
 #endif  // EPROSIMA_USER_DLL_EXPORT
@@ -43,309 +42,268 @@
 #if defined(_WIN32)
 #if defined(EPROSIMA_USER_DLL_EXPORT)
 #if defined(DestroyObject_SOURCE)
-#define DestroyObject_DllAPI __declspec( dllexport )
+#define DestroyObject_DllAPI __declspec(dllexport)
 #else
-#define DestroyObject_DllAPI __declspec( dllimport )
-#endif // DestroyObject_SOURCE
+#define DestroyObject_DllAPI __declspec(dllimport)
+#endif  // DestroyObject_SOURCE
 #else
 #define DestroyObject_DllAPI
 #endif  // EPROSIMA_USER_DLL_EXPORT
 #else
 #define DestroyObject_DllAPI
-#endif // _WIN32
+#endif  // _WIN32
 
 namespace eprosima {
 namespace fastcdr {
 class Cdr;
-} // namespace fastcdr
-} // namespace eprosima
-
+}  // namespace fastcdr
+}  // namespace eprosima
 
 namespace carla_msgs {
-    namespace srv {
-        /*!
-         * @brief This class represents the structure DestroyObject_Request defined by the user in the IDL file.
-         * @ingroup DESTROYOBJECT
-         */
-        class DestroyObject_Request
-        {
-        public:
+namespace srv {
+/*!
+ * @brief This class represents the structure DestroyObject_Request defined by the user in the IDL file.
+ * @ingroup DESTROYOBJECT
+ */
+class DestroyObject_Request {
+public:
+  /*!
+   * @brief Default constructor.
+   */
+  eProsima_user_DllExport DestroyObject_Request();
 
-            /*!
-             * @brief Default constructor.
-             */
-            eProsima_user_DllExport DestroyObject_Request();
+  /*!
+   * @brief Default destructor.
+   */
+  eProsima_user_DllExport ~DestroyObject_Request();
 
-            /*!
-             * @brief Default destructor.
-             */
-            eProsima_user_DllExport ~DestroyObject_Request();
+  /*!
+   * @brief Copy constructor.
+   * @param x Reference to the object carla_msgs::srv::DestroyObject_Request that will be copied.
+   */
+  eProsima_user_DllExport DestroyObject_Request(const DestroyObject_Request& x);
 
-            /*!
-             * @brief Copy constructor.
-             * @param x Reference to the object carla_msgs::srv::DestroyObject_Request that will be copied.
-             */
-            eProsima_user_DllExport DestroyObject_Request(
-                    const DestroyObject_Request& x);
+  /*!
+   * @brief Move constructor.
+   * @param x Reference to the object carla_msgs::srv::DestroyObject_Request that will be copied.
+   */
+  eProsima_user_DllExport DestroyObject_Request(DestroyObject_Request&& x);
 
-            /*!
-             * @brief Move constructor.
-             * @param x Reference to the object carla_msgs::srv::DestroyObject_Request that will be copied.
-             */
-            eProsima_user_DllExport DestroyObject_Request(
-                    DestroyObject_Request&& x);
+  /*!
+   * @brief Copy assignment.
+   * @param x Reference to the object carla_msgs::srv::DestroyObject_Request that will be copied.
+   */
+  eProsima_user_DllExport DestroyObject_Request& operator=(const DestroyObject_Request& x);
 
-            /*!
-             * @brief Copy assignment.
-             * @param x Reference to the object carla_msgs::srv::DestroyObject_Request that will be copied.
-             */
-            eProsima_user_DllExport DestroyObject_Request& operator =(
-                    const DestroyObject_Request& x);
+  /*!
+   * @brief Move assignment.
+   * @param x Reference to the object carla_msgs::srv::DestroyObject_Request that will be copied.
+   */
+  eProsima_user_DllExport DestroyObject_Request& operator=(DestroyObject_Request&& x);
 
-            /*!
-             * @brief Move assignment.
-             * @param x Reference to the object carla_msgs::srv::DestroyObject_Request that will be copied.
-             */
-            eProsima_user_DllExport DestroyObject_Request& operator =(
-                    DestroyObject_Request&& x);
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::srv::DestroyObject_Request object to compare.
+   */
+  eProsima_user_DllExport bool operator==(const DestroyObject_Request& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::srv::DestroyObject_Request object to compare.
-             */
-            eProsima_user_DllExport bool operator ==(
-                    const DestroyObject_Request& x) const;
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::srv::DestroyObject_Request object to compare.
+   */
+  eProsima_user_DllExport bool operator!=(const DestroyObject_Request& x) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::srv::DestroyObject_Request object to compare.
-             */
-            eProsima_user_DllExport bool operator !=(
-                    const DestroyObject_Request& x) const;
+  /*!
+   * @brief This function sets a value in member id
+   * @param _id New value for member id
+   */
+  eProsima_user_DllExport void id(int32_t _id);
 
-            /*!
-             * @brief This function sets a value in member id
-             * @param _id New value for member id
-             */
-            eProsima_user_DllExport void id(
-                    int32_t _id);
+  /*!
+   * @brief This function returns the value of member id
+   * @return Value of member id
+   */
+  eProsima_user_DllExport int32_t id() const;
 
-            /*!
-             * @brief This function returns the value of member id
-             * @return Value of member id
-             */
-            eProsima_user_DllExport int32_t id() const;
+  /*!
+   * @brief This function returns a reference to member id
+   * @return Reference to member id
+   */
+  eProsima_user_DllExport int32_t& id();
 
-            /*!
-             * @brief This function returns a reference to member id
-             * @return Reference to member id
-             */
-            eProsima_user_DllExport int32_t& id();
+  /*!
+   * @brief This function returns the maximum serialized size of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getMaxCdrSerializedSize(size_t current_alignment = 0);
 
+  /*!
+   * @brief This function returns the serialized size of a data depending on the buffer alignment.
+   * @param data Data which is calculated its serialized size.
+   * @param current_alignment Buffer alignment.
+   * @return Serialized size.
+   */
+  eProsima_user_DllExport static size_t getCdrSerializedSize(const carla_msgs::srv::DestroyObject_Request& data,
+                                                             size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the maximum serialized size of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function serializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serialize(eprosima::fastcdr::Cdr& cdr) const;
 
-            /*!
-             * @brief This function returns the serialized size of a data depending on the buffer alignment.
-             * @param data Data which is calculated its serialized size.
-             * @param current_alignment Buffer alignment.
-             * @return Serialized size.
-             */
-            eProsima_user_DllExport static size_t getCdrSerializedSize(
-                    const carla_msgs::srv::DestroyObject_Request& data,
-                    size_t current_alignment = 0);
+  /*!
+   * @brief This function deserializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void deserialize(eprosima::fastcdr::Cdr& cdr);
 
+  /*!
+   * @brief This function returns the maximum serialized size of the Key of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief This function serializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serialize(
-                    eprosima::fastcdr::Cdr& cdr) const;
+  /*!
+   * @brief This function tells you if the Key has been defined for this type
+   */
+  eProsima_user_DllExport static bool isKeyDefined();
 
-            /*!
-             * @brief This function deserializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void deserialize(
-                    eprosima::fastcdr::Cdr& cdr);
+  /*!
+   * @brief This function serializes the key members of an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serializeKey(eprosima::fastcdr::Cdr& cdr) const;
 
+private:
+  int32_t m_id;
+};
+/*!
+ * @brief This class represents the structure DestroyObject_Response defined by the user in the IDL file.
+ * @ingroup DESTROYOBJECT
+ */
+class DestroyObject_Response {
+public:
+  /*!
+   * @brief Default constructor.
+   */
+  eProsima_user_DllExport DestroyObject_Response();
 
+  /*!
+   * @brief Default destructor.
+   */
+  eProsima_user_DllExport ~DestroyObject_Response();
 
-            /*!
-             * @brief This function returns the maximum serialized size of the Key of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
+  /*!
+   * @brief Copy constructor.
+   * @param x Reference to the object carla_msgs::srv::DestroyObject_Response that will be copied.
+   */
+  eProsima_user_DllExport DestroyObject_Response(const DestroyObject_Response& x);
 
-            /*!
-             * @brief This function tells you if the Key has been defined for this type
-             */
-            eProsima_user_DllExport static bool isKeyDefined();
+  /*!
+   * @brief Move constructor.
+   * @param x Reference to the object carla_msgs::srv::DestroyObject_Response that will be copied.
+   */
+  eProsima_user_DllExport DestroyObject_Response(DestroyObject_Response&& x);
 
-            /*!
-             * @brief This function serializes the key members of an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serializeKey(
-                    eprosima::fastcdr::Cdr& cdr) const;
+  /*!
+   * @brief Copy assignment.
+   * @param x Reference to the object carla_msgs::srv::DestroyObject_Response that will be copied.
+   */
+  eProsima_user_DllExport DestroyObject_Response& operator=(const DestroyObject_Response& x);
 
-        private:
+  /*!
+   * @brief Move assignment.
+   * @param x Reference to the object carla_msgs::srv::DestroyObject_Response that will be copied.
+   */
+  eProsima_user_DllExport DestroyObject_Response& operator=(DestroyObject_Response&& x);
 
-            int32_t m_id;
-        };
-        /*!
-         * @brief This class represents the structure DestroyObject_Response defined by the user in the IDL file.
-         * @ingroup DESTROYOBJECT
-         */
-        class DestroyObject_Response
-        {
-        public:
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::srv::DestroyObject_Response object to compare.
+   */
+  eProsima_user_DllExport bool operator==(const DestroyObject_Response& x) const;
 
-            /*!
-             * @brief Default constructor.
-             */
-            eProsima_user_DllExport DestroyObject_Response();
+  /*!
+   * @brief Comparison operator.
+   * @param x carla_msgs::srv::DestroyObject_Response object to compare.
+   */
+  eProsima_user_DllExport bool operator!=(const DestroyObject_Response& x) const;
 
-            /*!
-             * @brief Default destructor.
-             */
-            eProsima_user_DllExport ~DestroyObject_Response();
+  /*!
+   * @brief This function sets a value in member success
+   * @param _success New value for member success
+   */
+  eProsima_user_DllExport void success(bool _success);
 
-            /*!
-             * @brief Copy constructor.
-             * @param x Reference to the object carla_msgs::srv::DestroyObject_Response that will be copied.
-             */
-            eProsima_user_DllExport DestroyObject_Response(
-                    const DestroyObject_Response& x);
+  /*!
+   * @brief This function returns the value of member success
+   * @return Value of member success
+   */
+  eProsima_user_DllExport bool success() const;
 
-            /*!
-             * @brief Move constructor.
-             * @param x Reference to the object carla_msgs::srv::DestroyObject_Response that will be copied.
-             */
-            eProsima_user_DllExport DestroyObject_Response(
-                    DestroyObject_Response&& x);
+  /*!
+   * @brief This function returns a reference to member success
+   * @return Reference to member success
+   */
+  eProsima_user_DllExport bool& success();
 
-            /*!
-             * @brief Copy assignment.
-             * @param x Reference to the object carla_msgs::srv::DestroyObject_Response that will be copied.
-             */
-            eProsima_user_DllExport DestroyObject_Response& operator =(
-                    const DestroyObject_Response& x);
+  /*!
+   * @brief This function returns the maximum serialized size of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief Move assignment.
-             * @param x Reference to the object carla_msgs::srv::DestroyObject_Response that will be copied.
-             */
-            eProsima_user_DllExport DestroyObject_Response& operator =(
-                    DestroyObject_Response&& x);
+  /*!
+   * @brief This function returns the serialized size of a data depending on the buffer alignment.
+   * @param data Data which is calculated its serialized size.
+   * @param current_alignment Buffer alignment.
+   * @return Serialized size.
+   */
+  eProsima_user_DllExport static size_t getCdrSerializedSize(const carla_msgs::srv::DestroyObject_Response& data,
+                                                             size_t current_alignment = 0);
 
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::srv::DestroyObject_Response object to compare.
-             */
-            eProsima_user_DllExport bool operator ==(
-                    const DestroyObject_Response& x) const;
+  /*!
+   * @brief This function serializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serialize(eprosima::fastcdr::Cdr& cdr) const;
 
-            /*!
-             * @brief Comparison operator.
-             * @param x carla_msgs::srv::DestroyObject_Response object to compare.
-             */
-            eProsima_user_DllExport bool operator !=(
-                    const DestroyObject_Response& x) const;
+  /*!
+   * @brief This function deserializes an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void deserialize(eprosima::fastcdr::Cdr& cdr);
 
-            /*!
-             * @brief This function sets a value in member success
-             * @param _success New value for member success
-             */
-            eProsima_user_DllExport void success(
-                    bool _success);
+  /*!
+   * @brief This function returns the maximum serialized size of the Key of an object
+   * depending on the buffer alignment.
+   * @param current_alignment Buffer alignment.
+   * @return Maximum serialized size.
+   */
+  eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(size_t current_alignment = 0);
 
-            /*!
-             * @brief This function returns the value of member success
-             * @return Value of member success
-             */
-            eProsima_user_DllExport bool success() const;
+  /*!
+   * @brief This function tells you if the Key has been defined for this type
+   */
+  eProsima_user_DllExport static bool isKeyDefined();
 
-            /*!
-             * @brief This function returns a reference to member success
-             * @return Reference to member success
-             */
-            eProsima_user_DllExport bool& success();
+  /*!
+   * @brief This function serializes the key members of an object using CDR serialization.
+   * @param cdr CDR serialization object.
+   */
+  eProsima_user_DllExport void serializeKey(eprosima::fastcdr::Cdr& cdr) const;
 
+private:
+  bool m_success;
+};
+}  // namespace srv
+}  // namespace carla_msgs
 
-            /*!
-             * @brief This function returns the maximum serialized size of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
-
-            /*!
-             * @brief This function returns the serialized size of a data depending on the buffer alignment.
-             * @param data Data which is calculated its serialized size.
-             * @param current_alignment Buffer alignment.
-             * @return Serialized size.
-             */
-            eProsima_user_DllExport static size_t getCdrSerializedSize(
-                    const carla_msgs::srv::DestroyObject_Response& data,
-                    size_t current_alignment = 0);
-
-
-            /*!
-             * @brief This function serializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serialize(
-                    eprosima::fastcdr::Cdr& cdr) const;
-
-            /*!
-             * @brief This function deserializes an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void deserialize(
-                    eprosima::fastcdr::Cdr& cdr);
-
-
-
-            /*!
-             * @brief This function returns the maximum serialized size of the Key of an object
-             * depending on the buffer alignment.
-             * @param current_alignment Buffer alignment.
-             * @return Maximum serialized size.
-             */
-            eProsima_user_DllExport static size_t getKeyMaxCdrSerializedSize(
-                    size_t current_alignment = 0);
-
-            /*!
-             * @brief This function tells you if the Key has been defined for this type
-             */
-            eProsima_user_DllExport static bool isKeyDefined();
-
-            /*!
-             * @brief This function serializes the key members of an object using CDR serialization.
-             * @param cdr CDR serialization object.
-             */
-            eProsima_user_DllExport void serializeKey(
-                    eprosima::fastcdr::Cdr& cdr) const;
-
-        private:
-
-            bool m_success;
-        };
-    } // namespace srv
-} // namespace carla_msgs
-
-#endif // _FAST_DDS_GENERATED_CARLA_MSGS_SRV_DESTROYOBJECT_H_
+#endif  // _FAST_DDS_GENERATED_CARLA_MSGS_SRV_DESTROYOBJECT_H_

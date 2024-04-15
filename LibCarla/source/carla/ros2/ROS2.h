@@ -73,14 +73,13 @@ public:
 
   /**
    * Process incoming messages
-  */
+   */
   void ProcessMessages();
 
   /**
    * Implement actions after each tick
    */
   void PostTickAction();
-
 
   uint64_t CurrentFrame() const;
   carla::ros2::types::Timestamp const& CurrentTimestamp() const;

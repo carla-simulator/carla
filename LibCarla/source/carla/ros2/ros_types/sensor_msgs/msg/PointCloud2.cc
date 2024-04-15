@@ -44,178 +44,157 @@ using namespace eprosima::fastcdr::exception;
 #define std_msgs_msg_Header_max_key_cdr_typesize 0ULL;
 
 template <class ALLOCATOR>
-sensor_msgs::msg::PointCloud2T<ALLOCATOR>::PointCloud2T()
-{
-    // std_msgs::msg::Header m_header
+sensor_msgs::msg::PointCloud2T<ALLOCATOR>::PointCloud2T() {
+  // std_msgs::msg::Header m_header
 
-    // unsigned long m_height
-    m_height = 0;
-    // unsigned long m_width
-    m_width = 0;
-    // sequence<sensor_msgs::msg::PointField> m_fields
+  // unsigned long m_height
+  m_height = 0;
+  // unsigned long m_width
+  m_width = 0;
+  // sequence<sensor_msgs::msg::PointField> m_fields
 
-    // boolean m_is_bigendian
-    m_is_bigendian = false;
-    // unsigned long m_point_step
-    m_point_step = 0;
-    // unsigned long m_row_step
-    m_row_step = 0;
-    // sequence<octet> m_data
+  // boolean m_is_bigendian
+  m_is_bigendian = false;
+  // unsigned long m_point_step
+  m_point_step = 0;
+  // unsigned long m_row_step
+  m_row_step = 0;
+  // sequence<octet> m_data
 
-    // boolean m_is_dense
-    m_is_dense = false;
+  // boolean m_is_dense
+  m_is_dense = false;
 }
 
 template <class ALLOCATOR>
-sensor_msgs::msg::PointCloud2T<ALLOCATOR>::~PointCloud2T()
-{
+sensor_msgs::msg::PointCloud2T<ALLOCATOR>::~PointCloud2T() {}
+
+template <class ALLOCATOR>
+sensor_msgs::msg::PointCloud2T<ALLOCATOR>::PointCloud2T(const PointCloud2T<ALLOCATOR>& x) {
+  m_header = x.m_header;
+  m_height = x.m_height;
+  m_width = x.m_width;
+  m_fields = x.m_fields;
+  m_is_bigendian = x.m_is_bigendian;
+  m_point_step = x.m_point_step;
+  m_row_step = x.m_row_step;
+  m_data = x.m_data;
+  m_is_dense = x.m_is_dense;
 }
 
 template <class ALLOCATOR>
-sensor_msgs::msg::PointCloud2T<ALLOCATOR>::PointCloud2T(
-        const PointCloud2T<ALLOCATOR>& x)
-{
-    m_header = x.m_header;
-    m_height = x.m_height;
-    m_width = x.m_width;
-    m_fields = x.m_fields;
-    m_is_bigendian = x.m_is_bigendian;
-    m_point_step = x.m_point_step;
-    m_row_step = x.m_row_step;
-    m_data = x.m_data;
-    m_is_dense = x.m_is_dense;
+sensor_msgs::msg::PointCloud2T<ALLOCATOR>::PointCloud2T(PointCloud2T<ALLOCATOR>&& x) noexcept {
+  m_header = std::move(x.m_header);
+  m_height = x.m_height;
+  m_width = x.m_width;
+  m_fields = std::move(x.m_fields);
+  m_is_bigendian = x.m_is_bigendian;
+  m_point_step = x.m_point_step;
+  m_row_step = x.m_row_step;
+  m_data = std::move(x.m_data);
+  m_is_dense = x.m_is_dense;
 }
 
 template <class ALLOCATOR>
-sensor_msgs::msg::PointCloud2T<ALLOCATOR>::PointCloud2T(
-        PointCloud2T<ALLOCATOR>&& x) noexcept
-{
-    m_header = std::move(x.m_header);
-    m_height = x.m_height;
-    m_width = x.m_width;
-    m_fields = std::move(x.m_fields);
-    m_is_bigendian = x.m_is_bigendian;
-    m_point_step = x.m_point_step;
-    m_row_step = x.m_row_step;
-    m_data = std::move(x.m_data);
-    m_is_dense = x.m_is_dense;
+sensor_msgs::msg::PointCloud2T<ALLOCATOR>& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::operator=(
+    const PointCloud2T<ALLOCATOR>& x) {
+  m_header = x.m_header;
+  m_height = x.m_height;
+  m_width = x.m_width;
+  m_fields = x.m_fields;
+  m_is_bigendian = x.m_is_bigendian;
+  m_point_step = x.m_point_step;
+  m_row_step = x.m_row_step;
+  m_data = x.m_data;
+  m_is_dense = x.m_is_dense;
+
+  return *this;
 }
 
 template <class ALLOCATOR>
-sensor_msgs::msg::PointCloud2T<ALLOCATOR>& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::operator =(
-        const PointCloud2T<ALLOCATOR>& x)
-{
-    m_header = x.m_header;
-    m_height = x.m_height;
-    m_width = x.m_width;
-    m_fields = x.m_fields;
-    m_is_bigendian = x.m_is_bigendian;
-    m_point_step = x.m_point_step;
-    m_row_step = x.m_row_step;
-    m_data = x.m_data;
-    m_is_dense = x.m_is_dense;
+sensor_msgs::msg::PointCloud2T<ALLOCATOR>& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::operator=(
+    PointCloud2T<ALLOCATOR>&& x) noexcept {
+  m_header = std::move(x.m_header);
+  m_height = x.m_height;
+  m_width = x.m_width;
+  m_fields = std::move(x.m_fields);
+  m_is_bigendian = x.m_is_bigendian;
+  m_point_step = x.m_point_step;
+  m_row_step = x.m_row_step;
+  m_data = std::move(x.m_data);
+  m_is_dense = x.m_is_dense;
 
-    return *this;
+  return *this;
 }
 
 template <class ALLOCATOR>
-sensor_msgs::msg::PointCloud2T<ALLOCATOR>& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::operator =(
-        PointCloud2T<ALLOCATOR>&& x) noexcept
-{
-    m_header = std::move(x.m_header);
-    m_height = x.m_height;
-    m_width = x.m_width;
-    m_fields = std::move(x.m_fields);
-    m_is_bigendian = x.m_is_bigendian;
-    m_point_step = x.m_point_step;
-    m_row_step = x.m_row_step;
-    m_data = std::move(x.m_data);
-    m_is_dense = x.m_is_dense;
-
-    return *this;
+bool sensor_msgs::msg::PointCloud2T<ALLOCATOR>::operator==(const PointCloud2T<ALLOCATOR>& x) const {
+  return (m_header == x.m_header && m_height == x.m_height && m_width == x.m_width && m_fields == x.m_fields &&
+          m_is_bigendian == x.m_is_bigendian && m_point_step == x.m_point_step && m_row_step == x.m_row_step &&
+          m_data == x.m_data && m_is_dense == x.m_is_dense);
 }
 
 template <class ALLOCATOR>
-bool sensor_msgs::msg::PointCloud2T<ALLOCATOR>::operator ==(
-        const PointCloud2T<ALLOCATOR>& x) const
-{
-    return (m_header == x.m_header && m_height == x.m_height && m_width == x.m_width && m_fields == x.m_fields && m_is_bigendian == x.m_is_bigendian && m_point_step == x.m_point_step && m_row_step == x.m_row_step && m_data == x.m_data && m_is_dense == x.m_is_dense);
+bool sensor_msgs::msg::PointCloud2T<ALLOCATOR>::operator!=(const PointCloud2T<ALLOCATOR>& x) const {
+  return !(*this == x);
 }
 
 template <class ALLOCATOR>
-bool sensor_msgs::msg::PointCloud2T<ALLOCATOR>::operator !=(
-        const PointCloud2T<ALLOCATOR>& x) const
-{
-    return !(*this == x);
-}
-
-template <class ALLOCATOR>
-size_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::getMaxCdrSerializedSize(
-        size_t current_alignment)
-{
-    static_cast<void>(current_alignment);
-    return sensor_msgs_msg_PointCloud2_max_cdr_typesize;
+size_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::getMaxCdrSerializedSize(size_t current_alignment) {
+  static_cast<void>(current_alignment);
+  return sensor_msgs_msg_PointCloud2_max_cdr_typesize;
 }
 
 template <class ALLOCATOR>
 size_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::getCdrSerializedSize(
-        const sensor_msgs::msg::PointCloud2T<ALLOCATOR>& data,
-        size_t current_alignment)
-{
-    size_t initial_alignment = current_alignment;
-    current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
-    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+    const sensor_msgs::msg::PointCloud2T<ALLOCATOR>& data, size_t current_alignment) {
+  size_t initial_alignment = current_alignment;
+  current_alignment += std_msgs::msg::Header::getCdrSerializedSize(data.header(), current_alignment);
+  current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+  current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+  current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
-    for(size_t a = 0; a < data.fields().size(); ++a)
-    {
-        current_alignment += sensor_msgs::msg::PointField::getCdrSerializedSize(data.fields().at(a), current_alignment);
-    }
+  for (size_t a = 0; a < data.fields().size(); ++a) {
+    current_alignment += sensor_msgs::msg::PointField::getCdrSerializedSize(data.fields().at(a), current_alignment);
+  }
 
-    current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+  current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
+  current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+  current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+  current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
-    if (data.data().size() > 0)
-    {
-        current_alignment += (data.data().size() * 1) + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
-    }
+  if (data.data().size() > 0) {
+    current_alignment += (data.data().size() * 1) + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
+  }
 
-    current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
+  current_alignment += 1 + eprosima::fastcdr::Cdr::alignment(current_alignment, 1);
 
-    return current_alignment - initial_alignment;
+  return current_alignment - initial_alignment;
 }
 
 template <class ALLOCATOR>
-void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::serialize(
-        eprosima::fastcdr::Cdr& scdr) const
-{
-    scdr << m_header;
-    scdr << m_height;
-    scdr << m_width;
-    scdr << m_fields;
-    scdr << m_is_bigendian;
-    scdr << m_point_step;
-    scdr << m_row_step;
-    scdr << m_data;
-    scdr << m_is_dense;
+void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::serialize(eprosima::fastcdr::Cdr& scdr) const {
+  scdr << m_header;
+  scdr << m_height;
+  scdr << m_width;
+  scdr << m_fields;
+  scdr << m_is_bigendian;
+  scdr << m_point_step;
+  scdr << m_row_step;
+  scdr << m_data;
+  scdr << m_is_dense;
 }
 
 template <class ALLOCATOR>
-void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::deserialize(
-        eprosima::fastcdr::Cdr& dcdr)
-{
-    dcdr >> m_header;
-    dcdr >> m_height;
-    dcdr >> m_width;
-    dcdr >> m_fields;
-    dcdr >> m_is_bigendian;
-    dcdr >> m_point_step;
-    dcdr >> m_row_step;
-    dcdr >> m_data;
-    dcdr >> m_is_dense;
+void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::deserialize(eprosima::fastcdr::Cdr& dcdr) {
+  dcdr >> m_header;
+  dcdr >> m_height;
+  dcdr >> m_width;
+  dcdr >> m_fields;
+  dcdr >> m_is_bigendian;
+  dcdr >> m_point_step;
+  dcdr >> m_row_step;
+  dcdr >> m_data;
+  dcdr >> m_is_dense;
 }
 
 /*!
@@ -223,10 +202,8 @@ void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::deserialize(
  * @param _header New value to be copied in member header
  */
 template <class ALLOCATOR>
-void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::header(
-        const std_msgs::msg::Header& _header)
-{
-    m_header = _header;
+void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::header(const std_msgs::msg::Header& _header) {
+  m_header = _header;
 }
 
 /*!
@@ -234,10 +211,8 @@ void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::header(
  * @param _header New value to be moved in member header
  */
 template <class ALLOCATOR>
-void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::header(
-        std_msgs::msg::Header&& _header)
-{
-    m_header = std::move(_header);
+void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::header(std_msgs::msg::Header&& _header) {
+  m_header = std::move(_header);
 }
 
 /*!
@@ -245,9 +220,8 @@ void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::header(
  * @return Constant reference to member header
  */
 template <class ALLOCATOR>
-const std_msgs::msg::Header& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::header() const
-{
-    return m_header;
+const std_msgs::msg::Header& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::header() const {
+  return m_header;
 }
 
 /*!
@@ -255,9 +229,8 @@ const std_msgs::msg::Header& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::header()
  * @return Reference to member header
  */
 template <class ALLOCATOR>
-std_msgs::msg::Header& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::header()
-{
-    return m_header;
+std_msgs::msg::Header& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::header() {
+  return m_header;
 }
 
 /*!
@@ -265,10 +238,8 @@ std_msgs::msg::Header& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::header()
  * @param _height New value for member height
  */
 template <class ALLOCATOR>
-void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::height(
-        uint32_t _height)
-{
-    m_height = _height;
+void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::height(uint32_t _height) {
+  m_height = _height;
 }
 
 /*!
@@ -276,9 +247,8 @@ void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::height(
  * @return Value of member height
  */
 template <class ALLOCATOR>
-uint32_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::height() const
-{
-    return m_height;
+uint32_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::height() const {
+  return m_height;
 }
 
 /*!
@@ -286,9 +256,8 @@ uint32_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::height() const
  * @return Reference to member height
  */
 template <class ALLOCATOR>
-uint32_t& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::height()
-{
-    return m_height;
+uint32_t& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::height() {
+  return m_height;
 }
 
 /*!
@@ -296,10 +265,8 @@ uint32_t& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::height()
  * @param _width New value for member width
  */
 template <class ALLOCATOR>
-void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::width(
-        uint32_t _width)
-{
-    m_width = _width;
+void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::width(uint32_t _width) {
+  m_width = _width;
 }
 
 /*!
@@ -307,9 +274,8 @@ void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::width(
  * @return Value of member width
  */
 template <class ALLOCATOR>
-uint32_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::width() const
-{
-    return m_width;
+uint32_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::width() const {
+  return m_width;
 }
 
 /*!
@@ -317,9 +283,8 @@ uint32_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::width() const
  * @return Reference to member width
  */
 template <class ALLOCATOR>
-uint32_t& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::width()
-{
-    return m_width;
+uint32_t& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::width() {
+  return m_width;
 }
 
 /*!
@@ -327,10 +292,8 @@ uint32_t& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::width()
  * @param _fields New value to be copied in member fields
  */
 template <class ALLOCATOR>
-void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::fields(
-        const std::vector<sensor_msgs::msg::PointField>& _fields)
-{
-    m_fields = _fields;
+void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::fields(const std::vector<sensor_msgs::msg::PointField>& _fields) {
+  m_fields = _fields;
 }
 
 /*!
@@ -338,10 +301,8 @@ void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::fields(
  * @param _fields New value to be moved in member fields
  */
 template <class ALLOCATOR>
-void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::fields(
-        std::vector<sensor_msgs::msg::PointField>&& _fields)
-{
-    m_fields = std::move(_fields);
+void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::fields(std::vector<sensor_msgs::msg::PointField>&& _fields) {
+  m_fields = std::move(_fields);
 }
 
 /*!
@@ -349,9 +310,8 @@ void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::fields(
  * @return Constant reference to member fields
  */
 template <class ALLOCATOR>
-const std::vector<sensor_msgs::msg::PointField>& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::fields() const
-{
-    return m_fields;
+const std::vector<sensor_msgs::msg::PointField>& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::fields() const {
+  return m_fields;
 }
 
 /*!
@@ -359,9 +319,8 @@ const std::vector<sensor_msgs::msg::PointField>& sensor_msgs::msg::PointCloud2T<
  * @return Reference to member fields
  */
 template <class ALLOCATOR>
-std::vector<sensor_msgs::msg::PointField>& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::fields()
-{
-    return m_fields;
+std::vector<sensor_msgs::msg::PointField>& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::fields() {
+  return m_fields;
 }
 
 /*!
@@ -369,10 +328,8 @@ std::vector<sensor_msgs::msg::PointField>& sensor_msgs::msg::PointCloud2T<ALLOCA
  * @param _is_bigendian New value for member is_bigendian
  */
 template <class ALLOCATOR>
-void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_bigendian(
-        bool _is_bigendian)
-{
-    m_is_bigendian = _is_bigendian;
+void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_bigendian(bool _is_bigendian) {
+  m_is_bigendian = _is_bigendian;
 }
 
 /*!
@@ -380,9 +337,8 @@ void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_bigendian(
  * @return Value of member is_bigendian
  */
 template <class ALLOCATOR>
-bool sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_bigendian() const
-{
-    return m_is_bigendian;
+bool sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_bigendian() const {
+  return m_is_bigendian;
 }
 
 /*!
@@ -390,9 +346,8 @@ bool sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_bigendian() const
  * @return Reference to member is_bigendian
  */
 template <class ALLOCATOR>
-bool& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_bigendian()
-{
-    return m_is_bigendian;
+bool& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_bigendian() {
+  return m_is_bigendian;
 }
 
 /*!
@@ -400,10 +355,8 @@ bool& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_bigendian()
  * @param _point_step New value for member point_step
  */
 template <class ALLOCATOR>
-void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::point_step(
-        uint32_t _point_step)
-{
-    m_point_step = _point_step;
+void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::point_step(uint32_t _point_step) {
+  m_point_step = _point_step;
 }
 
 /*!
@@ -411,9 +364,8 @@ void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::point_step(
  * @return Value of member point_step
  */
 template <class ALLOCATOR>
-uint32_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::point_step() const
-{
-    return m_point_step;
+uint32_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::point_step() const {
+  return m_point_step;
 }
 
 /*!
@@ -421,9 +373,8 @@ uint32_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::point_step() const
  * @return Reference to member point_step
  */
 template <class ALLOCATOR>
-uint32_t& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::point_step()
-{
-    return m_point_step;
+uint32_t& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::point_step() {
+  return m_point_step;
 }
 
 /*!
@@ -431,10 +382,8 @@ uint32_t& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::point_step()
  * @param _row_step New value for member row_step
  */
 template <class ALLOCATOR>
-void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::row_step(
-        uint32_t _row_step)
-{
-    m_row_step = _row_step;
+void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::row_step(uint32_t _row_step) {
+  m_row_step = _row_step;
 }
 
 /*!
@@ -442,9 +391,8 @@ void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::row_step(
  * @return Value of member row_step
  */
 template <class ALLOCATOR>
-uint32_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::row_step() const
-{
-    return m_row_step;
+uint32_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::row_step() const {
+  return m_row_step;
 }
 
 /*!
@@ -452,9 +400,8 @@ uint32_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::row_step() const
  * @return Reference to member row_step
  */
 template <class ALLOCATOR>
-uint32_t& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::row_step()
-{
-    return m_row_step;
+uint32_t& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::row_step() {
+  return m_row_step;
 }
 
 /*!
@@ -463,9 +410,8 @@ uint32_t& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::row_step()
  */
 template <class ALLOCATOR>
 void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::data(
-        const typename sensor_msgs::msg::PointCloud2T<ALLOCATOR>::vector_type& _data)
-{
-    m_data = _data;
+    const typename sensor_msgs::msg::PointCloud2T<ALLOCATOR>::vector_type& _data) {
+  m_data = _data;
 }
 
 /*!
@@ -474,9 +420,8 @@ void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::data(
  */
 template <class ALLOCATOR>
 void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::data(
-        typename sensor_msgs::msg::PointCloud2T<ALLOCATOR>::vector_type&& _data)
-{
-    m_data = std::move(_data);
+    typename sensor_msgs::msg::PointCloud2T<ALLOCATOR>::vector_type&& _data) {
+  m_data = std::move(_data);
 }
 
 /*!
@@ -484,9 +429,9 @@ void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::data(
  * @return Constant reference to member data
  */
 template <class ALLOCATOR>
-const typename sensor_msgs::msg::PointCloud2T<ALLOCATOR>::vector_type& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::data() const
-{
-    return m_data;
+const typename sensor_msgs::msg::PointCloud2T<ALLOCATOR>::vector_type& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::data()
+    const {
+  return m_data;
 }
 
 /*!
@@ -494,9 +439,8 @@ const typename sensor_msgs::msg::PointCloud2T<ALLOCATOR>::vector_type& sensor_ms
  * @return Reference to member data
  */
 template <class ALLOCATOR>
-typename sensor_msgs::msg::PointCloud2T<ALLOCATOR>::vector_type& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::data()
-{
-    return m_data;
+typename sensor_msgs::msg::PointCloud2T<ALLOCATOR>::vector_type& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::data() {
+  return m_data;
 }
 
 /*!
@@ -504,10 +448,8 @@ typename sensor_msgs::msg::PointCloud2T<ALLOCATOR>::vector_type& sensor_msgs::ms
  * @param _is_dense New value for member is_dense
  */
 template <class ALLOCATOR>
-void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_dense(
-        bool _is_dense)
-{
-    m_is_dense = _is_dense;
+void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_dense(bool _is_dense) {
+  m_is_dense = _is_dense;
 }
 
 /*!
@@ -515,9 +457,8 @@ void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_dense(
  * @return Value of member is_dense
  */
 template <class ALLOCATOR>
-bool sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_dense() const
-{
-    return m_is_dense;
+bool sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_dense() const {
+  return m_is_dense;
 }
 
 /*!
@@ -525,28 +466,22 @@ bool sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_dense() const
  * @return Reference to member is_dense
  */
 template <class ALLOCATOR>
-bool& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_dense()
-{
-    return m_is_dense;
+bool& sensor_msgs::msg::PointCloud2T<ALLOCATOR>::is_dense() {
+  return m_is_dense;
 }
 
 template <class ALLOCATOR>
-size_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::getKeyMaxCdrSerializedSize(
-        size_t current_alignment)
-{
-    static_cast<void>(current_alignment);
-    return sensor_msgs_msg_PointCloud2_max_key_cdr_typesize;
+size_t sensor_msgs::msg::PointCloud2T<ALLOCATOR>::getKeyMaxCdrSerializedSize(size_t current_alignment) {
+  static_cast<void>(current_alignment);
+  return sensor_msgs_msg_PointCloud2_max_key_cdr_typesize;
 }
 
 template <class ALLOCATOR>
-bool sensor_msgs::msg::PointCloud2T<ALLOCATOR>::isKeyDefined()
-{
-    return false;
+bool sensor_msgs::msg::PointCloud2T<ALLOCATOR>::isKeyDefined() {
+  return false;
 }
 
 template <class ALLOCATOR>
-void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::serializeKey(
-        eprosima::fastcdr::Cdr& scdr) const
-{
-    (void) scdr;
+void sensor_msgs::msg::PointCloud2T<ALLOCATOR>::serializeKey(eprosima::fastcdr::Cdr& scdr) const {
+  (void)scdr;
 }
