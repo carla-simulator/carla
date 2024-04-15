@@ -185,7 +185,7 @@ bool UActorDispatcher::DestroyActor(FCarlaActor::IdType ActorId)
 }
 
 #if defined(WITH_ROS2)
-carla::ros2::types::PublisherSensorType GetPublisherSensorType(ASensor * Sensor) { 
+carla::ros2::types::PublisherSensorType GetPublisherSensorType(ASensor * Sensor) {
       // map the Ue4 sensors to their ESensor type and stream_id
   carla::ros2::types::PublisherSensorType SensorType = carla::ros2::types::PublisherSensorType::Unknown;
   if ( dynamic_cast<ACollisionSensor *>(Sensor) ) {

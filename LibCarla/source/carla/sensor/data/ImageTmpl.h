@@ -15,6 +15,11 @@
 #include "carla/sensor/s11n/NormalsImageSerializer.h"
 
 namespace carla {
+
+namespace ros2 {
+  class ROS2;
+}
+
 namespace sensor {
 namespace data {
 

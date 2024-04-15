@@ -282,7 +282,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
   {
     #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled()) 
+    if (ROS2->IsEnabled())
     {
       ROS2->PreTickAction();
     }
@@ -294,7 +294,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
       {
         Server.RunSome(1u);
         #if defined(WITH_ROS2)
-        if (ROS2->IsEnabled()) 
+        if (ROS2->IsEnabled())
         {
           ROS2->ProcessMessages();
         }
@@ -307,7 +307,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
       {
         // ensure the delta seconds in this run are also considered
         DeltaSeconds = 1 / 20.0f;
-        
+
         CurrentSettings.bSynchronousMode = true;
         CurrentSettings.FixedDeltaSeconds = DeltaSeconds;
         OnEpisodeSettingsChanged(CurrentSettings);
@@ -321,7 +321,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
       {
         Server.RunSome(1u);
         #if defined(WITH_ROS2)
-        if (ROS2->IsEnabled()) 
+        if (ROS2->IsEnabled())
         {
           ROS2->ProcessMessages();
         }
@@ -360,7 +360,7 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
   {
     #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled()) 
+    if (ROS2->IsEnabled())
     {
       ROS2->PostTickAction();
     }

@@ -329,7 +329,7 @@ else
   git clone --depth=1 -b release-${GTEST_VERSION} https://github.com/google/googletest.git ${GTEST_BASENAME}-source
 
   end_download_time=$(date +%s)
-  echo "Elapsed Time downloading rpclib: $(($end-$start)) seconds"
+  echo "Elapsed Time downloading rpclib: $(($end_download_time-$start_download_time)) seconds"
 
   log "Building Google Test for server (libc++)."
 
