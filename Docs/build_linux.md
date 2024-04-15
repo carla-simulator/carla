@@ -38,7 +38,9 @@ CARLA requires many different kinds of software to run. Some are built during th
 
 ```sh
 sudo apt-get update &&
-sudo apt-get install wget software-properties-common
+sudo apt-get install wget software-properties-common &&
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test &&
+sudo apt-get update
 ```
 
 !!! Warning
@@ -47,24 +49,28 @@ sudo apt-get install wget software-properties-common
 
 __Ubuntu 22.04__.
 ```sh
-sudo apt-get install build-essential cmake ninja-build libvulkan1 python-is-python3 python3 python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git git-lfs
+sudo apt-get install build-essential g++-13 cmake ninja-build libvulkan1 python-is-python3 python3 python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git git-lfs
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 180
 ```
 
 __Ubuntu 20.04__.
 ```sh
-sudo apt-get install build-essential cmake ninja-build libvulkan1 python python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git
+sudo apt-get install build-essential g++-13 cmake ninja-build libvulkan1 python python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 180
 ```
 
 __Ubuntu 18.04__.
 
 ```sh
-sudo apt-get install build-essential cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git
+sudo apt-get install build-essential g++-13 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 180
 ```
 
 __Ubuntu 16.04__.
 
 ```sh
-sudo apt-get install build-essential cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git
+sudo apt-get install build-essential g++-13 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 180
 ```
 
 __Previous Ubuntu versions__.
@@ -72,7 +78,7 @@ __Previous Ubuntu versions__.
 We strongly advise using Ubuntu 18.04 or later to build CARLA. However, you may attempt to build CARLA on older versions of Ubuntu with the following commands:
 
 ```sh
-sudo apt-get install build-essential cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git
+sudo apt-get install build-essential g++-13 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git
 ```
 
 __All Ubuntu systems__.
