@@ -29,16 +29,6 @@ if (LIBCARLA_USE_ROS)
     install(FILES ${libcarla_carla_ros2_public_headers} DESTINATION include/carla/ros2/${dir})
   endforeach()
 
-  file(GLOB subdirs RELATIVE "${libcarla_source_path}/carla/ros2/ros_types" "${libcarla_source_path}/carla/ros2/ros_types/*")
-  foreach(dir ${subdirs})
-    if(IS_DIRECTORY "${libcarla_source_path}/carla/ros2/ros_types/${dir}")
-      file(GLOB libcarla_carla_ros2_types_${dir}_headers
-            "${libcarla_source_path}/carla/ros2/ros_types/${dir}/msg/*.h"
-      )
-      install(FILES ${libcarla_carla_ros2_types_${dir}_headers} DESTINATION include/carla/ros2/ros_types/${dir}/msg/)
-    endif()
-  endforeach()
-
   if(NOT WIN32)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3" CACHE STRING "" FORCE)
   endif()
@@ -93,7 +83,7 @@ endforeach()
 if (LIBCARLA_USE_ROS)
   foreach(ros2_dir
           "/"
-          "impl/fastdds/"
+          "${ROS2_MW_NAME}/carla/ros2/impl/"
           "publishers/"
           "services/"
           "subscribers/"
@@ -103,11 +93,11 @@ if (LIBCARLA_USE_ROS)
     list(APPEND libcarla_server_sources ${sources})
   endforeach()
 
-  file(GLOB sources "${libcarla_source_path}/carla/ros2/ros_types/*/msg/*.cxx")
-  list(APPEND libcarla_server_sources ${sources})
+  file(GLOB msg_sources "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}/*/msg/*.cxx")
+  list(APPEND libcarla_server_sources ${msg_sources})
 
-  file(GLOB sources "${libcarla_source_path}/carla/ros2/ros_types/*/srv/*.cxx")
-  list(APPEND libcarla_server_sources ${sources})
+  file(GLOB srv_sources "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}/*/srv/*.cxx")
+  list(APPEND libcarla_server_sources ${srv_sources})
 
 endif()
 
@@ -132,11 +122,11 @@ if (LIBCARLA_BUILD_RELEASE)
 
   if (LIBCARLA_USE_ROS)
     target_include_directories(carla_server SYSTEM PRIVATE
-     # first the ros_types allowing overrides of fastdds headers
-     "${libcarla_source_path}/carla/ros2/ros_types"
-     "${FASTDDS_INCLUDE_PATH}")
-    target_link_directories(carla_server PRIVATE ${FASTDDS_LIB_PATH})
-    target_link_libraries(carla_server fastrtps fastcdr)
+     # first the ROS2_MW_NAME local folder allowing potential overrides of header files
+     "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}"
+     "${ROS2_MW_INCLUDE_PATH}")
+    target_link_directories(carla_server PRIVATE ${ROS2_MW_LIB_PATH})
+    target_link_libraries(carla_server ${ROS2_MW_LINK_LIBRARIES})
     target_compile_definitions(carla_server PUBLIC -DWITH_ROS2)
   endif()
 endif()
@@ -159,11 +149,11 @@ if (LIBCARLA_BUILD_DEBUG)
 
   if (LIBCARLA_USE_ROS)
     target_include_directories(carla_server_debug SYSTEM PRIVATE
-     # first the ros_types allowing overrides of fastdds headers
-     "${libcarla_source_path}/carla/ros2/ros_types"
-     "${FASTDDS_INCLUDE_PATH}")
-     target_link_directories(carla_server_debug PRIVATE ${FASTDDS_LIB_PATH})
-     target_link_libraries(carla_server_debug fastrtps fastcdr)
+     # first the ROS2_MW_NAME local folder allowing potential overrides of header files
+     "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}"
+     "${ROS2_MW_INCLUDE_PATH}")
+     target_link_directories(carla_server_debug PRIVATE ${ROS2_MW_LIB_PATH})
+     target_link_libraries(carla_server_debug ${ROS2_MW_LINK_LIBRARIES})
      target_compile_definitions(carla_server_debug PUBLIC -DWITH_ROS2)
      endif()
 endif()

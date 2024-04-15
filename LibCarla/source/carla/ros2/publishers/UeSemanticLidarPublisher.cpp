@@ -5,7 +5,7 @@
 #include "UeSemanticLidarPublisher.h"
 
 #include "carla/Debug.h"
-#include "carla/ros2/impl/fastdds/DdsPublisherImpl.h"
+#include "carla/ros2/impl/DdsPublisherImpl.h"
 
 namespace carla {
 namespace ros2 {

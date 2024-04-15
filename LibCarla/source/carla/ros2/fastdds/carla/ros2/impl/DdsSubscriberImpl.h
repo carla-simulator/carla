@@ -14,9 +14,9 @@
 #include <fastdds/dds/topic/TypeSupport.hpp>
 
 #include "carla/Logging.h"
-#include "carla/ros2/impl/fastdds/DdsDomainParticipantImpl.h"
-#include "carla/ros2/impl/fastdds/DdsQoS.h"
-#include "carla/ros2/impl/fastdds/DdsReturnCode.h"
+#include "carla/ros2/impl/DdsDomainParticipantImpl.h"
+#include "carla/ros2/impl/DdsQoS.h"
+#include "carla/ros2/impl/DdsReturnCode.h"
 #include "carla/ros2/subscribers/SubscriberInterface.h"
 
 namespace carla {

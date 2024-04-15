@@ -4,7 +4,7 @@
 
 #include "carla/ros2/subscribers/WalkerControlSubscriber.h"
 
-#include "carla/ros2/impl/fastdds/DdsSubscriberImpl.h"
+#include "carla/ros2/impl/DdsSubscriberImpl.h"
 
 namespace carla {
 namespace ros2 {

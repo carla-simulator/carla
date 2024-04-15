@@ -4,7 +4,7 @@
 
 #include "UeCollisionPublisher.h"
 
-#include "carla/ros2/impl/fastdds/DdsPublisherImpl.h"
+#include "carla/ros2/impl/DdsPublisherImpl.h"
 #include "carla/ros2/types/CoordinateSystemTransform.h"
 #include "carla/sensor/s11n/CollisionEventSerializer.h"
 

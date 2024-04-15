@@ -4,7 +4,7 @@
 
 #include "carla/ros2/services/DestroyObjectService.h"
 
-#include "carla/ros2/impl/fastdds/DdsServiceImpl.h"
+#include "carla/ros2/impl/DdsServiceImpl.h"
 
 namespace carla {
 namespace ros2 {

@@ -6,7 +6,7 @@
 
 #include <cmath>
 
-#include "carla/ros2/impl/fastdds/DdsPublisherImpl.h"
+#include "carla/ros2/impl/DdsPublisherImpl.h"
 
 template <typename T>
 T CLAMP(const T& value, const T& low, const T& high) {

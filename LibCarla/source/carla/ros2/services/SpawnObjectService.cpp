@@ -8,7 +8,7 @@
 #include <random>
 
 #include "carla/actors/BlueprintLibrary.h"
-#include "carla/ros2/impl/fastdds/DdsServiceImpl.h"
+#include "carla/ros2/impl/DdsServiceImpl.h"
 #include "carla/ros2/types/Transform.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4

@@ -4,7 +4,7 @@
 
 #include "carla/ros2/publishers/UePublisherBaseCamera.h"
 
-#include "carla/ros2/impl/fastdds/DdsPublisherImpl.h"
+#include "carla/ros2/impl/DdsPublisherImpl.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
 
 namespace carla {

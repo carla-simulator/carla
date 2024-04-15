@@ -4,7 +4,7 @@
 
 #include "WalkerPublisher.h"
 
-#include "carla/ros2/impl/fastdds/DdsPublisherImpl.h"
+#include "carla/ros2/impl/DdsPublisherImpl.h"
 #include "carla/ros2/types/Speed.h"
 #include "carla/ros2/types/WalkerControl.h"
 

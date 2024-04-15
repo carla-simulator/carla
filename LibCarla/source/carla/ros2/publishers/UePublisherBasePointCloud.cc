@@ -3,7 +3,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/ros2/publishers/UePublisherBasePointCloud.h"
-#include "carla/ros2/impl/fastdds/DdsPublisherImpl.h"
+#include "carla/ros2/impl/DdsPublisherImpl.h"
 
 namespace carla {
 namespace ros2 {

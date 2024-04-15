@@ -16,7 +16,7 @@ link_directories(
     ${RPCLIB_LIB_PATH}
     ${GTEST_LIB_PATH})
 if (LIBCARLA_USE_ROS)
-  link_directories(${FASTDDS_LIB_PATH})
+  link_directories(${ROS2_MW_LIB_PATH})
 endif()
 
 

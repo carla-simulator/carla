@@ -7,7 +7,7 @@
 
 #include "UeIMUPublisher.h"
 
-#include "carla/ros2/impl/fastdds/DdsPublisherImpl.h"
+#include "carla/ros2/impl/DdsPublisherImpl.h"
 #include "carla/ros2/types/Acceleration.h"
 #include "carla/ros2/types/AngularVelocity.h"
 

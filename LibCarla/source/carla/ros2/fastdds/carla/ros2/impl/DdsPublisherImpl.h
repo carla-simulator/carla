@@ -15,9 +15,9 @@
 #include <fastdds/dds/topic/TypeSupport.hpp>
 
 #include "builtin_interfaces/msg/Time.h"
-#include "carla/ros2/impl/fastdds/DdsDomainParticipantImpl.h"
-#include "carla/ros2/impl/fastdds/DdsQoS.h"
-#include "carla/ros2/impl/fastdds/DdsReturnCode.h"
+#include "carla/ros2/impl/DdsDomainParticipantImpl.h"
+#include "carla/ros2/impl/DdsQoS.h"
+#include "carla/ros2/impl/DdsReturnCode.h"
 #include "carla/ros2/publishers/PublisherInterface.h"
 
 namespace carla {
