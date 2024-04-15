@@ -398,7 +398,6 @@ function(add_carla_ue_package_target TARGET_NAME_SUFFIX UE_BUILD_CONFIGURATION)
 
   add_custom_target (
     package${TARGET_NAME_SUFFIX}
-    ${CARLA_LAUNCH_TARGET_OPTIONS}
   )
 
   add_dependencies (
