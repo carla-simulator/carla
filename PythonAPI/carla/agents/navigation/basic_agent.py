@@ -42,7 +42,7 @@ class BasicAgent(object):
             :param grp_inst: GlobalRoutePlanner instance to avoid the expensive call of getting it.
 
         """
-        self._vehicle = vehicle
+        self._vehicle = vehicle  # type: carla.Vehicle
         self._world = self._vehicle.get_world()
         if map_inst:
             if isinstance(map_inst, carla.Map):
@@ -73,9 +73,10 @@ class BasicAgent(object):
         # Get the static elements of the scene
         self._lights_list = self._world.get_actors().filter("*traffic_light*")
         # Dictionary mapping a traffic light to a Waypoint corresponding to its trigger volume location
-        self._lights_map: "dict[int, carla.Waypoint]" = {}
+        self._lights_map = {} # type: "dict[int, carla.Waypoint]"
 
-    def add_emergency_stop(self, control: carla.VehicleControl):
+    def add_emergency_stop(self, control):
+        # type: (carla.VehicleControl) -> carla.VehicleControl
         """
         Overwrites the throttle a brake values of a control to perform an emergency stop.
         The steering is kept the same to avoid going out of the lane when stopping during turns
@@ -157,7 +158,8 @@ class BasicAgent(object):
             clean_queue=clean_queue
         )
 
-    def trace_route(self, start_waypoint: carla.Waypoint, end_waypoint: carla.Waypoint):
+    def trace_route(self, start_waypoint, end_waypoint):
+        # type: (carla.Waypoint, carla.Waypoint) -> list[carla.Waypoint]
         """
         Calculates the shortest route between a starting and ending waypoint.
 
