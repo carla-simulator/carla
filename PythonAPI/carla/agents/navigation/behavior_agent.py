@@ -75,15 +75,25 @@ class BehaviorAgent(BasicAgent):
         This method updates the information regarding the ego
         vehicle based on the surrounding world.
         """
+        # Speed
         self.config.live_info.current_speed = get_speed(self._vehicle)
         self.config.live_info.current_speed_limit = self._vehicle.get_speed_limit()
         self._local_planner.set_speed(self.config.live_info.current_speed_limit) # note: currently redundant, but will print warning.
+        
+        # Location
+        self.config.live_info.current_location = self._vehicle.get_location()
+        self.config.live_info.current_waypoint = self._map.get_waypoint(self.config.live_info.current_location)
+        
+        # Direction
+        # NOTE: This is set at local_planner.run_step and the executed direction from the *last* step
         self._direction = self._local_planner.target_road_option
         if self._direction is None:
             self._direction = RoadOption.LANEFOLLOW
 
+        # Upcoming direction
         self._look_ahead_steps = int((self.config.live_info.current_speed_limit) / 10)
 
+        # Will take the direction that is a few meters in front of the vehicle depending on the speed
         self._incoming_waypoint, self._incoming_direction = self._local_planner.get_incoming_waypoint_and_direction(
             steps=self._look_ahead_steps)
         if self._incoming_direction is None:
@@ -266,8 +276,8 @@ class BehaviorAgent(BasicAgent):
         if self._tailgate_counter > 0:
             self._tailgate_counter -= 1
 
-        ego_vehicle_loc = self._vehicle.get_location()
-        ego_vehicle_wp = self._map.get_waypoint(ego_vehicle_loc)
+        ego_vehicle_loc = self.config.live_info.current_location
+        ego_vehicle_wp = self.config.live_info.current_waypoint
 
         # 1: Red lights and stops behavior
         if self.traffic_light_manager():

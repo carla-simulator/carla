@@ -165,8 +165,10 @@ class SimpleConfig(object):
 class LiveInfo(AgentConfig):
     current_speed : float = MISSING
     current_speed_limit : float = MISSING
-    direction : RoadOption = MISSING
     velocity_vector : "carla.Vector3D" = MISSING
+    direction : RoadOption = MISSING
+    current_location : "carla.Location" = MISSING
+    current_waypoint : "carla.Waypoint" = MISSING
     
     # NOTE: Not ported to OmegaConf
     @property
