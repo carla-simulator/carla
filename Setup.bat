@@ -44,10 +44,7 @@ if errorlevel 1 (
 
 echo Installing Python Pacakges...
 python -m pip install --upgrade pip || exit /b
-python -m pip install --user numpy || exit /b
-python -m pip install --user -Iv setuptools==47.3.1 || exit /b
-python -m pip install --user distro || exit /b
-python -m pip install --user wheel auditwheel || exit /b
+python -m install -r requirements.txt || exit /b
 echo Python Pacakges Installed...
 
 
