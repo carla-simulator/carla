@@ -169,3 +169,17 @@ def positive(num):
         :param num: value to check
     """
     return num if num > 0.0 else 0.0
+
+
+def lanes_have_same_direction(wp1, wp2) -> bool:
+    """
+    Check if two lanes have the same direction, i.e. their lane ids
+    have the same sign.
+
+        :param wp1: first waypoint
+        :param wp2: second waypoint
+        
+    Returns:
+        True if the lanes have the same direction, False otherwise
+    """
+    return wp1.lane_id * wp2.lane_id > 0
