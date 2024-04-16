@@ -27,6 +27,15 @@ RUN echo -e '\n#CARLA CMake 3.28.3\nPATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PAT
 RUN export PATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH
 RUN rm -rf cmake-3.28.3-linux-x86_64.tar.gz
 
+#TODO: makes this path generic
+RUN echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH=/home/UnrealEngine5_carla\n' >> ~/.bashrc
+
+RUN apt install locales
+RUN locale-gen es_ES.utf8
+RUN locale-gen en_US.UTF-8
+RUN echo -e '\n#CARLA locale\nexport LANG=en_US.UTF-8\nexport LC_ALL=en_US.UTF-8\n' >> ~/.bashrc
+
+
 #RUN pip3 install --upgrade pip
 #COPY ../requirements.txt .
 #RUN pip3 install -r requirements.txt
