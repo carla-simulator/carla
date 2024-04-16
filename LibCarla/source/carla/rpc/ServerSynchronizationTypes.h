@@ -11,7 +11,7 @@
 namespace carla {
 namespace rpc {
 
-using synchronization_client_id_type = void*;
+using synchronization_client_id_type = void const*;
 static constexpr carla::rpc::synchronization_client_id_type ALL_CLIENTS{nullptr};
 
 using synchronization_participant_id_type = uint32_t;

@@ -9,7 +9,9 @@
 #include "carla/Buffer.h"
 #include "carla/Memory.h"
 
-#if defined(CARLA_SERVER_BUILD)
+#if defined(WITH_ROS2) && defined(CARLA_SERVER_BUILD)
+// When compiling with ROS2 in server we must not move the data on deserialization
+// because the data is used multiple times: by the ROS2 server as well as the TCP server
 # define DESERIALIZE_MOVE_DATA(data)  data
 # define DESERIALIZE_DECL_DATA(data)  const &data
 # define DESERIALIZE_FORWARD_DATA(type, data)  std::forward<type const>(data)

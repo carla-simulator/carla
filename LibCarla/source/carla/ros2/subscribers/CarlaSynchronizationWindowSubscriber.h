@@ -25,21 +25,18 @@ public:
   virtual ~CarlaSynchronizationWindowSubscriber();
 
   /**
-   * Implements SubscriberInterface::IsAlive() interface
-   */
-  bool IsAlive() const override;
-  /**
-   * Implements SubscriberInterface::HasNewMessage() interface
-   */
-  bool HasNewMessage() const override;
-  /**
-   * Implements SubscriberInterface::GetMessage() interface
-   */
-  const carla_msgs::msg::CarlaSynchronizationWindow &GetMessage() override;
-  /**
    * Implements SubscriberBase::ProcessMessages()
    */
   void ProcessMessages() override;
+  /**
+   * Implements SubscriberBase::PublisherConnected()
+   */
+  void PublisherConnected(carla::rpc::synchronization_client_id_type const &publisher) override;
+
+  /**
+   * Implements SubscriberBase::PublisherDisconnected()
+   */
+  void PublisherDisconnected(carla::rpc::synchronization_client_id_type const &publisher) override;
 
   /**
    * Implements ROS2NameRecord::Init() interface
@@ -47,13 +44,10 @@ public:
   bool Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) override;
 
 private:
-  carla::rpc::synchronization_client_id_type ThisAsSynchronizationWindowClient() {
-    return reinterpret_cast<carla::rpc::synchronization_client_id_type>(this);
-  }
-
   std::shared_ptr<CarlaSynchronizationWindowSubscriberImpl> _impl;
   carla::rpc::RpcServerInterface &_carla_server;
-  carla::rpc::synchronization_participant_id_type _carla_synchronization_window_participant;
+  std::map<carla::rpc::synchronization_client_id_type, carla::rpc::synchronization_participant_id_type>
+      _carla_synchronization_window_participants;
   carla::rpc::synchronization_target_game_time _carla_synchronization_target_game_time{
       carla::rpc::NO_SYNC_TARGET_GAME_TIME};
 };

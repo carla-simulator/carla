@@ -27,7 +27,7 @@ struct ROS2QoS {
 
   ROS2QoS &keep_last(size_t depth) {
     _history = History::KEEP_LAST;
-    _history_depth = depth;
+    _history_depth = int32_t(depth);
     return *this;
   }
 

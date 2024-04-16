@@ -1064,7 +1064,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   # Here libraries linking libc++.
   set(ROS2_MW_INCLUDE_PATH "${FASTDDS_SERVER_INCLUDE}")
   set(ROS2_MW_LIB_PATH "${FASTDDS_SERVER_LIB}")
-  set(ROS2_MW_LINK_LIBRARIES "fastrtps fastcdr")
+  set(ROS2_MW_LINK_LIBRARIES "fastrtps;fastcdr")
   set(ROS2_MW_NAME "fastdds")
   set(LLVM_INCLUDE_PATH "${LLVM_INCLUDE}")
   set(LLVM_LIB_PATH "${LLVM_LIBPATH}")

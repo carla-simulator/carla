@@ -144,7 +144,6 @@ private:
     std::shared_ptr<VehiclePublisher> _vehicle_publisher;
     std::shared_ptr<VehicleControlSubscriber> _vehicle_controller;
     std::shared_ptr<AckermannControlSubscriber> _vehicle_ackermann_controller;
-    std::shared_ptr<CarlaSynchronizationWindowSubscriber> _sync_subscriber;
   };
   std::unordered_map<ActorId, UeVehicle> _vehicles;
 
@@ -153,7 +152,6 @@ private:
       : _walker_publisher(carla_walker_publisher) {}
     std::shared_ptr<WalkerPublisher> _walker_publisher;
     std::shared_ptr<WalkerControlSubscriber> _walker_controller;
-    std::shared_ptr<CarlaSynchronizationWindowSubscriber> _sync_subscriber;
     carla::ros2::types::WalkerControlCallback _walker_control_callback;
   };
   std::unordered_map<ActorId, UeWalker> _walkers;

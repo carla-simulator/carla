@@ -333,7 +333,7 @@ set CMAKE_CONFIG_FILE=%INSTALLATION_DIR%CMakeLists.txt.in
 >>"%CMAKE_CONFIG_FILE%" echo.
 >>"%CMAKE_CONFIG_FILE%" echo set(ROS2_MW_INCLUDE_PATH "%CMAKE_INSTALLATION_DIR%fastDDS-install/include")
 >>"%CMAKE_CONFIG_FILE%" echo set(ROS2_MW_LIB_PATH "%CMAKE_INSTALLATION_DIR%fastDDS-install/lib")
->>"%CMAKE_CONFIG_FILE%" echo set(ROS2_MW_LINK_LIBRARIES "fastrtps fastcdr")
+>>"%CMAKE_CONFIG_FILE%" echo set(ROS2_MW_LINK_LIBRARIES "fastrtps;fastcdr")
 >>"%CMAKE_CONFIG_FILE%" echo set(ROS2_MW_NAME "fastdds")
 >>"%CMAKE_CONFIG_FILE%" echo.
 >>"%CMAKE_CONFIG_FILE%" echo if (CMAKE_BUILD_TYPE STREQUAL "Server")

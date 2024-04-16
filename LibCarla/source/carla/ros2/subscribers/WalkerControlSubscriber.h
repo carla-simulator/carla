@@ -24,18 +24,6 @@ public:
   virtual ~WalkerControlSubscriber() = default;
 
   /**
-   * Implements SubscriberInterface::IsAlive() interface
-   */
-  bool IsAlive() const override;
-  /**
-   * Implements SubscriberInterface::HasNewMessage() interface
-   */
-  bool HasNewMessage() const override;
-  /**
-   * Implements SubscriberInterface::GetMessage() interface
-   */
-  const carla_msgs::msg::CarlaWalkerControl& GetMessage() override;
-  /**
    * Implements SubscriberBase::ProcessMessages()
    */
   void ProcessMessages() override;

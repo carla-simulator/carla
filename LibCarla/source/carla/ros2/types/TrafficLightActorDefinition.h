@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "carla/ros2/ros_types/carla_msgs/msg/CarlaTrafficLightStatus.h"
 #include "carla/ros2/types/ActorNameDefinition.h"
 #include "carla/sensor/data/ActorDynamicState.h"
+#include "carla_msgs/msg/CarlaTrafficLightStatus.h"
 
 namespace carla {
 namespace ros2 {

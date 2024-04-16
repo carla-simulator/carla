@@ -153,13 +153,13 @@ public:
     for(auto const &SynchronizationWindow: SynchronizationWindowMap) {
       if ( (SynchronizationWindow.second.TargetGameTime > carla::rpc::NO_SYNC_TARGET_GAME_TIME) && (SynchronizationWindow.second.TargetGameTime < TargetGameTime) ) {
         if (LogOutput) {
-          UE_LOG(LogCarla, Log, TEXT("ServerSynchronization::GetTargetSynchronizationTime[%u:%u] = %f"), SynchronizationWindow.first, SynchronizationWindow.second.ParticipantId, SynchronizationWindow.second.TargetGameTime);
+          UE_LOG(LogCarla, Verbose, TEXT("ServerSynchronization::GetTargetSynchronizationTime[%u:%u] = %f"), SynchronizationWindow.first, SynchronizationWindow.second.ParticipantId, SynchronizationWindow.second.TargetGameTime);
         }
         TargetGameTime = SynchronizationWindow.second.TargetGameTime;
       }
     }
     if (LogOutput) {
-      UE_LOG(LogCarla, Log, TEXT("ServerSynchronization::GetTargetSynchronizationTime[ALL:ALL] = %f"), TargetGameTime);
+      UE_LOG(LogCarla, Verbose, TEXT("ServerSynchronization::GetTargetSynchronizationTime[ALL:ALL] = %f"), TargetGameTime);
     }
     return TargetGameTime;
   }
@@ -180,7 +180,7 @@ public:
           if (SynchronizationWindowIter->second.ParticipantId == ParticipantId ) {
             ParticipantFound=true;
             SynchronizationWindowIter->second.TargetGameTime = TargetGameTime;
-            UE_LOG(LogCarla, Log, TEXT("ServerSynchronization::UpdateSynchronizationWindow[%u:%u] = %f"), ClientId, ParticipantId, TargetGameTime);
+            UE_LOG(LogCarla, Verbose, TEXT("ServerSynchronization::UpdateSynchronizationWindow[%u:%u] = %f"), ClientId, ParticipantId, TargetGameTime);
           }
       }
       if ( !ParticipantFound ) {
@@ -193,7 +193,7 @@ public:
       for (auto &SynchronizationWindow: SynchronizationWindowMap) {
         if (SynchronizationWindow.second.TargetGameTime > carla::rpc::NO_SYNC_TARGET_GAME_TIME) {
           SynchronizationWindow.second.TargetGameTime = TargetGameTime;
-          UE_LOG(LogCarla, Log, TEXT("ServerSynchronization::UpdateSynchronizationWindow[%u:%u] = %f FORCE"), SynchronizationWindow.first, SynchronizationWindow.second.ParticipantId, TargetGameTime);
+          UE_LOG(LogCarla, Verbose, TEXT("ServerSynchronization::UpdateSynchronizationWindow[%u:%u] = %f FORCE"), SynchronizationWindow.first, SynchronizationWindow.second.ParticipantId, TargetGameTime);
         }
       }
     }
@@ -202,7 +202,7 @@ public:
 
   void LogSynchronizationMap(std::string const &Reason) {
     for (auto &SynchronizationWindow: SynchronizationWindowMap) {
-      UE_LOG(LogCarla, Log, TEXT("ServerSynchronization::LogSynchronizationMap[%u:%u] = %f (%s)"), SynchronizationWindow.first, SynchronizationWindow.second.ParticipantId, SynchronizationWindow.second.TargetGameTime, *FString(Reason.c_str()));
+      UE_LOG(LogCarla, Verbose, TEXT("ServerSynchronization::LogSynchronizationMap[%u:%u] = %f (%s)"), SynchronizationWindow.first, SynchronizationWindow.second.ParticipantId, SynchronizationWindow.second.TargetGameTime, *FString(Reason.c_str()));
     }
   }
 

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <memory>
+#include <set>
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
 #include <fastdds/dds/subscriber/DataReader.hpp>
@@ -17,15 +18,21 @@
 #include "carla/ros2/impl/DdsDomainParticipantImpl.h"
 #include "carla/ros2/impl/DdsQoS.h"
 #include "carla/ros2/impl/DdsReturnCode.h"
-#include "carla/ros2/subscribers/SubscriberInterface.h"
+#include "carla/ros2/subscribers/SubscriberImplBase.h"
 
 namespace carla {
 namespace ros2 {
 
 template <typename MESSAGE_TYPE, typename MESSAGE_PUB_TYPE>
-class DdsSubscriberImpl : public SubscriberInterface<MESSAGE_TYPE>, public eprosima::fastdds::dds::DataReaderListener {
+class DdsSubscriberImpl : public SubscriberImplBase<MESSAGE_TYPE>, public eprosima::fastdds::dds::DataReaderListener {
 public:
-  DdsSubscriberImpl() = default;
+  using SubscriberImplBase<MESSAGE_TYPE>::AddPublisher;
+  using SubscriberImplBase<MESSAGE_TYPE>::NumberPublishersConnected;
+  using SubscriberImplBase<MESSAGE_TYPE>::RemovePublisher;
+  using SubscriberImplBase<MESSAGE_TYPE>::HasPublishersConnected;
+  using SubscriberImplBase<MESSAGE_TYPE>::AddMessage;
+
+  DdsSubscriberImpl(SubscriberBase<MESSAGE_TYPE>& parent) : SubscriberImplBase<MESSAGE_TYPE>(parent) {}
 
   virtual ~DdsSubscriberImpl() {
     carla::log_info("DdsSubscriberImpl[", _topic->get_name(), "]::Destructor()");
@@ -53,52 +60,48 @@ public:
     return InitInternal(domain_participant, topic_name, tqos, subqos, rqos);
   }
 
-  void on_subscription_matched(eprosima::fastdds::dds::DataReader*,
+  void on_subscription_matched(eprosima::fastdds::dds::DataReader* reader,
                                const eprosima::fastdds::dds::SubscriptionMatchedStatus& info) override {
-    if ((_matched == 0u) && (info.total_count > 1)) {
-      _first_connected = true;
+    carla::rpc::synchronization_client_id_type const client_id = GetClientId(info.last_publication_handle);
+    bool had_connected_publisher = HasPublishersConnected();
+
+    if (info.current_count_change < 0) {
+      RemovePublisher(client_id);
+      carla::log_debug("DdsSubscriberImpl[", _topic->get_name(), "]::on_subscription_matched(", client_id,
+                       ") publisher disconnected. Connected publisher remaining: ", NumberPublishersConnected());
+    } else {
+      AddPublisher(client_id);
+      carla::log_debug("DdsSubscriberImpl[", _topic->get_name(), "]::on_subscription_matched(", client_id,
+                       ") publisher connected. Connected publisher: ", NumberPublishersConnected());
     }
-    _matched = info.total_count;
-    if (_matched == 0) {
-      carla::log_error("DdsSubscriberImpl[", _topic->get_name(),
-                       "]::on_subscription_matched(): interface disconnected");
-      _alive = false;
-    } else if (!_alive) {
-      carla::log_error("DdsSubscriberImpl[", _topic->get_name(),
-                       "]::on_subscription_matched(): interface (re-)connected");
-      _alive = true;
+
+    if (info.current_count != NumberPublishersConnected()) {
+      carla::log_error("DdsSubscriberImpl[", _topic->get_name(), "]::on_subscription_matched(", client_id,
+                       "): current_count=", info.current_count,
+                       ", but publisher list not yet empty. Connected publisher: ", NumberPublishersConnected());
     }
+    carla::log_debug("DdsSubscriberImpl[", _topic->get_name(), "]::on_subscription_matched(", client_id,
+                     "): interface has"
+                     " total_count=",
+                     info.total_count, " total_count_change=", info.total_count_change,
+                     " current_count=", info.current_count, " current_count_change=", info.current_count_change,
+                     " handle-id=", info.last_publication_handle, " matched subscriptions and currently ",
+                     NumberPublishersConnected(), " publisher connected.");
   }
 
   void on_data_available(eprosima::fastdds::dds::DataReader* reader) override {
     eprosima::fastdds::dds::SampleInfo info;
-    auto rcode = reader->take_next_sample(&_message, &info);
+    MESSAGE_TYPE message;
+    auto rcode = reader->take_next_sample(&message, &info);
+    carla::rpc::synchronization_client_id_type const client_id = GetClientId(info.publication_handle);
     if (rcode == eprosima::fastrtps::types::ReturnCode_t::ReturnCodeValue::RETCODE_OK) {
-      _new_message = true;
+      AddMessage(client_id, message);
+      carla::log_debug("DdsSubscriberImpl[", _topic->get_name(), "]::on_data_available(): from client ", client_id,
+                       "and handle: ", info.publication_handle);
     } else {
       carla::log_error("DdsSubscriberImpl[", _topic->get_name(), "]::on_data_available(): Error ",
                        std::to_string(rcode));
     }
-  }
-
-  /**
-   * Implements SubscriberInterface::IsAlive() interface
-   */
-  bool IsAlive() const override {
-    return _alive;
-  }
-  /**
-   * Implements SubscriberInterface::HasNewMessage() interface
-   */
-  bool HasNewMessage() const override {
-    return _new_message;
-  }
-  /**
-   * Implements SubscriberInterface::GetMessage() interface
-   */
-  const MESSAGE_TYPE& GetMessage() override {
-    _new_message = false;
-    return _message;
   }
 
   bool InitInternal(std::shared_ptr<DdsDomainParticipantImpl> domain_participant, std::string topic_name,
@@ -141,17 +144,19 @@ public:
     return true;
   }
 
+  carla::rpc::synchronization_client_id_type GetClientId(
+      eprosima::fastdds::dds::InstanceHandle_t const& instance_handle) {
+    auto insert_result = _instance_handles.insert(instance_handle);
+    return reinterpret_cast<carla::rpc::synchronization_client_id_type const>(&(*insert_result.first));
+  }
+
   eprosima::fastdds::dds::DomainParticipant* _participant{nullptr};
   eprosima::fastdds::dds::Subscriber* _subscriber{nullptr};
   eprosima::fastdds::dds::Topic* _topic{nullptr};
   eprosima::fastdds::dds::DataReader* _datareader{nullptr};
   eprosima::fastdds::dds::TypeSupport _type{new MESSAGE_PUB_TYPE()};
 
-  MESSAGE_TYPE _message{};
-  int _matched{0};
-  bool _first_connected{false};
-  bool _new_message{false};
-  bool _alive{true};
+  std::set<eprosima::fastdds::dds::InstanceHandle_t> _instance_handles;
 };
 }  // namespace ros2
 }  // namespace carla

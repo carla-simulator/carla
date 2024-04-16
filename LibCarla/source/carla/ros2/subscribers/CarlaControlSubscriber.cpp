@@ -10,7 +10,7 @@ namespace carla {
 namespace ros2 {
 
 CarlaControlSubscriber::CarlaControlSubscriber(ROS2NameRecord &parent, carla::rpc::RpcServerInterface &carla_server)
-  : SubscriberBase(parent), _impl(std::make_shared<CarlaControlSubscriberImpl>()), _carla_server(carla_server) {}
+  : SubscriberBase(parent), _impl(std::make_shared<CarlaControlSubscriberImpl>(*this)), _carla_server(carla_server) {}
 
 bool CarlaControlSubscriber::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
   _carla_control_synchronization_participant =
@@ -23,21 +23,9 @@ CarlaControlSubscriber::~CarlaControlSubscriber() {
                                                             _carla_control_synchronization_participant);
 }
 
-const carla_msgs::msg::CarlaControl &CarlaControlSubscriber::GetMessage() {
-  return _impl->GetMessage();
-};
-
-bool CarlaControlSubscriber::IsAlive() const {
-  return _impl->IsAlive();
-}
-
-bool CarlaControlSubscriber::HasNewMessage() const {
-  return _impl->HasNewMessage();
-}
-
 void CarlaControlSubscriber::ProcessMessages() {
-  while (IsAlive() && HasNewMessage()) {
-    auto const carla_control_msg = GetMessage();
+  while (_impl->HasPublishersConnected() && _impl->HasNewMessage()) {
+    auto const carla_control_msg = _impl->GetMessage();
     auto const command = carla_control_msg.command();
     log_error("ROS2::ProcessMessages command =", std::to_string(command));
     switch (command) {

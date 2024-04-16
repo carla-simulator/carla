@@ -6,12 +6,12 @@
 
 #include <functional>
 
-#include "carla/ros2/ros_types/carla_msgs/msg/CarlaVehicleStatus.h"
 #include "carla/ros2/types/ActorDefinition.h"
 #include "carla/ros2/types/VehicleAckermannControl.h"
 #include "carla/ros2/types/VehicleControl.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/sensor/data/ActorDynamicState.h"
+#include "carla_msgs/msg/CarlaVehicleStatus.h"
 
 namespace carla {
 namespace ros2 {

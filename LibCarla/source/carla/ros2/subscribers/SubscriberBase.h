@@ -9,7 +9,7 @@
 
 #include "carla/ros2/ROS2NameRecord.h"
 #include "carla/ros2/ROS2QoS.h"
-#include "carla/ros2/subscribers/SubscriberInterface.h"
+#include "carla/rpc/ServerSynchronizationTypes.h"
 
 namespace carla {
 namespace ros2 {
@@ -20,8 +20,11 @@ namespace ros2 {
 template <typename MESSAGE_TYPE, typename MESSAGE_PUB_TYPE>
 class DdsSubscriberImpl;
 
+/**
+ * Subscriber Base class
+ */
 template <typename MESSAGE_TYPE>
-class SubscriberBase : public SubscriberInterface<MESSAGE_TYPE> {
+class SubscriberBase {
 public:
   SubscriberBase(ROS2NameRecord &parent) : _parent(parent) {}
   virtual ~SubscriberBase() = default;
@@ -35,6 +38,20 @@ public:
    * Process all available messages.
    */
   virtual void ProcessMessages() = 0;
+
+  /**
+   * A new publisher has connected to this subscriber.
+   */
+  virtual void PublisherConnected(carla::rpc::synchronization_client_id_type const &publisher) {
+    (void)publisher;
+  }
+
+  /**
+   * A publisher has disconnected from this subscriber.
+   */
+  virtual void PublisherDisconnected(carla::rpc::synchronization_client_id_type const &publisher) {
+    (void)publisher;
+  }
 
   /*
    * @brief Default get_topic_qos() for subscribers

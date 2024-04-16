@@ -29,6 +29,18 @@ if (LIBCARLA_USE_ROS)
     install(FILES ${libcarla_carla_ros2_public_headers} DESTINATION include/carla/ros2/${dir})
   endforeach()
 
+  file(GLOB subdirs RELATIVE "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}" "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}/*")
+  foreach(typedir "msg" "srv")
+    foreach(dir ${subdirs})
+      if(IS_DIRECTORY "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}/${dir}/${typedir}")
+        file(GLOB libcarla_carla_ros2_types_${dir}_headers
+              "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}/${dir}/${typedir}/*.h"
+        )
+        install(FILES ${libcarla_carla_ros2_types_${dir}_headers} DESTINATION include/carla/ros2/ros_types/${dir}/${typedir}/)
+      endif()
+    endforeach()
+  endforeach()
+
   if(NOT WIN32)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3" CACHE STRING "" FORCE)
   endif()

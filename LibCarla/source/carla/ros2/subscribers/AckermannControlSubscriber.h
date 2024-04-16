@@ -24,18 +24,6 @@ public:
   virtual ~AckermannControlSubscriber() = default;
 
   /**
-   * Implements SubscriberInterface::IsAlive() interface
-   */
-  bool IsAlive() const override;
-  /**
-   * Implements SubscriberInterface::HasNewMessage() interface
-   */
-  bool HasNewMessage() const override;
-  /**
-   * Implements SubscriberInterface::GetMessage() interface
-   */
-  const ackermann_msgs::msg::AckermannDriveStamped& GetMessage() override;
-  /**
    * Implements SubscriberBase::ProcessMessages()
    */
   void ProcessMessages() override;
