@@ -47,7 +47,7 @@ retry --until=success --times=12 --delay=300 -- sudo apt-get install build-essen
 echo "Ubuntu Pacakges Installed..."
 
 echo "Installing Python Pacakges..."
-pip3 install --upgrade pip3
+pip3 install --upgrade pip
 pip3 install -r requirements.txt
 echo "Python Pacakges Installed..."
 
