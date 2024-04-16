@@ -107,13 +107,13 @@ class GlobalRoutePlanner(object):
             seg_dict['path'] = []
             endloc = wp2.transform.location
             if wp1.transform.location.distance(endloc) > self._sampling_resolution:
-                w = wp1.next(self._sampling_resolution)[0]
-                while w.transform.location.distance(endloc) > self._sampling_resolution:
-                    seg_dict['path'].append(w)
-                    next_ws = w.next(self._sampling_resolution)
-                    if len(next_ws) == 0:
+                next_wp = wp1.next(self._sampling_resolution)[0]
+                while next_wp.transform.location.distance(endloc) > self._sampling_resolution:
+                    seg_dict['path'].append(next_wp)
+                    next_waypoints = next_wp.next(self._sampling_resolution)
+                    if len(next_waypoints) == 0:
                         break
-                    w = next_ws[0]
+                    next_wp = next_waypoints[0]
             else:
                 next_wps = wp1.next(self._sampling_resolution)
                 if len(next_wps) == 0:

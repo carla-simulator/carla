@@ -223,10 +223,10 @@ class BehaviorAgent(BasicAgent):
 
         vehicle_speed = get_speed(vehicle)
         delta_v = max(1, (self.config.live_info.current_speed - vehicle_speed) / 3.6)
-        ttc = distance / delta_v if delta_v != 0 else distance / self._epsilon
+        time_to_collision = distance / delta_v if delta_v != 0 else distance / self._epsilon
 
         # Under safety time distance, slow down.
-        if self.config.speed.safety_time > ttc > 0.0:
+        if self.config.speed.safety_time > time_to_collision > 0.0:
             target_speed = min([
                 positive(vehicle_speed - self.config.speed.speed_decrease),
                 self.config.speed.max_speed,
@@ -235,7 +235,7 @@ class BehaviorAgent(BasicAgent):
             control = self._local_planner.run_step(debug=debug)
 
         # Actual safety distance area, try to follow the speed of the vehicle in front.
-        elif 2 * self.config.speed.safety_time > ttc >= self.config.speed.safety_time:
+        elif 2 * self.config.speed.safety_time > time_to_collision >= self.config.speed.safety_time:
             target_speed = min([
                 max(self.config.speed.min_speed, vehicle_speed),
                 self.config.speed.max_speed,
