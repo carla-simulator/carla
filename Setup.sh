@@ -47,10 +47,8 @@ retry --until=success --times=12 --delay=300 -- sudo apt-get install build-essen
 echo "Ubuntu Pacakges Installed..."
 
 echo "Installing Python Pacakges..."
-pip3 install --user numpy
-pip3 install --user -Iv setuptools==47.3.1
-pip3 install --user distro
-pip3 install --user wheel auditwheel
+pip3 install --upgrade pip3
+pip3 install -r requirements.txt
 echo "Python Pacakges Installed..."
 
 echo "Clonning CARLA Content asynchronously... (see the progres in ContentClone.log)"
