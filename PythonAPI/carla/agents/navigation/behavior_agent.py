@@ -17,7 +17,7 @@ from agents.navigation.local_planner import RoadOption
 from agents.conf.behavior_types import Cautious, Aggressive, Normal
 from agents.conf.agent_settings_backend import BehaviorAgentSettings, AgentConfig, SimpleConfig
 
-from agents.tools.misc import get_speed, positive, is_within_distance, compute_distance
+from agents.tools.misc import get_speed, positive, is_within_distance, compute_distance, lanes_have_same_direction
 
 class BehaviorAgent(BasicAgent):
     """
@@ -115,44 +115,55 @@ class BehaviorAgent(BasicAgent):
 
         return affected
 
+    def plan_lane_change(self, vehicle_list, order=["left", "right"], up_angle_th=180, low_angle_th=0, speed_limit_look_ahead_factor=0.5):
+        if vehicle_list is None:
+            vehicle_list = self._world.get_actors().filter("*vehicle*")
+        waypoint = self.config.live_info.current_waypoint
+        
+        for direction in order:
+            if direction == "right":
+                right_turn = waypoint.right_lane_marking.lane_change
+                can_change = (right_turn == carla.LaneChange.Right or right_turn == carla.LaneChange.Both)
+                other_wpt = waypoint.get_right_lane()
+                lane_offset = 1
+            else:
+                left_turn = waypoint.left_lane_marking.lane_change
+                can_change = (left_turn == carla.LaneChange.Left or left_turn == carla.LaneChange.Both)
+                other_wpt = waypoint.get_left_lane()
+                lane_offset = -1
+            if can_change and lanes_have_same_direction(waypoint, other_wpt) and other_wpt.lane_type == carla.LaneType.Driving:
+                # Detect if right lane is free
+                affected_by_vehicle, _, _ = self._vehicle_obstacle_detected(vehicle_list, 
+                                                max(self.config.distance.min_proximity_threshold,
+                                                    self.config.live_info.current_speed_limit * speed_limit_look_ahead_factor), 
+                                                    up_angle_th=up_angle_th,
+                                                    low_angle_th=low_angle_th,
+                                                    lane_offset=lane_offset)
+                if not affected_by_vehicle:
+                    print("Changing lane, moving to the %s!", direction)
+                    end_waypoint = self._local_planner.target_waypoint
+                    self.set_destination(end_waypoint.transform.location,
+                                            other_wpt.transform.location)
+                    return True
+        
+
+
     def _tailgating(self, waypoint, vehicle_list):
         """
         This method is in charge of tailgating behaviors.
+        If a faster vehicle is behind the agent it will try to change the lane.
 
-            :param location: current location of the agent
             :param waypoint: current waypoint of the agent
             :param vehicle_list: list of all the nearby vehicles
         """
 
-        left_turn = waypoint.left_lane_marking.lane_change
-        right_turn = waypoint.right_lane_marking.lane_change
-
-        left_wpt = waypoint.get_left_lane()
-        right_wpt = waypoint.get_right_lane()
-
         behind_vehicle_state, behind_vehicle, _ = self._vehicle_obstacle_detected(vehicle_list, max(
             self.config.distance.min_proximity_threshold, self.config.live_info.current_speed_limit / 2), up_angle_th=180, low_angle_th=160)
         if behind_vehicle_state and self.config.live_info.current_speed < get_speed(behind_vehicle):
-            if (right_turn == carla.LaneChange.Right or right_turn ==
-                    carla.LaneChange.Both) and waypoint.lane_id * right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
-                new_vehicle_state, _, _ = self._vehicle_obstacle_detected(vehicle_list, max(
-                    self.config.distance.min_proximity_threshold, self.config.live_info.current_speed_limit / 2), up_angle_th=180, lane_offset=1)
-                if not new_vehicle_state:
-                    print("Tailgating, moving to the right!")
-                    end_waypoint = self._local_planner.target_waypoint
-                    self._tailgate_counter = 200
-                    self.set_destination(end_waypoint.transform.location,
-                                         right_wpt.transform.location)
-            elif left_turn == carla.LaneChange.Left and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
-                new_vehicle_state, _, _ = self._vehicle_obstacle_detected(vehicle_list, max(
-                    self.config.distance.min_proximity_threshold, self.config.live_info.current_speed_limit / 2), up_angle_th=180, lane_offset=-1)
-                if not new_vehicle_state:
-                    print("Tailgating, moving to the left!")
-                    end_waypoint = self._local_planner.target_waypoint
-                    self._tailgate_counter = 200
-                    self.set_destination(end_waypoint.transform.location,
-                                         left_wpt.transform.location)
-
+            changes_lane = self.plan_lane_change(vehicle_list, order=("right", "left"))
+            if changes_lane:
+                self._tailgate_counter = 200
+        
     def collision_and_car_avoid_manager(self, waypoint):
         """
         This module is in charge of warning in case of a collision
