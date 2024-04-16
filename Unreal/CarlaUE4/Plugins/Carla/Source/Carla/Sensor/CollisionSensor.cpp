@@ -41,7 +41,6 @@ void ACollisionSensor::SetOwner(AActor *NewOwner)
     if(IsValid(Vehicle))
     {
       Vehicle->GetMesh()->OnComponentHit.AddDynamic(this, &ACollisionSensor::OnComponentCollisionEvent);
-      UE_LOG(LogCarla, Error, TEXT("New owner is valid Vehicle"));
     }
     else
     {
@@ -49,19 +48,16 @@ void ACollisionSensor::SetOwner(AActor *NewOwner)
       if(IsValid(Walker))
       {
         Walker->GetMesh()->OnComponentHit.AddDynamic(this, &ACollisionSensor::OnComponentCollisionEvent);
-        UE_LOG(LogCarla, Error, TEXT("New owner is valid Walker"));
-
       }
       else
       {
         OnActorHit.AddDynamic(this, &ACollisionSensor::OnActorCollisionEvent);
-        UE_LOG(LogCarla, Error, TEXT("New owner is valid actor"));
       }
     }
   }
   else
   {
-    UE_LOG(LogCarla, Error, TEXT("New owner is not valid") );
+    UE_LOG(LogCarla, Log, TEXT("ACollisionSensor::SetOwner New owner is not valid or you are destroying collision sensor") );
   }
 }
 
