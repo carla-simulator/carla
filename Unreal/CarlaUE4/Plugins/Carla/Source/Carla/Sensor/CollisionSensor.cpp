@@ -35,7 +35,7 @@ void ACollisionSensor::SetOwner(AActor *NewOwner)
   Super::SetOwner(NewOwner);
 
   /// @todo Deregister previous owner if there was one.
-  if (NewOwner != nullptr)
+  if (IsValid(NewOwner))
   {
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(NewOwner);
     if(IsValid(Vehicle))
@@ -77,20 +77,20 @@ void ACollisionSensor::PrePhysTick(float DeltaSeconds) {
       CollisionRegistry.end());
 }
 
-void ACollisionSensor::OnActorCollisionEvent(
+void ACollisionSensor::OnCollisionEvent(
     AActor *Actor,
     AActor *OtherActor,
     FVector NormalImpulse,
     const FHitResult &Hit)
 {
-  if (OtherActor == nullptr)
+  if (!IsValid(OtherActor))
   {
     UE_LOG(LogCarla, Error, TEXT("ACollisionSensor::OnActorCollisionEvent Error with collided actor; Not valid.\n Collider actor %s"),
       *(Actor->GetName()) );
     return;
   }
 
-  if (Actor == nullptr)
+  if (!IsValid(Actor))
   {
     UE_LOG(LogCarla, Error, TEXT("ACollisionSensor::OnActorCollisionEvent Error with collider actor; Not valid.\n Collided actor %s"),
       *(OtherActor->GetName()) );
@@ -121,6 +121,7 @@ void ACollisionSensor::OnActorCollisionEvent(
           (float)NormalImpulse.X,
           (float)NormalImpulse.Y,
           (float)NormalImpulse.Z));
+
   // record the collision event
   if (CurrentEpisode.GetRecorder()->IsEnabled()){
       CurrentEpisode.GetRecorder()->AddCollision(Actor, OtherActor);
@@ -129,7 +130,7 @@ void ACollisionSensor::OnActorCollisionEvent(
   CollisionRegistry.emplace_back(CurrentFrame, Actor, OtherActor);
 
   // ROS2
-  #if defined(WITH_ROS2)
+#if defined(WITH_ROS2)
   auto ROS2 = carla::ros2::ROS2::GetInstance();
   if (ROS2->IsEnabled())
   {
@@ -146,7 +147,16 @@ void ACollisionSensor::OnActorCollisionEvent(
       ROS2->ProcessDataFromCollisionSensor(0, StreamId, GetActorTransform(), OtherActor->GetUniqueID(), carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z}, this);
     }
   }
-  #endif
+#endif
+}
+
+void ACollisionSensor::OnActorCollisionEvent(
+    AActor *Actor,
+    AActor *OtherActor,
+    FVector NormalImpulse,
+    const FHitResult &Hit)
+{
+  OnCollisionEvent(Actor, OtherActor, NormalImpulse, Hit);
 }
 
 void ACollisionSensor::OnComponentCollisionEvent(
@@ -157,68 +167,5 @@ void ACollisionSensor::OnComponentCollisionEvent(
       const FHitResult& Hit)
 {
   AActor* Actor = HitComp->GetOwner();
-  if (OtherActor == nullptr)
-  {
-    UE_LOG(LogCarla, Error, TEXT("ACollisionSensor::OnComponentCollisionEvent Error with collided actor; Not valid.\n Collider actor %s"),
-      *(Actor->GetName()) );
-    return;
-  }
-
-  if (Actor == nullptr)
-  {
-    UE_LOG(LogCarla, Error, TEXT("ACollisionSensor::OnComponentCollisionEvent Error with collider actor; Not valid.\n Collided actor %s"),
-      *(OtherActor->GetName()) );
-    return;
-  }
-
-  uint64_t CurrentFrame = FCarlaEngine::GetFrameCounter();
-  // check if this collision has been procesed already in this frame
-  for (auto& Collision: CollisionRegistry)
-  {
-
-    if (std::get<0>(Collision) == CurrentFrame &&
-        std::get<1>(Collision) == Actor &&
-        std::get<2>(Collision) == OtherActor)
-    {
-      return;
-    }
-  }
-
-  const auto& CurrentEpisode = GetEpisode();
-  constexpr float TO_METERS = 1e-2;
-  NormalImpulse *= TO_METERS;
-  GetDataStream(*this).SerializeAndSend(
-      *this,
-      CurrentEpisode.SerializeActor(Actor),
-      CurrentEpisode.SerializeActor(OtherActor),
-      carla::geom::Vector3D(
-          (float)NormalImpulse.X,
-          (float)NormalImpulse.Y,
-          (float)NormalImpulse.Z));
-  // record the collision event
-  if (CurrentEpisode.GetRecorder()->IsEnabled()){
-      CurrentEpisode.GetRecorder()->AddCollision(Actor, OtherActor);
-  }
-
-  CollisionRegistry.emplace_back(CurrentFrame, Actor, OtherActor);
-
-  // ROS2
-  #if defined(WITH_ROS2)
-  auto ROS2 = carla::ros2::ROS2::GetInstance();
-  if (ROS2->IsEnabled())
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
-    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
-    AActor* ParentActor = GetAttachParentActor();
-    if (ParentActor)
-    {
-      FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromCollisionSensor(0, StreamId, LocalTransformRelativeToParent, OtherActor->GetUniqueID(), carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z}, this);
-    }
-    else
-    {
-      ROS2->ProcessDataFromCollisionSensor(0, StreamId, GetActorTransform(), OtherActor->GetUniqueID(), carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z}, this);
-    }
-  }
-  #endif
+  OnCollisionEvent(Actor, OtherActor, NormalImpulse, Hit);
 }

@@ -29,6 +29,12 @@ public:
   virtual void PrePhysTick(float DeltaSeconds) override;
   void SetOwner(AActor *NewOwner) override;
 
+  UFUNCTION()
+  void OnCollisionEvent(
+      AActor *Actor,
+      AActor *OtherActor,
+      FVector NormalImpulse,
+      const FHitResult &Hit);
 
   UFUNCTION(BlueprintCallable, Category="Collision")
   void OnActorCollisionEvent(
