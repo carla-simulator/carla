@@ -134,12 +134,6 @@ carla_string_option (
   /usr/bin/gcc-7
 )
 
-carla_string_option (
-  GXX_COMPILER
-  "g++ compiler used by some CARLA extensions."
-  /usr/bin/g++-7
-)
-
 
 
 # ================================
