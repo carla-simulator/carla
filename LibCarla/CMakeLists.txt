@@ -275,7 +275,6 @@ if (BUILD_CARLA_CLIENT)
   target_link_libraries (
     carla-client PUBLIC
     Boost::asio
-    Boost::python
     Boost::algorithm
     Boost::geometry
     Boost::assert
