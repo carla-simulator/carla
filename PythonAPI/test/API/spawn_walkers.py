@@ -22,11 +22,6 @@ except IndexError:
 
 import carla
 
-
-#record the result as json to the same folder
-def _on_collision(event):
-    print(f"Collision with {event.other_actor.type_id}")
-
 def WalkersSpawnTest():
 
     client = carla.Client()
@@ -67,6 +62,5 @@ def WalkersSpawnTest():
     #This MUST Become an assert
     print("Spected actors: 0 Got Actors: ", gotactors)
 
-class TestWalkersSpawnTest(SmokeTest):
-    def testspawnwalkers():
-        WalkersSpawnTest()
+if __name__ == '__main__':
+    WalkersSpawnTest()
