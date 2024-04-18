@@ -1,13 +1,13 @@
 execute_process(
   COMMAND git log -1 --format=%H
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  WORKING_DIRECTORY ${CARLA_SOURCE_DIR}
   OUTPUT_VARIABLE CARLA_GIT_HASH
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
 execute_process(
   COMMAND git log -1 --format=%H
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Content/Carla
+  WORKING_DIRECTORY ${CARLA_SOURCE_DIR}/Unreal/CarlaUnreal/Content/Carla
   OUTPUT_VARIABLE CONTENT_GIT_HASH
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
@@ -19,15 +19,10 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-set (CARLA_PACKAGE_VERSION_FILE_CONTENT
-  "CARLA git hash:         ${CARLA_GIT_HASH}\n"
-  "Content git hash:       ${CONTENT_GIT_HASH}\n"
-  "UnrealEngine git hash:  ${UNREAL_ENGINE_GIT_HASH}\n"
-)
 file (
-  GENERATE
-  OUTPUT
+  WRITE
     ${CARLA_PACKAGE_VERSION_FILE}
-  CONTENT
-    "${CARLA_PACKAGE_VERSION_FILE_CONTENT}"
+    "Carla git hash:         ${CARLA_GIT_HASH}\n"
+    "Content git hash:       ${CONTENT_GIT_HASH}\n"
+    "UnrealEngine git hash:  ${UNREAL_ENGINE_GIT_HASH}\n"
 )
