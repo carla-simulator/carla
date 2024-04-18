@@ -1,7 +1,6 @@
 
 from __future__ import print_function
 
-from . import SmokeTest
 import argparse
 import glob
 import math
@@ -62,6 +61,5 @@ def VehiclesSpawnTest():
     #This MUST Become an assert
     print("Spected actors: 0 Got Actors: ", gotactors)
 
-class TestVehiclesSpawnTest(SmokeTest):
-    def testspawnvehicles():
-        VehiclesSpawnTest()
+if __name__ == '__main__':
+    VehiclesSpawnTest()
