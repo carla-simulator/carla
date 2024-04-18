@@ -129,18 +129,6 @@ if %REMOVE_INTERMEDIATE% == true (
     )
 )
 
-rem Download Houdini Plugin
-
-set HOUDINI_PLUGIN_REPO=https://github.com/sideeffects/HoudiniEngineForUnreal.git
-set HOUDINI_PLUGIN_PATH=Plugins/HoudiniEngine
-set HOUDINI_PLUGIN_COMMIT=55b6a16cdf274389687fce3019b33e3b6e92a914
-set HOUDINI_PATCH=${CARLA_UTIL_FOLDER}/Patches/houdini_patch.txt
-if not exist "%HOUDINI_PLUGIN_PATH%" (
-  call git clone %HOUDINI_PLUGIN_REPO% %HOUDINI_PLUGIN_PATH%
-  cd %HOUDINI_PLUGIN_PATH%
-  call git checkout %HOUDINI_PLUGIN_COMMIT%
-  cd ../..
-)
 
 rem Build Carla Editor
 rem
@@ -155,10 +143,10 @@ if exist %OMNIVERSE_PLUGIN_FOLDER% (
 )
 
 if %USE_CARSIM% == true (
-    py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -e
+    python %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -e
     set CARSIM_STATE="CarSim ON"
 ) else (
-    py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
+    python %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
     set CARSIM_STATE="CarSim OFF"
 )
 if %USE_CHRONO% == true (
