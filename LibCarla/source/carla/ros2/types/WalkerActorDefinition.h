@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <functional>
 #include "carla/ros2/types/ActorDefinition.h"
 #include "carla/ros2/types/WalkerControl.h"
 #include "carla/rpc/WalkerControl.h"
