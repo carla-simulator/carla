@@ -730,10 +730,9 @@ cp -p -r ${SQLITE_SERVER_LIB}* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
 # -- Get and compile PROJ ------------------------------------------------------
 # ==============================================================================
 
-PROJ_VERSION=proj-7.2.1
-PROJ_REPO=https://download.osgeo.org/proj/${PROJ_VERSION}.tar.gz
+PROJ_VERSION=7.2
+PROJ_REPO=https://github.com/OSGeo/PROJ
 
-PROJ_TAR=${PROJ_VERSION}.tar.gz
 PROJ_BASENAME=proj
 PROJ_CLIENT_LIB=${PROJ_BASENAME}-client-install/lib/libproj.a
 PROJ_SERVER_LIB=${PROJ_BASENAME}-server-install/lib/libproj.a
@@ -749,17 +748,9 @@ else
   log "Retrieving PROJ"
 
   start=$(date +%s)
-  wget ${PROJ_REPO}
+  git clone -b ${PROJ_VERSION} --depth 1 ${PROJ_REPO} ${PROJ_BASENAME}-source
   end=$(date +%s)
   echo "Elapsed Time: $(($end-$start)) seconds"
-
-  log "Extracting PROJ"
-  start=$(date +%s)
-  tar -xzf ${PROJ_TAR}
-  end=$(date +%s)
-  echo "Elapsed Time Extracting for PROJ: $(($end-$start)) seconds"
-
-  mv ${PROJ_VERSION} ${PROJ_BASENAME}-source
 
   mkdir -p ${PROJ_BASENAME}-client-build
   pushd ${PROJ_BASENAME}-client-build >/dev/null
@@ -985,7 +976,7 @@ if ${USE_ROS2} ; then
     pushd ${FASTDDS_BASENAME}-server-build/asio >/dev/null
     # since ASIO is header only installation, we don't care about flags from LIBCPP_TOOLCHAIN_FILE (let the tests etc. build on host settings for now...)
     ${FASTDDS_BASENAME}-source/thirdparty/asio/asio/configure --prefix="${FASTDDS_BASENAME}-server-install"
-    make -j 15 install
+    make -j 15 install-data
     popd >/dev/null
 
     log "fast dds: Build foonathan memory vendor"
