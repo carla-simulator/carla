@@ -19,7 +19,6 @@ except IndexError:
 import carla
 
 class TestVehiclesSpawnTest(unittest.TestCase):
-    print("IntegrationTest.Vehicles.VehiclesSpawnTest")
     def test_vehicle_spawn(self):
         client = carla.Client()
         world = client.load_world('Town10HD_Opt')
