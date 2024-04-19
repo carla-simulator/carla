@@ -18,7 +18,7 @@ except IndexError:
 
 import carla
 
-class TestWalkersSpawnTest(unittest.TestCase):
+class TestWalkersSpawn(unittest.TestCase):
     def test_walker_spawn(self):
         client = carla.Client()
         world = client.load_world('Town10HD_Opt')
