@@ -1,0 +1,1 @@
+API.spawn_walkers API.spawn_vehicles

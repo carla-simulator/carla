@@ -1,12 +1,9 @@
 
 from __future__ import print_function
-
-import argparse
+import unittest
 import glob
-import math
 import os
 import sys
-import time
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
@@ -21,45 +18,41 @@ except IndexError:
 
 import carla
 
-def VehiclesSpawnTest():
+class TestVehiclesSpawnTest(unittest.TestCase):
+    print("IntegrationTest.Vehicles.VehiclesSpawnTest")
+    def test_vehicle_spawn(self):
+        client = carla.Client()
+        world = client.load_world('Town10HD_Opt')
+        bp_lib = world.get_blueprint_library()
+        spectator = world.get_spectator()
+        spectator.set_transform(carla.Transform(carla.Location(-27.8, -63.28, 10.6), carla.Rotation(pitch=-29, yaw=135)))
 
-    client = carla.Client()
-    world = client.load_world('Town10HD_Opt')
-    bp_lib = world.get_blueprint_library()
-    spectator = world.get_spectator()
-    spectator.set_transform(carla.Transform(carla.Location(-27.8, -63.28, 10.6), carla.Rotation(pitch=-29, yaw=135)))
-
-    vehicles_bp_to_spawn = bp_lib.filter("*vehicle*")
-    # Spawn the actor
-    vehicles = []
-    counter = 0
-    for bp in vehicles_bp_to_spawn:
-        location = carla.Location(-70.8 + (counter * 4) , -61.28, 6.0)
-        vehicle = world.spawn_actor(bp, carla.Transform(location, carla.Rotation(0,-90,0)))
-        vehicles.append(vehicle)
-        counter += 1
-        if vehicle is None:
-            print("Error spawning Vehicles", vehicle)
-    
-    world.tick()
-    actors = world.get_actors().filter('*vehicle*')
-    gotactors = actors.__len__()
-
-    for _ in range(300):
+        vehicles_bp_to_spawn = bp_lib.filter("*vehicle*")
+        # Spawn the actor
+        vehicles = []
+        counter = 0
+        for bp in vehicles_bp_to_spawn:
+            location = carla.Location(-70.8 + (counter * 4) , -61.28, 6.0)
+            vehicle = world.spawn_actor(bp, carla.Transform(location, carla.Rotation(0,-90,0)))
+            self.assertIsNotNone(vehicle)
+            vehicles.append(vehicle)
+            counter += 1
+        
+        # Tick for Engine do it's stuff
         world.tick()
-    
-    #This MUST Become an assert
-    print("Spected actors: ", counter, " Got Actors: ", gotactors)
+        actors = world.get_actors().filter('*vehicle*')
+        gotactors = actors.__len__()
 
-    for vehicle in vehicles:
-        vehicle.destroy()
+        for _ in range(300):
+            world.tick()
+        
+        self.assertEqual(counter, gotactors)
 
-    world.tick()
-    actors = world.get_actors().filter('*vehicle*')
-    gotactors = actors.__len__()
+        for vehicle in vehicles:
+            vehicle.destroy()
 
-    #This MUST Become an assert
-    print("Spected actors: 0 Got Actors: ", gotactors)
+        world.tick()
+        actors = world.get_actors().filter('*vehicle*')
+        gotactors = actors.__len__()
 
-if __name__ == '__main__':
-    VehiclesSpawnTest()
+        self.assertEqual(0, gotactors)
