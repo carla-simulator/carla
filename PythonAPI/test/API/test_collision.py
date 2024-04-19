@@ -27,9 +27,11 @@ import carla
 
 
 class TestCollision(unittest.TestCase):
-    collisions = 0
-    def _on_collision(event):
-        collisions += 1
+    def setUp(self):
+        self.collisions = 0
+
+    def _on_collision(self, event ):
+        self.collisions += 1
 
     def test_collision_against_side_of_car(self):
         client = carla.Client()
@@ -48,7 +50,7 @@ class TestCollision(unittest.TestCase):
 
         collision_bp = bp_lib.find('sensor.other.collision')
         sensor_collision = world.spawn_actor(collision_bp, carla.Transform(), attach_to=vehicle)
-        sensor_collision.listen(lambda event: self._on_collision(event))
+        sensor_collision.listen(lambda event: self._on_collision(self. event))
 
         vehicle.apply_control(carla.VehicleControl(throttle=1))
 
