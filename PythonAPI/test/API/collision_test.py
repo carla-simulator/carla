@@ -26,7 +26,7 @@ import carla
 #record the result as json to the same folder
 
 
-class TestVehiclesSpawnTest(unittest.TestCase):
+class TestCollision(unittest.TestCase):
     collisions = 0
     def _on_collision(event):
         collisions += 1
