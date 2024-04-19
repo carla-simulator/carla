@@ -148,6 +148,15 @@ namespace geom {
 
     RoadParameters road_param;
 
+  private:
+
+    // Calculate the points on both sides of the lane mark for the specified s_current
+    std::pair<geom::Vector3D, geom::Vector3D> ComputeEdgesForLanemark(
+      const road::LaneSection& lane_section,
+      const road::Lane& lane,
+      const double s_current,
+      const double lanemark_width) const;
+
   };
 
 } // namespace geom

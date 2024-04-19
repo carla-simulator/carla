@@ -61,7 +61,7 @@ namespace detail {
     if(result) {
       carla::traffic_manager::TrafficManager::Tick();
     }
-    
+
     return result;
   }
 
@@ -220,10 +220,10 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
 
   uint64_t Simulator::Tick(time_duration timeout) {
     DEBUG_ASSERT(_episode != nullptr);
-    
+
     // tick pedestrian navigation
     NavigationTick();
-    
+
     // send tick command
     const auto frame = _client.SendTickCue();
 
@@ -342,19 +342,21 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   // -- General operations with actors -----------------------------------------
   // ===========================================================================
 
-  SharedPtr<Actor> Simulator::SpawnActor(
+    SharedPtr<Actor> Simulator::SpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent,
       rpc::AttachmentType attachment_type,
-      GarbageCollectionPolicy gc) {
+      GarbageCollectionPolicy gc,
+      const std::string& socket_name) {
     rpc::Actor actor;
     if (parent != nullptr) {
       actor = _client.SpawnActorWithParent(
           blueprint.MakeActorDescription(),
           transform,
           parent->GetId(),
-          attachment_type);
+          attachment_type,
+          socket_name);
     } else {
       actor = _client.SpawnActor(
           blueprint.MakeActorDescription(),
@@ -401,10 +403,22 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
           cb(std::move(data));
         });
   }
-  
+
   void Simulator::UnSubscribeFromSensor(Actor &sensor) {
     _client.UnSubscribeFromStream(sensor.GetActorDescription().GetStreamToken());
     // If in the future we need to unsubscribe from each gbuffer individually, it should be done here.
+  }
+
+  void Simulator::EnableForROS(const Sensor &sensor) {
+    _client.EnableForROS(sensor.GetActorDescription().GetStreamToken());
+  }
+
+  void Simulator::DisableForROS(const Sensor &sensor) {
+    _client.DisableForROS(sensor.GetActorDescription().GetStreamToken());
+  }
+
+  bool Simulator::IsEnabledForROS(const Sensor &sensor) {
+    return _client.IsEnabledForROS(sensor.GetActorDescription().GetStreamToken());
   }
 
   void Simulator::SubscribeToGBuffer(

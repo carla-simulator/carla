@@ -25,6 +25,8 @@ set CHRONO_STATE="Chrono OFF"
 set UNITY_STATE="Unity ON"
 set AT_LEAST_WRITE_OPTIONALMODULES=false
 set EDITOR_FLAGS=""
+set USE_ROS2=false
+set ROS2_STATE="Ros2 OFF"
 
 :arg-parse
 echo %1
@@ -47,6 +49,9 @@ if not "%1"=="" (
     )
     if "%1"=="--chrono" (
         set USE_CHRONO=true
+    )
+    if "%1"=="--ros2" (
+        set USE_ROS2=true
     )
     if "%1"=="--no-unity" (
         set USE_UNITY=false
@@ -124,18 +129,6 @@ if %REMOVE_INTERMEDIATE% == true (
     )
 )
 
-rem Download Houdini Plugin
-
-set HOUDINI_PLUGIN_REPO=https://github.com/sideeffects/HoudiniEngineForUnreal.git
-set HOUDINI_PLUGIN_PATH=Plugins/HoudiniEngine
-set HOUDINI_PLUGIN_COMMIT=55b6a16cdf274389687fce3019b33e3b6e92a914
-set HOUDINI_PATCH=${CARLA_UTIL_FOLDER}/Patches/houdini_patch.txt
-if not exist "%HOUDINI_PLUGIN_PATH%" (
-  call git clone %HOUDINI_PLUGIN_REPO% %HOUDINI_PLUGIN_PATH%
-  cd %HOUDINI_PLUGIN_PATH%
-  call git checkout %HOUDINI_PLUGIN_COMMIT%
-  cd ../..
-)
 
 rem Build Carla Editor
 rem
@@ -150,10 +143,10 @@ if exist %OMNIVERSE_PLUGIN_FOLDER% (
 )
 
 if %USE_CARSIM% == true (
-    py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -e
+    python %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -e
     set CARSIM_STATE="CarSim ON"
 ) else (
-    py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
+    python %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
     set CARSIM_STATE="CarSim OFF"
 )
 if %USE_CHRONO% == true (
@@ -161,12 +154,17 @@ if %USE_CHRONO% == true (
 ) else (
     set CHRONO_STATE="Chrono OFF"
 )
+if %USE_ROS2% == true (
+    set ROS2_STATE="Ros2 ON"
+) else (
+    set ROS2_STATE="Ros2 OFF"
+)
 if %USE_UNITY% == true (
     set UNITY_STATE="Unity ON"
 ) else (
     set UNITY_STATE="Unity OFF"
 )
-set OPTIONAL_MODULES_TEXT=%CARSIM_STATE% %CHRONO_STATE% %OMNIVERSE_PLUGIN_INSTALLED% %UNITY_STATE%
+set OPTIONAL_MODULES_TEXT=%CARSIM_STATE% %CHRONO_STATE% %ROS2_STATE% %OMNIVERSE_PLUGIN_INSTALLED% %UNITY_STATE%
 echo %OPTIONAL_MODULES_TEXT% > "%ROOT_PATH%Unreal/CarlaUE4/Config/OptionalModules.ini"
 
 
