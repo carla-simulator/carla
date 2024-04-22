@@ -5,9 +5,6 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 import unittest
-import glob
-import os
-import sys
 import carla
 
 

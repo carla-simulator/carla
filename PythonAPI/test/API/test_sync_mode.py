@@ -6,9 +6,6 @@
 
 import random
 import unittest
-import glob
-import os
-import sys
 import carla
 
 class TestSyncMode(unittest.TestCase):
