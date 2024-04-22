@@ -44,7 +44,7 @@ if errorlevel 1 (
 
 echo Installing Python Pacakges...
 python -m pip install --upgrade pip || exit /b
-python -m install -r requirements.txt || exit /b
+python -m pip install -r requirements.txt || exit /b
 echo Python Pacakges Installed...
 
 
