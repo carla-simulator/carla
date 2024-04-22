@@ -1,22 +1,15 @@
+# Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Barcelona (UAB).
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
 
-from __future__ import print_function
 import unittest
 import glob
 import os
 import sys
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-try:
-    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/carla')
-except IndexError:
-    pass
-
 import carla
+
 
 class TestVehiclesSpawnTest(unittest.TestCase):
     def test_vehicle_spawn(self):
