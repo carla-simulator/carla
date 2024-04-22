@@ -8,6 +8,16 @@ project (
     "Open-source simulator for autonomous driving research."
 )
 
+option(ENABLE_DIRECTORY_CLEAN
+  "Enable ADDITIONAL_CLEAN_FILES on directory level"
+  ON
+)
+
+set (
+  CARLA_BUILD_PATH
+  ${CARLA_WORKSPACE_PATH}/Build/
+)
+
 set (
   CARLA_UE_PATH
   ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal
@@ -480,3 +490,17 @@ add_dependencies (
   launch-only
   prelaunch-content-check
 )
+
+set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES  
+  "${CARLA_UE_PATH}/Binaries" 
+  "${CARLA_UE_PATH}/Intermediate"
+  "${CARLA_UE_PATH}/Saved"
+  "${CARLA_UE_CARLA_TOOLS_PATH}/Binaries" 
+  "${CARLA_UE_CARLA_TOOLS_PATH}/Intermediate"
+  "${CARLA_UE_CARLA_TOOLS_PATH}/Saved"
+  "${CARLA_UE_CARLA_PATH}/Binaries" 
+  "${CARLA_UE_CARLA_PATH}/Intermediate"
+  "${CARLA_UE_CARLA_PATH}/Saved"
+  "${CARLA_BUILD_PATH}/Package"
+  )
+
