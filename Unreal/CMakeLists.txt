@@ -502,5 +502,6 @@ set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES
   "${CARLA_UE_CARLA_PATH}/Intermediate"
   "${CARLA_UE_CARLA_PATH}/Saved"
   "${CARLA_BUILD_PATH}/Package"
+  "${CARLA_BUILD_PATH}/PythonAPI/dist"
   )
 
