@@ -12,7 +12,7 @@ import sys
 import carla
 
 class TestSyncMode(unittest.TestCase):
-    def test_sync_mode(self):
+    def test_sync_mode_set_transform(self):
         client = carla.Client()
         actor = None
 
@@ -49,16 +49,16 @@ class TestSyncMode(unittest.TestCase):
 
             actor.set_transform(new_tran)
             world.tick()
-            transfor = actor.get_transform()
+            transform = actor.get_transform()
             spectator.set_transform(carla.Transform(new_tran.location - carla.Location(
                     x = 10,
                     y = 0,
                     z = 0,
                 )))
 
-            self.assertEqual(transfor.location.x, new_tran.location.x)
-            self.assertEqual(transfor.location.y, new_tran.location.y)
-            self.assertEqual(transfor.location.z, new_tran.location.z)
+            self.assertEqual(transform.location.x, new_tran.location.x)
+            self.assertEqual(transform.location.y, new_tran.location.y)
+            self.assertEqual(transform.location.z, new_tran.location.z)
 
         actor.destroy()
 
