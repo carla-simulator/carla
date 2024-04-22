@@ -1,1 +1,1 @@
-API.spawn_walkers API.spawn_vehicles
+API.test_spawn_walkers API.test_spawn_vehicles API.test_sync_mode
