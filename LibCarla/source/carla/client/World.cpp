@@ -90,6 +90,15 @@ namespace client {
   void World::SetWeather(const rpc::WeatherParameters &weather) {
     _episode.Lock()->SetWeatherParameters(weather);
   }
+  
+  float World::GetIMUISensorGravity() const {
+    return _episode.Lock()->GetIMUISensorGravity();
+  }
+
+  void World::SetIMUISensorGravity(float NewIMUISensorGravity) {
+    _episode.Lock()->SetIMUISensorGravity(NewIMUISensorGravity);
+  }
+  
 
   WorldSnapshot World::GetSnapshot() const {
     return _episode.Lock()->GetWorldSnapshot();
@@ -119,17 +128,19 @@ namespace client {
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent_actor,
-      rpc::AttachmentType attachment_type) {
-    return _episode.Lock()->SpawnActor(blueprint, transform, parent_actor, attachment_type);
+      rpc::AttachmentType attachment_type,
+      const std::string& socket_name) {
+    return _episode.Lock()->SpawnActor(blueprint, transform, parent_actor, attachment_type, GarbageCollectionPolicy::Inherit, socket_name);
   }
 
   SharedPtr<Actor> World::TrySpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent_actor,
-      rpc::AttachmentType attachment_type) noexcept {
+      rpc::AttachmentType attachment_type,
+      const std::string& socket_name) noexcept {
     try {
-      return SpawnActor(blueprint, transform, parent_actor, attachment_type);
+      return SpawnActor(blueprint, transform, parent_actor, attachment_type, socket_name);
     } catch (const std::exception &) {
       return nullptr;
     }

@@ -103,10 +103,7 @@ void UCarSimManagerComponent::ProcessControl(FVehicleControl &Control)
   #endif
 }
 
-void UCarSimManagerComponent::OnCarSimHit(AActor *Actor,
-    AActor *OtherActor,
-    FVector NormalImpulse,
-    const FHitResult &Hit)
+void UCarSimManagerComponent::DisableCarSimPhysics()
 {
   #ifdef WITH_CARSIM
   // finish Carsim simulation
@@ -130,6 +127,19 @@ void UCarSimManagerComponent::OnCarSimHit(AActor *Actor,
   #endif
 }
 
+void UCarSimManagerComponent::DisableSpecialPhysics()
+{
+  DisableCarSimPhysics();
+}
+
+void UCarSimManagerComponent::OnCarSimHit(AActor *Actor,
+    AActor *OtherActor,
+    FVector NormalImpulse,
+    const FHitResult &Hit)
+{
+  DisableCarSimPhysics();
+}
+
 
 void UCarSimManagerComponent::OnCarSimOverlap(UPrimitiveComponent* OverlappedComponent,
     AActor* OtherActor,
@@ -142,26 +152,7 @@ void UCarSimManagerComponent::OnCarSimOverlap(UPrimitiveComponent* OverlappedCom
       ECollisionChannel::ECC_WorldDynamic) ==
       ECollisionResponse::ECR_Block)
   {
-    #ifdef WITH_CARSIM
-    // finish Carsim simulation
-    UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
-    CarlaVehicle->GetMesh()->SetPhysicsLinearVelocity(FVector(0,0,0), false, "Vehicle_Base");
-    CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(true);
-    CarlaVehicle->GetVehicleMovementComponent()->Activate();
-    CarlaVehicle->GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::SimulationUpatesComponentTransform;
-    auto * Bone = CarlaVehicle->GetMesh()->GetBodyInstance(NAME_None);
-    if (Bone)
-    {
-      Bone->SetInstanceSimulatePhysics(true);
-    }
-    else
-    {
-      carla::log_warning("No bone with name");
-    }
-    CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
-    CarlaVehicle->GetMesh()->SetCollisionProfileName("Vehicle");    
-    CarlaVehicle->RestoreVehiclePhysicsControl();
-    #endif
+    DisableCarSimPhysics();
   }
 }
 

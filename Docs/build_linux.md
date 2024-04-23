@@ -48,6 +48,16 @@ wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add
 
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies, use the same compiler version and C++ runtime library to compile everything. The CARLA team uses clang-8 (or clang-10 in Ubuntu 20.04) and LLVM's libc++. Change the default clang version to compile Unreal Engine and the CARLA dependencies.
 
+__Ubuntu 22.04__.
+```sh
+sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu focal main universe"
+sudo apt-get update
+sudo apt-get install build-essential clang-10 lld-10 g++-7 cmake ninja-build libvulkan1 python python3 python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git git-lfs
+sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-10/bin/clang++ 180 &&
+sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-10/bin/clang 180 &&
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 180
+```
+
 __Ubuntu 20.04__.
 ```sh
 sudo apt-add-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main"

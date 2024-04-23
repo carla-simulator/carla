@@ -41,12 +41,14 @@ nav:
   - 'CarSIM': 'tuto_G_carsim_integration.md'
   - 'Chrono': 'tuto_G_chrono.md'
   - 'MathWorks': 'large_map_roadrunner.md'
-  - 'OpenDRIVE': 'adv_opendrive.md'
+  - 'NVIDIA SimReady': 'ecosys_simready.md'
+  - 'ASAM OpenDRIVE': 'adv_opendrive.md'
   - 'PTV Vissim': 'adv_ptv.md'
   - 'RSS': 'adv_rss.md'
   - 'ROS': https://carla.readthedocs.io/projects/ros-bridge/en/latest/
   - 'Scenic': 'tuto_G_scenic.md'
   - 'SUMO': 'adv_sumo.md'
+  - 'SYNKROTRON': 'ecosys_synkrotron.md'
 
 - Contributing:
   - 'Guidelines': 'cont_contribution_guidelines.md' 
