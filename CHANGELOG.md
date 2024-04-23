@@ -14,6 +14,7 @@
  * Added possibility to change gravity variable in imui sensor for the accelerometer
  * Fixed ROS2 native extension build error when ROS2 is installed in the system.
  * ROS2Native: Force fast-dds dependencies download to avoid build crash when boost_asio and tinyxml2 are not installed in Linux.
+ * Updated data coming from the radar. The speed is transmitted along both axes relative to the radar.
 
 ## CARLA 0.9.15
 
