@@ -477,45 +477,7 @@ std::string GetVehicleRoleString(ITSContainer::VehicleRole_t vehicleRole)
         return "Default";
     }
 }
-// boost::python::list GetVehicleExteriorLightList(const ITSContainer::ExteriorLights_t exteriorLights)
-// {
-//   boost::python::list ExteriorLightsList;
-//   uint8_t light = *exteriorLights.buf;
-//   if(light & 0x80)
-//   {
-//     ExteriorLightsList.append("Low Beam Head Lights On");
-//   }
-//   if(light & 0x40)
-//   {
-//     ExteriorLightsList.append("High Beam Head Lights On");
-//   }
-//   if(light & 0x20)
-//   {
-//     ExteriorLightsList.append("Left turn signal on");
-//   }
-//   if(light & 0x10)
-//   {
-//     ExteriorLightsList.append("Right turn signal on");
-//   }
-//   if(light & 0x08)
-//   {
-//     ExteriorLightsList.append("Day time running lights on");
-//   }
-//   if(light & 0x04)
-//   {
-//     ExteriorLightsList.append("Reverse light on");
-//   }
-//   if(light & 0x02)
-//   {
-//     ExteriorLightsList.append("Fog light on");
-//   }
-//   if(light & 0x01)
-//   {
-//     ExteriorLightsList.append("Parking Lights on");
-//   }
-//   return ExteriorLightsList;
 
-// }
 boost::python::list GetPathHistory(const ITSContainer::PathHistory_t pathHistory)
 {
 
@@ -542,7 +504,7 @@ boost::python::dict GetBVCLowFrequency(const CAMContainer::BasicVehicleContainer
 {
     boost::python::dict BVC;
     BVC["Vehicle Role"] = GetVehicleRoleString(bvc.vehicleRole);
-    BVC["Exterior Light"] = bvc.exteriorLights; // GetVehicleExteriorLightList(bvc.exteriorLights);
+    BVC["Exterior Light"] = bvc.exteriorLights;
     if (bvc.pathHistory.NumberOfPathPoint != 0)
     {
         BVC["Path History"] = GetPathHistory(bvc.pathHistory);
