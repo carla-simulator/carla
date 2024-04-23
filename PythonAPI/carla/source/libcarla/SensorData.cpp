@@ -35,8 +35,6 @@
 #include <algorithm>
 #include <thread>
 
-// #include "V2XData.cpp"
-
 namespace carla {
 namespace sensor {
 namespace data {
