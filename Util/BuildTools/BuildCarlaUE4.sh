@@ -19,7 +19,6 @@ USE_UNITY=true
 USE_ROS2=false
 
 EDITOR_FLAGS=""
-USE_HOUDINI=false
 
 GDB=
 RHI="-vulkan"
@@ -70,9 +69,6 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --no-unity )
       USE_UNITY=false
-      shift ;;
-    --with-houdini )
-      USE_HOUDINI=true;
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -134,22 +130,6 @@ if ${REMOVE_INTERMEDIATE} ; then
 
   popd >/dev/null
 
-fi
-
-# ==============================================================================
-# -- Download Houdini Plugin for Unreal Engine ---------------------------------
-# ==============================================================================
-
-HOUDINI_PLUGIN_REPO=https://github.com/sideeffects/HoudiniEngineForUnreal.git
-HOUDINI_PLUGIN_PATH=Plugins/HoudiniEngine
-HOUDINI_PLUGIN_COMMIT=55b6a16cdf274389687fce3019b33e3b6e92a914
-HOUDINI_PATCH=${CARLA_UTIL_FOLDER}/Patches/houdini_patch.txt
-if [[ ! -d ${HOUDINI_PLUGIN_PATH} ]] ; then
-  git clone ${HOUDINI_PLUGIN_REPO} ${HOUDINI_PLUGIN_PATH}
-  pushd ${HOUDINI_PLUGIN_PATH} >/dev/null
-  git checkout ${HOUDINI_PLUGIN_COMMIT}
-  git apply ${HOUDINI_PATCH}
-  popd >/dev/null
 fi
 
 # ==============================================================================
