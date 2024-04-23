@@ -20,8 +20,8 @@ set USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--build] [--clean] [-
 set REMOVE_INTERMEDIATE=false
 set BUILD_OSM2ODR=false
 set GIT_PULL=true
-set CURRENT_OSM2ODR_COMMIT=ee0c2b9241fef5365a6bc044ac82e6580b8ce936
-set OSM2ODR_BRANCH=carla_osm2odr
+set CURRENT_OSM2ODR_COMMIT=1835e1e9538d0778971acc8b19b111834aae7261
+set OSM2ODR_BRANCH=aaron/defaultsidewalkwidth
 set OSM2ODR_REPO=https://github.com/carla-simulator/sumo.git
 
 :arg-parse
@@ -38,6 +38,10 @@ if not "%1"=="" (
     )
     if "%1"=="--clean" (
         set REMOVE_INTERMEDIATE=true
+    )
+    if "%1"=="--generator" (
+        set GENERATOR=%2
+        shift
     )
     if "%1"=="-h" (
         echo %DOC_STRING%
@@ -69,6 +73,10 @@ rem
 set OSM2ODR_VSPROJECT_PATH=%INSTALLATION_DIR:/=\%osm2odr-visualstudio\
 set OSM2ODR_SOURCE_PATH=%INSTALLATION_DIR:/=\%om2odr-source\
 set OSM2ODR_INSTALL_PATH=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
+set OSM2ODR__SERVER_INSTALL_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies
+set CARLA_DEPENDENCIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies\
+
+if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
 
 if %REMOVE_INTERMEDIATE% == true (
     rem Remove directories
@@ -95,7 +103,13 @@ if %BUILD_OSM2ODR% == true (
     if not exist "%OSM2ODR_VSPROJECT_PATH%" mkdir "%OSM2ODR_VSPROJECT_PATH%"
     cd "%OSM2ODR_VSPROJECT_PATH%"
 
-    cmake -G "Visual Studio 16 2019" -A x64^
+    echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
+        set PLATFORM=-A x64
+    ) || (
+        set PLATFORM=
+    )
+
+    cmake -G %GENERATOR% %PLATFORM%^
         -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
         -DCMAKE_INSTALL_PREFIX="%OSM2ODR_INSTALL_PATH:\=/%"^
         -DPROJ_INCLUDE_DIR=%INSTALLATION_DIR:/=\%\proj-install\include^
@@ -107,6 +121,8 @@ if %BUILD_OSM2ODR% == true (
 
     cmake --build . --config Release --target install | findstr /V "Up-to-date:"
     if %errorlevel% neq 0 goto error_install
+    copy %OSM2ODR_INSTALL_PATH%\lib\osm2odr.lib %CARLA_DEPENDENCIES_FOLDER%\lib
+    copy %OSM2ODR_INSTALL_PATH%\include\OSM2ODR.h %CARLA_DEPENDENCIES_FOLDER%\include
 )
 
 goto success
@@ -130,7 +146,7 @@ rem ============================================================================
 
 :error_install
     echo.
-    echo %FILE_N% [ERROR] An error ocurred while installing using Visual Studio 16 2019 Win64.
+    echo %FILE_N% [ERROR] An error ocurred while installing using %GENERATOR% Win64.
     echo           [ERROR] Possible causes:
     echo           [ERROR]  - Make sure you have Visual Studio installed.
     echo           [ERROR]  - Make sure you have the "x64 Visual C++ Toolset" in your path.

@@ -23,9 +23,9 @@ In CARLA, there is a set of master materials that are used as templates for the 
 *   __M_CarInterior_Master__ — Material applied to the inside of the car.  
 *   __M_CarLightsGlass_Master__ — Material applied to the glass covering car lights.  
 *   __M_CarWindows_Master__ — Material applied to the windows.  
-*   __M_CarLicensePlate_Master__ — Material applied to the license plate.  
-*   __M_CarVehicleLights_Master__ — Material applied to the car lights as an emissive texure.  
-*   __M_CarVehicleLigthsSirens_Master__ — Material applied to the sirens, if applicable.  
+*   __M_LicensePlate_Master__ — Material applied to the license plate.  
+*   __M_VehicleLights_Master__ — Material applied to the car lights as an emissive texure.  
+*   __M_VehicleLights_Sirens_Master__ — Material applied to the sirens, if applicable.  
 
 ---
 ## Customize car materials
@@ -142,7 +142,7 @@ Similarly to car materials, a building material can be greatly changed if desire
 	*   `Color` — Tint to be applied based on the white area on the __Diffuse__ `Alpha` texture.  
 	*   `Emissive Texture` — Enable the usage of an __Emissive__ texture.  
 	*   `EmissiveColor` — Tint to be applied based on the white area on the __ORME__ `Emissive mask` texture.
-	*   `Emissive atenuance` — Factor that divides the intensity stated in __BP_Lights__ to obtain proper emissive values.  
+	*   `Emissive attenuance` — Factor that divides the intensity stated in __BP_Lights__ to obtain proper emissive values.  
 	*   `RoughnessCorrection` — Changes the intensity of the roughness map.  
 	*   `MetallicCorrection` — Changes the intensity of the metallic map.  
 	*   `NormalFlatness` — Changes the intensity of the normal map.  

@@ -86,6 +86,140 @@
     - def_name: __str__
     # --------------------------------------
 
+  - class_name: VehicleAckermannControl
+    # - DESCRIPTION ------------------------
+    doc: >
+      Manages the basic movement of a vehicle using Ackermann driving controls.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: steer
+      type: float
+      doc: >
+        Desired steer (rad). Positive value is to the right. Default is 0.0.
+    # --------------------------------------
+    - var_name: steer_speed
+      type: float
+      doc: >
+        Steering velocity (rad/s). Zero steering angle velocity means change the steering angle as quickly as possible. Default is 0.0.
+    # --------------------------------------
+    - var_name: speed
+      type: float
+      doc: >
+        Desired speed (m/s). Default is 0.0.
+    # --------------------------------------
+    - var_name: acceleration
+      type: float
+      doc: >
+        Desired acceleration (m/s2) Default is 0.0.
+    # --------------------------------------
+    - var_name: jerk
+      type: float
+      doc: >
+        Desired jerk (m/s3). Default is 0.0.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: steer
+        type: float
+        default: 0.0
+      - param_name: steer_speed
+        type: float
+        default: 0.0
+      - param_name: speed
+        type: float
+        default: 0.0
+      - param_name: acceleration
+        type: float
+        default: 0.0
+      - param_name: jerk
+        type: float
+        default: 0.0
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.AckermannVehicleControl
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.AckermannVehicleControl
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: AckermannControllerSettings
+    # - DESCRIPTION ------------------------
+    doc: >
+      Manages the settings of the Ackermann PID controller.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: speed_kp
+      type: float
+      doc: >
+        Proportional term of the speed PID controller.
+    # --------------------------------------
+    - var_name: speed_ki
+      type: float
+      doc: >
+        Integral term of the speed PID controller.
+    # --------------------------------------
+    - var_name: speed_kd
+      type: float
+      doc: >
+        Derivative term of the speed PID controller.
+    # --------------------------------------
+    - var_name: accel_kp
+      type: float
+      doc: >
+        Proportional term of the acceleration PID controller.
+    # --------------------------------------
+    - var_name: accel_ki
+      type: float
+      doc: >
+        Integral term of the acceleration PID controller.
+    # --------------------------------------
+    - var_name: accel_kd
+      type: float
+      doc: >
+        Derivative term of the acceleration PID controller.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: speed_kp
+        type: float
+        default: 0.15
+      - param_name: speed_ki
+        type: float
+        default: 0.0
+      - param_name: speed_kd
+        type: float
+        default: 0.25
+      - param_name: accel_kp
+        type: float
+        default: 0.01
+      - param_name: accel_ki
+        type: float
+        default: 0.0
+      - param_name: accel_kd
+        type: float
+        default: 0.01
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.AckermannControllerSettings
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.AckermannControllerSettings
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
   - class_name: WalkerControl
     doc: >
       This class defines specific directions that can be commanded to a carla.Walker to control it via script.

@@ -267,6 +267,14 @@ namespace detail {
     _pimpl->AsyncCall("set_weather_parameters", weather);
   }
 
+  float Client::GetIMUISensorGravity() const {
+    return _pimpl->CallAndWait<float>("get_imui_gravity");
+  }
+
+  void Client::SetIMUISensorGravity(float NewIMUISensorGravity) {
+    _pimpl->AsyncCall("set_imui_gravity", NewIMUISensorGravity);
+  }
+
   std::vector<rpc::Actor> Client::GetActorsById(
       const std::vector<ActorId> &ids) {
     using return_t = std::vector<rpc::Actor>;
@@ -326,19 +334,22 @@ namespace detail {
     return _pimpl->CallAndWait<rpc::Actor>("spawn_actor", description, transform);
   }
 
-  rpc::Actor Client::SpawnActorWithParent(
+    rpc::Actor Client::SpawnActorWithParent(
       const rpc::ActorDescription &description,
       const geom::Transform &transform,
       rpc::ActorId parent,
-      rpc::AttachmentType attachment_type) {
+      rpc::AttachmentType attachment_type,
+      const std::string& socket_name) {
 
-      if(attachment_type == rpc::AttachmentType::SpringArm) {
+      if (attachment_type == rpc::AttachmentType::SpringArm ||
+          attachment_type == rpc::AttachmentType::SpringArmGhost)
+      {
         const auto a = transform.location.MakeSafeUnitVector(std::numeric_limits<float>::epsilon());
         const auto z = geom::Vector3D(0.0f, 0.f, 1.0f);
         constexpr float OneEps = 1.0f - std::numeric_limits<float>::epsilon();
         if (geom::Math::Dot(a, z) > OneEps) {
           std::cout << "WARNING: Transformations with translation only in the 'z' axis are ill-formed when \
-            using SprintArm attachment. Please, be careful with that." << std::endl;
+            using SpringArm or SpringArmGhost attachment. Please, be careful with that." << std::endl;
         }
       }
 
@@ -346,7 +357,8 @@ namespace detail {
         description,
         transform,
         parent,
-        attachment_type);
+        attachment_type,
+        socket_name);
   }
 
   bool Client::DestroyActor(rpc::ActorId actor) {
@@ -406,8 +418,59 @@ namespace detail {
     _pimpl->AsyncCall("add_actor_torque", actor, vector);
   }
 
+  geom::Transform Client::GetActorComponentWorldTransform(rpc::ActorId actor, const std::string componentName) {
+    return _pimpl->CallAndWait<geom::Transform>("get_actor_component_world_transform", actor, componentName);
+  }
+
+  geom::Transform Client::GetActorComponentRelativeTransform(rpc::ActorId actor, const std::string componentName) {
+    return _pimpl->CallAndWait<geom::Transform>("get_actor_component_relative_transform", actor, componentName);
+  }
+
+  std::vector<geom::Transform> Client::GetActorBoneWorldTransforms(rpc::ActorId actor) {
+    using return_t = std::vector<geom::Transform>;
+    return _pimpl->CallAndWait<return_t>("get_actor_bone_world_transforms", actor);
+  }
+
+  std::vector<geom::Transform> Client::GetActorBoneRelativeTransforms(rpc::ActorId actor) {
+    using return_t = std::vector<geom::Transform>;
+    return _pimpl->CallAndWait<return_t>("get_actor_bone_relative_transforms", actor);
+  }
+
+  std::vector<std::string> Client::GetActorComponentNames(rpc::ActorId actor) {
+    using return_t = std::vector<std::string>;
+    return _pimpl->CallAndWait<return_t>("get_actor_component_names", actor);
+  }
+
+  std::vector<std::string> Client::GetActorBoneNames(rpc::ActorId actor) {
+    using return_t = std::vector<std::string>;
+    return _pimpl->CallAndWait<return_t>("get_actor_bone_names", actor);
+  }
+
+  std::vector<geom::Transform> Client::GetActorSocketWorldTransforms(rpc::ActorId actor) {
+    using return_t = std::vector<geom::Transform>;
+    return _pimpl->CallAndWait<return_t>("get_actor_socket_world_transforms", actor);
+  }
+
+  std::vector<geom::Transform> Client::GetActorSocketRelativeTransforms(rpc::ActorId actor) {
+    using return_t = std::vector<geom::Transform>;
+    return _pimpl->CallAndWait<return_t>("get_actor_socket_relative_transforms", actor);
+  }
+
+  std::vector<std::string> Client::GetActorSocketNames(rpc::ActorId actor) {
+    using return_t = std::vector<std::string>;
+    return _pimpl->CallAndWait<return_t>("get_actor_socket_names", actor);
+  }
+
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {
     _pimpl->CallAndWait<void>("set_actor_simulate_physics", actor, enabled);
+  }
+
+  void Client::SetActorCollisions(rpc::ActorId actor, const bool enabled) {
+    _pimpl->CallAndWait<void>("set_actor_collisions", actor, enabled);
+  }
+
+  void Client::SetActorDead(rpc::ActorId actor) {
+    _pimpl->AsyncCall("set_actor_dead", actor);
   }
 
   void Client::SetActorEnableGravity(rpc::ActorId actor, const bool enabled) {
@@ -468,6 +531,10 @@ namespace detail {
         PowertrainJSON,
         TireJSON,
         BaseJSONPath);
+  }
+
+  void Client::RestorePhysXPhysics(rpc::ActorId vehicle) {
+    _pimpl->AsyncCall("restore_physx_physics", vehicle);
   }
 
   void Client::ApplyControlToWalker(rpc::ActorId walker, const rpc::WalkerControl &control) {
@@ -577,13 +644,55 @@ namespace detail {
     _pimpl->AsyncCall("set_replayer_ignore_hero", ignore_hero);
   }
 
+  void Client::SetReplayerIgnoreSpectator(bool ignore_spectator) {
+    _pimpl->AsyncCall("set_replayer_ignore_spectator", ignore_spectator);
+  }
+
   void Client::SubscribeToStream(
       const streaming::Token &token,
       std::function<void(Buffer)> callback) {
-    _pimpl->streaming_client.Subscribe(token, std::move(callback));
+    carla::streaming::detail::token_type thisToken(token);
+    streaming::Token receivedToken = _pimpl->CallAndWait<streaming::Token>("get_sensor_token", thisToken.get_stream_id());
+    _pimpl->streaming_client.Subscribe(receivedToken, std::move(callback));
   }
 
   void Client::UnSubscribeFromStream(const streaming::Token &token) {
+    _pimpl->streaming_client.UnSubscribe(token);
+  }
+
+  void Client::EnableForROS(const streaming::Token &token) {
+    carla::streaming::detail::token_type thisToken(token);
+    _pimpl->AsyncCall("enable_sensor_for_ros", thisToken.get_stream_id());
+  }
+
+  void Client::DisableForROS(const streaming::Token &token) {
+    carla::streaming::detail::token_type thisToken(token);
+    _pimpl->AsyncCall("disable_sensor_for_ros", thisToken.get_stream_id());
+  }
+
+  bool Client::IsEnabledForROS(const streaming::Token &token) {
+    carla::streaming::detail::token_type thisToken(token);
+    return _pimpl->CallAndWait<bool>("is_sensor_enabled_for_ros", thisToken.get_stream_id());
+  }
+
+  void Client::SubscribeToGBuffer(
+      rpc::ActorId ActorId,
+      uint32_t GBufferId,
+      std::function<void(Buffer)> callback)
+  {
+    std::vector<unsigned char> token_data = _pimpl->CallAndWait<std::vector<unsigned char>>("get_gbuffer_token", ActorId, GBufferId);
+    streaming::Token token;
+    std::memcpy(&token.data[0u], token_data.data(), token_data.size());
+    _pimpl->streaming_client.Subscribe(token, std::move(callback));
+  }
+
+  void Client::UnSubscribeFromGBuffer(
+      rpc::ActorId ActorId,
+      uint32_t GBufferId)
+  {
+    std::vector<unsigned char> token_data = _pimpl->CallAndWait<std::vector<unsigned char>>("get_gbuffer_token", ActorId, GBufferId);
+    streaming::Token token;
+    std::memcpy(&token.data[0u], token_data.data(), token_data.size());
     _pimpl->streaming_client.UnSubscribe(token);
   }
 
@@ -613,6 +722,10 @@ namespace detail {
 
   void Client::UpdateServerLightsState(std::vector<rpc::LightState>& lights, bool discard_client) const {
     _pimpl->AsyncCall("update_lights_state", _pimpl->endpoint, std::move(lights), discard_client);
+  }
+
+  void Client::UpdateDayNightCycle(const bool active) const {
+    _pimpl->AsyncCall("update_day_night_cycle", _pimpl->endpoint, active);
   }
 
   std::vector<geom::BoundingBox> Client::GetLevelBBs(uint8_t queried_tag) const {

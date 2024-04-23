@@ -24,6 +24,8 @@
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
 
+
+#include "FoliageInstancedStaticMeshComponent.h"
 #include "CoreMinimal.h"
 
 //-----CARSIM--------------------------------
@@ -32,6 +34,9 @@
 #endif
 //-------------------------------------------
 
+#include <utility>
+
+#include "carla/rpc/VehicleFailureState.h"
 #include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;
@@ -43,6 +48,8 @@ enum class EVehicleWheelLocation : uint8 {
   FR_Wheel = 1,
   BL_Wheel = 2,
   BR_Wheel = 3,
+  ML_Wheel = 4,
+  MR_Wheel = 5,
   //Use for bikes and bicycles
   Front_Wheel = 0,
   Back_Wheel = 1,
@@ -185,6 +192,8 @@ public:
 
   void SetVehicleLightState(const FVehicleLightState &LightState);
 
+  void SetFailureState(const carla::rpc::VehicleFailureState &FailureState);
+
   UFUNCTION(BlueprintNativeEvent)
   bool IsTwoWheeledVehicle();
   virtual bool IsTwoWheeledVehicle_Implementation() {
@@ -326,9 +335,6 @@ private:
   ECarlaWheeledVehicleState State = ECarlaWheeledVehicleState::UNKNOWN;
 
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
-  UBoxComponent *VehicleBounds;
-
-  UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
   UVehicleVelocityControl* VelocityControl;
 
   struct
@@ -346,7 +352,42 @@ private:
   bool bAckermannControlActive = false;
   FAckermannController AckermannController;
 
+  float RolloverBehaviorForce = 0.35;
+  int RolloverBehaviorTracker = 0;
+  float RolloverFlagTime = 5.0f;
+
+  carla::rpc::VehicleFailureState FailureState = carla::rpc::VehicleFailureState::None;
+
 public:
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", EditDefaultsOnly)
+  float DetectionSize { 750.0f };
+
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly)
+  FBox FoliageBoundingBox;
+
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
+  UBoxComponent *VehicleBounds;
+
+  UFUNCTION()
+  FBox GetDetectionBox() const;
+
+  UFUNCTION()
+  float GetDetectionSize() const;
+
+  UFUNCTION()
+  void UpdateDetectionBox();
+
+  UFUNCTION()
+  const TArray<int32> GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const;
+
+  UFUNCTION(BlueprintCallable)
+  void DrawFoliageBoundingBox() const;
+
+  UFUNCTION()
+  FBoxSphereBounds GetBoxSphereBounds() const;
+
+  UFUNCTION()
+  bool IsInVehicleRange(const FVector& Location) const;
 
   /// Set the rotation of the car wheels indicated by the user
   /// 0 = FL_VehicleWheel, 1 = FR_VehicleWheel, 2 = BL_VehicleWheel, 3 = BR_VehicleWheel
@@ -369,6 +410,9 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void CloseDoorPhys(const EVehicleDoor DoorIdx);
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void RecordDoorChange(const EVehicleDoor DoorIdx, const bool bIsOpen); 
+
   virtual FVector GetVelocity() const override;
 
 //-----CARSIM--------------------------------
@@ -379,6 +423,16 @@ public:
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
   bool bIsNWVehicle = false;
 
+  void SetRolloverFlag();
+
+  carla::rpc::VehicleFailureState GetFailureState() const;
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  static FRotator GetPhysicsConstraintAngle(UPhysicsConstraintComponent* Component);
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  static void SetPhysicsConstraintAngle(
+      UPhysicsConstraintComponent*Component, const FRotator &NewAngle);
+ 
 private:
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
@@ -401,4 +455,31 @@ private:
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   TMap<UPrimitiveComponent*, UPhysicsConstraintComponent*> CollisionDisableConstraints;
 
+  /// Rollovers tend to have too much angular velocity, resulting in the vehicle doing a full 360º flip.
+  /// This function progressively reduces the vehicle's angular velocity so that it ends up upside down instead.
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void ApplyRolloverBehavior();
+
+  void CheckRollover(const float roll, const std::pair<float, float> threshold_roll);
+
+  void AddReferenceToManager();
+  void RemoveReferenceToManager();
+
+
+  FTimerHandle TimerHandler;
+public:
+  float SpeedAnim { 0.0f };
+  float RotationAnim { 0.0f };
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetSpeedAnim() const { return SpeedAnim; }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetSpeedAnim(float Speed) { SpeedAnim = Speed; }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetRotationAnim() const { return RotationAnim; }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetRotationAnim(float Rotation) { RotationAnim = Rotation; }
 };

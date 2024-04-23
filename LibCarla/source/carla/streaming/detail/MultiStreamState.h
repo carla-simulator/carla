@@ -27,34 +27,56 @@ namespace detail {
 
     using StreamStateBase::StreamStateBase;
 
-    MultiStreamState(const token_type &token) : 
-      StreamStateBase(token), 
+    MultiStreamState(const token_type &token) :
+      StreamStateBase(token),
       _session(nullptr)
       {};
 
     template <typename... Buffers>
-    void Write(Buffers &&... buffers) {
-      auto message = Session::MakeMessage(std::move(buffers)...);
-
+    void Write(Buffers... buffers) {
       // try write single stream
       auto session = _session.load();
       if (session != nullptr) {
+        auto message = Session::MakeMessage(buffers...);
         session->Write(std::move(message));
-        // Return here, _session is only valid if we have a 
+        log_debug("sensor ", session->get_stream_id()," data sent");
+        // Return here, _session is only valid if we have a
         // single session.
-        return; 
+        return;
       }
 
       // try write multiple stream
       std::lock_guard<std::mutex> lock(_mutex);
-      for (auto &s : _sessions) {
-        if (s != nullptr) {
-          s->Write(message);
+      if (_sessions.size() > 0) {
+        auto message = Session::MakeMessage(buffers...);
+        for (auto &s : _sessions) {
+          if (s != nullptr) {
+            s->Write(message);
+            log_debug("sensor ", s->get_stream_id()," data sent ");
+         }
         }
       }
     }
 
-  private:
+    void ForceActive() {
+      _force_active = true;
+    }
+
+    void EnableForROS() {
+      _enabled_for_ros = true;
+    }
+
+    void DisableForROS() {
+      _enabled_for_ros = false;
+    }
+
+    bool IsEnabledForROS() {
+      return _enabled_for_ros;
+    }
+
+    bool AreClientsListening() {
+      return (_sessions.size() > 0 || _force_active || _enabled_for_ros);
+    }
 
     void ConnectSession(std::shared_ptr<Session> session) final {
       DEBUG_ASSERT(session != nullptr);
@@ -72,16 +94,19 @@ namespace detail {
     void DisconnectSession(std::shared_ptr<Session> session) final {
       DEBUG_ASSERT(session != nullptr);
       std::lock_guard<std::mutex> lock(_mutex);
+      log_debug("Calling DisconnectSession for ", session->get_stream_id());
       if (_sessions.size() == 0) return;
       if (_sessions.size() == 1) {
         DEBUG_ASSERT(session == _session.load());
         _session.store(nullptr);
         _sessions.clear();
+        _force_active = false;
+        log_debug("Last session disconnected");
       } else {
         _sessions.erase(
             std::remove(_sessions.begin(), _sessions.end(), session),
             _sessions.end());
-        
+
         // set single session if only one
         if (_sessions.size() == 1)
           _session.store(_sessions[0]);
@@ -93,10 +118,18 @@ namespace detail {
 
     void ClearSessions() final {
       std::lock_guard<std::mutex> lock(_mutex);
+      for (auto &s : _sessions) {
+        if (s != nullptr) {
+          s->Close();
+        }
+      }
       _sessions.clear();
+      _force_active = false;
       _session.store(nullptr);
       log_debug("Disconnecting all multistream sessions");
     }
+
+  private:
 
     std::mutex _mutex;
 
@@ -104,6 +137,8 @@ namespace detail {
     AtomicSharedPtr<Session> _session;
     // if there are more than one session, we use vector of sessions with mutex
     std::vector<std::shared_ptr<Session>> _sessions;
+    bool _force_active {false};
+    bool _enabled_for_ros {false};
   };
 
 } // namespace detail

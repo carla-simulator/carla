@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "Carla/Game/Tagger.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 
 #include "Carla/Traffic/TrafficSignBase.h"
@@ -26,20 +27,15 @@
 namespace crp = carla::rpc;
 
 static FBoundingBox ApplyTransformToBB(
-    const FBoundingBox& InBoundingBox,
+    FBoundingBox InBB,
     const FTransform& Transform)
 {
-  const FRotator Rotation = Transform.GetRotation().Rotator();
-  const FVector Translation = Transform.GetLocation();
-  const FVector Scale = Transform.GetScale3D();
-
-  FBoundingBox BoundingBox = InBoundingBox;
-  BoundingBox.Origin *= Scale;
-  BoundingBox.Origin = Rotation.RotateVector(BoundingBox.Origin) + Translation;
-  BoundingBox.Extent *= Scale;
-  BoundingBox.Rotation = Rotation;
-
-  return BoundingBox;
+  auto Scale = Transform.GetScale3D();
+  InBB.Origin *= Scale;
+  InBB.Rotation = Transform.GetRotation().Rotator();
+  InBB.Origin = InBB.Rotation.RotateVector(InBB.Origin) + Transform.GetLocation();
+  InBB.Extent *= Scale;
+  return InBB;
 }
 
 FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, uint8 InTagQueried)
@@ -73,12 +69,27 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
     auto TrafficSign = Cast<ATrafficSignBase>(Actor);
     if (TrafficSign != nullptr)
     {
+      // first return a merge of the generated trigger boxes, if any
+      auto TriggerVolumes = TrafficSign->GetTriggerVolumes();
+      if (TriggerVolumes.Num() > 0)
+      {
+        FBoundingBox Box = UBoundingBoxCalculator::CombineBoxes(TriggerVolumes);
+        FTransform Transform = Actor->GetActorTransform();
+        Box.Origin = Transform.InverseTransformPosition(Box.Origin);
+        Box.Rotation = Transform.InverseTransformRotation(Box.Rotation.Quaternion()).Rotator();
+        return Box;
+      }
+      // try to return the original bounding box
       auto TriggerVolume = TrafficSign->GetTriggerVolume();
       if (TriggerVolume != nullptr)
       {
-        FVector Origin = TriggerVolume->GetRelativeTransform().GetTranslation();
-        FVector Extent = TriggerVolume->GetScaledBoxExtent();
-        return {Origin, Extent};
+          auto Transform = TriggerVolume->GetRelativeTransform();
+          return
+          {
+              Transform.GetTranslation(),
+              TriggerVolume->GetScaledBoxExtent(),
+              Transform.GetRotation().Rotator()
+          };
       }
       else
       {
@@ -90,9 +101,10 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
     TArray<FBoundingBox> BBs = GetBBsOfActor(Actor);
     FBoundingBox BB = CombineBBs(BBs);
     // Conver to local space; GetBBsOfActor return BBs in world space
-    FTransform Transform = Actor->GetTransform();
+    FTransform Transform = Actor->GetActorTransform();
     BB.Origin = Transform.InverseTransformPosition(BB.Origin);
     BB.Rotation = Transform.InverseTransformRotation(BB.Rotation.Quaternion()).Rotator();
+    BB.Rotation = Transform.GetRotation().Rotator();
     return BB;
 
   }
@@ -116,9 +128,9 @@ FBoundingBox UBoundingBoxCalculator::GetVehicleBoundingBox(
   if(FilterByTagEnabled && Tag != TagQueried) return {};
 
   USkeletalMesh* SkeletalMesh = ParentComp->SkeletalMesh;
-  FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
+  FBoundingBox BB = GetSkeletalMeshBoundingBox(SkeletalMesh);
 
-  if(BoundingBox.Extent.IsZero())
+  if(BB.Extent.IsZero())
   {
     UE_LOG(LogCarla, Error, TEXT("%s has no SKM assigned"), *Vehicle->GetName());
     return {};
@@ -154,37 +166,27 @@ FBoundingBox UBoundingBoxCalculator::GetVehicleBoundingBox(
 
     if(SocketFound)
     {
-      FVector MinVertex = BoundingBox.Origin - BoundingBox.Extent;
-      FVector MaxVertex = BoundingBox.Origin + BoundingBox.Extent;
+      auto Min = BB.Origin - BB.Rotation.RotateVector(BB.Extent);
+      auto Max = BB.Origin + BB.Rotation.RotateVector(BB.Extent);
+      auto Tmp = Min;
+      Min = Min.ComponentMin(Max);
+      Max = Max.ComponentMin(Tmp);
+
       MaxHeadLocation += 20.0f; // hack, the bone of the head is at he bottom
 
-      MaxVertex.Y = (MaxKneeLocation > MaxVertex.Y) ? MaxKneeLocation : MaxVertex.Y;
-      MinVertex.Y = (-MaxKneeLocation < MinVertex.Y) ? MaxKneeLocation : MinVertex.Y;
-      MaxVertex.Z = (MaxHeadLocation > MaxVertex.Z) ? MaxHeadLocation : MaxVertex.Z;
+      Max.Y = (MaxKneeLocation > Max.Y) ? MaxKneeLocation : Max.Y;
+      Min.Y = (-MaxKneeLocation < Min.Y) ? MaxKneeLocation : Min.Y;
+      Max.Z = (MaxHeadLocation > Max.Z) ? MaxHeadLocation : Max.Z;
 
-      FVector Extent (
-        (MaxVertex.X - MinVertex.X) * 0.5f,
-        (MaxVertex.Y - MinVertex.Y) * 0.5f,
-        (MaxVertex.Z - MinVertex.Z) * 0.5f
-      );
-
-      // Calculate middle point
-      FVector Origin (
-        (MinVertex.X + Extent.X),
-        (MinVertex.Y + Extent.Y),
-        (MinVertex.Z + Extent.Z)
-      );
-
-      BoundingBox.Origin = Origin;
-      BoundingBox.Extent = Extent;
+      BB.Extent = (Max - Min) * 0.5f;
+      BB.Origin = Min + BB.Extent;
     }
   }
 
   // Component-to-world transform for this component
-  const FTransform& CompToWorldTransform = ParentComp->GetComponentTransform();
-  BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
-
-  return BoundingBox;
+  auto& CompToWorldTransform = ParentComp->GetComponentTransform();
+  BB = ApplyTransformToBB(BB, CompToWorldTransform);
+  return BB;
 }
 
 FBoundingBox UBoundingBoxCalculator::GetCharacterBoundingBox(
@@ -209,7 +211,7 @@ FBoundingBox UBoundingBoxCalculator::GetCharacterBoundingBox(
     BoundingBox.Origin = {0.0f, 0.0f, 0.0f};
     BoundingBox.Extent = {Radius, Radius, HalfHeight};
     // Component-to-world transform for this component
-    const FTransform& CompToWorldTransform = Capsule->GetComponentTransform();
+    auto CompToWorldTransform = Capsule->GetComponentTransform();
     BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
 
     return BoundingBox;
@@ -270,32 +272,18 @@ FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBox(const USkeletalM
   uint32 NumVertices = FPositionVertexBuffer.GetNumVertices();
 
   // Look for Skeletal Mesh bounds (vertex perfect)
-  FVector MaxVertex(TNumericLimits<float>::Lowest());
-  FVector MinVertex(TNumericLimits<float>::Max());
+  FVector Max(TNumericLimits<float>::Lowest());
+  FVector Min(TNumericLimits<float>::Max());
+
   for(uint32 i = 0; i < NumVertices; i++)
   {
-    FVector& Pos = FPositionVertexBuffer.VertexPosition(i);
-    MaxVertex.X = (Pos.X > MaxVertex.X) ? Pos.X : MaxVertex.X;
-    MaxVertex.Y = (Pos.Y > MaxVertex.Y) ? Pos.Y : MaxVertex.Y;
-    MaxVertex.Z = (Pos.Z > MaxVertex.Z) ? Pos.Z : MaxVertex.Z;
-    MinVertex.X = (Pos.X < MinVertex.X) ? Pos.X : MinVertex.X;
-    MinVertex.Y = (Pos.Y < MinVertex.Y) ? Pos.Y : MinVertex.Y;
-    MinVertex.Z = (Pos.Z < MinVertex.Z) ? Pos.Z : MinVertex.Z;
+    auto Pos = FPositionVertexBuffer.VertexPosition(i);
+    Max = Max.ComponentMax(Pos);
+    Min = Min.ComponentMin(Pos);
   }
 
-  // Calculate box extent
-  FVector Extent (
-    (MaxVertex.X - MinVertex.X) * 0.5f,
-    (MaxVertex.Y - MinVertex.Y) * 0.5f,
-    (MaxVertex.Z - MinVertex.Z) * 0.5f
-  );
-
-  // Calculate middle point
-  FVector Origin (
-    (MinVertex.X + Extent.X),
-    (MinVertex.Y + Extent.Y),
-    (MinVertex.Z + Extent.Z)
-  );
+  auto Extent = (Max - Min) * 0.5f;
+  auto Origin = Min + Extent;
 
   return {Origin, Extent};
 }
@@ -575,38 +563,55 @@ void UBoundingBoxCalculator::CombineBBsOfActor(
   }
 }
 
+template <typename Collection, typename ExtractAABB>
+static FBoundingBox CombineBoundingBoxesGeneric(
+    Collection&& collection,
+    ExtractAABB&& extract_aabb)
+{
+    FVector Max(std::numeric_limits<float>::lowest());
+    FVector Min(std::numeric_limits<float>::max());
+
+    for (auto& e : collection)
+    {
+        auto BB = extract_aabb(e);
+        auto LocalMax = BB.Origin + BB.Rotation.RotateVector(BB.Extent);
+        auto LocalMin = BB.Origin - BB.Rotation.RotateVector(BB.Extent);
+        auto Tmp = LocalMin;
+        LocalMin = LocalMin.ComponentMin(LocalMax);
+        LocalMax = LocalMax.ComponentMax(Tmp);
+        Max = Max.ComponentMax(LocalMax);
+        Min = Min.ComponentMin(LocalMin);
+    }
+
+    auto Extent = (Max - Min) * 0.5f;
+    auto Origin = Min + Extent;
+
+    return { Origin, Extent };
+}
+
+template <typename Collection>
+static auto CombineBoundingBoxesGeneric(Collection&& collection)
+{
+    using T = std::remove_reference_t<decltype(collection[0])>;
+    return CombineBoundingBoxesGeneric(std::forward<Collection>(collection), [](T& e) { return e; });
+}
+
 FBoundingBox UBoundingBoxCalculator::CombineBBs(const TArray<FBoundingBox>& BBsToCombine)
 {
-  FVector MaxVertex(TNumericLimits<float>::Lowest());
-  FVector MinVertex(TNumericLimits<float>::Max());
+    return CombineBoundingBoxesGeneric(BBsToCombine);
+}
 
-  for(const FBoundingBox& BB : BBsToCombine) {
-    FVector MaxVertexOfBB = BB.Origin + BB.Extent;
-    FVector MinVertexOfBB = BB.Origin - BB.Extent;
-
-    MaxVertex.X = (MaxVertexOfBB.X > MaxVertex.X) ? MaxVertexOfBB.X : MaxVertex.X;
-    MaxVertex.Y = (MaxVertexOfBB.Y > MaxVertex.Y) ? MaxVertexOfBB.Y : MaxVertex.Y;
-    MaxVertex.Z = (MaxVertexOfBB.Z > MaxVertex.Z) ? MaxVertexOfBB.Z : MaxVertex.Z;
-    MinVertex.X = (MinVertexOfBB.X < MinVertex.X) ? MinVertexOfBB.X : MinVertex.X;
-    MinVertex.Y = (MinVertexOfBB.Y < MinVertex.Y) ? MinVertexOfBB.Y : MinVertex.Y;
-    MinVertex.Z = (MinVertexOfBB.Z < MinVertex.Z) ? MinVertexOfBB.Z : MinVertex.Z;
-  }
-
-  // Calculate box extent
-  FVector Extent (
-    (MaxVertex.X - MinVertex.X) * 0.5f,
-    (MaxVertex.Y - MinVertex.Y) * 0.5f,
-    (MaxVertex.Z - MinVertex.Z) * 0.5f
-  );
-
-  // Calculate middle point
-  FVector Origin (
-    (MinVertex.X + Extent.X),
-    (MinVertex.Y + Extent.Y),
-    (MinVertex.Z + Extent.Z)
-  );
-
-  return {Origin, Extent};
+FBoundingBox UBoundingBoxCalculator::CombineBoxes(const TArray<UBoxComponent *>& BBsToCombine)
+{
+    return CombineBoundingBoxesGeneric(BBsToCombine, [](UBoxComponent* e)
+    {
+        return FBoundingBox
+        {
+            e->GetComponentLocation(),
+            e->GetScaledBoxExtent(),
+            e->GetComponentRotation()
+        };
+    });
 }
 
 void UBoundingBoxCalculator::GetMeshCompsFromActorBoundingBox(

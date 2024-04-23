@@ -2,6 +2,8 @@
 
 using UnrealBuildTool;
 using System.Collections.Generic;
+using System;
+using System.IO;
 
 public class CarlaUE4EditorTarget : TargetRules
 {
@@ -9,5 +11,25 @@ public class CarlaUE4EditorTarget : TargetRules
 	{
 		Type = TargetType.Editor;
 		ExtraModuleNames.Add("CarlaUE4");
+
+		string ConfigDir = Path.GetDirectoryName(ProjectFile.ToString()) + "/Config/";
+		string OptionalModulesFile = Path.Combine(ConfigDir, "OptionalModules.ini");
+		string[] text = System.IO.File.ReadAllLines(OptionalModulesFile);
+
+		bool UnityOn = true;
+
+		foreach (string line in text) {
+			if (line.Contains("Unity OFF"))
+			{
+				UnityOn = false;
+			}
+		}
+
+		if (!UnityOn) {
+			Console.WriteLine("Disabling unity");
+			bUseUnityBuild = false;
+			bForceUnityBuild = false;
+			bUseAdaptiveUnityBuild = false;
+		}
 	}
 }

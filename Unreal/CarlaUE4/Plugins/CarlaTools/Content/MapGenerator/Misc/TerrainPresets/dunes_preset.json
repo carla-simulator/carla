@@ -1,0 +1,30 @@
+{
+	"presetName": "Dunes",
+	"widgetState":
+	{
+		"isPersistentState": false,
+		"mapName": "",
+		"workingPath": "",
+		"activeTabName": "",
+		"terrainGeneralSize": 0,
+		"terrainGeneralSlope": 0.34000000357627869,
+		"terrainGeneralHeight": 2.0999999046325684,
+		"terrainGeneralMinHeight": 0,
+		"terrainGeneralMaxHeight": 1,
+		"terrainGeneralInvert": 0.2,
+		"terrainOverallSeed": 2000,
+		"terrainOverallScale": 38,
+		"terrainOverallSlope": 10,
+		"terrainOverallHeight": 2.5,
+		"terrainOverallMinHeight": 0.75,
+		"terrainOverallMaxHeight": 1,
+		"terrainOverallInvert": 0.86,
+		"terrainDetailedSeed": 6000,
+		"terrainDetailedScale": 89,
+		"terrainDetailedSlope": 1.7000000476837158,
+		"terrainDetailedHeight": 0.40000000596046448,
+		"terrainDetailedMinHeight": 0.014999999664723873,
+		"terrainDetailedMaxHeight": 1,
+		"terrainDetailedInvert": 1
+	}
+}

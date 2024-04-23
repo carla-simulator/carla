@@ -65,7 +65,7 @@
       - param_name: opendrive
         type: str
         doc: >
-          Content of an OpenDRIVE file as `string`, __not the path to the `.xodr`__.
+          Content of an ASAM OpenDRIVE file as `string`, __not the path to the `.xodr`__.
       - param_name: parameters
         type: carla.OpendriveGenerationParameters
         default: (2.0, 50.0, 1.0, 0.6, true, true)
@@ -101,6 +101,7 @@
         doc: >
           Layers of the map that will be loaded. By default all layers are loaded.
           This parameter works like a flag mask.
+      return: carla.World
       warning: >
         `map_layers` are only available for "Opt" maps
       doc: >
@@ -114,11 +115,37 @@
         doc: >
           Option to reset the episode setting to default values, set to false to keep the current settings.
           This is useful to keep sync mode when changing map and to keep deterministic scenarios.
+      return: carla.World
       raises: RuntimeError when corresponding.
       doc: >
         Reload the current world, note that a new world is created with default
         settings using the same map. All actors present in the world will be
         destroyed, __but__ traffic manager instances will stay alive.
+      # --------------------------------------
+    - def_name: load_world_if_different
+      params:
+      - param_name: map_name
+        type: str
+        doc: >
+          Name of the map to be used in this world. Accepts both full paths and map names, e.g.
+          '/Game/Carla/Maps/Town01' or 'Town01'. Remember that these paths are dynamic.
+      - param_name: reset_settings
+        type: bool
+        default: true
+        doc: >
+          Option to reset the episode setting to default values, set to false to keep the current settings.
+          This is useful to keep sync mode when changing map and to keep deterministic scenarios.
+      - param_name: map_layers
+        type: carla.MapLayer
+        default: carla.MapLayer.All
+        doc: >
+          Layers of the map that will be loaded. By default all layers are loaded.
+          This parameter works like a flag mask.
+      return: carla.World
+      warning: >
+        `map_layers` are only available for "Opt" maps
+      doc: >
+        Creates a new world with default settings using `map_name` map only if it is a different map from the currently loaded map. Otherwise this function returns `None`. All actors in the current world will be destroyed.
     # --------------------------------------
     - def_name: replay_file
       params:
@@ -297,7 +324,7 @@
         doc: >
           New timeout value. Default is 5 seconds.
       doc: >
-        Sets the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.
+        Sets the maximum time a network call is allowed before blocking it and raising a timeout exceeded error.
      # --------------------------------------
     - def_name: set_replayer_ignore_hero
       params:
@@ -305,6 +332,13 @@
         type: bool
         doc: >
           Enables or disables playback of the hero vehicle during a playback of a recorded simulation.
+    # --------------------------------------
+    - def_name: set_replayer_ignore_spectator
+      params:
+      - param_name: ignore_spectator
+        type: bool
+        doc: >
+          Determines whether the recorded spectator movements will be replicated by the replayer.
      # --------------------------------------
     - def_name: set_files_base_folder
       params:
@@ -414,6 +448,17 @@
 
         Default is 30. Exceeding a speed limit can be done using negative percentages.
     # --------------------------------------
+    - def_name: global_lane_offset
+      params:
+      - param_name: offset
+        type: float
+        doc: >
+          Lane offset displacement from the center line.
+      doc: >
+        Sets a global lane offset displacement from the center line. Positive values imply a right offset while negative ones mean a left one.
+
+        Default is 0. Numbers high enough to cause the vehicle to drive through other lanes might break the controller.
+    # --------------------------------------
     - def_name: ignore_lights_percentage
       params:
       - param_name: actor
@@ -481,6 +526,21 @@
 
         Default is 30. Exceeding a speed limit can be done using negative percentages.
     # --------------------------------------
+    - def_name: vehicle_lane_offset
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle whose lane offset behaviour is being changed.
+      - param_name: offset
+        type: float
+        doc: >
+          Lane offset displacement from the center line.
+      doc: >
+        Sets a lane offset displacement from the center line. Positive values imply a right offset while negative ones mean a left one.
+
+        Default is 0. Numbers high enough to cause the vehicle to drive through other lanes might break the controller.
+    # --------------------------------------
     - def_name: update_vehicle_lights
       params:
       - param_name: actor
@@ -511,6 +571,19 @@
           Meters between vehicles.
       doc: >
         Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.
+    # --------------------------------------
+    - def_name: set_desired_speed
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle whose speed is being changed.
+      - param_name: speed
+        type: float
+        doc: >
+          Desired speed at which the vehicle will move.
+      doc: >
+        Sets the speed of a vehicle to the specified value.
     # --------------------------------------
     - def_name: set_hybrid_physics_mode
       params:
@@ -602,11 +675,91 @@
       warning: >
         The `upper_bound` cannot be higher than the `actor_active_distance`. The `lower_bound` cannot be less than 25.
     # --------------------------------------
+    - def_name: set_path
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that must follow the given path
+      - param_name: path
+        type: list
+        doc: >
+          The list of carla.Locations for the actor to follow
+      doc: >
+        Sets a list of locations for a vehicle to follow while controlled by the Traffic Manager. 
+      warning: >
+        Ensure that the road topology doesn't impede the given path.
+    # --------------------------------------
+    - def_name: set_route
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that must follow the given route instructions
+      - param_name: path
+        type: list
+        doc: >
+          The list of route instructions (string) for the vehicle to follow.
+      doc: >
+        Sets a list of route instructions for a vehicle to follow while controlled by the Traffic Manager. The possible route instructions are 'Left', 'Right', 'Straight'.
+      warning: >
+        Ensure that the lane topology doesn't impede the given route.
+    # --------------------------------------
+    - def_name: get_next_action
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that you wish to query. 
+      return: list of two elements - [Road option (string e.g. 'Left', 'Right', 'Straight'), Next waypoint (carla.Waypoint)]
+      doc: >
+        Returns the next known road option and waypoint that an actor controlled by the Traffic Manager will follow.  
+    # --------------------------------------
+    - def_name: get_all_actions
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that you wish to query. 
+      return: list of lists with each element as follows - [Road option (string e.g. 'Left', 'Right', 'Straight'), Next waypoint (carla.Waypoint)]
+      doc: >
+        Returns all known actions (i.e. road options and waypoints) that an actor controlled by the Traffic Manager will perform in its next steps.  
+    # --------------------------------------
+    - def_name: random_left_lanechange_percentage
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that you wish to query. 
+      - param_name: percentage
+        type: float
+        doc: >
+          The probability of lane change in percentage units (between 0 and 100) 
+      doc: >
+        Adjust probability that in each timestep the actor will perform a left lane change, dependent on lane change availability.
+    # --------------------------------------
+    - def_name: random_right_lanechange_percentage
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that you wish to query. 
+      - param_name: percentage
+        type: float
+        doc: >
+          The probability of lane change in percentage units (between 0 and 100)
+      doc: >
+        Adjust probability that in each timestep the actor will perform a right lane change, dependent on lane change availability.
+    # --------------------------------------
+    - def_name: shut_down
+      doc: >
+        Shuts down the traffic manager. 
+    # --------------------------------------
 
   - class_name: OpendriveGenerationParameters
     # - DESCRIPTION ------------------------
     doc: >
-      This class defines the parameters used when generating a world using an OpenDRIVE file.
+      This class defines the parameters used when generating a world using an ASAM OpenDRIVE file.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: vertex_distance

@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaStatics.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
@@ -17,6 +18,7 @@
 #include "Carla/Util/RandomEngine.h"
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/Game/CarlaStaticDelegates.h"
 #include "Carla/MapGen/LargeMapManager.h"
 
 #include "Engine/StaticMeshActor.h"
@@ -24,6 +26,8 @@
 #include "GameFramework/SpectatorPawn.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Kismet/GameplayStatics.h"
+#include "Materials/MaterialParameterCollection.h"
+#include "Materials/MaterialParameterCollectionInstance.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 
@@ -54,6 +58,7 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
     Id(URandomEngine::GenerateRandomId())
 {
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
+  FrameData.SetEpisode(this);
 }
 
 bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
@@ -100,6 +105,21 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
     UGameplayStatics::OpenLevel(GetWorld(), *FinalPath, true);
     if (ResetSettings)
       ApplySettings(FEpisodeSettings{});
+
+    // send 'LOAD_MAP' command to all secondary servers (if any)
+    if (bIsPrimaryServer)
+    {
+      UCarlaGameInstance *GameInstance = UCarlaStatics::GetGameInstance(GetWorld());
+      if(GameInstance)
+      {
+        FCarlaEngine *CarlaEngine = GameInstance->GetCarlaEngine();
+        auto SecondaryServer = CarlaEngine->GetSecondaryServer();
+        if (SecondaryServer->HasClientsConnected())
+        {
+          SecondaryServer->GetCommander().SendLoadMap(std::string(TCHAR_TO_UTF8(*FinalPath)));
+        }
+      }
+    }
   }
   return bIsFileFound;
 }
@@ -244,8 +264,6 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FCarlaActor *CarlaActor) const
   return Actor;
 }
 
-static FString GetRelevantTagAsString(const TSet<crp::CityObjectLabel> &SemanticTags);
-
 carla::rpc::Actor UCarlaEpisode::SerializeActor(AActor* Actor) const
 {
   FCarlaActor* CarlaActor = FindCarlaActor(Actor);
@@ -261,7 +279,7 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(AActor* Actor) const
     TSet<crp::CityObjectLabel> SemanticTags;
     ATagger::GetTagsOfTaggedActor(*Actor, SemanticTags);
     FActorDescription Description;
-    Description.Id = TEXT("static.") + GetRelevantTagAsString(SemanticTags);
+    Description.Id = TEXT("static.") + CarlaGetRelevantTagAsString(SemanticTags);
     SerializedActor.description = Description;
     SerializedActor.semantic_tags.reserve(SemanticTags.Num());
     for (auto &&Tag : SemanticTags)
@@ -276,12 +294,20 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(AActor* Actor) const
 void UCarlaEpisode::AttachActors(
     AActor *Child,
     AActor *Parent,
-    EAttachmentType InAttachmentType)
+    EAttachmentType InAttachmentType,
+    const FString& SocketName)
 {
   Child->AddActorWorldOffset(FVector(CurrentMapOrigin));
 
-  UActorAttacher::AttachActors(Child, Parent, InAttachmentType);
+  UActorAttacher::AttachActors(Child, Parent, InAttachmentType, SocketName);
 
+  if (bIsPrimaryServer)
+  {
+    GetFrameData().AddEvent(
+        CarlaRecorderEventParent{
+          FindCarlaActor(Child)->GetActorId(),
+          FindCarlaActor(Parent)->GetActorId()});
+  }
   // recorder event
   if (Recorder->IsEnabled())
   {
@@ -316,6 +342,21 @@ void UCarlaEpisode::InitializeAtBeginPlay()
   {
     UE_LOG(LogCarla, Error, TEXT("Can't find spectator!"));
   }
+
+  // material parameters collection
+  UMaterialParameterCollection *Collection = LoadObject<UMaterialParameterCollection>(nullptr, TEXT("/Game/Carla/Blueprints/Game/CarlaParameters.CarlaParameters"), nullptr, LOAD_None, nullptr);
+	if (Collection != nullptr)
+  {
+    MaterialParameters = World->GetParameterCollectionInstance(Collection);
+    if (MaterialParameters == nullptr)
+    {
+      UE_LOG(LogCarla, Error, TEXT("Can't find CarlaParameters instance!"));
+    }
+  }
+  else
+	{
+    UE_LOG(LogCarla, Error, TEXT("Can't find CarlaParameters asset!"));
+	}
 
   for (TActorIterator<ATrafficSignBase> It(World); It; ++It)
   {
@@ -405,16 +446,24 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
 
   // NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
   auto result = ActorDispatcher->SpawnActor(LocalTransform, thisActorDescription, DesiredId);
-  if (Recorder->IsEnabled())
+  if (result.Key == EActorSpawnResultStatus::Success && bIsPrimaryServer)
   {
-    if (result.Key == EActorSpawnResultStatus::Success)
+    if (Recorder->IsEnabled())
     {
       Recorder->CreateRecorderEventAdd(
         result.Value->GetActorId(),
         static_cast<uint8_t>(result.Value->GetActorType()),
         Transform,
-        std::move(thisActorDescription)
+        thisActorDescription
       );
+    }
+    if (bIsPrimaryServer)
+    {
+      GetFrameData().CreateRecorderEventAdd(
+          result.Value->GetActorId(),
+          static_cast<uint8_t>(result.Value->GetActorType()),
+          Transform,
+          std::move(thisActorDescription));
     }
   }
 

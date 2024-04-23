@@ -10,6 +10,8 @@
 #include "Carla/Sensor/DataStream.h"
 #include "Carla/Util/RandomEngine.h"
 
+#include "Carla/Game/CarlaEngine.h"
+
 #include "GameFramework/Actor.h"
 
 #include "Sensor.generated.h"
@@ -33,6 +35,8 @@ public:
 
   virtual void Set(const FActorDescription &Description);
 
+  boost::optional<FActorAttribute> GetAttribute(const FString Name);
+
   virtual void BeginPlay();
 
   /// Replace the FDataStream associated with this sensor.
@@ -54,10 +58,22 @@ public:
     return Stream.GetToken();
   }
 
+  bool IsStreamReady()
+  {
+    return Stream.IsStreamReady();
+  }
+
   void Tick(const float DeltaTime) final;
 
   virtual void PrePhysTick(float DeltaSeconds) {}
   virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) {}
+  // Small interface to notify sensors when clients are listening
+  virtual void OnFirstClientConnected() {};
+  // Small interface to notify sensors when no clients are listening
+  virtual void OnLastClientDisconnected() {};
+
+
+  void PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds);
 
   UFUNCTION(BlueprintCallable)
   URandomEngine *GetRandomEngine()
@@ -74,17 +90,17 @@ public:
   UFUNCTION(BlueprintCallable)
   void SetSeed(int32 InSeed);
 
-protected:
-
-  void PostActorCreated() override;
-
-  void EndPlay(EEndPlayReason::Type EndPlayReason) override;
-
   const UCarlaEpisode &GetEpisode() const
   {
     check(Episode != nullptr);
     return *Episode;
   }
+
+protected:
+
+  void PostActorCreated() override;
+
+  void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
   /// Return the FDataStream associated with this sensor.
   ///
@@ -104,16 +120,22 @@ protected:
   UPROPERTY()
   URandomEngine *RandomEngine = nullptr;
 
-private:
+  UPROPERTY()
+  bool bIsActive = false;
 
-  void PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds);
+private:
 
   FDataStream Stream;
 
   FDelegateHandle OnPostTickDelegate;
 
+  FActorDescription SensorDescription;
+
   const UCarlaEpisode *Episode = nullptr;
 
   /// Allows the sensor to tick with the tick rate from UE4.
   bool ReadyToTick = false;
+
+  bool bClientsListening = false;
+
 };

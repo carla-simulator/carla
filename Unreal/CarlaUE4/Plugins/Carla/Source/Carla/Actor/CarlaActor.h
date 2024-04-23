@@ -226,6 +226,8 @@ public:
 
   virtual ECarlaServerResponse SetActorSimulatePhysics(bool bEnabled);
 
+  virtual ECarlaServerResponse SetActorCollisions(bool bEnabled);
+
   virtual ECarlaServerResponse SetActorEnableGravity(bool bEnabled);
 
   // Vehicle functions
@@ -240,6 +242,11 @@ public:
   }
 
   virtual ECarlaServerResponse GetPhysicsControl(FVehiclePhysicsControl&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetFailureState(carla::rpc::VehicleFailureState&)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -342,6 +349,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse RestorePhysXPhysics()
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   // Traffic light functions
 
   virtual ECarlaServerResponse SetTrafficLightState(const ETrafficLightState&)
@@ -414,6 +426,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse SetActorDead()
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse FreezeTrafficLight(bool)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -478,6 +495,8 @@ public:
 
   virtual ECarlaServerResponse GetPhysicsControl(FVehiclePhysicsControl& PhysicsControl) final;
 
+  virtual ECarlaServerResponse GetFailureState(carla::rpc::VehicleFailureState&) final;
+
   virtual ECarlaServerResponse GetVehicleLightState(FVehicleLightState& LightState) final;
 
   virtual ECarlaServerResponse OpenVehicleDoor(const EVehicleDoor DoorIdx) final;
@@ -526,6 +545,8 @@ public:
       uint64_t MaxSubsteps, float MaxSubstepDeltaTime,
       const FString& VehicleJSON, const FString& PowertrainJSON,
       const FString& TireJSON, const FString& BaseJSONPath) final;
+
+  virtual ECarlaServerResponse RestorePhysXPhysics();
 };
 
 class FSensorActor : public FCarlaActor
@@ -602,12 +623,14 @@ public:
   virtual ECarlaServerResponse GetWalkerControl(FWalkerControl&) final;
 
   virtual ECarlaServerResponse GetBonesTransform(FWalkerBoneControlOut&) final;
-  
+
   virtual ECarlaServerResponse SetBonesTransform(const FWalkerBoneControlIn&) final;
 
   virtual ECarlaServerResponse BlendPose(float Blend);
 
   virtual ECarlaServerResponse GetPoseFromAnimation();
+
+  virtual ECarlaServerResponse SetActorDead();
 };
 
 class FOtherActor : public FCarlaActor

@@ -6,7 +6,15 @@
 
 #pragma once
 
-#include <boost/variant.hpp>
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4583)
+#pragma warning(disable:4582)
+#include <boost/variant2/variant.hpp>
+#pragma warning(pop)
+#else
+#include <boost/variant2/variant.hpp>
+#endif
 
 #include "carla/rpc/ActorId.h"
 
@@ -36,11 +44,15 @@ namespace nav {
     /// event to pause and check for near vehicles
     struct WalkerEventStopAndCheck {
         double time;
-        WalkerEventStopAndCheck(double duration) : time(duration) {};
+        bool check_for_trafficlight;
+        SharedPtr<carla::client::TrafficLight> actor;
+        WalkerEventStopAndCheck(double duration) : time(duration),
+                                                   check_for_trafficlight(true)
+                                                   {};
     };
 
     /// walker event variant
-    using WalkerEvent = boost::variant<WalkerEventIgnore, WalkerEventWait, WalkerEventStopAndCheck>;
+    using WalkerEvent = boost::variant2::variant<WalkerEventIgnore, WalkerEventWait, WalkerEventStopAndCheck>;
 
     /// visitor class
     class WalkerEventVisitor {

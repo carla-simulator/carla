@@ -19,12 +19,22 @@ set LAUNCH_UE4_EDITOR=false
 set REMOVE_INTERMEDIATE=false
 set USE_CARSIM=false
 set USE_CHRONO=false
+set USE_UNITY=true
 set CARSIM_STATE="CarSim OFF"
 set CHRONO_STATE="Chrono OFF"
+set UNITY_STATE="Unity ON"
+set AT_LEAST_WRITE_OPTIONALMODULES=false
+set EDITOR_FLAGS=""
+set USE_ROS2=false
+set ROS2_STATE="Ros2 OFF"
 
 :arg-parse
 echo %1
 if not "%1"=="" (
+    if "%1"=="--editor-flags" (
+        set EDITOR_FLAGS=%2
+        shift
+    )
     if "%1"=="--build" (
         set BUILD_UE4_EDITOR=true
     )
@@ -40,6 +50,15 @@ if not "%1"=="" (
     if "%1"=="--chrono" (
         set USE_CHRONO=true
     )
+    if "%1"=="--ros2" (
+        set USE_ROS2=true
+    )
+    if "%1"=="--no-unity" (
+        set USE_UNITY=false
+    )
+    if "%1"=="--at-least-write-optionalmodules" (
+        set AT_LEAST_WRITE_OPTIONALMODULES=true
+    )
     if "%1"=="-h" (
         goto help
     )
@@ -49,11 +68,15 @@ if not "%1"=="" (
     shift
     goto arg-parse
 )
+rem remove quotes from arguments
+set EDITOR_FLAGS=%EDITOR_FLAGS:"=%
 
 if %REMOVE_INTERMEDIATE% == false (
     if %LAUNCH_UE4_EDITOR% == false (
         if %BUILD_UE4_EDITOR% == false (
-            goto help
+            if %AT_LEAST_WRITE_OPTIONALMODULES% == false (
+                goto help
+            )
         )
     )
 )
@@ -106,14 +129,24 @@ if %REMOVE_INTERMEDIATE% == true (
     )
 )
 
+
 rem Build Carla Editor
 rem
+set OMNIVERSE_PATCH_FOLDER=%ROOT_PATH%Util\Patches\omniverse_4.26\
+set OMNIVERSE_PLUGIN_FOLDER=%UE4_ROOT%Engine\Plugins\Marketplace\NVIDIA\Omniverse\
+if exist %OMNIVERSE_PLUGIN_FOLDER% (
+    set OMNIVERSE_PLUGIN_INSTALLED="Omniverse ON"
+    xcopy /Y /S /I "%OMNIVERSE_PATCH_FOLDER%USDCARLAInterface.h" "%OMNIVERSE_PLUGIN_FOLDER%Source\OmniverseUSD\Public\" > NUL
+    xcopy /Y /S /I "%OMNIVERSE_PATCH_FOLDER%USDCARLAInterface.cpp" "%OMNIVERSE_PLUGIN_FOLDER%Source\OmniverseUSD\Private\" > NUL
+) else (
+    set OMNIVERSE_PLUGIN_INSTALLED="Omniverse OFF"
+)
 
 if %USE_CARSIM% == true (
-    py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -e
+    python %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -e
     set CARSIM_STATE="CarSim ON"
 ) else (
-    py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
+    python %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
     set CARSIM_STATE="CarSim OFF"
 )
 if %USE_CHRONO% == true (
@@ -121,8 +154,19 @@ if %USE_CHRONO% == true (
 ) else (
     set CHRONO_STATE="Chrono OFF"
 )
-set OPTIONAL_MODULES_TEXT=%CARSIM_STATE% %CHRONO_STATE%
+if %USE_ROS2% == true (
+    set ROS2_STATE="Ros2 ON"
+) else (
+    set ROS2_STATE="Ros2 OFF"
+)
+if %USE_UNITY% == true (
+    set UNITY_STATE="Unity ON"
+) else (
+    set UNITY_STATE="Unity OFF"
+)
+set OPTIONAL_MODULES_TEXT=%CARSIM_STATE% %CHRONO_STATE% %ROS2_STATE% %OMNIVERSE_PLUGIN_INSTALLED% %UNITY_STATE%
 echo %OPTIONAL_MODULES_TEXT% > "%ROOT_PATH%Unreal/CarlaUE4/Config/OptionalModules.ini"
+
 
 if %BUILD_UE4_EDITOR% == true (
     echo %FILE_N% Building Unreal Editor...
@@ -151,7 +195,7 @@ rem
 if %LAUNCH_UE4_EDITOR% == true (
     echo %FILE_N% Launching Unreal Editor...
     call "%UE4_ROOT%\Engine\Binaries\Win64\UE4Editor.exe"^
-        "%UE4_PROJECT_FOLDER%CarlaUE4.uproject"
+        "%UE4_PROJECT_FOLDER%CarlaUE4.uproject" %EDITOR_FLAGS%
     if %errorlevel% neq 0 goto error_build
 )
 

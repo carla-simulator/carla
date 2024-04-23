@@ -275,6 +275,15 @@
         Returns a list of locations with all crosswalk zones in the form of closed polygons. The first point is repeated, symbolizing where the polygon begins and ends.
       return: list(carla.Location)
     # --------------------------------------
+    - def_name: cook_in_memory_map
+      params:
+      - param_name: path
+        type: str
+        doc: >
+          Path to the intended location of the stored binary map file.
+      doc: >
+        Generates a binary file from the CARLA map containing information used by the Traffic Manager. This method is only used during the import process for maps.
+    # --------------------------------------
     - def_name: __str__
     # --------------------------------------
 
@@ -313,7 +322,7 @@
     - var_name: id
       type: int
       doc: >
-        The identificator is generated using a hash combination of the <b>road</b>, <b>section</b>, <b>lane</b> and <b>s</b> values that correspond to said point in the OpenDRIVE geometry. The <b>s</b> precision is set to 2 centimeters, so 2 waypoints closer than 2 centimeters in the same road, section and lane, will have the same identificator.
+        The identifier is generated using a hash combination of the <b>road</b>, <b>section</b>, <b>lane</b> and <b>s</b> values that correspond to said point in the OpenDRIVE geometry. The <b>s</b> precision is set to 2 centimeters, so 2 waypoints closer than 2 centimeters in the same road, section and lane, will have the same identificator.
     - var_name: transform
       type: carla.Transform
       doc: >
@@ -326,6 +335,14 @@
       type: int
       doc: >
         OpenDRIVE section's id, based on the order that they are originally defined.
+    - var_name: is_junction
+      type: bool
+      doc: >
+        <b>True</b> if the current Waypoint is on a junction as defined by OpenDRIVE.
+    - var_name: junction_id
+      type: int
+      doc: >
+        OpenDRIVE junction's id. For more information refer to OpenDRIVE [documentation](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf#page=20)
     - var_name: lane_id
       type: int
       doc: >
@@ -335,10 +352,6 @@
       param_units: meters
       doc: >
         OpenDRIVE <b>s</b> value of the current position.
-    - var_name: is_junction
-      type: bool
-      doc: >
-        <b>True</b> if the current Waypoint is on a junction as defined by OpenDRIVE.
     - var_name: lane_width
       type: float
       param_units: meters
@@ -413,7 +426,7 @@
     - def_name: get_junction
       return: carla.Junction
       doc: >
-        If the waypoint belongs to a junction this method returns the asociated junction object. Otherwise returns null.
+        If the waypoint belongs to a junction this method returns the associated junction object. Otherwise returns null.
     # --------------------------------------
     - def_name: get_landmarks
       params:
@@ -477,7 +490,7 @@
     - var_name: id
       type: int
       doc: >
-        Identificator found in the OpenDRIVE file.
+        Identifier found in the OpenDRIVE file.
     - var_name: bounding_box
       type: carla.BoundingBox
       doc: >
@@ -686,11 +699,11 @@
     - var_name: type
       type: str
       doc: >
-        Type identificator of the landmark according to the country code.
+        Type identifier of the landmark according to the country code.
     - var_name: sub_type
       type: str
       doc: >
-        Subtype identificator of the landmark according to the country code.
+        Subtype identifier of the landmark according to the country code.
     - var_name: value
       type: float
       doc: >

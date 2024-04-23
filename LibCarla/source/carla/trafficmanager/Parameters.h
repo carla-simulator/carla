@@ -37,10 +37,16 @@ struct ChangeLaneInfo {
 class Parameters {
 
 private:
-  /// Target velocity map for individual vehicles.
+  /// Target velocity map for individual vehicles, based on a % diffrerence from speed limit.
   AtomicMap<ActorId, float> percentage_difference_from_speed_limit;
+  /// Lane offset map for individual vehicles.
+  AtomicMap<ActorId, float> lane_offset;
+  /// Target velocity map for individual vehicles, based on a desired velocity.
+  AtomicMap<ActorId, float> exact_desired_speed;
   /// Global target velocity limit % difference.
   float global_percentage_difference_from_limit = 0;
+  /// Global lane offset
+  float global_lane_offset = 0;
   /// Map containing a set of actors to be ignored during collision detection.
   AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> ignore_collision;
   /// Map containing distance to leading vehicle command.
@@ -104,9 +110,20 @@ public:
   /// If less than 0, it's a % increase.
   void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
 
+  /// Method to set a lane offset displacement from the center line.
+  /// Positive values imply a right offset while negative ones mean a left one.
+  void SetLaneOffset(const ActorPtr &actor, const float offset);
+
+  /// Set a vehicle's exact desired velocity.
+  void SetDesiredSpeed(const ActorPtr &actor, const float value);
+
   /// Set a global % decrease in velocity with respect to the speed limit.
   /// If less than 0, it's a % increase.
   void SetGlobalPercentageSpeedDifference(float const percentage);
+
+  /// Method to set a global lane offset displacement from the center line.
+  /// Positive values imply a right offset while negative ones mean a left one.
+  void SetGlobalLaneOffset(float const offset);
 
   /// Method to set collision detection rules between vehicles.
   void SetCollisionDetection(
@@ -201,6 +218,9 @@ public:
 
   /// Method to query target velocity for a vehicle.
   float GetVehicleTargetVelocity(const ActorId &actor_id, const float speed_limit) const;
+
+  /// Method to query lane offset for a vehicle.
+  float GetLaneOffset(const ActorId &actor_id) const;
 
   /// Method to query collision avoidance rule between a pair of vehicles.
   bool GetCollisionDetection(const ActorId &reference_actor_id, const ActorId &other_actor_id) const;

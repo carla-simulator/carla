@@ -47,8 +47,8 @@ void UChronoMovementComponent::CreateChronoMovementComponent(
   }
   ChronoMovementComponent->MaxSubsteps = MaxSubsteps;
   ChronoMovementComponent->MaxSubstepDeltaTime = MaxSubstepDeltaTime;
-  ChronoMovementComponent->RegisterComponent();
   Vehicle->SetCarlaMovementComponent(ChronoMovementComponent);
+  ChronoMovementComponent->RegisterComponent();
   #else
   UE_LOG(LogCarla, Warning, TEXT("Error: Chrono is not enabled") );
   #endif
@@ -267,7 +267,8 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
     AdvanceChronoSimulation(DeltaTime);
   }
 
-  auto VehiclePos = Vehicle->GetVehiclePos() - ChVector<>(0,0,0.5);
+  const auto ChronoPositionOffset = ChVector<>(0,0,-0.25f);
+  auto VehiclePos = Vehicle->GetVehiclePos() + ChronoPositionOffset;
   auto VehicleRot = Vehicle->GetVehicleRot();
   double Time = Vehicle->GetSystem()->GetChTime();
 
@@ -281,7 +282,11 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
     return;
   }
   CarlaVehicle->SetActorLocation(NewLocation);
-  CarlaVehicle->SetActorRotation(NewRotation);
+  FRotator NewRotator = NewRotation.Rotator();
+  // adding small rotation to compensate chrono offset
+  const float ChronoPitchOffset = 2.5f;
+  NewRotator.Add(ChronoPitchOffset, 0.f, 0.f); 
+  CarlaVehicle->SetActorRotation(NewRotator);
 }
 
 void UChronoMovementComponent::AdvanceChronoSimulation(float StepSize)
@@ -343,6 +348,11 @@ void UChronoMovementComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 }
 #endif
 
+void UChronoMovementComponent::DisableSpecialPhysics()
+{
+  DisableChronoPhysics();
+}
+
 void UChronoMovementComponent::DisableChronoPhysics()
 {
   this->SetComponentTickEnabled(false);
@@ -353,7 +363,6 @@ void UChronoMovementComponent::DisableChronoPhysics()
   CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(
       ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
   UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
-  carla::log_warning("Chrono physics does not support collisions yet, reverting to default PhysX physics.");
 }
 
 void UChronoMovementComponent::OnVehicleHit(AActor *Actor,
@@ -361,6 +370,7 @@ void UChronoMovementComponent::OnVehicleHit(AActor *Actor,
     FVector NormalImpulse,
     const FHitResult &Hit)
 {
+  carla::log_warning("Chrono physics does not support collisions yet, reverting to default PhysX physics.");
   DisableChronoPhysics();
 }
 
@@ -378,6 +388,7 @@ void UChronoMovementComponent::OnVehicleOverlap(
       ECollisionChannel::ECC_WorldDynamic) ==
       ECollisionResponse::ECR_Block)
   {
+    carla::log_warning("Chrono physics does not support collisions yet, reverting to default PhysX physics.");
     DisableChronoPhysics();
   }
 }

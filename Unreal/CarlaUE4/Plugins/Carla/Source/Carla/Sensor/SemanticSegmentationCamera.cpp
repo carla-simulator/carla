@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "Carla/Sensor/SemanticSegmentationCamera.h"
 
+#include "Actor/ActorBlueprintFunctionLibrary.h"
+
 #include "Carla/Sensor/PixelReader.h"
 
 FActorDefinition ASemanticSegmentationCamera::GetSensorDefinition()
@@ -27,5 +29,5 @@ ASemanticSegmentationCamera::ASemanticSegmentationCamera(
 void ASemanticSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASemanticSegmentationCamera::PostPhysTick);
-  FPixelReader::SendPixelsInRenderThread(*this);
+  FPixelReader::SendPixelsInRenderThread<ASemanticSegmentationCamera, FColor>(*this);
 }

@@ -9,6 +9,14 @@
 
 #include "Carla/OpenDrive/OpenDrive.h"
 
+#include "UObject/ConstructorHelpers.h"
+#include "DrawDebugHelpers.h"
+
+#include "ConstructorHelpers.h"
+#include "Materials/MaterialExpressionTextureSample.h"
+
+#include "DrawDebugHelpers.h"
+
 #include <compiler/disable-ue4-macros.h>
 #include <carla/geom/Math.h>
 #include <carla/opendrive/OpenDriveParser.h>

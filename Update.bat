@@ -19,7 +19,7 @@ for /F "delims=" %%a in (%CONTENT_VERSIONS%) do (
    set "lastLine=%%a"
 )
 set CONTENT_ID=%lastLine:~-16,16%
-set CONTENT_LINK=http://carla-assets.s3.amazonaws.com/%CONTENT_ID%.tar.gz
+set CONTENT_LINK=https://carla-assets.s3.us-east-005.backblazeb2.com/%CONTENT_ID%.tar.gz
 if "%CONTENT_ID:~0,2%"=="20" (
   set CONTENT_FILE=%CONTENT_FOLDER%/%CONTENT_ID%.tar.gz
   set CONTENT_FILE_TAR=%CONTENT_FOLDER%/%CONTENT_ID%.tar

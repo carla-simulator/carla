@@ -9,13 +9,13 @@
 #include "CarlaRecorderHelpers.h"
 
 
-void CarlaRecorderLightVehicle::Write(std::ofstream &OutFile)
+void CarlaRecorderLightVehicle::Write(std::ostream &OutFile)
 {
   // database id
   WriteValue<uint32_t>(OutFile, this->DatabaseId);
   WriteValue<VehicleLightStateType>(OutFile, this->State);
 }
-void CarlaRecorderLightVehicle::Read(std::ifstream &InFile)
+void CarlaRecorderLightVehicle::Read(std::istream &InFile)
 {
   // database id
   ReadValue<uint32_t>(InFile, this->DatabaseId);
@@ -34,7 +34,7 @@ void CarlaRecorderLightVehicles::Add(const CarlaRecorderLightVehicle &Vehicle)
   Vehicles.push_back(Vehicle);
 }
 
-void CarlaRecorderLightVehicles::Write(std::ofstream &OutFile)
+void CarlaRecorderLightVehicles::Write(std::ostream &OutFile)
 {
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::VehicleLight));
@@ -51,4 +51,23 @@ void CarlaRecorderLightVehicles::Write(std::ofstream &OutFile)
   {
     Vehicle.Write(OutFile);
   }
+}
+
+void CarlaRecorderLightVehicles::Read(std::istream &InFile)
+{
+  uint16_t Total;
+  CarlaRecorderLightVehicle LightVehicle;
+
+  // read Total walkers
+  ReadValue<uint16_t>(InFile, Total);
+  for (uint16_t i = 0; i < Total; ++i)
+  {
+    LightVehicle.Read(InFile);
+    Add(LightVehicle);
+  }
+}
+
+const std::vector<CarlaRecorderLightVehicle>& CarlaRecorderLightVehicles::GetLightVehicles()
+{
+  return Vehicles;
 }

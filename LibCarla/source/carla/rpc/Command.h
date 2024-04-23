@@ -10,14 +10,26 @@
 #include "carla/MsgPackAdaptors.h"
 #include "carla/geom/Transform.h"
 #include "carla/rpc/ActorDescription.h"
+#include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/ActorId.h"
+#include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleAckermannControl.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/WalkerControl.h"
 
-#include <boost/variant.hpp>
+#include <string>
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4583)
+#pragma warning(disable:4582)
+#include <boost/variant2/variant.hpp>
+#pragma warning(pop)
+#else
+#include <boost/variant2/variant.hpp>
+#endif
 
 namespace carla {
 
@@ -50,11 +62,19 @@ namespace rpc {
         : description(std::move(description)),
           transform(transform),
           parent(parent) {}
+      SpawnActor(ActorDescription description, const geom::Transform &transform, ActorId parent, AttachmentType attachment_type, const std::string& bone)
+        : description(std::move(description)),
+          transform(transform),
+          parent(parent),
+          attachment_type(attachment_type),
+          socket_name(bone) {}
       ActorDescription description;
       geom::Transform transform;
       boost::optional<ActorId> parent;
+      AttachmentType attachment_type;
+      std::string socket_name;
       std::vector<Command> do_after;
-      MSGPACK_DEFINE_ARRAY(description, transform, parent, do_after);
+      MSGPACK_DEFINE_ARRAY(description, transform, parent, attachment_type, socket_name, do_after);
     };
 
     struct DestroyActor : CommandBase<DestroyActor> {
@@ -113,6 +133,16 @@ namespace rpc {
       ActorId actor;
       geom::Transform transform;
       MSGPACK_DEFINE_ARRAY(actor, transform);
+    };
+
+    struct ApplyLocation : CommandBase<ApplyLocation> {
+      ApplyLocation() = default;
+      ApplyLocation(ActorId id, const geom::Location &value)
+        : actor(id),
+          location(value) {}
+      ActorId actor;
+      geom::Location location;
+      MSGPACK_DEFINE_ARRAY(actor, location);
     };
 
     struct ApplyWalkerState : CommandBase<ApplyWalkerState> {
@@ -243,7 +273,26 @@ namespace rpc {
       MSGPACK_DEFINE_ARRAY(actor, light_state);
     };
 
-    using CommandType = boost::variant<
+    struct ConsoleCommand : CommandBase<ConsoleCommand> {
+      ConsoleCommand() = default;
+      ConsoleCommand(std::string cmd) : cmd(cmd) {}
+      std::string cmd;
+      MSGPACK_DEFINE_ARRAY(cmd);
+    };
+
+    struct SetTrafficLightState : CommandBase<SetTrafficLightState> {
+      SetTrafficLightState() = default;
+      SetTrafficLightState(
+          ActorId id,
+          rpc::TrafficLightState state)
+        : actor(id),
+          traffic_light_state(state) {}
+      ActorId actor;
+      rpc::TrafficLightState traffic_light_state;
+      MSGPACK_DEFINE_ARRAY(actor, traffic_light_state);
+    };
+
+    using CommandType = boost::variant2::variant<
         SpawnActor,
         DestroyActor,
         ApplyVehicleControl,
@@ -262,7 +311,10 @@ namespace rpc {
         SetEnableGravity,
         SetAutopilot,
         ShowDebugTelemetry,
-        SetVehicleLightState>;
+        SetVehicleLightState,
+        ApplyLocation,
+        ConsoleCommand,
+        SetTrafficLightState>;
 
     CommandType command;
 

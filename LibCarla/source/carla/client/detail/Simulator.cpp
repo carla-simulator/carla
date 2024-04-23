@@ -17,6 +17,7 @@
 #include "carla/client/TimeoutException.h"
 #include "carla/client/WalkerAIController.h"
 #include "carla/client/detail/ActorFactory.h"
+#include "carla/client/detail/WalkerNavigation.h"
 #include "carla/trafficmanager/TrafficManager.h"
 #include "carla/sensor/Deserializer.h"
 
@@ -126,16 +127,19 @@ namespace detail {
   // -- Access to current episode ----------------------------------------------
   // ===========================================================================
 
-  EpisodeProxy Simulator::GetCurrentEpisode() {
+  void Simulator::GetReadyCurrentEpisode() {
     if (_episode == nullptr) {
       ValidateVersions(_client);
-      _episode = std::make_shared<Episode>(_client);
+      _episode = std::make_shared<Episode>(_client, std::weak_ptr<Simulator>(shared_from_this()));
       _episode->Listen();
       if (!GetEpisodeSettings().synchronous_mode) {
         WaitForTick(_client.GetTimeout());
       }
-      _light_manager->SetEpisode(EpisodeProxy{shared_from_this()});
+      _light_manager->SetEpisode(WeakEpisodeProxy{shared_from_this()});
     }
+  }
+EpisodeProxy Simulator::GetCurrentEpisode() {
+    GetReadyCurrentEpisode();
     return EpisodeProxy{shared_from_this()};
   }
 
@@ -203,6 +207,10 @@ namespace detail {
 
   WorldSnapshot Simulator::WaitForTick(time_duration timeout) {
     DEBUG_ASSERT(_episode != nullptr);
+
+    // tick pedestrian navigation
+    NavigationTick();
+
     auto result = _episode->WaitForState(timeout);
     if (!result.has_value()) {
       throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
@@ -212,7 +220,14 @@ namespace detail {
 
   uint64_t Simulator::Tick(time_duration timeout) {
     DEBUG_ASSERT(_episode != nullptr);
+
+    // tick pedestrian navigation
+    NavigationTick();
+
+    // send tick command
     const auto frame = _client.SendTickCue();
+
+    // waits until new episode is received
     bool result = SynchronizeFrame(frame, *_episode, timeout);
     if (!result) {
       throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
@@ -270,6 +285,19 @@ namespace detail {
   // -- AI ---------------------------------------------------------------------
   // ===========================================================================
 
+  std::shared_ptr<WalkerNavigation> Simulator::GetNavigation() {
+    DEBUG_ASSERT(_episode != nullptr);
+    auto nav = _episode->CreateNavigationIfMissing();
+    return nav;
+  }
+
+  // tick pedestrian navigation
+  void Simulator::NavigationTick() {
+    DEBUG_ASSERT(_episode != nullptr);
+    auto nav = _episode->CreateNavigationIfMissing();
+    nav->Tick(_episode);
+  }
+
   void Simulator::RegisterAIController(const WalkerAIController &controller) {
     auto walker = controller.GetParent();
     if (walker == nullptr) {
@@ -277,9 +305,8 @@ namespace detail {
       return;
     }
     DEBUG_ASSERT(_episode != nullptr);
-    auto navigation = _episode->CreateNavigationIfMissing();
-    DEBUG_ASSERT(navigation != nullptr);
-    navigation->RegisterWalker(walker->GetId(), controller.GetId());
+    auto nav = _episode->CreateNavigationIfMissing();
+    nav->RegisterWalker(walker->GetId(), controller.GetId());
   }
 
   void Simulator::UnregisterAIController(const WalkerAIController &controller) {
@@ -289,49 +316,47 @@ namespace detail {
       return;
     }
     DEBUG_ASSERT(_episode != nullptr);
-    auto navigation = _episode->CreateNavigationIfMissing();
-    DEBUG_ASSERT(navigation != nullptr);
-    navigation->UnregisterWalker(walker->GetId(), controller.GetId());
+    auto nav = _episode->CreateNavigationIfMissing();
+    nav->UnregisterWalker(walker->GetId(), controller.GetId());
   }
 
   boost::optional<geom::Location> Simulator::GetRandomLocationFromNavigation() {
     DEBUG_ASSERT(_episode != nullptr);
-    auto navigation = _episode->CreateNavigationIfMissing();
-    DEBUG_ASSERT(navigation != nullptr);
-    return navigation->GetRandomLocation();
+    auto nav = _episode->CreateNavigationIfMissing();
+    return nav->GetRandomLocation();
   }
 
   void Simulator::SetPedestriansCrossFactor(float percentage) {
     DEBUG_ASSERT(_episode != nullptr);
-    auto navigation = _episode->CreateNavigationIfMissing();
-    DEBUG_ASSERT(navigation != nullptr);
-    navigation->SetPedestriansCrossFactor(percentage);
+    auto nav = _episode->CreateNavigationIfMissing();
+    nav->SetPedestriansCrossFactor(percentage);
   }
 
   void Simulator::SetPedestriansSeed(unsigned int seed) {
     DEBUG_ASSERT(_episode != nullptr);
-    auto navigation = _episode->CreateNavigationIfMissing();
-    DEBUG_ASSERT(navigation != nullptr);
-    navigation->SetPedestriansSeed(seed);
+    auto nav = _episode->CreateNavigationIfMissing();
+    nav->SetPedestriansSeed(seed);
   }
 
   // ===========================================================================
   // -- General operations with actors -----------------------------------------
   // ===========================================================================
 
-  SharedPtr<Actor> Simulator::SpawnActor(
+    SharedPtr<Actor> Simulator::SpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent,
       rpc::AttachmentType attachment_type,
-      GarbageCollectionPolicy gc) {
+      GarbageCollectionPolicy gc,
+      const std::string& socket_name) {
     rpc::Actor actor;
     if (parent != nullptr) {
       actor = _client.SpawnActorWithParent(
           blueprint.MakeActorDescription(),
           transform,
           parent->GetId(),
-          attachment_type);
+          attachment_type,
+          socket_name);
     } else {
       actor = _client.SpawnActor(
           blueprint.MakeActorDescription(),
@@ -379,8 +404,37 @@ namespace detail {
         });
   }
 
-  void Simulator::UnSubscribeFromSensor(const Sensor &sensor) {
+  void Simulator::UnSubscribeFromSensor(Actor &sensor) {
     _client.UnSubscribeFromStream(sensor.GetActorDescription().GetStreamToken());
+    // If in the future we need to unsubscribe from each gbuffer individually, it should be done here.
+  }
+
+  void Simulator::EnableForROS(const Sensor &sensor) {
+    _client.EnableForROS(sensor.GetActorDescription().GetStreamToken());
+  }
+
+  void Simulator::DisableForROS(const Sensor &sensor) {
+    _client.DisableForROS(sensor.GetActorDescription().GetStreamToken());
+  }
+
+  bool Simulator::IsEnabledForROS(const Sensor &sensor) {
+    return _client.IsEnabledForROS(sensor.GetActorDescription().GetStreamToken());
+  }
+
+  void Simulator::SubscribeToGBuffer(
+      Actor &actor,
+      uint32_t gbuffer_id,
+      std::function<void(SharedPtr<sensor::SensorData>)> callback) {
+    _client.SubscribeToGBuffer(actor.GetId(), gbuffer_id,
+        [cb=std::move(callback), ep=WeakEpisodeProxy{shared_from_this()}](auto buffer) {
+          auto data = sensor::Deserializer::Deserialize(std::move(buffer));
+          data->_episode = ep.TryLock();
+          cb(std::move(data));
+        });
+  }
+
+  void Simulator::UnSubscribeFromGBuffer(Actor &actor, uint32_t gbuffer_id) {
+    _client.UnSubscribeFromGBuffer(actor.GetId(), gbuffer_id);
   }
 
   void Simulator::FreezeAllTrafficLights(bool frozen) {

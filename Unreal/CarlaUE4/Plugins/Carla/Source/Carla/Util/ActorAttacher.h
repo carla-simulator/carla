@@ -20,8 +20,9 @@ UENUM(BlueprintType)
 enum class EAttachmentType : uint8
 {
   Null = 0, // Workarround for UE4.24 issue with enums
-  Rigid      = CARLA_ENUM_FROM_RPC(Rigid)      UMETA(DisplayName = "Rigid"),
-  SpringArm  = CARLA_ENUM_FROM_RPC(SpringArm)  UMETA(DisplayName = "SpringArm"),
+  Rigid           = CARLA_ENUM_FROM_RPC(Rigid)            UMETA(DisplayName = "Rigid"),
+  SpringArm       = CARLA_ENUM_FROM_RPC(SpringArm)        UMETA(DisplayName = "SpringArm"),
+  SpringArmGhost  = CARLA_ENUM_FROM_RPC(SpringArmGhost)   UMETA(DisplayName = "SpringArmGhost"),
 
   SIZE      UMETA(Hidden),
   INVALID   UMETA(Hidden)
@@ -41,5 +42,5 @@ class CARLA_API UActorAttacher : public UBlueprintFunctionLibrary
 public:
 
   UFUNCTION(BlueprintCallable, Category="CARLA|Actor Attacher")
-  static void AttachActors(AActor *Child, AActor *Parent, EAttachmentType AttachmentType);
+  static void AttachActors(AActor *Child, AActor *Parent, EAttachmentType AttachmentType, const FString& SocketName = "");
 };
