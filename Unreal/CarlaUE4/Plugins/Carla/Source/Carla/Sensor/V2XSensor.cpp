@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Institut fuer Technik der Informationsverarbeitung (ITIV) at the 
+// Copyright (c) 2024 Institut fuer Technik der Informationsverarbeitung (ITIV) at the
 // Karlsruhe Institute of Technology
 //
 // This work is licensed under the terms of the MIT license.
@@ -40,7 +40,7 @@ void AV2XSensor::SetOwner(AActor *Owner)
     Super::SetOwner(Owner);
 
     // Store the actor into the static list if the actor details are not available
-    if(Owner != nullptr)
+    if (Owner != nullptr)
     {
         if (std::find(AV2XSensor::mV2XActorContainer.begin(), AV2XSensor::mV2XActorContainer.end(), Owner) == AV2XSensor::mV2XActorContainer.end())
         {
@@ -51,9 +51,7 @@ void AV2XSensor::SetOwner(AActor *Owner)
         CaServiceObj->SetOwner(world, Owner);
         PathLossModelObj->SetOwner(Owner);
     }
-
 }
-
 
 FActorDefinition AV2XSensor::GetSensorDefinition()
 {
@@ -88,7 +86,8 @@ void AV2XSensor::SetPropagationParams(const float TransmitPower,
     PathLossModelObj->SetParams(TransmitPower, ReceiverSensitivity, Frequency, combined_antenna_gain, path_loss_exponent, reference_distance_fspl, filter_distance, use_etsi_fading, custom_fading_stddev);
 }
 
-void AV2XSensor::SetPathLossModel(const EPathLossModel path_loss_model){
+void AV2XSensor::SetPathLossModel(const EPathLossModel path_loss_model)
+{
     PathLossModelObj->SetPathLossModel(path_loss_model);
 }
 

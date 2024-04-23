@@ -197,7 +197,6 @@ namespace data {
     out << "CustomV2XData(power=" << std::to_string(data.Power)
         << ", stationId=" << std::to_string(data.Message.header.stationID)
         << ", messageId=" << std::to_string(data.Message.header.messageID)
-        // << ", message=" << data.Message.message
         << ')';
     return out;
   }

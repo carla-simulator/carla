@@ -1029,7 +1029,6 @@ void UActorBlueprintFunctionLibrary::MakeV2XDefinition(
     FActorDefinition &Definition)
 {
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("v2x"));
-  // AddRecommendedValuesForSensorRoleNames(Definition);
   AddVariationsForSensor(Definition);
 
   // - Noise seed --------------------------------
@@ -1263,7 +1262,6 @@ void UActorBlueprintFunctionLibrary::MakeCustomV2XDefinition(
     FActorDefinition &Definition)
 {
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("v2x_custom"));
-  // AddRecommendedValuesForSensorRoleNames(Definition);
   AddVariationsForSensor(Definition);
 
   // - Noise seed --------------------------------

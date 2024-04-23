@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Institut fuer Technik der Informationsverarbeitung (ITIV) at the 
+// Copyright (c) 2024 Institut fuer Technik der Informationsverarbeitung (ITIV) at the
 // Karlsruhe Institute of Technology
 //
 // This work is licensed under the terms of the MIT license.
@@ -54,7 +54,7 @@ namespace carla
                 {
                     return Super::size();
                 }
-            };            
+            };
 
         } // namespace data
     }     // namespace sensor

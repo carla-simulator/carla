@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Institut fuer Technik der Informationsverarbeitung (ITIV) at the 
+// Copyright (c) 2024 Institut fuer Technik der Informationsverarbeitung (ITIV) at the
 // Karlsruhe Institute of Technology
 //
 // This work is licensed under the terms of the MIT license.
@@ -10,10 +10,9 @@
 #include <random>
 #include <limits>
 
-
 double PathLossModel::Frequency_GHz = 5.9f;
-double PathLossModel::Frequency = 5.9f * std::pow(10,9);
-double PathLossModel::lambda = PathLossModel::c_speedoflight/(5.9f * std::pow(10,9));
+double PathLossModel::Frequency = 5.9f * std::pow(10, 9);
+double PathLossModel::lambda = PathLossModel::c_speedoflight / (5.9f * std::pow(10, 9));
 
 PathLossModel::PathLossModel(URandomEngine *random_engine)
 {
@@ -44,8 +43,8 @@ void PathLossModel::SetParams(const float TransmitPower,
     this->custom_fading_stddev = custom_fading_stddev;
     this->combined_antenna_gain = combined_antenna_gain;
     PathLossModel::Frequency_GHz = Frequency;
-    PathLossModel::Frequency = PathLossModel::Frequency_GHz * std::pow(10,9);
-    PathLossModel::lambda = PathLossModel::c_speedoflight/PathLossModel::Frequency;
+    PathLossModel::Frequency = PathLossModel::Frequency_GHz * std::pow(10, 9);
+    PathLossModel::lambda = PathLossModel::c_speedoflight / PathLossModel::Frequency;
     // when reference distance is set, we prepare the FSPL for the reference distance to be used in LDPL
     CalculateFSPL_d0();
 }
@@ -316,7 +315,6 @@ void PathLossModel::SetPathLossModel(const EPathLossModel path_loss_model)
     model = path_loss_model;
 }
 
-
 float PathLossModel::ComputeLoss(AActor *OtherActor, FVector Source, FVector Destination, double Distance3d, double TxHeight, double RxHeight, double reference_z)
 {
     // TxHeight in m
@@ -524,7 +522,7 @@ float PathLossModel::CalculateShadowFading(EPathState state)
     }
     else
     {
-        //custom fading param
+        // custom fading param
         std_dev_dB = custom_fading_stddev;
     }
 
