@@ -267,7 +267,6 @@ static boost::python::dict GetBVCHighFrequency(const CAM_t message)
     HeadingValueConfidence["Value"] = bvchf.heading.headingValue;
     HeadingValueConfidence["Confidence"] = GetHeadingConfidenceString(bvchf.heading.headingConfidence);
     BVCHighFrequency["Heading"] = HeadingValueConfidence;
-    // ValueConfidence.clear();
     boost::python::dict SpeedValueConfidence;
     SpeedValueConfidence["Value"] = bvchf.speed.speedValue;
     SpeedValueConfidence["Confidence"] = GetSpeedConfidenceString(bvchf.speed.speedConfidence);
@@ -335,7 +334,6 @@ static boost::python::dict GetBVCHighFrequency(const CAM_t message)
         ValueConfidence["Value"] = bvchf.lateralAcceleration.lateralAccelerationValue;
         ValueConfidence["Confidence"] = GetAccelerationConfidenceString(bvchf.lateralAcceleration.lateralAccelerationConfidence);
         BVCHighFrequency["Lateral Acceleration"] = ValueConfidence;
-        // BVCHighFrequency["Lateral Acceleration"] = boost::python::object();
     }
     else
     {
@@ -423,7 +421,6 @@ static boost::python::dict GetHighFrequencyContainer(const CAM_t message)
 {
     boost::python::dict HFC;
     CAMContainer::HighFrequencyContainer_t hfc = message.cam.camParameters.highFrequencyContainer;
-    // HFC["High Frequency Container Present"] = GetHFCPresentString(hfc.present);
     switch (hfc.present)
     {
     case CAMContainer::HighFrequencyContainer_PR_basicVehicleContainerHighFrequency:

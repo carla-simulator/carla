@@ -386,17 +386,6 @@ public:
         AccelerationControl_cruiseControlEngaged    = 5,
         AccelerationControl_speedLimiterEngaged = 6
     } e_AccelerationControl;
-
-    /* BIT_STRING_s*/
-    // struct BIT_STRING_s {
-    //     // uint8_t *buf;   /* BIT STRING body */
-    //     //note: we cant use pointers
-    //     uint8_t buf;   /* BIT STRING body */
-    //     int size;   /* Size of the above buffer */
- 
-    //     int bits_unused;/* Unused trailing bits in the last octet (0..7) */
-
-    // };
  
     /* AccelerationControl */
     typedef uint8_t AccelerationControl_t;
@@ -516,7 +505,6 @@ public:
 
 
     /* TimestampIts */
-    // typedef BIT_STRING_s TimestampIts_t; 
     typedef long TimestampIts_t; 
 
     /* ProtectedZoneRadius Dependencies */
@@ -582,7 +570,6 @@ public:
     } e_ExteriorLights;
 
     /* ExteriorLights */
-    // typedef BIT_STRING_s ExteriorLights_t;
     typedef uint8_t ExteriorLights_t;
     /* DeltaLatitude Dependencies */
     typedef enum DeltaLatitude {
@@ -718,15 +705,10 @@ public:
     /* HighFrequencyContainer */
     typedef struct HighFrequencyContainer
     {
-        // HighFrequencyContainer() {};
-        // HighFrequencyContainer(HighFrequencyContainer &hfc) {};
-        // ~HighFrequencyContainer() {};
         HighFrequencyContainer_PR present;
-        // union
-        // {
-            BasicVehicleContainerHighFrequency_t basicVehicleContainerHighFrequency;
-            RSUContainerHighFrequency_t rsuContainerHighFrequency;
-        // };
+
+        BasicVehicleContainerHighFrequency_t basicVehicleContainerHighFrequency;
+        RSUContainerHighFrequency_t rsuContainerHighFrequency;
 
     } HighFrequencyContainer_t;
 
@@ -749,17 +731,10 @@ public:
     /* LowFrequencyContainer */
     typedef struct LowFrequencyContainer
     {
-        // LowFrequencyContainer() {};
-        // LowFrequencyContainer(LowFrequencyContainer &lfc) {};
-        // ~LowFrequencyContainer() {};
         LowFrequencyContainer_PR present;
-        // union
-        // {
-            BasicVehicleContainerLowFrequency_t basicVehicleContainerLowFrequency;
+        // Since only option is available
+        BasicVehicleContainerLowFrequency_t basicVehicleContainerLowFrequency;
 
-        // };
-        //Since only option is available 
-        // BasicVehicleContainerLowFrequency_t basicVehicleContainerLowFrequency;
     } LowFrequencyContainer_t;
 
     /* CamParameters */
@@ -768,7 +743,7 @@ public:
         BasicContainer_t basicContainer;
         HighFrequencyContainer_t highFrequencyContainer;
         LowFrequencyContainer_t lowFrequencyContainer; /* OPTIONAL */
-        // SpecialVehicleContainer *specialVehicleContainer; /* OPTIONAL */
+        // Optional TODO: SpecialVehicleContainer *specialVehicleContainer
     } CamParameters_t;
 
     /* CoopAwareness*/

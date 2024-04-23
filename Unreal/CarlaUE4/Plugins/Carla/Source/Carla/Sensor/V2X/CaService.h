@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Institut fuer Technik der Informationsverarbeitung (ITIV) at the 
+// Copyright (c) 2024 Institut fuer Technik der Informationsverarbeitung (ITIV) at the
 // Karlsruhe Institute of Technology
 //
 // This work is licensed under the terms of the MIT license.
@@ -20,32 +20,30 @@
 class CaService
 {
 public:
-
-  CaService(URandomEngine* random_engine);
-  void SetOwner(UWorld* world, AActor *Owner);
+  CaService(URandomEngine *random_engine);
+  void SetOwner(UWorld *world, AActor *Owner);
 
   void SetParams(const float GenCamMin, const float GenCamMax, const bool FixedRate);
-  void SetVelDeviation(const float noise_vel_stddev_x); 
-  void SetYawrateDeviation(const float noise_yawrate_stddev, const float noise_yawrate_bias);  
+  void SetVelDeviation(const float noise_vel_stddev_x);
+  void SetYawrateDeviation(const float noise_yawrate_stddev, const float noise_yawrate_bias);
   void SetAccelerationStandardDeviation(const FVector &Vec);
   void SetGNSSDeviation(const float noise_lat_stddev,
-                                    const float noise_lon_stddev,
-                                    const float noise_alt_stddev,
-                                    const float noise_head_stddev,
-                                    const float noise_lat_bias,
-                                    const float noise_lon_bias,
-                                    const float noise_alt_bias,
-                                    const float noise_head_bias);
+                        const float noise_lon_stddev,
+                        const float noise_alt_stddev,
+                        const float noise_head_stddev,
+                        const float noise_lat_bias,
+                        const float noise_lon_bias,
+                        const float noise_alt_bias,
+                        const float noise_head_bias);
   bool Trigger(float DeltaSeconds);
   CAM_t GetCamMessage();
 
 private:
-
   AActor *mActorOwner;
-  FCarlaActor* mCarlaActor;
-  UCarlaEpisode* mCarlaEpisode;
-  UWorld* mWorld;
-  ACarlaWheeledVehicle* mVehicle;
+  FCarlaActor *mCarlaActor;
+  UCarlaEpisode *mCarlaEpisode;
+  UWorld *mWorld;
+  ACarlaWheeledVehicle *mVehicle;
   float mLastCamTimeStamp;
   float mLastLowCamTimeStamp;
   float mGenCamMin;
@@ -68,7 +66,6 @@ private:
   FVector mLastCamHeading;
   std::chrono::milliseconds mGenerationDelta0;
 
-
   bool CheckTriggeringConditions(float DeltaSeconds);
   bool CheckHeadingDelta(float DeltaSeconds);
   bool CheckPositionDelta(float DeltaSeconds);
@@ -85,21 +82,21 @@ private:
   const long mMessageId = ITSContainer::messageID_cam;
   long mStationId;
   long mStationType;
-  
+
   carla::geom::Vector3D ComputeAccelerometer(const float DeltaTime);
   const carla::geom::Vector3D ComputeAccelerometerNoise(const FVector &Accelerometer);
   /// Standard deviation for acceleration settings.
   FVector StdDevAccel;
 
-    /// Used to compute the acceleration
+  /// Used to compute the acceleration
   std::array<FVector, 2> PrevLocation;
 
   /// Used to compute the acceleration
   float PrevDeltaTime;
 
-  //GNSS reference position and heading
+  // GNSS reference position and heading
   FVector GetReferencePosition();
-  carla::geom::GeoLocation CurrentGeoReference;                                    
+  carla::geom::GeoLocation CurrentGeoReference;
   float LatitudeDeviation;
   float LongitudeDeviation;
   float AltitudeDeviation;
@@ -109,29 +106,27 @@ private:
   float LongitudeBias;
   float AltitudeBias;
   float HeadingBias;
-  
-  //Velocity
-  float ComputeSpeed(); 
-  float VelocityDeviation;                             
-  
-  //Yaw rate
+
+  // Velocity
+  float ComputeSpeed();
+  float VelocityDeviation;
+
+  // Yaw rate
   const float ComputeYawNoise(const FVector &Gyroscope);
   float ComputeYawRate();
   float YawrateDeviation;
   float YawrateBias;
 
   CAM_t CreateCooperativeAwarenessMessage(float DeltaTime);
-  void CreateITSPduHeader(CAM_t& message);
-  void AddCooperativeAwarenessMessage(CAMContainer::CoopAwareness_t& CoopAwarenessMessage, float DeltaTime);
-  void AddBasicContainer(CAMContainer::BasicContainer_t& BasicContainer);
-  void AddBasicVehicleContainerHighFrequency(CAMContainer::HighFrequencyContainer_t& hfc, float DeltaTime);
-  void AddRSUContainerHighFrequency(CAMContainer::HighFrequencyContainer_t& hfc);
-  void AddLowFrequencyContainer(CAMContainer::LowFrequencyContainer_t& lfc);
+  void CreateITSPduHeader(CAM_t &message);
+  void AddCooperativeAwarenessMessage(CAMContainer::CoopAwareness_t &CoopAwarenessMessage, float DeltaTime);
+  void AddBasicContainer(CAMContainer::BasicContainer_t &BasicContainer);
+  void AddBasicVehicleContainerHighFrequency(CAMContainer::HighFrequencyContainer_t &hfc, float DeltaTime);
+  void AddRSUContainerHighFrequency(CAMContainer::HighFrequencyContainer_t &hfc);
+  void AddLowFrequencyContainer(CAMContainer::LowFrequencyContainer_t &lfc);
   CAM_t mCAMMessage;
 
-    //random for noise
-  URandomEngine* mRandomEngine;
+  // random for noise
+  URandomEngine *mRandomEngine;
   ITSContainer::SpeedValue_t buildSpeedValue(const float vel);
-
-
 };

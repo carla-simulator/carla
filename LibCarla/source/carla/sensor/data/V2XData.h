@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Institut fuer Technik der Informationsverarbeitung (ITIV) at the 
+// Copyright (c) 2024 Institut fuer Technik der Informationsverarbeitung (ITIV) at the
 // Karlsruhe Institute of Technology
 //
 // This work is licensed under the terms of the MIT license.
@@ -45,19 +45,19 @@ namespace carla
 
                 CAMDataS &operator=(CAMDataS &&) = default;
 
-                // /// Returns the number of current received messages.
+                // Returns the number of current received messages.
                 size_t GetMessageCount() const
                 {
                     return MessageList.size();
                 }
 
-                /// Deletes the current messages.
+                // Deletes the current messages.
                 void Reset()
                 {
                     MessageList.clear();
                 }
 
-                /// Adds a new detection.
+                // Adds a new detection.
                 void WriteMessage(CAMData message)
                 {
                     MessageList.push_back(message);
@@ -69,7 +69,6 @@ namespace carla
                 friend class s11n::CAMDataSerializer;
             };
 
-
             class CustomV2XDataS
             {
 
@@ -78,19 +77,19 @@ namespace carla
 
                 CustomV2XDataS &operator=(CustomV2XDataS &&) = default;
 
-                // /// Returns the number of current received messages.
+                // Returns the number of current received messages.
                 size_t GetMessageCount() const
                 {
                     return MessageList.size();
                 }
 
-                /// Deletes the current messages.
+                // Deletes the current messages.
                 void Reset()
                 {
                     MessageList.clear();
                 }
 
-                /// Adds a new detection.
+                // Adds a new detection.
                 void WriteMessage(CustomV2XData message)
                 {
                     MessageList.push_back(message);
@@ -100,7 +99,7 @@ namespace carla
                 std::vector<CustomV2XData> MessageList;
 
                 friend class s11n::CustomV2XDataSerializer;
-            };            
+            };
 
         } // namespace s11n
     }     // namespace sensor
