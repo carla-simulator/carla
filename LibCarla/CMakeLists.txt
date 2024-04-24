@@ -144,6 +144,12 @@ if (BUILD_CARLA_SERVER)
     ${CARLA_ROS2_DEFINITIONS}
   )
 
+  target_compile_options (
+    carla-server PUBLIC
+    ${CARLA_EXCEPTION_OPTIONS}
+    ${CARLA_RTTI_OPTIONS}
+  )
+
   if (ENABLE_ROS2)
     add_dependencies (carla-server carla-ros2-native)
   endif ()
@@ -275,7 +281,6 @@ if (BUILD_CARLA_CLIENT)
   target_link_libraries (
     carla-client PUBLIC
     Boost::asio
-    Boost::python
     Boost::algorithm
     Boost::geometry
     Boost::assert
@@ -287,6 +292,13 @@ if (BUILD_CARLA_CLIENT)
     zlibstatic
     rpc
   )
+
+  if (BUILD_PYTHON_API)
+    target_link_libraries (
+      carla-client PUBLIC
+      Boost::python
+    )
+  endif ()
   
   target_include_directories (
     carla-client PUBLIC
@@ -297,6 +309,12 @@ if (BUILD_CARLA_CLIENT)
     carla-client PUBLIC
     ${CARLA_COMMON_DEFINITIONS}
     ${CARLA_RTTI_DEFINITIONS}
+  )
+
+  target_compile_options (
+    carla-client PUBLIC
+    ${CARLA_RTTI_OPTIONS}
+    ${CARLA_EXCEPTION_OPTIONS}
   )
 
 endif ()

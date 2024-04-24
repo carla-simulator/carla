@@ -60,6 +60,7 @@ endif ()
 #   Exception Definitions
 # ================================
 
+set (CARLA_EXCEPTION_OPTIONS)
 set (CARLA_EXCEPTION_DEFINITIONS)
 
 if (ENABLE_EXCEPTIONS)
@@ -67,18 +68,18 @@ if (ENABLE_EXCEPTIONS)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       check_cxx_compiler_flag(-fexceptions HAS_fexceptions)
       if (HAS_fexceptions)
-        add_compile_options (-fexceptions)
+        list (APPEND CARLA_EXCEPTION_OPTIONS -fexceptions)
       endif ()
     else ()
       check_cxx_compiler_flag(/EHa HAS_EHa)
       if (HAS_EHa)
-        add_compile_options (/EHa)
+        list (APPEND CARLA_EXCEPTION_OPTIONS /EHa)
       endif ()
     endif ()
   else ()
     check_cxx_compiler_flag(-fexceptions HAS_fexceptions)
     if (HAS_fexceptions)
-      add_compile_options (-fexceptions)
+      list (APPEND CARLA_EXCEPTION_OPTIONS -fexceptions)
     endif ()
   endif ()
 else ()
@@ -86,24 +87,36 @@ else ()
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       check_cxx_compiler_flag(-fno-exceptions HAS_fnoexceptions)
       if (HAS_fnoexceptions)
-        add_compile_options (-fno-exceptions)
+        list (APPEND CARLA_EXCEPTION_OPTIONS -fno-exceptions)
       endif ()
     else ()
       check_cxx_compiler_flag(/EHsc HAS_EHsc)
       if (HAS_EHsc)
-        add_compile_options (/EHsc)
+        list (APPEND CARLA_EXCEPTION_OPTIONS /EHsc)
       endif ()
     endif ()
   else ()
     check_cxx_compiler_flag(-fno-exceptions HAS_fnoexceptions)
     if (HAS_fnoexceptions)
-      add_compile_options (-fno-exceptions)
+      list (APPEND CARLA_EXCEPTION_OPTIONS -fno-exceptions)
     endif ()
   endif ()
-  list (APPEND CARLA_EXCEPTION_DEFINITIONS ASIO_NO_EXCEPTIONS)
-  list (APPEND CARLA_EXCEPTION_DEFINITIONS BOOST_NO_EXCEPTIONS)
-  list (APPEND CARLA_EXCEPTION_DEFINITIONS LIBCARLA_NO_EXCEPTIONS)
-  list (APPEND CARLA_EXCEPTION_DEFINITIONS PUGIXML_NO_EXCEPTIONS)
+
+  list (
+    APPEND
+    CARLA_EXCEPTION_DEFINITIONS
+  )
+
+  list (
+    APPEND
+    CARLA_EXCEPTION_DEFINITIONS
+
+    ASIO_NO_EXCEPTIONS
+    BOOST_NO_EXCEPTIONS
+    BOOST_EXCEPTION_DISABLE
+    PUGIXML_NO_EXCEPTIONS
+    LIBCARLA_NO_EXCEPTIONS
+  )
 endif ()
 
 # ================================
@@ -111,24 +124,25 @@ endif ()
 # ================================
 
 set (CARLA_RTTI_DEFINITIONS)
+set (CARLA_RTTI_OPTIONS)
 
-if (CARLA_RTTI_DEFINITIONS)
+if (ENABLE_RTTI)
   if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       check_cxx_compiler_flag(-frtti HAS_frtti)
       if (HAS_frtti)
-        add_compile_options (-frtti)
+        list (APPEND CARLA_RTTI_OPTIONS -frtti)
       endif ()
     else ()
       check_cxx_compiler_flag(/GR HAS_GR)
       if (HAS_GR)
-        add_compile_options (/GR)
+        list (APPEND CARLA_RTTI_OPTIONS /GR)
       endif ()
     endif ()
   else ()
     check_cxx_compiler_flag(-frtti HAS_frtti)
     if (HAS_frtti)
-      add_compile_options (-frtti)
+      list (APPEND CARLA_RTTI_OPTIONS -frtti)
     endif ()
   endif ()
 else ()
@@ -136,21 +150,28 @@ else ()
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       check_cxx_compiler_flag(-fno-rtti HAS_fnortti)
       if (HAS_fnortti)
-        add_compile_options (-fno-rtti)
+        list (APPEND CARLA_RTTI_OPTIONS -fno-rtti)
       endif ()
     else ()
       check_cxx_compiler_flag(/GR HAS_GRm)
       if (HAS_GRm)
-        add_compile_options (/GR-)
+        list (APPEND CARLA_RTTI_OPTIONS /GR-)
       endif ()
     endif ()
   else ()
     check_cxx_compiler_flag(-fno-rtti HAS_fnortti)
     if (HAS_fnortti)
-      add_compile_options (-fno-rtti)
+      list (APPEND CARLA_RTTI_OPTIONS -fno-rtti)
     endif ()
   endif ()
-  list (APPEND CARLA_RTTI_DEFINITIONS BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY)
+
+  list (
+    APPEND
+    CARLA_RTTI_DEFINITIONS
+    BOOST_NO_RTTI
+    BOOST_NO_TYPEID
+    BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY
+  )
 endif ()
 
 # ================================

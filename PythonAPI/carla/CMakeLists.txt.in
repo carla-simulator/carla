@@ -204,3 +204,9 @@ target_link_libraries (
   $<TARGET_FILE:zlibstatic>
   $<TARGET_FILE:rpc>
 )
+
+target_compile_options (
+  ${SKBUILD_PROJECT_NAME} PUBLIC
+  @CARLA_EXCEPTION_OPTIONS@
+  @CARLA_RTTI_OPTIONS@
+)

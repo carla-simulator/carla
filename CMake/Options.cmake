@@ -86,11 +86,19 @@ carla_option (
   OFF
 )
 
+if (NOT ENABLE_EXCEPTIONS)
+  carla_warning("Compiling CARLA without C++ RTTI enabled may cause build errors in the CARLA Python API.")
+endif ()
+
 carla_option (
   ENABLE_EXCEPTIONS
   "Enable C++ Exceptions."
   OFF
 )
+
+if (NOT ENABLE_EXCEPTIONS)
+  carla_warning("Compiling CARLA without C++ exceptions enabled may cause build errors in the CARLA Python API.")
+endif ()
 
 carla_option (
   PREFER_CLONE

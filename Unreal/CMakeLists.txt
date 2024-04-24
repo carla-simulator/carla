@@ -79,7 +79,6 @@ set (
   carla-server
   libsqlite3
   Boost::asio
-  Boost::python
   Boost::geometry
   Boost::gil
   Eigen3::Eigen
@@ -87,6 +86,10 @@ set (
   png_static
   rpc
 )
+
+if (BUILD_PYTHON_API)
+  list (APPEND UE_DEPENDENCIES_ORDER_ONLY Boost::python)
+endif ()
 
 set (UE_DEPENDENCIES ${UE_DEPENDENCIES_ORDER_ONLY})
 
