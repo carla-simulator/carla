@@ -3,24 +3,14 @@ import unittest
 import glob
 import os
 import sys
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-try:
-    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/carla')
-except IndexError:
-    pass
 
 import carla
 from carla import ColorConverter as cc
 import weakref
 import math
-import time
 from math import isclose
+import time
+import json
 
 try:
     import numpy as np
@@ -33,6 +23,7 @@ class TestSensorRecordingTest(unittest.TestCase):
         client = carla.Client()
         world = client.load_world('Town10HD_Opt')
         bp_lib = world.get_blueprint_library()
+        start_time = str(round(time.time()))
         
         # Spawn player actor
         spectator = world.get_spectator()
@@ -44,13 +35,13 @@ class TestSensorRecordingTest(unittest.TestCase):
         player_movement = PlayerMovement(player)
         
         # Spawn CameraManager with some sensors
-        camera_manager = CameraManager(player, self)
+        camera_manager = CameraManager(player, self, start_time)
         self.assertIsNotNone(camera_manager)
         
         # Spawn other sensors
         sensors_array = []
-        gnss_sensor = GnssSensor(player)
-        imu_sensor = IMUSensor(player)
+        gnss_sensor = GnssSensor(player, start_time)
+        imu_sensor = IMUSensor(player, start_time)
         radar_sensor = RadarSensor(player)
         self.assertIsNotNone(gnss_sensor.sensor)
         self.assertIsNotNone(imu_sensor.sensor)
@@ -76,7 +67,7 @@ class TestSensorRecordingTest(unittest.TestCase):
         if player is not None:
             player.destroy()
 
-        sensor_actors = world.get_actors().filter('sensor.other.*')
+        sensor_actors = world.get_actors().filter('sensor.*')
         self.assertEqual(0, sensor_actors.__len__())
         
         
@@ -122,9 +113,11 @@ class PlayerMovement(object):
 # -- GnssSensor ----------------------------------------------------------------
 # ==============================================================================
 class GnssSensor(object):
-    def __init__(self, parent_actor):
+    def __init__(self, parent_actor, start_time):
         self.sensor = None
         self._parent = parent_actor
+        self.file_path= "_out/" + start_time + "/GnssSensor/GnssData.json"
+        self.frame_number = 0
         self.lat = 0.0
         self.lon = 0.0
         world = self._parent.get_world()
@@ -134,23 +127,52 @@ class GnssSensor(object):
         # reference.
         weak_self = weakref.ref(self)
         self.sensor.listen(lambda event: GnssSensor._on_gnss_event(weak_self, event))
+        
+        os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
 
     @staticmethod
     def _on_gnss_event(weak_self, event):
         self = weak_self()
         if not self:
             return
+        
         self.lat = event.latitude
         self.lon = event.longitude
+        GnssSensor.save_to_json(weak_self)
+        self.frame_number += 1
+    
+    @staticmethod
+    def save_to_json(weak_self):
+        self = weak_self()
+        if not self:
+            return
+        
+        data = {}
+        if os.path.exists(self.file_path):
+            with open(self.file_path, "r") as file:
+                data = json.load(file)
+        else:
+            data = {}
+
+        frame_str = str(self.frame_number)
+        if frame_str not in data:
+            data[frame_str] = []
+        data[frame_str].append({"latitude": str(self.lat), "longitude": str(self.lon)})
+
+        with open(self.file_path, "w") as file:
+            json.dump(data, file, indent=4)
 
 
 # ==============================================================================
 # -- IMUSensor -----------------------------------------------------------------
 # ==============================================================================
 class IMUSensor(object):
-    def __init__(self, parent_actor):
+    def __init__(self, parent_actor, start_time):
         self.sensor = None
         self._parent = parent_actor
+        self.start_time = start_time
+        self.file_path= "_out/" + start_time + "/IMUSensor/IMUData.json"
+        self.frame_number = 0
         self.accelerometer = (0.0, 0.0, 0.0)
         self.gyroscope = (0.0, 0.0, 0.0)
         self.compass = 0.0
@@ -161,6 +183,8 @@ class IMUSensor(object):
         # reference.
         weak_self = weakref.ref(self)
         self.sensor.listen(lambda sensor_data: IMUSensor._IMU_callback(weak_self, sensor_data))
+        
+        os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
         
     @staticmethod
     def _IMU_callback(weak_self, sensor_data):
@@ -177,6 +201,30 @@ class IMUSensor(object):
             max(limits[0], min(limits[1], math.degrees(sensor_data.gyroscope.y))),
             max(limits[0], min(limits[1], math.degrees(sensor_data.gyroscope.z))))
         self.compass = math.degrees(sensor_data.compass)
+        
+        IMUSensor.save_to_json(weak_self)
+        self.frame_number += 1
+    
+    @staticmethod
+    def save_to_json(weak_self):
+        self = weak_self()
+        if not self:
+            return
+        
+        data = {}
+        if os.path.exists(self.file_path):
+            with open(self.file_path, "r") as file:
+                data = json.load(file)
+        else:
+            data = {}
+
+        frame_str = str(self.frame_number)
+        if frame_str not in data:
+            data[frame_str] = []
+        data[frame_str].append({"accelerometer": str(self.accelerometer), "gyroscope": str(self.gyroscope), "compass": str(self.compass)})
+
+        with open(self.file_path, "w") as file:
+            json.dump(data, file, indent=4)
 
 
 # ==============================================================================
@@ -244,25 +292,24 @@ class RadarSensor(object):
 # -- CameraManager -------------------------------------------------------------
 # ==============================================================================
 class CameraManager(object):
-    def __init__(self, parent_actor, unit_test):
+    def __init__(self, parent_actor, unit_test, start_time):
         self._parent = parent_actor
         self._unit_test = unit_test
         self.spawned_sensors = []
-        self.start_time = str(round(time.time()))
+        self.start_time = start_time
         bound_x = 0.5 + self._parent.bounding_box.extent.x
         bound_y = 0.5 + self._parent.bounding_box.extent.y
         bound_z = 0.5 + self._parent.bounding_box.extent.z
         Attachment = carla.AttachmentType
 
         self._camera_transforms = [
-            (carla.Transform(carla.Location(x=0.0, y=0.0, z=1.3)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=-2.0*bound_x, y=+0.0*bound_y, z=2.0*bound_z), carla.Rotation(pitch=8.0)), Attachment.SpringArmGhost),
             (carla.Transform(carla.Location(x=+0.8*bound_x, y=+0.0*bound_y, z=1.3*bound_z)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=+1.9*bound_x, y=+1.0*bound_y, z=1.2*bound_z)), Attachment.SpringArmGhost),
             (carla.Transform(carla.Location(x=-2.8*bound_x, y=+0.0*bound_y, z=4.6*bound_z), carla.Rotation(pitch=6.0)), Attachment.SpringArmGhost),
             (carla.Transform(carla.Location(x=-1.0, y=-1.0*bound_y, z=0.4*bound_z)), Attachment.Rigid)
         ]
-        self.transform_index = 2
+        self.transform_index = 1
         
         self.sensors = [
             ['sensor.camera.rgb', cc.Raw, 'CameraRGB', {}],
@@ -270,11 +317,11 @@ class CameraManager(object):
             #['sensor.camera.depth', cc.Depth, 'CameraDepth (GrayScale)', {}],
             ['sensor.camera.depth', cc.LogarithmicDepth, 'CameraDepth (LogarithmicGrayScale)', {}],
             #['sensor.camera.semantic_segmentation', cc.Raw, 'CameraSemanticSegmentation (Raw)', {}],
-            #['sensor.camera.semantic_segmentation', cc.CityScapesPalette, 'CameraSemanticSegmentation (CityScapesPalette)', {}],
+            ['sensor.camera.semantic_segmentation', cc.CityScapesPalette, 'CameraSemanticSegmentation (CityScapesPalette)', {}],
             #['sensor.camera.instance_segmentation', cc.Raw, 'CameraInstanceSegmentation (Raw)', {}],
-            #['sensor.camera.instance_segmentation', cc.CityScapesPalette, 'CameraInstanceSegmentation (CityScapesPalette)', {}],
-            #['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)', {'range': '50'}],
-            #['sensor.lidar.ray_cast_semantic', None, 'SemanticLidar (Ray-Cast)', {'range': '50'}],
+            ['sensor.camera.instance_segmentation', cc.CityScapesPalette, 'CameraInstanceSegmentation (CityScapesPalette)', {}],
+            ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)', {'range': '50'}],
+            ['sensor.lidar.ray_cast_semantic', None, 'SemanticLidar (Ray-Cast)', {'range': '50'}],
             #['sensor.camera.dvs', cc.Raw, 'DynamicVisionSensor', {}],
             #['sensor.camera.rgb', cc.Raw, 'Camera RGB Distorted', {'lens_circle_multiplier': '3.0', 'lens_circle_falloff': '3.0', 'chromatic_aberration_intensity': '0.5', 'chromatic_aberration_offset': '0'}],
             #['sensor.camera.optical_flow', cc.Raw, 'OpticalFlow', {}],
@@ -325,7 +372,6 @@ class CameraManager(object):
         if not self:
             return
         
-        #cc.ConvertImage(image, cc.Depth)
         if sensor_color == cc.Raw or sensor_color == None:
             image.save_to_disk('_out/' + self.start_time + '/' + sensor_name + '/%08d' % image.frame)
         else:
