@@ -72,9 +72,13 @@ fi
 if [ ! -z $CARLA_UNREAL_ENGINE_PATH ] && [ -d $CARLA_UNREAL_ENGINE_PATH ]; then
     echo "Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - OK"
 elif [ -d ../UnrealEngine5_carla ]; then
+    pushd ..
+    pushd UnrealEngine5_carla
     echo "Found UnrealEngine5 ../UnrealEngine5_carla - OK"
-    export CARLA_UNREAL_ENGINE_PATH=$PWD/../UnrealEngine5_carla
+    export CARLA_UNREAL_ENGINE_PATH=$PWD
     echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$CARLA_UNREAL_ENGINE_PATH >> ~/.bashrc
+    popd
+    popd
     #TODO: Check if UnrealEngine binary file exists and if not build it
 else
     echo "Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - FAIL"
