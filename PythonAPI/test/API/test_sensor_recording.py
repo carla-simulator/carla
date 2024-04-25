@@ -10,7 +10,7 @@ import weakref
 import math
 from math import isclose
 import time
-import json
+import csv
 
 try:
     import numpy as np
@@ -22,6 +22,12 @@ class TestSensorRecordingTest(unittest.TestCase):
     def test_sensor_recording(self):
         client = carla.Client()
         world = client.load_world('Town10HD_Opt')
+        time.sleep(5)
+        
+        settings = world.get_settings()
+        settings.synchronous_mode = True
+        settings.fixed_delta_seconds = 0.05
+        world.apply_settings(settings)
         bp_lib = world.get_blueprint_library()
         start_time = str(round(time.time()))
         
@@ -42,7 +48,7 @@ class TestSensorRecordingTest(unittest.TestCase):
         sensors_array = []
         gnss_sensor = GnssSensor(player, start_time)
         imu_sensor = IMUSensor(player, start_time)
-        radar_sensor = RadarSensor(player)
+        radar_sensor = RadarSensor(player, start_time)
         self.assertIsNotNone(gnss_sensor.sensor)
         self.assertIsNotNone(imu_sensor.sensor)
         self.assertIsNotNone(radar_sensor.sensor)
@@ -54,6 +60,7 @@ class TestSensorRecordingTest(unittest.TestCase):
         while not player_movement.movement_finished:
             world.tick()
             player_movement.move()
+            time.sleep(settings.fixed_delta_seconds)
 
         # Cleanup
         for sensor in sensors_array:
@@ -67,8 +74,14 @@ class TestSensorRecordingTest(unittest.TestCase):
         if player is not None:
             player.destroy()
 
+        world.tick()
         sensor_actors = world.get_actors().filter('sensor.*')
         self.assertEqual(0, sensor_actors.__len__())
+        
+        settings = world.get_settings()
+        settings.synchronous_mode = False
+        world.apply_settings(settings)
+        world.tick()
         
         
         
@@ -116,7 +129,7 @@ class GnssSensor(object):
     def __init__(self, parent_actor, start_time):
         self.sensor = None
         self._parent = parent_actor
-        self.file_path= "_out/" + start_time + "/GnssSensor/GnssData.json"
+        self.file_path= "_out/" + start_time + "/GnssSensor/GnssData.csv"
         self.frame_number = 0
         self.lat = 0.0
         self.lon = 0.0
@@ -138,29 +151,22 @@ class GnssSensor(object):
         
         self.lat = event.latitude
         self.lon = event.longitude
-        GnssSensor.save_to_json(weak_self)
+        GnssSensor.save_to_csv(weak_self)
         self.frame_number += 1
     
     @staticmethod
-    def save_to_json(weak_self):
+    def save_to_csv(weak_self):
         self = weak_self()
         if not self:
             return
         
-        data = {}
-        if os.path.exists(self.file_path):
-            with open(self.file_path, "r") as file:
-                data = json.load(file)
-        else:
-            data = {}
+        with open(self.file_path, "a+", newline="") as csv_file:
+            fieldnames = ["frame", "latitude", "longitude"]
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            if csv_file.tell() == 0:
+                writer.writeheader()
 
-        frame_str = str(self.frame_number)
-        if frame_str not in data:
-            data[frame_str] = []
-        data[frame_str].append({"latitude": str(self.lat), "longitude": str(self.lon)})
-
-        with open(self.file_path, "w") as file:
-            json.dump(data, file, indent=4)
+            writer.writerow({"frame": self.frame_number, "latitude": self.lat, "longitude": self.lon})
 
 
 # ==============================================================================
@@ -171,7 +177,7 @@ class IMUSensor(object):
         self.sensor = None
         self._parent = parent_actor
         self.start_time = start_time
-        self.file_path= "_out/" + start_time + "/IMUSensor/IMUData.json"
+        self.file_path= "_out/" + start_time + "/IMUSensor/IMUData.csv"
         self.frame_number = 0
         self.accelerometer = (0.0, 0.0, 0.0)
         self.gyroscope = (0.0, 0.0, 0.0)
@@ -202,76 +208,90 @@ class IMUSensor(object):
             max(limits[0], min(limits[1], math.degrees(sensor_data.gyroscope.z))))
         self.compass = math.degrees(sensor_data.compass)
         
-        IMUSensor.save_to_json(weak_self)
+        IMUSensor.save_to_csv(weak_self)
         self.frame_number += 1
     
     @staticmethod
-    def save_to_json(weak_self):
+    def save_to_csv(weak_self):
         self = weak_self()
         if not self:
             return
         
-        data = {}
-        if os.path.exists(self.file_path):
-            with open(self.file_path, "r") as file:
-                data = json.load(file)
-        else:
-            data = {}
+        with open(self.file_path, "a+", newline="") as csv_file:
+            fieldnames = ["frame", "accelerometer", "gyroscope", "compass"]
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            if csv_file.tell() == 0:
+                writer.writeheader()
 
-        frame_str = str(self.frame_number)
-        if frame_str not in data:
-            data[frame_str] = []
-        data[frame_str].append({"accelerometer": str(self.accelerometer), "gyroscope": str(self.gyroscope), "compass": str(self.compass)})
-
-        with open(self.file_path, "w") as file:
-            json.dump(data, file, indent=4)
+            writer.writerow({"frame": self.frame_number, "accelerometer": self.accelerometer, "gyroscope": self.gyroscope, "compass": self.compass})
 
 
 # ==============================================================================
 # -- RadarSensor ---------------------------------------------------------------
 # ==============================================================================
 class RadarSensor(object):
-    def __init__(self, parent_actor):
+    def __init__(self, parent_actor, start_time):
         self.sensor = None
         self._parent = parent_actor
+        self.start_time = start_time
+        self.file_path= "_out/" + start_time + "/RadarSensor/"
+        self.frame_number = 0
         bound_x = 0.5 + self._parent.bounding_box.extent.x
         bound_y = 0.5 + self._parent.bounding_box.extent.y
         bound_z = 0.5 + self._parent.bounding_box.extent.z
 
         self.velocity_range = 7.5 # m/s
         world = self._parent.get_world()
-        self.debug = world.debug
+        self.debug = world.debug and False #### Draw debug disabled
         bp = world.get_blueprint_library().find('sensor.other.radar')
         bp.set_attribute('horizontal_fov', str(35))
         bp.set_attribute('vertical_fov', str(20))
         self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=bound_x + 0.05, z=bound_z+0.05), carla.Rotation(pitch=5)), attach_to=self._parent)
         # We need a weak reference to self to avoid circular reference.
         weak_self = weakref.ref(self)
-        self.sensor.listen(
-            lambda radar_data: RadarSensor._Radar_callback(weak_self, radar_data))
+        self.sensor.listen(lambda radar_data: RadarSensor._Radar_callback(weak_self, radar_data))
+        
+        os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
 
     @staticmethod
     def _Radar_callback(weak_self, radar_data):
         self = weak_self()
         if not self:
             return
-        # To get a numpy [[vel, altitude, azimuth, depth],...[,,,]]:
-        # points = np.frombuffer(radar_data.raw_data, dtype=np.dtype('f4'))
-        # points = np.reshape(points, (len(radar_data), 4))
+        
+        RadarSensor.save_to_csv(weak_self, radar_data)
+        if self.debug:
+            RadarSensor.draw_debug(weak_self, radar_data)
+        self.frame_number += 1
+            
+    @staticmethod
+    def save_to_csv(weak_self, radar_data):
+        self = weak_self()
+        if not self:
+            return
+        
+        final_path = self.file_path + "frame_" + str(self.frame_number) + ".csv" 
+        with open(final_path, "a+", newline="") as csv_file:
+            fieldnames = ["Altitude", "Azimuth", "Depth", "Velocity"]
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            writer.writeheader()
+
+            for point in radar_data:
+                writer.writerow({"Altitude": point.altitude, "Azimuth": point.azimuth, "Depth": point.depth, "Velocity": point.velocity})
+        
+    @staticmethod
+    def draw_debug(weak_self, radar_data): # method disabled by default as it shows artifacts in the other cameras
+        self = weak_self()
+        if not self:
+            return
 
         current_rot = radar_data.transform.rotation
         for detect in radar_data:
             azi = math.degrees(detect.azimuth)
             alt = math.degrees(detect.altitude)
-            # The 0.25 adjusts a bit the distance so the dots can
-            # be properly seen
+            # The 0.25 adjusts a bit the distance so the dots can be properly seen
             fw_vec = carla.Vector3D(x=detect.depth - 0.25)
-            carla.Transform(
-                carla.Location(),
-                carla.Rotation(
-                    pitch=current_rot.pitch + alt,
-                    yaw=current_rot.yaw + azi,
-                    roll=current_rot.roll)).transform(fw_vec)
+            carla.Transform(carla.Location(), carla.Rotation(pitch=current_rot.pitch + alt, yaw=current_rot.yaw + azi, roll=current_rot.roll)).transform(fw_vec)
 
             def clamp(min_v, max_v, value):
                 return max(min_v, min(value, max_v))
@@ -280,12 +300,7 @@ class RadarSensor(object):
             r = int(clamp(0.0, 1.0, 1.0 - norm_velocity) * 255.0)
             g = int(clamp(0.0, 1.0, 1.0 - abs(norm_velocity)) * 255.0)
             b = int(abs(clamp(- 1.0, 0.0, - 1.0 - norm_velocity)) * 255.0)
-            self.debug.draw_point(
-                radar_data.transform.location + fw_vec,
-                size=0.075,
-                life_time=0.06,
-                persistent_lines=False,
-                color=carla.Color(r, g, b))
+            self.debug.draw_point(radar_data.transform.location + fw_vec, size=0.075, life_time=0.06, persistent_lines=False, color=carla.Color(r, g, b))
             
             
 # ==============================================================================
@@ -384,5 +399,5 @@ class CameraManager(object):
                 sensor.destroy()
                 
 
-if __name__ == '__main__':
-    unittest.main()
+# if __name__ == '__main__':
+#     unittest.main()
