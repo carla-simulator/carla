@@ -90,6 +90,10 @@ call cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release -DBUILD_CARLA_UNREA
 echo Buiding CARLA...
 call cmake --build Build || exit /b
 
+echo Installing PythonAPI...
+REM We do not want a Python API build error to block the installation as not all the users need Python API
+cmake --build Build --target carla-python-api-install
+
 echo Build Succesfull :)
 echo Launching Unreal Editor with CARLA...
 call cmake --build Build --target launch || exit /b
