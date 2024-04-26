@@ -8,13 +8,13 @@ pipeline
         stage('Configure')
         {
             steps {
-              ls
+              sh ls
             }
         }
         stage('Launch')
         {
             steps {
-              ls
+              sh ls
             }
         }
     }
