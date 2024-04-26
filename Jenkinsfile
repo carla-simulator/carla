@@ -2,7 +2,7 @@
 
 pipeline
 {
-    agent none
+    agent { label "gpu" }
     stages
     {
         stage('Configure')
