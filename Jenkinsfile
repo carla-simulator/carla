@@ -18,12 +18,12 @@ pipeline
               steps {
                 sh "ls"
               }
-            },
+            }
             stage('Test On MacOS'){
               steps {
                 sh "ls"
               }
-            },
+            }
             stage('Test On Linux'){
               steps {
                 sh "ls"
