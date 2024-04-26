@@ -7,11 +7,11 @@ pipeline
     {
       stage("Platforms")
       {
-        steps {
-          parallel
+        parallel
+        {
+          stage('Linux')
           {
-            stage('Linux')
-            {
+            stages {
               stage('Configure')
               {
                   steps {
@@ -31,8 +31,10 @@ pipeline
                 }
               }
             }
-            stage('Windows')
-            {
+          }
+          stage('Windows')
+          {
+            stages {
               stage('Configure')
               {
                   steps {
