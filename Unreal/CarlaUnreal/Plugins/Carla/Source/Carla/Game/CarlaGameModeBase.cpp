@@ -44,7 +44,7 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
   PrimaryActorTick.TickGroup = TG_PrePhysics;
   bAllowTickBeforeBeginPlay = false;
 
-  Episode = CreateDefaultSubobject<UCarlaEpisode>(TEXT("Episode"));
+  Episode = nullptr;
 
   Recorder = CreateDefaultSubobject<ACarlaRecorder>(TEXT("Recorder"));
 
@@ -84,9 +84,7 @@ void ACarlaGameModeBase::InitGame(
   check(World != nullptr);
   FString InMapName(MapName);
 
-  checkf(
-      Episode != nullptr,
-      TEXT("Missing episode, can't continue without an episode!"));
+  Episode->LoadNewEpisode("");
 
   AActor* LMManagerActor =
       UGameplayStatics::GetActorOfClass(GetWorld(), ALargeMapManager::StaticClass());

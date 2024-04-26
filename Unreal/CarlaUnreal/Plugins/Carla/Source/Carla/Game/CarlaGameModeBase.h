@@ -44,7 +44,7 @@ public:
 
   const UCarlaEpisode &GetCarlaEpisode() const
   {
-    check(Episode != nullptr);
+    Episode->LoadNewEpisode("");
     return *Episode;
   }
 
