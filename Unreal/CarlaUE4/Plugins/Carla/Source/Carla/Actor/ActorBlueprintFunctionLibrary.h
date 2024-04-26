@@ -124,20 +124,6 @@ public:
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeCustomV2XDefinition(
       bool &Success,
-      FActorDefinition &Definition);
-
-  static FActorDefinition MakeV2XDefinition();
-
-  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
-  static void MakeV2XDefinition(
-      bool &Success,
-      FActorDefinition &Definition);
-
-  static FActorDefinition MakeCustomV2XDefinition();
-
-  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
-  static void MakeCustomV2XDefinition(
-      bool &Success,
       FActorDefinition &Definition);            
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
