@@ -13,9 +13,23 @@ pipeline
         }
         stage('Launch')
         {
-            steps {
-              sh "ls"
+          parallel {
+            stage('Test On Windows'){
+              steps {
+                sh "ls"
+              }
+            },
+            stage('Test On MacOS'){
+              steps {
+                sh "ls"
+              }
+            },
+            stage('Test On Linux'){
+              steps {
+                sh "ls"
+              }
             }
+          }
         }
     }
 }
