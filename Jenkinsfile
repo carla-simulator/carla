@@ -8,27 +8,19 @@ pipeline
         stage('Configure')
         {
             steps {
-              sh "ls"
+              sh "cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/LinuxToolchain.cmake -DLAUNCH_ARGS="-prefernvidia" -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH"
             }
         }
-        stage('Launch')
+        stage('Build')
         {
-          parallel {
-            stage('Test On Windows'){
-              steps {
-                sh "ls"
-              }
-            }
-            stage('Test On MacOS'){
-              steps {
-                sh "ls"
-              }
-            }
-            stage('Test On Linux'){
-              steps {
-                sh "ls"
-              }
-            }
+          steps {
+            sh "cmake --build Build --target carla-python-api-install"
+          }
+        }
+        stage('Package')
+        {
+          steps {
+            sh "cmake --build Build --target package"
           }
         }
     }
