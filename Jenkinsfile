@@ -5,47 +5,50 @@ pipeline
     agent { label "gpu" }
     stages
     {
-      parallel
+      stage("Platforms")
       {
-        stage('Linux')
+        parallel
         {
-          stage('Configure')
+          stage('Linux')
           {
+            stage('Configure')
+            {
+                steps {
+                  sh "cmake --version"
+                }
+            }
+            stage('Build')
+            {
               steps {
                 sh "cmake --version"
               }
-          }
-          stage('Build')
-          {
-            steps {
-              sh "cmake --version"
             }
-          }
-          stage('Package')
-          {
-            steps {
-              sh "cmake --version"
-            }
-          }
-        }
-        stage('Windows')
-        {
-          stage('Configure')
-          {
+            stage('Package')
+            {
               steps {
                 sh "cmake --version"
               }
-          }
-          stage('Build')
-          {
-            steps {
-              sh "cmake --version"
             }
           }
-          stage('Package')
+          stage('Windows')
           {
-            steps {
-              sh "cmake --version"
+            stage('Configure')
+            {
+                steps {
+                  sh "cmake --version"
+                }
+            }
+            stage('Build')
+            {
+              steps {
+                sh "cmake --version"
+              }
+            }
+            stage('Package')
+            {
+              steps {
+                sh "cmake --version"
+              }
             }
           }
         }
