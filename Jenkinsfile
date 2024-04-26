@@ -5,16 +5,16 @@ pipeline
     agent none
     stages
     {
-        stage('Stage1')
+        stage('Configure')
         {
             steps {
-              echo "STAGE 1"
+              sh "cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/LinuxToolchain.cmake -DLAUNCH_ARGS="-prefernvidia" -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH"
             }
         }
-        stage('Stage2')
+        stage('Launch')
         {
             steps {
-              echo "STAGE 2"
+              sh "cmake --build Build --target launch"
             }
         }
     }
