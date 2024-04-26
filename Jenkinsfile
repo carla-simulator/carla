@@ -14,13 +14,13 @@ pipeline
         stage('Build')
         {
           steps {
-            cmake --build Build --target carla-python-api-install
+            sh "cmake --version"
           }
         }
         stage('Package')
         {
           steps {
-            cmake --build Build --target package
+            sh "cmake --version"
           }
         }
     }
