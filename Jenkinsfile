@@ -8,7 +8,7 @@ pipeline
         stage('Configure')
         {
             steps {
-              cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/LinuxToolchain.cmake -DLAUNCH_ARGS="-prefernvidia" -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH
+              sh "cmake --version"
             }
         }
         stage('Build')
@@ -20,7 +20,7 @@ pipeline
         stage('Package')
         {
           steps {
-            sh "cmake --build Build --target package"
+            cmake --build Build --target package
           }
         }
     }
