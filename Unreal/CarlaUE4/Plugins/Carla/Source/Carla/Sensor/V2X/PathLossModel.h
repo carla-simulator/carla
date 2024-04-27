@@ -32,22 +32,6 @@ enum EScenario
     Urban
 };
 
-struct DiffractionObstacle
-{
-    DiffractionObstacle(double distTx, double height);
-    // meter
-    double d; // distance to transmitter
-    double h; // height of obstacle
-};
-
-struct DiffractionPath
-{
-    DiffractionPath();
-
-    double attenuation;
-    double d; // meter
-};
-
 class PathLossModel
 {
 public:
@@ -69,12 +53,8 @@ public:
     void SetPathLossModel(const EPathLossModel path_loss_model);
 
 private:
-    // multiple knife edge diffraction for NLOSv
-    double computeVehiclePathLoss(const FVector &pos_tx, const FVector &pos_rx, const double reference_z, std::vector<FVector> &vehicle_obstacles);
-    double computeSimpleKnifeEdge(double heightTx, double heightRx, double heightObs, double distTxRx, double distTxObs);
-    DiffractionPath computeMultipleKnifeEdge(const std::list<DiffractionObstacle> &obs);
-    std::list<DiffractionObstacle> buildTopObstacles(const std::vector<FVector> &vehicles, const FVector &pos_tx, const FVector &pos_rx);
-
+    // diffraction for NLOSv
+    double CalcVehicleLoss(const double d1, const double d2, const double h);
     // powers
     float CalculateReceivedPower(AActor *OtherActor,
                                  const float OtherTransmitPower,
