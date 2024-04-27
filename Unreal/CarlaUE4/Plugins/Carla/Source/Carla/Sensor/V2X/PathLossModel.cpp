@@ -274,6 +274,16 @@ void PathLossModel::EstimatePathStateAndVehicleObstacles(AActor *OtherActor,
     }
 }
 
+double PathLossModel::CalcVehicleLoss(const double d1, const double d2, const double h)
+{
+    double V = h * sqrt(2.0 * (d1 + d2) / (lambda * d1 * d2));
+    if (V >= -0.78) {
+		double T = std::pow(V - 0.1, 2) + 1.0;
+		return 6.9 + 20.0 * log10(sqrt(T + 1.0) + V - 0.1);
+	}
+    return 0.0;
+}
+
 double PathLossModel::CalculateNLOSvLoss(const FVector Source,
                                          const FVector Destination,
                                          const double TxHeight,
@@ -281,7 +291,6 @@ double PathLossModel::CalculateNLOSvLoss(const FVector Source,
                                          const double RxDistance3d,
                                          std::vector<FVector> &vehicle_obstacles)
 {
-    double vehicle_blockage_loss = 0.0;
 
     // convert all positions to meters
     FVector pos_tx = Source;
@@ -293,21 +302,20 @@ double PathLossModel::CalculateNLOSvLoss(const FVector Source,
     pos_rx.X /= 100.0f;
     pos_rx.Y /= 100.0f;
     pos_rx.Z = RxHeight;
-    const double distTxRx{sqrt(std::pow(pos_rx.X - pos_tx.X, 2) + std::pow(pos_rx.Y - pos_tx.Y, 2))}; /*< ground distance */
-    DiffractionObstacle Tx{0.0, pos_tx.Z};
-    DiffractionObstacle Rx{distTxRx, pos_rx.Z};
 
-    auto obsTop = buildTopObstacles(vehicle_obstacles, pos_tx, pos_rx);
-
-    if (!obsTop.empty())
+    double max_loss = 0.0;
+    for(auto veh_it = vehicle_obstacles.begin(); veh_it != vehicle_obstacles.end(); veh_it++)
     {
-        obsTop.push_front(Tx);
-        obsTop.push_back(Rx);
-        auto path = computeMultipleKnifeEdge(obsTop);
-        vehicle_blockage_loss = path.attenuation;
+        double dist_tx_veh = sqrt(std::pow(veh_it->X - pos_tx.X, 2) + std::pow(veh_it->Y - pos_tx.Y, 2));
+        double dist_veh_rx = sqrt(std::pow(pos_rx.X - veh_it->X, 2) + std::pow(pos_rx.Y - veh_it->Y, 2));
+        double cur_loss = CalcVehicleLoss(dist_tx_veh,dist_veh_rx,veh_it->Z);
+        if(cur_loss >= max_loss)
+        {
+            max_loss = cur_loss;
+        }
     }
 
-    return vehicle_blockage_loss;
+    return max_loss;
 }
 
 void PathLossModel::SetPathLossModel(const EPathLossModel path_loss_model)
