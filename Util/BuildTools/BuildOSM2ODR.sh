@@ -76,13 +76,17 @@ fi
 
 if ${BUILD_OSM2ODR} ; then
   log "Building OSM2ODR."
-  cd $OSM2ODR_SOURCE_PATH
-  curl --retry 5 --retry-max-time 120 -L -o OSM2ODR.zip https://github.com/carla-simulator/sumo/archive/$CURRENT_OSM2ODR_COMMIT.zip
-  tar -xf OSM2ODR.zip
-  cd sumo-$CURRENT_OSM2ODR_COMMIT
+  if [ ! -d ${OSM2ODR_SOURCE_FOLDER} ] ; then
+    cd ${CARLA_BUILD_FOLDER}
+    curl --retry 5 --retry-max-time 120 -L -o OSM2ODR.zip https://github.com/carla-simulator/sumo/archive/${CURRENT_OSM2ODR_COMMIT}.zip
+    unzip OSM2ODR.zip
+    rm -f OSM2ODR.zip
+    mv sumo-${CURRENT_OSM2ODR_COMMIT} ${OSM2ODR_SOURCE_FOLDER}
+  fi
 
   mkdir -p ${OSM2ODR_BUILD_FOLDER}
   cd ${OSM2ODR_BUILD_FOLDER}
+
 
   export CC="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang"
   export CXX="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++"
