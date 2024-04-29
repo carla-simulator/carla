@@ -15,7 +15,7 @@ pipeline
               stage('Configure')
               {
                   steps {
-                    sh "lsb_release -a"
+                    sh "echo $UE4_ROOT"
                   }
               }
               stage('Build')
