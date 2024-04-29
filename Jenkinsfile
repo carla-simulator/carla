@@ -15,7 +15,7 @@ pipeline
               stage('Configure')
               {
                   steps {
-                    sh "echo $UE4_ROOT"
+                    sh "echo $PATH"
                   }
               }
               stage('Build')
