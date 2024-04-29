@@ -72,9 +72,13 @@ fi
 if [ ! -z $CARLA_UNREAL_ENGINE_PATH ] && [ -d $CARLA_UNREAL_ENGINE_PATH ]; then
     echo "Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - OK"
 elif [ -d ../UnrealEngine5_carla ]; then
+    pushd ..
+    pushd UnrealEngine5_carla
     echo "Found UnrealEngine5 ../UnrealEngine5_carla - OK"
-    export CARLA_UNREAL_ENGINE_PATH=$PWD/../UnrealEngine5_carla
+    export CARLA_UNREAL_ENGINE_PATH=$PWD
     echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$CARLA_UNREAL_ENGINE_PATH >> ~/.bashrc
+    popd
+    popd
     #TODO: Check if UnrealEngine binary file exists and if not build it
 else
     echo "Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - FAIL"
@@ -96,9 +100,11 @@ else
 fi
 
 echo "Configuring CARLA..."
-retry --until=success --times=10 -- cmake -G Ninja -S . -B Build --toolchain=CMake/LinuxToolchain.cmake -DLAUNCH_ARGS="-prefernvidia" -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH
+retry --until=success --times=10 -- cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/LinuxToolchain.cmake -DLAUNCH_ARGS="-prefernvidia" -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH
 echo "Building CARLA..."
 retry --until=success --times=10 -- cmake --build Build
+echo "Installing PythonAPI..."
+cmake --build Build --target carla-python-api-install
 echo "Waitting for Content to be downloaded... (see the progres in ContentClone.log)"
 wait #Waitting for content
 echo "Instalation and build succesfull! :)"
