@@ -76,15 +76,10 @@ fi
 
 if ${BUILD_OSM2ODR} ; then
   log "Building OSM2ODR."
-  # [ ! -d ${OSM2ODR_BUILD_FOLDER} ] && mkdir ${OSM2ODR_BUILD_FOLDER}
-  if ${GIT_PULL} ; then
-    if [ ! -d ${OSM2ODR_SOURCE_FOLDER} ] ; then
-      git clone -b ${OSM2ODR_BRANCH} ${OSM2ODR_REPO} ${OSM2ODR_SOURCE_FOLDER}
-    fi
-    cd ${OSM2ODR_SOURCE_FOLDER}
-    git fetch
-    git checkout ${CURRENT_OSM2ODR_COMMIT}
-  fi
+  cd $OSM2ODR_SOURCE_PATH
+  curl --retry 5 --retry-max-time 120 -L -o OSM2ODR.zip https://github.com/carla-simulator/sumo/archive/$CURRENT_OSM2ODR_COMMIT.zip
+  tar -xf OSM2ODR.zip
+  cd sumo-$CURRENT_OSM2ODR_COMMIT
 
   mkdir -p ${OSM2ODR_BUILD_FOLDER}
   cd ${OSM2ODR_BUILD_FOLDER}
