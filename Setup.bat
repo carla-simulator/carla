@@ -1,3 +1,5 @@
+SETLOCAL EnableDelayedExpansion
+
 echo Starting Content Download...
 if not exist "Unreal\CarlaUnreal\Content" mkdir Unreal\CarlaUnreal\Content
 start cmd /c git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla
@@ -44,10 +46,7 @@ if errorlevel 1 (
 
 echo Installing Python Pacakges...
 python -m pip install --upgrade pip || exit /b
-python -m pip install --user numpy || exit /b
-python -m pip install --user -Iv setuptools==47.3.1 || exit /b
-python -m pip install --user distro || exit /b
-python -m pip install --user wheel auditwheel || exit /b
+python -m pip install -r requirements.txt || exit /b
 echo Python Pacakges Installed...
 
 
@@ -59,8 +58,12 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     echo Found UnrealEngine5 %CARLA_UNREAL_ENGINE_PATH% - OK
 ) else if exist ..\UnrealEngine5_carla (
     echo Found UnrealEngine5 ..\UnrealEngine5_carla - OK
-    set CARLA_UNREAL_ENGINE_PATH=%cd:\=\\%\\..\\UnrealEngine5_carla
-    setx CARLA_UNREAL_ENGINE_PATH %cd:\=\\%\\..\\UnrealEngine5_carla
+    pushd ..
+    pushd UnrealEngine5_carla
+    set CARLA_UNREAL_ENGINE_PATH=!cd!
+    setx CARLA_UNREAL_ENGINE_PATH !cd!
+    popd
+    popd
     REM TODO: Check if UnrealEngine binary file exists and if not build it
 ) else (
     echo Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - FAIL
@@ -74,8 +77,8 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     call GenerateProjectFiles.bat || exit /b
     echo Opening Visual Studio 2022...
     msbuild Engine\Intermediate\ProjectFiles\UE5.vcxproj /property:Configuration="Development_Editor" /property:Platform="x64" || exit /b
-    set CARLA_UNREAL_ENGINE_PATH=%cd:\=\\%\\..\\UnrealEngine5_carla
-    setx CARLA_UNREAL_ENGINE_PATH %cd:\=\\%\\..\\UnrealEngine5_carla
+    set CARLA_UNREAL_ENGINE_PATH=!cd!
+    setx CARLA_UNREAL_ENGINE_PATH !cd!
     popd
     popd
 )
@@ -86,6 +89,9 @@ call cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release -DBUILD_CARLA_UNREA
 
 echo Buiding CARLA...
 call cmake --build Build || exit /b
+
+echo Installing PythonAPI...
+cmake --build Build --target carla-python-api-install
 
 echo Build Succesfull :)
 echo Launching Unreal Editor with CARLA...

@@ -8,6 +8,16 @@ project (
     "Open-source simulator for autonomous driving research."
 )
 
+option(ENABLE_DIRECTORY_CLEAN
+  "Enable ADDITIONAL_CLEAN_FILES on directory level"
+  ON
+)
+
+set (
+  CARLA_BUILD_PATH
+  ${CARLA_WORKSPACE_PATH}/Build/
+)
+
 set (
   CARLA_UE_PATH
   ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal
@@ -92,9 +102,6 @@ set (UE_DEPENDENCIES ${UE_DEPENDENCIES_ORDER_ONLY})
 
 if (BUILD_CARLA_CLIENT)
   list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-client)
-endif ()
-if (BUILD_PYTHON_API)
-  list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-python-api)
 endif ()
 
 
@@ -407,6 +414,14 @@ function(add_carla_ue_package_target TARGET_NAME_SUFFIX UE_BUILD_CONFIGURATION)
   add_custom_command(
     TARGET carla-unreal-package${TARGET_NAME_SUFFIX}
     POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE CREATING VERSION FILE UNREAL PACKAGE EXTRA FILES STARTED **********"
+    COMMAND ${CMAKE_COMMAND}
+      -DCARLA_SOURCE_DIR=${CARLA_SOURCE_DIR}
+      -DCARLA_UNREAL_ENGINE_PATH=${CARLA_UNREAL_ENGINE_PATH}
+      -DCARLA_PACKAGE_VERSION_FILE=${CARLA_TARGET_PACKAGE_PATH}/VERSION
+      -P${CMAKE_CURRENT_SOURCE_DIR}/Package/CreateCarlaVersionFile.cmake
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE VERSION FILE UNREAL PACKAGE EXTRA FILES COMPLETED **********"
+
     COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE REMOVING UNREAL PACKAGE EXTRA FILES STARTED **********"
     COMMAND ${CMAKE_COMMAND}
       -DCARLA_TARGET_PACKAGE_PATH=${CARLA_TARGET_PACKAGE_PATH}
@@ -511,3 +526,18 @@ add_dependencies (
   launch-only
   prelaunch-content-check
 )
+
+set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES  
+  "${CARLA_UE_PATH}/Binaries" 
+  "${CARLA_UE_PATH}/Intermediate"
+  "${CARLA_UE_PATH}/Saved"
+  "${CARLA_UE_CARLA_TOOLS_PATH}/Binaries" 
+  "${CARLA_UE_CARLA_TOOLS_PATH}/Intermediate"
+  "${CARLA_UE_CARLA_TOOLS_PATH}/Saved"
+  "${CARLA_UE_CARLA_PATH}/Binaries" 
+  "${CARLA_UE_CARLA_PATH}/Intermediate"
+  "${CARLA_UE_CARLA_PATH}/Saved"
+  "${CARLA_BUILD_PATH}/Package"
+  "${CARLA_BUILD_PATH}/PythonAPI/dist"
+  )
+

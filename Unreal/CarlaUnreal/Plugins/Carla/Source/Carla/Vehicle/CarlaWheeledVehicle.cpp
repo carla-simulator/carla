@@ -97,8 +97,8 @@ void ACarlaWheeledVehicle::SetWheelCollisionNW(UWheeledVehicleMovementComponentN
 
 void ACarlaWheeledVehicle::BeginPlay()
 {
-#if 0 // @CARLAUE5
   Super::BeginPlay();
+#if 0 // @CARLAUE5
 
   UDefaultMovementComponent::CreateDefaultMovementComponent(this);
 
