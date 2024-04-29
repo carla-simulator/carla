@@ -65,6 +65,11 @@ set (
   ${CARLA_WORKSPACE_PATH}/LICENSE
 )
 
+set (
+  CARLA_CMAKE_MODULE_PATH
+  ${CARLA_WORKSPACE_PATH}/CMake/Modules
+)
+
 include (CheckCCompilerFlag)
 include (CheckCXXCompilerFlag)
 include (CheckLinkerFlag)
@@ -72,7 +77,6 @@ include (${CARLA_WORKSPACE_PATH}/CMake/Util.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Options.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Common.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Dependencies.cmake)
-
 
 
 if (BUILD_CARLA_CLIENT OR BUILD_CARLA_SERVER)

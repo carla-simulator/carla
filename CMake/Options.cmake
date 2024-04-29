@@ -83,7 +83,7 @@ carla_option (
 carla_option (
   ENABLE_RTTI
   "Enable C++ RTTI."
-  OFF
+  ON
 )
 
 if (NOT ENABLE_EXCEPTIONS)
@@ -93,7 +93,7 @@ endif ()
 carla_option (
   ENABLE_EXCEPTIONS
   "Enable C++ Exceptions."
-  OFF
+  ON
 )
 
 if (NOT ENABLE_EXCEPTIONS)
@@ -130,11 +130,38 @@ carla_option (
   OFF
 )
 
-carla_string_option (
-  LIBCARLA_IMAGE_SUPPORTED_FORMATS
-  "Semicolon-separated list of supported image formats by LibCarla. Available formats: png, jpeg, tiff."
-  png
+carla_option (
+  ENABLE_PNG_SUPPORT
+  "Whether to enable PNG image support."
+  ON
 )
+
+carla_option (
+  ENABLE_TIFF_SUPPORT
+  "Whether to enable TIFF image support."
+  OFF
+)
+
+carla_option (
+  ENABLE_JPEG_SUPPORT
+  "Whether to enable JPEG image support."
+  OFF
+)
+
+set (LIBCARLA_IMAGE_SUPPORTED_FORMATS)
+
+if (ENABLE_PNG_SUPPORT)
+  list (APPEND LIBCARLA_IMAGE_SUPPORTED_FORMATS png)
+endif ()
+
+if (ENABLE_TIFF_SUPPORT)
+  list (APPEND LIBCARLA_IMAGE_SUPPORTED_FORMATS tiff)
+endif ()
+
+if (ENABLE_JPEG_SUPPORT)
+  list (APPEND LIBCARLA_IMAGE_SUPPORTED_FORMATS jpeg)
+endif ()
+
 
 carla_string_option (  
   GCC_COMPILER

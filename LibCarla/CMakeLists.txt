@@ -151,7 +151,10 @@ if (BUILD_CARLA_SERVER)
   )
 
   if (ENABLE_ROS2)
-    add_dependencies (carla-server carla-ros2-native)
+    add_dependencies (
+      carla-server
+      carla-ros2-native
+    )
   endif ()
 
 endif ()

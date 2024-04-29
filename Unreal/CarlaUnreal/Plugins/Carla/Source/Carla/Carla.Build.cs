@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using System.Collections.Generic;
 using UnrealBuildTool;
 using System.Diagnostics;
 using EpicGames.Core;
@@ -9,36 +10,48 @@ using EpicGames.Core;
 public class Carla :
   ModuleRules
 {
-  [CommandLine("-verbose")]
-  bool Verbose = false;
+  private List<string> ReadCMakeStringOptionsFile(string name)
+  {
+    var result = new List<string>();
+    var path = Path.Combine(PluginDirectory, name + ".def");
+    if (File.Exists(path))
+    {
+      Console.WriteLine("Reading " + name + ".def.");
+      foreach (var e in File.ReadAllText(path).Split(';'))
+      {
+        var entry = e.Trim();
+        if (entry.Length != 0)
+          result.Add(entry);
+      }
+    }
+    else
+    {
+      Console.WriteLine("Skipping " + name + ".def, file not found.");
+    }
+    return result;
+  }
 
-  [CommandLine("-carsim")]
-  bool EnableCarSim = false;
-
-  [CommandLine("-chrono")]
-  bool EnableChrono = false;
-
-  [CommandLine("-pytorch")]
-  bool EnablePytorch = false;
-
-  [CommandLine("-ros2")]
-  bool EnableRos2 = false;
-
-  [CommandLine("-osm2odr")]
-  bool EnableOSM2ODR = false;
-
-
+  private void AddDynamicLibrary(string library)
+  {
+    PublicAdditionalLibraries.Add(library);
+    RuntimeDependencies.Add(library);
+    PublicDelayLoadDLLs.Add(library);
+    Console.WriteLine("Dynamic Library Added: " + library);
+  }
 
   public Carla(ReadOnlyTargetRules Target) :
     base(Target)
   {
-    void AddDynamicLibrary(string library)
-    {
-      PublicAdditionalLibraries.Add(library);
-      RuntimeDependencies.Add(library);
-      PublicDelayLoadDLLs.Add(library);
-      Console.WriteLine("Dynamic Library Added: " + library);
-    }
+    foreach (var e in ReadCMakeStringOptionsFile("PublicIncludePaths"))
+      PublicIncludePaths.Add(e);
+    foreach (var e in ReadCMakeStringOptionsFile("PrivateIncludePaths"))
+      PrivateIncludePaths.Add(e);
+    foreach (var e in ReadCMakeStringOptionsFile("RuntimeDependencies"))
+      RuntimeDependencies.Add(e);
+    foreach (var e in ReadCMakeStringOptionsFile("PublicAdditionalLibraries"))
+      PublicAdditionalLibraries.Add(e);
+    foreach (var e in ReadCMakeStringOptionsFile("PublicDelayLoadDLLs"))
+      PublicDelayLoadDLLs.Add(e);
 
     Console.WriteLine("PluginDirectory: " + PluginDirectory);
     foreach (var option in File.ReadAllText(Path.Combine(PluginDirectory, "Options.def")).Split(';'))

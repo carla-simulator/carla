@@ -4,20 +4,31 @@ using System;
 using UnrealBuildTool;
 using EpicGames.Core;
 using System.IO;
+using System.Collections.Generic;
 
 public class CarlaTools :
   ModuleRules
 {
-  [CommandLine("-verbose")]
-  bool Verbose = false;
-
-  [CommandLine("-nv-omniverse")]
-  bool EnableNVIDIAOmniverse = false;
-
-  [CommandLine("-osm2odr")]
-  bool EnableOSM2ODR = false;
-
-
+  private List<string> ReadCMakeStringOptionsFile(string name)
+  {
+    var result = new List<string>();
+    var path = Path.Combine(PluginDirectory, name + ".def");
+    if (File.Exists(path))
+    {
+      Console.WriteLine("Reading " + name + ".def.");
+      foreach (var e in File.ReadAllText(path).Split(';'))
+      {
+        var entry = e.Trim();
+        if (entry.Length != 0)
+          result.Add(entry);
+      }
+    }
+    else
+    {
+      Console.WriteLine("Skipping " + name + ".def, file not found.");
+    }
+    return result;
+  }
 
   public CarlaTools(ReadOnlyTargetRules Target) :
     base(Target)

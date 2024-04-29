@@ -8,7 +8,14 @@
 
 ]]
 
+include (ExternalProject)
 include (FetchContent)
+
+list (
+  APPEND
+  CMAKE_MODULE_PATH
+  ${CARLA_CMAKE_MODULE_PATH}
+)
 
 set (CARLA_DEPENDENCIES_PENDING)
 
@@ -38,6 +45,28 @@ macro (carla_dependency_add NAME TAG ARCHIVE_URL GIT_URL)
   endif ()
 endmacro ()
 
+macro (carla_dynamic_dependency_add NAME TAG ARCHIVE_URL GIT_URL)
+  if (PREFER_CLONE)
+    carla_message ("Cloning ${NAME}...")
+    ExternalProject_Add (
+      ${NAME}
+      GIT_REPOSITORY ${GIT_URL}
+      GIT_TAG ${TAG}
+      GIT_SUBMODULES_RECURSE ON
+      GIT_SHALLOW ON
+      GIT_PROGRESS ON
+      ${ARGN}
+    )
+  else ()
+    carla_message ("Downloading ${NAME}...")
+    ExternalProject_Add (
+      ${NAME}
+      URL ${ARCHIVE_URL}
+      ${ARGN}
+    )
+  endif ()
+endmacro ()
+
 macro (carla_dependencies_make_available)
   FetchContent_MakeAvailable (
     ${CARLA_DEPENDENCIES_PENDING})
@@ -51,9 +80,6 @@ endmacro ()
 
 
 # ==== SQLITE3 ====
-
-set (THREADS_PREFER_PTHREAD_FLAG ON)
-find_package (Threads REQUIRED)
 
 string (REPLACE "." "" CARLA_SQLITE_TAG ${CARLA_SQLITE_VERSION})
 
@@ -76,14 +102,49 @@ add_executable (
   ${sqlite3_SOURCE_DIR}/shell.c
 )
 
+file (
+  GENERATE
+  OUTPUT ${CARLA_WORKSPACE_PATH}/CMake/Modules/FindSQLite3.cmake
+  INPUT ${CARLA_WORKSPACE_PATH}/CMake/Modules/FindSQLite3.cmake.in
+)
+
 if (LINUX)
-  target_link_libraries (libsqlite3 PRIVATE ${CMAKE_DL_LIBS})
-  target_link_libraries (libsqlite3 PRIVATE Threads::Threads)
+
+  set (THREADS_PREFER_PTHREAD_FLAG ON)
+
+  find_package (Threads REQUIRED)
+
+  target_link_libraries (
+    libsqlite3
+    PRIVATE
+    ${CMAKE_DL_LIBS}
+  )
+
+  target_link_libraries (
+    libsqlite3
+    PRIVATE
+    Threads::Threads
+  )
 endif ()
 
 target_link_libraries (
   sqlite3 PRIVATE
   libsqlite3
+)
+
+list (APPEND CMAKE_PROGRAM_PATH ${CMAKE_CURRENT_BINARY_DIR})
+
+carla_dependency_option (SQLite3_INCLUDE_DIRS ${sqlite3_SOURCE_DIR})
+carla_dependency_option (SQLITE3_VERSION 3.45)
+carla_dependency_option (SQLite3_LIBRARIES ${CMAKE_CURRENT_BINARY_DIR}/libsqlite3${LIB_EXT})
+carla_dependency_option (EXE_SQLITE3 ${CMAKE_CURRENT_BINARY_DIR}/sqlite3${EXE_EXT})
+
+carla_message ("${SQLite3_LIBRARIES}")
+
+include_directories (
+  ${sqlite3_SOURCE_DIR}
+  ${sqlite3_BINARY_DIR}
+  # @TODO HACK
 )
 
 # ==== ZLIB ====
@@ -193,14 +254,24 @@ carla_dependency_add (
 # ==== PROJ ====
 
 if (ENABLE_OSM2ODR)
-  carla_dependency_option (BUILD_TESTING OFF)
-  carla_dependency_option (ENABLE_TIFF OFF)
-  carla_dependency_option (ENABLE_CURL OFF)
-  carla_dependency_add (
+  carla_dynamic_dependency_add (
     proj
     ${CARLA_PROJ_TAG}
     https://github.com/OSGeo/PROJ/archive/refs/tags/${CARLA_PROJ_TAG}.zip
     https://github.com/OSGeo/PROJ.git
+    CMAKE_ARGS
+      -DCMAKE_GENERATOR=${CMAKE_GENERATOR}
+      -DCMAKE_PROGRAM_PATH=${CMAKE_CURRENT_BINARY_DIR}
+      -DCMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}
+      -DBUILD_TESTING=OFF
+      -DENABLE_TIFF=OFF
+      -DENABLE_CURL=OFF
+      -DBUILD_PROJSYNC=OFF
+  )
+  add_dependencies (
+    proj
+    sqlite3
+    libsqlite3
   )
 endif ()
 

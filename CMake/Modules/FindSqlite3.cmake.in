@@ -1,0 +1,14 @@
+#[[
+
+  Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma
+  de Barcelona (UAB).
+  
+  This work is licensed under the terms of the MIT license.
+  For a copy, see <https://opensource.org/licenses/MIT>.
+
+]]
+
+set (SQLite3_INCLUDE_DIRS @sqlite3_SOURCE_DIR@ CACHE STRING "")
+set (SQLite3_VERSION 3.45 CACHE STRING "")
+set (SQLite3_LIBRARIES $<TARGET_FILE:libsqlite3> CACHE STRING "")
+set (SQLite3_FOUND TRUE CACHE BOOL "")

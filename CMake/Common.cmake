@@ -1,6 +1,7 @@
 # ================================
 #   Common
 # ================================
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -31,6 +32,22 @@ if (WIN32)
     set (CARLA_DEBUG_AFFIX )
     set (CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
   endif ()
+endif ()
+
+if (WIN32)
+  set (EXE_EXT .exe)
+  set (LIB_EXT .lib)
+  set (DLL_EXT .dll)
+elseif (LINUX)
+  set (EXE_EXT)
+  set (LIB_EXT .a)
+  set (DLL_EXT .so)
+elseif (APPLE)
+  set (EXE_EXT)
+  set (LIB_EXT .a)
+  set (DLL_EXT .so)
+else ()
+  carla_error ("Unknown target system.")
 endif ()
 
 # ================================
