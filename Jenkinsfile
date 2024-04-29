@@ -15,7 +15,7 @@ pipeline
               stage('Configure')
               {
                   steps {
-                    sh "cmake --version"
+                    sh "lsb_release -a"
                   }
               }
               stage('Build')
