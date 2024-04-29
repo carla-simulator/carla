@@ -242,7 +242,8 @@ class RadarSensor(object):
 
         self.velocity_range = 7.5 # m/s
         world = self._parent.get_world()
-        self.debug = world.debug and False #### Draw debug disabled
+        self.draw_radar = False # Set to True if we want to show Radar point cloud in camera sensors.
+        self.debug = world.debug
         bp = world.get_blueprint_library().find('sensor.other.radar')
         bp.set_attribute('horizontal_fov', str(35))
         bp.set_attribute('vertical_fov', str(20))
@@ -260,7 +261,7 @@ class RadarSensor(object):
             return
         
         RadarSensor.save_to_csv(weak_self, radar_data)
-        if self.debug:
+        if self.draw_radar:
             RadarSensor.draw_debug(weak_self, radar_data)
         self.frame_number += 1
             
