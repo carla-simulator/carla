@@ -15,7 +15,7 @@ pipeline
               stage('Configure')
               {
                   steps {
-                    sh "echo $PATH"
+                    sh "printenv"
                   }
               }
               stage('Build')
