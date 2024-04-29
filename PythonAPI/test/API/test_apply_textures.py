@@ -124,8 +124,8 @@ def test_apply_textures_to_object(host, port):
       name,
       NOISE_TEXTURE_COLOR_BLUE,
       carla.TextureFloatColor(0, 0), # Skip emissive
-      NOISE_TEXTURE_COLOR_BLUE,
-      NOISE_TEXTURE_COLOR_BLUE)
+      NOISE_TEXTURE_FLOAT_COLOR_BLUE,
+      NOISE_TEXTURE_FLOAT_COLOR_BLUE)
 
 def test_apply_color_texture_to_objects(host, port):
   global this_name_index
