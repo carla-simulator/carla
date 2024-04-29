@@ -128,5 +128,5 @@ private:
 
   // random for noise
   URandomEngine *mRandomEngine;
-  ITSContainer::SpeedValue_t buildSpeedValue(const float vel);
+  ITSContainer::SpeedValue_t BuildSpeedValue(const float vel);
 };

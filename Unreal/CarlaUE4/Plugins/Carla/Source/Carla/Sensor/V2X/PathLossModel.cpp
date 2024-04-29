@@ -278,7 +278,7 @@ double PathLossModel::CalcVehicleLoss(const double d1, const double d2, const do
 {
     double V = h * sqrt(2.0 * (d1 + d2) / (lambda * d1 * d2));
     if (V >= -0.78) {
-		double T = std::pow(V - 0.1, 2) + 1.0;
+		double T = std::pow(V - 0.1, 2);
 		return 6.9 + 20.0 * log10(sqrt(T + 1.0) + V - 0.1);
 	}
     return 0.0;
@@ -363,7 +363,7 @@ float PathLossModel::ComputeLoss(AActor *OtherActor, FVector Source, FVector Des
         }
         else
         {
-            // fspl + multi knife edge
+            // fspl + knife edge
             // fspl
             double free_space_loss = 20.0 * log10(Distance3d) + 20.0 * log10(4.0 * M_PI / lambda);
             // add the knife edge vehicle blockage loss

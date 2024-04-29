@@ -12,7 +12,7 @@
 #include <chrono>
 static const float scLowFrequencyContainerInterval = 0.5;
 
-ITSContainer::SpeedValue_t CaService::buildSpeedValue(const float vel)
+ITSContainer::SpeedValue_t CaService::BuildSpeedValue(const float vel)
 {
     static const float lower = 0.0;    // meter_per_second
     static const float upper = 163.82; // meter_per_second
@@ -474,7 +474,7 @@ void CaService::AddBasicVehicleContainerHighFrequency(CAMContainer::HighFrequenc
     bvc.heading.headingConfidence = ITSContainer::HeadingConfidence_equalOrWithinOneDegree; // TODO
     // speed
     // speed with noise
-    bvc.speed.speedValue = buildSpeedValue(ComputeSpeed());
+    bvc.speed.speedValue = BuildSpeedValue(ComputeSpeed());
     bvc.speed.speedConfidence = ITSContainer::SpeedConfidence_equalOrWithInOneCentimerterPerSec * 3; // TODO
     // direction
     bvc.driveDirection = (mVehicle->GetVehicleForwardSpeed() / 100.0f) >= 0.0 ? ITSContainer::DriveDirection_forward : ITSContainer::DriveDirection_backward;
