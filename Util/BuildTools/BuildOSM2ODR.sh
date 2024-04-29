@@ -79,7 +79,7 @@ if ${BUILD_OSM2ODR} ; then
   if [ ! -d ${OSM2ODR_SOURCE_FOLDER} ] ; then
     cd ${CARLA_BUILD_FOLDER}
     curl --retry 5 --retry-max-time 120 -L -o OSM2ODR.zip https://github.com/carla-simulator/sumo/archive/${CURRENT_OSM2ODR_COMMIT}.zip
-    unzip OSM2ODR.zip
+    unzip -qq OSM2ODR.zip
     rm -f OSM2ODR.zip
     mv sumo-${CURRENT_OSM2ODR_COMMIT} ${OSM2ODR_SOURCE_FOLDER}
   fi
