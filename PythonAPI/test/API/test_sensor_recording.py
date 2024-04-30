@@ -11,79 +11,108 @@ import math
 from math import isclose
 import time
 import csv
+from enum import Enum
 
 try:
     import numpy as np
 except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
+class SensorType(Enum):
+    Gnss = 1
+    IMU = 2
+    Radar = 3
+    RGB = 4
+    Depth_Raw = 5
+    Depth_GrayScale = 6
+    Depth_LogScale = 7
+    SemanticSeg_Raw = 8
+    SemanticSeg_CityScapesPalette = 9
+    InstanceSeg_Raw = 10
+    InstanceSeg_CityScapesPalette = 11
+    Lidar = 12
+    SemanticLidar = 13
+    RGB_Distorted = 14
 
-class TestSensorRecordingTest(unittest.TestCase):
-    def test_sensor_recording(self):
+# ==============================================================================
+# -- Scenario ------------------------------------------------------------------
+# ==============================================================================
+class Scenario():
+    def __init__(self, test):
+        self.test = test
         client = carla.Client()
-        world = client.load_world('Town10HD_Opt')
+        self.world = client.load_world('Town10HD_Opt')
         time.sleep(5)
         
-        settings = world.get_settings()
-        settings.synchronous_mode = True
-        settings.fixed_delta_seconds = 0.05
-        world.apply_settings(settings)
-        bp_lib = world.get_blueprint_library()
-        start_time = str(round(time.time()))
+        # sync mode
+        self.settings = self.world.get_settings()
+        self.settings.synchronous_mode = True
+        self.settings.fixed_delta_seconds = 0.05
+        self.world.apply_settings(self.settings)
+        bp_lib = self.world.get_blueprint_library()
+        self.start_time = str(round(time.time()))
         
         # Spawn player actor
-        spectator = world.get_spectator()
+        spectator = self.world.get_spectator()
         spectator.set_transform(carla.Transform(carla.Location(39.32, 130.43, 5.84), carla.Rotation(pitch=-29, yaw=180)))
         player_bp_to_spawn = bp_lib.find("static.prop.vendingmachine")
-        player = world.try_spawn_actor(player_bp_to_spawn, carla.Transform(carla.Location(32.338, 130.16, 0.6), carla.Rotation(yaw=180)))
-        self.assertIsNotNone(player)
-        world.tick()
-        player_movement = PlayerMovement(player)
+        self.player = self.world.try_spawn_actor(player_bp_to_spawn, carla.Transform(carla.Location(32.338, 130.16, 0.6), carla.Rotation(yaw=180)))
+        self.test.assertIsNotNone(self.player)
+        self.world.tick()
+        self.player_movement = PlayerMovement(self.player)
+        self.camera_manager = CameraManager(self.player, self.test, self.start_time)
+        self.sensors_array = []
+        self.gnss_sensor = None
+        self.imu_sensor = None
+        self.radar_sensor = None
+    
+    def spawn_sensor(self, sensor_type):
+        if sensor_type == SensorType.Gnss:
+            self.gnss_sensor = GnssSensor(self.player, self.start_time)
+            self.test.assertIsNotNone(self.gnss_sensor.sensor)
+            self.sensors_array.append(self.gnss_sensor.sensor)
+        elif sensor_type == SensorType.IMU:
+            self.imu_sensor = IMUSensor(self.player, self.start_time)
+            self.test.assertIsNotNone(self.imu_sensor.sensor)
+            self.sensors_array.append(self.imu_sensor.sensor)
+        elif sensor_type == SensorType.Radar:
+            self.radar_sensor = RadarSensor(self.player, self.start_time)
+            self.test.assertIsNotNone(self.radar_sensor.sensor)
+            self.sensors_array.append(self.radar_sensor.sensor)
+        else:
+            self.camera_manager.spawn_sensor(sensor_type)
+            self.test.assertIsNotNone(self.camera_manager)
         
-        # Spawn CameraManager with some sensors
-        camera_manager = CameraManager(player, self, start_time)
-        self.assertIsNotNone(camera_manager)
+    def game_loop(self):
+        while not self.player_movement.movement_finished:
+            self.world.tick()
+            self.player_movement.move()
+            if len(self.camera_manager.spawned_sensors) > 0:
+                self.camera_manager.tick() # Waits until all the cameras have the current frame data
+            else:
+                time.sleep(self.settings.fixed_delta_seconds)
         
-        # Spawn other sensors
-        sensors_array = []
-        gnss_sensor = GnssSensor(player, start_time)
-        imu_sensor = IMUSensor(player, start_time)
-        radar_sensor = RadarSensor(player, start_time)
-        self.assertIsNotNone(gnss_sensor.sensor)
-        self.assertIsNotNone(imu_sensor.sensor)
-        self.assertIsNotNone(radar_sensor.sensor)
-        sensors_array.append(gnss_sensor.sensor)
-        sensors_array.append(imu_sensor.sensor)
-        sensors_array.append(radar_sensor.sensor)
-        
-        ## Game Loop
-        while not player_movement.movement_finished:
-            world.tick()
-            player_movement.move()
-            camera_manager.tick() # Waits until all the cameras have the current frame data
-
-        # Cleanup
-        for sensor in sensors_array:
+    def cleanup(self):
+        for sensor in self.sensors_array:
             if sensor is not None:
                 sensor.stop()
                 sensor.destroy()
                 
-        if camera_manager is not None:
-            camera_manager.destroy_sensors()
+        if self.camera_manager is not None:
+            self.camera_manager.destroy_sensors()
             
-        if player is not None:
-            player.destroy()
+        if self.player is not None:
+            self.player.destroy()
 
-        world.tick()
-        sensor_actors = world.get_actors().filter('sensor.*')
-        self.assertEqual(0, sensor_actors.__len__())
+        self.world.tick()
+        sensor_actors = self.world.get_actors().filter('sensor.*')
+        self.test.assertEqual(0, sensor_actors.__len__())
         
-        settings = world.get_settings()
+        settings = self.world.get_settings()
         settings.synchronous_mode = False
-        world.apply_settings(settings)
-        world.tick()
-        
-        
+        self.world.apply_settings(settings)
+        self.world.tick()
+    
         
 # ==============================================================================
 # -- Player Movement -----------------------------------------------------------
@@ -149,6 +178,7 @@ class GnssSensor(object):
         if not self:
             return
         
+        print("Gnss save")
         self.lat = event.latitude
         self.lon = event.longitude
         GnssSensor.save_to_csv(weak_self)
@@ -331,59 +361,57 @@ class CameraManager(object):
         self.transform_index = 1
         
         self.sensors = [
-            ['sensor.camera.rgb', cc.Raw, 'CameraRGB', {}],
-            #['sensor.camera.depth', cc.Raw, 'CameraDepth (Raw)', {}],
-            #['sensor.camera.depth', cc.Depth, 'CameraDepth (GrayScale)', {}],
-            ['sensor.camera.depth', cc.LogarithmicDepth, 'CameraDepth (LogarithmicGrayScale)', {}],
-            #['sensor.camera.semantic_segmentation', cc.Raw, 'CameraSemanticSegmentation (Raw)', {}],
-            ['sensor.camera.semantic_segmentation', cc.CityScapesPalette, 'CameraSemanticSegmentation (CityScapesPalette)', {}],
-            #['sensor.camera.instance_segmentation', cc.Raw, 'CameraInstanceSegmentation (Raw)', {}],
-            ['sensor.camera.instance_segmentation', cc.CityScapesPalette, 'CameraInstanceSegmentation (CityScapesPalette)', {}],
-            ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)', {'range': '50'}],
-            ['sensor.lidar.ray_cast_semantic', None, 'SemanticLidar (Ray-Cast)', {'range': '50'}],
-            #['sensor.camera.dvs', cc.Raw, 'DynamicVisionSensor', {}],
-            #['sensor.camera.rgb', cc.Raw, 'Camera RGB Distorted', {'lens_circle_multiplier': '3.0', 'lens_circle_falloff': '3.0', 'chromatic_aberration_intensity': '0.5', 'chromatic_aberration_offset': '0'}],
-            #['sensor.camera.optical_flow', cc.Raw, 'OpticalFlow', {}],
-            #['sensor.camera.normals', cc.Raw, 'CameraNormals', {}],
+            [SensorType.RGB, 'sensor.camera.rgb', cc.Raw, 'CameraRGB', {}],
+            [SensorType.Depth_Raw, 'sensor.camera.depth', cc.Raw, 'CameraDepth (Raw)', {}],
+            [SensorType.Depth_GrayScale, 'sensor.camera.depth', cc.Depth, 'CameraDepth (GrayScale)', {}],
+            [SensorType.Depth_LogScale, 'sensor.camera.depth', cc.LogarithmicDepth, 'CameraDepth (LogarithmicGrayScale)', {}],
+            [SensorType.SemanticSeg_Raw, 'sensor.camera.semantic_segmentation', cc.Raw, 'CameraSemanticSegmentation (Raw)', {}],
+            [SensorType.SemanticSeg_CityScapesPalette, 'sensor.camera.semantic_segmentation', cc.CityScapesPalette, 'CameraSemanticSegmentation (CityScapesPalette)', {}],
+            [SensorType.InstanceSeg_Raw, 'sensor.camera.instance_segmentation', cc.Raw, 'CameraInstanceSegmentation (Raw)', {}],
+            [SensorType.InstanceSeg_CityScapesPalette, 'sensor.camera.instance_segmentation', cc.CityScapesPalette, 'CameraInstanceSegmentation (CityScapesPalette)', {}],
+            [SensorType.Lidar, 'sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)', {'range': '50'}],
+            [SensorType.SemanticLidar, 'sensor.lidar.ray_cast_semantic', None, 'SemanticLidar (Ray-Cast)', {'range': '50'}],
+            [SensorType.RGB_Distorted, 'sensor.camera.rgb', cc.Raw, 'Camera RGB Distorted', {'lens_circle_multiplier': '3.0', 'lens_circle_falloff': '3.0', 'chromatic_aberration_intensity': '0.5', 'chromatic_aberration_offset': '0'}],
         ]
         
         self.configure_sensors()
-        self.spawn_sensors()
 
     def configure_sensors(self):
         world = self._parent.get_world()
         bp_library = world.get_blueprint_library()
         for item in self.sensors:
-            bp = bp_library.find(item[0])
-            if item[0].startswith('sensor.camera'):
+            bp = bp_library.find(item[1])
+            if item[1].startswith('sensor.camera'):
                 bp.set_attribute('image_size_x', '1280')
                 bp.set_attribute('image_size_y', '720')
                 if bp.has_attribute('gamma'):
                     bp.set_attribute('gamma', str(2.2))
-                for attr_name, attr_value in item[3].items():
+                for attr_name, attr_value in item[4].items():
                     bp.set_attribute(attr_name, attr_value)
-            elif item[0].startswith('sensor.lidar'):
-                for attr_name, attr_value in item[3].items():
+            elif item[1].startswith('sensor.lidar'):
+                for attr_name, attr_value in item[4].items():
                     bp.set_attribute(attr_name, attr_value)
 
             item.append(bp)
         
-    def spawn_sensors(self):
+    def spawn_sensor(self, sensor_type):
         for sensor_item in self.sensors:
-            spawned_sensor = self._parent.get_world().spawn_actor(
-                sensor_item[-1],
-                self._camera_transforms[self.transform_index][0],
-                attach_to=self._parent,
-                attachment_type=self._camera_transforms[self.transform_index][1])
-            
-            self._unit_test.assertIsNotNone(spawned_sensor)
-            self.spawned_sensors.append(spawned_sensor)
-            # We need to pass the lambda a weak reference to self to avoid circular reference.
-            weak_self = weakref.ref(self)
-            sensor_name = sensor_item[2]
-            sensor_color = sensor_item[1]
-            self.spawned_sensors_frames.append([sensor_name, 0])
-            spawned_sensor.listen(lambda image, sensor_name=sensor_name, sensor_color=sensor_color: CameraManager._parse_image(weak_self, image, sensor_name, sensor_color))
+            if sensor_type == sensor_item[0]:
+                spawned_sensor = self._parent.get_world().spawn_actor(
+                    sensor_item[-1],
+                    self._camera_transforms[self.transform_index][0],
+                    attach_to=self._parent,
+                    attachment_type=self._camera_transforms[self.transform_index][1])
+                
+                self._unit_test.assertIsNotNone(spawned_sensor)
+                self.spawned_sensors.append(spawned_sensor)
+                # We need to pass the lambda a weak reference to self to avoid circular reference.
+                weak_self = weakref.ref(self)
+                sensor_name = sensor_item[3]
+                sensor_color = sensor_item[2]
+                self.spawned_sensors_frames.append([sensor_name, 0])
+                spawned_sensor.listen(lambda image, sensor_name=sensor_name, sensor_color=sensor_color: CameraManager._parse_image(weak_self, image, sensor_name, sensor_color))
+                break
 
     def tick(self):
         world = self._parent.get_world()
@@ -422,6 +450,76 @@ class CameraManager(object):
                 sensor.stop()
                 sensor.destroy()
                 
-
-# if __name__ == '__main__':
-#     unittest.main()
+                
+# ==============================================================================
+# -- Tests ---------------------------------------------------------------------
+# ==============================================================================
+class TestSensorRecording(unittest.TestCase):  
+    def test_gnss(self):
+        print("TestSensorRecording.test_gnss")
+        scenario = Scenario(self)
+        scenario.spawn_sensor(SensorType.Gnss)
+        scenario.game_loop()
+        scenario.cleanup()
+        
+    def test_imu(self):
+        print("TestSensorRecording.test_imu")
+        scenario = Scenario(self)
+        scenario.spawn_sensor(SensorType.IMU)
+        scenario.game_loop()
+        scenario.cleanup()
+    
+    def test_radar(self):
+        print("TestSensorRecording.test_radar")
+        scenario = Scenario(self)
+        scenario.spawn_sensor(SensorType.Radar)
+        scenario.game_loop()
+        scenario.cleanup()
+        
+    def test_rgb(self):
+        print("TestSensorRecording.test_rgb")
+        scenario = Scenario(self)
+        scenario.spawn_sensor(SensorType.RGB)
+        scenario.spawn_sensor(SensorType.RGB_Distorted)
+        scenario.game_loop()
+        scenario.cleanup()
+        
+    def test_depth(self):
+        print("TestSensorRecording.test_depth")
+        scenario = Scenario(self)
+        scenario.spawn_sensor(SensorType.Depth_Raw)
+        scenario.spawn_sensor(SensorType.Depth_GrayScale)
+        scenario.spawn_sensor(SensorType.Depth_LogScale)
+        scenario.game_loop()
+        scenario.cleanup()
+        
+    def test_instance_segmentation(self):
+        print("TestSensorRecording.test_instance_segmentation")
+        scenario = Scenario(self)
+        scenario.spawn_sensor(SensorType.InstanceSeg_Raw)
+        scenario.spawn_sensor(SensorType.InstanceSeg_CityScapesPalette)
+        scenario.game_loop()
+        scenario.cleanup()
+        
+    def test_semantic_segmentation(self):
+        print("TestSensorRecording.test_semantic_segmentation")
+        scenario = Scenario(self)
+        scenario.spawn_sensor(SensorType.SemanticSeg_CityScapesPalette)
+        scenario.spawn_sensor(SensorType.SemanticSeg_Raw)
+        scenario.game_loop()
+        scenario.cleanup()
+        
+    def test_lidar(self):
+        print("TestSensorRecording.test_lidar")
+        scenario = Scenario(self)
+        scenario.spawn_sensor(SensorType.Lidar)
+        scenario.game_loop()
+        scenario.cleanup()
+        
+    def test_semantic_lidar(self):
+        print("TestSensorRecording.test_semantic_lidar")
+        scenario = Scenario(self)
+        scenario.spawn_sensor(SensorType.SemanticLidar)
+        scenario.game_loop()
+        scenario.cleanup()
+        
