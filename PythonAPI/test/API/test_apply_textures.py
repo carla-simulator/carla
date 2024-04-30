@@ -14,12 +14,18 @@ import carla
 import argparse
 import unittest
 import numpy as np
-
+import weakref
+import time
+from pathlib import Path
 
 
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 2000
-OUTPUT_PATH = '_out/apply_textures'
+OUTPUT_PATH = Path(__file__).parent / '_out' / 'apply_textures'
+for e in OUTPUT_PATH.parents:
+  e.mkdir(exist_ok=True)
+HEIGHT = 256
+WIDTH = 256
 
 
 
@@ -40,6 +46,10 @@ args = argparser.parse_args()
 
 
 class TestApplyTextures(unittest.TestCase):
+
+  def __init__(self, methodName: str = "runTest"):
+    super().__init__(methodName)
+    self.camera = None
 
   def to_texture(self, data, w, h, mask = 'rgb'):
     t = carla.TextureColor(w, h)
@@ -67,45 +77,53 @@ class TestApplyTextures(unittest.TestCase):
         ))
     return t
 
+  @staticmethod
+  def save_image(weak_self, image):
+    self = weak_self()
+    image.convert(carla.ColorConverter.Raw)
+    image.save_to_disk(str(OUTPUT_PATH / f'frame-{image.frame}'))
+
   def test_apply_textures(self, host = DEFAULT_HOST, port = DEFAULT_PORT):
-    client = carla.Client(host, port)
-    self.assertIsNotNone(client)
-    client.set_timeout(20.0)
-    world = client.get_world()
-    self.assertIsNotNone(world)
-    height = 256
-    width = 256
-    print('Creating noise data.')
-    noise_data = np.reshape([
-      np.abs(np.random.normal())
-      for i in range(0, height * width) ],
-      [ width, height ])
-    print('Creating noise texture.')
-    noise_texture_color_red = self.to_texture(noise_data, width, height, 'r')
-    names = set(world.get_names_of_all_objects())
-    print('Spawning test actor.')
-    bpl = world.get_blueprint_library()
-    spectator = world.get_spectator()
-    spectator.set_transform(
-      carla.Transform(
-        carla.Location(-27.8, -63.28, 10.6),
-        carla.Rotation(pitch=-29, yaw=135)))
-    bp = np.random.choice(bpl.filter('static.prop.*'))
-    self.assertIsNotNone(bp)
-    target = world.try_spawn_actor(
-      bp,
-      carla.Transform(
-        carla.Location(-4270.000000, -5550.000000, 0.000000)))
-    world.tick()
-    self.assertIsNotNone(target)
-    actors = set.difference(names, set(world.get_names_of_all_objects()))
-    self.assertNotEqual(len(actors), 0)
-    for e in actors:
-      print(f'Applying random test texture to {e}')
-      world.apply_color_texture_to_object(
-        e,
-        carla.MaterialParameter.Diffuse,
-        noise_texture_color_red)
+    try:
+      client = carla.Client(host, port)
+      self.assertIsNotNone(client)
+      client.set_timeout(20.0)
+      world = client.get_world()
+      self.assertIsNotNone(world)
+      noise_data = np.reshape([
+        np.abs(np.random.normal())
+        for i in range(0, HEIGHT * WIDTH) ],
+        [ WIDTH, HEIGHT ])
+      noise_texture_color_red = self.to_texture(noise_data, WIDTH, HEIGHT, 'r')
+      bpl = world.get_blueprint_library()
+      camera = world.spawn_actor(
+        bpl.find('sensor.camera.rgb'),
+        carla.Transform(
+          carla.Location(x=-9.872277, y=9.048162, z=8.958106),
+          carla.Rotation(pitch=-31.830936, yaw=-46.900402, roll=0.000000)))
+      weak_self = weakref.ref(self)
+      self.camera = camera
+      camera.listen(lambda image: TestApplyTextures.save_image(weak_self, image))
+      self.assertIsNotNone(bpl)
+      world.tick()
+      spectator = world.get_spectator()
+      self.assertIsNotNone(spectator)
+      spectator.set_transform(carla.Transform(
+        carla.Location(x=-9.872277, y=9.048162, z=8.958106),
+        carla.Rotation(pitch=-31.830936, yaw=-46.900402, roll=0.000000)))
+      world.tick()
+      bp = np.random.choice(bpl.filter('static.prop.*'))
+      self.assertIsNotNone(bp)
+      world.tick()
+      world.apply_color_texture_to_objects(
+        world.get_names_of_all_objects(),
+          carla.MaterialParameter.Diffuse,
+          noise_texture_color_red)
+      time.sleep(2)
+    finally:
+      if self.camera != None:
+        self.camera.destroy()
+        self.camera = None
 
 if __name__ == '__main__':
   unittest.main()
