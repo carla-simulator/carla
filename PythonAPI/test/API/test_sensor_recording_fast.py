@@ -33,9 +33,9 @@ class TestSensorRecordingTest(unittest.TestCase):
         
         # Spawn player actor
         spectator = world.get_spectator()
-        spectator.set_transform(carla.Transform(carla.Location(39.32, 130.43, 5.84), carla.Rotation(pitch=-29, yaw=180)))
+        spectator.set_transform(carla.Transform(carla.Location(28.32, 130.43, 5.84), carla.Rotation(pitch=-29, yaw=180)))
         player_bp_to_spawn = bp_lib.find("static.prop.vendingmachine")
-        player = world.try_spawn_actor(player_bp_to_spawn, carla.Transform(carla.Location(32.338, 130.16, 0.6), carla.Rotation(yaw=180)))
+        player = world.try_spawn_actor(player_bp_to_spawn, carla.Transform(carla.Location(14.338, 130.16, 0.6), carla.Rotation(yaw=180)))
         self.assertIsNotNone(player)
         world.tick()
         player_movement = PlayerMovement(player)
@@ -93,11 +93,8 @@ class PlayerMovement(object):
         self._parent = parent_actor
         self.movement_finished = False
         self.movement_state = 0
-        self.speed = 0.30
-        self.angular_speed = 1.4
+        self.speed = 0.50
         self.first_target_x = -28.98
-        self.second_target_yaw = -90.0
-        self.third_target_y = 79.25
 
     def move(self):
         player_transform = self._parent.get_transform()
@@ -107,18 +104,6 @@ class PlayerMovement(object):
             player_location = player_transform.location + carla.Location(self.speed * forward_vec.x, self.speed * forward_vec.y)
             self._parent.set_location(player_location)
             if isclose(self.first_target_x, player_location.x, abs_tol=self.speed):
-                self.movement_state = 1
-        elif self.movement_state == 1:
-            player_transform.location += carla.Location(self.speed * forward_vec.x, self.speed * forward_vec.y)
-            player_transform.rotation.yaw += self.angular_speed
-            self._parent.set_transform(player_transform)
-            if isclose(self.second_target_yaw, player_transform.rotation.yaw, abs_tol=self.angular_speed):
-                self.movement_state = 2
-        elif self.movement_state == 2:
-            player_location = player_transform.location + carla.Location(self.speed * forward_vec.x, self.speed * forward_vec.y)
-            self._parent.set_location(player_location)
-            if isclose(self.third_target_y, player_location.y, abs_tol=self.speed):
-                self.movement_state = 3
                 self.movement_finished = True
        
 
@@ -423,5 +408,5 @@ class CameraManager(object):
                 sensor.destroy()
                 
 
-# if __name__ == '__main__':
-#     unittest.main()
+#if __name__ == '__main__':
+#    unittest.main()
