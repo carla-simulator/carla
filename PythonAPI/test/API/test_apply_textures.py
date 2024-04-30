@@ -15,12 +15,33 @@ import argparse
 import unittest
 import numpy as np
 
+
+
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 2000
+OUTPUT_PATH = '_out/apply_textures'
+
+
+
+argparser = argparse.ArgumentParser()
+argparser.add_argument(
+    '--host',
+    metavar='H',
+    default=DEFAULT_HOST,
+    help=f'IP of the host server (default: {DEFAULT_HOST})')
+argparser.add_argument(
+    '-p', '--port',
+    metavar='P',
+    default=DEFAULT_PORT,
+    type=int,
+    help=f'TCP port to listen to (default: {DEFAULT_PORT})')
+args = argparser.parse_args()
+
+
 
 class TestApplyTextures(unittest.TestCase):
 
-  def to_texture(data, w, h, mask = 'rgb'):
+  def to_texture(self, data, w, h, mask = 'rgb'):
     t = carla.TextureColor(w, h)
     for i in range(0, h):
       for j in range(0, w):
@@ -33,7 +54,7 @@ class TestApplyTextures(unittest.TestCase):
         ))
     return t
 
-  def to_texture_float(data, w, h, mask = 'rgb'):
+  def to_texture_float(self, data, w, h, mask = 'rgb'):
     t = carla.TextureFloatColor(w, h)
     for i in range(0, h):
       for j in range(0, w):
@@ -46,168 +67,45 @@ class TestApplyTextures(unittest.TestCase):
         ))
     return t
 
-  def __init__(self):
-    self.height = 256
-    self.width = 256
-    self.noise_data = np.reshape([
+  def test_apply_textures(self, host = DEFAULT_HOST, port = DEFAULT_PORT):
+    client = carla.Client(host, port)
+    self.assertIsNotNone(client)
+    client.set_timeout(20.0)
+    world = client.get_world()
+    self.assertIsNotNone(world)
+    height = 256
+    width = 256
+    print('Creating noise data.')
+    noise_data = np.reshape([
       np.abs(np.random.normal())
-      for i in range(0, self.height * self.width) ],
-      [ self.width, self.height ])
-    self.noise_texture_color_red = self.to_texture(self.noise_data, self.width, self.height, 'r')
-    self.noise_texture_color_green = self.to_texture(self.noise_data, self.width, self.height, 'g')
-    self.noise_texture_color_blue = self.to_texture(self.noise_data, self.width, self.height, 'b')
-    self.noise_texture_float_color_red = self.to_texture_float(self.noise_data, self.width, self.height, 'r')
-    self.noise_texture_float_color_green = self.to_texture_float(self.noise_data, self.width, self.height, 'g')
-    self.noise_texture_float_color_blue = self.to_texture_float(self.noise_data, self.width, self.height, 'b')
-    self.this_name_index = 0
-    self.this_name = None
-    self.actor_count = 0
-
-  def reset_state():
-    global this_name_index
-    global actor_count
-    global this_name
-    this_name_index = 0
-    this_name = None
-    actor_count = 0
-
-  def test_apply_color_texture_to_object(self, host, port):
-    global this_name_index
-    global actor_count
-    global this_name
-    client = carla.Client(host, port)
-    client.set_timeout(20.0)
-    world = client.get_world()
-    name_list = world.get_names_of_all_objects()
-    actor_count = len(name_list)
-    for name in name_list:
-      this_name = name
-      this_name_index += 1
-      print(f'[{this_name_index}/{actor_count}] Applying random test texture to {name}')
+      for i in range(0, height * width) ],
+      [ width, height ])
+    print('Creating noise texture.')
+    noise_texture_color_red = self.to_texture(noise_data, width, height, 'r')
+    names = set(world.get_names_of_all_objects())
+    print('Spawning test actor.')
+    bpl = world.get_blueprint_library()
+    spectator = world.get_spectator()
+    spectator.set_transform(
+      carla.Transform(
+        carla.Location(-27.8, -63.28, 10.6),
+        carla.Rotation(pitch=-29, yaw=135)))
+    bp = np.random.choice(bpl.filter('static.prop.*'))
+    self.assertIsNotNone(bp)
+    target = world.try_spawn_actor(
+      bp,
+      carla.Transform(
+        carla.Location(-4270.000000, -5550.000000, 0.000000)))
+    world.tick()
+    self.assertIsNotNone(target)
+    actors = set.difference(names, set(world.get_names_of_all_objects()))
+    self.assertNotEqual(len(actors), 0)
+    for e in actors:
+      print(f'Applying random test texture to {e}')
       world.apply_color_texture_to_object(
-        name,
+        e,
         carla.MaterialParameter.Diffuse,
-        self.noise_texture_color_red)
+        noise_texture_color_red)
 
-  def test_apply_float_color_texture_to_object(self, host, port):
-    global this_name_index
-    global actor_count
-    global this_name
-    client = carla.Client(host, port)
-    client.set_timeout(20.0)
-    world = client.get_world()
-    name_list = world.get_names_of_all_objects()
-    actor_count = len(name_list)
-    for name in name_list:
-      this_name = name
-      this_name_index += 1
-      print(f'[{this_name_index}/{actor_count}] Applying random test texture to {name}')
-      world.apply_float_color_texture_to_object(
-        name,
-        carla.MaterialParameter.Diffuse,
-        self.noise_texture_float_color_green)
-
-  def test_apply_textures_to_object(self, host, port):
-    global this_name_index
-    global actor_count
-    global this_name
-    client = carla.Client(host, port)
-    client.set_timeout(20.0)
-    world = client.get_world()
-    name_list = world.get_names_of_all_objects()
-    actor_count = len(name_list)
-    for name in name_list:
-      this_name = name
-      this_name_index += 1
-      print(f'[{this_name_index}/{actor_count}] Applying random test texture to {name}')
-      world.apply_textures_to_object(
-        name,
-        self.noise_texture_color_blue,
-        carla.TextureFloatColor(0, 0), # Skip emissive
-        self.noise_texture_float_color_blue,
-        self.noise_texture_float_color_blue)
-
-  def test_apply_color_texture_to_objects(self, host, port):
-    global this_name_index
-    global actor_count
-    global this_name
-    client = carla.Client(host, port)
-    client.set_timeout(20.0)
-    world = client.get_world()
-    name_list = world.get_names_of_all_objects()
-    actor_count = len(name_list)
-    print('Applying random test texture to all actors (using apply_color_texture_to_objects).')
-    world.apply_color_texture_to_objects(
-      name_list,
-      carla.MaterialParameter.Diffuse,
-      self.noise_texture_color_red)
-
-  def test_apply_float_color_texture_to_objects(self, host, port):
-    global this_name_index
-    global actor_count
-    global this_name
-    client = carla.Client(host, port)
-    client.set_timeout(20.0)
-    world = client.get_world()
-    name_list = world.get_names_of_all_objects()
-    actor_count = len(name_list)
-    print('Applying random test texture to all actors (using apply_float_color_texture_to_objects).')
-    world.apply_float_color_texture_to_objects(
-      name_list,
-      carla.MaterialParameter.Diffuse,
-      self.noise_texture_float_color_green)
-
-  def test_apply_textures_to_objects(self, host, port):
-    global this_name_index
-    global actor_count
-    global this_name
-    client = carla.Client(host, port)
-    client.set_timeout(20.0)
-    world = client.get_world()
-    name_list = world.get_names_of_all_objects()
-    print('Applying random test texture to all actors (using apply_textures_to_objects).')
-    world.apply_textures_to_objects(
-      name_list,
-      self.noise_texture_color_blue,
-      carla.TextureFloatColor(0, 0), # Skip emissive
-      self.noise_texture_float_color_blue,
-      self.noise_texture_float_color_blue)
-
-  def test_apply_textures(self):
-      ec = 0
-      try:
-        argparser = argparse.ArgumentParser()
-        argparser.add_argument(
-            '--host',
-            metavar='H',
-            default=DEFAULT_HOST,
-            help=f'IP of the host server (default: {DEFAULT_HOST})')
-        argparser.add_argument(
-            '-p', '--port',
-            metavar='P',
-            default=DEFAULT_PORT,
-            type=int,
-            help=f'TCP port to listen to (default: {DEFAULT_PORT})')
-        args = argparser.parse_args()
-        self.reset_state()
-        self.test_apply_color_texture_to_objects(args.host, args.port)
-        self.reset_state()
-        self.test_apply_float_color_texture_to_objects(args.host, args.port)
-        self.reset_state()
-        self.test_apply_textures_to_objects(args.host, args.port)
-        self.reset_state()
-        self.test_apply_color_texture_to_object(args.host, args.port)
-        self.reset_state()
-        self.test_apply_float_color_texture_to_object(args.host, args.port)
-        self.reset_state()
-        self.test_apply_textures_to_object(args.host, args.port)
-      except Exception as e:
-        ec = -1
-        print('Exception caught while running texture change test.')
-        print(f' Actor Name: "{this_name}"')
-        print(f' Actor Index: {this_name_index}')
-        raise e
-      finally:
-        if this_name_index != actor_count:
-          print()
-      exit(ec)
+if __name__ == '__main__':
+  unittest.main()
