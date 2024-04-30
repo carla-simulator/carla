@@ -150,7 +150,11 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
           case carla::multigpu::MultiGPUCommand::LOAD_MAP:
           {
             FString FinalPath((char *) Data.data());
-            UGameplayStatics::OpenLevel(CurrentEpisode->GetWorld(), *FinalPath, true);
+            if(GetCurrentEpisode())
+            {
+              UGameplayStatics::OpenLevel(GetCurrentEpisode()->GetWorld(), *FinalPath, true);
+            }
+            
             break;
           }
           case carla::multigpu::MultiGPUCommand::GET_TOKEN:
