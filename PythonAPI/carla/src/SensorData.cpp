@@ -303,9 +303,7 @@ static std::string SaveImageToDisk(T &self, std::string path, EColorConverter cc
   std::string r;
   carla::PythonUtil::ReleaseGIL unlock;
   using namespace carla::image;
-  puts("ImageView::MakeView.");
   auto view = ImageView::MakeView(self);
-  puts("ImageIO::WriteView.");
   try
   {
   switch (cc) {
@@ -341,7 +339,6 @@ static std::string SaveImageToDisk(T &self, std::string path, EColorConverter cc
   {
     puts("Exception thrown");
   }
-  puts("Done.");
   return r;
 }
 

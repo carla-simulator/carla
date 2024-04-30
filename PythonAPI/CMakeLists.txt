@@ -115,5 +115,5 @@ add_dependencies (
 
 add_dependencies (
   carla-python-api-install
-  ${PYTHON_API_DEPENDENCIES}
+  carla-python-api
 )
