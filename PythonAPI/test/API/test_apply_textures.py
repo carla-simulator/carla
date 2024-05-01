@@ -124,6 +124,3 @@ class TestApplyTextures(unittest.TestCase):
       if self.camera != None:
         self.camera.destroy()
         self.camera = None
-
-if __name__ == '__main__':
-  unittest.main()
