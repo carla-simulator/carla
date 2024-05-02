@@ -96,11 +96,12 @@ class TestApplyTextures(unittest.TestCase):
         [ WIDTH, HEIGHT ])
       noise_texture_color_red = self.to_texture(noise_data, WIDTH, HEIGHT, 'r')
       bpl = world.get_blueprint_library()
+      transform = carla.Transform(
+          carla.Location(x=-9.872277, y=9.048162, z=8.958106),
+          carla.Rotation(pitch=-31.830936, yaw=-46.900402, roll=0.000000))
       camera = world.spawn_actor(
         bpl.find('sensor.camera.rgb'),
-        carla.Transform(
-          carla.Location(x=-9.872277, y=9.048162, z=8.958106),
-          carla.Rotation(pitch=-31.830936, yaw=-46.900402, roll=0.000000)))
+        transform)
       weak_self = weakref.ref(self)
       self.camera = camera
       camera.listen(lambda image: TestApplyTextures.save_image(weak_self, image))
@@ -108,9 +109,7 @@ class TestApplyTextures(unittest.TestCase):
       world.tick()
       spectator = world.get_spectator()
       self.assertIsNotNone(spectator)
-      spectator.set_transform(carla.Transform(
-        carla.Location(x=-9.872277, y=9.048162, z=8.958106),
-        carla.Rotation(pitch=-31.830936, yaw=-46.900402, roll=0.000000)))
+      spectator.set_transform(transform)
       world.tick()
       bp = np.random.choice(bpl.filter('static.prop.*'))
       self.assertIsNotNone(bp)
