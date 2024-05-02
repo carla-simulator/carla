@@ -2,11 +2,10 @@ cmake_minimum_required (VERSION 3.28.0)
 
 project(carla-ros2-native-project)
 
-include (${CARLA_WORKSPACE_PATH}/CMake/CarlaOptions.cmake)
 include (ExternalProject)
 
 set (PROJECT_INSTALL_PATH ${CMAKE_CURRENT_BINARY_DIR}/install)
-set (PROJECT_CMAKE_FLAGS -DCMAKE_CXX_COMPILER=${GXX_COMPILER} -DCMAKE_C_COMPILER=${GCC_COMPILER} -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=-D_GLIBCXX_USE_CXX11_ABI=0 -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH})
+set (PROJECT_CMAKE_FLAGS -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=-D_GLIBCXX_USE_CXX11_ABI=0 -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH})
 
 ExternalProject_add (
   foonathan_memory
@@ -38,10 +37,10 @@ ExternalProject_Add(
 )
 
 set (CARLA_PLUGIN_BINARY_PATH ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Plugins/Carla/Binaries/Linux)
+make_directory(${CARLA_PLUGIN_BINARY_PATH})
 add_custom_command(
     TARGET carla-ros2-native-lib
     POST_BUILD
-    COMMAND cmake -E make_directory ${CARLA_PLUGIN_BINARY_PATH}
     COMMAND ${CMAKE_COMMAND} -E copy
       ${PROJECT_INSTALL_PATH}/lib/*.so*
       ${CARLA_PLUGIN_BINARY_PATH}

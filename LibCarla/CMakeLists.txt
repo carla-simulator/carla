@@ -1,24 +1,17 @@
-set (LIBCARLA_SOURCE_PATH ${CARLA_WORKSPACE_PATH}/LibCarla/source)
-set (LIBCARLA_THIRD_PARTY_SOURCE_PATH ${LIBCARLA_SOURCE_PATH}/third-party)
+set (
+  LIBCARLA_SOURCE_PATH
+  ${CARLA_WORKSPACE_PATH}/LibCarla/source
+)
 
-set (CARLA_PYTHON_VERSION_MAJOR 3)
-set (CARLA_PYTHON_VERSION_MINOR 8)
+set (
+  LIBCARLA_THIRD_PARTY_SOURCE_PATH
+  ${LIBCARLA_SOURCE_PATH}/third-party
+)
 
 carla_two_step_configure_file (
   ${LIBCARLA_SOURCE_PATH}/carla/Version.h
   ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in
 )
-
-set (CARLA_RTTI_DEFINITIONS)
-
-if (ENABLE_RTTI)
-else ()
-  list (
-    APPEND
-    CARLA_RTTI_DEFINITIONS
-    BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY
-  )
-endif ()
 
 if (BUILD_CARLA_SERVER)
 
@@ -49,6 +42,7 @@ if (BUILD_CARLA_SERVER)
     ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/tcp/*.cpp
     ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.cpp
   )
+
   if (ENABLE_ROS2)
     file (
       GLOB
@@ -251,16 +245,16 @@ if (BUILD_CARLA_CLIENT)
   )
 
   if (ENABLE_RSS)
-      file (
-          GLOB
-          LIBCARLA_CLIENT_SOURCES_RSS
-          ${LIBCARLA_SOURCE_PATH}/carla/rss/*.cpp
-      )
-      list (
-          APPEND
-          LIBCARLA_CLIENT_SOURCES
-          ${LIBCARLA_CLIENT_SOURCES_RSS}
-      )
+    file (
+      GLOB
+      LIBCARLA_CLIENT_SOURCES_RSS
+      ${LIBCARLA_SOURCE_PATH}/carla/rss/*.cpp
+    )
+    list (
+      APPEND
+      LIBCARLA_CLIENT_SOURCES
+      ${LIBCARLA_CLIENT_SOURCES_RSS}
+    )
   endif ()
 
   file (
@@ -281,6 +275,7 @@ if (BUILD_CARLA_CLIENT)
   target_link_libraries (
     carla-client PUBLIC
     Boost::asio
+    Boost::python
     Boost::algorithm
     Boost::geometry
     Boost::assert
@@ -305,3 +300,12 @@ if (BUILD_CARLA_CLIENT)
   )
 
 endif ()
+
+add_custom_target (
+  carla-server-package
+)
+
+add_dependencies (
+  carla-server-package
+  carla-server
+)

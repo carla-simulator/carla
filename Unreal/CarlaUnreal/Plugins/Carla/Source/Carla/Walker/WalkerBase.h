@@ -22,11 +22,11 @@ public:
   bool bAlive = true;
 
   UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
-  float AfterLifeSpan = 10.0f;
+  float LifeSpanAfterDeath = 10.0f;
 
   UFUNCTION(BlueprintCallable)
   void StartDeathLifeSpan()
   {
-    SetLifeSpan(AfterLifeSpan);
+    SetLifeSpan(LifeSpanAfterDeath);
   }
 };

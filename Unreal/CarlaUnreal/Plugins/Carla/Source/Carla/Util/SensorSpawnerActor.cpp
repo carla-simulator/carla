@@ -234,7 +234,6 @@ void ASensorSpawnerActor::SaveSensorData(float DeltaSeconds)
     if(ASceneCaptureSensor* CaptureSensor = Cast<ASceneCaptureSensor>(CurrentSensor))
     {
       const FString FinalPath = FPaths::Combine(SaveImagePath, CaptureSensor->GetName(), FString::Printf(TEXT("%lld"), FDateTime::Now().ToUnixTimestamp()) + "-Frame_" + FrameNumber + ".png");
-      CaptureSensor->EnqueueRenderSceneImmediate();
       CaptureSensor->SaveCaptureToDisk(FinalPath);
       continue;
     }

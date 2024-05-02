@@ -49,6 +49,8 @@ void ASceneCaptureCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureCamera::PostPhysTick);
+  Super::PostPhysTick(World, TickType, DeltaSeconds);
+  
   ENQUEUE_RENDER_COMMAND(MeasureTime)
   (
     [](auto &InRHICmdList)
@@ -62,12 +64,13 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
       TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(*ProfilerText);
     }
   );
-  
-  ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this](
+
+  auto FrameIndex = FCarlaEngine::GetFrameCounter();
+  ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
   {
-    SendImageDataToClient(*this, Pixels);
+    SendImageDataToClient(*this, Pixels, FrameIndex);
     return true;
   });
 }

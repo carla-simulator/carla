@@ -40,6 +40,7 @@ public class Carla :
       Console.WriteLine("Dynamic Library Added: " + library);
     }
 
+    Console.WriteLine("PluginDirectory: " + PluginDirectory);
     foreach (var option in File.ReadAllText(Path.Combine(PluginDirectory, "Options.def")).Split(';'))
     {
       string optionTrimmed = option.Trim();
@@ -126,11 +127,11 @@ public class Carla :
 
     foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Includes.def")).Split(';'))
       if (Path.Length != 0)
-        PublicIncludePaths.Add(Path);
+        PublicIncludePaths.Add(Path.Trim());
 
     foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Libraries.def")).Split(';'))
       if (Path.Length != 0)
-        PublicAdditionalLibraries.Add(Path);
+        PublicAdditionalLibraries.Add(Path.Trim());
 
     if (EnableOSM2ODR)
     {
@@ -157,9 +158,13 @@ public class Carla :
       string CarlaPluginSourcePath = Path.GetFullPath(ModuleDirectory);
       string CarlaPluginBinariesLinuxPath = Path.Combine(CarlaPluginSourcePath, "..", "..", "Binaries", "Linux");
       AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libcarla-ros2-native.so"));
-      AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libfoonathan_memory-0.7.3.so"));
-      AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so"));
-      AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so"));
+      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfoonathan_memory-0.7.3.so"));
+      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so"));
+      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so.1"));
+      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so.1.1.1"));
+      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so"));
+      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11"));
+      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11.2"));
     }
 
     PublicDefinitions.AddRange(new string[]

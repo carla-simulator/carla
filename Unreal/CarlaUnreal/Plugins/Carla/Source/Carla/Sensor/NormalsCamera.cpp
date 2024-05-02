@@ -27,13 +27,14 @@ ANormalsCamera::ANormalsCamera(const FObjectInitializer &ObjectInitializer)
 void ANormalsCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ANormalsCamera::PostPhysTick);
-  
+  Super::PostPhysTick(World, TickType, DeltaSeconds);
 
-  ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this](
+  auto FrameIndex = FCarlaEngine::GetFrameCounter();
+  ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
   {
-    SendImageDataToClient(*this, Pixels);
+    SendImageDataToClient(*this, Pixels, FrameIndex);
     return true;
   });
 }

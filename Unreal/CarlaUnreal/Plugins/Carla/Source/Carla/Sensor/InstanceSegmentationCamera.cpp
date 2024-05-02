@@ -52,6 +52,7 @@ void AInstanceSegmentationCamera::SetUpSceneCaptureComponent(USceneCaptureCompon
 void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AInstanceSegmentationCamera::PostPhysTick);
+  Super::PostPhysTick(World, TickType, DeltaSeconds);
 
   USceneCaptureComponent2D* SceneCapture = GetCaptureComponent2D();
   TArray<UObject *> TaggedComponents;
@@ -62,13 +63,13 @@ void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickTyp
     UPrimitiveComponent *Component = Cast<UPrimitiveComponent>(Object);
     SceneCapture->ShowOnlyComponents.Emplace(Component);
   }
-  
 
-  ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this](
+  auto FrameIndex = FCarlaEngine::GetFrameCounter();
+  ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
   {
-    SendImageDataToClient(*this, Pixels);
+    SendImageDataToClient(*this, Pixels, FrameIndex);
     return true;
   });
 }

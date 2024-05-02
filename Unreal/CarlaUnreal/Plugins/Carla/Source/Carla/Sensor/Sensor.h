@@ -133,27 +133,32 @@ protected:
     typename PixelType>
   static void SendImageDataToClient(
     SensorType&& Sensor,
-    TArrayView<PixelType> Pixels)
+    TArrayView<PixelType> Pixels,
+    uint32 FrameIndex)
   {
+    using carla::sensor::SensorRegistry;
+    using SensorT = std::remove_const_t<std::remove_reference_t<SensorType>>;
+
     auto Stream = Sensor.GetDataStream(Sensor);
-    Stream.SetFrameNumber(FCarlaEngine::GetFrameCounter());
+    Stream.SetFrameNumber(FrameIndex);
     auto Buffer = Stream.PopBufferFromPool();
-    Buffer.copy_from(0, boost::asio::buffer(Pixels.GetData(), Pixels.Num() * sizeof(FColor)));
+    Buffer.copy_from(
+      carla::sensor::SensorRegistry::get<SensorT*>::type::header_offset,
+      boost::asio::buffer(
+        Pixels.GetData(),
+        Pixels.Num() * sizeof(FColor)));
     if (!Buffer.data())
       return;
-    carla::Buffer BufferReady(
-      std::move(
-        carla::sensor::SensorRegistry::Serialize(
-          Sensor,
-          std::move(Buffer))));
-    auto BufferView =
-      carla::BufferView::CreateFrom(
-        std::move(BufferReady));
+    auto Serialized = SensorRegistry::Serialize(
+      Sensor,
+      std::move(Buffer));
+    auto SerializedBuffer = carla::Buffer(std::move(Serialized));
+    auto BufferView = carla::BufferView::CreateFrom(std::move(SerializedBuffer));
 #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
     {
-      TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send PixelReader");
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 SendImageDataToClient");
       auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
       auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, StreamId, BufferView]()
       {
@@ -170,20 +175,24 @@ protected:
         if (FovOpt.has_value())
           Fov = FCString::Atof(*FovOpt->Value);
         // send data to ROS2
-        AActor* ParentActor = Sensor.GetAttachParentActor();
-        if (ParentActor)
-        {
-          FTransform LocalTransformRelativeToParent = Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-          ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, W, H, Fov, BufferView, &Sensor);
-        }
-        else
-        {
-          ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), W, H, Fov, BufferView, &Sensor);
-        }
+        auto ParentActor = Sensor.GetAttachParentActor();
+        auto Transform =
+          ParentActor ?
+          Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) :
+          Stream.GetSensorTransform();
+        ROS2->ProcessDataFromCamera(
+          Stream.GetSensorType(),
+          StreamId,
+          Transform,
+          W, H,
+          Fov,
+          BufferView,
+          &Sensor);
       });
     }
 #endif
-    Stream.Send(Sensor, BufferView);
+    if (Sensor.AreClientsListening()) 
+      Stream.Send(Sensor, BufferView);
   }
 
   /// Seed of the pseudo-random engine.

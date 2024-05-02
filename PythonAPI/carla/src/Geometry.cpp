@@ -151,6 +151,7 @@ void export_geom() {
     .def("get_forward_vector", &cg::Rotation::GetForwardVector)
     .def("get_right_vector", &cg::Rotation::GetRightVector)
     .def("get_up_vector", &cg::Rotation::GetUpVector)
+    .def("get_normalized", &cg::Rotation::Normalize)
     .def("__eq__", &cg::Rotation::operator==)
     .def("__ne__", &cg::Rotation::operator!=)
     .def(self_ns::str(self_ns::self))

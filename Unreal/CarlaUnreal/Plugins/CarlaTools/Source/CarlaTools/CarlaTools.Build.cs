@@ -123,11 +123,11 @@ public class CarlaTools :
 
     foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Includes.def")).Split(';'))
       if (Path.Length != 0)
-        PublicIncludePaths.Add(Path);
+        PublicIncludePaths.Add(Path.Trim());
 
     foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Libraries.def")).Split(';'))
       if (Path.Length != 0)
-        PublicAdditionalLibraries.Add(Path);
+        PublicAdditionalLibraries.Add(Path.Trim());
 
     PublicDefinitions.AddRange(new string[]
     {

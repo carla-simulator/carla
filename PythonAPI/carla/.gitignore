@@ -1,5 +1,4 @@
-*.egg-info
-pyproject.toml
-build
-dependencies
-dist
+CMakeLists.txt
+LICENSE
+MANIFEST.in
+setup.py
