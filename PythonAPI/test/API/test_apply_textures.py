@@ -88,7 +88,7 @@ class TestApplyTextures(unittest.TestCase):
       client = carla.Client(host, port)
       self.assertIsNotNone(client)
       client.set_timeout(20.0)
-      world = client.get_world()
+      world = client.load_world('Town10HD_Opt')
       self.assertIsNotNone(world)
       noise_data = np.reshape([
         np.abs(np.random.normal())
