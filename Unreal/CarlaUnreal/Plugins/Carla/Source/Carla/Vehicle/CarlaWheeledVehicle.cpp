@@ -571,6 +571,27 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   AckermannController.UpdateVehiclePhysics(this);
 }
 
+void ACarlaWheeledVehicle::ApplyVehicleControl(const FVehicleControl &Control, EVehicleInputPriority Priority)
+{
+  if (bAckermannControlActive) {
+    AckermannController.Reset();
+  }
+  bAckermannControlActive = false;
+
+  if (InputControl.Priority <= Priority)
+  {
+    InputControl.Control = Control;
+    InputControl.Priority = Priority;
+  }
+}
+
+  void ACarlaWheeledVehicle::ApplyVehicleAckermannControl(const FVehicleAckermannControl &AckermannControl, EVehicleInputPriority Priority)
+  {
+    bAckermannControlActive = true;
+    LastAppliedAckermannControl = AckermannControl;
+    AckermannController.SetTargetPoint(AckermannControl);
+  }
+
 void ACarlaWheeledVehicle::ActivateVelocityControl(const FVector &Velocity)
 {
   VelocityControl->Activate(Velocity);
@@ -635,13 +656,13 @@ void ACarlaWheeledVehicle::SetFailureState(const carla::rpc::VehicleFailureState
   FailureState = InFailureState;
 }
 
-void ACarlaWheeledVehicle::SetCarlaMovementComponent(UBaseCarlaMovementComponent* MovementComponent)
+void ACarlaWheeledVehicle::SetCarlaMovementComponent(UBaseCarlaMovementComponent* NewBaseMovementComponent)
 {
   if (BaseMovementComponent)
   {
     BaseMovementComponent->DestroyComponent();
   }
-  BaseMovementComponent = MovementComponent;
+  BaseMovementComponent = NewBaseMovementComponent;
 }
 
 void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLocation, float AngleInDeg) 
