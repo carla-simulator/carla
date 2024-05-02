@@ -71,7 +71,6 @@ void ACarlaWheeledVehicle::SetWheelCollisionNW(UChaosWheeledVehicleMovementCompo
 void ACarlaWheeledVehicle::BeginPlay()
 {
   Super::BeginPlay();
-#if 0 // @CARLAUE5
 
   UDefaultMovementComponent::CreateDefaultMovementComponent(this);
 
@@ -922,3 +921,4 @@ void ACarlaWheeledVehicle::SetPhysicsConstraintAngle(
 {
   Component->ConstraintInstance.AngularRotationOffset = NewAngle;
 }
+
