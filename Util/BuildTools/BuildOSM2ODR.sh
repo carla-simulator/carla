@@ -91,14 +91,12 @@ if ${BUILD_OSM2ODR} ; then
         ${OSM2ODR_BASENAME}-server-install ${OSM2ODR_BASENAME}-client-install
 
     log "Building OSM2ODR."
-    if ${GIT_PULL} ; then
-      if [ ! -d ${OSM2ODR_BASENAME}-source ] ; then
-        git clone --depth 1 -b ${OSM2ODR_BRANCH} ${OSM2ODR_REPO} ${OSM2ODR_BASENAME}-source
-      fi
-      pushd ${OSM2ODR_BASENAME}-source >/dev/null
-      git fetch
-      git checkout ${CURRENT_OSM2ODR_COMMIT}
-      popd >/dev/null
+    if [ ! -d ${OSM2ODR_BASENAME}-source ] ; then
+      cd ${CARLA_BUILD_FOLDER}
+      curl --retry 5 --retry-max-time 120 -L -o OSM2ODR.zip https://github.com/carla-simulator/sumo/archive/${CURRENT_OSM2ODR_COMMIT}.zip
+      unzip -qq OSM2ODR.zip
+      rm -f OSM2ODR.zip
+      mv sumo-${CURRENT_OSM2ODR_COMMIT} ${OSM2ODR_BASENAME}-source
     fi
 
     mkdir -p ${OSM2ODR_BASENAME}-client-build
