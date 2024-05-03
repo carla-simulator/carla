@@ -64,7 +64,6 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     setx CARLA_UNREAL_ENGINE_PATH !cd!
     popd
     popd
-    REM TODO: Check if UnrealEngine binary file exists and if not build it
 ) else (
     echo Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - FAIL
     pushd ..
