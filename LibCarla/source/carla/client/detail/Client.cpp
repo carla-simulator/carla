@@ -164,6 +164,22 @@ namespace detail {
     _pimpl->CallAndWait<void>("copy_opendrive_to_file", std::move(opendrive), params);
   }
 
+  void Client::ApplyTextureToActor(
+    rpc::ActorId ActorId,
+    const rpc::MaterialParameter& MaterialParameter,
+    const rpc::TextureColor& Texture)
+  {
+    _pimpl->CallAndWait<void>("apply_texture_to_actor", ActorId, MaterialParameter, Texture);
+  }
+
+  void Client::ApplyTextureToActor(
+    rpc::ActorId ActorId,
+    const rpc::MaterialParameter& MaterialParameter,
+    const rpc::TextureFloatColor& Texture)
+  {
+    _pimpl->CallAndWait<void>("apply_texture_to_actor_float", ActorId, MaterialParameter, Texture);
+  }
+
   void Client::ApplyColorTextureToObjects(
       const std::vector<std::string> &objects_name,
       const rpc::MaterialParameter& parameter,

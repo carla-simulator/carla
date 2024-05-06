@@ -96,6 +96,20 @@ namespace client {
     GetEpisode().Lock()->SetActorEnableGravity(*this, enabled);
   }
 
+  void Actor::ApplyTexture(
+    const rpc::MaterialParameter& MaterialParameter,
+    const rpc::TextureColor& Texture)
+  {
+    GetEpisode().Lock()->ApplyTextureToActor(*this, MaterialParameter, Texture);
+  }
+
+  void Actor::ApplyTexture(
+    const rpc::MaterialParameter& MaterialParameter,
+    const rpc::TextureFloatColor& Texture)
+  {
+    GetEpisode().Lock()->ApplyTextureToActor(*this, MaterialParameter, Texture);
+  }
+
   rpc::ActorState Actor::GetActorState() const {
     return GetEpisode().Lock()->GetActorState(*this);
   }

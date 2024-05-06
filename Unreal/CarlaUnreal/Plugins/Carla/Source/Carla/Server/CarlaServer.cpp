@@ -85,6 +85,20 @@ static std::vector<T> MakeVectorFromTArray(const TArray<Other> &Array)
   return {Array.GetData(), Array.GetData() + Array.Num()};
 }
 
+template <typename T>
+static void ApplyTextureToActor(
+  UCarlaEpisode* Episode,
+  carla::rpc::ActorId ActorId,
+  const carla::rpc::MaterialParameter& MaterialParameter,
+  T&& Texture)
+{
+  auto CarlaActor = Episode->FindCarlaActor(ActorId);
+  auto Actor = CarlaActor->GetActor();
+  auto GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+  auto TextureUE = GameMode->CreateUETexture(Texture);
+  GameMode->ApplyTextureToActor(Actor, TextureUE, MaterialParameter);
+}
+
 // =============================================================================
 // -- FCarlaServer::FPimpl -----------------------------------------------
 // =============================================================================
@@ -349,6 +363,26 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("opendrive could not be correctly parsed");
     }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(apply_texture_to_actor) << [this](
+    cr::ActorId ActorId,
+    const cr::MaterialParameter& MaterialParameter,
+    const cr::TextureColor& Texture) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ::ApplyTextureToActor(Episode, ActorId, MaterialParameter, Texture);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(apply_texture_to_actor_float) << [this](
+    cr::ActorId ActorId,
+    const cr::MaterialParameter& MaterialParameter,
+    const cr::TextureFloatColor& Texture) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ::ApplyTextureToActor(Episode, ActorId, MaterialParameter, Texture);
     return R<void>::Success();
   };
 
