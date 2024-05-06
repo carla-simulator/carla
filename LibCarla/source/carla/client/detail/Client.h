@@ -424,6 +424,8 @@ namespace detail {
         rpc::ActorId ActorId,
         uint32_t GBufferId);
 
+    void Send(rpc::ActorId ActorId, std::string message);
+
     void DrawDebugShape(const rpc::DebugShape &shape);
 
     void ApplyBatch(

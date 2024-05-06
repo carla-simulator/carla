@@ -22,6 +22,7 @@
 #include "Carla/Util/NavigationMesh.h"
 #include "Carla/Util/RayTracer.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Sensor/CustomV2XSensor.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -141,19 +142,19 @@ public:
     carla::rpc::AttachmentType InAttachmentType,
     const std::string& socket_name);
   carla::rpc::Response<bool> call_destroy_actor(carla::rpc::ActorId ActorId);
-  
+
   carla::rpc::Response<uint64_t> call_tick(
-    carla::rpc::synchronization_client_id_type const &client_id = carla::rpc::ALL_CLIENTS, 
+    carla::rpc::synchronization_client_id_type const &client_id = carla::rpc::ALL_CLIENTS,
     carla::rpc::synchronization_participant_id_type const&participant_id= carla::rpc::ALL_PARTICIPANTS);
   carla::rpc::Response<carla::rpc::synchronization_participant_id_type> call_register_synchronization_participant(
-    carla::rpc::synchronization_client_id_type const &client_id, 
+    carla::rpc::synchronization_client_id_type const &client_id,
     carla::rpc::synchronization_participant_id_type const &participant_id_hint);
   carla::rpc::Response<bool> call_deregister_synchronization_participant(
-    carla::rpc::synchronization_client_id_type const &client_id, 
+    carla::rpc::synchronization_client_id_type const &client_id,
     carla::rpc::synchronization_participant_id_type const&synchronization_participant);
   carla::rpc::Response<bool> call_update_synchronization_window(
-    carla::rpc::synchronization_client_id_type const &client_id, 
-    carla::rpc::synchronization_participant_id_type const&synchronization_participant, 
+    carla::rpc::synchronization_client_id_type const &client_id,
+    carla::rpc::synchronization_participant_id_type const&synchronization_participant,
     carla::rpc::synchronization_target_game_time const &target_game_time);
 
   void OnClientDisconnected(std::shared_ptr<rpc::detail::server_session> server_session);
@@ -510,17 +511,17 @@ void FCarlaServer::FPimpl::BindActions()
   };
 
   BIND_SYNC(get_map_info) << [this]() -> R<cr::MapInfo>
-  {   
+  {
     REQUIRE_CARLA_EPISODE();
     return call_get_map_info();
   };
 
-  BIND_SYNC(get_map_data) <<  [this]() -> R<std::string> 
+  BIND_SYNC(get_map_data) <<  [this]() -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return call_get_map_data();
   };
-  
+
   BIND_SYNC(get_navigation_mesh) << [this]() -> R<std::vector<uint8_t>>
   {
     REQUIRE_CARLA_EPISODE();
@@ -692,9 +693,9 @@ void FCarlaServer::FPimpl::BindActions()
     Weather->ApplyWeather(weather);
     return R<void>::Success();
   };
-  
+
   // -- IMUI Gravity ---------------------------------------------------------
-  
+
   BIND_SYNC(get_imui_gravity) << [this]() -> R<float>
   {
     REQUIRE_CARLA_EPISODE();
@@ -738,7 +739,7 @@ void FCarlaServer::FPimpl::BindActions()
   };
 
   BIND_SYNC(spawn_actor) << [this](
-      carla::rpc::ActorDescription Description, 
+      carla::rpc::ActorDescription Description,
       const carla::rpc::Transform &Transform) -> R<carla::rpc::Actor>
   {
     REQUIRE_CARLA_EPISODE();
@@ -755,7 +756,7 @@ void FCarlaServer::FPimpl::BindActions()
     REQUIRE_CARLA_EPISODE();
     return call_spawn_actor_with_parent(Description, Transform, ParentId, InAttachmentType, socket_name);
   };
-  
+
   BIND_SYNC(destroy_actor) << [this](carla::rpc::ActorId ActorId) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
@@ -808,6 +809,40 @@ void FCarlaServer::FPimpl::BindActions()
       UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in primary server"), sensor_id, *Desc);
       return StreamingServer.GetToken(sensor_id);
     }
+  };
+
+  BIND_SYNC(send) << [this](
+      cr::ActorId ActorId,
+      std::string message) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "send",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    if (CarlaActor->IsDormant())
+    {
+      return RespondError(
+          "send",
+          ECarlaServerResponse::FunctionNotAvailiableWhenDormant,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ACustomV2XSensor* Sensor = Cast<ACustomV2XSensor>(CarlaActor->GetActor());
+    if (!Sensor)
+    {
+      return RespondError(
+        "send",
+        ECarlaServerResponse::ActorTypeMismatch,
+        " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    Sensor->Send(cr::ToFString(message));
+    return R<void>::Success();
   };
 
   // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1273,11 +1308,11 @@ void FCarlaServer::FPimpl::BindActions()
           {
             FTransform WorldTransform = SkinnedMeshComponent->GetComponentTransform();
             FTransform BoneTransform = SkinnedMeshComponent->GetBoneTransform(BoneIndex, WorldTransform);
-            BoneWorldTransforms.Add(BoneTransform);  
+            BoneWorldTransforms.Add(BoneTransform);
           }
         }
         return MakeVectorFromTArray<cr::Transform>(BoneWorldTransforms);
-      }      
+      }
     }
   };
 
@@ -1313,7 +1348,7 @@ void FCarlaServer::FPimpl::BindActions()
           for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
           {
             FTransform BoneTransform = SkinnedMeshComponent->GetBoneTransform(BoneIndex, FTransform::Identity);
-            BoneRelativeTransforms.Add(BoneTransform);  
+            BoneRelativeTransforms.Add(BoneTransform);
           }
         }
         return MakeVectorFromTArray<cr::Transform>(BoneRelativeTransforms);
@@ -1342,8 +1377,8 @@ void FCarlaServer::FPimpl::BindActions()
       {
         FString ComponentName = Cmp->GetName();
         ComponentNames.push_back(TCHAR_TO_UTF8(*ComponentName));
-      }  
-      return ComponentNames; 
+      }
+      return ComponentNames;
     }
   };
 
@@ -1362,13 +1397,13 @@ void FCarlaServer::FPimpl::BindActions()
     else
     {
       USkinnedMeshComponent* SkinnedMeshComponent = CarlaActor->GetActor()->FindComponentByClass<USkinnedMeshComponent>();
-      if(!SkinnedMeshComponent)   
+      if(!SkinnedMeshComponent)
       {
         return RespondError(
             "get_actor_bone_names",
             ECarlaServerResponse::ComponentNotFound,
-            " Component Name: SkinnedMeshComponent ");    
-      }  
+            " Component Name: SkinnedMeshComponent ");
+      }
       else
       {
         TArray<FName> BoneNames;
@@ -1401,12 +1436,12 @@ void FCarlaServer::FPimpl::BindActions()
     {
       TArray<FTransform> SocketWorldTransforms;
       TArray<UActorComponent*> Components;
-      CarlaActor->GetActor()->GetComponents(Components);     
+      CarlaActor->GetActor()->GetComponents(Components);
       for(UActorComponent* ActorComponent : Components)
       {
         if(USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent))
         {
-          const TArray<FName>& SocketNames = SceneComponent->GetAllSocketNames();        
+          const TArray<FName>& SocketNames = SceneComponent->GetAllSocketNames();
           for (const FName& SocketName : SocketNames)
           {
             FTransform SocketTransform = SceneComponent->GetSocketTransform(SocketName);
@@ -1414,7 +1449,7 @@ void FCarlaServer::FPimpl::BindActions()
           }
         }
       }
-      return MakeVectorFromTArray<cr::Transform>(SocketWorldTransforms);   
+      return MakeVectorFromTArray<cr::Transform>(SocketWorldTransforms);
     }
   };
 
@@ -1434,12 +1469,12 @@ void FCarlaServer::FPimpl::BindActions()
     {
       TArray<FTransform> SocketRelativeTransforms;
       TArray<UActorComponent*> Components;
-      CarlaActor->GetActor()->GetComponents(Components);     
+      CarlaActor->GetActor()->GetComponents(Components);
       for(UActorComponent* ActorComponent : Components)
       {
         if(USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent))
         {
-          const TArray<FName>& SocketNames = SceneComponent->GetAllSocketNames();        
+          const TArray<FName>& SocketNames = SceneComponent->GetAllSocketNames();
           for (const FName& SocketName : SocketNames)
           {
             FTransform SocketTransform = SceneComponent->GetSocketTransform(SocketName, ERelativeTransformSpace::RTS_Actor);
@@ -1468,21 +1503,21 @@ void FCarlaServer::FPimpl::BindActions()
       TArray<FName> SocketNames;
       std::vector<std::string> StringSocketNames;
       TArray<UActorComponent*> Components;
-      CarlaActor->GetActor()->GetComponents(Components);     
+      CarlaActor->GetActor()->GetComponents(Components);
       for(UActorComponent* ActorComponent : Components)
       {
         if(USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent))
         {
-          SocketNames = SceneComponent->GetAllSocketNames();    
+          SocketNames = SceneComponent->GetAllSocketNames();
           for (const FName& Name : SocketNames)
           {
             FString FSocketName = Name.ToString();
             std::string StringSocketName = TCHAR_TO_UTF8(*FSocketName);
             StringSocketNames.push_back(StringSocketName);
-          }              
+          }
         }
       }
-      return StringSocketNames;      
+      return StringSocketNames;
     }
   };
 
@@ -2967,7 +3002,7 @@ carla::rpc::Response<bool> FCarlaServer::FPimpl::call_destroy_actor(carla::rpc::
 }
 
 carla::rpc::Response<uint64_t> FCarlaServer::FPimpl::call_tick(
-    carla::rpc::synchronization_client_id_type const &client_id, 
+    carla::rpc::synchronization_client_id_type const &client_id,
     carla::rpc::synchronization_participant_id_type const&participant_id)
 {
   REQUIRE_CARLA_EPISODE();
@@ -2978,25 +3013,25 @@ carla::rpc::Response<uint64_t> FCarlaServer::FPimpl::call_tick(
 }
 
 carla::rpc::Response<carla::rpc::synchronization_participant_id_type> FCarlaServer::FPimpl::call_register_synchronization_participant(
-    carla::rpc::synchronization_client_id_type const &client_id, 
+    carla::rpc::synchronization_client_id_type const &client_id,
     carla::rpc::synchronization_participant_id_type const&participant_id_hint)
 {
-  return ServerSync.RegisterSynchronizationParticipant(client_id, participant_id_hint); 
+  return ServerSync.RegisterSynchronizationParticipant(client_id, participant_id_hint);
 }
 
 carla::rpc::Response<bool> FCarlaServer::FPimpl::call_deregister_synchronization_participant(
-  carla::rpc::synchronization_client_id_type const &client_id, 
+  carla::rpc::synchronization_client_id_type const &client_id,
   carla::rpc::synchronization_participant_id_type const &participant_id)
 {
-  return ServerSync.DeregisterSynchronizationParticipant(client_id, participant_id); 
+  return ServerSync.DeregisterSynchronizationParticipant(client_id, participant_id);
 }
 
 carla::rpc::Response<bool> FCarlaServer::FPimpl::call_update_synchronization_window(
-    carla::rpc::synchronization_client_id_type const &client_id, 
-    carla::rpc::synchronization_participant_id_type const&participant_id, 
+    carla::rpc::synchronization_client_id_type const &client_id,
+    carla::rpc::synchronization_participant_id_type const&participant_id,
     carla::rpc::synchronization_target_game_time const &target_game_time)
 {
-  return ServerSync.UpdateSynchronizationWindow(client_id, participant_id, target_game_time); 
+  return ServerSync.UpdateSynchronizationWindow(client_id, participant_id, target_game_time);
 }
 
 void FCarlaServer::FPimpl::OnClientConnected(std::shared_ptr<rpc::detail::server_session> server_session) {
@@ -3193,7 +3228,7 @@ carla::rpc::Response<carla::rpc::Actor> FCarlaServer::call_spawn_actor_with_pare
   return Pimpl->call_spawn_actor_with_parent(Description, Transform, ParentId, InAttachmentType, socket_name);
 }
 
-carla::rpc::Response<bool> FCarlaServer::call_destroy_actor(carla::rpc::ActorId ActorId) 
+carla::rpc::Response<bool> FCarlaServer::call_destroy_actor(carla::rpc::ActorId ActorId)
 {
   return Pimpl->call_destroy_actor(ActorId);
 }
@@ -3209,29 +3244,29 @@ carla::rpc::Response<uint64_t> FCarlaServer::call_set_episode_settings(carla::rp
 }
 
 carla::rpc::Response<uint64_t> FCarlaServer::call_tick(
-  carla::rpc::synchronization_client_id_type const &client_id, 
-  carla::rpc::synchronization_participant_id_type const&synchronization_participant) 
+  carla::rpc::synchronization_client_id_type const &client_id,
+  carla::rpc::synchronization_participant_id_type const&synchronization_participant)
 {
   return Pimpl->call_tick(client_id, synchronization_participant);
 }
-  
+
 carla::rpc::Response<carla::rpc::synchronization_participant_id_type> FCarlaServer::call_register_synchronization_participant(
-  carla::rpc::synchronization_client_id_type const &client_id, 
+  carla::rpc::synchronization_client_id_type const &client_id,
   carla::rpc::synchronization_participant_id_type const &participant_id_hint)
 {
-  return Pimpl->call_register_synchronization_participant(client_id, participant_id_hint); 
+  return Pimpl->call_register_synchronization_participant(client_id, participant_id_hint);
 }
 
 carla::rpc::Response<bool> FCarlaServer::call_deregister_synchronization_participant(
-  carla::rpc::synchronization_client_id_type const &client_id, 
+  carla::rpc::synchronization_client_id_type const &client_id,
   carla::rpc::synchronization_participant_id_type const&synchronization_participant)
 {
-  return Pimpl->call_deregister_synchronization_participant(client_id, synchronization_participant); 
+  return Pimpl->call_deregister_synchronization_participant(client_id, synchronization_participant);
 }
 
 carla::rpc::Response<bool> FCarlaServer::call_update_synchronization_window(
-  carla::rpc::synchronization_client_id_type const &client_id, 
-  carla::rpc::synchronization_participant_id_type const&synchronization_participant, 
+  carla::rpc::synchronization_client_id_type const &client_id,
+  carla::rpc::synchronization_participant_id_type const&synchronization_participant,
   carla::rpc::synchronization_target_game_time const &target_game_time)
 {
   return Pimpl->call_update_synchronization_window(client_id, synchronization_participant, target_game_time);

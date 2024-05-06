@@ -429,6 +429,10 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     _client.FreezeAllTrafficLights(frozen);
   }
 
+  void Simulator::Send(const Sensor &sensor, std::string message) {
+    _client.Send(sensor.GetId(), message);
+  }
+
   // =========================================================================
   /// -- Texture updating operations
   // =========================================================================

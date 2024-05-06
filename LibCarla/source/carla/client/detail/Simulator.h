@@ -693,6 +693,8 @@ namespace detail {
         Actor & sensor,
         uint32_t gbuffer_id);
 
+    void Send(const Sensor &sensor, std::string message);        
+
     /// @}
     // =========================================================================
     /// @name Operations with traffic lights

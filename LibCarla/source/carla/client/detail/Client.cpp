@@ -655,6 +655,10 @@ namespace detail {
     _pimpl->streaming_client.UnSubscribe(token);
   }
 
+  void Client::Send(rpc::ActorId ActorId, std::string message) {
+    _pimpl->AsyncCall("send", ActorId, message);
+  }
+
   void Client::SubscribeToGBuffer(
       rpc::ActorId ActorId,
       uint32_t GBufferId,

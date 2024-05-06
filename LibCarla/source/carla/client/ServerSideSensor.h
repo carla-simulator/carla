@@ -47,6 +47,9 @@ namespace client {
       return listening_mask.test(id + 1);
     }
 
+    /// Send data via this sensor
+    void Send(std::string message);
+
     /// @copydoc Actor::Destroy()
     ///
     /// Additionally stop listening.
