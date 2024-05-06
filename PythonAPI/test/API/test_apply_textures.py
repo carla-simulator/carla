@@ -115,7 +115,7 @@ class TestApplyTextures(unittest.TestCase):
       self.assertIsNotNone(bp)
       world.tick()
       world.apply_color_texture_to_objects(
-        world.get_names_of_all_objects(),
+        world.get_all_actors(),
           carla.MaterialParameter.Diffuse,
           noise_texture_color_red)
       time.sleep(2)

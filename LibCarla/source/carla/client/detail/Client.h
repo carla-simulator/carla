@@ -107,6 +107,16 @@ namespace detail {
     void CopyOpenDriveToServer(
         std::string opendrive, const rpc::OpendriveGenerationParameters & params);
 
+    void ApplyTextureToActor(
+      rpc::ActorId ActorId,
+      const rpc::MaterialParameter& MaterialParameter,
+      const rpc::TextureColor& Texture);
+
+    void ApplyTextureToActor(
+      rpc::ActorId ActorId,
+      const rpc::MaterialParameter& MaterialParameter,
+      const rpc::TextureFloatColor& Texture);
+
     void ApplyColorTextureToObjects(
         const std::vector<std::string> &objects_name,
         const rpc::MaterialParameter& parameter,
