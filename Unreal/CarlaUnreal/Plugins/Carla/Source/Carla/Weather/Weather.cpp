@@ -8,6 +8,7 @@
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Components/SkyLightComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 
