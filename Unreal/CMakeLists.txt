@@ -411,7 +411,7 @@ add_custom_target (
 
 add_dependencies (
   launch
-  carla-unreal-editor
+  CarlaUnrealEditor
   prelaunch-content-check
 )
 
