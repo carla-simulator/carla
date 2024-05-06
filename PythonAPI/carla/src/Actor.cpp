@@ -49,14 +49,14 @@ static void ApplyControl(cc::Walker &self, const ControlT &control) {
 
 static void ApplyTexture(
   cc::Actor& self,
-  const carla::rpc::MaterialParameter& MaterialParameter,
+  const cr::MaterialParameter& MaterialParameter,
   const boost::python::object& Texture)
 {
-  boost::python::extract<carla::rpc::TextureColor> ext(Texture);
+  boost::python::extract<cr::TextureColor> ext(Texture);
   if (ext.check())
     return self.ApplyTexture(MaterialParameter, ext());
 
-  boost::python::extract<carla::rpc::TextureFloatColor> ext_float(Texture);
+  boost::python::extract<cr::TextureFloatColor> ext_float(Texture);
   if (ext_float.check())
     return self.ApplyTexture(MaterialParameter, ext_float());
 
