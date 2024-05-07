@@ -85,20 +85,6 @@ static std::vector<T> MakeVectorFromTArray(const TArray<Other> &Array)
   return {Array.GetData(), Array.GetData() + Array.Num()};
 }
 
-template <typename T>
-static void ApplyTextureToActor(
-  UCarlaEpisode* Episode,
-  carla::rpc::ActorId ActorId,
-  const carla::rpc::MaterialParameter& MaterialParameter,
-  T&& Texture)
-{
-  auto CarlaActor = Episode->FindCarlaActor(ActorId);
-  auto Actor = CarlaActor->GetActor();
-  auto GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-  auto TextureUE = GameMode->CreateUETexture(Texture);
-  GameMode->ApplyTextureToActor(Actor, TextureUE, MaterialParameter);
-}
-
 // =============================================================================
 // -- FCarlaServer::FPimpl -----------------------------------------------
 // =============================================================================
@@ -164,6 +150,13 @@ private:
     CARLA_ENSURE_GAME_THREAD();   \
     if (Episode == nullptr) { RESPOND_ERROR("episode not ready"); }
 
+#define REQUIRE_CARLA_GAME_MODE() \
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld()); \
+    if (!GameMode) \
+    { \
+      RESPOND_ERROR("unable to find CARLA game mode"); \
+    }
+
 carla::rpc::ResponseError RespondError(
     const FString& FuncName,
     const FString& ErrorMessage,
@@ -181,6 +174,30 @@ carla::rpc::ResponseError RespondError(
     const FString& ExtraInfo = "")
 {
   return RespondError(FuncName, CarlaGetStringError(Error), ExtraInfo);
+}
+
+template <typename T>
+static R<void> ApplyTextureToActor(
+  UCarlaEpisode* Episode,
+  carla::rpc::ActorId ActorId,
+  const carla::rpc::MaterialParameter& MaterialParameter,
+  T&& Texture)
+{
+  auto CarlaActor = Episode->FindCarlaActor(ActorId);
+  if (CarlaActor == nullptr)
+  {
+    RESPOND_ERROR("Could not find CARLA Actor.");
+  }
+  auto Actor = CarlaActor->GetActor();
+  check(Actor);
+  REQUIRE_CARLA_GAME_MODE()
+  auto TextureUE = GameMode->CreateUETexture(Texture);
+  if (TextureUE == nullptr)
+  {
+    RESPOND_ERROR("CreateUETexture failed.");
+  }
+  GameMode->ApplyTextureToActor(Actor, TextureUE, MaterialParameter);
+  return R<void>::Success();
 }
 
 class ServerBinder
