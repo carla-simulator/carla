@@ -7,7 +7,7 @@
 #pragma once
 
 #include <vector>
-#include <cmath>
+
 
 using ActorPowerMap = std::map<AActor *, float>;
 using ActorPowerPair = std::pair<AActor *, float>;
