@@ -41,16 +41,13 @@ then
     sudo apt update
     sudo apt-get install retry
 fi
-retry --until=success --times=12 --delay=300 -- sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu focal main universe"
 retry --until=success --times=12 --delay=300 -- sudo apt-get update
-retry --until=success --times=12 --delay=300 -- sudo apt-get install build-essential make g++-7 ninja-build libvulkan1 python3 python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl libtool rsync libxml2-dev git git-lfs
+retry --until=success --times=12 --delay=300 -- sudo apt-get install build-essential make ninja-build libvulkan1 python3 python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl libtool rsync libxml2-dev git git-lfs
 echo "Ubuntu Pacakges Installed..."
 
 echo "Installing Python Pacakges..."
-pip3 install --user numpy
-pip3 install --user -Iv setuptools==47.3.1
-pip3 install --user distro
-pip3 install --user wheel auditwheel
+pip3 install --upgrade pip
+pip3 install -r requirements.txt
 echo "Python Pacakges Installed..."
 
 echo "Clonning CARLA Content asynchronously... (see the progres in ContentClone.log)"
@@ -66,7 +63,7 @@ else
     curl -L -O https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3-linux-x86_64.tar.gz
     sudo mkdir -p /opt
     sudo tar -xzf cmake-3.28.3-linux-x86_64.tar.gz -C /opt
-    sudo echo -e '\n#CARLA CMake 3.28.3\nPATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH' >> ~/.bashrc
+    echo -e '\n#CARLA CMake 3.28.3\nPATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH' >> ~/.bashrc
     export PATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH
     rm -rf cmake-3.28.3-linux-x86_64.tar.gz
     echo "CMake Intalled 3.28.3..."
@@ -75,33 +72,42 @@ fi
 if [ ! -z $CARLA_UNREAL_ENGINE_PATH ] && [ -d $CARLA_UNREAL_ENGINE_PATH ]; then
     echo "Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - OK"
 elif [ -d ../UnrealEngine5_carla ]; then
+    pushd ..
+    pushd UnrealEngine5_carla
     echo "Found UnrealEngine5 ../UnrealEngine5_carla - OK"
-    export CARLA_UNREAL_ENGINE_PATH=$PWD/../UnrealEngine5_carla
-    sudo echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$CARLA_UNREAL_ENGINE_PATH >> ~/.bashrc
-    #TODO: Check if UnrealEngine binary file exists and if not build it
+    export CARLA_UNREAL_ENGINE_PATH=$PWD
+    echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$CARLA_UNREAL_ENGINE_PATH >> ~/.bashrc
+    popd
+    popd
 else
     echo "Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - FAIL"
     echo "Cloning CARLA UnrealEngine5..."
     pushd ..
     git clone -b ue5-dev-carla https://github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla
     pushd UnrealEngine5_carla
-    echo "Setup CARLA UnrealEngine5..."
-    ./Setup.sh
-    echo "GenerateProjectFiles CARLA UnrealEngine5..."
-    ./GenerateProjectFiles.sh
-    echo "Build CARLA UnrealEngine5..."
-    make
-    sudo echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$PWD >> ~/.bashrc
+    echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$PWD >> ~/.bashrc
     export CARLA_UNREAL_ENGINE_PATH=$PWD
     popd
     popd
     echo "CARLA UnrealEngine5 Installed..."
 fi
+pushd ..
+pushd UnrealEngine5_carla
+echo "Setup CARLA UnrealEngine5..."
+./Setup.sh --force
+echo "GenerateProjectFiles CARLA UnrealEngine5..."
+./GenerateProjectFiles.sh
+echo "Build CARLA UnrealEngine5..."
+make
+popd
+popd
 
 echo "Configuring CARLA..."
-retry --until=success --times=10 -- cmake -G Ninja -S . -B Build --toolchain=CMake/LinuxToolchain.cmake -DLAUNCH_ARGS="-prefernvidia" -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH
+retry --until=success --times=10 -- cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/LinuxToolchain.cmake -DLAUNCH_ARGS="-prefernvidia" -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH
 echo "Building CARLA..."
 retry --until=success --times=10 -- cmake --build Build
+echo "Installing PythonAPI..."
+cmake --build Build --target carla-python-api-install
 echo "Waitting for Content to be downloaded... (see the progres in ContentClone.log)"
 wait #Waitting for content
 echo "Instalation and build succesfull! :)"

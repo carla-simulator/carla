@@ -8,6 +8,16 @@ project (
     "Open-source simulator for autonomous driving research."
 )
 
+option(ENABLE_DIRECTORY_CLEAN
+  "Enable ADDITIONAL_CLEAN_FILES on directory level"
+  ON
+)
+
+set (
+  CARLA_BUILD_PATH
+  ${CARLA_WORKSPACE_PATH}/Build/
+)
+
 set (
   CARLA_UE_PATH
   ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal
@@ -92,9 +102,6 @@ set (UE_DEPENDENCIES ${UE_DEPENDENCIES_ORDER_ONLY})
 
 if (BUILD_CARLA_CLIENT)
   list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-client)
-endif ()
-if (BUILD_PYTHON_API)
-  list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-python-api)
 endif ()
 
 
@@ -330,42 +337,98 @@ add_dependencies (
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
-add_custom_target (
-  carla-unreal-package
-  COMMAND
-    ${CARLA_UE_BUILD_COMMAND_PREFIX}
-    CarlaUnreal
-    ${UE_SYSTEM_NAME}
-    Shipping
-    -project=${CARLA_UE_PROJECT_PATH}
-    -game
-    -buildscw
-  COMMAND
-    ${CARLA_UE_UAT_COMMAND_PREFIX}
-    BuildCookRun
-    -nocompileeditor
-    -TargetPlatform=${UE_SYSTEM_NAME}
-    -Platform=${UE_SYSTEM_NAME}
-    -installed
-    -nop4
-    -project=${CARLA_UE_PROJECT_PATH}
-    -cook
-    -stage
-    -build
-    -archive
-    -archivedirectory=${CARLA_PACKAGE_PATH}/Unreal
-    -package
-    -clientconfig=Shipping
-  DEPENDS
-    ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
-    USES_TERMINAL
-    VERBATIM
-)
+function(add_carla_ue_package_target TARGET_NAME_SUFFIX UE_BUILD_CONFIGURATION)
+  add_custom_target (
+    carla-unreal-package${TARGET_NAME_SUFFIX}
+    COMMAND
+      ${CARLA_UE_BUILD_COMMAND_PREFIX}
+      CarlaUnreal
+      ${UE_SYSTEM_NAME}
+      ${UE_BUILD_CONFIGURATION}
+      -project=${CARLA_UE_PROJECT_PATH}
+      -game
+      -buildscw
+    COMMAND
+      ${CARLA_UE_UAT_COMMAND_PREFIX}
+      BuildCookRun
+      -project=${CARLA_UE_PROJECT_PATH}
+      -nocompileeditor
+      -nop4
+      -cook
+      -stage
+      -archive
+      -package
+      -iterate
+      -clientconfig=${UE_BUILD_CONFIGURATION}
+      -TargetPlatform=${UE_SYSTEM_NAME}
+      -Platform=${UE_SYSTEM_NAME}
+      -prereqs
+      -build
+      -archivedirectory=${CARLA_PACKAGE_PATH}
+    DEPENDS
+      ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
+      USES_TERMINAL
+      VERBATIM
+    )
 
-add_dependencies (
-  carla-unreal-package
-  ${UE_DEPENDENCIES_ORDER_ONLY}
-)
+  set(CARLA_TARGET_PACKAGE_PATH ${CARLA_PACKAGE_PATH}/${UE_SYSTEM_NAME})
+  add_custom_command(
+    TARGET carla-unreal-package${TARGET_NAME_SUFFIX}
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE CREATING VERSION FILE UNREAL PACKAGE EXTRA FILES STARTED **********"
+    COMMAND ${CMAKE_COMMAND}
+      -DCARLA_SOURCE_DIR=${CARLA_SOURCE_DIR}
+      -DCARLA_UNREAL_ENGINE_PATH=${CARLA_UNREAL_ENGINE_PATH}
+      -DCARLA_PACKAGE_VERSION_FILE=${CARLA_TARGET_PACKAGE_PATH}/VERSION
+      -P${CMAKE_CURRENT_SOURCE_DIR}/Package/CreateCarlaVersionFile.cmake
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE VERSION FILE UNREAL PACKAGE EXTRA FILES COMPLETED **********"
+
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE REMOVING UNREAL PACKAGE EXTRA FILES STARTED **********"
+    COMMAND ${CMAKE_COMMAND}
+      -DCARLA_TARGET_PACKAGE_PATH=${CARLA_TARGET_PACKAGE_PATH}
+      -P${CMAKE_CURRENT_SOURCE_DIR}/Package/RemoveUnrealPackageExtraFiles.cmake
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE REMOVING UNREAL PACKAGE EXTRA FILES COMPLETED **********"
+
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE COPYING CARLA ADDITIONAL FILES STARTED **********"
+    COMMAND ${CMAKE_COMMAND}
+      -DCARLA_SOURCE_DIR=${CARLA_SOURCE_DIR}
+      -DCARLA_TARGET_PACKAGE_PATH=${CARLA_TARGET_PACKAGE_PATH}
+      -DCARLA_BINARY_DIR=${CARLA_BINARY_DIR}
+      -P${CMAKE_CURRENT_SOURCE_DIR}/Package/CopyCarlaAdditionalFiles.cmake
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE COPYING CARLA ADDITIONAL FILES COMPLETED **********"
+
+    COMMAND ${CMAKE_COMMAND} -E echo "********** COMPRESSING PACKAGE STARTED **********"
+    COMMAND ${CMAKE_COMMAND}
+      -DCARLA_PACKAGE_PATH=${CARLA_PACKAGE_PATH}
+      -DCARLA_TARGET_PACKAGE_PATH=${CARLA_TARGET_PACKAGE_PATH}
+      -DTARGET_NAME_SUFFIX=${TARGET_NAME_SUFFIX}
+      -P${CMAKE_CURRENT_SOURCE_DIR}/Package/Compress.cmake
+    COMMAND ${CMAKE_COMMAND} -E echo "********** COMPRESSING PACKAGE COMPLETED **********"
+  )
+
+  add_dependencies (
+    carla-unreal-package${TARGET_NAME_SUFFIX}
+    ${UE_DEPENDENCIES_ORDER_ONLY}
+  )
+
+  add_custom_target (
+    package${TARGET_NAME_SUFFIX}
+  )
+
+  add_dependencies (
+    package${TARGET_NAME_SUFFIX}
+    carla-unreal-package${TARGET_NAME_SUFFIX}
+  )
+endfunction()
+
+# Docs for UE5 build configurations:
+# https://docs.unrealengine.com/4.27/en-US/ProductionPipelines/DevelopmentSetup/BuildConfigurations/
+add_carla_ue_package_target("" Shipping)
+add_carla_ue_package_target(-Shipping Shipping)
+add_carla_ue_package_target(-Debug Debug)
+add_carla_ue_package_target(-DebugGame DebugGame)
+add_carla_ue_package_target(-Development Development)
+add_carla_ue_package_target(-Test Test)
 
 
 
@@ -411,7 +474,7 @@ add_custom_target (
 
 add_dependencies (
   launch
-  CarlaUnrealEditor
+  carla-unreal-editor
   prelaunch-content-check
 )
 
@@ -425,12 +488,17 @@ add_dependencies (
   prelaunch-content-check
 )
 
-add_custom_target (
-  package
-  ${CARLA_LAUNCH_TARGET_OPTIONS}
-)
+set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES  
+  "${CARLA_UE_PATH}/Binaries" 
+  "${CARLA_UE_PATH}/Intermediate"
+  "${CARLA_UE_PATH}/Saved"
+  "${CARLA_UE_CARLA_TOOLS_PATH}/Binaries" 
+  "${CARLA_UE_CARLA_TOOLS_PATH}/Intermediate"
+  "${CARLA_UE_CARLA_TOOLS_PATH}/Saved"
+  "${CARLA_UE_CARLA_PATH}/Binaries" 
+  "${CARLA_UE_CARLA_PATH}/Intermediate"
+  "${CARLA_UE_CARLA_PATH}/Saved"
+  "${CARLA_BUILD_PATH}/Package"
+  "${CARLA_BUILD_PATH}/PythonAPI/dist"
+  )
 
-add_dependencies (
-  package
-  carla-unreal-package
-)

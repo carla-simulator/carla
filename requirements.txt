@@ -1,3 +1,8 @@
 psutil
 requests
 scikit-build-core
+wheel
+numpy
+setuptools==47.3.1
+build
+pygame

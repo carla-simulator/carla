@@ -150,6 +150,13 @@ private:
     CARLA_ENSURE_GAME_THREAD();   \
     if (Episode == nullptr) { RESPOND_ERROR("episode not ready"); }
 
+#define REQUIRE_CARLA_GAME_MODE() \
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld()); \
+    if (!GameMode) \
+    { \
+      RESPOND_ERROR("unable to find CARLA game mode"); \
+    }
+
 carla::rpc::ResponseError RespondError(
     const FString& FuncName,
     const FString& ErrorMessage,
@@ -167,6 +174,30 @@ carla::rpc::ResponseError RespondError(
     const FString& ExtraInfo = "")
 {
   return RespondError(FuncName, CarlaGetStringError(Error), ExtraInfo);
+}
+
+template <typename T>
+static R<void> ApplyTextureToActor(
+  UCarlaEpisode* Episode,
+  carla::rpc::ActorId ActorId,
+  const carla::rpc::MaterialParameter& MaterialParameter,
+  T&& Texture)
+{
+  auto CarlaActor = Episode->FindCarlaActor(ActorId);
+  if (CarlaActor == nullptr)
+  {
+    RESPOND_ERROR("Could not find CARLA Actor.");
+  }
+  auto Actor = CarlaActor->GetActor();
+  check(Actor);
+  REQUIRE_CARLA_GAME_MODE()
+  auto TextureUE = GameMode->CreateUETexture(Texture);
+  if (TextureUE == nullptr)
+  {
+    RESPOND_ERROR("CreateUETexture failed.");
+  }
+  GameMode->ApplyTextureToActor(Actor, TextureUE, MaterialParameter);
+  return R<void>::Success();
 }
 
 class ServerBinder
@@ -349,6 +380,26 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("opendrive could not be correctly parsed");
     }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(apply_texture_to_actor) << [this](
+    cr::ActorId ActorId,
+    const cr::MaterialParameter& MaterialParameter,
+    const cr::TextureColor& Texture) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ::ApplyTextureToActor(Episode, ActorId, MaterialParameter, Texture);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(apply_texture_to_actor_float) << [this](
+    cr::ActorId ActorId,
+    const cr::MaterialParameter& MaterialParameter,
+    const cr::TextureFloatColor& Texture) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ::ApplyTextureToActor(Episode, ActorId, MaterialParameter, Texture);
     return R<void>::Success();
   };
 
@@ -2149,7 +2200,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
         else
         {
           auto Actor = View.GetActor();
-          if (!Actor->IsPendingKill())
+          if (IsValid(Actor))
           {
             const ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
             List.emplace_back(
