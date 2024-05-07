@@ -8,7 +8,8 @@ project (
     "Open-source simulator for autonomous driving research."
 )
 
-option(ENABLE_DIRECTORY_CLEAN
+carla_option (
+  ENABLE_DIRECTORY_CLEAN
   "Enable ADDITIONAL_CLEAN_FILES on directory level"
   ON
 )
@@ -295,8 +296,9 @@ file (
 
 
 
-add_custom_target (
+carla_add_custom_target (
   carla-unreal
+  "Build the CarlaUnreal subproject."
   COMMAND
     ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnreal
@@ -316,8 +318,9 @@ add_dependencies (
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
-add_custom_target (
+carla_add_custom_target (
   carla-unreal-editor
+  "Build the CarlaUnrealEditor subproject."
   COMMAND
     ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnrealEditor
@@ -337,9 +340,11 @@ add_dependencies (
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
-function(add_carla_ue_package_target TARGET_NAME_SUFFIX UE_BUILD_CONFIGURATION)
-  add_custom_target (
+function (add_carla_ue_package_target PACKAGE_CONFIGURATION UE_BUILD_CONFIGURATION)
+  set (TARGET_NAME_SUFFIX -${PACKAGE_CONFIGURATION})
+  carla_add_custom_target (
     carla-unreal-package${TARGET_NAME_SUFFIX}
+    "Create a CARLA package in ${PACKAGE_CONFIGURATION} mode."
     COMMAND
       ${CARLA_UE_BUILD_COMMAND_PREFIX}
       CarlaUnreal
@@ -371,8 +376,8 @@ function(add_carla_ue_package_target TARGET_NAME_SUFFIX UE_BUILD_CONFIGURATION)
       VERBATIM
     )
 
-  set(CARLA_TARGET_PACKAGE_PATH ${CARLA_PACKAGE_PATH}/${UE_SYSTEM_NAME})
-  add_custom_command(
+  set (CARLA_TARGET_PACKAGE_PATH ${CARLA_PACKAGE_PATH}/${UE_SYSTEM_NAME})
+  add_custom_command (
     TARGET carla-unreal-package${TARGET_NAME_SUFFIX}
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE CREATING VERSION FILE UNREAL PACKAGE EXTRA FILES STARTED **********"
@@ -411,8 +416,9 @@ function(add_carla_ue_package_target TARGET_NAME_SUFFIX UE_BUILD_CONFIGURATION)
     ${UE_DEPENDENCIES_ORDER_ONLY}
   )
 
-  add_custom_target (
+  carla_add_custom_target (
     package${TARGET_NAME_SUFFIX}
+    "Create a CARLA package in ${PACKAGE_CONFIGURATION} mode."
   )
 
   add_dependencies (
@@ -424,11 +430,11 @@ endfunction()
 # Docs for UE5 build configurations:
 # https://docs.unrealengine.com/4.27/en-US/ProductionPipelines/DevelopmentSetup/BuildConfigurations/
 add_carla_ue_package_target("" Shipping)
-add_carla_ue_package_target(-Shipping Shipping)
-add_carla_ue_package_target(-Debug Debug)
-add_carla_ue_package_target(-DebugGame DebugGame)
-add_carla_ue_package_target(-Development Development)
-add_carla_ue_package_target(-Test Test)
+add_carla_ue_package_target(Shipping Shipping)
+add_carla_ue_package_target(Debug Debug)
+add_carla_ue_package_target(DebugGame DebugGame)
+add_carla_ue_package_target(Development Development)
+add_carla_ue_package_target(Test Test)
 
 
 
@@ -445,8 +451,9 @@ set (
   VERBATIM
 )
 
-add_custom_target (
+carla_add_custom_target (
   launch
+  "Build and open CARLA in the Unreal Editor."
   ${CARLA_LAUNCH_TARGET_OPTIONS}
 )
 
@@ -462,8 +469,9 @@ else ()
   )
 endif ()
 
-add_custom_target (
-  prelaunch-content-check
+carla_add_custom_target (
+  check-unreal-content
+  "Perform some basic checks to ensure that the CARLA Unreal Editor will not open without its assets."
   COMMAND
     ${PRELAUNCH_CONTENT_CHECK_COMMAND}
   COMMENT
@@ -475,20 +483,22 @@ add_custom_target (
 add_dependencies (
   launch
   carla-unreal-editor
-  prelaunch-content-check
+  check-unreal-content
 )
 
-add_custom_target (
+carla_add_custom_target (
   launch-only
+  "Open CARLA in the Unreal Editor. This will not rebuild outdated targets."
   ${CARLA_LAUNCH_TARGET_OPTIONS}
 )
 
 add_dependencies (
   launch-only
-  prelaunch-content-check
+  check-unreal-content
 )
 
-set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES  
+set_property (
+  DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES  
   "${CARLA_UE_PATH}/Binaries" 
   "${CARLA_UE_PATH}/Intermediate"
   "${CARLA_UE_PATH}/Saved"
@@ -500,5 +510,5 @@ set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES
   "${CARLA_UE_CARLA_PATH}/Saved"
   "${CARLA_BUILD_PATH}/Package"
   "${CARLA_BUILD_PATH}/PythonAPI/dist"
-  )
+)
 

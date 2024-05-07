@@ -73,8 +73,6 @@ include (${CARLA_WORKSPACE_PATH}/CMake/Options.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Common.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Dependencies.cmake)
 
-
-
 if (BUILD_CARLA_CLIENT OR BUILD_CARLA_SERVER)
   add_subdirectory (LibCarla)
 endif ()
@@ -98,4 +96,25 @@ endif ()
 
 if (BUILD_EXAMPLES)
   add_subdirectory (Examples)
+endif ()
+
+if (CARLA_CMAKE_HELP)
+  carla_get_option_docs (CARLA_OPTION_DOCS)
+  carla_get_target_docs (CARLA_TARGET_DOCS)
+  set (
+    CARLA_CMAKE_HELP_MESSAGE
+    "# CARLA - CMake Help\n"
+    "## CMake Targets\n"
+    "${CARLA_TARGET_DOCS}\n"
+    "## CMake Options\n"
+    "${CARLA_OPTION_DOCS}\n"
+  )
+  message ("${CARLA_CMAKE_HELP_MESSAGE}")
+  if (CARLA_CMAKE_HELP_FILE)
+    file (
+      WRITE
+      ${CARLA_WORKSPACE_PATH}/Help.md
+      ${CARLA_CMAKE_HELP_MESSAGE}
+    )
+  endif ()
 endif ()
