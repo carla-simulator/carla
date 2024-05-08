@@ -134,18 +134,6 @@ carla_string_option (
   "/usr/bin/gcc-7"
 )
 
-carla_option (
-  CARLA_CMAKE_HELP
-  "Display additional information regarding the various options and targets."
-  OFF
-)
-
-carla_option (
-  CARLA_CMAKE_HELP_FILE
-  "Write the output of CARLA_CMAKE_HELP to ${CARLA_WORKSPACE_PATH}/Help.md"
-  OFF
-)
-
 
 
 # ================================
