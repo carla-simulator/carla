@@ -101,7 +101,9 @@ endif ()
 if (CARLA_CMAKE_HELP)
   carla_get_option_docs (CARLA_OPTION_DOCS)
   carla_get_target_docs (CARLA_TARGET_DOCS)
-  set (
+  set (CARLA_CMAKE_HELP_MESSAGE)
+  string (
+    APPEND 
     CARLA_CMAKE_HELP_MESSAGE
     "# CARLA - CMake Help\n"
     "## CMake Targets\n"
