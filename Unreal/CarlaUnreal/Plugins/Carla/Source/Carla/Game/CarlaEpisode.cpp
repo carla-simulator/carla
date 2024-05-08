@@ -31,6 +31,26 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 
+static FString BuildRecastBuilderFile()
+{
+    // Define filename with extension depending on if we are on Windows or not
+#if PLATFORM_WINDOWS
+    const FString RecastToolName = "RecastBuilder.exe";
+#else
+    const FString RecastToolName = "RecastBuilder";
+#endif // PLATFORM_WINDOWS
+
+    // Define path depending on the UE4 build type (Package or Editor)
+#if UE_BUILD_SHIPPING
+    const FString AbsoluteRecastBuilderPath = FPaths::ConvertRelativePathToFull(
+        FPaths::RootDir() + "Tools/" + RecastToolName);
+#else
+    const FString AbsoluteRecastBuilderPath = FPaths::ConvertRelativePathToFull(
+        FPaths::ProjectDir() + "../../Build/_deps/recastnavigation-build/RecastBuilder/" + RecastToolName);
+#endif
+    return AbsoluteRecastBuilderPath;
+}
+
 static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
 {
   using TSS = ETrafficSignState;
@@ -59,6 +79,15 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
 {
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
   FrameData.SetEpisode(this);
+
+  const FString AbsoluteRecastBuilderPath = BuildRecastBuilderFile();
+
+  if (!FPaths::FileExists(AbsoluteRecastBuilderPath))
+  {
+      UE_LOG(LogCarla, Warning, TEXT("'RecastBuilder' not present under '%s', "
+          "the binaries for pedestrian navigation will not be created."),
+          *AbsoluteRecastBuilderPath);
+  }
 }
 
 bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
@@ -124,25 +153,7 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
   return bIsFileFound;
 }
 
-static FString BuildRecastBuilderFile()
-{
-  // Define filename with extension depending on if we are on Windows or not
-#if PLATFORM_WINDOWS
-  const FString RecastToolName = "RecastBuilder.exe";
-#else
-  const FString RecastToolName = "RecastBuilder";
-#endif // PLATFORM_WINDOWS
 
-  // Define path depending on the UE4 build type (Package or Editor)
-#if UE_BUILD_SHIPPING
-  const FString AbsoluteRecastBuilderPath = FPaths::ConvertRelativePathToFull(
-      FPaths::RootDir() + "Tools/" + RecastToolName);
-#else
-  const FString AbsoluteRecastBuilderPath = FPaths::ConvertRelativePathToFull(
-      FPaths::ProjectDir() + "../../Util/DockerUtils/dist/" + RecastToolName);
-#endif
-  return AbsoluteRecastBuilderPath;
-}
 
 bool UCarlaEpisode::LoadNewOpendriveEpisode(
     const FString &OpenDriveString,
@@ -208,8 +219,7 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
 
   const FString AbsoluteRecastBuilderPath = BuildRecastBuilderFile();
 
-  if (FPaths::FileExists(AbsoluteRecastBuilderPath) &&
-      Params.enable_pedestrian_navigation)
+  if (FPaths::FileExists(AbsoluteRecastBuilderPath))
   {
     /// @todo this can take too long to finish, clients need a method
     /// to know if the navigation is available or not.
