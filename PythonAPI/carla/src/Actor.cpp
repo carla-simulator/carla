@@ -9,6 +9,9 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 namespace ctm = carla::traffic_manager;
+namespace cc = carla::client;
+namespace cg = carla::geom;
+namespace cr = carla::rpc;
 
 template<class T>
 static auto StdVectorToPyList(const std::vector<T> &vec) {
@@ -19,32 +22,49 @@ static auto StdVectorToPyList(const std::vector<T> &vec) {
   return l;
 }
 
-static auto GetSemanticTags(const carla::client::Actor &self) {
+static auto GetSemanticTags(const cc::Actor &self) {
   const std::vector<uint8_t> &tags = self.GetSemanticTags();
   return StdVectorToPyList(tags);
 }
 
-static void AddActorImpulse(carla::client::Actor &self,
-    const carla::geom::Vector3D &impulse) {
+static void AddActorImpulse(cc::Actor &self,
+    const cg::Vector3D &impulse) {
   self.AddImpulse(impulse);
 }
 
-static void AddActorForce(carla::client::Actor &self,
-    const carla::geom::Vector3D &force) {
+static void AddActorForce(cc::Actor &self,
+    const cg::Vector3D &force) {
   self.AddForce(force);
 }
 
-static auto GetGroupTrafficLights(carla::client::TrafficLight &self) {
+static auto GetGroupTrafficLights(cc::TrafficLight &self) {
   auto values = self.GetGroupTrafficLights();
   return StdVectorToPyList(values);
 }
 
 template <typename ControlT>
-static void ApplyControl(carla::client::Walker &self, const ControlT &control) {
+static void ApplyControl(cc::Walker &self, const ControlT &control) {
   self.ApplyControl(control);
 }
 
-static auto GetLightBoxes(const carla::client::TrafficLight &self) {
+static void ApplyTexture(
+  cc::Actor& self,
+  const cr::MaterialParameter& MaterialParameter,
+  const boost::python::object& Texture)
+{
+  boost::python::extract<cr::TextureColor> ext(Texture);
+  if (ext.check())
+    return self.ApplyTexture(MaterialParameter, ext());
+
+  boost::python::extract<cr::TextureFloatColor> ext_float(Texture);
+  if (ext_float.check())
+    return self.ApplyTexture(MaterialParameter, ext_float());
+
+  throw std::invalid_argument(
+    "Invalid texture passed to apply_texture. Expected either a TextureColor or TextureFloatColor.");
+}
+
+static auto GetLightBoxes(const cc::TrafficLight &self) {
   boost::python::list result;
   for (const auto &bb : self.GetLightBoxes()) {
     result.append(bb);
@@ -53,10 +73,8 @@ static auto GetLightBoxes(const carla::client::TrafficLight &self) {
 }
 
 void export_actor() {
+
   using namespace boost::python;
-  namespace cc = carla::client;
-  namespace cr = carla::rpc;
-  namespace ctm = carla::traffic_manager;
 
   enum_<cr::ActorState>("ActorState")
     .value("Invalid", cr::ActorState::Invalid)
@@ -106,6 +124,7 @@ void export_actor() {
       .def("set_simulate_physics", &cc::Actor::SetSimulatePhysics, (arg("enabled") = true))
       .def("set_collisions", &cc::Actor::SetCollisions, (arg("enabled") = true))
       .def("set_enable_gravity", &cc::Actor::SetEnableGravity, (arg("enabled") = true))
+      .def("apply_texture", &ApplyTexture, (arg("material_parameter"), arg("texture")))
       .def("destroy", CALL_WITHOUT_GIL(cc::Actor, Destroy))
       .def(self_ns::str(self_ns::self))
   ;

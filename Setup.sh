@@ -79,25 +79,28 @@ elif [ -d ../UnrealEngine5_carla ]; then
     echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$CARLA_UNREAL_ENGINE_PATH >> ~/.bashrc
     popd
     popd
-    #TODO: Check if UnrealEngine binary file exists and if not build it
 else
     echo "Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - FAIL"
     echo "Cloning CARLA UnrealEngine5..."
     pushd ..
     git clone -b ue5-dev-carla https://github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla
     pushd UnrealEngine5_carla
-    echo "Setup CARLA UnrealEngine5..."
-    ./Setup.sh
-    echo "GenerateProjectFiles CARLA UnrealEngine5..."
-    ./GenerateProjectFiles.sh
-    echo "Build CARLA UnrealEngine5..."
-    make
     echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$PWD >> ~/.bashrc
     export CARLA_UNREAL_ENGINE_PATH=$PWD
     popd
     popd
     echo "CARLA UnrealEngine5 Installed..."
 fi
+pushd ..
+pushd UnrealEngine5_carla
+echo "Setup CARLA UnrealEngine5..."
+./Setup.sh --force
+echo "GenerateProjectFiles CARLA UnrealEngine5..."
+./GenerateProjectFiles.sh
+echo "Build CARLA UnrealEngine5..."
+make
+popd
+popd
 
 echo "Configuring CARLA..."
 retry --until=success --times=10 -- cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/LinuxToolchain.cmake -DLAUNCH_ARGS="-prefernvidia" -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH

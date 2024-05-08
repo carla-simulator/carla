@@ -64,25 +64,27 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     setx CARLA_UNREAL_ENGINE_PATH !cd!
     popd
     popd
-    REM TODO: Check if UnrealEngine binary file exists and if not build it
 ) else (
     echo Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - FAIL
     pushd ..
     echo Cloning CARLA Unreal Engine 5...
     git clone -b ue5-dev-carla https://github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla || exit /b
     pushd UnrealEngine5_carla
-    echo Setup CARLA Unreal Engine 5...
-    call Setup.bat || exit /b
-    echo GenerateProjectFiles CARLA Unreal Engine 5...
-    call GenerateProjectFiles.bat || exit /b
-    echo Opening Visual Studio 2022...
-    msbuild Engine\Intermediate\ProjectFiles\UE5.vcxproj /property:Configuration="Development_Editor" /property:Platform="x64" || exit /b
     set CARLA_UNREAL_ENGINE_PATH=!cd!
     setx CARLA_UNREAL_ENGINE_PATH !cd!
     popd
     popd
 )
-
+pushd ..
+pushd UnrealEngine5_carla
+echo Setup CARLA Unreal Engine 5...
+call Setup.bat || exit /b
+echo GenerateProjectFiles CARLA Unreal Engine 5...
+call GenerateProjectFiles.bat || exit /b
+echo Opening Visual Studio 2022...
+msbuild Engine\Intermediate\ProjectFiles\UE5.vcxproj /property:Configuration="Development_Editor" /property:Platform="x64" || exit /b
+popd
+popd
 
 echo Configuring CARLA...
 call cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=%CARLA_UNREAL_ENGINE_PATH% || exit /b

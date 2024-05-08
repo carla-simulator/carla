@@ -470,6 +470,22 @@ namespace detail {
       _client.SetActorEnableGravity(actor.GetId(), enabled);
     }
 
+    void ApplyTextureToActor(
+      Actor& actor,
+      const rpc::MaterialParameter& MaterialParameter,
+      const rpc::TextureColor& Texture)
+    {
+      _client.ApplyTextureToActor(actor.GetId(), MaterialParameter, Texture);
+    }
+
+    void ApplyTextureToActor(
+      Actor& actor,
+      const rpc::MaterialParameter& MaterialParameter,
+      const rpc::TextureFloatColor& Texture)
+    {
+      _client.ApplyTextureToActor(actor.GetId(), MaterialParameter, Texture);
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with vehicles
