@@ -538,7 +538,7 @@ void FCarlaServer::FPimpl::BindActions()
     REQUIRE_CARLA_EPISODE();
 
     // Check that the path ends in a slash, add it otherwise
-    if (folder[folder.size() - 1] != '/' && folder[folder.size() - 1] != '\\') {
+    if (!folder.empty() && folder[folder.size() - 1] != '/' && folder[folder.size() - 1] != '\\') {
       folder += "/";
     }
 
