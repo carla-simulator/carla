@@ -128,12 +128,6 @@ carla_string_option (
   "png"
 )
 
-carla_string_option (  
-  GCC_COMPILER
-  "gcc compiler used by some CARLA extensions."
-  "/usr/bin/gcc-7"
-)
-
 
 
 # ================================
