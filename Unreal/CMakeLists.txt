@@ -341,7 +341,9 @@ add_dependencies (
 )
 
 function (add_carla_ue_package_target PACKAGE_CONFIGURATION UE_BUILD_CONFIGURATION)
-  set (TARGET_NAME_SUFFIX -${PACKAGE_CONFIGURATION})
+  if (NOT "${PACKAGE_CONFIGURATION}" STREQUAL "")
+    set (TARGET_NAME_SUFFIX -${PACKAGE_CONFIGURATION})
+  endif ()
   carla_add_custom_target (
     carla-unreal-package${TARGET_NAME_SUFFIX}
     "Create a CARLA package in ${PACKAGE_CONFIGURATION} mode."
