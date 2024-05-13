@@ -11,9 +11,8 @@ set (
   ${CARLA_WORKSPACE_PATH}/osm-world-renderer/OsmRenderer
 )
 
-carla_add_library (
+add_library (
   lib-osm-map-renderer
-  "Build OSM-Map-Renderer."
   ${OSM_RENDERER_SOURCE_PATH}/src/OsmRenderer.cpp
   ${OSM_RENDERER_SOURCE_PATH}/src/MapDrawer.cpp
   ${OSM_RENDERER_SOURCE_PATH}/src/MapRasterizer.cpp
@@ -33,9 +32,8 @@ target_include_directories (
   ${OSM_RENDERER_SOURCE_PATH}/include
 )
 
-carla_add_executable (
+add_executable (
   osm-world-renderer
-  "Build OSM-World-Renderer."
   ${OSM_RENDERER_SOURCE_PATH}/main.cpp
 )
 

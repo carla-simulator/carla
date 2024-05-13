@@ -1,8 +1,7 @@
 project (carla-example-cpp-client)
 
-carla_add_executable (
+add_executable (
   carla-example-cpp-client
-  "Build the CARLA C++ client example."
   main.cpp
 )
 

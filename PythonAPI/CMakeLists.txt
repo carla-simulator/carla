@@ -81,9 +81,8 @@ else ()
   )
 endif ()
 
-carla_add_custom_target (
+add_custom_target (
   carla-python-api
-  "Build the CARLA Python API."
   COMMAND
     ${CMAKE_COMMAND}
       -E copy
@@ -97,9 +96,8 @@ carla_add_custom_target (
   USES_TERMINAL
 )
 
-carla_add_custom_target (
+add_custom_target (
   carla-python-api-install
-  "Build & install the CARLA Python API"
   COMMAND
     ${Python3_EXECUTABLE}
       -m pip install

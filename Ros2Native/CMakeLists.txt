@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.28.0)
 
-project (carla-ros2-native-project)
+project(carla-ros2-native-project)
 
 include (ExternalProject)
 
@@ -29,7 +29,7 @@ ExternalProject_add (
   DEPENDS foonathan_memory fastcdr
 )
 
-ExternalProject_Add (
+ExternalProject_Add(
   carla-ros2-native-lib
   DEPENDS fastdds
   SOURCE_DIR ${PROJECT_SOURCE_DIR}/LibCarlaRos2Native
@@ -37,20 +37,16 @@ ExternalProject_Add (
 )
 
 set (CARLA_PLUGIN_BINARY_PATH ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Plugins/Carla/Binaries/Linux)
-
-make_directory (${CARLA_PLUGIN_BINARY_PATH})
-
-add_custom_command (
-  TARGET carla-ros2-native-lib
-  POST_BUILD
-  COMMAND
-    ${CMAKE_COMMAND} -E copy
-    ${PROJECT_INSTALL_PATH}/lib/*.so*
-    ${CARLA_PLUGIN_BINARY_PATH}
+make_directory(${CARLA_PLUGIN_BINARY_PATH})
+add_custom_command(
+    TARGET carla-ros2-native-lib
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+      ${PROJECT_INSTALL_PATH}/lib/*.so*
+      ${CARLA_PLUGIN_BINARY_PATH}
 )
 
-carla_add_custom_target (
+add_custom_target (
   carla-ros2-native
-  "Build the ROS2-Native CARLA subproject."
   DEPENDS carla-ros2-native-lib
 )
