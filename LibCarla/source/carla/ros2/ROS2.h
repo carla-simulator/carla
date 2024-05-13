@@ -41,6 +41,8 @@ namespace ros2 {
   class CarlaTransformPublisher;
   class CarlaClockPublisher;
   class CarlaEgoVehicleControlSubscriber;
+  class BasicSubscriber;
+  class BasicPublisher;
 
 class ROS2
 {
@@ -70,6 +72,8 @@ class ROS2
   std::string GetActorParentRosName(void *actor);
 
   // callbacks
+  void AddBasicSubscriberCallback(void* actor, std::string ros_name, ActorMessageCallback callback);
+  void RemoveBasicSubscriberCallback(void* actor);
   void AddActorCallback(void* actor, std::string ros_name, ActorCallback callback);
   void RemoveActorCallback(void* actor);
 
@@ -156,11 +160,15 @@ void ProcessDataFromCollisionSensor(
   std::unordered_map<void *, std::string> _actor_ros_name;
   std::unordered_map<void *, std::vector<void*> > _actor_parent_ros_name;
   std::shared_ptr<CarlaEgoVehicleControlSubscriber> _controller;
+  std::shared_ptr<BasicSubscriber> _basic_subscriber;
   std::shared_ptr<CarlaClockPublisher> _clock_publisher;
+  std::shared_ptr<BasicPublisher> _basic_publisher;
   std::unordered_map<void *, std::shared_ptr<CarlaPublisher>> _publishers;
   std::unordered_map<void *, std::shared_ptr<CarlaTransformPublisher>> _transforms;
   std::unordered_set<carla::streaming::detail::stream_id_type> _publish_stream;
   std::unordered_map<void *, ActorCallback> _actor_callbacks;
+  std::unordered_map<void *, ActorMessageCallback> _actor_message_callbacks;
+
 };
 
 } // namespace ros2

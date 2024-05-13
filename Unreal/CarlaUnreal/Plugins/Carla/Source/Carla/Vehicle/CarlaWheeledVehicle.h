@@ -209,6 +209,8 @@ public:
     return false;
   }
 
+  void PrintROS2Message(const char* Message);
+
   /// @}
   // ===========================================================================
   /// @name Vehicle input control
