@@ -28,3 +28,16 @@ void ActorROS2Handler::operator()(carla::ros2::VehicleControl &Source)
 
   Vehicle->ApplyVehicleControl(NewControl, EVehicleInputPriority::User);
 }
+
+void ActorROS2Handler::operator()(carla::ros2::MessageControl Message)
+{
+  if (!_Actor) return;
+
+  ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(_Actor);
+  if (!Vehicle) return;
+
+  Vehicle->PrintROS2Message(Message.message);
+
+  // FString ROSMessage = Message.message;
+  // UE_LOG(LogCarla, Warning, TEXT("ROS2 Message received: %s"), *ROSMessage);
+}

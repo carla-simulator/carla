@@ -918,22 +918,22 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   FActorVariation Channels;
   Channels.Id = TEXT("channels");
   Channels.Type = EActorAttributeType::Int;
-  Channels.RecommendedValues = { TEXT("32") };
+  Channels.RecommendedValues = { TEXT("64") };
   // Range.
   FActorVariation Range;
   Range.Id = TEXT("range");
   Range.Type = EActorAttributeType::Float;
-  Range.RecommendedValues = { TEXT("10.0") }; // 10 meters
+  Range.RecommendedValues = { TEXT("50.0") }; // 50 meters
   // Points per second.
   FActorVariation PointsPerSecond;
   PointsPerSecond.Id = TEXT("points_per_second");
   PointsPerSecond.Type = EActorAttributeType::Int;
-  PointsPerSecond.RecommendedValues = { TEXT("56000") };
+  PointsPerSecond.RecommendedValues = { TEXT("600000") };
   // Frequency.
   FActorVariation Frequency;
   Frequency.Id = TEXT("rotation_frequency");
   Frequency.Type = EActorAttributeType::Float;
-  Frequency.RecommendedValues = { TEXT("10.0") };
+  Frequency.RecommendedValues = { TEXT("60.0") };
   // Upper FOV limit.
   FActorVariation UpperFOV;
   UpperFOV.Id = TEXT("upper_fov");
