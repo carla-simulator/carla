@@ -6,6 +6,8 @@
 
 #include "Carla.h"
 #include "Carla/Game/CarlaEpisode.h"
+#include "Math/UnrealMathUtility.h"
+
 #include "PathLossModel.h"
 #include <random>
 #include <limits>
@@ -332,7 +334,7 @@ float PathLossModel::ComputeLoss(AActor *OtherActor, FVector Source, FVector Des
     EPathState state;
 
     float PathLoss = 0.0;
-    double VehicleBlockageLoss;
+    double VehicleBlockageLoss = 0.0;
     float ShadowFadingLoss = 0.0;
 
     // state and vehicle obstacles are call-by-reference
@@ -365,7 +367,7 @@ float PathLossModel::ComputeLoss(AActor *OtherActor, FVector Source, FVector Des
         {
             // fspl + knife edge
             // fspl
-            double free_space_loss = 20.0 * log10(Distance3d) + 20.0 * log10(4.0 * M_PI / lambda);
+            double free_space_loss = 20.0 * log10(Distance3d) + 20.0 * log10(4.0 * PI / lambda);
             // add the knife edge vehicle blockage loss
             PathLoss = free_space_loss + CalculateNLOSvLoss(Source, Destination, TxHeight, RxHeight, Distance3d, vehicle_obstacles);
         }
@@ -446,7 +448,7 @@ bool PathLossModel::GetLocationIfVehicle(const FVector CurrentActorLocation, con
 
 void PathLossModel::CalculateFSPL_d0()
 {
-    m_fspl_d0 = 20.0 * log10(reference_distance_fspl) + 20.0 * log10(Frequency) + 20.0 * log10(4.0 * M_PI / c_speedoflight);
+    m_fspl_d0 = 20.0 * log10(reference_distance_fspl) + 20.0 * log10(Frequency) + 20.0 * log10(4.0 * PI / c_speedoflight);
 }
 
 // Following ETSI TR 103 257-1 V1.1.1 (2019-05: from WINNER Project Board: "D5.3 - WINNER+ Final Channel Models", 30 06 2010.
@@ -563,7 +565,7 @@ double PathLossModel::CalculateTwoRayPathLoss(double Distance3d, double TxHeight
 
     double gamma = (sin_theta - sqrt(epsilon_r - std::pow(cos_theta, 2))) / (sin_theta + sqrt(epsilon_r - std::pow(cos_theta, 2)));
 
-    double phi = (2.0 * M_PI / lambda * (Distance3d - d_refl));
+    double phi = (2.0 * PI / lambda * (Distance3d - d_refl));
 
-    return 20 * log10(4.0 * M_PI * d_ground / lambda * 1.0 / sqrt(std::pow(1 + gamma * cos(phi), 2) + std::pow(gamma, 2) * std::pow(sin(phi), 2)));
+    return 20 * log10(4.0 * PI * d_ground / lambda * 1.0 / sqrt(std::pow(1 + gamma * cos(phi), 2) + std::pow(gamma, 2) * std::pow(sin(phi), 2)));
 }
