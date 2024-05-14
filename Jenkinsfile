@@ -15,13 +15,13 @@ pipeline
               stage('Configure')
               {
                   steps {
-                    sh "printenv"
+                    sh "nvidia-smi"
                   }
               }
               stage('Build')
               {
                 steps {
-                  sh "cmake --version"
+                  sh "vulkaninfo"
                 }
               }
               stage('Package')
