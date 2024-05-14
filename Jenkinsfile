@@ -15,7 +15,7 @@ pipeline
               stage('Configure')
               {
                   steps {
-                    sh "nvidia-smi"
+                    sh "lsb_release -a"
                   }
               }
               stage('Build')
