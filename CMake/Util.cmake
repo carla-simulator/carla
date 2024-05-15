@@ -76,7 +76,7 @@ endif ()
 
 function (carla_add_target_docs)
   set (OPTIONS)
-  set (ONE_VAL_ARGS TARGET_NAME TYPE DOCS_BRIEF)
+  set (ONE_VAL_ARGS NAME TYPE DOCS_BRIEF)
   set (MULTI_VAL_ARGS)
   cmake_parse_arguments (
     ARG
@@ -86,7 +86,7 @@ function (carla_add_target_docs)
     ${ARGN}
   )
   get_property (DOCS GLOBAL PROPERTY CARLA_TARGET_DOCS)
-  string (APPEND DOCS "- ${ARG_TARGET_NAME}\n")
+  string (APPEND DOCS "- ${ARG_NAME}\n")
   if (NOT ${ARG_TYPE} STREQUAL "")
     string (APPEND DOCS "\t- Type: ${ARG_TYPE}\n")
   endif ()
