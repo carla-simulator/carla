@@ -1,12 +1,12 @@
 # Similar to configure_file, but also expands variables
 # that are set at generate time, like generator expressions.
-macro (carla_two_step_configure_file DESTINATION SOURCE)
+function (carla_two_step_configure_file DESTINATION SOURCE)
   carla_message ("Configuring file ${DESTINATION}")
   # Configure-time step; evaluate variables:
   configure_file (${SOURCE} ${DESTINATION} @ONLY)
   # Generate-time step; evaluate generator expressions:
   file (GENERATE OUTPUT ${DESTINATION} INPUT ${DESTINATION})
-endmacro ()
+endfunction ()
 
 
 
