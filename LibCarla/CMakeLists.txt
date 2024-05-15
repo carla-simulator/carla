@@ -108,8 +108,9 @@ if (BUILD_CARLA_SERVER)
     ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.hpp
   )
 
-  add_library (
+  carla_add_library (
     carla-server
+    "Build the CARLA server."
     ${LIBCARLA_SERVER_HEADERS}
     ${LIBCARLA_SERVER_SOURCES}
     ${LIBCARLA_SERVER_HEADERS_THIRD_PARTY}
@@ -264,8 +265,9 @@ if (BUILD_CARLA_CLIENT)
     ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.cpp
   )
 
-  add_library (
+  carla_add_library (
     carla-client
+    "Build the CARLA client."
     ${LIBCARLA_CLIENT_HEADERS}
     ${LIBCARLA_CLIENT_SOURCES}
     ${LIBCARLA_CLIENT_HEADERS_THIRD_PARTY}
@@ -300,12 +302,3 @@ if (BUILD_CARLA_CLIENT)
   )
 
 endif ()
-
-add_custom_target (
-  carla-server-package
-)
-
-add_dependencies (
-  carla-server-package
-  carla-server
-)

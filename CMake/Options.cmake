@@ -125,13 +125,7 @@ carla_option (
 carla_string_option (
   LIBCARLA_IMAGE_SUPPORTED_FORMATS
   "Semicolon-separated list of supported image formats by LibCarla. Available formats: png, jpeg, tiff."
-  png
-)
-
-carla_string_option (  
-  GCC_COMPILER
-  "gcc compiler used by some CARLA extensions."
-  /usr/bin/gcc-7
+  "png"
 )
 
 
@@ -192,7 +186,7 @@ if (${BUILD_CARLA_UNREAL} AND ${CARLA_HAS_UNREAL_ENGINE_PATH})
   )
 else ()
   carla_error (
-    "Could not add UE project to build since the carla_option CARLA_UNREAL_ENGINE_PATH"
+    "Could not add UE project to build since the carla_option CARLA_UNREAL_ENGINE_PATH "
     "is not set to a valid path (\"${CARLA_UNREAL_ENGINE_PATH}\")."
     "Please set it to point to the root path of your CARLA Unreal Engine installation."
   )
