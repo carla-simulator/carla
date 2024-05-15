@@ -22,9 +22,8 @@ file (
     ${LIBCARLA_SOURCE_PATH}/carla/ros2/types/*.h
 )
 
-carla_add_library (
+add_library (
     carla-ros2-native
-    "Build the CARLA ROS2-Native subproject."
     SHARED
     ${LIBCARLA_ROS2_HEADERS}
     ${LIBCARLA_ROS2_SOURCES}
