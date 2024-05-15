@@ -128,6 +128,10 @@ if ${REMOVE_INTERMEDIATE} ; then
 
   rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
 
+  cd Plugins
+  rm -Rf HoudiniEngine
+  cd ..
+
   popd >/dev/null
 
 fi
