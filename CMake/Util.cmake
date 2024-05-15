@@ -69,6 +69,35 @@ endmacro ()
 
 
 
+# If, for some reason, CARLA is configured with CMake<3.5, this is necessary:
+if (${CMAKE_VERSION} VERSION_LESS 3.5)
+  include (CMakeParseArguments)
+endif ()
+
+function (carla_add_target_docs)
+  set (OPTIONS)
+  set (ONE_VAL_ARGS TARGET_NAME TYPE DOCS_BRIEF)
+  set (MULTI_VAL_ARGS)
+  cmake_parse_arguments (
+    ARG
+    "${OPTIONS}"
+    "${ONE_VAL_ARGS}"
+    "${MULTI_VAL_ARGS}"
+    ${ARGN}
+  )
+  get_property (DOCS GLOBAL PROPERTY CARLA_TARGET_DOCS)
+  string (APPEND DOCS "- ${ARG_TARGET_NAME}\n")
+  if (NOT ${ARG_TYPE} STREQUAL "")
+    string (APPEND DOCS "\t- Type: ${ARG_TYPE}\n")
+  endif ()
+  if (NOT ${ARG_DOCS_BRIEF} STREQUAL "")
+    string (APPEND DOCS "\t- Description: ${ARG_DOCS_BRIEF}\n")
+  endif ()
+  set_property (GLOBAL PROPERTY CARLA_TARGET_DOCS ${DOCS})
+endfunction ()
+
+
+
 function (carla_get_target_docs OUT_VAR)
   get_property (DOCS GLOBAL PROPERTY CARLA_TARGET_DOCS)
   set (${OUT_VAR} ${DOCS})
@@ -76,45 +105,42 @@ function (carla_get_target_docs OUT_VAR)
 endfunction ()
 
 
+
 function (carla_add_library NAME DESCRIPTION)
-  get_property (DOCS GLOBAL PROPERTY CARLA_TARGET_DOCS)
-  string (
-    APPEND
-    DOCS
-    "- ${NAME}\n"
-    "\t- Type: Library\n"
-    "\t- Description: ${DESCRIPTION}\n"
+  carla_add_target_docs (
+    NAME ${NAME}
+    TYPE Library
+    DOCS_BRIEF ${DESCRIPTION}
   )
   add_library (${NAME} ${ARGN})
-  set_property (GLOBAL PROPERTY CARLA_TARGET_DOCS ${DOCS})
 endfunction ()
 
 
 
 function (carla_add_executable NAME DESCRIPTION)
-  get_property (DOCS GLOBAL PROPERTY CARLA_TARGET_DOCS)
-  string (
-    APPEND
-    DOCS
-    "- ${NAME}\n"
-    "\t- Type: Executable\n"
-    "\t- Description: ${DESCRIPTION}\n"
+  carla_add_target_docs (
+    NAME ${NAME}
+    TYPE Executable
+    DOCS_BRIEF ${DESCRIPTION}
   )
   add_executable (${NAME} ${ARGN})
-  set_property (GLOBAL PROPERTY CARLA_TARGET_DOCS ${DOCS})
 endfunction ()
 
 
 
 function (carla_add_custom_target NAME DESCRIPTION)
-  get_property (DOCS GLOBAL PROPERTY CARLA_TARGET_DOCS)
-  string (
-    APPEND
-    DOCS
-    "- ${NAME}\n"
-    "\t- Type: CustomTarget\n"
-    "\t- Description: ${DESCRIPTION}\n"
+  carla_add_target_docs (
+    NAME ${NAME}
+    TYPE CustomTarget
+    DOCS_BRIEF ${DESCRIPTION}
   )
   add_custom_target (${NAME} ${ARGN})
-  set_property (GLOBAL PROPERTY CARLA_TARGET_DOCS ${DOCS})
 endfunction ()
+
+
+
+carla_add_target_docs (
+  NAME clean
+  TYPE Builtin
+  DOCS_BRIEF "Removes all build directories and files."
+)
