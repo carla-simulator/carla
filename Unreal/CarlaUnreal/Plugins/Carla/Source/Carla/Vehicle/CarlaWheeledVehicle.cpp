@@ -29,6 +29,12 @@
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
 
+void ACarlaWheeledVehicle::PrintROS2Message(const char* Message)
+{
+  FString ROSMessage = Message;
+  UE_LOG(LogCarla, Warning, TEXT("ROS2 Message received: %s"), *ROSMessage);
+}
+
 ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer)
 {

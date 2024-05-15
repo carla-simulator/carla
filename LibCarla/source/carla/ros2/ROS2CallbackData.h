@@ -33,9 +33,16 @@ namespace ros2 {
     bool    manual_gear_shift;
   };
 
+    struct MessageControl
+  {
+    const char* message;
+  };
+
   using ROS2CallbackData = boost::variant2::variant<VehicleControl>;
+  using ROS2MessageCallbackData = boost::variant2::variant<MessageControl>;
 
   using ActorCallback = std::function<void(void *actor, ROS2CallbackData data)>;
-
+  using ActorMessageCallback = std::function<void(void *actor, ROS2MessageCallbackData data)>;
+  
 } // namespace ros2
 } // namespace carla
