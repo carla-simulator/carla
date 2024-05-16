@@ -9,7 +9,7 @@
 namespace carla {
 
   constexpr const char *version() {
-    return "${CARLA_VERSION}";
+    return "@CARLA_VERSION@";
   }
 
 } // namespace carla

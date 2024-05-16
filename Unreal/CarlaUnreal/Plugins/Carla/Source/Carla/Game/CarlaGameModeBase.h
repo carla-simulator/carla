@@ -112,6 +112,7 @@ public:
       UTexture2D* Texture,
       const carla::rpc::MaterialParameter& TextureParam);
 
+  [[deprecated("This command no longer makes sense since the apply_textures API relies on IDs.")]]
   TArray<FString> GetNamesOfAllActors();
   
   FOnEpisodeInitialisedDelegate OnEpisodeInitialisedDelegate;

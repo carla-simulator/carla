@@ -109,13 +109,14 @@ class TestApplyTextures(unittest.TestCase):
       world.tick()
       spectator = world.get_spectator()
       self.assertIsNotNone(spectator)
-      spectator.set_transform(transform)
+      # spectator.set_transform(transform)
       world.tick()
       bp = np.random.choice(bpl.filter('static.prop.*'))
       self.assertIsNotNone(bp)
       world.tick()
-      world.apply_color_texture_to_objects(
-        world.get_names_of_all_objects(),
+      for e in world.get_actors():
+        print(f'Applying texture to {e}.')
+        e.apply_texture(
           carla.MaterialParameter.Diffuse,
           noise_texture_color_red)
       time.sleep(2)

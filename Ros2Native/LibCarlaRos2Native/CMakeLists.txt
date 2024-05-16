@@ -22,7 +22,9 @@ file (
     ${LIBCARLA_SOURCE_PATH}/carla/ros2/types/*.h
 )
 
-add_library (carla-ros2-native SHARED
+add_library (
+    carla-ros2-native
+    SHARED
     ${LIBCARLA_ROS2_HEADERS}
     ${LIBCARLA_ROS2_SOURCES}
 )

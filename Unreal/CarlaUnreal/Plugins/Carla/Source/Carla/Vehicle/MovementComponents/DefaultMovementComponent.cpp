@@ -22,29 +22,26 @@ void UDefaultMovementComponent::BeginPlay()
 
 void UDefaultMovementComponent::ProcessControl(FVehicleControl &Control)
 {
-  auto *MovementComponent = CarlaVehicle->GetVehicleMovementComponent();
+  auto *MovementComponent = CarlaVehicle->GetChaosWheeledVehicleMovementComponent();
   MovementComponent->SetThrottleInput(Control.Throttle);
   MovementComponent->SetSteeringInput(Control.Steer);
   MovementComponent->SetBrakeInput(Control.Brake);
   MovementComponent->SetHandbrakeInput(Control.bHandBrake);
-#if 0 // @CARLAUE5
+
   if (CarlaVehicle->GetVehicleControl().bReverse != Control.bReverse)
   {
-    MovementComponent->SetUseAutoGears(!Control.bReverse);
+    MovementComponent->SetUseAutomaticGears(!Control.bReverse);
     MovementComponent->SetTargetGear(Control.bReverse ? -1 : 1, true);
-
   }
   else
   {
-
-    MovementComponent->SetUseAutoGears(!Control.bManualGearShift);
+    MovementComponent->SetUseAutomaticGears(!Control.bManualGearShift);
     if (Control.bManualGearShift)
     {
       MovementComponent->SetTargetGear(Control.Gear, true);
     }
   }
   Control.Gear = MovementComponent->GetCurrentGear();
-#endif
 }
 
 // FVector GetVelocity() const override;

@@ -118,48 +118,25 @@ class CARLA_API UWheeledVehicleMovementComponentNW :
 	GENERATED_UCLASS_BODY()
 
 		/** Engine */
-	UPROPERTY(EditAnywhere, Category = MechanicalSetup)
-	FVehicleNWEngineData EngineSetupEXT;
+	//UPROPERTY(EditAnywhere, Category = MechanicalSetup)
+	//FVehicleNWEngineData EngineSetupEXT;
 
 	/** Differential */
-	UPROPERTY(EditAnywhere, Category = MechanicalSetup)
-	TArray<FVehicleNWWheelDifferentialData> DifferentialSetupEXT;
+	//UPROPERTY(EditAnywhere, Category = MechanicalSetup)
+	//TArray<FVehicleNWWheelDifferentialData> DifferentialSetupEXT;
 
 	/** Transmission data */
-	UPROPERTY(EditAnywhere, Category = MechanicalSetup)
-	FVehicleNWTransmissionData TransmissionSetupEXT;
+	//UPROPERTY(EditAnywhere, Category = MechanicalSetup)
+	//FVehicleNWTransmissionData TransmissionSetupEXT;
 
 	/** Maximum steering versus forward speed (km/h) */
-	UPROPERTY(EditAnywhere, Category = SteeringSetup)
-	FRuntimeFloatCurve SteeringCurve;
+	//UPROPERTY(EditAnywhere, Category = SteeringSetup)
+	//FRuntimeFloatCurve SteeringCurve;
 
-	virtual void Serialize(FArchive& Ar) override;
-	virtual void ComputeConstants() override;
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
 protected:
 
-#if 0 // @CARLAUE5
-	virtual const void* GetTireData(physx::PxVehicleWheels* Wheels, UChaosVehicleWheel* Wheel);
-	virtual const int32 GetWheelShapeMapping(physx::PxVehicleWheels* Wheels, uint32 Wheel);
-	virtual const physx::PxVehicleWheelData GetWheelData(physx::PxVehicleWheels* Wheels, uint32 Wheel);
-
-	/** Allocate and setup the PhysX vehicle */
-	virtual void SetupVehicle() override;
-
-	virtual int32 GetCustomGearBoxNumForwardGears() const;
-
-	virtual void UpdateSimulation(float DeltaTime) override;
-
-	/** update simulation data: engine */
-	virtual void UpdateEngineSetup(const FVehicleNWEngineData& NewEngineSetup);
-
-	/** update simulation data: differential */
-	virtual void UpdateDifferentialSetup(const TArray<FVehicleNWWheelDifferentialData>& NewDifferentialSetup);
-
-	/** update simulation data: transmission */
-	virtual void UpdateTransmissionSetup(const FVehicleNWTransmissionData& NewGearSetup);
-#endif
 };

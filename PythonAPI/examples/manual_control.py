@@ -58,16 +58,16 @@ from __future__ import print_function
 
 
 # ==============================================================================
-# -- find libcarla module ---------------------------------------------------------
+# -- find carla module ---------------------------------------------------------
 # ==============================================================================
 
 # ==============================================================================
 # -- imports -------------------------------------------------------------------
 # ==============================================================================
 
-import libcarla
+import carla
 
-from libcarla import ColorConverter as cc
+from carla import ColorConverter as cc
 
 import argparse
 import collections
@@ -138,8 +138,8 @@ except ImportError:
 def find_weather_presets():
     rgx = re.compile('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)')
     name = lambda x: ' '.join(m.group(0) for m in rgx.finditer(x))
-    presets = [x for x in dir(libcarla.WeatherParameters) if re.match('[A-Z].+', x)]
-    return [(getattr(libcarla.WeatherParameters, x), name(x)) for x in presets]
+    presets = [x for x in dir(carla.WeatherParameters) if re.match('[A-Z].+', x)]
+    return [(getattr(carla.WeatherParameters, x), name(x)) for x in presets]
 
 
 def get_actor_display_name(actor, truncate=250):
@@ -210,17 +210,17 @@ class World(object):
         self.doors_are_open = False
         self.current_map_layer = 0
         self.map_layer_names = [
-            libcarla.MapLayer.NONE,
-            libcarla.MapLayer.Buildings,
-            libcarla.MapLayer.Decals,
-            libcarla.MapLayer.Foliage,
-            libcarla.MapLayer.Ground,
-            libcarla.MapLayer.ParkedVehicles,
-            libcarla.MapLayer.Particles,
-            libcarla.MapLayer.Props,
-            libcarla.MapLayer.StreetLights,
-            libcarla.MapLayer.Walls,
-            libcarla.MapLayer.All
+            carla.MapLayer.NONE,
+            carla.MapLayer.Buildings,
+            carla.MapLayer.Decals,
+            carla.MapLayer.Foliage,
+            carla.MapLayer.Ground,
+            carla.MapLayer.ParkedVehicles,
+            carla.MapLayer.Particles,
+            carla.MapLayer.Props,
+            carla.MapLayer.StreetLights,
+            carla.MapLayer.Walls,
+            carla.MapLayer.All
         ]
 
     def restart(self):
@@ -266,7 +266,7 @@ class World(object):
                 print('Please add some Vehicle Spawn Point to your UE4 scene.')
                 sys.exit(1)
             spawn_points = self.map.get_spawn_points()
-            spawn_point = random.choice(spawn_points) if spawn_points else libcarla.Transform()
+            spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
             self.show_vehicle_telemetry = False
             self.modify_vehicle_physics(self.player)
@@ -364,14 +364,14 @@ class KeyboardControl(object):
         self._autopilot_enabled = start_in_autopilot
         self._ackermann_enabled = False
         self._ackermann_reverse = 1
-        if isinstance(world.player, libcarla.Vehicle):
-            self._control = libcarla.VehicleControl()
-            self._ackermann_control = libcarla.VehicleAckermannControl()
-            self._lights = libcarla.VehicleLightState.NONE
+        if isinstance(world.player, carla.Vehicle):
+            self._control = carla.VehicleControl()
+            self._ackermann_control = carla.VehicleAckermannControl()
+            self._lights = carla.VehicleLightState.NONE
             world.player.set_autopilot(self._autopilot_enabled)
             world.player.set_light_state(self._lights)
-        elif isinstance(world.player, libcarla.Walker):
-            self._control = libcarla.WalkerControl()
+        elif isinstance(world.player, carla.Walker):
+            self._control = carla.WalkerControl()
             self._autopilot_enabled = False
             self._rotation = world.player.get_transform().rotation
         else:
@@ -380,7 +380,7 @@ class KeyboardControl(object):
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
     def parse_events(self, client, world, clock, sync_mode):
-        if isinstance(self._control, libcarla.VehicleControl):
+        if isinstance(self._control, carla.VehicleControl):
             current_lights = self._lights
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -425,7 +425,7 @@ class KeyboardControl(object):
                         world.constant_velocity_enabled = False
                         world.hud.notification("Disabled Constant Velocity Mode")
                     else:
-                        world.player.enable_constant_velocity(libcarla.Vector3D(17, 0, 0))
+                        world.player.enable_constant_velocity(carla.Vector3D(17, 0, 0))
                         world.constant_velocity_enabled = True
                         world.hud.notification("Enabled Constant Velocity Mode at 60 km/h")
                 elif event.key == K_o:
@@ -433,11 +433,11 @@ class KeyboardControl(object):
                         if world.doors_are_open:
                             world.hud.notification("Closing Doors")
                             world.doors_are_open = False
-                            world.player.close_door(libcarla.VehicleDoor.All)
+                            world.player.close_door(carla.VehicleDoor.All)
                         else:
                             world.hud.notification("Opening doors")
                             world.doors_are_open = True
-                            world.player.open_door(libcarla.VehicleDoor.All)
+                            world.player.open_door(carla.VehicleDoor.All)
                     except Exception:
                         pass
                 elif event.key == K_t:
@@ -494,7 +494,7 @@ class KeyboardControl(object):
                     else:
                         world.recording_start += 1
                     world.hud.notification("Recording start time is %d" % (world.recording_start))
-                if isinstance(self._control, libcarla.VehicleControl):
+                if isinstance(self._control, carla.VehicleControl):
                     if event.key == K_f:
                         # Toggle ackermann controller
                         self._ackermann_enabled = not self._ackermann_enabled
@@ -507,7 +507,7 @@ class KeyboardControl(object):
                         else:
                             self._ackermann_reverse *= -1
                             # Reset ackermann control
-                            self._ackermann_control = libcarla.VehicleAckermannControl()
+                            self._ackermann_control = carla.VehicleAckermannControl()
                     elif event.key == K_m:
                         self._control.manual_gear_shift = not self._control.manual_gear_shift
                         self._control.gear = world.player.get_control().gear
@@ -526,49 +526,49 @@ class KeyboardControl(object):
                         world.hud.notification(
                             'Autopilot %s' % ('On' if self._autopilot_enabled else 'Off'))
                     elif event.key == K_l and pygame.key.get_mods() & KMOD_CTRL:
-                        current_lights ^= libcarla.VehicleLightState.Special1
+                        current_lights ^= carla.VehicleLightState.Special1
                     elif event.key == K_l and pygame.key.get_mods() & KMOD_SHIFT:
-                        current_lights ^= libcarla.VehicleLightState.HighBeam
+                        current_lights ^= carla.VehicleLightState.HighBeam
                     elif event.key == K_l:
                         # Use 'L' key to switch between lights:
                         # closed -> position -> low beam -> fog
-                        if not self._lights & libcarla.VehicleLightState.Position:
+                        if not self._lights & carla.VehicleLightState.Position:
                             world.hud.notification("Position lights")
-                            current_lights |= libcarla.VehicleLightState.Position
+                            current_lights |= carla.VehicleLightState.Position
                         else:
                             world.hud.notification("Low beam lights")
-                            current_lights |= libcarla.VehicleLightState.LowBeam
-                        if self._lights & libcarla.VehicleLightState.LowBeam:
+                            current_lights |= carla.VehicleLightState.LowBeam
+                        if self._lights & carla.VehicleLightState.LowBeam:
                             world.hud.notification("Fog lights")
-                            current_lights |= libcarla.VehicleLightState.Fog
-                        if self._lights & libcarla.VehicleLightState.Fog:
+                            current_lights |= carla.VehicleLightState.Fog
+                        if self._lights & carla.VehicleLightState.Fog:
                             world.hud.notification("Lights off")
-                            current_lights ^= libcarla.VehicleLightState.Position
-                            current_lights ^= libcarla.VehicleLightState.LowBeam
-                            current_lights ^= libcarla.VehicleLightState.Fog
+                            current_lights ^= carla.VehicleLightState.Position
+                            current_lights ^= carla.VehicleLightState.LowBeam
+                            current_lights ^= carla.VehicleLightState.Fog
                     elif event.key == K_i:
-                        current_lights ^= libcarla.VehicleLightState.Interior
+                        current_lights ^= carla.VehicleLightState.Interior
                     elif event.key == K_z:
-                        current_lights ^= libcarla.VehicleLightState.LeftBlinker
+                        current_lights ^= carla.VehicleLightState.LeftBlinker
                     elif event.key == K_x:
-                        current_lights ^= libcarla.VehicleLightState.RightBlinker
+                        current_lights ^= carla.VehicleLightState.RightBlinker
 
         if not self._autopilot_enabled:
-            if isinstance(self._control, libcarla.VehicleControl):
+            if isinstance(self._control, carla.VehicleControl):
                 self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
                 self._control.reverse = self._control.gear < 0
                 # Set automatic control-related vehicle lights
                 if self._control.brake:
-                    current_lights |= libcarla.VehicleLightState.Brake
+                    current_lights |= carla.VehicleLightState.Brake
                 else: # Remove the Brake flag
-                    current_lights &= ~libcarla.VehicleLightState.Brake
+                    current_lights &= ~carla.VehicleLightState.Brake
                 if self._control.reverse:
-                    current_lights |= libcarla.VehicleLightState.Reverse
+                    current_lights |= carla.VehicleLightState.Reverse
                 else: # Remove the Reverse flag
-                    current_lights &= ~libcarla.VehicleLightState.Reverse
+                    current_lights &= ~carla.VehicleLightState.Reverse
                 if current_lights != self._lights: # Change the light state only if necessary
                     self._lights = current_lights
-                    world.player.set_light_state(libcarla.VehicleLightState(self._lights))
+                    world.player.set_light_state(carla.VehicleLightState(self._lights))
                 # Apply control
                 if not self._ackermann_enabled:
                     world.player.apply_control(self._control)
@@ -579,7 +579,7 @@ class KeyboardControl(object):
                     # Update hud with the newest ackermann control
                     world.hud.update_ackermann_control(self._ackermann_control)
 
-            elif isinstance(self._control, libcarla.WalkerControl):
+            elif isinstance(self._control, carla.WalkerControl):
                 self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time(), world)
                 world.player.apply_control(self._control)
 
@@ -669,7 +669,7 @@ class HUD(object):
         self._server_clock = pygame.time.Clock()
 
         self._show_ackermann_info = False
-        self._ackermann_control = libcarla.VehicleAckermannControl()
+        self._ackermann_control = carla.VehicleAckermannControl()
 
     def on_world_tick(self, timestamp):
         self._server_clock.tick()
@@ -710,7 +710,7 @@ class HUD(object):
             'GNSS:% 24s' % ('(% 2.6f, % 3.6f)' % (world.gnss_sensor.lat, world.gnss_sensor.lon)),
             'Height:  % 18.0f m' % t.location.z,
             '']
-        if isinstance(c, libcarla.VehicleControl):
+        if isinstance(c, carla.VehicleControl):
             self._info_text += [
                 ('Throttle:', c.throttle, 0.0, 1.0),
                 ('Steer:', c.steer, -1.0, 1.0),
@@ -725,7 +725,7 @@ class HUD(object):
                     'Ackermann Controller:',
                     '  Target speed: % 8.0f km/h' % (3.6*self._ackermann_control.speed),
                 ]
-        elif isinstance(c, libcarla.WalkerControl):
+        elif isinstance(c, carla.WalkerControl):
             self._info_text += [
                 ('Speed:', c.speed, 0.0, 5.556),
                 ('Jump:', c.jump)]
@@ -871,7 +871,7 @@ class CollisionSensor(object):
         self.hud = hud
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.collision')
-        self.sensor = world.spawn_actor(bp, libcarla.Transform(), attach_to=self._parent)
+        self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=self._parent)
         # We need to pass the lambda a weak reference to self to avoid circular
         # reference.
         weak_self = weakref.ref(self)
@@ -912,7 +912,7 @@ class LaneInvasionSensor(object):
             self.hud = hud
             world = self._parent.get_world()
             bp = world.get_blueprint_library().find('sensor.other.lane_invasion')
-            self.sensor = world.spawn_actor(bp, libcarla.Transform(), attach_to=self._parent)
+            self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=self._parent)
             # We need to pass the lambda a weak reference to self to avoid circular
             # reference.
             weak_self = weakref.ref(self)
@@ -941,7 +941,7 @@ class GnssSensor(object):
         self.lon = 0.0
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.gnss')
-        self.sensor = world.spawn_actor(bp, libcarla.Transform(libcarla.Location(x=1.0, z=2.8)), attach_to=self._parent)
+        self.sensor = world.spawn_actor(bp, carla.Transform(carla.Location(x=1.0, z=2.8)), attach_to=self._parent)
         # We need to pass the lambda a weak reference to self to avoid circular
         # reference.
         weak_self = weakref.ref(self)
@@ -971,7 +971,7 @@ class IMUSensor(object):
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.imu')
         self.sensor = world.spawn_actor(
-            bp, libcarla.Transform(), attach_to=self._parent)
+            bp, carla.Transform(), attach_to=self._parent)
         # We need to pass the lambda a weak reference to self to avoid circular
         # reference.
         weak_self = weakref.ref(self)
@@ -1016,9 +1016,9 @@ class RadarSensor(object):
         bp.set_attribute('vertical_fov', str(20))
         self.sensor = world.spawn_actor(
             bp,
-            libcarla.Transform(
-                libcarla.Location(x=bound_x + 0.05, z=bound_z+0.05),
-                libcarla.Rotation(pitch=5)),
+            carla.Transform(
+                carla.Location(x=bound_x + 0.05, z=bound_z+0.05),
+                carla.Rotation(pitch=5)),
             attach_to=self._parent)
         # We need a weak reference to self to avoid circular reference.
         weak_self = weakref.ref(self)
@@ -1040,10 +1040,10 @@ class RadarSensor(object):
             alt = math.degrees(detect.altitude)
             # The 0.25 adjusts a bit the distance so the dots can
             # be properly seen
-            fw_vec = libcarla.Vector3D(x=detect.depth - 0.25)
-            libcarla.Transform(
-                libcarla.Location(),
-                libcarla.Rotation(
+            fw_vec = carla.Vector3D(x=detect.depth - 0.25)
+            carla.Transform(
+                carla.Location(),
+                carla.Rotation(
                     pitch=current_rot.pitch + alt,
                     yaw=current_rot.yaw + azi,
                     roll=current_rot.roll)).transform(fw_vec)
@@ -1060,7 +1060,7 @@ class RadarSensor(object):
                 size=0.075,
                 life_time=0.06,
                 persistent_lines=False,
-                color=libcarla.Color(r, g, b))
+                color=carla.Color(r, g, b))
 
 # ==============================================================================
 # -- CameraManager -------------------------------------------------------------
@@ -1077,22 +1077,22 @@ class CameraManager(object):
         bound_x = 0.5 + self._parent.bounding_box.extent.x
         bound_y = 0.5 + self._parent.bounding_box.extent.y
         bound_z = 0.5 + self._parent.bounding_box.extent.z
-        Attachment = libcarla.AttachmentType
+        Attachment = carla.AttachmentType
 
         if not self._parent.type_id.startswith("walker.pedestrian"):
             self._camera_transforms = [
-                (libcarla.Transform(libcarla.Location(x=-2.0*bound_x, y=+0.0*bound_y, z=2.0*bound_z), libcarla.Rotation(pitch=8.0)), Attachment.SpringArmGhost),
-                (libcarla.Transform(libcarla.Location(x=+0.8*bound_x, y=+0.0*bound_y, z=1.3*bound_z)), Attachment.Rigid),
-                (libcarla.Transform(libcarla.Location(x=+1.9*bound_x, y=+1.0*bound_y, z=1.2*bound_z)), Attachment.SpringArmGhost),
-                (libcarla.Transform(libcarla.Location(x=-2.8*bound_x, y=+0.0*bound_y, z=4.6*bound_z), libcarla.Rotation(pitch=6.0)), Attachment.SpringArmGhost),
-                (libcarla.Transform(libcarla.Location(x=-1.0, y=-1.0*bound_y, z=0.4*bound_z)), Attachment.Rigid)]
+                (carla.Transform(carla.Location(x=-2.0*bound_x, y=+0.0*bound_y, z=2.0*bound_z), carla.Rotation(pitch=8.0)), Attachment.SpringArmGhost),
+                (carla.Transform(carla.Location(x=+0.8*bound_x, y=+0.0*bound_y, z=1.3*bound_z)), Attachment.Rigid),
+                (carla.Transform(carla.Location(x=+1.9*bound_x, y=+1.0*bound_y, z=1.2*bound_z)), Attachment.SpringArmGhost),
+                (carla.Transform(carla.Location(x=-2.8*bound_x, y=+0.0*bound_y, z=4.6*bound_z), carla.Rotation(pitch=6.0)), Attachment.SpringArmGhost),
+                (carla.Transform(carla.Location(x=-1.0, y=-1.0*bound_y, z=0.4*bound_z)), Attachment.Rigid)]
         else:
             self._camera_transforms = [
-                (libcarla.Transform(libcarla.Location(x=-2.5, z=0.0), libcarla.Rotation(pitch=-8.0)), Attachment.SpringArmGhost),
-                (libcarla.Transform(libcarla.Location(x=1.6, z=1.7)), Attachment.Rigid),
-                (libcarla.Transform(libcarla.Location(x=2.5, y=0.5, z=0.0), libcarla.Rotation(pitch=-8.0)), Attachment.SpringArmGhost),
-                (libcarla.Transform(libcarla.Location(x=-4.0, z=2.0), libcarla.Rotation(pitch=6.0)), Attachment.SpringArmGhost),
-                (libcarla.Transform(libcarla.Location(x=0, y=-2.5, z=-0.0), libcarla.Rotation(yaw=90.0)), Attachment.Rigid)]
+                (carla.Transform(carla.Location(x=-2.5, z=0.0), carla.Rotation(pitch=-8.0)), Attachment.SpringArmGhost),
+                (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid),
+                (carla.Transform(carla.Location(x=2.5, y=0.5, z=0.0), carla.Rotation(pitch=-8.0)), Attachment.SpringArmGhost),
+                (carla.Transform(carla.Location(x=-4.0, z=2.0), carla.Rotation(pitch=6.0)), Attachment.SpringArmGhost),
+                (carla.Transform(carla.Location(x=0, y=-2.5, z=-0.0), carla.Rotation(yaw=90.0)), Attachment.Rigid)]
 
         self.transform_index = 1
         self.sensors = [
@@ -1191,7 +1191,7 @@ class CameraManager(object):
             lidar_img[tuple(lidar_data.T)] = (255, 255, 255)
             self.surface = pygame.surfarray.make_surface(lidar_img)
         elif self.sensors[self.index][0].startswith('sensor.camera.dvs'):
-            # Example of converting the raw_data from a libcarla.DVSEventArray
+            # Example of converting the raw_data from a carla.DVSEventArray
             # sensor into a NumPy array and using it as an image
             dvs_events = np.frombuffer(image.raw_data, dtype=np.dtype([
                 ('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol', np.bool)]))
@@ -1229,7 +1229,7 @@ def game_loop(args):
     original_settings = None
 
     try:
-        client = libcarla.Client(args.host, args.port)
+        client = carla.Client(args.host, args.port)
         client.set_timeout(2000.0)
 
         sim_world = client.get_world()
