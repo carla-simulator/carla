@@ -8,6 +8,7 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Actor/ActorBlueprintFunctionLibrary.h"
+#include "Engine/PostProcessVolume.h"
 
 #include <mutex>
 #include <atomic>
@@ -446,6 +447,88 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
 {
   check(CaptureComponent2D != nullptr);
   return CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset;
+}
+
+bool ASceneCaptureSensor::ApplyPostProcessVolumeToSensor(APostProcessVolume* Origin, ASceneCaptureSensor* Dest, bool bOverrideCurrentCamera)
+{
+  if(!IsValid(Origin) || !IsValid(Dest))
+  {
+    return false;
+  }
+
+  if(!bOverrideCurrentCamera)
+  {
+    //Cache postprocesssettings
+    float CacheGamma = Dest->GetTargetGamma();
+    EAutoExposureMethod CacheAutoExposureMethod = Dest->GetExposureMethod();
+    float CacheEC = Dest->GetExposureCompensation();
+    float CacheSS = Dest->GetShutterSpeed();
+    float CacheISO = Dest->GetISO();
+    float CacheA = Dest->GetAperture();
+    float CacheFD = Dest->GetFocalDistance();
+    float CacheDBA = Dest->GetDepthBlurAmount();
+    float CacheDBR = Dest->GetDepthBlurRadius();
+    float CacheBC = Dest->GetBladeCount();
+    float CacheDFMinFStop = Dest->GetDepthOfFieldMinFstop();
+    float CacheFS = Dest->GetFilmSlope();
+    float CacheFT = Dest->GetFilmToe();
+    float CacheFShoulder = Dest->GetFilmShoulder();
+    float CacheFBC = Dest->GetFilmBlackClip();
+    float CacheFWC = Dest->GetFilmWhiteClip();
+    float CacheEMinB = Dest->GetExposureMinBrightness();
+    float CacheEMaxB = Dest->GetExposureMaxBrightness();
+    float CacheESDown = Dest->GetExposureSpeedDown();
+    float CacheESUp = Dest->GetExposureSpeedUp();
+    float CacheCC = Dest->GetExposureCalibrationConstant();
+    float CacheMBI = Dest->GetMotionBlurIntensity();
+    float CacheMBMaxD = Dest->GetMotionBlurMaxDistortion();
+    float CacheMBMinOSS = Dest->GetMotionBlurMinObjectScreenSize();
+    float CacheLFI = Dest->GetLensFlareIntensity();
+    float CacheBI = Dest->GetBloomIntensity();
+    float CacheWTemp = Dest->GetWhiteTemp();
+    float CacheWTint = Dest->GetWhiteTint();
+    float CacheCAI = Dest->GetChromAberrIntensity();
+    float CacheCAO = Dest->GetChromAberrOffset();
+
+    Dest->CaptureComponent2D->PostProcessSettings = Origin->Settings;
+  
+    Dest->SetTargetGamma(CacheGamma);
+    Dest->SetExposureMethod(CacheAutoExposureMethod);
+    Dest->SetExposureCompensation(CacheEC);
+    Dest->SetShutterSpeed(CacheSS);
+    Dest->SetISO(CacheISO);
+    Dest->SetAperture(CacheA);
+    Dest->SetFocalDistance(CacheFD);
+    Dest->SetDepthBlurAmount(CacheDBA);
+    Dest->SetDepthBlurRadius(CacheDBR);
+    Dest->SetBladeCount(CacheBC);
+    Dest->SetDepthOfFieldMinFstop(CacheDFMinFStop);
+    Dest->SetFilmSlope(CacheFS);
+    Dest->SetFilmToe(CacheFT);
+    Dest->SetFilmShoulder(CacheFShoulder);
+    Dest->SetFilmBlackClip(CacheFBC);
+    Dest->SetFilmWhiteClip(CacheFWC);
+    Dest->SetExposureMinBrightness(CacheEMinB);
+    Dest->SetExposureMaxBrightness(CacheEMaxB);
+    Dest->SetExposureSpeedDown(CacheESDown);
+    Dest->SetExposureSpeedUp(CacheESUp);
+    Dest->SetExposureCalibrationConstant(CacheCC);
+    Dest->SetMotionBlurIntensity(CacheMBI);
+    Dest->SetMotionBlurMaxDistortion(CacheMBMaxD);
+    Dest->SetMotionBlurMinObjectScreenSize(CacheMBMinOSS);
+    Dest->SetLensFlareIntensity(CacheLFI);
+    Dest->SetBloomIntensity(CacheBI);
+    Dest->SetWhiteTemp(CacheWTemp);
+    Dest->SetWhiteTint(CacheWTint);
+    Dest->SetChromAberrIntensity(CacheCAI);
+    Dest->SetChromAberrOffset(CacheCAO);
+  }
+  else
+  {
+    Dest->CaptureComponent2D->PostProcessSettings = Origin->Settings;
+  }
+
+  return true;
 }
 
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
