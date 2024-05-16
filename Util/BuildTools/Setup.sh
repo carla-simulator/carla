@@ -94,16 +94,16 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     log "Retrieving boost."
 
     start=$(date +%s)
-    wget "https://archives.boost.io/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+    wget "https://archives.boost.io/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" -O ${BOOST_PACKAGE_BASENAME}.tar.gz || true
     end=$(date +%s)
     echo "Elapsed Time downloading from boost webpage: $(($end-$start)) seconds"
 
     # try to use the backup boost we have in Jenkins
-    if [ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ] || [[ $(sha256sum "${BOOST_PACKAGE_BASENAME}.tar.gz") != "${BOOST_SHA256SUM}" ]] ; then
+    if [ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ] || [[ $(sha256sum "${BOOST_PACKAGE_BASENAME}.tar.gz" | cut -d " " -f 1 ) != "${BOOST_SHA256SUM}" ]] ; then
       log "Using boost backup"
 
       start=$(date +%s)
-      wget "https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+      wget "https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" -O ${BOOST_PACKAGE_BASENAME}.tar.gz || true
       end=$(date +%s)
       echo "Elapsed Time downloading from boost carla backup in backblaze: $(($end-$start)) seconds"
 
