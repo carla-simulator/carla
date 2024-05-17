@@ -47,10 +47,6 @@ done
 
 source $(dirname "$0")/Environment.sh
 
-export CC="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang"
-export CXX="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++"
-export PATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin:$PATH"
-
 CXX_TAG=c10
 
 # Convert comma-separated string to array of unique elements.
@@ -59,11 +55,15 @@ IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
 mkdir -p ${CARLA_BUILD_FOLDER}
 pushd ${CARLA_BUILD_FOLDER} >/dev/null
 
-LLVM_INCLUDE="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
-LLVM_LIBPATH="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
-UNREAL_HOSTED_CFLAGS="--sysroot=$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/ -isystem ${LLVM_INCLUDE}"
-UNREAL_SYSTEM_LIBPATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/usr/lib"
-UNREAL_HOSTED_LINKER_FLAGS="--sysroot=$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/ -L${LLVM_LIBPATH} -L${UNREAL_SYSTEM_LIBPATH} -lc++ -lc++abi"
+LLVM_INCLUDE="${UE4_ROOT}/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
+LLVM_LIBPATH="${UE4_ROOT}/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
+UNREAL_SDK_ROOT="${UE4_ROOT}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/"
+UNREAL_HOSTED_CFLAGS="--sysroot=${UNREAL_SDK_ROOT} -isystem ${LLVM_INCLUDE}"
+UNREAL_HOSTED_LINKER_FLAGS="--sysroot=${UNREAL_SDK_ROOT} -L${LLVM_LIBPATH} -L${UNREAL_SDK_PATH}/usr/lib -lc++ -lc++abi -Wl,--rpath=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/libc-2.17.so -Wl,--dynamic-linker=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/ld-2.17.so"
+
+export CC="${UNREAL_SDK_ROOT}/bin/clang"
+export CXX="${UNREAL_SDK_ROOT}/bin/clang++"
+export PATH="${UNREAL_SDK_ROOT}:$PATH"
 
 
 # ==============================================================================
@@ -142,7 +142,7 @@ mkdir -p "${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/"
 cp ${LLVM_LIBPATH}/libc++*.a "${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/"
 
 # Install UE shared dependencies
-cp -p ${UNREAL_SYSTEM_LIBPATH}/lib${libName}*.so* "${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/"
+cp -p ${UNREAL_SDK_ROOT}/lib64/lib${libName}*.so* "${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/"
 
 # ==============================================================================
 # -- Get boost includes --------------------------------------------------------
