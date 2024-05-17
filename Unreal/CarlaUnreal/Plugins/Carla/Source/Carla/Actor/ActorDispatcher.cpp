@@ -216,13 +216,14 @@ FCarlaActor* UActorDispatcher::RegisterActor(
             ActorROS2Handler Handler(UEActor, RosName);
             std::visit(Handler, Data);
           });
-
+          #if defined(WITH_ROS2_DEMO)
           ROS2->AddBasicSubscriberCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2MessageCallbackData Data) -> void
           {
             AActor *UEActor = reinterpret_cast<AActor *>(Actor);
             ActorROS2Handler Handler(UEActor, RosName);
             std::visit(Handler, Data);
           });
+          #endif
         }
       }
     }
