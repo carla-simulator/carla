@@ -32,10 +32,6 @@ add_library (
 target_include_directories (carla-ros2-native SYSTEM PRIVATE
     ${LIBCARLA_SOURCE_PATH}
     ${CMAKE_INSTALL_PREFIX}/include
-    ${BOOST_INCLUDE_PATH}/variant2/include
-    ${BOOST_INCLUDE_PATH}/mp11/include
-    ${BOOST_INCLUDE_PATH}/assert/include
-    ${BOOST_INCLUDE_PATH}/config/include
 )
 
 target_compile_definitions (carla-ros2-native PUBLIC
