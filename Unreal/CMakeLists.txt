@@ -482,6 +482,22 @@ carla_add_custom_target (
   VERBATIM
 )
 
+if (ENABLE_ROS2)
+  carla_add_custom_target (
+    launch-ros2-demo
+    COMMENT
+      "Launching Carla Unreal..."
+    COMMAND
+      ${UNREAL_EDITOR_PATH}
+        ${CARLA_UE_PROJECT_PATH}
+        -${CARLA_UNREAL_RHI}
+        --ros2-demo
+        ${LAUNCH_ARGS}
+    USES_TERMINAL
+    VERBATIM
+  )
+endif()
+
 add_dependencies (
   launch
   carla-unreal-editor
