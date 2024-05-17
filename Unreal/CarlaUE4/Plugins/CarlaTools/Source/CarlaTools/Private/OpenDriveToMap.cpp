@@ -338,7 +338,7 @@ void UOpenDriveToMap::GenerateTile(){
       Tile0Offset = LmManager->GetTile0Offset();
 
       FCarlaMapTile& CarlaTile =  LmManager->GetCarlaMapTile(CurrentTilesInXY);
-      //UEditorLevelLibrary::SaveCurrentLevel();
+      UEditorLevelLibrary::SaveCurrentLevel();
 
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Current Tile is %s"), *( CurrentTilesInXY.ToString() ) );
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("NumTilesInXY is %s"), *( NumTilesInXY.ToString() ) );
@@ -362,7 +362,7 @@ void UOpenDriveToMap::GenerateTile(){
     }
 
     UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
-    //UEditorLevelLibrary::SaveCurrentLevel();
+    UEditorLevelLibrary::SaveCurrentLevel();
     RemoveFromRoot();
   }
 }
