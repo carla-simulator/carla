@@ -20,6 +20,7 @@
   #include <compiler/disable-ue4-macros.h>
   #include "carla/ros2/ROS2.h"
   #include <compiler/enable-ue4-macros.h>
+  #include <variant>
 #endif
 
 void UActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
@@ -213,14 +214,14 @@ FCarlaActor* UActorDispatcher::RegisterActor(
           {
             AActor *UEActor = reinterpret_cast<AActor *>(Actor);
             ActorROS2Handler Handler(UEActor, RosName);
-            boost::variant2::visit(Handler, Data);
+            std::visit(Handler, Data);
           });
 
           ROS2->AddBasicSubscriberCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2MessageCallbackData Data) -> void
           {
             AActor *UEActor = reinterpret_cast<AActor *>(Actor);
             ActorROS2Handler Handler(UEActor, RosName);
-            boost::variant2::visit(Handler, Data);
+            std::visit(Handler, Data);
           });
         }
       }
