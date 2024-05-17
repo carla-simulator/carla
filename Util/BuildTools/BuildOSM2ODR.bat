@@ -71,7 +71,7 @@ rem ============================================================================
 rem Set the visual studio solution directory
 rem
 set OSM2ODR_VSPROJECT_PATH=%INSTALLATION_DIR:/=\%osm2odr-visualstudio\
-set OSM2ODR_SOURCE_PATH=%INSTALLATION_DIR:/=\%om2odr-source\
+set OSM2ODR_SOURCE_PATH=%INSTALLATION_DIR:/=\%osm2odr-source\
 set OSM2ODR_INSTALL_PATH=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 set OSM2ODR__SERVER_INSTALL_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies
 set CARLA_DEPENDENCIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies\
@@ -92,24 +92,19 @@ if %REMOVE_INTERMEDIATE% == true (
 
 rem Build OSM2ODR
 if %BUILD_OSM2ODR% == true (
-
-    if  %GIT_PULL% == true (
-        if not exist "%OSM2ODR_SOURCE_PATH%" git clone -b %OSM2ODR_BRANCH% %OSM2ODR_REPO% %OSM2ODR_SOURCE_PATH%
-        cd "%OSM2ODR_SOURCE_PATH%"
-        git fetch
-        git checkout %CURRENT_OSM2ODR_COMMIT%
+    cd "%INSTALLATION_DIR%"
+    if not exist "%OSM2ODR_SOURCE_PATH%" (
+        curl --retry 5 --retry-max-time 120 -L -o OSM2ODR.zip https://github.com/carla-simulator/sumo/archive/%CURRENT_OSM2ODR_COMMIT%.zip
+        tar -xf OSM2ODR.zip
+        del OSM2ODR.zip
+        ren sumo-%CURRENT_OSM2ODR_COMMIT% osm2odr-source
     )
-
+    
+    cd ..
     if not exist "%OSM2ODR_VSPROJECT_PATH%" mkdir "%OSM2ODR_VSPROJECT_PATH%"
     cd "%OSM2ODR_VSPROJECT_PATH%"
 
-    echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
-        set PLATFORM=-A x64
-    ) || (
-        set PLATFORM=
-    )
-
-    cmake -G %GENERATOR% %PLATFORM%^
+    cmake -G %GENERATOR% -A x64^
         -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
         -DCMAKE_INSTALL_PREFIX="%OSM2ODR_INSTALL_PATH:\=/%"^
         -DPROJ_INCLUDE_DIR=%INSTALLATION_DIR:/=\%\proj-install\include^

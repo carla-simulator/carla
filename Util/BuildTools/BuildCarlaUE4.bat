@@ -110,6 +110,7 @@ if %REMOVE_INTERMEDIATE% == true (
         "%UE4_PROJECT_FOLDER%Intermediate",
         "%UE4_PROJECT_FOLDER%Plugins\Carla\Binaries",
         "%UE4_PROJECT_FOLDER%Plugins\Carla\Intermediate",
+        "%UE4_PROJECT_FOLDER%Plugins\HoudiniEngine\",
         "%UE4_PROJECT_FOLDER%.vs"
     ) do (
         if exist %%G (

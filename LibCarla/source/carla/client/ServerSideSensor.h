@@ -56,6 +56,9 @@ namespace client {
     /// Return if the sensor is publishing for ROS2
     bool IsEnabledForROS();
 
+    /// Send data via this sensor
+    void Send(std::string message);
+
     /// @copydoc Actor::Destroy()
     ///
     /// Additionally stop listening.
