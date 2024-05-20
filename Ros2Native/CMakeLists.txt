@@ -33,7 +33,7 @@ ExternalProject_Add (
   carla-ros2-native-lib
   DEPENDS fastdds
   SOURCE_DIR ${PROJECT_SOURCE_DIR}/LibCarlaRos2Native
-  CMAKE_ARGS ${PROJECT_CMAKE_FLAGS} -DBOOST_INCLUDE_PATH=${BOOST_INCLUDE_PATH}
+  CMAKE_ARGS ${PROJECT_CMAKE_FLAGS}
 )
 
 set (CARLA_PLUGIN_BINARY_PATH ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Plugins/Carla/Binaries/Linux)

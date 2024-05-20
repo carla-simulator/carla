@@ -27,7 +27,7 @@
 class UDrawFrustumComponent;
 class UStaticMeshComponent;
 class UTextureRenderTarget2D;
-
+class APostProcessVolume;
 
 
 struct FCameraGBufferUint8
@@ -423,6 +423,8 @@ public:
     FCameraGBufferUint8 CustomStencil;
   } CameraGBuffers;
 
+  UFUNCTION(BlueprintCallable)
+  static bool ApplyPostProcessVolumeToSensor(APostProcessVolume* Origin, ASceneCaptureSensor* Dest, bool bOverrideCurrentCamera = false);
 protected:
 
   void CaptureSceneExtended();
