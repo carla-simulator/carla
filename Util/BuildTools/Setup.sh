@@ -57,13 +57,13 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 
 LLVM_INCLUDE="${UE4_ROOT}/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
 LLVM_LIBPATH="${UE4_ROOT}/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
-UNREAL_SDK_ROOT="${UE4_ROOT}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/"
+UNREAL_SDK_ROOT="${UE4_ROOT}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu"
 UNREAL_HOSTED_CFLAGS="--sysroot=${UNREAL_SDK_ROOT} -isystem ${LLVM_INCLUDE}"
-UNREAL_HOSTED_LINKER_FLAGS="--sysroot=${UNREAL_SDK_ROOT} -L${LLVM_LIBPATH} -L${UNREAL_SDK_PATH}/usr/lib -lc++ -lc++abi -Wl,--rpath=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/libc-2.17.so -Wl,--dynamic-linker=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/ld-2.17.so"
+UNREAL_HOSTED_LINKER_FLAGS="--sysroot=${UNREAL_SDK_ROOT} -L${LLVM_LIBPATH} -L${LIBCARLA_INSTALL_SERVER_FOLDER}/lib -Wl,--rpath=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib -Wl,--dynamic-linker=${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/ld-2.17.so -lc++ -lc++abi "
 
 export CC="${UNREAL_SDK_ROOT}/bin/clang"
 export CXX="${UNREAL_SDK_ROOT}/bin/clang++"
-export PATH="${UNREAL_SDK_ROOT}:$PATH"
+export PATH="${UNREAL_SDK_ROOT}/bin:$PATH"
 
 
 # ==============================================================================
@@ -142,7 +142,7 @@ mkdir -p "${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/"
 cp ${LLVM_LIBPATH}/libc++*.a "${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/"
 
 # Install UE shared dependencies
-cp -p ${UNREAL_SDK_ROOT}/lib64/lib${libName}*.so* "${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/"
+cp -p ${UNREAL_SDK_ROOT}/lib64/*.* "${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/"
 
 # ==============================================================================
 # -- Get boost includes --------------------------------------------------------
@@ -152,23 +152,25 @@ BOOST_VERSION=1.80.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 BOOST_SHA256SUM="4b2136f98bdd1f5857f1c3dea9ac2018effe65286cf251534b6ae20cc45e1847"
 
-BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
-BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
+BOOST_CLIENT_INCLUDE=${PWD}/${BOOST_BASENAME}-client-install/include
+BOOST_CLIENT_LIBPATH=${PWD}/${BOOST_BASENAME}-client-install/lib
+BOOST_SERVER_INCLUDE=${PWD}/${BOOST_BASENAME}-server-install/include
+BOOST_SERVER_LIBPATH=${PWD}/${BOOST_BASENAME}-server-install/lib
 
 for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
   SHOULD_BUILD_BOOST=true
   PYTHON_VERSION=$(/usr/bin/env python${PY_VERSION} -V 2>&1)
   LIB_NAME=$(cut -d . -f 1,2 <<< "$PYTHON_VERSION" | tr -d .)
   LIB_NAME=${LIB_NAME:7}
-  if [[ -d "${BOOST_BASENAME}-install" ]] ; then
-    if [ -f "${BOOST_BASENAME}-install/lib/libboost_python${LIB_NAME}.a" ] ; then
+  if [[ -d "${BOOST_BASENAME}-server-install" && -d "${BOOST_BASENAME}-client-install" ]] ; then
+    if [ -f "${BOOST_BASENAME}-server-install/lib/libboost_python${LIB_NAME}.a" ] && [ -f "${BOOST_BASENAME}-client-install/lib/libboost_python${LIB_NAME}.a" ] ; then
       SHOULD_BUILD_BOOST=false
       log "${BOOST_BASENAME} already installed."
     fi
   fi
 
   if { ${SHOULD_BUILD_BOOST} ; } ; then
-    rm -Rf ${BOOST_BASENAME}-source
+    rm -Rf ${BOOST_BASENAME}-client-source ${BOOST_BASENAME}-server-source
 
     BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
 
@@ -180,7 +182,8 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     echo "Elapsed Time downloading from boost webpage: $(($end-$start)) seconds"
 
     # try to use the backup boost we have in Jenkins
-    if [ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ] || [[ $(sha256sum "${BOOST_PACKAGE_BASENAME}.tar.gz") != "${BOOST_SHA256SUM}" ]] ; then
+    SHA256SUM=$(sha256sum "${BOOST_PACKAGE_BASENAME}.tar.gz" | cut -d " " -f 1)
+    if [ ! -f ${BOOST_PACKAGE_BASENAME}.tar.gz ] || [[ "${SHA256SUM}" != "${BOOST_SHA256SUM}" ]] ; then
       log "Using boost backup"
 
       start=$(date +%s)
@@ -197,22 +200,42 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     end=$(date +%s)
     echo "Elapsed Time Extracting boost for Python: $(($end-$start)) seconds"
 
-    mkdir -p ${BOOST_BASENAME}-install/include
-    mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
-
-    pushd ${BOOST_BASENAME}-source >/dev/null
+    mkdir -p ${BOOST_BASENAME}-client-install/include
+    mkdir -p ${BOOST_BASENAME}-server-install/include
+    cp -r ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-client-source
+    mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-server-source
 
     BOOST_TOOLSET="clang-10.0"
     BOOST_CFLAGS="-fPIC -std=c++17 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
+    pushd ${BOOST_BASENAME}-server-source >/dev/null
+    ./bootstrap.sh \
+        --with-toolset="clang --cxx=${CXX}" \
+        --prefix="../${BOOST_BASENAME}-server-install" \
+        --with-libraries=system
+
+    sed -i s#"clang --cxx=${CXX} in "#"clang in "# project-config.jam
+    sed -i s#"using clang --cxx=${CXX}"#"using clang : 10.0 : ${CXX}"# project-config.jam
+    sed -i s#"<toolset>clang --cxx=${CXX}"#"<toolset>${BOOST_TOOLSET}"# project-config.jam
+
+    ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS} ${UNREAL_HOSTED_CFLAGS} -stdlib=libc++" linkflags="${UNREAL_HOSTED_LINKER_FLAGS}" --with-system --prefix="../${BOOST_BASENAME}-server-install" -j ${CARLA_BUILD_CONCURRENCY} stage release install
+    popd >/dev/null
+
+    pushd ${BOOST_BASENAME}-client-source >/dev/null
+
     py3="/usr/bin/env python${PY_VERSION}"
     py3_root=`${py3} -c "import sys; print(sys.prefix)"`
     pyv=`$py3 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
+
     ./bootstrap.sh \
-        --with-toolset=clang \
-        --prefix=../boost-install \
+        --with-toolset="clang --cxx=${CXX}" \
+        --prefix="../${BOOST_BASENAME}-client-install" \
         --with-libraries=python,filesystem,system,program_options \
         --with-python=${py3} --with-python-root=${py3_root}
+
+    sed -i s#"clang --cxx=${CXX} in "#"clang in "# project-config.jam
+    sed -i s#"using clang --cxx=${CXX}"#"using clang : 10.0 : ${CXX}"# project-config.jam
+    sed -i s#"<toolset>clang --cxx=${CXX}"#"<toolset>${BOOST_TOOLSET}"# project-config.jam
 
     if ${TRAVIS} ; then
       echo "using python : ${pyv} : ${py3_root}/bin/python${PY_VERSION} ;" > ${HOME}/user-config.jam
@@ -220,17 +243,16 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
       echo "using python : ${pyv} : ${py3_root}/bin/python${PY_VERSION} ;" > project-config.jam
     fi
 
-    ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
-    ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
+    ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-client-install" -j ${CARLA_BUILD_CONCURRENCY} stage release install
 
     popd >/dev/null
 
-    rm -Rf ${BOOST_BASENAME}-source
-    rm ${BOOST_PACKAGE_BASENAME}.tar.gz
+    rm -Rf ${BOOST_BASENAME}-client-source ${BOOST_BASENAME}-server-source
+    rm ${BOOST_PACKAGE_BASENAME}.tar.gz*
 
     # Install boost dependencies
-    cp -rf ${BOOST_BASENAME}-install/include/* ${LIBCARLA_INSTALL_CLIENT_FOLDER}/include/system
-    cp -rf ${BOOST_BASENAME}-install/lib/* ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib
+    cp -rf ${BOOST_BASENAME}-client-install/include/* ${LIBCARLA_INSTALL_CLIENT_FOLDER}/include/system
+    cp -rf ${BOOST_BASENAME}-client-install/lib/* ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib
 
   fi
 
@@ -714,7 +736,8 @@ else
 
   mkdir ${SQLITE_BASENAME}-server-build
   pushd ${SQLITE_BASENAME}-server-build >/dev/null
-  ../${SQLITE_BASENAME}-source/configure CFLAGS="-fPIC -w ${UNREAL_HOSTED_CFLAGS}" LDFLAGS="${UNREAL_HOSTED_LINKER_FLAGS}" --prefix=${PWD}/../${SQLITE_BASENAME}-server-install/
+  ../${SQLITE_BASENAME}-source/configure CFLAGS="-fPIC -w ${UNREAL_HOSTED_CFLAGS}" LDFLAGS="${UNREAL_HOSTED_LINKER_FLAGS}" --prefix=${PWD}/../${SQLITE_BASENAME}-server-install/ --with-sysroot=${UNREAL_SDK_ROOT}
+
   make
   make install
   popd >/dev/null
@@ -1013,7 +1036,7 @@ if ${USE_ROS2} ; then
       -DOPENSSL_SSL_LIBRARY:FILEPATH=${FASTDDS_BASENAME}-server-install/lib/libssl.a \
       -DOPENSSL_CRYPTO_LIBRARY:FILEPATH=${FASTDDS_BASENAME}-server-install/lib/libcrypto.a \
       -DCMAKE_CXX_FLAGS="-latomic" \
-      -DTHIRDPARTY_BOOST_INCLUDE_DIR="${BOOST_INCLUDE};${FASTDDS_BASENAME}-source/thirdparty/boost/include" \
+      -DTHIRDPARTY_BOOST_INCLUDE_DIR="${BOOST_SERVER_INCLUDE};${FASTDDS_BASENAME}-source/thirdparty/boost/include" \
       ${FASTDDS_BASENAME}-source
     ninja
     ninja install
@@ -1049,10 +1072,11 @@ endif ()
 
 add_definitions(-DLIBCARLA_TEST_CONTENT_FOLDER="${LIBCARLA_TEST_CONTENT_FOLDER}")
 
-set(BOOST_INCLUDE_PATH "${BOOST_INCLUDE}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Server")
   # Here libraries linking libc++.
+  set(BOOST_INCLUDE_PATH "${BOOST_SERVER_INCLUDE}")
+  set(BOOST_LIB_PATH "${BOOST_SERVER_LIBPATH}")
   set(ROS2_MW_INCLUDE_PATH "${FASTDDS_SERVER_INCLUDE}")
   set(ROS2_MW_LIB_PATH "${FASTDDS_SERVER_LIB}")
   set(ROS2_MW_LINK_LIBRARIES "fastrtps;fastcdr")
@@ -1064,17 +1088,20 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   set(GTEST_INCLUDE_PATH "${GTEST_SERVER_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_SERVER_LIBPATH}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Pytorch")
+  set(BOOST_INCLUDE_PATH "${BOOST_CLIENT_INCLUDE}")
+  set(BOOST_LIB_PATH "${BOOST_CLIENT_LIBPATH}")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCH_PATH}")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHSCATTER_INSTALL_CLIENT_DIR}")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHCLUSTER_INSTALL_CLIENT_DIR}")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHSPARSE_INSTALL_CLIENT_DIR}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   # Here libraries linking libstdc++.
+  set(BOOST_INCLUDE_PATH "${BOOST_CLIENT_INCLUDE}")
+  set(BOOST_LIB_PATH "${BOOST_CLIENT_LIBPATH}")
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_CLIENT_INCLUDE}")
   set(RPCLIB_LIB_PATH "${RPCLIB_CLIENT_LIBPATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_CLIENT_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_CLIENT_LIBPATH}")
-  set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
   set(RECAST_INCLUDE_PATH "${RECAST_CLIENT_INCLUDE}")
   set(RECAST_LIB_PATH "${RECAST_CLIENT_LIBPATH}")
   set(LIBPNG_INCLUDE_PATH "${LIBPNG_CLIENT_INCLUDE}")
