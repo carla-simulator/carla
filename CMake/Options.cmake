@@ -57,6 +57,12 @@ carla_option (
 )
 
 carla_option (
+  ENABLE_ROS2_DEMO
+  "Enable ROS2 demo."
+  OFF
+)
+
+carla_option (
   ENABLE_OSM2ODR
   "Enable OSM2ODR."
   OFF
