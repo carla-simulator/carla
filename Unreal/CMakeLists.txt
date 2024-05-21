@@ -57,6 +57,10 @@ if (ENABLE_ROS2)
   set (LAUNCH_ARGS ${LAUNCH_ARGS} --ros2)
 endif()
 
+if (ENABLE_ROS2_DEMO)
+  set (LAUNCH_ARGS ${LAUNCH_ARGS} --ros2-demo)
+endif()
+
 if (WIN32)
   set (EXE_EXT .exe)
   set (UE_SYSTEM_NAME Win64)
@@ -158,6 +162,14 @@ if (ENABLE_ROS2)
     APPEND
     CARLA_UNREAL_OPTIONS
     "ROS2"
+  )
+endif()
+
+if (ENABLE_ROS2_DEMO)
+  list (
+    APPEND
+    CARLA_UNREAL_OPTIONS
+    "ROS2_DEMO"
   )
 endif()
 
@@ -481,22 +493,6 @@ carla_add_custom_target (
   USES_TERMINAL
   VERBATIM
 )
-
-if (ENABLE_ROS2)
-  carla_add_custom_target (
-    launch-ros2-demo
-    COMMENT
-      "Launching Carla Unreal..."
-    COMMAND
-      ${UNREAL_EDITOR_PATH}
-        ${CARLA_UE_PROJECT_PATH}
-        -${CARLA_UNREAL_RHI}
-        --ros2-demo
-        ${LAUNCH_ARGS}
-    USES_TERMINAL
-    VERBATIM
-  )
-endif()
 
 add_dependencies (
   launch
