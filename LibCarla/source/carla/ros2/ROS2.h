@@ -74,10 +74,8 @@ class ROS2
   // callbacks
   void AddActorCallback(void* actor, std::string ros_name, ActorCallback callback);
   void RemoveActorCallback(void* actor);
-#if defined(WITH_ROS2_DEMO)
   void RemoveBasicSubscriberCallback(void* actor);
   void AddBasicSubscriberCallback(void* actor, std::string ros_name, ActorMessageCallback callback);
-#endif
 
   // enabling streams to publish
   void EnableStream(carla::streaming::detail::stream_id_type id) { _publish_stream.insert(id); }

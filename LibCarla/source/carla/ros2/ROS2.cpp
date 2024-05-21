@@ -200,20 +200,22 @@ std::string ROS2::GetActorParentRosName(void *actor) {
     return std::string("");
 }
 
-#if defined(WITH_ROS2_DEMO)
 void ROS2::AddBasicSubscriberCallback(void* actor, std::string ros_name, ActorMessageCallback callback) {
+  #if defined(WITH_ROS2_DEMO)
   _actor_message_callbacks.insert({actor, std::move(callback)});
 
   _basic_subscriber.reset();
   _basic_subscriber = std::make_shared<BasicSubscriber>(actor, ros_name.c_str());
   _basic_subscriber->Init();
+  #endif
 }
 
 void ROS2::RemoveBasicSubscriberCallback(void* actor) {
+  #if defined(WITH_ROS2_DEMO)
   _basic_subscriber.reset();
   _actor_message_callbacks.erase(actor);
+  #endif
 }
-#endif
 
 void ROS2::AddActorCallback(void* actor, std::string ros_name, ActorCallback callback) {
   _actor_callbacks.insert({actor, std::move(callback)});
