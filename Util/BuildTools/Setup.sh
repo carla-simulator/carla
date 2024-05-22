@@ -163,7 +163,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
   LIB_NAME=$(cut -d . -f 1,2 <<< "$PYTHON_VERSION" | tr -d .)
   LIB_NAME=${LIB_NAME:7}
   if [[ -d "${BOOST_BASENAME}-server-install" && -d "${BOOST_BASENAME}-client-install" ]] ; then
-    if [ -f "${BOOST_BASENAME}-server-install/lib/libboost_python${LIB_NAME}.a" ] && [ -f "${BOOST_BASENAME}-client-install/lib/libboost_python${LIB_NAME}.a" ] ; then
+    if [ -f "${BOOST_BASENAME}-server-install/lib/libboost_system.a" ] && [ -f "${BOOST_BASENAME}-client-install/lib/libboost_python${LIB_NAME}.a" ] ; then
       SHOULD_BUILD_BOOST=false
       log "${BOOST_BASENAME} already installed."
     fi
