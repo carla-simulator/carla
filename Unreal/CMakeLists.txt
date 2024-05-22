@@ -57,6 +57,10 @@ if (ENABLE_ROS2)
   set (LAUNCH_ARGS ${LAUNCH_ARGS} --ros2)
 endif()
 
+if (ENABLE_ROS2_DEMO)
+  set (LAUNCH_ARGS ${LAUNCH_ARGS} --ros2-demo)
+endif()
+
 if (WIN32)
   set (EXE_EXT .exe)
   set (UE_SYSTEM_NAME Win64)
@@ -158,6 +162,14 @@ if (ENABLE_ROS2)
     APPEND
     CARLA_UNREAL_OPTIONS
     "ROS2"
+  )
+endif()
+
+if (ENABLE_ROS2_DEMO)
+  list (
+    APPEND
+    CARLA_UNREAL_OPTIONS
+    "ROS2_DEMO"
   )
 endif()
 

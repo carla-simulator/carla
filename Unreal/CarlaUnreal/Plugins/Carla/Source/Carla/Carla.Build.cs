@@ -24,6 +24,9 @@ public class Carla :
   [CommandLine("-ros2")]
   bool EnableRos2 = false;
 
+  [CommandLine("-ros2-demo")]
+  bool EnableRos2Demo = false;
+
   [CommandLine("-osm2odr")]
   bool EnableOSM2ODR = false;
 
@@ -47,6 +50,11 @@ public class Carla :
       if (optionTrimmed.Equals("ROS2"))
       {
         EnableRos2 = true;
+      }
+      else if (optionTrimmed.Equals("ROS2_DEMO"))
+      {
+        EnableRos2 = true;
+        EnableRos2Demo = true;
       }
       else if(optionTrimmed.Equals("OSM2ODR"))
       {
@@ -154,6 +162,7 @@ public class Carla :
     if (EnableRos2)
     {
       TestOptionalFeature(EnableRos2, "Ros2 support", "WITH_ROS2");
+      TestOptionalFeature(EnableRos2Demo, "Ros2 demo", "WITH_ROS2_DEMO");
 
       string CarlaPluginSourcePath = Path.GetFullPath(ModuleDirectory);
       string CarlaPluginBinariesLinuxPath = Path.Combine(CarlaPluginSourcePath, "..", "..", "Binaries", "Linux");

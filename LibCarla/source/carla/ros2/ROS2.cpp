@@ -39,7 +39,9 @@
 
 #include "subscribers/CarlaSubscriber.h"
 #include "subscribers/CarlaEgoVehicleControlSubscriber.h"
-#include "subscribers/BasicSubscriber.h"
+#if defined(WITH_ROS2_DEMO)
+  #include "subscribers/BasicSubscriber.h"
+#endif
 
 #include <vector>
 
@@ -69,8 +71,7 @@ enum ESensors {
   InstanceSegmentationCamera,
   WorldObserver,
   CameraGBufferUint8,
-  CameraGBufferFloat,
-  YourNewSensor
+  CameraGBufferFloat
 };
 
 void ROS2::Enable(bool enable) {
@@ -78,8 +79,10 @@ void ROS2::Enable(bool enable) {
   log_info("ROS2 enabled: ", _enabled);
   _clock_publisher = std::make_shared<CarlaClockPublisher>("clock", "");
   _clock_publisher->Init();
+#if defined(WITH_ROS2_DEMO)
   _basic_publisher = std::make_shared<BasicPublisher>("basic_publisher", "");
   _basic_publisher->Init();
+#endif
 }
 
 void ROS2::SetFrame(uint64_t frame) {
@@ -99,6 +102,7 @@ void ROS2::SetFrame(uint64_t frame) {
       RemoveActorCallback(actor);
     }
    }
+#if defined(WITH_ROS2_DEMO)
    if (_basic_subscriber)
    {
     void* actor = _basic_subscriber->GetActor();
@@ -115,6 +119,7 @@ void ROS2::SetFrame(uint64_t frame) {
       }
     }
    }
+#endif
 }
 
 void ROS2::SetTimestamp(double timestamp) {
@@ -125,9 +130,10 @@ void ROS2::SetTimestamp(double timestamp) {
   _nanoseconds = static_cast<uint32_t>(fractional * multiplier);
   _clock_publisher->SetData(_seconds, _nanoseconds);
   _clock_publisher->Publish();
+#if defined(WITH_ROS2_DEMO)
   _basic_publisher->SetData("Hello from Carla!");
   _basic_publisher->Publish();
-   //log_info("ROS2 new timestamp: ", _timestamp);
+#endif
 }
 
 void ROS2::AddActorRosName(void *actor, std::string ros_name) {
@@ -195,16 +201,20 @@ std::string ROS2::GetActorParentRosName(void *actor) {
 }
 
 void ROS2::AddBasicSubscriberCallback(void* actor, std::string ros_name, ActorMessageCallback callback) {
+  #if defined(WITH_ROS2_DEMO)
   _actor_message_callbacks.insert({actor, std::move(callback)});
 
   _basic_subscriber.reset();
   _basic_subscriber = std::make_shared<BasicSubscriber>(actor, ros_name.c_str());
   _basic_subscriber->Init();
+  #endif
 }
 
 void ROS2::RemoveBasicSubscriberCallback(void* actor) {
+  #if defined(WITH_ROS2_DEMO)
   _basic_subscriber.reset();
   _actor_message_callbacks.erase(actor);
+  #endif
 }
 
 void ROS2::AddActorCallback(void* actor, std::string ros_name, ActorCallback callback) {
@@ -503,24 +513,6 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
       case ESensors::CameraGBufferFloat: {
         std::cerr << "Camera GBuffer float does not have an available publisher" << std::endl;
       } break;
-      case ESensors::YourNewSensor: {
-        if (ros_name == "ros_name__") {
-          ros_name.pop_back();
-          ros_name.pop_back();
-          ros_name += string_id;
-          UpdateActorRosName(actor, ros_name);
-        }
-        std::shared_ptr<BasicPublisher> new_publisher = std::make_shared<BasicPublisher>(ros_name.c_str(), parent_ros_name.c_str());
-        if (new_publisher->Init()) {
-          _publishers.insert({actor, new_publisher});
-          publisher = new_publisher;
-        }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
-        if (new_transform->Init()) {
-          _transforms.insert({actor, new_transform});
-          transform = new_transform;
-        }
-      }
       default: {
         std::cerr << "Unknown sensor type" << std::endl;
       }
@@ -893,10 +885,12 @@ void ROS2::Shutdown() {
     element.second.reset();
   }
   _clock_publisher.reset();
-  _basic_publisher.reset();
   _controller.reset();
-  _basic_subscriber.reset();
   _enabled = false;
+#if defined(WITH_ROS2_DEMO)
+  _basic_publisher.reset();
+  _basic_subscriber.reset();
+#endif
 }
 
 } // namespace ros2
