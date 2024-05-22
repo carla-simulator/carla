@@ -40,6 +40,11 @@ set (
 )
 
 set (
+  CARLA_UE_CARLA_EXPORTER_PATH
+  ${CARLA_UE_PLUGINS_PATH}/CarlaExporter
+)
+
+set (
   CARLA_UE_PROJECT_PATH
   ${CARLA_UE_PATH}/CarlaUnreal.uproject
 )
@@ -312,7 +317,7 @@ carla_add_custom_target (
   carla-unreal
   "Build the CarlaUnreal subproject."
   COMMAND
-    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
+    ${CARLA_UE_BUILD_COMMAND_PREFIX}
     CarlaUnreal
     ${UE_SYSTEM_NAME}
     ${CARLA_UNREAL_BUILD_TYPE}
@@ -334,7 +339,7 @@ carla_add_custom_target (
   carla-unreal-editor
   "Build the CarlaUnrealEditor subproject."
   COMMAND
-    ${CARLA_UE_BUILD_COMMAND_PREFIX} 
+    ${CARLA_UE_BUILD_COMMAND_PREFIX}
     CarlaUnrealEditor
     ${UE_SYSTEM_NAME}
     ${CARLA_UNREAL_BUILD_TYPE}
@@ -512,17 +517,24 @@ add_dependencies (
 )
 
 set_property (
-  DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES  
-  "${CARLA_UE_PATH}/Binaries" 
+  DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES
+  "${CARLA_UE_PATH}/Binaries"
+  "${CARLA_UE_PATH}/Build"
+  "${CARLA_UE_PATH}/DerivedDataCache"
   "${CARLA_UE_PATH}/Intermediate"
   "${CARLA_UE_PATH}/Saved"
-  "${CARLA_UE_CARLA_TOOLS_PATH}/Binaries" 
+  "${CARLA_UE_CARLA_TOOLS_PATH}/Binaries"
   "${CARLA_UE_CARLA_TOOLS_PATH}/Intermediate"
   "${CARLA_UE_CARLA_TOOLS_PATH}/Saved"
-  "${CARLA_UE_CARLA_PATH}/Binaries" 
+  "${CARLA_UE_CARLA_EXPORTER_PATH}/Binaries"
+  "${CARLA_UE_CARLA_EXPORTER_PATH}/Intermediate"
+  "${CARLA_UE_CARLA_EXPORTER_PATH}/Saved"
+  "${CARLA_UE_CARLA_PATH}/Binaries"
   "${CARLA_UE_CARLA_PATH}/Intermediate"
   "${CARLA_UE_CARLA_PATH}/Saved"
+  "${CARLA_UE_PLUGINS_PATH}/StreetMap/Binaries"
+  "${CARLA_UE_PLUGINS_PATH}/StreetMap/Intermediate"
+  "${CARLA_UE_PLUGINS_PATH}/StreetMap/Saved"
   "${CARLA_BUILD_PATH}/Package"
   "${CARLA_BUILD_PATH}/PythonAPI/dist"
 )
-
