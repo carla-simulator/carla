@@ -63,7 +63,7 @@ def equal_physics_control(pc_a, pc_b):
 
     return True, error_msg
 
-def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_sweep = None, long_stiff = None):
+def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_sweep = None):
     # Change Vehicle Physics Control parameters of the vehicle
     physics_control = vehicle.get_physics_control()
 
@@ -83,12 +83,6 @@ def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_swe
         front_right_wheel.tire_friction = tire_friction
         rear_left_wheel.tire_friction = tire_friction
         rear_right_wheel.tire_friction = tire_friction
-
-    if long_stiff is not None:
-        front_left_wheel.long_stiff_value = long_stiff
-        front_right_wheel.long_stiff_value = long_stiff
-        rear_left_wheel.long_stiff_value = long_stiff
-        rear_right_wheel.long_stiff_value = long_stiff
 
     wheels = [front_left_wheel, front_right_wheel, rear_left_wheel, rear_right_wheel]
     physics_control.wheels = wheels
@@ -126,7 +120,7 @@ class TestApplyVehiclePhysics(SyncSmokeTest):
         self.wait(2)
 
         # Checking the setting of wheel variables (tire friction)
-        pc_a = change_physics_control(vehicle, tire_friction=5, long_stiff=987)
+        pc_a = change_physics_control(vehicle, tire_friction=5)
         vehicle.apply_physics_control(pc_a)
         self.wait(2)
         pc_b = vehicle.get_physics_control()
@@ -164,8 +158,7 @@ class TestApplyVehiclePhysics(SyncSmokeTest):
         pc_b = []
         for i in range(0, num_veh):
             friction = 1.0 + 0.1*i
-            lstiff = 500 + 100*i
-            pc_a.append(change_physics_control(vehicles[i], tire_friction=friction, long_stiff=lstiff))
+            pc_a.append(change_physics_control(vehicles[i], tire_friction=friction))
             vehicles[i].apply_physics_control(pc_a[i])
 
         self.wait(2)
@@ -557,8 +550,8 @@ class TestVehicleTireConfig(SyncSmokeTest):
             self.wait(10)
 
             self.client.apply_batch_sync([
-                ApplyVehiclePhysicsControl(veh_refs[0], change_physics_control(veh_refs[0], drag=0.0, long_stiff = 100)),
-                ApplyVehiclePhysicsControl(veh_refs[1], change_physics_control(veh_refs[1], drag=0.0, long_stiff = 2000))])
+                ApplyVehiclePhysicsControl(veh_refs[0], change_physics_control(veh_refs[0], drag=0.0)),
+                ApplyVehiclePhysicsControl(veh_refs[1], change_physics_control(veh_refs[1], drag=0.0))])
 
             self.wait(1)
 

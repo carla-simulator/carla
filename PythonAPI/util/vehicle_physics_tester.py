@@ -75,8 +75,7 @@ class VehicleControlStop:
 
 
 def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_sweep = None, 
-    long_stiff = None, lat_stiff = None, lat_load = None,
-    clutch_strength = None, max_rpm = None):
+    max_rpm = None):
 
     physics_control = vehicle.get_physics_control()
 
@@ -86,17 +85,12 @@ def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_swe
     if wheel_sweep is not None:
         physics_control.use_sweep_wheel_collision = wheel_sweep
 
-    if clutch_strength is not None:
-        physics_control.clutch_strength = clutch_strength
-
     if max_rpm is not None:
         physics_control.max_rpm = max_rpm
 
     if len(physics_control.forward_gears) == 1:
         gear = carla.GearPhysicsControl(1.0, 0.00, 0.00)
         physics_control.forward_gears = [gear]
-
-    physics_control.damping_rate_full_throttle = 0.01
 
     front_left_wheel = physics_control.wheels[0]
     front_right_wheel = physics_control.wheels[1]
@@ -108,24 +102,6 @@ def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_swe
         front_right_wheel.tire_friction = tire_friction
         rear_left_wheel.tire_friction = tire_friction
         rear_right_wheel.tire_friction = tire_friction
-
-    if long_stiff is not None:
-        front_left_wheel.long_stiff_value = long_stiff
-        front_right_wheel.long_stiff_value = long_stiff
-        rear_left_wheel.long_stiff_value = long_stiff
-        rear_right_wheel.long_stiff_value = long_stiff
-
-    if lat_stiff is not None:
-        front_left_wheel.lat_stiff_value  = lat_stiff
-        front_right_wheel.lat_stiff_value = lat_stiff
-        rear_left_wheel.lat_stiff_value   = lat_stiff
-        rear_right_wheel.lat_stiff_value  = lat_stiff
-
-    if lat_load is not None:
-        front_left_wheel.lat_stiff_max_load  = lat_load
-        front_right_wheel.lat_stiff_max_load = lat_load
-        rear_left_wheel.lat_stiff_max_load   = lat_load
-        rear_right_wheel.lat_stiff_max_load  = lat_load
 
     wheels = [front_left_wheel, front_right_wheel, rear_left_wheel, rear_right_wheel]
     physics_control.wheels = wheels

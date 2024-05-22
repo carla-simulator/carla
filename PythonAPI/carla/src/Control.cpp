@@ -106,13 +106,9 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
     "torque_curve",
     "max_rpm",
     "moi",
-    "damping_rate_full_throttle",
-    "damping_rate_zero_throttle_clutch_engaged",
-    "damping_rate_zero_throttle_clutch_disengaged",
 
     "use_gear_autobox",
     "gear_switch_time",
-    "clutch_strength",
     "final_ratio",
     "forward_gears",
 
@@ -334,26 +330,18 @@ void export_control() {
   ;
 
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
-    .def(init<float, float, float, float, float, float, float, float, float, cg::Vector3D>(
-        (arg("tire_friction")=2.0f,
-         arg("damping_rate")=0.25f,
+    .def(init<float, float, float, float, float, cg::Vector3D>(
+        (arg("tire_friction")=3.0f,
          arg("max_steer_angle")=70.0f,
          arg("radius")=30.0f,
          arg("max_brake_torque")=1500.0f,
          arg("max_handbrake_torque")=3000.0f,
-         arg("lat_stiff_max_load")=2.0f,
-         arg("lat_stiff_value")=17.0f,
-         arg("long_stiff_value")=1000.0f,
          arg("position")=cg::Vector3D{0.0f, 0.0f, 0.0f})))
     .def_readwrite("tire_friction", &cr::WheelPhysicsControl::tire_friction)
-    .def_readwrite("damping_rate", &cr::WheelPhysicsControl::damping_rate)
     .def_readwrite("max_steer_angle", &cr::WheelPhysicsControl::max_steer_angle)
     .def_readwrite("radius", &cr::WheelPhysicsControl::radius)
     .def_readwrite("max_brake_torque", &cr::WheelPhysicsControl::max_brake_torque)
     .def_readwrite("max_handbrake_torque", &cr::WheelPhysicsControl::max_handbrake_torque)
-    .def_readwrite("lat_stiff_max_load", &cr::WheelPhysicsControl::lat_stiff_max_load)
-    .def_readwrite("lat_stiff_value", &cr::WheelPhysicsControl::lat_stiff_value)
-    .def_readwrite("long_stiff_value", &cr::WheelPhysicsControl::long_stiff_value)
     .def_readwrite("position", &cr::WheelPhysicsControl::position)
     .def("__eq__", &cr::WheelPhysicsControl::operator==)
     .def("__ne__", &cr::WheelPhysicsControl::operator!=)
@@ -366,15 +354,8 @@ void export_control() {
     .add_property("torque_curve", &GetTorqueCurve, &SetTorqueCurve)
     .def_readwrite("max_rpm", &cr::VehiclePhysicsControl::max_rpm)
     .def_readwrite("moi", &cr::VehiclePhysicsControl::moi)
-    .def_readwrite("damping_rate_full_throttle",
-        &cr::VehiclePhysicsControl::damping_rate_full_throttle)
-    .def_readwrite("damping_rate_zero_throttle_clutch_engaged",
-        &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_engaged)
-    .def_readwrite("damping_rate_zero_throttle_clutch_disengaged",
-        &cr::VehiclePhysicsControl::damping_rate_zero_throttle_clutch_disengaged)
     .def_readwrite("use_gear_autobox", &cr::VehiclePhysicsControl::use_gear_autobox)
     .def_readwrite("gear_switch_time", &cr::VehiclePhysicsControl::gear_switch_time)
-    .def_readwrite("clutch_strength", &cr::VehiclePhysicsControl::clutch_strength)
     .def_readwrite("final_ratio", &cr::VehiclePhysicsControl::final_ratio)
     .add_property("forward_gears", &GetForwardGears, &SetForwardGears)
     .def_readwrite("mass", &cr::VehiclePhysicsControl::mass)

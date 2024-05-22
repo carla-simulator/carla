@@ -471,14 +471,10 @@ namespace rpc {
 
   inline std::ostream &operator<<(std::ostream &out, const WheelPhysicsControl &control) {
     out << "WheelPhysicsControl(tire_friction=" << std::to_string(control.tire_friction)
-        << ", damping_rate=" << std::to_string(control.damping_rate)
         << ", max_steer_angle=" << std::to_string(control.max_steer_angle)
         << ", radius=" << std::to_string(control.radius)
         << ", max_brake_torque=" << std::to_string(control.max_brake_torque)
         << ", max_handbrake_torque=" << std::to_string(control.max_handbrake_torque)
-        << ", lat_stiff_max_load=" << std::to_string(control.lat_stiff_max_load)
-        << ", lat_stiff_value=" << std::to_string(control.lat_stiff_value)
-        << ", long_stiff_value=" << std::to_string(control.long_stiff_value)
         << ", position=" << control.position << ')';
     return out;
   }
@@ -487,12 +483,8 @@ namespace rpc {
     out << "VehiclePhysicsControl(torque_curve=" << control.torque_curve
     << ", max_rpm=" << std::to_string(control.max_rpm)
     << ", moi=" << std::to_string(control.moi)
-    << ", damping_rate_full_throttle=" << std::to_string(control.damping_rate_full_throttle)
-    << ", damping_rate_zero_throttle_clutch_engaged=" << std::to_string(control.damping_rate_zero_throttle_clutch_engaged)
-    << ", damping_rate_zero_throttle_clutch_disengaged=" << std::to_string(control.damping_rate_zero_throttle_clutch_disengaged)
     << ", use_gear_autobox=" << boolalpha(control.use_gear_autobox)
     << ", gear_switch_time=" << std::to_string(control.gear_switch_time)
-    << ", clutch_strength=" << std::to_string(control.clutch_strength)
     << ", final_ratio=" << std::to_string(control.final_ratio)
     << ", forward_gears=" << control.forward_gears
     << ", mass=" << std::to_string(control.mass)
