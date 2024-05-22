@@ -19,11 +19,7 @@ void CarlaRecorderPhysicsControl::Write(std::ostream &OutFile)
   WriteValue<uint32_t>(OutFile, this->DatabaseId);
   WriteValue(OutFile, RPCPhysicsControl.max_rpm);
   WriteValue(OutFile, RPCPhysicsControl.moi);
-  WriteValue(OutFile, RPCPhysicsControl.damping_rate_full_throttle);
-  WriteValue(OutFile, RPCPhysicsControl.damping_rate_zero_throttle_clutch_engaged);
-  WriteValue(OutFile, RPCPhysicsControl.damping_rate_zero_throttle_clutch_disengaged);
   WriteValue(OutFile, RPCPhysicsControl.use_gear_autobox);
-  WriteValue(OutFile, RPCPhysicsControl.clutch_strength);
   WriteValue(OutFile, RPCPhysicsControl.final_ratio);
   WriteValue(OutFile, RPCPhysicsControl.mass);
   WriteValue(OutFile, RPCPhysicsControl.drag_coefficient);
@@ -48,11 +44,7 @@ void CarlaRecorderPhysicsControl::Read(std::istream &InFile)
   ReadValue<uint32_t>(InFile, this->DatabaseId);
   ReadValue(InFile, RPCPhysicsControl.max_rpm);
   ReadValue(InFile, RPCPhysicsControl.moi);
-  ReadValue(InFile, RPCPhysicsControl.damping_rate_full_throttle);
-  ReadValue(InFile, RPCPhysicsControl.damping_rate_zero_throttle_clutch_engaged);
-  ReadValue(InFile, RPCPhysicsControl.damping_rate_zero_throttle_clutch_disengaged);
   ReadValue(InFile, RPCPhysicsControl.use_gear_autobox);
-  ReadValue(InFile, RPCPhysicsControl.clutch_strength);
   ReadValue(InFile, RPCPhysicsControl.final_ratio);
   ReadValue(InFile, RPCPhysicsControl.mass);
   ReadValue(InFile, RPCPhysicsControl.drag_coefficient);

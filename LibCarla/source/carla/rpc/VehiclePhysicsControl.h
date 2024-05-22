@@ -27,13 +27,9 @@ namespace rpc {
         const std::vector<carla::geom::Vector2D> &in_torque_curve,
         float in_max_rpm,
         float in_moi,
-        float in_damping_rate_full_throttle,
-        float in_damping_rate_zero_throttle_clutch_engaged,
-        float in_damping_rate_zero_throttle_clutch_disengaged,
 
         bool in_use_gear_autobox,
         float in_gear_switch_time,
-        float in_clutch_strength,
         float in_final_ratio,
         std::vector<GearPhysicsControl> &in_forward_gears,
 
@@ -46,12 +42,8 @@ namespace rpc {
       : torque_curve(in_torque_curve),
         max_rpm(in_max_rpm),
         moi(in_moi),
-        damping_rate_full_throttle(in_damping_rate_full_throttle),
-        damping_rate_zero_throttle_clutch_engaged(in_damping_rate_zero_throttle_clutch_engaged),
-        damping_rate_zero_throttle_clutch_disengaged(in_damping_rate_zero_throttle_clutch_disengaged),
         use_gear_autobox(in_use_gear_autobox),
         gear_switch_time(in_gear_switch_time),
-        clutch_strength(in_clutch_strength),
         final_ratio(in_final_ratio),
         forward_gears(in_forward_gears),
         mass(in_mass),
@@ -104,13 +96,9 @@ namespace rpc {
     std::vector<geom::Vector2D> torque_curve = {geom::Vector2D(0.0f, 500.0f), geom::Vector2D(5000.0f, 500.0f)};
     float max_rpm = 5000.0f;
     float moi = 1.0f;
-    float damping_rate_full_throttle = 0.15f;
-    float damping_rate_zero_throttle_clutch_engaged = 2.0f;
-    float damping_rate_zero_throttle_clutch_disengaged = 0.35f;
 
     bool use_gear_autobox = true;
     float gear_switch_time = 0.5f;
-    float clutch_strength = 10.0f;
     float final_ratio = 4.0f;
     std::vector<GearPhysicsControl> forward_gears;
 
@@ -127,13 +115,9 @@ namespace rpc {
       return
         max_rpm != rhs.max_rpm ||
         moi != rhs.moi ||
-        damping_rate_full_throttle != rhs.damping_rate_full_throttle ||
-        damping_rate_zero_throttle_clutch_engaged != rhs.damping_rate_zero_throttle_clutch_engaged ||
-        damping_rate_zero_throttle_clutch_disengaged != rhs.damping_rate_zero_throttle_clutch_disengaged ||
 
         use_gear_autobox != rhs.use_gear_autobox ||
         gear_switch_time != rhs.gear_switch_time ||
-        clutch_strength != rhs.clutch_strength ||
         final_ratio != rhs.final_ratio ||
         forward_gears != rhs.forward_gears ||
 
@@ -161,14 +145,10 @@ namespace rpc {
       }
       max_rpm = Control.MaxRPM;
       moi = Control.MOI;
-      damping_rate_full_throttle = Control.DampingRateFullThrottle;
-      damping_rate_zero_throttle_clutch_engaged = Control.DampingRateZeroThrottleClutchEngaged;
-      damping_rate_zero_throttle_clutch_disengaged = Control.DampingRateZeroThrottleClutchDisengaged;
 
       // Transmission Setup
       use_gear_autobox = Control.bUseGearAutoBox;
       gear_switch_time = Control.GearSwitchTime;
-      clutch_strength = Control.ClutchStrength;
       final_ratio = Control.FinalRatio;
       forward_gears = std::vector<GearPhysicsControl>();
       for (const auto &Gear : Control.ForwardGears) {
@@ -208,14 +188,10 @@ namespace rpc {
       Control.TorqueCurve = TorqueCurve;
       Control.MaxRPM = max_rpm;
       Control.MOI = moi;
-      Control.DampingRateFullThrottle = damping_rate_full_throttle;
-      Control.DampingRateZeroThrottleClutchEngaged = damping_rate_zero_throttle_clutch_engaged;
-      Control.DampingRateZeroThrottleClutchDisengaged = damping_rate_zero_throttle_clutch_disengaged;
 
       // Transmission Setup
       Control.bUseGearAutoBox = use_gear_autobox;
       Control.GearSwitchTime = gear_switch_time;
-      Control.ClutchStrength = clutch_strength;
       Control.FinalRatio = final_ratio;
       TArray<FGearPhysicsControl> ForwardGears;
       for (const auto &gear : forward_gears) {
@@ -254,12 +230,8 @@ namespace rpc {
     MSGPACK_DEFINE_ARRAY(torque_curve,
         max_rpm,
         moi,
-        damping_rate_full_throttle,
-        damping_rate_zero_throttle_clutch_engaged,
-        damping_rate_zero_throttle_clutch_disengaged,
         use_gear_autobox,
         gear_switch_time,
-        clutch_strength,
         final_ratio,
         forward_gears,
         mass,

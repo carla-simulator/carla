@@ -514,12 +514,8 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             Info << "  Id: " << PhysicsControl.DatabaseId << std::endl
                 << "   max_rpm = " << Control.max_rpm << std::endl
                 << "   MOI = " << Control.moi << std::endl
-                << "   damping_rate_full_throttle = " << Control.damping_rate_full_throttle << std::endl
-                << "   damping_rate_zero_throttle_clutch_engaged = " << Control.damping_rate_zero_throttle_clutch_engaged << std::endl
-                << "   damping_rate_zero_throttle_clutch_disengaged = " << Control.damping_rate_zero_throttle_clutch_disengaged << std::endl
                 << "   use_gear_auto_box = " << (Control.use_gear_autobox ? "true" : "false") << std::endl
                 << "   gear_switch_time = " << Control.gear_switch_time << std::endl
-                << "   clutch_strength = " << Control.clutch_strength << std::endl
                 << "   final_ratio = " << Control.final_ratio << std::endl
                 << "   mass = " << Control.mass << std::endl
                 << "   drag_coefficient = " << Control.drag_coefficient << std::endl
@@ -550,7 +546,6 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             for (auto& Wheel : Control.wheels)
             {
               Info << "    wheel " << count << ": tire_friction " << Wheel.tire_friction
-                  << " damping_rate " << Wheel.damping_rate
                   << " max_steer_angle " << Wheel.max_steer_angle
                   << " radius " << Wheel.radius
                   << " max_brake_torque " << Wheel.max_brake_torque

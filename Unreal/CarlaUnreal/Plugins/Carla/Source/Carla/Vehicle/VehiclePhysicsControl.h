@@ -42,24 +42,12 @@ struct CARLA_API FVehiclePhysicsControl
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
   float MOI = 0.0f;
 
-  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  float DampingRateFullThrottle = 0.0f;
-
-  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  float DampingRateZeroThrottleClutchEngaged = 0.0f;
-
-  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  float DampingRateZeroThrottleClutchDisengaged = 0.0f;
-
   // // Transmission Setup
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
   bool bUseGearAutoBox = 0.0f;
 
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
   float GearSwitchTime = 0.0f;
-
-  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  float ClutchStrength = 0.0f;
 
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
   float FinalRatio = 1.0f;

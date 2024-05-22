@@ -388,21 +388,6 @@
       doc: >
         The moment of inertia of the vehicle's engine.
     # --------------------------------------
-    - var_name: damping_rate_full_throttle
-      type: float
-      doc: >
-        Damping ratio when the throttle is maximum.
-    # --------------------------------------
-    - var_name: damping_rate_zero_throttle_clutch_engaged
-      type: float
-      doc: >
-        Damping ratio when the throttle is zero with clutch engaged.
-    # --------------------------------------
-    - var_name: damping_rate_zero_throttle_clutch_disengaged
-      type: float
-      doc: >
-        Damping ratio when the throttle is zero with clutch disengaged.
-    # --------------------------------------
     - var_name: use_gear_autobox
       type: bool
       doc: >
@@ -413,12 +398,6 @@
       var_units: seconds
       doc: >
         Switching time between gears.
-    # --------------------------------------
-    - var_name: clutch_strength
-      type: float
-      var_units: kg*m<sup>2</sup>/s
-      doc: >
-        Clutch strength of the vehicle.
     # --------------------------------------
     - var_name: final_ratio
       type: float
@@ -478,15 +457,6 @@
         default: 1.0
         type: float
         param_units: kg*m<sup>2</sup>
-      - param_name: damping_rate_full_throttle
-        default: 0.15
-        type: float
-      - param_name: damping_rate_zero_throttle_clutch_engaged
-        default: 2.0
-        type: float
-      - param_name: damping_rate_zero_throttle_clutch_disengaged
-        default: 0.35
-        type: float
       - param_name: use_gear_autobox
         default: True
         type: bool
@@ -494,9 +464,6 @@
         default: 0.5
         type: float
         param_units: seconds
-      - param_name: clutch_strength
-        default: 10.0
-        type: float
         param_units: kg*m<sup>2</sup>/s
       - param_name: final_ratio
         default: 4.0
@@ -549,11 +516,6 @@
       doc: >
         A scalar value that indicates the friction of the wheel.
     # --------------------------------------
-    - var_name: damping_rate
-      type: float
-      doc: >
-        Damping rate of the wheel.
-    # --------------------------------------
     - var_name: max_steer_angle
       type: float
       var_units: degrees
@@ -582,31 +544,12 @@
       type: carla.Vector3D
       doc: >
         World position of the wheel. This is a read-only parameter.
-    # --------------------------------------
-    - var_name: long_stiff_value
-      type: float
-      var_units: kg per radian
-      doc: >
-        Tire longitudinal stiffness per unit gravitational acceleration. Each vehicle has a custom value.
-    # --------------------------------------
-    - var_name: lat_stiff_max_load
-      type: float
-      doc: >
-        Maximum normalized tire load at which the tire can deliver no more lateral stiffness no matter how much extra load is applied to the tire. Each vehicle has a custom value.
-    # --------------------------------------
-    - var_name: lat_stiff_value
-      type: float
-      doc: >
-        Maximum stiffness per unit of lateral slip. Each vehicle has a custom value.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
       params:
       - param_name: tire_friction
-        default: 2.0
-        type: float
-      - param_name: damping_rate
-        default: 0.25
+        default: 3.0
         type: float
       - param_name: max_steer_angle
         default: 70.0
