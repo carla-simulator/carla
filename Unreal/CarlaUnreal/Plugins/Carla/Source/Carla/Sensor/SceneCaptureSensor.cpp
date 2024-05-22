@@ -9,6 +9,8 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 #include "Engine/PostProcessVolume.h"
+#include "GameFramework/SpectatorPawn.h"
+#include "EditorViewportClient.h"
 
 #include <mutex>
 #include <atomic>
@@ -548,8 +550,13 @@ void ASceneCaptureSensor::BeginPlay()
   // Determine the gamma of the player.
   const bool bInForceLinearGamma = !bEnablePostProcessingEffects;
 
-  CaptureRenderTarget->InitCustomFormat(ImageWidth, ImageHeight, bEnable16BitFormat ? PF_FloatRGBA : PF_B8G8R8A8,
-                                        bInForceLinearGamma);
+  CaptureRenderTarget->InitCustomFormat(
+      ImageWidth,
+      ImageHeight,
+      bEnable16BitFormat ? PF_FloatRGBA : PF_B8G8R8A8,
+      bInForceLinearGamma);
+
+  UE_LOG(LogCarla, Log, TEXT("%u"), CaptureRenderTarget->OverrideFormat);
 
   if (bEnablePostProcessingEffects)
   {
@@ -580,7 +587,7 @@ void ASceneCaptureSensor::BeginPlay()
   // This ensures the camera is always spawning the raindrops in case the
   // weather was previously set to have rain.
   GetEpisode().GetWeather()->NotifyWeather(this);
-
+  
   Super::BeginPlay();
 }
 
@@ -712,6 +719,39 @@ namespace SceneCaptureSensor_local_ns {
   static void SetCameraDefaultOverrides(USceneCaptureComponent2D &CaptureComponent2D)
   {
     auto &PostProcessSettings = CaptureComponent2D.PostProcessSettings;
+
+    PostProcessSettings.bOverride_LumenReflectionQuality = true;
+    PostProcessSettings.bOverride_LumenSceneLightingQuality = true;
+    PostProcessSettings.bOverride_LumenSceneDetail = true;
+    PostProcessSettings.bOverride_LumenSceneViewDistance = true;
+    PostProcessSettings.bOverride_LumenSceneLightingUpdateSpeed = true;
+    PostProcessSettings.bOverride_LumenFinalGatherQuality = true;
+    PostProcessSettings.bOverride_LumenFinalGatherLightingUpdateSpeed = true;
+    PostProcessSettings.bOverride_LumenMaxTraceDistance = true;
+    PostProcessSettings.bOverride_LumenDiffuseColorBoost = true;
+    PostProcessSettings.bOverride_LumenSkylightLeaking = true;
+    PostProcessSettings.bOverride_LumenFullSkylightLeakingDistance = true;
+    PostProcessSettings.bOverride_LumenRayLightingMode = true;
+    PostProcessSettings.bOverride_LumenFrontLayerTranslucencyReflections = true;
+    PostProcessSettings.bOverride_LumenMaxReflectionBounces = true;
+    PostProcessSettings.bOverride_LumenSurfaceCacheResolution = true;
+    PostProcessSettings.LumenSceneLightingQuality = 2.0F;
+    PostProcessSettings.LumenSceneDetail = 1.0F;
+    PostProcessSettings.LumenSceneViewDistance = 10000.0F;
+    PostProcessSettings.LumenSceneLightingUpdateSpeed = 1.0F;
+    PostProcessSettings.LumenFinalGatherQuality = 1.0F;
+    PostProcessSettings.LumenFinalGatherLightingUpdateSpeed = 1.0F;
+    PostProcessSettings.LumenMaxTraceDistance = 10000.0F;
+    PostProcessSettings.LumenDiffuseColorBoost = 1.0F;
+    PostProcessSettings.LumenSkylightLeaking = 0.0F;
+    PostProcessSettings.LumenFullSkylightLeakingDistance = 0.0F;
+    PostProcessSettings.LumenSurfaceCacheResolution = 1.0F;
+    PostProcessSettings.LumenReflectionQuality = 2.0F;
+    PostProcessSettings.LumenRayLightingMode = ELumenRayLightingModeOverride::Default;
+    PostProcessSettings.LumenFrontLayerTranslucencyReflections = true;
+    PostProcessSettings.LumenMaxReflectionBounces = 8;
+
+
 
     // Exposure
     PostProcessSettings.bOverride_AutoExposureMethod = true;
