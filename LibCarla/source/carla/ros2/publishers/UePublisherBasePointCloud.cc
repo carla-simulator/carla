@@ -40,7 +40,7 @@ void UePublisherBasePointCloud<HEADER_TYPE, DATA_TYPE>::UpdateSensorData(
   auto data_vector_view = this->vector_view(buffer_view);
 
   _point_cloud->SetMessageHeader(GetTime(sensor_header), frame_id());
-  const size_t point_size = sizeof(DataType);
+  const size_t point_size = GetMessagePointSize();
   _point_cloud->Message().width(1);
   _point_cloud->Message().height(uint32_t(data_vector_view.size()));
   _point_cloud->Message().is_bigendian(false);

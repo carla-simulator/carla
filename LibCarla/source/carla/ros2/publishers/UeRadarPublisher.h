@@ -42,6 +42,7 @@ public:
 
 protected:
   std::vector<sensor_msgs::msg::PointField> GetPointFields() const override;
+  size_t GetMessagePointSize() const override;
 
   void SetPointCloudDataFromBuffer(std::shared_ptr<HeaderTypeConst> header_view,
                                    std::vector<DataType, DataVectorAllocator> vector_view) override;

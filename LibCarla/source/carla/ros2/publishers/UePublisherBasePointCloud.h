@@ -61,6 +61,7 @@ protected:
   }
 
   virtual std::vector<sensor_msgs::msg::PointField> GetPointFields() const = 0;
+  virtual size_t GetMessagePointSize() const { return sizeof(DataType); }
 
   virtual void SetPointCloudDataFromBuffer(std::shared_ptr<HeaderTypeConst> header_view,
                                            std::vector<DataType, DataVectorAllocator> vector_view) = 0;

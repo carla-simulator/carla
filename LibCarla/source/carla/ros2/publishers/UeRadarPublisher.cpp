@@ -10,6 +10,15 @@
 namespace carla {
 namespace ros2 {
 
+  struct RadarDetectionWithPosition {
+    float x;
+    float y;
+    float z;
+    carla::sensor::data::RadarDetection detection;
+  };
+
+
+
 UeRadarPublisher::UeRadarPublisher(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
                                    std::shared_ptr<TransformPublisher> transform_publisher)
   : UePublisherBasePointCloud(sensor_actor_definition, transform_publisher) {}
@@ -53,15 +62,12 @@ std::vector<sensor_msgs::msg::PointField> UeRadarPublisher::GetPointFields() con
   return {descriptor1, descriptor2, descriptor3, descriptor4, descriptor5, descriptor6, descriptor7};
 }
 
+size_t UeRadarPublisher::GetMessagePointSize() const {
+  return sizeof(RadarDetectionWithPosition);
+}
+
 void UeRadarPublisher::SetPointCloudDataFromBuffer(std::shared_ptr<HeaderTypeConst>,
                                                    std::vector<DataType, DataVectorAllocator> data_vector_view) {
-  struct RadarDetectionWithPosition {
-    float x;
-    float y;
-    float z;
-    carla::sensor::data::RadarDetection detection;
-  };
-
   _point_cloud->Message().data().resize(data_vector_view.size() * sizeof(RadarDetectionWithPosition) / sizeof(uint8_t));
   auto point_clound_data_iter = reinterpret_cast<RadarDetectionWithPosition *>(_point_cloud->Message().data().data());
   for (auto const &data_view : data_vector_view) {
