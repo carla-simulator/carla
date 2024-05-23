@@ -113,7 +113,7 @@ else
 fi
 pushd ..
 pushd UnrealEngine5_carla
-echo Cehcking if UnreaEngine5 is in the last commit...
+echo Checking if UnreaEngine5 is in the last commit...
 git fetch
 if [[ $(git status) =~ "up to date" ]]; then
     echo UnreaEngine5 is already in the last commit - OK
