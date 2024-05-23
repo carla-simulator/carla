@@ -134,6 +134,18 @@ carla_string_option (
   "png"
 )
 
+carla_string_option (
+  GXX_COMPILER
+  "g++ compiler used by some CARLA extensions."
+  /usr/bin/g++-12
+)
+
+carla_string_option (
+  GCC_COMPILER
+  "gcc compiler used by some CARLA extensions."
+  /usr/bin/gcc-12
+)
+
 
 
 # ================================
