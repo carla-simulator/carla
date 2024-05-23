@@ -82,6 +82,7 @@ if (BUILD_OSM_WORLD_RENDERER)
 endif ()
 
 if (ENABLE_ROS2)
+  set (BOOST_INCLUDE_PATH ${CMAKE_BINARY_DIR}/_deps/boost-src/libs)
   add_subdirectory (Ros2Native)
 endif()
 

@@ -6,6 +6,16 @@
 
 #pragma once
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4583)
+#pragma warning(disable:4582)
+#include <boost/variant2/variant.hpp>
+#pragma warning(pop)
+#else
+#include <boost/variant2/variant.hpp>
+#endif
+
 #include <variant>
 #include <functional>
 
@@ -28,8 +38,8 @@ namespace ros2 {
     const char* message;
   };
 
-  using ROS2CallbackData = std::variant<VehicleControl>;
-  using ROS2MessageCallbackData = std::variant<MessageControl>;
+  using ROS2CallbackData = boost::variant2::variant<VehicleControl>;
+  using ROS2MessageCallbackData = boost::variant2::variant<MessageControl>;
 
   using ActorCallback = std::function<void(void *actor, ROS2CallbackData data)>;
   using ActorMessageCallback = std::function<void(void *actor, ROS2MessageCallbackData data)>;
