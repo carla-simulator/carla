@@ -569,7 +569,7 @@ void ASceneCaptureSensor::BeginPlay()
   CaptureComponent2D->TextureTarget = CaptureRenderTarget;
 
   // Call derived classes to set up their things.
-  //SetUpSceneCaptureComponent(*CaptureComponent2D);
+  SetUpSceneCaptureComponent(*CaptureComponent2D);
 
   CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalToneCurveHDR;
 
@@ -581,8 +581,9 @@ void ASceneCaptureSensor::BeginPlay()
       GetWorld(),
       FString("g.TimeoutForBlockOnRenderFence 300000"));
 
-  //SceneCaptureSensor_local_ns::ConfigureShowFlags(CaptureComponent2D->ShowFlags,
-  //    bEnablePostProcessingEffects);
+  SceneCaptureSensor_local_ns::ConfigureShowFlags(
+      CaptureComponent2D->ShowFlags,
+      bEnablePostProcessingEffects);
 
   // This ensures the camera is always spawning the raindrops in case the
   // weather was previously set to have rain.
@@ -838,7 +839,26 @@ namespace SceneCaptureSensor_local_ns {
   {
     if (bPostProcessing)
     {
-      ShowFlags.EnableAdvancedFeatures();
+      // This block of code {
+      ShowFlags.SetLensFlares(true);
+      ShowFlags.SetEyeAdaptation(true);
+      ShowFlags.SetColorGrading(true);
+      ShowFlags.SetCameraImperfections(true);
+      ShowFlags.SetDepthOfField(true);
+      ShowFlags.SetVignette(true);
+      ShowFlags.SetGrain(true);
+      ShowFlags.SetSeparateTranslucency(true);
+      ShowFlags.SetScreenSpaceReflections(true);
+      ShowFlags.SetTemporalAA(true);
+      ShowFlags.SetAmbientOcclusion(true);
+      ShowFlags.SetIndirectLightingCache(true);
+      ShowFlags.SetLightShafts(true);
+      ShowFlags.SetPostProcessMaterial(true);
+      ShowFlags.SetDistanceFieldAO(true);
+      // TODO: Remove when Physical page pool size scales automatically with demand
+      ShowFlags.SetVirtualShadowMapCaching(false);
+      // } must be kept in sync with ShowFlags.EnableAdvancedFeatures(), but activate Lumen.
+
       ShowFlags.SetMotionBlur(true);
       return;
     }

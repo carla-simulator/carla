@@ -51,11 +51,7 @@ class CARLA_API AShaderBasedSensor : public ASceneCaptureSensor
 
 public:
 
-  AShaderBasedSensor(const FObjectInitializer &ObjectInitializer)
-    : Super(ObjectInitializer)
-  {
-    EnablePostProcessingEffects(true);
-  }
+  AShaderBasedSensor(const FObjectInitializer &ObjectInitializer);
 
   void Set(const FActorDescription &ActorDescription) override;
 
