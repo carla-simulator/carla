@@ -17,10 +17,16 @@ void CarlaRecorderPhysicsControl::Write(std::ostream &OutFile)
 {
   carla::rpc::VehiclePhysicsControl RPCPhysicsControl(VehiclePhysicsControl);
   WriteValue<uint32_t>(OutFile, this->DatabaseId);
+  WriteValue(OutFile, RPCPhysicsControl.max_torque);
   WriteValue(OutFile, RPCPhysicsControl.max_rpm);
   WriteValue(OutFile, RPCPhysicsControl.moi);
+  WriteValue(OutFile, RPCPhysicsControl.rev_down_rate);
+  WriteValue(OutFile, RPCPhysicsControl.front_rear_split);
   WriteValue(OutFile, RPCPhysicsControl.use_gear_autobox);
   WriteValue(OutFile, RPCPhysicsControl.final_ratio);
+  WriteValue(OutFile, RPCPhysicsControl.change_up_rpm);
+  WriteValue(OutFile, RPCPhysicsControl.change_down_rpm);
+  WriteValue(OutFile, RPCPhysicsControl.transmission_efficiency);
   WriteValue(OutFile, RPCPhysicsControl.mass);
   WriteValue(OutFile, RPCPhysicsControl.drag_coefficient);
   WriteValue(OutFile, RPCPhysicsControl.center_of_mass);
@@ -30,6 +36,9 @@ void CarlaRecorderPhysicsControl::Write(std::ostream &OutFile)
 
   // forward gears
   WriteStdVector(OutFile, RPCPhysicsControl.forward_gears);
+
+  // reverse gears
+  WriteStdVector(OutFile, RPCPhysicsControl.reverse_gears);
 
   // steering curve
   WriteStdVector(OutFile, RPCPhysicsControl.steering_curve);
@@ -42,9 +51,15 @@ void CarlaRecorderPhysicsControl::Read(std::istream &InFile)
 {
   carla::rpc::VehiclePhysicsControl RPCPhysicsControl;
   ReadValue<uint32_t>(InFile, this->DatabaseId);
+  ReadValue(InFile, RPCPhysicsControl.max_torque);
   ReadValue(InFile, RPCPhysicsControl.max_rpm);
   ReadValue(InFile, RPCPhysicsControl.moi);
+  ReadValue(InFile, RPCPhysicsControl.rev_down_rate);
+  ReadValue(InFile, RPCPhysicsControl.front_rear_split);
   ReadValue(InFile, RPCPhysicsControl.use_gear_autobox);
+  ReadValue(InFile, RPCPhysicsControl.final_ratio);
+  ReadValue(InFile, RPCPhysicsControl.change_up_rpm);
+  ReadValue(InFile, RPCPhysicsControl.transmission_efficiency);
   ReadValue(InFile, RPCPhysicsControl.final_ratio);
   ReadValue(InFile, RPCPhysicsControl.mass);
   ReadValue(InFile, RPCPhysicsControl.drag_coefficient);
@@ -55,6 +70,9 @@ void CarlaRecorderPhysicsControl::Read(std::istream &InFile)
 
   // forward gears
   ReadStdVector(InFile, RPCPhysicsControl.forward_gears);
+
+  // reverse gears
+  ReadStdVector(InFile, RPCPhysicsControl.reverse_gears);
 
   // steering curve
   ReadStdVector(InFile, RPCPhysicsControl.steering_curve);

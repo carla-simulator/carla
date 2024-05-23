@@ -365,23 +365,23 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
 
   // Engine Setup
   PhysicsControl.TorqueCurve = VehicleMovComponent->EngineSetup.TorqueCurve.EditorCurveData;
+  PhysicsControl.MaxTorque = VehicleMovComponent->EngineSetup.MaxTorque;
   PhysicsControl.MaxRPM = VehicleMovComponent->EngineSetup.MaxRPM;
   PhysicsControl.MOI = VehicleMovComponent->EngineSetup.EngineRevUpMOI;
+  PhysicsControl.RevDownRate = VehicleMovComponent->EngineSetup.EngineRevDownRate;
+
+  // Differential Setup
+  PhysicsControl.FrontRearSplit = VehicleMovComponent->DifferentialSetup.FrontRearSplit;
+  
   // Transmission Setup
   PhysicsControl.bUseGearAutoBox = VehicleMovComponent->TransmissionSetup.bUseAutomaticGears;
-  PhysicsControl.GearSwitchTime = VehicleMovComponent->TransmissionSetup.GearChangeTime;
   PhysicsControl.FinalRatio = VehicleMovComponent->TransmissionSetup.FinalRatio;
-
-  TArray<FGearPhysicsControl> ForwardGears;
-  for (const auto &Gear : VehicleMovComponent->TransmissionSetup.ForwardGearRatios)
-  {
-    FGearPhysicsControl GearPhysicsControl;
-    GearPhysicsControl.Ratio = Gear;
-    ForwardGears.Add(GearPhysicsControl);
-  }
-  PhysicsControl.ForwardGears = ForwardGears;
-
-  // ToDo:: Backwards?
+  PhysicsControl.ForwardGears = VehicleMovComponent->TransmissionSetup.ForwardGearRatios;
+  PhysicsControl.ReverseGears = VehicleMovComponent->TransmissionSetup.ReverseGearRatios;
+  PhysicsControl.ChangeUpRPM = VehicleMovComponent->TransmissionSetup.ChangeUpRPM;
+  PhysicsControl.ChangeDownRPM = VehicleMovComponent->TransmissionSetup.ChangeDownRPM;
+  PhysicsControl.GearSwitchTime = VehicleMovComponent->TransmissionSetup.GearChangeTime;
+  PhysicsControl.TransmissionEfficiency = VehicleMovComponent->TransmissionSetup.TransmissionEfficiency;
 
   // VehicleMovComponent Setup
   PhysicsControl.Mass = VehicleMovComponent->Mass;
@@ -409,6 +409,9 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
     PhysicsWheel.MaxBrakeTorque = VehicleMovComponent->Wheels[i]->MaxBrakeTorque;
     PhysicsWheel.MaxHandBrakeTorque = VehicleMovComponent->Wheels[i]->MaxHandBrakeTorque;
     PhysicsWheel.Position = VehicleMovComponent->Wheels[i]->Location;
+    PhysicsWheel.CorneringStiffness = VehicleMovComponent->Wheels[i]->CorneringStiffness;
+    PhysicsWheel.bABSEnabled = VehicleMovComponent->Wheels[i]->bABSEnabled;
+    PhysicsWheel.bTractionControlEnabled = VehicleMovComponent->Wheels[i]->bTractionControlEnabled;
 
     if(VehicleMovComponent->Wheels[i]->SweepShape == ESweepShape::Spherecast)
     {
@@ -442,19 +445,23 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
 
   // Engine Setup
   VehicleMovComponent->EngineSetup.TorqueCurve.EditorCurveData = PhysicsControl.TorqueCurve;
+  VehicleMovComponent->EngineSetup.MaxTorque = PhysicsControl.MaxTorque;
   VehicleMovComponent->EngineSetup.MaxRPM = PhysicsControl.MaxRPM;
   VehicleMovComponent->EngineSetup.EngineRevUpMOI = PhysicsControl.MOI;
+  VehicleMovComponent->EngineSetup.EngineRevDownRate = PhysicsControl.RevDownRate;
+
+  // Differential Setup
+  VehicleMovComponent->DifferentialSetup.FrontRearSplit = PhysicsControl.FrontRearSplit;
+  
   // Transmission Setup
   VehicleMovComponent->TransmissionSetup.bUseAutomaticGears = PhysicsControl.bUseGearAutoBox;
-  VehicleMovComponent->TransmissionSetup.GearChangeTime = PhysicsControl.GearSwitchTime;
   VehicleMovComponent->TransmissionSetup.FinalRatio = PhysicsControl.FinalRatio;
-
-  TArray<float> ForwardGears;
-  for (const auto &Gear : PhysicsControl.ForwardGears)
-  {
-    ForwardGears.Add(Gear.Ratio);
-  }
-  VehicleMovComponent->TransmissionSetup.ForwardGearRatios = ForwardGears;
+  VehicleMovComponent->TransmissionSetup.ForwardGearRatios = PhysicsControl.ForwardGears;
+  VehicleMovComponent->TransmissionSetup.ReverseGearRatios = PhysicsControl.ReverseGears;
+  VehicleMovComponent->TransmissionSetup.ChangeUpRPM = PhysicsControl.ChangeUpRPM;
+  VehicleMovComponent->TransmissionSetup.ChangeDownRPM = PhysicsControl.ChangeDownRPM;
+  VehicleMovComponent->TransmissionSetup.GearChangeTime = PhysicsControl.GearSwitchTime;
+  VehicleMovComponent->TransmissionSetup.TransmissionEfficiency = PhysicsControl.TransmissionEfficiency;
 
   // Vehicle Setup
   VehicleMovComponent->Mass = PhysicsControl.Mass;
@@ -495,6 +502,9 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
     VehicleMovComponent->SetWheelMaxSteerAngle(i, PhysicsControl.Wheels[i].MaxSteerAngle);
     VehicleMovComponent->SetWheelMaxBrakeTorque(i, PhysicsControl.Wheels[i].MaxBrakeTorque);
     VehicleMovComponent->SetWheelHandbrakeTorque(i, PhysicsControl.Wheels[i].MaxHandBrakeTorque);
+    VehicleMovComponent->SetABSEnabled(i, PhysicsControl.Wheels[i].bABSEnabled);
+    VehicleMovComponent->SetTractionControlEnabled(i, PhysicsControl.Wheels[i].bTractionControlEnabled);
+    VehicleMovComponent->Wheels[i]->CorneringStiffness = PhysicsControl.Wheels[i].CorneringStiffness;
     VehicleMovComponent->Wheels[i]->SweepShape = PhysicsControl.UseSweepWheelCollision ? ESweepShape::Spherecast : ESweepShape::Raycast;
   }
   

@@ -512,11 +512,17 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             PhysicsControl.Read(File);
             carla::rpc::VehiclePhysicsControl Control(PhysicsControl.VehiclePhysicsControl);
             Info << "  Id: " << PhysicsControl.DatabaseId << std::endl
+                << "   max_torque = " << Control.max_torque << std::endl
                 << "   max_rpm = " << Control.max_rpm << std::endl
                 << "   MOI = " << Control.moi << std::endl
+                << "   rev_down_rate = " << Control.rev_down_rate << std::endl
+                << "   front_rear_split = " << Control.front_rear_split << std::endl
                 << "   use_gear_auto_box = " << (Control.use_gear_autobox ? "true" : "false") << std::endl
                 << "   gear_switch_time = " << Control.gear_switch_time << std::endl
                 << "   final_ratio = " << Control.final_ratio << std::endl
+                << "   change_up_rpm = " << Control.change_up_rpm << std::endl
+                << "   change_down_rpm = " << Control.change_down_rpm << std::endl
+                << "   transmission_efficiency = " << Control.transmission_efficiency << std::endl
                 << "   mass = " << Control.mass << std::endl
                 << "   drag_coefficient = " << Control.drag_coefficient << std::endl
                 << "   center_of_mass = " << "(" << Control.center_of_mass.x << ", " << Control.center_of_mass.y << ", " << Control.center_of_mass.z << ")" << std::endl;
@@ -536,9 +542,14 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             uint32_t count = 0;
             for (auto& Gear : Control.forward_gears)
             {
-              Info << "    gear " << count << ": ratio " << Gear.ratio
-                  << " down_ratio " << Gear.down_ratio
-                  << " up_ratio " << Gear.up_ratio << std::endl;
+              Info << "    gear " << count << ": ratio " << Gear << std::endl;
+              ++count;
+            }
+            Info << "   reverse_gears:" << std::endl;
+            count = 0;
+            for (auto& Gear : Control.reverse_gears)
+            {
+              Info << "    gear " << count << ": ratio " << Gear << std::endl;
               ++count;
             }
             Info << "   wheels:" << std::endl;
@@ -548,6 +559,9 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
               Info << "    wheel " << count << ": tire_friction " << Wheel.tire_friction
                   << " max_steer_angle " << Wheel.max_steer_angle
                   << " radius " << Wheel.radius
+                  << " cornering_stiffness " << Wheel.cornering_stiffness
+                  << " abs " << Wheel.abs
+                  << " traction_control " << Wheel.traction_control
                   << " max_brake_torque " << Wheel.max_brake_torque
                   << " max_handbrake_torque " << Wheel.max_handbrake_torque
                   << " position " << "(" << Wheel.position.x << ", " << Wheel.position.y << ", " << Wheel.position.z << ")"

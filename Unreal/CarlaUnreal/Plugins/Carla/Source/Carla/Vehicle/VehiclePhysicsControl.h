@@ -11,20 +11,6 @@
 #include "Curves/RichCurve.h"
 #include "VehiclePhysicsControl.generated.h"
 
-USTRUCT(BlueprintType)
-struct FGearPhysicsControl
-{
-  GENERATED_USTRUCT_BODY()
-
-  UPROPERTY(Category = "Gear Physics Control", EditAnywhere, BlueprintReadWrite)
-  float Ratio = 1.0f;
-
-  UPROPERTY(Category = "Gear Physics Control", EditAnywhere, BlueprintReadWrite)
-  float DownRatio = 0.5f;
-
-  UPROPERTY(Category = "Gear Physics Control", EditAnywhere, BlueprintReadWrite)
-  float UpRatio = 0.65f;
-};
 
 USTRUCT(BlueprintType)
 struct CARLA_API FVehiclePhysicsControl
@@ -37,30 +23,52 @@ struct CARLA_API FVehiclePhysicsControl
   FRichCurve TorqueCurve;
 
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  float MaxRPM = 0.0f;
+  float MaxTorque = 300.0f;;
+  
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  float MaxRPM = 5000.0f;
 
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  float MOI = 0.0f;
-
-  // // Transmission Setup
-  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  bool bUseGearAutoBox = 0.0f;
+  float MOI = 1.0f;
 
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  float GearSwitchTime = 0.0f;
+  float RevDownRate = 600.0f;
+
+  // Differential Setup
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  float FrontRearSplit = 0.5f;
+
+  // Transmission Setup
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  bool bUseGearAutoBox = true;
 
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  float FinalRatio = 1.0f;
+  float GearSwitchTime = 0.5f;
 
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  TArray<FGearPhysicsControl> ForwardGears;
+  float FinalRatio = 4.0f;
+
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  TArray<float> ForwardGears = {2.85, 2.02, 1.35, 1.0, 2.85, 2.02, 1.35, 1.0};
+
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  TArray<float> ReverseGears = {2.86, 2.86};
+
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  float ChangeUpRPM = 4500.0f;
+
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  float ChangeDownRPM = 2000.0f;
+
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  float TransmissionEfficiency = 0.9f;
 
   // Vehicle Setup
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  float Mass = 0.0f;
+  float Mass = 1000.0f;
 
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-  float DragCoefficient = 0.0f;
+  float DragCoefficient = 0.3f;
 
   // Steering Setup
   FRichCurve SteeringCurve;
