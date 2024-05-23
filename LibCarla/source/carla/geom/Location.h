@@ -54,7 +54,7 @@ namespace geom {
     // =========================================================================
 
     Location &operator+=(const Location &rhs) {
-      static_cast<Vector3D &>(*this) += rhs;
+      static_cast<Vector3D &>(*this) += static_cast<const Vector3D &>(rhs);
       return *this;
     }
 
@@ -64,7 +64,7 @@ namespace geom {
     }
 
     Location &operator-=(const Location &rhs) {
-      static_cast<Vector3D &>(*this) -= rhs;
+      static_cast<Vector3D &>(*this) -= static_cast<const Vector3D &>(rhs);
       return *this;
     }
 
@@ -78,7 +78,7 @@ namespace geom {
     // =========================================================================
 
     bool operator==(const Location &rhs) const {
-      return static_cast<const Vector3D &>(*this) == rhs;
+      return static_cast<const Vector3D &>(*this) == static_cast<const Vector3D &>(rhs);
     }
 
     bool operator!=(const Location &rhs) const {

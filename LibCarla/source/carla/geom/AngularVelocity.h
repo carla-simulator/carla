@@ -45,7 +45,7 @@ namespace geom {
     // =========================================================================
 
     AngularVelocity &operator+=(const AngularVelocity &rhs) {
-      static_cast<Vector3D &>(*this) += rhs;
+      static_cast<Vector3D &>(*this) += static_cast<const Vector3D &>(rhs);
       return *this;
     }
 
@@ -55,7 +55,7 @@ namespace geom {
     }
 
     AngularVelocity &operator-=(const AngularVelocity &rhs) {
-      static_cast<Vector3D &>(*this) -= rhs;
+      static_cast<Vector3D &>(*this) -= static_cast<const Vector3D &>(rhs);
       return *this;
     }
 
@@ -69,7 +69,7 @@ namespace geom {
     // =========================================================================
 
     bool operator==(const AngularVelocity &rhs) const {
-      return static_cast<const Vector3D &>(*this) == rhs;
+      return static_cast<const Vector3D &>(*this) == static_cast<const Vector3D &>(rhs);
     }
 
     bool operator!=(const AngularVelocity &rhs) const {

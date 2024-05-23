@@ -168,7 +168,7 @@ public:
       eprosima::fastrtps::rtps::WriteParams write_params;
       write_params.related_sample_identity() = incoming_request._request_identity;
       auto rcode = _datawriter->write(reinterpret_cast<void*>(&response), write_params);
-      if (rcode != eprosima::fastrtps::types::ReturnCode_t::ReturnCodeValue::RETCODE_OK) {
+      if (rcode != bool(eprosima::fastrtps::types::ReturnCode_t::ReturnCodeValue::RETCODE_OK)) {
         // strange: getting error while the result is actually sent out
         carla::log_debug("DdsServiceImpl[", _response_topic->get_name(),
                          "]::CheckRequest() Failed to write data; Error ", std::to_string(rcode));

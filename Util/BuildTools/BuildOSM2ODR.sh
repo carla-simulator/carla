@@ -78,9 +78,6 @@ fi
 # ==============================================================================
 
 if ${BUILD_OSM2ODR} ; then
-  export CC="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang"
-  export CXX="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++"
-  export PATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin:$PATH"
 
   if [[ -d ${OSM2ODR_BASENAME}-client-install && -d ${OSM2ODR_BASENAME}-server-install ]] ; then
     log "OSM2ODR already installed."
@@ -104,12 +101,12 @@ if ${BUILD_OSM2ODR} ; then
 
     cmake ${OSM2ODR_BASENAME}-source \
         -G "Eclipse CDT4 - Ninja" \
-        -DCMAKE_CXX_FLAGS="-stdlib=libstdc++" \
         -DCMAKE_INSTALL_PREFIX=${OSM2ODR_BASENAME}-client-install \
+        -DCMAKE_TOOLCHAIN_FILE="${CARLA_CLIENT_TOOLCHAIN_FILE}" \
         -DOSM2ODR_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/proj-client-install/include \
-        -DOSM2ODR_LIBRARY=${CARLA_BUILD_FOLDER}/proj-client-install/lib/libproj.a \
+        -DOSM2ODR_LIBRARY=${CARLA_BUILD_FOLDER}/proj-client-install/lib/libproj.so \
         -DXercesC_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-client-install/include \
-        -DXercesC_LIBRARY=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-client-install/lib/libxerces-c.a
+        -DXercesC_LIBRARY=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-client-install/lib/libxerces-c.so
 
     ninja osm2odr
     ninja install
@@ -121,11 +118,11 @@ if ${BUILD_OSM2ODR} ; then
     cmake ${OSM2ODR_BASENAME}-source \
         -G "Eclipse CDT4 - Ninja" \
         -DCMAKE_INSTALL_PREFIX=${OSM2ODR_BASENAME}-server-install \
-        -DCMAKE_TOOLCHAIN_FILE="${LIBCPP_TOOLCHAIN_FILE}" \
+        -DCMAKE_TOOLCHAIN_FILE="${CARLA_SERVER_TOOLCHAIN_FILE}" \
         -DOSM2ODR_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/proj-server-install/include \
-        -DOSM2ODR_LIBRARY=${CARLA_BUILD_FOLDER}/proj-server-install/lib/libproj.so \
+        -DOSM2ODR_LIBRARY=${CARLA_BUILD_FOLDER}/proj-server-install/lib/libproj.a \
         -DXercesC_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-server-install/include \
-        -DXercesC_LIBRARY=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-server-install/lib/libxerces-c.so
+        -DXercesC_LIBRARY=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-server-install/lib/libxerces-c.a
 
     ninja osm2odr
     ninja install

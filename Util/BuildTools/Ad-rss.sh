@@ -91,8 +91,6 @@ ADRSS_INSTALL_DIR="${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/install"
 #else
 #  echo "Using clang-$CARLA_LLVM_VERSION_MAJOR as the CARLA compiler."
 #fi
-CXX_TAG=c10
-
 #
 # Since it it not possible with boost-python to build more than one python version at once (find_package has some bugs)
 # we have to build it for every version in a separate colcon build
@@ -107,9 +105,9 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     pushd "${ADRSS_COLCON_WORKSPACE}" >/dev/null
     if [[ "${CMAKE_PREFIX_PATH}" == "" ]]; then
-      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.80.0-$CXX_TAG-install;${CARLA_BUILD_FOLDER}/proj-install"
+      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.80.0-install;${CARLA_BUILD_FOLDER}/proj-client-install"
     else
-      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.80.0-$CXX_TAG-install;${CARLA_BUILD_FOLDER}/proj-install;${CMAKE_PREFIX_PATH}"
+      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.80.0-install;${CARLA_BUILD_FOLDER}/proj-client-install;${CMAKE_PREFIX_PATH}"
     fi
 
     # get the python version of the binding to be built, need to query the binary,
@@ -120,7 +118,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     echo "PYTHON_BINDING_VERSIONS=${PYTHON_BINDING_VERSIONS}"
 
     # enforce sequential executor to reduce the required memory for compilation
-    colcon build --executor sequential --packages-up-to ad_rss_map_integration --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE="${CARLA_BUILD_FOLDER}/LibStdCppToolChain.cmake" -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH}" -DPYTHON_BINDING_VERSIONS="${PYTHON_BINDING_VERSIONS}" --build-base ${ADRSS_BUILD_DIR} --install-base ${ADRSS_INSTALL_DIR}
+    colcon build --executor sequential --packages-up-to ad_rss_map_integration --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE="${CARLA_BUILD_FOLDER}/CarlaClientToolChain.cmake" -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH}" -DPYTHON_BINDING_VERSIONS="${PYTHON_BINDING_VERSIONS}" --build-base ${ADRSS_BUILD_DIR} --install-base ${ADRSS_INSTALL_DIR}
 
     COLCON_RESULT=$?
     if (( COLCON_RESULT )); then

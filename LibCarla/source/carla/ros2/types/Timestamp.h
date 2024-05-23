@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <cmath>
+
 #include "builtin_interfaces/msg/Time.h"
 
 namespace carla {
@@ -18,7 +20,7 @@ class Timestamp {
 public:
   explicit Timestamp(float timestamp = 0.f) : _stamp(timestamp) {
     float integral;
-    const float fractional = modf(timestamp, &integral);
+    const float fractional = std::modf(timestamp, &integral);
     _ros_time.sec(static_cast<int32_t>(integral));
     _ros_time.nanosec(static_cast<uint32_t>(fractional * 1e9));
   }
