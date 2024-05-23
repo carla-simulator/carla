@@ -15,7 +15,6 @@ import yaml
 import logging
 import carla
 
-
 python_file_path = os.path.realpath(__file__)
 python_file_path = python_file_path.replace('run_system_manager.py', '')
 
@@ -36,7 +35,6 @@ def _setup_vehicle_actors(world):
                                 world.get_map().get_spawn_points()[0],
                                 attach_to=None)
     actors.add(vehicle)
-    
     
     # Create sensors based on this input:
     # This is done manually to ensure that all vehicle and sensor behavior in the simulation is static across runs
@@ -134,7 +132,7 @@ def main(args):
             logging.debug(' Available Map: %s', client.get_available_maps())
             for map in client.get_available_maps():
                 if scenario_file['map'] in map and 'Carla' in map:
-                    logging.info('  Loading Map: %s', map)
+                    logging.debug(' Loading Map: %s', map)
                     client.load_world(map)
                     world = client.get_world()
                     world.apply_settings(settings)
@@ -150,16 +148,15 @@ def main(args):
 
         #vehicle.set_autopilot(True)
 
-        #logging.info("  Running...")
-
+        logging.info("  Running Mission...")
         while True:
             _ = world.tick()
 
     except KeyboardInterrupt:
-        logging.debug(' System Shutdown Command, closing out System Manager')
+        logging.info('  System Shutdown Command, closing out System Manager')
     except Exception as error:
         logging.info('  Error: %s', error)
-        logging.debug(' System Error, Check log, likely CARLA is not connected. See if CARLA is running.')
+        logging.info('  System Error, Check log, likely CARLA is not connected. See if CARLA is running.')
 
     finally:
         try:
@@ -174,7 +171,7 @@ def main(args):
             _ = world.tick()
             logging.info('  Game finished resetting, exiting System Manager...')
         except Exception as error:
-            logging.debug(' Error: %s', error)
+            logging.info('  Error: %s', error)
             logging.info('  Failed to reset game to original state...')
             pass
 
