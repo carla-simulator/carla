@@ -35,6 +35,10 @@ struct CARLA_API FVehiclePhysicsControl
   float RevDownRate = 600.0f;
 
   // Differential Setup
+  // ToDo: Convert to an enum, see EVehicleDifferential.
+  UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
+  uint8 DifferentialType = 0;
+  
   UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
   float FrontRearSplit = 0.5f;
 

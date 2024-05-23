@@ -371,6 +371,7 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
   PhysicsControl.RevDownRate = VehicleMovComponent->EngineSetup.EngineRevDownRate;
 
   // Differential Setup
+  PhysicsControl.DifferentialType = static_cast<uint8>(VehicleMovComponent->DifferentialSetup.DifferentialType);
   PhysicsControl.FrontRearSplit = VehicleMovComponent->DifferentialSetup.FrontRearSplit;
   
   // Transmission Setup
@@ -451,6 +452,7 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   VehicleMovComponent->EngineSetup.EngineRevDownRate = PhysicsControl.RevDownRate;
 
   // Differential Setup
+  VehicleMovComponent->DifferentialSetup.DifferentialType = static_cast<EVehicleDifferential>(PhysicsControl.DifferentialType);
   VehicleMovComponent->DifferentialSetup.FrontRearSplit = PhysicsControl.FrontRearSplit;
   
   // Transmission Setup

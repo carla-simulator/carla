@@ -29,6 +29,7 @@ namespace rpc {
         float in_moi,
         float in_rev_down_rate,
 
+        uint8_t in_differential_type,
         float in_front_rear_split,
 
         bool in_use_gear_autobox,
@@ -51,6 +52,7 @@ namespace rpc {
         max_rpm(in_max_rpm),
         moi(in_moi),
         rev_down_rate(in_rev_down_rate),
+        differential_type(in_differential_type),
         front_rear_split(in_front_rear_split),
         use_gear_autobox(in_use_gear_autobox),
         gear_switch_time(in_gear_switch_time),
@@ -121,6 +123,8 @@ namespace rpc {
     float moi = 1.0f;
     float rev_down_rate = 600.0f;
 
+    // ToDo: Convert to an enum, see EVehicleDifferential.
+    uint8_t differential_type = 0;
     float front_rear_split = 0.5f;
 
     bool use_gear_autobox = true;
@@ -148,6 +152,7 @@ namespace rpc {
         moi != rhs.moi ||
         rev_down_rate != rhs.rev_down_rate ||
           
+        differential_type != rhs.differential_type ||
         front_rear_split != rhs.front_rear_split ||
 
         use_gear_autobox != rhs.use_gear_autobox ||
@@ -187,6 +192,7 @@ namespace rpc {
       rev_down_rate = Control.RevDownRate;
 
       // Differential Setup
+      differential_type = Control.DifferentialType;
       front_rear_split = Control.FrontRearSplit;
 
       // Transmission Setup
@@ -244,6 +250,7 @@ namespace rpc {
       Control.RevDownRate = rev_down_rate;
 
       // Differential Setup
+      Control.DifferentialType = differential_type;
       Control.FrontRearSplit = front_rear_split;
       
       // Transmission Setup
@@ -299,6 +306,7 @@ namespace rpc {
         max_rpm,
         moi,
         rev_down_rate,
+        differential_type,
         front_rear_split,
         use_gear_autobox,
         gear_switch_time,

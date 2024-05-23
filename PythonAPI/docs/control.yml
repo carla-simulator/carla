@@ -352,6 +352,11 @@
       doc: >
         Affects how fast the vehicle's engine RPM slows down.
       # --------------------------------------
+    - var_name: differential_type
+      type: int
+      doc: >
+        Type of differential (Undefined = 0, AllWheelDrive = 1, FrontWheelDrive = 2, RearWheelDrive = 3).
+      # --------------------------------------
     - var_name: front_rear_split
       type: float
       doc: >
@@ -453,6 +458,9 @@
       - param_name: rev_down_rate
         default: 600.0
         type: float
+      - param_name: differential_type
+        default: 3
+        type: int
       - param_name: front_rear_split
         default: 0.5
         type: float
