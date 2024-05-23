@@ -63,18 +63,34 @@ static void SetWheels(carla::rpc::VehiclePhysicsControl &self, const boost::pyth
 
 static auto GetForwardGears(const carla::rpc::VehiclePhysicsControl &self) {
   const auto &gears = self.GetForwardGears();
-  boost::python::object get_iter = boost::python::iterator<std::vector<carla::rpc::GearPhysicsControl>>();
+  boost::python::object get_iter = boost::python::iterator<std::vector<float>>();
   boost::python::object iter = get_iter(gears);
   return boost::python::list(iter);
 }
 
 static void SetForwardGears(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
-  std::vector<carla::rpc::GearPhysicsControl> gears;
+  std::vector<float> gears;
   auto length = boost::python::len(list);
   for (auto i = 0u; i < length; ++i) {
-    gears.push_back(boost::python::extract<carla::rpc::GearPhysicsControl &>(list[i]));
+    gears.push_back(boost::python::extract<float &>(list[i]));
   }
   self.SetForwardGears(gears);
+}
+
+static auto GetReverseGears(const carla::rpc::VehiclePhysicsControl &self) {
+  const auto &gears = self.GetReverseGears();
+  boost::python::object get_iter = boost::python::iterator<std::vector<float>>();
+  boost::python::object iter = get_iter(gears);
+  return boost::python::list(iter);
+}
+
+static void SetReverseGears(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
+  std::vector<float> gears;
+  auto length = boost::python::len(list);
+  for (auto i = 0u; i < length; ++i) {
+    gears.push_back(boost::python::extract<float &>(list[i]));
+  }
+  self.SetReverseGears(gears);
 }
 
 static auto GetTorqueCurve(const carla::rpc::VehiclePhysicsControl &self) {
@@ -101,16 +117,25 @@ static void SetSteeringCurve(carla::rpc::VehiclePhysicsControl &self, const boos
 
 boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boost::python::dict kwargs) {
   // Args names
-  const uint32_t NUM_ARGUMENTS = 17;
+  const uint32_t NUM_ARGUMENTS = 21;
   const char *args_names[NUM_ARGUMENTS] = {
     "torque_curve",
+    "max_torque",
     "max_rpm",
     "moi",
+    "rev_down_rate",
+
+    "differential_type",
+    "front_rear_split",
 
     "use_gear_autobox",
     "gear_switch_time",
     "final_ratio",
     "forward_gears",
+    "reverse_gears",
+    "change_up_rpm",
+    "change_down_rpm",
+    "transmission_efficiency",
 
     "mass",
     "drag_coefficient",
@@ -306,40 +331,28 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<std::vector<cr::GearPhysicsControl>>("vector_of_gears")
-      .def(boost::python::vector_indexing_suite<std::vector<cr::GearPhysicsControl>>())
-      .def(self_ns::str(self_ns::self))
-  ;
-
-  class_<cr::GearPhysicsControl>("GearPhysicsControl")
-    .def(init<float, float, float>(
-        (arg("ratio")=1.0f,
-         arg("down_ratio")=0.5f,
-         arg("up_ratio")=0.65f)))
-    .def_readwrite("ratio", &cr::GearPhysicsControl::ratio)
-    .def_readwrite("down_ratio", &cr::GearPhysicsControl::down_ratio)
-    .def_readwrite("up_ratio", &cr::GearPhysicsControl::up_ratio)
-    .def("__eq__", &cr::GearPhysicsControl::operator==)
-    .def("__ne__", &cr::GearPhysicsControl::operator!=)
-    .def(self_ns::str(self_ns::self))
-  ;
-
   class_<std::vector<cr::WheelPhysicsControl>>("vector_of_wheels")
     .def(boost::python::vector_indexing_suite<std::vector<cr::WheelPhysicsControl>>())
     .def(self_ns::str(self_ns::self))
   ;
 
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
-    .def(init<float, float, float, float, float, cg::Vector3D>(
+    .def(init<float, float, float, float, bool, bool, float, float, cg::Vector3D>(
         (arg("tire_friction")=3.0f,
          arg("max_steer_angle")=70.0f,
          arg("radius")=30.0f,
+         arg("cornering_stiffness")=1000.0f,
+         arg("abs")=false,
+         arg("traction_control")=false,
          arg("max_brake_torque")=1500.0f,
          arg("max_handbrake_torque")=3000.0f,
          arg("position")=cg::Vector3D{0.0f, 0.0f, 0.0f})))
     .def_readwrite("tire_friction", &cr::WheelPhysicsControl::tire_friction)
     .def_readwrite("max_steer_angle", &cr::WheelPhysicsControl::max_steer_angle)
     .def_readwrite("radius", &cr::WheelPhysicsControl::radius)
+    .def_readwrite("cornering_stiffness", &cr::WheelPhysicsControl::cornering_stiffness)
+    .def_readwrite("abs", &cr::WheelPhysicsControl::abs)
+    .def_readwrite("traction_control", &cr::WheelPhysicsControl::traction_control)
     .def_readwrite("max_brake_torque", &cr::WheelPhysicsControl::max_brake_torque)
     .def_readwrite("max_handbrake_torque", &cr::WheelPhysicsControl::max_handbrake_torque)
     .def_readwrite("position", &cr::WheelPhysicsControl::position)
@@ -352,12 +365,20 @@ void export_control() {
     .def("__init__", raw_function(VehiclePhysicsControl_init))
     .def(init<>())
     .add_property("torque_curve", &GetTorqueCurve, &SetTorqueCurve)
+    .def_readwrite("max_torque", &cr::VehiclePhysicsControl::max_torque)
     .def_readwrite("max_rpm", &cr::VehiclePhysicsControl::max_rpm)
     .def_readwrite("moi", &cr::VehiclePhysicsControl::moi)
+    .def_readwrite("rev_down_rate", &cr::VehiclePhysicsControl::rev_down_rate)
+    .def_readwrite("differential_type", &cr::VehiclePhysicsControl::differential_type)
+    .def_readwrite("front_rear_split", &cr::VehiclePhysicsControl::front_rear_split)
     .def_readwrite("use_gear_autobox", &cr::VehiclePhysicsControl::use_gear_autobox)
     .def_readwrite("gear_switch_time", &cr::VehiclePhysicsControl::gear_switch_time)
     .def_readwrite("final_ratio", &cr::VehiclePhysicsControl::final_ratio)
     .add_property("forward_gears", &GetForwardGears, &SetForwardGears)
+    .add_property("reverse_gears", &GetReverseGears, &SetReverseGears)
+    .def_readwrite("change_up_rpm", &cr::VehiclePhysicsControl::change_up_rpm)
+    .def_readwrite("change_down_rpm", &cr::VehiclePhysicsControl::change_down_rpm)
+    .def_readwrite("transmission_efficiency", &cr::VehiclePhysicsControl::mass)
     .def_readwrite("mass", &cr::VehiclePhysicsControl::mass)
     .def_readwrite("drag_coefficient", &cr::VehiclePhysicsControl::drag_coefficient)
     .def_readwrite("center_of_mass", &cr::VehiclePhysicsControl::center_of_mass)

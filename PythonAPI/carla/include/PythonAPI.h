@@ -462,17 +462,13 @@ namespace rpc {
     return out;
   }
 
-  inline std::ostream &operator<<(std::ostream &out, const GearPhysicsControl &control) {
-    out << "GearPhysicsControl(ratio=" << std::to_string(control.ratio)
-        << ", down_ratio=" << std::to_string(control.down_ratio)
-        << ", up_ratio=" << std::to_string(control.up_ratio) << ')';
-    return out;
-  }
-
   inline std::ostream &operator<<(std::ostream &out, const WheelPhysicsControl &control) {
     out << "WheelPhysicsControl(tire_friction=" << std::to_string(control.tire_friction)
         << ", max_steer_angle=" << std::to_string(control.max_steer_angle)
         << ", radius=" << std::to_string(control.radius)
+        << ", cornering_stiffness=" << std::to_string(control.cornering_stiffness)
+        << ", abs=" << std::to_string(control.abs)
+        << ", traction_control=" << std::to_string(control.traction_control)
         << ", max_brake_torque=" << std::to_string(control.max_brake_torque)
         << ", max_handbrake_torque=" << std::to_string(control.max_handbrake_torque)
         << ", position=" << control.position << ')';
@@ -481,12 +477,20 @@ namespace rpc {
 
   inline std::ostream &operator<<(std::ostream &out, const VehiclePhysicsControl &control) {
     out << "VehiclePhysicsControl(torque_curve=" << control.torque_curve
+    << ", max_torque=" << std::to_string(control.max_torque)
     << ", max_rpm=" << std::to_string(control.max_rpm)
     << ", moi=" << std::to_string(control.moi)
+    << ", rev_down_rate=" << std::to_string(control.rev_down_rate)
+    << ", differential_type=" << std::to_string(control.differential_type)
+    << ", front_rear_split=" << std::to_string(control.front_rear_split)
     << ", use_gear_autobox=" << boolalpha(control.use_gear_autobox)
     << ", gear_switch_time=" << std::to_string(control.gear_switch_time)
     << ", final_ratio=" << std::to_string(control.final_ratio)
     << ", forward_gears=" << control.forward_gears
+    << ", reverse_gears=" << control.reverse_gears
+    << ", change_up_rpm=" << std::to_string(control.change_up_rpm)
+    << ", change_down_rpm=" << std::to_string(control.change_down_rpm)
+    << ", transmission_efficiency=" << std::to_string(control.transmission_efficiency)
     << ", mass=" << std::to_string(control.mass)
     << ", drag_coefficient=" << std::to_string(control.drag_coefficient)
     << ", center_of_mass=" << control.center_of_mass
