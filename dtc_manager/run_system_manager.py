@@ -19,8 +19,8 @@ import carla
 python_file_path = os.path.realpath(__file__)
 python_file_path = python_file_path.replace('run_system_manager.py', '')
 
-def _setup_vehicle(world):
-
+def _setup_vehicle_actors(world):
+    actors = []
     # vehicle settings, static for P1
     vehicle_type = "vehicle.lincoln.mkz_2020"
     vehicle_id   = "hero"
@@ -35,6 +35,8 @@ def _setup_vehicle(world):
     vehicle = world.spawn_actor(bp,
                                 world.get_map().get_spawn_points()[0],
                                 attach_to=None)
+    actors.add(vehicle)
+    
     
     # Create sensors based on this input:
     # This is done manually to ensure that all vehicle and sensor behavior in the simulation is static across runs
@@ -52,18 +54,8 @@ def _setup_vehicle(world):
     sensor_spawn = carla.Transform(location=carla.Location(x=1.12, y=0, z=2.4), rotation=carla.Rotation(roll=0, pitch=-6.305, yaw=0))
     sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
     sensor_actor.enable_for_ros()
+    actors.add(sensor_actor)
 
- # "sensors": [
-    #     {
-    #         "type": "sensor.camera.rgb",
-    #         "id": "rgb",
-    #         "spawn_point": {"x": -4.5, "y": 0.0, "z": 2.5, "roll": 0.0, "pitch": 20.0, "yaw": 0.0},
-    #         "attributes": {
-    #             "image_size_x": 400,
-    #             "image_size_y": 200,
-    #             "fov": 90.0
-    #         }
-    #     },
     logging.debug(' Creating RGB Sensor')
     sensor = bp_library.filter('sensor.camera.rgb')[0]
     sensor.set_attribute("role_name",    'front_rgb')
@@ -75,6 +67,20 @@ def _setup_vehicle(world):
     sensor_spawn = carla.Transform(location=carla.Location(x=-4.5, y=0, z=2.5), rotation=carla.Rotation(roll=0, pitch=-20, yaw=0))
     sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
     sensor_actor.enable_for_ros()
+    actors.add(sensor_actor)
+
+    # logging.debug(' Creating IR Sensor')
+    # sensor = bp_library.filter('sensor.camera.ir')[0]
+    # sensor.set_attribute("role_name",    'front_ir')
+    # sensor.set_attribute("ros_name",     'front_ir')
+    # sensor.set_attribute("image_size_x", 1920)
+    # sensor.set_attribute("image_size_y", 1200)
+    # sensor.set_attribute("fov",          90.0)
+    # sensor.set_attribute("sensor_tick",  0.1)
+    # sensor_spawn = carla.Transform(location=carla.Location(x=-4.5, y=0, z=2.5), rotation=carla.Rotation(roll=0, pitch=-20, yaw=0))
+    # sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
+    # sensor_actor.enable_for_ros()
+    # actors.add(sensor_actor)
 
     logging.debug(' Creating GPS Sensor')
     sensor = bp_library.filter('sensor.lidar.gnss')[0]
@@ -84,6 +90,7 @@ def _setup_vehicle(world):
     sensor_spawn = carla.Transform(location=carla.Location(x=0, y=0, z=0), rotation=carla.Rotation(roll=0, pitch=0, yaw=0))
     sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
     sensor_actor.enable_for_ros()
+    actors.add(sensor_actor)
 
     logging.debug(' Creating IMU Sensor')
     sensor = bp_library.filter('sensor.lidar.imu')[0]
@@ -93,15 +100,15 @@ def _setup_vehicle(world):
     sensor_spawn = carla.Transform(location=carla.Location(x=0, y=0, z=0), rotation=carla.Rotation(roll=0, pitch=0, yaw=0))
     sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
     sensor_actor.enable_for_ros()
+    actors.add(sensor_actor)
 
-    # logging.debug(' Creating IR Sensor')
-    return vehicle
+    return actors
 
 def main(args):
 
     world = None
     old_world = None
-    vehicle = None
+    vehicle_actors = None
     original_settings = None
 
     try:
@@ -132,9 +139,12 @@ def main(args):
                     world = client.get_world()
                     world.apply_settings(settings)
                     break
+
+        # Setup MetaHumans
+        # Needs Code
   
-        
-        #vehicle = _setup_vehicle(world)
+        # Create Vehicle with sensors
+        vehicle_actors = _setup_vehicle_actors(world)
 
         #_ = world.tick()
 
@@ -158,11 +168,8 @@ def main(args):
                 client.load_world('NewWorld')
                 client.get_world().apply_settings(original_settings)
 
-            # for sensor in sensors:
-            #     sensor.destroy()
-
-            # if vehicle:
-            #     vehicle.destroy()
+            for actor in vehicle_actors:
+                actor.destroy()
 
             _ = world.tick()
             logging.info('  Game finished resetting, exiting System Manager...')
