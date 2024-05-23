@@ -20,85 +20,91 @@ python_file_path = python_file_path.replace('run_system_manager.py', '')
 
 def _setup_vehicle_actors(world):
     actors = []
-    # vehicle settings, static for P1
-    vehicle_type = "vehicle.lincoln.mkz_2020"
-    vehicle_id   = "hero"
 
-    logging.debug(" Spawning vehicle: %s", vehicle_type)
+    try:
+        # vehicle settings, static for P1
+        vehicle_type = "static.prop.atm"
+        vehicle_id   = "hero"
 
-    bp_library = world.get_blueprint_library()
-    bp = bp_library.filter(vehicle_type)[0]
-    bp.set_attribute("role_name", vehicle_id)
-    bp.set_attribute("ros_name",  vehicle_id) 
+        logging.debug(" Spawning vehicle: %s", vehicle_type)
 
-    vehicle = world.spawn_actor(bp,
-                                world.get_map().get_spawn_points()[0],
-                                attach_to=None)
-    actors.add(vehicle)
-    
-    # Create sensors based on this input:
-    # This is done manually to ensure that all vehicle and sensor behavior in the simulation is static across runs
-    logging.debug(' Creating LiDAR Sensor')
-    sensor = bp_library.filter('sensor.lidar.ray_cast')[0]
-    sensor.set_attribute("role_name",          'front_lidar')
-    sensor.set_attribute("ros_name",           'front_lidar')
-    sensor.set_attribute("range",              50)
-    sensor.set_attribute("channels",           64)
-    sensor.set_attribute("points_per_second",  2621440)
-    sensor.set_attribute("rotation_frequency", 20)
-    sensor.set_attribute("upper_fov",          22.5)
-    sensor.set_attribute("lower_fov",          -22.5)
-    sensor.set_attribute("sensor_tick",        0.1)
-    sensor_spawn = carla.Transform(location=carla.Location(x=1.12, y=0, z=2.4), rotation=carla.Rotation(roll=0, pitch=-6.305, yaw=0))
-    sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
-    sensor_actor.enable_for_ros()
-    actors.add(sensor_actor)
+        bp_library = world.get_blueprint_library()
+        bp = bp_library.filter(vehicle_type)[0]
+        #bp.set_attribute("role_name", vehicle_id)
+        #bp.set_attribute("ros_name",  vehicle_id) 
 
-    logging.debug(' Creating RGB Sensor')
-    sensor = bp_library.filter('sensor.camera.rgb')[0]
-    sensor.set_attribute("role_name",    'front_rgb')
-    sensor.set_attribute("ros_name",     'front_rgb')
-    sensor.set_attribute("image_size_x", 1920)
-    sensor.set_attribute("image_size_y", 1200)
-    sensor.set_attribute("fov",          90.0)
-    sensor.set_attribute("sensor_tick",  0.1)
-    sensor_spawn = carla.Transform(location=carla.Location(x=-4.5, y=0, z=2.5), rotation=carla.Rotation(roll=0, pitch=-20, yaw=0))
-    sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
-    sensor_actor.enable_for_ros()
-    actors.add(sensor_actor)
+        vehicle = world.spawn_actor(bp,
+                                    world.get_map().get_spawn_points()[0],
+                                    attach_to=None)
+        actors.append(vehicle)
 
-    # logging.debug(' Creating IR Sensor')
-    # sensor = bp_library.filter('sensor.camera.ir')[0]
-    # sensor.set_attribute("role_name",    'front_ir')
-    # sensor.set_attribute("ros_name",     'front_ir')
-    # sensor.set_attribute("image_size_x", 1920)
-    # sensor.set_attribute("image_size_y", 1200)
-    # sensor.set_attribute("fov",          90.0)
-    # sensor.set_attribute("sensor_tick",  0.1)
-    # sensor_spawn = carla.Transform(location=carla.Location(x=-4.5, y=0, z=2.5), rotation=carla.Rotation(roll=0, pitch=-20, yaw=0))
-    # sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
-    # sensor_actor.enable_for_ros()
-    # actors.add(sensor_actor)
+        # Create sensors based on this input:
+        # This is done manually to ensure that all vehicle and sensor behavior in the simulation is static across runs
+        logging.debug(' Creating LiDAR Sensor')
+        sensor = bp_library.filter('sensor.lidar.ray_cast')[0]
+        sensor.set_attribute("role_name",          'front_lidar')
+        sensor.set_attribute("ros_name",           'front_lidar')
+        sensor.set_attribute("range",              '50')
+        sensor.set_attribute("channels",           '64')
+        sensor.set_attribute("points_per_second",  '2621440')
+        sensor.set_attribute("rotation_frequency", '20')
+        sensor.set_attribute("upper_fov",          '22.5')
+        sensor.set_attribute("lower_fov",          '-22.5')
+        sensor.set_attribute("sensor_tick",        '0.1')
+        sensor_spawn = carla.Transform(location=carla.Location(x=1.12, y=0, z=2.4), rotation=carla.Rotation(roll=0, pitch=-6.305, yaw=0))
+        sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
+        sensor_actor.enable_for_ros()
+        actors.append(sensor_actor)
 
-    logging.debug(' Creating GPS Sensor')
-    sensor = bp_library.filter('sensor.lidar.gnss')[0]
-    sensor.set_attribute("role_name",   'gnss')
-    sensor.set_attribute("ros_name",    'gnss')
-    sensor.set_attribute("sensor_tick", 0.1)
-    sensor_spawn = carla.Transform(location=carla.Location(x=0, y=0, z=0), rotation=carla.Rotation(roll=0, pitch=0, yaw=0))
-    sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
-    sensor_actor.enable_for_ros()
-    actors.add(sensor_actor)
+        logging.debug(' Creating RGB Sensor')
+        sensor = bp_library.filter('sensor.camera.rgb')[0]
+        sensor.set_attribute("role_name",    'front_rgb')
+        sensor.set_attribute("ros_name",     'front_rgb')
+        sensor.set_attribute("image_size_x", '1920')
+        sensor.set_attribute("image_size_y", '1200')
+        sensor.set_attribute("fov",          '90.0')
+        sensor.set_attribute("sensor_tick",  '0.1')
+        sensor_spawn = carla.Transform(location=carla.Location(x=-4.5, y=0, z=2.5), rotation=carla.Rotation(roll=0, pitch=-20, yaw=0))
+        sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
+        sensor_actor.enable_for_ros()
+        actors.append(sensor_actor)
 
-    logging.debug(' Creating IMU Sensor')
-    sensor = bp_library.filter('sensor.lidar.imu')[0]
-    sensor.set_attribute("role_name",   'imu')
-    sensor.set_attribute("ros_name",    'imu')
-    sensor.set_attribute("sensor_tick", 0.1)
-    sensor_spawn = carla.Transform(location=carla.Location(x=0, y=0, z=0), rotation=carla.Rotation(roll=0, pitch=0, yaw=0))
-    sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
-    sensor_actor.enable_for_ros()
-    actors.add(sensor_actor)
+        # logging.debug(' Creating IR Sensor')
+        # sensor = bp_library.filter('sensor.camera.ir')[0]
+        # sensor.set_attribute("role_name",    'front_ir')
+        # sensor.set_attribute("ros_name",     'front_ir')
+        # sensor.set_attribute("image_size_x", '1920')
+        # sensor.set_attribute("image_size_y", '1200')
+        # sensor.set_attribute("fov",          '90.0')
+        # sensor.set_attribute("sensor_tick",  '0.1')
+        # sensor_spawn = carla.Transform(location=carla.Location(x=-4.5, y=0, z=2.5), rotation=carla.Rotation(roll=0, pitch=-20, yaw=0))
+        # sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
+        # sensor_actor.enable_for_ros()
+        # actors.add(sensor_actor)
+
+        logging.debug(' Creating GPS Sensor')
+        sensor = bp_library.filter('sensor.other.gnss')[0]
+        sensor.set_attribute("role_name",   'gnss')
+        sensor.set_attribute("ros_name",    'gnss')
+        sensor.set_attribute("sensor_tick", '0.1')
+        sensor_spawn = carla.Transform(location=carla.Location(x=0, y=0, z=0), rotation=carla.Rotation(roll=0, pitch=0, yaw=0))
+        sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
+        sensor_actor.enable_for_ros()
+        actors.append(sensor_actor)
+
+        logging.debug(' Creating IMU Sensor')
+        sensor = bp_library.filter('sensor.other.imu')[0]
+        sensor.set_attribute("role_name",   'imu')
+        sensor.set_attribute("ros_name",    'imu')
+        sensor.set_attribute("sensor_tick", '0.1')
+        sensor_spawn = carla.Transform(location=carla.Location(x=0, y=0, z=0), rotation=carla.Rotation(roll=0, pitch=0, yaw=0))
+        sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
+        sensor_actor.enable_for_ros()
+        actors.append(sensor_actor)
+
+    except Exception as error:
+        logging.info('  Error: %s', error)
+        raise Exception("Failed to Spawn Vehicle and Sensors")
 
     return actors
 
