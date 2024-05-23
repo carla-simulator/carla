@@ -57,10 +57,10 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
   CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
 
-  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D_CARLA>(
-      FName(*FString::Printf(TEXT("USceneCaptureComponent2D_CARLA_%d"), SCENE_CAPTURE_COUNTER)));
+  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(
+      FName(*FString::Printf(TEXT("USceneCaptureComponent2D%d"), SCENE_CAPTURE_COUNTER)));
   check(CaptureComponent2D != nullptr);
-  CaptureComponent2D->ViewActor = this;
+  //CaptureComponent2D->ViewActor = this;
   CaptureComponent2D->SetupAttachment(RootComponent);
   CaptureComponent2D->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
   CaptureComponent2D->bCaptureOnMovement = false;
@@ -68,7 +68,7 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureComponent2D->bAlwaysPersistRenderingState = true;
   CaptureComponent2D->bUseRayTracingIfEnabled = true;
 
-  SceneCaptureSensor_local_ns::SetCameraDefaultOverrides(*CaptureComponent2D);
+  //SceneCaptureSensor_local_ns::SetCameraDefaultOverrides(*CaptureComponent2D);
 
   ++SCENE_CAPTURE_COUNTER;
 }
@@ -569,9 +569,9 @@ void ASceneCaptureSensor::BeginPlay()
   CaptureComponent2D->TextureTarget = CaptureRenderTarget;
 
   // Call derived classes to set up their things.
-  SetUpSceneCaptureComponent(*CaptureComponent2D);
+  //SetUpSceneCaptureComponent(*CaptureComponent2D);
 
-  CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+  CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalToneCurveHDR;
 
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();
@@ -581,8 +581,8 @@ void ASceneCaptureSensor::BeginPlay()
       GetWorld(),
       FString("g.TimeoutForBlockOnRenderFence 300000"));
 
-  SceneCaptureSensor_local_ns::ConfigureShowFlags(CaptureComponent2D->ShowFlags,
-      bEnablePostProcessingEffects);
+  //SceneCaptureSensor_local_ns::ConfigureShowFlags(CaptureComponent2D->ShowFlags,
+  //    bEnablePostProcessingEffects);
 
   // This ensures the camera is always spawning the raindrops in case the
   // weather was previously set to have rain.

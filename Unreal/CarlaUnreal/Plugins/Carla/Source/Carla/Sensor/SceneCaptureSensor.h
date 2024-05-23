@@ -443,12 +443,12 @@ protected:
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
 
   /// Render target necessary for scene capture.
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(VisibleAnywhere)
   UTextureRenderTarget2D *CaptureRenderTarget = nullptr;
 
   /// Scene capture component.
-  UPROPERTY(EditAnywhere)
-  USceneCaptureComponent2D_CARLA *CaptureComponent2D = nullptr;
+  UPROPERTY(VisibleAnywhere)
+  USceneCaptureComponent2D *CaptureComponent2D = nullptr;
 
   UPROPERTY(EditAnywhere)
   float TargetGamma = 2.4f;

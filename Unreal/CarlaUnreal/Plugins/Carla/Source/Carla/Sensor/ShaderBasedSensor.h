@@ -54,7 +54,7 @@ public:
   AShaderBasedSensor(const FObjectInitializer &ObjectInitializer)
     : Super(ObjectInitializer)
   {
-    EnablePostProcessingEffects(false);
+    EnablePostProcessingEffects(true);
   }
 
   void Set(const FActorDescription &ActorDescription) override;
