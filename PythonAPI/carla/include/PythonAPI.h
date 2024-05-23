@@ -481,6 +481,7 @@ namespace rpc {
     << ", max_rpm=" << std::to_string(control.max_rpm)
     << ", moi=" << std::to_string(control.moi)
     << ", rev_down_rate=" << std::to_string(control.rev_down_rate)
+    << ", differential_type=" << std::to_string(control.differential_type)
     << ", front_rear_split=" << std::to_string(control.front_rear_split)
     << ", use_gear_autobox=" << boolalpha(control.use_gear_autobox)
     << ", gear_switch_time=" << std::to_string(control.gear_switch_time)

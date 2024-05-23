@@ -117,7 +117,7 @@ static void SetSteeringCurve(carla::rpc::VehiclePhysicsControl &self, const boos
 
 boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boost::python::dict kwargs) {
   // Args names
-  const uint32_t NUM_ARGUMENTS = 20;
+  const uint32_t NUM_ARGUMENTS = 21;
   const char *args_names[NUM_ARGUMENTS] = {
     "torque_curve",
     "max_torque",
@@ -125,6 +125,7 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
     "moi",
     "rev_down_rate",
 
+    "differential_type",
     "front_rear_split",
 
     "use_gear_autobox",
@@ -368,6 +369,7 @@ void export_control() {
     .def_readwrite("max_rpm", &cr::VehiclePhysicsControl::max_rpm)
     .def_readwrite("moi", &cr::VehiclePhysicsControl::moi)
     .def_readwrite("rev_down_rate", &cr::VehiclePhysicsControl::rev_down_rate)
+    .def_readwrite("differential_type", &cr::VehiclePhysicsControl::differential_type)
     .def_readwrite("front_rear_split", &cr::VehiclePhysicsControl::front_rear_split)
     .def_readwrite("use_gear_autobox", &cr::VehiclePhysicsControl::use_gear_autobox)
     .def_readwrite("gear_switch_time", &cr::VehiclePhysicsControl::gear_switch_time)
