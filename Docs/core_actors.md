@@ -218,9 +218,8 @@ if traffic_light.get_state() == carla.TrafficLightState.Red:
 ```py
     vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-1.0))
 ```
-* __[carla.VehiclePhysicsControl](python_api.md#carla.VehiclePhysicsControl)__ defines physical attributes of the vehicle and contains two more controllers:
+* __[carla.VehiclePhysicsControl](python_api.md#carla.VehiclePhysicsControl)__ defines physical attributes of the vehicle and contains one controller:
 
-    * [carla.GearPhysicsControl](python_api.md#carla.GearPhysicsControl) which controls the gears. 
     * [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl) which provides specific control over each wheel.  
 
 ```py

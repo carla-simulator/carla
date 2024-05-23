@@ -89,8 +89,12 @@ def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_swe
         physics_control.max_rpm = max_rpm
 
     if len(physics_control.forward_gears) == 1:
-        gear = carla.GearPhysicsControl(1.0, 0.00, 0.00)
+        gear = 1.0
         physics_control.forward_gears = [gear]
+
+    if len(physics_control.reverse_gears) == 1:
+        gear = 1.0
+        physics_control.reverse_gears = [gear]
 
     front_left_wheel = physics_control.wheels[0]
     front_right_wheel = physics_control.wheels[1]

@@ -22,6 +22,15 @@ struct CARLA_API FWheelPhysicsControl
   UPROPERTY(Category = "Wheel Shape Radius", EditAnywhere, BlueprintReadWrite)
   float Radius = 30.0f;
 
+  UPROPERTY(Category = "Tyre Cornering Ability", EditAnywhere, BlueprintReadWrite)
+  float CorneringStiffness = 1000.0f;
+
+  UPROPERTY(Category = "Advanced Braking System Enabled", EditAnywhere, BlueprintReadWrite)
+  bool bABSEnabled = false;
+
+  UPROPERTY(Category = "Straight Line Traction Control Enabled", EditAnywhere, BlueprintReadWrite)
+  bool bTractionControlEnabled = false;
+
   UPROPERTY(Category = "Wheel Max Brake Torque (Nm)", EditAnywhere, BlueprintReadWrite)
   float MaxBrakeTorque = 1500.0f;
 

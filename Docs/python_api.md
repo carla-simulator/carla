@@ -858,31 +858,6 @@ The texture "CustomStencil" contains the Unreal Engine custom stencil data.
 
 ---
 
-## carla.GearPhysicsControl<a name="carla.GearPhysicsControl"></a>
-Class that provides access to vehicle transmission details by defining a gear and when to run on it. This will be later used by [carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl) to help simulate physics.  
-
-### Instance Variables
-- <a name="carla.GearPhysicsControl.ratio"></a>**<font color="#f8805a">ratio</font>** (_float_)  
-The transmission ratio of the gear.  
-- <a name="carla.GearPhysicsControl.down_ratio"></a>**<font color="#f8805a">down_ratio</font>** (_float_)  
-Quotient between current RPM and MaxRPM where the autonomous gear box should shift down.  
-- <a name="carla.GearPhysicsControl.up_ratio"></a>**<font color="#f8805a">up_ratio</font>** (_float_)  
-Quotient between current RPM and MaxRPM where the autonomous gear box should shift up.  
-
-### Methods
-- <a name="carla.GearPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**ratio**=1.0</font>, <font color="#00a6ed">**down_ratio**=0.5</font>, <font color="#00a6ed">**up_ratio**=0.65</font>)  
-    - **Parameters:**
-        - `ratio` (_float_)  
-        - `down_ratio` (_float_)  
-        - `up_ratio` (_float_)  
-
-##### Dunder methods
-- <a name="carla.GearPhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.GearPhysicsControl](#carla.GearPhysicsControl)</font>)  
-- <a name="carla.GearPhysicsControl.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.GearPhysicsControl](#carla.GearPhysicsControl)</font>)  
-- <a name="carla.GearPhysicsControl.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
-
----
-
 ## carla.GeoLocation<a name="carla.GeoLocation"></a>
 Class that contains geographical coordinates simulated data. The [carla.Map](#carla.Map) can convert simulation locations by using the <b><georeference></b> tag in the OpenDRIVE file.  
 
@@ -3065,18 +3040,32 @@ Summarizes the parameters that will be used to simulate a [carla.Vehicle](#carla
 ### Instance Variables
 - <a name="carla.VehiclePhysicsControl.torque_curve"></a>**<font color="#f8805a">torque_curve</font>** (_list([carla.Vector2D](#carla.Vector2D))_)  
 Curve that indicates the torque measured in Nm for a specific RPM of the vehicle's engine.  
+- <a name="carla.VehiclePhysicsControl.max_torque"></a>**<font color="#f8805a">max_torque</font>** (_float_)  
+The maximum vehicle's engine Torque (Nm).   
 - <a name="carla.VehiclePhysicsControl.max_rpm"></a>**<font color="#f8805a">max_rpm</font>** (_float_)  
 The maximum RPM of the vehicle's engine.  
 - <a name="carla.VehiclePhysicsControl.moi"></a>**<font color="#f8805a">moi</font>** (_float<small> - kg*m<sup>2</sup></small>_)  
 The moment of inertia of the vehicle's engine.  
+- <a name="carla.VehiclePhysicsControl.rev_down_rate"></a>**<font color="#f8805a">rev_down_rate</font>** (_float_)  
+Affects how fast the vehicle's engine RPM slows down.  
+- <a name="carla.VehiclePhysicsControl.front_rear_split"></a>**<font color="#f8805a">front_rear_split</font>** (_float_)  
+Ratio of torque split between front and rear (<0.5 means more to front, >0.5 means more to rear, works only with 4W type). 
 - <a name="carla.VehiclePhysicsControl.use_gear_autobox"></a>**<font color="#f8805a">use_gear_autobox</font>** (_bool_)  
 If <b>True</b>, the vehicle will have an automatic transmission.  
 - <a name="carla.VehiclePhysicsControl.gear_switch_time"></a>**<font color="#f8805a">gear_switch_time</font>** (_float<small> - seconds</small>_)  
 Switching time between gears.   
 - <a name="carla.VehiclePhysicsControl.final_ratio"></a>**<font color="#f8805a">final_ratio</font>** (_float_)  
 Fixed ratio from transmission to wheels.  
-- <a name="carla.VehiclePhysicsControl.forward_gears"></a>**<font color="#f8805a">forward_gears</font>** (_list([carla.GearPhysicsControl](#carla.GearPhysicsControl))_)  
-List of objects defining the vehicle's gears.  
+- <a name="carla.VehiclePhysicsControl.forward_gears"></a>**<font color="#f8805a">forward_gears</font>** (_list(float)_)  
+List of floats defining the vehicle's gears.  
+- <a name="carla.VehiclePhysicsControl.reverse_gears"></a>**<font color="#f8805a">reverse_gears</font>** (_list(float)_)  
+List of floats defining the vehicle's reverse gears (there is normally only one). 
+- <a name="carla.VehiclePhysicsControl.change_up_rpm"></a>**<font color="#f8805a">change_up_rpm</font>** (_float_)  
+Vehicle's engine RPM at which gear up change ocurrs.  
+- <a name="carla.VehiclePhysicsControl.change_down_rpm"></a>**<font color="#f8805a">change_down_rpm</font>** (_float_)  
+Vehicle's engine RPM at which gear down change ocurrs.  
+- <a name="carla.VehiclePhysicsControl.transmission_efficiency"></a>**<font color="#f8805a">transmission_efficiency</font>** (_float_)  
+Mechanical frictional losses. If set to 0.9 means that the transmission operate at 90% efficiency.  
 - <a name="carla.VehiclePhysicsControl.mass"></a>**<font color="#f8805a">mass</font>** (_float<small> - kilograms</small>_)  
 Mass of the vehicle.  
 - <a name="carla.VehiclePhysicsControl.drag_coefficient"></a>**<font color="#f8805a">drag_coefficient</font>** (_float_)  
@@ -3091,22 +3080,29 @@ Enable the use of sweep for wheel collision. By default, it is disabled and it u
 List of wheel physics objects. This list should have 4 elements, where index 0 corresponds to the front left wheel, index 1 corresponds to the front right wheel, index 2 corresponds to the back left wheel and index 3 corresponds to the back right wheel. For 2 wheeled vehicles, set the same values for both front and back wheels.  
 
 ### Methods
-- <a name="carla.VehiclePhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**torque_curve**=[[0.0, 500.0], [5000.0, 500.0]]</font>, <font color="#00a6ed">**max_rpm**=5000.0</font>, <font color="#00a6ed">**moi**=1.0</font>, <font color="#00a6ed">**use_gear_autobox**=True</font>, <font color="#00a6ed">**gear_switch_time**=0.5</font>, <font color="#00a6ed">**final_ratio**=4.0</font>, <font color="#00a6ed">**forward_gears**=list()</font>, <font color="#00a6ed">**drag_coefficient**=0.3</font>, <font color="#00a6ed">**center_of_mass**=[0.0, 0.0, 0.0]</font>, <font color="#00a6ed">**steering_curve**=[[0.0, 1.0], [10.0, 0.5]]</font>, <font color="#00a6ed">**wheels**=list()</font>, <font color="#00a6ed">**use_sweep_wheel_collision**=False</font>, <font color="#00a6ed">**mass**=1000.0</font>)  
+- <a name="carla.VehiclePhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**torque_curve**=[[0.0, 500.0], [5000.0, 500.0]]</font>, <font color="#00a6ed">**max_torque**=300.0</font>, <font color="#00a6ed">**max_rpm**=5000.0</font>, <font color="#00a6ed">**moi**=1.0</font>, <font color="#00a6ed">**rev_down_rate**=600.0</font>, <font color="#00a6ed">**front_rear_split**=0.5</font>, <font color="#00a6ed">**use_gear_autobox**=True</font>, <font color="#00a6ed">**gear_switch_time**=0.5</font>, <font color="#00a6ed">**final_ratio**=4.0</font>, <font color="#00a6ed">**forward_gears**=[2.85, 2.02, 1.35, 1.0, 2.85, 2.02, 1.35, 1.0]</font>, <font color="#00a6ed">**reverse_gears**=[2.86, 2.86]</font>, <font color="#00a6ed">**change_up_rpm**=4500.0</font>, <font color="#00a6ed">**change_down_rpm**=2000.0</font>, <font color="#00a6ed">**transmission_efficiency**=0.9</font>, <font color="#00a6ed">**mass**=1000.0</font>, <font color="#00a6ed">**drag_coefficient**=0.3</font>, <font color="#00a6ed">**center_of_mass**=[0.0, 0.0, 0.0]</font>, <font color="#00a6ed">**steering_curve**=[[0.0, 1.0], [10.0, 0.5]]</font>, <font color="#00a6ed">**wheels**=list()</font>, <font color="#00a6ed">**use_sweep_wheel_collision**=False</font>)  
 VehiclePhysicsControl constructor.  
     - **Parameters:**
         - `torque_curve` (_list([carla.Vector2D](#carla.Vector2D))_)  
+        - `max_torque` (_float_)  
         - `max_rpm` (_float_)  
         - `moi` (_float<small> - kg*m<sup>2</sup></small>_)  
+        - `rev_down_rate` (_float_)  
+        - `front_rear_split` (_float_)  
         - `use_gear_autobox` (_bool_)  
         - `gear_switch_time` (_float<small> - seconds</small>_)   
         - `final_ratio` (_float_)  
-        - `forward_gears` (_list([carla.GearPhysicsControl](#carla.GearPhysicsControl))_)  
+        - `forward_gears` (_list(float)_)  
+        - `reverse_gears` (_list(float)_)  
+        - `change_up_rpm` (_float_)  
+        - `change_down_rpm` (_float_)  
+        - `transmission_efficiency` (_float_)  
+        - `mass` (_float<small> - kilograms</small>_)  
         - `drag_coefficient` (_float_)  
         - `center_of_mass` (_[carla.Vector3D](#carla.Vector3D)_)  
         - `steering_curve` (_[carla.Vector2D](#carla.Vector2D)_)  
         - `wheels` (_list([carla.WheelPhysicsControl](#carla.WheelPhysicsControl))_)  
         - `use_sweep_wheel_collision` (_bool_)  
-        - `mass` (_float<small> - kilograms</small>_)  
 
 ##### Dunder methods
 - <a name="carla.VehiclePhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)</font>)  
@@ -3437,6 +3433,12 @@ A scalar value that indicates the friction of the wheel.
 Maximum angle that the wheel can steer.  
 - <a name="carla.WheelPhysicsControl.radius"></a>**<font color="#f8805a">radius</font>** (_float<small> - centimeters</small>_)  
 Radius of the wheel.  
+- <a name="carla.WheelPhysicsControl.cornering_stiffness"></a>**<font color="#f8805a">cornering_stiffness</font>** (_float_)  
+Tyre Cornering Ability.
+- <a name="carla.WheelPhysicsControl.abs"></a>**<font color="#f8805a">abs</font>** (_bool_)  
+Indicates if the Advanced Braking System is enabled.
+- <a name="carla.WheelPhysicsControl.traction_control"></a>**<font color="#f8805a">traction_control</font>** (_bool_)  
+Indicates if the Straight Line Traction Control is enabled.
 - <a name="carla.WheelPhysicsControl.max_brake_torque"></a>**<font color="#f8805a">max_brake_torque</font>** (_float<small> - N*m</small>_)  
 Maximum brake torque.  
 - <a name="carla.WheelPhysicsControl.max_handbrake_torque"></a>**<font color="#f8805a">max_handbrake_torque</font>** (_float<small> - N*m</small>_)  
@@ -3445,11 +3447,14 @@ Maximum handbrake torque.
 World position of the wheel. This is a read-only parameter.  
 
 ### Methods
-- <a name="carla.WheelPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**tire_friction**=3.0</font>, <font color="#00a6ed">**max_steer_angle**=70.0</font>, <font color="#00a6ed">**radius**=30.0</font>, <font color="#00a6ed">**max_brake_torque**=1500.0</font>, <font color="#00a6ed">**max_handbrake_torque**=3000.0</font>, <font color="#00a6ed">**position**=(0.0,0.0,0.0)</font>)  
+- <a name="carla.WheelPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**tire_friction**=3.0</font>, <font color="#00a6ed">**max_steer_angle**=70.0</font>, <font color="#00a6ed">**radius**=30.0</font>, <font color="#00a6ed">**cornering_stiffness**=1000.0</font>, <font color="#00a6ed">**abs**=False</font>, <font color="#00a6ed">**traction_control**=False</font>, <font color="#00a6ed">**max_brake_torque**=1500.0</font>, <font color="#00a6ed">**max_handbrake_torque**=3000.0</font>, <font color="#00a6ed">**position**=(0.0,0.0,0.0)</font>)  
     - **Parameters:**
         - `tire_friction` (_float_)  
         - `max_steer_angle` (_float<small> - degrees</small>_)  
         - `radius` (_float<small> - centimerers</small>_)  
+        - `cornering_stiffness` (_float_)  
+        - `abs` (_bool_)  
+        - `traction_control` (_bool_)  
         - `max_brake_torque` (_float<small> - N*m</small>_)  
         - `max_handbrake_torque` (_float<small> - N*m</small>_)  
         - `position` (_[carla.Vector3D](#carla.Vector3D)<small> - meters</small>_)  
