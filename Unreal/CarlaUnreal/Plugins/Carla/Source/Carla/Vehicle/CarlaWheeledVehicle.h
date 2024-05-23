@@ -95,6 +95,13 @@ public:
   /// @{
 public:
 
+  /// Get chaos wheeled vehicle movement component casted
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  UChaosWheeledVehicleMovementComponent* GetChaosWheeledVehicleMovementComponent() const
+  {
+    return Cast<UChaosWheeledVehicleMovementComponent>(GetVehicleMovement());
+  }
+  
   /// Vehicle control currently applied to this vehicle.
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   const FVehicleControl &GetVehicleControl() const
@@ -190,10 +197,7 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void SetSimulatePhysics(bool enabled);
 
-#if 0
-  void SetWheelCollision(UWheeledVehicleMovementComponent4W *Vehicle4W, const FVehiclePhysicsControl &PhysicsControl);
-#endif
-  void SetWheelCollisionNW(UWheeledVehicleMovementComponentNW *VehicleNW, const FVehiclePhysicsControl &PhysicsControl);
+  void SetWheelCollisionNW(UChaosWheeledVehicleMovementComponent *VehicleNW, const FVehiclePhysicsControl &PhysicsControl);
 
   void SetVehicleLightState(const FVehicleLightState &LightState);
 
@@ -205,6 +209,8 @@ public:
     return false;
   }
 
+  void PrintROS2Message(const char* Message);
+
   /// @}
   // ===========================================================================
   /// @name Vehicle input control
@@ -213,27 +219,10 @@ public:
 public:
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  void ApplyVehicleControl(const FVehicleControl &Control, EVehicleInputPriority Priority)
-  {
-    if (bAckermannControlActive) {
-      AckermannController.Reset();
-    }
-    bAckermannControlActive = false;
-
-    if (InputControl.Priority <= Priority)
-    {
-      InputControl.Control = Control;
-      InputControl.Priority = Priority;
-    }
-  }
+  void ApplyVehicleControl(const FVehicleControl &Control, EVehicleInputPriority Priority);
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  void ApplyVehicleAckermannControl(const FVehicleAckermannControl &AckermannControl, EVehicleInputPriority Priority)
-  {
-    bAckermannControlActive = true;
-    LastAppliedAckermannControl = AckermannControl;
-    AckermannController.SetTargetPoint(AckermannControl);
-  }
+  void ApplyVehicleAckermannControl(const FVehicleAckermannControl &AckermannControl, EVehicleInputPriority Priority);
 
   bool IsAckermannControlActive() const
   {
@@ -330,6 +319,15 @@ protected:
   UFUNCTION(BlueprintCallable, CallInEditor)
   void ResetConstraints();
 
+public:
+  struct
+  {
+    EVehicleInputPriority Priority = EVehicleInputPriority::INVALID;
+    FVehicleControl Control;
+    FVehicleLightState LightState;
+  }
+  InputControl;
+
 private:
 
   /// Current state of the vehicle controller (for debugging purposes).
@@ -339,13 +337,6 @@ private:
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
   UVehicleVelocityControl* VelocityControl;
 
-  struct
-  {
-    EVehicleInputPriority Priority = EVehicleInputPriority::INVALID;
-    FVehicleControl Control;
-    FVehicleLightState LightState;
-  }
-  InputControl;
 
   FVehicleControl LastAppliedControl;
   FVehicleAckermannControl LastAppliedAckermannControl;

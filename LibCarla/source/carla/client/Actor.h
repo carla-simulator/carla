@@ -108,6 +108,14 @@ namespace client {
     /// Enable or disable gravity on this actor.
     void SetEnableGravity(bool enabled = true);
 
+    void ApplyTexture(
+      const rpc::MaterialParameter& MaterialParameter,
+      const rpc::TextureColor& Texture);
+
+    void ApplyTexture(
+      const rpc::MaterialParameter& MaterialParameter,
+      const rpc::TextureFloatColor& Texture);
+
     rpc::ActorState GetActorState() const;
 
     bool IsAlive() const {

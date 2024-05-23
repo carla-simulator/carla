@@ -1,3 +1,5 @@
+SETLOCAL EnableDelayedExpansion
+
 echo Starting Content Download...
 if not exist "Unreal\CarlaUnreal\Content" mkdir Unreal\CarlaUnreal\Content
 start cmd /c git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla
@@ -44,7 +46,7 @@ if errorlevel 1 (
 
 echo Installing Python Pacakges...
 python -m pip install --upgrade pip || exit /b
-python -m install -r requirements.txt || exit /b
+python -m pip install -r requirements.txt || exit /b
 echo Python Pacakges Installed...
 
 
@@ -56,33 +58,42 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     echo Found UnrealEngine5 %CARLA_UNREAL_ENGINE_PATH% - OK
 ) else if exist ..\UnrealEngine5_carla (
     echo Found UnrealEngine5 ..\UnrealEngine5_carla - OK
-    set CARLA_UNREAL_ENGINE_PATH=%cd:\=\\%\\..\\UnrealEngine5_carla
-    setx CARLA_UNREAL_ENGINE_PATH %cd:\=\\%\\..\\UnrealEngine5_carla
-    REM TODO: Check if UnrealEngine binary file exists and if not build it
+    pushd ..
+    pushd UnrealEngine5_carla
+    set CARLA_UNREAL_ENGINE_PATH=!cd!
+    setx CARLA_UNREAL_ENGINE_PATH !cd!
+    popd
+    popd
 ) else (
     echo Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - FAIL
     pushd ..
     echo Cloning CARLA Unreal Engine 5...
     git clone -b ue5-dev-carla https://github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla || exit /b
     pushd UnrealEngine5_carla
-    echo Setup CARLA Unreal Engine 5...
-    call Setup.bat || exit /b
-    echo GenerateProjectFiles CARLA Unreal Engine 5...
-    call GenerateProjectFiles.bat || exit /b
-    echo Opening Visual Studio 2022...
-    msbuild Engine\Intermediate\ProjectFiles\UE5.vcxproj /property:Configuration="Development_Editor" /property:Platform="x64" || exit /b
-    set CARLA_UNREAL_ENGINE_PATH=%cd:\=\\%\\..\\UnrealEngine5_carla
-    setx CARLA_UNREAL_ENGINE_PATH %cd:\=\\%\\..\\UnrealEngine5_carla
+    set CARLA_UNREAL_ENGINE_PATH=!cd!
+    setx CARLA_UNREAL_ENGINE_PATH !cd!
     popd
     popd
 )
-
+pushd ..
+pushd UnrealEngine5_carla
+echo Setup CARLA Unreal Engine 5...
+call Setup.bat || exit /b
+echo GenerateProjectFiles CARLA Unreal Engine 5...
+call GenerateProjectFiles.bat || exit /b
+echo Opening Visual Studio 2022...
+msbuild Engine\Intermediate\ProjectFiles\UE5.vcxproj /property:Configuration="Development_Editor" /property:Platform="x64" || exit /b
+popd
+popd
 
 echo Configuring CARLA...
 call cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=%CARLA_UNREAL_ENGINE_PATH% || exit /b
 
 echo Buiding CARLA...
 call cmake --build Build || exit /b
+
+echo Installing PythonAPI...
+cmake --build Build --target carla-python-api-install
 
 echo Build Succesfull :)
 echo Launching Unreal Editor with CARLA...

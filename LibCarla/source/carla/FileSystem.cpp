@@ -17,7 +17,7 @@ namespace carla {
 
   void FileSystem::ValidateFilePath(std::string &filepath, const std::string &ext) {
     fs::path path(filepath);
-    if (path.extension() != ext)
+    if (!ext.empty() && path.extension() != ext)
       path.replace_extension(ext);
     auto parent = path.parent_path();
     if (!fs::exists(parent))
