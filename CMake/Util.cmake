@@ -3,7 +3,7 @@
 macro (carla_two_step_configure_file DESTINATION SOURCE)
   carla_message ("Configuring file ${DESTINATION}")
   # Configure-time step; evaluate variables:
-  configure_file (${SOURCE} ${DESTINATION})
+  configure_file (${SOURCE} ${DESTINATION} @ONLY)
   # Generate-time step; evaluate generator expressions:
   file (GENERATE OUTPUT ${DESTINATION} INPUT ${DESTINATION})
 endmacro ()
@@ -31,6 +31,12 @@ endfunction ()
 
 
 
+macro (carla_option NAME DESCRIPTION VALUE)
+  option (${NAME} ${DESCRIPTION} ${VALUE})
+  carla_message ("(option) ${NAME} : ${VALUE}")
+endmacro ()
+
 macro (carla_string_option NAME DESCRIPTION VALUE)
-  set (${NAME} "${VALUE}" CACHE STRING ${DESCRIPTION})
+  set (${NAME} "${VALUE}")
+  carla_message ("(option) ${NAME} : \"${VALUE}\"")
 endmacro ()

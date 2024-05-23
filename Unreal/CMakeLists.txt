@@ -33,6 +33,15 @@ set (
   ${CARLA_UE_PATH}/CarlaUnreal.uproject
 )
 
+set (
+  CARLA_UE_CONTENT_PATH
+  ${CARLA_UE_PATH}/Content/Carla
+)
+
+if (NOT EXISTS ${CARLA_UE_CONTENT_PATH}/.git)
+  carla_error ("Missing CARLA content.")
+endif ()
+
 if (ENABLE_ROS2)
   set (LAUNCH_ARGS ${LAUNCH_ARGS} --ros2)
 endif()
@@ -167,6 +176,10 @@ if (WIN32)
     CARLA_UE_BUILD_COMMAND_PREFIX
       ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat
   )
+  set (
+    CARLA_UE_UAT_COMMAND_PREFIX
+      ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/RunUAT.bat
+  )
 else ()
   set (
     CARLA_UE_GENERATE_PROJECT_FILES_COMMAND
@@ -179,6 +192,10 @@ else ()
   set (
     CARLA_UE_BUILD_COMMAND_PREFIX
       ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/${UE_SYSTEM_NAME}/Build.sh
+  )
+  set (
+    CARLA_UE_UAT_COMMAND_PREFIX
+      ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/RunUAT.sh
   )
 endif ()
 
@@ -272,7 +289,7 @@ file (
 
 
 add_custom_target (
-  CarlaUnreal
+  carla-unreal
   COMMAND
     ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnreal
@@ -288,12 +305,12 @@ add_custom_target (
 )
 
 add_dependencies (
-  CarlaUnreal
+  carla-unreal
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
 add_custom_target (
-  CarlaUnrealEditor
+  carla-unreal-editor
   COMMAND
     ${CARLA_UE_BUILD_COMMAND_PREFIX} 
     CarlaUnrealEditor
@@ -309,9 +326,94 @@ add_custom_target (
 )
 
 add_dependencies (
-  CarlaUnrealEditor
+  carla-unreal-editor
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
+
+function(add_carla_ue_package_target TARGET_NAME_SUFFIX UE_BUILD_CONFIGURATION)
+  add_custom_target (
+    carla-unreal-package${TARGET_NAME_SUFFIX}
+    COMMAND
+      ${CARLA_UE_BUILD_COMMAND_PREFIX}
+      CarlaUnreal
+      ${UE_SYSTEM_NAME}
+      ${UE_BUILD_CONFIGURATION}
+      -project=${CARLA_UE_PROJECT_PATH}
+      -game
+      -buildscw
+    COMMAND
+      ${CARLA_UE_UAT_COMMAND_PREFIX}
+      BuildCookRun
+      -project=${CARLA_UE_PROJECT_PATH}
+      -nocompileeditor
+      -nop4
+      -cook
+      -stage
+      -archive
+      -package
+      -iterate
+      -clientconfig=${UE_BUILD_CONFIGURATION}
+      -TargetPlatform=${UE_SYSTEM_NAME}
+      -Platform=${UE_SYSTEM_NAME}
+      -prereqs
+      -build
+      -archivedirectory=${CARLA_PACKAGE_PATH}
+    DEPENDS
+      ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
+      USES_TERMINAL
+      VERBATIM
+    )
+
+  set(CARLA_TARGET_PACKAGE_PATH ${CARLA_PACKAGE_PATH}/${UE_SYSTEM_NAME})
+  add_custom_command(
+    TARGET carla-unreal-package${TARGET_NAME_SUFFIX}
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE REMOVING UNREAL PACKAGE EXTRA FILES STARTED **********"
+    COMMAND ${CMAKE_COMMAND}
+      -DCARLA_TARGET_PACKAGE_PATH=${CARLA_TARGET_PACKAGE_PATH}
+      -P${CMAKE_CURRENT_SOURCE_DIR}/Package/RemoveUnrealPackageExtraFiles.cmake
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE REMOVING UNREAL PACKAGE EXTRA FILES COMPLETED **********"
+
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE COPYING CARLA ADDITIONAL FILES STARTED **********"
+    COMMAND ${CMAKE_COMMAND}
+      -DCARLA_SOURCE_DIR=${CARLA_SOURCE_DIR}
+      -DCARLA_TARGET_PACKAGE_PATH=${CARLA_TARGET_PACKAGE_PATH}
+      -DCARLA_BINARY_DIR=${CARLA_BINARY_DIR}
+      -P${CMAKE_CURRENT_SOURCE_DIR}/Package/CopyCarlaAdditionalFiles.cmake
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE COPYING CARLA ADDITIONAL FILES COMPLETED **********"
+
+    COMMAND ${CMAKE_COMMAND} -E echo "********** COMPRESSING PACKAGE STARTED **********"
+    COMMAND ${CMAKE_COMMAND}
+      -DCARLA_PACKAGE_PATH=${CARLA_PACKAGE_PATH}
+      -DCARLA_TARGET_PACKAGE_PATH=${CARLA_TARGET_PACKAGE_PATH}
+      -DTARGET_NAME_SUFFIX=${TARGET_NAME_SUFFIX}
+      -P${CMAKE_CURRENT_SOURCE_DIR}/Package/Compress.cmake
+    COMMAND ${CMAKE_COMMAND} -E echo "********** COMPRESSING PACKAGE COMPLETED **********"
+  )
+
+  add_dependencies (
+    carla-unreal-package${TARGET_NAME_SUFFIX}
+    ${UE_DEPENDENCIES_ORDER_ONLY}
+  )
+
+  add_custom_target (
+    package${TARGET_NAME_SUFFIX}
+  )
+
+  add_dependencies (
+    package${TARGET_NAME_SUFFIX}
+    carla-unreal-package${TARGET_NAME_SUFFIX}
+  )
+endfunction()
+
+# Docs for UE5 build configurations:
+# https://docs.unrealengine.com/4.27/en-US/ProductionPipelines/DevelopmentSetup/BuildConfigurations/
+add_carla_ue_package_target("" Shipping)
+add_carla_ue_package_target(-Shipping Shipping)
+add_carla_ue_package_target(-Debug Debug)
+add_carla_ue_package_target(-DebugGame DebugGame)
+add_carla_ue_package_target(-Development Development)
+add_carla_ue_package_target(-Test Test)
 
 
 
@@ -357,7 +459,7 @@ add_custom_target (
 
 add_dependencies (
   launch
-  CarlaUnrealEditor
+  carla-unreal-editor
   prelaunch-content-check
 )
 

@@ -349,7 +349,7 @@ void FCarlaActor::SetActorGlobalTransform(
       LocalTransform =
           LargeMap->GlobalToLocalTransform(LocalTransform);
     }
-    GetActor()->SetActorRelativeTransform(
+    GetActor()->SetActorTransform(
         LocalTransform,
         false,
         nullptr,
