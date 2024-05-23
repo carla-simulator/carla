@@ -42,7 +42,27 @@ then
     sudo apt-get install retry
 fi
 retry --until=success --times=12 --delay=300 -- sudo apt-get update
-retry --until=success --times=12 --delay=300 -- sudo apt-get install build-essential make ninja-build libvulkan1 python3 python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl libtool rsync libxml2-dev git git-lfs
+retry --until=success --times=12 --delay=300 -- sudo apt-get -y install \
+    build-essential \
+    g++-12 \
+    gcc-12 \
+    make \
+    ninja-build \
+    libvulkan1 \
+    python3 \
+    python3-dev \
+    python3-pip \
+    libpng-dev \
+    libtiff5-dev \
+    libjpeg-dev \
+    tzdata \
+    sed \
+    curl \
+    libtool \
+    rsync \
+    libxml2-dev \
+    git \
+    git-lfs
 echo "Ubuntu Pacakges Installed..."
 
 echo "Installing Python Pacakges..."
@@ -103,7 +123,13 @@ popd
 popd
 
 echo "Configuring CARLA..."
-retry --until=success --times=10 -- cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/LinuxToolchain.cmake -DLAUNCH_ARGS="-prefernvidia" -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH
+retry --until=success --times=10 -- cmake -G Ninja -S . -B Build \
+    --toolchain=$PWD/CMake/LinuxToolchain.cmake \
+    -DLAUNCH_ARGS="-prefernvidia" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DENABLE_ROS2=ON \
+    -DBUILD_CARLA_UNREAL=ON \
+    -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH
 echo "Building CARLA..."
 retry --until=success --times=10 -- cmake --build Build
 echo "Installing PythonAPI..."
