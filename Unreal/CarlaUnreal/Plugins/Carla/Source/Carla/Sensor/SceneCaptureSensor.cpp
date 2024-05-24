@@ -10,7 +10,6 @@
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 #include "Engine/PostProcessVolume.h"
 #include "GameFramework/SpectatorPawn.h"
-#include "EditorViewportClient.h"
 
 #include <mutex>
 #include <atomic>

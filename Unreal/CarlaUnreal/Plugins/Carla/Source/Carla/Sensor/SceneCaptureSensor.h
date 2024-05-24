@@ -115,6 +115,17 @@ struct FCameraGBufferFloat
 
 
 
+class FSceneCaptureSensorPostProcessOptions
+{
+  FPostProcessSettings PostProcessSettings;
+
+  FEngineShowFlags EngineShowFlags;
+
+public:
+
+  void EnablePostProcessingEffects(bool Enable);
+
+};
 
 
 
@@ -368,6 +379,10 @@ public:
 
   UFUNCTION(BlueprintCallable)
   float GetChromAberrOffset() const;
+
+  UFUNCTION(BlueprintCallable)
+  virtual void ApplyPostProcessOptions(
+    const FSceneCaptureSensorPostProcessOptions& PPOptions);
 
   /// Use for debugging purposes only.
   UFUNCTION(BlueprintCallable)
