@@ -10,6 +10,7 @@
 #include "Carla/Sensor/Sensor.h"
 #include "Carla/Sensor/UE4_Overridden/SceneCaptureComponent2D_CARLA.h"
 #include "Carla/Sensor/ImageUtil.h"
+#include "Carla/Sensor/PostProcessConfig.h"
 
 #include "Async/Async.h"
 
@@ -111,20 +112,6 @@ struct FCameraGBufferFloat
 
   mutable bool bIsUsed = false;
   FDataStream Stream;
-};
-
-
-
-class FSceneCaptureSensorPostProcessOptions
-{
-  FPostProcessSettings PostProcessSettings;
-
-  FEngineShowFlags EngineShowFlags;
-
-public:
-
-  void EnablePostProcessingEffects(bool Enable);
-
 };
 
 
@@ -380,9 +367,8 @@ public:
   UFUNCTION(BlueprintCallable)
   float GetChromAberrOffset() const;
 
-  UFUNCTION(BlueprintCallable)
-  virtual void ApplyPostProcessOptions(
-    const FSceneCaptureSensorPostProcessOptions& PPOptions);
+  virtual void UpdatePostProcessConfig(
+    FPostProcessConfig& InOutPostProcessConfig);
 
   /// Use for debugging purposes only.
   UFUNCTION(BlueprintCallable)

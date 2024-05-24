@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla/Sensor/SceneCaptureSensor.h"
+#include "Carla/Sensor/PostProcessConfig.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Actor/ActorBlueprintFunctionLibrary.h"
@@ -450,6 +451,11 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
   return CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset;
 }
 
+void ASceneCaptureSensor::UpdatePostProcessConfig(
+    FPostProcessConfig& InOutPostProcessConfig)
+{
+}
+
 bool ASceneCaptureSensor::ApplyPostProcessVolumeToSensor(APostProcessVolume* Origin, ASceneCaptureSensor* Dest, bool bOverrideCurrentCamera)
 {
   if(!IsValid(Origin) || !IsValid(Dest))
@@ -580,9 +586,14 @@ void ASceneCaptureSensor::BeginPlay()
       GetWorld(),
       FString("g.TimeoutForBlockOnRenderFence 300000"));
 
-  SceneCaptureSensor_local_ns::ConfigureShowFlags(
-      CaptureComponent2D->ShowFlags,
-      bEnablePostProcessingEffects);
+  auto PostProcessConfig = FPostProcessConfig(
+      CaptureComponent2D->PostProcessSettings,
+      CaptureComponent2D->ShowFlags);
+  PostProcessConfig.UpdateFromSceneCaptureComponent2D(*CaptureComponent2D);
+  PostProcessConfig.EnablePostProcessingEffects(ArePostProcessingEffectsEnabled());
+  UpdatePostProcessConfig(PostProcessConfig);
+  CaptureComponent2D->ShowFlags = PostProcessConfig.EngineShowFlags;
+  CaptureComponent2D->PostProcessSettings = PostProcessConfig.PostProcessSettings;
 
   // This ensures the camera is always spawning the raindrops in case the
   // weather was previously set to have rain.
@@ -720,39 +731,6 @@ namespace SceneCaptureSensor_local_ns {
   {
     auto &PostProcessSettings = CaptureComponent2D.PostProcessSettings;
 
-    PostProcessSettings.bOverride_LumenReflectionQuality = true;
-    PostProcessSettings.bOverride_LumenSceneLightingQuality = true;
-    PostProcessSettings.bOverride_LumenSceneDetail = true;
-    PostProcessSettings.bOverride_LumenSceneViewDistance = true;
-    PostProcessSettings.bOverride_LumenSceneLightingUpdateSpeed = true;
-    PostProcessSettings.bOverride_LumenFinalGatherQuality = true;
-    PostProcessSettings.bOverride_LumenFinalGatherLightingUpdateSpeed = true;
-    PostProcessSettings.bOverride_LumenMaxTraceDistance = true;
-    PostProcessSettings.bOverride_LumenDiffuseColorBoost = true;
-    PostProcessSettings.bOverride_LumenSkylightLeaking = true;
-    PostProcessSettings.bOverride_LumenFullSkylightLeakingDistance = true;
-    PostProcessSettings.bOverride_LumenRayLightingMode = true;
-    PostProcessSettings.bOverride_LumenFrontLayerTranslucencyReflections = true;
-    PostProcessSettings.bOverride_LumenMaxReflectionBounces = true;
-    PostProcessSettings.bOverride_LumenSurfaceCacheResolution = true;
-    PostProcessSettings.LumenSceneLightingQuality = 2.0F;
-    PostProcessSettings.LumenSceneDetail = 1.0F;
-    PostProcessSettings.LumenSceneViewDistance = 10000.0F;
-    PostProcessSettings.LumenSceneLightingUpdateSpeed = 1.0F;
-    PostProcessSettings.LumenFinalGatherQuality = 1.0F;
-    PostProcessSettings.LumenFinalGatherLightingUpdateSpeed = 1.0F;
-    PostProcessSettings.LumenMaxTraceDistance = 10000.0F;
-    PostProcessSettings.LumenDiffuseColorBoost = 1.0F;
-    PostProcessSettings.LumenSkylightLeaking = 0.0F;
-    PostProcessSettings.LumenFullSkylightLeakingDistance = 0.0F;
-    PostProcessSettings.LumenSurfaceCacheResolution = 1.0F;
-    PostProcessSettings.LumenReflectionQuality = 2.0F;
-    PostProcessSettings.LumenRayLightingMode = ELumenRayLightingModeOverride::Default;
-    PostProcessSettings.LumenFrontLayerTranslucencyReflections = true;
-    PostProcessSettings.LumenMaxReflectionBounces = 8;
-
-
-
     // Exposure
     PostProcessSettings.bOverride_AutoExposureMethod = true;
     PostProcessSettings.AutoExposureMethod = EAutoExposureMethod::AEM_Histogram;
@@ -831,180 +809,4 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_LensFlareIntensity = true;
     PostProcessSettings.LensFlareIntensity = 0.1;
   }
-
-  // Remove the show flags that might interfere with post-processing effects
-  // like depth and semantic segmentation.
-  static void ConfigureShowFlags(FEngineShowFlags &ShowFlags, bool bPostProcessing)
-  {
-    if (bPostProcessing)
-    {
-      // This block of code {
-      ShowFlags.SetLensFlares(true);
-      ShowFlags.SetEyeAdaptation(true);
-      ShowFlags.SetColorGrading(true);
-      ShowFlags.SetCameraImperfections(true);
-      ShowFlags.SetDepthOfField(true);
-      ShowFlags.SetVignette(true);
-      ShowFlags.SetGrain(true);
-      ShowFlags.SetSeparateTranslucency(true);
-      ShowFlags.SetScreenSpaceReflections(true);
-      ShowFlags.SetTemporalAA(true);
-      ShowFlags.SetAmbientOcclusion(true);
-      ShowFlags.SetIndirectLightingCache(true);
-      ShowFlags.SetLightShafts(true);
-      ShowFlags.SetPostProcessMaterial(true);
-      ShowFlags.SetDistanceFieldAO(true);
-      // TODO: Remove when Physical page pool size scales automatically with demand
-      ShowFlags.SetVirtualShadowMapCaching(false);
-      // } must be kept in sync with ShowFlags.EnableAdvancedFeatures(), but activate Lumen.
-
-      ShowFlags.SetMotionBlur(true);
-      return;
-    }
-
-    ShowFlags.SetAmbientOcclusion(false);
-    ShowFlags.SetAntiAliasing(false);
-    ShowFlags.SetVolumetricFog(false);
-    // ShowFlags.SetAtmosphericFog(false);
-    // ShowFlags.SetAudioRadius(false);
-    // ShowFlags.SetBillboardSprites(false);
-    ShowFlags.SetBloom(false);
-    // ShowFlags.SetBounds(false);
-    // ShowFlags.SetBrushes(false);
-    // ShowFlags.SetBSP(false);
-    // ShowFlags.SetBSPSplit(false);
-    // ShowFlags.SetBSPTriangles(false);
-    // ShowFlags.SetBuilderBrush(false);
-    // ShowFlags.SetCameraAspectRatioBars(false);
-    // ShowFlags.SetCameraFrustums(false);
-    ShowFlags.SetCameraImperfections(false);
-    ShowFlags.SetCameraInterpolation(false);
-    // ShowFlags.SetCameraSafeFrames(false);
-    // ShowFlags.SetCollision(false);
-    // ShowFlags.SetCollisionPawn(false);
-    // ShowFlags.SetCollisionVisibility(false);
-    ShowFlags.SetColorGrading(false);
-    // ShowFlags.SetCompositeEditorPrimitives(false);
-    // ShowFlags.SetConstraints(false);
-    // ShowFlags.SetCover(false);
-    // ShowFlags.SetDebugAI(false);
-    // ShowFlags.SetDecals(false);
-    // ShowFlags.SetDeferredLighting(false);
-    ShowFlags.SetDepthOfField(false);
-    ShowFlags.SetDiffuse(false);
-    ShowFlags.SetDirectionalLights(false);
-    ShowFlags.SetDirectLighting(false);
-    // ShowFlags.SetDistanceCulledPrimitives(false);
-    // ShowFlags.SetDistanceFieldAO(false);
-    // ShowFlags.SetDistanceFieldGI(false);
-    ShowFlags.SetDynamicShadows(false);
-    // ShowFlags.SetEditor(false);
-    ShowFlags.SetEyeAdaptation(false);
-    ShowFlags.SetFog(false);
-    // ShowFlags.SetGame(false);
-    // ShowFlags.SetGameplayDebug(false);
-    // ShowFlags.SetGBufferHints(false);
-    ShowFlags.SetGlobalIllumination(false);
-    ShowFlags.SetGrain(false);
-    // ShowFlags.SetGrid(false);
-    // ShowFlags.SetHighResScreenshotMask(false);
-    // ShowFlags.SetHitProxies(false);
-    ShowFlags.SetHLODColoration(false);
-    ShowFlags.SetHMDDistortion(false);
-    // ShowFlags.SetIndirectLightingCache(false);
-    // ShowFlags.SetInstancedFoliage(false);
-    // ShowFlags.SetInstancedGrass(false);
-    // ShowFlags.SetInstancedStaticMeshes(false);
-    // ShowFlags.SetLandscape(false);
-    // ShowFlags.SetLargeVertices(false);
-    ShowFlags.SetLensFlares(false);
-    ShowFlags.SetLevelColoration(false);
-    ShowFlags.SetLightComplexity(false);
-    ShowFlags.SetLightFunctions(false);
-    ShowFlags.SetLightInfluences(false);
-    ShowFlags.SetLighting(false);
-    ShowFlags.SetLightMapDensity(false);
-    ShowFlags.SetLightRadius(false);
-    ShowFlags.SetLightShafts(false);
-    // ShowFlags.SetLOD(false);
-    ShowFlags.SetLODColoration(false);
-    // ShowFlags.SetMaterials(false);
-    // ShowFlags.SetMaterialTextureScaleAccuracy(false);
-    // ShowFlags.SetMeshEdges(false);
-    // ShowFlags.SetMeshUVDensityAccuracy(false);
-    // ShowFlags.SetModeWidgets(false);
-    ShowFlags.SetMotionBlur(false);
-    // ShowFlags.SetNavigation(false);
-    ShowFlags.SetOnScreenDebug(false);
-    // ShowFlags.SetOutputMaterialTextureScales(false);
-    // ShowFlags.SetOverrideDiffuseAndSpecular(false);
-    // ShowFlags.SetPaper2DSprites(false);
-    ShowFlags.SetParticles(false);
-    // ShowFlags.SetPivot(false);
-    ShowFlags.SetPointLights(false);
-    // ShowFlags.SetPostProcessing(false);
-    // ShowFlags.SetPostProcessMaterial(false);
-    // ShowFlags.SetPrecomputedVisibility(false);
-    // ShowFlags.SetPrecomputedVisibilityCells(false);
-    // ShowFlags.SetPreviewShadowsIndicator(false);
-    // ShowFlags.SetPrimitiveDistanceAccuracy(false);
-    ShowFlags.SetPropertyColoration(false);
-    // ShowFlags.SetQuadOverdraw(false);
-    // ShowFlags.SetReflectionEnvironment(false);
-    // ShowFlags.SetReflectionOverride(false);
-    ShowFlags.SetRefraction(false);
-    // ShowFlags.SetRendering(false);
-    ShowFlags.SetSceneColorFringe(false);
-    // ShowFlags.SetScreenPercentage(false);
-    ShowFlags.SetScreenSpaceAO(false);
-    ShowFlags.SetScreenSpaceReflections(false);
-    // ShowFlags.SetSelection(false);
-    // ShowFlags.SetSelectionOutline(false);
-    // ShowFlags.SetSeparateTranslucency(false);
-    // ShowFlags.SetShaderComplexity(false);
-    // ShowFlags.SetShaderComplexityWithQuadOverdraw(false);
-    // ShowFlags.SetShadowFrustums(false);
-    // ShowFlags.SetSkeletalMeshes(false);
-    // ShowFlags.SetSkinCache(false);
-    ShowFlags.SetSkyLighting(false);
-    // ShowFlags.SetSnap(false);
-    // ShowFlags.SetSpecular(false);
-    // ShowFlags.SetSplines(false);
-    ShowFlags.SetSpotLights(false);
-    // ShowFlags.SetStaticMeshes(false);
-    ShowFlags.SetStationaryLightOverlap(false);
-    // ShowFlags.SetStereoRendering(false);
-    // ShowFlags.SetStreamingBounds(false);
-    ShowFlags.SetSubsurfaceScattering(false);
-    // ShowFlags.SetTemporalAA(false);
-    // ShowFlags.SetTessellation(false);
-    // ShowFlags.SetTestImage(false);
-    // ShowFlags.SetTextRender(false);
-    // ShowFlags.SetTexturedLightProfiles(false);
-    ShowFlags.SetTonemapper(false);
-    // ShowFlags.SetTranslucency(false);
-    // ShowFlags.SetVectorFields(false);
-    // ShowFlags.SetVertexColors(false);
-    // ShowFlags.SetVignette(false);
-    // ShowFlags.SetVisLog(false);
-    // ShowFlags.SetVisualizeAdaptiveDOF(false);
-    // ShowFlags.SetVisualizeBloom(false);
-    ShowFlags.SetVisualizeBuffer(false);
-    ShowFlags.SetVisualizeDistanceFieldAO(false);
-    ShowFlags.SetVisualizeDOF(false);
-    ShowFlags.SetVisualizeHDR(false);
-    ShowFlags.SetVisualizeLightCulling(false);
-    ShowFlags.SetVisualizeMeshDistanceFields(false);
-    ShowFlags.SetVisualizeMotionBlur(false);
-    ShowFlags.SetVisualizeOutOfBoundsPixels(false);
-    ShowFlags.SetVisualizeSenses(false);
-    ShowFlags.SetVisualizeShadingModels(false);
-    ShowFlags.SetVisualizeSSR(false);
-    ShowFlags.SetVisualizeSSS(false);
-    // ShowFlags.SetVolumeLightingSamples(false);
-    // ShowFlags.SetVolumes(false);
-    // ShowFlags.SetWidgetComponents(false);
-    // ShowFlags.SetWireframe(false);
-  }
-
 } // namespace SceneCaptureSensor_local_ns
