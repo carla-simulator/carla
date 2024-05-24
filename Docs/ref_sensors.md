@@ -15,6 +15,9 @@
 - [__Instance segmentation camera__](#instance-segmentation-camera)
 - [__DVS camera__](#dvs-camera)
 - [__Optical Flow camera__](#optical-flow-camera)
+- [__V2X sensor__](#v2x-sensor)
+    - [Cooperative awareness](#cooperative-awareness-message)
+    - [Custom message](#custom-v2x-message)
 
 !!! Important
     All the sensors use the UE coordinate system (__x__-*forward*, __y__-*right*, __z__-*up*), and return coordinates in local space. When using any visualization software, pay attention to its coordinate system. Many invert the Y-axis, so visualizing the sensor data directly may result in mirrored outputs.  
@@ -904,3 +907,102 @@ The Optical Flow camera captures the motion perceived from the point of view of 
 | `raw_data` | bytes | Array of BGRA 64-bit pixels containing two float values. |
 
 <br>
+
+---
+
+## V2X sensor 
+
+Vehicle-to-everything (V2X) communication is an important aspect for future applications of cooperative intelligent transportation systems. In real vehicles, this requires a dedicated onboard unit (OBU) in each vehicle, that is able to send and receive information over wireless channels. Depending on the region (Europe, China, USA), different physical technologies, protocols and application messaging formats are used. 
+
+CARLA currently supports simulation of a simple broadcast wireless channel and two application messages. Protocols for network access and forwarding are not supported yet. The two implemented messages are the [*Cooperative Awarness Message*](#cooperative-awareness-message) according to the European standard ETSI, and a [*custom message*](#custom-v2x-message) type, that can be used to transmit arbitrary string data (e.g. JSON). There are two distinct sensors for V2X communication, that can be used separately, one for each application message type.
+
+Basically, the wireless channel incorporates the following calculation for both sensors:
+
+    ReceivedPower = OtherTransmitPower + combined_antenna_gain - loss
+
+    IF (ReceivedPower >= receiver_sensitivity)
+        THEN message is received
+
+To simulate V2X communication, at least two V2X sensors of the same type need to be spawned (at least one sender-receiver pair). Because the received power is calculated on the receiver-side V2X sensor, only the antenna gain that is specified on the receiver-side sensor is incorporated in this calculation. Transmission power and receiver sensitivity can be configured (see [Blueprint attributes](#v2x-sensors-blueprint-attributes)).
+
+The *loss* calculation depends on 
+- the visbility condition between sender and receiver: line of sight (no obstacles), non-line of sight obstructed by buildings, or non-line of sight obstructed by vehicles, and
+- the scenario: highway, rural, or urban environment
+
+While the visibility is simulated within CARLA, the scenario can be configured by the user (see [Blueprint attributes](#v2x-sensors-blueprint-attributes)), as well as several other attributes of the wireless channel.
+
+### Sensor (sub)types
+
+#### Cooperative Awareness Message
+
+*   __Blueprint:__ sensor.other.v2x
+*   __Output:__ [carla.CAMData](python_api.md#carla.CAMData), triggered according to the ETSI CAM standard, unless configured otherwise
+
+Triggering conditions according to ETSI standard:
+- Heading angle change > $4$°
+- Position difference > $4$ m
+- Speed change > $5$ m/s
+- Time elapsed > CAM Generation time (configurable)
+- Low Frequency Container Time Elapsed $> 500$ ms
+
+For the CAM V2X sensor, additional blueprint attributes apply:
+
+| Blueprint attribute     | Type   | Default  | Description                        |
+|-------------------------|--------|-------------------------|------------------------------------|
+| <td colspan=4> Message generation | 
+| gen\_cam\_min           | float  | $0.1$         |  Minimum elapsed time between two successive CAMs in seconds (s)        |
+| gen\_cam\_max           | float  | $1.0$       |   Maximum elapsed time between two successive CAMs in seconds (s)          |
+| fixed\_rate             | bool   | false [true]     |  Generate a CAM in every CARLA tick (only for debug purposes, will result in slowdown)    |
+| <td colspan=4> Data generation | 
+| `noise_vel_stddev_x` | float  | 0\.0   | Standard deviation parameter in the noise model for velocity (X axis). |
+| `noise_accel_stddev_x`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (X axis).  |
+| `noise_accel_stddev_y`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (Y axis).  |
+| `noise_accel_stddev_z`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (Z axis).  |
+| `noise_yawrate_bias`   | float  | 0\.0   | Mean parameter in the noise model for yaw rate.    |
+| `noise_yawrate_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for yaw rate.  |
+| `noise_alt_bias`   | float  | 0\.0   | Mean parameter in the noise model for altitude.    |
+| `noise_alt_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for altitude.  |
+| `noise_lat_bias`   | float  | 0\.0   | Mean parameter in the noise model for latitude.    |
+| `noise_lat_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for latitude.  |
+| `noise_lon_bias`   | float  | 0\.0   | Mean parameter in the noise model for longitude.   |
+| `noise_lon_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for longitude. |
+| `noise_head_bias`   | float  | 0\.0   | Mean parameter in the noise model for heading.   |
+| `noise_head_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for heading. |
+
+#### Custom V2X Message
+
+*   __Blueprint:__ sensor.other.v2x_custom
+*   __Output:__ [carla.CustomV2XData](python_api.md#carla.CustomV2XData), triggered with next tick after a *send()* was called
+
+##### Methods
+- <a name="carla.Sensor.send"></a>**<font color="#7fb800">send</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)
+The function the user has to call every time to send a message. This function needs for an argument containing an object type [carla.SensorData](#carla.SensorData) to work with.  
+    - **Parameters:**
+        - `data` (_function_) - The called function with one argument containing the sensor data.  
+
+The custom V2X message sensor works a little bit different than other sensors, because it has the *send* function in addition to the *listen* function, that needs to be called, before another sensor of this type will receive anything. The transmission of a custom message is only triggered, when *send* is called. Each message given to the *send* function is only transmitted once to all Custom V2X Message sensors currently spawned.
+
+Example:
+
+    bp = world.get_blueprint_library().find('sensor.other.v2x_custom')
+    sensor = world.spawn_actor(bp, carla.Transform(), attach_to=parent)
+    sensor.send("Hello CARLA")
+
+### V2X sensors blueprint attributes
+
+| Blueprint attribute     | Type   | Default | Description                        |
+|-------------------------|--------|-------------------------|------------------------------------|
+| transmit\_power         | float  | $21.5$       | Sender transmission power in dBm                         |
+| receiver\_sensitivity   | float  | $-99$        | Receiver sensitivity in dBm                                |
+| frequency\_ghz          | float  | $5.9$ | Transmission frequency in GHz. 5.9 GHz is standard for several physical channels.                 |
+| noise\_seed             | int    | $0$   | Random parameter for initialization of noise                           |
+| filter\_distance        | float  | $500$      | Maximum transmission distance in meter, path loss calculations above are skipped for simulation speed      |
+| <td colspan=4> __Path loss model parameters__ |
+| combined\_antenna\_gain | float  | $10.0$   | Combined gain of sender and receiver antennas in dBi, parameter for radiation efficiency and directivity |
+| d\_ref                  | float  | $ 1.0 $    | reference distance for Log-distance path loss model in meter           |
+| path\_loss\_exponent    | float  | 2.7                     |    Loss parameter for non-line of sight due to building obstruction    |
+| scenario                | string | urban   | Options: [urban, rural, highway], defines the fading noise parameters |
+| path\_loss\_model       | string | geometric     |   general path loss model to be used. Options: [geometric, winner]  |
+| use\_etsi\_fading       | bool   | true         |   Use the fading params as mentioned in the ETSI publication (true), or use the custom fading standard deviation         |
+| custom\_fading\_stddev  | float  | 0.0      |   Custom value for fading standard deviation, only used if `use_etsi_fading` is set to `false`              |
+
