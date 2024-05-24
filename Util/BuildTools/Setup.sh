@@ -761,7 +761,7 @@ cp -p ${PROJ_SERVER_LIB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
 # -- Get and compile patchelf --------------------------------------------------
 # ==============================================================================
 
-PATCHELF_VERSION=0.14
+PATCHELF_VERSION=0.12
 PATCHELF_REPO=https://github.com/NixOS/patchelf/archive/${PATCHELF_VERSION}.tar.gz
 
 PATCHELF_TAR=${PATCHELF_VERSION}.tar.gz

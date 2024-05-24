@@ -363,7 +363,10 @@ void UOpenDriveToMap::GenerateTile(){
 
     UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
     UEditorLevelLibrary::SaveCurrentLevel();
+#if PLATFORM_LINUX
     RemoveFromRoot();
+#endif
+
   }
 }
 
