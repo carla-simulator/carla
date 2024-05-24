@@ -113,6 +113,17 @@ else
 fi
 pushd ..
 pushd UnrealEngine5_carla
+echo Checking if UnreaEngine5 is in the last commit...
+git fetch
+if [[ $(git status) =~ "up to date" ]]; then
+    echo UnreaEngine5 is already in the last commit - OK
+else
+    echo UnreaEngine5 is NOT in the last commit - FAIL
+    echo Cleaning UnrealEngine5 build...
+    git clean -fdx
+    echo Pulling last UnrealEngine5 changes...
+    git pull
+fi
 echo "Setup CARLA UnrealEngine5..."
 ./Setup.sh --force
 echo "GenerateProjectFiles CARLA UnrealEngine5..."
