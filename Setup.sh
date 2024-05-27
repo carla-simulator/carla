@@ -112,7 +112,7 @@ else
     echo "CARLA UnrealEngine5 Installed..."
 fi
 pushd ..
-pushd UnrealEngine5_carla
+pushd $CARLA_UNREAL_ENGINE_PATH
 echo Checking if UnreaEngine5 is in the last commit...
 git fetch
 if [[ $(git status) =~ "up to date" ]]; then
