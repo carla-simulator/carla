@@ -1,6 +1,6 @@
 #pragma once
 #include "GameFramework/Actor.h"
-#include "SkyBase.generated.h"
+#include "Sky.generated.h"
 
 UCLASS(Abstract)
 class CARLA_API ASkyBase :
