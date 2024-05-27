@@ -14,29 +14,32 @@ class CARLA_API ASkyBase :
 	public AActor
 {
 	GENERATED_BODY()
+
 public:
 
 	ASkyBase(const FObjectInitializer& ObjectInitializer);
 
-	UPROPERTY(EditAnywhere, Category = "Components")
+protected:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UPostProcessComponent* PostProcessComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UExponentialHeightFogComponent* ExponentialHeightFogComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UDirectionalLightComponent* DirectionalLightComponentSun;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UDirectionalLightComponent* DirectionalLightComponentMoon;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	USkyLightComponent* SkyLightComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UVolumetricCloudComponent* VolumetricCloudComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	USkyAtmosphereComponent* SkyAtmosphereComponent;
 
 
