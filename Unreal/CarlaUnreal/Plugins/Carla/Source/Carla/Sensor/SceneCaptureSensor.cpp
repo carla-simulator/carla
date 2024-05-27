@@ -55,7 +55,7 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
   CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
 
-  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(
+  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D_CARLA>(
       FName(*FString::Printf(TEXT("USceneCaptureComponent2D%d"), SCENE_CAPTURE_COUNTER)));
   check(CaptureComponent2D != nullptr);
   CaptureComponent2D->ViewActor = this;
