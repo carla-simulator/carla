@@ -77,12 +77,12 @@ add_executable (
 )
 
 if (LINUX)
-  target_link_libraries (libsqlite3 PRIVATE ${CMAKE_DL_LIBS})
-  target_link_libraries (libsqlite3 PRIVATE Threads::Threads)
+  target_link_libraries (libsqlite3 PUBLIC ${CMAKE_DL_LIBS})
+  target_link_libraries (libsqlite3 PUBLIC Threads::Threads)
 endif ()
 
 target_link_libraries (
-  sqlite3 PRIVATE
+  sqlite3 PUBLIC
   libsqlite3
 )
 
