@@ -727,6 +727,45 @@ namespace SceneCaptureSensor_local_ns {
   {
     auto &PostProcessSettings = CaptureComponent2D.PostProcessSettings;
 
+    CaptureComponent2D.bUseRayTracingIfEnabled = true;
+    // Lumen
+    PostProcessSettings.bOverride_DynamicGlobalIlluminationMethod = true;
+    PostProcessSettings.DynamicGlobalIlluminationMethod = EDynamicGlobalIlluminationMethod::Lumen;
+    PostProcessSettings.bOverride_LumenSceneLightingQuality = true;
+    PostProcessSettings.LumenSceneLightingQuality = 1.0f;
+    PostProcessSettings.bOverride_LumenSceneDetail = true;
+    PostProcessSettings.LumenSceneDetail = 1.0f;
+    PostProcessSettings.bOverride_LumenSceneViewDistance = true;
+    PostProcessSettings.LumenSceneViewDistance = 20000.0f;
+    PostProcessSettings.bOverride_LumenFinalGatherQuality = true;
+    PostProcessSettings.LumenFinalGatherQuality = 1.0f;
+    PostProcessSettings.bOverride_LumenMaxTraceDistance = true;
+    PostProcessSettings.LumenMaxTraceDistance = 20000.0f;
+    PostProcessSettings.bOverride_LumenSurfaceCacheResolution = true;
+    PostProcessSettings.LumenSurfaceCacheResolution = 1.0f;
+    PostProcessSettings.bOverride_LumenSceneLightingUpdateSpeed = true;
+    PostProcessSettings.LumenSceneLightingUpdateSpeed = 1.0f;
+    PostProcessSettings.bOverride_LumenFinalGatherLightingUpdateSpeed = true;
+    PostProcessSettings.LumenFinalGatherLightingUpdateSpeed = 1.0f;
+    PostProcessSettings.bOverride_LumenDiffuseColorBoost = true;
+    PostProcessSettings.LumenDiffuseColorBoost = 1.0f;
+    PostProcessSettings.bOverride_LumenSkylightLeaking = true;
+    PostProcessSettings.LumenSkylightLeaking = 0.0f;
+    PostProcessSettings.bOverride_LumenFullSkylightLeakingDistance = true;
+    PostProcessSettings.LumenFullSkylightLeakingDistance = 1000.0f;
+    PostProcessSettings.bOverride_ReflectionMethod = true;
+    PostProcessSettings.ReflectionMethod = EReflectionMethod::Lumen;
+    PostProcessSettings.bOverride_LumenReflectionQuality = true;
+    PostProcessSettings.LumenReflectionQuality = 1.0f;
+    PostProcessSettings.bOverride_LumenRayLightingMode = true;
+    PostProcessSettings.LumenRayLightingMode = ELumenRayLightingModeOverride::Default;
+    PostProcessSettings.bOverride_LumenFrontLayerTranslucencyReflections = true;
+    PostProcessSettings.LumenFrontLayerTranslucencyReflections = false;
+    PostProcessSettings.bOverride_LumenMaxReflectionBounces = true;
+    PostProcessSettings.LumenMaxReflectionBounces = 1;
+
+    return;
+
     // Exposure
     PostProcessSettings.bOverride_AutoExposureMethod = true;
     PostProcessSettings.AutoExposureMethod = EAutoExposureMethod::AEM_Histogram;

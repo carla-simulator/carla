@@ -1556,11 +1556,11 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     Camera->SetMotionBlurMaxDistortion(
         RetrieveActorAttributeToFloat("motion_blur_max_distortion", Description.Variations, 5.0f));
     Camera->SetMotionBlurMinObjectScreenSize(
-        RetrieveActorAttributeToFloat("motion_blur_min_object_screen_size", Description.Variations, 0.5f));
+        RetrieveActorAttributeToFloat("motion_blur_min_object_screen_size", Description.Variations, 0.0f));
     Camera->SetLensFlareIntensity(
-        RetrieveActorAttributeToFloat("lens_flare_intensity", Description.Variations, 0.1f));
+        RetrieveActorAttributeToFloat("lens_flare_intensity", Description.Variations, 1.0f));
     Camera->SetBloomIntensity(
-        RetrieveActorAttributeToFloat("bloom_intensity", Description.Variations, 0.675f));
+        RetrieveActorAttributeToFloat("bloom_intensity", Description.Variations, 0.675000f));
     // Exposure, histogram mode by default
     if (RetrieveActorAttributeToString("exposure_mode", Description.Variations, "histogram") == "histogram")
     {
@@ -1571,27 +1571,28 @@ void UActorBlueprintFunctionLibrary::SetCamera(
       Camera->SetExposureMethod(EAutoExposureMethod::AEM_Manual);
     }
     Camera->SetExposureCompensation(
-        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, 0.0f));
+        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, 1.0f));
     Camera->SetShutterSpeed(
-        RetrieveActorAttributeToFloat("shutter_speed", Description.Variations, 200.0f));
+        RetrieveActorAttributeToFloat("shutter_speed", Description.Variations, 60.0f));
     Camera->SetISO(
         RetrieveActorAttributeToFloat("iso", Description.Variations, 100.0f));
     Camera->SetAperture(
-        RetrieveActorAttributeToFloat("fstop", Description.Variations, 1.4f));
+        RetrieveActorAttributeToFloat("fstop", Description.Variations, 4.0f));
 
     Camera->SetExposureMinBrightness(
-        RetrieveActorAttributeToFloat("exposure_min_bright", Description.Variations, 7.0f));
+        RetrieveActorAttributeToFloat("exposure_min_bright", Description.Variations, -10.0f));
     Camera->SetExposureMaxBrightness(
-        RetrieveActorAttributeToFloat("exposure_max_bright", Description.Variations, 9.0f));
+        RetrieveActorAttributeToFloat("exposure_max_bright", Description.Variations, 20.0f));
     Camera->SetExposureSpeedUp(
         RetrieveActorAttributeToFloat("exposure_speed_up", Description.Variations, 3.0f));
     Camera->SetExposureSpeedDown(
         RetrieveActorAttributeToFloat("exposure_speed_down", Description.Variations, 1.0f));
+    // This is deprecated:
     Camera->SetExposureCalibrationConstant(
         RetrieveActorAttributeToFloat("calibration_constant", Description.Variations, 16.0f));
 
     Camera->SetFocalDistance(
-        RetrieveActorAttributeToFloat("focal_distance", Description.Variations, 1000.0f));
+        RetrieveActorAttributeToFloat("focal_distance", Description.Variations, 0.0f));
     Camera->SetDepthBlurAmount(
         RetrieveActorAttributeToFloat("blur_amount", Description.Variations, 1.0f));
     Camera->SetDepthBlurRadius(
