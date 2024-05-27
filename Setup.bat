@@ -76,7 +76,7 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     popd
 )
 pushd ..
-pushd UnrealEngine5_carla
+pushd %CARLA_UNREAL_ENGINE_PATH%
 echo Setup CARLA Unreal Engine 5...
 call Setup.bat || exit /b
 echo GenerateProjectFiles CARLA Unreal Engine 5...
