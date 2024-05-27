@@ -2,8 +2,8 @@
 #include "GameFramework/Actor.h"
 #include "Sky.generated.h"
 
-class APostProcessVolume;
-class AExponentialHeightFog;
+class UPostProcessComponent;
+class UExponentialHeightFogComponent;
 class UDirectionalLightComponent;
 class USkyLightComponent;
 class UVolumetricCloudComponent;
@@ -19,10 +19,10 @@ public:
 	ASkyBase(const FObjectInitializer& ObjectInitializer);
 
 	UPROPERTY(EditAnywhere, Category = "Components")
-	APostProcessVolume* PostProcessVolume;
+	UPostProcessComponent* PostProcessComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Components")
-	AExponentialHeightFog* ExponentialHeightFog;
+	UExponentialHeightFogComponent* ExponentialHeightFogComponent;
 
 	UPROPERTY(EditAnywhere, Category = "Components")
 	UDirectionalLightComponent* DirectionalLightComponentSun;
