@@ -18,12 +18,26 @@ public:
 
 	ASkyBase(const FObjectInitializer& ObjectInitializer);
 
+	UPROPERTY(EditAnywhere, Category = "Components")
 	APostProcessVolume* PostProcessVolume;
+
+	UPROPERTY(EditAnywhere, Category = "Components")
 	AExponentialHeightFog* ExponentialHeightFog;
+
+	UPROPERTY(EditAnywhere, Category = "Components")
 	UDirectionalLightComponent* DirectionalLightComponentSun;
+
+	UPROPERTY(EditAnywhere, Category = "Components")
 	UDirectionalLightComponent* DirectionalLightComponentMoon;
+
+	UPROPERTY(EditAnywhere, Category = "Components")
 	USkyLightComponent* SkyLightComponent;
+
+	UPROPERTY(EditAnywhere, Category = "Components")
 	UVolumetricCloudComponent* VolumetricCloudComponent;
+
+	UPROPERTY(EditAnywhere, Category = "Components")
 	USkyAtmosphereComponent* SkyAtmosphereComponent;
+
 
 };
