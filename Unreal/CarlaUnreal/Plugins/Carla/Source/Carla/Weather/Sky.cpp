@@ -2,6 +2,7 @@
 
 ASkyBase::ASkyBase(
 	const FObjectInitializer& ObjectInitializer) :
-	Super(ObjectInitializer)
+	Super(ObjectInitializer),
+	PostProcessVolume(nullptr)
 {
 }
