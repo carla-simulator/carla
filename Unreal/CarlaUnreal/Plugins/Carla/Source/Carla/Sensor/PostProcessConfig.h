@@ -19,7 +19,7 @@ public:
   void UpdateFromSceneCaptureComponent2D(const class USceneCaptureComponent2D& Component);
   void EnablePostProcessingEffects(bool Enable);
 
-  FPostProcessSettings& PostProcessSettings;
-  FEngineShowFlags& EngineShowFlags;
+  FPostProcessSettings PostProcessSettings;
+  FEngineShowFlags EngineShowFlags;
 
 };
