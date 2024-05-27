@@ -561,8 +561,6 @@ void ASceneCaptureSensor::BeginPlay()
       bEnable16BitFormat ? PF_FloatRGBA : PF_B8G8R8A8,
       bInForceLinearGamma);
 
-  UE_LOG(LogCarla, Log, TEXT("%u"), CaptureRenderTarget->OverrideFormat);
-
   if (bEnablePostProcessingEffects)
   {
     CaptureRenderTarget->TargetGamma = TargetGamma;
