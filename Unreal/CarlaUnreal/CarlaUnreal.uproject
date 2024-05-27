@@ -167,7 +167,7 @@
 			"Enabled": true
 		},
 		{
-			"Name": "DTCPlugin",
+			"Name": "dtc_plugin",
 			"Enabled": true
 		}
 	],

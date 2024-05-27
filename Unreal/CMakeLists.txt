@@ -41,7 +41,7 @@ set (
 
 set (
   CARLA_DTC_PLUGIN_PATH
-  ${CARLA_UE_PLUGINS_PATH}/DTCPlugin
+  ${CARLA_UE_PLUGINS_PATH}/dtc_plugin
 )
 
 set (
