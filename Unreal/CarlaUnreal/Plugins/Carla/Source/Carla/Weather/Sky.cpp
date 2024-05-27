@@ -9,6 +9,6 @@ ASkyBase::ASkyBase(
 	DirectionalLightComponentMoon(nullptr),
 	SkyLightComponent(nullptr),
 	VolumetricCloudComponent(nullptr),
-	SkyAtmosphereComponent(nullptr),
+	SkyAtmosphereComponent(nullptr)
 {
 }
