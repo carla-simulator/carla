@@ -137,7 +137,7 @@ def main(args):
             logging.debug(' Checking for Map: %s', scenario_file['map'])
             logging.debug(' Available Map: %s', client.get_available_maps())
             for map in client.get_available_maps():
-                if scenario_file['map'] in map and 'Carla' in map:
+                if scenario_file['map'] in map:
                     logging.debug(' Loading Map: %s', map)
                     client.load_world(map)
                     world = client.get_world()
@@ -145,7 +145,7 @@ def main(args):
                     break
 
         # Setup MetaHumans
-        # Needs Code
+        # Needs Code 
   
         # Create Vehicle with sensors
         vehicle_actors = _setup_vehicle_actors(world)
@@ -168,7 +168,7 @@ def main(args):
         try:
             logging.info('  Reseting Game to original state...')
             if original_settings:
-                client.load_world('NewWorld')
+                client.load_world('StartingWorld')
                 client.get_world().apply_settings(original_settings)
 
             for actor in vehicle_actors:

@@ -165,10 +165,6 @@
 		{
 			"Name": "MovieRenderPipeline",
 			"Enabled": true
-		},
-		{
-			"Name": "dtc_plugin",
-			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [

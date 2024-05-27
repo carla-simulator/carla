@@ -5,6 +5,7 @@
 #pragma once
 
 
+#include "Carla/DTC/Idtc_plugin.h"
 #include "Logging/LogMacros.h"
 #include "Util/NonCopyable.h"
 #include "Modules/ModuleInterface.h"
@@ -36,7 +37,7 @@ DECLARE_CYCLE_STAT(TEXT("Stream Send"), STAT_CarlaSensorStreamSend, STATGROUP_Ca
 // #define CARLA_WEATHER_EXTRA_LOG
 #endif // WITH_EDITOR
 
-class FCarlaModule : public IModuleInterface
+class FCarlaModule : public Idtc_plugin
 {
 	void RegisterSettings();
 	void UnregisterSettings();
