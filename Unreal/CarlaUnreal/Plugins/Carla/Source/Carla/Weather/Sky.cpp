@@ -3,6 +3,12 @@
 ASkyBase::ASkyBase(
 	const FObjectInitializer& ObjectInitializer) :
 	Super(ObjectInitializer),
-	PostProcessVolume(nullptr)
+	PostProcessComponent(nullptr),
+	ExponentialHeightFogComponent(nullptr),
+	DirectionalLightComponentSun(nullptr),
+	DirectionalLightComponentMoon(nullptr),
+	SkyLightComponent(nullptr),
+	VolumetricCloudComponent(nullptr),
+	SkyAtmosphereComponent(nullptr),
 {
 }
