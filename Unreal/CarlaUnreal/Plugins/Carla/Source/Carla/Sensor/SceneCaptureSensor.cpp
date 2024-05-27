@@ -27,8 +27,6 @@ namespace SceneCaptureSensor_local_ns {
 
   static void SetCameraDefaultOverrides(USceneCaptureComponent2D &CaptureComponent2D);
 
-  static void ConfigureShowFlags(FEngineShowFlags &ShowFlags, bool bPostProcessing = true);
-
   static auto GetQualitySettings(UWorld *World)
   {
     auto Settings = UCarlaStatics::GetCarlaSettings(World);
@@ -68,7 +66,7 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureComponent2D->bAlwaysPersistRenderingState = true;
   CaptureComponent2D->bUseRayTracingIfEnabled = true;
 
-  //SceneCaptureSensor_local_ns::SetCameraDefaultOverrides(*CaptureComponent2D);
+  SceneCaptureSensor_local_ns::SetCameraDefaultOverrides(*CaptureComponent2D);
 
   ++SCENE_CAPTURE_COUNTER;
 }
