@@ -9,8 +9,6 @@
 
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
-#include "Carla/Sensor/PixelReader.h"
-
 FActorDefinition ADepthCamera::GetSensorDefinition()
 {
   return UActorBlueprintFunctionLibrary::MakeCameraDefinition(TEXT("depth"));
