@@ -399,26 +399,26 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation MBIntesity;
     MBIntesity.Id = TEXT("motion_blur_intensity");
     MBIntesity.Type = EActorAttributeType::Float;
-    MBIntesity.RecommendedValues = { TEXT("0.45") };
+    MBIntesity.RecommendedValues = { TEXT("0.5") };
     MBIntesity.bRestrictToRecommended = false;
 
     FActorVariation MBMaxDistortion;
     MBMaxDistortion.Id = TEXT("motion_blur_max_distortion");
     MBMaxDistortion.Type = EActorAttributeType::Float;
-    MBMaxDistortion.RecommendedValues = { TEXT("0.35") };
+    MBMaxDistortion.RecommendedValues = { TEXT("5.0") };
     MBMaxDistortion.bRestrictToRecommended = false;
 
     FActorVariation MBMinObjectScreenSize;
     MBMinObjectScreenSize.Id = TEXT("motion_blur_min_object_screen_size");
     MBMinObjectScreenSize.Type = EActorAttributeType::Float;
-    MBMinObjectScreenSize.RecommendedValues = { TEXT("0.1") };
+    MBMinObjectScreenSize.RecommendedValues = { TEXT("0.0") };
     MBMinObjectScreenSize.bRestrictToRecommended = false;
 
     // Lens Flare
     FActorVariation LensFlareIntensity;
     LensFlareIntensity.Id = TEXT("lens_flare_intensity");
     LensFlareIntensity.Type = EActorAttributeType::Float;
-    LensFlareIntensity.RecommendedValues = { TEXT("0.1") };
+    LensFlareIntensity.RecommendedValues = { TEXT("1.0") };
     LensFlareIntensity.bRestrictToRecommended = false;
 
     // Bloom
@@ -450,7 +450,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureCompensation;
     ExposureCompensation.Id = TEXT("exposure_compensation");
     ExposureCompensation.Type = EActorAttributeType::Float;
-    ExposureCompensation.RecommendedValues = { TEXT("0.0") };
+    ExposureCompensation.RecommendedValues = { TEXT("1.0") };
     ExposureCompensation.bRestrictToRecommended = false;
 
     // - Manual ------------------------------------------------
@@ -462,7 +462,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ShutterSpeed; // (1/t)
     ShutterSpeed.Id = TEXT("shutter_speed");
     ShutterSpeed.Type = EActorAttributeType::Float;
-    ShutterSpeed.RecommendedValues = { TEXT("200.0") };
+    ShutterSpeed.RecommendedValues = { TEXT("60.0") };
     ShutterSpeed.bRestrictToRecommended = false;
 
     // The camera sensor sensitivity.
@@ -477,7 +477,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation Aperture; // N
     Aperture.Id = TEXT("fstop");
     Aperture.Type = EActorAttributeType::Float;
-    Aperture.RecommendedValues = { TEXT("1.4") };
+    Aperture.RecommendedValues = { TEXT("4.0") };
     Aperture.bRestrictToRecommended = false;
 
     // - Histogram ---------------------------------------------
@@ -487,7 +487,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureMinBright;
     ExposureMinBright.Id = TEXT("exposure_min_bright");
     ExposureMinBright.Type = EActorAttributeType::Float;
-    ExposureMinBright.RecommendedValues = { TEXT("10.0") };
+    ExposureMinBright.RecommendedValues = { TEXT("-10.0") };
     ExposureMinBright.bRestrictToRecommended = false;
 
     // The maximum brightness for auto exposure that limits the upper
@@ -495,7 +495,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureMaxBright;
     ExposureMaxBright.Id = TEXT("exposure_max_bright");
     ExposureMaxBright.Type = EActorAttributeType::Float;
-    ExposureMaxBright.RecommendedValues = { TEXT("12.0") };
+    ExposureMaxBright.RecommendedValues = { TEXT("20.0") };
     ExposureMaxBright.bRestrictToRecommended = false;
 
     // The speed at which the adaptation occurs from a dark environment
@@ -526,7 +526,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation FocalDistance;
     FocalDistance.Id = TEXT("focal_distance");
     FocalDistance.Type = EActorAttributeType::Float;
-    FocalDistance.RecommendedValues = { TEXT("1000.0") };
+    FocalDistance.RecommendedValues = { TEXT("0.0") };
     FocalDistance.bRestrictToRecommended = false;
 
     // Depth blur km for 50%
