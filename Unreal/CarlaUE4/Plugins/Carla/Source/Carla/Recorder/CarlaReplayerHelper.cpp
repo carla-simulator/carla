@@ -296,7 +296,7 @@ bool CarlaReplayerHelper::ProcessReplayerEventParent(uint32_t ChildId, uint32_t 
 }
 
 // reposition actors
-bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime)
+bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime, bool bIgnoreSpectator)
 {
   check(Episode != nullptr);
   FCarlaActor* CarlaActor = Episode->FindCarlaActor(Pos1.DatabaseId);
@@ -304,6 +304,11 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
   FRotator Rotation;
   if(CarlaActor)
   {
+    //Hot fix to avoid spectator we should investigate why this case is possible here
+    if(bIgnoreSpectator && CarlaActor->GetActor()->GetClass()->GetFName().ToString().Contains("Spectator"))
+    {
+      return false;
+    }
     // check to assign first position or interpolate between both
     if (Per == 0.0)
     {
