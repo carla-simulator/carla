@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actor/CarlaActorFactoryBlueprint.h"
+#include "Carla/Actor/CarlaActorFactoryBlueprint.h"
 #include "MessageFactory.generated.h"
 
 UCLASS()
