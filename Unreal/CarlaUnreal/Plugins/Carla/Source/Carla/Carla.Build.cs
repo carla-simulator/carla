@@ -112,7 +112,6 @@ public class Carla :
 			"CoreUObject",
 			"Engine",
 			"Foliage",
-			"GeoReferencing",
 			"InputCore",
 			"PhysicsCore", 
       "RenderCore",

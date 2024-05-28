@@ -172,19 +172,19 @@ void AVehicle::RotateVehicleForLook(FVector target)
 	SetActorRotation(NewRotVehicle);
 }
 
-bool AVehicle::GetCoordinates(FGeographicCoordinates &Coords)
-{
-	if (AGeoReferencingSystem* geoReferencingSystem = AGeoReferencingSystem::GetGeoReferencingSystem(GetWorld()))
-	{
-		geoReferencingSystem->EngineToGeographic(GetActorLocation(), Coords);
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+// bool AVehicle::GetCoordinates(FGeographicCoordinates &Coords)
+// {
+// 	// if (AGeoReferencingSystem* geoReferencingSystem = AGeoReferencingSystem::GetGeoReferencingSystem(GetWorld()))
+// 	// {
+// 	// 	geoReferencingSystem->EngineToGeographic(GetActorLocation(), Coords);
+// 	// 	return true;
+// 	// }
+// 	// else
+// 	// {
+// 	// 	return false;
+// 	// }
 	
-}
+// }
 
 void AVehicle::ExecuteNextWaypoint_Implementation()
 {

@@ -1,7 +1,7 @@
 #pragma once
 #include "AIController.h"
-#include "GeographicCoordinates.h"
-#include "GeoReferencingSystem.h"
+// #include "GeographicCoordinates.h"
+// #include "GeoReferencingSystem.h"
 #include "Vehicle.h"
 
 #include "Vehicle_AIController.generated.h"
@@ -23,9 +23,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetNewLocation(FVector InLocation);
 
-	/** Please add a function description */
-	UFUNCTION(BlueprintCallable)
-	void SetNewLocationCoord(FGeographicCoordinates GeographicCoords);
+	// /** Please add a function description */
+	// UFUNCTION(BlueprintCallable)
+	// void SetNewLocationCoord(FGeographicCoordinates GeographicCoords);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Blueprintable)
 	void LookAtTarget(AActor* target);

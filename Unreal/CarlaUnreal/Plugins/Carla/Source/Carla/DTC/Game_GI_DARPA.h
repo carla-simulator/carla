@@ -5,19 +5,19 @@
 #include "Game/CarlaGameInstance.h"
 #include "Game_GI_DARPA.generated.h"
 
-USTRUCT(BlueprintType)
-struct FWaypoint_List {
-	GENERATED_BODY()
+// USTRUCT(BlueprintType)
+// struct FWaypoint_List {
+// 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite)
-	FString waypoint;
+// 	UPROPERTY(BlueprintReadWrite)
+// 	FString waypoint;
 
-	UPROPERTY(BlueprintReadWrite)
-	float time;
+// 	UPROPERTY(BlueprintReadWrite)
+// 	float time;
 
-	UPROPERTY(BlueprintReadWrite)
-	FString classification;
-};
+// 	UPROPERTY(BlueprintReadWrite)
+// 	FString classification;
+// };
 
 UCLASS()
 class UGame_GI_DARPA : public UCarlaGameInstance
@@ -68,9 +68,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="CARLA")
 	void CarlaStopUnreal();
 
-	//YamlNode Variables
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	TArray<FWaypoint_List> Waypoints;
+	// //YamlNode Variables
+	// UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	// TArray<FWaypoint_List> Waypoints;
 	
 	// YamlNode Functions
 	UFUNCTION(BlueprintCallable, Category="YamlNode")

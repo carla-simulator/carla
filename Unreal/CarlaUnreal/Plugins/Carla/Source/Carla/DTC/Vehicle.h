@@ -4,8 +4,8 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "GeographicCoordinates.h"
-#include "GeoReferencingSystem.h"
+// #include "GeographicCoordinates.h"
+// #include "GeoReferencingSystem.h"
 #include "CollisionShape.h"
 
 
@@ -44,8 +44,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void RotateVehicleForLook(FVector target);
 
-	UFUNCTION(BlueprintCallable)
-	bool GetCoordinates(FGeographicCoordinates &Coords);
+	// UFUNCTION(BlueprintCallable)
+	// bool GetCoordinates(FGeographicCoordinates &Coords);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Blueprintable, Category="Vehicle")
 	void ExecuteNextWaypoint();

@@ -74,19 +74,19 @@ void AVehicle_AIController::SetNewLocation(FVector InLocation)
 	CameraBusy = false;
 }
 
-void AVehicle_AIController::SetNewLocationCoord(FGeographicCoordinates Coords)
-{
-	if (AGeoReferencingSystem* GeoReferencingSystem = AGeoReferencingSystem::GetGeoReferencingSystem(GetWorld()))
-	{
-		FVector TargetLocation;
-		GeoReferencingSystem->GeographicToEngine(Coords, TargetLocation);
-		SetNewLocation(TargetLocation);
-	}
-	else
-	{
-		//TODO: Add error for having no georeference system in world
-	}
-}
+// void AVehicle_AIController::SetNewLocationCoord(FGeographicCoordinates Coords)
+// {
+// 	// if (AGeoReferencingSystem* GeoReferencingSystem = AGeoReferencingSystem::GetGeoReferencingSystem(GetWorld()))
+// 	// {
+// 	// 	FVector TargetLocation;
+// 	// 	GeoReferencingSystem->GeographicToEngine(Coords, TargetLocation);
+// 	// 	SetNewLocation(TargetLocation);
+// 	// }
+// 	// else
+// 	// {
+// 	// 	//TODO: Add error for having no georeference system in world
+// 	// }
+// }
 
 void AVehicle_AIController::LookAtComponent_Implementation(USkeletalMeshComponent* component)
 {
