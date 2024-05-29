@@ -239,7 +239,7 @@ void UMapGenFunctionLibrary::CleanupGEngine(){
 #endif
 }
 
-void UMapGenFunctionLibrary::ChangeStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, int MinNumOfInstancesToBeChanged)
+void UMapGenFunctionLibrary::ChangeStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter, int MinNumOfInstancesToBeChanged)
 {
   TArray<AActor*> FoundActors;
   UGameplayStatics::GetAllActorsOfClass(World,  AStaticMeshActor::StaticClass(), FoundActors);
@@ -249,8 +249,11 @@ void UMapGenFunctionLibrary::ChangeStaticMeshesInTheLevelForInstancedStaticMeshe
     AStaticMeshActor* CurrentStaticMeshActor = Cast<AStaticMeshActor>(CurrentActor);
     UStaticMeshComponent* CurrentStaticMeshComponent = CurrentStaticMeshActor->GetStaticMeshComponent();
     UStaticMesh* CurrentStaticMesh = CurrentStaticMeshComponent->GetStaticMesh();
-    TArray<AStaticMeshActor*>& Instances = ActorsToCheckIfReplacedMap.FindOrAdd(CurrentStaticMesh);
-    Instances.Add(CurrentStaticMeshActor);
+    if( Filter.IsEmpty() || Filter.Contains(CurrentStaticMesh) )
+    {
+      TArray<AStaticMeshActor*>& Instances = ActorsToCheckIfReplacedMap.FindOrAdd(CurrentStaticMesh);
+      Instances.Add(CurrentStaticMeshActor);
+    }
   }
 
   for(auto CurrentPair : ActorsToCheckIfReplacedMap)
@@ -261,13 +264,40 @@ void UMapGenFunctionLibrary::ChangeStaticMeshesInTheLevelForInstancedStaticMeshe
       for( AStaticMeshActor* SMActor : CurrentPair.Value )
       {
         TransformsToBeInstanced.Add(SMActor->GetActorTransform());
+        SMActor->Destroy();
       }
-    
+
       AInstancedStaticMeshActor* InstancedStaticMeshActor = World->SpawnActor<AInstancedStaticMeshActor>();
       if(InstancedStaticMeshActor)
       {
         InstancedStaticMeshActor->GetInstancedStaticMeshComponent()->SetStaticMesh(CurrentPair.Key);
         InstancedStaticMeshActor->GetInstancedStaticMeshComponent()->AddInstances(TransformsToBeInstanced, false, true);
+      }
+    }
+  }
+}
+
+void UMapGenFunctionLibrary::RevertStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter)
+{
+  TArray<AActor*> FoundActors;
+  UGameplayStatics::GetAllActorsOfClass(World,  AInstancedStaticMeshActor::StaticClass(), FoundActors);
+
+  for(AActor* CurrentActor : FoundActors )
+  {
+    AInstancedStaticMeshActor* InstancedStaticMeshActor = Cast<AInstancedStaticMeshActor>(CurrentActor);
+    if(InstancedStaticMeshActor)
+    {
+      UStaticMesh* CurrentStaticMesh = InstancedStaticMeshActor->GetInstancedStaticMeshComponent()->GetStaticMesh();
+      if( Filter.IsEmpty() || Filter.Contains(CurrentStaticMesh))
+      {
+        const TArray<FInstancedStaticMeshInstanceData>& Instances = InstancedStaticMeshActor->GetInstancedStaticMeshComponent()->PerInstanceSMData;
+        for( FInstancedStaticMeshInstanceData CurrentInstanceData : Instances )
+        {
+          AStaticMeshActor* StaticMeshActor = World->SpawnActor<AStaticMeshActor>();
+          StaticMeshActor->GetStaticMeshComponent()->SetStaticMesh(CurrentStaticMesh);
+          StaticMeshActor->SetActorTransform(FTransform(CurrentInstanceData.Transform));
+        }
+        InstancedStaticMeshActor->Destroy();
       }
     }
   }
