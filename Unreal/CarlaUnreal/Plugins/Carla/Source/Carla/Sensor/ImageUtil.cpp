@@ -109,13 +109,13 @@ namespace ImageUtil
     case PF_FloatRGBA:
     case PF_R16G16B16A16_UNORM:
     case PF_R16G16B16A16_SNORM:
-      ConvertRawR16G16B16A16FDataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), false);
+      ConvertRawR16G16B16A16FDataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags.GetLinearToGamma());
       break;
     case PF_FloatR11G11B10:
-      ConvertRawR11G11B10DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), false);
+      ConvertRawR11G11B10DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags.GetLinearToGamma());
       break;
     case PF_A32B32G32R32F:
-      ConvertRawR32G32B32A32DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), false);
+      ConvertRawR32G32B32A32DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags.GetLinearToGamma());
       break;
     case PF_A16B16G16R16:
       ConvertRawR16G16B16A16DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());

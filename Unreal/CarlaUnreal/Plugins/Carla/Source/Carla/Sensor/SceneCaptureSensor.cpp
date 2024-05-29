@@ -5,10 +5,12 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla/Sensor/SceneCaptureSensor.h"
+#include "Carla/Sensor/PostProcessConfig.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 #include "Engine/PostProcessVolume.h"
+#include "GameFramework/SpectatorPawn.h"
 
 #include <mutex>
 #include <atomic>
@@ -24,8 +26,6 @@ static int SCENE_CAPTURE_COUNTER = 0u;
 namespace SceneCaptureSensor_local_ns {
 
   static void SetCameraDefaultOverrides(USceneCaptureComponent2D &CaptureComponent2D);
-
-  static void ConfigureShowFlags(FEngineShowFlags &ShowFlags, bool bPostProcessing = true);
 
   static auto GetQualitySettings(UWorld *World)
   {
@@ -56,7 +56,7 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
 
   CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D_CARLA>(
-      FName(*FString::Printf(TEXT("USceneCaptureComponent2D_CARLA_%d"), SCENE_CAPTURE_COUNTER)));
+      FName(*FString::Printf(TEXT("USceneCaptureComponent2D%d"), SCENE_CAPTURE_COUNTER)));
   check(CaptureComponent2D != nullptr);
   CaptureComponent2D->ViewActor = this;
   CaptureComponent2D->SetupAttachment(RootComponent);
@@ -449,6 +449,11 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
   return CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset;
 }
 
+void ASceneCaptureSensor::UpdatePostProcessConfig(
+    FPostProcessConfig& InOutPostProcessConfig)
+{
+}
+
 bool ASceneCaptureSensor::ApplyPostProcessVolumeToSensor(APostProcessVolume* Origin, ASceneCaptureSensor* Dest, bool bOverrideCurrentCamera)
 {
   if(!IsValid(Origin) || !IsValid(Dest))
@@ -548,8 +553,11 @@ void ASceneCaptureSensor::BeginPlay()
   // Determine the gamma of the player.
   const bool bInForceLinearGamma = !bEnablePostProcessingEffects;
 
-  CaptureRenderTarget->InitCustomFormat(ImageWidth, ImageHeight, bEnable16BitFormat ? PF_FloatRGBA : PF_B8G8R8A8,
-                                        bInForceLinearGamma);
+  CaptureRenderTarget->InitCustomFormat(
+      ImageWidth,
+      ImageHeight,
+      bEnable16BitFormat ? PF_FloatRGBA : PF_B8G8R8A8,
+      bInForceLinearGamma);
 
   if (bEnablePostProcessingEffects)
   {
@@ -574,13 +582,19 @@ void ASceneCaptureSensor::BeginPlay()
       GetWorld(),
       FString("g.TimeoutForBlockOnRenderFence 300000"));
 
-  SceneCaptureSensor_local_ns::ConfigureShowFlags(CaptureComponent2D->ShowFlags,
-      bEnablePostProcessingEffects);
+  auto PostProcessConfig = FPostProcessConfig(
+      CaptureComponent2D->PostProcessSettings,
+      CaptureComponent2D->ShowFlags);
+  PostProcessConfig.UpdateFromSceneCaptureComponent2D(*CaptureComponent2D);
+  PostProcessConfig.EnablePostProcessingEffects(ArePostProcessingEffectsEnabled());
+  UpdatePostProcessConfig(PostProcessConfig);
+  CaptureComponent2D->ShowFlags = PostProcessConfig.EngineShowFlags;
+  CaptureComponent2D->PostProcessSettings = PostProcessConfig.PostProcessSettings;
 
   // This ensures the camera is always spawning the raindrops in case the
   // weather was previously set to have rain.
   GetEpisode().GetWeather()->NotifyWeather(this);
-
+  
   Super::BeginPlay();
 }
 
@@ -713,239 +727,41 @@ namespace SceneCaptureSensor_local_ns {
   {
     auto &PostProcessSettings = CaptureComponent2D.PostProcessSettings;
 
-    // Exposure
-    PostProcessSettings.bOverride_AutoExposureMethod = true;
-    PostProcessSettings.AutoExposureMethod = EAutoExposureMethod::AEM_Histogram;
-    PostProcessSettings.bOverride_AutoExposureBias = true;
-    PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
-    PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
-    PostProcessSettings.bOverride_AutoExposureSpeedUp = true;
-    PostProcessSettings.bOverride_AutoExposureSpeedDown = true;
-    PostProcessSettings.bOverride_AutoExposureCalibrationConstant_DEPRECATED = true;
-    PostProcessSettings.bOverride_HistogramLogMin = true;
-    PostProcessSettings.HistogramLogMin = 1.0f;
-    PostProcessSettings.bOverride_HistogramLogMax = true;
-    PostProcessSettings.HistogramLogMax = 12.0f;
-
-    // Camera
-    PostProcessSettings.bOverride_CameraShutterSpeed = true;
-    PostProcessSettings.bOverride_CameraISO = true;
-    PostProcessSettings.bOverride_DepthOfFieldFstop = true;
-    PostProcessSettings.bOverride_DepthOfFieldMinFstop = true;
-    PostProcessSettings.bOverride_DepthOfFieldBladeCount = true;
-
-    // Film (Tonemapper)
-    PostProcessSettings.bOverride_FilmSlope = true;
-    PostProcessSettings.bOverride_FilmToe = true;
-    PostProcessSettings.bOverride_FilmShoulder = true;
-    PostProcessSettings.bOverride_FilmWhiteClip = true;
-    PostProcessSettings.bOverride_FilmBlackClip = true;
-
-    // Motion blur
-    PostProcessSettings.bOverride_MotionBlurAmount = true;
-    PostProcessSettings.MotionBlurAmount = 0.45f;
-    PostProcessSettings.bOverride_MotionBlurMax = true;
-    PostProcessSettings.MotionBlurMax = 0.35f;
-    PostProcessSettings.bOverride_MotionBlurPerObjectSize = true;
-    PostProcessSettings.MotionBlurPerObjectSize = 0.1f;
-
-    // Color Grading
-    PostProcessSettings.bOverride_WhiteTemp = true;
-    PostProcessSettings.bOverride_WhiteTint = true;
-    PostProcessSettings.bOverride_ColorContrast = true;
-#if PLATFORM_LINUX
-  // Looks like Windows and Linux have different outputs with the
-  // same exposure compensation, this fixes it.
-  PostProcessSettings.ColorContrast = FVector4(1.2f, 1.2f, 1.2f, 1.0f);
-#endif
-
-    // Chromatic Aberration
-    PostProcessSettings.bOverride_SceneFringeIntensity = true;
-    PostProcessSettings.bOverride_ChromaticAberrationStartOffset = true;
-
-    // Ambient Occlusion
-    PostProcessSettings.bOverride_AmbientOcclusionIntensity = true;
-    PostProcessSettings.AmbientOcclusionIntensity = 0.5f;
-    PostProcessSettings.bOverride_AmbientOcclusionRadius = true;
-    PostProcessSettings.AmbientOcclusionRadius = 100.0f;
-    PostProcessSettings.bOverride_AmbientOcclusionStaticFraction = true;
-    PostProcessSettings.AmbientOcclusionStaticFraction = 1.0f;
-    PostProcessSettings.bOverride_AmbientOcclusionFadeDistance = true;
-    PostProcessSettings.AmbientOcclusionFadeDistance = 50000.0f;
-    PostProcessSettings.bOverride_AmbientOcclusionPower = true;
-    PostProcessSettings.AmbientOcclusionPower = 2.0f;
-    PostProcessSettings.bOverride_AmbientOcclusionBias = true;
-    PostProcessSettings.AmbientOcclusionBias = 3.0f;
-    PostProcessSettings.bOverride_AmbientOcclusionQuality = true;
-    PostProcessSettings.AmbientOcclusionQuality = 100.0f;
-
-    // Bloom
-    PostProcessSettings.bOverride_BloomMethod = true;
-    PostProcessSettings.BloomMethod = EBloomMethod::BM_SOG;
-    PostProcessSettings.bOverride_BloomIntensity = true;
-    PostProcessSettings.BloomIntensity = 0.675f;
-    PostProcessSettings.bOverride_BloomThreshold = true;
-    PostProcessSettings.BloomThreshold = -1.0f;
-
-    // Lens
-    PostProcessSettings.bOverride_LensFlareIntensity = true;
-    PostProcessSettings.LensFlareIntensity = 0.1;
+    CaptureComponent2D.bUseRayTracingIfEnabled = true;
+    // Lumen
+    PostProcessSettings.bOverride_DynamicGlobalIlluminationMethod = true;
+    PostProcessSettings.DynamicGlobalIlluminationMethod = EDynamicGlobalIlluminationMethod::Lumen;
+    PostProcessSettings.bOverride_LumenSceneLightingQuality = true;
+    PostProcessSettings.LumenSceneLightingQuality = 1.0f;
+    PostProcessSettings.bOverride_LumenSceneDetail = true;
+    PostProcessSettings.LumenSceneDetail = 1.0f;
+    PostProcessSettings.bOverride_LumenSceneViewDistance = true;
+    PostProcessSettings.LumenSceneViewDistance = 20000.0f;
+    PostProcessSettings.bOverride_LumenFinalGatherQuality = true;
+    PostProcessSettings.LumenFinalGatherQuality = 1.0f;
+    PostProcessSettings.bOverride_LumenMaxTraceDistance = true;
+    PostProcessSettings.LumenMaxTraceDistance = 20000.0f;
+    PostProcessSettings.bOverride_LumenSurfaceCacheResolution = true;
+    PostProcessSettings.LumenSurfaceCacheResolution = 1.0f;
+    PostProcessSettings.bOverride_LumenSceneLightingUpdateSpeed = true;
+    PostProcessSettings.LumenSceneLightingUpdateSpeed = 1.0f;
+    PostProcessSettings.bOverride_LumenFinalGatherLightingUpdateSpeed = true;
+    PostProcessSettings.LumenFinalGatherLightingUpdateSpeed = 1.0f;
+    PostProcessSettings.bOverride_LumenDiffuseColorBoost = true;
+    PostProcessSettings.LumenDiffuseColorBoost = 1.0f;
+    PostProcessSettings.bOverride_LumenSkylightLeaking = true;
+    PostProcessSettings.LumenSkylightLeaking = 0.0f;
+    PostProcessSettings.bOverride_LumenFullSkylightLeakingDistance = true;
+    PostProcessSettings.LumenFullSkylightLeakingDistance = 1000.0f;
+    PostProcessSettings.bOverride_ReflectionMethod = true;
+    PostProcessSettings.ReflectionMethod = EReflectionMethod::Lumen;
+    PostProcessSettings.bOverride_LumenReflectionQuality = true;
+    PostProcessSettings.LumenReflectionQuality = 1.0f;
+    PostProcessSettings.bOverride_LumenRayLightingMode = true;
+    PostProcessSettings.LumenRayLightingMode = ELumenRayLightingModeOverride::Default;
+    PostProcessSettings.bOverride_LumenFrontLayerTranslucencyReflections = true;
+    PostProcessSettings.LumenFrontLayerTranslucencyReflections = false;
+    PostProcessSettings.bOverride_LumenMaxReflectionBounces = true;
+    PostProcessSettings.LumenMaxReflectionBounces = 1;
   }
-
-  // Remove the show flags that might interfere with post-processing effects
-  // like depth and semantic segmentation.
-  static void ConfigureShowFlags(FEngineShowFlags &ShowFlags, bool bPostProcessing)
-  {
-    if (bPostProcessing)
-    {
-      ShowFlags.EnableAdvancedFeatures();
-      ShowFlags.SetMotionBlur(true);
-      return;
-    }
-
-    ShowFlags.SetAmbientOcclusion(false);
-    ShowFlags.SetAntiAliasing(false);
-    ShowFlags.SetVolumetricFog(false);
-    // ShowFlags.SetAtmosphericFog(false);
-    // ShowFlags.SetAudioRadius(false);
-    // ShowFlags.SetBillboardSprites(false);
-    ShowFlags.SetBloom(false);
-    // ShowFlags.SetBounds(false);
-    // ShowFlags.SetBrushes(false);
-    // ShowFlags.SetBSP(false);
-    // ShowFlags.SetBSPSplit(false);
-    // ShowFlags.SetBSPTriangles(false);
-    // ShowFlags.SetBuilderBrush(false);
-    // ShowFlags.SetCameraAspectRatioBars(false);
-    // ShowFlags.SetCameraFrustums(false);
-    ShowFlags.SetCameraImperfections(false);
-    ShowFlags.SetCameraInterpolation(false);
-    // ShowFlags.SetCameraSafeFrames(false);
-    // ShowFlags.SetCollision(false);
-    // ShowFlags.SetCollisionPawn(false);
-    // ShowFlags.SetCollisionVisibility(false);
-    ShowFlags.SetColorGrading(false);
-    // ShowFlags.SetCompositeEditorPrimitives(false);
-    // ShowFlags.SetConstraints(false);
-    // ShowFlags.SetCover(false);
-    // ShowFlags.SetDebugAI(false);
-    // ShowFlags.SetDecals(false);
-    // ShowFlags.SetDeferredLighting(false);
-    ShowFlags.SetDepthOfField(false);
-    ShowFlags.SetDiffuse(false);
-    ShowFlags.SetDirectionalLights(false);
-    ShowFlags.SetDirectLighting(false);
-    // ShowFlags.SetDistanceCulledPrimitives(false);
-    // ShowFlags.SetDistanceFieldAO(false);
-    // ShowFlags.SetDistanceFieldGI(false);
-    ShowFlags.SetDynamicShadows(false);
-    // ShowFlags.SetEditor(false);
-    ShowFlags.SetEyeAdaptation(false);
-    ShowFlags.SetFog(false);
-    // ShowFlags.SetGame(false);
-    // ShowFlags.SetGameplayDebug(false);
-    // ShowFlags.SetGBufferHints(false);
-    ShowFlags.SetGlobalIllumination(false);
-    ShowFlags.SetGrain(false);
-    // ShowFlags.SetGrid(false);
-    // ShowFlags.SetHighResScreenshotMask(false);
-    // ShowFlags.SetHitProxies(false);
-    ShowFlags.SetHLODColoration(false);
-    ShowFlags.SetHMDDistortion(false);
-    // ShowFlags.SetIndirectLightingCache(false);
-    // ShowFlags.SetInstancedFoliage(false);
-    // ShowFlags.SetInstancedGrass(false);
-    // ShowFlags.SetInstancedStaticMeshes(false);
-    // ShowFlags.SetLandscape(false);
-    // ShowFlags.SetLargeVertices(false);
-    ShowFlags.SetLensFlares(false);
-    ShowFlags.SetLevelColoration(false);
-    ShowFlags.SetLightComplexity(false);
-    ShowFlags.SetLightFunctions(false);
-    ShowFlags.SetLightInfluences(false);
-    ShowFlags.SetLighting(false);
-    ShowFlags.SetLightMapDensity(false);
-    ShowFlags.SetLightRadius(false);
-    ShowFlags.SetLightShafts(false);
-    // ShowFlags.SetLOD(false);
-    ShowFlags.SetLODColoration(false);
-    // ShowFlags.SetMaterials(false);
-    // ShowFlags.SetMaterialTextureScaleAccuracy(false);
-    // ShowFlags.SetMeshEdges(false);
-    // ShowFlags.SetMeshUVDensityAccuracy(false);
-    // ShowFlags.SetModeWidgets(false);
-    ShowFlags.SetMotionBlur(false);
-    // ShowFlags.SetNavigation(false);
-    ShowFlags.SetOnScreenDebug(false);
-    // ShowFlags.SetOutputMaterialTextureScales(false);
-    // ShowFlags.SetOverrideDiffuseAndSpecular(false);
-    // ShowFlags.SetPaper2DSprites(false);
-    ShowFlags.SetParticles(false);
-    // ShowFlags.SetPivot(false);
-    ShowFlags.SetPointLights(false);
-    // ShowFlags.SetPostProcessing(false);
-    // ShowFlags.SetPostProcessMaterial(false);
-    // ShowFlags.SetPrecomputedVisibility(false);
-    // ShowFlags.SetPrecomputedVisibilityCells(false);
-    // ShowFlags.SetPreviewShadowsIndicator(false);
-    // ShowFlags.SetPrimitiveDistanceAccuracy(false);
-    ShowFlags.SetPropertyColoration(false);
-    // ShowFlags.SetQuadOverdraw(false);
-    // ShowFlags.SetReflectionEnvironment(false);
-    // ShowFlags.SetReflectionOverride(false);
-    ShowFlags.SetRefraction(false);
-    // ShowFlags.SetRendering(false);
-    ShowFlags.SetSceneColorFringe(false);
-    // ShowFlags.SetScreenPercentage(false);
-    ShowFlags.SetScreenSpaceAO(false);
-    ShowFlags.SetScreenSpaceReflections(false);
-    // ShowFlags.SetSelection(false);
-    // ShowFlags.SetSelectionOutline(false);
-    // ShowFlags.SetSeparateTranslucency(false);
-    // ShowFlags.SetShaderComplexity(false);
-    // ShowFlags.SetShaderComplexityWithQuadOverdraw(false);
-    // ShowFlags.SetShadowFrustums(false);
-    // ShowFlags.SetSkeletalMeshes(false);
-    // ShowFlags.SetSkinCache(false);
-    ShowFlags.SetSkyLighting(false);
-    // ShowFlags.SetSnap(false);
-    // ShowFlags.SetSpecular(false);
-    // ShowFlags.SetSplines(false);
-    ShowFlags.SetSpotLights(false);
-    // ShowFlags.SetStaticMeshes(false);
-    ShowFlags.SetStationaryLightOverlap(false);
-    // ShowFlags.SetStereoRendering(false);
-    // ShowFlags.SetStreamingBounds(false);
-    ShowFlags.SetSubsurfaceScattering(false);
-    // ShowFlags.SetTemporalAA(false);
-    // ShowFlags.SetTessellation(false);
-    // ShowFlags.SetTestImage(false);
-    // ShowFlags.SetTextRender(false);
-    // ShowFlags.SetTexturedLightProfiles(false);
-    ShowFlags.SetTonemapper(false);
-    // ShowFlags.SetTranslucency(false);
-    // ShowFlags.SetVectorFields(false);
-    // ShowFlags.SetVertexColors(false);
-    // ShowFlags.SetVignette(false);
-    // ShowFlags.SetVisLog(false);
-    // ShowFlags.SetVisualizeAdaptiveDOF(false);
-    // ShowFlags.SetVisualizeBloom(false);
-    ShowFlags.SetVisualizeBuffer(false);
-    ShowFlags.SetVisualizeDistanceFieldAO(false);
-    ShowFlags.SetVisualizeDOF(false);
-    ShowFlags.SetVisualizeHDR(false);
-    ShowFlags.SetVisualizeLightCulling(false);
-    ShowFlags.SetVisualizeMeshDistanceFields(false);
-    ShowFlags.SetVisualizeMotionBlur(false);
-    ShowFlags.SetVisualizeOutOfBoundsPixels(false);
-    ShowFlags.SetVisualizeSenses(false);
-    ShowFlags.SetVisualizeShadingModels(false);
-    ShowFlags.SetVisualizeSSR(false);
-    ShowFlags.SetVisualizeSSS(false);
-    // ShowFlags.SetVolumeLightingSamples(false);
-    // ShowFlags.SetVolumes(false);
-    // ShowFlags.SetWidgetComponents(false);
-    // ShowFlags.SetWireframe(false);
-  }
-
 } // namespace SceneCaptureSensor_local_ns
