@@ -19,11 +19,11 @@ ASkyBase::ASkyBase(
 	VolumetricCloudComponent(nullptr),
 	SkyAtmosphereComponent(nullptr)
 {
-  PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>("ASkyBase::PostProcessComponent");
-  ExponentialHeightFogComponent = CreateDefaultSubobject<UExponentialHeightFogComponent>("ASkyBase::ExponentialHeightFogComponent");
-  DirectionalLightComponentSun = CreateDefaultSubobject<UDirectionalLightComponent>("ASkyBase::DirectionalLightComponentSun");
-  DirectionalLightComponentMoon = CreateDefaultSubobject<UDirectionalLightComponent>("ASkyBase::DirectionalLightComponentMoon");
-  SkyLightComponent = CreateDefaultSubobject<USkyLightComponent>("ASkyBase::SkyLightComponent");
-  VolumetricCloudComponent = CreateDefaultSubobject<UVolumetricCloudComponent>("ASkyBase::VolumetricCloudComponent");
-  SkyAtmosphereComponent = CreateDefaultSubobject<USkyAtmosphereComponent>("ASkyBase::SkyAtmosphereComponent");
+  PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>("PostProcessComponent");
+  ExponentialHeightFogComponent = CreateDefaultSubobject<UExponentialHeightFogComponent>("ExponentialHeightFogComponent");
+  DirectionalLightComponentSun = CreateDefaultSubobject<UDirectionalLightComponent>("DirectionalLightComponentSun");
+  DirectionalLightComponentMoon = CreateDefaultSubobject<UDirectionalLightComponent>("DirectionalLightComponentMoon");
+  SkyLightComponent = CreateDefaultSubobject<USkyLightComponent>("SkyLightComponent");
+  VolumetricCloudComponent = CreateDefaultSubobject<UVolumetricCloudComponent>("VolumetricCloudComponent");
+  SkyAtmosphereComponent = CreateDefaultSubobject<USkyAtmosphereComponent>("SkyAtmosphereComponent");
 }
