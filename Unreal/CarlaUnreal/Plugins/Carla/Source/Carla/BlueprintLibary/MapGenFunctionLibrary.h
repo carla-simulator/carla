@@ -51,4 +51,9 @@ public:
 
   UFUNCTION(BlueprintCallable)
   static void CleanupGEngine();
+
+  // This function will count instances of each static mesh in the level, if there are > MinNumOfInstancesToBeChanged they will be changed by instanced static meshes 
+  // to reduce draw calls
+  UFUNCTION(BlueprintCallable)
+  static void ChangeStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, int MinNumOfInstancesToBeChanged = 20);
 };
