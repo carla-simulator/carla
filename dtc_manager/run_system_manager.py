@@ -14,9 +14,30 @@ import argparse
 import yaml
 import logging
 import carla
+import rclpy
+import threading
+from rclpy.node import Node
+from std_msgs.msg import Bool
 
 python_file_path = os.path.realpath(__file__)
 python_file_path = python_file_path.replace('run_system_manager.py', '')
+
+class SimulationStatusNode(Node):
+
+    def __init__(self):
+        super().__init__("carla_simulation_status")
+        self._status = False
+        self.publisher = self.create_publisher(Bool, "/simulation_ready", 10)
+        self._timer = self.create_timer(0.1, self.publish_status)
+
+    def publish_status(self):
+        msg = Bool()
+        msg.data = self._status
+        self.publisher.publish(msg)
+    
+    def set_status(self, status):
+        self._status = status
+
 
 def _setup_vehicle_actors(world):
     actors = []
@@ -109,11 +130,18 @@ def _setup_vehicle_actors(world):
     return actors
 
 def main(args):
-
+    rclpy.init()
+    simulation_status_node = SimulationStatusNode()
+    executor = rclpy.executors.MultiThreadedExecutor()
+    executor.add_node(simulation_status_node)
     world = None
     old_world = None
     vehicle_actors = None
     original_settings = None
+
+    # Spin in a separate thread
+    executor_thread = threading.Thread(target=executor.spin, daemon=True)
+    executor_thread.start()
 
     try:
         # Load the Scenario File
@@ -150,11 +178,9 @@ def main(args):
         # Create Vehicle with sensors
         vehicle_actors = _setup_vehicle_actors(world)
 
-        #_ = world.tick()
-
-        #vehicle.set_autopilot(True)
-
         logging.info("  Running Mission...")
+        _ = world.tick()
+        simulation_status_node.set_status(True)
         while True:
             _ = world.tick()
 
@@ -180,7 +206,7 @@ def main(args):
             logging.info('  Error: %s', error)
             logging.info('  Failed to reset game to original state...')
             pass
-
+    executor_thread.join()
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='DTC System Manager')
