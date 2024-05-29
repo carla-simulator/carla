@@ -99,19 +99,19 @@ if %REMOVE_INTERMEDIATE% == true (
 
 rem Build OSM2ODR
 if %BUILD_OSM2ODR% == true (
-    cd "%OSM2ODR_SOURCE_PATH%"
+    cd "%INSTALLATION_DIR%"
     if not exist "%OSM2ODR_SOURCE_PATH%" (
         curl --retry 5 --retry-max-time 120 -L -o OSM2ODR.zip https://github.com/carla-simulator/sumo/archive/%CURRENT_OSM2ODR_COMMIT%.zip
         tar -xf OSM2ODR.zip
         del OSM2ODR.zip
-        ren sumo-%CURRENT_OSM2ODR_COMMIT% %OSM2ODR_SOURCE_PATH%
+        ren sumo-%CURRENT_OSM2ODR_COMMIT% osm2odr-source
     )
 
+    cd ..
     if not exist "%OSM2ODR_VSPROJECT_PATH%" mkdir "%OSM2ODR_VSPROJECT_PATH%"
     cd "%OSM2ODR_VSPROJECT_PATH%"
 
-
-    cmake -G %GENERATOR% %PLATFORM%^
+    cmake -G %GENERATOR% -A x64^
         -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
         -DCMAKE_INSTALL_PREFIX="%OSM2ODR_INSTALL_PATH:\=/%"^
         -DPROJ_INCLUDE_DIR=%INSTALLATION_DIR:/=\%\proj-install\include^
