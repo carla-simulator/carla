@@ -81,6 +81,22 @@ namespace low_level {
       return _dispatcher->GetToken(sensor_id);
     }
 
+    void SetROS2TopicVisibilityDefaultEnabled(bool _topic_visibility_default_enabled) {
+      _dispatcher->SetROS2TopicVisibilityDefaultEnabled(_topic_visibility_default_enabled);
+    }
+    
+    void EnableForROS(stream_id sensor_id) {
+      _dispatcher->EnableForROS(sensor_id);
+    }
+
+    void DisableForROS(stream_id sensor_id) {
+      _dispatcher->DisableForROS(sensor_id);
+    }
+
+    bool IsEnabledForROS(stream_id sensor_id) {
+      return _dispatcher->IsEnabledForROS(sensor_id);
+    }
+
     std::shared_ptr<detail::Dispatcher> GetDispatcher() const {
       return _dispatcher;
     }

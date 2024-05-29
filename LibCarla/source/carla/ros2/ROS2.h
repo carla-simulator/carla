@@ -39,10 +39,18 @@ public:
   static std::shared_ptr<ROS2> GetInstance();
 
   // starting/stopping
+  enum class TopicVisibilityDefaultMode {
+    eOn,
+    eOff
+  }; 
   void Enable(carla::rpc::RpcServerInterface* carla_server,
-              carla::streaming::detail::stream_id_type const world_observer_stream_id);
-  bool IsEnabled() {
+              carla::streaming::detail::stream_id_type const world_observer_stream_id,
+              TopicVisibilityDefaultMode topic_visibility_default_mode);
+  bool IsEnabled() const {
     return _enabled;
+  }
+  TopicVisibilityDefaultMode VisibilityDefaultMode() const {
+    return _topic_visibility_default_mode;
   }
   void NotifyInitGame();
   void NotifyBeginEpisode();
@@ -65,6 +73,10 @@ public:
 
   void ProcessDataFromUeSensor(carla::streaming::detail::stream_id_type const stream_id,
                                std::shared_ptr<const carla::streaming::detail::Message> message);
+
+  void EnableForROS(carla::streaming::detail::stream_id_type const stream_id);
+  void DisableForROS(carla::streaming::detail::stream_id_type const stream_id);  
+  bool IsEnabledForROS(carla::streaming::detail::stream_id_type const stream_id);
 
   /**
    * Implement actions before each tick
@@ -90,6 +102,7 @@ public:
 
 private:
   bool _enabled{false};
+  TopicVisibilityDefaultMode _topic_visibility_default_mode{TopicVisibilityDefaultMode::eOn};
   carla::rpc::RpcServerInterface* _carla_server{nullptr};
   std::shared_ptr<ROS2NameRegistry> _name_registry{nullptr};
   std::shared_ptr<carla::streaming::detail::Dispatcher> _dispatcher;

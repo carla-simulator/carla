@@ -66,15 +66,20 @@ std::shared_ptr<ROS2> ROS2::GetInstance() {
 }
 
 void ROS2::Enable(carla::rpc::RpcServerInterface *carla_server,
-                  carla::streaming::detail::stream_id_type const world_observer_stream_id) {
+                  carla::streaming::detail::stream_id_type const world_observer_stream_id,
+                  TopicVisibilityDefaultMode topic_visibility_default_mode) {
   _enabled = true;
+  _topic_visibility_default_mode = topic_visibility_default_mode;
   _carla_server = carla_server;
   _name_registry = std::make_shared<ROS2NameRegistry>();
   _dispatcher = _carla_server->GetDispatcher();
   _domain_participant_impl = std::make_shared<DdsDomainParticipantImpl>();
+  // take basic actor role definition as this is acting as naming parent of others with /carla/world
+  auto world_observer_actor_definition = carla::ros2::types::ActorNameDefinition::CreateFromRoleName("/", true);
   _world_observer_sensor_actor_definition = std::make_shared<carla::ros2::types::SensorActorDefinition>(
-      carla::ros2::types::ActorNameDefinition(0, "world_observer", "world_observer"),
-      carla::ros2::types::PublisherSensorType::WorldObserver, world_observer_stream_id);
+      *world_observer_actor_definition,
+      carla::ros2::types::PublisherSensorType::WorldObserver, 
+      world_observer_stream_id);
   log_warning("ROS2 enabled");
 }
 
@@ -332,6 +337,8 @@ void ROS2::ProcessDataFromUeSensor(carla::streaming::detail::stream_id_type cons
   auto ue_sensor = _ue_sensors.find(stream_id);
   if (ue_sensor != _ue_sensors.end()) {
     auto const &sensor_actor_definition = ue_sensor->second.sensor_actor_definition;
+    log_info("Sensor Data to ROS data: frame.(", CurrentFrame(), ") stream.",
+              std::to_string(*sensor_actor_definition), " Processing...");
 
     auto buffer_list_view = message->GetBufferViewSequence();
     // currently we only support sensor header + data buffer
@@ -343,12 +350,20 @@ void ROS2::ProcessDataFromUeSensor(carla::streaming::detail::stream_id_type cons
                                 sensor_header_view.get()->data()));
 
     if (ue_sensor->second.publisher) {
-      auto data_view_iter = buffer_list_view.begin();
-      data_view_iter++;
-      if (data_view_iter != buffer_list_view.end()) {
-        ue_sensor->second.publisher->UpdateTransform(sensor_header);
-        ue_sensor->second.publisher->UpdateSensorData(sensor_header, *data_view_iter);
-        ue_sensor->second.publisher->Publish();
+      if ( ue_sensor->second.publisher->is_enabled_for_ros() ) {
+        auto data_view_iter = buffer_list_view.begin();
+        data_view_iter++;
+        if (data_view_iter != buffer_list_view.end()) {
+          ue_sensor->second.publisher->UpdateTransform(sensor_header);
+          ue_sensor->second.publisher->UpdateSensorData(sensor_header, *data_view_iter);
+          ue_sensor->second.publisher->Publish();
+        }
+        log_info("Sensor Data to ROS data: frame.(", CurrentFrame(), ") stream.",
+                  std::to_string(*sensor_actor_definition), " Processed.");
+
+      } else {
+        log_warning("Sensor Data to ROS data: frame.(", CurrentFrame(), ") stream.",
+                  std::to_string(*sensor_actor_definition), std::to_string(*ue_sensor->second.publisher->_actor_name_definition), " not enabled for ROS. Dropping data.");
       }
     } else {
       log_error("Sensor Data to ROS data: frame.(", CurrentFrame(), ") stream.",
@@ -360,6 +375,37 @@ void ROS2::ProcessDataFromUeSensor(carla::streaming::detail::stream_id_type cons
               " not registered. Dropping data.");
   }
 }
+
+void ROS2::EnableForROS(carla::streaming::detail::stream_id_type const stream_id) {
+  auto ue_sensor = _ue_sensors.find(stream_id);
+  if (ue_sensor != _ue_sensors.end()) {
+    if ( !ue_sensor->second.publisher->is_enabled_for_ros() ) {
+      log_warning("Enable Sensor for ROS: ",
+                  std::to_string(*ue_sensor->second.publisher->_actor_name_definition));
+      ue_sensor->second.publisher->enable_for_ros();
+    }
+  }
+}
+
+void ROS2::DisableForROS(carla::streaming::detail::stream_id_type const stream_id) {
+  auto ue_sensor = _ue_sensors.find(stream_id);
+  if (ue_sensor != _ue_sensors.end()) {
+    if ( ue_sensor->second.publisher->is_enabled_for_ros() ) {
+      log_warning("Disable Sensor for ROS: ",
+                  std::to_string(*ue_sensor->second.publisher->_actor_name_definition));
+      ue_sensor->second.publisher->disable_for_ros();
+    }
+  }
+}
+
+bool ROS2::IsEnabledForROS(carla::streaming::detail::stream_id_type const stream_id) {
+  auto ue_sensor = _ue_sensors.find(stream_id);
+  if (ue_sensor != _ue_sensors.end()) {
+    return ue_sensor->second.publisher->is_enabled_for_ros();
+  }
+  return false;
+}
+
 
 uint64_t ROS2::CurrentFrame() const {
   return (_world_publisher != nullptr) ? _world_publisher->CurrentFrame() : 0u;

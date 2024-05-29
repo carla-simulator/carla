@@ -655,6 +655,21 @@ namespace detail {
     _pimpl->streaming_client.UnSubscribe(token);
   }
 
+  void Client::EnableForROS(const streaming::Token &token) {
+    carla::streaming::detail::token_type thisToken(token);
+    _pimpl->AsyncCall("enable_sensor_for_ros", thisToken.get_stream_id());
+  }
+
+  void Client::DisableForROS(const streaming::Token &token) {
+    carla::streaming::detail::token_type thisToken(token);
+    _pimpl->AsyncCall("disable_sensor_for_ros", thisToken.get_stream_id());
+  }
+
+  bool Client::IsEnabledForROS(const streaming::Token &token) {
+    carla::streaming::detail::token_type thisToken(token);
+    return _pimpl->CallAndWait<bool>("is_sensor_enabled_for_ros", thisToken.get_stream_id());
+  }
+
   void Client::Send(rpc::ActorId ActorId, std::string message) {
     _pimpl->AsyncCall("send", ActorId, message);
   }

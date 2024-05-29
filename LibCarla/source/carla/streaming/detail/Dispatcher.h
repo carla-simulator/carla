@@ -24,7 +24,7 @@ namespace detail {
   using StreamMap = std::unordered_map<stream_id_type, std::shared_ptr<MultiStreamState>>;
 
   /// Keeps the mapping between streams and sessions.
-  class Dispatcher  {
+  class Dispatcher {
   public:
 
     template <typename Protocol, typename EndPointType>
@@ -43,6 +43,34 @@ namespace detail {
 
     token_type GetToken(stream_id_type sensor_id);
 
+    void SetROS2TopicVisibilityDefaultEnabled(bool _topic_visibility_default_enabled) {
+      _topic_visibility_default_enabled = _topic_visibility_default_enabled;
+    }
+
+    void EnableForROS(stream_id_type sensor_id) {
+      log_warning("Dispatcher: EnableForROS:", sensor_id);
+      auto search = _stream_map.find(sensor_id);
+      if (search != _stream_map.end()) {
+        log_warning("Dispatcher: EnableForROS: Found multistream state");
+        search->second->EnableForROS();
+      }
+    }
+
+    void DisableForROS(stream_id_type sensor_id) {
+      auto search = _stream_map.find(sensor_id);
+      if (search != _stream_map.end()) {
+        search->second->DisableForROS();
+      }
+    }
+
+    bool IsEnabledForROS(stream_id_type sensor_id) {
+      auto search = _stream_map.find(sensor_id);
+      if (search != _stream_map.end()) {
+        return search->second->IsEnabledForROS();
+      }
+      return false;
+    }
+
   private:
 
     // We use a mutex here, but we assume that sessions and streams won't be
@@ -52,6 +80,8 @@ namespace detail {
     token_type _cached_token;
 
     StreamMap _stream_map;
+
+    bool _topic_visibility_default_enabled{false};
   };
 
 } // namespace detail

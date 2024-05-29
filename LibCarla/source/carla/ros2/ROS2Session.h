@@ -26,6 +26,10 @@ public:
     // this is handled directly within ROS2 class
     // nothing to be done here
   }
+
+  void EnableForROS() override;
+  void DisableForROS()override;  
+  bool IsEnabledForROS() override;
 };
 
 }  // namespace ros2

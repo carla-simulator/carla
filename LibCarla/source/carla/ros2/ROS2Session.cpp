@@ -16,5 +16,19 @@ void ROS2Session::WriteMessage(std::shared_ptr<const carla::streaming::detail::M
   ROS2->ProcessDataFromUeSensor(_stream_id, message);
 }
 
+void ROS2Session::EnableForROS() {
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  ROS2->EnableForROS(_stream_id);
+}
+
+void ROS2Session::DisableForROS() {
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  ROS2->DisableForROS(_stream_id);
+}
+
+bool ROS2Session::IsEnabledForROS() {
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  return ROS2->IsEnabledForROS(_stream_id);
+}
 }  // namespace ros2
 }  // namespace carla

@@ -77,6 +77,12 @@ carla_msgs::srv::SpawnObject_Response SpawnObjectService::SpawnObject(
     }
 
     auto actor_description = blueprint.MakeActorDescription();
+    
+    carla::rpc::ActorAttributeValue attribute_value;
+    attribute_value.id = "enabled_for_ros";
+    attribute_value.type = carla::rpc::ActorAttributeType::Bool;
+    attribute_value.value = "1";
+    actor_description.attributes.push_back(attribute_value);
 
     carla::rpc::Response<carla::rpc::Actor> result;
     carla::rpc::ActorId const parent = request.attach_to();

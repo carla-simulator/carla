@@ -144,6 +144,8 @@ private:
     std::shared_ptr<VehiclePublisher> _vehicle_publisher;
     std::shared_ptr<VehicleControlSubscriber> _vehicle_controller;
     std::shared_ptr<AckermannControlSubscriber> _vehicle_ackermann_controller;
+
+    void Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant);
   };
   std::unordered_map<ActorId, UeVehicle> _vehicles;
 
@@ -153,6 +155,8 @@ private:
     std::shared_ptr<WalkerPublisher> _walker_publisher;
     std::shared_ptr<WalkerControlSubscriber> _walker_controller;
     carla::ros2::types::WalkerControlCallback _walker_control_callback;
+  
+    void Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant);
   };
   std::unordered_map<ActorId, UeWalker> _walkers;
 
@@ -160,6 +164,8 @@ private:
     explicit UeTrafficLight(std::shared_ptr<TrafficLightPublisher> carla_traffic_light_publisher)
       : _traffic_light_publisher(carla_traffic_light_publisher) {}
     std::shared_ptr<TrafficLightPublisher> _traffic_light_publisher;
+
+    void Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant);
   };
   std::unordered_map<ActorId, UeTrafficLight> _traffic_lights;
 
@@ -167,6 +173,8 @@ private:
     explicit UeTrafficSign(std::shared_ptr<TrafficSignPublisher> carla_traffic_sign_publisher)
       : _traffic_sign_publisher(carla_traffic_sign_publisher) {}
     std::shared_ptr<TrafficSignPublisher> _traffic_sign_publisher;
+
+    void Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant);
   };
   std::unordered_map<ActorId, UeTrafficSign> _traffic_signs;
 

@@ -50,6 +50,18 @@ public:
    */
 
   /**
+   * @brief ros sensor interaction calls
+   * @{
+   */
+  virtual carla::rpc::Response<void> call_enable_sensor_for_ros(carla::streaming::detail::stream_id_type sensor_id) = 0;
+  virtual carla::rpc::Response<void> call_disable_sensor_for_ros(carla::streaming::detail::stream_id_type sensor_id) = 0;
+  virtual carla::rpc::Response<bool> call_is_sensor_enabled_for_ros(carla::streaming::detail::stream_id_type sensor_id) = 0;
+  /**
+   * @}
+   */
+
+
+  /**
    * @brief synchronization calls
    * @{
    */

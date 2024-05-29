@@ -46,6 +46,8 @@ public:
   void DisableSynchronousMode();
   bool IsSynchronousModeActive();
 
+  void SetROS2TopicVisibilityDefaultEnabled(bool _topic_visibility_default_enabled);
+
   void Tick();
   
   bool TickCueReceived();
@@ -78,6 +80,10 @@ public:
     carla::rpc::AttachmentType InAttachmentType,
     const std::string& socket_name) override;
   carla::rpc::Response<bool> call_destroy_actor(carla::rpc::ActorId ActorId) override;
+  carla::rpc::Response<void> call_enable_sensor_for_ros(carla::streaming::detail::stream_id_type sensor_id) override;
+  carla::rpc::Response<void> call_disable_sensor_for_ros(carla::streaming::detail::stream_id_type sensor_id) override;
+  carla::rpc::Response<bool> call_is_sensor_enabled_for_ros(carla::streaming::detail::stream_id_type sensor_id) override;
+
   carla::rpc::Response<uint64_t> call_tick(
     carla::rpc::synchronization_client_id_type const &client_id = carla::rpc::ALL_CLIENTS, 
     carla::rpc::synchronization_participant_id_type const&participant_id= carla::rpc::ALL_PARTICIPANTS) override;

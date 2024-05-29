@@ -44,6 +44,27 @@ public:
   ROS2QoS get_topic_qos() const {
     return DEFAULT_PUBLISHER_QOS;
   }
+
+  /*
+   * @brief enable actor ROS publication
+   */
+  void enable_for_ros() {
+    _actor_name_definition->enabled_for_ros = true;
+  }
+
+  /*
+   * @brief disable actor ROS publication
+   */
+  void disable_for_ros() {
+    _actor_name_definition->enabled_for_ros = false;
+  }
+
+  /*
+   * @brief is the publisher actually enabled for ROS publication
+   */
+  bool is_enabled_for_ros() const {
+    return _actor_name_definition->enabled_for_ros;
+  }
 };
 }  // namespace ros2
 }  // namespace carla

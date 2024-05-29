@@ -47,6 +47,9 @@ namespace detail {
       if (!result.second) {
         throw_exception(std::runtime_error("failed to create stream!"));
       }
+      if ( _topic_visibility_default_enabled ) {
+        ptr->EnableForROS();
+      }
       log_debug("Stream created");
       return carla::streaming::Stream(ptr);
     } else {

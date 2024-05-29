@@ -176,6 +176,43 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             Secondary->Write(std::move(buf));
             break;
           }
+          case carla::multigpu::MultiGPUCommand::ENABLE_ROS:
+          {
+            // get the sensor id
+            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
+            // query dispatcher
+            Server.GetStreamingServer().EnableForROS(sensor_id);
+            // return a 'true'
+            bool res = true;
+            carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
+            carla::log_info("responding ENABLE_ROS with a true");
+            Secondary->Write(std::move(buf));
+            break;
+          }
+          case carla::multigpu::MultiGPUCommand::DISABLE_ROS:
+          {
+            // get the sensor id
+            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
+            // query dispatcher
+            Server.GetStreamingServer().DisableForROS(sensor_id);
+            // return a 'true'
+            bool res = true;
+            carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
+            carla::log_info("responding DISABLE_ROS with a true");
+            Secondary->Write(std::move(buf));
+            break;
+          }
+          case carla::multigpu::MultiGPUCommand::IS_ENABLED_ROS:
+          {
+            // get the sensor id
+            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
+            // query dispatcher
+            bool res = Server.GetStreamingServer().IsEnabledForROS(sensor_id);
+            carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
+            carla::log_info("responding IS_ENABLED_ROS with: ", res);
+            Secondary->Write(std::move(buf));
+            break;
+          }
         }
       };
 
@@ -199,9 +236,11 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     #if defined(WITH_ROS2)
     if (Settings.ROS2) {
       // create ROS2 manager
-      UE_LOG(LogCarla, Log, TEXT("ENABLE ROS"));
+      UE_LOG(LogCarla, Log, TEXT("ENABLE ROS: %s"), UTF8_TO_TCHAR(Settings.ROS2TopicVisibility?" Topics visible per default": " Topics invisible"));
       auto ROS2 = carla::ros2::ROS2::GetInstance();
-      ROS2->Enable(&Server, carla::streaming::detail::token_type(WorldObserver.GetToken()).get_stream_id());
+      ROS2->Enable(&Server, carla::streaming::detail::token_type(WorldObserver.GetToken()).get_stream_id(), 
+        Settings.ROS2TopicVisibility?carla::ros2::ROS2::TopicVisibilityDefaultMode::eOn:carla::ros2::ROS2::TopicVisibilityDefaultMode::eOff);
+      Server.SetROS2TopicVisibilityDefaultEnabled(Settings.ROS2TopicVisibility);
     }
     #endif
   }
