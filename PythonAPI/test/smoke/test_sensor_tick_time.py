@@ -38,7 +38,9 @@ class TestSensorTickTime(SyncSmokeTest):
       "sensor.camera.semantic_segmentation",
       "sensor.camera.dvs",
       "sensor.other.obstacle",
-      "sensor.camera.instance_segmentation"
+      "sensor.camera.instance_segmentation",
+      "sensor.other.v2x",
+      "sensor.other.v2x_custom"
     }
     spawned_sensors = []
     sensor_tick = 1.0
@@ -64,5 +66,3 @@ class TestSensorTickTime(SyncSmokeTest):
       self.assertEqual(sensor.num_ticks, num_sensor_ticks,
         "\n\n {} does not match tick count".format(sensor.bp_sensor.id))
       sensor.destroy()
-
-
