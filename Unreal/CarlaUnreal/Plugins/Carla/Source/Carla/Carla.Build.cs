@@ -107,14 +107,7 @@ public class Carla :
 
     PublicDependencyModuleNames.AddRange(new string[]
     {
-			"AIModule", 
       "Core",
-			"CoreUObject",
-			"Engine",
-			"Foliage",
-			"InputCore",
-			"PhysicsCore", 
-      "RenderCore",
       "RHI",
       "Renderer",
       "ProceduralMeshComponent",
