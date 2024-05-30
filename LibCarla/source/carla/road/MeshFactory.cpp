@@ -633,8 +633,6 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             if (mesh_uptr_list[lane_pair.second.GetType()].size() <= PosToAdd) {
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
             } else {
-              uint32_t verticesinwidth  = 0;
-              
               *(mesh_uptr_list[lane_pair.second.GetType()][PosToAdd]) += lane_section_mesh;
             }
           }
