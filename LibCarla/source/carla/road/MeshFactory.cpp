@@ -206,23 +206,33 @@ namespace geom {
       size_t PosToAdd = it - redirections.begin();
 
       Mesh out_mesh;
-      if(lane_pair.second.GetType() == road::Lane::LaneType::Driving ){
-        out_mesh += *GenerateTesselated(lane_pair.second);
-      }else{
-        out_mesh += *GenerateSidewalk(lane_pair.second);
+      switch(lane_pair.second.GetType())
+      {
+        case road::Lane::LaneType::Driving:
+        case road::Lane::LaneType::Parking:
+        case road::Lane::LaneType::Bidirectional:
+        {
+          out_mesh += *GenerateTesselated(lane_pair.second);
+          break;
+        }
+        case road::Lane::LaneType::Shoulder:
+        case road::Lane::LaneType::Sidewalk:
+        case road::Lane::LaneType::Biking:
+        {
+          out_mesh += *GenerateSidewalk(lane_pair.second);
+          break;
+        }
+        default:
+        {
+          out_mesh += *GenerateTesselated(lane_pair.second);
+          break;
+        }
       }
 
       if( result[lane_pair.second.GetType()].size() <= PosToAdd ){
         result[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(out_mesh));
       } else {
-        uint32_t verticesinwidth  = 0;
-        if(lane_pair.second.GetType() == road::Lane::LaneType::Driving) {
-          verticesinwidth = vertices_in_width;
-        }else if(lane_pair.second.GetType() == road::Lane::LaneType::Sidewalk){
-          verticesinwidth = 6;
-        }else{
-          verticesinwidth = 2;
-        }
+        uint32_t verticesinwidth  = SelectVerticesInWidth(vertices_in_width, lane_pair.second.GetType());
         (result[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(out_mesh, verticesinwidth);
       }
     }
@@ -548,12 +558,28 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
 
           for (auto &&lane_pair : lane_section.GetLanes()) {
             Mesh lane_section_mesh;
-            if(lane_pair.second.GetType() == road::Lane::LaneType::Driving ){
-              lane_section_mesh += *GenerateTesselated(lane_pair.second, s_current, s_until);
-            }else{
-              lane_section_mesh += *GenerateSidewalk(lane_pair.second, s_current, s_until);
+            switch(lane_pair.second.GetType())
+            {
+              case road::Lane::LaneType::Driving:
+              case road::Lane::LaneType::Parking:
+              case road::Lane::LaneType::Bidirectional:
+              {
+                lane_section_mesh += *GenerateTesselated(lane_pair.second, s_current, s_until);
+                break;
+              }
+              case road::Lane::LaneType::Shoulder:
+              case road::Lane::LaneType::Sidewalk:
+              case road::Lane::LaneType::Biking:
+              {
+                lane_section_mesh += *GenerateSidewalk(lane_pair.second, s_current, s_until);
+                break;
+              }
+              default:
+              {
+                 lane_section_mesh += *GenerateTesselated(lane_pair.second, s_current, s_until);
+                break;
+              }
             }
-
             auto it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
             if (it == redirections.end()) {
               redirections.push_back(lane_pair.first);
@@ -564,14 +590,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             if (mesh_uptr_list[lane_pair.second.GetType()].size() <= PosToAdd) {
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
             } else {
-              uint32_t verticesinwidth  = 0;
-              if(lane_pair.second.GetType() == road::Lane::LaneType::Driving) {
-                verticesinwidth = vertices_in_width;
-              }else if(lane_pair.second.GetType() == road::Lane::LaneType::Sidewalk){
-                verticesinwidth = 6;
-              }else{
-                verticesinwidth = 2;
-              }
+              uint32_t verticesinwidth = SelectVerticesInWidth(vertices_in_width, lane_pair.second.GetType());
               (mesh_uptr_list[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(lane_section_mesh, verticesinwidth);
             }
           }
@@ -580,10 +599,27 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
         if (s_end - s_current > EPSILON) {
           for (auto &&lane_pair : lane_section.GetLanes()) {
             Mesh lane_section_mesh;
-            if(lane_pair.second.GetType() == road::Lane::LaneType::Driving ){
-              lane_section_mesh += *GenerateTesselated(lane_pair.second, s_current, s_end);
-            }else{
-              lane_section_mesh += *GenerateSidewalk(lane_pair.second, s_current, s_end);
+            switch(lane_pair.second.GetType())
+            {
+              case road::Lane::LaneType::Driving:
+              case road::Lane::LaneType::Parking:
+              case road::Lane::LaneType::Bidirectional:
+              {
+                lane_section_mesh += *GenerateTesselated(lane_pair.second, s_current, s_end);
+                break;
+              }
+              case road::Lane::LaneType::Shoulder:
+              case road::Lane::LaneType::Sidewalk:
+              case road::Lane::LaneType::Biking:
+              {
+                lane_section_mesh += *GenerateSidewalk(lane_pair.second, s_current, s_end);
+                break;
+              }
+              default:
+              {
+                lane_section_mesh += *GenerateTesselated(lane_pair.second, s_current, s_end);
+                break;
+              }
             }
 
             auto it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
@@ -598,13 +634,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
             } else {
               uint32_t verticesinwidth  = 0;
-              if(lane_pair.second.GetType() == road::Lane::LaneType::Driving) {
-                verticesinwidth = vertices_in_width;
-              }else if(lane_pair.second.GetType() == road::Lane::LaneType::Sidewalk){
-                verticesinwidth = 6;
-              }else{
-                verticesinwidth = 2;
-              }
+              
               *(mesh_uptr_list[lane_pair.second.GetType()][PosToAdd]) += lane_section_mesh;
             }
           }
@@ -725,9 +755,20 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
     for (auto&& lane_section : road.GetLaneSections()) {
       for (auto&& lane : lane_section.GetLanes()) {
         if (lane.first != 0) {
-          if(lane.second.GetType() == road::Lane::LaneType::Driving ){
-            GenerateLaneMarksForNotCenterLine(lane_section, lane.second, inout, outinfo);
-            outinfo.push_back("white");
+          switch(lane.second.GetType())
+          {
+            case road::Lane::LaneType::Driving:
+            case road::Lane::LaneType::Parking:
+            case road::Lane::LaneType::Bidirectional:
+            {
+              GenerateLaneMarksForNotCenterLine(lane_section, lane.second, inout, outinfo);
+              outinfo.push_back("white");
+              break;
+            }
+            default:
+            {
+              break;
+            }
           }
         } else {
           if(lane.second.GetType() == road::Lane::LaneType::None ){
@@ -1129,6 +1170,32 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
     }
 
     return std::make_unique<Mesh>(out_mesh);
+  }
+
+  uint32_t MeshFactory::SelectVerticesInWidth(uint32_t default_num_vertices, road::Lane::LaneType type)
+  {
+    switch(type)
+    {
+      case road::Lane::LaneType::Driving:
+      case road::Lane::LaneType::Parking:
+      case road::Lane::LaneType::Bidirectional:
+      {
+        return default_num_vertices;
+        break;
+      }
+      case road::Lane::LaneType::Shoulder:
+      case road::Lane::LaneType::Sidewalk:
+      case road::Lane::LaneType::Biking:
+      {
+        return 6;
+        break;
+      }
+      default:
+      {
+        return 2;
+        break;
+      }
+    }
   }
 
   std::pair<geom::Vector3D, geom::Vector3D> MeshFactory::ComputeEdgesForLanemark(
