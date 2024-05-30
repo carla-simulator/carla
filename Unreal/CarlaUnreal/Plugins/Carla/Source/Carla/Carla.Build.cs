@@ -86,6 +86,7 @@ public class Carla :
       "AIModule",
       "AssetRegistry",
       "CoreUObject",
+      //"dtc_plugin",
       "Engine",
       "Foliage",
       "HTTP",

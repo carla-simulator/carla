@@ -49,9 +49,9 @@ set (
   ${CARLA_UE_PATH}/Content/Carla
 )
 
-if (NOT EXISTS ${CARLA_UE_CONTENT_PATH}/.git)
-  carla_error ("Missing CARLA content.")
-endif ()
+#if (NOT EXISTS ${CARLA_UE_CONTENT_PATH}/.git)
+#  carla_error ("Missing CARLA content.")
+#endif ()
 
 if (ENABLE_ROS2)
   set (LAUNCH_ARGS ${LAUNCH_ARGS} --ros2)
@@ -90,7 +90,6 @@ set (
   carla-server
   libsqlite3
   Boost::asio
-  Boost::python
   Boost::geometry
   Boost::gil
   Eigen3::Eigen
