@@ -10,20 +10,27 @@
 
 ASkyBase::ASkyBase(
 	const FObjectInitializer& ObjectInitializer) :
-	Super(ObjectInitializer),
-	PostProcessComponent(nullptr),
-	ExponentialHeightFogComponent(nullptr),
-	DirectionalLightComponentSun(nullptr),
-	DirectionalLightComponentMoon(nullptr),
-	SkyLightComponent(nullptr),
-	VolumetricCloudComponent(nullptr),
-	SkyAtmosphereComponent(nullptr)
+	Super(ObjectInitializer)
 {
   PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>("PostProcessComponent");
+  RootComponent = PostProcessComponent;
+
   ExponentialHeightFogComponent = CreateDefaultSubobject<UExponentialHeightFogComponent>("ExponentialHeightFogComponent");
+  ExponentialHeightFogComponent->SetupAttachment(RootComponent);
+
   DirectionalLightComponentSun = CreateDefaultSubobject<UDirectionalLightComponent>("DirectionalLightComponentSun");
+  DirectionalLightComponentSun->SetupAttachment(RootComponent);
+
   DirectionalLightComponentMoon = CreateDefaultSubobject<UDirectionalLightComponent>("DirectionalLightComponentMoon");
+  DirectionalLightComponentMoon->SetupAttachment(RootComponent);
+
   SkyLightComponent = CreateDefaultSubobject<USkyLightComponent>("SkyLightComponent");
+  SkyLightComponent->SetupAttachment(RootComponent);
+
   VolumetricCloudComponent = CreateDefaultSubobject<UVolumetricCloudComponent>("VolumetricCloudComponent");
+  VolumetricCloudComponent->SetupAttachment(RootComponent);
+
   SkyAtmosphereComponent = CreateDefaultSubobject<USkyAtmosphereComponent>("SkyAtmosphereComponent");
+  SkyAtmosphereComponent->SetupAttachment(RootComponent);
+
 }
