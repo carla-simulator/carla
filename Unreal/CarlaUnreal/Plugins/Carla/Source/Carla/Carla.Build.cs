@@ -110,6 +110,7 @@ public class Carla :
       "Core",
       "RHI",
       "Renderer",
+      "RenderCore",
       "ProceduralMeshComponent",
       "MeshDescription"
     });
