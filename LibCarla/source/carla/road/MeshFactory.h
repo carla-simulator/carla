@@ -129,7 +129,10 @@ namespace geom {
       const road::Lane& lane,
       std::vector<std::unique_ptr<Mesh>>& inout,
       std::vector<std::string>& outinfo ) const;
-
+      
+    // =========================================================================
+    // -- Generation parameters ------------------------------------------------
+    // =========================================================================
 
     /// Parameters for the road generation
     struct RoadParameters {
