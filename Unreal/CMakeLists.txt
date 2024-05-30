@@ -40,6 +40,11 @@ set (
 )
 
 set (
+  CARLA_UE_DTC_PLUGIN_PATH
+  ${CARLA_UE_PLUGINS_PATH}/dtc_plugin
+)
+
+set (
   CARLA_UE_PROJECT_PATH
   ${CARLA_UE_PATH}/CarlaUnreal.uproject
 )
@@ -83,12 +88,10 @@ else ()
   carla_warning ("Could not find CARLA Content, download it or running the editor will result in a crash.")
 endif ()
 
-
-
 set (
   UE_DEPENDENCIES_ORDER_ONLY
   carla-server
-  libsqlite3
+  #libsqlite3
   Boost::asio
   Boost::geometry
   Boost::gil
@@ -103,8 +106,6 @@ set (UE_DEPENDENCIES ${UE_DEPENDENCIES_ORDER_ONLY})
 if (BUILD_CARLA_CLIENT)
   list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-client)
 endif ()
-
-
 
 set (
   CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH
@@ -134,10 +135,10 @@ foreach (UE_DEP ${UE_DEPENDENCIES})
   )
 endforeach ()
 
-set (
-  CARLA_UNREAL_LIBRARIES
-  $<TARGET_FILE:libsqlite3>
-)
+# set (
+#   CARLA_UNREAL_LIBRARIES
+#   $<TARGET_FILE:libsqlite3>
+# )
 
 foreach (UE_DEP ${UE_DEPENDENCIES})
   get_target_property (UE_DEP_TYPE ${UE_DEP} TYPE)
@@ -233,12 +234,15 @@ set (
     ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
     ${CARLA_UE_CARLA_PATH}/Includes.def
     ${CARLA_UE_CARLA_TOOLS_PATH}/Includes.def
+    ${CARLA_UE_DTC_PLUGIN_PATH}/Includes.def
     ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH}
     ${CARLA_UE_CARLA_PATH}/Libraries.def
     ${CARLA_UE_CARLA_TOOLS_PATH}/Libraries.def
+    ${CARLA_UE_DTC_PLUGIN_PATH}/Libraries.def
     ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH}
     ${CARLA_UE_CARLA_PATH}/Options.def
     ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
+    ${CARLA_UE_DTC_PLUGIN_PATH}/Options.def
 )
 
 
@@ -272,10 +276,13 @@ add_custom_command (
     ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
   COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Includes.def
   COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Includes.def
+  COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH} ${CARLA_UE_DTC_PLUGIN_PATH}/Includes.def
   COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Libraries.def
   COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Libraries.def
+  COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_LIBRARIES_PATHS_FILE_PATH} ${CARLA_UE_DTC_PLUGIN_PATH}/Libraries.def
   COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_PATH}/Options.def
   COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_CARLA_TOOLS_PATH}/Options.def
+  COMMAND ${CMAKE_COMMAND} ARGS -E create_symlink ${CARLA_UNREAL_OPTIONS_PATHS_FILE_PATH} ${CARLA_UE_DTC_PLUGIN_PATH}/Options.def
   USES_TERMINAL
   VERBATIM
 )
@@ -506,6 +513,9 @@ set_property (
   "${CARLA_UE_CARLA_TOOLS_PATH}/Binaries" 
   "${CARLA_UE_CARLA_TOOLS_PATH}/Intermediate"
   "${CARLA_UE_CARLA_TOOLS_PATH}/Saved"
+  "${CARLA_UE_DTC_PLUGIN_PATH}/Binaries" 
+  "${CARLA_UE_DTC_PLUGIN_PATH}/Intermediate"
+  "${CARLA_UE_DTC_PLUGIN_PATH}/Saved"
   "${CARLA_UE_CARLA_PATH}/Binaries" 
   "${CARLA_UE_CARLA_PATH}/Intermediate"
   "${CARLA_UE_CARLA_PATH}/Saved"

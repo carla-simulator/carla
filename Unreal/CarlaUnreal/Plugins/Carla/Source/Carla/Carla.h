@@ -4,7 +4,6 @@
 // plugin.
 #pragma once
 
-
 #include "Logging/LogMacros.h"
 #include "Util/NonCopyable.h"
 #include "Modules/ModuleInterface.h"

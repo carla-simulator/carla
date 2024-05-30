@@ -27,8 +27,6 @@ public class Carla :
   [CommandLine("-osm2odr")]
   bool EnableOSM2ODR = false;
 
-
-
   public Carla(ReadOnlyTargetRules Target) :
     base(Target)
   {
@@ -111,9 +109,9 @@ public class Carla :
     PublicDependencyModuleNames.AddRange(new string[]
     {
       "Core",
-      "RenderCore",
       "RHI",
       "Renderer",
+      "RenderCore",
       "ProceduralMeshComponent",
       "MeshDescription"
     });
