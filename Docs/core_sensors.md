@@ -96,7 +96,8 @@ Sensor data differs a lot between sensor types. Take a look at the [sensors refe
 
 
 !!! Important
-    `is_listening` is a __sensor attribute__ that enables/disables data listening at will.  
+    `is_listening()` is a __sensor method__ to check whether the sensor has a callback registered by `listen`.
+    `stop()` is a __sensor method__ to stop the sensor from listening.
     `sensor_tick` is a __blueprint attribute__ that sets the simulation time between data received.  
 
 ---

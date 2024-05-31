@@ -23,13 +23,6 @@
         - [Collision detector](ref_sensors.md#collision-detector).
         - [Lane invasion detector](ref_sensors.md#lane-invasion-detector).
         - [Obstacle detector](ref_sensors.md#obstacle-detector).
-
-    # - PROPERTIES -------------------------
-    instance_variables:
-    - var_name: is_listening
-      type: boolean
-      doc: >
-        When <b>True</b> the sensor will be waiting for data.
     # - METHODS ----------------------------
     methods:
     - def_name: listen
@@ -44,6 +37,8 @@
     - def_name: is_listening
       doc: >
         Returns whether the sensor is in a listening state.
+      return:
+        bool
     # --------------------------------------
     - def_name: stop
       doc: >
@@ -60,6 +55,8 @@
     - def_name: is_enabled_for_ros
       doc: >
         Returns if the sensor is enabled or not to publish in ROS2 if there is no any listen to it.
+      return:
+        bool
     # --------------------------------------
     - def_name: listen_to_gbuffer
       params:
@@ -83,6 +80,8 @@
           The ID of the target Unreal Engine GBuffer texture.
       doc: >
         Returns whether the sensor is in a listening state for a specific GBuffer texture.
+      return:
+        bool
     # --------------------------------------
     - def_name: stop_gbuffer
       params:
