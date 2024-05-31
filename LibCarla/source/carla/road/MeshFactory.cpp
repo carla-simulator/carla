@@ -763,10 +763,6 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
               outinfo.push_back("white");
               break;
             }
-            default:
-            {
-              break;
-            }
           }
         } else {
           if(lane.second.GetType() == road::Lane::LaneType::None ){
@@ -1179,19 +1175,16 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
       case road::Lane::LaneType::Bidirectional:
       {
         return default_num_vertices;
-        break;
       }
       case road::Lane::LaneType::Shoulder:
       case road::Lane::LaneType::Sidewalk:
       case road::Lane::LaneType::Biking:
       {
         return 6;
-        break;
       }
       default:
       {
         return 2;
-        break;
       }
     }
   }
