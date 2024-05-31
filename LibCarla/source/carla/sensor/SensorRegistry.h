@@ -50,6 +50,7 @@ class ARssSensor;
 class FWorldObserver;
 struct FCameraGBufferUint8;
 struct FCameraGBufferFloat;
+class AIRSceneCaptureCamera;
 
 namespace carla {
 namespace sensor {
@@ -80,7 +81,8 @@ namespace sensor {
     std::pair<AInstanceSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<FWorldObserver *, s11n::EpisodeStateSerializer>,
     std::pair<FCameraGBufferUint8 *, s11n::GBufferUint8Serializer>,
-    std::pair<FCameraGBufferFloat *, s11n::GBufferFloatSerializer>
+    std::pair<FCameraGBufferFloat *, s11n::GBufferFloatSerializer>,
+    std::pair<AIRSceneCaptureCamera *, s11n::ImageSerializer>
   >;
 
 } // namespace sensor
