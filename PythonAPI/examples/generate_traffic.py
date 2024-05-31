@@ -272,6 +272,8 @@ def main():
             loc = world.get_random_location_from_navigation()
             if (loc != None):
                 spawn_point.location = loc
+                #Apply Offset in vertical to avoid collision spawning
+                spawn_point.location.z += 2
                 spawn_points.append(spawn_point)
         # 2. we spawn the walker object
         batch = []
