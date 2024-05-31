@@ -18,6 +18,8 @@ from agents.tools.misc import (get_speed, is_within_distance,
                                get_trafficlight_trigger_location,
                                compute_distance)
 
+from agents.tools.hints import ObstacleDetectionResult, TrafficLightDetectionResult
+
 
 class BasicAgent(object):
     """
@@ -265,7 +267,7 @@ class BasicAgent(object):
                 If None, the base threshold value is used
         """
         if self._ignore_traffic_lights:
-            return (False, None)
+            return TrafficLightDetectionResult(False, None)
 
         if not lights_list:
             lights_list = self._world.get_actors().filter("*traffic_light*")
@@ -277,7 +279,7 @@ class BasicAgent(object):
             if self._last_traffic_light.state != carla.TrafficLightState.Red:
                 self._last_traffic_light = None
             else:
-                return (True, self._last_traffic_light)
+                return TrafficLightDetectionResult(True, self._last_traffic_light)
 
         ego_vehicle_location = self._vehicle.get_location()
         ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
@@ -308,9 +310,9 @@ class BasicAgent(object):
 
             if is_within_distance(trigger_wp.transform, self._vehicle.get_transform(), max_distance, [0, 90]):
                 self._last_traffic_light = traffic_light
-                return (True, traffic_light)
+                return TrafficLightDetectionResult(True, traffic_light)
 
-        return (False, None)
+        return TrafficLightDetectionResult(False, None)
 
     def _vehicle_obstacle_detected(self, vehicle_list=None, max_distance=None, up_angle_th=90, low_angle_th=0, lane_offset=0):
         """
@@ -347,12 +349,12 @@ class BasicAgent(object):
             return Polygon(route_bb)
       
         if self._ignore_vehicles:
-            return (False, None, -1)
+            return ObstacleDetectionResult(False, None, -1)
 
         if vehicle_list is None:
             vehicle_list = self._world.get_actors().filter("*vehicle*")
         if len(vehicle_list) == 0:
-            return (False, None, -1)
+            return ObstacleDetectionResult(False, None, -1)
 
         if not max_distance:
             max_distance = self._base_vehicle_threshold
@@ -395,7 +397,7 @@ class BasicAgent(object):
                 target_polygon = Polygon(target_list)
 
                 if route_polygon.intersects(target_polygon):
-                    return (True, target_vehicle, compute_distance(target_vehicle.get_location(), ego_location))
+                    return ObstacleDetectionResult(True, target_vehicle, compute_distance(target_vehicle.get_location(), ego_location))
 
             # Simplified approach, using only the plan waypoints (similar to TM)
             else:
@@ -416,9 +418,9 @@ class BasicAgent(object):
                 )
 
                 if is_within_distance(target_rear_transform, ego_front_transform, max_distance, [low_angle_th, up_angle_th]):
-                    return (True, target_vehicle, compute_distance(target_transform.location, ego_transform.location))
+                    return ObstacleDetectionResult(True, target_vehicle, compute_distance(target_transform.location, ego_transform.location))
 
-        return (False, None, -1)
+        return ObstacleDetectionResult(False, None, -1)
 
     def _generate_lane_change_path(self, waypoint, direction='left', distance_same_lane=10,
                                 distance_other_lane=25, lane_change_distance=25,
