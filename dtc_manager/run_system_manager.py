@@ -206,7 +206,6 @@ def main(args):
             logging.info('  Error: %s', error)
             logging.info('  Failed to reset game to original state...')
             pass
-    executor_thread.join()
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='DTC System Manager')

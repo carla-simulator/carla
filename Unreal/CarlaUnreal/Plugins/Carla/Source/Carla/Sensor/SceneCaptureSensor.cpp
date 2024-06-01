@@ -496,7 +496,7 @@ void ASceneCaptureSensor::BeginPlay()
 
   // This ensures the camera is always spawning the raindrops in case the
   // weather was previously set to have rain.
-  GetEpisode().GetWeather()->NotifyWeather(this);
+  //GetEpisode().GetWeather()->NotifyWeather(this);
 
   Super::BeginPlay();
 }
