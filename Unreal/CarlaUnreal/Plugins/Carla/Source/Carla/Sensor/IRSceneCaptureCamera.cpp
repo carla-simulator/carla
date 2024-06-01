@@ -28,8 +28,8 @@ AIRSceneCaptureCamera::AIRSceneCaptureCamera(const FObjectInitializer& ObjectIni
     AddPostProcessingMaterial(
         TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
 
-	AddPostProcessingMaterial(TEXT("Material'/Game/Maps/IRCamera/PP_IR_Thermal.PP_IR_Thermal'"));
-	AddPostProcessingMaterial(TEXT("Material'/Game/Maps/IRCamera/PP_CameraBlur.PP_CameraBlur'"));
+	AddPostProcessingMaterial(TEXT("Material'/Game/DTC/IRCamera/PP_IR_Thermal.PP_IR_Thermal'"));
+	AddPostProcessingMaterial(TEXT("Material'/Game/DTC/IRCamera/PP_CameraBlur.PP_CameraBlur'"));
 }
 
 void AIRSceneCaptureCamera::BeginPlay()
