@@ -2,3 +2,27 @@ map: L_Razish_Carla
 #map: L_TrainCrash_Carla
 #map: Town10HD_Opt
 #map: StartingWorld
+
+waypoints:
+  waypoint_1:
+    zone: 1
+  waypoint_2:
+    zone: 4
+  waypoint_3:
+    zone: 7
+  waypoint_4:
+    zone: 10
+
+casualties:
+  casualty_1:
+    zone: 1
+    casualty_type: BP_Casualty_02
+  casualty_2:
+    zone: 4
+    casualty_type: BP_Casualty_17
+  casualty_3:
+    zone: 7
+    casualty_type: BP_Casualty_04
+  casualty_4:
+    zone: 10
+    casualty_type: BP_Casualty_05

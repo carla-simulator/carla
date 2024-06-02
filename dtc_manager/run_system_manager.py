@@ -153,13 +153,9 @@ def main(args):
         # Setup CARLA World
         logging.debug(' Setting up Carla Client and Settings')
         client = carla.Client(args.host, args.port)
-        logging.debug(' Got Client')
         client.set_timeout(60.0)
-        logging.debug(' Set Timeout')
         old_world = client.get_world()
-        logging.debug(' Got Old World')
         original_settings = old_world.get_settings()
-        logging.debug(' Got Old Worlds Settings')
         settings = old_world.get_settings()
         settings.synchronous_mode = True
         settings.fixed_delta_seconds = 0.05
@@ -175,12 +171,24 @@ def main(args):
                     world = client.get_world()
                     world.apply_settings(settings)
                     break
+        else:
+            logging.info("  No Map in Scenario File")
+            raise Exception("No Map in Scenario File")
 
         # Setup MetaHumans
+        if 'casualties' not in scenario_file:
+            logging.info("  No Casualties defined in Scenario File")
+            raise Exception("No Casualties defined in Scenario File")
         # Needs Code 
   
         # Create Vehicle with sensors
         vehicle_actors = _setup_vehicle_actors(world)
+
+        # Setup Vehicle Waypoints
+        if 'waypoints' not in scenario_file:
+            logging.info("  No Waypoints defined in Scenario File")
+            raise Exception("No Waypoints defined in Scenario File")
+        # Needs Code 
 
         logging.info("  Running Mission...")
         _ = world.tick()
