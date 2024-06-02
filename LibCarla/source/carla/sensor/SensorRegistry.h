@@ -37,6 +37,7 @@ class ANormalsCamera;
 class ADVSCamera;
 class AGnssSensor;
 class AInertialMeasurementUnit;
+class AIRCamera;
 class ALaneInvasionSensor;
 class AObstacleDetectionSensor;
 class AOpticalFlowCamera;
@@ -50,7 +51,6 @@ class ARssSensor;
 class FWorldObserver;
 struct FCameraGBufferUint8;
 struct FCameraGBufferFloat;
-class AIRSceneCaptureCamera;
 
 namespace carla {
 namespace sensor {
@@ -69,6 +69,7 @@ namespace sensor {
     std::pair<ADVSCamera *, s11n::DVSEventArraySerializer>,
     std::pair<AGnssSensor *, s11n::GnssSerializer>,
     std::pair<AInertialMeasurementUnit *, s11n::IMUSerializer>,
+    std::pair<AIRCamera *, s11n::ImageSerializer>,
     std::pair<ALaneInvasionSensor *, s11n::NoopSerializer>,
     std::pair<AObstacleDetectionSensor *, s11n::ObstacleDetectionEventSerializer>,
     std::pair<AOpticalFlowCamera *, s11n::OpticalFlowImageSerializer>,
@@ -81,8 +82,7 @@ namespace sensor {
     std::pair<AInstanceSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<FWorldObserver *, s11n::EpisodeStateSerializer>,
     std::pair<FCameraGBufferUint8 *, s11n::GBufferUint8Serializer>,
-    std::pair<FCameraGBufferFloat *, s11n::GBufferFloatSerializer>,
-    std::pair<AIRSceneCaptureCamera *, s11n::ImageSerializer>
+    std::pair<FCameraGBufferFloat *, s11n::GBufferFloatSerializer>
   >;
 
 } // namespace sensor
@@ -99,6 +99,7 @@ namespace sensor {
 #include "Carla/Sensor/DVSCamera.h"
 #include "Carla/Sensor/GnssSensor.h"
 #include "Carla/Sensor/InertialMeasurementUnit.h"
+#include "Carla/Sensor/IRCamera.h"
 #include "Carla/Sensor/LaneInvasionSensor.h"
 #include "Carla/Sensor/ObstacleDetectionSensor.h"
 #include "Carla/Sensor/OpticalFlowCamera.h"
@@ -110,6 +111,5 @@ namespace sensor {
 #include "Carla/Sensor/SemanticSegmentationCamera.h"
 #include "Carla/Sensor/InstanceSegmentationCamera.h"
 #include "Carla/Sensor/WorldObserver.h"
-#include "Carla/Sensor/IRSceneCaptureCamera.h"
 
 #endif // LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES

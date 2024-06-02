@@ -11,6 +11,12 @@
 #include "Components/SceneCaptureComponent2D.h"
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 
+AShaderBasedSensor::AShaderBasedSensor(const FObjectInitializer& ObjectInitializer)
+: Super(ObjectInitializer)
+{
+    EnablePostProcessingEffects(false);
+}
+
 bool AShaderBasedSensor::AddPostProcessingMaterial(const FString &Path)
 {
   ConstructorHelpers::FObjectFinder<UMaterial> Loader(*Path);
