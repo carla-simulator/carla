@@ -5,11 +5,11 @@
 #include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/ShaderBasedSensor.h"
 
-#include "IRSceneCaptureCamera.generated.h"
+#include "IRCamera.generated.h"
 
 /// A sensor that captures images from the scene.
 UCLASS()
-class CARLA_API AIRSceneCaptureCamera : public AShaderBasedSensor
+class CARLA_API AIRCamera : public AShaderBasedSensor
 {
 	GENERATED_BODY()
 
@@ -18,7 +18,7 @@ public:
 
 	static FActorDefinition GetSensorDefinition();
 
-	AIRSceneCaptureCamera(const FObjectInitializer &ObjectInitializer);
+	AIRCamera(const FObjectInitializer &ObjectInitializer);
 
 protected:
 	

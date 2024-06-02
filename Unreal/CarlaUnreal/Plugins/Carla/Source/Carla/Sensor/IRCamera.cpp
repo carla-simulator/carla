@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla/Sensor/IRSceneCaptureCamera.h"
+#include "Carla/Sensor/IRCamera.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaEngine.h"
@@ -14,7 +14,7 @@
 
 #include "Runtime/RenderCore/Public/RenderingThread.h"
 
-FActorDefinition AIRSceneCaptureCamera::GetSensorDefinition()
+FActorDefinition AIRCamera::GetSensorDefinition()
 {
     constexpr bool bEnableModifyingPostProcessEffects = true;
     return UActorBlueprintFunctionLibrary::MakeCameraDefinition(
@@ -22,7 +22,7 @@ FActorDefinition AIRSceneCaptureCamera::GetSensorDefinition()
         bEnableModifyingPostProcessEffects);
 }
 
-AIRSceneCaptureCamera::AIRSceneCaptureCamera(const FObjectInitializer& ObjectInitializer)
+AIRCamera::AIRCamera(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
     AddPostProcessingMaterial(
@@ -32,27 +32,27 @@ AIRSceneCaptureCamera::AIRSceneCaptureCamera(const FObjectInitializer& ObjectIni
 	AddPostProcessingMaterial(TEXT("Material'/Game/DTC/IRCamera/PP_CameraBlur.PP_CameraBlur'"));
 }
 
-void AIRSceneCaptureCamera::BeginPlay()
+void AIRCamera::BeginPlay()
 {
   Super::BeginPlay();
 }
 
-void AIRSceneCaptureCamera::OnFirstClientConnected()
+void AIRCamera::OnFirstClientConnected()
 {
 }
 
-void AIRSceneCaptureCamera::OnLastClientDisconnected()
+void AIRCamera::OnLastClientDisconnected()
 {
 }
 
-void AIRSceneCaptureCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void AIRCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   Super::EndPlay(EndPlayReason);
 }
 
-void AIRSceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
+void AIRCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(AIRSceneCaptureCamera::PostPhysTick);
+  TRACE_CPUPROFILER_EVENT_SCOPE(AIRCamera::PostPhysTick);
   Super::PostPhysTick(World, TickType, DeltaSeconds);
   
   ENQUEUE_RENDER_COMMAND(MeasureTime)
@@ -80,7 +80,7 @@ void AIRSceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, flo
 }
 
 #ifdef CARLA_HAS_GBUFFER_API
-void AIRSceneCaptureCamera::SendGBufferTextures(FGBufferRequest& GBuffer)
+void AIRCamera::SendGBufferTextures(FGBufferRequest& GBuffer)
 {
     SendGBufferTexturesInternal(*this, GBuffer);
 }
