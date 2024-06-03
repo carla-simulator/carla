@@ -51,7 +51,36 @@ cmake --build Build
 cmake --build Build --target carla-python-api-install
 ```
 
-* Run the editor:
+* Launch the editor:
 
 ```sh
 cmake --build Build --target launch
+```
+
+## Build a package with CARLA UE5
+
+```sh
+cmake --build Build --target package
+```
+
+The package will be generated in the directory `$CARLA_PATH/Build/Package`
+
+## Run the package
+
+Run the package with the following command.
+
+```sh
+./CarlaUnreal.sh
+```
+
+If you want to run the native ROS2 interface, add the `--ros2` argument
+
+```sh
+./CarlaUnreal.sh --ros2
+```
+
+If you want to install the Python API corresponding to the package you have built:
+
+```sh
+pip3 install PythonAPI/carla/dist/carla-*.whl
+```
