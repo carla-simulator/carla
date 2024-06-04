@@ -368,16 +368,16 @@ public:
   float GetChromAberrOffset() const;
 
   UFUNCTION(BlueprintCallable)
-  void SetColorSaturation(float ColorSaturation);
+  void SetColorSaturation(FVector4 ColorSaturation);
 
   UFUNCTION(BlueprintCallable)
-  float GetColorSaturation() const;
+  FVector4 GetColorSaturation() const;
 
   UFUNCTION(BlueprintCallable)
-  void SetColorContrast(float ColorContrast);
+  void SetColorContrast(FVector4 ColorContrast);
 
   UFUNCTION(BlueprintCallable)
-  float GetColorContrast() const;
+  FVector4 GetColorContrast() const;
 
   UFUNCTION(BlueprintCallable)
   void SetToneCurveAmount(float ToneCurveAmount);

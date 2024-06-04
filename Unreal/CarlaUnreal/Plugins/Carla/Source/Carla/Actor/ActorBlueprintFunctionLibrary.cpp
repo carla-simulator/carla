@@ -617,6 +617,37 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     ChromaticOffset.Type = EActorAttributeType::Float;
     ChromaticOffset.RecommendedValues = { TEXT("0.0") };
     ChromaticOffset.bRestrictToRecommended = false;
+    
+    FActorVariation ColorSaturation;
+    ColorSaturation.Id = TEXT("color_saturation");
+    ColorSaturation.Type = EActorAttributeType::Float;
+    ColorSaturation.RecommendedValues = { ColorToFString(FLinearColor(0.7f,0.7f,0.7f).ToFColorSRGB()) };
+    ColorSaturation.bRestrictToRecommended = false;
+
+    FActorVariation ColorContrast;
+    ColorContrast.Id = TEXT("color_contrast");
+    ColorContrast.Type = EActorAttributeType::Float;
+    ColorContrast.RecommendedValues = { ColorToFString(FLinearColor(0.9f,0.9f,0.9f).ToFColorSRGB()) };
+    ColorContrast.bRestrictToRecommended = false;
+
+    FActorVariation ToneCurveAmount;
+    ToneCurveAmount.Id = TEXT("tone_curve_amount");
+    ToneCurveAmount.Type = EActorAttributeType::Float;
+    ToneCurveAmount.RecommendedValues = { TEXT("0.7") };
+    ToneCurveAmount.bRestrictToRecommended = false;
+
+    FActorVariation SceneColorTint;
+    SceneColorTint.Id = TEXT("scene_color_tint");
+    SceneColorTint.Type = EActorAttributeType::RGBColor;
+    SceneColorTint.RecommendedValues = { ColorToFString(FLinearColor(0.540257,0.740748,0.839583).ToFColorSRGB()) };
+    SceneColorTint.bRestrictToRecommended = false;
+
+    FActorVariation VignetteIntensity;
+    VignetteIntensity.Id = TEXT("vignette_intensity");
+    VignetteIntensity.Type = EActorAttributeType::Float;
+    VignetteIntensity.RecommendedValues = { TEXT("0.5") };
+    VignetteIntensity.bRestrictToRecommended = false;
+
 
     Definition.Variations.Append({
       ExposureMode,
@@ -649,7 +680,12 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
       Temperature,
       Tint,
       ChromaticIntensity,
-      ChromaticOffset});
+      ChromaticOffset,
+      ColorSaturation,
+      ColorContrast,
+      ToneCurveAmount,
+      SceneColorTint,
+      VignetteIntensity});
   }
 
   Success = CheckActorDefinition(Definition);
@@ -1558,9 +1594,9 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     Camera->SetMotionBlurMinObjectScreenSize(
         RetrieveActorAttributeToFloat("motion_blur_min_object_screen_size", Description.Variations, 0.0f));
     Camera->SetLensFlareIntensity(
-        RetrieveActorAttributeToFloat("lens_flare_intensity", Description.Variations, 1.0f));
+        RetrieveActorAttributeToFloat("lens_flare_intensity", Description.Variations, 0.2f));
     Camera->SetBloomIntensity(
-        RetrieveActorAttributeToFloat("bloom_intensity", Description.Variations, 0.675000f));
+        RetrieveActorAttributeToFloat("bloom_intensity", Description.Variations, 0.2f));
     // Exposure, histogram mode by default
     if (RetrieveActorAttributeToString("exposure_mode", Description.Variations, "histogram") == "histogram")
     {
@@ -1592,7 +1628,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         RetrieveActorAttributeToFloat("calibration_constant", Description.Variations, 16.0f));
 
     Camera->SetFocalDistance(
-        RetrieveActorAttributeToFloat("focal_distance", Description.Variations, 0.0f));
+        RetrieveActorAttributeToFloat("focal_distance", Description.Variations, 200.0f));
     Camera->SetDepthBlurAmount(
         RetrieveActorAttributeToFloat("blur_amount", Description.Variations, 1.0f));
     Camera->SetDepthBlurRadius(
@@ -1605,7 +1641,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     Camera->SetFilmSlope(
         RetrieveActorAttributeToFloat("slope", Description.Variations, 0.88f));
     Camera->SetFilmToe(
-        RetrieveActorAttributeToFloat("toe", Description.Variations, 0.55f));
+        RetrieveActorAttributeToFloat("toe", Description.Variations, 0.4f));
     Camera->SetFilmShoulder(
         RetrieveActorAttributeToFloat("shoulder", Description.Variations, 0.26f));
     Camera->SetFilmBlackClip(
@@ -1619,9 +1655,26 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         RetrieveActorAttributeToFloat("tint", Description.Variations, 0.0f));
 
     Camera->SetChromAberrIntensity(
-        RetrieveActorAttributeToFloat("chromatic_aberration_intensity", Description.Variations, 0.0f));
-    Camera->SetChromAberrOffset(
+        RetrieveActorAttributeToFloat("chromatic_aberration_intensity", Description.Variations, 0.2f));
+    Camera->SetChromAberrIntensity(
         RetrieveActorAttributeToFloat("chromatic_aberration_offset", Description.Variations, 0.0f));
+
+    auto ColorSaturation = RetrieveActorAttributeToColor("color_saturation", Description.Variations, FLinearColor(0.75f,0.75f,0.75f).ToFColorSRGB());
+    Camera->SetColorSaturation(
+        FVector4(ColorSaturation.R, ColorSaturation.G, ColorSaturation.B, ColorSaturation.A));
+
+    auto ColorContrast = RetrieveActorAttributeToColor("color_contrast", Description.Variations, FLinearColor(0.9f,0.9f,0.9f).ToFColorSRGB());
+    Camera->SetColorContrast(
+        FVector4(ColorContrast.R, ColorContrast.G, ColorContrast.B, ColorContrast.A));
+
+    Camera->SetToneCurveAmount(
+        RetrieveActorAttributeToFloat("tone_curve_amount", Description.Variations, 0.7f));
+    
+    Camera->SetSceneColorTint(
+        RetrieveActorAttributeToColor("scene_color_tint", Description.Variations, FLinearColor(0.540257, 0.740748, 0.839583).ToFColorSRGB()));
+    
+    Camera->SetVignetteIntensity(
+        RetrieveActorAttributeToFloat("vignette_intensity", Description.Variations, 0.5f));
   }
 }
 

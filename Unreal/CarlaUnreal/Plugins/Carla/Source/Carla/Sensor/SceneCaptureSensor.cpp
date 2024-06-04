@@ -449,25 +449,25 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
   return CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset;
 }
 
-void ASceneCaptureSensor::SetColorSaturation(float ColorSaturation)
+void ASceneCaptureSensor::SetColorSaturation(FVector4 ColorSaturation)
 {
   check(CaptureComponent2D != nullptr);
   CaptureComponent2D->PostProcessSettings.ColorSaturation = ColorSaturation;
 }
 
-float ASceneCaptureSensor::GetColorSaturation() const
+FVector4 ASceneCaptureSensor::GetColorSaturation() const
 {
   check(CaptureComponent2D != nullptr);
   return CaptureComponent2D->PostProcessSettings.ColorSaturation;
 }
 
-void ASceneCaptureSensor::SetColorContrast(float ColorContrast)
+void ASceneCaptureSensor::SetColorContrast(FVector4 ColorContrast)
 {
   check(CaptureComponent2D != nullptr);
   CaptureComponent2D->PostProcessSettings.ColorContrast = ColorContrast;
 }
 
-float ASceneCaptureSensor::GetColorContrast() const
+FVector4 ASceneCaptureSensor::GetColorContrast() const
 {
   check(CaptureComponent2D != nullptr);
   return CaptureComponent2D->PostProcessSettings.ColorContrast;
