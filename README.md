@@ -106,7 +106,7 @@ cd CarlaUE5
 Setup.bat
 ```
 
-This will download and install Unreal Engine 5.3, install the prerequisite requirements and build and launch CARLA. It may take some time to complete and use a significant amount of disk space. For further instructions on building in Linux can be found [here][buildlinuxlink] and [here][buildwindowslink] for building in Windows.
+This will download and install Unreal Engine 5.3, install the prerequisite requirements and build and launch CARLA. It may take some time to complete and use a significant amount of disk space. For further instructions on building in Linux can be found [here][buildlinuxlink] and the instructions for building in Windows can be found [here][buildwindowslink].
 
 [buildlinuxlink]: https://carla.readthedocs.io/en/latest/build_linux_ue5/
 [buildwindowslink]: https://carla.readthedocs.io/en/latest/build_windows_ue5/
