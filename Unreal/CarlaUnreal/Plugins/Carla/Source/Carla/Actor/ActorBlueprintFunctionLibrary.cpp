@@ -418,14 +418,14 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation LensFlareIntensity;
     LensFlareIntensity.Id = TEXT("lens_flare_intensity");
     LensFlareIntensity.Type = EActorAttributeType::Float;
-    LensFlareIntensity.RecommendedValues = { TEXT("1.0") };
+    LensFlareIntensity.RecommendedValues = { TEXT("0.2") };
     LensFlareIntensity.bRestrictToRecommended = false;
 
     // Bloom
     FActorVariation BloomIntensity;
     BloomIntensity.Id = TEXT("bloom_intensity");
     BloomIntensity.Type = EActorAttributeType::Float;
-    BloomIntensity.RecommendedValues = { TEXT("0.675") };
+    BloomIntensity.RecommendedValues = { TEXT("0.2") };
     BloomIntensity.bRestrictToRecommended = false;
 
     // More info at:
@@ -450,7 +450,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureCompensation;
     ExposureCompensation.Id = TEXT("exposure_compensation");
     ExposureCompensation.Type = EActorAttributeType::Float;
-    ExposureCompensation.RecommendedValues = { TEXT("1.0") };
+    ExposureCompensation.RecommendedValues = { TEXT("0.0") };
     ExposureCompensation.bRestrictToRecommended = false;
 
     // - Manual ------------------------------------------------
@@ -479,6 +479,24 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     Aperture.Type = EActorAttributeType::Float;
     Aperture.RecommendedValues = { TEXT("4.0") };
     Aperture.bRestrictToRecommended = false;
+  
+    // Defines the opening of the camera lens, Aperture is 1.0/fstop,
+    // typical lens go down to f/1.2 (large opening),
+    // larger numbers reduce the DOF effect
+    FActorVariation MaxAperture;
+    MaxAperture.Id = TEXT("min_fstop");
+    MaxAperture.Type = EActorAttributeType::Float;
+    MaxAperture.RecommendedValues = { TEXT("1.2") };
+    MaxAperture.bRestrictToRecommended = false;
+
+    // Defines the number of blades of the diaphragm within the
+    // lens (between 4 and 16)
+    FActorVariation BladeCount;
+    BladeCount.Id = TEXT("blade_count");
+    BladeCount.Type = EActorAttributeType::Int;
+    BladeCount.RecommendedValues = { TEXT("5") };
+    BladeCount.bRestrictToRecommended = false;
+
 
     // - Histogram ---------------------------------------------
 
@@ -487,7 +505,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureMinBright;
     ExposureMinBright.Id = TEXT("exposure_min_bright");
     ExposureMinBright.Type = EActorAttributeType::Float;
-    ExposureMinBright.RecommendedValues = { TEXT("-10.0") };
+    ExposureMinBright.RecommendedValues = { TEXT("-2.0") };
     ExposureMinBright.bRestrictToRecommended = false;
 
     // The maximum brightness for auto exposure that limits the upper
@@ -526,7 +544,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation FocalDistance;
     FocalDistance.Id = TEXT("focal_distance");
     FocalDistance.Type = EActorAttributeType::Float;
-    FocalDistance.RecommendedValues = { TEXT("0.0") };
+    FocalDistance.RecommendedValues = { TEXT("200.0") };
     FocalDistance.bRestrictToRecommended = false;
 
     // Depth blur km for 50%
@@ -543,23 +561,6 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     DepthBlurRadius.RecommendedValues = { TEXT("0.0") };
     DepthBlurRadius.bRestrictToRecommended = false;
 
-    // Defines the opening of the camera lens, Aperture is 1.0/fstop,
-    // typical lens go down to f/1.2 (large opening),
-    // larger numbers reduce the DOF effect
-    FActorVariation MaxAperture;
-    MaxAperture.Id = TEXT("min_fstop");
-    MaxAperture.Type = EActorAttributeType::Float;
-    MaxAperture.RecommendedValues = { TEXT("1.2") };
-    MaxAperture.bRestrictToRecommended = false;
-
-    // Defines the number of blades of the diaphragm within the
-    // lens (between 4 and 16)
-    FActorVariation BladeCount;
-    BladeCount.Id = TEXT("blade_count");
-    BladeCount.Type = EActorAttributeType::Int;
-    BladeCount.RecommendedValues = { TEXT("5") };
-    BladeCount.bRestrictToRecommended = false;
-
     // - Tonemapper Settings -----------------------------------
     // You can adjust these tonemapper controls to emulate other
     // types of film stock for your project
@@ -572,7 +573,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation FilmToe;
     FilmToe.Id = TEXT("toe");
     FilmToe.Type = EActorAttributeType::Float;
-    FilmToe.RecommendedValues = { TEXT("0.55") };
+    FilmToe.RecommendedValues = { TEXT("0.4") };
     FilmToe.bRestrictToRecommended = false;
 
     FActorVariation FilmShoulder;
@@ -609,7 +610,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ChromaticIntensity;
     ChromaticIntensity.Id = TEXT("chromatic_aberration_intensity");
     ChromaticIntensity.Type = EActorAttributeType::Float;
-    ChromaticIntensity.RecommendedValues = { TEXT("0.0") };
+    ChromaticIntensity.RecommendedValues = { TEXT("0.2") };
     ChromaticIntensity.bRestrictToRecommended = false;
 
     FActorVariation ChromaticOffset;
@@ -621,7 +622,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ColorSaturation;
     ColorSaturation.Id = TEXT("color_saturation");
     ColorSaturation.Type = EActorAttributeType::Float;
-    ColorSaturation.RecommendedValues = { ColorToFString(FLinearColor(0.7f,0.7f,0.7f).ToFColorSRGB()) };
+    ColorSaturation.RecommendedValues = { ColorToFString(FLinearColor(0.75f,0.75f,0.75f).ToFColorSRGB()) };
     ColorSaturation.bRestrictToRecommended = false;
 
     FActorVariation ColorContrast;
@@ -1607,7 +1608,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
       Camera->SetExposureMethod(EAutoExposureMethod::AEM_Manual);
     }
     Camera->SetExposureCompensation(
-        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, 1.0f));
+        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, 0.0f));
     Camera->SetShutterSpeed(
         RetrieveActorAttributeToFloat("shutter_speed", Description.Variations, 60.0f));
     Camera->SetISO(
@@ -1616,7 +1617,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         RetrieveActorAttributeToFloat("fstop", Description.Variations, 4.0f));
 
     Camera->SetExposureMinBrightness(
-        RetrieveActorAttributeToFloat("exposure_min_bright", Description.Variations, -10.0f));
+        RetrieveActorAttributeToFloat("exposure_min_bright", Description.Variations, -2.0f));
     Camera->SetExposureMaxBrightness(
         RetrieveActorAttributeToFloat("exposure_max_bright", Description.Variations, 20.0f));
     Camera->SetExposureSpeedUp(
@@ -1659,11 +1660,11 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     Camera->SetChromAberrIntensity(
         RetrieveActorAttributeToFloat("chromatic_aberration_offset", Description.Variations, 0.0f));
 
-    auto ColorSaturation = RetrieveActorAttributeToColor("color_saturation", Description.Variations, FLinearColor(0.75f,0.75f,0.75f).ToFColorSRGB());
+    auto ColorSaturation = FLinearColor(RetrieveActorAttributeToColor("color_saturation", Description.Variations, FLinearColor(0.75f,0.75f,0.75f).ToFColorSRGB()));
     Camera->SetColorSaturation(
         FVector4(ColorSaturation.R, ColorSaturation.G, ColorSaturation.B, ColorSaturation.A));
 
-    auto ColorContrast = RetrieveActorAttributeToColor("color_contrast", Description.Variations, FLinearColor(0.9f,0.9f,0.9f).ToFColorSRGB());
+    auto ColorContrast = FLinearColor(RetrieveActorAttributeToColor("color_contrast", Description.Variations, FLinearColor(0.9f,0.9f,0.9f).ToFColorSRGB()));
     Camera->SetColorContrast(
         FVector4(ColorContrast.R, ColorContrast.G, ColorContrast.B, ColorContrast.A));
 
@@ -1706,7 +1707,7 @@ void UActorBlueprintFunctionLibrary::SetLidar(
       RetrieveActorAttributeToInt("channels", Description.Variations, Lidar.Channels);
   Lidar.Range =
       RetrieveActorAttributeToFloat("range", Description.Variations, 10.0f) * TO_CENTIMETERS;
-  Lidar.PointsPerSecond =
+  Lidar.PointsPerSecond = 
       RetrieveActorAttributeToInt("points_per_second", Description.Variations, Lidar.PointsPerSecond);
   Lidar.RotationFrequency =
       RetrieveActorAttributeToFloat("rotation_frequency", Description.Variations, Lidar.RotationFrequency);
