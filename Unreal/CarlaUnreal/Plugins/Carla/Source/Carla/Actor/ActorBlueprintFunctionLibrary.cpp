@@ -1659,11 +1659,11 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     Camera->SetChromAberrIntensity(
         RetrieveActorAttributeToFloat("chromatic_aberration_offset", Description.Variations, 0.0f));
 
-    auto ColorSaturation = RetrieveActorAttributeToColor("color_saturation", Description.Variations, FLinearColor(0.75f,0.75f,0.75f).ToFColorSRGB());
+    auto ColorSaturation = FLinearColor(RetrieveActorAttributeToColor("color_saturation", Description.Variations, FLinearColor(0.75f,0.75f,0.75f).ToFColorSRGB()));
     Camera->SetColorSaturation(
         FVector4(ColorSaturation.R, ColorSaturation.G, ColorSaturation.B, ColorSaturation.A));
 
-    auto ColorContrast = RetrieveActorAttributeToColor("color_contrast", Description.Variations, FLinearColor(0.9f,0.9f,0.9f).ToFColorSRGB());
+    auto ColorContrast = FLinearColor(RetrieveActorAttributeToColor("color_contrast", Description.Variations, FLinearColor(0.9f,0.9f,0.9f).ToFColorSRGB()));
     Camera->SetColorContrast(
         FVector4(ColorContrast.R, ColorContrast.G, ColorContrast.B, ColorContrast.A));
 

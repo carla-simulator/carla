@@ -787,8 +787,41 @@ namespace SceneCaptureSensor_local_ns {
   {
     auto &PostProcessSettings = CaptureComponent2D.PostProcessSettings;
 
+    PostProcessSettings.bOverride_AutoExposureMethod = true;
+    PostProcessSettings.bOverride_AutoExposureBias = true;
+    PostProcessSettings.bOverride_CameraShutterSpeed = true;
+    PostProcessSettings.bOverride_CameraISO = true;
+    PostProcessSettings.bOverride_DepthOfFieldFstop = true;
+    PostProcessSettings.bOverride_DepthOfFieldFocalDistance = true;
+    PostProcessSettings.bOverride_DepthOfFieldDepthBlurAmount = true;
+    PostProcessSettings.bOverride_DepthOfFieldDepthBlurRadius = true;
+    PostProcessSettings.bOverride_DepthOfFieldMinFstop = true;
+    PostProcessSettings.bOverride_DepthOfFieldBladeCount = true;
+    PostProcessSettings.bOverride_FilmSlope = true;
+    PostProcessSettings.bOverride_FilmShoulder = true;
+    PostProcessSettings.bOverride_FilmBlackClip = true;
+    PostProcessSettings.bOverride_FilmWhiteClip = true;
+    PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
+    PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
+    PostProcessSettings.bOverride_AutoExposureSpeedDown = true;
+    PostProcessSettings.bOverride_AutoExposureSpeedUp = true;
+    PostProcessSettings.bOverride_AutoExposureCalibrationConstant_DEPRECATED = true;
+    PostProcessSettings.bOverride_MotionBlurAmount = true;
+    PostProcessSettings.bOverride_MotionBlurMax = true;
+    PostProcessSettings.bOverride_MotionBlurPerObjectSize = true;
+    PostProcessSettings.bOverride_LensFlareIntensity = true;
+    PostProcessSettings.bOverride_BloomIntensity = true;
+    PostProcessSettings.bOverride_WhiteTemp = true;
+    PostProcessSettings.bOverride_WhiteTint = true;
+    PostProcessSettings.bOverride_SceneFringeIntensity = true;
+    PostProcessSettings.bOverride_ChromaticAberrationStartOffset = true;
+    PostProcessSettings.bOverride_ColorSaturation = true;
+    PostProcessSettings.bOverride_ColorContrast = true;
+    PostProcessSettings.bOverride_ToneCurveAmount = true;
+    PostProcessSettings.bOverride_SceneColorTint = true;
+    PostProcessSettings.bOverride_VignetteIntensity = true;
+
     CaptureComponent2D.bUseRayTracingIfEnabled = true;
-    // Lumen
     PostProcessSettings.bOverride_DynamicGlobalIlluminationMethod = true;
     PostProcessSettings.DynamicGlobalIlluminationMethod = EDynamicGlobalIlluminationMethod::Lumen;
     PostProcessSettings.bOverride_LumenSceneLightingQuality = true;
