@@ -449,6 +449,66 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
   return CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset;
 }
 
+void ASceneCaptureSensor::SetColorSaturation(float ColorSaturation)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.ColorSaturation = ColorSaturation;
+}
+
+float ASceneCaptureSensor::GetColorSaturation() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.ColorSaturation;
+}
+
+void ASceneCaptureSensor::SetColorContrast(float ColorContrast)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.ColorContrast = ColorContrast;
+}
+
+float ASceneCaptureSensor::GetColorContrast() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.ColorContrast;
+}
+
+void ASceneCaptureSensor::SetToneCurveAmount(float ToneCurveAmount)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.ToneCurveAmount = ToneCurveAmount;
+}
+
+float ASceneCaptureSensor::GetToneCurveAmount() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.ToneCurveAmount;
+}
+
+void ASceneCaptureSensor::SetSceneColorTint(float SceneColorTint)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.SceneColorTint = SceneColorTint;
+}
+
+float ASceneCaptureSensor::GetSceneColorTint() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.SceneColorTint;
+}
+
+void ASceneCaptureSensor::SetVignetteIntensity(float VignetteIntensity)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.VignetteIntensity = VignetteIntensity;
+}
+
+float ASceneCaptureSensor::GetVignetteIntensity() const
+{
+  check(CaptureComponent2D != nullptr);
+  return CaptureComponent2D->PostProcessSettings.VignetteIntensity;
+}
+
 void ASceneCaptureSensor::UpdatePostProcessConfig(
     FPostProcessConfig& InOutPostProcessConfig)
 {

@@ -367,6 +367,36 @@ public:
   UFUNCTION(BlueprintCallable)
   float GetChromAberrOffset() const;
 
+  UFUNCTION(BlueprintCallable)
+  void SetColorSaturation(float ColorSaturation);
+
+  UFUNCTION(BlueprintCallable)
+  float GetColorSaturation() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetColorContrast(float ColorContrast);
+
+  UFUNCTION(BlueprintCallable)
+  float GetColorContrast() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetToneCurveAmount(float ToneCurveAmount);
+
+  UFUNCTION(BlueprintCallable)
+  float GetToneCurveAmount() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetSceneColorTint(float SceneColorTint);
+
+  UFUNCTION(BlueprintCallable)
+  float GetSceneColorTint() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetVignetteIntensity(float VignetteIntensity);
+
+  UFUNCTION(BlueprintCallable)
+  float GetVignetteIntensity() const;
+
   virtual void UpdatePostProcessConfig(
     FPostProcessConfig& InOutPostProcessConfig);
 
