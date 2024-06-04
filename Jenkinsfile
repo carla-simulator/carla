@@ -311,7 +311,7 @@ pipeline
                                                 dir('doc_repo')
                                                 {
                                                     unstash name: 'carla_docs'
-                                                    withCredentials([gitUsernamePassword(credentialsId: 'carla_test_1', gitToolName: 'git-tool')]) {
+                                                    withCredentials([gitUsernamePassword(credentialsId: 'github_token_as_pwd_2', gitToolName: 'git-tool')]) {
                                                         sh '''
                                                             tar -xvzf carla_doc.tar.gz
                                                             git add Doxygen
