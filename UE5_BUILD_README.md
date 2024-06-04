@@ -4,7 +4,7 @@
 # Building CARLA in Linux with Unreal Engine 5.3
 
 > [!NOTE]
-> This build process is implemented and tested for Ubuntu 22.04. We recommend to use this Ubuntu version. 
+> This build process is implemented and tested for Ubuntu 22.04. CARLA UE5 will not be supported for Ubuntu 20.04.
 
 ## Set up the environment
 
@@ -123,7 +123,7 @@ The Setup.bat script installs all the required packages, including Visual Studio
 
 The Setup.bat file launches the following commands itself, you will need to use the following commands once you modify the code and wish to relaunch:
 
-[!IMPORTANT]
+> [!IMPORTANT]
 > Ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined pointing to the CARLA Unreal Engine 5.3 absolute path. Setup.bat sets this variable, but I may not be set if another approach was followed to install the requirements. 
 
 * **Configure**. Open x64 Native Tools Command Prompt for VS 2022 at the CarlaUE5 folder and runn the following command:
