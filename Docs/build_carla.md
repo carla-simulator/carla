@@ -11,8 +11,8 @@ Build instructions are available for Linux and Windows. You can also build CARLA
 * [__Updating CARLA__](build_update.md)  
 * [__Build system__](build_system.md)   
 
-* [__Linux build with Unreal Engine 5__](build_linux_ue5.md)
-* [__Windwos build with Unreal Engine 5__](build_linux_ue5.md)
+* [__Linux build with Unreal Engine 5.3__](build_linux_ue5.md)
+* [__Windows build with Unreal Engine 5.3__](build_windows_ue5.md)
 
 * [__FAQ__](build_faq.md)  
  
