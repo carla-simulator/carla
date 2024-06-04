@@ -81,25 +81,35 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 }
 ```
 
-Building CARLA
+Building CARLA with Unreal Engine 5.3
 --------------
 
 Clone this repository locally from GitHub:
 
 ```sh
-git clone https://github.com/carla-simulator/carla.git .
+git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
 ```
 
-Also, clone the [CARLA fork of the Unreal Engine](https://github.com/CarlaUnreal/UnrealEngine) into an appropriate location:
+Then run the setup script:
+
+Linux:
 
 ```sh
-git clone --depth 1 -b carla https://github.com/CarlaUnreal/UnrealEngine.git .
+cd CarlaUE5
+./Setup.sh
 ```
 
-Once you have cloned the repositories, follow the instructions for [building in Linux][buildlinuxlink] or [building in Windows][buildwindowslink].
+Windows:
 
-[buildlinuxlink]: https://carla.readthedocs.io/en/latest/build_linux/
-[buildwindowslink]: https://carla.readthedocs.io/en/latest/build_windows/
+```sh
+cd CarlaUE5
+Setup.bat
+```
+
+This will download and install Unreal Engine 5.3, install the prerequisite requirements and build and launch CARLA. It may take some time to complete and use a significant amount of disk space. For further instructions on building in Linux can be found [here][buildlinuxlink] and [here][buildwindowslink] for building in Windows.
+
+[buildlinuxlink]: https://carla.readthedocs.io/en/latest/build_linux_ue5/
+[buildwindowslink]: https://carla.readthedocs.io/en/latest/build_windows_ue5/
 
 Contributing
 ------------
