@@ -113,7 +113,7 @@ void ASceneCaptureSensor::SetExposureCompensation(float Compensation)
 #if PLATFORM_LINUX
   // Looks like Windows and Linux have different outputs with the
   // same exposure compensation, this fixes it.
-  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation + 0.75f;
+  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation + 0.0f;
 #else
   CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation;
 #endif
@@ -854,7 +854,7 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_LumenRayLightingMode = true;
     PostProcessSettings.LumenRayLightingMode = ELumenRayLightingModeOverride::Default;
     PostProcessSettings.bOverride_LumenFrontLayerTranslucencyReflections = true;
-    PostProcessSettings.LumenFrontLayerTranslucencyReflections = false;
+    PostProcessSettings.LumenFrontLayerTranslucencyReflections = true;
     PostProcessSettings.bOverride_LumenMaxReflectionBounces = true;
     PostProcessSettings.LumenMaxReflectionBounces = 1;
   }
