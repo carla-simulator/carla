@@ -38,7 +38,7 @@ public:
 
   void UpdateTrafficLightStatus(carla_msgs::msg::CarlaTrafficLightStatus const &traffic_light_status);
   void UpdateTrafficLightInfo(carla_msgs::msg::CarlaTrafficLightInfo const &traffic_light_info);
-  void RemoveTrafficLight(carla::rpc::ActorId id);
+  void RemoveTrafficLight(carla::streaming::detail::actor_id_type id);
 
 private:
   std::shared_ptr<TrafficLightsInfoPublisherImpl> _traffic_light_info;

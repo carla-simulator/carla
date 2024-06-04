@@ -90,7 +90,7 @@ public:
     return PtrToId ? FindCarlaActor(*PtrToId) : nullptr;
   }
 
-  FString GetDescriptionFromStream(carla::streaming::detail::stream_id_type Id);
+  FCarlaActor* FindCarlaActorByStreamId(carla::streaming::detail::stream_id_type Id) const;
 
   void PutActorToSleep(IdType Id, UCarlaEpisode* CarlaEpisode);
 

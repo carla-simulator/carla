@@ -183,12 +183,13 @@ public:
     return ActorDispatcher->GetActorRegistry().FindCarlaActor(Actor);
   }
 
-  /// Get the description of the Carla actor (sensor) using specific stream id.
+  /// Find the actor view by StreamId
   ///
-  /// If the actor is not found returns an empty string
-  FString GetActorDescriptionFromStream(carla::streaming::detail::stream_id_type StreamId)
+  /// If the actor is not found or is pending kill, the returned view is
+  /// invalid.
+  FCarlaActor* FindCarlaActorByStreamId(carla::streaming::detail::stream_id_type StreamId) const
   {
-    return ActorDispatcher->GetActorRegistry().GetDescriptionFromStream(StreamId);
+    return ActorDispatcher->GetActorRegistry().FindCarlaActorByStreamId(StreamId);
   }
 
   // ===========================================================================

@@ -379,6 +379,12 @@ namespace detail {
       return _client.DestroyActor(actor_id);
     }
 
+    void EnableForROS(const Actor &actor);
+
+    void DisableForROS(const Actor &actor);
+
+    bool IsEnabledForROS(const Actor &actor);
+
     ActorSnapshot GetActorSnapshot(ActorId actor_id) const {
       DEBUG_ASSERT(_episode != nullptr);
       return _episode->GetState()->GetActorSnapshot(actor_id);
@@ -683,12 +689,6 @@ namespace detail {
         std::function<void(SharedPtr<sensor::SensorData>)> callback);
 
     void UnSubscribeFromSensor(Actor &sensor);
-
-    void EnableForROS(const Sensor &sensor);
-
-    void DisableForROS(const Sensor &sensor);
-
-    bool IsEnabledForROS(const Sensor &sensor);
 
     void SubscribeToGBuffer(
         Actor & sensor,

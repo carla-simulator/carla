@@ -334,5 +334,75 @@ void UeWorldPublisher::UpdateSensorData(
   }
 }
 
+void UeWorldPublisher::enable_for_ros(carla::streaming::detail::actor_id_type actor_id) {
+  if ( actor_id == _actor_name_definition->id ) {
+    // the world publisher itself always enabled
+    return;
+  }
+  auto vehicle_it = _vehicles.find(actor_id);
+  if (vehicle_it != _vehicles.end()) {
+    vehicle_it->second._vehicle_publisher->enable_for_ros();
+  }
+  auto walker_it = _walkers.find(actor_id);
+  if (walker_it != _walkers.end()) {
+    walker_it->second._walker_publisher->enable_for_ros();
+  }
+  auto traffic_sign_it = _traffic_signs.find(actor_id);
+  if (traffic_sign_it != _traffic_signs.end()) {
+    traffic_sign_it->second._traffic_sign_publisher->enable_for_ros();
+  }
+  auto traffic_light_it = _traffic_lights.find(actor_id);
+  if (traffic_light_it != _traffic_lights.end()) {
+    traffic_light_it->second._traffic_light_publisher->enable_for_ros();
+  }
+}
+
+void UeWorldPublisher::disable_for_ros(carla::streaming::detail::actor_id_type actor_id) {
+  if ( actor_id == _actor_name_definition->id ) {
+    // the world publisher itself always enabled
+    return;
+  }
+  auto vehicle_it = _vehicles.find(actor_id);
+  if (vehicle_it != _vehicles.end()) {
+    vehicle_it->second._vehicle_publisher->disable_for_ros();
+  }
+  auto walker_it = _walkers.find(actor_id);
+  if (walker_it != _walkers.end()) {
+    walker_it->second._walker_publisher->disable_for_ros();
+  }
+  auto traffic_sign_it = _traffic_signs.find(actor_id);
+  if (traffic_sign_it != _traffic_signs.end()) {
+    traffic_sign_it->second._traffic_sign_publisher->disable_for_ros();
+  }
+  auto traffic_light_it = _traffic_lights.find(actor_id);
+  if (traffic_light_it != _traffic_lights.end()) {
+    traffic_light_it->second._traffic_light_publisher->disable_for_ros();
+  }
+}
+
+bool UeWorldPublisher::is_enabled_for_ros(carla::streaming::detail::actor_id_type actor_id) const {
+  if ( actor_id == _actor_name_definition->id ) {
+    // the world publisher itself always enabled
+    return true;
+  }
+  auto vehicle_it = _vehicles.find(actor_id);
+  if (vehicle_it != _vehicles.end()) {
+    return vehicle_it->second._vehicle_publisher->is_enabled_for_ros();
+  }
+  auto walker_it = _walkers.find(actor_id);
+  if (walker_it != _walkers.end()) {
+    return walker_it->second._walker_publisher->is_enabled_for_ros();
+  }
+  auto traffic_sign_it = _traffic_signs.find(actor_id);
+  if (traffic_sign_it != _traffic_signs.end()) {
+    return traffic_sign_it->second._traffic_sign_publisher->is_enabled_for_ros();
+  }
+  auto traffic_light_it = _traffic_lights.find(actor_id);
+  if (traffic_light_it != _traffic_lights.end()) {
+    return traffic_light_it->second._traffic_light_publisher->is_enabled_for_ros();
+  }
+  return false;
+}
+
 }  // namespace ros2
 }  // namespace carla

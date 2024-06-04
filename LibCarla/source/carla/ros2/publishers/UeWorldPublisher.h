@@ -111,6 +111,21 @@ public:
     return _transform_publisher;
   }
 
+  /*
+   * @brief enable actor ROS publication
+   */
+  void enable_for_ros(carla::streaming::detail::actor_id_type actor_id) override;
+
+  /*
+   * @brief disable actor ROS publication
+   */
+  void disable_for_ros(carla::streaming::detail::actor_id_type actor_id) override;
+
+  /*
+   * @brief is the actor publisher actually enabled for ROS publication
+   */
+  bool is_enabled_for_ros(carla::streaming::detail::actor_id_type actor_id) const override;
+
 private:
   using EpisodeHeaderConst = carla::sensor::s11n::EpisodeStateSerializer::Header const;
 

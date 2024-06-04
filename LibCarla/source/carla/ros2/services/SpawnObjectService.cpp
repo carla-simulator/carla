@@ -85,7 +85,7 @@ carla_msgs::srv::SpawnObject_Response SpawnObjectService::SpawnObject(
     actor_description.attributes.push_back(attribute_value);
 
     carla::rpc::Response<carla::rpc::Actor> result;
-    carla::rpc::ActorId const parent = request.attach_to();
+    carla::streaming::detail::actor_id_type const parent = request.attach_to();
     if (parent == 0) {
       result = _carla_server.call_spawn_actor(actor_description, transform);
     } else {

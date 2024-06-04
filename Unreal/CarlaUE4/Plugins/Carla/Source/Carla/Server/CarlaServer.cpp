@@ -143,9 +143,9 @@ public:
     const std::string& socket_name);
   carla::rpc::Response<bool> call_destroy_actor(carla::rpc::ActorId ActorId);
 
-  carla::rpc::Response<void> call_enable_sensor_for_ros(carla::streaming::detail::stream_id_type sensor_id);
-  carla::rpc::Response<void> call_disable_sensor_for_ros(carla::streaming::detail::stream_id_type sensor_id);
-  carla::rpc::Response<bool> call_is_sensor_enabled_for_ros(carla::streaming::detail::stream_id_type sensor_id);
+  carla::rpc::Response<void> call_enable_actor_for_ros(carla::streaming::detail::actor_id_type ActorId);
+  carla::rpc::Response<void> call_disable_actor_for_ros(carla::streaming::detail::actor_id_type ActorId);
+  carla::rpc::Response<bool> call_is_actor_enabled_for_ros(carla::streaming::detail::actor_id_type ActorId);
 
   carla::rpc::Response<uint64_t> call_tick(
     carla::rpc::synchronization_client_id_type const &client_id = carla::rpc::ALL_CLIENTS,
@@ -160,6 +160,17 @@ public:
     carla::rpc::synchronization_client_id_type const &client_id,
     carla::rpc::synchronization_participant_id_type const&synchronization_participant,
     carla::rpc::synchronization_target_game_time const &target_game_time);
+
+  struct CheckHandleActorInSecondaryServerResult {
+    bool actor_exists;
+    bool handle_in_secondary_server;
+    FString actor_type_id;
+    carla::streaming::detail::stream_actor_id_type stream_actor_id;
+  };
+  CheckHandleActorInSecondaryServerResult CheckHandleSensorInSecondaryServer(carla::streaming::detail::stream_id_type stream_id);
+  CheckHandleActorInSecondaryServerResult CheckHandleActorInSecondaryServer(carla::streaming::detail::actor_id_type actor_id);
+  CheckHandleActorInSecondaryServerResult CheckHandleActorInSecondaryServer(FCarlaActor* CarlaActor,
+    carla::streaming::detail::stream_actor_id_type stream_actor_id);
 
   void OnClientDisconnected(std::shared_ptr<rpc::detail::server_session> server_session);
   void OnClientConnected(std::shared_ptr<rpc::detail::server_session> server_session);
@@ -782,58 +793,44 @@ void FCarlaServer::FPimpl::BindActions()
     return GEngine->Exec(Episode->GetWorld(), UTF8_TO_TCHAR(cmd.c_str()));
   };
 
-  BIND_SYNC(get_sensor_token) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+  BIND_SYNC(get_sensor_token) << [this](carla::streaming::detail::stream_id_type stream_id) ->
                                  R<carla::streaming::Token>
   {
     REQUIRE_CARLA_EPISODE();
-    bool ForceInPrimary = false;
-
-    // check for the world observer (always in primary server)
-    if (sensor_id == 1)
-    {
-      ForceInPrimary = true;
-    }
-
-    // collision sensor always in primary server in multi-gpu
-    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
-    if (Desc == "" || Desc == "sensor.other.collision")
-    {
-      ForceInPrimary = true;
-    }
-
-    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
+    auto check_result = CheckHandleSensorInSecondaryServer(stream_id);
+    if ( check_result.handle_in_secondary_server ) 
     {
       // multi-gpu
-      UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in secondary server"), sensor_id, *Desc);
-      return SecondaryServer->GetCommander().GetToken(sensor_id);
+      UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in secondary server"), stream_id, *check_result.actor_type_id);
+      return SecondaryServer->GetCommander().GetToken(stream_id);
     }
     else
     {
       // single-gpu
-      UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in primary server"), sensor_id, *Desc);
-      return StreamingServer.GetToken(sensor_id);
+      UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in primary server"), stream_id, *check_result.actor_type_id);
+      return StreamingServer.GetToken(stream_id);
     }
   };
 
-  BIND_SYNC(enable_sensor_for_ros) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+  BIND_SYNC(enable_actor_for_ros) << [this](carla::rpc::ActorId ActorId) ->
                                  R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    return call_enable_sensor_for_ros(sensor_id);
+    return call_enable_actor_for_ros(ActorId);
   };
 
-  BIND_SYNC(disable_sensor_for_ros) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+  BIND_SYNC(disable_actor_for_ros) << [this](carla::rpc::ActorId ActorId) ->
                                  R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    return call_disable_sensor_for_ros(sensor_id);
+    return call_disable_actor_for_ros(ActorId);
   };
 
-  BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+  BIND_SYNC(is_actor_enabled_for_ros) << [this](carla::streaming::detail::actor_id_type ActorId) ->
                                  R<bool>
   {
     REQUIRE_CARLA_EPISODE();
-    return call_is_sensor_enabled_for_ros(sensor_id);
+    return call_is_actor_enabled_for_ros(ActorId);
   };
 
   BIND_SYNC(send) << [this](
@@ -3026,95 +3023,64 @@ carla::rpc::Response<bool> FCarlaServer::FPimpl::call_destroy_actor(carla::rpc::
   return true;
 }
 
-carla::rpc::Response<void> FCarlaServer::FPimpl::call_enable_sensor_for_ros(carla::streaming::detail::stream_id_type sensor_id)
+carla::rpc::Response<void> FCarlaServer::FPimpl::call_enable_actor_for_ros(carla::streaming::detail::actor_id_type ActorId)
 {
-    bool ForceInPrimary = false;
-
-    // check for the world observer (always in primary server)
-    if (sensor_id == 1)
-    {
-      ForceInPrimary = true;
-    }
-
-    // collision sensor always in primary server in multi-gpu
-    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
-    if (Desc == "" || Desc == "sensor.other.collision")
-    {
-      ForceInPrimary = true;
-    }
-
-    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
-    {
-      // multi-gpu
-      SecondaryServer->GetCommander().EnableForROS(sensor_id);
-    }
-    else
-    {
-      // single-gpu
-      StreamingServer.EnableForROS(sensor_id);
-    }
-    return carla::rpc::Response<void>::Success();
-  };
-
-  carla::rpc::Response<void> FCarlaServer::FPimpl::call_disable_sensor_for_ros(carla::streaming::detail::stream_id_type sensor_id)
+  auto check_result = CheckHandleActorInSecondaryServer(ActorId);
+  if ( !check_result.actor_exists )
   {
-    bool ForceInPrimary = false;
+    RESPOND_ERROR("unable to enable actor for ROS: not found");
+  }
+  else if ( check_result.handle_in_secondary_server ) 
+  {
+    // multi-gpu
+    SecondaryServer->GetCommander().EnableForROS(check_result.stream_actor_id);
+  }
+  else 
+  {
+    // single-gpu
+    StreamingServer.EnableForROS(check_result.stream_actor_id);
+  }
+  return carla::rpc::Response<void>::Success();
+};
 
-    // check for the world observer (always in primary server)
-    if (sensor_id == 1)
-    {
-      ForceInPrimary = true;
-    }
-
-    // collision sensor always in primary server in multi-gpu
-    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
-    if (Desc == "" || Desc == "sensor.other.collision")
-    {
-      ForceInPrimary = true;
-    }
-
-    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
-    {
-      // multi-gpu
-      SecondaryServer->GetCommander().DisableForROS(sensor_id);
-    }
-    else
-    {
-      // single-gpu
-      StreamingServer.DisableForROS(sensor_id);
-    }
-    return carla::rpc::Response<void>::Success();
-  };
-
-carla::rpc::Response<bool> FCarlaServer::FPimpl::call_is_sensor_enabled_for_ros(carla::streaming::detail::stream_id_type sensor_id)
+carla::rpc::Response<void> FCarlaServer::FPimpl::call_disable_actor_for_ros(carla::streaming::detail::actor_id_type ActorId)
 {
-    bool ForceInPrimary = false;
+  auto check_result = CheckHandleActorInSecondaryServer(ActorId);
+  if ( !check_result.actor_exists )
+  {
+    RESPOND_ERROR("unable to disable actor for ROS: not found");
+  }
+  else if ( check_result.handle_in_secondary_server ) 
+  {
+    // multi-gpu
+    SecondaryServer->GetCommander().DisableForROS(check_result.stream_actor_id);
+  }
+  else 
+  {
+    // single-gpu
+    StreamingServer.DisableForROS(check_result.stream_actor_id);
+  }
+  return carla::rpc::Response<void>::Success();
+};
 
-    // check for the world observer (always in primary server)
-    if (sensor_id == 1)
-    {
-      ForceInPrimary = true;
-    }
-
-    // collision sensor always in primary server in multi-gpu
-    FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
-    if (Desc == "" || Desc == "sensor.other.collision")
-    {
-      ForceInPrimary = true;
-    }
-
-    if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
-    {
-      // multi-gpu
-      return SecondaryServer->GetCommander().IsEnabledForROS(sensor_id);
-    }
-    else
-    {
-      // single-gpu
-      return StreamingServer.IsEnabledForROS(sensor_id);
-    }
-  };
-
+carla::rpc::Response<bool> FCarlaServer::FPimpl::call_is_actor_enabled_for_ros(carla::streaming::detail::actor_id_type ActorId)
+{
+  auto check_result = CheckHandleActorInSecondaryServer(ActorId);
+  if ( !check_result.actor_exists )
+  {
+    RESPOND_ERROR("unable to check if actor is enabled for ROS: not found");
+  }
+  else if ( check_result.handle_in_secondary_server )
+  {
+    // multi-gpu
+    return SecondaryServer->GetCommander().IsEnabledForROS(check_result.stream_actor_id);
+  }
+  else 
+  {
+    // single-gpu
+    return StreamingServer.IsEnabledForROS(check_result.stream_actor_id);
+  }
+};
 
 carla::rpc::Response<uint64_t> FCarlaServer::FPimpl::call_tick(
     carla::rpc::synchronization_client_id_type const &client_id,
@@ -3147,6 +3113,66 @@ carla::rpc::Response<bool> FCarlaServer::FPimpl::call_update_synchronization_win
     carla::rpc::synchronization_target_game_time const &target_game_time)
 {
   return ServerSync.UpdateSynchronizationWindow(client_id, participant_id, target_game_time);
+}
+
+FCarlaServer::FPimpl::CheckHandleActorInSecondaryServerResult FCarlaServer::FPimpl::CheckHandleSensorInSecondaryServer(carla::streaming::detail::stream_id_type stream_id) {
+  FCarlaActor* CarlaActor = Episode->FindCarlaActorByStreamId(stream_id);
+  if ( CarlaActor == nullptr ) 
+  {
+    return {.actor_exists = false,
+            .handle_in_secondary_server = false,
+            .actor_type_id = "",
+            .stream_actor_id = {.stream_id=stream_id, .actor_id=0}};
+
+  }
+  return CheckHandleActorInSecondaryServer(CarlaActor, {.stream_id=stream_id, .actor_id=CarlaActor->GetActorId()});
+}
+
+FCarlaServer::FPimpl::CheckHandleActorInSecondaryServerResult FCarlaServer::FPimpl::CheckHandleActorInSecondaryServer(carla::streaming::detail::actor_id_type actor_id) {
+  FCarlaActor* CarlaActor = Episode->FindCarlaActor(actor_id);
+  // the world observer is responsible for streaming non-sensor actors
+  carla::streaming::detail::stream_id_type stream_id = 1;
+
+  if (CarlaActor == nullptr) {
+    return {.actor_exists = false,
+            .handle_in_secondary_server = false,
+            .actor_type_id = "",
+            .stream_actor_id = {.stream_id=stream_id, .actor_id=actor_id}};
+  }
+
+  auto *Sensor = Cast<ASensor>(CarlaActor->GetActor());
+  if ( Sensor != nullptr ) 
+  {
+    stream_id = carla::streaming::detail::token_type(Sensor->GetToken()).get_stream_id();
+  }
+  return CheckHandleActorInSecondaryServer(CarlaActor, {.stream_id=stream_id, .actor_id=actor_id});
+}
+
+
+
+FCarlaServer::FPimpl::CheckHandleActorInSecondaryServerResult FCarlaServer::FPimpl::CheckHandleActorInSecondaryServer(FCarlaActor* CarlaActor,
+  carla::streaming::detail::stream_actor_id_type stream_actor_id) {
+
+  CheckHandleActorInSecondaryServerResult result = {.actor_exists = true,
+            .handle_in_secondary_server = false,
+            .actor_type_id = CarlaActor->GetActorInfo()->Description.Id,
+            .stream_actor_id = stream_actor_id};
+
+  // check for the world observer (always in primary server)
+  if (stream_actor_id.stream_id == 1 || 
+      // collision sensor always in primary server
+      (result.actor_type_id == "sensor.other.collision") ||
+      // sensor only in secondary if clients are connected
+      !SecondaryServer->HasClientsConnected() )
+  {
+    result.handle_in_secondary_server = false;
+  }
+  else 
+  {
+    result.handle_in_secondary_server = true;
+  }
+
+  return result;
 }
 
 void FCarlaServer::FPimpl::OnClientConnected(std::shared_ptr<rpc::detail::server_session> server_session) {
@@ -3352,19 +3378,19 @@ carla::rpc::Response<bool> FCarlaServer::call_destroy_actor(carla::rpc::ActorId 
   return Pimpl->call_destroy_actor(ActorId);
 }
 
-carla::rpc::Response<void> FCarlaServer::call_enable_sensor_for_ros(carla::streaming::detail::stream_id_type sensor_id)
+carla::rpc::Response<void> FCarlaServer::call_enable_actor_for_ros(carla::streaming::detail::actor_id_type ActorId)
 {
-  return Pimpl->call_enable_sensor_for_ros(sensor_id);
+  return Pimpl->call_enable_actor_for_ros(ActorId);
 }
 
-carla::rpc::Response<void> FCarlaServer::call_disable_sensor_for_ros(carla::streaming::detail::stream_id_type sensor_id)
+carla::rpc::Response<void> FCarlaServer::call_disable_actor_for_ros(carla::streaming::detail::actor_id_type ActorId)
 {
-  return Pimpl->call_disable_sensor_for_ros(sensor_id);
+  return Pimpl->call_disable_actor_for_ros(ActorId);
 }
 
-carla::rpc::Response<bool> FCarlaServer::call_is_sensor_enabled_for_ros(carla::streaming::detail::stream_id_type sensor_id)
+carla::rpc::Response<bool> FCarlaServer::call_is_actor_enabled_for_ros(carla::streaming::detail::actor_id_type ActorId)
 {
-  return Pimpl->call_is_sensor_enabled_for_ros(sensor_id);
+  return Pimpl->call_is_actor_enabled_for_ros(ActorId);
 }
 
 carla::rpc::Response<carla::rpc::EpisodeSettings> FCarlaServer::call_get_episode_settings()

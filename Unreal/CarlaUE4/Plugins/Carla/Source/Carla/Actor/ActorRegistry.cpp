@@ -237,7 +237,7 @@ void FActorRegistry::WakeActorUp(FCarlaActor::IdType Id, UCarlaEpisode* CarlaEpi
   }
 }
 
-FString FActorRegistry::GetDescriptionFromStream(carla::streaming::detail::stream_id_type Id)
+FCarlaActor* FActorRegistry::FindCarlaActorByStreamId(carla::streaming::detail::stream_id_type Id) const
 {
   for (auto &Item : ActorDatabase)
   {
@@ -248,9 +248,8 @@ FString FActorRegistry::GetDescriptionFromStream(carla::streaming::detail::strea
     carla::streaming::detail::token_type token(Sensor->GetToken());
     if (token.get_stream_id() == Id)
     {
-      const FActorInfo *Info = Item.Value->GetActorInfo();
-      return Info->Description.Id;
+      return Item.Value.Get();
     }
   }
-  return FString("");
+  return nullptr;
 }

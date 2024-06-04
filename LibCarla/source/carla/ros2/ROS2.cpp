@@ -376,32 +376,32 @@ void ROS2::ProcessDataFromUeSensor(carla::streaming::detail::stream_id_type cons
   }
 }
 
-void ROS2::EnableForROS(carla::streaming::detail::stream_id_type const stream_id) {
-  auto ue_sensor = _ue_sensors.find(stream_id);
+void ROS2::EnableForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id) {
+  auto ue_sensor = _ue_sensors.find(stream_actor_id.stream_id);
   if (ue_sensor != _ue_sensors.end()) {
-    if ( !ue_sensor->second.publisher->is_enabled_for_ros() ) {
+    if ( !ue_sensor->second.publisher->is_enabled_for_ros(stream_actor_id.actor_id) ) {
       log_warning("Enable Sensor for ROS: ",
                   std::to_string(*ue_sensor->second.publisher->_actor_name_definition));
-      ue_sensor->second.publisher->enable_for_ros();
+      ue_sensor->second.publisher->enable_for_ros(stream_actor_id.actor_id);
     }
   }
 }
 
-void ROS2::DisableForROS(carla::streaming::detail::stream_id_type const stream_id) {
-  auto ue_sensor = _ue_sensors.find(stream_id);
+void ROS2::DisableForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id) {
+  auto ue_sensor = _ue_sensors.find(stream_actor_id.stream_id);
   if (ue_sensor != _ue_sensors.end()) {
-    if ( ue_sensor->second.publisher->is_enabled_for_ros() ) {
+    if ( ue_sensor->second.publisher->is_enabled_for_ros(stream_actor_id.actor_id) ) {
       log_warning("Disable Sensor for ROS: ",
                   std::to_string(*ue_sensor->second.publisher->_actor_name_definition));
-      ue_sensor->second.publisher->disable_for_ros();
+      ue_sensor->second.publisher->disable_for_ros(stream_actor_id.actor_id);
     }
   }
 }
 
-bool ROS2::IsEnabledForROS(carla::streaming::detail::stream_id_type const stream_id) {
-  auto ue_sensor = _ue_sensors.find(stream_id);
+bool ROS2::IsEnabledForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id) {
+  auto ue_sensor = _ue_sensors.find(stream_actor_id.stream_id);
   if (ue_sensor != _ue_sensors.end()) {
-    return ue_sensor->second.publisher->is_enabled_for_ros();
+    return ue_sensor->second.publisher->is_enabled_for_ros(stream_actor_id.actor_id);
   }
   return false;
 }

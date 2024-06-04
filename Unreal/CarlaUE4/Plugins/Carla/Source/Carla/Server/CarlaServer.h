@@ -80,9 +80,9 @@ public:
     carla::rpc::AttachmentType InAttachmentType,
     const std::string& socket_name) override;
   carla::rpc::Response<bool> call_destroy_actor(carla::rpc::ActorId ActorId) override;
-  carla::rpc::Response<void> call_enable_sensor_for_ros(carla::streaming::detail::stream_id_type sensor_id) override;
-  carla::rpc::Response<void> call_disable_sensor_for_ros(carla::streaming::detail::stream_id_type sensor_id) override;
-  carla::rpc::Response<bool> call_is_sensor_enabled_for_ros(carla::streaming::detail::stream_id_type sensor_id) override;
+  carla::rpc::Response<void> call_enable_actor_for_ros(carla::rpc::ActorId ActorId) override;
+  carla::rpc::Response<void> call_disable_actor_for_ros(carla::rpc::ActorId ActorId) override;
+  carla::rpc::Response<bool> call_is_actor_enabled_for_ros(carla::rpc::ActorId ActorId) override;
 
   carla::rpc::Response<uint64_t> call_tick(
     carla::rpc::synchronization_client_id_type const &client_id = carla::rpc::ALL_CLIENTS, 

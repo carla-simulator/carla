@@ -166,7 +166,7 @@ ROS2NameRegistry::TopicAndFrame const& ROS2NameRegistry::GetTopicAndFrameLocked(
   }
 }
 
-void ROS2NameRegistry::UpdateTopicAndFrameLocked(carla::rpc::ActorId actor_id) {
+void ROS2NameRegistry::UpdateTopicAndFrameLocked(carla::streaming::detail::actor_id_type actor_id) {
   // update all of this
   for (auto& record : record_set) {
     auto const actor_definition = record->_actor_name_definition;

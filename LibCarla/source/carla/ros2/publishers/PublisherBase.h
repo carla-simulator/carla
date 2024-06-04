@@ -48,21 +48,24 @@ public:
   /*
    * @brief enable actor ROS publication
    */
-  void enable_for_ros() {
+  virtual void enable_for_ros(carla::streaming::detail::actor_id_type actor_id=0) {
+    (void) actor_id;
     _actor_name_definition->enabled_for_ros = true;
   }
 
   /*
    * @brief disable actor ROS publication
    */
-  void disable_for_ros() {
+  virtual void disable_for_ros(carla::streaming::detail::actor_id_type actor_id=0) {
+    (void) actor_id;
     _actor_name_definition->enabled_for_ros = false;
   }
 
   /*
    * @brief is the publisher actually enabled for ROS publication
    */
-  bool is_enabled_for_ros() const {
+  virtual bool is_enabled_for_ros(carla::streaming::detail::actor_id_type actor_id=0) const {
+    (void) actor_id;
     return _actor_name_definition->enabled_for_ros;
   }
 };

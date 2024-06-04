@@ -55,9 +55,9 @@ namespace detail {
     /// Post a job to close the session.
     virtual void Close() = 0;
 
-    virtual void EnableForROS() {}
-    virtual void DisableForROS() {}
-    virtual bool IsEnabledForROS() { return false; }
+    virtual void EnableForROS(actor_id_type actor_id) {}
+    virtual void DisableForROS(actor_id_type actor_id) {}
+    virtual bool IsEnabledForROS(actor_id_type actor_id) { return false; }
 
   protected:
     stream_id_type _stream_id = 0u;

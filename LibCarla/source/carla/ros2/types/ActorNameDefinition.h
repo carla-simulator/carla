@@ -6,14 +6,14 @@
 
 #include <string>
 
-#include "carla/rpc/ActorId.h"
+#include "carla/streaming/detail/Types.h"
 
 namespace carla {
 namespace ros2 {
 namespace types {
 
 struct ActorNameDefinition {
-  ActorNameDefinition(carla::rpc::ActorId id_ = 0u, std::string type_id_ = "", std::string ros_name_ = "",
+  ActorNameDefinition(carla::streaming::detail::actor_id_type id_ = 0u, std::string type_id_ = "", std::string ros_name_ = "",
                       std::string role_name_ = "", std::string object_type_ = "", std::string base_type_ = "", bool enabled_for_ros_ = false)
     : id(id_),
       type_id(type_id_),
@@ -32,7 +32,7 @@ struct ActorNameDefinition {
 
   virtual ~ActorNameDefinition() = default;
 
-  carla::rpc::ActorId id;
+  carla::streaming::detail::actor_id_type id;
   std::string type_id;
   std::string ros_name;
   std::string role_name;

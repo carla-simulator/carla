@@ -420,11 +420,11 @@ namespace detail {
 
     void UnSubscribeFromStream(const streaming::Token &token);
 
-    void EnableForROS(const streaming::Token &token);
+    void EnableForROS(const rpc::ActorId actor);
 
-    void DisableForROS(const streaming::Token &token);
+    void DisableForROS(const rpc::ActorId actor);
 
-    bool IsEnabledForROS(const streaming::Token &token);
+    bool IsEnabledForROS(const rpc::ActorId actor);
 
     void UnSubscribeFromGBuffer(
         rpc::ActorId ActorId,

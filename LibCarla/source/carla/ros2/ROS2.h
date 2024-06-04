@@ -74,9 +74,9 @@ public:
   void ProcessDataFromUeSensor(carla::streaming::detail::stream_id_type const stream_id,
                                std::shared_ptr<const carla::streaming::detail::Message> message);
 
-  void EnableForROS(carla::streaming::detail::stream_id_type const stream_id);
-  void DisableForROS(carla::streaming::detail::stream_id_type const stream_id);  
-  bool IsEnabledForROS(carla::streaming::detail::stream_id_type const stream_id);
+  void EnableForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id);
+  void DisableForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id);  
+  bool IsEnabledForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id);
 
   /**
    * Implement actions before each tick

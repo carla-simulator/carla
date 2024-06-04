@@ -77,24 +77,24 @@ namespace low_level {
       _server.SetSynchronousMode(is_synchro);
     }
 
-    token_type GetToken(stream_id sensor_id) {
-      return _dispatcher->GetToken(sensor_id);
+    token_type GetToken(stream_id stream_id) {
+      return _dispatcher->GetToken(stream_id);
     }
 
     void SetROS2TopicVisibilityDefaultEnabled(bool _topic_visibility_default_enabled) {
       _dispatcher->SetROS2TopicVisibilityDefaultEnabled(_topic_visibility_default_enabled);
     }
     
-    void EnableForROS(stream_id sensor_id) {
-      _dispatcher->EnableForROS(sensor_id);
+    void EnableForROS(detail::stream_actor_id_type stream_actor_id) {
+      _dispatcher->EnableForROS(stream_actor_id);
     }
 
-    void DisableForROS(stream_id sensor_id) {
-      _dispatcher->DisableForROS(sensor_id);
+    void DisableForROS(detail::stream_actor_id_type stream_actor_id) {
+      _dispatcher->DisableForROS(stream_actor_id);
     }
 
-    bool IsEnabledForROS(stream_id sensor_id) {
-      return _dispatcher->IsEnabledForROS(sensor_id);
+    bool IsEnabledForROS(detail::stream_actor_id_type stream_actor_id) {
+      return _dispatcher->IsEnabledForROS(stream_actor_id);
     }
 
     std::shared_ptr<detail::Dispatcher> GetDispatcher() const {

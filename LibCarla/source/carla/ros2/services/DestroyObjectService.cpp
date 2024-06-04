@@ -26,7 +26,7 @@ void DestroyObjectService::CheckRequest() {
 carla_msgs::srv::DestroyObject_Response DestroyObjectService::DestroyObject(
     carla_msgs::srv::DestroyObject_Request const &request) {
   carla_msgs::srv::DestroyObject_Response response;
-  response.success(_carla_server.call_destroy_actor(carla::rpc::ActorId(request.id())));
+  response.success(_carla_server.call_destroy_actor(carla::streaming::detail::actor_id_type(request.id())));
   return response;
 }
 

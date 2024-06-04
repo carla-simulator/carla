@@ -30,7 +30,7 @@ public:
   void UnregisterRecord(ROS2NameRecord const* record);
 
   // attaching actors to each other
-  void AttachActors(ActorId const child, ActorId const parent);
+  void AttachActors(carla::streaming::detail::actor_id_type const child, carla::streaming::detail::actor_id_type const parent);
 
   struct TopicAndFrame {
     TopicAndFrame(std::string topic_name = "", std::string frame_id = "")
@@ -39,9 +39,9 @@ public:
     std::string _frame_id = "";
   };
 
-  carla::rpc::ActorId ParentActorId(ActorId const child_id) const {
+  carla::streaming::detail::actor_id_type ParentActorId(carla::streaming::detail::actor_id_type const child_id) const {
     std::lock_guard<std::mutex> lock(access_mutex);
-    carla::rpc::ActorId parent_actor_id = 0;
+    carla::streaming::detail::actor_id_type parent_actor_id = 0;
     auto find_result = parent_map.find(child_id);
     if (find_result != parent_map.end()) {
       parent_actor_id = find_result->second;
@@ -52,7 +52,7 @@ public:
   /*!
     @brief returns the shortest common prefix of all registered topic names for this actor_id
   */
-  std::string TopicPrefix(ActorId const actor_id);
+  std::string TopicPrefix(carla::streaming::detail::actor_id_type const actor_id);
 
   std::string FrameId(ROS2NameRecord const* record) {
     std::lock_guard<std::mutex> lock(access_mutex);
@@ -100,7 +100,7 @@ private:
     }
 
     ROS2NameRecord const* const _record;
-    carla::rpc::ActorId _actor_id;
+    carla::streaming::detail::actor_id_type _actor_id;
   };
 
   // locked operations
@@ -108,12 +108,12 @@ private:
   TopicAndFrame const& GetParentTopicAndFrameLocked(ROS2NameRecord const* record);
 
   TopicAndFrame const& GetTopicAndFrameLocked(KeyType const& key);
-  void UpdateTopicAndFrameLocked(carla::rpc::ActorId actor_id);
+  void UpdateTopicAndFrameLocked(carla::streaming::detail::actor_id_type actor_id);
   std::map<KeyType, TopicAndFrame>::iterator CreateTopicAndFrameLocked(KeyType const& key);
 
   mutable std::mutex access_mutex;
   std::set<ROS2NameRecord const*> record_set;
-  std::map<carla::rpc::ActorId, carla::rpc::ActorId> parent_map;
+  std::map<carla::streaming::detail::actor_id_type, carla::streaming::detail::actor_id_type> parent_map;
   std::map<KeyType, TopicAndFrame> topic_and_frame_map;
 };
 

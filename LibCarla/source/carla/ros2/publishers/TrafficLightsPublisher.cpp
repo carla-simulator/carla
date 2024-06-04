@@ -59,7 +59,7 @@ void TrafficLightsPublisher::UpdateTrafficLightInfo(carla_msgs::msg::CarlaTraffi
   _traffic_light_info->SetMessageUpdated();
 }
 
-void TrafficLightsPublisher::RemoveTrafficLight(carla::rpc::ActorId actor) {
+void TrafficLightsPublisher::RemoveTrafficLight(carla::streaming::detail::actor_id_type actor) {
   (void)std::remove_if(
       _traffic_light_status->Message().traffic_lights().begin(),
       _traffic_light_status->Message().traffic_lights().end(),
