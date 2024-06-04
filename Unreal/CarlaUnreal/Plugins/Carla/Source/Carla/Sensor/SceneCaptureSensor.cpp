@@ -632,7 +632,7 @@ void ASceneCaptureSensor::BeginPlay()
   // Call derived classes to set up their things.
   SetUpSceneCaptureComponent(*CaptureComponent2D);
 
-  CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+  CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalToneCurveHDR;
 
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();
@@ -798,6 +798,7 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_DepthOfFieldMinFstop = true;
     PostProcessSettings.bOverride_DepthOfFieldBladeCount = true;
     PostProcessSettings.bOverride_FilmSlope = true;
+    PostProcessSettings.bOverride_FilmToe = true;
     PostProcessSettings.bOverride_FilmShoulder = true;
     PostProcessSettings.bOverride_FilmBlackClip = true;
     PostProcessSettings.bOverride_FilmWhiteClip = true;
@@ -843,7 +844,7 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_LumenDiffuseColorBoost = true;
     PostProcessSettings.LumenDiffuseColorBoost = 1.0f;
     PostProcessSettings.bOverride_LumenSkylightLeaking = true;
-    PostProcessSettings.LumenSkylightLeaking = 0.0f;
+    PostProcessSettings.LumenSkylightLeaking = 0.1f;
     PostProcessSettings.bOverride_LumenFullSkylightLeakingDistance = true;
     PostProcessSettings.LumenFullSkylightLeakingDistance = 1000.0f;
     PostProcessSettings.bOverride_ReflectionMethod = true;
