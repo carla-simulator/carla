@@ -208,7 +208,6 @@ pipeline
                                         stage('ubuntu smoke tests')
                                         {
                                             agent { label "gpu_20_04" }
-                                            options{skipDefaultCheckout()} 
                                             steps
                                             {
                                                 unstash name: 'ubuntu_eggs'
