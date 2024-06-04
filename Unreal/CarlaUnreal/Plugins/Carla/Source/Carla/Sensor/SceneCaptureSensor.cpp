@@ -485,13 +485,13 @@ float ASceneCaptureSensor::GetToneCurveAmount() const
   return CaptureComponent2D->PostProcessSettings.ToneCurveAmount;
 }
 
-void ASceneCaptureSensor::SetSceneColorTint(float SceneColorTint)
+void ASceneCaptureSensor::SetSceneColorTint(FLinearColor SceneColorTint)
 {
   check(CaptureComponent2D != nullptr);
   CaptureComponent2D->PostProcessSettings.SceneColorTint = SceneColorTint;
 }
 
-float ASceneCaptureSensor::GetSceneColorTint() const
+FLinearColor ASceneCaptureSensor::GetSceneColorTint() const
 {
   check(CaptureComponent2D != nullptr);
   return CaptureComponent2D->PostProcessSettings.SceneColorTint;
