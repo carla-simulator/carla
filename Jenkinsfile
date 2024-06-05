@@ -132,7 +132,7 @@ pipeline
                                                 dir('doc_repo')
                                                 {
                                                     checkout scmGit(
-                                                        branches: [[name: '*/master']], 
+                                                        branches: [[name: '*/dev']], 
                                                         extensions: [
                                                             cleanBeforeCheckout(),
                                                             checkoutOption(120), 
@@ -316,7 +316,7 @@ pipeline
                                                             tar -xvzf carla_doc.tar.gz
                                                             git add Doxygen
                                                             git commit -m "Updated c++ docs" || true
-                                                            git push --set-upstream origin master
+                                                            git push --set-upstream origin dev
                                                         '''
                                                     }
                                                 }
