@@ -43,8 +43,10 @@ public:
   UFUNCTION(BlueprintCallable, Category="Procedural Building Utilities")
   void CookProceduralBuildingToMesh(const FString& DestinationPath, const FString& FileName);
 
+  //Creates an actor with the current settings of the bp procedural building. Copying
+  //the hierarchical mesh components.
   UFUNCTION(BlueprintCallable, Category="Procedural Building Utilities")
-  void PlaceBuilding(AActor* Parent, TArray<UHierarchicalInstancedStaticMeshComponent*> Components, const FString& Name);
+  void PlaceBuilding(AActor* Parent, TArray<UHierarchicalInstancedStaticMeshComponent*> Components);
 
   UFUNCTION(BlueprintCallable, Category="Procedural Building Utilities")
   void CookProceduralMeshToMesh(class UProceduralMeshComponent* Mesh, const FString& DestinationPath, const FString& FileName);

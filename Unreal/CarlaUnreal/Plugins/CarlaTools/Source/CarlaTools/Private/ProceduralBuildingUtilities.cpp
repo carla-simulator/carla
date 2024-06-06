@@ -215,7 +215,7 @@ void AProceduralBuildingUtilities::CookProceduralMeshToMesh(
       SaveArgs);
 }
 
-void AProceduralBuildingUtilities::PlaceBuilding(AActor* Parent, TArray<UHierarchicalInstancedStaticMeshComponent*> Components, const FString& Name)
+void AProceduralBuildingUtilities::PlaceBuilding(AActor* Parent, TArray<UHierarchicalInstancedStaticMeshComponent*> Components)
 {
   //Security wall.
   if(Parent == nullptr) return;
@@ -231,7 +231,7 @@ void AProceduralBuildingUtilities::PlaceBuilding(AActor* Parent, TArray<UHierarc
     //Creates the component. The index is needed so every component has a unique name, if not, each iteration
     //will just override the previous one. 
     UHierarchicalInstancedStaticMeshComponent* NewComponent = 
-     NewObject<UHierarchicalInstancedStaticMeshComponent>(Parent, HSMClass, FName(Name + FString::FromInt(i)));
+      NewObject<UHierarchicalInstancedStaticMeshComponent>(Parent, HSMClass, FName(Components[i]->GetStaticMesh().GetName() + FString::FromInt(i)));
     
     //Sets static mesh
     NewComponent->SetStaticMesh(Components[i]->GetStaticMesh());
