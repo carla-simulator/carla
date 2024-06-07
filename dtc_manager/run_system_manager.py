@@ -19,6 +19,13 @@ import threading
 from rclpy.node import Node
 from std_msgs.msg import Bool
 
+import time
+
+from optparse import OptionParser
+import inspect
+
+# import unreal
+
 python_file_path = os.path.realpath(__file__)
 python_file_path = python_file_path.replace('run_system_manager.py', '')
 
@@ -44,19 +51,71 @@ def _setup_vehicle_actors(world):
 
     try:
         # vehicle settings, static for P1
-        vehicle_type = "static.prop.atm"
+        vehicle_type = "WaypointVehicle"
         vehicle_id   = "hero"
 
         logging.debug(" Spawning vehicle: %s", vehicle_type)
 
         bp_library = world.get_blueprint_library()
+        # print(bp_library)
         bp = bp_library.filter(vehicle_type)[0]
         #bp.set_attribute("role_name", vehicle_id)
         #bp.set_attribute("ros_name",  vehicle_id) 
 
-        vehicle = world.spawn_actor(bp,
-                                    world.get_map().get_spawn_points()[0],
-                                    attach_to=None)
+
+        transform = carla.Transform(carla.Location(x=0, y=0, z=0), carla.Rotation(yaw=180))
+        vehicle = world.spawn_actor(bp,transform)
+        # vehicle = world.spawn_actor(bp,
+        #                             world.get_map().get_spawn_points()[0],
+        #                             attach_to=None)
+        
+        # method_list = [func for func in dir(vehicle) if callable(getattr(vehicle, func))]
+        # print(method_list)
+
+        
+        functor_start_simulation_bp = bp_library.filter("FunctorStartSimulation")[0]
+        # functor_start_simulation = world.spawn_actor(functor_start_simulation_bp, transform)
+
+        functor_sent_casualties_bp = bp_library.filter("FunctorSendCasualties")[0]
+        # method_list = [func for func in dir(functor_sent_casualties_bp) if callable(getattr(functor_sent_casualties_bp, func))]
+        # print(method_list)
+        print(functor_sent_casualties_bp.get_attribute('2'))
+        attr = functor_sent_casualties_bp.get_attribute('1')
+        functor_sent_casualties_bp.set_attribute('1', "BP_Casualty_02|4")
+        # functor_sent_casualties_bp.set_attribute('60', "BP_Casualty_03|5")
+
+        # attr.is_modifiable = True
+        print(attr.is_modifiable)
+        # functor_sent_casualties_bp.set_attribute('1', "foo")
+
+        # print(functor_sent_casualties_bp.attributes)
+
+        # functor_sent_casualties = world.spawn_actor(functor_sent_casualties_bp, transform)
+        # print(functor_sent_casualties.attributes)
+
+        functor_sent_waypoints_bp = bp_library.filter("FunctorSendWaypoints")[0]
+        functor_sent_waypoints_bp.set_attribute('1', "3")
+        functor_sent_waypoints_bp.set_attribute('2', "4")
+        functor_sent_waypoints = world.spawn_actor(functor_sent_waypoints_bp, transform)
+
+
+        # method_list = [func for func in dir(dummy) if callable(getattr(dummy, func))]
+        # print()
+        # print()
+        # method_list = [func for func in dir(dummy_bp) if callable(getattr(dummy_bp, func))]
+
+        # print(dummy.get_attribute('should_send_waypoint')())
+        # print(dummy.attributes)
+        # dummy.Hello()
+
+        # u_world = unreal.UnrealEditorSubsystem().get_editor_world()
+        # bp_asset = unreal.EditorUtilityLibrary.get_selected_assets()[0]
+        # dummy.call_method("HelloWorld")
+
+
+
+        # actors.append(dummy)
+
         actors.append(vehicle)
 
         # Create sensors based on this input:
@@ -123,7 +182,11 @@ def _setup_vehicle_actors(world):
         sensor_actor.enable_for_ros()
         actors.append(sensor_actor)
 
+        functor_start_simulation = world.spawn_actor(functor_start_simulation_bp, transform)
+
+
     except Exception as error:
+        logging.info('  Error: %s', type(error))
         logging.info('  Error: %s', error)
         raise Exception("Failed to Spawn Vehicle and Sensors")
 
@@ -167,7 +230,7 @@ def main(args):
             for map in client.get_available_maps():
                 if scenario_file['map'] in map:
                     logging.debug(' Loading Map: %s', map)
-                    client.load_world(map)
+                    # client.load_world(map)
                     world = client.get_world()
                     world.apply_settings(settings)
                     break
@@ -181,6 +244,8 @@ def main(args):
             raise Exception("No Casualties defined in Scenario File")
         # Needs Code 
   
+        # time.sleep(7)
+
         # Create Vehicle with sensors
         vehicle_actors = _setup_vehicle_actors(world)
 
