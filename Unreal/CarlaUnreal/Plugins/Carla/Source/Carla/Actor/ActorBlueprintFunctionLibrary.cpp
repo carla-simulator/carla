@@ -644,7 +644,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     ColorSaturation.RecommendedValues = { ColorToFString(FLinearColor(0.5f, 0.5f, 0.5f).ToFColorSRGB()) };
     ColorSaturation.bRestrictToRecommended = false;
 
-/* Commented becasue linear color does not accept > 1.0 values, we need to implement FVector type in CARLA PythonAPI
+/* Commented because linear color does not accept > 1.0 values, we need to implement FVector type in CARLA PythonAPI
     FActorVariation ColorContrast;
     ColorContrast.Id = TEXT("color_contrast");
     ColorContrast.Type = EActorAttributeType::Float;
