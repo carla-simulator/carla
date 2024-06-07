@@ -419,48 +419,6 @@ Parses the location and extent of the bounding box to string.
 
 ---
 
-## carla.CAMData<a name="carla.CAMData"></a>
-<small style="display:block;margin-top:-20px;">Inherited from _[carla.SensorData](#carla.SensorData)_</small></br>
-This is the data type for cooperative awareness message reception, contained in a [CAMEvent](#carlacamevent)
-### Instance Variables
-- <a name="carla.CAMData.power"></a>**<font color="#f8805a">power</font>** (_float<small> - dBm</small>_)  
-Received power.  
-
-### Methods
-- <a name="carla.CAMData.get()"></a>**<font color="#7fb800">get</font>**(<font color="#00a6ed">**self**</font>)  
-Get the CAM data.   
-    - **Return:** _dict_
-    
-        Returns a nested dictionary containing the message following the ETSI standard: 
-        - `"Header"`: _dict_ 
-        -  `"Message"`: _dict_
-
-##### Dunder methods
-- <a name="carla.CAMData.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
-
----
-
-## carla.CAMEvent<a name="carla.CAMEvent"></a>
-<small style="display:block;margin-top:-20px;">Inherited from _[carla.SensorData](#carla.SensorData)_</small></br>
-Class that defines the data provided by a <b>sensor.other.v2x</b>. This is a collection type to combine returning several [CAMData](#carlacamdata).
-
-### Instance Variables
-
-
-### Methods
-- <a name="carla.CAMEvent.get_message_count()"></a>**<font color="#7fb800">get_message_count</font>**(<font color="#00a6ed">**self**</font>)  
-Get the number of received CAM's.   
-    - **Return:** _int_ 
-
-##### Dunder methods
-- <a name="carla.CAMEvent.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
-- <a name="carla.CAMEvent.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
-Iterate over the [carla.CAMData](#carla.CAMData) retrieved as data.  
-- <a name="carla.DVSEventArray.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
-
----
-
-
 ## carla.CityObjectLabel<a name="carla.CityObjectLabel"></a>
 Enum declaration that contains the different tags available to filter the bounding boxes returned by [carla.World.get_level_bbs](#carla.World.get_level_bbs)(). These values correspond to the [semantic tag](ref_sensors.md#semantic-segmentation-camera) that the elements in the scene have.  
 
@@ -618,8 +576,8 @@ Returns the client libcarla version by consulting it in the "Version.h" file. Bo
 - <a name="carla.Client.get_required_files"></a>**<font color="#7fb800">get_required_files</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**folder**</font>, <font color="#00a6ed">**download**=True</font>)  
 Asks the server which files are required by the client to use the current map. Option to download files automatically if they are not already in the cache.  
     - **Parameters:**
-        - `folder` (_str_) - Folder where files required by the client will be downloaded to.  
-        - `download` (_bool_) - If True, downloads files that are not already in cache.  
+        - `folder` (_str_) - Specifies a folder to look through on the server maps. Leaving this blank will search recursively through all map folders in the server, which is recommended if you're unfamiliar with the server map folder structure.  
+        - `download` (_bool_) - If True, downloads files that are not already in cache. The cache can be found at "HOME\carlaCache" or "USERPROFILE\carlaCache", depending on OS.  
 - <a name="carla.Client.get_server_version"></a>**<font color="#7fb800">get_server_version</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version.  
     - **Return:** _str_  
@@ -710,49 +668,6 @@ Converts the image to a depth map using a logarithmic scale, leading to better p
 No changes applied to the image. Used by the [RGB camera](ref_sensors.md#rgb-camera).  
 
 ---
-## carla.CustomV2XData<a name="carla.CustomV2XData"></a>
-<small style="display:block;margin-top:-20px;">Inherited from _[carla.SensorData](#carla.SensorData)_</small></br>
-This is the data type defining a custom V2X message. Received as part of a [CustomV2XEvent](#carla.CustomV2XEvent).
-
-### Instance Variables
-- <a name="carla.CustomV2XData.power"></a>**<font color="#f8805a">power</font>** (_float<small> - dBm</small>_)  
-Received power.  
-
-### Methods
-- <a name="carla.CustomV2XData.get()"></a>**<font color="#7fb800">get</font>**(<font color="#00a6ed">**self**</font>)  
-Get the custom message.   
-    - **Return:** _dict_. 
-        
-        Returns a nested dictionary containing the message. It has two primary keys: 
-        -  `"Header"` : _dict_ 
-        - `"Message"`: _str_
-    
-
-##### Dunder methods
-- <a name="carla.CustomV2XData.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
-
----
-
-## carla.CustomV2XEvent<a name="carla.CustomV2XEvent"></a>
-<small style="display:block;margin-top:-20px;">Inherited from _[carla.SensorData](#carla.SensorData)_</small></br>
-Class that defines the data provided by a <b>sensor.other.v2x_custom</b>. This is a collection type to combine returning several [CustomV2XData](#carla.CustomV2XData).
-
-### Instance Variables
-
-
-### Methods
-- <a name="carla.CustomV2XEvent.get_message_count()"></a>**<font color="#7fb800">get_message_count</font>**(<font color="#00a6ed">**self**</font>)  
-Get the number of received CAM's.   
-    - **Return:** _int_ 
-
-##### Dunder methods
-- <a name="carla.CustomV2XEvent.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
-- <a name="carla.CustomV2XEvent.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
-Iterate over the [carla.CustomV2XData](#carla.CustomV2XData) retrieved as data.  
-- <a name="carla.CustomV2XEvent.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
-
----
-
 
 ## carla.DVSEvent<a name="carla.DVSEvent"></a>
 Class that defines a DVS event. An event is a quadruple, so a tuple of 4 elements, with `x`, `y` pixel coordinate location, timestamp `t` and polarity `pol` of the event. Learn more about them [here](ref_sensors.md).  
@@ -2330,11 +2245,6 @@ Sensors compound a specific family of actors quite diverse and unique. They are 
   - [Collision detector](ref_sensors.md#collision-detector).
   - [Lane invasion detector](ref_sensors.md#lane-invasion-detector).
   - [Obstacle detector](ref_sensors.md#obstacle-detector).  
-  - [V2X sensor](ref_sensors.md#v2x-sensor).  
-
-### Instance Variables
-- <a name="carla.Sensor.is_listening"></a>**<font color="#f8805a">is_listening</font>** (_boolean_)  
-When <b>True</b> the sensor will be waiting for data.  
 
 ### Methods
 - <a name="carla.Sensor.disable_for_ros"></a>**<font color="#7fb800">disable_for_ros</font>**(<font color="#00a6ed">**self**</font>)  
@@ -2343,12 +2253,15 @@ Commands the sensor to not be processed for publishing in ROS2 if there is no an
 Commands the sensor to be processed to be able to publish in ROS2 without any listen to it.  
 - <a name="carla.Sensor.is_enabled_for_ros"></a>**<font color="#7fb800">is_enabled_for_ros</font>**(<font color="#00a6ed">**self**</font>)  
 Returns if the sensor is enabled or not to publish in ROS2 if there is no any listen to it.  
+    - **Return:** _bool_  
 - <a name="carla.Sensor.is_listening"></a>**<font color="#7fb800">is_listening</font>**(<font color="#00a6ed">**self**</font>)  
 Returns whether the sensor is in a listening state.  
+    - **Return:** _bool_  
 - <a name="carla.Sensor.is_listening_gbuffer"></a>**<font color="#7fb800">is_listening_gbuffer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**gbuffer_id**</font>)  
 Returns whether the sensor is in a listening state for a specific GBuffer texture.  
     - **Parameters:**
         - `gbuffer_id` (_[carla.GBufferTextureID](#carla.GBufferTextureID)_) - The ID of the target Unreal Engine GBuffer texture.  
+    - **Return:** _bool_  
 - <a name="carla.Sensor.listen"></a>**<font color="#7fb800">listen</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)<button class="SnipetButton" id="carla.Sensor.listen-snipet_button">snippet &rarr;</button>  
 The function the sensor will be calling to every time a new measurement is received. This function needs for an argument containing an object type [carla.SensorData](#carla.SensorData) to work with.  
     - **Parameters:**
@@ -2358,10 +2271,6 @@ The function the sensor will be calling to every time the desired GBuffer textur
     - **Parameters:**
         - `gbuffer_id` (_[carla.GBufferTextureID](#carla.GBufferTextureID)_) - The ID of the target Unreal Engine GBuffer texture.  
         - `callback` (_function_) - The called function with one argument containing the received GBuffer texture.  
-- <a name="carla.Sensor.send"></a>**<font color="#7fb800">send</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**message**</font>)  
-Instructs the sensor to send the string given by `message` to all other CustomV2XSensors on the next tick.  
-    - **Parameters:**
-        - `message` (_string_) - The data to send. *Note*: maximum string length is 100 chars.        
 - <a name="carla.Sensor.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  
 Commands the sensor to stop listening for data.  
 - <a name="carla.Sensor.stop_gbuffer"></a>**<font color="#7fb800">stop_gbuffer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**gbuffer_id**</font>)  
@@ -2385,9 +2294,7 @@ Base class for all the objects containing data generated by a [carla.Sensor](#ca
   - Obstacle detector: [carla.ObstacleDetectionEvent](#carla.ObstacleDetectionEvent).<br>
   - Radar sensor: [carla.RadarMeasurement](#carla.RadarMeasurement).<br>
   - RSS sensor: [carla.RssResponse](#carla.RssResponse).<br>
-  - Semantic LIDAR sensor: [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement). 
-  - Cooperative awareness messages V2X sensor: [carla.CAMEvent](#carla.CAMEvent).  
-  - Custom V2X messages V2X sensor: [carla.CustomV2XEvent](#carla.CustomV2XEvent).  
+  - Semantic LIDAR sensor: [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement).  
 
 ### Instance Variables
 - <a name="carla.SensorData.frame"></a>**<font color="#f8805a">frame</font>** (_int_)  

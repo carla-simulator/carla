@@ -352,12 +352,12 @@
       - param_name: folder
         type: str
         doc: >
-          Folder where files required by the client will be downloaded to.
+          Specifies a folder to look through on the server maps. Leaving this blank will search recursively through all map folders in the server, which is recommended if you're unfamiliar with the server map folder structure.
       - param_name: download
         type: bool
         default: True
         doc: >
-          If True, downloads files that are not already in cache.
+          If True, downloads files that are not already in cache. The cache can be found at "HOME\carlaCache" or "USERPROFILE\carlaCache", depending on OS.
       doc: >
          Asks the server which files are required by the client to use the current map. Option to download files automatically if they are not already in the cache.
      # --------------------------------------
