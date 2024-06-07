@@ -224,6 +224,12 @@ public:
   float GetAperture() const;
 
   UFUNCTION(BlueprintCallable)
+  void SetSensorWidth(float Width);
+
+  UFUNCTION(BlueprintCallable)
+  float GetSensorWidth() const;
+
+  UFUNCTION(BlueprintCallable)
   void SetFocalDistance(float Distance);
 
   UFUNCTION(BlueprintCallable)
@@ -380,6 +386,18 @@ public:
   FVector4 GetColorContrast() const;
 
   UFUNCTION(BlueprintCallable)
+  void SetColorGamma(FVector4 ColorGamma);
+
+  UFUNCTION(BlueprintCallable)
+  FVector4 GetColorGamma() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetHighlightsGamma(FVector4 HighlightsGamma);
+
+  UFUNCTION(BlueprintCallable)
+  FVector4 GetHighlightsGamma() const;
+
+  UFUNCTION(BlueprintCallable)
   void SetToneCurveAmount(float ToneCurveAmount);
 
   UFUNCTION(BlueprintCallable)
@@ -396,6 +414,18 @@ public:
 
   UFUNCTION(BlueprintCallable)
   float GetVignetteIntensity() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetHighlightContrastScale(float HighlightContrastScale);
+
+  UFUNCTION(BlueprintCallable)
+  float GetHighlightContrastScale() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetShadowContrastScale(float ShadowContrastScale);
+
+  UFUNCTION(BlueprintCallable)
+  float GetShadowContrastScale() const;
 
   virtual void UpdatePostProcessConfig(
     FPostProcessConfig& InOutPostProcessConfig);
