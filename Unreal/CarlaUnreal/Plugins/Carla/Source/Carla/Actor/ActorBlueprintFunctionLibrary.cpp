@@ -1331,6 +1331,28 @@ void UActorBlueprintFunctionLibrary::MakePropDefinitions(
   FillActorDefinitionArray(ParameterArray, Definitions, &MakePropDefinition);
 }
 
+void UActorBlueprintFunctionLibrary::MakeWaypointDefinition(
+    const FWaypointParameters &Parameters,
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  /// @todo We need to validate here the params.
+  FillIdAndTags(Definition, TEXT("dtc"),  TEXT("system"), Parameters.Id);
+  AddRecommendedValuesForActorRoleName(Definition, {TEXT("dtc")});
+  Definition.Class = Parameters.Class;
+  Definition.Attributes = Parameters.Attributes;
+  Definition.Variations = Parameters.Variations;
+
+  Success = CheckActorDefinition(Definition);
+}
+
+void UActorBlueprintFunctionLibrary::MakeWaypointDefinitions(
+    const TArray<FWaypointParameters> &ParameterArray,
+    TArray<FActorDefinition> &Definitions)
+{
+  FillActorDefinitionArray(ParameterArray, Definitions, &MakeWaypointDefinition);
+}
+
 void UActorBlueprintFunctionLibrary::MakeObstacleDetectorDefinitions(
     const FString &Type,
     const FString &Id,
