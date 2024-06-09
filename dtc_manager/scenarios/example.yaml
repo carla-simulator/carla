@@ -1,8 +1,12 @@
-map: L_Razish_Carla
-#map: L_TrainCrash_Carla
-#map: Town10HD_Opt
-#map: StartingWorld
+# Scenario File Example of how to leverage configuration in the simulation
 
+# Map Argument: Defines which Unreal map to load into, options include:
+# StartingWorld: a blank empty space that Unreal opens into, also the map that loads when something goes wrong.
+# L_Razish_Carla: The Test Map for executing missions. Has 10 Zones.
+map: L_Razish_Carla
+
+# Waypoint List: Defines which waypoints and in which order the robot should traverse. Arguments include:
+# zone: The zone number that corresponds to the waypoint to traverse to.
 waypoints:
   waypoint_1:
     zone: 7
@@ -25,6 +29,9 @@ waypoints:
   waypoint_10:
     zone: 2
 
+# Casualty List: Defines which casualty types to spawn and in which zone locations. Arguments include:
+# zone: The zone number that corresponds to the waypoint to spawn the casualty in.
+# casualty_type: The casualty type to spawn. 60 Casualties from 01 to 60 exist for this scenario.
 casualties:
   casualty_1:
     zone: 1

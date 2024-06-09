@@ -187,17 +187,19 @@ def main(args):
             raise Exception("No Casualties defined in Scenario File")
         logging.info("  Setting Casualties...")
         functor_sent_casualties_bp = bp_library.filter("FunctorSendCasualties")[0]
-        # array index , Casualty BP Name | Zone 
-        functor_sent_casualties_bp.set_attribute('1', "BP_Casualty_05|1")
-        functor_sent_casualties_bp.set_attribute('2', "BP_Casualty_07|2")
-        functor_sent_casualties_bp.set_attribute('3', "BP_Casualty_15|3")
-        functor_sent_casualties_bp.set_attribute('4', "BP_Casualty_18|4")
-        functor_sent_casualties_bp.set_attribute('5', "BP_Casualty_13|5")
-        functor_sent_casualties_bp.set_attribute('6', "BP_Casualty_21|6")
-        functor_sent_casualties_bp.set_attribute('7', "BP_Casualty_31|7")
-        functor_sent_casualties_bp.set_attribute('8', "BP_Casualty_42|8")
-        functor_sent_casualties_bp.set_attribute('9', "BP_Casualty_55|9")
-        functor_sent_casualties_bp.set_attribute('10', "BP_Casualty_32|10")
+        iteration = 1
+        for casualty_name in scenario_file['casualties']:
+            casualty = scenario_file['casualties'][casualty_name]
+            if 'zone' not in casualty:
+                logging.info("  No Zone defined in Casualty Scenario Loadout")
+                raise Exception("No Zone defined in Casualty Scenario Loadout")
+            if 'casualty_type' not in casualty:
+                logging.info("  No Type defined in Casualty Scenario Loadout")
+                raise Exception("No Type defined in Casualty Scenario Loadout")
+            # Set Casualty in Attribute
+            casualty_string = casualty['casualty_type'] + "|" + str(casualty['zone'])
+            functor_sent_casualties_bp.set_attribute(str(iteration), casualty_string)
+            iteration+=1
         functor_sent_casualties = world.spawn_actor(functor_sent_casualties_bp, transform)
 
         # Setup Vehicle Waypoints
@@ -206,22 +208,20 @@ def main(args):
             raise Exception("No Waypoints defined in Scenario File")
         logging.info("  Setting Waypoints...")
         functor_sent_waypoints_bp = bp_library.filter("FunctorSendWaypoints")[0]
-        # array index , Zone
-        functor_sent_waypoints_bp.set_attribute('1', "7")
-        functor_sent_waypoints_bp.set_attribute('2', "9")
-        functor_sent_waypoints_bp.set_attribute('3', "10")
-        functor_sent_waypoints_bp.set_attribute('4', "8")
-        functor_sent_waypoints_bp.set_attribute('5', "6")
-        functor_sent_waypoints_bp.set_attribute('6', "5")
-        functor_sent_waypoints_bp.set_attribute('7', "4")
-        functor_sent_waypoints_bp.set_attribute('8', "3")
-        functor_sent_waypoints_bp.set_attribute('9', "1")
-        functor_sent_waypoints_bp.set_attribute('10', "2")
+        iteration = 1
+        for waypoint_name in scenario_file['waypoints']:
+            waypoint = scenario_file['waypoints'][waypoint_name]
+            if 'zone' not in waypoint:
+                logging.info("  No Zone defined in Waypoint Scenario Loadout")
+                raise Exception("No Zone defined in Waypoint Scenario Loadout")
+            # Set Casualty in Attribute
+            functor_sent_waypoints_bp.set_attribute(str(iteration), str(waypoint['zone']))
+            iteration+=1
         functor_sent_waypoints = world.spawn_actor(functor_sent_waypoints_bp, transform)
 
         # Create Vehicle with sensors
         vehicle_actors = _setup_vehicle_actors(world)
-        
+
         # Start Simulation
         logging.info("  Starting Simulation...")
         functor_start_simulation = world.spawn_actor(functor_start_simulation_bp, transform)
