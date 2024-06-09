@@ -25,6 +25,7 @@
 #include "publishers/CarlaSSCameraPublisher.h"
 #include "publishers/CarlaISCameraPublisher.h"
 #include "publishers/CarlaDVSCameraPublisher.h"
+#include "publishers/CarlaIRCameraPublisher.h"
 #include "publishers/CarlaLidarPublisher.h"
 #include "publishers/CarlaSemanticLidarPublisher.h"
 #include "publishers/CarlaRadarPublisher.h"
@@ -35,11 +36,9 @@
 #include "publishers/CarlaTransformPublisher.h"
 #include "publishers/CarlaCollisionPublisher.h"
 #include "publishers/CarlaLineInvasionPublisher.h"
-#include "publishers/BasicPublisher.h"
 
 #include "subscribers/CarlaSubscriber.h"
 #include "subscribers/CarlaEgoVehicleControlSubscriber.h"
-#include "subscribers/BasicSubscriber.h"
 
 #include <vector>
 
@@ -57,6 +56,7 @@ enum ESensors {
   DVSCamera,
   GnssSensor,
   InertialMeasurementUnit,
+  IRCamera,
   LaneInvasionSensor,
   ObstacleDetectionSensor,
   OpticalFlowCamera,
@@ -69,8 +69,7 @@ enum ESensors {
   InstanceSegmentationCamera,
   WorldObserver,
   CameraGBufferUint8,
-  CameraGBufferFloat,
-  YourNewSensor
+  CameraGBufferFloat
 };
 
 void ROS2::Enable(bool enable) {
@@ -78,8 +77,6 @@ void ROS2::Enable(bool enable) {
   log_info("ROS2 enabled: ", _enabled);
   _clock_publisher = std::make_shared<CarlaClockPublisher>("clock", "");
   _clock_publisher->Init();
-  _basic_publisher = std::make_shared<BasicPublisher>("basic_publisher", "");
-  _basic_publisher->Init();
 }
 
 void ROS2::SetFrame(uint64_t frame) {
@@ -99,22 +96,6 @@ void ROS2::SetFrame(uint64_t frame) {
       RemoveActorCallback(actor);
     }
    }
-   if (_basic_subscriber)
-   {
-    void* actor = _basic_subscriber->GetActor();
-    if (!_basic_subscriber->IsAlive()){
-        RemoveBasicSubscriberCallback(actor);
-    }
-    if (actor&& _basic_subscriber->HasNewMessage())
-    {
-      auto it = _actor_message_callbacks.find(actor);
-      if (it != _actor_message_callbacks.end()) {
-        MessageControl control;
-        control.message = _basic_subscriber->GetMessage();
-        it->second(actor, control);
-      }
-    }
-   }
 }
 
 void ROS2::SetTimestamp(double timestamp) {
@@ -125,8 +106,6 @@ void ROS2::SetTimestamp(double timestamp) {
   _nanoseconds = static_cast<uint32_t>(fractional * multiplier);
   _clock_publisher->SetData(_seconds, _nanoseconds);
   _clock_publisher->Publish();
-  _basic_publisher->SetData("Hello from Carla!");
-  _basic_publisher->Publish();
    //log_info("ROS2 new timestamp: ", _timestamp);
 }
 
@@ -192,19 +171,6 @@ std::string ROS2::GetActorParentRosName(void *actor) {
   }
   else
     return std::string("");
-}
-
-void ROS2::AddBasicSubscriberCallback(void* actor, std::string ros_name, ActorMessageCallback callback) {
-  _actor_message_callbacks.insert({actor, std::move(callback)});
-
-  _basic_subscriber.reset();
-  _basic_subscriber = std::make_shared<BasicSubscriber>(actor, ros_name.c_str());
-  _basic_subscriber->Init();
-}
-
-void ROS2::RemoveBasicSubscriberCallback(void* actor) {
-  _basic_subscriber.reset();
-  _actor_message_callbacks.erase(actor);
 }
 
 void ROS2::AddActorCallback(void* actor, std::string ros_name, ActorCallback callback) {
@@ -458,6 +424,28 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           transform = new_transform;
         }
       } break;
+      case ESensors::IRCamera: {
+        if (ros_name == "ir__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
+          ros_name += string_id;
+          UpdateActorRosName(actor, ros_name);
+        }
+        else
+        {
+          std::cerr << "ROS NAME NOT WORKING: " << ros_name << std::endl;
+        }
+        std::shared_ptr<CarlaIRCameraPublisher> new_publisher = std::make_shared<CarlaIRCameraPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        if (new_publisher->Init()) {
+          _publishers.insert({actor, new_publisher});
+          publisher = new_publisher;
+        }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        if (new_transform->Init()) {
+          _transforms.insert({actor, new_transform});
+          transform = new_transform;
+        }
+      } break;
       case ESensors::SemanticSegmentationCamera: {
         if (ros_name == "semantic_segmentation__") {
           ros_name.pop_back();
@@ -503,24 +491,6 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
       case ESensors::CameraGBufferFloat: {
         std::cerr << "Camera GBuffer float does not have an available publisher" << std::endl;
       } break;
-      case ESensors::YourNewSensor: {
-        if (ros_name == "ros_name__") {
-          ros_name.pop_back();
-          ros_name.pop_back();
-          ros_name += string_id;
-          UpdateActorRosName(actor, ros_name);
-        }
-        std::shared_ptr<BasicPublisher> new_publisher = std::make_shared<BasicPublisher>(ros_name.c_str(), parent_ros_name.c_str());
-        if (new_publisher->Init()) {
-          _publishers.insert({actor, new_publisher});
-          publisher = new_publisher;
-        }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
-        if (new_transform->Init()) {
-          _transforms.insert({actor, new_transform});
-          transform = new_transform;
-        }
-      }
       default: {
         std::cerr << "Unknown sensor type" << std::endl;
       }
@@ -630,7 +600,6 @@ void ROS2::ProcessDataFromCamera(
       log_info("Sensor RssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       break;
     case ESensors::SceneCaptureCamera:
-    {
       log_info("Sensor SceneCaptureCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       {
         auto sensors = GetOrCreateSensor(ESensors::SceneCaptureCamera, stream_id, actor);
@@ -653,7 +622,29 @@ void ROS2::ProcessDataFromCamera(
         }
       }
       break;
-    }
+    case ESensors::IRCamera:
+      log_info("Sensor IRCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
+      {
+        auto sensors = GetOrCreateSensor(ESensors::IRCamera, stream_id, actor);
+        if (sensors.first) {
+          std::shared_ptr<CarlaIRCameraPublisher> publisher = std::dynamic_pointer_cast<CarlaIRCameraPublisher>(sensors.first);
+          const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
+            reinterpret_cast<const carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer->data());
+          if (!header)
+            return;
+          if (!publisher->HasBeenInitialized())
+            publisher->InitInfoData(0, 0, H, W, Fov, true);
+          publisher->SetImageData(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+          publisher->SetCameraInfoData(_seconds, _nanoseconds);
+          publisher->Publish();
+        }
+        if (sensors.second) {
+          std::shared_ptr<CarlaTransformPublisher> publisher = std::dynamic_pointer_cast<CarlaTransformPublisher>(sensors.second);
+          publisher->SetData(_seconds, _nanoseconds, (const float*)&sensor_transform.location, (const float*)&sensor_transform.rotation);
+          publisher->Publish();
+        }
+      }
+      break;
     case ESensors::SemanticSegmentationCamera:
       log_info("Sensor SemanticSegmentationCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       {
@@ -893,9 +884,7 @@ void ROS2::Shutdown() {
     element.second.reset();
   }
   _clock_publisher.reset();
-  _basic_publisher.reset();
   _controller.reset();
-  _basic_subscriber.reset();
   _enabled = false;
 }
 

@@ -1,14 +1,5 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB).
-#
-# This work is licensed under the terms of the MIT license.
-# For a copy, see <https://opensource.org/licenses/MIT>.
-
-# Allows controlling a vehicle with a keyboard. For a simpler and more
-# documented example, please take a look at tutorial.py.
-
 import os
 import argparse
 import yaml
@@ -21,6 +12,7 @@ from std_msgs.msg import Bool
 
 python_file_path = os.path.realpath(__file__)
 python_file_path = python_file_path.replace('run_system_manager.py', '')
+global_transform = carla.Transform(carla.Location(x=0, y=0, z=0), carla.Rotation(yaw=180))
 
 class SimulationStatusNode(Node):
 
@@ -38,25 +30,56 @@ class SimulationStatusNode(Node):
     def set_status(self, status):
         self._status = status
 
+def _setup_waypoint_actors(world, scenario_file, bp_library):
+    if 'waypoints' not in scenario_file:
+        logging.info("  No Waypoints defined in Scenario File")
+        raise Exception("No Waypoints defined in Scenario File")
+    logging.info("  Setting Waypoints...")
+    functor_sent_waypoints_bp = bp_library.filter("functorsendwaypoints")[0]
+    iteration = 1
+    for waypoint_name in scenario_file['waypoints']:
+        waypoint = scenario_file['waypoints'][waypoint_name]
+        if 'zone' not in waypoint:
+            logging.info("  No Zone defined in Waypoint Scenario Loadout")
+            raise Exception("No Zone defined in Waypoint Scenario Loadout")
+        # Set Casualty in Attribute
+        functor_sent_waypoints_bp.set_attribute(str(iteration), str(waypoint['zone']))
+        iteration+=1
+    return world.spawn_actor(functor_sent_waypoints_bp, global_transform)
 
-def _setup_vehicle_actors(world):
+def _setup_casualty_actors(world, scenario_file, bp_library):
+    if 'casualties' not in scenario_file:
+        logging.info("  No Casualties defined in Scenario File")
+        raise Exception("No Casualties defined in Scenario File")
+    logging.info("  Setting Casualties...")
+    functor_sent_casualties_bp = bp_library.filter("functorsendcasualties")[0]
+    iteration = 1
+    logging.info("  Begin iterating through Casualties...")
+    for casualty_name in scenario_file['casualties']:
+        casualty = scenario_file['casualties'][casualty_name]
+        if 'zone' not in casualty:
+            logging.info("  No Zone defined in Casualty Scenario Loadout")
+            raise Exception("No Zone defined in Casualty Scenario Loadout")
+        if 'casualty_type' not in casualty:
+            logging.info("  No Type defined in Casualty Scenario Loadout")
+            raise Exception("No Type defined in Casualty Scenario Loadout")
+        casualty_string = casualty['casualty_type'] + "|" + str(casualty['zone'])
+        functor_sent_casualties_bp.set_attribute(str(iteration), casualty_string)
+        iteration+=1
+    return world.spawn_actor(functor_sent_casualties_bp, global_transform)
+
+def _setup_vehicle_actors(world, scenario_file, bp_library):
     actors = []
-
     try:
         # vehicle settings, static for P1
-        vehicle_type = "static.prop.atm"
-        vehicle_id   = "hero"
-
+        vehicle_type = "waypointvehicle"
         logging.debug(" Spawning vehicle: %s", vehicle_type)
-
-        bp_library = world.get_blueprint_library()
         bp = bp_library.filter(vehicle_type)[0]
-        #bp.set_attribute("role_name", vehicle_id)
-        #bp.set_attribute("ros_name",  vehicle_id) 
-
-        vehicle = world.spawn_actor(bp,
-                                    world.get_map().get_spawn_points()[0],
-                                    attach_to=None)
+        logging.debug(" Setting attributes for: %s", vehicle_type)
+        bp.set_attribute("role_name", 'hero')
+        bp.set_attribute("ros_name",  'hero')
+        logging.debug(" Spawning vehicle in world: %s", vehicle_type)
+        vehicle = world.spawn_actor(bp, world.get_map().get_spawn_points()[0], attach_to=None)
         actors.append(vehicle)
 
         # Create sensors based on this input:
@@ -72,7 +95,7 @@ def _setup_vehicle_actors(world):
         sensor.set_attribute("upper_fov",          '22.5')
         sensor.set_attribute("lower_fov",          '-22.5')
         sensor.set_attribute("sensor_tick",        '0.1')
-        sensor_spawn = carla.Transform(location=carla.Location(x=1.12, y=0, z=2.4), rotation=carla.Rotation(roll=0, pitch=-6.305, yaw=0))
+        sensor_spawn = carla.Transform(location=carla.Location(x=0, y=0, z=1.2), rotation=carla.Rotation(roll=0, pitch=-6.305, yaw=0))
         sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
         sensor_actor.enable_for_ros()
         actors.append(sensor_actor)
@@ -85,23 +108,23 @@ def _setup_vehicle_actors(world):
         sensor.set_attribute("image_size_y", '1200')
         sensor.set_attribute("fov",          '90.0')
         sensor.set_attribute("sensor_tick",  '0.1')
-        sensor_spawn = carla.Transform(location=carla.Location(x=-4.5, y=0, z=2.5), rotation=carla.Rotation(roll=0, pitch=-20, yaw=0))
+        sensor_spawn = carla.Transform(location=carla.Location(x=0, y=0, z=1.2), rotation=carla.Rotation(roll=0, pitch=-20, yaw=0))
         sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
         sensor_actor.enable_for_ros()
         actors.append(sensor_actor)
 
-        # logging.debug(' Creating IR Sensor')
-        # sensor = bp_library.filter('sensor.camera.ir')[0]
-        # sensor.set_attribute("role_name",    'front_ir')
-        # sensor.set_attribute("ros_name",     'front_ir')
-        # sensor.set_attribute("image_size_x", '1920')
-        # sensor.set_attribute("image_size_y", '1200')
-        # sensor.set_attribute("fov",          '90.0')
-        # sensor.set_attribute("sensor_tick",  '0.1')
-        # sensor_spawn = carla.Transform(location=carla.Location(x=-4.5, y=0, z=2.5), rotation=carla.Rotation(roll=0, pitch=-20, yaw=0))
-        # sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
-        # sensor_actor.enable_for_ros()
-        # actors.add(sensor_actor)
+        logging.debug(' Creating IR Sensor')
+        sensor = bp_library.filter('sensor.camera.ir')[0]
+        sensor.set_attribute("role_name",    'front_ir')
+        sensor.set_attribute("ros_name",     'front_ir')
+        sensor.set_attribute("image_size_x", '1920')
+        sensor.set_attribute("image_size_y", '1200')
+        sensor.set_attribute("fov",          '90.0')
+        sensor.set_attribute("sensor_tick",  '0.1')
+        sensor_spawn = carla.Transform(location=carla.Location(x=0, y=0, z=1.2), rotation=carla.Rotation(roll=0, pitch=-20, yaw=0))
+        sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
+        sensor_actor.enable_for_ros()
+        actors.append(sensor_actor)
 
         logging.debug(' Creating GPS Sensor')
         sensor = bp_library.filter('sensor.other.gnss')[0]
@@ -124,6 +147,7 @@ def _setup_vehicle_actors(world):
         actors.append(sensor_actor)
 
     except Exception as error:
+        logging.info('  Error: %s', type(error))
         logging.info('  Error: %s', error)
         raise Exception("Failed to Spawn Vehicle and Sensors")
 
@@ -136,8 +160,8 @@ def main(args):
     executor.add_node(simulation_status_node)
     world = None
     old_world = None
-    vehicle_actors = None
     original_settings = None
+    tracked_actors = []
 
     # Spin in a separate thread
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
@@ -171,12 +195,28 @@ def main(args):
                     world = client.get_world()
                     world.apply_settings(settings)
                     break
+        else:
+            logging.info("  No Map in Scenario File")
+            raise Exception("No Map in Scenario File")
+
+        # Create the simulation starter
+        bp_library = world.get_blueprint_library()
+        functor_start_simulation_bp = bp_library.filter("functorstartsimulation")[0]
 
         # Setup MetaHumans
-        # Needs Code 
-  
+        tracked_actors.append(_setup_casualty_actors(world, scenario_file, bp_library))
+
+        # Setup Vehicle Waypoints
+        tracked_actors.append(_setup_waypoint_actors(world, scenario_file, bp_library))
+
         # Create Vehicle with sensors
-        vehicle_actors = _setup_vehicle_actors(world)
+        vehicle_actors = _setup_vehicle_actors(world, scenario_file, bp_library)
+        for actor in vehicle_actors:
+           tracked_actors.append(actor)
+
+        # Start Simulation
+        logging.info("  Starting Simulation...")
+        tracked_actors.append(world.spawn_actor(functor_start_simulation_bp, global_transform))
 
         logging.info("  Running Mission...")
         _ = world.tick()
@@ -193,12 +233,12 @@ def main(args):
     finally:
         try:
             logging.info('  Reseting Game to original state...')
+            for actor in tracked_actors:
+                actor.destroy()
+
             if original_settings:
                 client.load_world('StartingWorld')
                 client.get_world().apply_settings(original_settings)
-
-            for actor in vehicle_actors:
-                actor.destroy()
 
             _ = world.tick()
             logging.info('  Game finished resetting, exiting System Manager...')
@@ -206,7 +246,6 @@ def main(args):
             logging.info('  Error: %s', error)
             logging.info('  Failed to reset game to original state...')
             pass
-    executor_thread.join()
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='DTC System Manager')

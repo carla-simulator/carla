@@ -94,10 +94,6 @@ if (BUILD_CARLA_UNREAL)
   add_subdirectory (Unreal)
 endif ()
 
-if (BUILD_EXAMPLES)
-  add_subdirectory (Examples)
-endif ()
-
 carla_add_custom_target (
   carla-help
   "Display this message."

@@ -169,6 +169,10 @@
 		{
 			"Name": "dtc_plugin",
 			"Enabled": true
+		},
+		{
+			"Name": "Volumetrics",
+			"Enabled": false
 		}
 	],
 	"TargetPlatforms": [

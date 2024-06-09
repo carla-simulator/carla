@@ -1,3 +1,65 @@
-#map: L_Razish_Master
-#map: L_TrainCrash_Master
-map: Town10HD_Opt
+# Scenario File Example of how to leverage configuration in the simulation
+
+# Map Argument: Defines which Unreal map to load into, options include:
+# StartingWorld: a blank empty space that Unreal opens into, also the map that loads when something goes wrong.
+# L_Razish_Carla: The Test Map for executing missions. Has 10 Zones.
+map: L_Razish_Carla
+
+# Waypoint List: Defines which waypoints and in which order the robot should traverse. Arguments include:
+# zone: The zone number that corresponds to the waypoint to traverse to.
+waypoints:
+  waypoint_1:
+    zone: 7
+  waypoint_2:
+    zone: 9
+  waypoint_3:
+    zone: 10
+  waypoint_4:
+    zone: 8
+  waypoint_5:
+    zone: 6
+  waypoint_6:
+    zone: 5
+  waypoint_7:
+    zone: 4
+  waypoint_8:
+    zone: 3
+  waypoint_9:
+    zone: 1
+  waypoint_10:
+    zone: 2
+
+# Casualty List: Defines which casualty types to spawn and in which zone locations. Arguments include:
+# zone: The zone number that corresponds to the waypoint to spawn the casualty in.
+# casualty_type: The casualty type to spawn. 60 Casualties from 01 to 60 exist for this scenario.
+casualties:
+  casualty_1:
+    zone: 1
+    casualty_type: BP_Casualty_02
+  casualty_2:
+    zone: 2
+    casualty_type: BP_Casualty_17
+  casualty_3:
+    zone: 3
+    casualty_type: BP_Casualty_04
+  casualty_4:
+    zone: 4
+    casualty_type: BP_Casualty_05
+  casualty_5:
+    zone: 5
+    casualty_type: BP_Casualty_06
+  casualty_6:
+    zone: 6
+    casualty_type: BP_Casualty_21
+  casualty_7:
+    zone: 7
+    casualty_type: BP_Casualty_15
+  casualty_8:
+    zone: 8
+    casualty_type: BP_Casualty_01
+  casualty_9:
+    zone: 9
+    casualty_type: BP_Casualty_30
+  casualty_10:
+    zone: 10
+    casualty_type: BP_Casualty_42

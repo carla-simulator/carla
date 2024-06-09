@@ -9,8 +9,6 @@
 #include "Carla/Game/TaggedComponent.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
-#include "Carla/Sensor/PixelReader.h"
-
 #include "Components/SceneCaptureComponent2D.h"
 
 FActorDefinition AInstanceSegmentationCamera::GetSensorDefinition()
