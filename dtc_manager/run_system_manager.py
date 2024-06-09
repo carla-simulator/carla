@@ -200,9 +200,6 @@ def main(args):
         functor_sent_casualties_bp.set_attribute('10', "BP_Casualty_32|10")
         functor_sent_casualties = world.spawn_actor(functor_sent_casualties_bp, transform)
 
-        # Create Vehicle with sensors
-        vehicle_actors = _setup_vehicle_actors(world)
-
         # Setup Vehicle Waypoints
         if 'waypoints' not in scenario_file:
             logging.info("  No Waypoints defined in Scenario File")
@@ -222,13 +219,16 @@ def main(args):
         functor_sent_waypoints_bp.set_attribute('10', "2")
         functor_sent_waypoints = world.spawn_actor(functor_sent_waypoints_bp, transform)
 
+        # Create Vehicle with sensors
+        vehicle_actors = _setup_vehicle_actors(world)
+        
         # Start Simulation
         logging.info("  Starting Simulation...")
-        #functor_start_simulation = world.spawn_actor(functor_start_simulation_bp, transform)
+        functor_start_simulation = world.spawn_actor(functor_start_simulation_bp, transform)
 
         logging.info("  Running Mission...")
         _ = world.tick()
-        #simulation_status_node.set_status(True)
+        simulation_status_node.set_status(True)
         while True:
             _ = world.tick()
 
