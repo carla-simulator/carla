@@ -52,15 +52,9 @@ def _setup_vehicle_actors(world):
     try:
         # vehicle settings, static for P1
         vehicle_type = "WaypointVehicle"
-        #vehicle_type = "atm"
-        vehicle_id   = "hero"
-
         logging.debug(" Spawning vehicle: %s", vehicle_type)
-
         bp_library = world.get_blueprint_library()
         bp = bp_library.filter(vehicle_type)[0]
-        bp.set_attribute("role_name", vehicle_id)
-        bp.set_attribute("ros_name",  vehicle_id)
         vehicle = world.spawn_actor(bp, world.get_map().get_spawn_points()[0], attach_to=None)
 
         actors.append(vehicle)
@@ -187,18 +181,24 @@ def main(args):
         bp_library = world.get_blueprint_library()
         functor_start_simulation_bp = bp_library.filter("FunctorStartSimulation")[0]
 
-
         # Setup MetaHumans
         if 'casualties' not in scenario_file:
             logging.info("  No Casualties defined in Scenario File")
             raise Exception("No Casualties defined in Scenario File")
-        # Needs Code 
-        ######################
-        # functor_sent_casualties_bp = bp_library.filter("FunctorSendCasualties")[0]
-        # array index , Casualty BP Name | Zone
-        # functor_sent_casualties_bp.set_attribute('1', "BP_Casualty_02|4")
-        # functor_sent_casualties = world.spawn_actor(functor_sent_casualties_bp, transform)
-        ######################
+        logging.info("  Setting Casualties...")
+        functor_sent_casualties_bp = bp_library.filter("FunctorSendCasualties")[0]
+        # array index , Casualty BP Name | Zone 
+        functor_sent_casualties_bp.set_attribute('1', "BP_Casualty_05|1")
+        functor_sent_casualties_bp.set_attribute('2', "BP_Casualty_07|2")
+        functor_sent_casualties_bp.set_attribute('3', "BP_Casualty_15|3")
+        functor_sent_casualties_bp.set_attribute('4', "BP_Casualty_18|4")
+        functor_sent_casualties_bp.set_attribute('5', "BP_Casualty_13|5")
+        functor_sent_casualties_bp.set_attribute('6', "BP_Casualty_21|6")
+        functor_sent_casualties_bp.set_attribute('7', "BP_Casualty_31|7")
+        functor_sent_casualties_bp.set_attribute('8', "BP_Casualty_42|8")
+        functor_sent_casualties_bp.set_attribute('9', "BP_Casualty_55|9")
+        functor_sent_casualties_bp.set_attribute('10', "BP_Casualty_32|10")
+        functor_sent_casualties = world.spawn_actor(functor_sent_casualties_bp, transform)
 
         # Create Vehicle with sensors
         vehicle_actors = _setup_vehicle_actors(world)
@@ -207,18 +207,28 @@ def main(args):
         if 'waypoints' not in scenario_file:
             logging.info("  No Waypoints defined in Scenario File")
             raise Exception("No Waypoints defined in Scenario File")
-        # Needs Code 
-        ###############################
-        # functor_sent_waypoints_bp = bp_library.filter("FunctorSendWaypoints")[0]
+        logging.info("  Setting Waypoints...")
+        functor_sent_waypoints_bp = bp_library.filter("FunctorSendWaypoints")[0]
         # array index , Zone
-        # functor_sent_waypoints_bp.set_attribute('1', "3")
-        # functor_sent_waypoints = world.spawn_actor(functor_sent_waypoints_bp, transform)
-        ###############################
+        functor_sent_waypoints_bp.set_attribute('1', "7")
+        functor_sent_waypoints_bp.set_attribute('2', "9")
+        functor_sent_waypoints_bp.set_attribute('3', "10")
+        functor_sent_waypoints_bp.set_attribute('4', "8")
+        functor_sent_waypoints_bp.set_attribute('5', "6")
+        functor_sent_waypoints_bp.set_attribute('6', "5")
+        functor_sent_waypoints_bp.set_attribute('7', "4")
+        functor_sent_waypoints_bp.set_attribute('8', "3")
+        functor_sent_waypoints_bp.set_attribute('9', "1")
+        functor_sent_waypoints_bp.set_attribute('10', "2")
+        functor_sent_waypoints = world.spawn_actor(functor_sent_waypoints_bp, transform)
+
+        # Start Simulation
+        logging.info("  Starting Simulation...")
+        #functor_start_simulation = world.spawn_actor(functor_start_simulation_bp, transform)
 
         logging.info("  Running Mission...")
-        functor_start_simulation = world.spawn_actor(functor_start_simulation_bp, transform)
         _ = world.tick()
-        simulation_status_node.set_status(True)
+        #simulation_status_node.set_status(True)
         while True:
             _ = world.tick()
 

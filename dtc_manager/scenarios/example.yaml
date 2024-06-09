@@ -5,24 +5,54 @@ map: L_Razish_Carla
 
 waypoints:
   waypoint_1:
-    zone: 1
-  waypoint_2:
-    zone: 4
-  waypoint_3:
     zone: 7
-  waypoint_4:
+  waypoint_2:
+    zone: 9
+  waypoint_3:
     zone: 10
+  waypoint_4:
+    zone: 8
+  waypoint_5:
+    zone: 6
+  waypoint_6:
+    zone: 5
+  waypoint_7:
+    zone: 4
+  waypoint_8:
+    zone: 3
+  waypoint_9:
+    zone: 1
+  waypoint_10:
+    zone: 2
 
 casualties:
   casualty_1:
     zone: 1
     casualty_type: BP_Casualty_02
   casualty_2:
-    zone: 4
+    zone: 2
     casualty_type: BP_Casualty_17
   casualty_3:
-    zone: 7
+    zone: 3
     casualty_type: BP_Casualty_04
   casualty_4:
-    zone: 10
+    zone: 4
     casualty_type: BP_Casualty_05
+  casualty_5:
+    zone: 5
+    casualty_type: BP_Casualty_06
+  casualty_6:
+    zone: 6
+    casualty_type: BP_Casualty_21
+  casualty_7:
+    zone: 7
+    casualty_type: BP_Casualty_15
+  casualty_8:
+    zone: 8
+    casualty_type: BP_Casualty_01
+  casualty_9:
+    zone: 9
+    casualty_type: BP_Casualty_30
+  casualty_10:
+    zone: 10
+    casualty_type: BP_Casualty_42
