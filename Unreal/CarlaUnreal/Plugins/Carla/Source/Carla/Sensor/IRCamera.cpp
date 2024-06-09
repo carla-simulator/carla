@@ -25,8 +25,8 @@ FActorDefinition AIRCamera::GetSensorDefinition()
 AIRCamera::AIRCamera(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
-    AddPostProcessingMaterial(
-        TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
+  AddPostProcessingMaterial(
+      TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
 
 	AddPostProcessingMaterial(TEXT("Material'/Game/DTC/IRCamera/PP_IR_Thermal.PP_IR_Thermal'"));
 	AddPostProcessingMaterial(TEXT("Material'/Game/DTC/IRCamera/PP_CameraBlur.PP_CameraBlur'"));
@@ -52,22 +52,8 @@ void AIRCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void AIRCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(AIRCamera::PostPhysTick);
+  TRACE_CPUPROFILER_EVENT_SCOPE(ADepthCamera::PostPhysTick);
   Super::PostPhysTick(World, TickType, DeltaSeconds);
-  
-  ENQUEUE_RENDER_COMMAND(MeasureTime)
-  (
-    [](auto &InRHICmdList)
-    {
-      std::chrono::time_point<std::chrono::high_resolution_clock> Time = 
-          std::chrono::high_resolution_clock::now();
-      auto Duration = std::chrono::duration_cast< std::chrono::milliseconds >(Time.time_since_epoch());
-      uint64_t Milliseconds = Duration.count();
-      FString ProfilerText = FString("(Render)Frame: ") + FString::FromInt(FCarlaEngine::GetFrameCounter()) + 
-          FString(" Time: ") + FString::FromInt(Milliseconds);
-      TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(*ProfilerText);
-    }
-  );
 
   auto FrameIndex = FCarlaEngine::GetFrameCounter();
   ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
@@ -78,10 +64,3 @@ void AIRCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeco
     return true;
   });
 }
-
-#ifdef CARLA_HAS_GBUFFER_API
-void AIRCamera::SendGBufferTextures(FGBufferRequest& GBuffer)
-{
-    SendGBufferTexturesInternal(*this, GBuffer);
-}
-#endif

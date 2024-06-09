@@ -1,14 +1,5 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB).
-#
-# This work is licensed under the terms of the MIT license.
-# For a copy, see <https://opensource.org/licenses/MIT>.
-
-# Allows controlling a vehicle with a keyboard. For a simpler and more
-# documented example, please take a look at tutorial.py.
-
 import os
 import argparse
 import yaml
@@ -18,8 +9,6 @@ import rclpy
 import threading
 from rclpy.node import Node
 from std_msgs.msg import Bool
-
-# import unreal
 
 python_file_path = os.path.realpath(__file__)
 python_file_path = python_file_path.replace('run_system_manager.py', '')
@@ -86,9 +75,6 @@ def _setup_vehicle_actors(world, scenario_file, bp_library):
         vehicle_type = "waypointvehicle"
         logging.debug(" Spawning vehicle: %s", vehicle_type)
         bp = bp_library.filter(vehicle_type)[0]
-        # Set Casualty in Attribute        
-        for attr in bp:
-            print('  - {}'.format(attr))
         logging.debug(" Setting attributes for: %s", vehicle_type)
         bp.set_attribute("role_name", 'hero')
         bp.set_attribute("ros_name",  'hero')
