@@ -283,9 +283,10 @@ def main(args):
         for actor in vehicle_actors:
            tracked_actors.append(actor)
 
-        # Start Simulation
+        # Start Simulation, need to process a few frames to fully load things
         logging.info("  Starting Simulation...")
-        _ = world.tick()
+        for step in range(5):
+            _ = world.tick()
         simulation_status_node.set_status(True)
         stationary_count = 0
         while True:
