@@ -9,6 +9,9 @@ import rclpy
 import threading
 from rclpy.node import Node
 from std_msgs.msg import Bool
+from std_msgs.msg import Empty
+from sensor_msgs.msg import Imu
+import time
 
 python_file_path = os.path.realpath(__file__)
 python_file_path = python_file_path.replace('run_system_manager.py', '')
@@ -29,6 +32,67 @@ class SimulationStatusNode(Node):
     
     def set_status(self, status):
         self._status = status
+
+class SimulationStartNode(Node):
+
+    def __init__(self):
+        super().__init__("carla_simulation_start")
+        self._start = False
+        self.subscriber = self.create_subscription(Empty, "/simulation_start", self.set_start, 10)
+    
+    def get_start(self):
+        return self._start
+
+    def set_start(self, msg):
+        self._start = True
+
+class SimulationIMUNode(Node):
+
+    def __init__(self):
+        super().__init__("carla_simulation_imu_tracker")
+        self._current_message = None
+        self._last_message = None
+        self._has_moved = False
+        self._eps = 0.0001
+        self.subscriber = self.create_subscription(Imu, "/carla/dtc_vehicle/imu", self.set_imu, 10)
+    
+    def is_stationary(self):
+        # Check if the previous and current IMU messages are identical.
+        # When Linear Accel and Angular Vel differentials are both 0,
+        # The vehicle is assumed to be stationary
+        if self._current_message is None or self._last_message is None:
+            return False
+
+        # Assume stationary and set to False if movement detected in any direction
+        # this is done on a per axis basis but could be made better is linear math used
+        is_stationary = True
+
+        if abs(self._last_message.angular_velocity.x - self._current_message.angular_velocity.x) > self._eps:
+            is_stationary = False
+        if abs(self._last_message.angular_velocity.y - self._current_message.angular_velocity.y) > self._eps:
+            is_stationary = False
+        if abs(self._last_message.angular_velocity.z - self._current_message.angular_velocity.z) > self._eps:
+            is_stationary = False
+        if abs(self._last_message.linear_acceleration.x - self._current_message.linear_acceleration.x) > self._eps:
+            is_stationary = False
+        if abs(self._last_message.linear_acceleration.y - self._current_message.linear_acceleration.y) > self._eps:
+            is_stationary = False
+        if abs(self._last_message.linear_acceleration.z - self._current_message.linear_acceleration.z) > self._eps:
+            is_stationary = False
+
+        # Check if the vehicle has moved at all. We want this to only trigger at the end, the sim starts with the vehicle
+        # stationary. So return False until the vehicle has moved.
+        if not self._has_moved:
+            if not is_stationary:
+                self._has_moved = True
+            return False
+
+        return is_stationary
+
+    def set_imu(self, msg):
+        if self._current_message is not None:
+            self._last_message = self._current_message
+        self._current_message = msg
 
 def _setup_waypoint_actors(world, scenario_file, bp_library):
     if 'waypoints' not in scenario_file:
@@ -76,8 +140,8 @@ def _setup_vehicle_actors(world, scenario_file, bp_library):
         logging.debug(" Spawning vehicle: %s", vehicle_type)
         bp = bp_library.filter(vehicle_type)[0]
         logging.debug(" Setting attributes for: %s", vehicle_type)
-        bp.set_attribute("role_name", 'hero')
-        bp.set_attribute("ros_name",  'hero')
+        bp.set_attribute("role_name", 'dtc_vehicle')
+        bp.set_attribute("ros_name",  'dtc_vehicle')
         logging.debug(" Spawning vehicle in world: %s", vehicle_type)
         vehicle = world.spawn_actor(bp, world.get_map().get_spawn_points()[0], attach_to=None)
         actors.append(vehicle)
@@ -156,12 +220,17 @@ def _setup_vehicle_actors(world, scenario_file, bp_library):
 def main(args):
     rclpy.init()
     simulation_status_node = SimulationStatusNode()
+    simulation_start_node = SimulationStartNode()
+    simulation_imu_node = SimulationIMUNode()
     executor = rclpy.executors.MultiThreadedExecutor()
     executor.add_node(simulation_status_node)
+    executor.add_node(simulation_start_node)
+    executor.add_node(simulation_imu_node)
     world = None
     old_world = None
     original_settings = None
     tracked_actors = []
+    mission_started = False
 
     # Spin in a separate thread
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
@@ -216,14 +285,38 @@ def main(args):
 
         # Start Simulation
         logging.info("  Starting Simulation...")
-        tracked_actors.append(world.spawn_actor(functor_start_simulation_bp, global_transform))
-
-        logging.info("  Running Mission...")
         _ = world.tick()
         simulation_status_node.set_status(True)
+        stationary_count = 0
         while True:
-            _ = world.tick()
+            try:
+                # Check if the simulation has not been started but should, if so, trigger the start command in Unreal
+                if not mission_started and simulation_start_node.get_start():
+                    logging.info("  Running Mission...")
+                    tracked_actors.append(world.spawn_actor(functor_start_simulation_bp, global_transform))
+                    mission_started = True
 
+                # Tick the simulation if the mission has been started, otherwise, wait for the start command
+                if mission_started:
+                    _ = world.tick()
+                else:
+                    time.sleep(settings.fixed_delta_seconds)
+                    # Ensures that rogue messages on startup don't contribute to stationary counts
+                    stationary_count=0
+
+                # Check if the vehicle is stationary, if not, reset the stationary count
+                if simulation_imu_node.is_stationary():
+                    stationary_count+=1
+                else:
+                    stationary_count=0
+                
+                # Check if the vehicle has been stationary long enough to close the simulation (10 seconds)
+                if stationary_count >= 4 / settings.fixed_delta_seconds:
+                    logging.info("  Mission Completed...")
+                    break
+            except:
+                logging.info('  CARLA Client no longer connected, likely a system crash or the mission completed')
+                raise Exception("CARLA Client no longer connected")
     except KeyboardInterrupt:
         logging.info('  System Shutdown Command, closing out System Manager')
     except Exception as error:
@@ -232,16 +325,24 @@ def main(args):
 
     finally:
         try:
-            logging.info('  Reseting Game to original state...')
-            for actor in tracked_actors:
-                actor.destroy()
+            if args.cleankill:
+                logging.info('  Clean Kill enabled, End World...')
+                if original_settings:
+                    client.get_world().apply_settings(original_settings)
+                    _ = world.tick()
+                    client.load_world('EndingWorld')
+                logging.info('  Game Instance Closed, exiting System Manager...')
+            else:
+                logging.info('  Reseting Game to original state...')
+                for actor in tracked_actors:
+                    actor.destroy()
 
-            if original_settings:
-                client.load_world('StartingWorld')
-                client.get_world().apply_settings(original_settings)
+                if original_settings:
+                    client.load_world('StartingWorld')
+                    client.get_world().apply_settings(original_settings)
 
-            _ = world.tick()
-            logging.info('  Game finished resetting, exiting System Manager...')
+                _ = world.tick()
+                logging.info('  Game finished resetting, exiting System Manager...')
         except Exception as error:
             logging.info('  Error: %s', error)
             logging.info('  Failed to reset game to original state...')
@@ -249,10 +350,11 @@ def main(args):
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='DTC System Manager')
-    argparser.add_argument('--host',          default='localhost', dest='host',    type=str,  help='IP of the host CARLA Simulator (default: localhost)')
-    argparser.add_argument('--port',          default=2000,        dest='port',    type=int,  help='TCP port of CARLA Simulator (default: 2000)')
-    argparser.add_argument('-f', '--file',    default='example',   dest='file',    type=str,  help='Scenario File to run, Note, Always looks in `dtc_manager/scenarios` and does not include the .yaml (default: example)')
-    argparser.add_argument('-v', '--verbose', default=False,       dest='verbose', type=bool, help='print debug information (default: False)')
+    argparser.add_argument('--host',          default='localhost', dest='host',      type=str,  help='IP of the host CARLA Simulator (default: localhost)')
+    argparser.add_argument('--port',          default=2000,        dest='port',      type=int,  help='TCP port of CARLA Simulator (default: 2000)')
+    argparser.add_argument('-f', '--file',    default='example',   dest='file',      type=str,  help='Scenario File to run, Note, Always looks in `dtc_manager/scenarios` and does not include the .yaml (default: example)')
+    argparser.add_argument('-v', '--verbose', default=False,       dest='verbose',   type=bool, help='print debug information (default: False)')
+    argparser.add_argument('--clean-kill',    default=False,       dest='cleankill', type=bool, help='When true, cleanly kills the simulation when the python script is exited')
 
     args = argparser.parse_args()
 
