@@ -202,7 +202,7 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
   }
 
   // check to ignore Hero or Spectator
-  if ((bIgnoreHero && IsHero) || 
+  if ((bIgnoreHero && IsHero) ||
       (bIgnoreSpectator && ActorDesc.Id.StartsWith("spectator")))
   {
     return std::make_pair(3, 0);
@@ -227,7 +227,11 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
         // disable physics
         SetActorSimulatePhysics(result.second, false);
         // disable collisions
-        result.second->GetActor()->SetActorEnableCollision(false);
+        result.second->GetActor()->SetActorEnableCollision(true);
+        auto RootComponent = Cast<UPrimitiveComponent>(
+            result.second->GetActor()->GetRootComponent());
+        RootComponent->SetSimulatePhysics(false);
+        RootComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         // disable autopilot for vehicles
         if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle)
           SetActorAutopilot(result.second, false, false);

@@ -9,6 +9,7 @@
 #include "Carla/Actor/ActorInfo.h"
 #include "Carla/Actor/ActorData.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Vehicle/VehicleTelemetryData.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Traffic/TrafficLightState.h"
 
@@ -325,6 +326,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse GetVehicleTelemetryData(FVehicleTelemetryData&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse ShowVehicleDebugTelemetry(bool)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -529,6 +535,8 @@ public:
   ECarlaServerResponse ApplyAckermannControllerSettings(const FAckermannControllerSettings&) override final;
 
   ECarlaServerResponse SetActorAutopilot(bool bEnabled, bool bKeepState = false) override final;
+
+  ECarlaServerResponse GetVehicleTelemetryData(FVehicleTelemetryData&) override final;
 
   ECarlaServerResponse ShowVehicleDebugTelemetry(bool bEnabled) override final;
 
