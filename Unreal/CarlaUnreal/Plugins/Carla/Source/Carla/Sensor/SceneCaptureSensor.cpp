@@ -720,6 +720,7 @@ void ASceneCaptureSensor::BeginPlay()
 
 void ASceneCaptureSensor::PrePhysTick(float DeltaSeconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::PrePhysTick);
   Super::PrePhysTick(DeltaSeconds);
 
   // Add the view information every tick. It's only used for one tick and then
@@ -732,7 +733,9 @@ void ASceneCaptureSensor::PrePhysTick(float DeltaSeconds)
 
 void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::PostPhysTick);
   Super::PostPhysTick(World, TickType, DeltaTime);
+  UE_LOG(LogCarla, Warning, TEXT("PostPhysTick %f "), DeltaTime);
   EnqueueRenderSceneImmediate();
 }
 
