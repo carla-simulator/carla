@@ -735,7 +735,6 @@ void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::PostPhysTick);
   Super::PostPhysTick(World, TickType, DeltaTime);
-  UE_LOG(LogCarla, Warning, TEXT("PostPhysTick %f "), DeltaTime);
   EnqueueRenderSceneImmediate();
 }
 
