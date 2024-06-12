@@ -2742,11 +2742,13 @@ void FCarlaServer::RunSome(uint32 Milliseconds)
 
 void FCarlaServer::Tick()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(FCarlaServer::Tick);
   (void)Pimpl->TickCuesReceived.fetch_add(1, std::memory_order_release);
 }
 
 bool FCarlaServer::TickCueReceived()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(FCarlaServer::TickCueReceived);
   auto k = Pimpl->TickCuesReceived.fetch_sub(1, std::memory_order_acquire);
   bool flag = (k > 0);
   if (!flag)

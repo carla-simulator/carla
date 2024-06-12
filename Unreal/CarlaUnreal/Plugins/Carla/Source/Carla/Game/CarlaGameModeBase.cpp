@@ -373,6 +373,7 @@ void ACarlaGameModeBase::ApplyTextureToActor(
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaGameModeBase::Tick);
   Super::Tick(DeltaSeconds);
 
   /// @todo Recorder should not tick here, FCarlaEngine should do it.

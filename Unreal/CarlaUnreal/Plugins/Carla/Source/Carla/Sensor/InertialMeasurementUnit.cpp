@@ -185,6 +185,7 @@ float AInertialMeasurementUnit::ComputeCompass()
 
 void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(AInertialMeasurementUnit::PostPhysTick);
   AccelerometerValue = ComputeAccelerometer(DeltaTime);
   GyroscopeValue = ComputeGyroscope();
   CompassValue = ComputeCompass();
@@ -212,7 +213,7 @@ void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, 
   #endif
 
   {
-    TRACE_CPUPROFILER_EVENT_SCOPE(AInertialMeasurementUnit::PostPhysTick);
+    TRACE_CPUPROFILER_EVENT_SCOPE(AInertialMeasurementUnit::SerializeAndSend);
     DataStream.SerializeAndSend(*this, AccelerometerValue, GyroscopeValue, CompassValue);
   }
 }
