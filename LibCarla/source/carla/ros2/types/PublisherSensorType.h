@@ -28,6 +28,7 @@ enum class PublisherSensorType {
   WorldObserver,
   CameraGBufferUint8,
   CameraGBufferFloat,
+  V2XCustom,
   Unknown
 };
 }
@@ -75,6 +76,8 @@ inline std::string to_string(carla::ros2::types::PublisherSensorType sensor_type
       return "CameraGBufferUint8";
     case carla::ros2::types::PublisherSensorType::CameraGBufferFloat:
       return "CameraGBufferFloat";
+    case carla::ros2::types::PublisherSensorType::V2XCustom:
+      return "V2XCustom";
     default:
       return "Unknown";
   }

@@ -14,8 +14,7 @@
 #include "CustomV2XSensor.h"
 #include "V2X/PathLossModel.h"
 
-std::list<AActor *> ACustomV2XSensor::mV2XActorContainer;
-ACustomV2XSensor::ActorV2XDataMap ACustomV2XSensor::mActorV2XDataMap;
+ACustomV2XSensor::ActorV2XDataMap ACustomV2XSensor::gActorV2XDataMap;
 
 ACustomV2XSensor::ACustomV2XSensor(const FObjectInitializer &ObjectInitializer)
     : Super(ObjectInitializer)
@@ -30,33 +29,21 @@ ACustomV2XSensor::ACustomV2XSensor(const FObjectInitializer &ObjectInitializer)
 void ACustomV2XSensor::SetOwner(AActor *Owner)
 {
     UE_LOG(LogCarla, Warning, TEXT("CustomV2XSensor: called setowner with %p"), Owner);
-    if (GetOwner() != nullptr)
-    {
-        ACustomV2XSensor::mV2XActorContainer.remove(GetOwner());
-        UE_LOG(LogCarla, Warning, TEXT("CustomV2XSensor: removed old owner %p"), GetOwner());
-    }
 
     Super::SetOwner(Owner);
 
-    // Store the actor into the static list if the actor details are not available
+    mStationId = 0;
     if(Owner != nullptr)
     {
-        if (std::find(ACustomV2XSensor::mV2XActorContainer.begin(), ACustomV2XSensor::mV2XActorContainer.end(), Owner) == ACustomV2XSensor::mV2XActorContainer.end())
+        UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+        FCarlaActor* CarlaActor = CarlaEpisode->FindCarlaActor(Owner);
+        if (CarlaActor != nullptr)
         {
-            ACustomV2XSensor::mV2XActorContainer.push_back(Owner);
-            UE_LOG(LogCarla, Warning, TEXT("CustomV2XSensor: added owner, length now %d"), ACustomV2XSensor::mV2XActorContainer.size());
+            mStationId = static_cast<long>(CarlaActor->GetActorId());
         }
-
     }
 
     PathLossModelObj->SetOwner(Owner);
-    
-    UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(GetWorld());
-    FCarlaActor* CarlaActor = CarlaEpisode->FindCarlaActor(Owner);
-    if (CarlaActor != nullptr)
-    {
-        mStationId = static_cast<long>(CarlaActor->GetActorId());
-    }
 }
 
 FActorDefinition ACustomV2XSensor::GetSensorDefinition()
@@ -70,6 +57,12 @@ void ACustomV2XSensor::Set(const FActorDescription &ActorDescription)
     UE_LOG(LogCarla, Warning, TEXT("CustomV2XSensor: Set function called"));
     Super::Set(ActorDescription);
     UActorBlueprintFunctionLibrary::SetCustomV2X(ActorDescription, this);
+
+    auto Role = ActorDescription.Variations.Find("role_name");
+    if (Role != nullptr) 
+    {
+        mRoleName = TCHAR_TO_UTF8(*Role->Value);
+    }
 }
 
 void ACustomV2XSensor::SetPropagationParams(const float TransmitPower,
@@ -106,7 +99,7 @@ void ACustomV2XSensor::PrePhysTick(float DeltaSeconds)
     // Clear the message created during the last sim cycle
     if (GetOwner())
     {
-        ACustomV2XSensor::mActorV2XDataMap.erase(GetOwner());
+        ACustomV2XSensor::gActorV2XDataMap.erase(GetOwner());
 
         // Step 0: Create message to send, if triggering conditions fulfilled
         // this needs to be done in pre phys tick to enable synchronous reception in all other v2x sensors
@@ -120,7 +113,7 @@ void ACustomV2XSensor::PrePhysTick(float DeltaSeconds)
             message_pw.Message = CreateCustomV2XMessage();
             
             message_pw.Power = PathLossModelObj->GetTransmitPower();
-            ACustomV2XSensor::mActorV2XDataMap.insert({GetOwner(), message_pw});
+            gActorV2XDataMap.insert({GetOwner(), {.RoleName = mRoleName, .Message = message_pw}});
         }
     }
 }
@@ -130,7 +123,9 @@ CustomV2XM_t ACustomV2XSensor::CreateCustomV2XMessage()
     CustomV2XM_t message = CustomV2XM_t();
 
     CreateITSPduHeader(message);
-    std::strcpy(message.message,mMessageData.c_str());
+    // safe strncpy: ensure null terminated target string, other payload is dropped
+    std::strncpy(message.message, mMessageData.c_str(), sizeof(message.message));
+    message.message[sizeof(message.message)-1] = 0;
     mMessageDataChanged = false;
     return message;
 }
@@ -154,15 +149,19 @@ void ACustomV2XSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float De
 
     // Step 1: Create an actor list which has messages to send targeting this v2x sensor instance
     std::vector<ActorPowerPair> ActorPowerList;
-    for (const auto &pair : ACustomV2XSensor::mActorV2XDataMap)
+    for (const auto &pair : gActorV2XDataMap)
     {
         if (pair.first != GetOwner())
         {
-            ActorPowerPair actor_power_pair;
-            actor_power_pair.first = pair.first;
-            // actor sending with transmit power
-            actor_power_pair.second = pair.second.Power;
-            ActorPowerList.push_back(actor_power_pair);
+            // only sensors with the same role_name talk to each other
+            if ( mRoleName == pair.second.RoleName ) 
+            { 
+                ActorPowerPair actor_power_pair;
+                actor_power_pair.first = pair.first;
+                // actor sending with transmit power
+                actor_power_pair.second = pair.second.Message.Power;
+                ActorPowerList.push_back(actor_power_pair);
+            }
         }
     }
 
@@ -178,10 +177,10 @@ void ACustomV2XSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float De
         // get registry to retrieve carla actor IDs
         const FActorRegistry &Registry = carla_episode->GetActorRegistry();
 
-        ACustomV2XSensor::V2XDataList msg_received_power_list;
+        V2XDataList msg_received_power_list;
         for (const auto &pair : actor_receivepower_map)
         {
-            carla::sensor::data::CustomV2XData send_msg_and_pw = ACustomV2XSensor::mActorV2XDataMap.at(pair.first);
+            carla::sensor::data::CustomV2XData send_msg_and_pw = gActorV2XDataMap.at(pair.first).Message;
             carla::sensor::data::CustomV2XData received_msg_and_pw;
             // sent CAM
             received_msg_and_pw.Message = send_msg_and_pw.Message;
@@ -217,8 +216,6 @@ void ACustomV2XSensor::WriteMessageToV2XData(const ACustomV2XSensor::V2XDataList
 
 void ACustomV2XSensor::Send(const FString message)
 {
-    //note: this is unsafe! 
-    //should be fixed to limit length somewhere
     mMessageData = TCHAR_TO_UTF8(*message);
     mMessageDataChanged = true;
 }

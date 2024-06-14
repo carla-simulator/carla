@@ -980,7 +980,7 @@ The function the user has to call every time to send a message. This function ne
     - **Parameters:**
         - `data` (_function_) - The called function with one argument containing the sensor data.  
 
-The custom V2X message sensor works a little bit different than other sensors, because it has the *send* function in addition to the *listen* function, that needs to be called, before another sensor of this type will receive anything. The transmission of a custom message is only triggered, when *send* is called. Each message given to the *send* function is only transmitted once to all Custom V2X Message sensors currently spawned.
+The custom V2X message sensor works a little bit different than other sensors, because it has the *send* function in addition to the *listen* function, that needs to be called, before another sensor of this type will receive anything. The transmission of a custom message is only triggered, when *send* is called. Each message given to the *send* function is only transmitted once to all Custom V2X Message sensors currently spawned. Independent communcation channels can be created by the sensors 'role_name' attribute. Only sensors having the same 'role_name' are communicating with each other. This allows to create different sender/receiver groups within the system.
 
 Example:
 

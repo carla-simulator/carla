@@ -28,6 +28,7 @@
 #  include <compiler/enable-ue4-macros.h>
 
 #  include "Carla/Sensor/CollisionSensor.h"
+#  include "Carla/Sensor/CustomV2XSensor.h"
 #  include "Carla/Sensor/DepthCamera.h"
 #  include "Carla/Sensor/NormalsCamera.h"
 #  include "Carla/Sensor/DVSCamera.h"
@@ -225,6 +226,8 @@ carla::ros2::types::PublisherSensorType GetPublisherSensorType(ASensor * Sensor)
     SensorType = carla::ros2::types::PublisherSensorType::CameraGBufferUint8;
   } else if ( dynamic_cast<FCameraGBufferFloat *>(Sensor) ) {
     SensorType = carla::ros2::types::PublisherSensorType::CameraGBufferFloat;
+  } else if ( dynamic_cast<ACustomV2XSensor *>(Sensor) ) {
+    SensorType = carla::ros2::types::PublisherSensorType::V2XCustom;
   } else {
      // not derived from ASensor, is initialized in each case separately
      //carla::ros2::types::PublisherSensorType::WorldObserver
@@ -245,7 +248,16 @@ void RegisterActorROS2(std::shared_ptr<carla::ros2::ROS2> ROS2, FCarlaActor* Car
       ActorNameDefinition,
       GetPublisherSensorType(Sensor),
       carla::streaming::detail::token_type(Sensor->GetToken()).get_stream_id());
-    ROS2->AddSensorUe(SensorActorDefinition);
+    auto *V2XCustomSensor = Cast<ACustomV2XSensor>(CarlaActor->GetActor());
+    if (V2XCustomSensor != nullptr) {
+      carla::ros2::types::V2XCustomSendCallback V2XCustomSendCallback = [V2XCustomSensor](std::string const &Message) -> void {
+        V2XCustomSensor->Send(FString(Message.c_str()));
+      };
+      ROS2->AddSensorUe(SensorActorDefinition, V2XCustomSendCallback);
+    }
+    else {
+      ROS2->AddSensorUe(SensorActorDefinition);
+    }
   }
   else if (Vehicle != nullptr ) {
     FVehiclePhysicsControl PhysicsControl;

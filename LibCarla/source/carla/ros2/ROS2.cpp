@@ -35,6 +35,7 @@
 #include "carla/ros2/publishers/UeSSCameraPublisher.h"
 #include "carla/ros2/publishers/UeSemanticLidarPublisher.h"
 #include "carla/ros2/publishers/UeWorldPublisher.h"
+#include "carla/ros2/publishers/UeV2XCustomPublisher.h"
 #include "carla/ros2/publishers/VehiclePublisher.h"
 
 #include "carla/ros2/services/DestroyObjectService.h"
@@ -170,8 +171,8 @@ void ROS2::AddTrafficSignUe(
   _world_publisher->AddTrafficSignUe(traffic_sign_actor_definition);
 }
 
-bool ROS2::AddSensorUe(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition) {
-  log_warning("ROS2::AddSensorUe(", std::to_string(*sensor_actor_definition), ")");
+bool ROS2::AddSensorUe(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition, 
+     carla::ros2::types::V2XCustomSendCallback v2x_custom_send_callback) {
 
   auto insert_result = _ue_sensors.insert({sensor_actor_definition->stream_id, UeSensor(sensor_actor_definition)});
   if (!insert_result.second) {
@@ -179,9 +180,9 @@ bool ROS2::AddSensorUe(std::shared_ptr<carla::ros2::types::SensorActorDefinition
                 "): Sensor already_registered. Ignoring");
     return false;
   }
-
+  insert_result.first->second.v2x_custom_send_callback = v2x_custom_send_callback;
   return true;
-}
+}    
 
 void ROS2::AttachActors(ActorId const child, ActorId const parent) {
   log_warning("ROS2::AttachActors[", child, "]: parent=", parent);
@@ -261,7 +262,10 @@ void ROS2::CreateSensorUePublisher(UeSensor &sensor) {
           std::make_shared<UeWorldPublisher>(*_carla_server, _name_registry, sensor.sensor_actor_definition);
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(_world_publisher);
     } break;
-
+    case types::PublisherSensorType::V2XCustom : {
+      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+          std::make_shared<UeV2XCustomPublisher>(sensor.sensor_actor_definition, sensor.v2x_custom_send_callback, _transform_publisher));
+    } break;
     case types::PublisherSensorType::RssSensor:
       // no server side interface to be implemented: maybe move client based implementation from client to the sensor
       // folder for those? in each case should be implemented in a form that the actual calcuations are only performed
@@ -324,6 +328,11 @@ void ROS2::PreTickAction() {
 void ROS2::ProcessMessages() {
   for (auto service : _services) {
     service->CheckRequest();
+  }
+  for (auto &ue_sensor : _ue_sensors) {
+    if ( (ue_sensor.second.publisher != nullptr) && (ue_sensor.second.v2x_custom_send_callback != nullptr) ) {
+      ue_sensor.second.publisher->ProcessMessages();
+    } 
   }
   _world_publisher->ProcessMessages();
 }

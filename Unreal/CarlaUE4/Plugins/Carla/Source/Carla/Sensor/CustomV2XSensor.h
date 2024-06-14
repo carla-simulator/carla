@@ -23,7 +23,11 @@ class CARLA_API ACustomV2XSensor : public ASensor
 
     using FV2XData = carla::sensor::data::CustomV2XDataS;
     using V2XDataList = std::vector<carla::sensor::data::CustomV2XData>;
-    using ActorV2XDataMap = std::map<AActor *, carla::sensor::data::CustomV2XData>;
+    struct DataToSend {
+        std::string RoleName;
+        carla::sensor::data::CustomV2XData Message;
+    };
+    using ActorV2XDataMap = std::map<AActor *, DataToSend>;
 
 public:
     ACustomV2XSensor(const FObjectInitializer &ObjectInitializer);
@@ -50,15 +54,14 @@ public:
     void Send(const FString message);
 
 private:
-    static std::list<AActor *> mV2XActorContainer;
-    PathLossModel *PathLossModelObj;
+    // global data
+    static ActorV2XDataMap gActorV2XDataMap;
 
-    //store data
-    static ACustomV2XSensor::ActorV2XDataMap mActorV2XDataMap;
+    PathLossModel *PathLossModelObj;
     FV2XData mV2XData;
 
     //write
-    void WriteMessageToV2XData(const ACustomV2XSensor::V2XDataList &msg_received_power_list);
+    void WriteMessageToV2XData(const V2XDataList &msg_received_power_list);
 
     //msg gen
     void CreateITSPduHeader(CustomV2XM_t &message);
@@ -66,6 +69,7 @@ private:
     const long mProtocolVersion = 2;
     const long mMessageId = ITSContainer::messageID_custom;
     long mStationId;
+    std::string mRoleName;
     std::string mMessageData;
     bool mMessageDataChanged = false;
     constexpr static uint16_t data_size = sizeof(CustomV2XM_t::message);

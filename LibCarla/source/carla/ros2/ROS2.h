@@ -68,7 +68,9 @@ public:
   void AddTrafficLightUe(
       std::shared_ptr<carla::ros2::types::TrafficLightActorDefinition> traffic_light_actor_definition);
   void AddTrafficSignUe(std::shared_ptr<carla::ros2::types::TrafficSignActorDefinition> traffic_sign_actor_definition);
-  bool AddSensorUe(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition);
+  bool AddSensorUe(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition, 
+    carla::ros2::types::V2XCustomSendCallback v2x_custom_send_callback = nullptr);
+
   void RemoveActor(ActorId const actor);
 
   void ProcessDataFromUeSensor(carla::streaming::detail::stream_id_type const stream_id,
@@ -113,6 +115,7 @@ private:
     UeSensor(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition_)
       : sensor_actor_definition(sensor_actor_definition_) {}
     std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition;
+    carla::ros2::types::V2XCustomSendCallback v2x_custom_send_callback{nullptr};
     bool publisher_expected{true};
     std::shared_ptr<UePublisherBaseSensor> publisher;
     std::shared_ptr<ROS2Session> session;

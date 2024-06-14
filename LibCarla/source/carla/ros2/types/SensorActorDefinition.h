@@ -12,6 +12,8 @@ namespace carla {
 namespace ros2 {
 namespace types {
 
+using V2XCustomSendCallback = std::function<void(std::string const &)>;
+
 struct SensorActorDefinition : public ActorNameDefinition {
   SensorActorDefinition(ActorNameDefinition const &actor_name_definition,
                         carla::ros2::types::PublisherSensorType sensor_type_,
