@@ -91,6 +91,14 @@ public:
   }
 
   /**
+   * If the last message was sent out or the message has never been set to updated, this returns \c true 
+   * indicating the publisher to be able to overwrite the message.
+   */
+  bool WasMessagePublished() {
+    return !_message_updated;
+  }
+
+  /**
    * Initialize the message header. This function is only valid if the message type provided supports a header!
    * Implicitly calls SetMessageUpdated() to mark the message to be updated, so that it is published by Publish().
    */

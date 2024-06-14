@@ -73,7 +73,7 @@ public:
   /**
    * Process incoming messages
    */
-  void ProcessMessages();
+  void ProcessMessages() override;
 
   /**
    * Implement actions after each tick

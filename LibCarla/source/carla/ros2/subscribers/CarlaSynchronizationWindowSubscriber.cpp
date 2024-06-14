@@ -16,7 +16,7 @@ CarlaSynchronizationWindowSubscriber::CarlaSynchronizationWindowSubscriber(ROS2N
     _carla_server(carla_server) {}
 
 bool CarlaSynchronizationWindowSubscriber::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
-  return _impl->Init(domain_participant, _parent.get_topic_name("synchronization_window"), get_topic_qos().reliable());
+  return _impl->Init(domain_participant, get_topic_name("control/synchronization_window"), get_topic_qos().reliable());
 }
 
 CarlaSynchronizationWindowSubscriber::~CarlaSynchronizationWindowSubscriber() {

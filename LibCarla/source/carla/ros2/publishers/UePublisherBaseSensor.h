@@ -28,6 +28,12 @@ public:
       std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header,
       carla::SharedBufferView buffer_view) = 0;
 
+  /**
+   * Some sensors also have to process incoming requests
+  */
+  virtual void ProcessMessages() {}
+
+
   builtin_interfaces::msg::Time GetTime(
       std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header) const {
     return carla::ros2::types::Timestamp(sensor_header->timestamp).time();

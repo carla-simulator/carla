@@ -16,7 +16,7 @@ AckermannControlSubscriber::AckermannControlSubscriber(
     _vehicle_ackermann_control_callback(vehicle_ackermann_control_callback) {}
 
 bool AckermannControlSubscriber::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
-  return _impl->Init(domain_participant, _parent.get_topic_name("vehicle_ackermann_drive_cmd"), get_topic_qos());
+  return _impl->Init(domain_participant, get_topic_name("control/vehicle_ackermann_drive_cmd"), get_topic_qos());
 }
 
 void AckermannControlSubscriber::ProcessMessages() {

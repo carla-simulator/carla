@@ -16,7 +16,7 @@ VehicleControlSubscriber::VehicleControlSubscriber(ROS2NameRecord& parent,
     _vehicle_control_callback(vehicle_control_callback) {}
 
 bool VehicleControlSubscriber::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
-  return _impl->Init(domain_participant, _parent.get_topic_name("vehicle_control_cmd"), get_topic_qos());
+  return _impl->Init(domain_participant, get_topic_name("control/vehicle_control_cmd"), get_topic_qos());
 }
 
 void VehicleControlSubscriber::ProcessMessages() {

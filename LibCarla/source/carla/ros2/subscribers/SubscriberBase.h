@@ -69,6 +69,11 @@ public:
     return DEFAULT_SUBSCRIBER_QOS;
   };
 
+  std::string get_topic_name(std::string postfix = "") const {
+    return _parent.get_topic_name(postfix);
+  }
+
+
 protected:
   ROS2NameRecord &_parent;
 };

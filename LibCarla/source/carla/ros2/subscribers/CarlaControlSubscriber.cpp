@@ -15,7 +15,7 @@ CarlaControlSubscriber::CarlaControlSubscriber(ROS2NameRecord &parent, carla::rp
 bool CarlaControlSubscriber::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
   _carla_control_synchronization_participant =
       _carla_server.call_register_synchronization_participant(ThisAsSynchronizationClient());
-  return _impl->Init(domain_participant, _parent.get_topic_name("control"), get_topic_qos().reliable());
+  return _impl->Init(domain_participant, get_topic_name("control/carla_control"), get_topic_qos().reliable());
 }
 
 CarlaControlSubscriber::~CarlaControlSubscriber() {

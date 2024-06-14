@@ -16,7 +16,7 @@ WalkerControlSubscriber::WalkerControlSubscriber(ROS2NameRecord& parent,
     _walker_control_callback(walker_control_callback) {}
 
 bool WalkerControlSubscriber::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
-  return _impl->Init(domain_participant, _parent.get_topic_name("walker_control_cmd"), get_topic_qos());
+  return _impl->Init(domain_participant, get_topic_name("control/walker_control_cmd"), get_topic_qos());
 }
 
 void WalkerControlSubscriber::ProcessMessages() {

@@ -229,7 +229,7 @@ ROS2NameRegistry::CreateTopicAndFrameLocked(ROS2NameRegistry::KeyType const& key
     type = "traffic_lights";
   } else if (traffic_sign_actor_definition != nullptr) {
     type = "traffic_signs";
-  } else if (sensor_actor_definition != nullptr) {
+  } else if ((sensor_actor_definition != nullptr)&&(sensor_actor_definition->stream_id!=1)) {
     type = "sensors";
   } else {
     type = "world";

@@ -27,8 +27,8 @@ namespace carla
 
                 friend Serializer;
 
-                explicit CAMEvent(RawData &&data)
-                    : Super(0u, std::move(data)) {}
+                explicit CAMEvent(RawData DESERIALIZE_DECL_DATA(data))
+                    : Super(0u, DESERIALIZE_MOVE_DATA(data)) {}
 
             public:
                 Super::size_type GetMessageCount() const
@@ -46,8 +46,8 @@ namespace carla
 
                 friend Serializer;
 
-                explicit CustomV2XEvent(RawData &&data)
-                    : Super(0u, std::move(data)) {}
+                explicit CustomV2XEvent(RawData DESERIALIZE_DECL_DATA(data))
+                    : Super(0u, DESERIALIZE_MOVE_DATA(data)) {}
 
             public:
                 Super::size_type GetMessageCount() const
