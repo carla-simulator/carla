@@ -2945,12 +2945,16 @@ class Sensor(Actor):
     """
 
     # region Instance Variables
-    @property
-    def is_listening() -> bool:
-        """When `True` the sensor will be waiting for data."""
+    #@property
+    #def is_listening() -> bool:
+    #    """When `True` the sensor will be waiting for data."""
     # endregion
 
     # region Methods
+    
+    def is_listening(self) -> bool:
+        """Returns whether the sensor is in a listening state."""
+    
     def is_listening_gbuffer(self, gbuffer_id: GBufferTextureID) -> bool:
         """Returns whether the sensor is in a listening state for a specific GBuffer texture.
 
