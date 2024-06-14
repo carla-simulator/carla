@@ -126,15 +126,15 @@ if ${REMOVE_INTERMEDIATE} ; then
 
   rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
 
+  cd Plugins
+  rm -Rf HoudiniEngine
+  cd ..
+
   rm -f Makefile
 
   pushd "${CARLAUE4_PLUGIN_ROOT_FOLDER}" >/dev/null
 
   rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
-
-  cd Plugins
-  rm -Rf HoudiniEngine
-  cd ..
 
   popd >/dev/null
 
