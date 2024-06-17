@@ -31,8 +31,12 @@ void AOpticalFlowCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float 
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AOpticalFlowCamera::PostPhysTick);
   auto CVarForceOutputsVelocity = IConsoleManager::Get().FindConsoleVariable(TEXT("r.BasePassForceOutputsVelocity"));
-  int32 OldValue = CVarForceOutputsVelocity->GetInt();
-  CVarForceOutputsVelocity->Set(1);
+  int32 OldValue = 0;
+  if (CVarForceOutputsVelocity)
+  {
+      OldValue = CVarForceOutputsVelocity->GetInt();
+      CVarForceOutputsVelocity->Set(1);
+  }
 
   std::function<TArray<float>(void *, uint32)> Conversor = [](void *Data, uint32 Size)
   {
@@ -51,7 +55,19 @@ void AOpticalFlowCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float 
     }
     return IntermediateBuffer;
   };
+
+  auto FrameIndex = FCarlaEngine::GetFrameCounter();
+  ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
+      TArrayView<const FColor> Pixels,
+      FIntPoint Size) -> bool
+      {
+          SendImageDataToClient(*this, Pixels, FrameIndex);
+          return true;
+      });
   FPixelReader::SendPixelsInRenderThread<AOpticalFlowCamera, float>(*this, true, Conversor);
   
-  CVarForceOutputsVelocity->Set(OldValue);
+  if (CVarForceOutputsVelocity)
+  {
+      CVarForceOutputsVelocity->Set(OldValue);
+  }
 }

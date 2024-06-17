@@ -129,6 +129,7 @@ void ADVSCamera::Set(const FActorDescription &Description)
 void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ADVSCamera::PostPhysTick);
+  Super::PostPhysTick(World, TickType, DeltaTime);
   check(CaptureRenderTarget != nullptr);
   if (!HasActorBegunPlay() || IsPendingKill())
   {
@@ -156,11 +157,13 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
   /** DVS Simulator **/
   ADVSCamera::DVSEventArray events = this->Simulation(DeltaTime);
 
+  auto FrameIndex = FCarlaEngine::GetFrameCounter();
   auto DataStream = GetDataStream(*this);
-  auto Buff = DataStream.PopBufferFromPool();
+  DataStream.SetFrameNumber(FrameIndex);
+  auto Buffer = DataStream.PopBufferFromPool();
 
   // serialize data
-  carla::Buffer BufferReady(carla::sensor::SensorRegistry::Serialize(*this, events, std::move(Buff)));
+  carla::Buffer BufferReady(carla::sensor::SensorRegistry::Serialize(*this, events, std::move(Buffer)));
   carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(BufferReady));
 
   // ROS2
