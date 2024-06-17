@@ -576,6 +576,15 @@ else
   echo "Elapsed Time Extracting EIGEN: $(($end-$start)) seconds"
 
   mv ${EIGEN_BASENAME} ${EIGEN_BASENAME}-source
+  # patch some files
+  cp $CARLA_ROOT_FOLDER/Util/Patches/Eigen${EIGEN_VERSION}/Functors.h "${EIGEN_BASENAME}-source/Eigen/src/Core/Functors.h"
+  cp $CARLA_ROOT_FOLDER/Util/Patches/Eigen${EIGEN_VERSION}/VectorBlock.h "${EIGEN_BASENAME}-source/Eigen/src/Core/VectorBlock.h"
+  cp $CARLA_ROOT_FOLDER/Util/Patches/Eigen${EIGEN_VERSION}/PacketMath.h "${EIGEN_BASENAME}-source/Eigen/src/Core/arch/SSE/PacketMath.h"
+  cp $CARLA_ROOT_FOLDER/Util/Patches/Eigen${EIGEN_VERSION}/SelfadjointMatrixVector.h "${EIGEN_BASENAME}-source/Eigen/src/Core/products/SelfadjointMatrixVector.h"
+  cp $CARLA_ROOT_FOLDER/Util/Patches/Eigen${EIGEN_VERSION}/Macros.h "${EIGEN_BASENAME}-source/Eigen/src/Core/util/Macros.h"
+  cp $CARLA_ROOT_FOLDER/Util/Patches/Eigen${EIGEN_VERSION}/ArrayCwiseUnaryOps.h "${EIGEN_BASENAME}-source/Eigen/src/plugins/ArrayCwiseUnaryOps.h"
+  cp $CARLA_ROOT_FOLDER/Util/Patches/Eigen${EIGEN_VERSION}/MatrixCwiseUnaryOps.h "${EIGEN_BASENAME}-source/Eigen/src/plugins/MatrixCwiseUnaryOps.h"
+
   mkdir -p ${EIGEN_INCLUDE}/unsupported
   mv ${EIGEN_BASENAME}-source/Eigen ${EIGEN_INCLUDE}
   mv ${EIGEN_BASENAME}-source/unsupported/Eigen ${EIGEN_INCLUDE}/unsupported/Eigen
