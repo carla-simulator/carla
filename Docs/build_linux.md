@@ -156,7 +156,7 @@ __2.__ Navigate into the directory where you cloned the repository:
 
 __3.__ Make the build. This may take an hour or two depending on your system. 
 ```sh
-    ./Setup.sh && ./GenerateProjectFiles.sh -ForceUseSystemCompiler && make ARGS="-ForceUseSystemCompiler"
+    ./Setup.sh && ./GenerateProjectFiles.sh && make
 ```
 
 __4.__ Open the Editor to check that Unreal Engine has been installed properly.

@@ -114,7 +114,7 @@ if ${HARD_CLEAN} ; then
 
   log "Doing a \"hard\" clean of the Unreal Engine project."
 
-  make CarlaUE4Editor ARGS="-clean -ForceUseSystemCompiler"
+  make CarlaUE4Editor ARGS="-clean"
 
 fi
 
@@ -186,13 +186,13 @@ if ${BUILD_CARLAUE4} ; then
     # This command fails sometimes but normally we can continue anyway.
     set +e
     log "Generate Unreal project files."
-    ${UE4_ROOT}/GenerateProjectFiles.sh -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles -ForceUseSystemCompiler
+    ${UE4_ROOT}/GenerateProjectFiles.sh -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
     set -e
 
   fi
 
   log "Build CarlaUE4 project."
-  make CarlaUE4Editor ARGS="-ForceUseSystemCompiler"
+  make CarlaUE4Editor
 
   #Providing the user with the ExportedMaps folder
   EXPORTED_MAPS="${CARLAUE4_ROOT_FOLDER}/Content/Carla/ExportedMaps"

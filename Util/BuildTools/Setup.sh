@@ -55,11 +55,16 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 
 LLVM_INCLUDE="${UE4_ROOT}/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
 LLVM_LIBPATH="${UE4_ROOT}/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
+UNREAL_HOSTED_CFLAGS="--sysroot=$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/ -isystem ${LLVM_INCLUDE}"
+UNREAL_SYSTEM_LIBPATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/usr/lib"
+UNREAL_HOSTED_LINKER_FLAGS="--sysroot=$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/ -L${LLVM_LIBPATH} -L${UNREAL_SYSTEM_LIBPATH} -lc++ -lc++abi"
 
 CARLA_CFLAGS="-fPIC -w"
 CARLA_CXXFLAGS="-std=c++20 -DBOOST_ERROR_CODE_HEADER_ONLY"
-CARLA_SERVER_CXXFLAGS="-isystem ${LLVM_INCLUDE} -stdlib=libc++ -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS"
-CARLA_SERVER_LINKER_FLAGS="-L${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/ -lc++ -lc++abi"
+
+CARLA_SERVER_CFLAGS="${UNREAL_HOSTED_CFLAGS} ${CARLA_CFLAGS}"
+CARLA_SERVER_CXXFLAGS="${CARLA_SERVER_CFLAGS} ${CARLA_CXXFLAGS} -stdlib=libc++ -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS"
+CARLA_SERVER_LINKER_FLAGS="${UNREAL_HOSTED_LINKER_FLAGS} -L${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/"
 
 export CC="clang"
 export CXX="clang++"
@@ -136,6 +141,9 @@ mkdir -p "${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/"
 
 # Install libc++ libraries.
 cp ${LLVM_LIBPATH}/libc++*.a "${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/"
+
+# Install UE shared dependencies
+cp -p ${UNREAL_SYSTEM_LIBPATH}/lib${libName}*.so* "${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/"
 
 # ==============================================================================
 # -- Get boost includes --------------------------------------------------------
@@ -688,17 +696,20 @@ SQLITE_REPO=https://www.sqlite.org/2021/${SQLITE_VERSION}.tar.gz
 SQLITE_TAR=${SQLITE_VERSION}.tar.gz
 SQLITE_BASENAME=sqlite
 
-SQLITE_INCLUDE_DIR=${PWD}/${SQLITE_BASENAME}-install/include
-SQLITE_LIB=${PWD}/${SQLITE_BASENAME}-install/lib/libsqlite3.a
-SQLITE_EXE=${PWD}/${SQLITE_BASENAME}-install/bin/sqlite3
+SQLITE_SERVER_INCLUDE_DIR=${PWD}/${SQLITE_BASENAME}-server-install/include
+SQLITE_SERVER_LIB=${PWD}/${SQLITE_BASENAME}-server-install/lib/libsqlite3.a
+SQLITE_CLIENT_INCLUDE_DIR=${PWD}/${SQLITE_BASENAME}-client-install/include
+SQLITE_CLIENT_LIB=${PWD}/${SQLITE_BASENAME}-client-install/lib/libsqlite3.a
+SQLITE_EXE=${PWD}/${SQLITE_BASENAME}-client-install/bin/sqlite3
 
-if [[ -d ${SQLITE_BASENAME}-install ]] ; then
+if [[ -d ${SQLITE_BASENAME}-server-install && -d ${SQLITE_BASENAME}-client-install ]] ; then
   log "Sqlite already installed."
 else
   rm -Rf \
       ${SQLITE_BASENAME}-source \
       ${SQLITE_BASENAME}-build  \
-      ${SQLITE_BASENAME}-install
+      ${SQLITE_BASENAME}-client-install \
+      ${SQLITE_BASENAME}-server-install
 
   log "Retrieving Sqlite3"
 
@@ -716,18 +727,25 @@ else
 
   mv ${SQLITE_VERSION} ${SQLITE_BASENAME}-source
 
-  mkdir ${SQLITE_BASENAME}-build
-  pushd ${SQLITE_BASENAME}-build >/dev/null
-  ../${SQLITE_BASENAME}-source/configure CFLAGS="${CARLA_CFLAGS} -w" --prefix=${PWD}/../${SQLITE_BASENAME}-install/
+  mkdir ${SQLITE_BASENAME}-client-build
+  pushd ${SQLITE_BASENAME}-client-build >/dev/null
+  ../${SQLITE_BASENAME}-source/configure CFLAGS="${CARLA_CFLAGS} -w" --prefix=${PWD}/../${SQLITE_BASENAME}-client-install/
   make install
   popd >/dev/null
 
+  mkdir ${SQLITE_BASENAME}-server-build
+  pushd ${SQLITE_BASENAME}-server-build >/dev/null
+  ../${SQLITE_BASENAME}-source/configure CFLAGS="${CARLA_SERVER_CFLAGS} -w" --prefix=${PWD}/../${SQLITE_BASENAME}-server-install/
+  make install
+  popd >/dev/null
+
+
   rm -Rf ${SQLITE_TAR}
-  rm -Rf ${SQLITE_BASENAME}-source ${SQLITE_BASENAME}-build
+  rm -Rf ${SQLITE_BASENAME}-source ${SQLITE_BASENAME}-client-build ${SQLITE_BASENAME}-server-build
 fi
 
-cp ${SQLITE_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
-cp -p -r ${SQLITE_LIB}* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+cp ${SQLITE_CLIENT_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+cp -p -r ${SQLITE_SERVER_LIB}* ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
 
 # ==============================================================================
 # -- Get and compile PROJ ------------------------------------------------------
@@ -760,7 +778,7 @@ else
   cmake -G "Ninja" \
       -DCMAKE_INSTALL_PREFIX=../${PROJ_BASENAME}-client-install \
       -DCMAKE_TOOLCHAIN_FILE="${CARLA_CLIENT_TOOLCHAIN_FILE}" \
-      -DSQLITE3_INCLUDE_DIR=${SQLITE_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_LIB} \
+      -DSQLITE3_INCLUDE_DIR=${SQLITE_CLIENT_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_CLIENT_LIB} \
       -DEXE_SQLITE3=${SQLITE_EXE} \
       -DENABLE_TIFF=OFF -DENABLE_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF \
       -DCMAKE_BUILD_TYPE=Release -DBUILD_PROJINFO=OFF \
@@ -776,7 +794,7 @@ else
   cmake -G "Ninja" \
       -DCMAKE_INSTALL_PREFIX=../${PROJ_BASENAME}-server-install \
       -DCMAKE_TOOLCHAIN_FILE="${CARLA_SERVER_TOOLCHAIN_FILE}" \
-      -DSQLITE3_INCLUDE_DIR=${SQLITE_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_LIB} \
+      -DSQLITE3_INCLUDE_DIR=${SQLITE_SERVER_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_SERVER_LIB} \
       -DEXE_SQLITE3=${SQLITE_EXE} \
       -DENABLE_TIFF=OFF -DENABLE_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF \
       -DCMAKE_BUILD_TYPE=Release -DBUILD_PROJINFO=OFF \
