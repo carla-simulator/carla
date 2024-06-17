@@ -8,6 +8,8 @@
 #include "carla/ros2/types/PublisherSensorType.h"
 #include "carla/streaming/detail/Types.h"
 
+#include <functional>
+
 namespace carla {
 namespace ros2 {
 namespace types {

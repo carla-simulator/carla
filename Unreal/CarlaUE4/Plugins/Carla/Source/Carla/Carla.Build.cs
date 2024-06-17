@@ -14,6 +14,7 @@ public class Carla : CarlaRules
   {
     PrivatePCHHeaderFile = "Carla.h";
     bEnableExceptions = true;
+    CppStandard = CppStandardVersion.Cpp20;
 
     // Read config about carsim
     string CarlaPluginPath = Path.GetFullPath( ModuleDirectory );

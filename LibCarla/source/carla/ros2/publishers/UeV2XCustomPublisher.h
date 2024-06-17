@@ -49,11 +49,11 @@ public:
                         const carla::SharedBufferView buffer_view) override;
 
 private:
-  using CustomV2XDataConst = carla::sensor::data::CustomV2XData const;
-  using CustomV2XDataVectorAllocator = carla::sensor::data::SerializerVectorAllocator<CustomV2XDataConst>;
+  using CustomV2XData = carla::sensor::data::CustomV2XData;
+  using CustomV2XDataVectorAllocator = carla::sensor::data::SerializerVectorAllocator<CustomV2XData>;
 
-  std::vector<CustomV2XDataConst, CustomV2XDataVectorAllocator> vector_view(const carla::SharedBufferView buffer_view) {
-    return carla::sensor::data::buffer_data_accessed_by_vector<CustomV2XDataConst>(
+  std::vector<CustomV2XData, CustomV2XDataVectorAllocator> vector_view(const carla::SharedBufferView buffer_view) {
+    return carla::sensor::data::buffer_data_accessed_by_vector<CustomV2XData>(
         buffer_view, 0);
   }
 

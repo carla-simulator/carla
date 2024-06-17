@@ -8,6 +8,7 @@
 #include "Carla/Sensor/V2XSensor.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include <string.h>
 #include <algorithm>

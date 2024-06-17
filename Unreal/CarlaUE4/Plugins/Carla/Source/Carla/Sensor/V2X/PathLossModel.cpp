@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Math/UnrealMathUtility.h"
+#include "DrawDebugHelpers.h"
+#include "Carla/Util/RandomEngine.h"
 
 #include "PathLossModel.h"
 #include <random>
