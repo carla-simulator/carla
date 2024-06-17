@@ -25,6 +25,42 @@
 
 struct FActorDescription;
 
+
+
+/*  @CARLA_UE5
+    
+    The FPixelReader class has been deprecated, as its functionality
+    is now split between ImageUtil::ReadImageDataAsync (see Sensor/ImageUtil.h)
+    and ASensor::SendImageDataToClient.
+    Here's a brief example of how to use both:
+    
+    auto FrameIndex = FCarlaEngine::GetFrameCounter();
+    ImageUtil::ReadImageDataAsync(
+        *GetCaptureRenderTarget(),
+        [this](
+            const void* MappedPtr,
+            size_t RowPitch,
+            size_t BufferHeight,
+            EPixelFormat Format,
+            FIntPoint Extent)
+        {
+            TArray<FColor> ImageData;
+            // Parse the raw data into ImageData...
+            SendImageDataToClient(
+                *this,
+                ImageData,
+                FrameIndex);
+            return true;
+        });
+
+    Alternatively, if you just want to retrieve the pixels as
+    FColor/FLinearColor, you can just use ReadImageDataAsyncFColor
+    or ReadImageDataAsyncFLinearColor.
+
+*/
+
+
+
 /// Base class for sensors.
 UCLASS(Abstract, hidecategories = (Collision, Attachment, Actor))
 class CARLA_API ASensor : public AActor
@@ -128,32 +164,40 @@ protected:
       GetEpisode().GetElapsedGameTime());
   }
 
+
+  // Send the sensor data to the client.
   template <
     typename SensorType,
     typename PixelType>
   static void SendImageDataToClient(
-    SensorType&& Sensor,
-    TArrayView<PixelType> Pixels,
-    uint32 FrameIndex)
+    SensorType&& Sensor,            // The data's owning sensor.
+    TArrayView<PixelType> Pixels,   // Data to send to the client.
+    uint64_t FrameIndex             // Current frame index.
+    )
   {
     using carla::sensor::SensorRegistry;
     using SensorT = std::remove_const_t<std::remove_reference_t<SensorType>>;
 
+    if (!Sensor.AreClientsListening())
+        return;
+
     auto Stream = Sensor.GetDataStream(Sensor);
     Stream.SetFrameNumber(FrameIndex);
+    
     auto Buffer = Stream.PopBufferFromPool();
     Buffer.copy_from(
       carla::sensor::SensorRegistry::get<SensorT*>::type::header_offset,
       boost::asio::buffer(
         Pixels.GetData(),
         Pixels.Num() * sizeof(FColor)));
+
     if (!Buffer.data())
       return;
-    auto Serialized = SensorRegistry::Serialize(
-      Sensor,
-      std::move(Buffer));
+
+    auto Serialized = SensorRegistry::Serialize(Sensor, std::move(Buffer));
     auto SerializedBuffer = carla::Buffer(std::move(Serialized));
     auto BufferView = carla::BufferView::CreateFrom(std::move(SerializedBuffer));
+
 #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
@@ -191,7 +235,8 @@ protected:
       });
     }
 #endif
-    if (Sensor.AreClientsListening()) 
+
+    if (Sensor.AreClientsListening())
       Stream.Send(Sensor, BufferView);
   }
 

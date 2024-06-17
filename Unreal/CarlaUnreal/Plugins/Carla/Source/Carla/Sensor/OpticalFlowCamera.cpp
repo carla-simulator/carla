@@ -30,28 +30,37 @@ AOpticalFlowCamera::AOpticalFlowCamera(const FObjectInitializer &ObjectInitializ
 void AOpticalFlowCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AOpticalFlowCamera::PostPhysTick);
-  auto CVarForceOutputsVelocity = IConsoleManager::Get().FindConsoleVariable(TEXT("r.BasePassForceOutputsVelocity"));
-  int32 OldValue = CVarForceOutputsVelocity->GetInt();
-  CVarForceOutputsVelocity->Set(1);
-
-  std::function<TArray<float>(void *, uint32)> Conversor = [](void *Data, uint32 Size)
-  {
-    TArray<float> IntermediateBuffer;
-    int32 Count = Size / sizeof(FFloat16Color);
-    DEBUG_ASSERT(Count * sizeof(FFloat16Color) == Size);
-    FFloat16Color *Buf = reinterpret_cast<FFloat16Color *>(Data);
-    IntermediateBuffer.Reserve(Count * 2);
-    for (int i=0; i<Count; ++i)
-    {
-      float x = (Buf->R.GetFloat() - 0.5f) * 4.f;
-      float y = (Buf->G.GetFloat() - 0.5f) * 4.f;
-      IntermediateBuffer.Add(x);
-      IntermediateBuffer.Add(y);
-      ++Buf;
-    }
-    return IntermediateBuffer;
-  };
-  FPixelReader::SendPixelsInRenderThread<AOpticalFlowCamera, float>(*this, true, Conversor);
   
-  CVarForceOutputsVelocity->Set(OldValue);
+  // auto CVarForceOutputsVelocity = IConsoleManager::Get().FindConsoleVariable(TEXT("r.BasePassForceOutputsVelocity"));
+  // int32 OldValue = CVarForceOutputsVelocity->GetInt();
+  // CVarForceOutputsVelocity->Set(1);
+
+  auto FrameIndex = FCarlaEngine::GetFrameCounter();
+  ImageUtil::ReadImageDataAsync(
+      *GetCaptureRenderTarget(),
+      [this, FrameIndex](
+          const void* MappedPtr,
+          size_t RowPitch,
+          size_t BufferHeight,
+          EPixelFormat Format,
+          FIntPoint Extent)
+      {
+          TArray<FVector2f> ImageData;
+          ImageData.SetNum(Extent.X * Extent.Y);
+          auto Ptr = reinterpret_cast<const FFloat16Color*>(MappedPtr);
+          for (auto& Out : ImageData)
+          {
+              Out.X = Ptr->R.GetFloat();
+              Out.Y = Ptr->G.GetFloat();
+              Out -= FVector2f(0.5F);
+              Out *= 4.0F;
+          }
+          SendImageDataToClient(
+              *this,
+              TArrayView<FVector2f>(ImageData),
+              FrameIndex);
+          return true;
+      });
+
+  // CVarForceOutputsVelocity->Set(OldValue);
 }
