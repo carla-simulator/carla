@@ -22,7 +22,7 @@ namespace ImageUtil
   using ReadImageDataAsyncCallback = std::function<
     bool(
       const void*,          // Source image data.
-      size_t,               // Number of bytes per image row.
+      size_t,               // Number of pixels (NOT BYTES) per image row.
       size_t,               // Number of rows.
       EPixelFormat,         // Image pixel format.
       FIntPoint             // Image extent.

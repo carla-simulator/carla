@@ -65,12 +65,15 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
     }
   );
 
+  if (!AreClientsListening())
+      return;
+
   auto FrameIndex = FCarlaEngine::GetFrameCounter();
   ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
   {
-    SendImageDataToClient(*this, Pixels, FrameIndex);
+    SendDataToClient(*this, Pixels, FrameIndex);
     return true;
   });
 }

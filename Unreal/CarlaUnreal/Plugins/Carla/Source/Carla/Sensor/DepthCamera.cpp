@@ -33,12 +33,15 @@ void ADepthCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaS
   TRACE_CPUPROFILER_EVENT_SCOPE(ADepthCamera::PostPhysTick);
   Super::PostPhysTick(World, TickType, DeltaSeconds);
 
+  if (!AreClientsListening())
+      return;
+
   auto FrameIndex = FCarlaEngine::GetFrameCounter();
   ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
   {
-    SendImageDataToClient(*this, Pixels, FrameIndex);
+    SendDataToClient(*this, Pixels, FrameIndex);
     return true;
   });
 }

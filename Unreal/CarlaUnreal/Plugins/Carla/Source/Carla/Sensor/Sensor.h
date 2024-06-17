@@ -31,9 +31,12 @@ struct FActorDescription;
     
     The FPixelReader class has been deprecated, as its functionality
     is now split between ImageUtil::ReadImageDataAsync (see Sensor/ImageUtil.h)
-    and ASensor::SendImageDataToClient.
+    and ASensor::SendDataToClient.
     Here's a brief example of how to use both:
     
+    if (!AreClientsListening()) // Ideally, check whether there are any clients.
+        return;
+
     auto FrameIndex = FCarlaEngine::GetFrameCounter();
     ImageUtil::ReadImageDataAsync(
         *GetCaptureRenderTarget(),
@@ -46,7 +49,7 @@ struct FActorDescription;
         {
             TArray<FColor> ImageData;
             // Parse the raw data into ImageData...
-            SendImageDataToClient(
+            SendDataToClient(
                 *this,
                 ImageData,
                 FrameIndex);
@@ -165,18 +168,19 @@ protected:
   }
 
 
-  // Send the sensor data to the client.
+  // Send sensor data to the client.
   template <
     typename SensorType,
-    typename PixelType>
-  static void SendImageDataToClient(
-    SensorType&& Sensor,            // The data's owning sensor.
-    TArrayView<PixelType> Pixels,   // Data to send to the client.
-    uint64_t FrameIndex             // Current frame index.
+    typename ElementType>
+  static void SendDataToClient(
+    SensorType&& Sensor,                  // The data's owning sensor.
+    TArrayView<ElementType> SensorData,   // Data to send to the client.
+    uint64_t FrameIndex                   // Current frame index.
     )
   {
     using carla::sensor::SensorRegistry;
     using SensorT = std::remove_const_t<std::remove_reference_t<SensorType>>;
+    constexpr size_t HeaderOffset = SensorRegistry::get<SensorT*>::type::header_offset;
 
     if (!Sensor.AreClientsListening())
         return;
@@ -186,10 +190,10 @@ protected:
     
     auto Buffer = Stream.PopBufferFromPool();
     Buffer.copy_from(
-      carla::sensor::SensorRegistry::get<SensorT*>::type::header_offset,
+      HeaderOffset,
       boost::asio::buffer(
-        Pixels.GetData(),
-        Pixels.Num() * sizeof(FColor)));
+        SensorData.GetData(),
+        SensorData.Num() * sizeof(ElementType)));
 
     if (!Buffer.data())
       return;
@@ -202,7 +206,7 @@ protected:
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
     {
-      TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 SendImageDataToClient");
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 SendDataToClient");
       auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
       auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, StreamId, BufferView]()
       {

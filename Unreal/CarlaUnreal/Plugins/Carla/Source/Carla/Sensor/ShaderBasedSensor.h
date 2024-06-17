@@ -16,8 +16,11 @@
 
     The FPixelReader class has been deprecated, as its functionality
     is now split between ImageUtil::ReadImageDataAsync (see Sensor/ImageUtil.h)
-    and ASensor::SendImageDataToClient.
+    and ASensor::SendDataToClient.
     Here's a brief example of how to use both:
+
+    if (!AreClientsListening()) // Ideally, check whether there are any clients.
+        return;
 
     auto FrameIndex = FCarlaEngine::GetFrameCounter();
     ImageUtil::ReadImageDataAsync(
@@ -31,7 +34,7 @@
         {
             TArray<FColor> ImageData;
             // Parse the raw data into ImageData...
-            SendImageDataToClient(
+            SendDataToClient(
                 *this,
                 ImageData,
                 FrameIndex);

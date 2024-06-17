@@ -30,10 +30,7 @@ AOpticalFlowCamera::AOpticalFlowCamera(const FObjectInitializer &ObjectInitializ
 void AOpticalFlowCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AOpticalFlowCamera::PostPhysTick);
-  
-  // auto CVarForceOutputsVelocity = IConsoleManager::Get().FindConsoleVariable(TEXT("r.BasePassForceOutputsVelocity"));
-  // int32 OldValue = CVarForceOutputsVelocity->GetInt();
-  // CVarForceOutputsVelocity->Set(1);
+  Super::PostPhysTick(World, TickType, DeltaSeconds);
 
   auto FrameIndex = FCarlaEngine::GetFrameCounter();
   ImageUtil::ReadImageDataAsync(
@@ -45,22 +42,32 @@ void AOpticalFlowCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float 
           EPixelFormat Format,
           FIntPoint Extent)
       {
-          TArray<FVector2f> ImageData;
-          ImageData.SetNum(Extent.X * Extent.Y);
-          auto Ptr = reinterpret_cast<const FFloat16Color*>(MappedPtr);
-          for (auto& Out : ImageData)
+        check(sizeof(FVector2f) == sizeof(float) * 2);
+        check(RowPitch >= Extent.X);
+        check(BufferHeight >= Extent.Y);
+        // UE_LOG(LogCarla, Log, TEXT("Format=%u"), (unsigned)Format);
+        TArray<FVector2f> ImageData;
+        ImageData.Reserve(Extent.X * Extent.Y);
+        auto BasePtr = reinterpret_cast<const FFloat16Color*>(MappedPtr);
+        for (uint32 i = 0; i != Extent.Y; ++i)
+        {
+          auto Ptr = BasePtr;
+          for (uint32 j = 0; j != Extent.X; ++j)
           {
-              Out.X = Ptr->R.GetFloat();
-              Out.Y = Ptr->G.GetFloat();
-              Out -= FVector2f(0.5F);
-              Out *= 4.0F;
+            FVector2f Out(
+              Ptr->R.GetFloat(),
+              Ptr->G.GetFloat());
+            Out -= FVector2f(0.5F, 0.5F);
+            Out *= 4.0F;
+            ImageData.Add(Out);
+            ++Ptr;
           }
-          SendImageDataToClient(
-              *this,
-              TArrayView<FVector2f>(ImageData),
-              FrameIndex);
-          return true;
+          BasePtr += RowPitch;
+        }
+        SendDataToClient(
+            *this,
+            TArrayView<FVector2f>(ImageData),
+            FrameIndex);
+        return true;
       });
-
-  // CVarForceOutputsVelocity->Set(OldValue);
 }
