@@ -362,7 +362,6 @@ private:
   bool m_is_dense;
 };
 
-using PointCloud2FromBuffer = PointCloud2T<carla::sensor::data::SerializerVectorAllocator<uint8_t>>;
 using PointCloud2 = PointCloud2T<std::allocator<uint8_t>>;
 
 }  // namespace msg

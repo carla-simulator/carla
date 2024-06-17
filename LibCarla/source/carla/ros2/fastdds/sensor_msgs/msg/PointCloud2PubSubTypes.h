@@ -90,7 +90,6 @@ public:
   unsigned char* m_keyBuffer;
 };
 
-using PointCloud2PubSubTypeFromBuffer = PointCloud2PubSubTypeT<carla::sensor::data::SerializerVectorAllocator<uint8_t>>;
 using PointCloud2PubSubType = PointCloud2PubSubTypeT<std::allocator<uint8_t>>;
 }  // namespace msg
 }  // namespace sensor_msgs

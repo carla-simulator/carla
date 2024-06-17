@@ -46,7 +46,7 @@ void UeDVSCameraPublisher::UpdateSensorData(
   UpdateImageHeader(stamp, camera_info);
 
   SetImageData(data_vector_view);
-  SetPointCloudData(buffer_view);
+  SetPointCloudData(data_vector_view);
 }
 
 void UeDVSCameraPublisher::SetImageData(std::vector<DVSEvent, DVSEventVectorAllocator> &data_vector_view) {
@@ -59,8 +59,9 @@ void UeDVSCameraPublisher::SetImageData(std::vector<DVSEvent, DVSEventVectorAllo
   _image->Message().data(std::move(im_data));
 }
 
-void UeDVSCameraPublisher::SetPointCloudData(carla::SharedBufferView &buffer_view) {
+void UeDVSCameraPublisher::SetPointCloudData(std::vector<DVSEvent, DVSEventVectorAllocator> &data_vector_view) {
   _point_cloud->Message().header(_image->Message().header());
+  _point_cloud->SetMessageUpdated();
 
   sensor_msgs::msg::PointField descriptor1;
   descriptor1.name("x");
@@ -79,24 +80,44 @@ void UeDVSCameraPublisher::SetPointCloudData(carla::SharedBufferView &buffer_vie
       sensor_msgs::msg::PointField__FLOAT64);  // PointField__INT64 is not existing, but would be required here!!
   descriptor3.count(1);
   sensor_msgs::msg::PointField descriptor4;
-  descriptor3.name("pol");
-  descriptor3.offset(offsetof(DVSEvent, pol));
-  descriptor3.datatype(sensor_msgs::msg::PointField__INT8);
-  descriptor3.count(1);
+  descriptor4.name("pol");
+  descriptor4.offset(offsetof(DVSEvent, pol));
+  descriptor4.datatype(sensor_msgs::msg::PointField__INT8);
+  descriptor4.count(1);
+
+
+#pragma pack(push, 1)
+  // definition of the actual data type to be put into the point_cloud (which is different to DVSEvent!!)
+  struct DVSPointCloudData {
+    explicit DVSPointCloudData(DVSEvent event)
+     : x (event.x)
+     , y (event.y)
+     , t (event.t)
+     , pol (event.pol)
+     {}
+    std::uint16_t x;
+    std::uint16_t y;
+    double t;
+    std::int8_t pol;
+  };
+#pragma pack(pop)
 
   DEBUG_ASSERT_EQ(num_channels(), 4);
-  DEBUG_ASSERT_EQ(sizeof(DVSEvent), 2 * sizeof(uint16_t) + sizeof(double) + sizeof(int8_t));
-  const uint32_t point_size = sizeof(DVSEvent);
+  const uint32_t point_size = sizeof(DVSPointCloudData);
   _point_cloud->Message().width(width());
   _point_cloud->Message().height(height());
   _point_cloud->Message().is_bigendian(false);
   _point_cloud->Message().fields({descriptor1, descriptor2, descriptor3, descriptor4});
   _point_cloud->Message().point_step(point_size);
   _point_cloud->Message().row_step(width() * point_size);
-  _point_cloud->Message().is_dense(false);  // True if there are not invalid points
-
-  _point_cloud->Message().data(carla::sensor::data::buffer_data_accessed_by_vector<uint8_t>(
-      buffer_view, carla::sensor::s11n::DVSEventArraySerializer::header_offset));
+  _point_cloud->Message().is_dense(false);
+  std::vector<uint8_t> pcl_data_uint8_t;
+  pcl_data_uint8_t.resize(data_vector_view.size()*point_size);
+  for (size_t i = 0; i < data_vector_view.size(); ++i) {
+    // convert the DVSEvent format to DVSPointCloudData putting it directly into the desired array to be sent out
+    *(reinterpret_cast<DVSPointCloudData*>(pcl_data_uint8_t.data()+i*point_size)) = DVSPointCloudData(data_vector_view[i]);
+  }
+  _point_cloud->Message().data(std::move(pcl_data_uint8_t));
 }
 }  // namespace ros2
 }  // namespace carla

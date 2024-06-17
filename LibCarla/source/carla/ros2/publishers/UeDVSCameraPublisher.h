@@ -12,7 +12,7 @@ namespace carla {
 namespace ros2 {
 
 using UePointCloudFromBufferPublisherImpl =
-    DdsPublisherImpl<sensor_msgs::msg::PointCloud2FromBuffer, sensor_msgs::msg::PointCloud2PubSubTypeFromBuffer>;
+    DdsPublisherImpl<sensor_msgs::msg::PointCloud2, sensor_msgs::msg::PointCloud2PubSubType>;
 
 class UeDVSCameraPublisher : public UePublisherBaseCamera<sensor_msgs::msg::Image::allocator_type> {
 public:
@@ -63,7 +63,7 @@ private:
   }
 
   void SetImageData(std::vector<DVSEvent, DVSEventVectorAllocator> &data_vector_view);
-  void SetPointCloudData(carla::SharedBufferView &buffer_view);
+  void SetPointCloudData(std::vector<DVSEvent, DVSEventVectorAllocator> &data_vector_view);
 
   std::shared_ptr<UePointCloudFromBufferPublisherImpl> _point_cloud;
 };
