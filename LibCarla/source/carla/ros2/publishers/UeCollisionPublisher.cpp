@@ -32,11 +32,11 @@ bool UeCollisionPublisher::SubscribersConnected() const {
 void UeCollisionPublisher::UpdateSensorData(
     std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header,
     carla::SharedBufferView buffer_view) {
-  auto collision_event_data = data_view_ptr(buffer_view);
+  auto collision_event_data = data(buffer_view);
   _impl->SetMessageHeader(GetTime(sensor_header), frame_id());
-  _impl->Message().other_actor_id(collision_event_data->other_actor.id);
+  _impl->Message().other_actor_id(collision_event_data.other_actor.id);
   _impl->Message().normal_impulse() =
-      CoordinateSystemTransform::TransformLinearAxisMsg(collision_event_data->normal_impulse);
+      CoordinateSystemTransform::TransformLinearAxisMsg(collision_event_data.normal_impulse);
 }
 }  // namespace ros2
 }  // namespace carla

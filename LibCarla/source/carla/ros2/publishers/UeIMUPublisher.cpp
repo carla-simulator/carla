@@ -33,10 +33,10 @@ bool UeIMUPublisher::SubscribersConnected() const {
 void UeIMUPublisher::UpdateSensorData(
     std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header,
     carla::SharedBufferView buffer_view) {
-  auto imu_data = data_view_ptr(buffer_view);
+  auto imu_data = data(buffer_view);
   _impl->SetMessageHeader(GetTime(sensor_header), frame_id());
-  _impl->Message().angular_velocity(carla::ros2::types::AngularVelocity(imu_data->gyroscope).angular_velocity());
-  _impl->Message().linear_acceleration(carla::ros2::types::Acceleration(imu_data->accelerometer).accel().linear());
+  _impl->Message().angular_velocity(carla::ros2::types::AngularVelocity(imu_data.gyroscope).angular_velocity());
+  _impl->Message().linear_acceleration(carla::ros2::types::Acceleration(imu_data.accelerometer).accel().linear());
 
   /*
     TODO: original ROS bridge had taken the transform to provide a correct 3D orientation
@@ -47,7 +47,7 @@ void UeIMUPublisher::UpdateSensorData(
 
   // optimized rotation calculation
   /*const float rp = 0.0f;                           // pitch*/
-  const float ry = float(M_PI_2) - imu_data->compass;  // -yaw
+  const float ry = float(M_PI_2) - imu_data.compass;  // -yaw
   /*const float rr = 0.0f;                           // roll*/
 
   const float cr = 1.f;

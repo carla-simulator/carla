@@ -28,12 +28,12 @@ bool UeGNSSPublisher::SubscribersConnected() const {
 void UeGNSSPublisher::UpdateSensorData(
     std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header,
     carla::SharedBufferView buffer_view) {
-  auto gnss_data = data_view_ptr(buffer_view);
+  auto gnss_data = data(buffer_view);
 
   _impl->SetMessageHeader(GetTime(sensor_header), frame_id());
-  _impl->Message().latitude(gnss_data->latitude);
-  _impl->Message().longitude(gnss_data->longitude);
-  _impl->Message().altitude(gnss_data->altitude);
+  _impl->Message().latitude(gnss_data.latitude);
+  _impl->Message().longitude(gnss_data.longitude);
+  _impl->Message().altitude(gnss_data.altitude);
 }
 }  // namespace ros2
 }  // namespace carla

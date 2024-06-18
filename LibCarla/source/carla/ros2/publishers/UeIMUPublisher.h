@@ -41,10 +41,8 @@ public:
                         const carla::SharedBufferView buffer_view) override;
 
 private:
-  using IMUDataConst = carla::sensor::s11n::IMUSerializer::Data const;
-
-  std::shared_ptr<IMUDataConst> data_view_ptr(carla::SharedBufferView buffer_view) {
-    return std::shared_ptr<IMUDataConst>(buffer_view, reinterpret_cast<IMUDataConst*>(buffer_view->data()));
+  carla::sensor::s11n::IMUSerializer::Data data(carla::SharedBufferView buffer_view) {
+    return MsgPack::UnPack<carla::sensor::s11n::IMUSerializer::Data>(buffer_view->data(), buffer_view->size());
   }
 
   std::shared_ptr<UeIMUPublisherImpl> _impl;

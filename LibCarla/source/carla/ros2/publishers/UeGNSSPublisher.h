@@ -42,10 +42,9 @@ public:
                         const carla::SharedBufferView buffer_view) override;
 
 private:
-  using GnssDataConst = carla::geom::GeoLocation const;
 
-  std::shared_ptr<GnssDataConst> data_view_ptr(carla::SharedBufferView buffer_view) {
-    return std::shared_ptr<GnssDataConst>(buffer_view, reinterpret_cast<GnssDataConst*>(buffer_view->data()));
+  carla::geom::GeoLocation data(carla::SharedBufferView buffer_view) {
+    return MsgPack::UnPack<carla::geom::GeoLocation>(buffer_view->data(), buffer_view->size());
   }
 
   std::shared_ptr<UeGNSSPublisherImpl> _impl;
