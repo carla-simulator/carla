@@ -17,6 +17,7 @@ USE_CHRONO=false
 USE_PYTORCH=false
 USE_UNITY=true
 USE_ROS2=false
+EDITOR_ROS2_FLAGS=""
 
 EDITOR_FLAGS=""
 
@@ -70,6 +71,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --ros2 )
       USE_ROS2=true;
+      # Due to continued segfaults in reallocations of MallocBinned2 enforce using AnsiMalloc calls 
+      # (see https://forums.unrealengine.com/t/dealing-with-allocator-mismatches-with-external-libraries/1416830)
+      EDITOR_ROS2_FLAGS="-ansimalloc"
       shift ;;
     --no-unity )
       USE_UNITY=false
@@ -208,7 +212,7 @@ fi
 if ${LAUNCH_UE4_EDITOR} ; then
 
   log "Launching UE4Editor..."
-  ${GDB} ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject" ${RHI} ${EDITOR_FLAGS}
+  ${GDB} ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject" ${RHI} ${EDITOR_FLAGS} ${EDITOR_ROS2_FLAGS}
 
 else
 

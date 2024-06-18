@@ -17,6 +17,9 @@ USE_CARSIM=false
 SINGLE_PACKAGE=false
 ARCHIVE_SUFIX=""
 
+EDITOR_ROS2_FLAGS=""
+
+
 OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,carsim,packages:,python-version,target-archive:,archive-sufix:, -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
@@ -42,6 +45,11 @@ while [[ $# -gt 0 ]]; do
     --archive-sufix )
       ARCHIVE_SUFIX="$2"
       shift 2 ;;
+    --ros2 )
+      # Due to continued segfaults in reallocations of MallocBinned2 enforce using AnsiMalloc calls 
+      # (see https://forums.unrealengine.com/t/dealing-with-allocator-mismatches-with-external-libraries/1416830)
+      EDITOR_ROS2_FLAGS="-ansimalloc"
+      shift ;;
     --carsim )
       USE_CARSIM=true;
       shift ;;
@@ -187,6 +195,8 @@ if ${DO_CARLA_RELEASE} ; then
 
   copy_if_changed "./Unreal/CarlaUE4/Content/Carla/HDMaps/*.pcd" "${DESTINATION}/HDMaps/"
   copy_if_changed "./Unreal/CarlaUE4/Content/Carla/HDMaps/Readme.md" "${DESTINATION}/HDMaps/README"
+
+  sed -i s#CarlaUE4-Linux-Shipping" CarlaUE4#CarlaUE4-Linux-Shipping" CarlaUE4 ${EDITOR_ROS2_FLAGS}#g "${DESTINATION}/CarlaUE4.sh"
 
   popd >/dev/null
 
