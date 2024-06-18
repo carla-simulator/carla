@@ -7,12 +7,13 @@
 #include "CityMapMeshHolder.h"
 #include "Carla.h"
 #include "Engine/StaticMeshActor.h"
-#include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
-#include <vector>
+#include "Engine/Level.h"
+#include "Components/InstancedStaticMeshComponent.h"
 #include "Settings/CarlaSettings.h"
 #include "Game/CarlaGameInstance.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include <vector>
 
 
 using tag_size_t = std::underlying_type<ECityMapMeshTag>::type;
@@ -57,11 +58,11 @@ void ACityMapMeshHolder::PostInitializeComponents()
 {
   Super::PostInitializeComponents();
 
-  if(IsValid(GetLevel())&&!GetLevel()->IsPendingKill())
+  if (IsValid(GetLevel()) && !GetLevel()->IsPendingKill())
   {
 	 TArray<AActor*> roadpieces;
      GetAttachedActors(roadpieces);
-	 if(roadpieces.Num()==0)
+	 if (roadpieces.Num()==0)
 	 {
 	   UE_LOG(LogCarla, Error, TEXT("Please regenerate the road in edit mode for '%s' actor"), *UKismetSystemLibrary::GetDisplayName(this));
 	   UpdateMapScale();
@@ -156,7 +157,7 @@ void ACityMapMeshHolder::DeletePieces()
   //this part will be deprecated: remove the instanced static mesh components
   TArray<UInstancedStaticMeshComponent*> oldcomponents;
   GetComponents(oldcomponents);
-  for(int32 i=0;i<oldcomponents.Num();i++)
+  for (int32 i=0;i<oldcomponents.Num();i++)
   {
 	  oldcomponents[i]->DestroyComponent();
   }
@@ -164,9 +165,9 @@ void ACityMapMeshHolder::DeletePieces()
   TArray<AActor*> roadpieces;
   GetAttachedActors(roadpieces);
 
-  for(int32 i=roadpieces.Num()-1; i>=0; i--)
+  for (int32 i=roadpieces.Num()-1; i>=0; i--)
   {
-	if(roadpieces[i]->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG))
+	if (roadpieces[i]->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG))
 	{
 	   roadpieces[i]->Destroy();
 	}
