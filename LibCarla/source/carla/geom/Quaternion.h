@@ -6,6 +6,8 @@
 
 #pragma once
 
+#define ALLOW_UNSAFE_GEOM_MATRIX_ACCESS 0
+
 #include <array>
 
 #include "carla/MsgPack.h"
@@ -210,32 +212,6 @@ namespace geom {
       return rotator;
     }
 
-  private:
-    /// Computes the 3x3 rotation-matrix of the inverse quaternion
-    std::array<float, 9> InverseRotationMatrix() const {
-      return Inverse().RotationMatrix();
-    }
-
-    RightHandedVector3D RotatedPoint(RightHandedVector3D const &in_point) const {
-      Quaternion quat = *this * in_point * Inverse();
-      RightHandedVector3D out_point;
-      out_point.x = quat.x;
-      out_point.y = quat.y;
-      out_point.z = quat.z;
-      return out_point;
-    }
-
-    RightHandedVector3D InverseRotatedPoint(RightHandedVector3D const &in_point) const {
-      Quaternion quat = Inverse() * in_point * *this;
-      RightHandedVector3D out_point;
-      out_point.x = quat.x;
-      out_point.y = quat.y;
-      out_point.z = quat.z;
-      return out_point;
-    }
-
-  public:
-
     template <class VECTOR_TYPE>
     RightHandedVector3D RotatedVector(VECTOR_TYPE const &in_point) const {
        return RotatedPoint(in_point);
@@ -303,12 +279,12 @@ namespace geom {
         clmdep_msgpack::type::make_define_array(x, y, z, w).msgpack_object(o, sneaky_variable_that_shadows_z);
     }
     // =========================================================================
-  private:
-#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
-    // allow Transform to access our private functions
-    friend class Transform;
-#endif
 
+#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
+  public:
+#else
+  private:
+#endif
     // Computes the 3x3 rotation-matrix of the quaternion (as this matrix operates in right handed space as our quaternion, keept the matrix private for the moment.
     // If required public input/output vectors of this operation will have to be ensured to be RightHandedVector3D
     // Therefore, making it public reuires a dedicated Matrix class which is enforing this by it's interface. 
@@ -344,6 +320,29 @@ namespace geom {
           float(wx2 + yz2),
           float(1. - (xx2 + yy2))};
       return matrix;
+    }
+
+    /// Computes the 3x3 rotation-matrix of the inverse quaternion
+    std::array<float, 9> InverseRotationMatrix() const {
+      return Inverse().RotationMatrix();
+    }
+
+    RightHandedVector3D RotatedPoint(RightHandedVector3D const &in_point) const {
+      Quaternion quat = *this * in_point * Inverse();
+      RightHandedVector3D out_point;
+      out_point.x = quat.x;
+      out_point.y = quat.y;
+      out_point.z = quat.z;
+      return out_point;
+    }
+
+    RightHandedVector3D InverseRotatedPoint(RightHandedVector3D const &in_point) const {
+      Quaternion quat = Inverse() * in_point * *this;
+      RightHandedVector3D out_point;
+      out_point.x = quat.x;
+      out_point.y = quat.y;
+      out_point.z = quat.z;
+      return out_point;
     }
   };
 

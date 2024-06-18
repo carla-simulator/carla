@@ -9,6 +9,7 @@
 #include "carla/MsgPack.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/Quaternion.h"
 #include "carla/geom/Rotation.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
@@ -16,8 +17,6 @@
 #include "Math/Transform.h"
 #include <compiler/disable-ue4-macros.h>
 #endif // LIBCARLA_INCLUDED_FROM_UE4
-
-#define ALLOW_UNSAFE_GEOM_MATRIX_ACCESS 0
 
 namespace carla {
 namespace geom {
@@ -111,11 +110,10 @@ namespace geom {
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
 #if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
-  private:
     // this matrix is rotating within a right handed-coordinate system, but Unreal coordinate frame is left-handed!
     // If we want to make this public, a dedicated Matrix4x4 type has to be defined considiering that (see also Quaternion.h)
     std::array<float, 16> TransformationMatrix() const {
-      auto const matrix = rotation.RotationMatrix();
+      auto const matrix = Quaternion(rotation).RotationMatrix();
 
       std::array<float, 16> transform = {
           matrix[0], matrix[1], matrix[2], location.x,
@@ -128,7 +126,7 @@ namespace geom {
 
     /// Computes the 4-matrix form of the inverse transformation
     std::array<float, 16> InverseTransformationMatrix() const {
-      auto const matrix = rotation.InverseRotationMatrix();
+      auto const matrix = Quaternion(rotation).InverseRotationMatrix();
 
       Vector3D a = {0.0f, 0.0f, 0.0f};
       InverseTransformPoint(a);
