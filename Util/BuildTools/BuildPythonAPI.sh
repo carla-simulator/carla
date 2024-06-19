@@ -48,8 +48,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-export CC="clang"
-export CXX="clang++"
+UNREAL_SYSROOT="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu"
+export CC="${UNREAL_SYSROOT}/bin/clang"
+export CXX="${UNREAL_SYSROOT}/bin/clang++"
+export PATH="${UNREAL_SYSROOT}/bin:$PATH"
 
 source $(dirname "$0")/Environment.sh
 

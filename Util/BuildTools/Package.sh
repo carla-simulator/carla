@@ -6,7 +6,7 @@
 
 DOC_STRING="Makes a packaged version of CARLA and other content packages ready for distribution."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--config={Debug,Development,Shipping}] [--no-zip] [--clean-intermediate] [--packages=Name1,Name2,...] [--target-archive=] [--archive-sufix=]"
+USAGE_STRING="Usage: $0 [-h|--help] [--config={Debug,Development,Shipping}] [--no-zip] [--clean-intermediate] [--packages=Name1,Name2,...] [--target-archive=] [--archive-sufix=] [--ros2]"
 
 PACKAGES="Carla"
 DO_TARBALL=true
@@ -20,7 +20,7 @@ ARCHIVE_SUFIX=""
 EDITOR_ROS2_FLAGS=""
 
 
-OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,carsim,packages:,python-version,target-archive:,archive-sufix:, -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,carsim,packages:,python-version,target-archive:,archive-sufix:,ros2 -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -196,7 +196,7 @@ if ${DO_CARLA_RELEASE} ; then
   copy_if_changed "./Unreal/CarlaUE4/Content/Carla/HDMaps/*.pcd" "${DESTINATION}/HDMaps/"
   copy_if_changed "./Unreal/CarlaUE4/Content/Carla/HDMaps/Readme.md" "${DESTINATION}/HDMaps/README"
 
-  sed -i s#CarlaUE4-Linux-Shipping" CarlaUE4#CarlaUE4-Linux-Shipping" CarlaUE4 ${EDITOR_ROS2_FLAGS}#g "${DESTINATION}/CarlaUE4.sh"
+  sed -i "s/CarlaUE4 /CarlaUE4 ${EDITOR_ROS2_FLAGS} /g" "${DESTINATION}/CarlaUE4.sh"
 
   popd >/dev/null
 

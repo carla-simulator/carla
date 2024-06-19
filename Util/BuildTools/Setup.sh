@@ -55,9 +55,11 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 
 LLVM_INCLUDE="${UE4_ROOT}/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
 LLVM_LIBPATH="${UE4_ROOT}/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
-UNREAL_HOSTED_CFLAGS="--sysroot=$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/ -isystem ${LLVM_INCLUDE}"
-UNREAL_SYSTEM_LIBPATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/usr/lib"
-UNREAL_HOSTED_LINKER_FLAGS="--sysroot=$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/ -L${LLVM_LIBPATH} -L${UNREAL_SYSTEM_LIBPATH} -lc++ -lc++abi"
+UNREAL_SYSROOT="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu"
+UNREAL_HOSTED_CFLAGS="--sysroot=${UNREAL_SYSROOT} -isystem ${LLVM_INCLUDE}"
+UNREAL_SYSTEM_LIBPATH="${UNREAL_SYSROOT}/usr/lib"
+UNREAL_HOSTED_LINKER_FLAGS="--sysroot=${UNREAL_SYSROOT} -L${LLVM_LIBPATH} -L${UNREAL_SYSTEM_LIBPATH} -lc++ -lc++abi"
+
 
 CARLA_CFLAGS="-fPIC -w"
 CARLA_CXXFLAGS="-std=c++20 -DBOOST_ERROR_CODE_HEADER_ONLY"
@@ -66,9 +68,9 @@ CARLA_SERVER_CFLAGS="${UNREAL_HOSTED_CFLAGS} ${CARLA_CFLAGS}"
 CARLA_SERVER_CXXFLAGS="${CARLA_SERVER_CFLAGS} ${CARLA_CXXFLAGS} -stdlib=libc++ -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS"
 CARLA_SERVER_LINKER_FLAGS="${UNREAL_HOSTED_LINKER_FLAGS} -L${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/"
 
-export CC="clang"
-export CXX="clang++"
-
+export CC="${UNREAL_SYSROOT}/bin/clang"
+export CXX="${UNREAL_SYSROOT}/bin/clang++"
+export PATH="${UNREAL_SYSROOT}/bin:$PATH"
 
 # ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
@@ -755,8 +757,10 @@ PROJ_VERSION=7.2
 PROJ_REPO=https://github.com/OSGeo/PROJ
 
 PROJ_BASENAME=proj
-PROJ_CLIENT_LIB=${PROJ_BASENAME}-client-install/lib/libproj.a
+PROJ_CLIENT_LIBPATH=${PROJ_BASENAME}-client-install/lib
+PROJ_CLIENT_LIB=${PROJ_CLIENT_LIBPATH}/libproj.a
 PROJ_SERVER_LIB=${PROJ_BASENAME}-server-install/lib/libproj.a
+PROJ_CLIENT_INCLUDE=${PROJ_BASENAME}-client-install/include
 
 if [[ -d ${PROJ_BASENAME}-client-install && -d ${PROJ_BASENAME}-server-install ]] ; then
   log "PROJ already installed."
@@ -1092,6 +1096,8 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Pytorch")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   set(BOOST_INCLUDE_PATH "${BOOST_CLIENT_INCLUDE}")
   set(BOOST_LIB_PATH "${BOOST_CLIENT_LIBPATH}")
+  set(PROJ_INCLUDE_PATH "${PROJ_CLIENT_INCLUDE}")
+  set(PROJ_LIBPATH "${PROJ_CLIENT_LIBPATH}")
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_CLIENT_INCLUDE}")
   set(RPCLIB_LIB_PATH "${RPCLIB_CLIENT_LIBPATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_CLIENT_INCLUDE}")
