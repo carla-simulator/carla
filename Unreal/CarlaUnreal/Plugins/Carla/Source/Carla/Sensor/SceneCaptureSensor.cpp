@@ -912,7 +912,7 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_LumenDiffuseColorBoost = true;
     PostProcessSettings.LumenDiffuseColorBoost = 1.0f;
     PostProcessSettings.bOverride_LumenSkylightLeaking = true;
-    PostProcessSettings.LumenSkylightLeaking = 0.05f;
+    PostProcessSettings.LumenSkylightLeaking = 0.1f;
     PostProcessSettings.bOverride_LumenFullSkylightLeakingDistance = true;
     PostProcessSettings.LumenFullSkylightLeakingDistance = 1000.0f;
     PostProcessSettings.bOverride_ReflectionMethod = true;
@@ -924,6 +924,6 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_LumenFrontLayerTranslucencyReflections = true;
     PostProcessSettings.LumenFrontLayerTranslucencyReflections = true;
     PostProcessSettings.bOverride_LumenMaxReflectionBounces = true;
-    PostProcessSettings.LumenMaxReflectionBounces = 1;
+    PostProcessSettings.LumenMaxReflectionBounces = 3;
   }
 } // namespace SceneCaptureSensor_local_ns

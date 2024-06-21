@@ -1338,9 +1338,9 @@ def main():
         help='actor role name (default: "hero")')
     argparser.add_argument(
         '--gamma',
-        default=2.2,
+        default=1.0,
         type=float,
-        help='Gamma correction of the camera (default: 2.2)')
+        help='Gamma correction of the camera (default: 1.0)')
     argparser.add_argument(
         '--sync',
         action='store_true',
