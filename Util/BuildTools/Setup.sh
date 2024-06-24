@@ -757,10 +757,10 @@ PROJ_VERSION=7.2
 PROJ_REPO=https://github.com/OSGeo/PROJ
 
 PROJ_BASENAME=proj
-PROJ_CLIENT_LIBPATH=${PROJ_BASENAME}-client-install/lib
+PROJ_CLIENT_LIBPATH=${PWD}/${PROJ_BASENAME}-client-install/lib
 PROJ_CLIENT_LIB=${PROJ_CLIENT_LIBPATH}/libproj.a
-PROJ_SERVER_LIB=${PROJ_BASENAME}-server-install/lib/libproj.a
-PROJ_CLIENT_INCLUDE=${PROJ_BASENAME}-client-install/include
+PROJ_SERVER_LIB=${PWD}/${PROJ_BASENAME}-server-install/lib/libproj.a
+PROJ_CLIENT_INCLUDE=${PWD}/${PROJ_BASENAME}-client-install/include
 
 if [[ -d ${PROJ_BASENAME}-client-install && -d ${PROJ_BASENAME}-server-install ]] ; then
   log "PROJ already installed."
