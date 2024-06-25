@@ -180,6 +180,9 @@ public:
   static FColor ActorAttributeToColor(const FActorAttribute &ActorAttribute, const FColor &Default);
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static FVector ActorAttributeToVector(const FActorAttribute &ActorAttribute, const FVector &Default);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static bool RetrieveActorAttributeToBool(
       const FString &Id,
       const TMap<FString, FActorAttribute> &Attributes,
@@ -208,6 +211,12 @@ public:
       const FString &Id,
       const TMap<FString, FActorAttribute> &Attributes,
       const FColor &Default);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static FVector RetrieveActorAttributeToVector(
+      const FString &Id,
+      const TMap<FString, FActorAttribute> &Attributes,
+      const FVector &Default);
 
   /// @}
   /// ==========================================================================

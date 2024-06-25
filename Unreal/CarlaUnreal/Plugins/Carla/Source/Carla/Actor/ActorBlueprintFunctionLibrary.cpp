@@ -170,6 +170,15 @@ static FString ColorToFString(const FColor &Color)
       FString::FromInt(Color.B));
 }
 
+static FString VectorToFString(const FVector &TextVector)
+{
+  return JoinStrings(
+      TEXT(","),
+      FString::SanitizeFloat(TextVector.X),
+      FString::SanitizeFloat(TextVector.Y),
+      FString::SanitizeFloat(TextVector.Z));
+}
+
 /// ============================================================================
 /// -- Actor definition validators ---------------------------------------------
 /// ============================================================================
@@ -644,19 +653,17 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     ColorSaturation.RecommendedValues = { ColorToFString(FLinearColor(0.45f, 0.45f, 0.45f).ToFColorSRGB()) };
     ColorSaturation.bRestrictToRecommended = false;
 
-/* Commented because linear color does not accept > 1.0 values, we need to implement FVector type in CARLA PythonAPI
     FActorVariation ColorContrast;
     ColorContrast.Id = TEXT("color_contrast");
-    ColorContrast.Type = EActorAttributeType::Float;
-    ColorContrast.RecommendedValues = { ColorToFString(FLinearColor(1.3f, 1.3f, 1.3f).ToFColorSRGB()) };
+    ColorContrast.Type = EActorAttributeType::Vector;
+    ColorContrast.RecommendedValues = { VectorToFString(FVector(1.35f, 1.35f, 1.35f)) };
     ColorContrast.bRestrictToRecommended = false;
 
     FActorVariation ColorGamma;
     ColorGamma.Id = TEXT("color_gamma");
-    ColorGamma.Type = EActorAttributeType::Float;
-    ColorGamma.RecommendedValues = { ColorToFString(FLinearColor(1.2f, 1.2f, 1.2f).ToFColorSRGB()) };
+    ColorGamma.Type = EActorAttributeType::Vector;
+    ColorGamma.RecommendedValues = { VectorToFString(FVector(1.2f, 1.2f, 1.2f)) };
     ColorGamma.bRestrictToRecommended = false;
-*/
 
     FActorVariation HighlightsGamma;
     HighlightsGamma.Id = TEXT("highlights_gamma");
@@ -1540,6 +1547,34 @@ FColor UActorBlueprintFunctionLibrary::ActorAttributeToColor(
   return Color;
 }
 
+FVector UActorBlueprintFunctionLibrary::ActorAttributeToVector(
+    const FActorAttribute &ActorAttribute,
+    const FVector &Default)
+{
+  if (ActorAttribute.Type != EActorAttributeType::Vector)
+  {
+    UE_LOG(LogCarla, Error, TEXT("ActorAttribute '%s' is not a vector"), *ActorAttribute.Id);
+    return Default;
+  }
+  TArray<FString> Values;
+  ActorAttribute.Value.ParseIntoArray(Values, TEXT(","), false);
+  if (Values.Num() != 3)
+  {
+    UE_LOG(LogCarla,
+        Error,
+        TEXT("ActorAttribute '%s': invalid vector '%s' must contain 3 values separated with comma"),
+        *ActorAttribute.Id,
+        *ActorAttribute.Value);
+    return Default;
+  }
+  
+  FVector NewVector;
+  NewVector.X = FCString::Atof(*(Values[0]));
+  NewVector.Y = FCString::Atof(*(Values[1]));
+  NewVector.Z = FCString::Atof(*(Values[2]));
+  return NewVector;
+}
+
 bool UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
     const FString &Id,
     const TMap<FString, FActorAttribute> &Attributes,
@@ -1587,6 +1622,16 @@ FColor UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
 {
   return Attributes.Contains(Id) ?
          ActorAttributeToColor(Attributes[Id], Default) :
+         Default;
+}
+
+FVector UActorBlueprintFunctionLibrary::RetrieveActorAttributeToVector(
+    const FString &Id,
+    const TMap<FString, FActorAttribute> &Attributes,
+    const FVector &Default)
+{
+  return Attributes.Contains(Id) ?
+         ActorAttributeToVector(Attributes[Id], Default) :
          Default;
 }
 
@@ -1709,17 +1754,15 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         FVector4(ColorSaturation.R, ColorSaturation.G, ColorSaturation.B, ColorSaturation.A));
 
     // Temporal comments until FVector is implemented in clientside
-    //auto ColorContrast = FLinearColor(RetrieveActorAttributeToColor("color_contrast", Description.Variations, FVector4(1.3f, 1.3f, 1.3f)));
+    FVector ColorContrast = FVector(RetrieveActorAttributeToVector("color_contrast", Description.Variations, FVector(1.3f, 1.3f, 1.3f)));
     Camera->SetColorContrast(
-        //FVector4(ColorContrast.R, ColorContrast.G, ColorContrast.B, ColorContrast.A));
-        FVector4(1.35f, 1.35f, 1.35f, 1.0));
+        FVector4(ColorContrast.X, ColorContrast.Y, ColorContrast.Z, 1.0f));
 
     // Temporal comments until FVector is implemented in clientside
-    //auto ColorGamma = FLinearColor(RetrieveActorAttributeToColor("color_gamma", Description.Variations, FVector4( 1.2f, 1.2f, 1.2f, 1.0f)));
+    FVector ColorGamma = FVector(RetrieveActorAttributeToVector("color_gamma", Description.Variations, FVector( 1.2f, 1.2f, 1.2f )));
     Camera->SetColorGamma(
-        //FVector4(ColorGamma.R, ColorGamma.G, ColorGamma.B, ColorGamma.A));
-        FVector4( 1.2f, 1.2f, 1.2f, 1.0f));
-
+        FVector4(ColorGamma.X, ColorGamma.Y, ColorGamma.Z, 1.0f));
+        
     auto HighlightsGamma = FLinearColor(RetrieveActorAttributeToColor("highlights_gamma", Description.Variations, FLinearColor(0.5f, 0.5, 0.5f).ToFColorSRGB()));
     Camera->SetHighlightsGamma(
         FVector4(HighlightsGamma.R, HighlightsGamma.G, HighlightsGamma.B, HighlightsGamma.A));
