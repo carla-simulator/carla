@@ -21,6 +21,8 @@ AInstanceSegmentationCamera::AInstanceSegmentationCamera(
   : Super(ObjectInitializer)
 {
   AddPostProcessingMaterial(TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
+  AddPostProcessingMaterial(TEXT("Material'/Game/Carla/PostProcessMaterials/M_InstanceSegmentationSensorMaterial'"));
+  
   // TODO: Setup OnActorSpawnHandler so we can refresh components
   // World->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateRaw(this, &AInstanceSegmentationCamera::OnActorSpawned));
 }
@@ -29,9 +31,9 @@ void AInstanceSegmentationCamera::SetUpSceneCaptureComponent(USceneCaptureCompon
 {
   Super::SetUpSceneCaptureComponent(SceneCapture);
 
-  ApplyViewMode(VMI_Unlit, true, SceneCapture.ShowFlags);
+  //ApplyViewMode(VMI_Unlit, true, SceneCapture.ShowFlags);
 
-  SceneCapture.ShowFlags.SetNotDrawTaggedComponents(false); // TaggedComponent detects this and sets view relevance for proxy material
+  /*SceneCapture.ShowFlags.SetNotDrawTaggedComponents(false); // TaggedComponent detects this and sets view relevance for proxy material
 
   SceneCapture.ShowFlags.SetAtmosphere(false);
 
@@ -40,11 +42,11 @@ void AInstanceSegmentationCamera::SetUpSceneCaptureComponent(USceneCaptureCompon
   TArray<UObject *> TaggedComponents;
   GetObjectsOfClass(UTaggedComponent::StaticClass(), TaggedComponents, false, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags::AllFlags);
 
-  TArray<UPrimitiveComponent *> ShowOnlyComponents;
+  //TArray<UPrimitiveComponent *> ShowOnlyComponents;
   for (UObject *Object : TaggedComponents) {
     UPrimitiveComponent *Component = Cast<UPrimitiveComponent>(Object);
     SceneCapture.ShowOnlyComponents.Emplace(Component);
-  }
+  }*/
 }
 
 void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
@@ -52,7 +54,7 @@ void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickTyp
   TRACE_CPUPROFILER_EVENT_SCOPE(AInstanceSegmentationCamera::PostPhysTick);
   Super::PostPhysTick(World, TickType, DeltaSeconds);
 
-  USceneCaptureComponent2D* SceneCapture = GetCaptureComponent2D();
+  /*USceneCaptureComponent2D* SceneCapture = GetCaptureComponent2D();
   TArray<UObject *> TaggedComponents;
   GetObjectsOfClass(UTaggedComponent::StaticClass(), TaggedComponents, false, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags::AllFlags);
 
@@ -60,7 +62,7 @@ void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickTyp
   for (UObject *Object : TaggedComponents) {
     UPrimitiveComponent *Component = Cast<UPrimitiveComponent>(Object);
     SceneCapture->ShowOnlyComponents.Emplace(Component);
-  }
+  }*/
 
   auto FrameIndex = FCarlaEngine::GetFrameCounter();
   ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
