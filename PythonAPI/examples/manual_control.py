@@ -160,7 +160,7 @@ def get_actor_blueprints(world, filter, generation):
     try:
         int_generation = int(generation)
         # Check if generation is in available generations
-        if int_generation in [1, 2, 3]:
+        if int_generation in [1, 2, 3, 4]:
             bps = [x for x in bps if int(x.get_attribute('generation')) == int_generation]
             return bps
         else:
@@ -263,7 +263,7 @@ class World(object):
         while self.player is None:
             if not self.map.get_spawn_points():
                 print('There are no spawn points available in your map/town.')
-                print('Please add some Vehicle Spawn Point to your UE4 scene.')
+                print('Please add some Vehicle Spawn Point to your UE5 scene.')
                 sys.exit(1)
             spawn_points = self.map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
@@ -1329,8 +1329,8 @@ def main():
     argparser.add_argument(
         '--generation',
         metavar='G',
-        default='2',
-        help='restrict to certain actor generation (values: "1","2","All" - default: "2")')
+        default='4',
+        help='restrict to certain actor generation (values: "1","2","3","4","All" - default: "4")')
     argparser.add_argument(
         '--rolename',
         metavar='NAME',
