@@ -1756,12 +1756,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     // Temporal comments until FVector is implemented in clientside
     FVector ColorContrast = FVector(RetrieveActorAttributeToVector("color_contrast", Description.Variations, FVector(1.3f, 1.3f, 1.3f)));
     Camera->SetColorContrast(
-<<<<<<< HEAD
         FVector4(ColorContrast.X, ColorContrast.Y, ColorContrast.Z, 1.0f));
-=======
-        //FVector4(ColorContrast.R, ColorContrast.G, ColorContrast.B, ColorContrast.A));
-        FVector4(1.35f, 1.35f, 1.35f, 1.0));
->>>>>>> ue5-dev
 
     // Temporal comments until FVector is implemented in clientside
     FVector ColorGamma = FVector(RetrieveActorAttributeToVector("color_gamma", Description.Variations, FVector( 1.2f, 1.2f, 1.2f )));
