@@ -1,0 +1,35 @@
+{
+  "version": 4,
+  "configurePresets": [
+    {
+      "name": "common",
+      "generator": "Ninja",
+      "hidden": true
+    },
+    {
+      "name": "Debug",
+      "inherits": "common",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "Development",
+      "inherits": "common",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "Release",
+      "inherits": "common",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "Default",
+      "inherits": "Release"
+    }
+  ]
+}
