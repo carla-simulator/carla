@@ -25,7 +25,7 @@ SpawnObjectService::SpawnObjectService(carla::rpc::RpcServerInterface &carla_ser
   : ServiceBase(carla_server, actor_name_definition), _impl(std::make_shared<SpawnObjectServiceImpl>()) {}
 
 bool SpawnObjectService::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
-  _impl->SetServiceCallback(std::bind(std::mem_fn(&SpawnObjectService::SpawnObject), this, std::placeholders::_1));
+  _impl->SetServiceCallback(std::bind(&SpawnObjectService::SpawnObject, this, std::placeholders::_1));
   return _impl->Init(domain_participant, get_topic_name());
 }
 
@@ -43,7 +43,7 @@ carla_msgs::srv::SpawnObject_Response SpawnObjectService::SpawnObject(
     auto map_info = _carla_server.call_get_map_info();
     std::vector<geom::Transform> result;
     std::sample(map_info.Get().recommended_spawn_points.begin(), map_info.Get().recommended_spawn_points.end(),
-                result.begin(), 1, std::mt19937{std::random_device{}()});
+                std::back_inserter(result), 1, std::mt19937{std::random_device{}()});
     if (result.empty()) {
       response.error_string("SpawnObjectService: failed to retrieve random spawn point");
       response.id(0);
@@ -63,7 +63,7 @@ carla_msgs::srv::SpawnObject_Response SpawnObjectService::SpawnObject(
     return response;
   } else {
     std::vector<carla::actors::ActorBlueprint> blueprint_result;
-    std::sample(blueprints->begin(), blueprints->end(), blueprint_result.begin(), 1,
+    std::sample(blueprints->begin(), blueprints->end(), std::back_inserter(blueprint_result), 1,
                 std::mt19937{std::random_device{}()});
     if (blueprint_result.size() == 0) {
       response.error_string("SpawnObjectService: failed to retrieve random matching blueprint");

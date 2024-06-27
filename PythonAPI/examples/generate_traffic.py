@@ -175,18 +175,21 @@ def main():
             traffic_manager.set_random_device_seed(args.seed)
 
         settings = world.get_settings()
-        if not args.asynch:
-            traffic_manager.set_synchronous_mode(True)
-            if not settings.synchronous_mode:
-                synchronous_master = True
-                settings.synchronous_mode = True
-                settings.fixed_delta_seconds = 0.05
-            else:
-                synchronous_master = False
-        else:
-            print("You are currently in asynchronous mode. If this is a traffic simulation, \
-            you could experience some issues. If it's not working correctly, switch to synchronous \
-            mode by using traffic_manager.set_synchronous_mode(True)")
+        # Why do we need synchronization here?
+        # At least this is not working anymore with the new synchronization interface... if setting to sync mode, then EVERY client participating in sync interface has to call tick()!!
+        # Only if ALL synchronization clients have ticked, the server continues!
+        #if not args.asynch:
+        #    traffic_manager.set_synchronous_mode(True)
+        #    if not settings.synchronous_mode:
+        #        synchronous_master = True
+        #        #settings.synchronous_mode = True
+        #        settings.fixed_delta_seconds = 0.05
+        #    else:
+        #        synchronous_master = False
+        #else:
+        #    print("You are currently in asynchronous mode. If this is a traffic simulation, \
+        #    you could experience some issues. If it's not working correctly, switch to synchronous \
+        #    mode by using traffic_manager.set_synchronous_mode(True)")
 
         if args.no_rendering:
             settings.no_rendering_mode = True

@@ -18,7 +18,7 @@ GetBlueprintsService::GetBlueprintsService(
   : ServiceBase(carla_server, actor_name_definition), _impl(std::make_shared<GetBlueprintsServiceImpl>()) {}
 
 bool GetBlueprintsService::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
-  _impl->SetServiceCallback(std::bind(std::mem_fn(&GetBlueprintsService::GetBlueprints), this, std::placeholders::_1));
+  _impl->SetServiceCallback(std::bind(&GetBlueprintsService::GetBlueprints, this, std::placeholders::_1));
   return _impl->Init(domain_participant, get_topic_name());
 }
 

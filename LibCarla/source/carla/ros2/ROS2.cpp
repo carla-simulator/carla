@@ -101,17 +101,17 @@ void ROS2::NotifyBeginEpisode() {
   log_warning("ROS2 NotifyBeginEpisode start");
 
   auto spwan_object_service = std::make_shared<carla::ros2::SpawnObjectService>(
-      *_carla_server, carla::ros2::types::ActorNameDefinition::CreateFromRoleName("world/spawn_object"));
+      *_carla_server, carla::ros2::types::ActorNameDefinition::CreateFromRoleName("spawn_object"));
   spwan_object_service->Init(_domain_participant_impl);
   _services.push_back(spwan_object_service);
 
   auto destroy_object_service = std::make_shared<carla::ros2::DestroyObjectService>(
-      *_carla_server, carla::ros2::types::ActorNameDefinition::CreateFromRoleName("world/destroy_object"));
+      *_carla_server, carla::ros2::types::ActorNameDefinition::CreateFromRoleName("destroy_object"));
   destroy_object_service->Init(_domain_participant_impl);
   _services.push_back(destroy_object_service);
 
   auto get_blueprints_service = std::make_shared<carla::ros2::GetBlueprintsService>(
-      *_carla_server, carla::ros2::types::ActorNameDefinition::CreateFromRoleName("world/get_blueprints"));
+      *_carla_server, carla::ros2::types::ActorNameDefinition::CreateFromRoleName("get_blueprints"));
   get_blueprints_service->Init(_domain_participant_impl);
   _services.push_back(get_blueprints_service);
 
