@@ -13,9 +13,12 @@ class CARLA_API AIRCamera : public AShaderBasedSensor
 {
 	GENERATED_BODY()
 
+protected:
+	UMaterialParameterCollection* IRMPC;
+
 public:
 
-
+	
 	static FActorDefinition GetSensorDefinition();
 
 	AIRCamera(const FObjectInitializer &ObjectInitializer);
@@ -28,6 +31,7 @@ protected:
 
 	void BeginPlay() override;
 	void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void PrePhysTick(float DeltaSeconds) override;
 	void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
   
 	virtual void OnFirstClientConnected() override;
