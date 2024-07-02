@@ -31,16 +31,11 @@ carla_add_executable (
   carla-example-client
   "Build the CARLA C++ client example."
   ${CARLA_EXAMPLE_CPP_SOURCES}
+  ${CARLA_EXAMPLE_CPP_HEADERS}
 )
   
 target_link_libraries (
   carla-example-client PUBLIC
   carla-client
-)
-
-target_include_directories(
-  carla-example-client 
-  PUBLIC 
-  ${CARLA_EXAMPLE_CPP_HEADERS}
 )
 
