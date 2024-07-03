@@ -6,6 +6,7 @@ __pycache__/
 Build/
 Doxygen/
 Dist/
+Temp/
 out/
 
 CMakeSettings.json
