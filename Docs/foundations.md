@@ -16,7 +16,7 @@ import carla
 - [__World and client__](#world-and-client)  
 	- [Client](#client) 
     - [World](#world)
-- [__Syncrhonous and asyncrhonous mode__](#synchronous-and-asynchronous-mode)  
+- [__Synchronous and asynchronous mode__](#synchronous-and-asynchronous-mode)  
 	- [Setting synchronous mode](#setting-synchronous-mode) 
     - [Using synchronous mode](#using-synchronous-mode)
 - [__Recorder__](#recorder)  
