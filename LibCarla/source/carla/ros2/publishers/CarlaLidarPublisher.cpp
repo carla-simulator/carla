@@ -13,8 +13,8 @@
 #include <fastdds/dds/publisher/DataWriter.hpp>
 #include <fastdds/dds/topic/TypeSupport.hpp>
 
-#include <fastdds/dds/domain/qos/DomainParticipantQos.hpp>
-#include <fastdds/dds/domain/DomainParticipantFactory.hpp>
+#include <carla/ros2/ROS2.h>
+#include <carla/ros2/impl/DdsDomainParticipantImpl.h>
 #include <fastdds/dds/publisher/qos/PublisherQos.hpp>
 #include <fastdds/dds/topic/qos/TopicQos.hpp>
 
@@ -30,7 +30,6 @@ namespace ros2 {
   using erc = eprosima::fastrtps::types::ReturnCode_t;
 
   struct CarlaLidarPublisherImpl {
-    efd::DomainParticipant* _participant { nullptr };
     efd::Publisher* _publisher { nullptr };
     efd::Topic* _topic { nullptr };
     efd::DataWriter* _datawriter { nullptr };
@@ -45,18 +44,12 @@ namespace ros2 {
         return false;
     }
 
-    efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    pqos.name(_name);
-    auto factory = efd::DomainParticipantFactory::get_instance();
-    _impl->_participant = factory->create_participant(0, pqos);
-    if (_impl->_participant == nullptr) {
-        std::cerr << "Failed to create DomainParticipant" << std::endl;
-        return false;
-    }
-    _impl->_type.register_type(_impl->_participant);
+    auto participant = ROS2::GetDdsDomainParticipant()->GetDomainParticipant();
+
+    _impl->_type.register_type(participant);
 
     efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
-    _impl->_publisher = _impl->_participant->create_publisher(pubqos, nullptr);
+    _impl->_publisher = participant->create_publisher(pubqos, nullptr);
     if (_impl->_publisher == nullptr) {
       std::cerr << "Failed to create Publisher" << std::endl;
       return false;
@@ -68,7 +61,7 @@ namespace ros2 {
     if (!_parent.empty())
       topic_name += _parent + "/";
     topic_name += _name;
-    _impl->_topic = _impl->_participant->create_topic(topic_name, _impl->_type->getName(), tqos);
+    _impl->_topic = participant->create_topic(topic_name, _impl->_type->getName(), tqos);
     if (_impl->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
         return false;
@@ -214,17 +207,16 @@ void CarlaLidarPublisher::SetData(int32_t seconds, uint32_t nanoseconds, size_t 
       if (!_impl)
           return;
 
+      auto participant = ROS2::GetDdsDomainParticipant()->GetDomainParticipant();
       if (_impl->_datawriter)
           _impl->_publisher->delete_datawriter(_impl->_datawriter);
 
       if (_impl->_publisher)
-          _impl->_participant->delete_publisher(_impl->_publisher);
+          participant->delete_publisher(_impl->_publisher);
 
       if (_impl->_topic)
-          _impl->_participant->delete_topic(_impl->_topic);
+          participant->delete_topic(_impl->_topic);
 
-      if (_impl->_participant)
-          efd::DomainParticipantFactory::get_instance()->delete_participant(_impl->_participant);
   }
 
   CarlaLidarPublisher::CarlaLidarPublisher(const CarlaLidarPublisher& other) {

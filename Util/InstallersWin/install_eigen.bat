@@ -74,8 +74,18 @@ if not exist "%EIGEN_INSTALL_DIR%" (
 
 xcopy /q /Y /S /I /d "%EIGEN_SRC_DIR%\Eigen" "%EIGEN_INCLUDE%\Eigen"
 xcopy /q /Y /S /I /d "%EIGEN_SRC_DIR%\unsupported\Eigen" "%EIGEN_INCLUDE%\unsupported\Eigen"
-copy "%BUILD_DIR%..\Util\Patches\Eigen3.1.0\Macros.h" "%EIGEN_INCLUDE%\Eigen\src\Core\util\Macros.h"
+copy "%BUILD_DIR%..\Util\Patches\Eigen3.1.0\Functors.h" "%EIGEN_INCLUDE%\Eigen\src\Core\Functors.h"
 copy "%BUILD_DIR%..\Util\Patches\Eigen3.1.0\VectorBlock.h" "%EIGEN_INCLUDE%\Eigen\src\Core\VectorBlock.h"
+copy "%BUILD_DIR%..\Util\Patches\Eigen3.1.0\PacketMath.h" "%EIGEN_INCLUDE%\Eigen\src\Core\arch\SSE\PacketMath.h"
+copy "%BUILD_DIR%..\Util\Patches\Eigen3.1.0\SelfadjointMatrixVector.h" "%EIGEN_INCLUDE%\Eigen\src\Core\products\SelfadjointMatrixVector.h"
+copy "%BUILD_DIR%..\Util\Patches\Eigen3.1.0\Macros.h" "%EIGEN_INCLUDE%\Eigen\src\Core\util\Macros.h"
+copy "%BUILD_DIR%..\Util\Patches\Eigen3.1.0\ArrayCwiseUnaryOps.h" "%EIGEN_INCLUDE%\Eigen\src\plugins\ArrayCwiseUnaryOps.h"
+copy "%BUILD_DIR%..\Util\Patches\Eigen3.1.0\MatrixCwiseUnaryOps.h" "%EIGEN_INCLUDE%\Eigen\src\plugins\MatrixCwiseUnaryOps.h"
+
+  cp $CARLA_ROOT_FOLDER/Util/Patches/Eigen${EIGEN_VERSION}/Macros.h "${EIGEN_BASENAME}-source/Eigen/src/Core/util/Macros.h"
+  cp $CARLA_ROOT_FOLDER/Util/Patches/Eigen${EIGEN_VERSION}/ArrayCwiseUnaryOps.h "${EIGEN_BASENAME}-source/Eigen/src/plugins/ArrayCwiseUnaryOps.h"
+  cp $CARLA_ROOT_FOLDER/Util/Patches/Eigen${EIGEN_VERSION}/MatrixCwiseUnaryOps.h "${EIGEN_BASENAME}-source/Eigen/src/plugins/MatrixCwiseUnaryOps.h"
+
 
 goto success
 

@@ -13,8 +13,8 @@
 #include <fastdds/dds/topic/TypeSupport.hpp>
 #include <fastdds/dds/subscriber/SampleInfo.hpp>
 
-#include <fastdds/dds/domain/qos/DomainParticipantQos.hpp>
-#include <fastdds/dds/domain/DomainParticipantFactory.hpp>
+#include <carla/ros2/ROS2.h>
+#include <carla/ros2/impl/DdsDomainParticipantImpl.h>
 #include <fastdds/dds/subscriber/qos/SubscriberQos.hpp>
 #include <fastdds/dds/topic/qos/TopicQos.hpp>
 
@@ -31,7 +31,6 @@ namespace ros2 {
   using erc = eprosima::fastrtps::types::ReturnCode_t;
 
   struct CarlaEgoVehicleControlSubscriberImpl {
-    efd::DomainParticipant* _participant { nullptr };
     efd::Subscriber* _subscriber { nullptr };
     efd::Topic* _topic { nullptr };
     efd::DataReader* _datareader { nullptr };
@@ -50,18 +49,12 @@ namespace ros2 {
         return false;
     }
 
-    efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    pqos.name(_name);
-    auto factory = efd::DomainParticipantFactory::get_instance();
-    _impl->_participant = factory->create_participant(0, pqos);
-    if (_impl->_participant == nullptr) {
-        std::cerr << "Failed to create DomainParticipant" << std::endl;
-        return false;
-    }
-    _impl->_type.register_type(_impl->_participant);
+    auto participant = ROS2::GetDdsDomainParticipant()->GetDomainParticipant();
+
+    _impl->_type.register_type(participant);
 
     efd::SubscriberQos subqos = efd::SUBSCRIBER_QOS_DEFAULT;
-    _impl->_subscriber = _impl->_participant->create_subscriber(subqos, nullptr);
+    _impl->_subscriber = participant->create_subscriber(subqos, nullptr);
     if (_impl->_subscriber == nullptr) {
       std::cerr << "Failed to create Subscriber" << std::endl;
       return false;
@@ -75,7 +68,7 @@ namespace ros2 {
       topic_name += _parent + "/";
     topic_name += _name;
     topic_name += publisher_type;
-    _impl->_topic = _impl->_participant->create_topic(topic_name, _impl->_type->getName(), tqos);
+    _impl->_topic = participant->create_topic(topic_name, _impl->_type->getName(), tqos);
     if (_impl->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
         return false;
@@ -191,17 +184,16 @@ namespace ros2 {
       if (!_impl)
           return;
 
+    auto participant = ROS2::GetDdsDomainParticipant()->GetDomainParticipant();
       if (_impl->_datareader)
           _impl->_subscriber->delete_datareader(_impl->_datareader);
 
       if (_impl->_subscriber)
-          _impl->_participant->delete_subscriber(_impl->_subscriber);
+          participant->delete_subscriber(_impl->_subscriber);
 
       if (_impl->_topic)
-          _impl->_participant->delete_topic(_impl->_topic);
+          participant->delete_topic(_impl->_topic);
 
-      if (_impl->_participant)
-          efd::DomainParticipantFactory::get_instance()->delete_participant(_impl->_participant);
   }
 
   CarlaEgoVehicleControlSubscriber::CarlaEgoVehicleControlSubscriber(const CarlaEgoVehicleControlSubscriber& other) {

@@ -6,7 +6,7 @@
 
 DOC_STRING="Makes a packaged version of CARLA and other content packages ready for distribution."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--config={Debug,Development,Shipping}] [--no-zip] [--clean-intermediate] [--packages=Name1,Name2,...] [--target-archive=] [--archive-sufix=]"
+USAGE_STRING="Usage: $0 [-h|--help] [--config={Debug,Development,Shipping}] [--no-zip] [--clean-intermediate] [--packages=Name1,Name2,...] [--target-archive=] [--archive-sufix=] [--ros2]"
 
 PACKAGES="Carla"
 DO_TARBALL=true
@@ -17,7 +17,10 @@ USE_CARSIM=false
 SINGLE_PACKAGE=false
 ARCHIVE_SUFIX=""
 
-OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,carsim,packages:,python-version,target-archive:,archive-sufix:, -n 'parse-options' -- "$@"`
+EDITOR_ROS2_FLAGS=""
+
+
+OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,carsim,packages:,python-version,target-archive:,archive-sufix:,ros2 -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -42,6 +45,11 @@ while [[ $# -gt 0 ]]; do
     --archive-sufix )
       ARCHIVE_SUFIX="$2"
       shift 2 ;;
+    --ros2 )
+      # Due to continued segfaults in reallocations of MallocBinned2 enforce using AnsiMalloc calls 
+      # (see https://forums.unrealengine.com/t/dealing-with-allocator-mismatches-with-external-libraries/1416830)
+      EDITOR_ROS2_FLAGS="-ansimalloc"
+      shift ;;
     --carsim )
       USE_CARSIM=true;
       shift ;;
@@ -182,11 +190,13 @@ if ${DO_CARLA_RELEASE} ; then
   fi
 
   if [ -d "./Unreal/CarlaUE4/Plugins/Carla/CarlaDependencies/lib" ] ; then
-    cp -r "./Unreal/CarlaUE4/Plugins/Carla/CarlaDependencies/lib" "${DESTINATION}/CarlaUE4/Plugins/Carla/CarlaDependencies"
+    cp -r "./Unreal/CarlaUE4/Plugins/Carla/CarlaDependencies/lib/" "${DESTINATION}/CarlaUE4/Plugins/Carla/CarlaDependencies"
   fi
 
   copy_if_changed "./Unreal/CarlaUE4/Content/Carla/HDMaps/*.pcd" "${DESTINATION}/HDMaps/"
   copy_if_changed "./Unreal/CarlaUE4/Content/Carla/HDMaps/Readme.md" "${DESTINATION}/HDMaps/README"
+
+  sed -i "s/CarlaUE4 /CarlaUE4 ${EDITOR_ROS2_FLAGS} /g" "${DESTINATION}/CarlaUE4.sh"
 
   popd >/dev/null
 

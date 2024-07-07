@@ -48,10 +48,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-
-export CC="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang"
-export CXX="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++"
-export PATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin:$PATH"
+UNREAL_SYSROOT="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu"
+export CC="${UNREAL_SYSROOT}/bin/clang"
+export CXX="${UNREAL_SYSROOT}/bin/clang++"
+export PATH="${UNREAL_SYSROOT}/bin:$PATH"
 
 source $(dirname "$0")/Environment.sh
 
@@ -75,7 +75,7 @@ if ${REMOVE_INTERMEDIATE} ; then
   rm -Rf build dist source/carla.egg-info
 
   find source -name "*.so" -delete
-  find source -name "__pycache__" -type d -exec rm -r "{}" \;
+  find source -name "__pycache__" -type d -exec rm -rf "{}" \;
 
 fi
 

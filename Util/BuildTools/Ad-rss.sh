@@ -22,6 +22,13 @@ done
 # ==============================================================================
 source $(dirname "$0")/Environment.sh
 
+
+UNREAL_SYSROOT="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu"
+export CC="${UNREAL_SYSROOT}/bin/clang"
+export CXX="${UNREAL_SYSROOT}/bin/clang++"
+export PATH="${UNREAL_SYSROOT}/bin:$PATH"
+
+
 # Convert comma-separated string to array of unique elements.
 IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
 
@@ -29,7 +36,7 @@ IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
 # -- Get ad-rss -------------------------------------------
 # ==============================================================================
 
-ADRSS_VERSION=4.4.4
+ADRSS_VERSION=4.4.5
 ADRSS_BASENAME=ad-rss-${ADRSS_VERSION}
 ADRSS_COLCON_WORKSPACE="${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}"
 ADRSS_SRC_DIR="${ADRSS_COLCON_WORKSPACE}/src"
@@ -42,11 +49,8 @@ if [[ ! -d "${ADRSS_SRC_DIR}" ]]; then
 
   # clone ad-rss with all submodules, but remove proj, as CARLA already uses it
   pushd "${ADRSS_SRC_DIR}" >/dev/null
-  git clone -b v${ADRSS_VERSION} https://github.com/intel/ad-rss-lib.git && cd ad-rss-lib && git submodule update --init --recursive && rm -rf dependencies/map/dependencies/PROJ4 && cd ..
+  git clone -b v${ADRSS_VERSION} https://github.com/intel/ad-rss-lib.git && cd ad-rss-lib && git submodule update --init --recursive && cd ..
 
-  # ADRSS_VERSION is designed for older boost, update datatype from boost::array to std::array
-  grep -rl "boost::array" | xargs sed -i 's/boost::array/std::array/g'
-  grep -rl "find_package(Boost" | xargs sed -i 's/find_package(Boost/find_package(Boost 1.80/g'
   popd
 
   cat >"${ADRSS_COLCON_WORKSPACE}/colcon.meta" <<EOL
@@ -91,8 +95,6 @@ ADRSS_INSTALL_DIR="${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/install"
 #else
 #  echo "Using clang-$CARLA_LLVM_VERSION_MAJOR as the CARLA compiler."
 #fi
-CXX_TAG=c10
-
 #
 # Since it it not possible with boost-python to build more than one python version at once (find_package has some bugs)
 # we have to build it for every version in a separate colcon build
@@ -107,9 +109,9 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     pushd "${ADRSS_COLCON_WORKSPACE}" >/dev/null
     if [[ "${CMAKE_PREFIX_PATH}" == "" ]]; then
-      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.80.0-$CXX_TAG-install;${CARLA_BUILD_FOLDER}/proj-install"
+      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.80.0-client-install;${CARLA_BUILD_FOLDER}/proj-client-install"
     else
-      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.80.0-$CXX_TAG-install;${CARLA_BUILD_FOLDER}/proj-install;${CMAKE_PREFIX_PATH}"
+      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.80.0-client-install;${CARLA_BUILD_FOLDER}/proj-client-install;${CMAKE_PREFIX_PATH}"
     fi
 
     # get the python version of the binding to be built, need to query the binary,
@@ -120,7 +122,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     echo "PYTHON_BINDING_VERSIONS=${PYTHON_BINDING_VERSIONS}"
 
     # enforce sequential executor to reduce the required memory for compilation
-    colcon build --executor sequential --packages-up-to ad_rss_map_integration --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE="${CARLA_BUILD_FOLDER}/LibStdCppToolChain.cmake" -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH}" -DPYTHON_BINDING_VERSIONS="${PYTHON_BINDING_VERSIONS}" --build-base ${ADRSS_BUILD_DIR} --install-base ${ADRSS_INSTALL_DIR}
+    colcon build --executor sequential --packages-up-to ad_rss_map_integration --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE="${CARLA_BUILD_FOLDER}/CarlaClientToolChain.cmake" -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH}" -DPYTHON_BINDING_VERSIONS="${PYTHON_BINDING_VERSIONS}" --build-base ${ADRSS_BUILD_DIR} --install-base ${ADRSS_INSTALL_DIR}
 
     COLCON_RESULT=$?
     if (( COLCON_RESULT )); then

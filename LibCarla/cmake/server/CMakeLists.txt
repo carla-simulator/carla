@@ -1,78 +1,51 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(libcarla-server)
 
-# Install libc++ shared libraries.
-file(GLOB LibCXX_Libraries "${LLVM_LIB_PATH}/libc++*")
-install(FILES ${LibCXX_Libraries} DESTINATION lib)
-
-# Install rpclib.
-install(DIRECTORY "${RPCLIB_INCLUDE_PATH}/rpc" DESTINATION include)
-file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
-install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
-
-# Install headers.
-
 install(DIRECTORY "${libcarla_source_path}/compiler" DESTINATION include)
 
-file(GLOB libcarla_carla_headers "${libcarla_source_path}/carla/*.h")
-install(FILES ${libcarla_carla_headers} DESTINATION include/carla)
+foreach(dir "" 
+            "actors/"
+            "geom/"
+            "opendrive/" "opendrive/parser/"
+            "profiler/"
+            "road/" "road/element/" "road/general/" "road/object/" "road/signal/"
+            "rpc/"
+            "sensor/" "sensor/data/" "sensor/s11n/"
+            "streaming/" "streaming/detail/" "streaming/detail/tcp/" "streaming/low_level/"
+            "multigpu/")
 
-file(GLOB libcarla_carla_geom_headers "${libcarla_source_path}/carla/geom/*.h")
-install(FILES ${libcarla_carla_geom_headers} DESTINATION include/carla/geom)
+  file(GLOB headers "${libcarla_source_path}/carla/${dir}*.h")
+  install(FILES ${headers} DESTINATION include/carla/${dir})
 
-file(GLOB libcarla_carla_opendrive "${libcarla_source_path}/carla/opendrive/*.h")
-install(FILES ${libcarla_carla_opendrive} DESTINATION include/carla/opendrive)
+endforeach()
 
-file(GLOB libcarla_carla_opendrive_parser "${libcarla_source_path}/carla/opendrive/parser/*.h")
-install(FILES ${libcarla_carla_opendrive_parser} DESTINATION include/carla/opendrive/parser)
 
-file(GLOB libcarla_carla_profiler_headers "${libcarla_source_path}/carla/profiler/*.h")
-install(FILES ${libcarla_carla_profiler_headers} DESTINATION include/carla/profiler)
 
-file(GLOB libcarla_carla_road_headers "${libcarla_source_path}/carla/road/*.h")
-install(FILES ${libcarla_carla_road_headers} DESTINATION include/carla/road)
+  # only install the required public interface headers
+  foreach(dir "" "types/" )
+    file(GLOB libcarla_carla_ros2_public_headers
+      "${libcarla_source_path}/carla/ros2/${dir}*.h"
+    )
+    install(FILES ${libcarla_carla_ros2_public_headers} DESTINATION include/carla/ros2/${dir})
+  endforeach()
+if (LIBCARLA_USE_ROS)
 
-file(GLOB libcarla_carla_road_element_headers "${libcarla_source_path}/carla/road/element/*.h")
-install(FILES ${libcarla_carla_road_element_headers} DESTINATION include/carla/road/element)
+  file(GLOB subdirs RELATIVE "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}" "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}/*")
+  foreach(typedir "msg" "srv")
+    foreach(dir ${subdirs})
+      if(IS_DIRECTORY "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}/${dir}/${typedir}")
+        file(GLOB libcarla_carla_ros2_types_${dir}_headers
+              "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}/${dir}/${typedir}/*.h"
+        )
+        install(FILES ${libcarla_carla_ros2_types_${dir}_headers} DESTINATION include/carla/ros2/ros_types/${dir}/${typedir}/)
+      endif()
+    endforeach()
+  endforeach()
 
-file(GLOB libcarla_carla_road_general_headers "${libcarla_source_path}/carla/road/general/*.h")
-install(FILES ${libcarla_carla_road_general_headers} DESTINATION include/carla/road/general)
-
-file(GLOB libcarla_carla_road_object_headers "${libcarla_source_path}/carla/road/object/*.h")
-install(FILES ${libcarla_carla_road_object_headers} DESTINATION include/carla/road/object)
-
-file(GLOB libcarla_carla_road_signal_headers "${libcarla_source_path}/carla/road/signal/*.h")
-install(FILES ${libcarla_carla_road_signal_headers} DESTINATION include/carla/road/signal)
-
-file(GLOB libcarla_carla_rpc_headers "${libcarla_source_path}/carla/rpc/*.h")
-install(FILES ${libcarla_carla_rpc_headers} DESTINATION include/carla/rpc)
-
-file(GLOB libcarla_carla_sensor_headers "${libcarla_source_path}/carla/sensor/*.h")
-install(FILES ${libcarla_carla_sensor_headers} DESTINATION include/carla/sensor)
-
-file(GLOB libcarla_carla_sensor_data_headers "${libcarla_source_path}/carla/sensor/data/*.h")
-install(FILES ${libcarla_carla_sensor_data_headers} DESTINATION include/carla/sensor/data)
-
-file(GLOB libcarla_carla_sensor_s11n_headers "${libcarla_source_path}/carla/sensor/s11n/*.h")
-install(FILES ${libcarla_carla_sensor_s11n_headers} DESTINATION include/carla/sensor/s11n)
-
-file(GLOB libcarla_carla_streaming_headers "${libcarla_source_path}/carla/streaming/*.h")
-install(FILES ${libcarla_carla_streaming_headers} DESTINATION include/carla/streaming)
-
-file(GLOB libcarla_carla_streaming_detail_headers "${libcarla_source_path}/carla/streaming/detail/*.h")
-install(FILES ${libcarla_carla_streaming_detail_headers} DESTINATION include/carla/streaming/detail)
-
-file(GLOB libcarla_carla_streaming_detail_tcp_headers "${libcarla_source_path}/carla/streaming/detail/tcp/*.h")
-install(FILES ${libcarla_carla_streaming_detail_tcp_headers} DESTINATION include/carla/streaming/detail/tcp)
-
-file(GLOB libcarla_carla_streaming_low_level_headers "${libcarla_source_path}/carla/streaming/low_level/*.h")
-install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/carla/streaming/low_level)
-
-file(GLOB libcarla_carla_multigpu_headers "${libcarla_source_path}/carla/multigpu/*.h")
-install(FILES ${libcarla_carla_multigpu_headers} DESTINATION include/carla/multigpu)
-
-file(GLOB libcarla_carla_ros2_headers "${libcarla_source_path}/carla/ros2/*.h")
-install(FILES ${libcarla_carla_ros2_headers} DESTINATION include/carla/ros2)
+  if(NOT WIN32)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3" CACHE STRING "" FORCE)
+  endif()
+endif()
 
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
 
@@ -85,47 +58,62 @@ if(WIN32)
 endif()
 
 # carla_server library.
+# first the sources which are picked from some directories
+set(libcarla_server_sources
+  "${libcarla_source_path}/carla/Buffer.cpp"
+  "${libcarla_source_path}/carla/Exception.cpp"
+  "${libcarla_source_path}/carla/StringUtil.cpp"
+  # other cpp files only define Deserialize used in client
+  "${libcarla_source_path}/carla/sensor/s11n/SensorHeaderSerializer.cpp"
+  )
+# then the globs on the folders to add as a whole
+foreach(dir 
+      "actors"
+      "geom"
+      "opendrive" "opendrive/parser" 
+      "profiler"
+      "road" "road/element" "road/general" "road/object" "road/signal"
+      "rpc"
+      "sensor" "sensor/data"
+      "streaming" "streaming/detail" "streaming/detail/tcp" "streaming/low_level"
+      "multigpu")
 
-file(GLOB libcarla_server_sources
-    "${libcarla_source_path}/carla/*.h"
-    "${libcarla_source_path}/carla/Buffer.cpp"
-    "${libcarla_source_path}/carla/Exception.cpp"
-    "${libcarla_source_path}/carla/geom/*.cpp"
-    "${libcarla_source_path}/carla/geom/*.h"
-    "${libcarla_source_path}/carla/opendrive/*.cpp"
-    "${libcarla_source_path}/carla/opendrive/*.h"
-    "${libcarla_source_path}/carla/opendrive/parser/*.cpp"
-    "${libcarla_source_path}/carla/opendrive/parser/*.h"
-    "${libcarla_source_path}/carla/road/*.cpp"
-    "${libcarla_source_path}/carla/road/*.h"
-    "${libcarla_source_path}/carla/road/element/*.cpp"
-    "${libcarla_source_path}/carla/road/element/*.h"
-    "${libcarla_source_path}/carla/road/general/*.cpp"
-    "${libcarla_source_path}/carla/road/general/*.h"
-    "${libcarla_source_path}/carla/road/object/*.cpp"
-    "${libcarla_source_path}/carla/road/object/*.h"
-    "${libcarla_source_path}/carla/road/signal/*.cpp"
-    "${libcarla_source_path}/carla/road/signal/*.h"
-    "${libcarla_source_path}/carla/rpc/*.cpp"
-    "${libcarla_source_path}/carla/rpc/*.h"
-    "${libcarla_source_path}/carla/sensor/*.h"
-    "${libcarla_source_path}/carla/sensor/s11n/*.h"
-    "${libcarla_source_path}/carla/sensor/s11n/SensorHeaderSerializer.cpp"
-    "${libcarla_source_path}/carla/streaming/*.h"
-    "${libcarla_source_path}/carla/streaming/detail/*.cpp"
-    "${libcarla_source_path}/carla/streaming/detail/*.h"
-    "${libcarla_source_path}/carla/streaming/detail/tcp/*.cpp"
-    "${libcarla_source_path}/carla/streaming/low_level/*.h"
-    "${libcarla_source_path}/carla/multigpu/*.h"
-    "${libcarla_source_path}/carla/multigpu/*.cpp"
-    "${libcarla_source_path}/carla/ros2/*.h"
-    "${libcarla_source_path}/carla/ros2/*.cpp"
-    "${libcarla_source_thirdparty_path}/odrSpiral/*.cpp"
-    "${libcarla_source_thirdparty_path}/odrSpiral/*.h"
-    "${libcarla_source_thirdparty_path}/moodycamel/*.cpp"
-    "${libcarla_source_thirdparty_path}/moodycamel/*.h"
-    "${libcarla_source_thirdparty_path}/pugixml/*.cpp"
-    "${libcarla_source_thirdparty_path}/pugixml/*.hpp")
+  file(GLOB sources "${libcarla_source_path}/carla/${dir}/*.cpp")
+  list(APPEND libcarla_server_sources ${sources})
+
+endforeach()
+
+foreach(thirdparty_dir
+        "odrSpiral"
+        "moodycamel"
+        "pugixml")
+
+  file(GLOB sources "${libcarla_source_thirdparty_path}/${thirdparty_dir}/*.cpp")
+  list(APPEND libcarla_server_sources ${sources})
+
+endforeach()
+
+if (LIBCARLA_USE_ROS)
+  foreach(ros2_dir
+          "/"
+          "${ROS2_MW_NAME}/carla/ros2/impl/"
+          "listeners/"
+          "publishers/"
+          "services/"
+          "subscribers/"
+          "types/")
+
+    file(GLOB sources "${libcarla_source_path}/carla/ros2/${ros2_dir}*.cpp")
+    list(APPEND libcarla_server_sources ${sources})
+  endforeach()
+
+  file(GLOB msg_sources "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}/*/msg/*.cxx")
+  list(APPEND libcarla_server_sources ${msg_sources})
+
+  file(GLOB srv_sources "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}/*/srv/*.cxx")
+  list(APPEND libcarla_server_sources ${srv_sources})
+
+endif()
 
 # ==============================================================================
 # Create targets for debug and release in the same build type.
@@ -133,7 +121,10 @@ file(GLOB libcarla_server_sources
 
 if (LIBCARLA_BUILD_RELEASE)
 
-  add_library(carla_server STATIC ${libcarla_server_sources})
+  add_library(carla_server STATIC
+    ${libcarla_server_sources}
+  )
+  target_compile_definitions(carla_server PUBLIC -DCARLA_SERVER_BUILD)
 
   target_include_directories(carla_server SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
@@ -143,11 +134,23 @@ if (LIBCARLA_BUILD_RELEASE)
 
   set_target_properties(carla_server PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
 
+  if (LIBCARLA_USE_ROS)
+    target_include_directories(carla_server SYSTEM PRIVATE
+     # first the ROS2_MW_NAME local folder allowing potential overrides of header files
+     "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}"
+     "${ROS2_MW_INCLUDE_PATH}")
+    target_link_directories(carla_server PRIVATE ${ROS2_MW_LIB_PATH})
+    target_link_libraries(carla_server ${ROS2_MW_LINK_LIBRARIES})
+    target_compile_definitions(carla_server PUBLIC -DWITH_ROS2)
+  endif()
 endif()
 
 if (LIBCARLA_BUILD_DEBUG)
 
-  add_library(carla_server_debug STATIC ${libcarla_server_sources})
+  add_library(carla_server_debug STATIC
+    ${libcarla_server_sources}
+  )
+  target_compile_definitions(carla_server_debug PUBLIC -DCARLA_SERVER_BUILD)
 
   target_include_directories(carla_server_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
@@ -158,4 +161,13 @@ if (LIBCARLA_BUILD_DEBUG)
   set_target_properties(carla_server_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
   target_compile_definitions(carla_server_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
 
+  if (LIBCARLA_USE_ROS)
+    target_include_directories(carla_server_debug SYSTEM PRIVATE
+     # first the ROS2_MW_NAME local folder allowing potential overrides of header files
+     "${libcarla_source_path}/carla/ros2/${ROS2_MW_NAME}"
+     "${ROS2_MW_INCLUDE_PATH}")
+     target_link_directories(carla_server_debug PRIVATE ${ROS2_MW_LIB_PATH})
+     target_link_libraries(carla_server_debug ${ROS2_MW_LINK_LIBRARIES})
+     target_compile_definitions(carla_server_debug PUBLIC -DWITH_ROS2)
+     endif()
 endif()

@@ -6,7 +6,7 @@
 
 DOC_STRING="Build and launch CarlaUE4."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--opengl]"
+USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--opengl] [--ros2]"
 
 REMOVE_INTERMEDIATE=false
 HARD_CLEAN=false
@@ -17,11 +17,13 @@ USE_CHRONO=false
 USE_PYTORCH=false
 USE_UNITY=true
 USE_ROS2=false
+EDITOR_ROS2_FLAGS=""
 
 EDITOR_FLAGS=""
 
 GDB=
 RHI="-vulkan"
+DEBUG=false
 
 OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,ros2,no-unity,editor-flags: -n 'parse-options' -- "$@"`
 
@@ -34,6 +36,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --gdb )
       GDB="gdb --args";
+      shift ;;
+    --debug )
+      DEBUG=true;
       shift ;;
     --build )
       BUILD_CARLAUE4=true;
@@ -66,6 +71,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --ros2 )
       USE_ROS2=true;
+      # Due to continued segfaults in reallocations of MallocBinned2 enforce using AnsiMalloc calls 
+      # (see https://forums.unrealengine.com/t/dealing-with-allocator-mismatches-with-external-libraries/1416830)
+      EDITOR_ROS2_FLAGS="-ansimalloc"
       shift ;;
     --no-unity )
       USE_UNITY=false
@@ -110,7 +118,7 @@ if ${HARD_CLEAN} ; then
 
   log "Doing a \"hard\" clean of the Unreal Engine project."
 
-  make CarlaUE4Editor ARGS=-clean
+  make CarlaUE4Editor ARGS="-clean"
 
 fi
 
@@ -122,15 +130,15 @@ if ${REMOVE_INTERMEDIATE} ; then
 
   rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
 
+  cd Plugins
+  rm -Rf HoudiniEngine
+  cd ..
+
   rm -f Makefile
 
   pushd "${CARLAUE4_PLUGIN_ROOT_FOLDER}" >/dev/null
 
   rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
-
-  cd Plugins
-  rm -Rf HoudiniEngine
-  cd ..
 
   popd >/dev/null
 
@@ -165,12 +173,16 @@ if ${BUILD_CARLAUE4} ; then
   else
     OPTIONAL_MODULES_TEXT="Ros2 OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
+  if ${DEBUG} ; then
+    OPTIONAL_MODULES_TEXT="Debug ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  else
+    OPTIONAL_MODULES_TEXT="Debug OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  fi
   if ${USE_UNITY} ; then
     OPTIONAL_MODULES_TEXT="Unity ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
   else
     OPTIONAL_MODULES_TEXT="Unity OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
-  OPTIONAL_MODULES_TEXT="Fast_dds ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
   echo ${OPTIONAL_MODULES_TEXT} > ${PWD}/Config/OptionalModules.ini
 
   if [ ! -f Makefile ]; then
@@ -200,7 +212,7 @@ fi
 if ${LAUNCH_UE4_EDITOR} ; then
 
   log "Launching UE4Editor..."
-  ${GDB} ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject" ${RHI} ${EDITOR_FLAGS}
+  ${GDB} ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject" ${RHI} ${EDITOR_FLAGS} ${EDITOR_ROS2_FLAGS}
 
 else
 

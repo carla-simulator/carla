@@ -65,7 +65,7 @@ if not "%1"=="" (
 
 rem If not defined, use Visual Studio 2019 as tool set
 if "%TOOLSET%" == "" set TOOLSET=msvc-14.2
-if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
+if "%GENERATOR%" == "" set GENERATOR="Visual Studio 16 2019"
 
 rem If is not set, set the number of parallel jobs to the number of CPU threads
 if "%NUMBER_OF_ASYNC_JOBS%" == "" set NUMBER_OF_ASYNC_JOBS=%NUMBER_OF_PROCESSORS%
@@ -81,14 +81,17 @@ echo %FILE_N% Boost toolset:      %TOOLSET%
 echo %FILE_N% Generator:          %GENERATOR%
 echo %FILE_N% Install directory:  "%INSTALLATION_DIR%"
 
-if not exist "%CONTENT_DIR%" (
-    echo %FILE_N% Creating "%CONTENT_DIR%" folder...
-    mkdir "%CONTENT_DIR%"
-)
-
-if not exist "%INSTALLATION_DIR%" (
-    echo %FILE_N% Creating "%INSTALLATION_DIR%" folder...
-    mkdir "%INSTALLATION_DIR%"
+rem creating some folders
+for %%G in (
+    "%CONTENT_DIR%",
+    "%INSTALLATION_DIR%",
+    "%CARLA_DEPENDENCIES_FOLDER%\include",
+    "%CARLA_DEPENDENCIES_FOLDER%\lib"
+) do (
+    if not exist %%G (
+        echo %FILE_N% Creating "%%G" folder...
+        mkdir "%%G"
+    )
 )
 
 rem ============================================================================
@@ -141,6 +144,8 @@ if not defined install_rpclib (
     echo %FILE_N% Failed while installing rpclib.
     goto failed
 )
+xcopy /Y /S /I %INSTALLATION_DIR%rpclib-install\include\rpc\* %CARLA_DEPENDENCIES_FOLDER%\include\rpc\* > NUL
+copy %INSTALLATION_DIR%rpclib-install\lib\*.* %CARLA_DEPENDENCIES_FOLDER%\lib\ > NUL
 
 rem ============================================================================
 rem -- Download and install Google Test ----------------------------------------
@@ -179,26 +184,6 @@ if not defined install_recast (
 )
 
 rem ============================================================================
-rem -- Download and install Fast-DDS (for ROS2)---------------------------------
-rem ============================================================================
-
-if %USE_ROS2% == true (
-    echo %FILE_N% Installing "Fast-DDS"...
-    call "%INSTALLERS_DIR%install_fastDDS.bat"^
-    --build-dir "%INSTALLATION_DIR%"
-
-    if %errorlevel% neq 0 goto failed
-
-    if not defined install_dds (
-
-        echo %FILE_N% Failed while installing "Fast-DDS".
-        goto failed
-    ) else (
-        set FASTDDS_INSTALL_DIR=%install_dds:\=/%
-    )
-)
-
-rem ============================================================================
 rem -- Download and install Boost ----------------------------------------------
 rem ============================================================================
 
@@ -214,6 +199,27 @@ if %errorlevel% neq 0 goto failed
 if not defined install_boost (
     echo %FILE_N% Failed while installing Boost.
     goto failed
+)
+
+rem ============================================================================
+rem -- Download and install Fast-DDS (for ROS2)---------------------------------
+rem ============================================================================
+
+if %USE_ROS2% == true (
+    echo %FILE_N% Installing "Fast-DDS"...
+    call "%INSTALLERS_DIR%install_fastDDS.bat"^
+    --boost-version %BOOST_VERSION%^
+    --build-dir "%INSTALLATION_DIR%"^
+    --install-dir "%INSTALLATION_DIR%fastDDS-install\"
+
+    if %errorlevel% neq 0 goto failed
+
+    if not defined install_dds (
+        echo %FILE_N% Failed while installing "Fast-DDS".
+        goto failed
+    )
+    copy %INSTALLATION_DIR%fastDDS-install\lib\*.lib %CARLA_DEPENDENCIES_FOLDER%\lib > NUL
+    xcopy /Y /S /I  %INSTALLATION_DIR%fastDDS-install\include\* %CARLA_DEPENDENCIES_FOLDER%\include\* > NUL
 )
 
 rem ============================================================================
@@ -285,81 +291,6 @@ if %USE_CHRONO% == true (
     xcopy /Y /S /I "%INSTALLATION_DIR%eigen-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
 )
 
-REM ==============================================================================
-REM -- Download Fast DDS and dependencies ----------------------------------------
-REM ==============================================================================
-
-SET FASTDDS_BASENAME=fast-dds
-SET FASTDDS_INSTALL_DIR=%CD%\%FASTDDS_BASENAME%-install
-SET FASTDDS_INCLUDE=%FASTDDS_INSTALL_DIR%\include
-SET FASTDDS_LIB=%FASTDDS_INSTALL_DIR%\lib
-IF "%USE_ROS2%"=="true" (
-
-  :build_fastdds_extension
-  SET LIB_SOURCE=%1
-  SET LIB_REPO=%2
-  SET CMAKE_FLAGS=%3
-
-  IF NOT EXIST "%LIB_SOURCE%" (
-    mkdir "%LIB_SOURCE%"
-    echo %LIB_REPO%
-    git clone %LIB_REPO% %LIB_SOURCE%
-    mkdir "%LIB_SOURCE%\build"
-  )
-
-  IF NOT EXIST "%FASTDDS_INSTALL_DIR%" (
-    mkdir "%FASTDDS_INSTALL_DIR%"
-    echo Build foonathan memory vendor
-    SET FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan-memory-vendor
-    SET FOONATHAN_MEMORY_VENDOR_SOURCE_DIR=%CD%\%FOONATHAN_MEMORY_VENDOR_BASENAME%-source
-    SET FOONATHAN_MEMORY_VENDOR_REPO="https://github.com/eProsima/foonathan_memory_vendor.git"
-    SET FOONATHAN_MEMORY_VENDOR_CMAKE_FLAGS=-DBUILD_SHARED_LIBS=ON
-    CALL :build_fastdds_extension "%FOONATHAN_MEMORY_VENDOR_SOURCE_DIR%" "%FOONATHAN_MEMORY_VENDOR_REPO%"
-    pushd "%FOONATHAN_MEMORY_VENDOR_SOURCE_DIR%\build" >nul
-    cmake -G "Ninja" ^
-      -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR%" ^
-      -DBUILD_SHARED_LIBS=ON ^
-      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" ^
-      -DFOONATHAN_MEMORY_FORCE_VENDORED_BUILD=ON ^
-      ..
-    ninja
-    ninja install
-    popd >nul
-    rmdir /s /q "%FOONATHAN_MEMORY_VENDOR_SOURCE_DIR%"
-
-    echo Build fast cdr
-    SET FAST_CDR_BASENAME=fast-cdr
-    SET FAST_CDR_SOURCE_DIR=%CD%\%FAST_CDR_BASENAME%-source
-    SET FAST_CDR_REPO="https://github.com/eProsima/Fast-CDR.git"
-    CALL :build_fastdds_extension "%FAST_CDR_SOURCE_DIR%" "%FAST_CDR_REPO%"
-    pushd "%FAST_CDR_SOURCE_DIR%\build" >nul
-    cmake -G "Ninja" ^
-      -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR%" ^
-      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" ^
-      ..
-    ninja
-    ninja install
-    popd >nul
-    rmdir /s /q "%FAST_CDR_SOURCE_DIR%"
-
-    echo Build fast dds
-    SET FAST_DDS_LIB_BASENAME=fast-dds-lib
-    SET FAST_DDS_LIB_SOURCE_DIR=%CD%\%FAST_DDS_LIB_BASENAME%-source
-    SET FAST_DDS_LIB_REPO="https://github.com/eProsima/Fast-DDS.git"
-    CALL :build_fastdds_extension "%FAST_DDS_LIB_SOURCE_DIR%" "%FAST_DDS_LIB_REPO%"
-    pushd "%FAST_DDS_LIB_SOURCE_DIR%\build" >nul
-    cmake -G "Ninja" ^
-      -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR%" ^
-      -DCMAKE_CXX_FLAGS=-latomic ^
-      -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" ^
-      ..
-    ninja
-    ninja install
-    popd >nul
-    rmdir /
-  )
-)
-
 rem ============================================================================
 rem -- Assets download URL -----------------------------------------------------
 rem ============================================================================
@@ -384,7 +315,7 @@ set CMAKE_CONFIG_FILE=%INSTALLATION_DIR%CMakeLists.txt.in
  >"%CMAKE_CONFIG_FILE%" echo # Automatically generated by Setup.bat
 >>"%CMAKE_CONFIG_FILE%" echo set(CARLA_VERSION %carla_version%)
 >>"%CMAKE_CONFIG_FILE%" echo.
->>"%CMAKE_CONFIG_FILE%" echo set(CMAKE_CXX_STANDARD 14)
+>>"%CMAKE_CONFIG_FILE%" echo set(CMAKE_CXX_STANDARD 20)
 >>"%CMAKE_CONFIG_FILE%" echo set(CMAKE_CXX_STANDARD_REQUIRED ON)
 >>"%CMAKE_CONFIG_FILE%" echo.
 >>"%CMAKE_CONFIG_FILE%" echo add_definitions(-D_WIN32_WINNT=0x0600)
@@ -399,6 +330,11 @@ set CMAKE_CONFIG_FILE=%INSTALLATION_DIR%CMakeLists.txt.in
 >>"%CMAKE_CONFIG_FILE%" echo.
 >>"%CMAKE_CONFIG_FILE%" echo set(RPCLIB_INCLUDE_PATH "%CMAKE_INSTALLATION_DIR%rpclib-install/include")
 >>"%CMAKE_CONFIG_FILE%" echo set(RPCLIB_LIB_PATH "%CMAKE_INSTALLATION_DIR%rpclib-install/lib")
+>>"%CMAKE_CONFIG_FILE%" echo.
+>>"%CMAKE_CONFIG_FILE%" echo set(ROS2_MW_INCLUDE_PATH "%CMAKE_INSTALLATION_DIR%fastDDS-install/include")
+>>"%CMAKE_CONFIG_FILE%" echo set(ROS2_MW_LIB_PATH "%CMAKE_INSTALLATION_DIR%fastDDS-install/lib")
+>>"%CMAKE_CONFIG_FILE%" echo set(ROS2_MW_LINK_LIBRARIES "fastrtps;fastcdr")
+>>"%CMAKE_CONFIG_FILE%" echo set(ROS2_MW_NAME "fastdds")
 >>"%CMAKE_CONFIG_FILE%" echo.
 >>"%CMAKE_CONFIG_FILE%" echo if (CMAKE_BUILD_TYPE STREQUAL "Server")
 >>"%CMAKE_CONFIG_FILE%" echo   # Prevent exceptions

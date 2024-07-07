@@ -12,13 +12,11 @@
  * Fixed bug in python agents when vehicle list was empty causing a check on all vehicles (BasicAgent.py) and detected pedestrians as vehicles if no pedestrains are present (BehaviourAgent.py) 
  * Extended debug drawing functions to allow drawing primitives on HUD layer
  * Added possibility to change gravity variable in imui sensor for the accelerometer
- * Fixed ROS2 native extension build error when ROS2 is installed in the system.
- * ROS2Native: Force fast-dds dependencies download to avoid build crash when boost_asio and tinyxml2 are not installed in Linux.
  * Added API function `get_telemetry_data` to the vehicle actor.
  * PythonAPI `Sensor.is_listening` was defined twice (property and method), cleaned and clarified it as a method.
  * Added V2X sensors for cooperative awareness message and custom user-defined messages to support vehicle-to-vehicle communication
  * Added named tuples for BasicAgent.py's detection result to allow for type-hints and better semantics.
-
+ * Cleaned up the client/server build and respective naming
 
 ## CARLA 0.9.15
 

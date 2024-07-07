@@ -17,8 +17,8 @@
 #include <fastdds/dds/publisher/DataWriter.hpp>
 #include <fastdds/dds/topic/TypeSupport.hpp>
 
-#include <fastdds/dds/domain/qos/DomainParticipantQos.hpp>
-#include <fastdds/dds/domain/DomainParticipantFactory.hpp>
+#include <carla/ros2/ROS2.h>
+#include <carla/ros2/impl/DdsDomainParticipantImpl.h>
 #include <fastdds/dds/publisher/qos/PublisherQos.hpp>
 #include <fastdds/dds/topic/qos/TopicQos.hpp>
 
@@ -35,7 +35,6 @@ namespace ros2 {
   using erc = eprosima::fastrtps::types::ReturnCode_t;
 
   struct CarlaDVSCameraPublisherImpl {
-    efd::DomainParticipant* _participant { nullptr };
     efd::Publisher* _publisher { nullptr };
     efd::Topic* _topic { nullptr };
     efd::DataWriter* _datawriter { nullptr };
@@ -45,7 +44,6 @@ namespace ros2 {
   };
 
   struct CarlaCameraInfoPublisherImpl {
-    efd::DomainParticipant* _participant { nullptr };
     efd::Publisher* _publisher { nullptr };
     efd::Topic* _topic { nullptr };
     efd::DataWriter* _datawriter { nullptr };
@@ -56,7 +54,6 @@ namespace ros2 {
   };
 
   struct CarlaPointCloudPublisherImpl {
-    efd::DomainParticipant* _participant { nullptr };
     efd::Publisher* _publisher { nullptr };
     efd::Topic* _topic { nullptr };
     efd::DataWriter* _datawriter { nullptr };
@@ -85,18 +82,12 @@ namespace ros2 {
         return false;
     }
 
-    efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    pqos.name(_name);
-    auto factory = efd::DomainParticipantFactory::get_instance();
-    _impl->_participant = factory->create_participant(0, pqos);
-    if (_impl->_participant == nullptr) {
-        std::cerr << "Failed to create DomainParticipant" << std::endl;
-        return false;
-    }
-    _impl->_type.register_type(_impl->_participant);
+    auto participant = ROS2::GetDdsDomainParticipant()->GetDomainParticipant();
+
+    _impl->_type.register_type(participant);
 
     efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
-    _impl->_publisher = _impl->_participant->create_publisher(pubqos, nullptr);
+    _impl->_publisher = participant->create_publisher(pubqos, nullptr);
     if (_impl->_publisher == nullptr) {
       std::cerr << "Failed to create Publisher" << std::endl;
       return false;
@@ -110,7 +101,7 @@ namespace ros2 {
       topic_name += _parent + "/";
     topic_name += _name;
     topic_name += publisher_type;
-    _impl->_topic = _impl->_participant->create_topic(topic_name, _impl->_type->getName(), tqos);
+    _impl->_topic = participant->create_topic(topic_name, _impl->_type->getName(), tqos);
     if (_impl->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
         return false;
@@ -134,18 +125,11 @@ namespace ros2 {
         return false;
     }
 
-    efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    pqos.name(_name);
-    auto factory = efd::DomainParticipantFactory::get_instance();
-    _info->_participant = factory->create_participant(0, pqos);
-    if (_info->_participant == nullptr) {
-        std::cerr << "Failed to create DomainParticipant" << std::endl;
-        return false;
-    }
-    _info->_type.register_type(_info->_participant);
+    auto participant = ROS2::GetDdsDomainParticipant()->GetDomainParticipant();
+    _info->_type.register_type(participant);
 
     efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
-    _info->_publisher = _info->_participant->create_publisher(pubqos, nullptr);
+    _info->_publisher = participant->create_publisher(pubqos, nullptr);
     if (_info->_publisher == nullptr) {
       std::cerr << "Failed to create Publisher" << std::endl;
       return false;
@@ -159,7 +143,7 @@ namespace ros2 {
       topic_name += _parent + "/";
     topic_name += _name;
     topic_name += publisher_type;
-    _info->_topic = _info->_participant->create_topic(topic_name, _info->_type->getName(), tqos);
+    _info->_topic = participant->create_topic(topic_name, _info->_type->getName(), tqos);
     if (_info->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
         return false;
@@ -182,18 +166,11 @@ namespace ros2 {
         return false;
     }
 
-    efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    pqos.name(_name);
-    auto factory = efd::DomainParticipantFactory::get_instance();
-    _point_cloud->_participant = factory->create_participant(0, pqos);
-    if (_point_cloud->_participant == nullptr) {
-        std::cerr << "Failed to create DomainParticipant" << std::endl;
-        return false;
-    }
-    _point_cloud->_type.register_type(_point_cloud->_participant);
+    auto participant = ROS2::GetDdsDomainParticipant()->GetDomainParticipant();
+    _point_cloud->_type.register_type(participant);
 
     efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
-    _point_cloud->_publisher = _point_cloud->_participant->create_publisher(pubqos, nullptr);
+    _point_cloud->_publisher = participant->create_publisher(pubqos, nullptr);
     if (_point_cloud->_publisher == nullptr) {
       std::cerr << "Failed to create Publisher" << std::endl;
       return false;
@@ -207,7 +184,7 @@ namespace ros2 {
       topic_name += _parent + "/";
     topic_name += _name;
     topic_name += publisher_type;
-    _point_cloud->_topic = _point_cloud->_participant->create_topic(topic_name, _point_cloud->_type->getName(), tqos);
+    _point_cloud->_topic = participant->create_topic(topic_name, _point_cloud->_type->getName(), tqos);
     if (_point_cloud->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
         return false;
@@ -519,17 +496,16 @@ namespace ros2 {
       if (!_impl)
           return;
 
+      auto participant = ROS2::GetDdsDomainParticipant()->GetDomainParticipant();
       if (_impl->_datawriter)
           _impl->_publisher->delete_datawriter(_impl->_datawriter);
 
       if (_impl->_publisher)
-          _impl->_participant->delete_publisher(_impl->_publisher);
+          participant->delete_publisher(_impl->_publisher);
 
       if (_impl->_topic)
-          _impl->_participant->delete_topic(_impl->_topic);
+          participant->delete_topic(_impl->_topic);
 
-      if (_impl->_participant)
-          efd::DomainParticipantFactory::get_instance()->delete_participant(_impl->_participant);
 
       if (!_info)
           return;
@@ -538,13 +514,10 @@ namespace ros2 {
           _info->_publisher->delete_datawriter(_info->_datawriter);
 
       if (_info->_publisher)
-          _info->_participant->delete_publisher(_info->_publisher);
+          participant->delete_publisher(_info->_publisher);
 
       if (_info->_topic)
-          _info->_participant->delete_topic(_info->_topic);
-
-      if (_info->_participant)
-          efd::DomainParticipantFactory::get_instance()->delete_participant(_info->_participant);
+          participant->delete_topic(_info->_topic);
 
       if (!_point_cloud)
           return;
@@ -553,13 +526,10 @@ namespace ros2 {
           _point_cloud->_publisher->delete_datawriter(_point_cloud->_datawriter);
 
       if (_point_cloud->_publisher)
-          _point_cloud->_participant->delete_publisher(_point_cloud->_publisher);
+          participant->delete_publisher(_point_cloud->_publisher);
 
       if (_point_cloud->_topic)
-          _point_cloud->_participant->delete_topic(_point_cloud->_topic);
-
-      if (_point_cloud->_participant)
-          efd::DomainParticipantFactory::get_instance()->delete_participant(_point_cloud->_participant);
+          participant->delete_topic(_point_cloud->_topic);
   }
 
   CarlaDVSCameraPublisher::CarlaDVSCameraPublisher(const CarlaDVSCameraPublisher& other) {
