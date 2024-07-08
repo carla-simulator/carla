@@ -17,7 +17,7 @@ pipeline
             //{
                 stage('ubuntu')
                 {
-                    agent { label "gpu" }
+                    agent { label "ubuntu_20_04" }
                     environment
                     {
                         UE4_ROOT = '/home/jenkins/UnrealEngine_4.26'
@@ -132,7 +132,7 @@ pipeline
                                                 dir('doc_repo')
                                                 {
                                                     checkout scmGit(
-                                                        branches: [[name: '*/master']], 
+                                                        branches: [[name: '*/dev']], 
                                                         extensions: [
                                                             cleanBeforeCheckout(),
                                                             checkoutOption(120), 
@@ -207,6 +207,7 @@ pipeline
                                     {
                                         stage('ubuntu smoke tests')
                                         {
+                                            agent { label "gpu_20_04" }
                                             steps
                                             {
                                                 unstash name: 'ubuntu_eggs'
@@ -315,7 +316,7 @@ pipeline
                                                             tar -xvzf carla_doc.tar.gz
                                                             git add Doxygen
                                                             git commit -m "Updated c++ docs" || true
-                                                            git push --set-upstream origin ruben/jenkins_migration
+                                                            git push --set-upstream origin dev
                                                         '''
                                                     }
                                                 }
