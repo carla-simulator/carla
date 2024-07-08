@@ -40,13 +40,11 @@ DdsDomainParticipantImpl::DdsDomainParticipantImpl() {
 }
 
 DdsDomainParticipantImpl::~DdsDomainParticipantImpl() {
-  std::cerr << "~DdsDomainParticipantImpl" << std::endl;
   carla::log_warning("DdsDomainParticipantImpl::Destructor()");
   if ((_participant != nullptr) && (_factory != nullptr)) {
     _factory->delete_participant(_participant);
     _participant=nullptr;
   }
-  std::cerr << "~DdsDomainParticipantImpl end" << std::endl;
 }
 
 }  // namespace ros2
