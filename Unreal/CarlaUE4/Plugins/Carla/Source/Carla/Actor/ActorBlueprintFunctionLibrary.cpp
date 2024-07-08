@@ -1613,6 +1613,13 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
   IsInvincible.bRestrictToRecommended = false;
   Definition.Variations.Emplace(IsInvincible);
 
+  FActorVariation WheelChairVariation;
+  WheelChairVariation.Id = TEXT("use_wheelchair");
+  WheelChairVariation.Type = EActorAttributeType::Bool;
+  WheelChairVariation.RecommendedValues = { TEXT("true"), TEXT("false") };
+  WheelChairVariation.bRestrictToRecommended = false;
+  Definition.Variations.Emplace(WheelChairVariation);
+
   Success = CheckActorDefinition(Definition);
 }
 
