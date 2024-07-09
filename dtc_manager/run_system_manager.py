@@ -100,7 +100,7 @@ def _setup_vehicle_actors(world, scenario_file, bp_library):
         sensor_actor.enable_for_ros()
         actors.append(sensor_actor)
 
-        logging.debug(' Creating LiDAR Sensor')
+        logging.debug(' Creating RADAR Sensor')
         sensor = bp_library.filter('sensor.other.radar')[0]
         sensor.set_attribute("role_name",          'front_radar')
         sensor.set_attribute("ros_name",           'front_radar')
