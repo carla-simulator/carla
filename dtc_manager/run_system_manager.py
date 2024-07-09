@@ -10,6 +10,7 @@ import threading
 from rclpy.node import Node
 from std_msgs.msg import Bool
 from std_msgs.msg import Empty
+from std_msgs.msg import String
 from sensor_msgs.msg import Imu
 import time
 
@@ -45,6 +46,22 @@ class SimulationStartNode(Node):
 
     def set_start(self, msg):
         self._start = True
+
+class SimulationAudioNode(Node):
+
+    def __init__(self):
+        super().__init__("carla_audio_system")
+        self.publisher = self.create_publisher(String, "/current_audio_file", 10)
+        self._audio_file_name = "Null"
+        self._timer = self.create_timer(0.1, self.publish_audio)
+
+    def publish_audio(self):
+        msg = String()
+        msg.data = self._audio_file_name
+        self.publisher.publish(msg)
+    
+    def set_audio(self, file_name):
+        self._audio_file_name = file_name
 
 class SimulationIMUNode(Node):
 
@@ -221,10 +238,12 @@ def main(args):
     rclpy.init()
     simulation_status_node = SimulationStatusNode()
     simulation_start_node = SimulationStartNode()
+    simulation_audio_node = SimulationAudioNode()
     simulation_imu_node = SimulationIMUNode()
     executor = rclpy.executors.MultiThreadedExecutor()
     executor.add_node(simulation_status_node)
     executor.add_node(simulation_start_node)
+    executor.add_node(simulation_audio_node)
     executor.add_node(simulation_imu_node)
     world = None
     old_world = None
