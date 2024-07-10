@@ -6,7 +6,6 @@
 
 #include "Carla/Sensor/InstanceSegmentationCamera.h"
 #include "Carla.h"
-#include "Carla/Game/TaggedComponent.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
 #include "Components/SceneCaptureComponent2D.h"
@@ -30,40 +29,13 @@ AInstanceSegmentationCamera::AInstanceSegmentationCamera(
 void AInstanceSegmentationCamera::SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture)
 {
   Super::SetUpSceneCaptureComponent(SceneCapture);
-
-  //ApplyViewMode(VMI_Unlit, true, SceneCapture.ShowFlags);
-
-  /*SceneCapture.ShowFlags.SetNotDrawTaggedComponents(false); // TaggedComponent detects this and sets view relevance for proxy material
-
-  SceneCapture.ShowFlags.SetAtmosphere(false);
-
-  SceneCapture.PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
-
-  TArray<UObject *> TaggedComponents;
-  GetObjectsOfClass(UTaggedComponent::StaticClass(), TaggedComponents, false, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags::AllFlags);
-
-  //TArray<UPrimitiveComponent *> ShowOnlyComponents;
-  for (UObject *Object : TaggedComponents) {
-    UPrimitiveComponent *Component = Cast<UPrimitiveComponent>(Object);
-    SceneCapture.ShowOnlyComponents.Emplace(Component);
-  }*/
 }
 
 void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AInstanceSegmentationCamera::PostPhysTick);
   Super::PostPhysTick(World, TickType, DeltaSeconds);
-
-  /*USceneCaptureComponent2D* SceneCapture = GetCaptureComponent2D();
-  TArray<UObject *> TaggedComponents;
-  GetObjectsOfClass(UTaggedComponent::StaticClass(), TaggedComponents, false, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags::AllFlags);
-
-  SceneCapture->ClearShowOnlyComponents();
-  for (UObject *Object : TaggedComponents) {
-    UPrimitiveComponent *Component = Cast<UPrimitiveComponent>(Object);
-    SceneCapture->ShowOnlyComponents.Emplace(Component);
-  }*/
-
+  
   auto FrameIndex = FCarlaEngine::GetFrameCounter();
   ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
     TArrayView<const FColor> Pixels,
