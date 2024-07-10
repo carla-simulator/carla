@@ -28,6 +28,46 @@ waypoints:
     zone: 1
   waypoint_10:
     zone: 2
+  waypoint_11:
+    zone: 17
+  waypoint_12:
+    zone: 19
+  waypoint_13:
+    zone: 20
+  waypoint_14:
+    zone: 18
+  waypoint_15:
+    zone: 16
+  waypoint_16:
+    zone: 15
+  waypoint_17:
+    zone: 14
+  waypoint_18:
+    zone: 13
+  waypoint_19:
+    zone: 11
+  waypoint_20:
+    zone: 22
+  waypoint_21:
+    zone: 27
+  waypoint_22:
+    zone: 29
+  waypoint_23:
+    zone: 30
+  waypoint_24:
+    zone: 28
+  waypoint_25:
+    zone: 26
+  waypoint_26:
+    zone: 25
+  waypoint_27:
+    zone: 24
+  waypoint_28:
+    zone: 23
+  waypoint_29:
+    zone: 21
+  waypoint_30:
+    zone: 12
 
 # Casualty List: Defines which casualty types to spawn and in which zone locations. Arguments include:
 # zone: The zone number that corresponds to the waypoint to spawn the casualty in.
@@ -35,31 +75,91 @@ waypoints:
 casualties:
   casualty_1:
     zone: 1
-    casualty_type: BP_Casualty_02
+    casualty_type: BP_Casualty_01
   casualty_2:
     zone: 2
-    casualty_type: BP_Casualty_17
+    casualty_type: BP_Casualty_02
   casualty_3:
     zone: 3
-    casualty_type: BP_Casualty_04
+    casualty_type: BP_Casualty_03
   casualty_4:
     zone: 4
-    casualty_type: BP_Casualty_05
+    casualty_type: BP_Casualty_04
   casualty_5:
     zone: 5
-    casualty_type: BP_Casualty_06
+    casualty_type: BP_Casualty_05
   casualty_6:
     zone: 6
-    casualty_type: BP_Casualty_21
+    casualty_type: BP_Casualty_06
   casualty_7:
     zone: 7
-    casualty_type: BP_Casualty_15
+    casualty_type: BP_Casualty_07
   casualty_8:
     zone: 8
-    casualty_type: BP_Casualty_01
+    casualty_type: BP_Casualty_08
   casualty_9:
     zone: 9
-    casualty_type: BP_Casualty_30
+    casualty_type: BP_Casualty_09
   casualty_10:
     zone: 10
-    casualty_type: BP_Casualty_42
+    casualty_type: BP_Casualty_10
+  casualty_11:
+    zone: 11
+    casualty_type: BP_Casualty_11
+  casualty_12:
+    zone: 12
+    casualty_type: BP_Casualty_12
+  casualty_13:
+    zone: 13
+    casualty_type: BP_Casualty_13
+  casualty_14:
+    zone: 14
+    casualty_type: BP_Casualty_14
+  casualty_15:
+    zone: 15
+    casualty_type: BP_Casualty_15
+  casualty_16:
+    zone: 16
+    casualty_type: BP_Casualty_16
+  casualty_17:
+    zone: 17
+    casualty_type: BP_Casualty_17
+  casualty_18:
+    zone: 18
+    casualty_type: BP_Casualty_18
+  casualty_19:
+    zone: 19
+    casualty_type: BP_Casualty_19
+  casualty_20:
+    zone: 20
+    casualty_type: BP_Casualty_20
+  casualty_21:
+    zone: 21
+    casualty_type: BP_Casualty_21
+  casualty_22:
+    zone: 22
+    casualty_type: BP_Casualty_22
+  casualty_23:
+    zone: 23
+    casualty_type: BP_Casualty_23
+  casualty_24:
+    zone: 24
+    casualty_type: BP_Casualty_24
+  casualty_25:
+    zone: 25
+    casualty_type: BP_Casualty_25
+  casualty_26:
+    zone: 26
+    casualty_type: BP_Casualty_26
+  casualty_27:
+    zone: 27
+    casualty_type: BP_Casualty_27
+  casualty_28:
+    zone: 28
+    casualty_type: BP_Casualty_28
+  casualty_29:
+    zone: 29
+    casualty_type: BP_Casualty_29
+  casualty_30:
+    zone: 30
+    casualty_type: BP_Casualty_30
