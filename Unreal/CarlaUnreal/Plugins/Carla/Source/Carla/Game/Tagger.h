@@ -79,7 +79,14 @@ public:
     const FString Path = Object->GetPathName();
     TArray<FString> StringArray;
     Path.ParseIntoArray(StringArray, TEXT("/"), false);
-    return (StringArray.Num() > 4 ? GetLabelByFolderName(StringArray[4]) : crp::CityObjectLabel::None);
+    if(Path.Contains("UE5UseOnly"))
+    {
+      return (StringArray.Num() > 5 ? GetLabelByFolderName(StringArray[5]) : crp::CityObjectLabel::None);
+    }
+    else
+    {
+      return (StringArray.Num() > 4 ? GetLabelByFolderName(StringArray[4]) : crp::CityObjectLabel::None);
+    }
   }
 
   /// Method that computes the label corresponding to an specific object

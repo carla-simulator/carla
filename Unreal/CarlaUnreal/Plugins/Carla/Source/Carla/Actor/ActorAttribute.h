@@ -24,6 +24,7 @@ enum class EActorAttributeType : uint8
   Float     = CARLA_ENUM_FROM_RPC(Float)     UMETA(DisplayName = "Float"),
   String    = CARLA_ENUM_FROM_RPC(String)    UMETA(DisplayName = "String"),
   RGBColor  = CARLA_ENUM_FROM_RPC(RGBColor)  UMETA(DisplayName = "RGB Color (comma separated)"),
+  Vector    = CARLA_ENUM_FROM_RPC(Vector)    UMETA(DisplayName = "3 Components vector (comma separated)"),
 
   SIZE        UMETA(Hidden),
   INVALID     UMETA(Hidden)

@@ -41,7 +41,7 @@ void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickTyp
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
   {
-    SendImageDataToClient(*this, Pixels, FrameIndex);
+    SendDataToClient(*this, Pixels, FrameIndex);
     return true;
   });
 }
