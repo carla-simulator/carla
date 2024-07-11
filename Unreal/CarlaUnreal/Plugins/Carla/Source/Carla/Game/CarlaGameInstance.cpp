@@ -20,3 +20,13 @@ UCarlaGameInstance::UCarlaGameInstance() {
 }
 
 UCarlaGameInstance::~UCarlaGameInstance() = default;
+
+UCarlaGameInstance* UCarlaGameInstance::Get(const UObject* WorldContext)
+{
+	if (WorldContext == nullptr)
+	{
+		return nullptr;
+	}
+	UWorld* World = WorldContext->GetWorld();
+	return World ? Cast<UCarlaGameInstance>(World->GetGameInstance()) : nullptr;
+}

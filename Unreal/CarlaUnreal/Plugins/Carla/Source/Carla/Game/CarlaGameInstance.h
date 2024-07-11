@@ -40,6 +40,14 @@ public:
     return *CarlaSettings;
   }
 
+  UFUNCTION(BlueprintImplementableEvent, Category = "DTC")
+  void HandlePreIRCapture();
+
+   UFUNCTION(BlueprintImplementableEvent, Category = "DTC")
+  void HandlePostIRCapture();
+
+  static UCarlaGameInstance* Get(const UObject* WorldContext);
+
   const UCarlaSettings &GetCarlaSettings() const
   {
     check(CarlaSettings != nullptr);
