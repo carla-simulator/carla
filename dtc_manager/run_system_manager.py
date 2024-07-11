@@ -40,13 +40,27 @@ class SimulationStartNode(Node):
     def __init__(self):
         super().__init__("carla_simulation_start")
         self._start = False
+        self._start_time = None
+        self._timeout = 300000000000 # 5 minutes in nanoseconds
         self.subscriber = self.create_subscription(Empty, "/simulation_start", self.set_start, 10)
     
     def get_start(self):
         return self._start
+    
+    def check_timeout(self):
+        if self._start_time is None:
+            return False
+
+        if self.get_clock().now().nanoseconds - self._start_time >= self._timeout:
+            return True
+        return False
 
     def set_start(self, msg):
         self._start = True
+        if self._start_time is None:
+            self._start_time = self.get_clock().now().nanoseconds
+            logging.info("  Start Time: %s", self._start_time)
+
 
 class SimulationAudioNode(Node):
 
@@ -416,8 +430,13 @@ def main(args):
                 
                 # Check if the vehicle has been stationary long enough to close the simulation (4 seconds)
                 if stationary_count >= 4 / settings.fixed_delta_seconds:
-                    logging.info("  Mission Completed...")
+                    logging.info("  Mission Completed... All Waypoints have Completed")
                     break
+
+                if simulation_start_node.check_timeout():
+                    logging.info("  Mission Completed... Timeout Reached")
+                    break
+
             except:
                 logging.info('  CARLA Client no longer connected, likely a system crash or the mission completed')
                 raise Exception("CARLA Client no longer connected")
