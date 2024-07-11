@@ -259,7 +259,7 @@ def main(args):
         weather.precipitation=0.00000
         weather.precipitation_deposits=0.00000
         weather.wind_intensity=5.000000
-        weather.sun_azimuth_angle=220.000000
+        weather.sun_azimuth_angle=-1.000000
         weather.sun_altitude_angle=45.000000
         weather.fog_density=0.000000
         weather.fog_distance=0.750000
