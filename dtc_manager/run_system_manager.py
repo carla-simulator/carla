@@ -253,6 +253,23 @@ def main(args):
         settings.synchronous_mode = True
         settings.fixed_delta_seconds = 0.05
 
+        # Get and modify the weather
+        weather = old_world.get_weather()            
+        weather.cloudiness=10.000000
+        weather.precipitation=0.00000
+        weather.precipitation_deposits=0.00000
+        weather.wind_intensity=5.000000
+        weather.sun_azimuth_angle=-1.000000
+        weather.sun_altitude_angle=45.000000
+        weather.fog_density=0.000000
+        weather.fog_distance=0.750000
+        weather.fog_falloff=0.250000
+        weather.wetness=0.000000
+        weather.scattering_intensity=1.000000
+        weather.mie_scattering_scale=0.003996
+        weather.rayleigh_scattering_scale=0.033100
+        weather.dust_storm=0.000000
+
         # Change CARLA Map to desired map
         if 'map' in scenario_file:
             logging.debug(' Checking for Map: %s', scenario_file['map'])
@@ -263,6 +280,7 @@ def main(args):
                     client.load_world(map)
                     world = client.get_world()
                     world.apply_settings(settings)
+                    world.set_weather(weather)
                     break
         else:
             logging.info("  No Map in Scenario File")
