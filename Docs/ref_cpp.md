@@ -1,4 +1,15 @@
 # C++ Reference 
+
+## C++ client
+
+The C++ client can be built with `make` on Linux and `cmake` in Windows. An C++ client example is provided in the repository in `CARLA_ROOT/Examples/CppClient/main.cpp`. This example shows how to connect the C++ client to the CARLA server and use the API for some simple tasks. 
+
+To build the example C++ client, open a terminal in the `CARLA_ROOT/Examples/CppClient` directory in the repository. Run `make` in this folder and then execute `./bin/cpp_client` to run the example. The example will choose a random map from those available then load it. It will then spawn a vehicle and apply a control to the vehicle. 
+
+Please see the [C++ client example](adv_cpp_client.md) for more details on this example script.
+
+## C++ documentation
+
 We use Doxygen to generate the documentation of our C++ code:
 
 [Libcarla/Source](http://carla.org/Doxygen/html/dir_b9166249188ce33115fd7d5eed1849f2.html)<br>
