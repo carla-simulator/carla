@@ -61,7 +61,6 @@ class SimulationStartNode(Node):
             self._start_time = self.get_clock().now().nanoseconds
             logging.info("  Start Time: %s", self._start_time)
 
-
 class SimulationAudioNode(Node):
 
     def __init__(self):
@@ -237,6 +236,19 @@ def _setup_vehicle_actors(world, scenario_file, bp_library):
         sensor_actor.enable_for_ros()
         actors.append(sensor_actor)
 
+        logging.debug(' Creating RADAR Sensor')
+        sensor = bp_library.filter('sensor.other.radar')[0]
+        sensor.set_attribute("role_name",          'front_radar')
+        sensor.set_attribute("ros_name",           'front_radar')
+        sensor.set_attribute("horizontal_fov",     '30')
+        sensor.set_attribute("vertical_fov",       '30')
+        sensor.set_attribute("range",              '50')
+        sensor.set_attribute("sensor_tick",        '0.1')
+        sensor_spawn = carla.Transform(location=carla.Location(x=0, y=0, z=1.2), rotation=carla.Rotation(roll=0, pitch=-6.305, yaw=0))
+        sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
+        sensor_actor.enable_for_ros()
+        actors.append(sensor_actor)
+
         logging.debug(' Creating RGB Sensor')
         sensor = bp_library.filter('sensor.camera.rgb')[0]
         sensor.set_attribute("role_name",    'front_rgb')
@@ -244,7 +256,7 @@ def _setup_vehicle_actors(world, scenario_file, bp_library):
         sensor.set_attribute("image_size_x", '1920')
         sensor.set_attribute("image_size_y", '1200')
         sensor.set_attribute("fov",          '90.0')
-        sensor.set_attribute("sensor_tick",  '0.1')
+        sensor.set_attribute("sensor_tick",  '0.05')
         sensor_spawn = carla.Transform(location=carla.Location(x=0, y=0, z=1.2), rotation=carla.Rotation(roll=0, pitch=-20, yaw=0))
         sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
         sensor_actor.enable_for_ros()
@@ -257,7 +269,7 @@ def _setup_vehicle_actors(world, scenario_file, bp_library):
         sensor.set_attribute("image_size_x", '1920')
         sensor.set_attribute("image_size_y", '1200')
         sensor.set_attribute("fov",          '90.0')
-        sensor.set_attribute("sensor_tick",  '0.1')
+        sensor.set_attribute("sensor_tick",  '0.05')
         sensor_spawn = carla.Transform(location=carla.Location(x=0, y=0, z=1.2), rotation=carla.Rotation(roll=0, pitch=-20, yaw=0))
         sensor_actor = world.spawn_actor(sensor, sensor_spawn, attach_to=vehicle)
         sensor_actor.enable_for_ros()
@@ -430,11 +442,11 @@ def main(args):
                 
                 # Check if the vehicle has been stationary long enough to close the simulation (4 seconds)
                 if stationary_count >= 4 / settings.fixed_delta_seconds:
-                    logging.info("  Mission Completed... All Waypoints have Completed")
+                    logging.info("  Mission Completed... Completed all Waypoints")
                     break
 
                 if simulation_start_node.check_timeout():
-                    logging.info("  Mission Completed... Timeout Reached")
+                    logging.info("  Mission Completed... Exceeded Time Limit")
                     break
 
             except:
