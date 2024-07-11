@@ -2,32 +2,73 @@
 
 # Map Argument: Defines which Unreal map to load into, options include:
 # StartingWorld: a blank empty space that Unreal opens into, also the map that loads when something goes wrong.
-# L_Razish_Carla: The Test Map for executing missions. Has 10 Zones.
-map: L_Razish_Carla
+# L_Razish_Carla: The Desert Map for executing missions. Has 30 Zones.
+# L_TrainCrash_Carla: The Train Crash Map for executing missions. Has 30 Zones.
+map: L_TrainCrash_Carla
 
 # Waypoint List: Defines which waypoints and in which order the robot should traverse. Arguments include:
 # zone: The zone number that corresponds to the waypoint to traverse to.
 waypoints:
   waypoint_1:
-    zone: 7
-  waypoint_2:
-    zone: 9
-  waypoint_3:
-    zone: 10
-  waypoint_4:
-    zone: 8
-  waypoint_5:
-    zone: 6
-  waypoint_6:
-    zone: 5
-  waypoint_7:
-    zone: 4
-  waypoint_8:
-    zone: 3
-  waypoint_9:
     zone: 1
-  waypoint_10:
+  waypoint_2:
     zone: 2
+  waypoint_3:
+    zone: 3
+  waypoint_4:
+    zone: 4
+  waypoint_5:
+    zone: 5
+  waypoint_6:
+    zone: 6
+  waypoint_7:
+    zone: 7
+  waypoint_8:
+    zone: 8
+  waypoint_9:
+    zone: 9
+  waypoint_10:
+    zone: 10
+  waypoint_11:
+    zone: 11
+  waypoint_12:
+    zone: 12
+  waypoint_13:
+    zone: 13
+  waypoint_14:
+    zone: 14
+  waypoint_15:
+    zone: 15
+  waypoint_16:
+    zone: 16
+  waypoint_17:
+    zone: 17
+  waypoint_18:
+    zone: 18
+  waypoint_19:
+    zone: 19
+  waypoint_20:
+    zone: 20
+  waypoint_21:
+    zone: 21
+  waypoint_22:
+    zone: 22
+  waypoint_23:
+    zone: 23
+  waypoint_24:
+    zone: 24
+  waypoint_25:
+    zone: 25
+  waypoint_26:
+    zone: 26
+  waypoint_27:
+    zone: 27
+  waypoint_28:
+    zone: 28
+  waypoint_29:
+    zone: 29
+  waypoint_30:
+    zone: 30
 
 # Casualty List: Defines which casualty types to spawn and in which zone locations. Arguments include:
 # zone: The zone number that corresponds to the waypoint to spawn the casualty in.
@@ -35,31 +76,91 @@ waypoints:
 casualties:
   casualty_1:
     zone: 1
-    casualty_type: BP_Casualty_02
+    casualty_type: BP_Casualty_31
   casualty_2:
     zone: 2
-    casualty_type: BP_Casualty_17
+    casualty_type: BP_Casualty_32
   casualty_3:
     zone: 3
-    casualty_type: BP_Casualty_04
+    casualty_type: BP_Casualty_33
   casualty_4:
     zone: 4
-    casualty_type: BP_Casualty_05
+    casualty_type: BP_Casualty_34
   casualty_5:
     zone: 5
-    casualty_type: BP_Casualty_06
+    casualty_type: BP_Casualty_35
   casualty_6:
     zone: 6
-    casualty_type: BP_Casualty_21
+    casualty_type: BP_Casualty_36
   casualty_7:
     zone: 7
-    casualty_type: BP_Casualty_15
+    casualty_type: BP_Casualty_37
   casualty_8:
     zone: 8
-    casualty_type: BP_Casualty_01
+    casualty_type: BP_Casualty_38
   casualty_9:
     zone: 9
-    casualty_type: BP_Casualty_30
+    casualty_type: BP_Casualty_39
   casualty_10:
     zone: 10
+    casualty_type: BP_Casualty_40
+  casualty_11:
+    zone: 11
+    casualty_type: BP_Casualty_41
+  casualty_12:
+    zone: 12
     casualty_type: BP_Casualty_42
+  casualty_13:
+    zone: 13
+    casualty_type: BP_Casualty_43
+  casualty_14:
+    zone: 14
+    casualty_type: BP_Casualty_44
+  casualty_15:
+    zone: 15
+    casualty_type: BP_Casualty_45
+  casualty_16:
+    zone: 16
+    casualty_type: BP_Casualty_46
+  casualty_17:
+    zone: 17
+    casualty_type: BP_Casualty_47
+  casualty_18:
+    zone: 18
+    casualty_type: BP_Casualty_48
+  casualty_19:
+    zone: 19
+    casualty_type: BP_Casualty_49
+  casualty_20:
+    zone: 20
+    casualty_type: BP_Casualty_50
+  casualty_21:
+    zone: 21
+    casualty_type: BP_Casualty_51
+  casualty_22:
+    zone: 22
+    casualty_type: BP_Casualty_52
+  casualty_23:
+    zone: 23
+    casualty_type: BP_Casualty_53
+  casualty_24:
+    zone: 24
+    casualty_type: BP_Casualty_54
+  casualty_25:
+    zone: 25
+    casualty_type: BP_Casualty_55
+  casualty_26:
+    zone: 26
+    casualty_type: BP_Casualty_56
+  casualty_27:
+    zone: 27
+    casualty_type: BP_Casualty_57
+  casualty_28:
+    zone: 28
+    casualty_type: BP_Casualty_58
+  casualty_29:
+    zone: 29
+    casualty_type: BP_Casualty_59
+  casualty_30:
+    zone: 30
+    casualty_type: BP_Casualty_60
