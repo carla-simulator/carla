@@ -11,6 +11,7 @@ from rclpy.node import Node
 from std_msgs.msg import Bool
 from std_msgs.msg import Empty
 from std_msgs.msg import String
+from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import Imu
 from sensor_msgs.msg import NavSatFix
 import time
@@ -41,7 +42,7 @@ class SimulationStartNode(Node):
         super().__init__("carla_simulation_start")
         self._start = False
         self._start_time = None
-        self._timeout = 300000000000 # 5 minutes in nanoseconds
+        self._timeout = 1800000000000 # 30 minutes in nanoseconds
         self.subscriber = self.create_subscription(Empty, "/simulation_start", self.set_start, 10)
     
     def get_start(self):
@@ -86,15 +87,31 @@ class SimulationGNSSNode(Node):
         self._last_imu_message = None
         self._last_gnss_message = None
         self._has_moved = False
+        self._is_stationary = False
+        self._new_gnss_msg = False
+        self._new_imu_msg = False
+        self._should_track = False
         self._current_waypoint = 0
         self._time_at_waypoint = 0
-        self._eps = 0.0001
-        self._is_at_waypoint_not_moving = True
+        self._gps_eps = 0.000001
+        self._imu_eps = 0.001
+        self._is_at_waypoint_not_moving = False
         self._last_gnss_header_checked = None
-        self.subscriber = self.create_subscription(Imu,       "/carla/dtc_vehicle/imu",  self.set_imu,  10)
-        self.subscriber = self.create_subscription(NavSatFix, "/carla/dtc_vehicle/gnss", self.set_gnss, 10)
+        self.subscriber = self.create_subscription(Imu,       "/carla/dtc_vehicle/imu",  self.set_imu,       10)
+        self.subscriber = self.create_subscription(NavSatFix, "/carla/dtc_vehicle/gnss", self.set_gnss,      10)
+        self.subscriber = self.create_subscription(Clock,     "/clock",                  self.is_stationary, 10)
     
-    def is_stationary(self):
+    def is_stationary(self, msg):
+        # Check that we should be tracking stationary movement
+        if not self._should_track:
+            return False
+
+        # Check that there are actually new messages and this information will not be checked multiple times
+        if self._new_gnss_msg and self._new_imu_msg:
+            # Reset so that we are waiting for new messages again
+            self._new_gnss_msg = False
+            self._new_imu_msg = False
+
         # Will check if the previous and current IMU messages are identical.
         # When Linear Accel and Angular Vel differentials are both 0,
         # The vehicle is assumed to be stationary
@@ -109,33 +126,30 @@ class SimulationGNSSNode(Node):
 
         # Assume stationary and set to False if movement detected in any direction
         # this is done on a per axis basis but could be made better is linear math used
-        is_stationary = True
-        if abs(self._last_imu_message.angular_velocity.x - self._current_imu_message.angular_velocity.x) > self._eps:
-            is_stationary = False
-        if abs(self._last_imu_message.angular_velocity.y - self._current_imu_message.angular_velocity.y) > self._eps:
-            is_stationary = False
-        if abs(self._last_imu_message.angular_velocity.z - self._current_imu_message.angular_velocity.z) > self._eps:
-            is_stationary = False
-        if abs(self._last_imu_message.linear_acceleration.x - self._current_imu_message.linear_acceleration.x) > self._eps:
-            is_stationary = False
-        if abs(self._last_imu_message.linear_acceleration.y - self._current_imu_message.linear_acceleration.y) > self._eps:
-            is_stationary = False
-        if abs(self._last_imu_message.linear_acceleration.z - self._current_imu_message.linear_acceleration.z) > self._eps:
-            is_stationary = False
+        self._is_stationary = True
+        if abs(self._last_imu_message.angular_velocity.x - self._current_imu_message.angular_velocity.x) > self._imu_eps:
+            self._is_stationary = False
+        if abs(self._last_imu_message.angular_velocity.y - self._current_imu_message.angular_velocity.y) > self._imu_eps:
+            self._is_stationary = False
+        if abs(self._last_imu_message.angular_velocity.z - self._current_imu_message.angular_velocity.z) > self._imu_eps:
+            self._is_stationary = False
 
         # Assume at a waypoint and set to False if movement detected in any direction
         is_at_waypoint = True
-        if abs(self._last_gnss_message.latitude - self._current_gnss_message.latitude) > self._eps:
+        if abs(self._last_gnss_message.latitude - self._current_gnss_message.latitude) > self._gps_eps:
             is_at_waypoint = False
-        if abs(self._last_gnss_message.longitude - self._current_gnss_message.longitude) > self._eps:
+            self._is_stationary = False
+        if abs(self._last_gnss_message.longitude - self._current_gnss_message.longitude) > self._gps_eps:
             is_at_waypoint = False
-        if abs(self._last_gnss_message.altitude - self._current_gnss_message.altitude) > self._eps:
+            self._is_stationary = False
+        if abs(self._last_gnss_message.altitude - self._current_gnss_message.altitude) > self._gps_eps:
             is_at_waypoint = False
+            self._is_stationary = False
 
         # Check if the vehicle has moved at all. We want this to only trigger at the end, the sim starts with the vehicle
         # stationary. So return False until the vehicle has moved.
         if not self._has_moved:
-            if not is_stationary:
+            if not self._is_stationary:
                 self._has_moved = True
             return False
 
@@ -150,21 +164,27 @@ class SimulationGNSSNode(Node):
         elif not is_at_waypoint:
             self._is_at_waypoint_not_moving = False
             self._time_at_waypoint=0
-
-        return is_stationary
     
+    def get_is_stationary(self):
+        return self._is_stationary
+
     def get_current_waypoint(self):
         return self._current_waypoint
+    
+    def start_tracking(self):
+        self._should_track = True
 
     def set_imu(self, msg):
         if self._current_imu_message is not None:
             self._last_imu_message = self._current_imu_message
         self._current_imu_message = msg
+        self._new_imu_msg = True
 
     def set_gnss(self, msg):
         if self._current_gnss_message is not None:
             self._last_gnss_message = self._current_gnss_message
         self._current_gnss_message = msg
+        self._new_gnss_msg = True
 
 def _setup_waypoint_actors(world, scenario_file, bp_library):
     if 'waypoints' not in scenario_file:
@@ -341,21 +361,21 @@ def main(args):
         settings.fixed_delta_seconds = 0.05
 
         # Get and modify the weather
-        weather = old_world.get_weather()            
-        weather.cloudiness=10.000000
-        weather.precipitation=0.00000
-        weather.precipitation_deposits=0.00000
-        weather.wind_intensity=5.000000
-        weather.sun_azimuth_angle=-1.000000
-        weather.sun_altitude_angle=45.000000
-        weather.fog_density=0.000000
-        weather.fog_distance=0.750000
-        weather.fog_falloff=0.250000
-        weather.wetness=0.000000
-        weather.scattering_intensity=1.000000
-        weather.mie_scattering_scale=0.003996
-        weather.rayleigh_scattering_scale=0.033100
-        weather.dust_storm=0.000000
+        # weather = old_world.get_weather()            
+        # weather.cloudiness=10.000000
+        # weather.precipitation=0.00000
+        # weather.precipitation_deposits=0.00000
+        # weather.wind_intensity=5.000000
+        # weather.sun_azimuth_angle=-1.000000
+        # weather.sun_altitude_angle=45.000000
+        # weather.fog_density=0.000000
+        # weather.fog_distance=0.750000
+        # weather.fog_falloff=0.250000
+        # weather.wetness=0.000000
+        # weather.scattering_intensity=1.000000
+        # weather.mie_scattering_scale=0.003996
+        # weather.rayleigh_scattering_scale=0.033100
+        # weather.dust_storm=0.000000
 
         # Change CARLA Map to desired map
         if 'map' in scenario_file:
@@ -367,7 +387,7 @@ def main(args):
                     client.load_world(map)
                     world = client.get_world()
                     world.apply_settings(settings)
-                    world.set_weather(weather)
+                    #world.set_weather(weather)
                     break
         else:
             logging.info("  No Map in Scenario File")
@@ -392,23 +412,23 @@ def main(args):
         # Audio Mapping is {'Zone':'Audio File Name'}
         zone_audio_map = {}
         audio_map = {}
-        waypoint_iteration = 0
+        num_waypoints = 0
         if 'audio_map' in scenario_file:
             for casualty_name in scenario_file['casualties']:
                 casualty = scenario_file['casualties'][casualty_name]
                 zone_audio_map[str(casualty['zone'])] = scenario_file['audio_map'][casualty['casualty_type']]
             for waypoint_name in scenario_file['waypoints']:
                 waypoint = scenario_file['waypoints'][waypoint_name]
-                waypoint_iteration+=1
-                audio_map[str(waypoint_iteration)] = zone_audio_map[str(waypoint['zone'])]  
+                num_waypoints+=1
+                audio_map[str(num_waypoints)] = zone_audio_map[str(waypoint['zone'])]
         else:
             logging.info("  No Audio Mapping in Scenario File")
             raise Exception("No Audio Mapping in Scenario File")
         logging.debug(" Audio Mapping: %s", audio_map)
 
-        # Start Simulation, need to process a few frames to fully load things
+        # Start Simulation, need to process a second of frames to fully load things
         logging.info("  Starting Simulation...")
-        for step in range(5):
+        for step in range(20):
             _ = world.tick()
         simulation_status_node.set_status(True)
         stationary_count = 0
@@ -419,6 +439,7 @@ def main(args):
                     logging.info("  Running Mission...")
                     tracked_actors.append(world.spawn_actor(functor_start_simulation_bp, global_transform))
                     mission_started = True
+                    simulation_gnss_node.start_tracking()
 
                 # Tick the simulation if the mission has been started, otherwise, wait for the start command
                 if mission_started:
@@ -429,19 +450,18 @@ def main(args):
                     stationary_count=0
 
                 # Check if the vehicle is stationary, if not, reset the stationary count
-                if simulation_gnss_node.is_stationary():
+                if simulation_gnss_node.get_is_stationary():
                     stationary_count+=1
                 else:
                     stationary_count=0
                 
                 # Get the current waypoint, if not 0, set the audio file name that should be published
-                if simulation_gnss_node.get_current_waypoint() != waypoint_iteration:
+                if simulation_gnss_node.get_current_waypoint() != 0 and not simulation_gnss_node.get_current_waypoint() > num_waypoints:
                     # Since waypoint order is not sequential, we need to check this waypoint against the actual zone it maps to
-                    waypoint_iteration = simulation_gnss_node.get_current_waypoint()
-                    simulation_audio_node.set_audio(str(audio_map[str(waypoint_iteration + 1)]))
+                    simulation_audio_node.set_audio(str(audio_map[str(simulation_gnss_node.get_current_waypoint())]))
                 
-                # Check if the vehicle has been stationary long enough to close the simulation (4 seconds)
-                if stationary_count >= 4 / settings.fixed_delta_seconds:
+                # Check if the vehicle has been stationary long enough to close the simulation (5 seconds)
+                if stationary_count >= 5 / settings.fixed_delta_seconds:
                     logging.info("  Mission Completed... Completed all Waypoints")
                     break
 
