@@ -186,10 +186,11 @@ Provides measures that accelerometer, gyroscope and compass would retrieve for t
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
 | `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `accelerometer`      | [carla.Vector3D](<../python_api#carlavector3d>)    | Measures linear acceleration in `m/s^2`.     |
-| `gyroscope`        | [carla.Vector3D](<../python_api#carlavector3d>)    | Measures angular velocity in `rad/sec`.      |
-| `compass`          | float | Orientation in radians. North is `(0.0, -1.0, 0.0)` in UE.       |
+| `gyroscope`        | [carla.Vector3D](<../python_api#carlavector3d>)    | Measures angular velocity in `rad/s`.      |
+| `compass`          | float | Orientation in radians. North is 0 radians.     |
 
-
+!!! note
+     For the compass, North is 0 radians. East is *pi*/2 radians, South is *pi* radians, West is 3*pi*/2 radians. North is in the direction of decreasing Y in CARLA's global coordinate system. East is in the direction of increasing X. The compass value converted to degrees is equal to 90 - yaw.
 
 ---
 ## Lane invasion detector
