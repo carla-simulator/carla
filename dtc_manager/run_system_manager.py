@@ -7,7 +7,9 @@ import logging
 import carla
 import rclpy
 import threading
+import numpy as np
 from rclpy.node import Node
+from nav_msgs.msg import Odometry
 from std_msgs.msg import Bool
 from std_msgs.msg import Empty
 from std_msgs.msg import String
@@ -19,6 +21,27 @@ import time
 python_file_path = os.path.realpath(__file__)
 python_file_path = python_file_path.replace('run_system_manager.py', '')
 global_transform = carla.Transform(carla.Location(x=0, y=0, z=0), carla.Rotation(yaw=180))
+
+
+def get_quaternion_from_euler(roll, pitch, yaw):
+    """
+    Online Available rpy to quat conversion
+    Convert an Euler angle to a quaternion.
+
+    Input
+    :param roll: The roll (rotation around x-axis) angle in radians.
+    :param pitch: The pitch (rotation around y-axis) angle in radians.
+    :param yaw: The yaw (rotation around z-axis) angle in radians.
+
+    Output
+    :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+    """
+    qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+    qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+    qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+
+    return [qx, qy, qz, qw]
 
 class SimulationStatusNode(Node):
 
@@ -186,6 +209,52 @@ class SimulationGNSSNode(Node):
         self._current_gnss_message = msg
         self._new_gnss_msg = True
 
+class SimulationVehicleOdometryNode(Node):
+
+    def __init__(self):
+        super().__init__("carla_vehicle_odometry_node")
+        self._vehicle = None
+        self._simulation_started = False
+        self.publisher = self.create_publisher(Odometry, "/carla/dtc_vehicle/odometry", 10)
+        self._timer = self.create_timer(0.1, self.publish_odom)
+
+    def publish_odom(self):
+        if self._vehicle is None or self._simulation_started == False:
+            return
+
+        msg = Odometry()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = 'dtc_vehicle'
+        msg.child_frame_id = 'dtc_vehicle'
+
+        transform = self._vehicle.get_transform()
+
+        # Pose Y needs to be flipped
+        msg.pose.pose.position.x = transform.location.x
+        msg.pose.pose.position.y = -transform.location.y
+        msg.pose.pose.position.z = transform.location.z
+
+        # RPY comes in degrees, convert to rads, pitch and yaw needs to be converted to right hand rule
+        roll = transform.rotation.roll * 0.0174533
+        pitch = -transform.rotation.pitch * 0.0174533
+        yaw = -transform.rotation.yaw * 0.0174533
+        quat = get_quaternion_from_euler(roll, pitch, yaw)
+        # returned [qx, qy, qz, qw]
+        msg.pose.pose.orientation.x = quat[0]
+        msg.pose.pose.orientation.y = quat[1]
+        msg.pose.pose.orientation.z = quat[2]
+        msg.pose.pose.orientation.w = quat[3]
+
+        # NOTE TO ANYONE READING, Twist Used because the current system doesn't use physics
+
+        self.publisher.publish(msg)
+    
+    def set_vehicle(self, vehicle):
+        self._vehicle = vehicle
+
+    def set_start(self):
+        self._simulation_started = True
+
 def _setup_waypoint_actors(world, scenario_file, bp_library):
     if 'waypoints' not in scenario_file:
         logging.info("  No Waypoints defined in Scenario File")
@@ -328,11 +397,13 @@ def main(args):
     simulation_start_node = SimulationStartNode()
     simulation_audio_node = SimulationAudioNode()
     simulation_gnss_node = SimulationGNSSNode()
+    simulation_odom_node = SimulationVehicleOdometryNode()
     executor = rclpy.executors.MultiThreadedExecutor()
     executor.add_node(simulation_status_node)
     executor.add_node(simulation_start_node)
     executor.add_node(simulation_audio_node)
     executor.add_node(simulation_gnss_node)
+    executor.add_node(simulation_odom_node)
     world = None
     old_world = None
     original_settings = None
@@ -405,6 +476,8 @@ def main(args):
 
         # Create Vehicle with sensors
         vehicle_actors = _setup_vehicle_actors(world, scenario_file, bp_library)
+        if len(vehicle_actors) > 0:
+            simulation_odom_node.set_vehicle(vehicle_actors[0])
         for actor in vehicle_actors:
            tracked_actors.append(actor)
 
@@ -440,6 +513,7 @@ def main(args):
                     tracked_actors.append(world.spawn_actor(functor_start_simulation_bp, global_transform))
                     mission_started = True
                     simulation_gnss_node.start_tracking()
+                    simulation_odom_node.set_start()
 
                 # Tick the simulation if the mission has been started, otherwise, wait for the start command
                 if mission_started:
