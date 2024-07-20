@@ -41,7 +41,7 @@ void AIRCamera::BeginPlay()
 {
   Super::BeginPlay();
 
-	IRMPC = LoadObject<UMaterialParameterCollection>(NULL, TEXT("Plugins/dtc_plugin/Content/DARPA/Materials/MPC/MPC_IR.uasset"), NULL, LOAD_None, NULL);
+	IRMPC = LoadObject<UMaterialParameterCollection>(NULL, TEXT("/Plugins/dtc_plugin/Content/DARPA/Materials/MPC/MPC_IR.uasset"), NULL, LOAD_None, NULL);
 }
 
 void AIRCamera::OnFirstClientConnected()
