@@ -4,7 +4,7 @@
 # StartingWorld: a blank empty space that Unreal opens into, also the map that loads when something goes wrong.
 # L_Razish_Carla: The Desert Map for executing missions. Has 30 Zones.
 # L_TrainCrash_Carla: The Train Crash Map for executing missions. Has 30 Zones.
-map: L_TrainCrash_Carla
+map: L_Razish_Carla
 
 # Waypoint List: Defines which waypoints and in which order the robot should traverse. Arguments include:
 # zone: The zone number that corresponds to the waypoint to traverse to.
@@ -73,94 +73,252 @@ waypoints:
 # Casualty List: Defines which casualty types to spawn and in which zone locations. Arguments include:
 # zone: The zone number that corresponds to the waypoint to spawn the casualty in.
 # casualty_type: The casualty type to spawn. 60 Casualties from 01 to 60 exist for this scenario.
+#### First 30
 casualties:
   casualty_1:
     zone: 1
-    casualty_type: BP_Casualty_31
+    casualty_type: BP_Casualty_01
   casualty_2:
     zone: 2
-    casualty_type: BP_Casualty_32
+    casualty_type: BP_Casualty_02
   casualty_3:
     zone: 3
-    casualty_type: BP_Casualty_33
+    casualty_type: BP_Casualty_03
   casualty_4:
     zone: 4
-    casualty_type: BP_Casualty_34
+    casualty_type: BP_Casualty_04
   casualty_5:
     zone: 5
-    casualty_type: BP_Casualty_35
+    casualty_type: BP_Casualty_05
   casualty_6:
     zone: 6
-    casualty_type: BP_Casualty_36
+    casualty_type: BP_Casualty_06
   casualty_7:
     zone: 7
-    casualty_type: BP_Casualty_37
+    casualty_type: BP_Casualty_07
   casualty_8:
     zone: 8
-    casualty_type: BP_Casualty_38
+    casualty_type: BP_Casualty_08
   casualty_9:
     zone: 9
-    casualty_type: BP_Casualty_39
+    casualty_type: BP_Casualty_09
   casualty_10:
     zone: 10
-    casualty_type: BP_Casualty_40
+    casualty_type: BP_Casualty_10
   casualty_11:
     zone: 11
-    casualty_type: BP_Casualty_41
+    casualty_type: BP_Casualty_11
   casualty_12:
     zone: 12
-    casualty_type: BP_Casualty_42
+    casualty_type: BP_Casualty_12
   casualty_13:
     zone: 13
-    casualty_type: BP_Casualty_43
+    casualty_type: BP_Casualty_13
   casualty_14:
     zone: 14
-    casualty_type: BP_Casualty_44
+    casualty_type: BP_Casualty_14
   casualty_15:
     zone: 15
-    casualty_type: BP_Casualty_45
+    casualty_type: BP_Casualty_15
   casualty_16:
     zone: 16
-    casualty_type: BP_Casualty_46
+    casualty_type: BP_Casualty_16
   casualty_17:
     zone: 17
-    casualty_type: BP_Casualty_47
+    casualty_type: BP_Casualty_17
   casualty_18:
     zone: 18
-    casualty_type: BP_Casualty_48
+    casualty_type: BP_Casualty_18
   casualty_19:
     zone: 19
-    casualty_type: BP_Casualty_49
+    casualty_type: BP_Casualty_19
   casualty_20:
     zone: 20
-    casualty_type: BP_Casualty_50
+    casualty_type: BP_Casualty_20
   casualty_21:
     zone: 21
-    casualty_type: BP_Casualty_51
+    casualty_type: BP_Casualty_21
   casualty_22:
     zone: 22
-    casualty_type: BP_Casualty_52
+    casualty_type: BP_Casualty_22
   casualty_23:
     zone: 23
-    casualty_type: BP_Casualty_53
+    casualty_type: BP_Casualty_23
   casualty_24:
     zone: 24
-    casualty_type: BP_Casualty_54
+    casualty_type: BP_Casualty_24
   casualty_25:
     zone: 25
-    casualty_type: BP_Casualty_55
+    casualty_type: BP_Casualty_25
   casualty_26:
     zone: 26
-    casualty_type: BP_Casualty_56
+    casualty_type: BP_Casualty_26
   casualty_27:
     zone: 27
-    casualty_type: BP_Casualty_57
+    casualty_type: BP_Casualty_27
   casualty_28:
     zone: 28
-    casualty_type: BP_Casualty_58
+    casualty_type: BP_Casualty_28
   casualty_29:
     zone: 29
-    casualty_type: BP_Casualty_59
+    casualty_type: BP_Casualty_29
   casualty_30:
     zone: 30
-    casualty_type: BP_Casualty_60
+    casualty_type: BP_Casualty_30
+
+#### Last 30
+# casualties:
+#   casualty_1:
+#     zone: 1
+#     casualty_type: BP_Casualty_31
+#   casualty_2:
+#     zone: 2
+#     casualty_type: BP_Casualty_32
+#   casualty_3:
+#     zone: 3
+#     casualty_type: BP_Casualty_33
+#   casualty_4:
+#     zone: 4
+#     casualty_type: BP_Casualty_34
+#   casualty_5:
+#     zone: 5
+#     casualty_type: BP_Casualty_35
+#   casualty_6:
+#     zone: 6
+#     casualty_type: BP_Casualty_36
+#   casualty_7:
+#     zone: 7
+#     casualty_type: BP_Casualty_37
+#   casualty_8:
+#     zone: 8
+#     casualty_type: BP_Casualty_38
+#   casualty_9:
+#     zone: 9
+#     casualty_type: BP_Casualty_39
+#   casualty_10:
+#     zone: 10
+#     casualty_type: BP_Casualty_40
+#   casualty_11:
+#     zone: 11
+#     casualty_type: BP_Casualty_41
+#   casualty_12:
+#     zone: 12
+#     casualty_type: BP_Casualty_42
+#   casualty_13:
+#     zone: 13
+#     casualty_type: BP_Casualty_43
+#   casualty_14:
+#     zone: 14
+#     casualty_type: BP_Casualty_44
+#   casualty_15:
+#     zone: 15
+#     casualty_type: BP_Casualty_45
+#   casualty_16:
+#     zone: 16
+#     casualty_type: BP_Casualty_46
+#   casualty_17:
+#     zone: 17
+#     casualty_type: BP_Casualty_47
+#   casualty_18:
+#     zone: 18
+#     casualty_type: BP_Casualty_48
+#   casualty_19:
+#     zone: 19
+#     casualty_type: BP_Casualty_49
+#   casualty_20:
+#     zone: 20
+#     casualty_type: BP_Casualty_50
+#   casualty_21:
+#     zone: 21
+#     casualty_type: BP_Casualty_51
+#   casualty_22:
+#     zone: 22
+#     casualty_type: BP_Casualty_52
+#   casualty_23:
+#     zone: 23
+#     casualty_type: BP_Casualty_53
+#   casualty_24:
+#     zone: 24
+#     casualty_type: BP_Casualty_54
+#   casualty_25:
+#     zone: 25
+#     casualty_type: BP_Casualty_55
+#   casualty_26:
+#     zone: 26
+#     casualty_type: BP_Casualty_56
+#   casualty_27:
+#     zone: 27
+#     casualty_type: BP_Casualty_57
+#   casualty_28:
+#     zone: 28
+#     casualty_type: BP_Casualty_58
+#   casualty_29:
+#     zone: 29
+#     casualty_type: BP_Casualty_59
+#   casualty_30:
+#     zone: 30
+#     casualty_type: BP_Casualty_60
+
+# Audio Mapping: Defines which audio file will go to what casualty. Not used by Competitors in the competition.
+# casualty_name: audio_file_name 
+audio_map:
+  BP_Casualty_01: Null
+  BP_Casualty_02: Line18-L
+  BP_Casualty_03: Line20-L
+  BP_Casualty_04: Null
+  BP_Casualty_05: Line19-B
+  BP_Casualty_06: Line20-L
+  BP_Casualty_07: Line17-B
+  BP_Casualty_08: Line21-L
+  BP_Casualty_09: Line17-L
+  BP_Casualty_10: Line18-B
+  BP_Casualty_11: Line19-B
+  BP_Casualty_12: Line20-B
+  BP_Casualty_13: Line19-L
+  BP_Casualty_14: Line18-L
+  BP_Casualty_15: Line20-B
+  BP_Casualty_16: Line19-L
+  BP_Casualty_17: Line17-B
+  BP_Casualty_18: Line17-L
+  BP_Casualty_19: Line18-B
+  BP_Casualty_20: Line20-L
+  BP_Casualty_21: Line18-L
+  BP_Casualty_22: Line17-B
+  BP_Casualty_23: Line20-L
+  BP_Casualty_24: Line17-L
+  BP_Casualty_25: Null
+  BP_Casualty_26: Line19-B
+  BP_Casualty_27: Line20-B
+  BP_Casualty_28: Line19-L
+  BP_Casualty_29: Line20-L
+  BP_Casualty_30: Line19-B
+  BP_Casualty_31: Line21-L
+  BP_Casualty_32: Line20-L
+  BP_Casualty_33: Line12-B
+  BP_Casualty_34: Line18-B
+  BP_Casualty_35: Line16-L
+  BP_Casualty_36: Null
+  BP_Casualty_37: Line5-L
+  BP_Casualty_38: Line18-L
+  BP_Casualty_39: Line12-L
+  BP_Casualty_40: Line16-B
+  BP_Casualty_41: Null
+  BP_Casualty_42: Null
+  BP_Casualty_43: Line13-L
+  BP_Casualty_44: Line17-L
+  BP_Casualty_45: Line7-L
+  BP_Casualty_46: Line2-L
+  BP_Casualty_47: Line11-B
+  BP_Casualty_48: Null
+  BP_Casualty_49: Line14-B
+  BP_Casualty_50: Null
+  BP_Casualty_51: Line13-L
+  BP_Casualty_52: Line18-B
+  BP_Casualty_53: Line10-L
+  BP_Casualty_54: Line14-B
+  BP_Casualty_55: Line15-L
+  BP_Casualty_56: Line6-B
+  BP_Casualty_57: Line17-L
+  BP_Casualty_58: Line2-B
+  BP_Casualty_59: Null
+  BP_Casualty_60: Null
