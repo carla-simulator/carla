@@ -13,9 +13,6 @@ class CARLA_API AIRCamera : public AShaderBasedSensor
 {
 	GENERATED_BODY()
 
-protected:
-	UMaterialParameterCollection* IRMPC;
-
 public:
 
 	
