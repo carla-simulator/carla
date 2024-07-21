@@ -3,7 +3,7 @@
 # Map Argument: Defines which Unreal map to load into, options include:
 # StartingWorld: a blank empty space that Unreal opens into, also the map that loads when something goes wrong.
 # L_Razish_Carla: The Desert Map for executing missions. Has 30 Zones.
-# L_TrainCrash_Carla: The Train Crash Map for executing missions. Has 30 Zones.
+# L_TrainCrash_Carla: The Train Crash Map for executing missions. Has 30 Zones. (Not Released)
 map: L_Razish_Carla
 
 # Waypoint List: Defines which waypoints and in which order the robot should traverse. Arguments include:

@@ -34,14 +34,12 @@ AIRCamera::AIRCamera(const FObjectInitializer& ObjectInitializer)
 
 	AddPostProcessingMaterial(TEXT("Material'/Game/DTC/IRCamera/PP_IR_Thermal.PP_IR_Thermal'"));
 	AddPostProcessingMaterial(TEXT("Material'/Game/DTC/IRCamera/PP_CameraBlur.PP_CameraBlur'"));
-    IRMPC = nullptr;
 }
 
 void AIRCamera::BeginPlay()
 {
   Super::BeginPlay();
 
-	IRMPC = LoadObject<UMaterialParameterCollection>(NULL, TEXT("/Plugins/dtc_plugin/Content/DARPA/Materials/MPC/MPC_IR.uasset"), NULL, LOAD_None, NULL);
 }
 
 void AIRCamera::OnFirstClientConnected()
