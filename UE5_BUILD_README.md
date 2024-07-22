@@ -16,11 +16,13 @@ Clone the `ue5-dev` branch of CARLA on your local machine:
 git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
 ```
 
-Run the setup script:
+Run the setup script with your GitHub credentials:
+> [!NOTE]
+> * This version of CARLA requires the **CARLA fork of Unreal Engine 5.3**. You need to link your GitHub account to Epic Games in order to gain permission to clone the UE repository. If you have not already linked your accounts, follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github)
 
 ```sh
 cd CarlaUE5
-bash -x Setup.sh
+env GIT_LOCAL_CREDENTIALS=your_user@your_token bash -x Setup.sh
 ```
 
 The Setup.sh script installs all the required packages, including Cmake, debian packages, Python packages and Unreal Engine 5.3. It also downloads the CARLA content and builds CARLA. This script can therefore take a long time to complete. 
