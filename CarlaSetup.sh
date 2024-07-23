@@ -35,6 +35,15 @@ satisfies_minimum_version() {
 set -e
 sudo echo "Got super powers..."
 
+echo "Parsing GIT_LOCAL_CREDENTIALS local variable "
+arrIN=(${GIT_LOCAL_CREDENTIALS//@/ })
+GIT_LOCAL_USER=${arrIN[0]}
+GIT_LOCAL_TOKEN=${arrIN[1]}
+if [ -z "$GIT_LOCAL_CREDENTIALS" ]
+then
+    echo "Git credentials are not set, they will be requested later on during the download of Unreal Engine Carla fork"
+fi
+
 echo "Installing Ubuntu Pacakges..."
 if ! command -v retry &> /dev/null
 then
@@ -103,7 +112,12 @@ else
     echo "Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - FAIL"
     echo "Cloning CARLA UnrealEngine5..."
     pushd ..
-    git clone -b ue5-dev-carla https://github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla
+    if [ -z "$GIT_LOCAL_CREDENTIALS" ]
+    then
+        git clone -b ue5-dev-carla https://github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla
+    else
+        git clone -b ue5-dev-carla https://$GIT_LOCAL_USER:$GIT_LOCAL_TOKEN@github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla
+    fi
     pushd UnrealEngine5_carla
     echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$PWD >> ~/.bashrc
     export CARLA_UNREAL_ENGINE_PATH=$PWD
