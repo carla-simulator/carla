@@ -1,5 +1,19 @@
 from enum import Enum
-from typing import Callable, Iterable, Iterator, Union, Optional, overload
+from typing import Callable, Iterable, Iterator, Union, Optional, overload, ClassVar
+    
+class __CarlaEnum(Enum):
+    """
+    CARLA's Enums have a `values` entry that is not part of the python enum.Enum class.
+    This abstract class adds this method.
+    """
+        
+    values : ClassVar[dict[int, "__CarlaEnum"]]
+    names  : ClassVar[dict[str, "__CarlaEnum"]]
+    
+    def __init_subclass__(cls):
+        cls.values : dict[int, cls]
+        cls.names  : dict[str, cls]
+         
 
 
 class AckermannControllerSettings():
@@ -373,7 +387,7 @@ class ActorAttribute():
     # endregion
 
 
-class ActorAttributeType(Enum):
+class ActorAttributeType(__CarlaEnum):
     """CARLA provides a library of blueprints for actors in `carla.BlueprintLibrary` with different attributes each. This class defines the types those at `carla.ActorAttribute` can be as a series of enum. All this information is managed internally and listed here for a better comprehension of how CARLA works.
     """
     # region Instance Variables
@@ -575,7 +589,7 @@ class ActorSnapshot():
     # endregion
 
 
-class ActorState(Enum):
+class ActorState(__CarlaEnum):
     """Class that defines the state of an actor."""
     # region Instance Variables
     Invalid = 0,
@@ -587,7 +601,7 @@ class ActorState(Enum):
     # endregion
 
 
-class AttachmentType(Enum):
+class AttachmentType(__CarlaEnum):
     """Class that defines attachment options between an actor and its parent. When spawning actors, these can be attached to another actor so their position changes accordingly. This is specially useful for sensors. The snippet in `carla.World.spawn_actor` shows some sensors being attached to a car when spawned.
 
     + Note that the attachment type is declared as an enum within the class."""
@@ -742,7 +756,7 @@ class BoundingBox():
     # endregion
 
 
-class CityObjectLabel(Enum):
+class CityObjectLabel(__CarlaEnum):
     """Enum declaration that contains the different tags available to filter the bounding boxes returned by carla.World.get_level_bbs(). These values correspond to the semantic tag that the elements in the scene have."""
     NONE = 0,
     Buildings = 3,
@@ -1076,7 +1090,7 @@ class Color():
     # endregion
 
 
-class ColorConverter(Enum):
+class ColorConverter(__CarlaEnum):
     """Class that defines conversion patterns that can be applied to a `carla.Image` in order to show information provided by `carla.Sensor`. Depth conversions cause a loss of accuracy, as sensors detect depth as float that is then converted to a grayscale value between 0 and 255. Take a look at the snippet in `carla.Sensor.listen` to see an example of how to create and save image data for `sensor.camera.semantic_segmentation`.
     """
 
@@ -1317,7 +1331,7 @@ class FloatColor():
     # endregion
 
 
-class GBufferTextureID(Enum):
+class GBufferTextureID(__CarlaEnum):
     """Defines the identifiers of each GBuffer texture (See the method `carla.Sensor.listen_to_gbuffer`)."""
 
     # region Instance Variables
@@ -1710,7 +1724,7 @@ class Landmark():
     # endregion
 
 
-class LandmarkOrientation(Enum):
+class LandmarkOrientation(__CarlaEnum):
     """Helper class to define the orientation of a landmark in the road. The definition is not directly translated from OpenDRIVE but converted for the sake of understanding."""
 
     # region Instance Variables
@@ -1725,6 +1739,9 @@ class LandmarkOrientation(Enum):
 
 class LandmarkType(Enum):
     """Helper class containing a set of commonly used landmark types as defined by the default country code in the OpenDRIVE standard (Germany 2017). `carla.Landmark` does not reference this class. The landmark type is a string that varies greatly depending on the country code being used. This class only makes it easier to manage some of the most commonly used in the default set by describing them as an enum."""
+    
+    # NOTE: Has no attributes for `values` and `names`
+    
     # region Instance Variables
     Danger = "101",
     LanesMerging = "121",
@@ -1764,7 +1781,7 @@ class LandmarkType(Enum):
     # endregion
 
 
-class LaneChange(Enum):
+class LaneChange(__CarlaEnum):
     """Class that defines the permission to turn either left, right, both or none (meaning only going straight is allowed). This information is stored for every `carla.Waypoint` according to the OpenDRIVE file. The snippet in `carla.Map.get_waypoint` shows how a waypoint can be used to learn which turns are permitted."""
 
     # region Instance Variables
@@ -1820,7 +1837,7 @@ class LaneMarking():
     # endregion
 
 
-class LaneMarkingColor(Enum):
+class LaneMarkingColor(__CarlaEnum):
     """Class that defines the lane marking colors according to OpenDRIVE 1.4."""
 
     # region Instance Variables
@@ -1835,7 +1852,7 @@ class LaneMarkingColor(Enum):
     # endregion
 
 
-class LaneMarkingType(Enum):
+class LaneMarkingType(__CarlaEnum):
     """Class that defines the lane marking types accepted by OpenDRIVE 1.4. The snippet in `carla.Map.get_waypoint` shows how a waypoint can be used to retrieve the information about adjacent lane markings.
 
     + Note on double types: Lane markings are defined under the OpenDRIVE standard that determines whereas a line will be considered "BrokenSolid" or "SolidBroken". For each road there is a center lane marking, defined from left to right regarding the lane's directions. The rest of the lane markings are defined in order from the center lane to the closest outside of the road.
@@ -1856,7 +1873,7 @@ class LaneMarkingType(Enum):
     # endregion
 
 
-class LaneType(Enum):
+class LaneType(__CarlaEnum):
     """Class that defines the possible lane types accepted by OpenDRIVE 1.4. This standards define the road information. The snippet in `carla.Map.get_waypoint` makes use of a waypoint to get the current and adjacent lane types."""
 
     # region Instance Variables
@@ -2032,7 +2049,7 @@ class Light():
     # endregion
 
 
-class LightGroup(Enum):
+class LightGroup(__CarlaEnum):
     """This class categorizes the lights on scene into different groups. These groups available are provided as a enum values that can be used as flags.
 
     + Note. So far, though there is a `vehicle` group, vehicle lights are not available as `carla.Light` objects. These have to be managed using `carla.Vehicle` and `carla.VehicleLightState`."""
@@ -2460,7 +2477,7 @@ class Map():
     # endregion
 
 
-class MapLayer(Enum):
+class MapLayer(__CarlaEnum):
     """Class that represents each manageable layer of the map. Can be used as flags.
 
     + WARNING: Only "Opt" maps are able to work with map layers."""
@@ -2478,7 +2495,7 @@ class MapLayer(Enum):
     """All layers selected."""
 
 
-class MaterialParameter(Enum):
+class MaterialParameter(__CarlaEnum):
     """Class that represents material parameters. Not all objects in the scene contain all parameters."""
 
     # region Instance Variables
@@ -3236,7 +3253,7 @@ class TrafficLight(TrafficSign):
     # endregion
 
 
-class TrafficLightState(Enum):
+class TrafficLightState(__CarlaEnum):
     """All possible states for traffic lights. These can either change at a specific time step or be changed manually. The snippet in `carla.TrafficLight.set_state` changes the state of a traffic light on the fly."""
     Red = 0,
     Yellow = 1,
@@ -3921,7 +3938,7 @@ class VehicleControl():
     # endregion
 
 
-class VehicleDoor(Enum):
+class VehicleDoor(__CarlaEnum):
     """Possible index representing the possible doors that can be open. Notice that not all possible doors are able to open in some vehicles."""
     FL = 0,
     """Front left door."""
@@ -3935,7 +3952,7 @@ class VehicleDoor(Enum):
     """Represents all doors."""
 
 
-class VehicleFailureState(Enum):
+class VehicleFailureState(__CarlaEnum):
     """Enum containing the different failure states of a vehicle, from which the it cannot recover. These are returned by get_failure_state() and only Rollover is currently implemented."""
 
     NONE = 0,
@@ -3944,7 +3961,7 @@ class VehicleFailureState(Enum):
     TirePuncture = 3,
 
 
-class VehicleLightState(Enum):
+class VehicleLightState(__CarlaEnum):
     """Class that recaps the state of the lights of a vehicle, these can be used as a flags.
 
     E.g: `VehicleLightState.HighBeam & VehicleLightState.Brake` will return `True` when both are active.
@@ -4089,7 +4106,7 @@ class VehiclePhysicsControl():
     # endregion
 
 
-class VehicleWheelLocation(Enum):
+class VehicleWheelLocation(__CarlaEnum):
     """enum representing the position of each wheel on a vehicle. Used to identify the target wheel when setting an angle in `carla.Vehicle.set_wheel_steer_direction` or `carla.Vehicle.get_wheel_steer_angle`."""
     FL_Wheel = 0,
     """Front left wheel of a 4 wheeled vehicle."""
