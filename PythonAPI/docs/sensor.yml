@@ -25,10 +25,6 @@
         - [V2X sensor](ref_sensors.md#v2x-sensor)
     # - PROPERTIES -------------------------
     instance_variables:
-    - var_name: is_listening
-      type: boolean
-      doc: >
-        When **True** the sensor will be waiting for data. 
     # - METHODS ----------------------------
     methods:
     - def_name: listen
