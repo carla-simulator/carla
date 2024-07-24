@@ -931,7 +931,7 @@ Initializes a color, black by default.
 ---
 
 ## carla.GBufferTextureID<a name="carla.GBufferTextureID"></a>
-Defines the of each GBuffer texture (See the method `[carla.Sensor.listen_to_gbuffer](#carla.Sensor.listen_to_gbuffer)`).  
+Defines the identifiers of each GBuffer texture (See the method [carla.Sensor.listen_to_gbuffer](#carla.Sensor.listen_to_gbuffer)).  
 
 ### Instance Variables
 - <a name="carla.GBufferTextureID.SceneColor"></a>**<font color="#f8805a">SceneColor</font>**  
