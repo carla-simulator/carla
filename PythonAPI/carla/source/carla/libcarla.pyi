@@ -4562,7 +4562,7 @@ class Waypoint():
 class WeatherParameters():
     """This class defines objects containing lighting and weather specifications that can later be applied in `carla.World`. So far, these conditions only intervene with `sensor.camera.rgb`. They neither affect the actor's physics nor other sensors.
 
-    Each of these parameters acts indepently from the rest. Increasing the rainfall will not automatically create puddles nor change the road's humidity. That makes for a better customization but means that realistic conditions need to be scripted. However an example of dynamic weather conditions working realistically can be found here.
+    Each of these parameters acts independently from the rest. Increasing the rainfall will not automatically create puddles nor change the road's humidity. That makes for a better customization but means that realistic conditions need to be scripted. However an example of dynamic weather conditions working realistically can be found here.
 
     https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/dynamic_weather.py
     """
@@ -4728,16 +4728,16 @@ class World():
 
     # region Methods
     def apply_color_texture_to_object(self, object_name: str, material_parameter: MaterialParameter, texture: TextureColor):
-        """Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to `object_name`."""
+        """Applies a `texture` object in the field corresponding to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to `object_name`."""
 
     def apply_color_texture_to_objects(self, objects_name_list: list[str], material_parameter: MaterialParameter, texture: TextureColor):
-        """Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`."""
+        """Applies a `texture` object in the field corresponding to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`."""
 
     def apply_float_color_texture_to_object(self, object_name: str, material_parameter: MaterialParameter, texture: TextureFloatColor):
-        """Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`."""
+        """Applies a `texture` object in the field corresponding to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`."""
 
     def apply_float_color_texture_to_objects(self, objects_name_list: list[str], material_parameter: MaterialParameter, texture: TextureFloatColor):
-        """Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`."""
+        """Applies a `texture` object in the field corresponding to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`."""
 
     def apply_settings(self, world_settings: WorldSettings) -> int:
         """This method applies settings contained in an object to the simulation running and returns the ID of the frame they were implemented.
@@ -5000,13 +5000,14 @@ class World():
     def set_pedestrians_seed(self, seed: int):
         """ Sets the seed to use for any random number generated in relation to pedestrians.
 
-        + Note: Should be set before pedestrians are spawned. If you want to repeat the same exact bodies (blueprint) for each pedestrian, then use the same seed in the Python code (where the blueprint is choosen randomly) and here, otherwise the pedestrians will repeat the same paths but the bodies will be different.
+        + Note: Should be set before pedestrians are spawned. If you want to repeat the same exact bodies (blueprint) for each pedestrian, then use the same seed in the Python code (where the blueprint is chosen randomly) and here, otherwise the pedestrians will repeat the same paths but the bodies will be different.
         """
 
     def set_weather(self, weather: WeatherParameters):
-        """Changes the weather parameteres ruling the simulation to another ones defined in an object.
+        """Changes the weather parameters ruling the simulation to another ones defined in an object.
 
         + Getter: `carla.World.get_weather`
+        
         Args:
             `weather (WeatherParameters)`: New conditions to be applied.\n
         """
