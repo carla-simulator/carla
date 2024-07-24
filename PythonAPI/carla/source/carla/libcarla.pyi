@@ -1806,6 +1806,7 @@ class LaneInvasionEvent(SensorData):
     def actor() -> Actor:
         """Gets the actor the sensor is attached to, the one that invaded another lane."""
 
+    @property
     def crossed_lane_markings() -> list[LaneMarking]:
         """List of lane markings that have been crossed and detected by the sensor."""
     # endregion
