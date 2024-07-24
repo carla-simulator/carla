@@ -898,67 +898,67 @@ class Client():
             `replay_sensors (bool)`: Flag to enable or disable the spawn of sensors during playback.\n
         """
 
-        def request_file(self, name: str):
-            """Requests one of the required files returned by `carla.Client.get_required_files`.
+    def request_file(self, name: str):
+        """Requests one of the required files returned by `carla.Client.get_required_files`.
 
-            Args:
-                `name (str)`: Name of the file you are requesting.\n
-            """
+        Args:
+            `name (str)`: Name of the file you are requesting.\n
+        """
 
-        def show_recorder_actors_blocked(self, filename: str, min_time: float, min_distance: float) -> str:
-            """The terminal will show the information registered for actors considered blocked. An actor is considered blocked when it does not move a minimum distance in a period of time, being these `min_distance` and `min_time`.
+    def show_recorder_actors_blocked(self, filename: str, min_time: float, min_distance: float) -> str:
+        """The terminal will show the information registered for actors considered blocked. An actor is considered blocked when it does not move a minimum distance in a period of time, being these `min_distance` and `min_time`.
 
-            Args:
-                `filename (str)`: Name of the recorded file to load.\n
-                `min_time (float - seconds)`: Minimum time the actor has to move a minimum distance before being considered blocked. Default is 60 seconds.\n
-                `min_distance (float - centimeters)`: Minimum distance the actor has to move to not be considered blocked. Default is 100 centimeters.\n
+        Args:
+            `filename (str)`: Name of the recorded file to load.\n
+            `min_time (float - seconds)`: Minimum time the actor has to move a minimum distance before being considered blocked. Default is 60 seconds.\n
+            `min_distance (float - centimeters)`: Minimum distance the actor has to move to not be considered blocked. Default is 100 centimeters.\n
 
-            Returns:
-                `str`\n
-            """
+        Returns:
+            `str`\n
+        """
 
-        def show_recorder_collisions(self, filename: str, category1: str, category2: str) -> str:
-            """The terminal will show the collisions registered by the recorder. These can be filtered by specifying the type of actor involved. The categories will be specified in `category1` and `category2` as follows: 'h' = Hero, the one vehicle that can be controlled manually or managed by the user. 'v' = Vehicle 'w' = Walker 't' = Traffic light 'o' = Other 'a' = Any If you want to see only collisions between a vehicles and a walkers, use for `category1` as 'v' and `category2` as 'w' or vice versa. If you want to see all the collisions (filter off) you can use 'a' for both parameters.
+    def show_recorder_collisions(self, filename: str, category1: str, category2: str) -> str:
+        """The terminal will show the collisions registered by the recorder. These can be filtered by specifying the type of actor involved. The categories will be specified in `category1` and `category2` as follows: 'h' = Hero, the one vehicle that can be controlled manually or managed by the user. 'v' = Vehicle 'w' = Walker 't' = Traffic light 'o' = Other 'a' = Any If you want to see only collisions between a vehicles and a walkers, use for `category1` as 'v' and `category2` as 'w' or vice versa. If you want to see all the collisions (filter off) you can use 'a' for both parameters.
 
-            Args:
-                `filename (str)`: Name or absolute path of the file recorded, depending on your previous choice.\n
-                `category1 (str)`: Character variable specifying a first type of actor involved in the collision.\n
-                `category2 (str)`: Character variable specifying the second type of actor involved in the collision.\n
+        Args:
+            `filename (str)`: Name or absolute path of the file recorded, depending on your previous choice.\n
+            `category1 (str)`: Character variable specifying a first type of actor involved in the collision.\n
+            `category2 (str)`: Character variable specifying the second type of actor involved in the collision.\n
 
-            Returns:
-                `str`\n
-            """
+        Returns:
+            `str`\n
+        """
 
-        def show_recorder_file_info(self, filename: str, show_all: bool) -> str:
-            """The information saved by the recorder will be parsed and shown in your terminal as text (frames, times, events, state, positions...). The information shown can be specified by using the `show_all` parameter. Here is some more information about how to read the recorder file.
+    def show_recorder_file_info(self, filename: str, show_all: bool) -> str:
+        """The information saved by the recorder will be parsed and shown in your terminal as text (frames, times, events, state, positions...). The information shown can be specified by using the `show_all` parameter. Here is some more information about how to read the recorder file.
 
-            https://carla.readthedocs.io/en/latest/ref_recorder_binary_file_format/
+        https://carla.readthedocs.io/en/latest/ref_recorder_binary_file_format/
 
-            Args:
-                `filename (str)`: Name or absolute path of the file recorded, depending on your previous choice.\n
-                `show_all (bool)`: If `True`, returns all the information stored for every frame (traffic light states, positions of all actors, orientation and animation data...). If `False`, returns a summary of key events and frames.\n
+        Args:
+            `filename (str)`: Name or absolute path of the file recorded, depending on your previous choice.\n
+            `show_all (bool)`: If `True`, returns all the information stored for every frame (traffic light states, positions of all actors, orientation and animation data...). If `False`, returns a summary of key events and frames.\n
 
-            Returns:
-                `str`\n
-            """
+        Returns:
+            `str`\n
+        """
 
-        def start_recorder(self, filename: str, additional_data=False):
-            """Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.
+    def start_recorder(self, filename: str, additional_data=False):
+        """Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.
 
-            Args:
-                `filename (str)`: Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUE4/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.\n
-                `additional_data (bool, optional)`: Enables or disable recording non-essential data for reproducing the simulation (bounding box location, physics control parameters, etc). Defaults to False.\n
-            """
+        Args:
+            `filename (str)`: Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUE4/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.\n
+            `additional_data (bool, optional)`: Enables or disable recording non-essential data for reproducing the simulation (bounding box location, physics control parameters, etc). Defaults to False.\n
+        """
 
-        def stop_recorder(self):
-            """Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUE4/Saved/`."""
+    def stop_recorder(self):
+        """Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUE4/Saved/`."""
 
-        def stop_replayer(self, keep_actors: bool):
-            """Stop current replayer.
+    def stop_replayer(self, keep_actors: bool):
+        """Stop current replayer.
 
-            Args:
-                `keep_actors (bool)`: `True` if you want autoremove all actors from the replayer, or `False` to keep them.\n
-            """
+        Args:
+            `keep_actors (bool)`: `True` if you want autoremove all actors from the replayer, or `False` to keep them.\n
+        """
     # endregion
 
     # region Getters
@@ -5031,7 +5031,13 @@ class WorldSnapshot():
     # endregion
 
 
+
+
 class command():
+    """
+    Submodule with commands that can be used with `carla.Client.apply_batch`
+    and `carla.Client.apply_batch_sync`.
+    """
 
     class ApplyAngularImpulse():
         """Command adaptation of `add_angular_impulse()` in `carla.Actor`. Applies an angular impulse to an actor.
