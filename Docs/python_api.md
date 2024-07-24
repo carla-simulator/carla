@@ -2113,10 +2113,6 @@ Sensors compound a specific family of actors quite diverse and unique. They are 
   - [Obstacle detector](ref_sensors.md#obstacle-detector)<br>
   - [V2X sensor](ref_sensors.md#v2x-sensor).  
 
-### Instance Variables
-- <a name="carla.Sensor.is_listening"></a>**<font color="#f8805a">is_listening</font>** (_boolean_)  
-When **True** the sensor will be waiting for data.  
-
 ### Methods
 - <a name="carla.Sensor.disable_for_ros"></a>**<font color="#7fb800">disable_for_ros</font>**(<font color="#00a6ed">**self**</font>)  
 Commands the sensor to not be processed for publishing in ROS2 if there is no any listen to it.  
@@ -3417,7 +3413,7 @@ World objects are created by the client to have a place for the simulation to ha
 
 ### Instance Variables
 - <a name="carla.World.id"></a>**<font color="#f8805a">id</font>** (_int_)  
-The ID of the episode associated with this world. Episodes are different sessions of a simulation. These change everytime a world is disabled or reloaded. Keeping track is useful to avoid possible issues.  
+The ID of the episode associated with this world. Episodes are different sessions of a simulation. These change every time a world is disabled or reloaded. Keeping track is useful to avoid possible issues.  
 - <a name="carla.World.debug"></a>**<font color="#f8805a">debug</font>** (_[carla.DebugHelper](#carla.DebugHelper)_)  
 Responsible for creating different shapes for debugging. Take a look at its class to learn more about it.  
 
@@ -3496,7 +3492,7 @@ Loads the selected layers to the level. If the layer is already loaded the call 
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Mask of level layers to be loaded.  
     - **Warning:** <font color="#ED2F2F">_This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs._</font>  
 - <a name="carla.World.on_tick"></a>**<font color="#7fb800">on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
-This method is used in [__asynchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/). It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called everytime the server ticks. It requires a [carla.WorldSnapshot](#carla.WorldSnapshot) as argument, which can be retrieved from __<font color="#7fb800">wait_for_tick()</font>__. Use __<font color="#7fb800">remove_on_tick()</font>__ to stop the callbacks.  
+This method is used in [__asynchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/). It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called every time the server ticks. It requires a [carla.WorldSnapshot](#carla.WorldSnapshot) as argument, which can be retrieved from __<font color="#7fb800">wait_for_tick()</font>__. Use __<font color="#7fb800">remove_on_tick()</font>__ to stop the callbacks.  
     - **Parameters:**
         - `callback` (_[carla.WorldSnapshot](#carla.WorldSnapshot)_) - Function with a snapshot as compulsory parameter that will be called when the client receives a tick.  
     - **Return:** _int_  
@@ -3640,7 +3636,7 @@ _</font>
     - **Note:** <font color="#8E8E8E">_Should be set before pedestrians are spawned. If you want to repeat the same exact bodies (blueprint) for each pedestrian, then use the same seed in the Python code (where the blueprint is chosen randomly) and here, otherwise the pedestrians will repeat the same paths but the bodies will be different.
 _</font>  
 - <a name="carla.World.set_weather"></a>**<font color="#7fb800">set_weather</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**weather**</font>)  
-Changes the weather parameteres ruling the simulation to another ones defined in an object.  
+Changes the weather parameters ruling the simulation to another ones defined in an object.  
     - **Parameters:**
         - `weather` (_[carla.WeatherParameters](#carla.WeatherParameters)_) - New conditions to be applied.  
     - **Getter:** _[carla.World.get_weather](#carla.World.get_weather)_  
@@ -3671,7 +3667,7 @@ The maximum number of physics substepping that are allowed. By default, the valu
 - <a name="carla.WorldSettings.max_culling_distance"></a>**<font color="#f8805a">max_culling_distance</font>** (_float_)  
 Configure the max draw distance for each mesh of the level.  
 - <a name="carla.WorldSettings.deterministic_ragdolls"></a>**<font color="#f8805a">deterministic_ragdolls</font>** (_bool_)  
-Defines wether to use deterministic physics for pedestrian death animations or physical ragdoll simulation.  When enabled, pedestrians have less realistic death animation but ensures determinism.  When disabled, pedestrians are simulated as ragdolls with more realistic simulation and collision but no determinsm can be ensured.  
+Defines wether to use deterministic physics for pedestrian death animations or physical ragdoll simulation.  When enabled, pedestrians have less realistic death animation but ensures determinism.  When disabled, pedestrians are simulated as ragdolls with more realistic simulation and collision but no determinism can be ensured.  
 - <a name="carla.WorldSettings.tile_stream_distance"></a>**<font color="#f8805a">tile_stream_distance</font>** (_float_)  
 Used for large maps only. Configures the maximum distance from the hero vehicle to stream tiled maps. Regions of the map within this range will be visible (and capable of simulating physics). Regions outside this region will not be loaded.  
 - <a name="carla.WorldSettings.actor_active_distance"></a>**<font color="#f8805a">actor_active_distance</font>** (_float_)  
