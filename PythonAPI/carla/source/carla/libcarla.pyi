@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Callable, Iterable, Iterator, Union, Optional, overload, ClassVar, Any
+from typing import Callable, Iterable, Iterator, Union, Optional, overload, ClassVar, Any, Literal
     
 class __CarlaEnum(Enum):
     """
@@ -2538,11 +2538,14 @@ class Map():
         ...
 
     @overload
-    def get_waypoint(self, location: Location, project_to_road=False, lane_type=LaneType.Driving) -> Waypoint | None: 
+    def get_waypoint(self, location: Location, project_to_road: Literal[True]=True, lane_type=LaneType.Driving) -> Waypoint: 
         ...
 
     @overload
-    def get_waypoint(self, location: Location, project_to_road=True, lane_type=LaneType.Driving) -> Waypoint:
+    def get_waypoint(self, location: Location, project_to_road: Literal[False], lane_type=LaneType.Driving) -> Waypoint | None: 
+        ...
+        
+    def get_waypoint(self, location: Location, project_to_road=True, lane_type=LaneType.Driving):
         """Returns a waypoint that can be located in an exact location or translated to the center of the nearest lane. Said lane type can be defined using flags such as `LaneType.Driving & LaneType.Shoulder`.
 
         The method will return `None` if the waypoint is not found, which may happen only when trying to retrieve a waypoint for an exact location. That eases checking if a point is inside a certain road, as otherwise, it will return the corresponding waypoint.
@@ -2564,7 +2567,6 @@ class Map():
         """
         ...
     # endregion
-
 
 class MapLayer(__CarlaEnum):
     """Class that represents each manageable layer of the map. Can be used as flags.
