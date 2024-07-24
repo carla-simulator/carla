@@ -1211,11 +1211,16 @@ class DVSEventArray():
 
 
 class DebugHelper():
-    """Helper class part of `carla.World` that defines methods for creating debug shapes. By default, shapes last one second. They can be permanent, but take into account the resources needed to do so. Take a look at the snippets available for this class to learn how to debug easily in CARLA."""
+    """
+    Helper class part of `carla.World` that defines methods for creating debug shapes. By default, 
+    shapes last one second. They can be permanent, but take into account the resources needed to do 
+    so. Take a look at the snippets available for this class to learn how to debug easily in CARLA.
+    """
 
     # region Methods
-    def draw_arrow(self, begin: Location, end: Location, thickness=0.1, arrow_size=0.1, color: Color = (255, 0, 0), life_time=-1.0):
-        """Draws an arrow from `begin` to `end` pointing in that direction.
+    def draw_arrow(self, begin: Location, end: Location, thickness=0.1, arrow_size=0.1, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True):
+        """
+        Draws an arrow from `begin` to `end` pointing in that direction.
 
         Args:
             begin (Location): Point in the coordinate system where the arrow starts (meters).
@@ -1226,8 +1231,21 @@ class DebugHelper():
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes (seconds). Defaults to -1.0.
         """
         ...
+        
+    def draw_hud_arrow(self, begin: Location, end: Location, thickness=0.1, arrow_size=0.1, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True):
+        """
+        Draws an arrow on the HUD from `begin` to `end` which can only be seen server-side.
+        
+        Args:
+            begin (Location): Point in the coordinate system where the arrow starts (meters).
+            end (Location): Point in the coordinate system where the arrow ends and points towards to (meters).
+            thickness (float, optional): Density of the line (meters). Defaults to 0.1.
+            arrow_size (float, optional): Size of the tip of the arrow (meters). Defaults to 0.1.
+            color (Color, optional): RGB code to color the object. Defaults to (255,0,0).
+            life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes (seconds). Defaults to -1.0.
+        """
 
-    def draw_box(self, box: BoundingBox, rotation: Rotation, thickness=0.1, color: Color = (255, 0, 0), life_time=-1.0):
+    def draw_box(self, box: BoundingBox, rotation: Rotation, thickness=0.1, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True):
         """Draws a box, usually to act for object colliders.
 
         Args:
@@ -1238,9 +1256,37 @@ class DebugHelper():
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes. Defaults to -1.0.
         """
         ...
+        
+    def draw_hud_box(self, box: BoundingBox, rotation: Rotation, thickness=0.1, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True):
+        """
+        Draws a box on the HUD, usually to act for object colliders. The box can only be seen server-side.
 
-    def draw_line(self, begin: Location, end: Location, thickness=0.1, color: Color = (255, 0, 0), life_time=-1.0):
-        """Draws a line in between `begin` and `end`.
+        Args:
+            box (BoundingBox): Object containing a location and the length of a box for every axis.
+            rotation (Rotation): Orientation of the box according to Unreal Engine's axis system (degrees (pitch,yaw,roll)).
+            thickness (float, optional): Density of the lines that define the box (meters). Defaults to 0.1.
+            color (Color, optional): RGB code to color the object. Defaults to (255,0,0).
+            life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes. Defaults to -1.0.
+        """
+        ...
+    
+
+    def draw_line(self, begin: Location, end: Location, thickness=0.1, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True):
+        """
+        Draws a line in between `begin` and `end`.
+
+        Args:
+            begin (Location): Point in the coordinate system where the line starts (meters).
+            end (Location): Spot in the coordinate system where the line ends (meters).
+            thickness (float, optional): Density of the line. Defaults to 0.1.
+            color (Color, optional): RGB code to color the object. Defaults to (255,0,0).
+            life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes. Defaults to -1.0.
+        """
+        ...
+        
+    def draw_hud_line(self, begin: Location, end: Location, thickness=0.1, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True):
+        """
+        Draws a line on the HUD in between `begin` and `end`. The line can only be seen server-side.
 
         Args:
             begin (Location): Point in the coordinate system where the line starts (meters).
@@ -1251,8 +1297,21 @@ class DebugHelper():
         """
         ...
 
-    def draw_point(self, location: Location, size=0.1, color=(255, 0, 0), life_time=-1.0):
-        """Draws a point location.
+    def draw_point(self, location: Location, size=0.1, color=(255, 0, 0), life_time=-1.0, persistent_lines=True):
+        """
+        Draws a point location.
+
+        Args:
+            location (Location): Spot in the coordinate system to center the object (meters).
+            size (float, optional): Density of the point (meters). Defaults to 0.1.
+            color (tuple, optional): RGB code to color the object. Defaults to (255,0,0).
+            life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to 0 for permanent shapes (seconds). Defaults to -1.0.
+        """
+        ...
+        
+    def draw_hud_point(self, location: Location, size=0.1, color=(255, 0, 0), life_time=-1.0, persistent_lines=True):
+        """
+        Draws a point on the HUD at `location`. The point can only be seen server-side.
 
         Args:
             location (Location): Spot in the coordinate system to center the object (meters).
@@ -1262,7 +1321,7 @@ class DebugHelper():
         """
         ...
 
-    def draw_string(self, location: Location, text: str, draw_shadow=False, color: Color = (255, 0, 0), life_time=-1.0):
+    def draw_string(self, location: Location, text: str, draw_shadow=False, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True):
         """Draws a string in a given location of the simulation which can only be seen server-side.
 
         Args:
