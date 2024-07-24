@@ -23,7 +23,7 @@ except IndexError:
     print("  .---------------------------------------------------.")
     print("  |     Make sure the python client is compiled!      |")
     print("  '---------------------------------------------------'\n")
-    # We don't provide an error to prvent Travis checks failing
+    # We don't provide an error to prevent Travis checks failing
     sys.exit(0)
 
 import carla

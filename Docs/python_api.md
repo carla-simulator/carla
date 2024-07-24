@@ -95,21 +95,21 @@ _</font>
 
 ##### Getters
 - <a name="carla.Actor.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the actor's 3D acceleration vector the client recieved during last tick. The method does not call the simulator.  
+Returns the actor's 3D acceleration vector the client received during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> - m/s<sup>2</sup></small>_  
 - <a name="carla.Actor.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the actor's angular velocity vector the client recieved during last tick. The method does not call the simulator.  
+Returns the actor's angular velocity vector the client received during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> - deg/s</small>_  
 - <a name="carla.Actor.get_location"></a>**<font color="#7fb800">get_location</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the actor's location the client recieved during last tick. The method does not call the simulator.  
+Returns the actor's location the client received during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Location](#carla.Location)<small> - meters</small>_  
     - **Setter:** _[carla.Actor.set_location](#carla.Actor.set_location)_  
 - <a name="carla.Actor.get_transform"></a>**<font color="#7fb800">get_transform</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the actor's transform (location and rotation) the client recieved during last tick. The method does not call the simulator.  
+Returns the actor's transform (location and rotation) the client received during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Transform](#carla.Transform)_  
     - **Setter:** _[carla.Actor.set_transform](#carla.Actor.set_transform)_  
 - <a name="carla.Actor.get_velocity"></a>**<font color="#7fb800">get_velocity</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the actor's velocity vector the client recieved during last tick. The method does not call the simulator.  
+Returns the actor's velocity vector the client received during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> - m/s</small>_  
 - <a name="carla.Actor.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the world this actor belongs to.  
@@ -2286,7 +2286,7 @@ Time register of the frame at which this measurement was taken given by the OS i
 
 ## carla.TrafficLight<a name="carla.TrafficLight"></a>
 <small style="display:block;margin-top:-20px;">Inherited from _[carla.TrafficSign](#carla.TrafficSign)_</small></br>
-A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.
+A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differentiated by their pole index.
      
   Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends a few seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually.  
 
@@ -2748,7 +2748,7 @@ Returns the axis values for the vector parsed as string.
 
 ## carla.Vehicle<a name="carla.Vehicle"></a>
 <small style="display:block;margin-top:-20px;">Inherited from _[carla.Actor](#carla.Actor)_</small></br>
-One of the most important groups of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these actors is provided in [carla.BlueprintLibrary](#carla.BlueprintLibrary) to facilitate differente requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the <b>traffic manager</b>.  
+One of the most important groups of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bicycles and also official vehicles such as police cars. A wide set of these actors is provided in [carla.BlueprintLibrary](#carla.BlueprintLibrary) to facilitate different requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the <b>traffic manager</b>.  
 
 ### Instance Variables
 - <a name="carla.Vehicle.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)  
@@ -3306,7 +3306,7 @@ Will return <b>None</b> if the lane does not exist.
 
 ## carla.WeatherParameters<a name="carla.WeatherParameters"></a>
 This class defines objects containing lighting and weather specifications that can later be applied in [carla.World](#carla.World). So far, these conditions only intervene with [sensor.camera.rgb](ref_sensors.md#rgb-camera). They neither affect the actor's physics nor other sensors.        
-  Each of these parameters acts indepently from the rest. Increasing the rainfall will not automatically create puddles nor change the road's humidity. That makes for a better customization but means that realistic conditions need to be scripted. However an example of dynamic weather conditions working realistically can be found [here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/dynamic_weather.py).  
+  Each of these parameters acts independently from the rest. Increasing the rainfall will not automatically create puddles nor change the road's humidity. That makes for a better customization but means that realistic conditions need to be scripted. However an example of dynamic weather conditions working realistically can be found [here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/dynamic_weather.py).  
 
 ### Instance Variables
 - <a name="carla.WeatherParameters.cloudiness"></a>**<font color="#f8805a">cloudiness</font>** (_float_)  
@@ -3423,25 +3423,25 @@ Responsible for creating different shapes for debugging. Take a look at its clas
 
 ### Methods
 - <a name="carla.World.apply_color_texture_to_object"></a>**<font color="#7fb800">apply_color_texture_to_object</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**object_name**</font>, <font color="#00a6ed">**material_parameter**</font>, <font color="#00a6ed">**texture**</font>)  
-Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to `object_name`.  
+Applies a `texture` object in the field corresponding to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to `object_name`.  
     - **Parameters:**
         - `object_name` (_str_)  
         - `material_parameter` (_[carla.MaterialParameter](#carla.MaterialParameter)_)  
         - `texture` (_TextureColor_)  
 - <a name="carla.World.apply_color_texture_to_objects"></a>**<font color="#7fb800">apply_color_texture_to_objects</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**objects_name_list**</font>, <font color="#00a6ed">**material_parameter**</font>, <font color="#00a6ed">**texture**</font>)  
-Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`.  
+Applies a `texture` object in the field corresponding to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`.  
     - **Parameters:**
         - `objects_name_list` (_list(str)_)  
         - `material_parameter` (_[carla.MaterialParameter](#carla.MaterialParameter)_)  
         - `texture` (_TextureColor_)  
 - <a name="carla.World.apply_float_color_texture_to_object"></a>**<font color="#7fb800">apply_float_color_texture_to_object</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**object_name**</font>, <font color="#00a6ed">**material_parameter**</font>, <font color="#00a6ed">**texture**</font>)  
-Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to `object_name`.  
+Applies a `texture` object in the field corresponding to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to `object_name`.  
     - **Parameters:**
         - `object_name` (_str_)  
         - `material_parameter` (_[carla.MaterialParameter](#carla.MaterialParameter)_)  
         - `texture` (_TextureFloatColor_)  
 - <a name="carla.World.apply_float_color_texture_to_objects"></a>**<font color="#7fb800">apply_float_color_texture_to_objects</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**objects_name_list**</font>, <font color="#00a6ed">**material_parameter**</font>, <font color="#00a6ed">**texture**</font>)  
-Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`.  
+Applies a `texture` object in the field corresponding to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`.  
     - **Parameters:**
         - `objects_name_list` (_list(str)_)  
         - `material_parameter` (_[carla.MaterialParameter](#carla.MaterialParameter)_)  
@@ -3637,7 +3637,7 @@ _</font>
 - <a name="carla.World.set_pedestrians_seed"></a>**<font color="#7fb800">set_pedestrians_seed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seed**</font>)  
     - **Parameters:**
         - `seed` (_int_) - Sets the seed to use for any random number generated in relation to pedestrians.  
-    - **Note:** <font color="#8E8E8E">_Should be set before pedestrians are spawned. If you want to repeat the same exact bodies (blueprint) for each pedestrian, then use the same seed in the Python code (where the blueprint is choosen randomly) and here, otherwise the pedestrians will repeat the same paths but the bodies will be different.
+    - **Note:** <font color="#8E8E8E">_Should be set before pedestrians are spawned. If you want to repeat the same exact bodies (blueprint) for each pedestrian, then use the same seed in the Python code (where the blueprint is chosen randomly) and here, otherwise the pedestrians will repeat the same paths but the bodies will be different.
 _</font>  
 - <a name="carla.World.set_weather"></a>**<font color="#7fb800">set_weather</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**weather**</font>)  
 Changes the weather parameteres ruling the simulation to another ones defined in an object.  
