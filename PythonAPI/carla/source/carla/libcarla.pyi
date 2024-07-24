@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Callable, Iterable, Iterator, Union, Optional, overload, ClassVar
+from typing import Callable, Iterable, Iterator, Union, Optional, overload, ClassVar, Any
     
 class __CarlaEnum(Enum):
     """
@@ -471,7 +471,7 @@ class ActorBlueprint():
     # endregion
 
     # region Setters
-    def set_attribute(self, id: str, value: str):
+    def set_attribute(self, id: str, value: str) -> None:
         """If the `id` attribute is modifiable, changes its value to `value`.
 
         Args:
@@ -495,8 +495,8 @@ class ActorBlueprint():
 
 
 class ActorList():
-    """A class that contains every actor present on the scene and provides access to them.
-
+    """
+    A class that contains every actor present on the scene and provides access to them.
     The list is automatically created and updated by the server and it can be returned using `carla.World`.
     """
 
@@ -1159,7 +1159,10 @@ class DVSEvent():
 
 
 class DVSEventArray():
-    """Class that defines a stream of events in `carla.DVSEvent`. Such stream is an array of arbitrary size depending on the number of events. This class also stores the field of view, the height and width of the image and the timestamp from convenience. Learn more about them here.
+    """
+    Class that defines a stream of events in `carla.DVSEvent`. Such stream is an array of arbitrary
+    size depending on the number of events. This class also stores the field of view, the height and
+    width of the image and the timestamp from convenience. Learn more about them here.
 
     https://carla.readthedocs.io/en/latest/ref_sensors/
     """
@@ -1218,7 +1221,7 @@ class DebugHelper():
     """
 
     # region Methods
-    def draw_arrow(self, begin: Location, end: Location, thickness=0.1, arrow_size=0.1, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True):
+    def draw_arrow(self, begin: Location, end: Location, thickness=0.1, arrow_size=0.1, color: Color =Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws an arrow from `begin` to `end` pointing in that direction.
 
@@ -1232,7 +1235,7 @@ class DebugHelper():
         """
         ...
         
-    def draw_hud_arrow(self, begin: Location, end: Location, thickness=0.1, arrow_size=0.1, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True):
+    def draw_hud_arrow(self, begin: Location, end: Location, thickness=0.1, arrow_size=0.1, color: Color =Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws an arrow on the HUD from `begin` to `end` which can only be seen server-side.
         
@@ -1245,7 +1248,7 @@ class DebugHelper():
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes (seconds). Defaults to -1.0.
         """
 
-    def draw_box(self, box: BoundingBox, rotation: Rotation, thickness=0.1, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True):
+    def draw_box(self, box: BoundingBox, rotation: Rotation, thickness=0.1, color: Color =Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """Draws a box, usually to act for object colliders.
 
         Args:
@@ -1257,7 +1260,7 @@ class DebugHelper():
         """
         ...
         
-    def draw_hud_box(self, box: BoundingBox, rotation: Rotation, thickness=0.1, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True):
+    def draw_hud_box(self, box: BoundingBox, rotation: Rotation, thickness=0.1, color: Color =Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws a box on the HUD, usually to act for object colliders. The box can only be seen server-side.
 
@@ -1271,7 +1274,7 @@ class DebugHelper():
         ...
     
 
-    def draw_line(self, begin: Location, end: Location, thickness=0.1, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True):
+    def draw_line(self, begin: Location, end: Location, thickness=0.1, color: Color =Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws a line in between `begin` and `end`.
 
@@ -1284,7 +1287,7 @@ class DebugHelper():
         """
         ...
         
-    def draw_hud_line(self, begin: Location, end: Location, thickness=0.1, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True):
+    def draw_hud_line(self, begin: Location, end: Location, thickness=0.1, color: Color =Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws a line on the HUD in between `begin` and `end`. The line can only be seen server-side.
 
@@ -1297,7 +1300,7 @@ class DebugHelper():
         """
         ...
 
-    def draw_point(self, location: Location, size=0.1, color=(255, 0, 0), life_time=-1.0, persistent_lines=True):
+    def draw_point(self, location: Location, size=0.1, color=Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws a point location.
 
@@ -1309,7 +1312,7 @@ class DebugHelper():
         """
         ...
         
-    def draw_hud_point(self, location: Location, size=0.1, color=(255, 0, 0), life_time=-1.0, persistent_lines=True):
+    def draw_hud_point(self, location: Location, size=0.1, color=(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws a point on the HUD at `location`. The point can only be seen server-side.
 
@@ -1321,7 +1324,7 @@ class DebugHelper():
         """
         ...
 
-    def draw_string(self, location: Location, text: str, draw_shadow=False, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True):
+    def draw_string(self, location: Location, text: str, draw_shadow=False, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """Draws a string in a given location of the simulation which can only be seen server-side.
 
         Args:
@@ -1861,7 +1864,7 @@ class LandmarkType(Enum):
     CityEnd = "311",
     Highway = "330",
     DeadEnd = "357",
-    RecomendedSpeed = "380", # NOTE: Wrong Spelling, but is named like this internally!
+    RecomendedSpeed = "380",    # NOTE: Wrong Spelling, but is named like this internally!
     RecomendedSpeedEnd = "381", # NOTE: Wrong Spelling, but is named like this internally!
     # endregion
 
@@ -3065,16 +3068,18 @@ class Sensor(Actor):
             `gbuffer_id (GBufferTextureID)`: The ID of the target Unreal Engine GBuffer texture.\n
         """
 
-    def listen(self, callback: Callable):
-        """The function the sensor will be calling to every time a new measurement is received. This function needs for an argument containing an object type `carla.SensorData` to work with.
+    def listen(self, callback: Callable[[SensorData], Any]) -> None:
+        """
+        The function the sensor will be calling to every time a new measurement is received. 
+        This function needs for an argument containing an object type `carla.SensorData` to work with.
 
         Args:
-            `callback (Callable)`: The called function with one argument containing the sensor data.\n
+            `callback (Callable[[SensorData], Any])`: The called function with one argument containing the sensor data.\n
         """
 
-    def listen_to_gbuffer(self, gbuffer_id: GBufferTextureID, callback: Callable):
-        """The function the sensor will be calling to every time the desired GBuffer texture is received.
-
+    def listen_to_gbuffer(self, gbuffer_id: GBufferTextureID, callback: Callable[[SensorData], Any]) -> None:
+        """
+        The function the sensor will be calling to every time the desired GBuffer texture is received.
         This function needs for an argument containing an object type `carla.SensorData` to work with.
 
         Args:
@@ -3646,17 +3651,17 @@ class Transform():
         """Describes a rotation for an object according to Unreal Engine's axis system (degrees (pitch, yaw, roll))."""
     # endregion
 
-    # region Methods
-    def __init__(self, location: Location, rotation: Rotation): ...
+    # region Methods    
+    def __init__(self, location: Location = Location(0,0,0), rotation: Rotation = Rotation(0,0,0)): ...
 
-    def transform(self, in_point: Location):
+    def transform(self, in_point: Vector3D) -> Vector3D:
         """Translates a 3D point from local to global coordinates using the current transformation as frame of reference.
 
         Args:
             in_point (Location): Translates a 3D point from local to global coordinates using the current transformation as frame of reference.
         """
 
-    def transform_vector(self, in_vector: Vector3D):
+    def transform_vector(self, in_vector: Vector3D) -> Vector3D:
         """Rotates a vector using the current transformation as frame of reference, without applying translation. Use this to transform, for example, a velocity.
 
         Args:
@@ -4488,11 +4493,10 @@ class Waypoint():
         """
 
     def next_until_lane_end(self, distance: float) -> list[Waypoint]:
-        """This method does not return the waypoint previously visited by an actor, but a list of waypoints at an approximate `distance` but in the opposite direction of the lane. Similarly to `next()`, it takes into account the road and its possible deviations without performing any lane change and returns one waypoint per option. The list may be empty if the lane is not connected to any other at the specified distance.
-
+        """Returns a list of waypoints from this to the end of the lane separated by a certain `distance`.""
 
         Args:
-            `distance (float)`: The approximate distance where to get the previous waypoints (meters).\n
+            `distance (float)`: The approximate distance between waypoints.(meters).
 
         Returns:
             `list[Waypoint]`\n
@@ -4877,11 +4881,11 @@ class World():
 
     def get_actors(self, actor_ids: Optional["list[int]"] = None) -> ActorList:
         """
-        Retrieves a list of `carla.Actor` elements, either using a list of IDs provided or just 
-        listing everyone on stage. If an ID does not correspond with any actor, it will be excluded 
-        from the list returned, meaning that both the list of IDs and the list of actors may have 
+        Retrieves a list of `carla.Actor` elements, either using a list of IDs provided or just
+        listing everyone on stage. If an ID does not correspond with any actor, it will be excluded
+        from the list returned, meaning that both the list of IDs and the list of actors may have
         different lengths.
-        
+
         Args:
             `actor_ids (list[int], optional)`: The IDs of the actors being searched. By default it is set to None and returns every actor on scene.
 
