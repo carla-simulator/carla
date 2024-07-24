@@ -1,4 +1,4 @@
-#Python API reference
+# Python API reference
 This reference contains all the details the Python API. To consult a previous reference for a specific CARLA release, change the documentation version using the panel in the bottom right corner.<br>This will change the whole documentation to a previous state. Remember that the <i>latest</i> version is the `dev` branch and may show features not available in any packaged versions of CARLA.<hr>  
 
 ## carla.AckermannControllerSettings<a name="carla.AckermannControllerSettings"></a>
