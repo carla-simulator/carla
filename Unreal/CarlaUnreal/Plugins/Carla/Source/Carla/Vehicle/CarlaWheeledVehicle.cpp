@@ -76,7 +76,7 @@ void ACarlaWheeledVehicle::BeginPlay()
           GetDefaultSubobjectByName(ConstraintComponent->ComponentName1.ComponentName));
       if(DoorComponent)
       {
-        UE_LOG(LogCarla, Warning, TEXT("Door name: %s"), *(DoorComponent->GetName()));
+        UE_LOG(LogCarla, Log, TEXT("Door name: %s"), *(DoorComponent->GetName()));
         FTransform ComponentWorldTransform = DoorComponent->GetComponentTransform();
         FTransform RelativeTransform = ComponentWorldTransform * ActorInverseTransform;
         DoorComponentsTransform.Add(DoorComponent, RelativeTransform);
