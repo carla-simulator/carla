@@ -808,7 +808,7 @@ void CarlaReplayer::InterpolatePosition(
     double DeltaTime)
 {
   // call the callback
-  Helper.ProcessReplayerPosition(Pos1, Pos2, Per, DeltaTime);
+  Helper.ProcessReplayerPosition(Pos1, Pos2, Per, DeltaTime, IgnoreSpectator);
 }
 
 // tick for the replayer

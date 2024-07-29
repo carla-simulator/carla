@@ -94,16 +94,16 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     log "Retrieving boost."
 
     start=$(date +%s)
-    wget "https://archives.boost.io/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+    wget "https://archives.boost.io/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" -O ${BOOST_PACKAGE_BASENAME}.tar.gz || true
     end=$(date +%s)
     echo "Elapsed Time downloading from boost webpage: $(($end-$start)) seconds"
 
     # try to use the backup boost we have in Jenkins
-    if [ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ] || [[ $(sha256sum "${BOOST_PACKAGE_BASENAME}.tar.gz") != "${BOOST_SHA256SUM}" ]] ; then
+    if [ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ] || [[ $(sha256sum "${BOOST_PACKAGE_BASENAME}.tar.gz" | cut -d " " -f 1 ) != "${BOOST_SHA256SUM}" ]] ; then
       log "Using boost backup"
 
       start=$(date +%s)
-      wget "https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+      wget "https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" -O ${BOOST_PACKAGE_BASENAME}.tar.gz || true
       end=$(date +%s)
       echo "Elapsed Time downloading from boost carla backup in backblaze: $(($end-$start)) seconds"
 
@@ -259,7 +259,7 @@ else
   git clone --depth=1 -b release-${GTEST_VERSION} https://github.com/google/googletest.git ${GTEST_BASENAME}-source
 
   end_download_time=$(date +%s)
-  echo "Elapsed Time downloading rpclib: $(($end-$start)) seconds"
+  echo "Elapsed Time downloading rpclib: $(($end_download_time-$start_download_time)) seconds"
 
   log "Building Google Test with libc++."
 
@@ -926,6 +926,7 @@ if ${USE_ROS2} ; then
       -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
       -DBUILD_SHARED_LIBS=ON \
       -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+      -DFOONATHAN_MEMORY_FORCE_VENDORED_BUILD=ON \
       ..
     ninja
     ninja install
@@ -959,7 +960,8 @@ if ${USE_ROS2} ; then
       -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
       -DCMAKE_CXX_FLAGS=-latomic \
       -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
-       \
+      -DTHIRDPARTY_Asio=FORCE \
+      -DTHIRDPARTY_TinyXML2=FORCE \
       ..
     ninja
     ninja install

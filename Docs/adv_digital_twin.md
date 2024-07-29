@@ -17,7 +17,26 @@ The __Digital Twin Tool__ enables procedural generation of unique 3D environment
 
 ## Building the OSM renderer
 
-If you are using Linux, you have the option of using the OSM renderer in the CARLA interface to navigate a large OSM map region that you have downloaded. You first need to build the OSM renderer. Run `make osmrenderer` inside the CARLA root directory. You may need to upgrade your version of CMake to v3.2 or above in order for this to work. This will create two folders in your build directory called `libosmcout-source` and `libosmcout-build`. Windows users do not have the option of using the OSM renderer and must use directly a URL. 
+If you are using Linux, you have the option of using the OSM renderer in the CARLA interface to navigate a large OSM map region that you have downloaded. You first need to build the OSM renderer before proceeding to build CARLA. Run `make osmrenderer` inside the CARLA root directory. You may need to upgrade your version of CMake to v3.2 or above in order for this to work. This will create two folders in your build directory called `libosmcout-source` and `libosmcout-build`. Before proceeding to build CARLA, you need to then edit the `Build.sh` file in the directory `$CARLA_ROOT/Build/libosmcout-source/maps` like so, to ensure the executable is found:
+
+```bash
+if [[ -x ../Import/src/Import ]]; then
+  importExe=../Import/src/Import
+elif [[ -x ../debug/Import/Import ]]; then
+  importExe=../debug/Import/Import
+elif [[ -x ../build/Import/Import ]]; then
+  importExe=../build/Import/Import
+###################  Add this line ####################
+elif [ -x ../../libosmscout-build/Import/Import ]; then
+  importExe=../../libosmscout-build/Import/Import
+#######################################################
+else
+  echo "Cannot find Import executable!"
+  exit 1
+fi
+```
+
+Then continue to build CARLA in the normal way. Windows users do not have the option of using the OSM renderer and must directly the URL. 
 
 ## Downloading and preparing OSM map data
 

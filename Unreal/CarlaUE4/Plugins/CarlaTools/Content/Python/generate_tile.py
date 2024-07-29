@@ -30,9 +30,10 @@ if os.name == "nt":
     editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)
     command = [editor_path, uproject_path, run]
     command.extend(arguments)
+    full_command = editor_path + " " + uproject_path + " " + run + " " + arguments
     print("Commandlet:", command)
     print("Arguments:", arguments)
-    subprocess.check_call(command, shell=True)
+    subprocess.check_call(full_command, shell=True)
 elif os.name == "posix":
     sys_name = "Linux"
     editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)

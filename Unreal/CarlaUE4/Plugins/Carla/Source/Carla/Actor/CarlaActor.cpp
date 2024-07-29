@@ -969,6 +969,25 @@ ECarlaServerResponse FVehicleActor::SetActorAutopilot(bool bEnabled, bool bKeepS
   return ECarlaServerResponse::Success;
 }
 
+ECarlaServerResponse FVehicleActor::GetVehicleTelemetryData(FVehicleTelemetryData& TelemetryData)
+{
+  if (IsDormant())
+  {
+    FVehicleTelemetryData EmptyTelemetryData;
+    TelemetryData = EmptyTelemetryData;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    TelemetryData = Vehicle->GetVehicleTelemetryData();
+  }
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::ShowVehicleDebugTelemetry(bool bEnabled)
 {
   if (IsDormant())
@@ -1051,6 +1070,28 @@ ECarlaServerResponse FVehicleActor::EnableChronoPhysics(
         PowertrainJSON,
         TireJSON,
         BaseJSONPath);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::RestorePhysXPhysics()
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    UBaseCarlaMovementComponent* MovementComponent = 
+        Vehicle->GetCarlaMovementComponent<UBaseCarlaMovementComponent>();
+    if(MovementComponent)
+    {
+      MovementComponent->DisableSpecialPhysics();
+    }
   }
   return ECarlaServerResponse::Success;
 }

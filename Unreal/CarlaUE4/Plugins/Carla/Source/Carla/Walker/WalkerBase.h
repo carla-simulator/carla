@@ -24,6 +24,9 @@ public:
   UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
   float AfterLifeSpan = 10.0f;
 
+  UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
+  bool bUsesWheelChair = false;
+
   UFUNCTION(BlueprintCallable)
   void StartDeathLifeSpan()
   {
