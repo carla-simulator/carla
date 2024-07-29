@@ -169,6 +169,7 @@
           ID of the actor to follow. If this is 0 then camera is disabled.
       - param_name: replay_sensors
         type: bool
+        default: false
         doc: >
           Flag to enable or disable the spawn of sensors during playback.
       doc: >
