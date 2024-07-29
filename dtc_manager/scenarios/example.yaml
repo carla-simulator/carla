@@ -4,71 +4,102 @@
 # StartingWorld: a blank empty space that Unreal opens into, also the map that loads when something goes wrong.
 # L_Razish_Carla: The Desert Map for executing missions. Has 30 Zones.
 # L_TrainCrash_Carla: The Train Crash Map for executing missions. Has 30 Zones. (Not Released)
-map: L_Razish_Carla
+map: L_TrainCrash_Carla
 
 # Waypoint List: Defines which waypoints and in which order the robot should traverse. Arguments include:
 # zone: The zone number that corresponds to the waypoint to traverse to.
+# dwell_time: The length of time in seconds to stay at the waypoint, 3 second minimum
 waypoints:
   waypoint_1:
     zone: 1
+    dwell_time: 3
   waypoint_2:
     zone: 2
+    dwell_time: 3
   waypoint_3:
     zone: 3
+    dwell_time: 3
   waypoint_4:
     zone: 4
+    dwell_time: 3
   waypoint_5:
     zone: 5
+    dwell_time: 3
   waypoint_6:
     zone: 6
+    dwell_time: 3
   waypoint_7:
     zone: 7
+    dwell_time: 3
   waypoint_8:
     zone: 8
+    dwell_time: 3
   waypoint_9:
     zone: 9
+    dwell_time: 3
   waypoint_10:
     zone: 10
+    dwell_time: 3
   waypoint_11:
     zone: 11
+    dwell_time: 3
   waypoint_12:
     zone: 12
+    dwell_time: 3
   waypoint_13:
     zone: 13
+    dwell_time: 3
   waypoint_14:
     zone: 14
+    dwell_time: 3
   waypoint_15:
     zone: 15
+    dwell_time: 3
   waypoint_16:
     zone: 16
+    dwell_time: 3
   waypoint_17:
     zone: 17
+    dwell_time: 3
   waypoint_18:
     zone: 18
+    dwell_time: 3
   waypoint_19:
     zone: 19
+    dwell_time: 3
   waypoint_20:
     zone: 20
+    dwell_time: 3
   waypoint_21:
     zone: 21
+    dwell_time: 3
   waypoint_22:
     zone: 22
+    dwell_time: 3
   waypoint_23:
     zone: 23
+    dwell_time: 3
   waypoint_24:
     zone: 24
+    dwell_time: 3
   waypoint_25:
     zone: 25
+    dwell_time: 3
   waypoint_26:
     zone: 26
+    dwell_time: 3
   waypoint_27:
     zone: 27
+    dwell_time: 3
   waypoint_28:
     zone: 28
+    dwell_time: 3
   waypoint_29:
     zone: 29
+    dwell_time: 3
   waypoint_30:
     zone: 30
+    dwell_time: 3
 
 # Casualty List: Defines which casualty types to spawn and in which zone locations. Arguments include:
 # zone: The zone number that corresponds to the waypoint to spawn the casualty in.

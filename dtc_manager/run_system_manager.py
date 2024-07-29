@@ -117,6 +117,7 @@ class SimulationGNSSNode(Node):
         self._current_waypoint = 0
         self._time_at_waypoint = 0
         self._gps_eps = 0.000001
+        self._gps_alt_eps = 0.01
         self._imu_eps = 0.001
         self._is_at_waypoint_not_moving = False
         self._last_gnss_header_checked = None
@@ -165,7 +166,7 @@ class SimulationGNSSNode(Node):
         if abs(self._last_gnss_message.longitude - self._current_gnss_message.longitude) > self._gps_eps:
             is_at_waypoint = False
             self._is_stationary = False
-        if abs(self._last_gnss_message.altitude - self._current_gnss_message.altitude) > self._gps_eps:
+        if abs(self._last_gnss_message.altitude - self._current_gnss_message.altitude) > self._gps_alt_eps:
             is_at_waypoint = False
             self._is_stationary = False
 
@@ -271,6 +272,23 @@ def _setup_waypoint_actors(world, scenario_file, bp_library):
         functor_sent_waypoints_bp.set_attribute(str(iteration), str(waypoint['zone']))
         iteration+=1
     return world.spawn_actor(functor_sent_waypoints_bp, global_transform)
+
+def _setup_dwell_time_actors(world, scenario_file, bp_library):
+    if 'waypoints' not in scenario_file:
+        logging.info("  No Waypoints defined in Scenario File")
+        raise Exception("No Waypoints defined in Scenario File")
+    logging.info("  Setting Waypoints...")
+    functor_send_dwell_times_bp = bp_library.filter("functorsenddwelltimes")[0]
+    iteration = 1
+    for waypoint_name in scenario_file['waypoints']:
+        waypoint = scenario_file['waypoints'][waypoint_name]
+        if 'dwell_time' not in waypoint:
+            logging.info("  No Dwell Time defined in Waypoint Scenario Loadout")
+            raise Exception("No Dwell Time defined in Waypoint Scenario Loadout")
+        # Set Casualty in Attribute
+        functor_send_dwell_times_bp.set_attribute(str(iteration), str(waypoint['dwell_time']))
+        iteration+=1
+    return world.spawn_actor(functor_send_dwell_times_bp, global_transform)
 
 def _setup_casualty_actors(world, scenario_file, bp_library):
     if 'casualties' not in scenario_file:
@@ -473,6 +491,7 @@ def main(args):
 
         # Setup Vehicle Waypoints
         tracked_actors.append(_setup_waypoint_actors(world, scenario_file, bp_library))
+        tracked_actors.append(_setup_dwell_time_actors(world, scenario_file, bp_library))
 
         # Create Vehicle with sensors
         vehicle_actors = _setup_vehicle_actors(world, scenario_file, bp_library)
@@ -535,7 +554,7 @@ def main(args):
                     simulation_audio_node.set_audio(str(audio_map[str(simulation_gnss_node.get_current_waypoint())]))
                 
                 # Check if the vehicle has been stationary long enough to close the simulation (5 seconds)
-                if stationary_count >= 5 / settings.fixed_delta_seconds:
+                if stationary_count >= 5 / settings.fixed_delta_seconds and simulation_gnss_node.get_current_waypoint() >= num_waypoints:
                     logging.info("  Mission Completed... Completed all Waypoints")
                     break
 
