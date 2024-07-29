@@ -793,4 +793,36 @@
     - var_name: enable_pedestrian_navigation
       type: bool
       doc: >
-        If __True__, Pedestrian navigation will be enabled using Recast tool. For very large maps it is recomended to disable this option. __Default is `True`__.
+        If __True__, Pedestrian navigation will be enabled using Recast tool. For very large maps it is recommended to disable this option. __Default is `True`__.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: vertex_distance
+        type: float
+        param_units: meters
+        default: 2.0
+      - param_name: max_road_length
+        type: float
+        param_units: meters
+        default: 50.0
+      - param_name: wall_height
+        type: float
+        param_units: meters
+        default: 1.0
+      - param_name: additional_width
+        type: float
+        param_units: meters
+        default: 0.6
+      - param_name: smooth_junctions
+        type: bool
+        default: true
+      - param_name: enable_mesh_visibility
+        type: bool
+        default: true
+      - param_name: enable_pedestrian_navigation
+        type: bool
+        default: true
+      doc: >
+        OpendriveGenerationParameters constructor
+        

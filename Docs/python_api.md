@@ -1845,7 +1845,19 @@ If __True__, the mesh at junctions will be smoothed to prevent issues where road
 - <a name="carla.OpendriveGenerationParameters.enable_mesh_visibility"></a>**<font color="#f8805a">enable_mesh_visibility</font>** (_bool_)  
 If __True__, the road mesh will be rendered. Setting this to __False__ should reduce the rendering overhead.  __Default is `True`__.  
 - <a name="carla.OpendriveGenerationParameters.enable_pedestrian_navigation"></a>**<font color="#f8805a">enable_pedestrian_navigation</font>** (_bool_)  
-If __True__, Pedestrian navigation will be enabled using Recast tool. For very large maps it is recomended to disable this option. __Default is `True`__.  
+If __True__, Pedestrian navigation will be enabled using Recast tool. For very large maps it is recommended to disable this option. __Default is `True`__.  
+
+### Methods
+- <a name="carla.OpendriveGenerationParameters.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vertex_distance**=2.0</font>, <font color="#00a6ed">**max_road_length**=50.0</font>, <font color="#00a6ed">**wall_height**=1.0</font>, <font color="#00a6ed">**additional_width**=0.6</font>, <font color="#00a6ed">**smooth_junctions**=True</font>, <font color="#00a6ed">**enable_mesh_visibility**=True</font>, <font color="#00a6ed">**enable_pedestrian_navigation**=True</font>)  
+OpendriveGenerationParameters constructor.  
+    - **Parameters:**
+        - `vertex_distance` (_float<small> - meters</small>_)  
+        - `max_road_length` (_float<small> - meters</small>_)  
+        - `wall_height` (_float<small> - meters</small>_)  
+        - `additional_width` (_float<small> - meters</small>_)  
+        - `smooth_junctions` (_bool_)  
+        - `enable_mesh_visibility` (_bool_)  
+        - `enable_pedestrian_navigation` (_bool_)  
 
 ---
 
