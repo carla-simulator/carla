@@ -656,13 +656,13 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ColorContrast;
     ColorContrast.Id = TEXT("color_contrast");
     ColorContrast.Type = EActorAttributeType::Vector;
-    ColorContrast.RecommendedValues = { VectorToFString(FVector(1.35f, 1.35f, 1.35f)) };
+    ColorContrast.RecommendedValues = { VectorToFString(FVector(1.0f, 1.0f, 1.0f)) };
     ColorContrast.bRestrictToRecommended = false;
 
     FActorVariation ColorGamma;
     ColorGamma.Id = TEXT("color_gamma");
     ColorGamma.Type = EActorAttributeType::Vector;
-    ColorGamma.RecommendedValues = { VectorToFString(FVector(1.2f, 1.2f, 1.2f)) };
+    ColorGamma.RecommendedValues = { VectorToFString(FVector(1.0f, 1.0f, 1.0f)) };
     ColorGamma.bRestrictToRecommended = false;
 
     FActorVariation HighlightsGamma;
@@ -1771,21 +1771,21 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     Camera->SetChromAberrOffset(
         RetrieveActorAttributeToFloat("chromatic_aberration_offset", Description.Variations, 0.0f));
 
-    auto ColorSaturation = FLinearColor(RetrieveActorAttributeToColor("color_saturation", Description.Variations, FLinearColor(1.0f, 1.0f, 1.0f).ToFColorSRGB()));
+    auto ColorSaturation = FLinearColor(RetrieveActorAttributeToColor("color_saturation", Description.Variations, FLinearColor(1.0f, 0.5f, 1.0f).ToFColorSRGB()));
     Camera->SetColorSaturation(
         FVector4(ColorSaturation.R, ColorSaturation.G, ColorSaturation.B, ColorSaturation.A));
 
     // Temporal comments until FVector is implemented in clientside
-    FVector ColorContrast = FVector(RetrieveActorAttributeToVector("color_contrast", Description.Variations, FVector(1.3f, 1.3f, 1.3f)));
+    FVector ColorContrast = FVector(RetrieveActorAttributeToVector("color_contrast", Description.Variations, FVector(1.0f, 1.0f, 1.0f)));
     Camera->SetColorContrast(
         FVector4(ColorContrast.X, ColorContrast.Y, ColorContrast.Z, 1.0f));
 
     // Temporal comments until FVector is implemented in clientside
-    FVector ColorGamma = FVector(RetrieveActorAttributeToVector("color_gamma", Description.Variations, FVector( 1.2f, 1.2f, 1.2f )));
+    FVector ColorGamma = FVector(RetrieveActorAttributeToVector("color_gamma", Description.Variations, FVector( 1.0f, 1.0f, 1.0f )));
     Camera->SetColorGamma(
         FVector4(ColorGamma.X, ColorGamma.Y, ColorGamma.Z, 1.0f));
         
-    auto HighlightsGamma = FLinearColor(RetrieveActorAttributeToColor("highlights_gamma", Description.Variations, FLinearColor(0.5f, 0.5, 0.5f).ToFColorSRGB()));
+    auto HighlightsGamma = FLinearColor(RetrieveActorAttributeToColor("highlights_gamma", Description.Variations, FLinearColor(1.0f, 1.0f, 1.0f).ToFColorSRGB()));
     Camera->SetHighlightsGamma(
         FVector4(HighlightsGamma.R, HighlightsGamma.G, HighlightsGamma.B, HighlightsGamma.A));
 
