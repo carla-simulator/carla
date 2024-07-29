@@ -858,7 +858,7 @@ class Client():
             `list[command.Response]`\n
         """
 
-    def generate_opendrive_world(self, opendrive: str, parameters: OpendriveGenerationParameters = (2.0, 50.0, 1.0, 0.6, True, True), reset_settings=True):
+    def generate_opendrive_world(self, opendrive: str, parameters: OpendriveGenerationParameters = OpendriveGenerationParameters(2.0, 50.0, 1.0, 0.6, True, True), reset_settings=True):
         """Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter. It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side. Cars can drive around the map, but there are no graphics besides the road and sidewalks.
 
         Args:
@@ -1663,10 +1663,12 @@ class Junction():
     """Class that embodies the intersections on the road described in the OpenDRIVE file according to OpenDRIVE 1.4 standards."""
 
     # region Instance Variables
+    @property
     def id() -> int:
         """Identifier found in the OpenDRIVE file."""
         ...
 
+    @property
     def bounding_box() -> BoundingBox:
         """Bounding box encapsulating the junction lanes."""
         ...
@@ -2672,6 +2674,19 @@ class OpendriveGenerationParameters():
         """If `True`, Pedestrian navigation will be enabled using Recast tool. For very large maps it is recommended to disable this option. Default is `True`."""
         ...
     # endregion
+    
+    # region Methods
+    
+    # region Methods    
+    def __init__(self, vertex_distance: float =2.0, 
+                 max_road_length:float = 50.0, 
+                 wall_height:float = 1.0, 
+                 additional_width: float=0.6, 
+                 smooth_junctions: bool =True,
+                 enable_mesh_visibility: bool=True,
+                 enable_pedestrian_navigation: bool=True):
+        """Constructor method"""
+        ...
 
 
 class OpticalFlowImage(SensorData):
@@ -4637,7 +4652,7 @@ class WeatherParameters():
                  fog_falloff=0.0,
                  scattering_intensity=0.0,
                  mie_scattering_scale=0.0,
-                 rayleigh_scattering_scale=0.0331) -> WeatherParameters:
+                 rayleigh_scattering_scale=0.0331):
         """Method to initialize an object defining weather conditions. This class has some presets for different noon and sunset conditions listed in a note below.
 
         + Note: ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset.
