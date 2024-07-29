@@ -1,10 +1,15 @@
 from enum import Enum, Flag, IntFlag
 import sys
 from typing import Callable, Iterable, Iterator, Union, Optional, overload, ClassVar, Any, Literal
-if sys.version_info < (3, 11):
-    from typing_extensions import Self
-else:
+if sys.version_info >= (3, 11):
     from typing import Self
+else:
+    from typing_extensions import Self
+    
+if sys.version_info >= (3, 9):
+    from typing import Annotated
+else:
+    from typing_extensions import Annotated
 
 class __CarlaEnum(Enum):
     """
@@ -63,7 +68,7 @@ class AckermannControllerSettings():
                  speed_kd: float = 0.25,
                  accel_kp: float = 0.01,
                  accel_ki: float = 0.0,
-                 accel_kd: float = 0.01) -> AckermannControllerSettings:
+                 accel_kd: float = 0.01):
         """Manages the settings of the Ackermann PID controller.
         """
     # endregion
@@ -1148,7 +1153,7 @@ class DVSEvent():
     def x(self) -> int:
         """X pixel coordinate."""
     @property
-    def x(self) -> int:
+    def y(self) -> int:
         """Y pixel coordinate."""
     @property
     def t(self) -> int:
@@ -1305,7 +1310,7 @@ class DebugHelper():
         """
         ...
 
-    def draw_point(self, location: Location, size=0.1, color=Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_point(self, location: Location, size=0.1, color: Color=Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws a point location.
 
@@ -1317,7 +1322,7 @@ class DebugHelper():
         """
         ...
         
-    def draw_hud_point(self, location: Location, size=0.1, color=(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_hud_point(self, location: Location, size=0.1, color: Color=Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws a point on the HUD at `location`. The point can only be seen server-side.
 
@@ -1329,7 +1334,7 @@ class DebugHelper():
         """
         ...
 
-    def draw_string(self, location: Location, text: str, draw_shadow=False, color: Color = (255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_string(self, location: Location, text: str, draw_shadow=False, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """Draws a string in a given location of the simulation which can only be seen server-side.
 
         Args:
@@ -1484,13 +1489,17 @@ class GearPhysicsControl():
     """
 
     # region Instance Variables
-    def ratio() -> float:
+    @property
+    def ratio(self) -> float:
         """The transmission ratio of the gear."""
         ...
 
-    def down_ratio() -> float:
+    @property
+    def down_ratio(self) -> float:
         """Quotient between current RPM and MaxRPM where the autonomous gear box should shift down."""
-    def up_ratio() -> float:
+    
+    @property
+    def up_ratio(self) -> float:
         """Quotient between current RPM and MaxRPM where the autonomous gear box should shift up."""
     # endregion
 
@@ -1898,7 +1907,8 @@ class LaneInvasionEvent(SensorData):
     """
 
     # region Instance Variables
-    def actor() -> Actor:
+    @property
+    def actor(self) -> Actor:
         """Gets the actor the sensor is attached to, the one that invaded another lane."""
 
     @property
@@ -2894,7 +2904,8 @@ class RadarMeasurement(SensorData):
     """
 
     # region Instance Variables
-    def raw_data() -> bytes:
+    @property
+    def raw_data(self) -> bytes:
         """The complete information of the `carla.RadarDetection` the radar has registered.
         """
     # endregion
@@ -3248,7 +3259,9 @@ class Timestamp():
     @property
     def delta_seconds(self) -> float:
         """Simulated seconds elapsed since the previous frame (seconds)."""
-    def platform_timestamp() -> float:
+    
+    @property
+    def platform_timestamp(self) -> float:
         """Time register of the frame at which this measurement was taken given by the OS in seconds (seconds)."""
     # endregion
 
@@ -3559,17 +3572,17 @@ class TrafficManager():
     # endregion
 
     # region Setters
-    def set_boundaries_respawn_dormant_vehicles(self, lower_bound=25.0, upper_bound: float = WorldSettings.actor_active_distance):
+    def set_boundaries_respawn_dormant_vehicles(self, lower_bound:Annotated[float, ">=25.0"], upper_bound: Annotated[float, "<= WorldSettings.actor_active_distance"]) -> None:
         """Sets the upper and lower boundaries for dormant actors to be respawned near the hero vehicle.
 
         + Warning: The `upper_bound` cannot be higher than the `actor_active_distance`. The `lower_bound` cannot be less than `25`.
 
         Args:
-            lower_bound (float, optional): The minimum distance in meters from the hero vehicle that a dormant actor will be respawned. Defaults to 25.0.
-            upper_bound (float, optional): The maximum distance in meters from the hero vehicle that a dormant actor will be respawned. Defaults to WorldSettings.actor_active_distance.
+            lower_bound (float, optional): The minimum distance in meters from the hero vehicle that a dormant actor will be respawned.
+            upper_bound (float, optional): The maximum distance in meters from the hero vehicle that a dormant actor will be respawned.
         """
 
-    def set_desired_speed(self, actor: Actor, speed: float):
+    def set_desired_speed(self, actor: Actor, speed: float) -> None:
         """Sets the speed of a vehicle to the specified value.
 
         Args:
@@ -3577,7 +3590,7 @@ class TrafficManager():
             speed (float): Desired speed at which the vehicle will move.
         """
 
-    def set_global_distance_to_leading_vehicle(self, distance: float):
+    def set_global_distance_to_leading_vehicle(self, distance: float) -> None:
         """Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.
 
         Args:
@@ -4203,7 +4216,7 @@ class VehiclePhysicsControl():
                  steering_curve=[[0.0, 1.0], [10.0, 0.5]],
                  wheels=list(),
                  use_sweep_wheel_collision=False,
-                 mass=1000.0) -> VehiclePhysicsControl:
+                 mass=1000.0):
         """VehiclePhysicsControl constructor.
 
         Args:
@@ -4390,7 +4403,8 @@ class WalkerBoneControlOut():
     """This class is used to return all bone positions of a pedestrian. For each bone we get its name and its transform in three different spaces (world, actor and relative)."""
 
     # region Instance Variables
-    def bone_transforms() -> list[tuple[str, Transform, Transform, Transform]]:
+    @property
+    def bone_transforms(self) -> list[tuple[str, Transform, Transform, Transform]]:
         """
         List of one entry per bone with this information:
 
@@ -4725,7 +4739,7 @@ class WheelPhysicsControl():
                  radius=30.0,
                  max_brake_torque=1500.0,
                  max_handbrake_torque=3000.0,
-                 position: Vector3D = (0.0, 0.0, 0.0)) -> WheelPhysicsControl: ...
+                 position: Vector3D = Vector3D(0.0, 0.0, 0.0)): ...
     # endregion
 
     # region Dunder Methods
@@ -4840,7 +4854,7 @@ class World():
         """Resets the cycle of all traffic lights in the map to the initial state.
         """
 
-    def spawn_actor(self, blueprint: ActorBlueprint, transform: Transform, attach_to: Actor = None, attachment=AttachmentType.Rigid) -> Actor:
+    def spawn_actor(self, blueprint: ActorBlueprint, transform: Transform, attach_to: Optional[Actor] = None, attachment=AttachmentType.Rigid) -> Actor:
         """The method will create, return and spawn an actor into the world. The actor will need an available blueprint to be created and a transform (location and rotation). It can also be attached to a parent with a certain attachment type.
 
         Args:
@@ -4865,7 +4879,7 @@ class World():
             `int`\n
         """
 
-    def try_spawn_actor(self, blueprint: ActorBlueprint, transform: Transform, attach_to: Actor = None, attachment=AttachmentType.Rigid) -> Actor:
+    def try_spawn_actor(self, blueprint: ActorBlueprint, transform: Transform, attach_to: Optional[Actor] = None, attachment=AttachmentType.Rigid) -> Actor:
         """Same as `spawn_actor()` but returns `None` on failure instead of throwing an exception.
 
         Args:
@@ -4952,7 +4966,7 @@ class World():
     def get_random_location_from_navigation(self) -> Location:
         """This can only be used with walkers. It retrieves a random location to be used as a destination using the `go_to_location()` method in `carla.WalkerAIController`. This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at `generate_traffic.py` for an example."""
 
-    def get_settings() -> WorldSettings:
+    def get_settings(self) -> WorldSettings:
         """Returns an object containing some data about the simulation such as synchrony between client and server or rendering mode."""
 
     def get_snapshot(self) -> WorldSnapshot:
@@ -5094,7 +5108,7 @@ class WorldSettings():
                  deterministic_ragdolls=False,
                  tile_stream_distance=3000,
                  actor_active_distance=2000,
-                 spectator_as_ego=True) -> WorldSettings:
+                 spectator_as_ego=True):
         """Creates an object containing desired settings that could later be applied through `carla.World` and its method `apply_settings()`.
 
         Args:
@@ -5417,7 +5431,7 @@ class command():
             """
         # endregion
 
-    class ApplyWalkerControl():
+    class ApplyWalkerState():
         """Apply a state to the walker actor. Specially useful to initialize an actor them with a specific location, orientation and speed."""
 
         # region Instance Variables
