@@ -116,8 +116,8 @@ class SimulationGNSSNode(Node):
         self._should_track = False
         self._current_waypoint = 0
         self._time_at_waypoint = 0
-        self._gps_eps = 0.000001
-        self._gps_alt_eps = 0.01
+        self._gps_eps = 0.0000001
+        self._gps_alt_eps = 0.001
         self._imu_eps = 0.001
         self._is_at_waypoint_not_moving = False
         self._last_gnss_header_checked = None
@@ -263,14 +263,19 @@ def _setup_waypoint_actors(world, scenario_file, bp_library):
     logging.info("  Setting Waypoints...")
     functor_sent_waypoints_bp = bp_library.filter("functorsendwaypoints")[0]
     iteration = 1
+    last_zone = 0
     for waypoint_name in scenario_file['waypoints']:
         waypoint = scenario_file['waypoints'][waypoint_name]
         if 'zone' not in waypoint:
             logging.info("  No Zone defined in Waypoint Scenario Loadout")
             raise Exception("No Zone defined in Waypoint Scenario Loadout")
         # Set Casualty in Attribute
+        if last_zone == waypoint['zone']:
+            logging.info("  Zone defined twice in a row, must move to difference zones")
+            raise Exception("Zone defined twice in a row, must move to difference zones")
         functor_sent_waypoints_bp.set_attribute(str(iteration), str(waypoint['zone']))
         iteration+=1
+        last_zone = waypoint['zone']
     return world.spawn_actor(functor_sent_waypoints_bp, global_transform)
 
 def _setup_dwell_time_actors(world, scenario_file, bp_library):
