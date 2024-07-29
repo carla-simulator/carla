@@ -4034,28 +4034,48 @@ class VehicleAckermannControl():
 class VehicleControl():
     """Manages the basic movement of a vehicle using typical driving controls."""
     # region Instance Variables
+
     @property
     def throttle(self) -> float:
         """A scalar value to control the vehicle throttle [0.0, 1.0]. Default is 0.0."""
+    @throttle.setter
+    def throttle(self, value: float):...
+
     @property
     def steer(self) -> float:
         """A scalar value to control the vehicle steering [-1.0, 1.0]. Default is 0.0."""
+    @steer.setter
+    def steer(self, value: float): ...
+
     @property
     def brake(self) -> float:
         """A scalar value to control the vehicle brake [0.0, 1.0]. Default is 0.0."""
+    @brake.setter
+    def brake(self, value: float): ...
+
     @property
     def hand_brake(self) -> bool:
         """Determines whether hand brake will be used. Default is `False`."""
+    @hand_brake.setter
+    def hand_brake(self, value: bool): ...
+
     @property
     def reverse(self) -> bool:
         """Determines whether the vehicle will move backwards. Default is `False`."""
+    @reverse.setter
+    def reverse(self, value: bool): ...
+
     @property
     def manual_gear_shift(self) -> bool:
-        """Determines whether the vehicle will be controlled by changing gears manually. Default is `False`.
-        """
+        """Determines whether the vehicle will be controlled by changing gears manually. Default is `False`."""
+    @manual_gear_shift.setter
+    def manual_gear_shift(self, value: bool): ...
+
     @property
     def gear(self) -> int:
         """States which gear is the vehicle running on."""
+    @gear.setter
+    def gear(self, value: int):  ...
     # endregion
 
     # region Methods
