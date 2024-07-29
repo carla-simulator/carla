@@ -214,6 +214,7 @@ void ASensorSpawnerActor::AddSensorToSaveDataArray(AActor* Actor)
 
 void ASensorSpawnerActor::Tick(float DeltaSeconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ASensorSpawnerActor::Tick);
   Super::Tick(DeltaSeconds);
 
   if(bRecordingData)

@@ -95,7 +95,7 @@ void AIRCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeco
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
   {
-    SendImageDataToClient(*this, Pixels, FrameIndex);
+    SendDataToClient(*this, Pixels, FrameIndex);
     return true;
   });
 }

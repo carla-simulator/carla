@@ -10,7 +10,6 @@
 #include "carla/MsgPack.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Vector2D.h"
-#include "carla/rpc/GearPhysicsControl.h"
 #include "carla/rpc/WheelPhysicsControl.h"
 
 #include <string>
@@ -25,17 +24,22 @@ namespace rpc {
 
     VehiclePhysicsControl(
         const std::vector<carla::geom::Vector2D> &in_torque_curve,
+        float in_max_torque,
         float in_max_rpm,
         float in_moi,
-        float in_damping_rate_full_throttle,
-        float in_damping_rate_zero_throttle_clutch_engaged,
-        float in_damping_rate_zero_throttle_clutch_disengaged,
+        float in_rev_down_rate,
+
+        uint8_t in_differential_type,
+        float in_front_rear_split,
 
         bool in_use_gear_autobox,
         float in_gear_switch_time,
-        float in_clutch_strength,
         float in_final_ratio,
-        std::vector<GearPhysicsControl> &in_forward_gears,
+        std::vector<float> &in_forward_gears,
+        std::vector<float> &in_reverse_gears,
+        float in_change_up_rpm,
+        float in_change_down_rpm,
+        float in_transmission_efficiency,
 
         float in_mass,
         float in_drag_coefficient,
@@ -44,16 +48,20 @@ namespace rpc {
         std::vector<WheelPhysicsControl> &in_wheels,
         bool in_use_sweep_wheel_collision)
       : torque_curve(in_torque_curve),
+        max_torque(in_max_torque),
         max_rpm(in_max_rpm),
         moi(in_moi),
-        damping_rate_full_throttle(in_damping_rate_full_throttle),
-        damping_rate_zero_throttle_clutch_engaged(in_damping_rate_zero_throttle_clutch_engaged),
-        damping_rate_zero_throttle_clutch_disengaged(in_damping_rate_zero_throttle_clutch_disengaged),
+        rev_down_rate(in_rev_down_rate),
+        differential_type(in_differential_type),
+        front_rear_split(in_front_rear_split),
         use_gear_autobox(in_use_gear_autobox),
         gear_switch_time(in_gear_switch_time),
-        clutch_strength(in_clutch_strength),
         final_ratio(in_final_ratio),
         forward_gears(in_forward_gears),
+        reverse_gears(in_reverse_gears),
+        change_up_rpm(in_change_up_rpm),
+        change_down_rpm(in_change_down_rpm),
+        transmission_efficiency(in_transmission_efficiency),
         mass(in_mass),
         drag_coefficient(in_drag_coefficient),
         center_of_mass(in_center_of_mass),
@@ -61,12 +69,20 @@ namespace rpc {
         wheels(in_wheels),
         use_sweep_wheel_collision(in_use_sweep_wheel_collision) {}
 
-    const std::vector<GearPhysicsControl> &GetForwardGears() const {
+    const std::vector<float> &GetForwardGears() const {
       return forward_gears;
     }
 
-    void SetForwardGears(std::vector<GearPhysicsControl> &in_forward_gears) {
+    void SetForwardGears(std::vector<float> &in_forward_gears) {
       forward_gears = in_forward_gears;
+    }
+
+    const std::vector<float> &GetReverseGears() const {
+      return reverse_gears;
+    }
+
+    void SetReverseGears(std::vector<float> &in_reverse_gears) {
+      reverse_gears = in_reverse_gears;
     }
 
     const std::vector<WheelPhysicsControl> &GetWheels() const {
@@ -102,17 +118,23 @@ namespace rpc {
     }
 
     std::vector<geom::Vector2D> torque_curve = {geom::Vector2D(0.0f, 500.0f), geom::Vector2D(5000.0f, 500.0f)};
+    float max_torque = 300.0f;
     float max_rpm = 5000.0f;
     float moi = 1.0f;
-    float damping_rate_full_throttle = 0.15f;
-    float damping_rate_zero_throttle_clutch_engaged = 2.0f;
-    float damping_rate_zero_throttle_clutch_disengaged = 0.35f;
+    float rev_down_rate = 600.0f;
+
+    // ToDo: Convert to an enum, see EVehicleDifferential.
+    uint8_t differential_type = 0;
+    float front_rear_split = 0.5f;
 
     bool use_gear_autobox = true;
     float gear_switch_time = 0.5f;
-    float clutch_strength = 10.0f;
     float final_ratio = 4.0f;
-    std::vector<GearPhysicsControl> forward_gears;
+    std::vector<float> forward_gears = {2.85, 2.02, 1.35, 1.0, 2.85, 2.02, 1.35, 1.0};
+    std::vector<float> reverse_gears = {2.86, 2.86};
+    float change_up_rpm = 4500.0f;
+    float change_down_rpm = 2000.0f;
+    float transmission_efficiency = 0.9f;
 
     float mass = 1000.0f;
     float drag_coefficient = 0.3f;
@@ -125,17 +147,22 @@ namespace rpc {
 
     bool operator!=(const VehiclePhysicsControl &rhs) const {
       return
+        max_torque != rhs.max_torque ||
         max_rpm != rhs.max_rpm ||
         moi != rhs.moi ||
-        damping_rate_full_throttle != rhs.damping_rate_full_throttle ||
-        damping_rate_zero_throttle_clutch_engaged != rhs.damping_rate_zero_throttle_clutch_engaged ||
-        damping_rate_zero_throttle_clutch_disengaged != rhs.damping_rate_zero_throttle_clutch_disengaged ||
+        rev_down_rate != rhs.rev_down_rate ||
+          
+        differential_type != rhs.differential_type ||
+        front_rear_split != rhs.front_rear_split ||
 
         use_gear_autobox != rhs.use_gear_autobox ||
         gear_switch_time != rhs.gear_switch_time ||
-        clutch_strength != rhs.clutch_strength ||
         final_ratio != rhs.final_ratio ||
         forward_gears != rhs.forward_gears ||
+        reverse_gears != rhs.reverse_gears ||
+        change_up_rpm != rhs.change_up_rpm ||
+        change_down_rpm != rhs.change_down_rpm ||
+        transmission_efficiency != rhs.transmission_efficiency ||
 
         mass != rhs.mass ||
         drag_coefficient != rhs.drag_coefficient ||
@@ -159,20 +186,31 @@ namespace rpc {
         geom::Vector2D point(TorqueCurveKeys[KeyIdx].Time, TorqueCurveKeys[KeyIdx].Value);
         torque_curve.push_back(point);
       }
+      max_torque = Control.MaxTorque;
       max_rpm = Control.MaxRPM;
       moi = Control.MOI;
-      damping_rate_full_throttle = Control.DampingRateFullThrottle;
-      damping_rate_zero_throttle_clutch_engaged = Control.DampingRateZeroThrottleClutchEngaged;
-      damping_rate_zero_throttle_clutch_disengaged = Control.DampingRateZeroThrottleClutchDisengaged;
+      rev_down_rate = Control.RevDownRate;
+
+      // Differential Setup
+      differential_type = Control.DifferentialType;
+      front_rear_split = Control.FrontRearSplit;
 
       // Transmission Setup
       use_gear_autobox = Control.bUseGearAutoBox;
       gear_switch_time = Control.GearSwitchTime;
-      clutch_strength = Control.ClutchStrength;
       final_ratio = Control.FinalRatio;
-      forward_gears = std::vector<GearPhysicsControl>();
+      change_up_rpm = Control.ChangeUpRPM;
+      change_down_rpm = Control.ChangeDownRPM;
+      transmission_efficiency = Control.TransmissionEfficiency;
+      forward_gears = std::vector<float>();
+      forward_gears.reserve(Control.ForwardGears.Num());
       for (const auto &Gear : Control.ForwardGears) {
-        forward_gears.push_back(GearPhysicsControl(Gear));
+        forward_gears.push_back(Gear);
+      }
+      reverse_gears = std::vector<float>();
+      reverse_gears.reserve(Control.ReverseGears.Num());
+      for (const auto &Gear : Control.ReverseGears) {
+        reverse_gears.push_back(Gear);
       }
 
       // Vehicle Setup
@@ -206,22 +244,34 @@ namespace rpc {
         TorqueCurve.AddKey(point.x, point.y);
       }
       Control.TorqueCurve = TorqueCurve;
+      Control.MaxTorque = max_torque;
       Control.MaxRPM = max_rpm;
       Control.MOI = moi;
-      Control.DampingRateFullThrottle = damping_rate_full_throttle;
-      Control.DampingRateZeroThrottleClutchEngaged = damping_rate_zero_throttle_clutch_engaged;
-      Control.DampingRateZeroThrottleClutchDisengaged = damping_rate_zero_throttle_clutch_disengaged;
+      Control.RevDownRate = rev_down_rate;
 
+      // Differential Setup
+      Control.DifferentialType = differential_type;
+      Control.FrontRearSplit = front_rear_split;
+      
       // Transmission Setup
       Control.bUseGearAutoBox = use_gear_autobox;
       Control.GearSwitchTime = gear_switch_time;
-      Control.ClutchStrength = clutch_strength;
       Control.FinalRatio = final_ratio;
-      TArray<FGearPhysicsControl> ForwardGears;
+      Control.ChangeUpRPM = change_up_rpm;
+      Control.ChangeDownRPM = change_down_rpm;
+      Control.TransmissionEfficiency = transmission_efficiency;
+      TArray<float> ForwardGears;
+      ForwardGears.Reserve(forward_gears.size());
       for (const auto &gear : forward_gears) {
-        ForwardGears.Add(FGearPhysicsControl(gear));
+        ForwardGears.Add(gear);
       }
       Control.ForwardGears = ForwardGears;
+      TArray<float> ReverseGears;
+      ReverseGears.Reserve(reverse_gears.size());
+      for (const auto &gear : reverse_gears) {
+        ReverseGears.Add(gear);
+      }
+      Control.ReverseGears = ReverseGears;
 
 
       // Vehicle Setup
@@ -252,16 +302,20 @@ namespace rpc {
 #endif
 
     MSGPACK_DEFINE_ARRAY(torque_curve,
+        max_torque,
         max_rpm,
         moi,
-        damping_rate_full_throttle,
-        damping_rate_zero_throttle_clutch_engaged,
-        damping_rate_zero_throttle_clutch_disengaged,
+        rev_down_rate,
+        differential_type,
+        front_rear_split,
         use_gear_autobox,
         gear_switch_time,
-        clutch_strength,
         final_ratio,
         forward_gears,
+        reverse_gears,
+        change_up_rpm,
+        change_down_rpm,
+        transmission_efficiency,
         mass,
         drag_coefficient,
         center_of_mass,

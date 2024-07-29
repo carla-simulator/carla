@@ -116,9 +116,6 @@ struct FCameraGBufferFloat
 
 
 
-
-
-
 /// Base class for sensors using a USceneCaptureComponent2D for rendering the
 /// scene. This class does not capture data, use
 /// `FPixelReader::SendPixelsInRenderThread<FColor>(*this)` in derived classes.
@@ -225,6 +222,12 @@ public:
 
   UFUNCTION(BlueprintCallable)
   float GetAperture() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetSensorWidth(float Width);
+
+  UFUNCTION(BlueprintCallable)
+  float GetSensorWidth() const;
 
   UFUNCTION(BlueprintCallable)
   void SetFocalDistance(float Distance);
@@ -370,6 +373,63 @@ public:
   UFUNCTION(BlueprintCallable)
   float GetChromAberrOffset() const;
 
+  UFUNCTION(BlueprintCallable)
+  void SetColorSaturation(FVector4 ColorSaturation);
+
+  UFUNCTION(BlueprintCallable)
+  FVector4 GetColorSaturation() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetColorContrast(FVector4 ColorContrast);
+
+  UFUNCTION(BlueprintCallable)
+  FVector4 GetColorContrast() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetColorGamma(FVector4 ColorGamma);
+
+  UFUNCTION(BlueprintCallable)
+  FVector4 GetColorGamma() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetHighlightsGamma(FVector4 HighlightsGamma);
+
+  UFUNCTION(BlueprintCallable)
+  FVector4 GetHighlightsGamma() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetToneCurveAmount(float ToneCurveAmount);
+
+  UFUNCTION(BlueprintCallable)
+  float GetToneCurveAmount() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetSceneColorTint(FLinearColor SceneColorTint);
+
+  UFUNCTION(BlueprintCallable)
+  FLinearColor GetSceneColorTint() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetVignetteIntensity(float VignetteIntensity);
+
+  UFUNCTION(BlueprintCallable)
+  float GetVignetteIntensity() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetHighlightContrastScale(float HighlightContrastScale);
+
+  UFUNCTION(BlueprintCallable)
+  float GetHighlightContrastScale() const;
+
+  UFUNCTION(BlueprintCallable)
+  void SetShadowContrastScale(float ShadowContrastScale);
+
+  UFUNCTION(BlueprintCallable)
+  float GetShadowContrastScale() const;
+
+  virtual void UpdatePostProcessConfig(
+    FPostProcessConfig& InOutPostProcessConfig);
+
   /// Use for debugging purposes only.
   UFUNCTION(BlueprintCallable)
   bool ReadPixels(TArray<FColor> &BitMap) const
@@ -377,9 +437,6 @@ public:
     check(CaptureRenderTarget != nullptr);
     return FPixelReader::WritePixelsToArray(*CaptureRenderTarget, BitMap);
   }
-
-  virtual void UpdatePostProcessConfig(
-    FPostProcessConfig& InOutPostProcessConfig);
 
   /// Use for debugging purposes only.
   UFUNCTION(BlueprintCallable)
@@ -427,9 +484,8 @@ public:
     FCameraGBufferUint8 CustomStencil;
   } CameraGBuffers;
 
-UFUNCTION(BlueprintCallable)
-static bool ApplyPostProcessVolumeToSensor(APostProcessVolume* Origin, ASceneCaptureSensor* Dest, bool bOverrideCurrentCamera = false);
-
+  UFUNCTION(BlueprintCallable)
+  static bool ApplyPostProcessVolumeToSensor(APostProcessVolume* Origin, ASceneCaptureSensor* Dest, bool bOverrideCurrentCamera = false);
 protected:
 
   void CaptureSceneExtended();

@@ -215,7 +215,6 @@ FCarlaActor* UActorDispatcher::RegisterActor(
             ActorROS2Handler Handler(UEActor, RosName);
             boost::variant2::visit(Handler, Data);
           });
-
         }
       }
     }
