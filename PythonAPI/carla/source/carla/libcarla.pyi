@@ -1,14 +1,19 @@
 from enum import Enum
+import sys
 from typing import Callable, Iterable, Iterator, Union, Optional, overload, ClassVar, Any, Literal
-    
+if sys.version_info < (3, 11):
+    from typing_extensions import Self
+else:
+    from typing import Self
+
 class __CarlaEnum(Enum):
     """
-    CARLA's Enums have a `values` entry that is not part of the python enum.Enum class.
-    This abstract class adds this method.
+    CARLA's Enums have a `values` and `names` attribute that are not part of the python `enum.Enum` 
+    class. This abstract stub class adds these attributes.
     """
         
-    values : ClassVar[dict[int, "__CarlaEnum"]]
-    names  : ClassVar[dict[str, "__CarlaEnum"]]
+    values : ClassVar[dict[int, Self]]
+    names  : ClassVar[dict[str, Self]]
     
     def __init_subclass__(cls):
         cls.values : dict[int, cls]
