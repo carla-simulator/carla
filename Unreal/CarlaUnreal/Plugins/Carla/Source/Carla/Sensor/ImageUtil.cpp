@@ -14,62 +14,74 @@
 
 
 
+template <typename F>
+class ScopedCallback
+{
+    F fn;
+public:
+
+    constexpr ScopedCallback(F&& fn) : fn(fn) { }
+
+    ~ScopedCallback() { fn(); }
+};
+
+
+
 namespace ImageUtil
 {
   bool DecodePixelsByFormat(
     const void* PixelData,
     int32 SourcePitch,
-    FIntPoint SourceExtent,
-    FIntPoint DestinationExtent,
+    FIntPoint Extent,
     EPixelFormat Format,
     FReadSurfaceDataFlags Flags,
     TArrayView<FLinearColor> Out)
   {
     SourcePitch *= GPixelFormats[Format].BlockBytes;
-    auto OutPixelCount = DestinationExtent.X * DestinationExtent.Y;
+    auto OutPixelCount = Extent.X * Extent.Y;
     switch (Format)
     {
     case PF_G16:
     case PF_R16_UINT:
     case PF_R16_SINT:
       // Shadow maps
-      ConvertRawR16DataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawR16DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     case PF_R8G8B8A8:
-      ConvertRawR8G8B8A8DataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawR8G8B8A8DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     case PF_B8G8R8A8:
-      ConvertRawB8G8R8A8DataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawB8G8R8A8DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     case PF_A2B10G10R10:
-      ConvertRawA2B10G10R10DataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawA2B10G10R10DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     case PF_FloatRGBA:
     case PF_R16G16B16A16_UNORM:
     case PF_R16G16B16A16_SNORM:
-      ConvertRawR16G16B16A16FDataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
+      ConvertRawR16G16B16A16FDataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
       break;
     case PF_FloatR11G11B10:
-      ConvertRawRR11G11B10DataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawRR11G11B10DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     case PF_A32B32G32R32F:
-      ConvertRawR32G32B32A32DataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
+      ConvertRawR32G32B32A32DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
       break;
     case PF_A16B16G16R16:
-      ConvertRawR16G16B16A16DataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawR16G16B16A16DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     case PF_G16R16:
-      ConvertRawR16G16DataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawR16G16DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     case PF_X24_G8: // Depth Stencil
-      ConvertRawR24G8DataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
+      ConvertRawR24G8DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
       break;
     case PF_R32_FLOAT: // Depth Stencil
-      ConvertRawR32DataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
+      ConvertRawR32DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
       break;
     case PF_R16G16B16A16_UINT:
     case PF_R16G16B16A16_SINT:
-      ConvertRawR16G16B16A16DataToFLinearColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawR16G16B16A16DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     default:
       UE_LOG(LogCarla, Warning, TEXT("Unsupported format %llu"), (unsigned long long)Format);
@@ -78,66 +90,67 @@ namespace ImageUtil
     return true;
   }
 
+
+
   bool DecodePixelsByFormat(
     const void* PixelData,
     int32 SourcePitch,
-    FIntPoint SourceExtent,
-    FIntPoint DestinationExtent,
+    FIntPoint Extent,
     EPixelFormat Format,
     FReadSurfaceDataFlags Flags,
     TArrayView<FColor> Out)
   {
     SourcePitch *= GPixelFormats[Format].BlockBytes;
-    auto OutPixelCount = DestinationExtent.X * DestinationExtent.Y;
+    auto OutPixelCount = Extent.X * Extent.Y;
     switch (Format)
     {
     case PF_G16:
     case PF_R16_UINT:
     case PF_R16_SINT:
       // Shadow maps
-      ConvertRawR16DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawR16DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     case PF_R8G8B8A8:
-      ConvertRawR8G8B8A8DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawR8G8B8A8DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     case PF_B8G8R8A8:
-      ConvertRawB8G8R8A8DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawB8G8R8A8DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     case PF_A2B10G10R10:
-      ConvertRawR10G10B10A2DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawR10G10B10A2DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     case PF_FloatRGBA:
     case PF_R16G16B16A16_UNORM:
     case PF_R16G16B16A16_SNORM:
-      ConvertRawR16G16B16A16FDataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags.GetLinearToGamma());
+      ConvertRawR16G16B16A16FDataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags.GetLinearToGamma());
       break;
     case PF_FloatR11G11B10:
-      ConvertRawR11G11B10DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags.GetLinearToGamma());
+      ConvertRawR11G11B10DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags.GetLinearToGamma());
       break;
     case PF_A32B32G32R32F:
-      ConvertRawR32G32B32A32DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags.GetLinearToGamma());
+      ConvertRawR32G32B32A32DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags.GetLinearToGamma());
       break;
     case PF_A16B16G16R16:
-      ConvertRawR16G16B16A16DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawR16G16B16A16DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     case PF_G16R16:
-      ConvertRawR16G16DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawR16G16DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     case PF_DepthStencil: // Depth / Stencil
-      ConvertRawD32S8DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
+      ConvertRawD32S8DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
       break;
     case PF_X24_G8: // Depth / Stencil
-      ConvertRawR24G8DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
+      ConvertRawR24G8DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
       break;
     case PF_R32_FLOAT: // Depth
-      ConvertRawR32DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
+      ConvertRawR32DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
       break;
     case PF_R16G16B16A16_UINT:
     case PF_R16G16B16A16_SINT:
-      ConvertRawR16G16B16A16DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawR16G16B16A16DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     case PF_G8:
-      ConvertRawR8DataToFColor(DestinationExtent.X, DestinationExtent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
+      ConvertRawR8DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
       break;
     default:
       UE_LOG(LogCarla, Warning, TEXT("Unsupported format %llu"), (unsigned long long)Format);
@@ -145,6 +158,8 @@ namespace ImageUtil
     }
     return true;
   }
+
+
 
   bool ReadImageData(
     UTextureRenderTarget2D& RenderTarget,
@@ -157,6 +172,8 @@ namespace ImageUtil
     return Resource->ReadPixels(Out, ReadFlags);
   }
 
+
+
   bool ReadImageData(
     UTextureRenderTarget2D& RenderTarget,
     TArray64<FColor>& Out)
@@ -167,6 +184,8 @@ namespace ImageUtil
     Out.SetNum(RenderTarget.GetSurfaceWidth() * RenderTarget.GetSurfaceHeight());
     return Resource->ReadPixelsPtr(Out.GetData(), ReadFlags);
   }
+
+
 
   TUniquePtr<TImagePixelData<FColor>> ReadImageData(
     UTextureRenderTarget2D& RenderTarget)
@@ -179,12 +198,16 @@ namespace ImageUtil
     return TUniquePtr<TImagePixelData<FColor>>();
   }
 
+
+
   TFuture<bool> SaveImageData(
     UTextureRenderTarget2D& RenderTarget,
     const FStringView& Path)
   {
     return SaveImageData(ReadImageData(RenderTarget), Path);
   }
+
+
 
   TFuture<bool> SaveImageData(
     TUniquePtr<TImagePixelData<FColor>> Data,
@@ -201,11 +224,14 @@ namespace ImageUtil
     return HighResScreenshotConfig.ImageWriteQueue->Enqueue(MoveTemp(ImageTask));
   }
 
+
+
   static void ReadImageDataAsyncCommand(
     UTextureRenderTarget2D& RenderTarget,
     ReadImageDataAsyncCallback&& Callback)
   {
-    static thread_local auto RenderQueryPool = RHICreateRenderQueryPool(RQT_AbsoluteTime);
+    static thread_local auto RenderQueryPool =
+        RHICreateRenderQueryPool(RQT_AbsoluteTime);
 
     auto& CmdList = FRHICommandListImmediate::Get();
     auto Resource = static_cast<FTextureRenderTarget2DResource*>(
@@ -213,7 +239,8 @@ namespace ImageUtil
     auto Texture = Resource->GetRenderTargetTexture();
     if (Texture == nullptr)
       return;
-    auto Readback = MakeUnique<FRHIGPUTextureReadback>(TEXT("ReadImageData-Readback"));
+    auto Readback = MakeUnique<FRHIGPUTextureReadback>(
+      TEXT("ReadImageData-Readback"));
     auto Size = Texture->GetSizeXY();
     auto Format = Texture->GetFormat();
     auto ResolveRect = FResolveRect();
@@ -226,20 +253,26 @@ namespace ImageUtil
     RHIGetRenderQueryResult(Query.GetQuery(), DeltaTime, true);
     Query.ReleaseQuery();
 
-    AsyncTask(ENamedThreads::HighTaskPriority, [
+    AsyncTask(
+      ENamedThreads::HighTaskPriority, [
       Readback = MoveTemp(Readback),
       Callback = std::move(Callback),
-      Size, Format]
+      Size,
+      Format]
     {
       while (!Readback->IsReady())
         std::this_thread::yield();
       int32 RowPitch, BufferHeight;
-      auto Mapping = Readback->Lock(RowPitch, &BufferHeight);
-      if (Mapping != nullptr)
-        Callback(Mapping, RowPitch, BufferHeight, Format, Size);
-      Readback->Unlock();
+      auto MappedPtr = Readback->Lock(RowPitch, &BufferHeight);
+      if (MappedPtr != nullptr)
+      {
+        ScopedCallback Unlock = [&] { Readback->Unlock(); };
+        Callback(MappedPtr, RowPitch, BufferHeight, Format, Size);
+      }
     });
   }
+
+
 
   bool ReadImageDataAsync(
     UTextureRenderTarget2D& RenderTarget,
@@ -266,6 +299,8 @@ namespace ImageUtil
     return true;
   }
 
+
+
   bool ReadSensorImageDataAsync(
     AShaderBasedSensor& Sensor,
     ReadImageDataAsyncCallback&& Callback)
@@ -278,6 +313,7 @@ namespace ImageUtil
       *RenderTarget,
       std::move(Callback));
   }
+
 
 
   bool ReadImageDataAsyncFColor(
@@ -294,11 +330,13 @@ namespace ImageUtil
       FReadSurfaceDataFlags Flags;
       TArray<FColor> Pixels;
       Pixels.SetNum(Size.X * Size.Y);
-      if (!DecodePixelsByFormat(Mapping, RowPitch, Size, Size, Format, Flags, Pixels))
+      if (!DecodePixelsByFormat(Mapping, RowPitch, Size, Format, Flags, Pixels))
         return false;
       return Callback(Pixels, Size);
     });
   }
+
+
 
   bool ReadSensorImageDataAsyncFColor(
     AShaderBasedSensor& Sensor,
@@ -309,6 +347,8 @@ namespace ImageUtil
       return false;
     return ReadImageDataAsyncFColor(*RenderTarget, std::move(Callback));
   }
+
+
 
   bool ReadImageDataAsyncFLinearColor(
     UTextureRenderTarget2D& RenderTarget,
@@ -324,11 +364,13 @@ namespace ImageUtil
         FReadSurfaceDataFlags Flags;
         TArray<FLinearColor> Pixels;
         Pixels.SetNum(Size.X * Size.Y);
-        if (!DecodePixelsByFormat(Mapping, RowPitch, Size, Size, Format, Flags, Pixels))
+        if (!DecodePixelsByFormat(Mapping, RowPitch, Size, Format, Flags, Pixels))
           return false;
         return Callback(Pixels, Size);
       });
   }
+
+
 
   bool ReadSensorImageDataAsyncFLinearColor(
     AShaderBasedSensor& Sensor,

@@ -20,6 +20,8 @@ void ASoilTypeManager::BeginPlay()
 
 void ASoilTypeManager::Tick(float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ASoilTypeManager::Tick);
+  Super::Tick(DeltaTime);
 #if WITH_EDITOR // Only for debugging purposes. Requires to activate tick in contructor
   if((int)DeltaTime % 2000 == 0)
   {

@@ -19,6 +19,7 @@ void FSensorManager::DeRegisterSensor(ASensor* Sensor)
 
 void FSensorManager::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(FSensorManager::PostPhysTick);
   for(ASensor* Sensor : SensorList)
   {
     Sensor->PostPhysTickInternal(World, TickType, DeltaSeconds);

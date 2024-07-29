@@ -13,6 +13,7 @@
 #include "Materials/MaterialInstanceConstant.h"
 #include "MeshMergeModule.h"
 #include "ProceduralMeshComponent.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/SavePackage.h"
@@ -212,6 +213,44 @@ void AProceduralBuildingUtilities::CookProceduralMeshToMesh(
       StaticMesh,
       *FileName,
       SaveArgs);
+}
+
+void AProceduralBuildingUtilities::PlaceBuilding(AActor* Parent, TArray<UHierarchicalInstancedStaticMeshComponent*> Components)
+{
+  //Security wall.
+  if(Parent == nullptr) return;
+
+  //We need to create a component. This line is just for readability purposes.
+  UClass* HSMClass = UHierarchicalInstancedStaticMeshComponent::StaticClass();
+
+  //For every hierarchichal component we passed in the function, set 
+  //In the parent actor a new hierarchichal component that copies 
+  //the instances of the passed one.
+  for(int i = 0; i < Components.Num(); i++)
+  {
+    //Creates the component. The index is needed so every component has a unique name, if not, each iteration
+    //will just override the previous one. 
+    UHierarchicalInstancedStaticMeshComponent* NewComponent = 
+      NewObject<UHierarchicalInstancedStaticMeshComponent>(Parent, HSMClass, FName(Components[i]->GetStaticMesh().GetName() + FString::FromInt(i)));
+    
+    //Sets static mesh
+    NewComponent->SetStaticMesh(Components[i]->GetStaticMesh());
+
+    //Sets the instances transform.
+    for(int j = 0; j < Components[i]->GetInstanceCount(); j++)
+    {
+      FTransform InstanceTransform;
+      Components[i]->GetInstanceTransform(j, InstanceTransform, false);
+      NewComponent->AddInstance(InstanceTransform, false);
+    }
+
+    //Registers the component in the parent actor and makes it visible for the user.
+    NewComponent->RegisterComponent();
+    NewComponent->AttachToComponent(
+      Parent->GetRootComponent(),
+      FAttachmentTransformRules::SnapToTargetIncludingScale);
+    Parent->AddInstanceComponent(NewComponent);
+  }
 }
 
 UMaterialInstanceConstant* AProceduralBuildingUtilities::GenerateBuildingMaterialAsset(

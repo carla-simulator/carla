@@ -29,28 +29,45 @@ AOpticalFlowCamera::AOpticalFlowCamera(const FObjectInitializer &ObjectInitializ
 
 void AOpticalFlowCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-  auto CVarForceOutputsVelocity = IConsoleManager::Get().FindConsoleVariable(TEXT("r.BasePassForceOutputsVelocity"));
-  int32 OldValue = CVarForceOutputsVelocity->GetInt();
-  CVarForceOutputsVelocity->Set(1);
+  TRACE_CPUPROFILER_EVENT_SCOPE(AOpticalFlowCamera::PostPhysTick);
+  Super::PostPhysTick(World, TickType, DeltaSeconds);
 
-  std::function<TArray<float>(void *, uint32)> Conversor = [](void *Data, uint32 Size)
-  {
-    TArray<float> IntermediateBuffer;
-    int32 Count = Size / sizeof(FFloat16Color);
-    DEBUG_ASSERT(Count * sizeof(FFloat16Color) == Size);
-    FFloat16Color *Buf = reinterpret_cast<FFloat16Color *>(Data);
-    IntermediateBuffer.Reserve(Count * 2);
-    for (int i=0; i<Count; ++i)
-    {
-      float x = (Buf->R.GetFloat() - 0.5f) * 4.f;
-      float y = (Buf->G.GetFloat() - 0.5f) * 4.f;
-      IntermediateBuffer.Add(x);
-      IntermediateBuffer.Add(y);
-      ++Buf;
-    }
-    return IntermediateBuffer;
-  };
-  FPixelReader::SendPixelsInRenderThread<AOpticalFlowCamera, float>(*this, true, Conversor);
-  
-  CVarForceOutputsVelocity->Set(OldValue);
+  auto FrameIndex = FCarlaEngine::GetFrameCounter();
+  ImageUtil::ReadImageDataAsync(
+      *GetCaptureRenderTarget(),
+      [this, FrameIndex](
+          const void* MappedPtr,
+          size_t RowPitch,
+          size_t BufferHeight,
+          EPixelFormat Format,
+          FIntPoint Extent)
+      {
+        check(sizeof(FVector2f) == sizeof(float) * 2);
+        check(RowPitch >= Extent.X);
+        check(BufferHeight >= Extent.Y);
+        // UE_LOG(LogCarla, Log, TEXT("Format=%u"), (unsigned)Format);
+        TArray<FVector2f> ImageData;
+        ImageData.Reserve(Extent.X * Extent.Y);
+        auto BasePtr = reinterpret_cast<const FFloat16Color*>(MappedPtr);
+        for (uint32 i = 0; i != Extent.Y; ++i)
+        {
+          auto Ptr = BasePtr;
+          for (uint32 j = 0; j != Extent.X; ++j)
+          {
+            FVector2f Out(
+              Ptr->R.GetFloat(),
+              Ptr->G.GetFloat());
+            Out -= FVector2f(0.5F, 0.5F);
+            Out *= 4.0F;
+            ImageData.Add(Out);
+            ++Ptr;
+          }
+          BasePtr += RowPitch;
+        }
+        SendDataToClient(
+            *this,
+            TArrayView<FVector2f>(ImageData),
+            FrameIndex);
+        return true;
+      });
 }

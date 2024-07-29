@@ -14,17 +14,10 @@ validation of autonomous driving systems. In addition to open-source code and pr
 vehicles) that were created for this purpose and can be used freely. The simulation platform supports flexible specification of sensor suites and
 environmental conditions.
 
-[![CARLA Video](Docs/img/0_9_15_thumbnail.webp)](https://www.youtube.com/watch?v=q4V9GYjA1pE )
+[![CARLA Video](Docs/img/carla_ue5_readme_img.webp)](https://www.youtube.com/watch?v=q4V9GYjA1pE)
 
-### Download CARLA
-
-Linux:
-* [**Get CARLA overnight build**](http://carla-releases.s3.amazonaws.com/Linux/Dev/CARLA_Latest.tar.gz)
-* [**Get AdditionalMaps overnight build**](http://carla-releases.s3.amazonaws.com/Linux/Dev/AdditionalMaps_Latest.tar.gz)
-
-Windows:
-* [**Get CARLA overnight build**](http://carla-releases.s3.amazonaws.com/Windows/Dev/CARLA_Latest.zip)
-* [**Get AdditionalMaps overnight build**](http://carla-releases.s3.amazonaws.com/Windows/Dev/AdditionalMaps_Latest.zip)
+>[!NOTE]
+> This is the development branch `ue5-dev` for the **Unreal Engine 5.3 version of CARLA**. This branch exists in parallel with the Unreal Engine 4.26 version of CARLA, in the `ue4-dev` branch. Please be sure that this version of CARLA is suitable for your needs as there are significant differences between the UE 5.3 and UE 4.26 versions of CARLA. 
 
 ### Recommended system
 
@@ -81,25 +74,35 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 }
 ```
 
-Building CARLA
+Building CARLA with Unreal Engine 5.3
 --------------
 
 Clone this repository locally from GitHub:
 
 ```sh
-git clone https://github.com/carla-simulator/carla.git .
+git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
 ```
 
-Also, clone the [CARLA fork of the Unreal Engine](https://github.com/CarlaUnreal/UnrealEngine) into an appropriate location:
+Then run the setup script:
+
+Linux:
 
 ```sh
-git clone --depth 1 -b carla https://github.com/CarlaUnreal/UnrealEngine.git .
+cd CarlaUE5
+./Setup.sh
 ```
 
-Once you have cloned the repositories, follow the instructions for [building in Linux][buildlinuxlink] or [building in Windows][buildwindowslink].
+Windows:
 
-[buildlinuxlink]: https://carla.readthedocs.io/en/latest/build_linux/
-[buildwindowslink]: https://carla.readthedocs.io/en/latest/build_windows/
+```sh
+cd CarlaUE5
+Setup.bat
+```
+
+This will download and install Unreal Engine 5.3, install the prerequisite requirements and build and launch CARLA. It may take some time to complete and use a significant amount of disk space. For further instructions on building in Linux can be found [here][buildlinuxlink] and the instructions for building in Windows can be found [here][buildwindowslink].
+
+[buildlinuxlink]: https://carla.readthedocs.io/en/latest/build_linux_ue5/
+[buildwindowslink]: https://carla.readthedocs.io/en/latest/build_windows_ue5/
 
 Contributing
 ------------

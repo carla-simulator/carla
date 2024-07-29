@@ -4,7 +4,7 @@
 # StartingWorld: a blank empty space that Unreal opens into, also the map that loads when something goes wrong.
 # L_Razish_Carla: The Desert Map for executing missions. Has 30 Zones.
 # L_TrainCrash_Carla: The Train Crash Map for executing missions. Has 30 Zones. (Not Released)
-map: L_TrainCrash_Carla
+map: L_Razish_Carla
 
 # Waypoint List: Defines which waypoints and in which order the robot should traverse. Arguments include:
 # zone: The zone number that corresponds to the waypoint to traverse to.

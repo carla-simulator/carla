@@ -197,8 +197,6 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void SetSimulatePhysics(bool enabled);
 
-  void SetWheelCollisionNW(UChaosWheeledVehicleMovementComponent *VehicleNW, const FVehiclePhysicsControl &PhysicsControl);
-
   void SetVehicleLightState(const FVehicleLightState &LightState);
 
   void SetFailureState(const carla::rpc::VehicleFailureState &FailureState);

@@ -79,7 +79,14 @@ public:
     const FString Path = Object->GetPathName();
     TArray<FString> StringArray;
     Path.ParseIntoArray(StringArray, TEXT("/"), false);
-    return (StringArray.Num() > 4 ? GetLabelByFolderName(StringArray[4]) : crp::CityObjectLabel::None);
+    if(Path.Contains("UE5UseOnly"))
+    {
+      return (StringArray.Num() > 5 ? GetLabelByFolderName(StringArray[5]) : crp::CityObjectLabel::None);
+    }
+    else
+    {
+      return (StringArray.Num() > 4 ? GetLabelByFolderName(StringArray[4]) : crp::CityObjectLabel::None);
+    }
   }
 
   /// Method that computes the label corresponding to an specific object
@@ -90,7 +97,8 @@ public:
       return GetLabelByPath(Object.Get());
   }
 
-  static void SetStencilValue(UPrimitiveComponent &Component,
+  //TODO: Change function name to reflect the new functionality
+  static void SetStencilValue(UPrimitiveComponent &Component, const uint32 ActorID,
     const crp::CityObjectLabel &Label, const bool bSetRenderCustomDepth);
 
   static FLinearColor GetActorLabelColor(const AActor &Actor, const crp::CityObjectLabel &Label);
@@ -112,4 +120,5 @@ private:
 
   UPROPERTY(Category = "Tagger", EditAnywhere)
   bool bTagForSemanticSegmentation = false;
+
 };

@@ -6,7 +6,6 @@
 
 #include "Tagger.h"
 #include "Carla.h"
-#include "TaggedComponent.h"
 #include "Vehicle/CarlaWheeledVehicle.h"
 
 #include "Components/SkeletalMeshComponent.h"
@@ -56,14 +55,24 @@ crp::CityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
   else                               return crp::CityObjectLabel::None;
 }
 
-void ATagger::SetStencilValue(
-    UPrimitiveComponent &Component,
-    const crp::CityObjectLabel &Label,
-    const bool bSetRenderCustomDepth) {
-  Component.SetCustomDepthStencilValue(CastEnum(Label));
-  Component.SetRenderCustomDepth(
-      bSetRenderCustomDepth &&
-      (Label != crp::CityObjectLabel::None));
+void ATagger::SetStencilValue( UPrimitiveComponent &Component, const uint32 ActorID, const crp::CityObjectLabel &Label, const bool bSetRenderCustomDepth) 
+{
+
+static TMap<unsigned short, unsigned int> TruncatedIDUsedDebug;
+
+#ifdef CARLA_TAGGER_EXTRA_LOG
+  unsigned short truncated_id = static_cast<unsigned short>(ActorID);
+  if(TruncatedIDUsedDebug.Contains(truncated_id)){
+    UE_LOG(LogCarla, Warning, TEXT("Warning: The Instance ID %d has been used %d time/s previously on this scene"), truncated_id, TruncatedIDUsedDebug[truncated_id]);
+    TruncatedIDUsedDebug[truncated_id]++;
+  }
+  else
+  {
+    TruncatedIDUsedDebug.Emplace(truncated_id, 1);
+  }
+#endif //CARLA_TAGGER_EXTRA_LOG
+
+  Component.SetCustomPrimitiveDataVector4(4, FVector4((float) ActorID, (float) CastEnum(Label), 0.0f, 0.0f));
 }
 
 bool ATagger::IsThing(const crp::CityObjectLabel &Label)
@@ -109,114 +118,40 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
   // Iterate static meshes.
   TArray<UStaticMeshComponent *> StaticMeshComponents;
   Actor.GetComponents<UStaticMeshComponent>(StaticMeshComponents);
-  for (UStaticMeshComponent *Component : StaticMeshComponents) {
+
+  for (UStaticMeshComponent *Component : StaticMeshComponents) 
+  {
     auto Label = GetLabelByPath(Component->GetStaticMesh());
-    if (Label == crp::CityObjectLabel::Pedestrians &&
-        Cast<ACarlaWheeledVehicle>(&Actor))
+    if (Label == crp::CityObjectLabel::Pedestrians && Cast<ACarlaWheeledVehicle>(&Actor))
     {
       Label = crp::CityObjectLabel::Rider;
     }
-    SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
-#ifdef CARLA_TAGGER_EXTRA_LOG
-    UE_LOG(LogCarla, Log, TEXT("  + StaticMeshComponent: %s"), *Component->GetName());
-    UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
-#endif // CARLA_TAGGER_EXTRA_LOG
 
-    if(!Component->IsVisible() || !Component->GetStaticMesh())
-    {
-      continue;
-    }
+    SetStencilValue(*Component, Actor.GetUniqueID(), Label, bTagForSemanticSegmentation);
 
-    // Find a tagged component that is attached to this component
-    UTaggedComponent *TaggedComponent = NULL;
-    TArray<USceneComponent *> AttachedComponents = Component->GetAttachChildren();
-    for (USceneComponent *SceneComponent : AttachedComponents) {
-      UTaggedComponent *TaggedSceneComponent = Cast<UTaggedComponent>(SceneComponent);
-      if (IsValid(TaggedSceneComponent)) {
-          TaggedComponent = TaggedSceneComponent;
-#ifdef CARLA_TAGGER_EXTRA_LOG
-          UE_LOG(LogCarla, Log, TEXT("    - Found Tag"));
-#endif // CARLA_TAGGER_EXTRA_LOG
-          break;
-      }
-    }
-
-    // If not found, then create new tagged component and attach it to this component
-    if (!TaggedComponent) {
-      TaggedComponent = NewObject<UTaggedComponent>(Component);
-      TaggedComponent->SetupAttachment(Component);
-      TaggedComponent->RegisterComponent();
-#ifdef CARLA_TAGGER_EXTRA_LOG
-      UE_LOG(LogCarla, Log, TEXT("    - Added Tag"));
-#endif // CARLA_TAGGER_EXTRA_LOG
-    }
-
-    // Set tagged component color
-    FLinearColor Color = GetActorLabelColor(Actor, Label);
-#ifdef CARLA_TAGGER_EXTRA_LOG
-    UE_LOG(LogCarla, Log, TEXT("    - Color: %s"), *Color.ToString());
-#endif // CARLA_TAGGER_EXTRA_LOG
-    TaggedComponent->DetailMode = EDetailMode::DM_Epic;
-    TaggedComponent->SetColor(Color);
-    TaggedComponent->MarkRenderStateDirty();
-    TaggedComponent->SetComponentTickEnabled(true);
+    #ifdef CARLA_TAGGER_EXTRA_LOG
+        UE_LOG(LogCarla, Log, TEXT("  + StaticMeshComponent: %s"), *Component->GetName());
+        UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
+    #endif // CARLA_TAGGER_EXTRA_LOG
   }
-
+  
   // Iterate skeletal meshes.
   TArray<USkeletalMeshComponent *> SkeletalMeshComponents;
   Actor.GetComponents<USkeletalMeshComponent>(SkeletalMeshComponents);
+
   for (USkeletalMeshComponent *Component : SkeletalMeshComponents) {
     auto Label = GetLabelByPath(Component->GetPhysicsAsset());
-    if (Label == crp::CityObjectLabel::Pedestrians &&
-        Cast<ACarlaWheeledVehicle>(&Actor))
+    if (Label == crp::CityObjectLabel::Pedestrians && Cast<ACarlaWheeledVehicle>(&Actor))
     {
       Label = crp::CityObjectLabel::Rider;
     }
-    SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
-#ifdef CARLA_TAGGER_EXTRA_LOG
-    UE_LOG(LogCarla, Log, TEXT("  + SkeletalMeshComponent: %s"), *Component->GetName());
-    UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
-#endif // CARLA_TAGGER_EXTRA_LOG
 
-    if(!Component->IsVisible() || !Component->GetSkeletalMeshRenderData())
-    {
-      continue;
-    }
+    SetStencilValue(*Component, Actor.GetUniqueID(), Label, bTagForSemanticSegmentation);
 
-    // Find a tagged component that is attached to this component
-    UTaggedComponent *TaggedComponent = NULL;
-    TArray<USceneComponent *> AttachedComponents = Component->GetAttachChildren();
-    for (USceneComponent *SceneComponent : AttachedComponents) {
-      UTaggedComponent *TaggedSceneComponent = Cast<UTaggedComponent>(SceneComponent);
-      if (IsValid(TaggedSceneComponent)) {
-          TaggedComponent = TaggedSceneComponent;
-#ifdef CARLA_TAGGER_EXTRA_LOG
-          UE_LOG(LogCarla, Log, TEXT("    - Found Tag"));
-#endif // CARLA_TAGGER_EXTRA_LOG
-          break;
-      }
-    }
-
-    // If not found, then create new tagged component and attach it to this component
-    if (!TaggedComponent) {
-      TaggedComponent = NewObject<UTaggedComponent>(Component);
-      TaggedComponent->SetupAttachment(Component);
-      TaggedComponent->RegisterComponent();
-#ifdef CARLA_TAGGER_EXTRA_LOG
-      UE_LOG(LogCarla, Log, TEXT("    - Added Tag"));
-#endif // CARLA_TAGGER_EXTRA_LOG
-    }
-
-    // Set tagged component color
-    FLinearColor Color = GetActorLabelColor(Actor, Label);
-#ifdef CARLA_TAGGER_EXTRA_LOG
-    UE_LOG(LogCarla, Log, TEXT("    - Color: %s"), *Color.ToString());
-#endif // CARLA_TAGGER_EXTRA_LOG
-    TaggedComponent->DetailMode = EDetailMode::DM_Epic;
-    TaggedComponent->SetColor(Color);
-    TaggedComponent->MarkRenderStateDirty();
-    TaggedComponent->SetComponentTickEnabled(true);
-
+    #ifdef CARLA_TAGGER_EXTRA_LOG
+        UE_LOG(LogCarla, Log, TEXT("  + SkeletalMeshComponent: %s"), *Component->GetName());
+        UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
+    #endif // CARLA_TAGGER_EXTRA_LOG
   }
 }
 

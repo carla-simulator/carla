@@ -173,6 +173,10 @@
 		{
 			"Name": "Volumetrics",
 			"Enabled": false
+		},
+		{
+			"Name": "PerformanceMonitor",
+			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [
