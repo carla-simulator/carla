@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, Flag, IntFlag
 import sys
 from typing import Callable, Iterable, Iterator, Union, Optional, overload, ClassVar, Any, Literal
 if sys.version_info < (3, 11):
@@ -392,15 +392,15 @@ class ActorAttribute():
     # endregion
 
 
-class ActorAttributeType(__CarlaEnum):
+class ActorAttributeType(int, __CarlaEnum):
     """CARLA provides a library of blueprints for actors in `carla.BlueprintLibrary` with different attributes each. This class defines the types those at `carla.ActorAttribute` can be as a series of enum. All this information is managed internally and listed here for a better comprehension of how CARLA works.
     """
     # region Instance Variables
-    Bool = 0,
-    Int = 1,
-    Float = 2,
-    String = 3,
-    RGBColor = 4,
+    Bool = 0
+    Int = 1
+    Float = 2
+    String = 3
+    RGBColor = 4
     # endregion
 
 
@@ -594,19 +594,19 @@ class ActorSnapshot():
     # endregion
 
 
-class ActorState(__CarlaEnum):
+class ActorState(int, __CarlaEnum):
     """Class that defines the state of an actor."""
     # region Instance Variables
-    Invalid = 0,
+    Invalid = 0
     """An actor is Invalid if a problem has occurred."""
-    Active = 1,
+    Active = 1
     """An actor is Active when it visualized and can affect other actors."""
-    Dormant = 2,
+    Dormant = 2
     """An actor is Dormant when it is not visualized and will not affect other actors through physics. For example, actors are dormant if they are on an unloaded tile in a large map."""
     # endregion
 
 
-class AttachmentType(__CarlaEnum):
+class AttachmentType(int, __CarlaEnum):
     """
     Class that defines attachment options between an actor and its parent. 
     When spawning actors, these can be attached to another actor so their 
@@ -617,11 +617,11 @@ class AttachmentType(__CarlaEnum):
     + Note that the attachment type is declared as an enum within the class."""
 
     # region Instance Variables
-    Rigid = 0,
+    Rigid = 0
     """With this fixed attachment the object follow its parent position strictly. 
     This is the recommended attachment to retrieve precise data from the simulation."""
     
-    SpringArm = 1,
+    SpringArm = 1
     """
     An attachment that expands or retracts the position of the actor, 
     depending on its parent. This attachment is only recommended to record 
@@ -635,7 +635,7 @@ class AttachmentType(__CarlaEnum):
     actor is spawned with a relative translation in the Z-axis (e.g. `child_location = Location(0,0,2)`).
     """
 
-    SpringArmGhost = 2,
+    SpringArmGhost = 2
     """
     An attachment like the previous one but that does not make the collision test, 
     and that means that it does not expands or retracts the position of the actor. 
@@ -782,37 +782,37 @@ class BoundingBox():
     # endregion
 
 
-class CityObjectLabel(__CarlaEnum):
+class CityObjectLabel(int, __CarlaEnum):
     """Enum declaration that contains the different tags available to filter the bounding boxes returned by carla.World.get_level_bbs(). These values correspond to the semantic tag that the elements in the scene have."""
-    NONE = 0,
-    Buildings = 3,
-    Fences = 5,
-    Other = 22,
-    Pedestrians = 12,
-    Poles = 6,
-    RoadLines = 24,
-    Roads = 1,
-    Sidewalks = 2,
-    TrafficSigns = 8,
-    Vegetation = 9,
-    Car = 14,
-    Walls = 4,
-    Sky = 11,
-    Ground = 25,
-    Bridge = 26,
-    RailTrack = 27,
-    GuardRail = 28,
-    TrafficLight = 7,
-    Static = 20,
-    Dynamic = 21,
-    Water = 23,
-    Terrain = 10,
-    Truck = 15,
-    Motorcycle = 18,
-    Bicycle = 19,
-    Bus = 16,
-    Rider = 13,
-    Train = 17,
+    NONE = 0
+    Buildings = 3
+    Fences = 5
+    Other = 22
+    Pedestrians = 12
+    Poles = 6
+    RoadLines = 24
+    Roads = 1
+    Sidewalks = 2
+    TrafficSigns = 8
+    Vegetation = 9
+    Car = 14
+    Walls = 4
+    Sky = 11
+    Ground = 25
+    Bridge = 26
+    RailTrack = 27
+    GuardRail = 28
+    TrafficLight = 7
+    Static = 20
+    Dynamic = 21
+    Water = 23
+    Terrain = 10
+    Truck = 15
+    Motorcycle = 18
+    Bicycle = 19
+    Bus = 16
+    Rider = 13
+    Train = 17
     Any = 255
 
 
@@ -1116,7 +1116,7 @@ class Color():
     # endregion
 
 
-class ColorConverter(__CarlaEnum):
+class ColorConverter(int, __CarlaEnum):
     """
     Class that defines conversion patterns that can be applied to a `carla.Image` in order to show 
     information provided by `carla.Sensor`. Depth conversions cause a loss of accuracy, as sensors 
@@ -1126,13 +1126,13 @@ class ColorConverter(__CarlaEnum):
     """
 
     # region Instance Variables
-    Raw = 0,
+    Raw = 0
     """No changes applied to the image. Used by the `RGB camera`."""
-    Depth = 1,
+    Depth = 1
     """Converts the image to a linear depth map. Used by the `depth camera`."""
-    LogarithmicDepth = 2,
+    LogarithmicDepth = 2
     """Converts the image to a depth map using a logarithmic scale, leading to better precision for small distances at the expense of losing it when further away."""
-    CityScapesPalette = 3,
+    CityScapesPalette = 3
     """Converts the image to a segmented map using tags provided by the blueprint library. Used by the `semantic segmentation camera`."""
     # endregion
 
@@ -1424,25 +1424,25 @@ class FloatColor():
     # endregion
 
 
-class GBufferTextureID(__CarlaEnum):
+class GBufferTextureID(int, __CarlaEnum):
     """Defines the identifiers of each GBuffer texture (See the method `carla.Sensor.listen_to_gbuffer`)."""
 
     # region Instance Variables
-    SceneColor = 0,
+    SceneColor = 0
     """The texture "SceneColor" contains the final color of the image."""
-    SceneDepth = 1,
+    SceneDepth = 1
     """The texture "SceneDepth" contains the depth buffer - linear in world units."""
-    SceneStencil = 2,
+    SceneStencil = 2
     """The texture "SceneStencil" contains the stencil buffer."""
-    GBufferA = 3,
+    GBufferA = 3
     """The texture "GBufferA" contains the world-space normal vectors in the RGB channels. The alpha channel contains "per-object data"."""
-    GBufferB = 4,
+    GBufferB = 4
     """The texture "GBufferB" contains the metallic, specular and roughness in the RGB channels, respectively. The alpha channel contains a mask where the lower 4 bits indicate the shading model and the upper 4 bits contain the selective output mask."""
-    GBufferC = 5,
+    GBufferC = 5
     """The texture "GBufferC" contains the diffuse color in the RGB channels, with the indirect irradiance in the alpha channel.
     
     If static lightning is not allowed, the alpha channel will contain the ambient occlusion instead."""
-    GBufferD = 6,
+    GBufferD = 6
     """
     The contents of the "GBufferD" varies depending on the rendered object's material shading model (GBufferB):
         MSM_Subsurface (2), MSM_PreintegratedSkin (3), MSM_TwoSidedFoliage (6):
@@ -1464,17 +1464,17 @@ class GBufferTextureID(__CarlaEnum):
         B: Iris mask.
         A: Iris distance.
     """
-    GBufferE = 7,
+    GBufferE = 7
     """The texture "GBufferE" contains the precomputed shadow factors in the RGBA channels. This texture is unavailable if the selective output mask (GBufferB) does not have its 4th bit set."""
-    GBufferF = 8,
+    GBufferF = 8
     """The texture "GBufferF" contains the world-space tangent in the RGB channels and the anisotropy in the alpha channel. This texture is unavailable if the selective output mask (GBufferB) does not have its 5th bit set."""
-    Velocity = 9,
+    Velocity = 9
     """The texture "Velocity" contains the screen-space velocity of the scene objects."""
-    SSAO = 10,
+    SSAO = 10
     """The texture "SSAO" contains the screen-space ambient occlusion texture."""
-    CustomDepth = 11,
+    CustomDepth = 11
     """The texture "CustomDepth" contains the Unreal Engine custom depth data."""
-    CustomStencil = 12,
+    CustomStencil = 12
     """The texture "CustomStencil" contains the Unreal Engine custom stencil data."""
     # endregion
 
@@ -1817,15 +1817,15 @@ class Landmark():
     # endregion
 
 
-class LandmarkOrientation(__CarlaEnum):
+class LandmarkOrientation(int, __CarlaEnum):
     """Helper class to define the orientation of a landmark in the road. The definition is not directly translated from OpenDRIVE but converted for the sake of understanding."""
 
     # region Instance Variables
-    Positive = 0,
+    Positive = 0
     """The landmark faces towards vehicles going on the same direction as the road's geometry definition (lanes 0 and negative in OpenDRIVE)."""
-    Negative = 1,
+    Negative = 1
     """The landmark faces towards vehicles going on the opposite direction to the road's geometry definition (positive lanes in OpenDRIVE)."""
-    Both = 2,
+    Both = 2
     """Affects vehicles going in both directions of the road."""
     # endregion
 
@@ -1874,17 +1874,17 @@ class LandmarkType(Enum):
     # endregion
 
 
-class LaneChange(__CarlaEnum):
+class LaneChange(int, __CarlaEnum):
     """Class that defines the permission to turn either left, right, both or none (meaning only going straight is allowed). This information is stored for every `carla.Waypoint` according to the OpenDRIVE file. The snippet in `carla.Map.get_waypoint` shows how a waypoint can be used to learn which turns are permitted."""
 
     # region Instance Variables
-    NONE = 0,
+    NONE = 0
     """Traffic rules do not allow turning right or left, only going straight."""
-    Right = 1,
+    Right = 1
     """Traffic rules allow turning right."""
-    Left = 2,
+    Left = 2
     """Traffic rules allow turning left."""
-    Both = 3,
+    Both = 3
     """Traffic rules allow turning either right or left."""
     # endregion
 
@@ -1931,70 +1931,71 @@ class LaneMarking():
     # endregion
 
 
-class LaneMarkingColor(__CarlaEnum):
+class LaneMarkingColor(int, __CarlaEnum):
     """Class that defines the lane marking colors according to OpenDRIVE 1.4."""
 
     # region Instance Variables
-    White = 0,
-    Standard = 0,
+    White = 0
+    Standard = 0
     """White by default."""
-    Blue = 1,
-    Green = 2,
-    Red = 3,
-    Yellow = 4,
-    Other = 5,
+    Blue = 1
+    Green = 2
+    Red = 3
+    Yellow = 4
+    Other = 5
     # endregion
 
 
-class LaneMarkingType(__CarlaEnum):
+class LaneMarkingType(int, __CarlaEnum):
     """Class that defines the lane marking types accepted by OpenDRIVE 1.4. The snippet in `carla.Map.get_waypoint` shows how a waypoint can be used to retrieve the information about adjacent lane markings.
 
     + Note on double types: Lane markings are defined under the OpenDRIVE standard that determines whereas a line will be considered "BrokenSolid" or "SolidBroken". For each road there is a center lane marking, defined from left to right regarding the lane's directions. The rest of the lane markings are defined in order from the center lane to the closest outside of the road.
     """
 
     # region Instance Variables
-    Other = 0,
-    Broken = 1,
-    Solid = 2,
-    SolidSolid = 3,
-    SolidBroken = 4,
-    BrokenSolid = 5,
-    BrokenBroken = 6,
-    BottsDots = 7,
-    Grass = 8,
-    Curb = 9,
-    NONE = 0,
+    Other = 0
+    Broken = 1
+    Solid = 2
+    SolidSolid = 3
+    SolidBroken = 4
+    BrokenSolid = 5
+    BrokenBroken = 6
+    BottsDots = 7
+    Grass = 8
+    Curb = 9
+    NONE = 0
     # endregion
 
 
-class LaneType(__CarlaEnum):
+class LaneType(IntFlag, __CarlaEnum):
     """Class that defines the possible lane types accepted by OpenDRIVE 1.4. This standards define the road information. The snippet in `carla.Map.get_waypoint` makes use of a waypoint to get the current and adjacent lane types."""
 
     # region Instance Variables
-    Any = -2,
-    NONE = 1,
+    Any = -2
+    NONE = 1
     """Every type except for `NONE`."""
-    Driving = 2,
-    Stop = 4,
-    Shoulder = 8,
-    Biking = 16,
-    Sidewalk = 32,
-    Border = 64,
-    Restricted = 128,
-    Parking = 256,
-    Bidirectional = 512,
-    Median = 1024,
-    Special1 = 2048,
-    Special2 = 4096,
-    Special3 = 8192,
-    RoadWorks = 16384,
-    Tram = 32768,
-    Rail = 65536,
-    Entry = 131072,
-    Exit = 262144,
-    OffRamp = 524288,
-    OnRamp = 1048576,
+    Driving = 2
+    Stop = 4
+    Shoulder = 8
+    Biking = 16
+    Sidewalk = 32
+    Border = 64
+    Restricted = 128
+    Parking = 256
+    Bidirectional = 512
+    Median = 1024
+    Special1 = 2048
+    Special2 = 4096
+    Special3 = 8192
+    RoadWorks = 16384
+    Tram = 32768
+    Rail = 65536
+    Entry = 131072
+    Exit = 262144
+    OffRamp = 524288
+    OnRamp = 1048576
     # endregion
+
 
 
 class LidarDetection():
@@ -2143,17 +2144,17 @@ class Light():
     # endregion
 
 
-class LightGroup(__CarlaEnum):
+class LightGroup(int, __CarlaEnum):
     """This class categorizes the lights on scene into different groups. These groups available are provided as a enum values that can be used as flags.
 
     + Note. So far, though there is a `vehicle` group, vehicle lights are not available as `carla.Light` objects. These have to be managed using `carla.Vehicle` and `carla.VehicleLightState`."""
 
-    NONE = 0,
+    NONE = 0
     """All lights."""
-    Vehicle = 1,
-    Street = 2,
-    Building = 3,
-    Other = 4,
+    Vehicle = 1
+    Street = 2
+    Building = 3
+    Other = 4
 
 
 class LightManager():
@@ -2573,35 +2574,35 @@ class Map():
         ...
     # endregion
 
-class MapLayer(__CarlaEnum):
+class MapLayer(Flag, __CarlaEnum):
     """Class that represents each manageable layer of the map. Can be used as flags.
 
     + WARNING: Only "Opt" maps are able to work with map layers."""
-    NONE = 0,
-    Buildings = 1,
-    Decals = 2,
-    Foliage = 4,
-    Ground = 8,
-    ParkedVehicles = 16,
-    Particles = 32,
-    Props = 64,
-    StreetLights = 128,
-    Walls = 256,
-    All = 65535,
+    NONE = 0
+    Buildings = 1
+    Decals = 2
+    Foliage = 4
+    Ground = 8
+    ParkedVehicles = 16
+    Particles = 32
+    Props = 64
+    StreetLights = 128
+    Walls = 256
+    All = 65535
     """All layers selected."""
 
 
-class MaterialParameter(__CarlaEnum):
+class MaterialParameter(int, __CarlaEnum):
     """Class that represents material parameters. Not all objects in the scene contain all parameters."""
 
     # region Instance Variables
-    Normal = 0,
+    Normal = 0
     """The Normal map of the object. Present in all objects."""
-    AO_Roughness_Metallic_Emissive = 1,
+    AO_Roughness_Metallic_Emissive = 1
     """A texture where each color channel represent a property of the material (R: Ambient occlusion, G: Roughness, B: Metallic, A: Emissive/Height map in some objects)."""
-    Diffuse = 2,
+    Diffuse = 2
     """The Diffuse texture of the object. Present in all objects."""
-    Emissive = 3,
+    Emissive = 3
     """Emissive texture. Present in a few objects."""
     # endregion
 
@@ -3365,13 +3366,13 @@ class TrafficLight(TrafficSign):
     # endregion
 
 
-class TrafficLightState(__CarlaEnum):
+class TrafficLightState(int, __CarlaEnum):
     """All possible states for traffic lights. These can either change at a specific time step or be changed manually. The snippet in `carla.TrafficLight.set_state` changes the state of a traffic light on the fly."""
-    Red = 0,
-    Yellow = 1,
-    Green = 2,
-    Off = 3,
-    Unknown = 4,
+    Red = 0
+    Yellow = 1
+    Green = 2
+    Off = 3
+    Unknown = 4
 
 
 class TrafficManager():
@@ -4050,30 +4051,30 @@ class VehicleControl():
     # endregion
 
 
-class VehicleDoor(__CarlaEnum):
+class VehicleDoor(int, __CarlaEnum):
     """Possible index representing the possible doors that can be open. Notice that not all possible doors are able to open in some vehicles."""
-    FL = 0,
+    FL = 0
     """Front left door."""
-    FR = 1,
+    FR = 1
     """Front right door."""
-    RL = 2,
+    RL = 2
     """Back left door."""
-    RR = 3,
+    RR = 3
     """Back right door."""
-    All = 6,
+    All = 6
     """Represents all doors."""
 
 
-class VehicleFailureState(__CarlaEnum):
+class VehicleFailureState(int, __CarlaEnum):
     """Enum containing the different failure states of a vehicle, from which the it cannot recover. These are returned by get_failure_state() and only Rollover is currently implemented."""
 
-    NONE = 0,
-    Rollover = 1,
-    Engine = 2,
-    TirePuncture = 3,
+    NONE = 0
+    Rollover = 1
+    Engine = 2
+    TirePuncture = 3
 
 
-class VehicleLightState(__CarlaEnum):
+class VehicleLightState(Flag, __CarlaEnum):
     """Class that recaps the state of the lights of a vehicle, these can be used as a flags.
 
     E.g: `VehicleLightState.HighBeam & VehicleLightState.Brake` will return `True` when both are active.
@@ -4081,22 +4082,22 @@ class VehicleLightState(__CarlaEnum):
     Lights are off by default in any situation and should be managed by the user via script. The blinkers blink automatically.
 
     + Warning: Right now, not all vehicles have been prepared to work with this functionality, this will be added to all of them in later updates."""
-    NONE = 0,
+    NONE = 0
     """All lights off."""
-    Position = 1,
-    LowBeam = 2,
-    HighBeam = 4,
-    Brake = 8,
-    RightBlinker = 16,
-    LeftBlinker = 32,
-    Reverse = 64,
-    Fog = 128,
-    Interior = 256,
-    Special1 = 512,
+    Position = 1
+    LowBeam = 2
+    HighBeam = 4
+    Brake = 8
+    RightBlinker = 16
+    LeftBlinker = 32
+    Reverse = 64
+    Fog = 128
+    Interior = 256
+    Special1 = 512
     """This is reserved for certain vehicles that can have special lights, like a siren."""
-    Special2 = 1024,
+    Special2 = 1024
     """This is reserved for certain vehicles that can have special lights, like a siren."""
-    All = -1,
+    All = -1
     """All lights on."""
 
 
@@ -4218,19 +4219,19 @@ class VehiclePhysicsControl():
     # endregion
 
 
-class VehicleWheelLocation(__CarlaEnum):
+class VehicleWheelLocation(int, __CarlaEnum):
     """enum representing the position of each wheel on a vehicle. Used to identify the target wheel when setting an angle in `carla.Vehicle.set_wheel_steer_direction` or `carla.Vehicle.get_wheel_steer_angle`."""
-    FL_Wheel = 0,
+    FL_Wheel = 0
     """Front left wheel of a 4 wheeled vehicle."""
-    FR_Wheel = 1,
+    FR_Wheel = 1
     """Front right wheel of a 4 wheeled vehicle."""
-    BL_Wheel = 2,
+    BL_Wheel = 2
     """Back left wheel of a 4 wheeled vehicle."""
-    BR_Wheel = 3,
+    BR_Wheel = 3
     """Back right wheel of a 4 wheeled vehicle."""
-    Front_Wheel = 0,
+    Front_Wheel = 0
     """Front wheel of a 2 wheeled vehicle."""
-    Back_Wheel = 1,
+    Back_Wheel = 1
     """Back wheel of a 2 wheeled vehicle."""
 
 
