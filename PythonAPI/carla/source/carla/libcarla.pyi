@@ -26,32 +26,32 @@ class AckermannControllerSettings():
 
     # region Instance Variables
     @property
-    def speed_kp() -> float:
+    def speed_kp(self) -> float:
         """Proportional term of the speed PID controller."""
         ...
 
     @property
-    def speed_ki() -> float:
+    def speed_ki(self) -> float:
         """Integral term of the speed PID controller."""
         ...
 
     @property
-    def speed_kd() -> float:
+    def speed_kd(self) -> float:
         """Derivative term of the speed PID controller."""
         ...
 
     @property
-    def accel_kp() -> float:
+    def accel_kp(self) -> float:
         """Proportional term of the acceleration PID controller."""
         ...
 
     @property
-    def accel_ki() -> float:
+    def accel_ki(self) -> float:
         """Integral term of the acceleration PID controller."""
         ...
 
     @property
-    def accel_kd() -> float:
+    def accel_kd(self) -> float:
         """Derivative term of the acceleration PID controller."""
         ...
     # endregion
@@ -86,46 +86,46 @@ class Actor():
 
     # region Instance Variables
     @property
-    def attributes() -> dict:
+    def attributes(self) -> dict:
         """A dictionary containing the attributes of the blueprint this actor was based on.
         """
         ...
 
     @property
-    def id() -> int:
+    def id(self) -> int:
         """Identifier for this actor. Unique during a given episode.
         """
         ...
 
     @property
-    def type_id() -> str:
+    def type_id(self) -> str:
         """The identifier of the blueprint this actor was based on,
 
         e.g., `vehicle.ford.mustang.`"""
         ...
 
     @property
-    def is_alive() -> bool:
+    def is_alive(self) -> bool:
         """Returns whether this object was destroyed using this actor handle."""
         ...
 
     @property
-    def is_active() -> bool:
+    def is_active(self) -> bool:
         """Returns whether this actor is active (`True`) or not (`False`)."""
         ...
 
     @property
-    def is_dormant() -> bool:
+    def is_dormant(self) -> bool:
         """Returns whether this actor is dormant (`True`) or not (`False`) - the opposite of `is_active`."""
         ...
 
     @property
-    def parent() -> Union["Actor", None]:
+    def parent(self) -> Union["Actor", None]:
         """Actors may be attached to a parent actor that they will follow around. This is said actor."""
         ...
 
     @property
-    def semantic_tags() -> list[int]:
+    def semantic_tags(self) -> list[int]:
         """A list of semantic tags provided by the blueprint listing components for this actor.
 
         E.g. a traffic light could be tagged with `Pole` and `TrafficLight`. These tags are used by the semantic segmentation sensor. Find more about this and other sensors here
@@ -133,12 +133,12 @@ class Actor():
         """
 
     @property
-    def actor_state() -> ActorState:
+    def actor_state(self) -> ActorState:
         """Returns the carla.ActorState, which can identify if the actor is Active, Dormant or Invalid."""
         ...
 
     @property
-    def bounding_box() -> BoundingBox:
+    def bounding_box(self) -> BoundingBox:
         """Bounding box containing the geometry of the actor. Its location and rotation are relative to the actor it is attached to."""
     # endregion
 
@@ -345,17 +345,17 @@ class ActorAttribute():
 
     # region Instance Variables
     @property
-    def id() -> str:
+    def id(self) -> str:
         """The attribute's name and identifier in the library.
         """
     @property
-    def is_modifiable() -> bool:
+    def is_modifiable(self) -> bool:
         """It is True if the attribute's value can be modified."""
     @property
-    def recommended_values() -> list[str]:
+    def recommended_values(self) -> list[str]:
         """A list of values suggested by those who designed the blueprint."""
     @property
-    def type() -> ActorAttributeType:
+    def type(self) -> ActorAttributeType:
         """The attribute's parameter type."""
     # endregion
 
@@ -410,13 +410,13 @@ class ActorBlueprint():
 
     # region Instance Variables
     @property
-    def id() -> str:
+    def id(self) -> str:
         """The identifier of said blueprint inside the library.
 
         E.g. `walker.pedestrian.0001`."""
 
     @property
-    def tags() -> list[str]:
+    def tags(self) -> list[str]:
         """A list of tags each blueprint has that helps describing them.
 
         E.g. `['0001', 'pedestrian', 'walker']`.
@@ -554,7 +554,7 @@ class ActorSnapshot():
 
     # region Instance Variables
     @property
-    def id() -> int:
+    def id(self) -> int:
         """An identifier for the snapshot itself."""
         ...
     # endregion
@@ -714,14 +714,14 @@ class BoundingBox():
 
     # region Instance Variables
     @property
-    def extent() -> Vector3D:
+    def extent(self) -> Vector3D:
         """Vector from the center of the box to one vertex. The value in each axis equals half the size of the box for that axis. `extent.x * 2` would return the size of the box in the X-axis.
 
         Returns:
             `Vector3D`: meters\n
         """
     @property
-    def location() -> Location:
+    def location(self) -> Location:
         """The center of the bounding box.
 
         Returns:
@@ -729,7 +729,7 @@ class BoundingBox():
         """
 
     @property
-    def rotation() -> Rotation:
+    def rotation(self) -> Rotation:
         """The orientation of the bounding box."""
     # endregion
 
@@ -1068,13 +1068,13 @@ class CollisionEvent(SensorData):
     """
     # region Instance Variables
     @property
-    def actor() -> Actor:
+    def actor(self) -> Actor:
         """The actor the sensor is attached to, the one that measured the collision."""
     @property
-    def other_actor() -> Actor:
+    def other_actor(self) -> Actor:
         """The second actor involved in the collision."""
     @property
-    def normal_impulse() -> Vector3D:
+    def normal_impulse(self) -> Vector3D:
         """Normal impulse resulting of the collision.(N*s)"""
     # endregion
 
@@ -1084,16 +1084,16 @@ class Color():
 
     # region Instance Variables
     @property
-    def r() -> int:
+    def r(self) -> int:
         """Red color (0-255)."""
     @property
-    def g() -> int:
+    def g(self) -> int:
         """Green color (0-255)."""
     @property
-    def b() -> int:
+    def b(self) -> int:
         """Blue color (0-255)."""
     @property
-    def a() -> int:
+    def a(self) -> int:
         """Alpha channel (0-255)."""
     # endregion
 
@@ -1145,16 +1145,16 @@ class DVSEvent():
 
     # region Instance Variables
     @property
-    def x() -> int:
+    def x(self) -> int:
         """X pixel coordinate."""
     @property
-    def x() -> int:
+    def x(self) -> int:
         """Y pixel coordinate."""
     @property
-    def t() -> int:
+    def t(self) -> int:
         """Timestamp of the moment the event happened."""
     @property
-    def pol() -> bool:
+    def pol(self) -> bool:
         """Polarity of the event. True for positive and False for negative."""
     # endregion
 
@@ -1174,16 +1174,16 @@ class DVSEventArray():
 
     # region Instance Variables
     @property
-    def fov() -> float:
+    def fov(self) -> float:
         """Horizontal field of view of the image."""
     @property
-    def height() -> int:
+    def height(self) -> int:
         """Image height in pixels."""
     @property
-    def width() -> int:
+    def width(self) -> int:
         """Image width in pixels."""
     @property
-    def raw_data() -> bytes: ...
+    def raw_data(self) -> bytes: ...
     # endregion
 
     # region Methods
@@ -1348,27 +1348,27 @@ class EnvironmentObject():
 
     # region Instance Variables
     @property
-    def transform() -> Transform:
+    def transform(self) -> Transform:
         """Contains the location and orientation of the EnvironmentObject in world space."""
         ...
 
     @property
-    def bounding_box() -> BoundingBox:
+    def bounding_box(self) -> BoundingBox:
         """Object containing a location, rotation and the length of a box for every axis in world space."""
         ...
 
     @property
-    def id() -> int:
+    def id(self) -> int:
         """Unique ID to identify the object in the level."""
         ...
 
     @property
-    def name() -> str:
+    def name(self) -> str:
         """Name of the EnvironmentObject."""
         ...
 
     @property
-    def type() -> CityObjectLabel:
+    def type(self) -> CityObjectLabel:
         """Semantic tag."""
         ...
     # endregion
@@ -1385,22 +1385,22 @@ class FloatColor():
 
     # region Instance Variables
     @property
-    def r() -> float:
+    def r(self) -> float:
         """Red color."""
         ...
 
     @property
-    def g() -> float:
+    def g(self) -> float:
         """Green color."""
         ...
 
     @property
-    def b() -> float:
+    def b(self) -> float:
         """Blue color."""
         ...
 
     @property
-    def a() -> float:
+    def a(self) -> float:
         """Alpha channel."""
         ...
     # endregion
@@ -1518,17 +1518,17 @@ class GeoLocation():
 
     # region Instance Variables
     @property
-    def latitude() -> float:
+    def latitude(self) -> float:
         """North/South value of a point on the map (degrees)."""
         ...
 
     @property
-    def longitude() -> float:
+    def longitude(self) -> float:
         """West/East value of a point on the map (degrees)."""
         ...
 
     @property
-    def altitude() -> float:
+    def altitude(self) -> float:
         """Height regarding ground level (meters)."""
         ...
     # endregion
@@ -1557,17 +1557,17 @@ class GnssMeasurement(SensorData):
 
     # region Instance Variables
     @property
-    def altitude() -> float:
+    def altitude(self) -> float:
         """Height regarding ground level (meters)."""
         ...
 
     @property
-    def latitude() -> float:
+    def latitude(self) -> float:
         """North/South value of a point on the map (degrees)."""
         ...
 
     @property
-    def longitude() -> float:
+    def longitude(self) -> float:
         """West/East value of a point on the map (degrees)."""
         ...
     # endregion
@@ -1582,17 +1582,17 @@ class IMUMeasurement(SensorData):
 
     # region Instance Variables
     @property
-    def accelerometer() -> Vector3D:
+    def accelerometer(self) -> Vector3D:
         """Linear acceleration (m/s2)."""
         ...
 
     @property
-    def compass() -> float:
+    def compass(self) -> float:
         """Orientation with regard to the North ([0.0, -1.0, 0.0] in Unreal Engine) (radians)."""
         ...
 
     @property
-    def gyroscope() -> Vector3D:
+    def gyroscope(self) -> Vector3D:
         """Angular velocity. (rad/s)"""
         ...
     # endregion
@@ -1609,22 +1609,22 @@ class Image(SensorData):
 
     # region Instance Variables
     @property
-    def fov() -> float:
+    def fov(self) -> float:
         """Horizontal field of view of the image (degrees)."""
         ...
 
     @property
-    def height() -> int:
+    def height(self) -> int:
         """Image height in pixels."""
         ...
 
     @property
-    def width() -> int:
+    def width(self) -> int:
         """Image width in pixels."""
         ...
 
     @property
-    def raw_data() -> bytes:
+    def raw_data(self) -> bytes:
         """Flattened array of pixel data, use reshape to create an image array."""
         ...
     # endregion
@@ -1664,12 +1664,12 @@ class Junction():
 
     # region Instance Variables
     @property
-    def id() -> int:
+    def id(self) -> int:
         """Identifier found in the OpenDRIVE file."""
         ...
 
     @property
-    def bounding_box() -> BoundingBox:
+    def bounding_box(self) -> BoundingBox:
         """Bounding box encapsulating the junction lanes."""
         ...
     # endregion
@@ -1692,12 +1692,12 @@ class LabelledPoint():
 
     # region Instance Variables
     @property
-    def location() -> Location:
+    def location(self) -> Location:
         """Position in 3D space."""
         ...
 
     @property
-    def label() -> CityObjectLabel:
+    def label(self) -> CityObjectLabel:
         """Semantic tag of the point."""
         ...
     # endregion
@@ -1708,106 +1708,106 @@ class Landmark():
 
     # region Instance Variables
     @property
-    def road_id() -> int:
+    def road_id(self) -> int:
         """The OpenDRIVE ID of the road where this landmark is defined. Due to OpenDRIVE road definitions, this road may be different from the road the landmark is currently affecting. It is mostly the case in junctions where the road diverges in different routes.
 
         Example: a traffic light is defined in one of the divergent roads in a junction, but it affects all the possible routes."""
         ...
 
     @property
-    def distance() -> float:
+    def distance(self) -> float:
         """Distance between the landmark and the waypoint creating the object (querying `get_landmarks` or `get_landmarks_of_type`) (meters)."""
         ...
 
     @property
-    def s() -> float:
+    def s(self) -> float:
         """Distance where the landmark is positioned along the geometry of the road `road_id` (meters)."""
         ...
 
     @property
-    def t() -> float:
+    def t(self) -> float:
         """Lateral distance where the landmark is positioned from the edge of the road `road_id` (meters)."""
         ...
 
     @property
-    def id() -> str:
+    def id(self) -> str:
         """Unique ID of the landmark in the OpenDRIVE file."""
         ...
 
     @property
-    def name() -> str:
+    def name(self) -> str:
         """Name of the landmark in the in the OpenDRIVE file."""
         ...
 
     @property
-    def is_dynamic() -> bool:
+    def is_dynamic(self) -> bool:
         """Indicates if the landmark has state changes over time such as traffic lights."""
         ...
 
     @property
-    def orientation() -> LandmarkOrientation:
+    def orientation(self) -> LandmarkOrientation:
         """Indicates which lanes the landmark is facing towards to (degrees)."""
         ...
 
     @property
-    def z_offset() -> float:
+    def z_offset(self) -> float:
         """Height where the landmark is placed (meters)."""
         ...
 
     @property
-    def country() -> str:
+    def country(self) -> str:
         """Country code where the landmark is defined (default to OpenDRIVE is Germany 2017)."""
         ...
 
     @property
-    def type() -> str:
+    def type(self) -> str:
         """Type identifier of the landmark according to the country code."""
         ...
 
     @property
-    def sub_type() -> str:
+    def sub_type(self) -> str:
         """Subtype identifier of the landmark according to the country code."""
 
     @property
-    def value() -> float:
+    def value(self) -> float:
         """Value printed in the signal (e.g. speed limit, maximum weight, etc)."""
 
     @property
-    def unit() -> str:
+    def unit(self) -> str:
         """Units of measurement for the attribute `value`."""
         ...
 
     @property
-    def height() -> float:
+    def height(self) -> float:
         """Total height of the signal (meters)."""
 
     @property
-    def width() -> float:
+    def width(self) -> float:
         """Total width of the signal (meters)."""
 
     @property
-    def text() -> str:
+    def text(self) -> str:
         """Additional text in the signal."""
 
     @property
-    def h_offset() -> float:
+    def h_offset(self) -> float:
         """Orientation offset of the signal relative to the the definition of `road_id` at `s` in OpenDRIVE (meters)."""
         ...
 
     @property
-    def pitch() -> float:
+    def pitch(self) -> float:
         """Pitch rotation of the signal (Y-axis in UE coordinates system) (meters)."""
 
     @property
-    def roll() -> float:
+    def roll(self) -> float:
         """Roll rotation of the signal (X-axis in UE coordinates system) (meters)."""
 
     @property
-    def waypoint() -> Waypoint:
+    def waypoint(self) -> Waypoint:
         """A waypoint placed in the lane of the one that made the query and at the `s` of the landmark. It is the first waypoint for which the landmark will be effective."""
 
     @property
-    def transform() -> Transform:
+    def transform(self) -> Transform:
         """The location and orientation of the landmark in the simulation."""
     # endregion
 
@@ -1902,7 +1902,7 @@ class LaneInvasionEvent(SensorData):
         """Gets the actor the sensor is attached to, the one that invaded another lane."""
 
     @property
-    def crossed_lane_markings() -> list[LaneMarking]:
+    def crossed_lane_markings(self) -> list[LaneMarking]:
         """List of lane markings that have been crossed and detected by the sensor."""
     # endregion
 
@@ -1916,19 +1916,19 @@ class LaneMarking():
 
     # region Instance Variables
     @property
-    def color() -> LaneMarkingColor:
+    def color(self) -> LaneMarkingColor:
         """Actual color of the marking."""
 
     @property
-    def lane_change() -> LaneChange:
+    def lane_change(self) -> LaneChange:
         """Permissions for said lane marking to be crossed."""
 
     @property
-    def type() -> LaneMarkingType:
+    def type(self) -> LaneMarkingType:
         """Lane marking type."""
 
     @property
-    def width() -> float:
+    def width(self) -> float:
         """Horizontal lane marking thickness."""
     # endregion
 
@@ -2004,10 +2004,10 @@ class LidarDetection():
     """Data contained inside a `carla.LidarMeasurement`. Each of these represents one of the points in the cloud with its location and its associated intensity."""
     # region Instance Variables
     @property
-    def point() -> Location:
+    def point(self) -> Location:
         """Point in xyz coordinates (meters)."""
     @property
-    def intensity() -> float:
+    def intensity(self) -> float:
         """Computed intensity for this point as a scalar value between [0.0 , 1.0]."""
     # endregion
 
@@ -2023,15 +2023,15 @@ class LidarMeasurement(SensorData):
     """
     # region Instance Variables
     @property
-    def channels() -> int:
+    def channels(self) -> int:
         """Number of lasers shot."""
 
     @property
-    def horizontal_angle() -> float:
+    def horizontal_angle(self) -> float:
         """Horizontal angle the LIDAR is rotated at the time of the measurement (radians)."""
 
     @property
-    def raw_data() -> bytes:
+    def raw_data(self) -> bytes:
         """Received list of 4D points. Each point consists of [x,y,z] coordinates plus the intensity computed for that point."""
     # endregion
 
@@ -2071,35 +2071,35 @@ class Light():
 
     # region Instance Variables
     @property
-    def color() -> Color:
+    def color(self) -> Color:
         """Color of the light."""
         ...
 
     @property
-    def id() -> int:
+    def id(self) -> int:
         """Identifier of the light."""
         ...
 
     @property
-    def intensity() -> float:
+    def intensity(self) -> float:
         """Intensity of the light. (lumens)"""
 
     @property
-    def is_on() -> bool:
+    def is_on(self) -> bool:
         """Switch of the light. It is `True` when the light is on. When the night mode starts, this is set to `True`."""
         ...
 
     @property
-    def location() -> Location:
+    def location(self) -> Location:
         """Position of the light (meters)."""
         ...
 
     @property
-    def light_group() -> LightGroup:
+    def light_group(self) -> LightGroup:
         """Group the light belongs to."""
 
     @property
-    def light_state() -> LightState:
+    def light_state(self) -> LightState:
         """State of the light. Summarizes its attributes, group, and if it is on/off."""
     # endregion
 
@@ -2351,19 +2351,19 @@ class LightState():
 
     # region Instance Variables
     @property
-    def intensity() -> float:
+    def intensity(self) -> float:
         """Intensity of a light."""
 
     @property
-    def color() -> Color:
+    def color(self) -> Color:
         """Color of a light."""
 
     @property
-    def group() -> LightGroup:
+    def group(self) -> LightGroup:
         """Group a light belongs to."""
 
     @property
-    def active() -> bool:
+    def active(self) -> bool:
         """Switch of a light. It is `True` when the light is on."""
     # endregion
 
@@ -2384,13 +2384,13 @@ class Location(Vector3D):
     """Represents a spot in the world."""
     # region Instance Variables
     @property
-    def x() -> float:
+    def x(self) -> float:
         """Distance from origin to spot on X axis (meter)."""
     @property
-    def y() -> float:
+    def y(self) -> float:
         """Distance from origin to spot on Y axis (meter)."""
     @property
-    def z() -> float:
+    def z(self) -> float:
         """Distance from origin to spot on Z axis. (meter)"""
     # endregion
 
@@ -2440,7 +2440,7 @@ class Map():
 
     # region Instance Variables
     @property
-    def name() -> str:
+    def name(self) -> str:
         """The name of the map. It corresponds to the .umap from Unreal Engine that is loaded from a CARLA server, which then references to the .xodr road description."""
     # endregion
 
@@ -2616,17 +2616,17 @@ class ObstacleDetectionEvent(SensorData):
     """
     # region Instance Variables
     @property
-    def actor() -> Actor:
+    def actor(self) -> Actor:
         """The actor the sensor is attached to."""
         ...
 
     @property
-    def other_actor() -> Actor:
+    def other_actor(self) -> Actor:
         """The actor or object considered to be an obstacle."""
         ...
 
     @property
-    def distance() -> float:
+    def distance(self) -> float:
         """Distance between actor and other (meters)."""
         ...
     # endregion
@@ -2640,37 +2640,37 @@ class OpendriveGenerationParameters():
     """This class defines the parameters used when generating a world using an OpenDRIVE file."""
     # region Instance Variables
     @property
-    def vertex_distance() -> float:
+    def vertex_distance(self) -> float:
         """Distance between vertices of the mesh generated. Default is 2.0."""
         ...
 
     @property
-    def max_road_length() -> float:
+    def max_road_length(self) -> float:
         """Max road length for a single mesh portion. The mesh of the map is divided into portions, in order to avoid propagating issues. Default is 50.0."""
         ...
 
     @property
-    def wall_height() -> float:
+    def wall_height(self) -> float:
         """Height of walls created on the boundaries of the road. These prevent vehicles from falling off the road. Default is 1.0."""
         ...
 
     @property
-    def additional_width() -> float:
+    def additional_width(self) -> float:
         """Additional with applied junction lanes. Complex situations tend to occur at junctions, and a little increase can prevent vehicles from falling off the road. Default is 0.6."""
         ...
 
     @property
-    def smooth_junctions() -> bool:
+    def smooth_junctions(self) -> bool:
         """If `True`, the mesh at junctions will be smoothed to prevent issues where roads blocked other roads. Default is `True`."""
         ...
 
     @property
-    def enable_mesh_visibility() -> bool:
+    def enable_mesh_visibility(self) -> bool:
         """If `True`, the road mesh will be rendered. Setting this to False should reduce the rendering overhead. Default is True."""
         ...
 
     @property
-    def enable_pedestrian_navigation() -> bool:
+    def enable_pedestrian_navigation(self) -> bool:
         """If `True`, Pedestrian navigation will be enabled using Recast tool. For very large maps it is recommended to disable this option. Default is `True`."""
         ...
     # endregion
@@ -2693,22 +2693,22 @@ class OpticalFlowImage(SensorData):
     """Class that defines an optical flow image of 2-Dimension float (32-bit) vectors representing the optical flow detected in the field of view. The components of the vector represents the displacement of an object in the image plane. Each component outputs values in the normalized range [-2,2] which scales to [-2 size, 2 size] with size being the total resolution in the corresponding component."""
     # region Instance Variables
     @property
-    def fov() -> float:
+    def fov(self) -> float:
         """Horizontal field of view of the image. (degrees)"""
         ...
 
     @property
-    def height() -> int:
+    def height(self) -> int:
         """Image height in pixels."""
         ...
 
     @property
-    def width() -> int:
+    def width(self) -> int:
         """Image width in pixels."""
         ...
 
     @property
-    def raw_data() -> bytes:
+    def raw_data(self) -> bytes:
         """Flattened array of pixel data, use reshape to create an image array."""
     # endregion
 
@@ -2735,12 +2735,12 @@ class OpticalFlowPixel():
 
     # region Instance Variables
     @property
-    def x() -> float:
+    def x(self) -> float:
         """Optical flow in the x component."""
         ...
 
     @property
-    def y() -> float:
+    def y(self) -> float:
         """Optical flow in the y component."""
     # endregion
 
@@ -2790,48 +2790,48 @@ class Osm2OdrSettings():
 
     # region Instance Variables
     @property
-    def use_offsets() -> bool:
+    def use_offsets(self) -> bool:
         """Enables the use of offset for the conversion. The offset will move the origin position of the map. Default value is False.
         """
         ...
 
     @property
-    def offset_x() -> float:
+    def offset_x(self) -> float:
         """Offset in the X axis. Default value is 0.0 (meters)."""
         ...
 
     @property
-    def offset_y() -> float:
+    def offset_y(self) -> float:
         """Offset in the Y axis. Default value is 0.0 (meters)."""
         ...
 
     @property
-    def default_lane_width() -> float:
+    def default_lane_width(self) -> float:
         """Width of the lanes described in the resulting XODR map. Default value is 4.0 (meter)."""
         ...
 
     @property
-    def elevation_layer_height() -> float:
+    def elevation_layer_height(self) -> float:
         """Defines the height separating two different OpenStreetMap layers. Default value is 0.0."""
         ...
 
     @property
-    def center_map() -> bool:
+    def center_map(self) -> bool:
         """When this option is enabled, the geometry of the map will be displaced so that the origin of coordinates matches the center of the bounding box of the entire road map."""
         ...
 
     @property
-    def proj_string() -> str:
+    def proj_string(self) -> str:
         """Defines the `proj4` string that will be used to compute the projection from geocoordinates to cartesian coordinates. This string will be written in the resulting OpenDRIVE unless the options `use_offsets` or `center_map` are enabled as these options override some of the definitions in the string."""
         ...
 
     @property
-    def generate_traffic_lights() -> bool:
+    def generate_traffic_lights(self) -> bool:
         """Indicates wether to generate traffic light data in the OpenDRIVE. Road types defined by `set_traffic_light_excluded_way_types(way_types)` will not generate traffic lights."""
         ...
 
     @property
-    def all_junctions_with_traffic_lights() -> bool:
+    def all_junctions_with_traffic_lights(self) -> bool:
         """When disabled, the converter will generate traffic light data from the OpenStreetMaps data only. When enabled, all junctions will generate traffic lights."""
     # endregion
 
@@ -2862,22 +2862,22 @@ class RadarDetection():
 
     # region Instance Variables
     @property
-    def altitude() -> float:
+    def altitude(self) -> float:
         """Altitude angle of the detection (radians)."""
         ...
 
     @property
-    def azimuth() -> float:
+    def azimuth(self) -> float:
         """Azimuth angle of the detection (radians)."""
         ...
 
     @property
-    def depth() -> float:
+    def depth(self) -> float:
         """Distance from the sensor to the detection position (meters)."""
         ...
 
     @property
-    def velocity() -> float:
+    def velocity(self) -> float:
         """The velocity of the detected object towards the sensor (m/s)."""
         ...
     # endregion
@@ -2924,17 +2924,17 @@ class Rotation():
 
     # region Instance Variables
     @property
-    def pitch() -> float:
+    def pitch(self) -> float:
         """Y-axis rotation angle (degrees)."""
         ...
 
     @property
-    def yaw() -> float:
+    def yaw(self) -> float:
         """Z-axis rotation angle (degrees)."""
         ...
 
     @property
-    def roll() -> float:
+    def roll(self) -> float:
         """X-axis rotation angle (degrees)."""
         ...
     # endregion
@@ -2982,16 +2982,16 @@ class SemanticLidarDetection():
 
     # region Instance Variables
     @property
-    def point() -> Location:
+    def point(self) -> Location:
         """[x,y,z] coordinates of the point (meters)."""
     @property
-    def cos_inc_angle() -> float:
+    def cos_inc_angle(self) -> float:
         """Cosine of the incident angle between the ray, and the normal of the hit object."""
     @property
-    def object_idx() -> int:
+    def object_idx(self) -> int:
         """ID of the actor hit by the ray."""
     @property
-    def object_tag() -> int:
+    def object_tag(self) -> int:
         """`Semantic tag` of the component hit by the ray."""
     # endregion
 
@@ -3008,13 +3008,13 @@ class SemanticLidarMeasurement(SensorData):
 
     # region Instance Variables
     @property
-    def channels() -> int:
+    def channels(self) -> int:
         """Number of lasers shot."""
     @property
-    def horizontal_angle() -> float:
+    def horizontal_angle(self) -> float:
         """Horizontal angle the LIDAR is rotated at the time of the measurement (radians)."""
     @property
-    def raw_data() -> bytes:
+    def raw_data(self) -> bytes:
         """Received list of raw detection points. Each point consists of [x,y,z] coordinates plus the cosine of the incident angle, the index of the hit actor, and its semantic tag."""
     # endregion
 
@@ -3146,17 +3146,17 @@ class SensorData():
     """
     # region Instance Variables
     @property
-    def frame() -> int:
+    def frame(self) -> int:
         """Frame count when the data was generated."""
         ...
 
     @property
-    def timestamp() -> float:
+    def timestamp(self) -> float:
         """Simulation-time(seconds) when the data was generated."""
         ...
 
     @property
-    def transform() -> Transform:
+    def transform(self) -> Transform:
         """Sensor's transform when the data was generated."""
     # endregion
 
@@ -3168,10 +3168,10 @@ class TextureColor():
     """
     # region Instance Variables
     @property
-    def width() -> int:
+    def width(self) -> int:
         """X-coordinate size of the texture."""
     @property
-    def height() -> int:
+    def height(self) -> int:
         """Y-coordinate size of the texture."""
     # endregion
 
@@ -3209,10 +3209,10 @@ class TextureFloatColor():
 
     # region Instance Variables
     @property
-    def width() -> int:
+    def width(self) -> int:
         """X-coordinate size of the texture."""
     @property
-    def height() -> int:
+    def height(self) -> int:
         """Y-coordinate size of the texture."""
     # endregion
 
@@ -3240,13 +3240,13 @@ class Timestamp():
 
     # region Instance Variables
     @property
-    def frame() -> int:
+    def frame(self) -> int:
         """The number of frames elapsed since the simulator was launched."""
     @property
-    def elapsed_seconds() -> float:
+    def elapsed_seconds(self) -> float:
         """Simulated seconds elapsed since the beginning of the current episode (seconds)."""
     @property
-    def delta_seconds() -> float:
+    def delta_seconds(self) -> float:
         """Simulated seconds elapsed since the previous frame (seconds)."""
     def platform_timestamp() -> float:
         """Time register of the frame at which this measurement was taken given by the OS in seconds (seconds)."""
@@ -3270,7 +3270,7 @@ class TrafficLight(TrafficSign):
 
     # region Instance Variables
     @property
-    def state() -> TrafficLightState:
+    def state(self) -> TrafficLightState:
         """Current state of the traffic light."""
     # endregion
 
@@ -3656,7 +3656,7 @@ class TrafficSign(Actor):
 
     # region Instance Variables
     @property
-    def trigger_volume() -> BoundingBox:
+    def trigger_volume(self) -> BoundingBox:
         """A carla.BoundingBox situated near a traffic sign where the carla.Actor who is inside can know about it."""
     # endregion
 
@@ -3667,10 +3667,10 @@ class Transform():
 
     # region Instance Variables
     @property
-    def location() -> Location:
+    def location(self) -> Location:
         """Describes a point in the coordinate system."""
     @property
-    def rotation() -> Rotation:
+    def rotation(self) -> Rotation:
         """Describes a rotation for an object according to Unreal Engine's axis system (degrees (pitch, yaw, roll))."""
     # endregion
 
@@ -3726,10 +3726,10 @@ class Vector2D():
 
     # region Instance Variables
     @property
-    def x() -> float:
+    def x(self) -> float:
         """X-axis value."""
     @property
-    def y() -> float:
+    def y(self) -> float:
         """Y-axis value."""
     # endregion
 
@@ -3772,13 +3772,13 @@ class Vector3D():
 
     # region Instance Variables
     @property
-    def x() -> float:
+    def x(self) -> float:
         """X-axis value."""
     @property
-    def y() -> float:
+    def y(self) -> float:
         """Y-axis value."""
     @property
-    def z() -> float:
+    def z(self) -> float:
         """Z-axis value."""
     # endregion
 
@@ -3841,7 +3841,7 @@ class Vehicle(Actor):
 
     # region Instance Variables
     @property
-    def bounding_box() -> BoundingBox:
+    def bounding_box(self) -> BoundingBox:
         """Bounding box containing the geometry of the vehicle. Its location and rotation are relative to the vehicle it is attached to."""
     # endregion
 
@@ -3988,22 +3988,22 @@ class VehicleAckermannControl():
 
     # region Instance Variables
     @property
-    def steer() -> float:
+    def steer(self) -> float:
         """Desired steer (rad). Positive value is to the right. Default is 0.0."""
     @property
-    def steer_speed() -> float:
+    def steer_speed(self) -> float:
         """Steering velocity (rad/s). Zero steering angle velocity means change the steering angle as quickly as possible. Default is 0.0."""
 
     @property
-    def speed() -> float:
+    def speed(self) -> float:
         """Desired speed (m/s). Default is 0.0."""
 
     @property
-    def acceleration() -> float:
+    def acceleration(self) -> float:
         """Desired acceleration (m/s2) Default is 0.0."""
 
     @property
-    def jerk() -> float:
+    def jerk(self) -> float:
         """Desired jerk (m/s3). Default is 0.0."""
     # endregion
 
@@ -4022,26 +4022,26 @@ class VehicleControl():
     """Manages the basic movement of a vehicle using typical driving controls."""
     # region Instance Variables
     @property
-    def throttle() -> float:
+    def throttle(self) -> float:
         """A scalar value to control the vehicle throttle [0.0, 1.0]. Default is 0.0."""
     @property
-    def steer() -> float:
+    def steer(self) -> float:
         """A scalar value to control the vehicle steering [-1.0, 1.0]. Default is 0.0."""
     @property
-    def brake() -> float:
+    def brake(self) -> float:
         """A scalar value to control the vehicle brake [0.0, 1.0]. Default is 0.0."""
     @property
-    def hand_brake() -> bool:
+    def hand_brake(self) -> bool:
         """Determines whether hand brake will be used. Default is `False`."""
     @property
-    def reverse() -> bool:
+    def reverse(self) -> bool:
         """Determines whether the vehicle will move backwards. Default is `False`."""
     @property
-    def manual_gear_shift() -> bool:
+    def manual_gear_shift(self) -> bool:
         """Determines whether the vehicle will be controlled by changing gears manually. Default is `False`.
         """
     @property
-    def gear() -> int:
+    def gear(self) -> int:
         """States which gear is the vehicle running on."""
     # endregion
 
@@ -4121,70 +4121,70 @@ class VehiclePhysicsControl():
 
     # region Instance Variables
     @property
-    def torque_curve() -> list[Vector2D]:
+    def torque_curve(self) -> list[Vector2D]:
         """Curve that indicates the torque measured in Nm for a specific RPM of the vehicle's engine."""
     @property
-    def max_rpm() -> float:
+    def max_rpm(self) -> float:
         """The maximum RPM of the vehicle's engine."""
 
     @property
-    def moi() -> float:
+    def moi(self) -> float:
         """The moment of inertia of the vehicle's engine. (kg*m^2)"""
 
     @property
-    def damping_rate_full_throttle() -> float:
+    def damping_rate_full_throttle(self) -> float:
         """Damping ratio when the throttle is maximum."""
 
     @property
-    def damping_rate_zero_throttle_clutch_engaged() -> float:
+    def damping_rate_zero_throttle_clutch_engaged(self) -> float:
         """Damping ratio when the throttle is zero with clutch engaged."""
 
     @property
-    def damping_rate_zero_throttle_clutch_disengaged() -> float:
+    def damping_rate_zero_throttle_clutch_disengaged(self) -> float:
         """Damping ratio when the throttle is zero with clutch disengaged."""
 
     @property
-    def use_gear_autobox() -> bool:
+    def use_gear_autobox(self) -> bool:
         """If `True`, the vehicle will have an automatic transmission."""
 
     @property
-    def gear_switch_time() -> float:
+    def gear_switch_time(self) -> float:
         """Switching time between gears. (seconds)"""
 
     @property
-    def clutch_strength() -> float:
+    def clutch_strength(self) -> float:
         """Clutch strength of the vehicle (kg*m^2/s)."""
 
     @property
-    def final_ratio() -> float:
+    def final_ratio(self) -> float:
         """Fixed ratio from transmission to wheels."""
 
     @property
-    def forward_gears() -> list[GearPhysicsControl]:
+    def forward_gears(self) -> list[GearPhysicsControl]:
         """List of objects defining the vehicle's gears."""
 
     @property
-    def mass() -> float:
+    def mass(self) -> float:
         """Mass of the vehicle (kilograms)."""
 
     @property
-    def drag_coefficient() -> float:
+    def drag_coefficient(self) -> float:
         """Drag coefficient of the vehicle's chassis."""
 
     @property
-    def center_of_mass() -> Vector3D:
+    def center_of_mass(self) -> Vector3D:
         """Center of mass of the vehicle (meters)."""
 
     @property
-    def steering_curve() -> list[Vector2D]:
+    def steering_curve(self) -> list[Vector2D]:
         """Curve that indicates the maximum steering for a specific forward speed."""
 
     @property
-    def use_sweep_wheel_collision() -> bool:
+    def use_sweep_wheel_collision(self) -> bool:
         """Enable the use of sweep for wheel collision. By default, it is disabled and it uses a simple raycast from the axis to the floor for each wheel. This option provides a better collision model in which the full volume of the wheel is checked against collisions."""
 
     @property
-    def wheels() -> list[WheelPhysicsControl]:
+    def wheels(self) -> list[WheelPhysicsControl]:
         """List of wheel physics objects. This list should have 4 elements, where index 0 corresponds to the front left wheel, index 1 corresponds to the front right wheel, index 2 corresponds to the back left wheel and index 3 corresponds to the back right wheel. For 2 wheeled vehicles, set the same values for both front and back wheels."""
     # endregion
 
@@ -4363,7 +4363,7 @@ class WalkerBoneControlIn():
 
     # region Instance Variables
     @property
-    def bone_transforms() -> list[tuple[str, Transform]]:
+    def bone_transforms(self) -> list[tuple[str, Transform]]:
         """
         List with the data for each bone we want to set:
         + name: bone name
@@ -4414,13 +4414,13 @@ class WalkerControl():
 
     # region Instance Variables
     @property
-    def direction() -> Vector3D:
+    def direction(self) -> Vector3D:
         """Vector using global coordinates that will correspond to the direction of the walker."""
     @property
-    def speed() -> float:
+    def speed(self) -> float:
         """A scalar value to control the walker's speed (m/s)."""
     @property
-    def jump() -> bool:
+    def jump(self) -> bool:
         """If `True`, the walker will perform a jump."""
     # endregion
 
@@ -4449,58 +4449,58 @@ class Waypoint():
     """
     # region Instance Variables
     @property
-    def id() -> int:
+    def id(self) -> int:
         """The identifier is generated using a hash combination of the road, section, lane and s values that correspond to said point in the OpenDRIVE geometry. The s precision is set to 2 centimeters, so 2 waypoints closer than 2 centimeters in the same road, section and lane, will have the same identificator."""
 
     @property
-    def transform() -> Transform:
+    def transform(self) -> Transform:
         """Position and orientation of the waypoint according to the current lane information. This data is computed the first time it is accessed. It is not created right away in order to ease computing costs when lots of waypoints are created but their specific transform is not needed."""
 
     @property
-    def road_id() -> int:
+    def road_id(self) -> int:
         """OpenDRIVE road's id."""
 
     @property
-    def section_id() -> int:
+    def section_id(self) -> int:
         """OpenDRIVE section's id, based on the order that they are originally defined."""
 
     @property
-    def is_junction() -> bool:
+    def is_junction(self) -> bool:
         """True if the current Waypoint is on a junction as defined by OpenDRIVE."""
 
     @property
-    def junction_id() -> int:
+    def junction_id(self) -> int:
         """OpenDRIVE junction's id. For more information refer to OpenDRIVE documentation.
 
         http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf#page=20
         """
 
     @property
-    def lane_id() -> int:
+    def lane_id(self) -> int:
         """OpenDRIVE lane's id, this value can be positive or negative which represents the direction of the current lane with respect to the road. For more information refer to OpenDRIVE documentation."""
 
     @property
-    def s() -> float:
+    def s(self) -> float:
         """OpenDRIVE s value of the current position."""
 
     @property
-    def lane_width() -> float:
+    def lane_width(self) -> float:
         """Horizontal size of the road at current `s`."""
 
     @property
-    def lane_change() -> LaneChange:
+    def lane_change(self) -> LaneChange:
         """Lane change definition of the current Waypoint's location, based on the traffic rules defined in the OpenDRIVE file. It states if a lane change can be done and in which direction."""
 
     @property
-    def lane_type() -> LaneType:
+    def lane_type(self) -> LaneType:
         """The lane type of the current Waypoint, based on OpenDRIVE 1.4 standard."""
 
     @property
-    def right_lane_marking() -> LaneMarking:
+    def right_lane_marking(self) -> LaneMarking:
         """The right lane marking information based on the direction of the Waypoint."""
 
     @property
-    def left_lane_marking() -> LaneMarking:
+    def left_lane_marking(self) -> LaneMarking:
         """The left lane marking information based on the direction of the Waypoint."""
     # endregion
 
@@ -4589,34 +4589,34 @@ class WeatherParameters():
     """
     # region Instance Variables
     @property
-    def cloudiness() -> float:
+    def cloudiness(self) -> float:
         """Values range from 0 to 100, being 0 a clear sky and 100 one completely covered with clouds."""
     @property
-    def precipitation() -> float:
+    def precipitation(self) -> float:
         """Rain intensity values range from 0 to 100, being 0 none at all and 100 a heavy rain."""
     @property
-    def precipitation_deposits() -> float:
+    def precipitation_deposits(self) -> float:
         """Determines the creation of puddles. Values range from 0 to 100, being 0 none at all and 100 a road completely capped with water. Puddles are created with static noise, meaning that they will always appear at the same locations."""
     @property
-    def wind_intensity() -> float:
+    def wind_intensity(self) -> float:
         """Controls the strenght of the wind with values from 0, no wind at all, to 100, a strong wind. The wind does affect rain direction and leaves from trees, so this value is restricted to avoid animation issues."""
     @property
-    def sun_azimuth_angle() -> float:
+    def sun_azimuth_angle(self) -> float:
         """The azimuth angle of the sun. Values range from 0 to 360. Zero is an origin point in a sphere determined by Unreal Engine (degrees)."""
     @property
-    def sun_altitude_angle() -> float:
+    def sun_altitude_angle(self) -> float:
         """Altitude angle of the sun. Values range from -90 to 90 corresponding to midnight and midday each (degrees)."""
     @property
-    def fog_density() -> float:
+    def fog_density(self) -> float:
         """Fog concentration or thickness. It only affects the RGB camera sensor. Values range from 0 to 100."""
     @property
-    def fog_distance() -> float:
+    def fog_distance(self) -> float:
         """Fog start distance. Values range from 0 to infinite (meters)."""
     @property
-    def wetness() -> float:
+    def wetness(self) -> float:
         """Wetness intensity. It only affects the RGB camera sensor. Values range from 0 to 100."""
     @property
-    def fog_falloff() -> float:
+    def fog_falloff(self) -> float:
         """Density of the fog (as in specific mass) from 0 to infinity. The bigger the value, the more dense and heavy it will be, and the fog will reach smaller heights. Corresponds to `Fog Height Falloff` in the UE docs.
 
         If the value is 0, the fog will be lighter than air, and will cover the whole scene.
@@ -4625,16 +4625,16 @@ class WeatherParameters():
         For values greater than 5, the air will be so dense that it will be compressed on ground level.
         """
     @property
-    def scattering_intensity() -> float:
+    def scattering_intensity(self) -> float:
         """Controls how much the light will contribute to volumetric fog. When set to 0, there is no contribution."""
     @property
-    def mie_scattering_scale() -> float:
+    def mie_scattering_scale(self) -> float:
         """Controls interaction of light with large particles like pollen or air pollution resulting in a hazy sky with halos around the light sources. When set to 0, there is no contribution."""
     @property
-    def rayleigh_scattering_scale() -> float:
+    def rayleigh_scattering_scale(self) -> float:
         """Controls interaction of light with small particles like air molecules. Dependent on light wavelength, resulting in a blue sky in the day or red sky in the evening."""
     @property
-    def dust_storm() -> float:
+    def dust_storm(self) -> float:
         """Determines the strength of the dust storm weather. Values range from 0 to 100."""
     # endregion
 
@@ -4686,34 +4686,34 @@ class WheelPhysicsControl():
 
     # region Instance Variables
     @property
-    def tire_friction() -> float:
+    def tire_friction(self) -> float:
         """A scalar value that indicates the friction of the wheel."""
     @property
-    def damping_rate() -> float:
+    def damping_rate(self) -> float:
         """Damping rate of the wheel."""
     @property
-    def max_steer_angle() -> float:
+    def max_steer_angle(self) -> float:
         """Maximum angle that the wheel can steer (degrees)."""
     @property
-    def radius() -> float:
+    def radius(self) -> float:
         """Radius of the wheel (centimeters)."""
     @property
-    def max_brake_torque() -> float:
+    def max_brake_torque(self) -> float:
         """Maximum brake torque (N*m)."""
     @property
-    def max_handbrake_torque() -> float:
+    def max_handbrake_torque(self) -> float:
         """Maximum handbrake torque."""
     @property
-    def position() -> Vector3D:
+    def position(self) -> Vector3D:
         """World position of the wheel. This is a read-only parameter."""
     @property
-    def long_stiff_value() -> float:
+    def long_stiff_value(self) -> float:
         """Tire longitudinal stiffness per unit gravitational acceleration. Each vehicle has a custom value (kg/rad)."""
     @property
-    def lat_stiff_max_load() -> float:
+    def lat_stiff_max_load(self) -> float:
         """Maximum normalized tire load at which the tire can deliver no more lateral stiffness no matter how much extra load is applied to the tire. Each vehicle has a custom value."""
     @property
-    def lat_stiff_value() -> float:
+    def lat_stiff_value(self) -> float:
         """Maximum stiffness per unit of lateral slip. Each vehicle has a custom value."""
     # endregion
 
@@ -4740,10 +4740,10 @@ class World():
 
     # region Instance Variables
     @property
-    def id() -> int:
+    def id(self) -> int:
         """The ID of the episode associated with this world. Episodes are different sessions of a simulation. These change everytime a world is disabled or reloaded. Keeping track is useful to avoid possible issues."""
     @property
-    def debug() -> DebugHelper:
+    def debug(self) -> DebugHelper:
         """Responsible for creating different shapes for debugging. Take a look at its class to learn more about it."""
     # endregion
 
@@ -5048,40 +5048,40 @@ class WorldSettings():
 
     # region description
     @property
-    def synchronous_mode() -> bool:
+    def synchronous_mode(self) -> bool:
         """States the synchrony between client and server. When set to true, the server will wait for a client tick in order to move forward. It is `False` by default."""
     @property
-    def no_rendering_mode() -> bool:
+    def no_rendering_mode(self) -> bool:
         """When enabled, the simulation will run no rendering at all. This is mainly used to avoid overhead during heavy traffic simulations. It is `False` by default."""
     @property
-    def fixed_delta_seconds() -> float:
+    def fixed_delta_seconds(self) -> float:
         """Ensures that the time elapsed between two steps of the simulation is fixed. Set this to `0.0` to work with a variable time-step, as happens by default."""
     @property
-    def substepping() -> bool:
+    def substepping(self) -> bool:
         """Enable the physics substepping. This option allows computing some physics substeps between two render frames. If synchronous mode is set, the number of substeps and its time interval are fixed and computed are so they fulfilled the requirements of `carla.WorldSettings.max_substep` and `carla.WorldSettings.max_substep_delta_time`. These last two parameters need to be compatible with c`arla.WorldSettings.fixed_delta_seconds`. Enabled by default."""
     @property
-    def max_substep_delta_time() -> float:
+    def max_substep_delta_time(self) -> float:
         """Maximum delta time of the substeps. If the carla.`WorldSettingsmax_substep` is high enough, the substep delta time would be always below or equal to this value. By default, the value is set to 0.01."""
     @property
-    def max_substeps() -> int:
+    def max_substeps(self) -> int:
         """The maximum number of physics substepping that are allowed. By default, the value is set to 10.
         """
     @property
-    def max_culling_distance() -> float:
+    def max_culling_distance(self) -> float:
         """Configure the max draw distance for each mesh of the level."""
     @property
-    def deterministic_ragdolls() -> bool:
+    def deterministic_ragdolls(self) -> bool:
         """Defines wether to use deterministic physics for pedestrian death animations or physical ragdoll simulation. When enabled, pedestrians have less realistic death animation but ensures determinism. When disabled, pedestrians are simulated as ragdolls with more realistic simulation and collision but no determinsm can be ensured."""
     @property
-    def tile_stream_distance() -> bool:
+    def tile_stream_distance(self) -> bool:
         """Used for large maps only. Configures the maximum distance from the hero vehicle to stream tiled maps. Regions of the map within this range will be visible (and capable of simulating physics). Regions outside this region will not be loaded."""
     @property
-    def actor_active_distance() -> float:
+    def actor_active_distance(self) -> float:
         """Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant. Actors within this range will be active, and actors outside will become dormant."""
         ...
 
     @property
-    def spectator_as_ego() -> float:
+    def spectator_as_ego(self) -> float:
         """Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. By default, the spectator will provoke loading of neighboring tiles in the absence of an ego actor. This might be inconvenient for applications that immediately spawn an ego actor."""
     # endregion
 
@@ -5128,13 +5128,13 @@ class WorldSnapshot():
 
     # region Instance Variables
     @property
-    def id() -> int:
+    def id(self) -> int:
         """A value unique for every snapshot to differentiate them."""
     @property
-    def frame() -> int:
+    def frame(self) -> int:
         """Simulation frame in which the snapshot was taken."""
     @property
-    def timestamp() -> Timestamp:
+    def timestamp(self) -> Timestamp:
         """Precise moment in time when snapshot was taken. This class works in seconds as given by the operative system (seconds)."""
     # endregion
 
@@ -5175,10 +5175,10 @@ class command():
         """
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor affected by the command."""
         @property
-        def impulse() -> Vector3D:
+        def impulse(self) -> Vector3D:
             """Angular impulse applied to the actor (degrees*s)."""
         # endregion
 
@@ -5196,10 +5196,10 @@ class command():
         """Command adaptation of `add_force()` in `carla.Actor`. Applies a force to an actor."""
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor affected by the command."""
         @property
-        def force() -> Vector3D:
+        def force(self) -> Vector3D:
             """Force applied to the actor over time (N)."""
         # endregion
 
@@ -5217,10 +5217,10 @@ class command():
         """Command adaptation of `add_impulse()` in `carla.Actor`. Applies an impulse to an actor."""
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor affected by the command."""
         @property
-        def impulse() -> Vector3D:
+        def impulse(self) -> Vector3D:
             """Impulse applied to the actor (N*s)."""
         # endregion
 
@@ -5240,10 +5240,10 @@ class command():
 
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor affected by the command."""
         @property
-        def angular_velocity() -> Vector3D:
+        def angular_velocity(self) -> Vector3D:
             """The 3D angular velocity that will be applied to the actor (deg/s)."""
         # endregion
 
@@ -5262,10 +5262,10 @@ class command():
         """
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor affected by the command."""
         @property
-        def velocity() -> Vector3D:
+        def velocity(self) -> Vector3D:
             """The 3D velocity applied to the actor (m/s)."""
         # endregion
 
@@ -5286,11 +5286,11 @@ class command():
         
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor affected by the command."""
             
         @property
-        def transform() -> Vector3D:
+        def transform(self) -> Vector3D:
             """Torque applied to the actor over time (degrees)."""
             
         # endregion
@@ -5312,10 +5312,10 @@ class command():
 
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor affected by the command."""
         @property
-        def transform() -> Transform:
+        def transform(self) -> Transform:
             """Transformation to be applied."""
         # endregion
 
@@ -5334,10 +5334,10 @@ class command():
         """
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor affected by the command."""
         @property
-        def control() -> AckermannControllerSettings:
+        def control(self) -> AckermannControllerSettings:
             """Vehicle ackermann control to be applied."""
         # endregion
 
@@ -5356,10 +5356,10 @@ class command():
 
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor affected by the command."""
         @property
-        def control() -> VehicleControl:
+        def control(self) -> VehicleControl:
             """Vehicle control to be applied."""
         # endregion
 
@@ -5378,10 +5378,10 @@ class command():
 
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor affected by the command."""
         @property
-        def control() -> VehiclePhysicsControl:
+        def control(self) -> VehiclePhysicsControl:
             """Physics control to be applied."""
         # endregion
 
@@ -5400,10 +5400,10 @@ class command():
 
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Walker actor affected by the command."""
         @property
-        def control() -> VehiclePhysicsControl:
+        def control(self) -> VehiclePhysicsControl:
             """Walker control to be applied."""
         # endregion
 
@@ -5422,13 +5422,13 @@ class command():
 
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Walker actor affected by the command."""
         @property
-        def transform() -> Transform:
+        def transform(self) -> Transform:
             """Transform to be applied."""
         @property
-        def speed() -> float:
+        def speed(self) -> float:
             """Speed to be applied (m/s)."""
         # endregion
 
@@ -5448,7 +5448,7 @@ class command():
 
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor affected by the command."""
         # endregion
 
@@ -5470,10 +5470,10 @@ class command():
 
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor to whom the command was applied to. States that the command was successful."""
         @property
-        def error() -> str:
+        def error(self) -> str:
             """A string stating the command has failed."""
         # endregion
 
@@ -5487,13 +5487,13 @@ class command():
 
         # region Instance Methods
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor that is affected by the command."""
         @property
-        def enabled() -> bool:
+        def enabled(self) -> bool:
             """If autopilot should be activated or not."""
         @property
-        def port() -> int:
+        def port(self) -> int:
             """Port of the Traffic Manager where the vehicle is to be registered or unlisted."""
         # endregion
 
@@ -5512,10 +5512,10 @@ class command():
         """Command adaptation of `set_enable_gravity()` in `carla.Actor`. Enables or disables gravity on an actor."""
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor that is affected by the command."""
         @property
-        def enabled() -> bool:
+        def enabled(self) -> bool:
             """If gravity should be activated or not."""
         # endregion
 
@@ -5533,10 +5533,10 @@ class command():
         """Command adaptation of `set_simulate_physics()` in `carla.Actor`. Determines whether an actor will be affected by physics or not."""
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor that is affected by the command."""
         @property
-        def enabled() -> bool:
+        def enabled(self) -> bool:
             """If physics should be activated or not."""
         # endregion
 
@@ -5554,10 +5554,10 @@ class command():
         """Command adaptation of `set_light_state()` in `carla.Vehicle`. Sets the light state of a vehicle."""
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor that is affected by the command."""
         @property
-        def light_state() -> VehicleLightState:
+        def light_state(self) -> VehicleLightState:
             """Recaps the state of the lights of a vehicle, these can be used as a flags."""
         # endregion
 
@@ -5576,10 +5576,10 @@ class command():
         """
         # region Instance Variables
         @property
-        def actor_id() -> int:
+        def actor_id(self) -> int:
             """Actor that is affected by the command."""
         @property
-        def enabled() -> bool:
+        def enabled(self) -> bool:
             """If debug should be activated or not."""
         # endregion
 
@@ -5598,10 +5598,10 @@ class command():
 
         # region Instance Variables
         @property
-        def transform() -> Transform:
+        def transform(self) -> Transform:
             """Transform to be applied."""
         @property
-        def parent_id() -> int:
+        def parent_id(self) -> int:
             """Identificator of the parent actor."""
         # endregion
 
