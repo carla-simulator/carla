@@ -632,7 +632,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation Tint;
     Tint.Id = TEXT("tint");
     Tint.Type = EActorAttributeType::Float;
-    Tint.RecommendedValues = { TEXT("-0.15") };
+    Tint.RecommendedValues = { TEXT("0.0") };
     Tint.bRestrictToRecommended = false;
 
     FActorVariation ChromaticIntensity;
