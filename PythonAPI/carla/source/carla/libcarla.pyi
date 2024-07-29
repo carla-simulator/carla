@@ -1,6 +1,7 @@
 from enum import Enum, Flag, IntFlag
 import sys
-from typing import Callable, Iterable, Iterator, Union, Optional, overload, ClassVar, Any, Literal
+from typing import Callable, Iterable, Iterator, Union, Optional, overload, ClassVar, Any
+
 if sys.version_info >= (3, 11):
     from typing import Self
 else:
@@ -10,6 +11,11 @@ if sys.version_info >= (3, 9):
     from typing import Annotated
 else:
     from typing_extensions import Annotated
+    
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
 
 class __CarlaEnum(Enum):
     """
@@ -2556,14 +2562,14 @@ class Map():
         ...
 
     @overload
-    def get_waypoint(self, location: Location, project_to_road: Literal[True]=True, lane_type=LaneType.Driving) -> Waypoint: 
+    def get_waypoint(self, location: Location, project_to_road: Literal[False], lane_type:LaneType=LaneType.Driving) -> Waypoint | None: 
         ...
 
     @overload
-    def get_waypoint(self, location: Location, project_to_road: Literal[False], lane_type=LaneType.Driving) -> Waypoint | None: 
+    def get_waypoint(self, location: Location, project_to_road: Literal[True]=True, lane_type: Literal[LaneType.Driving]=LaneType.Driving) -> Waypoint:
         ...
-        
-    def get_waypoint(self, location: Location, project_to_road=True, lane_type=LaneType.Driving):
+    
+    def get_waypoint(self, location: Location, project_to_road:bool=True, lane_type: LaneType=LaneType.Driving) -> Waypoint | None:
         """Returns a waypoint that can be located in an exact location or translated to the center of the nearest lane. Said lane type can be defined using flags such as `LaneType.Driving & LaneType.Shoulder`.
 
         The method will return `None` if the waypoint is not found, which may happen only when trying to retrieve a waypoint for an exact location. That eases checking if a point is inside a certain road, as otherwise, it will return the corresponding waypoint.
