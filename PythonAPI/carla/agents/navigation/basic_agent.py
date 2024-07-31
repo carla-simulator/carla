@@ -6,7 +6,7 @@
 """
 This module implements an agent that roams around a track following random
 waypoints and avoiding other vehicles. The agent also responds to traffic lights.
-It can also make use of the global route planner to follow a specifed route
+It can also make use of the global route planner to follow a specified route
 """
 
 import carla
@@ -17,6 +17,7 @@ from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.tools.misc import (get_speed, is_within_distance,
                                get_trafficlight_trigger_location,
                                compute_distance)
+from agents.conf.agent_settings_backend import BasicAgentSettings, SimpleBasicAgentSettings
 
 from agents.tools.hints import ObstacleDetectionResult, TrafficLightDetectionResult
 
@@ -29,9 +30,9 @@ class BasicAgent(object):
     as well as to change its parameters in case a different driving mode is desired.
     """
 
-    def __init__(self, vehicle, target_speed=20, opt_dict={}, map_inst=None, grp_inst=None):
+    def __init__(self, vehicle, opt_dict=BasicAgentSettings(), map_inst=None, grp_inst=None):
         """
-        Initialization the agent paramters, the local and the global planner.
+        Initialization the agent parameters, the local and the global planner.
 
             :param vehicle: actor to apply to agent logic onto
             :param target_speed: speed (in Km/h) at which the vehicle will move
@@ -41,7 +42,7 @@ class BasicAgent(object):
             :param grp_inst: GlobalRoutePlanner instance to avoid the expensive call of getting it.
 
         """
-        self._vehicle = vehicle
+        self._vehicle = vehicle  # type: carla.Vehicle
         self._world = self._vehicle.get_world()
         if map_inst:
             if isinstance(map_inst, carla.Map):
@@ -53,41 +54,10 @@ class BasicAgent(object):
             self._map = self._world.get_map()
         self._last_traffic_light = None
 
-        # Base parameters
-        self._ignore_traffic_lights = False
-        self._ignore_stop_signs = False
-        self._ignore_vehicles = False
-        self._use_bbs_detection = False
-        self._target_speed = target_speed
-        self._sampling_resolution = 2.0
-        self._base_tlight_threshold = 5.0  # meters
-        self._base_vehicle_threshold = 5.0  # meters
-        self._speed_ratio = 1
-        self._max_brake = 0.5
-        self._offset = 0
-
-        # Change parameters according to the dictionary
-        opt_dict['target_speed'] = target_speed
-        if 'ignore_traffic_lights' in opt_dict:
-            self._ignore_traffic_lights = opt_dict['ignore_traffic_lights']
-        if 'ignore_stop_signs' in opt_dict:
-            self._ignore_stop_signs = opt_dict['ignore_stop_signs']
-        if 'ignore_vehicles' in opt_dict:
-            self._ignore_vehicles = opt_dict['ignore_vehicles']
-        if 'use_bbs_detection' in opt_dict:
-            self._use_bbs_detection = opt_dict['use_bbs_detection']
-        if 'sampling_resolution' in opt_dict:
-            self._sampling_resolution = opt_dict['sampling_resolution']
-        if 'base_tlight_threshold' in opt_dict:
-            self._base_tlight_threshold = opt_dict['base_tlight_threshold']
-        if 'base_vehicle_threshold' in opt_dict:
-            self._base_vehicle_threshold = opt_dict['base_vehicle_threshold']
-        if 'detection_speed_ratio' in opt_dict:
-            self._speed_ratio = opt_dict['detection_speed_ratio']
-        if 'max_brake' in opt_dict:
-            self._max_brake = opt_dict['max_brake']
-        if 'offset' in opt_dict:
-            self._offset = opt_dict['offset']
+        if isinstance(opt_dict, dict):
+            opt_dict = SimpleBasicAgentSettings(overwrites=opt_dict)
+            
+        self.config = opt_dict
 
         # Initialize the planners
         self._local_planner = LocalPlanner(self._vehicle, opt_dict=opt_dict, map_inst=self._map)
@@ -96,24 +66,26 @@ class BasicAgent(object):
                 self._global_planner = grp_inst
             else:
                 print("Warning: Ignoring the given map as it is not a 'carla.Map'")
-                self._global_planner = GlobalRoutePlanner(self._map, self._sampling_resolution)
+                self._global_planner = GlobalRoutePlanner(self._map, self.config.planner.sampling_resolution)
         else:
-            self._global_planner = GlobalRoutePlanner(self._map, self._sampling_resolution)
+            self._global_planner = GlobalRoutePlanner(self._map, self.config.planner.sampling_resolution)
 
         # Get the static elements of the scene
         self._lights_list = self._world.get_actors().filter("*traffic_light*")
-        self._lights_map = {}  # Dictionary mapping a traffic light to a wp corrspoing to its trigger volume location
+        # Dictionary mapping a traffic light to a Waypoint corresponding to its trigger volume location
+        self._lights_map = {} # type: "dict[int, carla.Waypoint]"
 
     def add_emergency_stop(self, control):
+        # type: (carla.VehicleControl) -> carla.VehicleControl
         """
         Overwrites the throttle a brake values of a control to perform an emergency stop.
         The steering is kept the same to avoid going out of the lane when stopping during turns
 
             :param speed (carl.VehicleControl): control to be modified
         """
-        control.throttle = 0.0
-        control.brake = self._max_brake
-        control.hand_brake = False
+        control.throttle = self.config.emergency.throttle
+        control.brake = self.config.emergency.max_emergency_brake
+        control.hand_brake = self.config.emergency.hand_brake
         return control
 
     def set_target_speed(self, speed):
@@ -121,8 +93,10 @@ class BasicAgent(object):
         Changes the target speed of the agent
             :param speed (float): target speed in Km/h
         """
-        self._target_speed = speed
-        self._local_planner.set_speed(speed)
+        self.config.speed.target_speed = speed
+        if self.config.speed.follow_speed_limits:
+            print("WARNING: The max speed is currently set to follow the speed limits. "
+                  "Use 'follow_speed_limits' to deactivate this")
 
     def follow_speed_limits(self, value=True):
         """
@@ -130,7 +104,7 @@ class BasicAgent(object):
 
             :param value (bool): whether or not to activate this behavior
         """
-        self._local_planner.follow_speed_limits(value)
+        self.config.speed.follow_speed_limits = value
 
     def get_local_planner(self):
         """Get method for protected member local planner"""
@@ -185,6 +159,7 @@ class BasicAgent(object):
         )
 
     def trace_route(self, start_waypoint, end_waypoint):
+        # type: (carla.Waypoint, carla.Waypoint) -> list[carla.Waypoint]
         """
         Calculates the shortest route between a starting and ending waypoint.
 
@@ -202,16 +177,23 @@ class BasicAgent(object):
         # Retrieve all relevant actors
         vehicle_list = self._world.get_actors().filter("*vehicle*")
 
-        vehicle_speed = get_speed(self._vehicle) / 3.6
+        self.config.live_info.current_speed = get_speed(self._vehicle) # km/s
+        vehicle_speed = self.config.live_info.current_speed  / 3.6
 
         # Check for possible vehicle obstacles
-        max_vehicle_distance = self._base_vehicle_threshold + self._speed_ratio * vehicle_speed
+        max_vehicle_distance = self.config.obstacles.base_vehicle_threshold + self.config.obstacles.detection_speed_ratio * vehicle_speed
         affected_by_vehicle, _, _ = self._vehicle_obstacle_detected(vehicle_list, max_vehicle_distance)
         if affected_by_vehicle:
             hazard_detected = True
 
         # Check if the vehicle is affected by a red traffic light
-        max_tlight_distance = self._base_tlight_threshold + self._speed_ratio * vehicle_speed
+        if self.config.obstacles.use_dynamic_speed_threshold:
+            # Basic agent setting:
+            max_tlight_distance = self.config.obstacles.base_tlight_threshold + self.config.obstacles.detection_speed_ratio * self.config.live_info.current_speed
+        else:
+            # Behavior setting:
+            max_tlight_distance = self.config.obstacles.base_tlight_threshold
+        
         affected_by_tlight, _ = self._affected_by_traffic_light(self._lights_list, max_tlight_distance)
         if affected_by_tlight:
             hazard_detected = True
@@ -228,15 +210,15 @@ class BasicAgent(object):
 
     def ignore_traffic_lights(self, active=True):
         """(De)activates the checks for traffic lights"""
-        self._ignore_traffic_lights = active
+        self.config.obstacles.ignore_traffic_lights = active
 
     def ignore_stop_signs(self, active=True):
         """(De)activates the checks for stop signs"""
-        self._ignore_stop_signs = active
+        self.config.obstacles.ignore_stop_signs = active
 
     def ignore_vehicles(self, active=True):
         """(De)activates the checks for stop signs"""
-        self._ignore_vehicles = active
+        self.config.obstacles.ignore_vehicles = active
 
     def set_offset(self, offset):
         """Sets an offset for the vehicle"""
@@ -257,7 +239,7 @@ class BasicAgent(object):
             lane_change_time * speed,
             False,
             1,
-            self._sampling_resolution
+            self.config.planner.sampling_resolution
         )
         if not path:
             print("WARNING: Ignoring the lane change as no path was found")
@@ -280,7 +262,7 @@ class BasicAgent(object):
             lights_list = self._world.get_actors().filter("*traffic_light*")
 
         if not max_distance:
-            max_distance = self._base_tlight_threshold
+            max_distance = self.config.obstacles.base_tlight_threshold
 
         if self._last_traffic_light:
             if self._last_traffic_light.state != carla.TrafficLightState.Red:
@@ -325,7 +307,7 @@ class BasicAgent(object):
         """
         Method to check if there is a vehicle in front of the agent blocking its path.
 
-            :param vehicle_list (list of carla.Vehicle): list contatining vehicle objects.
+            :param vehicle_list (list of carla.Vehicle): list containing vehicle objects.
                 If None, all vehicle in the scene are used
             :param max_distance: max freespace to check for obstacles.
                 If None, the base threshold value is used
@@ -333,8 +315,8 @@ class BasicAgent(object):
         def get_route_polygon():
             route_bb = []
             extent_y = self._vehicle.bounding_box.extent.y
-            r_ext = extent_y + self._offset
-            l_ext = -extent_y + self._offset
+            r_ext = extent_y + self.config.planner.offset
+            l_ext = -extent_y + self.config.planner.offset
             r_vec = ego_transform.get_right_vector()
             p1 = ego_location + carla.Location(r_ext * r_vec.x, r_ext * r_vec.y)
             p2 = ego_location + carla.Location(l_ext * r_vec.x, l_ext * r_vec.y)
@@ -364,7 +346,7 @@ class BasicAgent(object):
             return ObstacleDetectionResult(False, None, -1)
 
         if not max_distance:
-            max_distance = self._base_vehicle_threshold
+            max_distance = self.config.obstacles.base_vehicle_threshold
 
         ego_transform = self._vehicle.get_transform()
         ego_location = ego_transform.location
@@ -379,8 +361,8 @@ class BasicAgent(object):
         ego_front_transform.location += carla.Location(
             self._vehicle.bounding_box.extent.x * ego_transform.get_forward_vector())
 
-        opposite_invasion = abs(self._offset) + self._vehicle.bounding_box.extent.y > ego_wpt.lane_width / 2
-        use_bbs = self._use_bbs_detection or opposite_invasion or ego_wpt.is_junction
+        opposite_invasion = abs(self.config.planner.offset) + self._vehicle.bounding_box.extent.y > ego_wpt.lane_width / 2
+        use_bbs = self.config.obstacles.use_bbs_detection or opposite_invasion or ego_wpt.is_junction
 
         # Get the route bounding box
         route_polygon = get_route_polygon()

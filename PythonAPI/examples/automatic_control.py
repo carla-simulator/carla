@@ -738,10 +738,10 @@ def game_loop(args):
         world = World(client.get_world(), hud, args)
         controller = KeyboardControl(world)
         if args.agent == "Basic":
-            agent = BasicAgent(world.player, 30)
+            agent = BasicAgent(world.player, {'target_speed':30})
             agent.follow_speed_limits(True)
         elif args.agent == "Constant":
-            agent = ConstantVelocityAgent(world.player, 30)
+            agent = ConstantVelocityAgent(world.player, {'target_speed':30})
             ground_loc = world.world.ground_projection(world.player.get_location(), 5)
             if ground_loc:
                 world.player.set_location(ground_loc.location + carla.Location(z=0.01))
