@@ -44,7 +44,7 @@ then
     echo "Git credentials are not set, they will be requested later on during the download of Unreal Engine Carla fork"
 fi
 
-echo "Installing Ubuntu Pacakges..."
+echo "Installing Ubuntu Packages..."
 if ! command -v retry &> /dev/null
 then
     sudo apt update
@@ -72,12 +72,12 @@ retry --until=success --times=12 --delay=300 -- sudo apt-get -y install \
     libxml2-dev \
     git \
     git-lfs
-echo "Ubuntu Pacakges Installed..."
+echo "Ubuntu Packages Installed..."
 
-echo "Installing Python Pacakges..."
+echo "Installing Python Packages..."
 pip3 install --upgrade pip
 pip3 install -r requirements.txt
-echo "Python Pacakges Installed..."
+echo "Python Packages Installed..."
 
 echo "Clonning CARLA Content asynchronously... (see the progres in ContentClone.log)"
 mkdir -p Unreal/CarlaUnreal/Content
