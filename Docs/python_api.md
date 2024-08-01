@@ -2585,14 +2585,18 @@ Describes a rotation for an object according to Unreal Engine's axis system.
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
         - `rotation` (_[carla.Rotation](#carla.Rotation)<small> - degrees (pitch, yaw, roll)</small>_)  
+- <a name="carla.Transform.inverse_transform"></a>**<font color="#7fb800">inverse_transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_point**</font>)  
+Applies the inverse of `transform` by translating a 3D point in place from global to local coordinates using the current transformation as frame of reference.  
+    - **Parameters:**
+        - `in_point` (_[carla.Vector3D](#carla.Vector3D)_) - Location in the space to which the inverse transformation will be applied.  
 - <a name="carla.Transform.transform"></a>**<font color="#7fb800">transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_point**</font>)  
-Translates a 3D point from local to global coordinates using the current transformation as frame of reference.  
+Translates a 3D point in place from local to global coordinates using the current transformation as frame of reference.  
     - **Parameters:**
-        - `in_point` (_[carla.Location](#carla.Location)_) - Location in the space to which the transformation will be applied.  
-- <a name="carla.Transform.transform_vector"></a>**<font color="#7fb800">transform_vector</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_vector**</font>)  
-Rotates a vector using the current transformation as frame of reference, without applying translation. Use this to transform, for example, a velocity.  
+        - `in_point` (_[carla.Vector3D](#carla.Vector3D)_) - Location in the space to which the transformation will be applied.  
+- <a name="carla.Transform.transform_vector"></a>**<font color="#7fb800">transform_vector</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_point**</font>)  
+Rotates a vector in place using the current transformation as frame of reference, without applying translation. Use this to transform, for example, a velocity.  
     - **Parameters:**
-        - `in_vector` (_[carla.Vector3D](#carla.Vector3D)_) - Vector to which the transformation will be applied.  
+        - `in_point` (_[carla.Vector3D](#carla.Vector3D)_) - Vector to which the transformation will be applied.  
 
 ##### Getters
 - <a name="carla.Transform.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
