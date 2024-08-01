@@ -4880,7 +4880,7 @@ class World():
         """Resets the cycle of all traffic lights in the map to the initial state.
         """
 
-    def spawn_actor(self, blueprint: ActorBlueprint, transform: Transform, attach_to: Optional[Actor] = None, attachment=AttachmentType.Rigid) -> Actor:
+    def spawn_actor(self, blueprint: ActorBlueprint, transform: Transform, attach_to: Optional[Actor] = None, attachment_type=AttachmentType.Rigid) -> Actor:
         """The method will create, return and spawn an actor into the world. The actor will need an available blueprint to be created and a transform (location and rotation). It can also be attached to a parent with a certain attachment type.
 
         Args:
@@ -4905,7 +4905,7 @@ class World():
             `int`\n
         """
 
-    def try_spawn_actor(self, blueprint: ActorBlueprint, transform: Transform, attach_to: Optional[Actor] = None, attachment=AttachmentType.Rigid) -> Actor:
+    def try_spawn_actor(self, blueprint: ActorBlueprint, transform: Transform, attach_to: Optional[Actor] = None, attachment_type=AttachmentType.Rigid) -> Actor:
         """Same as `spawn_actor()` but returns `None` on failure instead of throwing an exception.
 
         Args:
