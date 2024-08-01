@@ -3697,17 +3697,39 @@ class Transform():
     def __init__(self, location: Location = Location(0,0,0), rotation: Rotation = Rotation(0,0,0)): ...
 
     def transform(self, in_point: Vector3D) -> Vector3D:
-        """Translates a 3D point from local to global coordinates using the current transformation as frame of reference.
+        """
+        Translates a 3D point from local to global coordinates using the current 
+        transformation as frame of reference.
 
         Args:
-            in_point (Location): Translates a 3D point from local to global coordinates using the current transformation as frame of reference.
+            in_point (Location): Location in the space to which the transformation will be applied. 
+            
+        Note:
+            This operation transforms `in_point` in place.
+        """
+    
+    def inverse_transform(self, in_point: Vector3D) -> Vector3D:
+        """
+        Applies the inverse of `transform` by translating a 3D point from global to local 
+        coordinates using the current transformation as frame of reference.
+        
+        Args:
+            in_point (Vector3D): Vector to which the transformation will be applied.
+        
+        Note:
+            This operation transforms `in_point` in place.
         """
 
-    def transform_vector(self, in_vector: Vector3D) -> Vector3D:
-        """Rotates a vector using the current transformation as frame of reference, without applying translation. Use this to transform, for example, a velocity.
+    def transform_vector(self, in_point: Vector3D) -> Vector3D:
+        """
+        Rotates a vector using the current transformation as frame of reference, 
+        without applying translation. Use this to transform, for example, a velocity.
 
         Args:
-            in_vector (Vector3D): Vector to which the transformation will be applied.
+            in_point (Vector3D): Vector to which the transformation will be applied.
+        
+        Note:
+            This operation transforms `in_point` in place.
         """
     # endregion
 
