@@ -39,6 +39,7 @@ endif ()
 
 if (WIN32)
   add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
+  add_compile_options (/utf-8)
 endif ()
 
 set (CARLA_COMMON_DEFINITIONS)
