@@ -1,6 +1,6 @@
 from enum import Enum, Flag, IntFlag
 import sys
-from typing import Callable, Iterable, Iterator, Union, Optional, overload, ClassVar, Any
+from typing import Callable, Iterable, Iterator, Union, Optional, overload, ClassVar, Any, TypeVar
 
 if sys.version_info >= (3, 11):
     from typing import Self
@@ -16,6 +16,12 @@ if sys.version_info >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
+
+
+# Note: __protected_variables are not part of the carla module, they are helpers to complete the stubs.
+
+__SensorData = TypeVar("__SensorData", bound=SensorData) # type: ignore
+"""Generic that allows subclassing."""
 
 class __CarlaEnum(Enum):
     """
@@ -3108,7 +3114,7 @@ class Sensor(Actor):
             `gbuffer_id (GBufferTextureID)`: The ID of the target Unreal Engine GBuffer texture.\n
         """
 
-    def listen(self, callback: Callable[[SensorData], Any]) -> None:
+    def listen(self, callback: Callable[[__SensorData], Any]) -> None:
         """
         The function the sensor will be calling to every time a new measurement is received. 
         This function needs for an argument containing an object type `carla.SensorData` to work with.
@@ -3117,14 +3123,14 @@ class Sensor(Actor):
             `callback (Callable[[SensorData], Any])`: The called function with one argument containing the sensor data.\n
         """
 
-    def listen_to_gbuffer(self, gbuffer_id: GBufferTextureID, callback: Callable[[SensorData], Any]) -> None:
+    def listen_to_gbuffer(self, gbuffer_id: GBufferTextureID, callback: Callable[[__SensorData], Any]) -> None:
         """
         The function the sensor will be calling to every time the desired GBuffer texture is received.
         This function needs for an argument containing an object type `carla.SensorData` to work with.
 
         Args:
             `gbuffer_id (GBufferTextureID)`: The ID of the target Unreal Engine GBuffer texture.\n
-            `callback (Callable)`: The called function with one argument containing the received GBuffer texture.\n
+            `callback (Callable[[__SensorData], Any])`: The called function with one argument containing the received GBuffer texture.\n
         """
 
     def stop(self):
@@ -4872,11 +4878,11 @@ class World():
             map_layers (MapLayer): Mask of level layers to be loaded.
         """
 
-    def on_tick(self, callback: Callable) -> int:
+    def on_tick(self, callback: Callable[[WorldSnapshot], Any]) -> int:
         """This method is used in `asynchronous mode`. It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called everytime the server ticks. It requires a `carla.WorldSnapshot` as argument, which can be retrieved from `wait_for_tick()`. Use `remove_on_tick()` to stop the callbacks.
 
         Args:
-            callback (Callable): Function with a `snapshot` as compulsory parameter that will be called when the client receives a tick.
+            callback (Callable[[WorldSnapshot], Any]): Function with a `snapshot` as compulsory parameter that will be called when the client receives a tick.
         """
 
     def project_point(self, location: Location, direction: Vector3D, search_distance: float) -> LabelledPoint:
