@@ -3725,6 +3725,8 @@ This snapshot comprises all the information for every actor on scene at a certai
 A value unique for every snapshot to differentiate them.  
 - <a name="carla.WorldSnapshot.frame"></a>**<font color="#f8805a">frame</font>** (_int_)  
 Simulation frame in which the snapshot was taken.  
+- <a name="carla.WorldSnapshot.elapsed_seconds"></a>**<font color="#f8805a">elapsed_seconds</font>** (_float<small> - seconds</small>_)  
+Simulated seconds elapsed since the beginning of the current episode.  
 - <a name="carla.WorldSnapshot.timestamp"></a>**<font color="#f8805a">timestamp</font>** (_[carla.Timestamp](#carla.Timestamp)<small> - seconds</small>_)  
 Precise moment in time when snapshot was taken. This class works in seconds as given by the operative system.  
 

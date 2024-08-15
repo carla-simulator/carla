@@ -993,7 +993,7 @@ class World(object):
 
         # Register event for receiving server tick
         weak_self = weakref.ref(self)
-        self.world.on_tick(lambda timestamp: World.on_world_tick(weak_self, timestamp))
+        self.world.on_tick(lambda world_snapshot: World.on_world_tick(weak_self, world_snapshot))
 
     def select_hero_actor(self):
         """Selects only one hero actor if there are more than one. If there are not any, it will spawn one."""
@@ -1081,7 +1081,7 @@ class World(object):
         self._hud.add_info('HERO', hero_mode_text)
 
     @staticmethod
-    def on_world_tick(weak_self, timestamp):
+    def on_world_tick(weak_self, world_snapshot):
         """Updates the server tick"""
         self = weak_self()
         if not self:
@@ -1089,7 +1089,7 @@ class World(object):
 
         self.server_clock.tick()
         self.server_fps = self.server_clock.get_fps()
-        self.simulation_time = timestamp.elapsed_seconds
+        self.simulation_time = world_snapshot.elapsed_seconds
 
     def _show_nearby_vehicles(self, vehicles):
         """Shows nearby vehicles of the hero actor"""
