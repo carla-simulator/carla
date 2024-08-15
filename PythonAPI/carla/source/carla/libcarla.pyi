@@ -1,6 +1,7 @@
 from enum import Enum, Flag, IntFlag
 import sys
-from typing import Callable, Iterable, Iterator, Union, Optional, overload, ClassVar, Any, TypeVar
+from typing import (Callable, Iterable, Iterator, Union, Optional, overload, ClassVar, Any, TypeVar, 
+                    type_check_only)
 
 if sys.version_info >= (3, 11):
     from typing import Self
@@ -20,9 +21,10 @@ else:
 
 # Note: __protected_variables are not part of the carla module, they are helpers to complete the stubs.
 
-__SensorData = TypeVar("__SensorData", bound=SensorData) # type: ignore
+__SensorData = TypeVar("__SensorData", bound=SensorData)
 """Generic that allows subclassing."""
 
+@type_check_only
 class __CarlaEnum(Enum):
     """
     CARLA's Enums have a `values` and `names` attribute that are not part of the python `enum.Enum` 
@@ -36,7 +38,6 @@ class __CarlaEnum(Enum):
         cls.values : dict[int, cls]
         cls.names  : dict[str, cls]
          
-
 
 class AckermannControllerSettings():
     """Manages the settings of the Ackermann PID controller."""
@@ -137,7 +138,7 @@ class Actor():
         ...
 
     @property
-    def parent(self) -> Union["Actor", None]:
+    def parent(self) -> Actor | None:
         """Actors may be attached to a parent actor that they will follow around. This is said actor."""
         ...
 
@@ -1897,7 +1898,7 @@ class LandmarkType(Enum):
     # endregion
 
 
-class LaneChange(int, __CarlaEnum):
+class LaneChange(IntFlag, __CarlaEnum):
     """Class that defines the permission to turn either left, right, both or none (meaning only going straight is allowed). This information is stored for every `carla.Waypoint` according to the OpenDRIVE file. The snippet in `carla.Map.get_waypoint` shows how a waypoint can be used to learn which turns are permitted."""
 
     # region Instance Variables
@@ -1992,7 +1993,11 @@ class LaneMarkingType(int, __CarlaEnum):
 
 
 class LaneType(IntFlag, __CarlaEnum):
-    """Class that defines the possible lane types accepted by OpenDRIVE 1.4. This standards define the road information. The snippet in `carla.Map.get_waypoint` makes use of a waypoint to get the current and adjacent lane types."""
+    """
+    Class that defines the possible lane types accepted by OpenDRIVE 1.4. 
+    This standards define the road information. The snippet in `carla.Map.get_waypoint` 
+    makes use of a waypoint to get the current and adjacent lane types.
+    """
 
     # region Instance Variables
     Any = -2
@@ -2019,7 +2024,6 @@ class LaneType(IntFlag, __CarlaEnum):
     OffRamp = 524288
     OnRamp = 1048576
     # endregion
-
 
 
 class LidarDetection():
@@ -2417,7 +2421,13 @@ class Location(Vector3D):
     # endregion
 
     # region Methods
-    def __init__(self, x=0.0, y=0.0, z=0.0):
+    @overload
+    def __init__(self, rhs: Vector3D): ...
+
+    @overload
+    def __init__(self, x: float=0.0, y: float=0.0, z: float=0.0): ...
+
+    def __init__(self, x: float=0.0, y: float=0.0, z: float=0.0):
         """Represents a spot in the world.
 
         Args:
@@ -2568,14 +2578,14 @@ class Map():
         ...
 
     @overload
-    def get_waypoint(self, location: Location, project_to_road: Literal[False], lane_type:LaneType=LaneType.Driving) -> Waypoint | None: 
+    def get_waypoint(self, location: Location, project_to_road: Literal[True]=True, lane_type: Literal[LaneType.Driving, LaneType.Any]=LaneType.Driving) -> Waypoint:
         ...
 
     @overload
-    def get_waypoint(self, location: Location, project_to_road: Literal[True]=True, lane_type: Literal[LaneType.Driving]=LaneType.Driving) -> Waypoint:
+    def get_waypoint(self, location: Location, project_to_road :bool | None=True, lane_type: LaneType=LaneType.Driving) -> Waypoint | None:
         ...
     
-    def get_waypoint(self, location: Location, project_to_road:bool=True, lane_type: LaneType=LaneType.Driving) -> Waypoint | None:
+    def get_waypoint(self, location: Location, project_to_road: bool | None=True, lane_type: LaneType=LaneType.Driving) -> Waypoint | None:
         """Returns a waypoint that can be located in an exact location or translated to the center of the nearest lane. Said lane type can be defined using flags such as `LaneType.Driving & LaneType.Shoulder`.
 
         The method will return `None` if the waypoint is not found, which may happen only when trying to retrieve a waypoint for an exact location. That eases checking if a point is inside a certain road, as otherwise, it will return the corresponding waypoint.
@@ -2597,6 +2607,7 @@ class Map():
         """
         ...
     # endregion
+
 
 class MapLayer(Flag, __CarlaEnum):
     """Class that represents each manageable layer of the map. Can be used as flags.
@@ -2696,8 +2707,6 @@ class OpendriveGenerationParameters():
         """If `True`, Pedestrian navigation will be enabled using Recast tool. For very large maps it is recommended to disable this option. Default is `True`."""
         ...
     # endregion
-    
-    # region Methods
     
     # region Methods    
     def __init__(self, vertex_distance: float =2.0, 
@@ -3130,7 +3139,7 @@ class Sensor(Actor):
 
         Args:
             `gbuffer_id (GBufferTextureID)`: The ID of the target Unreal Engine GBuffer texture.\n
-            `callback (Callable[[__SensorData], Any])`: The called function with one argument containing the received GBuffer texture.\n
+            `callback (Callable[[SensorData], Any])`: The called function with one argument containing the received GBuffer texture.\n
         """
 
     def stop(self):
@@ -3584,7 +3593,7 @@ class TrafficManager():
     # endregion
 
     # region Setters
-    def set_boundaries_respawn_dormant_vehicles(self, lower_bound:Annotated[float, ">=25.0"], upper_bound: Annotated[float, "<= WorldSettings.actor_active_distance"]) -> None:
+    def set_boundaries_respawn_dormant_vehicles(self, lower_bound: Annotated[float, ">=25.0"], upper_bound: Annotated[float, "<= WorldSettings.actor_active_distance"]) -> None:
         """Sets the upper and lower boundaries for dormant actors to be respawned near the hero vehicle.
 
         + Warning: The `upper_bound` cannot be higher than the `actor_active_distance`. The `lower_bound` cannot be less than `25`.
@@ -3694,9 +3703,16 @@ class Transform():
     @property
     def location(self) -> Location:
         """Describes a point in the coordinate system."""
+    @location.setter
+    def location(self, value: Location | Vector3D):
+        ...
+
     @property
     def rotation(self) -> Rotation:
         """Describes a rotation for an object according to Unreal Engine's axis system (degrees (pitch, yaw, roll))."""
+    @rotation.setter
+    def rotation(self, value: Rotation | Vector3D):
+        ...
     # endregion
 
     # region Methods    
@@ -3875,7 +3891,7 @@ class Vector3D():
 
     def __add__(self, other: Vector3D) -> Vector3D: ...
     def __eq__(self, other: Vector3D) -> bool: ...
-    def __mul__(self, other: Vector3D): ...
+    def __mul__(self, other: Vector3D | float) -> Vector3D: ...
     def __ne__(self, other: Vector3D) -> bool: ...
     def __str__(self) -> str: ...
     def __sub__(self, other: Vector3D): ...
@@ -3905,13 +3921,13 @@ class Vehicle(Actor):
 
         + Warning: This method does call the simulator."""
 
-    def apply_control(self, control: VehicleControl):
+    def apply_control(self, control: VehicleControl) -> None:
         """Applies a control object on the next tick, containing driving parameters such as throttle, steering or gear shifting."""
 
     def apply_physics_control(self, physics_control: VehiclePhysicsControl):
         """Applies a physics control object in the next tick containing the parameters that define the vehicle as a corporeal body. E.g.: moment of inertia, mass, drag coefficient and many more."""
 
-    def close_door(self, door_idx: VehicleDoor):
+    def close_door(self, door_idx: VehicleDoor) -> None:
         """Close the door `door_idx` if the vehicle has it. Use `carla.VehicleDoor.All` to close all available doors."""
 
     def enable_carsim(self, simfile_path: str):
@@ -4004,7 +4020,7 @@ class Vehicle(Actor):
     # endregion
 
     # region Setters
-    def set_autopilot(self, enabled=True, port=8000):
+    def set_autopilot(self, enabled=True, port=8000) -> None:
         """Registers or deletes the vehicle from a Traffic Manager's list. When `True`, the Traffic Manager passed as parameter will move the vehicle around. The autopilot takes place client-side.
 
         Args:
@@ -4012,7 +4028,7 @@ class Vehicle(Actor):
             `port (int, optional)`: The port of the TM-Server where the vehicle is to be registered or unlisted. Defaults to 8000.\n
         """
 
-    def set_light_state(self, light_state: VehicleLightState):
+    def set_light_state(self, light_state: VehicleLightState) -> None:
         """Sets the light state of a vehicle using a flag that represents the lights that are on and off.
 
         + Getter: `carla.Vehicle.get_light_state`
@@ -4156,7 +4172,7 @@ class VehicleFailureState(int, __CarlaEnum):
     TirePuncture = 3
 
 
-class VehicleLightState(Flag, __CarlaEnum):
+class VehicleLightState(IntFlag, __CarlaEnum):
     """Class that recaps the state of the lights of a vehicle, these can be used as a flags.
 
     E.g: `VehicleLightState.HighBeam & VehicleLightState.Brake` will return `True` when both are active.
@@ -4635,12 +4651,19 @@ class Waypoint():
             `stop_at_junction (bool, optional)`: Enables or disables the landmark search through junctions. Defaults to False.\n
         """
 
-    def get_left_lane(self) -> Waypoint:
-        """Generates a Waypoint at the center of the left lane based on the direction of the current Waypoint, taking into account if the lane change is allowed in this location. Will return `None` if the lane does not exist.
+    def get_left_lane(self) -> Waypoint | None:
+        """
+        Generates a Waypoint at the center of the left lane based on the direction of the current
+        Waypoint, taking into account if the lane change is allowed in this location.
+        Will return `None` if the lane does not exist.
         """
 
-    def get_right_lane(self) -> Waypoint:
-        """Generates a waypoint at the center of the right lane based on the direction of the current waypoint, taking into account if the lane change is allowed in this location. Will return None if the lane does not exist."""
+    def get_right_lane(self) -> Waypoint | None:
+        """
+        Generates a waypoint at the center of the right lane based on the direction of the current
+        waypoint, taking into account if the lane change is allowed in this location.
+        Will return `None` if the lane does not exist.
+        """
     # endregion
 
     # region Dunder Methods
@@ -4667,7 +4690,7 @@ class WeatherParameters():
         """Determines the creation of puddles. Values range from 0 to 100, being 0 none at all and 100 a road completely capped with water. Puddles are created with static noise, meaning that they will always appear at the same locations."""
     @property
     def wind_intensity(self) -> float:
-        """Controls the strenght of the wind with values from 0, no wind at all, to 100, a strong wind. The wind does affect rain direction and leaves from trees, so this value is restricted to avoid animation issues."""
+        """Controls the strength of the wind with values from 0, no wind at all, to 100, a strong wind. The wind does affect rain direction and leaves from trees, so this value is restricted to avoid animation issues."""
     @property
     def sun_azimuth_angle(self) -> float:
         """The azimuth angle of the sun. Values range from 0 to 360. Zero is an origin point in a sphere determined by Unreal Engine (degrees)."""
@@ -4970,7 +4993,7 @@ class World():
     def get_actor(self, actor_id: int) -> Actor:
         """Looks up for an actor by ID and returns `None` if not found."""
 
-    def get_actors(self, actor_ids: Optional["list[int]"] = None) -> ActorList:
+    def get_actors(self, actor_ids: Optional[list[int]] = None) -> ActorList:
         """
         Retrieves a list of `carla.Actor` elements, either using a list of IDs provided or just
         listing everyone on stage. If an ID does not correspond with any actor, it will be excluded
@@ -5118,40 +5141,79 @@ class WorldSettings():
     @property
     def synchronous_mode(self) -> bool:
         """States the synchrony between client and server. When set to true, the server will wait for a client tick in order to move forward. It is `False` by default."""
+    @synchronous_mode.setter
+    def synchronous_mode(self, value: bool):
+        ...
+
     @property
     def no_rendering_mode(self) -> bool:
         """When enabled, the simulation will run no rendering at all. This is mainly used to avoid overhead during heavy traffic simulations. It is `False` by default."""
+    @no_rendering_mode.setter
+    def no_rendering_mode(self, value: bool):
+        ...
+
     @property
-    def fixed_delta_seconds(self) -> float:
+    def fixed_delta_seconds(self) -> float | None:
         """Ensures that the time elapsed between two steps of the simulation is fixed. Set this to `0.0` to work with a variable time-step, as happens by default."""
+    @fixed_delta_seconds.setter
+    def fixed_delta_seconds(self, value: float | None):
+        ...
+
     @property
     def substepping(self) -> bool:
         """Enable the physics substepping. This option allows computing some physics substeps between two render frames. If synchronous mode is set, the number of substeps and its time interval are fixed and computed are so they fulfilled the requirements of `carla.WorldSettings.max_substep` and `carla.WorldSettings.max_substep_delta_time`. These last two parameters need to be compatible with c`arla.WorldSettings.fixed_delta_seconds`. Enabled by default."""
+    @substepping.setter
+    def substepping(self, value: bool):
+        ...
+
     @property
     def max_substep_delta_time(self) -> float:
         """Maximum delta time of the substeps. If the carla.`WorldSettingsmax_substep` is high enough, the substep delta time would be always below or equal to this value. By default, the value is set to 0.01."""
+    @max_substep_delta_time.setter
+    def max_substep_delta_time(self, value: float):
+        ...
+
     @property
     def max_substeps(self) -> int:
-        """The maximum number of physics substepping that are allowed. By default, the value is set to 10.
-        """
+        """The maximum number of physics substepping that are allowed. By default, the value is set to 10."""
+    @max_substeps.setter
+    def max_substeps(self, value: int):
+        ...
+
     @property
     def max_culling_distance(self) -> float:
         """Configure the max draw distance for each mesh of the level."""
+    @max_culling_distance.setter
+    def max_culling_distance(self, value: float):
+        ...
+
     @property
     def deterministic_ragdolls(self) -> bool:
         """Defines wether to use deterministic physics for pedestrian death animations or physical ragdoll simulation. When enabled, pedestrians have less realistic death animation but ensures determinism. When disabled, pedestrians are simulated as ragdolls with more realistic simulation and collision but no determinsm can be ensured."""
+    @deterministic_ragdolls.setter
+    def deterministic_ragdolls(self, value: bool):
+        ...
+
     @property
     def tile_stream_distance(self) -> bool:
         """Used for large maps only. Configures the maximum distance from the hero vehicle to stream tiled maps. Regions of the map within this range will be visible (and capable of simulating physics). Regions outside this region will not be loaded."""
+    @tile_stream_distance.setter
+    def tile_stream_distance(self, value: bool):
+        ...
+
     @property
     def actor_active_distance(self) -> float:
         """Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant. Actors within this range will be active, and actors outside will become dormant."""
+    @actor_active_distance.setter
+    def actor_active_distance(self, value: float):
         ...
 
     @property
     def spectator_as_ego(self) -> float:
         """Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. By default, the spectator will provoke loading of neighboring tiles in the absence of an ego actor. This might be inconvenient for applications that immediately spawn an ego actor."""
-    # endregion
+    @spectator_as_ego.setter
+    def spectator_as_ego(self, value: float):
+        ...
 
     # region Methods
     def __init__(self,
@@ -5190,9 +5252,9 @@ class WorldSettings():
 class WorldSnapshot():
     """
     This snapshot comprises all the information for every actor on scene at a certain moment of time. 
-    It creates and gives acces to a data structure containing a series of `carla.ActorSnapshot`. 
-    The client recieves a new snapshot on every tick that cannot be stored."""
-    pass
+    It creates and gives access to a data structure containing a series of `carla.ActorSnapshot`. 
+    The client receives a new snapshot on every tick that cannot be stored.
+    """
 
     # region Instance Variables
     @property
@@ -5228,8 +5290,6 @@ class WorldSnapshot():
     def __ne__(self, __value: WorldSnapshot) -> bool:
         """Returns True if both `timestamp` are different."""
     # endregion
-
-
 
 
 class command():
