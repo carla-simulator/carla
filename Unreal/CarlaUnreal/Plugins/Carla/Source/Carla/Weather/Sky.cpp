@@ -1,4 +1,5 @@
 #include "Sky.h"
+#include "WeatherParameters.h"
 #include "Components/PostProcessComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/DirectionalLightComponent.h"
@@ -12,25 +13,82 @@ ASkyBase::ASkyBase(
 	const FObjectInitializer& ObjectInitializer) :
 	Super(ObjectInitializer)
 {
-  PostProcessComponent = CreateDefaultSubobject<UPostProcessComponent>("PostProcessComponent");
-  RootComponent = PostProcessComponent;
+  PostProcess =
+	CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcess"));
 
-  ExponentialHeightFogComponent = CreateDefaultSubobject<UExponentialHeightFogComponent>("ExponentialHeightFogComponent");
-  ExponentialHeightFogComponent->SetupAttachment(RootComponent);
+  ExponentialHeightFog =
+	CreateDefaultSubobject<UExponentialHeightFogComponent>(TEXT("ExponentialHeightFog"));
 
-  DirectionalLightComponentSun = CreateDefaultSubobject<UDirectionalLightComponent>("DirectionalLightComponentSun");
-  DirectionalLightComponentSun->SetupAttachment(RootComponent);
+  DirectionalLight =
+	CreateDefaultSubobject<UDirectionalLightComponent>(TEXT("DirectionalLight"));
 
-  DirectionalLightComponentMoon = CreateDefaultSubobject<UDirectionalLightComponent>("DirectionalLightComponentMoon");
-  DirectionalLightComponentMoon->SetupAttachment(RootComponent);
+  SkyLight =
+	CreateDefaultSubobject<USkyLightComponent>(TEXT("SkyLight"));
 
-  SkyLightComponent = CreateDefaultSubobject<USkyLightComponent>("SkyLightComponent");
-  SkyLightComponent->SetupAttachment(RootComponent);
+  VolumetricCloud =
+	CreateDefaultSubobject<UVolumetricCloudComponent>(TEXT("VolumetricCloud"));
 
-  VolumetricCloudComponent = CreateDefaultSubobject<UVolumetricCloudComponent>("VolumetricCloudComponent");
-  VolumetricCloudComponent->SetupAttachment(RootComponent);
+  SkyAtmosphere =
+	CreateDefaultSubobject<USkyAtmosphereComponent>(TEXT("SkyAtmosphere"));
+}
 
-  SkyAtmosphereComponent = CreateDefaultSubobject<USkyAtmosphereComponent>("SkyAtmosphereComponent");
-  SkyAtmosphereComponent->SetupAttachment(RootComponent);
+UPostProcessComponent* ASkyBase::GetPostProcess()
+{
+	check(PostProcess != nullptr);
+	return PostProcess;
+}
+
+UExponentialHeightFogComponent* ASkyBase::GetExponentialHeightFog()
+{
+	check(ExponentialHeightFog != nullptr);
+	return ExponentialHeightFog;
+}
+
+UDirectionalLightComponent* ASkyBase::GetDirectionalLight()
+{
+	check(DirectionalLight != nullptr);
+	return DirectionalLight;
+}
+
+USkyLightComponent* ASkyBase::GetSkyLight()
+{
+	check(SkyLight != nullptr);
+	return SkyLight;
+}
+
+UVolumetricCloudComponent* ASkyBase::GetVolumetricCloud()
+{
+	check(VolumetricCloud != nullptr);
+	return VolumetricCloud;
+}
+
+USkyAtmosphereComponent* ASkyBase::GetSkyAtmosphere()
+{
+	check(SkyAtmosphere != nullptr);
+	return SkyAtmosphere;
+}
+
+bool ASkyBase::IsNight() const
+{
+	return false;
+}
+
+void ASkyBase::UpdateSun()
+{
+	DirectionalLight->SetMobility(EComponentMobility::Movable);
+
+	auto Pitch = -WeatherParameters.SunAltitudeAngle;
+	auto Yaw = WeatherParameters.SunAzimuthAngle;
+	DirectionalLight->SetWorldRotation(FRotator(Pitch, Yaw, 0.0));
+}
+
+void ASkyBase::UpdateMoon()
+{
+}
+
+void ASkyBase::UpdateNight()
+{
+	if (!IsNight())
+		return;
 
 }

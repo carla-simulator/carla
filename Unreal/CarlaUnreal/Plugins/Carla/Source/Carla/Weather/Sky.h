@@ -9,6 +9,8 @@ class USkyLightComponent;
 class UVolumetricCloudComponent;
 class USkyAtmosphereComponent;
 
+struct CARLA_API FWeatherParameters;
+
 UCLASS(Abstract)
 class CARLA_API ASkyBase :
 	public AActor
@@ -19,28 +21,58 @@ public:
 
 	ASkyBase(const FObjectInitializer& ObjectInitializer);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UPostProcessComponent* GetPostProcess();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UExponentialHeightFogComponent* GetExponentialHeightFog();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UDirectionalLightComponent* GetDirectionalLight();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	USkyLightComponent* GetSkyLight();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UVolumetricCloudComponent* GetVolumetricCloud();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	USkyAtmosphereComponent* GetSkyAtmosphere();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool IsNight() const;
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateSun();
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateMoon();
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateNight();
+
 protected:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UPostProcessComponent* PostProcessComponent;
+	UPROPERTY(EditAnywhere, Category = "Components")
+	UPostProcessComponent* PostProcess;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UExponentialHeightFogComponent* ExponentialHeightFogComponent;
+	UPROPERTY(EditAnywhere, Category = "Components")
+	UExponentialHeightFogComponent* ExponentialHeightFog;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UDirectionalLightComponent* DirectionalLightComponentSun;
+	UPROPERTY(EditAnywhere, Category = "Components")
+	UDirectionalLightComponent* DirectionalLight;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UDirectionalLightComponent* DirectionalLightComponentMoon;
+	UPROPERTY(EditAnywhere, Category = "Components")
+	USkyLightComponent* SkyLight;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	USkyLightComponent* SkyLightComponent;
+	UPROPERTY(EditAnywhere, Category = "Components")
+	UVolumetricCloudComponent* VolumetricCloud;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UVolumetricCloudComponent* VolumetricCloudComponent;
+	UPROPERTY(EditAnywhere, Category = "Components")
+	USkyAtmosphereComponent* SkyAtmosphere;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	USkyAtmosphereComponent* SkyAtmosphereComponent;
+	UPROPERTY(EditAnywhere, Category = "Weather")
+	FWeatherParameters WeatherParameters;
 
 
 };
