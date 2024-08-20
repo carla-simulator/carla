@@ -16,6 +16,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   )
 endif ()
 
+if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set (CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+endif ()
+
 if (LINUX)
   check_linker_flag (CXX -lpthread HAS_PTHREAD)
   if (HAS_PTHREAD)
