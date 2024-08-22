@@ -137,7 +137,8 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
   LM_LOG(Warning, "OnLevelAddedToWorld");
-  ATagger::TagActorsInLevel(*InLevel, true);
+  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(InWorld);
+  ATagger::TagActorsInLevel(*InLevel, *CarlaEpisode, true);
 
 
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
