@@ -41,6 +41,11 @@
         type: list
         doc: >
           A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page.
+      - param_name: do_tick
+        type: bool
+        default: false
+        doc: >
+          A boolean parameter to specify whether or not to perform a carla.World.tick after applying the batch in _synchronous mode_. Defaults to __False__.
       doc: >
         Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the __<font color="#7fb800">apply_batch_sync()</font>__ method.
         [Here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) is an example on how to delete the actors that appear in carla.ActorList all at once.
@@ -51,11 +56,11 @@
         type: list
         doc: >
           A list of commands to execute in batch. The commands available are listed right above, in the method **<font color="#7fb800">apply_batch()</font>**.
-      - param_name: due_tick_cue
+      - param_name: do_tick
         type: bool
         default: false
         doc: >
-          A boolean parameter to specify whether or not to perform a carla.World.tick after applying the batch in _synchronous mode_. It is __False__ by default.
+          A boolean parameter to specify whether or not to perform a carla.World.tick after applying the batch in _synchronous mode_. Defaults to __False__.
       return: list(command.Response)
       doc: >
         Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) is an example of it being used to spawn actors.

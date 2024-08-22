@@ -505,15 +505,16 @@ Client constructor.
         - `host` (_str_) - IP address where a CARLA Simulator instance is running. Default is localhost (127.0.0.1).  
         - `port` (_int_) - TCP port where the CARLA Simulator instance is running. Default are 2000 and the subsequent 2001.  
         - `worker_threads` (_int_) - Number of working threads used for background updates. If 0, use all available concurrency.  
-- <a name="carla.Client.apply_batch"></a>**<font color="#7fb800">apply_batch</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>)  
+- <a name="carla.Client.apply_batch"></a>**<font color="#7fb800">apply_batch</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>, <font color="#00a6ed">**do_tick**=False</font>)  
 Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the __<font color="#7fb800">apply_batch_sync()</font>__ method. [Here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) is an example on how to delete the actors that appear in [carla.ActorList](#carla.ActorList) all at once.  
     - **Parameters:**
         - `commands` (_list_) - A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page.  
-- <a name="carla.Client.apply_batch_sync"></a>**<font color="#7fb800">apply_batch_sync</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>, <font color="#00a6ed">**due_tick_cue**=False</font>)<button class="SnipetButton" id="carla.Client.apply_batch_sync-snipet_button">snippet &rarr;</button>  
+        - `do_tick` (_bool_) - A boolean parameter to specify whether or not to perform a [carla.World.tick](#carla.World.tick) after applying the batch in _synchronous mode_. Defaults to __False__.  
+- <a name="carla.Client.apply_batch_sync"></a>**<font color="#7fb800">apply_batch_sync</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>, <font color="#00a6ed">**do_tick**=False</font>)<button class="SnipetButton" id="carla.Client.apply_batch_sync-snipet_button">snippet &rarr;</button>  
 Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) is an example of it being used to spawn actors.  
     - **Parameters:**
         - `commands` (_list_) - A list of commands to execute in batch. The commands available are listed right above, in the method **<font color="#7fb800">apply_batch()</font>**.  
-        - `due_tick_cue` (_bool_) - A boolean parameter to specify whether or not to perform a [carla.World.tick](#carla.World.tick) after applying the batch in _synchronous mode_. It is __False__ by default.  
+        - `do_tick` (_bool_) - A boolean parameter to specify whether or not to perform a [carla.World.tick](#carla.World.tick) after applying the batch in _synchronous mode_. Defaults to __False__.  
     - **Return:** _list(command.Response)_  
 - <a name="carla.Client.generate_opendrive_world"></a>**<font color="#7fb800">generate_opendrive_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive**</font>, <font color="#00a6ed">**parameters**=(2.0, 50.0, 1.0, 0.6, true, true)</font>, <font color="#00a6ed">**reset_settings**=True</font>)  
 Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter. It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side. Cars can drive around the map, but there are no graphics besides the road and sidewalks.  
