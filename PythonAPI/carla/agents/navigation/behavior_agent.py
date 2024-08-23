@@ -15,7 +15,7 @@ from agents.navigation.basic_agent import BasicAgent
 from agents.navigation.local_planner import RoadOption
 from agents.navigation.behavior_types import Cautious, Aggressive, Normal
 
-from agents.tools.misc import get_speed, positive, is_within_distance, compute_distance
+from agents.tools.misc import get_speed, positive
 
 class BehaviorAgent(BasicAgent):
     """

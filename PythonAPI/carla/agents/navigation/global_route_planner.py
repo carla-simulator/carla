@@ -198,6 +198,7 @@ class GlobalRoutePlanner(object):
 
             entry_carla_vector = entry_wp.transform.rotation.get_forward_vector()
             exit_carla_vector = exit_wp.transform.rotation.get_forward_vector()
+            net_carla_vector = (exit_wp.transform.location - entry_wp.transform.location).make_unit_vector()
 
             # Adding edge with attributes
             self._graph.add_edge(
@@ -208,7 +209,7 @@ class GlobalRoutePlanner(object):
                     [entry_carla_vector.x, entry_carla_vector.y, entry_carla_vector.z]),
                 exit_vector=np.array(
                     [exit_carla_vector.x, exit_carla_vector.y, exit_carla_vector.z]),
-                net_vector=vector(entry_wp.transform.location, exit_wp.transform.location),
+                net_vector=[net_carla_vector.x, net_carla_vector.y, net_carla_vector.z],
                 intersection=intersection, type=RoadOption.LANEFOLLOW)
 
     def _find_loose_ends(self):
