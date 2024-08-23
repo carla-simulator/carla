@@ -630,10 +630,10 @@ TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried) cons
   UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
 
   TArray<FBoundingBox> BoundingBoxes;
-  BoundingBoxes = UBoundingBoxCalculator::GetBoundingBoxOfActors(FoundActors, TagQueried);
+  BoundingBoxes = UBoundingBoxCalculator::GetBoundingBoxOfActors(FoundActors, &GetCarlaEpisode(), TagQueried);
 
   return BoundingBoxes;
-}
+  }
 
 void ACarlaGameModeBase::RegisterEnvironmentObjects()
 {

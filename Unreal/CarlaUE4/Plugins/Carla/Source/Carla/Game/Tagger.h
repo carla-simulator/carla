@@ -37,7 +37,7 @@ public:
   /// pass is necessary for rendering the semantic segmentation. However, it may
   /// add a performance penalty since occlusion doesn't seem to be applied to
   /// objects having this value active.
-  static void TagActor(const AActor &Actor, bool bTagForSemanticSegmentation, int64_t ActorId = -1);
+  static void TagActor(const AActor &Actor, bool bTagForSemanticSegmentation, uint32_t ActorId);
 
 
   /// Set the tag of every actor in level.
@@ -87,7 +87,7 @@ public:
   static void SetStencilValue(UPrimitiveComponent &Component,
     const crp::CityObjectLabel &Label, const bool bSetRenderCustomDepth);
 
-  static FLinearColor GetLabelColor(const int64_t ActorID, const crp::CityObjectLabel &Label);
+  static FLinearColor GetLabelColor(const uint32_t ActorID, const crp::CityObjectLabel &Label);
 
   static bool IsThing(const crp::CityObjectLabel &Label);
 

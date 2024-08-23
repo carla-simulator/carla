@@ -407,12 +407,21 @@ void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
 
 TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
   const TArray<AActor*>& Actors,
+  const UCarlaEpisode* Episode,
   uint8 InTagQueried)
 {
   TArray<FBoundingBox> Result;
   for(AActor* Actor : Actors)
   {
+    uint32_t ActorId = Actor->GetUniqueID();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(Actor);
+    if (CarlaActor) {
+      ActorId = CarlaActor->GetActorId();
+    }
     TArray<FBoundingBox> BBs = GetBBsOfActor(Actor, InTagQueried);
+    for (FBoundingBox& BB : BBs) {
+      BB.ActorId = ActorId;
+    }
     Result.Append(BBs.GetData(), BBs.Num());
   }
 

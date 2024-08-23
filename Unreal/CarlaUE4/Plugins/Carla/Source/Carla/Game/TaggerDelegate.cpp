@@ -22,6 +22,6 @@ void UTaggerDelegate::RegisterSpawnHandler(UWorld *InWorld)
 void UTaggerDelegate::OnActorSpawned(AActor* InActor)
 {
   if (InActor != nullptr) {
-    ATagger::TagActor(*InActor, bSemanticSegmentationEnabled);
+    ATagger::TagActor(*InActor, bSemanticSegmentationEnabled, InActor->GetUniqueID());
   }
 }

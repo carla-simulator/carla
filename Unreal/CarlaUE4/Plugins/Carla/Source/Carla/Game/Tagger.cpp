@@ -82,7 +82,7 @@ bool ATagger::IsThing(const crp::CityObjectLabel &Label)
           Label == crp::CityObjectLabel::TrafficLight);
 }
 
-FLinearColor ATagger::GetLabelColor(const int64_t ActorID, const crp::CityObjectLabel &Label)
+FLinearColor ATagger::GetLabelColor(const uint32_t ActorID, const crp::CityObjectLabel &Label)
 {
   // TODO: Warn if id > 0xffff.
 
@@ -101,16 +101,11 @@ FLinearColor ATagger::GetLabelColor(const int64_t ActorID, const crp::CityObject
 // -- static ATagger functions -------------------------------------------------
 // =============================================================================
 
-void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation, int64_t ActorID)
+void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation, uint32_t ActorID)
 {
-#define CARLA_TAGGER_EXTRA_LOG
 #ifdef CARLA_TAGGER_EXTRA_LOG
   UE_LOG(LogCarla, Log, TEXT("Actor: %s %d %d"), *Actor.GetName(), Actor.GetUniqueID(), ActorID);
 #endif // CARLA_TAGGER_EXTRA_LOG
-
-  if (ActorID == -1) {
-    ActorID = (int64_t) Actor.GetUniqueID();
-  }
 
   // Iterate static meshes.
   TArray<UStaticMeshComponent *> StaticMeshComponents;
@@ -159,7 +154,6 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation, in
 
     // Set tagged component color
     FLinearColor Color = GetLabelColor(ActorID, Label);
-    // TODO: auto ret = FindCarlaActor(Actor);
 #ifdef CARLA_TAGGER_EXTRA_LOG
     UE_LOG(LogCarla, Log, TEXT("    - Color: %s"), *Color.ToString());
 #endif // CARLA_TAGGER_EXTRA_LOG
@@ -229,33 +223,31 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation, in
 void ATagger::TagActorsInLevel(UWorld &World, const UCarlaEpisode &Episode, bool bTagForSemanticSegmentation)
 {
   for (TActorIterator<AActor> it(&World); it; ++it) {
+    uint32_t cActorId = (*it)->GetUniqueID();
     FCarlaActor* cActor = Episode.FindCarlaActor(*it);
     if (cActor) {
-      int64_t cActorId = (int64_t) cActor->GetActorId();
-      TagActor(**it, bTagForSemanticSegmentation, cActorId);
-    } else {
-      TagActor(**it, bTagForSemanticSegmentation);
+      cActorId = cActor->GetActorId();
     }
+    TagActor(**it, bTagForSemanticSegmentation, cActorId);
   }
 }
 
 void ATagger::TagActorsInLevel(UWorld &World, bool bTagForSemanticSegmentation)
 {
   for (TActorIterator<AActor> it(&World); it; ++it) {
-    TagActor(**it, bTagForSemanticSegmentation);
+    TagActor(**it, bTagForSemanticSegmentation, (*it)->GetUniqueID());
   }
 }
 
 void ATagger::TagActorsInLevel(ULevel &Level, const UCarlaEpisode &Episode, bool bTagForSemanticSegmentation)
 {
   for (AActor * Actor : Level.Actors) {
+    uint32_t cActorId = Actor->GetUniqueID();
     FCarlaActor* cActor = Episode.FindCarlaActor(Actor);
     if (cActor) {
-      int64_t cActorId = (int64_t) cActor->GetActorId();
-      TagActor(*Actor, bTagForSemanticSegmentation, cActorId);
-    } else {
-      TagActor(*Actor, bTagForSemanticSegmentation);
+      cActorId = cActor->GetActorId();
     }
+    TagActor(*Actor, bTagForSemanticSegmentation, cActorId);
   }
 }
 

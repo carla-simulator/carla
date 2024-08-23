@@ -21,6 +21,7 @@
  * Added type-hint support for the PythonAPI
  * If available, use ActorIDs instead of Unreal Engine IDs for instance segmentation
  * Synchronized actor BoundingBox between server and client
+ * Add actor_id to bounding boxes
 
 ## CARLA 0.9.15
 

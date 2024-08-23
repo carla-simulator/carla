@@ -1357,6 +1357,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
     FBoundingBox bounding_box = UBoundingBoxCalculator::GetActorBoundingBox(CarlaActor->GetActor(), 0);
+    bounding_box.ActorId = CarlaActor->GetActorId();
     return cr::BoundingBox(bounding_box);
   };
 
