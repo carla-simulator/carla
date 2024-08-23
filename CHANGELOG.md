@@ -18,6 +18,7 @@
  * PythonAPI `Sensor.is_listening` was defined twice (property and method), cleaned and clarified it as a method.
  * Added V2X sensors for cooperative awareness message and custom user-defined messages to support vehicle-to-vehicle communication
  * Added named tuples for BasicAgent.py's detection result to allow for type-hints and better semantics.
+ * Added type-hints to GlobalRoutePlanner and used carla.Vector3D code instead of pre 0.9.13 numpy code.
 
 
 ## CARLA 0.9.15
