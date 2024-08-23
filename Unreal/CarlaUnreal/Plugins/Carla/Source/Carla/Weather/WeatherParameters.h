@@ -8,10 +8,21 @@
 
 #include "WeatherParameters.generated.h"
 
+UENUM(BlueprintType)
+enum class ECameraPPVPreset : uint8
+{
+  Other    = 0    UMETA(DisplayName = "Other"),
+  Overcast = 1    UMETA(DisplayName = "Overcast"),
+  Daylight = 2    UMETA(DisplayName = "Daylight")
+};
+
 USTRUCT(BlueprintType)
 struct CARLA_API FWeatherParameters
 {
   GENERATED_BODY()
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TEnumAsByte<ECameraPPVPreset> PPVPreset = ECameraPPVPreset::Overcast;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "0.0", ClampMax = "100.0", UIMin = "0.0", UIMax = "100.0"))
   float Cloudiness = 0.0f;

@@ -551,6 +551,18 @@ void ASceneCaptureSensor::SetHighlightContrastScale(float HighlightContrastScale
   CaptureComponent2D->PostProcessSettings.LocalExposureHighlightContrastScale = HighlightContrastScale;
 }
 
+void ASceneCaptureSensor::SetAmbientOclussionIntensity(float AmbientOclussionIntensity)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.AmbientOcclusionIntensity = AmbientOclussionIntensity;
+}
+
+void ASceneCaptureSensor::SetAmbientOclussionRadius(float AmbientOclussionRadius)
+{
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->PostProcessSettings.AmbientOcclusionRadius = AmbientOclussionRadius;
+}
+
 float ASceneCaptureSensor::GetHighlightContrastScale() const
 {
   check(CaptureComponent2D != nullptr);
@@ -568,6 +580,7 @@ float ASceneCaptureSensor::GetShadowContrastScale() const
   check(CaptureComponent2D != nullptr);
   return CaptureComponent2D->PostProcessSettings.LocalExposureShadowContrastScale;
 }
+
 
 void ASceneCaptureSensor::UpdatePostProcessConfig(
     FPostProcessConfig& InOutPostProcessConfig)
@@ -855,40 +868,42 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_CameraISO = true;
     PostProcessSettings.bOverride_DepthOfFieldFstop = true;
     PostProcessSettings.bOverride_DepthOfFieldFocalDistance = true;
-    PostProcessSettings.bOverride_DepthOfFieldDepthBlurAmount = true;
-    PostProcessSettings.bOverride_DepthOfFieldDepthBlurRadius = true;
-    PostProcessSettings.bOverride_DepthOfFieldMinFstop = true;
-    PostProcessSettings.bOverride_DepthOfFieldBladeCount = true;
+    PostProcessSettings.bOverride_DepthOfFieldDepthBlurAmount = false;
+    PostProcessSettings.bOverride_DepthOfFieldDepthBlurRadius = false;
+    PostProcessSettings.bOverride_DepthOfFieldMinFstop = false;
+    PostProcessSettings.bOverride_DepthOfFieldBladeCount = false;
     PostProcessSettings.bOverride_DepthOfFieldSensorWidth = true;
-    PostProcessSettings.bOverride_FilmSlope = true;
-    PostProcessSettings.bOverride_FilmToe = true;
-    PostProcessSettings.bOverride_FilmShoulder = true;
-    PostProcessSettings.bOverride_FilmBlackClip = true;
-    PostProcessSettings.bOverride_FilmWhiteClip = true;
-    PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
-    PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
-    PostProcessSettings.bOverride_AutoExposureSpeedDown = true;
-    PostProcessSettings.bOverride_AutoExposureSpeedUp = true;
-    PostProcessSettings.bOverride_AutoExposureCalibrationConstant_DEPRECATED = true;
+    PostProcessSettings.bOverride_FilmSlope = false;
+    PostProcessSettings.bOverride_FilmToe = false;
+    PostProcessSettings.bOverride_FilmShoulder = false;
+    PostProcessSettings.bOverride_FilmBlackClip = false;
+    PostProcessSettings.bOverride_FilmWhiteClip = false;
+    PostProcessSettings.bOverride_AutoExposureMinBrightness = false;
+    PostProcessSettings.bOverride_AutoExposureMaxBrightness = false;
+    PostProcessSettings.bOverride_AutoExposureSpeedDown = false;
+    PostProcessSettings.bOverride_AutoExposureSpeedUp = false;
+    PostProcessSettings.bOverride_AutoExposureCalibrationConstant_DEPRECATED = false;
     PostProcessSettings.bOverride_TemperatureType = true;
-    PostProcessSettings.bOverride_MotionBlurAmount = true;
-    PostProcessSettings.bOverride_MotionBlurMax = true;
-    PostProcessSettings.bOverride_MotionBlurPerObjectSize = true;
-    PostProcessSettings.bOverride_LensFlareIntensity = true;
-    PostProcessSettings.bOverride_BloomIntensity = true;
+    PostProcessSettings.bOverride_MotionBlurAmount = false;
+    PostProcessSettings.bOverride_MotionBlurMax = false;
+    PostProcessSettings.bOverride_MotionBlurPerObjectSize = false;
+    PostProcessSettings.bOverride_LensFlareIntensity = false;
+    PostProcessSettings.bOverride_BloomIntensity = false;
     PostProcessSettings.bOverride_WhiteTemp = true;
     PostProcessSettings.bOverride_WhiteTint = true;
-    PostProcessSettings.bOverride_SceneFringeIntensity = true;
-    PostProcessSettings.bOverride_ChromaticAberrationStartOffset = true;
+    PostProcessSettings.bOverride_SceneFringeIntensity = false;
+    PostProcessSettings.bOverride_ChromaticAberrationStartOffset = false;
     PostProcessSettings.bOverride_ColorSaturation = true;
     PostProcessSettings.bOverride_ColorContrast = true;
     PostProcessSettings.bOverride_ColorGamma = true;
     PostProcessSettings.bOverride_ColorGammaHighlights = true;
-    PostProcessSettings.bOverride_ToneCurveAmount = true;
+    PostProcessSettings.bOverride_ToneCurveAmount = false;
     PostProcessSettings.bOverride_SceneColorTint = true;
     PostProcessSettings.bOverride_VignetteIntensity = true;
     PostProcessSettings.bOverride_LocalExposureHighlightContrastScale = true;
     PostProcessSettings.bOverride_LocalExposureShadowContrastScale = true;
+    PostProcessSettings.bOverride_AmbientOcclusionIntensity = true;
+    PostProcessSettings.bOverride_AmbientOcclusionRadius = true;
 
     CaptureComponent2D.bUseRayTracingIfEnabled = true;
     PostProcessSettings.bOverride_DynamicGlobalIlluminationMethod = true;

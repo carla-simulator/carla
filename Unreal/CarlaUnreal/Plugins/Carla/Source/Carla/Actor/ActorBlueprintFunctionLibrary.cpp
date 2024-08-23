@@ -7,20 +7,31 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla.h"
 
+#include "CarlaActor.h"
+#include "Carla/Settings/CarlaSettings.h"
+#include "Carla/Game/CarlaGameModeBase.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/Sensor/CameraPresets.h"
 #include "Carla/Sensor/LidarDescription.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
-#include "Carla/Sensor/ShaderBasedSensor.h"
 #include "Carla/Util/ScopedStack.h"
+#include "Carla/Sensor/Sensor.h"
+#include "Carla/Sensor/ShaderBasedSensor.h"
+#include "Carla/Game/CarlaGameInstance.h"
+#include "LevelEditor.h"
+#include "Editor.h"
 
 #include <algorithm>
 #include <limits>
 #include <stack>
+#include "Engine/World.h"
+#include "Runtime/Engine/Classes/Engine/World.h"
+#include "Subsystems/UnrealEditorSubsystem.h"
 
 /// Checks validity of FActorDefinition.
 class FActorDefinitionValidator
 {
 public:
-
   /// Iterate all actor definitions and their properties and display messages on
   /// error.
   bool AreValid(const TArray<FActorDefinition> &ActorDefinitions)
@@ -315,8 +326,37 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     const FString &Id,
     const bool bEnableModifyingPostProcessEffects,
     bool &Success,
-    FActorDefinition &Definition)
+    FActorDefinition &Definition) //Pasar world como parametro
 {
+  
+  //UUnrealEditorSubsystem* UnrealEditorSubsystem = GEditor->GetEditorSubsystem<UUnrealEditorSubsystem>();
+
+	//UWorld* GameWorld = UnrealEditorSubsystem->GetGameWorld();
+
+  FWorldContext* world = GEngine->GetWorldContextFromGameViewport(GEngine->GameViewport);
+
+  UWorld* CarlaWorld = world->World();
+
+  ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(CarlaWorld);
+
+  const UCarlaEpisode& CurrentEpisode = GameMode->GetCarlaEpisode();
+
+  if(GameMode == nullptr)
+  {
+    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Not valid mate ;)"));
+  }
+  else
+  {
+    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Valid World"));
+    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, GameMode->GetCarlaEpisode().GetName());
+  }
+  
+  FWeatherParameters CurrentParams = CurrentEpisode.GetWeather()->GetCurrentWeather();
+    
+  TEnumAsByte<ECameraPPVPreset> CurrentPPVPreset = CurrentParams.PPVPreset;
+
+  UE_LOG(LogTemp, Warning, TEXT("CurrentPPVPreset: %i"), CurrentPPVPreset)
+
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), Id);
   AddRecommendedValuesForSensorRoleNames(Definition);
   AddVariationsForSensor(Definition);
@@ -459,19 +499,19 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureCompensation;
     ExposureCompensation.Id = TEXT("exposure_compensation");
     ExposureCompensation.Type = EActorAttributeType::Float;
-    ExposureCompensation.RecommendedValues = { TEXT("1.35") };
+    ExposureCompensation.RecommendedValues = { UCameraPresets::GetPPVExposureBiasPresetValueAsText(CurrentPPVPreset) };
     ExposureCompensation.bRestrictToRecommended = false;
 
     FActorVariation HighlightContrastScaleVariation;
     HighlightContrastScaleVariation.Id = TEXT("highlight_contrast_scale");
     HighlightContrastScaleVariation.Type = EActorAttributeType::Float;
-    HighlightContrastScaleVariation.RecommendedValues = { TEXT("0.8") };
+    HighlightContrastScaleVariation.RecommendedValues = { TEXT("1.0") };
     HighlightContrastScaleVariation.bRestrictToRecommended = false;
 
     FActorVariation ShadowContrastScaleVariation;
     ShadowContrastScaleVariation.Id = TEXT("shadow_constrast_scale");
     ShadowContrastScaleVariation.Type = EActorAttributeType::Float;
-    ShadowContrastScaleVariation.RecommendedValues = { TEXT("0.85") };
+    ShadowContrastScaleVariation.RecommendedValues = { TEXT("0.65") };
     ShadowContrastScaleVariation.bRestrictToRecommended = false;
 
     // - Manual ------------------------------------------------
@@ -523,35 +563,6 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
 
     // The minimum brightness for auto exposure that limits the lower
     // brightness the eye can adapt within
-    FActorVariation ExposureMinBright;
-    ExposureMinBright.Id = TEXT("exposure_min_bright");
-    ExposureMinBright.Type = EActorAttributeType::Float;
-    ExposureMinBright.RecommendedValues = { TEXT("0.0") };
-    ExposureMinBright.bRestrictToRecommended = false;
-
-    // The maximum brightness for auto exposure that limits the upper
-    // brightness the eye can adapt within
-    FActorVariation ExposureMaxBright;
-    ExposureMaxBright.Id = TEXT("exposure_max_bright");
-    ExposureMaxBright.Type = EActorAttributeType::Float;
-    ExposureMaxBright.RecommendedValues = { TEXT("20.0") };
-    ExposureMaxBright.bRestrictToRecommended = false;
-
-    // The speed at which the adaptation occurs from a dark environment
-    // to a bright environment.
-    FActorVariation ExposureSpeedUp;
-    ExposureSpeedUp.Id = TEXT("exposure_speed_up");
-    ExposureSpeedUp.Type = EActorAttributeType::Float;
-    ExposureSpeedUp.RecommendedValues = { TEXT("3.0") };
-    ExposureSpeedUp.bRestrictToRecommended = false;
-
-    // The speed at which the adaptation occurs from a bright environment
-    // to a dark environment.
-    FActorVariation ExposureSpeedDown;
-    ExposureSpeedDown.Id = TEXT("exposure_speed_down");
-    ExposureSpeedDown.Type = EActorAttributeType::Float;
-    ExposureSpeedDown.RecommendedValues = { TEXT("1.0") };
-    ExposureSpeedDown.bRestrictToRecommended = false;
 
     // Calibration constant for 18% Albedo.
     FActorVariation CalibrationConstant;
@@ -601,7 +612,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation FilmToe;
     FilmToe.Id = TEXT("toe");
     FilmToe.Type = EActorAttributeType::Float;
-    FilmToe.RecommendedValues = { TEXT("0.6") };
+    FilmToe.RecommendedValues = { TEXT("0.55") };
     FilmToe.bRestrictToRecommended = false;
 
     FActorVariation FilmShoulder;
@@ -626,7 +637,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation Temperature;
     Temperature.Id = TEXT("temp");
     Temperature.Type = EActorAttributeType::Float;
-    Temperature.RecommendedValues = { TEXT("5000.0") };
+    Temperature.RecommendedValues = { TEXT("6500.0") };
     Temperature.bRestrictToRecommended = false;
 
     FActorVariation Tint;
@@ -650,13 +661,13 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ColorSaturation;
     ColorSaturation.Id = TEXT("color_saturation");
     ColorSaturation.Type = EActorAttributeType::Float;
-    ColorSaturation.RecommendedValues = { ColorToFString(FLinearColor(0.45f, 0.45f, 0.45f).ToFColorSRGB()) };
+    ColorSaturation.RecommendedValues = { ColorToFString(FLinearColor(0.6f, 0.6f, 0.6f).ToFColorSRGB()) };
     ColorSaturation.bRestrictToRecommended = false;
 
     FActorVariation ColorContrast;
     ColorContrast.Id = TEXT("color_contrast");
     ColorContrast.Type = EActorAttributeType::Vector;
-    ColorContrast.RecommendedValues = { VectorToFString(FVector(1.35f, 1.35f, 1.35f)) };
+    ColorContrast.RecommendedValues = { VectorToFString(FVector(1.4f, 1.4f, 1.4f)) };
     ColorContrast.bRestrictToRecommended = false;
 
     FActorVariation ColorGamma;
@@ -671,16 +682,10 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     HighlightsGamma.RecommendedValues = { ColorToFString(FLinearColor(0.5f, 0.5f, 0.5f).ToFColorSRGB()) };
     HighlightsGamma.bRestrictToRecommended = false;
 
-    FActorVariation ToneCurveAmount;
-    ToneCurveAmount.Id = TEXT("tone_curve_amount");
-    ToneCurveAmount.Type = EActorAttributeType::Float;
-    ToneCurveAmount.RecommendedValues = { TEXT("1.0") };
-    ToneCurveAmount.bRestrictToRecommended = false;
-
     FActorVariation SceneColorTint;
     SceneColorTint.Id = TEXT("scene_color_tint");
     SceneColorTint.Type = EActorAttributeType::RGBColor;
-    SceneColorTint.RecommendedValues = { ColorToFString(FLinearColor(0.783308, 0.893718, 0.936458).ToFColorSRGB()) };
+    SceneColorTint.RecommendedValues = { ColorToFString(FLinearColor(0.93125f, 0.916985f, 0.716012f).ToFColorSRGB()) };
     SceneColorTint.bRestrictToRecommended = false;
 
     FActorVariation VignetteIntensity;
@@ -689,6 +694,17 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     VignetteIntensity.RecommendedValues = { TEXT("0.4") };
     VignetteIntensity.bRestrictToRecommended = false;
 
+    FActorVariation AOIntensity;
+    AOIntensity.Id = TEXT("ambient_oclussion_intensity");
+    AOIntensity.Type = EActorAttributeType::Float;
+    AOIntensity.RecommendedValues = { TEXT("0.5") };
+    AOIntensity.bRestrictToRecommended = false;
+
+    FActorVariation AORadius;
+    AORadius.Id = TEXT("ambient_oclussion_radius");
+    AORadius.Type = EActorAttributeType::Float;
+    AORadius.RecommendedValues = { TEXT("200") };
+    AORadius.bRestrictToRecommended = false;
 
     Definition.Variations.Append({
       ExposureMode,
@@ -703,10 +719,6 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
       LensFlareIntensity,
       BloomIntensity,
       MBMinObjectScreenSize,
-      ExposureMinBright,
-      ExposureMaxBright,
-      ExposureSpeedUp,
-      ExposureSpeedDown,
       HighlightContrastScaleVariation,
       ShadowContrastScaleVariation,
       CalibrationConstant,
@@ -729,9 +741,11 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
       //ColorContrast,
       //ColorGamma,
       HighlightsGamma,
-      ToneCurveAmount,
+      //ToneCurveAmount,
       SceneColorTint,
-      VignetteIntensity});
+      VignetteIntensity,
+      AOIntensity,
+      AORadius});
   }
 
   Success = CheckActorDefinition(Definition);
@@ -1663,12 +1677,36 @@ void UActorBlueprintFunctionLibrary::SetCamera(
       RetrieveActorAttributeToInt("image_size_y", Description.Variations, 600));
   Camera->SetFOVAngle(
       RetrieveActorAttributeToFloat("fov", Description.Variations, 90.0f));
+  
+  UWorld* CarlaWorld = Camera->GetWorld();
+
+  ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(CarlaWorld);
+
+  const UCarlaEpisode& CurrentEpisode = GameMode->GetCarlaEpisode();
+
+
   if (Description.Variations.Contains("enable_postprocess_effects"))
   {
     Camera->EnablePostProcessingEffects(
         ActorAttributeToBool(
         Description.Variations["enable_postprocess_effects"],
         true));
+
+    FWeatherParameters CurrentParams = CurrentEpisode.GetWeather()->GetCurrentWeather();
+    
+    TEnumAsByte<ECameraPPVPreset> CurrentPPVPreset = CurrentParams.PPVPreset;
+
+    UE_LOG(LogTemp, Warning, TEXT("CurrentPPVPreset: %i"), CurrentPPVPreset)
+
+    if(CarlaWorld == nullptr)
+    {
+      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, TEXT("Not valid mate ;)"));
+    }
+    else
+    {
+      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Valid World"));
+    }
+
     Camera->SetTargetGamma(
         RetrieveActorAttributeToFloat("gamma", Description.Variations, 1.0f));
     Camera->SetMotionBlurIntensity(
@@ -1677,10 +1715,10 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         RetrieveActorAttributeToFloat("motion_blur_max_distortion", Description.Variations, 5.0f));
     Camera->SetMotionBlurMinObjectScreenSize(
         RetrieveActorAttributeToFloat("motion_blur_min_object_screen_size", Description.Variations, 0.0f));
-    Camera->SetLensFlareIntensity(
-        RetrieveActorAttributeToFloat("lens_flare_intensity", Description.Variations, 0.2f));
+
     Camera->SetBloomIntensity(
         RetrieveActorAttributeToFloat("bloom_intensity", Description.Variations, 0.0f));
+        
     // Exposure, histogram mode by default
     if (RetrieveActorAttributeToString("exposure_mode", Description.Variations, "histogram") == "histogram")
     {
@@ -1690,8 +1728,17 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     {
       Camera->SetExposureMethod(EAutoExposureMethod::AEM_Manual);
     }
+    
     Camera->SetExposureCompensation(
-        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, 1.35f));
+        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations,  UCameraPresets::GetPPVExposureBiasPresetValue(CurrentPPVPreset)));
+
+    Camera->SetExposureMaxBrightness(
+        RetrieveActorAttributeToFloat("exposure_max_bright", Description.Variations, 20.0f));
+    Camera->SetExposureSpeedUp(
+        RetrieveActorAttributeToFloat("exposure_speed_up", Description.Variations, 0.0f));
+    Camera->SetExposureSpeedDown(
+        RetrieveActorAttributeToFloat("exposure_speed_down", Description.Variations, 0.0f));
+
     Camera->SetShutterSpeed(
         RetrieveActorAttributeToFloat("shutter_speed", Description.Variations, 25.0f));
     Camera->SetISO(
@@ -1699,32 +1746,23 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     Camera->SetAperture(
         RetrieveActorAttributeToFloat("fstop", Description.Variations, 7.1f));
 
-    Camera->SetExposureMinBrightness(
-        RetrieveActorAttributeToFloat("exposure_min_bright", Description.Variations, 0.0f));
-    Camera->SetExposureMaxBrightness(
-        RetrieveActorAttributeToFloat("exposure_max_bright", Description.Variations, 20.0f));
-    Camera->SetExposureSpeedUp(
-        RetrieveActorAttributeToFloat("exposure_speed_up", Description.Variations, 3.0f));
-    Camera->SetExposureSpeedDown(
-        RetrieveActorAttributeToFloat("exposure_speed_down", Description.Variations, 1.0f));
-    Camera->SetHighlightContrastScale(
-        RetrieveActorAttributeToFloat("highlight_contrast_scale", Description.Variations, 0.8f));
     Camera->SetShadowContrastScale(
-        RetrieveActorAttributeToFloat("shadow_constrast_scale", Description.Variations, 0.85f));
-    // This is deprecated:
-    Camera->SetExposureCalibrationConstant(
-        RetrieveActorAttributeToFloat("calibration_constant", Description.Variations, 16.0f));
+        RetrieveActorAttributeToFloat("highlight_constrast_scale", Description.Variations, 1.0f));
+    Camera->SetShadowContrastScale(
+        RetrieveActorAttributeToFloat("shadow_constrast_scale", Description.Variations, 0.65f));
 
     Camera->SetSensorWidth(
         RetrieveActorAttributeToFloat("sensor_width", Description.Variations, 24.576f));
     Camera->SetFocalDistance(
         RetrieveActorAttributeToFloat("focal_distance", Description.Variations, 250.0f));
+
     Camera->SetDepthBlurAmount(
         RetrieveActorAttributeToFloat("blur_amount", Description.Variations, 1.0f));
     Camera->SetDepthBlurRadius(
         RetrieveActorAttributeToFloat("blur_radius", Description.Variations, 0.0f));
     Camera->SetDepthOfFieldMinFstop(
         RetrieveActorAttributeToFloat("min_fstop", Description.Variations, 1.2f));
+
     Camera->SetBladeCount(
         RetrieveActorAttributeToInt("blade_count", Description.Variations, 5));
 
@@ -1740,7 +1778,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         RetrieveActorAttributeToFloat("white_clip", Description.Variations, 0.04f));
 
     Camera->SetWhiteTemp(
-        RetrieveActorAttributeToFloat("temp", Description.Variations, 5000.0f));
+        RetrieveActorAttributeToFloat("temp", Description.Variations, 6500.0f));
     Camera->SetWhiteTint(
         RetrieveActorAttributeToFloat("tint", Description.Variations, -0.15f));
 
@@ -1749,12 +1787,12 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     Camera->SetChromAberrOffset(
         RetrieveActorAttributeToFloat("chromatic_aberration_offset", Description.Variations, 0.0f));
 
-    auto ColorSaturation = FLinearColor(RetrieveActorAttributeToColor("color_saturation", Description.Variations, FLinearColor(0.45f, 0.45f, 0.45f).ToFColorSRGB()));
+    auto ColorSaturation = FLinearColor(RetrieveActorAttributeToColor("color_saturation", Description.Variations, FLinearColor(0.6f, 0.6f, 0.6f).ToFColorSRGB()));
     Camera->SetColorSaturation(
         FVector4(ColorSaturation.R, ColorSaturation.G, ColorSaturation.B, ColorSaturation.A));
 
     // Temporal comments until FVector is implemented in clientside
-    FVector ColorContrast = FVector(RetrieveActorAttributeToVector("color_contrast", Description.Variations, FVector(1.3f, 1.3f, 1.3f)));
+    FVector ColorContrast = FVector(RetrieveActorAttributeToVector("color_contrast", Description.Variations, FVector(1.4f, 1.4f, 1.4f)));
     Camera->SetColorContrast(
         FVector4(ColorContrast.X, ColorContrast.Y, ColorContrast.Z, 1.0f));
 
@@ -1766,15 +1804,18 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     auto HighlightsGamma = FLinearColor(RetrieveActorAttributeToColor("highlights_gamma", Description.Variations, FLinearColor(0.5f, 0.5, 0.5f).ToFColorSRGB()));
     Camera->SetHighlightsGamma(
         FVector4(HighlightsGamma.R, HighlightsGamma.G, HighlightsGamma.B, HighlightsGamma.A));
-
-    Camera->SetToneCurveAmount(
-        RetrieveActorAttributeToFloat("tone_curve_amount", Description.Variations, 1.0f));
     
     Camera->SetSceneColorTint(
-        RetrieveActorAttributeToColor("scene_color_tint", Description.Variations, FLinearColor(0.783308f, 0.893718f, 0.936458f).ToFColorSRGB()));
+        RetrieveActorAttributeToColor("scene_color_tint", Description.Variations, FLinearColor(0.93125f, 0.916985f, 0.716012f).ToFColorSRGB()));
     
     Camera->SetVignetteIntensity(
         RetrieveActorAttributeToFloat("vignette_intensity", Description.Variations, 0.4f));
+
+    Camera->SetAmbientOclussionIntensity(
+        RetrieveActorAttributeToFloat("ambient_oclussion_intensity", Description.Variations, 0.5f));
+
+    Camera->SetAmbientOclussionRadius(
+        RetrieveActorAttributeToFloat("ambient_oclussion_radius", Description.Variations, 200.0f));
   }
 }
 

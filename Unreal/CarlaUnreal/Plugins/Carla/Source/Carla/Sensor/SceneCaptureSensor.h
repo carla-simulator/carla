@@ -419,6 +419,12 @@ public:
   void SetHighlightContrastScale(float HighlightContrastScale);
 
   UFUNCTION(BlueprintCallable)
+  void SetAmbientOclussionIntensity(float AmbientOclussionIntensity);
+
+  UFUNCTION(BlueprintCallable)
+  void SetAmbientOclussionRadius(float AmbientOclussionRadius);
+
+  UFUNCTION(BlueprintCallable)
   float GetHighlightContrastScale() const;
 
   UFUNCTION(BlueprintCallable)

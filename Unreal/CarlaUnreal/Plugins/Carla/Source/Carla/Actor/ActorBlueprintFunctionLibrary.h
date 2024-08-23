@@ -22,6 +22,7 @@
 class ASceneCaptureSensor;
 class AShaderBasedSensor;
 struct FLidarDescription;
+class ULevel;
 
 UCLASS()
 class UActorBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
