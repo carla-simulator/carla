@@ -394,3 +394,17 @@ carla_string_option (
   "Target StreetMap git tag."
   ${CARLA_STREETMAP_VERSION}
 )
+
+# ==== Robotec GPU LIDAR ====
+
+carla_string_option (
+  CARLA_RGL_VERSION
+  "Target RGL Plugin version."
+  "marcel/dev"
+)
+
+carla_string_option (
+  CARLA_RGL_TAG
+  "Target RGL Plugin git tag."
+  "${CARLA_RGL_VERSION}"
+)

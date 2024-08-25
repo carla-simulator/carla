@@ -249,4 +249,18 @@ if (BUILD_CARLA_UNREAL)
   )
 endif ()
 
+# ==== Robotec GPU LIDAR ====
+
+#[[
+if (BUILD_CARLA_UNREAL)
+  carla_dependency_add (
+    carla-RGL
+    ${CARLA_RGL_TAG}
+    https://github.com/carla-simulator/carla-RGL/archive/refs/heads/${CARLA_RGL_TAG}.zip
+    https://github.com/carla-simulator/carla-RGL.git
+    SOURCE_DIR ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins/carla-RGL
+  )
+endif ()
+]]
+
 carla_dependencies_make_available ()
