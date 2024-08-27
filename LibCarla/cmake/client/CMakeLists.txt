@@ -21,8 +21,8 @@ if (BUILD_RSS_VARIANT)
   install(FILES ${spdlog_file} DESTINATION lib)
   list(APPEND ADRSS_LIBS ${spdlog_file})
 
-  set(proj_include_dir ${ADRSS_INSTALL_DIR}/../../proj-install/include)
-  set(proj_lib ${ADRSS_INSTALL_DIR}/../../proj-install/lib/libproj.a)
+  set(proj_include_dir ${PROJ_INCLUDE_PATH})
+  set(proj_lib ${PROJ_LIBPATH}/libproj.a)
   install(DIRECTORY ${proj_include_dir} DESTINATION include/system)
   list(APPEND ADRSS_INCLUDE_DIRS ${proj_include_dir})
   install(FILES ${proj_lib} DESTINATION lib)
@@ -97,6 +97,12 @@ file(GLOB libcarla_carla_sources
     "${libcarla_source_path}/carla/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_sources}")
 install(FILES ${libcarla_carla_sources} DESTINATION include/carla)
+
+file(GLOB libcarla_carla_actors_sources
+    "${libcarla_source_path}/carla/actors/*.cpp"
+    "${libcarla_source_path}/carla/actors/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_actors_sources}")
+install(FILES ${libcarla_carla_actors_sources} DESTINATION include/carla/actors)
 
 file(GLOB libcarla_carla_client_sources
     "${libcarla_source_path}/carla/client/*.cpp"
@@ -266,11 +272,10 @@ file(GLOB libcarla_carla_trafficmanager_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_trafficmanager_sources}")
 install(FILES ${libcarla_carla_trafficmanager_sources} DESTINATION include/carla/trafficmanager)
 
-file(GLOB libcarla_carla_ros2_sources
-    "${libcarla_source_path}/carla/ros2/*.cpp"
-    "${libcarla_source_path}/carla/ros2/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_ros2_sources}")
-install(FILES ${libcarla_carla_ros2_sources} DESTINATION include/carla/ros2)
+  file(GLOB libcarla_carla_ros2_public_headers
+    "${libcarla_source_path}/carla/ros2/*.h"
+  )
+  install(FILES ${libcarla_carla_ros2_public_headers} DESTINATION include/carla/ros2)
 
 # ==============================================================================
 # Create targets for debug and release in the same build type.

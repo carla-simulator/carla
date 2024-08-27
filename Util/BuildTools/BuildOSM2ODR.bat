@@ -6,6 +6,7 @@ rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 
 set LOCAL_PATH=%~dp0
 set FILE_N=-[%~n0]:
+set GENERATOR=""
 
 rem Print batch params (debug purpose)
 echo %FILE_N% [Batch params]: %*
@@ -57,6 +58,13 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
+if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
+echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
+    set PLATFORM=-A x64
+) || (
+    set PLATFORM=
+)
+
 if %REMOVE_INTERMEDIATE% == false (
     if %BUILD_OSM2ODR% == false (
         echo Nothing selected to be done.
@@ -76,8 +84,6 @@ set OSM2ODR_INSTALL_PATH=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 set OSM2ODR__SERVER_INSTALL_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies
 set CARLA_DEPENDENCIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies\
 
-if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
-
 if %REMOVE_INTERMEDIATE% == true (
     rem Remove directories
     for %%G in (
@@ -90,6 +96,7 @@ if %REMOVE_INTERMEDIATE% == true (
     )
 )
 
+
 rem Build OSM2ODR
 if %BUILD_OSM2ODR% == true (
     cd "%INSTALLATION_DIR%"
@@ -99,7 +106,7 @@ if %BUILD_OSM2ODR% == true (
         del OSM2ODR.zip
         ren sumo-%CURRENT_OSM2ODR_COMMIT% osm2odr-source
     )
-    
+
     cd ..
     if not exist "%OSM2ODR_VSPROJECT_PATH%" mkdir "%OSM2ODR_VSPROJECT_PATH%"
     cd "%OSM2ODR_VSPROJECT_PATH%"

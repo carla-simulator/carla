@@ -16,6 +16,7 @@
 #include "carla/sensor/s11n/ImageSerializer.h"
 #include "carla/sensor/s11n/SensorHeaderSerializer.h"
 
+#include "fastdds/carla/ros2/impl/DdsDomainParticipantImpl.h"
 #include "publishers/CarlaPublisher.h"
 #include "publishers/CarlaClockPublisher.h"
 #include "publishers/CarlaRGBCameraPublisher.h"
@@ -46,6 +47,14 @@ namespace ros2 {
 
 // static fields
 std::shared_ptr<ROS2> ROS2::_instance;
+std::shared_ptr<DdsDomainParticipantImpl> ROS2::GetDdsDomainParticipant() {
+  auto _instance = ROS2::GetInstance();
+  if (_instance->_domain_participant_impl == nullptr) 
+  {
+    _instance->_domain_participant_impl = std::make_shared<DdsDomainParticipantImpl>();
+  }
+  return _instance->_domain_participant_impl;
+}
 
 // list of sensors (should be equal to the list of SensorsRegistry
 enum ESensors {
@@ -841,6 +850,9 @@ void ROS2::Shutdown() {
   _clock_publisher.reset();
   _controller.reset();
   _enabled = false;
+  // finally, release the rest of our resources by destroying our instance
+  // to prevent from race conditions on system level shutdown of global resources
+  _instance = nullptr;
 }
 
 } // namespace ros2

@@ -57,14 +57,14 @@ EgoDynamicsOnRoute::EgoDynamicsOnRoute()
     time_since_epoch_check_end_ms(0.),
     ego_speed(0.),
     min_stopping_distance(0.),
-    ego_center({0., 0., 0.}),
+    ego_center(),
     ego_heading(0.),
     ego_heading_change(0.),
     ego_steering_angle(0.),
     ego_center_within_route(false),
     crossing_border(false),
     route_heading(0.),
-    route_nominal_center({0., 0., 0.}),
+    route_nominal_center(),
     heading_diff(0.),
     route_speed_lat(0.),
     route_speed_lon(0.),
@@ -73,6 +73,12 @@ EgoDynamicsOnRoute::EgoDynamicsOnRoute()
     avg_route_accel_lat(0.),
     avg_route_accel_lon(0.) {
   timestamp.elapsed_seconds = 0.;
+  ego_center.x = 0.;
+  ego_center.y = 0.;
+  ego_center.z = 0.,
+  route_nominal_center.x = 0.;
+  route_nominal_center.y = 0.;
+  route_nominal_center.z = 0.;
 }
 
 std::shared_ptr<spdlog::logger> getLogger() {

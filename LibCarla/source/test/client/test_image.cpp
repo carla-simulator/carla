@@ -14,7 +14,6 @@
 
 template <typename ViewT, typename PixelT>
 struct TestImage {
-  TestImage(TestImage &&) = default;
   using pixel_type = PixelT;
   std::unique_ptr<PixelT[]> data;
   ViewT view;
@@ -28,7 +27,7 @@ static auto MakeTestImage(size_t width, size_t height) {
       height,
       reinterpret_cast<PixelT*>(data.get()),
       static_cast<long>(sizeof(PixelT) * width));
-  return TestImage<decltype(view), PixelT>{std::move(data), view};
+  return TestImage<decltype(view), PixelT>{.data = std::move(data), .view = view};
 }
 
 #ifndef PLATFORM_WINDOWS

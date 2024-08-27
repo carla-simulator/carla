@@ -15,6 +15,8 @@ rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
+set GENERATOR=""
+
 :arg-parse
 if not "%1"=="" (
     if "%1"=="--build-dir" (
@@ -36,6 +38,11 @@ if not "%1"=="" (
 )
 
 if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
+echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
+    set PLATFORM=-A x64
+) || (
+    set PLATFORM=
+)
 
 rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
@@ -78,12 +85,6 @@ move %BUILD_DIR%%PROJ_BASE_NAME% %PROJ_SRC_DIR%
 
 mkdir %PROJ_BUILD_DIR%
 cd %PROJ_BUILD_DIR%
-
-echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
-    set PLATFORM=-A x64
-) || (
-    set PLATFORM=
-)
 
 cmake .. -G %GENERATOR% %PLATFORM%^
     -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^

@@ -41,6 +41,7 @@ namespace ros2 {
   class CarlaTransformPublisher;
   class CarlaClockPublisher;
   class CarlaEgoVehicleControlSubscriber;
+  class DdsDomainParticipantImpl;
 
 class ROS2
 {
@@ -53,6 +54,8 @@ class ROS2
       _instance = std::shared_ptr<ROS2>(new ROS2);
     return _instance;
   }
+
+  static std::shared_ptr<DdsDomainParticipantImpl> GetDdsDomainParticipant();
 
   // general
   void Enable(bool enable);
@@ -148,6 +151,7 @@ void ProcessDataFromCollisionSensor(
   ROS2() {};
 
   static std::shared_ptr<ROS2> _instance;
+  std::shared_ptr<DdsDomainParticipantImpl> _domain_participant_impl;
 
   bool _enabled { false };
   uint64_t _frame { 0 };
