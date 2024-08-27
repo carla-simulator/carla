@@ -428,9 +428,11 @@ class BasicAgent(object):
 
         return ObstacleDetectionResult(False, None, -1)
 
-    def _generate_lane_change_path(self, waypoint, direction='left', distance_same_lane=10,
+    @staticmethod
+    def _generate_lane_change_path(waypoint, direction='left', distance_same_lane=10,
                                 distance_other_lane=25, lane_change_distance=25,
                                 check=True, lane_changes=1, step_distance=2):
+        # type: (carla.Waypoint, str, float, float, float, bool, int, float) -> list[tuple[carla.Waypoint, RoadOption]]
         """
         This methods generates a path that results in a lane change.
         Use the different distances to fine-tune the maneuver.
