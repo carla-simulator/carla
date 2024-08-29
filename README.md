@@ -24,7 +24,10 @@ environmental conditions.
 * Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD ryzen 7 / AMD ryzen 9
 * +32 GB RAM memory 
 * NVIDIA RTX 3070 / NVIDIA RTX 3080 / NVIDIA RTX 4090
-* Ubuntu 20.04
+* Ubuntu 22.04
+
+ >[!NOTE]
+> Ubuntu version 22.04 is required, the Unreal Engine 5.3 version of CARLA will not work on Ubuntu 20.04 or lower. 
 
 ## Documentation
 

@@ -7,7 +7,23 @@ start cmd /c git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucke
 
 echo Installing Visual Studio 2022...
 curl -L -O https://aka.ms/vs/17/release/vs_community.exe || exit /b
-vs_Community.exe --add Microsoft.VisualStudio.Workload.NativeDesktop Microsoft.VisualStudio.Workload.NativeGame Microsoft.VisualStudio.Workload.ManagedDesktop Microsoft.VisualStudio.Component.Windows10SDK.18362  Microsoft.VisualStudio.Component.VC.CMake.Project Microsoft.Net.ComponentGroup.4.8.1.DeveloperTools Microsoft.VisualStudio.Component.VC.Llvm.Clang Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang --removeProductLang Es-es --addProductLang En-us --installWhileDownloading --passive --wait
+rem See: https://learn.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-community?view=vs-2022&preserve-view=true
+vs_Community.exe --add ^
+  Microsoft.VisualStudio.Workload.NativeDesktop ^
+  Microsoft.VisualStudio.Workload.NativeGame ^
+  Microsoft.VisualStudio.Workload.ManagedDesktop ^
+  Microsoft.VisualStudio.Component.Windows10SDK.18362 ^
+  Microsoft.VisualStudio.Component.VC.CMake.Project ^
+  Microsoft.Net.ComponentGroup.4.8.1.DeveloperTools ^
+  Microsoft.VisualStudio.Component.VC.Llvm.Clang ^
+  Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset ^
+  Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang ^
+  Microsoft.VisualStudio.Component.VC.14.36.17.6.x86.x64 ^
+  --removeProductLang Es-es ^
+  --addProductLang En-us ^
+  --installWhileDownloading ^
+  --passive ^
+  --wait
 del vs_community.exe
 echo Visual Studion 2022 Installed!!!
 
@@ -44,10 +60,10 @@ if errorlevel 1 (
 )
 
 
-echo Installing Python Pacakges...
+echo Installing Python Packages...
 python -m pip install --upgrade pip || exit /b
 python -m pip install -r requirements.txt || exit /b
-echo Python Pacakges Installed...
+echo Python Packages Installed...
 
 
 echo Switching to x64 Native Tools Command Prompt for VS 2022 command line...
