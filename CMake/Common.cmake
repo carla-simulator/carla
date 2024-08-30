@@ -39,7 +39,11 @@ endif ()
 
 if (WIN32)
   add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
-  add_compile_options (/utf-8)
+
+  check_cxx_compiler_flag(/utf-8 HAS_MSVC_UTF8)
+  if (HAS_MSVC_UTF8)
+    add_compile_options (/utf-8)
+  endif ()
 endif ()
 
 set (CARLA_COMMON_DEFINITIONS)
