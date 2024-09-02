@@ -38,7 +38,7 @@ if not "%1"=="" (
 rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
 if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
-if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
+if %GENERATOR% == "" set GENERATOR="Visual Studio 17 2022"
 
 rem ============================================================================
 rem -- Get Eigen (Chrono dependency) -------------------------------------------

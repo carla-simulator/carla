@@ -72,7 +72,7 @@ rem Set the visual studio solution directory
 rem
 set LIBCARLA_VSPROJECT_PATH=%INSTALLATION_DIR:/=\%libcarla-visualstudio\
 
-if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
+if %GENERATOR% == "" set GENERATOR="Visual Studio 17 2022"
 
 
 set LIBCARLA_SERVER_INSTALL_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies\

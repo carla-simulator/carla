@@ -76,7 +76,7 @@ set OSM2ODR_INSTALL_PATH=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 set OSM2ODR__SERVER_INSTALL_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies
 set CARLA_DEPENDENCIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies\
 
-if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
+if %GENERATOR% == "" set GENERATOR="Visual Studio 17 2022"
 
 if %REMOVE_INTERMEDIATE% == true (
     rem Remove directories
