@@ -200,12 +200,23 @@ namespace tcp {
           if (_done) {
             return;
           }
+
+#define LIBCARLA_SEQUENTIAL_CALLBACKS // Temporary fix for memory usage blowup during save_to_disk
+#ifndef LIBCARLA_SEQUENTIAL_CALLBACKS
           // Now that we know the size of the coming buffer, we can allocate our
           // buffer and start putting data into it.
           boost::asio::async_read(
               _socket,
               message->buffer(),
-              boost::asio::bind_executor(_strand, handle_read_data));
+            boost::asio::bind_executor(_strand, handle_read_data));
+#else
+          boost::asio::read(
+              _socket,
+              message->buffer());
+          handle_read_data(
+            boost::system::error_code(),
+            message->size());
+#endif
         } else if (!_done) {
           log_debug("streaming client: failed to read header:", ec.message());
           DEBUG_ONLY(log_debug("size  = ", message->size()));
@@ -214,11 +225,20 @@ namespace tcp {
         }
       };
 
+#ifndef LIBCARLA_SEQUENTIAL_CALLBACKS
       // Read the size of the buffer that is coming.
       boost::asio::async_read(
           _socket,
           message->size_as_buffer(),
           boost::asio::bind_executor(_strand, handle_read_header));
+#else
+      boost::asio::read(
+          _socket,
+          message->size_as_buffer());
+      handle_read_header(
+        boost::system::error_code(),
+        sizeof(message_size_type));
+#endif
     });
   }
 
