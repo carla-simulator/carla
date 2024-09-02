@@ -279,8 +279,11 @@ def main():
         for spawn_point in spawn_points:
             walker_bp = random.choice(blueprintsWalkers)
             # set as not invincible
+            probability = random.randint(0,100 + 1);
             if walker_bp.has_attribute('is_invincible'):
                 walker_bp.set_attribute('is_invincible', 'false')
+            if walker_bp.has_attribute('can_use_wheelchair') and probability < 11:
+                walker_bp.set_attribute('use_wheelchair', 'true')
             # set the max speed
             if walker_bp.has_attribute('speed'):
                 if (random.random() > percentagePedestriansRunning):
