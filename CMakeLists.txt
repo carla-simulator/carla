@@ -18,6 +18,7 @@ cmake_policy (SET CMP0091 NEW)
 cmake_policy (SET CMP0074 NEW)
 cmake_policy (SET CMP0077 NEW)
 cmake_policy (SET CMP0117 NEW)
+
 if (${CMAKE_MINOR_VERSION} GREATER_EQUAL 24)
   cmake_policy (SET CMP0135 NEW)
 endif ()
@@ -121,3 +122,10 @@ file (
   ${CMAKE_CURRENT_BINARY_DIR}/Help.md
   ${CARLA_CMAKE_HELP_MESSAGE}
 )
+
+if (CMAKE_EXPORT_COMPILE_COMMANDS)
+  configure_file (
+    ${CARLA_WORKSPACE_PATH}/.clangd.in
+    ${CARLA_WORKSPACE_PATH}/.clangd
+  )
+endif ()
