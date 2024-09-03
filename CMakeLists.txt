@@ -99,7 +99,7 @@ if (BUILD_EXAMPLES)
 endif ()
 
 carla_add_custom_target (
-  carla_help
+  carla-help
   "Display this message."
   COMMAND ${CMAKE_COMMAND} -E cat "${CMAKE_CURRENT_BINARY_DIR}/Help.md"
 )
