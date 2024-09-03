@@ -18,6 +18,7 @@ cmake_policy (SET CMP0091 NEW)
 cmake_policy (SET CMP0074 NEW)
 cmake_policy (SET CMP0077 NEW)
 cmake_policy (SET CMP0117 NEW)
+
 if (${CMAKE_MINOR_VERSION} GREATER_EQUAL 24)
   cmake_policy (SET CMP0135 NEW)
 endif ()
@@ -73,6 +74,8 @@ include (${CARLA_WORKSPACE_PATH}/CMake/Options.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Common.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Dependencies.cmake)
 
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 if (BUILD_CARLA_CLIENT OR BUILD_CARLA_SERVER)
   add_subdirectory (LibCarla)
 endif ()
@@ -98,7 +101,7 @@ if (BUILD_EXAMPLES)
 endif ()
 
 carla_add_custom_target (
-  carla-help
+  carla_help
   "Display this message."
   COMMAND ${CMAKE_COMMAND} -E cat "${CMAKE_CURRENT_BINARY_DIR}/Help.md"
 )
@@ -121,3 +124,10 @@ file (
   ${CMAKE_CURRENT_BINARY_DIR}/Help.md
   ${CARLA_CMAKE_HELP_MESSAGE}
 )
+
+if (CMAKE_EXPORT_COMPILE_COMMANDS)
+  configure_file (
+    ${CARLA_WORKSPACE_PATH}/.clangd.in
+    ${CARLA_WORKSPACE_PATH}/.clangd
+  )
+endif ()
