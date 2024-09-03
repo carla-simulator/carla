@@ -73,12 +73,17 @@ namespace tcp {
     }
 
     /// Writes some data to the socket.
-    void Write(std::shared_ptr<const Message> message);
+    void Write(
+      std::shared_ptr<const Message> message,
+      std::atomic_size_t* sync_counter = nullptr);
 
     /// Writes some data to the socket.
     template <typename... Buffers>
-    void Write(Buffers... buffers) {
-      Write(MakeMessage(buffers...));
+    void Write(
+      Buffers... buffers,
+      std::atomic_size_t* sync_counter = nullptr)
+    {
+      Write(MakeMessage(buffers...), sync_counter);
     }
 
     /// Post a job to close the session.

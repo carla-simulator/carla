@@ -32,13 +32,17 @@ namespace detail {
       _session(nullptr)
       {};
 
-    template <typename... Buffers>
-    void Write(Buffers... buffers) {
+    template <bool Sync = false, typename... Buffers>
+    void Write(Buffers... buffers)
+    {
+      std::atomic_size_t sync_counter = 1U;
+      auto sync_counter_ptr = Sync ? &sync_counter : nullptr;
+
       // try write single stream
       auto session = _session.load();
       if (session != nullptr) {
         auto message = Session::MakeMessage(buffers...);
-        session->Write(std::move(message));
+        session->Write(std::move(message), sync_counter_ptr);
         log_debug("sensor ", session->get_stream_id()," data sent");
         // Return here, _session is only valid if we have a
         // single session.
@@ -47,13 +51,28 @@ namespace detail {
 
       // try write multiple stream
       std::scoped_lock<std::mutex> lock(_mutex);
-      if (_sessions.size() > 0) {
+      if (_sessions.size() > 0)
+      {
+        if constexpr (Sync)
+          (void)sync_counter.fetch_add(_sessions.size(), std::memory_order::acquire);
+        
         auto message = Session::MakeMessage(buffers...);
         for (auto &s : _sessions) {
           if (s != nullptr) {
             s->Write(message);
             log_debug("sensor ", s->get_stream_id()," data sent ");
          }
+        }
+      }
+
+      if constexpr (Sync)
+      {
+        for (;;)
+        {
+          auto last = sync_counter.load(std::memory_order::acquire);
+          if (last == 0)
+            break;
+          sync_counter.wait(last, std::memory_order::acquire);
         }
       }
     }

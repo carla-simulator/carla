@@ -28,37 +28,37 @@ struct FActorDescription;
 
 
 /*  @CARLA_UE5
-    
-    The FPixelReader class has been deprecated, as its functionality
-    is now split between ImageUtil::ReadImageDataAsync (see Sensor/ImageUtil.h)
-    and ASensor::SendDataToClient.
-    Here's a brief example of how to use both:
-    
-    if (!AreClientsListening()) // Ideally, check whether there are any clients.
-        return;
 
-    auto FrameIndex = FCarlaEngine::GetFrameCounter();
-    ImageUtil::ReadImageDataAsync(
-        *GetCaptureRenderTarget(),
-        [this](
-            const void* MappedPtr,
-            size_t RowPitch,
-            size_t BufferHeight,
-            EPixelFormat Format,
-            FIntPoint Extent)
-        {
-            TArray<FColor> ImageData;
-            // Parse the raw data into ImageData...
-            SendDataToClient(
-                *this,
-                ImageData,
-                FrameIndex);
-            return true;
-        });
+	The FPixelReader class has been deprecated, as its functionality
+	is now split between ImageUtil::ReadImageDataAsync (see Sensor/ImageUtil.h)
+	and ASensor::SendDataToClient.
+	Here's a brief example of how to use both:
 
-    Alternatively, if you just want to retrieve the pixels as
-    FColor/FLinearColor, you can just use ReadImageDataAsyncFColor
-    or ReadImageDataAsyncFLinearColor.
+	if (!AreClientsListening()) // Ideally, check whether there are any clients.
+		return;
+
+	auto FrameIndex = FCarlaEngine::GetFrameCounter();
+	ImageUtil::ReadImageDataAsync(
+		*GetCaptureRenderTarget(),
+		[this](
+			const void* MappedPtr,
+			size_t RowPitch,
+			size_t BufferHeight,
+			EPixelFormat Format,
+			FIntPoint Extent)
+		{
+			TArray<FColor> ImageData;
+			// Parse the raw data into ImageData...
+			SendDataToClient(
+				*this,
+				ImageData,
+				FrameIndex);
+			return true;
+		});
+
+	Alternatively, if you just want to retrieve the pixels as
+	FColor/FLinearColor, you can just use ReadImageDataAsyncFColor
+	or ReadImageDataAsyncFLinearColor.
 
 */
 
@@ -68,209 +68,211 @@ struct FActorDescription;
 UCLASS(Abstract, hidecategories = (Collision, Attachment, Actor))
 class CARLA_API ASensor : public AActor
 {
-  GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
 
-  ASensor(const FObjectInitializer &ObjectInitializer);
+	ASensor(const FObjectInitializer& ObjectInitializer);
 
-  void SetEpisode(const UCarlaEpisode &InEpisode)
-  {
-    Episode = &InEpisode;
-  }
+	void SetEpisode(const UCarlaEpisode& InEpisode)
+	{
+		Episode = &InEpisode;
+	}
 
-  virtual void Set(const FActorDescription &Description);
+	virtual void Set(const FActorDescription& Description);
 
-  std::optional<FActorAttribute> GetAttribute(const FString Name);
+	std::optional<FActorAttribute> GetAttribute(const FString Name);
 
-  virtual void BeginPlay();
+	virtual void BeginPlay();
 
-  /// Replace the FDataStream associated with this sensor.
-  ///
-  /// @warning Do not change the stream after BeginPlay. It is not thread-safe.
-  void SetDataStream(FDataStream InStream)
-  {
-    Stream = std::move(InStream);
-  }
+	/// Replace the FDataStream associated with this sensor.
+	///
+	/// @warning Do not change the stream after BeginPlay. It is not thread-safe.
+	void SetDataStream(FDataStream InStream)
+	{
+		Stream = std::move(InStream);
+	}
 
-  FDataStream MoveDataStream()
-  {
-    return std::move(Stream);
-  }
+	FDataStream MoveDataStream()
+	{
+		return std::move(Stream);
+	}
 
-  /// Return the token that allows subscribing to this sensor's stream.
-  auto GetToken() const
-  {
-    return Stream.GetToken();
-  }
+	/// Return the token that allows subscribing to this sensor's stream.
+	auto GetToken() const
+	{
+		return Stream.GetToken();
+	}
 
-  bool IsStreamReady()
-  {
-    return Stream.IsStreamReady();
-  }
+	bool IsStreamReady()
+	{
+		return Stream.IsStreamReady();
+	}
 
-  bool AreClientsListening()
-  { 
-    return Stream.AreClientsListening();
-  }
+	bool AreClientsListening()
+	{
+		return Stream.AreClientsListening();
+	}
 
-  void Tick(const float DeltaTime) final;
+	void Tick(const float DeltaTime) final;
 
-  virtual void PrePhysTick(float DeltaSeconds) {}
-  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) {}
-  // Small interface to notify sensors when clients are listening
-  virtual void OnFirstClientConnected() {};
-  // Small interface to notify sensors when no clients are listening
-  virtual void OnLastClientDisconnected() {};
+	virtual void PrePhysTick(float DeltaSeconds) {}
+	virtual void PostPhysTick(UWorld* World, ELevelTick TickType, float DeltaSeconds) {}
+	// Small interface to notify sensors when clients are listening
+	virtual void OnFirstClientConnected() {};
+	// Small interface to notify sensors when no clients are listening
+	virtual void OnLastClientDisconnected() {};
 
 
-  void PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds);
+	void PostPhysTickInternal(UWorld* World, ELevelTick TickType, float DeltaSeconds);
 
-  UFUNCTION(BlueprintCallable)
-  URandomEngine *GetRandomEngine()
-  {
-    return RandomEngine;
-  }
+	UFUNCTION(BlueprintCallable)
+	URandomEngine* GetRandomEngine()
+	{
+		return RandomEngine;
+	}
 
-  UFUNCTION(BlueprintCallable)
-  int32 GetSeed() const
-  {
-    return Seed;
-  }
+	UFUNCTION(BlueprintCallable)
+	int32 GetSeed() const
+	{
+		return Seed;
+	}
 
-  UFUNCTION(BlueprintCallable)
-  void SetSeed(int32 InSeed);
+	UFUNCTION(BlueprintCallable)
+	void SetSeed(int32 InSeed);
 
-  const UCarlaEpisode &GetEpisode() const
-  {
-    check(Episode != nullptr);
-    return *Episode;
-  }
+	const UCarlaEpisode& GetEpisode() const
+	{
+		check(Episode != nullptr);
+		return *Episode;
+	}
 
-  void SetSavingDataToDisk(bool bSavingData) { bSavingDataToDisk = bSavingData; }
+	void SetSavingDataToDisk(bool bSavingData) { bSavingDataToDisk = bSavingData; }
 
 protected:
 
-  void PostActorCreated() override;
+	void PostActorCreated() override;
 
-  void EndPlay(EEndPlayReason::Type EndPlayReason) override;
+	void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
-  /// Return the FDataStream associated with this sensor.
-  ///
-  /// You need to provide a reference to self, this is necessary for template
-  /// deduction.
-  template <typename SensorType>
-  FAsyncDataStream GetDataStream(SensorType&& Self)
-  {
-    return Stream.MakeAsyncDataStream<std::remove_cvref_t<SensorType>>(
-      std::forward<SensorType>(Self),
-      GetEpisode().GetElapsedGameTime());
-  }
+	/// Return the FDataStream associated with this sensor.
+	///
+	/// You need to provide a reference to self, this is necessary for template
+	/// deduction.
+	template <typename SensorType>
+	FAsyncDataStream GetDataStream(SensorType&& Self)
+	{
+		return Stream.MakeAsyncDataStream<std::remove_cvref_t<SensorType>>(
+			std::forward<SensorType>(Self),
+			GetEpisode().GetElapsedGameTime());
+	}
 
 
-  // Send sensor data to the client.
-  template <
-    typename SensorType,
-    typename ElementType>
-  static void SendDataToClient(
-    SensorType&& Sensor,                  // The data's owning sensor.
-    TArrayView<ElementType> SensorData,   // Data to send to the client.
-    uint64_t FrameIndex                   // Current frame index.
-    )
-  {
-    using carla::sensor::SensorRegistry;
-    using SensorT = std::remove_const_t<std::remove_reference_t<SensorType>>;
-    constexpr size_t HeaderOffset = SensorRegistry::get<SensorT*>::type::header_offset;
+	// Send sensor data to the client.
+	template <
+		typename SensorType,
+		typename ElementType>
+	static void SendDataToClient(
+		SensorType&& Sensor,                  // The data's owning sensor.
+		TArrayView<ElementType> SensorData,   // Data to send to the client.
+		uint64_t FrameIndex                   // Current frame index.
+	)
+	{
+		using carla::sensor::SensorRegistry;
+		using SensorT = std::remove_const_t<std::remove_reference_t<SensorType>>;
+		constexpr size_t HeaderOffset = SensorRegistry::get<SensorT*>::type::header_offset;
 
-    if (!Sensor.AreClientsListening())
-        return;
+		if (!Sensor.AreClientsListening())
+			return;
 
-    auto Stream = Sensor.GetDataStream(Sensor);
-    Stream.SetFrameNumber(FrameIndex);
-    
-    auto Buffer = Stream.PopBufferFromPool();
-    Buffer.copy_from(
-      HeaderOffset,
-      boost::asio::buffer(
-        SensorData.GetData(),
-        SensorData.Num() * sizeof(ElementType)));
+		auto Stream = Sensor.GetDataStream(Sensor);
+		Stream.SetFrameNumber(FrameIndex);
 
-    if (!Buffer.data())
-      return;
+		auto Buffer = Stream.PopBufferFromPool();
+		Buffer.copy_from(
+			HeaderOffset,
+			boost::asio::buffer(
+				SensorData.GetData(),
+				SensorData.Num() * sizeof(ElementType)));
 
-    auto Serialized = SensorRegistry::Serialize(Sensor, std::move(Buffer));
-    auto SerializedBuffer = carla::Buffer(std::move(Serialized));
-    auto BufferView = carla::BufferView::CreateFrom(std::move(SerializedBuffer));
+		if (!Buffer.data())
+			return;
+
+		auto Serialized = SensorRegistry::Serialize(Sensor, std::move(Buffer));
+		auto SerializedBuffer = carla::Buffer(std::move(Serialized));
+		auto BufferView = carla::BufferView::CreateFrom(std::move(SerializedBuffer));
 
 #if defined(WITH_ROS2)
-    auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled())
-    {
-      TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 SendDataToClient");
-      auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
-      auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, StreamId, BufferView]()
-      {
-        // get resolution of camera
-        int W = -1, H = -1;
-        float Fov = -1.0f;
-        auto WidthOpt = Sensor.GetAttribute("image_size_x");
-        if (WidthOpt.has_value())
-          W = FCString::Atoi(*WidthOpt->Value);
-        auto HeightOpt = Sensor.GetAttribute("image_size_y");
-        if (HeightOpt.has_value())
-          H = FCString::Atoi(*HeightOpt->Value);
-        auto FovOpt = Sensor.GetAttribute("fov");
-        if (FovOpt.has_value())
-          Fov = FCString::Atof(*FovOpt->Value);
-        // send data to ROS2
-        auto ParentActor = Sensor.GetAttachParentActor();
-        auto Transform =
-          ParentActor ?
-          Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) :
-          Stream.GetSensorTransform();
-        ROS2->ProcessDataFromCamera(
-          Stream.GetSensorType(),
-          StreamId,
-          Transform,
-          W, H,
-          Fov,
-          BufferView,
-          &Sensor);
-      });
-    }
+		auto ROS2 = carla::ros2::ROS2::GetInstance();
+		if (ROS2->IsEnabled())
+		{
+			TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 SendDataToClient");
+			auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
+			auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, StreamId, BufferView]()
+				{
+					// get resolution of camera
+					int W = -1, H = -1;
+					float Fov = -1.0f;
+					auto WidthOpt = Sensor.GetAttribute("image_size_x");
+					if (WidthOpt.has_value())
+						W = FCString::Atoi(*WidthOpt->Value);
+					auto HeightOpt = Sensor.GetAttribute("image_size_y");
+					if (HeightOpt.has_value())
+						H = FCString::Atoi(*HeightOpt->Value);
+					auto FovOpt = Sensor.GetAttribute("fov");
+					if (FovOpt.has_value())
+						Fov = FCString::Atof(*FovOpt->Value);
+					// send data to ROS2
+					auto ParentActor = Sensor.GetAttachParentActor();
+					auto Transform =
+						ParentActor ?
+						Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) :
+						Stream.GetSensorTransform();
+					ROS2->ProcessDataFromCamera(
+						Stream.GetSensorType(),
+						StreamId,
+						Transform,
+						W, H,
+						Fov,
+						BufferView,
+						&Sensor);
+				});
+		}
 #endif
 
-    if (Sensor.AreClientsListening())
-      Stream.Send(Sensor, BufferView);
-  }
+		if (Sensor.AreClientsListening())
+		{
+			Stream.Send(Sensor, BufferView);
+		}
+	}
 
-  /// Seed of the pseudo-random engine.
-  UPROPERTY(Category = "Random Engine", EditAnywhere)
-  int32 Seed = 123456789;
+	/// Seed of the pseudo-random engine.
+	UPROPERTY(Category = "Random Engine", EditAnywhere)
+	int32 Seed = 123456789;
 
-  /// Random Engine used to provide noise for sensor output.
-  UPROPERTY()
-  URandomEngine *RandomEngine = nullptr;
+	/// Random Engine used to provide noise for sensor output.
+	UPROPERTY()
+	URandomEngine* RandomEngine = nullptr;
 
-  UPROPERTY()
-  bool bIsActive = false;
+	UPROPERTY()
+	bool bIsActive = false;
 
-  // Property used when testing with SensorSpawnerActor in editor.
-  bool bSavingDataToDisk = false;
+	// Property used when testing with SensorSpawnerActor in editor.
+	bool bSavingDataToDisk = false;
 
 private:
 
-  FDataStream Stream;
+	FDataStream Stream;
 
-  FDelegateHandle OnPostTickDelegate;
+	FDelegateHandle OnPostTickDelegate;
 
-  FActorDescription SensorDescription;
+	FActorDescription SensorDescription;
 
-  const UCarlaEpisode *Episode = nullptr;
+	const UCarlaEpisode* Episode = nullptr;
 
-  /// Allows the sensor to tick with the tick rate from UE4.
-  bool ReadyToTick = false;
+	/// Allows the sensor to tick with the tick rate from UE4.
+	bool ReadyToTick = false;
 
-  bool bClientsListening = false;
+	bool bClientsListening = false;
 
 };

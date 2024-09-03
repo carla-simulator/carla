@@ -75,9 +75,13 @@ namespace tcp {
     });
   }
 
-  void ServerSession::Write(std::shared_ptr<const Message> message) {
+  void ServerSession::Write(
+    std::shared_ptr<const Message> message,
+    std::atomic_size_t* sync_counter)
+  {
     DEBUG_ASSERT(message != nullptr);
     DEBUG_ASSERT(!message->empty());
+    
     auto self = shared_from_this();
     boost::asio::post(_strand, [=]() {
       if (!_socket.is_open()) {
@@ -97,7 +101,10 @@ namespace tcp {
       }
       _is_writing = true;
 
-      auto handle_sent = [this, self, message](const boost::system::error_code &ec, size_t DEBUG_ONLY(bytes)) {
+      auto handle_sent = [this, self, message, sync_counter](
+        const boost::system::error_code &ec,
+        size_t DEBUG_ONLY(bytes))
+      {
         _is_writing = false;
         if (ec) {
           log_info("session", _session_id, ": error sending data :", ec.message());
@@ -105,6 +112,12 @@ namespace tcp {
         } else {
           DEBUG_ONLY(log_debug("session", _session_id, ": successfully sent", bytes, "bytes"));
           DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type) + message->size());
+        }
+        if (sync_counter != nullptr)
+        {
+          auto n = sync_counter->fetch_sub(1, std::memory_order::release) - 1;
+          if (n == 0)
+            sync_counter->notify_all();
         }
       };
 

@@ -36,96 +36,96 @@ class FAsyncDataStreamTmpl
 {
 public:
 
-  using StreamType = T;
+	using StreamType = T;
 
-  FAsyncDataStreamTmpl(FAsyncDataStreamTmpl &&) = default;
+	FAsyncDataStreamTmpl(FAsyncDataStreamTmpl&&) = default;
 
-  /// Return the token that allows subscribing to this stream.
-  auto GetToken() const
-  {
-    return Stream.GetToken();
-  }
+	/// Return the token that allows subscribing to this stream.
+	auto GetToken() const
+	{
+		return Stream.GetToken();
+	}
 
-  /// Pop a Buffer from the pool. Buffers in the pool can reuse the memory
-  /// allocated by previous messages, significantly improving performance for
-  /// big messages.
-  carla::Buffer PopBufferFromPool()
-  {
-    return Stream.MakeBuffer();
-  }
+	/// Pop a Buffer from the pool. Buffers in the pool can reuse the memory
+	/// allocated by previous messages, significantly improving performance for
+	/// big messages.
+	carla::Buffer PopBufferFromPool()
+	{
+		return Stream.MakeBuffer();
+	}
 
-  /// Send some data down the stream.
-  template <typename SensorT, typename... ArgsT>
-  void Send(SensorT &Sensor, ArgsT &&... Args);
+	/// Send some data down the stream.
+	template <typename SensorT, typename... ArgsT>
+	void Send(SensorT& Sensor, ArgsT &&... Args);
 
-  template <typename SensorT, typename... ArgsT>
-  void SerializeAndSend(SensorT &Sensor, ArgsT &&... Args);
+	template <typename SensorT, typename... ArgsT>
+	void SerializeAndSend(SensorT& Sensor, ArgsT &&... Args);
 
-  /// allow to change the frame number of the header
-  void SetFrameNumber(uint64_t FrameNumber)
-  {
-    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr =
-      reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
-    if (HeaderStr)
-    {
-      if (HeaderStr->frame != FrameNumber)
-      {
-        carla::log_info("Re-framing sensor type ", HeaderStr->sensor_type, " from ", HeaderStr->frame, " to ", FrameNumber);
-        HeaderStr->frame = FrameNumber;
-      }
-    }
-  }
+	/// allow to change the frame number of the header
+	void SetFrameNumber(uint64_t FrameNumber)
+	{
+		carla::sensor::s11n::SensorHeaderSerializer::Header* HeaderStr =
+			reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header*>(Header.data());
+		if (HeaderStr)
+		{
+			if (HeaderStr->frame != FrameNumber)
+			{
+				carla::log_info("Re-framing sensor type ", HeaderStr->sensor_type, " from ", HeaderStr->frame, " to ", FrameNumber);
+				HeaderStr->frame = FrameNumber;
+			}
+		}
+	}
 
-  /// return the type of sensor of this stream
-  uint64_t GetSensorType()
-  {
-    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr =
-      reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
-    if (HeaderStr)
-    {
-      return HeaderStr->sensor_type;
-    }
-    return 0u;
-  }
+	/// return the type of sensor of this stream
+	uint64_t GetSensorType()
+	{
+		carla::sensor::s11n::SensorHeaderSerializer::Header* HeaderStr =
+			reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header*>(Header.data());
+		if (HeaderStr)
+		{
+			return HeaderStr->sensor_type;
+		}
+		return 0u;
+	}
 
-  /// return the transform of the sensor
-  FTransform GetSensorTransform()
-  {
-    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr =
-      reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
-    if (HeaderStr)
-    {
-      return FTransform(HeaderStr->sensor_transform);
-    }
-    return FTransform();
-  }
+	/// return the transform of the sensor
+	FTransform GetSensorTransform()
+	{
+		carla::sensor::s11n::SensorHeaderSerializer::Header* HeaderStr =
+			reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header*>(Header.data());
+		if (HeaderStr)
+		{
+			return FTransform(HeaderStr->sensor_transform);
+		}
+		return FTransform();
+	}
 
-  /// return the timestamp of the sensor
-  double GetSensorTimestamp()
-  {
-    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr =
-      reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
-    if (HeaderStr)
-    {
-      return HeaderStr->timestamp;
-    }
-    return 0.0;
-  }
+	/// return the timestamp of the sensor
+	double GetSensorTimestamp()
+	{
+		carla::sensor::s11n::SensorHeaderSerializer::Header* HeaderStr =
+			reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header*>(Header.data());
+		if (HeaderStr)
+		{
+			return HeaderStr->timestamp;
+		}
+		return 0.0;
+	}
 
 private:
 
-  friend class FDataStreamTmpl<T>;
+	friend class FDataStreamTmpl<T>;
 
-  /// @pre This functions needs to be called in the game-thread.
-  template <typename SensorT>
-  explicit FAsyncDataStreamTmpl(
-      const SensorT &InSensor,
-      double Timestamp,
-      StreamType InStream);
+	/// @pre This functions needs to be called in the game-thread.
+	template <typename SensorT>
+	explicit FAsyncDataStreamTmpl(
+		const SensorT& InSensor,
+		double Timestamp,
+		StreamType InStream);
 
-  StreamType Stream;
+	StreamType Stream;
 
-  carla::Buffer Header;
+	carla::Buffer Header;
 };
 
 // =============================================================================
@@ -142,26 +142,33 @@ using FAsyncDataMultiStream = FAsyncDataStreamTmpl<carla::streaming::Stream>;
 
 template <typename T>
 template <typename SensorT, typename... ArgsT>
-inline void FAsyncDataStreamTmpl<T>::SerializeAndSend(SensorT &Sensor, ArgsT &&... Args)
+inline void FAsyncDataStreamTmpl<T>::SerializeAndSend(SensorT& Sensor, ArgsT &&... Args)
 {
-  // serialize data
-  carla::Buffer Data(carla::sensor::SensorRegistry::Serialize(Sensor, std::forward<ArgsT>(Args)...));
+	// serialize data
+	carla::Buffer Data(carla::sensor::SensorRegistry::Serialize(Sensor, std::forward<ArgsT>(Args)...));
 
-  // create views of buffers
-  auto ViewHeader = carla::BufferView::CreateFrom(std::move(Header));
-  auto ViewData = carla::BufferView::CreateFrom(std::move(Data));
+	// create views of buffers
+	auto ViewHeader = carla::BufferView::CreateFrom(std::move(Header));
+	auto ViewData = carla::BufferView::CreateFrom(std::move(Data));
 
-  // send views
-  Stream.Write(ViewHeader, ViewData);
+	// send views
+	Stream.Write(ViewHeader, ViewData);
 }
 
 template <typename T>
 template <typename SensorT, typename... ArgsT>
-inline void FAsyncDataStreamTmpl<T>::Send(SensorT &Sensor, ArgsT &&... Args)
+inline void FAsyncDataStreamTmpl<T>::Send(SensorT& Sensor, ArgsT &&... Args)
 {
-  // create views of buffers
-  auto ViewHeader = carla::BufferView::CreateFrom(std::move(Header));
+	auto& Episode = Sensor.GetEpisode();
+	auto& Settings = Episode.GetSettings();
+	bool IsSync = Settings.bSynchronousMode;
 
-  // send views
-  Stream.Write(ViewHeader, std::forward<ArgsT>(Args)...);
+	// create views of buffers
+	auto ViewHeader = carla::BufferView::CreateFrom(std::move(Header));
+
+	// send views
+	if (IsSync)
+		Stream.template Write<true>(ViewHeader, std::forward<ArgsT>(Args)...);
+	else
+		Stream.template Write<false>(ViewHeader, std::forward<ArgsT>(Args)...);
 }

@@ -48,9 +48,9 @@ namespace detail {
     }
 
     /// Flush @a buffers down the stream. No copies are made.
-    template <typename... Buffers>
+    template <bool Sync = false, typename... Buffers>
     void Write(Buffers &&... buffers) {
-      _shared_state->Write(std::move(buffers)...);
+      _shared_state->template Write<Sync>(std::move(buffers)...);
     }
 
     /// Make a copy of @a data and flush it down the stream.
