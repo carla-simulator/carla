@@ -110,10 +110,8 @@ namespace tcp {
     log_debug("session", _session_id, ": sending message of", message->size(), "bytes");
 
     _deadline.expires_from_now(_timeout);
-    boost::asio::write(
-        _socket,
-        message->GetBufferSequence());
-        handle_sent({},{});
+    boost::asio::async_write(_socket, message->GetBufferSequence(), 
+      boost::asio::bind_executor(_strand, handle_sent));
   }
 
   void ServerSession::Close() {
