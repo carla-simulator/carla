@@ -42,7 +42,7 @@ namespace detail {
       auto session = _session.load();
       if (session != nullptr) {
         auto message = Session::MakeMessage(buffers...);
-        session->Write(std::move(message), sync_counter_ptr);
+        session->WriteWithCounter(std::move(message), sync_counter_ptr);
         log_debug("sensor ", session->get_stream_id()," data sent");
         // Return here, _session is only valid if we have a
         // single session.
@@ -59,7 +59,7 @@ namespace detail {
           auto message = Session::MakeMessage(buffers...);
           for (auto &s : _sessions) {
             if (s != nullptr) {
-              s->Write(message, sync_counter_ptr);
+              s->WriteWithCounter(message, sync_counter_ptr);
               log_debug("sensor ", s->get_stream_id()," data sent ");
            }
           }

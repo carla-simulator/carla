@@ -79,9 +79,18 @@ namespace tcp {
 
     /// Writes some data to the socket.
     template <typename... Buffers>
+    requires (sizeof...(Buffers) > 1)
     void Write(
-      Buffers... buffers,
-      std::atomic_size_t* sync_counter = nullptr)
+      Buffers... buffers)
+    {
+      Write(MakeMessage(buffers...));
+    }
+
+    /// Writes some data to the socket.
+    template <typename... Buffers>
+    void WriteWithCounter(
+      std::atomic_size_t* sync_counter,
+      Buffers... buffers)
     {
       Write(MakeMessage(buffers...), sync_counter);
     }
