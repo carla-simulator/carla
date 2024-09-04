@@ -86,7 +86,7 @@ namespace tcp {
 
   void Client::Connect() {
     auto self = shared_from_this();
-    boost::asio::post(_strand, [this, self]() {
+    //boost::asio::post(_strand, [this, self]() {
       if (_done) {
         return;
       }
@@ -139,18 +139,18 @@ namespace tcp {
 
       log_debug("streaming client: connecting to", ep);
       _socket.async_connect(ep, boost::asio::bind_executor(_strand, handle_connect));
-    });
+    //});
   }
 
   void Client::Stop() {
     _connection_timer.cancel();
     auto self = shared_from_this();
-    boost::asio::post(_strand, [this, self]() {
+    //boost::asio::post(_strand, [this, self]() {
       _done = true;
       if (_socket.is_open()) {
         _socket.close();
       }
-    });
+    //});
   }
 
   void Client::Reconnect() {
@@ -165,7 +165,7 @@ namespace tcp {
 
   void Client::ReadData() {
     auto self = shared_from_this();
-    boost::asio::post(_strand, [this, self]() {
+    //boost::asio::post(_strand, [this, self]() {
       if (_done) {
         return;
       }
@@ -182,7 +182,8 @@ namespace tcp {
           // Move the buffer to the callback function and start reading the next
           // piece of data.
           // log_debug("streaming client: success reading data, calling the callback");
-          boost::asio::post(_strand, [self, message]() { self->_callback(message->pop()); });
+          //boost::asio::post(_strand, [self, message]() { self->_callback(message->pop()); });
+          _callback(message->pop());
           ReadData();
         } else {
           // As usual, if anything fails start over from the very top.
@@ -201,7 +202,7 @@ namespace tcp {
             return;
           }
 
-#define LIBCARLA_SEQUENTIAL_CALLBACKS // Temporary fix for memory usage blowup during save_to_disk
+//#define LIBCARLA_SEQUENTIAL_CALLBACKS // Temporary fix for memory usage blowup during save_to_disk
 #ifndef LIBCARLA_SEQUENTIAL_CALLBACKS
           // Now that we know the size of the coming buffer, we can allocate our
           // buffer and start putting data into it.
@@ -239,7 +240,7 @@ namespace tcp {
         boost::system::error_code(),
         sizeof(message_size_type));
 #endif
-    });
+    //});
   }
 
 } // namespace tcp
