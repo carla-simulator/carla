@@ -167,7 +167,7 @@ setup(
     name='carla',
     version='0.9.15',
     package_dir={'': 'source'},
-    packages=['carla'],
+    packages=['carla'] if not is_rss_variant_enabled() else ['carla', 'carla.ad', 'carla.ad.map', 'carla.ad.rss'],
     ext_modules=get_libcarla_extensions(),
     license=get_license(),
     description='Python API for communicating with the CARLA server.',
