@@ -116,19 +116,19 @@ namespace tcp {
           boost::asio::async_write(
               _socket,
               boost::asio::buffer(&stream_id, sizeof(stream_id)),
-              boost::asio::bind_executor(_strand, [=](error_code ec, size_t DEBUG_ONLY(bytes)) {
+              boost::asio::bind_executor(_strand, [self](error_code ec, size_t DEBUG_ONLY(bytes)) {
                 // Ensures to stop the execution once the connection has been stopped.
-                if (_done) {
+                if (self->_done) {
                   return;
                 }
                 if (!ec) {
                   DEBUG_ASSERT_EQ(bytes, sizeof(stream_id));
                   // If succeeded start reading data.
-                  ReadData();
+                  self->ReadData();
                 } else {
                   // Else try again.
                   log_debug("streaming client: failed to send stream id:", ec.message());
-                  Connect();
+                  self->Connect();
                 }
               }));
         } else {
@@ -165,7 +165,9 @@ namespace tcp {
 
   void Client::ReadData() {
     auto self = shared_from_this();
-    boost::asio::post(_strand, [this, self]() {
+    std::atomic_size_t sync_counter = 1;
+    auto sync_counter_ptr = true ? &sync_counter : nullptr;
+    boost::asio::post(_strand, [this, self, sync_counter_ptr]() {
       if (_done) {
         return;
       }
@@ -174,7 +176,10 @@ namespace tcp {
 
       auto message = std::make_shared<IncomingMessage>(_buffer_pool->Pop());
 
-      auto handle_read_data = [this, self, message](boost::system::error_code ec, size_t DEBUG_ONLY(bytes)) {
+      auto handle_read_data = [this, self, message, sync_counter_ptr](
+        boost::system::error_code ec,
+        size_t DEBUG_ONLY(bytes))
+      {
         DEBUG_ONLY(log_debug("streaming client: Client::ReadData.handle_read_data", bytes, "bytes"));
         if (!ec) {
           DEBUG_ASSERT_EQ(bytes, message->size());
@@ -182,7 +187,15 @@ namespace tcp {
           // Move the buffer to the callback function and start reading the next
           // piece of data.
           // log_debug("streaming client: success reading data, calling the callback");
-          boost::asio::post(_strand, [self, message]() { self->_callback(message->pop()); });
+          boost::asio::post(_strand, [self, message, sync_counter_ptr]()
+          {
+            if (sync_counter_ptr != nullptr)
+            {
+              (void)sync_counter_ptr->fetch_sub(1, std::memory_order_release);
+              sync_counter_ptr->notify_one();
+            }
+            self->_callback(message->pop());
+          });
           ReadData();
         } else {
           // As usual, if anything fails start over from the very top.
@@ -191,9 +204,10 @@ namespace tcp {
         }
       };
 
-      auto handle_read_header = [this, self, message, handle_read_data](
+      auto handle_read_header = [this, self, message, handle_read_data, sync_counter_ptr](
           boost::system::error_code ec,
-          size_t DEBUG_ONLY(bytes)) {
+          size_t DEBUG_ONLY(bytes))
+      {
         DEBUG_ONLY(log_debug("streaming client: Client::ReadData.handle_read_header", bytes, "bytes"));
         if (!ec && (message->size() > 0u)) {
           DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type));
@@ -220,6 +234,17 @@ namespace tcp {
           message->size_as_buffer(),
           boost::asio::bind_executor(_strand, handle_read_header));
     });
+
+    if (sync_counter_ptr != nullptr)
+    {
+      for (;;)
+      {
+        auto last = sync_counter_ptr->load(std::memory_order::acquire);
+        if (last == 0)
+          break;
+        sync_counter_ptr->wait(last, std::memory_order_acquire);
+      }
+    }
   }
 
 } // namespace tcp
