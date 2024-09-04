@@ -226,16 +226,7 @@ namespace ImageUtil
 
 
 
-  struct ReadImageDataContext
-  {
-    EPixelFormat Format;
-    FIntPoint Size;
-    ReadImageDataAsyncCallback Callback;
-    TUniquePtr<FRHIGPUTextureReadback> Readback;
-  };
-
-  static void ReadImageDataBegin(
-    ReadImageDataContext& Self,
+  static void ReadImageDataAsyncCommand(
     UTextureRenderTarget2D& RenderTarget,
     ReadImageDataAsyncCallback&& Callback)
   {
@@ -248,13 +239,12 @@ namespace ImageUtil
     auto Texture = Resource->GetRenderTargetTexture();
     if (Texture == nullptr)
       return;
-    Self.Callback = std::move(Callback);
-    Self.Readback = MakeUnique<FRHIGPUTextureReadback>(
+    auto Readback = MakeUnique<FRHIGPUTextureReadback>(
       TEXT("ReadImageData-Readback"));
-    Self.Size = Texture->GetSizeXY();
-    Self.Format = Texture->GetFormat();
+    auto Size = Texture->GetSizeXY();
+    auto Format = Texture->GetFormat();
     auto ResolveRect = FResolveRect();
-    Self.Readback->EnqueueCopy(CmdList, Texture, ResolveRect);
+    Readback->EnqueueCopy(CmdList, Texture, ResolveRect);
 
     auto Query = RenderQueryPool->AllocateQuery();
     CmdList.EndRenderQuery(Query.GetQuery());
@@ -262,40 +252,24 @@ namespace ImageUtil
     uint64 DeltaTime;
     RHIGetRenderQueryResult(Query.GetQuery(), DeltaTime, true);
     Query.ReleaseQuery();
-  }
 
-  static void ReadImageDataEnd(
-    ReadImageDataContext& Self)
-  {
-    int32 RowPitch, BufferHeight;
-    auto MappedPtr = Self.Readback->Lock(RowPitch, &BufferHeight);
-    if (MappedPtr != nullptr)
-    {
-      ScopedCallback Unlock = [&] { Self.Readback->Unlock(); };
-      Self.Callback(MappedPtr, RowPitch, BufferHeight, Self.Format, Self.Size);
-    }
-  }
-
-  static void ReadImageDataEndAsync(
-    ReadImageDataContext&& Self)
-  {
     AsyncTask(
       ENamedThreads::HighTaskPriority, [
-      Self = std::move(Self)]() mutable
+      Readback = MoveTemp(Readback),
+      Callback = std::move(Callback),
+      Size,
+      Format]
     {
-      while (!Self.Readback->IsReady())
+      while (!Readback->IsReady())
         std::this_thread::yield();
-      ReadImageDataEnd(Self);
+      int32 RowPitch, BufferHeight;
+      auto MappedPtr = Readback->Lock(RowPitch, &BufferHeight);
+      if (MappedPtr != nullptr)
+      {
+        ScopedCallback Unlock = [&] { Readback->Unlock(); };
+        Callback(MappedPtr, RowPitch, BufferHeight, Format, Size);
+      }
     });
-  }
-
-  static void ReadImageDataAsyncCommand(
-    UTextureRenderTarget2D& RenderTarget,
-    ReadImageDataAsyncCallback&& Callback)
-  {
-    ReadImageDataContext Context = { };
-    ReadImageDataBegin(Context, RenderTarget, std::move(Callback));
-    ReadImageDataEndAsync(std::move(Context));
   }
 
 
@@ -313,14 +287,14 @@ namespace ImageUtil
     else
     {
       ENQUEUE_RENDER_COMMAND(ReadImageDataAsyncCmd)([
-        &RenderTarget, Callback = std::move(Callback)
+        &RenderTarget,
+        Callback = std::move(Callback)
       ](auto& CmdList) mutable
       {
-        ReadImageDataContext Context = { };
-        ReadImageDataBegin(Context, RenderTarget, std::move(Callback));
-        ReadImageDataEnd(Context);
+        ReadImageDataAsyncCommand(
+          RenderTarget,
+          std::move(Callback));
       });
-      FlushRenderingCommands();
     }
     return true;
   }
