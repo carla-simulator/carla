@@ -75,7 +75,7 @@ namespace tcp {
     });
   }
 
-  void ServerSession::Write(
+  void ServerSession::WriteOne(
     std::shared_ptr<const Message> message,
     std::atomic_size_t* sync_counter)
   {
