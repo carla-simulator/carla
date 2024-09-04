@@ -8,6 +8,7 @@ Doxygen/
 Dist/
 out/
 
+.clangd
 CMakeSettings.json
 
 Help.md

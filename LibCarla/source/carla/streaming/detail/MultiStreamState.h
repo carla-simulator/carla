@@ -35,12 +35,14 @@ namespace detail {
     template <bool Sync = false, typename... Buffers>
     void Write(Buffers... buffers)
     {
-      std::atomic_size_t sync_counter = 1U;
+      std::atomic_size_t sync_counter;
       auto sync_counter_ptr = Sync ? &sync_counter : nullptr;
 
       // try write single stream
       auto session = _session.load();
       if (session != nullptr) {
+        if constexpr (Sync)
+          (void)sync_counter.fetch_add(1, std::memory_order::release);
         auto message = Session::MakeMessage(buffers...);
         session->WriteWithCounter(sync_counter_ptr, std::move(message));
         log_debug("sensor ", session->get_stream_id()," data sent");

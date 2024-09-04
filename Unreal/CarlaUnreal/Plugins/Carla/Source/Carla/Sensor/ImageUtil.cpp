@@ -240,7 +240,14 @@ namespace ImageUtil
 			RenderTarget.Resource);
 		auto Texture = Resource->GetRenderTargetTexture();
 		if (Texture == nullptr)
+		{
+			if (DoneFlag != nullptr)
+			{
+				DoneFlag->store(true, std::memory_order::release);
+				DoneFlag->notify_all();
+			}
 			return;
+		}
 		auto Readback = MakeUnique<FRHIGPUTextureReadback>(
 			TEXT("ReadImageData-Readback"));
 		auto Size = Texture->GetSizeXY();
@@ -269,7 +276,7 @@ namespace ImageUtil
 				{
 					if (DoneFlag != nullptr)
 					{
-						DoneFlag->store(false, std::memory_order::release);
+						DoneFlag->store(true, std::memory_order::release);
 						DoneFlag->notify_all();
 					}
 				};
