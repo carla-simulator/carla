@@ -36,6 +36,18 @@ set (
   ${CMAKE_CURRENT_SOURCE_DIR}/carla
 )
 
+set (
+  CARLA_PYTHON_API_CMAKE_ARGS
+  "\t'-G${CMAKE_GENERATOR}'"
+)
+
+if (CMAKE_TOOLCHAIN_FILE)
+  set (
+    CARLA_PYTHON_API_CMAKE_ARGS
+    "${CARLA_PYTHON_API_CMAKE_ARGS},\n\'\t--toolchain=${CMAKE_TOOLCHAIN_FILE}\'"
+  )
+endif ()
+
 carla_two_step_configure_file (
   ${CARLA_PYTHON_API_CARLA_PATH}/pyproject.toml
   ${CARLA_PYTHON_API_CARLA_PATH}/pyproject.toml.in
