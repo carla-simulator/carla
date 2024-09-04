@@ -118,7 +118,7 @@ void RssSensor::Stop() {
   // don't remove the braces since they protect the scoped_lock
   {
      // ensure there is no processing anymore when deleting rss_check object
-    const std::scoped_lock<std::mutex> lock(_processing_lock);
+    const std::scoped_lock lock(_processing_lock);
 
     if ( bool(_rss_check) ) {
       _rss_check->GetLogger()->info("RssSensor delete checker");

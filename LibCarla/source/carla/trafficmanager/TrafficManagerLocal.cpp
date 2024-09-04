@@ -314,12 +314,12 @@ void TrafficManagerLocal::Reset() {
 }
 
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_list) {
-  std::scoped_lock<std::mutex> registration_lock(registration_mutex);
+  std::scoped_lock registration_lock(registration_mutex);
   registered_vehicles.Insert(vehicle_list);
 }
 
 void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
-  std::scoped_lock<std::mutex> registration_lock(registration_mutex);
+  std::scoped_lock registration_lock(registration_mutex);
   std::vector<ActorId> actor_id_list;
   for (auto &actor : actor_list) {
     alsm.RemoveActor(actor->GetId(), true);

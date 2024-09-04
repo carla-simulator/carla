@@ -30,14 +30,14 @@ namespace detail {
 
     template <typename ValueT>
     void Push(ValueT &&value) {
-      std::scoped_lock<std::mutex> lock(_mutex);
+      std::scoped_lock lock(_mutex);
       auto new_list = std::make_shared<ListT>(*Load());
       new_list->emplace_back(std::forward<ValueT>(value));
       _list = new_list;
     }
 
     void DeleteByIndex(size_t index) {
-      std::scoped_lock<std::mutex> lock(_mutex);
+      std::scoped_lock lock(_mutex);
       auto new_list = std::make_shared<ListT>(*Load());
       auto begin = new_list->begin();
       std::advance(begin, index);
@@ -47,14 +47,14 @@ namespace detail {
 
     template <typename ValueT>
     void DeleteByValue(const ValueT &value) {
-      std::scoped_lock<std::mutex> lock(_mutex);
+      std::scoped_lock lock(_mutex);
       auto new_list = std::make_shared<ListT>(*Load());
       new_list->erase(std::remove(new_list->begin(), new_list->end(), value), new_list->end());
       _list = new_list;
     }
 
     void Clear() {
-      std::scoped_lock<std::mutex> lock(_mutex);
+      std::scoped_lock lock(_mutex);
       _list = std::make_shared<ListT>();
     }
 

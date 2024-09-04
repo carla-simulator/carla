@@ -60,7 +60,7 @@ namespace detail {
     void write_to_file(std::ios_base::openmode mode, Args &&... args) {
       if (!_filename.empty()) {
         static std::mutex MUTEX;
-        std::scoped_lock<std::mutex> guard(MUTEX);
+        std::scoped_lock guard(MUTEX);
         std::ofstream file(_filename, mode);
         write_csv_to_stream(file, std::forward<Args>(args)...);
         file << std::endl;

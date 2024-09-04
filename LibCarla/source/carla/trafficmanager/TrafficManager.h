@@ -387,7 +387,7 @@ private:
     uint16_t port);
 
   TrafficManagerBase* GetTM(uint16_t port) const {
-    std::scoped_lock<std::mutex> lock(_mutex);
+    std::scoped_lock lock(_mutex);
     auto it = _tm_map.find(port);
     if (it != _tm_map.end()) {
       return it->second;

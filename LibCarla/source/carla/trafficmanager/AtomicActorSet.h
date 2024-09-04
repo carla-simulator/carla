@@ -34,7 +34,7 @@ namespace traffic_manager {
 
     std::vector<ActorPtr> GetList() {
 
-      std::scoped_lock<std::mutex> lock(modification_mutex);
+      std::scoped_lock lock(modification_mutex);
       std::vector<ActorPtr> actor_list;
       for (auto it = actor_set.begin(); it != actor_set.end(); ++it) {
         actor_list.push_back(it->second);
@@ -44,7 +44,7 @@ namespace traffic_manager {
 
     std::vector<ActorId> GetIDList() {
 
-      std::scoped_lock<std::mutex> lock(modification_mutex);
+      std::scoped_lock lock(modification_mutex);
       std::vector<ActorId> actor_list;
       for (auto it = actor_set.begin(); it != actor_set.end(); ++it) {
         actor_list.push_back(it->first);
@@ -54,7 +54,7 @@ namespace traffic_manager {
 
     void Insert(std::vector<ActorPtr> actor_list) {
 
-      std::scoped_lock<std::mutex> lock(modification_mutex);
+      std::scoped_lock lock(modification_mutex);
       for (auto &actor: actor_list) {
         actor_set.insert({actor->GetId(), actor});
       }
@@ -63,7 +63,7 @@ namespace traffic_manager {
 
     void Remove(std::vector<ActorId> actor_id_list) {
 
-      std::scoped_lock<std::mutex> lock(modification_mutex);
+      std::scoped_lock lock(modification_mutex);
       for (auto& actor_id: actor_id_list) {
         if (actor_set.find(actor_id) != actor_set.end()){
           actor_set.erase(actor_id);
@@ -74,7 +74,7 @@ namespace traffic_manager {
 
     void Destroy(ActorId actor_id) {
 
-      std::scoped_lock<std::mutex> lock(modification_mutex);
+      std::scoped_lock lock(modification_mutex);
       if (actor_set.find(actor_id) != actor_set.end()) {
         ActorPtr actor = actor_set.at(actor_id);
         actor->Destroy();
@@ -85,25 +85,25 @@ namespace traffic_manager {
 
     int GetState() {
 
-      std::scoped_lock<std::mutex> lock(modification_mutex);
+      std::scoped_lock lock(modification_mutex);
       return state_counter;
     }
 
     bool Contains(ActorId id) {
 
-      std::scoped_lock<std::mutex> lock(modification_mutex);
+      std::scoped_lock lock(modification_mutex);
       return actor_set.find(id) != actor_set.end();
     }
 
     size_t Size() {
 
-      std::scoped_lock<std::mutex> lock(modification_mutex);
+      std::scoped_lock lock(modification_mutex);
       return actor_set.size();
     }
 
     void Clear() {
 
-      std::scoped_lock<std::mutex> lock(modification_mutex);
+      std::scoped_lock lock(modification_mutex);
       return actor_set.clear();
     }
 

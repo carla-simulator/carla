@@ -126,7 +126,7 @@ namespace detail {
   template <typename T>
   template <typename T2>
   void RecurrentSharedFuture<T>::SetValue(const T2 &value) {
-    std::scoped_lock<std::mutex> lock(_mutex);
+    std::scoped_lock lock(_mutex);
     for (auto &pair : _map) {
       pair.second.should_wait = false;
       pair.second.value = value;

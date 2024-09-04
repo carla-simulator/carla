@@ -26,7 +26,7 @@ namespace traffic_manager {
 
     void AddEntry(const std::pair<Key, Value> &entry) {
 
-      std::scoped_lock<std::mutex> lock(map_mutex);
+      std::scoped_lock lock(map_mutex);
       const Key& key = entry.first;
       if (map.find(key) != map.end()) {
         map.at(key) = entry.second;
@@ -37,19 +37,19 @@ namespace traffic_manager {
 
     bool Contains(const Key &key) const {
 
-      std::scoped_lock<std::mutex> lock(map_mutex);
+      std::scoped_lock lock(map_mutex);
       return map.find(key) != map.end();
     }
 
     const Value &GetValue(const Key &key) const {
 
-      std::scoped_lock<std::mutex> lock(map_mutex);
+      std::scoped_lock lock(map_mutex);
       return map.at(key);
     }
 
     void RemoveEntry(const Key &key) {
 
-      std::scoped_lock<std::mutex> lock(map_mutex);
+      std::scoped_lock lock(map_mutex);
       map.erase(key);
     }
 

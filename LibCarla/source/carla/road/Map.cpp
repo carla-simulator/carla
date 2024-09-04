@@ -1162,7 +1162,7 @@ namespace road {
         [this, &write_mutex, &mesh_factory, &RoadsIDToGenerate, &road_out_mesh_list, i, num_roads_per_thread]() {
         std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current =
           std::move(GenerateRoadsMultithreaded(mesh_factory, RoadsIDToGenerate,i, num_roads_per_thread ));
-        std::scoped_lock<std::mutex> guard(write_mutex);
+        std::scoped_lock guard(write_mutex);
         for ( auto&& pair : Current ) {
           if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end()) {
             road_out_mesh_list[pair.first].insert(road_out_mesh_list[pair.first].end(),
@@ -1382,7 +1382,7 @@ namespace road {
           GenerateSingleJunction(mesh_factory, JunctionsToGenerate[junctionindex], &junctionsofthisthread);
         }
         std::cout << "Generated Junctions between  " << std::to_string(i * num_junctions_per_thread) << " and " << std::to_string(minimum) << std::endl;
-        std::scoped_lock<std::mutex> guard(write_mutex);
+        std::scoped_lock guard(write_mutex);
         for ( auto&& pair : junctionsofthisthread ) {
           if ((*junction_out_mesh_list).find(pair.first) != (*junction_out_mesh_list).end()) {
             (*junction_out_mesh_list)[pair.first].insert((*junction_out_mesh_list)[pair.first].end(),

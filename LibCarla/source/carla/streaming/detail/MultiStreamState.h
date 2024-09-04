@@ -50,18 +50,19 @@ namespace detail {
       }
 
       // try write multiple stream
-      std::scoped_lock<std::mutex> lock(_mutex);
-      if (_sessions.size() > 0)
       {
+        std::scoped_lock lock(_mutex);
         if constexpr (Sync)
-          (void)sync_counter.fetch_add(_sessions.size(), std::memory_order::acquire);
-        
-        auto message = Session::MakeMessage(buffers...);
-        for (auto &s : _sessions) {
-          if (s != nullptr) {
-            s->Write(message);
-            log_debug("sensor ", s->get_stream_id()," data sent ");
-         }
+          (void)sync_counter.fetch_add(_sessions.size(), std::memory_order::release);
+        if (_sessions.size() > 0)
+        {
+          auto message = Session::MakeMessage(buffers...);
+          for (auto &s : _sessions) {
+            if (s != nullptr) {
+              s->Write(message, sync_counter_ptr);
+              log_debug("sensor ", s->get_stream_id()," data sent ");
+           }
+          }
         }
       }
 
@@ -99,7 +100,7 @@ namespace detail {
 
     void ConnectSession(std::shared_ptr<Session> session) final {
       DEBUG_ASSERT(session != nullptr);
-      std::scoped_lock<std::mutex> lock(_mutex);
+      std::scoped_lock lock(_mutex);
       _sessions.emplace_back(std::move(session));
       log_debug("Connecting multistream sessions:", _sessions.size());
       if (_sessions.size() == 1) {
@@ -112,7 +113,7 @@ namespace detail {
 
     void DisconnectSession(std::shared_ptr<Session> session) final {
       DEBUG_ASSERT(session != nullptr);
-      std::scoped_lock<std::mutex> lock(_mutex);
+      std::scoped_lock lock(_mutex);
       log_debug("Calling DisconnectSession for ", session->get_stream_id());
       if (_sessions.size() == 0) return;
       if (_sessions.size() == 1) {
@@ -136,7 +137,7 @@ namespace detail {
     }
 
     void ClearSessions() final {
-      std::scoped_lock<std::mutex> lock(_mutex);
+      std::scoped_lock lock(_mutex);
       for (auto &s : _sessions) {
         if (s != nullptr) {
           s->Close();

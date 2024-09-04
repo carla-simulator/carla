@@ -216,7 +216,7 @@ bool LightManager::IsActive(LightId id) const {
 }
 
 void LightManager::SetActive(LightId id, bool active) {
-  std::scoped_lock<std::mutex> lock(_mutex);
+  std::scoped_lock lock(_mutex);
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state._active = active;
   _lights_changes[id] = state;
@@ -224,7 +224,7 @@ void LightManager::SetActive(LightId id, bool active) {
 }
 
 void LightManager::SetColor(LightId id, Color color) {
-  std::scoped_lock<std::mutex> lock(_mutex);
+  std::scoped_lock lock(_mutex);
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state._color = color;
   _lights_changes[id] = state;
@@ -232,7 +232,7 @@ void LightManager::SetColor(LightId id, Color color) {
 }
 
 void LightManager::SetIntensity(LightId id, float intensity) {
-  std::scoped_lock<std::mutex> lock(_mutex);
+  std::scoped_lock lock(_mutex);
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state._intensity = intensity;
   _lights_changes[id] = state;
@@ -240,7 +240,7 @@ void LightManager::SetIntensity(LightId id, float intensity) {
 }
 
 void LightManager::SetLightState(LightId id, const LightState& new_state) {
-  std::scoped_lock<std::mutex> lock(_mutex);
+  std::scoped_lock lock(_mutex);
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state = new_state;
   _lights_changes[id] = state;
@@ -254,7 +254,7 @@ void LightManager::SetLightStateNoLock(LightId id, const LightState& new_state) 
 }
 
 void LightManager::SetLightGroup(LightId id, LightGroup group) {
-  std::scoped_lock<std::mutex> lock(_mutex);
+  std::scoped_lock lock(_mutex);
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
   state._group = group;
   _lights_changes[id] = state;
@@ -271,7 +271,7 @@ const LightState& LightManager::RetrieveLightState(LightId id) const {
 }
 
 void LightManager::QueryLightsStateToServer() {
-  std::scoped_lock<std::mutex> lock(_mutex);
+  std::scoped_lock lock(_mutex);
   // Send blocking query
   std::vector<rpc::LightState> lights_snapshot = _episode.Lock()->QueryLightsStateToServer();
 
@@ -294,7 +294,7 @@ void LightManager::QueryLightsStateToServer() {
 }
 
 void LightManager::UpdateServerLightsState(bool discard_client) {
-  std::scoped_lock<std::mutex> lock(_mutex);
+  std::scoped_lock lock(_mutex);
 
   if(_dirty) {
     std::vector<rpc::LightState> message;
@@ -321,7 +321,7 @@ void LightManager::UpdateServerLightsState(bool discard_client) {
 }
 
 void LightManager::ApplyChanges() {
-  std::scoped_lock<std::mutex> lock(_mutex);
+  std::scoped_lock lock(_mutex);
   for(const auto& it : _lights_changes) {
     SetLightStateNoLock(it.first, it.second);
   }

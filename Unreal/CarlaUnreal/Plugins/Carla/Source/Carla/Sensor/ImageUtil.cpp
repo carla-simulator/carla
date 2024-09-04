@@ -230,7 +230,7 @@ namespace ImageUtil
 	static void ReadImageDataAsyncCommand(
 		UTextureRenderTarget2D& RenderTarget,
 		ReadImageDataAsyncCallback&& Callback,
-		std::atomic_flag* DoneFlag)
+		std::atomic_bool* DoneFlag)
 	{
 		static thread_local auto RenderQueryPool =
 			RHICreateRenderQueryPool(RQT_AbsoluteTime);
@@ -259,12 +259,21 @@ namespace ImageUtil
 			ENamedThreads::HighTaskPriority,
 			[
 				Readback = MoveTemp(Readback),
-					Callback = std::move(Callback),
-					Size,
-					Format,
-					DoneFlag
+				Callback = std::move(Callback),
+				Size,
+				Format,
+				DoneFlag
 			]()
 			{
+				ScopedCallback Notify = [&]
+				{
+					if (DoneFlag != nullptr)
+					{
+						DoneFlag->store(false, std::memory_order::release);
+						DoneFlag->notify_all();
+					}
+				};
+				
 				while (!Readback->IsReady())
 					std::this_thread::yield();
 				int32 RowPitch, BufferHeight;
@@ -273,11 +282,6 @@ namespace ImageUtil
 				{
 					ScopedCallback Unlock = [&] { Readback->Unlock(); };
 					Callback(MappedPtr, RowPitch, BufferHeight, Format, Size);
-				}
-				if (DoneFlag != nullptr)
-				{
-					(void)DoneFlag->test_and_set(std::memory_order::release);
-					DoneFlag->notify_all();
 				}
 			});
 	}
@@ -289,7 +293,7 @@ namespace ImageUtil
 		ReadImageDataAsyncCallback&& Callback,
 		ASensor* Owner)
 	{
-		std::atomic_flag DoneFlag = { };
+		std::atomic_bool DoneFlag = false;
 		bool SyncMode = false;
 		if (Owner != nullptr)
 		{
@@ -320,10 +324,9 @@ namespace ImageUtil
 		{
 			if (!IsInRenderingThread())
 				FlushRenderingCommands();
-			DoneFlag.wait(false, std::memory_order::acquire);
 			for (;;)
 			{
-				auto last = DoneFlag.test(std::memory_order::acquire);
+				auto last = DoneFlag.load(std::memory_order::acquire);
 				if (last)
 					break;
 				DoneFlag.wait(last, std::memory_order::acquire);
