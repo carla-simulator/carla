@@ -169,7 +169,6 @@ class AdMapMatching():
         '''
         ...
 
-
 class ENUObjectPosition():
     def assign(self, arg1: ENUObjectPosition, other: ENUObjectPosition) -> ENUObjectPosition:
         '''
@@ -192,7 +191,6 @@ class ENUObjectPosition():
 
     @property
     def heading(self) -> point.ENUHeading: ...
-
 
 class ENUObjectPositionList():
     def append(self, arg1: ENUObjectPositionList, arg2: ENUObjectPosition) -> None:
@@ -255,7 +253,6 @@ class ENUObjectPositionList():
         '''
         ...
 
-
 class LaneOccupiedRegion():
     def assign(self, arg1: LaneOccupiedRegion, other: LaneOccupiedRegion) -> LaneOccupiedRegion:
         '''
@@ -275,7 +272,6 @@ class LaneOccupiedRegion():
 
     @property
     def longitudinalRange(self) -> ad.physics.ParametricRange: ...
-
 
 class LaneOccupiedRegionList():
     def append(self, arg1: LaneOccupiedRegionList, arg2: LaneOccupiedRegion) -> None:
@@ -337,17 +333,16 @@ class LaneOccupiedRegionList():
                 void reverse(std::vector<ad::map::match::LaneOccupiedRegion, std::allocator<ad::map::match::LaneOccupiedRegion> > {lvalue})
         '''
         ...
-        
-    def __getitem__(self, key: int) -> LaneOccupiedRegion: ...
-    
-    def __contains__(self, item: LaneOccupiedRegion) -> bool: ...
-    
-    def __delitem__(self, key: int) -> None: ...
-    
-    def __hash__(self) -> int: ...
-    
-    def __setitem__(self, key: int, value: LaneOccupiedRegion) -> None: ...
 
+    def __getitem__(self, key: int) -> LaneOccupiedRegion: ...
+
+    def __contains__(self, item: LaneOccupiedRegion) -> bool: ...
+
+    def __delitem__(self, key: int) -> None: ...
+
+    def __hash__(self) -> int: ...
+
+    def __setitem__(self, key: int, value: LaneOccupiedRegion) -> None: ...
 
 class LanePoint():
     def assign(self, arg1: LanePoint, other: LanePoint) -> LanePoint:
@@ -372,7 +367,6 @@ class LanePoint():
     @property
     def paraPoint(self) -> point.ParaPoint: ...
 
-
 class MapMatchedObjectBoundingBox():
     def assign(self, arg1: MapMatchedObjectBoundingBox, other: MapMatchedObjectBoundingBox) -> MapMatchedObjectBoundingBox:
         '''
@@ -395,7 +389,6 @@ class MapMatchedObjectBoundingBox():
 
     @property
     def samplingDistance(self) -> ad.physics.Distance: ...
-
 
 class MapMatchedObjectReferencePositionList():
     def append(self, arg1: MapMatchedObjectReferencePositionList, arg2: vector_less_ad_scope_map_scope_match_scope_MapMatchedPosition_greater_) -> None:
@@ -438,7 +431,6 @@ class MapMatchedObjectReferencePositionList():
         '''
         ...
 
-
 class MapMatchedPosition():
     def assign(self, arg1: MapMatchedPosition, other: MapMatchedPosition) -> MapMatchedPosition:
         '''
@@ -468,7 +460,6 @@ class MapMatchedPosition():
     @property
     def type(self) -> MapMatchedPositionType: ...
 
-
 class MapMatchedPositionType(int,):
     INVALID = 0
 
@@ -479,7 +470,6 @@ class MapMatchedPositionType(int,):
     LANE_RIGHT = 4
 
     UNKNOWN = 1
-
 
 class Object():
     def assign(self, arg1: Object, other: Object) -> Object:
@@ -498,7 +488,6 @@ class Object():
     @property
     def mapMatchedBoundingBox(self) -> MapMatchedObjectBoundingBox: ...
 
-
 class ObjectReferencePoints(int,):
     Center = 4
 
@@ -511,7 +500,6 @@ class ObjectReferencePoints(int,):
     RearLeft = 2
 
     RearRight = 3
-
 
 class vector_less_ad_scope_map_scope_match_scope_MapMatchedPosition_greater_():
     def append(self, arg1: vector_less_ad_scope_map_scope_match_scope_MapMatchedPosition_greater_, arg2: MapMatchedPosition) -> None:

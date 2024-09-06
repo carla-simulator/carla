@@ -4,75 +4,10 @@ import ad
 
 from . import *
 
-class Altitude:
-    @property
-    def Valid(self) -> bool: ...
-
-    def assign(self, arg1: Altitude, other: Altitude) -> Altitude:
-        """
-
-        assign( (Altitude)arg1, (Altitude)other) -> Altitude :
-
-            C++ signature :
-                ad::map::point::Altitude {lvalue} assign(ad::map::point::Altitude {lvalue},ad::map::point::Altitude)
-        """
-        ...
-
-    cMaxValue = 1.7976931348623157e+308
-
-    cMinValue = -1.7976931348623157e+308
-
-    cPrecisionValue = 0.001
-
-    def ensureValid(self, arg1: Altitude) -> None:
-        """
-
-        ensureValid( (Altitude)arg1) -> None :
-
-            C++ signature :
-                void ensureValid(ad::map::point::Altitude {lvalue})
-        """
-        ...
-
-    def ensureValidNonZero(self, arg1: Altitude) -> None:
-        """
-
-        ensureValidNonZero( (Altitude)arg1) -> None :
-
-            C++ signature :
-                void ensureValidNonZero(ad::map::point::Altitude {lvalue})
-        """
-        ...
-
-    def getMax(self) -> Altitude:
-        """
-
-        getMax() -> Altitude :
-
-            C++ signature :
-                ad::map::point::Altitude getMax()
-        """
-        ...
-
-    def getMin(self) -> Altitude:
-        """
-
-        getMin() -> Altitude :
-
-            C++ signature :
-                ad::map::point::Altitude getMin()
-        """
-        ...
-
-    def getPrecision(self) -> Altitude:
-        """
-
-        getPrecision() -> Altitude :
-
-            C++ signature :
-                ad::map::point::Altitude getPrecision()
-        """
-        ...
+class Altitude(ad._Calculable):
+    cMaxValue: float = ...
+    cMinValue: float = ...
+    cPrecisionValue: float = 0.001
 
 class BoundingSphere:
     def assign(self, arg1: BoundingSphere, other: BoundingSphere) -> BoundingSphere:
@@ -289,136 +224,13 @@ class CoordinateTransform:
         """
         ...
 
-class ECEFCoordinate:
-    @property
-    def Valid(self) -> bool: ...
+class ECEFCoordinate(ad._Calculable):
+    cMaxValue: float = 1000000000.0
+    cMinValue: float = -1000000000.0
+    cPrecisionValue: float = 0.001
 
-    def assign(self, arg1: ECEFCoordinate, other: ECEFCoordinate) -> ECEFCoordinate:
-        """
-
-        assign( (ECEFCoordinate)arg1, (ECEFCoordinate)other) -> ECEFCoordinate :
-
-            C++ signature :
-                ad::map::point::ECEFCoordinate {lvalue} assign(ad::map::point::ECEFCoordinate {lvalue},ad::map::point::ECEFCoordinate)
-        """
-        ...
-
-    cMaxValue = 1000000000.0
-
-    cMinValue = -1000000000.0
-
-    cPrecisionValue = 0.001
-
-    def ensureValid(self, arg1: ECEFCoordinate) -> None:
-        """
-
-        ensureValid( (ECEFCoordinate)arg1) -> None :
-
-            C++ signature :
-                void ensureValid(ad::map::point::ECEFCoordinate {lvalue})
-        """
-        ...
-
-    def ensureValidNonZero(self, arg1: ECEFCoordinate) -> None:
-        """
-
-        ensureValidNonZero( (ECEFCoordinate)arg1) -> None :
-
-            C++ signature :
-                void ensureValidNonZero(ad::map::point::ECEFCoordinate {lvalue})
-        """
-        ...
-
-    def getMax(self) -> ECEFCoordinate:
-        """
-
-        getMax() -> ECEFCoordinate :
-
-            C++ signature :
-                ad::map::point::ECEFCoordinate getMax()
-        """
-        ...
-
-    def getMin(self) -> ECEFCoordinate:
-        """
-
-        getMin() -> ECEFCoordinate :
-
-            C++ signature :
-                ad::map::point::ECEFCoordinate getMin()
-        """
-        ...
-
-    def getPrecision(self) -> ECEFCoordinate:
-        """
-
-        getPrecision() -> ECEFCoordinate :
-
-            C++ signature :
-                ad::map::point::ECEFCoordinate getPrecision()
-        """
-        ...
-
-class ECEFEdge:
-    def append(self, arg1: ECEFEdge, arg2: ECEFPoint) -> None:
-        """
-
-        append( (ECEFEdge)arg1, (ECEFPoint)arg2) -> None :
-
-            C++ signature :
-                void append(std::vector<ad::map::point::ECEFPoint, std::allocator<ad::map::point::ECEFPoint> > {lvalue},ad::map::point::ECEFPoint)
-        """
-        ...
-
-    def count(self, arg1: ECEFEdge, arg2: ECEFPoint) -> int:
-        """
-
-        count( (ECEFEdge)arg1, (ECEFPoint)arg2) -> int :
-
-            C++ signature :
-                unsigned long count(std::vector<ad::map::point::ECEFPoint, std::allocator<ad::map::point::ECEFPoint> > {lvalue},ad::map::point::ECEFPoint)
-        """
-        ...
-
-    def extend(self, arg1: ECEFEdge, arg2: object) -> None:
-        """
-
-        extend( (ECEFEdge)arg1, (object)arg2) -> None :
-
-            C++ signature :
-                void extend(std::vector<ad::map::point::ECEFPoint, std::allocator<ad::map::point::ECEFPoint> > {lvalue},boost::python::api::object)
-        """
-        ...
-
-    def index(self, arg1: ECEFEdge, arg2: ECEFPoint) -> int:
-        """
-
-        index( (ECEFEdge)arg1, (ECEFPoint)arg2) -> int :
-
-            C++ signature :
-                unsigned long index(std::vector<ad::map::point::ECEFPoint, std::allocator<ad::map::point::ECEFPoint> > {lvalue},ad::map::point::ECEFPoint)
-        """
-        ...
-
-    def insert(self, arg1: ECEFEdge, arg2: int, arg3: ECEFPoint) -> None:
-        """
-
-        insert( (ECEFEdge)arg1, (int)arg2, (ECEFPoint)arg3) -> None :
-
-            C++ signature :
-                void insert(std::vector<ad::map::point::ECEFPoint, std::allocator<ad::map::point::ECEFPoint> > {lvalue},long,ad::map::point::ECEFPoint)
-        """
-        ...
-
-    def reverse(self, arg1: ECEFEdge) -> None:
-        """
-
-        reverse( (ECEFEdge)arg1) -> None :
-
-            C++ signature :
-                void reverse(std::vector<ad::map::point::ECEFPoint, std::allocator<ad::map::point::ECEFPoint> > {lvalue})
-        """
-        ...
+class ECEFEdge(ad._VectorSequence[ECEFPoint]):
+    ...
 
 class ECEFHeading:
     def assign(self, arg1: ECEFHeading, other: ECEFHeading) -> ECEFHeading:
@@ -460,137 +272,13 @@ class ECEFPoint:
     @property
     def z(self) -> ECEFCoordinate: ...
 
-class ENUCoordinate(ad._FloatLike):
+class ENUCoordinate(ad._Calculable):
+    cMaxValue: float = 1000000.0
+    cMinValue: float = -1000000.0
+    cPrecisionValue: float = 0.001
 
-    @property
-    def Valid(self) -> bool: ...
-
-    def assign(self, arg1: ENUCoordinate, other: ENUCoordinate) -> ENUCoordinate:
-        """
-
-        assign( (ENUCoordinate)arg1, (ENUCoordinate)other) -> ENUCoordinate :
-
-            C++ signature :
-                ad::map::point::ENUCoordinate {lvalue} assign(ad::map::point::ENUCoordinate {lvalue},ad::map::point::ENUCoordinate)
-        """
-        ...
-
-    cMaxValue = 1000000.0
-
-    cMinValue = -1000000.0
-
-    cPrecisionValue = 0.001
-
-    def ensureValid(self, arg1: ENUCoordinate) -> None:
-        """
-
-        ensureValid( (ENUCoordinate)arg1) -> None :
-
-            C++ signature :
-                void ensureValid(ad::map::point::ENUCoordinate {lvalue})
-        """
-        ...
-
-    def ensureValidNonZero(self, arg1: ENUCoordinate) -> None:
-        """
-
-        ensureValidNonZero( (ENUCoordinate)arg1) -> None :
-
-            C++ signature :
-                void ensureValidNonZero(ad::map::point::ENUCoordinate {lvalue})
-        """
-        ...
-
-    def getMax(self) -> ENUCoordinate:
-        """
-
-        getMax() -> ENUCoordinate :
-
-            C++ signature :
-                ad::map::point::ENUCoordinate getMax()
-        """
-        ...
-
-    def getMin(self) -> ENUCoordinate:
-        """
-
-        getMin() -> ENUCoordinate :
-
-            C++ signature :
-                ad::map::point::ENUCoordinate getMin()
-        """
-        ...
-
-    def getPrecision(self) -> ENUCoordinate:
-        """
-
-        getPrecision() -> ENUCoordinate :
-
-            C++ signature :
-                ad::map::point::ENUCoordinate getPrecision()
-        """
-        ...
-
-class ENUEdge:
-    def append(self, arg1: ENUEdge, arg2: ENUPoint) -> None:
-        """
-
-        append( (ENUEdge)arg1, (ENUPoint)arg2) -> None :
-
-            C++ signature :
-                void append(std::vector<ad::map::point::ENUPoint, std::allocator<ad::map::point::ENUPoint> > {lvalue},ad::map::point::ENUPoint)
-        """
-        ...
-
-    def count(self, arg1: ENUEdge, arg2: ENUPoint) -> int:
-        """
-
-        count( (ENUEdge)arg1, (ENUPoint)arg2) -> int :
-
-            C++ signature :
-                unsigned long count(std::vector<ad::map::point::ENUPoint, std::allocator<ad::map::point::ENUPoint> > {lvalue},ad::map::point::ENUPoint)
-        """
-        ...
-
-    def extend(self, arg1: ENUEdge, arg2: object) -> None:
-        """
-
-        extend( (ENUEdge)arg1, (object)arg2) -> None :
-
-            C++ signature :
-                void extend(std::vector<ad::map::point::ENUPoint, std::allocator<ad::map::point::ENUPoint> > {lvalue},boost::python::api::object)
-        """
-        ...
-
-    def index(self, arg1: ENUEdge, arg2: ENUPoint) -> int:
-        """
-
-        index( (ENUEdge)arg1, (ENUPoint)arg2) -> int :
-
-            C++ signature :
-                unsigned long index(std::vector<ad::map::point::ENUPoint, std::allocator<ad::map::point::ENUPoint> > {lvalue},ad::map::point::ENUPoint)
-        """
-        ...
-
-    def insert(self, arg1: ENUEdge, arg2: int, arg3: ENUPoint) -> None:
-        """
-
-        insert( (ENUEdge)arg1, (int)arg2, (ENUPoint)arg3) -> None :
-
-            C++ signature :
-                void insert(std::vector<ad::map::point::ENUPoint, std::allocator<ad::map::point::ENUPoint> > {lvalue},long,ad::map::point::ENUPoint)
-        """
-        ...
-
-    def reverse(self, arg1: ENUEdge) -> None:
-        """
-
-        reverse( (ENUEdge)arg1) -> None :
-
-            C++ signature :
-                void reverse(std::vector<ad::map::point::ENUPoint, std::allocator<ad::map::point::ENUPoint> > {lvalue})
-        """
-        ...
+class ENUEdge(ad._VectorSequence[ENUPoint]):
+    ...
 
 class ENUEdgeCache:
     def assign(self, arg1: ENUEdgeCache, other: ENUEdgeCache) -> ENUEdgeCache:
@@ -609,77 +297,12 @@ class ENUEdgeCache:
     @property
     def enuVersion(self) -> int: ...
 
-class ENUHeading(ad._FloatLike):
-    def __float__(self) -> float: ...
+class ENUHeading(ad._Calculable):
+    cMaxValue: float = ...
 
-    @property
-    def Valid(self) -> bool: ...
+    cMinValue: float = ...
 
-    def assign(self, arg1: ENUHeading, other: ENUHeading) -> ENUHeading:
-        """
-
-        assign( (ENUHeading)arg1, (ENUHeading)other) -> ENUHeading :
-
-            C++ signature :
-                ad::map::point::ENUHeading {lvalue} assign(ad::map::point::ENUHeading {lvalue},ad::map::point::ENUHeading)
-        """
-        ...
-
-    cMaxValue = 1.7976931348623157e+308
-
-    cMinValue = -1.7976931348623157e+308
-
-    cPrecisionValue = 0.0001
-
-    def ensureValid(self, arg1: ENUHeading) -> None:
-        """
-
-        ensureValid( (ENUHeading)arg1) -> None :
-
-            C++ signature :
-                void ensureValid(ad::map::point::ENUHeading {lvalue})
-        """
-        ...
-
-    def ensureValidNonZero(self, arg1: ENUHeading) -> None:
-        """
-
-        ensureValidNonZero( (ENUHeading)arg1) -> None :
-
-            C++ signature :
-                void ensureValidNonZero(ad::map::point::ENUHeading {lvalue})
-        """
-        ...
-
-    def getMax(self) -> ENUHeading:
-        """
-
-        getMax() -> ENUHeading :
-
-            C++ signature :
-                ad::map::point::ENUHeading getMax()
-        """
-        ...
-
-    def getMin(self) -> ENUHeading:
-        """
-
-        getMin() -> ENUHeading :
-
-            C++ signature :
-                ad::map::point::ENUHeading getMin()
-        """
-        ...
-
-    def getPrecision(self) -> ENUHeading:
-        """
-
-        getPrecision() -> ENUHeading :
-
-            C++ signature :
-                ad::map::point::ENUHeading getPrecision()
-        """
-        ...
+    cPrecisionValue: float = 0.0001
 
 class ENUPoint(ad._FloatLike):
     def assign(self, arg1: ENUPoint, other: ENUPoint) -> ENUPoint:
@@ -822,11 +445,11 @@ class Latitude(ad._FloatLike):
         """
         ...
 
-    cMaxValue = 1.7976931348623157e+308
+    cMaxValue: float = ...
 
-    cMinValue = -1.7976931348623157e+308
+    cMinValue: float = ...
 
-    cPrecisionValue = 1e-08
+    cPrecisionValue: float = 1e-08
 
     def ensureValid(self, arg1: Latitude) -> None:
         """
@@ -892,11 +515,11 @@ class Longitude(ad._FloatLike):
         """
         ...
 
-    cMaxValue = 1.7976931348623157e+308
+    cMaxValue: float = ...
 
-    cMinValue = -1.7976931348623157e+308
+    cMinValue: float = ...
 
-    cPrecisionValue = 1e-08
+    cPrecisionValue: float = 1e-08
 
     def ensureValid(self, arg1: Longitude) -> None:
         """

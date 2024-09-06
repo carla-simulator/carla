@@ -2,13 +2,12 @@ from ... import ad
 from ...libcarla import _CarlaEnum
 from . import *
 
-
 def isDangerous(rssState: RssState) -> bool:
     ...
-    
+
 def isLateralSafe(rssState: RssState) -> bool:
     ...
-    
+
 def isLongitudinalSafe(rssState: RssState) -> bool:
     ...
 
@@ -32,7 +31,6 @@ class AccelerationRestriction():
     @property
     def longitudinalRange(self) -> ad.physics.AccelerationRange: ...
 
-
 class HeadingRange():
     def assign(self, arg1: HeadingRange, other: HeadingRange) -> HeadingRange:
         '''
@@ -49,7 +47,6 @@ class HeadingRange():
 
     @property
     def end(self) -> ad.physics.Angle: ...
-
 
 class HeadingRangeVector(ad._Vector[HeadingRange]):
     def append(self, arg1: HeadingRangeVector, arg2: HeadingRange) -> None:
@@ -112,12 +109,10 @@ class HeadingRangeVector(ad._Vector[HeadingRange]):
         '''
         ...
 
-
 class LateralResponse(int,):
     BrakeMin = 1
 
     None = 0  # type: ignore
-
 
 class LateralRssState():
     @property
@@ -142,14 +137,12 @@ class LateralRssState():
     @property
     def rssStateInformation(self) -> RssStateInformation: ...
 
-
 class LongitudinalResponse(int,):
     BrakeMin = 2
 
     BrakeMinCorrect = 1
 
     None = 0  # type: ignore
-
 
 class LongitudinalRssState():
     @property
@@ -173,7 +166,6 @@ class LongitudinalRssState():
 
     @property
     def rssStateInformation(self) -> RssStateInformation: ...
-
 
 class ProperResponse():
     @property
@@ -212,7 +204,6 @@ class ProperResponse():
 
     @property
     def unstructuredSceneResponse(self) -> UnstructuredSceneResponse: ...
-
 
 class RssState():
     def assign(self, other: RssState) -> RssState:
@@ -279,7 +270,6 @@ class RssStateInformation():
     @property
     def safeDistance(self) -> ad.physics.Distance: ...
 
-
 class RssStateSnapshot():
     def assign(self, other: RssStateSnapshot) -> RssStateSnapshot:
         '''
@@ -303,68 +293,10 @@ class RssStateSnapshot():
     @property
     def unstructuredSceneEgoInformation(self) -> UnstructuredSceneStateInformation: ...
 
-class RssStateVector(ad._Vector[RssState]):
-    def append(self, arg1: RssStateVector, arg2: RssState) -> None:
-        '''
+class RssStateVector(ad._VectorSequence[RssState]):
+   ...
 
-        append( (RssStateVector)arg1, (RssState)arg2) -> None :
-
-            C++ signature :
-                void append(std::vector<ad::rss::state::RssState, std::allocator<ad::rss::state::RssState> > {lvalue},ad::rss::state::RssState)
-        '''
-        ...
-
-    def count(self, arg1: RssStateVector, arg2: RssState) -> int:
-        '''
-
-        count( (RssStateVector)arg1, (RssState)arg2) -> int :
-
-            C++ signature :
-                unsigned long count(std::vector<ad::rss::state::RssState, std::allocator<ad::rss::state::RssState> > {lvalue},ad::rss::state::RssState)
-        '''
-        ...
-
-    def extend(self, arg1: RssStateVector, arg2: object) -> None:
-        '''
-
-        extend( (RssStateVector)arg1, (object)arg2) -> None :
-
-            C++ signature :
-                void extend(std::vector<ad::rss::state::RssState, std::allocator<ad::rss::state::RssState> > {lvalue},boost::python::api::object)
-        '''
-        ...
-
-    def index(self, arg1: RssStateVector, arg2: RssState) -> int:
-        '''
-
-        index( (RssStateVector)arg1, (RssState)arg2) -> int :
-
-            C++ signature :
-                unsigned long index(std::vector<ad::rss::state::RssState, std::allocator<ad::rss::state::RssState> > {lvalue},ad::rss::state::RssState)
-        '''
-        ...
-
-    def insert(self, arg1: RssStateVector, arg2: int, arg3: RssState) -> None:
-        '''
-
-        insert( (RssStateVector)arg1, (int)arg2, (RssState)arg3) -> None :
-
-            C++ signature :
-                void insert(std::vector<ad::rss::state::RssState, std::allocator<ad::rss::state::RssState> > {lvalue},long,ad::rss::state::RssState)
-        '''
-        ...
-
-    def reverse(self, arg1: RssStateVector) -> None:
-        '''
-
-        reverse( (RssStateVector)arg1) -> None :
-
-            C++ signature :
-                void reverse(std::vector<ad::rss::state::RssState, std::allocator<ad::rss::state::RssState> > {lvalue})
-        '''
-        ...
-
-class UnstructuredSceneResponse(int,):
+class UnstructuredSceneResponse(int, _CarlaEnum):
     None = 0  # type: ignore # is named None in the C++ code
     ContinueForward = 1
     DriveAway = 2

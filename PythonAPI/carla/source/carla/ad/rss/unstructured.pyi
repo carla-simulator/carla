@@ -1,3 +1,4 @@
+from ad import _Vector
 
 class DebugDrawing:
     class DebugLine:
@@ -81,125 +82,11 @@ class DebugDrawing:
         """
         ...
 
-class vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugLine_greater_:
-    def append(self, arg1: vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugLine_greater_, arg2: DebugDrawing.DebugLine) -> None:
-        """
+class vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugLine_greater_(_Vector[DebugDrawing.DebugLine]):
+    ...
 
-        append( (vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugLine_greater_)arg1, (DebugLine)arg2) -> None :
+class vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPoint_greater_(_Vector[DebugDrawing.DebugPoint]):
+    ...
 
-            C++ signature :
-                void append(std::vector<ad::rss::unstructured::DebugDrawing::DebugLine, std::allocator<ad::rss::unstructured::DebugDrawing::DebugLine> > {lvalue},ad::rss::unstructured::DebugDrawing::DebugLine)
-        """
-        ...
-
-    def extend(self, arg1: vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugLine_greater_, arg2: object) -> None:
-        """
-
-        extend( (vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugLine_greater_)arg1, (object)arg2) -> None :
-
-            C++ signature :
-                void extend(std::vector<ad::rss::unstructured::DebugDrawing::DebugLine, std::allocator<ad::rss::unstructured::DebugDrawing::DebugLine> > {lvalue},boost::python::api::object)
-        """
-        ...
-
-    def insert(self, arg1: vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugLine_greater_, arg2: int, arg3: DebugDrawing.DebugLine) -> None:
-        """
-
-        insert( (vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugLine_greater_)arg1, (int)arg2, (DebugLine)arg3) -> None :
-
-            C++ signature :
-                void insert(std::vector<ad::rss::unstructured::DebugDrawing::DebugLine, std::allocator<ad::rss::unstructured::DebugDrawing::DebugLine> > {lvalue},long,ad::rss::unstructured::DebugDrawing::DebugLine)
-        """
-        ...
-
-    def reverse(self, arg1: vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugLine_greater_) -> None:
-        """
-
-        reverse( (vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugLine_greater_)arg1) -> None :
-
-            C++ signature :
-                void reverse(std::vector<ad::rss::unstructured::DebugDrawing::DebugLine, std::allocator<ad::rss::unstructured::DebugDrawing::DebugLine> > {lvalue})
-        """
-        ...
-
-class vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPoint_greater_:
-    def append(self, arg1: vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPoint_greater_, arg2: DebugDrawing.DebugPoint) -> None:
-        """
-
-        append( (vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPoint_greater_)arg1, (DebugPoint)arg2) -> None :
-
-            C++ signature :
-                void append(std::vector<ad::rss::unstructured::DebugDrawing::DebugPoint, std::allocator<ad::rss::unstructured::DebugDrawing::DebugPoint> > {lvalue},ad::rss::unstructured::DebugDrawing::DebugPoint)
-        """
-        ...
-
-    def extend(self, arg1: vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPoint_greater_, arg2: object) -> None:
-        """
-
-        extend( (vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPoint_greater_)arg1, (object)arg2) -> None :
-
-            C++ signature :
-                void extend(std::vector<ad::rss::unstructured::DebugDrawing::DebugPoint, std::allocator<ad::rss::unstructured::DebugDrawing::DebugPoint> > {lvalue},boost::python::api::object)
-        """
-        ...
-
-    def insert(self, arg1: vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPoint_greater_, arg2: int, arg3: DebugDrawing.DebugPoint) -> None:
-        """
-
-        insert( (vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPoint_greater_)arg1, (int)arg2, (DebugPoint)arg3) -> None :
-
-            C++ signature :
-                void insert(std::vector<ad::rss::unstructured::DebugDrawing::DebugPoint, std::allocator<ad::rss::unstructured::DebugDrawing::DebugPoint> > {lvalue},long,ad::rss::unstructured::DebugDrawing::DebugPoint)
-        """
-        ...
-
-    def reverse(self, arg1: vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPoint_greater_) -> None:
-        """
-
-        reverse( (vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPoint_greater_)arg1) -> None :
-
-            C++ signature :
-                void reverse(std::vector<ad::rss::unstructured::DebugDrawing::DebugPoint, std::allocator<ad::rss::unstructured::DebugDrawing::DebugPoint> > {lvalue})
-        """
-        ...
-
-class vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPolygon_greater_:
-    def append(self, arg1: vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPolygon_greater_, arg2: DebugDrawing.DebugPolygon) -> None:
-        """
-
-        append( (vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPolygon_greater_)arg1, (DebugPolygon)arg2) -> None :
-
-            C++ signature :
-                void append(std::vector<ad::rss::unstructured::DebugDrawing::DebugPolygon, std::allocator<ad::rss::unstructured::DebugDrawing::DebugPolygon> > {lvalue},ad::rss::unstructured::DebugDrawing::DebugPolygon)
-        """
-        ...
-
-    def extend(self, arg1: vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPolygon_greater_, arg2: object) -> None:
-        """
-
-        extend( (vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPolygon_greater_)arg1, (object)arg2) -> None :
-
-            C++ signature :
-                void extend(std::vector<ad::rss::unstructured::DebugDrawing::DebugPolygon, std::allocator<ad::rss::unstructured::DebugDrawing::DebugPolygon> > {lvalue},boost::python::api::object)
-        """
-        ...
-
-    def insert(self, arg1: vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPolygon_greater_, arg2: int, arg3: DebugDrawing.DebugPolygon) -> None:
-        """
-
-        insert( (vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPolygon_greater_)arg1, (int)arg2, (DebugPolygon)arg3) -> None :
-
-            C++ signature :
-                void insert(std::vector<ad::rss::unstructured::DebugDrawing::DebugPolygon, std::allocator<ad::rss::unstructured::DebugDrawing::DebugPolygon> > {lvalue},long,ad::rss::unstructured::DebugDrawing::DebugPolygon)
-        """
-        ...
-
-    def reverse(self, arg1: vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPolygon_greater_) -> None:
-        """
-
-        reverse( (vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPolygon_greater_)arg1) -> None :
-
-            C++ signature :
-                void reverse(std::vector<ad::rss::unstructured::DebugDrawing::DebugPolygon, std::allocator<ad::rss::unstructured::DebugDrawing::DebugPolygon> > {lvalue})
-        """
-        ...
+class vector_less_ad_scope_rss_scope_unstructured_scope_DebugDrawing_scope_DebugPolygon_greater_(_Vector[DebugDrawing.DebugPolygon]):
+    ...

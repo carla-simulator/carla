@@ -1,5 +1,5 @@
 from typing import Any, ClassVar
-from libcarla import _CarlaEnum
+from ...libcarla import _CarlaEnum
 
 from . import access, config, intersection, landmark, lane, match, point, restriction, route
 from .. import rss
@@ -55,29 +55,28 @@ class RssSceneCreation:
     RouteOnly = AppendRoadBoundariesMode.RouteOnly
     
     __instance_size__: ClassVar[int] = 256
-    @classmethod
-    def __init__(cls, timeIndex: int, defaultEgoRssDynamics: rss.world.RssDynamics) -> None:
+    def __init__(self, timeIndex: int, defaultEgoRssDynamics: rss.world.RssDynamics) -> None:
         """
         __init__( (object)arg1, (object)timeIndex, (RssDynamics)defaultEgoRssDynamics) -> None :
 
             C++ signature :
                 void __init__(_object*,unsigned long,ad::rss::world::RssDynamics)"""
     @classmethod
-    def appendRoadBoundaries(cls, egoObjectData: RssObjectData, route: route.FullRoute, operationMode: AppendRoadBoundariesMode):
+    def appendRoadBoundaries(cls, egoObjectData: RssObjectData, route: route.FullRoute, operationMode: AppendRoadBoundariesMode) -> bool:
         """
         appendRoadBoundaries( (RssSceneCreation)arg1, (RssObjectData)egoObjectData, (FullRoute)route, (AppendRoadBoundariesMode)operationMode) -> bool :
 
             C++ signature :
                 bool appendRoadBoundaries(ad::rss::map::RssSceneCreation {lvalue},ad::rss::map::RssObjectData,ad::map::route::FullRoute,ad::rss::map::RssSceneCreation::AppendRoadBoundariesMode)"""
-    @classmethod
-    def appendScenes(cls, *args, **kwargs):
+
+    def appendScenes(self, *args, **kwargs) -> bool:
         """
         appendScenes( (RssSceneCreation)arg1, (RssObjectData)egoObjectData, (FullRoute)egoRoute, (RssObjectData)otherObjectData, (RestrictSpeedLimitMode)restrictSpeedLimitMode, (LandmarkIdSet)greenTrafficLights, (RssMode)mode) -> bool :
 
             C++ signature :
                 bool appendScenes(ad::rss::map::RssSceneCreation {lvalue},ad::rss::map::RssObjectData,ad::map::route::FullRoute,ad::rss::map::RssObjectData,ad::rss::map::RssSceneCreation::RestrictSpeedLimitMode,std::set<ad::map::landmark::LandmarkId, std::less<ad::map::landmark::LandmarkId>, std::allocator<ad::map::landmark::LandmarkId> >,ad::rss::map::RssMode)"""
-    @classmethod
-    def getWorldModel(cls) -> Any:
+
+    def getWorldModel(self) -> rss.world.WorldModel:
         """
         getWorldModel( (RssSceneCreation)arg1) -> WorldModel :
 

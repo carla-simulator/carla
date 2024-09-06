@@ -1,4 +1,5 @@
-import ad
+from typing import ClassVar, overload
+from carla import ad
 
 from . import *
 
@@ -218,6 +219,8 @@ class ObjectType(int):
     Pedestrian = 3
 
 class OccupiedRegion:
+    __instance_size__: ClassVar[int] = ...
+
     def assign(self, arg1: OccupiedRegion, other: OccupiedRegion) -> OccupiedRegion:
         """
 
@@ -237,185 +240,44 @@ class OccupiedRegion:
     @property
     def segmentId(self) -> int: ...
 
-class OccupiedRegionVector(ad._Vector[OccupiedRegion]):
-    def append(self, arg1: OccupiedRegionVector, arg2: OccupiedRegion) -> None:
+    @classmethod
+    def __eq__(cls, other: object, /) -> bool:
         """
-
-        append( (OccupiedRegionVector)arg1, (OccupiedRegion)arg2) -> None :
+        __eq__( (OccupiedRegion)arg1, (OccupiedRegion)arg2) -> object :
 
             C++ signature :
-                void append(std::vector<ad::rss::world::OccupiedRegion, std::allocator<ad::rss::world::OccupiedRegion> > {lvalue},ad::rss::world::OccupiedRegion)
-        """
-        ...
-
-    def count(self, arg1: OccupiedRegionVector, arg2: OccupiedRegion) -> int:
+                _object* __eq__(ad::rss::world::OccupiedRegion {lvalue},ad::rss::world::OccupiedRegion)
         """
 
-        count( (OccupiedRegionVector)arg1, (OccupiedRegion)arg2) -> int :
+    @classmethod
+    def __ne__(cls, other: object, /) -> bool:
+        """
+        __ne__( (OccupiedRegion)arg1, (OccupiedRegion)arg2) -> object :
 
             C++ signature :
-                unsigned long count(std::vector<ad::rss::world::OccupiedRegion, std::allocator<ad::rss::world::OccupiedRegion> > {lvalue},ad::rss::world::OccupiedRegion)
-        """
-        ...
-
-    def extend(self, arg1: OccupiedRegionVector, arg2: object) -> None:
+                _object* __ne__(ad::rss::world::OccupiedRegion {lvalue},ad::rss::world::OccupiedRegion)
         """
 
-        extend( (OccupiedRegionVector)arg1, (object)arg2) -> None :
+    @classmethod
+    def __reduce__(cls): ...
 
-            C++ signature :
-                void extend(std::vector<ad::rss::world::OccupiedRegion, std::allocator<ad::rss::world::OccupiedRegion> > {lvalue},boost::python::api::object)
-        """
-        ...
+class OccupiedRegionVector(ad._VectorSequence[OccupiedRegion]):
+    ...
 
-    def index(self, arg1: OccupiedRegionVector, arg2: OccupiedRegion) -> int:
-        """
+class RoadArea(ad._VectorSequence[RoadSegment]):
+    __instance_size__: ClassVar[int] = ...
 
-        index( (OccupiedRegionVector)arg1, (OccupiedRegion)arg2) -> int :
+class RoadSegment(ad._VectorSequence[LaneSegment]):
+    __instance_size__: ClassVar[int] = ...
 
-            C++ signature :
-                unsigned long index(std::vector<ad::rss::world::OccupiedRegion, std::allocator<ad::rss::world::OccupiedRegion> > {lvalue},ad::rss::world::OccupiedRegion)
-        """
-        ...
+class RssDynamics(ad._Assignable):
+    __instance_size__: ClassVar[int] = ...
 
-    def insert(self, arg1: OccupiedRegionVector, arg2: int, arg3: OccupiedRegion) -> None:
-        """
-
-        insert( (OccupiedRegionVector)arg1, (int)arg2, (OccupiedRegion)arg3) -> None :
-
-            C++ signature :
-                void insert(std::vector<ad::rss::world::OccupiedRegion, std::allocator<ad::rss::world::OccupiedRegion> > {lvalue},long,ad::rss::world::OccupiedRegion)
-        """
-        ...
-
-    def reverse(self, arg1: OccupiedRegionVector) -> None:
-        """
-
-        reverse( (OccupiedRegionVector)arg1) -> None :
-
-            C++ signature :
-                void reverse(std::vector<ad::rss::world::OccupiedRegion, std::allocator<ad::rss::world::OccupiedRegion> > {lvalue})
-        """
-        ...
-
-class RoadArea:
-    def append(self, arg1: RoadArea, arg2: RoadSegment) -> None:
-        """
-
-        append( (RoadArea)arg1, (RoadSegment)arg2) -> None :
-
-            C++ signature :
-                void append(std::vector<std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> >, std::allocator<std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> > > > {lvalue},std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> >)
-        """
-        ...
-
-    def extend(self, arg1: RoadArea, arg2: object) -> None:
-        """
-
-        extend( (RoadArea)arg1, (object)arg2) -> None :
-
-            C++ signature :
-                void extend(std::vector<std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> >, std::allocator<std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> > > > {lvalue},boost::python::api::object)
-        """
-        ...
-
-    def insert(self, arg1: RoadArea, arg2: int, arg3: RoadSegment) -> None:
-        """
-
-        insert( (RoadArea)arg1, (int)arg2, (RoadSegment)arg3) -> None :
-
-            C++ signature :
-                void insert(std::vector<std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> >, std::allocator<std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> > > > {lvalue},long,std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> >)
-        """
-        ...
-
-    def reverse(self, arg1: RoadArea) -> None:
-        """
-
-        reverse( (RoadArea)arg1) -> None :
-
-            C++ signature :
-                void reverse(std::vector<std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> >, std::allocator<std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> > > > {lvalue})
-        """
-        ...
-
-class RoadSegment:
-    def append(self, arg1: RoadSegment, arg2: LaneSegment) -> None:
-        """
-
-        append( (RoadSegment)arg1, (LaneSegment)arg2) -> None :
-
-            C++ signature :
-                void append(std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> > {lvalue},ad::rss::world::LaneSegment)
-        """
-        ...
-
-    def count(self, arg1: RoadSegment, arg2: LaneSegment) -> int:
-        """
-
-        count( (RoadSegment)arg1, (LaneSegment)arg2) -> int :
-
-            C++ signature :
-                unsigned long count(std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> > {lvalue},ad::rss::world::LaneSegment)
-        """
-        ...
-
-    def extend(self, arg1: RoadSegment, arg2: object) -> None:
-        """
-
-        extend( (RoadSegment)arg1, (object)arg2) -> None :
-
-            C++ signature :
-                void extend(std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> > {lvalue},boost::python::api::object)
-        """
-        ...
-
-    def index(self, arg1: RoadSegment, arg2: LaneSegment) -> int:
-        """
-
-        index( (RoadSegment)arg1, (LaneSegment)arg2) -> int :
-
-            C++ signature :
-                unsigned long index(std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> > {lvalue},ad::rss::world::LaneSegment)
-        """
-        ...
-
-    def insert(self, arg1: RoadSegment, arg2: int, arg3: LaneSegment) -> None:
-        """
-
-        insert( (RoadSegment)arg1, (int)arg2, (LaneSegment)arg3) -> None :
-
-            C++ signature :
-                void insert(std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> > {lvalue},long,ad::rss::world::LaneSegment)
-        """
-        ...
-
-    def reverse(self, arg1: RoadSegment) -> None:
-        """
-
-        reverse( (RoadSegment)arg1) -> None :
-
-            C++ signature :
-                void reverse(std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> > {lvalue})
-        """
-        ...
-
-class RssDynamics:
     @property
     def alphaLat(self) -> LateralRssAccelerationValues: ...
 
     @property
     def alphaLon(self) -> LongitudinalRssAccelerationValues: ...
-
-    def assign(self, arg1: RssDynamics, other: RssDynamics) -> RssDynamics:
-        """
-
-        assign( (RssDynamics)arg1, (RssDynamics)other) -> RssDynamics :
-
-            C++ signature :
-                ad::rss::world::RssDynamics {lvalue} assign(ad::rss::world::RssDynamics {lvalue},ad::rss::world::RssDynamics)
-        """
-        ...
 
     @property
     def lateralFluctuationMargin(self) -> ad.physics.Distance: ...
@@ -429,17 +291,7 @@ class RssDynamics:
     @property
     def unstructuredSettings(self) -> UnstructuredSettings: ...
 
-class Scene:
-    def assign(self, arg1: Scene, other: Scene) -> Scene:
-        """
-
-        assign( (Scene)arg1, (Scene)other) -> Scene :
-
-            C++ signature :
-                ad::rss::world::Scene {lvalue} assign(ad::rss::world::Scene {lvalue},ad::rss::world::Scene)
-        """
-        ...
-
+class Scene(ad._Assignable):
     @property
     def egoVehicle(self) -> Object: ...
 
@@ -461,78 +313,10 @@ class Scene:
     @property
     def situationType(self) -> situation.SituationType: ...
 
-class SceneVector(ad._Vector[Scene]):
-    def append(self, arg2: Scene) -> None:
-        """
+class SceneVector(ad._VectorSequence[Scene]):
+    ...
 
-        append( (SceneVector)arg1, (Scene)arg2) -> None :
-
-            C++ signature :
-                void append(std::vector<ad::rss::world::Scene, std::allocator<ad::rss::world::Scene> > {lvalue},ad::rss::world::Scene)
-        """
-        ...
-
-    def count(self, arg2: Scene) -> int:
-        """
-
-        count( (SceneVector)arg1, (Scene)arg2) -> int :
-
-            C++ signature :
-                unsigned long count(std::vector<ad::rss::world::Scene, std::allocator<ad::rss::world::Scene> > {lvalue},ad::rss::world::Scene)
-        """
-        ...
-
-    def extend(self, arg2: object) -> None:
-        """
-
-        extend( (SceneVector)arg1, (object)arg2) -> None :
-
-            C++ signature :
-                void extend(std::vector<ad::rss::world::Scene, std::allocator<ad::rss::world::Scene> > {lvalue},boost::python::api::object)
-        """
-        ...
-
-    def index(self, arg2: Scene) -> int:
-        """
-
-        index( (SceneVector)arg1, (Scene)arg2) -> int :
-
-            C++ signature :
-                unsigned long index(std::vector<ad::rss::world::Scene, std::allocator<ad::rss::world::Scene> > {lvalue},ad::rss::world::Scene)
-        """
-        ...
-
-    def insert(self, arg2: int, arg3: Scene) -> None:
-        """
-
-        insert( (SceneVector)arg1, (int)arg2, (Scene)arg3) -> None :
-
-            C++ signature :
-                void insert(std::vector<ad::rss::world::Scene, std::allocator<ad::rss::world::Scene> > {lvalue},long,ad::rss::world::Scene)
-        """
-        ...
-
-    def reverse(self) -> None:
-        """
-
-        reverse( (SceneVector)arg1) -> None :
-
-            C++ signature :
-                void reverse(std::vector<ad::rss::world::Scene, std::allocator<ad::rss::world::Scene> > {lvalue})
-        """
-        ...
-
-class UnstructuredSettings:
-    def assign(self, other: UnstructuredSettings) -> UnstructuredSettings:
-        """
-
-        assign( (UnstructuredSettings)arg1, (UnstructuredSettings)other) -> UnstructuredSettings :
-
-            C++ signature :
-                ad::rss::world::UnstructuredSettings {lvalue} assign(ad::rss::world::UnstructuredSettings {lvalue},ad::rss::world::UnstructuredSettings)
-        """
-        ...
-
+class UnstructuredSettings(ad._Assignable):
     @property
     def driveAwayMaxAngle(self) -> ad.physics.Angle: ...
 
@@ -578,16 +362,7 @@ class UnstructuredSettings:
     @property
     def vehicleYawRateChange(self) -> ad.physics.AngularAcceleration: ...
 
-class Velocity:
-    def assign(self, arg1: Velocity, other: Velocity) -> Velocity:
-        """
-
-        assign( (Velocity)arg1, (Velocity)other) -> Velocity :
-
-            C++ signature :
-                ad::rss::world::Velocity {lvalue} assign(ad::rss::world::Velocity {lvalue},ad::rss::world::Velocity)
-        """
-        ...
+class Velocity(ad._Assignable):
 
     @property
     def speedLatMax(self) -> ad.physics.Speed: ...
@@ -601,17 +376,7 @@ class Velocity:
     @property
     def speedLonMin(self) -> ad.physics.Speed: ...
 
-class WorldModel:
-    def assign(self, arg1: WorldModel, other: WorldModel) -> WorldModel:
-        """
-
-        assign( (WorldModel)arg1, (WorldModel)other) -> WorldModel :
-
-            C++ signature :
-                ad::rss::world::WorldModel {lvalue} assign(ad::rss::world::WorldModel {lvalue},ad::rss::world::WorldModel)
-        """
-        ...
-
+class WorldModel(ad._Assignable):
     @property
     def defaultEgoVehicleRssDynamics(self) -> RssDynamics: ...
 
@@ -620,3 +385,108 @@ class WorldModel:
 
     @property
     def timeIndex(self) -> int: ...
+
+@overload
+def to_string(value: (OccupiedRegion | OccupiedRegionVector | ObjectIdVector | LongitudinalRssAccelerationValues
+                      | Velocity | LaneDrivingDirection | LaneSegment | LaneSegmentType | RoadSegment
+                      | LateralRssAccelerationValues | UnstructuredSettings | RssDynamics | ObjectState | ObjectType
+                      | Object | RoadArea | Scene | SceneVector | WorldModel)) -> str:
+    """
+    to_string( (OccupiedRegion)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::rss::world::OccupiedRegion)
+
+    to_string( (OccupiedRegionVector)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(std::vector<ad::rss::world::OccupiedRegion, std::allocator<ad::rss::world::OccupiedRegion> >)
+
+    to_string( (ObjectIdVector)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(std::vector<unsigned long, std::allocator<unsigned long> >)
+
+    to_string( (LongitudinalRssAccelerationValues)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::rss::world::LongitudinalRssAccelerationValues)
+
+    to_string( (Velocity)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::rss::world::Velocity)
+
+    to_string( (LaneDrivingDirection)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::rss::world::LaneDrivingDirection)
+
+    to_string( (LaneSegmentType)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::rss::world::LaneSegmentType)
+
+    to_string( (LaneSegment)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::rss::world::LaneSegment)
+
+    to_string( (RoadSegment)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> >)
+
+    to_string( (LateralRssAccelerationValues)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::rss::world::LateralRssAccelerationValues)
+
+    to_string( (UnstructuredSettings)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::rss::world::UnstructuredSettings)
+
+    to_string( (RssDynamics)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::rss::world::RssDynamics)
+
+    to_string( (ObjectState)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::rss::world::ObjectState)
+
+    to_string( (ObjectType)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::rss::world::ObjectType)
+
+    to_string( (Object)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::rss::world::Object)
+
+    to_string( (RoadArea)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(std::vector<std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> >, std::allocator<std::vector<ad::rss::world::LaneSegment, std::allocator<ad::rss::world::LaneSegment> > > >)
+
+    to_string( (Scene)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::rss::world::Scene)
+
+    to_string( (SceneVector)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(std::vector<ad::rss::world::Scene, std::allocator<ad::rss::world::Scene> >)
+
+    to_string( (WorldModel)value) -> str :
+
+        C++ signature :
+            std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::rss::world::WorldModel)
+    """
+@overload
+def to_string(ad) -> str:
+   ...

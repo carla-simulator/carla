@@ -34,9 +34,9 @@ class PartitionId:
         """
         ...
 
-    cMaxValue = 18446744073709551615
+    cMaxValue: float = 18446744073709551615
 
-    cMinValue = 0
+    cMinValue: float = 0
 
     def ensureValid(self, arg1: PartitionId) -> None:
         """

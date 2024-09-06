@@ -1,4 +1,3 @@
-from . import *
 
 class ENULandmark:
     def assign(self, arg1: ENULandmark, other: ENULandmark) -> ENULandmark:
@@ -136,9 +135,9 @@ class LandmarkId:
         """
         ...
 
-    cMaxValue = 18446744073709551615
+    cMaxValue: float = 18446744073709551615
 
-    cMinValue = 0
+    cMinValue: float = 0
 
     def ensureValid(self, arg1: LandmarkId) -> None:
         """

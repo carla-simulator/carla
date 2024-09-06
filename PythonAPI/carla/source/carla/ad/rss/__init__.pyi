@@ -7,5 +7,5 @@ __all__ = [
  'situation',
  'state',
  'unstructured',
- 'world'
+ 'world',
 ]

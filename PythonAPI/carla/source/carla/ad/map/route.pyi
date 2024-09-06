@@ -1,7 +1,7 @@
 from typing import Iterable, TypeAlias, overload
 
 import ad
-from libcarla import _CarlaEnum
+from ...libcarla import _CarlaEnum
 
 from . import *
 
@@ -573,8 +573,6 @@ class RoutingParaPoint:
 
     @property
     def point(self) -> point.ParaPoint: ...
-
-    ...
 
 class ShortenRouteMode(int):
     DontCutIntersectionAndPrependIfSucceededBeforeRoute = 2

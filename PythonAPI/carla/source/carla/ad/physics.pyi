@@ -17,11 +17,11 @@ class Acceleration:
         """
         ...
 
-    cMaxValue = 1000.0
+    cMaxValue: float = 1000.0
 
-    cMinValue = -1000.0
+    cMinValue: float = -1000.0
 
-    cPrecisionValue = 0.0001
+    cPrecisionValue: float = 0.0001
 
     def ensureValid(self, arg1: Acceleration) -> None:
         """
@@ -331,11 +331,11 @@ class Angle:
         """
         ...
 
-    cMaxValue = 1.7976931348623157e+308
+    cMaxValue: float = ...
 
-    cMinValue = -1.7976931348623157e+308
+    cMinValue: float = ...
 
-    cPrecisionValue = 0.001
+    cPrecisionValue: float = 0.001
 
     def ensureValid(self, arg1: Angle) -> None:
         """
@@ -550,11 +550,11 @@ class AngularAcceleration:
         """
         ...
 
-    cMaxValue = 1000.0
+    cMaxValue: float = 1000.0
 
-    cMinValue = -1000.0
+    cMinValue: float = -1000.0
 
-    cPrecisionValue = 0.0001
+    cPrecisionValue: float = 0.0001
 
     def ensureValid(self, arg1: AngularAcceleration) -> None:
         """
@@ -691,11 +691,11 @@ class AngularVelocity:
         """
         ...
 
-    cMaxValue = 1000.0
+    cMaxValue: float = 1000.0
 
-    cMinValue = -1000.0
+    cMinValue: float = -1000.0
 
-    cPrecisionValue = 0.001
+    cPrecisionValue: float = 0.001
 
     def ensureValid(self, arg1: AngularVelocity) -> None:
         """
@@ -1072,11 +1072,11 @@ class Distance(_FloatLike):
         """
         ...
 
-    cMaxValue = 1000000000.0
+    cMaxValue: float = 1000000000.0
 
-    cMinValue = -1000000000.0
+    cMinValue: float = -1000000000.0
 
-    cPrecisionValue = 0.001
+    cPrecisionValue: float = 0.001
 
     def ensureValid(self, arg1: Distance) -> None:
         """
@@ -1372,11 +1372,11 @@ class DistanceSquared:
         """
         ...
 
-    cMaxValue = 1e+18
+    cMaxValue: float = 1e+18
 
-    cMinValue = -1e+18
+    cMinValue: float = -1e+18
 
-    cPrecisionValue = 1e-06
+    cPrecisionValue: float = 1e-06
 
     def ensureValid(self, arg1: DistanceSquared) -> None:
         """
@@ -1513,11 +1513,11 @@ class Duration:
         """
         ...
 
-    cMaxValue = 1000000.0
+    cMaxValue: float = 1000000.0
 
-    cMinValue = -1000000.0
+    cMinValue: float = -1000000.0
 
-    cPrecisionValue = 0.001
+    cPrecisionValue: float = 0.001
 
     def ensureValid(self, arg1: Duration) -> None:
         """
@@ -1654,11 +1654,11 @@ class DurationSquared:
         """
         ...
 
-    cMaxValue = 1000000000000.0
+    cMaxValue: float = 1000000000000.0
 
-    cMinValue = -1000000000000.0
+    cMinValue: float = -1000000000000.0
 
-    cPrecisionValue = 1e-06
+    cPrecisionValue: float = 1e-06
 
     def ensureValid(self, arg1: DurationSquared) -> None:
         """
@@ -1951,11 +1951,11 @@ class ParametricValue:
         """
         ...
 
-    cMaxValue = 1.7976931348623157e+308
+    cMaxValue: float = ...
 
-    cMinValue = -1.7976931348623157e+308
+    cMinValue: float = ...
 
-    cPrecisionValue = 1e-06
+    cPrecisionValue: float = 1e-06
 
     def ensureValid(self, arg1: ParametricValue) -> None:
         """
@@ -2092,11 +2092,11 @@ class Probability:
         """
         ...
 
-    cMaxValue = 1.7976931348623157e+308
+    cMaxValue: float = ...
 
-    cMinValue = -1.7976931348623157e+308
+    cMinValue: float = ...
 
-    cPrecisionValue = 1e-06
+    cPrecisionValue: float = 1e-06
 
     def ensureValid(self, arg1: Probability) -> None:
         """
@@ -2233,11 +2233,11 @@ class RatioValue:
         """
         ...
 
-    cMaxValue = 1.7976931348623157e+308
+    cMaxValue: float = ...
 
-    cMinValue = -1.7976931348623157e+308
+    cMinValue: float = ...
 
-    cPrecisionValue = 1e-09
+    cPrecisionValue: float = 1e-09
 
     def ensureValid(self, arg1: RatioValue) -> None:
         """
@@ -2374,11 +2374,11 @@ class Speed:
         """
         ...
 
-    cMaxValue = 1000.0
+    cMaxValue: float = 1000.0
 
-    cMinValue = -1000.0
+    cMinValue: float = -1000.0
 
-    cPrecisionValue = 0.001
+    cPrecisionValue: float = 0.001
 
     def ensureValid(self, arg1: Speed) -> None:
         """
@@ -2593,11 +2593,11 @@ class SpeedSquared:
         """
         ...
 
-    cMaxValue = 1000000.0
+    cMaxValue: float = 1000000.0
 
-    cMinValue = -1000000.0
+    cMinValue: float = -1000000.0
 
-    cPrecisionValue = 1e-06
+    cPrecisionValue: float = 1e-06
 
     def ensureValid(self, arg1: SpeedSquared) -> None:
         """
@@ -2815,11 +2815,11 @@ class Weight:
         """
         ...
 
-    cMaxValue = 1.7976931348623157e+308
+    cMaxValue: float = ...
 
-    cMinValue = -1.7976931348623157e+308
+    cMinValue: float = ...
 
-    cPrecisionValue = 0.001
+    cPrecisionValue: float = 0.001
 
     def ensureValid(self, arg1: Weight) -> None:
         """

@@ -599,8 +599,6 @@ class LaneAltitudeRange:
     @property
     def minimum(self) -> point.Altitude: ...
 
-    ...
-
 class LaneDirection(int):
     BIDIRECTIONAL = 5
 
@@ -630,9 +628,9 @@ class LaneId:
         """
         ...
 
-    cMaxValue = 18446744073709551615
+    cMaxValue: float = 18446744073709551615
 
-    cMinValue = 0
+    cMinValue: float = 0
 
     def ensureValid(self, arg1: LaneId) -> None:
         """
