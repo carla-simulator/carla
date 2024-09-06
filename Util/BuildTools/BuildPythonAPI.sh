@@ -99,6 +99,8 @@ if ${BUILD_PYTHONAPI} ; then
 
   for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     log "Building Python API for Python ${PY_VERSION}."
+    # Building the RSS variant adds files to SOURCES.txt we do not want included in a normal build
+    rm -Rf source/carla.egg-info 
 
     if [[ -z ${TARGET_WHEEL_PLATFORM} ]] ; then
       /usr/bin/env python${PY_VERSION} setup.py bdist_egg bdist_wheel --dist-dir dist/.tmp
