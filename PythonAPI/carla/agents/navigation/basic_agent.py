@@ -6,7 +6,7 @@
 """
 This module implements an agent that roams around a track following random
 waypoints and avoiding other vehicles. The agent also responds to traffic lights.
-It can also make use of the global route planner to follow a specifed route
+It can also make use of the global route planner to follow a specified route
 """
 
 import carla
@@ -30,7 +30,7 @@ class BasicAgent(object):
 
     def __init__(self, vehicle, target_speed=20, opt_dict={}, map_inst=None, grp_inst=None):
         """
-        Initialization the agent paramters, the local and the global planner.
+        Initialization the agent parameters, the local and the global planner.
 
             :param vehicle: actor to apply to agent logic onto
             :param target_speed: speed (in Km/h) at which the vehicle will move
@@ -101,7 +101,7 @@ class BasicAgent(object):
 
         # Get the static elements of the scene
         self._lights_list = self._world.get_actors().filter("*traffic_light*")
-        self._lights_map = {}  # Dictionary mapping a traffic light to a wp corrspoing to its trigger volume location
+        self._lights_map = {}  # Dictionary mapping a traffic light to a wp corresponding to its trigger volume location
 
     def add_emergency_stop(self, control):
         """
@@ -324,7 +324,7 @@ class BasicAgent(object):
         """
         Method to check if there is a vehicle in front of the agent blocking its path.
 
-            :param vehicle_list (list of carla.Vehicle): list contatining vehicle objects.
+            :param vehicle_list (list of carla.Vehicle): list containing vehicle objects.
                 If None, all vehicle in the scene are used
             :param max_distance: max freespace to check for obstacles.
                 If None, the base threshold value is used
