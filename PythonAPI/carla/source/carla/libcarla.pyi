@@ -4047,7 +4047,7 @@ class Vector3D:
     def distance(self, vector: Vector3D) -> float:
         """Computes the distance between two vectors."""
 
-    def distance_2d(self, vector: Vector3D) -> Vector3D:
+    def distance_2d(self, vector: Vector3D) -> float:
         """Computes the 2-dimensional distance between two vectors."""
 
     def distance_squared(self, vector: Vector3D) -> float:
