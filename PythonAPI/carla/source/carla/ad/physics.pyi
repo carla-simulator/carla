@@ -1,7 +1,7 @@
 
 from collections.abc import MutableSequence
 
-from ad import _FloatLike
+from ad import _FloatLike, _Calculable
 
 class Acceleration:
     @property
@@ -2360,75 +2360,14 @@ class RatioValueList:
         """
         ...
 
-class Speed:
-    @property
-    def Valid(self) -> bool: ...
-
-    def assign(self, arg1: Speed, other: Speed) -> Speed:
-        """
-
-        assign( (Speed)arg1, (Speed)other) -> Speed :
-
-            C++ signature :
-                ad::physics::Speed {lvalue} assign(ad::physics::Speed {lvalue},ad::physics::Speed)
-        """
-        ...
-
+class Speed(_Calculable):
     cMaxValue: float = 1000.0
 
     cMinValue: float = -1000.0
 
     cPrecisionValue: float = 0.001
 
-    def ensureValid(self, arg1: Speed) -> None:
-        """
-
-        ensureValid( (Speed)arg1) -> None :
-
-            C++ signature :
-                void ensureValid(ad::physics::Speed {lvalue})
-        """
-        ...
-
-    def ensureValidNonZero(self, arg1: Speed) -> None:
-        """
-
-        ensureValidNonZero( (Speed)arg1) -> None :
-
-            C++ signature :
-                void ensureValidNonZero(ad::physics::Speed {lvalue})
-        """
-        ...
-
-    def getMax(self) -> Speed:
-        """
-
-        getMax() -> Speed :
-
-            C++ signature :
-                ad::physics::Speed getMax()
-        """
-        ...
-
-    def getMin(self) -> Speed:
-        """
-
-        getMin() -> Speed :
-
-            C++ signature :
-                ad::physics::Speed getMin()
-        """
-        ...
-
-    def getPrecision(self) -> Speed:
-        """
-
-        getPrecision() -> Speed :
-
-            C++ signature :
-                ad::physics::Speed getPrecision()
-        """
-        ...
+    
 
 class SpeedList(MutableSequence[Speed]):
     def append(self, arg1: SpeedList, arg2: Speed) -> None:
