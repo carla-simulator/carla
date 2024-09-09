@@ -26,28 +26,31 @@ if TYPE_CHECKING:
         from typing_extensions import NotRequired
     else:
         from typing_extensions import TypedDict, NotRequired
-    
-    TopologyDict = TypedDict('TopologyDict', {'entry': carla.Waypoint, 
-                                              'exit': carla.Waypoint,
-                                              'entryxyz': tuple[float, float, float], 
-                                              'exitxyz': tuple[float, float, float], 
-                                              'path': list[carla.Waypoint]})
-    
-    EdgeDict = TypedDict('EdgeDict', 
+
+    TopologyDict = TypedDict('TopologyDict',
+        {
+            'entry': carla.Waypoint,
+            'exit': carla.Waypoint,
+            'entryxyz': tuple[float, float, float],
+            'exitxyz': tuple[float, float, float],
+            'path': list[carla.Waypoint]
+        })
+
+    EdgeDict = TypedDict('EdgeDict',
         {
             'length': int,
             'path': list[carla.Waypoint],
-            'entry_waypoint': carla.Waypoint, 
-            'exit_waypoint': carla.Waypoint, 
-            'entry_vector': np.ndarray, 
-            'exit_vector': np.ndarray, 
-            'net_vector': list[float], 
-            'intersection': bool, 
-            'type': RoadOption, 
+            'entry_waypoint': carla.Waypoint,
+            'exit_waypoint': carla.Waypoint,
+            'entry_vector': np.ndarray,
+            'exit_vector': np.ndarray,
+            'net_vector': list[float],
+            'intersection': bool,
+            'type': RoadOption,
             'change_waypoint': NotRequired[carla.Waypoint]
         })
 
-class GlobalRoutePlanner(object):
+class GlobalRoutePlanner:
     """
     This class provides a very high level route plan.
     """
@@ -353,7 +356,7 @@ class GlobalRoutePlanner(object):
         for node1, node2 in [(route[i], route[i + 1]) for i in range(index, len(route) - 1)]:
             candidate_edge = self._graph.edges[node1, node2]  # type: EdgeDict
             if node1 == route[index]:
-                last_intersection_edge = candidate_edge  
+                last_intersection_edge = candidate_edge
             if candidate_edge['type'] == RoadOption.LANEFOLLOW and candidate_edge['intersection']:
                 last_intersection_edge = candidate_edge
                 last_node = node2

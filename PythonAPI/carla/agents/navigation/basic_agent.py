@@ -20,7 +20,7 @@ from agents.tools.misc import (get_speed, is_within_distance,
 from agents.tools.hints import ObstacleDetectionResult, TrafficLightDetectionResult
 
 
-class BasicAgent(object):
+class BasicAgent:
     """
     BasicAgent implements an agent that navigates the scene.
     This agent respects traffic lights and other vehicles, but ignores stop signs.
@@ -138,14 +138,14 @@ class BasicAgent(object):
     def get_global_planner(self):
         """Get method for protected member local planner"""
         return self._global_planner
-        
+
     def set_destination(self, end_location, start_location=None, clean_queue=True):
         # type: (carla.Location, carla.Location | None, bool) -> None
         """
         This method creates a list of waypoints between a starting and ending location,
         based on the route returned by the global router, and adds it to the local planner.
-        If no starting location is passed and `clean_queue` is True, the vehicle local planner's 
-        target location is chosen, which corresponds (by default), to a location about 5 meters 
+        If no starting location is passed and `clean_queue` is True, the vehicle local planner's
+        target location is chosen, which corresponds (by default), to a location about 5 meters
         in front of the vehicle.
         If `clean_queue` is False the newly planned route will be appended to the current route.
 
@@ -156,19 +156,19 @@ class BasicAgent(object):
         if not start_location:
             if clean_queue and self._local_planner.target_waypoint:
                 # Plan from the waypoint in front of the vehicle onwards
-                start_location = self._local_planner.target_waypoint.transform.location 
+                start_location = self._local_planner.target_waypoint.transform.location
             elif not clean_queue and self._local_planner._waypoints_queue:
                 # Append to the current plan
                 start_location = self._local_planner._waypoints_queue[-1][0].transform.location
             else:
                 # no target_waypoint or _waypoints_queue empty, use vehicle location
-                start_location = self._vehicle.get_location() 
+                start_location = self._vehicle.get_location()
         start_waypoint = self._map.get_waypoint(start_location)
         end_waypoint = self._map.get_waypoint(end_location)
-        
+
         route_trace = self.trace_route(start_waypoint, end_waypoint)
         self._local_planner.set_global_plan(route_trace, clean_queue=clean_queue)
-        
+
     def set_global_plan(self, plan, stop_waypoint_creation=True, clean_queue=True):
         """
         Adds a specific plan to the agent.
@@ -353,7 +353,7 @@ class BasicAgent(object):
                 return None
 
             return Polygon(route_bb)
-      
+
         if self._ignore_vehicles:
             return ObstacleDetectionResult(False, None, -1)
 

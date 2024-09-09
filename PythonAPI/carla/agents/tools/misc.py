@@ -142,7 +142,7 @@ def vector(location_1, location_2):
     Returns the unit vector from location_1 to location_2
 
         :param location_1, location_2: carla.Location objects
-        
+
     .. note::
         Alternatively you can use:
         `(location_2 - location_1).make_unit_vector()`
@@ -159,7 +159,7 @@ def compute_distance(location_1, location_2):
     Euclidean distance between 3D points
 
         :param location_1, location_2: 3D points
-        
+
     .. deprecated:: 0.9.13
         Use `location_1.distance(location_2)` instead
     """
