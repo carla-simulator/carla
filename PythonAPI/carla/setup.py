@@ -179,7 +179,7 @@ class CleanADStubFiles(install_lib):
     def run(self):
         if not is_rss_variant_enabled():
             self.prune_rss()
-        super().run()
+        install_lib.run(self)  # for python2 do not use super here
         
     def prune_rss(self):
         """Removes files from an rss build that we do not want to be copied over to a non-rss build."""
@@ -189,7 +189,7 @@ class CleanADStubFiles(install_lib):
         shutil.rmtree(os.path.join(self.build_dir, self.CARLA_AD_STUB_DIR), ignore_errors=True)
         try:
             os.remove(os.path.join(self.build_dir, self._CARLA_RSS_STUB_FILE_PATH))
-        except FileNotFoundError:
+        except OSError:
             pass
         return
 
