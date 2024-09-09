@@ -1228,7 +1228,7 @@ class DebugHelper:
     """
 
     # region Methods
-    def draw_arrow(self, begin: Location, end: Location, thickness=0.1, arrow_size=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_arrow(self, begin: Vector3D, end: Vector3D, thickness=0.1, arrow_size=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws an arrow from `begin` to `end` pointing in that direction.
 
@@ -1241,7 +1241,7 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes (seconds). Defaults to -1.0.
         """
 
-    def draw_hud_arrow(self, begin: Location, end: Location, thickness=0.1, arrow_size=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_hud_arrow(self, begin: Vector3D, end: Vector3D, thickness=0.1, arrow_size=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws an arrow on the HUD from `begin` to `end` which can only be seen server-side.
 
@@ -1277,7 +1277,7 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes. Defaults to -1.0.
         """
 
-    def draw_line(self, begin: Location, end: Location, thickness=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_line(self, begin: Vector3D, end: Vector3D, thickness=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws a line in between `begin` and `end`.
 
@@ -1289,7 +1289,7 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes. Defaults to -1.0.
         """
 
-    def draw_hud_line(self, begin: Location, end: Location, thickness=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_hud_line(self, begin: Vector3D, end: Vector3D, thickness=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws a line on the HUD in between `begin` and `end`. The line can only be seen server-side.
 
@@ -1301,7 +1301,7 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes. Defaults to -1.0.
         """
 
-    def draw_point(self, location: Location, size=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_point(self, location: Vector3D, size=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws a point location.
 
@@ -1312,7 +1312,7 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to 0 for permanent shapes (seconds). Defaults to -1.0.
         """
 
-    def draw_hud_point(self, location: Location, size=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_hud_point(self, location: Vector3D, size=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """
         Draws a point on the HUD at `location`. The point can only be seen server-side.
 
@@ -1323,7 +1323,7 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to 0 for permanent shapes (seconds). Defaults to -1.0.
         """
 
-    def draw_string(self, location: Location, text: str, draw_shadow=False, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_string(self, location: Vector3D, text: str, draw_shadow=False, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
         """Draws a string in a given location of the simulation which can only be seen server-side.
 
         Args:
