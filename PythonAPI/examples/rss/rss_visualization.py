@@ -147,7 +147,7 @@ def get_matrix(transform):
     s_r = np.sin(np.radians(rotation.roll))
     c_p = np.cos(np.radians(rotation.pitch))
     s_p = np.sin(np.radians(rotation.pitch))
-    matrix = np.matrix(np.identity(4))
+    matrix = np.identity(4)
     matrix[0, 3] = location.x
     matrix[1, 3] = location.y
     matrix[2, 3] = location.z
@@ -353,7 +353,7 @@ class RssUnstructuredSceneVisualizer(object):
         Creates 3D bounding boxes based on carla vehicle list and camera.
         """
         trajectory_sets = [
-        # ego
+            # ego
             (RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
                 rss_state_snapshot.unstructuredSceneEgoInformation.brakeTrajectorySet), camera_transform, calibration),
              Color.red),
@@ -398,15 +398,14 @@ class RssUnstructuredSceneVisualizer(object):
         """
         Returns trajectory set projected to camera view
         """
+        if world_cords.size == 0:
+            return []
         world_cords = np.transpose(world_cords)
         cords_x_y_z = RssUnstructuredSceneVisualizer._world_to_sensor(world_cords, camera_transform)[:3, :]
-        cords_y_minus_z_x = np.concatenate([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
+        cords_y_minus_z_x = np.stack([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
         ts = np.transpose(np.dot(calibration, cords_y_minus_z_x))
-        camera_ts = np.concatenate([ts[:, 0] / ts[:, 2], ts[:, 1] / ts[:, 2], ts[:, 2]], axis=1)
-        line_to_draw = []
-        for point in camera_ts:
-            line_to_draw.append((int(point[0, 0]), int(point[0, 1])))
-        return line_to_draw
+        camera_ts = np.stack([ts[:, 0] / ts[:, 2], ts[:, 1] / ts[:, 2], ts[:, 2]], axis=1)
+        return [(int(point[0, 0]), int(point[0, 1])) for point in camera_ts]  # line_to_draw
 
     @staticmethod
     def _get_trajectory_set_points(trajectory_set):
@@ -465,7 +464,7 @@ class RssBoundingBoxVisualizer(object):
 
         # only render on new frame
         if len(self._surface_for_frame) > 0 and self._surface_for_frame[0][0] == frame:
-                return
+            return
 
         surface = pygame.Surface(self._dim)
         surface.set_colorkey(pygame.Color('black'))
@@ -539,9 +538,9 @@ class RssBoundingBoxVisualizer(object):
 
         bb_cords = RssBoundingBoxVisualizer._create_bb_points(vehicle)
         cords_x_y_z = RssBoundingBoxVisualizer._vehicle_to_sensor(bb_cords, vehicle, camera_transform)[:3, :]
-        cords_y_minus_z_x = np.concatenate([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
+        cords_y_minus_z_x = np.stack([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
         bbox = np.transpose(np.dot(calibration, cords_y_minus_z_x))
-        camera_bbox = np.concatenate([bbox[:, 0] / bbox[:, 2], bbox[:, 1] / bbox[:, 2], bbox[:, 2]], axis=1)
+        camera_bbox = np.stack([bbox[:, 0] / bbox[:, 2], bbox[:, 1] / bbox[:, 2], bbox[:, 2]], axis=1)
         return camera_bbox
 
     @staticmethod
