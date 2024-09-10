@@ -540,14 +540,14 @@ class RssBoundingBoxVisualizer(object):
         x = extent.x
         y = extent.y
         z = extent.z
-        cords[0, :] = [x, y, -z, 1.]
-        cords[1, :] = [-x, y, -z, 1.]
-        cords[2, :] = [-x, -y, -z, 1.]
-        cords[3, :] = [x, -y, -z, 1.]
-        cords[4, :] = [x, y, z, 1.]
-        cords[5, :] = [-x, y, z, 1.]
-        cords[6, :] = [-x, -y, z, 1.]
-        cords[7, :] = [x, -y, z, 1.]
+        cords[0] = [x, y, -z, 1.]
+        cords[1] = [-x, y, -z, 1.]
+        cords[2] = [-x, -y, -z, 1.]
+        cords[3] = [x, -y, -z, 1.]
+        cords[4] = [x, y, z, 1.]
+        cords[5] = [-x, y, z, 1.]
+        cords[6] = [-x, -y, z, 1.]
+        cords[7] = [x, -y, z, 1.]
         return cords
 
     @staticmethod
