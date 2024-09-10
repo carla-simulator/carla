@@ -535,16 +535,19 @@ class RssBoundingBoxVisualizer(object):
         Returns 3D bounding box for a vehicle.
         """
 
-        cords = np.zeros((8, 4))
+        cords = np.empty((8, 4))
         extent = vehicle.bounding_box.extent
-        cords[0, :] = np.array([extent.x, extent.y, -extent.z, 1])
-        cords[1, :] = np.array([-extent.x, extent.y, -extent.z, 1])
-        cords[2, :] = np.array([-extent.x, -extent.y, -extent.z, 1])
-        cords[3, :] = np.array([extent.x, -extent.y, -extent.z, 1])
-        cords[4, :] = np.array([extent.x, extent.y, extent.z, 1])
-        cords[5, :] = np.array([-extent.x, extent.y, extent.z, 1])
-        cords[6, :] = np.array([-extent.x, -extent.y, extent.z, 1])
-        cords[7, :] = np.array([extent.x, -extent.y, extent.z, 1])
+        x = extent.x
+        y = extent.y
+        z = extent.z
+        cords[0, :] = [x, y, -z, 1.]
+        cords[1, :] = [-x, y, -z, 1.]
+        cords[2, :] = [-x, -y, -z, 1.]
+        cords[3, :] = [x, -y, -z, 1.]
+        cords[4, :] = [x, y, z, 1.]
+        cords[5, :] = [-x, y, z, 1.]
+        cords[6, :] = [-x, -y, z, 1.]
+        cords[7, :] = [x, -y, z, 1.]
         return cords
 
     @staticmethod
