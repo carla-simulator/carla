@@ -434,7 +434,7 @@ class RssSensor(object):
 
             if self.unstructured_scene_visualizer:
                 self.unstructured_scene_visualizer.tick(response.frame, response, self._allowed_heading_ranges)
-            
+
             new_states = [
                 RssStateInfo(rss_state,
                              response.ego_dynamics_on_route,
