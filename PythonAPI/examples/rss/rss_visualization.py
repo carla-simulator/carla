@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # Copyright (c) 2020 Intel Corporation
 #
@@ -27,6 +26,7 @@ from carla import ad
 class RssStateVisualizer(object):
 
     def __init__(self, display_dimensions, font, world):
+        # type: (tuple[int, int] | list[int], pygame.font.Font, carla.World) -> None
         self._surface = None
         self._display_dimensions = display_dimensions
         self._font = font
@@ -162,12 +162,14 @@ class RssUnstructuredSceneVisualizerMode(Enum):
 
 
 class RssUnstructuredSceneVisualizer(object):
+    """Provides a top-view over the setting?"""
 
     def __init__(self, parent_actor, world, display_dimensions):
+        # type: (carla.Actor, carla.World, tuple[int, int] | list[int]) -> None
         self._last_rendered_frame = -1
         self._surface = None
-        self._current_rss_surface = None
-        self.current_camera_surface = (0, None)
+        self._current_rss_surface = None  # type: tuple[int, pygame.Surface] | None
+        self.current_camera_surface = (0, None)  # type: tuple[int, pygame.Surface]
         self._world = world
         self._parent_actor = parent_actor
         self._display_dimensions = display_dimensions
@@ -290,17 +292,19 @@ class RssUnstructuredSceneVisualizer(object):
             lines = RssUnstructuredSceneVisualizer.get_trajectory_sets(
                 rss_response.rss_state_snapshot, self._camera.get_transform(), self._calibration)
 
-            polygons = []
-            for heading_range in allowed_heading_ranges:
-                polygons.append((RssUnstructuredSceneVisualizer.transform_points(
+            polygons = [
+                (RssUnstructuredSceneVisualizer.transform_points(
                     RssUnstructuredSceneVisualizer._get_points_from_pairs(
                         RssUnstructuredSceneVisualizer.draw_heading_range(
-                            heading_range, rss_response.ego_dynamics_on_route)),
-                    self._camera.get_transform(), self._calibration), (0, 0, 255)))
+                        heading_range,
+                        rss_response.ego_dynamics_on_route)),
+                    self._camera.get_transform(),
+                    self._calibration),
+                Color.blue)
+                for heading_range in allowed_heading_ranges]
 
             RssUnstructuredSceneVisualizer.draw_lines(surface, lines)
             RssUnstructuredSceneVisualizer.draw_polygons(surface, polygons)
-
         except RuntimeError as e:
             print("ERROR {}".format(e))
         self._current_rss_surface = (frame, surface)
@@ -336,22 +340,26 @@ class RssUnstructuredSceneVisualizer(object):
         """
         Creates 3D bounding boxes based on carla vehicle list and camera.
         """
-        trajectory_sets = []
-
+        trajectory_sets = [
         # ego
-        trajectory_sets.append((RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
-            rss_state_snapshot.unstructuredSceneEgoInformation.brakeTrajectorySet), camera_transform, calibration), (255, 0, 0)))
-        trajectory_sets.append((RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
-            rss_state_snapshot.unstructuredSceneEgoInformation.continueForwardTrajectorySet), camera_transform, calibration), (0, 255, 0)))
+            (RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
+                rss_state_snapshot.unstructuredSceneEgoInformation.brakeTrajectorySet), camera_transform, calibration),
+             Color.red),
+            (RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
+                rss_state_snapshot.unstructuredSceneEgoInformation.continueForwardTrajectorySet), camera_transform, calibration),
+             Color.green)
+            ]
 
         # others
         for state in rss_state_snapshot.individualResponses:
             if state.unstructuredSceneState.rssStateInformation.brakeTrajectorySet:
                 trajectory_sets.append((RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
-                    state.unstructuredSceneState.rssStateInformation.brakeTrajectorySet), camera_transform, calibration), (255, 0, 0)))
+                    state.unstructuredSceneState.rssStateInformation.brakeTrajectorySet), camera_transform, calibration),
+                                        Color.red))
             if state.unstructuredSceneState.rssStateInformation.continueForwardTrajectorySet:
                 trajectory_sets.append((RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
-                    state.unstructuredSceneState.rssStateInformation.continueForwardTrajectorySet), camera_transform, calibration), (0, 255, 0)))
+                    state.unstructuredSceneState.rssStateInformation.continueForwardTrajectorySet), camera_transform, calibration),
+                                        Color.green))
 
         return trajectory_sets
 
@@ -393,10 +401,8 @@ class RssUnstructuredSceneVisualizer(object):
         """
         """
         cords = np.zeros((len(trajectory_set), 4))
-        i = 0
-        for pt in trajectory_set:
-            cords[i, :] = np.array([pt.x, -pt.y, 0, 1])
-            i += 1
+        for i, pt in enumerate(trajectory_set):
+            cords[i, :] = [pt.x, -pt.y, 0, 1]
         return cords
 
     @staticmethod
@@ -404,10 +410,8 @@ class RssUnstructuredSceneVisualizer(object):
         """
         """
         cords = np.zeros((len(trajectory_set), 4))
-        i = 0
-        for pt in trajectory_set:
-            cords[i, :] = np.array([pt[0], -pt[1], 0, 1])
-            i += 1
+        for i, pt in enumerate(trajectory_set):
+            cords[i, :] = [pt[0], -pt[1], 0, 1]
         return cords
 
     @staticmethod
@@ -448,8 +452,7 @@ class RssBoundingBoxVisualizer(object):
                 return
 
         # only render on new frame
-        if len(self._surface_for_frame) > 0:
-            if self._surface_for_frame[0][0] == frame:
+        if len(self._surface_for_frame) > 0 and self._surface_for_frame[0][0] == frame:
                 return
 
         surface = pygame.Surface(self._dim)
@@ -557,8 +560,8 @@ class RssBoundingBoxVisualizer(object):
         """
 
         world_cord = RssBoundingBoxVisualizer._vehicle_to_world(cords, vehicle)
-        sensor_cord = RssBoundingBoxVisualizer._world_to_sensor(world_cord, camera_transform)
-        return sensor_cord
+        # Sensor coordinates
+        return RssBoundingBoxVisualizer._world_to_sensor(world_cord, camera_transform)
 
     @staticmethod
     def _vehicle_to_world(cords, vehicle):
@@ -570,8 +573,8 @@ class RssBoundingBoxVisualizer(object):
         bb_vehicle_matrix = get_matrix(bb_transform)
         vehicle_world_matrix = get_matrix(vehicle.get_transform())
         bb_world_matrix = np.dot(vehicle_world_matrix, bb_vehicle_matrix)
-        world_cords = np.dot(bb_world_matrix, np.transpose(cords))
-        return world_cords
+        # World coordinates
+        return np.dot(bb_world_matrix, np.transpose(cords))
 
     @staticmethod
     def _world_to_sensor(cords, camera_transform):
@@ -581,8 +584,8 @@ class RssBoundingBoxVisualizer(object):
 
         sensor_world_matrix = get_matrix(camera_transform)
         world_sensor_matrix = np.linalg.inv(sensor_world_matrix)
-        sensor_cords = np.dot(world_sensor_matrix, cords)
-        return sensor_cords
+        # Sensor coordinates
+        return np.dot(world_sensor_matrix, cords)
 
 # ==============================================================================
 # -- RssDebugVisualizer ------------------------------------------------------------
@@ -618,14 +621,14 @@ class RssDebugVisualizer(object):
         print("New Debug Visualizer Mode {}".format(self._visualization_mode))
 
     def tick(self, route, dangerous, individual_rss_states, ego_dynamics_on_route):
-        if self._visualization_mode == RssDebugVisualizationMode.RouteOnly or \
-                self._visualization_mode == RssDebugVisualizationMode.VehicleStateAndRoute or \
-                self._visualization_mode == RssDebugVisualizationMode.All:
+        if self._visualization_mode in {RssDebugVisualizationMode.RouteOnly,
+                                RssDebugVisualizationMode.VehicleStateAndRoute,
+                                RssDebugVisualizationMode.All}:
             self.visualize_route(dangerous, route)
 
-        if self._visualization_mode == RssDebugVisualizationMode.VehicleStateOnly or \
-                self._visualization_mode == RssDebugVisualizationMode.VehicleStateAndRoute or \
-                self._visualization_mode == RssDebugVisualizationMode.All:
+        if self._visualization_mode in {RssDebugVisualizationMode.VehicleStateOnly,
+                                        RssDebugVisualizationMode.VehicleStateAndRoute,
+                                        RssDebugVisualizationMode.All}:
             self.visualize_rss_results(individual_rss_states)
 
         if self._visualization_mode == RssDebugVisualizationMode.All:
@@ -634,8 +637,8 @@ class RssDebugVisualizer(object):
     def visualize_route(self, dangerous, route):
         if not route:
             return
-        right_lane_edges = dict()
-        left_lane_edges = dict()
+        right_lane_edges = {}
+        left_lane_edges = {}
 
         for road_segment in route.roadSegments:
             right_most_lane = road_segment.drivableLaneSegments[0]
