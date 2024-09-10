@@ -29,7 +29,7 @@ class Color:
     red = (255, 0, 0)
     green = (0, 255, 0)
     blue = (0, 0, 255)
-    
+
     carla_gray = carla.Color(150, 150, 150)
     carla_red = carla.Color(255, 0, 0)
     carla_green = carla.Color(0, 255, 0)
@@ -132,35 +132,6 @@ class RssStateVisualizer(object):
     def render(self, display, v_offset):
         if self._surface:
             display.blit(self._surface, (0, v_offset))
-
-
-def get_matrix(transform):
-    """
-    Creates matrix from carla transform.
-    """
-
-    rotation = transform.rotation
-    location = transform.location
-    c_y = np.cos(np.radians(rotation.yaw))
-    s_y = np.sin(np.radians(rotation.yaw))
-    c_r = np.cos(np.radians(rotation.roll))
-    s_r = np.sin(np.radians(rotation.roll))
-    c_p = np.cos(np.radians(rotation.pitch))
-    s_p = np.sin(np.radians(rotation.pitch))
-    matrix = np.identity(4)
-    matrix[0, 3] = location.x
-    matrix[1, 3] = location.y
-    matrix[2, 3] = location.z
-    matrix[0, 0] = c_p * c_y
-    matrix[0, 1] = c_y * s_p * s_r - s_y * c_r
-    matrix[0, 2] = -c_y * s_p * c_r - s_y * s_r
-    matrix[1, 0] = s_y * c_p
-    matrix[1, 1] = s_y * s_p * s_r + c_y * c_r
-    matrix[1, 2] = -s_y * s_p * c_r + c_y * s_r
-    matrix[2, 0] = s_p
-    matrix[2, 1] = -c_p * s_r
-    matrix[2, 2] = c_p * c_r
-    return matrix
 
 # ==============================================================================
 # -- RssUnstructuredSceneVisualizer ------------------------------------------------
@@ -405,7 +376,7 @@ class RssUnstructuredSceneVisualizer(object):
         cords_y_minus_z_x = np.stack([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
         ts = np.transpose(np.dot(calibration, cords_y_minus_z_x))
         camera_ts = np.stack([ts[:, 0] / ts[:, 2], ts[:, 1] / ts[:, 2], ts[:, 2]], axis=1)
-        return [(int(point[0, 0]), int(point[0, 1])) for point in camera_ts]  # line_to_draw
+        return [(int(point[0]), int(point[1])) for point in camera_ts]  # line_to_draw
 
     @staticmethod
     def _get_trajectory_set_points(trajectory_set):
@@ -430,10 +401,9 @@ class RssUnstructuredSceneVisualizer(object):
         """
         Transforms world coordinates to sensor.
         """
-        sensor_world_matrix = get_matrix(camera_transform)
-        world_sensor_matrix = np.linalg.inv(sensor_world_matrix)
-        sensor_cords = np.dot(world_sensor_matrix, cords)
-        return sensor_cords
+        world_sensor_matrix = camera_transform.get_inverse_matrix()
+        # Sensor coordinates
+        return np.dot(world_sensor_matrix, cords)
 
 # ==============================================================================
 # -- RssBoundingBoxVisualizer ------------------------------------------------------
@@ -502,9 +472,8 @@ class RssBoundingBoxVisualizer(object):
                 if other_actor:
                     bounding_boxes.append(RssBoundingBoxVisualizer.get_bounding_box(
                         other_actor, camera_transform, calibration))
-        # filter objects behind camera
-        bounding_boxes = [bb for bb in bounding_boxes if all(bb[:, 2] > 0)]
-        return bounding_boxes
+        # filter objects behind camera and return bounding_boxes
+        return [bb for bb in bounding_boxes if all(bb[:, 2] > 0)]
 
     @staticmethod
     def draw_bounding_boxes(surface, bounding_boxes, color=pygame.Color('red')):
@@ -540,8 +509,8 @@ class RssBoundingBoxVisualizer(object):
         cords_x_y_z = RssBoundingBoxVisualizer._vehicle_to_sensor(bb_cords, vehicle, camera_transform)[:3, :]
         cords_y_minus_z_x = np.stack([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
         bbox = np.transpose(np.dot(calibration, cords_y_minus_z_x))
-        camera_bbox = np.stack([bbox[:, 0] / bbox[:, 2], bbox[:, 1] / bbox[:, 2], bbox[:, 2]], axis=1)
-        return camera_bbox
+        # camera_bbox
+        return np.stack([bbox[:, 0] / bbox[:, 2], bbox[:, 1] / bbox[:, 2], bbox[:, 2]], axis=1)
 
     @staticmethod
     def _create_bb_points(vehicle):
@@ -580,9 +549,8 @@ class RssBoundingBoxVisualizer(object):
         Transforms coordinates of a vehicle bounding box to world.
         """
 
-        bb_transform = carla.Transform(vehicle.bounding_box.location)
-        bb_vehicle_matrix = get_matrix(bb_transform)
-        vehicle_world_matrix = get_matrix(vehicle.get_transform())
+        bb_vehicle_matrix = carla.Transform(vehicle.bounding_box.location).get_matrix()
+        vehicle_world_matrix = vehicle.get_transform().get_matrix()
         bb_world_matrix = np.dot(vehicle_world_matrix, bb_vehicle_matrix)
         # World coordinates
         return np.dot(bb_world_matrix, np.transpose(cords))
@@ -593,8 +561,7 @@ class RssBoundingBoxVisualizer(object):
         Transforms world coordinates to sensor.
         """
 
-        sensor_world_matrix = get_matrix(camera_transform)
-        world_sensor_matrix = np.linalg.inv(sensor_world_matrix)
+        world_sensor_matrix = camera_transform.get_inverse_matrix()
         # Sensor coordinates
         return np.dot(world_sensor_matrix, cords)
 
