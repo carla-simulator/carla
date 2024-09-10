@@ -22,6 +22,18 @@ import weakref
 import carla
 from carla import ad
 
+class Color:
+    black = (0, 0, 0)
+    gray = (128, 128, 128)
+    white = (255, 255, 255)
+    red = (255, 0, 0)
+    green = (0, 255, 0)
+    blue = (0, 0, 255)
+    
+    carla_gray = carla.Color(150, 150, 150)
+    carla_red = carla.Color(255, 0, 0)
+    carla_green = carla.Color(0, 255, 0)
+    carla_blue = carla.Color(0, 0, 255)
 
 class RssStateVisualizer(object):
 
@@ -38,7 +50,7 @@ class RssStateVisualizer(object):
         v_offset = 0
 
         if individual_rss_states:
-            surface = self._font.render('RSS States:', True, (255, 255, 255))
+            surface = self._font.render('RSS States:', True, Color.white)
             state_surface.blit(surface, (8, v_offset))
             v_offset += 26
         for state in individual_rss_states:
@@ -66,14 +78,14 @@ class RssStateVisualizer(object):
                 mode = "-"
             item = '%4s % 2dm %8s' % (mode, state.distance, object_name)
 
-            surface = self._font.render(item, True, (255, 255, 255))
+            surface = self._font.render(item, True, Color.white)
             state_surface.blit(surface, (5, v_offset))
-            color = (128, 128, 128)
+            color = Color.gray
             if state.actor_calculation_mode != ad.rss.map.RssMode.NotRelevant:
                 if state.is_dangerous:
-                    color = (255, 0, 0)
+                    color = Color.red
                 else:
-                    color = (0, 255, 0)
+                    color = Color.green
             pygame.draw.circle(state_surface, color, (12, v_offset + 7), 5)
             xpos = 184
             if state.actor_calculation_mode == ad.rss.map.RssMode.Structured:
@@ -111,7 +123,7 @@ class RssStateVisualizer(object):
                     text = "  C"
                 elif state.rss_state.unstructuredSceneState.response == ad.rss.state.UnstructuredSceneResponse.Brake:
                     text = "  B"
-                surface = self._font.render(text, True, (255, 255, 255))
+                surface = self._font.render(text, True, Color.white)
                 state_surface.blit(surface, (xpos, v_offset))
 
             v_offset += 14
@@ -235,13 +247,13 @@ class RssUnstructuredSceneVisualizer(object):
             surface = self.current_camera_surface[1]
             surface.blit(self._current_rss_surface[1], (0, 0))
             rect = pygame.Rect((0, 0), (2, surface.get_height()))
-            pygame.draw.rect(surface, (0, 0, 0), rect, 0)
+            pygame.draw.rect(surface, Color.black, rect, 0)
             rect = pygame.Rect((0, 0), (surface.get_width(), 2))
-            pygame.draw.rect(surface, (0, 0, 0), rect, 0)
+            pygame.draw.rect(surface, Color.black, rect, 0)
             rect = pygame.Rect((0, surface.get_height() - 2), (surface.get_width(), surface.get_height()))
-            pygame.draw.rect(surface, (0, 0, 0), rect, 0)
+            pygame.draw.rect(surface, Color.black, rect, 0)
             rect = pygame.Rect((surface.get_width() - 2, 0), (surface.get_width(), surface.get_width()))
-            pygame.draw.rect(surface, (0, 0, 0), rect, 0)
+            pygame.draw.rect(surface, Color.black, rect, 0)
             self._surface = surface
 
     def toggle_camera(self):
@@ -650,7 +662,7 @@ class RssDebugVisualizer(object):
                 color = carla.Color(r=(128 if dangerous else 255))
                 if intersection_lane:
                     color.b = 128 if dangerous else 255
-                color = carla.Color(r=255, g=0, b=255)
+
                 self.visualize_enu_edge(edge, color, self._player.get_location().z)
 
             left_most_lane = road_segment.drivableLaneSegments[-1]
@@ -684,18 +696,18 @@ class RssDebugVisualizer(object):
 
             point = other_actor.get_location()
             point.z += 0.05
-            indicator_color = carla.Color(0, 255, 0)
+            indicator_color = Color.carla_green
             dangerous = ad.rss.state.isDangerous(state.rss_state)
             if dangerous:
-                indicator_color = carla.Color(255, 0, 0)
+                indicator_color = Color.carla_red
             elif state.rss_state.situationType == ad.rss.situation.SituationType.NotRelevant:
-                indicator_color = carla.Color(150, 150, 150)
+                indicator_color = Color.carla_gray
 
             if self._visualization_mode == RssDebugVisualizationMode.All:
                 # the connection lines are only visualized if All is requested
-                lon_color = indicator_color
-                lat_l_color = indicator_color
-                lat_r_color = indicator_color
+                lon_color = carla.Color(indicator_color.r, indicator_color.g, indicator_color.b)
+                lat_l_color = carla.Color(indicator_color.r, indicator_color.g, indicator_color.b)
+                lat_r_color = carla.Color(indicator_color.r, indicator_color.g, indicator_color.b)
                 if not state.rss_state.longitudinalState.isSafe:
                     lon_color.r = 255
                     lon_color.g = 0 if dangerous else 255
@@ -714,7 +726,6 @@ class RssDebugVisualizer(object):
             self._world.debug.draw_point(point, 0.2, indicator_color, 0.02, False)
 
     def visualize_ego_dynamics(self, ego_dynamics_on_route):
-        color = carla.Color(0, 0, 255)
 
         sin_heading = math.sin(float(ego_dynamics_on_route.route_heading))
         cos_heading = math.cos(float(ego_dynamics_on_route.route_heading))
@@ -728,7 +739,7 @@ class RssDebugVisualizer(object):
         heading_location_end.y -= sin_heading * 10.
         heading_location_end.z += 0.5
 
-        self._world.debug.draw_arrow(heading_location_start, heading_location_end, 0.1, 0.1, color, 0.02, False)
+        self._world.debug.draw_arrow(heading_location_start, heading_location_end, 0.1, 0.1, Color.carla_blue, 0.02, False)
 
         sin_center = math.sin(float(ego_dynamics_on_route.route_heading) + math.pi / 2.)
         cos_center = math.cos(float(ego_dynamics_on_route.route_heading) + math.pi / 2.)
@@ -741,4 +752,4 @@ class RssDebugVisualizer(object):
         center_location_end.y -= sin_center * 2.
         center_location_end.z += 0.5
 
-        self._world.debug.draw_line(center_location_start, center_location_end, 0.1, color, 0.02, False)
+        self._world.debug.draw_line(center_location_start, center_location_end, 0.1, Color.carla_blue, 0.02, False)
