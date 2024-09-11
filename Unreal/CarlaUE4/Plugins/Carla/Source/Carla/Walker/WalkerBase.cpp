@@ -5,3 +5,9 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "WalkerBase.h"
+
+
+AWalkerBase::AWalkerBase(const FObjectInitializer &ObjectInitializer)
+        : Super(ObjectInitializer)
+{
+}
