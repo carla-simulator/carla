@@ -129,3 +129,10 @@ if (CMAKE_EXPORT_COMPILE_COMMANDS)
     ${CARLA_WORKSPACE_PATH}/.clangd
   )
 endif ()
+
+if (ENABLE_GRAPHVIZ)
+  configure_file (
+    ${CARLA_WORKSPACE_PATH}/Util/CMakeGraphVizOptions.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/CMakeGraphVizOptions.cmake
+  )
+endif ()

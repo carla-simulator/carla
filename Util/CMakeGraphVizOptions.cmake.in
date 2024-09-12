@@ -1,0 +1,6 @@
+set (GRAPHVIZ_UNKNOWN_LIBS OFF)
+set (GRAPHVIZ_CUSTOM_TARGETS ON)
+set (GRAPHVIZ_IGNORE_TARGETS ".*boost.*;.*eigen.*;.*rpc.*;.*png.*;.*zlib.*")
+set (GRAPHVIZ_GENERATE_PER_TARGET OFF)
+set (GRAPHVIZ_GENERATE_DEPENDERS OFF)
+include (CMakeGraphVizOptions)

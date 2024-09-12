@@ -128,6 +128,12 @@ carla_option (
   OFF
 )
 
+carla_option (
+  ENABLE_GRAPHVIZ
+  "Whether to perform additional configure steps to facilitate using GraphViz on CARLA's CMake targets."
+  OFF
+)
+
 carla_string_option (
   LIBCARLA_IMAGE_SUPPORTED_FORMATS
   "Semicolon-separated list of supported image formats by LibCarla. Available formats: png, jpeg, tiff."
@@ -199,17 +205,17 @@ carla_string_option (
 )
 
 if (${BUILD_CARLA_UNREAL})
-if (${CARLA_HAS_UNREAL_ENGINE_PATH})
-  carla_message (
-    "Carla UE project successfully added to build. (UE path: ${CARLA_UNREAL_ENGINE_PATH})"
-  )
-else ()
-  carla_error (
-    "Could not add UE project to build since the carla_option CARLA_UNREAL_ENGINE_PATH "
-    "is not set to a valid path (\"${CARLA_UNREAL_ENGINE_PATH}\")."
-    "Please set it to point to the root path of your CARLA Unreal Engine installation."
-  )
-endif ()
+  if (${CARLA_HAS_UNREAL_ENGINE_PATH})
+    carla_message (
+      "Carla UE project successfully added to build. (UE path: ${CARLA_UNREAL_ENGINE_PATH})"
+    )
+  else ()
+    carla_error (
+      "Could not add the UE project to build since the carla_option CARLA_UNREAL_ENGINE_PATH "
+      "is not set to a valid path (\"${CARLA_UNREAL_ENGINE_PATH}\")."
+      "Please set it to point to the root path of your CARLA Unreal Engine installation."
+    )
+  endif ()
 endif ()
 
 carla_string_option (
@@ -218,10 +224,20 @@ carla_string_option (
   ""
 )
 
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+  set (CARLA_UNREAL_BUILD_TYPE_DEFAULT Debug)
+elseif ("${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
+  set (CARLA_UNREAL_BUILD_TYPE_DEFAULT Development)
+elseif ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+  set (CARLA_UNREAL_BUILD_TYPE_DEFAULT Release)
+else ()
+  set (CARLA_UNREAL_BUILD_TYPE_DEFAULT Development)
+endif ()
+
 carla_string_option (
   CARLA_UNREAL_BUILD_TYPE
   "Carla Unreal-style build type (Debug/Development/Shipping)."
-  "Development"
+  "${CARLA_UNREAL_BUILD_TYPE_DEFAULT}"
 )
 
 
@@ -380,7 +396,6 @@ carla_string_option (
   ${CARLA_LIBOSMSCOUT_VERSION}
 )
 
-
 # ==== STREETMAP ====
 
 carla_string_option (
@@ -393,4 +408,46 @@ carla_string_option (
   CARLA_STREETMAP_TAG
   "Target StreetMap git tag."
   ${CARLA_STREETMAP_VERSION}
+)
+
+# ==== FOONATHAN MEMORY ====
+
+carla_string_option (
+  CARLA_FOONATHAN_MEMORY_VERSION
+  "Target foonathan_memory version."
+  1.3.1
+)
+
+carla_string_option (
+  CARLA_FOONATHAN_MEMORY_TAG
+  "Target foonathan_memory git tag."
+  v${CARLA_FOONATHAN_MEMORY_VERSION}
+)
+
+# ==== FAST-CDR ====
+
+carla_string_option (
+  CARLA_FAST_CDR_VERSION
+  "Target Fast-CDR version."
+  2.2.4
+)
+
+carla_string_option (
+  CARLA_FAST_CDR_TAG
+  "Target Fast-CDR git tag."
+  v${CARLA_FAST_CDR_VERSION}
+)
+
+# ==== FAST-DDS ====
+
+carla_string_option (
+  CARLA_FAST_DDS_VERSION
+  "Target Fast-DDS version."
+  3.0.0
+)
+
+carla_string_option (
+  CARLA_FAST_DDS_TAG
+  "Target Fast-DDS git tag."
+  v${CARLA_FAST_DDS_VERSION}
 )

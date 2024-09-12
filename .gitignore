@@ -4,6 +4,8 @@
 __pycache__/
 
 Build/
+Install/
+GraphViz/
 Doxygen/
 Dist/
 out/
