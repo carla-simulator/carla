@@ -1,3 +1,11 @@
+project (
+  libcarla
+  LANGUAGES
+    CXX
+  VERSION
+    ${CARLA_VERSION}
+)
+
 set (
   LIBCARLA_SOURCE_PATH
   ${CARLA_WORKSPACE_PATH}/LibCarla/source
@@ -14,14 +22,6 @@ carla_two_step_configure_file (
 )
 
 if (BUILD_CARLA_SERVER)
-
-  project (
-    carla-server
-    LANGUAGES
-      CXX
-    VERSION
-      ${CARLA_VERSION}
-  )
 
   file (
     GLOB
@@ -158,14 +158,6 @@ endif ()
 
 
 if (BUILD_CARLA_CLIENT)
-
-  project (
-    carla-client
-    LANGUAGES
-      CXX
-    VERSION
-      ${CARLA_VERSION}
-  )
 
   file (
     GLOB
