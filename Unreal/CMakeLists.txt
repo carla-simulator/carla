@@ -357,10 +357,23 @@ add_dependencies (
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
-function (add_carla_ue_package_target PACKAGE_CONFIGURATION UE_BUILD_CONFIGURATION)
+function (
+  add_carla_ue_package_target
+  PACKAGE_CONFIGURATION
+  UE_BUILD_CONFIGURATION)
+
+  set (
+    CARLA_TARGET_PACKAGE_PATH
+    ${CARLA_PACKAGE_PATH}/${UE_SYSTEM_NAME}
+  )
+
   if (NOT "${PACKAGE_CONFIGURATION}" STREQUAL "")
     set (TARGET_NAME_SUFFIX -${PACKAGE_CONFIGURATION})
+    string (TOLOWER "${TARGET_NAME_SUFFIX}" TARGET_NAME_SUFFIX)
+  else ()
+    set (PACKAGE_CONFIGURATION "default (shipping)")
   endif ()
+
   carla_add_custom_target (
     carla-unreal-package${TARGET_NAME_SUFFIX}
     "Create a CARLA package in ${PACKAGE_CONFIGURATION} mode."
@@ -395,7 +408,6 @@ function (add_carla_ue_package_target PACKAGE_CONFIGURATION UE_BUILD_CONFIGURATI
       VERBATIM
     )
 
-  set (CARLA_TARGET_PACKAGE_PATH ${CARLA_PACKAGE_PATH}/${UE_SYSTEM_NAME})
   add_custom_command (
     TARGET carla-unreal-package${TARGET_NAME_SUFFIX}
     POST_BUILD
