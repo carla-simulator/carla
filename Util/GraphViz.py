@@ -14,6 +14,7 @@ subprocess.run([
     'cmake',
     '--preset',
     f'{SYSTEM_NAME}-{CONFIGURATION}',
+    '-DENABLE_GRAPHVIZ=ON',
     f'--graphviz={OUTPUT_PATH / "CARLA.dot"}',
 ]).check_returncode()
 
