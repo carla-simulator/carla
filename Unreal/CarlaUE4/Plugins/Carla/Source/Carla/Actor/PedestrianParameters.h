@@ -55,4 +55,7 @@ struct CARLA_API FPedestrianParameters
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   int32 Generation = 0;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool bCanUseWheelChair = false;
 };

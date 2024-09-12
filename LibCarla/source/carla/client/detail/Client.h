@@ -29,6 +29,7 @@
 #include "carla/rpc/VehicleLightStateList.h"
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/rpc/VehicleTelemetryData.h"
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/Texture.h"
@@ -285,6 +286,8 @@ namespace detail {
         rpc::ActorId vehicle,
         bool enabled);
 
+    rpc::VehicleTelemetryData GetVehicleTelemetryData(rpc::ActorId vehicle) const;
+
     void ShowVehicleDebugTelemetry(
         rpc::ActorId vehicle,
         bool enabled);
@@ -429,6 +432,8 @@ namespace detail {
     void UnSubscribeFromGBuffer(
         rpc::ActorId ActorId,
         uint32_t GBufferId);
+
+    void Send(rpc::ActorId ActorId, std::string message);
 
     void DrawDebugShape(const rpc::DebugShape &shape);
 

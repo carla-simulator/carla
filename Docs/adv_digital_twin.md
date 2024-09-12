@@ -15,6 +15,8 @@
 
 The __Digital Twin Tool__ enables procedural generation of unique 3D environments based on road networks derived from the [OpenStreetMap](https://www.openstreetmap.org) (OSM) service. Through the Digital Twin Tool interface in CARLA's Unreal Engine editor a user can select a region of map from OSM and download the road network as the basis for a new CARLA map. The tool then fills the spaces between the roads with procedurally generated 3D buildings that adjust to the layout of the road, creating a realistic 3D road environment with high variability.
 
+<iframe width="100%" height="400px" src="https://www.youtube.com/embed/gTutXdS2UkQ?si=hssM3YRCAjSIzdXM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 ## Building the OSM renderer
 
 If you are using Linux, you have the option of using the OSM renderer in the CARLA interface to navigate a large OSM map region that you have downloaded. You first need to build the OSM renderer before proceeding to build CARLA. Run `make osmrenderer` inside the CARLA root directory. You may need to upgrade your version of CMake to v3.2 or above in order for this to work. This will create two folders in your build directory called `libosmcout-source` and `libosmcout-build`. Before proceeding to build CARLA, you need to then edit the `Build.sh` file in the directory `$CARLA_ROOT/Build/libosmcout-source/maps` like so, to ensure the executable is found:

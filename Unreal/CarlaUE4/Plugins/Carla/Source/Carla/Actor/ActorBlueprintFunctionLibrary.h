@@ -14,6 +14,10 @@
 #include "Carla/Sensor/GnssSensor.h"
 #include "Carla/Sensor/Radar.h"
 #include "Carla/Sensor/InertialMeasurementUnit.h"
+#include "Carla/Sensor/V2XSensor.h"
+#include "Carla/Sensor/CustomV2XSensor.h"
+#include "Carla/Sensor/V2XSensor.h"
+#include "Carla/Sensor/CustomV2XSensor.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 
@@ -107,6 +111,20 @@ public:
   static void MakeRadarDefinition(
       bool &Success,
       FActorDefinition &Definition);
+
+  static FActorDefinition MakeV2XDefinition();
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeV2XDefinition(
+      bool &Success,
+      FActorDefinition &Definition);
+
+  static FActorDefinition MakeCustomV2XDefinition();
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeCustomV2XDefinition(
+      bool &Success,
+      FActorDefinition &Definition);            
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeVehicleDefinition(
@@ -226,4 +244,7 @@ public:
   static void SetIMU(const FActorDescription &Description, AInertialMeasurementUnit *IMU);
 
   static void SetRadar(const FActorDescription &Description, ARadar *Radar);
+
+  static void SetV2X(const FActorDescription &Description, AV2XSensor *V2X);
+  static void SetCustomV2X(const FActorDescription &Description, ACustomV2XSensor *V2X);
 };

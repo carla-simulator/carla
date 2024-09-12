@@ -525,6 +525,10 @@ namespace detail {
       _client.SetActorAutopilot(vehicle.GetId(), enabled);
     }
 
+    rpc::VehicleTelemetryData GetVehicleTelemetryData(const Vehicle &vehicle) const {
+      return _client.GetVehicleTelemetryData(vehicle.GetId());
+    }
+
     void ShowVehicleDebugTelemetry(Vehicle &vehicle, bool enabled = true) {
       _client.ShowVehicleDebugTelemetry(vehicle.GetId(), enabled);
     }
@@ -694,6 +698,8 @@ namespace detail {
     void UnSubscribeFromGBuffer(
         Actor & sensor,
         uint32_t gbuffer_id);
+
+    void Send(const Sensor &sensor, std::string message);        
 
     /// @}
     // =========================================================================
