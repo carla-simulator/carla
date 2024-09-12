@@ -82,10 +82,6 @@ if (BUILD_OSM_WORLD_RENDERER)
   add_subdirectory (osm-world-renderer)
 endif ()
 
-if (ENABLE_ROS2)
-  add_subdirectory (Ros2Native)
-endif()
-
 if (BUILD_PYTHON_API)
   add_subdirectory (PythonAPI)
 endif ()

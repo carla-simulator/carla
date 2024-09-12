@@ -249,4 +249,59 @@ if (BUILD_CARLA_UNREAL)
   )
 endif ()
 
+if (ENABLE_ROS2)
+  carla_dependency_option (
+    FOONATHAN_MEMORY_FORCE_VENDORED_BUILD
+    ON
+  )
+
+  carla_git_dependency_add (
+    foonathan_memory
+    ${CARLA_FOONATHAN_MEMORY_TAG}
+    https://github.com/eProsima/foonathan_memory_vendor/archive/refs/tags/${CARLA_FOONATHAN_MEMORY_TAG}.zip
+    https://github.com/eProsima/foonathan_memory_vendor.git
+  )
+
+  include_directories (
+    ${foonathan_memory_SOURCE_DIR}
+    ${foonathan_memory_BINARY_DIR}
+  )
+
+  carla_git_dependency_add (
+    fastcdr
+    ${CARLA_FAST_CDR_TAG}
+    https://github.com/eProsima/Fast-CDR/archive/refs/tags/${CARLA_FAST_CDR_TAG}.zip
+    https://github.com/eProsima/Fast-CDR.git
+  )
+
+  include_directories (
+    ${fastcdr_SOURCE_DIR}
+    ${fastcdr_BINARY_DIR}
+  )
+
+  carla_dependency_option (
+    THIRDPARTY_Asio
+    ON
+  )
+
+  carla_dependency_option (
+    THIRDPARTY_TinyXML2
+    ON
+  )
+
+  carla_dependency_option (
+    COMPILE_TOOLS
+    ON
+  )
+  
+  # We currently git clone fast-dds to handle submodules:
+  carla_git_dependency_add (
+    fastdds
+    ${CARLA_FAST_DDS_TAG}
+    https://github.com/eProsima/Fast-DDS/archive/refs/tags/${CARLA_FAST_DDS_TAG}.zip
+    https://github.com/eProsima/Fast-DDS.git
+  )
+
+endif ()
+
 carla_dependencies_make_available ()
