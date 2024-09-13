@@ -19,7 +19,7 @@ void CarlaRecorderPhysicsControl::Write(std::ostream &OutFile)
   WriteValue<uint32_t>(OutFile, this->DatabaseId);
   WriteValue(OutFile, RPCPhysicsControl.max_torque);
   WriteValue(OutFile, RPCPhysicsControl.max_rpm);
-  WriteValue(OutFile, RPCPhysicsControl.moi);
+  WriteValue(OutFile, RPCPhysicsControl.rev_up_moi);
   WriteValue(OutFile, RPCPhysicsControl.rev_down_rate);
   WriteValue(OutFile, RPCPhysicsControl.differential_type);
   WriteValue(OutFile, RPCPhysicsControl.front_rear_split);
@@ -54,7 +54,7 @@ void CarlaRecorderPhysicsControl::Read(std::istream &InFile)
   ReadValue<uint32_t>(InFile, this->DatabaseId);
   ReadValue(InFile, RPCPhysicsControl.max_torque);
   ReadValue(InFile, RPCPhysicsControl.max_rpm);
-  ReadValue(InFile, RPCPhysicsControl.moi);
+  ReadValue(InFile, RPCPhysicsControl.rev_up_moi);
   ReadValue(InFile, RPCPhysicsControl.rev_down_rate);
   ReadValue(InFile, RPCPhysicsControl.differential_type);
   ReadValue(InFile, RPCPhysicsControl.front_rear_split);

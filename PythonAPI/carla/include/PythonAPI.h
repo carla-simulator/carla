@@ -479,27 +479,38 @@ namespace rpc {
   }
 
   inline std::ostream &operator<<(std::ostream &out, const VehiclePhysicsControl &control) {
-    out << "VehiclePhysicsControl(torque_curve=" << control.torque_curve
-    << ", max_torque=" << std::to_string(control.max_torque)
-    << ", max_rpm=" << std::to_string(control.max_rpm)
-    << ", moi=" << std::to_string(control.moi)
-    << ", rev_down_rate=" << std::to_string(control.rev_down_rate)
-    << ", differential_type=" << std::to_string(control.differential_type)
-    << ", front_rear_split=" << std::to_string(control.front_rear_split)
-    << ", use_gear_autobox=" << boolalpha(control.use_gear_autobox)
-    << ", gear_switch_time=" << std::to_string(control.gear_switch_time)
-    << ", final_ratio=" << std::to_string(control.final_ratio)
-    << ", forward_gears=" << control.forward_gears
-    << ", reverse_gears=" << control.reverse_gears
-    << ", change_up_rpm=" << std::to_string(control.change_up_rpm)
-    << ", change_down_rpm=" << std::to_string(control.change_down_rpm)
-    << ", transmission_efficiency=" << std::to_string(control.transmission_efficiency)
-    << ", mass=" << std::to_string(control.mass)
-    << ", drag_coefficient=" << std::to_string(control.drag_coefficient)
-    << ", center_of_mass=" << control.center_of_mass
-    << ", steering_curve=" << control.steering_curve
-    << ", wheels=" << control.wheels
-    << ", use_sweep_wheel_collision=" << control.use_sweep_wheel_collision << ')';
+    out << "VehiclePhysicsControl("
+      << ", torque_curve=" << control.torque_curve
+      << ", max_torque=" << control.max_torque
+      << ", max_rpm=" << control.max_rpm
+      << ", idle_rpm=" << control.idle_rpm
+      << ", brake_effect=" << control.brake_effect
+      << ", rev_up_moi=" << control.rev_up_moi
+      << ", rev_down_rate=" << control.rev_down_rate
+      << ", differential_type=" << control.differential_type
+      << ", front_rear_split=" << control.front_rear_split
+      << ", use_gear_autobox=" << control.use_gear_autobox
+      << ", gear_switch_time=" << control.gear_switch_time
+      << ", final_ratio=" << control.final_ratio
+      << ", forward_gears=" << control.forward_gears
+      << ", reverse_gears=" << control.reverse_gears
+      << ", change_up_rpm=" << control.change_up_rpm
+      << ", change_down_rpm=" << control.change_down_rpm
+      << ", transmission_efficiency=" << control.transmission_efficiency
+      << ", mass=" << control.mass
+      << ", drag_coefficient=" << control.drag_coefficient
+      << ", center_of_mass=" << control.center_of_mass
+      << ", chassis_width=" << control.chassis_width
+      << ", chassis_height=" << control.chassis_height
+      << ", downforce_coefficient=" << control.downforce_coefficient
+      << ", drag_area=" << control.drag_area
+      << ", inertia_tensor_scale=" << control.inertia_tensor_scale
+      << ", sleep_threshold=" << control.sleep_threshold
+      << ", sleep_slope_limit=" << control.sleep_slope_limit
+      << ", steering_curv=" << control.steering_curve
+      << ", wheels=" << control.wheels
+      << ", use_sweep_wheel_collision=" << control.use_sweep_wheel_collision
+      << ")";
     return out;
   }
 

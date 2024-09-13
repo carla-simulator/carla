@@ -122,7 +122,7 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
     "torque_curve",
     "max_torque",
     "max_rpm",
-    "moi",
+    "rev_up_moi",
     "rev_down_rate",
 
     "differential_type",
@@ -367,7 +367,7 @@ void export_control() {
     .add_property("torque_curve", &GetTorqueCurve, &SetTorqueCurve)
     .def_readwrite("max_torque", &cr::VehiclePhysicsControl::max_torque)
     .def_readwrite("max_rpm", &cr::VehiclePhysicsControl::max_rpm)
-    .def_readwrite("moi", &cr::VehiclePhysicsControl::moi)
+    .def_readwrite("rev_up_moi", &cr::VehiclePhysicsControl::rev_up_moi)
     .def_readwrite("rev_down_rate", &cr::VehiclePhysicsControl::rev_down_rate)
     .def_readwrite("differential_type", &cr::VehiclePhysicsControl::differential_type)
     .def_readwrite("front_rear_split", &cr::VehiclePhysicsControl::front_rear_split)

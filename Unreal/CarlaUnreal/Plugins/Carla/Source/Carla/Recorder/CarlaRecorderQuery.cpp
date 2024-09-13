@@ -514,7 +514,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             Info << "  Id: " << PhysicsControl.DatabaseId << std::endl
                 << "   max_torque = " << Control.max_torque << std::endl
                 << "   max_rpm = " << Control.max_rpm << std::endl
-                << "   MOI = " << Control.moi << std::endl
+                << "   MOI = " << Control.rev_up_moi << std::endl
                 << "   rev_down_rate = " << Control.rev_down_rate << std::endl
                 << "   differential_type = " << Control.differential_type << std::endl
                 << "   front_rear_split = " << Control.front_rear_split << std::endl
