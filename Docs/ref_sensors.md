@@ -736,7 +736,7 @@ The following tags are currently available (Note, tags changed from version 0.9.
 | `14`           | Car            | `(0, 0, 142)`    | Cars, vans        |
 | `15`           | Truck          | `(0, 0, 70)`    | Trucks        |
 | `16`           | Bus            | `(0, 60, 100)`  | Busses        |
-| `17`           | Train          | `(0, 60, 100)`  | Trains        |
+| `17`           | Train          | `(0, 80, 100)`  | Trains        |
 | `18`           | Motorcycle     | `(0, 0, 230)`    | Motorcycle, Motorbike        |
 | `19`           | Bicycle        | `(119, 11, 32)`   | Bicylces      |
 | `20`           | Static         | `(110, 190, 160)`            | Elements in the scene and props that are immovable. <br> E.g. fire hydrants, fixed benches, fountains, bus stops, etc.    |
