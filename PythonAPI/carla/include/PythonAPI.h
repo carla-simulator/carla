@@ -479,8 +479,7 @@ namespace rpc {
   }
 
   inline std::ostream &operator<<(std::ostream &out, const VehiclePhysicsControl &control) {
-    out << "VehiclePhysicsControl("
-      << ", torque_curve=" << control.torque_curve
+    out << "VehiclePhysicsControl(torque_curve=" << control.torque_curve
       << ", max_torque=" << control.max_torque
       << ", max_rpm=" << control.max_rpm
       << ", idle_rpm=" << control.idle_rpm

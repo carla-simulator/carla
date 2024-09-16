@@ -84,13 +84,13 @@ static auto GetReverseGearRatios(const carla::rpc::VehiclePhysicsControl &self) 
   return boost::python::list(iter);
 }
 
-static void SetReverseGearRatios(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
+static void SetReverseGears(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
   std::vector<float> gears;
   auto length = boost::python::len(list);
   for (auto i = 0u; i < length; ++i) {
     gears.push_back(boost::python::extract<float &>(list[i]));
   }
-  self.SetReverseGearRatios(gears);
+  self.SetReverseGears(gears);
 }
 
 static auto GetTorqueCurve(const carla::rpc::VehiclePhysicsControl &self) {
@@ -122,12 +122,12 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
     "torque_curve",
     "max_torque",
     "max_rpm",
+    "idle_rpm",
+    "brake_effect",
     "rev_up_moi",
     "rev_down_rate",
-
     "differential_type",
     "front_rear_split",
-
     "use_automatic_gears",
     "gear_change_time",
     "final_ratio",
@@ -136,14 +136,19 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
     "change_up_rpm",
     "change_down_rpm",
     "transmission_efficiency",
-
     "mass",
     "drag_coefficient",
-
     "center_of_mass",
+    "chassis_width",
+    "chassis_height",
+    "downforce_coefficient",
+    "drag_area",
+    "inertia_tensor_scale",
+    "sleep_threshold",
+    "sleep_slope_limit",
     "steering_curve",
     "wheels",
-    "use_sweep_wheel_collision",
+    "use_sweep_wheel_collision"
   };
 
   boost::python::object self = args[0];
@@ -375,7 +380,7 @@ void export_control() {
     .def_readwrite("gear_change_time", &cr::VehiclePhysicsControl::gear_change_time)
     .def_readwrite("final_ratio", &cr::VehiclePhysicsControl::final_ratio)
     .add_property("forward_gear_ratios", &GetForwardGearRatios, &SetForwardGearRatios)
-    .add_property("reverse_gear_ratios", &GetReverseGearRatios, &SetReverseGearRatios)
+    .add_property("reverse_gear_ratios", &GetReverseGearRatios, &SetReverseGears)
     .def_readwrite("change_up_rpm", &cr::VehiclePhysicsControl::change_up_rpm)
     .def_readwrite("change_down_rpm", &cr::VehiclePhysicsControl::change_down_rpm)
     .def_readwrite("transmission_efficiency", &cr::VehiclePhysicsControl::mass)
