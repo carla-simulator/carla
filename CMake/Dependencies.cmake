@@ -190,7 +190,7 @@ carla_dependency_add (
 
 # ==== RECAST ====
 
-carla_dependency_option (RECASTNAVIGATION_BUILDER OFF)
+carla_dependency_option (RECASTNAVIGATION_BUILDER ON)
 carla_dependency_add (
   recastnavigation
   ${CARLA_RECAST_TAG}
