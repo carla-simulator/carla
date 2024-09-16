@@ -375,13 +375,13 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
 	PhysicsControl.FrontRearSplit = VehicleMovComponent->DifferentialSetup.FrontRearSplit;
 
 	// Transmission Setup
-	PhysicsControl.bUseGearAutoBox = VehicleMovComponent->TransmissionSetup.bUseAutomaticGears;
+	PhysicsControl.bUseAutomaticGears = VehicleMovComponent->TransmissionSetup.bUseAutomaticGears;
 	PhysicsControl.FinalRatio = VehicleMovComponent->TransmissionSetup.FinalRatio;
-	PhysicsControl.ForwardGears = VehicleMovComponent->TransmissionSetup.ForwardGearRatios;
-	PhysicsControl.ReverseGears = VehicleMovComponent->TransmissionSetup.ReverseGearRatios;
+	PhysicsControl.ForwardGearRatios = VehicleMovComponent->TransmissionSetup.ForwardGearRatios;
+	PhysicsControl.ReverseGearRatios = VehicleMovComponent->TransmissionSetup.ReverseGearRatios;
 	PhysicsControl.ChangeUpRPM = VehicleMovComponent->TransmissionSetup.ChangeUpRPM;
 	PhysicsControl.ChangeDownRPM = VehicleMovComponent->TransmissionSetup.ChangeDownRPM;
-	PhysicsControl.GearSwitchTime = VehicleMovComponent->TransmissionSetup.GearChangeTime;
+	PhysicsControl.GearChangeTime = VehicleMovComponent->TransmissionSetup.GearChangeTime;
 	PhysicsControl.TransmissionEfficiency = VehicleMovComponent->TransmissionSetup.TransmissionEfficiency;
 
 	// VehicleMovComponent Setup
@@ -459,13 +459,13 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
 	VehicleMovComponent->DifferentialSetup.FrontRearSplit = PhysicsControl.FrontRearSplit;
 
 	// Transmission Setup
-	VehicleMovComponent->TransmissionSetup.bUseAutomaticGears = PhysicsControl.bUseGearAutoBox;
+	VehicleMovComponent->TransmissionSetup.bUseAutomaticGears = PhysicsControl.bUseAutomaticGears;
 	VehicleMovComponent->TransmissionSetup.FinalRatio = PhysicsControl.FinalRatio;
-	VehicleMovComponent->TransmissionSetup.ForwardGearRatios = PhysicsControl.ForwardGears;
-	VehicleMovComponent->TransmissionSetup.ReverseGearRatios = PhysicsControl.ReverseGears;
+	VehicleMovComponent->TransmissionSetup.ForwardGearRatios = PhysicsControl.ForwardGearRatios;
+	VehicleMovComponent->TransmissionSetup.ReverseGearRatios = PhysicsControl.ReverseGearRatios;
 	VehicleMovComponent->TransmissionSetup.ChangeUpRPM = PhysicsControl.ChangeUpRPM;
 	VehicleMovComponent->TransmissionSetup.ChangeDownRPM = PhysicsControl.ChangeDownRPM;
-	VehicleMovComponent->TransmissionSetup.GearChangeTime = PhysicsControl.GearSwitchTime;
+	VehicleMovComponent->TransmissionSetup.GearChangeTime = PhysicsControl.GearChangeTime;
 	VehicleMovComponent->TransmissionSetup.TransmissionEfficiency = PhysicsControl.TransmissionEfficiency;
 
 	// Vehicle Setup

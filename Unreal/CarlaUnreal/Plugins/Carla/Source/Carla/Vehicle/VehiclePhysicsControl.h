@@ -50,19 +50,19 @@ struct CARLA_API FVehiclePhysicsControl
 
 	// Transmission Setup
 	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-	bool bUseGearAutoBox = true;
+	bool bUseAutomaticGears = true;
 
 	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-	float GearSwitchTime = 0.5f;
+	float GearChangeTime = 0.5f;
 
 	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	float FinalRatio = 4.0f;
 
 	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-	TArray<float> ForwardGears = { 2.85, 2.02, 1.35, 1.0, 2.85, 2.02, 1.35, 1.0 };
+	TArray<float> ForwardGearRatios = { 2.85, 2.02, 1.35, 1.0, 2.85, 2.02, 1.35, 1.0 };
 
 	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
-	TArray<float> ReverseGears = { 2.86, 2.86 };
+	TArray<float> ReverseGearRatios = { 2.86, 2.86 };
 
 	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	float ChangeUpRPM = 4500.0f;
@@ -106,7 +106,7 @@ struct CARLA_API FVehiclePhysicsControl
 	float SleepThreshold = 10.0f;
 
 	UPROPERTY(Category = "Vehicle Sleep Slope Limit", EditAnywhere, BlueprintReadWrite)
-	float SleepSlopeLimit = 0.866f;	// 30บ
+	float SleepSlopeLimit = 0.866f;	// 30ยบ
 
 	/*
 

@@ -518,8 +518,8 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
                 << "   rev_down_rate = " << Control.rev_down_rate << std::endl
                 << "   differential_type = " << Control.differential_type << std::endl
                 << "   front_rear_split = " << Control.front_rear_split << std::endl
-                << "   use_gear_auto_box = " << (Control.use_gear_autobox ? "true" : "false") << std::endl
-                << "   gear_switch_time = " << Control.gear_switch_time << std::endl
+                << "   use_gear_auto_box = " << (Control.use_automatic_gears ? "true" : "false") << std::endl
+                << "   gear_change_time = " << Control.gear_change_time << std::endl
                 << "   final_ratio = " << Control.final_ratio << std::endl
                 << "   change_up_rpm = " << Control.change_up_rpm << std::endl
                 << "   change_down_rpm = " << Control.change_down_rpm << std::endl
@@ -539,16 +539,16 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
               Info << " (" << vec.x << ", " << vec.y << ")";
             }
             Info << std::endl;
-            Info << "   forward_gears:" << std::endl;
+            Info << "   forward_gear_ratios:" << std::endl;
             uint32_t count = 0;
-            for (auto& Gear : Control.forward_gears)
+            for (auto& Gear : Control.forward_gear_ratios)
             {
               Info << "    gear " << count << ": ratio " << Gear << std::endl;
               ++count;
             }
-            Info << "   reverse_gears:" << std::endl;
+            Info << "   reverse_gear_ratios:" << std::endl;
             count = 0;
-            for (auto& Gear : Control.reverse_gears)
+            for (auto& Gear : Control.reverse_gear_ratios)
             {
               Info << "    gear " << count << ": ratio " << Gear << std::endl;
               ++count;

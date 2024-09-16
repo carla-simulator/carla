@@ -80,14 +80,14 @@ struct FVehicleNWTransmissionData
 	GENERATED_USTRUCT_BODY()
 	/** Whether to use automatic transmission */
 	UPROPERTY(EditAnywhere, Category = VehicleSetup, meta = (DisplayName = "Automatic Transmission"))
-	bool bUseGearAutoBox = false;
+	bool bUseAutomaticGears = false;
 
 	/** Time it takes to switch gears (seconds) */
 	UPROPERTY(EditAnywhere, Category = Setup, meta = (ClampMin = "0.0", UIMin = "0.0"))
-	float GearSwitchTime = 0.0F;
+	float GearChangeTime = 0.0F;
 
 	/** Minimum time it takes the automatic transmission to initiate a gear change (seconds)*/
-	UPROPERTY(EditAnywhere, Category = Setup, meta = (editcondition = "bUseGearAutoBox", ClampMin = "0.0", UIMin = "0.0"))
+	UPROPERTY(EditAnywhere, Category = Setup, meta = (editcondition = "bUseAutomaticGears", ClampMin = "0.0", UIMin = "0.0"))
 	float GearAutoBoxLatency = 0.0F;
 
 	/** The final gear ratio multiplies the transmission gear ratios.*/
@@ -96,7 +96,7 @@ struct FVehicleNWTransmissionData
 
 	/** Forward gear ratios (up to 30) */
 	UPROPERTY(EditAnywhere, Category = Setup, AdvancedDisplay)
-	TArray<FVehicleNWGearData> ForwardGears;
+	TArray<FVehicleNWGearData> ForwardGearRatios;
 
 	/** Reverse gear ratio */
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = Setup)

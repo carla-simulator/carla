@@ -489,11 +489,11 @@ namespace rpc {
       << ", rev_down_rate=" << control.rev_down_rate
       << ", differential_type=" << control.differential_type
       << ", front_rear_split=" << control.front_rear_split
-      << ", use_gear_autobox=" << control.use_gear_autobox
-      << ", gear_switch_time=" << control.gear_switch_time
+      << ", use_automatic_gears=" << control.use_automatic_gears
+      << ", gear_change_time=" << control.gear_change_time
       << ", final_ratio=" << control.final_ratio
-      << ", forward_gears=" << control.forward_gears
-      << ", reverse_gears=" << control.reverse_gears
+      << ", forward_gear_ratios=" << control.forward_gear_ratios
+      << ", reverse_gear_ratios=" << control.reverse_gear_ratios
       << ", change_up_rpm=" << control.change_up_rpm
       << ", change_down_rpm=" << control.change_down_rpm
       << ", transmission_efficiency=" << control.transmission_efficiency

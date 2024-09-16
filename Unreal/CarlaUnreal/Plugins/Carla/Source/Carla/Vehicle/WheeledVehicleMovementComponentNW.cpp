@@ -34,14 +34,14 @@ UWheeledVehicleMovementComponentNW::UWheeledVehicleMovementComponentNW(const FOb
 	}
 
 	FVehicleTransmissionConfig TransmissionData;
-	TransmissionSetup.GearSwitchTime = DefGearSetup.mSwitchTime;
+	TransmissionSetup.GearChangeTime = DefGearSetup.mSwitchTime;
 	TransmissionSetup.ReverseGearRatio = DefGearSetup.mRatios[PxVehicleGearsData::eREVERSE];
 	TransmissionSetup.FinalRatio = DefGearSetup.mFinalRatio;
 
 	PxVehicleAutoBoxData DefAutoBoxSetup;
 	TransmissionSetup.NeutralGearUpRatio = DefAutoBoxSetup.mUpRatios[PxVehicleGearsData::eNEUTRAL];
 	TransmissionSetup.GearAutoBoxLatency = DefAutoBoxSetup.getLatency();
-	TransmissionSetup.bUseGearAutoBox = true;
+	TransmissionSetup.bUseAutomaticGears = true;
 
 	for (uint32 i = PxVehicleGearsData::eFIRST; i < DefGearSetup.mNbRatios; ++i)
 	{
@@ -49,7 +49,7 @@ UWheeledVehicleMovementComponentNW::UWheeledVehicleMovementComponentNW(const FOb
 		GearData.DownRatio = DefAutoBoxSetup.mDownRatios[i];
 		GearData.UpRatio = DefAutoBoxSetup.mUpRatios[i];
 		GearData.Ratio = DefGearSetup.mRatios[i];
-		TransmissionSetup.ForwardGears.Add(GearData);
+		TransmissionSetup.ForwardGearRatios.Add(GearData);
 	}
 
 	*/
@@ -78,17 +78,17 @@ void UWheeledVehicleMovementComponentNW::PostEditChangeProperty(struct FProperty
 
 	if (PropertyName == TEXT("DownRatio"))
 	{
-		for (int32 GearIdx = 0; GearIdx < TransmissionSetup.ForwardGears.Num(); ++GearIdx)
+		for (int32 GearIdx = 0; GearIdx < TransmissionSetup.ForwardGearRatios.Num(); ++GearIdx)
 		{
-			FVehicleNWGearData& GearData = TransmissionSetup.ForwardGears[GearIdx];
+			FVehicleNWGearData& GearData = TransmissionSetup.ForwardGearRatios[GearIdx];
 			GearData.DownRatio = FMath::Min(GearData.DownRatio, GearData.UpRatio);
 		}
 	}
 	else if (PropertyName == TEXT("UpRatio"))
 	{
-		for (int32 GearIdx = 0; GearIdx < TransmissionSetup.ForwardGears.Num(); ++GearIdx)
+		for (int32 GearIdx = 0; GearIdx < TransmissionSetup.ForwardGearRatios.Num(); ++GearIdx)
 		{
-			FVehicleNWGearData& GearData = TransmissionSetup.ForwardGears[GearIdx];
+			FVehicleNWGearData& GearData = TransmissionSetup.ForwardGearRatios[GearIdx];
 			GearData.UpRatio = FMath::Max(GearData.DownRatio, GearData.UpRatio);
 		}
 	}

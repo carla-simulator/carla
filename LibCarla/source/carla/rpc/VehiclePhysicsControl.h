@@ -70,11 +70,11 @@ namespace rpc {
         differential_type(in_differential_type),
         front_rear_split(in_front_rear_split),
 
-        use_gear_autobox(in_use_gear_autobox),
-        gear_switch_time(in_gear_switch_time),
+        use_automatic_gears(in_use_gear_autobox),
+        gear_change_time(in_gear_switch_time),
         final_ratio(in_final_ratio),
-        forward_gears(in_forward_gears),
-        reverse_gears(in_reverse_gears),
+        forward_gear_ratios(in_forward_gears),
+        reverse_gear_ratios(in_reverse_gears),
         change_up_rpm(in_change_up_rpm),
         change_down_rpm(in_change_down_rpm),
         transmission_efficiency(in_transmission_efficiency),
@@ -94,20 +94,20 @@ namespace rpc {
         wheels(in_wheels),
         use_sweep_wheel_collision(in_use_sweep_wheel_collision) {}
 
-    const std::vector<float> &GetForwardGears() const {
-      return forward_gears;
+    const std::vector<float> &GetForwardGearRatios() const {
+      return forward_gear_ratios;
     }
 
-    void SetForwardGears(std::vector<float> &in_forward_gears) {
-      forward_gears = in_forward_gears;
+    void SetForwardGearRatios(std::vector<float> &in_forward_gear_ratios) {
+      forward_gear_ratios = in_forward_gear_ratios;
     }
 
-    const std::vector<float> &GetReverseGears() const {
-      return reverse_gears;
+    const std::vector<float> &GetReverseGearRatios() const {
+      return reverse_gear_ratios;
     }
 
-    void SetReverseGears(std::vector<float> &in_reverse_gears) {
-      reverse_gears = in_reverse_gears;
+    void SetReverseGearRatios(std::vector<float> &in_reverse_gear_ratios) {
+      reverse_gear_ratios = in_reverse_gear_ratios;
     }
 
     const std::vector<WheelPhysicsControl> &GetWheels() const {
@@ -158,11 +158,11 @@ namespace rpc {
     uint8_t differential_type = 0;
     float front_rear_split = 0.5f;
 
-    bool use_gear_autobox = true;
-    float gear_switch_time = 0.5f;
+    bool use_automatic_gears = true;
+    float gear_change_time = 0.5f;
     float final_ratio = 4.0f;
-    std::vector<float> forward_gears = { 2.85, 2.02, 1.35, 1.0, 2.85, 2.02, 1.35, 1.0 };
-    std::vector<float> reverse_gears = { 2.86, 2.86 };
+    std::vector<float> forward_gear_ratios = { 2.85, 2.02, 1.35, 1.0, 2.85, 2.02, 1.35, 1.0 };
+    std::vector<float> reverse_gear_ratios = { 2.86, 2.86 };
     float change_up_rpm = 4500.0f;
     float change_down_rpm = 2000.0f;
     float transmission_efficiency = 0.9f;
@@ -197,11 +197,11 @@ namespace rpc {
         rev_down_rate == rhs.rev_down_rate,
         differential_type == rhs.differential_type,
         front_rear_split == rhs.front_rear_split,
-        use_gear_autobox == rhs.use_gear_autobox,
-        gear_switch_time == rhs.gear_switch_time,
+        use_automatic_gears == rhs.use_automatic_gears,
+        gear_change_time == rhs.gear_change_time,
         final_ratio == rhs.final_ratio,
-        forward_gears == rhs.forward_gears,
-        reverse_gears == rhs.reverse_gears,
+        forward_gear_ratios == rhs.forward_gear_ratios,
+        reverse_gear_ratios == rhs.reverse_gear_ratios,
         change_up_rpm == rhs.change_up_rpm,
         change_down_rpm == rhs.change_down_rpm,
         transmission_efficiency == rhs.transmission_efficiency,
@@ -250,21 +250,21 @@ namespace rpc {
       front_rear_split = Control.FrontRearSplit;
 
       // Transmission Setup
-      use_gear_autobox = Control.bUseGearAutoBox;
-      gear_switch_time = Control.GearSwitchTime;
+      use_automatic_gears = Control.bUseAutomaticGears;
+      gear_change_time = Control.GearChangeTime;
       final_ratio = Control.FinalRatio;
       change_up_rpm = Control.ChangeUpRPM;
       change_down_rpm = Control.ChangeDownRPM;
       transmission_efficiency = Control.TransmissionEfficiency;
-      forward_gears = std::vector<float>();
-      forward_gears.reserve(Control.ForwardGears.Num());
-      for (const auto &Gear : Control.ForwardGears) {
-        forward_gears.push_back(Gear);
+      forward_gear_ratios = std::vector<float>();
+      forward_gear_ratios.reserve(Control.ForwardGearRatios.Num());
+      for (const auto &Gear : Control.ForwardGearRatios) {
+        forward_gear_ratios.push_back(Gear);
       }
-      reverse_gears = std::vector<float>();
-      reverse_gears.reserve(Control.ReverseGears.Num());
-      for (const auto &Gear : Control.ReverseGears) {
-        reverse_gears.push_back(Gear);
+      reverse_gear_ratios = std::vector<float>();
+      reverse_gear_ratios.reserve(Control.ReverseGearRatios.Num());
+      for (const auto &Gear : Control.ReverseGearRatios) {
+        reverse_gear_ratios.push_back(Gear);
       }
 
       // Vehicle Setup
@@ -319,24 +319,24 @@ namespace rpc {
       Control.FrontRearSplit = front_rear_split;
       
       // Transmission Setup
-      Control.bUseGearAutoBox = use_gear_autobox;
-      Control.GearSwitchTime = gear_switch_time;
+      Control.bUseAutomaticGears = use_automatic_gears;
+      Control.GearChangeTime = gear_change_time;
       Control.FinalRatio = final_ratio;
       Control.ChangeUpRPM = change_up_rpm;
       Control.ChangeDownRPM = change_down_rpm;
       Control.TransmissionEfficiency = transmission_efficiency;
-      TArray<float> ForwardGears;
-      ForwardGears.Reserve(forward_gears.size());
-      for (const auto &gear : forward_gears) {
-        ForwardGears.Add(gear);
+      TArray<float> ForwardGearRatios;
+      ForwardGearRatios.Reserve(forward_gear_ratios.size());
+      for (const auto &gear : forward_gear_ratios) {
+        ForwardGearRatios.Add(gear);
       }
-      Control.ForwardGears = ForwardGears;
-      TArray<float> ReverseGears;
-      ReverseGears.Reserve(reverse_gears.size());
-      for (const auto &gear : reverse_gears) {
-        ReverseGears.Add(gear);
+      Control.ForwardGearRatios = ForwardGearRatios;
+      TArray<float> ReverseGearRatios;
+      ReverseGearRatios.Reserve(reverse_gear_ratios.size());
+      for (const auto &gear : reverse_gear_ratios) {
+        ReverseGearRatios.Add(gear);
       }
-      Control.ReverseGears = ReverseGears;
+      Control.ReverseGearRatios = ReverseGearRatios;
 
 
       // Vehicle Setup
@@ -366,27 +366,38 @@ namespace rpc {
 
 #endif
 
-    MSGPACK_DEFINE_ARRAY(torque_curve,
+    MSGPACK_DEFINE_ARRAY(
+        torque_curve,
         max_torque,
         max_rpm,
+        idle_rpm,
+        brake_effect,
         rev_up_moi,
         rev_down_rate,
         differential_type,
         front_rear_split,
-        use_gear_autobox,
-        gear_switch_time,
+        use_automatic_gears,
+        gear_change_time,
         final_ratio,
-        forward_gears,
-        reverse_gears,
+        forward_gear_ratios,
+        reverse_gear_ratios,
         change_up_rpm,
         change_down_rpm,
         transmission_efficiency,
         mass,
         drag_coefficient,
         center_of_mass,
+        chassis_width,
+        chassis_height,
+        downforce_coefficient,
+        drag_area,
+        inertia_tensor_scale,
+        sleep_threshold,
+        sleep_slope_limit,
         steering_curve,
         wheels,
-        use_sweep_wheel_collision);
+        use_sweep_wheel_collision
+      );
   };
 
 } // namespace rpc
