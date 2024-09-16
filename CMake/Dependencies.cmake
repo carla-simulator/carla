@@ -40,9 +40,9 @@ endmacro ()
 
 macro (carla_dependency_add NAME TAG ARCHIVE_URL GIT_URL)
   if (PREFER_CLONE)
-    carla_git_dependency_add (${NAME} ${TAG} ${ARCHIVE_URL} ${GIT_URL})
+    carla_git_dependency_add (${NAME} ${TAG} ${ARCHIVE_URL} ${GIT_URL} ${ARGN})
   else ()
-    carla_download_dependency_add (${NAME} ${TAG} ${ARCHIVE_URL} ${GIT_URL})
+    carla_download_dependency_add (${NAME} ${TAG} ${ARCHIVE_URL} ${GIT_URL} ${ARGN})
   endif ()
 endmacro ()
 
@@ -190,7 +190,7 @@ carla_dependency_add (
 
 # ==== RECAST ====
 
-carla_dependency_option (RECASTNAVIGATION_BUILDER OFF)
+carla_dependency_option (RECASTNAVIGATION_BUILDER ON)
 carla_dependency_add (
   recastnavigation
   ${CARLA_RECAST_TAG}
