@@ -370,26 +370,35 @@ void export_control() {
     .def("__init__", raw_function(VehiclePhysicsControl_init))
     .def(init<>())
     .add_property("torque_curve", &GetTorqueCurve, &SetTorqueCurve)
-    .def_readwrite("max_torque", &cr::VehiclePhysicsControl::max_torque)
-    .def_readwrite("max_rpm", &cr::VehiclePhysicsControl::max_rpm)
-    .def_readwrite("rev_up_moi", &cr::VehiclePhysicsControl::rev_up_moi)
-    .def_readwrite("rev_down_rate", &cr::VehiclePhysicsControl::rev_down_rate)
-    .def_readwrite("differential_type", &cr::VehiclePhysicsControl::differential_type)
-    .def_readwrite("front_rear_split", &cr::VehiclePhysicsControl::front_rear_split)
-    .def_readwrite("use_automatic_gears", &cr::VehiclePhysicsControl::use_automatic_gears)
-    .def_readwrite("gear_change_time", &cr::VehiclePhysicsControl::gear_change_time)
-    .def_readwrite("final_ratio", &cr::VehiclePhysicsControl::final_ratio)
+    .def_readwrite("max_torque", &cr::VehiclePhysicsControl::max_torque);
+    .def_readwrite("max_rpm", &cr::VehiclePhysicsControl::max_rpm);
+    .def_readwrite("idle_rpm", &cr::VehiclePhysicsControl::idle_rpm);
+    .def_readwrite("brake_effect", &cr::VehiclePhysicsControl::brake_effect);
+    .def_readwrite("rev_up_moi", &cr::VehiclePhysicsControl::rev_up_moi);
+    .def_readwrite("rev_down_rate", &cr::VehiclePhysicsControl::rev_down_rate);
+    .def_readwrite("differential_type", &cr::VehiclePhysicsControl::differential_type);
+    .def_readwrite("front_rear_split", &cr::VehiclePhysicsControl::front_rear_split);
+    .def_readwrite("use_automatic_gears", &cr::VehiclePhysicsControl::use_automatic_gears);
+    .def_readwrite("gear_change_time", &cr::VehiclePhysicsControl::gear_change_time);
+    .def_readwrite("final_ratio", &cr::VehiclePhysicsControl::final_ratio);
     .add_property("forward_gear_ratios", &GetForwardGearRatios, &SetForwardGearRatios)
     .add_property("reverse_gear_ratios", &GetReverseGearRatios, &SetReverseGears)
-    .def_readwrite("change_up_rpm", &cr::VehiclePhysicsControl::change_up_rpm)
-    .def_readwrite("change_down_rpm", &cr::VehiclePhysicsControl::change_down_rpm)
-    .def_readwrite("transmission_efficiency", &cr::VehiclePhysicsControl::mass)
-    .def_readwrite("mass", &cr::VehiclePhysicsControl::mass)
-    .def_readwrite("drag_coefficient", &cr::VehiclePhysicsControl::drag_coefficient)
-    .def_readwrite("center_of_mass", &cr::VehiclePhysicsControl::center_of_mass)
+    .def_readwrite("change_up_rpm", &cr::VehiclePhysicsControl::change_up_rpm);
+    .def_readwrite("change_down_rpm", &cr::VehiclePhysicsControl::change_down_rpm);
+    .def_readwrite("transmission_efficiency", &cr::VehiclePhysicsControl::transmission_efficiency);
+    .def_readwrite("mass", &cr::VehiclePhysicsControl::mass);
+    .def_readwrite("drag_coefficient", &cr::VehiclePhysicsControl::drag_coefficient);
+    .def_readwrite("center_of_mass", &cr::VehiclePhysicsControl::center_of_mass);
+    .def_readwrite("chassis_width", &cr::VehiclePhysicsControl::chassis_width);
+    .def_readwrite("chassis_height", &cr::VehiclePhysicsControl::chassis_height);
+    .def_readwrite("downforce_coefficient", &cr::VehiclePhysicsControl::downforce_coefficient);
+    .def_readwrite("drag_area", &cr::VehiclePhysicsControl::drag_area);
+    .def_readwrite("inertia_tensor_scale", &cr::VehiclePhysicsControl::inertia_tensor_scale);
+    .def_readwrite("sleep_threshold", &cr::VehiclePhysicsControl::sleep_threshold);
+    .def_readwrite("sleep_slope_limit", &cr::VehiclePhysicsControl::sleep_slope_limit);
     .add_property("steering_curve", &GetSteeringCurve, &SetSteeringCurve)
     .add_property("wheels", &GetWheels, &SetWheels)
-    .def_readwrite("use_sweep_wheel_collision", &cr::VehiclePhysicsControl::use_sweep_wheel_collision)
+    .def_readwrite("use_sweep_wheel_collision", &cr::VehiclePhysicsControl::use_sweep_wheel_collision);
     .def("__eq__", &cr::VehiclePhysicsControl::operator==)
     .def("__ne__", &cr::VehiclePhysicsControl::operator!=)
     .def(self_ns::str(self_ns::self))
