@@ -40,9 +40,9 @@ endmacro ()
 
 macro (carla_dependency_add NAME TAG ARCHIVE_URL GIT_URL)
   if (PREFER_CLONE)
-    carla_git_dependency_add (${NAME} ${TAG} ${ARCHIVE_URL} ${GIT_URL})
+    carla_git_dependency_add (${NAME} ${TAG} ${ARCHIVE_URL} ${GIT_URL} ${ARGN})
   else ()
-    carla_download_dependency_add (${NAME} ${TAG} ${ARCHIVE_URL} ${GIT_URL})
+    carla_download_dependency_add (${NAME} ${TAG} ${ARCHIVE_URL} ${GIT_URL} ${ARGN})
   endif ()
 endmacro ()
 
