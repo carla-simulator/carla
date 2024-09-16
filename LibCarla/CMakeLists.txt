@@ -112,13 +112,28 @@ if (BUILD_CARLA_SERVER)
     ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.hpp
   )
 
+  list (
+    APPEND
+    LIBCARLA_SERVER_HEADERS
+    ${LIBCARLA_SERVER_HEADERS_THIRD_PARTY}
+  )
+
+  list (
+    APPEND
+    LIBCARLA_SERVER_SOURCES
+    ${LIBCARLA_SERVER_SOURCES_THIRD_PARTY}
+  )
+
   carla_add_library (
     carla-server
     "Build the CARLA server."
     ${LIBCARLA_SERVER_HEADERS}
     ${LIBCARLA_SERVER_SOURCES}
-    ${LIBCARLA_SERVER_HEADERS_THIRD_PARTY}
-    ${LIBCARLA_SERVER_SOURCES_THIRD_PARTY}
+  )
+
+  carla_install_common (
+    carla-server
+    ${LIBCARLA_SERVER_HEADERS}
   )
 
   target_link_libraries (
@@ -152,6 +167,10 @@ if (BUILD_CARLA_SERVER)
   if (ENABLE_ROS2)
     add_dependencies (carla-server carla-ros2-native)
   endif ()
+
+  install (
+    
+  )
 
 endif ()
 
@@ -261,13 +280,28 @@ if (BUILD_CARLA_CLIENT)
     ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.cpp
   )
 
+  list (
+    APPEND
+    LIBCARLA_CLIENT_HEADERS
+    ${LIBCARLA_CLIENT_HEADERS_THIRD_PARTY}
+  )
+
+  list (
+    APPEND
+    LIBCARLA_CLIENT_SOURCES
+    ${LIBCARLA_CLIENT_SOURCES_THIRD_PARTY}
+  )
+
   carla_add_library (
     carla-client
     "Build the CARLA client."
     ${LIBCARLA_CLIENT_HEADERS}
     ${LIBCARLA_CLIENT_SOURCES}
-    ${LIBCARLA_CLIENT_HEADERS_THIRD_PARTY}
-    ${LIBCARLA_CLIENT_SOURCES_THIRD_PARTY}
+  )
+
+  carla_install_common (
+    carla-client
+    ${LIBCARLA_CLIENT_HEADERS}
   )
 
   target_link_libraries (

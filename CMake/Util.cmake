@@ -139,6 +139,22 @@ endfunction ()
 
 
 
+function (carla_install_common NAME HEADERS)
+  install (
+    TARGETS
+      ${NAME}
+  )
+  install (
+    FILES
+      ${HEADERS}
+    DESTINATION
+      include/${NAME}
+  )
+endfunction ()
+
+
+
+
 carla_add_target_docs (
   NAME clean
   TYPE Builtin
