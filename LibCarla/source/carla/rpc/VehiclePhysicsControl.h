@@ -249,9 +249,11 @@ namespace carla {
 				gear_change_time = Control.GearChangeTime;
 				final_ratio = Control.FinalRatio;
 				forward_gear_ratios.resize(Control.ForwardGearRatios.Num());
-				std::copy(Control.ForwardGearRatios.begin(), Control.ForwardGearRatios.end(), forward_gear_ratios.begin());
+				for (size_t i = 0; i != forward_gear_ratios.size(); ++i)
+					forward_gear_ratios[i] = Control.ForwardGearRatios[i];
 				reverse_gear_ratios.resize(Control.ReverseGearRatios.Num());
-				std::copy(Control.ReverseGearRatios.begin(), Control.ReverseGearRatios.end(), reverse_gear_ratios.begin());
+				for (size_t i = 0; i != reverse_gear_ratios.size(); ++i)
+					reverse_gear_ratios[i] = Control.ReverseGearRatios[i];
 				change_up_rpm = Control.ChangeUpRPM;
 				change_down_rpm = Control.ChangeDownRPM;
 				transmission_efficiency = Control.TransmissionEfficiency;
@@ -272,7 +274,8 @@ namespace carla {
 				for (auto& Key : Control.SteeringCurve.GetConstRefOfKeys())
 					steering_curve.push_back(geom::Vector2D(Key.Time, Key.Value));
 				wheels.resize(Control.Wheels.Num());
-				std::copy(Control.Wheels.begin(), Control.Wheels.end(), wheels.begin());
+				for (size_t i = 0; i != wheels.size(); ++i)
+					wheels[i] = Control.Wheels[i];
 				use_sweep_wheel_collision = Control.UseSweepWheelCollision;
 			}
 
@@ -292,9 +295,11 @@ namespace carla {
 				Control.GearChangeTime = gear_change_time;
 				Control.FinalRatio = final_ratio;
 				Control.ForwardGearRatios.SetNum(forward_gear_ratios.size());
-				std::copy(forward_gear_ratios.begin(), forward_gear_ratios.end(), Control.ForwardGearRatios.begin());
+				for (size_t i = 0; i != Control.ForwardGearRatios.Num(); ++i)
+					Control.ForwardGearRatios[i] = forward_gear_ratios[i];
 				Control.ReverseGearRatios.SetNum(reverse_gear_ratios.size());
-				std::copy(reverse_gear_ratios.begin(), reverse_gear_ratios.end(), Control.ReverseGearRatios.begin());
+				for (size_t i = 0; i != Control.ReverseGearRatios.Num(); ++i)
+					Control.ReverseGearRatios[i] = reverse_gear_ratios[i];
 				Control.ChangeUpRPM = change_up_rpm;
 				Control.ChangeDownRPM = change_down_rpm;
 				Control.TransmissionEfficiency = transmission_efficiency;
@@ -314,7 +319,8 @@ namespace carla {
 				for (auto [x, y] : steering_curve)
 					Control.SteeringCurve.AddKey(x, y);
 				Control.Wheels.SetNum(wheels.size());
-				std::copy(wheels.begin(), wheels.end(), Control.Wheels.begin());
+				for (size_t i = 0; i != Control.Wheels.Num(); ++i)
+					Control.Wheels[i] = wheels[i];
 				Control.UseSweepWheelCollision = use_sweep_wheel_collision;
 				return Control;
 			}
