@@ -84,48 +84,48 @@ struct CARLA_API FVehiclePhysicsControl
 	FRichCurve SteeringCurve;
 
 	// Center Of Mass
-	UPROPERTY(Category = "Vehicle Center Of Mass", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	FVector CenterOfMass = FVector::ZeroVector;
 
-	UPROPERTY(Category = "Vehicle Chassis Width", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	float ChassisWidth = 180.f;
 
-	UPROPERTY(Category = "Vehicle Chassis Height", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	float ChassisHeight = 140.f;
 
-	UPROPERTY(Category = "Vehicle Downforce Coefficient", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	float DownforceCoefficient = 0.3f;
 
-	UPROPERTY(Category = "Vehicle Drag Area", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	float DragArea = 0.0f;
 
-	UPROPERTY(Category = "Vehicle Inertia Tensor Scale", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	FVector InertiaTensorScale = FVector(1.0f, 1.0f, 1.0f);
 
-	UPROPERTY(Category = "Vehicle Sleep Threshold", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	float SleepThreshold = 10.0f;
 
-	UPROPERTY(Category = "Vehicle Sleep Slope Limit", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	float SleepSlopeLimit = 0.866f;	// 30º
 
 	/*
 
-	UPROPERTY(Category = "Vehicle Aerofoils", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	TArray<FVehicleAerofoilConfig> Aerofoils;
 
-	UPROPERTY(Category = "Vehicle Thrusters", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	TArray<FVehicleThrustConfig> Thrusters;
 
-	UPROPERTY(Category = "Vehicle Torque Control", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	FVehicleTorqueControlConfig TorqueControl;
 
-	UPROPERTY(Category = "Vehicle Target Rotation Control", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	FVehicleTargetRotationControlConfig TargetRotationControl;
 
-	UPROPERTY(Category = "Vehicle Stabilize Control", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	FVehicleStabilizeControlConfig StabilizeControl;
 
-	UPROPERTY(Category = "Vehicle Vehicle Setup Tag", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	uint32 VehicleSetupTag;
 
 	*/
@@ -133,6 +133,6 @@ struct CARLA_API FVehiclePhysicsControl
 	// Wheels Setup
 	TArray<FWheelPhysicsControl> Wheels;
 
-	UPROPERTY(Category = "Vehicle Wheels Configuration", EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Vehicle Engine Physics Control", EditAnywhere, BlueprintReadWrite)
 	bool UseSweepWheelCollision = false;
 };
