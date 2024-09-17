@@ -15,7 +15,8 @@
 
 void CarlaRecorderPhysicsControl::Write(std::ostream &OutFile)
 {
-  carla::rpc::VehiclePhysicsControl RPCPhysicsControl(VehiclePhysicsControl);
+  auto RPCPhysicsControl = carla::rpc::VehiclePhysicsControl::FromFVehiclePhysicsControl(
+      VehiclePhysicsControl);
   WriteValue<uint32_t>(OutFile, this->DatabaseId);
   WriteValue(OutFile, RPCPhysicsControl.max_torque);
   WriteValue(OutFile, RPCPhysicsControl.max_rpm);

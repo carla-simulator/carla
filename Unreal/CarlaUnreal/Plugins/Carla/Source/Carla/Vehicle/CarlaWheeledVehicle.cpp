@@ -359,72 +359,99 @@ void ACarlaWheeledVehicle::SetWheelsFrictionScale(TArray<float>& WheelsFrictionS
 
 FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
 {
-	FVehiclePhysicsControl PhysicsControl;
-	UChaosWheeledVehicleMovementComponent* VehicleMovComponent = GetChaosWheeledVehicleMovementComponent();
-	check(VehicleMovComponent != nullptr);
-
-	// Engine Setup
-	PhysicsControl.TorqueCurve = VehicleMovComponent->EngineSetup.TorqueCurve.EditorCurveData;
-	PhysicsControl.MaxTorque = VehicleMovComponent->EngineSetup.MaxTorque;
-	PhysicsControl.MaxRPM = VehicleMovComponent->EngineSetup.MaxRPM;
-	PhysicsControl.RevUpMOI = VehicleMovComponent->EngineSetup.EngineRevUpMOI;
-	PhysicsControl.RevDownRate = VehicleMovComponent->EngineSetup.EngineRevDownRate;
-
-	// Differential Setup
-	PhysicsControl.DifferentialType = static_cast<uint8>(VehicleMovComponent->DifferentialSetup.DifferentialType);
-	PhysicsControl.FrontRearSplit = VehicleMovComponent->DifferentialSetup.FrontRearSplit;
-
-	// Transmission Setup
-	PhysicsControl.bUseAutomaticGears = VehicleMovComponent->TransmissionSetup.bUseAutomaticGears;
-	PhysicsControl.FinalRatio = VehicleMovComponent->TransmissionSetup.FinalRatio;
-	PhysicsControl.ForwardGearRatios = VehicleMovComponent->TransmissionSetup.ForwardGearRatios;
-	PhysicsControl.ReverseGearRatios = VehicleMovComponent->TransmissionSetup.ReverseGearRatios;
-	PhysicsControl.ChangeUpRPM = VehicleMovComponent->TransmissionSetup.ChangeUpRPM;
-	PhysicsControl.ChangeDownRPM = VehicleMovComponent->TransmissionSetup.ChangeDownRPM;
-	PhysicsControl.GearChangeTime = VehicleMovComponent->TransmissionSetup.GearChangeTime;
-	PhysicsControl.TransmissionEfficiency = VehicleMovComponent->TransmissionSetup.TransmissionEfficiency;
-
-	// VehicleMovComponent Setup
-	PhysicsControl.Mass = VehicleMovComponent->Mass;
-	PhysicsControl.DragCoefficient = VehicleMovComponent->DragCoefficient;
-
-	// Center of mass offset (Center of mass is always zero vector in local
-	// position)
-	UPrimitiveComponent* UpdatedPrimitive = Cast<UPrimitiveComponent>(VehicleMovComponent->UpdatedComponent);
-	check(UpdatedPrimitive != nullptr);
-
-	PhysicsControl.CenterOfMass = UpdatedPrimitive->GetCenterOfMass();
-
-	// Transmission Setup
-	PhysicsControl.SteeringCurve = VehicleMovComponent->SteeringSetup.SteeringCurve.EditorCurveData;
-
+	FVehiclePhysicsControl PhysicsControl = { };
+	auto VehicleMovComponentPtr = GetChaosWheeledVehicleMovementComponent();
+	check(VehicleMovComponentPtr != nullptr);
+	auto& VehicleMovComponent = *VehicleMovComponentPtr;
+	auto& EngineSetup = VehicleMovComponent.EngineSetup;
+	auto RCurve = EngineSetup.TorqueCurve.GetRichCurve();
+	check(RCurve != nullptr);
+	PhysicsControl.TorqueCurve = *RCurve;
+	PhysicsControl.MaxTorque = EngineSetup.MaxTorque;
+	PhysicsControl.MaxRPM = EngineSetup.MaxRPM;
+	PhysicsControl.IdleRPM = EngineSetup.EngineIdleRPM;
+	PhysicsControl.BrakeEffect = EngineSetup.EngineBrakeEffect;
+	PhysicsControl.RevUpMOI = EngineSetup.EngineRevUpMOI;
+	PhysicsControl.RevDownRate = EngineSetup.EngineRevDownRate;
+	auto& DifferentialSetup = VehicleMovComponent.DifferentialSetup;
+	PhysicsControl.DifferentialType = (uint8_t)DifferentialSetup.DifferentialType;
+	PhysicsControl.FrontRearSplit = DifferentialSetup.FrontRearSplit;
+	auto& TransmissionSetup = VehicleMovComponent.TransmissionSetup;
+	PhysicsControl.bUseAutomaticGears = TransmissionSetup.bUseAutomaticGears;
+	PhysicsControl.GearChangeTime = TransmissionSetup.GearChangeTime;
+	PhysicsControl.FinalRatio = TransmissionSetup.FinalRatio;
+	PhysicsControl.ForwardGearRatios = TransmissionSetup.ForwardGearRatios;
+	PhysicsControl.ReverseGearRatios = TransmissionSetup.ReverseGearRatios;
+	PhysicsControl.ChangeUpRPM = TransmissionSetup.ChangeUpRPM;
+	PhysicsControl.ChangeDownRPM = TransmissionSetup.ChangeDownRPM;
+	PhysicsControl.TransmissionEfficiency = TransmissionSetup.TransmissionEfficiency;
+	PhysicsControl.Mass = VehicleMovComponent.Mass;
+	PhysicsControl.DragCoefficient = VehicleMovComponent.DragCoefficient;
+	auto PrimitiveComponentPtr = Cast<UPrimitiveComponent>(VehicleMovComponent.UpdatedComponent);
+	check(PrimitiveComponentPtr != nullptr);
+	PhysicsControl.CenterOfMass = PrimitiveComponentPtr->GetCenterOfMass();
+	PhysicsControl.ChassisWidth = VehicleMovComponent.ChassisWidth;
+	PhysicsControl.ChassisHeight = VehicleMovComponent.ChassisHeight;
+	PhysicsControl.DownforceCoefficient = VehicleMovComponent.DownforceCoefficient;
+	PhysicsControl.DragArea = VehicleMovComponent.DragArea;
+	PhysicsControl.InertiaTensorScale = VehicleMovComponent.InertiaTensorScale;
+	PhysicsControl.SleepThreshold = VehicleMovComponent.SleepThreshold;
+	PhysicsControl.SleepSlopeLimit = VehicleMovComponent.SleepSlopeLimit;
+	RCurve = VehicleMovComponent.SteeringSetup.SteeringCurve.GetRichCurve();
+	check(RCurve != nullptr);
+	PhysicsControl.SteeringCurve = *RCurve;
+	PhysicsControl.UseSweepWheelCollision = false;
 	// Wheels Setup
-	TArray<FWheelPhysicsControl> Wheels;
-
-	for (int32 i = 0; i < VehicleMovComponent->WheelSetups.Num(); ++i)
+	PhysicsControl.Wheels.SetNum(VehicleMovComponent.WheelSetups.Num());
+	for (int32 i = 0; i < PhysicsControl.Wheels.Num(); ++i)
 	{
-		FWheelPhysicsControl PhysicsWheel;
-		PhysicsWheel.Radius = VehicleMovComponent->Wheels[i]->WheelRadius;
-		PhysicsWheel.FrictionForceMultiplier = VehicleMovComponent->Wheels[i]->FrictionForceMultiplier;
-		PhysicsWheel.MaxSteerAngle = VehicleMovComponent->Wheels[i]->MaxSteerAngle;
-		PhysicsWheel.MaxBrakeTorque = VehicleMovComponent->Wheels[i]->MaxBrakeTorque;
-		PhysicsWheel.MaxHandBrakeTorque = VehicleMovComponent->Wheels[i]->MaxHandBrakeTorque;
-		PhysicsWheel.Position = VehicleMovComponent->Wheels[i]->Location;
-		PhysicsWheel.CorneringStiffness = VehicleMovComponent->Wheels[i]->CorneringStiffness;
-		PhysicsWheel.bABSEnabled = VehicleMovComponent->Wheels[i]->bABSEnabled;
-		PhysicsWheel.bTractionControlEnabled = VehicleMovComponent->Wheels[i]->bTractionControlEnabled;
-
-		if (VehicleMovComponent->Wheels[i]->SweepShape == ESweepShape::Spherecast)
-		{
-			// If some of the wheels use Spherecast, it will be used for everyone if we call ApplyPhisicsControl() as it has no sense to have it only for one.
+		auto& In = *VehicleMovComponent.Wheels[i];
+		auto& Out = PhysicsControl.Wheels[i];
+		Out.AxleType = In.AxleType;
+		Out.Offset = In.Offset;
+		Out.WheelRadius = In.WheelRadius;
+		Out.WheelWidth = In.WheelWidth;
+		Out.WheelMass = In.WheelMass;
+		Out.CorneringStiffness = In.CorneringStiffness;
+		Out.FrictionForceMultiplier = In.FrictionForceMultiplier;
+		Out.SideSlipModifier = In.SideSlipModifier;
+		Out.SlipThreshold = In.SlipThreshold;
+		Out.SkidThreshold = In.SkidThreshold;
+		Out.MaxSteerAngle = In.MaxSteerAngle;
+		Out.bAffectedBySteering = In.bAffectedBySteering;
+		Out.bAffectedByBrake = In.bAffectedByBrake;
+		Out.bAffectedByHandbrake = In.bAffectedByHandbrake;
+		Out.bAffectedByEngine = In.bAffectedByEngine;
+		Out.bABSEnabled = In.bABSEnabled;
+		Out.bTractionControlEnabled = In.bTractionControlEnabled;
+		Out.MaxWheelspinRotation = In.MaxWheelspinRotation;
+		Out.ExternalTorqueCombineMethod = In.ExternalTorqueCombineMethod;
+		RCurve = In.LateralSlipGraph.GetRichCurve();
+		check(RCurve != nullptr);
+		Out.LateralSlipGraph = *RCurve;
+		Out.SuspensionAxis = In.SuspensionAxis;
+		Out.SuspensionForceOffset = In.SuspensionForceOffset;
+		Out.SuspensionMaxRaise = In.SuspensionMaxRaise;
+		Out.SuspensionMaxDrop = In.SuspensionMaxDrop;
+		Out.SuspensionDampingRatio = In.SuspensionDampingRatio;
+		Out.WheelLoadRatio = In.WheelLoadRatio;
+		Out.SpringRate = In.SpringRate;
+		Out.SpringPreload = In.SpringPreload;
+		Out.SuspensionSmoothing = In.SuspensionSmoothing;
+		Out.RollbarScaling = In.RollbarScaling;
+		Out.SweepShape = In.SweepShape;
+		Out.SweepType = In.SweepType;
+		Out.MaxBrakeTorque = In.MaxBrakeTorque;
+		Out.MaxHandBrakeTorque = In.MaxHandBrakeTorque;
+		Out.WheelIndex = In.WheelIndex;
+		Out.Location = In.Location;
+		Out.OldLocation = In.OldLocation;
+		Out.Velocity = In.Velocity;
+		// If some of the wheels use Spherecast, it will be used for everyone
+		// if we call ApplyPhisicsControl() as it has no sense to have it only for one.
+		if (In.SweepShape == ESweepShape::Spherecast)
 			PhysicsControl.UseSweepWheelCollision = true;
-		}
-
-		Wheels.Add(PhysicsWheel);
 	}
-
-	PhysicsControl.Wheels = Wheels;
-
 	return PhysicsControl;
 }
 
@@ -442,92 +469,108 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
 	const FVehiclePhysicsControl& PhysicsControl)
 {
 	LastPhysicsControl = PhysicsControl;
-	UChaosWheeledVehicleMovementComponent* VehicleMovComponent = GetChaosWheeledVehicleMovementComponent();
-	check(VehicleMovComponent != nullptr);
-
-	// Engine Setup
-	VehicleMovComponent->EngineSetup.TorqueCurve.EditorCurveData = PhysicsControl.TorqueCurve;
-	VehicleMovComponent->EngineSetup.MaxTorque = PhysicsControl.MaxTorque;
-	VehicleMovComponent->EngineSetup.MaxRPM = PhysicsControl.MaxRPM;
-	VehicleMovComponent->EngineSetup.EngineIdleRPM = PhysicsControl.IdleRPM;
-	VehicleMovComponent->EngineSetup.EngineBrakeEffect = PhysicsControl.BrakeEffect;
-	VehicleMovComponent->EngineSetup.EngineRevUpMOI = PhysicsControl.RevUpMOI;
-	VehicleMovComponent->EngineSetup.EngineRevDownRate = PhysicsControl.RevDownRate;
-
-	// Differential Setup
-	VehicleMovComponent->DifferentialSetup.DifferentialType = static_cast<EVehicleDifferential>(PhysicsControl.DifferentialType);
-	VehicleMovComponent->DifferentialSetup.FrontRearSplit = PhysicsControl.FrontRearSplit;
-
-	// Transmission Setup
-	VehicleMovComponent->TransmissionSetup.bUseAutomaticGears = PhysicsControl.bUseAutomaticGears;
-	VehicleMovComponent->TransmissionSetup.FinalRatio = PhysicsControl.FinalRatio;
-	VehicleMovComponent->TransmissionSetup.ForwardGearRatios = PhysicsControl.ForwardGearRatios;
-	VehicleMovComponent->TransmissionSetup.ReverseGearRatios = PhysicsControl.ReverseGearRatios;
-	VehicleMovComponent->TransmissionSetup.ChangeUpRPM = PhysicsControl.ChangeUpRPM;
-	VehicleMovComponent->TransmissionSetup.ChangeDownRPM = PhysicsControl.ChangeDownRPM;
-	VehicleMovComponent->TransmissionSetup.GearChangeTime = PhysicsControl.GearChangeTime;
-	VehicleMovComponent->TransmissionSetup.TransmissionEfficiency = PhysicsControl.TransmissionEfficiency;
-
-	// Vehicle Setup
-	VehicleMovComponent->Mass = PhysicsControl.Mass;
-	VehicleMovComponent->bEnableCenterOfMassOverride = PhysicsControl.CenterOfMass != FVector::ZeroVector;
-	VehicleMovComponent->CenterOfMassOverride = PhysicsControl.CenterOfMass;
-	VehicleMovComponent->ChassisWidth = PhysicsControl.ChassisWidth;
-	VehicleMovComponent->ChassisHeight = PhysicsControl.ChassisHeight;
-	VehicleMovComponent->DragCoefficient = PhysicsControl.DragCoefficient;
-	VehicleMovComponent->DownforceCoefficient = PhysicsControl.DownforceCoefficient;
-	VehicleMovComponent->DragArea = PhysicsControl.DragArea;
-	VehicleMovComponent->InertiaTensorScale = PhysicsControl.InertiaTensorScale;
-	VehicleMovComponent->SleepThreshold = PhysicsControl.SleepThreshold;
-	VehicleMovComponent->SleepSlopeLimit = PhysicsControl.SleepSlopeLimit;
-	/*
-	VehicleMovComponent->Aerofoils = PhysicsControl.Aerofoils;
-	VehicleMovComponent->Thrusters = PhysicsControl.Thrusters;
-	VehicleMovComponent->TorqueControl = PhysicsControl.TorqueControl;
-	VehicleMovComponent->TargetRotationControl = PhysicsControl.TargetRotationControl;
-	VehicleMovComponent->StabilizeControl = PhysicsControl.StabilizeControl;
-	VehicleMovComponent->VehicleSetupTag = PhysicsControl.VehicleSetupTag;
-	*/
-
-	// Center of mass
-	UPrimitiveComponent* UpdatedPrimitive = Cast<UPrimitiveComponent>(VehicleMovComponent->UpdatedComponent);
-	check(UpdatedPrimitive != nullptr);
-
-	UpdatedPrimitive->BodyInstance.COMNudge = PhysicsControl.CenterOfMass;
-
-	// Transmission Setup
-	VehicleMovComponent->SteeringSetup.SteeringCurve.EditorCurveData = PhysicsControl.SteeringCurve;
+	auto VehicleMovComponentPtr = GetChaosWheeledVehicleMovementComponent();
+	check(VehicleMovComponentPtr != nullptr);
+	auto& VehicleMovComponent = *VehicleMovComponentPtr;
+	auto& EngineSetup = VehicleMovComponent.EngineSetup;
+	EngineSetup.TorqueCurve.EditorCurveData = PhysicsControl.TorqueCurve;
+	EngineSetup.MaxTorque = PhysicsControl.MaxTorque;
+	EngineSetup.MaxRPM = PhysicsControl.MaxRPM;
+	EngineSetup.EngineIdleRPM = PhysicsControl.IdleRPM;
+	EngineSetup.EngineBrakeEffect = PhysicsControl.BrakeEffect;
+	EngineSetup.EngineRevUpMOI = PhysicsControl.RevUpMOI;
+	EngineSetup.EngineRevDownRate = PhysicsControl.RevDownRate;
+	auto& DifferentialSetup = VehicleMovComponent.DifferentialSetup;
+	DifferentialSetup.DifferentialType = (EVehicleDifferential)PhysicsControl.DifferentialType;
+	DifferentialSetup.FrontRearSplit = PhysicsControl.FrontRearSplit;
+	auto& TransmissionSetup = VehicleMovComponent.TransmissionSetup;
+	TransmissionSetup.bUseAutomaticGears = PhysicsControl.bUseAutomaticGears;
+	TransmissionSetup.GearChangeTime = PhysicsControl.GearChangeTime;
+	TransmissionSetup.FinalRatio = PhysicsControl.FinalRatio;
+	TransmissionSetup.ForwardGearRatios = PhysicsControl.ForwardGearRatios;
+	TransmissionSetup.ReverseGearRatios = PhysicsControl.ReverseGearRatios;
+	TransmissionSetup.ChangeUpRPM = PhysicsControl.ChangeUpRPM;
+	TransmissionSetup.ChangeDownRPM = PhysicsControl.ChangeDownRPM;
+	TransmissionSetup.TransmissionEfficiency = PhysicsControl.TransmissionEfficiency;
+	VehicleMovComponent.Mass = PhysicsControl.Mass;
+	VehicleMovComponent.DragCoefficient = PhysicsControl.DragCoefficient;
+	auto PrimitiveComponentPtr = Cast<UPrimitiveComponent>(VehicleMovComponent.UpdatedComponent);
+	check(PrimitiveComponentPtr != nullptr);
+	auto& PrimitiveComponent = *PrimitiveComponentPtr;
+	PrimitiveComponent.SetCenterOfMass(PhysicsControl.CenterOfMass);
+	VehicleMovComponent.ChassisWidth = PhysicsControl.ChassisWidth;
+	VehicleMovComponent.ChassisHeight = PhysicsControl.ChassisHeight;
+	VehicleMovComponent.DownforceCoefficient = PhysicsControl.DownforceCoefficient;
+	VehicleMovComponent.DragArea = PhysicsControl.DragArea;
+	VehicleMovComponent.InertiaTensorScale = PhysicsControl.InertiaTensorScale;
+	VehicleMovComponent.SleepThreshold = PhysicsControl.SleepThreshold;
+	VehicleMovComponent.SleepSlopeLimit = PhysicsControl.SleepSlopeLimit;
+	auto& SteeringSetup = VehicleMovComponent.SteeringSetup;
+	SteeringSetup.SteeringCurve.EditorCurveData = PhysicsControl.SteeringCurve;
 
 	// Wheels Setup
-	const int PhysicsWheelsNum = PhysicsControl.Wheels.Num();
+	auto WheelCount = PhysicsControl.Wheels.Num();
 
-	// TODO:: What about bikes or NW vehicles?
-	if (PhysicsWheelsNum != 4)
+	// @TODO: What about bikes or NW vehicles?
+	if (WheelCount != 4)
 	{
 		UE_LOG(LogCarla, Error, TEXT("Number of WheelPhysicsControl is not 4."));
 		return;
 	}
 
-	// Change, if required, the collision mode for wheels
-	TArray<FChaosWheelSetup> NewWheelSetups = VehicleMovComponent->WheelSetups;
-	for (int32 i = 0; i < PhysicsWheelsNum; ++i)
-	{
-		UChaosVehicleWheel* Wheel = NewWheelSetups[i].WheelClass.GetDefaultObject();
-		check(Wheel != nullptr);
-	}
-	VehicleMovComponent->WheelSetups = NewWheelSetups;
+	for (auto& WheelSetup : VehicleMovComponent.WheelSetups)
+		check(WheelSetup.WheelClass != nullptr);
 
-	for (int32 i = 0; i < PhysicsWheelsNum; ++i)
+	for (int32 i = 0; i < WheelCount; ++i)
 	{
-		VehicleMovComponent->SetWheelRadius(i, PhysicsControl.Wheels[i].Radius);
-		VehicleMovComponent->SetWheelFrictionMultiplier(i, PhysicsControl.Wheels[i].FrictionForceMultiplier);
-		VehicleMovComponent->SetWheelMaxSteerAngle(i, PhysicsControl.Wheels[i].MaxSteerAngle);
-		VehicleMovComponent->SetWheelMaxBrakeTorque(i, PhysicsControl.Wheels[i].MaxBrakeTorque);
-		VehicleMovComponent->SetWheelHandbrakeTorque(i, PhysicsControl.Wheels[i].MaxHandBrakeTorque);
-		VehicleMovComponent->SetABSEnabled(i, PhysicsControl.Wheels[i].bABSEnabled);
-		VehicleMovComponent->SetTractionControlEnabled(i, PhysicsControl.Wheels[i].bTractionControlEnabled);
-		VehicleMovComponent->Wheels[i]->CorneringStiffness = PhysicsControl.Wheels[i].CorneringStiffness;
-		VehicleMovComponent->Wheels[i]->SweepShape = PhysicsControl.UseSweepWheelCollision ? ESweepShape::Spherecast : ESweepShape::Raycast;
+		auto& In = PhysicsControl.Wheels[i];
+		auto OutPtr = VehicleMovComponent.Wheels[i];
+		check(OutPtr != nullptr);
+		auto& Out = *OutPtr;
+
+		Out.AxleType = In.AxleType;
+		Out.Offset = In.Offset;
+		VehicleMovComponent.SetWheelRadius(i, In.WheelRadius);
+		Out.WheelWidth = In.WheelWidth;
+		Out.WheelMass = In.WheelMass;
+		Out.CorneringStiffness = In.CorneringStiffness;
+		VehicleMovComponent.SetWheelFrictionMultiplier(i, In.FrictionForceMultiplier);
+		Out.SideSlipModifier = In.SideSlipModifier;
+		Out.SlipThreshold = In.SlipThreshold;
+		Out.SkidThreshold = In.SkidThreshold;
+		VehicleMovComponent.SetWheelMaxSteerAngle(i, In.MaxSteerAngle);
+		Out.bAffectedBySteering = In.bAffectedBySteering;
+		Out.bAffectedByBrake = In.bAffectedByBrake;
+		Out.bAffectedByHandbrake = In.bAffectedByHandbrake;
+		Out.bAffectedByEngine = In.bAffectedByEngine;
+		VehicleMovComponent.SetABSEnabled(i, In.bABSEnabled);
+		VehicleMovComponent.SetTractionControlEnabled(i, In.bTractionControlEnabled);
+		Out.MaxWheelspinRotation = In.MaxWheelspinRotation;
+		Out.ExternalTorqueCombineMethod = In.ExternalTorqueCombineMethod;
+		Out.LateralSlipGraph.EditorCurveData = In.LateralSlipGraph;
+		Out.SuspensionAxis = In.SuspensionAxis;
+		Out.SuspensionForceOffset = In.SuspensionForceOffset;
+		Out.SuspensionMaxRaise = In.SuspensionMaxRaise;
+		Out.SuspensionMaxDrop = In.SuspensionMaxDrop;
+		Out.SuspensionDampingRatio = In.SuspensionDampingRatio;
+		Out.WheelLoadRatio = In.WheelLoadRatio;
+		Out.SpringRate = In.SpringRate;
+		Out.SpringPreload = In.SpringPreload;
+		Out.SuspensionSmoothing = In.SuspensionSmoothing;
+		Out.RollbarScaling = In.RollbarScaling;
+		Out.SweepShape = In.SweepShape;
+		Out.SweepType = In.SweepType;
+		VehicleMovComponent.SetWheelMaxBrakeTorque(i, In.MaxBrakeTorque);
+		VehicleMovComponent.SetWheelHandbrakeTorque(i, In.MaxHandBrakeTorque);
+		Out.WheelIndex = In.WheelIndex;
+		Out.Location = In.Location;
+		Out.OldLocation = In.OldLocation;
+		Out.Velocity = In.Velocity;
+
+		Out.SweepShape =
+			PhysicsControl.UseSweepWheelCollision ?
+			ESweepShape::Spherecast :
+			ESweepShape::Raycast;
 	}
 
 	ResetConstraints();

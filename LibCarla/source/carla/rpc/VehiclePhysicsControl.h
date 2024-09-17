@@ -19,134 +19,12 @@ namespace carla {
 	namespace rpc {
 		struct VehiclePhysicsControl
 		{
-
-			VehiclePhysicsControl() = default;
-
-			VehiclePhysicsControl(
-				// Engine Setup:
-				const std::vector<carla::geom::Vector2D>& in_torque_curve,
-				float in_max_torque,
-				float in_max_rpm,
-				float in_idle_rpm,
-				float in_brake_effect,
-				float in_rev_up_moi,
-				float in_rev_down_rate,
-
-				uint8_t in_differential_type,
-				float in_front_rear_split,
-
-				bool in_use_gear_automatic_gears,
-				float in_gear_switch_time,
-				float in_final_ratio,
-				std::vector<float>& in_forward_gear_ratios,
-				std::vector<float>& in_reverse_gear_ratios,
-				float in_change_up_rpm,
-				float in_change_down_rpm,
-				float in_transmission_efficiency,
-
-				float in_mass,
-				float in_drag_coefficient,
-				geom::Location in_center_of_mass,
-				float in_chassis_width,
-				float in_chassis_height,
-				float in_downforce_coefficient,
-				float in_drag_area,
-				float in_debug_drag_magnitude,
-				geom::Vector3D in_inertia_tensor_scale,
-				float in_sleep_threshold,
-				float in_sleep_slope_limit,
-
-				const std::vector<carla::geom::Vector2D>& in_steering_curve,
-				std::vector<WheelPhysicsControl>& in_wheels,
-				bool in_use_sweep_wheel_collision) :
-			torque_curve(in_torque_curve),
-				max_torque(in_max_torque),
-				max_rpm(in_max_rpm),
-				idle_rpm(in_idle_rpm),
-				brake_effect(in_brake_effect),
-				rev_up_moi(in_rev_up_moi),
-				rev_down_rate(in_rev_down_rate),
-
-				differential_type(in_differential_type),
-				front_rear_split(in_front_rear_split),
-
-				use_automatic_gears(in_use_gear_automatic_gears),
-				gear_change_time(in_gear_switch_time),
-				final_ratio(in_final_ratio),
-				forward_gear_ratios(in_forward_gear_ratios),
-				reverse_gear_ratios(in_reverse_gear_ratios),
-				change_up_rpm(in_change_up_rpm),
-				change_down_rpm(in_change_down_rpm),
-				transmission_efficiency(in_transmission_efficiency),
-
-				mass(in_mass),
-				drag_coefficient(in_drag_coefficient),
-				center_of_mass(in_center_of_mass),
-				chassis_width(in_chassis_width),
-				chassis_height(in_chassis_height),
-				downforce_coefficient(in_downforce_coefficient),
-				drag_area(in_drag_area),
-				inertia_tensor_scale(in_inertia_tensor_scale),
-				sleep_threshold(in_sleep_threshold),
-				sleep_slope_limit(in_sleep_slope_limit),
-
-				steering_curve(in_steering_curve),
-				wheels(in_wheels),
-				use_sweep_wheel_collision(in_use_sweep_wheel_collision) {}
-
-			const std::vector<float>& GetForwardGearRatios() const {
-				return forward_gear_ratios;
-			}
-
-			void SetForwardGearRatios(std::vector<float>& in_forward_gear_ratios) {
-				forward_gear_ratios = in_forward_gear_ratios;
-			}
-
-			const std::vector<float>& GetReverseGearRatios() const {
-				return reverse_gear_ratios;
-			}
-
-			void SetReverseGearRatios(std::vector<float>& in_reverse_gear_ratios) {
-				reverse_gear_ratios = in_reverse_gear_ratios;
-			}
-
-			const std::vector<WheelPhysicsControl>& GetWheels() const {
-				return wheels;
-			}
-
-			void SetWheels(std::vector<WheelPhysicsControl>& in_wheels) {
-				wheels = in_wheels;
-			}
-
-			const std::vector<geom::Vector2D>& GetTorqueCurve() const {
-				return torque_curve;
-			}
-
-			void SetTorqueCurve(std::vector<geom::Vector2D>& in_torque_curve) {
-				torque_curve = in_torque_curve;
-			}
-
-			const std::vector<geom::Vector2D>& GetSteeringCurve() const {
-				return steering_curve;
-			}
-
-			void SetSteeringCurve(std::vector<geom::Vector2D>& in_steering_curve) {
-				steering_curve = in_steering_curve;
-			}
-
-			void SetUseSweepWheelCollision(bool in_sweep) {
-				use_sweep_wheel_collision = in_sweep;
-			}
-
-			bool GetUseSweepWheelCollision() {
-				return use_sweep_wheel_collision;
-			}
-
 			// Engine Setup:
 			std::vector<geom::Vector2D> torque_curve = {
 			  geom::Vector2D(0.0f, 500.0f),
 			  geom::Vector2D(5000.0f, 500.0f)
 			};
+
 			float max_torque = 300.0f;
 			float max_rpm = 5000.0f;
 			float idle_rpm = 1.0f;
@@ -187,7 +65,7 @@ namespace carla {
 			bool use_sweep_wheel_collision = false;
 
 			inline bool operator==(const VehiclePhysicsControl& rhs) const {
-				const bool cmp_results[] = {
+				const bool cmp[] = {
 				  torque_curve == rhs.torque_curve,
 				  max_torque == rhs.max_torque,
 				  max_rpm == rhs.max_rpm,
@@ -221,8 +99,8 @@ namespace carla {
 				};
 
 				return std::all_of(
-					std::begin(cmp_results),
-					std::end(cmp_results),
+					std::begin(cmp),
+					std::end(cmp),
 					std::identity());
 			}
 
@@ -232,51 +110,53 @@ namespace carla {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
-			VehiclePhysicsControl(const FVehiclePhysicsControl& Control) {
-				new (this) VehiclePhysicsControl();
-				torque_curve.reserve(Control.TorqueCurve.GetNumKeys());
+			static VehiclePhysicsControl FromFVehiclePhysicsControl(
+				const FVehiclePhysicsControl& Control) {
+				VehiclePhysicsControl Out = { };
+				Out.torque_curve.reserve(Control.TorqueCurve.GetNumKeys());
 				for (auto& Key : Control.TorqueCurve.GetConstRefOfKeys())
-					torque_curve.push_back(geom::Vector2D(Key.Time, Key.Value));
-				max_torque = Control.MaxTorque;
-				max_rpm = Control.MaxRPM;
-				idle_rpm = Control.IdleRPM;
-				brake_effect = Control.BrakeEffect;
-				rev_up_moi = Control.RevUpMOI;
-				rev_down_rate = Control.RevDownRate;
-				differential_type = Control.DifferentialType;
-				front_rear_split = Control.FrontRearSplit;
-				use_automatic_gears = Control.bUseAutomaticGears;
-				gear_change_time = Control.GearChangeTime;
-				final_ratio = Control.FinalRatio;
-				forward_gear_ratios.resize(Control.ForwardGearRatios.Num());
-				for (size_t i = 0; i != forward_gear_ratios.size(); ++i)
-					forward_gear_ratios[i] = Control.ForwardGearRatios[i];
-				reverse_gear_ratios.resize(Control.ReverseGearRatios.Num());
-				for (size_t i = 0; i != reverse_gear_ratios.size(); ++i)
-					reverse_gear_ratios[i] = Control.ReverseGearRatios[i];
-				change_up_rpm = Control.ChangeUpRPM;
-				change_down_rpm = Control.ChangeDownRPM;
-				transmission_efficiency = Control.TransmissionEfficiency;
-				mass = Control.Mass;
-				drag_coefficient = Control.DragCoefficient;
-				center_of_mass = Control.CenterOfMass;
-				chassis_width = Control.ChassisWidth;
-				chassis_height = Control.ChassisHeight;
-				downforce_coefficient = Control.DownforceCoefficient;
-				drag_area = Control.DragArea;
-				inertia_tensor_scale = geom::Vector3D(
+					Out.torque_curve.push_back(geom::Vector2D(Key.Time, Key.Value));
+				Out.max_torque = Control.MaxTorque;
+				Out.max_rpm = Control.MaxRPM;
+				Out.idle_rpm = Control.IdleRPM;
+				Out.brake_effect = Control.BrakeEffect;
+				Out.rev_up_moi = Control.RevUpMOI;
+				Out.rev_down_rate = Control.RevDownRate;
+				Out.differential_type = Control.DifferentialType;
+				Out.front_rear_split = Control.FrontRearSplit;
+				Out.use_automatic_gears = Control.bUseAutomaticGears;
+				Out.gear_change_time = Control.GearChangeTime;
+				Out.final_ratio = Control.FinalRatio;
+				Out.forward_gear_ratios.resize(Control.ForwardGearRatios.Num());
+				for (size_t i = 0; i != Out.forward_gear_ratios.size(); ++i)
+					Out.forward_gear_ratios[i] = Control.ForwardGearRatios[i];
+				Out.reverse_gear_ratios.resize(Control.ReverseGearRatios.Num());
+				for (size_t i = 0; i != Out.reverse_gear_ratios.size(); ++i)
+					Out.reverse_gear_ratios[i] = Control.ReverseGearRatios[i];
+				Out.change_up_rpm = Control.ChangeUpRPM;
+				Out.change_down_rpm = Control.ChangeDownRPM;
+				Out.transmission_efficiency = Control.TransmissionEfficiency;
+				Out.mass = Control.Mass;
+				Out.drag_coefficient = Control.DragCoefficient;
+				Out.center_of_mass = Control.CenterOfMass;
+				Out.chassis_width = Control.ChassisWidth;
+				Out.chassis_height = Control.ChassisHeight;
+				Out.downforce_coefficient = Control.DownforceCoefficient;
+				Out.drag_area = Control.DragArea;
+				Out.inertia_tensor_scale = geom::Vector3D(
 					Control.InertiaTensorScale.X,
 					Control.InertiaTensorScale.Y,
 					Control.InertiaTensorScale.Z);
-				sleep_threshold = Control.SleepThreshold;
-				sleep_slope_limit = Control.SleepSlopeLimit;
-				steering_curve.reserve(Control.SteeringCurve.GetNumKeys());
+				Out.sleep_threshold = Control.SleepThreshold;
+				Out.sleep_slope_limit = Control.SleepSlopeLimit;
+				Out.steering_curve.reserve(Control.SteeringCurve.GetNumKeys());
 				for (auto& Key : Control.SteeringCurve.GetConstRefOfKeys())
-					steering_curve.push_back(geom::Vector2D(Key.Time, Key.Value));
-				wheels.resize(Control.Wheels.Num());
-				for (size_t i = 0; i != wheels.size(); ++i)
-					wheels[i] = Control.Wheels[i];
-				use_sweep_wheel_collision = Control.UseSweepWheelCollision;
+					Out.steering_curve.push_back(geom::Vector2D(Key.Time, Key.Value));
+				Out.wheels.resize(Control.Wheels.Num());
+				for (size_t i = 0; i != Out.wheels.size(); ++i)
+					Out.wheels[i] = WheelPhysicsControl::FromFWheelPhysicsControl(Control.Wheels[i]);
+				Out.use_sweep_wheel_collision = Control.UseSweepWheelCollision;
+				return Out;
 			}
 
 			operator FVehiclePhysicsControl() const {
