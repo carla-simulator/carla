@@ -581,7 +581,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
 					Index = 0;
 					for (auto& Wheel : Control.wheels)
 					{
-						Info << "wheel #" << Index << ":\n"
+						Info << "\nwheel #" << Index << ":\n"
 	  						" axle_type: " << axle_type <<
 	  						" offset: " << FormatVectorLike(offset) <<
 	  						" wheel_radius: " << wheel_radius <<
