@@ -19,8 +19,7 @@
 namespace carla {
 namespace geom {
 
-  class Location : public Vector3D {
-  public:
+  struct Location : Vector3D {
 
     // =========================================================================
     // -- Constructors ---------------------------------------------------------

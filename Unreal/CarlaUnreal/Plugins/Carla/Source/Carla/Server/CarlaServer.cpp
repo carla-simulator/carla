@@ -1349,7 +1349,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    return cr::VehiclePhysicsControl(PhysicsControl);
+    return cr::VehiclePhysicsControl::FromFVehiclePhysicsControl(PhysicsControl);
   };
 
   BIND_SYNC(get_vehicle_light_state) << [this](
