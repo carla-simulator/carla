@@ -11,168 +11,168 @@
 USTRUCT(BlueprintType)
 struct CARLA_API FWheelPhysicsControl
 {
-	GENERATED_BODY()
+  GENERATED_BODY()
 
-	/** If left undefined then the bAffectedByEngine value is used, if defined then bAffectedByEngine is ignored and the differential setup on the vehicle defines which wheels get power from the engine */
-	UPROPERTY(EditAnywhere, Category = Wheel)
-	EAxleType AxleType;
+  /** If left undefined then the bAffectedByEngine value is used, if defined then bAffectedByEngine is ignored and the differential setup on the vehicle defines which wheels get power from the engine */
+  UPROPERTY(EditAnywhere, Category = Wheel)
+  EAxleType AxleType;
 
-	/**
-	 * If BoneName is specified, offset the wheel from the bone's location.
-	 * Otherwise this offsets the wheel from the vehicle's origin.
-	 */
-	UPROPERTY(EditAnywhere, Category = Wheel)
-	FVector Offset;
+  /**
+   * If BoneName is specified, offset the wheel from the bone's location.
+   * Otherwise this offsets the wheel from the vehicle's origin.
+   */
+  UPROPERTY(EditAnywhere, Category = Wheel)
+  FVector Offset;
 
-	/** Radius of the wheel */
-	UPROPERTY(EditAnywhere, Category = Wheel, meta = (ClampMin = "0.01", UIMin = "0.01"))
-	float WheelRadius;
+  /** Radius of the wheel */
+  UPROPERTY(EditAnywhere, Category = Wheel, meta = (ClampMin = "0.01", UIMin = "0.01"))
+  float WheelRadius;
 
-	/** Width of the wheel */
-	UPROPERTY(EditAnywhere, Category = Wheel, meta = (ClampMin = "0.01", UIMin = "0.01"))
-	float WheelWidth;
+  /** Width of the wheel */
+  UPROPERTY(EditAnywhere, Category = Wheel, meta = (ClampMin = "0.01", UIMin = "0.01"))
+  float WheelWidth;
 
-	/** Mass of the wheel Kg */
-	UPROPERTY(EditAnywhere, Category = Wheel, meta = (ClampMin = "0.01", UIMin = "0.01"))
-	float WheelMass;
+  /** Mass of the wheel Kg */
+  UPROPERTY(EditAnywhere, Category = Wheel, meta = (ClampMin = "0.01", UIMin = "0.01"))
+  float WheelMass;
 
-	/** Tyre Cornering Ability */
-	UPROPERTY(EditAnywhere, Category = Wheel)
-	float CorneringStiffness;
+  /** Tyre Cornering Ability */
+  UPROPERTY(EditAnywhere, Category = Wheel)
+  float CorneringStiffness;
 
-	/** Friction Force Multiplier */
-	UPROPERTY(EditAnywhere, Category = Wheel)
-	float FrictionForceMultiplier;
+  /** Friction Force Multiplier */
+  UPROPERTY(EditAnywhere, Category = Wheel)
+  float FrictionForceMultiplier;
 
-	/** Wheel Lateral Skid Grip Loss, lower number less grip on skid */
-	UPROPERTY(EditAnywhere, Category = Wheel, meta = (ClampMin = "0.0", UIMin = "0.0", ClampMax = "1.0", UIMax = "1.0"))
-	float SideSlipModifier;
+  /** Wheel Lateral Skid Grip Loss, lower number less grip on skid */
+  UPROPERTY(EditAnywhere, Category = Wheel, meta = (ClampMin = "0.0", UIMin = "0.0", ClampMax = "1.0", UIMax = "1.0"))
+  float SideSlipModifier;
 
-	/** Wheel Longitudinal Slip Threshold */
-	UPROPERTY(EditAnywhere, Category = Wheel, meta = (ClampMin = "0.0", UIMin = "0.0"))
-	float SlipThreshold;
+  /** Wheel Longitudinal Slip Threshold */
+  UPROPERTY(EditAnywhere, Category = Wheel, meta = (ClampMin = "0.0", UIMin = "0.0"))
+  float SlipThreshold;
 
-	/** Wheel Lateral Skid Threshold */
-	UPROPERTY(EditAnywhere, Category = Wheel, meta = (ClampMin = "0.0", UIMin = "0.0"))
-	float SkidThreshold;
+  /** Wheel Lateral Skid Threshold */
+  UPROPERTY(EditAnywhere, Category = Wheel, meta = (ClampMin = "0.0", UIMin = "0.0"))
+  float SkidThreshold;
 
-	// steer angle in degrees for this wheel
-	UPROPERTY(EditAnywhere, Category = WheelsSetup)
-	float MaxSteerAngle;
+  // steer angle in degrees for this wheel
+  UPROPERTY(EditAnywhere, Category = WheelsSetup)
+  float MaxSteerAngle;
 
-	/** Whether steering should affect this wheel */
-	UPROPERTY(EditAnywhere, Category = WheelsSetup)
-	bool bAffectedBySteering;
+  /** Whether steering should affect this wheel */
+  UPROPERTY(EditAnywhere, Category = WheelsSetup)
+  bool bAffectedBySteering;
 
-	/** Whether brake should affect this wheel */
-	UPROPERTY(EditAnywhere, Category = Wheel)
-	bool bAffectedByBrake;
+  /** Whether brake should affect this wheel */
+  UPROPERTY(EditAnywhere, Category = Wheel)
+  bool bAffectedByBrake;
 
-	/** Whether handbrake should affect this wheel */
-	UPROPERTY(EditAnywhere, Category = Wheel)
-	bool bAffectedByHandbrake;
+  /** Whether handbrake should affect this wheel */
+  UPROPERTY(EditAnywhere, Category = Wheel)
+  bool bAffectedByHandbrake;
 
-	/** Whether engine should power this wheel */
-	UPROPERTY(EditAnywhere, Category = Wheel)
-	bool bAffectedByEngine;
+  /** Whether engine should power this wheel */
+  UPROPERTY(EditAnywhere, Category = Wheel)
+  bool bAffectedByEngine;
 
-	/** Advanced Braking System Enabled */
-	UPROPERTY(EditAnywhere, Category = Wheel)
-	bool bABSEnabled;
+  /** Advanced Braking System Enabled */
+  UPROPERTY(EditAnywhere, Category = Wheel)
+  bool bABSEnabled;
 
-	/** Straight Line Traction Control Enabled */
-	UPROPERTY(EditAnywhere, Category = Wheel)
-	bool bTractionControlEnabled;
+  /** Straight Line Traction Control Enabled */
+  UPROPERTY(EditAnywhere, Category = Wheel)
+  bool bTractionControlEnabled;
 
-	/** Max Wheelspin rotation rad/sec */
-	UPROPERTY(EditAnywhere, Category = Wheel)
-	float MaxWheelspinRotation;
+  /** Max Wheelspin rotation rad/sec */
+  UPROPERTY(EditAnywhere, Category = Wheel)
+  float MaxWheelspinRotation;
 
-	/** Determines how the SetDriveTorque/SetBrakeTorque inputs are combined with the internal torques */
-	UPROPERTY(EditAnywhere, Category = Wheel)
-	ETorqueCombineMethod ExternalTorqueCombineMethod;
+  /** Determines how the SetDriveTorque/SetBrakeTorque inputs are combined with the internal torques */
+  UPROPERTY(EditAnywhere, Category = Wheel)
+  ETorqueCombineMethod ExternalTorqueCombineMethod;
 
-	UPROPERTY(EditAnywhere, Category = Setup)
-	FRichCurve LateralSlipGraph;
+  UPROPERTY(EditAnywhere, Category = Setup)
+  FRichCurve LateralSlipGraph;
 
-	/** Local body direction in which where suspension forces are applied (typically along -Z-axis) */
-	UPROPERTY(EditAnywhere, Category = Suspension)
-	FVector SuspensionAxis;
+  /** Local body direction in which where suspension forces are applied (typically along -Z-axis) */
+  UPROPERTY(EditAnywhere, Category = Suspension)
+  FVector SuspensionAxis;
 
-	/** Vertical offset from where suspension forces are applied (along Z-axis) */
-	UPROPERTY(EditAnywhere, Category = Suspension)
-	FVector SuspensionForceOffset;
+  /** Vertical offset from where suspension forces are applied (along Z-axis) */
+  UPROPERTY(EditAnywhere, Category = Suspension)
+  FVector SuspensionForceOffset;
 
-	/** How far the wheel can go above the resting position */
-	UPROPERTY(EditAnywhere, Category = Suspension)
-	float SuspensionMaxRaise;
+  /** How far the wheel can go above the resting position */
+  UPROPERTY(EditAnywhere, Category = Suspension)
+  float SuspensionMaxRaise;
 
-	/** How far the wheel can drop below the resting position */
-	UPROPERTY(EditAnywhere, Category = Suspension)
-	float SuspensionMaxDrop;
+  /** How far the wheel can drop below the resting position */
+  UPROPERTY(EditAnywhere, Category = Suspension)
+  float SuspensionMaxDrop;
 
-	/** Suspension damping, larger value causes the suspension to come to rest faster [range 0 to 1] */
-	UPROPERTY(EditAnywhere, Category = Suspension)
-	float SuspensionDampingRatio;
+  /** Suspension damping, larger value causes the suspension to come to rest faster [range 0 to 1] */
+  UPROPERTY(EditAnywhere, Category = Suspension)
+  float SuspensionDampingRatio;
 
-	/**
-	 *	Amount wheel load effects wheel friction.
-		At 0 wheel friction is completely independent of the loading on the wheel (This is artificial as it always assumes even balance between all wheels)
-		At 1 wheel friction is based on the force pressing wheel into the ground. This is more realistic.
-		Lower value cures lift off over-steer, generally makes vehicle easier to handle under extreme motions.
-	 */
-	UPROPERTY(EditAnywhere, Category = Suspension, meta = (ClampMin = "0.0", UIMin = "0.0", ClampMax = "1.0", UIMax = "1.0"))
-	float WheelLoadRatio;
+  /**
+   *	Amount wheel load effects wheel friction.
+    At 0 wheel friction is completely independent of the loading on the wheel (This is artificial as it always assumes even balance between all wheels)
+    At 1 wheel friction is based on the force pressing wheel into the ground. This is more realistic.
+    Lower value cures lift off over-steer, generally makes vehicle easier to handle under extreme motions.
+   */
+  UPROPERTY(EditAnywhere, Category = Suspension, meta = (ClampMin = "0.0", UIMin = "0.0", ClampMax = "1.0", UIMax = "1.0"))
+  float WheelLoadRatio;
 
-	/** Spring Force (N/m) */
-	UPROPERTY(EditAnywhere, Category = Suspension)
-	float SpringRate;
+  /** Spring Force (N/m) */
+  UPROPERTY(EditAnywhere, Category = Suspension)
+  float SpringRate;
 
-	/** Spring Preload (N/m) */
-	UPROPERTY(EditAnywhere, Category = Suspension)
-	float SpringPreload;
+  /** Spring Preload (N/m) */
+  UPROPERTY(EditAnywhere, Category = Suspension)
+  float SpringPreload;
 
-	/** Smooth suspension [0-off, 10-max] - Warning might cause momentary visual inter-penetration of the wheel against objects/terrain */
-	UPROPERTY(EditAnywhere, Category = Suspension, meta = (ClampMin = "0.0", UIMin = "0", ClampMax = "10.0", UIMax = "10"))
-	int SuspensionSmoothing;
+  /** Smooth suspension [0-off, 10-max] - Warning might cause momentary visual inter-penetration of the wheel against objects/terrain */
+  UPROPERTY(EditAnywhere, Category = Suspension, meta = (ClampMin = "0.0", UIMin = "0", ClampMax = "10.0", UIMax = "10"))
+  int SuspensionSmoothing;
 
-	/** Anti-roll effect */
-	UPROPERTY(EditAnywhere, Category = Suspension, meta = (ClampMin = "0.0", UIMin = "0", ClampMax = "1.0", UIMax = "1"))
-	float RollbarScaling;
+  /** Anti-roll effect */
+  UPROPERTY(EditAnywhere, Category = Suspension, meta = (ClampMin = "0.0", UIMin = "0", ClampMax = "1.0", UIMax = "1"))
+  float RollbarScaling;
 
-	/** Wheel suspension trace type, defaults to ray trace */
-	UPROPERTY(EditAnywhere, Category = Suspension)
-	ESweepShape SweepShape;
+  /** Wheel suspension trace type, defaults to ray trace */
+  UPROPERTY(EditAnywhere, Category = Suspension)
+  ESweepShape SweepShape;
 
-	/** Whether wheel suspension considers simple, complex */
-	UPROPERTY(EditAnywhere, Category = Suspension)
-	ESweepType SweepType;
+  /** Whether wheel suspension considers simple, complex */
+  UPROPERTY(EditAnywhere, Category = Suspension)
+  ESweepType SweepType;
 
-	/** max brake torque for this wheel (Nm) */
-	UPROPERTY(EditAnywhere, Category = Brakes)
-	float MaxBrakeTorque;
+  /** max brake torque for this wheel (Nm) */
+  UPROPERTY(EditAnywhere, Category = Brakes)
+  float MaxBrakeTorque;
 
-	/**
-	 *	Max handbrake brake torque for this wheel (Nm). A handbrake should have a stronger brake torque
-	 *	than the brake. This will be ignored for wheels that are not affected by the handbrake.
-	 */
-	UPROPERTY(EditAnywhere, Category = Brakes)
-	float MaxHandBrakeTorque;
+  /**
+   *	Max handbrake brake torque for this wheel (Nm). A handbrake should have a stronger brake torque
+   *	than the brake. This will be ignored for wheels that are not affected by the handbrake.
+   */
+  UPROPERTY(EditAnywhere, Category = Brakes)
+  float MaxHandBrakeTorque;
 
-	// Our index in the vehicle's (and setup's) wheels array
-	UPROPERTY(transient)
-	int32 WheelIndex;
+  // Our index in the vehicle's (and setup's) wheels array
+  UPROPERTY(transient)
+  int32 WheelIndex;
 
-	// Worldspace location of this wheel
-	UPROPERTY(transient)
-	FVector Location;
+  // Worldspace location of this wheel
+  UPROPERTY(transient)
+  FVector Location;
 
-	// Worldspace location of this wheel last frame
-	UPROPERTY(transient)
-	FVector OldLocation;
+  // Worldspace location of this wheel last frame
+  UPROPERTY(transient)
+  FVector OldLocation;
 
-	// Current velocity of the wheel center (change in location over time)
-	UPROPERTY(Category = "Wheel Position", EditAnywhere, BlueprintReadWrite)
-	FVector Velocity;
+  // Current velocity of the wheel center (change in location over time)
+  UPROPERTY(Category = "Wheel Position", EditAnywhere, BlueprintReadWrite)
+  FVector Velocity;
 
 };
