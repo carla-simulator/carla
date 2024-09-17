@@ -21,6 +21,29 @@
 
 #include <Carla/Vehicle/CarlaWheeledVehicle.h>
 
+template <typename V>
+requires (
+	std::remove_reference_t<V>::Dim <= 3)
+static std::string FormatVectorLike(V&& v)
+{
+	constexpr auto Dim = std::remove_reference_t<V>::Dim;
+	if constexpr (Dim == 1)
+	{
+		const auto& [x] = v;
+		return std::format("({})", x);
+	}
+	else if constexpr (Dim == 2)
+	{
+		const auto& [x, y] = v;
+		return std::format("({}, {})", x, y);
+	}
+	else if constexpr (Dim == 3)
+	{
+		const auto& [x, y, z] = v;
+		return std::format("({}, {}, {})", x, y, z);
+	}
+}
+
 inline bool CarlaRecorderQuery::ReadHeader(void)
 {
 	if (File.eof())
@@ -506,61 +529,100 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
 					bFramePrinted = true;
 				}
 
-				Info << " Physics Control events: " << Total << std::endl;
+				Info << " Physics Control events: " << Total << '\n';
 				for (i = 0; i < Total; ++i)
 				{
 					PhysicsControl.Read(File);
 					auto Control = carla::rpc::VehiclePhysicsControl::FromFVehiclePhysicsControl(
 						PhysicsControl.VehiclePhysicsControl);
-					Info << "  Id: " << PhysicsControl.DatabaseId << std::endl
-						<< "   max_torque = " << Control.max_torque << std::endl
-						<< "   max_rpm = " << Control.max_rpm << std::endl
-						<< "   MOI = " << Control.rev_up_moi << std::endl
-						<< "   rev_down_rate = " << Control.rev_down_rate << std::endl
-						<< "   differential_type = " << Control.differential_type << std::endl
-						<< "   front_rear_split = " << Control.front_rear_split << std::endl
-						<< "   use_gear_auto_box = " << (Control.use_automatic_gears ? "true" : "false") << std::endl
-						<< "   gear_change_time = " << Control.gear_change_time << std::endl
-						<< "   final_ratio = " << Control.final_ratio << std::endl
-						<< "   change_up_rpm = " << Control.change_up_rpm << std::endl
-						<< "   change_down_rpm = " << Control.change_down_rpm << std::endl
-						<< "   transmission_efficiency = " << Control.transmission_efficiency << std::endl
-						<< "   mass = " << Control.mass << std::endl
-						<< "   drag_coefficient = " << Control.drag_coefficient << std::endl
-						<< "   center_of_mass = " << "(" << Control.center_of_mass.x << ", " << Control.center_of_mass.y << ", " << Control.center_of_mass.z << ")" << std::endl;
+					Info << "  Id: " << PhysicsControl.DatabaseId << '\n'
+						<< "   max_torque = " << Control.max_torque << '\n'
+						<< "   max_rpm = " << Control.max_rpm << '\n'
+						<< "   MOI = " << Control.rev_up_moi << '\n'
+						<< "   rev_down_rate = " << Control.rev_down_rate << '\n'
+						<< "   differential_type = " << Control.differential_type << '\n'
+						<< "   front_rear_split = " << Control.front_rear_split << '\n'
+						<< "   use_gear_auto_box = " << (Control.use_automatic_gears ? "true" : "false") << '\n'
+						<< "   gear_change_time = " << Control.gear_change_time << '\n'
+						<< "   final_ratio = " << Control.final_ratio << '\n'
+						<< "   change_up_rpm = " << Control.change_up_rpm << '\n'
+						<< "   change_down_rpm = " << Control.change_down_rpm << '\n'
+						<< "   transmission_efficiency = " << Control.transmission_efficiency << '\n'
+						<< "   mass = " << Control.mass << '\n'
+						<< "   drag_coefficient = " << Control.drag_coefficient << '\n'
+						<< "   center_of_mass = " << "(" << Control.center_of_mass.x << ", " << Control.center_of_mass.y << ", " << Control.center_of_mass.z << ")" << '\n';
 					Info << "   torque_curve =";
 					for (auto& vec : Control.torque_curve)
 					{
 						Info << " (" << vec.x << ", " << vec.y << ")";
 					}
-					Info << std::endl;
+					Info << '\n';
 					Info << "   steering_curve =";
 					for (auto& vec : Control.steering_curve)
 					{
 						Info << " (" << vec.x << ", " << vec.y << ")";
 					}
-					Info << std::endl;
-					Info << "   forward_gear_ratios:" << std::endl;
+					Info << '\n';
+					Info << "   forward_gear_ratios:" << '\n';
 					uint32_t count = 0;
 					for (auto& Gear : Control.forward_gear_ratios)
 					{
-						Info << "    gear " << count << ": ratio " << Gear << std::endl;
+						Info << "    gear " << count << ": ratio " << Gear << '\n';
 						++count;
 					}
-					Info << "   reverse_gear_ratios:" << std::endl;
+					Info << "   reverse_gear_ratios:" << '\n';
 					count = 0;
 					for (auto& Gear : Control.reverse_gear_ratios)
 					{
-						Info << "    gear " << count << ": ratio " << Gear << std::endl;
+						Info << "    gear " << count << ": ratio " << Gear << '\n';
 						++count;
 					}
-					Info << "   wheels:" << std::endl;
-					count = 0;
+					Info << "   wheels:";
+					Index = 0;
 					for (auto& Wheel : Control.wheels)
 					{
-						abort();
-						++count;
+						Info << "wheel #" << Index << ":\n"
+	  						" axle_type: " << axle_type <<
+	  						" offset: " << FormatVectorLike(offset) <<
+	  						" wheel_radius: " << wheel_radius <<
+	  						" wheel_width: " << wheel_width <<
+	  						" wheel_mass: " << wheel_mass <<
+	  						" cornering_stiffness: " << cornering_stiffness <<
+	  						" friction_force_multiplier: " << friction_force_multiplier <<
+	  						" side_slip_modifier: " << side_slip_modifier <<
+	  						" slip_threshold: " << slip_threshold <<
+	  						" skid_threshold: " << skid_threshold <<
+	  						" max_steer_angle: " << max_steer_angle <<
+	  						" affected_by_steering: " << affected_by_steering <<
+	  						" affected_by_brake: " << affected_by_brake <<
+	  						" affected_by_handbrake: " << affected_by_handbrake <<
+	  						" affected_by_engine: " << affected_by_engine <<
+	  						" abs_enabled: " << abs_enabled <<
+	  						" traction_control_enabled: " << traction_control_enabled <<
+	  						" max_wheelspin_rotation: " << max_wheelspin_rotation <<
+	  						" external_torque_combine_method: " << external_torque_combine_method <<
+	  						" lateral_slip_graph: " << lateral_slip_graph <<
+	  						" suspension_axis: " << FormatVectorLike(suspension_axis) <<
+	  						" suspension_force_offset: " << FormatVectorLike(suspension_force_offset) <<
+	  						" suspension_max_raise: " << suspension_max_raise <<
+	  						" suspension_max_drop: " << suspension_max_drop <<
+	  						" suspension_damping_ratio: " << suspension_damping_ratio <<
+	  						" wheel_load_ratio: " << wheel_load_ratio <<
+	  						" spring_rate: " << spring_rate <<
+	  						" spring_preload: " << spring_preload <<
+	  						" suspension_smoothing: " << suspension_smoothing <<
+	  						" rollbar_scaling: " << rollbar_scaling <<
+	  						" sweep_shape: " << sweep_shape <<
+	  						" sweep_type: " << sweep_type <<
+	  						" max_brake_torque: " << max_brake_torque <<
+	  						" max_hand_brake_torque: " << max_hand_brake_torque <<
+	  						" wheel_index: " << wheel_index <<
+	  						" location: " << FormatVectorLike(location) <<
+	  						" old_location: " << FormatVectorLike(old_location) <<
+	  						" velocity: " << FormatVectorLike(velocity);
+						++Index;
 					}
+					Info << std::endl;
 				}
 			}
 			else

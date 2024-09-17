@@ -11,7 +11,7 @@
 namespace carla {
 namespace geom {
 
-  class Location;
+  struct Location;
 
   class GeoLocation {
   public:

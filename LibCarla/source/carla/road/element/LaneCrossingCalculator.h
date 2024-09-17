@@ -11,7 +11,7 @@
 #include <vector>
 
 namespace carla {
-namespace geom { class Location; }
+namespace geom { struct Location; }
 namespace road {
 
   class Map;
