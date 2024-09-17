@@ -248,24 +248,22 @@ class RssSensor(object):
                                         actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.Unstructured
                                         self.change_to_unstructured_position_map[
                                             actor_id] = actor_constellation_data.other_match_object.enuPosition
-                        else:
-                            # ego moves
-                            if actor_distance < 10:
-                                # if the ego moves, the other actor doesn't move an the mode was
-                                # previously set to unstructured, keep it
-                                try:
-                                    if self.change_to_unstructured_position_map[actor_id] == actor_constellation_data.other_match_object.enuPosition:
-                                        heading_delta = abs(float(actor_constellation_data.ego_match_object.enuPosition.heading -
-                                                                  actor_constellation_data.other_match_object.enuPosition.heading))
-                                        if heading_delta > 0.2:
-                                            actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.Unstructured
-                                        else:
-                                            del self.change_to_unstructured_position_map[actor_id]
-                                except (AttributeError, KeyError):
-                                    pass
-                            else:
-                                if actor_id in self.change_to_unstructured_position_map:
-                                    del self.change_to_unstructured_position_map[actor_id]
+                        # ego moves
+                        elif actor_distance < 10:
+                            # if the ego moves, the other actor doesn't move an the mode was
+                            # previously set to unstructured, keep it
+                            try:
+                                if self.change_to_unstructured_position_map[actor_id] == actor_constellation_data.other_match_object.enuPosition:
+                                    heading_delta = abs(float(actor_constellation_data.ego_match_object.enuPosition.heading -
+                                                                actor_constellation_data.other_match_object.enuPosition.heading))
+                                    if heading_delta > 0.2:
+                                        actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.Unstructured
+                                    else:
+                                        del self.change_to_unstructured_position_map[actor_id]
+                            except (AttributeError, KeyError):
+                                pass
+                        elif actor_id in self.change_to_unstructured_position_map:
+                            del self.change_to_unstructured_position_map[actor_id]
 
                     # still in structured?
                     if actor_constellation_result.rss_calculation_mode == ad.rss.map.RssMode.Structured:
