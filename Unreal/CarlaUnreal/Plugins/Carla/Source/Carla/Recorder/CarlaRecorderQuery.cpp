@@ -44,6 +44,18 @@ static std::string FormatVectorLike(V&& v)
   }
 }
 
+template <typename V>
+static std::string FormatCurveLike(V&& v)
+{
+    std::string r;
+    r.reserve(4096);
+    r += "[";
+    for (auto& [x, y] : v)
+        r += std::format("({}, {}),", x, y);
+    r += "]";
+    return r;
+}
+
 inline bool CarlaRecorderQuery::ReadHeader(void)
 {
   if (File.eof())
@@ -578,48 +590,48 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             ++count;
           }
           Info << "   wheels:";
-          Index = 0;
+          size_t Index = 0;
           for (auto& Wheel : Control.wheels)
           {
             Info << "\nwheel #" << Index << ":\n"
-              " axle_type: " << axle_type <<
-              " offset: " << FormatVectorLike(offset) <<
-              " wheel_radius: " << wheel_radius <<
-              " wheel_width: " << wheel_width <<
-              " wheel_mass: " << wheel_mass <<
-              " cornering_stiffness: " << cornering_stiffness <<
-              " friction_force_multiplier: " << friction_force_multiplier <<
-              " side_slip_modifier: " << side_slip_modifier <<
-              " slip_threshold: " << slip_threshold <<
-              " skid_threshold: " << skid_threshold <<
-              " max_steer_angle: " << max_steer_angle <<
-              " affected_by_steering: " << affected_by_steering <<
-              " affected_by_brake: " << affected_by_brake <<
-              " affected_by_handbrake: " << affected_by_handbrake <<
-              " affected_by_engine: " << affected_by_engine <<
-              " abs_enabled: " << abs_enabled <<
-              " traction_control_enabled: " << traction_control_enabled <<
-              " max_wheelspin_rotation: " << max_wheelspin_rotation <<
-              " external_torque_combine_method: " << external_torque_combine_method <<
-              " lateral_slip_graph: " << lateral_slip_graph <<
-              " suspension_axis: " << FormatVectorLike(suspension_axis) <<
-              " suspension_force_offset: " << FormatVectorLike(suspension_force_offset) <<
-              " suspension_max_raise: " << suspension_max_raise <<
-              " suspension_max_drop: " << suspension_max_drop <<
-              " suspension_damping_ratio: " << suspension_damping_ratio <<
-              " wheel_load_ratio: " << wheel_load_ratio <<
-              " spring_rate: " << spring_rate <<
-              " spring_preload: " << spring_preload <<
-              " suspension_smoothing: " << suspension_smoothing <<
-              " rollbar_scaling: " << rollbar_scaling <<
-              " sweep_shape: " << sweep_shape <<
-              " sweep_type: " << sweep_type <<
-              " max_brake_torque: " << max_brake_torque <<
-              " max_hand_brake_torque: " << max_hand_brake_torque <<
-              " wheel_index: " << wheel_index <<
-              " location: " << FormatVectorLike(location) <<
-              " old_location: " << FormatVectorLike(old_location) <<
-              " velocity: " << FormatVectorLike(velocity);
+              " axle_type: " << Wheel.axle_type <<
+              " offset: " << FormatVectorLike(Wheel.offset) <<
+              " wheel_radius: " << Wheel.wheel_radius <<
+              " wheel_width: " << Wheel.wheel_width <<
+              " wheel_mass: " << Wheel.wheel_mass <<
+              " cornering_stiffness: " << Wheel.cornering_stiffness <<
+              " friction_force_multiplier: " << Wheel.friction_force_multiplier <<
+              " side_slip_modifier: " << Wheel.side_slip_modifier <<
+              " slip_threshold: " << Wheel.slip_threshold <<
+              " skid_threshold: " << Wheel.skid_threshold <<
+              " max_steer_angle: " << Wheel.max_steer_angle <<
+              " affected_by_steering: " << Wheel.affected_by_steering <<
+              " affected_by_brake: " << Wheel.affected_by_brake <<
+              " affected_by_handbrake: " << Wheel.affected_by_handbrake <<
+              " affected_by_engine: " << Wheel.affected_by_engine <<
+              " abs_enabled: " << Wheel.abs_enabled <<
+              " traction_control_enabled: " << Wheel.traction_control_enabled <<
+              " max_wheelspin_rotation: " << Wheel.max_wheelspin_rotation <<
+              " external_torque_combine_method: " << Wheel.external_torque_combine_method <<
+              " lateral_slip_graph: " << FormatCurveLike(Wheel.lateral_slip_graph) <<
+              " suspension_axis: " << FormatVectorLike(Wheel.suspension_axis) <<
+              " suspension_force_offset: " << FormatVectorLike(Wheel.suspension_force_offset) <<
+              " suspension_max_raise: " << Wheel.suspension_max_raise <<
+              " suspension_max_drop: " << Wheel.suspension_max_drop <<
+              " suspension_damping_ratio: " << Wheel.suspension_damping_ratio <<
+              " wheel_load_ratio: " << Wheel.wheel_load_ratio <<
+              " spring_rate: " << Wheel.spring_rate <<
+              " spring_preload: " << Wheel.spring_preload <<
+              " suspension_smoothing: " << Wheel.suspension_smoothing <<
+              " rollbar_scaling: " << Wheel.rollbar_scaling <<
+              " sweep_shape: " << Wheel.sweep_shape <<
+              " sweep_type: " << Wheel.sweep_type <<
+              " max_brake_torque: " << Wheel.max_brake_torque <<
+              " max_hand_brake_torque: " << Wheel.max_hand_brake_torque <<
+              " wheel_index: " << Wheel.wheel_index <<
+              " location: " << FormatVectorLike(Wheel.location) <<
+              " old_location: " << FormatVectorLike(Wheel.old_location) <<
+              " velocity: " << FormatVectorLike(Wheel.velocity);
             ++Index;
           }
           Info << std::endl;
