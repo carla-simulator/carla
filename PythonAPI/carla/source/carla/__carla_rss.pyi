@@ -2,7 +2,7 @@
 from typing import Callable
 
 import ad
-from libcarla import (
+from .libcarla import (
     Actor,
     Sensor,
     SensorData,

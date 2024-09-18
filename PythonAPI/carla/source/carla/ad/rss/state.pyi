@@ -1,3 +1,4 @@
+from typing import Self
 from ... import ad
 from ...libcarla import _CarlaEnum
 from . import *
@@ -31,22 +32,27 @@ class AccelerationRestriction():
     @property
     def longitudinalRange(self) -> ad.physics.AccelerationRange: ...
 
-class HeadingRange():
-    def assign(self, arg1: HeadingRange, other: HeadingRange) -> HeadingRange:
-        '''
-
-        assign( (HeadingRange)arg1, (HeadingRange)other) -> HeadingRange :
-
-            C++ signature :
-                ad::rss::state::HeadingRange {lvalue} assign(ad::rss::state::HeadingRange {lvalue},ad::rss::state::HeadingRange)
-        '''
+class HeadingRange(ad._Assignable):
+    
+    def __init__(self, other: HeadingRange | None = None) -> None:
         ...
 
     @property
-    def begin(self) -> ad.physics.Angle: ...
+    def begin(self) -> ad.physics.Angle:
+        ...
+
+    @begin.setter
+    def begin(self, value: ad.physics.Angle | float) -> None:
+        ...
 
     @property
-    def end(self) -> ad.physics.Angle: ...
+    def end(self) -> ad.physics.Angle:
+        ...
+
+    @end.setter
+    def end(self, value: ad.physics.Angle | float) -> None:
+        ...
+
 
 class HeadingRangeVector(ad._Vector[HeadingRange]):
     def append(self, arg1: HeadingRangeVector, arg2: HeadingRange) -> None:

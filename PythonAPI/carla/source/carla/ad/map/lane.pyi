@@ -1,3 +1,4 @@
+from typing import overload
 import ad
 
 from . import *
@@ -837,3 +838,763 @@ class numeric_limits_less__ad_scope_map_scope_lane_scope_LaneId__greater_:
                 ad::map::lane::LaneId max()
         """
         ...
+
+def calcLaneAltitudeRange(lane: Lane) -> LaneAltitudeRange:
+    """
+
+        calcLaneAltitudeRange( (Lane)lane) -> LaneAltitudeRange :
+
+            C++ signature :
+                ad::map::lane::LaneAltitudeRange calcLaneAltitudeRange(ad::map::lane::Lane)
+    """
+
+def calcLength(laneId: LaneId | match.LaneOccupiedRegion | ENUBorder | ECEFBorder | GeoBorder | ENUBorderList | ECEFBorderList | GeoBorderList) -> ad.physics.Distance:
+    """
+
+        calcLength( (LaneId)laneId) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance calcLength(ad::map::lane::LaneId)
+
+        calcLength( (LaneOccupiedRegion)laneOccupiedRegion) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance calcLength(ad::map::match::LaneOccupiedRegion)
+
+        calcLength( (ENUBorder)border) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance calcLength(ad::map::lane::ENUBorder)
+
+        calcLength( (ECEFBorder)border) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance calcLength(ad::map::lane::ECEFBorder)
+
+        calcLength( (GeoBorder)border) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance calcLength(ad::map::lane::GeoBorder)
+
+        calcLength( (ENUBorderList)borderList) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance calcLength(std::vector<ad::map::lane::ENUBorder, std::allocator<ad::map::lane::ENUBorder> >)
+
+        calcLength( (ECEFBorderList)borderList) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance calcLength(std::vector<ad::map::lane::ECEFBorder, std::allocator<ad::map::lane::ECEFBorder> >)
+
+        calcLength( (GeoBorderList)borderList) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance calcLength(std::vector<ad::map::lane::GeoBorder, std::allocator<ad::map::lane::GeoBorder> >)
+    """
+
+def calcWidth(obj: point.ParaPoint | LaneId | ad.physics.ParametricValue | point.ENUPoint | match.LaneOccupiedRegion) -> ad.physics.Distance:
+    """
+
+        calcWidth( (ParaPoint)paraPoint) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance calcWidth(ad::map::point::ParaPoint)
+
+        calcWidth( (LaneId)laneId, (ParametricValue)longOffset) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance calcWidth(ad::map::lane::LaneId,ad::physics::ParametricValue)
+
+        calcWidth( (ENUPoint)enuPoint) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance calcWidth(ad::map::point::ENUPoint)
+
+        calcWidth( (LaneOccupiedRegion)laneOccupiedRegion) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance calcWidth(ad::map::match::LaneOccupiedRegion)
+    """
+
+def findNearestPointOnLane(lane: Lane, pt: point.ECEFPoint, mmpos: match.MapMatchedPosition) -> bool:
+    """
+
+        findNearestPointOnLane( (Lane)lane, (ECEFPoint)pt, (MapMatchedPosition)mmpos) -> bool :
+
+            C++ signature :
+                bool findNearestPointOnLane(ad::map::lane::Lane,ad::map::point::ECEFPoint,ad::map::match::MapMatchedPosition {lvalue})
+    """
+
+def findNearestPointOnLaneInterval(laneInterval: route.LaneInterval, pt: point.ECEFPoint, mmpos: match.MapMatchedPosition) -> bool:
+    """
+
+        findNearestPointOnLaneInterval( (LaneInterval)laneInterval, (ECEFPoint)pt, (MapMatchedPosition)mmpos) -> bool :
+
+            C++ signature :
+                bool findNearestPointOnLaneInterval(ad::map::route::LaneInterval,ad::map::point::ECEFPoint,ad::map::match::MapMatchedPosition {lvalue})
+    """
+
+def fromString(str: str) -> ContactLocation | LaneType | ContactType | LaneDirection:
+    """
+
+        fromString( (str)str) -> ContactLocation :
+
+            C++ signature :
+                ad::map::lane::ContactLocation fromString(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)
+
+        fromString( (str)str) -> LaneType :
+
+            C++ signature :
+                ad::map::lane::LaneType fromString(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)
+
+        fromString( (str)str) -> ContactType :
+
+            C++ signature :
+                ad::map::lane::ContactType fromString(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)
+
+        fromString( (str)str) -> LaneDirection :
+
+            C++ signature :
+                ad::map::lane::LaneDirection fromString(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)
+    """
+
+def getContactLanes(lane: Lane, location: ContactLocation | ContactLocationList) -> ContactLaneList:
+    """
+
+        getContactLanes( (Lane)lane, (ContactLocation)location) -> ContactLaneList :
+
+            C++ signature :
+                std::vector<ad::map::lane::ContactLane, std::allocator<ad::map::lane::ContactLane> > getContactLanes(ad::map::lane::Lane,ad::map::lane::ContactLocation)
+
+        getContactLanes( (Lane)lane, (ContactLocationList)locations) -> ContactLaneList :
+
+            C++ signature :
+                std::vector<ad::map::lane::ContactLane, std::allocator<ad::map::lane::ContactLane> > getContactLanes(ad::map::lane::Lane,std::vector<ad::map::lane::ContactLocation, std::allocator<ad::map::lane::ContactLocation> >)
+    """
+
+def getContactLocation(lane: Lane, to_lane_id: LaneId) -> ContactLocation:
+    """
+
+        getContactLocation( (Lane)lane, (LaneId)to_lane_id) -> ContactLocation :
+
+            C++ signature :
+                ad::map::lane::ContactLocation getContactLocation(ad::map::lane::Lane,ad::map::lane::LaneId)
+    """
+
+def getDirectNeighborhoodRelation(laneId: LaneId, checkLaneId: LaneId) -> ContactLocation:
+    """
+
+        getDirectNeighborhoodRelation( (LaneId)laneId, (LaneId)checkLaneId) -> ContactLocation :
+
+            C++ signature :
+                ad::map::lane::ContactLocation getDirectNeighborhoodRelation(ad::map::lane::LaneId,ad::map::lane::LaneId)
+    """
+
+def getDistanceEnuPointToLateralAlignmentEdge(enuPoint: point.ENUPoint, lateralAlignmentEdge: point.ENUEdge) -> ad.physics.Distance:
+    """
+
+        getDistanceEnuPointToLateralAlignmentEdge( (ENUPoint)enuPoint, (ENUEdge)lateralAlignmentEdge) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance getDistanceEnuPointToLateralAlignmentEdge(ad::map::point::ENUPoint,std::vector<ad::map::point::ENUPoint, std::allocator<ad::map::point::ENUPoint> >)
+    """
+
+def getDistanceToLane(laneId: LaneId, object: rss.world.Object) -> ad.physics.Distance:
+    """
+
+        getDistanceToLane( (LaneId)laneId, (Object)object) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance getDistanceToLane(ad::map::lane::LaneId,ad::map::match::Object)
+    """
+
+def getDuration(lane: Lane, range: ad.physics.ParametricRange) -> ad.physics.Duration:
+    """
+
+        getDuration( (Lane)lane, (ParametricRange)range) -> Duration :
+
+            C++ signature :
+                ad::physics::Duration getDuration(ad::map::lane::Lane,ad::physics::ParametricRange)
+    """
+
+def getENUHeading(borderList: ENUBorderList, enuPoint: point.ENUPoint) -> point.ENUHeading:
+    """
+
+        getENUHeading( (ENUBorderList)borderList, (ENUPoint)enuPoint) -> ENUHeading :
+
+            C++ signature :
+                ad::map::point::ENUHeading getENUHeading(std::vector<ad::map::lane::ENUBorder, std::allocator<ad::map::lane::ENUBorder> >,ad::map::point::ENUPoint)
+    """
+
+def getENULanePoint(parametricPoint: point.ParaPoint, lateralOffset: ad.physics.ParametricValue) -> point.ENUHeading:
+    """
+
+        getENULanePoint( (ParaPoint)parametricPoint [, (ParametricValue)lateralOffset=<physics.ParametricValue object at 0x7752c8de28f0>]) -> ENUPoint :
+
+            C++ signature :
+                ad::map::point::ENUPoint getENULanePoint(ad::map::point::ParaPoint [,ad::physics::ParametricValue=<physics.ParametricValue object at 0x7752c8de28f0>])
+    """
+
+def getEndPoint(lane: Lane) -> point.ECEFPoint:
+    """
+
+        getEndPoint( (Lane)lane) -> ECEFPoint :
+
+            C++ signature :
+                ad::map::point::ECEFPoint getEndPoint(ad::map::lane::Lane)
+    """
+
+def getHOV(lane: Lane) -> int:
+    """
+
+        getHOV( (Lane)lane) -> int :
+
+            C++ signature :
+                unsigned short getHOV(ad::map::lane::Lane)
+    """
+
+def getLane(id: LaneId) -> Lane:
+    """
+
+        getLane( (LaneId)id) -> Lane :
+
+            C++ signature :
+                ad::map::lane::Lane getLane(ad::map::lane::LaneId)
+    """
+
+def getLaneECEFHeading(position: match.MapMatchedPosition | point.ParaPoint, /) -> point.ECEFHeading:
+    """
+
+        getLaneECEFHeading( (MapMatchedPosition)mapMatchedPosition) -> ECEFHeading :
+
+            C++ signature :
+                ad::map::point::ECEFHeading getLaneECEFHeading(ad::map::match::MapMatchedPosition)
+
+        getLaneECEFHeading( (ParaPoint)paraPoint) -> ECEFHeading :
+
+            C++ signature :
+                ad::map::point::ECEFHeading getLaneECEFHeading(ad::map::point::ParaPoint)
+    """
+
+
+@overload
+def getLaneENUHeading(position: match.MapMatchedPosition | point.ParaPoint, /):
+    """
+
+        getLaneENUHeading( (MapMatchedPosition)mapMatchedPosition) -> ENUHeading :
+
+            C++ signature :
+                ad::map::point::ENUHeading getLaneENUHeading(ad::map::match::MapMatchedPosition)
+
+        getLaneENUHeading( (ParaPoint)paraPoint, (GeoPoint)gnssReference) -> ENUHeading :
+
+            C++ signature :
+                ad::map::point::ENUHeading getLaneENUHeading(ad::map::point::ParaPoint,ad::map::point::GeoPoint)
+
+        getLaneENUHeading( (ParaPoint)position) -> ENUHeading :
+
+            C++ signature :
+                ad::map::point::ENUHeading getLaneENUHeading(ad::map::point::ParaPoint)
+    """
+
+@overload
+def getLaneENUHeading(paraPoint: point.ParaPoint, gnssReference: point.GeoPoint) -> point.ENUHeading:
+    """
+
+        getLaneENUHeading( (MapMatchedPosition)mapMatchedPosition) -> ENUHeading :
+
+            C++ signature :
+                ad::map::point::ENUHeading getLaneENUHeading(ad::map::match::MapMatchedPosition)
+
+        getLaneENUHeading( (ParaPoint)paraPoint, (GeoPoint)gnssReference) -> ENUHeading :
+
+            C++ signature :
+                ad::map::point::ENUHeading getLaneENUHeading(ad::map::point::ParaPoint,ad::map::point::GeoPoint)
+
+        getLaneENUHeading( (ParaPoint)position) -> ENUHeading :
+
+            C++ signature :
+                ad::map::point::ENUHeading getLaneENUHeading(ad::map::point::ParaPoint)
+    """
+
+def getLanePtr(id: LaneId) -> Lane:
+    """
+
+        getLanePtr( (LaneId)id) -> Lane :
+
+            C++ signature :
+                std::shared_ptr<ad::map::lane::Lane const> getLanePtr(ad::map::lane::LaneId)
+    """
+
+def getLanes() -> LaneIdList:
+    """
+
+        getLanes() -> LaneIdList :
+
+            C++ signature :
+                std::vector<ad::map::lane::LaneId, std::allocator<ad::map::lane::LaneId> > getLanes()
+    """
+
+def getLateralAlignmentEdge(border: ENUBorder, lateralAlignment: ad.physics.ParametricValue) -> point.ENUEdge:
+    """
+
+        getLateralAlignmentEdge( (ENUBorder)border, (ParametricValue)lateralAlignment) -> ENUEdge :
+
+            C++ signature :
+                std::vector<ad::map::point::ENUPoint, std::allocator<ad::map::point::ENUPoint> > getLateralAlignmentEdge(ad::map::lane::ENUBorder,ad::physics::ParametricValue)
+    """
+
+def getMaxSpeed(lane: Lane, range: ad.physics.ParametricRange) -> ad.physics.Speed:
+    """
+
+        getMaxSpeed( (Lane)lane, (ParametricRange)range) -> Speed :
+
+            C++ signature :
+                ad::physics::Speed getMaxSpeed(ad::map::lane::Lane,ad::physics::ParametricRange)
+    """
+
+def getParametricPoint(lane: Lane, longitudinalOffset: ad.physics.ParametricValue, lateralOffset: ad.physics.ParametricValue) -> point.ECEFPoint:
+    """
+
+        getParametricPoint( (Lane)lane, (ParametricValue)longitudinalOffset, (ParametricValue)lateralOffset) -> ECEFPoint :
+
+            C++ signature :
+                ad::map::point::ECEFPoint getParametricPoint(ad::map::lane::Lane,ad::physics::ParametricValue,ad::physics::ParametricValue)
+    """
+
+def getProjectedParametricPoint(lane: Lane, longitudinalOffset: ad.physics.ParametricValue, lateralOffset: ad.physics.ParametricValue) -> point.ECEFPoint:
+    """
+
+        getProjectedParametricPoint( (Lane)lane, (ParametricValue)longitudinalOffset, (ParametricValue)lateralOffset) -> ECEFPoint :
+
+            C++ signature :
+                ad::map::point::ECEFPoint getProjectedParametricPoint(ad::map::lane::Lane,ad::physics::ParametricValue,ad::physics::ParametricValue)
+    """
+
+def getSpeedLimits(lane: Lane, range: ad.physics.ParametricRange) -> restriction.SpeedLimitList:
+    """
+
+        getSpeedLimits( (Lane)lane, (ParametricRange)range) -> SpeedLimitList :
+
+            C++ signature :
+                std::vector<ad::map::restriction::SpeedLimit, std::allocator<ad::map::restriction::SpeedLimit> > getSpeedLimits(ad::map::lane::Lane,ad::physics::ParametricRange)
+    """
+
+def getStartPoint(lane: Lane) -> point.ECEFPoint:
+    """
+
+        getStartPoint( (Lane)lane) -> ECEFPoint :
+
+            C++ signature :
+                ad::map::point::ECEFPoint getStartPoint(ad::map::lane::Lane)
+    """
+
+def getWidth(lane: Lane, longitudinalOffset: ad.physics.ParametricValue) -> ad.physics.Distance:
+    """
+
+        getWidth( (Lane)lane, (ParametricValue)longitudinalOffset) -> Distance :
+
+            C++ signature :
+                ad::physics::Distance getWidth(ad::map::lane::Lane,ad::physics::ParametricValue)
+    """
+
+def isAccessOk(lane: Lane | ContactLane, vehicle: restriction.VehicleDescriptor) -> bool:
+    """
+
+        isAccessOk( (Lane)lane, (VehicleDescriptor)vehicle) -> bool :
+
+            C++ signature :
+                bool isAccessOk(ad::map::lane::Lane,ad::map::restriction::VehicleDescriptor)
+
+        isAccessOk( (ContactLane)contactLane, (VehicleDescriptor)vehicle) -> bool :
+
+            C++ signature :
+                bool isAccessOk(ad::map::lane::ContactLane,ad::map::restriction::VehicleDescriptor)
+    """
+
+def isHeadingInLaneDirection(position: point.ParaPoint, heading: point.ENUHeading) -> bool:
+    """
+
+        isHeadingInLaneDirection( (ParaPoint)position, (ENUHeading)heading) -> bool :
+
+            C++ signature :
+                bool isHeadingInLaneDirection(ad::map::point::ParaPoint,ad::map::point::ENUHeading)
+    """
+
+
+def isLaneDirectionNegative(lane: Lane | LaneId) -> bool:
+    """
+
+        isLaneDirectionNegative( (Lane)lane) -> bool :
+
+            C++ signature :
+                bool isLaneDirectionNegative(ad::map::lane::Lane)
+
+        isLaneDirectionNegative( (LaneId)laneId) -> bool :
+
+            C++ signature :
+                bool isLaneDirectionNegative(ad::map::lane::LaneId)
+    """
+
+def isLaneDirectionPositive(lane: Lane | LaneId) -> bool:
+    """
+
+        isLaneDirectionPositive( (Lane)lane) -> bool :
+
+            C++ signature :
+                bool isLaneDirectionPositive(ad::map::lane::Lane)
+
+        isLaneDirectionPositive( (LaneId)laneId) -> bool :
+
+            C++ signature :
+                bool isLaneDirectionPositive(ad::map::lane::LaneId)
+    """
+
+def isLanePartOfAnIntersection(lane: Lane) -> bool:
+    """
+
+        isLanePartOfAnIntersection( (Lane)lane) -> bool :
+
+            C++ signature :
+                bool isLanePartOfAnIntersection(ad::map::lane::Lane)
+    """
+
+def isLaneRelevantForExpansion(laneId: LaneId, relevantLanes: LaneIdSet) -> bool:
+    """
+
+        isLaneRelevantForExpansion( (LaneId)laneId, (LaneIdSet)relevantLanes) -> bool :
+
+            C++ signature :
+                bool isLaneRelevantForExpansion(ad::map::lane::LaneId,std::set<ad::map::lane::LaneId, std::less<ad::map::lane::LaneId>, std::allocator<ad::map::lane::LaneId> >)
+    """
+
+def isLeftMost(lane: Lane) -> bool:
+    """
+
+        isLeftMost( (Lane)lane) -> bool :
+
+            C++ signature :
+                bool isLeftMost(ad::map::lane::Lane)
+    """
+
+def isNear(lane: Lane, boundingSphere: point.BoundingSphere) -> bool:
+    """
+
+        isNear( (Lane)lane, (BoundingSphere)boundingSphere) -> bool :
+
+            C++ signature :
+                bool isNear(ad::map::lane::Lane,ad::map::point::BoundingSphere)
+    """
+
+def isPhysicalPredecessor(lane: Lane, other: Lane) -> bool:
+    """
+
+        isPhysicalPredecessor( (Lane)lane, (Lane)other) -> bool :
+
+            C++ signature :
+                bool isPhysicalPredecessor(ad::map::lane::Lane,ad::map::lane::Lane)
+    """
+
+def isPyhsicalSuccessor(lane: Lane, other: Lane) -> bool:
+    """
+
+        isPyhsicalSuccessor( (Lane)lane, (Lane)other) -> bool :
+
+            C++ signature :
+                bool isPyhsicalSuccessor(ad::map::lane::Lane,ad::map::lane::Lane)
+    """
+
+def isRightMost(lane: Lane) -> bool:
+    """
+
+        isRightMost( (Lane)lane) -> bool :
+
+            C++ signature :
+                bool isRightMost(ad::map::lane::Lane)
+    """
+
+def isRouteable(lane: Lane) -> bool:
+    """
+
+        isRouteable( (Lane)lane) -> bool :
+
+            C++ signature :
+                bool isRouteable(ad::map::lane::Lane)
+    """
+
+def isSameOrDirectNeighbor(id: LaneId, neighbor: LaneId) -> bool:
+    """
+
+        isSameOrDirectNeighbor( (LaneId)id, (LaneId)neighbor) -> bool :
+
+            C++ signature :
+                bool isSameOrDirectNeighbor(ad::map::lane::LaneId,ad::map::lane::LaneId)
+    """
+
+def isSuccessorOrPredecessor(laneId: LaneId, checkLaneId: LaneId) -> bool:
+    """
+
+        isSuccessorOrPredecessor( (LaneId)laneId, (LaneId)checkLaneId) -> bool :
+
+            C++ signature :
+                bool isSuccessorOrPredecessor(ad::map::lane::LaneId,ad::map::lane::LaneId)
+    """
+
+def isValid(laneId: LaneId | Lane | ContactLane, /, logErrors: bool=True) -> bool:
+    """
+
+        isValid( (LaneId)laneId [, (bool)logErrors=True]) -> bool :
+
+            C++ signature :
+                bool isValid(ad::map::lane::LaneId [,bool=True])
+
+        isValid( (Lane)lane [, (bool)logErrors=True]) -> bool :
+
+            C++ signature :
+                bool isValid(ad::map::lane::Lane [,bool=True])
+
+        isValid( (ContactLane)contactLane [, (bool)logErrors=True]) -> bool :
+
+            C++ signature :
+                bool isValid(ad::map::lane::ContactLane [,bool=True])
+    """
+
+def isVanishingLaneEnd(lane: Lane) -> bool:
+    """
+
+        isVanishingLaneEnd( (Lane)lane) -> bool :
+
+            C++ signature :
+                bool isVanishingLaneEnd(ad::map::lane::Lane)
+    """
+
+def isVanishingLaneStart(lane: Lane) -> bool:
+    """
+
+        isVanishingLaneStart( (Lane)lane) -> bool :
+
+            C++ signature :
+                bool isVanishingLaneStart(ad::map::lane::Lane)
+    """
+
+def makeTransitionFromFirstBorderContinuous(first: ENUBorder, second: ENUBorder) -> None:
+    """
+
+        makeTransitionFromFirstBorderContinuous( (ENUBorder)first, (ENUBorder)second) -> None :
+
+            C++ signature :
+                void makeTransitionFromFirstBorderContinuous(ad::map::lane::ENUBorder {lvalue},ad::map::lane::ENUBorder)
+    """
+
+def makeTransitionFromFirstEdgeContinuous(first: point.ENUEdge, second: point.ENUEdge) -> None:
+    """
+
+        makeTransitionFromFirstEdgeContinuous( (ENUEdge)first, (ENUEdge)second) -> None :
+
+            C++ signature :
+                void makeTransitionFromFirstEdgeContinuous(std::vector<ad::map::point::ENUPoint, std::allocator<ad::map::point::ENUPoint> > {lvalue},std::vector<ad::map::point::ENUPoint, std::allocator<ad::map::point::ENUPoint> >)
+    """
+
+def makeTransitionToSecondBorderContinuous(first: ENUBorder, second: ENUBorder) -> None:
+    """
+
+        makeTransitionToSecondBorderContinuous( (ENUBorder)first, (ENUBorder)second) -> None :
+
+            C++ signature :
+                void makeTransitionToSecondBorderContinuous(ad::map::lane::ENUBorder,ad::map::lane::ENUBorder {lvalue})
+    """
+
+def makeTransitionToSecondEdgeContinuous(first: point.ENUEdge, second: point.ENUEdge) -> None:
+    """
+
+        makeTransitionToSecondEdgeContinuous( (ENUEdge)first, (ENUEdge)second) -> None :
+
+            C++ signature :
+                void makeTransitionToSecondEdgeContinuous(std::vector<ad::map::point::ENUPoint, std::allocator<ad::map::point::ENUPoint> >,std::vector<ad::map::point::ENUPoint, std::allocator<ad::map::point::ENUPoint> > {lvalue})
+    """
+
+def normalizeBorder(border: ENUBorder, previousBorder: ENUBorder) -> None:
+    """
+
+        normalizeBorder( (ENUBorder)border [, (ENUBorder)previousBorder=0]) -> None :
+
+            C++ signature :
+                void normalizeBorder(ad::map::lane::ENUBorder {lvalue} [,ad::map::lane::ENUBorder const*=0])
+    """
+
+def oppositeLocation(e: ContactLocation) -> ContactLocation:
+    """
+
+        oppositeLocation( (ContactLocation)e) -> ContactLocation :
+
+            C++ signature :
+                ad::map::lane::ContactLocation oppositeLocation(ad::map::lane::ContactLocation)
+    """
+
+def projectParametricPointToEdges(lane: Lane, referencePoint: point.ECEFPoint | ad.physics.ParametricValue, point_on_left_edge: point.ECEFPoint, point_on_right_edge: point.ECEFPoint) -> bool:
+    """
+
+        projectParametricPointToEdges( (Lane)lane, (ECEFPoint)referencePoint, (ECEFPoint)point_on_left_edge, (ECEFPoint)point_on_right_edge) -> bool :
+
+            C++ signature :
+                bool projectParametricPointToEdges(ad::map::lane::Lane,ad::map::point::ECEFPoint,ad::map::point::ECEFPoint {lvalue},ad::map::point::ECEFPoint {lvalue})
+
+        projectParametricPointToEdges( (Lane)lane, (ParametricValue)longitudinalOffset, (ECEFPoint)point_on_left_edge, (ECEFPoint)point_on_right_edge) -> bool :
+
+            C++ signature :
+                bool projectParametricPointToEdges(ad::map::lane::Lane,ad::physics::ParametricValue,ad::map::point::ECEFPoint {lvalue},ad::map::point::ECEFPoint {lvalue})
+    """
+
+def projectPositionToLaneInHeadingDirection(position: point.ParaPoint, heading: point.ENUHeading, projectedPosition: point.ParaPoint) -> bool:
+    """
+
+        projectPositionToLaneInHeadingDirection( (ParaPoint)position, (ENUHeading)heading, (ParaPoint)projectedPosition) -> bool :
+
+            C++ signature :
+                bool projectPositionToLaneInHeadingDirection(ad::map::point::ParaPoint,ad::map::point::ENUHeading,ad::map::point::ParaPoint {lvalue})
+    """
+
+def satisfiesFilter(lane: Lane, typeFilter: str, isHov: bool) -> bool:
+    """
+
+        satisfiesFilter( (Lane)lane, (str)typeFilter, (bool)isHov) -> bool :
+
+            C++ signature :
+                bool satisfiesFilter(ad::map::lane::Lane,std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >,bool)
+    """
+
+def toString(e: ContactLocation | LaneType | ContactType | LaneDirection) -> str:
+    """
+
+        toString( (ContactLocation)e) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > toString(ad::map::lane::ContactLocation)
+
+        toString( (LaneType)e) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > toString(ad::map::lane::LaneType)
+
+        toString( (ContactType)e) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > toString(ad::map::lane::ContactType)
+
+        toString( (LaneDirection)e) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > toString(ad::map::lane::LaneDirection)
+    """
+
+def to_string(value: object) -> str:
+    """
+
+        to_string( (LaneId)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::map::lane::LaneId)
+
+        to_string( (LaneIdList)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(std::vector<ad::map::lane::LaneId, std::allocator<ad::map::lane::LaneId> >)
+
+        to_string( (ContactLocation)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::map::lane::ContactLocation)
+
+        to_string( (LaneType)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::map::lane::LaneType)
+
+        to_string( (ENUBorder)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::map::lane::ENUBorder)
+
+        to_string( (GeoBorder)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::map::lane::GeoBorder)
+
+        to_string( (ContactType)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::map::lane::ContactType)
+
+        to_string( (ContactTypeList)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(std::vector<ad::map::lane::ContactType, std::allocator<ad::map::lane::ContactType> >)
+
+        to_string( (ContactLane)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::map::lane::ContactLane)
+
+        to_string( (ContactLaneList)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(std::vector<ad::map::lane::ContactLane, std::allocator<ad::map::lane::ContactLane> >)
+
+        to_string( (LaneDirection)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::map::lane::LaneDirection)
+
+        to_string( (Lane)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::map::lane::Lane)
+
+        to_string( (GeoBorderList)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(std::vector<ad::map::lane::GeoBorder, std::allocator<ad::map::lane::GeoBorder> >)
+
+        to_string( (ECEFBorder)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(ad::map::lane::ECEFBorder)
+
+        to_string( (ENUBorderList)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(std::vector<ad::map::lane::ENUBorder, std::allocator<ad::map::lane::ENUBorder> >)
+
+        to_string( (ECEFBorderList)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(std::vector<ad::map::lane::ECEFBorder, std::allocator<ad::map::lane::ECEFBorder> >)
+
+        to_string( (ContactLocationList)value) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(std::vector<ad::map::lane::ContactLocation, std::allocator<ad::map::lane::ContactLocation> >)
+
+        to_string( (LaneIdSet)laneIdSet) -> str :
+
+            C++ signature :
+                std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > to_string(std::set<ad::map::lane::LaneId, std::less<ad::map::lane::LaneId>, std::allocator<ad::map::lane::LaneId> >)
+    """
+
+def uniqueLaneId(point: point.GeoPoint) -> LaneId:
+    """
+
+        uniqueLaneId( (GeoPoint)point) -> LaneId :
+
+            C++ signature :
+                ad::map::lane::LaneId uniqueLaneId(ad::map::point::GeoPoint)
+    """
+
+def uniqueParaPoint(point: point.GeoPoint) -> point.ParaPoint:
+    """
+
+        uniqueParaPoint( (GeoPoint)point) -> ParaPoint :
+
+            C++ signature :
+                ad::map::point::ParaPoint uniqueParaPoint(ad::map::point::GeoPoint)
+    """

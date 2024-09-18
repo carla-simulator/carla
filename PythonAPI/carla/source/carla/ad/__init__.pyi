@@ -73,7 +73,16 @@ class _IndexableVector(_Vector[_T], Protocol):
 class _VectorSequence(_IndexableVector[_T], Protocol):
     """Adds `count` and `index` methods."""
 
-    def index(self, item: _T, /) -> int:
+    def count(self, item: _T, /) -> int:
+        ...
+        
+@type_check_only
+class _SortableSequence(_VectorSequence[_T], Protocol):
+    """Adds `sort` method. Not all _VectorSequences support sort."""
+
+    # TODO: Need to check if _VectorSequence is correct base or if needs two protocols
+
+    def sort(self) -> None:
         ...
 
 @type_check_only
@@ -109,6 +118,9 @@ class _FloatLike(Protocol):
 
 @type_check_only
 class _Calculable(_Assignable, _FloatLike, Protocol):
+    """
+    A float like with Max, Min, and Precision values.
+    """
 
     cMaxValue: float
     cMinValue: float
