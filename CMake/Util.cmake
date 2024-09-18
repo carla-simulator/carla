@@ -39,7 +39,7 @@ endfunction ()
 
 macro (carla_option NAME DESCRIPTION VALUE)
   option (${NAME} ${DESCRIPTION} ${VALUE})
-  carla_message ("(option) ${NAME} : ${VALUE}")
+  carla_message ("(option) ${NAME} : ${${NAME}}")
   get_property (DOCS GLOBAL PROPERTY CARLA_OPTION_DOCS)
   string (
     APPEND
@@ -55,7 +55,7 @@ endmacro ()
 
 macro (carla_string_option NAME DESCRIPTION VALUE)
   set (${NAME} "${VALUE}")
-  carla_message ("(option) ${NAME} : \"${VALUE}\"")
+  carla_message ("(option) ${NAME} : \"${${NAME}}\"")
   get_property (DOCS GLOBAL PROPERTY CARLA_OPTION_DOCS)
   string (
     APPEND

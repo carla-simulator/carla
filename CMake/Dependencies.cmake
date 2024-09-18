@@ -12,29 +12,37 @@ include (FetchContent)
 
 set (CARLA_DEPENDENCIES_PENDING)
 
+macro (carla_git_dependency_add NAME TAG ARCHIVE_URL GIT_URL)
+  carla_message ("Cloning ${NAME}...")
+  FetchContent_Declare (
+    ${NAME}
+    GIT_REPOSITORY ${GIT_URL}
+    GIT_TAG ${TAG}
+    GIT_SUBMODULES_RECURSE ON
+    GIT_SHALLOW ON
+    GIT_PROGRESS ON
+    OVERRIDE_FIND_PACKAGE
+    ${ARGN}
+  )
+  list (APPEND CARLA_DEPENDENCIES_PENDING ${NAME})
+endmacro ()
+
+macro (carla_download_dependency_add NAME TAG ARCHIVE_URL GIT_URL)
+  carla_message ("Downloading ${NAME}...")
+  FetchContent_Declare (
+    ${NAME}
+    URL ${ARCHIVE_URL}
+    OVERRIDE_FIND_PACKAGE
+    ${ARGN}
+  )
+  list (APPEND CARLA_DEPENDENCIES_PENDING ${NAME})
+endmacro ()
+
 macro (carla_dependency_add NAME TAG ARCHIVE_URL GIT_URL)
   if (PREFER_CLONE)
-    carla_message ("Cloning ${NAME}...")
-    FetchContent_Declare (
-      ${NAME}
-      GIT_REPOSITORY ${GIT_URL}
-      GIT_TAG ${TAG}
-      GIT_SUBMODULES_RECURSE ON
-      GIT_SHALLOW ON
-      GIT_PROGRESS ON
-      OVERRIDE_FIND_PACKAGE
-      ${ARGN}
-    )
-    list (APPEND CARLA_DEPENDENCIES_PENDING ${NAME})
+    carla_git_dependency_add (${NAME} ${TAG} ${ARCHIVE_URL} ${GIT_URL} ${ARGN})
   else ()
-    carla_message ("Downloading ${NAME}...")
-    FetchContent_Declare (
-      ${NAME}
-      URL ${ARCHIVE_URL}
-      OVERRIDE_FIND_PACKAGE
-      ${ARGN}
-    )
-    list (APPEND CARLA_DEPENDENCIES_PENDING ${NAME})
+    carla_download_dependency_add (${NAME} ${TAG} ${ARCHIVE_URL} ${GIT_URL} ${ARGN})
   endif ()
 endmacro ()
 
@@ -182,7 +190,7 @@ carla_dependency_add (
 
 # ==== RECAST ====
 
-carla_dependency_option (RECASTNAVIGATION_BUILDER OFF)
+carla_dependency_option (RECASTNAVIGATION_BUILDER ON)
 carla_dependency_add (
   recastnavigation
   ${CARLA_RECAST_TAG}
