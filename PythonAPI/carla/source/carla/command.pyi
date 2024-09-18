@@ -5,6 +5,9 @@ and `carla.Client.apply_batch_sync`.
 # needs change in API
 # pylint: disable=too-many-locals,too-many-public-methods,too-many-arguments,too-many-public-methods,too-few-public-methods,too-many-lines
 # Fixable low-priority
+# pylint: disable=line-too-long,R0801# needs change in API
+# pylint: disable=too-many-locals,too-many-public-methods,too-many-arguments,too-many-public-methods,too-few-public-methods,too-many-lines
+# Fixable low-priority
 # pylint: disable=line-too-long,R0801
 
 from typing import (  # pylint: disable=no-name-in-module

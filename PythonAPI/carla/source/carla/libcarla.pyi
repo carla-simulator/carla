@@ -1,3 +1,22 @@
+# --------- Linting ------------
+# Not relevant for stubs
+# pylint: disable=unused-argument,C0103,used-before-assignment,dangerous-default-value,super-init-not-called,no-name-in-module
+#
+# needs change in API
+# pylint: disable=too-many-locals,too-many-public-methods,too-many-arguments,too-many-public-methods,too-few-public-methods,too-many-lines,redefined-builtin
+#
+# Fixable
+# pylint: disable=line-too-long
+# Needs __all__ to be defined
+# pylint: disable=useless-import-alias,unused-import
+#
+# False positives
+# Should only trigger for class name used in itself
+# pylint: disable=undefined-variable
+#
+# ruff: noqa: F401,F403,F405
+# -------------------------------
+
 import sys
 from enum import Enum, Flag, IntFlag
 from typing import (  # pylint: disable=no-name-in-module
@@ -68,8 +87,8 @@ class __CarlaEnum(Enum):
         """The value attribute is not available in CARLA's enums."""
 
     def __init_subclass__(cls) -> None:
-        cls.values: dict[int, cls]  # noqa: B032
-        cls.names: dict[str, cls]  # noqa: B032
+        cls.values: dict[int, Self]  # noqa: B032
+        cls.names: dict[str, Self]  # noqa: B032
 
 # pylint: disable=function-redefined
 class AckermannControllerSettings:
