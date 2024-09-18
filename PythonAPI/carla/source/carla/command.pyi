@@ -383,7 +383,7 @@ class SetAutopilot(_IsCommand):
     # endregion
 
     # region Methods
-    def __init__(self, actor: Actor | int, enabled: bool, port=8000) -> None:
+    def __init__(self, actor: Actor | int, enabled: bool, port: int = 8000) -> None:
         """Turns on/off the vehicle's autopilot mode.
 
         Args:

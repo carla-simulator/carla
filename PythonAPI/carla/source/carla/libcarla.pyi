@@ -336,7 +336,7 @@ class Actor:
             `location (Location)`: meters
         """
 
-    def set_simulate_physics(self, enabled=True):
+    def set_simulate_physics(self, enabled: bool = True):
         """Enables or disables the simulation of physics on this actor.
 
         Args:
@@ -836,7 +836,7 @@ class Client:
 
     # region Methods
 
-    def __init__(self, host="127.0.0.1", port=2000, worker_threads=0) -> None:
+    def __init__(self, host: str = "127.0.0.1", port: int = 2000, worker_threads: int = 0) -> None:
         """Client constructor.
 
         Args:
@@ -874,7 +874,7 @@ class Client:
     def generate_opendrive_world(self,
                                  opendrive: str,
                                  parameters: OpendriveGenerationParameters = OpendriveGenerationParameters(2.0, 50.0, 1.0, 0.6, True, True),
-                                 reset_settings=True):
+                                 reset_settings: bool = True):
         """Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter. It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side. Cars can drive around the map, but there are no graphics besides the road and sidewalks.
 
         Args:
@@ -883,7 +883,7 @@ class Client:
             `reset_settings (bool, optional)`: Option to reset the episode setting to default values, set to false to keep the current settings. This is useful to keep sync mode when changing map and to keep deterministic scenarios. Defaults to True.
         """
 
-    def load_world(self, map_name: str, reset_settings=True, map_layers=MapLayer.All) -> World:
+    def load_world(self, map_name: str, reset_settings: bool = True, map_layers: MapLayer = MapLayer.All) -> World:
         """Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.
 
         + Warning: `map_layers` are only available for "Opt" maps
@@ -897,7 +897,7 @@ class Client:
             `World`
         """
 
-    def reload_world(self, reset_settings=True) -> World:
+    def reload_world(self, reset_settings: bool = True) -> World:
         """Reload the current world, note that a new world is created with default settings using the same map. All actors present in the world will be destroyed, but traffic manager instances will stay alive.
 
         Args:
@@ -910,7 +910,7 @@ class Client:
             `World`
         """
 
-    def load_world_if_different(self, map_name: str, reset_settings=True, map_layers=MapLayer.All):
+    def load_world_if_different(self, map_name: str, reset_settings: bool = True, map_layers: MapLayer = MapLayer.All):
         """"
         Creates a new world with default settings using `map_name` map only if it is a different map
         from the currently loaded map.
@@ -984,7 +984,7 @@ class Client:
             `str`
         """
 
-    def start_recorder(self, filename: str, additional_data=False):
+    def start_recorder(self, filename: str, additional_data: bool = False):
         """Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.
 
         Args:
@@ -1013,7 +1013,7 @@ class Client:
     def get_client_version(self) -> str:
         """Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server can use different libcarla versions but some issues may arise regarding unexpected incompatibilities."""
 
-    def get_required_files(self, folder: str, download=True):
+    def get_required_files(self, folder: str, download: bool = True):
         """Asks the server which files are required by the client to use the current map. Option to download files automatically if they are not already in the cache.
 
         Args:
@@ -1024,7 +1024,7 @@ class Client:
     def get_server_version(self) -> str:
         """Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version."""
 
-    def get_trafficmanager(self, client_connection=8000) -> TrafficManager:
+    def get_trafficmanager(self, client_connection: int = 8000) -> TrafficManager:
         """Returns an instance of the traffic manager related to the specified port. If it does not exist, this will be created.
 
         Args:
@@ -1057,7 +1057,7 @@ class Client:
             `ignore_spectator (bool)`: Determines whether the recorded spectator movements will be replicated by the replayer.
         """
 
-    def set_replayer_time_factor(self, time_factor=1.0):
+    def set_replayer_time_factor(self, time_factor: float = 1.0):
         """When used, the time speed of the reenacted simulation is modified at will. It can be used several times while a playback is in curse.
 
         Args:
@@ -1121,7 +1121,7 @@ class Color:
     # endregion
 
     # region Methods
-    def __init__(self, r=0, g=0, b=0, a=255) -> None:
+    def __init__(self, r: int = 0, g: int = 0, b: int = 0, a: int = 255) -> None:
         """Initializes a color, black by default.
 
         Args:
@@ -1247,7 +1247,7 @@ class DebugHelper:
     """
 
     # region Methods
-    def draw_arrow(self, begin: Vector3D, end: Vector3D, thickness=0.1, arrow_size=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_arrow(self, begin: Vector3D, end: Vector3D, thickness: float = 0.1, arrow_size: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
         """
         Draws an arrow from `begin` to `end` pointing in that direction.
 
@@ -1260,7 +1260,7 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes (seconds). Defaults to -1.0.
         """
 
-    def draw_hud_arrow(self, begin: Vector3D, end: Vector3D, thickness=0.1, arrow_size=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_hud_arrow(self, begin: Vector3D, end: Vector3D, thickness: float = 0.1, arrow_size: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
         """
         Draws an arrow on the HUD from `begin` to `end` which can only be seen server-side.
 
@@ -1273,7 +1273,7 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes (seconds). Defaults to -1.0.
         """
 
-    def draw_box(self, box: BoundingBox, rotation: Rotation, thickness=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_box(self, box: BoundingBox, rotation: Rotation, thickness: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
         """Draws a box, usually to act for object colliders.
 
         Args:
@@ -1284,7 +1284,7 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes. Defaults to -1.0.
         """
 
-    def draw_hud_box(self, box: BoundingBox, rotation: Rotation, thickness=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_hud_box(self, box: BoundingBox, rotation: Rotation, thickness: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
         """
         Draws a box on the HUD, usually to act for object colliders. The box can only be seen server-side.
 
@@ -1296,7 +1296,7 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes. Defaults to -1.0.
         """
 
-    def draw_line(self, begin: Vector3D, end: Vector3D, thickness=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_line(self, begin: Vector3D, end: Vector3D, thickness: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
         """
         Draws a line in between `begin` and `end`.
 
@@ -1308,7 +1308,7 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes. Defaults to -1.0.
         """
 
-    def draw_hud_line(self, begin: Vector3D, end: Vector3D, thickness=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_hud_line(self, begin: Vector3D, end: Vector3D, thickness: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
         """
         Draws a line on the HUD in between `begin` and `end`. The line can only be seen server-side.
 
@@ -1320,7 +1320,7 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes. Defaults to -1.0.
         """
 
-    def draw_point(self, location: Vector3D, size=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_point(self, location: Vector3D, size: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
         """
         Draws a point location.
 
@@ -1331,7 +1331,7 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to 0 for permanent shapes (seconds). Defaults to -1.0.
         """
 
-    def draw_hud_point(self, location: Vector3D, size=0.1, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_hud_point(self, location: Vector3D, size: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
         """
         Draws a point on the HUD at `location`. The point can only be seen server-side.
 
@@ -1342,7 +1342,7 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to 0 for permanent shapes (seconds). Defaults to -1.0.
         """
 
-    def draw_string(self, location: Vector3D, text: str, draw_shadow=False, color: Color = Color(255, 0, 0), life_time=-1.0, persistent_lines=True) -> None:
+    def draw_string(self, location: Vector3D, text: str, draw_shadow: bool = False, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
         """Draws a string in a given location of the simulation which can only be seen server-side.
 
         Args:
@@ -1406,13 +1406,13 @@ class FloatColor:
     # endregion
 
     # region Methods
-    def __init__(self, r=.0, g=.0, b=.0, a=1.0) -> None:
+    def __init__(self, r: float = .0, g: float = .0, b: float = .0, a: float = 1.0) -> None:
         """Initializes a color, black by default.
 
         Args:
-            r (float, optional): Red color. Defaults to .0.
-            g (float, optional): Green color. Defaults to .0.
-            b (float, optional): Blue color. Defaults to .0.
+            r (float, optional): Red color. Defaults to 0.0.
+            g (float, optional): Green color. Defaults to 0.0.
+            b (float, optional): Blue color. Defaults to 0.0.
             a (float, optional): Alpha channel. Defaults to 1.0.
         """
     # endregion
@@ -1494,7 +1494,7 @@ class GearPhysicsControl:
     # endregion
 
     # region Methods
-    def __init__(self, ratio=1.0, down_ratio=0.5, up_ratio=0.65) -> None:
+    def __init__(self, ratio: float = 1.0, down_ratio: float = 0.5, up_ratio: float = 0.65) -> None:
         """Class that provides access to vehicle transmission details by defining a gear and when to run on it. This will be later used by `carla.VehiclePhysicsControl` to help simulate physics.
 
         Args:
@@ -1528,7 +1528,7 @@ class GeoLocation:
     # endregion
 
     # region Methods
-    def __init__(self, latitude=0.0, longitude=0.0, altitude=0.0) -> None:
+    def __init__(self, latitude: float = 0.0, longitude: float = 0.0, altitude: float = 0.0) -> None:
         """Class that contains geographical coordinates simulated data. The `carla.Map` can convert simulation locations by using the tag in the OpenDRIVE file.
 
         Args:
@@ -1618,7 +1618,7 @@ class Image(SensorData):
             `color_converter (ColorConverter)`
         """
 
-    def save_to_disk(self, path: str, color_converter=ColorConverter.Raw):
+    def save_to_disk(self, path: str, color_converter: ColorConverter = ColorConverter.Raw):
         """Saves the image to disk using a converter pattern stated as `color_converter`. The default conversion pattern is `Raw` that will make no changes to the image.
 
         Args:
@@ -1628,7 +1628,7 @@ class Image(SensorData):
     # endregion
 
     # region Dunder Methods
-    def __getitem__(self, pos=int) -> Color: ...
+    def __getitem__(self, pos: int) -> Color: ...
 
     def __iter__(self) -> Iterator[Color]:
         """Iterate over the `carla.Color` that form the image."""
@@ -2314,13 +2314,13 @@ class LightState:
     # endregion
 
     # region Methods
-    def __init__(self, intensity=0.0, color=Color, group=LightGroup.NONE, active=False) -> None:
+    def __init__(self, intensity: float = 0.0, color: Color = Color(0, 0, 0, 0), group: LightGroup = LightGroup.NONE, active: bool = False) -> None:
         """This class represents all the light variables except the identifier and the location, which are should to be static. Using this class allows to manage all the parametrization of the light in one call.
 
         Args:
             `intensity (float, optional)`: Intensity of a light (lumens). Defaults to 0.0.\n
-            `color (_type_, optional)`: Color of a light. Defaults to Color.\n
-            `group (_type_, optional)`: Group a light belongs to. Defaults to LightGroup.NONE.\n
+            `color (Color, optional)`: Color of a light. Defaults to Color.\n
+            `group (LightGroup, optional)`: Group a light belongs to. Defaults to LightGroup.NONE.\n
             `active (bool, optional)`: Switch of a light. It is True when the light is on. Defaults to False.
         """
     # endregion
@@ -2673,7 +2673,7 @@ class OpticalFlowPixel:
     # endregion
 
     # region Methods
-    def __init__(self, x=.0, y=.0) -> None:
+    def __init__(self, x: float = .0, y: float = .0) -> None:
         """Initializes the Optical Flow Pixel. Zero by default.
 
         Args:
@@ -2856,7 +2856,7 @@ class Rotation:
     # endregion
 
     # region Methods
-    def __init__(self, pitch=.0, yaw=.0, roll=.0) -> None:
+    def __init__(self, pitch: float = .0, yaw: float = .0, roll: float = .0) -> None:
         """+ Warning: The declaration order is different in CARLA (pitch,yaw,roll), and in the Unreal Engine Editor (roll,pitch,yaw). When working in a build from source, don't mix up the axes' rotations.
 
         Args:
@@ -3825,21 +3825,21 @@ class TrafficManager:
             distance (float): Meters between vehicles (meters).
         """
 
-    def set_hybrid_physics_mode(self, enabled=False):
+    def set_hybrid_physics_mode(self, enabled: bool = False):
         """Enables or disables the hybrid physics mode. In this mode, vehicle's farther than a certain radius from the ego vehicle will have their physics disabled. Computation cost will be reduced by not calculating vehicle dynamics. Vehicles will be teleported.
 
         Args:
             enabled (bool, optional): If `True`, enables the hybrid physics. Defaults to False.
         """
 
-    def set_hybrid_physics_radius(self, r=50.0):
+    def set_hybrid_physics_radius(self, r: float = 50.0):
         """With hybrid physics on, changes the radius of the area of influence where physics are enabled.
 
         Args:
             r (float, optional): New radius where physics are enabled (meters). Defaults to 50.0.
         """
 
-    def set_osm_mode(self, mode_switch=True):
+    def set_osm_mode(self, mode_switch: bool = True):
         """Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the OSM feature. These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.
 
         Args:
@@ -3861,7 +3861,7 @@ class TrafficManager:
             value (int): Seed value for the random number generation of the Traffic Manager.
         """
 
-    def set_respawn_dormant_vehicles(self, mode_switch=False):
+    def set_respawn_dormant_vehicles(self, mode_switch: bool = False):
         """If `True`, vehicles in large maps will respawn near the hero vehicle when they become dormant. Otherwise, they will stay dormant until they are within `actor_active_distance` of the hero vehicle again.
 
 
@@ -3880,7 +3880,7 @@ class TrafficManager:
             path (list[str]): The list of route instructions (string) for the vehicle to follow.
         """
 
-    def set_synchronous_mode(self, mode_switch=True):
+    def set_synchronous_mode(self, mode_switch: bool = True):
         """Sets the Traffic Manager to synchronous mode. In a multiclient situation, only the TM-Server can tick. Similarly, in a multiTM situation, only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.
 
         + Warning: If the server is set to synchronous mode, the TM must be set to synchronous mode too in the same client that does the tick.
@@ -3999,7 +3999,7 @@ class Vector2D:
     # endregion
 
     # region Methods
-    def __init__(self, x=0.0, y=0.0) -> None: ...
+    def __init__(self, x: float = 0.0, y: float = 0.0) -> None: ...
 
     def length(self) -> float:
         """Computes the length of the vector."""
@@ -4058,7 +4058,7 @@ class Vector3D:
     # endregion
 
     # region Methods
-    def __init__(self, x=0.0, y=0.0, z=0.0) -> None: ...
+    def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0) -> None: ...
 
     def cross(self, vector: Vector3D) -> Vector3D:
         """Computes the cross product between two vectors."""
@@ -4173,7 +4173,7 @@ class Vehicle(Actor):
             `door_idx (VehicleDoor)`: door index.
         """
 
-    def show_debug_telemetry(self, enabled=True):
+    def show_debug_telemetry(self, enabled: bool = True):
         """Enables or disables the telemetry on this vehicle. This shows information about the vehicles current state and forces applied to it in the spectator window. Only information for one vehicle can be shown so that, if you enable a second one, the previous will be automatically disabled."""
 
     def use_carsim_road(self, enabled: bool):
@@ -4227,7 +4227,7 @@ class Vehicle(Actor):
     # endregion
 
     # region Setters
-    def set_autopilot(self, enabled=True, port=8000) -> None:
+    def set_autopilot(self, enabled: bool = True, port: int = 8000) -> None:
         """Registers or deletes the vehicle from a Traffic Manager's list. When `True`, the Traffic Manager passed as parameter will move the vehicle around. The autopilot takes place client-side.
 
         Args:
@@ -4277,7 +4277,7 @@ class VehicleAckermannControl:
     # endregion
 
     # region Methods
-    def __init__(self, steer=0.0, steer_speed=0.0, speed=0.0, acceleration=0.0, jerk=0.0) -> None: ...
+    def __init__(self, steer: float = 0.0, steer_speed: float = 0.0, speed: float = 0.0, acceleration: float = 0.0, jerk: float = 0.0) -> None: ...
     # endregion
 
     # region Dunder Methods
@@ -4336,7 +4336,7 @@ class VehicleControl:
     # endregion
 
     # region Methods
-    def __init__(self, throttle=0.0, steer=0.0, brake=0.0, hand_brake=False, reverse=False, manual_gear_shift=False, gear=0) -> None:
+    def __init__(self, throttle: float = 0.0, steer: float = 0.0, brake: float = 0.0, hand_brake: bool = False, reverse: bool = False, manual_gear_shift: bool = False, gear: int = 0) -> None:
         """
         Args:
             `throttle (float, optional)`: Scalar value between [0.0,1.0]. Defaults to 0.0.\n
@@ -4631,7 +4631,7 @@ class WalkerAIController(Actor):
     # endregion
 
     # region Setters
-    def set_max_speed(self, speed=1.4):
+    def set_max_speed(self, speed: float = 1.4):
         """Sets a speed for the walker in meters per second.
 
         Args:
@@ -4711,11 +4711,11 @@ class WalkerControl:
     # endregion
 
     # region Methods
-    def __init__(self, direction=Vector3D(1.0, 0.0, 0.0), speed: float = 0.0, jump: bool = False) -> None:
+    def __init__(self, direction: Vector3D = Vector3D(1.0, 0.0, 0.0), speed: float = 0.0, jump: bool = False) -> None:
         """This class defines specific directions that can be commanded to a `carla.Walker` to control it via script.
 
         Args:
-            `direction (list, optional)`: Vector using global coordinates that will correspond to the direction of the walker.. Defaults to [1.0, 0.0, 0.0].\n
+            `direction (Vector3D, optional)`: Vector using global coordinates that will correspond to the direction of the walker.. Defaults to [1.0, 0.0, 0.0].\n
             `speed (float, optional)`: A scalar value to control the walker's speed (m/s). Defaults to 0.0.\n
             `jump (bool, optional)`: If `True`, the walker will perform a jump. Defaults to False.
         """
@@ -4836,7 +4836,7 @@ class Waypoint:
     def get_junction(self) -> Junction:
         """If the waypoint belongs to a junction this method returns the associated junction object. Otherwise returns `null`."""
 
-    def get_landmarks(self, distance: float, stop_at_junction=False) -> list[Landmark]:
+    def get_landmarks(self, distance: float, stop_at_junction: bool = False) -> list[Landmark]:
         """Returns a list of landmarks in the road from the current waypoint until the specified distance.
 
         Args:
@@ -4844,7 +4844,7 @@ class Waypoint:
             `stop_at_junction (bool, optional)`: Enables or disables the landmark search through junctions. Defaults to False.
         """
 
-    def get_landmarks_of_type(self, distance: float, type: str, stop_at_junction=False) -> list[Landmark]:
+    def get_landmarks_of_type(self, distance: float, type: str, stop_at_junction: bool = False) -> list[Landmark]:
         """Returns a list of landmarks in the road of a specified type from the current waypoint until the specified distance.
 
         Args:
@@ -4933,19 +4933,19 @@ class WeatherParameters:
 
     # region Methods
     def __init__(self,
-                 cloudiness=0.0,
-                 precipitation=0.0,
-                 precipitation_deposits=0.0,
-                 wind_intensity=0.0,
-                 sun_azimuth_angle=0.0,
-                 sun_altitude_angle=0.0,
-                 fog_density=0.0,
-                 fog_distance=0.0,
-                 wetness=0.0,
-                 fog_falloff=0.0,
-                 scattering_intensity=0.0,
-                 mie_scattering_scale=0.0,
-                 rayleigh_scattering_scale=0.0331) -> None:
+                 cloudiness: float = 0.0,
+                 precipitation: float = 0.0,
+                 precipitation_deposits: float = 0.0,
+                 wind_intensity: float = 0.0,
+                 sun_azimuth_angle: float = 0.0,
+                 sun_altitude_angle: float = 0.0,
+                 fog_density: float = 0.0,
+                 fog_distance: float = 0.0,
+                 wetness: float = 0.0,
+                 fog_falloff: float = 0.0,
+                 scattering_intensity: float = 0.0,
+                 mie_scattering_scale: float = 0.0,
+                 rayleigh_scattering_scale: float = 0.0331) -> None:
         """Method to initialize an object defining weather conditions. This class has some presets for different noon and sunset conditions listed in a note below.
 
         + Note: ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset.
@@ -5011,12 +5011,12 @@ class WheelPhysicsControl:
 
     # region Methods
     def __init__(self,
-                 tire_friction=2.0,
-                 damping_rate=0.25,
-                 max_steer_angle=70.0,
-                 radius=30.0,
-                 max_brake_torque=1500.0,
-                 max_handbrake_torque=3000.0,
+                 tire_friction: float = 2.0,
+                 damping_rate: float = 0.25,
+                 max_steer_angle: float = 70.0,
+                 radius: float = 30.0,
+                 max_brake_torque: float = 1500.0,
+                 max_handbrake_torque: float = 3000.0,
                  position: Vector3D = Vector3D(0.0, 0.0, 0.0)) -> None: ...
     # endregion
 
@@ -5131,7 +5131,7 @@ class World:
     def reset_all_traffic_lights(self):
         """Resets the cycle of all traffic lights in the map to the initial state."""
 
-    def spawn_actor(self, blueprint: ActorBlueprint, transform: Transform, attach_to: Optional[Actor] = None, attachment_type=AttachmentType.Rigid) -> Actor:
+    def spawn_actor(self, blueprint: ActorBlueprint, transform: Transform, attach_to: Optional[Actor] = None, attachment_type: AttachmentType = AttachmentType.Rigid) -> Actor:
         """The method will create, return and spawn an actor into the world. The actor will need an available blueprint to be created and a transform (location and rotation). It can also be attached to a parent with a certain attachment type.
 
         Args:
@@ -5144,7 +5144,7 @@ class World:
             `Actor`
         """
 
-    def tick(self, seconds=10.0) -> int:
+    def tick(self, seconds: float = 10.0) -> int:
         """This method is used in synchronous mode, when the server waits for a client tick before computing the next frame. This method will send the tick, and give way to the server. It returns the ID of the new frame computed by the server.
 
         + Note: If no tick is received in synchronous mode, the simulation will freeze. Also, if many ticks are received from different clients, there may be synchronization issues. Please read the docs about synchronous mode to learn more.
