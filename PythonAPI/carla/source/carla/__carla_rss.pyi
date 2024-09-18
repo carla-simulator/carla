@@ -65,47 +65,45 @@ class RssActorConstellationResult:
     @property
     def rss_calculation_mode(self) -> ad.rss.map.RssMode:
         """The calculation mode to be applied with the actor."""
-        ...
+
     @rss_calculation_mode.setter
     def rss_calculation_mode(self, value: ad.rss.map.RssMode) -> None:
         """Setter for rss_calculation_mode property."""
-        ...
+
 
     @property
     def restrict_speed_limit_mode(self) -> ad.rss.map.RssSceneCreation.RestrictSpeedLimitMode:
         """The mode for restricting speed limit."""
-        ...
+
     @restrict_speed_limit_mode.setter
     def restrict_speed_limit_mode(self, value: ad.rss.map.RssSceneCreation.RestrictSpeedLimitMode) -> None:
         """Setter for restrict_speed_limit_mode property."""
-        ...
+
 
     @property
-    def ego_vehicle_dynamics(self) -> ad.rss.world.RssDynamics:
-        """The RSS dynamics to be applied for the ego vehicle."""
-        ...
+    def ego_vehicle_dynamics(self) -> ad.rss.world.RssDynamics: ...
+
     @ego_vehicle_dynamics.setter
     def ego_vehicle_dynamics(self, value: ad.rss.world.RssDynamics) -> None:
         """Setter for ego_vehicle_dynamics property."""
-        ...
 
     @property
     def actor_object_type(self) -> ad.rss.world.ObjectType:
         """The RSS object type to be used for the actor."""
-        ...
+
     @actor_object_type.setter
     def actor_object_type(self, value: ad.rss.world.ObjectType) -> None:
         """Setter for actor_object_type property."""
-        ...
+
 
     @property
     def actor_dynamics(self) -> ad.rss.world.RssDynamics:
         """The RSS dynamics to be applied for the actor."""
-        ...
+
     @actor_dynamics.setter
     def actor_dynamics(self, value: ad.rss.world.RssDynamics) -> None:
         """Setter for actor_dynamics property."""
-        ...
+
     # endregion
 
     # region Dunder Methods
@@ -265,12 +263,11 @@ class RssRestrictor:
 
         Returns:
             VehicleControl: The restricted vehicle control.
-
         """
     # endregion
 
     # region Setters
-    def set_log_level(self, log_level: RssLogLevel):
+    def set_log_level(self, log_level: RssLogLevel) -> None:
         """Sets the log level."""
     # endregion
 
@@ -332,7 +329,7 @@ class RssSensor(Sensor):
         """The current list of targets considered to route the vehicle. If no routing targets are defined, a route is generated at random."""
 
     # region Methods
-    def append_routing_target(self, routing_target: Transform):
+    def append_routing_target(self, routing_target: Transform) -> None:
         """
         Appends a new target position to the current route of the vehicle.
 
@@ -340,7 +337,7 @@ class RssSensor(Sensor):
             routing_target (Transform): New target point for the route. Choose these after the intersections to force the route to take the desired turn.
         """
 
-    def drop_route(self):
+    def drop_route(self) -> None:
         """
         Discards the current route.
 
@@ -348,7 +345,7 @@ class RssSensor(Sensor):
         Otherwise, a new route is created at random.
         """
 
-    def register_actor_constellation_callback(self, callback: Callable[[RssActorConstellationData], RssActorConstellationResult]):
+    def register_actor_constellation_callback(self, callback: Callable[[RssActorConstellationData], RssActorConstellationResult]) -> None:
         """
         Register a callback to customize a `carla.RssActorConstellationResult`.
         By this callback the settings of RSS parameters are done per actor constellation
@@ -358,12 +355,12 @@ class RssSensor(Sensor):
             callback (Callable): The function to be called whenever a RSS situation is about to be calculated.
         """
 
-    def reset_routing_targets(self):
+    def reset_routing_targets(self) -> None:
         """Erases the targets that have been appended to the route."""
 
-    def set_log_level(self, log_level: RssLogLevel | int):
+    def set_log_level(self, log_level: RssLogLevel | int) -> None:
         """Sets the log level."""
-    def set_map_log_level(self, log_level: RssLogLevel | int):
+    def set_map_log_level(self, log_level: RssLogLevel | int) -> None:
         """Sets the map log level."""
     # endregion
 
