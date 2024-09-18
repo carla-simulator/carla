@@ -95,7 +95,7 @@ endif ()
 
 
 set (
-  UE_DEPENDENCIES_ORDER_ONLY
+  UE_DEPENDENCIES
   carla-server
   libsqlite3
   Boost::asio
@@ -108,11 +108,17 @@ set (
   rpc
 )
 
-set (UE_DEPENDENCIES ${UE_DEPENDENCIES_ORDER_ONLY})
+set (UE_DEPENDENCIES_ORDER_ONLY ${UE_DEPENDENCIES})
 
 if (BUILD_CARLA_CLIENT)
   list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-client)
 endif ()
+
+list (
+  APPEND
+  UE_DEPENDENCIES_ORDER_ONLY
+  RecastBuilder
+)
 
 
 
@@ -444,7 +450,7 @@ function (
 
   add_dependencies (
     carla-unreal-package${TARGET_NAME_SUFFIX}
-    ${UE_DEPENDENCIES_ORDER_ONLY}
+    carla-unreal-editor
   )
 
   carla_add_custom_target (
