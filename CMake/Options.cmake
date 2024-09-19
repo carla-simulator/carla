@@ -105,12 +105,6 @@ carla_option (
 )
 
 carla_option (
-  BUILD_PYTHON_API_WHEEL_PACKAGE
-  "Whether to build the CARLA python API wheel package."
-  ON
-)
-
-carla_option (
   ENABLE_PEP517
   "Whether to use PEP 517."
   ON
