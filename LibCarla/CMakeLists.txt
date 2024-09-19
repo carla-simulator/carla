@@ -11,11 +11,6 @@ set (
   ${CARLA_WORKSPACE_PATH}/LibCarla/source
 )
 
-set (
-  LIBCARLA_THIRD_PARTY_SOURCE_PATH
-  ${LIBCARLA_SOURCE_PATH}/third-party
-)
-
 carla_two_step_configure_file (
   ${LIBCARLA_SOURCE_PATH}/carla/Version.h
   ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in
@@ -59,9 +54,9 @@ if (BUILD_CARLA_SERVER)
   file (
     GLOB
     LIBCARLA_SERVER_SOURCES_THIRD_PARTY
-    ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/odrSpiral/*.cpp
-    ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/moodycamel/*.cpp
-    ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.cpp
+    ${LIBCARLA_SOURCE_PATH}/third-party/odrSpiral/*.cpp
+    ${LIBCARLA_SOURCE_PATH}/third-party/moodycamel/*.cpp
+    ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.cpp
   )
 
   file (
@@ -107,9 +102,9 @@ if (BUILD_CARLA_SERVER)
   file (
     GLOB
     LIBCARLA_SERVER_HEADERS_THIRD_PARTY
-    ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/odrSpiral/*.h
-    ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/moodycamel/*.h
-    ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.hpp
+    ${LIBCARLA_SOURCE_PATH}/third-party/odrSpiral/*.h
+    ${LIBCARLA_SOURCE_PATH}/third-party/moodycamel/*.h
+    ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.hpp
   )
 
   carla_add_library (
@@ -206,10 +201,10 @@ if (BUILD_CARLA_CLIENT)
   file (
     GLOB
     LIBCARLA_CLIENT_HEADERS_THIRD_PARTY
-    ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/odrSpiral/*.h
-    ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/moodycamel/*.h
-    ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.hpp
-    ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.h
+    ${LIBCARLA_SOURCE_PATH}/third-party/odrSpiral/*.h
+    ${LIBCARLA_SOURCE_PATH}/third-party/moodycamel/*.h
+    ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.hpp
+    ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.h
   )
 
   file (
@@ -257,8 +252,8 @@ if (BUILD_CARLA_CLIENT)
   file (
     GLOB
     LIBCARLA_CLIENT_SOURCES_THIRD_PARTY
-    ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/odrSpiral/*.cpp
-    ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.cpp
+    ${LIBCARLA_SOURCE_PATH}/third-party/odrSpiral/*.cpp
+    ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.cpp
   )
 
   carla_add_library (

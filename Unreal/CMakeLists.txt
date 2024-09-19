@@ -66,19 +66,6 @@ if (ENABLE_ROS2_DEMO)
   set (LAUNCH_ARGS ${LAUNCH_ARGS} --ros2-demo)
 endif()
 
-if (WIN32)
-  set (EXE_EXT .exe)
-  set (UE_SYSTEM_NAME Win64)
-elseif (LINUX)
-  set (EXE_EXT)
-  set (UE_SYSTEM_NAME Linux)
-elseif (APPLE)
-  set (EXE_EXT)
-  set (UE_SYSTEM_NAME Mac)
-else ()
-  carla_error ("Unknown target system.")
-endif ()
-
 set (
   UNREAL_EDITOR_PATH
   ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
@@ -86,9 +73,8 @@ set (
 
 set (CARLA_UE_CONTENT_CHECK_PATH ${CARLA_UE_PATH}/Content/Carla/Blueprints)
 if (IS_DIRECTORY ${CARLA_UE_CONTENT_CHECK_PATH})
-  carla_message ("CARLA Unreal Content - FOUND")
+  carla_message_verbose ("CARLA Unreal Content - FOUND")
 else ()
-  carla_message ("CARLA Unreal Content - MISSING")
   carla_warning ("Could not find CARLA Content, download it or running the editor will result in a crash.")
 endif ()
 
@@ -380,8 +366,11 @@ function (
     set (PACKAGE_CONFIGURATION "default (shipping)")
   endif ()
 
+  set (TARGET_NAME_SHORT package${TARGET_NAME_SUFFIX})
+  set (TARGET_NAME carla-unreal-${TARGET_NAME_SHORT})
+
   carla_add_custom_target (
-    carla-unreal-package${TARGET_NAME_SUFFIX}
+    ${TARGET_NAME}
     "Create a CARLA package in ${PACKAGE_CONFIGURATION} mode."
     COMMAND
       ${CARLA_UE_BUILD_COMMAND_PREFIX}
@@ -413,9 +402,9 @@ function (
       USES_TERMINAL
       VERBATIM
     )
-
+  
   add_custom_command (
-    TARGET carla-unreal-package${TARGET_NAME_SUFFIX}
+    TARGET ${TARGET_NAME}
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE CREATING VERSION FILE UNREAL PACKAGE EXTRA FILES STARTED **********"
     COMMAND ${CMAKE_COMMAND}
@@ -449,20 +438,23 @@ function (
   )
 
   add_dependencies (
-    carla-unreal-package${TARGET_NAME_SUFFIX}
+    ${TARGET_NAME}
     carla-unreal-editor
   )
 
   carla_add_custom_target (
-    package${TARGET_NAME_SUFFIX}
+    ${TARGET_NAME_SHORT}
     "Create a CARLA package in ${PACKAGE_CONFIGURATION} mode."
   )
 
   add_dependencies (
-    package${TARGET_NAME_SUFFIX}
-    carla-unreal-package${TARGET_NAME_SUFFIX}
+    ${TARGET_NAME_SHORT}
+    ${TARGET_NAME}
   )
+
 endfunction()
+
+
 
 # Docs for UE5 build configurations:
 # https://docs.unrealengine.com/4.27/en-US/ProductionPipelines/DevelopmentSetup/BuildConfigurations/
@@ -488,12 +480,6 @@ set (
   VERBATIM
 )
 
-carla_add_custom_target (
-  launch
-  "Build and open CARLA in the Unreal Editor."
-  ${CARLA_LAUNCH_TARGET_OPTIONS}
-)
-
 if (WIN32)
   set (
     PRELAUNCH_CONTENT_CHECK_COMMAND
@@ -517,12 +503,6 @@ carla_add_custom_target (
   VERBATIM
 )
 
-add_dependencies (
-  launch
-  carla-unreal-editor
-  check-unreal-content
-)
-
 carla_add_custom_target (
   launch-only
   "Open CARLA in the Unreal Editor. This will not rebuild outdated targets."
@@ -531,6 +511,18 @@ carla_add_custom_target (
 
 add_dependencies (
   launch-only
+  check-unreal-content
+)
+
+carla_add_custom_target (
+  launch
+  "Build and open CARLA in the Unreal Editor."
+  ${CARLA_LAUNCH_TARGET_OPTIONS}
+)
+
+add_dependencies (
+  launch
+  carla-unreal-editor
   check-unreal-content
 )
 

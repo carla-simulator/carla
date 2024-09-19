@@ -1,6 +1,6 @@
 cmake_minimum_required (
   VERSION
-  @CMAKE_MAJOR_VERSION@.@CMAKE_MINOR_VERSION@.@CMAKE_PATCH_VERSION@
+  @CARLA_CMAKE_MINIMUM_REQUIRED_VERSION@
 )
 
 project (
@@ -47,7 +47,7 @@ set (
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-carla_message (
+carla_message_verbose (
   "Selected Python executable: ${Python3_EXECUTABLE} (Interpreter ID: ${Python3_INTERPRETER_ID})"
 )
 

@@ -94,8 +94,9 @@ target_link_libraries (
   libsqlite3
 )
 
-# ==== ZLIB ====
 
+
+# ==== ZLIB ====
 carla_dependency_option (ZLIB_BUILD_EXAMPLES OFF)
 carla_dependency_add (
   zlib
@@ -117,8 +118,9 @@ endif ()
 carla_dependency_option (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
 carla_dependency_option (ZLIB_LIBRARIES ${ZLIB_LIBRARY})
 
-# ==== LIBPNG ====
 
+
+# ==== LIBPNG ====
 carla_dependency_option (PNG_SHARED OFF)
 carla_dependency_option (PNG_STATIC ON)
 if (APPLE)
@@ -143,11 +145,6 @@ include_directories (
 
 
 # ==== BOOST ====
-
-carla_dependency_option (BOOST_ENABLE_PYTHON ${BUILD_PYTHON_API})
-carla_dependency_option (BOOST_ENABLE_MPI OFF)
-carla_dependency_option (BOOST_LOCALE_WITH_ICU OFF)
-carla_dependency_option (BOOST_LOCALE_WITH_ICONV OFF)
 set (
   BOOST_INCLUDED_PROJECTS
   asio
@@ -155,11 +152,22 @@ set (
   python
   date_time
   geometry
-  gil
   container
   variant2
+  gil
+)
+set (
+  BOOST_EXCLUDED_PROJECTS
+  # filesystem # <- Boost.GIL links with Boost.filesystem, so we can't remove the dependency yet.
 )
 carla_dependency_option (BOOST_INCLUDE_LIBRARIES "${BOOST_INCLUDED_PROJECTS}")
+carla_dependency_option (BOOST_EXCLUDE_LIBRARIES "${BOOST_EXCLUDED_PROJECTS}")
+carla_dependency_option (BOOST_ENABLE_PYTHON ${BUILD_PYTHON_API})
+carla_dependency_option (BOOST_ENABLE_MPI OFF)
+carla_dependency_option (BOOST_LOCALE_WITH_ICU OFF)
+carla_dependency_option (BOOST_LOCALE_WITH_ICONV OFF)
+carla_dependency_option (BOOST_GIL_BUILD_EXAMPLES OFF)
+carla_dependency_option (BOOST_GIL_BUILD_HEADER_TESTS OFF)
 carla_dependency_add(
   boost
   ${CARLA_BOOST_TAG}
@@ -167,8 +175,9 @@ carla_dependency_add(
   https://github.com/boostorg/boost.git
 )
 
-# ==== EIGEN ====
 
+
+# ==== EIGEN ====
 carla_dependency_option (EIGEN_BUILD_PKGCONFIG OFF)
 carla_dependency_option (BUILD_TESTING OFF)
 carla_dependency_option (EIGEN_BUILD_DOC OFF)
@@ -179,8 +188,9 @@ carla_dependency_add (
   https://gitlab.com/libeigen/eigen.git
 )
 
-# ==== RPCLIB ====
 
+
+# ==== RPCLIB ====
 carla_dependency_add (
   rpclib
   ${CARLA_RPCLIB_TAG}
@@ -188,8 +198,9 @@ carla_dependency_add (
   https://github.com/carla-simulator/rpclib.git
 )
 
-# ==== RECAST ====
 
+
+# ==== RECAST ====
 carla_dependency_option (RECASTNAVIGATION_BUILDER ON)
 carla_dependency_add (
   recastnavigation
@@ -198,9 +209,10 @@ carla_dependency_add (
   https://github.com/carla-simulator/recastnavigation.git
 )
 
-# ==== PROJ ====
+
 
 if (ENABLE_OSM2ODR)
+  # ==== PROJ ====
   carla_dependency_option (BUILD_TESTING OFF)
   carla_dependency_option (ENABLE_TIFF OFF)
   carla_dependency_option (ENABLE_CURL OFF)
@@ -212,9 +224,10 @@ if (ENABLE_OSM2ODR)
   )
 endif ()
 
-# ==== XERCESC ====
+
 
 if (ENABLE_OSM2ODR)
+  # ==== XERCESC ====
   carla_dependency_add (
     xercesc
     ${CARLA_XERCESC_TAG}
@@ -223,20 +236,18 @@ if (ENABLE_OSM2ODR)
   )
 endif ()
 
-# ==== LUNASVG ====
+
 
 if (BUILD_OSM_WORLD_RENDERER)
+  # ==== LUNASVG ====
   carla_dependency_add (
     lunasvg
     ${CARLA_LUNASVG_TAG}
     https://github.com/sammycage/lunasvg/archive/refs/tags/${CARLA_LUNASVG_TAG}.zip
     https://github.com/sammycage/lunasvg.git
   )
-endif ()
 
-# ==== LIBOSMSCOUT ====
-
-if (BUILD_OSM_WORLD_RENDERER)
+  # ==== LIBOSMSCOUT ====
   carla_dependency_add (
     libosmscout
     ${CARLA_LIBOSMSCOUT_TAG}
@@ -245,9 +256,10 @@ if (BUILD_OSM_WORLD_RENDERER)
   )
 endif ()
 
-# ==== STREETMAP ====
+
 
 if (BUILD_CARLA_UNREAL)
+  # ==== STREETMAP ====
   carla_dependency_add (
     StreetMap
     ${CARLA_STREETMAP_TAG}
