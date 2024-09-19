@@ -7,12 +7,6 @@ project (carla-ros2-native-project)
 
 include (ExternalProject)
 
-configure_file (
-  ${CMAKE_CURRENT_SOURCE_DIR}/LibCarlaRos2Native/CMakeLists.txt.in
-  ${CMAKE_CURRENT_SOURCE_DIR}/LibCarlaRos2Native/CMakeLists.txt
-  @ONLY
-)
-
 set (PROJECT_INSTALL_PATH ${CMAKE_CURRENT_BINARY_DIR}/install)
 
 set (PROJECT_CMAKE_FLAGS

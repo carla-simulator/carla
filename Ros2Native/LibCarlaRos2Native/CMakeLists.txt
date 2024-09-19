@@ -1,6 +1,6 @@
 cmake_minimum_required (
   VERSION
-  @CARLA_CMAKE_MINIMUM_REQUIRED_VERSION@
+  3.27.2
 )
 
 project (
@@ -9,7 +9,7 @@ project (
 
 set (
   LIBCARLA_SOURCE_PATH
-  @CARLA_WORKSPACE_PATH@/LibCarla/source
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../LibCarla/source
 )
 
 file (
