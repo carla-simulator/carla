@@ -1,10 +1,20 @@
-cmake_minimum_required (VERSION 3.28.0)
+cmake_minimum_required (
+  VERSION
+  ${CARLA_CMAKE_MINIMUM_REQUIRED_VERSION}
+)
 
 project (carla-ros2-native-project)
 
 include (ExternalProject)
 
+configure_file (
+  ${CMAKE_CURRENT_SOURCE_DIR}/LibCarlaRos2Native/CMakeLists.txt.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/LibCarlaRos2Native/CMakeLists.txt
+  @ONLY
+)
+
 set (PROJECT_INSTALL_PATH ${CMAKE_CURRENT_BINARY_DIR}/install)
+
 set (PROJECT_CMAKE_FLAGS
     -DCMAKE_CXX_COMPILER=${GXX_COMPILER}
     -DCMAKE_C_COMPILER=${GCC_COMPILER}

@@ -8,9 +8,14 @@
 
 ]]
 
+set (
+  CARLA_CMAKE_MINIMUM_REQUIRED_VERSION
+  3.27.2
+)
+
 cmake_minimum_required (
   VERSION
-  3.27.2
+  ${CARLA_CMAKE_MINIMUM_REQUIRED_VERSION}
 )
 
 cmake_policy (SET CMP0097 NEW)
