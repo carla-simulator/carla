@@ -46,7 +46,7 @@ static auto GetVectorOfBoneTransformFromList(const boost::python::list &list) {
 }
 
 static auto GetWheels(const carla::rpc::VehiclePhysicsControl &self) {
-  const auto &wheels = self.GetWheels();
+  auto &wheels = self.wheels;
   boost::python::object get_iter = boost::python::iterator<std::vector<carla::rpc::WheelPhysicsControl>>();
   boost::python::object iter = get_iter(wheels);
   return boost::python::list(iter);
@@ -62,7 +62,7 @@ static void SetWheels(carla::rpc::VehiclePhysicsControl &self, const boost::pyth
 }
 
 static auto GetForwardGearRatios(const carla::rpc::VehiclePhysicsControl &self) {
-  const auto &gears = self.GetForwardGearRatios();
+  auto &gears = self.forward_gear_ratios;
   boost::python::object get_iter = boost::python::iterator<std::vector<float>>();
   boost::python::object iter = get_iter(gears);
   return boost::python::list(iter);
@@ -74,11 +74,11 @@ static void SetForwardGearRatios(carla::rpc::VehiclePhysicsControl &self, const 
   for (auto i = 0u; i < length; ++i) {
     gears.push_back(boost::python::extract<float &>(list[i]));
   }
-  self.SetForwardGearRatios(gears);
+  self.forward_gear_ratios = gears;
 }
 
 static auto GetReverseGearRatios(const carla::rpc::VehiclePhysicsControl &self) {
-  const auto &gears = self.GetReverseGearRatios();
+  auto &gears = self.reverse_gear_ratios;
   boost::python::object get_iter = boost::python::iterator<std::vector<float>>();
   boost::python::object iter = get_iter(gears);
   return boost::python::list(iter);
@@ -90,11 +90,11 @@ static void SetReverseGearRatios(carla::rpc::VehiclePhysicsControl &self, const 
   for (auto i = 0u; i < length; ++i) {
     gears.push_back(boost::python::extract<float &>(list[i]));
   }
-  self.SetReverseGearRatios(gears);
+  self.reverse_gear_ratios = gears;
 }
 
 static auto GetTorqueCurve(const carla::rpc::VehiclePhysicsControl &self) {
-  const std::vector<carla::geom::Vector2D> &torque_curve = self.GetTorqueCurve();
+  auto &torque_curve = self.torque_curve;
   boost::python::object get_iter = boost::python::iterator<const std::vector<carla::geom::Vector2D>>();
   boost::python::object iter = get_iter(torque_curve);
   return boost::python::list(iter);
@@ -105,7 +105,7 @@ static void SetTorqueCurve(carla::rpc::VehiclePhysicsControl &self, const boost:
 }
 
 static auto GetSteeringCurve(const carla::rpc::VehiclePhysicsControl &self) {
-  const std::vector<carla::geom::Vector2D> &steering_curve = self.GetSteeringCurve();
+  auto &steering_curve = self.steering_curve;
   boost::python::object get_iter = boost::python::iterator<const std::vector<carla::geom::Vector2D>>();
   boost::python::object iter = get_iter(steering_curve);
   return boost::python::list(iter);
@@ -148,6 +148,69 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
     "steering_curve",
     "wheels",
     "use_sweep_wheel_collision"
+  };
+  const auto NUM_ARGUMENTS = sizeof(args_names) / sizeof(const char*);
+
+  boost::python::object self = args[0];
+  args = boost::python::tuple(args.slice(1, boost::python::_));
+
+  auto res = self.attr("__init__")();
+  if (len(args) > 0) {
+    for (unsigned int i = 0; i < len(args); ++i) {
+      self.attr(args_names[i]) = args[i];
+    }
+  }
+
+  for (unsigned int i = 0; i < NUM_ARGUMENTS; ++i) {
+    if (kwargs.contains(args_names[i])) {
+      self.attr(args_names[i]) = kwargs[args_names[i]];
+    }
+  }
+
+  return res;
+}
+
+boost::python::object WheelPhysicsControl_init(boost::python::tuple args, boost::python::dict kwargs) {
+  // Args names
+  const char* const args_names[] = {
+    "axle_type",
+    "offset",
+    "wheel_radius",
+    "wheel_width",
+    "wheel_mass",
+    "cornering_stiffness",
+    "friction_force_multiplier",
+    "side_slip_modifier",
+    "slip_threshold",
+    "skid_threshold",
+    "max_steer_angle",
+    "affected_by_steering",
+    "affected_by_brake",
+    "affected_by_handbrake",
+    "affected_by_engine",
+    "abs_enabled",
+    "traction_control_enabled",
+    "max_wheelspin_rotation",
+    "external_torque_combine_method",
+    "lateral_slip_graph",
+    "suspension_axis",
+    "suspension_force_offset",
+    "suspension_max_raise",
+    "suspension_max_drop",
+    "suspension_damping_ratio",
+    "wheel_load_ratio",
+    "spring_rate",
+    "spring_preload",
+    "suspension_smoothing",
+    "rollbar_scaling",
+    "sweep_shape",
+    "sweep_type",
+    "max_brake_torque",
+    "max_hand_brake_torque",
+    "wheel_index",
+    "location",
+    "old_location",
+    "velocity",
   };
   const auto NUM_ARGUMENTS = sizeof(args_names) / sizeof(const char*);
 
@@ -341,26 +404,48 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
-    .def(init<float, float, float, float, bool, bool, float, float, cg::Vector3D>(
-        (arg("tire_friction")=3.0f,
-         arg("max_steer_angle")=70.0f,
-         arg("radius")=30.0f,
-         arg("cornering_stiffness")=1000.0f,
-         arg("abs")=false,
-         arg("traction_control")=false,
-         arg("max_brake_torque")=1500.0f,
-         arg("max_handbrake_torque")=3000.0f,
-         arg("position")=cg::Vector3D{0.0f, 0.0f, 0.0f})))
-    .def_readwrite("tire_friction", &cr::WheelPhysicsControl::tire_friction)
-    .def_readwrite("max_steer_angle", &cr::WheelPhysicsControl::max_steer_angle)
-    .def_readwrite("radius", &cr::WheelPhysicsControl::radius)
+
+  class_<cr::WheelPhysicsControl>("WheelPhysicsControl", no_init)
+    .def("__init__", raw_function(WheelPhysicsControl_init))
+    .def(init<>())
+    .def_readwrite("axle_type", &cr::WheelPhysicsControl::axle_type)
+    .def_readwrite("offset", &cr::WheelPhysicsControl::offset)
+    .def_readwrite("wheel_radius", &cr::WheelPhysicsControl::wheel_radius)
+    .def_readwrite("wheel_width", &cr::WheelPhysicsControl::wheel_width)
+    .def_readwrite("wheel_mass", &cr::WheelPhysicsControl::wheel_mass)
     .def_readwrite("cornering_stiffness", &cr::WheelPhysicsControl::cornering_stiffness)
-    .def_readwrite("abs", &cr::WheelPhysicsControl::abs)
-    .def_readwrite("traction_control", &cr::WheelPhysicsControl::traction_control)
+    .def_readwrite("friction_force_multiplier", &cr::WheelPhysicsControl::friction_force_multiplier)
+    .def_readwrite("side_slip_modifier", &cr::WheelPhysicsControl::side_slip_modifier)
+    .def_readwrite("slip_threshold", &cr::WheelPhysicsControl::slip_threshold)
+    .def_readwrite("skid_threshold", &cr::WheelPhysicsControl::skid_threshold)
+    .def_readwrite("max_steer_angle", &cr::WheelPhysicsControl::max_steer_angle)
+    .def_readwrite("affected_by_steering", &cr::WheelPhysicsControl::affected_by_steering)
+    .def_readwrite("affected_by_brake", &cr::WheelPhysicsControl::affected_by_brake)
+    .def_readwrite("affected_by_handbrake", &cr::WheelPhysicsControl::affected_by_handbrake)
+    .def_readwrite("affected_by_engine", &cr::WheelPhysicsControl::affected_by_engine)
+    .def_readwrite("abs_enabled", &cr::WheelPhysicsControl::abs_enabled)
+    .def_readwrite("traction_control_enabled", &cr::WheelPhysicsControl::traction_control_enabled)
+    .def_readwrite("max_wheelspin_rotation", &cr::WheelPhysicsControl::max_wheelspin_rotation)
+    .def_readwrite("external_torque_combine_method", &cr::WheelPhysicsControl::external_torque_combine_method)
+    .def_readwrite("lateral_slip_graph", &cr::WheelPhysicsControl::lateral_slip_graph)
+    .def_readwrite("suspension_axis", &cr::WheelPhysicsControl::suspension_axis)
+    .def_readwrite("suspension_force_offset", &cr::WheelPhysicsControl::suspension_force_offset)
+    .def_readwrite("suspension_max_raise", &cr::WheelPhysicsControl::suspension_max_raise)
+    .def_readwrite("suspension_max_drop", &cr::WheelPhysicsControl::suspension_max_drop)
+    .def_readwrite("suspension_damping_ratio", &cr::WheelPhysicsControl::suspension_damping_ratio)
+    .def_readwrite("wheel_load_ratio", &cr::WheelPhysicsControl::wheel_load_ratio)
+    .def_readwrite("spring_rate", &cr::WheelPhysicsControl::spring_rate)
+    .def_readwrite("spring_preload", &cr::WheelPhysicsControl::spring_preload)
+    .def_readwrite("suspension_smoothing", &cr::WheelPhysicsControl::suspension_smoothing)
+    .def_readwrite("rollbar_scaling", &cr::WheelPhysicsControl::rollbar_scaling)
+    .def_readwrite("sweep_shape", &cr::WheelPhysicsControl::sweep_shape)
+    .def_readwrite("sweep_type", &cr::WheelPhysicsControl::sweep_type)
     .def_readwrite("max_brake_torque", &cr::WheelPhysicsControl::max_brake_torque)
-    .def_readwrite("max_handbrake_torque", &cr::WheelPhysicsControl::max_handbrake_torque)
-    .def_readwrite("position", &cr::WheelPhysicsControl::position)
+    .def_readwrite("max_hand_brake_torque", &cr::WheelPhysicsControl::max_hand_brake_torque)
+    .def_readwrite("wheel_index", &cr::WheelPhysicsControl::wheel_index)
+    .def_readwrite("location", &cr::WheelPhysicsControl::location)
+    .def_readwrite("old_location", &cr::WheelPhysicsControl::old_location)
+    .def_readwrite("velocity", &cr::WheelPhysicsControl::velocity)
     .def("__eq__", &cr::WheelPhysicsControl::operator==)
     .def("__ne__", &cr::WheelPhysicsControl::operator!=)
     .def(self_ns::str(self_ns::self))

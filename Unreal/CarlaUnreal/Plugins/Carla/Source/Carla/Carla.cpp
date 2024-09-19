@@ -124,12 +124,12 @@ IMPLEMENT_MODULE(FCarlaModule, Carla)
 // -- Implement carla throw_exception ------------------------------------------
 // =============================================================================
 
+#ifndef __cpp_exceptions
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Exception.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <exception>
-
 namespace carla {
 
   void throw_exception(const std::exception &e) {
@@ -139,3 +139,4 @@ namespace carla {
   }
 
 } // namespace carla
+#endif

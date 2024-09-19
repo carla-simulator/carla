@@ -466,15 +466,45 @@ namespace rpc {
   }
 
   inline std::ostream &operator<<(std::ostream &out, const WheelPhysicsControl &control) {
-    out << "WheelPhysicsControl(tire_friction=" << std::to_string(control.tire_friction)
-        << ", max_steer_angle=" << std::to_string(control.max_steer_angle)
-        << ", radius=" << std::to_string(control.radius)
-        << ", cornering_stiffness=" << std::to_string(control.cornering_stiffness)
-        << ", abs=" << std::to_string(control.abs)
-        << ", traction_control=" << std::to_string(control.traction_control)
-        << ", max_brake_torque=" << std::to_string(control.max_brake_torque)
-        << ", max_handbrake_torque=" << std::to_string(control.max_handbrake_torque)
-        << ", position=" << control.position << ')';
+    out << "WheelPhysicsControl(axle_type=" << std::to_string(control.axle_type)
+      << ", offset" << control.offset
+      << ", wheel_radius=" << std::to_string(control.wheel_radius)
+      << ", wheel_width=" << std::to_string(control.wheel_width)
+      << ", wheel_mass=" << std::to_string(control.wheel_mass)
+      << ", cornering_stiffness=" << std::to_string(control.cornering_stiffness)
+      << ", friction_force_multiplier=" << std::to_string(control.friction_force_multiplier)
+      << ", side_slip_modifier=" << std::to_string(control.side_slip_modifier)
+      << ", slip_threshold=" << std::to_string(control.slip_threshold)
+      << ", skid_threshold=" << std::to_string(control.skid_threshold)
+      << ", max_steer_angle=" << std::to_string(control.max_steer_angle)
+      << ", affected_by_steering=" << std::to_string(control.affected_by_steering)
+      << ", affected_by_brake=" << std::to_string(control.affected_by_brake)
+      << ", affected_by_handbrake=" << std::to_string(control.affected_by_handbrake)
+      << ", affected_by_engine=" << std::to_string(control.affected_by_engine)
+      << ", abs_enabled=" << std::to_string(control.abs_enabled)
+      << ", traction_control_enabled=" << std::to_string(control.traction_control_enabled)
+      << ", max_wheelspin_rotation=" << std::to_string(control.max_wheelspin_rotation)
+      << ", external_torque_combine_method=" << std::to_string(control.external_torque_combine_method)
+      << ", lateral_slip_graph=" << control.lateral_slip_graph
+      << ", suspension_axis=" << control.suspension_axis
+      << ", suspension_force_offset=" << control.suspension_force_offset
+      << ", suspension_max_raise=" << std::to_string(control.suspension_max_raise)
+      << ", suspension_max_drop=" << std::to_string(control.suspension_max_drop)
+      << ", suspension_damping_ratio=" << std::to_string(control.suspension_damping_ratio)
+      << ", wheel_load_ratio=" << std::to_string(control.wheel_load_ratio)
+      << ", spring_rate=" << std::to_string(control.spring_rate)
+      << ", spring_preload=" << std::to_string(control.spring_preload)
+      << ", suspension_smoothing=" << std::to_string(control.suspension_smoothing)
+      << ", rollbar_scaling=" << std::to_string(control.rollbar_scaling)
+      << ", sweep_shape=" << std::to_string(control.sweep_shape)
+      << ", sweep_type=" << std::to_string(control.sweep_type)
+      << ", max_brake_torque=" << std::to_string(control.max_brake_torque)
+      << ", max_hand_brake_torque=" << std::to_string(control.max_hand_brake_torque)
+      << ", wheel_index=" << std::to_string(control.wheel_index)
+      << ", location=" << control.location
+      << ", old_location=" << control.old_location
+      << ", velocity=" << control.velocity
+      << ')';
     return out;
   }
 
@@ -506,7 +536,7 @@ namespace rpc {
       << ", inertia_tensor_scale=" << control.inertia_tensor_scale
       << ", sleep_threshold=" << control.sleep_threshold
       << ", sleep_slope_limit=" << control.sleep_slope_limit
-      << ", steering_curv=" << control.steering_curve
+      << ", steering_curve=" << control.steering_curve
       << ", wheels=" << control.wheels
       << ", use_sweep_wheel_collision=" << control.use_sweep_wheel_collision
       << ")";
