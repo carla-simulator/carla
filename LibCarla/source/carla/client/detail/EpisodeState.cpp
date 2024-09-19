@@ -31,6 +31,8 @@ namespace detail {
               actor.velocity,
               actor.angular_velocity,
               actor.acceleration,
+              actor.unreal_name,
+              actor.unreal_class_name,
               actor.state});
       DEBUG_ASSERT(result.second);
     }

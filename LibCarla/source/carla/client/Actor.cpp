@@ -32,6 +32,16 @@ namespace client {
     return GetEpisode().Lock()->GetActorAcceleration(*this);
   }
 
+  std::string Actor::GetUnrealName() const
+  {
+    return GetEpisode().Lock()->GetActorUnrealName(*this);
+  }
+
+  std::string Actor::GetUnrealClassName() const
+  {
+    return GetEpisode().Lock()->GetActorUnrealClassName(*this);
+  }
+
   void Actor::SetLocation(const geom::Location &location) {
     GetEpisode().Lock()->SetActorLocation(*this, location);
   }
