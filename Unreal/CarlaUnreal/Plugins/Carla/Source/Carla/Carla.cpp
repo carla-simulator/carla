@@ -124,7 +124,7 @@ IMPLEMENT_MODULE(FCarlaModule, Carla)
 // -- Implement carla throw_exception ------------------------------------------
 // =============================================================================
 
-#ifndef __cpp_exceptions
+#ifdef LIBCARLA_NO_EXCEPTIONS
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Exception.h>
 #include <compiler/enable-ue4-macros.h>
