@@ -12,6 +12,7 @@
 
 #include <ctime>
 #include <sstream>
+#include <format>
 #include <string>
 
 #include <compiler/disable-ue4-macros.h>
