@@ -61,6 +61,19 @@ if (WIN32)
   list (APPEND CARLA_COMMON_DEFINITIONS _USE_MATH_DEFINES)
 endif ()
 
+if (WIN32)
+  set (EXE_EXT .exe)
+  set (UE_SYSTEM_NAME Win64)
+elseif (LINUX)
+  set (EXE_EXT)
+  set (UE_SYSTEM_NAME Linux)
+elseif (APPLE)
+  set (EXE_EXT)
+  set (UE_SYSTEM_NAME Mac)
+else ()
+  carla_error ("Unknown target system.")
+endif ()
+
 # ================================
 #   Exception Definitions
 # ================================

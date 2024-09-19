@@ -66,19 +66,6 @@ if (ENABLE_ROS2_DEMO)
   set (LAUNCH_ARGS ${LAUNCH_ARGS} --ros2-demo)
 endif()
 
-if (WIN32)
-  set (EXE_EXT .exe)
-  set (UE_SYSTEM_NAME Win64)
-elseif (LINUX)
-  set (EXE_EXT)
-  set (UE_SYSTEM_NAME Linux)
-elseif (APPLE)
-  set (EXE_EXT)
-  set (UE_SYSTEM_NAME Mac)
-else ()
-  carla_error ("Unknown target system.")
-endif ()
-
 set (
   UNREAL_EDITOR_PATH
   ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}

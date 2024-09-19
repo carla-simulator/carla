@@ -15,13 +15,13 @@ set (PROJECT_CMAKE_FLAGS
 
 ExternalProject_add (
   foonathan_memory
-  URL https://github.com/eProsima/foonathan_memory_vendor/archive/refs/heads/master.zip
+  URL https://github.com/eProsima/foonathan_memory_vendor/archive/refs/heads/${CARLA_FOONATHAN_MEMORY_VENDOR_TAG}.zip
   CMAKE_ARGS ${PROJECT_CMAKE_FLAGS} -DBUILD_SHARED_LIBS=ON -DFOONATHAN_MEMORY_FORCE_VENDORED_BUILD=ON
 )
 
 ExternalProject_add (
   fastcdr
-  URL https://github.com/eProsima/Fast-CDR/archive/refs/heads/1.1.x.zip
+  URL https://github.com/eProsima/Fast-CDR/archive/refs/heads/${CARLA_FASTCDR_TAG}.zip
   CMAKE_ARGS ${PROJECT_CMAKE_FLAGS}
 )
 
@@ -30,7 +30,7 @@ ExternalProject_add (
 ExternalProject_add (
   fastdds
   GIT_REPOSITORY https://github.com/eProsima/Fast-DDS.git
-  GIT_TAG 2.11.2
+  GIT_TAG ${CARLA_FASTDDS_TAG}
   CMAKE_ARGS ${PROJECT_CMAKE_FLAGS} -DTHIRDPARTY_Asio=FORCE -DTHIRDPARTY_TinyXML2=FORCE -DCOMPILE_TOOLS=OFF
   DEPENDS foonathan_memory fastcdr
 )

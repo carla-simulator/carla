@@ -382,7 +382,6 @@ carla_string_option (
   ${CARLA_LIBOSMSCOUT_VERSION}
 )
 
-
 # ==== STREETMAP ====
 
 carla_string_option (
@@ -395,4 +394,46 @@ carla_string_option (
   CARLA_STREETMAP_TAG
   "Target StreetMap git tag."
   ${CARLA_STREETMAP_VERSION}
+)
+
+# ==== FASTDDS ====
+
+carla_string_option (
+  CARLA_FASTDDS_VERSION
+  "Target Fast-DDS version."
+  2.11.2
+)
+
+carla_string_option (
+  CARLA_FASTDDS_TAG
+  "Target Fast-DDS git tag."
+  ${CARLA_FASTDDS_VERSION}
+)
+
+# ==== FASTCDR ====
+
+carla_string_option (
+  CARLA_FASTCDR_VERSION
+  "Target Fast-CDR version."
+  2.2.x
+)
+
+carla_string_option (
+  CARLA_FASTCDR_TAG
+  "Target Fast-CDR git tag."
+  ${CARLA_FASTCDR_VERSION}
+)
+
+# ==== FOONATHAN MEMORY VENDOR ====
+
+carla_string_option (
+  CARLA_FOONATHAN_MEMORY_VENDOR_VERSION
+  "Target foonathan_memory_vendor version."
+  master
+)
+
+carla_string_option (
+  CARLA_FOONATHAN_MEMORY_VENDOR_TAG
+  "Target foonathan_memory_vendor git tag."
+  ${CARLA_FOONATHAN_MEMORY_VENDOR_VERSION}
 )
