@@ -2655,10 +2655,10 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   {
     REQUIRE_CARLA_EPISODE();
     auto CarlaActor = Episode->FindCarlaActor(ActorID);
-    if (CarlaActor == nullptr) [[unlikely]]
+    if (CarlaActor == nullptr)
       return std::string();
     auto Actor = CarlaActor->GetActor();
-    if (Actor == nullptr) [[unlikely]]
+    if (Actor == nullptr)
       return std::string();
     auto Name = Actor->GetName();
     if (Name.Len() == 0)
@@ -2672,13 +2672,13 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   {
     REQUIRE_CARLA_EPISODE();
     auto CarlaActor = Episode->FindCarlaActor(ActorID);
-    if (CarlaActor == nullptr) [[unlikely]]
+    if (CarlaActor == nullptr)
       return std::string();
     auto Actor = CarlaActor->GetActor();
-    if (Actor == nullptr) [[unlikely]]
+    if (Actor == nullptr)
       return std::string();
     auto Class = Actor->GetClass();
-    if (Class == nullptr) [[unlikely]]
+    if (Class == nullptr)
       return std::string();
     auto Name = Class->GetName();
     if (Name.Len() == 0)
