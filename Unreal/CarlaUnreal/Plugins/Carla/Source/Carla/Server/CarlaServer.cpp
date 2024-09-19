@@ -2650,7 +2650,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     return URayTracer::CastRay(StartLocation, EndLocation, World);
   };
 
-  BIND_SYNC(get_actor_unreal_name) << [this](
+  BIND_SYNC(get_actor_name) << [this](
     cr::ActorId ActorID) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
@@ -2663,7 +2663,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     return std::string((const char*)NameStr.Get(), NameStr.Length());
   };
 
-  BIND_SYNC(get_actor_unreal_class_name) << [this](
+  BIND_SYNC(get_actor_class_name) << [this](
     cr::ActorId ActorID) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();

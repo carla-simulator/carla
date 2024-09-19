@@ -64,13 +64,13 @@ namespace client {
     ///
     /// @note This function does not call the simulator, it returns the
     /// acceleration calculated after the actor's velocity.
-    std::string GetUnrealName() const;
+    std::string GetActorName() const;
 
     /// Return the name of the underlying actor's Unreal class.
     ///
     /// @note This function does not call the simulator, it returns the
     /// acceleration calculated after the actor's velocity.
-    std::string GetUnrealClassName() const;
+    std::string GetActorClassName() const;
 
     /// Teleport the actor to @a location.
     void SetLocation(const geom::Location &location);
