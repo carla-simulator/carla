@@ -409,7 +409,7 @@ carla_string_option (
 carla_string_option (
   CARLA_FASTCDR_VERSION
   "Target Fast-CDR version."
-  2.2.x
+  1.1.x
 )
 
 carla_string_option (
