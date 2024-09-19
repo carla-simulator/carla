@@ -37,7 +37,7 @@ namespace carla {
       bool traction_control_enabled = false;
       float max_wheelspin_rotation = 30;
       uint8_t external_torque_combine_method = 0; // @TODO INTRODUCE ENUM
-      std::vector<geom::Vector2D> lateral_slip_graph;
+      std::vector<geom::Vector2D> lateral_slip_graph = {};
       geom::Vector3D suspension_axis = geom::Vector3D(0, 0, -1);
       geom::Vector3D suspension_force_offset = geom::Vector3D(0, 0, 0);
       float suspension_max_raise = 10.0f;

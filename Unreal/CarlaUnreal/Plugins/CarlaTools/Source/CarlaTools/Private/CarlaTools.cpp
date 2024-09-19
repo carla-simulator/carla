@@ -21,6 +21,7 @@ void FCarlaToolsModule::ShutdownModule()
 	
 IMPLEMENT_MODULE(FCarlaToolsModule, CarlaTools)
 
+#ifndef __cpp_exceptions
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Exception.h>
 #include <compiler/enable-ue4-macros.h>
@@ -36,3 +37,4 @@ namespace carla {
   }
 
 } // namespace carla 
+#endif
