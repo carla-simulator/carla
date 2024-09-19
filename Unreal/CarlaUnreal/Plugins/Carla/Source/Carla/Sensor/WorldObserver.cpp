@@ -353,6 +353,9 @@ static carla::Buffer FWorldObserver_Serialize(
     }
     ActorTransform = View->GetActorGlobalTransform();
 
+    auto ActorPtr = View->GetActor();
+    check(ActorPtr != nullptr);
+
     ActorDynamicState info = {
       View->GetActorId(),
       View->GetActorState(),
@@ -360,7 +363,7 @@ static carla::Buffer FWorldObserver_Serialize(
       carla::geom::Vector3D(Velocity.X, Velocity.Y, Velocity.Z),
       AngularVelocity,
       Acceleration,
-      State,
+      State
     };
     write_data(info);
   }

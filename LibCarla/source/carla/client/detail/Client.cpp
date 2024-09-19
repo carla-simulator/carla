@@ -710,6 +710,16 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
   }
 
+  std::string Client::GetActorName(rpc::ActorId actor) const
+  {
+    return _pimpl->CallAndWait<std::string>("get_actor_name", actor);
+  }
+
+  std::string Client::GetActorClassName(rpc::ActorId actor) const
+  {
+    return _pimpl->CallAndWait<std::string>("get_actor_class_name", actor);
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla
