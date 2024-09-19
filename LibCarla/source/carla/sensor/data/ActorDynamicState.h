@@ -134,11 +134,6 @@ namespace detail {
     geom::Vector3D angular_velocity;
 
     geom::Vector3D acceleration;
-
-    std::string unreal_name;
-
-    std::string unreal_class_name;
-
     union TypeDependentState {
       detail::TrafficLightData traffic_light_data;
       detail::TrafficSignData traffic_sign_data;
@@ -150,7 +145,7 @@ namespace detail {
 #pragma pack(pop)
 
  static_assert(
-    sizeof(ActorDynamicState) == 183U,
+    sizeof(ActorDynamicState) == 119u,
     "Invalid ActorDynamicState size! "
     "If you modified this class please update the size here, else you may "
     "comment this assert, but your platform may have compatibility issues "

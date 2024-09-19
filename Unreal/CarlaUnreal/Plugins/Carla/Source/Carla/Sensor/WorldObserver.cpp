@@ -363,8 +363,6 @@ static carla::Buffer FWorldObserver_Serialize(
       carla::geom::Vector3D(Velocity.X, Velocity.Y, Velocity.Z),
       AngularVelocity,
       Acceleration,
-      TCHAR_TO_UTF8(*ActorPtr->GetName()),
-      TCHAR_TO_UTF8(*ActorPtr->GetClass()->GetName()),
       State
     };
     write_data(info);

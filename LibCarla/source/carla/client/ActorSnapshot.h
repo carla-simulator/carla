@@ -22,8 +22,6 @@ namespace client {
     geom::Vector3D velocity;
     geom::Vector3D angular_velocity;
     geom::Vector3D acceleration;
-    std::string unreal_name;
-    std::string unreal_class_name;
     sensor::data::ActorDynamicState::TypeDependentState state;
   };
 

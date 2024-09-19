@@ -710,6 +710,16 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
   }
 
+  std::string Client::GetActorUnrealName(rpc::ActorId actor) const
+  {
+    return _pimpl->CallAndWait<std::string>("get_actor_unreal_name");
+  }
+
+  std::string Client::GetActorUnrealClassName(rpc::ActorId actor) const
+  {
+    return _pimpl->CallAndWait<std::string>("get_actor_unreal_class_name");
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla

@@ -440,12 +440,12 @@ namespace detail {
 
     std::string GetActorUnrealName(const Actor& actor) const
     {
-      return GetActorSnapshot(actor).unreal_name;
+      return _client.GetActorUnrealName(actor.GetId());
     }
 
     std::string GetActorUnrealClassName(const Actor& actor) const
     {
-      return GetActorSnapshot(actor).unreal_class_name;
+      return _client.GetActorUnrealClassName(actor.GetId());
     }
 
     void SetActorLocation(Actor &actor, const geom::Location &location) {

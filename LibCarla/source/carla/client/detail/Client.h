@@ -439,6 +439,10 @@ namespace detail {
     std::vector<rpc::LabelledPoint> CastRay(
         geom::Location start_location, geom::Location end_location) const;
 
+    std::string GetActorUnrealName(rpc::ActorId actor) const;
+
+    std::string GetActorUnrealClassName(rpc::ActorId actor) const;
+
   private:
 
     class Pimpl;
