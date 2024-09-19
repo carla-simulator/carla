@@ -47,7 +47,7 @@ set (
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-carla_message (
+carla_message_verbose (
   "Selected Python executable: ${Python3_EXECUTABLE} (Interpreter ID: ${Python3_INTERPRETER_ID})"
 )
 

@@ -144,10 +144,6 @@ include_directories (
 
 # ==== BOOST ====
 
-carla_dependency_option (BOOST_ENABLE_PYTHON ${BUILD_PYTHON_API})
-carla_dependency_option (BOOST_ENABLE_MPI OFF)
-carla_dependency_option (BOOST_LOCALE_WITH_ICU OFF)
-carla_dependency_option (BOOST_LOCALE_WITH_ICONV OFF)
 set (
   BOOST_INCLUDED_PROJECTS
   asio
@@ -155,11 +151,24 @@ set (
   python
   date_time
   geometry
-  gil
   container
   variant2
+  gil
 )
+
+set (
+  BOOST_EXCLUDED_PROJECTS
+  # filesystem # <- Boost.GIL links with Boost.filesystem, so we can't remove the dependency yet.
+)
+
 carla_dependency_option (BOOST_INCLUDE_LIBRARIES "${BOOST_INCLUDED_PROJECTS}")
+carla_dependency_option (BOOST_EXCLUDE_LIBRARIES "${BOOST_EXCLUDED_PROJECTS}")
+carla_dependency_option (BOOST_ENABLE_PYTHON ${BUILD_PYTHON_API})
+carla_dependency_option (BOOST_ENABLE_MPI OFF)
+carla_dependency_option (BOOST_LOCALE_WITH_ICU OFF)
+carla_dependency_option (BOOST_LOCALE_WITH_ICONV OFF)
+carla_dependency_option (BOOST_GIL_BUILD_EXAMPLES OFF)
+carla_dependency_option (BOOST_GIL_BUILD_HEADER_TESTS OFF)
 carla_dependency_add(
   boost
   ${CARLA_BOOST_TAG}

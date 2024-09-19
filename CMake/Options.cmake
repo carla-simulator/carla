@@ -146,6 +146,12 @@ carla_string_option (
   /usr/bin/gcc-12
 )
 
+carla_option (
+  VERBOSE_CONFIGURE
+  "Whether to emit extra messages during CMake configure."
+  OFF
+)
+
 
 
 # ================================
@@ -198,18 +204,14 @@ carla_string_option (
   "${CARLA_UNREAL_RHI_DEFAULT}"
 )
 
-if (${BUILD_CARLA_UNREAL})
-if (${CARLA_HAS_UNREAL_ENGINE_PATH})
-  carla_message (
-    "Carla UE project successfully added to build. (UE path: ${CARLA_UNREAL_ENGINE_PATH})"
-  )
-else ()
-  carla_error (
-    "Could not add UE project to build since the carla_option CARLA_UNREAL_ENGINE_PATH "
-    "is not set to a valid path (\"${CARLA_UNREAL_ENGINE_PATH}\")."
-    "Please set it to point to the root path of your CARLA Unreal Engine installation."
-  )
-endif ()
+if (BUILD_CARLA_UNREAL)
+  if (NOT ${CARLA_HAS_UNREAL_ENGINE_PATH})
+    carla_error (
+      "Could not add UE project to build since the carla_option CARLA_UNREAL_ENGINE_PATH "
+      "is not set to a valid path (\"${CARLA_UNREAL_ENGINE_PATH}\")."
+      "Please set it to point to the root path of your CARLA Unreal Engine installation."
+    )
+  endif ()
 endif ()
 
 carla_string_option (

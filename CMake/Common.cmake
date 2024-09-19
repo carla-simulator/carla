@@ -39,9 +39,9 @@ endif ()
 
 if (WIN32)
   add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
-
-  check_cxx_compiler_flag(/utf-8 HAS_MSVC_UTF8)
+  check_cxx_compiler_flag (/utf-8 HAS_MSVC_UTF8)
   if (HAS_MSVC_UTF8)
+    # @TODO This causes warnings with MASM. A better approach should be looked into.
     add_compile_options (/utf-8)
   endif ()
 endif ()
@@ -49,7 +49,7 @@ endif ()
 set (CARLA_COMMON_DEFINITIONS)
 
 foreach (FORMAT ${LIBCARLA_IMAGE_SUPPORTED_FORMATS})
-  carla_message ("Enabling CARLA image support for \"${FORMAT}\".")
+  carla_message_verbose ("Enabling CARLA image support for \"${FORMAT}\".")
   string (TOUPPER "${FORMAT}" FORMAT_UPPERCASE)
   list (APPEND CARLA_COMMON_DEFINITIONS LIBCARLA_IMAGE_SUPPORT_${FORMAT_UPPERCASE}=1)
 endforeach ()
