@@ -328,7 +328,6 @@ static carla::Buffer FWorldObserver_Serialize(
     carla::geom::Vector3D Acceleration(0.0f, 0.0f, 0.0f);
     carla::sensor::data::ActorDynamicState::TypeDependentState State{};
 
-
     check(View);
 
     if(View->IsDormant())
@@ -352,9 +351,6 @@ static carla::Buffer FWorldObserver_Serialize(
       State = FWorldObserver_GetActorState(*View, Registry);
     }
     ActorTransform = View->GetActorGlobalTransform();
-
-    auto ActorPtr = View->GetActor();
-    check(ActorPtr != nullptr);
 
     ActorDynamicState info = {
       View->GetActorId(),

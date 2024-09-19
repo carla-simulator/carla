@@ -2655,10 +2655,14 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   {
     REQUIRE_CARLA_EPISODE();
     auto CarlaActor = Episode->FindCarlaActor(ActorID);
-    check(CarlaActor != nullptr);
+    if (CarlaActor == nullptr) [[unlikely]]
+      return std::string();
     auto Actor = CarlaActor->GetActor();
-    check(Actor != nullptr);
+    if (Actor == nullptr) [[unlikely]]
+      return std::string();
     auto Name = Actor->GetName();
+    if (Name.Len() == 0)
+      return std::string();
     auto NameStr = StringCast<UTF8CHAR>(*Name, Name.Len());
     return std::string((const char*)NameStr.Get(), NameStr.Length());
   };
@@ -2668,12 +2672,17 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   {
     REQUIRE_CARLA_EPISODE();
     auto CarlaActor = Episode->FindCarlaActor(ActorID);
-    check(CarlaActor != nullptr);
+    if (CarlaActor == nullptr) [[unlikely]]
+      return std::string();
     auto Actor = CarlaActor->GetActor();
-    check(Actor != nullptr);
+    if (Actor == nullptr) [[unlikely]]
+      return std::string();
     auto Class = Actor->GetClass();
-    check(Class != nullptr);
+    if (Class == nullptr) [[unlikely]]
+      return std::string();
     auto Name = Class->GetName();
+    if (Name.Len() == 0)
+      return std::string();
     auto NameStr = StringCast<UTF8CHAR>(*Name, Name.Len());
     return std::string((const char*)NameStr.Get(), NameStr.Length());
   };
