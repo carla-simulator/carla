@@ -22,7 +22,8 @@
 
 #include <Carla/Vehicle/CarlaWheeledVehicle.h>
 
-#if __has_include(<format>)
+// Clang 16 does not support C++20's std::format
+#if defined(ENABLE_STD_FORMAT) && __has_include(<format>)
 #define HAS_FORMAT
 #include <format>
 #endif
@@ -32,7 +33,9 @@ requires (
   std::remove_reference_t<V>::Dim <= 3)
 static std::string FormatVectorLike(V&& v)
 {
+#ifndef HAS_FORMAT
   char buffer[256];
+#endif
   constexpr auto Dim = std::remove_reference_t<V>::Dim;
   if constexpr (Dim == 1)
   {
