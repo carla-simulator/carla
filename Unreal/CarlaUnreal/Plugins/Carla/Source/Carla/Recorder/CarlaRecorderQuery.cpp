@@ -12,7 +12,7 @@
 
 #include <ctime>
 #include <sstream>
-#include <format>
+#include <string_view>
 #include <string>
 
 #include <compiler/disable-ue4-macros.h>
@@ -22,39 +22,68 @@
 
 #include <Carla/Vehicle/CarlaWheeledVehicle.h>
 
+#if __has_include(<format>)
+#define HAS_FORMAT
+#include <format>
+#endif
+
 template <typename V>
-  requires (
-std::remove_reference_t<V>::Dim <= 3)
+requires (
+  std::remove_reference_t<V>::Dim <= 3)
 static std::string FormatVectorLike(V&& v)
 {
+  char buffer[256];
   constexpr auto Dim = std::remove_reference_t<V>::Dim;
   if constexpr (Dim == 1)
   {
     const auto& [x] = v;
+#ifdef HAS_FORMAT
     return std::format("({})", x);
+#else
+    auto n = snprintf(buffer, sizeof(buffer), "(%f)", (double)x);
+    if (n < 0)
+      return "<FORMAT-ERRROR>";
+    return std::string(buffer, n);
+#endif
   }
   else if constexpr (Dim == 2)
   {
     const auto& [x, y] = v;
+#ifdef HAS_FORMAT
     return std::format("({}, {})", x, y);
+#else
+    auto n = snprintf(buffer, sizeof(buffer), "(%f, %f)", (double)x, (double)y);
+    if (n < 0)
+      return "<FORMAT-ERRROR>";
+    return std::string(buffer, n);
+#endif
   }
   else if constexpr (Dim == 3)
   {
     const auto& [x, y, z] = v;
+#ifdef HAS_FORMAT
     return std::format("({}, {}, {})", x, y, z);
+#else
+    auto n = snprintf(buffer, sizeof(buffer), "(%f, %f, %f)", (double)x, (double)y, (double)z);
+    if (n < 0)
+      return "<FORMAT-ERRROR>";
+    return std::string(buffer, n);
+#endif
   }
 }
 
 template <typename V>
 static std::string FormatCurveLike(V&& v)
 {
-    std::string r;
-    r.reserve(4096);
-    r += "[";
-    for (auto& [x, y] : v)
-        r += std::format("({}, {}),", x, y);
-    r += "]";
-    return r;
+  std::string r;
+  r += "[";
+  for (auto& point : v)
+  {
+    r += FormatVectorLike(point);
+    r += ',';
+  }
+  r += "]";
+  return r;
 }
 
 inline bool CarlaRecorderQuery::ReadHeader(void)
