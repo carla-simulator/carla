@@ -138,7 +138,7 @@ LibCarla.client.rss.release: setup ad-rss
 plugins:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Plugins.sh $(ARGS)
 
-setup downloadplugins:
+setup: downloadplugins
 	@${CARLA_BUILD_TOOLS_FOLDER}/Setup.sh $(ARGS)
 
 ad-rss:
