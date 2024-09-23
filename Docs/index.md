@@ -1,6 +1,8 @@
-# CARLA Documentation
+# CARLA Unreal Engine 5 Documentation
 
-Welcome to the CARLA documentation.
+Welcome to the CARLA Unreal Engine 5 documentation.
+
+This documentation refers to the Unreal Engine 5 version of CARLA, which differs significantly in functionality and features from the Unreal Engine 4 version of CARLA. If you are using the Unreal Engine 4 version of CARLA please refer to the [documentation for that version](https://carla.readthedocs.org)
 
 This home page contains an index with a brief description of the different sections in the documentation. Feel free to read in whatever order preferred. In any case, here are a few suggestions for newcomers.
 
