@@ -39,14 +39,14 @@ def __fix_ad_namespaces():
                 # this should be fine for the current rss versions.
                 # NOTE: Check when updating RSS version
                 if v.__name__ != "map":
-                    print(v, "already imported. This might create a carla.ad import hierarchy")
+                    print(v, "already imported. This might create a wrong carla.ad import hierarchy")
                 continue
             correct_path = parent+"."+v.__name__
             ad_submodules[v] = correct_path
             get_submodules(v, correct_path)
-    get_submodules(ad, "carla.ad")  # type: ignore
-    if ad is sys.modules["ad"]:  # type: ignore
-        sys.modules["carla.ad"] = sys.modules.pop("ad")
+    get_submodules(ad, "carla.libcarla.ad")  # type: ignore
+    if ad.__name__ != "carla.libcarla.ad" and "ad" in sys.modules and ad is sys.modules["ad"] and "carla.libcarla.ad" not in sys.modules:  # type: ignore
+        sys.modules["carla.libcarla.ad"] = sys.modules.pop("ad")
     for mod, correct_name in ad_submodules.items():
         # NOTE: Check when updating RSS version
         #print("Correcting", mod.__name__, "to", correct_name)
@@ -59,6 +59,5 @@ if "ad" in locals():
         __fix_ad_namespaces()
     except Exception as e:
         print("Could not clean ad_rss namespace due to", e, "Please report this bug")
-        pass
 
 del __fix_ad_namespaces
