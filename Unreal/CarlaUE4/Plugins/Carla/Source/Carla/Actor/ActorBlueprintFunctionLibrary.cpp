@@ -1595,7 +1595,7 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
 
 
   Definition.Attributes.Emplace(FActorAttribute{
-    TEXT("can_use_wheel_chair"),
+    TEXT("can_use_wheelchair"),
     EActorAttributeType::Bool,
     Parameters.bCanUseWheelChair ? TEXT("true") : TEXT("false") });
 
@@ -1626,7 +1626,7 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
   WheelChairVariation.Type = EActorAttributeType::Bool;
   if(bCanUseWheelChair)
   {
-    WheelChairVariation.RecommendedValues = { TEXT("true"), TEXT("false") };
+    WheelChairVariation.RecommendedValues = { TEXT("false"), TEXT("true") };
   }
   else
   {

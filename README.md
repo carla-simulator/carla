@@ -22,12 +22,12 @@ environmental conditions.
 ### Download CARLA
 
 Linux:
-* [**Get CARLA overnight build**](https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/Dev/CARLA_Latest.tar.gz)
-* [**Get AdditionalMaps overnight build**](https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/Dev/AdditionalMaps_Latest.tar.gz)
+* [**Get CARLA overnight build**](https://tiny.carla.org/carla-latest-linux)
+* [**Get AdditionalMaps overnight build**](https://tiny.carla.org/additional-maps-latest-linux)
 
 Windows:
-* [**Get CARLA overnight build**](https://carla-releases.s3.us-east-005.backblazeb2.com/Windows/Dev/CARLA_Latest.zip)
-* [**Get AdditionalMaps overnight build**](https://carla-releases.s3.us-east-005.backblazeb2.com/Windows/Dev/AdditionalMaps_Latest.zip)
+* [**Get CARLA overnight build**](https://tiny.carla.org/carla-latest-windows)
+* [**Get AdditionalMaps overnight build**](https://tiny.carla.org/additional-maps-latest-windows)
 
 >[!WARNING]
 >The CARLA package downloads are now provided using the BackBlaze CDN. The Amazon Web Service download links have been discontinued. Please ensure you update any relevant information in repositories using the CARLA simulator package versions. 

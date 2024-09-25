@@ -89,3 +89,7 @@ If you want to install the Python API corresponding to the package you have buil
 ```sh
 pip3 install PythonAPI/carla/dist/carla-*.whl
 ```
+
+## Additional build targets
+
+The procedure outlined above will download all necessary components to build CARLA, you may not want to 
