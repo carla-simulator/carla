@@ -35,6 +35,11 @@ public class Carla :
   public Carla(ReadOnlyTargetRules Target) :
     base(Target)
   {
+    bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
+
+    PrivatePCHHeaderFile = "Carla.h";
+    bEnableExceptions = true;
+    
     void AddDynamicLibrary(string library)
     {
       PublicAdditionalLibraries.Add(library);
@@ -42,31 +47,31 @@ public class Carla :
       PublicDelayLoadDLLs.Add(library);
       Console.WriteLine("Dynamic Library Added: " + library);
     }
+    
+    foreach (var Definition in File.ReadAllText(Path.Combine(PluginDirectory, "Definitions.def")).Split(';'))
+      PrivateDefinitions.Add(Definition.Trim());
 
-    Console.WriteLine("PluginDirectory: " + PluginDirectory);
-    foreach (var option in File.ReadAllText(Path.Combine(PluginDirectory, "Options.def")).Split(';'))
+    foreach (var Option in File.ReadAllText(Path.Combine(PluginDirectory, "Options.def")).Split(';'))
     {
-      string optionTrimmed = option.Trim();
-      if (optionTrimmed.Equals("ROS2"))
+      string Trimmed = Option.Trim();
+      switch (Trimmed)
       {
-        EnableRos2 = true;
-      }
-      else if (optionTrimmed.Equals("ROS2_DEMO"))
-      {
-        EnableRos2 = true;
-        EnableRos2Demo = true;
-      }
-      else if(optionTrimmed.Equals("OSM2ODR"))
-      {
-        EnableOSM2ODR = true;
+        case "ROS2":
+          EnableRos2 = true;
+          break;
+        case "ROS2_DEMO":
+          EnableRos2 = true;
+          EnableRos2Demo = true;
+          break;
+        case "OSM2ODR":
+          EnableOSM2ODR = true;
+          break;
+        default:
+          Console.WriteLine($"Unknown option \"{Trimmed}\".");
+          break;
       }
     }
 
-    bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
-
-    PrivatePCHHeaderFile = "Carla.h";
-    bEnableExceptions = true;
-    
     Action<bool, string, string> TestOptionalFeature = (enable, name, definition) =>
     {
       if (enable)
