@@ -439,6 +439,7 @@ function (
 
   add_dependencies (
     ${TARGET_NAME}
+    carla-python-api
     carla-unreal-editor
   )
 
