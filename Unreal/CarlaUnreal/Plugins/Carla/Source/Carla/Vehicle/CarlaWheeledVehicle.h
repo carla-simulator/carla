@@ -188,6 +188,9 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   FVehicleLightState GetVehicleLightState() const;
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintPure, BlueprintCallable)
+  static FVehicleLightState TransformIntToVehicleLightState(int LightState);
+
   void ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
 
   void ApplyAckermannControllerSettings(const FAckermannControllerSettings &AckermannControllerSettings) {

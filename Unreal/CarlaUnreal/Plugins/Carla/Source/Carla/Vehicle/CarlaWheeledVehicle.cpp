@@ -460,6 +460,28 @@ FVehicleLightState ACarlaWheeledVehicle::GetVehicleLightState() const
   return InputControl.LightState;
 }
 
+FVehicleLightState ACarlaWheeledVehicle::TransformIntToVehicleLightState(int LightState) {
+  
+  FVehicleLightState State;
+
+  bool no_lights =  LightState == 0;
+  bool all_lights = LightState & (1 << 12);
+  State.Position      = (LightState & (1 << 0)  || all_lights) && !no_lights;
+  State.LowBeam       = (LightState & (1 << 1)  || all_lights) && !no_lights;
+  State.HighBeam      = (LightState & (1 << 2)  || all_lights) && !no_lights;
+  State.Brake         = (LightState & (1 << 3)  || all_lights) && !no_lights;
+  State.RightBlinker  = (LightState & (1 << 4)  || all_lights) && !no_lights;
+  State.LeftBlinker   = (LightState & (1 << 5)  || all_lights) && !no_lights;
+  State.Reverse       = (LightState & (1 << 6)  || all_lights) && !no_lights;
+  State.Fog           = (LightState & (1 << 7)  || all_lights) && !no_lights;
+  State.Interior      = (LightState & (1 << 8)  || all_lights) && !no_lights;
+  State.Special1      = (LightState & (1 << 9)  || all_lights) && !no_lights;
+  State.Special2      = (LightState & (1 << 10) || all_lights) && !no_lights;
+
+
+  return State;
+}
+
 void ACarlaWheeledVehicle::RestoreVehiclePhysicsControl()
 {
   ApplyVehiclePhysicsControl(LastPhysicsControl);
