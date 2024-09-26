@@ -33,6 +33,19 @@ if (WIN32)
   endif ()
 endif ()
 
+if (CMAKE_TOOLCHAIN_FILE)
+  cmake_path (
+    ABSOLUTE_PATH
+      CMAKE_TOOLCHAIN_FILE
+    BASE_DIRECTORY
+      ${CARLA_WORKSPACE_PATH}
+    NORMALIZE
+    OUTPUT_VARIABLE
+      TOOLCHAIN_FILE
+  )
+  set (CMAKE_TOOLCHAIN_FILE ${TOOLCHAIN_FILE})
+endif ()
+
 # ================================
 #   Common Definitions
 # ================================
