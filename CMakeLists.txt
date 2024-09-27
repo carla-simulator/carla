@@ -44,7 +44,7 @@ project (
   LANGUAGES
     C
     CXX
-    ASM # This is required by some dependencies, such as LibPNG.
+    ASM
   DESCRIPTION
     "Open-source simulator for autonomous driving research."
   HOMEPAGE_URL
