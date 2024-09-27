@@ -111,7 +111,7 @@ set (
 )
 
 set (
-  CARLA_UNREAL_DEFINITIONS_FILE_NAME
+  CARLA_UNREAL_OPTIONS_FILE_NAME
   Options.def
 )
 
@@ -371,6 +371,7 @@ carla_add_custom_target (
 
 add_dependencies (
   carla-unreal-editor
+  carla-unreal
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
 
