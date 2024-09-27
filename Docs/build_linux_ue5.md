@@ -1,10 +1,7 @@
-!!! warning
-        This is a work in progress!! This version of CARLA is not considered a stable release. Over the following months many significant changes may be made to this branch which could break any modifications you make. We advise you to treat this branch as experimental.
-
 # Building CARLA in Linux with Unreal Engine 5.3
 
 !!! note
-        This build process is implemented and tested for Ubuntu 22.04. We recommend to use this Ubuntu version. 
+        The Unreal Engine 5 version of CARLA requires Ubuntu version 22.04 at minimum. It has not been configured to build on older Ubuntu versions.
 
 ## Set up the environment
 

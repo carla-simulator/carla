@@ -41,24 +41,32 @@ The key factors in preparing a custom vehicle for CARLA lie in rigging the vehic
 
 ## Modeling
 
-Vehicles should have between 50,000 and 100,000 faces. We recommend triangulating the model prior to export as best practice. CARLA vehicles are modeled using the size and scale of actual cars as reference. Please ensure you pay careful attention to the units of your 3D application. Some work in centimeters while others work in meters. 
+Vehicles should have between 50,000 and 100,000 faces. We recommend triangulating the model prior to export as best practice. CARLA vehicles are modeled using the size and scale of real-world vehicles as reference. Please ensure you pay careful attention to the units of your 3D application. Some work in centimeters while others work in meters. 
 
-### Naming conventions
+### Vehicle parts
 
-For ease and consistency we recommend that you divide the vehicle into the following parts and name them accordingly. Details specific to glass and lights will be covered in later sections:
+There are several parts of the vehicle that should be modelled as separate objects in the scene in Maya:
 
->1. __Bodywork__: The metallic part of the vehicle. This material is changed to Unreal Engine material. Logos and details can be added but, to be visible, they must be painted in a different color by using the alpha channels in the Unreal Engine editor.
+- Chassis, bodywork and interior: these should all be part of the same object
+- Wheels: each wheel should be its own object
+- Glass: all glass parts of the vehicle, including windows and light enclosure glass should be part of the same object
+- Lights: all lights including brake lights, headlights, foglights and blinkers should be part of the same object
+
+#### Naming conventions
+
+We recommend the following naming convention for the various parts for organization:
+
+- __Bodywork__: The exterior metallic part of the vehicle and the interior such as the seats and dashboard. This material is changed to Unreal Engine material. Logos and details can be added but, to be visible, they must be painted in a different color by using the alpha channels in the Unreal Engine editor.
 - __Glass_Ext__: A layer of glass that allows visibility from the outside to the inside of the vehicle.
 - __Glass_Int__: A layer of glass that allows visibility from the inside to the outside of the vehicle.
 - __Lights__: Headlights, indicator lights, etc.
 - __LightGlass_Ext__: A layer of glass that allows visibility from the outside to the inside of the light.
 - __LightGlass_Int__: A layer of glass that allows visibility from the inside to the outside of the light.
 - __LicensePlate__: A rectangular plane of 29x12 cm. You can use the CARLA provided `.fbx` for best results, download it [here](https://carla-assets.s3.eu-west-3.amazonaws.com/fbx/LicensePlate.rar). The texture will be assigned automatically in Unreal Engine.
-- __Interior__: Any other details that don't fit in the above sections can go into _Interior_.
 
-Materials should be named using the format `M_CarPart_CarName`, e.g, `M_Bodywork_Mustang`.
+Materials can be named using the format `M_CarPart_CarName`, e.g, `M_Bodywork_Mustang`.
 
-Textures should be named using the format `T_CarPart_CarName`, e.g, `T_Bodywork_Mustang`. Textures should be sized as 2048x2048.
+Textures can be named using the format `T_CarPart_CarName`, e.g, `T_Bodywork_Mustang`. Textures should be sized as 2048x2048.
 
 ## Rigging the vehicle using an armature
 
@@ -66,87 +74,99 @@ To look realistic within the simulation, the car needs to have rotating and whee
 
 ### Import 
 
-Import or model the vehicle model mesh in your 3D modelling application. In this guide we will use Blender 3D. Ensure that the wheels are separable from the main body. Each wheel must be accessible as a distinct object. 
+Import or model the vehicle model mesh in your 3D modelling application. In this guide we will use Autodesk Maya. Ensure that the wheels are separable from the main body. Each wheel must be accessible as a distinct object in the scene. 
 
-![model_in_blender](img/tuto_content_authoring_vehicles/import_model_blender.png)
+![model_in_blender](img/tuto_content_authoring_vehicles/import_model_maya.png)
 
-It is important to ensure that the vehicle faces in the positive X direction, so the hood and windshield should be facing towards positive X. The car should also be oriented such that the floor to roof direction is in the positive Z direction. The wheels should be just grazing the X-Y plane and the origin should be situated where you would expect the vehicle's center of mass to be in the X-Y plane (not in the Z plane though).
+It is important to ensure that the vehicle faces in the positive X direction, so the hood and windshield should be facing towards positive X. The car should also be oriented such that the floor to roof direction is in the positive Z direction. The wheels should be just grazing the X-Y plane and the origin should be situated where you would expect the vehicle's center of mass to be in the X-Y plane (not in the Z plane).
 
 ### Add an armature
 
-Now add an armature to the center of the vehicle, ensure the object is properly centered, the root of the armature bone should be set at the origin. Switch to edit mode and rotate the armature 90 around the x axis. 
+Firstly add a bone to the center of the vehicle, ensure the object is properly centered, the root of the bone should be set at the origin. Name the bone `Vehicle_Base`. 
 
-![armature_init](img/tuto_content_authoring_vehicles/vehicle_base_bone.png)
+![armature_init](img/tuto_content_authoring_vehicles/maya_vehicle_base.png)
 
-Now select the armature and add 4 more bones. Each of these bones needs to be located such that the root of the bone coincides with the centre of the each wheel. This can be achieved by locating the 3D cursor at the center of each wheel in edit mode. Select one of the wheels in object mode, select a vertex, press A to select all vertices then `Shift+S` and select `Cursor to selected`. This will locate the cursor in the center of the wheel. Then, in object mode, select the armature, switch to edit mode, select a bone and choose `Selection to cursor`. Your bone will now coincide with the wheel. Rotate each bone such that it lines up with the base of the armature. 
+From the vehicle base bone and add 4 more child bones (drag the child bones into the vehicle base in the outliner). Each of these bones needs to be located such that the root of the bone coincides with the centre of the each wheel. 
 
-For each wheel, it is recommended to name the bone according to the wheel it needs to be coupled to, this will help in identification later when you need to assign vertex groups to each bone. 
+For each wheel, it is recommended to name the bone according to the wheel it needs to be coupled to, this will help in identification later when you need to assign vertex groups to each bone:
 
-![armature_full](img/tuto_content_authoring_vehicles/all_vehicle_bones.png)
-
-### Parenting 
-
-Now select all the parts of the body and all 4 wheels using shift or control in the project outliner,  then control select the armature you have created (this order is important, it won't work if you select these in reverse order). Press `Ctrl+p` and select `With empty groups` to bind the mesh to the armature.  
-
-![bind_armature](img/tuto_content_authoring_vehicles/bind_armature.gif)
-
-Now you have parented the mesh to the armature, you now need to assign each wheel to its respective bone. Select a wheel either in the outliner or the editor. Switch to edit mode, and select all the vertices of the wheel (shortcut - `a`). 
+- Wheel_Front_Left
+- Wheel_Front_Right
+- Wheel_Back_Left
+- Wheel_Back_Right
 
 ### Assigning car parts to bones
 
-Select the mesh tab of the properties (the green triangle). Inside the vertex groups tab of the mesh properties panel, you should now see the bones of your armature. Select the bone corresponding to the wheel you are editing and select `Assign`. Once you have rigged the wheels, rig all other parts of the vehicle to the base bone.
+Change to rigging mode. In the skin section, select *Bind skin* then select the relevant wheel bone (e.g. Wheel_Front_Right) and then shift click on the geometry you want to parent to that bone (e.g. the front right wheel). Repeat this with each wheel. 
 
-![assign_bone](img/tuto_content_authoring_vehicles/assign_vertex_group.gif)
+![assign_bone](img/tuto_content_authoring_vehicles/assign_wheel_to_bone.png)
 
-Once you have assigned all of the mesh parts to the armature you can test if it works by selecting the armature and moving to pose mode and moving the relevant bones. The vehicle base bone should move the whole vehicle, while the wheel bones should each move and rotate their respective wheels. Ensure to undo any posing you might do with `Ctrl+Z`.
+Finally, repeat this process with the vehicle base bone and the chassis and bodywork geometry.
 
-![test_armature](img/tuto_content_authoring_vehicles/test_pose.gif)
+Select the Vehicle_Base bone in the outliner and ensure that all Translate and Rotate fields are zero in the Channel Box / Layer Editor and all the scale fields are set to 1.
 
-### Blender UE4 vehicle rigging add-on
+Select the bone for each wheel, press E to activate the rotation widget, rotate the the bone around the axis of the wheel and ensure that the wheel geometry turns with the bone, this shows that the geometry is properly bound to the bone. 
 
-There is a very useful add on for blender for rigging a vehicle for import into CARLA that helps streamline the above steps. Please see the [__add-on webpage__](https://continuebreak.com/creations/ue4-vehicle-rigging-addon-blender/) for instructions.
+![test_armature](img/tuto_content_authoring_vehicles/check_wheel_turning.png)
 
 ### Export
 
-Now we will export our rigged model into FBX format for import into Unreal Engine. Select `Export > FBX (.fbx)` from the File menu. In the `Object Types` section of the `Include` panel, shift select the `Armature` and `Mesh` options. 
+Each vehicle part should be exported separately, you should have separate geometry objects for the following parts:
 
-In the `Transform` panel. Change `Forward` to `X Forward` and change `Up` to `Z Up`. This is important to ensure the vehicle is oriented correctly in the Unreal Engine. 
+- the bodywork/chassis
+- 4 wheels
+- glass
+- lights
+- 4 doors (optional)
+- collision mesh
+- raycast mesh
 
-In the `Armature` section uncheck `Add Leaf Bones` and uncheck `Bake Animation`.
-
-![export_fbx](img/tuto_content_authoring_vehicles/export_fbx.gif)
+For each part select the object and go to *File > Export selection*. Leave the default export options and select FBX format.
 
 ## Importing into unreal engine
 
-Launch the Unreal Editor with the `make launch` command from the CARLA root directory (the one where you have built CARLA from source). Open a content browser, set up an appropriate directory and right click and select `Import to ....`. Choose the FBX file that you previously exported from Blender (or another 3D modelling application). Import with default settings. 
+Launch the Unreal Editor from the CARLA root directory using the following command:
+
+```sh
+cmake --build Build --target launch
+```
+
+Open the content browser and create a new folder for your vehicle, for example `Carla > Static > Car > 4Wheeled > MyVehicle`. Note that the chosen directory will affect the semantic label of the vehicle in the semantic camera and LIDAR sensors. If you are modelling a truck, you should create your directory in `Carla > Static > Truck`. Drag all the FBX files you exported from Maya into the new directory in the content browser. Keep the default import options.  
+
+![regenerate_body](img/tuto_content_authoring_vehicles/drag_into_content_browser.png)
+
+Open the *Skeleton* file of the vehicle and switch to the skeleton edit mode. Select *File > Save As* to save a *SkeletalMesh* file, which you will need later.
+
+![regenerate_body](img/tuto_content_authoring_vehicles/drag_into_content_browser.png)
 
 ### Setting the physics asset
 
-You will now have 3 things in your content browser directory, the mesh, the skeleton and the physics asset. Double click on the physics asset to adjust it.
+You should have a *Physics Asset* file in the directory which was created on import. Double click on the physics asset to open the editor. Select the default cuboid collision mesh and delete it, then right click on the *VehicleBase* in the *SkeletonTree* panel and select *Copy Collision From StaticMesh*. Search for the collision mesh that you imported in the dialogue and select it. You should see the outline of the collision mesh in the viewport with a blue hue. 
 
-![regenerate_body](img/tuto_content_authoring_vehicles/physics_asset.png)
+![regenerate_body](img/tuto_content_authoring_vehicles/phys_asset_collision.png)
 
-First, select the main body, in the `Details` menu on the right, change the `Linear Damping` to 0.0 in the `Physics` section, check `Simulation Generates Hit Events` in the `Collision` section and change the `Primitive Type` from `Capsule` to `Box` in the `Body Creation` section. Then press `Regenerate bodies`. The capsule will now change to a rectangular box. Then select the wheels.
+- Select all the wheels:
+	- Go to the Tools panel and change the Primitive Type to Sphere.
+	- Go to the Details panel and change Physics Type to Kinematic.
+	- Set the Collision Response to Disabled.
+	- Set Linear Damping to 0. This will eliminate any extra friction on the wheels.
 
-![physics_details](img/tuto_content_authoring_vehicles/physics_details.png)
+- Enable Simulation Generates Hit Event for all meshes.
+- Click Re-generate Bodies.
+- Adjust the wheel sphere to the size of the wheel.
+- Save and close the window.
 
-Now select all the wheels (in the `Skeleton Tree` section on the left). 
+### Creating the animation blueprint
 
-![regenerate_wheels](img/tuto_content_authoring_vehicles/wheels_asset.png)
+In the content browser directory where you have your new vehicle asset, right click and choose `Animation > Animation Blueprint`. In the popup that opens, search for `VehicleAnimationInstance` for the *Parent Class* and inf the *Specific Skeleton* field search for the *Skeletal Mesh* of your vehicle. Name the blueprint and then click *Create*.
 
-Change `Linear Damping` to 0.0, set `Physics Type` to `Kinematic`, set `Collision Response` to `Disabled` and select the `Primitive Type` as `Sphere`. Press `Re-generate Bodies` once more.
+![animation_blueprint](img/tuto_content_authoring_vehicles/animation_bp.png)
 
-![regenerate_wheels](img/tuto_content_authoring_vehicles/wheel_physics_details.png)
+In the content browser search for an existing, completed CARLA vehicle from the library, open the animation blueprint and copy the nodes from it. Go back to your vehicle's animation blueprint and paste the nodes.
 
-### Creating the animation
+![copy_nodes](img/tuto_content_authoring_vehicles/animation_nodes.png)
 
-In the content browser directory where you have your new vehicle asset, right click and choose `Animation > Animation Blueprint`. In the popup that opens, search for `VehicleAnimInstance` in the `Parent Class` section and for the `Target Skeleton` search for the skeleton corresponding to your new vehicle, you should be able to see the name in your content browser. After selecting these two things press OK. This will create a new animation blueprint for your vehicle.
-
-![animation_blueprint](img/tuto_content_authoring_vehicles/create_anim_blueprint.png)
-
-To simplify things, we can copy the animation from another vehicle. In a second content browser, open `Content > Carla > Static > Vehicles > 4Wheeled` and choose any vehicle. Open the animation blueprint of your chosen vehicle and then copy all nodes that are not the `Output pose` node from this into your new animation blueprint. Connect the nodes by dragging a new connection between the final node to the output node. Press compile and the animation blueprint is now set.
-
-![copy_nodes](img/tuto_content_authoring_vehicles/animation_blueprint_setup.gif)
+Save the animation blueprint. 
 
 ### Creating the blueprint
 

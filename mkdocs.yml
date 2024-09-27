@@ -38,9 +38,10 @@ nav:
 - CARLA Ecosystem:
   - 'MathWorks': 'large_map_roadrunner.md'
   - 'ASAM OpenDRIVE': 'adv_opendrive.md'
-  - 'ROS': https://carla.readthedocs.io/projects/ros-bridge/en/latest/
+  - 'ROS2': 'ros2_native.md'
   - 'Scenic': 'tuto_G_scenic.md'
   - 'SYNKROTRON': 'ecosys_synkrotron.md'
+  - 'InvertedAI': 'inverted_ai.md'
 
 - Contributing:
   - 'Guidelines': 'cont_contribution_guidelines.md' 
