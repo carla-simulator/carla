@@ -31,10 +31,7 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 
-#define TO_STRING_EXPAND(s) #s
-#define TO_STRING(s) TO_STRING_EXPAND(s)
-
-constexpr TCHAR DefaultRecastBuilderPath[] = TEXT(TO_STRING(RECASTBUILDER_PATH));
+constexpr TCHAR DefaultRecastBuilderPath[] = TEXT(RECASTBUILDER_PATH);
 
 static FString BuildRecastBuilderFile()
 {
