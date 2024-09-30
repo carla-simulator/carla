@@ -92,7 +92,7 @@ def main():
         '--generationv',
         metavar='G',
         default='All',
-        help='restrict to certain vehicle generation (values: "1","2","All" - default: "All")')
+        help='restrict to certain vehicle generation (values: "2","3","All" - default: "All")')
     argparser.add_argument(
         '--filterw',
         metavar='PATTERN',
@@ -102,7 +102,7 @@ def main():
         '--generationw',
         metavar='G',
         default='2',
-        help='restrict to certain pedestrian generation (values: "1","2","All" - default: "2")')
+        help='restrict to certain pedestrian generation (values: "2","3","All" - default: "2")')
     argparser.add_argument(
         '--tm-port',
         metavar='P',
