@@ -441,11 +441,9 @@ function (
       -build
       -stagingdirectory=${CARLA_PACKAGE_STAGING_PATH}
       -archivedirectory=${CARLA_PACKAGE_ARCHIVE_PATH}
-    DEPENDS
-      ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
-      USES_TERMINAL
-      VERBATIM
-    )
+    USES_TERMINAL
+    VERBATIM
+  )
   
   add_custom_command (
     TARGET ${TARGET_NAME}
@@ -479,6 +477,8 @@ function (
       -DCARLA_CURRENT_PACKAGE_PATH=${CARLA_CURRENT_PACKAGE_PATH}
       -P${CMAKE_CURRENT_SOURCE_DIR}/Package/Compress.cmake
     COMMAND ${CMAKE_COMMAND} -E echo "********** COMPRESSING PACKAGE COMPLETED **********"
+    USES_TERMINAL
+    VERBATIM
   )
 
   add_dependencies (
