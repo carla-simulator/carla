@@ -31,24 +31,25 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 
+#define TO_STRING_EXPAND(s) #s
+#define TO_STRING(s) TO_STRING_EXPAND(s)
+
+constexpr TCHAR DefaultRecastBuilderPath[] = TEXT(TO_STRING(RECASTBUILDER_PATH));
+
 static FString BuildRecastBuilderFile()
 {
-    // Define filename with extension depending on if we are on Windows or not
+    auto Path = FPaths::RootDir();
 #if PLATFORM_WINDOWS
-    const FString RecastToolName = "RecastBuilder.exe";
+    Path += TEXT("Tools/RecastBuilder.exe");
 #else
-    const FString RecastToolName = "RecastBuilder";
-#endif // PLATFORM_WINDOWS
-
-    // Define path depending on the UE4 build type (Package or Editor)
-#if UE_BUILD_SHIPPING
-    const FString AbsoluteRecastBuilderPath = FPaths::ConvertRelativePathToFull(
-        FPaths::RootDir() + "Tools/" + RecastToolName);
-#else
-    const FString AbsoluteRecastBuilderPath = FPaths::ConvertRelativePathToFull(
-        FPaths::ProjectDir() + "../../Build/_deps/recastnavigation-build/RecastBuilder/" + RecastToolName);
+    Path += TEXT("Tools/RecastBuilder");
 #endif
-    return AbsoluteRecastBuilderPath;
+    Path = FPaths::ConvertRelativePathToFull(Path);
+
+    if (FPaths::FileExists(Path))
+        return Path;
+    else
+        return DefaultRecastBuilderPath;
 }
 
 static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)

@@ -27,6 +27,26 @@ public class CarlaTools :
     PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
     bEnableExceptions = true;
     
+    foreach (var Definition in File.ReadAllText(Path.Combine(PluginDirectory, "Definitions.def")).Split(';'))
+      PrivateDefinitions.Add(Definition.Trim());
+
+    foreach (var Option in File.ReadAllText(Path.Combine(PluginDirectory, "Options.def")).Split(';'))
+    {
+      string Trimmed = Option.Trim();
+      switch (Trimmed)
+      {
+        case "NV_OMNIVERSE":
+          EnableNVIDIAOmniverse = true;
+          break;
+        case "OSM2ODR":
+          EnableOSM2ODR = true;
+          break;
+        default:
+          Console.WriteLine($"Unknown option \"{Trimmed}\".");
+          break;
+      }
+    }
+
     Action<bool, string, string> TestOptionalFeature = (enable, name, definition) =>
     {
       if (enable)

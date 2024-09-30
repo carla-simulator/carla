@@ -118,7 +118,7 @@ void ACarlaRecorder::Ticking(float DeltaSeconds)
           AddActorPosition(View);
           AddVehicleAnimation(View);
           AddVehicleLight(View);
-          AddVehicleWheelsAnimation(View);
+          //AddVehicleWheelsAnimation(View);
           if (bAdditionalData)
           {
             AddActorKinematics(View);
@@ -308,11 +308,15 @@ void ACarlaRecorder::AddVehicleLight(FCarlaActor *CarlaActor)
 
 void ACarlaRecorder::AddVehicleDoor(const ACarlaWheeledVehicle &Vehicle, const EVehicleDoor SDoors, bool bIsOpen)
 {
-  CarlaRecorderDoorVehicle DoorVehicle;
-  DoorVehicle.DatabaseId = Episode->GetActorRegistry().FindCarlaActor(&Vehicle)->GetActorId();
-  DoorVehicle.Doors = static_cast<CarlaRecorderDoorVehicle::VehicleDoorType>(SDoors);
-  DoorVehicle.bIsOpen = bIsOpen;
-  AddDoorVehicle(DoorVehicle);
+  const FCarlaActor* LocalCarlaActor = Episode->GetActorRegistry().FindCarlaActor(&Vehicle);
+  if (LocalCarlaActor != nullptr) 
+  {
+    CarlaRecorderDoorVehicle DoorVehicle;
+    DoorVehicle.DatabaseId = LocalCarlaActor->GetActorId();
+    DoorVehicle.Doors = static_cast<CarlaRecorderDoorVehicle::VehicleDoorType>(SDoors);
+    DoorVehicle.bIsOpen = bIsOpen;
+    AddDoorVehicle(DoorVehicle);
+  }
 }
 
 void ACarlaRecorder::AddActorKinematics(FCarlaActor *CarlaActor)
