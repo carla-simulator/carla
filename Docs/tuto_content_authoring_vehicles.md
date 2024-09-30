@@ -95,7 +95,7 @@ For each wheel, it is recommended to name the bone according to the wheel it nee
 - Wheel_Back_Left
 - Wheel_Back_Right
 
-### Assigning car parts to bones
+### Assigning vehicle parts to bones
 
 Change to rigging mode. In the skin section, select *Bind skin* then select the relevant wheel bone (e.g. Wheel_Front_Right) and then shift click on the geometry you want to parent to that bone (e.g. the front right wheel). Repeat this with each wheel. 
 
@@ -139,42 +139,84 @@ Open the *Skeleton* file of the vehicle and switch to the skeleton edit mode. Se
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/drag_into_content_browser.png)
 
-### Setting the physics asset
+### Setting up the physics asset
 
 You should have a *Physics Asset* file in the directory which was created on import. Double click on the physics asset to open the editor. Select the default cuboid collision mesh and delete it, then right click on the *VehicleBase* in the *SkeletonTree* panel and select *Copy Collision From StaticMesh*. Search for the collision mesh that you imported in the dialogue and select it. You should see the outline of the collision mesh in the viewport with a blue hue. 
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/phys_asset_collision.png)
 
 - Select all the wheels:
-	- Go to the Tools panel and change the Primitive Type to Sphere.
-	- Go to the Details panel and change Physics Type to Kinematic.
-	- Set the Collision Response to Disabled.
-	- Set Linear Damping to 0. This will eliminate any extra friction on the wheels.
+	- Go to the *Tools* panel and change the *Primitive Type* to *Sphere*.
+	- Go to the *Details* panel and change *Physics Type* to *Kinematic*.
+	- Set the *Collision Response* to *Disabled*.
+	- Set *Linear Damping* to 0. This will eliminate any extra friction on the wheels.
 
-- Enable Simulation Generates Hit Event for all meshes.
-- Click Re-generate Bodies.
+- Enable *Simulation Generates Hit Event* for all meshes.
+- Click *Re-generate Bodies*.
 - Adjust the wheel sphere to the size of the wheel.
 - Save and close the window.
 
 ### Creating the animation blueprint
 
-In the content browser directory where you have your new vehicle asset, right click and choose `Animation > Animation Blueprint`. In the popup that opens, search for `VehicleAnimationInstance` for the *Parent Class* and inf the *Specific Skeleton* field search for the *Skeletal Mesh* of your vehicle. Name the blueprint and then click *Create*.
+In the content browser directory where you have your new vehicle asset, right click and choose `Animation > Animation Blueprint`. In the popup that opens, search for `VehicleAnimationInstance` for the *Parent Class* and in the *Specific Skeleton* field search for the *Skeletal Mesh* of your vehicle. Name the blueprint and then click *Create*.
 
 ![animation_blueprint](img/tuto_content_authoring_vehicles/animation_bp.png)
 
-In the content browser search for an existing, completed CARLA vehicle from the library, open the animation blueprint and copy the nodes from it. Go back to your vehicle's animation blueprint and paste the nodes.
+In the content browser search for an existing, completed CARLA vehicle animation blueprint from the library, open the animation blueprint and copy the nodes from it. Go back to your vehicle's animation blueprint and paste the nodes.
 
 ![copy_nodes](img/tuto_content_authoring_vehicles/animation_nodes.png)
 
 Save the animation blueprint. 
 
-### Creating the blueprint
+### Wheel blueprints
 
-Navigate with your content browser into `Content > Carla > Blueprints > Vehicles > LincolnMKZ2017` or a similar vehicle. In here you will find a set of blueprints set up for the 4 wheels. Copy these into the directory containing your own vehicle and rename them to ensure you can distinguish them later. You can set up your own custom wheels if you prefer, please refer to the later [__wheels section__](#wheels)
+Navigate with your content browser to `Content > Carla > Blueprints > Vehicles`, create a new folder for your vehicle.
 
-![copy_wheels](img/tuto_content_authoring_vehicles/copy_wheels.png)
+Inside this folder create the one blueprint for each of the 4 wheels. Right-click and select *Blueprint class. Search for the *ChaosVehicleWheel* class and select it. Name each wheel blueprint similar to the following examples:
 
-Right click in the content browser directory where your new vehicle assets are and chose `Blueprint Class`. Search in the `All Classes` menu for `BaseVehiclePawn` and choose this class. Name the blueprint and open it. Select `Mesh` in the `Components` tab on the left and then drag the vehicle mesh into the Mesh section on the right hand side.
+- BP_MyVehicle_FRW
+- BP_MyVehicle_FLW
+- BP_MyVehicle_RRW
+- BP_MyVehicle_RLW
+
+Open each blueprint individually and repeat the following configuration steps:
+
+- Set the *Collision Mesh* to *Wheel_Shape*
+- Set the *Axle Type* according to the wheel position (front or rear)
+- Set the *Wheel Radius*, *Wheel Width* and *Wheel mass* according to the dimensions and specifications of your vehicle model, you may need to measure these dimensions in your 3D application
+- Set the *Friction Force Multiplier* to 3.5
+- Set the *Brake*, *Handbrake*, *Engine*, *ABS* and *Traction control*, *Front wheel drive*, *Rear wheel drive*, *Four wheel drive* settings according to the specification of your vehicle
+
+Adjust the max steer angle as needed, the default value of 50 will suit most applications. Most vehicles have a max steering angle between 30 and 50.
+
+For both front wheels enable *Affected By Steering*, ensure this parameter is disabled for the rear wheels.
+
+Leave *MaxBrakeTorque* and *MaxHandBrakeTorque* at the default values unless you have alternative figures from a vehicle specification. 
+
+### Suspension
+
+## Vehicle blueprint
+
+Right click inside the vehicle's content directory and choose *Blueprint CLass*. In the dialogue, search for *BaseVehiclePawn* and press *Select*. Rename the blueprint as BP_<vehicle_name>.
+
+Click on the mesh in the component's panel:
+
+- Set *EnablePhysics to true
+- Assign the vehicle skeletal mesh and AnimClass
+- Set the *Center Of Mass Override* to be within the body of the vehicle, for example 50cm for a normal car. You may need to adjust this parameter if the vehicle behaves strangely, for example if it rolls easily on corners.
+- In the components panel, select *Custom Collision (Inherited)
+- 
+
+
+
+
+
+
+
+
+
+
+
 
 ![blueprint_with_mesh](img/tuto_content_authoring_vehicles/blueprint_with_mesh.png)
 
