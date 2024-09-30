@@ -435,7 +435,7 @@ std::string ACarlaRecorder::Start(std::string Name, FString MapName, bool Additi
   std::string Filename = GetRecorderFilename(Name);
 
   // binary file
-  File.open(Filename, std::ios::out);
+  File.open(Filename, std::ios::binary);
   if (!File.is_open())
   {
     return "";
