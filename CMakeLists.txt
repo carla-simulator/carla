@@ -57,8 +57,13 @@ set (
 )
 
 set (
+  CARLA_BUILD_PATH
+  ${CMAKE_BINARY_DIR}
+)
+
+set (
   CARLA_PACKAGE_PATH
-  ${CMAKE_BINARY_DIR}/Package
+  ${CARLA_BUILD_PATH}/Package
 )
 
 set (
