@@ -37,9 +37,9 @@ std::string GetRecorderFilename(std::string Filename)
 // write binary data from FVector
 void WriteFVector(std::ostream &OutFile, const FVector &InObj)
 {
-  WriteValue<float>(OutFile, InObj.X);
-  WriteValue<float>(OutFile, InObj.Y);
-  WriteValue<float>(OutFile, InObj.Z);
+  WriteValue<double>(OutFile, InObj.X);
+  WriteValue<double>(OutFile, InObj.Y);
+  WriteValue<double>(OutFile, InObj.Z);
 }
 
 // write binary data from FTransform
@@ -67,9 +67,9 @@ void WriteFString(std::ostream &OutFile, const FString &InObj)
 // read binary data to FVector
 void ReadFVector(std::istream &InFile, FVector &OutObj)
 {
-  ReadValue(InFile, OutObj.X);
-  ReadValue(InFile, OutObj.Y);
-  ReadValue(InFile, OutObj.Z);
+  ReadValue<double>(InFile, OutObj.X);
+  ReadValue<double>(InFile, OutObj.Y);
+  ReadValue<double>(InFile, OutObj.Z);
 }
 
 // read binary data to FTransform
