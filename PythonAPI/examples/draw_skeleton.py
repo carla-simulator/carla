@@ -327,6 +327,7 @@ def main():
     ped_bp = random.choice(world.get_blueprint_library().filter("walker.pedestrian.*"))
     trans = carla.Transform()
     trans.location = world.get_random_location_from_navigation()
+    trans.location.z += 1 # Apply an offset in vertical axis to avoid collision spawning
     ped = world.spawn_actor(ped_bp, trans)
     walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
     controller = world.spawn_actor(walker_controller_bp, carla.Transform(), ped)
