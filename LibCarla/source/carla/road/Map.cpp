@@ -1349,8 +1349,8 @@ namespace road {
   std::vector<geom::Mesh> Map::GetAllCrosswalkMeshesTesselated() const {
     std::vector<geom::Mesh> out_meshes;
 
-    const size_t NumVertexWidthTessCrosswalk = 30;
-    const size_t NumVertexLenghtTessCrosswalk = 200;
+    const size_t NumVertexWidthTessCrosswalk = 2;
+    const size_t NumVertexLenghtTessCrosswalk = 2;
 
     // Get the crosswalk vertices for the current map
     const std::vector<std::vector<geom::Location>> crosswalks_vertices = GetAllCrosswalkZonesListed();
@@ -1370,28 +1370,31 @@ namespace road {
       geom::Location forwardvector = current_crosswalk[2] - current_crosswalk[0];
 
       geom::Vector3D first_left_edge = current_crosswalk[0];
-      geom::Vector3D first_right_edge = current_crosswalk[0];
+      geom::Vector3D first_right_edge = current_crosswalk[1];
       size_t current_vertex_length = 0;
 
       std::vector<geom::Vector3D> vertices;
       // Ensure minimum vertices in width are two
       const int vertices_in_width = NumVertexWidthTessCrosswalk;
       const int segments_number = vertices_in_width - 1;
+      const geom::Location segments_length_size = forwardvector/NumVertexLenghtTessCrosswalk;
 
       do {
-        const geom::Vector3D left_edge = first_left_edge + (forwardvector * current_vertex_length);
-        const geom::Vector3D right_edge = first_right_edge + (forwardvector * current_vertex_length);
+        const geom::Vector3D left_edge = first_left_edge + (segments_length_size * current_vertex_length);
+        const geom::Vector3D right_edge = first_right_edge + (segments_length_size * current_vertex_length);
 
         const geom::Vector3D segments_size = ( right_edge - left_edge ) / segments_number;
         geom::Vector3D current_vertex = left_edge;
         for (int i = 0; i < vertices_in_width; ++i) {
+          current_vertex = current_vertex + segments_size * i;
           vertices.push_back(current_vertex);
-          current_vertex = current_vertex + segments_size;
         }
         // Update the current waypoint's "s"
         current_vertex_length++;
       } while (current_vertex_length < NumVertexLenghtTessCrosswalk);
-      
+
+      out_mesh.AddVertices(vertices);
+
       for (size_t i = 0; i < (NumVertexLenghtTessCrosswalk - 1); ++i) {
         for (size_t j = 0; j < NumVertexWidthTessCrosswalk - 1; ++j) {
           out_mesh.AddIndex(   j       + (   i       * NumVertexWidthTessCrosswalk ) + 1);

@@ -10,6 +10,8 @@
 #include "Modules/ModuleManager.h"
 #include <string>
 
+DECLARE_LOG_CATEGORY_EXTERN(LogCarlaExporter, Log, All);
+
 class FToolBarBuilder;
 class FMenuBuilder;
 
@@ -36,6 +38,7 @@ public:
 private:
 
   void AddMenuExtension(FMenuBuilder& Builder);
+  int32 WriteCrosswalks(std::ofstream &f, int32 Offset);
   int32 WriteObjectGeom(std::ofstream &f, FString ObjectName, UBodySetup *body, FTransform &CompTransform, AreaType Area, int32 Offset);
 
 private:

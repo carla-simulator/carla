@@ -295,6 +295,12 @@ foreach (DEF_FILE ${CARLA_UNREAL_DEF_FILES})
       -E create_symlink
       ${CMAKE_CURRENT_BINARY_DIR}/${DEF_FILE}
       ${CARLA_UE_CARLA_TOOLS_PATH}/${DEF_FILE}
+    COMMAND
+      ${CMAKE_COMMAND}
+    ARGS
+      -E create_symlink
+      ${CMAKE_CURRENT_BINARY_DIR}/${DEF_FILE}
+      ${CARLA_UE_CARLA_EXPORTER_PATH}/${DEF_FILE}
   )
 endforeach ()
 

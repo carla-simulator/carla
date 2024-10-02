@@ -125,14 +125,6 @@ public class CarlaTools :
       PrivateDefinitions.Add("WIN32_LEAN_AND_MEAN");
     }
 
-    PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
-    PublicDefinitions.Add("BOOST_NO_RTTI");
-    PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
-    PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
-    PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
-    PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
-    PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
-
     if (EnableOSM2ODR)
     {
       // @TODO

@@ -19,5 +19,11 @@
 			"Type": "Editor",
 			"LoadingPhase": "Default"
 		}
+	],
+	"Plugins": [
+		{
+		"Name": "Carla",
+		"Enabled": true
+		}
 	]
 }

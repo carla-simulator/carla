@@ -22,8 +22,20 @@
 #include "Chaos/TriangleMeshImplicitObject.h"
 #include <fstream>
 #include <sstream>
+#include <vector>
+#include <optional>
+#include <exception>
+
+#include "OpenDrive/OpenDriveGenerator.h"
+#include <compiler/disable-ue4-macros.h>
+#include <carla/opendrive/OpenDriveParser.h>
+#include <carla/road/Map.h>
+#include <carla/rpc/String.h>
+#include <carla/Exception.h>
+#include <compiler/enable-ue4-macros.h>
 
 static const FName CarlaExporterTabName("CarlaExporter");
+DEFINE_LOG_CATEGORY(LogCarlaExporter);
 
 #define LOCTEXT_NAMESPACE "FCarlaExporterModule"
 
@@ -163,7 +175,7 @@ void FCarlaExporterModule::PluginButtonClicked()
             comp2->GetInstanceTransform(i, InstanceTransform, true);
             FVector InstanceLocation = InstanceTransform.GetTranslation();
 
-            offset += WriteObjectGeom(f, ObjectName, body, InstanceTransform, areaType, offset);
+            //offset += WriteObjectGeom(f, ObjectName, body, InstanceTransform, areaType, offset);
           }
         }
         else
@@ -183,12 +195,57 @@ void FCarlaExporterModule::PluginButtonClicked()
           FTransform CompTransform = comp->GetComponentTransform();
           FVector CompLocation = CompTransform.GetTranslation();
 
-          offset += WriteObjectGeom(f, ObjectName, body, CompTransform, areaType, offset);
+          //offset += WriteObjectGeom(f, ObjectName, body, CompTransform, areaType, offset);
         }
       }
     }
   }
+  
+  offset += WriteCrosswalks(f, offset);
+  
   f.close();
+}
+
+int32 FCarlaExporterModule::WriteCrosswalks(std::ofstream &f, int32 Offset){
+
+  FString FilePath = FString("C:/CarlaUE5/Unreal/CarlaUnreal/Content/Carla/Maps/OpenDrive/Town10HD_Opt.xodr");
+  FString FileContent;
+  FFileHelper::LoadFileToString(FileContent, *FilePath);
+  std::string opendrive_xml = carla::rpc::FromLongFString(FileContent);
+  std::optional<carla::road::Map> CarlaMap = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
+  if (!CarlaMap.has_value())
+  {
+    //UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Invalid Map"));
+    return 0;
+  }
+
+  std::vector<carla::geom::Mesh> crosswalk_meshes = CarlaMap->GetAllCrosswalkMeshesTesselated();
+
+  constexpr float TO_METERS = 0.01f;
+  int TotalVerticesAdded = 0;
+
+  for(int i = 0; i < crosswalk_meshes.size(); i++){
+
+    f << "o crosswalk_" << TCHAR_TO_ANSI(*FString::FromInt(i)) << "\n";
+
+    std::vector<carla::geom::Vector3D> crosswalk_vertices = crosswalk_meshes[i].GetVertices();
+    std::vector<size_t> crosswalk_indexes = crosswalk_meshes[i].GetIndexes();
+
+    for(int j = 0; j < crosswalk_vertices.size(); ++j){
+      f << "v " << std::fixed << crosswalk_vertices[j].x << " " << crosswalk_vertices[j].z << " " << crosswalk_vertices[j].y << "\n";
+    }
+
+    f << "usemtl crosswalk" << "\n";
+
+    for(int j = 0; j < crosswalk_indexes.size(); j+=3){
+      f << "f " << Offset + crosswalk_indexes[j] << " " << Offset + crosswalk_indexes[j+1] << " " << Offset + crosswalk_indexes[j+2] << "\n";
+    }
+    
+    Offset += crosswalk_vertices.size();
+    TotalVerticesAdded = crosswalk_vertices.size();
+  }
+
+  return TotalVerticesAdded;
 }
 
 int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName, UBodySetup *body, FTransform &CompTransform, AreaType Area, int32 Offset)
@@ -404,9 +461,6 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
   }
 
   return TotalVerticesAdded;
-#else
-    return 0;
-#endif
 }
 
 void FCarlaExporterModule::AddMenuExtension(FMenuBuilder& Builder)
@@ -417,3 +471,24 @@ void FCarlaExporterModule::AddMenuExtension(FMenuBuilder& Builder)
 #undef LOCTEXT_NAMESPACE
 
 IMPLEMENT_MODULE(FCarlaExporterModule, CarlaExporter)
+
+// =============================================================================
+// -- Implement carla throw_exception ------------------------------------------
+// =============================================================================
+
+#ifdef LIBCARLA_NO_EXCEPTIONS
+#include <compiler/disable-ue4-macros.h>
+#include <carla/Exception.h>
+#include <compiler/enable-ue4-macros.h>
+
+#include <exception>
+namespace carla {
+
+  void throw_exception(const std::exception &e) {
+    UE_LOG(LogCarlaExporter, Fatal, TEXT("Exception thrown: %s"), UTF8_TO_TCHAR(e.what()));
+    // It should never reach this part.
+    std::terminate();
+  }
+
+} // namespace carla
+#endif
