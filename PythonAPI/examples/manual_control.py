@@ -1330,7 +1330,7 @@ def main():
         '--generation',
         metavar='G',
         default='All',
-        help='restrict to certain actor generation (values: "1","2","3","4","All" - default: "4")')
+        help='restrict to certain actor generation (values: "2","3","All" - default: "All")')
     argparser.add_argument(
         '--rolename',
         metavar='NAME',
