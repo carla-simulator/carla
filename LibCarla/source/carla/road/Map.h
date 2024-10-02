@@ -28,7 +28,6 @@ namespace road {
 
   class Map : private MovableNonCopyable {
   public:
-
     using Waypoint = element::Waypoint;
 
     /// ========================================================================
@@ -90,6 +89,10 @@ namespace road {
     /// Returns a list of locations defining 2d areas,
     /// when a location is repeated an area is finished
     std::vector<geom::Location> GetAllCrosswalkZones() const;
+
+    /// Returns a list of quads of locations defining 2d areas,
+    /// when a location is repeated an area is finished
+    std::vector<std::vector<geom::Location>> GetAllCrosswalkZonesListed() const;
 
     /// Data structure for the signal search
     struct SignalSearchData {
@@ -168,6 +171,9 @@ namespace road {
 
     /// Buids a mesh of all crosswalks based on the OpenDRIVE
     geom::Mesh GetAllCrosswalkMesh() const;
+
+    /// Buids a mesh of all crosswalks based on the OpenDRIVE
+    std::vector<geom::Mesh>  GetAllCrosswalkMeshesTesselated() const;
 
     std::vector<std::pair<geom::Transform, std::string>> GetTreesTransform(
       const geom::Vector3D& minpos,

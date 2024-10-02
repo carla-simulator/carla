@@ -511,6 +511,67 @@ namespace road {
     return result;
   }
 
+  std::vector<std::vector<geom::Location>> Map::GetAllCrosswalkZonesListed() const {
+      std::vector<std::vector<geom::Location>> result;
+
+    for (const auto &pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      std::vector<const RoadInfoCrosswalk *> crosswalks = road.GetInfos<RoadInfoCrosswalk>();
+      if (crosswalks.size() > 0) {
+        for (auto crosswalk : crosswalks) {
+          // waypoint only at start position
+          std::vector<geom::Location> points;
+          Waypoint waypoint;
+          geom::Transform base;
+          for (const auto &section : road.GetLaneSectionsAt(crosswalk->GetS())) {
+            // get the section with the center lane
+            for (const auto &lane : section.GetLanes()) {
+              // is the center line
+              if (lane.first == 0) {
+                // get the center point
+                waypoint.road_id = pair.first;
+                waypoint.section_id = section.GetId();
+                waypoint.lane_id = 0;
+                waypoint.s = crosswalk->GetS();
+                base = ComputeTransform(waypoint);
+              }
+            }
+          }
+
+          // move perpendicular ('t')
+          geom::Transform pivot = base;
+          pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
+          pivot.rotation.yaw -= 90;   // move perpendicular to 's' for the lateral offset
+          geom::Vector3D v(static_cast<float>(crosswalk->GetT()), 0.0f, 0.0f);
+          pivot.TransformPoint(v);
+          // restore pivot position and orientation
+          pivot = base;
+          pivot.location = v;
+          pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
+
+          // calculate all the corners
+          std::vector<geom::Location> quad;
+          for (auto corner : crosswalk->GetPoints()) {
+            geom::Vector3D v2(
+                static_cast<float>(corner.u),
+                static_cast<float>(corner.v),
+                static_cast<float>(corner.z));
+            // set the width larger to contact with the sidewalk (in case they have gutter area)
+            if (corner.u < 0) {
+              v2.x -= 1.0f;
+            } else {
+              v2.x += 1.0f;
+            }
+            pivot.TransformPoint(v2);
+            quad.push_back(v2);
+          }
+          result.push_back(quad);
+        }
+      }
+    }
+    return result;
+  }
+
   // ===========================================================================
   // -- Map: Waypoint generation -----------------------------------------------
   // ===========================================================================
@@ -1284,6 +1345,71 @@ namespace road {
     out_mesh.EndMaterial();
     return out_mesh;
   }
+
+  std::vector<geom::Mesh> Map::GetAllCrosswalkMeshesTesselated() const {
+    std::vector<geom::Mesh> out_meshes;
+
+    const size_t NumVertexWidthTessCrosswalk = 30;
+    const size_t NumVertexLenghtTessCrosswalk = 200;
+
+    // Get the crosswalk vertices for the current map
+    const std::vector<std::vector<geom::Location>> crosswalks_vertices = GetAllCrosswalkZonesListed();
+    if (crosswalks_vertices.empty()) {
+      return out_meshes;
+    }
+
+    // Create a a list of triangle fans with material "crosswalk"
+    size_t start_vertex_index = 0;
+    size_t i = 0;
+    std::vector<geom::Vector3D> vertices;
+    for(const std::vector<geom::Location>& current_crosswalk : crosswalks_vertices)
+    {
+      geom::Mesh out_mesh;
+      out_mesh.AddMaterial("crosswalk");
+      geom::Location leftvector = current_crosswalk[1] - current_crosswalk[0];
+      geom::Location forwardvector = current_crosswalk[2] - current_crosswalk[0];
+
+      geom::Vector3D first_left_edge = current_crosswalk[0];
+      geom::Vector3D first_right_edge = current_crosswalk[0];
+      size_t current_vertex_length = 0;
+
+      std::vector<geom::Vector3D> vertices;
+      // Ensure minimum vertices in width are two
+      const int vertices_in_width = NumVertexWidthTessCrosswalk;
+      const int segments_number = vertices_in_width - 1;
+
+      do {
+        const geom::Vector3D left_edge = first_left_edge + (forwardvector * current_vertex_length);
+        const geom::Vector3D right_edge = first_right_edge + (forwardvector * current_vertex_length);
+
+        const geom::Vector3D segments_size = ( right_edge - left_edge ) / segments_number;
+        geom::Vector3D current_vertex = left_edge;
+        for (int i = 0; i < vertices_in_width; ++i) {
+          vertices.push_back(current_vertex);
+          current_vertex = current_vertex + segments_size;
+        }
+        // Update the current waypoint's "s"
+        current_vertex_length++;
+      } while (current_vertex_length < NumVertexLenghtTessCrosswalk);
+      
+      for (size_t i = 0; i < (NumVertexLenghtTessCrosswalk - 1); ++i) {
+        for (size_t j = 0; j < NumVertexWidthTessCrosswalk - 1; ++j) {
+          out_mesh.AddIndex(   j       + (   i       * NumVertexWidthTessCrosswalk ) + 1);
+          out_mesh.AddIndex( ( j + 1 ) + (   i       * NumVertexWidthTessCrosswalk ) + 1);
+          out_mesh.AddIndex(   j       + ( ( i + 1 ) * NumVertexWidthTessCrosswalk ) + 1);
+
+          out_mesh.AddIndex( ( j + 1 ) + (   i       * NumVertexWidthTessCrosswalk ) + 1);
+          out_mesh.AddIndex( ( j + 1 ) + ( ( i + 1 ) * NumVertexWidthTessCrosswalk ) + 1);
+          out_mesh.AddIndex(   j       + ( ( i + 1 ) * NumVertexWidthTessCrosswalk ) + 1);
+        }
+      }
+      out_mesh.EndMaterial();
+      out_meshes.push_back(std::move(out_mesh));
+    }
+
+    return out_meshes;
+  }
+
 
   /// Buids a list of meshes related with LineMarkings
   std::vector<std::unique_ptr<geom::Mesh>> Map::GenerateLineMarkings(
