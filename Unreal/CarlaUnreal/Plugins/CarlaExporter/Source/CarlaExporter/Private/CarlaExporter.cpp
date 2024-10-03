@@ -117,6 +117,7 @@ void FCarlaExporterModule::PluginButtonClicked()
       if (TempActor->ActorHasTag(FName("NoExport"))) continue;
 
       FString ActorName = TempActor->GetName();
+			bool try_writing_complex_col_first = TempActor->ActorHasTag(FName("road")) || ActorName.Contains("Road");
 
       // check type by nomenclature
       if (ActorName.Find("Road_Road") != -1 || ActorName.Find("Roads_Road") != -1)
@@ -175,7 +176,7 @@ void FCarlaExporterModule::PluginButtonClicked()
             comp2->GetInstanceTransform(i, InstanceTransform, true);
             FVector InstanceLocation = InstanceTransform.GetTranslation();
 
-            //offset += WriteObjectGeom(f, ObjectName, body, InstanceTransform, areaType, offset);
+            offset += WriteObjectGeom(f, ObjectName, body, InstanceTransform, areaType, offset, try_writing_complex_col_first);
           }
         }
         else
@@ -195,7 +196,7 @@ void FCarlaExporterModule::PluginButtonClicked()
           FTransform CompTransform = comp->GetComponentTransform();
           FVector CompLocation = CompTransform.GetTranslation();
 
-          //offset += WriteObjectGeom(f, ObjectName, body, CompTransform, areaType, offset);
+          offset += WriteObjectGeom(f, ObjectName, body, CompTransform, areaType, offset, try_writing_complex_col_first);
         }
       }
     }
@@ -208,47 +209,84 @@ void FCarlaExporterModule::PluginButtonClicked()
 
 int32 FCarlaExporterModule::WriteCrosswalks(std::ofstream &f, int32 Offset){
 
-  FString FilePath = FString("C:/CarlaUE5/Unreal/CarlaUnreal/Content/Carla/Maps/OpenDrive/Town10HD_Opt.xodr");
-  FString FileContent;
-  FFileHelper::LoadFileToString(FileContent, *FilePath);
-  std::string opendrive_xml = carla::rpc::FromLongFString(FileContent);
-  std::optional<carla::road::Map> CarlaMap = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
-  if (!CarlaMap.has_value())
-  {
-    //UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Invalid Map"));
-    return 0;
-  }
+	FString FilePath = FString("C:/CarlaUE5/Unreal/CarlaUnreal/Content/Carla/Maps/OpenDrive/Town10HD_Opt.xodr");
+	FString FileContent;
+	FFileHelper::LoadFileToString(FileContent, *FilePath);
+	std::string opendrive_xml = carla::rpc::FromLongFString(FileContent);
+	std::optional<carla::road::Map> CarlaMap = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
+	if (!CarlaMap.has_value())
+	{
+		//UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Invalid Map"));
+		return 0;
+	}
 
-  std::vector<carla::geom::Mesh> crosswalk_meshes = CarlaMap->GetAllCrosswalkMeshesTesselated();
+	//using format from GetAllCrosswalkMeshesTesselated
+	/*std::vector<carla::geom::Mesh> crosswalk_meshes = CarlaMap->GetAllCrosswalkMeshesTesselated();
 
-  constexpr float TO_METERS = 0.01f;
-  int TotalVerticesAdded = 0;
+	constexpr float TO_METERS = 0.01f;
+	int TotalVerticesAdded = 0;
 
-  for(int i = 0; i < crosswalk_meshes.size(); i++){
+	for(int i = 0; i < crosswalk_meshes.size(); i++){
 
-    f << "o crosswalk_" << TCHAR_TO_ANSI(*FString::FromInt(i)) << "\n";
+		f << "o crosswalk_" << TCHAR_TO_ANSI(*FString::FromInt(i)) << "\n";
 
-    std::vector<carla::geom::Vector3D> crosswalk_vertices = crosswalk_meshes[i].GetVertices();
-    std::vector<size_t> crosswalk_indexes = crosswalk_meshes[i].GetIndexes();
+		std::vector<carla::geom::Vector3D> crosswalk_vertices = crosswalk_meshes[i].GetVertices();
+		std::vector<size_t> crosswalk_indexes = crosswalk_meshes[i].GetIndexes();
 
-    for(int j = 0; j < crosswalk_vertices.size(); ++j){
-      f << "v " << std::fixed << crosswalk_vertices[j].x << " " << crosswalk_vertices[j].z << " " << crosswalk_vertices[j].y << "\n";
-    }
+		for(int j = 0; j < crosswalk_vertices.size(); ++j){
+		f << "v " << std::fixed << crosswalk_vertices[j].x << " " << crosswalk_vertices[j].z << " " << crosswalk_vertices[j].y << "\n";
+		}
 
-    f << "usemtl crosswalk" << "\n";
+		f << "usemtl crosswalk" << "\n";
 
-    for(int j = 0; j < crosswalk_indexes.size(); j+=3){
-      f << "f " << Offset + crosswalk_indexes[j] << " " << Offset + crosswalk_indexes[j+1] << " " << Offset + crosswalk_indexes[j+2] << "\n";
-    }
-    
-    Offset += crosswalk_vertices.size();
-    TotalVerticesAdded = crosswalk_vertices.size();
-  }
+		for(int j = 0; j < crosswalk_indexes.size(); j+=3){
+		f << "f " << Offset + crosswalk_indexes[j] << " " << Offset + crosswalk_indexes[j+1] << " " << Offset + crosswalk_indexes[j+2] << "\n";
+		}
+		
+		Offset += crosswalk_vertices.size();
+		TotalVerticesAdded = crosswalk_vertices.size();
+	}*/
 
-  return TotalVerticesAdded;
+ 	//using format from GetAllCrosswalkZones
+	std::vector<carla::geom::Location> crosswalks_points = CarlaMap->GetAllCrosswalkZones();
+	int faceIndex = 0;
+	int vertexIndex = 0;
+	int i = 0;
+	int total_crosswalks = 0;
+	int total_points = 0;
+
+	while(i < crosswalks_points.size())
+	{
+		total_crosswalks++;
+		f << "o crosswalk_" << TCHAR_TO_ANSI(*FString::FromInt(total_crosswalks)) << "\n";
+		
+		int starting_index = i;
+		int starting_point = total_points;
+		while(i < crosswalks_points.size())
+		{
+			f << "v " << std::fixed << crosswalks_points[i].x << " " << crosswalks_points[i].z << " " << crosswalks_points[i].y << "\n";
+			i++;
+			total_points++;
+			if(crosswalks_points[i].x == crosswalks_points[starting_index].x &&
+				 crosswalks_points[i].y == crosswalks_points[starting_index].y &&
+				 crosswalks_points[i].z == crosswalks_points[starting_index].z)
+				{
+					i++;
+					break;
+				}
+		}
+
+		f << "usemtl crosswalk" << "\n";
+		for(int j = starting_point+1; j < total_points-1; ++j)
+		{
+			f << "f " << Offset + starting_point << " " << Offset + j << " " << Offset + j + 1 << "\n";
+		}
+	}
+	
+  return total_points;
 }
 
-int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName, UBodySetup *body, FTransform &CompTransform, AreaType Area, int32 Offset)
+int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName, UBodySetup *body, FTransform &CompTransform, AreaType Area, int32 Offset, bool TryComplexFirst)
 {
   if (!body) return 0;
 
@@ -259,7 +297,7 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
 
   auto WriteComplexCollision = [&]() {
     // write the mesh
-    for (const TSharedPtr<Chaos::FTriangleMeshImplicitObject, ESPMode::ThreadSafe> &mesh : body->ChaosTriMeshes)
+	for (const TSharedPtr<Chaos::FTriangleMeshImplicitObject, ESPMode::ThreadSafe> &mesh : body->ChaosTriMeshes)
     {
       // get data
       uint32_t nbVerts = mesh->Particles().Size();
@@ -448,7 +486,7 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
     }
   };
   
-  if(ObjectName.Contains(TEXT("Road"))){
+  if(TryComplexFirst){
     WriteComplexCollision();
     if(!Written) WriteSimpleCollision();
     if(!Written) WriteBoxCollision();

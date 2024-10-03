@@ -39,7 +39,7 @@ private:
 
   void AddMenuExtension(FMenuBuilder& Builder);
   int32 WriteCrosswalks(std::ofstream &f, int32 Offset);
-  int32 WriteObjectGeom(std::ofstream &f, FString ObjectName, UBodySetup *body, FTransform &CompTransform, AreaType Area, int32 Offset);
+  int32 WriteObjectGeom(std::ofstream &f, FString ObjectName, UBodySetup *body, FTransform &CompTransform, AreaType Area, int32 Offset, bool TryComplexFirst);
 
 private:
   TSharedPtr<class FUICommandList> PluginCommands;
