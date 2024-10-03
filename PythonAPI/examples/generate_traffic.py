@@ -101,8 +101,8 @@ def main():
     argparser.add_argument(
         '--generationw',
         metavar='G',
-        default='2',
-        help='restrict to certain pedestrian generation (values: "2","3","All" - default: "2")')
+        default='All',
+        help='restrict to certain pedestrian generation (values: "2","3","All" - default: "All")')
     argparser.add_argument(
         '--tm-port',
         metavar='P',

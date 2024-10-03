@@ -85,7 +85,7 @@ def main(arg):
         # Impulse/Force at the center of mass of the object
         impulse = 10 * car_mass
 
-        print("# Adding an Impulse of %f N s" % impulse)
+        print("# Adding an Impulse of {:.1f} N s".format(impulse))
         vehicle.add_impulse(carla.Vector3D(0, 0, impulse))
 
         wait(world)
@@ -93,7 +93,7 @@ def main(arg):
         vehicle.set_target_velocity(carla.Vector3D(0, 0, 0))
         wait(world)
 
-        print("# Adding a Force of %f N" % (impulse / delta))
+        print("# Adding a Force of {:.1f} N".format(impulse / delta))
         # The add_force method should not be use for instantaneous forces like this one,
         # it is more useful for constant or variable forces acting in a finite amount of time.
         # In this script it is done with the proper scaling to show the equivalence
@@ -106,8 +106,6 @@ def main(arg):
         vehicle.set_transform(vehicle_transform)
         vehicle.set_target_velocity(carla.Vector3D(0, 0, 0))
         wait(world)
-
-        wait(world, 500)
 
 
     finally:
@@ -134,7 +132,7 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--filter',
         metavar='PATTERN',
-        default='model3',
+        default='vehicle.*',
         help='actor filter (default: "vehicle.*")')
     args = argparser.parse_args()
 
