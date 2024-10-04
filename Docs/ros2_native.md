@@ -1,10 +1,14 @@
 # ROS2 native interface
 
-The CARLA simulator supports ROS2 natively from the server. Launch CARLA from the command line with the `--ros2` command line option:
+![inverted_ai_logo](img/logos/ros_carla.png)
+
+The CARLA simulator supports ROS2 natively from the server. To use ROS2 with CARLA, launch the CARLA simulator from the command line with the `--ros2` command line option:
 
 ```sh
 ./CarlaUnreal.sh --ros2
 ```
+
+## Sensor data
 
 The CARLA server will broadcast sensor data for any spawned sensors for which ROS is enabled. To enable a sensor for ROS use the `enable_for_ros()` method of the sensor class:
 
@@ -23,6 +27,8 @@ bp.set_attribute('ros_name', 'front_camera')
 In this case the image data will be published to: `/carla/front_camera/image`. 
 
 If the camera is parented to an actor, for example the ego vehicle, the topic name will also include the role name given to the vehicle: `/carla/ego/front_camera/image`.
+
+See the [ROS2 sensors reference](ros2_native_sensors.md) for details about the message formats used for each sensor type.
 
 ## Control data
 

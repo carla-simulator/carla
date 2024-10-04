@@ -1,15 +1,15 @@
 # CARLA Unreal Engine 5 Documentation
 
-Welcome to the CARLA Unreal Engine 5 documentation.
-
 !!! note
-    This documentation refers to the Unreal Engine 5 version of CARLA, which differs significantly in functionality and features from the Unreal Engine 4 version of CARLA. If you are using the Unreal Engine 4 version of CARLA please refer to the [documentation for that version](https://carla.readthedocs.org).
+    There are currently two different flavours of the CARLA simulator in active development, one based on Unreal Engine 4 and the this version based on Unreal Engine 5. Due to the differences in features and functionality between the two versions, you must use the correct version of the documentation. If you are using the Unreal Engine 4 version of CARLA please refer to the [correct documentation for that version](https://carla.readthedocs.org).
+
+Welcome to the CARLA Unreal Engine 5 documentation.
 
 This home page contains an index with a brief description of the different sections in the documentation. Feel free to read in whatever order preferred. In any case, here are a few suggestions for newcomers.
 
-* __Install CARLA.__ Either follow the [Quick start installation](start_quickstart.md) to get a CARLA release or [make the build](build_carla.md) for a desired platform.
-* __Start using CARLA.__ The section titled [Foundations](foundations.md) is an introduction to the most important concepts and the [first steps tutorial](tuto_first_steps.md) shows you how to get started.
-* __Check the API.__ there is a handy [Python API reference](python_api.md) to look up the classes and methods available.
+* __Install CARLA:__ Either follow the [Quick Start Installation](start_quickstart.md) to get a CARLA release or [build_carla_from_source](build_carla.md) for a desired platform.
+* __Start using CARLA:__ The [Foundations](foundations.md) section is an introduction to the most important concepts in CARLA and the [First Steps tutorial](tuto_first_steps.md) shows you how to get started configuring simulations.
+* __Check the API:__ there is a handy [Python API reference](python_api.md) to look up the classes and methods available.
 
 The CARLA forum is available to post any doubts or suggestions that may arise during the reading.
 <div class="build-buttons">
@@ -37,8 +37,6 @@ CARLA forum</a>
 [__Maps__](core_map.md) — Discover the different maps and how do vehicles move around.  
 [__Sensors and data__](core_sensors.md) — Retrieve simulation data using sensors.  
 [__Traffic__](ts_traffic_simulation_overview.md) — An overview of the different options available to populate your scenes with traffic.  
-[__Development__](development_tutorials.md) — Information on how to develop custom features for CARLA.  
-[__Custom assets__](custom_assets_tutorials.md) — Information on how to develop custom assets 
 
 ## Resources
 [__Blueprint library__](bp_library.md) — Blueprints provided to spawn actors.   

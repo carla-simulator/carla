@@ -15,26 +15,20 @@ The following requirements should be fulfilled before installing CARLA:
 
 * __System requirements__: CARLA is built for Windows and Linux systems.
 * __Operating system__: CARLA Unreal Engine 5 version requires a minimum of Ubuntu 22.04 or Windows 10.
-* __An adequate GPU__: CARLA aims for realistic simulations that require a lot of compute power. We recommend at minimum an NVIDIA RTX 3000 series or better with at least 8 Gb of VRAM (16+ recommended). A dedicated GPU, separate from the GPU used for CARLA, is highly recommended for large machine learning workloads. 
-* __Disk space.__ CARLA will use about 130 GB of space.
-* __Python.__ [Python]((https://www.python.org/downloads/)) is the main scripting language in CARLA. CARLA supports Python 3 on Linux and Windows.
-* __Pip.__ Some installation methods of the CARLA client library require __pip__ or __pip3__ (depending on your Python version) version 20.3 or higher. To check your __pip__ version:
+* __An adequate GPU__: CARLA aims for realistic simulations that require a lot of compute power. We recommend at minimum an NVIDIA RTX 3000 series or better with at least 16 Gb of VRAM. A dedicated GPU, separate from the GPU used for CARLA, is highly recommended for large machine learning workloads. 
+* __Disk space__: CARLA requires 130 GB of space.
+* __Python__: [Python]((https://www.python.org/downloads/)) is the main scripting language in CARLA. CARLA supports Python 3 on Linux and Windows.
+* __Pip__: The CARLA Python client requires __pip3__ version 20.3 or higher for installation. To check your __pip__ version:
 
 >>      # For Python 3
 >>      pip3 -V
-
->>      # For Python 2
->>      pip -V
 
 >If you need to upgrade:
 
 >>      # For Python 3
 >>      pip3 install --upgrade pip
 
->>      # For Python 2
->>      pip install --upgrade pip
-
-* __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Make sure that these ports are not blocked by firewalls or any other applications. 
+* __Two TCP ports and a good internet connection.__ 2000 and 2001 by default. Make sure that these ports are not blocked by firewalls or any other applications. 
 * __Other requirements.__  CARLA requires some Python dependencies. Install the dependencies according to your operating system:
 
 ### Windows
@@ -46,7 +40,6 @@ pip3 install --user pygame numpy
 ### Linux
 
 ```sh
-pip install --user pygame numpy &&
 pip3 install --user pygame numpy
 ```
 
@@ -74,7 +67,7 @@ pip3 install carla
 
 __It is recommended to install the CARLA client library in a virtual environment to avoid conflicts when working with multiple versions.__
 
-You may also wish to install the wheel directly from the package, to ensure version consistency. Locate the CARLA Python wheel in `PythonAPI/Carla/dist` and install it with PIP.
+You may also wish to install the wheel directly from the package, to ensure version consistency. Locate the CARLA Python wheel in `PythonAPI/carla/dist` and install it with PIP.
 
 ---
 ## Running CARLA
@@ -95,13 +88,13 @@ CarlaUnreal.exe
 
 A window containing a view over Town 10 will pop up. This is the _spectator view_. To fly around the city use the mouse and `WASD` keys, holding down the right mouse button to control the direction. 
 
-This is the server simulator which is now running and waiting for a client to connect and interact with the world. You can try some of the example scripts to spawn life into the city and drive a car:
+This window is driven by the simulator server which is now running and waiting for a client to connect and interact with the world. You can try some of the example scripts to spawn vehicles into the city and drive a car:
 
 ```sh
 # Terminal A 
 cd PythonAPI\examples
 
-python3 -m pip install -r requirements.txt # Support for Python2 is provided in the CARLA release packages
+pip3 install -r requirements.txt
 
 python3 generate_traffic.py  
 
@@ -115,4 +108,4 @@ python3 manual_control.py
 
 By now you should have a packaged version of CARLA up and running. If you came across any difficulties during the installation process, feel free to post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions/) or in the [Discord](https://discord.gg/8kqACuC) channel.
 
-The next step is to learn more about the core concepts in CARLA. Read the [__First steps__](tuto_first_steps.md) section to start learning. You can also find all the information about the Python API classes and methods in the [Python API reference](python_api.md).
+The next step is to learn more about the core concepts in CARLA. Start with the [__First steps__](tuto_first_steps.md) tutorial to start learning and then refer to the [Foundations](foundations.md), [Actors](core_actors.md), [Maps](core_map.md) and [Sensors](core_sensors.md) sections to form a deeper understanding of CARLA's functionality. You should also familiarize yourself with the Python API classes and methods in the [Python API reference](python_api.md).
