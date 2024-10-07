@@ -43,56 +43,18 @@ vehicle.apply_control(control)
 	* [__Dodge__ - Charger 2020](#dodge-charger-2020)
 	* [__Dodge__ - Police Charger 2020](#dodge-police-charger-2020)
 	* [__Ford__ - Crown (taxi)](#ford-crown-taxi)
-	* [__Lincoln__ - MKZ 2020](#lincoln-mkz-2020)
-	* [__Mercedes__ - Coupe 2020](#mercedes-coupe-2020)
-	* [__Mini__ - Cooper S 2021](#mini-cooper-s-2021)
-	* [__Nissan__ - Patrol 2021](#nissan-patrol-2021)
+	* [__Lincoln__ - MKZ](#lincoln-mkz)
+	* [__Mercedes__ - Coupe](#mercedes-coupe)
+	* [__Mini__ - Cooper](#mini-cooper)
+	* [__Nissan__ - Patrol](#nissan-patrol)
 * __Truck__
-	* [__CARLA Motors__ - European HGV (cab-over-engine type)](#carla-motors-european-hgv-cab-over-engine-type)
 	* [__CARLA Motors__ - Firetruck](#carla-motors-firetruck)
 	* [__Tesla__ - Cybertruck](#tesla-cybertruck)
 * __Van__
 	* [__Ford__ - Ambulance](#ford-ambulance)
 	* [__Mercedes__ - Sprinter](#mercedes-sprinter)
-	* [__Volkswagen__ - T2 2021](#volkswagen-t2-2021)
 * __Bus__
 	* [__Mitsubishi__ - Fusorosa](#mitsubishi-fusorosa)
-
-
-## Generation 1
-
-* __Car__
-	* [__Audi__ - A2](#audi-a2)
-	* [__Audi__ - E-Tron](#audi-e-tron)
-	* [__Audi__ - TT](#audi-tt)
-	* [__BMW__ - Gran Tourer](#bmw-gran-tourer)
-	* [__Chevrolet__ - Impala](#chevrolet-impala)
-	* [__Citroen__ - C3](#citroen-c3)
-	* [__Dodge__ - Police Charger](#dodge-police-charger)
-	* [__Ford__ - Mustang](#ford-mustang)
-	* [__Jeep__ - Wrangler Rubicon](#jeep-wrangler-rubicon)
-	* [__Lincoln__ - MKZ 2017](#lincoln-mkz-2017)
-	* [__Mercedes__ - Coupe](#mercedes-coupe)
-	* [__Micro__ - Microlino](#micro-microlino)
-	* [__Mini__ - Cooper S](#mini-cooper-s)
-	* [__Nissan__ - Micra](#nissan-micra)
-	* [__Nissan__ - Patrol](#nissan-patrol)
-	* [__Seat__ - Leon](#seat-leon)
-	* [__Tesla__ - Model 3](#tesla-model-3)
-	* [__Toyota__ - Prius](#toyota-prius)
-* __Truck__
-	* [__CARLA Motors__ - CarlaCola](#carla-motors-carlacola)
-* __Van__
-	* [__Volkswagen__ - T2](#volkswagen-t2)
-* __Motorcycle__
-	* [__Harley Davidson__ - Low Rider](#harley-davidson-low-rider)
-	* [__Kawasaki__ - Ninja](#kawasaki-ninja)
-	* [__Vespa__ - ZX 125](#vespa-zx-125)
-	* [__Yamaha__ - YZF](#yamaha-yzf)
-* __Bicycle__
-	* [__BH__ - Crossbike](#bh-crossbike)
-	* [__Diamondback__ - Century](#diamondback-century)
-	* [__Gazelle__ - Omafiets](#gazelle-omafiets)
 
 
 ---
@@ -137,42 +99,6 @@ vehicle.destroy()
 ---
 
 ## Cars
-### Audi - A2
-
-![audi_a2](../img/catalogue/vehicles/audi_a2.webp)
-
-
-* __Manufacturer__: Audi
-* __Model__: A2
-* __Class__: Compact
-* __Generation__: 1
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.audi.a2<span>
-
-* __Base type__: car
-
-* __Has lights__: <span style="color:#f16c6c;">False<span>
-
-* __Has opening doors__: <span style="color:#f16c6c;">False<span>
-
-### Audi - E-Tron
-
-![audi_etron](../img/catalogue/vehicles/audi_etron.webp)
-
-
-* __Manufacturer__: Audi
-* __Model__: E-Tron
-* __Class__: SUV
-* __Generation__: 1
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.audi.etron<span>
-
-* __Base type__: car
-
-* __Special type__: electric
-
-* __Has lights__: <span style="color:#f16c6c;">False<span>
-
-* __Has opening doors__: <span style="color:#f16c6c;">False<span>
-
 ### Audi - TT
 
 ![audi_tt](../img/catalogue/vehicles/audi_tt.webp)
@@ -224,24 +150,7 @@ vehicle.destroy()
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
-### Citroen - C3
-
-![citroen_c3](../img/catalogue/vehicles/citroen_c3.webp)
-
-
-* __Manufacturer__: Citroen
-* __Model__: C3
-* __Class__: Compact
-* __Generation__: 1
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.citroen.c3<span>
-
-* __Base type__: car
-
-* __Has lights__: <span style="color:#f16c6c;">False<span>
-
-* __Has opening doors__: <span style="color:#f16c6c;">False<span>
-
-### Dodge - Charger 2020
+### Dodge - Charger
 
 ![dodge_charger_2020](../img/catalogue/vehicles/dodge_charger_2020.webp)
 
@@ -259,25 +168,6 @@ vehicle.destroy()
 * __Has opening doors__: <span style="color:#99c635;">True<span>
 
 ### Dodge - Police Charger
-
-![dodge_charger_police](../img/catalogue/vehicles/dodge_charger_police.webp)
-
-
-* __Manufacturer__: Dodge
-* __Model__: Police Charger
-* __Class__: Standard
-* __Generation__: 1
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.dodge.charger_police<span>
-
-* __Base type__: car
-
-* __Special type__: emergency
-
-* __Has lights__: <span style="color:#f16c6c;">False<span>
-
-* __Has opening doors__: <span style="color:#f16c6c;">False<span>
-
-### Dodge - Police Charger 2020
 
 ![dodge_charger_police_2020](../img/catalogue/vehicles/dodge_charger_police_2020.webp)
 
@@ -332,50 +222,15 @@ vehicle.destroy()
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
-### Jeep - Wrangler Rubicon
-
-![jeep_wrangler_rubicon](../img/catalogue/vehicles/jeep_wrangler_rubicon.webp)
-
-
-* __Manufacturer__: Jeep
-* __Model__: Wrangler Rubicon
-* __Class__: Compact
-* __Generation__: 1
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.jeep.wrangler_rubicon<span>
-
-* __Base type__: car
-
-* __Has lights__: <span style="color:#f16c6c;">False<span>
-
-* __Has opening doors__: <span style="color:#f16c6c;">False<span>
-
-### Lincoln - MKZ 2017
-
-![lincoln_mkz_2017](../img/catalogue/vehicles/lincoln_mkz_2017.webp)
-
-
-* __Manufacturer__: Lincoln
-* __Model__: MKZ 2017
-* __Class__: Standard
-* __Generation__: 1
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.lincoln.mkz_2017<span>
-
-* __Base type__: car
-
-* __Has lights__: <span style="color:#f16c6c;">False<span>
-
-* __Has opening doors__: <span style="color:#f16c6c;">False<span>
-
-### Lincoln - MKZ 2020
+### Lincoln - MKZ
 
 ![lincoln_mkz_2020](../img/catalogue/vehicles/lincoln_mkz_2020.webp)
 
-
 * __Manufacturer__: Lincoln
-* __Model__: MKZ 2020
+* __Model__: MKZ
 * __Class__: Standard
 * __Generation__: 2
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.lincoln.mkz_2020<span>
+* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.lincoln.mkz<span>
 
 * __Base type__: car
 
