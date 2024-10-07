@@ -4,7 +4,7 @@
 """ This module contains the different parameters sets for each behavior. """
 
 
-class Cautious(object):
+class Cautious:
     """Class for Cautious agent."""
     max_speed = 40
     speed_lim_dist = 6
@@ -15,7 +15,7 @@ class Cautious(object):
     tailgate_counter = 0
 
 
-class Normal(object):
+class Normal:
     """Class for Normal agent."""
     max_speed = 50
     speed_lim_dist = 3
@@ -26,7 +26,7 @@ class Normal(object):
     tailgate_counter = 0
 
 
-class Aggressive(object):
+class Aggressive:
     """Class for Aggressive agent."""
     max_speed = 70
     speed_lim_dist = 1
