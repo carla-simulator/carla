@@ -105,4 +105,3 @@ The generation step will take around 10 minutes for a 2x2 km<sup>2</sup> region,
 ## Save the map
 
 If you are satisfied with the generated map then you can press *Save Map* button to save the map. __This step will take a significant amount of time__, it may take over an hour and could take several. You should prepare to leave your computer running for several hours while this step is completed. Once this step is completed, the map will be available through the Unreal Engine editor or through the CARLA API, the same as any other map. 
-
