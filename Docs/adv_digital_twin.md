@@ -44,13 +44,13 @@ Then continue to build CARLA in the normal way. Windows users do not have the op
 
 ![osm_website](img/osm_export.png)
 
-In a web-browser, go to the [OpenStreetMap website](https:/www.openstreetmap.org) and choose an area of the map which you would like to use. Define your region and then export the data as an `.osm` file, or you can use a URL, as explained later. Alternatively, you could use other tools based on the OpenStreetMap service such as [GeoFabrik](https://download.geofabrik.de/), which allows specific map regions such as states or territories to be extracted from the OSM data.
+In a web-browser, go to the [OpenStreetMap website](https://www.openstreetmap.org) and choose an area of the map which you would like to use. Define your region and then export the data as an `.osm` file, or you can use a URL, as explained later. Alternatively, you could use other tools based on the OpenStreetMap service such as [GeoFabrik](https://download.geofabrik.de/), which allows specific map regions such as states or territories to be extracted from the OSM data.
 
 There are two ways to use the OSM data. Using a URL or downloading an OSM file: 
 
 ### Using a URL
 
-In the [OpenStreetMap website](https:/www.openstreetmap.org) website, navigate to an area of interest, then press `Export`, you may also want to use the `Manually select a different area` option. Then, right click on `Overpass API` and select `Copy link` from the context menu. You must ensure that the file will be no bigger than 1 Gb. Take this link and paste it into the URL field of the interface.
+In the [OpenStreetMap website](https://www.openstreetmap.org) website, navigate to an area of interest, then press `Export`, you may also want to use the `Manually select a different area` option. Then, right click on `Overpass API` and select `Copy link` from the context menu. You must ensure that the file will be no bigger than 1 Gb. Take this link and paste it into the URL field of the interface.
 
 ### Downloading an OSM file and navigating in the interface
 
