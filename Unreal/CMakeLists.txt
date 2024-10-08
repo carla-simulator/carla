@@ -427,20 +427,25 @@ function (
       ${CARLA_UE_UAT_COMMAND_PREFIX}
       BuildCookRun
       -project=${CARLA_UE_PROJECT_PATH}
-      -nocompileeditor
-      -nop4
+      -clientconfig=${UE_BUILD_CONFIGURATION}
+      -targetplatform=${UE_SYSTEM_NAME}
+      -stagingdirectory=${CARLA_PACKAGE_STAGING_PATH}
+      -archivedirectory=${CARLA_PACKAGE_ARCHIVE_PATH}
+      -build
       -cook
       -stage
       -archive
       -package
+      -distribution
+      -pak
+      -cook
+      -noxge
       -iterate
-      -clientconfig=${UE_BUILD_CONFIGURATION}
-      -TargetPlatform=${UE_SYSTEM_NAME}
-      -Platform=${UE_SYSTEM_NAME}
+      -iostore
       -prereqs
-      -build
-      -stagingdirectory=${CARLA_PACKAGE_STAGING_PATH}
-      -archivedirectory=${CARLA_PACKAGE_ARCHIVE_PATH}
+      -utf8output
+      -nop4
+      -nocompileeditor
     USES_TERMINAL
     VERBATIM
   )
