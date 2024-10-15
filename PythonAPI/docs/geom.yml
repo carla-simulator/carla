@@ -330,7 +330,7 @@
       <br>
       The constructor method follows a specific order of declaration: `(pitch, yaw, roll)`, which corresponds to `(Y-rotation,Z-rotation,X-rotation)`.
       <br>
-      <img src="/img/unreal_lhcs.png" width="100%">
+      <img src="https://github.com/carla-simulator/carla/blob/ue4-dev/Docs/img/unreal_lhcs.png?raw=true" width="100%">
       *Unreal Engine's left handed coordinate system with rotations*
     # - PROPERTIES -------------------------
     instance_variables:
