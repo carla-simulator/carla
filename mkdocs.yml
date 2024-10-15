@@ -4,6 +4,9 @@ docs_dir: Docs
 edit_uri: 'edit/master/Docs/'
 extra_css: [extra.css]
 extra_javascript: [extra.js]
+theme:
+  name: 'readthedocs'
+  logo: _static/carla_ue5_logo.png
 
 nav:
 - Home: 'index.md'
@@ -48,8 +51,4 @@ nav:
  
 markdown_extensions:
   - admonition 
-
-theme:
-  name: 'readthedocs'
-  logo: carla_ue5_logo.png
  
