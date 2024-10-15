@@ -6,7 +6,8 @@ extra_css: [extra.css]
 extra_javascript: [extra.js]
 theme:
   name: 'readthedocs'
-  logo: _static/carla_ue5_logo.png
+  custom_dir: Docs
+  logo: carla_ue5_logo.png
 
 nav:
 - Home: 'index.md'
