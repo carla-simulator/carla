@@ -2,7 +2,6 @@ site_name: CARLA Simulator UE5
 repo_url: https://github.com/carla-simulator/carla
 docs_dir: Docs
 edit_uri: 'edit/master/Docs/'
-theme: readthedocs
 extra_css: [extra.css]
 extra_javascript: [extra.js]
 
