@@ -1,4 +1,4 @@
-site_name: CARLA Simulator UE5 <br> <img src="https://github.com/carla-simulator/carla/blob/docs/ue5-docs/Docs/carla_ue5_logo.png?raw=true" style="width: 100% !important; background-color: #c7e9fd00 !important; border-radius: 0 !important;">
+site_name: CARLA Simulator UE5
 repo_url: https://github.com/carla-simulator/carla
 docs_dir: Docs
 edit_uri: 'edit/master/Docs/'
