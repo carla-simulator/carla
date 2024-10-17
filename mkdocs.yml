@@ -4,10 +4,7 @@ docs_dir: Docs
 edit_uri: 'edit/master/Docs/'
 extra_css: [extra.css]
 extra_javascript: [extra.js]
-theme:
-  #logo: carla_ue5_logo.png
-  name: 'readthedocs'
-  #custom_dir: Docs
+theme: readthedocs
   
 
 nav:

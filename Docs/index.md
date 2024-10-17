@@ -19,9 +19,6 @@ CARLA forum</a>
 
 <br>
 
-!!! Warning
-    __Change the docs version to fit the CARLA version you are using__. Use the panel in the bottom-right side of this window to change to previous versions. __The _Latest_ version points to documentation in the `dev` branch__ which may refer to features currently in development and __not available__ in any packaged version of CARLA, as well general documentation improvements. ![docs_version_panel](img/docs_version_panel.jpg)
-
 ---
 
 ## Getting started
@@ -39,15 +36,19 @@ CARLA forum</a>
 [__Traffic__](ts_traffic_simulation_overview.md) — An overview of the different options available to populate your scenes with traffic.  
 
 ## Resources
-[__Blueprint library__](bp_library.md) — Blueprints provided to spawn actors.   
-[__Python API__](python_api.md) — Classes and methods in the Python API.   
+[__Python API__](python_api.md) — Classes and methods in the Python API. 
+[__Catalogue__](catalogue.md) — Catalogue of CARLA's available maps, vehicles, pedestrians and props. 
+[__Blueprint library__](bp_library.md) — Blueprints provided to spawn actors.     
 [__C++ reference__](ref_cpp.md) — Classes and methods in CARLA C++.    
 
 ## CARLA ecosystem
 
-[__MathWorks__](large_map_roadrunner.md) — Overview of creating a map in RoadRunner.    
-[__Scenic__](tuto_G_scenic.md) — How to use Scenic with CARLA to generate scenarios.    
-[__OpenDrive__](adv_opendrive.md) — Details of the OpenDrive support in CARLA.   
+[__MathWorks__](large_map_roadrunner.md) — Overview of creating a map in RoadRunner.      
+[__ASM OpenDrive__](adv_opendrive.md) — Details of the OpenDrive support in CARLA.   
+[__ROS2__](ros2_native.md) — Details of how to use the native ROS2 interface.  
+[__Scenic__](tuto_G_scenic.md) — How to use Scenic with CARLA to generate scenarios. 
+[__SYNKROTRON__](ecosys_syncrotron.md) — Details about SYNKROTRON's CARLA-based simulation products.
+[__Inverted AI__](inverted_ai.md) — Details about Inverted AI's generative AI based traffic simulation products.
 
 ## Contributing to CARLA
 [__Guidelines__](cont_contribution_guidelines.md) — Guidelines on contributing to the development of the CARLA simulator and its ecosystem.   
