@@ -16,6 +16,9 @@ environmental conditions.
 
 [![CARLA Video](Docs/img/0_9_15_thumbnail.webp)](https://www.youtube.com/watch?v=q4V9GYjA1pE )
 
+>[!NOTE]
+>This is the development branch `ue4-dev` for the **Unreal Engine 4.26 version of CARLA**. This branch exists in parallel with the Unreal Engine 5.3 version of CARLA, in the `ue5-dev` branch. Please be sure that this version of CARLA is suitable for your needs as there are significant differences between the UE 4.26 and UE 5.3 versions of CARLA. 
+
 ### Download CARLA
 
 Linux:
@@ -25,6 +28,9 @@ Linux:
 Windows:
 * [**Get CARLA overnight build**](https://tiny.carla.org/carla-latest-windows)
 * [**Get AdditionalMaps overnight build**](https://tiny.carla.org/additional-maps-latest-windows)
+
+>[!WARNING]
+>The CARLA package downloads are now provided using the BackBlaze CDN. The Amazon Web Service download links have been discontinued. Please ensure you update any relevant information in repositories using the CARLA simulator package versions. 
 
 ### Recommended system
 
