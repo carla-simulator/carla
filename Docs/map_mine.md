@@ -1,0 +1,2 @@
+# Open cast mine map
+
