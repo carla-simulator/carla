@@ -32,7 +32,7 @@ nav:
   - 'C++ reference': 'ref_cpp.md'
   - 'Blueprint library': 'bp_library.md'  
   - 'Tutorials': 'tutorials.md'
-  - 'Extended documentation': 'ext_docs.md'
+  #- 'Extended documentation': 'ext_docs.md'
 
 - CARLA Ecosystem:
   - 'MathWorks': 'large_map_roadrunner.md'

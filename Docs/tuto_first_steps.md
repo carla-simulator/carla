@@ -176,7 +176,7 @@ To define the Ego Vehicle, you should set the `role_name` attribute of the vehic
 
 ```py
 
-ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz_2020')
+ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz')
 
 ego_bp.set_attribute('role_name', 'hero')
 

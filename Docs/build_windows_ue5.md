@@ -45,9 +45,11 @@ The Setup.bat file launches the following commands itself, you will need to use 
 cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release
 ```
 
-G - build system
-S - source path
-B - where the build goes
+The command line options are as follows:
+
+**G** - which build system to use
+**S** - source path for CARLA repository
+**B** - directory where the build goes
 
 CMake preset - aggregate commands into single preset
 
@@ -92,3 +94,16 @@ The package will be generated in the directory `Build/Package`
 ## Run the package
 
 The package build is not yet tested for Windows
+
+## Presets
+
+If you are building using multiple configurations, we recommend to use the preset system. To set up a preset, use the following command:
+
+```sh
+cmake --preset Linux-Development
+```
+
+This will create a folder within the build directory named `Linux-Development`. All other build artefacts for this configuration should then be directed into this folder, for example to launch the editor, run:
+
+```sh
+cmake --build Build/Linux-Development/ --target launch

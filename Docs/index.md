@@ -56,6 +56,6 @@ CARLA forum</a>
 [__Coding standards__](cont_coding_standard.md) — Details on the best coding practices when contributing to CARLA development.  
 [__Documentation standard__](cont_doc_standard.md) — Details on the documentation standards for CARLA docs.     
 
-## Extended documentation
+<!-- ## Extended documentation
 
-The pages above cover most of the core concepts and features of CARLA. There is additional documentation in the [extended documentation](ext_docs.md) section covering advanced features in more depth.
+The pages above cover most of the core concepts and features of CARLA. There is additional documentation in the [extended documentation](ext_docs.md) section covering advanced features in more depth. -->

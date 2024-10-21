@@ -20,9 +20,11 @@ cd CarlaUE5
 bash -x  CarlaSetup.sh
 ```
 
-The Setup.sh script installs all the required packages, including Cmake, debian packages, Python packages and Unreal Engine 5.3. It also downloads the CARLA content and builds CARLA. Set's up environment variables. 
+The Setup.sh script installs all the required packages, including Cmake, debian packages, Python packages and Unreal Engine 5.3 and sets up the necessary environment variables. It also downloads the CARLA content, builds CARLA then launches the editor. 
 
-Once this is complete, the script will launch the CARLA Unreal Engine 5 editor. **Note: This script can therefore take a long time to complete. It should only be run once**
+Once this is complete, the script will launch the CARLA Unreal Engine 5 editor. **Note: This script can therefore take a long time to complete.**
+
+The setup script should only be run the first time that you set up the build. Subsequently, when rebuilding, you should use the commands in the following section.
 
 !!! note
         * This version of CARLA requires the **CARLA fork of Unreal Engine 5.3**. You need to link your GitHub account to Epic Games in order to gain permission to clone the UE repository. If you have not already linked your accounts, follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github)
@@ -41,6 +43,12 @@ The setup script launches the following commands itself, you will need to use th
 cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/LinuxToolchain.cmake \
 -DLAUNCH_ARGS="-prefernvidia" -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON
 ```
+
+The command line options are as follows:
+
+**G** - which build system to use
+**S** - source path for CARLA repository
+**B** - directory where the build goes
 
 * Build CARLA:
 
@@ -68,9 +76,11 @@ cmake --build Build --target package
 
 The package will be generated in the directory `$CARLA_PATH/Build/Package`
 
+To build a development package, use the `package-development` target. This will build a package that outputs logs for debugging. 
+
 ## Run the package
 
-Run the package with the following command.
+Run the package with the following command from inside the package root folder.
 
 ```sh
 ./CarlaUnreal.sh
@@ -86,4 +96,18 @@ If you want to install the Python API corresponding to the package you have buil
 
 ```sh
 pip3 install PythonAPI/dist/carla-*.whl
+```
+
+## Presets
+
+If you are building using multiple configurations, we recommend to use the preset system. To set up a preset, use the following command:
+
+```sh
+cmake --preset Linux-Development
+```
+
+This will create a folder within the build directory named `Linux-Development`. All other build artefacts for this configuration should then be directed into this folder, for example to launch the editor, run:
+
+```sh
+cmake --build Build/Linux-Development/ --target launch
 ```

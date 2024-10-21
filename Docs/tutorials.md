@@ -11,7 +11,7 @@ Here you will find the multitude of tutorials available to help you understand h
 [__Instance segmentation camera__](tuto_G_instance_segmentation_sensor.md) — Use an instance segmentation camera to distinguish objects of the same class.  
 [__Bounding boxes__](tuto_G_bounding_boxes.md) — Project bounding boxes from CARLA objects into the camera.  
 [__Pedestrian bones__](tuto_G_pedestrian_bones.md) — Project pedestrian skeleton into camera plane.  
-[__Control walker skeletons__](tuto_G_control_walker_skeletons.md) — Animate walkers using skeletons. 
+[__Control walker skeletons__](tuto_G_control_walker_skeletons.md) — Animate walkers using skeletons.  
 [__PyGame control__](tuto_G_pygame.md) — Use PyGame to display the output of camera sensors. 
 
 ## Assets and maps
@@ -22,14 +22,14 @@ Here you will find the multitude of tutorials available to help you understand h
 [__Create standalone packages__](tuto_A_create_standalone.md) — Generate and handle standalone packages for assets.  
 [__Material customization__](tuto_A_material_customization.md) — Edit vehicle and building materials.  
 
-## Developers
+<!-- ## Developers -->
 
-[__How to upgrade content__](tuto_D_contribute_assets.md) — Add new content to CARLA.  
-[__Create a sensor__](tuto_D_create_sensor.md) — Develop a new sensor to be used in CARLA.    
-[__Create semantic tags__](tuto_D_create_semantic_tags.md) — Define customized tags for semantic segmentation.  
-[__Customize vehicle suspension__](tuto_D_customize_vehicle_suspension.md) — Modify the suspension system of a vehicle.  
-[__Generate detailed colliders__](tuto_D_generate_colliders.md) — Create detailed colliders for vehicles.  
-[__Make a release__](tuto_D_make_release.md) — How to make a release of CARLA
+<!-- [__How to upgrade content__](tuto_D_contribute_assets.md) — Add new content to CARLA.   -->
+<!-- [__Create a sensor__](tuto_D_create_sensor.md) — Develop a new sensor to be used in CARLA.     -->
+<!-- [__Create semantic tags__](tuto_D_create_semantic_tags.md) — Define customized tags for semantic segmentation.   -->
+<!-- [__Customize vehicle suspension__](tuto_D_customize_vehicle_suspension.md) — Modify the suspension system of a vehicle.   -->
+<!-- [__Generate detailed colliders__](tuto_D_generate_colliders.md) — Create detailed colliders for vehicles.   -->
+<!-- [__Make a release__](tuto_D_make_release.md) — How to make a release of CARLA -->
 
 ## Video tutorials
 
