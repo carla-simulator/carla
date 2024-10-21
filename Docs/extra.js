@@ -9,7 +9,7 @@ $(document).ready(function () {
 
     var nav = document.getElementsByClassName("wy-side-nav-search")
     var img = document.createElement("img");
-    img.src = "_static/carla_ue5_logo.png";
+    img.src = "https://raw.githubusercontent.com/carla-simulator/carla/359f723d20edd1084512c967a53e22771c9a1045/Docs/img/logos/carla_ue5_logo.png";
     img.style.width = "100%"
     img.style.borderRadius = "0px"
     img.style.height = img.style.width

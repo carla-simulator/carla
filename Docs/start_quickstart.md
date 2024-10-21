@@ -14,9 +14,9 @@ This guide shows how to download and install the packaged version of CARLA. The 
 The following requirements should be fulfilled before installing CARLA:
 
 * __System requirements__: CARLA is built for Windows and Linux systems.
-* __Operating system__: CARLA Unreal Engine 5 version requires a minimum of Ubuntu 22.04 or Windows 10.
-* __An adequate GPU__: CARLA aims for realistic simulations that require a lot of compute power. We recommend at minimum an NVIDIA RTX 3000 series or better with at least 16 Gb of VRAM. A dedicated GPU, separate from the GPU used for CARLA, is highly recommended for large machine learning workloads. 
-* __Disk space__: CARLA requires 130 GB of space.
+* __Operating system__: CARLA Unreal Engine 5 version requires a minimum of **Ubuntu 22.04** or **Windows 11**.
+* __An adequate GPU__: CARLA aims for realistic simulations that require a lot of compute power. We recommend at minimum an NVIDIA RTX 3000 series or better with at least **16 Gb of VRAM**. A dedicated GPU, separate from the GPU used for CARLA, is highly recommended to handle large machine learning workloads. 
+* __Disk space__: CARLA requires **130 GB** of hard disk (or SSD) space.
 * __Python__: [Python]((https://www.python.org/downloads/)) is the main scripting language in CARLA. CARLA supports Python 3 on Linux and Windows.
 * __Pip__: The CARLA Python client requires __pip3__ version 20.3 or higher for installation. To check your __pip__ version:
 
@@ -59,15 +59,19 @@ The package is a compressed file named __CARLA_version.number__. Download and ex
 
 ## Install client library
 
-Install the CARLA client library with PIP from PyPi:
+Install the CARLA client library from the wheel provided with the package:
 
 ```sh
-pip3 install carla
+cd CARLA_ROOT/PythonAPI/dist/
+
+pip3 install carla-*.*.*-cp3**-linux_x86_64.whl
 ```
+
+The characters denoted by wildcards depend upon the version of the simulator you are using and your Python version.
 
 __It is recommended to install the CARLA client library in a virtual environment to avoid conflicts when working with multiple versions.__
 
-You may also wish to install the wheel directly from the package, to ensure version consistency. Locate the CARLA Python wheel in `PythonAPI/carla/dist` and install it with PIP.
+You may also wish to install the wheel directly from the package, to ensure version consistency. Locate the CARLA Python wheel in `PythonAPI/dist` and install it with PIP.
 
 ---
 ## Running CARLA
@@ -88,7 +92,9 @@ CarlaUnreal.exe
 
 A window containing a view over Town 10 will pop up. This is the _spectator view_. To fly around the city use the mouse and `WASD` keys, holding down the right mouse button to control the direction. 
 
-This window is driven by the simulator server which is now running and waiting for a client to connect and interact with the world. You can try some of the example scripts to spawn vehicles into the city and drive a car:
+![town_10_default](../img/catalogue/maps/town10/town10default.png)
+
+This window is driven by the simulator server which is now running and waiting for a client to connect and interact with the world. You can try some of the example scripts to create traffic in the city and drive a vehicle around the map. Open up two separate terminals and run the following commands:
 
 ```sh
 # Terminal A 

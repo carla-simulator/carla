@@ -17,10 +17,12 @@ Run the setup script:
 
 ```sh
 cd CarlaUE5
-bash -x Setup.sh
+bash -x  CarlaSetup.sh
 ```
 
-The Setup.sh script installs all the required packages, including Cmake, debian packages, Python packages and Unreal Engine 5.3. It also downloads the CARLA content and builds CARLA. This script can therefore take a long time to complete. 
+The Setup.sh script installs all the required packages, including Cmake, debian packages, Python packages and Unreal Engine 5.3. It also downloads the CARLA content and builds CARLA. Set's up environment variables. 
+
+Once this is complete, the script will launch the CARLA Unreal Engine 5 editor. **Note: This script can therefore take a long time to complete. It should only be run once**
 
 !!! note
         * This version of CARLA requires the **CARLA fork of Unreal Engine 5.3**. You need to link your GitHub account to Epic Games in order to gain permission to clone the UE repository. If you have not already linked your accounts, follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github)
@@ -37,8 +39,7 @@ The setup script launches the following commands itself, you will need to use th
 
 ```sh
 cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/LinuxToolchain.cmake \
--DLAUNCH_ARGS="-prefernvidia" -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON \
--DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH
+-DLAUNCH_ARGS="-prefernvidia" -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON
 ```
 
 * Build CARLA:
@@ -84,5 +85,5 @@ If you want to run the native ROS2 interface, add the `--ros2` argument
 If you want to install the Python API corresponding to the package you have built:
 
 ```sh
-pip3 install PythonAPI/carla/dist/carla-*.whl
+pip3 install PythonAPI/dist/carla-*.whl
 ```

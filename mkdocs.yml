@@ -16,7 +16,7 @@ nav:
   - 'Building CARLA' : 'build_carla.md'
 
 - Next steps:
-  - 'Content authoring - maps': 'tuto_content_authoring_maps.md'  
+  #- 'Content authoring - maps': 'tuto_content_authoring_maps.md'  
   - 'Content authoring - vehicles': 'tuto_content_authoring_vehicles.md'  
 
 - CARLA topics:

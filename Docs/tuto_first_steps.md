@@ -49,9 +49,11 @@ Please find more information about CARLA maps [__here__](core_map.md).
 
 ## Spectator navigation
 
-The spectator is a view into the simulation. By default, the spectator opens in a new window when you run the CARLA server on a computer with a screen attached, unless you specify the `-RenderOffScreen` command line option. 
+![town_10_default](../img/catalogue/maps/town10/town10default.png)
 
-The spectator is helpful to visualize your simulation. Using the spectator, you can familiarize yourself with the map you've loaded, and see the result of any changes you are making, such as adding vehicles, changing the weather, turning on/off various layers of the map and for debugging purposes. 
+The spectator is a view into the simulation. By default, the spectator opens in a new window when you run the CARLA server on a computer with a screen attached. 
+
+The spectator is helpful to visualize your simulation. Using the spectator, you can familiarize yourself with the map you've loaded, and see the result of any changes you are making, such as adding vehicles, changing the weather, turning on/off various layers of the map and for debugging purposes. You can also use the spectator to monitor the behavior of an autonomous agent as it navigates the environment for development iteration.
 
 You can fly the spectator around the world using the mouse to control the pitch and yaw of the spectator view and the QWE-ASD keys to move the spectator:
 

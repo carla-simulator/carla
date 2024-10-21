@@ -17,10 +17,12 @@ Run the setup script:
 
 ```sh
 cd CarlaUE5
-Setup.bat
+CarlaSetup.bat
 ```
 
-The Setup.bat script installs all the required packages, including Visual Studio 2022, Cmake, Python packages and Unreal Engine 5. It also downloads the CARLA content and builds CARLA. This batch file can therefore take a long time to complete. 
+The CarlaSetup.bat script installs all the required packages, including Visual Studio 2022, Cmake, Python 3.8 packages and Unreal Engine 5.3. It also downloads the CARLA content and builds CARLA. This batch file can therefore take a long time to complete. 
+
+You may also use Python 3.9 and 3.10. 
 
 !!! note
         * This version of CARLA requires the **CARLA fork of Unreal Engine 5.3**. You need to link your GitHub account to Epic Games in order to gain permission to clone the UE repository. If you have not already linked your accounts, follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github)
@@ -40,8 +42,14 @@ The Setup.bat file launches the following commands itself, you will need to use 
 * **Configure**. Open x64 Native Tools Command Prompt for VS 2022 at the CarlaUE5 folder and runn the following command:
 
 ```sh
-cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=%CARLA_UNREAL_ENGINE_PATH%
+cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release
 ```
+
+G - build system
+S - source path
+B - where the build goes
+
+CMake preset - aggregate commands into single preset
 
 * **Build CARLA**. Open the x64 Native Tools Command Prompt for VS 2022 at the CarlaUE5 folder and run the following command:
 
@@ -66,11 +74,18 @@ cmake --build Build --target launch
 !!! warning
         The package build for Carla UE5 is not yet fully tested for Windows.
 
-Open the x64 Native Tools Command Prompt for VS 2022 at the CarlaUE5 folder and run the following command:
+Open the x64 Native Tools Command Prompt for VS 2022 at the CarlaUE5 folder and run the following command to create a shipping package:
 
 ```sh
 cmake --build Build --target package
 ```
+
+You may also want to build a development package which produces logs for debugging: 
+
+
+```sh
+cmake --build Build --target package-development
+``` 
 
 The package will be generated in the directory `Build/Package`
 
