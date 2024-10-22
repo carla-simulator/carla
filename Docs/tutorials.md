@@ -13,14 +13,15 @@ Here you will find the multitude of tutorials available to help you understand h
 [__Pedestrian bones__](tuto_G_pedestrian_bones.md) — Project pedestrian skeleton into camera plane.  
 [__Control walker skeletons__](tuto_G_control_walker_skeletons.md) — Animate walkers using skeletons.  
 [__PyGame control__](tuto_G_pygame.md) — Use PyGame to display the output of camera sensors. 
-
-## Assets and maps
-
-[__Generate maps with OpenStreetMap__](tuto_G_openstreetmap.md) — Use OpenStreetMap to generate maps for use in simulations.  
 [__Add a new vehicle__](tuto_content_authoring_vehicles.md) — Prepare a vehicle to be used in CARLA.  
-[__Add new props__](tuto_A_add_props.md) — Import additional props into CARLA.  
-[__Create standalone packages__](tuto_A_create_standalone.md) — Generate and handle standalone packages for assets.  
-[__Material customization__](tuto_A_material_customization.md) — Edit vehicle and building materials.  
+
+<!-- ## Assets and maps -->
+
+<!-- [__Generate maps with OpenStreetMap__](tuto_G_openstreetmap.md) — Use OpenStreetMap to generate maps for use in simulations.   -->
+<!-- [__Add a new vehicle__](tuto_content_authoring_vehicles.md) — Prepare a vehicle to be used in CARLA.   -->
+<!-- [__Add new props__](tuto_A_add_props.md) — Import additional props into CARLA.   -->
+<!-- [__Create standalone packages__](tuto_A_create_standalone.md) — Generate and handle standalone packages for assets.   -->
+<!-- [__Material customization__](tuto_A_material_customization.md) — Edit vehicle and building materials.   -->
 
 <!-- ## Developers -->
 
