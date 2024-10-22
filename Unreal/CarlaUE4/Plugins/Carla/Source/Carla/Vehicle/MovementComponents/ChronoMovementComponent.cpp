@@ -213,6 +213,7 @@ void UChronoMovementComponent::InitializeChronoVehicle()
           Vehicle->InitializeTire(tire, wheel, VisualizationType::MESH);
       }
   }
+  UE_LOG(LogCarla, Log, TEXT("Chrono vehicle initialized"));
 }
 
 void UChronoMovementComponent::ProcessControl(FVehicleControl &Control)

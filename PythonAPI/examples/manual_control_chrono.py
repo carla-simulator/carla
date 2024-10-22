@@ -428,10 +428,10 @@ class KeyboardControl(object):
                     print("o pressed")
                     if not self._chrono_enabled:
                         self._chrono_enabled = True
-                        vehicle_json = "sedan/vehicle/Sedan_Vehicle.json"
-                        powertrain_json = "sedan/powertrain/Sedan_SimpleMapPowertrain.json"
-                        tire_json = "sedan/tire/Sedan_TMeasyTire.json"
-                        base_path = "/home/adas/carla/Build/chrono-install/share/chrono/data/vehicle/"
+                        vehicle_json = "sedan\\vehicle\\Sedan_Vehicle.json"
+                        powertrain_json = "sedan\\powertrain\\Sedan_SimpleMapPowertrain.json"
+                        tire_json = "sedan\\tire\\Sedan_TMeasyTire.json"
+                        base_path = "C:\\sixwheel\\carla\\Build\\chrono-install\\data\\vehicle\\"
                         world.player.enable_chrono_physics(5000, 0.002, vehicle_json, powertrain_json, tire_json, base_path)
                     else:
                         self._chrono_enabled = False

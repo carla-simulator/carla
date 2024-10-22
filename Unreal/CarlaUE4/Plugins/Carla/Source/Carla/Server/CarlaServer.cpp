@@ -2355,6 +2355,8 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       std::string TireJSON,
       std::string BaseJSONPath) -> R<void>
   {
+    // Log the parameters
+    UE_LOG(LogCarla, Log, TEXT("enable_chrono_physics: MaxSubsteps: %d, MaxSubstepDeltaTime: %f, VehicleJSON: %s, PowertrainJSON: %s, TireJSON: %s, BaseJSONPath: %s"), MaxSubsteps, MaxSubstepDeltaTime, *FString(VehicleJSON.c_str()), *FString(PowertrainJSON.c_str()), *FString(TireJSON.c_str()), *FString(BaseJSONPath.c_str()));
     REQUIRE_CARLA_EPISODE();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
