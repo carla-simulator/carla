@@ -259,6 +259,7 @@ TArray<AInstancedStaticMeshActor*> UMapGenFunctionLibrary::ChangeStaticMeshesInT
 
   for(auto CurrentPair : ActorsToCheckIfReplacedMap)
   {
+    static int32 Counter = 0;
     if(CurrentPair.Value.Num() > MinNumOfInstancesToBeChanged)
     {
       TArray<FTransform> TransformsToBeInstanced;
@@ -273,7 +274,6 @@ TArray<AInstancedStaticMeshActor*> UMapGenFunctionLibrary::ChangeStaticMeshesInT
       {
         InstancedStaticMeshActor->GetInstancedStaticMeshComponent()->SetStaticMesh(CurrentPair.Key);
         InstancedStaticMeshActor->GetInstancedStaticMeshComponent()->AddInstances(TransformsToBeInstanced, false, true);
-        InstancedStaticMeshActor->Rename(*(CurrentPair.Key->GetName()));
         Result.Add(InstancedStaticMeshActor);
       }
     }
@@ -282,11 +282,11 @@ TArray<AInstancedStaticMeshActor*> UMapGenFunctionLibrary::ChangeStaticMeshesInT
   return Result;
 }
 
-void UMapGenFunctionLibrary::RevertStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter)
+TArray<AStaticMeshActor*> UMapGenFunctionLibrary::RevertStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter)
 {
   TArray<AActor*> FoundActors;
+  TArray<AStaticMeshActor*> Result;
   UGameplayStatics::GetAllActorsOfClass(World,  AInstancedStaticMeshActor::StaticClass(), FoundActors);
-
   for(AActor* CurrentActor : FoundActors )
   {
     AInstancedStaticMeshActor* InstancedStaticMeshActor = Cast<AInstancedStaticMeshActor>(CurrentActor);
@@ -301,9 +301,12 @@ void UMapGenFunctionLibrary::RevertStaticMeshesInTheLevelForInstancedStaticMeshe
           AStaticMeshActor* StaticMeshActor = World->SpawnActor<AStaticMeshActor>();
           StaticMeshActor->GetStaticMeshComponent()->SetStaticMesh(CurrentStaticMesh);
           StaticMeshActor->SetActorTransform(FTransform(CurrentInstanceData.Transform));
+          Result.Add(StaticMeshActor);
         }
         InstancedStaticMeshActor->Destroy();
       }
     }
   }
+
+  return Result;
 }
