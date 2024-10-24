@@ -259,7 +259,6 @@ TArray<AInstancedStaticMeshActor*> UMapGenFunctionLibrary::ChangeStaticMeshesInT
 
   for(auto CurrentPair : ActorsToCheckIfReplacedMap)
   {
-
     if(CurrentPair.Value.Num() > MinNumOfInstancesToBeChanged)
     {
       TArray<FTransform> TransformsToBeInstanced;
