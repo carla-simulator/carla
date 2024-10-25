@@ -46,6 +46,22 @@
 	* [__Variant 1__](#adult-pedestrian-13-variant-1)
 	* [__Variant 2__](#adult-pedestrian-13-variant-2)
 
+## Children
+
+* [__Child pedestrian - 1__](#child-pedestrian-1)
+
+* [__Child pedestrian - 2__](#child-pedestrian-2)
+
+* [__Child pedestrian - 3__](#child-pedestrian-3)
+
+* [__Child pedestrian - 4__](#child-pedestrian-4)
+
+## Children
+
+* [__Police pedestrian - 1__](#police-pedestrian-1)
+
+* [__Police pedestrian - 2__](#police-pedestrian-2)
+
 --- 
 ## Adults
 
@@ -282,5 +298,65 @@
 
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0046<span>
+
+---
+
+#### Adult pedestrian 14 - variant 1
+
+![pedestrian_0045](../img/catalogue/pedestrians/pedestrian_0045.png)
+
+
+* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0045<span>
+
+---
+
+## Children
+
+#### Child pedestrian 1
+
+![pedestrian_0050](../img/catalogue/pedestrians/pedestrian_0050.png)
+
+
+* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0050<span>
+
+#### Child pedestrian 2
+
+![pedestrian_0051](../img/catalogue/pedestrians/pedestrian_0051.png)
+
+
+* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0051<span>
+
+#### Child pedestrian 3
+
+![pedestrian_0051](../img/catalogue/pedestrians/pedestrian_0048.png)
+
+
+* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0048<span>
+
+#### Child pedestrian 4
+
+![pedestrian_0051](../img/catalogue/pedestrians/pedestrian_0049.png)
+
+
+* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0049<span>
+
+
+---
+
+## Police
+
+#### Police pedestrian 1
+
+![pedestrian_0030](../img/catalogue/pedestrians/pedestrian_0030.png)
+
+
+* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0030<span>
+
+#### Police pedestrian 2
+
+![pedestrian_0032](../img/catalogue/pedestrians/pedestrian_0032.png)
+
+
+* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0032<span>
 
 ---
