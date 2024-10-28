@@ -43,28 +43,22 @@ def argument_parser():
         type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '--tm-port',
-        metavar='P',
-        default=8000,
-        type=int,
-        help='Port to communicate with TM (default: 8000)')
-    argparser.add_argument(
         '-n', '--number-of-vehicles',
         metavar='N',
         default=30,
         type=int,
-        help='Number of vehicles spawned by InvertedAI (default: 20)')
+        help='Number of vehicles spawned by InvertedAI (default: 30)')
     argparser.add_argument(
         '-w', '--number-of-walkers',
         metavar='W',
         default=10,
         type=int,
-        help='Number of walkers (default: 0)')
+        help='Number of walkers (default: 10)')
     argparser.add_argument(
         '--safe',
         type=bool,
         default=True,
-        help='Avoid spawning vehicles prone to accidents')
+        help='Avoid spawning vehicles prone to accidents (default True)')
     argparser.add_argument(
         '--filterv',
         metavar='PATTERN',
@@ -89,7 +83,7 @@ def argument_parser():
         '-s', '--seed',
         metavar='S',
         type=int,
-        help='Set random device seed and deterministic mode for Traffic Manager')
+        help='Set random seed')
     argparser.add_argument(
         '--hero',
         action='store_true',
@@ -98,75 +92,57 @@ def argument_parser():
     argparser.add_argument(
         '--iai-key',
         type=str,
-        help="InvertedAI API key."
-    )
+        help="InvertedAI API key.")
     argparser.add_argument(
         '--record',
         action='store_true',
         help="Record the simulation using the CARLA recorder",
-        default=False
-    )
+        default=False)
     argparser.add_argument(
         '--sim-length',
         type=int,
         default=120,
-        help="Length of the simulation in seconds (default: 120)",
-    )
+        help="Length of the simulation in seconds (default: 120)")
     argparser.add_argument(
         '--location',
         type=str,
-        help=f"IAI formatted map on which to create simulate.",
-        default='carla:Town10HD'
-    )
+        help=f"IAI formatted map on which to create simulate (default: carla:Town10HD)",
+        default='carla:Town10HD')
     argparser.add_argument(
         '--capacity',
         type=int,
-        help=f"The capacity parameter of a quadtree leaf before splitting.",
-        default=100
-    )
-    argparser.add_argument(
-        '--fov',
-        type=int,
-        help=f"Field of view for visualization.",
-        default=100
-    )
+        help=f"The capacity parameter of a quadtree leaf before splitting (default: 100)",
+        default=100)
     argparser.add_argument(
         '--width',
         type=int,
-        help=f"Full width of the area to initialize.",
-        default=250
-    )
+        help=f"Full width of the area to initialize (default: 250)",
+        default=250)
     argparser.add_argument(
         '--height',
         type=int,
-        help=f"Full height of the area to initialize",
-        default=250
-    )
+        help=f"Full height of the area to initialize (default: 250)",
+        default=250)
     argparser.add_argument(
         '--map-center',
         type=int,
         nargs='+',
-        help=f"Center of the area to initialize",
-        default=tuple([0,30])
-    )
+        help=f"Center of the area to initialize (default: [0,30])",
+        default=tuple([0,30]))
     argparser.add_argument(
         '--iai-async',
         type=bool,
-        help=f"Whether to call drive asynchronously.",
-        default=True
-    )
+        help=f"Whether to call drive asynchronously (default: True)",
+        default=True)
     argparser.add_argument(
         '--api-model',
         type=str,
-        help=f"IAI API model version",
-        default="bI5p"
-    )
+        help=f"IAI API model version (default: bI5p)",
+        default="bI5p")
     argparser.add_argument(
         '--iai-log',
         action="store_true",
-        help=f"Export a log file for the InvertedAI cosimulation, which can be replayed afterwards",
-        default=False
-    )
+        help=f"Export a log file for the InvertedAI cosimulation, which can be replayed afterwards")
 
     args = argparser.parse_args()
 
@@ -425,7 +401,6 @@ def initialize_simulation(args, world, agent_states=None, agent_properties=None)
     print(f"Call location info.")
     location_info_response = iai.location_info(
         location = args.location,
-        rendering_fov = args.fov,
         rendering_center = map_center
     )
     print(f"Begin initialization.") 
@@ -521,7 +496,7 @@ def main():
     try:
         iai.add_apikey(args.iai_key)  
     except:
-        print("\n\tYou need to indicate the InvertedAI API key. To obtain one, please go to https://www.inverted.ai \n")
+        print("\n\tYou need to indicate the InvertedAI API key with the argument --iai-key. To obtain one, please go to https://www.inverted.ai \n")
 
     num_pedestrians = args.number_of_walkers
 
