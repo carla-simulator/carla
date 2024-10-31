@@ -14,24 +14,12 @@ It can easily be configure for any different number of sensors.
 To do that, check lines 290-308.
 """
 
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
 import carla
 import argparse
 import random
 import time
 import numpy as np
-
+from numpy import random
 
 try:
     import pygame
@@ -39,6 +27,7 @@ try:
     from pygame.locals import K_q
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
+
 
 class CustomTimer:
     def __init__(self):
@@ -268,17 +257,16 @@ def run_simulation(args, client):
         world = client.get_world()
         original_settings = world.get_settings()
 
-        if args.sync:
-            traffic_manager = client.get_trafficmanager(8000)
-            settings = world.get_settings()
-            traffic_manager.set_synchronous_mode(True)
-            settings.synchronous_mode = True
-            settings.fixed_delta_seconds = 0.05
-            world.apply_settings(settings)
+        traffic_manager = client.get_trafficmanager(8000)
+        traffic_manager.set_synchronous_mode(True)
 
+        settings = world.get_settings()
+        settings.synchronous_mode = True
+        settings.fixed_delta_seconds = 0.05
+        world.apply_settings(settings)
 
         # Instanciating the vehicle to which we attached the sensors
-        bp = world.get_blueprint_library().filter('charger_2020')[0]
+        bp = random.choice(world.get_blueprint_library().filter(args.filter))
         vehicle = world.spawn_actor(bp, random.choice(world.get_map().get_spawn_points()))
         vehicle_list.append(vehicle)
         vehicle.set_autopilot(True)
@@ -303,16 +291,12 @@ def run_simulation(args, client):
         SensorManager(world, display_manager, 'SemanticLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), 
                       vehicle, {'channels' : '64', 'range' : '100', 'points_per_second': '100000', 'rotation_frequency': '20'}, display_pos=[1, 2])
 
-
         #Simulation loop
         call_exit = False
         time_init_sim = timer.time()
         while True:
             # Carla Tick
-            if args.sync:
-                world.tick()
-            else:
-                world.wait_for_tick()
+            world.tick()
 
             # Render received data
             display_manager.render()
@@ -337,36 +321,21 @@ def run_simulation(args, client):
         world.apply_settings(original_settings)
 
 
-
 def main():
     argparser = argparse.ArgumentParser(
         description='CARLA Sensor tutorial')
     argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
+        '--host', metavar='H', default='127.0.0.1',
         help='IP of the host server (default: 127.0.0.1)')
     argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
+        '-p', '--port', metavar='P', default=2000, type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '--sync',
-        action='store_true',
-        help='Synchronous mode execution')
-    argparser.add_argument(
-        '--async',
-        dest='sync',
-        action='store_false',
-        help='Asynchronous mode execution')
-    argparser.set_defaults(sync=True)
-    argparser.add_argument(
-        '--res',
-        metavar='WIDTHxHEIGHT',
-        default='1280x720',
+        '--res', metavar='WIDTHxHEIGHT', default='1280x720',
         help='window resolution (default: 1280x720)')
+    argparser.add_argument(
+        '--filter', metavar='PATTERN', default='vehicle.*',
+        help='actor filter (default: "vehicle.*")')
 
     args = argparser.parse_args()
 

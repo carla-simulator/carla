@@ -6,18 +6,6 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
 import carla
 
 import argparse
@@ -92,46 +80,28 @@ def draw_junction(debug, junction, l_time=10):
 def main():
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
+        '--host', metavar='H', default='127.0.0.1',
         help='IP of the host server (default: 127.0.0.1)')
     argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
+        '-p', '--port', metavar='P', default=2000, type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '-i', '--info',
-        action='store_true',
+        '-i', '--info', action='store_true',
         help='Show text information')
     argparser.add_argument(
-        '-x',
-        default=0.0,
-        type=float,
+        '-x', default=0.0, type=float,
         help='X start position (default: 0.0)')
     argparser.add_argument(
-        '-y',
-        default=0.0,
-        type=float,
+        '-y', default=0.0, type=float,
         help='Y start position (default: 0.0)')
     argparser.add_argument(
-        '-z',
-        default=0.0,
-        type=float,
+        '-z', default=0.0, type=float,
         help='Z start position (default: 0.0)')
     argparser.add_argument(
-        '-s', '--seed',
-        metavar='S',
-        default=os.getpid(),
-        type=int,
-        help='Seed for the random path (default: program pid)')
+        '-s', '--seed', metavar='S', default=None, type=int,
+        help='Seed for the random path (default: None)')
     argparser.add_argument(
-        '-t', '--tick-time',
-        metavar='T',
-        default=0.2,
-        type=float,
+        '-t', '--tick-time', metavar='T', default=0.2, type=float,
         help='Tick time between updates (forward velocity) (default: 0.2)')
     args = argparser.parse_args()
 
@@ -143,15 +113,12 @@ def main():
         m = world.get_map()
         debug = world.debug
 
-        random.seed(args.seed)
-        print("Seed: ", args.seed)
+        if args.seed:
+            random.seed(args.seed)
 
         loc = carla.Location(args.x, args.y, args.z)
-        print("Initial location: ", loc)
-
         current_w = m.get_waypoint(loc)
 
-        # main loop
         while True:
             # list of potential next waypoints
             potential_w = list(current_w.next(waypoint_separation))

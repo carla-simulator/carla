@@ -1,17 +1,12 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-# Allows controlling a vehicle with a keyboard. For a simpler and more
-# documented example, please take a look at tutorial.py.
-
 import argparse
-import sys
-import time
 import math
 
 import carla
@@ -26,13 +21,22 @@ def get_transform(vehicle, angle, d=2.5):
     location = carla.Location(radius * math.cos(a), radius * math.sin(a), height) + vehicle_location
     return carla.Transform(location, carla.Rotation(yaw=180 + angle, pitch=-15))
 
+
 def main():
     argparser = argparse.ArgumentParser(
         description='CARLA Manual Control Client')
-    argparser.add_argument('--host', metavar='H', default='127.0.0.1', help='IP of the host server (default: 127.0.0.1)')
-    argparser.add_argument('-p', '--port', metavar='P', default=2000, type=int, help='TCP port to listen to (default: 2000)')
-    argparser.add_argument('-b', '--blueprint', default='lincoln', help="Blueprint to be used. 'all' cycles through all vehicles")
-    argparser.add_argument('--speed', default=36, type=int, help="Camera rotation speed")
+    argparser.add_argument(
+        '--host', metavar='H', default='127.0.0.1',
+        help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument(
+        '-p', '--port', metavar='P', default=2000, type=int,
+        help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-b', '--blueprint', default='lincoln',
+        help="Blueprint to be used. 'all' cycles through all vehicles")
+    argparser.add_argument(
+        '--speed', default=60, type=int,
+        help="Camera rotation speed")
     args = argparser.parse_args()
 
     client = carla.Client(args.host, args.port)

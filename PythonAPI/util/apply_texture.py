@@ -11,26 +11,8 @@
 # -- imports -------------------------------------------------------------------
 # ==============================================================================
 
-import glob
-import os
-import sys
 import argparse
-import math
-import time
-import queue
 import imageio
-
-# ==============================================================================
-# -- find carla module ---------------------------------------------------------
-# ==============================================================================
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 
@@ -69,38 +51,25 @@ def get_float_texture(image):
 def main():
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
+        '--host', metavar='H', default='127.0.0.1',
         help='IP of the host server (default: 127.0.0.1)')
     argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
+        '-p', '--port', metavar='P', default=2000, type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '-d', '--diffuse',
-        type=str,
-        default='',
-        help='Path to diffuse image to update')
-    argparser.add_argument(
-        '-o', '--object-name',
-        type=str,
-        help='Object name')
-    argparser.add_argument(
-        '-l', '--list',
-        action='store_true',
+        '-l', '--list', action='store_true',
         help='Prints names of all objects in the scene')
     argparser.add_argument(
-        '-n', '--normal',
-        type=str,
-        default='',
+        '-d', '--diffuse', type=str, default='',
+        help='Path to diffuse image to update')
+    argparser.add_argument(
+        '-o', '--object-name', type=str,
+        help='Object name')
+    argparser.add_argument(
+        '-n', '--normal', type=str, default='',
         help='Path to normal map to update')
     argparser.add_argument(
-        '--ao_roughness_metallic_emissive',
-        type=str,
-        default='',
+        '--ao_roughness_metallic_emissive', type=str, default='',
         help='Path to normal map to update')
     args = argparser.parse_args()
 
@@ -110,23 +79,23 @@ def main():
     world = client.get_world()
 
     if args.list:
-        names = world.get_names_of_all_objects()
+        names = list(filter(lambda k: 'Apartment' in k, world.get_names_of_all_objects()))
         for name in names:
             print(name)
         return
 
-    if args.object_name is '':
+    if args.object_name == '':
         print('Error: missing object name to apply texture')
         return
 
     diffuse = None
     normal = None
     ao_r_m_e = None
-    if args.diffuse is not '':
+    if args.diffuse != '':
         diffuse = imageio.imread(args.diffuse)
-    if args.normal is not '':
+    if args.normal != '':
         normal = imageio.imread(args.normal)
-    if args.ao_roughness_metallic_emissive is not '':
+    if args.ao_roughness_metallic_emissive != '':
         ao_r_m_e = imageio.imread(args.ao_roughness_metallic_emissive)
 
     tex_diffuse = get_8bit_texture(diffuse)

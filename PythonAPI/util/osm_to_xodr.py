@@ -1,17 +1,16 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Barcelona (UAB).
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
+
 """ Convert OpenStreetMap file to OpenDRIVE file. """
 
 import argparse
-import glob
 import os
 import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 
@@ -60,30 +59,22 @@ def main():
     argparser = argparse.ArgumentParser(
         description=__doc__)
     argparser.add_argument(
-        '-i', '--input-path',
-        required=True,
-        metavar='OSM_FILE_PATH',
+        '-i', '--input-path', required=True, metavar='OSM_FILE_PATH',
         help='set the input OSM file path')
     argparser.add_argument(
-        '-o', '--output-path',
-        required=True,
-        metavar='XODR_FILE_PATH',
+        '-o', '--output-path', required=True, metavar='XODR_FILE_PATH',
         help='set the output XODR file path')
     argparser.add_argument(
-        '--lane-width',
-        default=6.0,
+        '--lane-width', default=6.0,
         help='width of each road lane in meters')
     argparser.add_argument(
-        '--traffic-lights',
-        action='store_true',
+        '--traffic-lights', action='store_true',
         help='enable traffic light generation from OSM data')
     argparser.add_argument(
-        '--all-junctions-lights',
-        action='store_true',
+        '--all-junctions-lights', action='store_true',
         help='set traffic lights for all junctions')
     argparser.add_argument(
-        '--center-map',
-        action='store_true',
+        '--center-map', action='store_true',
         help='set center of map to the origin coordinates')
 
     if len(sys.argv) < 2:

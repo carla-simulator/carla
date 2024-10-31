@@ -56,9 +56,15 @@ def get_traffic_light_bbs(traffic_light):
 def main():
     argparser = argparse.ArgumentParser(
         description='CARLA Manual Control Client')
-    argparser.add_argument('--host', metavar='H', default='127.0.0.1', help='IP of the host server (default: 127.0.0.1)')
-    argparser.add_argument('-p', '--port', metavar='P', default=2000, type=int, help='TCP port to listen to (default: 2000)')
-    argparser.add_argument('--show', default='100', type=float, help='Duration of the visualization of the junctions')
+    argparser.add_argument(
+        '--host', metavar='H', default='127.0.0.1',
+        help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument(
+        '-p', '--port', metavar='P', default=2000, type=int,
+        help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '--show', default='100', type=float,
+        help='Duration of the visualization of the junctions')
     args = argparser.parse_args()
 
     client = carla.Client(args.host, args.port)
@@ -86,37 +92,39 @@ def main():
 
         bounding_box.location.z += offset
         trigger_volume.location.z += offset
-        world.debug.draw_box(bounding_box, bounding_box.rotation, life_time=args.show, thickness=0.2, color=carla.Color(0, 0, 128))
-        # world.debug.draw_box(trigger_volume, trigger_volume.rotation, life_time=args.show, thickness=0.2, color=carla.Color(0, 128, 0))
+        world.debug.draw_box(bounding_box, bounding_box.rotation, life_time=args.show, thickness=0.1, color=carla.Color(0, 0, 200))
+        world.debug.draw_box(trigger_volume, trigger_volume.rotation, life_time=args.show, thickness=0.1, color=carla.Color(0, 200, 0))
+
+        text = f"[{tl.get_pole_index()}] - [{tl.get_opendrive_id()}]"
+        world.debug.draw_string(location, text, life_time=args.show, color=color)
 
         light_boxes = tl.get_light_boxes()
         for lb in light_boxes:
             lb.location.z += offset
-            world.debug.draw_box(lb, lb.rotation, life_time=args.show, thickness=0.2, color=carla.Color(0, 128, 128))
-
-        # tl.get_pole_index()
-        # tl.get_opendrive_id()
-        # tl.get_red_time()
-        # tl.get_yellow_time()
-        # tl.get_green_time()
-        # tl.get_elapsed_time()
-        # tl.freeze()
-        # tl.is_frozen()
-        # tl.reset_group()
+            world.debug.draw_box(lb, lb.rotation, life_time=args.show, thickness=0.1, color=carla.Color(200, 0, 0))
 
         for wp in tl.get_affected_lane_waypoints():
-            world.debug.draw_point(wp.transform.location, life_time=args.show, size=0.1, color=carla.Color(128,128,0))
+            world.debug.draw_point(wp.transform.location, life_time=args.show, size=0.3, color=carla.Color(200, 0, 200))
             world.debug.draw_arrow(
                 location + carla.Location(z=offset), wp.transform.location + carla.Location(z=offset),
-                life_time=args.show, arrow_size=0.5, thickness=0.1, color=carla.Color(128, 128, 0)
+                life_time=args.show, arrow_size=0.5, thickness=0.1, color=carla.Color(200, 0, 200)
             )
 
         for wp in tl.get_stop_waypoints():
-            world.debug.draw_point(wp.transform.location, life_time=args.show, size=0.1, color=carla.Color(128,128,0))
+            world.debug.draw_point(wp.transform.location, life_time=args.show, size=0.3, color=carla.Color(0, 200, 200))
             world.debug.draw_arrow(
                 location + carla.Location(z=offset), wp.transform.location + carla.Location(z=offset),
-                life_time=args.show, arrow_size=0.5, thickness=0.1, color=carla.Color(128, 128, 0)
+                life_time=args.show, arrow_size=0.5, thickness=0.1, color=carla.Color(0, 200, 200)
             )
+
+    print("Showing all the static information available for the traffic light. This includes:")
+    print("- Bounding box (blue box)")
+    print("- Trigger volume (green box)")
+    print("- Light boxes (Red boxes)")
+    print("- Affected waypoints (Pink arrows and points)")
+    print("- Stop waypoints (Teal arrows and points)")
+    print("- Pole index and OpenDrive ID (Dark blue text)")
+
 
 if __name__ == '__main__':
     main()
