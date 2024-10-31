@@ -119,7 +119,7 @@ public:
   void UpdateLights();
 
   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Carla Light")
-  void RegisterLightWithWeather();
+  void DayTimeChanged(bool bIsDay);
 
   UFUNCTION(BlueprintCallable, Category = "Carla Light")
   void SetLightIntensity(float Intensity);

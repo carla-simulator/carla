@@ -22,6 +22,9 @@
 /**
  *
  */
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDayTimeChanged, bool, bIsDay);
+
 UCLASS(Blueprintable, BlueprintType)
 class CARLA_API UCarlaLightSubsystem : public UWorldSubsystem
 {
@@ -63,6 +66,9 @@ public:
   }
 
   void SetDayNightCycle(const bool active);
+
+  UPROPERTY(BlueprintCallable, BlueprintAssignable, Category = "DayTimeChangeEvent")
+  FDayTimeChanged DayTimeChangeEvent;
 
 private:
 

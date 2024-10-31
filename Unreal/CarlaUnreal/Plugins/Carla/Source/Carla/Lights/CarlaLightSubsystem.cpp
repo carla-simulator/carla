@@ -31,6 +31,7 @@ void UCarlaLightSubsystem::RegisterLight(UCarlaLight* CarlaLight)
       return;
     }
     Lights.Add(LightId, CarlaLight);
+    DayTimeChangeEvent.AddDynamic(CarlaLight, &UCarlaLight::DayTimeChanged);
   }
   SetClientStatesdirty("");
 }
