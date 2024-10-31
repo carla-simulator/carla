@@ -29,18 +29,6 @@ And for profiling one radar:
 
 """
 
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
 import carla
 import argparse
 import random
@@ -446,90 +434,56 @@ def main():
     argparser = argparse.ArgumentParser(
         description='CARLA Sensor tutorial')
     argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
+        '--host', metavar='H', default='127.0.0.1',
         help='IP of the host server (default: 127.0.0.1)')
     argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
+        '-p', '--port', metavar='P', default=2000, type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '--sync',
-        action='store_true',
+        '--sync', action='store_true',
         help='Synchronous mode execution')
     argparser.add_argument(
-        '--async',
-        dest='sync',
-        action='store_false',
+        '--async', dest='sync', action='store_false',
         help='Asynchronous mode execution')
     argparser.set_defaults(sync=True)
     argparser.add_argument(
-        '--res',
-        metavar='WIDTHxHEIGHT',
-        default='1280x720',
+        '--res', metavar='WIDTHxHEIGHT', default='1280x720',
         help='window resolution (default: 1280x720)')
     argparser.add_argument(
-        '-lp', '--lidar_points',
-        metavar='LP',
-        default='100000',
+        '-lp', '--lidar_points', metavar='LP', default='100000',
         help='lidar points per second (default: "100000")')
     argparser.add_argument(
-        '-ln', '--lidar_number',
-        metavar='LN',
-        default=3,
-        type=int,
+        '-ln', '--lidar_number', metavar='LN', default=3, type=int,
         choices=range(0, 4),
         help='Number of lidars to render (from zero to three)')
     argparser.add_argument(
-        '-slp', '--semanticlidar_points',
-        metavar='SLP',
-        default='100000',
+        '-slp', '--semanticlidar_points', metavar='SLP', default='100000',
         help='semantic lidar points per second (default: "100000")')
     argparser.add_argument(
-        '-sln', '--semanticlidar_number',
-        metavar='SLN',
-        default=0,
-        type=int,
-        choices=range(0, 4),
+        '-sln', '--semanticlidar_number', metavar='SLN', default=0, type=int, choices=range(0, 4),
         help='Number of semantic lidars to render (from zero to three)')
     argparser.add_argument(
-        '-rp', '--radar_points',
-        metavar='RP',
-        default='100000',
+        '-rp', '--radar_points', metavar='RP',  default='100000',
         help='radar points per second (default: "100000")')
     argparser.add_argument(
-        '-rn', '--radar_number',
-        metavar='LN',
-        default=0,
-        type=int,
-        choices=range(0, 4),
+        '-rn', '--radar_number', metavar='LN', default=0, type=int, choices=range(0, 4),
         help='Number of radars to render (from zero to three)')
     argparser.add_argument(
-        '--camera',
-        dest='render_cam', action='store_true',
+        '--camera', dest='render_cam', action='store_true',
         help='render also RGB camera (camera enable by default)')
-    argparser.add_argument('--no-camera',
-        dest='render_cam', action='store_false',
+    argparser.add_argument(
+        '--no-camera', dest='render_cam', action='store_false', default=True,
         help='no render RGB camera (camera disable by default)')
-    argparser.set_defaults(render_cam=True)
     argparser.add_argument(
-        '--profiling',
-        action='store_true',
+        '--profiling', action='store_true', default=False,
         help='Use the script in profiling mode. It measures the performance of \
-         the lidar for different number of points.')
-    argparser.set_defaults(profiling=False)
+              the lidar for different number of points.')
     argparser.add_argument(
-        '--no-render-window',
-        action='store_false',
-        dest='render_window',
+        '--no-render-window', action='store_false', dest='render_window', default=True,
         help='Render visualization window.')
-    argparser.set_defaults(render_window=True)
+
 
     args = argparser.parse_args()
-
     args.width, args.height = [int(x) for x in args.res.split('x')]
 
     try:

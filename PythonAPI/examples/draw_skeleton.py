@@ -5,23 +5,11 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-import glob
-import os
-import sys
 import math
 import argparse
 import copy
-import time
 from multiprocessing import Pool
 from PIL import Image
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 import random
@@ -284,18 +272,12 @@ def write_image(frame, id, buffer):
     img.save('_out/%s_%06d.png' % (id, frame))
 
 def main():
-    argparser = argparse.ArgumentParser(
-        description='CARLA Manual Control Client')
+    argparser = argparse.ArgumentParser(description='Show a pedestrian skeleton')
     argparser.add_argument(
-        '--fov',
-        default=60,
-        type=int,
+        '--fov', default=60, type=int,
         help='FOV for camera')
     argparser.add_argument(
-      '--res',
-      metavar='WIDTHxHEIGHT',
-      # default='1920x1080',
-      default='800x600',
+      '--res', metavar='WIDTHxHEIGHT', default='800x600',
       help='window resolution (default: 800x600)')
     args = argparser.parse_args()
     

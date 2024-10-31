@@ -231,6 +231,8 @@ class World(object):
         cam_pos_index = self.camera_manager.transform_index if self.camera_manager is not None else 0
         # Get a random blueprint.
         blueprint_list = get_actor_blueprints(self.world, self._actor_filter, self._actor_generation)
+        if self.args.safe:
+            blueprint_list = [x for x in blueprint_list if x.get_attribute('base_type') == 'car']
         if not blueprint_list:
             raise ValueError("Couldn't find any blueprints with the specified filters")
         blueprint = random.choice(blueprint_list)
@@ -1217,6 +1219,201 @@ class CameraManager(object):
             image.save_to_disk('_out/%08d' % image.frame)
 
 
+class Traffic(object):
+
+    def __init__(self, client, world, traffic_manager, args):
+        self.client = client
+        self.world = world
+        self.traffic_manager = traffic_manager
+        self.args = args
+        self.vehicle_ids = []
+        self.vehicles = []          # USed to print "spawned X vehicles"
+        self.walkers = []
+        self.walker_and_control_ids = []        # These include the controllers too
+        self.walkers_and_controls = []
+
+        if self.args.sync:
+            self.traffic_manager.set_synchronous_mode(True)
+        if self.args.respawn:
+            self.traffic_manager.set_respawn_dormant_vehicles(True)
+        if self.args.hybrid:
+            self.traffic_manager.set_hybrid_physics_mode(True)
+            self.traffic_manager.set_hybrid_physics_radius(70.0)
+        if self.args.seed is not None:
+            self.traffic_manager.set_random_device_seed(self.args.seed)
+
+        self.traffic_manager.set_global_distance_to_leading_vehicle(2.5)
+        self.traffic_manager.global_percentage_speed_difference(0)
+
+        if not args.sync:
+            print("You are currently in asynchronous mode, and traffic might experience some issues")
+
+        self.spawn_vehicles()
+        self.spawn_pedestrians()
+
+        print('Spawned %d vehicles and %d walkers, press Ctrl+C to exit.' % (len(self.vehicles), len(self.walkers)))
+
+    def spawn_vehicles(self):
+
+        if self.args.number_of_vehicles == 0:
+            return
+        
+        # Get the vehicle blueprints
+        blueprints_vehicles = get_actor_blueprints(self.world, self.args.filterv, self.args.generationv)
+        if not blueprints_vehicles:
+            raise ValueError("Couldn't find any vehicles with the specified filters")
+        if self.args.safe:
+            blueprints_vehicles = [x for x in blueprints_vehicles if x.get_attribute('base_type') == 'car']
+        blueprints_vehicles = sorted(blueprints_vehicles, key=lambda bp: bp.id)
+
+        # Get their spawn points
+        spawn_points = self.world.get_map().get_spawn_points()
+        number_of_spawn_points = len(spawn_points)
+        number_vehicles = self.args.number_of_vehicles
+        if number_vehicles < number_of_spawn_points:
+            random.shuffle(spawn_points)
+        elif self.args.number_of_vehicles > number_of_spawn_points:
+            print(f"Requested {number_vehicles} vehicles, but could only find {number_of_spawn_points} spawn points")
+            number_vehicles = number_of_spawn_points
+
+        hero = self.args.hero
+
+        SpawnActor = carla.command.SpawnActor
+        SetAutopilot = carla.command.SetAutopilot
+        FutureActor = carla.command.FutureActor
+
+        batch = []
+        for n, transform in enumerate(spawn_points):
+            if n >= self.args.number_of_vehicles:
+                break
+            blueprint = random.choice(blueprints_vehicles)
+            if blueprint.has_attribute('color'):
+                color = random.choice(blueprint.get_attribute('color').recommended_values)
+                blueprint.set_attribute('color', color)
+            if blueprint.has_attribute('driver_id'):
+                driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
+                blueprint.set_attribute('driver_id', driver_id)
+            if hero:
+                blueprint.set_attribute('role_name', 'hero')
+                hero = False
+            else:
+                blueprint.set_attribute('role_name', 'autopilot')
+
+            # Spawn the cars and set their autopilot
+            batch.append(SpawnActor(blueprint, transform)
+                .then(SetAutopilot(FutureActor, True, self.traffic_manager.get_port())))
+
+        for response in self.client.apply_batch_sync(batch, self.args.sync):
+            if response.error:
+                logging.error(response.error)
+            else:
+                self.vehicle_ids.append(response.actor_id)
+
+        # Set automatic vehicle lights update
+        if self.args.car_lights_on:
+            self.vehicles = self.world.get_actors(self.vehicle_ids)
+            for actor in self.vehicles:
+                self.traffic_manager.update_vehicle_lights(actor, True)
+
+    def spawn_pedestrians(self):
+
+        if self.args.number_of_walkers == 0:
+            return
+
+        blueprints_walkers = get_actor_blueprints(self.world, self.args.filterw, self.args.generationw)
+        if not blueprints_walkers:
+            raise ValueError("Couldn't find any walkers with the specified filters")
+        blueprints_walkers = sorted(blueprints_walkers, key=lambda bp: bp.id)
+
+        controller_bp = self.world.get_blueprint_library().find('controller.ai.walker')
+
+        SpawnActor = carla.command.SpawnActor
+
+        percentagePedestriansRunning = 0.0      # how many pedestrians will run
+        percentagePedestriansCrossing = 0.0     # how many pedestrians will walk through the road
+
+        if self.args.seed:
+            self.world.set_pedestrians_seed(self.args.seed)
+
+        # Get the spawn points
+        walker_spawn_points = []
+        for i in range(self.args.number_of_walkers):
+            spawn_point = carla.Transform()
+            loc = self.world.get_random_location_from_navigation()
+            if (loc != None):
+                spawn_point.location = loc
+                spawn_point.location.z += 2
+                walker_spawn_points.append(spawn_point)
+
+        # Get the blueprints
+        batch = []
+        walker_speed = []
+        for spawn_point in walker_spawn_points:
+            walker_bp = random.choice(blueprints_walkers)
+
+            if walker_bp.has_attribute('is_invincible'):
+                walker_bp.set_attribute('is_invincible', 'false')
+
+            if walker_bp.has_attribute('speed'):
+                if (random.random() > percentagePedestriansRunning):
+                    walker_speed.append(walker_bp.get_attribute('speed').recommended_values[1])
+                else:
+                    walker_speed.append(walker_bp.get_attribute('speed').recommended_values[2])
+            else:
+                print("Found a walker has no speed")
+                walker_speed.append(0.0)
+
+            batch.append(SpawnActor(walker_bp, spawn_point))
+
+        # Spawn the walkers
+        results = self.client.apply_batch_sync(batch, self.args.sync)
+        new_walker_speed = []
+        for i in range(len(results)):
+            if results[i].error:
+                print(results[i].error)
+            else:
+                self.walkers.append({"id": results[i].actor_id})
+                new_walker_speed.append(walker_speed[i])
+        walker_speed = new_walker_speed
+
+        # Spawn the controllers
+        batch = []
+        for i in range(len(self.walkers)):
+            batch.append(SpawnActor(controller_bp, carla.Transform(), self.walkers[i]["id"]))
+
+        results = self.client.apply_batch_sync(batch, self.args.sync)
+        for i in range(len(results)):
+            if results[i].error:
+                print(results[i].error)
+            else:
+                self.walkers[i]["controller"] = results[i].actor_id
+
+        for i in range(len(self.walkers)):
+            self.walker_and_control_ids.append(self.walkers[i]["controller"])
+            self.walker_and_control_ids.append(self.walkers[i]["id"])
+        self.walkers_and_controls = self.world.get_actors(self.walker_and_control_ids)
+
+        if not self.args.sync:
+            self.world.wait_for_tick()
+        else:
+            self.world.tick()
+
+        self.world.set_pedestrians_cross_factor(percentagePedestriansCrossing)
+        for i in range(0, len(self.walker_and_control_ids), 2):
+            self.walkers_and_controls[i].start()
+            self.walkers_and_controls[i].go_to_location(self.world.get_random_location_from_navigation())
+            self.walkers_and_controls[i].set_max_speed(float(walker_speed[int(i/2)]))
+
+    def destroy(self):
+        self.client.apply_batch([carla.command.DestroyActor(x) for x in self.vehicle_ids])
+
+        # Stop walker controllers (list is [controller, actor, controller, actor ...])
+        for i in range(0, len(self.walker_and_control_ids), 2):
+            self.walkers_and_controls[i].stop()
+
+        self.client.apply_batch([carla.command.DestroyActor(x) for x in self.walker_and_control_ids])
+
+
 # ==============================================================================
 # -- game_loop() ---------------------------------------------------------------
 # ==============================================================================
@@ -1226,11 +1423,13 @@ def game_loop(args):
     pygame.init()
     pygame.font.init()
     world = None
+    traffic = None
     original_settings = None
 
     try:
         client = carla.Client(args.host, args.port)
         client.set_timeout(2000.0)
+        traffic_manager = client.get_trafficmanager()
 
         sim_world = client.get_world()
         if args.sync:
@@ -1240,9 +1439,6 @@ def game_loop(args):
                 settings.synchronous_mode = True
                 settings.fixed_delta_seconds = 0.05
             sim_world.apply_settings(settings)
-
-            traffic_manager = client.get_trafficmanager()
-            traffic_manager.set_synchronous_mode(True)
 
         if args.autopilot and not sim_world.get_settings().synchronous_mode:
             print("WARNING: You are currently in asynchronous mode and could "
@@ -1257,6 +1453,7 @@ def game_loop(args):
         hud = HUD(args.width, args.height)
         world = World(sim_world, hud, args)
         controller = KeyboardControl(world, args.autopilot)
+        traffic = Traffic(client, sim_world, traffic_manager, args)
 
         if args.sync:
             sim_world.tick()
@@ -1277,6 +1474,8 @@ def game_loop(args):
     finally:
 
         if original_settings:
+            if not original_settings.synchronous_mode:
+                traffic_manager.set_synchronous_mode(False)
             sim_world.apply_settings(original_settings)
 
         if (world and world.recording_enabled):
@@ -1284,6 +1483,9 @@ def game_loop(args):
 
         if world is not None:
             world.destroy()
+
+        if traffic is not None:
+            traffic.destroy()
 
         pygame.quit()
 
@@ -1306,10 +1508,22 @@ def main():
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
         '-a', '--autopilot', action='store_true',
-        help='enable autopilot')
+        help='enable the autopilot for the manual controleld vehicle')
     argparser.add_argument(
         '--res', metavar='WIDTHxHEIGHT', default='1280x720',
         help='window resolution (default: 1280x720)')
+    argparser.add_argument(
+        '--sync', action='store_true',
+        help='Activate synchronous mode execution')
+    argparser.add_argument(
+        '--rolename', metavar='NAME', default='hero',
+        help='actor role name (default: "hero")')
+    argparser.add_argument(
+        '-s', '--seed', metavar='S', type=int,
+        help='Sets the seed of all random behaviors')
+    argparser.add_argument(
+        '--car-lights-on', action='store_true', default=False,
+        help='Enable automatic car light management')
     argparser.add_argument(
         '--filter', metavar='PATTERN', default='vehicle.*',
         help='actor filter (default: "vehicle.*")')
@@ -1317,14 +1531,41 @@ def main():
         '--generation', metavar='G', default='All',
         help='restrict to certain actor generation (values: "2","3","All" - default: "All")')
     argparser.add_argument(
-        '--rolename', metavar='NAME', default='hero',
-        help='actor role name (default: "hero")')
+        '--filterv', metavar='PATTERN', default='vehicle.*',
+        help='Traffic filter (default: "vehicle.*")')
+    argparser.add_argument(
+        '--generationv', metavar='G', default='All',
+        help='restrict the traffic to certain actor generation (values: "2","3","All" - default: "All")')
+    argparser.add_argument(
+        '--filterw', metavar='PATTERN', default='vehicle.*',
+        help='pedestrian filter (default: "vehicle.*")')
+    argparser.add_argument(
+        '--generationw', metavar='G', default='All',
+        help='restrict the pedestrians to certain actor generation (values: "2","3","All" - default: "All")')
+    argparser.add_argument(
+        '-n', '--number-of-vehicles', metavar='N', default=30, type=int,
+        help='Number of vehicles (default: 30)')
+    argparser.add_argument(
+        '-w', '--number-of-walkers', metavar='W', default=10, type=int,
+        help='Number of walkers (default: 10)')
+    argparser.add_argument(
+        '--safe', action='store_true',
+        help='Avoid spawning vehicles prone to accidents')
+    argparser.add_argument(
+        '--tm-port', metavar='P', default=8000, type=int,
+        help='Port to communicate with TM (default: 8000)')
+    argparser.add_argument(
+        '--hybrid', action='store_true',
+        help='Activate hybrid mode for Traffic Manager')
+    argparser.add_argument(
+        '--respawn', action='store_true', default=False,
+        help='Automatically respawn dormant vehicles (only in large maps)')
+    argparser.add_argument(
+        '--hero', action='store_true', default=False,
+        help='Set one of the vehicles as hero')
     argparser.add_argument(
         '--gamma', default=1.0, type=float,
         help='Gamma correction of the camera (default: 1.0)')
-    argparser.add_argument(
-        '--sync', action='store_true',
-        help='Activate synchronous mode execution')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]

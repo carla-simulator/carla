@@ -6,8 +6,6 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-# Allows controlling a vehicle with a keyboard. For a simpler and more
-# documented example, please take a look at tutorial.py.
 
 import argparse
 import sys
@@ -56,9 +54,15 @@ def get_traffic_light_bbs(traffic_light):
 def main():
     argparser = argparse.ArgumentParser(
         description='CARLA Manual Control Client')
-    argparser.add_argument('--host', metavar='H', default='127.0.0.1', help='IP of the host server (default: 127.0.0.1)')
-    argparser.add_argument('-p', '--port', metavar='P', default=2000, type=int, help='TCP port to listen to (default: 2000)')
-    argparser.add_argument('--show', default='100', type=float, help='Duration of the visualization of the junctions')
+    argparser.add_argument(
+        '--host', metavar='H', default='127.0.0.1',
+        help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument(
+        '-p', '--port', metavar='P', default=2000, type=int,
+        help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '--show', default='100', type=float,
+        help='Duration of the visualization of the junctions')
     args = argparser.parse_args()
 
     client = carla.Client(args.host, args.port)
