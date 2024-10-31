@@ -691,7 +691,7 @@ void FCarlaServer::FPimpl::BindActions()
     auto *Weather = Episode->GetWeather();
     if (Weather == nullptr)
     {
-      RESPOND_ERROR("internal error: unable to find weather");
+      RESPOND_ERROR("internal error: unable to find weather:: weather is disabled");
     }
     return Weather->GetCurrentWeather();
   };
@@ -703,7 +703,7 @@ void FCarlaServer::FPimpl::BindActions()
     auto *Weather = Episode->GetWeather();
     if (Weather == nullptr)
     {
-      RESPOND_ERROR("internal error: unable to find weather");
+      RESPOND_ERROR("internal error: unable to find weather:: weather is disabled");
     }
     Weather->ApplyWeather(weather);
     return R<void>::Success();
