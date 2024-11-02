@@ -1,4 +1,5 @@
 ## Latest Changes
+ * Fixed a bug that caused navigation information not to be loaded when switching maps
  * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
  * Added vehicle doors to the recorder
  * Added functions to get actor' components transform
