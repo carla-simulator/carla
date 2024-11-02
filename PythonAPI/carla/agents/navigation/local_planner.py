@@ -28,7 +28,7 @@ class RoadOption(IntEnum):
     CHANGELANERIGHT = 6
 
 
-class LocalPlanner(object):
+class LocalPlanner:
     """
     LocalPlanner implements the basic behavior of following a
     trajectory of waypoints that is generated on-the-fly.
@@ -151,7 +151,7 @@ class LocalPlanner(object):
 
     def follow_speed_limits(self, value=True):
         """
-        Activates a flag that makes the max speed dynamically vary according to the spped limits
+        Activates a flag that makes the max speed dynamically vary according to the speed limits
 
         :param value: bool
         :return:
@@ -287,7 +287,7 @@ class LocalPlanner(object):
             try:
                 wpt, direction = self._waypoints_queue[-1]
                 return wpt, direction
-            except IndexError as i:
+            except IndexError:
                 return None, RoadOption.VOID
 
     def get_plan(self):
@@ -316,7 +316,7 @@ def _retrieve_options(list_waypoints, current_waypoint):
     options = []
     for next_waypoint in list_waypoints:
         # this is needed because something we are linking to
-        # the beggining of an intersection, therefore the
+        # the beginning of an intersection, therefore the
         # variation in angle is small
         next_next_waypoint = next_waypoint.next(3.0)[0]
         link = _compute_connection(current_waypoint, next_next_waypoint)

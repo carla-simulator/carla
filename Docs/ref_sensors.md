@@ -1004,4 +1004,3 @@ Example:
 | path\_loss\_model       | string | geometric     |   general path loss model to be used. Options: [geometric, winner]  |
 | use\_etsi\_fading       | bool   | true         |   Use the fading params as mentioned in the ETSI publication (true), or use the custom fading standard deviation         |
 | custom\_fading\_stddev  | float  | 0.0      |   Custom value for fading standard deviation, only used if `use_etsi_fading` is set to `false`              |
-
