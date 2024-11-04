@@ -39,6 +39,7 @@ public class Carla :
 
     PrivatePCHHeaderFile = "Carla.h";
     bEnableExceptions = true;
+    bUseRTTI = true;
     
     void AddDynamicLibrary(string library)
     {

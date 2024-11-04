@@ -26,6 +26,7 @@ public class CarlaTools :
 
     PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
     bEnableExceptions = true;
+    bUseRTTI = true;
     
     foreach (var Definition in File.ReadAllText(Path.Combine(PluginDirectory, "Definitions.def")).Split(';'))
       PrivateDefinitions.Add(Definition.Trim());
@@ -100,8 +101,8 @@ public class CarlaTools :
       "RHI",
       "RenderCore",
       "MeshMergeUtilities",
-      "StreetMapImporting",
-      "StreetMapRuntime",
+      // "StreetMapImporting",
+      // "StreetMapRuntime",
       "Chaos",
       "ChaosVehicles"
     });

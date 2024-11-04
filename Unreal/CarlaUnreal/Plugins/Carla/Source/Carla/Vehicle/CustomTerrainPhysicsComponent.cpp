@@ -930,7 +930,7 @@ void UCustomTerrainPhysicsComponent::UpdateTexture()
     region.Width = Texture->GetSizeX();
     region.Height = Texture->GetSizeY();
 
-    FTexture2DResource* resource = (FTexture2DResource*)Texture->Resource;
+    FTexture2DResource* resource = (FTexture2DResource*)Texture->GetResource();
     RHIUpdateTexture2D(
         resource->GetTexture2DRHI(), 0, region, region.Width * sizeof(uint8_t), &NewData[0]); 
   });
@@ -1024,7 +1024,7 @@ void UCustomTerrainPhysicsComponent::UpdateLargeTexture()
     region.Width = Texture->GetSizeX();
     region.Height = Texture->GetSizeY();
 
-    FTexture2DResource* resource = (FTexture2DResource*)Texture->Resource;
+    FTexture2DResource* resource = (FTexture2DResource*)Texture->GetResource();
     RHIUpdateTexture2D(
         resource->GetTexture2DRHI(), 0, region, region.Width * sizeof(uint8_t), &NewData[0]); 
   });

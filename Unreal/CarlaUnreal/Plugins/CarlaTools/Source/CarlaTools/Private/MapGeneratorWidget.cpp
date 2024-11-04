@@ -776,7 +776,7 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
   {
     UE_LOG(LogCarlaToolsMapGenerator, Error, 
         TEXT("%s: Failed to cast Large Map Actor in %s."),
-        *MetaInfo.MapName); 
+        *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName); 
     return false;
   }
 
@@ -1200,8 +1200,11 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
         FVector(2500, 2500, 900));
 
     UActorFactory* ActorFactory = GEditor->FindActorFactoryForActorClass(AProceduralFoliageVolume::StaticClass());
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Name = InName;
+    SpawnParams.ObjectFlags = InObjectFlags;
     AProceduralFoliageVolume* FoliageVolumeActor = (AProceduralFoliageVolume*) ActorFactory->CreateActor(
-        AProceduralFoliageVolume::StaticClass(), Level, Transform, InObjectFlags, InName);
+        AProceduralFoliageVolume::StaticClass(), Level, Transform, SpawnParams);
 
     UProceduralFoliageComponent* FoliageComponent = FoliageVolumeActor->ProceduralComponent;
     FoliageComponent->FoliageSpawner = Spawner;

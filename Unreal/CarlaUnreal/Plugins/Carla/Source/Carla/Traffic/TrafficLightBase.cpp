@@ -16,7 +16,7 @@
 
 static bool IsValid(const ACarlaWheeledVehicle *Vehicle)
 {
-  return ((Vehicle != nullptr) && !Vehicle->IsPendingKill());
+  return ((Vehicle != nullptr) && IsValidChecked(Vehicle));
 }
 
 static ETrafficSignState ToTrafficSignState(ETrafficLightState State)

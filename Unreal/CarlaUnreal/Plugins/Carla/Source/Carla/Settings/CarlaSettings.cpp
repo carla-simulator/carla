@@ -164,10 +164,10 @@ void UCarlaSettings::LoadSettingsFromString(const FString &INIFileContents)
 {
   UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from string"));
   FIniFile ConfigFile;
-  ConfigFile.ProcessInputFileContents(INIFileContents);
+  CurrentFileName = TEXT("<string-provided-by-client>");
+  ConfigFile.ProcessInputFileContents(INIFileContents, CurrentFileName);
   constexpr bool bLoadCarlaServerSection = false;
   LoadSettingsFromConfig(ConfigFile, *this, bLoadCarlaServerSection);
-  CurrentFileName = TEXT("<string-provided-by-client>");
 }
 
 void UCarlaSettings::LogSettings() const

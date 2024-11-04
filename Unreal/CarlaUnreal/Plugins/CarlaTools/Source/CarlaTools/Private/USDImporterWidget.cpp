@@ -29,6 +29,7 @@
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "BlueprintEditor.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "PhysicsEngine/SkeletalBodySetup.h"
 
 
 void UUSDImporterWidget::ImportUSDProp(
@@ -641,9 +642,9 @@ void UUSDImporterWidget::CopyCollisionToPhysicsAsset(
     UPhysicsAsset* PhysicsAssetToEdit, UStaticMesh* StaticMesh)
 {
   UE_LOG(LogCarlaTools, Log, TEXT("Num bodysetups %d"), PhysicsAssetToEdit->SkeletalBodySetups.Num());
-  UBodySetup* BodySetupPhysicsAsset = 
+  UBodySetup* BodySetupPhysicsAsset = Cast<UBodySetup>(
       PhysicsAssetToEdit->SkeletalBodySetups[
-          PhysicsAssetToEdit->FindBodyIndex(FName("Vehicle_Base"))];
+          PhysicsAssetToEdit->FindBodyIndex(FName("Vehicle_Base"))]);
   UBodySetup* BodySetupStaticMesh = StaticMesh->GetBodySetup();
   BodySetupPhysicsAsset->AggGeom = BodySetupStaticMesh->AggGeom;
 

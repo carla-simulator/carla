@@ -20,6 +20,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "UObject/Package.h"
 
 static bool ValidateStaticMesh(UStaticMesh *Mesh)
 {
@@ -334,7 +335,7 @@ bool UPrepareAssetsForCookingCommandlet::SaveWorld(
 {
   // Create Package to save
   UPackage *Package = AssetData.GetPackage();
-  Package->SetFolderName(*WorldName);
+  // Package->SetFolderName(*WorldName); @TODO
   Package->FullyLoad();
   Package->MarkPackageDirty();
   FAssetRegistryModule::AssetCreated(World);
