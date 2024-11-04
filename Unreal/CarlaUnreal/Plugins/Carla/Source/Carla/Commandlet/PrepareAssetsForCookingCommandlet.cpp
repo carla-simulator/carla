@@ -335,7 +335,6 @@ bool UPrepareAssetsForCookingCommandlet::SaveWorld(
 {
   // Create Package to save
   UPackage *Package = AssetData.GetPackage();
-  // Package->SetFolderName(*WorldName); @TODO
   Package->FullyLoad();
   Package->MarkPackageDirty();
   FAssetRegistryModule::AssetCreated(World);
