@@ -618,10 +618,6 @@ void ACarlaWheeledVehicle::DeactivateVelocityControl()
 
 void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
 {
-  UE_LOG(LogCarla, Warning, TEXT("ACarlaWheeledVehicle::ShowDebugTelemetry:: Chaos does not support Debug telemetry"));
-  return;
-  //To Do: Implement Debug Telemetry?
-  /*
   if (GetWorld()->GetFirstPlayerController())
   {
     ACarlaHUD* hud = Cast<ACarlaHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
@@ -643,7 +639,6 @@ void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
     UE_LOG(LogCarla, Warning, TEXT("ACarlaWheeledVehicle::ShowDebugTelemetry:: Cannot find HUD for debug info"));
     }
   }
-  */
 }
 
 void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState& LightState)
