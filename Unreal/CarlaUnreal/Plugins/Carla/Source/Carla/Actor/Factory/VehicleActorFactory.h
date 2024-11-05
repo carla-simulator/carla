@@ -45,8 +45,8 @@ private:
 
 protected:
 
-  UPROPERTY(VisibleAnywhere)
+  UPROPERTY(VisibleAnywhere, Category="VehicleActorFactory")
   TArray<FActorDefinition> Definitions;
-  UPROPERTY(VisibleAnywhere)
+  UPROPERTY(VisibleAnywhere, Category="VehicleActorFactory")
   TArray<FVehicleParameters> VehiclesParams;
 };

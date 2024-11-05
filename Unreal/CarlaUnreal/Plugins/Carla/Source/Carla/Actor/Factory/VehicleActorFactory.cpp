@@ -26,7 +26,7 @@ FActorSpawnResult AVehicleActorFactory::SpawnActor(
     const FActorDescription &ActorDescription)
 {
   FActorSpawnResult SpawnResult;
-  if(IsValid(ActorDescription.Class))
+  if(!IsValid(ActorDescription.Class))
   {
     UE_LOG(LogCarla, Error, TEXT("Actor Description Class is null."));
     SpawnResult.Status = EActorSpawnResultStatus::InvalidDescription;
@@ -56,7 +56,11 @@ TSharedPtr<FJsonObject> AVehicleActorFactory::FVehicleParametersToJsonObject(con
 
   JsonObject->SetStringField(TEXT("Make"), VehicleParams.Make);
   JsonObject->SetStringField(TEXT("Model"), VehicleParams.Model);
+<<<<<<< HEAD
   JsonObject->SetStringField(TEXT("Class"), VehicleParams.Class ? VehicleParams.Class->GetName() : "");
+=======
+  JsonObject->SetStringField(TEXT("Class"), VehicleParams.Class ? VehicleParams.Class->GetPathName() : "");
+>>>>>>> c37d00d6710e39996778dd59cea15a685d5fae49
   JsonObject->SetNumberField(TEXT("NumberOfWheels"), VehicleParams.NumberOfWheels);
   JsonObject->SetNumberField(TEXT("Generation"), VehicleParams.Generation);
   JsonObject->SetStringField(TEXT("ObjectType"), VehicleParams.ObjectType);
@@ -121,11 +125,19 @@ void AVehicleActorFactory::SaveVehicleParametersArrayToFile(const TArray<FVehicl
   // Save the JSON to a file
   if (FFileHelper::SaveStringToFile(JsonContent, *FilePath))
   {
+<<<<<<< HEAD
       UE_LOG(LogTemp, Log, TEXT("JSON file successfully saved at: %s"), *FilePath);
   }
   else
   {
       UE_LOG(LogTemp, Error, TEXT("Failed to save JSON file at: %s"), *FilePath);
+=======
+      UE_LOG(LogCarla, Log, TEXT("JSON file successfully saved at: %s"), *FilePath);
+  }
+  else
+  {
+      UE_LOG(LogCarla, Error, TEXT("Failed to save JSON file at: %s"), *FilePath);
+>>>>>>> c37d00d6710e39996778dd59cea15a685d5fae49
   }
 }
 
@@ -136,8 +148,15 @@ bool AVehicleActorFactory::JsonToFVehicleParameters(const TSharedPtr<FJsonObject
     JsonObject->TryGetStringField(TEXT("Make"), OutVehicleParams.Make);
     JsonObject->TryGetStringField(TEXT("Model"), OutVehicleParams.Model);
     // Convert "Class" string back to a class reference if necessary
+<<<<<<< HEAD
     // JsonObject->TryGetStringField(TEXT("Class"), OutVehicleParams.Class); // Custom conversion required if needed
     
+=======
+    FString ClassPath;
+    JsonObject->TryGetStringField(TEXT("Class"), ClassPath); // Custom conversion required if needed
+    OutVehicleParams.Class = StaticLoadClass(ACarlaWheeledVehicle::StaticClass(), nullptr, *ClassPath);
+
+>>>>>>> c37d00d6710e39996778dd59cea15a685d5fae49
     JsonObject->TryGetNumberField(TEXT("NumberOfWheels"), OutVehicleParams.NumberOfWheels);
     JsonObject->TryGetNumberField(TEXT("Generation"), OutVehicleParams.Generation);
     JsonObject->TryGetStringField(TEXT("ObjectType"), OutVehicleParams.ObjectType);
@@ -187,7 +206,11 @@ bool AVehicleActorFactory::JsonToFVehicleParametersArray(const FString& JsonStri
 
     if (!FJsonSerializer::Deserialize(Reader, RootObject) || !RootObject.IsValid())
     {
+<<<<<<< HEAD
         UE_LOG(LogTemp, Error, TEXT("Failed to parse JSON."));
+=======
+        UE_LOG(LogCarla, Error, TEXT("Failed to parse JSON."));
+>>>>>>> c37d00d6710e39996778dd59cea15a685d5fae49
         return false;
     }
 
@@ -225,15 +248,27 @@ void AVehicleActorFactory::LoadVehicleParametersArrayFromFile(const FString& Fil
       // Parse the JSON and populate the TArray<FVehicleParameters>
       if (JsonToFVehicleParametersArray(JsonContent, OutVehicleParamsArray))
       {
+<<<<<<< HEAD
           UE_LOG(LogTemp, Log, TEXT("Vehicle parameters loaded successfully from %s"), *FilePath);
       }
       else
       {
           UE_LOG(LogTemp, Error, TEXT("Failed to parse vehicle parameters from %s"), *FilePath);
+=======
+          UE_LOG(LogCarla, Log, TEXT("Vehicle parameters loaded successfully from %s"), *FilePath);
+      }
+      else
+      {
+          UE_LOG(LogCarla, Error, TEXT("Failed to parse vehicle parameters from %s"), *FilePath);
+>>>>>>> c37d00d6710e39996778dd59cea15a685d5fae49
       }
   }
   else
   {
+<<<<<<< HEAD
       UE_LOG(LogTemp, Error, TEXT("Failed to load file: %s"), *FilePath);
+=======
+      UE_LOG(LogCarla, Error, TEXT("Failed to load file: %s"), *FilePath);
+>>>>>>> c37d00d6710e39996778dd59cea15a685d5fae49
   }
 }
