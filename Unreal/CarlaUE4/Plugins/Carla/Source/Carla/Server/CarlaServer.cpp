@@ -43,6 +43,7 @@
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/BoneTransformDataIn.h>
+#include <carla/rpc/BoundingBox.h>
 #include <carla/rpc/Command.h>
 #include <carla/rpc/CommandResponse.h>
 #include <carla/rpc/DebugShape.h>
@@ -1341,6 +1342,23 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
+  };
+
+  BIND_SYNC(get_actor_bounding_box) << [this](
+      cr::ActorId ActorId) -> R<cr::BoundingBox>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_actor_bounding_box",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    FBoundingBox bounding_box = UBoundingBoxCalculator::GetActorBoundingBox(CarlaActor->GetActor(), 0);
+    bounding_box.ActorId = CarlaActor->GetActorId();
+    return cr::BoundingBox(bounding_box);
   };
 
   BIND_SYNC(get_actor_component_world_transform) << [this](

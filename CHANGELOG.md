@@ -21,7 +21,9 @@
  * Added named tuples for BasicAgent.py's detection result to allow for type-hints and better semantics.
  * Added type-hint support for the PythonAPI
  * Added type-hints to GlobalRoutePlanner and use carla.Vector3D code instead of pre 0.9.13 numpy code.
-
+ * If available, use ActorIDs instead of Unreal Engine IDs for instance segmentation
+ * Synchronized actor BoundingBox between server and client
+ * Add actor_id to bounding boxes
 
 ## CARLA 0.9.15
 

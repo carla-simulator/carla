@@ -418,6 +418,10 @@ namespace detail {
     _pimpl->AsyncCall("add_actor_torque", actor, vector);
   }
 
+  geom::BoundingBox Client::GetActorBoundingBox(rpc::ActorId actor) {
+    return _pimpl->CallAndWait<geom::BoundingBox>("get_actor_bounding_box", actor);
+  }
+
   geom::Transform Client::GetActorComponentWorldTransform(rpc::ActorId actor, const std::string componentName) {
     return _pimpl->CallAndWait<geom::Transform>("get_actor_component_world_transform", actor, componentName);
   }

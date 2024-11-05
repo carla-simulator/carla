@@ -238,6 +238,9 @@ namespace detail {
         rpc::ActorId actor,
         const geom::Vector3D &vector);
 
+    geom::BoundingBox GetActorBoundingBox(
+        rpc::ActorId actor);
+
     geom::Transform GetActorComponentWorldTransform(
         rpc::ActorId actor,
         const std::string componentName);
