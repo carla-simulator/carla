@@ -30,6 +30,7 @@
 #include "BlueprintEditor.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "PhysicsEngine/SkeletalBodySetup.h"
+#include "UObject/SavePackage.h"
 
 
 void UUSDImporterWidget::ImportUSDProp(

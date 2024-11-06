@@ -7,9 +7,10 @@
 #pragma once
 
 #include "MapGen/CityMapMeshHolder.h"
-
 #include "MapGen/DoublyConnectedEdgeList.h"
 #include "MapGen/GraphParser.h"
+
+#include "UObject/ObjectSaveContext.h"
 
 #include "CityMapGenerator.generated.h"
 
@@ -40,7 +41,7 @@ public:
   /// @{
 public:
 
-  virtual void PreSave(const ITargetPlatform *TargetPlatform) override;
+  virtual void PreSave(FObjectPreSaveContext ObjectSaveContext) override;
 
   /// @}
   // ===========================================================================

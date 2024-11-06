@@ -28,7 +28,7 @@ void FPixelReader::WritePixelsToBuffer(
 
   auto RenderResource =
       static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.GetResource());
-  FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
+  auto Texture = RenderResource->GetRenderTargetTexture();
   if (!Texture)
   {
     return;
