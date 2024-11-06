@@ -51,6 +51,9 @@ public:
 
   virtual void DrawHUD() override;
 
+  /** Draw 2D debug text graphs on UI for the wheels, suspension and other systems */
+  void DrawDebug(float& YL, float& YPos);
+
   UChaosWheeledVehicleMovementComponent* DebugVehicle = nullptr;
 
   void AddDebugVehicleForTelemetry(UChaosWheeledVehicleMovementComponent* NewDebugVehiclePtr)

@@ -179,6 +179,7 @@ def get_actor_blueprints(world, filter, generation):
 class World(object):
     def __init__(self, carla_world, hud, args):
         self.world = carla_world
+        self.args = args
         self.sync = args.sync
         self.actor_role_name = args.rolename
         try:
