@@ -184,11 +184,6 @@ void ACarlaGameModeBase::BeginPlay()
   LoadMapLayer(GameInstance->GetCurrentMapLayer());
   ReadyToRegisterObjects = true;
 
-  if (true) { /// @todo If semantic segmentation enabled.
-    ATagger::TagActorsInLevel(*World, true);
-    TaggerDelegate->SetSemanticSegmentationEnabled();
-  }
-
   // HACK: fix transparency see-through issues
   // The problem: transparent objects are visible through walls.
   // This is due to a weird interaction between the SkyAtmosphere component,
@@ -204,6 +199,11 @@ void ACarlaGameModeBase::BeginPlay()
 
   Episode->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
+
+  if (true) { /// @todo If semantic segmentation enabled.
+    ATagger::TagActorsInLevel(*World, *Episode, true);
+    TaggerDelegate->SetSemanticSegmentationEnabled();
+  }
 
   if (Episode->Weather != nullptr)
   {
@@ -630,10 +630,10 @@ TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried) cons
   UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
 
   TArray<FBoundingBox> BoundingBoxes;
-  BoundingBoxes = UBoundingBoxCalculator::GetBoundingBoxOfActors(FoundActors, TagQueried);
+  BoundingBoxes = UBoundingBoxCalculator::GetBoundingBoxOfActors(FoundActors, &GetCarlaEpisode(), TagQueried);
 
   return BoundingBoxes;
-}
+  }
 
 void ACarlaGameModeBase::RegisterEnvironmentObjects()
 {
@@ -773,7 +773,7 @@ void ACarlaGameModeBase::OnLoadStreamLevel()
   if(ReadyToRegisterObjects && PendingLevelsToLoad == 0)
   {
     RegisterEnvironmentObjects();
-    ATagger::TagActorsInLevel(*GetWorld(), true);
+    ATagger::TagActorsInLevel(*GetWorld(), *Episode, true);
   }
 }
 

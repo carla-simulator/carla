@@ -10,6 +10,7 @@
 #include "Carla/Sensor/LidarDescription.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Sensor/ShaderBasedSensor.h"
+#include "Carla/Sensor/V2X/PathLossModel.h"
 #include "Carla/Util/ScopedStack.h"
 
 #include <algorithm>
@@ -1014,6 +1015,351 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   Success = CheckActorDefinition(Definition);
 }
 
+FActorDefinition UActorBlueprintFunctionLibrary::MakeV2XDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeV2XDefinition(Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeV2XDefinition(
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("v2x"));
+  AddVariationsForSensor(Definition);
+
+  // - Noise seed --------------------------------
+  FActorVariation NoiseSeed;
+  NoiseSeed.Id = TEXT("noise_seed");
+  NoiseSeed.Type = EActorAttributeType::Int;
+  NoiseSeed.RecommendedValues = { TEXT("0") };
+  NoiseSeed.bRestrictToRecommended = false;  
+
+  //Frequency
+  FActorVariation Frequency;
+  Frequency.Id = TEXT("frequency_ghz");
+  Frequency.Type = EActorAttributeType::Float;
+  Frequency.RecommendedValues = { TEXT("5.9")};
+
+  //TransmitPower
+  FActorVariation TransmitPower;
+  TransmitPower.Id = TEXT("transmit_power");
+  TransmitPower.Type = EActorAttributeType::Float;
+  TransmitPower.RecommendedValues = { TEXT("21.5")};
+
+  //ReceiveSensitivity
+  FActorVariation ReceiverSensitivity;
+  ReceiverSensitivity.Id = TEXT("receiver_sensitivity");
+  ReceiverSensitivity.Type = EActorAttributeType::Float;
+  ReceiverSensitivity.RecommendedValues = { TEXT("-99.0")};
+
+  //Combined Antenna Gain in dBi
+  FActorVariation CombinedAntennaGain;
+  CombinedAntennaGain.Id = TEXT("combined_antenna_gain");
+  CombinedAntennaGain.Type = EActorAttributeType::Float;
+  CombinedAntennaGain.RecommendedValues = { TEXT("10.0")};  
+
+  //Scenario
+  FActorVariation Scenario;
+  Scenario.Id = TEXT("scenario");
+  Scenario.Type = EActorAttributeType::String;
+  Scenario.RecommendedValues = { TEXT("highway"), TEXT("rural"), TEXT("urban")};
+  Scenario.bRestrictToRecommended = true;
+
+  //Path loss exponent
+  FActorVariation PLE;
+  PLE.Id = TEXT("path_loss_exponent");
+  PLE.Type = EActorAttributeType::Float;
+  PLE.RecommendedValues = { TEXT("2.7")};
+  
+
+  //FSPL reference distance for LDPL calculation
+  FActorVariation FSPL_RefDistance;
+  FSPL_RefDistance.Id = TEXT("d_ref");
+  FSPL_RefDistance.Type = EActorAttributeType::Float;
+  FSPL_RefDistance.RecommendedValues = { TEXT("1.0")};
+
+  //filter distance to speed up calculation
+  FActorVariation FilterDistance;
+  FilterDistance.Id = TEXT("filter_distance");
+  FilterDistance.Type = EActorAttributeType::Float;
+  FilterDistance.RecommendedValues = { TEXT("500.0")};
+
+  //etsi fading
+  FActorVariation EtsiFading;
+  EtsiFading.Id = TEXT("use_etsi_fading");
+  EtsiFading.Type = EActorAttributeType::Bool;
+  EtsiFading.RecommendedValues = { TEXT("true")};
+
+  //custom fading std deviation
+  FActorVariation CustomFadingStddev;
+  CustomFadingStddev.Id = TEXT("custom_fading_stddev");
+  CustomFadingStddev.Type = EActorAttributeType::Float;
+  CustomFadingStddev.RecommendedValues = { TEXT("0.0")};
+
+  // Min Cam Generation
+  FActorVariation GenCamMin;
+  GenCamMin.Id = TEXT("gen_cam_min");
+  GenCamMin.Type = EActorAttributeType::Float;
+  GenCamMin.RecommendedValues = { TEXT("0.1")};
+
+  // Max Cam Generation
+  FActorVariation GenCamMax;
+  GenCamMax.Id = TEXT("gen_cam_max");
+  GenCamMax.Type = EActorAttributeType::Float;
+  GenCamMax.RecommendedValues = { TEXT("1.0")};
+
+  //Fixed Rate
+  FActorVariation FixedRate;
+  FixedRate.Id = TEXT("fixed_rate");
+  FixedRate.Type = EActorAttributeType::Bool;
+  FixedRate.RecommendedValues = { TEXT("false")};
+
+  //path loss model
+  FActorVariation PLModel;
+  PLModel.Id = TEXT("path_loss_model");
+  PLModel.Type = EActorAttributeType::String;
+  PLModel.RecommendedValues = { TEXT("winner"), TEXT("geometric")};
+  PLModel.bRestrictToRecommended = true;
+
+  //V2x Sensor sends GNSS position in CAM messages
+  // - Latitude ----------------------------------
+  FActorVariation StdDevLat;
+  StdDevLat.Id = TEXT("noise_lat_stddev");
+  StdDevLat.Type = EActorAttributeType::Float;
+  StdDevLat.RecommendedValues = { TEXT("0.0") };
+  StdDevLat.bRestrictToRecommended = false;
+  FActorVariation BiasLat;
+  BiasLat.Id = TEXT("noise_lat_bias");
+  BiasLat.Type = EActorAttributeType::Float;
+  BiasLat.RecommendedValues = { TEXT("0.0") };
+  BiasLat.bRestrictToRecommended = false;
+
+  // - Longitude ---------------------------------
+  FActorVariation StdDevLong;
+  StdDevLong.Id = TEXT("noise_lon_stddev");
+  StdDevLong.Type = EActorAttributeType::Float;
+  StdDevLong.RecommendedValues = { TEXT("0.0") };
+  StdDevLong.bRestrictToRecommended = false;
+  FActorVariation BiasLong;
+  BiasLong.Id = TEXT("noise_lon_bias");
+  BiasLong.Type = EActorAttributeType::Float;
+  BiasLong.RecommendedValues = { TEXT("0.0") };
+  BiasLong.bRestrictToRecommended = false;
+
+  // - Altitude ----------------------------------
+  FActorVariation StdDevAlt;
+  StdDevAlt.Id = TEXT("noise_alt_stddev");
+  StdDevAlt.Type = EActorAttributeType::Float;
+  StdDevAlt.RecommendedValues = { TEXT("0.0") };
+  StdDevAlt.bRestrictToRecommended = false;
+  FActorVariation BiasAlt;
+  BiasAlt.Id = TEXT("noise_alt_bias");
+  BiasAlt.Type = EActorAttributeType::Float;
+  BiasAlt.RecommendedValues = { TEXT("0.0") };
+  BiasAlt.bRestrictToRecommended = false;
+
+    // - Heading ----------------------------------
+  FActorVariation StdDevHeading;
+  StdDevHeading.Id = TEXT("noise_head_stddev");
+  StdDevHeading.Type = EActorAttributeType::Float;
+  StdDevHeading.RecommendedValues = { TEXT("0.0") };
+  StdDevHeading.bRestrictToRecommended = false;
+  FActorVariation BiasHeading;
+  BiasHeading.Id = TEXT("noise_head_bias");
+  BiasHeading.Type = EActorAttributeType::Float;
+  BiasHeading.RecommendedValues = { TEXT("0.0") };
+  BiasHeading.bRestrictToRecommended = false;
+  
+  //V2x Sensor sends acceleration in CAM messages
+  // - Accelerometer Standard Deviation ----------
+  // X Component
+  FActorVariation StdDevAccelX;
+  StdDevAccelX.Id = TEXT("noise_accel_stddev_x");
+  StdDevAccelX.Type = EActorAttributeType::Float;
+  StdDevAccelX.RecommendedValues = { TEXT("0.0") };
+  StdDevAccelX.bRestrictToRecommended = false;
+  // Y Component
+  FActorVariation StdDevAccelY;
+  StdDevAccelY.Id = TEXT("noise_accel_stddev_y");
+  StdDevAccelY.Type = EActorAttributeType::Float;
+  StdDevAccelY.RecommendedValues = { TEXT("0.0") };
+  StdDevAccelY.bRestrictToRecommended = false;
+  // Z Component
+  FActorVariation StdDevAccelZ;
+  StdDevAccelZ.Id = TEXT("noise_accel_stddev_z");
+  StdDevAccelZ.Type = EActorAttributeType::Float;
+  StdDevAccelZ.RecommendedValues = { TEXT("0.0") };
+  StdDevAccelZ.bRestrictToRecommended = false;
+
+  // Yaw rate
+  FActorVariation StdDevYawrate;
+  StdDevYawrate.Id = TEXT("noise_yawrate_stddev");
+  StdDevYawrate.Type = EActorAttributeType::Float;
+  StdDevYawrate.RecommendedValues = { TEXT("0.0") };
+  StdDevYawrate.bRestrictToRecommended = false;
+  FActorVariation BiasYawrate;
+  BiasYawrate.Id = TEXT("noise_yawrate_bias");
+  BiasYawrate.Type = EActorAttributeType::Float;
+  BiasYawrate.RecommendedValues = { TEXT("0.0") };
+  BiasYawrate.bRestrictToRecommended = false; 
+
+  //V2x Sensor sends speed in CAM messages
+  // X Component
+  FActorVariation StdDevVelX;
+  StdDevVelX.Id = TEXT("noise_vel_stddev_x");
+  StdDevVelX.Type = EActorAttributeType::Float;
+  StdDevVelX.RecommendedValues = { TEXT("0.0") };
+  StdDevVelX.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+    NoiseSeed,
+    TransmitPower,
+    ReceiverSensitivity,
+    Frequency,
+    CombinedAntennaGain,
+    Scenario,
+    PLModel,
+    PLE,
+    FSPL_RefDistance,
+    FilterDistance,
+    EtsiFading,
+    CustomFadingStddev,
+    GenCamMin,
+    GenCamMax,
+    FixedRate,
+    StdDevLat,
+    BiasLat,
+    StdDevLong,
+    BiasLong,
+    StdDevAlt,
+    BiasAlt,
+    StdDevHeading,
+    BiasHeading,
+    StdDevAccelX,
+    StdDevAccelY,
+    StdDevAccelZ,
+    StdDevYawrate,
+    BiasYawrate,
+    StdDevVelX});
+  Success = CheckActorDefinition(Definition);
+}    
+
+FActorDefinition UActorBlueprintFunctionLibrary::MakeCustomV2XDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeCustomV2XDefinition(Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeCustomV2XDefinition(
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("v2x_custom"));
+  AddVariationsForSensor(Definition);
+
+  // - Noise seed --------------------------------
+  FActorVariation NoiseSeed;
+  NoiseSeed.Id = TEXT("noise_seed");
+  NoiseSeed.Type = EActorAttributeType::Int;
+  NoiseSeed.RecommendedValues = { TEXT("0") };
+  NoiseSeed.bRestrictToRecommended = false;  
+
+  //TransmitPower
+  FActorVariation TransmitPower;
+  TransmitPower.Id = TEXT("transmit_power");
+  TransmitPower.Type = EActorAttributeType::Float;
+  TransmitPower.RecommendedValues = { TEXT("21.5")};
+
+  //ReceiveSensitivity
+  FActorVariation ReceiverSensitivity;
+  ReceiverSensitivity.Id = TEXT("receiver_sensitivity");
+  ReceiverSensitivity.Type = EActorAttributeType::Float;
+  ReceiverSensitivity.RecommendedValues = { TEXT("-99.0")};
+
+  //Frequency
+  FActorVariation Frequency;
+  Frequency.Id = TEXT("frequency_ghz");
+  Frequency.Type = EActorAttributeType::Float;
+  Frequency.RecommendedValues = { TEXT("5.9")};
+
+  //Combined Antenna Gain in dBi
+  FActorVariation CombinedAntennaGain;
+  CombinedAntennaGain.Id = TEXT("combined_antenna_gain");
+  CombinedAntennaGain.Type = EActorAttributeType::Float;
+  CombinedAntennaGain.RecommendedValues = { TEXT("10.0")};
+
+  //Scenario
+  FActorVariation Scenario;
+  Scenario.Id = TEXT("scenario");
+  Scenario.Type = EActorAttributeType::String;
+  Scenario.RecommendedValues = { TEXT("highway"), TEXT("rural"), TEXT("urban")};
+  Scenario.bRestrictToRecommended = true;
+
+  //Path loss exponent
+  FActorVariation PLE;
+  PLE.Id = TEXT("path_loss_exponent");
+  PLE.Type = EActorAttributeType::Float;
+  PLE.RecommendedValues = { TEXT("2.7")};
+  
+
+  //FSPL reference distance for LDPL calculation
+  FActorVariation FSPL_RefDistance;
+  FSPL_RefDistance.Id = TEXT("d_ref");
+  FSPL_RefDistance.Type = EActorAttributeType::Float;
+  FSPL_RefDistance.RecommendedValues = { TEXT("1.0")};
+
+  //filter distance to speed up calculation
+  FActorVariation FilterDistance;
+  FilterDistance.Id = TEXT("filter_distance");
+  FilterDistance.Type = EActorAttributeType::Float;
+  FilterDistance.RecommendedValues = { TEXT("500.0")};
+
+  //etsi fading
+  FActorVariation EtsiFading;
+  EtsiFading.Id = TEXT("use_etsi_fading");
+  EtsiFading.Type = EActorAttributeType::Bool;
+  EtsiFading.RecommendedValues = { TEXT("true")};
+
+  //custom fading std deviation
+  FActorVariation CustomFadingStddev;
+  CustomFadingStddev.Id = TEXT("custom_fading_stddev");
+  CustomFadingStddev.Type = EActorAttributeType::Float;
+  CustomFadingStddev.RecommendedValues = { TEXT("0.0")};
+
+  //path loss model
+  FActorVariation PLModel;
+  PLModel.Id = TEXT("path_loss_model");
+  PLModel.Type = EActorAttributeType::String;
+  PLModel.RecommendedValues = { TEXT("winner"), TEXT("geometric")};
+  PLModel.bRestrictToRecommended = true;
+  
+  
+  Definition.Variations.Append({
+    NoiseSeed,
+    TransmitPower,
+    ReceiverSensitivity,
+    Frequency,
+    CombinedAntennaGain,
+    Scenario,
+    PLModel,
+    PLE,
+    FSPL_RefDistance,
+    FilterDistance,
+    EtsiFading,
+    CustomFadingStddev
+});
+
+  Success = CheckActorDefinition(Definition);
+}
+
+
 FActorDefinition UActorBlueprintFunctionLibrary::MakeGnssDefinition()
 {
   FActorDefinition Definition;
@@ -1247,6 +1593,12 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
     EActorAttributeType::String,
     GetAge(Parameters.Age)});
 
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("can_use_wheelchair"),
+    EActorAttributeType::Bool,
+    Parameters.bCanUseWheelChair ? TEXT("true") : TEXT("false") });
+
   if (Parameters.Speed.Num() > 0)
   {
     FActorVariation Speed;
@@ -1260,12 +1612,28 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
     Definition.Variations.Emplace(Speed);
   }
 
+  bool bCanUseWheelChair = Parameters.bCanUseWheelChair;
+
   FActorVariation IsInvincible;
   IsInvincible.Id = TEXT("is_invincible");
   IsInvincible.Type = EActorAttributeType::Bool;
   IsInvincible.RecommendedValues = { TEXT("true") };
   IsInvincible.bRestrictToRecommended = false;
   Definition.Variations.Emplace(IsInvincible);
+
+  FActorVariation WheelChairVariation;
+  WheelChairVariation.Id = TEXT("use_wheelchair");
+  WheelChairVariation.Type = EActorAttributeType::Bool;
+  if(bCanUseWheelChair)
+  {
+    WheelChairVariation.RecommendedValues = { TEXT("false"), TEXT("true") };
+  }
+  else
+  {
+    WheelChairVariation.RecommendedValues = { TEXT("false") };
+  }
+  WheelChairVariation.bRestrictToRecommended = true;
+  Definition.Variations.Emplace(WheelChairVariation);
 
   Success = CheckActorDefinition(Definition);
 }
@@ -1763,4 +2131,136 @@ void UActorBlueprintFunctionLibrary::SetRadar(
       RetrieveActorAttributeToInt("points_per_second", Description.Variations, 1500));
 }
 
+void UActorBlueprintFunctionLibrary::SetV2X(
+    const FActorDescription &Description,
+    AV2XSensor* V2X)
+{
+  CARLA_ABFL_CHECK_ACTOR(V2X);
+  if (Description.Variations.Contains("noise_seed"))
+  {
+    V2X->SetSeed(
+      RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
+  }
+  else
+  {
+    V2X->SetSeed(V2X->GetRandomEngine()->GenerateRandomSeed());
+  }
+
+  V2X->SetPropagationParams(
+    RetrieveActorAttributeToFloat("transmit_power", Description.Variations, 21.5),
+    RetrieveActorAttributeToFloat("receiver_sensitivity", Description.Variations, -99.0),
+    RetrieveActorAttributeToFloat("frequency_ghz", Description.Variations, 5.9),
+    RetrieveActorAttributeToFloat("combined_antenna_gain", Description.Variations, 10.0),
+    RetrieveActorAttributeToFloat("path_loss_exponent", Description.Variations, 2.7),
+    RetrieveActorAttributeToFloat("d_ref", Description.Variations, 1.0),
+    RetrieveActorAttributeToFloat("filter_distance", Description.Variations, 500.0),
+    RetrieveActorAttributeToBool("use_etsi_fading", Description.Variations, true),
+    RetrieveActorAttributeToFloat("custom_fading_stddev", Description.Variations, 0.0f)
+    );
+
+    if (RetrieveActorAttributeToString("scenario", Description.Variations, "urban") == "urban")
+    {
+        V2X->SetScenario(EScenario::Urban);
+    }
+    else if (RetrieveActorAttributeToString("scenario", Description.Variations, "urban") == "rural")
+    {
+        V2X->SetScenario(EScenario::Rural);
+    }
+    else
+    {
+      V2X->SetScenario(EScenario::Highway);
+    }    
+
+    V2X->SetCaServiceParams(
+        RetrieveActorAttributeToFloat("gen_cam_min", Description.Variations, 0.1), 
+        RetrieveActorAttributeToFloat("gen_cam_max", Description.Variations, 1.0),
+        RetrieveActorAttributeToBool("fixed_rate", Description.Variations, false));
+
+    V2X->SetAccelerationStandardDeviation({
+        RetrieveActorAttributeToFloat("noise_accel_stddev_x", Description.Variations, 0.0f),
+        RetrieveActorAttributeToFloat("noise_accel_stddev_y", Description.Variations, 0.0f),
+        RetrieveActorAttributeToFloat("noise_accel_stddev_z", Description.Variations, 0.0f)});    
+
+    V2X->SetGNSSDeviation(
+        RetrieveActorAttributeToFloat("noise_lat_stddev", Description.Variations, 0.0f),
+        RetrieveActorAttributeToFloat("noise_lon_stddev", Description.Variations, 0.0f),
+        RetrieveActorAttributeToFloat("noise_alt_stddev", Description.Variations, 0.0f),
+        RetrieveActorAttributeToFloat("noise_head_stddev", Description.Variations, 0.0f),
+        RetrieveActorAttributeToFloat("noise_lat_bias", Description.Variations, 0.0f),
+        RetrieveActorAttributeToFloat("noise_lon_bias", Description.Variations, 0.0f),
+        RetrieveActorAttributeToFloat("noise_alt_bias", Description.Variations, 0.0f),
+        RetrieveActorAttributeToFloat("noise_head_bias", Description.Variations, 0.0f)); 
+
+    V2X->SetVelDeviation(
+        RetrieveActorAttributeToFloat("noise_vel_stddev_x", Description.Variations, 0.0f)
+    );
+    V2X->SetYawrateDeviation(
+        RetrieveActorAttributeToFloat("noise_yawrate_stddev", Description.Variations, 0.0f),
+        RetrieveActorAttributeToFloat("noise_yawrate_bias", Description.Variations, 0.0f)
+    );
+
+    if (RetrieveActorAttributeToString("path_loss_model", Description.Variations, "geometric") == "winner")
+    {
+        V2X->SetPathLossModel(EPathLossModel::Winner);
+    }
+    else if(RetrieveActorAttributeToString("path_loss_model", Description.Variations, "geometric") == "geometric")
+    {
+        V2X->SetPathLossModel(EPathLossModel::Geometric);
+    }
+
+
+}
+
+void UActorBlueprintFunctionLibrary::SetCustomV2X(
+    const FActorDescription &Description,
+    ACustomV2XSensor* V2X)
+{
+  CARLA_ABFL_CHECK_ACTOR(V2X);
+  if (Description.Variations.Contains("noise_seed"))
+  {
+    V2X->SetSeed(
+      RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
+  }
+  else
+  {
+    V2X->SetSeed(V2X->GetRandomEngine()->GenerateRandomSeed());
+  }
+
+  V2X->SetPropagationParams(
+    RetrieveActorAttributeToFloat("transmit_power", Description.Variations, 21.5),
+    RetrieveActorAttributeToFloat("receiver_sensitivity", Description.Variations, -99.0),
+    RetrieveActorAttributeToFloat("frequency_ghz", Description.Variations, 5.9),
+    RetrieveActorAttributeToFloat("combined_antenna_gain", Description.Variations, 10.0),
+    RetrieveActorAttributeToFloat("path_loss_exponent", Description.Variations, 2.7),
+    RetrieveActorAttributeToFloat("d_ref", Description.Variations, 1.0),
+    RetrieveActorAttributeToFloat("filter_distance", Description.Variations, 500.0),
+    RetrieveActorAttributeToBool("use_etsi_fading", Description.Variations, true),
+    RetrieveActorAttributeToFloat("custom_fading_stddev", Description.Variations, 0.0f)
+    );
+
+    if (RetrieveActorAttributeToString("scenario", Description.Variations, "urban") == "urban")
+    {
+        V2X->SetScenario(EScenario::Urban);
+    }
+    else if (RetrieveActorAttributeToString("scenario", Description.Variations, "urban") == "rural")
+    {
+        V2X->SetScenario(EScenario::Rural);
+    }
+    else
+    {
+      V2X->SetScenario(EScenario::Highway);
+    }    
+
+
+    if (RetrieveActorAttributeToString("path_loss_model", Description.Variations, "geometric") == "winner")
+    {
+        V2X->SetPathLossModel(EPathLossModel::Winner);
+    }
+    else if(RetrieveActorAttributeToString("path_loss_model", Description.Variations, "geometric") == "geometric")
+    {
+        V2X->SetPathLossModel(EPathLossModel::Geometric);
+    }
+
+
+}
 #undef CARLA_ABFL_CHECK_ACTOR

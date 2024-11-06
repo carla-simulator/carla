@@ -12,6 +12,8 @@ import math
 import numpy as np
 import carla
 
+_EPS = np.finfo(float).eps
+
 def draw_waypoints(world, waypoints, z=0.5):
     """
     Draw a list of waypoints at a certain height given in z.
@@ -140,12 +142,15 @@ def vector(location_1, location_2):
     Returns the unit vector from location_1 to location_2
 
         :param location_1, location_2: carla.Location objects
+
+    .. note::
+        Alternatively you can use:
+        `(location_2 - location_1).make_unit_vector()`
     """
     x = location_2.x - location_1.x
     y = location_2.y - location_1.y
     z = location_2.z - location_1.z
-    norm = np.linalg.norm([x, y, z]) + np.finfo(float).eps
-
+    norm = np.linalg.norm([x, y, z]) + _EPS
     return [x / norm, y / norm, z / norm]
 
 
@@ -154,11 +159,14 @@ def compute_distance(location_1, location_2):
     Euclidean distance between 3D points
 
         :param location_1, location_2: 3D points
+
+    .. deprecated:: 0.9.13
+        Use `location_1.distance(location_2)` instead
     """
     x = location_2.x - location_1.x
     y = location_2.y - location_1.y
     z = location_2.z - location_1.z
-    norm = np.linalg.norm([x, y, z]) + np.finfo(float).eps
+    norm = np.linalg.norm([x, y, z]) + _EPS
     return norm
 
 

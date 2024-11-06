@@ -44,6 +44,10 @@ namespace client {
     }
   }
 
+  Vehicle::TelemetryData Vehicle::GetTelemetryData() const {
+    return GetEpisode().Lock()->GetVehicleTelemetryData(*this);
+  }
+
   void Vehicle::ShowDebugTelemetry(bool enabled) {
     GetEpisode().Lock()->ShowVehicleDebugTelemetry(*this, enabled);
   }
@@ -142,6 +146,10 @@ namespace client {
         PowertrainJSON,
         TireJSON,
         BaseJSONPath);
+  }
+
+  void Vehicle::RestorePhysXPhysics() {
+    GetEpisode().Lock()->RestorePhysXPhysics(*this);
   }
 
   rpc::VehicleFailureState Vehicle::GetFailureState() const {

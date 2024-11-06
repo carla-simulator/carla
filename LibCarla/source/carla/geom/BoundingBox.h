@@ -32,6 +32,12 @@ namespace geom {
     // -- Constructors ---------------------------------------------------------
     // =========================================================================
 
+    explicit BoundingBox(const Location &in_location, const Vector3D &in_extent, const Rotation &in_rotation, const uint32_t &in_actor_id)
+      : location(in_location),
+        extent(in_extent),
+        rotation(in_rotation),
+        actor_id(in_actor_id) {}
+
     explicit BoundingBox(const Location &in_location, const Vector3D &in_extent, const Rotation &in_rotation)
       : location(in_location),
         extent(in_extent),
@@ -50,6 +56,7 @@ namespace geom {
     Location location;  ///< Center of the BoundingBox in local space
     Vector3D extent;    ///< Half the size of the BoundingBox in local space
     Rotation rotation;  ///< Rotation of the BoundingBox in local space
+    uint32_t actor_id;
 
     // =========================================================================
     // -- Other methods --------------------------------------------------------
@@ -137,11 +144,12 @@ namespace geom {
     BoundingBox(const FBoundingBox &Box)
       : location(Box.Origin),
         extent(1e-2f * Box.Extent.X, 1e-2f * Box.Extent.Y, 1e-2f * Box.Extent.Z),
-        rotation(Box.Rotation) {}
+        rotation(Box.Rotation),
+        actor_id(Box.ActorId) {}
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
-    MSGPACK_DEFINE_ARRAY(location, extent, rotation);
+    MSGPACK_DEFINE_ARRAY(location, extent, rotation, actor_id);
   };
 
 } // namespace geom

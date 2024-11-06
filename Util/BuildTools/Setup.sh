@@ -69,6 +69,7 @@ UNREAL_HOSTED_CFLAGS="--sysroot=$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/Hos
 
 BOOST_VERSION=1.80.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
+BOOST_SHA256SUM="4b2136f98bdd1f5857f1c3dea9ac2018effe65286cf251534b6ae20cc45e1847"
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
@@ -91,15 +92,30 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
 
     log "Retrieving boost."
-    wget "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+
+    start=$(date +%s)
+    wget "https://archives.boost.io/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" -O ${BOOST_PACKAGE_BASENAME}.tar.gz || true
+    end=$(date +%s)
+    echo "Elapsed Time downloading from boost webpage: $(($end-$start)) seconds"
+
     # try to use the backup boost we have in Jenkins
-    if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ]] ; then
+    if [ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ] || [[ $(sha256sum "${BOOST_PACKAGE_BASENAME}.tar.gz" | cut -d " " -f 1 ) != "${BOOST_SHA256SUM}" ]] ; then
       log "Using boost backup"
-      wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+
+      start=$(date +%s)
+      wget "https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" -O ${BOOST_PACKAGE_BASENAME}.tar.gz || true
+      end=$(date +%s)
+      echo "Elapsed Time downloading from boost carla backup in backblaze: $(($end-$start)) seconds"
+
     fi
 
     log "Extracting boost for Python ${PY_VERSION}."
+
+    start=$(date +%s)
     tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
+    end=$(date +%s)
+    echo "Elapsed Time Extracting boost for Python: $(($end-$start)) seconds"
+
     mkdir -p ${BOOST_BASENAME}-install/include
     mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
 
@@ -165,8 +181,13 @@ else
 
   log "Retrieving rpclib."
 
+  start_download_time=$(date +%s)
+
   git clone -b ${RPCLIB_PATCH} https://github.com/carla-simulator/rpclib.git ${RPCLIB_BASENAME}-source
 
+  end_download_time=$(date +%s)
+
+  echo "Elapsed Time downloading rpclib: $(($end_download_time-$start_download_time)) seconds"
   log "Building rpclib with libc++."
 
   # rpclib does not use any cmake 3.9 feature.
@@ -233,7 +254,12 @@ else
 
   log "Retrieving Google Test."
 
+  start_download_time=$(date +%s)
+
   git clone --depth=1 -b release-${GTEST_VERSION} https://github.com/google/googletest.git ${GTEST_BASENAME}-source
+
+  end_download_time=$(date +%s)
+  echo "Elapsed Time downloading rpclib: $(($end_download_time-$start_download_time)) seconds"
 
   log "Building Google Test with libc++."
 
@@ -295,11 +321,14 @@ else
 
   log "Retrieving Recast & Detour"
 
-  git clone https://github.com/carla-simulator/recastnavigation.git ${RECAST_BASENAME}-source
+  start=$(date +%s)
+
+  git clone --depth 1 -b carla https://github.com/carla-simulator/recastnavigation.git ${RECAST_BASENAME}-source
+
+  end=$(date +%s)
+  echo "Elapsed Time downloading: $(($end-$start)) seconds"
 
   pushd ${RECAST_BASENAME}-source >/dev/null
-
-  git checkout carla
 
   popd >/dev/null
 
@@ -350,10 +379,18 @@ if [[ -d ${LIBPNG_INSTALL} ]] ; then
   log "Libpng already installed."
 else
   log "Retrieving libpng."
-  wget ${LIBPNG_REPO}
 
+  start=$(date +%s)
+  wget ${LIBPNG_REPO}
+  end=$(date +%s)
+  echo "Elapsed Time downloading libpng: $(($end-$start)) seconds"
+
+  start=$(date +%s)
   log "Extracting libpng."
   tar -xf libpng-${LIBPNG_VERSION}.tar.xz
+  end=$(date +%s)
+  echo "Elapsed Time Extracting libpng: $(($end-$start)) seconds"
+
   mv ${LIBPNG_BASENAME} ${LIBPNG_BASENAME}-source
 
   pushd ${LIBPNG_BASENAME}-source >/dev/null
@@ -387,16 +424,26 @@ if [[ -d ${XERCESC_INSTALL_DIR} &&  -d ${XERCESC_INSTALL_SERVER_DIR} ]] ; then
   log "Xerces-c already installed."
 else
   log "Retrieving xerces-c."
+  start=$(date +%s)
   wget ${XERCESC_REPO}
-
+  end=$(date +%s)
+  echo "Elapsed Time downloading from xerces repo: $(($end-$start)) seconds"
   # try to use the backup boost we have in Jenkins
   if [[ ! -f "${XERCESC_BASENAME}.tar.gz" ]] ; then
     log "Using xerces backup"
-    wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${XERCESC_BASENAME}.tar.gz" || true
+    start=$(date +%s)
+    wget "https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/${XERCESC_BASENAME}.tar.gz" || true
+    end=$(date +%s)
+    echo "Elapsed Time downloading from xerces backup: $(($end-$start)) seconds"
   fi
 
   log "Extracting xerces-c."
+
+  start=$(date +%s)
   tar -xzf ${XERCESC_BASENAME}.tar.gz
+  end=$(date +%s)
+  echo "Elapsed Time Extracting xerces-c: $(($end-$start)) seconds"
+
   mv ${XERCESC_BASENAME} ${XERCESC_SRC_DIR}
   mkdir -p ${XERCESC_INSTALL_DIR}
   mkdir -p ${XERCESC_SRC_DIR}/build
@@ -460,10 +507,18 @@ if [[ -d ${EIGEN_INSTALL_DIR} ]] ; then
   log "Eigen already installed."
 else
   log "Retrieving Eigen."
+
+  start=$(date +%s)
   wget ${EIGEN_REPO}
+  end=$(date +%s)
+  echo "Elapsed Time downloading from eigen repo: $(($end-$start)) seconds"
 
   log "Extracting Eigen."
+  start=$(date +%s)
   tar -xzf ${EIGEN_BASENAME}.tar.gz
+  end=$(date +%s)
+  echo "Elapsed Time Extracting EIGEN: $(($end-$start)) seconds"
+
   mv ${EIGEN_BASENAME} ${EIGEN_SRC_DIR}
   mkdir -p ${EIGEN_INCLUDE}/unsupported
   mv ${EIGEN_SRC_DIR}/Eigen ${EIGEN_INCLUDE}
@@ -495,10 +550,19 @@ if ${USE_CHRONO} ; then
     log "Eigen already installed."
   else
     log "Retrieving Eigen."
+
+    start=$(date +%s)
     wget ${EIGEN_REPO}
+    end=$(date +%s)
+    echo "Elapsed Time: $(($end-$start)) seconds"
 
     log "Extracting Eigen."
+
+    start=$(date +%s)
     tar -xzf ${EIGEN_BASENAME}.tar.gz
+    end=$(date +%s)
+    echo "Elapsed Time Extracting for Eigen: $(($end-$start)) seconds"
+
     mv ${EIGEN_BASENAME} ${EIGEN_SRC_DIR}
     mkdir -p ${EIGEN_INCLUDE}/unsupported
     mv ${EIGEN_SRC_DIR}/Eigen ${EIGEN_INCLUDE}
@@ -526,7 +590,10 @@ if ${USE_CHRONO} ; then
     log "chrono library already installed."
   else
     log "Retrieving chrono library."
+    start=$(date +%s)
     git clone --depth 1 --branch ${CHRONO_TAG} ${CHRONO_REPO} ${CHRONO_SRC_DIR}
+    end=$(date +%s)
+    echo "Elapsed Time dowloading chrono: $(($end-$start)) seconds"
 
     mkdir -p ${CHRONO_SRC_DIR}/build
 
@@ -573,10 +640,19 @@ if [[ -d ${SQLITE_INSTALL_DIR} ]] ; then
   log "Sqlite already installed."
 else
   log "Retrieving Sqlite3"
+
+  start=$(date +%s)
   wget ${SQLITE_REPO}
+  end=$(date +%s)
+  echo "Elapsed Time: $(($end-$start)) seconds"
 
   log "Extracting Sqlite3"
+
+  start=$(date +%s)
   tar -xzf ${SQLITE_TAR}
+  end=$(date +%s)
+  echo "Elapsed Time Extracting for SQlite: $(($end-$start)) seconds"
+
   mv ${SQLITE_VERSION} ${SQLITE_SOURCE_DIR}
 
   mkdir ${SQLITE_INSTALL_DIR}
@@ -620,10 +696,18 @@ if [[ -d ${PROJ_INSTALL_DIR} && -d ${PROJ_INSTALL_SERVER_DIR_FULL} ]] ; then
   log "PROJ already installed."
 else
   log "Retrieving PROJ"
+
+  start=$(date +%s)
   wget ${PROJ_REPO}
+  end=$(date +%s)
+  echo "Elapsed Time: $(($end-$start)) seconds"
 
   log "Extracting PROJ"
+  start=$(date +%s)
   tar -xzf ${PROJ_TAR}
+  end=$(date +%s)
+  echo "Elapsed Time Extracting for PROJ: $(($end-$start)) seconds"
+
   mv ${PROJ_VERSION} ${PROJ_SRC_DIR}
 
   mkdir -p ${PROJ_SRC_DIR}/build
@@ -691,10 +775,18 @@ if [[ -d ${PATCHELF_INSTALL_DIR} ]] ; then
   log "Patchelf already installed."
 else
   log "Retrieving patchelf"
+
+  start=$(date +%s)
   wget ${PATCHELF_REPO}
+  end=$(date +%s)
+  echo "Elapsed Time: $(($end-$start)) seconds"
 
   log "Extracting patchelf"
+  start=$(date +%s)
   tar -xzf ${PATCHELF_TAR}
+  end=$(date +%s)
+  echo "Elapsed Time Extracting patchelf: $(($end-$start)) seconds"
+
   mv patchelf-${PATCHELF_VERSION} ${PATCHELF_SOURCE_DIR}
 
   mkdir ${PATCHELF_INSTALL_DIR}
@@ -729,7 +821,12 @@ if ${USE_PYTORCH} ; then
   LIBTORCH_ZIPFILE=libtorch-shared-with-deps-1.11.0+cu113.zip
   LIBTORCH_REPO=https://download.pytorch.org/libtorch/cu113/libtorch-shared-with-deps-1.11.0%2Bcu113.zip
   if [[ ! -d ${LIBTORCH_PATH} ]] ; then
+
+    start=$(date +%s)
     wget ${LIBTORCH_REPO}
+    end=$(date +%s)
+    echo "Elapsed Time downloading LIBTORCH_REPO: $(($end-$start)) seconds"
+
     unzip ${LIBTORCH_ZIPFILE}
   fi
 
@@ -809,7 +906,10 @@ if ${USE_ROS2} ; then
     if [[ ! -d ${LIB_SOURCE} ]] ; then
       mkdir -p ${LIB_SOURCE}
       log "${LIB_REPO}"
+      start=$(date +%s)
       git clone --depth 1 --branch ${LIB_BRANCH} ${LIB_REPO} ${LIB_SOURCE}
+      end=$(date +%s)
+      echo "Elapsed Time dowloading fastdds extension: $(($end-$start)) seconds"
       mkdir -p ${LIB_SOURCE}/build
     fi
   }
@@ -826,6 +926,7 @@ if ${USE_ROS2} ; then
       -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
       -DBUILD_SHARED_LIBS=ON \
       -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
+      -DFOONATHAN_MEMORY_FORCE_VENDORED_BUILD=ON \
       ..
     ninja
     ninja install
@@ -859,7 +960,8 @@ if ${USE_ROS2} ; then
       -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
       -DCMAKE_CXX_FLAGS=-latomic \
       -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" \
-       \
+      -DTHIRDPARTY_Asio=FORCE \
+      -DTHIRDPARTY_TinyXML2=FORCE \
       ..
     ninja
     ninja install

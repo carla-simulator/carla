@@ -206,23 +206,33 @@ namespace geom {
       size_t PosToAdd = it - redirections.begin();
 
       Mesh out_mesh;
-      if(lane_pair.second.GetType() == road::Lane::LaneType::Driving ){
-        out_mesh += *GenerateTesselated(lane_pair.second);
-      }else{
-        out_mesh += *GenerateSidewalk(lane_pair.second);
+      switch(lane_pair.second.GetType())
+      {
+        case road::Lane::LaneType::Driving:
+        case road::Lane::LaneType::Parking:
+        case road::Lane::LaneType::Bidirectional:
+        {
+          out_mesh += *GenerateTesselated(lane_pair.second);
+          break;
+        }
+        case road::Lane::LaneType::Shoulder:
+        case road::Lane::LaneType::Sidewalk:
+        case road::Lane::LaneType::Biking:
+        {
+          out_mesh += *GenerateSidewalk(lane_pair.second);
+          break;
+        }
+        default:
+        {
+          out_mesh += *GenerateTesselated(lane_pair.second);
+          break;
+        }
       }
 
       if( result[lane_pair.second.GetType()].size() <= PosToAdd ){
         result[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(out_mesh));
       } else {
-        uint32_t verticesinwidth  = 0;
-        if(lane_pair.second.GetType() == road::Lane::LaneType::Driving) {
-          verticesinwidth = vertices_in_width;
-        }else if(lane_pair.second.GetType() == road::Lane::LaneType::Sidewalk){
-          verticesinwidth = 6;
-        }else{
-          verticesinwidth = 2;
-        }
+        uint32_t verticesinwidth  = SelectVerticesInWidth(vertices_in_width, lane_pair.second.GetType());
         (result[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(out_mesh, verticesinwidth);
       }
     }
@@ -548,12 +558,28 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
 
           for (auto &&lane_pair : lane_section.GetLanes()) {
             Mesh lane_section_mesh;
-            if(lane_pair.second.GetType() == road::Lane::LaneType::Driving ){
-              lane_section_mesh += *GenerateTesselated(lane_pair.second, s_current, s_until);
-            }else{
-              lane_section_mesh += *GenerateSidewalk(lane_pair.second, s_current, s_until);
+            switch(lane_pair.second.GetType())
+            {
+              case road::Lane::LaneType::Driving:
+              case road::Lane::LaneType::Parking:
+              case road::Lane::LaneType::Bidirectional:
+              {
+                lane_section_mesh += *GenerateTesselated(lane_pair.second, s_current, s_until);
+                break;
+              }
+              case road::Lane::LaneType::Shoulder:
+              case road::Lane::LaneType::Sidewalk:
+              case road::Lane::LaneType::Biking:
+              {
+                lane_section_mesh += *GenerateSidewalk(lane_pair.second, s_current, s_until);
+                break;
+              }
+              default:
+              {
+                 lane_section_mesh += *GenerateTesselated(lane_pair.second, s_current, s_until);
+                break;
+              }
             }
-
             auto it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
             if (it == redirections.end()) {
               redirections.push_back(lane_pair.first);
@@ -564,14 +590,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             if (mesh_uptr_list[lane_pair.second.GetType()].size() <= PosToAdd) {
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
             } else {
-              uint32_t verticesinwidth  = 0;
-              if(lane_pair.second.GetType() == road::Lane::LaneType::Driving) {
-                verticesinwidth = vertices_in_width;
-              }else if(lane_pair.second.GetType() == road::Lane::LaneType::Sidewalk){
-                verticesinwidth = 6;
-              }else{
-                verticesinwidth = 2;
-              }
+              uint32_t verticesinwidth = SelectVerticesInWidth(vertices_in_width, lane_pair.second.GetType());
               (mesh_uptr_list[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(lane_section_mesh, verticesinwidth);
             }
           }
@@ -580,10 +599,27 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
         if (s_end - s_current > EPSILON) {
           for (auto &&lane_pair : lane_section.GetLanes()) {
             Mesh lane_section_mesh;
-            if(lane_pair.second.GetType() == road::Lane::LaneType::Driving ){
-              lane_section_mesh += *GenerateTesselated(lane_pair.second, s_current, s_end);
-            }else{
-              lane_section_mesh += *GenerateSidewalk(lane_pair.second, s_current, s_end);
+            switch(lane_pair.second.GetType())
+            {
+              case road::Lane::LaneType::Driving:
+              case road::Lane::LaneType::Parking:
+              case road::Lane::LaneType::Bidirectional:
+              {
+                lane_section_mesh += *GenerateTesselated(lane_pair.second, s_current, s_end);
+                break;
+              }
+              case road::Lane::LaneType::Shoulder:
+              case road::Lane::LaneType::Sidewalk:
+              case road::Lane::LaneType::Biking:
+              {
+                lane_section_mesh += *GenerateSidewalk(lane_pair.second, s_current, s_end);
+                break;
+              }
+              default:
+              {
+                lane_section_mesh += *GenerateTesselated(lane_pair.second, s_current, s_end);
+                break;
+              }
             }
 
             auto it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
@@ -597,14 +633,6 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             if (mesh_uptr_list[lane_pair.second.GetType()].size() <= PosToAdd) {
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
             } else {
-              uint32_t verticesinwidth  = 0;
-              if(lane_pair.second.GetType() == road::Lane::LaneType::Driving) {
-                verticesinwidth = vertices_in_width;
-              }else if(lane_pair.second.GetType() == road::Lane::LaneType::Sidewalk){
-                verticesinwidth = 6;
-              }else{
-                verticesinwidth = 2;
-              }
               *(mesh_uptr_list[lane_pair.second.GetType()][PosToAdd]) += lane_section_mesh;
             }
           }
@@ -725,9 +753,16 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
     for (auto&& lane_section : road.GetLaneSections()) {
       for (auto&& lane : lane_section.GetLanes()) {
         if (lane.first != 0) {
-          if(lane.second.GetType() == road::Lane::LaneType::Driving ){
-            GenerateLaneMarksForNotCenterLine(lane_section, lane.second, inout, outinfo);
-            outinfo.push_back("white");
+          switch(lane.second.GetType())
+          {
+            case road::Lane::LaneType::Driving:
+            case road::Lane::LaneType::Parking:
+            case road::Lane::LaneType::Bidirectional:
+            {
+              GenerateLaneMarksForNotCenterLine(lane_section, lane.second, inout, outinfo);
+              outinfo.push_back("white");
+              break;
+            }
           }
         } else {
           if(lane.second.GetType() == road::Lane::LaneType::None ){
@@ -761,14 +796,11 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
           case carla::road::element::LaneMarking::Type::Solid: {
             size_t currentIndex = out_mesh.GetVertices().size() + 1;
 
-            std::pair<geom::Vector3D, geom::Vector3D> edges = lane.GetCornerPositions(s_current, 0);
-
-            geom::Vector3D director = edges.second - edges.first;
-            director /= director.Length();
-            geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
+            std::pair<geom::Vector3D, geom::Vector3D> edges = 
+              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
 
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
+            out_mesh.AddVertex(edges.second);
 
             out_mesh.AddIndex(currentIndex);
             out_mesh.AddIndex(currentIndex + 1);
@@ -784,30 +816,23 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
           case carla::road::element::LaneMarking::Type::Broken: {
             size_t currentIndex = out_mesh.GetVertices().size() + 1;
 
-            std::pair<geom::Vector3D, geom::Vector3D> edges =
-              lane.GetCornerPositions(s_current, road_param.extra_lane_width);
-
-            geom::Vector3D director = edges.second - edges.first;
-            director /= director.Length();
-            geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
+            std::pair<geom::Vector3D, geom::Vector3D> edges = 
+              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
 
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
+            out_mesh.AddVertex(edges.second);
 
             s_current += road_param.resolution * 3;
             if (s_current > s_end)
             {
               s_current = s_end;
             }
-            edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
 
-            director = edges.second - edges.first;
-            director /= director.Length();
-            endmarking = edges.first + director * lane_mark_info.width;
+            edges = ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
 
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
-
+            out_mesh.AddVertex(edges.second);
+            
             out_mesh.AddIndex(currentIndex);
             out_mesh.AddIndex(currentIndex + 1);
             out_mesh.AddIndex(currentIndex + 2);
@@ -864,13 +889,12 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
       const carla::road::element::RoadInfoMarkRecord* road_info_mark = lane.GetInfo<carla::road::element::RoadInfoMarkRecord>(s_current);
       if (road_info_mark != nullptr) {
         carla::road::element::LaneMarking lane_mark_info(*road_info_mark);
-        std::pair<geom::Vector3D, geom::Vector3D> edges = lane.GetCornerPositions(s_end, 0);
-        geom::Vector3D director = edges.second - edges.first;
-        director /= director.Length();
-        geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
+        
+        std::pair<geom::Vector3D, geom::Vector3D> edges = 
+              ComputeEdgesForLanemark(lane_section, lane, s_end, lane_mark_info.width);
 
         out_mesh.AddVertex(edges.first);
-        out_mesh.AddVertex(endmarking);
+        out_mesh.AddVertex(edges.second);
       }
       inout.push_back(std::make_unique<Mesh>(out_mesh));
     }
@@ -927,29 +951,21 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
           case carla::road::element::LaneMarking::Type::Broken: {
             size_t currentIndex = out_mesh.GetVertices().size() + 1;
 
-            std::pair<geom::Vector3D, geom::Vector3D> edges =
-              lane.GetCornerPositions(s_current, road_param.extra_lane_width);
-
-            geom::Vector3D director = edges.second - edges.first;
-            director /= director.Length();
-            geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
-
+            std::pair<geom::Vector3D, geom::Vector3D> edges = 
+              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
+            
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
+            out_mesh.AddVertex(edges.second);
 
             s_current += road_param.resolution * 3;
             if (s_current > s_end) {
               s_current = s_end;
             }
 
-            edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
-
-            director = edges.second - edges.first;
-            director /= director.Length();
-            endmarking = edges.first + director * lane_mark_info.width;
+            edges = ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
 
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
+            out_mesh.AddVertex(edges.second);
 
             out_mesh.AddIndex(currentIndex);
             out_mesh.AddIndex(currentIndex + 1);
@@ -1150,6 +1166,56 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
     return std::make_unique<Mesh>(out_mesh);
   }
 
+  uint32_t MeshFactory::SelectVerticesInWidth(uint32_t default_num_vertices, road::Lane::LaneType type)
+  {
+    switch(type)
+    {
+      case road::Lane::LaneType::Driving:
+      case road::Lane::LaneType::Parking:
+      case road::Lane::LaneType::Bidirectional:
+      {
+        return default_num_vertices;
+      }
+      case road::Lane::LaneType::Shoulder:
+      case road::Lane::LaneType::Sidewalk:
+      case road::Lane::LaneType::Biking:
+      {
+        return 6;
+      }
+      default:
+      {
+        return 2;
+      }
+    }
+  }
+
+  std::pair<geom::Vector3D, geom::Vector3D> MeshFactory::ComputeEdgesForLanemark(
+      const road::LaneSection& lane_section,
+      const road::Lane& lane,
+      const double s_current,
+      const double lanemark_width) const {
+    std::pair<geom::Vector3D, geom::Vector3D> edges =
+      lane.GetCornerPositions(s_current, road_param.extra_lane_width);
+
+    geom::Vector3D director;
+    if (edges.first != edges.second) {
+      director = edges.second - edges.first;
+      director /= director.Length(); 
+    } else {
+      const std::map<road::LaneId, road::Lane> & lanes = lane_section.GetLanes();
+      for (const auto& lane_pair : lanes) {
+        std::pair<geom::Vector3D, geom::Vector3D> another_edge =
+          lane_pair.second.GetCornerPositions(s_current, road_param.extra_lane_width);
+        if (another_edge.first != another_edge.second) {
+          director = another_edge.second - another_edge.first;
+          director /= director.Length();
+          break;
+        }
+      }
+    }
+    geom::Vector3D endmarking = edges.first + director * lanemark_width;
+    return std::make_pair(edges.first, endmarking);
+  }
 
 } // namespace geom
 } // namespace carla

@@ -37,7 +37,7 @@ namespace client {
 
   std::ostream &operator<<(std::ostream &out, const ActorAttribute &attr) {
     using Type = carla::rpc::ActorAttributeType;
-    static_assert(static_cast<uint8_t>(Type::SIZE) == 5u, "Please update this function.");
+    static_assert(static_cast<uint8_t>(Type::SIZE) == 6u, "Please update this function.");
     out << "ActorAttribute(id=" << attr.GetId();
     switch (attr.GetType()) {
       case Type::Bool:
