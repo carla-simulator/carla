@@ -221,7 +221,7 @@ void UCarlaSettingsDelegate::LaunchLowQualityCommands(UWorld *world) const
   GEngine->Exec(world, TEXT("r.TranslucentLightingVolume 0"));
   GEngine->Exec(world, TEXT("r.LightShaftDownSampleFactor 4"));
   GEngine->Exec(world, TEXT("r.OcclusionQueryLocation 1"));
-  // GEngine->Exec(world,TEXT("r.BasePassOutputsVelocity 0")); //--> readonly
+  // GEngine->Exec(world,TEXT("r.VelocityOutputPass 0")); //--> readonly
   // GEngine->Exec(world,TEXT("r.DetailMode 0")); //-->will change to lods 0
   GEngine->Exec(world, TEXT("r.DefaultFeature.AutoExposure 1"));
 
@@ -412,7 +412,7 @@ void UCarlaSettingsDelegate::LaunchEpicQualityCommands(UWorld *world) const
   GEngine->Exec(world, TEXT("r.TranslucentLightingVolume 1"));
   GEngine->Exec(world, TEXT("r.LightShaftDownSampleFactor 2"));
   // GEngine->Exec(world,TEXT("r.OcclusionQueryLocation 0"));
-  // GEngine->Exec(world,TEXT("r.BasePassOutputsVelocity 0")); //readonly
+  // GEngine->Exec(world,TEXT("r.VelocityOutputPass 0")); //readonly
   GEngine->Exec(world, TEXT("r.DetailMode 2"));
 }
 
