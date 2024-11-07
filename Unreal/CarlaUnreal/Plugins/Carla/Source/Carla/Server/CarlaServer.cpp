@@ -691,7 +691,7 @@ void FCarlaServer::FPimpl::BindActions()
     auto *Weather = Episode->GetWeather();
     if (Weather == nullptr)
     {
-      UE_LOG(LogCarla, Error, TEXT("internal error: unable to find weather:: weather is disabled"));
+      UE_LOG(LogCarla, Error, TEXT("get_weather_parameters internal error: unable to find weather:: weather is disabled"));
       return cr::WeatherParameters();
     }
     return Weather->GetCurrentWeather();
@@ -704,10 +704,21 @@ void FCarlaServer::FPimpl::BindActions()
     auto *Weather = Episode->GetWeather();
     if (Weather == nullptr)
     {
-      RESPOND_ERROR("internal error: unable to find weather:: weather is disabled");
+      RESPOND_ERROR("set_weather_parameters internal error: unable to find weather:: weather is disabled");
     }
     Weather->ApplyWeather(weather);
     return R<void>::Success();
+  };
+
+  BIND_SYNC(is_weather_enabled) << [this]() -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *Weather = Episode->GetWeather();
+    if (Weather == nullptr)
+    {
+      return false;
+    }
+    return true;
   };
 
   // ~~ Actor operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

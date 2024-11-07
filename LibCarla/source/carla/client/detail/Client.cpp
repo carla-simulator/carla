@@ -283,6 +283,11 @@ namespace detail {
     _pimpl->AsyncCall("set_weather_parameters", weather);
   }
 
+  bool Client::IsWeatherEnabled() {
+    return false;
+    //return _pimpl->CallAndWait<bool>("is_weather_enabled");
+  }
+
   std::vector<rpc::Actor> Client::GetActorsById(
       const std::vector<ActorId> &ids) {
     using return_t = std::vector<rpc::Actor>;
