@@ -286,7 +286,7 @@ UTexture2D* ACarlaGameModeBase::CreateUETexture(const carla::rpc::TextureColor& 
     }
   }
   UTexture2D* UETexture = UTexture2D::CreateTransient(Texture.GetWidth(), Texture.GetHeight(), EPixelFormat::PF_B8G8R8A8);
-  FTexture2DMipMap& Mip = UETexture->PlatformData->Mips[0];
+  FTexture2DMipMap& Mip = UETexture->GetPlatformData()->Mips[0];
   void* Data = Mip.BulkData.Lock( LOCK_READ_WRITE );
   FMemory::Memcpy( Data,
       &Colors[0],
@@ -309,7 +309,7 @@ UTexture2D* ACarlaGameModeBase::CreateUETexture(const carla::rpc::TextureFloatCo
     }
   }
   UTexture2D* UETexture = UTexture2D::CreateTransient(Texture.GetWidth(), Texture.GetHeight(), EPixelFormat::PF_FloatRGBA);
-  FTexture2DMipMap& Mip = UETexture->PlatformData->Mips[0];
+  FTexture2DMipMap& Mip = UETexture->GetPlatformData()->Mips[0];
   void* Data = Mip.BulkData.Lock( LOCK_READ_WRITE );
   FMemory::Memcpy( Data,
       &Colors[0],

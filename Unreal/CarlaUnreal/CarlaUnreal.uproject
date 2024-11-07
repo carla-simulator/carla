@@ -54,10 +54,6 @@
 			"Enabled": true
 		},
 		{
-			"Name": "StreetMap",
-			"Enabled": true
-		},
-		{
 			"Name": "ModelingToolsEditorMode",
 			"Enabled": true,
 			"TargetAllowList": [

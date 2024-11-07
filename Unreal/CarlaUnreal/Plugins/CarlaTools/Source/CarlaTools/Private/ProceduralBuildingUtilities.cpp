@@ -116,7 +116,9 @@ void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& D
   UPackage* NewPackage = CreatePackage(*PackageName);
   check(NewPackage);
 
-  const IMeshMergeUtilities& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshMergeModule>("MeshMergeUtilities").GetUtilities();
+  auto& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshMergeModule>(
+    "MeshMergeUtilities").GetUtilities();
+  
   MeshUtilities.MergeComponentsToStaticMesh(
       Components,
       World,
@@ -130,15 +132,19 @@ void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& D
       true);
 
   FSavePackageArgs SaveArgs;
-  SaveArgs.TopLevelFlags = EObjectFlags::RF_Public |
-                           EObjectFlags::RF_Standalone;
+  SaveArgs.TopLevelFlags =
+    EObjectFlags::RF_Public |
+    EObjectFlags::RF_Standalone;
   SaveArgs.Error = GError;
   SaveArgs.bForceByteSwapping = true;
   SaveArgs.bWarnOfLongFilename = true;
   SaveArgs.SaveFlags = SAVE_NoError;
 
-  UPackage::SavePackage(NewPackage, AssetsToSync[0],
-      *FileName, SaveArgs);
+  UPackage::SavePackage(
+    NewPackage,
+    AssetsToSync[0],
+    *FileName,
+    SaveArgs);
 
 }
 

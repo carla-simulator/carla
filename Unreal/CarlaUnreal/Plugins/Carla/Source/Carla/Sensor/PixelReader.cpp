@@ -27,8 +27,8 @@ void FPixelReader::WritePixelsToBuffer(
   check(IsInRenderingThread());
 
   auto RenderResource =
-      static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
-  FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
+      static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.GetResource());
+  auto Texture = RenderResource->GetRenderTargetTexture();
   if (!Texture)
   {
     return;
@@ -53,7 +53,7 @@ void FPixelReader::WritePixelsToBuffer(
     RHICmdList.ImmediateFlush(EImmediateFlushType::FlushRHIThread);
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("query result");
     uint64 OldAbsTime = 0;
-    RHICmdList.GetRenderQueryResult(Query, OldAbsTime, true);
+    RHIGetRenderQueryResult(Query, OldAbsTime, true);
   }
 
   AsyncTask(ENamedThreads::HighTaskPriority, [=, Readback=std::move(BackBufferReadback)]() mutable {

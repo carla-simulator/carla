@@ -35,6 +35,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/ObjectMacros.h"
+#include "UObject/SavePackage.h"
 
 #include "Dom/JsonObject.h"
 #include "JsonObjectConverter.h"
@@ -435,10 +436,23 @@ UWorld* UMapGeneratorWidget::DuplicateWorld(FString BaseWorldPath, FString Targe
   DuplicateWorld = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
 
   const FString PackageFileName = FPackageName::LongPackageNameToFilename(
-          PackageName, 
-          FPackageName::GetMapPackageExtension());
-      UPackage::SavePackage(WorldPackage, DuplicateWorld, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-          *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+    PackageName, 
+    FPackageName::GetMapPackageExtension());
+  
+  FSavePackageArgs SaveArgs;
+  SaveArgs.TopLevelFlags =
+    EObjectFlags::RF_Public |
+    EObjectFlags::RF_Standalone;
+  SaveArgs.Error = GError;
+  SaveArgs.bForceByteSwapping = true;
+  SaveArgs.bWarnOfLongFilename = true;
+  SaveArgs.SaveFlags = SAVE_NoError;
+
+  UPackage::SavePackage(
+    WorldPackage,
+    DuplicateWorld,
+    *PackageFileName,
+    SaveArgs);
 
   return DuplicateWorld;
 }
@@ -751,9 +765,21 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
   const FString PackageFileName = FPackageName::LongPackageNameToFilename(
       PackageName, 
       FPackageName::GetMapPackageExtension());
-  UPackage::SavePackage(BaseMapPackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-      *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+  
+  FSavePackageArgs SaveArgs;
+  SaveArgs.TopLevelFlags =
+    EObjectFlags::RF_Public |
+    EObjectFlags::RF_Standalone;
+  SaveArgs.Error = GError;
+  SaveArgs.bForceByteSwapping = true;
+  SaveArgs.bWarnOfLongFilename = true;
+  SaveArgs.SaveFlags = SAVE_NoError;
 
+  UPackage::SavePackage(
+    BaseMapPackage,
+    World,
+    *PackageFileName,
+    SaveArgs);
 
   bool bLoadedSuccess = FEditorFileUtils::LoadMap(*PackageName, false, true);
     if(!bLoadedSuccess){
@@ -776,7 +802,7 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
   {
     UE_LOG(LogCarlaToolsMapGenerator, Error, 
         TEXT("%s: Failed to cast Large Map Actor in %s."),
-        *MetaInfo.MapName); 
+        *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName); 
     return false;
   }
 
@@ -810,8 +836,19 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
 
   }
 
-  UPackage::SavePackage(BaseMapPackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-      *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+  SaveArgs.TopLevelFlags =
+    EObjectFlags::RF_Public |
+    EObjectFlags::RF_Standalone;
+  SaveArgs.Error = GError;
+  SaveArgs.bForceByteSwapping = true;
+  SaveArgs.bWarnOfLongFilename = true;
+  SaveArgs.SaveFlags = SAVE_NoError;
+
+  UPackage::SavePackage(
+    BaseMapPackage,
+    World,
+    *PackageFileName,
+    SaveArgs);
 
   return true;
 }
@@ -1082,8 +1119,21 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       const FString PackageFileName = FPackageName::LongPackageNameToFilename(
           PackageName, 
           FPackageName::GetMapPackageExtension());
-      UPackage::SavePackage(TilePackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-          *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+      
+      FSavePackageArgs SaveArgs;
+      SaveArgs.TopLevelFlags =
+        EObjectFlags::RF_Public |
+        EObjectFlags::RF_Standalone;
+      SaveArgs.Error = GError;
+      SaveArgs.bForceByteSwapping = true;
+      SaveArgs.bWarnOfLongFilename = true;
+      SaveArgs.SaveFlags = SAVE_NoError;
+
+      UPackage::SavePackage(
+        TilePackage,
+        World,
+        *PackageFileName,
+        SaveArgs);
 
       // TODO PROV
       FText ErrorUnloadingStr;
@@ -1200,8 +1250,11 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
         FVector(2500, 2500, 900));
 
     UActorFactory* ActorFactory = GEditor->FindActorFactoryForActorClass(AProceduralFoliageVolume::StaticClass());
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Name = InName;
+    SpawnParams.ObjectFlags = InObjectFlags;
     AProceduralFoliageVolume* FoliageVolumeActor = (AProceduralFoliageVolume*) ActorFactory->CreateActor(
-        AProceduralFoliageVolume::StaticClass(), Level, Transform, InObjectFlags, InName);
+        AProceduralFoliageVolume::StaticClass(), Level, Transform, SpawnParams);
 
     UProceduralFoliageComponent* FoliageComponent = FoliageVolumeActor->ProceduralComponent;
     FoliageComponent->FoliageSpawner = Spawner;

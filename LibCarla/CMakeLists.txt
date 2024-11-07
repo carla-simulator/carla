@@ -117,7 +117,7 @@ if (BUILD_CARLA_SERVER)
   )
 
   target_link_libraries (
-    carla-server PUBLIC
+    carla-server PUBLIC SYSTEM
     Boost::asio
     Boost::geometry
     Boost::algorithm

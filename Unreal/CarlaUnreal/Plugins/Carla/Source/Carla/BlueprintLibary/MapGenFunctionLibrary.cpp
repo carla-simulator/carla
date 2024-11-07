@@ -14,6 +14,7 @@
 #include "PhysicsEngine/BodySetup.h"
 #include "Engine/StaticMeshActor.h"
 #include "Carla/Actor/LevelActor/InstancedStaticMeshActor.h"
+#include "UObject/SavePackage.h"
 #if WITH_EDITOR
 #include "Editor/EditorEngine.h"
 #include "Editor/Transactor.h"
@@ -185,7 +186,26 @@ UStaticMesh* UMapGenFunctionLibrary::CreateMesh(
 
     // Notify asset registry of new asset
     FAssetRegistryModule::AssetCreated(Mesh);
-    //UPackage::SavePackage(Package, Mesh, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *(MeshName.ToString()), GError, nullptr, true, true, SAVE_NoError);
+
+    /*
+
+    FSavePackageArgs SaveArgs;
+    SaveArgs.TopLevelFlags =
+      EObjectFlags::RF_Public |
+      EObjectFlags::RF_Standalone;
+    SaveArgs.Error = GError;
+    SaveArgs.bForceByteSwapping = true;
+    SaveArgs.bWarnOfLongFilename = true;
+    SaveArgs.SaveFlags = SAVE_NoError;
+
+    UPackage::SavePackage(
+      Package, 
+      Mesh,
+      *(MeshName.ToString()),
+      SaveArgs);
+
+    */
+
     Package->MarkPackageDirty();
     return Mesh;
   }

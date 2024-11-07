@@ -60,7 +60,7 @@ ACityMapGenerator::~ACityMapGenerator() {}
 // -- Overriden from UObject ---------------------------------------------------
 // =============================================================================
 
-void ACityMapGenerator::PreSave(const ITargetPlatform *TargetPlatform)
+void ACityMapGenerator::PreSave(FObjectPreSaveContext ObjectSaveContext)
 {
 #if WITH_EDITOR
   if (bGenerateRoadMapOnSave) {
@@ -73,7 +73,7 @@ void ACityMapGenerator::PreSave(const ITargetPlatform *TargetPlatform)
   }
 #endif // WITH_EDITOR
 
-  Super::PreSave(TargetPlatform);
+  Super::PreSave(ObjectSaveContext);
 }
 
 // =============================================================================

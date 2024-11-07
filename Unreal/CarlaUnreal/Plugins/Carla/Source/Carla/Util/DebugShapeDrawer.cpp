@@ -208,7 +208,7 @@ struct FShapeVisitor
       Location = LargeMap->GlobalToLocalLocation(Location);
     }
     ACarlaHUD *Hud = Cast<ACarlaHUD>(PlayerController->GetHUD());
-    Hud->AddHUDString(carla::rpc::ToFString(Str.text), Location, Color.Quantize(), LifeTime);
+    Hud->AddHUDString(carla::rpc::ToFString(Str.text), Location, Color.QuantizeRound(), LifeTime);
   }
 
 private:

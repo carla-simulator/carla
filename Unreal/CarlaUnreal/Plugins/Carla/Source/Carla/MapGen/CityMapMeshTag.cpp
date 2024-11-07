@@ -23,8 +23,6 @@ uint32 CityMapMeshTag::GetRoadIntersectionSize()
 
 FString CityMapMeshTag::ToString(ECityMapMeshTag Tag)
 {
-  const UEnum* ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("ECityMapMeshTag"), true);
-  if(!ptr)
-    return FString("Invalid");
-  return ptr->GetNameStringByIndex(static_cast<int32>(Tag));
+  static_assert(TIsEnumClass<ECityMapMeshTag>::Value);
+  return StaticEnum<ECityMapMeshTag>()->GetNameStringByValue((int64)Tag);
 }

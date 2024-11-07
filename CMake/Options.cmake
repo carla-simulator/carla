@@ -89,7 +89,7 @@ carla_option (
 carla_option (
   ENABLE_RTTI
   "Enable C++ RTTI."
-  OFF
+  ON
 )
 
 carla_option (
@@ -143,6 +143,12 @@ carla_string_option (
 carla_option (
   VERBOSE_CONFIGURE
   "Whether to emit extra messages during CMake configure."
+  OFF
+)
+
+carla_option (
+  ENABLE_STREETMAP
+  "Whether to download the Streetmap UE plugin."
   OFF
 )
 

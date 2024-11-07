@@ -106,9 +106,30 @@ endif ()
 #   RTTI Definitions
 # ================================
 
+if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC" AND
+    NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  if (ENABLE_RTTI)
+    set (RTTI_FLAG /GR)
+  else ()
+    set (RTTI_FLAG /GR-)
+  endif ()
+else ()
+  if (ENABLE_RTTI)
+    set (RTTI_FLAG -frtti)
+  else ()
+    set (RTTI_FLAG -fno-rtti)
+  endif ()
+endif ()
+
+carla_message ("Checking for ${RTTI_FLAG} support")
+check_cxx_compiler_flag (${RTTI_FLAG} HAS_RTTI_FLAG)
+if (HAS_RTTI_FLAG)
+  add_compile_options (${RTTI_FLAG})
+endif ()
+
 set (CARLA_RTTI_DEFINITIONS)
 
-if (CARLA_RTTI_DEFINITIONS)
+if (ENABLE_RTTI)
   # Nothing
 else ()
   list (APPEND CARLA_RTTI_DEFINITIONS BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY)

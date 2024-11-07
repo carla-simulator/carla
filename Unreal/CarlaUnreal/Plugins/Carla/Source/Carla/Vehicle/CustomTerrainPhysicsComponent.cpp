@@ -40,6 +40,7 @@
 #include "Async/Async.h"
 #include "Async/Future.h"
 #include "LandscapeProxy.h"
+#include "UObject/SavePackage.h"
 
 
 #include "Carla/Game/CarlaStatics.h"
@@ -930,7 +931,7 @@ void UCustomTerrainPhysicsComponent::UpdateTexture()
     region.Width = Texture->GetSizeX();
     region.Height = Texture->GetSizeY();
 
-    FTexture2DResource* resource = (FTexture2DResource*)Texture->Resource;
+    FTexture2DResource* resource = (FTexture2DResource*)Texture->GetResource();
     RHIUpdateTexture2D(
         resource->GetTexture2DRHI(), 0, region, region.Width * sizeof(uint8_t), &NewData[0]); 
   });
@@ -1024,7 +1025,7 @@ void UCustomTerrainPhysicsComponent::UpdateLargeTexture()
     region.Width = Texture->GetSizeX();
     region.Height = Texture->GetSizeY();
 
-    FTexture2DResource* resource = (FTexture2DResource*)Texture->Resource;
+    FTexture2DResource* resource = (FTexture2DResource*)Texture->GetResource();
     RHIUpdateTexture2D(
         resource->GetTexture2DRHI(), 0, region, region.Width * sizeof(uint8_t), &NewData[0]); 
   });
@@ -1379,8 +1380,24 @@ void UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapDataAasset(ALandscap
   Package->MarkPackageDirty();
   // FAssetRegistryModule::AssetCreated(NewTexture);
 
-  FString PackageFileName = FPackageName::LongPackageNameToFilename(PackageName, FPackageName::GetAssetPackageExtension());
-  bool bSaved = UPackage::SavePackage(Package, HeightMapAsset, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+  FSavePackageArgs SaveArgs;
+  SaveArgs.TopLevelFlags =
+    EObjectFlags::RF_Public |
+    EObjectFlags::RF_Standalone;
+  SaveArgs.Error = GError;
+  SaveArgs.bForceByteSwapping = true;
+  SaveArgs.bWarnOfLongFilename = true;
+  SaveArgs.SaveFlags = SAVE_NoError;
+
+  FString PackageFileName = FPackageName::LongPackageNameToFilename(
+    PackageName,
+    FPackageName::GetAssetPackageExtension());
+  
+  bool bSaved = UPackage::SavePackage(
+    Package,
+    HeightMapAsset,
+    *PackageFileName,
+    SaveArgs);
 }
 
 

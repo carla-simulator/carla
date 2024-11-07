@@ -52,14 +52,14 @@ public:
     return ConfigFile.Combine(FileName);
   }
 
-  void ProcessInputFileContents(const FString &INIFileContents)
+  void ProcessInputFileContents(const FString &INIFileContents, const FString &Hint)
   {
-    ConfigFile.ProcessInputFileContents(INIFileContents);
+    ConfigFile.ProcessInputFileContents(INIFileContents, Hint);
   }
 
   bool HasSection(const FString &Section) const
   {
-    return (ConfigFile.Num() > 0) && (ConfigFile.Find(Section) != nullptr);
+    return (ConfigFile.Num() > 0) && (ConfigFile.FindSection(Section) != nullptr);
   }
 
   void AddSectionIfMissing(const FString &Section)

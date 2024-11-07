@@ -258,7 +258,7 @@ endif ()
 
 
 
-if (BUILD_CARLA_UNREAL)
+if (BUILD_CARLA_UNREAL AND ENABLE_STREETMAP)
   # ==== STREETMAP ====
   carla_dependency_add (
     StreetMap
