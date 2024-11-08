@@ -164,6 +164,12 @@ carla_option (
   OFF
 )
 
+carla_option (
+  CARLA_UNREAL_CONTENT_CHECK
+  "Check both at configure and build time if the CARLA content is present."
+  ON
+)
+
 cmake_path (
   CONVERT
   "$ENV{CARLA_UNREAL_ENGINE_PATH}"

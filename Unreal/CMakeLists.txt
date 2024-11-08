@@ -58,11 +58,26 @@ set (
   ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
 )
 
-set (CARLA_UE_CONTENT_CHECK_PATH ${CARLA_UE_PATH}/Content/Carla/Blueprints)
-if (IS_DIRECTORY ${CARLA_UE_CONTENT_CHECK_PATH})
-  carla_message_verbose ("CARLA Unreal Content - FOUND")
-else ()
-  carla_warning ("Could not find CARLA Content, download it or running the editor will result in a crash.")
+
+
+# Configure-time check for CARLA content:
+
+if (CARLA_UNREAL_CONTENT_CHECK)
+
+  execute_process (
+    COMMAND
+      git -C ${CARLA_UE_CONTENT_PATH} rev-parse --is-inside-work-tree
+    OUTPUT_VARIABLE
+      HAS_CONTENT_AT_CONFIGURE_TIME
+    RESULT_VARIABLE
+      HAS_CONTENT_AT_CONFIGURE_TIME_EC
+  )
+
+  if (NOT "${HAS_CONTENT_AT_CONFIGURE_TIME_EC}" STREQUAL "0" AND
+          "${HAS_CONTENT_AT_CONFIGURE_TIME}" STREQUAL "true")
+    carla_error("Could not find CARLA content at CMake configure time. Make sure CarlaSetup executed successfully if you did run it, otherwise you can directly clone https://bitbucket.org/carla-simulator/carla-content.git into \"${CARLA_UE_CONTENT_PATH}\".")
+  endif ()
+
 endif ()
 
 
@@ -535,38 +550,10 @@ set (
   VERBATIM
 )
 
-if (WIN32)
-  set (
-    PRELAUNCH_CONTENT_CHECK_COMMAND
-    if exist ${CARLA_UE_CONTENT_CHECK_PATH} (exit 0) else (exit 1)
-  )
-else ()
-  set (
-    PRELAUNCH_CONTENT_CHECK_COMMAND
-    test -d ${CARLA_UE_CONTENT_CHECK_PATH}
-  )
-endif ()
-
-carla_add_custom_target (
-  check-unreal-content
-  "Perform some basic checks to ensure that the CARLA Unreal Editor will not open without its assets."
-  COMMAND
-    ${PRELAUNCH_CONTENT_CHECK_COMMAND}
-  COMMENT
-    "Performing prelaunch check for CARLA Content presence."
-  USES_TERMINAL
-  VERBATIM
-)
-
 carla_add_custom_target (
   launch-only
   "Open CARLA in the Unreal Editor. This will not rebuild outdated targets."
   ${CARLA_LAUNCH_TARGET_OPTIONS}
-)
-
-add_dependencies (
-  launch-only
-  check-unreal-content
 )
 
 carla_add_custom_target (
@@ -578,8 +565,29 @@ carla_add_custom_target (
 add_dependencies (
   launch
   carla-unreal-editor
-  check-unreal-content
 )
+
+if (CARLA_UNREAL_CONTENT_CHECK)
+  add_custom_target (
+    check-unreal-content
+    COMMAND
+      git -C ${CARLA_UE_CONTENT_PATH} rev-parse --is-inside-work-tree
+    COMMENT
+      "Checking for CARLA content presence."
+    USES_TERMINAL
+    VERBATIM
+  )
+
+  add_dependencies (
+    launch-only
+    check-unreal-content
+  )
+  
+  add_dependencies (
+    launch
+    check-unreal-content
+  )  
+endif ()
 
 set_property (
   DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES
