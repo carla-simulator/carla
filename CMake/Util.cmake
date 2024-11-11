@@ -32,6 +32,8 @@ function (carla_get_option_docs OUT_VAR)
   return (PROPAGATE ${OUT_VAR})
 endfunction ()
 
+
+
 macro (carla_option NAME DESCRIPTION VALUE)
   option (${NAME} ${DESCRIPTION} ${VALUE})
   carla_message_verbose ("(option) ${NAME} : ${${NAME}}")
@@ -61,6 +63,17 @@ macro (carla_string_option NAME DESCRIPTION VALUE)
   )
   set_property (GLOBAL PROPERTY CARLA_OPTION_DOCS ${DOCS})
 endmacro ()
+
+
+
+function (carla_add_clike_compile_options)
+  foreach (ARG ${ARGN})
+    add_compile_options (
+      $<$<COMPILE_LANGUAGE:C,CXX>:${ARG}>
+    )
+  endforeach ()
+endfunction ()
+
 
 
 
