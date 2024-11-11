@@ -122,7 +122,12 @@ inline bool CarlaRecorderQuery::CheckFileInfo(std::stringstream& Info)
   // show general Info
   Info << "Version: " << RecInfo.Version << std::endl;
   Info << "Map: " << TCHAR_TO_UTF8(*RecInfo.Mapfile) << std::endl;
-  tm* TimeInfo = localtime(&RecInfo.Date);
+#ifdef _WIN32
+  struct tm Tmp;
+  auto TimeInfo = localtime_s(&RecInfo.Date, &Tmp);
+#else
+  auto TimeInfo = localtime(&RecInfo.Date);
+#endif
   char DateStr[100];
   strftime(DateStr, sizeof(DateStr), "%x %X", TimeInfo);
   Info << "Date: " << DateStr << std::endl << std::endl;
