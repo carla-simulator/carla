@@ -9,11 +9,11 @@
 #include "Carla/Util/RandomEngine.h"
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include "carla/ros2/ROS2.h"
 #include <carla/Buffer.h>
 #include <carla/BufferView.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include <random>
 #include <cmath>

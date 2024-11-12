@@ -17,9 +17,9 @@
 #include "Carla/Sensor/DataStream.h"
 #include "Carla/Traffic/TrafficLightState.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/rpc/WalkerControl.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 class UCarlaEpisode;
 class UTrafficLightController;

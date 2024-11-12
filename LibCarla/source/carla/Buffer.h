@@ -17,11 +17,11 @@
 #include <memory>
 #include <type_traits>
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
-#include <compiler/enable-ue4-macros.h>
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
+#include <compiler/enable-unreal-macros.h>
 #include "Containers/Array.h"
-#include <compiler/disable-ue4-macros.h>
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#include <compiler/disable-unreal-macros.h>
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
 namespace carla {
 
@@ -336,7 +336,7 @@ namespace carla {
       copy_from(offset, boost::asio::buffer(source));
     }
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
     /// @copydoc copy_from(size_type, const Buffer &)
     template <typename T>
     void copy_from(size_type offset, const TArray<T> &source) {
@@ -345,7 +345,7 @@ namespace carla {
           reinterpret_cast<const value_type *>(source.GetData()),
           sizeof(T) * source.Num());
     }
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
     /// Copy @a size bytes of the memory pointed by @a data into this buffer,
     /// leaving at the front an offset of @a offset bytes uninitialized.

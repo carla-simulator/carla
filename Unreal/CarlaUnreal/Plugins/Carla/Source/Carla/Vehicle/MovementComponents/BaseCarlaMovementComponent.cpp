@@ -8,9 +8,9 @@
 #include "BaseCarlaMovementComponent.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/Logging.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 void UBaseCarlaMovementComponent::BeginPlay()
 {

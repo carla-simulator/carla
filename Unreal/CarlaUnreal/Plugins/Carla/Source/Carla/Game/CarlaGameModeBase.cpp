@@ -19,13 +19,13 @@
 #include "Util/BoundingBoxCalculator.h"
 #include "EngineUtils.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/element/RoadInfoSignal.h"
 #include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/rpc/MapLayer.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include "Async/ParallelFor.h"
 #include "DynamicRHI.h"

@@ -8,11 +8,11 @@
 
 #include "carla/MsgPack.h"
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
-#include <compiler/enable-ue4-macros.h>
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
+#include <compiler/enable-unreal-macros.h>
 #include "Carla/Vehicle/VehicleControl.h"
-#include <compiler/disable-ue4-macros.h>
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#include <compiler/disable-unreal-macros.h>
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
 namespace carla {
 namespace rpc {
@@ -46,7 +46,7 @@ namespace rpc {
     bool manual_gear_shift = false;
     int32_t gear = 0;
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
 
     VehicleControl(const FVehicleControl &Control)
       : throttle(Control.Throttle),
@@ -69,7 +69,7 @@ namespace rpc {
       return Control;
     }
 
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
     bool operator!=(const VehicleControl &rhs) const {
       return

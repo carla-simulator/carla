@@ -11,9 +11,9 @@
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Traffic/TrafficLightBase.h"
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/rpc/ObjectLabel.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
 #include "Components/BoxComponent.h"

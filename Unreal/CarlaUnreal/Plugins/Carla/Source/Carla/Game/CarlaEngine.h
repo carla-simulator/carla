@@ -15,7 +15,7 @@
 
 #include "Misc/CoreDelegates.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/multigpu/router.h>
 #include <carla/multigpu/primaryCommands.h>
 #include <carla/multigpu/secondary.h>
@@ -23,7 +23,7 @@
 #if WITH_ROS2
     #include <carla/ros2/ROS2.h>
 #endif
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include <mutex>
 

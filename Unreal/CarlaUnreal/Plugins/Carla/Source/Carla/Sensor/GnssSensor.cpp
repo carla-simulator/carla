@@ -11,10 +11,10 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/MapGen/LargeMapManager.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include "carla/geom/Vector3D.h"
 #include "carla/ros2/ROS2.h"
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 AGnssSensor::AGnssSensor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)

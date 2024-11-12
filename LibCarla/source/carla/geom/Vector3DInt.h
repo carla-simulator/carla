@@ -128,7 +128,7 @@ namespace geom {
     // -- Conversions to UE4 types ---------------------------------------------
     // =========================================================================
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
 
     Vector3DInt(const FIntVector &v) = delete;
     Vector3DInt& operator=(const FIntVector &rhs) = delete;
@@ -147,7 +147,7 @@ namespace geom {
       return FIntVector{x, y, z};
     }
 
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
     // =========================================================================
     /// @todo The following is copy-pasted from MSGPACK_DEFINE_ARRAY.

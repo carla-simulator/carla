@@ -11,10 +11,10 @@
 
 #include "CoreMinimal.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/multigpu/router.h>
 #include <carla/streaming/Server.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 class UCarlaEpisode;
 

@@ -9,11 +9,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <optional>
 #include <carla/rpc/Texture.h>
 #include <carla/rpc/MaterialParameter.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include "Carla/Actor/CarlaActorFactory.h"
 #include "Carla/Game/CarlaEpisode.h"

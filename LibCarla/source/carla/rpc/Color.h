@@ -10,11 +10,11 @@
 
 #include <cstdint>
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
-#include <compiler/enable-ue4-macros.h>
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
+#include <compiler/enable-unreal-macros.h>
 #include "Math/Color.h"
-#include <compiler/disable-ue4-macros.h>
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#include <compiler/disable-unreal-macros.h>
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
 namespace carla {
 namespace rpc {
@@ -34,7 +34,7 @@ namespace rpc {
 
     Color &operator=(const Color &) = default;
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
 
     Color(const FColor &color)
       : Color(color.R, color.G, color.B) {}
@@ -55,7 +55,7 @@ namespace rpc {
       };
     }
 
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
     MSGPACK_DEFINE_ARRAY(r, g, b);
   };

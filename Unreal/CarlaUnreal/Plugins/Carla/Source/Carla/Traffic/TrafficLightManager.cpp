@@ -14,11 +14,11 @@
 
 #include "UObject/ConstructorHelpers.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/rpc/String.h>
 #include <carla/road/SignalType.h>
 #include <carla/opendrive/OpenDriveParser.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include <string>
 

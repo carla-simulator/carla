@@ -15,9 +15,9 @@
 #include "Carla/MapGen/LargeMapManager.h"
 #include "carla/road/element/RoadInfoSignal.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/road/element/RoadInfoSignal.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 UTrafficLightComponent::UTrafficLightComponent()
   : Super()

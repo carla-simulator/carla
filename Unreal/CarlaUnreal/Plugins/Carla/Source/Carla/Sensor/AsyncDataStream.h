@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/Buffer.h>
 #include <carla/Logging.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <carla/sensor/s11n/SensorHeaderSerializer.h>
 #include <carla/streaming/Stream.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 template <typename T>
 class FDataStreamTmpl;

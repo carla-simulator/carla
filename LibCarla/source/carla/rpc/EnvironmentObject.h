@@ -25,7 +25,7 @@ namespace rpc {
     std::string name;
     CityObjectLabel type = CityObjectLabel::None;
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
 
     EnvironmentObject(const FEnvironmentObject &EnvironmentObject)
       : transform(EnvironmentObject.Transform),
@@ -34,7 +34,7 @@ namespace rpc {
         name(TCHAR_TO_UTF8(*EnvironmentObject.Name)),
         type(EnvironmentObject.ObjectLabel) {}
 
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
     MSGPACK_DEFINE_ARRAY(transform, bounding_box, id, name, type);
   };

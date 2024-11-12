@@ -106,7 +106,7 @@ namespace carla {
         return !(*this == rhs);
       }
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
 
       static WheelPhysicsControl FromFWheelPhysicsControl(
         const FWheelPhysicsControl& Wheel)

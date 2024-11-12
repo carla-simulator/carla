@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/rpc/ActorAttributeType.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include "ActorAttribute.generated.h"
 

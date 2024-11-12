@@ -11,10 +11,10 @@
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 #include "PhysicsEngine/PhysicsObjectExternalInterface.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/geom/Math.h>
 #include <carla/ros2/ROS2.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 FActorDefinition ARadar::GetSensorDefinition()
 {

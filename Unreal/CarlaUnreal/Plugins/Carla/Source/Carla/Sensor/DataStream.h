@@ -8,10 +8,10 @@
 
 #include "Carla/Sensor/AsyncDataStream.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/streaming/Stream.h>
 #include <optional>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 // =============================================================================
 // -- FDataStreamTmpl ----------------------------------------------------------

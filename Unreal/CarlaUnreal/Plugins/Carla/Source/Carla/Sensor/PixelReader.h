@@ -21,12 +21,12 @@
 
 #include "Carla/Game/CarlaEngine.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/Logging.h>
 #include <carla/Buffer.h>
 #include <carla/BufferView.h>
 #include <carla/sensor/SensorRegistry.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 // =============================================================================
 // -- FPixelReader -------------------------------------------------------------

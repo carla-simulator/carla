@@ -14,11 +14,11 @@
 
 MSGPACK_ADD_ENUM(carla::rpc::ActorAttributeType);
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
-#include <compiler/enable-ue4-macros.h>
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
+#include <compiler/enable-unreal-macros.h>
 #include "Carla/Actor/ActorAttribute.h"
-#include <compiler/disable-ue4-macros.h>
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#include <compiler/disable-unreal-macros.h>
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
 namespace carla {
 namespace rpc {
@@ -40,7 +40,7 @@ namespace rpc {
 
     bool restrict_to_recommended = false;
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
 
     ActorAttribute(const FActorAttribute &Attribute)
       : id(FromFString(Attribute.Id)),
@@ -62,7 +62,7 @@ namespace rpc {
       }
     }
 
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
     MSGPACK_DEFINE_ARRAY(id, type, value, recommended_values, is_modifiable, restrict_to_recommended);
   };
@@ -83,7 +83,7 @@ namespace rpc {
 
     std::string value;
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
 
     ActorAttributeValue(const FActorAttribute &Attribute)
       : ActorAttributeValue(ActorAttribute(Attribute)) {}
@@ -96,7 +96,7 @@ namespace rpc {
       return Attribute;
     }
 
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
     MSGPACK_DEFINE_ARRAY(id, type, value);
   };

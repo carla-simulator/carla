@@ -11,7 +11,7 @@
 #include "Carla/Vehicle/VehicleControl.h"
 
 #ifdef WITH_CHRONO
-#include "compiler/disable-ue4-macros.h"
+#include "compiler/disable-unreal-macros.h"
 
 #if defined(__clang__)
 #  pragma clang diagnostic push
@@ -28,7 +28,7 @@
 #  pragma clang diagnostic pop
 #endif
 
-#include "compiler/enable-ue4-macros.h"
+#include "compiler/enable-unreal-macros.h"
 #endif
 
 #include "ChronoMovementComponent.generated.h"

@@ -19,7 +19,7 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Components/CapsuleComponent.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/rpc/AckermannControllerSettings.h>
 #include "carla/rpc/LabelledPoint.h"
 #include <carla/rpc/LightState.h>
@@ -35,7 +35,7 @@
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 
 FCarlaActor::FCarlaActor(

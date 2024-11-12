@@ -8,9 +8,9 @@
 
 #include <vector>
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/rpc/LightState.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include "Carla.h"
 #include "CoreMinimal.h"

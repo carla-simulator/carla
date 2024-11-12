@@ -11,10 +11,10 @@
 #include "Carla/MapGen/LargeMapManager.h"
 #include "DrawDebugHelpers.h"
 #include "Components/LineBatchComponent.h"
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/String.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 
 

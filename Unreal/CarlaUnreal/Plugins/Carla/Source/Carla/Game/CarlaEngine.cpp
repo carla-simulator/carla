@@ -19,7 +19,7 @@
 #include "PhysicsEngine/PhysicsSettings.h"
 #include "Carla/MapGen/LargeMapManager.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/Logging.h>
 #include <carla/multigpu/primaryCommands.h>
 #include <carla/multigpu/commands.h>
@@ -28,7 +28,7 @@
 #include <carla/ros2/ROS2.h>
 #include <carla/streaming/EndPoint.h>
 #include <carla/streaming/Server.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include <thread>
 

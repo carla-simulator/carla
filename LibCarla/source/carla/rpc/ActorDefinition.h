@@ -29,7 +29,7 @@ namespace rpc {
 
     std::vector<ActorAttribute> attributes;
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
 
     ActorDefinition(const FActorDefinition &Definition)
       : uid(Definition.UId),
@@ -44,7 +44,7 @@ namespace rpc {
       }
     }
 
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
     MSGPACK_DEFINE_ARRAY(uid, id, tags, attributes);
   };

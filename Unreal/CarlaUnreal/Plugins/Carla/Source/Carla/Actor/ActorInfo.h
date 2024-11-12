@@ -11,10 +11,10 @@
 
 #include "Math/DVector.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ObjectLabel.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 namespace crp = carla::rpc;
 

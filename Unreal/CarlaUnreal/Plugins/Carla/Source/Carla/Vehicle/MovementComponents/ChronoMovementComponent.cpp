@@ -9,12 +9,12 @@
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Vehicle/MovementComponents/DefaultMovementComponent.h"
 
-#include "compiler/disable-ue4-macros.h"
+#include "compiler/disable-unreal-macros.h"
 #include <carla/rpc/String.h>
 #ifdef WITH_CHRONO
 #include "chrono_vehicle/utils/ChUtilsJSON.h"
 #endif
-#include "compiler/enable-ue4-macros.h"
+#include "compiler/enable-unreal-macros.h"
 #include "Carla/Util/RayTracer.h"
 
 

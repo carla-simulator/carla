@@ -13,9 +13,9 @@
 #include "Carla/Sensor/RayCastSemanticLidar.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/sensor/data/LidarData.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include "RayCastLidar.generated.h"
 

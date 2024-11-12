@@ -12,9 +12,9 @@
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include "carla/ros2/ROS2.h"
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 AObstacleDetectionSensor::AObstacleDetectionSensor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)

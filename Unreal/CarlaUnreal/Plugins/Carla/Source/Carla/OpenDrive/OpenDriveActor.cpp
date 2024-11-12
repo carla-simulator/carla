@@ -17,12 +17,12 @@
 
 #include "DrawDebugHelpers.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/geom/Math.h>
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/road/element/Waypoint.h>
 #include <carla/rpc/String.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include <algorithm>
 #include <unordered_set>

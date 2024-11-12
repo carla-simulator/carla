@@ -8,9 +8,9 @@
 
 #include "carla/MsgPack.h"
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
 #  include "Carla/Vehicle/VehicleAckermannControl.h"
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
 namespace carla {
 namespace rpc {
@@ -38,7 +38,7 @@ namespace rpc {
     float acceleration = 0.0f;
     float jerk = 0.0f;
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
 
     VehicleAckermannControl(const FVehicleAckermannControl &Control)
       : steer(Control.Steer),
@@ -57,7 +57,7 @@ namespace rpc {
       return Control;
     }
 
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
     bool operator!=(const VehicleAckermannControl &rhs) const {
       return

@@ -19,7 +19,7 @@
 #include "GameFramework/Pawn.h"
 #include "Materials/MaterialParameterCollectionInstance.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/geom/BoundingBox.h>
 #include <carla/geom/GeoLocation.h>
 #if WITH_ROS2
@@ -29,7 +29,7 @@
 #include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/OpendriveGenerationParameters.h>
 #include <carla/streaming/Server.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include "CarlaEpisode.generated.h"
 

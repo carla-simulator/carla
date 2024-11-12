@@ -125,9 +125,9 @@ IMPLEMENT_MODULE(FCarlaModule, Carla)
 // =============================================================================
 
 #ifdef LIBCARLA_NO_EXCEPTIONS
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/Exception.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include <exception>
 namespace carla {

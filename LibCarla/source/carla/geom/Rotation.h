@@ -12,11 +12,11 @@
 #include "carla/geom/Math.h"
 #include "carla/geom/Vector3D.h"
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
-#include <compiler/enable-ue4-macros.h>
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
+#include <compiler/enable-unreal-macros.h>
 #include "Math/Rotator.h"
-#include <compiler/disable-ue4-macros.h>
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#include <compiler/disable-unreal-macros.h>
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
 namespace carla {
 namespace geom {
@@ -213,7 +213,7 @@ namespace geom {
     // -- Conversions to UE4 types ---------------------------------------------
     // =========================================================================
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
 
     Rotation(const FRotator &rotator)
       : Rotation(rotator.Pitch, rotator.Yaw, rotator.Roll) {}
@@ -222,7 +222,7 @@ namespace geom {
       return FRotator{pitch, yaw, roll};
     }
 
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
   };
 
 } // namespace geom

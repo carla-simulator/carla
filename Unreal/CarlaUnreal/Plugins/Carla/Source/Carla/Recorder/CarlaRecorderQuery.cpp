@@ -15,10 +15,10 @@
 #include <string_view>
 #include <string>
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/rpc/VehicleLightState.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include <Carla/Vehicle/CarlaWheeledVehicle.h>
 

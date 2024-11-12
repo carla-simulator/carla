@@ -17,9 +17,9 @@
 #include <cmath>
 #include <sstream>
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/rpc/String.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 // disable warnings for eigen 3.1.0
 #if defined(__clang__)

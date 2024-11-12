@@ -8,9 +8,9 @@
 
 #include "carla/MsgPack.h"
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
 #  include "Carla/Vehicle/AckermannControllerSettings.h"
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
 namespace carla {
 namespace rpc {
@@ -41,7 +41,7 @@ namespace rpc {
     float accel_ki = 0.0f;
     float accel_kd = 0.0f;
 
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#ifdef LIBCARLA_INCLUDED_FROM_UNREAL
 
     AckermannControllerSettings(const FAckermannControllerSettings &Settings)
       : speed_kp(Settings.SpeedKp),
@@ -62,7 +62,7 @@ namespace rpc {
       return Settings;
     }
 
-#endif // LIBCARLA_INCLUDED_FROM_UE4
+#endif // LIBCARLA_INCLUDED_FROM_UNREAL
 
     bool operator!=(const AckermannControllerSettings &rhs) const {
       return

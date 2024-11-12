@@ -9,10 +9,10 @@
 #include "EditorUtilityActor.h"
 #include "EditorUtilityObject.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <optional>
 #include <carla/road/Map.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include "OpenDriveToMap.generated.h"
 

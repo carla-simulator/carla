@@ -11,9 +11,9 @@
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Actor/ActorDescription.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include "carla/geom/Vector3D.h"
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include <array>
 

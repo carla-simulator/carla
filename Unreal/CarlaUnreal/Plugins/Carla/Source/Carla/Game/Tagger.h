@@ -9,9 +9,9 @@
 #include "GameFramework/Actor.h"
 #include "Components/PrimitiveComponent.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/rpc/ObjectLabel.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include "Tagger.generated.h"
 

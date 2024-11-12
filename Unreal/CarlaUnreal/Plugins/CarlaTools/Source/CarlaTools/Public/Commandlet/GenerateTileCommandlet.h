@@ -9,9 +9,9 @@
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
 #include "Commandlets/Commandlet.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include "OpenDriveToMap.h"
 

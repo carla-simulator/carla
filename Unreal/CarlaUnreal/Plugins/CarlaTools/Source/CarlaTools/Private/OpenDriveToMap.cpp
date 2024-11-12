@@ -16,7 +16,7 @@
 #include "Carla/BlueprintLibary/MapGenFunctionLibrary.h"
 #include "OpenDrive/OpenDriveGenerator.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/road/Map.h>
 #include <carla/geom/Simplification.h>
@@ -26,7 +26,7 @@
   #define HAS_OSM2ODR
   #include <OSM2ODR.h>
 #endif
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include "Engine/TriggerBox.h"
 #include "Engine/AssetManager.h"

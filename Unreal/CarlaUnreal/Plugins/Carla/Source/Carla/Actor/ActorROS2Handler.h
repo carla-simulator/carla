@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include "carla/ros2/ROS2.h"
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 /// visitor class
 class ActorROS2Handler

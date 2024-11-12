@@ -26,7 +26,7 @@
 #include "CarlaServerResponse.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Misc/FileHelper.h"
-#include <compiler/disable-ue4-macros.h>
+#include <compiler/disable-unreal-macros.h>
 #include <carla/Functional.h>
 #include <carla/multigpu/router.h>
 #include <carla/Version.h>
@@ -65,7 +65,7 @@
 #include <carla/streaming/detail/Types.h>
 #include <carla/rpc/Texture.h>
 #include <carla/rpc/MaterialParameter.h>
-#include <compiler/enable-ue4-macros.h>
+#include <compiler/enable-unreal-macros.h>
 
 #include <vector>
 #include <atomic>
