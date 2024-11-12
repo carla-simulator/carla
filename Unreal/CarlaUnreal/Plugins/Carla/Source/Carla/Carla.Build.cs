@@ -184,14 +184,29 @@ public class Carla :
 
     PublicDefinitions.AddRange(new string[]
     {
-      "ASIO_NO_EXCEPTIONS",
-      "BOOST_NO_EXCEPTIONS",
-      "LIBCARLA_NO_EXCEPTIONS",
-      "PUGIXML_NO_EXCEPTIONS",
       "BOOST_DISABLE_ABI_HEADERS",
-      "BOOST_NO_RTTI",
-      "BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY",
     });
+
+    if (!bEnableExceptions)
+    {
+      PublicDefinitions.AddRange(new string[]
+      {
+        "ASIO_NO_EXCEPTIONS",
+        "BOOST_NO_EXCEPTIONS",
+        "LIBCARLA_NO_EXCEPTIONS",
+        "PUGIXML_NO_EXCEPTIONS",
+        "BOOST_DISABLE_ABI_HEADERS",
+      });
+    }
+
+    if (!bUseRTTI)
+    {
+      PublicDefinitions.AddRange(new string[]
+      {
+        "BOOST_NO_RTTI",
+        "BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY",
+      });
+    }
 
     if (IsWindows)
     {
