@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Carla/Actor/ActorDefinition.h"
+#include "Carla/Actor/ActorDescription.h"
 #include "SensorSpawnerActor.generated.h"
 
 class ASensor;

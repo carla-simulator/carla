@@ -8,6 +8,7 @@
 
 #include "carla/rpc/Metadata.h"
 
+#include <rpc/config.h>
 #include <rpc/client.h>
 
 namespace carla {

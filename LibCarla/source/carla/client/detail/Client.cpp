@@ -24,6 +24,7 @@
 #include "carla/rpc/WalkerControl.h"
 #include "carla/streaming/Client.h"
 
+#include <rpc/config.h>
 #include <rpc/rpc_error.h>
 
 #include <thread>

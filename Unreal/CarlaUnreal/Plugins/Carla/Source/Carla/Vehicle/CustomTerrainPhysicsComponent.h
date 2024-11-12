@@ -25,7 +25,6 @@ THIRD_PARTY_INCLUDES_END
 
 #include <unordered_map>
 #include <vector>
-#include "Misc/ScopeLock.h"
 #include <string>
 
 #include "CustomTerrainPhysicsComponent.generated.h"

@@ -8,6 +8,7 @@
 
 #include "carla/Buffer.h"
 
+#include <rpc/config.h>
 #include <rpc/msgpack.hpp>
 
 namespace carla {

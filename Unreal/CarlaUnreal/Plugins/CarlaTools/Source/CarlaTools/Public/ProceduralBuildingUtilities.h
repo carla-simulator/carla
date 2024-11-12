@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EditorUtilityActor.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "ProceduralBuildingUtilities.generated.h"
 
 class USceneCaptureComponent2D;

@@ -9,6 +9,7 @@
 #include "carla/trafficmanager/Constants.h"
 #include "carla/rpc/Actor.h"
 
+#include <rpc/config.h>
 #include <rpc/client.h>
 
 namespace carla {

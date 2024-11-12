@@ -14,6 +14,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
 
+#include <rpc/config.h>
 #include <rpc/server.h>
 
 #include <future>

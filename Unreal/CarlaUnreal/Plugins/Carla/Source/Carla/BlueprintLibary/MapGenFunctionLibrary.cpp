@@ -14,6 +14,7 @@
 #include "PhysicsEngine/BodySetup.h"
 #include "Engine/StaticMeshActor.h"
 #include "Carla/Actor/LevelActor/InstancedStaticMeshActor.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "UObject/SavePackage.h"
 #if WITH_EDITOR
 #include "Editor/EditorEngine.h"
