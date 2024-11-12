@@ -5,7 +5,9 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "CustomTerrainPhysicsComponent.h"
-#include "Runtime/Core/Public/Async/ParallelFor.h"
+#include "Async/ParallelFor.h"
+#include "Async/Async.h"
+#include "Async/Future.h"
 #include "Engine/CollisionProfile.h"
 #include "Engine/StaticMeshActor.h"
 #include "StaticMeshResources.h"
@@ -18,10 +20,10 @@
 #include "HAL/PlatformFileManager.h"
 #include "HAL/RunnableThread.h"
 #include "Misc/Paths.h"
-#include "Engine/World.h"
 #include "Math/UnrealMathUtility.h"
 #include "Engine/World.h"
 #include "Landscape.h"
+#include "LandscapeProxy.h"
 #include "LandscapeHeightfieldCollisionComponent.h"
 #include "LandscapeComponent.h"
 
@@ -36,23 +38,11 @@
 // #include <carla/pytorch/pytorch.h>
 
 #include "Components/SkinnedMeshComponent.h"
-#include "GenericPlatform/GenericPlatformFile.h"
-#include "Async/Async.h"
-#include "Async/Future.h"
-#include "LandscapeProxy.h"
 #include "UObject/SavePackage.h"
 
-
-#include "Carla/Game/CarlaStatics.h"
-#include "HAL/PlatformFileManager.h"
-#include "HAL/RunnableThread.h"
-#include "Misc/Paths.h"
-#include "Engine/World.h"
-#include "Math/UnrealMathUtility.h"
 #include "GenericPlatform/GenericPlatformFile.h"
 #include "Engine/Texture2D.h"
 #include "Engine/Texture.h"
-#include "Rendering/Texture2DResource.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Components/PrimitiveComponent.h"
 #include "DrawDebugHelpers.h"

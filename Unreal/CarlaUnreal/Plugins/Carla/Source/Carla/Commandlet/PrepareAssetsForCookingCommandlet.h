@@ -6,18 +6,13 @@
 
 #pragma once
 
-#include "Carla/OpenDrive/OpenDriveActor.h"
+#include "UObject/NoExportTypes.h"
 #include "Commandlets/Commandlet.h"
-#include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
-#include "Runtime/Engine/Classes/Engine/StaticMeshActor.h"
-#include "AssetRegistry/AssetRegistryModule.h"
 #include "Materials/MaterialInterface.h"
 #include "PrepareAssetsForCookingCommandlet.generated.h"
 
-// undef this API to avoid conflict with UE 4.26
-// (see UE_4.26\Engine\Source\Runtime\Core\Public\Windows\HideWindowsPlatformAtomics.h)
-#undef InterlockedCompareExchange
-#undef _InterlockedCompareExchange
+class UObjectLibrary;
+class AStaticMeshActor;
 
 /// Struct containing Package with @a Name and @a bOnlyPrepareMaps flag used to
 /// separate the cooking of maps and props across the different stages (Maps

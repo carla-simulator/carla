@@ -5,23 +5,22 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "PrepareAssetsForCookingCommandlet.h"
-
 #include "AssetRegistry/AssetRegistryModule.h"
-
 #include "SSTags.h"
-
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Materials/MaterialInstanceConstant.h"
+#include "UObject/SavePackage.h"
+#include "UObject/Package.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
+#include "Runtime/Engine/Classes/Engine/StaticMeshActor.h"
+#include "HAL/PlatformFileManager.h"
+#include "Misc/FileHelper.h"
 #if WITH_EDITOR
 #include "FileHelpers.h"
 #endif
-#include "Misc/FileHelper.h"
-#include "Serialization/JsonReader.h"
-#include "Serialization/JsonSerializer.h"
-#include "HAL/PlatformFileManager.h"
-#include "UObject/ConstructorHelpers.h"
-#include "Materials/MaterialInstanceConstant.h"
-#include "Carla/MapGen/LargeMapManager.h"
-#include "UObject/SavePackage.h"
-#include "UObject/Package.h"
 
 static bool ValidateStaticMesh(UStaticMesh *Mesh)
 {
