@@ -124,7 +124,8 @@ inline bool CarlaRecorderQuery::CheckFileInfo(std::stringstream& Info)
   Info << "Map: " << TCHAR_TO_UTF8(*RecInfo.Mapfile) << std::endl;
 #ifdef _WIN32
   struct tm Tmp;
-  auto TimeInfo = localtime_s(&RecInfo.Date, &Tmp);
+  localtime_s(&Tmp, &RecInfo.Date);
+  auto TimeInfo = &Tmp;
 #else
   auto TimeInfo = localtime(&RecInfo.Date);
 #endif
