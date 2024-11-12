@@ -5,66 +5,47 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "CustomTerrainPhysicsComponent.h"
+
+#include "Landscape.h"
+#include "LandscapeProxy.h"
+#include "LandscapeComponent.h"
+
+#include "Rendering/Texture2DResource.h"
+
+#include "Engine/Level.h"
+#include "Engine/World.h"
+#include "Engine/Texture.h"
+#include "Engine/Texture2D.h"
+#include "Engine/StaticMeshActor.h"
+#include "Components/PrimitiveComponent.h"
+#include "Components/LineBatchComponent.h"
+
+#include "Math/OrientedBox.h"
+
 #include "Async/ParallelFor.h"
 #include "Async/Async.h"
 #include "Async/Future.h"
-#include "Engine/CollisionProfile.h"
-#include "Engine/StaticMeshActor.h"
-#include "StaticMeshResources.h"
-#include "CollisionQueryParams.h"
-#include "Carla/MapGen/LargeMapManager.h"
-#include "Carla/Game/CarlaStatics.h"
-#include "Carla/MapGen/SoilTypeManager.h"
-#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+
+#include "Misc/CommandLine.h"
+#include "Misc/Paths.h"
+#include "Misc/ScopeLock.h"
+#include "Misc/DateTime.h"
+
+#include "UObject/SavePackage.h"
 
 #include "HAL/PlatformFileManager.h"
 #include "HAL/RunnableThread.h"
-#include "Misc/Paths.h"
-#include "Math/UnrealMathUtility.h"
-#include "Engine/World.h"
-#include "Landscape.h"
-#include "LandscapeProxy.h"
-#include "LandscapeHeightfieldCollisionComponent.h"
-#include "LandscapeComponent.h"
 
-#include "RHICommandList.h"
-#include "TextureResource.h"
-#include "Rendering/Texture2DResource.h"
-#include "GenericPlatform/GenericPlatformProcess.h"
-#include "Materials/MaterialParameterCollection.h"
-#include "Materials/MaterialParameterCollectionInstance.h"
-#include "Materials/MaterialInterface.h"
-#include "Materials/MaterialInstance.h"
-// #include <carla/pytorch/pytorch.h>
-
-#include "Components/SkinnedMeshComponent.h"
-#include "UObject/SavePackage.h"
-
-#include "GenericPlatform/GenericPlatformFile.h"
-#include "Engine/Texture2D.h"
-#include "Engine/Texture.h"
-#include "Engine/TextureRenderTarget2D.h"
-#include "Components/PrimitiveComponent.h"
-#include "DrawDebugHelpers.h"
-#include "Kismet/KismetSystemLibrary.h"
-#include "Misc/CommandLine.h"
-#include "Components/LineBatchComponent.h"
-#include "Math/OrientedBox.h"
-#include "Misc/DateTime.h"
-#include "EngineUtils.h"
-#include <algorithm>
-#include <fstream>
-
-#include <thread>
-#include <chrono>
+#include "Carla/MapGen/LargeMapManager.h"
+#include "Carla/MapGen/SoilTypeManager.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Game/CarlaStatics.h"
 
 #include <compiler/disable-unreal-macros.h>
 #include "carla/rpc/String.h"
 #include <compiler/enable-unreal-macros.h>
 
 #undef CreateDirectory
-
-
 
 constexpr float MToCM = 100.f;
 constexpr float CMToM = 0.01f;

@@ -9,12 +9,9 @@
 #include "Components/ActorComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Engine/StaticMeshActor.h"
-#include "Misc/ScopeLock.h"
 
 #include "Carla/Math/DVector.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
-#include "Engine/TextureRenderTarget2D.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Engine/DataAsset.h"
 #include "Async/Future.h"
 #ifdef WITH_PYTORCH
@@ -24,11 +21,14 @@ THIRD_PARTY_INCLUDES_END
 #endif
 
 #include <unordered_map>
+#include <set>
 #include <vector>
 #include <string>
 
 #include "CustomTerrainPhysicsComponent.generated.h"
 
+class ULevel;
+class ALargeMapManager;
 
 UENUM(BlueprintType)
 enum EDefResolutionType
