@@ -41,7 +41,7 @@ The key factors in preparing a custom vehicle for CARLA lie in rigging the vehic
 
 ## Modeling
 
-Vehicles should have between 50,000 and 100,000 faces. We recommend triangulating the model prior to export as best practice. CARLA vehicles are modeled using the size and scale of real-world vehicles as reference. Please ensure you pay careful attention to the units of your 3D application. Some work in centimeters while others work in meters. 
+We recommend triangulating the model prior to export as best practice. CARLA vehicles are modeled using the size and scale of real-world vehicles as reference. Please ensure you pay careful attention to the units of your 3D application. Some work in centimeters while others work in meters. 
 
 ### Vehicle parts
 
@@ -86,7 +86,7 @@ Firstly add a bone to the center of the vehicle, ensure the object is properly c
 
 ![armature_init](img/tuto_content_authoring_vehicles/maya_vehicle_base.png)
 
-From the vehicle base bone and add 4 more child bones (drag the child bones into the vehicle base in the outliner). Each of these bones needs to be located such that the root of the bone coincides with the centre of the each wheel. 
+From the vehicle base bone and add 4 more child bones (drag the child bones into the vehicle base in the outliner). Each of these bones needs to be located such that the root of the bone coincides with the centre of the each wheel. It should be in the center both of the diameter and depth of the wheel It's important that the vehicle is laterally symmyetric 
 
 For each wheel, it is recommended to name the bone according to the wheel it needs to be coupled to, this will help in identification later when you need to assign vertex groups to each bone:
 
@@ -94,6 +94,15 @@ For each wheel, it is recommended to name the bone according to the wheel it nee
 - Wheel_Front_Right
 - Wheel_Back_Left
 - Wheel_Back_Right
+
+__Doors__: If you want the doors of your vehicle to be opened through the API, you should also add 2 or 4 more bones to the vehicle base bone with the following names:
+
+- Door_Front_Left
+- Door_Front_Right
+- Door_Back_Left
+- Door_Back_Right
+
+The door bones have their bases located at the expected pivot point of the door, i.e. where the hinge would be.
 
 ### Assigning vehicle parts to bones
 
@@ -109,12 +118,13 @@ Select the bone for each wheel, press E to activate the rotation widget, rotate 
 
 ![test_armature](img/tuto_content_authoring_vehicles/check_wheel_turning.png)
 
+If you have added bones for the doors, you do not need to bind the door geometry to these since the door geometry must be exported and then imported into Unreal Engine separately.
+
 ### Export
 
 Each vehicle part should be exported separately, you should have separate geometry objects for the following parts:
 
-- the bodywork/chassis
-- 4 wheels
+- the bodywork/chassis with 4 wheels (including the bones/armature)
 - glass
 - lights
 - 4 doors (optional)
@@ -122,6 +132,8 @@ Each vehicle part should be exported separately, you should have separate geomet
 - raycast mesh
 
 For each part select the object and go to *File > Export selection*. Leave the default export options and select FBX format.
+
+When exporting the bodywork/chassis and wheels, you should select all the mesh items and all the bones before exporting, to ensure the bones are included in the FBX and it is then imported into Unreal Engine as a skeletal mesh. All other parts should be exported individually, with no bones selected, to ensure they are imported as static meshes in Unreal Engine. 
 
 ## Importing into unreal engine
 
@@ -131,25 +143,55 @@ Launch the Unreal Editor from the CARLA root directory using the following comma
 cmake --build Build --target launch
 ```
 
-Open the content browser and create a new folder for your vehicle, for example `Carla > Static > Car > 4Wheeled > MyVehicle`. Note that the chosen directory will affect the semantic label of the vehicle in the semantic camera and LIDAR sensors. If you are modelling a truck, you should create your directory in `Carla > Static > Truck`. Drag all the FBX files you exported from Maya into the new directory in the content browser. Keep the default import options.  
+![regenerate_body](img/tuto_content_authoring_vehicles/vehicle_folder.png)
 
-![regenerate_body](img/tuto_content_authoring_vehicles/drag_into_content_browser.png)
+Open the content browser and create a new folder for your vehicle, for example `Carla > Static > Car > 4Wheeled > TutorialVehicle`. Note that the chosen directory will affect the semantic label of the vehicle in the semantic camera and LIDAR sensors. For example, if you are importing a truck model, you should create your directory in `Carla > Static > Truck`. 
 
-Open the *Skeleton* file of the vehicle and switch to the skeleton edit mode. Select *File > Save As* to save a *SkeletalMesh* file, which you will need later.
+Drag the FBX containing the vehicle's chassis, bodywork, wheels and bones/armature into the content browser. If you have set up bones for the doors, you may get a warning message that the door bones are missing from the bind pose. This is expected, since the doors are imported and assigned separately. You may disregard this warning.
 
-![regenerate_body](img/tuto_content_authoring_vehicles/drag_into_content_browser.png)
+The importer should create a *Physics Asset* and a *Skeleton*. Select the skeletal mesh edit mode with the option highlighted in red:
+
+![regenerate_body](img/tuto_content_authoring_vehicles/save_skeletal_mesh.png)
+
+Select *File > Save As* to save a *Skeletal Mesh* file, which you will need later. You may want to add a prefix of *SK_* to identify the file as a skeletal mesh. 
+
+Drag the other FBX files you exported from Maya or Blender into the new directory in the content browser. Keep the default import options. To keep the folder more organized, you may want to add seperate folders for the glass and lights meshes and drag those parts in separately. These parts should all be imported as *Static Mesh* items. If they appear as a *Skeleton* item, you may need to revise your export process in Maya or Blender and ensure you haven't accidentally included bones or other types of object in the export. You may want to add a prefix of *SM_* to any *Static Mesh* items you import for organization.
+
+![regenerate_body](img/tuto_content_authoring_vehicles/imported_vehicle.png)
 
 ### Setting up the physics asset
 
-You should have a *Physics Asset* file in the directory which was created on import. Double click on the physics asset to open the editor. Select the default cuboid collision mesh and delete it, then right click on the *VehicleBase* in the *SkeletonTree* panel and select *Copy Collision From StaticMesh*. Search for the collision mesh that you imported in the dialogue and select it. You should see the outline of the collision mesh in the viewport with a blue hue. 
+You should have a *Physics Asset* file in the directory which was created on import. Double click on the physics asset to open the editor.
 
-![regenerate_body](img/tuto_content_authoring_vehicles/phys_asset_collision.png)
+#### Collision mesh
 
-- Select all the wheels:
-	- Go to the *Tools* panel and change the *Primitive Type* to *Sphere*.
-	- Go to the *Details* panel and change *Physics Type* to *Kinematic*.
-	- Set the *Collision Response* to *Disabled*.
-	- Set *Linear Damping* to 0. This will eliminate any extra friction on the wheels.
+__Automatically generated collision mesh__: First, we need to define the collision mesh. This can either be generated automatically by Unreal Engine or modelled manually. To generate it automatically, in the *Tools* panel, normally in the lower right corner of the *Physics asset* editor, in the *Body Creation* section, change the *Primitive Type* to *Single Convex Hull* then press *Generate All Bodies*. This will generate a single convex hull that covers most of the vehicle's body. If your vehicle is a more complicated shape, this might not capture the shape too well. In this case you can try selecting *Multi Convex Hull* as the *Primitive Type*. Press *Generate All Bodies* again and inspect the result. You may also wish to try other options like *Box*, *Capsule* or *Sphere* for the primitive type, these may suit vehicles with simpler geometric profiles. 
+
+![regenerate_body](img/tuto_content_authoring_vehicles/single_convex_hull.png) 
+
+__Modelled collision mesh__: If the built in or automated collision primitives work, you may want to manually model the collision hull. It should be a low poly analogue of the surface profile of your vehicle. High poly collision meshes may degrade physics performance. Generally for vehicles it's best not to inlude the wheel profile in the collision mesh.
+
+![regenerate_body](img/tuto_content_authoring_vehicles/collision_mesh.png) 
+
+To use the manually modelled colision mesh, first import it by dragging it into the vehicle's content folder. Right click on the *Vehicle_Base* item in the *Skeleton Tree* panel of the *Physics Asset* editor and select *Copy Collision From StaticMesh*. 
+
+![regenerate_body](img/tuto_content_authoring_vehicles/copy_collision.png)
+
+Search for the collision mesh that you imported in the dialogue and select it. You should see the outline of the collision mesh in the viewport with a blue/purple hue. In the viewport, select and delete all parts of the automatically generated collision mesh was already there, to leave just the modelled collision mesh.
+
+![regenerate_body](img/tuto_content_authoring_vehicles/modelled_collision_mesh.png)
+
+__Wheels__:
+
+After setting up the collision mesh for the vehicle itself, now we need to configure the collision primitives for the wheels.
+
+Select all the wheels in the *Skeleton Tree* panel:
+
+- Go to the *Tools* panel and change the *Primitive Type* to *Sphere*.
+- Go to the *Details* panel and change *Physics Type* to *Kinematic*.
+- Set the *Collision Response* to *Disabled*.
+- Set *Linear Damping* to 0. This will eliminate any extra friction on the wheels.
+
 
 - Enable *Simulation Generates Hit Event* for all meshes.
 - Click *Re-generate Bodies*.
@@ -158,9 +200,9 @@ You should have a *Physics Asset* file in the directory which was created on imp
 
 ### Creating the animation blueprint
 
-In the content browser directory where you have your new vehicle asset, right click and choose `Animation > Animation Blueprint`. In the popup that opens, search for `VehicleAnimationInstance` for the *Parent Class* and in the *Specific Skeleton* field search for the *Skeletal Mesh* of your vehicle. Name the blueprint and then click *Create*.
+In the content browser directory where you have your new vehicle asset, right click in an empty space and choose `Animation > Animation Blueprint` from the context menu. In the popup that opens, search for `VehicleAnimationInstance` for the *Parent Class* and in the *Specific Skeleton* field search for the *Skeleton* file created for your new vehicle. Name the blueprint and then click *Create*.
 
-![animation_blueprint](img/tuto_content_authoring_vehicles/animation_bp.png)
+<img src="../img/tuto_content_authoring_vehicles/animation_bp.png" alt= “synkrotron_logo” style="display: block; margin-left: auto; margin-right: auto; width: 50%;">
 
 In the content browser search for an existing, completed CARLA vehicle animation blueprint from the library, open the animation blueprint and copy the nodes from it. Go back to your vehicle's animation blueprint and paste the nodes.
 
@@ -208,7 +250,8 @@ Click on the mesh in the component's panel:
 ### Vehicle movement component configuration
 
 - Open the VehicleMovementComponent in the details panel
-- Fill the *Wheel setups* variable with the Chaos vehicle wheels and respective bone names
+- Create 4 new wheels by pressing the plus icon in the *Wheel setups* row
+- Fill the *Wheel setups* variable with the Chaos vehicle wheels and respective bone names for each of the wheels
 
 ![vehicle_wheel_setups](img/tuto_content_authoring_vehicles/vehicle_wheel_setups.png)
 
