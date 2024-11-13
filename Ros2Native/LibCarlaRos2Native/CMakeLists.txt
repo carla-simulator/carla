@@ -51,7 +51,7 @@ target_compile_definitions (
 )
 
 target_link_libraries (
-  carla-ros2-native PUBLIC SYSTEM
+  carla-ros2-native PUBLIC
   ${CMAKE_INSTALL_PREFIX}/lib/libfastrtps.so
 )
 
