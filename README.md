@@ -92,14 +92,14 @@ Linux:
 
 ```sh
 cd CarlaUE5
-./Setup.sh
+./CarlaSetup.sh
 ```
 
 Windows:
 
 ```sh
 cd CarlaUE5
-Setup.bat
+CarlaSetup.bat
 ```
 
 This will download and install Unreal Engine 5.5, install the prerequisite requirements and build and launch CARLA. It may take some time to complete and use a significant amount of disk space. For further instructions on building in Linux can be found [here][buildlinuxlink] and the instructions for building in Windows can be found [here][buildwindowslink].
