@@ -259,6 +259,10 @@ namespace detail {
       _client.SetWeatherParameters(weather);
     }
 
+    bool IsWeatherEnabled() {
+      return _client.IsWeatherEnabled();
+    }
+
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
