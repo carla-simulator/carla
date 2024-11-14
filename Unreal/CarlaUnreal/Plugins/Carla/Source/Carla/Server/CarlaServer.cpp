@@ -691,6 +691,7 @@ void FCarlaServer::FPimpl::BindActions()
     auto *Weather = Episode->GetWeather();
     if (Weather == nullptr)
     {
+      UE_LOG(LogCarla, Log, TEXT("internal error: unable to find weather:: weather is disabled"));
       return cr::WeatherParameters();
     }
     return Weather->GetCurrentWeather();
