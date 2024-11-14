@@ -1,11 +1,11 @@
 CARLA Simulator
 ===============
 
-[![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io)
+[![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](https://carla-ue5.readthedocs.io)
 
 [![carla.org](Docs/img/btn/web.png)](http://carla.org)
 [![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/blob/master/Docs/download.md)
-[![documentation](Docs/img/btn/docs.png)](http://carla.readthedocs.io)
+[![documentation](Docs/img/btn/docs.png)](https://carla-ue5.readthedocs.io)
 [![forum](Docs/img/btn/forum.png)](https://github.com/carla-simulator/carla/discussions)
 [![discord](Docs/img/btn/chat.png)](https://discord.gg/8kqACuC)
 
@@ -31,14 +31,14 @@ environmental conditions.
 
 ## Documentation
 
-The [CARLA documentation](https://carla.readthedocs.io/en/latest/) is hosted on ReadTheDocs. Please see the following key links:
+The [CARLA documentation](https://carla-ue5.readthedocs.io/en/latest/) is hosted on ReadTheDocs. Please see the following key links:
 
-- [Building on Linux](https://carla.readthedocs.io/en/latest/build_linux/)
-- [Building on Windows](https://carla.readthedocs.io/en/latest/build_windows/)
-- [First steps](https://carla.readthedocs.io/en/latest/tuto_first_steps/)
-- [CARLA asset catalogue](https://carla.readthedocs.io/en/latest/catalogue/)
-- [Python API reference](https://carla.readthedocs.io/en/latest/python_api/)
-- [Blueprint library](https://carla.readthedocs.io/en/latest/bp_library/)
+- [Building on Linux](https://carla-ue5.readthedocs.io/en/latest/build_linux/)
+- [Building on Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows/)
+- [First steps](https://carla-ue5.readthedocs.io/en/latest/tuto_first_steps/)
+- [CARLA asset catalogue](https://carla-ue5.readthedocs.io/en/latest/catalogue/)
+- [Python API reference](https://carla-ue5.readthedocs.io/en/latest/python_api/)
+- [Blueprint library](https://carla-ue5.readthedocs.io/en/latest/bp_library/)
 
 ## CARLA Ecosystem
 Repositories associated with the CARLA simulation platform:
@@ -104,21 +104,21 @@ CarlaSetup.bat
 
 This will download and install Unreal Engine 5.5, install the prerequisite requirements and build and launch CARLA. It may take some time to complete and use a significant amount of disk space. For further instructions on building in Linux can be found [here][buildlinuxlink] and the instructions for building in Windows can be found [here][buildwindowslink].
 
-[buildlinuxlink]: https://carla.readthedocs.io/en/latest/build_linux_ue5/
-[buildwindowslink]: https://carla.readthedocs.io/en/latest/build_windows_ue5/
+[buildlinuxlink]: https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/
+[buildwindowslink]: https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/
 
 Contributing
 ------------
 
 Please take a look at our [Contribution guidelines][contriblink].
 
-[contriblink]: https://carla.readthedocs.io/en/latest/cont_contribution_guidelines/
+[contriblink]: https://carla-ue5.readthedocs.io/en/latest/cont_contribution_guidelines/
 
 F.A.Q.
 ------
 
 If you run into problems, check our
-[FAQ](https://carla.readthedocs.io/en/latest/build_faq/).
+[FAQ](https://carla-ue5.readthedocs.io/en/latest/build_faq/).
 
 Licenses
 -------
