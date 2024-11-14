@@ -20,7 +20,7 @@ Run the setup script:
 
 ```sh
 cd CarlaUE5
-bash -x Setup.sh
+bash -x CarlaSetup.sh
 ```
 
 The Setup.sh script installs all the required packages, including Cmake, debian packages, Python packages and Unreal Engine 5.3. It also downloads the CARLA content and builds CARLA. This script can therefore take a long time to complete. 

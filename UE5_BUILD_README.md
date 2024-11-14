@@ -22,7 +22,7 @@ Run the setup script with your GitHub credentials:
 
 ```sh
 cd CarlaUE5
-env GIT_LOCAL_CREDENTIALS=your_user@your_token bash -x Setup.sh
+env GIT_LOCAL_CREDENTIALS=your_user@your_token bash -x CarlaSetup.sh
 ```
 
 The Setup.sh script installs all the required packages, including Cmake, debian packages, Python packages and Unreal Engine 5.3. It also downloads the CARLA content and builds CARLA. This script can therefore take a long time to complete. 
@@ -108,7 +108,7 @@ Run the setup script:
 
 ```sh
 cd CarlaUE5
-Setup.bat
+CarlaSetup.bat
 ```
 
 The Setup.bat script installs all the required packages, including Visual Studio 2022, Cmake, Python packages and Unreal Engine 5. It also downloads the CARLA content and builds CARLA. This batch file can therefore take a long time to complete. 
