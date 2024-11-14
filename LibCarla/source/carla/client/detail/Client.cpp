@@ -284,8 +284,7 @@ namespace detail {
   }
 
   bool Client::IsWeatherEnabled() {
-    return false;
-    //return _pimpl->CallAndWait<bool>("is_weather_enabled");
+    return _pimpl->CallAndWait<bool>("is_weather_enabled");
   }
 
   std::vector<rpc::Actor> Client::GetActorsById(

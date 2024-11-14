@@ -312,7 +312,7 @@ void export_world() {
     .def("apply_settings", &ApplySettings, (arg("settings"), arg("seconds")=0.0))
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
     .def("set_weather", &cc::World::SetWeather)
-    .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, IsWeatherEnabled))
+    .def("is_weather_enabled", CONST_CALL_WITHOUT_GIL(cc::World, IsWeatherEnabled))
     .def("get_snapshot", &cc::World::GetSnapshot)
     .def("get_actor", CONST_CALL_WITHOUT_GIL_1(cc::World, GetActor, carla::ActorId), (arg("actor_id")))
     .def("get_actors", CONST_CALL_WITHOUT_GIL(cc::World, GetActors))
