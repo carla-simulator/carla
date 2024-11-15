@@ -6,8 +6,11 @@
 
 #pragma once
 
-#include "GameFramework/Actor.h"
 #include "SpringBasedVegetationComponent.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "GameFramework/Actor.h"
+#include <util/ue-header-guard-end.h>
 
 #include "BaseVegetationActor.generated.h"
 

@@ -12,8 +12,10 @@
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Traffic/TrafficLightState.h"
 
+#include <util/disable-ue4-macros.h>
 #include "carla/rpc/ActorState.h"
 #include "carla/rpc/AttachmentType.h"
+#include <util/enable-ue4-macros.h>
 
 #include "Carla/Server/CarlaServerResponse.h"
 

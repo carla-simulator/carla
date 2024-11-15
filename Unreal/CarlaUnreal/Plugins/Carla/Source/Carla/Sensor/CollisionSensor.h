@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Sensor/Sensor.h"
+#include "Carla/Actor/ActorDefinition.h"
 
 #include "CollisionSensor.generated.h"
 

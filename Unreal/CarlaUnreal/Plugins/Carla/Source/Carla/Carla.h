@@ -4,13 +4,15 @@
 // plugin.
 #pragma once
 
+#include "Carla/Util/NonCopyable.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Logging/LogMacros.h"
-#include "Util/NonCopyable.h"
 #include "Modules/ModuleInterface.h"
 #include "Stats/Stats.h"
 #include "EngineMinimal.h"
 #include "CoreMinimal.h"
+#include <util/ue-header-guard-end.h>
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCarla, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(LogCarlaServer, Log, All);

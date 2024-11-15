@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "Misc/ConfigCacheIni.h"
+#include <util/ue-header-guard-end.h>
 
 #include <limits>
 

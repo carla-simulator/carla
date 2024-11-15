@@ -8,7 +8,7 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Vehicle/CarlaWheeledVehicle.h"
-#include "Vehicle/WheeledVehicleAIController.h"
+#include "Carla/Vehicle/WheeledVehicleAIController.h"
 
 // =============================================================================
 // -- Static local methods -----------------------------------------------------

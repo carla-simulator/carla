@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "ActorData.h"
+#include "Carla/Actor/ActorData.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Traffic/SignComponent.h"
@@ -13,11 +13,14 @@
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
 #include "Carla/Sensor/Sensor.h"
 #include "CarlaActor.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "GameFramework/CharacterMovementComponent.h"
+#include <util/ue-header-guard-end.h>
 
 AActor* FActorData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& Info)
 {

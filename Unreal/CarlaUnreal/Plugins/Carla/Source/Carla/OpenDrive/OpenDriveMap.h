@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/road/Map.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
 #include "OpenDriveMap.generated.h"
 

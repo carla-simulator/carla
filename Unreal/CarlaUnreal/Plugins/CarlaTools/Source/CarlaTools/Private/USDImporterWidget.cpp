@@ -1,10 +1,16 @@
 // Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "USDImporterWidget.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "CarlaTools.h"
+
 #ifdef WITH_OMNIVERSE
   #include "USDCARLAInterface.h"
 #endif
+
+#include <util/ue-header-guard-begin.h>
 #include "Kismet/GameplayStatics.h"
+#include "MeshMerge/MeshMergingSettings.h"
 #include "Modules/ModuleManager.h"
 #include "IMeshMergeUtilities.h"
 #include "MeshMergeModule.h"
@@ -17,8 +23,6 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "PackageHelperFunctions.h"
 #include "EditorAssetLibrary.h"
-#include <unordered_map>
-#include <string>
 #include "Components/LightComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/SpotLightComponent.h"
@@ -28,10 +32,12 @@
 #include "Factories/BlueprintFactory.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "BlueprintEditor.h"
-#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "PhysicsEngine/SkeletalBodySetup.h"
 #include "UObject/SavePackage.h"
+#include <util/ue-header-guard-end.h>
 
+#include <unordered_map>
+#include <string>
 
 void UUSDImporterWidget::ImportUSDProp(
     const FString& USDPath, const FString& DestinationAssetPath, bool bAsBlueprint)

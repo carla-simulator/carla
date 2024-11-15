@@ -7,14 +7,17 @@
 #include "Carla/Sensor/Radar.h"
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
-#include "Kismet/KismetMathLibrary.h"
-#include "Runtime/Core/Public/Async/ParallelFor.h"
-#include "PhysicsEngine/PhysicsObjectExternalInterface.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/geom/Math.h>
 #include <carla/ros2/ROS2.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "Kismet/KismetMathLibrary.h"
+#include "Async/ParallelFor.h"
+#include "PhysicsEngine/PhysicsObjectExternalInterface.h"
+#include <util/ue-header-guard-end.h>
 
 FActorDefinition ARadar::GetSensorDefinition()
 {

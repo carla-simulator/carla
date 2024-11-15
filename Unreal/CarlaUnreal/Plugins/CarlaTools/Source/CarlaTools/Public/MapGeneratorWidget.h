@@ -6,13 +6,14 @@
 
 #pragma once 
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
-
 #include "EditorUtilityWidget.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "ProceduralFoliageSpawner.h"
 #include "RegionOfInterest.h"
 #include <Containers/UnrealString.h>
+#include <util/ue-header-guard-end.h>
 
 #include "MapGeneratorWidget.generated.h"
 

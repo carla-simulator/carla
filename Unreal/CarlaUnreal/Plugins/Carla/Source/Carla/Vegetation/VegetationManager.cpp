@@ -5,11 +5,14 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla/Vegetation/VegetationManager.h"
-#include "ProceduralFoliageVolume.h"
-#include "ProceduralFoliageComponent.h"
 #include "Carla/Vegetation/SpringBasedVegetationComponent.h"
 #include "Carla/Game/CarlaStatics.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "ProceduralFoliageVolume.h"
+#include "ProceduralFoliageComponent.h"
 #include "Engine/Level.h"
+#include <util/ue-header-guard-end.h>
 
 
 

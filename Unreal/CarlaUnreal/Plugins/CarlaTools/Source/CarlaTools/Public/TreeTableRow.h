@@ -2,8 +2,11 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
+#include <util/ue-header-guard-end.h>
+
 #include "TreeTableRow.generated.h"
 
 /**

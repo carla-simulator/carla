@@ -7,12 +7,14 @@
 #include "Carla/Actor/Factory/VehicleActorFactory.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Actor/ActorDefinition.h"
-
 #include "Carla/Game/CarlaEpisode.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Json.h"
 #include "JsonUtilities.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include <util/ue-header-guard-end.h>
 
 TArray<FActorDefinition> AVehicleActorFactory::GetDefinitions()
 {

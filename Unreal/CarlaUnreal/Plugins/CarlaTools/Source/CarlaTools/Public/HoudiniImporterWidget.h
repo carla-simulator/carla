@@ -6,11 +6,14 @@
 
 #pragma once
 
+#include "Carla/MapGen/LargeMapManager.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "EditorUtilityWidget.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "Engine/LevelStreaming.h"
+#include <util/ue-header-guard-end.h>
 
 #include "HoudiniImporterWidget.generated.h"
 

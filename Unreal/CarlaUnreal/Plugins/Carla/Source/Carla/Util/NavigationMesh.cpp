@@ -6,7 +6,10 @@
 
 #include "Carla/Util/NavigationMesh.h"
 #include "Carla.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Misc/FileHelper.h"
+#include <util/ue-header-guard-end.h>
 
 TArray<uint8> FNavigationMesh::Load(FString MapName)
 {

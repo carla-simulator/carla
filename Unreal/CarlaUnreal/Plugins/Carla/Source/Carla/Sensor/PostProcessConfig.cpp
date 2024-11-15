@@ -1,6 +1,8 @@
 #include "PostProcessConfig.h"
+#include <util/ue-header-guard-begin.h>
 #include "Components/SceneCaptureComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include <util/ue-header-guard-end.h>
 
 void FPostProcessConfig::EnablePostProcessingEffects()
 {

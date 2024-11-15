@@ -5,12 +5,14 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "CarlaHUD.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Engine/Engine.h"
 #include "Engine/Canvas.h"
 #include "CanvasItem.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
-
 #include "GameFramework/PlayerController.h"
+#include <util/ue-header-guard-end.h>
 
 void ACarlaHUD::DrawHUD()
 {

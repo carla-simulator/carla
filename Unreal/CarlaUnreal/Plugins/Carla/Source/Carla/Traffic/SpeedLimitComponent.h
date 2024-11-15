@@ -6,8 +6,12 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "SignComponent.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "CoreMinimal.h"
+#include <util/ue-header-guard-end.h>
+
 #include "SpeedLimitComponent.generated.h"
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

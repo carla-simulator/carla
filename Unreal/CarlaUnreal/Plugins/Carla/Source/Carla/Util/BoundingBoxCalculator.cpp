@@ -11,14 +11,15 @@
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Traffic/TrafficLightBase.h"
-#include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/ObjectLabel.h>
-#include <compiler/enable-ue4-macros.h>
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
 #include "Components/BoxComponent.h"
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "Engine/SkeletalMeshSocket.h"
+
+#include <util/disable-ue4-macros.h>
+#include <carla/rpc/ObjectLabel.h>
+#include <util/enable-ue4-macros.h>
 
 namespace crp = carla::rpc;
 

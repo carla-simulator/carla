@@ -5,7 +5,10 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "VehicleVelocityControl.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Kismet/KismetMathLibrary.h"
+#include <util/ue-header-guard-end.h>
 
 UVehicleVelocityControl::UVehicleVelocityControl()
 {

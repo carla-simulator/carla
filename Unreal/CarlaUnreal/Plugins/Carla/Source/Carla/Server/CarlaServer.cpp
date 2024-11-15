@@ -8,7 +8,6 @@
 #include "Carla.h"
 #include "Carla/Server/CarlaServerResponse.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
-#include "EngineUtils.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Util/NavigationMesh.h"
@@ -16,7 +15,6 @@
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
@@ -25,8 +23,8 @@
 #include "Carla/Actor/ActorData.h"
 #include "CarlaServerResponse.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
-#include "Misc/FileHelper.h"
-#include <compiler/disable-ue4-macros.h>
+
+#include <util/disable-ue4-macros.h>
 #include <carla/Functional.h>
 #include <carla/multigpu/router.h>
 #include <carla/Version.h>
@@ -65,7 +63,13 @@
 #include <carla/streaming/detail/Types.h>
 #include <carla/rpc/Texture.h>
 #include <carla/rpc/MaterialParameter.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "EngineUtils.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Misc/FileHelper.h"
+#include <util/ue-header-guard-end.h>
 
 #include <vector>
 #include <atomic>

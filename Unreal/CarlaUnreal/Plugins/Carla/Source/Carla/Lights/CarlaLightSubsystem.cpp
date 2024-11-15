@@ -6,7 +6,10 @@
 
 #include "CarlaLightSubsystem.h"
 #include "Carla/Weather/Weather.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Kismet/GameplayStatics.h"
+#include <util/ue-header-guard-end.h>
 
 //using cr = carla::rpc;
 

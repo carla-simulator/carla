@@ -6,13 +6,17 @@
 
 #include "CityMapMeshHolder.h"
 #include "Carla.h"
+#include "Settings/CarlaSettings.h"
+#include "Game/CarlaGameInstance.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Engine/StaticMeshActor.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/Level.h"
 #include "Components/InstancedStaticMeshComponent.h"
-#include "Settings/CarlaSettings.h"
-#include "Game/CarlaGameInstance.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include <util/ue-header-guard-end.h>
+
 #include <vector>
 
 

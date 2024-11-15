@@ -6,16 +6,19 @@
 
 #pragma once
 
-#include <vector>
-
-#include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/LightState.h>
-#include <compiler/enable-ue4-macros.h>
-
 #include "Carla.h"
-#include "CoreMinimal.h"
 #include "CarlaLight.h"
+
+#include <util/disable-ue4-macros.h>
+#include <carla/rpc/LightState.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
+#include <util/ue-header-guard-end.h>
+
+#include <vector>
 
 #include "CarlaLightSubsystem.generated.h"
 

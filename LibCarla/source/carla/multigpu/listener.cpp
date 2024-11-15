@@ -7,9 +7,9 @@
 #include "carla/multigpu/listener.h"
 #include "carla/multigpu/primary.h"
 
-#include <boost/asio/post.hpp>
-
 #include "carla/Logging.h"
+
+#include <boost/asio/post.hpp>
 
 #include <memory>
 

@@ -6,9 +6,11 @@
 
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla.h"
-#include "Game/CarlaGameInstance.h"
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Settings/CarlaSettings.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "Game/CarlaGameInstance.h"
 #include "Async/Async.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/DirectionalLight.h"
@@ -22,7 +24,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Landscape.h"
 #include "Scalability.h"
-
+#include <util/ue-header-guard-end.h>
 
 static constexpr float CARLA_SETTINGS_MAX_SCALE_SIZE = 50.0f;
 

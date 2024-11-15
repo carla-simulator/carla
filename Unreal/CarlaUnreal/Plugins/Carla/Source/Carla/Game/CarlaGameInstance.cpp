@@ -6,7 +6,6 @@
 
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla.h"
-
 #include "Carla/Settings/CarlaSettings.h"
 
 UCarlaGameInstance::UCarlaGameInstance() {

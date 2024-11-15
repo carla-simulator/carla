@@ -5,9 +5,12 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "EditorCamera.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "UnrealClient.h"
 #include "Editor/EditorEngine.h"
 #include "EditorViewportClient.h"
+#include <util/ue-header-guard-end.h>
 
 void AEditorCameraUtils::Get()
 {

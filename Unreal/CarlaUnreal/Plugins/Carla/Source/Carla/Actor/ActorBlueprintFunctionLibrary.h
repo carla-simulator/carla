@@ -15,7 +15,9 @@
 #include "Carla/Sensor/Radar.h"
 #include "Carla/Sensor/InertialMeasurementUnit.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include <util/ue-header-guard-end.h>
 
 #include "ActorBlueprintFunctionLibrary.generated.h"
 

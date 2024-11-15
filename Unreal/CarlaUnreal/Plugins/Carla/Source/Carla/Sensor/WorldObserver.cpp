@@ -17,12 +17,16 @@
 #include "Carla/Traffic/TrafficSignBase.h"
 #include "Carla/Traffic/SignComponent.h"
 #include "Carla/Walker/WalkerController.h"
-#include "CoreGlobals.h"
-#include <compiler/disable-ue4-macros.h>
+
+#include <util/disable-ue4-macros.h>
 #include <carla/rpc/String.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <carla/sensor/data/ActorDynamicState.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "CoreGlobals.h"
+#include <util/ue-header-guard-end.h>
 
 static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRegistry &Registry)
 {

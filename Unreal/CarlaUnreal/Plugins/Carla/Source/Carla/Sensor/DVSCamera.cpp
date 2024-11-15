@@ -7,13 +7,16 @@
 #include "Carla/Sensor/DVSCamera.h"
 #include "Carla.h"
 #include "Carla/Util/RandomEngine.h"
-#include "Actor/ActorBlueprintFunctionLibrary.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include "carla/ros2/ROS2.h"
 #include <carla/Buffer.h>
 #include <carla/BufferView.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "Actor/ActorBlueprintFunctionLibrary.h"
+#include <util/ue-header-guard-end.h>
 
 #include <random>
 #include <cmath>

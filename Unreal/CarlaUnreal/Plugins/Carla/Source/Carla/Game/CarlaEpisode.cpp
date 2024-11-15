@@ -7,12 +7,6 @@
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
-
-#include <compiler/disable-ue4-macros.h>
-#include <carla/opendrive/OpenDriveParser.h>
-#include <carla/rpc/String.h>
-#include <compiler/enable-ue4-macros.h>
-
 #include "Carla/Sensor/Sensor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Util/RandomEngine.h"
@@ -21,6 +15,12 @@
 #include "Carla/Game/CarlaStaticDelegates.h"
 #include "Carla/MapGen/LargeMapManager.h"
 
+#include <util/disable-ue4-macros.h>
+#include <carla/opendrive/OpenDriveParser.h>
+#include <carla/rpc/String.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
 #include "Engine/StaticMeshActor.h"
 #include "EngineUtils.h"
 #include "GameFramework/SpectatorPawn.h"
@@ -30,6 +30,7 @@
 #include "Materials/MaterialParameterCollectionInstance.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include <util/ue-header-guard-end.h>
 
 constexpr TCHAR DefaultRecastBuilderPath[] = TEXT(RECASTBUILDER_PATH);
 

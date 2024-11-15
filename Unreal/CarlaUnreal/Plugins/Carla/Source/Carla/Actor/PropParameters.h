@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "Engine/StaticMesh.h"
+#include <util/ue-header-guard-end.h>
 
 #include "PropParameters.generated.h"
 

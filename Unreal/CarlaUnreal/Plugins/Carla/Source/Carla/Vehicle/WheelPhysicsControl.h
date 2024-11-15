@@ -5,7 +5,11 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
+
+#include <util/ue-header-guard-begin.h>
 #include "ChaosVehicleWheel.h"
+#include <util/ue-header-guard-end.h>
+
 #include "WheelPhysicsControl.generated.h"
 
 USTRUCT(BlueprintType)

@@ -6,7 +6,6 @@
 
 #include "Carla/Game/CarlaEngine.h"
 #include "Carla.h"
-
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
 #include "Carla/Game/CarlaStatics.h"
@@ -14,12 +13,9 @@
 #include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Settings/CarlaSettings.h"
 #include "Carla/Settings/EpisodeSettings.h"
-
-#include "Runtime/Core/Public/Misc/App.h"
-#include "PhysicsEngine/PhysicsSettings.h"
 #include "Carla/MapGen/LargeMapManager.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/Logging.h>
 #include <carla/multigpu/primaryCommands.h>
 #include <carla/multigpu/commands.h>
@@ -28,7 +24,12 @@
 #include <carla/ros2/ROS2.h>
 #include <carla/streaming/EndPoint.h>
 #include <carla/streaming/Server.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "Misc/App.h"
+#include "PhysicsEngine/PhysicsSettings.h"
+#include <util/ue-header-guard-end.h>
 
 #include <thread>
 

@@ -16,6 +16,68 @@ carla_two_step_configure_file (
   ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in
 )
 
+if (WIN32)
+
+  file (
+    STRINGS
+    ${LIBCARLA_SOURCE_PATH}/util/winnt-macros.txt
+    WINDOWS_MACRO_LIST
+  )
+
+  set (
+    GUARD_BEGIN_FILE_TEXT
+    ""
+  )
+
+  set (
+    GUARD_END_FILE_TEXT
+    ""
+  )
+
+  foreach (WINDOWS_MACRO ${WINDOWS_MACRO_LIST})
+    string (
+      APPEND
+      GUARD_BEGIN_FILE_TEXT
+      "#pragma push_macro(\"${WINDOWS_MACRO}\")\n"
+      "#undef ${WINDOWS_MACRO}\n"
+    )
+    string (
+      APPEND
+      GUARD_END_FILE_TEXT
+      "#pragma pop_macro(\"${WINDOWS_MACRO}\")\n"
+    )
+  endforeach ()
+
+  file (
+    WRITE
+    ${LIBCARLA_SOURCE_PATH}/util/ue-header-guard-begin.h
+    ${GUARD_BEGIN_FILE_TEXT}
+  )
+
+  file (
+    WRITE
+    ${LIBCARLA_SOURCE_PATH}/util/ue-header-guard-end.h
+    ${GUARD_END_FILE_TEXT}
+  )
+
+else ()
+
+  file (
+    WRITE
+    ${LIBCARLA_SOURCE_PATH}/util/ue-header-guard-begin.h
+    ""
+  )
+
+  file (
+    WRITE
+    ${LIBCARLA_SOURCE_PATH}/util/ue-header-guard-end.h
+    ""
+  )
+
+endif ()
+
+
+
 if (BUILD_CARLA_SERVER)
 
   file (
@@ -78,9 +140,15 @@ if (BUILD_CARLA_SERVER)
     ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/*.h
     ${LIBCARLA_SOURCE_PATH}/carla/streaming/low_level/*.h
     ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.h
-    ${LIBCARLA_SOURCE_PATH}/compiler/*.h
+    ${LIBCARLA_SOURCE_PATH}/util/*.h
   )
   
+  list (
+    APPEND
+    LIBCARLA_SERVER_HEADERS
+    ${LIBCARLA_SOURCE_PATH}/util/winnt-macros.txt
+  )
+
   if (ENABLE_ROS2)
     file (
       GLOB
@@ -182,7 +250,13 @@ if (BUILD_CARLA_CLIENT)
     ${LIBCARLA_SOURCE_PATH}/carla/streaming/low_level/*.h
     ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.h
     ${LIBCARLA_SOURCE_PATH}/carla/trafficmanager/*.h
-    ${LIBCARLA_SOURCE_PATH}/compiler/*.h
+    ${LIBCARLA_SOURCE_PATH}/util/*.h
+  )
+
+  list (
+    APPEND
+    LIBCARLA_CLIENT_HEADERS
+    ${LIBCARLA_SOURCE_PATH}/util/winnt-macros.txt
   )
 
   if (ENABLE_RSS)

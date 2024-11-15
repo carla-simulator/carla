@@ -6,9 +6,13 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "SignComponent.h"
 #include "Carla/Vehicle/WheeledVehicleAIController.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "CoreMinimal.h"
+#include <util/ue-header-guard-end.h>
+
 #include "StopSignComponent.generated.h"
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

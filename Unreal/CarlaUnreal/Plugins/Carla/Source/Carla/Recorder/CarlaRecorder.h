@@ -10,7 +10,6 @@
 #include <fstream>
 
 #include "Carla/Actor/ActorDescription.h"
-
 #include "CarlaRecorderTraficLightTime.h"
 #include "CarlaRecorderPhysicsControl.h"
 #include "CarlaRecorderPlatformTime.h"

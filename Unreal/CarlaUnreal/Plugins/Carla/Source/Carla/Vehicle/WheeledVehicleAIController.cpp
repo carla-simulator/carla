@@ -4,16 +4,19 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "WheeledVehicleAIController.h"
+#include "Carla/Vehicle/WheeledVehicleAIController.h"
 #include "Carla.h"
-#include "MapGen/RoadMap.h"
-#include "Traffic/RoutePlanner.h"
-#include "Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/MapGen/RoadMap.h"
+#include "Carla/Traffic/RoutePlanner.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/CityMapGenerator.h"
 #include "Carla/Util/RandomEngine.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
 #include "ChaosWheeledVehicleMovementComponent.h"
+#include <util/ue-header-guard-end.h>
 
 // =============================================================================
 // -- Static local methods -----------------------------------------------------

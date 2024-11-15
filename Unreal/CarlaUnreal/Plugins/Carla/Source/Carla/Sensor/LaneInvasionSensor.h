@@ -6,9 +6,7 @@
 #pragma once
 
 #include "Carla/Sensor/ShaderBasedSensor.h"
-
 #include "Carla/Actor/ActorDefinition.h"
-
 #include "LaneInvasionSensor.generated.h"
 
 /// LaneInvasion sensor representation

@@ -8,6 +8,7 @@
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
+
 #include <string>
 
 class FToolBarBuilder;

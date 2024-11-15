@@ -5,8 +5,12 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
+
+#include <util/ue-header-guard-begin.h>
 #include "ChaosWheeledVehicleMovementComponent.h"
 #include "Curves/CurveFloat.h"
+#include <util/ue-header-guard-end.h>
+
 #include "WheeledVehicleMovementComponentNW.generated.h"
 
 USTRUCT()
