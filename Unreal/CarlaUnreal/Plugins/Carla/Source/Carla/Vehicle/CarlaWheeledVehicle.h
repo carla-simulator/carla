@@ -177,6 +177,8 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   FVehiclePhysicsControl GetVehiclePhysicsControl() const;
 
+  FVector GetCenterOfMass(UChaosWheeledVehicleMovementComponent &VehicleMovComponent) const;
+
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   FAckermannControllerSettings GetAckermannControllerSettings() const {
     return AckermannController.GetSettings();
@@ -189,6 +191,8 @@ public:
   FVehicleLightState GetVehicleLightState() const;
 
   void ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
+
+  void SetCenterOfMass(UChaosWheeledVehicleMovementComponent &VehicleMovComponent, const FVehiclePhysicsControl &PhysicsControl);
 
   void ApplyAckermannControllerSettings(const FAckermannControllerSettings &AckermannControllerSettings) {
     return AckermannController.ApplySettings(AckermannControllerSettings);

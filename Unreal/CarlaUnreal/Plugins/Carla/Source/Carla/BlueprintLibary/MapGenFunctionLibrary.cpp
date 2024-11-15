@@ -6,22 +6,23 @@
 
 #include "MapGenFunctionLibrary.h"
 
-#include "Carla/Actor/LevelActor/InstancedStaticMeshActor.h"
-
-#include <util/ue-header-guard-begin.h>
+// Engine headers
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Materials/MaterialInstance.h"
 #include "StaticMeshAttributes.h"
 #include "RenderingThread.h"
 #include "PhysicsEngine/BodySetup.h"
 #include "Engine/StaticMeshActor.h"
+#include "Carla/Actor/LevelActor/InstancedStaticMeshActor.h"
 #include "UObject/SavePackage.h"
 #if WITH_EDITOR
 #include "Editor/EditorEngine.h"
 #include "Editor/Transactor.h"
 #endif
-#include "Components/HierarchicalInstancedStaticMeshComponent.h"
-#include <util/ue-header-guard-end.h>
+// Carla C++ headers
+
+// Carla plugin headers
+
 
 DEFINE_LOG_CATEGORY(LogCarlaMapGenFunctionLibrary);
 static const float OSMToCentimetersScaleFactor = 100.0f;

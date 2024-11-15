@@ -389,9 +389,7 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
   PhysicsControl.TransmissionEfficiency = TransmissionSetup.TransmissionEfficiency;
   PhysicsControl.Mass = VehicleMovComponent.Mass;
   PhysicsControl.DragCoefficient = VehicleMovComponent.DragCoefficient;
-  auto PrimitiveComponentPtr = Cast<UPrimitiveComponent>(VehicleMovComponent.UpdatedComponent);
-  check(PrimitiveComponentPtr != nullptr);
-  PhysicsControl.CenterOfMass = PrimitiveComponentPtr->GetCenterOfMass();
+  PhysicsControl.CenterOfMass = GetCenterOfMass(VehicleMovComponent);
   PhysicsControl.ChassisWidth = VehicleMovComponent.ChassisWidth;
   PhysicsControl.ChassisHeight = VehicleMovComponent.ChassisHeight;
   PhysicsControl.DownforceCoefficient = VehicleMovComponent.DownforceCoefficient;
@@ -457,6 +455,20 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
   return PhysicsControl;
 }
 
+FVector ACarlaWheeledVehicle::GetCenterOfMass(UChaosWheeledVehicleMovementComponent& VehicleMovComponent) const
+{
+  if (VehicleMovComponent.bEnableCenterOfMassOverride)
+  {
+    return VehicleMovComponent.CenterOfMassOverride;
+  }
+  else {
+    auto PrimitiveComponentPtr = Cast<UPrimitiveComponent>(VehicleMovComponent.UpdatedComponent);
+    check(PrimitiveComponentPtr != nullptr);
+    auto& PrimitiveComponent = *PrimitiveComponentPtr;
+    return PrimitiveComponent.BodyInstance.COMNudge;
+  }
+}
+
 FVehicleLightState ACarlaWheeledVehicle::GetVehicleLightState() const
 {
   return InputControl.LightState;
@@ -496,10 +508,7 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
   TransmissionSetup.TransmissionEfficiency = PhysicsControl.TransmissionEfficiency;
   VehicleMovComponent.Mass = PhysicsControl.Mass;
   VehicleMovComponent.DragCoefficient = PhysicsControl.DragCoefficient;
-  auto PrimitiveComponentPtr = Cast<UPrimitiveComponent>(VehicleMovComponent.UpdatedComponent);
-  check(PrimitiveComponentPtr != nullptr);
-  auto& PrimitiveComponent = *PrimitiveComponentPtr;
-  PrimitiveComponent.SetCenterOfMass(PhysicsControl.CenterOfMass);
+  SetCenterOfMass(VehicleMovComponent, PhysicsControl);
   VehicleMovComponent.ChassisWidth = PhysicsControl.ChassisWidth;
   VehicleMovComponent.ChassisHeight = PhysicsControl.ChassisHeight;
   VehicleMovComponent.DownforceCoefficient = PhysicsControl.DownforceCoefficient;
@@ -575,6 +584,7 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
       ESweepShape::Raycast;
   }
 
+  VehicleMovComponent.RecreatePhysicsState();
   ResetConstraints();
 
   auto* Recorder = UCarlaStatics::GetRecorder(GetWorld());
@@ -585,6 +595,20 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
 
   // Update physics in the Ackermann Controller
   AckermannController.UpdateVehiclePhysics(this);
+}
+
+void ACarlaWheeledVehicle::SetCenterOfMass(UChaosWheeledVehicleMovementComponent& VehicleMovComponent, const FVehiclePhysicsControl& PhysicsControl)
+{
+  if (VehicleMovComponent.bEnableCenterOfMassOverride)
+  {
+    VehicleMovComponent.CenterOfMassOverride = PhysicsControl.CenterOfMass;
+  }
+  else {
+    auto PrimitiveComponentPtr = Cast<UPrimitiveComponent>(VehicleMovComponent.UpdatedComponent);
+    check(PrimitiveComponentPtr != nullptr);
+    auto& PrimitiveComponent = *PrimitiveComponentPtr;
+    PrimitiveComponent.BodyInstance.COMNudge = PhysicsControl.CenterOfMass;
+  }
 }
 
 void ACarlaWheeledVehicle::ApplyVehicleControl(const FVehicleControl& Control, EVehicleInputPriority Priority)

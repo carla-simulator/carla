@@ -6,45 +6,45 @@ using UnrealBuildTool;
 
 public class CarlaUnreal : ModuleRules
 {
-  [CommandLine("-slate-ui")]
-  bool EnableSlateUI = false;
+	[CommandLine("-slate-ui")]
+	bool EnableSlateUI = false;
 
-  [CommandLine("-online-subsys")]
-  bool EnableOnlineSubSys = false;
+    [CommandLine("-online-subsys")]
+    bool EnableOnlineSubSys = false;
 
-  private static void LogFlagStatus(string name, bool value)
-  {
-    var state = value ? "enabled" : "disabled";
-    Console.WriteLine(string.Format("{0} is {1}.", name, state));
-  }
-
-  public CarlaUnreal(ReadOnlyTargetRules Target) : base(Target)
-  {
-    PrivatePCHHeaderFile = "CarlaUnreal.h";
-    bEnableExceptions = true;
-    bUseRTTI = true;
-
-    PublicDependencyModuleNames.AddRange(new string[]
+    private static void LogFlagStatus(string name, bool value)
     {
-      "Core",
-      "CoreUObject",
-      "Engine",
-      "InputCore"
-    });
+        var state = value ? "enabled" : "disabled";
+        Console.WriteLine(string.Format("{0} is {1}.", name, state));
+    }
 
-    if (Target.Type == TargetType.Editor)
-      PublicDependencyModuleNames.Add("UnrealEd");
+    public CarlaUnreal(ReadOnlyTargetRules Target) : base(Target)
+	{
+		PrivatePCHHeaderFile = "CarlaUnreal.h";
+        bEnableExceptions = true;
+        bUseRTTI = true;
 
-    LogFlagStatus("Slate UI", EnableSlateUI);
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
+			"Core",
+			"CoreUObject",
+			"Engine",
+			"InputCore"
+		});
 
-    if (EnableSlateUI)
-      PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+		if (Target.Type == TargetType.Editor)
+            PublicDependencyModuleNames.Add("UnrealEd");
 
-    LogFlagStatus("Online Subsystem", EnableOnlineSubSys);
+        LogFlagStatus("Slate UI", EnableSlateUI);
 
-    if (EnableOnlineSubSys)
-      PrivateDependencyModuleNames.Add("OnlineSubsystem");
+        if (EnableSlateUI)
+            PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 
-    // To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
-  }
+        LogFlagStatus("Online Subsystem", EnableOnlineSubSys);
+
+        if (EnableOnlineSubSys)
+			PrivateDependencyModuleNames.Add("OnlineSubsystem");
+
+        // To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
+    }
 }
