@@ -7,10 +7,13 @@
 #include <Carla/Sensor/ImageUtil.h>
 #include <Carla/Sensor/ShaderBasedSensor.h>
 #include <Carla/Carla.h>
-#include <Runtime/RHI/Public/RHISurfaceDataConversion.h>
-#include <Runtime/ImageWriteQueue/Public/ImageWriteQueue.h>
+
+#include <util/ue-header-guard-begin.h>
+#include <RHISurfaceDataConversion.h>
+#include <ImageWriteQueue.h>
 #include <HighResScreenshot.h>
 #include <RHIGPUReadback.h>
+#include <util/ue-header-guard-end.h>
 
 
 
