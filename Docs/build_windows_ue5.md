@@ -17,7 +17,7 @@ Run the setup script:
 
 ```sh
 cd CarlaUE5
-Setup.bat
+CarlaSetup.bat
 ```
 
 The Setup.bat script installs all the required packages, including Visual Studio 2022, Cmake, Python packages and Unreal Engine 5. It also downloads the CARLA content and builds CARLA. This batch file can therefore take a long time to complete. 
