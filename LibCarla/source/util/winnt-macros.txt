@@ -99,3 +99,4 @@ InterlockedDecrementSizeTNoFence
 Yield
 CreateDirectory
 CaptureStackBackTrace
+GetObject

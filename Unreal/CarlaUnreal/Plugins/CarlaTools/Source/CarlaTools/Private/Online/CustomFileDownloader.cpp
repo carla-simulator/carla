@@ -4,6 +4,7 @@
 
 #include "Online/CustomFileDownloader.h"
 #include "OpenDriveToMap.h"
+#include "MapGeneratorWidget.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "HttpModule.h"
@@ -16,7 +17,9 @@
   #include <OSM2ODR.h>
 #endif
 
-DECLARE_LOG_CATEGORY_EXTERN(LogCarlaToolsMapGenerator, Log, All);
+#if defined(_WIN32) && defined(CreateDirectory)
+#undef CreateDirectory
+#endif
 
 void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0, float Lon_0)
 {

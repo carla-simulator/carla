@@ -35,8 +35,6 @@ public class Carla :
   public Carla(ReadOnlyTargetRules Target) :
     base(Target)
   {
-    bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
-
     PrivatePCHHeaderFile = "Carla.h";
     bEnableExceptions = true;
     bUseRTTI = true;
@@ -182,24 +180,24 @@ public class Carla :
       RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11.2"));
     }
 
-    PublicDefinitions.AddRange(new string[]
-    {
-      "ASIO_NO_EXCEPTIONS",
-      "BOOST_NO_EXCEPTIONS",
-      "LIBCARLA_NO_EXCEPTIONS",
-      "PUGIXML_NO_EXCEPTIONS",
-      "BOOST_DISABLE_ABI_HEADERS",
-      "BOOST_NO_RTTI",
-      "BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY",
-    });
-
-    if (IsWindows)
+    if (!bEnableExceptions)
     {
       PublicDefinitions.AddRange(new string[]
       {
-        "NOMINMAX",
-        "VC_EXTRALEAN",
-        "WIN32_LEAN_AND_MEAN",
+        "ASIO_NO_EXCEPTIONS",
+        "BOOST_NO_EXCEPTIONS",
+        "LIBCARLA_NO_EXCEPTIONS",
+        "PUGIXML_NO_EXCEPTIONS",
+      });
+    }
+
+    if (!bUseRTTI)
+    {
+      PublicDefinitions.AddRange(new string[]
+      {
+        // "BOOST_DISABLE_ABI_HEADERS", // ?
+        "BOOST_NO_RTTI",
+        "BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY",
       });
     }
   }

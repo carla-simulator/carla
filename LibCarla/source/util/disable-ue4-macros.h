@@ -13,6 +13,7 @@
 #  define BOOST_ERROR_CODE_HEADER_ONLY
 #endif // BOOST_ERROR_CODE_HEADER_ONLY
 
+/*
 #ifndef BOOST_NO_EXCEPTIONS
 #  error LibCarla should be compiled with -DBOOST_NO_EXCEPTIONS inside UE4.
 #endif // BOOST_NO_EXCEPTIONS
@@ -22,6 +23,7 @@
 #ifndef LIBCARLA_NO_EXCEPTIONS
 #  error LibCarla should be compiled with -DLIBCARLA_NO_EXCEPTIONS inside UE4.
 #endif // LIBCARLA_NO_EXCEPTIONS
+*/
 
 #endif // LIBCARLA_INCLUDED_DISABLE_UE4_MACROS_HEADER
 

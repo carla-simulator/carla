@@ -7,7 +7,7 @@ using EpicGames.Core;
 public class CarlaUnrealTarget : TargetRules
 {
     [CommandLine("-unity-build")]
-    bool EnableUnityBuild = false;
+    bool EnableUnityBuild = true;
 
     private static void LogFlagStatus(string name, bool value)
     {

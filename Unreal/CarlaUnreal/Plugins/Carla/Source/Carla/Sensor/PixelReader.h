@@ -18,7 +18,7 @@
 #include <util/ue-header-guard-begin.h>
 #include "CoreGlobals.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "ImagePixelData.h"
+#include "Runtime/ImageWriteQueue/Public/ImagePixelData.h"
 #include "DataDrivenShaderPlatformInfo.h"
 #include "RHIDefinitions.h"
 #include <util/ue-header-guard-end.h>

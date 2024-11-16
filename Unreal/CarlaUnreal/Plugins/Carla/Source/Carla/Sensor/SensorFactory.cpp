@@ -11,11 +11,12 @@
 #include "Carla/Sensor/Sensor.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 
-#include <util/disable-ue4-macros.h>
+#include <util/ue-header-guard-begin.h>
+#include <carla/sensor/SensorRegistry.h>
 #define LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES
 #include <carla/sensor/SensorRegistry.h>
 #undef LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES
-#include <util/enable-ue4-macros.h>
+#include <util/ue-header-guard-end.h>
 
 #include <type_traits>
 

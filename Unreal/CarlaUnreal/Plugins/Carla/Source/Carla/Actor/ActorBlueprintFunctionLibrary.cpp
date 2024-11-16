@@ -6,6 +6,10 @@
 
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla.h"
+#include "Carla/Actor/ActorDescription.h"
+#include "Carla/Sensor/GnssSensor.h"
+#include "Carla/Sensor/Radar.h"
+#include "Carla/Sensor/InertialMeasurementUnit.h"
 #include "Carla/Sensor/LidarDescription.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Sensor/ShaderBasedSensor.h"

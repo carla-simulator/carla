@@ -99,3 +99,4 @@
 #pragma pop_macro("Yield")
 #pragma pop_macro("CreateDirectory")
 #pragma pop_macro("CaptureStackBackTrace")
+#pragma pop_macro("GetObject")

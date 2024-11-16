@@ -10,7 +10,7 @@
 #include <CoreMinimal.h>
 #include <CoreGlobals.h>
 #include <Engine/TextureRenderTarget2D.h>
-#include <ImagePixelData.h>
+#include "Runtime/ImageWriteQueue/Public/ImagePixelData.h"
 #include <util/ue-header-guard-end.h>
 
 #include <functional>

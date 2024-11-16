@@ -104,11 +104,11 @@ namespace ImageUtil
       ConvertRawR24G8DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
       break;
     case PF_R32_FLOAT: // Depth
-		  for (uint32 Y = 0; Y < Extent.Y; Y++)
+		  for (uint32 Y = 0; Y < (uint32)Extent.Y; Y++)
 		  {
 		  	auto SrcPtr = (float*)((uint8*)PixelData + Y * SourcePitch);
 		  	auto DestPtr = Out.GetData() + Y * Extent.X;
-		  	for (uint32 X = 0; X < Extent.X; X++)
+		  	for (uint32 X = 0; X < (uint32)Extent.X; X++)
 		  	{
 		  		*DestPtr = FLinearColor(SrcPtr[0], 0.f, 0.f, 1.f).QuantizeRound();
 		  		++SrcPtr;

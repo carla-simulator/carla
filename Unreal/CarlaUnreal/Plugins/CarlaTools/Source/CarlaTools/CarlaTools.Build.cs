@@ -22,8 +22,6 @@ public class CarlaTools :
   public CarlaTools(ReadOnlyTargetRules Target) :
     base(Target)
   {
-    bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
-
     PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
     bEnableExceptions = true;
     bUseRTTI = true;
@@ -119,21 +117,6 @@ public class CarlaTools :
       });
     }
 
-    if (IsWindows)
-    {
-      PrivateDefinitions.Add("NOMINMAX");
-      PrivateDefinitions.Add("VC_EXTRALEAN");
-      PrivateDefinitions.Add("WIN32_LEAN_AND_MEAN");
-    }
-
-    PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
-    PublicDefinitions.Add("BOOST_NO_RTTI");
-    PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
-    PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
-    PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
-    PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
-    PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
-
     if (EnableOSM2ODR)
     {
       // @TODO
@@ -150,22 +133,25 @@ public class CarlaTools :
       if (Path.Length != 0)
         PublicAdditionalLibraries.Add(Path.Trim());
 
-    PublicDefinitions.AddRange(new string[]
+    if (!bEnableExceptions)
     {
-      "ASIO_NO_EXCEPTIONS",
-      "BOOST_NO_EXCEPTIONS",
-      "LIBCARLA_NO_EXCEPTIONS",
-      "PUGIXML_NO_EXCEPTIONS",
-      "BOOST_DISABLE_ABI_HEADERS",
-      "BOOST_NO_RTTI",
-      "BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY",
-    });
+      PublicDefinitions.AddRange(new string[]
+      {
+        "ASIO_NO_EXCEPTIONS",
+        "BOOST_NO_EXCEPTIONS",
+        "LIBCARLA_NO_EXCEPTIONS",
+        "PUGIXML_NO_EXCEPTIONS",
+      });
+    }
 
-    if (IsWindows)
+    if (!bUseRTTI)
     {
-      PrivateDefinitions.Add("NOMINMAX");
-      PrivateDefinitions.Add("VC_EXTRALEAN");
-      PrivateDefinitions.Add("WIN32_LEAN_AND_MEAN");
+      PublicDefinitions.AddRange(new string[]
+      {
+        // "BOOST_DISABLE_ABI_HEADERS", // ?
+        "BOOST_NO_RTTI",
+        "BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY",
+      });
     }
   }
 }

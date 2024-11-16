@@ -18,9 +18,14 @@ carla_two_step_configure_file (
 
 if (WIN32)
 
+  set (
+    WINNT_MACRO_PATH
+    ${LIBCARLA_SOURCE_PATH}/util/winnt-macros.txt
+  )
+
   file (
     STRINGS
-    ${LIBCARLA_SOURCE_PATH}/util/winnt-macros.txt
+    ${WINNT_MACRO_PATH}
     WINDOWS_MACRO_LIST
   )
 
@@ -58,6 +63,12 @@ if (WIN32)
     WRITE
     ${LIBCARLA_SOURCE_PATH}/util/ue-header-guard-end.h
     ${GUARD_END_FILE_TEXT}
+  )
+
+  set_directory_properties(
+    PROPERTIES
+    CMAKE_CONFIGURE_DEPENDS
+    ${WINNT_MACRO_PATH}
   )
 
 else ()

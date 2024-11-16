@@ -14,6 +14,7 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "Carla/Game/Tagger.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>

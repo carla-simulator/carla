@@ -5,6 +5,9 @@
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Sensor/RayCastLidar.h"
+#include "Carla/Sensor/GnssSensor.h"
+#include "Carla/Sensor/Radar.h"
+#include "Carla/Sensor/InertialMeasurementUnit.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "JsonFileManagerLibrary.h"

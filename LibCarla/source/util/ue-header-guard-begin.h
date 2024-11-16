@@ -200,3 +200,5 @@
 #undef CreateDirectory
 #pragma push_macro("CaptureStackBackTrace")
 #undef CaptureStackBackTrace
+#pragma push_macro("GetObject")
+#undef GetObject

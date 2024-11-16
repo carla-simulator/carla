@@ -14,7 +14,6 @@
 #include "ActorFactories/ActorFactory.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Components/SplineComponent.h"
-#include "FoliageEdMode.h"
 #include "EditorLevelLibrary.h"
 #include "FileHelpers.h"
 #include "GenericPlatform/GenericPlatformFile.h"
@@ -1266,6 +1265,7 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
     {
       FoliageComponent->RemoveProceduralContent(false);
 
+#if 0
       FFoliagePaintingGeometryFilter OverrideGeometryFilter;
       OverrideGeometryFilter.bAllowStaticMesh = FoliageComponent->bAllowStaticMesh;
       OverrideGeometryFilter.bAllowBSP = FoliageComponent->bAllowBSP;
@@ -1274,6 +1274,7 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
       OverrideGeometryFilter.bAllowTranslucent = FoliageComponent->bAllowTranslucent;
 
       FEdModeFoliage::AddInstances(World, FoliageInstances, OverrideGeometryFilter, true);
+#endif
     }
     else
     {
