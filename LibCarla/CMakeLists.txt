@@ -374,6 +374,7 @@ if (BUILD_CARLA_CLIENT)
   target_compile_definitions (
     carla-client PUBLIC
     ${CARLA_COMMON_DEFINITIONS}
+    ${CARLA_EXCEPTION_DEFINITIONS}
     ${CARLA_RTTI_DEFINITIONS}
   )
 

@@ -48,7 +48,25 @@ public class Carla :
     }
     
     foreach (var Definition in File.ReadAllText(Path.Combine(PluginDirectory, "Definitions.def")).Split(';'))
-      PrivateDefinitions.Add(Definition.Trim());
+    {
+      var Trimmed = Definition.Trim();
+      if (Trimmed.Length != 0)
+        PrivateDefinitions.Add(Trimmed.Trim());
+    }
+
+    foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Includes.def")).Split(';'))
+    {
+      var Trimmed = Path.Trim();
+      if (Trimmed.Length != 0)
+        PublicIncludePaths.Add(Trimmed.Trim());
+    }
+
+    foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Libraries.def")).Split(';'))
+    {
+      var Trimmed = Path.Trim();
+      if (Trimmed.Length != 0)
+        PublicAdditionalLibraries.Add(Trimmed.Trim());
+    }
 
     foreach (var Option in File.ReadAllText(Path.Combine(PluginDirectory, "Options.def")).Split(';'))
     {
@@ -77,16 +95,6 @@ public class Carla :
         PrivateDefinitions.Add(definition);
       Console.WriteLine(string.Format("{0} is {1}.", name, enable ? "enabled" : "disabled"));
     };
-    
-    Action<string> AddIncludeDirectories = (str) =>
-    {
-      if (str.Length == 0)
-        return;
-      var paths = str.Split(';');
-      if (paths.Length == 0)
-        return;
-      PublicIncludePaths.AddRange(paths);
-    };
 
     TestOptionalFeature(EnableCarSim, "CarSim support", "WITH_CARSIM");
     TestOptionalFeature(EnableChrono, "Chrono support", "WITH_CHRONO");
@@ -113,12 +121,6 @@ public class Carla :
       "ChaosVehicles"
     });
 
-    if (EnableCarSim)
-    {
-      PrivateDependencyModuleNames.Add("CarSim");
-      PrivateIncludePathModuleNames.Add("CarSim");
-    }
-
     PublicDependencyModuleNames.AddRange(new string[]
     {
       "Core",
@@ -130,6 +132,12 @@ public class Carla :
     });
 
     if (EnableCarSim)
+    {
+      PrivateDependencyModuleNames.Add("CarSim");
+      PrivateIncludePathModuleNames.Add("CarSim");
+    }
+
+    if (EnableCarSim)
       PublicDependencyModuleNames.Add("CarSim");
 
     if (Target.Type == TargetType.Editor)
@@ -137,18 +145,11 @@ public class Carla :
       
     PublicIncludePaths.Add(ModuleDirectory);
 
-    foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Includes.def")).Split(';'))
-      if (Path.Length != 0)
-        PublicIncludePaths.Add(Path.Trim());
-
-    foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Libraries.def")).Split(';'))
-      if (Path.Length != 0)
-        PublicAdditionalLibraries.Add(Path.Trim());
-
     if (EnableOSM2ODR)
     {
       // @TODO
       PublicAdditionalLibraries.Add("");
+      throw new NotImplementedException();
     }
 
     if (EnableChrono)
@@ -161,6 +162,7 @@ public class Carla :
         "ChronoModels_vehicle",
         "ChronoModels_robot",
       };
+      throw new NotImplementedException();
     }
 
     if (EnableRos2)
@@ -178,27 +180,6 @@ public class Carla :
       RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so"));
       RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11"));
       RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11.2"));
-    }
-
-    if (!bEnableExceptions)
-    {
-      PublicDefinitions.AddRange(new string[]
-      {
-        "ASIO_NO_EXCEPTIONS",
-        "BOOST_NO_EXCEPTIONS",
-        "LIBCARLA_NO_EXCEPTIONS",
-        "PUGIXML_NO_EXCEPTIONS",
-      });
-    }
-
-    if (!bUseRTTI)
-    {
-      PublicDefinitions.AddRange(new string[]
-      {
-        // "BOOST_DISABLE_ABI_HEADERS", // ?
-        "BOOST_NO_RTTI",
-        "BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY",
-      });
     }
   }
 }

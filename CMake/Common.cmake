@@ -91,6 +91,22 @@ endif ()
 #   Exception Definitions
 # ================================
 
+if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC" AND
+  NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")  
+else ()
+  if (ENABLE_EXCEPTIONS)
+    set (EXCEPTIONS_FLAG -fexceptions)
+  else ()
+    set (EXCEPTIONS_FLAG -fno-exceptions)
+  endif ()
+endif ()
+
+carla_message ("Checking for ${EXCEPTIONS_FLAG} support")
+check_cxx_compiler_flag (${EXCEPTIONS_FLAG} HAS_EXCEPTIONS_FLAG)
+if (HAS_EXCEPTIONS_FLAG)
+  add_compile_options (${EXCEPTIONS_FLAG})
+endif ()
+
 set (CARLA_EXCEPTION_DEFINITIONS)
 
 if (ENABLE_EXCEPTIONS)
@@ -132,6 +148,7 @@ set (CARLA_RTTI_DEFINITIONS)
 if (ENABLE_RTTI)
   # Nothing
 else ()
+  list (APPEND CARLA_RTTI_DEFINITIONS BOOST_NO_RTTI)
   list (APPEND CARLA_RTTI_DEFINITIONS BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY)
 endif ()
 

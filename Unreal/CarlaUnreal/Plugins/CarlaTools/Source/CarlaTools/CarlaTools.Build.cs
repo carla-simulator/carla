@@ -26,8 +26,28 @@ public class CarlaTools :
     bEnableExceptions = true;
     bUseRTTI = true;
     
+    PublicIncludePaths.Add(ModuleDirectory);
+
     foreach (var Definition in File.ReadAllText(Path.Combine(PluginDirectory, "Definitions.def")).Split(';'))
-      PrivateDefinitions.Add(Definition.Trim());
+    {
+      var Trimmed = Definition.Trim();
+      if (Trimmed.Length != 0)
+        PrivateDefinitions.Add(Trimmed.Trim());
+    }
+
+    foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Includes.def")).Split(';'))
+    {
+      var Trimmed = Path.Trim();
+      if (Trimmed.Length != 0)
+        PublicIncludePaths.Add(Trimmed.Trim());
+    }
+
+    foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Libraries.def")).Split(';'))
+    {
+      var Trimmed = Path.Trim();
+      if (Trimmed.Length != 0)
+        PublicAdditionalLibraries.Add(Trimmed.Trim());
+    }
 
     foreach (var Option in File.ReadAllText(Path.Combine(PluginDirectory, "Options.def")).Split(';'))
     {
@@ -53,16 +73,6 @@ public class CarlaTools :
       Console.WriteLine(string.Format("{0} is {1}.", name, enable ? "enabled" : "disabled"));
     };
     
-    Action<string> AddIncludeDirectories = (str) =>
-    {
-      if (str.Length == 0)
-        return;
-      var paths = str.Split(';');
-      if (paths.Length == 0)
-        return;
-      PublicIncludePaths.AddRange(paths);
-    };
-
     TestOptionalFeature(EnableOSM2ODR, "OSM2ODR support", "WITH_OSM2ODR");
 
     PublicDependencyModuleNames.AddRange(new string[]
@@ -107,7 +117,7 @@ public class CarlaTools :
 
     if (EnableNVIDIAOmniverse)
     {
-      PrivateDefinitions.Add("WITH_OMNIVERSE");
+      // @TODO: This should be handled by the (CMake) build system.
       PrivateDefinitions.Add("WITH_OMNIVERSE");
 
       PrivateDependencyModuleNames.AddRange(new string[]
@@ -115,43 +125,14 @@ public class CarlaTools :
         "OmniverseUSD",
         "OmniverseRuntime"
       });
+
+      throw new NotImplementedException();
     }
 
     if (EnableOSM2ODR)
     {
       // @TODO
-      PublicAdditionalLibraries.Add("");
-    }
-    
-    PublicIncludePaths.Add(ModuleDirectory);
-
-    foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Includes.def")).Split(';'))
-      if (Path.Length != 0)
-        PublicIncludePaths.Add(Path.Trim());
-
-    foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Libraries.def")).Split(';'))
-      if (Path.Length != 0)
-        PublicAdditionalLibraries.Add(Path.Trim());
-
-    if (!bEnableExceptions)
-    {
-      PublicDefinitions.AddRange(new string[]
-      {
-        "ASIO_NO_EXCEPTIONS",
-        "BOOST_NO_EXCEPTIONS",
-        "LIBCARLA_NO_EXCEPTIONS",
-        "PUGIXML_NO_EXCEPTIONS",
-      });
-    }
-
-    if (!bUseRTTI)
-    {
-      PublicDefinitions.AddRange(new string[]
-      {
-        // "BOOST_DISABLE_ABI_HEADERS", // ?
-        "BOOST_NO_RTTI",
-        "BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY",
-      });
+      throw new NotImplementedException();
     }
   }
 }
