@@ -47,7 +47,7 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
   FSoilTerramechanicsProperties GeneralSoilType;
 
   UPROPERTY(BlueprintReadWrite)
-  UTextureRenderTarget2D* GlobalHeightmap;
+  UTextureRenderTarget2D* GlobalHeightmap = nullptr;
 
   UPROPERTY(BlueprintReadWrite)
   TMap<FRoiTile, FTerrainROI> TerrainRoisMap;
