@@ -144,7 +144,6 @@ namespace client {
   }
 
   void LaneInvasionSensor::Listen(CallbackFunctionType callback) {
-      /*
     auto vehicle = std::dynamic_pointer_cast<Vehicle>(GetParent());
     if (vehicle == nullptr) {
       log_error(GetDisplayId(), ": not attached to a vehicle");
@@ -170,7 +169,6 @@ namespace client {
     if (previous != 0u) {
       episode->RemoveOnTickEvent(previous);
     }
-    */
   }
 
   void LaneInvasionSensor::Stop() {
