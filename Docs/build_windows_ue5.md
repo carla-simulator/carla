@@ -1,7 +1,7 @@
 !!! warning
         This is a work in progress!! This version of CARLA is not considered a stable release. Over the following months many significant changes may be made to this branch which could break any modifications you make. We advise you to treat this branch as experimental.
 
-# Building CARLA in Windows with Unreal Engine 5.3
+# Building CARLA in Windows with Unreal Engine 5.5
 
 ## Set up the environment
 
@@ -20,7 +20,7 @@ cd CarlaUE5
 CarlaSetup.bat
 ```
 
-The CarlaSetup.bat script installs all the required packages, including Visual Studio 2022, Cmake, Python 3.8 packages and Unreal Engine 5.3. It also downloads the CARLA content and builds CARLA. This batch file can therefore take a long time to complete. 
+The CarlaSetup.bat script installs all the required packages, including Visual Studio 2022, Cmake, Python 3.8 packages and Unreal Engine 5.5. It also downloads the CARLA content and builds CARLA. This batch file can therefore take a long time to complete. 
 
 You may also use Python 3.9 and 3.10. 
 
