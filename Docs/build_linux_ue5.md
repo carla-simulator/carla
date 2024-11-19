@@ -1,4 +1,4 @@
-# Building CARLA in Linux with Unreal Engine 5.3
+# Building CARLA in Linux with Unreal Engine 5.5
 
 !!! note
         The Unreal Engine 5 version of CARLA requires Ubuntu version 22.04 at minimum. It has not been configured to build on older Ubuntu versions.
@@ -20,15 +20,15 @@ cd CarlaUE5
 bash -x  CarlaSetup.sh
 ```
 
-The Setup.sh script installs all the required packages, including Cmake, debian packages, Python packages and Unreal Engine 5.3 and sets up the necessary environment variables. It also downloads the CARLA content, builds CARLA then launches the editor. 
+The Setup.sh script installs all the required packages, including Cmake, debian packages, Python packages and Unreal Engine 5.5 and sets up the necessary environment variables. It also downloads the CARLA content, builds CARLA then launches the editor. 
 
 Once this is complete, the script will launch the CARLA Unreal Engine 5 editor. **Note: This script can therefore take a long time to complete.**
 
 The setup script should only be run the first time that you set up the build. Subsequently, when rebuilding, you should use the commands in the following section.
 
 !!! note
-        * This version of CARLA requires the **CARLA fork of Unreal Engine 5.3**. You need to link your GitHub account to Epic Games in order to gain permission to clone the UE repository. If you have not already linked your accounts, follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github)
-        * For using CARLA Unreal Engine 5 previous builds, **ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined** pointing to the CARLA Unreal Engine 5.3 absolute path. If this variable is not defined, the Setup.sh script will download and build CARLA Unreal Engine 5 and **this takes more than 1 extra hour of build and 225Gb of disk space**.
+        * This version of CARLA requires the **CARLA fork of Unreal Engine 5.5**. You need to link your GitHub account to Epic Games in order to gain permission to clone the UE repository. If you have not already linked your accounts, follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github)
+        * For using CARLA Unreal Engine 5 previous builds, **ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined** pointing to the CARLA Unreal Engine 5.5 absolute path. If this variable is not defined, the Setup.sh script will download and build CARLA Unreal Engine 5 and **this takes more than 1 extra hour of build and 225Gb of disk space**.
         * The Setup.sh script checks if there is any Python installed at the top of the PATH variable, and installs Python otherwise. **To use your own version of Python, ensure that the PATH variable is properly set for Python before running the script**.
         * CARLA cannot be built on an external disk, Ubuntu is not giving the required read/write/execution permissions for builds.
 
