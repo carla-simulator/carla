@@ -5,7 +5,7 @@
 
 ## Set up the environment
 
-This guide details how to build CARLA from source on Windows with Unreal Engine 5.3. 
+This guide details how to build CARLA from source on Windows with Unreal Engine 5.5. 
 
 Clone the `ue5-dev` branch of CARLA on your local machine:
 
