@@ -6,12 +6,14 @@
 
 #pragma once
 
+#include <util/disable-ue4-macros.h>
+#include <carla/rpc/ObjectLabel.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
 #include "GameFramework/Actor.h"
 #include "Components/PrimitiveComponent.h"
-
-#include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/ObjectLabel.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/ue-header-guard-end.h>
 
 #include "Tagger.generated.h"
 

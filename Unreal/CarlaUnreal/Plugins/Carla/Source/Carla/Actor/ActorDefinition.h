@@ -8,7 +8,9 @@
 
 #include "Carla/Actor/ActorAttribute.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "GameFramework/Actor.h"
+#include <util/ue-header-guard-end.h>
 
 #include "ActorDefinition.generated.h"
 
@@ -59,7 +61,7 @@ struct FVehicleActorDefinition
 
   /// Assign a static mesh into the actor.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  UStaticMesh* mesh;
+  UStaticMesh* mesh = nullptr;
 
   /// Colors represent the avaliable colors for each actor
   UPROPERTY(EditAnywhere, BlueprintReadWrite)

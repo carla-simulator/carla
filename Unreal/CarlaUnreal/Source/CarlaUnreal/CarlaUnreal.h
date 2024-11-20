@@ -2,6 +2,8 @@
 
 #pragma once
 
-#include "Engine.h"
+#include "Carla/Util/NonCopyable.h"
 
-#include "Util/NonCopyable.h"
+#include <util/ue-header-guard-begin.h>
+#include "Engine.h"
+#include <util/ue-header-guard-end.h>

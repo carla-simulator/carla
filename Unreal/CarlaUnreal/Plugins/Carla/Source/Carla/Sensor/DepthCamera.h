@@ -7,9 +7,7 @@
 #pragma once
 
 #include "Carla/Sensor/ShaderBasedSensor.h"
-
 #include "Carla/Actor/ActorDefinition.h"
-
 #include "DepthCamera.generated.h"
 
 /// Sensor that produces "depth" images.

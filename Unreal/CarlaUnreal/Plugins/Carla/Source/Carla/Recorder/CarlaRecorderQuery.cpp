@@ -5,22 +5,19 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "CarlaRecorderQuery.h"
-
 #include "CarlaRecorderHelpers.h"
-
 #include "CarlaRecorder.h"
+#include <Carla/Vehicle/CarlaWheeledVehicle.h>
+
+#include <util/disable-ue4-macros.h>
+#include <carla/rpc/VehicleLightState.h>
+#include <carla/rpc/VehiclePhysicsControl.h>
+#include <util/enable-ue4-macros.h>
 
 #include <ctime>
 #include <sstream>
 #include <string_view>
 #include <string>
-
-#include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/VehicleLightState.h>
-#include <carla/rpc/VehiclePhysicsControl.h>
-#include <compiler/enable-ue4-macros.h>
-
-#include <Carla/Vehicle/CarlaWheeledVehicle.h>
 
 // Clang 16 does not support C++20's std::format
 #if defined(ENABLE_STD_FORMAT) && __has_include(<format>)
@@ -122,7 +119,13 @@ inline bool CarlaRecorderQuery::CheckFileInfo(std::stringstream& Info)
   // show general Info
   Info << "Version: " << RecInfo.Version << std::endl;
   Info << "Map: " << TCHAR_TO_UTF8(*RecInfo.Mapfile) << std::endl;
-  tm* TimeInfo = localtime(&RecInfo.Date);
+#ifdef _WIN32
+  struct tm Tmp;
+  localtime_s(&Tmp, &RecInfo.Date);
+  auto TimeInfo = &Tmp;
+#else
+  auto TimeInfo = localtime(&RecInfo.Date);
+#endif
   char DateStr[100];
   strftime(DateStr, sizeof(DateStr), "%x %X", TimeInfo);
   Info << "Date: " << DateStr << std::endl << std::endl;

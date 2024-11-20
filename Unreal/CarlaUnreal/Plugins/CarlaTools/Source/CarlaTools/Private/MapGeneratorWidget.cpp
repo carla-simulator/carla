@@ -5,15 +5,15 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "MapGeneratorWidget.h"
-
-#include "ActorFactories/ActorFactory.h"
-#include "AssetRegistry/AssetRegistryModule.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/MapGen/SoilTypeManager.h"
 #include "Carla/Weather/Weather.h"
 #include "Carla/Vehicle/CustomTerrainPhysicsComponent.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "ActorFactories/ActorFactory.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Components/SplineComponent.h"
-#include "Editor/FoliageEdit/Public/FoliageEdMode.h"
 #include "EditorLevelLibrary.h"
 #include "FileHelpers.h"
 #include "GenericPlatform/GenericPlatformFile.h"
@@ -26,9 +26,8 @@
 #include "Misc/CString.h"
 #include "ProceduralFoliageComponent.h"
 #include "ProceduralFoliageVolume.h"
-#include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
-#include "Runtime/Engine/Public/DrawDebugHelpers.h"
-
+#include "Engine/ObjectLibrary.h"
+#include "DrawDebugHelpers.h"
 #include "EditorAssetLibrary.h"
 #include "EngineUtils.h"
 #include "ObjectEditorUtils.h"
@@ -36,11 +35,11 @@
 #include "UObject/UObjectGlobals.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/SavePackage.h"
-
 #include "Dom/JsonObject.h"
 #include "JsonObjectConverter.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonReader.h"
+#include <util/ue-header-guard-end.h>
 
 #define CUR_CLASS_FUNC (FString(__FUNCTION__))
 #define CUR_LINE  (FString::FromInt(__LINE__))
@@ -1266,6 +1265,7 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
     {
       FoliageComponent->RemoveProceduralContent(false);
 
+#if 0
       FFoliagePaintingGeometryFilter OverrideGeometryFilter;
       OverrideGeometryFilter.bAllowStaticMesh = FoliageComponent->bAllowStaticMesh;
       OverrideGeometryFilter.bAllowBSP = FoliageComponent->bAllowBSP;
@@ -1274,6 +1274,7 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
       OverrideGeometryFilter.bAllowTranslucent = FoliageComponent->bAllowTranslucent;
 
       FEdModeFoliage::AddInstances(World, FoliageInstances, OverrideGeometryFilter, true);
+#endif
     }
     else
     {

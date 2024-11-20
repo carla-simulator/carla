@@ -11,8 +11,10 @@
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Actor/ActorSpawnResult.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Containers/Array.h"
 #include "Templates/Function.h"
+#include <util/ue-header-guard-end.h>
 
 #include "ActorDispatcher.generated.h"
 

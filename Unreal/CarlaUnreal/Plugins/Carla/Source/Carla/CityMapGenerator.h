@@ -10,7 +10,9 @@
 #include "MapGen/DoublyConnectedEdgeList.h"
 #include "MapGen/GraphParser.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "UObject/ObjectSaveContext.h"
+#include <util/ue-header-guard-end.h>
 
 #include "CityMapGenerator.generated.h"
 

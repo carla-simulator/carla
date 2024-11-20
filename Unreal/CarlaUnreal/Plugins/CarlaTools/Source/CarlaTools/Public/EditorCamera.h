@@ -5,11 +5,12 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
+
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
+#include <util/ue-header-guard-end.h>
+
 #include "EditorCamera.generated.h"
-
-
-
 
 UCLASS(BlueprintType)
 class CARLATOOLS_API AEditorCameraUtils :

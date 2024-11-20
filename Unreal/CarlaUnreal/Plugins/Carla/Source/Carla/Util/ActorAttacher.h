@@ -6,11 +6,13 @@
 
 #pragma once
 
-#include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/AttachmentType.h>
-#include <compiler/enable-ue4-macros.h>
-
+#include <util/ue-header-guard-begin.h>
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include <util/ue-header-guard-end.h>
+
+#include <util/disable-ue4-macros.h>
+#include <carla/rpc/AttachmentType.h>
+#include <util/enable-ue4-macros.h>
 
 #include "ActorAttacher.generated.h"
 

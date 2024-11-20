@@ -6,15 +6,14 @@
 
 #pragma once
 
-// Engine headers
+#include "Carla/Util/ProceduralCustomMesh.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "MeshDescription.h"
 #include "ProceduralMeshComponent.h"
-// Carla C++ headers
-
-// Carla plugin headers
-#include "Carla/Util/ProceduralCustomMesh.h"
+#include <util/ue-header-guard-end.h>
 
 #include "MapGenFunctionLibrary.generated.h"
 

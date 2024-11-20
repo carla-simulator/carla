@@ -5,10 +5,11 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
-
-#include "Engine/StaticMesh.h"
-
 #include "Carla/Settings/QualityLevelUE.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "Engine/StaticMesh.h"
+#include <util/ue-header-guard-end.h>
 
 #include "CarlaSettings.generated.h"
 

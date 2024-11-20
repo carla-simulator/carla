@@ -6,12 +6,14 @@
 
 #pragma once
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/rpc/LightState.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include <util/ue-header-guard-end.h>
 
 #include <type_traits>
 #include <utility>

@@ -7,12 +7,11 @@
 #pragma once
 
 #include "Carla/Sensor/Sensor.h"
-
 #include "Carla/Actor/ActorDefinition.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/sensor/data/RadarData.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
 #include "Radar.generated.h"
 

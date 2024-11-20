@@ -9,14 +9,13 @@
 #pragma once
 
 #include "Carla/Sensor/Sensor.h"
-
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Sensor/LidarDescription.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/sensor/data/SemanticLidarData.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
 #include "RayCastSemanticLidar.generated.h"
 

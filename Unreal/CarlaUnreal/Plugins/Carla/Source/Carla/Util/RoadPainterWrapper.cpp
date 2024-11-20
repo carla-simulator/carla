@@ -6,6 +6,7 @@
 
 #include "RoadPainterWrapper.h"
 
+#include <util/ue-header-guard-begin.h>
 #if WITH_EDITOR
     #include "Misc/FileHelper.h"
 #endif
@@ -18,6 +19,7 @@
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
+#include <util/ue-header-guard-end.h>
 
 ARoadPainterWrapper::ARoadPainterWrapper(){
 

@@ -6,9 +6,11 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "EditorUtilityWidget.h"
 #include "CarlaTools.h"
+#include <util/ue-header-guard-end.h>
 
 #include "DigitalTwinsBaseWidget.generated.h"
 

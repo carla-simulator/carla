@@ -13,9 +13,7 @@
 #include "Carla/Util/NonCopyable.h"
 #include "Carla/Game/FrameData.h"
 
-#include "Misc/CoreDelegates.h"
-
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/multigpu/router.h>
 #include <carla/multigpu/primaryCommands.h>
 #include <carla/multigpu/secondary.h>
@@ -23,7 +21,11 @@
 #if WITH_ROS2
     #include <carla/ros2/ROS2.h>
 #endif
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "Misc/CoreDelegates.h"
+#include <util/ue-header-guard-end.h>
 
 #include <mutex>
 

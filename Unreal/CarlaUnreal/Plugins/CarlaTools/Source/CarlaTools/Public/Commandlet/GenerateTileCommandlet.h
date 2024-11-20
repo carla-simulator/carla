@@ -6,14 +6,12 @@
 
 #pragma once
 
-#include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
-#include "Commandlets/Commandlet.h"
-
-#include <compiler/disable-ue4-macros.h>
-
-#include <compiler/enable-ue4-macros.h>
-
 #include "OpenDriveToMap.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "Engine/ObjectLibrary.h"
+#include "Commandlets/Commandlet.h"
+#include <util/ue-header-guard-end.h>
 
 #include "GenerateTileCommandlet.generated.h"
 

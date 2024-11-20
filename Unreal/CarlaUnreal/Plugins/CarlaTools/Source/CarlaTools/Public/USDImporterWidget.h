@@ -2,12 +2,14 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Animation/Skeleton.h"
 #include "ChaosVehicleWheel.h"
 #include "Materials/MaterialInterface.h"
 #include "PhysicsEngine/PhysicsAsset.h"
+#include <util/ue-header-guard-end.h>
 
 #include "USDImporterWidget.generated.h"
 

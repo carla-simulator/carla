@@ -8,12 +8,14 @@
 #include "Carla.h"
 #include "Vehicle/CarlaWheeledVehicle.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
 #include "EngineUtils.h"
 #include "PhysicsEngine/PhysicsAsset.h"
+#include <util/ue-header-guard-end.h>
 
 namespace crp = carla::rpc;
 

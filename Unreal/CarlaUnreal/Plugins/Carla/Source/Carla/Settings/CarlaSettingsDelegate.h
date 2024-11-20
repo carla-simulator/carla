@@ -8,9 +8,11 @@
 
 #include "Carla/Settings/QualityLevelUE.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include <util/ue-header-guard-end.h>
 
 #include "CarlaSettingsDelegate.generated.h"
 

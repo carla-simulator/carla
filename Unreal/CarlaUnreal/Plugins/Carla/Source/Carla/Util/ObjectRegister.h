@@ -6,12 +6,14 @@
 
 #pragma once
 
-#include "GameFramework/Actor.h"
-
 #include "Carla/Util/BoundingBox.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Util/EnvironmentObject.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "GameFramework/Actor.h"
+#include <util/ue-header-guard-end.h>
 
 #include "ObjectRegister.generated.h"
 

@@ -2,10 +2,11 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include <util/ue-header-guard-end.h>
 
 #include "ProceduralBuilding.generated.h"
 

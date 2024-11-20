@@ -6,8 +6,11 @@
 
 #pragma once
 
-#include "GameFramework/Actor.h"
 #include "Carla/Weather/WeatherParameters.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "GameFramework/Actor.h"
+#include <util/ue-header-guard-end.h>
 
 #include "Weather.generated.h"
 

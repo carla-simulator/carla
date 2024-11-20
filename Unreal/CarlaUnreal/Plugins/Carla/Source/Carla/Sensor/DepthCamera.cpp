@@ -6,7 +6,6 @@
 
 #include "Carla/Sensor/DepthCamera.h"
 #include "Carla.h"
-
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
 FActorDefinition ADepthCamera::GetSensorDefinition()

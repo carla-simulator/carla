@@ -9,8 +9,11 @@
 #include "Carla/Actor/ActorSpawnResult.h"
 #include "Carla/Actor/CarlaActorFactory.h"
 #include "Carla/Actor/VehicleParameters.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Json.h"
 #include "JsonUtilities.h"
+#include <util/ue-header-guard-end.h>
 
 #include "VehicleActorFactory.generated.h"
 

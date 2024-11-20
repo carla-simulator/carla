@@ -6,7 +6,6 @@
 
 #include "NoWorldOffsetSceneComponent.h"
 
-
 void UNoWorldOffsetSceneComponent::ApplyWorldOffset(const FVector& InOffset, bool bWorldShift)
 {
 

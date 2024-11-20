@@ -6,9 +6,9 @@
 
 #include "carla/streaming/detail/tcp/Server.h"
 
-#include <boost/asio/post.hpp>
-
 #include "carla/Logging.h"
+
+#include <boost/asio/post.hpp>
 
 #include <memory>
 

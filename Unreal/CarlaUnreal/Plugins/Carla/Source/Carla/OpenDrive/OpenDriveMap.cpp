@@ -7,10 +7,11 @@
 #include "Carla/OpenDrive/OpenDriveMap.h"
 #include "Carla.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/rpc/String.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
 
 namespace UOpenDriveMap_Private {
 

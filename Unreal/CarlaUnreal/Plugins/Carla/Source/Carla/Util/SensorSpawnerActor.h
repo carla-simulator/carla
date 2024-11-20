@@ -2,14 +2,18 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include <util/ue-header-guard-end.h>
+
 #include "SensorSpawnerActor.generated.h"
 
 class ASensor;
 class USceneComponent;
 class UCarlaEpisode;
-
+struct FActorDefinition;
+struct FActorDescription;
 
 USTRUCT(BlueprintType)
 struct FSensorTuple

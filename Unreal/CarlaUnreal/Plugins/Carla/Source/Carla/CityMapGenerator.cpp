@@ -6,14 +6,15 @@
 
 #include "CityMapGenerator.h"
 #include "Carla.h"
-
 #include "MapGen/GraphGenerator.h"
 #include "MapGen/RoadMap.h"
 #include "Game/Tagger.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/World.h"
 #include "Misc/Paths.h"
+#include <util/ue-header-guard-end.h>
 
 #include <algorithm>
 #include <unordered_set>

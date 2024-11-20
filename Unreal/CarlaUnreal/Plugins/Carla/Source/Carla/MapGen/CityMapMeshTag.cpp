@@ -7,7 +7,9 @@
 #include "CityMapMeshTag.h"
 #include "Carla.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "UObject/Package.h"
+#include <util/ue-header-guard-end.h>
 
 #include <array>
 

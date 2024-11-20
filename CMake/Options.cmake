@@ -95,7 +95,7 @@ carla_option (
 carla_option (
   ENABLE_EXCEPTIONS
   "Enable C++ Exceptions."
-  OFF
+  ON
 )
 
 carla_option (

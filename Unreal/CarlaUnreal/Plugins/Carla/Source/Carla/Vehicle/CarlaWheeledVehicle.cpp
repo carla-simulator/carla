@@ -7,15 +7,6 @@
 
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
-#include "Components/BoxComponent.h"
-#include "Engine/CollisionProfile.h"
-#include "MovementComponents/DefaultMovementComponent.h"
-#include "Rendering/SkeletalMeshRenderData.h"
-#include "VehicleAnimationInstance.h"
-#include "UObject/UObjectGlobals.h"
-#include "DrawDebugHelpers.h"
-#include "Kismet/KismetSystemLibrary.h"
-
 #include "Carla.h"
 #include "Carla/Game/CarlaHUD.h"
 #include "Carla/Game/CarlaStatics.h"
@@ -24,7 +15,18 @@
 #include "Carla/Util/EmptyActor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Vegetation/VegetationManager.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "Components/BoxComponent.h"
+#include "Engine/CollisionProfile.h"
+#include "MovementComponents/DefaultMovementComponent.h"
+#include "Rendering/SkeletalMeshRenderData.h"
+#include "VehicleAnimationInstance.h"
+#include "UObject/UObjectGlobals.h"
+#include "DrawDebugHelpers.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "PhysicsEngine/PhysicsObjectExternalInterface.h"
+#include <util/ue-header-guard-end.h>
 
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------

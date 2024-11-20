@@ -7,11 +7,13 @@
 #include "Carla/Sensor/PixelReader.h"
 #include "Carla.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Engine/TextureRenderTarget2D.h"
 #include "Async/Async.h"
 #include "HighResScreenshot.h"
-#include "Runtime/ImageWriteQueue/Public/ImageWriteQueue.h"
+#include "ImageWriteQueue.h"
 #include "RHIGPUReadback.h"
+#include <util/ue-header-guard-end.h>
 
 // =============================================================================
 // -- FPixelReader -------------------------------------------------------------

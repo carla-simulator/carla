@@ -8,9 +8,12 @@
 #include "Carla/Sensor/PostProcessConfig.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 #include "Engine/PostProcessVolume.h"
 #include "GameFramework/SpectatorPawn.h"
+#include <util/ue-header-guard-end.h>
 
 #include <mutex>
 #include <atomic>

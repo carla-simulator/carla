@@ -2,8 +2,11 @@
 
 
 #include "ProceduralBuildingUtilities.h"
-
 #include "AssetRegistry/AssetRegistryModule.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "ProceduralMeshConversion.h"
+#include "MeshMerge/MeshMergingSettings.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -17,6 +20,8 @@
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/SavePackage.h"
+#include "PhysicsEngine/BodySetup.h"
+#include <util/ue-header-guard-end.h>
 
 void AProceduralBuildingUtilities::GenerateImpostorTexture(const FVector& BuildingSize)
 {

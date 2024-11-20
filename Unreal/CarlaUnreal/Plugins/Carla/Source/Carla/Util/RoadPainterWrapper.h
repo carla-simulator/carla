@@ -6,9 +6,11 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "GameFramework/Actor.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "Dom/JsonObject.h"
+#include <util/ue-header-guard-end.h>
 #include "RoadPainterWrapper.generated.h"
 
 USTRUCT(BlueprintType)

@@ -1,5 +1,9 @@
 #pragma once
+
+#include <util/ue-header-guard-begin.h>
 #include "GameFramework/Actor.h"
+#include <util/ue-header-guard-end.h>
+
 #include "Sky.generated.h"
 
 class UPostProcessComponent;

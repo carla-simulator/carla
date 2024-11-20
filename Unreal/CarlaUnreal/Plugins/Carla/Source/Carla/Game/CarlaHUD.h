@@ -22,9 +22,13 @@
 #undef DrawText
 
 #include "Carla.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Containers/Array.h"
 #include "GameFramework/HUD.h"
 #include "ChaosWheeledVehicleMovementComponent.h"
+#include <util/ue-header-guard-end.h>
+
 #include "CarlaHUD.generated.h"
 
 struct HUDString

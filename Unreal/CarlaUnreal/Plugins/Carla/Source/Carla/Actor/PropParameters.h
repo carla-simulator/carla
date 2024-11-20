@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "Engine/StaticMesh.h"
+#include <util/ue-header-guard-end.h>
 
 #include "PropParameters.generated.h"
 
@@ -33,7 +35,7 @@ struct CARLA_API FPropParameters
   FString Name;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  UStaticMesh *Mesh;
+  UStaticMesh* Mesh = nullptr;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   EPropSize Size = EPropSize::INVALID;

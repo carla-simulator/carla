@@ -6,15 +6,15 @@
 
 #pragma once
 
-#include "GameFramework/Actor.h"
-
 #include "Traffic/RoutePlanner.h"
 #include "Vehicle/VehicleSpawnPoint.h"
 
+#include <util/ue-header-guard-begin.h>
+#include "GameFramework/Actor.h"
 #include "Components/BillboardComponent.h"
 #include "Components/SceneComponent.h"
 #include "CoreMinimal.h"
-
+#include <util/ue-header-guard-end.h>
 
 #include "OpenDriveActor.generated.h"
 

@@ -55,7 +55,7 @@ if (WIN32)
   check_cxx_compiler_flag (/utf-8 HAS_MSVC_UTF8)
   if (HAS_MSVC_UTF8)
     # @TODO This causes warnings with MASM. A better approach should be looked into.
-    add_compile_options (/utf-8)
+    add_compile_options ($<$<COMPILE_LANGUAGE:CXX>:/utf-8>)
   endif ()
 endif ()
 
@@ -91,11 +91,33 @@ endif ()
 #   Exception Definitions
 # ================================
 
+if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC" AND
+  NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  if (ENABLE_EXCEPTIONS)
+    set (EXCEPTIONS_FLAG /EHsc)
+  else ()
+    set (EXCEPTIONS_FLAG /EHs-c-)
+  endif ()
+else ()
+  if (ENABLE_EXCEPTIONS)
+    set (EXCEPTIONS_FLAG -fexceptions)
+  else ()
+    set (EXCEPTIONS_FLAG -fno-exceptions)
+  endif ()
+endif ()
+
+carla_message ("Checking for ${EXCEPTIONS_FLAG} support")
+check_cxx_compiler_flag (${EXCEPTIONS_FLAG} HAS_EXCEPTIONS_FLAG)
+if (HAS_EXCEPTIONS_FLAG)
+  add_compile_options ($<$<COMPILE_LANGUAGE:CXX>:${EXCEPTIONS_FLAG}>)
+endif ()
+
 set (CARLA_EXCEPTION_DEFINITIONS)
 
 if (ENABLE_EXCEPTIONS)
   # Nothing
 else ()
+  list (APPEND CARLA_EXCEPTION_DEFINITIONS _HAS_EXCEPTIONS=0)
   list (APPEND CARLA_EXCEPTION_DEFINITIONS ASIO_NO_EXCEPTIONS)
   list (APPEND CARLA_EXCEPTION_DEFINITIONS BOOST_NO_EXCEPTIONS)
   list (APPEND CARLA_EXCEPTION_DEFINITIONS LIBCARLA_NO_EXCEPTIONS)
@@ -124,7 +146,7 @@ endif ()
 carla_message ("Checking for ${RTTI_FLAG} support")
 check_cxx_compiler_flag (${RTTI_FLAG} HAS_RTTI_FLAG)
 if (HAS_RTTI_FLAG)
-  add_compile_options (${RTTI_FLAG})
+  add_compile_options ($<$<COMPILE_LANGUAGE:CXX>:${RTTI_FLAG}>)
 endif ()
 
 set (CARLA_RTTI_DEFINITIONS)
@@ -132,6 +154,7 @@ set (CARLA_RTTI_DEFINITIONS)
 if (ENABLE_RTTI)
   # Nothing
 else ()
+  list (APPEND CARLA_RTTI_DEFINITIONS BOOST_NO_RTTI)
   list (APPEND CARLA_RTTI_DEFINITIONS BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY)
 endif ()
 
