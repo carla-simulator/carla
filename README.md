@@ -22,5 +22,25 @@ This work is based on the official CARLA documentation at [carla.readthedocs.io]
 공식 CARLA 문서 [carla.readthedocs.io](https://carla.readthedocs.io/)를 기반으로 합니다.
 
 ---
+
+### Local Build | 로컬 빌드
+To build the documentation locally, follow these steps:
+로컬에서 빌드하려면 다음 단계를 따르세요:
+
+1. Install required packages | 필요한 패키지 설치
+```bash
+pip install -r requirements.txt
+```
+
+2. Build the documentation | 문서 빌드
+```bash
+mkdocs build
+```
+
+3. Serve the documentation locally | 로컬에서 문서 서빙
+```bash
+mkdocs serve
+```
+
 *Korean translation maintained by [ Yun Sang Hyun/Organization ]*
 *한국어 번역 관리: [ Yun Sang Hyun / sxngt ]
