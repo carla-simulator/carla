@@ -1,251 +1,236 @@
-# First steps with CARLA
+# CARLA 시작하기
 
-The CARLA simulator is a comprehensive solution for producing synthetic training data for applications in autonomous driving (AD) and also other robotics applications. CARLA simulates a highly realistic environment emulating real world towns, cities and highways and the vehicles and other objects that occupy these driving spaces. 
+CARLA 시뮬레이터는 자율주행(AD) 및 기타 로봇공학 애플리케이션을 위한 종합적인 학습 데이터 생성 솔루션입니다. CARLA는 실제 마을, 도시, 고속도로와 그 안의 차량 및 다른 객체들을 매우 사실적으로 구현한 환경을 시뮬레이션합니다.
 
-The CARLA simulator is further useful as an evaluation and testing environment. You can deploy the AD agents you have trained within the simulation to test and evaluate their performance and safety, all within the security of a simulated environment, with no risk to hardware or other road users.
+또한 CARLA 시뮬레이터는 평가와 테스트 환경으로도 매우 유용합니다. 학습된 자율주행 에이전트를 시뮬레이션 환경에 배포하여 성능과 안전성을 테스트하고 평가할 수 있으며, 이 모든 것을 하드웨어나 다른 도로 사용자에게 어떤 위험도 없이 안전한 가상 환경에서 수행할 수 있습니다.
 
-In this tutorial, we will cover a standard workflow in CARLA, from launching the server and connecting the client, through to adding vehicles, sensors and generating training data to use for machine learning. This tutorial is meant to be light on details and go as efficiently as possible through the key steps in using CARLA to produce machine learning training data. For further details on each part of the workflow, such as the multitude of vehicles available in the blueprint library or the alternative types of sensors available, please consult the links in the text or browse the left menu. 
+이 튜토리얼에서는 CARLA의 기본적인 작업 흐름을 다룹니다. 서버 실행과 클라이언트 연결부터 시작해서 차량 추가, 센서 설정, 머신러닝용 학습 데이터 생성까지 설명합니다. 세부 사항은 최소화하고 핵심 단계들을 최대한 효율적으로 안내하는 것을 목표로 합니다. 블루프린트 라이브러리의 다양한 차량이나 여러 종류의 센서와 같은 각 부분에 대한 자세한 내용은 본문의 링크나 왼쪽 메뉴를 참고해주세요.
 
-* [__Launching CARLA__](#Launching-carla-and-connecting-the-client)  
-* [__Loading a map__](#loading-a-map) 
-* [__Spectator navigation__](#spectator-navigation)  
-* [__Adding NPCs__](#adding-npcs)  
-* [__Add sensors__](#add-sensors)  
-* [__Animate vehicles__](#animate-vehicles-with-traffic-manager)  
-* [__Assign a vehicle as the Ego Vehicle__](#assign-a-vehicle-as-the-ego-vehicle)
-* [__Choose your map__](#choose-your-map) 
-* [__Choose your vehicles__](#choose-your-vehicles) 
+* [__CARLA 실행하기__](#carla-실행과-클라이언트-연결)  
+* [__맵 불러오기__](#맵-불러오기) 
+* [__관찰자 시점 조작__](#관찰자-시점-조작)  
+* [__NPC 추가하기__](#npc-추가하기)  
+* [__센서 추가하기__](#센서-추가하기)  
+* [__차량 움직이기__](#traffic-manager로-차량-움직이기)  
+* [__주요 차량 지정하기__](#주요-차량-지정하기)
+* [__맵 선택하기__](#맵-선택하기) 
+* [__차량 선택하기__](#차량-선택하기) 
 
+## CARLA 실행과 클라이언트 연결
 
-## Launching CARLA and connecting the client
-
-CARLA can be launched using the command line using the executable in Windows or the shell script in Linux. Follow the installation instructions for [__Linux__](start_quickstart.md) and [__Windows__](start_quickstart.md) then [__launch CARLA__](start_quickstart.md#running-carla) from the command line:
+CARLA는 Windows에서는 실행 파일을, Linux에서는 쉘 스크립트를 사용하여 명령줄에서 실행할 수 있습니다. [__Linux__](start_quickstart.md)와 [__Windows__](start_quickstart.md)의 설치 지침을 따른 후 명령줄에서 [__CARLA를 실행__](start_quickstart.md#running-carla)하세요:
 
 ```sh
 cd /carla/root
 ./CarlaUE4.sh
 ```
- 
-To manipulate CARLA through the Python API, we need to connect the Python client to the server through an open port. The client controls the simulator through the [__client and world objects__](foundations.md#world-and-client) Open a Python notebook or create a new script, then add the following code to the start of the script or the main function:
+Python API를 통해 CARLA를 제어하려면 열린 포트를 통해 Python 클라이언트를 서버에 연결해야 합니다. 클라이언트는 [__클라이언트와 월드 객체__](foundations.md#world-and-client)를 통해 시뮬레이터를 제어합니다. Python 노트북을 열거나 새 스크립트를 만든 후, 스크립트 시작 부분이나 main 함수에 다음 코드를 추가하세요:
 
 ```py
 import carla
 import random
 
-# Connect to the client and retrieve the world object
+# 클라이언트에 연결하고 월드 객체 가져오기
 client = carla.Client('localhost', 2000)
 world = client.get_world()
-
 ```
 
-The [__client__](python_api#carlaclient) object serves to maintain the client's connection to the server and has a number of functions for applying commands and loading or exporting data. We can load an alternative map or reload the current one (resetting to initial state) using the client object.
+[__client__](python_api#carlaclient) 객체는 클라이언트의 서버 연결을 유지하고 명령을 실행하거나 데이터를 불러오고 내보내는 여러 기능을 제공합니다. 이를 통해 다른 맵을 불러오거나 현재 맵을 초기 상태로 다시 불러올 수 있습니다.
 
-The port can be chosen as any available port and is set to 2000 by default, you can also choose a host different from *localhost* by using a computer's IP address. This way, the CARLA server can be run on a networked machine, while the python client can be run from a personal computer. This is particularly useful for differentiating the GPU used for running the CARLA simulator and that used for neural network training, both of which can be highly demanding on graphics hardware.
+포트는 사용 가능한 아무 포트나 선택할 수 있으며, 기본값은 2000입니다. *localhost* 대신 컴퓨터의 IP 주소를 사용하여 다른 호스트를 선택할 수도 있습니다. 이렇게 하면 CARLA 서버는 네트워크 컴퓨터에서 실행하고 Python 클라이언트는 개인 컴퓨터에서 실행할 수 있습니다. 이는 CARLA 시뮬레이터 실행용 GPU와 신경망 학습용 GPU를 분리하는 데 특히 유용합니다. 두 작업 모두 그래픽 하드웨어에 많은 부하를 주기 때문입니다.
 
-!!! Note
-    The following presumes that CARLA is running in the default [__asynchronous__](adv_synchrony_timestep.md) mode. If you have engaged synchronous mode, some of the code in the following sections might not work as expected.
+!!! 참고
+    이후 내용은 CARLA가 기본 [__비동기__](adv_synchrony_timestep.md) 모드로 실행 중이라고 가정합니다. 동기 모드를 사용하는 경우 다음 섹션의 일부 코드가 예상대로 작동하지 않을 수 있습니다.
 
-## Loading a map 
+## 맵 불러오기 
 
-In the CARLA API, the [__world__](python_api.md#carla.World) object provides access to all elements of the simulation, including the map, objects within the map, such as buildings, traffic lights, vehicles and pedestrians. The CARLA server normally loads a default map (normally Town10). If you want to launch CARLA with an alternate map, use the `config.py` script:
+CARLA API에서 [__world__](python_api.md#carla.World) 객체는 맵, 건물, 신호등, 차량, 보행자 등 시뮬레이션의 모든 요소에 접근할 수 있게 해줍니다. CARLA 서버는 보통 기본 맵(일반적으로 Town10)을 불러옵니다. 다른 맵으로 CARLA를 실행하고 싶다면 `config.py` 스크립트를 사용하세요:
 
 ```sh
 ./config.py --map Town05 
 ```
 
-We can also use the world object to load a map from the client:
+world 객체를 사용하여 클라이언트에서 맵을 불러올 수도 있습니다:
 
 ```py
 client.load_world('Town05')
-
 ``` 
 
-Please find more information about CARLA maps [__here__](core_map.md).
+CARLA 맵에 대한 자세한 정보는 [__여기__](core_map.md)에서 확인할 수 있습니다.
+## 관찰자 시점 조작
 
-## Spectator navigation
+관찰자(Spectator)는 시뮬레이션을 보는 시점입니다. 화면이 있는 컴퓨터에서 CARLA 서버를 실행하면 `-RenderOffScreen` 옵션을 지정하지 않는 한 기본적으로 새 창에서 관찰자 화면이 열립니다.
 
-The spectator is a view into the simulation. By default, the spectator opens in a new window when you run the CARLA server on a computer with a screen attached, unless you specify the `-RenderOffScreen` command line option. 
+관찰자 시점은 시뮬레이션을 시각화하는 데 매우 유용합니다. 이를 통해 불러온 맵을 둘러보고, 차량 추가, 날씨 변경, 맵의 여러 레이어 켜고 끄기 등 변경사항을 바로 확인할 수 있으며 디버깅 용도로도 활용할 수 있습니다.
 
-The spectator is helpful to visualize your simulation. Using the spectator, you can familiarize yourself with the map you've loaded, and see the result of any changes you are making, such as adding vehicles, changing the weather, turning on/off various layers of the map and for debugging purposes. 
+마우스와 키보드를 사용해 관찰자 시점을 자유롭게 움직일 수 있습니다:
 
-You can fly the spectator around the world using the mouse to control the pitch and yaw of the spectator view and the QWE-ASD keys to move the spectator:
+- Q - 위로 이동 (창의 위쪽으로)
+- E - 아래로 이동 (창의 아래쪽으로)
+- W - 앞으로 이동
+- S - 뒤로 이동
+- A - 왼쪽으로 이동
+- D - 오른쪽으로 이동
 
-- Q - move upwards (towards the top edge of the window)
-- E - move downwards (towards the lower edge of the window)
-
-- W - move forwards
-- S - move backwards
-- A - move left
-- D - move right
-
-Left click and drag the mouse in the spectator window up and down to control pitch and left and right to control yaw.
+관찰자 창에서 마우스 왼쪽 버튼을 누른 채 드래그하면 시점을 조절할 수 있습니다:
+- 위아래로 드래그: 피치(상하 각도) 조절
+- 좌우로 드래그: 요(좌우 각도) 조절
 
 ![flying_spectator](../img/tuto_G_getting_started/flying_spectator.gif)
 
-The spectator and its properties can be accessed and manipulated through the Python API:
+Python API를 통해 관찰자와 그 속성에 접근하고 제어할 수 있습니다:
 
 ```py
-# Retrieve the spectator object
+# 관찰자 객체 가져오기
 spectator = world.get_spectator()
 
-# Get the location and rotation of the spectator through its transform
+# transform을 통해 관찰자의 위치와 회전값 가져오기
 transform = spectator.get_transform()
 
 location = transform.location
 rotation = transform.rotation
 
-# Set the spectator with an empty transform
+# 빈 transform으로 관찰자 설정
 spectator.set_transform(carla.Transform())
-# This will set the spectator at the origin of the map, with 0 degrees
-# pitch, yaw and roll - a good way to orient yourself in the map
-
+# 이렇게 하면 관찰자가 맵의 원점에 위치하며
+# 피치, 요, 롤이 모두 0도로 설정됩니다.
+# 맵에서 방향을 잡는 데 좋은 방법입니다.
 ```
 
-## Adding NPCs
+## NPC 추가하기
 
-Now we've loaded the map and the server is up and running we now need to populate our simulation with some vehicles to simulate a real environment with traffic and other road users or non-player characters (NPCs).
+이제 맵을 불러오고 서버가 실행되었으니, 실제 환경을 시뮬레이션하기 위해 교통량과 다른 도로 사용자들(NPC, Non-Player Characters)을 추가해야 합니다.
 
-To spawn vehicles, first, we need to select the vehicles we want from the blueprint library. 
+먼저 블루프린트 라이브러리에서 원하는 차량을 선택합니다:
 
 ```py
-# Get the blueprint library and filter for the vehicle blueprints
+# 블루프린트 라이브러리에서 차량 블루프린트 필터링하기
 vehicle_blueprints = world.get_blueprint_library().filter('*vehicle*')
 ```
-
-Now we have the blueprints, we need to find some appropriate spots in the map to spawn our vehicles. Each CARLA map provides pre-defined spawn points spread evenly throughout the map on the roads for this purpose.
+블루프린트를 선택했으니 이제 차량을 생성할 적절한 위치를 맵에서 찾아야 합니다. 각 CARLA 맵은 도로 위에 고르게 분포된 미리 정의된 생성 지점들을 제공합니다.
 
 ```py
-# Get the map's spawn points
+# 맵의 생성 지점 가져오기
 spawn_points = world.get_map().get_spawn_points()
 
-# Spawn 50 vehicles randomly distributed throughout the map 
-# for each spawn point, we choose a random vehicle from the blueprint library
+# 맵 전체에 무작위로 50대의 차량 생성
+# 각 생성 지점마다 블루프린트 라이브러리에서 무작위로 차량 선택
 for i in range(0,50):
     world.try_spawn_actor(random.choice(vehicle_blueprints), random.choice(spawn_points))
 ```
 
-Now we should also add a vehicle that will be the centerpoint of our simulation. To train an autonomous agent we need to simulate a the vehicle that it the autonomous agent will control. In CARLA parlance, we often refer to this vehicle as the "Ego vehicle". 
+다음으로 시뮬레이션의 중심이 될 차량을 추가해야 합니다. 자율주행 에이전트를 학습시키려면 에이전트가 제어할 차량이 필요합니다. CARLA에서는 이 차량을 "Ego Vehicle(주요 차량)"이라고 부릅니다.
 
 ```py
 ego_vehicle = world.spawn_actor(random.choice(vehicle_blueprints), random.choice(spawn_points))
 ```
 
-In addition to vehicles, CARLA also provides pedestrians to add to simulations to simulate realistic driving scenarios. Vehicles and pedestrians are referred to as __actors__ in the CARLA parlance, learn more about them [__here__](core_actors.md).
+차량 외에도 CARLA는 현실적인 주행 시나리오를 시뮬레이션하기 위한 보행자도 제공합니다. CARLA에서는 차량과 보행자를 __액터(actors)__ 라고 부릅니다. 자세한 내용은 [__여기__](core_actors.md)에서 확인할 수 있습니다.
 
-## Add sensors
+## 센서 추가하기
 
-Modern autonomous vehicles understand and interpret their environment through an array of attached sensors. These sensors include things such as optical video cameras, optical flow cameras, LIDARs, RADARs and accelerometers. CARLA has models of numerous types of sensors built in to create training data for machine learning. The sensors can be attached to a vehicle, or they can be attached to a fixed point to model for example a CCTV camera.
+현대의 자율주행 차량은 여러 센서를 통해 주변 환경을 이해하고 해석합니다. 이러한 센서에는 광학 비디오 카메라, 광학 흐름 카메라, 라이다(LIDAR), 레이더(RADAR), 가속도계 등이 있습니다. CARLA에는 머신러닝 학습 데이터를 생성하기 위한 다양한 종류의 센서 모델이 내장되어 있습니다. 이 센서들은 차량에 부착하거나 CCTV 카메라처럼 고정된 지점에 설치할 수 있습니다.
 
-Here we will attach a standard camera sensor to the ego vehicle to record some video data:
+여기서는 주요 차량에 기본 카메라 센서를 부착하여 영상 데이터를 녹화해보겠습니다:
 
 ```py
-# Create a transform to place the camera on top of the vehicle
+# 카메라를 차량 위에 설치하기 위한 transform 생성
 camera_init_trans = carla.Transform(carla.Location(z=1.5))
 
-# We create the camera through a blueprint that defines its properties
+# 속성이 정의된 블루프린트로 카메라 생성
 camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
 
-# We spawn the camera and attach it to our ego vehicle
+# 카메라를 생성하고 주요 차량에 부착
 camera = world.spawn_actor(camera_bp, camera_init_trans, attach_to=ego_vehicle)
 ```
+카메라를 생성한 후에는 `listen()` 메서드를 통해 녹화를 시작해야 합니다. listen 메서드는 데이터를 어떻게 처리할지 정의하는 콜백 함수를 인자로 받습니다. 데이터를 다른 프로그램으로 스트리밍하거나 디스크에 저장할 수 있습니다.
 
-Once we have spawned the camera, we need to set it recording through the `listen()` method. The listen method takes as argument a callback that defines what to do with the data. You can either stream it to another program or save it to disk.
-
-We will use a lambda function as a callback to save the data to disk:
+다음과 같이 람다 함수를 콜백으로 사용하여 데이터를 디스크에 저장하겠습니다:
 
 ```py
-# Start camera with PyGame callback
+# PyGame 콜백으로 카메라 시작
 camera.listen(lambda image: image.save_to_disk('out/%06d.png' % image.frame))
 ```
 
-This will save the data to the `out/` folder as a series of PNG image files named according to the simulation frame number.
+이렇게 하면 데이터가 `out/` 폴더에 시뮬레이션 프레임 번호에 따라 이름이 지정된 PNG 이미지 파일들로 저장됩니다.
 
-There are a multitude of different types of sensors to choose from. [__Here__](core_sensors.md) you can delve deeper into the array of sensors available and how to use them.
+다양한 종류의 센서들과 그 사용 방법에 대해 더 자세히 알아보려면 [__여기__](core_sensors.md)를 참고하세요.
 
-## Animate vehicles with traffic manager
+## Traffic Manager로 차량 움직이기
 
-Now we've added our traffic and ego vehicle to the simulation and started recording camera data, we now need to set the vehicles in motion using the [__Traffic manager__](adv_traffic_manager.md). The Traffic manager is a component of CARLA that controls vehicles to autonomously move around the roads of the map within the simulation, following the road conventions and behaving like real road users. 
+이제 교통 차량과 주요 차량을 시뮬레이션에 추가하고 카메라 데이터 녹화를 시작했으니, [__Traffic Manager__](adv_traffic_manager.md)를 사용하여 차량들을 움직여야 합니다. Traffic Manager는 CARLA의 핵심 구성 요소로, 차량들이 도로 규칙을 준수하고 실제 도로 사용자처럼 행동하면서 시뮬레이션 맵의 도로를 자율적으로 주행하도록 제어합니다.
 
-We can find all the vehicles in the simulation using the `world.get_actors()` method, filtering for all the vehicles. We can then use the `set_autopilot()` method to hand over control of the vehicle to the Traffic Manager.
+`world.get_actors()` 메서드로 시뮬레이션의 모든 차량을 찾은 다음, `set_autopilot()` 메서드를 사용하여 차량의 제어권을 Traffic Manager에 넘깁니다:
 
 ```py
 for vehicle in world.get_actors().filter('*vehicle*'):
     vehicle.set_autopilot(True)
 ```
 
-Now your simulation is running, with numerous vehicles driving around the map and a camera recording data from one of those vehicles. This data can then be used to feed a machine learning algorithm for training an autonomous driving agent. The Traffic manager has many functions for customising traffic behaviour, learn more [__here__](tuto_G_traffic_manager.md).
+이제 시뮬레이션이 실행되면서 여러 차량이 맵을 돌아다니고, 그 중 한 차량에서 카메라가 데이터를 녹화하고 있습니다. 이 데이터는 자율주행 에이전트를 학습시키는 머신러닝 알고리즘의 입력으로 사용할 수 있습니다. Traffic Manager는 교통 패턴을 커스터마이즈하기 위한 다양한 기능을 제공합니다. 자세한 내용은 [__여기__](tuto_G_traffic_manager.md)에서 확인할 수 있습니다.
 
-This is the most basic possible set up for a simulation, now you can go into further details deeper into documentation about the many extra sensors you can use to generate data, and the many other features of CARLA that can make your simulations more detailed and more realistic. 
+지금까지 설명한 것이 시뮬레이션의 가장 기본적인 설정입니다. 이제 데이터 생성에 사용할 수 있는 추가 센서들과 시뮬레이션을 더 상세하고 현실적으로 만들 수 있는 CARLA의 다른 기능들에 대해 문서를 더 자세히 살펴보시기 바랍니다.
+## 주요 차량 지정하기
 
----
+__주요 차량(Ego Vehicle)__ 은 CARLA를 사용할 때 반드시 이해해야 할 중요한 개념입니다. 주요 차량은 시뮬레이션의 중심이 되는 차량을 의미합니다. 대부분의 CARLA 사용 사례에서 이 차량은 센서를 부착하거나 자율주행 머신러닝 시스템이 제어할 차량이 됩니다. 이는 시뮬레이션의 효율성을 높이는 여러 작업의 기준점이 되기 때문에 매우 중요합니다. 예를 들면:
 
-## Assign a vehicle as the Ego Vehicle
+* __대형 맵의 타일 로딩__: 대형 맵(예: Town 12)은 CARLA의 성능을 최적화하기 위해 필요한 부분만 로드되는 타일 구조로 되어 있습니다. 주요 차량의 위치에 따라 어떤 타일을 사용할지 결정되며, 주요 차량 근처의 타일만 로드됩니다.
 
-The __Ego Vehicle__ is an important concept to bear in mind when using CARLA. The Ego Vehicle refers to the vehicle that will be the focus of the simulation. In most CARLA use cases it's likely to be the vehicle to which you will attach your sensors and/or the vehicle that your autonomous driving machine learning stack will control. It is important because it serves as the basis for some simulation operations that help improve the efficiency of the simulation, like for example:
+* __하이브리드 물리 모드__: Traffic Manager가 제어하는 차량이 많은 경우, 모든 차량의 물리 계산은 컴퓨팅 자원을 많이 소모합니다. [하이브리드 물리 모드](adv_traffic_manager.md#hybrid-physics-mode)를 사용하면 주요 차량 주변의 차량들에 대해서만 물리 계산을 수행하므로 컴퓨팅 자원을 절약할 수 있습니다.
 
-* __Loading map tiles for Large Maps__: Large Maps (like Town 12) are made up of tiles to that are only loaded when needed to improve CARLA performance. The position of the Ego Vehicle dictates which tiles are used. Only the tiles nearest the Ego Vehicle will be loaded.
-
-* __Hybrid Physics Mode__: if your simulation contains a lot of vehicles controlled by the Traffic Manager, calculating physics for all of these vehicles is very computationally expensive. The [Hybrid Physics Mode](adv_traffic_manager.md#hybrid-physics-mode) enables physics calculation to be limited to the vehicles in the vicinity of the Ego Vehicle, hence saving computing resources.
-
-To define the Ego Vehicle, you should set the `role_name` attribute of the vehicle [carla.Actor](python_api.md#carlaactor) object's [blueprint](python_api.md#carlaactorblueprint) when you are spawning your Ego Vehicle:
+주요 차량을 지정하려면 차량을 생성할 때 [carla.Actor](python_api.md#carlaactor) 객체의 [블루프린트](python_api.md#carlaactorblueprint)에서 `role_name` 속성을 설정하면 됩니다:
 
 ```py
-
 ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz_2020')
-
 ego_bp.set_attribute('role_name', 'hero')
-
 ego_vehicle = world.spawn_actor(ego_bp, random.choice(spawn_points))
-
 ```
----
-## Choose your map
+
+## 맵 선택하기
 
 ![maps_montage](../img/catalogue/maps/maps_montage.webp)
 
-CARLA comes loaded with several pre-made maps focused on providing a diversity of features. The maps present a range of environments such as urban, rural and residential. There are also differing architectural styles and also a multitude of different road layouts from unmarked rural roads to multi-lane highways. Browse the map guides in the [catalogue](catalogue.md) or in the table below. 
+CARLA에는 다양한 특징을 제공하는 여러 사전 제작 맵이 포함되어 있습니다. 도시, 시골, 주거 지역 등 다양한 환경과 함께 여러 건축 스타일, 비포장 시골길부터 다차선 고속도로까지 다양한 도로 구조를 제공합니다. [카탈로그](catalogue.md)나 아래 표에서 맵 가이드를 확인하세요.
 
-| Town       | Summary |
-| -----------| ------  |
-| [__Town01__](map_town01.md)  | A small, simple town with a river and several bridges.|
-| [__Town02__](map_town02.md) | A small simple town with a mixture of residential and commercial buildings.|
-| [__Town03__](map_town03.md) | A larger, urban map with a roundabout and large junctions.|
-| [__Town04__](map_town04.md) | A small town embedded in the mountains with a special "figure of 8" *infinite* highway.|
-| [__Town05__](map_town05.md) | Squared-grid town with cross junctions and a bridge. It has multiple lanes per direction. Useful to perform lane changes.  |
-| [__Town06__](map_town06.md) | Long many lane highways with many highway entrances and exits. It also has a [**Michigan left**](<https://en.wikipedia.org/wiki/Michigan_left>). |
-| [__Town07__](map_town07.md) | A rural environment with narrow roads, corn, barns and hardly any traffic lights. |
-| **Town08** | Secret "unseen" town used for the [Leaderboard](https://leaderboard.carla.org/) challenge |
-| **Town09** | Secret "unseen" town used for the [Leaderboard](https://leaderboard.carla.org/) challenge |
-| [__Town10__](map_town10.md) | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade.|
-| __Town11__ | A Large Map that is undecorated.|
-| [__Town12__](map_town12.md) | A Large Map with numerous different regions, including high-rise, residential and rural environments.|
-
-You can browse the available maps in your CARLA installation:
+| 마을 | 설명 |
+|------|------|
+| [__Town01__](map_town01.md) | 강과 여러 다리가 있는 작고 단순한 마을 |
+| [__Town02__](map_town02.md) | 주거와 상업 건물이 혼합된 작고 단순한 마을 |
+| [__Town03__](map_town03.md) | 로터리와 큰 교차로가 있는 더 큰 도시 맵 |
+| [__Town04__](map_town04.md) | 특별한 "8자형" *무한* 고속도로가 있는 산속의 작은 마을 |
+| [__Town05__](map_town05.md) | 교차로와 다리가 있는 바둑판식 도시. 각 방향에 여러 차선이 있어 차선 변경 연습에 유용 |
+| [__Town06__](map_town06.md) | 많은 진입로와 출구가 있는 긴 다차선 고속도로. [**미시간 좌회전**](<https://en.wikipedia.org/wiki/Michigan_left>) 구간도 포함 |
+| [__Town07__](map_town07.md) | 좁은 도로, 옥수수 밭, 헛간이 있고 신호등이 거의 없는 시골 환경 |
+| **Town08** | [Leaderboard](https://leaderboard.carla.org/) 챌린지용 비공개 "미공개" 마을 |
+| **Town09** | [Leaderboard](https://leaderboard.carla.org/) 챌린지용 비공개 "미공개" 마을 |
+| [__Town10__](map_town10.md) | 고층 빌딩, 주거 건물, 해변 산책로가 있는 도심 환경 |
+| __Town11__ | 장식이 없는 대형 맵 |
+| [__Town12__](map_town12.md) | 고층 건물, 주거 지역, 시골 환경을 포함한 여러 구역으로 구성된 대형 맵 |
+CARLA 설치에서 사용 가능한 맵들을 다음과 같이 확인할 수 있습니다:
 
 ```py
 client.get_available_maps()
 ```
 
-This will include maps that you have built yourself or imported.
+이 명령어를 실행하면 직접 제작하거나 가져온 맵들도 포함하여 모든 사용 가능한 맵이 표시됩니다.
 
-When you choose a map, load it like so:
+맵을 선택했다면 다음과 같이 불러올 수 있습니다:
 
 ```py
 client.load_world('Town03_Opt')
 ```
 
----
-
-## Choose your vehicles
-
+## 차량 선택하기
 
 ![vehicles_overview](../img/catalogue/vehicles/vehicle_montage.webp)
 
-CARLA provides a library of vehicles to fill your simulation with traffic. Browse the vehicle models in the [CARLA vehicle catalogue](catalogue_vehicles.md). 
+CARLA는 시뮬레이션에서 교통 상황을 구현하기 위한 다양한 차량 라이브러리를 제공합니다. [CARLA 차량 카탈로그](catalogue_vehicles.md)에서 차량 모델들을 살펴보세요.
 
-You can see all available vehicle blueprints by filtering the blueprint library. 
+블루프린트 라이브러리를 필터링하여 사용 가능한 모든 차량 블루프린트를 확인할 수 있습니다:
 
 ```py
 for bp in world.get_blueprint_library().filter('vehicle'):
     print(bp.id)
 ```
+
+이것으로 CARLA 시작하기 가이드가 완성되었습니다. 이 기본적인 설정을 바탕으로 더 많은 센서를 추가하고, 다양한 CARLA의 기능을 활용하여 더욱 상세하고 현실적인 시뮬레이션을 구현해보세요.

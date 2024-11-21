@@ -1,148 +1,139 @@
-# Getting started with CARLA
+# CARLA 시작하기
 
-The CARLA simulator is a comprehensive solution for producing synthetic training data for applications in autonomous driving (AD) and also other robotics applications. CARLA simulates a highly realistic environment emulating real world towns, cities and highways and the vehicles and other objects that occupy these driving spaces. 
+CARLA 시뮬레이터는 자율주행(AD) 및 기타 로봇공학 애플리케이션을 위한 종합적인 학습 데이터 생성 솔루션입니다. CARLA는 실제 마을, 도시, 고속도로와 그 안의 차량 및 기타 객체들을 매우 사실적으로 구현한 환경을 시뮬레이션합니다.
 
-The CARLA simulator is further useful as an evaluation and testing environment. You can deploy the AD agents you have trained within the simulation to test and evaluate their performance and safety, all within the security of a simulated environment, with no risk to hardware or other road users.
+CARLA 시뮬레이터는 평가와 테스트 환경으로도 매우 유용합니다. 학습된 자율주행 에이전트를 시뮬레이션 환경에 배포하여 성능과 안전성을 테스트하고 평가할 수 있으며, 이 모든 것을 하드웨어나 다른 도로 사용자에게 어떤 위험도 없이 안전한 가상 환경에서 수행할 수 있습니다.
 
-In this tutorial, we will cover some of the basic steps of getting started with CARLA, from using the spectator to navigate the environment, populating your simulation with vehicles and pedestrians and then adding sensors and cameras to gather simulated data to feed into neural networks for training or testing. 
+이 튜토리얼에서는 관찰자 시점으로 환경을 탐색하는 것부터 시작하여, 시뮬레이션에 차량과 보행자를 배치하고, 센서와 카메라를 추가하여 신경망 학습이나 테스트에 사용할 시뮬레이션 데이터를 수집하는 등 CARLA의 기본적인 시작 단계들을 다룹니다.
 
-## Starting CARLA and connecting the client
+## CARLA 실행과 클라이언트 연결
 
-CARLA can be launched using the command line using the executable in Windows or the shell script in Linux. Follow the installation instructions for [__Linux__](start_quickstart.md) and [__Windows__](start_quickstart.md) then [__launch CARLA__](start_quickstart.md#running-carla) from the command line.
- 
-To manipulate CARLA through the Python API, we need to connect the Python client to the server through an open port:
+CARLA는 Windows에서는 실행 파일을, Linux에서는 쉘 스크립트를 사용하여 명령줄에서 실행할 수 있습니다. [__Linux__](start_quickstart.md)와 [__Windows__](start_quickstart.md)의 설치 지침을 따른 후 명령줄에서 [__CARLA를 실행__](start_quickstart.md#running-carla)하세요.
+
+Python API를 통해 CARLA를 제어하려면 열린 포트를 통해 Python 클라이언트를 서버에 연결해야 합니다:
 
 ```py
 import carla
 import random
 
-# Connect to the client and retrieve the world object
+# 클라이언트에 연결하고 월드 객체 가져오기
 client = carla.Client('localhost', 2000)
 world = client.get_world()
-
 ```
 
-The [__client__](python_api#carlaclient) object serves to maintain the client's connection to the server and has a number of functions for applying commands and loading or exporting data. We can load an alternative map or reload the current one (resetting to initial state) using the client object:
-
+[__client__](python_api#carlaclient) 객체는 클라이언트의 서버 연결을 유지하고 명령을 실행하거나 데이터를 불러오고 내보내는 여러 기능을 제공합니다. client 객체를 사용하여 다른 맵을 불러오거나 현재 맵을 초기 상태로 다시 불러올 수 있습니다:
 
 ```py
-# Print available maps
+# 사용 가능한 맵 출력
 client.get_available_maps()
 
-# Load new map
+# 새로운 맵 불러오기
 client.load_world('Town07')
 
-# Reload current map and reset state
+# 현재 맵 다시 불러오고 상태 초기화
 client.reload_world()
-
 ```
+포트는 사용 가능한 아무 포트나 선택할 수 있으며, 기본값은 2000입니다. *localhost* 대신 컴퓨터의 IP 주소를 사용하여 다른 호스트를 선택할 수도 있습니다. 이렇게 하면 CARLA 서버는 네트워크 컴퓨터에서 실행하고 Python 클라이언트는 개인 컴퓨터에서 실행할 수 있습니다. 이는 CARLA 시뮬레이터 실행용 GPU와 신경망 학습용 GPU를 분리하는 데 특히 유용합니다. 두 작업 모두 그래픽 하드웨어에 많은 부하를 주기 때문입니다.
 
-The port can be chosen as any available port and is 2000 by default, you can also choose a host different from *localhost* by using a computer's IP address. This way, the CARLA server can be run on a networked machine, while the python client can be run from a personal computer. This is particularly useful for differentiating the GPU used for running the CARLA simulator and that used for neural network training, both of which can be highly demanding on graphics hardware.
+!!! 참고
+    이후 내용은 CARLA가 기본 [__비동기__](adv_synchrony_timestep.md) 모드로 실행 중이라고 가정합니다. 동기 모드를 사용하는 경우 다음 섹션의 일부 코드가 예상대로 작동하지 않을 수 있습니다.
 
-!!! Note
-    The following presumes that CARLA is running in the default [__asynchronous__](adv_synchrony_timestep.md) mode. If you have engaged synchronous mode, some of the code in the following sections might not work as expected.
+## 월드 객체
 
-## The world object
+CARLA API에서 [__world__](python_api#carlaworld) 객체는 맵, 건물, 신호등, 차량, 보행자 등 시뮬레이션의 모든 요소에 접근할 수 있게 해줍니다.
 
-In the CARLA API, the [__world__](python_api#carlaworld) object provides access to all elements of the simulation, including the map, objects within the map, such as buildings, traffic lights, vehicles and pedestrians.
-
-We can use the world object to query and access objects within the simulation:
+world 객체를 사용하여 시뮬레이션 내의 객체들을 조회하고 접근할 수 있습니다:
 
 ```py
-
-# Get names of all objects 
+# 모든 객체의 이름 가져오기
 world.get_names_of_all_objects()
 
-# Filter the list of names for buildings
+# 이름 목록에서 건물 필터링
 filter(lambda x: 'Building' in x, world.get_names_of_all_objects())
 
-# Get a list of all actors, such as vehicles and pedestrians
+# 차량과 보행자 등 모든 액터의 목록 가져오기
 world.get_actors()
 
-# Filter the list to find the vehicles
+# 목록에서 차량 필터링
 world.get_actors().filter('*vehicle*')
-
 ```
 
-The world object is used to add things to the simulation, such as vehicles and pedestrians through the spawn methods. Vehicles and pedestrians have a special place within the CARLA simulation since they exhibit behaviors, i.e. they can move around and affect other objects, so we call them actors. This differentiates them from static, inanimate objects like buildings that are just features in the map. Other objects such as traffic lights are also actors since they exhibit behaviors that affect other objects. 
+world 객체는 spawn 메서드를 통해 차량과 보행자 같은 것들을 시뮬레이션에 추가하는 데 사용됩니다. 차량과 보행자는 CARLA 시뮬레이션에서 특별한 위치를 차지합니다. 이들은 행동을 보이고(즉, 움직이고 다른 객체에 영향을 줄 수 있음) 액터(actors)라고 부릅니다. 이는 건물처럼 단순히 맵의 특징일 뿐인 정적이고 생명이 없는 객체들과 구별됩니다. 신호등과 같은 다른 객체들도 다른 객체에 영향을 주는 행동을 보이므로 액터로 분류됩니다.
 
-To spawn objects, we need a [__blueprint__](python_api#carlaactorblueprint) for the object. Blueprints are recipes containing all the parts necessary for an actor such as the mesh, textures and materials that govern it's appearance within the simulation and all the logic that governs its behavior and physics - how it interacts with other objects in the simulation. Let's find a blueprint for a vehicle and spawn it.
+객체를 생성하려면 해당 객체의 [__블루프린트__](python_api#carlaactorblueprint)가 필요합니다. 블루프린트는 액터에 필요한 모든 요소를 포함하는 레시피입니다. 시뮬레이션에서 외관을 결정하는 메시, 텍스처, 재질과 함께 시뮬레이션의 다른 객체들과 상호작용하는 방식을 결정하는 행동과 물리 법칙을 관장하는 모든 로직이 포함됩니다. 차량의 블루프린트를 찾아서 생성해보겠습니다:
 
 ```py
-
-# Get the blueprint library and filter for the vehicle blueprints
+# 블루프린트 라이브러리에서 차량 블루프린트 필터링
 vehicle_bps = world.get_blueprint_library().filter('*vehicle*')
 
-# Randomly choose a vehicle blueprint to spawn
+# 생성할 차량 블루프린트를 무작위로 선택
 vehicle_bp = random.choice(vehicle_bps)
 
-# We need a place to spawn the vehicle that will work so we will
-# use the predefined spawn points for the map and randomly select one
+# 차량을 생성할 적절한 위치가 필요하므로
+# 맵에 미리 정의된 생성 지점 중 하나를 무작위로 선택
 spawn_point = random.choice(world.get_map().get_spawn_points())
 
-# Now let's spawn the vehicle
+# 이제 차량을 생성
 world.spawn_actor(vehicle_bp, spawn_point)
-
 ```
-For various reasons, this spawn attempt might fail, so to avoid our code crashing, we can use a fault tolerant spawn method. This returns a NoneType object if the spawn fails. If the spawn succeeds, it will return a reference to the vehicle itself, that can be used to control it in various ways, including applying control inputs to move and steer it, handing over control to the Traffic Manager or destroying it.
+여러 가지 이유로 이 생성 시도가 실패할 수 있으므로, 코드가 중단되는 것을 방지하기 위해 오류에 강한 생성 메서드를 사용할 수 있습니다. 생성이 실패하면 NoneType 객체를 반환하고, 성공하면 차량 자체에 대한 참조를 반환합니다. 이 참조를 사용하여 차량을 움직이고 조향하는 제어 입력을 적용하거나, Traffic Manager에 제어권을 넘기거나, 차량을 제거하는 등 다양한 방식으로 제어할 수 있습니다.
 
 ```py
 vehicle = world.try_spawn_actor(vehicle_bp, spawn_point)
-
 ```
 
-The spawn may fail if there is already a vehicle or other actor at or close to the chosen spawn point, or if the spawn point is in an inappropriate location such as within a building or other static item of the map that's not a road or pavement.
+선택한 생성 지점이나 그 근처에 이미 차량이나 다른 액터가 있는 경우, 또는 생성 지점이 도로나 보도가 아닌 건물이나 다른 정적 맵 요소 내부와 같이 부적절한 위치에 있는 경우 생성이 실패할 수 있습니다.
 
-## The spectator
+## 관찰자(Spectator)
 
-The spectator is a view into the simulation. By default, the spectator opens in a new window when you run the CARLA server on a computer with a screen attached, unless you specify the `-RenderOffScreen` command line option. 
+관찰자는 시뮬레이션을 보는 시점입니다. 화면이 있는 컴퓨터에서 CARLA 서버를 실행하면 `-RenderOffScreen` 옵션을 지정하지 않는 한 기본적으로 새 창에서 관찰자 화면이 열립니다.
 
-The spectator is helpful to visualize your simulation. Using the spectator, you can familiarize yourself with the map you've loaded, and see the result of any changes you are making, such as adding vehicles, changing the weather, turning on/off various layers of the map and for debugging purposes. 
+관찰자는 시뮬레이션을 시각화하는 데 매우 유용합니다. 관찰자를 통해 불러온 맵을 둘러보고, 차량 추가, 날씨 변경, 맵의 여러 레이어 켜고 끄기 등 변경사항을 확인할 수 있으며 디버깅 용도로도 활용할 수 있습니다.
 
-You can fly the spectator around the world using the mouse to control the pitch and yaw of the spectator view and the QWE-ASD keys to move the spectator:
+마우스와 QWE-ASD 키를 사용해 관찰자를 자유롭게 움직일 수 있습니다:
 
-- Q - move upwards (towards the top edge of the window)
-- E - move downwards (towards the lower edge of the window)
+- Q - 위로 이동 (창의 위쪽으로)
+- E - 아래로 이동 (창의 아래쪽으로)
+- W - 앞으로 이동
+- S - 뒤로 이동
+- A - 왼쪽으로 이동
+- D - 오른쪽으로 이동
 
-- W - move forwards
-- S - move backwards
-- A - move left
-- D - move right
-
-Left click and drag the mouse in the spectator window up and down to control pitch and left and right to control yaw.
+관찰자 창에서 마우스 왼쪽 버튼을 누른 채 드래그하면 시점을 조절할 수 있습니다:
+- 위아래로 드래그: 피치(상하 각도) 조절
+- 좌우로 드래그: 요(좌우 각도) 조절
 
 ![flying_spectator](../img/tuto_G_getting_started/flying_spectator.gif)
 
-The spectator and its properties can be accessed and manipulated through the Python API:
+Python API를 통해 관찰자와 그 속성에 접근하고 조작할 수 있습니다:
 
 ```py
-# Retrieve the spectator object
+# 관찰자 객체 가져오기
 spectator = world.get_spectator()
 
-# Get the location and rotation of the spectator through its transform
+# transform을 통해 관찰자의 위치와 회전값 가져오기
 transform = spectator.get_transform()
 
 location = transform.location
 rotation = transform.rotation
 
-# Set the spectator with an empty transform
+# 빈 transform으로 관찰자 설정
 spectator.set_transform(carla.Transform())
-# This will set the spectator at the origin of the map, with 0 degrees
-# pitch, yaw and roll - a good way to orient yourself in the map
-
+# 이렇게 하면 관찰자가 맵의 원점에 위치하며
+# 피치, 요, 롤이 모두 0도로 설정됩니다.
+# 맵에서 방향을 잡는 데 좋은 방법입니다.
 ```
+## 관찰자를 사용한 커스텀 생성 지점 찾기
 
-## Finding a custom spawn point using the spectator
+관찰자는 액터들이 올바르게 생성되는지 확인하고 생성 위치를 결정하는 데 특히 유용합니다.
 
-The spectator is particularly useful to verify your actors are spawning correctly and also to determine locations for spawning. 
+생성 지점을 정의하는 방법에는 두 가지가 있습니다. 직접 커스텀 생성 지점을 정의하거나, 각 맵에서 제공하는 미리 정의된 생성 지점을 사용할 수 있습니다.
 
-We have two options to define spawn points. We can define our own custom spawn points, or we can use predefined spawn points that are provided with each map.
+커스텀 생성 지점을 정의하려면 생성 지점의 좌표를 알아야 합니다. 여기서 관찰자의 위치를 확인할 수 있으므로 관찰자가 도움이 됩니다.
 
-If we want to define a custom spawn point, we need to know the coordinates of the spawn point. Here we can use the spectator to help us since we can access its location.
+먼저, 위에서 설명한 컨트롤을 사용하여 관찰자를 원하는 지점으로 이동시킵니다.
 
-First, use the controls defined above to fly the spectator to a point of interest.
-
-Now, let's spawn a vehicle where the spectator is:
+이제 관찰자가 있는 위치에 차량을 생성해보겠습니다:
 
 ```py
 vehicle = world.try_spawn_actor(vehicle_bp, spectator.get_transform())
@@ -150,61 +141,57 @@ vehicle = world.try_spawn_actor(vehicle_bp, spectator.get_transform())
 
 ![spawn_vehicle](../img/tuto_G_getting_started/spawn_vehicle.gif)
 
-You'll now see a vehicle spawned at the point where the spectator is. It will take on both the location and the rotation of the spectator, so be sure to orient the spectator in the direction you want the vehicle to face. If you navigate close to the ground, the spectator will end up inside the vehicle, and if it is too close to the ground, the spawn may fail. If you spawn the vehicle with the spectator high in the air, the vehicle will drop to the ground.
+이제 관찰자가 있는 지점에 차량이 생성되는 것을 볼 수 있습니다. 차량은 관찰자의 위치와 회전 모두를 그대로 가져가므로, 차량이 향하길 원하는 방향으로 관찰자를 돌려놓았는지 확인하세요. 관찰자가 지면에 너무 가까우면 차량 내부에 위치하게 되거나 생성이 실패할 수 있습니다. 관찰자를 공중 높이 위치시키고 차량을 생성하면 차량은 지면으로 떨어질 것입니다.
 
-We can also record this point for later use, manually recording it or printing to a file:
+이 지점을 나중에 사용하기 위해 수동으로 기록하거나 파일로 출력할 수도 있습니다:
 
 ```py
 print(spectator.get_transform())
 
 >>> Transform(Location(x=25.761623, y=13.169240, z=0.539901), Rotation(pitch=0.862031, yaw=-2.056274, roll=0.000069))
-
 ```
 
-## Using and visualizing map spawn points
+## 맵 생성 지점 사용과 시각화
 
-Manually defining spawn points is useful for custom scenarios, however, if we need to create a whole city full of traffic, it could be very time consuming. For this reason, each map provides a set of predefined spawn points distributed evenly throughout the map to make creating large volumes of NPC traffic efficient.
+커스텀 생성 지점은 특별한 시나리오에 유용하지만, 도시 전체를 교통으로 채우려면 시간이 많이 걸릴 수 있습니다. 이러한 이유로, 각 맵은 대량의 NPC 교통을 효율적으로 생성할 수 있도록 맵 전체에 고르게 분포된 미리 정의된 생성 지점 세트를 제공합니다.
 
 ```py
-# Get the map's spawn points
+# 맵의 생성 지점 가져오기
 spawn_points = world.get_map().get_spawn_points()
 
-# Get the blueprint library and filter for the vehicle blueprints
+# 블루프린트 라이브러리에서 차량 블루프린트 필터링
 vehicle_bps = world.get_blueprint_library().filter('*vehicle*')
 
-# Spawn 50 vehicles randomly distributed throughout the map
+# 맵 전체에 무작위로 50대의 차량 생성
 for i in range(0,50):
-    world.try_spawn_actor(random.choice(vehicle_bps, random.choice(spawn_points)))
+    world.try_spawn_actor(random.choice(vehicle_bps), random.choice(spawn_points))
 ```
+이는 유용하지만, 차량들이 어디에 배치될지 정확히 알 수 없습니다. 다행히 CARLA의 디버그 도구를 사용하면 맵의 위치를 시각화할 수 있는 몇 가지 방법이 있습니다. 예를 들어, 도시의 특정 구역에 교통 체증을 만들고 싶어서 더 구체적인 생성 지점을 사용하고 싶다면, 시뮬레이션에 새로운 차량을 생성할 생성 지점 세트를 지정할 수 있습니다.
 
-This is useful, however, we don't really know where the vehicles are going to end up. Luckily CARLA's debug tools give us some ways of visualizing locations in the map. For example, if we wanted to be slightly more specific about which spawn points we wanted to use, in the case that we wanted to create congestion in one particular part of town, we could specify a set of spawn points for instantiating new vehicles in the simulation. 
-
-To do this, we can visualize the spawn points in the map.
+이를 위해 맵의 생성 지점들을 시각화해보겠습니다:
 
 ```py
-# Get the map spawn points
+# 맵 생성 지점 가져오기
 spawn_points = world.get_map().get_spawn_points()
 
 for i, spawn_point in enumerate(spawn_points):
-    # Draw in the spectator window the spawn point index
+    # 관찰자 창에 생성 지점 인덱스 표시
     world.debug.draw_string(spawn_point.location, str(i), life_time=100)
-    # We can also draw an arrow to see the orientation of the spawn point
-    # (i.e. which way the vehicle will be facing when spawned)
+    # 생성 지점의 방향을 보기 위해 화살표도 그릴 수 있습니다
+    # (차량이 생성될 때 향할 방향)
     world.debug.draw_arrow(spawn_point.location, spawn_point.location + spawn_point.get_forward_vector(), life_time=100)
-    
-
 ```
 
 ![spawn_points](../img/tuto_G_getting_started/spawn_points.png)
 
-Now we can note down the spawn point indices we are interested in and fill this street with vehicles:
+이제 우리가 관심 있는 생성 지점의 인덱스를 기록하고 이 거리에 차량을 채울 수 있습니다:
 
 ```py
 for ind in [89, 95, 99, 102, 103, 104, 110, 111, 115, 126, 135, 138, 139, 140, 141]:
     world.try_spawn_actor(random.choice(vehicle_bps), spawn_points[ind])
 ```
 
-Or spawn randomly throughout the map:
+또는 맵 전체에 무작위로 생성할 수도 있습니다:
 
 ```py
 for ind in range(0, 100):
@@ -213,26 +200,28 @@ for ind in range(0, 100):
 
 ![vehicle_street](../img/tuto_G_getting_started/vehicle_street.png)
 
-## Actors and blueprints
+## 액터와 블루프린트
 
-[__Actors__](python_api#carlaactor) are the objects within the CARLA simulation that have an affect or *act* upon other objects in the simulation. CARLA actors include vehicles, pedestrians, traffic lights, road signs, obstacles, cameras and sensors. Each actor requires a [__blueprint__](python_api#carlaactorblueprint). The blueprint defines all the necessary elements needed for an actor, including assets such as meshes, textures and materials and also any logic required to govern the behavior of the actor. To spawn an actor, we need to define it with a blueprint. 
+[__액터__](python_api#carlaactor)는 CARLA 시뮬레이션 내에서 다른 객체에 영향을 주거나 *행동*하는 객체입니다. CARLA 액터에는 차량, 보행자, 신호등, 도로 표지판, 장애물, 카메라, 센서가 포함됩니다. 각 액터는 [__블루프린트__](python_api#carlaactorblueprint)가 필요합니다. 블루프린트는 메시, 텍스처, 재질과 같은 에셋과 액터의 행동을 관장하는 데 필요한 모든 로직을 포함하여 액터에 필요한 모든 요소를 정의합니다. 액터를 생성하려면 블루프린트로 정의해야 합니다.
 
-CARLA provides a comprehensive library of blueprints including numerous types and models of vehicles, numerous pedestrian models and traffic lights, boxes, trash cans, shopping carts and traffic signals.
+CARLA는 다양한 종류와 모델의 차량, 여러 보행자 모델과 신호등, 상자, 쓰레기통, 쇼핑카트, 교통 신호 등을 포함하는 포괄적인 블루프린트 라이브러리를 제공합니다.
 
-We can use CARLA's [__blueprint library__](python_api#carlablueprintlibrary) to find and choose an appropriate blueprint for our needs:
+CARLA의 [__블루프린트 라이브러리__](python_api#carlablueprintlibrary)를 사용하여 우리의 필요에 맞는 적절한 블루프린트를 찾고 선택할 수 있습니다:
 
 ```py
-# Print all available blueprints
+# 사용 가능한 모든 블루프린트 출력
 for actor in world.get_blueprint_library():
     print(actor)
 ```
 
-The blueprint library can be filtered to narrow down our search:
+블루프린트 라이브러리를 필터링하여 검색 범위를 좁힐 수 있습니다:
 
 ```py
-# Print all available vehicle blueprints
+# 사용 가능한 모든 차량 블루프린트 출력
 for actor in world.get_blueprint_library().filter('vehicle'):
     print(actor)
 
 vehicle_blueprint = world.get_blueprint_library().find('vehicle.audi.tt')
 ```
+
+이것으로 CARLA 시작하기 가이드가 완성되었습니다. 이 기본적인 내용을 바탕으로 더 많은 기능을 탐험하고 복잡한 시뮬레이션을 구현해보세요.

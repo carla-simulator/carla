@@ -1,124 +1,127 @@
-# Actors and blueprints
+# 액터와 블루프린트
 
-Actors in CARLA are the elements that perform actions within the simulation, and they can affect other actors. Actors in CARLA includes vehicles and walkers and also sensors, traffic signs, traffic lights and the spectator. It is crucial to have full understanding on how to operate on them.  
+CARLA의 액터(Actors)는 시뮬레이션 내에서 동작을 수행하고 다른 액터들에게 영향을 미칠 수 있는 요소들입니다. CARLA의 액터에는 차량과 보행자뿐만 아니라 센서, 교통 표지판, 신호등, 관찰자(spectator)도 포함됩니다. 이러한 액터들을 어떻게 다루는지 완벽하게 이해하는 것이 매우 중요합니다.
 
-This section will cover spawning, destruction, types, and how to manage them. However, the possibilities are almost endless. Experiment, take a look at the __tutorials__ in this documentation and share doubts and ideas in the [CARLA forum](https://github.com/carla-simulator/carla/discussions/).  
+이 섹션에서는 액터의 생성, 제거, 유형 및 관리 방법을 다룹니다. 하지만 가능성은 거의 무한합니다. 실험해보고, 이 문서의 __튜토리얼__ 을 살펴보고, [CARLA 포럼](https://github.com/carla-simulator/carla/discussions/)에서 의문점과 아이디어를 공유해보세요.
 
-- [__Blueprints__](#blueprints)  
-	- [Managing the blueprint library](#managing-the-blueprint-library)  
-- [__Actor life cycle__](#actor-life-cycle)  
-	- [Spawning](#spawning)  
-	- [Handling](#handling)  
-	- [Destruction](#destruction)  
-- [__Types of actors__](#types-of-actors)  
-	- [Sensors](#sensors)  
-	- [Spectator](#spectator)  
-	- [Traffic signs and traffic lights](#traffic-signs-and-traffic-lights)  
-	- [Vehicles](#vehicles)  
-	- [Walkers](#walkers)  
+- [__블루프린트__](#블루프린트)  
+	- [블루프린트 라이브러리 관리](#블루프린트-라이브러리-관리)  
+- [__액터 수명 주기__](#액터-수명-주기)  
+	- [생성](#생성)  
+	- [제어](#제어)  
+	- [제거](#제거)  
+- [__액터의 종류__](#액터의-종류)  
+	- [센서](#센서)  
+	- [관찰자](#관찰자)  
+	- [교통 표지판과 신호등](#교통-표지판과-신호등)  
+	- [차량](#차량)  
+	- [보행자](#보행자)  
 
 ---
-## Blueprints
+## 블루프린트
 
-These layouts allow the user to smoothly incorporate new actors into the simulation. They are already-made models with animations and a series of attributes. Some of these are modifiable and others are not. These attributes include, among others, vehicle color, amount of channels in a lidar sensor, a walker's speed, and much more.
+블루프린트는 사용자가 새로운 액터를 시뮬레이션에 쉽게 추가할 수 있게 해주는 레이아웃입니다. 이는 애니메이션과 일련의 속성이 포함된 미리 만들어진 모델입니다. 이러한 속성 중 일부는 수정할 수 있고 일부는 수정할 수 없습니다. 이 속성들에는 차량 색상, 라이다 센서의 채널 수, 보행자의 속도 등 다양한 요소들이 포함됩니다.
 
-Available blueprints are listed in the [blueprint library](bp_library.md), along with their attributes. Vehicle and walker blueprints have a generation attribute that indicates if they are a new (gen 2) or old (gen 1) asset.
+[블루프린트 라이브러리](bp_library.md)에서 사용 가능한 블루프린트와 그 속성들을 확인할 수 있습니다. 차량과 보행자 블루프린트에는 새로운(gen 2) 또는 이전(gen 1) 에셋인지를 나타내는 세대 속성이 있습니다.
+### 블루프린트 라이브러리 관리
 
-### Managing the blueprint library
+[carla.BlueprintLibrary](python_api.md#carla.BlueprintLibrary) 클래스는 [carla.ActorBlueprint](python_api.md#carla.ActorBlueprint) 요소들의 목록을 포함합니다. world 객체를 통해 이 라이브러리에 접근할 수 있습니다.
 
-The [carla.BlueprintLibrary](python_api.md#carla.BlueprintLibrary) class contains a list of [carla.ActorBlueprint](python_api.md#carla.ActorBlueprint) elements. It is the world object who can provide access to it.
 ```py
 blueprint_library = world.get_blueprint_library()
 ```
-Blueprints have an ID to identify them and the actors spawned with it. The library can be read to find a certain ID, choose a blueprint at random, or filter results using a [wildcard pattern](https://tldp.org/LDP/GNU-Linux-Tools-Summary/html/x11655.htm).
+
+블루프린트에는 해당 블루프린트와 그것으로 생성된 액터를 식별하는 ID가 있습니다. 라이브러리에서 특정 ID를 찾거나, 무작위로 블루프린트를 선택하거나, [와일드카드 패턴](https://tldp.org/LDP/GNU-Linux-Tools-Summary/html/x11655.htm)을 사용하여 결과를 필터링할 수 있습니다.
 
 ```py
-# Find a specific blueprint.
+# 특정 블루프린트 찾기
 collision_sensor_bp = blueprint_library.find('sensor.other.collision')
-# Choose a vehicle blueprint at random.
+# 무작위로 차량 블루프린트 선택하기
 vehicle_bp = random.choice(blueprint_library.filter('vehicle.*.*'))
 ```
 
-Besides that, each [carla.ActorBlueprint](python_api.md#carla.ActorBlueprint) has a series of [carla.ActorAttribute](python_api.md#carla.ActorAttribute) that can be _get_ and _set_.
+또한, 각 [carla.ActorBlueprint](python_api.md#carla.ActorBlueprint)는 일련의 [carla.ActorAttribute](python_api.md#carla.ActorAttribute)를 가지고 있어 이를 _가져오거나(get)_ _설정할(set)_ 수 있습니다.
+
 ```py
 is_bike = [vehicle.get_attribute('number_of_wheels') == 2]
-if(is_bike)
+if(is_bike):
     vehicle.set_attribute('color', '255,0,0')
 ```
-!!! Note
-    Some of the attributes cannot be modified. Check it out in the [blueprint library](bp_library.md).
 
-Attributes have an [carla.ActorAttributeType](python_api.md#carla.ActorAttributeType) variable. It states its type from a list of enums. Also, modifiable attributes come with a __list of recommended values__. 
+!!! 참고
+    일부 속성은 수정할 수 없습니다. [블루프린트 라이브러리](bp_library.md)에서 확인하세요.
+
+속성들은 [carla.ActorAttributeType](python_api.md#carla.ActorAttributeType) 변수를 가지고 있습니다. 이는 열거형 목록에서 해당 속성의 유형을 나타냅니다. 또한, 수정 가능한 속성들은 __권장 값 목록__ 을 제공합니다.
 
 ```py
 for attr in blueprint:
     if attr.is_modifiable:
         blueprint.set_attribute(attr.id, random.choice(attr.recommended_values))
 ```
-!!! Note
-    Users can create their own vehicles. Check the __Tutorials (assets)__ to learn on that. Contributors can [add their new content to CARLA](tuto_D_contribute_assets.md). 
 
+!!! 참고
+    사용자는 자신만의 차량을 만들 수 있습니다. __튜토리얼(에셋)__ 을 확인하여 방법을 알아보세요. 기여자들은 [새로운 콘텐츠를 CARLA에 추가](tuto_D_contribute_assets.md)할 수 있습니다.
 ---
-## Actor life cycle  
+## 액터 수명 주기
 
-!!! Important
-    This section mentions different methods regarding actors. The Python API provides for __[commands](python_api.md#command.SpawnActor)__ to apply batches of the most common ones, in just one frame. 
+!!! 중요
+    이 섹션에서는 액터와 관련된 여러 메서드를 다룹니다. Python API는 가장 일반적인 메서드들을 하나의 프레임에서 일괄 처리할 수 있는 __[commands](python_api.md#command.SpawnActor)__ 를 제공합니다.
 
-### Spawning
+### 생성
 
-__The world object is responsible of spawning actors and keeping track of these.__ Spawning only requires a blueprint, and a [carla.Transform](python_api.md#carla.Transform) stating a location and rotation for the actor.  
+__world 객체는 액터를 생성하고 이를 추적하는 책임을 가집니다.__ 생성에는 블루프린트와 액터의 위치 및 회전을 지정하는 [carla.Transform](python_api.md#carla.Transform)만 필요합니다.
 
-The world has two different methods to spawn actors.  
+world는 액터를 생성하는 두 가지 다른 메서드를 제공합니다.
 
-* [`spawn_actor()`](python_api.md#carla.World.spawn_actor) raises an exception if the spawning fails.
-* [`try_spawn_actor()`](python_api.md#carla.World.try_spawn_actor) returns `None` if the spawning fails.
+* [`spawn_actor()`](python_api.md#carla.World.spawn_actor)는 생성이 실패하면 예외를 발생시킵니다.
+* [`try_spawn_actor()`](python_api.md#carla.World.try_spawn_actor)는 생성이 실패하면 `None`을 반환합니다.
 
 ```py
 transform = Transform(Location(x=230, y=195, z=40), Rotation(yaw=180))
 actor = world.spawn_actor(blueprint, transform)
 ```
 
-!!! Important
-    CARLA uses the [Unreal Engine coordinates system](https://carla.readthedocs.io/en/latest/python_api/#carlarotation). Remember that [`carla.Rotation`](https://carla.readthedocs.io/en/latest/python_api/#carlarotation) constructor is defined as `(pitch, yaw, roll)`, that differs from Unreal Engine Editor `(roll, pitch, yaw)`. 
+!!! 중요
+    CARLA는 [언리얼 엔진 좌표계](https://carla.readthedocs.io/en/latest/python_api/#carlarotation)를 사용합니다. [`carla.Rotation`](https://carla.readthedocs.io/en/latest/python_api/#carlarotation) 생성자는 `(pitch, yaw, roll)`로 정의되며, 이는 언리얼 엔진 에디터의 `(roll, pitch, yaw)`와 다르다는 점을 기억하세요.
 
-The actor will not be spawned in case of collision at the specified location. No matter if this happens with a static object or another actor. It is possible to try avoiding these undesired spawning collisions.  
+지정된 위치에서 충돌이 발생하면 액터가 생성되지 않습니다. 이는 정적 객체나 다른 액터와의 충돌 모두에 해당합니다. 이러한 원치 않는 생성 충돌을 피하기 위한 방법이 있습니다.
 
-* `map.get_spawn_points()` __for vehicles__. Returns a list of recommended spawning points. 
+* __차량을 위한__ `map.get_spawn_points()`. 권장되는 생성 지점 목록을 반환합니다.
 
 ```py
 spawn_points = world.get_map().get_spawn_points()
 ```
 
-* `world.get_random_location()` __for walkers__. Returns a random point on a sidewalk. This same method is used to set a goal location for walkers.  
+* __보행자를 위한__ `world.get_random_location()`. 보도 위의 무작위 지점을 반환합니다. 이 메서드는 보행자의 목표 위치를 설정할 때도 사용됩니다.
 
 ```py
 spawn_point = carla.Transform()
 spawn_point.location = world.get_random_location_from_navigation()
 ```
 
-An actor can be attached to another one when spawned. Actors follow the parent they are attached to. This is specially useful for sensors. The attachment can be rigid (proper to retrieve precise data) or with an eased movement according to its parent. It is defined by the helper class [carla.AttachmentType](python_api.md#carla.AttachmentType).  
+액터는 생성될 때 다른 액터에 부착될 수 있습니다. 액터는 부착된 부모를 따라갑니다. 이는 특히 센서에 유용합니다. 부착은 (정밀한 데이터 수집에 적합한) 강체 방식이거나 부모에 따라 완화된 움직임을 가질 수 있습니다. 이는 헬퍼 클래스 [carla.AttachmentType](python_api.md#carla.AttachmentType)에 의해 정의됩니다.
 
-The next example attaches a camera rigidly to a vehicle, so their relative position remains fixed. 
+다음 예제는 카메라를 차량에 강체로 부착하여 상대 위치가 고정되도록 합니다.
 
 ```py
 camera = world.spawn_actor(camera_bp, relative_transform, attach_to=my_vehicle, carla.AttachmentType.Rigid)
 ```
-!!! Important
-    When spawning attached actors, the transform provided must be relative to the parent actor. 
 
-Once spawned, the world object adds the actors to a list. This can be easily searched or iterated on. 
+!!! 중요
+    부착된 액터를 생성할 때, 제공되는 transform은 부모 액터를 기준으로 한 상대적인 것이어야 합니다.
+생성되면 world 객체는 액터들을 목록에 추가합니다. 이 목록은 쉽게 검색하거나 반복할 수 있습니다.
 ```py
 actor_list = world.get_actors()
-# Find an actor by id.
+# ID로 액터 찾기
 actor = actor_list.find(id)
-# Print the location of all the speed limit signs in the world.
+# 월드의 모든 속도 제한 표지판의 위치 출력하기
 for speed_sign in actor_list.filter('traffic.speed_limit.*'):
     print(speed_sign.get_location())
 ```
 
-### Handling
+### 제어
 
-[carla.Actor](python_api.md#carla.Actor) mostly consists of _get()_ and _set()_ methods to manage the actors around the map. 
+[carla.Actor](python_api.md#carla.Actor)는 주로 맵 주변의 액터들을 관리하기 위한 _get()_ 과 _set()_ 메서드로 구성되어 있습니다.
 
 ```py
 print(actor.get_acceleration())
@@ -129,113 +132,114 @@ location.z += 10.0
 actor.set_location(location)
 ```
 
-The actor's physics can be disabled to freeze it in place. 
+액터의 물리 효과를 비활성화하여 제자리에 고정할 수 있습니다.
 
 ```py
 actor.set_simulate_physics(False)
 ```
-Besides that, actors also have tags provided by their blueprints. These are mostly useful for semantic segmentation sensors. 
 
-!!! Warning
-    Most of the methods send requests to the simulator asynchronously. The simulator has a limited amount of time each update to parse them. Flooding the simulator with _set()_ methods will accumulate a significant lag.
+또한 액터들은 블루프린트에서 제공하는 태그를 가지고 있습니다. 이는 주로 시맨틱 세그멘테이션 센서에 유용합니다.
 
+!!! 경고
+    대부분의 메서드는 시뮬레이터에 비동기적으로 요청을 보냅니다. 시뮬레이터는 각 업데이트마다 이를 처리할 시간이 제한되어 있습니다. _set()_ 메서드를 과도하게 사용하면 상당한 지연이 누적될 수 있습니다.
 
-### Destruction
+### 제거
 
-Actors are not destroyed when a Python script finishes. They have to explicitly destroy themselves.  
+액터는 Python 스크립트가 종료될 때 자동으로 제거되지 않습니다. 명시적으로 자신을 제거해야 합니다.
 
 ```py
-destroyed_sucessfully = actor.destroy() # Returns True if successful
+destroyed_sucessfully = actor.destroy() # 성공하면 True 반환
 ```
 
-!!! Important
-    Destroying an actor blocks the simulator until the process finishes. 
+!!! 중요
+    액터를 제거하는 것은 프로세스가 완료될 때까지 시뮬레이터를 블록합니다.
 
 ---
-## Types of actors  
-### Sensors
+## 액터의 종류
 
-Sensors are actors that produce a stream of data. They have their own section, [4th. Sensors and data](core_sensors.md). For now, let's just take a look at a common sensor spawning cycle.  
+### 센서
 
-This example spawns a camera sensor, attaches it to a vehicle, and tells the camera to save the images generated to disk.  
+센서는 데이터 스트림을 생성하는 액터입니다. 이들은 별도의 섹션인 [4단계. 센서와 데이터](core_sensors.md)에서 다룹니다. 지금은 일반적인 센서 생성 주기를 살펴보겠습니다.
+
+이 예제는 카메라 센서를 생성하고, 차량에 부착한 다음, 생성된 이미지를 디스크에 저장하도록 카메라에 지시합니다.
 
 ```py
 camera_bp = blueprint_library.find('sensor.camera.rgb')
 camera = world.spawn_actor(camera_bp, relative_transform, attach_to=my_vehicle)
 camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame))
 ```
-* Sensors have blueprints too. Setting attributes is crucial.  
-* Most of the sensors will be attached to a vehicle to gather information on its surroundings. 
-* Sensors __listen__ to data. When data is received, they call a function described with a __[Lambda expression](https://docs.python.org/3/reference/expressions.html)__ <small>(6.14 in the link provided)</small>. 
+* 센서도 블루프린트를 가집니다. 속성 설정이 매우 중요합니다.
+* 대부분의 센서는 주변 정보를 수집하기 위해 차량에 부착됩니다.
+* 센서는 데이터를 __수신__ 합니다. 데이터가 수신되면 __[Lambda 표현식](https://docs.python.org/3/reference/expressions.html)__ 으로 정의된 함수를 호출합니다 <small>(링크의 6.14 참조)</small>.
+### 관찰자
 
-### Spectator
-
-Placed by Unreal Engine to provide an in-game point of view. It can be used to move the view of the simulator window. The following example would move the spectator actor, to point the view towards a desired vehicle. 
+관찰자는 언리얼 엔진에 의해 배치되어 게임 내 시점을 제공합니다. 시뮬레이터 창의 시점을 이동하는 데 사용할 수 있습니다. 다음 예제는 관찰자 액터를 이동시켜 원하는 차량을 바라보도록 시점을 변경합니다.
 
 ```py
 spectator = world.get_spectator()
 transform = vehicle.get_transform()
 spectator.set_transform(carla.Transform(transform.location + carla.Location(z=50),
 carla.Rotation(pitch=-90)))
-
 ```
 
-### Traffic signs and traffic lights
+### 교통 표지판과 신호등
 
-Only stops, yields and traffic lights are considered actors in CARLA so far. The rest of the OpenDRIVE signs are accessible from the API as [__carla.Landmark__](python_api.md#carla.Landmark). Their information is accessible using these instances, but they do no exist in the simulation as actors. Landmarks are explained more in detail in the following step, __3rd. Maps and navigation__.  
+현재 CARLA에서는 정지 표지판, 양보 표지판, 신호등만이 액터로 간주됩니다. 나머지 OpenDRIVE 표지판들은 API에서 [__carla.Landmark__](python_api.md#carla.Landmark)로 접근할 수 있습니다. 이들의 정보는 이러한 인스턴스를 통해 접근할 수 있지만, 시뮬레이션에서 액터로 존재하지는 않습니다. 랜드마크는 다음 단계인 __3단계. 맵과 내비게이션__ 에서 더 자세히 설명됩니다.
 
-When the simulation starts, stop, yields and traffic light are automatically generated using the information in the OpenDRIVE file. __None of these can be found in the blueprint library__ and thus, cannot be spawned. 
+시뮬레이션이 시작되면 정지 표지판, 양보 표지판, 신호등은 OpenDRIVE 파일의 정보를 사용하여 자동으로 생성됩니다. __이들은 블루프린트 라이브러리에서 찾을 수 없으며__ 따라서 직접 생성할 수 없습니다.
 
-!!! Note
-    CARLA maps do not have traffic signs nor lights in the OpenDRIVE file. These are manually placed by developers.  
+!!! 참고
+    CARLA 맵은 OpenDRIVE 파일에 교통 표지판이나 신호등을 포함하지 않습니다. 이들은 개발자가 수동으로 배치합니다.
 
-[__Traffic signs__](python_api.md#carla.TrafficSign) are not defined in the road map itself, as explained in the following page. Instead, they have a [carla.BoundingBox](python_api.md#carla.BoundingBox) to affect vehicles inside of it.  
+[__교통 표지판__](python_api.md#carla.TrafficSign)은 다음 페이지에서 설명하는 것처럼 도로 맵 자체에 정의되어 있지 않습니다. 대신, [carla.BoundingBox](python_api.md#carla.BoundingBox)를 사용하여 그 안에 있는 차량에 영향을 줍니다.
+
 ```py
-#Get the traffic light affecting a vehicle
+#차량에 영향을 주는 신호등 가져오기
 if vehicle_actor.is_at_traffic_light():
     traffic_light = vehicle_actor.get_traffic_light()
-``` 
-[__Traffic lights__](python_api.md#carla.TrafficLight) are found in junctions. They have their unique ID, as any actor, but also a `group` ID for the junction. To identify the traffic lights in the same group, a `pole` ID is used.  
+```
 
-The traffic lights in the same group follow a cycle. The first one is set to green while the rest remain frozen in red. The active one spends a few seconds in green, yellow and red, so there is a period of time where all the lights are red. Then, the next traffic light starts its cycle, and the previous one is frozen with the rest.  
+[__신호등__](python_api.md#carla.TrafficLight)은 교차로에 있습니다. 모든 액터처럼 고유한 ID를 가지고 있지만, 교차로를 위한 `group` ID도 있습니다. 같은 그룹의 신호등을 식별하기 위해 `pole` ID가 사용됩니다.
 
-The state of a traffic light can be set using the API. So does the seconds spent on each state. Possible states are described with [carla.TrafficLightState](python_api.md#carla.TrafficLightState) as a series of enum values. 
+같은 그룹의 신호등들은 주기를 따릅니다. 첫 번째 신호등이 녹색으로 설정되는 동안 나머지는 빨간색으로 고정됩니다. 활성화된 신호등은 녹색, 노란색, 빨간색에 각각 몇 초를 소비하므로, 모든 신호등이 빨간색인 기간이 있습니다. 그런 다음 다음 신호등이 주기를 시작하고, 이전 신호등은 나머지와 함께 고정됩니다.
+
+API를 사용하여 신호등의 상태를 설정할 수 있습니다. 각 상태에 소비되는 시간도 마찬가지입니다. 가능한 상태는 [carla.TrafficLightState](python_api.md#carla.TrafficLightState)에서 열거형 값으로 설명됩니다.
+
 ```py
-#Change a red traffic light to green
+#빨간색 신호등을 녹색으로 변경
 if traffic_light.get_state() == carla.TrafficLightState.Red:
     traffic_light.set_state(carla.TrafficLightState.Green)
     traffic_light.set_set_green_time(4.0)
-``` 
+```
 
-!!! Note
-    Vehicles will only be aware of a traffic light if the light is red.  
+!!! 참고
+    차량은 신호등이 빨간색일 때만 신호등을 인식합니다.
+### 차량
 
-### Vehicles
+[__carla.Vehicle__](python_api.md#carla.Vehicle)은 특별한 종류의 액터입니다. 바퀴 달린 차량의 물리학을 시뮬레이션하는 특별한 내부 구성 요소를 포함합니다. 이는 네 가지 다른 종류의 제어를 적용하여 구현됩니다:
 
-[__carla.Vehicle__](python_api.md#carla.Vehicle) is a special type of actor. It incorporates special internal components that simulate the physics of wheeled vehicles. This is achieved by applying four types of different controls:  
-
-* __[carla.VehicleControl](python_api.md#carla.VehicleControl)__ provides input for driving commands such as throttle, steering, brake, etc. 
+* __[carla.VehicleControl](python_api.md#carla.VehicleControl)__ 는 가속, 조향, 제동 등과 같은 주행 명령을 위한 입력을 제공합니다.
 ```py
     vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-1.0))
 ```
-* __[carla.VehiclePhysicsControl](python_api.md#carla.VehiclePhysicsControl)__ defines physical attributes of the vehicle and contains two more controllers:
+* __[carla.VehiclePhysicsControl](python_api.md#carla.VehiclePhysicsControl)__ 는 차량의 물리적 속성을 정의하고 두 가지 추가 컨트롤러를 포함합니다:
 
-    * [carla.GearPhysicsControl](python_api.md#carla.GearPhysicsControl) which controls the gears. 
-    * [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl) which provides specific control over each wheel.  
+    * [carla.GearPhysicsControl](python_api.md#carla.GearPhysicsControl)로 기어를 제어합니다.
+    * [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl)로 각 바퀴를 개별적으로 제어합니다.
 
 ```py
     vehicle.apply_physics_control(carla.VehiclePhysicsControl(max_rpm = 5000.0, center_of_mass = carla.Vector3D(0.0, 0.0, 0.0), torque_curve=[[0,400],[5000,400]]))
 ```
 
-Vehicles have a [carla.BoundingBox](python_api.md#carla.BoundingBox) encapsulating them. This bounding box allows physics to be applied to the vehicle and enables collisions to be detected.  
+차량에는 이를 감싸는 [carla.BoundingBox](python_api.md#carla.BoundingBox)가 있습니다. 이 경계 상자는 차량에 물리 법칙이 적용되도록 하고 충돌을 감지할 수 있게 합니다.
 
 ```py
     box = vehicle.bounding_box
-    print(box.location)         # Location relative to the vehicle.
-    print(box.extent)           # XYZ half-box extents in meters.
+    print(box.location)         # 차량을 기준으로 한 상대 위치
+    print(box.extent)           # XYZ 반경(미터 단위)
 ```
 
-The physics of vehicle wheels can be improved by enabling the [sweep wheel collision parameter][enable_sweep]. The default wheel physics uses single ray casting from the axis to the floor for each wheel but when sweep wheel collision is enabled, the full volume of the wheel is checked against collisions. It can be enabled as such:
+차량 바퀴의 물리학은 [sweep wheel collision 매개변수][enable_sweep]를 활성화하여 개선할 수 있습니다. 기본 바퀴 물리학은 각 바퀴에 대해 축에서 바닥까지 단일 레이캐스팅을 사용하지만, sweep wheel collision이 활성화되면 바퀴의 전체 부피에 대해 충돌을 확인합니다. 다음과 같이 활성화할 수 있습니다:
 
 ```py
     physics_control = vehicle.get_physics_control()
@@ -245,76 +249,76 @@ The physics of vehicle wheels can be improved by enabling the [sweep wheel colli
 
 [enable_sweep]: https://carla.readthedocs.io/en/latest/python_api/#carla.VehiclePhysicsControl.use_sweep_wheel_collision
 
+차량에는 다른 고유한 기능들도 포함되어 있습니다:
 
-Vehicles include other functionalities unique to them:
-
-* __Autopilot mode__ will subscribe a vehicle to the [Traffic Manager](adv_traffic_manager.md) to simulate real urban conditions. This module is hard-coded, not based on machine learning.  
+* __자율주행 모드__ 는 실제 도시 조건을 시뮬레이션하기 위해 차량을 [Traffic Manager](adv_traffic_manager.md)에 등록합니다. 이 모듈은 하드코딩되어 있으며 머신러닝 기반이 아닙니다.
 
 ```py
     vehicle.set_autopilot(True)
 ```
-* __Vehicle lights__ have to be turned on and off by the user. Each vehicle has a set of lights listed in [__carla.VehicleLightState__](python_api.md#carla.VehicleLightState). Not all vehicles have lights integrated. At the time of writing, vehicles with integrated lights are as follows:  
-	*   __Bikes:__ All bikes have a front and back position light.  
-	*   __Motorcycles:__ Yamaha and Harley Davidson models.  
-	*   __Cars:__ Audi TT, Chevrolet Impala, both Dodge police cars, Dodge Charger, Audi e-tron, Lincoln 2017 and 2020, Mustang, Tesla Model 3, Tesla Cybertruck, Volkswagen T2 and the Mercedes C-Class.  
 
-The lights of a vehicle can be retrieved and updated anytime using the methods [carla.Vehicle.get_light_state](python_api.md#carla.Vehicle.get_light_state) and [carla.Vehicle.set_light_state](#python_api.md#carla.Vehicle.set_light_state). These use binary operations to customize the light setting.  
+* __차량 조명__ 은 사용자가 직접 켜고 꺼야 합니다. 각 차량은 [__carla.VehicleLightState__](python_api.md#carla.VehicleLightState)에 나열된 조명 세트를 가지고 있습니다. 모든 차량이 조명을 가지고 있는 것은 아닙니다. 현재 조명이 통합된 차량은 다음과 같습니다:
+    * __자전거:__ 모든 자전거는 전방과 후방 위치등을 가지고 있습니다.
+    * __오토바이:__ Yamaha와 Harley Davidson 모델.
+    * __자동차:__ Audi TT, Chevrolet Impala, 두 종류의 Dodge 경찰차, Dodge Charger, Audi e-tron, Lincoln 2017과 2020, Mustang, Tesla Model 3, Tesla Cybertruck, Volkswagen T2, Mercedes C-Class.
+차량의 조명은 [carla.Vehicle.get_light_state](python_api.md#carla.Vehicle.get_light_state)와 [carla.Vehicle.set_light_state](#python_api.md#carla.Vehicle.set_light_state) 메서드를 사용하여 언제든지 확인하고 업데이트할 수 있습니다. 이들은 이진 연산을 사용하여 조명 설정을 커스터마이즈합니다.
 
 ```py
-# Turn on position lights
+# 위치등 켜기
 current_lights = carla.VehicleLightState.NONE
 current_lights |= carla.VehicleLightState.Position
 vehicle.set_light_state(current_lights)
 ```
 
-### Walkers
+### 보행자
 
-[__carla.Walker__](python_api.md#carla.Walker) work in a similar way as vehicles do. Control over them is provided by controllers.  
+[__carla.Walker__](python_api.md#carla.Walker)는 차량과 비슷한 방식으로 작동합니다. 컨트롤러를 통해 제어됩니다.
 
-* [__carla.WalkerControl__](python_api.md#carla.WalkerControl) moves the pedestrian around with a certain direction and speed. It also allows them to jump. 
-* [__carla.WalkerBoneControl__](python_api.md#carla.WalkerBoneControl) provides control over the 3D skeleton. [This tutorial](tuto_G_control_walker_skeletons.md) explains how to control it. 
+* [__carla.WalkerControl__](python_api.md#carla.WalkerControl)은 보행자를 특정 방향과 속도로 이동시킵니다. 점프도 가능하게 합니다.
+* [__carla.WalkerBoneControl__](python_api.md#carla.WalkerBoneControl)은 3D 스켈레톤을 제어합니다. [이 튜토리얼](tuto_G_control_walker_skeletons.md)에서 제어 방법을 설명합니다.
 
-Walkers can be AI controlled. They do not have an autopilot mode. The [__carla.WalkerAIController__](python_api.md#carla.WalkerAIController) actor moves around the actor it is attached to.  
+보행자는 AI로 제어될 수 있습니다. 자율주행 모드는 없습니다. [__carla.WalkerAIController__](python_api.md#carla.WalkerAIController) 액터는 자신이 부착된 액터를 이동시킵니다.
 
 ```py
 walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
 world.SpawnActor(walker_controller_bp, carla.Transform(), parent_walker)
 ```
-!!! Note
-    The AI controller is bodiless and has no physics. It will not appear on scene. Also, location `(0,0,0)` relative to its parent will not cause a collision.  
 
+!!! 참고
+    AI 컨트롤러는 몸체가 없고 물리 효과가 없습니다. 화면에 나타나지 않습니다. 또한, 부모에 대한 상대 위치 `(0,0,0)`는 충돌을 일으키지 않습니다.
 
-__Each AI controller needs initialization, a goal and, optionally, a speed__. Stopping the controller works in the same manner. 
+__각 AI 컨트롤러는 초기화, 목표, 선택적으로 속도가 필요합니다.__ 컨트롤러 정지도 같은 방식으로 작동합니다.
 
 ```py
 ai_controller.start()
 ai_controller.go_to_location(world.get_random_location_from_navigation())
-ai_controller.set_max_speed(1 + random.random())  # Between 1 and 2 m/s (default is 1.4 m/s).
+ai_controller.set_max_speed(1 + random.random())  # 1~2 m/s 사이 (기본값은 1.4 m/s)
 ...
 ai_controller.stop()
 ```
-When a walker reaches the target location, they will automatically walk to another random point. If the target point is not reachable, walkers will go to the closest point from their current location.
 
-A snipet in [carla.Client](python_api.md#carla.Client.apply_batch_sync) uses batches to spawn a lot of walkers and make them wander around.
+보행자가 목표 위치에 도달하면 자동으로 다른 무작위 지점으로 걸어갑니다. 목표 지점에 도달할 수 없는 경우, 보행자는 현재 위치에서 가장 가까운 지점으로 이동합니다.
 
-!!! Important
-    __To destroy AI pedestrians__, stop the AI controller and destroy both, the actor, and the controller. 
+[carla.Client](python_api.md#carla.Client.apply_batch_sync)의 코드 조각은 배치를 사용하여 많은 보행자를 생성하고 돌아다니게 만듭니다.
+
+!!! 중요
+    __AI 보행자를 제거하려면__, AI 컨트롤러를 정지시키고 액터와 컨트롤러 모두를 제거해야 합니다.
 
 ---
-That is a wrap as regarding actors in CARLA. The next step takes a closer look into the map, roads and traffic in CARLA.  
+이것으로 CARLA의 액터에 대한 설명을 마무리합니다. 다음 단계에서는 CARLA의 맵, 도로, 교통에 대해 자세히 살펴보겠습니다.
 
-Keep reading to learn more or visit the forum to post any doubts or suggestions that have come to mind during this reading. 
+계속 읽어보시거나 포럼을 방문하여 이 글을 읽는 동안 생긴 의문점이나 제안 사항을 게시해주세요.
 <div text-align: center>
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA 포럼">
+CARLA 포럼</a>
 </p>
 </div>
 <div class="build-buttons">
 <p>
-<a href="../core_map" target="_blank" class="btn btn-neutral" title="3rd. Maps and navigation">
-3rd. Maps and navigation</a>
+<a href="../core_map" target="_blank" class="btn btn-neutral" title="3단계. 맵과 내비게이션">
+3단계. 맵과 내비게이션</a>
 </p>
 </div>
 </div>
