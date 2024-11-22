@@ -3,7 +3,6 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
-#define _GLIBCXX_USE_CXX11_ABI 0
 
 #include <memory>
 #include <vector>
