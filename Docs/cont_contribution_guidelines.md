@@ -1,139 +1,137 @@
-# Contributing to CARLA
+# CARLA에 기여하기
 
-The CARLA team is glad to accept contributions from anybody willing to collaborate. There are different ways to contribute to the project, depending on the capabilities of the contributor. The team will work as much as possible so that contributions are successfully integrated in CARLA.  
+CARLA 팀은 협력하고자 하는 모든 분들의 기여를 기쁘게 받아들입니다. 기여자의 능력에 따라 프로젝트에 기여할 수 있는 다양한 방법이 있습니다. 팀은 기여가 CARLA에 성공적으로 통합될 수 있도록 최선을 다할 것입니다.
 
-Take a look and don't hesitate!  
+살펴보시고 주저하지 마세요!
 
-*   [__Report bugs__](#report-bugs)  
-*   [__Request features__](#request-features)  
-*   [__Code contributions__](#code-contributions)  
-	*   [Learn about Unreal Engine](#learn-about-unreal-engine)  
-	*   [Before getting started](#before-getting-started)  
-	*   [Coding standard](#coding-standard)  
-	*   [Submission](#submission)  
-	*   [Checklist](#checklist)  
-*   [__Art contributions__](#art-contributions)  
-*   [__Docs contributions__](#docs-contributions)  
+*   [__버그 보고__](#버그-보고)  
+*   [__기능 요청__](#기능-요청)  
+*   [__코드 기여__](#코드-기여)  
+    *   [언리얼 엔진 학습](#언리얼-엔진-학습)  
+    *   [시작하기 전에](#시작하기-전에)  
+    *   [코딩 표준](#코딩-표준)  
+    *   [제출](#제출)  
+    *   [체크리스트](#체크리스트)  
+*   [__아트 기여__](#아트-기여)  
+*   [__문서 기여__](#문서-기여)  
 
 ---
-## Report bugs
+## 버그 보고
 
-Issues can be reported in the [issue section][issueslink] on GitHub. Before reporting a new bug, make sure to do some checkups.  
+GitHub의 [이슈 섹션][issueslink]에서 문제를 보고할 수 있습니다. 새로운 버그를 보고하기 전에 몇 가지 확인 사항을 점검하세요.
 
-__1. Check if the bug has been reported.__ Look it up in that same issue section on GitHub.  
+__1. 버그가 이미 보고되었는지 확인하세요.__ GitHub의 동일한 이슈 섹션에서 검색해보세요.
 
-__2. Read the docs.__ Make sure that the issue is a bug, not a misunderstanding on how is CARLA supposed to work. Read the pages related to the issue in the [Documentation][docslink] and take a look at the [FAQ][faqlink] page.
+__2. 문서를 읽으세요.__ 해당 이슈가 CARLA가 작동하는 방식에 대한 오해가 아닌 버그인지 확인하세요. [문서][docslink]에서 이슈와 관련된 페이지를 읽고 [FAQ][faqlink] 페이지를 살펴보세요.
 
 [issueslink]: https://github.com/carla-simulator/carla/issues
 [docslink]: http://carla.readthedocs.io
 [faqlink]: build_faq.md
 
 ---
-## Request features
+## 기능 요청
 
-Ideas for new features are also a great way to contribute. Any suggestion that could improve the users' experience  can be submitted in the corresponding GitHub section [here][frlink].
+새로운 기능에 대한 아이디어도 기여하는 좋은 방법입니다. 사용자 경험을 개선할 수 있는 모든 제안은 [여기][frlink]에 있는 GitHub 섹션에서 제출할 수 있습니다.
 
 [frlink]: https://github.com/carla-simulator/carla/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22+sort%3Acomments-desc
 
 ---
-## Code contributions
+## 코드 기여
 
-Before starting hands-on on coding, please check out the [issue board][issueboard] to check what is the team already working on, to avoid overlapping. In case of doubt or to discuss how to proceed, please contact one of us (or send an email to <carla.simulator@gmail.com>).  
+코딩을 시작하기 전에 중복을 피하기 위해 [이슈 보드][issueboard]를 확인하여 팀이 이미 작업 중인 내용을 확인하세요. 의문이 있거나 진행 방법에 대해 논의하고 싶다면 팀원에게 연락하거나 이메일(<carla.simulator@gmail.com>)을 보내주세요.
 
-In order to start working, [fork the CARLA repository](https://docs.github.com/en/enterprise/2.13/user/articles/fork-a-repo), and clone said fork in your computer. Remember to [keep your fork in sync](https://docs.github.com/en/enterprise/2.13/user/articles/syncing-a-fork) with the original repository.  
+작업을 시작하려면 [CARLA 저장소를 포크](https://docs.github.com/en/enterprise/2.13/user/articles/fork-a-repo)하고 해당 포크를 컴퓨터에 복제하세요. [포크를 원본 저장소와 동기화](https://docs.github.com/en/enterprise/2.13/user/articles/syncing-a-fork)하는 것을 잊지 마세요.
 
 [issueboard]: https://github.com/carla-simulator/carla/issues
 
-### Learn about Unreal Engine
+### 언리얼 엔진 학습
 
-A basic introduction to C++ programming with UE4 can be found at Unreal's [C++ Programming Tutorials][ue4tutorials]. There are other options online, some of them not free of charge. The [Unreal C++ Course at Udemy][ue4course] it's pretty complete and there are usually offers that make it very affordable.
+UE4를 사용한 C++ 프로그래밍에 대한 기본적인 소개는 언리얼의 [C++ 프로그래밍 튜토리얼][ue4tutorials]에서 찾을 수 있습니다. 온라인에는 다른 옵션들도 있으며, 일부는 유료입니다. [Udemy의 언리얼 C++ 과정][ue4course]은 매우 완성도가 높으며 일반적으로 할인이 있어 매우 저렴하게 이용할 수 있습니다.
 
 [ue4tutorials]: https://docs.unrealengine.com/latest/INT/Programming/Tutorials/
 [ue4course]: https://www.udemy.com/unrealcourse/
 
-### Before getting started
+### 시작하기 전에
 
-Check out the [CARLA Design](index.md)<!-- @todo --> document to get an idea on the different modules that compose CARLA. Choose the most appropriate one
-to hold the new feature. Feel free to contact the team in the [Discord server](https://discord.com/invite/8kqACuC) in case any doubt arises during the process.  
+CARLA를 구성하는 다양한 모듈에 대한 아이디어를 얻으려면 [CARLA 설계](index.md)<!-- @todo --> 문서를 확인하세요. 새로운 기능을 담을 가장 적절한 모듈을 선택하세요. 프로세스 중에 의문이 생기면 [Discord 서버](https://discord.com/invite/8kqACuC)에서 팀에게 자유롭게 연락하세요.
 
-### Coding standard
+### 코딩 표준
 
-Follow the current [coding standard](cont_coding_standard.md) when submitting new code.  
+새로운 코드를 제출할 때는 현재의 [코딩 표준](cont_coding_standard.md)을 따르세요.
 
-### Submission
+### 제출
 
-Contributions and new features are not merged directly to the `master` branch, but to an intermediate branch named `dev`. This [Gitflow](https://nvie.com/posts/a-successful-git-branching-model/) branching model makes it easier to maintain a stable master branch. This model requires a specific workflow for contributions.  
+기여와 새로운 기능은 `master` 브랜치가 아닌 `dev`라는 중간 브랜치에 병합됩니다. 이 [Gitflow](https://nvie.com/posts/a-successful-git-branching-model/) 브랜칭 모델을 통해 안정적인 master 브랜치를 유지하기가 더 쉬워집니다. 이 모델은 기여를 위한 특정 워크플로우가 필요합니다.
 
-*   Always keep your `dev` branch updated with the lastest changes.  
-*   Develop the contribution in child branch from `dev` named as `username/name_of_the_contribution`.  
-*   Once the contribution is ready, submit a pull-request from your branch to `dev`. Try to be as descriptive as possible when filling the description. Note that there are some checks that the new code is required to pass before merging. The checks are automatically run by the continuous integration system. A green tick mark will appear if the checks are successful. If a red mark, please correct the code accordingly.  
+*   `dev` 브랜치를 항상 최신 변경사항으로 업데이트하세요.
+*   `dev`에서 `username/name_of_the_contribution`이라는 이름의 자식 브랜치에서 기여를 개발하세요.
+*   기여가 준비되면 브랜치에서 `dev`로 풀 리퀘스트를 제출하세요. 설명을 작성할 때 최대한 자세히 작성하세요. 새로운 코드가 병합 전에 통과해야 하는 몇 가지 검사가 있습니다. 검사는 지속적 통합 시스템에 의해 자동으로 실행됩니다. 검사가 성공하면 녹색 체크 표시가 나타납니다. 빨간 표시가 나타나면 그에 맞게 코드를 수정하세요.
 
-Once the contribution is merged in `dev`, it can be tested with the rest of new features. By the time of the next release, the `dev` branch will be merged to `master`, and the contribution will be available and announced.  
+기여가 `dev`에 병합되면 다른 새로운 기능들과 함께 테스트될 수 있습니다. 다음 릴리스 시점에 `dev` 브랜치가 `master`로 병합되어 기여가 사용 가능하게 되고 공지됩니다.
 
-### Checklist  
+### 체크리스트
 
-*   [ ] Your branch is up-to-date with the `dev` branch and tested with latest changes.  
-*   [ ] Extended the README/documentation, if necessary.  
-*   [ ] Code compiles correctly.  
-*   [ ] All tests passing with `make check`.  
-
----
-## Art contributions
-
-Art contributions include vehicles, walkers, maps or any other type of assets to be used in CARLA. These are stored in a BitBucket repository, which has some account space limitations. For said reason, the contributor will have to get in touch with the CARLA team, and ask them to create a branch on the content repository for the contributions.  
-
-__1. Create a BitBucket account.__ Visit the [Bitbucket page](https://bitbucket.org).  
-
-__2. Contact the art team to get access to the content repository.__ Join the [Discord server](https://discord.com/invite/8kqACuC). Go to the __Contributors__ channel and request for access to the content repostory.  
-
-__3. A branch will be created for each contributor.__ The branch will be named as `contributors/contributor_name`. All the contributions made by said user should be made in that corresponding branch.  
-
-__4. Build CARLA.__ In order to contribute, a CARLA build is necessary. Follow the instructions to build either in [Linux](https://carla.readthedocs.io/en/latest/build_linux/) or [Windows](https://carla.readthedocs.io/en/latest/build_windows/).  
-
-__5. Download the content repository.__ Follow the instructions to update the content in [here](https://carla.readthedocs.io/en/latest/build_update/#get-development-assets).
-
-__6. Update the branch to be in sync with master.__ The branch should always be updated with the latest changes in master.  
-
-__7. Upload the contribution.__ Do the corresponding changes and push the branch to origin.  
-
-__8. Wait for the art team to check it up.__ Once the contribution is uploaded, the team will check that everything is prepared to be merged with master.  
-
+*   [ ] 브랜치가 `dev` 브랜치와 동기화되어 있고 최신 변경사항으로 테스트되었습니다.
+*   [ ] 필요한 경우 README/문서를 확장했습니다.
+*   [ ] 코드가 올바르게 컴파일됩니다.
+*   [ ] `make check`로 모든 테스트가 통과됩니다.
 
 ---
-## Docs contributions
+## 아트 기여
 
-If some documentation is missing, vague or imprecise, it can be reported as with any other bug (read the previous section on [how to report bugs](#report-bugs)). However, users can contribute by writing documentation.  
+아트 기여에는 CARLA에서 사용할 차량, 보행자, 맵 또는 기타 유형의 에셋이 포함됩니다. 이들은 계정 공간 제한이 있는 BitBucket 저장소에 저장됩니다. 이러한 이유로, 기여자는 CARLA 팀과 연락하여 기여를 위한 콘텐츠 저장소에 브랜치를 만들어달라고 요청해야 합니다.
 
-The documentation is written with a mix of [Markdown](https://www.markdownguide.org/) and HTML tags, with a some extra CSS code for features such as tables or the [town slider](https://carla.readthedocs.io/en/latest/core_map/#carla-maps). Follow the steps below to start writing documentation. 
+__1. BitBucket 계정 생성__ [BitBucket 페이지](https://bitbucket.org)를 방문하세요.
 
-!!! Important
-    To submit docs contributions, follow the same workflow explained right above in [code contributions](#submission). To sum up, contributions are made in a child branch from `dev` and merged to said branch.  
+__2. 콘텐츠 저장소 접근을 위해 아트 팀에 연락__ [Discord 서버](https://discord.com/invite/8kqACuC)에 참여하세요. __Contributors__ 채널로 가서 콘텐츠 저장소 접근을 요청하세요.
 
-__1. Build CARLA from source.__ Follow the steps in the docs to build on [Linux](build_linux.md) or [Windows](build_windows.md).  
+__3. 각 기여자를 위한 브랜치가 생성됩니다.__ 브랜치는 `contributors/contributor_name`으로 명명됩니다. 해당 사용자의 모든 기여는 해당 브랜치에서 이루어져야 합니다.
 
+__4. CARLA 빌드__ 기여하려면 CARLA 빌드가 필요합니다. [Linux](https://carla.readthedocs.io/en/latest/build_linux/) 또는 [Windows](https://carla.readthedocs.io/en/latest/build_windows/)에서 빌드하는 지침을 따르세요.
 
-__2. Install [MkDocs](http://www.mkdocs.org/).__ MkDocs is a static site generator used to build documentation. 
+__5. 콘텐츠 저장소 다운로드__ [여기](https://carla.readthedocs.io/en/latest/build_update/#get-development-assets)의 지침에 따라 콘텐츠를 업데이트하세요.
+
+__6. 브랜치를 master와 동기화하여 업데이트__ 브랜치는 항상 master의 최신 변경사항으로 업데이트되어 있어야 합니다.
+
+__7. 기여 업로드__ 해당하는 변경을 하고 브랜치를 origin에 푸시하세요.
+
+__8. 아트 팀의 검토를 기다리세요.__ 기여가 업로드되면 팀이 master와 병합될 준비가 되었는지 확인할 것입니다.
+
+---
+## 문서 기여
+
+문서가 누락되었거나, 모호하거나, 부정확한 경우 다른 버그와 마찬가지로 보고할 수 있습니다([버그 보고 방법](#버그-보고) 참조). 하지만 사용자가 직접 문서를 작성하여 기여할 수도 있습니다.
+
+문서는 [Markdown](https://www.markdownguide.org/)과 HTML 태그의 조합으로 작성되며, 표나 [도시 슬라이더](https://carla.readthedocs.io/en/latest/core_map/#carla-maps)와 같은 기능을 위한 추가 CSS 코드가 있습니다. 아래 단계를 따라 문서 작성을 시작하세요.
+
+!!! 중요
+    문서 기여를 제출하려면 [코드 기여](#제출)에서 설명한 것과 동일한 워크플로우를 따르세요. 요약하면, 기여는 `dev`의 자식 브랜치에서 이루어지고 해당 브랜치에 병합됩니다.
+
+__1. CARLA를 소스에서 빌드하세요.__ [Linux](build_linux.md) 또는 [Windows](build_windows.md)에서 빌드하는 단계를 따르세요.
+
+__2. [MkDocs](http://www.mkdocs.org/) 설치__ MkDocs는 문서를 빌드하는 데 사용되는 정적 사이트 생성기입니다.
 
 ```sh
 sudo pip install mkdocs
 ```
 
-__3. Visualize the docs.__ In the main CARLA folder, run the following command and click the link that appears in the terminal (http://127.0.0.1:8000) to open a local visualization of the documentation.  
+__3. 문서 시각화__ 메인 CARLA 폴더에서 다음 명령을 실행하고 터미널에 나타나는 링크(http://127.0.0.1:8000)를 클릭하여 문서의 로컬 시각화를 엽니다.
 
 ```sh
 mkdocs serve
 ```
-__4. Create a git branch.__ Make sure to be in the `dev` branch (updated to latest changes) when creating a new one. 
+
+__4. git 브랜치 생성__ 새 브랜치를 만들 때 `dev` 브랜치에 있고(최신 변경사항으로 업데이트됨) 확인하세요.
 
 ```sh
 git checkout -b <contributor_name>/<branch_name>
 ```
 
-__5. Write the docs.__ Edit the files following the guidelines in the [documentation standard](cont_doc_standard.md) page.  
+__5. 문서 작성__ [문서 표준](cont_doc_standard.md) 페이지의 지침에 따라 파일을 편집하세요.
 
-__6. Submit the changes.__ Create a pull request in the GitHub repository, and add one of the suggested reviewers. Try to be as descriptive as possible when filling the pull-request description.  
+__6. 변경사항 제출__ GitHub 저장소에서 풀 리퀘스트를 생성하고 제안된 검토자 중 한 명을 추가하세요. 풀 리퀘스트 설명을 작성할 때 최대한 자세히 작성하세요.
 
-__7. Wait for review.__ The team will check if everything is ready to be merged or any changes are needed.  
+__7. 검토 대기__ 팀이 병합 준비가 되었는지 또는 필요한 변경사항이 있는지 확인할 것입니다.
 
-!!! Warning
-    The local repository must be updated with the latest updates in the `dev` branch.  
+!!! 경고
+    로컬 저장소는 `dev` 브랜치의 최신 업데이트로 업데이트되어 있어야 합니다.

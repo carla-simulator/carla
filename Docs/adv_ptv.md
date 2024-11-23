@@ -1,66 +1,66 @@
-# PTV-Vissim co-simulation
+# PTV-Vissim 코시뮬레이션
 
-CARLA has developed a co-simulation feature with PTV-Vissim. This allows to distribute the tasks at will, and exploit the capabilities of each simulation in favour of the user.  
+CARLA는 PTV-Vissim과의 코시뮬레이션 기능을 개발했습니다. 이를 통해 작업을 원하는 대로 분산하고 각 시뮬레이션의 기능을 사용자에게 유리하게 활용할 수 있습니다.
 
-*   [__Requisites__](#requisites)  
-*   [__Run a co-simulation__](#run-the-co-simulation)  
-	*   [Create a new network](#create-a-new-network)  
-
----
-## Requisites
-
-In order to run the co-simulation, two things are necessary.  
-
-*   Buy a license for [__PTV-Vissim simulator__](https://www.ptvgroup.com/en/solutions/products/ptv-vissim/). It is necessary to acquire the Driving Simulator Interface add-on.  
-*   In the PTV-Vissim installation folder, look for a `DrivingSimulatorProxy.dll`. Move it to `C:\Windows\System32`. 
+*   [__필수 요구사항__](#필수-요구사항)  
+*   [__코시뮬레이션 실행__](#코시뮬레이션-실행)  
+    *   [새 네트워크 생성](#새-네트워크-생성)  
 
 ---
-## Run a co-simulation
+## 필수 요구사항
 
-Everything related with this feature can be found in `Co-Simulation/PTV-Vissim`. CARLA provides some examples that contain networks for __Town01__, and __Town03__.  
+코시뮬레이션을 실행하기 위해서는 두 가지가 필요합니다.
 
-To run a co-simulation, use the script `PTV-Vissim/run_synchronization.py`. This has one mandatory argument containing the PTV-Vissim network, and some other optional arguments.  
+*   [__PTV-Vissim 시뮬레이터__](https://www.ptvgroup.com/en/solutions/products/ptv-vissim/) 라이센스 구매. Driving Simulator Interface 애드온을 구매해야 합니다.
+*   PTV-Vissim 설치 폴더에서 `DrivingSimulatorProxy.dll`을 찾아 `C:\Windows\System32`로 이동시킵니다.
 
-*   `vissim_network`— The vissim network file. This can be an example or a self-created PTV-Vissim network.  
-*   `--carla-host` *(default: 127.0.0.1)* — IP of the carla host server.  
-*   `--carla-port` *(default: 2000)*  TCP port to listen to.  
-*   `--vissim-version` *(default: 2020)* — PTV-Vissim version.  
-*   `--step-length` *(default: 0.05s)* — set fixed delta seconds for the simulation time-step.  
-*   `--simulator-vehicles` *(default: 1)* — number of vehicles that will be spawned in CARLA and passed to PTV-Vissim.  
+---
+## 코시뮬레이션 실행
+
+이 기능과 관련된 모든 것은 `Co-Simulation/PTV-Vissim`에서 찾을 수 있습니다. CARLA는 __Town01__과 __Town03__에 대한 네트워크가 포함된 몇 가지 예제를 제공합니다.
+
+코시뮬레이션을 실행하려면 `PTV-Vissim/run_synchronization.py` 스크립트를 사용하세요. 이 스크립트에는 PTV-Vissim 네트워크를 포함하는 하나의 필수 인수와 몇 가지 선택적 인수가 있습니다.
+
+*   `vissim_network` — Vissim 네트워크 파일. 예제이거나 직접 만든 PTV-Vissim 네트워크일 수 있습니다.
+*   `--carla-host` *(기본값: 127.0.0.1)* — CARLA 호스트 서버의 IP.
+*   `--carla-port` *(기본값: 2000)* — 수신할 TCP 포트.
+*   `--vissim-version` *(기본값: 2020)* — PTV-Vissim 버전.
+*   `--step-length` *(기본값: 0.05s)* — 시뮬레이션 타임스텝의 고정 델타 초를 설정.
+*   `--simulator-vehicles` *(기본값: 1)* — CARLA에서 스폰되어 PTV-Vissim으로 전달될 차량의 수.
 
 ```sh
 python3 run_synchronization.py examples/Town03/Town03.inpx
 ```
-!!! Warning
-    To stop the co-simulation, press `Ctrl+C` in the terminal that run the script.  
+!!! 경고
+    코시뮬레이션을 중지하려면 스크립트를 실행한 터미널에서 `Ctrl+C`를 누르세요.
 
-Both simulations will run in synchrony. The actions or events happening in one simulator will propagate to the other. So far, the feature only includes vehicle movement, and spawning. The spawning is limited due to PTV-Vissim types.  
-*   If a vehicle is spawned in CARLA, and the *Vehicle Type* in PTV-Vissim is set to `car`, it will spawn a car. No matter if it as a motorbike in CARLA. In the examples provided, the vehicle type is set to `car`.  
-*   If a vehicle is spawned in PTV-Vissim, CARLA will use a vehicle of the same type. The dimensions and characteristics will be similar, but not exactly the same.  
+두 시뮬레이션은 동기적으로 실행됩니다. 한 시뮬레이터에서 발생하는 행동이나 이벤트는 다른 시뮬레이터로 전파됩니다. 현재까지 이 기능은 차량 이동과 스폰만을 포함합니다. 스폰은 PTV-Vissim 유형으로 인해 제한됩니다.
+*   CARLA에서 차량이 스폰되고 PTV-Vissim의 *Vehicle Type*이 `car`로 설정된 경우, 자동차가 스폰됩니다. CARLA에서 오토바이였더라도 상관없습니다. 제공된 예제에서 차량 유형은 `car`로 설정되어 있습니다.
+*   PTV-Vissim에서 차량이 스폰되면 CARLA는 동일한 유형의 차량을 사용합니다. 크기와 특성은 비슷하지만 정확히 동일하지는 않습니다.
 
-### Create a new network 
+### 새 네트워크 생성 
 
-In order for a new PTV-Vissim network to run with CARLA, there are a few settings to be done.  
+새로운 PTV-Vissim 네트워크를 CARLA와 함께 실행하기 위해서는 몇 가지 설정이 필요합니다.
 
-* __Activate the driving simulator__. Go to `Base Data/Network settings/Driving simulator` and enable the option.  
-* __Specify the vehicle and pedestrian types__. These are the types that will be used in PTV-Vissim to sync with the spawnings done in CARLA. By default are empty.  
-* __Export the network as `.inpx`__. Create the network, export it, and run the co-simulation with `run_synchronization.py`.  
+* __주행 시뮬레이터 활성화__. `Base Data/Network settings/Driving simulator`로 이동하여 옵션을 활성화합니다.
+* __차량 및 보행자 유형 지정__. 이는 CARLA에서 수행된 스폰과 동기화하기 위해 PTV-Vissim에서 사용될 유형입니다. 기본적으로 비어 있습니다.
+* __네트워크를 `.inpx`로 내보내기__. 네트워크를 만들고, 내보낸 다음, `run_synchronization.py`로 코시뮬레이션을 실행합니다.
 
 ![ptv_types](img/ptv_types.jpg)
-<div style="text-align: right"><i>Any vehicle that is spawned in CARLA, will be spawned in PTV-Vissim using these types.</i></div>
+<div style="text-align: right"><i>CARLA에서 스폰되는 모든 차량은 이러한 유형을 사용하여 PTV-Vissim에서 스폰됩니다.</i></div>
 
-!!! Warning
-    PTV-Vissim will crash if the pedestrian and vehicle types are left empty. 
+!!! 경고
+    보행자와 차량 유형이 비어 있으면 PTV-Vissim이 충돌합니다.
 
 ---
 
-That is all there is so far, regarding for the PTV-Vissim co-simulation with CARLA. 
+지금까지 CARLA와의 PTV-Vissim 코시뮬레이션에 대해 알아보았습니다.
 
-Open CARLA and mess around for a while. If there are any doubts, feel free to post these in the forum. 
+CARLA를 열고 잠시 실험해보세요. 궁금한 점이 있다면 포럼에 자유롭게 게시하세요.
 
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA 포럼으로 이동">
+CARLA 포럼</a>
 </p>
 </div>

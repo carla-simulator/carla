@@ -1,9 +1,8 @@
+# 서드파티 통합
 
-# 3rd Party Integrations
+CARLA는 유용성과 확장성을 극대화하기 위해 여러 서드파티 애플리케이션과의 통합을 지원하도록 개발되었습니다.
 
-CARLA has been developed to integrate with several 3rd party applications in order to maximise its utility and extensability. The following  
-
--   [__ROS bridge__](https://carla.readthedocs.io/projects/ros-bridge/en/latest/)
+-   [__ROS 브리지__](https://carla.readthedocs.io/projects/ros-bridge/en/latest/)
 -   [__SUMO__](adv_sumo.md)  
 -   [__Scenic__](tuto_G_scenic.md)
 -   [__CarSIM__](tuto_G_carsim_integration.md)
@@ -11,68 +10,68 @@ CARLA has been developed to integrate with several 3rd party applications in ord
 -   [__ASAM OpenDRIVE__](adv_opendrive.md) 
 -   [__PTV Vissim__](adv_ptv.md)
 -   [__RSS__](adv_rss.md) 
--   [__AWS and RLlib__](tuto_G_rllib_integration.md)
+-   [__AWS와 RLlib__](tuto_G_rllib_integration.md)
 
 ---
-## ROS bridge
+## ROS 브리지
 
-__Full documentation of the ROS bridge is found [__here__](https://carla.readthedocs.io/projects/ros-bridge/en/latest/).__
+__ROS 브리지의 전체 문서는 [__여기__](https://carla.readthedocs.io/projects/ros-bridge/en/latest/)에서 확인할 수 있습니다.__
 
-The ROS bridge enables two-way communication between ROS and CARLA. The information from the CARLA server is translated to ROS topics. In the same way, the messages sent between nodes in ROS get translated to commands to be applied in CARLA.
+ROS 브리지는 ROS와 CARLA 간의 양방향 통신을 가능하게 합니다. CARLA 서버의 정보는 ROS 토픽으로 변환됩니다. 마찬가지로 ROS의 노드 간에 전송되는 메시지는 CARLA에서 적용될 명령으로 변환됩니다.
 
-The ROS bridge is compatible with both ROS 1 and ROS 2.
+ROS 브리지는 ROS 1과 ROS 2 모두와 호환됩니다.
 
-The ROS bridge boasts the following features:
+ROS 브리지는 다음과 같은 기능을 제공합니다:
 
-- Provides sensor data for LIDAR, Semantic LIDAR, Cameras (depth, segmentation, rgb, dvs), GNSS, Radar and IMU.
-- Provides object data such as transforms, traffic light status, visualisation markers, collision and lane invasion.
-- Control of AD agents through steering, throttle and brake.
-- Control of aspects of the CARLA simulation like synchronous mode, playing and pausing the simulation and setting simulation parameters.
+- LIDAR, Semantic LIDAR, 카메라(깊이, 분할, RGB, DVS), GNSS, 레이더, IMU의 센서 데이터 제공
+- 변환, 신호등 상태, 시각화 마커, 충돌 및 차선 침범과 같은 객체 데이터 제공
+- 조향, 가속, 제동을 통한 자율주행 에이전트 제어
+- 동기 모드, 시뮬레이션 실행/일시 정지, 시뮬레이션 매개변수 설정과 같은 CARLA 시뮬레이션 측면 제어
 
 ---
 
 ## SUMO
 
-CARLA has developed a co-simulation feature with [__SUMO__](https://www.eclipse.org/sumo/). This allows to distribute the tasks at will, and exploit the capabilities of each simulation in favour of the user.
+CARLA는 [__SUMO__](https://www.eclipse.org/sumo/)와의 코시뮬레이션 기능을 개발했습니다. 이를 통해 작업을 원하는 대로 분산하고 각 시뮬레이션의 기능을 사용자에게 유리하게 활용할 수 있습니다.
 
-Please refer to the full documentation [__here__](adv_sumo.md).
+전체 문서는 [__여기__](adv_sumo.md)를 참조하세요.
 
 ---
 
 ## PTV Vissim
 
-[__PTV Vissim__](https://www.ptvgroup.com/en/solutions/products/ptv-vissim/) is a proprietary software package providing a comprehensive traffic simulation solution with a powerful GUI. To use PTV-Vissim with CARLA refer to [__this guide__](adv_ptv.md)
+[__PTV Vissim__](https://www.ptvgroup.com/en/solutions/products/ptv-vissim/)은 강력한 GUI를 갖춘 종합적인 교통 시뮬레이션 솔루션을 제공하는 독점 소프트웨어 패키지입니다. CARLA에서 PTV-Vissim을 사용하는 방법은 [__이 가이드__](adv_ptv.md)를 참조하세요.
 
 ---
 
-## Scenic 
+## Scenic
 
-Scenic is a set of libraries and a language for scenario specification and scene generation. CARLA and scenic can work seemlessly together, read [__this guid__](tuto_G_scenic.md) to understand how to use scenic with CARLA. 
+Scenic은 시나리오 명세와 장면 생성을 위한 라이브러리와 언어 세트입니다. CARLA와 Scenic은 원활하게 함께 작동할 수 있으며, Scenic을 CARLA와 함께 사용하는 방법은 [__이 가이드__](tuto_G_scenic.md)를 참조하세요.
 
-If you need to learn more about Scenic, then read their ["Getting Started with Scenic"](https://scenic-lang.readthedocs.io/en/latest/quickstart.html) guide and have a look at their tutorials for creating [static](https://scenic-lang.readthedocs.io/en/latest/tutorials/tutorial.html) and [dynamic](https://scenic-lang.readthedocs.io/en/latest/tutorials/dynamics.html) scenarios.
+Scenic에 대해 더 자세히 알아보려면 ["Scenic 시작하기"](https://scenic-lang.readthedocs.io/en/latest/quickstart.html) 가이드를 읽고 [정적](https://scenic-lang.readthedocs.io/en/latest/tutorials/tutorial.html) 및 [동적](https://scenic-lang.readthedocs.io/en/latest/tutorials/dynamics.html) 시나리오 생성 튜토리얼을 살펴보세요.
 
 ---
 
 ## CarSIM
 
-CARLA's integration with CarSim allows vehicle controls in CARLA to be forwarded to CarSim. CarSim will do all required physics calculations of the vehicle and return the new state to CARLA. 
+CARLA의 CarSim 통합을 통해 CARLA의 차량 제어를 CarSim으로 전달할 수 있습니다. CarSim은 차량의 모든 필요한 물리 계산을 수행하고 새로운 상태를 CARLA로 반환합니다.
 
-Learn how to use CARLA alongside CarSIM [here](tuto_G_carsim_integration.md).
+CARLA를 CarSIM과 함께 사용하는 방법은 [여기](tuto_G_carsim_integration.md)에서 확인할 수 있습니다.
 
 ## ASAM OpenDRIVE
 
-[__ASAM OpenDRIVE__](https://www.asam.net/standards/detail/opendrive/) is an open format specification used to describe the logic of a road network intended to standardise the discription of road networks in digital format and allow different applications to exchange data on road networks. Please refer to the full documentation [__here__](adv_opendrive.md)
+[__ASAM OpenDRIVE__](https://www.asam.net/standards/detail/opendrive/)는 도로 네트워크의 로직을 설명하는 데 사용되는 개방형 형식 사양으로, 디지털 형식의 도로 네트워크 설명을 표준화하고 다른 애플리케이션이 도로 네트워크 데이터를 교환할 수 있도록 합니다. 전체 문서는 [__여기__](adv_opendrive.md)를 참조하세요.
 
-## RSS - Responsibility Sensitive Safety
+## RSS - 책임 민감형 안전
 
-CARLA integrates the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib) in the client library. This feature allows users to investigate behaviours of RSS without having to implement anything. CARLA will take care of providing the input, and applying the output to the AD systems on the fly. Refer to the full documentation [__here__](adv_rss.md)
+CARLA는 클라이언트 라이브러리에 [책임 민감형 안전을 위한 C++ 라이브러리](https://github.com/intel/ad-rss-lib)를 통합합니다. 이 기능을 통해 사용자는 아무것도 구현하지 않고도 RSS 동작을 조사할 수 있습니다. CARLA는 입력 제공과 실시간으로 자율주행 시스템에 출력을 적용하는 작업을 처리합니다. 전체 문서는 [__여기__](adv_rss.md)를 참조하세요.
 
-## AWS and RLlib integration
+## AWS와 RLlib 통합
 
-The RLlib integration brings support between the Ray/RLlib library and CARLA, allowing the easy use of the CARLA environment for training and inference purposes. Ray is an open source framework that provides a simple, universal API for building distributed applications. Ray is packaged with RLlib, a scalable reinforcement learning library, and Tune, a scalable hyperparameter tuning library. Read more about operating CARLA on AWS and RLlib [__here__](tuto_G_rllib_integration.md).
+RLlib 통합은 Ray/RLlib 라이브러리와 CARLA 간의 지원을 제공하여 학습 및 추론 목적으로 CARLA 환경을 쉽게 사용할 수 있게 합니다. Ray는 분산 애플리케이션을 구축하기 위한 간단하고 범용적인 API를 제공하는 오픈 소스 프레임워크입니다. Ray는 확장 가능한 강화학습 라이브러리인 RLlib과 확장 가능한 하이퍼파라미터 튜닝 라이브러리인 Tune과 함께 패키징됩니다. AWS와 RLlib에서 CARLA를 운영하는 방법에 대해 [__여기__](tuto_G_rllib_integration.md)에서 자세히 알아보세요.
 
-## Chrono physics
+## Chrono 물리엔진
 
-[__Chrono__](https://projectchrono.org/) is a multi-physics simulation engine providing high realism vehicle dynamics using templates. CARLA's Chrono integraion allows CARLA users to add Chrono templates to simulate vehicle dynamics. Please refer to the full documentation [__here__](tuto_G_chrono.md).
+[__Chrono__](https://projectchrono.org/)는 템플릿을 사용하여 높은 현실감의 차량 동역학을 제공하는 멀티 물리 시뮬레이션 엔진입니다. CARLA의 Chrono 통합을 통해 CARLA 사용자는 차량 동역학을 시뮬레이션하기 위해 Chrono 템플릿을 추가할 수 있습니다. 전체 문서는 [__여기__](tuto_G_chrono.md)를 참조하세요.
 
 ---

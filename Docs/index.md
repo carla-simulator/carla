@@ -60,7 +60,7 @@ CARLA 포럼 바로가기</a>
 [__OpenDRIVE 지원__](adv_opendrive.md) — OpenDRIVE 포맷 지원에 대해 설명합니다.  
 [__PTV-Vissim 연동__](adv_ptv.md) — PTV-Vissim과 연동하는 방법을 안내합니다.    
 [__RSS 기능__](adv_rss.md) — 안전 주행을 위한 RSS 라이브러리 활용법을 설명합니다.  
-[__AWS 활용__](tuto_G_rllib_integration) — AWS에서 RLlib으로 CARLA를 분산 실행하는 방법을 안내합니다.  
+[__AWS 활용__](tuto_G_rllib_integration.md) — AWS에서 RLlib으로 CARLA를 분산 실행하는 방법을 안내합니다.  
 [__ANSYS 레이더__](ecosys_ansys.md) — ANSYS 실시간 레이더 모델 연동에 대해 설명합니다.  
 [__웹 시각화 도구(carlaviz)__](plugins_carlaviz.md) — 웹 브라우저에서 시뮬레이션을 모니터링하고 데이터를 확인하는 방법을 안내합니다.
 

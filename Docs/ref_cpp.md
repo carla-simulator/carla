@@ -1,47 +1,47 @@
-# C++ Reference 
+# C++ 레퍼런스
 
-## C++ client
+## C++ 클라이언트
 
-The C++ client can be built with `make` on Linux and `cmake` in Windows. An C++ client example is provided in the repository in `CARLA_ROOT/Examples/CppClient/main.cpp`. This example shows how to connect the C++ client to the CARLA server and use the API for some simple tasks. 
+C++ 클라이언트는 Linux에서는 `make`로, Windows에서는 `cmake`로 빌드할 수 있습니다. C++ 클라이언트 예제는 저장소의 `CARLA_ROOT/Examples/CppClient/main.cpp`에서 제공됩니다. 이 예제는 C++ 클라이언트를 CARLA 서버에 연결하고 몇 가지 간단한 작업을 위해 API를 사용하는 방법을 보여줍니다.
 
-To build the example C++ client, open a terminal in the `CARLA_ROOT/Examples/CppClient` directory in the repository. Run `make` in this folder and then execute `./bin/cpp_client` to run the example. The example will choose a random map from those available then load it. It will then spawn a vehicle and apply a control to the vehicle. 
+예제 C++ 클라이언트를 빌드하려면, 저장소의 `CARLA_ROOT/Examples/CppClient` 디렉토리에서 터미널을 엽니다. 이 폴더에서 `make`를 실행한 다음 `./bin/cpp_client`를 실행하여 예제를 실행하세요. 이 예제는 사용 가능한 맵 중에서 무작위로 맵을 선택한 다음 로드합니다. 그런 다음 차량을 스폰하고 차량에 컨트롤을 적용합니다.
 
-Please see the [C++ client example](adv_cpp_client.md) for more details on this example script.
+이 예제 스크립트에 대한 자세한 내용은 [C++ 클라이언트 예제](adv_cpp_client.md)를 참조하세요.
 
-## C++ documentation
+## C++ 문서
 
-We use Doxygen to generate the documentation of our C++ code:
+우리는 C++ 코드의 문서를 생성하기 위해 Doxygen을 사용합니다:
 
 [Libcarla/Source](http://carla.org/Doxygen/html/dir_b9166249188ce33115fd7d5eed1849f2.html)<br>
 [Unreal/CarlaUE4/Source](http://carla.org/Doxygen/html/dir_733e9da672a36443d0957f83d26e7dbf.html)<br>
 [Unreal/CarlaUE4/Carla/Plugins](http://carla.org/Doxygen/html/dir_8fc34afb5f07a67966c78bf5319f94ae.html)
 
-The generated documentation is available at this link **<http://carla.org/Doxygen/html/index.html>**
+생성된 문서는 다음 링크에서 확인할 수 있습니다: **<http://carla.org/Doxygen/html/index.html>**
 
-!!! note
-    Document updates are done automatically by GitHub.
+!!! 참고
+    문서 업데이트는 GitHub에 의해 자동으로 수행됩니다.
 
-### Create doxygen documentation
+### Doxygen 문서 생성하기
 
-!!! important
-    [Doxygen](http://www.doxygen.nl/index.html) is required to generate the documentation
-    and [Graphviz](https://www.graphviz.org/) for the graph drawing toolkit.
+!!! 중요
+    문서를 생성하려면 [Doxygen](http://www.doxygen.nl/index.html)이 필요하며,
+    그래프 그리기 도구를 위해 [Graphviz](https://www.graphviz.org/)가 필요합니다.
 
-1- Install doxygen and graphviz with the following command:
+1- 다음 명령으로 doxygen과 graphviz를 설치합니다:
 
 ```sh
 # linux
 > sudo apt-get install doxygen graphviz
 ```
 
-2- Once installed, go to the project root folder where the _Doxyfile_ file is situated and
-run the following command:
+2- 설치가 완료되면 _Doxyfile_ 파일이 있는 프로젝트 루트 폴더로 이동하여
+다음 명령을 실행합니다:
 
 ```sh
 > doxygen
 ```
 
-It will start to build the documentation webpage.  
-The resulting webpage can be found at Doxygen/html/
+이것으로 문서 웹페이지 빌드가 시작됩니다.  
+생성된 웹페이지는 Doxygen/html/ 에서 찾을 수 있습니다.
 
-3- Open _index.html_ in a browser. Now you have your local cpp documentation!
+3- 브라우저에서 _index.html_을 엽니다. 이제 로컬 C++ 문서가 준비되었습니다!

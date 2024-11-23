@@ -1,130 +1,130 @@
 # RSS
 
-CARLA integrates the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib) in the client library. This feature allows users to investigate behaviours of RSS without having to implement anything. CARLA will take care of providing the input, and applying the output to the AD systems on the fly.
+CARLA는 클라이언트 라이브러리에 [책임 민감형 안전을 위한 C++ 라이브러리](https://github.com/intel/ad-rss-lib)를 통합합니다. 이 기능을 통해 사용자는 아무것도 구현하지 않고도 RSS의 동작을 조사할 수 있습니다. CARLA는 입력을 제공하고 자율주행 시스템에 실시간으로 출력을 적용하는 작업을 처리합니다.
 
-*   [__Overview__](#overview)
-*   [__Compilation__](#compilation)
-	*   [Dependencies](#dependencies)
-	*   [Build](#build)
-*	[__Current state__](#current-state)
-	*   [RssSensor](#rsssensor)
-	*   [RssRestrictor](#rssrestrictor)
+*   [__개요__](#개요)
+*   [__컴파일__](#컴파일)
+    *   [의존성](#의존성)
+    *   [빌드](#빌드)
+*   [__현재 상태__](#현재-상태)
+    *   [RssSensor](#rsssensor)
+    *   [RssRestrictor](#rssrestrictor)
 
-!!! Important
-    This feature is a work in progress. Right now, it is only available for the Linux build.
-
----
-## Overview
-
-The RSS library implements a mathematical model for safety assurance. It receives sensor information, and provides restrictions to the controllers of a vehicle. To sum up, the RSS module uses the sensor data to define __situations__. A situation describes the state of the ego vehicle with an element of the environment. For each situation, safety checks are made, and a proper response is calculated. The overall response is the result of all of the combined. For specific information on the library, read the [documentation](https://intel.github.io/ad-rss-lib/), especially the [Background section](https://intel.github.io/ad-rss-lib/ad_rss/Overview/).
-
-This is implemented in CARLA using two elements.
-
-*	__RssSensor__ is in charge of the situation analysis, and response generation using the *ad-rss-lib*.
-*	__RssRestrictor__ applies the response by restricting the commands of the vehicle.
-
-The following image sketches the integration of __RSS__ into the CARLA architecture.
-
-![Interate RSS into CARLA](img/rss_carla_integration_architecture.png)
-
-__1. The server.__
-
-- Sends a camera image to the client. <small>(Only if the client needs visualization).</small>
-- Provides the RssSensor with world data.
-- Sends a physics model of the vehicle to the RssRestrictor. <small>(Only if the default values are overwritten).</small>
-
-__2. The client.__
-
-- Provides the *RssSensor* with some [parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) to be considered.
--Sends to the *RssResrictor* an initial [carla.VehicleControl](python_api.md#carla.VehicleControl).
-
-__3. The RssSensor.__
-
-- Uses the *ad-rss-lib* to extract situations, do safety checks, and generate a response.
-- Sends the *RssRestrictor* a response containing the proper response and aceleration restrictions to be applied.
-
-__4. The RssRestrictor__
-
-- If the client asks for it, applies the response to the [carla.VehicleControl](python_api.md#carla.VehicleControl), and returns the resulting one.
-
-[![RSS sensor in CARLA](img/rss_carla_integration.png)](https://www.youtube.com/watch?v=UxKPXPT2T8Q)
-<div style="text-align: right"><i>Visualization of the RssSensor results.</i></div>
+!!! 중요
+    이 기능은 현재 개발 중입니다. 현재는 Linux 빌드에서만 사용할 수 있습니다.
 
 ---
-## Compilation
+## 개요
 
-The RSS integration has to be built aside from the rest of CARLA. The __ad-rss-lib__ comes with an LGPL-2.1 open-source license that creates conflict. It has to be linked statically into *libCarla*.
+RSS 라이브러리는 안전 보장을 위한 수학적 모델을 구현합니다. 센서 정보를 받아 차량 컨트롤러에 제한을 제공합니다. 요약하면, RSS 모듈은 센서 데이터를 사용하여 __상황__을 정의합니다. 상황은 자아 차량과 환경 요소의 상태를 설명합니다. 각 상황에 대해 안전 검사가 이루어지고 적절한 응답이 계산됩니다. 전체 응답은 모든 응답의 조합 결과입니다. 라이브러리에 대한 자세한 정보는 [문서](https://intel.github.io/ad-rss-lib/)를 읽어보세요. 특히 [배경 섹션](https://intel.github.io/ad-rss-lib/ad_rss/Overview/)을 참조하세요.
 
-As a reminder, the feature is only available for the Linux build so far.
+이는 CARLA에서 두 가지 요소를 사용하여 구현됩니다.
 
-### Dependencies
+*   __RssSensor__는 *ad-rss-lib*를 사용하여 상황 분석과 응답 생성을 담당합니다.
+*   __RssRestrictor__는 차량의 명령을 제한하여 응답을 적용합니다.
 
-There are additional prerequisites required for building RSS and its dependencies. Take a look at the [official documentation](https://intel.github.io/ad-rss-lib/BUILDING) to know more about this.
+다음 이미지는 CARLA 아키텍처에 __RSS__를 통합하는 과정을 보여줍니다.
 
-Dependencies provided by Ubunutu (>= 16.04).
+![RSS를 CARLA에 통합](img/rss_carla_integration_architecture.png)
+
+__1. 서버__
+
+- 클라이언트에 카메라 이미지를 보냅니다. <small>(클라이언트가 시각화를 필요로 하는 경우에만)</small>
+- RssSensor에 월드 데이터를 제공합니다.
+- RssRestrictor에 차량의 물리 모델을 보냅니다. <small>(기본값이 재정의된 경우에만)</small>
+
+__2. 클라이언트__
+
+- *RssSensor*에 고려해야 할 [매개변수](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/)를 제공합니다.
+- *RssResrictor*에 초기 [carla.VehicleControl](python_api.md#carla.VehicleControl)을 보냅니다.
+
+__3. RssSensor__
+
+- *ad-rss-lib*를 사용하여 상황을 추출하고, 안전 검사를 수행하며, 응답을 생성합니다.
+- *RssRestrictor*에 적절한 응답과 적용할 가속도 제한이 포함된 응답을 보냅니다.
+
+__4. RssRestrictor__
+
+- 클라이언트가 요청하면 [carla.VehicleControl](python_api.md#carla.VehicleControl)에 응답을 적용하고 결과를 반환합니다.
+
+[![CARLA의 RSS 센서](img/rss_carla_integration.png)](https://www.youtube.com/watch?v=UxKPXPT2T8Q)
+<div style="text-align: right"><i>RssSensor 결과의 시각화.</i></div>
+
+---
+## 컴파일
+
+RSS 통합은 CARLA의 나머지 부분과 별도로 빌드해야 합니다. __ad-rss-lib__는 충돌을 유발하는 LGPL-2.1 오픈소스 라이센스와 함께 제공됩니다. *libCarla*에 정적으로 연결되어야 합니다.
+
+현재까지 이 기능은 Linux 빌드에서만 사용할 수 있다는 점을 다시 한 번 알려드립니다.
+
+### 의존성
+
+RSS와 그 의존성을 빌드하기 위해 추가적인 전제 조건이 필요합니다. 이에 대해 자세히 알아보려면 [공식 문서](https://intel.github.io/ad-rss-lib/BUILDING)를 참조하세요.
+
+Ubuntu(>= 16.04)에서 제공하는 의존성.
 ```sh
 sudo apt-get install libgtest-dev libpython-dev libpugixml-dev libtbb-dev
 ```
 
-The dependencies are built using [colcon](https://colcon.readthedocs.io/en/released/user/installation.html), so it has to be installed.
+의존성은 [colcon](https://colcon.readthedocs.io/en/released/user/installation.html)을 사용하여 빌드되므로 설치해야 합니다.
 ```sh
 pip3 install --user -U colcon-common-extensions
 ```
 
-There are some additional dependencies for the Python bindings.
+Python 바인딩을 위한 추가 의존성이 있습니다.
 ```sh
 sudo apt-get install castxml
 pip3 install --user pygccxml pyplusplus
 ```
 
-### Build
+### 빌드
 
-Once this is done, the full set of dependencies and RSS components can be built.
+이 작업이 완료되면 전체 의존성 세트와 RSS 구성 요소를 빌드할 수 있습니다.
 
-*	Compile LibCarla to work with RSS.
+*   RSS와 함께 작동하도록 LibCarla를 컴파일합니다.
 
 ```sh
 make LibCarla.client.rss
 ```
 
-*	Compile the PythonAPI to include the RSS feature.
+*   RSS 기능을 포함하도록 PythonAPI를 컴파일합니다.
 
 ```sh
 make PythonAPI.rss
 ```
 
-*	As an alternative, a package can be built directly.
+*   대안으로, 패키지를 직접 빌드할 수 있습니다.
 ```sh
 make package.rss
 ```
 
 ---
-## Current state
+## 현재 상태
 
 ### RssSensor
 
-[__carla.RssSensor__](python_api.md#carla.RssSensor) supports [ad-rss-lib v4.2.0 feature set](https://intel.github.io/ad-rss-lib/RELEASE_NOTES_AND_DISCLAIMERS) completely, including intersections, [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) support and [unstructured constellations (e.g. with pedestrians)](https://intel.github.io/ad-rss-lib/ad_rss/UnstructuredConstellations/).
+[__carla.RssSensor__](python_api.md#carla.RssSensor)는 교차로, [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) 지원 및 [비구조화된 배치(예: 보행자)](https://intel.github.io/ad-rss-lib/ad_rss/UnstructuredConstellations/)를 포함하여 [ad-rss-lib v4.2.0 기능 세트](https://intel.github.io/ad-rss-lib/RELEASE_NOTES_AND_DISCLAIMERS)를 완전히 지원합니다.
 
-So far, the server provides the sensor with ground truth data of the surroundings that includes the state of other traffic participants and traffic lights.
+지금까지 서버는 다른 교통 참여자와 신호등의 상태를 포함하는 주변 환경의 실측 데이터를 센서에 제공합니다.
 
 ### RssRestrictor
 
-When the client calls for it, the [__carla.RssRestrictor__](python_api.md#carla.RssRestrictor) will modify the vehicle controller to best reach the desired accelerations or decelerations by a given response.
+클라이언트가 요청하면 [__carla.RssRestrictor__](python_api.md#carla.RssRestrictor)는 주어진 응답에 의해 원하는 가속도나 감속도에 가장 잘 도달하도록 차량 컨트롤러를 수정합니다.
 
-Due to the stucture of [carla.VehicleControl](python_api.md#carla.VehicleControl) objects, the restrictions applied have certain limitations. These controllers include `throttle`, `brake` and `streering` values. However, due to car physics and the simple control options these might not be met. The restriction intervenes in lateral direction simply by counter steering towards the parallel lane direction. The brake will be activated if deceleration requested by RSS. This depends on vehicle mass and brake torques provided by the [carla.Vehicle](python_api.md#carla.Vehicle).
+[carla.VehicleControl](python_api.md#carla.VehicleControl) 객체의 구조로 인해 적용되는 제한에는 특정 한계가 있습니다. 이러한 컨트롤러는 `throttle`, `brake`, `steering` 값을 포함합니다. 하지만 차량 물리와 단순한 제어 옵션으로 인해 이러한 값이 충족되지 않을 수 있습니다. 제한은 평행한 차선 방향으로 반대 조향을 하여 측면 방향으로만 개입합니다. RSS가 요청한 감속이 필요한 경우 브레이크가 작동됩니다. 이는 [carla.Vehicle](python_api.md#carla.Vehicle)이 제공하는 차량 질량과 제동 토크에 따라 달라집니다.
 
-!!! Note
-    In an automated vehicle controller it might be possible to adapt the planned trajectory to the restrictions. A fast control loop (>1KHz) can be used to ensure these are followed.
+!!! 참고
+    자동화된 차량 컨트롤러에서는 제한에 맞춰 계획된 궤적을 조정할 수 있을 것입니다. 빠른 제어 루프(>1KHz)를 사용하여 이러한 제한이 준수되도록 할 수 있습니다.
 
 ---
 
-That sets the basics regarding the RSS sensor in CARLA. Find out more about the specific attributes and parameters in the [sensor reference](ref_sensors.md#rss-sensor).
+지금까지 CARLA의 RSS 센서에 대한 기본 사항을 다루었습니다. 구체적인 속성과 매개변수에 대해서는 [센서 레퍼런스](ref_sensors.md#rss-sensor)에서 자세히 알아보세요.
 
-Open CARLA and mess around for a while. If there are any doubts, feel free to post these in the forum.
+CARLA를 열고 잠시 실험해보세요. 궁금한 점이 있다면 포럼에 자유롭게 게시하세요.
 
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA 포럼으로 이동">
+CARLA 포럼</a>
 </p>
 </div>
