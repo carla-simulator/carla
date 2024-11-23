@@ -1,37 +1,35 @@
-# Benchmarking Performance
+# 성능 벤치마킹
 
-We provide a benchmarking script to enable users to easily analyze the performance of CARLA in their own environment. The script can be configured to run a number of scenarios that combine different maps, sensors and weather conditions. It reports the average and standard deviation of FPS under the requested scenarios. 
+우리는 사용자가 자신의 환경에서 CARLA의 성능을 쉽게 분석할 수 있도록 벤치마킹 스크립트를 제공합니다. 스크립트는 다양한 맵, 센서, 날씨 조건을 결합한 여러 시나리오를 실행하도록 구성할 수 있습니다. 요청된 시나리오에서의 평균 FPS와 표준 편차를 보고합니다.
 
-In this section we detail the requirements to run the benchmark, where to find the script, the flags available to customize the scenarios that are run and examples on how to run the commands.
+이 섹션에서는 벤치마크를 실행하기 위한 요구사항, 스크립트 위치, 실행되는 시나리오를 커스터마이즈하는 데 사용할 수 있는 플래그, 명령어 실행 예제를 자세히 설명합니다.
 
-We have also included our results of a separate benchmark which measures performance in CARLA in a specific environment when using different combinations of number of vehicles, enabling physics and/or enabling Traffic Manager. The results are presented alongside the CARLA version used and the environment the test was performed in.
+또한 차량 수, 물리 활성화 및/또는 Traffic Manager 활성화의 다양한 조합을 사용할 때 특정 환경에서 CARLA의 성능을 측정하는 별도의 벤치마크 결과도 포함했습니다. 결과는 사용된 CARLA 버전과 테스트가 수행된 환경과 함께 제시됩니다.
 
-- [__The benchmark script__](#the-benchmark-script)
-    - [__Before you begin__](#before-you-begin)
-    - [__Synopsis__](#synopsis)
-        - [__Flags__](#flags)
-- [__CARLA performance report__](#carla-performance-report)
-
+- [__벤치마크 스크립트__](#벤치마크-스크립트)
+    - [__시작하기 전에__](#시작하기-전에)
+    - [__개요__](#개요)
+        - [__플래그__](#플래그)
+- [__CARLA 성능 보고서__](#carla-성능-보고서)
 
 ---
-## The benchmark script
+## 벤치마크 스크립트
 
-The benchmark script can be found in `PythonAPI/util`. It has several flags available to customize the scenarios to be tested which are detailed in the synopsis below.
+벤치마크 스크립트는 `PythonAPI/util`에서 찾을 수 있습니다. 아래 개요에서 자세히 설명하는 테스트할 시나리오를 커스터마이즈하기 위한 여러 플래그를 사용할 수 있습니다.
 
+### 시작하기 전에
 
-### Before you begin
-
-The benchmarking script requires some dependencies to be installed before you can run it:
+벤치마킹 스크립트를 실행하기 전에 몇 가지 의존성을 설치해야 합니다:
 
 ```python
-python -m pip install -U py-cpuinfo==5.0.0
-python -m pip install psutil
-python -m pip install python-tr
-python -m pip install gpuinfo
-python -m pip install GPUtil
+python -m pip install -U py-cpuinfo==5.0.0
+python -m pip install psutil
+python -m pip install python-tr
+python -m pip install gpuinfo
+python -m pip install GPUtil
 ```
 
-### Synopsis
+### 개요
 
 `python3` [`performance_benchmark.py`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/performance_benchmark.py) [`[--host HOST]`](#-host-ip_address) [`[--port PORT]`](#-port-port) [`[--file FILE]`](#-file-filenamemd) [`[--tm]`](#-tm)
 [`[--ticks TICKS]`](#-ticks) [`[--sync]`](#-sync) [`[--async]`](#-async))
@@ -41,103 +39,89 @@ python -m pip install GPUtil
 [`[--maps MAPS [MAPS ...]]`](#-maps-townname))
 [`[--weather WEATHER [WEATHER ...]]`](#-weather-integer)
 
-
-
-#### Flags
+#### 플래그
 
 ###### `--host`: IP_ADDRESS
->> __Default__: Localhost.
+>> __기본값__: Localhost
 
->> Configures the host of the server.
-
+>> 서버의 호스트를 구성합니다.
 
 ###### `--port`: PORT
->> __Default__: 2000
+>> __기본값__: 2000
 
->> Configures the TCP port to listen to.
+>> 수신할 TCP 포트를 구성합니다.
 
 ###### `--file`: filename.md
->> __Default__: benchmark.md 
+>> __기본값__: benchmark.md
 
->> Writes results in markdown table format to a file.
+>> 결과를 마크다운 표 형식으로 파일에 기록합니다.
 
 ###### `--tm`
-
->> Switch to Traffic Manager benchmark
+>> Traffic Manager 벤치마크로 전환합니다.
 
 ###### `--ticks`
+>> __기본값__: 100
 
->> __Default__: 100
-
->>  Sets the number of ticks to use for each scenario.
+>> 각 시나리오에서 사용할 틱 수를 설정합니다.
 
 ###### `--sync`
+>> __기본 모드__
 
->> __Default mode.__
-
->> Runs benchmark in synchronous mode. 
+>> 동기 모드에서 벤치마크를 실행합니다.
 
 ###### `--async`
-
->> Runs benchmark in asynchronous mode.
+>> 비동기 모드에서 벤치마크를 실행합니다.
 
 ###### `--fixed_dt`
+>> __기본값__: 0.05
 
->> __Default__: 0.05
-
->> For use with synchronous mode if you would like to set the delta timestep.
+>> 델타 타임스텝을 설정하고 싶을 때 동기 모드와 함께 사용합니다.
 
 ###### `--render_mode`
-
->>  Runs benchmark in rendering mode.
+>> 렌더링 모드에서 벤치마크를 실행합니다.
 
 ###### `--no_render_mode`
+>> __기본 모드__
 
->> __Default mode.__
-
->>  Runs benchmark in non-rendering mode.
+>> 비렌더링 모드에서 벤치마크를 실행합니다.
 
 ###### `--show_scenarios`
+>> 이 플래그만으로 스크립트를 실행하면 사용 가능한 모든 시나리오 매개변수의 목록을 볼 수 있습니다.
 
->> When the script is run with only this flag you will see a list of all the scenario parameters available.
-
->> When combined with other flags you will see a preview of the scenarios that will be run without actually executing them.
+>> 다른 플래그와 함께 사용하면 실제로 실행하지 않고도 실행될 시나리오의 미리보기를 볼 수 있습니다.
 
 ###### `--sensors`: INTEGER
->> __Default__: All
+>> __기본값__: 모두
 
->> Sensors to be used in the benchmark. Chose between LIDAR and RGB camera:
+>> 벤치마크에서 사용할 센서. LIDAR와 RGB 카메라 중에서 선택:
 
 >> * __`0`__: cam-300x200
 >> * __`1`__: cam-800x600
 >> * __`2`__: cam-1900x1080
->> * __`3`__: cam-300x200 cam-300x200 (two cameras)
+>> * __`3`__: cam-300x200 cam-300x200 (두 개의 카메라)
 >> * __`4`__: LIDAR: 100k
 >> * __`5`__: LIDAR: 500k
 >> * __`6`__: LIDAR: 1M
 
-
 ###### `--maps`: TownName
+>> __기본값__: 모든 맵
 
->> __Default__: All maps
-
->> All [CARLA maps][carla_maps], both layered and sub-layered, are available.
+>> 계층형과 하위 계층형 모두 모든 [CARLA 맵][carla_maps]을 사용할 수 있습니다.
 
 [carla_maps]: https://carla.readthedocs.io/en/latest/core_map/#carla-maps
 
 ###### `--weather`: INTEGER
+>> __기본값__: 모든 날씨 조건
 
->> __Default__: All weather conditions
-
->> Change the weather conditions:
+>> 날씨 조건 변경:
 
 >> * __`0`__: ClearNoon
 >> * __`1`__: CloudyNoon
 >> * __`2`__: SoftRainSunset
 
-## How to run the benchmark
+## 벤치마크 실행 방법
 
-1. Start CARLA:
+1. CARLA 시작:
 
         # Linux:
         ./CarlaUE4.sh
@@ -146,40 +130,37 @@ python -m pip install GPUtil
         # Source:
         make launch
 
+2. 별도의 터미널에서 `PythonAPI/util`로 이동하여 `performance_benchmark.py` 스크립트를 찾습니다:
 
-2. In a separate terminal navigate to `PythonAPI/util` to find the `performance_benchmark.py` script:
-
->> * Show all possible scenarios without running them:
+>> * 실행하지 않고 모든 가능한 시나리오 표시:
 ```shell
 python3 performance_benchmark.py --show_scenarios
 ```
 
->> * Show what scenarios will run when configurations are applied without actually executing them:
+>> * 구성이 적용될 때 실행될 시나리오를 실제로 실행하지 않고 표시:
 ```shell
-python3 performance_benchmark.py --sensors 2 5 --maps Town03 Town05 --weather 0 1 --show_scenarios`
+python3 performance_benchmark.py --sensors 2 5 --maps Town03 Town05 --weather 0 1 --show_scenarios
 ```
 
->> * Execute the performance benchmark for those scenarios:
+>> * 해당 시나리오에 대한 성능 벤치마크 실행:
 ```shell
 python3 performance_benchmark.py --sensors 2 5 --maps Town03 Town05 --weather 0 1
 ```
 
->> * Perform the benchmark for asynchronous mode and rendering mode:
+>> * 비동기 모드와 렌더링 모드에서 벤치마크 수행:
 ```shell
 python3 performance_benchmark.py --async --render_mode
 ```
 
 ---
-## CARLA performance report
+## CARLA 성능 보고서
 
+다음 표는 증가하는 차량 수와 물리 및 Traffic Manager의 활성화/비활성화의 다양한 조합으로 CARLA를 실행할 때 평균 FPS에 미치는 성능 영향을 자세히 보여줍니다.
 
-The following table details the performance effect on average FPS when running CARLA with increasing numbers of vehicles and different combinations of enabling and/or disabling physics and Traffic Manager.
+* CARLA 버전: Dev 브랜치 2021/01/29 (커밋 198fa38c9b1317c114ac15dff130766253c02832)
+* 환경 사양: Intel(R) Xeon(R) CPU E5-1620 v3 @ 3.50GHz / 32 GB / NVIDIA GeForce GTX 1080 Ti
 
-* CARLA Version: Dev branch on 29/01/21 (commit 198fa38c9b1317c114ac15dff130766253c02832)
-* Environment Specs: Intel(R) Xeon(R) CPU E5-1620 v3 @ 3.50GHz / 32 GB / NVIDIA GeForce GTX 1080 Ti
-
-
-|Num Vehicles|Phy: Off TM: Off|Phy: On TM: Off|Phy: Off TM: On|Phy: On TM: On|
+|차량 수|물리: 꺼짐 TM: 꺼짐|물리: 켜짐 TM: 꺼짐|물리: 꺼짐 TM: 켜짐|물리: 켜짐 TM: 켜짐|
 |------------|----------------|---------------|---------------|--------------|
 |0           |1220            |1102           |702            |729           |
 |1           |805             |579            |564            |422           |
@@ -192,12 +173,11 @@ The following table details the performance effect on average FPS when running C
 
 ---
 
-If you have any questions regarding the performance benchmarks then don't hesitate to post in the forum.
+성능 벤치마크에 대해 궁금한 점이 있다면 포럼에 게시하는 것을 주저하지 마세요.
 
 <div class="build-buttons">
-<!-- Latest release button -->
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="최신 CARLA 릴리스로 이동">
+CARLA 포럼</a>
 </p>
 </div>
