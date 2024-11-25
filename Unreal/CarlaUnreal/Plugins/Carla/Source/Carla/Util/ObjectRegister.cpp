@@ -8,12 +8,15 @@
 #include "Carla.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "InstancedFoliageActor.h"
 #include "GameFramework/Character.h"
 #if WITH_EDITOR
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #endif // WITH_EDITOR
+#include <util/ue-header-guard-end.h>
 
 namespace crp = carla::rpc;
 

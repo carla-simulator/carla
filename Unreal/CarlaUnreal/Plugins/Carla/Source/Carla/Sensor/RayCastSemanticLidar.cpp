@@ -8,17 +8,20 @@
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
 #include "carla/ros2/ROS2.h"
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
+#include <util/ue-header-guard-begin.h>
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
-#include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
-#include "Runtime/Core/Public/Async/ParallelFor.h"
-#include <cmath>
+#include "Kismet/KismetMathLibrary.h"
 #include "PhysicsEngine/PhysicsObjectExternalInterface.h"
+#include "Async/ParallelFor.h"
+#include <util/ue-header-guard-end.h>
+
+#include <cmath>
 
 namespace crp = carla::rpc;
 

@@ -6,10 +6,11 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "GameFramework/Actor.h"
-
 #include "Components/BoxComponent.h"
 #include "Components/SplineComponent.h"
+#include <util/ue-header-guard-end.h>
 
 #include "RoutePlanner.generated.h"
 

@@ -2,12 +2,14 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Animation/Skeleton.h"
 #include "ChaosVehicleWheel.h"
 #include "Materials/MaterialInterface.h"
 #include "PhysicsEngine/PhysicsAsset.h"
+#include <util/ue-header-guard-end.h>
 
 #include "USDImporterWidget.generated.h"
 
@@ -104,27 +106,27 @@ struct CARLATOOLS_API FMergedVehicleMeshParts
   GENERATED_BODY();
 
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  UStaticMesh* DoorFR;
+  TObjectPtr<UStaticMesh> DoorFR = nullptr;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  UStaticMesh* DoorFL;
+  TObjectPtr<UStaticMesh> DoorFL = nullptr;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  UStaticMesh* DoorRR;
+  TObjectPtr<UStaticMesh> DoorRR = nullptr;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  UStaticMesh* DoorRL;
+  TObjectPtr<UStaticMesh> DoorRL = nullptr;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  UStaticMesh* Trunk;
+  TObjectPtr<UStaticMesh> Trunk = nullptr;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  UStaticMesh* Hood;
+  TObjectPtr<UStaticMesh> Hood = nullptr;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  UStaticMesh* WheelFR;
+  TObjectPtr<UStaticMesh> WheelFR = nullptr;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  UStaticMesh* WheelFL;
+  TObjectPtr<UStaticMesh> WheelFL = nullptr;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  UStaticMesh* WheelRR;
+  TObjectPtr<UStaticMesh> WheelRR = nullptr;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  UStaticMesh* WheelRL;
+  TObjectPtr<UStaticMesh> WheelRL = nullptr;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
-  UStaticMesh* Body;
+  TObjectPtr<UStaticMesh> Body = nullptr;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
   FVehicleMeshAnchorPoints Anchors;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")

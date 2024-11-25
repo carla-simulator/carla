@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/rpc/QualityLevel.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
 #include "QualityLevelUE.generated.h"
 

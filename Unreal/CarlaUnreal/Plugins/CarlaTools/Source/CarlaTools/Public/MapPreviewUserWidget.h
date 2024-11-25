@@ -2,12 +2,15 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include <util/ue-header-guard-end.h>
 
-THIRD_PARTY_INCLUDES_START
+#include <util/disable-ue4-macros.h>
 #include <boost/asio.hpp>
-THIRD_PARTY_INCLUDES_END
+#include <util/enable-ue4-macros.h>
+
 #include <memory>
 
 #include "MapPreviewUserWidget.generated.h"

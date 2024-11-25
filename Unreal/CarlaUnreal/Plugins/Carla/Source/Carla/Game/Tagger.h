@@ -6,12 +6,14 @@
 
 #pragma once
 
+#include <util/disable-ue4-macros.h>
+#include <carla/rpc/ObjectLabel.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
 #include "GameFramework/Actor.h"
 #include "Components/PrimitiveComponent.h"
-
-#include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/ObjectLabel.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/ue-header-guard-end.h>
 
 #include "Tagger.generated.h"
 
@@ -49,11 +51,8 @@ public:
   static void TagActorsInLevel(ULevel &Level, bool bTagForSemanticSegmentation);
 
   /// Retrieve the tag of an already tagged component.
-  static crp::CityObjectLabel GetTagOfTaggedComponent(const UPrimitiveComponent &Component)
-  {
-    return static_cast<crp::CityObjectLabel>(Component.CustomDepthStencilValue);
-  }
-
+  static crp::CityObjectLabel GetTagOfTaggedComponent(const UPrimitiveComponent &Component);
+  
   /// Retrieve the tags of an already tagged actor. CityObjectLabel::None is
   /// not added to the array.
   static void GetTagsOfTaggedActor(const AActor &Actor, TSet<crp::CityObjectLabel> &Tags);
@@ -64,8 +63,10 @@ public:
     return (Tag == GetTagOfTaggedComponent(Component));
   }
 
-  /// Retrieve the tags of an already tagged actor. CityObjectLabel::None is
-  /// not added to the array.
+  /// Transform a string into a CityObjectLabel.
+  static crp::CityObjectLabel GetTagFromString(FString Tag);
+
+  /// Transform a CityObjectLabel into a string.
   static FString GetTagAsString(crp::CityObjectLabel Tag);
 
   /// Method that computes the label corresponding to a folder path

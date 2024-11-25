@@ -7,17 +7,19 @@
 #include "Carla/Sensor/RayCastLidar.h"
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
-#include "carla/geom/Math.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
 #include "carla/ros2/ROS2.h"
 #include "carla/geom/Location.h"
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
+#include <util/ue-header-guard-begin.h>
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
-#include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
+#include <util/ue-header-guard-end.h>
+
 #include <cmath>
 
 FActorDefinition ARayCastLidar::GetSensorDefinition()

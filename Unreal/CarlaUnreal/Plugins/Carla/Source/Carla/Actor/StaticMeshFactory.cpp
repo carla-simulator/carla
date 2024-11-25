@@ -6,8 +6,11 @@
 
 #include "StaticMeshFactory.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
-#include "Engine/StaticMeshActor.h"
 #include "Carla/Game/CarlaEpisode.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "Engine/StaticMeshActor.h"
+#include <util/ue-header-guard-end.h>
 
 TArray<FActorDefinition> AStaticMeshFactory::GetDefinitions()
 {

@@ -1,5 +1,5 @@
 {
-    "type": "vehicle.lincoln.mkz_2020",
+    "type": "vehicle.lincoln.mkz",
     "id": "hero",
     "sensors": [
         {
@@ -20,7 +20,7 @@
                 "range": 85,
                 "channels": 64,
                 "points_per_second": 600000,
-                "rotation_frequency": 10,
+                "rotation_frequency": 20,
                 "upper_fov": 10,
                 "lower_fov": -30,
                 "atmosphere_attenuation_rate": 0.004,

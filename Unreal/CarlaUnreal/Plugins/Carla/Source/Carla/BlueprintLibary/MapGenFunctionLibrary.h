@@ -6,15 +6,14 @@
 
 #pragma once
 
-// Engine headers
+#include "Carla/Util/ProceduralCustomMesh.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "MeshDescription.h"
 #include "ProceduralMeshComponent.h"
-// Carla C++ headers
-
-// Carla plugin headers
-#include "Carla/Util/ProceduralCustomMesh.h"
+#include <util/ue-header-guard-end.h>
 
 #include "MapGenFunctionLibrary.generated.h"
 
@@ -55,9 +54,9 @@ public:
   // This function will count instances of each static mesh in the level, if there are > MinNumOfInstancesToBeChanged they will be changed by instanced static meshes 
   // to reduce draw calls
   UFUNCTION(BlueprintCallable)
-  static void ChangeStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter, int MinNumOfInstancesToBeChanged = 20);
+  static TArray<class AInstancedStaticMeshActor*> ChangeStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter, int MinNumOfInstancesToBeChanged = 20);
 
   // This function will removed instanced static meshes in the level and place static mesh actors instead
   UFUNCTION(BlueprintCallable)
-  static void RevertStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter);
+  static TArray<AStaticMeshActor*> RevertStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter);
 };

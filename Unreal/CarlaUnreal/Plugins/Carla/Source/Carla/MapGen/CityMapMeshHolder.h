@@ -6,8 +6,12 @@
 
 #pragma once
 
-#include "GameFramework/Actor.h"
 #include "CityMapMeshTag.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "GameFramework/Actor.h"
+#include <util/ue-header-guard-end.h>
+
 #include "CityMapMeshHolder.generated.h"
 
 class IDetailLayoutBuilder;

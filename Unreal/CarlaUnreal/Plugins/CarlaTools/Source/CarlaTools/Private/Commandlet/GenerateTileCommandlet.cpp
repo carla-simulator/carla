@@ -9,10 +9,12 @@
 #include <iostream>
 #include <fstream>
 
+#include <util/ue-header-guard-begin.h>
 #if WITH_EDITOR
 #include "FileHelpers.h"
 #endif
 #include "UObject/ConstructorHelpers.h"
+#include <util/ue-header-guard-end.h>
 
 DEFINE_LOG_CATEGORY(LogCarlaToolsMapGenerateTileCommandlet);
 

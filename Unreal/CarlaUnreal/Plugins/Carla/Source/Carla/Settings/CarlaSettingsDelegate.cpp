@@ -6,9 +6,11 @@
 
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla.h"
-#include "Game/CarlaGameInstance.h"
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Settings/CarlaSettings.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "Game/CarlaGameInstance.h"
 #include "Async/Async.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/DirectionalLight.h"
@@ -22,7 +24,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Landscape.h"
 #include "Scalability.h"
-
+#include <util/ue-header-guard-end.h>
 
 static constexpr float CARLA_SETTINGS_MAX_SCALE_SIZE = 50.0f;
 
@@ -221,7 +223,7 @@ void UCarlaSettingsDelegate::LaunchLowQualityCommands(UWorld *world) const
   GEngine->Exec(world, TEXT("r.TranslucentLightingVolume 0"));
   GEngine->Exec(world, TEXT("r.LightShaftDownSampleFactor 4"));
   GEngine->Exec(world, TEXT("r.OcclusionQueryLocation 1"));
-  // GEngine->Exec(world,TEXT("r.BasePassOutputsVelocity 0")); //--> readonly
+  // GEngine->Exec(world,TEXT("r.VelocityOutputPass 0")); //--> readonly
   // GEngine->Exec(world,TEXT("r.DetailMode 0")); //-->will change to lods 0
   GEngine->Exec(world, TEXT("r.DefaultFeature.AutoExposure 1"));
 
@@ -412,7 +414,7 @@ void UCarlaSettingsDelegate::LaunchEpicQualityCommands(UWorld *world) const
   GEngine->Exec(world, TEXT("r.TranslucentLightingVolume 1"));
   GEngine->Exec(world, TEXT("r.LightShaftDownSampleFactor 2"));
   // GEngine->Exec(world,TEXT("r.OcclusionQueryLocation 0"));
-  // GEngine->Exec(world,TEXT("r.BasePassOutputsVelocity 0")); //readonly
+  // GEngine->Exec(world,TEXT("r.VelocityOutputPass 0")); //readonly
   GEngine->Exec(world, TEXT("r.DetailMode 2"));
 }
 

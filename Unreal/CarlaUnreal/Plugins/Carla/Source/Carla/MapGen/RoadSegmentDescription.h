@@ -7,7 +7,7 @@
 #pragma once
 
 #include "GraphTypes.h"
-#include "Util/NonCopyable.h"
+#include "Carla/Util/NonCopyable.h"
 
 #include <vector>
 

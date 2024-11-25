@@ -5,9 +5,12 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "WheeledVehicleMovementComponentNW.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "PhysicsPublic.h"
 #include "Components/PrimitiveComponent.h"
 #include "Logging/MessageLog.h"
+#include <util/ue-header-guard-end.h>
 
 UWheeledVehicleMovementComponentNW::UWheeledVehicleMovementComponentNW(const FObjectInitializer& ObjectInitializer) : 
   Super(ObjectInitializer)

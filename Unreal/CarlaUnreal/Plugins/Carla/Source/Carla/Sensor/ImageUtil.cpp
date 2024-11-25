@@ -7,10 +7,13 @@
 #include <Carla/Sensor/ImageUtil.h>
 #include <Carla/Sensor/ShaderBasedSensor.h>
 #include <Carla/Carla.h>
-#include <Runtime/RHI/Public/RHISurfaceDataConversion.h>
-#include <Runtime/ImageWriteQueue/Public/ImageWriteQueue.h>
+
+#include <util/ue-header-guard-begin.h>
+#include <RHISurfaceDataConversion.h>
+#include <ImageWriteQueue.h>
 #include <HighResScreenshot.h>
 #include <RHIGPUReadback.h>
+#include <util/ue-header-guard-end.h>
 
 
 
@@ -38,56 +41,14 @@ namespace ImageUtil
     TArrayView<FLinearColor> Out)
   {
     SourcePitch *= GPixelFormats[Format].BlockBytes;
-    auto OutPixelCount = Extent.X * Extent.Y;
-    switch (Format)
-    {
-    case PF_G16:
-    case PF_R16_UINT:
-    case PF_R16_SINT:
-      // Shadow maps
-      ConvertRawR16DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    case PF_R8G8B8A8:
-      ConvertRawR8G8B8A8DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    case PF_B8G8R8A8:
-      ConvertRawB8G8R8A8DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    case PF_A2B10G10R10:
-      ConvertRawA2B10G10R10DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    case PF_FloatRGBA:
-    case PF_R16G16B16A16_UNORM:
-    case PF_R16G16B16A16_SNORM:
-      ConvertRawR16G16B16A16FDataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
-      break;
-    case PF_FloatR11G11B10:
-      ConvertRawRR11G11B10DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    case PF_A32B32G32R32F:
-      ConvertRawR32G32B32A32DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
-      break;
-    case PF_A16B16G16R16:
-      ConvertRawR16G16B16A16DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    case PF_G16R16:
-      ConvertRawR16G16DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    case PF_X24_G8: // Depth Stencil
-      ConvertRawR24G8DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
-      break;
-    case PF_R32_FLOAT: // Depth Stencil
-      ConvertRawR32DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
-      break;
-    case PF_R16G16B16A16_UINT:
-    case PF_R16G16B16A16_SINT:
-      ConvertRawR16G16B16A16DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    default:
-      UE_LOG(LogCarla, Warning, TEXT("Unsupported format %llu"), (unsigned long long)Format);
-      return false;
-    }
-    return true;
+    return ConvertRAWSurfaceDataToFLinearColor(
+      Format,
+      Extent.X,
+      Extent.Y,
+      (uint8*)PixelData,
+      SourcePitch,
+      Out.GetData(),
+      Flags);
   }
 
 
@@ -143,7 +104,17 @@ namespace ImageUtil
       ConvertRawR24G8DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
       break;
     case PF_R32_FLOAT: // Depth
-      ConvertRawR32DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
+		  for (uint32 Y = 0; Y < (uint32)Extent.Y; Y++)
+		  {
+		  	auto SrcPtr = (float*)((uint8*)PixelData + Y * SourcePitch);
+		  	auto DestPtr = Out.GetData() + Y * Extent.X;
+		  	for (uint32 X = 0; X < (uint32)Extent.X; X++)
+		  	{
+		  		*DestPtr = FLinearColor(SrcPtr[0], 0.f, 0.f, 1.f).QuantizeRound();
+		  		++SrcPtr;
+		  		++DestPtr;
+		  	}
+		  }
       break;
     case PF_R16G16B16A16_UINT:
     case PF_R16G16B16A16_SINT:
@@ -244,7 +215,7 @@ namespace ImageUtil
 
     auto& CmdList = FRHICommandListImmediate::Get();
     auto Resource = static_cast<FTextureRenderTarget2DResource*>(
-      RenderTarget.Resource);
+      RenderTarget.GetResource());
     auto Texture = Resource->GetRenderTargetTexture();
     if (Texture == nullptr)
       return;

@@ -5,12 +5,15 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "HoudiniImporterWidget.h"
+#include "CarlaTools.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "EditorLevelUtils.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "FileHelpers.h"
 #include "Components/PrimitiveComponent.h"
+#include <util/ue-header-guard-end.h>
 
 void UHoudiniImporterWidget::CreateSubLevels(ALargeMapManager* LargeMapManager)
 {

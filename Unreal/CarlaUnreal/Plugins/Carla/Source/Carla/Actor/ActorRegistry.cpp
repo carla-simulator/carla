@@ -7,16 +7,15 @@
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla.h"
 #include "Carla/Actor/ActorData.h"
-
 #include "Carla/Game/Tagger.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Sensor/Sensor.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include "carla/streaming/Token.h"
 #include "carla/streaming/detail/Token.h"
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
 
 namespace crp = carla::rpc;

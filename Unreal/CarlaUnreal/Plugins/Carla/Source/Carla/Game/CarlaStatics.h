@@ -11,8 +11,10 @@
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Settings/CarlaSettings.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include <util/ue-header-guard-end.h>
 
 #include "CarlaStatics.generated.h"
 

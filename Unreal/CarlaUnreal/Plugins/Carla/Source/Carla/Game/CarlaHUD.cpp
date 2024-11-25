@@ -6,7 +6,13 @@
 
 #include "CarlaHUD.h"
 
+#include <util/ue-header-guard-begin.h>
+#include "Engine/Engine.h"
+#include "Engine/Canvas.h"
+#include "CanvasItem.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "GameFramework/PlayerController.h"
+#include <util/ue-header-guard-end.h>
 
 void ACarlaHUD::DrawHUD()
 {
@@ -19,13 +25,11 @@ void ACarlaHUD::DrawHUD()
     return;
   }
 
-#if 0 // @CARLAUE5
   if(DebugVehicle) {
     float YL = 1600.0f;
     float Y0 = 0.0f;
-    DebugVehicle->DrawDebug(Canvas, YL, Y0);
+    DrawDebug(YL, Y0);
   }
-#endif
 
   double Now = FPlatformTime::Seconds();
   int i = 0;
@@ -54,4 +58,38 @@ void ACarlaHUD::AddHUDString(const FString Str, const FVector Location, const FC
   double Now = FPlatformTime::Seconds();
   HUDString Obj { Str, Location, Color, Now + LifeTime };
   StringList.Add(std::move(Obj));
+}
+
+// Debug
+void ACarlaHUD::DrawDebug(float& YL, float& YPos)
+{
+	using namespace Chaos;
+
+	ensure(IsInGameThread());
+
+	if (!DebugVehicle->HasValidPhysicsState()){
+		UE_LOG(LogCarla, Log, TEXT("Invalid state"));
+		return;
+	}
+
+	UFont* RenderFont = GEngine->GetMediumFont();
+	// draw drive data
+	{
+		Canvas->SetDrawColor(FColor::White);
+	
+		YPos += 16;
+		for (int i = 0; i < DebugVehicle->GetNumWheels(); i++)
+		{
+			YPos += Canvas->DrawText(RenderFont, FString::Printf(TEXT("WheelLoad: [%d] %1.f N"), i, CmToM(DebugVehicle->GetWheelState(i).SpringForce)), 4, YPos);
+		}
+
+		YPos += 16;
+		for (int i = 0; i < DebugVehicle->GetNumWheels(); i++)
+		{
+			if (DebugVehicle->GetWheelState(i).PhysMaterial.IsValid())
+			{
+				YPos += Canvas->DrawText(RenderFont, FString::Printf(TEXT("SurfaceFriction: [%d] %.2f"), i, DebugVehicle->GetWheelState(i).PhysMaterial->Friction), 4, YPos);
+			}
+		}
+	}
 }

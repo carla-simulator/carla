@@ -6,22 +6,21 @@
 
 #include "Carla/Actor/ActorDispatcher.h"
 #include "Carla.h"
-
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Actor/ActorROS2Handler.h"
 #include "Carla/Actor/CarlaActorFactory.h"
-
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/VehicleControl.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "GameFramework/Controller.h"
-
 #ifdef WITH_ROS2
-  #include <compiler/disable-ue4-macros.h>
+  #include <util/disable-ue4-macros.h>
   #include "carla/ros2/ROS2.h"
-  #include <compiler/enable-ue4-macros.h>
+  #include <util/enable-ue4-macros.h>
   #include <variant>
 #endif
+#include <util/ue-header-guard-end.h>
 
 void UActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
 {

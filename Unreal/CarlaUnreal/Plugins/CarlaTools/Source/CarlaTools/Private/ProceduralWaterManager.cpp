@@ -6,16 +6,17 @@
 
 #include "ProceduralWaterManager.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Components/SplineComponent.h"
 #include "FileHelpers.h"
 #include "Misc/FileHelper.h"
 #include "Misc/CString.h"
-#include "Runtime/Engine/Public/DrawDebugHelpers.h"
-#include <Containers/UnrealString.h>
-
+#include "DrawDebugHelpers.h"
 #include "GameFramework/Actor.h"
 #include "Engine/World.h"
 #include "UObject/ConstructorHelpers.h"
+#include <Containers/UnrealString.h>
+#include <util/ue-header-guard-end.h>
 
 // Sets default values
 UProceduralWaterManager::UProceduralWaterManager()

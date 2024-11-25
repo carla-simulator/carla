@@ -11,15 +11,13 @@
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "Components/CapsuleComponent.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/rpc/AckermannControllerSettings.h>
 #include "carla/rpc/LabelledPoint.h"
 #include <carla/rpc/LightState.h>
@@ -35,8 +33,12 @@
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
+#include <util/ue-header-guard-begin.h>
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include <util/ue-header-guard-end.h>
 
 FCarlaActor::FCarlaActor(
     IdType ActorId,

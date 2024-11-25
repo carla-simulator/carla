@@ -8,7 +8,10 @@
 
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Sensor/ShaderBasedSensor.h"
+
+#include <util/disable-ue4-macros.h>
 #include <carla/sensor/data/DVSEvent.h>
+#include <util/enable-ue4-macros.h>
 
 #include "DVSCamera.generated.h"
 

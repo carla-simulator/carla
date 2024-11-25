@@ -5,13 +5,15 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
+
+#include <util/ue-header-guard-begin.h>
 #include <CoreMinimal.h>
 #include <CoreGlobals.h>
 #include <Engine/TextureRenderTarget2D.h>
-#include <Runtime/ImageWriteQueue/Public/ImagePixelData.h>
+#include "Runtime/ImageWriteQueue/Public/ImagePixelData.h"
+#include <util/ue-header-guard-end.h>
+
 #include <functional>
-
-
 
 class AShaderBasedSensor;
 class UTextureRenderTarget2D;

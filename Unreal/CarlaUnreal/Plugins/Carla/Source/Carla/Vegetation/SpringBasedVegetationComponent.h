@@ -6,9 +6,13 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "Components/ActorComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include <util/ue-header-guard-end.h>
+
 #include <vector>
+
 #include "SpringBasedVegetationComponent.generated.h"
 
 struct FJointProperties;

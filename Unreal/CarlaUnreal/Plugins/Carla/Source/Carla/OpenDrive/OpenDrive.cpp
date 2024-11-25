@@ -7,12 +7,14 @@
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaGameModeBase.h"
-#include "Misc/FileHelper.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "GenericPlatform/GenericPlatformProcess.h"
 
-#include "Runtime/Core/Public/HAL/FileManagerGeneric.h"
+#include <util/ue-header-guard-begin.h>
+#include "GenericPlatform/GenericPlatformProcess.h"
 #include "Misc/FileHelper.h"
+#include "HAL/FileManagerGeneric.h"
+#include "Misc/FileHelper.h"
+#include <util/ue-header-guard-end.h>
 
 FString UOpenDrive::FindPathToXODRFile(const FString &InMapName){
 
@@ -169,11 +171,23 @@ UOpenDriveMap *UOpenDrive::LoadOpenDriveMap(const FString &MapName)
 
 UOpenDriveMap *UOpenDrive::LoadCurrentOpenDriveMap(const UObject *WorldContextObject)
 {
-  UWorld *World = nullptr;
 #if WITH_EDITOR
-  GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+
+  if (WorldContextObject == nullptr)
+    return nullptr;
+
+  auto World = GEngine->GetWorldFromContextObject(
+    WorldContextObject,
+    EGetWorldErrorMode::LogAndReturnNull);
+
+  if (World == nullptr)
+    return nullptr;
+
+  return LoadOpenDriveMap(World->GetMapName());
+  
+#else
+
+  return nullptr;
+
 #endif
-  return World != nullptr ?
-      LoadOpenDriveMap(World->GetMapName()) :
-      nullptr;
 }

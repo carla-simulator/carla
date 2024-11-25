@@ -1,11 +1,11 @@
 CARLA Simulator
 ===============
 
-[![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io)
+[![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](https://carla-ue5.readthedocs.io)
 
 [![carla.org](Docs/img/btn/web.png)](http://carla.org)
 [![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/blob/master/Docs/download.md)
-[![documentation](Docs/img/btn/docs.png)](http://carla.readthedocs.io)
+[![documentation](Docs/img/btn/docs.png)](https://carla-ue5.readthedocs.io)
 [![forum](Docs/img/btn/forum.png)](https://github.com/carla-simulator/carla/discussions)
 [![discord](Docs/img/btn/chat.png)](https://discord.gg/8kqACuC)
 
@@ -17,7 +17,7 @@ environmental conditions.
 [![CARLA Video](Docs/img/carla_ue5_readme_img.webp)](https://www.youtube.com/watch?v=q4V9GYjA1pE)
 
 >[!NOTE]
-> This is the development branch `ue5-dev` for the **Unreal Engine 5.3 version of CARLA**. This branch exists in parallel with the Unreal Engine 4.26 version of CARLA, in the `ue4-dev` branch. Please be sure that this version of CARLA is suitable for your needs as there are significant differences between the UE 5.3 and UE 4.26 versions of CARLA. 
+> This is the development branch `ue5-dev` for the **Unreal Engine 5.5 version of CARLA**. This branch exists in parallel with the Unreal Engine 4.26 version of CARLA, in the `ue4-dev` branch. Please be sure that this version of CARLA is suitable for your needs as there are significant differences between the UE 5.5 and UE 4.26 versions of CARLA. 
 
 ### Recommended system
 
@@ -27,18 +27,18 @@ environmental conditions.
 * Ubuntu 22.04
 
  >[!NOTE]
-> Ubuntu version 22.04 is required, the Unreal Engine 5.3 version of CARLA will not work on Ubuntu 20.04 or lower. 
+> Ubuntu version 22.04 is required, the Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or lower. 
 
 ## Documentation
 
-The [CARLA documentation](https://carla.readthedocs.io/en/latest/) is hosted on ReadTheDocs. Please see the following key links:
+The [CARLA documentation](https://carla-ue5.readthedocs.io/en/latest/) is hosted on ReadTheDocs. Please see the following key links:
 
-- [Building on Linux](https://carla.readthedocs.io/en/latest/build_linux/)
-- [Building on Windows](https://carla.readthedocs.io/en/latest/build_windows/)
-- [First steps](https://carla.readthedocs.io/en/latest/tuto_first_steps/)
-- [CARLA asset catalogue](https://carla.readthedocs.io/en/latest/catalogue/)
-- [Python API reference](https://carla.readthedocs.io/en/latest/python_api/)
-- [Blueprint library](https://carla.readthedocs.io/en/latest/bp_library/)
+- [Building on Linux](https://carla-ue5.readthedocs.io/en/latest/build_linux/)
+- [Building on Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows/)
+- [First steps](https://carla-ue5.readthedocs.io/en/latest/tuto_first_steps/)
+- [CARLA asset catalogue](https://carla-ue5.readthedocs.io/en/latest/catalogue/)
+- [Python API reference](https://carla-ue5.readthedocs.io/en/latest/python_api/)
+- [Blueprint library](https://carla-ue5.readthedocs.io/en/latest/bp_library/)
 
 ## CARLA Ecosystem
 Repositories associated with the CARLA simulation platform:
@@ -77,7 +77,7 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 }
 ```
 
-Building CARLA with Unreal Engine 5.3
+Building CARLA with Unreal Engine 5.5
 --------------
 
 Clone this repository locally from GitHub:
@@ -92,33 +92,33 @@ Linux:
 
 ```sh
 cd CarlaUE5
-./Setup.sh
+./CarlaSetup.sh
 ```
 
 Windows:
 
 ```sh
 cd CarlaUE5
-Setup.bat
+CarlaSetup.bat
 ```
 
-This will download and install Unreal Engine 5.3, install the prerequisite requirements and build and launch CARLA. It may take some time to complete and use a significant amount of disk space. For further instructions on building in Linux can be found [here][buildlinuxlink] and the instructions for building in Windows can be found [here][buildwindowslink].
+This will download and install Unreal Engine 5.5, install the prerequisite requirements and build and launch CARLA. It may take some time to complete and use a significant amount of disk space. For further instructions on building in Linux can be found [here][buildlinuxlink] and the instructions for building in Windows can be found [here][buildwindowslink].
 
-[buildlinuxlink]: https://carla.readthedocs.io/en/latest/build_linux_ue5/
-[buildwindowslink]: https://carla.readthedocs.io/en/latest/build_windows_ue5/
+[buildlinuxlink]: https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/
+[buildwindowslink]: https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/
 
 Contributing
 ------------
 
 Please take a look at our [Contribution guidelines][contriblink].
 
-[contriblink]: https://carla.readthedocs.io/en/latest/cont_contribution_guidelines/
+[contriblink]: https://carla-ue5.readthedocs.io/en/latest/cont_contribution_guidelines/
 
 F.A.Q.
 ------
 
 If you run into problems, check our
-[FAQ](https://carla.readthedocs.io/en/latest/build_faq/).
+[FAQ](https://carla-ue5.readthedocs.io/en/latest/build_faq/).
 
 Licenses
 -------

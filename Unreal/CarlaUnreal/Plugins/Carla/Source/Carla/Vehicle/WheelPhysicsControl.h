@@ -5,7 +5,11 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
+
+#include <util/ue-header-guard-begin.h>
 #include "ChaosVehicleWheel.h"
+#include <util/ue-header-guard-end.h>
+
 #include "WheelPhysicsControl.generated.h"
 
 USTRUCT(BlueprintType)
@@ -13,6 +17,48 @@ struct CARLA_API FWheelPhysicsControl
 {
   GENERATED_BODY()
 
+  FWheelPhysicsControl() :
+    AxleType(EAxleType::Undefined),
+    Offset(FVector(0.0f, 0.0f, 0.0f)),
+    WheelRadius(1.0f),
+    WheelWidth(1.0f),
+    WheelMass(1),
+    CorneringStiffness(1.0f),
+    FrictionForceMultiplier(1.0f),
+    SideSlipModifier(0.5f),
+    SlipThreshold(1.0f),
+    SkidThreshold(1.0f),
+    MaxSteerAngle(60.0f),
+    bAffectedBySteering(true),
+    bAffectedByBrake(true),
+    bAffectedByHandbrake(true),
+    bAffectedByEngine(true),
+    bABSEnabled(true),
+    bTractionControlEnabled(true),
+    MaxWheelspinRotation(1.0f),
+    ExternalTorqueCombineMethod(ETorqueCombineMethod::None),
+    LateralSlipGraph(FRichCurve()),
+    SuspensionAxis(FVector(0.0f, 0.0f, 1.0f)),
+    SuspensionForceOffset(1.0f),
+    SuspensionMaxRaise(1.0f),
+    SuspensionMaxDrop(1.0f),
+    SuspensionDampingRatio(0.5f),
+    WheelLoadRatio(0.5f),
+    SpringRate(1.0f),
+    SpringPreload(1.0f),
+    SuspensionSmoothing(5.0f),
+    RollbarScaling(0.0f),
+    SweepShape(ESweepShape::Spherecast),
+    SweepType(ESweepType::ComplexSweep),
+    MaxBrakeTorque(1.0f),
+    MaxHandBrakeTorque(1.0f),
+    WheelIndex(0),
+    Location(FVector(0.0f, 0.0f, 0.0f)),
+    OldLocation(FVector(0.0f, 0.0f, 0.0f)),
+    Velocity(FVector(0.0f, 0.0f, 0.0f))
+  {
+
+  }
   /** If left undefined then the bAffectedByEngine value is used, if defined then bAffectedByEngine is ignored and the differential setup on the vehicle defines which wheels get power from the engine */
   UPROPERTY(EditAnywhere, Category = Wheel)
   EAxleType AxleType;

@@ -7,15 +7,6 @@
 
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
-#include "Components/BoxComponent.h"
-#include "Engine/CollisionProfile.h"
-#include "MovementComponents/DefaultMovementComponent.h"
-#include "Rendering/SkeletalMeshRenderData.h"
-#include "VehicleAnimationInstance.h"
-#include "UObject/UObjectGlobals.h"
-#include "DrawDebugHelpers.h"
-#include "Kismet/KismetSystemLibrary.h"
-
 #include "Carla.h"
 #include "Carla/Game/CarlaHUD.h"
 #include "Carla/Game/CarlaStatics.h"
@@ -24,7 +15,18 @@
 #include "Carla/Util/EmptyActor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Vegetation/VegetationManager.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "Components/BoxComponent.h"
+#include "Engine/CollisionProfile.h"
+#include "MovementComponents/DefaultMovementComponent.h"
+#include "Rendering/SkeletalMeshRenderData.h"
+#include "VehicleAnimationInstance.h"
+#include "UObject/UObjectGlobals.h"
+#include "DrawDebugHelpers.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "PhysicsEngine/PhysicsObjectExternalInterface.h"
+#include <util/ue-header-guard-end.h>
 
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
@@ -387,9 +389,7 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
   PhysicsControl.TransmissionEfficiency = TransmissionSetup.TransmissionEfficiency;
   PhysicsControl.Mass = VehicleMovComponent.Mass;
   PhysicsControl.DragCoefficient = VehicleMovComponent.DragCoefficient;
-  auto PrimitiveComponentPtr = Cast<UPrimitiveComponent>(VehicleMovComponent.UpdatedComponent);
-  check(PrimitiveComponentPtr != nullptr);
-  PhysicsControl.CenterOfMass = PrimitiveComponentPtr->GetCenterOfMass();
+  PhysicsControl.CenterOfMass = GetCenterOfMass(VehicleMovComponent);
   PhysicsControl.ChassisWidth = VehicleMovComponent.ChassisWidth;
   PhysicsControl.ChassisHeight = VehicleMovComponent.ChassisHeight;
   PhysicsControl.DownforceCoefficient = VehicleMovComponent.DownforceCoefficient;
@@ -455,6 +455,20 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
   return PhysicsControl;
 }
 
+FVector ACarlaWheeledVehicle::GetCenterOfMass(UChaosWheeledVehicleMovementComponent& VehicleMovComponent) const
+{
+  if (VehicleMovComponent.bEnableCenterOfMassOverride)
+  {
+    return VehicleMovComponent.CenterOfMassOverride;
+  }
+  else {
+    auto PrimitiveComponentPtr = Cast<UPrimitiveComponent>(VehicleMovComponent.UpdatedComponent);
+    check(PrimitiveComponentPtr != nullptr);
+    auto& PrimitiveComponent = *PrimitiveComponentPtr;
+    return PrimitiveComponent.BodyInstance.COMNudge;
+  }
+}
+
 FVehicleLightState ACarlaWheeledVehicle::GetVehicleLightState() const
 {
   return InputControl.LightState;
@@ -494,10 +508,7 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
   TransmissionSetup.TransmissionEfficiency = PhysicsControl.TransmissionEfficiency;
   VehicleMovComponent.Mass = PhysicsControl.Mass;
   VehicleMovComponent.DragCoefficient = PhysicsControl.DragCoefficient;
-  auto PrimitiveComponentPtr = Cast<UPrimitiveComponent>(VehicleMovComponent.UpdatedComponent);
-  check(PrimitiveComponentPtr != nullptr);
-  auto& PrimitiveComponent = *PrimitiveComponentPtr;
-  PrimitiveComponent.SetCenterOfMass(PhysicsControl.CenterOfMass);
+  SetCenterOfMass(VehicleMovComponent, PhysicsControl);
   VehicleMovComponent.ChassisWidth = PhysicsControl.ChassisWidth;
   VehicleMovComponent.ChassisHeight = PhysicsControl.ChassisHeight;
   VehicleMovComponent.DownforceCoefficient = PhysicsControl.DownforceCoefficient;
@@ -573,6 +584,7 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
       ESweepShape::Raycast;
   }
 
+  VehicleMovComponent.RecreatePhysicsState();
   ResetConstraints();
 
   auto* Recorder = UCarlaStatics::GetRecorder(GetWorld());
@@ -583,6 +595,20 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
 
   // Update physics in the Ackermann Controller
   AckermannController.UpdateVehiclePhysics(this);
+}
+
+void ACarlaWheeledVehicle::SetCenterOfMass(UChaosWheeledVehicleMovementComponent& VehicleMovComponent, const FVehiclePhysicsControl& PhysicsControl)
+{
+  if (VehicleMovComponent.bEnableCenterOfMassOverride)
+  {
+    VehicleMovComponent.CenterOfMassOverride = PhysicsControl.CenterOfMass;
+  }
+  else {
+    auto PrimitiveComponentPtr = Cast<UPrimitiveComponent>(VehicleMovComponent.UpdatedComponent);
+    check(PrimitiveComponentPtr != nullptr);
+    auto& PrimitiveComponent = *PrimitiveComponentPtr;
+    PrimitiveComponent.BodyInstance.COMNudge = PhysicsControl.CenterOfMass;
+  }
 }
 
 void ACarlaWheeledVehicle::ApplyVehicleControl(const FVehicleControl& Control, EVehicleInputPriority Priority)
@@ -618,10 +644,6 @@ void ACarlaWheeledVehicle::DeactivateVelocityControl()
 
 void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
 {
-  UE_LOG(LogCarla, Warning, TEXT("ACarlaWheeledVehicle::ShowDebugTelemetry:: Chaos does not support Debug telemetry"));
-  return;
-  //To Do: Implement Debug Telemetry?
-  /*
   if (GetWorld()->GetFirstPlayerController())
   {
     ACarlaHUD* hud = Cast<ACarlaHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
@@ -643,7 +665,6 @@ void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
     UE_LOG(LogCarla, Warning, TEXT("ACarlaWheeledVehicle::ShowDebugTelemetry:: Cannot find HUD for debug info"));
     }
   }
-  */
 }
 
 void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState& LightState)

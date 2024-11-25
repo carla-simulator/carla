@@ -6,9 +6,7 @@
 #pragma once
 
 #include "Carla/Sensor/ShaderBasedSensor.h"
-
 #include "Carla/Actor/ActorDefinition.h"
-
 #include "RssSensor.generated.h"
 
 /// RSS sensor representation

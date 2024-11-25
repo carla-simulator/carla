@@ -93,6 +93,9 @@ namespace client {
     /// Change the weather in the simulation.
     void SetWeather(const rpc::WeatherParameters &weather);
 
+    /// Query if the Weather is enabled or not
+    bool IsWeatherEnabled() const;
+
     /// Return a snapshot of the world at this moment.
     WorldSnapshot GetSnapshot() const;
 

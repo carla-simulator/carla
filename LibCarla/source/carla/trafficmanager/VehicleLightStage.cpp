@@ -24,7 +24,9 @@ VehicleLightStage::VehicleLightStage(
 void VehicleLightStage::UpdateWorldInfo() {
   // Get the global weather and all the vehicle light states at once
   all_light_states = world.GetVehiclesLightStates();
-  weather = world.GetWeather();
+  is_weather_enabled = world.IsWeatherEnabled();
+  if (is_weather_enabled)
+    weather = world.GetWeather();
 }
 
 void VehicleLightStage::Update(const unsigned long index) {
@@ -78,30 +80,32 @@ void VehicleLightStage::Update(const unsigned long index) {
     }
   }
 
-  // Determine position, fog and beams
+  // Determine position, fog and beams. Do nothing if the weather is disabled.
+  if (is_weather_enabled) {
 
-  // Turn on beams & positions from sunset to dawn
-  if (weather.sun_altitude_angle < SUN_ALTITUDE_DEGREES_BEFORE_DAWN ||
-      weather.sun_altitude_angle >SUN_ALTITUDE_DEGREES_AFTER_SUNSET)
-  {
-    position = true;
-    low_beam = true;
-  }
-  else if (weather.sun_altitude_angle < SUN_ALTITUDE_DEGREES_JUST_AFTER_DAWN ||
-           weather.sun_altitude_angle > SUN_ALTITUDE_DEGREES_JUST_BEFORE_SUNSET)
-  {
-    position = true;
-  }
-  // Turn on lights under heavy rain
-  if (weather.precipitation > HEAVY_PRECIPITATION_THRESHOLD) {
-    position = true;
-    low_beam = true;
-  }
-  // Turn on fog lights
-  if (weather.fog_density > FOG_DENSITY_THRESHOLD) {
-    position = true;
-    low_beam = true;
-    fog_lights = true;
+    // Turn on beams & positions from sunset to dawn
+    if (weather.sun_altitude_angle < SUN_ALTITUDE_DEGREES_BEFORE_DAWN ||
+        weather.sun_altitude_angle > SUN_ALTITUDE_DEGREES_AFTER_SUNSET)
+    {
+      position = true;
+      low_beam = true;
+    }
+    else if (weather.sun_altitude_angle < SUN_ALTITUDE_DEGREES_JUST_AFTER_DAWN ||
+            weather.sun_altitude_angle > SUN_ALTITUDE_DEGREES_JUST_BEFORE_SUNSET)
+    {
+      position = true;
+    }
+    // Turn on lights under heavy rain
+    if (weather.precipitation > HEAVY_PRECIPITATION_THRESHOLD) {
+      position = true;
+      low_beam = true;
+    }
+    // Turn on fog lights
+    if (weather.fog_density > FOG_DENSITY_THRESHOLD) {
+      position = true;
+      low_beam = true;
+      fog_lights = true;
+    }
   }
 
   // Determine the new vehicle light state

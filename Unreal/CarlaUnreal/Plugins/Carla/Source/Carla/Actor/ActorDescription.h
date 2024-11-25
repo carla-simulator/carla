@@ -6,9 +6,13 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "Carla/Actor/ActorAttribute.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include <util/ue-header-guard-end.h>
+
 #include "ActorDescription.generated.h"
 
 /// A description of a Carla Actor with all its variation.

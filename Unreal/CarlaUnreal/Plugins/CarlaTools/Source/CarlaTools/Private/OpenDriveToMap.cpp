@@ -1,33 +1,27 @@
 // Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "OpenDriveToMap.h"
+
+#if WITH_EDITOR
+#include "CarlaTools.h"
+#include "OpenDrive/OpenDriveGenerator.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/BlueprintLibary/MapGenFunctionLibrary.h"
+#include "Traffic/TrafficLightManager.h"
+#include "HoudiniImporterWidget.h"
+#include "MapGeneratorWidget.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "FileHelpers.h"
 #include "Misc/FileHelper.h"
 #include "Engine/LevelBounds.h"
 #include "Engine/SceneCapture2D.h"
-#include "Runtime/Core/Public/Async/ParallelFor.h"
+#include "Async/ParallelFor.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "KismetProceduralMeshLibrary.h"
 #include "StaticMeshAttributes.h"
-
-#include "Traffic/TrafficLightManager.h"
 #include "Online/CustomFileDownloader.h"
 #include "Util/ProceduralCustomMesh.h"
-#include "Carla/Game/CarlaStatics.h"
-#include "Carla/BlueprintLibary/MapGenFunctionLibrary.h"
-#include "OpenDrive/OpenDriveGenerator.h"
-
-#include <compiler/disable-ue4-macros.h>
-#include <carla/opendrive/OpenDriveParser.h>
-#include <carla/road/Map.h>
-#include <carla/geom/Simplification.h>
-#include <carla/road/Deformation.h>
-#include <carla/rpc/String.h>
-#if __has_include(<OSM2ODR.h>)
-  #define HAS_OSM2ODR
-  #include <OSM2ODR.h>
-#endif
-#include <compiler/enable-ue4-macros.h>
-
 #include "Engine/TriggerBox.h"
 #include "Engine/AssetManager.h"
 #include "Factories/MaterialInstanceConstantFactoryNew.h"
@@ -40,19 +34,27 @@
 #include "MeshDescription.h"
 #include "Subsystems/UnrealEditorSubsystem.h"
 #include "LevelEditorSubsystem.h"
-
 #include "ProceduralMeshConversion.h"
-
 #include "ContentBrowserModule.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "Math/Vector.h"
 #include "GameFramework/Actor.h"
-
 #include "DrawDebugHelpers.h"
-
-#if WITH_EDITOR
 #include "IDesktopPlatform.h"
 #include "DesktopPlatformModule.h"
+#include <util/ue-header-guard-end.h>
+
+#include <util/disable-ue4-macros.h>
+#include <carla/opendrive/OpenDriveParser.h>
+#include <carla/road/Map.h>
+#include <carla/geom/Simplification.h>
+#include <carla/road/Deformation.h>
+#include <carla/rpc/String.h>
+#if __has_include(<OSM2ODR.h>)
+  #define HAS_OSM2ODR
+  #include <OSM2ODR.h>
+#endif
+#include <util/enable-ue4-macros.h>
 
 
 

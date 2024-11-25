@@ -6,23 +6,22 @@
 
 #include "Carla/OpenDrive/OpenDriveActor.h"
 #include "Carla.h"
-
 #include "Carla/OpenDrive/OpenDrive.h"
 
-#include "UObject/ConstructorHelpers.h"
-#include "DrawDebugHelpers.h"
-
-#include "UObject/ConstructorHelpers.h"
-#include "Materials/MaterialExpressionTextureSample.h"
-
-#include "DrawDebugHelpers.h"
-
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/geom/Math.h>
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/road/element/Waypoint.h>
 #include <carla/rpc/String.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "UObject/ConstructorHelpers.h"
+#include "DrawDebugHelpers.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Materials/MaterialExpressionTextureSample.h"
+#include "DrawDebugHelpers.h"
+#include <util/ue-header-guard-end.h>
 
 #include <algorithm>
 #include <unordered_set>

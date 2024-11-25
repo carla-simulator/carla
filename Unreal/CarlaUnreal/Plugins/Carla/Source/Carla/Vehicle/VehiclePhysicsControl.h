@@ -8,7 +8,11 @@
 #pragma once
 
 #include "Vehicle/WheelPhysicsControl.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Curves/RichCurve.h"
+#include <util/ue-header-guard-end.h>
+
 #include "VehiclePhysicsControl.generated.h"
 
 

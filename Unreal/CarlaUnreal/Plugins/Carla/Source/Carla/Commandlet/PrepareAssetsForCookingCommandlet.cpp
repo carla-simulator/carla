@@ -5,11 +5,11 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "PrepareAssetsForCookingCommandlet.h"
-
-#include "AssetRegistry/AssetRegistryModule.h"
+#include "Carla/MapGen/LargeMapManager.h"
 
 #include "SSTags.h"
 
+#include <util/ue-header-guard-begin.h>
 #if WITH_EDITOR
 #include "FileHelpers.h"
 #endif
@@ -19,7 +19,11 @@
 #include "HAL/PlatformFileManager.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInstanceConstant.h"
-#include "Carla/MapGen/LargeMapManager.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "PhysicsEngine/BodySetup.h"
+#include "UObject/SavePackage.h"
+#include "UObject/Package.h"
+#include <util/ue-header-guard-end.h>
 
 static bool ValidateStaticMesh(UStaticMesh *Mesh)
 {
@@ -334,7 +338,6 @@ bool UPrepareAssetsForCookingCommandlet::SaveWorld(
 {
   // Create Package to save
   UPackage *Package = AssetData.GetPackage();
-  Package->SetFolderName(*WorldName);
   Package->FullyLoad();
   Package->MarkPackageDirty();
   FAssetRegistryModule::AssetCreated(World);
@@ -475,16 +478,20 @@ bool UPrepareAssetsForCookingCommandlet::SavePackage(const FString &PackagePath,
     return false;
   }
 
+  FSavePackageArgs SaveArgs;
+  SaveArgs.TopLevelFlags =
+    EObjectFlags::RF_Public |
+    EObjectFlags::RF_Standalone;
+  SaveArgs.Error = GError;
+  SaveArgs.bForceByteSwapping = true;
+  SaveArgs.bWarnOfLongFilename = true;
+  SaveArgs.SaveFlags = SAVE_NoError;
+
   return UPackage::SavePackage(
       Package,
       World,
-      EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
       *PackageFileName,
-      GError,
-      nullptr,
-      true,
-      true,
-      SAVE_NoError);
+      SaveArgs);
 }
 
 void UPrepareAssetsForCookingCommandlet::GenerateMapPathsFile(

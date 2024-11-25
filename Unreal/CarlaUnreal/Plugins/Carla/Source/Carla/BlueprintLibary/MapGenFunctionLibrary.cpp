@@ -6,22 +6,22 @@
 
 #include "MapGenFunctionLibrary.h"
 
-// Engine headers
+#include "Carla/Actor/LevelActor/InstancedStaticMeshActor.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Materials/MaterialInstance.h"
 #include "StaticMeshAttributes.h"
 #include "RenderingThread.h"
 #include "PhysicsEngine/BodySetup.h"
 #include "Engine/StaticMeshActor.h"
-#include "Carla/Actor/LevelActor/InstancedStaticMeshActor.h"
+#include "UObject/SavePackage.h"
 #if WITH_EDITOR
 #include "Editor/EditorEngine.h"
 #include "Editor/Transactor.h"
 #endif
-// Carla C++ headers
-
-// Carla plugin headers
-
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include <util/ue-header-guard-end.h>
 
 DEFINE_LOG_CATEGORY(LogCarlaMapGenFunctionLibrary);
 static const float OSMToCentimetersScaleFactor = 100.0f;
@@ -185,7 +185,26 @@ UStaticMesh* UMapGenFunctionLibrary::CreateMesh(
 
     // Notify asset registry of new asset
     FAssetRegistryModule::AssetCreated(Mesh);
-    //UPackage::SavePackage(Package, Mesh, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *(MeshName.ToString()), GError, nullptr, true, true, SAVE_NoError);
+
+    /*
+
+    FSavePackageArgs SaveArgs;
+    SaveArgs.TopLevelFlags =
+      EObjectFlags::RF_Public |
+      EObjectFlags::RF_Standalone;
+    SaveArgs.Error = GError;
+    SaveArgs.bForceByteSwapping = true;
+    SaveArgs.bWarnOfLongFilename = true;
+    SaveArgs.SaveFlags = SAVE_NoError;
+
+    UPackage::SavePackage(
+      Package, 
+      Mesh,
+      *(MeshName.ToString()),
+      SaveArgs);
+
+    */
+
     Package->MarkPackageDirty();
     return Mesh;
   }
@@ -239,8 +258,9 @@ void UMapGenFunctionLibrary::CleanupGEngine(){
 #endif
 }
 
-void UMapGenFunctionLibrary::ChangeStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter, int MinNumOfInstancesToBeChanged)
+TArray<AInstancedStaticMeshActor*> UMapGenFunctionLibrary::ChangeStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter, int MinNumOfInstancesToBeChanged)
 {
+  TArray<AInstancedStaticMeshActor*> Result;
   TArray<AActor*> FoundActors;
   UGameplayStatics::GetAllActorsOfClass(World,  AStaticMeshActor::StaticClass(), FoundActors);
   TMap<UStaticMesh*, TArray<AStaticMeshActor*>> ActorsToCheckIfReplacedMap;
@@ -258,6 +278,7 @@ void UMapGenFunctionLibrary::ChangeStaticMeshesInTheLevelForInstancedStaticMeshe
 
   for(auto CurrentPair : ActorsToCheckIfReplacedMap)
   {
+
     if(CurrentPair.Value.Num() > MinNumOfInstancesToBeChanged)
     {
       TArray<FTransform> TransformsToBeInstanced;
@@ -272,16 +293,19 @@ void UMapGenFunctionLibrary::ChangeStaticMeshesInTheLevelForInstancedStaticMeshe
       {
         InstancedStaticMeshActor->GetInstancedStaticMeshComponent()->SetStaticMesh(CurrentPair.Key);
         InstancedStaticMeshActor->GetInstancedStaticMeshComponent()->AddInstances(TransformsToBeInstanced, false, true);
+        Result.Add(InstancedStaticMeshActor);
       }
     }
   }
+
+  return Result;
 }
 
-void UMapGenFunctionLibrary::RevertStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter)
+TArray<AStaticMeshActor*> UMapGenFunctionLibrary::RevertStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter)
 {
   TArray<AActor*> FoundActors;
+  TArray<AStaticMeshActor*> Result;
   UGameplayStatics::GetAllActorsOfClass(World,  AInstancedStaticMeshActor::StaticClass(), FoundActors);
-
   for(AActor* CurrentActor : FoundActors )
   {
     AInstancedStaticMeshActor* InstancedStaticMeshActor = Cast<AInstancedStaticMeshActor>(CurrentActor);
@@ -296,9 +320,12 @@ void UMapGenFunctionLibrary::RevertStaticMeshesInTheLevelForInstancedStaticMeshe
           AStaticMeshActor* StaticMeshActor = World->SpawnActor<AStaticMeshActor>();
           StaticMeshActor->GetStaticMeshComponent()->SetStaticMesh(CurrentStaticMesh);
           StaticMeshActor->SetActorTransform(FTransform(CurrentInstanceData.Transform));
+          Result.Add(StaticMeshActor);
         }
         InstancedStaticMeshActor->Destroy();
       }
     }
   }
+
+  return Result;
 }

@@ -11,10 +11,12 @@
 #include "Carla/MapGen/LargeMapManager.h"
 #include "DrawDebugHelpers.h"
 #include "Components/LineBatchComponent.h"
-#include <compiler/disable-ue4-macros.h>
+
+#include <util/disable-ue4-macros.h>
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/String.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
 
 
 
@@ -208,7 +210,7 @@ struct FShapeVisitor
       Location = LargeMap->GlobalToLocalLocation(Location);
     }
     ACarlaHUD *Hud = Cast<ACarlaHUD>(PlayerController->GetHUD());
-    Hud->AddHUDString(carla::rpc::ToFString(Str.text), Location, Color.Quantize(), LifeTime);
+    Hud->AddHUDString(carla::rpc::ToFString(Str.text), Location, Color.QuantizeRound(), LifeTime);
   }
 
 private:

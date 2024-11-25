@@ -6,32 +6,34 @@
 
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla.h"
+#include "Carla/Game/Tagger.h"
 #include "Carla/Game/CarlaHUD.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
 #include "Carla/Lights/CarlaLight.h"
-#include "Engine/DecalActor.h"
-#include "Engine/LevelStreaming.h"
-#include "Engine/LocalPlayer.h"
-#include "Materials/MaterialInstanceDynamic.h"
-#include "Engine/StaticMeshActor.h"
-#include "Vehicle/VehicleSpawnPoint.h"
-#include "Util/BoundingBoxCalculator.h"
-#include "EngineUtils.h"
+#include "Carla/Vehicle/VehicleSpawnPoint.h"
+#include "Carla/Util/BoundingBoxCalculator.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/element/RoadInfoSignal.h"
 #include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/rpc/MapLayer.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
+#include <util/ue-header-guard-begin.h>
+#include "Engine/DecalActor.h"
+#include "Engine/LevelStreaming.h"
+#include "Engine/LocalPlayer.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Engine/StaticMeshActor.h"
+#include "EngineUtils.h"
 #include "Async/ParallelFor.h"
 #include "DynamicRHI.h"
-
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include <util/ue-header-guard-end.h>
 
 namespace cr = carla::road;
 namespace crp = carla::rpc;
@@ -286,7 +288,7 @@ UTexture2D* ACarlaGameModeBase::CreateUETexture(const carla::rpc::TextureColor& 
     }
   }
   UTexture2D* UETexture = UTexture2D::CreateTransient(Texture.GetWidth(), Texture.GetHeight(), EPixelFormat::PF_B8G8R8A8);
-  FTexture2DMipMap& Mip = UETexture->PlatformData->Mips[0];
+  FTexture2DMipMap& Mip = UETexture->GetPlatformData()->Mips[0];
   void* Data = Mip.BulkData.Lock( LOCK_READ_WRITE );
   FMemory::Memcpy( Data,
       &Colors[0],
@@ -309,7 +311,7 @@ UTexture2D* ACarlaGameModeBase::CreateUETexture(const carla::rpc::TextureFloatCo
     }
   }
   UTexture2D* UETexture = UTexture2D::CreateTransient(Texture.GetWidth(), Texture.GetHeight(), EPixelFormat::PF_FloatRGBA);
-  FTexture2DMipMap& Mip = UETexture->PlatformData->Mips[0];
+  FTexture2DMipMap& Mip = UETexture->GetPlatformData()->Mips[0];
   void* Data = Mip.BulkData.Lock( LOCK_READ_WRITE );
   FMemory::Memcpy( Data,
       &Colors[0],

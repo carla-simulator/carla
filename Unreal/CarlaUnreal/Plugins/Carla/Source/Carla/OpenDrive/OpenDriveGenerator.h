@@ -5,16 +5,19 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 #pragma once
 
+#include "Carla/Vehicle/VehicleSpawnPoint.h"
+
+#include <util/disable-ue4-macros.h>
+#include "carla/road/Map.h"
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "ProceduralMeshComponent.h"
+#include <util/ue-header-guard-end.h>
 
-#include <compiler/disable-ue4-macros.h>
 #include <optional>
-#include "carla/road/Map.h"
-#include <compiler/enable-ue4-macros.h>
-
-#include "Vehicle/VehicleSpawnPoint.h"
 
 #include "OpenDriveGenerator.generated.h"
 

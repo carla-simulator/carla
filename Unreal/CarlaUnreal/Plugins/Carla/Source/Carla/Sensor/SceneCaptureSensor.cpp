@@ -8,9 +8,12 @@
 #include "Carla/Sensor/PostProcessConfig.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 #include "Engine/PostProcessVolume.h"
 #include "GameFramework/SpectatorPawn.h"
+#include <util/ue-header-guard-end.h>
 
 #include <mutex>
 #include <atomic>
@@ -684,7 +687,7 @@ void ASceneCaptureSensor::BeginPlay()
     CaptureRenderTarget->TargetGamma = TargetGamma;
   }
 
-  check(IsValid(CaptureComponent2D) && !CaptureComponent2D->IsPendingKill());
+  check(IsValid(CaptureComponent2D) && IsValidChecked(CaptureComponent2D));
 
   CaptureComponent2D->Deactivate();
   CaptureComponent2D->TextureTarget = CaptureRenderTarget;
@@ -710,10 +713,12 @@ void ASceneCaptureSensor::BeginPlay()
   UpdatePostProcessConfig(PostProcessConfig);
   CaptureComponent2D->ShowFlags = PostProcessConfig.EngineShowFlags;
   CaptureComponent2D->PostProcessSettings = PostProcessConfig.PostProcessSettings;
-
+  
   // This ensures the camera is always spawning the raindrops in case the
   // weather was previously set to have rain.
-  GetEpisode().GetWeather()->NotifyWeather(this);
+  auto Weather = GetEpisode().GetWeather();
+  if (Weather != nullptr)
+    Weather->NotifyWeather(this);
   
   Super::BeginPlay();
 }

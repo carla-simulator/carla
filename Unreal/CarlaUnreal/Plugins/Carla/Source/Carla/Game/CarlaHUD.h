@@ -22,9 +22,13 @@
 #undef DrawText
 
 #include "Carla.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Containers/Array.h"
 #include "GameFramework/HUD.h"
 #include "ChaosWheeledVehicleMovementComponent.h"
+#include <util/ue-header-guard-end.h>
+
 #include "CarlaHUD.generated.h"
 
 struct HUDString
@@ -50,6 +54,9 @@ public:
   }
 
   virtual void DrawHUD() override;
+
+  /** Draw 2D debug text graphs on UI for the wheels, suspension and other systems */
+  void DrawDebug(float& YL, float& YPos);
 
   UChaosWheeledVehicleMovementComponent* DebugVehicle = nullptr;
 

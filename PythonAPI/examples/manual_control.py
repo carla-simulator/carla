@@ -1194,7 +1194,7 @@ class CameraManager(object):
             # Example of converting the raw_data from a carla.DVSEventArray
             # sensor into a NumPy array and using it as an image
             dvs_events = np.frombuffer(image.raw_data, dtype=np.dtype([
-                ('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol', np.bool)]))
+                ('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol', np.bool_)]))
             dvs_img = np.zeros((image.height, image.width, 3), dtype=np.uint8)
             # Blue is positive, red is negative
             dvs_img[dvs_events[:]['y'], dvs_events[:]['x'], dvs_events[:]['pol'] * 2] = 255
@@ -1294,56 +1294,36 @@ def game_loop(args):
 
 
 def main():
-    argparser = argparse.ArgumentParser(
-        description='CARLA Manual Control Client')
+    argparser = argparse.ArgumentParser(description='CARLA Manual Control Client')
     argparser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        dest='debug',
+        '-v', '--verbose', action='store_true', dest='debug',
         help='print debug information')
     argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
+        '--host', metavar='H', default='127.0.0.1',
         help='IP of the host server (default: 127.0.0.1)')
     argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
+        '-p', '--port', metavar='P', default=2000, type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '-a', '--autopilot',
-        action='store_true',
+        '-a', '--autopilot', action='store_true',
         help='enable autopilot')
     argparser.add_argument(
-        '--res',
-        metavar='WIDTHxHEIGHT',
-        default='1280x720',
+        '--res', metavar='WIDTHxHEIGHT', default='1280x720',
         help='window resolution (default: 1280x720)')
     argparser.add_argument(
-        '--filter',
-        metavar='PATTERN',
-        default='vehicle.*',
+        '--filter', metavar='PATTERN', default='vehicle.*',
         help='actor filter (default: "vehicle.*")')
     argparser.add_argument(
-        '--generation',
-        metavar='G',
-        default='All',
-        help='restrict to certain actor generation (values: "1","2","3","4","All" - default: "4")')
+        '--generation', metavar='G', default='All',
+        help='restrict to certain actor generation (values: "2","3","All" - default: "All")')
     argparser.add_argument(
-        '--rolename',
-        metavar='NAME',
-        default='hero',
+        '--rolename', metavar='NAME', default='hero',
         help='actor role name (default: "hero")')
     argparser.add_argument(
-        '--gamma',
-        default=1.0,
-        type=float,
+        '--gamma', default=1.0, type=float,
         help='Gamma correction of the camera (default: 1.0)')
     argparser.add_argument(
-        '--sync',
-        action='store_true',
+        '--sync', action='store_true',
         help='Activate synchronous mode execution')
     args = argparser.parse_args()
 

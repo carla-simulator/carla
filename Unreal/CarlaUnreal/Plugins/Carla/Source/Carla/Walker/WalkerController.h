@@ -10,12 +10,14 @@
 #include "Carla/Walker/WalkerBoneControlOut.h"
 #include "Carla/Walker/WalkerControl.h"
 
+#include <util/disable-ue4-macros.h>
+#include <carla/rpc/WalkerBoneControlIn.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "GameFramework/Controller.h"
-
-#include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/WalkerBoneControlIn.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/ue-header-guard-end.h>
 
 #include "WalkerController.generated.h"
 

@@ -4,13 +4,21 @@
 
 #include "Online/CustomFileDownloader.h"
 #include "OpenDriveToMap.h"
+#include "MapGeneratorWidget.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "HttpModule.h"
 #include "Http.h"
 #include "Misc/FileHelper.h"
+#include <util/ue-header-guard-end.h>
 
 #if defined(WITH_OSM2ODR) && __has_include(<OSM2ODR.h>)
   #define HAS_OSM2ODR
   #include <OSM2ODR.h>
+#endif
+
+#if defined(_WIN32) && defined(CreateDirectory)
+#undef CreateDirectory
 #endif
 
 void UCustomFileDownloader::ConvertOSMInOpenDrive(FString FilePath, float Lat_0, float Lon_0)

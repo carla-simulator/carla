@@ -7,10 +7,13 @@
 #include "Carla/Weather/Weather.h"
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/SkyLightComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
+#include <util/ue-header-guard-end.h>
 
 AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)

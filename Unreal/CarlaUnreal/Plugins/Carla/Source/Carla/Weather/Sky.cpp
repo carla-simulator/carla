@@ -1,4 +1,6 @@
 #include "Sky.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Components/PostProcessComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/DirectionalLightComponent.h"
@@ -6,6 +8,7 @@
 #include "Components/SkyLightComponent.h"
 #include "Components/VolumetricCloudComponent.h"
 #include "Components/SkyAtmosphereComponent.h"
+#include <util/ue-header-guard-end.h>
 
 
 ASkyBase::ASkyBase(

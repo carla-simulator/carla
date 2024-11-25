@@ -37,10 +37,6 @@
       "Enabled": true
     },
     {
-      "Name": "StreetMap",
-      "Enabled": true
-    },
-    {
       "Name": "ChaosVehiclesPlugin",
       "Enabled": true
     }

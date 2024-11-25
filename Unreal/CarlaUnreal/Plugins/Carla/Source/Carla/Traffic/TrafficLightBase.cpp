@@ -8,7 +8,7 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Vehicle/CarlaWheeledVehicle.h"
-#include "Vehicle/WheeledVehicleAIController.h"
+#include "Carla/Vehicle/WheeledVehicleAIController.h"
 
 // =============================================================================
 // -- Static local methods -----------------------------------------------------
@@ -16,7 +16,7 @@
 
 static bool IsValid(const ACarlaWheeledVehicle *Vehicle)
 {
-  return ((Vehicle != nullptr) && !Vehicle->IsPendingKill());
+  return ((Vehicle != nullptr) && IsValidChecked(Vehicle));
 }
 
 static ETrafficSignState ToTrafficSignState(ETrafficLightState State)

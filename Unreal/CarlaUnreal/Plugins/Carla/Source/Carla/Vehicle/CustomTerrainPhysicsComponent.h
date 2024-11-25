@@ -6,26 +6,27 @@
 
 #pragma once
 
-#include "Components/ActorComponent.h"
-#include "Components/PrimitiveComponent.h"
-#include "Engine/StaticMeshActor.h"
-#include "Misc/ScopeLock.h"
-
 #include "Carla/Math/DVector.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
-#include "Engine/TextureRenderTarget2D.h"
 #include "Carla/MapGen/LargeMapManager.h"
-#include "Engine/DataAsset.h"
-#include "Async/Future.h"
 #ifdef WITH_PYTORCH
 THIRD_PARTY_INCLUDES_START
 #include <carla/pytorch/pytorch.h>
 THIRD_PARTY_INCLUDES_END
 #endif
 
+#include <util/ue-header-guard-begin.h>
+#include "Components/ActorComponent.h"
+#include "Components/PrimitiveComponent.h"
+#include "Engine/StaticMeshActor.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "Engine/DataAsset.h"
+#include "Async/Future.h"
+#include "Misc/ScopeLock.h"
+#include <util/ue-header-guard-end.h>
+
 #include <unordered_map>
 #include <vector>
-#include "Misc/ScopeLock.h"
 #include <string>
 
 #include "CustomTerrainPhysicsComponent.generated.h"

@@ -2,7 +2,10 @@
 
 
 #include "CarlaSunSky.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Components/SkyLightComponent.h"
+#include <util/ue-header-guard-end.h>
 
 void ACarlaSunSky::SetRealTimeCapture(USkyLightComponent* SkyLightComp, bool NewRTC)
 {

@@ -20,7 +20,7 @@
       "inherits": "Common",
       "cacheVariables":
       {
-        "CMAKE_TOOLCHAIN_FILE": "CMake/LinuxToolchain.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/CMake/LinuxToolchain.cmake"
       },
       "hidden": true
     },

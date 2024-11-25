@@ -4,8 +4,10 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include <util/ue-header-guard-end.h>
 
 #include "UncenteredPivotPointMesh.generated.h"
 

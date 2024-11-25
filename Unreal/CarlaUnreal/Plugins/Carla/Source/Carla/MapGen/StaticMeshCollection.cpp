@@ -7,8 +7,10 @@
 #include "StaticMeshCollection.h"
 #include "Carla.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include <util/ue-header-guard-end.h>
 
 AStaticMeshCollection::AStaticMeshCollection(
   const FObjectInitializer& ObjectInitializer) :

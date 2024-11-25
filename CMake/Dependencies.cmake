@@ -191,6 +191,11 @@ carla_dependency_add (
 
 
 # ==== RPCLIB ====
+carla_dependency_option (RPCLIB_BUILD_TESTS OFF)
+carla_dependency_option (RPCLIB_GENERATE_COMPDB OFF)
+carla_dependency_option (RPCLIB_BUILD_EXAMPLES OFF)
+carla_dependency_option (RPCLIB_ENABLE_LOGGING OFF)
+carla_dependency_option (RPCLIB_ENABLE_COVERAGE OFF)
 carla_dependency_add (
   rpclib
   ${CARLA_RPCLIB_TAG}
@@ -258,7 +263,7 @@ endif ()
 
 
 
-if (BUILD_CARLA_UNREAL)
+if (BUILD_CARLA_UNREAL AND ENABLE_STREETMAP)
   # ==== STREETMAP ====
   carla_dependency_add (
     StreetMap

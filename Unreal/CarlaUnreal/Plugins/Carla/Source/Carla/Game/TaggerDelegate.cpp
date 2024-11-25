@@ -6,10 +6,11 @@
 
 #include "TaggerDelegate.h"
 #include "Carla.h"
-
 #include "Game/Tagger.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Engine/World.h"
+#include <util/ue-header-guard-end.h>
 
 UTaggerDelegate::UTaggerDelegate() :
   ActorSpawnedDelegate(FOnActorSpawned::FDelegate::CreateUObject(this, &UTaggerDelegate::OnActorSpawned)) {}

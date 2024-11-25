@@ -6,11 +6,6 @@
 
 #pragma once
 
-#include <fstream>
-#include <sstream>
-#include <unordered_map>
-
-#include <functional>
 #include "CarlaRecorderInfo.h"
 #include "CarlaRecorderFrames.h"
 #include "CarlaRecorderEventAdd.h"
@@ -21,6 +16,11 @@
 #include "CarlaRecorderState.h"
 #include "CarlaRecorderHelpers.h"
 #include "CarlaReplayerHelper.h"
+
+#include <fstream>
+#include <sstream>
+#include <unordered_map>
+#include <functional>
 
 class UCarlaEpisode;
 
