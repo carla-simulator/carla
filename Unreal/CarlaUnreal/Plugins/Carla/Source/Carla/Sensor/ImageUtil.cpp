@@ -291,7 +291,7 @@ namespace ImageUtil
         ReadImageDataBegin(Context, RenderTarget, std::move(Callback));
         ReadImageDataEnd(Context);
       });
-      FlushRenderingCommands();
+
     }
     return true;
   }

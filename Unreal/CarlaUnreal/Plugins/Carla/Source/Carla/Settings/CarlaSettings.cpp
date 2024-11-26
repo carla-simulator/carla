@@ -9,6 +9,7 @@
 #include "Carla/Util/IniFile.h"
 
 #include <util/ue-header-guard-begin.h>
+#include "Misc/ConfigCacheIni.h"
 #include "Misc/CommandLine.h"
 #include "Engine/DirectionalLight.h"
 #include "Engine/Engine.h"
@@ -20,6 +21,7 @@
 #include "UObject/Package.h"
 #include "Math/UnrealMathUtility.h"
 #include <util/ue-header-guard-end.h>
+
 
 // INI file sections.
 #define S_CARLA_SERVER          TEXT("CARLA/Server")
