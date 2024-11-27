@@ -1,40 +1,37 @@
-# Linux build
+# Linux 빌드
 
-This guide details how to build CARLA from source on Linux. There are two parts. Part one details system requirements and installations of required software, and part two details how to actually build and run CARLA.  
+이 가이드는 Linux에서 CARLA를 소스로부터 빌드하는 방법을 설명합니다. 크게 두 부분으로 나뉘어 있습니다. 첫 번째 부분에서는 시스템 요구사항과 필요한 소프트웨어 설치에 대해 다루고, 두 번째 부분에서는 실제 CARLA를 빌드하고 실행하는 방법을 설명합니다.
 
-The build process is long (4 hours or more) and involves several kinds of software. It is highly recommended to read through the guide fully before starting. 
+빌드 과정은 길며(4시간 이상) 여러 종류의 소프트웨어가 필요합니다. 시작하기 전에 가이드 전체를 읽어보시기를 강력히 권장합니다.
 
-If you come across errors or difficulties then have a look at the **[F.A.Q.](build_faq.md)** page which offers solutions for the most common complications. Alternatively, use the [CARLA forum](https://github.com/carla-simulator/carla/discussions) to post any queries you may have.
+오류나 어려움이 발생하면 가장 일반적인 문제에 대한 해결책을 제공하는 **[F.A.Q.](build_faq.md)** 페이지를 확인하시거나, [CARLA 포럼](https://github.com/carla-simulator/carla/discussions)에 질문을 올려주세요.
 
-- [__Part One: Prerequisites__](#part-one-prerequisites)
-    - [System requirements](#system-requirements)
-    - [Software requirements](#software-requirements)
-        - [Unreal Engine](#unreal-engine)
-- [__Part Two: Build CARLA__](#part-two-build-carla)
-    - [Clone the CARLA repository](#clone-the-carla-repository)
-    - [Get assets](#get-assets)
-    - [Set Unreal Engine environment variable](#set-unreal-engine-environment-variable)
-    - [Build CARLA](#build-carla)
-    - [Other make commands](#other-make-commands)
+- [__Part One: 사전 준비__](#part-one-prerequisites)
+    - [시스템 요구사항](#system-requirements)
+    - [소프트웨어 요구사항](#software-requirements)
+        - [언리얼 엔진](#unreal-engine)
+- [__Part Two: CARLA 빌드__](#part-two-build-carla)
+    - [CARLA 저장소 복제](#clone-the-carla-repository)
+    - [에셋 다운로드](#get-assets)
+    - [언리얼 엔진 환경 변수 설정](#set-unreal-engine-environment-variable)
+    - [CARLA 빌드](#build-carla)
+    - [기타 make 명령어](#other-make-commands)
 
 ---
-## Part One: Prerequisites
+## Part One: 사전 준비
 
-### System requirements
+### 시스템 요구사항
 
-* __Ubuntu 18.04.__ CARLA provides support for previous Ubuntu versions up to 16.04. **However** proper compilers are needed for Unreal Engine to work properly. Dependencies for Ubuntu 18.04 and previous versions are listed separately below. Make sure to install the ones corresponding to your system.
-* __130 GB disk space.__ Carla will take around 31 GB and Unreal Engine will take around 91 GB so have about 130 GB free to account for both of these plus additional minor software installations. 
-* __An adequate GPU.__ CARLA aims for realistic simulations, so the server needs at least a 6 GB GPU although 8 GB is recommended. A dedicated GPU is highly recommended for machine learning. 
-* __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Make sure that these ports are not blocked by firewalls or any other applications. 
+* __Ubuntu 18.04.__ CARLA는 16.04까지의 이전 Ubuntu 버전을 지원합니다. **하지만** 언리얼 엔진이 제대로 작동하려면 적절한 컴파일러가 필요합니다. Ubuntu 18.04와 이전 버전에 대한 의존성이 아래에 별도로 나열되어 있습니다. 시스템에 맞는 것을 설치하시기 바랍니다.
+* __130GB 디스크 공간.__ Carla는 약 31GB를, 언리얼 엔진은 약 91GB를 차지하므로 이 둘과 기타 소프트웨어 설치를 위해 약 130GB의 여유 공간이 필요합니다.
+* __적절한 GPU.__ CARLA는 현실적인 시뮬레이션을 목표로 하므로, 서버는 최소 6GB GPU가 필요하며 8GB를 권장합니다. 머신 러닝을 위해서는 전용 GPU를 강력히 권장합니다.
+* __두 개의 TCP 포트와 좋은 인터넷 연결.__ 기본적으로 2000번과 2001번 포트를 사용합니다. 이 포트들이 방화벽이나 다른 애플리케이션에 의해 차단되지 않았는지 확인하세요.
 
 !!! Warning
-    __If you are upgrading from CARLA 0.9.12 to 0.9.13__: you must first upgrade the CARLA fork of the UE4 engine to the latest version. See the [__Unreal Engine__](#unreal-engine) section for details on upgrading UE4
+    __CARLA 0.9.12에서 0.9.13으로 업그레이드하는 경우__: 먼저 UE4 엔진의 CARLA 포크를 최신 버전으로 업그레이드해야 합니다. UE4 업그레이드에 대한 자세한 내용은 [__언리얼 엔진__](#unreal-engine) 섹션을 참조하세요.
+### 소프트웨어 요구사항
 
-
-
-### Software requirements
-
-CARLA requires many different kinds of software to run. Some are built during the CARLA build process itself, such as *Boost.Python*. Others are binaries that should be installed before starting the build (*cmake*, *clang*, different versions of *Python*, etc.). To install these requirements, run the following commands:
+CARLA를 실행하기 위해서는 여러 종류의 소프트웨어가 필요합니다. *Boost.Python*과 같은 일부는 CARLA 빌드 과정에서 함께 빌드되며, 그 외에는 빌드 시작 전에 설치해야 하는 바이너리(*cmake*, *clang*, 다양한 버전의 *Python* 등)들이 있습니다. 이러한 요구사항을 설치하려면 다음 명령어를 실행하세요:
 
 ```sh
 sudo apt-get update &&
@@ -44,9 +41,9 @@ wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add
 ```
 
 !!! Warning
-    The following commands depend on your Ubuntu version. Make sure to choose accordingly. 
+    다음 명령어들은 Ubuntu 버전에 따라 다릅니다. 본인의 시스템에 맞는 것을 선택하세요.
 
-To avoid compatibility issues between Unreal Engine and the CARLA dependencies, use the same compiler version and C++ runtime library to compile everything. The CARLA team uses clang-8 (or clang-10 in Ubuntu 20.04) and LLVM's libc++. Change the default clang version to compile Unreal Engine and the CARLA dependencies.
+언리얼 엔진과 CARLA 의존성 간의 호환성 문제를 피하기 위해, 모든 것을 컴파일할 때 동일한 컴파일러 버전과 C++ 런타임 라이브러리를 사용하세요. CARLA 팀은 clang-8(또는 Ubuntu 20.04에서는 clang-10)과 LLVM의 libc++를 사용합니다. 언리얼 엔진과 CARLA 의존성을 컴파일하기 위해 기본 clang 버전을 변경하세요.
 
 __Ubuntu 22.04__.
 ```sh
@@ -68,7 +65,6 @@ sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-10/bin/cla
 ```
 
 __Ubuntu 18.04__.
-
 ```sh
 sudo apt-add-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic main"
 sudo apt-get update
@@ -78,7 +74,6 @@ sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clan
 ```
 
 __Ubuntu 16.04__.
-
 ```sh
 sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main" &&
 sudo apt-get update
@@ -87,9 +82,9 @@ sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/
 sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clang 180
 ```
 
-__Previous Ubuntu versions__.
+__이전 Ubuntu 버전__.
 
-We strongly advise using Ubuntu 18.04 or later to build CARLA. However, you may attempt to build CARLA on older versions of Ubuntu with the following commands:
+CARLA 빌드를 위해서는 Ubuntu 18.04 이상을 강력히 권장합니다. 하지만 다음 명령어를 사용하여 이전 버전의 Ubuntu에서도 CARLA 빌드를 시도해볼 수 있습니다:
 
 ```sh
 sudo apt-add-repository "deb http://apt.llvm.org/<code_name>/ llvm-toolchain-<code_name>-8 main" &&
@@ -99,29 +94,29 @@ sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/
 sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clang 180
 ```
 
-__All Ubuntu systems__.
+__모든 Ubuntu 시스템__.
 
-Starting with CARLA 0.9.12, users have the option to install the CARLA Python API using `pip` or `pip3`. Version 20.3 or higher is required. To check if you have a suitable version, run the following command:
+CARLA 0.9.12부터는 사용자가 `pip` 또는 `pip3`를 사용하여 CARLA Python API를 설치할 수 있는 옵션이 제공됩니다. 20.3 이상의 버전이 필요합니다. 적절한 버전이 있는지 확인하려면 다음 명령어를 실행하세요:
 
 ```sh
-# For Python 3
+# Python 3의 경우
 pip3 -V
 
-# For Python 2
+# Python 2의 경우
 pip -V
 ```
 
-If you need to upgrade:
+업그레이드가 필요한 경우:
 
 ```sh
-# For Python 3
+# Python 3의 경우
 pip3 install --upgrade pip
 
-# For Python 2
+# Python 2의 경우
 pip install --upgrade pip
 ```
 
-You must install the following Python dependencies:
+다음 Python 의존성을 설치해야 합니다:
 
 ```sh
 pip install --user setuptools &&
@@ -131,150 +126,144 @@ pip3 install --user distro &&
 pip install --user wheel &&
 pip3 install --user wheel auditwheel==4.0.0
 ```
+## 언리얼 엔진
 
----
+버전 0.9.12부터 CARLA는 수정된 언리얼 엔진 4.26 포크를 사용합니다. 이 포크에는 CARLA에 특화된 패치가 포함되어 있습니다.
 
-## Unreal Engine
+이 언리얼 엔진 포크를 다운로드하려면 __GitHub 계정이 언리얼 엔진 계정과 연동되어 있어야 합니다__. 이 설정이 되어 있지 않다면, 계속 진행하기 전에 [이 가이드](https://www.unrealengine.com/en-US/ue4-on-github)를 따라 설정하세요.
 
-Starting with version 0.9.12, CARLA uses a modified fork of Unreal Engine 4.26. This fork contains patches specific to CARLA.
-
-Be aware that to download this fork of Unreal Engine, __you need to have a GitHub account linked to Unreal Engine's account__. If you don't have this set up, please follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github) before going any further.
-
-__1.__ Clone the content for CARLA's fork of Unreal Engine 4.26 to your local computer:
+__1.__ CARLA의 언리얼 엔진 4.26 포크 내용을 로컬 컴퓨터에 복제합니다:
 
 ```sh
-    git clone --depth 1 -b carla https://github.com/CarlaUnreal/UnrealEngine.git ~/UnrealEngine_4.26
+git clone --depth 1 -b carla https://github.com/CarlaUnreal/UnrealEngine.git ~/UnrealEngine_4.26
 ```
-__2.__ Navigate into the directory where you cloned the repository:
+
+__2.__ 저장소를 복제한 디렉토리로 이동합니다:
 ```sh
-    cd ~/UnrealEngine_4.26
+cd ~/UnrealEngine_4.26
 ```
 
-__3.__ Make the build. This may take an hour or two depending on your system. 
+__3.__ 빌드를 수행합니다. 시스템에 따라 한두 시간 정도 소요될 수 있습니다.
 ```sh
-    ./Setup.sh && ./GenerateProjectFiles.sh && make
+./Setup.sh && ./GenerateProjectFiles.sh && make
 ```
 
-__4.__ Open the Editor to check that Unreal Engine has been installed properly.
+__4.__ 언리얼 엔진이 제대로 설치되었는지 확인하기 위해 에디터를 엽니다.
 ```sh
-    cd ~/UnrealEngine_4.26/Engine/Binaries/Linux && ./UE4Editor
+cd ~/UnrealEngine_4.26/Engine/Binaries/Linux && ./UE4Editor
 ```
 
----
-
-## Part Two: Build CARLA 
+## Part Two: CARLA 빌드
 
 !!! Note
-    Downloading aria2 with `sudo apt-get install aria2` will speed up the following commands.
+    `sudo apt-get install aria2`로 aria2를 설치하면 다음 명령어들의 속도가 향상됩니다.
 
-### Clone the CARLA repository
+### CARLA 저장소 복제
 
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla" target="_blank" class="btn btn-neutral" title="Go to the CARLA repository">
-<span class="icon icon-github"></span> CARLA repository</a>
+<a href="https://github.com/carla-simulator/carla" target="_blank" class="btn btn-neutral" title="CARLA 저장소로 이동">
+<span class="icon icon-github"></span> CARLA 저장소</a>
 </p>
 </div>
-The button above will take you to the official repository of the project. Either download from there and extract it locally or clone it using the following command:
+
+위 버튼을 클릭하면 프로젝트의 공식 저장소로 이동합니다. 저장소에서 다운로드하여 로컬에 압축을 풀거나, 다음 명령어를 사용하여 복제할 수 있습니다:
 
 ```sh
-        git clone https://github.com/carla-simulator/carla
+git clone https://github.com/carla-simulator/carla
 ```
 
 !!! Note
-    The `master` branch contains the current release of CARLA with the latest fixes and features. Previous CARLA versions are tagged with the version name. Always remember to check the current branch in git with the command `git branch`. 
+    `master` 브랜치에는 최신 수정사항과 기능이 포함된 현재 CARLA 릴리스가 있습니다. 이전 CARLA 버전들은 버전 이름으로 태그가 지정되어 있습니다. git에서 `git branch` 명령어로 현재 브랜치를 항상 확인하세요.
 
+### 에셋 다운로드
 
-### Get assets
-
-You will need to download the __latest__ assets to work with the current version of CARLA. We provide a script to automate this process. To use the script, run the following command in the CARLA root folder:
+현재 버전의 CARLA로 작업하려면 __최신__ 에셋을 다운로드해야 합니다. 이 과정을 자동화하는 스크립트를 제공합니다. 스크립트를 사용하려면 CARLA 루트 폴더에서 다음 명령어를 실행하세요:
 
 ```sh
-        ./Update.sh
+./Update.sh
 ```
 
-The assets will be downloaded and extracted to the appropriate location.
+에셋이 다운로드되어 적절한 위치에 압축이 풀립니다.
 
 !!! Important
-    To download the assets currently in development, visit [Update CARLA](build_update.md#get-development-assets) and read __Get development assets__.
+    개발 중인 에셋을 다운로드하려면 [CARLA 업데이트하기](build_update.md#get-development-assets)를 방문하여 __개발 에셋 받기__를 읽어보세요.
 
-To download the assets for a __specific version__ of CARLA:
+__특정 버전__의 CARLA 에셋을 다운로드하려면:
 
-1. From the root CARLA directory, navigate to `/Util/ContentVersions.txt`. This document contains the links to the assets for all CARLA releases. 
-2. Extract the assets in `Unreal\CarlaUE4\Content\Carla`. If the path doesn't exist, create it.  
-3. Extract the file with a command similar to the following:
-
-```sh
-        tar -xvzf <assets_file_name>.tar.gz.tar -C /path/to/carla/Unreal/CarlaUE4/Content/Carla
-```
-
-### Set Unreal Engine environment variable
-
-For CARLA to find the correct installation of Unreal Engine, we need to set the CARLA environment variable.
-
-To set the variable for this session only:
+1. CARLA 루트 디렉토리에서 `/Util/ContentVersions.txt`로 이동하세요. 이 문서에는 모든 CARLA 릴리스의 에셋 링크가 포함되어 있습니다.
+2. `Unreal\CarlaUE4\Content\Carla`에 에셋을 압축 해제하세요. 경로가 없다면 생성하세요.
+3. 다음과 유사한 명령어로 파일을 압축 해제하세요:
 
 ```sh
-    export UE4_ROOT=~/UnrealEngine_4.26
+tar -xvzf <assets_file_name>.tar.gz.tar -C /path/to/carla/Unreal/CarlaUE4/Content/Carla
 ```
+### 언리얼 엔진 환경 변수 설정
 
-To set the variable so it persists across sessions:
+CARLA가 올바른 언리얼 엔진 설치를 찾을 수 있도록 CARLA 환경 변수를 설정해야 합니다.
 
-__1.__ Open `~/.bashrc` or `./profile`.  
-```sh
-    gedit ~/.bashrc
-
-    # or 
-
-    gedit ~/.profile
-```
-
-__2.__ Add the following line to the bottom of the file: 
+현재 세션에만 변수를 설정하려면:
 
 ```sh
-    export UE4_ROOT=~/UnrealEngine_4.26 
+export UE4_ROOT=~/UnrealEngine_4.26
 ```
 
-__3.__ Save the file and reset the terminal.  
+세션 간에 변수가 유지되도록 설정하려면:
 
+__1.__ `~/.bashrc` 또는 `./profile`을 엽니다.
+```sh
+gedit ~/.bashrc
 
-### Build CARLA
-This section outlines the commands to build CARLA. __All commands should be run in the root CARLA folder.__
+# 또는 
 
-There are two parts to the build process for CARLA, compiling the client and compiling the server.
+gedit ~/.profile
+```
+
+__2.__ 파일 맨 아래에 다음 줄을 추가합니다:
+
+```sh
+export UE4_ROOT=~/UnrealEngine_4.26 
+```
+
+__3.__ 파일을 저장하고 터미널을 재시작합니다.
+
+### CARLA 빌드
+이 섹션에서는 CARLA를 빌드하는 명령어를 설명합니다. __모든 명령어는 CARLA 루트 폴더에서 실행해야 합니다.__
+
+CARLA의 빌드 과정은 클라이언트 컴파일과 서버 컴파일, 두 부분으로 이루어져 있습니다.
 
 !!! Warning
-    Make sure to run `make PythonAPI` to prepare the client and `make launch` for the server.
-    Alternatively `make LibCarla` will prepare the CARLA library to be imported anywhere.
+    클라이언트를 준비하기 위해 `make PythonAPI`를, 서버를 위해 `make launch`를 실행해야 합니다.
+    또는 `make LibCarla`를 실행하면 어디서나 임포트할 수 있는 CARLA 라이브러리를 준비합니다.
 
-__1.__ __Compile the Python API client__:
+__1.__ __Python API 클라이언트 컴파일__:
 
-The Python API client grants control over the simulation. Compilation of the Python API client is required the first time you build CARLA and again after you perform any updates. After the client is compiled, you will be able to run scripts to interact with the simulation.
+Python API 클라이언트는 시뮬레이션을 제어할 수 있게 해줍니다. Python API 클라이언트 컴파일은 CARLA를 처음 빌드할 때와 업데이트를 수행한 후에 필요합니다. 클라이언트가 컴파일되면 스크립트를 실행하여 시뮬레이션과 상호작용할 수 있습니다.
 
-The following command compiles the Python API client:
-
-```sh
-    make PythonAPI
-```
-
-Optionally, to compile the PythonAPI for a specific version of Python, run the below command in the root CARLA directory.
+다음 명령어로 Python API 클라이언트를 컴파일합니다:
 
 ```sh
-    # Delete versions as required
-    make PythonAPI ARGS="--python-version=2.7, 3.6, 3.7, 3.8"
+make PythonAPI
 ```
 
-The CARLA client library will be built in two distinct, mutually exclusive forms. This gives users the freedom to choose which form they prefer to run the CARLA client code. The two forms include `.egg` files and `.whl` files. Choose __one__ of the following options below to use the client library:
+선택적으로, 특정 Python 버전을 위한 PythonAPI를 컴파일하려면 CARLA 루트 디렉토리에서 아래 명령어를 실행하세요.
 
-__A. `.egg` file__
+```sh
+# 필요한 버전만 선택하세요
+make PythonAPI ARGS="--python-version=2.7, 3.6, 3.7, 3.8"
+```
 
->The `.egg` file does not need to be installed. All of CARLA's example scripts automatically [look for this file](build_system.md#versions-prior-to-0912) when importing CARLA.
+CARLA 클라이언트 라이브러리는 상호 배타적인 두 가지 형태로 빌드됩니다. 이를 통해 사용자가 선호하는 형태를 선택하여 CARLA 클라이언트 코드를 실행할 수 있습니다. 두 형태는 `.egg` 파일과 `.whl` 파일입니다. 클라이언트 라이브러리를 사용하기 위해 다음 옵션 중 __하나__를 선택하세요:
 
->If you previously installed a CARLA `.whl`, the `.whl` will take precedence over an `.egg` file.
+__A. `.egg` 파일__
 
-__B. `.whl` file__
+>`.egg` 파일은 설치가 필요하지 않습니다. CARLA의 모든 예제 스크립트는 CARLA를 임포트할 때 자동으로 [이 파일을 찾습니다](build_system.md#versions-prior-to-0912).
 
->The `.whl` file should be installed using `pip` or `pip3`:
+>이전에 CARLA `.whl`을 설치했다면, `.whl`이 `.egg` 파일보다 우선순위가 높습니다.
+
+__B. `.whl` 파일__
+
+>`pip` 또는 `pip3`를 사용하여 `.whl` 파일을 설치해야 합니다:
 
 ```sh
 # Python 3
@@ -284,74 +273,69 @@ pip3 install <path/to/wheel>.whl
 pip install <path/to/wheel>.whl
 ```
 
->This `.whl` file cannot be distributed as it is built specifically for your OS.
+>이 `.whl` 파일은 사용자의 OS에 맞게 특별히 빌드되었기 때문에 배포할 수 없습니다.
 
 !!! Warning
-    Issues can arise through the use of different methods to install the CARLA client library and having different versions of CARLA on your system. It is recommended to use virtual environments when installing the `.whl` and to [uninstall](build_faq.md#how-do-i-uninstall-the-carla-client-library) any previously installed client libraries before installing new ones.
+    CARLA 클라이언트 라이브러리를 설치하는 다양한 방법을 사용하고 시스템에 여러 버전의 CARLA가 있을 경우 문제가 발생할 수 있습니다. `.whl`을 설치할 때는 가상 환경을 사용하고, 새로운 클라이언트 라이브러리를 설치하기 전에 이전에 설치된 클라이언트 라이브러리를 [제거](build_faq.md#how-do-i-uninstall-the-carla-client-library)하는 것을 권장합니다.
+__2.__ __서버 컴파일__:
 
-
-__2.__ __Compile the server__:
-
-The following command compiles and launches Unreal Engine. Run this command each time you want to launch the server or use the Unreal Engine editor:
+다음 명령어는 언리얼 엔진을 컴파일하고 실행합니다. 서버를 실행하거나 언리얼 엔진 에디터를 사용하고 싶을 때마다 이 명령어를 실행하세요:
 
 ```sh
-    make launch
+make launch
 ```
 
-The project may ask to build other instances such as `UE4Editor-Carla.dll` the first time. Agree in order to open the project. During the first launch, the editor may show warnings regarding shaders and mesh distance fields. These take some time to be loaded and the map will not show properly until then.
+처음 실행할 때 프로젝트가 `UE4Editor-Carla.dll` 등의 다른 인스턴스를 빌드하라고 요청할 수 있습니다. 프로젝트를 열기 위해 동의하세요. 첫 실행 시 에디터에서 셰이더와 메시 거리 필드에 관한 경고를 표시할 수 있습니다. 이들이 로드되는 데 시간이 걸리며, 로드가 완료될 때까지 맵이 제대로 표시되지 않습니다.
 
+__3.__ __시뮬레이션 시작__:
 
-__3.__ __Start the simulation__:
+**Play**를 눌러 서버 시뮬레이션을 시작하세요. 카메라는 `WASD` 키로 이동할 수 있으며, 마우스를 움직이면서 장면을 클릭하여 회전할 수 있습니다.
 
-Press **Play** to start the server simulation. The camera can be moved with `WASD` keys and rotated by clicking the scene while moving the mouse around.  
-
-Test the simulator using the example scripts inside `PythonAPI\examples`.  With the simulator running, open a new terminal for each script and run the following commands to spawn some life into the town and create a weather cycle:
+`PythonAPI\examples` 내의 예제 스크립트를 사용하여 시뮬레이터를 테스트하세요. 시뮬레이터가 실행 중인 상태에서 각 스크립트마다 새 터미널을 열고 다음 명령어를 실행하여 도시에 생명을 불어넣고 날씨 순환을 만드세요:
 
 ```sh
-        # Terminal A 
-        cd PythonAPI/examples
-        python3 -m pip install -r requirements.txt
-        python3 generate_traffic.py  
+# 터미널 A 
+cd PythonAPI/examples
+python3 -m pip install -r requirements.txt
+python3 generate_traffic.py  
 
-        # Terminal B
-        cd PythonAPI/examples
-        python3 dynamic_weather.py 
+# 터미널 B
+cd PythonAPI/examples
+python3 dynamic_weather.py 
 ```
 
 !!! Important
-    If the simulation is running at a very low FPS rate, go to `Edit -> Editor preferences -> Performance` in the Unreal Engine editor and disable `Use less CPU when in background`.
+    시뮬레이션이 매우 낮은 FPS로 실행된다면, 언리얼 엔진 에디터에서 `Edit -> Editor preferences -> Performance`로 이동하여 `Use less CPU when in background`를 비활성화하세요.
 
+### 기타 make 명령어
 
+유용할 수 있는 다른 `make` 명령어들이 있습니다. 아래 표에서 확인하세요:
 
-### Other make commands
-
-There are more `make` commands that you may find useful. Find them in the table below:  
-
-| Command | Description |
+| 명령어 | 설명 |
 | ------- | ------- |
-| `make help`                                                           | Prints all available commands.                                        |
-| `make launch`                                                         | Launches CARLA server in Editor window.                               |
-| `make PythonAPI`                                                      | Builds the CARLA client.                                              |
-| `make LibCarla`                                                       | Prepares the CARLA library to be imported anywhere.                   |
-| `make package`                                                        | Builds CARLA and creates a packaged version for distribution.         |
-| `make clean`                                                          | Deletes all the binaries and temporals generated by the build system. |
-| `make rebuild`                                                        | `make clean` and `make launch` both in one command.                   |
+| `make help` | 사용 가능한 모든 명령어를 출력합니다. |
+| `make launch` | 에디터 창에서 CARLA 서버를 실행합니다. |
+| `make PythonAPI` | CARLA 클라이언트를 빌드합니다. |
+| `make LibCarla` | 어디서나 임포트할 수 있도록 CARLA 라이브러리를 준비합니다. |
+| `make package` | CARLA를 빌드하고 배포용 패키지 버전을 만듭니다. |
+| `make clean` | 빌드 시스템이 생성한 모든 바이너리와 임시 파일을 삭제합니다. |
+| `make rebuild` | `make clean`과 `make launch`를 하나의 명령어로 실행합니다. |
 
 ---
 
-Read the **[F.A.Q.](build_faq.md)** page or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions) for any issues regarding this guide.  
+이 가이드에 대해 궁금한 점이 있다면 **[F.A.Q.](build_faq.md)** 페이지를 읽거나 [CARLA 포럼](https://github.com/carla-simulator/carla/discussions)에 글을 올려주세요.
 
-Up next, learn how to update the CARLA build or take your first steps in the simulation, and learn some core concepts.  
+다음으로, CARLA 빌드를 업데이트하는 방법을 배우거나 시뮬레이션에서 첫 걸음을 떼고 핵심 개념을 배워보세요.
 <div class="build-buttons">
 
 <p>
-<a href="../build_update" target="_blank" class="btn btn-neutral" title="Learn how to update the build">
-Update CARLA</a>
+<a href="../build_update" target="_blank" class="btn btn-neutral" title="빌드 업데이트 방법 배우기">
+CARLA 업데이트</a>
 </p>
 
 <p>
-<a href="../core_concepts" target="_blank" class="btn btn-neutral" title="Learn about CARLA core concepts">
-First steps</a>
+<a href="../core_concepts" target="_blank" class="btn btn-neutral" title="CARLA 핵심 개념 배우기">
+첫 걸음</a>
 </p>
 
 </div>

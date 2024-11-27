@@ -1,283 +1,280 @@
-# Windows build
+# Windows 빌드
 
-This guide details how to build CARLA from source on Windows. There are two parts. Part one details system requirements and installations of required software, and part two details how to actually build and run CARLA.  
+이 가이드는 Windows에서 CARLA를 소스로부터 빌드하는 방법을 설명합니다. 크게 두 부분으로 나뉘어 있습니다. 첫 번째 부분에서는 시스템 요구사항과 필요한 소프트웨어 설치에 대해 다루고, 두 번째 부분에서는 실제 CARLA를 빌드하고 실행하는 방법을 설명합니다.
 
-The build process is long (4 hours or more) and involves several kinds of software. It is highly recommended to read through the guide fully before starting. 
+빌드 과정은 길며(4시간 이상) 여러 종류의 소프트웨어가 필요합니다. 시작하기 전에 가이드 전체를 읽어보시기를 강력히 권장합니다.
 
-If you come across errors or difficulties then have a look at the **[F.A.Q.](build_faq.md)** page which offers solutions for the most common complications. Alternatively, use the [CARLA forum](https://github.com/carla-simulator/carla/discussions) to post any queries you may have.
+오류나 어려움이 발생하면 가장 일반적인 문제에 대한 해결책을 제공하는 **[F.A.Q.](build_faq.md)** 페이지를 확인하시거나, [CARLA 포럼](https://github.com/carla-simulator/carla/discussions)에 질문을 올려주세요.
 
-- [__Part One: Prerequisites__](#part-one-prerequisites)
-    - [System requirements](#system-requirements)
-    - [Software requirements](#software-requirements)
-        - [Minor installations](#minor-installations)
-        - [Python dependencies](#python-dependencies)
-        - [Major installations](#major-installations)
+- [__Part One: 사전 준비__](#part-one-prerequisites)
+    - [시스템 요구사항](#system-requirements)
+    - [소프트웨어 요구사항](#software-requirements)
+        - [기본 설치](#minor-installations)
+        - [Python 의존성](#python-dependencies)
+        - [주요 설치](#major-installations)
             - [Visual Studio 2019](#visual-studio-2019)
-            - [Unreal Engine](#unreal-engine)
-- [__Part Two: Build CARLA__](#part-two-build-carla)
-    - [Clone the CARLA repository](#clone-the-carla-repository)
-    - [Get assets](#get-assets)
-    - [Set Unreal Engine environment variable](#set-unreal-engine-environment-variable)
-    - [Build CARLA](#build-carla)
-    - [Other make commands](#other-make-commands)
-
+            - [언리얼 엔진](#unreal-engine)
+- [__Part Two: CARLA 빌드__](#part-two-build-carla)
+    - [CARLA 저장소 복제](#clone-the-carla-repository)
+    - [에셋 가져오기](#get-assets)
+    - [언리얼 엔진 환경 변수 설정](#set-unreal-engine-environment-variable)
+    - [CARLA 빌드](#build-carla)
+    - [기타 make 명령어](#other-make-commands)
 
 ---
-## Part One: Prerequisites
+## Part One: 사전 준비
 
-In this section you will find details of system requirements, minor and major software installations and Python dependencies that are required before you can begin to build CARLA. 
-### System requirements
+이 섹션에서는 CARLA 빌드를 시작하기 전에 필요한 시스템 요구사항, 기본 및 주요 소프트웨어 설치, Python 의존성에 대한 세부 사항을 확인할 수 있습니다.
 
-* __x64 system.__ The simulator should run in any 64 bits Windows system.  
-* __165 GB disk space.__ CARLA itself will take around 32 GB and the related major software installations (including Unreal Engine) will take around 133 GB.
-* __An adequate GPU.__ CARLA aims for realistic simulations, so the server needs at least a 6 GB GPU although 8 GB is recommended. A dedicated GPU is highly recommended for machine learning. 
-* __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Make sure that these ports are not blocked by firewalls or any other applications. 
+### 시스템 요구사항
+
+* __x64 시스템.__ 시뮬레이터는 모든 64비트 Windows 시스템에서 실행되어야 합니다.
+* __165GB 디스크 공간.__ CARLA 자체는 약 32GB를 차지하며, 관련된 주요 소프트웨어 설치(언리얼 엔진 포함)는 약 133GB를 차지합니다.
+* __적절한 GPU.__ CARLA는 현실적인 시뮬레이션을 목표로 하므로, 서버는 최소 6GB GPU가 필요하며 8GB를 권장합니다. 머신 러닝을 위해서는 전용 GPU를 강력히 권장합니다.
+* __두 개의 TCP 포트와 좋은 인터넷 연결.__ 기본적으로 2000번과 2001번 포트를 사용합니다. 이 포트들이 방화벽이나 다른 애플리케이션에 의해 차단되지 않았는지 확인하세요.
 
 !!! Warning
-    __If you are upgrading from CARLA 0.9.12 to 0.9.13__: you must first upgrade the CARLA fork of the UE4 engine to the latest version. See the [__Unreal Engine__](#unreal-engine) section for details on upgrading UE4
+    __CARLA 0.9.12에서 0.9.13으로 업그레이드하는 경우__: 먼저 UE4 엔진의 CARLA 포크를 최신 버전으로 업그레이드해야 합니다. UE4 업그레이드에 대한 자세한 내용은 [__언리얼 엔진__](#unreal-engine) 섹션을 참조하세요.
 
-### Software requirements
+### 소프트웨어 요구사항
 
-#### Minor installations
+#### 기본 설치
 
-* [__CMake__](https://cmake.org/download/) generates standard build files from simple configuration files. __We recommend you use version 3.15+__.
-* [__Git__](https://git-scm.com/downloads) is a version control system to manage CARLA repositories.  
-* [__Make__](http://gnuwin32.sourceforge.net/packages/make.htm) generates the executables. It is necessary to use __Make version 3.81__, otherwise the build may fail. If you have multiple versions of Make installed, check that you are using version 3.81 in your PATH when building CARLA. You can check your default version of Make by running `make --version`.
-* [__7Zip__](https://www.7-zip.org/) is a file compression software. This is required for automatic decompression of asset files and prevents errors during build time due to large files being extracted incorrectly or partially.
-* [__Python3 x64__](https://www.python.org/downloads/) is the main scripting language in CARLA. Having a x32 version installed may cause conflict, so it is highly advisable to have it uninstalled.
+* [__CMake__](https://cmake.org/download/) - 간단한 구성 파일에서 표준 빌드 파일을 생성합니다. __버전 3.15 이상을 권장합니다__.
+* [__Git__](https://git-scm.com/downloads) - CARLA 저장소를 관리하는 버전 관리 시스템입니다.
+* [__Make__](http://gnuwin32.sourceforge.net/packages/make.htm) - 실행 파일을 생성합니다. __Make 버전 3.81__을 사용해야 하며, 그렇지 않으면 빌드가 실패할 수 있습니다. 여러 버전의 Make가 설치되어 있다면, CARLA를 빌드할 때 PATH에서 버전 3.81을 사용하고 있는지 확인하세요. `make --version` 명령어로 기본 Make 버전을 확인할 수 있습니다.
+* [__7Zip__](https://www.7-zip.org/) - 파일 압축 소프트웨어입니다. 에셋 파일의 자동 압축 해제에 필요하며, 대용량 파일이 잘못되거나 부분적으로 추출되어 빌드 중에 오류가 발생하는 것을 방지합니다.
+* [__Python3 x64__](https://www.python.org/downloads/) - CARLA의 주요 스크립트 언어입니다. x32 버전이 설치되어 있으면 충돌이 발생할 수 있으므로, 제거하는 것이 좋습니다.
 
 !!! Important
-    Be sure that the above programs are added to the [environment path](https://www.java.com/en/download/help/path.xml). Remember that the path added should correspond to the progam's `bin` directory.  
-#### Python dependencies
+    위의 프로그램들이 [환경 경로](https://www.java.com/en/download/help/path.xml)에 추가되었는지 확인하세요. 추가된 경로는 프로그램의 `bin` 디렉토리에 해당해야 한다는 것을 잊지 마세요.
+#### Python 의존성
 
-Starting with CARLA 0.9.12, users have the option to install the CARLA Python API using `pip3`. Version 20.3 or higher is required. To check if you have a suitable version, run the following command:
+CARLA 0.9.12부터는 사용자가 `pip3`를 사용하여 CARLA Python API를 설치할 수 있는 옵션이 제공됩니다. 20.3 이상의 버전이 필요합니다. 적절한 버전이 있는지 확인하려면 다음 명령어를 실행하세요:
 
 ```sh
 pip3 -V
 ```
 
-If you need to upgrade:
+업그레이드가 필요한 경우:
 
 ```sh
 pip3 install --upgrade pip
 ```
 
-You must install the following Python dependencies:
+다음 Python 의존성을 설치해야 합니다:
 
 ```sh
 pip3 install --user setuptools
 pip3 install --user wheel
 ```
 
-#### Major installations
+#### 주요 설치
 ##### Visual Studio 2019
 
-Get the 2019 version of Visual Studio from [here](https://developerinsider.co/download-visual-studio-2019-web-installer-iso-community-professional-enterprise/). Choose __Community__ for the free version. Use the _Visual Studio Installer_ to install three additional elements: 
+[여기](https://developerinsider.co/download-visual-studio-2019-web-installer-iso-community-professional-enterprise/)에서 Visual Studio 2019 버전을 다운로드하세요. 무료 버전인 __Community__를 선택하세요. _Visual Studio Installer_를 사용하여 세 가지 추가 요소를 설치하세요:
 
-* __Windows 8.1 SDK.__ Select it in the _Installation details_ section on the right or go to the _Indivdual Components_ tab and look under the _SDKs, libraries, and frameworks_ heading.
-* __x64 Visual C++ Toolset.__ In the _Workloads_ section, choose __Desktop development with C++__. This will enable a x64 command prompt that will be used for the build. Check that it has been installed correctly by pressing the `Windows` button and searching for `x64`. Be careful __not to open a `x86_x64` prompt__.  
-* __.NET framework 4.6.2__. In the _Workloads_ section, choose __.NET desktop development__ and then in the _Installation details_ panel on the right, select `.NET Framework 4.6.2 development tools`. This is required to build Unreal Engine. 
+* __Windows 8.1 SDK.__ 오른쪽의 _Installation details_ 섹션에서 선택하거나 _Individual Components_ 탭에서 _SDKs, libraries, and frameworks_ 제목 아래를 확인하세요.
+* __x64 Visual C++ 도구셋.__ _Workloads_ 섹션에서 __Desktop development with C++__를 선택하세요. 이를 통해 빌드에 사용될 x64 명령 프롬프트가 활성화됩니다. `Windows` 버튼을 누르고 `x64`를 검색하여 제대로 설치되었는지 확인하세요. __`x86_x64` 프롬프트를 열지 않도록__ 주의하세요.
+* __.NET framework 4.6.2.__ _Workloads_ 섹션에서 __.NET desktop development__를 선택하고, 오른쪽의 _Installation details_ 패널에서 `.NET Framework 4.6.2 development tools`를 선택하세요. 이는 언리얼 엔진을 빌드하는 데 필요합니다.
 
 !!! Important
-    Other Visual Studio versions may cause conflict. Even if these have been uninstalled, some registers may persist. To completely clean Visual Studio from the computer, go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`  
+    다른 Visual Studio 버전은 충돌을 일으킬 수 있습니다. 제거했더라도 일부 레지스트리가 남아있을 수 있습니다. 컴퓨터에서 Visual Studio를 완전히 제거하려면 `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout`로 이동하여 `.\InstallCleanup.exe -full`을 실행하세요.
 
 !!! Note
-    It is also possible to use Visual Studio 2022 using the above steps and substituting the Windows 8.1 SDK for the Windows 11/10 SDK. To override the default Visual Studio 2019 Generator in CMake, specify GENERATOR="Visual Studio 17 2022" when using the makefile commands (see [table](build_windows.md#other-make-commands)). You may specify any generator that works with the build commands as specific in the build scripts, for a full list run `cmake -G` (Ninja has been tested to work for building LibCarla so far).
+    위의 단계를 따르고 Windows 8.1 SDK 대신 Windows 11/10 SDK를 사용하여 Visual Studio 2022를 사용할 수도 있습니다. CMake의 기본 Visual Studio 2019 Generator를 재정의하려면 makefile 명령어를 사용할 때 GENERATOR="Visual Studio 17 2022"를 지정하세요([표](build_windows.md#other-make-commands) 참조). 빌드 스크립트에 지정된 대로 빌드 명령어와 함께 작동하는 모든 generator를 지정할 수 있습니다. 전체 목록을 보려면 `cmake -G`를 실행하세요(지금까지 LibCarla 빌드에는 Ninja가 잘 작동하는 것으로 테스트되었습니다).
 
-##### Unreal Engine
+##### 언리얼 엔진
 
-Starting with version 0.9.12, CARLA uses a modified fork of Unreal Engine 4.26. This fork contains patches specific to CARLA.
+버전 0.9.12부터 CARLA는 수정된 언리얼 엔진 4.26 포크를 사용합니다. 이 포크에는 CARLA에 특화된 패치가 포함되어 있습니다.
 
-Be aware that to download this fork of Unreal Engine, __you need to have a GitHub account linked to Unreal Engine's account__. If you don't have this set up, please follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github) before going any further.
+이 언리얼 엔진 포크를 다운로드하려면 __GitHub 계정이 언리얼 엔진 계정과 연결되어 있어야 합니다__. 이 설정이 되어 있지 않다면, 계속 진행하기 전에 [이 가이드](https://www.unrealengine.com/en-US/ue4-on-github)를 따르세요.
 
-To build the modified version of Unreal Engine:
+수정된 버전의 언리얼 엔진을 빌드하려면:
 
-__1.__ In a terminal, navigate to the location you want to save Unreal Engine and clone the _carla_ branch:
+__1.__ 터미널에서 언리얼 엔진을 저장하고 싶은 위치로 이동하여 _carla_ 브랜치를 복제하세요:
 
 ```sh
     git clone --depth 1 -b carla https://github.com/CarlaUnreal/UnrealEngine.git .
 ```
 
 !!! Note 
-    Keep the Unreal Engine folder as close as `C:\\` as you can because if the path exceeds a certain length then `Setup.bat` will return errors in step 3.
+    언리얼 엔진 폴더를 가능한 한 `C:\\`에 가깝게 유지하세요. 경로가 일정 길이를 초과하면 3단계에서 `Setup.bat`가 오류를 반환할 수 있습니다.
 
-__2.__ Run the configuration scripts:
+__2.__ 구성 스크립트를 실행하세요:
 
 ```sh
     Setup.bat
     GenerateProjectFiles.bat
 ```
 
-__3.__ Compile the modified engine:
+__3.__ 수정된 엔진을 컴파일하세요:
 
->1. Open the `UE4.sln` file inside the source folder with Visual Studio 2019.
+>1. Visual Studio 2019로 소스 폴더 내의 `UE4.sln` 파일을 여세요.
 
->2. In the build bar ensure that you have selected 'Development Editor', 'Win64' and 'UnrealBuildTool' options. Check [this guide](https://docs.unrealengine.com/en-US/ProductionPipelines/DevelopmentSetup/BuildingUnrealEngine/index.html) if you need any help. 
+>2. 빌드 바에서 'Development Editor', 'Win64', 'UnrealBuildTool' 옵션이 선택되어 있는지 확인하세요. 도움이 필요하다면 [이 가이드](https://docs.unrealengine.com/en-US/ProductionPipelines/DevelopmentSetup/BuildingUnrealEngine/index.html)를 참조하세요.
         
->3. In the solution explorer, right-click `UE4` and select `Build`.
+>3. 솔루션 탐색기에서 `UE4`를 마우스 오른쪽 버튼으로 클릭하고 `Build`를 선택하세요.
 
-__4.__ Once the solution is compiled you can open the engine to check that everything was installed correctly by launching the executable `Engine\Binaries\Win64\UE4Editor.exe`.
+__4.__ 솔루션이 컴파일되면 `Engine\Binaries\Win64\UE4Editor.exe` 실행 파일을 실행하여 모든 것이 올바르게 설치되었는지 확인할 수 있습니다.
 
 !!! Note
-    If the installation was successful, this should be recognised by Unreal Engine's version selector. You can check this by right-clicking on any `.uproject` file and selecting `Switch Unreal Engine version`. You should see a pop-up showing `Source Build at PATH` where PATH is the installation path that you have chosen. If you can not see this selector or the `Generate Visual Studio project files` when you right-click on `.uproject` files, something went wrong with the Unreal Engine installation and you will likely need to reinstall it correctly.
+    설치가 성공적이었다면 언리얼 엔진의 버전 선택기에서 인식될 것입니다. `.uproject` 파일을 마우스 오른쪽 버튼으로 클릭하고 `Switch Unreal Engine version`을 선택하여 확인할 수 있습니다. 선택한 설치 경로가 있는 `Source Build at PATH`라는 팝업이 표시되어야 합니다. 이 선택기나 `.uproject` 파일을 마우스 오른쪽 버튼으로 클릭했을 때 `Generate Visual Studio project files`가 보이지 않는다면, 언리얼 엔진 설치에 문제가 있었을 것이며 다시 설치해야 할 가능성이 높습니다.
 
 !!! Important
-    A lot has happened so far. It is highly advisable to restart the computer before continuing.
+    지금까지 많은 일이 있었습니다. 계속하기 전에 컴퓨터를 재시작하는 것이 매우 권장됩니다.
 
 ---
-## Part Two: Build CARLA 
- 
-### Clone the CARLA repository
+## Part Two: CARLA 빌드
+
+### CARLA 저장소 복제
 
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla" target="_blank" class="btn btn-neutral" title="Go to the CARLA repository">
-<span class="icon icon-github"></span> CARLA repository</a>
+<a href="https://github.com/carla-simulator/carla" target="_blank" class="btn btn-neutral" title="CARLA 저장소로 이동">
+<span class="icon icon-github"></span> CARLA 저장소</a>
 </p>
 </div>
 
-The button above will take you to the official repository of the project. Either download from there and extract it locally or clone it using the following command:
+위 버튼을 클릭하면 프로젝트의 공식 저장소로 이동합니다. 저장소에서 다운로드하여 로컬에 압축을 풀거나, 다음 명령어를 사용하여 복제할 수 있습니다:
 
 ```sh
     git clone https://github.com/carla-simulator/carla
 ```
 
 !!! Note
-    The `master` branch contains the current release of CARLA with the latest fixes and features. Previous CARLA versions are tagged with the version name. Always remember to check the current branch in git with the command `git branch`. 
+    `master` 브랜치에는 최신 수정사항과 기능이 포함된 현재 CARLA 릴리스가 있습니다. 이전 CARLA 버전들은 버전 이름으로 태그가 지정되어 있습니다. git에서 `git branch` 명령어로 현재 브랜치를 항상 확인하세요.
 
-### Get assets
+### 에셋 가져오기
 
-Download the __latest__ assets to work with the current version of CARLA by running the following command in the CARLA root folder:
+CARLA 루트 폴더에서 다음 명령어를 실행하여 현재 버전의 CARLA에서 작업할 __최신__ 에셋을 다운로드하세요:
 
 ```sh
     Update.bat
 ```
 
-The assets will be downloaded and extracted to the appropriate location if have 7zip installed. If you do not have this software installed, you will need to manually extract the file contents to `Unreal\CarlaUE4\Content\Carla`.
+7zip가 설치되어 있다면 에셋이 다운로드되어 적절한 위치에 압축이 풀립니다. 이 소프트웨어가 설치되어 있지 않다면, 파일 내용을 수동으로 `Unreal\CarlaUE4\Content\Carla`에 압축 해제해야 합니다.
 
-To download the assets for a __specific version__ of CARLA:
+__특정 버전__의 CARLA 에셋을 다운로드하려면:
 
-1. From the root CARLA directory, navigate to `\Util\ContentVersions.txt`. This document contains the links to the assets for all CARLA releases. 
-2. Extract the assets in `Unreal\CarlaUE4\Content\Carla`. If the path doesn't exist, create it.  
-3. Extract the file with a command similar to the following:
+1. CARLA 루트 디렉토리에서 `\Util\ContentVersions.txt`로 이동하세요. 이 문서에는 모든 CARLA 릴리스의 에셋 링크가 포함되어 있습니다.
+2. `Unreal\CarlaUE4\Content\Carla`에 에셋을 압축 해제하세요. 경로가 없다면 생성하세요.
+3. 다음과 유사한 명령어로 파일을 압축 해제하세요:
 
 ```sh
     tar -xvzf <assets_file_name>.tar.gz.tar -C C:\path\to\carla\Unreal\CarlaUE4\Content\Carla
 ```
 
-### Set Unreal Engine environment variable
+### 언리얼 엔진 환경 변수 설정
 
-It is necessary to set an environment variable so that CARLA can find the Unreal Engine installation folder. This allows users to choose which specific version of Unreal Engine is to be used. If no environment variable is specified, then CARLA will search for Unreal Engine in the windows registry and use the first version it finds there.  
+CARLA가 언리얼 엔진 설치 폴더를 찾을 수 있도록 환경 변수를 설정해야 합니다. 이를 통해 사용자는 사용할 특정 버전의 언리얼 엔진을 선택할 수 있습니다. 환경 변수가 지정되지 않으면 CARLA는 windows 레지스트리에서 언리얼 엔진을 검색하고 찾은 첫 번째 버전을 사용합니다.
 
-To set the environment variable:
+환경 변수를 설정하려면:
 
-1. Open Windows Control Panel and go to `Advanced System Settings` or search for `Advanced System Settings` in the Windows search bar.  
-2. On the `Advanced` panel open `Environment Variables...`.  
-3. Click `New...` to create the variable.  
-4. Name the variable `UE4_ROOT` and choose the path to the installation folder of the desired Unreal Engine installation.  
+1. Windows 제어판을 열고 `고급 시스템 설정`으로 이동하거나 Windows 검색 창에서 `고급 시스템 설정`을 검색하세요.
+2. `고급` 패널에서 `환경 변수...`를 엽니다.
+3. `새로 만들기...`를 클릭하여 변수를 생성합니다.
+4. 변수 이름을 `UE4_ROOT`로 지정하고 원하는 언리얼 엔진 설치의 설치 폴더 경로를 선택하세요.
 
+### CARLA 빌드
 
-### Build CARLA
+이 섹션에서는 CARLA를 빌드하는 명령어를 설명합니다.
 
-This section outlines the commands to build CARLA. 
+- 모든 명령어는 CARLA 루트 폴더에서 실행해야 합니다.
+- 명령어는 __x64 Native Tools Command Prompt for VS 2019__를 통해 실행해야 합니다. `Windows` 키를 누르고 `x64`를 검색하여 이를 열 수 있습니다.
 
-- All commands should be run in the root CARLA folder. 
-- Commands should be executed via the __x64 Native Tools Command Prompt for VS 2019__. Open this by clicking the `Windows` key and searching for `x64`.
+CARLA의 빌드 과정은 클라이언트 컴파일과 서버 컴파일, 두 부분으로 이루어져 있습니다.
 
-There are two parts to the build process for CARLA, compiling the client and compiling the server.
+__1.__ __Python API 클라이언트 컴파일__:
 
-__1.__ __Compile the Python API client__:
+Python API 클라이언트는 시뮬레이션을 제어할 수 있게 해줍니다. Python API 클라이언트 컴파일은 CARLA를 처음 빌드할 때와 업데이트를 수행한 후에 필요합니다. 클라이언트가 컴파일되면 스크립트를 실행하여 시뮬레이션과 상호작용할 수 있습니다.
 
-The Python API client grants control over the simulation. Compilation of the Python API client is required the first time you build CARLA and again after you perform any updates. After the client is compiled, you will be able to run scripts to interact with the simulation.
-
-The following command compiles the Python API client:
+다음 명령어로 Python API 클라이언트를 컴파일합니다:
 
 ```sh
     make PythonAPI
 ```
 
-The CARLA client library will be built in two distinct, mutually exclusive forms. This gives users the freedom to choose which form they prefer to run the CARLA client code. The two forms include `.egg` files and `.whl` files. Choose __one__ of the following options below to use the client library:
+CARLA 클라이언트 라이브러리는 상호 배타적인 두 가지 형태로 빌드됩니다. 이를 통해 사용자가 선호하는 형태로 CARLA 클라이언트 코드를 실행할 수 있습니다. 두 형태는 `.egg` 파일과 `.whl` 파일입니다. 클라이언트 라이브러리를 사용하기 위해 다음 옵션 중 __하나__를 선택하세요:
 
-__A. `.egg` file__
+__A. `.egg` 파일__
 
->The `.egg` file does not need to be installed. All of CARLA's example scripts automatically [look for this file](build_system.md#versions-prior-to-0912) when importing CARLA.
+>`.egg` 파일은 설치가 필요하지 않습니다. CARLA의 모든 예제 스크립트는 CARLA를 임포트할 때 자동으로 [이 파일을 찾습니다](build_system.md#versions-prior-to-0912).
 
->If you previously installed a CARLA `.whl`, the `.whl` will take precedence over an `.egg` file.
+>이전에 CARLA `.whl`을 설치했다면, `.whl`이 `.egg` 파일보다 우선순위가 높습니다.
 
-__B. `.whl` file__
+__B. `.whl` 파일__
 
->The `.whl` file should be installed using `pip3`:
+>`pip3`를 사용하여 `.whl` 파일을 설치해야 합니다:
 
 ```sh
 pip3 install <path/to/wheel>.whl
 ```
-
->This `.whl` file cannot be distributed as it is built specifically for your OS.
+>이 `.whl` 파일은 사용자의 OS에 맞게 특별히 빌드되었기 때문에 배포할 수 없습니다.
 
 !!! Warning
-    Issues can arise through the use of different methods to install the CARLA client library and having different versions of CARLA on your system. It is recommended to use virtual environments when installing the `.whl` and to [uninstall](build_faq.md#how-do-i-uninstall-the-carla-client-library) any previously installed client libraries before installing new ones.
+    CARLA 클라이언트 라이브러리를 설치하는 다양한 방법을 사용하고 시스템에 여러 버전의 CARLA가 있을 경우 문제가 발생할 수 있습니다. `.whl`을 설치할 때는 가상 환경을 사용하고, 새로운 클라이언트 라이브러리를 설치하기 전에 이전에 설치된 클라이언트 라이브러리를 [제거](build_faq.md#how-do-i-uninstall-the-carla-client-library)하는 것을 권장합니다.
 
-__2.__ __Compile the server__:
+__2.__ __서버 컴파일__:
 
-The following command compiles and launches Unreal Engine. Run this command each time you want to launch the server or use the Unreal Engine editor:
+다음 명령어는 언리얼 엔진을 컴파일하고 실행합니다. 서버를 실행하거나 언리얼 엔진 에디터를 사용하고 싶을 때마다 이 명령어를 실행하세요:
 
 ```sh
     make launch
 ```
 
-The project may ask to build other instances such as `UE4Editor-Carla.dll` the first time. Agree in order to open the project. During the first launch, the editor may show warnings regarding shaders and mesh distance fields. These take some time to be loaded and the map will not show properly until then.
+처음 실행할 때 프로젝트가 `UE4Editor-Carla.dll` 등의 다른 인스턴스를 빌드하라고 요청할 수 있습니다. 프로젝트를 열기 위해 동의하세요. 첫 실행 시 에디터에서 셰이더와 메시 거리 필드에 관한 경고를 표시할 수 있습니다. 이들이 로드되는 데 시간이 걸리며, 로드가 완료될 때까지 맵이 제대로 표시되지 않습니다.
 
-__3.__ __Start the simulation__:
+__3.__ __시뮬레이션 시작__:
 
-Press **Play** to start the server simulation. The camera can be moved with `WASD` keys and rotated by clicking the scene while moving the mouse around.  
+**Play**를 눌러 서버 시뮬레이션을 시작하세요. 카메라는 `WASD` 키로 이동할 수 있으며, 마우스를 움직이면서 장면을 클릭하여 회전할 수 있습니다.
 
-Test the simulator using the example scripts inside `PythonAPI\examples`.  With the simulator running, open a new terminal for each script and run the following commands to spawn some life into the town and create a weather cycle:
+`PythonAPI\examples` 내의 예제 스크립트를 사용하여 시뮬레이터를 테스트하세요. 시뮬레이터가 실행 중인 상태에서 각 스크립트마다 새 터미널을 열고 다음 명령어를 실행하여 도시에 생명을 불어넣고 날씨 순환을 만드세요:
 
 ```sh
-        # Terminal A 
+        # 터미널 A 
         cd PythonAPI\examples
         pip3 install -r requirements.txt
         python3 generate_traffic.py  
 
-        # Terminal B
+        # 터미널 B
         cd PythonAPI\examples
         python3 dynamic_weather.py 
 ```
 
 !!! Important
-    If the simulation is running at a very low FPS rate, go to `Edit -> Editor preferences -> Performance` in the Unreal Engine editor and disable `Use less CPU when in background`.
+    시뮬레이션이 매우 낮은 FPS로 실행된다면, 언리얼 엔진 에디터에서 `Edit -> Editor preferences -> Performance`로 이동하여 `Use less CPU when in background`를 비활성화하세요.
 
-### Other make commands
+### 기타 make 명령어
 
-There are more `make` commands that you may find useful. Find them in the table below:  
+유용할 수 있는 다른 `make` 명령어들이 있습니다. 아래 표에서 확인하세요:
 
-| Command | Description |
+| 명령어 | 설명 |
 | ------- | ------- |
-| `make help`                                                           | Prints all available commands.                                        |
-| `make launch`                                                         | Launches CARLA server in Editor window.                               |
-| `make PythonAPI`                                                      | Builds the CARLA client.                                              |
-| `make LibCarla`                                                       | Prepares the CARLA library to be imported anywhere.                   |
-| `make package`                                                        | Builds CARLA and creates a packaged version for distribution.         |
-| `make clean`                                                          | Deletes all the binaries and temporals generated by the build system. |
-| `make rebuild`                                                        | `make clean` and `make launch` both in one command.                   |
-
+| `make help` | 사용 가능한 모든 명령어를 출력합니다. |
+| `make launch` | 에디터 창에서 CARLA 서버를 실행합니다. |
+| `make PythonAPI` | CARLA 클라이언트를 빌드합니다. |
+| `make LibCarla` | 어디서나 임포트할 수 있도록 CARLA 라이브러리를 준비합니다. |
+| `make package` | CARLA를 빌드하고 배포용 패키지 버전을 만듭니다. |
+| `make clean` | 빌드 시스템이 생성한 모든 바이너리와 임시 파일을 삭제합니다. |
+| `make rebuild` | `make clean`과 `make launch`를 하나의 명령어로 실행합니다. |
 
 ---
 
-Read the **[F.A.Q.](build_faq.md)** page or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions) for any issues regarding this guide.  
+이 가이드에 대해 궁금한 점이 있다면 **[F.A.Q.](build_faq.md)** 페이지를 읽거나 [CARLA 포럼](https://github.com/carla-simulator/carla/discussions)에 글을 올려주세요.
 
-Now that you have built CARLA, learn how to update the CARLA build or take your first steps in the simulation, and learn some core concepts.
+이제 CARLA를 빌드했으니, CARLA 빌드를 업데이트하는 방법을 배우거나 시뮬레이션에서 첫 걸음을 떼고 핵심 개념을 배워보세요.
 
 <div class="build-buttons">
 
 <p>
-<a href="../build_update" target="_blank" class="btn btn-neutral" title="Learn how to update the build">
-Update CARLA</a>
+<a href="../build_update" target="_blank" class="btn btn-neutral" title="빌드 업데이트 방법 배우기">
+CARLA 업데이트</a>
 </p>
 
 <p>
-<a href="../core_concepts" target="_blank" class="btn btn-neutral" title="Learn about CARLA core concepts">
-First steps</a>
+<a href="../core_concepts" target="_blank" class="btn btn-neutral" title="CARLA 핵심 개념 배우기">
+첫 걸음</a>
 </p>
 
 </div>

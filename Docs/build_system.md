@@ -1,74 +1,71 @@
-# Build system
+# 빌드 시스템
 
-* [__Setup__](#setup)  
+* [__설정__](#setup)  
 * [__LibCarla__](#libcarla)  
-* [__CarlaUE4 and Carla plugin__](#carlaue4-and-carla-plugin)  
+* [__CarlaUE4와 Carla 플러그인__](#carlaue4-and-carla-plugin)  
 * [__PythonAPI__](#pythonapi)
-    - [Versions 0.9.12+](#versions-0912)
-    - [Versions prior to 0.9.12](#versions-prior-to-0912)
+    - [0.9.12+ 버전](#versions-0912)
+    - [0.9.12 이전 버전](#versions-prior-to-0912)
 
-> _This document is a work in progress, only the Linux build system is taken into account here._
+> _이 문서는 작성 중이며, 현재는 Linux 빌드 시스템만을 다루고 있습니다._
 
-The most challenging part of the setup is to compile all the dependencies and modules to be compatible with a) Unreal Engine in the server-side, and b) Python in the client-side.
+설정에서 가장 어려운 부분은 모든 의존성과 모듈을 a) 서버 측의 언리얼 엔진과 b) 클라이언트 측의 Python과 호환되도록 컴파일하는 것입니다.
 
-The goal is to be able to call Unreal Engine's functions from a separate Python process.
+목표는 별도의 Python 프로세스에서 언리얼 엔진의 함수를 호출할 수 있도록 하는 것입니다.
 
 ![modules](img/build_modules.jpg)
 
-In Linux, we compile CARLA and all the dependencies with clang-8.0 and C++14 standard. We however link against different runtime C++ libraries depending on where the code going to be used, since all the code that is going to be linked with Unreal Engine needs to be compiled using `libc++`.
+Linux에서는 CARLA와 모든 의존성을 clang-8.0과 C++14 표준으로 컴파일합니다. 하지만 코드가 사용될 위치에 따라 다른 런타임 C++ 라이브러리와 링크합니다. 언리얼 엔진과 링크될 모든 코드는 `libc++`를 사용하여 컴파일해야 하기 때문입니다.
 
 ---
-## Setup
+## 설정
 
-Command
+명령어
 
 ```sh
 make setup
 ```
 
-Get and compile dependencies
+의존성 가져오기 및 컴파일
 
-  * llvm-8 (libc++ and libc++abi)
-  * rpclib-2.2.1 (twice, with libstdc++ and libc++)
-  * boost-1.72.0 (headers and boost_python for libstdc++)
-  * googletest-1.8.1 (with libc++)
+  * llvm-8 (libc++ 및 libc++abi)
+  * rpclib-2.2.1 (libstdc++와 libc++로 두 번)
+  * boost-1.72.0 (libstdc++용 헤더와 boost_python)
+  * googletest-1.8.1 (libc++로)
 
 ---
 ## LibCarla
 
-Compiled with CMake (minimum version required CMake 3.9).
+CMake로 컴파일됩니다(최소 요구 버전 CMake 3.9).
 
-Command
+명령어
 
 ```sh
 make LibCarla
 ```
 
-Two configurations:
+두 가지 구성:
 
-
-|  | Server | Client |
+|  | 서버 | 클라이언트 |
 | ---------- | ---------- | ---------- |
-| **Unit tests**        | Yes                   | No                    |
-| **Requirements**      | rpclib, gtest, boost  | rpclib, boost         |
-| **std runtime**       | LLVM's `libc++`       | Default `libstdc++`   |
-| **Output**            | headers and test exes | `ibcarla_client.a`    |
-| **Required by**       | Carla plugin          | PythonAPI             |
-
-
+| **단위 테스트**        | 예                    | 아니오                 |
+| **요구사항**           | rpclib, gtest, boost  | rpclib, boost         |
+| **std 런타임**         | LLVM의 `libc++`       | 기본 `libstdc++`      |
+| **출력**               | 헤더와 테스트 실행 파일 | `libcarla_client.a`   |
+| **다음에서 필요**      | Carla 플러그인         | PythonAPI            |
 
 ---
-## CarlaUE4 and Carla plugin
+## CarlaUE4와 Carla 플러그인
 
-Both compiled at the same step with Unreal Engine build tool. They require the `UE4_ROOT` environment variable set.
+둘 다 언리얼 엔진 빌드 도구로 같은 단계에서 컴파일됩니다. `UE4_ROOT` 환경 변수 설정이 필요합니다.
 
-Command
+명령어
 
 ```sh
 make CarlaUE4Editor
 ```
 
-To launch Unreal Engine's Editor run
+언리얼 엔진의 에디터를 실행하려면
 
 ```sh
 make launch
@@ -76,49 +73,46 @@ make launch
 
 ---
 ## PythonAPI
-### Versions 0.9.12+
+### 0.9.12+ 버전
 
-Compiled using Python's `setuptools` ("setup.py"). Currently requires the following to be installed in the machine: Python, libpython-dev, and
-libboost-python-dev, pip>=20.3, wheel, and auditwheel.
+Python의 `setuptools`("setup.py")를 사용하여 컴파일됩니다. 현재 시스템에 다음이 설치되어 있어야 합니다: Python, libpython-dev, libboost-python-dev, pip>=20.3, wheel, auditwheel.
 
-Command:
+명령어:
 
 ```sh
 make PythonAPI
 ```
 
-Creates two files that each contain the client library and correspond to the supported Python version on the system. One file is a `.whl` file and the other is an `.egg` file. This allows for the option of two different, mutually exclusive ways to use the client library. 
+시스템에서 지원하는 Python 버전에 해당하는 클라이언트 라이브러리를 포함하는 두 개의 파일을 생성합니다. 하나는 `.whl` 파일이고 다른 하나는 `.egg` 파일입니다. 이를 통해 클라이언트 라이브러리를 사용하는 두 가지 상호 배타적인 방법 중 하나를 선택할 수 있습니다.
 
->__A. .whl file__
+>__A. .whl 파일__
 
->>The `.whl` is installed using the command:
+>>`.whl`은 다음 명령어로 설치됩니다:
 
 >>      pip install <wheel_file>.whl
 
->>There is no need to import the library path directly in scripts as is required in previous versions or `.egg` files (see section [__Versions prior to 0.9.12__](#versions-prior-to-0912)); `import carla` is sufficient.
+>>이전 버전이나 `.egg` 파일에서 필요했던 것처럼([__0.9.12 이전 버전__](#versions-prior-to-0912) 섹션 참조) 스크립트에서 라이브러리 경로를 직접 임포트할 필요가 없습니다; `import carla`만으로 충분합니다.
 
->__B. .egg file__
+>__B. .egg 파일__
 
->>See the section [__Versions prior to 0.9.12__](#versions-prior-to-0912) for more information.
+>>[__0.9.12 이전 버전__](#versions-prior-to-0912) 섹션에서 자세한 정보를 확인하세요.
 
+### 0.9.12 이전 버전
 
-### Versions prior to 0.9.12
+Python의 `setuptools`("setup.py")를 사용하여 컴파일됩니다. 현재 시스템에 다음이 설치되어 있어야 합니다: Python, libpython-dev, libboost-python-dev.
 
-Compiled using Python's `setuptools` ("setup.py"). Currently requires the following to be installed in the machine: Python, libpython-dev, and
-libboost-python-dev.
-
-Command
+명령어
 
 ```sh
 make PythonAPI
 ```
 
-It creates two "egg" packages
+두 개의 "egg" 패키지를 생성합니다
 
   * `PythonAPI/dist/carla-X.X.X-py2.7-linux-x86_64.egg`
   * `PythonAPI/dist/carla-X.X.X-py3.7-linux-x86_64.egg`
 
-This package can be directly imported into a Python script by adding it to the system path.
+이 패키지는 시스템 경로에 추가하여 Python 스크립트에서 직접 임포트할 수 있습니다.
 
 ```python
 #!/usr/bin/env python
@@ -134,7 +128,7 @@ import carla
 # ...
 ```
 
-Alternatively, it can be installed with `easy_install`
+또는 `easy_install`로 설치할 수 있습니다
 
 ```sh
 easy_install2 --user --no-deps PythonAPI/dist/carla-X.X.X-py2.7-linux-x86_64.egg
