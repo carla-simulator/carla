@@ -150,11 +150,6 @@ def main():
     client = carla.Client(args.host, args.port, worker_threads=1)
     client.set_timeout(10.0)
 
-    if args.default:
-        args.rendering = True
-        args.delta_seconds = None
-        args.no_sync = True
-
     if args.map is not None:
         print('Load map %r' % args.map)
         world = client.load_world(args.map)

@@ -8,26 +8,15 @@ The CARLA simulator provides a vast library of 3D assets to populate your autono
 
 ## Maps
 
-The CARLA simulator provides 10 pre-built maps to choose from, providing a diverse array of environments for training and testing your autonomous agents. 
-
-![maps_montage](../img/catalogue/maps/maps_montage.webp)
+There are two maps to chose from. An urban environment with skyscrapers, commercial units, industrial units and residential streets and an off-road, open-cast mine environment.
 
 | Town       | Summary |
 | -----------| ------  |
-| [__Town01__](map_town01.md)  | A small, simple town with a river and several bridges.|
-| [__Town02__](map_town02.md) | A small simple town with a mixture of residential and commercial buildings.|
-| [__Town03__](map_town03.md) | A larger, urban map with a roundabout and large junctions.|
-| [__Town04__](map_town04.md) | A small town embedded in the mountains with a special "figure of 8" *infinite* highway.|
-| [__Town05__](map_town05.md) | Squared-grid town with cross junctions and a bridge. It has multiple lanes per direction. Useful to perform lane changes.  |
-| [__Town06__](map_town06.md) | Long many lane highways with many highway entrances and exits. It also has a [**Michigan left**](<https://en.wikipedia.org/wiki/Michigan_left>). |
-| [__Town07__](map_town07.md) | A rural environment with narrow roads, corn, barns and hardly any traffic lights. |
-| **Town08** | Secret "unseen" town used for the [Leaderboard](https://leaderboard.carla.org/) challenge |
-| **Town09** | Secret "unseen" town used for the [Leaderboard](https://leaderboard.carla.org/) challenge |
 | [__Town10__](map_town10.md) | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade.|
-| [__Town11__](map_town11.md) | A Large Map that is undecorated. Serves as a proof of concept for the Large Maps feature. |
-| [__Town12__](map_town12.md) | A Large Map with numerous different regions, including high-rise, residential and rural environments.|
-| [__Town13__](map_town13.md) | A Large Map similar in scale to Town 12, but with distinct features.|
-| [__Town15__](map_town15.md) | A map based on the road layout of the Autonomous University of Barcelona. |
+| [__Mine__](map_mine.md) | An industrial, off-road, open-cast mining environment. |
+
+!!! note
+    Towns 1-9 are included in the build-from-source version of CARLA but are not updated or tested to work with UE5. There may be non-functioning geometry or textures in these maps. If you choose to use these maps, you will likely need to fix problems in the maps before use. 
 
 ## Vehicles
 

@@ -45,28 +45,15 @@ The port can be chosen as any available port and is set to 2000 by default, you 
 !!! Note
     The following presumes that CARLA is running in the default [__asynchronous__](adv_synchrony_timestep.md) mode. If you have engaged synchronous mode, some of the code in the following sections might not work as expected.
 
-## Loading a map 
-
-In the CARLA API, the [__world__](python_api.md#carla.World) object provides access to all elements of the simulation, including the map, objects within the map, such as buildings, traffic lights, vehicles and pedestrians. The CARLA server normally loads a default map (normally Town10). If you want to launch CARLA with an alternate map, use the `config.py` script:
-
-```sh
-./config.py --map Town05 
-```
-
-We can also use the world object to load a map from the client:
-
-```py
-client.load_world('Town05')
-
-``` 
-
 Please find more information about CARLA maps [__here__](core_map.md).
 
 ## Spectator navigation
 
-The spectator is a view into the simulation. By default, the spectator opens in a new window when you run the CARLA server on a computer with a screen attached, unless you specify the `-RenderOffScreen` command line option. 
+![town_10_default](../img/catalogue/maps/town10/town10default.png)
 
-The spectator is helpful to visualize your simulation. Using the spectator, you can familiarize yourself with the map you've loaded, and see the result of any changes you are making, such as adding vehicles, changing the weather, turning on/off various layers of the map and for debugging purposes. 
+The spectator is a view into the simulation. By default, the spectator opens in a new window when you run the CARLA server on a computer with a screen attached. 
+
+The spectator is helpful to visualize your simulation. Using the spectator, you can familiarize yourself with the map you've loaded, and see the result of any changes you are making, such as adding vehicles, changing the weather, turning on/off various layers of the map and for debugging purposes. You can also use the spectator to monitor the behavior of an autonomous agent as it navigates the environment for development iteration.
 
 You can fly the spectator around the world using the mouse to control the pitch and yaw of the spectator view and the QWE-ASD keys to move the spectator:
 
@@ -79,8 +66,6 @@ You can fly the spectator around the world using the mouse to control the pitch 
 - D - move right
 
 Left click and drag the mouse in the spectator window up and down to control pitch and left and right to control yaw.
-
-![flying_spectator](../img/tuto_G_getting_started/flying_spectator.gif)
 
 The spectator and its properties can be accessed and manipulated through the Python API:
 
@@ -191,50 +176,13 @@ To define the Ego Vehicle, you should set the `role_name` attribute of the vehic
 
 ```py
 
-ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz_2020')
+ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz')
 
 ego_bp.set_attribute('role_name', 'hero')
 
 ego_vehicle = world.spawn_actor(ego_bp, random.choice(spawn_points))
 
 ```
----
-## Choose your map
-
-![maps_montage](../img/catalogue/maps/maps_montage.webp)
-
-CARLA comes loaded with several pre-made maps focused on providing a diversity of features. The maps present a range of environments such as urban, rural and residential. There are also differing architectural styles and also a multitude of different road layouts from unmarked rural roads to multi-lane highways. Browse the map guides in the [catalogue](catalogue.md) or in the table below. 
-
-| Town       | Summary |
-| -----------| ------  |
-| [__Town01__](map_town01.md)  | A small, simple town with a river and several bridges.|
-| [__Town02__](map_town02.md) | A small simple town with a mixture of residential and commercial buildings.|
-| [__Town03__](map_town03.md) | A larger, urban map with a roundabout and large junctions.|
-| [__Town04__](map_town04.md) | A small town embedded in the mountains with a special "figure of 8" *infinite* highway.|
-| [__Town05__](map_town05.md) | Squared-grid town with cross junctions and a bridge. It has multiple lanes per direction. Useful to perform lane changes.  |
-| [__Town06__](map_town06.md) | Long many lane highways with many highway entrances and exits. It also has a [**Michigan left**](<https://en.wikipedia.org/wiki/Michigan_left>). |
-| [__Town07__](map_town07.md) | A rural environment with narrow roads, corn, barns and hardly any traffic lights. |
-| **Town08** | Secret "unseen" town used for the [Leaderboard](https://leaderboard.carla.org/) challenge |
-| **Town09** | Secret "unseen" town used for the [Leaderboard](https://leaderboard.carla.org/) challenge |
-| [__Town10__](map_town10.md) | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade.|
-| __Town11__ | A Large Map that is undecorated.|
-| [__Town12__](map_town12.md) | A Large Map with numerous different regions, including high-rise, residential and rural environments.|
-
-You can browse the available maps in your CARLA installation:
-
-```py
-client.get_available_maps()
-```
-
-This will include maps that you have built yourself or imported.
-
-When you choose a map, load it like so:
-
-```py
-client.load_world('Town03_Opt')
-```
-
----
 
 ## Choose your vehicles
 
