@@ -9,7 +9,6 @@
 - [__Obstacle detector__](#obstacle-detector)
 - [__Radar sensor__](#radar-sensor)
 - [__RGB camera__](#rgb-camera)
-- [__RSS sensor__](#rss-sensor)
 - [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
 - [__Semantic segmentation camera__](#semantic-segmentation-camera)
 - [__Instance segmentation camera__](#instance-segmentation-camera)

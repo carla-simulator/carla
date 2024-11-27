@@ -1757,7 +1757,6 @@ Sensors compound a specific family of actors quite diverse and unique. They are 
   - [SemanticLidar raycast](ref_sensors.md#semanticlidar-raycast-sensor).
   - [Radar](ref_sensors.md#radar-sensor).
   - [RGB camera](ref_sensors.md#rgb-camera).
-  - [RSS sensor](ref_sensors.md#rss-sensor).
   - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).
   <br><b>Only receive data when triggered.</b>
   - [Collision detector](ref_sensors.md#collision-detector).
