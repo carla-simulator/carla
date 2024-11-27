@@ -105,7 +105,7 @@ raw_image.save_to_disk("path/to/save/converted/image",carla.Depth)
 | `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 | `height`           | int   | Image height in pixels.          |
-| `fov` | float | Horizontal field of view in degrees.         |
+| `fov` | float | Horizontal field of view in degrees.          |
 | `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
 
 
@@ -458,7 +458,7 @@ Since these effects are provided by UE, please make sure to check their document
 | `exposure_speed_down`            | float          | 1\.0           | In `exposure_mode: "histogram"`. Speed at which the adaptation occurs from bright to dark environment.  |
 | `calibration_constant`           | float          | 16\.0          | Calibration constant for 18% albedo.           |
 | `focal_distance`     | float          | 1000\.0        | Distance at which the depth of field effect should be sharp. Measured in cm (UE units).           |
-| `blur_amount`  | float          | 1\.0           | Strength/intensity of motion blur.             |
+| `blur_amount`  | float          | 1\.0           | Distance from camera in Km to give a blur amount of 50%. |
 | `blur_radius`  | float          | 0\.0           | Radius in pixels at 1080p resolution to emulate atmospheric scattering according to distance from camera.           |
 | `motion_blur_intensity`          | float          | 0\.45          | Strength of motion blur [0,1].     |
 | `motion_blur_max_distortion`       | float          | 0\.35          | Max distortion caused by motion blur. Percentage of screen width.       |
