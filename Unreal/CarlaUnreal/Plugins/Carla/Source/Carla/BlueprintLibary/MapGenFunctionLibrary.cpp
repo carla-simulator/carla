@@ -14,6 +14,7 @@
 #include "PhysicsEngine/BodySetup.h"
 #include "Engine/StaticMeshActor.h"
 #include "Carla/Actor/LevelActor/InstancedStaticMeshActor.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #if WITH_EDITOR
 #include "Editor/EditorEngine.h"
 #include "Editor/Transactor.h"
@@ -301,4 +302,20 @@ void UMapGenFunctionLibrary::RevertStaticMeshesInTheLevelForInstancedStaticMeshe
       }
     }
   }
+}
+
+
+void UMapGenFunctionLibrary::GetMeshesAndInstanceFromHierachicalIntancedStaticMesh(UHierarchicalInstancedStaticMeshComponent* HierarchicalInstancedStaticMeshComponent, UStaticMesh *& OutStaticMesh, TArray<FTransform>& Instances)
+{
+    if(IsValid(HierarchicalInstancedStaticMeshComponent))
+    {
+        OutStaticMesh = HierarchicalInstancedStaticMeshComponent->GetStaticMesh();
+        int NumInstances = HierarchicalInstancedStaticMeshComponent->GetInstanceCount();
+        for (int i = 0; i < NumInstances; ++i) 
+        {
+            FTransform OutTransform;
+            HierarchicalInstancedStaticMeshComponent->GetInstanceTransform(i, OutTransform, true);
+            Instances.Add(OutTransform);
+        }
+    }
 }

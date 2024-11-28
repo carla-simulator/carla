@@ -1,6 +1,6 @@
 @echo off
 
-if exist "crosswalks.obj" del crosswalks.obj
+
 
 if exist "FBX2OBJ.exe" (
     if exist "%1.fbx" (
@@ -9,23 +9,10 @@ if exist "FBX2OBJ.exe" (
     )
 )
 
-if exist "%1.xodr" (
-    rem parse openDRIVE crosswalks (generate crosswalks.obj)
-    python get_xodr_crosswalks.py -f %1.xodr
-) else (
-    if not "%~2"=="" (
-        if exist "%2.xodr" (
-            rem parse openDRIVE crosswalks (generate crosswalks.obj)
-            python get_xodr_crosswalks.py -f %2.xodr
-        )
-    ) else (
-        echo "XODR file doesn't exist, ignoring crosswalks from openDRIVE"
-    )
-)
 
-if exist "crosswalks.obj" (
+if exist "crosswalksmgs.obj" (
     rem join both OBJ
-    python addOBJ.py %1.obj crosswalks.obj
+    python addOBJ.py %1.obj crosswalksmgs.obj
 )
  
 if exist "%1.obj" (

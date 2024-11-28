@@ -47,7 +47,7 @@ for i in range(len(points)):
     print(points[i])
 
 # generate the .OBJ file
-f = open("crosswalks.obj", "wt")
+f = open("crosswalksmgs.obj", "wt")
 faceIndex = 0
 vertexIndex = 0
 i = 0

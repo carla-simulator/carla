@@ -60,4 +60,9 @@ public:
   // This function will removed instanced static meshes in the level and place static mesh actors instead
   UFUNCTION(BlueprintCallable)
   static void RevertStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter);
+
+  
+  // This function will removed instanced static meshes in the level and place static mesh actors instead
+  UFUNCTION(BlueprintPure, Category="Functionality")
+  static void GetMeshesAndInstanceFromHierachicalIntancedStaticMesh(UHierarchicalInstancedStaticMeshComponent* HierarchicalInstancedStaticMeshComponent, UStaticMesh *& OutStaticMesh, TArray<FTransform>& Instances);
 };
