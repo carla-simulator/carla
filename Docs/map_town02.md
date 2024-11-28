@@ -1,30 +1,29 @@
 # Town 2
 
-![town_02_slideshow](../img/catalogue/maps/town02/town02_panorama.webp)
+![town_02_슬라이드쇼](../img/catalogue/maps/town02/town02_panorama.webp)
 
-Town 2 is a small town with numerous T-junctions and a variety of buildings, there are patches of coniferous trees, a park and a residential and commercial area. 
+Town 2는 다수의 T자형 교차로와 다양한 건물들이 있는 작은 마을입니다. 곳곳에 침엽수림이 있으며, 공원과 주거 및 상업 지역이 있습니다.
 
-## Road network
+## 도로망
 
-The road network consists of numerous simple T junctions.
+도로망은 다수의 단순한 T자형 교차로로 구성되어 있습니다.
 
-![town_02_aerial](../img/catalogue/maps/town02/town02aerial.webp)
+![town_02_항공사진](../img/catalogue/maps/town02/town02aerial.webp)
 
-## Features
+## 특징
 
-The map features a commercial area and high street. 
+이 맵은 상업 지역과 하이스트리트가 특징입니다.
 
-![town_02_highstreet](../img/catalogue/maps/town02/town02_highstreet.webp)
+![town_02_하이스트리트](../img/catalogue/maps/town02/town02_highstreet.webp)
 
+또한 주거용 아파트 건물들과 교회가 있습니다.
 
-There are also residential apartment buildings and a church.
+![town_02_아파트](../img/catalogue/maps/town02/town02_apartments.webp)
 
-![town_02_apartments](../img/catalogue/maps/town02/town02_apartments.webp)
+주유소가 있습니다.
 
-There is a gas station.
+![town_02_주유소](../img/catalogue/maps/town02/town02_gas.webp)
 
-![town_02_gas_station](../img/catalogue/maps/town02/town02_gas.webp)
+가로수길도 있습니다.
 
-There are also tree-lined roads.
-
-![town_02_tree_lined_road](../img/catalogue/maps/town02/town02_tree_road.webp)
+![town_02_가로수길](../img/catalogue/maps/town02/town02_tree_road.webp)

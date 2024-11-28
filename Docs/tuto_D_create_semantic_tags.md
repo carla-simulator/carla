@@ -1,87 +1,86 @@
-# Create semantic tags
+# 시맨틱 태그 생성
 
-Learn how to define customized tags for semantic segmentation. These can additionally be added to [carla.CityObjectLabel](python_api.md#carla.CityObjectLabel) to filter the bounding boxes that [carla.World](python_api.md#carla.World) retrieves.  
+시맨틱 세그멘테이션을 위한 사용자 정의 태그를 정의하는 방법을 배워보세요. 이러한 태그들은 [carla.World](python_api.md#carla.World)가 검색하는 바운딩 박스를 필터링하기 위해 [carla.CityObjectLabel](python_api.md#carla.CityObjectLabel)에 추가로 포함될 수 있습니다.
 
-*   [__Create a new semantic tag__](#create-a-new-semantic-tag)  
-	*   [1. Create the tag ID](#1-create-the-tag-id)  
-	*   [2. Create the UE folder for assets](#2-create-the-ue-folder-for-assets)  
-	*   [3. Create two-way correspondence between UE and the code tag](#3-create-two-way-correspondence-between-ue-and-the-code-tag)  
-	*   [4. Define a color code](#4-define-a-color-code)  
-	*   [5. Add the tagged elements](#5-add-the-tagged-elements)  
-*   [__Add a tag to carla.CityObjectLabel__](#add-a-tag-to-carlacityobjectlabel)  
+*   [__새로운 시맨틱 태그 생성하기__](#create-a-new-semantic-tag)  
+    *   [1. 태그 ID 생성하기](#1-create-the-tag-id)  
+    *   [2. 에셋을 위한 UE 폴더 생성하기](#2-create-the-ue-folder-for-assets)  
+    *   [3. UE와 코드 태그 간의 양방향 대응 관계 생성하기](#3-create-two-way-correspondence-between-ue-and-the-code-tag)  
+    *   [4. 색상 코드 정의하기](#4-define-a-color-code)  
+    *   [5. 태그가 지정된 요소 추가하기](#5-add-the-tagged-elements)  
+*   [__carla.CityObjectLabel에 태그 추가하기__](#add-a-tag-to-carlacityobjectlabel)  
 
 ---
 
-## Create a new semantic tag
+## 새로운 시맨틱 태그 생성하기
 
-### 1. Create the tag ID
+### 1. 태그 ID 생성하기
 
-__Open `ObjectLabel.h`__ in `LibCarla/source/carla/rpc`. Add your new tag by the end of the enum using the same formatting as the rest.  
+`LibCarla/source/carla/rpc`의 __`ObjectLabel.h`를 엽니다__. 다른 태그들과 동일한 형식을 사용하여 enum 끝에 새 태그를 추가합니다.
 
 ![object_label_h](img/tuto_D_create_semantic_tags/01_objectlabel_tag.jpg)
 
-!!! Note
-    Tags do not have to appear in order. However, it is good practice to list them in order. 
+!!! 참고
+    태그가 순서대로 나타날 필요는 없습니다. 하지만 순서대로 나열하는 것이 좋은 관행입니다.
 
-### 2. Create the UE folder for assets
+### 2. 에셋을 위한 UE 폴더 생성하기
 
-__Open the Unreal Engine Editor__ and go to `Carla/Static`. Create a new folder named as your tag. 
+__언리얼 엔진 에디터를 열고__ `Carla/Static`으로 이동합니다. 태그와 동일한 이름의 새 폴더를 생성합니다.
 
 ![ue_folder](img/tuto_D_create_semantic_tags/02_ue_folder.jpg)
 
-!!! Note
-    The UE folder and the tag do not necessarily have to be named the same. However, it is good practice to do so.  
+!!! 참고
+    UE 폴더와 태그의 이름이 반드시 같을 필요는 없습니다. 하지만 동일하게 하는 것이 좋은 관행입니다.
 
-### 3. Create two-way correspondence between UE and the code tag
+### 3. UE와 코드 태그 간의 양방향 대응 관계 생성하기
 
-__3.1. Open `Tagger.cpp`__ in `Unreal/CarlaUE4/Plugins/Carla/Source/Carla/Game`. Go to __`GetLabelByFolderName`__ Add the your tag by the end of the list. The string being compared is the name of the UE folder used in [__2.__](#2-create-the-ue-folder-for-assets), so use the exact same name here.  
+__3.1. `Unreal/CarlaUE4/Plugins/Carla/Source/Carla/Game`의 `Tagger.cpp`를 엽니다__. __`GetLabelByFolderName`__으로 이동합니다. 리스트 끝에 태그를 추가합니다. 비교되는 문자열은 [__2.__](#2-create-the-ue-folder-for-assets)에서 사용된 UE 폴더의 이름이므로, 여기에서도 정확히 같은 이름을 사용하세요.
 
 ![tagger_cpp](img/tuto_D_create_semantic_tags/03_tagger_cpp.jpg)
 
-__3.2. Go to `GetTagAsString`__ in the same `Tagger.cpp`. Add the new tag by the end of the switch.  
+__3.2. 같은 `Tagger.cpp`의 `GetTagAsString`__으로 이동합니다. switch문 끝에 새 태그를 추가합니다.
 
 ![tagger_cpp_02](img/tuto_D_create_semantic_tags/04_tagger_cpp_02.jpg)
 
-### 4. Define a color code
+### 4. 색상 코드 정의하기
 
-__Open `CityScapesPalette.h`__ in `LibCarla/source/carla/image`. Add the color code of your new tag by the end of the array. 
+`LibCarla/source/carla/image`의 __`CityScapesPalette.h`를 엽니다__. 배열 끝에 새 태그의 색상 코드를 추가합니다.
 
 ![city_scapes_palette_h](img/tuto_D_create_semantic_tags/05_city_scapes_palette_h.jpg)
 
-!!! Warning
-    The position in the array must correspond with the tag ID, in this case, `23u`. 
+!!! 경고
+    배열에서의 위치는 이 경우 `23u`인 태그 ID와 일치해야 합니다.
 
-### 5. Add the tagged meshes
+### 5. 태그가 지정된 메시 추가하기
 
-The new semantic tag is ready to be used. Only the meshes stored inside the UE folder of a tag are tagged as such. Move or import the corresponding meshes to the new folder, in order for the to be tagged properly. 
+이제 새로운 시맨틱 태그를 사용할 준비가 되었습니다. 태그의 UE 폴더 안에 저장된 메시만 해당 태그로 표시됩니다. 해당 메시들을 새 폴더로 이동하거나 가져와서 적절하게 태그가 지정되도록 하세요.
 
 ---
 
-## Add a tag to [carla.CityObjectLabel](python_api.md#carla.CityObjectLabel)
+## [carla.CityObjectLabel](python_api.md#carla.CityObjectLabel)에 태그 추가하기
 
-This step is not directly related with semantic segmentation. However, these tags can be used to filter the bounding box query in [carla.World](python_api.md#carla.World). In order to do this, the tag must be added to the [carla.CityObjectLabel](python_api.md#carla.CityObjectLabel) enum in the PythonAPI.  
+이 단계는 시맨틱 세그멘테이션과 직접적인 관련이 없습니다. 하지만 이러한 태그들은 [carla.World](python_api.md#carla.World)의 바운딩 박스 쿼리를 필터링하는 데 사용될 수 있습니다. 이를 위해서는 태그가 PythonAPI의 [carla.CityObjectLabel](python_api.md#carla.CityObjectLabel) enum에 추가되어야 합니다.
 
-__Open `World.cpp`__ in `carla/PythonAPI/carla/source/libcarla` and add the new tag by the end of the enum.  
+`carla/PythonAPI/carla/source/libcarla`의 __`World.cpp`를 열고__ enum 끝에 새 태그를 추가합니다.
 
 ![city_object_label](img/tuto_D_create_semantic_tags/06_city_object_label.jpg)
 
-
 ---
 
-Read the **[F.A.Q.](build_faq.md)** page or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions) for any issues, doubts or suggestions.  
+문제, 의문사항 또는 제안사항이 있으시면 **[F.A.Q.](build_faq.md)** 페이지를 읽거나 [CARLA 포럼](https://github.com/carla-simulator/carla/discussions)에 게시하세요.
 
-<p style="font-size: 20px">What's next?</p>
+<p style="font-size: 20px">다음 단계는?</p>
 
 <div class="build-buttons">
 
 <p>
-<a href="../ref_sensors" target="_blank" class="btn btn-neutral" title="Learn all about sensors in CARLA">
-Sensors reference</a>
+<a href="../ref_sensors" target="_blank" class="btn btn-neutral" title="CARLA의 센서에 대해 모두 배우기">
+센서 참조</a>
 </p>
 
 <p>
-<a href="../tuto_A_add_props" target="_blank" class="btn btn-neutral" title="Learn how to import your custom into CARLA">
-Add new props</a>
+<a href="../tuto_A_add_props" target="_blank" class="btn btn-neutral" title="CARLA에 사용자 정의 요소를 가져오는 방법 배우기">
+새로운 프롭 추가하기</a>
 </p>
 
 </div>

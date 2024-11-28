@@ -1,30 +1,30 @@
-# Manual package preparation
+# 수동 패키지 준비
 
-A map package follows a certain folder structure and must contain a `.json` file describing that structure. Our automatic map import processes create this `.json` file automatically, but you also have the option to prepare it yourself. Including your own `.json` file will overwrite any arguments passed to the `make import` command.
+맵 패키지는 특정 폴더 구조를 따르며 해당 구조를 설명하는 `.json` 파일을 포함해야 합니다. 자동 맵 가져오기 프로세스는 이 `.json` 파일을 자동으로 생성하지만, 직접 준비할 수도 있습니다. 자체 `.json` 파일을 포함하면 `make import` 명령어에 전달된 모든 인수를 덮어씁니다.
 
-- [__Standard Maps__](#standard-maps)
-    - [Create the folder structure for the standard maps](#create-the-folder-structure-for-the-standard-maps)
-    - [Create the JSON description for the standard maps](#create-the-json-description-for-the-standard-maps)
-- [__Large Maps__](#large-maps)
-    - [Create the folder structure for the large maps](#create-the-folder-structure-for-the-large-maps)
-    - [Create the JSON description for the large maps](#create-the-json-description-for-the-large-maps)
+- [__일반 맵__](#standard-maps)
+    - [일반 맵의 폴더 구조 생성하기](#create-the-folder-structure-for-the-standard-maps)
+    - [일반 맵의 JSON 설명 생성하기](#create-the-json-description-for-the-standard-maps)
+- [__대형 맵__](#large-maps)
+    - [대형 맵의 폴더 구조 생성하기](#create-the-folder-structure-for-the-large-maps)
+    - [대형 맵의 JSON 설명 생성하기](#create-the-json-description-for-the-large-maps)
 
 ---
 
-## Standard maps
-### Create the folder structure for the standard maps
+## 일반 맵
+### 일반 맵의 폴더 구조 생성하기
 
-__1. Create a folder inside `carla/Import`.__ The name of the folder is not important.  
+__1. `carla/Import` 내부에 폴더를 생성합니다.__ 폴더 이름은 중요하지 않습니다.
 
-__2. Create different subfolders__ for each map to be imported.
+__2. 가져올 각 맵에 대해 다른 하위 폴더를__ 생성합니다.
 
-__3. Move the files of each map to the corresponding subfolder.__ A subfolder will contain a specific set of elements: 
+__3. 각 맵의 파일을 해당 하위 폴더로 이동합니다.__ 하위 폴더는 특정 요소 세트를 포함합니다:
 
--   The mesh of the map in a `.fbx` file.  
--   The OpenDRIVE definition in a `.xodr` file.  
--   Optionally, the textures required by the asset.  
+-   `.fbx` 파일의 맵 메시
+-   `.xodr` 파일의 OpenDRIVE 정의
+-   선택적으로, 에셋에 필요한 텍스처
 
-For instance, an `Import` folder with one package containing two maps should have a structure similar to the one below.
+예를 들어, 두 개의 맵을 포함하는 하나의 패키지가 있는 `Import` 폴더는 아래와 같은 구조를 가져야 합니다.
 
 ```sh
 Import
@@ -49,20 +49,20 @@ Import
 
 ---
 
-### Create the JSON description for the standard maps
+### 일반 맵의 JSON 설명 생성하기
 
-Create a `.json` file in the root folder of the package. Name the file after the package. Note that this will be the distribution name. The content of the file will describe a JSON array of __maps__ and __props__ with basic information for each of them.  
+패키지의 루트 폴더에 `.json` 파일을 생성합니다. 패키지의 이름을 따서 파일 이름을 지정하세요. 이것이 배포 이름이 될 것입니다. 파일의 내용은 각각에 대한 기본 정보가 있는 __maps__와 __props__의 JSON 배열을 설명합니다.
 
-__Maps__ need the following parameters:  
+__Maps__에는 다음 매개변수가 필요합니다:
 
-- __name__ of the map. This must be the same as the `.fbx` and `.xodr` files.  
-- __source__ path to the `.fbx` file.  
-- __use_carla_materials__. If __True__, the map will use CARLA materials. Otherwise, it will use RoadRunner materials.  
-- __xodr__ Path to the `.xodr` file.  
+- __name__: 맵의 이름. `.fbx`와 `.xodr` 파일과 동일해야 합니다.
+- __source__: `.fbx` 파일의 경로.
+- __use_carla_materials__: __True__이면 맵이 CARLA 재질을 사용하고, 그렇지 않으면 RoadRunner 재질을 사용합니다.
+- __xodr__: `.xodr` 파일의 경로.
 
-__Props__ are not part of this tutorial. The field will be left empty. There is another tutorial on how to [add new props](tuto_A_add_props.md).  
+__Props__는 이 튜토리얼의 일부가 아닙니다. 필드는 비어있게 됩니다. [새로운 프롭 추가하기](tuto_A_add_props.md)에 대한 다른 튜토리얼이 있습니다.
 
-The resulting `.json` file should resemble the following:
+결과 `.json` 파일은 다음과 유사해야 합니다:
 
 ```json
 {
@@ -89,11 +89,11 @@ The resulting `.json` file should resemble the following:
 
 ---
 
-If you have any questions about the process, then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions).
+과정에 대해 궁금한 점이 있다면 [포럼](https://github.com/carla-simulator/carla/discussions)에서 질문할 수 있습니다.
 
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="CARLA 포럼으로 이동">
+CARLA 포럼</a>
 </p>
 </div>

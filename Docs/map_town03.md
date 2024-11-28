@@ -1,33 +1,33 @@
 # Town 3
 
-![town_03_slideshow](../img/catalogue/maps/town03/town03_panorama.webp)
+![town_03_슬라이드쇼](../img/catalogue/maps/town03/town03_panorama.webp)
 
-Town 3 is a larger town with features of a downtown urban area. The map includes some interesting road network features such as a roundabout, underpasses and overpasses. The town also includes a raised metro track and a large building under construction.
+Town 3은 도심 지역의 특징을 가진 더 큰 규모의 도시입니다. 이 맵은 로터리, 지하도, 고가도로와 같은 흥미로운 도로망 특징들을 포함하고 있습니다. 또한 고가 지하철 트랙과 건설 중인 대형 건물이 있습니다.
 
-## Road network
+## 도로망
 
-The road network features a central roundabout and a residential culdesac, along with numerous 4-way junctions and T-junctions.
+도로망은 중앙 로터리와 주거지역 막다른 길을 특징으로 하며, 수많은 4거리 교차로와 T자형 교차로가 있습니다.
 
-![town_03_aerial](../img/catalogue/maps/town03/town03aerial.webp)
+![town_03_항공사진](../img/catalogue/maps/town03/town03aerial.webp)
 
-## Features
+## 특징
 
-The map features prominent central roundabout with a modernist monument and water. 
+이 맵은 모더니즘 기념물과 수변 공간이 있는 눈에 띄는 중앙 로터리가 특징입니다.
 
-![town_03_roundabout](../img/catalogue/maps/town03/town03_roundabout.webp)
+![town_03_로터리](../img/catalogue/maps/town03/town03_roundabout.webp)
 
-There is a raised metro track surrounding the center.
+중심부를 둘러싸는 고가 지하철 트랙이 있습니다.
 
-![town_03_metro](../img/catalogue/maps/town03/town03_metro.webp)
+![town_03_지하철](../img/catalogue/maps/town03/town03_metro.webp)
 
-There is also a gas station next to a large junction.
+또한 대형 교차로 옆에 주유소가 있습니다.
 
-![town_03_gas_station](../img/catalogue/maps/town03/town03_junction.webp)
+![town_03_주유소](../img/catalogue/maps/town03/town03_junction.webp)
 
-The road network features an underpass.
+도로망에는 지하도가 있습니다.
 
-![town_03_underpass](../img/catalogue/maps/town03/town03_underpass.webp)
+![town_03_지하도](../img/catalogue/maps/town03/town03_underpass.webp)
 
-There are parks and a variety of commercial and residential buildings in varying styles.
+다양한 스타일의 상업용 및 주거용 건물들과 공원들이 있습니다.
 
-![town_03_overview](../img/catalogue/maps/town03/town03_buildings.webp)
+![town_03_전경](../img/catalogue/maps/town03/town03_buildings.webp)

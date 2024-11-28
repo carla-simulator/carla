@@ -2,6 +2,6 @@
 
 ![town_11](../img/catalogue/maps/town11/town11.webp)
 
-Town 11 is a Large Map without decoration such as buildings, sidewalks or vegetation. The road network consists of sprawling single lane roads interspersed with small clusters of grided junctions. The landscape has some hills and elevations and has a grass-like texture.
+Town 11은 건물, 보도, 식생과 같은 장식이 없는 대형 맵입니다. 도로망은 작은 격자형 교차로 군집이 산재해 있는 단일 차선의 넓게 퍼진 도로들로 구성되어 있습니다. 지형에는 언덕과 고도 차이가 있으며 잔디와 비슷한 질감을 가지고 있습니다.
 
-Town 11 principally serves as a proof of concept for the Large Map functionality introduced in CARLA 0.9.12 and was the first Large Map to be integrated into the CARLA simulator. You may find it helpful to look at Town 11's asset files in the Unreal Editor to understand how large maps are handled within the CARLA ecosystem.
+Town 11은 주로 CARLA 0.9.12에서 도입된 대형 맵 기능의 개념 증명으로 사용되며, CARLA 시뮬레이터에 통합된 최초의 대형 맵이었습니다. CARLA 생태계 내에서 대형 맵이 어떻게 처리되는지 이해하기 위해 언리얼 에디터에서 Town 11의 에셋 파일을 살펴보면 도움이 될 수 있습니다.

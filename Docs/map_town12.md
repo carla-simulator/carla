@@ -2,225 +2,89 @@
 
 ![town_12](../img/catalogue/maps/town12/town12.webp)
 
-Town 12 is a Large Map with dimensions of 10x10 km<sup>2</sup>. It is divided into 36 tiles, most with dimensions of 2x2 km<sup>2</sup> (some edge tiles are smaller). The road layout is partially inspired by the road layout of the city of [Amarillo in Texas, USA](https://www.google.com/maps/place/Amarillo,+TX,+USA/@35.2018863,-101.9450251,11z/data=!3m1!4b1!4m5!3m4!1s0x870148d4b245cf03:0xd0f3d11c6836d2af!8m2!3d35.2219971!4d-101.8312969). There are numerous contrasting regions to the city including urban, residential and rural areas, along with a large highway system surrounding the city with a ringroad. The architectural styles reflect those of many medium to large cities across North America.  
+Town 12는 10x10 km<sup>2</sup> 크기의 대형 맵입니다. 대부분 2x2 km<sup>2</sup> 크기(일부 가장자리 타일은 더 작음)의 36개 타일로 나뉘어 있습니다. 도로 배치는 [미국 텍사스 주의 아마릴로 시](https://www.google.com/maps/place/Amarillo,+TX,+USA/@35.2018863,-101.9450251,11z/data=!3m1!4b1!4m5!3m4!1s0x870148d4b245cf03:0xd0f3d11c6836d2af!8m2!3d35.2219971!4d-101.8312969)의 도로 배치에서 부분적으로 영감을 받았습니다. 도시에는 도심, 주거 및 시골 지역을 포함한 여러 대조적인 지역이 있으며, 순환도로가 있는 대규모 고속도로 시스템이 도시를 둘러싸고 있습니다. 건축 스타일은 북미 전역의 중소도시들의 특징을 반영합니다.
 
-## Navigator
+## 네비게이터
 
-The navigator interactive map can be used to browse the town and derive coordinates to use in the CARLA simulator.
+네비게이터 인터랙티브 맵을 사용하여 마을을 둘러보고 CARLA 시뮬레이터에서 사용할 좌표를 도출할 수 있습니다.
 
-__Using the navigator__:
+__네비게이터 사용법__:
 
-* `left mouse button` - click and hold, drag left, right, up or down to move the map
-* `scroll mouse wheel` - scroll down to zoom out, scroll up to zoom in on the location under the mouse pointer
-* `double click` - double click on a point on the map to record the coordinates, you will find the coordinates in the text and the code block just below the map
+* `마우스 왼쪽 버튼` - 클릭하고 누른 채로 좌, 우, 위, 아래로 드래그하여 맵을 이동
+* `마우스 휠 스크롤` - 아래로 스크롤하여 축소, 위로 스크롤하여 마우스 포인터 위치를 확대
+* `더블 클릭` - 맵의 한 지점을 더블 클릭하여 좌표를 기록, 맵 아래의 텍스트와 코드 블록에서 좌표를 확인할 수 있음
 
-__Zone color reference__:
+__구역 색상 참조__:
 
-* <span style="color:#595d5e; background-color:#595d5e;">&nbsp</span>   [Skyscraper](#high-rise-downtown)
-* <span style="color:#d2dddc; background-color:#d2dddc;">&nbsp</span>   [High density residential](#high-density-residential)
-* <span style="color:#838c8b; background-color:#838c8b;">&nbsp</span>   [Community buildings](#community-buildings)
-* <span style="color:#17d894; background-color:#17d894;">&nbsp</span>   [Low density residential](#low-density-residential)
-* <span style="color:#df6a19; background-color:#df6a19;">&nbsp</span>   [Parks](#parks)
-* <span style="color:#839317; background-color:#839317;">&nbsp</span>   [Rural farmland](#rural-and-farmland)
-* <span style="color:#265568; background-color:#265568;">&nbsp</span>   [Water](#water)
+* <span style="color:#595d5e; background-color:#595d5e;">&nbsp</span>   [초고층 건물](#high-rise-downtown)
+* <span style="color:#d2dddc; background-color:#d2dddc;">&nbsp</span>   [고밀도 주거지역](#high-density-residential)
+* <span style="color:#838c8b; background-color:#838c8b;">&nbsp</span>   [커뮤니티 건물](#community-buildings)
+* <span style="color:#17d894; background-color:#17d894;">&nbsp</span>   [저밀도 주거지역](#low-density-residential)
+* <span style="color:#df6a19; background-color:#df6a19;">&nbsp</span>   [공원](#parks)
+* <span style="color:#839317; background-color:#839317;">&nbsp</span>   [시골 농지](#rural-and-farmland)
+* <span style="color:#265568; background-color:#265568;">&nbsp</span>   [수역](#water)
+![town12_항공사진](../img/catalogue/maps/town12/town12roadrunner.webp#map)
 
-
-
-![town12_aerial](../img/catalogue/maps/town12/town12roadrunner.webp#map)
-
-
-__CARLA coordinates__: 
+__CARLA 좌표__:
 
 * __X__:  <span id="carlacoord_x" style="animation: fadeMe 2s;">--</span>
 * __Y__:  <span id="carlacoord_y" style="animation: fadeMe 2s;">--</span>
 
-
-After double clicking on a point of interest, the navigator will display the corresponding CARLA coordinates and update them in the following code block. Copy and paste the code into a notebook or Python terminal to translate the spectator to the desired location. You will need first to [connect the client and set up the world object](tuto_first_steps.md#launching-carla-and-connecting-the-client):
+관심 지점을 더블 클릭하면 네비게이터가 해당하는 CARLA 좌표를 표시하고 아래 코드 블록에서 업데이트합니다. 코드를 노트북이나 Python 터미널에 복사하여 원하는 위치로 관찰자를 이동할 수 있습니다. 먼저 [클라이언트를 연결하고 월드 객체를 설정](tuto_first_steps.md#launching-carla-and-connecting-the-client)해야 합니다:
 
 ```py
-# CARLA coordinates: X 0.0, Y 0.0
+# CARLA 좌표: X 0.0, Y 0.0
 spectator = world.get_spectator()
 loc = carla.Location(0.0, 0.0, 500.0)
 rot = carla.Rotation(pitch=-90, yaw=0.0, roll=0.0)
 spectator.set_transform(carla.Transform(loc, rot))
 ```
-## Town 12 zones
 
-#### High-rise downtown:
+## Town 12 구역
 
-Town 12's downtown area is a large span of high-rise skyscrapers arranged into blocks on a consistent grid of roads, resembling downtown areas in many large American and European cities.
+#### 고층 도심:
 
-![high_rise](../img/catalogue/maps/town12/high_rise.webp)
+Town 12의 도심 지역은 많은 미국과 유럽 대도시의 도심 지역과 비슷하게, 일관된 도로 격자 위에 배치된 고층 빌딩들이 넓게 펼쳐져 있습니다.
 
-#### High density residential:
+![고층건물](../img/catalogue/maps/town12/high_rise.webp)
 
-The high density residential areas of Town 12 have many 2-10 storey apartment buildings with commercial properties like cafes and retail stores at street level.
+#### 고밀도 주거지역:
 
-![high_dens_res](../img/catalogue/maps/town12/hi_dens_res.webp)
+Town 12의 고밀도 주거지역에는 1층에 카페와 소매점과 같은 상업시설이 있는 2-10층 높이의 아파트 건물이 많이 있습니다.
 
+![고밀도_주거](../img/catalogue/maps/town12/hi_dens_res.webp)
+#### 커뮤니티 건물:
 
-#### Community buildings:
+도시의 도심 지역 옆에 위치한 커뮤니티 건물들은 1층에 카페와 부티크가 있는 다채로운 보헤미안 스타일의 2-4층 아파트 건물들로 구성되어 있습니다.
 
-The community buildings are a set of 2-4 storey apartment buildings in a colorful bohemian style with cafes and boutiques on the ground floors, located next to the downtown area of the city.
+![커뮤니티](../img/catalogue/maps/town12/community.webp)
 
-![community](../img/catalogue/maps/town12/community.webp)
+#### 저밀도 주거지역:
 
-#### Low density residential:
+Town 12의 저밀도 주거지역은 많은 미국 도시의 전형적인 교외 지역을 반영하며, 울타리가 있는 정원과 차고가 있는 1층과 2층 주택들로 이루어져 있습니다.
 
-The low density residential regions of Town 12 reflect the classic suburbs of many American cities, with one and two story homes surrounded by fenced gardens and garages.
+![저밀도_주거](../img/catalogue/maps/town12/low_dens_res.webp)
 
-![low_dens_res](../img/catalogue/maps/town12/low_dens_res.webp)
+#### 공원:
 
-#### Parks:
+밀집된 주거지역과 도심 지역 사이사이에 작은 녹지 공용 공간이 있어, 도시 건축물과 녹색 수목이 대조를 이루고 있습니다.
 
-The dense residential and downtown areas are broken up by small islands of green communal space, juxtaposing green foliage against urban architecture.
+![공원](../img/catalogue/maps/town12/parks.webp)
 
-![parks](../img/catalogue/maps/town12/parks.webp)
+#### 고속도로와 교차로:
 
-#### Highways and intersections:
+Town 12는 3-4차선 고속도로와 인상적인 로터리 교차로를 포함하는 광범위한 고속도로 시스템을 갖추고 있습니다.
 
-Town 12 has an extensive highway system, including 3-4 lane highways interspersed with impressive roundabout junctions and intersections.
+![고속도로](../img/catalogue/maps/town12/highway.webp)
 
-![highway](../img/catalogue/maps/town12/highway.webp)
+#### 시골과 농지:
 
-#### Rural and farmland:
+Town 12에는 나무로 된 헛간과 농가, 풍차, 곡물 저장고, 옥수수 밭, 건초 더미, 시골 울타리 같은 전형적인 농지 건물들이 있는 시골 지역도 있습니다. 이 지역에는 표시가 없는 시골 비포장도로와 도시 간 교통을 위한 단일 차선 도시 간 도로가 있습니다.
 
-Town 12 also has rural regions with characteristic farmland buildings like wooden barns and farmhouses, windmills, grain silos, corn fields, hay bails and rural fencing. These areas have unmarked country dirt roads and single lane interurban roads for inter-city traffic.
+![시골](../img/catalogue/maps/town12/rural.webp)
 
-![rural](../img/catalogue/maps/town12/rural.webp)
+#### 수역:
 
-#### Water:
+Town 12에는 2개의 큰 호수와 여러 연못을 포함한 여러 수역이 있습니다. 도시 근처에 위치한 큰 수역들은 스카이라인의 반전된 반사를 만들어내어 자율 주행 에이전트에게 도전적인 환경을 제공합니다.
 
-There are several bodies of water in town 12 including 2 large lakes and several ponds. With some large water features located next to the city, these can produce inverted reflections of the skyline, creating challenges for autonomous driving agents. 
-
-![water](../img/catalogue/maps/town12/water.webp)
-
-<style>
-@keyframes fadeMe {
-  from {
-    color: #77aaff;
-  }
-  to {
-    color: #000000;
-  }
-}
-
-</style>
-<script>
-window.addEventListener('load', function () {
-
-    var text_coord_x = document.getElementById("carlacoord_x")
-    var text_coord_y = document.getElementById("carlacoord_y")
-    const code_coords = document.getElementsByClassName("hljs-number")
-    const code_comment = document.getElementsByClassName("hljs-comment")
-  
-    const image = document.querySelector('[src$="map"]');
-    const canv = document.createElement('canvas');
-
-    canv.setAttribute('height', image.height)
-    canv.setAttribute('width', image.width)
-    image.parentNode.replaceChild(canv, image)
-
-    var state = {mDown: false, button: 0, lastX: 0, lastY:0, canvX: 0, canvY: 0, zoom: 1.0, mdownX: 0, mdownY: 0, pX: 0.5, pY: 0.5, dblClick: false, listObj: false, touch: false}
-
-    ctx = canv.getContext('2d')
-    ctx.drawImage(image, 0, 0, canv.width, canv.height)
-
-    canv.addEventListener('mousemove', (event) => {
-        dX = event.clientX - state.lastX
-        dY = event.clientY - state.lastY
-        state.lastX = event.clientX
-        state.lastY = event.clientY
-
-        if(state.mDown && state.button == 0) {
-            state.canvX += dX
-            state.canvY += dY
-            ctx.clearRect(0, 0, canv.width, canv.height)
-            ctx.drawImage(image,  state.canvX, state.canvY, canv.width * state.zoom, canv.height * state.zoom)
-            state.touch = true;
-        }
-    })
-
-    canv.addEventListener('mousedown', (event) => {
-
-        state.button = event.button;
-        state.mDown = true;
-        state.touch = true;
-
-        var rect = canv.getBoundingClientRect();
-            
-        state.mdownX = event.clientX - rect.left;
-        state.mdownY = event.clientY - rect.top;
-
-        state.pX = (state.mdownX - state.canvX) / (canv.width * state.zoom);
-        state.pY = (state.mdownY - state.canvY) / (canv.height * state.zoom);
-    })
-
-    canv.addEventListener('mouseup', (event) => {
-        state.mDown = false;
-    })
-
-    canv.addEventListener('wheel', (event) => {
-        
-        state.mDown = false;
-
-        var rect = canv.getBoundingClientRect();
-
-        dX = event.clientX - rect.left;
-        dY = event.clientY - rect.top;
-
-        state.pX = (dX - state.canvX) / (canv.width * state.zoom);
-        state.pY = (dY - state.canvY) / (canv.height * state.zoom);
-
-        if(state.touch){
-            event.preventDefault();
-            if(event.wheelDelta > 0){
-                state.zoom *= 1.15 
-            } else {
-               state.zoom *= 0.85
-            }
-
-            if(state.zoom < 1.0){state.zoom = 1.0;}
-            if(state.zoom > 30.0){state.zoom = 30.0}
-
-            ctx.clearRect(0, 0, canv.width, canv.height)
-
-            state.canvX = - canv.width * state.zoom * state.pX + dX;
-            state.canvY = - canv.height * state.zoom * state.pY + dY;
-
-            ctx.drawImage(image,  state.canvX, state.canvY, canv.width * state.zoom, canv.height * state.zoom);
-        }
-        
-    })
-
-    canv.addEventListener('dblclick', (event) => {
-        
-        text_coord_x = document.getElementById("carlacoord_x")
-        text_coord_y = document.getElementById("carlacoord_y")
-
-        const carlaX = 10482.4274 * state.pX + -5.39801455 * state.pY - 5673.07949;
-        const carlaY = 5.39801455 * state.pX + 10482.4274 * state.pY - 2885.15738;
-
-        code_coords[0].textContent = carlaX.toFixed(1)
-        code_coords[1].textContent = carlaY.toFixed(1)
-        code_comment[0].textContent = "# CARLA coordinates - X: " + carlaX.toFixed(1) + " Y: " + carlaY.toFixed(1)
-
-        var newX = text_coord_x.cloneNode(true)
-        var newY = text_coord_y.cloneNode(true)
-
-        newX.textContent = carlaX.toFixed(1)
-        newY.textContent = carlaY.toFixed(1)
-
-        var parentX = text_coord_x.parentNode
-        var parentY = text_coord_y.parentNode
-
-        parentX.replaceChild(newX, text_coord_x);
-        parentY.replaceChild(newY, text_coord_y);
-
-        //console.log(state.pX + ", " + state.pY)
-
-    })
-
-})
-</script>
-
+![수역](../img/catalogue/maps/town12/water.webp)

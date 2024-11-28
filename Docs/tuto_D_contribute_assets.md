@@ -1,23 +1,15 @@
-# How to upgrade content
+# 컨텐츠 업그레이드 방법
 
-Our content resides on a separate [Git LFS repository][contentrepolink]. As part
-of our build system, we generate and upload a package containing the latest
-version of this content tagged with the current date and commit. Regularly, we
-upgrade the [CARLA repository][carlarepolink] with a link to the latest version
-of the content package. This document contains the manual steps necessary to
-update this link to the latest version.
+우리의 컨텐츠는 별도의 [Git LFS 저장소][contentrepolink]에 있습니다. 빌드 시스템의 일부로, 현재 날짜와 커밋으로 태그된 최신 버전의 컨텐츠가 포함된 패키지를 생성하고 업로드합니다. 정기적으로 [CARLA 저장소][carlarepolink]를 최신 버전의 컨텐츠 패키지 링크로 업그레이드합니다. 이 문서에는 이 링크를 최신 버전으로 업데이트하는 데 필요한 수동 단계가 포함되어 있습니다.
 
-1. **Copy the tag of the content package you wish to link.**<br>
-   This tag can be found by looking at the package name generated in the
-   artifacts section of the latest [Jenkins build][jenkinslink], e.g.,
-   `20190617_086f97f.tar.gz`.
+1. **연결하고자 하는 컨텐츠 패키지의 태그를 복사합니다.**<br>
+   이 태그는 최신 [Jenkins 빌드][jenkinslink]의 아티팩트 섹션에서 생성된 패키지 이름에서 찾을 수 있습니다(예: `20190617_086f97f.tar.gz`).
 
-2. **Paste the tag in ContentVersions.txt.**<br>
-   [Edit ContentVersions.txt][cvlink] by pasting the tag at the end of the file,
-   e.g. `Latest: 20190617_086f97f` (without the `.tar.gz` part).
+2. **ContentVersions.txt에 태그를 붙여넣습니다.**<br>
+   [ContentVersions.txt 편집][cvlink]에서 파일 끝에 태그를 붙여넣습니다(예: `Latest: 20190617_086f97f`, `.tar.gz` 부분은 제외).
 
-3. **Open a Pull Request.**<br>
-   Commit the changes and open a new Pull Request.
+3. **Pull Request를 엽니다.**<br>
+   변경 사항을 커밋하고 새 Pull Request를 엽니다.
 
 [contentrepolink]: https://bitbucket.org/carla-simulator/carla-content
 [carlarepolink]: https://github.com/carla-simulator/carla

@@ -1,26 +1,25 @@
 # Town 1
 
-![town_01_slideshow](../img/catalogue/maps/town01/town01_panorama.webp)
+![town_01_슬라이드쇼](../img/catalogue/maps/town01/town01_panorama.webp)
 
-Town 1 is a small town with numerous T-junctions and a variety of buildings, surrounded by coniferous trees and featuring several small bridges spanning across a river that divides the town into 2 halves.
+Town 1은 수많은 T자형 교차로와 다양한 건물들이 있는 작은 마을입니다. 마을을 둘러싼 침엽수림이 있으며, 마을을 반으로 가르는 강을 가로지르는 여러 개의 작은 다리가 특징입니다.
 
-## Road network
+## 도로망
 
-The road network presents several bridges crossing water and numerous simple T junctions.
+도로망에는 수로를 건너는 여러 다리와 많은 단순 T자형 교차로가 있습니다.
 
-![town_01_aerial](../img/catalogue/maps/town01/town01aerial.webp)
+![town_01_항공사진](../img/catalogue/maps/town01/town01aerial.webp)
 
-## Features
+## 특징
 
-The map features a small river with several crossings. 
+이 맵은 여러 개의 횡단 지점이 있는 작은 강이 특징입니다.
 
-![town_01_bridge](../img/catalogue/maps/town01/town01_bridge.webp)
+![town_01_다리](../img/catalogue/maps/town01/town01_bridge.webp)
 
+다수의 상업용 스타일 건물들이 있습니다.
 
-There are numerous commercial style buildings.
+![town_01_건물들](../img/catalogue/maps/town01/town01_commercial_buildings.webp)
 
-![town_01_buildings](../img/catalogue/maps/town01/town01_commercial_buildings.webp)
+주거용 건물들도 있습니다.
 
-There are also residential buildings.
-
-![town_01_residential](../img/catalogue/maps/town01/town01_residential_buildings.webp)
+![town_01_주거지역](../img/catalogue/maps/town01/town01_residential_buildings.webp)

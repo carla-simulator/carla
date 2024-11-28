@@ -1,29 +1,29 @@
 # Town 4
 
-![town_04_slideshow](../img/catalogue/maps/town04/town04_overhead.webp)
+![town_04_슬라이드쇼](../img/catalogue/maps/town04/town04_overhead.webp)
 
-Town 4 is a small town with a backdrop of snow-capped mountains and conifers. A multi-lane road circumnavigates the town in a "figure of 8".   
+Town 4는 눈 덮인 산맥과 침엽수를 배경으로 하는 작은 마을입니다. 여러 차선으로 된 도로가 "8자 형태"로 마을을 둘러싸고 있습니다.
 
-## Road network
+## 도로망
 
-The road network consists of a small network of short streets and junctions nested in between commercial and residential buildings, with a "figure of 8" style ringroad circumnavigating the buildings and a nearby mountain. The cross of the figure of 8 presents an underpass/overpass and circular slip roads. 
+도로망은 상업용과 주거용 건물들 사이에 위치한 짧은 거리와 교차로들의 작은 네트워크로 구성되어 있으며, "8자 형태"의 순환도로가 건물들과 인근 산을 둘러싸고 있습니다. 8자가 교차하는 지점에는 지하도/고가도로와 원형 진입로가 있습니다.
 
-![town_04_aerial](../img/catalogue/maps/town04/town04aerial.webp)
+![town_04_항공사진](../img/catalogue/maps/town04/town04aerial.webp)
 
-The network also features an underpass and overpass with circular slip roads.
+또한 이 네트워크에는 원형 진입로가 있는 지하도와 고가도로가 있습니다.
 
-![town_04_overpass](../img/catalogue/maps/town04/town04_overpass.webp)
+![town_04_고가도로](../img/catalogue/maps/town04/town04_overpass.webp)
 
-## Features
+## 특징
 
-There is a gas station set against the mountainous backdrop.
+산악 배경을 배경으로 주유소가 자리잡고 있습니다.
 
-![town_04_gas_station](../img/catalogue/maps/town04/town04_gas.webp)
+![town_04_주유소](../img/catalogue/maps/town04/town04_gas.webp)
 
-In the middle of the town is a pedestrian shopping arcade with outdoor seating.
+마을 중심부에는 야외 좌석이 있는 보행자 쇼핑 아케이드가 있습니다.
 
-![town_04_arcade](../img/catalogue/maps/town04/town04_arcade.webp)
+![town_04_아케이드](../img/catalogue/maps/town04/town04_arcade.webp)
 
-There are various styles of residential and commercial buildings and streets including trees and billboards.
+나무와 광고판이 있는 거리를 포함하여 다양한 스타일의 주거용 및 상업용 건물과 거리가 있습니다.
 
-![town_04_streets](../img/catalogue/maps/town04/town04_streets.webp)
+![town_04_거리](../img/catalogue/maps/town04/town04_streets.webp)
