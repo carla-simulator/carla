@@ -713,6 +713,9 @@ void ASceneCaptureSensor::BeginPlay()
   UpdatePostProcessConfig(PostProcessConfig);
   CaptureComponent2D->ShowFlags = PostProcessConfig.EngineShowFlags;
   CaptureComponent2D->PostProcessSettings = PostProcessConfig.PostProcessSettings;
+
+  if (ImageWidth < 1920 || ImageHeight < 1080)
+    CaptureComponent2D->ShowFlags.SetMotionBlur(false);
   
   // This ensures the camera is always spawning the raindrops in case the
   // weather was previously set to have rain.
