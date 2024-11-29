@@ -7,6 +7,7 @@
 #include "Carla/Sensor/RayCastSemanticLidar.h"
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Game/Tagger.h"
 
 #include <util/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
@@ -216,7 +217,7 @@ void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const
 
     const AActor* actor = HitInfo.GetActor();
     Detection.object_idx = 0;
-    Detection.object_tag = static_cast<uint32_t>(HitInfo.Component->CustomDepthStencilValue);
+    Detection.object_tag = static_cast<uint32_t>(ATagger::GetTagFromString(HitInfo.Component->ComponentTags[0].ToString()));
 
     if (actor != nullptr) {
 
