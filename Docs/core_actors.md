@@ -42,7 +42,7 @@ vehicle_bp = random.choice(blueprint_library.filter('vehicle.*.*'))
 Besides that, each [carla.ActorBlueprint](python_api.md#carla.ActorBlueprint) has a series of [carla.ActorAttribute](python_api.md#carla.ActorAttribute) that can be _get_ and _set_.
 ```py
 is_bike = [vehicle.get_attribute('number_of_wheels') == 2]
-if(is_bike)
+if is_bike:
     vehicle.set_attribute('color', '255,0,0')
 ```
 !!! Note
