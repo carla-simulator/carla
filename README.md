@@ -1,13 +1,14 @@
 CARLA Simulator
 ===============
 
-[![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io)
+[![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io) 
 
 [![carla.org](Docs/img/btn/web.png)](http://carla.org)
 [![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/blob/master/Docs/download.md)
 [![documentation](Docs/img/btn/docs.png)](http://carla.readthedocs.io)
 [![forum](Docs/img/btn/forum.png)](https://github.com/carla-simulator/carla/discussions)
 [![discord](Docs/img/btn/chat.png)](https://discord.gg/8kqACuC)
+[![Gurubase](https://img.shields.io/badge/Gurubase-Ask%20CARLA%20Simulator%20Guru-006BFF)](https://gurubase.io/g/carla-simulator)
 
 CARLA is an open-source simulator for autonomous driving research. CARLA has been developed from the ground up to support development, training, and
 validation of autonomous driving systems. In addition to open-source code and protocols, CARLA provides open digital assets (urban layouts, buildings,
