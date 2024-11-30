@@ -1,54 +1,65 @@
-CARLA Simulator
+# CARLA 시뮬레이터
 ===============
 
-Thanks for downloading CARLA!
+CARLA를 다운로드해주셔서 감사합니다!  
+[공식 웹사이트](http://carla.org/)
 
-<http://carla.org/>
+---
 
-How to run CARLA
-----------------
+## CARLA 실행 방법
 
-Launch a terminal in this folder and execute the simulator by running
+### 1. 시뮬레이터 시작
+
+이 폴더에서 터미널을 열고 아래 명령어를 실행하여 시뮬레이터를 시작합니다.
 
 ```sh
- ./CarlaUE4.sh
+./CarlaUE4.sh
 ```
 
-this will launch a window with a view over the city. This is the "spectator"
-view, you can fly around the city using the mouse and WASD keys, but you cannot
-interact with the world in this view. The simulator is now running as a server,
-waiting for a client app to connect and interact with the world.
+실행 후 도시를 조망하는 창이 열립니다. 이 화면은 "관전 모드"로, 마우스와 WASD 키를 사용해 도시를 둘러볼 수 있지만, 이 모드에서는 월드와 상호작용할 수 없습니다.  
+현재 시뮬레이터는 서버로 실행 중이며, 클라이언트 앱이 연결되어 월드와 상호작용하기를 기다리고 있습니다.
 
-Let's start by adding some live to the city, open a new terminal window and
-execute
+---
+
+### 2. 교통 추가
+
+도시에 생동감을 더해보겠습니다. 새 터미널 창을 열고 아래 명령어를 실행하세요.
 
 ```sh
 ./generate_traffic.py -n 80
 ```
 
-This adds 80 vehicles to the world driving in "autopilot" mode. Back to the
-simulator window we should see these vehicles driving around the city. They will
-keep driving randomly until we stop the script. Let's leave them there for now.
+이 명령어는 80대의 차량을 "자동 운전" 모드로 월드에 추가합니다. 시뮬레이터 창으로 돌아가면 차량들이 도시를 주행하는 모습을 볼 수 있습니다.  
+이 차량들은 스크립트를 중단할 때까지 랜덤하게 계속 주행합니다. 지금은 그대로 두겠습니다.
 
-Now, it's nice and sunny in CARLA, but that's not a very interesting driving
-condition. One of the cool features of CARLA is that you can control the weather
-and lighting conditions of the world. We'll launch now a script that dynamically
-controls the weather and time of the day, open yet another terminal window and
-execute
+---
+
+### 3. 동적 날씨 제어
+
+현재 CARLA는 맑은 날씨지만, 흥미로운 운전 조건을 만들기 위해 날씨와 조명 상태를 조작해보겠습니다.  
+새 터미널 창을 열고 다음 명령어를 실행하세요.
 
 ```sh
 ./dynamic_weather.py
 ```
 
-The city is now ready for us to drive, we can finally run
+이제 날씨와 시간대가 동적으로 변하는 도시가 준비되었습니다.
+
+---
+
+### 4. 차량 수동 제어
+
+마지막으로 차량을 직접 운전해보겠습니다. 새 터미널 창에서 아래 명령어를 실행하세요.
 
 ```sh
 ./manual_control.py
 ```
 
-This should open a new window with a 3rd person view of a car, you can drive
-this car with the WASD/arrow keys. Press 'h' to see all the options available.
+이 명령어는 차량의 3인칭 뷰 창을 열며, WASD 또는 화살표 키를 사용해 차량을 운전할 수 있습니다.  
+운전 중 옵션을 확인하려면 'h' 키를 눌러보세요.
 
-For more details and running options please refer to our online documentation
+---
 
-<http://carla.readthedocs.io>
+## 추가 정보
+
+더 많은 세부 사항과 실행 옵션은 [온라인 문서](http://carla.readthedocs.io)를 참고하세요.

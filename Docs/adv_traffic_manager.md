@@ -1,295 +1,279 @@
 # Traffic Manager
 
-- [__What is the Traffic Manager?__](#what-is-the-traffic-manager)
-	- [Structured design](#structured-design)
-	- [User customization](#user-customization)
-- [__Architecture__](#architecture)
-	- [Overview](#overview)
-	- [ALSM](#alsm)
-	- [Vehicle registry](#vehicle-registry)
-	- [Simulation state](#simulation-state)
-	- [Control loop](#control-loop)
-	- [In-Memory Map](#in-memory-map)
-	- [PBVT](#pbvt)
-	- [PID controller](#pid-controller)
-	- [Command array](#command-array)
-	- [Stages of the Control Loop](#stages-of-the-control-loop)
-- [__Using the Traffic Manager__](#using-the-traffic-manager)
-	- [Vehicle behavior considerations](#vehicle-behavior-considerations)
-	- [Creating a Traffic Manager](#creating-a-traffic-manager)
-	- [Configuring autopilot behavior](#configuring-autopilot-behavior)
-	- [Stopping a Traffic Manager](#stopping-a-traffic-manager)
-- [__Deterministic mode__](#deterministic-mode)
-- [__Hybrid physics mode__](#hybrid-physics-mode)
-- [__Running multiple Traffic Managers__](#running-multiple-traffic-managers)
-	- [Traffic Manager servers and clients](#traffic-manager-servers-and-clients)
-	- [Multi-client simulations](#multi-client-simulations)
-	- [Multi-TM simulations](#multi-tm-simulations)
-	- [Multi-simulation](#multi-simulation)
-- [__Synchronous mode__](#synchronous-mode)
-- [__Traffic manager in large maps__](#traffic-manager-in-large-maps)
+- [__Traffic Manager란?__](#traffic-manager란)
+    - [구조적 설계](#구조적-설계)
+    - [사용자 커스터마이징](#사용자-커스터마이징)
+- [__아키텍처__](#아키텍처)
+    - [개요](#개요)
+    - [ALSM](#alsm)
+    - [차량 레지스트리](#차량-레지스트리)
+    - [시뮬레이션 상태](#시뮬레이션-상태)
+    - [제어 루프](#제어-루프)
+    - [인메모리 맵](#인메모리-맵)
+    - [PBVT](#pbvt)
+    - [PID 컨트롤러](#pid-컨트롤러)
+    - [명령어 배열](#명령어-배열)
+    - [제어 루프의 단계들](#제어-루프의-단계들)
+- [__Traffic Manager 사용하기__](#traffic-manager-사용하기)
+    - [차량 행동 고려사항](#차량-행동-고려사항)
+    - [Traffic Manager 생성](#traffic-manager-생성)
+    - [자동조종 동작 설정](#자동조종-동작-설정)
+    - [Traffic Manager 중지](#traffic-manager-중지)
 
 ---
-## What is the Traffic Manager?
+## Traffic Manager란?
 
-The Traffic Manager (TM) is the module that controls vehicles in autopilot mode in a simulation. Its goal is to populate a simulation with realistic urban traffic conditions. Users can customize some behaviors, for example, to set specific learning circumstances.
+Traffic Manager(TM)는 시뮬레이션에서 자동조종 모드의 차량을 제어하는 모듈입니다. 이의 목표는 시뮬레이션에 현실적인 도시 교통 상황을 구현하는 것입니다. 사용자는 특정 학습 상황을 설정하는 등 일부 동작을 커스터마이즈할 수 있습니다.
 
-### Structured design
+### 구조적 설계
 
-TM is built on CARLA's client-side. The execution flow is divided into __stages__, each with independent operations and goals. This facilitates the development of phase-related functionalities and data structures while improving computational efficiency. Each stage runs on a different thread. Communication with other stages is managed through synchronous messaging. Information flows in one direction.
+TM은 CARLA의 클라이언트 측에 구축되어 있습니다. 실행 흐름은 각각 독립적인 작업과 목표를 가진 **단계들**로 나뉩니다. 이는 단계 관련 기능과 데이터 구조의 개발을 용이하게 하면서 계산 효율성을 향상시킵니다. 각 단계는 다른 스레드에서 실행됩니다. 다른 단계와의 통신은 동기식 메시징을 통해 관리됩니다. 정보는 한 방향으로 흐릅니다.
 
-### User customization
-Users have some control over the traffic flow by setting parameters that allow, force, or encourage specific behaviors. Users can change the traffic behavior as they prefer, both online and offline. For example, cars can be allowed to ignore the speed limits or force a lane change. Being able to play around with behaviors is indispensable when trying to simulate reality. Driving systems need to be trained under specific and atypical circumstances.
+### 사용자 커스터마이징
 
+사용자는 특정 동작을 허용, 강제 또는 장려하는 매개변수를 설정하여 교통 흐름을 어느 정도 제어할 수 있습니다. 사용자는 자신이 선호하는 대로 교통 동작을 온라인과 오프라인 모두에서 변경할 수 있습니다. 예를 들어, 차량이 속도 제한을 무시하도록 허용하거나 차선 변경을 강제할 수 있습니다. 현실을 시뮬레이션하려고 할 때 동작을 조정할 수 있다는 점은 필수적입니다. 운전 시스템은 특정하고 비정형적인 상황에서 훈련되어야 합니다.
 ---
-## Architecture
+## 아키텍처
 
-### Overview
+### 개요
 
-![Architecture](img/tm_2_architecture.jpg)
+![아키텍처](img/tm_2_architecture.jpg)
 
-The above diagram is a representation of the internal architecture of the TM. The C++ code for each component can be found in `LibCarla/source/carla/trafficmanager`. Each component is explained in detail in the following sections. A simplified overview of the logic is as follows: 
+위의 다이어그램은 TM의 내부 아키텍처를 나타낸 것입니다. 각 구성 요소의 C++ 코드는 `LibCarla/source/carla/trafficmanager`에서 찾을 수 있습니다. 각 구성 요소는 다음 섹션에서 자세히 설명됩니다. 로직의 단순화된 개요는 다음과 같습니다:
 
-__1. Store and update the current state of the simulation.__
+__1. 시뮬레이션의 현재 상태를 저장하고 업데이트합니다.__
 
-- The [Agent Lifecycle & State Management](#alsm) (ALSM) scans the world to keep track of all the vehicles and walkers present and to clean up entries for those that no longer exist. All the data is retrieved from the server and is passed through several [stages](#stages-of-the-control-loop). The ALSM is the only component that makes calls to the server.
-- The [vehicle registry](#vehicle-registry) contains an array of vehicles on autopilot (controlled by the TM) and a list of pedestrians and vehicles not on autopilot (not controlled by the TM).
-- The [simulation state](#simulation-state) is a cache store of the position, velocity, and additional information of all the vehicles and pedestrians in the simulation.
+- [에이전트 수명 주기 및 상태 관리](#alsm)(ALSM)는 월드를 스캔하여 존재하는 모든 차량과 보행자를 추적하고 더 이상 존재하지 않는 항목에 대한 항목을 정리합니다. 모든 데이터는 서버에서 검색되어 여러 [단계](#제어-루프의-단계들)를 거칩니다. ALSM은 서버에 호출을 하는 유일한 구성 요소입니다.
+- [차량 레지스트리](#차량-레지스트리)는 자동조종 상태의 차량(TM이 제어하는)의 배열과 자동조종이 아닌 보행자와 차량(TM이 제어하지 않는)의 목록을 포함합니다.
+- [시뮬레이션 상태](#시뮬레이션-상태)는 시뮬레이션의 모든 차량과 보행자의 위치, 속도 및 추가 정보를 캐시 저장합니다.
 
-__2. Calculate the movement of every autopilot vehicle.__
+__2. 모든 자동조종 차량의 이동을 계산합니다.__
 
-The TM generates viable commands for all vehicles in the [vehicle registry](#vehicle-registry) according to the [simulation state](#simulation-state). Calculations for each vehicle are done separately. These calculations are divided into different [stages](#stages-of-the-control-loop). The [control loop](#control-loop) makes sure that all calculations are consistent by creating __synchronization barriers__ between stages. No vehicle moves to the next stage before calculations are finished for all vehicles in the current stage. Each vehicle goes through the following stages:
+TM은 [시뮬레이션 상태](#시뮬레이션-상태)에 따라 [차량 레지스트리](#차량-레지스트리)의 모든 차량에 대한 실행 가능한 명령을 생성합니다. 각 차량에 대한 계산은 별도로 수행됩니다. 이러한 계산은 서로 다른 [단계](#제어-루프의-단계들)로 나뉩니다. [제어 루프](#제어-루프)는 단계 사이에 **동기화 장벽**을 만들어 모든 계산이 일관되도록 합니다. 현재 단계의 모든 차량에 대한 계산이 완료되기 전에는 어떤 차량도 다음 단계로 이동하지 않습니다. 각 차량은 다음 단계를 거칩니다:
 
->__2.1 - [Localization Stage](#stage-1-localization-stage).__
+>__2.1 - [위치 파악 단계](#단계-1-위치-파악-단계).__
 
->Paths are created dynamically using a list of nearby waypoints collected from the [In-Memory Map](#in-memory-map), a simplification of the simulation map as a grid of waypoints. Directions at junctions are chosen randomly. Each vehicle's path is stored and maintained by the [Path Buffers & Vehicle Tracking](#pbvt) (PBVT) component for easy access and modification in future stages.
+>[인메모리 맵](#인메모리-맵)에서 수집된 근처 웨이포인트 목록을 사용하여 경로가 동적으로 생성됩니다. 이는 시뮬레이션 맵을 웨이포인트 그리드로 단순화한 것입니다. 교차로에서의 방향은 무작위로 선택됩니다. 각 차량의 경로는 [경로 버퍼 및 차량 추적](#pbvt)(PBVT) 구성 요소에 저장되고 유지되어 향후 단계에서 쉽게 접근하고 수정할 수 있습니다.
 
->__2.2 - [Collision Stage](#stage-2-collision-stage).__
+>__2.2 - [충돌 단계](#단계-2-충돌-단계).__
 
->Bounding boxes are extended over each vehicle's path to identify and navigate potential collision hazards.
+>각 차량의 경로 위에 경계 상자를 확장하여 잠재적인 충돌 위험을 식별하고 회피합니다.
 
->__2.3 - [Traffic Light Stage](#stage-3-traffic-light-stage).__
+>__2.3 - [신호등 단계](#단계-3-신호등-단계).__
 
->Similar to the Collision Stage, potential hazards that affect each vehicle's path due to traffic light influence, stop signs, and junction priority are identified.
+>충돌 단계와 유사하게, 신호등, 정지 표지판, 교차로 우선순위로 인해 각 차량의 경로에 영향을 미치는 잠재적 위험을 식별합니다.
 
->__2.4 - [Motion Planner Stage](#stage-4-motion-planner-stage).__
+>__2.4 - [모션 플래너 단계](#단계-4-모션-플래너-단계).__
 
->Vehicle movement is computed based on the defined path. A [PID controller](#pid-controller) determines how to reach the target waypoints. This is then translated into a CARLA command for application in the next step.
+>정의된 경로에 따라 차량 이동을 계산합니다. [PID 컨트롤러](#pid-컨트롤러)가 목표 웨이포인트에 도달하는 방법을 결정합니다. 이는 다음 단계에서 적용할 CARLA 명령으로 변환됩니다.
 
->__2.5 - [Vehicle Lights Stage](#stage-5-vehicle-lights-stage).__
+>__2.5 - [차량 조명 단계](#단계-5-차량-조명-단계).__
 
-> The vehicle lights switch on/off dynamically based on environmental factors (e.g. sunlight and the presence of fog or rain) and vehicle behavior (e.g. turning on direction indicators if the vehicle will turn left/right at the next junction, or turn on the stop lights if braking).
+>환경 요인(예: 햇빛과 안개 또는 비의 존재)과 차량 동작(예: 다음 교차로에서 좌/우회전할 경우 방향 지시등을 켜거나 제동 시 정지등을 켜는 등)에 따라 차량 조명이 동적으로 켜지거나 꺼집니다.
 
+__3. 시뮬레이션에 명령을 적용합니다.__
 
-__3. Apply the commands in the simulation.__
+이전 단계에서 생성된 명령은 [명령어 배열](#명령어-배열)에 수집되어 동일한 프레임에 적용되도록 CARLA 서버로 일괄 전송됩니다.
 
-Commands generated in the previous step are collected into the [command array](#command-array) and sent to the CARLA server in a batch to be applied in the same frame.
-
-The following sections will explain each component and stage in the TM logic described above in more detail.
-
+다음 섹션에서는 위에서 설명한 TM 로직의 각 구성 요소와 단계를 더 자세히 설명합니다.
 ### ALSM
 
-ALSM stands for __Agent Lifecycle and State Management__. It is the first step in the TM logic cycle and provides context of the simulation's current state.
+ALSM은 __Agent Lifecycle and State Management__(에이전트 수명 주기 및 상태 관리)의 약자입니다. 이는 TM 로직 사이클의 첫 번째 단계이며 시뮬레이션의 현재 상태에 대한 맥락을 제공합니다.
 
-The ALSM component:
+ALSM 구성 요소는:
 
-- Scans the world to keep track of all vehicles and pedestrians, their positions and velocities. If physics are enabled, the velocity is retrieved by [Vehicle.get_velocity()](python_api.md#carla.Vehicle). Otherwise, the velocity is calculated using the history of position updates over time.
-- Stores the position, velocity, and additional information (traffic light influence, bounding boxes, etc) of every vehicle and pedestrian in the [simulation state](#simulation-state) component.
-- Updates the list of TM-controlled vehicles in the [vehicle registry](#vehicle-registry).
-- Updates entries in the [control loop](#control-loop) and [PBVT](#pbvt) components to match the vehicle registry.
+- 월드를 스캔하여 모든 차량과 보행자, 그들의 위치와 속도를 추적합니다. 물리가 활성화된 경우 속도는 [Vehicle.get_velocity()](python_api.md#carla.Vehicle)를 통해 검색됩니다. 그렇지 않으면 시간에 따른 위치 업데이트 기록을 사용하여 속도가 계산됩니다.
+- 모든 차량과 보행자의 위치, 속도 및 추가 정보(신호등 영향, 경계 상자 등)를 [시뮬레이션 상태](#시뮬레이션-상태) 구성 요소에 저장합니다.
+- [차량 레지스트리](#차량-레지스트리)에서 TM이 제어하는 차량 목록을 업데이트합니다.
+- [제어 루프](#제어-루프)와 [PBVT](#pbvt) 구성 요소의 항목을 차량 레지스트리와 일치하도록 업데이트합니다.
 
-__Related .cpp files:__ `ALSM.h`, `ALSM.cpp`.
+__관련 .cpp 파일:__ `ALSM.h`, `ALSM.cpp`.
 
-### Vehicle registry
+### 차량 레지스트리
 
-The vehicle registry keeps track of all vehicles and pedestrians in the simulation.
+차량 레지스트리는 시뮬레이션의 모든 차량과 보행자를 추적합니다.
 
-The vehicle registry:
+차량 레지스트리는:
 
-- Is passed an updated list of vehicles and pedestrians from the [ALSM](#alsm).
-- Stores vehicles registered to the TM in a separate array for iteration during the [control loop](#control-loop).
+- [ALSM](#alsm)으로부터 업데이트된 차량 및 보행자 목록을 전달받습니다.
+- TM에 등록된 차량을 [제어 루프](#제어-루프) 동안 반복할 수 있도록 별도의 배열에 저장합니다.
 
-__Related .cpp files:__ `MotionPlannerStage.cpp`.
+__관련 .cpp 파일:__ `MotionPlannerStage.cpp`.
 
-### Simulation state
+### 시뮬레이션 상태
 
-The simulation state stores information about all vehicles in the simulation for easy access and modification in later stages.
+시뮬레이션 상태는 나중 단계에서 쉽게 접근하고 수정할 수 있도록 시뮬레이션의 모든 차량에 대한 정보를 저장합니다.
 
-The simulation state:
+시뮬레이션 상태는:
 
-- Receives data from the [ALSM](#alsm) including current actor position, velocity, traffic light influence, traffic light state, etc.
-- Stores all information in cache, avoiding subsequent calls to the server during the [control loop](#control-loop).
+- [ALSM](#alsm)으로부터 현재 액터 위치, 속도, 신호등 영향, 신호등 상태 등을 포함한 데이터를 받습니다.
+- [제어 루프](#제어-루프) 동안 서버에 추가 호출을 하지 않도록 모든 정보를 캐시에 저장합니다.
 
-__Related .cpp files:__ `SimulationState.cpp`, `SimulationState.h`.
+__관련 .cpp 파일:__ `SimulationState.cpp`, `SimulationState.h`.
 
-### Control loop
+### 제어 루프
 
-The control loop manages the calculations of the next command for all autopilot vehicles so they are performed synchronously. The control loop consists of five different [stages](#stages-of-the-control-loop); localization, collision, traffic light, motion planner and vehicle lights.
+제어 루프는 모든 자동조종 차량의 다음 명령 계산이 동기적으로 수행되도록 관리합니다. 제어 루프는 위치 파악, 충돌, 신호등, 모션 플래너, 차량 조명의 다섯 가지 서로 다른 [단계](#제어-루프의-단계들)로 구성됩니다.
 
-The control loop:
+제어 루프는:
 
-- Receives an array of TM-controlled vehicles from the [vehicle registry](#vehicle-registry).
-- Performs calculations for each vehicle separately by looping over the array.
-- Divides calculations into a series of [stages](#stages-of-the-control-loop).
-- Creates synchronization barriers between stages to guarantee consistency. Calculations for all vehicles are finished before any of them move to the next stage, ensuring all vehicles are updated in the same frame.
-- Coordinates the transition between [stages](#stages-of-the-control-loop) so all calculations are done in sync.
-- Sends the [command array](#command-array) to the server when the last stages ([Motion Planner Stage](#stage-4-motion-planner-stage) and [Vehicle Lights Stage](#stage-5-vehicle-lights-stage)) finishes so there are no frame delays between the command calculations and the command application.
+- [차량 레지스트리](#차량-레지스트리)로부터 TM이 제어하는 차량의 배열을 받습니다.
+- 배열을 반복하여 각 차량에 대해 별도로 계산을 수행합니다.
+- 계산을 일련의 [단계들](#제어-루프의-단계들)로 나눕니다.
+- 일관성을 보장하기 위해 단계 사이에 동기화 장벽을 만듭니다. 모든 차량의 계산이 완료되기 전에는 다음 단계로 넘어가지 않으므로, 모든 차량이 동일한 프레임에서 업데이트됩니다.
+- 모든 계산이 동기적으로 수행되도록 [단계](#제어-루프의-단계들) 간의 전환을 조정합니다.
+- 마지막 단계들([모션 플래너 단계](#단계-4-모션-플래너-단계)와 [차량 조명 단계](#단계-5-차량-조명-단계))이 완료되면 명령 계산과 명령 적용 사이에 프레임 지연이 없도록 [명령어 배열](#명령어-배열)을 서버로 보냅니다.
 
-__Related .cpp files:__ `TrafficManagerLocal.cpp`.
+__관련 .cpp 파일:__ `TrafficManagerLocal.cpp`.
+### 인메모리 맵
 
-### In-Memory Map
+인메모리 맵은 [PBVT](#pbvt) 내에 포함된 헬퍼 모듈이며 [위치 파악 단계](#단계-1-위치-파악-단계) 동안 사용됩니다.
 
-The In-Memory Map is a helper module contained within the [PBVT](#pbvt) and is used during the [Localization Stage](#stage-1-localization-stage).  
+인메모리 맵은:
 
-The In-Memory Map:
+- 맵을 이산적인 웨이포인트의 그리드로 변환합니다.
+- 웨이포인트를 연결하고 도로, 교차로 등을 식별하기 위한 더 많은 정보가 포함된 특정 데이터 구조에 웨이포인트를 포함합니다.
+- 근처 영역의 차량을 빠르게 찾는 데 사용되는 ID로 이러한 구조를 식별합니다.
 
-- Converts the map into a grid of discrete waypoints.
-- Includes waypoints in a specific data structure with more information to connect waypoints and identify roads, junctions, etc.
-- Identifies these structures with an ID used to locate vehicles in nearby areas quickly.
-
-__Related .cpp files:__ `InMemoryMap.cpp` and `SimpleWaypoint.cpp`.
+__관련 .cpp 파일:__ `InMemoryMap.cpp`와 `SimpleWaypoint.cpp`.
 
 ### PBVT
 
-PBVT stands for __Path Buffer and Vehicle Tracking__. The PBVT is a data structure that contains the expected path for every vehicle and allows easy access to data during the [control loop](#control-loop).
+PBVT는 __Path Buffer and Vehicle Tracking__(경로 버퍼 및 차량 추적)의 약자입니다. PBVT는 모든 차량의 예상 경로를 포함하는 데이터 구조이며 [제어 루프](#제어-루프) 동안 데이터에 쉽게 접근할 수 있게 합니다.
 
-The PBVT:
+PBVT는:
 
-- Contains a map of deque objects with one entry per vehicle.
-- Contains a set of waypoints for each vehicle describing its current location and near-future path.
-- Contains the [In-Memory Map](#in-memory-map) used by the [Localization Stage](#stage-1-localization-stage) to relate every vehicle to the nearest waypoint and possible overlapping paths.
+- 차량당 하나의 항목이 있는 데크(deque) 객체의 맵을 포함합니다.
+- 각 차량의 현재 위치와 가까운 미래의 경로를 설명하는 웨이포인트 세트를 포함합니다.
+- [위치 파악 단계](#단계-1-위치-파악-단계)에서 모든 차량을 가장 가까운 웨이포인트와 가능한 겹치는 경로에 연결하는 데 사용되는 [인메모리 맵](#인메모리-맵)을 포함합니다.
 
-### PID controller
+### PID 컨트롤러
 
-The PID controller is a helper module that performs calculations during the [Motion Planner Stage](#stage-4-motion-planner-stage).
+PID 컨트롤러는 [모션 플래너 단계](#단계-4-모션-플래너-단계) 동안 계산을 수행하는 헬퍼 모듈입니다.
 
-The PID controller:
+PID 컨트롤러는:
 
-- Estimates the throttle, brake, and steering input needed to reach a target value using the information gathered by the [Motion Planner Stage](#stage-4-motion-planner-stage).
-- Makes adjustments depending on the specific parameterization of the controller. Parameters can be modified if desired. Read more about [PID controllers](https://en.wikipedia.org/wiki/PID_controller) to learn how to make modifications.
+- [모션 플래너 단계](#단계-4-모션-플래너-단계)에서 수집한 정보를 사용하여 목표값에 도달하는 데 필요한 스로틀, 브레이크, 조향 입력을 추정합니다.
+- 컨트롤러의 특정 매개변수화에 따라 조정을 합니다. 필요한 경우 매개변수를 수정할 수 있습니다. [PID 컨트롤러](https://en.wikipedia.org/wiki/PID_controller)에 대해 자세히 읽어보고 수정 방법을 알아보세요.
 
-__Related .cpp files:__ `PIDController.cpp`.
-### Command Array
+__관련 .cpp 파일:__ `PIDController.cpp`.
 
-The Command Array represents the last step in the TM logic cycle. It receives commands for all the registered vehicles and applies them.
+### 명령어 배열
 
-The Command Array:
+명령어 배열은 TM 로직 사이클의 마지막 단계를 나타냅니다. 등록된 모든 차량에 대한 명령을 받아 적용합니다.
 
-- Receives a series of [carla.VehicleControl](python_api.md#carla.VehicleControl)'s from the [Motion Planner Stage](#stage-4-motion-planner-stage).
-- Batches all commands to be applied during the same frame.
-- Sends the batch to the CARLA server calling either __apply_batch()__ or __apply_batch_synch()__ in [carla.Client](../python_api/#carla.Client) depending on whether the simulation is running in asynchronous or synchronous mode, respectively.
+명령어 배열은:
 
-__Related .cpp files:__ `TrafficManagerLocal.cpp`.
+- [모션 플래너 단계](#단계-4-모션-플래너-단계)로부터 [carla.VehicleControl](python_api.md#carla.VehicleControl)의 시리즈를 받습니다.
+- 동일한 프레임에 적용될 모든 명령을 일괄 처리합니다.
+- [carla.Client](../python_api/#carla.Client)의 시뮬레이션이 비동기 또는 동기 모드로 실행되는지에 따라 각각 __apply_batch()__ 또는 __apply_batch_synch()__를 호출하여 일괄 처리된 명령을 CARLA 서버로 보냅니다.
 
-### Stages of the Control Loop
+__관련 .cpp 파일:__ `TrafficManagerLocal.cpp`.
+### 제어 루프의 단계들
 
-##### Stage 1- Localization Stage
+##### 단계 1- 위치 파악 단계
 
-The Localization Stage defines a near-future path for vehicles controlled by the TM.
+위치 파악 단계는 TM이 제어하는 차량의 가까운 미래 경로를 정의합니다.
 
-The Localization Stage:
+위치 파악 단계는:
 
-- Obtains the position and velocity of all vehicles from the [simulation state](#simulation-state).
-- Uses the [In-Memory Map](#in-memory-map) to relate every vehicle with a list of waypoints that describes its current location and near-future path according to its trajectory. The faster the vehicle goes, the longer the list will be.
-- Updates the path according to planning decisions such as lane changes, speed limit, distance to leading vehicle parameterization, etc.
-- Stores the path for all vehicles in the [PBVT](#pbvt) module.
-- Compares paths with each other to estimate possible collision situations. Results are passed to the Collision Stage.
+- [시뮬레이션 상태](#시뮬레이션-상태)에서 모든 차량의 위치와 속도를 얻습니다.
+- [인메모리 맵](#인메모리-맵)을 사용하여 각 차량을 궤적에 따른 현재 위치와 가까운 미래 경로를 설명하는 웨이포인트 목록과 연결합니다. 차량이 빠를수록 목록이 더 길어집니다.
+- 차선 변경, 속도 제한, 선행 차량과의 거리 매개변수화 등과 같은 계획 결정에 따라 경로를 업데이트합니다.
+- 모든 차량의 경로를 [PBVT](#pbvt) 모듈에 저장합니다.
+- 가능한 충돌 상황을 추정하기 위해 경로들을 서로 비교합니다. 결과는 충돌 단계로 전달됩니다.
 
-__Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.
+__관련 .cpp 파일:__ `LocalizationStage.cpp`와 `LocalizationUtils.cpp`.
 
-##### Stage 2- Collision Stage
+##### 단계 2- 충돌 단계
 
-The Collision Stage triggers collision hazards.
+충돌 단계는 충돌 위험을 트리거합니다.
 
-The Collision Stage:
+충돌 단계는:
 
-- Receives from the [Localization Stage](#stage-1-localization-stage) a list of vehicle pairs whose paths could potentially overlap.
-- Extends bounding boxes along the path ahead (geodesic boundaries) for each vehicle pair to check if they actually overlap and determine whether the risk of collision is real.
-- Sends hazards for all possible collisions to the [Motion Planner Stage](#stage-4-motion-planner-stage) to modify the path accordingly.
+- [위치 파악 단계](#단계-1-위치-파악-단계)로부터 경로가 잠재적으로 겹칠 수 있는 차량 쌍의 목록을 받습니다.
+- 각 차량 쌍에 대해 경로를 따라 경계 상자를 확장하여(측지선 경계) 실제로 겹치는지 확인하고 충돌 위험이 실제인지 판단합니다.
+- 가능한 모든 충돌에 대한 위험을 [모션 플래너 단계](#단계-4-모션-플래너-단계)로 보내 그에 따라 경로를 수정합니다.
 
-__Related .cpp files:__ `CollisionStage.cpp`.
+__관련 .cpp 파일:__ `CollisionStage.cpp`.
 
-##### Stage 3- Traffic Light Stage
+##### 단계 3- 신호등 단계
 
-The Traffic Light stage triggers hazards due to traffic regulators such as traffic lights, stop signs, and priority at junctions.
+신호등 단계는 신호등, 정지 표지판, 교차로 우선순위와 같은 교통 규제로 인한 위험을 트리거합니다.
 
-The Traffic Light stage:
+신호등 단계는:
 
-- Sets a traffic hazard if a vehicle is under the influence of a yellow or red traffic light or a stop sign.
-- Extends a bounding box along a vehicle's path if it is in an unsignaled junction. Vehicles with overlapping paths follow a "First-In-First-Out" order to move. Wait times are set to a fixed value.
+- 차량이 황색이나 적색 신호등 또는 정지 표지판의 영향을 받는 경우 교통 위험을 설정합니다.
+- 차량이 신호가 없는 교차로에 있는 경우 해당 차량의 경로를 따라 경계 상자를 확장합니다. 경로가 겹치는 차량들은 "선입선출" 순서에 따라 이동합니다. 대기 시간은 고정 값으로 설정됩니다.
 
-__Related .cpp files:__ `TrafficLightStage.cpp`.
+__관련 .cpp 파일:__ `TrafficLightStage.cpp`.
 
-##### Stage 4- Motion Planner Stage
+##### 단계 4- 모션 플래너 단계
 
-The Motion Planner Stage generates the CARLA commands to be applied to vehicles.
+모션 플래너 단계는 차량에 적용할 CARLA 명령을 생성합니다.
 
-The Motion Planner Stage:
+모션 플래너 단계는:
 
-- Gathers a vehicle's position and velocity ([simulation state](#simulation-state)), path ([PBVT](#pbvt)), and hazards ([Collision Stage](#stage-2-collision-stage) and [Traffic Light Stage](#stage-3-traffic-light-stage)).
-- Makes high-level decisions about how a vehicle should move, for example, computing the brake needed to prevent a collision hazard. A [PID controller](#pid-controller) is used to estimate behaviors according to target values.
-- Translates the desired movement to a [carla.VehicleControl](python_api.md#carla.VehicleControl) for application to the vehicle.
-- Sends the resulting CARLA commands to the [Command Array](#command-array).
+- 차량의 위치와 속도([시뮬레이션 상태](#시뮬레이션-상태)), 경로([PBVT](#pbvt)), 그리고 위험([충돌 단계](#단계-2-충돌-단계)와 [신호등 단계](#단계-3-신호등-단계))을 수집합니다.
+- 예를 들어 충돌 위험을 방지하기 위해 필요한 제동을 계산하는 등, 차량이 어떻게 움직여야 하는지에 대한 고수준 결정을 내립니다. 목표 값에 따른 동작을 추정하기 위해 [PID 컨트롤러](#pid-컨트롤러)가 사용됩니다.
+- 원하는 움직임을 차량에 적용할 [carla.VehicleControl](python_api.md#carla.VehicleControl)로 변환합니다.
+- 결과로 나온 CARLA 명령을 [명령어 배열](#명령어-배열)로 보냅니다.
 
-__Related .cpp files:__ `MotionPlannerStage.cpp`.
+__관련 .cpp 파일:__ `MotionPlannerStage.cpp`.
 
+##### 단계 5- 차량 조명 단계
 
-##### Stage 5- Vehicle Lights Stage
+차량 조명 단계는 차량의 상태와 주변 환경에 따라 조명을 활성화합니다.
 
-The Vehicle Lights Stage activates the lights based on the condition of the vehicle and the surrounding environment.
-	
-The Vehicle Lights Stage:
+차량 조명 단계는:
 
-- Retrieves the planned waypoints for the vehicle, information about vehicle lights (eg. light state and the planned command to be applied) and the weather conditions.
+- 차량의 계획된 웨이포인트, 차량 조명 정보(예: 조명 상태와 적용될 계획된 명령) 및 날씨 조건을 검색합니다.
 
-- Determines the new state of the vehicle lights:
-	- Turns on the blinkers if the vehicle is planning to turn left/right at the next junction.
-	- Turns on the stop lights if the applied command is asking the vehicle to brake.
-	- Turns on the low beams and the position lights from sunset to dawn, or under heavy rain.
-	- Turns on the fog lights under heavy fog conditions.
+- 차량 조명의 새로운 상태를 결정합니다:
+  - 차량이 다음 교차로에서 좌/우회전할 계획이면 방향 지시등을 켭니다.
+  - 적용된 명령이 차량에 제동을 요구하면 정지등을 켭니다.
+  - 일몰부터 새벽까지 또는 폭우 시에 하향등과 위치등을 켭니다.
+  - 짙은 안개 상태에서 안개등을 켭니다.
 
-- Update the vehicle lights state if it has changed.
+- 변경이 있었다면 차량 조명 상태를 업데이트합니다.
 
-__Related .cpp files:__ `VehicleLightStage.cpp`.
-
+__관련 .cpp 파일:__ `VehicleLightStage.cpp`.
 ---
-## Using the Traffic Manager
+## Traffic Manager 사용하기
 
-### Vehicle behavior considerations
+### 차량 행동 고려사항
 
-The TM implements general behavior patterns that must be taken into consideration when you set vehicles to autopilot:
+TM은 차량을 자동조종으로 설정할 때 고려해야 하는 일반적인 행동 패턴을 구현합니다:
 
-- __Vehicles are not goal-oriented,__ they follow a dynamically produced trajectory and choose a path randomly when approaching a junction. Their path is endless.
-- __Vehicles' target speed is 70% of their current speed limit__ unless any other value is set.
-- __Junction priority does not follow traffic regulations.__ The TM uses its own priority system at junctions. The resolution of this restriction is a work in progress. In the meantime, some issues may arise, for example, vehicles inside a roundabout yielding to a vehicle trying to get in.
+- __차량은 목표 지향적이지 않습니다.__ 차량들은 동적으로 생성된 궤적을 따르며 교차로에 접근할 때 무작위로 경로를 선택합니다. 이들의 경로는 끝이 없습니다.
+- __차량의 목표 속도는 현재 속도 제한의 70%입니다.__ 다른 값이 설정되지 않는 한 이 값을 사용합니다.
+- __교차로 우선순위는 교통 규정을 따르지 않습니다.__ TM은 교차로에서 자체적인 우선순위 시스템을 사용합니다. 이 제한 사항의 해결은 진행 중입니다. 그동안 일부 문제가 발생할 수 있습니다. 예를 들어, 로터리 안에 있는 차량이 진입하려는 차량에게 양보하는 경우가 있습니다.
 
-TM behavior can be adjusted through the Python API. For specific methods, see the TM section of the Python API [documentation](../python_api/#carla.TrafficManager). Below is a general summary of what is possible through the API:
+TM 행동은 Python API를 통해 조정할 수 있습니다. 특정 메서드에 대해서는 API [문서](../python_api/#carla.TrafficManager)의 TM 섹션을 참조하세요. 아래는 API를 통해 가능한 것들의 일반적인 요약입니다:
 
-| Topic | Description |
+| 주제 | 설명 |
 | ----- | ----------- |
-| **General:** | - Create a TM instance connected to a port. <br> - Retrieve the port where a TM is connected. |
-| **Safety conditions:** | - Set a minimum distance between stopped vehicles (for a single vehicle or for all vehicles). This will affect the minimum moving distance. <br> - Set the desired speed as a percentage of the current speed limit (for a single vehicle or for all vehicles). <br> - Reset traffic lights. |
-| **Collision  managing:** | - Enable/Disable collisions between a vehicle and a specific actor. <br> - Make a vehicle ignore all other vehicles. <br> - Make a vehicle ignore all walkers. <br> - Make a vehicle ignore all traffic lights. |
-| **Lane  changes:** | - Force a lane change, ignoring possible collisions. <br> - Enable/Disable lane changes for a vehicle. |
-| **Hybrid physics mode:** | - Enable/Disable hybrid physics mode. <br> - Change the radius in which physics is enabled. |
+| **일반:** | - 포트에 연결된 TM 인스턴스 생성. <br> - TM이 연결된 포트 검색. |
+| **안전 조건:** | - 정지된 차량 사이의 최소 거리 설정(단일 차량 또는 모든 차량에 대해). 이는 최소 이동 거리에 영향을 미칩니다. <br> - 현재 속도 제한의 백분율로 원하는 속도 설정(단일 차량 또는 모든 차량에 대해). <br> - 신호등 재설정. |
+| **충돌 관리:** | - 차량과 특정 액터 사이의 충돌 활성화/비활성화. <br> - 차량이 다른 모든 차량을 무시하도록 설정. <br> - 차량이 모든 보행자를 무시하도록 설정. <br> - 차량이 모든 신호등을 무시하도록 설정. |
+| **차선 변경:** | - 가능한 충돌을 무시하고 차선 변경 강제. <br> - 차량의 차선 변경 활성화/비활성화. |
+| **하이브리드 물리 모드:** | - 하이브리드 물리 모드 활성화/비활성화. <br> - 물리가 활성화되는 반경 변경. |
+네, 공식 문서 MD 파일을 제공해 주시면 훌륭한 기술적 번역을 해드리겠습니다. 번역된 MD 파일을 아래와 같이 자연스럽고 기술적으로 표현된 한국어로 출력하겠습니다.
 
-
-
-
-### Creating a Traffic Manager
+### Traffic Manager 생성하기
 
 !!! Note
-	TM is designed to work in synchronous mode. Using TM in asynchronous mode can lead to unexpected and undesirable results. Read more in the section [__Synchronous mode__](#synchronous-mode).
+    TM은 동기 모드에서 작동하도록 설계되었습니다. TM을 비동기 모드에서 사용하면 예기치 않은 결과가 발생할 수 있습니다. [__동기 모드__](#동기-모드) 섹션에서 자세히 알아보세요.
 
-A TM instance is created by a [`carla.Client`](python_api.md#carla.Client), passing the port to be used. The default port is `8000`.
+TM 인스턴스는 [`carla.Client`](python_api.md#carla.Client)를 통해 사용할 포트를 전달하여 생성됩니다. 기본 포트는 `8000`입니다.
 
-To create a TM instance:
+TM 인스턴스를 생성하려면 다음과 같이 합니다:
 
 ```python
 tm = client.get_trafficmanager(port)
 ```
 
-To enable autopilot for a set of vehicles, retrieve the port of the TM instance and set `set_autopilot` to `True`, passing the TM port at the same time. If no port is provided, it will try to connect to a TM in the default port (`8000`). If the TM does not exist, it will create one:
+자동 조종 모드를 차량 집합에 활성화하려면 TM 인스턴스의 포트를 가져와서 `set_autopilot` 옵션을 `True`로 설정합니다. 포트를 지정하지 않으면 기본 포트(`8000`)에 연결하려 시도하며, TM이 존재하지 않는 경우 새로 생성합니다:
 
 ```python
 tm_port = tm.get_port()
@@ -297,9 +281,9 @@ tm_port = tm.get_port()
      v.set_autopilot(True,tm_port)
 ```
 !!! Note 
-    Creating or connecting to a TM in multi-client situations is different from the above example. Learn more in the section [__Running multiple Traffic Managers__](#running-multiple-traffic-managers).
+    다중 클라이언트 상황에서 TM을 생성하거나 연결하는 방법은 위 예제와 다릅니다. [__다중 Traffic Manager 실행하기__](#다중-traffic-manager-실행하기)에서 자세히 알아보세요.
 
-The `generate_traffic.py` script in `/PythonAPI/examples` provides an example of how to create a TM instance using a port passed as a script argument and register every vehicle spawned to it by setting the autopilot to `True` in a batch:
+`generate_traffic.py` 스크립트 `/PythonAPI/examples`에서는 스크립트 인수로 전달된 포트를 사용하여 TM 인스턴스를 생성하고, 생성된 모든 차량에 자동 조종 모드를 설정하는 예제를 보여줍니다:
 
 ```py
 traffic_manager = client.get_trafficmanager(args.tm-port)
@@ -310,9 +294,9 @@ batch.append(SpawnActor(blueprint, transform).then(SetAutopilot(FutureActor, Tru
 traffic_manager.global_percentage_speed_difference(30.0)
 ```
 
-### Configuring autopilot behavior
+### 자동 조종 동작 구성하기
 
-The following example creates a TM instance and configures dangerous behavior for a specific vehicle so it will ignore all traffic lights, leave no safety distance from other vehicles, and drive 20% faster than the current speed limit:
+다음 예에서는 TM 인스턴스를 생성하고, 특정 차량의 위험한 동작을 구성합니다. 이 차량은 모든 신호등을 무시하고, 다른 차량과 안전 거리를 유지하지 않으며, 현재 속도 제한보다 20% 빠르게 운전합니다:
 
 ```python
 tm = client.get_trafficmanager(port)
@@ -325,7 +309,7 @@ tm.distance_to_leading_vehicle(danger_car,0)
 tm.vehicle_percentage_speed_difference(danger_car,-20)
 ``` 
 
-The example below sets the same list of vehicles to autopilot but instead configures them with moderate driving behavior. The vehicles drive 80% slower than the current speed limit, leaving at least 5 meters between themselves and other vehicles, and never perform lane changes:
+다음 예에서는 같은 차량 집합에 자동 조종 모드를 설정하지만, 적절한 운전 동작을 구성합니다. 차량은 현재 속도 제한보다 80% 느리게 주행하고, 다른 차량과 최소 5미터의 거리를 유지하며, 차선 변경을 수행하지 않습니다:
 
 ```python
 tm = client.get_trafficmanager(port)
@@ -339,9 +323,9 @@ for v in my_vehicles:
   tm.auto_lane_change(v,False)
 ``` 
 
-#### Delegating the Traffic Manager to automatically update vehicle lights
+#### 차량 조명 자동 업데이트를 TM에 위임하기
 
-By default, vehicle lights (brake, turn indicators, etc...) of the vehicles managed by the TM are never updated. It is possible to delegate the TM to update the vehicle lights of a given vehicle actor:
+기본적으로 TM에 의해 관리되는 차량의 조명(브레이크, 방향 지시등 등)은 업데이트되지 않습니다. 특정 차량 액터의 조명 업데이트를 TM에 위임할 수 있습니다:
 
 ```python
 tm = client.get_trafficmanager(port)
@@ -349,44 +333,43 @@ for actor in my_vehicles:
   tm.update_vehicle_lights(actor, True)
 ```
 
-Vehicle lights management has to be specified on a per-vehicle basis, and there could be at any given time both vehicles with and without the automatic light management.
+차량 조명 관리는 차량별로 지정해야 하며, 언제든 자동 조명 관리가 활성화된 차량과 그렇지 않은 차량이 혼재될 수 있습니다.
 
 
+### Traffic Manager 중지하기
 
-### Stopping a Traffic Manager
-
-The TM is not an actor that needs to be destroyed; it will stop when the client that created it stops. This is automatically managed by the API, the user does not have to do anything. However, when shutting down a TM, the user must destroy the vehicles controlled by it, otherwise they will remain immobile on the map. The script `generate_traffic.py` does this automatically:
+TM은 소멸해야 하는 액터가 아니며, 이를 생성한 클라이언트가 중지되면 자동으로 중지됩니다. 이는 API에 의해 자동으로 관리되므로 사용자가 별도의 작업을 할 필요가 없습니다. 그러나 TM을 종료할 때는 이를 통해 관리되는 차량을 반드시 소멸시켜야 합니다. 그렇지 않으면 지도 위에 정지된 상태로 남게 됩니다. `generate_traffic.py` 스크립트는 이 작업을 자동으로 수행합니다:
 
 ```py
 client.apply_batch([carla.command.DestroyActor(x) for x in vehicles_list])
 ```
 
 !!! Warning
-    Shutting down a __TM-Server__ will shut down the __TM-Clients__ connecting to it. To learn the difference between a __TM-Server__ and a __TM-Client__, read about [__Running multiple Traffic Managers__](#running-multiple-traffic-managers).
+    **TM-Server**를 종료하면 이에 연결된 **TM-Client**들도 함께 종료됩니다. **TM-Server**와 **TM-Client**의 차이점에 대해 알아보려면 [__다중 Traffic Manager 실행하기__](#다중-traffic-manager-실행하기)를 읽어보세요.
 
 ---
-## Deterministic mode
+## 결정론 모드
 
-In deterministic mode, the TM will produce the same results and behaviors under the same conditions. Do not mistake determinism with the recorder. While the recorder allows you to store the log of a simulation to play it back, determinism ensures that the TM will always have the same output over different executions of a script as long as the same conditions are maintained.
+결정론 모드에서 TM은 동일한 조건에서 항상 동일한 결과와 동작을 생성합니다. 이를 기록기와 혼동하지 마세요. 기록기는 시뮬레이션 로그를 저장하고 재생할 수 있는 반면, 결정론은 동일한 조건이 유지되는 한 TM이 항상 동일한 출력을 내도록 보장합니다.
 
-Deterministic mode is available __in synchronous mode only__. In asynchronous mode, there is less control over the simulation and determinism cannot be achieved. Read more in the section [__"Synchronous mode"__](#synchronous-mode) before starting.
+결정론 모드는 __동기 모드__에서만 사용 가능합니다. 비동기 모드에서는 시뮬레이션에 대한 제어력이 부족하여 결정론을 달성할 수 없습니다. [__"동기 모드"__](#동기-모드) 섹션을 읽고 시작하세요.
 
-To enable deterministic mode, use the following method:
+결정론 모드를 활성화하려면 다음 메서드를 사용하세요:
 
 ```py
 my_tm.set_random_device_seed(seed_value)
 ```
 
-`seed_value` is an `int` number from which random numbers will be generated. The value itself is not relevant, but the same value will always result in the same output. Two simulations, with the same conditions, that use the same seed value, will be deterministic.
+`seed_value`는 무작위 숫자 생성을 위한 `int` 값입니다. 값 자체는 중요하지 않지만, 동일한 값을 사용하면 항상 동일한 출력이 생성됩니다. 동일한 조건에서 동일한 시드 값을 사용하는 두 시뮬레이션은 결정론적입니다.
 
-To maintain determinism over multiple simulation runs, __the seed must be set for every simulation__. For example, each time the world is [reloaded](python_api.md#carla.Client.reload_world), the seed must be set again:
+여러 시뮬레이션 실행에 걸쳐 결정론을 유지하려면 __매 시뮬레이션마다 시드를 설정해야 합니다__. 예를 들어, 세계가 [다시 로드](python_api.md#carla.Client.reload_world)될 때마다 시드를 다시 설정해야 합니다:
 
 ```py
 client.reload_world()
 my_tm.set_random_device_seed(seed_value)
 ```
 
-Deterministic mode can be tested in the `generate_traffic.py` example script by passing a seed value as an argument. The following example populates a map with 50 autopilot actors in synchronous mode and sets the seed to an arbitrary value of `9`:
+결정론 모드는 `generate_traffic.py` 예제 스크립트에서 시드 값을 인수로 전달하여 테스트할 수 있습니다. 다음 예제는 동기 모드에서 50개의 자동 조종 액터로 맵을 채우고, 임의의 값 `9`를 시드로 설정합니다:
 
 ```sh
 cd PythonAPI/examples
@@ -394,42 +377,37 @@ python3 generate_traffic.py -n 50 --seed 9
 ```
 
 !!! Warning
-    The CARLA server and the TM must be in synchronous mode before enabling deterministic mode. Read more [here](#synchronous-mode) about synchronous mode in TM.
+    CARLA 서버와 TM은 결정론 모드를 활성화하기 전에 동기 모드로 설정되어 있어야 합니다. [여기](#동기-모드)에서 TM의 동기 모드에 대해 자세히 알아보세요.
 
 ---
-## Hybrid physics mode
+## 하이브리드 물리 모드
 
-Hybrid mode allows users to disable most physics calculations for all autopilot vehicles, or for autopilot vehicles outside of a certain radius of a vehicle tagged with `hero`. This removes the vehicle physics bottleneck from a simulation. Vehicles whose physics are disabled will move by teleportation. Basic calculations for linear acceleration are maintained to ensure position updates and vehicle speed remain realistic and the toggling of physics calculations on vehicles is fluid.
+하이브리드 모드를 사용하면 사용자가 모든 자동 조종 차량의 물리 계산을 비활성화하거나, "영웅" 차량에서 일정 반경 내의 자동 조종 차량의 물리 계산을 비활성화할 수 있습니다. 이렇게 하면 시뮬레이션의 차량 물리 처리 병목 현상을 제거할 수 있습니다. 물리 계산이 비활성화된 차량은 순간 이동 방식으로 움직입니다. 선형 가속도에 대한 기본 계산은 유지되어 위치 업데이트와 차량 속도가 현실적이며, 물리 계산 전환이 부드럽습니다.
 
-Hybrid mode uses the [`Actor.set_simulate_physics()`](https://carla.readthedocs.io/en/latest/python_api/#carla.Actor.set_simulate_physics) method to toggle physics calculations. It is disabled by default. There are two options to enable it:
+하이브리드 모드는 [`Actor.set_simulate_physics()`](https://carla.readthedocs.io/en/latest/python_api/#carla.Actor.set_simulate_physics) 메서드를 사용하여 물리 계산을 전환합니다. 기본적으로 비활성화되어 있으며, 다음 두 가지 옵션으로 활성화할 수 있습니다:
 
-*   [__`TrafficManager.set_hybrid_physics_mode(True)`__](https://carla.readthedocs.io/en/latest/python_api/#carla.TrafficManager.set_hybrid_physics_mode) — This method enables hybrid mode for the TM object calling it.
-*   __Running `generate_traffic.py` with the flag `--hybrid`__ — This example script creates a TM and spawns vehicles in autopilot. It then sets these vehicles to hybrid mode when the `--hybrid` flag is passed as a script argument.
+*   [__`TrafficManager.set_hybrid_physics_mode(True)`__](https://carla.readthedocs.io/en/latest/python_api/#carla.TrafficManager.set_hybrid_physics_mode) — 이 메서드는 호출하는 TM 객체에 대해 하이브리드 모드를 활성화합니다.
+*   __`generate_traffic.py` 스크립트에 `--hybrid` 플래그 실행__ — 이 예제 스크립트는 TM을 생성하고 자동 조종 차량을 생성합니다. `--hybrid` 플래그가 전달되면 이 차량들을 하이브리드 모드로 설정합니다.
 
-To modify the behavior of hybrid mode, use the following two parameters:
+하이브리드 모드의 동작을 수정하려면 다음 두 가지 매개변수를 사용하세요:
 
-*   __Radius__ *(default = 50 meters)* — The radius is relative to vehicles tagged with `hero`. All vehicles inside this radius will have physics enabled; vehicles outside of the radius will have physics disabled. The size of the radius is modified using [`traffic_manager.set_hybrid_physics_radius(r)`](python_api.md#carla.TrafficManager.set_hybrid_physics_radius).
-*   __Hero vehicle__ — A vehicle tagged with `role_name='hero'` that acts as the center of the radius.
-	*   __If there is no hero vehicle,__ all vehicles' physics will be disabled.
-	*   __If there is more than one hero vehicle,__ the radius will be considered for them all, creating different areas of influence with physics enabled.
+*   __반경__ *(기본값 = 50미터)* — 이 반경은 "영웅" 차량을 기준으로 합니다. 이 반경 내의 모든 차량은 물리 계산이 활성화되며, 반경 밖의 차량은 물리 계산이 비활성화됩니다. 반경 크기는 [`traffic_manager.set_hybrid_physics_radius(r)`](python_api.md#carla.TrafficManager.set_hybrid_physics_radius)를 사용하여 수정할 수 있습니다.
+*   __영웅 차량__ — `role_name='hero'`로 태그된 차량이 반경의 중심이 됩니다.
+	*   __영웅 차량이 없는 경우,__ 모든 차량의 물리 계산이 비활성화됩니다.
+	*   __영웅 차량이 둘 이상인 경우,__ 각각의 영향 반경이 고려됩니다.
 
-The clip below shows how physics is enabled and disabled when hybrid mode is active. The __hero vehicle__ is tagged with a __red square__. Vehicles with __physics disabled__ are tagged with a __blue square__. When inside the hero vehicle's radius of influence, __physics are enabled and the tag becomes green__.
+다음 클립은 하이브리드 모드가 활성화되었을 때 물리 계산이 활성화/비활성화되는 모습을 보여줍니다. **영웅 차량**은 **빨간색 사각형**으로 표시됩니다. 물리 계산이 __비활성화된__ 차량은 **파란색 사각형**으로 표시됩니다. 영웅 차량의 반경 내에 있는 차량은 **물리 계산이 활성화되어 녹색 태그**가 지정됩니다.
 
 ![Welcome to CARLA](img/tm_hybrid.gif)
-
-
 ---
-## Running multiple Traffic Managers
 
-### Traffic Manager servers and clients
-
-A CARLA client creates a TM by specifying to the server which port to use. If a port is not specified, the default `8000` will be used. If further TMs are created on the same port, they will become __TM-Clients__ and the original TM will become a __TM-Server__. These titles define how a TM behaves within a simulation.
+### 다중 Traffic Manager 실행하기
 
 ###### TM-Server
 
-A TM-Server is created if it was the first TM to connect to a free port and then other TMs (TM-Clients) connected to the same port it was running on. __The TM-Server will dictate the behavior of all the TM-Clients__, e.g., if the TM-Server is stopped, all TM-Clients will stop.
+TM-Server는 포트가 비어있는 상태에서 최초로 연결된 TM이 됩니다. TM-Server는 연결된 모든 TM-Client의 동작을 결정합니다. 예를 들어 TM-Server가 중지되면 모든 TM-Client도 함께 중지됩니다.
 
-The following code creates two TM-Servers. Each one connects to a different, unused port:
+다음 코드는 두 개의 TM-Server를 생성합니다. 각각 다른 사용되지 않은 포트에 연결됩니다:
 
 ```py 
 tm01 = client01.get_trafficmanager() # tm01 --> tm01 (p=8000)
@@ -440,9 +418,9 @@ tm02 = client02.get_trafficmanager(5000) # tm02(p=5000) --> tm02 (p=5000)
 
 ###### TM-Client
 
-A TM-Client is created when a TM connects to a port occupied by another TM (TM-Server). The TM-Client behavior will be dictated by the TM-Server.
+TM-Client는 다른 TM(TM-Server)이 이미 연결되어 있는 포트에 연결될 때 생성됩니다. TM-Client의 동작은 TM-Server에 의해 결정됩니다.
 
-The following code creates two TM-Clients, each one connecting with the TM-Servers created in the section above.
+다음 코드는 두 개의 TM-Client를 생성합니다. 각각 위에서 생성된 TM-Server에 연결됩니다.
 
 ```py
 tm03 = client03.get_trafficmanager() # tm03 --> tm01 (p=8000). 
@@ -451,11 +429,11 @@ tm03 = client03.get_trafficmanager() # tm03 --> tm01 (p=8000).
 tm04 = client04.get_trafficmanager(5000) # tm04(p=5000) --> tm02 (p=5000)
 ```
 
-The CARLA server keeps a register of all TM instances by storing the port and the client IP (hidden to the user) that link to them. There is currently no way to check the TM instances that have been created so far. A connection will always be attempted when trying to create an instance and it will either create a new __TM-Server__ or a __TM-Client__.
+CARLA 서버는 모든 TM 인스턴스의 포트와 클라이언트 IP(사용자에게 숨겨짐)를 저장하여 관리합니다. 지금까지 생성된 TM 인스턴스를 확인할 방법은 없습니다. 인스턴스 생성을 시도하면 항상 연결이 시도되며, 새로운 __TM-Server__ 또는 __TM-Client__가 생성됩니다.
 
-### Multi-client simulations
+### 다중 클라이언트 시뮬레이션
 
-In a multi-client simulation, multiple TMs are created on the same port. The first TM will be a TM-Server and the rest will be TM-Clients connecting to it. The TM-Server will dictate the behavior of all the TM instances:
+다중 클라이언트 시뮬레이션에서는 동일한 포트에 여러 TM이 생성됩니다. 첫 번째 TM은 TM-Server가 되고, 나머지는 이 TM-Server에 연결되는 TM-Client가 됩니다. TM-Server가 모든 TM 인스턴스의 동작을 결정합니다:
 
 ```py
 terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000
@@ -463,9 +441,9 @@ terminal 2: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Server
 terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Client
 ```
 
-### Multi-TM simulations
+### 다중 TM 시뮬레이션
 
-In a multi-TM simulation, multiple TM instances are created on distinct ports. Each TM instance will control its own behavior:
+다중 TM 시뮬레이션에서는 서로 다른 포트에 여러 TM 인스턴스가 생성됩니다. 각 TM 인스턴스는 자체적인 동작을 제어합니다:
 
 ```py
 terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000
@@ -473,9 +451,9 @@ terminal 2: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Server A
 terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4550 # TM-Server B
 ```
 
-### Multi-simulation
+### 다중 시뮬레이션
 
-Multi-simulation is when more than one CARLA server is running at the same time. The TM needs to connect to the relevant CARLA server port. As long as the computational power allows for it, the TM can run multiple simulations at a time without any problems:
+다중 시뮬레이션은 둘 이상의 CARLA 서버가 동시에 실행되는 경우입니다. TM은 관련 CARLA 서버 포트에 연결해야 합니다. 컴퓨팅 파워가 허용한다면 TM은 동시에 여러 시뮬레이션을 실행할 수 있습니다:
 
 ```py
 terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000 # simulation A 
@@ -484,103 +462,102 @@ terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Server A
 terminal 4: python3 generate_traffic.py --port 5000 --tm-port 5050 # TM-Server B connected to simulation B
 ```
 
-The concept of multi-simulation is independent of the TM itself. The example above runs two CARLA simulations in parallel, A and B. In each of them, a TM-Server is created independently from the other. Simulation A could run a multi-client TM while simulation B is running a multi-TM or no TM at all.
+다중 시뮬레이션 개념은 TM 자체와 독립적입니다. 위의 예에서는 A와 B라는 두 개의 CARLA 시뮬레이션이 병렬로 실행됩니다. 각 시뮬레이션에서 TM-Server가 독립적으로 생성됩니다. A 시뮬레이션에서 다중 클라이언트 TM을 실행할 수 있고, B 시뮬레이션에서는 다중 TM 또는 TM 없이 실행할 수 있습니다.
 
-The most likely issue arising from the above set-up is a client trying to connect to an already existing TM that is not running on the selected simulation. If this happens, an error message will appear and the connection will be aborted to prevent interferences between simulations.
-
+위와 같은 설정에서 발생할 수 있는 가장 큰 문제는 이미 존재하는 TM에 연결하려는 클라이언트가 실제로는 다른 시뮬레이션에서 실행 중인 TM에 연결하려는 경우입니다. 이 경우 오류 메시지가 나타나고 시뮬레이션 간 간섭을 방지하기 위해 연결이 중단됩니다.
 
 ---
-## Synchronous mode
+## 동기 모드
 
-TM is designed to work in synchronous mode. Both the CARLA server and TM should be set to synchronous in order to function properly. __Using TM in asynchronous mode can lead to unexpected and undesirable results,__ however, if asynchronous mode is required, the simulation should run at 20-30 fps at least.
+TM은 동기 모드에서 작동하도록 설계되었습니다. CARLA 서버와 TM 모두 동기 모드로 설정되어 있어야 올바르게 작동합니다. __TM을 비동기 모드에서 사용하면 예기치 않은 결과가 발생할 수 있습니다.__ 그러나 비동기 모드가 필요한 경우 시뮬레이션은 최소 20-30 fps로 실행되어야 합니다.
 
-The script below demonstrates how to set both the server and TM to synchronous mode:
+다음 스크립트는 서버와 TM을 동기 모드로 설정하는 방법을 보여줍니다:
 
 ```py
 ...
 
-# Set the simulation to sync mode
+# 시뮬레이션을 동기 모드로 설정
 init_settings = world.get_settings()
 settings = world.get_settings()
 settings.synchronous_mode = True
-# After that, set the TM to sync mode
+# 그 다음 TM을 동기 모드로 설정
 my_tm.set_synchronous_mode(True)
 
 ...
 
-# Tick the world in the same client
+# 동기화를 완료하려면 동일한 클라이언트에서 세계를 업데이트
 world.apply_settings(init_settings)
 world.tick()
 ...
 
-# Always disable sync mode before the script ends to prevent the server blocking whilst waiting for a tick
+# 스크립트 종료 전에 반드시 동기 모드를 비활성화하여 서버가 틱을 기다리는 것을 막아야 합니다.
 settings.synchronous_mode = False
 my_tm.set_synchronous_mode(False)
 ```
 
-The `generate_traffic.py` example script starts a TM and populates the map with vehicles and pedestrians. It automatically sets the TM and the CARLA server to synchronous mode:
+`generate_traffic.py` 예제 스크립트는 TM을 시작하고 맵에 차량과 보행자를 생성합니다. 이때 자동으로 TM과 CARLA 서버를 동기 모드로 설정합니다:
 
 ```sh
 cd PythonAPI/examples
 python3 generate_traffic.py -n 50
 ```
 
-If asynchronous mode is required, use the `--async` flag when running the above command.
+비동기 모드가 필요한 경우 위 명령어에 `--async` 플래그를 추가하세요.
 
-If more than one TM is set to synchronous mode, synchrony will fail. Follow these guidelines to avoid issues:
+하나 이상의 TM이 동기 모드로 설정된 경우 동기화가 실패합니다. 문제를 방지하려면 다음 지침을 따르세요:
 
-- In a __[multiclient](#multiclient)__ situation, only the __TM-Server__ should be set to synchronous mode.
-- In a __[multiTM](#multitm)__ situation, only __one TM-Server__ should be set to synchronous mode.
-- The __[ScenarioRunner module](https://carla-scenariorunner.readthedocs.io/en/latest/)__ runs a TM automatically. The TM inside ScenarioRunner will automatically be the one set to sync mode.
+- __[다중 클라이언트](#다중-클라이언트-시뮬레이션)__ 상황에서는 **TM-Server**만 동기 모드로 설정해야 합니다.
+- __[다중 TM](#다중-tm-시뮬레이션)__ 상황에서는 **한 개의 TM-Server**만 동기 모드로 설정해야 합니다.
+- __[ScenarioRunner 모듈](https://carla-scenariorunner.readthedocs.io/en/latest/)__은 자동으로 TM을 실행합니다. ScenarioRunner 내의 TM은 자동으로 동기 모드로 설정됩니다.
 
 !!! Warning
-    Disable synchronous mode (for both the world and TM) in your script managing ticks before it finishes to prevent the server blocking, waiting forever for a tick.
+    스크립트가 종료되기 전에 (세계와 TM 모두) 동기 모드를 비활성화하여 서버가 영원히 틱을 기다리는 것을 방지해야 합니다.
 
 ---
 
-## Traffic manager in large maps
+## 대규모 맵에서의 Traffic Manager
 
-To understand how the TM works on large maps, make sure to first familiarise yourself with how large maps work by reading the documentation [here](large_map_overview.md).
+대규모 맵에서 TM의 동작을 이해하려면 먼저 대규모 맵 작동 방식에 대해 숙지해야 합니다. [여기](large_map_overview.md)에서 관련 문서를 읽어보세요.
 
-The behavior of autopilot vehicles in large maps depends on whether or not there is a hero vehicle present:
+영웅 차량의 존재 여부에 따라 대규모 맵에서 자동 조종 차량의 동작이 달라집니다:
 
-__Hero vehicle not present__
+__영웅 차량이 없는 경우__
 
-All autopilot vehicles will be considered dormant actors. The dormant autopilot actors will be moved around the map as in hybrid mode. The vehicles will not be rendered since there is no hero vehicle to trigger map tile streaming.
+모든 자동 조종 차량이 휴면 액터로 간주됩니다. 휴면 자동 조종 차량은 하이브리드 모드와 같이 맵 주위로 이동됩니다. 영웅 차량이 없으므로 맵 타일 스트리밍이 트리거되지 않아 차량이 렌더링되지 않습니다.
 
-__Hero vehicle present__
+__영웅 차량이 있는 경우__ 
 
-Autopilot vehicles will become dormant when they exceed the value defined by `actor_active_distance`. To set this value, use the Python API:
+`actor_active_distance` 값을 넘어서면 자동 조종 차량이 휴면 상태가 됩니다. 이 값을 설정하려면 Python API를 사용합니다:
 
 ```py
 settings = world.get_settings()
 
-# Actors will become dormant 2km away from the ego vehicle
+# 에고 차량에서 2km 떨어지면 액터가 휴면 상태가 됩니다
 settings.actor_active_distance = 2000
 
 world.apply_settings(settings)
 ```
 
-In the TM, dormant actors can be configured to continually respawn around the hero vehicle instead of remaining dormant on other parts of the map. This option can be configured using the `set_respawn_dormant_vehicles` method in the Python API. Vehicles will be respawned within a user-definable distance of the hero vehicle. The upper and lower boundaries of the respawnable distance can be set using the `set_boundaries_respawn_dormant_vehicles` method. Note that the upper distance will not be bigger than the tile streaming distance of the large map and the minimum lower distance is 20m.
+TM에서는 휴면 상태의 액터가 영웅 차량 주변에서 대신 계속 다시 생성되도록 구성할 수 있습니다. 이 옵션은 Python API의 `set_respawn_dormant_vehicles` 메서드를 사용하여 구성할 수 있습니다. 차량은 영웅 차량에서 사용자 정의 가능한 거리 내에서 다시 생성됩니다. 다시 생성할 수 있는 최소 및 최대 거리는 `set_boundaries_respawn_dormant_vehicles` 메서드를 사용하여 설정할 수 있습니다. 최대 거리는 대규모 맵의 타일 스트리밍 거리보다 크지 않아야 하며, 최소 거리는 20미터 이상이어야 합니다.
 
-To enable respawning of dormant vehicles within 25 and 700 meters of the hero vehicle:
+영웅 차량 주변 25미터와 700미터 사이에서 휴면 차량을 다시 생성하도록 설정하려면:
 
 ```py
 my_tm.set_respawn_dormant_vehicles(True)
 my_tm.set_boundaries_respawn_dormant_vehicles(25,700)
 ```
 
-If collisions prevent a dormant actor from being respawned, the TM will retry on the next simulation step.
+충돌로 인해 휴면 액터를 다시 생성할 수 없는 경우 TM은 다음 시뮬레이션 단계에서 다시 시도합니다.
 
-If dormant vehicles are not respawned, their behavior will depend on whether hybrid mode is enabled. If hybrid mode has been enabled, then the dormant actors will be teleported around the map. If hybrid mode is not enabled, then dormant actor's physics will not be computed and they will stay in place until they are no longer dormant.
+휴면 차량을 다시 생성하지 않으면 그 동작은 하이브리드 모드 활성화 여부에 따라 달라집니다. 하이브리드 모드가 활성화된 경우 휴면 액터는 맵 주변으로 순간 이동합니다. 하이브리드 모드가 비활성화된 경우 휴면 액터의 물리 계산이 수행되지 않으며 더 이상 휴면 상태가 되지 않을 때까지 그대로 유지됩니다.
 
 ---
 
-If you have any questions about the TM, then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions).
+TM에 대한 질문이 있다면 [포럼](https://github.com/carla-simulator/carla/discussions)에 문의할 수 있습니다.
 
 <div class="build-buttons">
 <p>
 <a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
+CARLA 포럼</a>
 </p>
 </div>
