@@ -1,14 +1,14 @@
-# Retrieve pedestrian ground truth bones through API
+# API를 통한 보행자 뼈대 실측 정보 검색
 
-To train autonomous vehicles, it is essential to make sure they recognize not only buildings, roads and cars, but also the pedestrians that occupy the sidewalks and cross the roads, to ensure the safety of all road users. The CARLA simulator provides AI controlled pedestrians to populate your simulation and training data with human forms. There are many computer vision applications in which human pose estimation is an important factor including autonomous driving, but also in security, crowd control and multiple robotic applications. 
+자율주행 차량을 훈련시킬 때, 건물, 도로, 자동차뿐만 아니라 보도를 이용하고 도로를 건너는 보행자들도 인식하도록 하여 모든 도로 사용자의 안전을 보장하는 것이 필수적입니다. CARLA 시뮬레이터는 AI가 제어하는 보행자들을 제공하여 시뮬레이션과 훈련 데이터에 인간 형태를 채울 수 있습니다. 자율주행을 포함하여 인간의 자세 추정이 중요한 컴퓨터 비전 응용 프로그램이 많이 있으며, 이는 보안, 군중 통제, 다양한 로봇 응용 분야에서도 중요합니다.
 
-CARLA's API provides functionality to retrieve the ground truth skeleton from pedestrians in the simulation. The skeleton is composed of a set of bones, each with a root node or vertex and a vector defining the pose (or orientation) of the bone. These bones control the movement of the limbs and body of the simulated pedestrian. By collecting together the ensemble of individual bones, a model of the virtual human's pose can be built that can be used to compare against a pose model estimated by a neural network, or even used to train a neural network for pose estimation. 
+CARLA의 API는 시뮬레이션에서 보행자의 실측 골격을 검색하는 기능을 제공합니다. 골격은 루트 노드(또는 정점)와 뼈대의 자세(또는 방향)를 정의하는 벡터를 가진 뼈대들의 집합으로 구성됩니다. 이러한 뼈대들은 시뮬레이션된 보행자의 사지와 신체의 움직임을 제어합니다. 개별 뼈대들을 모아서 가상 인간의 자세 모델을 구축할 수 있으며, 이는 신경망이 추정한 자세 모델과 비교하거나 자세 추정을 위한 신경망을 훈련시키는 데 사용할 수 있습니다.
 
-In this tutorial, we will go through the steps of spawning a pedestrian in a map, setting up an AI controller to move the pedestrian and then retrieving the ground truth skeleton and projecting the bones onto a 2D camera capture.
+이 튜토리얼에서는 맵에 보행자를 생성하고, 보행자를 움직이기 위한 AI 컨트롤러를 설정한 다음, 실측 골격을 검색하여 2D 카메라 캡처에 뼈대를 투영하는 단계를 살펴보겠습니다.
 
-## Setting up the simulator
+## 시뮬레이터 설정
 
-First, launch the CARLA simulator as per your standard workflow, either in standalone mode or inside the Unreal Editor. We will import several utility libraries to use for maths and plotting. To give us more control over the simulation, we will use [__synchronous mode__](adv_synchrony_timestep.md) in this tutorial. This means that our Python client controls the time progression of the simulator.
+먼저, 독립 실행 모드나 언리얼 에디터 내에서 표준 워크플로우에 따라 CARLA 시뮬레이터를 실행합니다. 수학과 플로팅에 사용할 여러 유틸리티 라이브러리를 임포트할 것입니다. 시뮬레이션을 더 잘 제어하기 위해 이 튜토리얼에서는 [__동기 모드__](adv_synchrony_timestep.md)를 사용할 것입니다. 이는 Python 클라이언트가 시뮬레이터의 시간 진행을 제어한다는 것을 의미합니다.
 
 ```py
 import carla
@@ -16,41 +16,38 @@ import random
 import numpy as np
 import math
 import queue
-import cv2 #OpenCV to manipulate and save the images
+import cv2 #이미지를 조작하고 저장하기 위한 OpenCV
 
-# Connect to the client and retrieve the world object
+# 클라이언트에 연결하고 월드 객체 검색
 client = carla.Client('localhost', 2000)
 world = client.get_world()
 
-# Set up the simulator in synchronous mode
+# 동기 모드로 시뮬레이터 설정
 settings = world.get_settings()
-settings.synchronous_mode = True # Enables synchronous mode
+settings.synchronous_mode = True # 동기 모드 활성화
 settings.fixed_delta_seconds = 0.05
 world.apply_settings(settings)
 
-# We will aslo set up the spectator so we can see what we do
+# 우리가 하는 일을 볼 수 있도록 관전자도 설정할 것입니다
 spectator = world.get_spectator()
-
 ```
 
-## Spawning a pedestrian in the CARLA simulator
+## CARLA 시뮬레이터에서 보행자 생성
 
-First, we want to spawn a pedestrian in the simulation. This can be done at a random location using `world.get_random_location_from_navigation()`, or it can be chosen using coordinates gathered from the Unreal Editor. In the unreal editor, add an empty actor to the location where you want to spawn your pedestrian, then use the inspector on the right hand side to query the coordinates.
+먼저, 시뮬레이션에 보행자를 생성하고자 합니다. 이는 `world.get_random_location_from_navigation()`를 사용하여 무작위 위치에 생성하거나, 언리얼 에디터에서 수집한 좌표를 사용하여 선택할 수 있습니다. 언리얼 에디터에서는 보행자를 생성하고 싶은 위치에 빈 액터를 추가한 다음, 오른쪽의 인스펙터를 사용하여 좌표를 조회합니다.
 
-![actor_location](../img/tuto_G_pedestrian_bones/actor_location.png)
+![액터_위치](../img/tuto_G_pedestrian_bones/actor_location.png)
 
-!!! Note
-    The Unreal Editor works in units of centimeters, while CARLA works in units of meters so the units must be converted. Ensure to divide the Unreal Editor coordinates by 100 before using in the CARLA simulator.
+!!! 참고
+    언리얼 에디터는 센티미터 단위로 작동하는 반면 CARLA는 미터 단위로 작동하므로 단위를 변환해야 합니다. CARLA 시뮬레이터에서 사용하기 전에 언리얼 에디터 좌표를 100으로 나누어야 합니다.
 
+좌표를 선택했다면, 보행자를 생성할 수 있습니다. 또한 이미지를 수집하기 위한 카메라도 생성할 것입니다. 카메라로부터 데이터를 쉽게 접근할 수 있도록 [`Queue`](#https://docs.python.org/3/library/queue.html) 객체도 필요합니다(카메라 센서는 스크립트를 실행하는 주 Python 스레드와 별개의 자체 스레드에서 작동하기 때문입니다).
 
-Once you have chosen your coordinates, you can then spawn the pedestrian. We will also spawn a camera to gather images. We also need a [`Queue`](#https://docs.python.org/3/library/queue.html) object to allow us easy access to the data from the camera (as the camera sensor operates on its own thread, separate from the main Python thread running your script).
-
-In order to see our pedestrian, we need to transform the camera so it is pointing at the pedestrian we spawn. For this we will use a function that calculates the translation and rotation needed to center the camera:
+보행자를 보기 위해서는 카메라가 생성한 보행자를 향하도록 변환해야 합니다. 이를 위해 카메라를 중앙에 맞추는 데 필요한 이동과 회전을 계산하는 함수를 사용할 것입니다:
 
 ```py
-
 def center_camera(ped, rot_offset=0):
-    # Rotate the camera to face the pedestrian and apply an offset
+    # 카메라를 보행자를 향하도록 회전하고 오프셋 적용
     trans = ped.get_transform()
     offset_radians = 2 * math.pi * rot_offset/360
     x = math.cos(offset_radians) * -2
@@ -63,78 +60,73 @@ def center_camera(ped, rot_offset=0):
     trans.rotation.yaw = -rot_offset
     spectator.set_transform(trans)
     return trans
-
 ```
 
-Now we'll spawn the pedestrian, the camera, a controller and move the spectator so we can see what we've done:
+이제 보행자, 카메라, 컨트롤러를 생성하고 우리가 한 일을 볼 수 있도록 관전자를 이동시키겠습니다:
 
 ```py
-# Get the pedestrian blueprint and spawn it
+# 보행자 블루프린트를 가져와서 생성
 pedestrian_bp = random.choice(world.get_blueprint_library().filter('*walker.pedestrian*'))
 transform = carla.Transform(carla.Location(x=-134,y=78.1,z=1.18))
 pedestrian = world.try_spawn_actor(pedestrian_bp, transform)
 
-# Spawn an RGB camera
+# RGB 카메라 생성
 camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
 camera = world.spawn_actor(camera_bp, transform)
 
-# Create a queue to store and retrieve the sensor data
+# 센서 데이터를 저장하고 검색할 큐 생성
 image_queue = queue.Queue()
 camera.listen(image_queue.put)
 
 world.tick()
 image_queue.get()
-# We must call image_queue.get() each time we call world.tick() to
-# ensure the timestep and sensor data stay synchronised
-    
-# Now we will rotate the camera to face the pedestrian
+# 타임스텝과 센서 데이터가 동기화되도록 world.tick()을 호출할 때마다
+# image_queue.get()을 호출해야 합니다
+
+# 이제 카메라가 보행자를 향하도록 회전시킵니다
 camera.set_transform(center_camera(pedestrian))
-# Move the spectator to see the result
+# 결과를 보기 위해 관전자 이동
 spectator.set_transform(camera.get_transform())
 
-# Set up the AI controller for the pedestrian.... see below
+# 보행자를 위한 AI 컨트롤러 설정.... 아래 참조
 controller_bp = world.get_blueprint_library().find('controller.ai.walker')
 controller = world.spawn_actor(controller_bp, pedestrian.get_transform(), pedestrian)
 
-# Start the controller and give it a random location to move to
+# 컨트롤러를 시작하고 이동할 무작위 위치를 지정
 controller.start()
 controller.go_to_location(world.get_random_location_from_navigation())
 
-# Move the world a few frames to let the pedestrian spawn
+# 보행자가 생성되도록 월드를 몇 프레임 진행
 for frame in range(0,5):
     world.tick()
     trash = image_queue.get() 
-
 ```
 
-## AI controller to guide the pedestrian around the map
+## 맵 주변을 안내하는 AI 컨트롤러
 
-In the previous step we also initialized an AI controller to help the pedestrian move intelligently around the map with the following code (you don't need to repeat it):
+이전 단계에서 다음 코드를 사용하여 보행자를 지능적으로 맵 주변으로 이동시키는 AI 컨트롤러도 초기화했습니다(반복할 필요 없음):
 
 ```py
 controller_bp = world.get_blueprint_library().find('controller.ai.walker')
 controller = world.spawn_actor(controller_bp, pedestrian.get_transform(), pedestrian)
 controller.start()
 controller.go_to_location(world.get_random_location_from_navigation())
-
 ```
 
-Now the pedestrian will move autonomously with each time increment (`world.tick()`) of the simulation.
+이제 보행자는 시뮬레이션의 각 시간 증분(`world.tick()`)에 따라 자율적으로 이동할 것입니다.
 
-## Camera geometry
+## 카메라 기하학
 
-Now we need to perform some geometric calculations. First, we want to transform the world coordinates of the bones into camera coordinates, we do this using the inverse of the camera transform. This means that the coordinates are transformed to be relative to a camera located at the origin facing in the positive x-direction.
+이제 몇 가지 기하학적 계산을 수행해야 합니다. 먼저, 뼈대의 월드 좌표를 카메라 좌표로 변환하려면 카메라 변환의 역행렬을 사용합니다. 이는 좌표가 원점에 위치하고 x축 양의 방향을 향하는 카메라를 기준으로 변환된다는 것을 의미합니다.
 
 ```py
-# get 4x4 matrix to transform points from world to camera coordinates
+# 월드에서 카메라 좌표로 점을 변환하는 4x4 행렬 얻기
 world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
-
 ```
 
-Then, we need to project the 3D points onto the 2D field of view (FOV) of the camera to overlay them on the output images using the [__camera matrix__](#https://en.wikipedia.org/wiki/Camera_matrix) or __projection matrix__. The following function produces the camera matrix needed for this 3D -> 2D transformation. 
+그런 다음, 출력 이미지에 오버레이하기 위해 3D 점들을 카메라의 2D 시야각(FOV)에 투영해야 하며, 이때 [__카메라 매트릭스__](#https://en.wikipedia.org/wiki/Camera_matrix) 또는 __투영 매트릭스__를 사용합니다. 다음 함수는 이 3D -> 2D 변환에 필요한 카메라 매트릭스를 생성합니다.
 
 ```py
-
 def build_projection_matrix(w, h, fov):
     focal = w / (2.0 * np.tan(fov * np.pi / 360.0))
     K = np.identity(3)
@@ -142,76 +134,69 @@ def build_projection_matrix(w, h, fov):
     K[0, 2] = w / 2.0
     K[1, 2] = h / 2.0
     return K
-
 ```
 
-## Build the skeleton 
+## 골격 구축
 
-Now we can put the moving parts together. First, gather the bone coordinates from the simulation using `pedestrian.get_bones()` and then put together the skeleton and project it onto the 2D imaging plane of the camera sensor. The bones are joined into the complete skeleton using the pairs defined in __skeleton.txt__ that can be downloaded [__here__](https://carla-assets.s3.us-east-005.backblazeb2.com/fbx/skeleton.txt).
+이제 움직이는 부분들을 조합할 수 있습니다. 먼저, `pedestrian.get_bones()`를 사용하여 시뮬레이션에서 뼈대 좌표를 수집한 다음, 골격을 조합하여 카메라 센서의 2D 이미징 평면에 투영합니다. 뼈대들은 [__여기__](https://carla-assets.s3.us-east-005.backblazeb2.com/fbx/skeleton.txt)에서 다운로드할 수 있는 __skeleton.txt__에 정의된 쌍들을 사용하여 완전한 골격으로 연결됩니다.
 
-We need a function to iterate through the bone pairs defined in __skeleton.txt__ and join the bone coordinates into lines that can be overlayed onto a camera sensor image. 
+__skeleton.txt__에 정의된 뼈대 쌍들을 반복하고 뼈대 좌표를 카메라 센서 이미지에 오버레이할 수 있는 선으로 연결하는 함수가 필요합니다.
 
 ```py
-
 def get_image_point(bone_trans):
-        # Calculate 2D projection of bone coordinate
+        # 뼈대 좌표의 2D 투영 계산
         
-        # get the world location of the bone root
+        # 뼈대 루트의 월드 위치 가져오기
         loc = bone_trans.world.location
         bone = np.array([loc.x, loc.y, loc.z, 1])
-        # transform to camera coordinates
+        # 카메라 좌표로 변환
         point_camera = np.dot(world_2_camera, bone)
 
-        # New we must change from UE4's coordinate system to an "standard"
+        # 이제 UE4의 좌표계를 "표준" 좌표계로 변경해야 합니다
         # (x, y ,z) -> (y, -z, x)
-        # and we remove the fourth component also
+        # 그리고 네 번째 구성요소도 제거합니다
         point_camera = [point_camera[1], -point_camera[2], point_camera[0]]
 
-        # now project 3D->2D using the camera matrix
+        # 이제 카메라 매트릭스를 사용하여 3D->2D 투영
         point_img = np.dot(K, point_camera)
-        # normalize
+        # 정규화
         point_img[0] /= point_img[2]
         point_img[1] /= point_img[2]
 
         return point_img[0:2]
     
 def build_skeleton(ped, sk_links, K):
-
-    ######## get the pedestrian skeleton #########
+    ######## 보행자 골격 가져오기 #########
     bones = ped.get_bones()
 
-    # list where we will store the lines we will project
-    # onto the camera output
+    # 카메라 출력에 투영할 선들을 저장할 리스트
     lines = []
 
-    # cycle through the bone pairs in skeleton.txt and retrieve the joint positions
+    # skeleton.txt의 뼈대 쌍들을 순회하며 관절 위치 검색
     for link in sk_links[1:]:
-
-        # get the roots of the two bones to be joined
+        # 연결할 두 뼈대의 루트 가져오기
         bone_transform_1 = next(filter(lambda b: b.name == link[0], bones.bone_transforms), None)
         bone_transform_2 = next(filter(lambda b: b.name == link[1], bones.bone_transforms), None)
-
-        # some bone names aren't matched
+        # 일부 뼈대 이름은 매칭되지 않음
         if bone_transform_1 is not None and bone_transform_2 is not None:
            
-            # Calculate 2D projection of 3D bone coordinates
+            # 3D 뼈대 좌표의 2D 투영 계산
             point_image = get_image_point(bone_transform_1)
     
-            # append line start to lines list
+            # 선의 시작점을 lines 리스트에 추가
             lines.append([point_image[0], point_image[1], 0, 0])
             
-            # Calculate 2D projection of 3D bone coordinates
+            # 3D 뼈대 좌표의 2D 투영 계산
             point_image = get_image_point(bone_transform_2)
             
-            # append line end to lines list
+            # 선의 끝점을 lines 리스트에 추가
             lines[-1][2] = point_image[0]
             lines[-1][3] = point_image[1]
             
     return lines
-
 ```
 
-Next, let's read the bone pairs from __skeleton.txt__:
+다음으로, __skeleton.txt__에서 뼈대 쌍들을 읽어보겠습니다:
 
 ```py
 skeleton_links = []
@@ -223,62 +208,56 @@ with open('skeleton.txt') as f:
         stripped = list(map(str.strip, line.strip().split(',')))
         skeleton_links.append(stripped)
 
-
 world.tick()
 trash = image_queue.get()
 ```
 
-Now we can iterate a few frames, building the skeleton in each frame and projecting the skeleton onto the camera sensor output. We use OpenCV to draw the skeleton onto the sensor output and save the image:
+이제 몇 프레임을 반복하면서 각 프레임에서 골격을 구축하고 카메라 센서 출력에 골격을 투영할 수 있습니다. OpenCV를 사용하여 센서 출력에 골격을 그리고 이미지를 저장합니다:
 
-!!! Note
-    Ensure that you have created a folder named __out/__ in your working directory to store the images
+!!! 참고
+    작업 디렉토리에 __out/__ 폴더를 만들어 이미지를 저장할 수 있도록 하세요
 
 ```py
-
 for frame in range(0,360):
     
-    # Move the camera around the pedestrian
+    # 보행자 주위로 카메라 이동
     camera.set_transform(center_camera(pedestrian, frame + 200))
     
-    # Advance the frame and retrieve an image
+    # 프레임을 진행하고 이미지 검색
     world.tick()
-    # Retrieve the frame from the queue
+    # 큐에서 프레임 검색
     image = image_queue.get()
     
-    # get 4x4 matrix to transform points from world to camera coordinates
+    # 월드에서 카메라 좌표로 점을 변환하는 4x4 행렬 가져오기
     world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
 
-    # get some attributes from the camera
+    # 카메라에서 몇 가지 속성 가져오기
     image_w = camera_bp.get_attribute("image_size_x").as_int()
     image_h = camera_bp.get_attribute("image_size_y").as_int()
     fov = camera_bp.get_attribute("fov").as_float()
 
-    # calculate the camera matrix to project from 3D -> 2D
+    # 3D -> 2D 투영을 위한 카메라 매트릭스 계산
     K = build_projection_matrix(image_w, image_h, fov)
     
-    # Build the list of lines that will display the skeleton
+    # 골격을 표시할 선 목록 구축
     lines = build_skeleton(pedestrian, skeleton_links, K)
 
-    # Reshape the data into a 2D RBGA array
+    # 데이터를 2D RGBA 배열로 재구성
     img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4)) 
 
-    # Draw the lines into the image using OpenCV
+    # OpenCV를 사용하여 이미지에 선 그리기
     for line in lines:
         l = [int(x) for x in line]
         cv2.line(img, (l[0],l[1]), (l[2],l[3]), (255,0,0, 255), 2)
     
-    # Save the image
+    # 이미지 저장
     cv2.imwrite('out/skeleton%04d.png' % frame, img)
-
 ```
 
-In the __out/__ folder you should now have a sequence of frames with the skeleton overlayed over the camera sensor output. The following animation can be reconstructed by joining the frames into a video:
+__out/__ 폴더에 이제 카메라 센서 출력에 골격이 오버레이된 프레임 시퀀스가 있어야 합니다. 다음 애니메이션은 프레임들을 비디오로 결합하여 재구성할 수 있습니다:
 
-![pedestrian_skeleton](../img/tuto_G_pedestrian_bones/pedestrian_skeleton.gif)
+![보행자_골격](../img/tuto_G_pedestrian_bones/pedestrian_skeleton.gif)
 
-## Summary
+## 요약
 
-During this tutorial, you have learned how to spawn a pedestrian with an AI controller, recover the ground truth 3D coordinates of the pedestrian bones and project those bones onto the 2D image captured by the camera sensor. You could use the techniques learned in this tutorial to set up training and validation for human pose estimation frameworks using the CARLA simulator.
-
-
-
+이 튜토리얼에서는 AI 컨트롤러가 있는 보행자를 생성하고, 보행자 뼈대의 3D 좌표 실측값을 검색하여 카메라 센서가 캡처한 2D 이미지에 이러한 뼈대를 투영하는 방법을 배웠습니다. 이 튜토리얼에서 배운 기술을 사용하여 CARLA 시뮬레이터를 사용하여 인간 자세 추정 프레임워크의 훈련 및 검증을 설정할 수 있습니다.

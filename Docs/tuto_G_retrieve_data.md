@@ -1,134 +1,130 @@
-# Retrieve simulation data
+# 시뮬레이션 데이터 검색
 
-Learning an efficient way to retrieve simulation data is essential in CARLA. This holistic tutorial is advised for both, newcomers and more experienced users. It starts from the very beginning, and gradually dives into the many options available in CARLA.  
+CARLA에서 시뮬레이션 데이터를 검색하는 효율적인 방법을 배우는 것은 필수적입니다. 이 종합적인 튜토리얼은 초보자와 경험이 많은 사용자 모두에게 권장됩니다. 매우 기초적인 내용부터 시작하여 점차 CARLA에서 사용할 수 있는 다양한 옵션들을 살펴봅니다.
 
-First, the simulation is initialized with custom settings and traffic. An ego vehicle is set to roam around the city, optionally with some basic sensors. The simulation is recorded, so that later it can be queried to find the highlights. After that, the original simulation is played back, and exploited to the limit. New sensors can be added to retrieve consistent data. The weather conditions can be changed. The recorder can even be used to test specific scenarios with different outputs.  
+먼저, 시뮬레이션은 사용자 정의 설정과 교통 상황으로 초기화됩니다. 자아(ego) 차량이 도시를 돌아다니도록 설정되며, 선택적으로 기본 센서들이 장착됩니다. 시뮬레이션이 기록되어 나중에 주요 장면을 찾을 수 있습니다. 그 후, 원본 시뮬레이션이 재생되고 최대한 활용됩니다. 일관된 데이터를 검색하기 위해 새로운 센서를 추가할 수 있고, 날씨 조건을 변경할 수 있으며, 레코더를 사용하여 특정 시나리오를 다른 결과로 테스트할 수도 있습니다.
 
-*   [__Overview__](#overview)  
-*   [__Set the simulation__](#set-the-simulation)  
-	*   [Map setting](#map-setting)  
-	*   [Weather setting](#weather-setting)  
-*   [__Set traffic__](#set-traffic)  
-	*   [CARLA traffic and pedestrians](#carla-traffic-and-pedestrians)  
-	*   [SUMO co-simulation traffic](#sumo-co-simulation-traffic)  
-*   [__Set the ego vehicle__](#set-the-ego-vehicle)  
-	*   [Spawn the ego vehicle](#spawn-the-ego-vehicle)  
-	*   [Place the spectator](#place-the-spectator)  
-*   [__Set basic sensors__](#set-basic-sensors)  
-	*   [RGB camera](#rgb-camera)  
-	*   [Detectors](#detectors)  
-	*   [Other sensors](#other-sensors)  
-*   [__Set advanced sensors__](#set-advanced-sensors)  
-	*   [Depth camera](#depth-camera)  
-	*   [Semantic segmentation camera](#semantic-segmentation-camera)  
-	*   [LIDAR raycast sensor](#lidar-raycast-sensor)  
-	*   [Radar sensor](#radar-sensor)  
-*   [__No-rendering-mode__](#no-rendering-mode)  
-	*   [Simulate at a fast pace](#simulate-at-a-fast-pace)  
-	*   [Manual control without rendering](#manual-control-without-rendering)  
-*   [__Record and retrieve data__](#record-and-retrieve-data)  
-	*   [Start recording](#start-recording)  
-	*   [Capture and record](#capture-and-record)  
-	*   [Stop recording](#stop-recording)  
-*   [__Exploit the recording__](#exploit-the-recording)  
-	*   [Query the events](#query-the-events)  
-	*   [Choose a fragment](#choose-a-fragment)  
-	*   [Retrieve more data](#retrieve-more-data)  
-	*   [Change the weather](#change-the-weather)  
-	*   [Try new outcomes](#try-new-outcomes)  
-*   [__Tutorial scripts__](#tutorial-scripts)  
-
----
-## Overview
-
-There are some common mistakes in the process of retrieving simulation data. Flooding the simulator with sensors, storing useless data, or struggling to find a specific event are some examples. However, some outlines to this process can be provided. The goal is to ensure that data can be retrieved and replicated, and the simulation can be examined and altered at will.  
-
-!!! Note
-    This tutorial uses the [__CARLA 0.9.8 deb package__](start_quickstart.md). There may be minor changes depending on your CARLA version and installation, specially regarding paths.
-
-The tutorial presents a wide set of options for the differents steps. All along, different scripts will be mentioned. Not all of them will be used, it depends on the specific use cases. Most of them are already provided in CARLA for generic purposes.  
-
-* __config.py__ changes the simulation settings. Map, rendering options, set a fixed time-step...  
-	* `carla/PythonAPI/util/config.py`
-* __dynamic_weather.py__ creates interesting weather conditions.  
-	* `carla/PythonAPI/examples/dynamic_weather.py`
-* __spawn_npc.py__ spawns some AI controlled vehicles and walkers.  
-	* `carla/PythonAPI/examples/spawn_npc.py`
-* __manual_control.py__ spawns an ego vehicle, and provides control over it.  
-	* `carla/PythonAPI/examples/manual_control.py`
-
-However, there are two scripts mentioned along the tutorial that cannot be found in CARLA. They contain the fragments of code cited. This serves a twofold purpose. First of all, to encourage users to build their own scripts. It is important to have full understanding of what the code is doing. In addition to this, the tutorial is only an outline that may, and should, vary a lot depending on user preferences. These two scripts are just an example.  
-
-* __tutorial_ego.py__ spawns an ego vehicle with some basic sensors, and enables autopilot. The spectator is placed at the spawning position. The recorder starts at the very beginning, and stops when the script is finished.  
-* __tutorial_replay.py__ reenacts the simulation that __tutorial_ego.py__ recorded. There are different fragments of code to query the recording, spawn some advanced sensors, change weather conditions, and reenact fragments of the recording.  
-
-The full code can be found in the last section of the tutorial. Remember these are not strict, but meant to be customized. Retrieving data in CARLA is as powerful as users want it to be. 
-
-!!! Important
-    This tutorial requires some knowledge of Python.
+*   [__개요__](#개요)  
+*   [__시뮬레이션 설정__](#시뮬레이션-설정)
+    *   [맵 설정](#맵-설정)
+    *   [날씨 설정](#날씨-설정)
+*   [__교통 설정__](#교통-설정)
+    *   [CARLA 교통과 보행자](#carla-교통과-보행자)
+    *   [SUMO 공동 시뮬레이션 교통](#sumo-공동-시뮬레이션-교통)
+*   [__자아 차량 설정__](#자아-차량-설정)
+    *   [자아 차량 생성](#자아-차량-생성)
+    *   [관전자 위치 지정](#관전자-위치-지정)
+*   [__기본 센서 설정__](#기본-센서-설정)
+    *   [RGB 카메라](#rgb-카메라)
+    *   [감지기](#감지기)
+    *   [기타 센서](#기타-센서)
+*   [__고급 센서 설정__](#고급-센서-설정)
+    *   [깊이 카메라](#깊이-카메라)
+    *   [의미론적 분할 카메라](#의미론적-분할-카메라)
+    *   [LIDAR 레이캐스트 센서](#lidar-레이캐스트-센서)
+    *   [레이더 센서](#레이더-센서)
+*   [__렌더링 없는 모드__](#렌더링-없는-모드)
+    *   [빠른 속도로 시뮬레이션하기](#빠른-속도로-시뮬레이션하기)
+    *   [렌더링 없는 수동 제어](#렌더링-없는-수동-제어)
+*   [__데이터 기록 및 검색__](#데이터-기록-및-검색)
+    *   [기록 시작](#기록-시작)
+    *   [캡처 및 기록](#캡처-및-기록)
+    *   [기록 중지](#기록-중지)
+*   [__기록 활용__](#기록-활용)
+    *   [이벤트 조회](#이벤트-조회)
+    *   [단편 선택](#단편-선택)
+    *   [더 많은 데이터 검색](#더-많은-데이터-검색)
+    *   [날씨 변경](#날씨-변경)
+    *   [새로운 결과 시도](#새로운-결과-시도)
+*   [__튜토리얼 스크립트__](#튜토리얼-스크립트)
 
 ---
-## Set the simulation
+## 개요
 
-The first thing to do is set the simulation ready to a desired environment.  
+시뮬레이션 데이터를 검색하는 과정에서 일반적인 실수들이 있습니다. 시뮬레이터에 너무 많은 센서를 추가하거나, 불필요한 데이터를 저장하거나, 특정 이벤트를 찾는 데 어려움을 겪는 것이 그 예입니다. 하지만 이 과정에 대한 몇 가지 지침을 제공할 수 있습니다. 목표는 데이터를 검색하고 복제할 수 있으며, 시뮬레이션을 원하는 대로 검사하고 수정할 수 있도록 하는 것입니다.
 
-Run CARLA. 
+!!! 참고
+    이 튜토리얼은 [__CARLA 0.9.8 deb 패키지__](start_quickstart.md)를 사용합니다. CARLA 버전과 설치 방법에 따라, 특히 경로와 관련하여 약간의 변경사항이 있을 수 있습니다.
+
+이 튜토리얼은 다양한 단계에 대한 광범위한 옵션들을 제시합니다. 튜토리얼 전반에 걸쳐 여러 스크립트가 언급될 것입니다. 모든 스크립트가 사용되는 것은 아니며, 특정 사용 사례에 따라 달라집니다. 대부분은 일반적인 용도로 CARLA에서 이미 제공됩니다.
+
+* __config.py__ 시뮬레이션 설정을 변경합니다. 맵, 렌더링 옵션, 고정 시간 단계 설정 등...
+    * `carla/PythonAPI/util/config.py`
+* __dynamic_weather.py__ 흥미로운 날씨 조건을 생성합니다.
+    * `carla/PythonAPI/examples/dynamic_weather.py`
+* __spawn_npc.py__ AI가 제어하는 차량과 보행자를 생성합니다.
+    * `carla/PythonAPI/examples/spawn_npc.py`
+* __manual_control.py__ 자아 차량을 생성하고 이에 대한 제어를 제공합니다.
+    * `carla/PythonAPI/examples/manual_control.py`
+그러나 튜토리얼에서 언급되는 두 개의 스크립트는 CARLA에서 찾을 수 없습니다. 이 스크립트들은 인용된 코드 조각들을 포함하고 있습니다. 이는 두 가지 목적을 가집니다. 첫째, 사용자가 자신만의 스크립트를 구축하도록 장려하는 것입니다. 코드가 무엇을 하는지 완전히 이해하는 것이 중요합니다. 둘째, 이 튜토리얼은 사용자 선호도에 따라 크게 달라질 수 있고, 또 그래야 하는 개요일 뿐입니다. 이 두 스크립트는 단지 예시일 뿐입니다.
+
+* __tutorial_ego.py__ 기본 센서가 있는 자아 차량을 생성하고 자동 조종을 활성화합니다. 관전자는 생성 위치에 배치됩니다. 레코더는 처음부터 시작하여 스크립트가 종료될 때 중지됩니다.
+* __tutorial_replay.py__ **tutorial_ego.py**가 기록한 시뮬레이션을 재현합니다. 기록을 조회하고, 고급 센서를 생성하고, 날씨 조건을 변경하고, 기록의 단편들을 재현하는 다양한 코드 단편이 있습니다.
+
+전체 코드는 튜토리얼의 마지막 섹션에서 찾을 수 있습니다. 이것들은 엄격한 것이 아니라 사용자 정의되도록 의도되었음을 기억하세요. CARLA에서 데이터를 검색하는 것은 사용자가 원하는 만큼 강력합니다.
+
+!!! 중요
+    이 튜토리얼은 Python에 대한 기본 지식이 필요합니다.
+
+---
+## 시뮬레이션 설정
+
+가장 먼저 해야 할 일은 원하는 환경에서 시뮬레이션을 준비하는 것입니다.
+
+CARLA를 실행합니다.
 
 ```sh
 cd /opt/carla/bin
-./CarlaUE.sh
+./CarlaUE4.sh
 ```
 
-### Map setting
+### 맵 설정
 
-Choose a map for the simulation to run. Take a look at the [map documentation](core_map.md#carla-maps) to learn more about their specific attributes. For the sake of this tutorial, __Town07__ is chosen. 
+시뮬레이션을 실행할 맵을 선택합니다. [맵 문서](core_map.md#carla-maps)를 참조하여 각 맵의 특정 속성에 대해 자세히 알아보세요. 이 튜토리얼에서는 *Town07*이 선택되었습니다.
 
-Open a new terminal. Change the map using the __config.py__ script. 
+새 터미널을 열고 __config.py__ 스크립트를 사용하여 맵을 변경합니다.
 
 ```
 cd /opt/carla/PythonAPI/utils
 python3 config.py --map Town01
 ```
-This script can enable different settings. Some of them will be mentioned during the tutorial, others will not. Hereunder there is a brief summary.  
+
+이 스크립트는 다양한 설정을 활성화할 수 있습니다. 일부는 튜토리얼에서 언급될 것이고, 일부는 그렇지 않습니다. 다음은 간단한 요약입니다.
 
 <details>
-<summary> Optional arguments in <b>config.py</b> </summary>
+<summary> <b>config.py</b>의 선택적 인수들 </summary>
 
 ```sh
-  -h, --help            show this help message and exit
-  --host H              IP of the host CARLA Simulator (default: localhost)
-  -p P, --port P        TCP port of CARLA Simulator (default: 2000)
-  -d, --default         set default settings
-  -m MAP, --map MAP     load a new map, use --list to see available maps
-  -r, --reload-map      reload current map
-  --delta-seconds S     set fixed delta seconds, zero for variable frame rate
-  --fps N               set fixed FPS, zero for variable FPS (similar to
-                        --delta-seconds)
-  --rendering           enable rendering
-  --no-rendering        disable rendering
-  --no-sync             disable synchronous mode
-  --weather WEATHER     set weather preset, use --list to see available
-                        presets
-  -i, --inspect         inspect simulation
-  -l, --list            list available options
+  -h, --help            도움말 메시지 표시 및 종료
+  --host H              CARLA 시뮬레이터의 IP (기본값: localhost)
+  -p P, --port P        CARLA 시뮬레이터의 TCP 포트 (기본값: 2000)
+  -d, --default         기본 설정으로 설정
+  -m MAP, --map MAP     새 맵 로드, --list를 사용하여 사용 가능한 맵 확인
+  -r, --reload-map      현재 맵 다시 로드
+  --delta-seconds S     고정 델타 초 설정, 가변 프레임 속도의 경우 0
+  --fps N               고정 FPS 설정, 가변 FPS의 경우 0 (--delta-seconds와 유사)
+  --rendering           렌더링 활성화
+  --no-rendering        렌더링 비활성화
+  --no-sync            동기 모드 비활성화
+  --weather WEATHER     날씨 프리셋 설정, --list를 사용하여 사용 가능한 프리셋 확인
+  -i, --inspect         시뮬레이션 검사
+  -l, --list           사용 가능한 옵션 나열
   -b FILTER, --list-blueprints FILTER
-                        list available blueprints matching FILTER (use '*' to
-                        list them all)
+                        FILTER와 일치하는 사용 가능한 블루프린트 나열 ('*'를 사용하여 모두 나열)
   -x XODR_FILE_PATH, --xodr-path XODR_FILE_PATH
-                        load a new map with a minimum physical road
-                        representation of the provided OpenDRIVE
+                        제공된 OpenDRIVE의 최소 물리적 도로 표현이 있는 새 맵 로드
 ```
 </details>
 <br>
 
 ![tuto_map](img/tuto_map.jpg)
-<div style="text-align: right"><i>Aerial view of Town07</i></div>
+<div style="text-align: right"><i>Town07의 항공 뷰</i></div>
 
-### Weather setting
+### 날씨 설정
 
-Each town is loaded with a specific weather that fits it, however this can be set at will. There are two scripts that offer different approaches to the matter. The first one sets a dynamic weather that changes conditions over time. The other sets custom weather conditions. It is also possible to code weather conditions. This will be covered later when [changing weather conditions](#change-the-weather).  
+각 도시는 해당 도시에 맞는 특정 날씨로 로드되지만, 이는 원하는 대로 설정할 수 있습니다. 이 문제에 대한 다른 접근 방식을 제공하는 두 개의 스크립트가 있습니다. 첫 번째는 시간이 지남에 따라 조건이 변하는 동적 날씨를 설정합니다. 다른 하나는 사용자 정의 날씨 조건을 설정합니다. 날씨 조건을 코딩하는 것도 가능합니다. 이는 나중에 [날씨 조건 변경](#날씨-조건-변경)에서 다룰 것입니다.
 
-* __To set a dynamic weather__. Open a new terminal and run __dynamic_weather.py__. This script allows to set the ratio at which the weather changes, being `1.0` the default setting. 
+* __동적 날씨를 설정하려면__ 새 터미널을 열고 **dynamic_weather.py**를 실행합니다. 이 스크립트는 날씨가 변하는 비율을 설정할 수 있으며, `1.0`이 기본 설정입니다.
 
 ```sh
 cd /opt/carla/PythonAPI/examples
@@ -136,134 +132,132 @@ cd /opt/carla/PythonAPI/examples
 python3 dynamic_weather.py --speed 1.0
 ```
 
-* __To set custom conditions__. Use the script __environment.py__. There are quite a lot of possible settings. Take a look at the optional arguments, and the documentation for [carla.WeatherParameters](python_api.md#carla.WeatherParameters).
+* __사용자 정의 조건을 설정하려면__ __environment.py__ 스크립트를 사용합니다. 가능한 설정이 꽤 많습니다. 선택적 인수와 [carla.WeatherParameters](python_api.md#carla.WeatherParameters)에 대한 문서를 살펴보세요.
 
 ```sh
 cd /opt/carla/PythonAPI/util
 python3 environment.py --clouds 100 --rain 80 --wetness 100 --puddles 60 --wind 80 --fog 50
-
 ```
+
 <details>
-<summary> Optional arguments in <b>environment.py</b> </summary>
+<summary> <b>environment.py</b>의 선택적 인수들 </summary>
 
 ```sh
-  -h, --help            show this help message and exit
-  --host H              IP of the host server (default: 127.0.0.1)
-  -p P, --port P        TCP port to listen to (default: 2000)
-  --sun SUN             Sun position presets [sunset | day | night]
-  --weather WEATHER     Weather condition presets [clear | overcast | rain]
-  --altitude A, -alt A  Sun altitude [-90.0, 90.0]
-  --azimuth A, -azm A   Sun azimuth [0.0, 360.0]
-  --clouds C, -c C      Clouds amount [0.0, 100.0]
-  --rain R, -r R        Rain amount [0.0, 100.0]
-  --puddles Pd, -pd Pd  Puddles amount [0.0, 100.0]
-  --wind W, -w W        Wind intensity [0.0, 100.0]
-  --fog F, -f F         Fog intensity [0.0, 100.0]
-  --fogdist Fd, -fd Fd  Fog Distance [0.0, inf)
+  -h, --help            도움말 메시지 표시 및 종료
+  --host H              호스트 서버의 IP (기본값: 127.0.0.1)
+  -p P, --port P        수신할 TCP 포트 (기본값: 2000)
+  --sun SUN             태양 위치 프리셋 [sunset | day | night]
+  --weather WEATHER     날씨 조건 프리셋 [clear | overcast | rain]
+  --altitude A, -alt A  태양 고도 [-90.0, 90.0]
+  --azimuth A, -azm A   태양 방위각 [0.0, 360.0]
+  --clouds C, -c C      구름량 [0.0, 100.0]
+  --rain R, -r R        강우량 [0.0, 100.0]
+  --puddles Pd, -pd Pd  물웅덩이량 [0.0, 100.0]
+  --wind W, -w W        바람 강도 [0.0, 100.0]
+  --fog F, -f F         안개 강도 [0.0, 100.0]
+  --fogdist Fd, -fd Fd  안개 거리 [0.0, inf)
   --wetness Wet, -wet Wet
-                        Wetness intensity [0.0, 100.0]
+                        습도 강도 [0.0, 100.0]
 ```
 </details>
 <br>
 
 ![tuto_weather](img/tuto_weather.jpg)
-<div style="text-align: right"><i>Weather changes applied</i></div>
-
+<div style="text-align: right"><i>적용된 날씨 변경</i></div>
 ---
-## Set traffic
+## 교통 설정
 
-Simulating traffic is one of the best ways to bring the map to life. It is also necessary to retrieve data for urban environments. There are different options to do so in CARLA.  
+교통을 시뮬레이션하는 것은 맵에 생명력을 불어넣는 가장 좋은 방법 중 하나입니다. 또한 도시 환경에 대한 데이터를 검색하는 데도 필요합니다. CARLA에서 이를 수행하는 방법에는 여러 가지가 있습니다.
 
-### CARLA traffic and pedestrians
+### CARLA 교통과 보행자
 
-The CARLA traffic is managed by the [Traffic Manager](adv_traffic_manager.md) module. As for pedestrians, each of them has their own [carla.WalkerAIController](python_api.md#carla.WalkerAIController). 
+CARLA 교통은 [Traffic Manager](adv_traffic_manager.md) 모듈에 의해 관리됩니다. 보행자의 경우, 각각이 자신만의 [carla.WalkerAIController](python_api.md#carla.WalkerAIController)를 가집니다.
 
-Open a new terminal, and run __spawn_npc.py__ to spawn vehicles and walkers. Let's just spawn 50 vehicles and the same amount of walkers. 
+새 터미널을 열고 **spawn_npc.py**를 실행하여 차량과 보행자를 생성합니다. 50대의 차량과 동일한 수의 보행자를 생성해 보겠습니다.
 
 ```sh
 cd /opt/carla/PythonAPI/examples
 python3 spawn_npc.py -n 50 -w 50 --safe
 ```
 <details>
-<summary> Optional arguments in <b>spawn_npc.py</b> </summary>
+<summary> <b>spawn_npc.py</b>의 선택적 인수들 </summary>
 
 ```sh
-  -h, --help            show this help message and exit
-  --host H              IP of the host server (default: 127.0.0.1)
-  -p P, --port P        TCP port to listen to (default: 2000)
+  -h, --help            도움말 메시지 표시 및 종료
+  --host H              호스트 서버의 IP (기본값: 127.0.0.1)
+  -p P, --port P        수신할 TCP 포트 (기본값: 2000)
   -n N, --number-of-vehicles N
-                        number of vehicles (default: 10)
+                        차량 수 (기본값: 10)
   -w W, --number-of-walkers W
-                        number of walkers (default: 50)
-  --safe                avoid spawning vehicles prone to accidents
-  --filterv PATTERN     vehicles filter (default: "vehicle.*")
-  --filterw PATTERN     pedestrians filter (default: "walker.pedestrian.*")
-  -tm_p P, --tm-port P  port to communicate with TM (default: 8000)
-  --async               Asynchronous mode execution
+                        보행자 수 (기본값: 50)
+  --safe               사고가 발생하기 쉬운 차량 생성 방지
+  --filterv PATTERN    차량 필터 (기본값: "vehicle.*")
+  --filterw PATTERN    보행자 필터 (기본값: "walker.pedestrian.*")
+  -tm_p P, --tm-port P  TM과 통신할 포트 (기본값: 8000)
+  --async              비동기 모드 실행
 ```
 </details>
 <br>
 ![tuto_spawning](img/tuto_spawning.jpg)
-<div style="text-align: right"><i>Vehicles spawned to simulate traffic.</i></div>
+<div style="text-align: right"><i>교통 시뮬레이션을 위해 생성된 차량들.</i></div>
 
-### SUMO co-simulation traffic
+### SUMO 공동 시뮬레이션 교통
 
-CARLA can run a co-simulation with SUMO. This allows for creating traffic in SUMO that will be propagated to CARLA. This co-simulation is bidirectional. Spawning vehicles in CARLA will do so in SUMO. Specific docs on this feature can be found [here](adv_sumo.md).  
+CARLA는 SUMO와 함께 공동 시뮬레이션을 실행할 수 있습니다. 이를 통해 SUMO에서 생성된 교통이 CARLA로 전파될 수 있습니다. 이 공동 시뮬레이션은 양방향입니다. CARLA에서 차량을 생성하면 SUMO에서도 생성됩니다. 이 기능에 대한 자세한 문서는 [여기](adv_sumo.md)에서 찾을 수 있습니다.
 
-This feature is available for CARLA 0.9.8 and later, in __Town01__, __Town04__, and __Town05__. The first one is the most stable.  
+이 기능은 CARLA 0.9.8 이상 버전의 __Town01__, __Town04__, **Town05**에서 사용할 수 있습니다. 첫 번째가 가장 안정적입니다.
 
-!!! Note
-    The co-simulation will enable synchronous mode in CARLA. Read the [documentation](adv_synchrony_timestep.md) to find out more about this. 
+!!! 참고
+    공동 시뮬레이션은 CARLA에서 동기 모드를 활성화합니다. 이에 대해 자세히 알아보려면 [문서](adv_synchrony_timestep.md)를 읽어보세요.
 
-* First of all, install SUMO. 
+* 먼저, SUMO를 설치합니다.
 ```sh
 sudo add-apt-repository ppa:sumo/stable
 sudo apt-get update
 sudo apt-get install sumo sumo-tools sumo-doc
 ```
-* Set the environment variable SUMO_HOME.
+* 환경 변수 SUMO_HOME을 설정합니다.
 ```sh
 echo "export SUMO_HOME=/usr/share/sumo" >> ~/.bashrc && source ~/.bashrc
 ```
-* With the CARLA server on, run the [SUMO-CARLA synchrony script](https://github.com/carla-simulator/carla/blob/master/Co-Simulation/Sumo/run_synchronization.py). 
+* CARLA 서버가 실행 중인 상태에서 [SUMO-CARLA 동기화 스크립트](https://github.com/carla-simulator/carla/blob/master/Co-Simulation/Sumo/run_synchronization.py)를 실행합니다.
 ```sh
 cd ~/carla/Co-Simulation/Sumo
 python3 run_synchronization.py examples/Town01.sumocfg --sumo-gui
 ```
-* A SUMO window should have opened. __Press Play__ in order to start traffic in both simulations. 
+* SUMO 창이 열려야 합니다. 두 시뮬레이션에서 교통을 시작하기 위해 __Play__를 누릅니다.
 ```
-> "Play" on SUMO window.
+> SUMO 창에서 "Play"를 누릅니다.
 ```
 
-The traffic generated by this script is an example created by the CARLA team. By default it spawns the same vehicles following the same routes. These can be changed by the user in SUMO. 
+이 스크립트로 생성되는 교통은 CARLA 팀이 만든 예시입니다. 기본적으로 동일한 차량이 동일한 경로를 따라 생성됩니다. 이는 SUMO에서 사용자가 변경할 수 있습니다.
 
 ![tuto_sumo](img/tuto_sumo.jpg)
-<div style="text-align: right"><i>SUMO and CARLA co-simulating traffic.</i></div>
+<div style="text-align: right"><i>SUMO와 CARLA의 교통 공동 시뮬레이션.</i></div>
 
-!!! Warning
-    Right now, SUMO co-simulation is a beta feature. Vehicles do not have physics nor take into account CARLA traffic lights. 
-
+!!! 경고
+    현재 SUMO 공동 시뮬레이션은 베타 기능입니다. 차량들은 물리적 특성이 없으며 CARLA 신호등을 고려하지 않습니다.
 ---
-## Set the ego vehicle
+## 자아 차량 설정
 
-From now up to the moment the recorder is stopped, there will be some fragments of code belonging to __tutorial_ego.py__. This script spawns the ego vehicle, optionally some sensors, and records the simulation until the user finishes the script. 
+이제부터 레코더가 중지될 때까지 __tutorial_ego.py__에 속하는 코드 조각들이 있을 것입니다. 이 스크립트는 자아 차량을 생성하고, 선택적으로 일부 센서를 추가하며, 사용자가 스크립트를 종료할 때까지 시뮬레이션을 기록합니다.
 
-### Spawn the ego vehicle
+### 자아 차량 생성
 
-Vehicles controlled by the user are commonly differenciated in CARLA by setting the attribute `role_name` to `ego`. Other attributes can be set, some with recommended values.  
+CARLA에서는 일반적으로 `role_name` 속성을 `ego`로 설정하여 사용자가 제어하는 차량을 구분합니다. 다른 속성들도 설정할 수 있으며, 일부는 권장 값이 있습니다.
 
-Hereunder, a Tesla model is retrieved from the [blueprint library](bp_library.md), and spawned with a random recommended colour. One of the recommended spawn points by the map is chosen to place the ego vehicle.  
+아래에서 테슬라 모델을 [블루프린트 라이브러리](bp_library.md)에서 검색하고, 권장되는 색상 중 무작위로 선택된 색상으로 생성합니다. 맵에서 권장하는 생성 지점 중 하나가 자아 차량을 배치하기 위해 선택됩니다.
 
 ```py        
 # --------------
-# Spawn ego vehicle
+# 자아 차량 생성
 # --------------
 ego_bp = world.get_blueprint_library().find('vehicle.tesla.model3')
 ego_bp.set_attribute('role_name','ego')
-print('\nEgo role_name is set')
+print('\n자아 role_name이 설정되었습니다')
 ego_color = random.choice(ego_bp.get_attribute('color').recommended_values)
 ego_bp.set_attribute('color',ego_color)
-print('\nEgo color is set')
+print('\n자아 색상이 설정되었습니다')
 
 spawn_points = world.get_map().get_spawn_points()
 number_of_spawn_points = len(spawn_points)
@@ -272,18 +266,18 @@ if 0 < number_of_spawn_points:
     random.shuffle(spawn_points)
     ego_transform = spawn_points[0]
     ego_vehicle = world.spawn_actor(ego_bp,ego_transform)
-    print('\nEgo is spawned')
+    print('\n자아가 생성되었습니다')
 else: 
-    logging.warning('Could not found any spawn points')
+    logging.warning('생성 지점을 찾을 수 없습니다')
 ```
 
-### Place the spectator
+### 관전자 위치 지정
 
-The spectator actor controls the simulation view. Moving it via script is optional, but it may facilitate finding the ego vehicle. 
+관전자 액터는 시뮬레이션 뷰를 제어합니다. 스크립트를 통해 이를 이동시키는 것은 선택사항이지만, 자아 차량을 찾는 것을 쉽게 만들 수 있습니다.
 
 ```py
 # --------------
-# Spectator on ego position
+# 자아 위치에 관전자 설정
 # --------------
 spectator = world.get_spectator()
 world_snapshot = world.wait_for_tick() 
@@ -291,33 +285,33 @@ spectator.set_transform(ego_vehicle.get_transform())
 ```
 
 ---
-## Set basic sensors
+## 기본 센서 설정
 
-The process to spawn any sensor is quite similar.  
+모든 센서를 생성하는 과정은 매우 유사합니다.
 
-__1.__ Use the library to find sensor blueprints.  
-__2.__ Set specific attributes for the sensor. This is crucial. Attributes will shape the data retrieved.  
-__3.__ Attach the sensor to the ego vehicle. __The transform is relative to its parent__. The [carla.AttachmentType](python_api.md#carlaattachmenttype) will determine how the position of the sensor is updated.  
-__4.__ Add a `listen()` method. This is the key element. A [__lambda__](https://www.w3schools.com/python/python_lambda.asp) method that will be called each time the sensor listens for data. The argument is the sensor data retrieved.  
+__1.__ 라이브러리를 사용하여 센서 블루프린트를 찾습니다.  
+__2.__ 센서에 대한 특정 속성을 설정합니다. 이는 매우 중요합니다. 속성들이 검색되는 데이터의 형태를 결정합니다.  
+__3.__ 센서를 자아 차량에 부착합니다. **변환(transform)은 부모를 기준으로 상대적**입니다. [carla.AttachmentType](python_api.md#carlaattachmenttype)은 센서의 위치가 어떻게 업데이트되는지 결정합니다.  
+__4.__ `listen()` 메서드를 추가합니다. 이것이 핵심 요소입니다. 센서가 데이터를 수신할 때마다 호출될 [__lambda__](https://www.w3schools.com/python/python_lambda.asp) 메서드입니다. 인자는 검색된 센서 데이터입니다.
 
-Having this basic guideline in mind, let's set some basic sensors for the ego vehicle. 
+이 기본 지침을 염두에 두고, 자아 차량에 몇 가지 기본 센서를 설정해 보겠습니다.
 
-### RGB camera
+### RGB 카메라
 
-The [RGB camera](ref_sensors.md#rgb-camera) generates realistic pictures of the scene. It is the sensor with more settable attributes of them all, but it is also a fundamental one. It should be understood as a real camera, with attributtes such as `focal_distance`, `shutter_speed` or `gamma` to determine how it would work internally. There is also a specific set of attributtes to define the lens distorsion, and lots of advanced attributes. For example, the `lens_circle_multiplier` can be used to achieve an effect similar to an eyefish lens. Learn more about them in the [documentation](ref_sensors.md#rgb-camera). 
+[RGB 카메라](ref_sensors.md#rgb-camera)는 장면의 사실적인 이미지를 생성합니다. 이는 모든 센서 중에서 설정 가능한 속성이 가장 많지만, 또한 가장 기본적인 센서입니다. 이는 `focal_distance`, `shutter_speed` 또는 `gamma`와 같은 속성으로 내부적으로 작동 방식을 결정하는 실제 카메라로 이해해야 합니다. 렌즈 왜곡을 정의하는 특정 속성 세트도 있고, 많은 고급 속성도 있습니다. 예를 들어, `lens_circle_multiplier`를 사용하여 어안 렌즈와 유사한 효과를 얻을 수 있습니다. 이에 대해 자세히 알아보려면 [문서](ref_sensors.md#rgb-camera)를 참조하세요.
 
-For the sake of simplicity, the script only sets the most commonly used attributes of this sensor.  
+단순화를 위해, 스크립트는 이 센서의 가장 일반적으로 사용되는 속성만 설정합니다.
 
-* __`image_size_x` and `image_size_y`__ will change the resolution of the output image.  
-* __`fov`__ is the horizontal field of view of the camera.  
+* __`image_size_x`와 `image_size_y`__ 는 출력 이미지의 해상도를 변경합니다.
+* __`fov`__ 는 카메라의 수평 시야각입니다.
 
-After setting the attributes, it is time to spawn the sensor. The script places the camera in the hood of the car, and pointing forward. It will capture the front view of the car. 
+속성을 설정한 후, 센서를 생성할 차례입니다. 스크립트는 카메라를 차량의 보닛에 위치시키고 전방을 향하게 합니다. 이는 차량의 전방 시야를 캡처할 것입니다.
 
-The data is retrieved as a [carla.Image](python_api.md#carla.Image) on every step. The listen method saves these to disk. The path can be altered at will. The name of each image is coded to be based on the simulation frame where the shot was taken.  
+데이터는 매 단계마다 [carla.Image](python_api.md#carla.Image)로 검색됩니다. listen 메서드는 이를 디스크에 저장합니다. 경로는 원하는 대로 변경할 수 있습니다. 각 이미지의 이름은 촬영된 시뮬레이션 프레임을 기반으로 코딩됩니다.
 
 ```py
 # --------------
-# Spawn attached RGB camera
+# RGB 카메라를 자아 차량에 부착
 # --------------
 cam_bp = None
 cam_bp = world.get_blueprint_library().find('sensor.camera.rgb')
@@ -331,29 +325,28 @@ ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachme
 ego_cam.listen(lambda image: image.save_to_disk('tutorial/output/%.6d.jpg' % image.frame))
 ```
 ![tuto_rgb](img/tuto_rgb.jpg)
-<div style="text-align: right"><i>RGB camera output</i></div>
+<div style="text-align: right"><i>RGB 카메라 출력</i></div>
+### 감지기
 
-### Detectors
+이 센서들은 부착된 객체가 특정 이벤트를 등록할 때 데이터를 검색합니다. 세 가지 유형의 감지기 센서가 있으며, 각각 한 가지 유형의 이벤트를 설명합니다.
 
-These sensors retrieve data when the object they are attached to registers a specific event. There are three type of detector sensors, each one describing one type of event.  
+* [__충돌 감지기__](ref_sensors.md#collision-detector) 부모와 다른 액터 사이의 충돌을 검색합니다.
+* [__차선 침범 감지기__](ref_sensors.md#lane-invasion-detector) 부모가 차선 표시를 건널 때 등록합니다.
+* [__장애물 감지기__](ref_sensors.md#obstacle-detector) 부모의 전방에 있는 잠재적 장애물을 감지합니다.
 
-* [__Collision detector.__](ref_sensors.md#collision-detector) Retrieves collisions between its parent and other actors.
-* [__Lane invasion detector.__](ref_sensors.md#lane-invasion-detector) Registers when its parent crosses a lane marking.
-* [__Obstacle detector.__](ref_sensors.md#obstacle-detector) Detects possible obstacles ahead of its parent.
+이들이 검색하는 데이터는 나중에 시뮬레이션의 어느 부분을 재연할지 결정할 때 도움이 될 것입니다. 실제로 충돌은 레코더를 사용하여 명시적으로 조회할 수 있습니다. 이는 출력되도록 준비되어 있습니다.
 
-The data they retrieve will be helpful later when deciding which part of the simulation is going to be reenacted. In fact, the collisions can be explicitely queried using the recorder. This is prepared to be printed.  
+장애물 감지기 블루프린트만이 설정해야 할 속성을 가집니다. 다음은 중요한 속성들입니다.
 
-Only the obstacle detector blueprint has attributes to be set. Here are some important ones. 
+* __`sensor_tick`__ 센서가 `x`초가 지난 후에만 데이터를 검색하도록 설정합니다. 이는 매 단계마다 데이터를 검색하는 센서의 일반적인 속성입니다.
+* __`distance`와 `hit-radius`__ 전방의 장애물을 감지하는 데 사용되는 디버그 라인의 형태를 결정합니다.
+* __`only_dynamics`__ 정적 객체를 고려해야 하는지 여부를 결정합니다. 기본적으로 모든 객체가 고려됩니다.
 
-* __`sensor_tick`__ sets the sensor to retrieve data only after `x` seconds pass. It is a common attribute for sensors that retrieve data on every step.  
-* __`distance` and `hit-radius`__ shape the debug line used to detect obstacles ahead. 
-* __`only_dynamics`__ determines if static objects should be taken into account or not. By default, any object is considered. 
-
-The script sets the obstacle detector to only consider dynamic objects. If the vehicle collides with any static object, it will be detected by the collision sensor.  
+스크립트는 장애물 감지기가 동적 객체만 고려하도록 설정합니다. 차량이 정적 객체와 충돌하면 충돌 센서에 의해 감지될 것입니다.
 
 ```py
 # --------------
-# Add collision sensor to ego vehicle. 
+# 자아 차량에 충돌 센서 추가
 # --------------
 
 col_bp = world.get_blueprint_library().find('sensor.other.collision')
@@ -362,11 +355,11 @@ col_rotation = carla.Rotation(0,0,0)
 col_transform = carla.Transform(col_location,col_rotation)
 ego_col = world.spawn_actor(col_bp,col_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
 def col_callback(colli):
-    print("Collision detected:\n"+str(colli)+'\n')
+    print("충돌 감지됨:\n"+str(colli)+'\n')
 ego_col.listen(lambda colli: col_callback(colli))
 
 # --------------
-# Add Lane invasion sensor to ego vehicle. 
+# 자아 차량에 차선 침범 센서 추가
 # --------------
 
 lane_bp = world.get_blueprint_library().find('sensor.other.lane_invasion')
@@ -375,11 +368,11 @@ lane_rotation = carla.Rotation(0,0,0)
 lane_transform = carla.Transform(lane_location,lane_rotation)
 ego_lane = world.spawn_actor(lane_bp,lane_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
 def lane_callback(lane):
-    print("Lane invasion detected:\n"+str(lane)+'\n')
+    print("차선 침범 감지됨:\n"+str(lane)+'\n')
 ego_lane.listen(lambda lane: lane_callback(lane))
 
 # --------------
-# Add Obstacle sensor to ego vehicle. 
+# 자아 차량에 장애물 센서 추가
 # --------------
 
 obs_bp = world.get_blueprint_library().find('sensor.other.obstacle')
@@ -389,28 +382,28 @@ obs_rotation = carla.Rotation(0,0,0)
 obs_transform = carla.Transform(obs_location,obs_rotation)
 ego_obs = world.spawn_actor(obs_bp,obs_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
 def obs_callback(obs):
-    print("Obstacle detected:\n"+str(obs)+'\n')
+    print("장애물 감지됨:\n"+str(obs)+'\n')
 ego_obs.listen(lambda obs: obs_callback(obs))
 ```
 ![tuto_detectors](img/tuto_detectors.jpg)
-<div style="text-align: right"><i>Output for detector sensors</i></div>
+<div style="text-align: right"><i>감지기 센서 출력</i></div>
 
-### Other sensors
+### 기타 센서
 
-Only two sensors of this category will be considered for the time being.  
+현재는 이 카테고리의 두 가지 센서만 고려하겠습니다.
 
-* [__GNSS sensor.__](ref_sensors.md#gnss-sensor) Retrieves the geolocation of the sensor.
-* [__IMU sensor.__](ref_sensors.md#imu-sensor) Comprises an accelerometer, a gyroscope, and a compass.
+* [__GNSS 센서__](ref_sensors.md#gnss-sensor) 센서의 지리적 위치를 검색합니다.
+* [__IMU 센서__](ref_sensors.md#imu-sensor) 가속도계, 자이로스코프, 나침반을 포함합니다.
 
-To get general measures for the vehicle object, these two sensors are spawned centered to it. 
+차량 객체의 일반적인 측정값을 얻기 위해, 이 두 센서는 차량의 중앙에 생성됩니다.
 
-The attributes available for these sensors mostly set the mean or standard deviation parameter in the noise model of the measure. This is useful to get more realistic measures. However, in __tutorial_ego.py__ only one attribute is set.  
+이 센서들에 사용할 수 있는 속성들은 대부분 측정의 노이즈 모델에서 평균이나 표준 편차 매개변수를 설정합니다. 이는 더 현실적인 측정값을 얻는 데 유용합니다. 하지만 **tutorial_ego.py**에서는 하나의 속성만 설정합니다.
 
-* __`sensor_tick`__. As this measures are not supposed to vary significantly between steps, it is okay to retrieve the data every so often. In this case, it is set to be printed every three seconds.  
+* __`sensor_tick`__ 이러한 측정값은 단계 사이에 크게 변하지 않을 것으로 예상되므로, 데이터를 가끔씩만 검색해도 괜찮습니다. 이 경우 3초마다 출력되도록 설정됩니다.
 
 ```py
 # --------------
-# Add GNSS sensor to ego vehicle. 
+# 자아 차량에 GNSS 센서 추가
 # --------------
 
 gnss_bp = world.get_blueprint_library().find('sensor.other.gnss')
@@ -420,11 +413,11 @@ gnss_transform = carla.Transform(gnss_location,gnss_rotation)
 gnss_bp.set_attribute("sensor_tick",str(3.0))
 ego_gnss = world.spawn_actor(gnss_bp,gnss_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
 def gnss_callback(gnss):
-    print("GNSS measure:\n"+str(gnss)+'\n')
+    print("GNSS 측정:\n"+str(gnss)+'\n')
 ego_gnss.listen(lambda gnss: gnss_callback(gnss))
 
 # --------------
-# Add IMU sensor to ego vehicle. 
+# 자아 차량에 IMU 센서 추가
 # --------------
 
 imu_bp = world.get_blueprint_library().find('sensor.other.imu')
@@ -434,32 +427,31 @@ imu_transform = carla.Transform(imu_location,imu_rotation)
 imu_bp.set_attribute("sensor_tick",str(3.0))
 ego_imu = world.spawn_actor(imu_bp,imu_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
 def imu_callback(imu):
-    print("IMU measure:\n"+str(imu)+'\n')
+    print("IMU 측정:\n"+str(imu)+'\n')
 ego_imu.listen(lambda imu: imu_callback(imu))
 ```
 
 ![tuto_other](img/tuto_other.jpg)
-<div style="text-align: right"><i>GNSS and IMU sensors output</i></div>
-
+<div style="text-align: right"><i>GNSS와 IMU 센서 출력</i></div>
 ---
-## Set advanced sensors
+## 고급 센서 설정
 
-The script __tutorial_replay.py__, among other things, contains definitions for more sensors. They work in the same way as the basic ones, but their comprehension may be a bit harder.
+스크립트 __tutorial_replay.py__는 다른 것들 중에서도 더 많은 센서에 대한 정의를 포함하고 있습니다. 이들은 기본 센서와 같은 방식으로 작동하지만, 이해하기가 조금 더 어려울 수 있습니다.
 
-### Depth camera
+### 깊이 카메라
 
-The [depth camera](ref_sensors.md#depth-camera) generates pictures of the scene that map every pixel in a grayscale depth map. However, the output is not straightforward. The depth buffer of the camera is mapped using a RGB color space. This has to be translated to grayscale to be comprehensible.  
+[깊이 카메라](ref_sensors.md#depth-camera)는 모든 픽셀을 회색조 깊이 맵에 매핑하는 장면의 이미지를 생성합니다. 하지만 출력은 직관적이지 않습니다. 카메라의 깊이 버퍼는 RGB 색상 공간을 사용하여 매핑됩니다. 이는 이해할 수 있도록 회색조로 변환되어야 합니다.
 
-In order to do this, simply save the image as with the RGB camera, but apply a [carla.ColorConverter](python_api.md#carla.ColorConverter) to it. There are two conversions available for depth cameras.  
+이를 위해서는 RGB 카메라와 마찬가지로 이미지를 저장하되, [carla.ColorConverter](python_api.md#carla.ColorConverter)를 적용하면 됩니다. 깊이 카메라에 사용할 수 있는 두 가지 변환이 있습니다.
 
-* __carla.ColorConverter.Depth__ translates the original depth with milimetric precision.  
-* __carla.ColorConverter.LogarithmicDepth__ also has milimetric granularity, but provides better results in close distances and a little worse for further elements.  
+* __carla.ColorConverter.Depth__ 원래의 깊이를 밀리미터 단위의 정밀도로 변환합니다.
+* __carla.ColorConverter.LogarithmicDepth__ 또한 밀리미터 단위의 정밀도를 가지지만, 가까운 거리에서는 더 좋은 결과를 제공하고 먼 요소에 대해서는 약간 더 나쁜 결과를 제공합니다.
 
-The attributes for the depth camera only set elements previously stated in the RGB camera: `fov`, `image_size_x`, `image_size_y` and `sensor_tick`. The script sets this sensor to match the previous RGB camera used. 
+깊이 카메라의 속성은 이전에 RGB 카메라에서 설명한 요소들만 설정합니다: `fov`, `image_size_x`, `image_size_y`, `sensor_tick`. 스크립트는 이 센서가 이전의 RGB 카메라와 일치하도록 설정합니다.
 
 ```py
 # --------------
-# Add a Depth camera to ego vehicle. 
+# 자아 차량에 깊이 카메라 추가
 # --------------
 depth_cam = None
 depth_bp = world.get_blueprint_library().find('sensor.camera.depth')
@@ -467,24 +459,24 @@ depth_location = carla.Location(2,0,1)
 depth_rotation = carla.Rotation(0,180,0)
 depth_transform = carla.Transform(depth_location,depth_rotation)
 depth_cam = world.spawn_actor(depth_bp,depth_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-# This time, a color converter is applied to the image, to get the semantic segmentation view
+# 이번에는 이미지에 색상 변환기가 적용되어 의미론적 분할 뷰를 얻습니다
 depth_cam.listen(lambda image: image.save_to_disk('tutorial/new_depth_output/%.6d.jpg' % image.frame,carla.ColorConverter.LogarithmicDepth))
 ```
 
 ![tuto_depths](img/tuto_depths.jpg)
-<div style="text-align: right"><i>Depth camera output. Simple conversion on the left, logarithmic on the right.</i></div>
+<div style="text-align: right"><i>깊이 카메라 출력. 왼쪽은 단순 변환, 오른쪽은 로그 변환.</i></div>
 
-### Semantic segmentation camera
+### 의미론적 분할 카메라
 
-The [semantic segmentation camera](ref_sensors.md#semantic-segmentation-camera) renders elements in scene with a different color depending on how these have been tagged. The tags are created by the simulator depending on the path of the asset used for spawning. For example, meshes tagged as `Pedestrians` are spawned with content stored in `Unreal/CarlaUE4/Content/Static/Pedestrians`.  
+[의미론적 분할 카메라](ref_sensors.md#semantic-segmentation-camera)는 장면의 요소들을 태그 방식에 따라 다른 색상으로 렌더링합니다. 태그는 생성에 사용된 에셋의 경로에 따라 시뮬레이터에 의해 생성됩니다. 예를 들어, `Pedestrians`로 태그된 메시는 `Unreal/CarlaUE4/Content/Static/Pedestrians`에 저장된 콘텐츠로 생성됩니다.
 
-The output is an image, as any camera, but each pixel contains the tag encoded in the red channel. This original image must be converted using __ColorConverter.CityScapesPalette__. New tags can be created, read more in the [documentation](ref_sensors.md#semantic-segmentation-camera).  
+출력은 모든 카메라와 마찬가지로 이미지이지만, 각 픽셀은 빨간색 채널에 태그를 인코딩하고 있습니다. 이 원본 이미지는 **ColorConverter.CityScapesPalette**를 사용하여 변환해야 합니다. 새로운 태그를 생성할 수 있으며, [문서](ref_sensors.md#semantic-segmentation-camera)에서 자세히 알아보세요.
 
-The attributes available for this camera are exactly the same as the depth camera. The script also sets this to match the original RGB camera. 
+이 카메라에 사용할 수 있는 속성은 깊이 카메라와 정확히 동일합니다. 스크립트는 이것도 원본 RGB 카메라와 일치하도록 설정합니다.
 
 ```py
 # --------------
-# Add a new semantic segmentation camera to my ego
+# 자아에 새로운 의미론적 분할 카메라 추가
 # --------------
 sem_cam = None
 sem_bp = world.get_blueprint_library().find('sensor.camera.semantic_segmentation')
@@ -495,33 +487,32 @@ sem_location = carla.Location(2,0,1)
 sem_rotation = carla.Rotation(0,180,0)
 sem_transform = carla.Transform(sem_location,sem_rotation)
 sem_cam = world.spawn_actor(sem_bp,sem_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-# This time, a color converter is applied to the image, to get the semantic segmentation view
+# 이번에는 이미지에 색상 변환기가 적용되어 의미론적 분할 뷰를 얻습니다
 sem_cam.listen(lambda image: image.save_to_disk('tutorial/new_sem_output/%.6d.jpg' % image.frame,carla.ColorConverter.CityScapesPalette))
 ```
 
 ![tuto_sem](img/tuto_sem.jpg)
-<div style="text-align: right"><i>Semantic segmentation camera output</i></div>
+<div style="text-align: right"><i>의미론적 분할 카메라 출력</i></div>
+### LIDAR 레이캐스트 센서
 
-### LIDAR raycast sensor
+[LIDAR 센서](ref_sensors.md#lidar-raycast-sensor)는 회전하는 LIDAR를 시뮬레이션합니다. 이는 장면을 3D로 매핑하는 포인트 클라우드를 생성합니다. LIDAR는 특정 주파수로 회전하는 레이저 세트를 포함합니다. 레이저는 충돌까지의 거리를 레이캐스트하고, 모든 샷을 단일 포인트로 저장합니다.
 
-The [LIDAR sensor](ref_sensors.md#lidar-raycast-sensor) simulates a rotating LIDAR. It creates a cloud of points that maps the scene in 3D. The LIDAR contains a set of lasers that rotate at a certain frequency. The lasers raycast the distance to impact, and store every shot as one single point.  
+레이저 배열의 배치 방식은 다양한 센서 속성을 사용하여 설정할 수 있습니다.
 
-The way the array of lasers is disposed can be set using different sensor attributes. 
+* __`upper_fov`와 `lower_fov`__ 각각 가장 높은 레이저와 가장 낮은 레이저의 각도입니다.
+* __`channels`__ 사용할 레이저의 수를 설정합니다. 이들은 원하는 _fov_ 를 따라 분포됩니다.
 
-* __`upper_fov` and `lower_fov`__ the angle of the highest and the lowest laser respectively.
-* __`channels`__ sets the amount of lasers to be used. These are distributed along the desired _fov_. 
+다른 속성들은 이 포인트들이 계산되는 방식을 설정합니다. 이들은 각 레이저가 매 단계마다 계산하는 포인트의 수를 결정합니다: `points_per_second / (FPS * channels)`.
 
-Other attributes set the way this points are calculated. They determine the amount of points that each laser calculates every step: `points_per_second / (FPS * channels)`.  
+* __`range`__ 캡처할 수 있는 최대 거리입니다.
+* __`points_per_second`__ 매 초마다 얻을 포인트의 수입니다. 이 수량은 `channels` 수로 나누어집니다.
+* __`rotation_frequency`__ LIDAR가 매 초마다 회전하는 횟수입니다.
 
-* __`range`__ is the maximum distance to capture.  
-* __`points_per_second`__ is the amount of points that will be obtained every second. This quantity is divided between the amount of `channels`.  
-* __`rotation_frequency`__ is the amount of times the LIDAR will rotate every second. 
-
-The point cloud output is described as a [carla.LidarMeasurement]. It can be iterated as a list of [carla.Location] or saved to a _.ply_ standart file format.  
+포인트 클라우드 출력은 [carla.LidarMeasurement]로 설명됩니다. 이는 [carla.Location] 목록으로 반복되거나 _.ply_ 표준 파일 형식으로 저장될 수 있습니다.
 
 ```py
 # --------------
-# Add a new LIDAR sensor to my ego
+# 자아에 새로운 LIDAR 센서 추가
 # --------------
 lidar_cam = None
 lidar_bp = world.get_blueprint_library().find('sensor.lidar.ray_cast')
@@ -536,44 +527,44 @@ lidar_sen = world.spawn_actor(lidar_bp,lidar_transform,attach_to=ego_vehicle)
 lidar_sen.listen(lambda point_cloud: point_cloud.save_to_disk('tutorial/new_lidar_output/%.6d.ply' % point_cloud.frame))
 ```
 
-The _.ply_ output can be visualized using __Meshlab__.  
+_.ply_ 출력은 __Meshlab__을 사용하여 시각화할 수 있습니다.
 
-__1.__ Install [Meshlab](http://www.meshlab.net/#download).
+__1.__ [Meshlab](http://www.meshlab.net/#download) 설치.
 ```sh
 sudo apt-get update -y
 sudo apt-get install -y meshlab
 ```
-__2.__ Open Meshlab.
+__2.__ Meshlab 실행.
 ```sh
 meshlab
 ```
-__3.__ Open one of the _.ply_ files. `File > Import mesh...` 
+__3.__ _.ply_ 파일 중 하나를 엽니다. `File > Import mesh...` 
 
 ![tuto_lidar](img/tuto_lidar.jpg)
-<div style="text-align: right"><i>LIDAR output after being processed in Meshlab.</i></div>
+<div style="text-align: right"><i>Meshlab에서 처리된 후의 LIDAR 출력.</i></div>
 
-### Radar sensor
+### 레이더 센서
 
-The [radar sensor](ref_sensors.md#radar-sensor) is similar to de LIDAR. It creates a conic view, and shoots lasers inside to raycast their impacts. The output is a [carla.RadarMeasurement](python_api.md#carlaradarmeasurement). It contains a list of the [carla.RadarDetection](python_api.md#carlaradardetection) retrieved by the lasers. These are not points in space, but detections with data regarding the sensor: `azimuth`, `altitude`, `sensor` and `velocity`. 
+[레이더 센서](ref_sensors.md#radar-sensor)는 LIDAR와 유사합니다. 원뿔형 뷰를 생성하고 그 안에서 레이저를 발사하여 충돌을 레이캐스트합니다. 출력은 [carla.RadarMeasurement](python_api.md#carlaradarmeasurement)입니다. 이는 레이저가 검색한 [carla.RadarDetection](python_api.md#carlaradardetection) 목록을 포함합니다. 이들은 공간상의 점이 아니라 센서에 관한 데이터를 가진 감지입니다: `azimuth`, `altitude`, `sensor`, `velocity`.
 
-The attributes of this sensor mostly set the way the lasers are located.
+이 센서의 속성들은 주로 레이저가 위치하는 방식을 설정합니다.
 
-* __`horizontal_fov` and `vertical_fov`__ determine the amplitude of the conic view.
-* __`channels`__ sets the amount of lasers to be used. These are distributed along the desired `fov`. 
-* __`range`__ is the maximum distance for the lasers to raycast. 
-* __`points_per_second`__ sets the the amount of points to be captured, that will be divided between the channels stated. 
+* __`horizontal_fov`와 `vertical_fov`__ 원뿔형 뷰의 진폭을 결정합니다.
+* __`channels`__ 사용할 레이저의 수를 설정합니다. 이들은 원하는 `fov`를 따라 분포됩니다.
+* __`range`__ 레이저가 레이캐스트할 최대 거리입니다.
+* __`points_per_second`__ 캡처할 포인트의 수를 설정하며, 이는 지정된 채널들 사이에 분배됩니다.
 
-The script places the sensor on the hood of the car, and rotated a bit upwards. That way, the output will map the front view of the car. The `horizontal_fov` is incremented, and the `vertical_fov` diminished. The area of interest is specially the height where vehicles and walkers usually move on. The `range` is also changed from 100m to 10m, in order to retrieve data only right ahead of the vehicle. 
+스크립트는 센서를 차량의 보닛에 위치시키고 약간 위쪽으로 회전시킵니다. 이렇게 하면 출력이 차량의 전방을 매핑할 것입니다. `horizontal_fov`는 증가하고 `vertical_fov`는 감소합니다. 관심 영역은 특히 차량과 보행자가 일반적으로 이동하는 높이입니다. `range`도 100m에서 10m로 변경되어 차량 바로 앞의 데이터만 검색합니다.
 
-The callback is a bit more complex this time, showing more of its capabilities. It will draw the points captured by the radar on the fly. The points will be colored depending on their velocity regarding the ego vehicle.  
+콜백은 이번에는 조금 더 복잡하여 더 많은 기능을 보여줍니다. 이는 레이더가 캡처한 포인트들을 실시간으로 그릴 것입니다. 포인트들은 자아 차량에 대한 속도에 따라 색상이 지정됩니다.
 
-* __Blue__ for points approaching the vehicle.  
-* __Red__ for points moving away from it. 
-* __White__ for points static regarding the ego vehicle. 
+* __파란색__ 차량에 접근하는 포인트.
+* __빨간색__ 차량에서 멀어지는 포인트.
+* __흰색__ 자아 차량에 대해 정지해 있는 포인트.
 
 ```py
 # --------------
-# Add a new radar sensor to my ego
+# 자아에 새로운 레이더 센서 추가
 # --------------
 rad_cam = None
 rad_bp = world.get_blueprint_library().find('sensor.other.radar')
@@ -590,8 +581,8 @@ def rad_callback(radar_data):
     for detect in radar_data:
         azi = math.degrees(detect.azimuth)
         alt = math.degrees(detect.altitude)
-        # The 0.25 adjusts a bit the distance so the dots can
-        # be properly seen
+        # 0.25는 점들이 제대로 보일 수 있도록
+        # 거리를 약간 조정합니다
         fw_vec = carla.Vector3D(x=detect.depth - 0.25)
         carla.Transform(
             carla.Location(),
@@ -603,7 +594,7 @@ def rad_callback(radar_data):
         def clamp(min_v, max_v, value):
             return max(min_v, min(value, max_v))
 
-        norm_velocity = detect.velocity / velocity_range # range [-1, 1]
+        norm_velocity = detect.velocity / velocity_range # 범위 [-1, 1]
         r = int(clamp(0.0, 1.0, 1.0 - norm_velocity) * 255.0)
         g = int(clamp(0.0, 1.0, 1.0 - abs(norm_velocity)) * 255.0)
         b = int(abs(clamp(- 1.0, 0.0, - 1.0 - norm_velocity)) * 255.0)
@@ -617,30 +608,29 @@ rad_ego.listen(lambda radar_data: rad_callback(radar_data))
 ```
 
 ![tuto_radar](img/tuto_radar.jpg)
-<div style="text-align: right"><i>Radar output. The vehicle is stopped at a traffic light, so the static elements in front of it appear in white.</i></div>
-
+<div style="text-align: right"><i>레이더 출력. 차량이 신호등에서 정지해 있어 앞에 있는 정적 요소들이 흰색으로 나타납니다.</i></div>
 ---
-## No-rendering mode
+## 렌더링 없는 모드
 
-The [no-rendering mode](adv_rendering_options.md) can be useful to run an initial simulation that will be later played again to retrieve data. Especially if this simulation has some extreme conditions, such as dense traffic.  
+[렌더링 없는 모드](adv_rendering_options.md)는 나중에 데이터를 검색하기 위해 재생할 초기 시뮬레이션을 실행하는 데 유용할 수 있습니다. 특히 밀집된 교통과 같은 극단적인 조건이 있는 경우에 더욱 그렇습니다.
 
-### Simulate at a fast pace 
+### 빠른 속도로 시뮬레이션하기
 
-Disabling the rendering will save up a lot of work to the simulation. As the GPU is not used, the server can work at full speed. This could be useful to simulate complex conditions at a fast pace. The best way to do so would be by setting a fixed time-step. Running an asynchronous server with a fixed time-step and no rendering, the only limitation for the simulation would be the inner logic of the server.  
+렌더링을 비활성화하면 시뮬레이션에서 많은 작업이 절약됩니다. GPU가 사용되지 않기 때문에 서버는 최대 속도로 작동할 수 있습니다. 이는 복잡한 조건을 빠른 속도로 시뮬레이션하는 데 유용할 수 있습니다. 이를 수행하는 가장 좋은 방법은 고정 시간 단계를 설정하는 것입니다. 고정 시간 단계와 렌더링이 없는 비동기 서버를 실행하면, 시뮬레이션의 유일한 제한은 서버의 내부 로직이 됩니다.
 
-The same `config.py` used to [set the map](#map-setting) can disable rendering, and set a fixed time-step. 
+[맵 설정](#맵-설정)에 사용된 동일한 `config.py`로 렌더링을 비활성화하고 고정 시간 단계를 설정할 수 있습니다.
 
 ```
 cd /opt/carla/PythonAPI/utils
-python3 config.py --no-rendering --delta-seconds 0.05 # Never greater than 0.1s
+python3 config.py --no-rendering --delta-seconds 0.05 # 절대 0.1초보다 크지 않게 설정
 ```
 
-!!! Warning
-    Read the [documentation](adv_synchrony_timestep.md) before messing around with with synchrony and time-step.
+!!! 경고
+    동기화와 시간 단계에 대해 변경하기 전에 [문서](adv_synchrony_timestep.md)를 읽어보세요.
 
-### Manual control without rendering
+### 렌더링 없는 수동 제어
 
-The script `PythonAPI/examples/no_rendering_mode.py` provides an overview of the simulation. It creates a minimalistic aerial view with Pygame, that will follow the ego vehicle. This could be used along with __manual_control.py__ to generate a route with barely no cost, record it, and then play it back and exploit it to gather data. 
+스크립트 `PythonAPI/examples/no_rendering_mode.py`는 시뮬레이션의 개요를 제공합니다. 이는 Pygame을 사용하여 자아 차량을 따라다니는 최소한의 항공 뷰를 생성합니다. 이는 __manual_control.py__와 함께 사용하여 거의 비용 없이 경로를 생성하고 기록한 다음, 나중에 재생하고 활용할 수 있습니다.
 
 ```
 cd /opt/carla/PythonAPI/examples
@@ -653,168 +643,165 @@ python3 no_rendering_mode.py --no-rendering
 ```
 
 <details>
-<summary> Optional arguments in <b>no_rendering_mode.py</b> </summary>
+<summary> <b>no_rendering_mode.py</b>의 선택적 인수들 </summary>
 
 ```sh
-  -h, --help           show this help message and exit
-  -v, --verbose        print debug information
-  --host H             IP of the host server (default: 127.0.0.1)
-  -p P, --port P       TCP port to listen to (default: 2000)
-  --res WIDTHxHEIGHT   window resolution (default: 1280x720)
-  --filter PATTERN     actor filter (default: "vehicle.*")
-  --map TOWN           start a new episode at the given TOWN
-  --no-rendering       switch off server rendering
-  --show-triggers      show trigger boxes of traffic signs
-  --show-connections   show waypoint connections
-  --show-spawn-points  show recommended spawn points
+  -h, --help           도움말 메시지 표시
+  -v, --verbose        디버그 정보 출력
+  --host H             호스트 서버의 IP (기본값: 127.0.0.1)
+  -p P, --port P       수신할 TCP 포트 (기본값: 2000)
+  --res WIDTHxHEIGHT   창 해상도 (기본값: 1280x720)
+  --filter PATTERN     액터 필터 (기본값: "vehicle.*")
+  --map TOWN          주어진 TOWN에서 새 에피소드 시작
+  --no-rendering       서버 렌더링 끄기
+  --show-triggers      트래픽 표지판의 트리거 박스 표시
+  --show-connections   웨이포인트 연결 표시
+  --show-spawn-points  권장 생성 지점 표시
 ```
 </details>
 <br>
 
 ![tuto_no_rendering](img/tuto_no_rendering.jpg)
-<div style="text-align: right"><i>no_rendering_mode.py working in Town07</i></div>
+<div style="text-align: right"><i>Town07에서 작동하는 no_rendering_mode.py</i></div>
 
-!!! Note
-    In this mode, GPU-based sensors will retrieve empty data. Cameras are useless, but other sensors such as detectors will work properly. 
-
+!!! 참고
+    이 모드에서는 GPU 기반 센서가 빈 데이터를 검색합니다. 카메라는 사용할 수 없지만, 감지기와 같은 다른 센서는 정상적으로 작동합니다.
 ---
-## Record and retrieve data
+## 데이터 기록 및 검색
 
-### Start recording
+### 기록 시작
 
-The [__recorder__](adv_recorder.md) can be started at anytime. The script does it at the very beginning, in order to capture everything, including the spawning of the first actors. If no path is detailed, the log will be saved into `CarlaUE4/Saved`. 
+[__레코더__](adv_recorder.md)는 언제든지 시작할 수 있습니다. 스크립트는 처음 액터들의 생성을 포함하여 모든 것을 캡처하기 위해 맨 처음에 이를 실행합니다. 경로가 지정되지 않으면 로그는 `CarlaUE4/Saved`에 저장됩니다.
 
 ```py
 # --------------
-# Start recording
+# 기록 시작
 # --------------
 client.start_recorder('~/tutorial/recorder/recording01.log')
 ```
 
-### Capture and record
+### 캡처 및 기록
 
-There are many different ways to do this. Mostly it goes down as either let it roam around or control it manually. The data for the sensors spawned will be retrieved on the fly. Make sure to check it while recording, to make sure everything is set properly.  
+이를 수행하는 방법에는 여러 가지가 있습니다. 주로 자동으로 돌아다니게 하거나 수동으로 제어하는 방식으로 나뉩니다. 생성된 센서의 데이터는 실시간으로 검색됩니다. 모든 것이 제대로 설정되었는지 확인하기 위해 기록하는 동안 이를 확인하세요.
 
-* __Enable the autopilot.__ This will register the vehicle to the [Traffic Manager](adv_traffic_manager.md). It will roam around the city endlessly. The script does this, and creates a loop to prevent the script from finishing. The recording will go on until the user finishes the script. Alternatively, a timer could be set to finish the script after a certain time.  
+* __자동 조종 활성화.__ 이는 차량을 [Traffic Manager](adv_traffic_manager.md)에 등록합니다. 차량은 도시를 끝없이 돌아다닐 것입니다. 스크립트는 이를 수행하고 스크립트가 끝나는 것을 방지하기 위한 루프를 만듭니다. 기록은 사용자가 스크립트를 종료할 때까지 계속됩니다. 또는 특정 시간 후에 스크립트를 종료하도록 타이머를 설정할 수도 있습니다.
 
 ```py
 # --------------
-# Capture data
+# 데이터 캡처
 # --------------
 ego_vehicle.set_autopilot(True)
-print('\nEgo autopilot enabled')
+print('\n자아 자동 조종이 활성화되었습니다')
 
 while True:
     world_snapshot = world.wait_for_tick()
 ```
 
-* __Manual control.__ Run the script `PythonAPI/examples/manual_control.py` in a client, and the recorder in another one. Drive the ego vehicle around to create the desired route, and stop the recorder when finished. The __tutorial_ego.py__ script can be used to manage the recorder, but make sure to comment other fragments of code.  
+* __수동 제어.__ 한 클라이언트에서는 `PythonAPI/examples/manual_control.py` 스크립트를 실행하고, 다른 클라이언트에서는 레코더를 실행합니다. 원하는 경로를 만들기 위해 자아 차량을 운전하고, 완료되면 레코더를 중지합니다. __tutorial_ego.py__ 스크립트를 사용하여 레코더를 관리할 수 있지만, 다른 코드 조각들은 주석 처리해야 합니다.
 
 ```
 cd /opt/carla/PythonAPI/examples
 python3 manual_control.py
 ```
 
-!!! Note
-    To avoid rendering and save up computational cost, enable [__no rendering mode__](adv_rendering_options.md#no-rendering-mode). The script `/PythonAPI/examples/no_rendering_mode.py` does this while creating a simple aerial view.  
+!!! 참고
+    렌더링을 피하고 컴퓨터 자원을 절약하려면 [__렌더링 없는 모드__](adv_rendering_options.md#no-rendering-mode)를 활성화하세요. 스크립트 `/PythonAPI/examples/no_rendering_mode.py`는 간단한 항공 뷰를 생성하면서 이를 수행합니다.
 
-### Stop recording 
+### 기록 중지
 
-The stop call is even simpler than the start call was. When the recorder is done, the recording will be saved in the path stated previously. 
+중지 호출은 시작 호출보다도 더 간단합니다. 레코더가 완료되면 기록이 이전에 지정된 경로에 저장됩니다.
 
 ```py
 # --------------
-# Stop recording
+# 기록 중지
 # --------------
 client.stop_recorder()
 ```
 
 ---
-## Exploit the recording
+## 기록 활용
 
-So far, a simulation has been recorded. Now, it is time to examine the recording, find the most remarkable moments, and work with them. These steps are gathered in the script, __tutorial_replay.py__.  The outline is structured in different segments of code commented.  
+지금까지 시뮬레이션이 기록되었습니다. 이제 기록을 검토하고, 가장 주목할 만한 순간들을 찾아, 그것들로 작업할 시간입니다. 이러한 단계들은 스크립트 **tutorial_replay.py**에 모여 있습니다. 개요는 주석 처리된 다른 코드 조각들로 구성되어 있습니다.
 
-It is time to run a new simulation. 
+새 시뮬레이션을 실행할 시간입니다.
 
 ```sh
 ./CarlaUE4.sh
 ```
-To reenact the simulation, [choose a fragment](#choose-a-fragment) and run the script containing the code for the playback.  
+시뮬레이션을 재현하려면 [단편을 선택](#단편-선택)하고 재생을 위한 코드가 포함된 스크립트를 실행하세요.
 
 ```sh
 python3 tuto_replay.py
 ```
+### 이벤트 조회
 
-### Query the events
-
-The different queries are detailed in the [__recorder documentation__](adv_recorder.md). In summary, they retrieve data for specific events or frames. Use the queries to study the recording. Find the spotlight moments, and trace what can be of interest.  
+다양한 조회 방법이 [__레코더 문서__](adv_recorder.md)에 자세히 설명되어 있습니다. 요약하면, 이들은 특정 이벤트나 프레임에 대한 데이터를 검색합니다. 조회를 사용하여 기록을 연구하세요. 주목할 만한 순간들을 찾고, 관심있을 수 있는 것들을 추적하세요.
 
 ```py
 # --------------
-# Query the recording
+# 기록 조회
 # --------------
-# Show only the most important events in the recording.  
+# 기록에서 가장 중요한 이벤트만 표시
 print(client.show_recorder_file_info("~/tutorial/recorder/recording01.log",False))
-# Show actors not moving 1 meter in 10 seconds.  
+# 10초 동안 1미터를 이동하지 않은 액터 표시
 print(client.show_recorder_actors_blocked("~/tutorial/recorder/recording01.log",10,1))
-# Filter collisions between vehicles 'v' and 'a' any other type of actor.  
+# 차량 'v'와 다른 유형의 액터 'a' 사이의 충돌 필터링
 print(client.show_recorder_collisions("~/tutorial/recorder/recording01.log",'v','a'))
 ```
 
-!!! Note
-    The recorder does not need to be on, in order to do the queries.
+!!! 참고
+    조회를 하기 위해 레코더가 켜져 있을 필요는 없습니다.
 
 ![tuto_query_frames](img/tuto_query_frames.jpg)
-<div style="text-align: right"><i>Query showing important events. This is the frame where the ego vehicle was spawned.</i></div>
+<div style="text-align: right"><i>중요한 이벤트를 보여주는 조회. 이는 자아 차량이 생성된 프레임입니다.</i></div>
 
 ![tuto_query_blocked](img/tuto_query_blocked.jpg)
-<div style="text-align: right"><i>Query showing actors blocked. In this simulation, the ego vehicle remained blocked for 100 seconds.</i></div>
+<div style="text-align: right"><i>멈춰있는 액터를 보여주는 조회. 이 시뮬레이션에서 자아 차량은 100초 동안 정지해있었습니다.</i></div>
 
 ![tuto_query_collisions](img/tuto_query_collisions.jpg)
-<div style="text-align: right"><i>Query showing a collision between the ego vehicle and an object of type "other".</i></div>
+<div style="text-align: right"><i>자아 차량과 "기타" 유형의 객체 사이의 충돌을 보여주는 조회.</i></div>
 
-!!! Note
-    Getting detailed file info for every frame can be overwhelming. Use it after other queries to know where to look at. 
+!!! 참고
+    모든 프레임에 대한 자세한 파일 정보를 얻는 것은 부담이 될 수 있습니다. 다른 조회를 통해 어디를 봐야 할지 알게 된 후에 사용하세요.
 
-### Choose a fragment
+### 단편 선택
 
-After the queries, it may be a good idea play some moments of the simulation back, before messing around. It is very simple to do so, and it could be really helpful. Know more about the simulation. It is the best way to save time later.  
+조회 후에는 시뮬레이션의 일부 순간들을 다시 재생해보는 것이 좋은 아이디어일 수 있습니다. 이는 매우 간단하며 매우 도움이 될 수 있습니다. 시뮬레이션에 대해 더 잘 알아보세요. 이는 나중에 시간을 절약하는 가장 좋은 방법입니다.
 
-The method allows to choose the beginning and ending point of the playback, and an actor to follow. 
+이 메서드를 사용하면 재생의 시작점과 종료점, 그리고 따라갈 액터를 선택할 수 있습니다.
 
 ```py
 # --------------
-# Reenact a fragment of the recording
+# 기록의 단편 재현
 # --------------
 client.replay_file("~/tutorial/recorder/recording01.log",45,10,0)
 ```
 
-Here is a list of possible things to do now. 
+다음은 지금 할 수 있는 일들의 목록입니다.
 
-* __Use the information from the queries.__ Find out the moment and the actors involved in an event, and play that again. Start the recorder a few seconds before the event.  
-* __Follow different actors.__ Different perspectives will show new events that are not included in the queries.  
-* __Rom around with a free spectator view.__ Set the `actor_id` to `0`, and get a general view of the simulation. Be wherever and whenever wanted thanks to the recording.  
+* __조회의 정보를 활용하세요.__ 이벤트의 순간과 관련된 액터들을 찾아내고, 그것을 다시 재생하세요. 이벤트 몇 초 전에 레코더를 시작하세요.
+* __다른 액터들을 따라가세요.__ 다른 관점들은 조회에 포함되지 않은 새로운 이벤트들을 보여줄 것입니다.
+* __자유로운 관전자 시점으로 돌아다니세요.__ `actor_id`를 `0`으로 설정하고 시뮬레이션의 전체적인 뷰를 얻으세요. 기록 덕분에 원하는 시간과 장소 어디든 있을 수 있습니다.
 
-!!! Note
-    When the recording stops, the simulation doesn't. Walkers will stand still, and vehicles will continue roaming around. This may happen either if the log ends, or the playback gets to the ending point stated. 
+!!! 참고
+    로그가 끝나거나 재생이 지정된 종료점에 도달하면 시뮬레이션이 중지되지 않습니다. 보행자들은 가만히 서 있고, 차량들은 계속 돌아다닐 것입니다.
+### 더 많은 데이터 검색
 
-### Retrieve more data
+레코더는 이 시뮬레이션에서 원본과 정확히 동일한 조건을 재현할 것입니다. 이는 서로 다른 재생 사이에서 일관된 데이터를 보장합니다.
 
-The recorder will recreate in this simulation, the exact same conditions as the original. That ensures consistent data within different playbacks.  
+중요한 순간들, 액터들, 이벤트들의 목록을 모으세요. 필요할 때마다 센서를 추가하고 시뮬레이션을 재생하세요. 이 과정은 이전과 정확히 동일합니다. 스크립트 __tutorial_replay.py__는 [__고급 센서 설정__](#고급-센서-설정) 섹션에서 자세히 설명된 다양한 예시를 제공합니다. 다른 예시들은 [__기본 센서 설정__](#기본-센서-설정) 섹션에서 설명되었습니다.
 
-Gather a list of the important moments, actors and events. Add sensors whenever needed and play the simulation back. The process is exactly the same as before. The script __tutorial_replay.py__ provides different examples that have been thoroughly explained in the [__Set advanced sensors__](#set-advanced-sensors) section. Others have been explained in the section [__Set basic sensors__](#set-basic-sensors). 
+필요한 만큼 많은 센서를 추가하고, 필요한 곳에 추가하세요. 원하는 만큼 자주 시뮬레이션을 재생하고 원하는 만큼 많은 데이터를 검색하세요.
 
-Add as many sensors as needed, wherever they are needed. Play the simulation back as many times as desired and retrieve as much data as desired.  
+### 날씨 변경
 
-### Change the weather
+레코딩은 원본의 날씨 조건을 재현할 것입니다. 하지만 이는 원하는 대로 변경할 수 있습니다. 이는 다른 모든 이벤트는 동일하게 유지하면서 날씨가 센서에 어떤 영향을 미치는지 비교하는 데 흥미로울 수 있습니다.
 
-The recording will recreate the original weather conditions. However, these can be altered at will. This may be interesting to compare how does it affect sensors, while mantaining the rest of events the same.  
-
-Get the current weather and modify it freely. Remember that [carla.WeatherParameters](python_api.md#carla.WeatherParameters) has some presets available. The script will change the environment to a foggy sunset. 
+현재 날씨를 가져오고 자유롭게 수정하세요. [carla.WeatherParameters](python_api.md#carla.WeatherParameters)에 일부 사전 설정이 있다는 것을 기억하세요. 스크립트는 환경을 안개 낀 일몰로 변경할 것입니다.
 
 ```py
 # --------------
-# Change weather for playback
+# 재생을 위한 날씨 변경
 # --------------
 weather = world.get_weather()
 weather.sun_altitude_angle = -30
@@ -823,521 +810,30 @@ weather.fog_distance = 10
 world.set_weather(weather)
 ```
 
-### Try new outcomes
+### 새로운 결과 시도
 
-The new simulation is not strictly linked to the recording. It can be modified anytime, and even when the recorder stops, the simulation goes on. 
+새로운 시뮬레이션은 레코딩에 엄격하게 연결되어 있지 않습니다. 이는 언제든지 수정될 수 있으며, 레코더가 중지된 후에도 시뮬레이션은 계속됩니다.
 
-This can be profitable for the user. For instance, collisions can be forced or avoided by playing back the simulation a few seconds before, and spawning or destroying an actor. Ending the recording at a specific moment can also be useful. Doing so, vehicles may take different paths. 
+이는 사용자에게 유용할 수 있습니다. 예를 들어, 시뮬레이션을 몇 초 전에 재생하고 액터를 생성하거나 제거함으로써 충돌을 강제하거나 피할 수 있습니다. 특정 순간에 레코딩을 종료하는 것도 유용할 수 있습니다. 이렇게 하면 차량들이 다른 경로를 택할 수 있습니다.
 
-Change the conditions and mess with the simulation. There is nothing to lose, as the recorder grants that the initial simulation can always be reenacted. This is the key to exploit the full potential of CARLA. 
-
----
-## Tutorial scripts
-
-Hereunder are the two scripts gathering the fragments of code for this tutorial. Most of the code is commented, as it is meant to be modified to fit specific purposes.
-
-<details>
-<summary><b>tutorial_ego.py</b> </summary>
-
-```py
-import glob
-import os
-import sys
-import time
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
-import carla
-
-import argparse
-import logging
-import random
-
-
-def main():
-    argparser = argparse.ArgumentParser(
-        description=__doc__)
-    argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
-    argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
-        help='TCP port to listen to (default: 2000)')
-    args = argparser.parse_args()
-
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
-
-    client = carla.Client(args.host, args.port)
-    client.set_timeout(10.0)
-
-    try:
-
-        world = client.get_world()
-        ego_vehicle = None
-        ego_cam = None
-        ego_col = None
-        ego_lane = None
-        ego_obs = None
-        ego_gnss = None
-        ego_imu = None
-
-        # --------------
-        # Start recording
-        # --------------
-        """
-        client.start_recorder('~/tutorial/recorder/recording01.log')
-        """
-
-        # --------------
-        # Spawn ego vehicle
-        # --------------
-        """
-        ego_bp = world.get_blueprint_library().find('vehicle.tesla.model3')
-        ego_bp.set_attribute('role_name','ego')
-        print('\nEgo role_name is set')
-        ego_color = random.choice(ego_bp.get_attribute('color').recommended_values)
-        ego_bp.set_attribute('color',ego_color)
-        print('\nEgo color is set')
-
-        spawn_points = world.get_map().get_spawn_points()
-        number_of_spawn_points = len(spawn_points)
-
-        if 0 < number_of_spawn_points:
-            random.shuffle(spawn_points)
-            ego_transform = spawn_points[0]
-            ego_vehicle = world.spawn_actor(ego_bp,ego_transform)
-            print('\nEgo is spawned')
-        else: 
-            logging.warning('Could not found any spawn points')
-        """
-
-        # --------------
-        # Add a RGB camera sensor to ego vehicle. 
-        # --------------
-        """
-        cam_bp = None
-        cam_bp = world.get_blueprint_library().find('sensor.camera.rgb')
-        cam_bp.set_attribute("image_size_x",str(1920))
-        cam_bp.set_attribute("image_size_y",str(1080))
-        cam_bp.set_attribute("fov",str(105))
-        cam_location = carla.Location(2,0,1)
-        cam_rotation = carla.Rotation(0,180,0)
-        cam_transform = carla.Transform(cam_location,cam_rotation)
-        ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-        ego_cam.listen(lambda image: image.save_to_disk('~/tutorial/output/%.6d.jpg' % image.frame))
-        """
-
-        # --------------
-        # Add collision sensor to ego vehicle. 
-        # --------------
-        """
-        col_bp = world.get_blueprint_library().find('sensor.other.collision')
-        col_location = carla.Location(0,0,0)
-        col_rotation = carla.Rotation(0,0,0)
-        col_transform = carla.Transform(col_location,col_rotation)
-        ego_col = world.spawn_actor(col_bp,col_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-        def col_callback(colli):
-            print("Collision detected:\n"+str(colli)+'\n')
-        ego_col.listen(lambda colli: col_callback(colli))
-        """
-
-        # --------------
-        # Add Lane invasion sensor to ego vehicle. 
-        # --------------
-        """
-        lane_bp = world.get_blueprint_library().find('sensor.other.lane_invasion')
-        lane_location = carla.Location(0,0,0)
-        lane_rotation = carla.Rotation(0,0,0)
-        lane_transform = carla.Transform(lane_location,lane_rotation)
-        ego_lane = world.spawn_actor(lane_bp,lane_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-        def lane_callback(lane):
-            print("Lane invasion detected:\n"+str(lane)+'\n')
-        ego_lane.listen(lambda lane: lane_callback(lane))
-        """
-        
-        # --------------
-        # Add Obstacle sensor to ego vehicle. 
-        # --------------
-        """
-        obs_bp = world.get_blueprint_library().find('sensor.other.obstacle')
-        obs_bp.set_attribute("only_dynamics",str(True))
-        obs_location = carla.Location(0,0,0)
-        obs_rotation = carla.Rotation(0,0,0)
-        obs_transform = carla.Transform(obs_location,obs_rotation)
-        ego_obs = world.spawn_actor(obs_bp,obs_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-        def obs_callback(obs):
-            print("Obstacle detected:\n"+str(obs)+'\n')
-        ego_obs.listen(lambda obs: obs_callback(obs))
-        """
-
-        # --------------
-        # Add GNSS sensor to ego vehicle. 
-        # --------------
-        """
-        gnss_bp = world.get_blueprint_library().find('sensor.other.gnss')
-        gnss_location = carla.Location(0,0,0)
-        gnss_rotation = carla.Rotation(0,0,0)
-        gnss_transform = carla.Transform(gnss_location,gnss_rotation)
-        gnss_bp.set_attribute("sensor_tick",str(3.0))
-        ego_gnss = world.spawn_actor(gnss_bp,gnss_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-        def gnss_callback(gnss):
-            print("GNSS measure:\n"+str(gnss)+'\n')
-        ego_gnss.listen(lambda gnss: gnss_callback(gnss))
-        """
-
-        # --------------
-        # Add IMU sensor to ego vehicle. 
-        # --------------
-        """
-        imu_bp = world.get_blueprint_library().find('sensor.other.imu')
-        imu_location = carla.Location(0,0,0)
-        imu_rotation = carla.Rotation(0,0,0)
-        imu_transform = carla.Transform(imu_location,imu_rotation)
-        imu_bp.set_attribute("sensor_tick",str(3.0))
-        ego_imu = world.spawn_actor(imu_bp,imu_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-        def imu_callback(imu):
-            print("IMU measure:\n"+str(imu)+'\n')
-        ego_imu.listen(lambda imu: imu_callback(imu))
-        """
-
-        # --------------
-        # Place spectator on ego spawning
-        # --------------
-        """
-        spectator = world.get_spectator()
-        world_snapshot = world.wait_for_tick() 
-        spectator.set_transform(ego_vehicle.get_transform())
-        """
-
-        # --------------
-        # Enable autopilot for ego vehicle
-        # --------------
-        """
-        ego_vehicle.set_autopilot(True)
-        """
-
-        # --------------
-        # Game loop. Prevents the script from finishing.
-        # --------------
-        while True:
-            world_snapshot = world.wait_for_tick()
-
-    finally:
-        # --------------
-        # Stop recording and destroy actors
-        # --------------
-        client.stop_recorder()
-        if ego_vehicle is not None:
-            if ego_cam is not None:
-                ego_cam.stop()
-                ego_cam.destroy()
-            if ego_col is not None:
-                ego_col.stop()
-                ego_col.destroy()
-            if ego_lane is not None:
-                ego_lane.stop()
-                ego_lane.destroy()
-            if ego_obs is not None:
-                ego_obs.stop()
-                ego_obs.destroy()
-            if ego_gnss is not None:
-                ego_gnss.stop()
-                ego_gnss.destroy()
-            if ego_imu is not None:
-                ego_imu.stop()
-                ego_imu.destroy()
-            ego_vehicle.destroy()
-
-if __name__ == '__main__':
-
-    try:
-        main()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        print('\nDone with tutorial_ego.')
-
-```
-</details>
-<br>
-<details>
-<summary><b>tutorial_replay.py</b></summary>
-
-```py
-import glob
-import os
-import sys
-import time
-import math
-import weakref
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
-import carla
-
-import argparse
-import logging
-import random
-
-def main():
-    client = carla.Client('127.0.0.1', 2000)
-    client.set_timeout(10.0)
-
-    try:
-        
-        world = client.get_world() 
-        ego_vehicle = None
-        ego_cam = None
-        depth_cam = None
-        depth_cam02 = None
-        sem_cam = None
-        rad_ego = None
-        lidar_sen = None
-
-        # --------------
-        # Query the recording
-        # --------------
-        """
-        # Show the most important events in the recording.  
-        print(client.show_recorder_file_info("~/tutorial/recorder/recording05.log",False))
-        # Show actors not moving 1 meter in 10 seconds.  
-        #print(client.show_recorder_actors_blocked("~/tutorial/recorder/recording04.log",10,1))
-        # Show collisions between any type of actor.  
-        #print(client.show_recorder_collisions("~/tutorial/recorder/recording04.log",'v','a'))
-        """
-
-        # --------------
-        # Reenact a fragment of the recording
-        # --------------
-        """
-        client.replay_file("~/tutorial/recorder/recording03.log",0,30,0)
-        """
-
-        # --------------
-        # Set playback simulation conditions
-        # --------------
-        """
-        ego_vehicle = world.get_actor(322) #Store the ID from the simulation or query the recording to find out
-        """
-
-        # --------------
-        # Place spectator on ego spawning
-        # --------------
-        """
-        spectator = world.get_spectator()
-        world_snapshot = world.wait_for_tick() 
-        spectator.set_transform(ego_vehicle.get_transform())
-        """
-
-        # --------------
-        # Change weather conditions
-        # --------------
-        """
-        weather = world.get_weather()
-        weather.sun_altitude_angle = -30
-        weather.fog_density = 65
-        weather.fog_distance = 10
-        world.set_weather(weather)
-        """
-
-        # --------------
-        # Add a RGB camera to ego vehicle.
-        # --------------
-        """
-        cam_bp = None
-        cam_bp = world.get_blueprint_library().find('sensor.camera.rgb')
-        cam_location = carla.Location(2,0,1)
-        cam_rotation = carla.Rotation(0,180,0)
-        cam_transform = carla.Transform(cam_location,cam_rotation)
-        cam_bp.set_attribute("image_size_x",str(1920))
-        cam_bp.set_attribute("image_size_y",str(1080))
-        cam_bp.set_attribute("fov",str(105))
-        ego_cam = world.spawn_actor(cam_bp,cam_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-        ego_cam.listen(lambda image: image.save_to_disk('~/tutorial/new_rgb_output/%.6d.jpg' % image.frame))
-        """
-
-        # --------------
-        # Add a Logarithmic Depth camera to ego vehicle. 
-        # --------------
-        """
-        depth_cam = None
-        depth_bp = world.get_blueprint_library().find('sensor.camera.depth')
-        depth_bp.set_attribute("image_size_x",str(1920))
-        depth_bp.set_attribute("image_size_y",str(1080))
-        depth_bp.set_attribute("fov",str(105))
-        depth_location = carla.Location(2,0,1)
-        depth_rotation = carla.Rotation(0,180,0)
-        depth_transform = carla.Transform(depth_location,depth_rotation)
-        depth_cam = world.spawn_actor(depth_bp,depth_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-        # This time, a color converter is applied to the image, to get the semantic segmentation view
-        depth_cam.listen(lambda image: image.save_to_disk('~/tutorial/de_log/%.6d.jpg' % image.frame,carla.ColorConverter.LogarithmicDepth))
-        """
-        # --------------
-        # Add a Depth camera to ego vehicle. 
-        # --------------
-        """
-        depth_cam02 = None
-        depth_bp02 = world.get_blueprint_library().find('sensor.camera.depth')
-        depth_bp02.set_attribute("image_size_x",str(1920))
-        depth_bp02.set_attribute("image_size_y",str(1080))
-        depth_bp02.set_attribute("fov",str(105))
-        depth_location02 = carla.Location(2,0,1)
-        depth_rotation02 = carla.Rotation(0,180,0)
-        depth_transform02 = carla.Transform(depth_location02,depth_rotation02)
-        depth_cam02 = world.spawn_actor(depth_bp02,depth_transform02,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-        # This time, a color converter is applied to the image, to get the semantic segmentation view
-        depth_cam02.listen(lambda image: image.save_to_disk('~/tutorial/de/%.6d.jpg' % image.frame,carla.ColorConverter.Depth))
-        """
-
-        # --------------
-        # Add a new semantic segmentation camera to ego vehicle
-        # --------------
-        """
-        sem_cam = None
-        sem_bp = world.get_blueprint_library().find('sensor.camera.semantic_segmentation')
-        sem_bp.set_attribute("image_size_x",str(1920))
-        sem_bp.set_attribute("image_size_y",str(1080))
-        sem_bp.set_attribute("fov",str(105))
-        sem_location = carla.Location(2,0,1)
-        sem_rotation = carla.Rotation(0,180,0)
-        sem_transform = carla.Transform(sem_location,sem_rotation)
-        sem_cam = world.spawn_actor(sem_bp,sem_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-        # This time, a color converter is applied to the image, to get the semantic segmentation view
-        sem_cam.listen(lambda image: image.save_to_disk('~/tutorial/new_sem_output/%.6d.jpg' % image.frame,carla.ColorConverter.CityScapesPalette))
-        """
-        
-        # --------------
-        # Add a new radar sensor to ego vehicle
-        # --------------
-        """
-        rad_cam = None
-        rad_bp = world.get_blueprint_library().find('sensor.other.radar')
-        rad_bp.set_attribute('horizontal_fov', str(35))
-        rad_bp.set_attribute('vertical_fov', str(20))
-        rad_bp.set_attribute('range', str(20))
-        rad_location = carla.Location(x=2.8, z=1.0)
-        rad_rotation = carla.Rotation(pitch=5)
-        rad_transform = carla.Transform(rad_location,rad_rotation)
-        rad_ego = world.spawn_actor(rad_bp,rad_transform,attach_to=ego_vehicle, attachment_type=carla.AttachmentType.Rigid)
-        def rad_callback(radar_data):
-            velocity_range = 7.5 # m/s
-            current_rot = radar_data.transform.rotation
-            for detect in radar_data:
-                azi = math.degrees(detect.azimuth)
-                alt = math.degrees(detect.altitude)
-                # The 0.25 adjusts a bit the distance so the dots can
-                # be properly seen
-                fw_vec = carla.Vector3D(x=detect.depth - 0.25)
-                carla.Transform(
-                    carla.Location(),
-                    carla.Rotation(
-                        pitch=current_rot.pitch + alt,
-                        yaw=current_rot.yaw + azi,
-                        roll=current_rot.roll)).transform(fw_vec)
-
-                def clamp(min_v, max_v, value):
-                    return max(min_v, min(value, max_v))
-
-                norm_velocity = detect.velocity / velocity_range # range [-1, 1]
-                r = int(clamp(0.0, 1.0, 1.0 - norm_velocity) * 255.0)
-                g = int(clamp(0.0, 1.0, 1.0 - abs(norm_velocity)) * 255.0)
-                b = int(abs(clamp(- 1.0, 0.0, - 1.0 - norm_velocity)) * 255.0)
-                world.debug.draw_point(
-                    radar_data.transform.location + fw_vec,
-                    size=0.075,
-                    life_time=0.06,
-                    persistent_lines=False,
-                    color=carla.Color(r, g, b))
-        rad_ego.listen(lambda radar_data: rad_callback(radar_data))
-        """
-
-        # --------------
-        # Add a new LIDAR sensor to ego vehicle
-        # --------------
-        """
-        lidar_cam = None
-        lidar_bp = world.get_blueprint_library().find('sensor.lidar.ray_cast')
-        lidar_bp.set_attribute('channels',str(32))
-        lidar_bp.set_attribute('points_per_second',str(90000))
-        lidar_bp.set_attribute('rotation_frequency',str(40))
-        lidar_bp.set_attribute('range',str(20))
-        lidar_location = carla.Location(0,0,2)
-        lidar_rotation = carla.Rotation(0,0,0)
-        lidar_transform = carla.Transform(lidar_location,lidar_rotation)
-        lidar_sen = world.spawn_actor(lidar_bp,lidar_transform,attach_to=ego_vehicle,attachment_type=carla.AttachmentType.Rigid)
-        lidar_sen.listen(lambda point_cloud: point_cloud.save_to_disk('/home/adas/Desktop/tutorial/new_lidar_output/%.6d.ply' % point_cloud.frame))
-        """
-
-        # --------------
-        # Game loop. Prevents the script from finishing.
-        # --------------
-        while True:
-            world_snapshot = world.wait_for_tick()
-
-    finally:
-        # --------------
-        # Destroy actors
-        # --------------
-        if ego_vehicle is not None:
-            if ego_cam is not None:
-                ego_cam.stop()
-                ego_cam.destroy()
-            if depth_cam is not None:
-                depth_cam.stop()
-                depth_cam.destroy()
-            if sem_cam is not None:
-                sem_cam.stop()
-                sem_cam.destroy()
-            if rad_ego is not None:
-                rad_ego.stop()
-                rad_ego.destroy()
-            if lidar_sen is not None:
-                lidar_sen.stop()
-                lidar_sen.destroy()
-            ego_vehicle.destroy()
-        print('\nNothing to be done.')
-        
-
-if __name__ == '__main__':
-
-    try:
-        main()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        print('\nDone with tutorial_replay.')
-```
-</details>
-<br>
+조건을 변경하고 시뮬레이션을 실험해 보세요. 잃을 것은 없습니다. 레코더 덕분에 초기 시뮬레이션은 항상 재현될 수 있습니다. 이것이 CARLA의 모든 잠재력을 활용하는 핵심입니다.
 
 ---
-That is a wrap on how to properly retrieve data from the simulation. Make sure to play around, change the conditions of the simulator, experiment with sensor settings. The possibilities are endless. 
+## 튜토리얼 스크립트
 
+아래는 이 튜토리얼의 코드 조각들을 모은 두 스크립트입니다. 대부분의 코드는 주석 처리되어 있는데, 이는 특정 목적에 맞게 수정되도록 의도된 것입니다.
 
-Visit the forum to post any doubts or suggestions that have come to mind during this reading.  
+[튜토리얼 스크립트 전체 내용은 원문 참조]
+
+이것으로 시뮬레이션에서 데이터를 적절히 검색하는 방법에 대한 설명을 마칩니다. 시뮬레이터의 조건을 변경하고, 센서 설정을 실험하고, 직접 해보세요. 가능성은 무한합니다.
+
+이 읽기 중에 떠오른 의문점이나 제안사항은 포럼에서 게시하세요.
 
 <div text-align: center>
 <div class="build-buttons">
 <p>
 <a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA forum">
-CARLA forum</a>
+CARLA 포럼</a>
 </p>
 </div>
 </div>
