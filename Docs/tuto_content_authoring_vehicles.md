@@ -1,347 +1,341 @@
-# Content authoring - vehicles
+# 콘텐츠 저작 - 차량
 
-CARLA provides a comprehensive set of vehicles out of the box in the blueprint library. CARLA allows the user to expand upon this with custom vehicles for maximum extensibility.
+CARLA는 블루프린트 라이브러리에 다양한 차량 세트를 기본적으로 제공합니다. CARLA는 사용자가 최대한의 확장성을 위해 커스텀 차량으로 이를 확장할 수 있도록 합니다.
 
-3D modelling of detailed vehicles is highly complex and requires a significant degree of skill. We therefore refer the reader to alternative sources of documentation on 3D modelling, since this is beyond the scope of this guide. There are, however, numerous sources of vehicle models in both free and proprietary online repositories. Hence the user has many options to turn to for creating custom vehicles for use in CARLA.
+상세한 차량의 3D 모델링은 매우 복잡하며 상당한 수준의 기술이 필요합니다. 따라서 이 가이드의 범위를 벗어나는 3D 모델링에 대해서는 다른 문서를 참조하시기 바랍니다. 하지만 무료와 유료 온라인 저장소 모두에서 수많은 차량 모델 소스를 찾을 수 있습니다. 따라서 사용자는 CARLA에서 사용할 커스텀 차량을 만드는 데 많은 옵션을 가지고 있습니다.
 
-The key factors in preparing a custom vehicle for CARLA lie in rigging the vehicle armature and then importing into the Unreal Engine. After rigging and importing, blueprints need to be set for the car and the wheels. Then apply materials and add the glass parts of the vehicle. We will cover these steps in the following guide.
+CARLA용 커스텀 차량을 준비하는 데 있어 핵심 요소는 차량 아마추어를 리깅하고 언리얼 엔진으로 가져오는 것입니다. 리깅과 가져오기 후에는 차량과 바퀴를 위한 블루프린트를 설정해야 합니다. 그런 다음 재질을 적용하고 차량의 유리 부분을 추가합니다. 다음 가이드에서 이러한 단계들을 다룰 것입니다.
 
-* __[Modeling](#modeling)__
-	* [Naming conventions](#naming-conventions)
-* __[Rigging](#rigging-the-vehicle-using-an-armature)__
-	* [Import](#import)
-	* [Armature](#add-an-armature)
-    * [Parenting](#parenting)
-    * [Assignment](#assigning-car-parts-to-bones)
-	* [Blender add-on](#blender-ue4-vehicle-rigging-add-on)
-    * [Export](#export)
-* __[Import into Unreal Engine](#importing-into-unreal-engine)__
-	* [Physics asset](#setting-the-physics-asset)
-	* [Animation](#creating-the-animation)
-    * [Blueprint](#creating-the-blueprint)
-* __[Materials](#materials)__
-	* [Applying materials](#applying-a-material-to-your-vehicle)
-		* [Color](#color)
-		* [Clear coat](#clear-coat)
-		* [Orange peel](#orange-peel)
-		* [Flakes](#flakes)
-		* [Dust](#dust)
-* __[Glass](#glass)__
-	* [Glass meshes](#glass-meshes)
-	* [Glass material](#glass-material)
-	* [Single layer glass](#single-layer-glass)
-* __[Wheels](#wheels)__
-	* [Wheel blueprint](#wheel-blueprint)
-	* [Collision mesh](#collision-mesh)
-	* [Tire configuration](#tire-configuration)
-	* [Wheel dimensions](#wheel-dimensions)
-* __[Lights](#lights)__
-	* [UV map](#uv-map)
-	* [Importing](#importing)
+* __[모델링](#모델링)__
+  * [명명 규칙](#명명-규칙)
+* __[리깅](#아마추어를-사용한-차량-리깅)__
+  * [가져오기](#가져오기)
+  * [아마추어](#아마추어-추가)
+  * [페어런팅](#페어런팅)
+  * [할당](#차량-부품을-뼈에-할당)
+  * [블렌더 애드온](#블렌더-ue4-차량-리깅-애드온)
+  * [내보내기](#내보내기)
+* __[언리얼 엔진으로 가져오기](#언리얼-엔진으로-가져오기)__
+  * [물리 에셋](#물리-에셋-설정)
+  * [애니메이션](#애니메이션-생성)
+  * [블루프린트](#블루프린트-생성)
+* __[재질](#재질)__
+  * [재질 적용](#차량에-재질-적용)
+    * [색상](#색상)
+    * [클리어 코트](#클리어-코트)
+    * [오렌지 필](#오렌지-필)
+    * [플레이크](#플레이크)
+    * [먼지](#먼지)
+* __[유리](#유리)__
+  * [유리 메시](#유리-메시)
+  * [유리 재질](#유리-재질)
+  * [단일 레이어 유리](#단일-레이어-유리)
+* __[바퀴](#바퀴)__
+  * [바퀴 블루프린트](#바퀴-블루프린트)
+  * [충돌 메시](#충돌-메시)
+  * [타이어 구성](#타이어-구성)
+  * [바퀴 치수](#바퀴-치수)
+* __[조명](#조명)__
+  * [UV 맵](#uv-맵)
+  * [가져오기](#가져오기-1)
 
-## Modeling
+## 모델링
 
-Vehicles should have between 50,000 and 100,000 faces. We recommend triangulating the model prior to export as best practice. CARLA vehicles are modeled using the size and scale of actual cars as reference. Please ensure you pay careful attention to the units of your 3D application. Some work in centimeters while others work in meters.
+차량은 50,000에서 100,000개의 면을 가져야 합니다. 모범 사례로서 내보내기 전에 모델을 삼각화하는 것을 권장합니다. CARLA 차량은 실제 자동차의 크기와 비율을 참조하여 모델링됩니다. 3D 애플리케이션의 단위에 신중한 주의를 기울이세요. 일부는 센티미터 단위로 작업하고 다른 일부는 미터 단위로 작업합니다.
 
-### Naming conventions
+### 명명 규칙
 
-For ease and consistency we recommend that you divide the vehicle into the following parts and name them accordingly. Details specific to glass and lights will be covered in later sections:
+편의성과 일관성을 위해 차량을 다음 부분으로 나누고 그에 따라 이름을 지정할 것을 권장합니다. 유리와 조명에 대한 구체적인 내용은 후반부에서 다룰 것입니다:
 
->1. __Bodywork__: The metallic part of the vehicle. This material is changed to Unreal Engine material. Logos and details can be added but, to be visible, they must be painted in a different color by using the alpha channels in the Unreal Engine editor.
-- __Glass_Ext__: A layer of glass that allows visibility from the outside to the inside of the vehicle.
-- __Glass_Int__: A layer of glass that allows visibility from the inside to the outside of the vehicle.
-- __Lights__: Headlights, indicator lights, etc.
-- __LightGlass_Ext__: A layer of glass that allows visibility from the outside to the inside of the light.
-- __LightGlass_Int__: A layer of glass that allows visibility from the inside to the outside of the light.
-- __LicensePlate__: A rectangular plane of 29x12 cm. You can use the CARLA provided `.fbx` for best results, download it [here](https://carla-assets.s3.us-east-005.backblazeb2.com/fbx/LicensePlate.rar). The texture will be assigned automatically in Unreal Engine.
-- __Interior__: Any other details that don't fit in the above sections can go into _Interior_.
+>1. __Bodywork__: 차량의 금속 부분. 이 재질은 언리얼 엔진 재질로 변경됩니다. 로고와 세부 사항을 추가할 수 있지만, 보이게 하려면 언리얼 엔진 에디터의 알파 채널을 사용하여 다른 색상으로 칠해야 합니다.
+- __Glass_Ext__: 차량 외부에서 내부를 볼 수 있게 하는 유리층.
+- __Glass_Int__: 차량 내부에서 외부를 볼 수 있게 하는 유리층.
+- __Lights__: 헤드라이트, 방향 지시등 등.
+- __LightGlass_Ext__: 조명 외부에서 내부를 볼 수 있게 하는 유리층.
+- __LightGlass_Int__: 조명 내부에서 외부를 볼 수 있게 하는 유리층.
+- __LicensePlate__: 29x12 cm의 직사각형 평면. 최상의 결과를 위해 [여기](https://carla-assets.s3.us-east-005.backblazeb2.com/fbx/LicensePlate.rar)에서 CARLA에서 제공하는 `.fbx`를 사용할 수 있습니다. 텍스처는 언리얼 엔진에서 자동으로 할당됩니다.
+- __Interior__: 위 섹션에 맞지 않는 다른 세부 사항들은 _Interior_에 포함될 수 있습니다.
 
-Materials should be named using the format `M_CarPart_CarName`, e.g, `M_Bodywork_Mustang`.
+재질은 `M_CarPart_CarName` 형식으로 이름을 지정해야 합니다(예: `M_Bodywork_Mustang`).
 
-Textures should be named using the format `T_CarPart_CarName`, e.g, `T_Bodywork_Mustang`. Textures should be sized as 2048x2048.
+텍스처는 `T_CarPart_CarName` 형식으로 이름을 지정해야 합니다(예: `T_Bodywork_Mustang`). 텍스처 크기는 2048x2048이어야 합니다.
+## 아마추어를 사용한 차량 리깅
 
-## Rigging the vehicle using an armature
+시뮬레이션에서 현실적으로 보이기 위해, 차량은 회전하는 바퀴가 있어야 하며, 앞쪽 한 쌍은 조향 입력에 따라 회전할 수 있어야 합니다. 따라서 CARLA용 차량을 준비하기 위해서는 바퀴를 식별하고 움직임을 허용하기 위해 차량에 아마추어를 리깅해야 합니다.
 
-To look realistic within the simulation, the car needs to have rotating and wheels, the front pair of which can turn with steering inputs. Therefore to prepare a vehicle for CARLA, an armature needs to be rigged to the car to identify the wheels and allow their movement.
+### 가져오기
 
-### Import
-
-Import or model the vehicle model mesh in your 3D modelling application. In this guide we will use Blender 3D. Ensure that the wheels are separable from the main body. Each wheel must be accessible as a distinct object.
+3D 모델링 애플리케이션에서 차량 모델 메시를 가져오거나 모델링합니다. 이 가이드에서는 Blender 3D를 사용할 것입니다. 바퀴가 본체와 분리될 수 있는지 확인하세요. 각 바퀴는 개별 객체로 접근할 수 있어야 합니다.
 
 ![model_in_blender](img/tuto_content_authoring_vehicles/import_model_blender.png)
 
-It is important to ensure that the vehicle faces in the positive X direction, so the hood and windshield should be facing towards positive X. The car should also be oriented such that the floor to roof direction is in the positive Z direction. The wheels should be just grazing the X-Y plane and the origin should be situated where you would expect the vehicle's center of mass to be in the X-Y plane (not in the Z plane though).
+차량이 양의 X 방향을 향하도록 하는 것이 중요합니다. 따라서 후드와 앞유리는 양의 X를 향해야 합니다. 또한 차량은 바닥에서 지붕 방향이 양의 Z 방향이 되도록 방향이 설정되어야 합니다. 바퀴는 X-Y 평면에 살짝 닿아야 하며, 원점은 X-Y 평면에서 차량의 무게중심이 있을 것으로 예상되는 위치에 있어야 합니다(Z 평면에서는 제외).
 
-### Add an armature
+### 아마추어 추가
 
-Now add an armature to the center of the vehicle, ensure the object is properly centered, the root of the armature bone should be set at the origin. Switch to edit mode and rotate the armature 90 around the x axis.
+이제 차량 중심에 아마추어를 추가합니다. 객체가 제대로 중심에 있는지 확인하고, 아마추어 뼈의 루트는 원점에 위치해야 합니다. 편집 모드로 전환하고 아마추어를 x축 기준으로 90도 회전합니다.
 
 ![armature_init](img/tuto_content_authoring_vehicles/vehicle_base_bone.png)
 
-Now select the armature and add 4 more bones. Each of these bones needs to be located such that the root of the bone coincides with the centre of the each wheel. This can be achieved by locating the 3D cursor at the center of each wheel in edit mode. Select one of the wheels in object mode, select a vertex, press A to select all vertices then `Shift+S` and select `Cursor to selected`. This will locate the cursor in the center of the wheel. Then, in object mode, select the armature, switch to edit mode, select a bone and choose `Selection to cursor`. Your bone will now coincide with the wheel. Rotate each bone such that it lines up with the base of the armature.
+이제 아마추어를 선택하고 4개의 뼈를 더 추가합니다. 각 뼈의 루트는 각 바퀴의 중심과 일치해야 합니다. 이는 편집 모드에서 3D 커서를 각 바퀴의 중심에 위치시켜 달성할 수 있습니다. 객체 모드에서 바퀴 하나를 선택하고, 정점을 선택한 다음 `A`를 눌러 모든 정점을 선택한 후 `Shift+S`를 누르고 `Cursor to selected`를 선택합니다. 이렇게 하면 커서가 바퀴의 중심에 위치하게 됩니다. 그런 다음 객체 모드에서 아마추어를 선택하고 편집 모드로 전환한 후, 뼈를 선택하고 `Selection to cursor`를 선택합니다. 이제 뼈가 바퀴와 일치하게 됩니다. 각 뼈를 회전하여 아마추어의 베이스와 정렬시킵니다.
 
-For each wheel, it is recommended to name the bone according to the wheel it needs to be coupled to, this will help in identification later when you need to assign vertex groups to each bone.
+각 바퀴에 대해, 나중에 각 뼈에 정점 그룹을 할당할 때 식별하는 데 도움이 되도록 뼈를 연결될 바퀴에 따라 이름을 지정하는 것이 좋습니다.
 
 ![armature_full](img/tuto_content_authoring_vehicles/all_vehicle_bones.png)
 
-### Parenting
+### 페어런팅
 
-Now select all the parts of the body and all 4 wheels using shift or control in the project outliner,  then control select the armature you have created (this order is important, it won't work if you select these in reverse order). Press `Ctrl+p` and select `With empty groups` to bind the mesh to the armature.
+이제 프로젝트 아웃라이너에서 shift나 control을 사용하여 본체의 모든 부분과 4개의 바퀴를 모두 선택한 다음, 생성한 아마추어를 control 선택합니다(이 순서가 중요합니다. 역순으로 선택하면 작동하지 않습니다). `Ctrl+p`를 누르고 `With empty groups`를 선택하여 메시를 아마추어에 바인딩합니다.
 
 ![bind_armature](img/tuto_content_authoring_vehicles/bind_armature.gif)
 
-Now you have parented the mesh to the armature, you now need to assign each wheel to its respective bone. Select a wheel either in the outliner or the editor. Switch to edit mode, and select all the vertices of the wheel (shortcut - `a`).
+이제 메시를 아마추어에 페어런팅했으므로, 각 바퀴를 해당 뼈에 할당해야 합니다. 아웃라이너나 에디터에서 바퀴를 선택합니다. 편집 모드로 전환하고 바퀴의 모든 정점을 선택합니다(단축키 - `a`).
 
-### Assigning car parts to bones
+### 차량 부품을 뼈에 할당
 
-Select the mesh tab of the properties (the green triangle). Inside the vertex groups tab of the mesh properties panel, you should now see the bones of your armature. Select the bone corresponding to the wheel you are editing and select `Assign`. Once you have rigged the wheels, rig all other parts of the vehicle to the base bone.
+속성의 메시 탭(녹색 삼각형)을 선택합니다. 메시 속성 패널의 정점 그룹 탭 안에서 아마추어의 뼈들이 보일 것입니다. 편집 중인 바퀴에 해당하는 뼈를 선택하고 `Assign`을 선택합니다. 바퀴를 모두 리깅한 후에는 차량의 다른 모든 부분을 베이스 뼈에 리깅합니다.
 
 ![assign_bone](img/tuto_content_authoring_vehicles/assign_vertex_group.gif)
 
-Once you have assigned all of the mesh parts to the armature you can test if it works by selecting the armature and moving to pose mode and moving the relevant bones. The vehicle base bone should move the whole vehicle, while the wheel bones should each move and rotate their respective wheels. Ensure to undo any posing you might do with `Ctrl+Z`.
+메시의 모든 부분을 아마추어에 할당한 후에는 아마추어를 선택하고 포즈 모드로 이동하여 관련 뼈를 움직여 작동하는지 테스트할 수 있습니다. 차량 베이스 뼈는 차량 전체를 움직여야 하고, 바퀴 뼈는 각각 해당 바퀴를 움직이고 회전시켜야 합니다. `Ctrl+Z`로 테스트한 포즈를 되돌리세요.
 
 ![test_armature](img/tuto_content_authoring_vehicles/test_pose.gif)
 
-### Blender UE4 vehicle rigging add-on
+### 블렌더 UE4 차량 리깅 애드온
 
-There is a very useful add on for blender for rigging a vehicle for import into CARLA that helps streamline the above steps. Please see the [__add-on webpage__](https://continuebreak.com/creations/ue4-vehicle-rigging-addon-blender/) for instructions.
+위 단계들을 간소화하는 데 도움이 되는 CARLA로 가져오기 위한 차량 리깅용 블렌더 애드온이 있습니다. 지침은 [__애드온 웹페이지__](https://continuebreak.com/creations/ue4-vehicle-rigging-addon-blender/)를 참조하세요.
 
-### Export
+### 내보내기
 
-Now we will export our rigged model into FBX format for import into Unreal Engine. Select `Export > FBX (.fbx)` from the File menu. In the `Object Types` section of the `Include` panel, shift select the `Armature` and `Mesh` options.
+이제 리깅된 모델을 언리얼 엔진으로 가져오기 위해 FBX 형식으로 내보내겠습니다. 파일 메뉴에서 `Export > FBX (.fbx)`를 선택합니다. `Include` 패널의 `Object Types` 섹션에서 shift를 누른 채 `Armature`와 `Mesh` 옵션을 선택합니다.
 
-In the `Transform` panel. Change `Forward` to `X Forward` and change `Up` to `Z Up`. This is important to ensure the vehicle is oriented correctly in the Unreal Engine.
+`Transform` 패널에서 `Forward`를 `X Forward`로 변경하고 `Up`을 `Z Up`으로 변경합니다. 이는 차량이 언리얼 엔진에서 올바른 방향을 갖도록 하는 데 중요합니다.
 
-In the `Armature` section uncheck `Add Leaf Bones` and uncheck `Bake Animation`.
+`Armature` 섹션에서 `Add Leaf Bones`를 체크 해제하고 `Bake Animation`을 체크 해제합니다.
 
 ![export_fbx](img/tuto_content_authoring_vehicles/export_fbx.gif)
+## 언리얼 엔진으로 가져오기
 
-## Importing into unreal engine
+CARLA 루트 디렉토리(소스에서 CARLA를 빌드한 디렉토리)에서 `make launch` 명령으로 언리얼 에디터를 실행합니다. 콘텐츠 브라우저를 열고, 적절한 디렉토리를 설정한 다음 우클릭하여 `Import to ....`를 선택합니다. 이전에 블렌더(또는 다른 3D 모델링 애플리케이션)에서 내보낸 FBX 파일을 선택합니다. 기본 설정으로 가져옵니다.
 
-Launch the Unreal Editor with the `make launch` command from the CARLA root directory (the one where you have built CARLA from source). Open a content browser, set up an appropriate directory and right click and select `Import to ....`. Choose the FBX file that you previously exported from Blender (or another 3D modelling application). Import with default settings.
+### 물리 에셋 설정
 
-### Setting the physics asset
-
-You will now have 3 things in your content browser directory, the mesh, the skeleton and the physics asset. Double click on the physics asset to adjust it.
+이제 콘텐츠 브라우저 디렉토리에 메시, 스켈레톤, 물리 에셋 세 가지가 있을 것입니다. 물리 에셋을 더블 클릭하여 조정합니다.
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/physics_asset.png)
 
-First, select the main body, in the `Details` menu on the right, change the `Linear Damping` to 0.0 in the `Physics` section, check `Simulation Generates Hit Events` in the `Collision` section and change the `Primitive Type` from `Capsule` to `Box` in the `Body Creation` section. Then press `Regenerate bodies`. The capsule will now change to a rectangular box. Then select the wheels.
+먼저, 메인 바디를 선택하고 오른쪽의 `Details` 메뉴에서 `Physics` 섹션의 `Linear Damping`을 0.0으로 변경하고, `Collision` 섹션에서 `Simulation Generates Hit Events`를 체크하며, `Body Creation` 섹션의 `Primitive Type`을 `Capsule`에서 `Box`로 변경합니다. 그런 다음 `Regenerate bodies`를 누릅니다. 캡슐이 이제 직사각형 상자로 변경될 것입니다. 그런 다음 바퀴를 선택합니다.
 
 ![physics_details](img/tuto_content_authoring_vehicles/physics_details.png)
 
-Now select all the wheels (in the `Skeleton Tree` section on the left).
+이제 모든 바퀴를 선택합니다(왼쪽의 `Skeleton Tree` 섹션에서).
 
 ![regenerate_wheels](img/tuto_content_authoring_vehicles/wheels_asset.png)
 
-Change `Linear Damping` to 0.0, set `Physics Type` to `Kinematic`, set `Collision Response` to `Disabled` and select the `Primitive Type` as `Sphere`. Press `Re-generate Bodies` once more.
+`Linear Damping`을 0.0으로 변경하고, `Physics Type`을 `Kinematic`으로 설정하며, `Collision Response`를 `Disabled`로 설정하고 `Primitive Type`을 `Sphere`로 선택합니다. 다시 `Re-generate Bodies`를 누릅니다.
 
 ![regenerate_wheels](img/tuto_content_authoring_vehicles/wheel_physics_details.png)
 
-### Creating the animation
+### 애니메이션 생성
 
-In the content browser directory where you have your new vehicle asset, right click and choose `Animation > Animation Blueprint`. In the popup that opens, search for `VehicleAnimInstance` in the `Parent Class` section and for the `Target Skeleton` search for the skeleton corresponding to your new vehicle, you should be able to see the name in your content browser. After selecting these two things press OK. This will create a new animation blueprint for your vehicle.
+새 차량 에셋이 있는 콘텐츠 브라우저 디렉토리에서 우클릭하고 `Animation > Animation Blueprint`를 선택합니다. 팝업이 열리면 `Parent Class` 섹션에서 `VehicleAnimInstance`를 검색하고 `Target Skeleton`에서는 새 차량에 해당하는 스켈레톤을 검색합니다. 콘텐츠 브라우저에서 이름을 볼 수 있어야 합니다. 이 두 가지를 선택한 후 OK를 누릅니다. 이렇게 하면 차량을 위한 새로운 애니메이션 블루프린트가 생성됩니다.
 
 ![animation_blueprint](img/tuto_content_authoring_vehicles/create_anim_blueprint.png)
 
-To simplify things, we can copy the animation from another vehicle. In a second content browser, open `Content > Carla > Static > Vehicles > 4Wheeled` and choose any vehicle. Open the animation blueprint of your chosen vehicle and then copy all nodes that are not the `Output pose` node from this into your new animation blueprint. Connect the nodes by dragging a new connection between the final node to the output node. Press compile and the animation blueprint is now set.
+간단히 하기 위해 다른 차량의 애니메이션을 복사할 수 있습니다. 두 번째 콘텐츠 브라우저에서 `Content > Carla > Static > Vehicles > 4Wheeled`를 열고 아무 차량이나 선택합니다. 선택한 차량의 애니메이션 블루프린트를 열고 `Output pose` 노드가 아닌 모든 노드를 새 애니메이션 블루프린트로 복사합니다. 최종 노드에서 출력 노드로 새 연결을 드래그하여 노드들을 연결합니다. 컴파일을 누르면 애니메이션 블루프린트가 설정됩니다.
 
 ![copy_nodes](img/tuto_content_authoring_vehicles/animation_blueprint_setup.gif)
 
-### Creating the blueprint
+### 블루프린트 생성
 
-Navigate with your content browser into `Content > Carla > Blueprints > Vehicles > LincolnMKZ2017` or a similar vehicle. In here you will find a set of blueprints set up for the 4 wheels. Copy these into the directory containing your own vehicle and rename them to ensure you can distinguish them later. You can set up your own custom wheels if you prefer, please refer to the later [__wheels section__](#wheels)
+콘텐츠 브라우저에서 `Content > Carla > Blueprints > Vehicles > LincolnMKZ2017` 또는 비슷한 차량으로 이동합니다. 여기에서 4개의 바퀴에 대해 설정된 블루프린트 세트를 찾을 수 있습니다. 이를 자신의 차량이 포함된 디렉토리로 복사하고 나중에 구분할 수 있도록 이름을 변경합니다. 원한다면 자신의 커스텀 바퀴를 설정할 수 있습니다. 자세한 내용은 뒷부분의 [__바퀴 섹션__](#바퀴)을 참조하세요.
 
 ![copy_wheels](img/tuto_content_authoring_vehicles/copy_wheels.png)
 
-Right click in the content browser directory where your new vehicle assets are and chose `Blueprint Class`. Search in the `All Classes` menu for `BaseVehiclePawn` and choose this class. Name the blueprint and open it. Select `Mesh` in the `Components` tab on the left and then drag the vehicle mesh into the Mesh section on the right hand side.
+새 차량 에셋이 있는 콘텐츠 브라우저 디렉토리에서 우클릭하고 `Blueprint Class`를 선택합니다. `All Classes` 메뉴에서 `BaseVehiclePawn`을 검색하고 이 클래스를 선택합니다. 블루프린트의 이름을 지정하고 엽니다. 왼쪽의 `Components` 탭에서 `Mesh`를 선택하고 오른쪽의 Mesh 섹션으로 차량 메시를 드래그합니다.
 
 ![blueprint_with_mesh](img/tuto_content_authoring_vehicles/blueprint_with_mesh.png)
 
-In `Anim Class` search for the animation corresponding to your new vehicle that you set up in the previous step.
+`Anim Class`에서 이전 단계에서 설정한 새 차량에 해당하는 애니메이션을 검색합니다.
 
-Next, select `Vehicle Movement` in the `Components` menu of the blueprint class and in the right `Details` menu navigate to the `Vehicle Setup` section. Now for each wheel, find the relevant wheel blueprint that you previously copied and renamed for the `Wheel Class` attribute. Do the same for each wheel. Compile and save.
+다음으로, 블루프린트 클래스의 `Components` 메뉴에서 `Vehicle Movement`를 선택하고 오른쪽 `Details` 메뉴의 `Vehicle Setup` 섹션으로 이동합니다. 이제 각 바퀴에 대해 `Wheel Class` 속성에 이전에 복사하고 이름을 변경한 관련 바퀴 블루프린트를 찾습니다. 각 바퀴에 대해 동일한 작업을 수행합니다. 컴파일하고 저장합니다.
 
 ![wheel_setup](img/tuto_content_authoring_vehicles/vehicle_wheel_setup.gif)
 
-Now navigate to `Content > Carla > Blueprints > Vehicles > VehicleFactory` and double click this to open the Vehicle Factory.
+이제 `Content > Carla > Blueprints > Vehicles > VehicleFactory`로 이동하여 더블 클릭하여 Vehicle Factory를 엽니다.
 
-Select the `Vehicles` node and expand the `Vehicles` item in the `Default value` section on the right hand side.
+`Vehicles` 노드를 선택하고 오른쪽의 `Default value` 섹션에서 `Vehicles` 항목을 확장합니다.
 
 ![vehicle_factory](img/tuto_content_authoring_vehicles/vehicle_factory_page.png)
 
-Press the plus icon to add your new vehicle. Scroll down to the last entry and expand it, it should be empty. Name the make and model of your vehicle and under the class section find your blueprint class that you created in the previous section. Leave the number of wheels as 4 and put the generation as 2. Compile and save. Do a global save for safety and you are now..ready to run your vehicle in a simulation.
+플러스 아이콘을 눌러 새 차량을 추가합니다. 마지막 항목으로 스크롤하여 확장하면 비어 있어야 합니다. 차량의 제조사와 모델 이름을 지정하고 클래스 섹션에서 이전 섹션에서 생성한 블루프린트 클래스를 찾습니다. 바퀴 수는 4로 두고 세대는 2로 설정합니다. 컴파일하고 저장합니다. 안전을 위해 전역 저장을 수행하면 이제 시뮬레이션에서 차량을 실행할 준비가 되었습니다.
 
-Press play in the unreal toolbar to run the simulation. Once it is running, open a terminal and run the `manual_control.py` script with the filter option to specify your new vehicle model:
+언리얼 툴바에서 재생을 눌러 시뮬레이션을 실행합니다. 실행되면 터미널을 열고 filter 옵션을 사용하여 새 차량 모델을 지정하여 `manual_control.py` 스크립트를 실행합니다:
 
 ```sh
 python manual_control.py --filter my_vehicle_make
 ```
 ![manual_control](img/tuto_content_authoring_vehicles/manual_control.gif)
 
-As it is, the vehicle currently has no textures or colors applied. The next step is to apply materials to give your vehicle a finish like a real road vehicle.
+현재 상태에서는 차량에 텍스처나 색상이 적용되어 있지 않습니다. 다음 단계는 실제 도로 차량과 같은 마감을 차량에 적용하기 위해 재질을 적용하는 것입니다.
+## 재질
 
-## Materials
+기본 에셋으로 메시와 블루프린트를 설정하여 차량을 가져온 후에는, 언리얼 엔진에서 사실적인 렌더링을 위한 재질을 차량에 추가하여 머신 러닝 학습 데이터의 최대 충실도를 달성해야 합니다.
 
-Once you have your vehicle imported as a basic asset with the mesh and blueprints laid out, you now want to add materials to your vehicle to facilitate photorealistic rendering in the Unreal Engine, for maximum fidelity in your machine learning training data.
+언리얼 에디터는 매우 사실적인 재질을 만들 수 있는 포괄적인 재질 워크플로우를 자랑합니다. 하지만 이는 프로세스에 상당한 복잡성을 더합니다. 이러한 이유로, CARLA는 처음부터 시작할 필요 없이 사용할 수 있는 대규모 재질 프로토타입 라이브러리를 제공합니다.
 
-The Unreal Editor boasts a comprehensive materials workflow that facilitates the creation of highly realistic materials. This does, however, add a significant degree of complexity to the process. For this reason, CARLA is provided with a large library of material prototypes for you to use without having to start from scratch.
+### 차량에 재질 적용
 
-### Applying a material to your vehicle
+CARLA는 다양한 종류의 차량 도장과 기능을 모방할 수 있는 광택 있는 마감을 복제하기 위한 프로토타입 재질을 제공합니다. 언리얼 에디터를 열고 콘텐츠 브라우저에서 `Content > Carla > Static > GenericMaterials > 00_MastersOpt`에 있는 재질을 찾습니다. 기본 재질은 `M_CarPaint_Master`라고 합니다. 이 재질을 우클릭하고 컨텍스트 메뉴에서 `Create Material Instance`를 선택합니다. 이름을 지정하고 새 차량 콘텐츠가 저장된 폴더로 이동합니다.
 
-CARLA provides a prototype material for replicating the glossy finish of vehicles that can mimic numerous different types of vehicle paint jobs and features. Open Unreal editor and in the content browser, locate the material in `Content > Carla > Static > GenericMaterials > 00_MastersOpt`. The basic material is called `M_CarPaint_Master`. Right click on this material and choose `Create Material Instance` from the context material. Name it and move it into the folder where your new vehicle content is stored.
-
-In the Unreal Editor, move the spectator to a point near the floor and drag the skeletal mesh of the vehicle from the content browser into the scene, the body of your vehicle will now appear there.
+언리얼 에디터에서 관찰자를 바닥 근처의 지점으로 이동하고 콘텐츠 브라우저에서 차량의 스켈레탈 메시를 장면으로 드래그합니다. 차량의 본체가 이제 거기에 나타날 것입니다.
 
 ![add_model](img/tuto_content_authoring_vehicles/add_model.gif)
 
-Now, in the details panel on the right hand side, drag your new material instance into the `Element 0` position of the `Materials` section. You will see the bodywork take on a new grey, glossy material property.
+이제 오른쪽의 details 패널에서 새로운 재질 인스턴스를 `Materials` 섹션의 `Element 0` 위치로 드래그합니다. 차체가 새로운 회색의 광택 있는 재질 속성을 가지게 되는 것을 볼 수 있습니다.
 
 ![apply_material](img/tuto_content_authoring_vehicles/apply_material.gif)
 
-Double click on the material in the content browser and we can start editing the parameters. There are a numerous parameters here that alter various properties that are important to mimic real world car paint jobs. The most important parameters are the following:
+콘텐츠 브라우저에서 재질을 더블 클릭하면 매개변수 편집을 시작할 수 있습니다. 여기에는 실제 자동차 도장을 모방하는 데 중요한 다양한 속성을 변경하는 수많은 매개변수가 있습니다. 가장 중요한 매개변수는 다음과 같습니다:
 
-#### __Color__
+#### __색상__
 
-The color settings govern the overall color of the car. The base color is simply the primary color of the car this will govern the overall color:
+색상 설정은 자동차의 전체적인 색상을 결정합니다. 기본 색상은 단순히 자동차의 기본 색상이며 전체적인 색상을 결정합니다:
 
 ![change_base_color](img/tuto_content_authoring_vehicles/change_base_color.gif)
 
-#### __Clear coat__
+#### __클리어 코트__
 
-The clear coat settings govern the appearance of the finish and how it reacts to light. The roughness uses a texture to apply imperfections to the vehicle surface, scattering light more with higher values to create a matte look. Subtle adjustments and low values are recommended for a realistic look. Generally, car paint jobs are smooth and reflective, however, this effect might be used more generously to model specialist matte finishes of custom paint jobs.
+클리어 코트 설정은 마감의 외관과 빛에 반응하는 방식을 결정합니다. 거칠기는 텍스처를 사용하여 차량 표면에 불완전함을 적용하고, 높은 값에서는 빛을 더 많이 산란시켜 매트한 외관을 만듭니다. 사실적인 외관을 위해서는 미묘한 조정과 낮은 값이 권장됩니다. 일반적으로 자동차 도장은 부드럽고 반사적이지만, 이 효과는 커스텀 도장의 특수 매트 마감을 모델링하는 데 더 많이 사용될 수 있습니다.
 
 ![change_roughness](img/tuto_content_authoring_vehicles/roughness.gif)
 
-An important parameter to govern the "shininess" or "glossiness" of your car is the `Clear Coat Intensity`. High values close to 1 will make the coat shiny and glossy.
+자동차의 "반짝임" 또는 "광택"을 결정하는 중요한 매개변수는 `Clear Coat Intensity`입니다. 1에 가까운 높은 값은 코팅을 반짝이고 광택이 나게 만듭니다.
 
-#### __Orange peel__
+#### __오렌지 필__
 
-Finishes on real cars (particularly on mass produced cars for the general market) tend to have imperfections that appear as slight ripples in the paint. The orange peel effect mimics this and makes cars look more realistic.
+실제 자동차의 마감(특히 일반 시장용 대량 생산 자동차)은 도장에 약간의 물결처럼 보이는 불완전함이 있는 경향이 있습니다. 오렌지 필 효과는 이를 모방하여 자동차를 더 사실적으로 보이게 만듭니다.
 
 ![change_orange_peel](img/tuto_content_authoring_vehicles/orange_peel.gif)
 
-#### __Flakes__
+#### __플레이크__
 
-Some cars have paint jobs that include flakes of other material, such as metals or ceramics, to give the car a `metallic` or `pearlescant` appearance, adding extra glints and reflections that react in an attractive way to light. The flakes parameters allows CARLA to mimic this. To mimic metallic finishes, it would be
+일부 자동차는 빛에 반응하여 매력적인 방식으로 추가적인 반짝임과 반사를 주는 금속이나 세라믹의 플레이크를 포함하는 도장을 가지고 있습니다. 플레이크 매개변수를 사용하면 CARLA가 이를 모방할 수 있습니다.
 
 ![flakes](img/tuto_content_authoring_vehicles/flakes.gif)
 
-#### __Dust__
+#### __먼지__
 
-Cars often accumulate grease and dust on the body that adds additional texture to the paint, affecting the way it reflects the light. The dust parameters allow you to add patches of disruption to the coat to mimic foreign materials sticking to the paint.
+자동차는 종종 도장에 기름과 먼지가 쌓여 빛을 반사하는 방식에 영향을 주는 추가적인 텍스처가 생깁니다. 먼지 매개변수를 사용하면 도장에 외부 물질이 달라붙는 것을 모방하기 위해 코팅에 패치 형태의 교란을 추가할 수 있습니다.
 
 ![dust](img/tuto_content_authoring_vehicles/change_dust.gif)
 
-## Glass
+## 유리
 
-Creating realistic glass in CARLA requires some tricks to capture the real refractive and reflective behavior of glass used in motor vehicles. The CARLA garage vehicles have 4 layers of meshes for the glass, with 2 different materials. The layers are separated by a few millimeters and there are separate materials for the interior and exterior facing glass layers to ensure that the glass looks realistic from both inside and outside the vehicle.
+CARLA에서 사실적인 유리를 만들기 위해서는 자동차에 사용되는 유리의 실제 굴절 및 반사 동작을 포착하기 위한 몇 가지 기술이 필요합니다. CARLA 차고의 차량들은 서로 다른 재질을 가진 4개의 유리 레이어를 가지고 있습니다. 레이어들은 몇 밀리미터 간격으로 분리되어 있으며, 차량 내부와 외부에서 모두 유리가 사실적으로 보이도록 하기 위해 내부와 외부를 향하는 유리 레이어에 대해 서로 다른 재질이 사용됩니다.
 
-There are 2 layers of glass for the appearance of the vehicle from outside and 2 layers for the appearance of glass from the interior of the vehicle. What makes glass look like glass is the reflections coming from both surfaces of the glass that makes a very subtle doubling of the reflection.
+차량 외부에서의 외관을 위한 2개의 유리 레이어와 차량 내부에서의 유리 외관을 위한 2개의 레이어가 있습니다. 유리가 유리처럼 보이게 만드는 것은 유리의 양면에서 오는 반사로, 반사의 매우 미묘한 이중화를 만듭니다.
 
-### Glass meshes
+### 유리 메시
 
-Here we see the glass parts attached to the main bodywork (not the doors or other moving parts) of the Lincoln.
+여기서는 Lincoln의 메인 차체(도어나 다른 움직이는 부품이 아닌)에 부착된 유리 부분을 볼 수 있습니다.
 
 ![main_glass](img/tuto_content_authoring_vehicles/glass.png)
 
-If we separate the constituent mesh parts, we can see that the glass profile is separated into 4 different layers.
+구성 메시 부분을 분리하면 유리 프로필이 4개의 서로 다른 레이어로 분리되어 있는 것을 볼 수 있습니다.
 
 ![main_glass_expanded](img/tuto_content_authoring_vehicles/glass_expanded.png)
 
-The 4 layers are separated into 2 groups, the exterior layers, with normals facing out of the vehicle and the interior layers, with mesh normals facing into the vehicle interior. The following diagram demonstrates
+4개의 레이어는 2개의 그룹으로 나뉩니다. 노멀이 차량 외부를 향하는 외부 레이어와 노멀이 차량 내부를 향하는 내부 레이어입니다. 다음 다이어그램이 이를 보여줍니다.
 
 ![glass_layers](img/tuto_content_authoring_vehicles/glass_layers.png)
 
-Once you have created your mesh layers, import them in the content browser into the Unreal Editor in the folder where you have stored your vehicle.
+메시 레이어를 생성한 후에는 언리얼 에디터의 콘텐츠 브라우저에서 차량을 저장한 폴더로 가져옵니다.
 
-Shift select the 4 glass layers and drag them into the map so you can see them.
+4개의 유리 레이어를 shift로 선택하고 맵으로 드래그하여 볼 수 있게 합니다.
 
 ![drag_glass](img/tuto_content_authoring_vehicles/drag_glass.gif)
 
-### Glass material
+### 유리 재질
 
-Double click the external layer of the glass, then navigate in a second content browser window to `Content > Carla > Static > Vehicles > GeneralMaterials` and find the `Glass` material. Drag the glass material to the material slot of the mesh item. Repeat this process for each layer of the glass.
+외부 유리 레이어를 더블 클릭한 다음, 두 번째 콘텐츠 브라우저 창에서 `Content > Carla > Static > Vehicles > GeneralMaterials`로 이동하여 `Glass` 재질을 찾습니다. 유리 재질을 메시 항목의 재질 슬롯으로 드래그합니다. 각 유리 레이어에 대해 이 과정을 반복합니다.
 
-The glass will now be transparent, but with reflectivity that reflects nearby objects and light sources. You should also check the interior glass, ensure there is a proper glass effect there.
+이제 유리가 투명해지고, 주변 객체와 광원을 반사하는 반사도를 가지게 됩니다. 내부 유리도 확인하여 적절한 유리 효과가 있는지 확인해야 합니다.
 
 ![glass_reflections](img/tuto_content_authoring_vehicles/glass_reflections.gif)
 
-### Single layer glass
+### 단일 레이어 유리
 
-For a quicker way to produce the glass parts of vehicles, the only critical part is the outermost glass layer. You can apply the glass material to this in Unreal Editor and get a result that might be suitable to your needs, however, views from inside the vehicle (i.e. if you instantiate a camera on the dashboard or behind the steering wheel) will seem to have no glass (no refraction or reflection). We recommend the above process to produce maximally realistic glass.
+차량의 유리 부분을 더 빠르게 제작하는 방법으로, 가장 바깥쪽 유리 레이어만이 중요합니다. 언리얼 에디터에서 이 레이어에 유리 재질을 적용하면 필요에 맞는 결과를 얻을 수 있습니다. 하지만 차량 내부에서의 시야(예: 대시보드나 운전대 뒤에 카메라를 설치하는 경우)에서는 유리가 없는 것처럼 보일 것입니다(굴절이나 반사가 없음). 최대한 사실적인 유리를 만들기 위해서는 위의 과정을 권장합니다.
 
-Now you have created the blueprint, added meshes, completed rigging, created materials for the paint finish and the glass, you should have a very realistic looking vehicle.
+이제 블루프린트를 생성하고, 메시를 추가하고, 리깅을 완료하고, 도장 마감과 유리를 위한 재질을 생성했으므로, 매우 사실적으로 보이는 차량이 있어야 합니다.
 
 ![finished_lincoln](img/tuto_content_authoring_vehicles/finished_lincoln.png)
 
-## Wheels
+## 바퀴
 
-If you copied the wheels when you were [creating the blueprint](#creating-the-blueprint), this might suit your purposes if your vehicle is very similar to vehicles that are already in the CARLA library. However, if your vehicle has non-standard wheel dimensions or grip characteristics, you should follow this section to set up your wheel blueprints to best match the physical characteristics of your vehicle's wheels.
+[블루프린트 생성하기](#블루프린트-생성)에서 바퀴를 복사했다면, 차량이 CARLA 라이브러리의 기존 차량과 매우 유사한 경우 이것으로 충분할 수 있습니다. 하지만 차량이 표준이 아닌 바퀴 치수나 그립 특성을 가지고 있다면, 이 섹션을 따라 차량의 물리적 특성에 가장 잘 맞도록 바퀴 블루프린트를 설정해야 합니다.
 
-For the wheels of CARLA vehicles, we need to set up a blueprint class for each wheel to deal with the mechanics and collision properties. You will set up 4 blueprint classes, we recommend the following prefixes or suffixes to identify the wheels:
+CARLA 차량의 바퀴를 위해서는 역학과 충돌 속성을 다루기 위한 각 바퀴에 대한 블루프린트 클래스를 설정해야 합니다. 4개의 블루프린트 클래스를 설정하게 되며, 바퀴를 식별하기 위해 다음과 같은 접두사나 접미사를 권장합니다:
 
-- __RRW__ - **R**ear **R**ight **W**heel
-- __RLW__ - **R**ear **L**eft **W**heel
-- __FRW__ - **F**ront **R**ight **W**heel
-- __FLW__ - **F**ront **L**eft **W**heel
+- __RRW__ - **R**ear **R**ight **W**heel (후방 우측 바퀴)
+- __RLW__ - **R**ear **L**eft **W**heel (후방 좌측 바퀴)
+- __FRW__ - **F**ront **R**ight **W**heel (전방 우측 바퀴)
+- __FLW__ - **F**ront **L**eft **W**heel (전방 좌측 바퀴)
 
-### Wheel blueprint
+### 바퀴 블루프린트
 
-Inside the folder where you have your new vehicle, right click and choose to create a new blueprint class. Search for
+새 차량이 있는 폴더 내에서 우클릭하고 새 블루프린트 클래스 생성을 선택합니다.
 
 ![wheel_blueprint](img/tuto_content_authoring_vehicles/wheel_blueprint.png)
 
-Double click on the blueprint to adjust it:
+블루프린트를 더블 클릭하여 조정합니다:
 
 ![wheel_blueprint_open](img/tuto_content_authoring_vehicles/wheel_bp_open.png)
 
-### Collision mesh
+### 충돌 메시
 
-Firstly, the default cylinder used for the collision mesh has a high polygon count, so we should replace this with a low polygon version. In the content browser locate the `CollisionWheel` mesh inside `Content > Carla > Blueprints > Vehicles`. Drag it onto the
-`Collision Mesh` slot in the details panel of the blueprint. This will improve performance without any noticeable deficit to physics simulation.
+먼저, 충돌 메시에 사용되는 기본 실린더는 폴리곤 수가 많으므로, 이를 저폴리곤 버전으로 교체해야 합니다. 콘텐츠 브라우저에서 `Content > Carla > Blueprints > Vehicles` 내부의 `CollisionWheel` 메시를 찾습니다. 이를 블루프린트의 details 패널에 있는 `Collision Mesh` 슬롯으로 드래그합니다. 이렇게 하면 물리 시뮬레이션에 눈에 띄는 결함 없이 성능이 향상됩니다.
 
-### Tire configuration
+### 타이어 구성
 
-Next, we  set the tire configuration. Inside `Content > Carla > Blueprints > Vehicles` locate the `CommonTireConfig` configuration and drag it onto the `Tire Config` section of the blueprint. If you double click on the Tire Config in the blueprint, you can adjust the Friction Scale, you can modify the behavior of the vehicle's road handling. By default it is set at 3.5, a value suitable for most vehicle use cases. However, if you wish to model for example a racing vehicle with slick tires, this would be the appropriate parameter to adjust.
+다음으로, 타이어 구성을 설정합니다. `Content > Carla > Blueprints > Vehicles` 내부에서 `CommonTireConfig` 구성을 찾아 블루프린트의 `Tire Config` 섹션으로 드래그합니다. 블루프린트에서 Tire Config를 더블 클릭하면 Friction Scale을 조정할 수 있으며, 이를 통해 차량의 도로 주행 동작을 수정할 수 있습니다. 기본적으로 3.5로 설정되어 있으며, 이는 대부분의 차량 사용 사례에 적합한 값입니다. 하지만 예를 들어 슬릭 타이어가 장착된 레이싱 차량을 모델링하고 싶다면, 이 매개변수를 조정하는 것이 적절할 것입니다.
 
-### Wheel dimensions
+### 바퀴 치수
 
-Next, in your 3D application, measure the diameter of your wheel. In Blender, the dimensions can be viewed in the properties panel opened by pressing `n` in object mode.
+다음으로, 3D 애플리케이션에서 바퀴의 직경을 측정합니다. 블렌더에서는 객체 모드에서 `n`을 눌러 열 수 있는 properties 패널에서 치수를 볼 수 있습니다.
 
 ![tire_dimensions](img/tuto_content_authoring_vehicles/wheel_dims.png)
 
-Now plug these numbers into the `Wheel` section of the blueprint.Take care to remember to half the diameter for the radius and also that Unreal Editor works in units of centimeters. For the wheel mass, we recommend looking for specifications on the internet, find the right tire model or a similar one to estimate the correct mass (in kilograms).
+이제 이 숫자들을 블루프린트의 `Wheel` 섹션에 입력합니다. 반경을 위해 직경을 반으로 나누는 것을 잊지 말고, 또한 언리얼 에디터가 센티미터 단위로 작동한다는 점도 기억하세요. 바퀴 질량의 경우, 인터넷에서 사양을 찾아보고 올바른 타이어 모델이나 비슷한 것을 찾아 올바른 질량(킬로그램 단위)을 추정하는 것을 권장합니다.
 
 ![bp_wheel_dimensions](img/tuto_content_authoring_vehicles/bp_wheel_dimensions.png)
 
+`Affected by handbrake`는 두 후방 바퀴 모두에 대해 체크되어야 합니다.
 
-`Affected by handbrake` should be checked for both rear wheels.
+`Steer angle`은 두 전방 바퀴에 대해 의도된 최대 조향 각도로 설정되어야 하며, 두 후방 바퀴에 대해서는 0으로 설정되어야 합니다.
 
-`Steer angle` should be set to the maximum intended steer angle for both front wheels and set to zero for both rear wheels.
+### __서스펜션 특성__
 
-### __Suspension characteristics__
+기본값들은 합리적인 시작점을 제공합니다. 차량 유형에 맞는 서스펜션 특성을 설정하려면 [__이 가이드__](tuto_D_customize_vehicle_suspension.md)를 참조하세요.
 
-The default values here provide a reasonable starting point. View [__this guide__](tuto_D_customize_vehicle_suspension.md) to set suspension characteristics appropriate to your vehicle type.
+## 조명
 
-
-## Lights
-
-The last element to complete a realistic vehicle for CARLA is the lights, headlights, brake lights, blinkers etc. In your 3D modelling application, you should model some shapes that resemble the lights of the vehicle you are replicating. This would be flat discs or flat cuboid structures for most headlights. Some vehicles may also have strips of LEDs.
+CARLA를 위한 사실적인 차량을 완성하는 마지막 요소는 조명, 즉 헤드라이트, 브레이크등, 방향지시등 등입니다. 3D 모델링 애플리케이션에서 복제하려는 차량의 조명과 비슷한 형태를 모델링해야 합니다. 대부분의 헤드라이트는 평평한 원판이나 평평한 직육면체 구조가 될 것입니다. 일부 차량은 LED 스트립도 있을 수 있습니다.
 
 ![lights_blender](img/tuto_content_authoring_vehicles/lights_blender.png)
 
-### UV map
+### UV 맵
 
-The different types of lights (headlights, blinkers, brake lights, etc.) are distinguished using a texture. You need to create a UV map in your 3D modelling application and position the lights to match up with the relevant region of the texture.
+서로 다른 종류의 조명(헤드라이트, 방향지시등, 브레이크등 등)은 텍스처를 사용하여 구분됩니다. 3D 모델링 애플리케이션에서 UV 맵을 생성하고 조명을 텍스처의 관련 영역과 일치하도록 위치시켜야 합니다.
 
 ![lights_uv](img/tuto_content_authoring_vehicles/lights_uv_map.png)
 
-### Importing
+### 가져오기
 
-Import the light mesh into the Unreal Editor- After importing the light mesh:
+조명 메시를 언리얼 에디터로 가져옵니다. 조명 메시를 가져온 후:
 
-- Drag the mesh item(s) into the **_Mesh (VehicleMesh) (Inherited)_** hierarchy in the **_Components_** panel.
-- Select the extra meshes in the hierarchy and search for `Collision` in the **_Details_** panel.
-- Set **_Collision Presets_** to `NoCollision`.
-- Select any lights meshes in the hierarchy. Search for `Tag` in the **_Details_** panel and add the tag `emissive`.
+- 메시 항목을 **_Components_** 패널의 **_Mesh (VehicleMesh) (Inherited)_** 계층 구조로 드래그합니다.
+- 계층 구조에서 추가 메시를 선택하고 **_Details_** 패널에서 `Collision`을 검색합니다.
+- **_Collision Presets_**를 `NoCollision`으로 설정합니다.
+- 계층 구조에서 조명 메시를 선택합니다. **_Details_** 패널에서 `Tag`를 검색하고 `emissive` 태그를 추가합니다.

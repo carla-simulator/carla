@@ -1,68 +1,68 @@
-# Create distribution packages for assets 
+# 에셋을 위한 배포 패키지 생성하기
 
-It is a common practice in CARLA to manage assets with standalone packages. Keeping them aside allows to reduce the size of the build. These asset packages can be easily imported into a CARLA package anytime. They also become really useful to easily distribute assets in an organized way. 
+CARLA에서는 에셋을 독립 실행형 패키지로 관리하는 것이 일반적인 관행입니다. 에셋을 별도로 관리하면 빌드 크기를 줄일 수 있습니다. 이러한 에셋 패키지는 언제든지 CARLA 패키지로 쉽게 가져올 수 있습니다. 또한 에셋을 체계적으로 배포하는 데 매우 유용합니다.
 
-- [__Export a package in a CARLA build from source__](#export-a-package-in-a-carla-build-from-source)  
-- [__Export a package using Docker__](#export-a-package-using-docker)
-- [__Import assets into a CARLA package__](#import-assets-into-a-carla-package)  
+- [__소스에서 빌드한 CARLA에서 패키지 내보내기__](#소스에서-빌드한-carla에서-패키지-내보내기)
+- [__도커를 사용하여 패키지 내보내기__](#도커를-사용하여-패키지-내보내기)
+- [__CARLA 패키지로 에셋 가져오기__](#carla-패키지로-에셋-가져오기)
 
 ---
-## Export a package in a CARLA build from source
+## 소스에서 빌드한 CARLA에서 패키지 내보내기
 
-Once assets are imported into Unreal, users can generate a __standalone package__ for them. This will be used to distribute the content to CARLA packages such as 0.9.8.
+에셋을 언리얼로 가져온 후, 사용자는 이를 위한 __독립 실행형 패키지__를 생성할 수 있습니다. 이는 CARLA 0.9.8과 같은 CARLA 패키지에 콘텐츠를 배포하는 데 사용됩니다.
 
-To export packages, simply run the command below.
+패키지를 내보내려면 아래 명령을 실행하면 됩니다.
 
 ```sh
 make package ARGS="--packages=Package1,Package2"
 ```
 
-This will create a standalone package compressed in a `.tar.gz` file for each of the packages listed. The files will be saved in `Dist` folder on Linux, and `/Build/UE4Carla/` on Windows. 
+이 명령은 나열된 각 패키지에 대해 `.tar.gz` 파일로 압축된 독립 실행형 패키지를 생성합니다. 파일은 Linux에서는 `Dist` 폴더에, Windows에서는 `/Build/UE4Carla/`에 저장됩니다.
 
 ---
 
-## Export a package using Docker
+## 도커를 사용하여 패키지 내보내기
 
-Unreal Engine and CARLA can be built in a Docker image which can then be used to create a package or export assets for use in a package.
+언리얼 엔진과 CARLA는 도커 이미지로 빌드할 수 있으며, 이후 이 이미지를 사용하여 패키지를 생성하거나 패키지에서 사용할 에셋을 내보낼 수 있습니다.
 
-To create the Docker image, follow the tutorial [here](build_docker_unreal.md).
+도커 이미지를 생성하려면 [여기](build_docker_unreal.md)의 튜토리얼을 따르세요.
 
-When you have the image ready:
+이미지가 준비되면:
 
-1. Navigate to `Util/Docker`.
-2. Create a CARLA package or prepare assets for use in a package by running one of the following commands:
+1. `Util/Docker`로 이동합니다.
+2. 다음 명령 중 하나를 실행하여 CARLA 패키지를 생성하거나 패키지에서 사용할 에셋을 준비합니다:
 
 ```sh
-# To create a standalone package
+# 독립 실행형 패키지를 생성하려면
 ./docker_tools.py --output /output/path
 
-#To cook assets to be consumed in a CARLA package
+# CARLA 패키지에서 사용할 에셋을 요리하려면
 ./docker_tools.py --input /assets/to/import/path --output /output/path --packages PkgeName1,PkgeName2
 ```
 
 ---
-## Import assets into a CARLA package
+## CARLA 패키지로 에셋 가져오기
 
-A standalone package is contained in a `.tar.gz` file. The way this is extracted depends on the platform.  
+독립 실행형 패키지는 `.tar.gz` 파일에 포함되어 있습니다. 이 파일을 추출하는 방법은 플랫폼에 따라 다릅니다.
 
-*   __On Windows__ extract the compressed file in the main root CARLA folder.  
-*   __On Linux__ move the compressed file to the `Import` folder and run the following script.  
+* __Windows에서는__ 압축 파일을 CARLA 메인 루트 폴더에 추출합니다.
+* __Linux에서는__ 압축 파일을 `Import` 폴더로 이동하고 다음 스크립트를 실행합니다.
 
 ```sh
 cd Import
 ./ImportAssets.sh
 ```
 
-!!! Note
-    Standalone packages cannot be directly imported into a CARLA build. Follow the tutorials to import [props](tuto_A_add_props.md), [maps](tuto_M_custom_map_overview.md) or [vehicles](tuto_A_add_vehicle.md).
+!!! 참고
+    독립 실행형 패키지는 CARLA 빌드로 직접 가져올 수 없습니다. [프롭](tuto_A_add_props.md), [맵](tuto_M_custom_map_overview.md) 또는 [차량](tuto_A_add_vehicle.md)을 가져오는 튜토리얼을 따르세요.
 
 ---
 
-That sumps up how to create and use standalone packages in CARLA. If there is any unexpected issue, feel free to post in the forum. 
+이것으로 CARLA에서 독립 실행형 패키지를 생성하고 사용하는 방법에 대한 설명을 마칩니다. 예상치 못한 문제가 발생하면 포럼에 자유롭게 게시하세요.
 
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA 포럼으로 이동">
+CARLA 포럼</a>
 </p>
 </div>

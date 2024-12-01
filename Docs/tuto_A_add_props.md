@@ -1,25 +1,25 @@
-# Add new props
+# 새로운 프롭 추가하기
 
-Props are the assets that populate the scene, besides the map, and the vehicles. That includes streetlights, buildings, trees, and much more. The simulator can ingest new props anytime in a simple process. This is really useful to create customized environments in a map. 
+프롭은 맵과 차량 외에도 장면을 구성하는 자산들입니다. 여기에는 가로등, 건물, 나무 등이 포함됩니다. 시뮬레이터는 간단한 과정을 통해 언제든지 새로운 프롭을 불러올 수 있습니다. 이는 맵에서 사용자 정의 환경을 만드는 데 매우 유용합니다.
 
-* [__Prepare the package__](#prepare-the-package)  
-	*   [Create the folder structure](#create-the-folder-structure)  
-	*   [Create the JSON description](#create-the-json-description)  
-*   [__Ingestion in a CARLA package__](#ingestion-in-a-carla-package)  
-*   [__Ingestion in a build from source__](#ingestion-in-a-build-from-source)  
+* [__패키지 준비하기__](#패키지-준비하기)
+  * [폴더 구조 생성하기](#폴더-구조-생성하기)
+  * [JSON 설명 파일 생성하기](#json-설명-파일-생성하기)
+* [__CARLA 패키지에 불러오기__](#carla-패키지에-불러오기)
+* [__소스에서 빌드하여 불러오기__](#소스에서-빌드하여-불러오기)
 
 ---
-## Prepare the package
+## 패키지 준비하기
 
-### Create the folder structure
+### 폴더 구조 생성하기
 
-__1. Create a folder inside `carla/Import`.__ The name of the folder is not relevant.  
+__1. `carla/Import` 내부에 폴더를 생성합니다.__ 폴더 이름은 중요하지 않습니다.
 
-__2. Create the subfolders.__ There should be one general subfolder for all the props, and inside of it, as many subfolders as props to import. 
+__2. 하위 폴더를 생성합니다.__ 모든 프롭을 위한 하나의 일반 하위 폴더가 있어야 하며, 그 안에 불러올 프롭 수만큼의 하위 폴더가 있어야 합니다.
 
-__3. Move the files of each prop to the corresponding subfolder.__ A prop subfolder will contain the `.fbx` mesh, and optionally, the textures required by it.  
+__3. 각 프롭의 파일을 해당 하위 폴더로 이동합니다.__ 프롭 하위 폴더에는 `.fbx` 메시와 선택적으로 이에 필요한 텍스처가 포함됩니다.
 
-For instance, an `Import` folder with two separate packages should have a structure similar to the one below.
+예를 들어, 두 개의 별도 패키지가 있는 `Import` 폴더는 아래와 같은 구조를 가져야 합니다.
 
 ```sh
 Import
@@ -35,54 +35,54 @@ Import
 │       └── Prop02
 │           └── Prop02.fbx
 └── Package02
-    ├── Packag02.json
+    ├── Package02.json
     └── Props
         └── Prop03
             └── Prop03.fbx
 ```
 
-### Create the JSON description
+### JSON 설명 파일 생성하기
 
-Create a `.json` file in the root folder of the package. Name the file after the package. Note that this will be the distribution name. The content of the file will describe a JSON array of __maps__ and __props__ with basic information for each of them.  
+패키지의 루트 폴더에 `.json` 파일을 생성합니다. 패키지 이름으로 파일 이름을 지정하세요. 이 이름이 배포 이름이 됩니다. 파일의 내용은 각 __맵__과 __프롭__에 대한 기본 정보를 포함하는 JSON 배열을 설명합니다.
 
-__Maps__ are not part of this tutorial, so this definition will be empty. There is a specific tutorial to [__add a new map__](tuto_M_custom_map_overview.md).  
+__맵__은 이 튜토리얼의 일부가 아니므로 이 정의는 비어 있을 것입니다. [__새 맵 추가하기__](tuto_M_custom_map_overview.md)에 대한 특정 튜토리얼이 있습니다.
 
-__Props__ need the following parameters.  
+__프롭__에는 다음 매개변수가 필요합니다.
 
-*   __name__ of the prop. This must be the same as the `.fbx`.  
-*   __source__ path to the `.fbx`.  
-*   __size__ estimation of the prop. The possible values are listed here.  
-	*   `tiny`  
-	*   `small`  
-	*   `medium`  
-	*   `big`  
-	*   `huge`  
-*   __tag__ value for the semantic segmentation. If the tag is misspelled, it will be read as `Unlabeled`. 
-	*   `Bridge`
-	*   `Building`
-	*   `Dynamic`
-	*   `Fence`
-	*   `Ground`
-	*   `GuardRail`
-	*   `Other`
-	*   `Pedestrian`
-	*   `Pole`
-	*   `RailTrack`
-	*   `Road`
-	*   `RoadLine`
-	*   `SideWalk`
-	*   `Sky`
-	*   `Static`
-	*   `Terrain`
-	*   `TrafficLight`
-	*   `TrafficSign`
-	*   `Unlabeled`
-	*   `Vegetation`
-	*   `Vehicles`
-	*   `Wall`
-	*   `Water`
+* __name__: 프롭의 이름. `.fbx`와 동일해야 합니다.
+* __source__: `.fbx`까지의 경로.
+* __size__: 프롭의 크기 추정치. 가능한 값은 다음과 같습니다.
+  * `tiny`
+  * `small`
+  * `medium`
+  * `big`
+  * `huge`
+* __tag__: 의미론적 분할을 위한 값. 태그가 잘못 입력되면 `Unlabeled`로 읽힙니다.
+  * `Bridge`
+  * `Building`
+  * `Dynamic`
+  * `Fence`
+  * `Ground`
+  * `GuardRail`
+  * `Other`
+  * `Pedestrian`
+  * `Pole`
+  * `RailTrack`
+  * `Road`
+  * `RoadLine`
+  * `SideWalk`
+  * `Sky`
+  * `Static`
+  * `Terrain`
+  * `TrafficLight`
+  * `TrafficSign`
+  * `Unlabeled`
+  * `Vegetation`
+  * `Vehicles`
+  * `Wall`
+  * `Water`
 
-In the end, the `.json` should look similar to the one below.
+최종적으로 `.json`은 아래와 비슷해야 합니다.
 
 ```json
 {
@@ -104,66 +104,64 @@ In the end, the `.json` should look similar to the one below.
   ]
 }
 ```
-!!! Warning
-    Packages with the same name will produce an error.  
+
+!!! 경고
+    동일한 이름의 패키지는 오류를 발생시킵니다.
 
 ---
-## Ingestion in a CARLA package
+## CARLA 패키지에 불러오기
 
-This is the method used to ingest the props into a CARLA package such as CARLA 0.9.8.  
+이는 CARLA 0.9.8과 같은 CARLA 패키지에 프롭을 불러오는 방법입니다.
 
-A Docker image of Unreal Engine will be created. It acts as a black box that automatically imports the package into the CARLA image, and generates a ditribution package. The Docker image takes 4h and 400GB to be built. However, this is only needed the first time. 
+언리얼 엔진의 도커 이미지가 생성됩니다. 이는 패키지를 CARLA 이미지로 자동으로 가져오고 배포 패키지를 생성하는 블랙박스 역할을 합니다. 도커 이미지는 구축하는 데 4시간과 400GB가 필요합니다. 하지만 이는 처음에만 필요합니다.
 
-__1. Build a Docker image of Unreal Engine.__ Follow [these instructions](https://github.com/carla-simulator/carla/tree/master/Util/Docker) to build the image.  
+__1. 언리얼 엔진의 도커 이미지를 빌드합니다.__ 이미지를 빌드하려면 [이 지침](https://github.com/carla-simulator/carla/tree/master/Util/Docker)을 따르세요.
 
-__2. Run the script to cook the props.__ In the folder `~/carla/Util/Docker` there is a script that connects with the Docker image previously created, and makes the ingestion automatically. It only needs the path for the input and output files, and the name of the package to be ingested.  
+__2. 프롭을 요리하는 스크립트를 실행합니다.__ `~/carla/Util/Docker` 폴더에는 이전에 생성된 도커 이미지와 연결하여 자동으로 불러오기를 수행하는 스크립트가 있습니다. 입력 및 출력 파일의 경로와 불러올 패키지의 이름만 필요합니다.
 
 ```sh
 python3 docker_tools.py --input ~/path_to_package --output ~/path_for_output_assets  --packages Package01
 ```
 
-__3. Locate the package__. The Docker should have generated the package `Package01.tar.gz` in the output path. This is the standalone package for the assets. 
+__3. 패키지를 찾습니다.__ 도커는 출력 경로에 `Package01.tar.gz` 패키지를 생성했어야 합니다. 이것이 자산의 독립 실행형 패키지입니다.
 
-__4. Import the package into CARLA.__  
+__4. CARLA에 패키지를 가져옵니다.__
 
-*   __On Windows__ extract the package in the `WindowsNoEditor` folder. 
+* __Windows에서__ `WindowsNoEditor` 폴더에 패키지를 추출합니다.
 
-*   __On Linux__ move the package to the `Import` folder, and run the script to import it. 
+* __Linux에서__ `Import` 폴더로 패키지를 이동하고 가져오기 스크립트를 실행합니다.
 
 ```sh
 cd Util
 ./ImportAssets.sh
 ```
 
-!!! Note
-    There is an alternative on Linux. Move the package to the `Import` folder and run the script `Util/ImportAssets.sh` to extract the package.
-
+!!! 참고
+    Linux에서는 대안이 있습니다. 패키지를 `Import` 폴더로 이동하고 `Util/ImportAssets.sh` 스크립트를 실행하여 패키지를 추출합니다.
 
 ---
-## Ingestion in a build from source
+## 소스에서 빌드하여 불러오기
 
-This is the method to import the props into a CARLA build from source.  
+이는 소스에서 빌드한 CARLA에 프롭을 가져오는 방법입니다.
 
-The JSON file will be read to place the props inside the `Content` in Unreal Engine. Furthermore, it will create a `Package1.Package.json` file inside the package's `Config` folder. This will be used to define the props in the blueprint library, and expose them in the Python API. It will also be used if the package is exported as a [standalone package](tuto_A_create_standalone.md).
+JSON 파일을 읽어 언리얼 엔진의 `Content` 안에 프롭을 배치합니다. 또한 패키지의 `Config` 폴더 안에 `Package1.Package.json` 파일을 생성합니다. 이는 블루프린트 라이브러리에서 프롭을 정의하고 Python API에서 노출시키는 데 사용됩니다. 패키지가 [독립 실행형 패키지](tuto_A_create_standalone.md)로 내보내질 때도 사용됩니다.
 
-When everything is ready, run the command. 
+모든 준비가 완료되면 명령을 실행합니다.
 
 ```sh
 make import
 ```
 
-!!! Warning
-    Make sure that the package is inside the `Import` folder in CARLA. 
+!!! 경고
+    패키지가 CARLA의 `Import` 폴더 안에 있는지 확인하세요.
 
 ---
 
-That is all there is to know about the different ways to import new props into CARLA. If there are any doubts, feel free to post these in the forum. 
+이것이 CARLA에 새로운 프롭을 가져오는 다양한 방법에 대해 알아야 할 전부입니다. 의문사항이 있다면 포럼에 자유롭게 게시하세요.
 
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA 포럼으로 이동">
+CARLA 포럼</a>
 </p>
 </div>
-
-
