@@ -202,7 +202,7 @@ crp::CityObjectLabel ATagger::GetTagFromString(FString Tag)
   if(Tag.Contains("Pedestrian")) return crp::CityObjectLabel::Pedestrians;
   if(Tag.Contains("Pole")) return crp::CityObjectLabel::Poles;
   if(Tag.Contains("Other")) return crp::CityObjectLabel::Other;
-  if(Tag.Contains("Road")) return crp::CityObjectLabel::Roads;
+  if(Tag.Contains("Roads")) return crp::CityObjectLabel::Roads;
   if(Tag.Contains("RoadLine")) return crp::CityObjectLabel::RoadLines;
   if(Tag.Contains("SideWalk")) return crp::CityObjectLabel::Sidewalks;
   if(Tag.Contains("TrafficSign")) return crp::CityObjectLabel::TrafficSigns;
