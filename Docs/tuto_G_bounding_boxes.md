@@ -128,7 +128,7 @@ bounding_box_set = world.get_level_bbs(carla.CityObjectLabel.TrafficLight)
 nearby_bboxes = []
 for bbox in bounding_box_set:
     if bbox.location.distance(actor.get_transform().location) < 50:
-        nearby_bboxes
+        nearby_bboxes.append()
 ```
 
 This list can be further filtered using actor location to identify objects that are nearby and therefore likely to be within the field of view of a camera attached to an actor. 
