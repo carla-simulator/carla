@@ -168,10 +168,16 @@ carla_dependency_option (BOOST_LOCALE_WITH_ICU OFF)
 carla_dependency_option (BOOST_LOCALE_WITH_ICONV OFF)
 carla_dependency_option (BOOST_GIL_BUILD_EXAMPLES OFF)
 carla_dependency_option (BOOST_GIL_BUILD_HEADER_TESTS OFF)
+
+set (BOOST_DOWNLOAD_URL https://github.com/boostorg/boost/releases/download/${CARLA_BOOST_TAG}/${CARLA_BOOST_TAG}.zip)
+if (${CARLA_BOOST_VERSION} VERSION_GREATER 1.84.0)
+  set (BOOST_DOWNLOAD_URL https://github.com/boostorg/boost/releases/download/${CARLA_BOOST_TAG}/${CARLA_BOOST_TAG}-cmake.zip)
+endif ()
+
 carla_dependency_add(
   boost
   ${CARLA_BOOST_TAG}
-  https://github.com/boostorg/boost/releases/download/${CARLA_BOOST_TAG}/${CARLA_BOOST_TAG}.zip
+  ${BOOST_DOWNLOAD_URL}
   https://github.com/boostorg/boost.git
 )
 

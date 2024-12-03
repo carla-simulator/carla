@@ -237,7 +237,7 @@ carla_string_option (
 carla_string_option (
   CARLA_BOOST_VERSION
   "Target boost version."
-  1.84.0
+  1.86.0
 )
 
 carla_string_option (
