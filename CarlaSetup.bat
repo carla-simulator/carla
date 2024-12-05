@@ -19,6 +19,14 @@ vs_Community.exe --add ^
   Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset ^
   Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang ^
   Microsoft.VisualStudio.Component.VC.14.36.17.6.x86.x64 ^
+  Microsoft.VisualStudio.Component.VC.14.38.17.8.CLI.Support ^
+  Microsoft.VisualStudio.Component.VC.14.29.16.11.CLI.Support ^	
+  Microsoft.VisualStudio.ComponentGroup.VC.Tools.142.x86.x64 ^
+  Microsoft.Net.Component.4.6.2.SDK ^
+  Microsoft.Net.Component.4.8.SDK ^
+  Microsoft.Net.Component.4.8.1.SDK ^
+  Microsoft.Net.Component.4.8.1.TargetingPack ^
+  Microsoft.VisualStudio.Component.HLSL ^	
   --removeProductLang Es-es ^
   --addProductLang En-us ^
   --installWhileDownloading ^
