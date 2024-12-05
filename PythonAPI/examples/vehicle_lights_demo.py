@@ -42,8 +42,7 @@ def main():
 
     client = carla.Client(args.host, args.port)
     client.set_timeout(10)
-    world = client.load_world('Town10HD_Opt')
-    tmap = world.get_map()
+    world = client.get_world()
 
     bp_lib = world.get_blueprint_library()
 
