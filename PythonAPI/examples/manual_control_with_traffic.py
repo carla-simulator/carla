@@ -1309,12 +1309,14 @@ class Traffic(object):
                 logging.error(response.error)
             else:
                 self.vehicle_ids.append(response.actor_id)
+        
+        self.vehicles = self.world.get_actors(self.vehicle_ids)
 
         # Set automatic vehicle lights update
         if self.args.car_lights_on:
-            self.vehicles = self.world.get_actors(self.vehicle_ids)
             for actor in self.vehicles:
                 self.traffic_manager.update_vehicle_lights(actor, True)
+
 
     def spawn_pedestrians(self):
 
@@ -1538,8 +1540,8 @@ def main():
         '--generationv', metavar='G', default='All',
         help='restrict the traffic to certain actor generation (values: "2","3","All" - default: "All")')
     argparser.add_argument(
-        '--filterw', metavar='PATTERN', default='vehicle.*',
-        help='pedestrian filter (default: "vehicle.*")')
+        '--filterw', metavar='PATTERN', default='walker.pedestrian.*',
+        help='pedestrian filter (default: "walker.pedestrian.*")')
     argparser.add_argument(
         '--generationw', metavar='G', default='All',
         help='restrict the pedestrians to certain actor generation (values: "2","3","All" - default: "All")')
