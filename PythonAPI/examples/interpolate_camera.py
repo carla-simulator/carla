@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
+"""Smooth movement of a camera interpolating collection of keypoints provided in a xml file"""
+
 import argparse
 
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 
 import xml.etree.ElementTree as ET
