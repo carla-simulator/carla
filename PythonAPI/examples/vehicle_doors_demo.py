@@ -6,6 +6,8 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
+"""Example visualization of vehicle doors opening"""
+
 import argparse
 import math
 

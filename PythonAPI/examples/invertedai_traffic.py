@@ -6,9 +6,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""
-Example script to generate realistic traffic with the InvertedAI API
-"""
+"""Example script to generate realistic traffic with the InvertedAI API"""
 
 import os
 import time

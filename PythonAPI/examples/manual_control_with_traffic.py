@@ -6,8 +6,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-# Allows controlling a vehicle with a keyboard. For a simpler and more
-# documented example, please take a look at tutorial.py.
+"""Allows controlling a vehicle with a keyboard, generating traffic in the simulation"""
 
 """
 Welcome to CARLA manual control.

@@ -11,6 +11,7 @@ import math
 
 import carla
 
+"""Visualize the different vehicle lights"""
 
 def get_transform(vehicle, angle, d=2.5):
 

@@ -6,8 +6,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-# Allows controlling a vehicle with a keyboard. For a simpler and more
-# documented example, please take a look at tutorial.py.
+"""Allows controlling a vehicle with a keyboard."""
 
 """
 Welcome to CARLA manual control.
@@ -56,10 +55,6 @@ Use ARROWS or WASD keys for control.
 
 from __future__ import print_function
 
-
-# ==============================================================================
-# -- find carla module ---------------------------------------------------------
-# ==============================================================================
 
 # ==============================================================================
 # -- imports -------------------------------------------------------------------

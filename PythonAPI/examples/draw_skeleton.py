@@ -5,6 +5,8 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
+"""Visualize the skeleton of a pedestrian"""
+
 import math
 import argparse
 import copy

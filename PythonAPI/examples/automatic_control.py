@@ -6,7 +6,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Example of automatic vehicle control from client side."""
+"""Example of automatic vehicle control from client side, with a python defined agent"""
 
 from __future__ import print_function
 
