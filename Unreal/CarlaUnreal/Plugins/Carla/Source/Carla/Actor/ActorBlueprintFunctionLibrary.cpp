@@ -468,7 +468,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation HighlightContrastScaleVariation;
     HighlightContrastScaleVariation.Id = TEXT("highlight_contrast_scale");
     HighlightContrastScaleVariation.Type = EActorAttributeType::Float;
-    HighlightContrastScaleVariation.RecommendedValues = { TEXT("0.3") };
+    HighlightContrastScaleVariation.RecommendedValues = { TEXT("0.7") };
     HighlightContrastScaleVariation.bRestrictToRecommended = false;
 
     FActorVariation ShadowContrastScaleVariation;
@@ -1711,7 +1711,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     Camera->SetExposureSpeedDown(
         RetrieveActorAttributeToFloat("exposure_speed_down", Description.Variations, 1.0f));
     Camera->SetHighlightContrastScale(
-        RetrieveActorAttributeToFloat("highlight_contrast_scale", Description.Variations, 0.3f));
+        RetrieveActorAttributeToFloat("highlight_contrast_scale", Description.Variations, 0.7f));
     Camera->SetShadowContrastScale(
         RetrieveActorAttributeToFloat("shadow_constrast_scale", Description.Variations, 0.65f));
     // This is deprecated:
