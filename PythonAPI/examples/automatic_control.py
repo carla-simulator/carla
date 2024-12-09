@@ -8,8 +8,6 @@
 
 """Example of automatic vehicle control from client side, with a python defined agent"""
 
-from __future__ import print_function
-
 import argparse
 import collections
 import datetime
