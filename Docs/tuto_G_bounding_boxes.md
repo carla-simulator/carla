@@ -21,6 +21,9 @@ client = carla.Client('localhost', 2000)
 world  = client.get_world()
 bp_lib = world.get_blueprint_library()
 
+# Get the map spawn points
+spawn_points = world.get_map().get_spawn_points()
+
 # spawn vehicle
 vehicle_bp =bp_lib.find('vehicle.lincoln.mkz_2020')
 vehicle = world.try_spawn_actor(vehicle_bp, random.choice(spawn_points))
@@ -36,9 +39,6 @@ settings = world.get_settings()
 settings.synchronous_mode = True # Enables synchronous mode
 settings.fixed_delta_seconds = 0.05
 world.apply_settings(settings)
-
-# Get the map spawn points
-spawn_points = world.get_map().get_spawn_points()
 
 # Create a queue to store and retrieve the sensor data
 image_queue = queue.Queue()
