@@ -1,5 +1,5 @@
-numpy; python_version < '3.0'
-numpy==1.24; python_version >= '3.0'
+numpy==1.24; python_version <= '3.11'
+numpy==1.26; python_version > '3.11'
 pygame
 matplotlib
 open3d
