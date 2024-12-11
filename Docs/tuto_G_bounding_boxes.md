@@ -108,7 +108,7 @@ CARLA objects all have an associated bounding box. CARLA [actors](python_api.md#
 It is important to note that to get the 3D coordinates of the bounding box in world coordinates, you need to include the transform of the actor as an argument to the `get_world_vertices()` method like so:
 
 ```py
-actor.get_world_vertices(actor.get_transform())
+bounding_box.get_world_vertices(actor.get_transform())
 
 ```
 
