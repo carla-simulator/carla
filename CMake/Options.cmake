@@ -220,10 +220,21 @@ carla_string_option (
   ""
 )
 
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  set (CARLA_UNREAL_BUILD_TYPE_DEFAULT Debug)
+elseif (${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
+  set (CARLA_UNREAL_BUILD_TYPE_DEFAULT Development)
+elseif (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+  set (CARLA_UNREAL_BUILD_TYPE_DEFAULT Shipping)
+else ()
+  carla_warning("Unexpected CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\". Unreal builds will default to Development. Manually override CARLA_UNREAL_BUILD_TYPE if this behavior is not desired.")
+  set (CARLA_UNREAL_BUILD_TYPE_DEFAULT Development)
+endif ()
+
 carla_string_option (
   CARLA_UNREAL_BUILD_TYPE
-  "Carla Unreal-style build type (Debug/Development/Shipping)."
-  "Development"
+  "Set the default Unreal build configuration."
+  "${CARLA_UNREAL_BUILD_TYPE_DEFAULT}"
 )
 
 
