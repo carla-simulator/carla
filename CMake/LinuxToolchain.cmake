@@ -76,7 +76,7 @@ set (
 
 set (
 	UE_OPENSSL_INCLUDE
-	${UE_THIRD_PARTY}/OpenSSL/1.1.1t/include/Unix/openssl CACHE PATH ""
+	${UE_THIRD_PARTY}/OpenSSL/1.1.1t/include/Unix CACHE PATH ""
 )
 
 set (
