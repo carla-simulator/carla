@@ -20,7 +20,7 @@
     - Ambulance
     - Mercedes Sprinter
     - Mitsubishi Fusorosa bus
-    - Mining earth mover
+    - Mining earth mover (provided by Synkrotron)
 * Rework of build system to use cmake
 * Native server support for ROS2 (without CARLA-ROS bridge)
 * Refactor of semantic segmentation and instance segmentation sensors
