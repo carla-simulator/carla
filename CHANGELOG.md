@@ -22,6 +22,7 @@
     - Mitsubishi Fusorosa bus
     - Mining earth mover
 * Rework of build system to use cmake
+* Native server support for ROS2 (without CARLA-ROS bridge)
 * Refactor of semantic segmentation and instance segmentation sensors
     - Semantic segmentation can now be visualized in UE editor for debugging
     - Only supports meshes with Nanite enabled
@@ -33,8 +34,9 @@
     - vehicle_doors_demo.py
     - vehicle_lights_demo.py
     - visualize_radar.py
+    - ros2_native.py
     - tools/generate_video_from_frames.py
-    - apply_textures
+    - utils/apply_textures.py
     - utils/change_map_layer.py
     - utils/manage_environment_objects.py
     - utils/manage_traffic_light.py
