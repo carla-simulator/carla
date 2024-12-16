@@ -172,14 +172,10 @@ public class Carla :
 
       string CarlaPluginSourcePath = Path.GetFullPath(ModuleDirectory);
       string CarlaPluginBinariesLinuxPath = Path.Combine(CarlaPluginSourcePath, "..", "..", "Binaries", "Linux");
-      AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libcarla-ros2-native.so"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfoonathan_memory-0.7.3.so"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so.1"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so.1.1.0"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11.2"));
+      PublicAdditionalLibraries.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libcarla-ros2-native.a"));
+      PublicAdditionalLibraries.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.a"));
+      PublicAdditionalLibraries.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.a"));
+      PublicAdditionalLibraries.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfoonathan_memory-0.7.3.a"));
     }
   }
 }
