@@ -125,6 +125,37 @@ try:
 except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
+OBJECT_TO_COLOR = [
+    (255, 255, 255),
+    (128, 64, 128),
+    (244, 35, 232),
+    (70, 70, 70),
+    (102, 102, 156),
+    (190, 153, 153),
+    (153, 153, 153),
+    (250, 170, 30),
+    (220, 220, 0),
+    (107, 142,  35),
+    (152, 251, 152),
+    (70, 130, 180),
+    (220, 20, 60),
+    (255, 0, 0),
+    (0, 0, 142),
+    (0, 0, 70),
+    (0,  60, 100),
+    (0,  80, 100),
+    (0, 0, 230),
+    (119, 11, 32),
+    (110, 190, 160),
+    (170, 120, 50),
+    (55, 90, 80),
+    (45, 60, 150),
+    (157, 234, 50),
+    (81, 0, 81),
+    (150, 100, 100),
+    (230, 150, 140),
+    (180, 165, 180),
+]
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
@@ -173,9 +204,10 @@ def get_actor_blueprints(world, filter, generation):
 
 
 class World(object):
-    def __init__(self, carla_world, hud, args):
+    def __init__(self, carla_world, hud, traffic_manager, args):
         self.world = carla_world
         self.args = args
+        self.traffic_manager = traffic_manager
         self.sync = args.sync
         self.actor_role_name = args.rolename
         try:
@@ -279,6 +311,7 @@ class World(object):
         self.camera_manager.set_sensor(cam_index, notify=False)
         actor_type = get_actor_display_name(self.player)
         self.hud.notification(actor_type)
+        self.traffic_manager.update_vehicle_lights(self.player, True)
 
         if self.sync:
             self.world.tick()
@@ -1103,7 +1136,7 @@ class CameraManager(object):
             ['sensor.camera.semantic_segmentation', cc.CityScapesPalette, 'Camera Semantic Segmentation (CityScapes Palette)', {}],
             ['sensor.camera.instance_segmentation', cc.Raw, 'Camera Instance Segmentation (Raw)', {}],
             ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)', {'range': '50'}],
-            ['sensor.camera.dvs', cc.Raw, 'Dynamic Vision Sensor', {}],
+            ['sensor.lidar.ray_cast_semantic', None, 'Semantic Lidar (Ray-Cast)', {'range': '50'}],
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB Distorted',
                 {'lens_circle_multiplier': '3.0',
                 'lens_circle_falloff': '3.0',
@@ -1175,7 +1208,7 @@ class CameraManager(object):
         self = weak_self()
         if not self:
             return
-        if self.sensors[self.index][0].startswith('sensor.lidar'):
+        if self.sensors[self.index][0] == 'sensor.lidar.ray_cast':
             points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
             points = np.reshape(points, (int(points.shape[0] / 4), 4))
             lidar_data = np.array(points[:, :2])
@@ -1188,15 +1221,21 @@ class CameraManager(object):
             lidar_img = np.zeros((lidar_img_size), dtype=np.uint8)
             lidar_img[tuple(lidar_data.T)] = (255, 255, 255)
             self.surface = pygame.surfarray.make_surface(lidar_img)
-        elif self.sensors[self.index][0].startswith('sensor.camera.dvs'):
-            # Example of converting the raw_data from a carla.DVSEventArray
-            # sensor into a NumPy array and using it as an image
-            dvs_events = np.frombuffer(image.raw_data, dtype=np.dtype([
-                ('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol', np.bool_)]))
-            dvs_img = np.zeros((image.height, image.width, 3), dtype=np.uint8)
-            # Blue is positive, red is negative
-            dvs_img[dvs_events[:]['y'], dvs_events[:]['x'], dvs_events[:]['pol'] * 2] = 255
-            self.surface = pygame.surfarray.make_surface(dvs_img.swapaxes(0, 1))
+        elif self.sensors[self.index][0] == 'sensor.lidar.ray_cast_semantic':
+            points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
+            points = np.reshape(points, (int(points.shape[0] / 6), 6))
+            lidar_data = np.array(points[:, :2])
+            lidar_data *= min(self.hud.dim) / (2.0 * self.lidar_range)
+            lidar_data += (0.5 * self.hud.dim[0], 0.5 * self.hud.dim[1])
+            lidar_data = lidar_data.astype(np.int32)
+            lidar_data = np.reshape(lidar_data, (-1, 2))
+            lidar_img_size = (self.hud.dim[0], self.hud.dim[1], 3)
+            lidar_img = np.zeros((lidar_img_size), dtype=np.uint8)
+            for i in range(len(image)):
+                point = lidar_data[i]
+                lidar_tag = image[i].object_tag
+                lidar_img[tuple(point.T)] = OBJECT_TO_COLOR[int(lidar_tag)]
+            self.surface = pygame.surfarray.make_surface(lidar_img)
         elif self.sensors[self.index][0].startswith('sensor.camera.optical_flow'):
             image = image.get_color_coded_flow()
             array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
@@ -1449,7 +1488,7 @@ def game_loop(args):
         pygame.display.flip()
 
         hud = HUD(args.width, args.height)
-        world = World(sim_world, hud, args)
+        world = World(sim_world, hud, traffic_manager, args)
         controller = KeyboardControl(world, args.autopilot)
         traffic = Traffic(client, sim_world, traffic_manager, args)
 
