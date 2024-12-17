@@ -6,7 +6,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Open3D Lidar visuialization example for CARLA"""
+"""Open3D Lidar visualization example for CARLA"""
 
 import glob
 import os
