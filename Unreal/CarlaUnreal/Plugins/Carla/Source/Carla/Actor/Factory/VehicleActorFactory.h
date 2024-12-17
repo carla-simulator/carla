@@ -52,4 +52,6 @@ protected:
   TArray<FActorDefinition> Definitions;
   UPROPERTY(EditAnywhere)
   TArray<FVehicleParameters> VehiclesParams;
+  UPROPERTY(EditAnywhere)
+  TArray<FVehicleParameters> MineVehiclesParams;
 };
