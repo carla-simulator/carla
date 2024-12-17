@@ -599,8 +599,7 @@ class KeyboardControl(object):
                 else: # Remove the Reverse flag
                     current_lights &= ~carla.VehicleLightState.Reverse
                 if current_lights != self._lights: # Change the light state only if necessary
-                    self._lights = current_lights
-                    world.player.set_light_state(carla.VehicleLightState(self._lights))
+                    world.player.set_light_state(carla.VehicleLightState(current_lights))
                 # Apply control
                 if not self._ackermann_enabled:
                     world.player.apply_control(self._control)
@@ -614,6 +613,8 @@ class KeyboardControl(object):
             elif isinstance(self._control, carla.WalkerControl):
                 self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time(), world)
                 world.player.apply_control(self._control)
+
+        self._lights = current_lights
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         if keys[K_UP] or keys[K_w]:
