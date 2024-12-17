@@ -59,12 +59,6 @@ set (
 	CACHE PATH ""
 )
 
-set(
-	CMAKE_SYSROOT
-	${UE_SYSROOT}
-	CACHE FILEPATH ""
-)
-
 set (
 	UE_THIRD_PARTY
 	${UE_ROOT}/Engine/Source/ThirdParty CACHE PATH ""
@@ -91,15 +85,13 @@ set (
 )
 
 add_compile_options (
-	-fPIC
-	-pthread
 	-fms-extensions
 	-fno-math-errno
 	-fdiagnostics-absolute-paths
 	$<$<COMPILE_LANGUAGE:CXX>:-stdlib=libc++>
 )
 
-add_link_options (-stdlib=libc++ -L${UE_LIBS} -lpthread)
+add_link_options (-stdlib=libc++ -L${UE_LIBS} )
 
 set (
 	CMAKE_AR
