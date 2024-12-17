@@ -32,7 +32,7 @@ file (
 
 add_library (
   carla-ros2-native
-  STATIC
+  SHARED
   ${LIBCARLA_ROS2_HEADERS}
   ${LIBCARLA_ROS2_SOURCES}
 )
@@ -52,9 +52,7 @@ target_compile_definitions (
 
 target_link_libraries (
   carla-ros2-native PUBLIC
-  ${CMAKE_INSTALL_PREFIX}/lib/libfastrtps.a
-  ${CMAKE_INSTALL_PREFIX}/lib/libfastcdr.a
-  ${CMAKE_INSTALL_PREFIX}/lib/libfoonathan_memory-0.7.3.a
+  ${CMAKE_INSTALL_PREFIX}/lib/libfastrtps.so
 )
 
 install (
