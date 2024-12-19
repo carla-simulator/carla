@@ -1,13 +1,13 @@
 # CARLA Unreal Engine 5 Documentation
 
 !!! note
-    There are currently two different flavours of the CARLA simulator in active development, one based on Unreal Engine 4 and this version based on Unreal Engine 5. Due to the differences in features and functionality between the two versions, you must use the correct version of the documentation. If you are using the Unreal Engine 4 version of CARLA please refer to the [correct documentation for that version](https://carla.readthedocs.org).
+    There are currently two different flavors of the CARLA simulator in active development, one based on Unreal Engine 4 and this version based on Unreal Engine 5. Due to the differences in features and functionality between the two versions, you must refer to the correct version of the documentation. If you are using the Unreal Engine 4 version of CARLA please refer to the [correct documentation for that version](https://carla.readthedocs.org).
 
 Welcome to the CARLA Unreal Engine 5 documentation.
 
 This home page contains an index with a brief description of the different sections in the documentation. Feel free to read in whatever order preferred. In any case, here are a few suggestions for newcomers.
 
-* __Install CARLA:__ Either follow the [Quick Start Installation](start_quickstart.md) to get a CARLA release or [build_carla_from_source](build_carla.md) for a desired platform.
+* __Install CARLA:__ Either follow the [Quick Start Installation](start_quickstart.md) to get a CARLA release or [build CARLA from source](build_carla.md) for a desired platform.
 * __Start using CARLA:__ The [Foundations](foundations.md) section is an introduction to the most important concepts in CARLA and the [First Steps tutorial](tuto_first_steps.md) shows you how to get started creating simulations.
 * __Check the API:__ there is a handy [Python API reference](python_api.md) to look up the classes and methods available.
 
