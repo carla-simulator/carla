@@ -5,7 +5,7 @@
 
 ## Set up the environment
 
-This guide details how to build CARLA from source on Windows with Unreal Engine 5.5. 
+This guide details how to build CARLA from source on Windows with Unreal Engine 5.5. If you are building CARLA for the first time, ensure that you **link your GitHub account to Epic Games** by following [this guide](https://www.unrealengine.com/en-US/ue-on-github).
 
 Clone the `ue5-dev` branch of CARLA on your local machine:
 
@@ -32,7 +32,7 @@ You may also use Python 3.9 and 3.10.
         * **CARLA cannot be built on an external disk**, Windows does not give the required read/write/execution permissions for builds.
 
 
-## Build and Run CARLA UE5
+## Build and run CARLA UE5
 
 The CarlaSetup.bat file launches the following commands itself, you will need to use the following commands once you modify the code and wish to relaunch:
 
@@ -91,7 +91,7 @@ cmake --build Build --target package-development
 
 The package will be generated in the directory `Build/Package`
 
-## Run the package
+### Run the package
 
 The package build is not yet tested for Windows
 
@@ -107,3 +107,6 @@ This will create a folder within the build directory named `Linux-Development`. 
 
 ```sh
 cmake --build Build/Linux-Development/ --target launch
+```
+
+There are 3 presets to choose from, `Linux-Debug`, `Linux-Development` and `Linux-Release`. The release preset provides minimal debug information or logs. The debug and development presets provide differing levels of terminal output and logs to help diagnose problems in CARLA installations. 
