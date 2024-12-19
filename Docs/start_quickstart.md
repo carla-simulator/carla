@@ -113,7 +113,7 @@ python3 manual_control.py
 
 ## Running CARLA using a Docker container
 
-CARLA is available in a Docker image, which you may use if you need to run it on the cloud or a cluster or if your machine does not meet the software or operating system prerequisites. 
+For Linux users, CARLA is available in a Docker image, which you may use if you need to run it on the cloud or a cluster or if your machine does not meet the software or operating system prerequisites. 
 
 Firstly, install Docker by following the [installation instructions](https://docs.docker.com/engine/install/ubuntu/). You may want to follow the [post installation instructions](https://docs.docker.com/engine/install/linux-postinstall/) to avoid the need for `sudo` commands. 
 
