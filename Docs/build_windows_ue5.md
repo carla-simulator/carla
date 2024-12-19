@@ -26,18 +26,18 @@ You may also use Python 3.9 and 3.10.
 
 !!! note
         * This version of CARLA requires the **CARLA fork of Unreal Engine 5.5**. You need to link your GitHub account to Epic Games in order to gain permission to clone the UE repository. If you have not already linked your accounts, follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github)
-        * For using CARLA Unreal Engine 5 previous builds, ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined pointing to the CARLA Unreal Engine 5 absolute path. If this variable is not defined, Setup.bat script will download and build CARLA Unreal Engine 5 and **this takes more than 1 extra hour of build and a 225Gb of disk space**.
-        * Setup.bat script checks if there is any Python version installed at the top of the PATH variable, and installs Python otherwise. **To use your own version of Python, ensure that the PATH variable is properly set for Python before running the script**.
+        * For using CARLA Unreal Engine 5 previous builds, ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined pointing to the CARLA Unreal Engine 5 absolute path. If this variable is not defined, CarlaSetup.bat script will download and build CARLA Unreal Engine 5 and **this takes more than 1 extra hour of build and a 225Gb of disk space**.
+        * The CarlaSetup.bat script checks if there is any Python version installed at the top of the PATH variable, and installs Python otherwise. **To use your own version of Python, ensure that the PATH variable is properly set for Python before running the script**.
         * **Windows Developer Mode should be active**, otherwise build will fail. Please see [here](https://learn.microsoft.com/en-us/gaming/game-bar/guide/developer-mode) for instructions on how to activate Developer Mode.
         * **CARLA cannot be built on an external disk**, Windows does not give the required read/write/execution permissions for builds.
 
 
 ## Build and Run CARLA UE5
 
-The Setup.bat file launches the following commands itself, you will need to use the following commands once you modify the code and wish to relaunch:
+The CarlaSetup.bat file launches the following commands itself, you will need to use the following commands once you modify the code and wish to relaunch:
 
 !!! warning
-       Ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined pointing to the CARLA Unreal Engine 5.5 absolute path. Setup.bat sets this variable, but I may not be set if another approach was followed to install the requirements. 
+       Ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined pointing to the CARLA Unreal Engine 5.5 absolute path. CarlaSetup.bat sets this variable, but I may not be set if another approach was followed to install the requirements. 
 
 * **Configure**. Open x64 Native Tools Command Prompt for VS 2022 at the CarlaUE5 folder and runn the following command:
 

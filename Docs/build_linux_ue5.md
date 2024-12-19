@@ -3,6 +3,12 @@
 !!! note
         The Unreal Engine 5 version of CARLA requires Ubuntu version 22.04 at minimum. It has not been configured to build on older Ubuntu versions.
 
+* __[Set up the environment](#set-up-the-environment)__  
+* __[Build and run CARLA UE5](#build-and-run-carla-ue5)__  
+* __[Build a package with CARLA UE5](#build-a-package-with-carla-ue5)__ 
+* __[Build presets](#build-presets)__ 
+* __[Extended build instructions](#extended-build-instructions)__ 
+
 ## Set up the environment
 
 This guide details how to build CARLA from source on Linux with Unreal Engine 5.5. 
@@ -20,7 +26,7 @@ cd CarlaUE5
 bash -x  CarlaSetup.sh
 ```
 
-The Setup.sh script installs all the required packages, including Cmake, debian packages, Python packages and Unreal Engine 5.5 and sets up the necessary environment variables. It also downloads the CARLA content, builds CARLA then launches the editor. 
+The CarlaSetup.sh script installs all the required packages, including Cmake, debian packages, Python packages and Unreal Engine 5.5 and sets up the necessary environment variables. It also downloads the CARLA content, builds CARLA then launches the editor. 
 
 Once this is complete, the script will launch the CARLA Unreal Engine 5 editor. **Note: This script can therefore take a long time to complete.**
 
@@ -28,12 +34,13 @@ The setup script should only be run the first time that you set up the build. Su
 
 !!! note
         * This version of CARLA requires the **CARLA fork of Unreal Engine 5.5**. You need to link your GitHub account to Epic Games in order to gain permission to clone the UE repository. If you have not already linked your accounts, follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github)
-        * For using CARLA Unreal Engine 5 previous builds, **ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined** pointing to the CARLA Unreal Engine 5.5 absolute path. If this variable is not defined, the Setup.sh script will download and build CARLA Unreal Engine 5 and **this takes more than 1 extra hour of build and 225Gb of disk space**.
-        * The Setup.sh script checks if there is any Python installed at the top of the PATH variable, and installs Python otherwise. **To use your own version of Python, ensure that the PATH variable is properly set for Python before running the script**.
+        * For using CARLA Unreal Engine 5 previous builds, **ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined** pointing to the CARLA Unreal Engine 5.5 absolute path. If this variable is not defined, the CarlaSetup.sh script will download and build CARLA Unreal Engine 5 and **this takes more than 1 extra hour of build and 225Gb of disk space**.
+        * The CarlaSetup.sh script checks if there is any Python installed at the top of the PATH variable, and installs Python otherwise. **To use your own version of Python, ensure that the PATH variable is properly set for Python before running the script**.
         * CARLA cannot be built on an external disk, Ubuntu is not giving the required read/write/execution permissions for builds.
 
+You may want to follow the setup steps separately, if, for example, you are including additional libraries or if the CarlaSetup.sh script fails for some reason. Please refer to [the extended instructions](#extended-build-instructions) to proceed.
 
-## Build and Run CARLA UE5
+## Build and run CARLA UE5
 
 The setup script launches the following commands itself, you will need to use the following commands once you modify the code and wish to relaunch:
 
@@ -78,7 +85,7 @@ The package will be generated in the directory `$CARLA_PATH/Build/Package`
 
 To build a development package, use the `package-development` target. This will build a package that outputs logs for debugging. 
 
-## Run the package
+### Run the package
 
 Run the package with the following command from inside the package root folder.
 
@@ -98,7 +105,7 @@ If you want to install the Python API corresponding to the package you have buil
 pip3 install PythonAPI/dist/carla-*.whl
 ```
 
-## Presets
+## Build presets
 
 If you are building using multiple configurations, we recommend to use the preset system. To set up a preset, use the following command:
 
@@ -106,8 +113,97 @@ If you are building using multiple configurations, we recommend to use the prese
 cmake --preset Linux-Development
 ```
 
-This will create a folder within the build directory named `Linux-Development`. All other build artefacts for this configuration should then be directed into this folder, for example to launch the editor, run:
+This will create a folder within the build directory named `Linux-Development`. All other build artifacts for this configuration should then be directed into this folder, for example to launch the editor, run:
 
 ```sh
 cmake --build Build/Linux-Development/ --target launch
+```
+
+---
+
+## Extended build instructions
+
+Use these instructions if you need more control over the setup process or the setup script has failed for some reason:
+
+### Install prerequisites
+
+Before building CARLA, ensure the prerequisites are installed with the following commands:
+
+```
+sudo apt update
+sudo apt install build-essential ninja-build libvulkan1 python3 python3-dev python3-pip git git-lfs
+```
+
+### Clone and build the Unreal Engine 5.5
+
+Clone the unreal engine from this fork:
+
+```
+git clone https://github.com/CarlaUnreal/UnrealEngine
+
+```
+
+Enter the repository root directory and switch to the ue5-dev-carla branch:
+
+```
+git checkout ue5-dev-carla
+```
+
+Then build Unreal Engine 5.5:
+
+```
+./Setup.sh && ./GenerateProjectFiles.sh && make
+```
+
+!!! note
+        The first time building the Unreal Engine may take up to 3 hours to complete. 
+
+Set up an environment variable to indicate the location of the Unreal Engine 5.5. In your `.bashrc` file, add the following line:
+
+```sh
+export CARLA_UNREAL_ENGINE_PATH=<PATH_TO_UNREAL_ENGINE_FOLDER>
+```
+
+###
+
+Clone the CARLA repository to your local machine:
+
+```
+git clone https://github.com/carla-simulator/carla.git
+```
+
+Enter the cloned repository and navigate to the content folder `CARLA_ROOT/carla/Unreal/CarlaUnreal/Content` (if it doesn't exist, create it). From inside this folder, clone the content repository:
+
+```
+git clone --single-branch --depth 1 -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla
+```
+
+This command may take some time since it is downloading a lot of data.
+
+###
+
+Once the Unreal Engine 5.5 is built and all the CARLA code and content is successfully downloaded, you can build CARLA. Enter the root folder of the CARLA code repository and run the following commands:
+
+Create a build preset:
+
+```
+cmake --preset Linux-Release
+```
+
+Compile the Python API:
+
+```
+cmake --build Build/Linux-Release/ --target carla-python-api-install
+```
+
+To launch the editor:
+
+```
+cmake --build Build/Linux-Release/ --target launch
+```
+
+To build a package:
+
+```
+cmake --build Build/Linux-Release/ --target package
 ```
