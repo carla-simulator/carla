@@ -13,10 +13,7 @@ There are two maps to chose from. An urban environment with skyscrapers, commerc
 | Town       | Summary |
 | -----------| ------  |
 | [__Town10__](map_town10.md) | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade.|
-| [__Mine__](map_mine.md) | An industrial, off-road, open-cast mining environment. |
-
-!!! note
-    Towns 1-9 are included in the build-from-source version of CARLA but are not updated or tested to work with UE5. There may be non-functioning geometry or textures in these maps. If you choose to use these maps, you will likely need to fix problems in the maps before use. 
+| [__Mine01__](map_mine.md) | An industrial, off-road, open-cast mining environment. |
 
 ## Vehicles
 
