@@ -28,19 +28,11 @@ file (COPY ${PYTHON_EXAMPLE_FILES} DESTINATION ${CARLA_PACKAGE_ARCHIVE_PATH}/Pyt
 file (COPY_FILE ${CARLA_WORKSPACE_PATH}/PythonAPI/examples/requirements.txt ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/examples/requirements.txt)
 
 make_directory (${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/examples/ros2)
-file (
-    GLOB_RECURSE
-    PYTHON_EXAMPLE_ROS2_FILES
-    ${CARLA_WORKSPACE_PATH}/PythonAPI/examples/ros2/*.md
-    ${CARLA_WORKSPACE_PATH}/PythonAPI/examples/ros2/*.py
-    ${CARLA_WORKSPACE_PATH}/PythonAPI/examples/ros2/*.json
-    ${CARLA_WORKSPACE_PATH}/PythonAPI/examples/ros2/*.sh
-    ${CARLA_WORKSPACE_PATH}/PythonAPI/examples/ros2/*.rviz
-    ${CARLA_WORKSPACE_PATH}/PythonAPI/examples/ros2/*.xml
-    # Add more patterns here as needed.
-    # Alternatively, we could consider including all files in examples/ros2.
-)
+file (GLOB PYTHON_EXAMPLE_ROS2_FILES ${CARLA_WORKSPACE_PATH}/PythonAPI/examples/ros2/*)
 file (COPY ${PYTHON_EXAMPLE_ROS2_FILES} DESTINATION ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/examples/ros2)
+make_directory (${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/examples/ros2)
+file (GLOB PYTHON_EXAMPLE_CONFIG_ROS2_FILES ${CARLA_WORKSPACE_PATH}/PythonAPI/examples/ros2/config/*)
+file (COPY ${PYTHON_EXAMPLE_CONFIG_ROS2_FILES} DESTINATION ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/examples/ros2/config)
 
 make_directory (${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/util/)
 file (GLOB PYTHON_UTIL_FILES ${CARLA_WORKSPACE_PATH}/PythonAPI/util/*.py)
