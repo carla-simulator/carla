@@ -25,6 +25,7 @@
  * If available, use ActorIDs instead of Unreal Engine IDs for instance segmentation
  * Synchronized actor BoundingBox between server and client
  * Add actor_id to bounding boxes
+ * Fixed invisible terrain in instance segmentation
 
 ## CARLA 0.9.15
 
