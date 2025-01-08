@@ -21,10 +21,11 @@ environmental conditions.
 
 ### Recommended system
 
-* Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD ryzen 7 / AMD ryzen 9
-* +32 GB RAM memory 
+* Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD Ryzen 7 / AMD Ryzen 9
+* +32 Gb RAM memory 
 * NVIDIA RTX 3070 / NVIDIA RTX 3080 / NVIDIA RTX 4090
-* Ubuntu 22.04
+* 16 Gb or more VRAM
+* Ubuntu 22.04 or Windows 11
 
  >[!NOTE]
 > Ubuntu version 22.04 is required, the Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or lower. 
@@ -33,8 +34,8 @@ environmental conditions.
 
 The [CARLA documentation](https://carla-ue5.readthedocs.io/en/latest/) is hosted on ReadTheDocs. Please see the following key links:
 
-- [Building on Linux](https://carla-ue5.readthedocs.io/en/latest/build_linux/)
-- [Building on Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows/)
+- [Building on Linux](https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/)
+- [Building on Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/)
 - [First steps](https://carla-ue5.readthedocs.io/en/latest/tuto_first_steps/)
 - [CARLA asset catalogue](https://carla-ue5.readthedocs.io/en/latest/catalogue/)
 - [Python API reference](https://carla-ue5.readthedocs.io/en/latest/python_api/)
@@ -80,7 +81,7 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 Building CARLA with Unreal Engine 5.5
 --------------
 
-Clone this repository locally from GitHub:
+Clone this repository locally from GitHub, specifying the *ue5-dev* branch:
 
 ```sh
 git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
