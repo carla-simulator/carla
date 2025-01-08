@@ -105,7 +105,7 @@ CarlaSetup.bat
 
 This will download and install Unreal Engine 5.5, install the prerequisites and build and launch CARLA. It may take some time to complete and use a significant amount of disk space.
 
-Once the setup is complete, you can execute subsequent builds with the following commands in a terminal open in the CARLA root directory. In Linux, run these commands in a standard terminal. In Windows, open the x64 Native Tools Command Prompt for VS 2022.
+Once the setup is complete, you can execute subsequent builds with the following commands in a terminal open in the CARLA root directory. In Linux, run these commands in a standard terminal. In Windows, open the x64 Native Tools Command Prompt for Visual Studio 2022.
 
 __Configure__:
 
