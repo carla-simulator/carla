@@ -1,6 +1,6 @@
 # Quick start package installation
 
-This guide shows how to download and install the packaged version of CARLA. The package includes the CARLA server and two options for the client library. There are additional assets that can be downloaded and imported into the package. Advanced customization and development options that require use of the Unreal Engine editor are not available but these can be accessed by using the build version of CARLA for either [Windows](build_windows.md) or [Linux](build_linux.md).
+This guide shows how to download and install the packaged version of CARLA. The package includes the CARLA server and two options for the client library. There are additional assets that can be downloaded and imported into the package. Advanced customization and development options that require use of the Unreal Engine editor are not available but these can be accessed by using the build version of CARLA for either [Windows](build_windows_ue5.md) or [Linux](build_linux_ue5.md).
 
 * __[Before you begin](#before-you-begin)__  
 * __[CARLA installation](#carla-installation)__  
@@ -49,7 +49,7 @@ pip3 install --user pygame numpy
 
 Download the desired CARLA package from GitHub:
 
-- [Download the package from GitHub here](#b-package-installation)
+- [Download the package from GitHub here](https://github.com/carla-simulator/carla/releases/tag/0.10.0)
 
 This repository contains different versions of CARLA. You will find options to download the __current release__ with all the most recent fixes and features, __previous releases__ and a __nightly build__ with all the developmental fixes and features (the nightly build is the most unstable version of CARLA).
 
