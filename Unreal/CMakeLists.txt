@@ -503,7 +503,8 @@ endfunction()
 
 # Docs for UE5 build configurations:
 # https://docs.unrealengine.com/4.27/en-US/ProductionPipelines/DevelopmentSetup/BuildConfigurations/
-add_carla_ue_package_target("" Shipping)
+
+add_carla_ue_package_target("" ${CARLA_UNREAL_PACKAGE_BUILD_TYPE})
 add_carla_ue_package_target(Shipping Shipping)
 add_carla_ue_package_target(Debug Debug)
 add_carla_ue_package_target(DebugGame DebugGame)

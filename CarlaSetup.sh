@@ -7,7 +7,7 @@
 # ==================================================================================================
 
 satisfies_minimum_version() {
-    CMAKE_VERSION="$(cmake --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+    CMAKE_VERSION="$($2 --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
     CMAKE_MINIMUM_VERSION=$1
     MAJOR="${CMAKE_VERSION%%.*}"
     REMAINDER="${CMAKE_VERSION#*.}"
@@ -84,7 +84,7 @@ mkdir -p Unreal/CarlaUnreal/Content
 git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla &> ContentClone.log&
 
 CMAKE_MINIMUM_VERSION=3.28.0
-if satisfies_minimum_version $CMAKE_MINIMUM_VERSION; then
+if (satisfies_minimum_version $CMAKE_MINIMUM_VERSION cmake) || (satisfies_minimum_version $CMAKE_MINIMUM_VERSION /opt/cmake-3.28.3-linux-x86_64/bin/cmake); then
     echo "Found CMake $CMAKE_VERSION - OK"
 else
     echo "Found CMake $CMAKE_VERSION - FAIL"
@@ -92,8 +92,10 @@ else
     curl -L -O https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3-linux-x86_64.tar.gz
     sudo mkdir -p /opt
     sudo tar -xzf cmake-3.28.3-linux-x86_64.tar.gz -C /opt
-    echo -e '\n#CARLA CMake 3.28.3\nPATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH' >> ~/.bashrc
-    export PATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH
+    if [[ ":$PATH:" != *":/opt/cmake-3.28.3-linux-x86_64/bin:"* ]]; then
+        echo -e '\n#CARLA CMake 3.28.3\nPATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH' >> ~/.bashrc
+        export PATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH
+    fi
     rm -rf cmake-3.28.3-linux-x86_64.tar.gz
     echo "CMake Intalled 3.28.3..."
 fi

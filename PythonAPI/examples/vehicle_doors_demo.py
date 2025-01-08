@@ -77,18 +77,22 @@ def main():
                     angle_0 = True
                 if not angle_90 and angle >= 90:
                     vehicle.close_door(carla.VehicleDoor.FR)
+                    world.wait_for_tick()
                     vehicle.open_door(carla.VehicleDoor.RR)
                     angle_90 = True
                 if not angle_180 and angle >= 180:
                     vehicle.close_door(carla.VehicleDoor.RR)
+                    world.wait_for_tick()
                     vehicle.open_door(carla.VehicleDoor.RL)
                     angle_180 = True
                 if not angle_270 and angle >= 270:
                     vehicle.close_door(carla.VehicleDoor.RL)
+                    world.wait_for_tick()
                     vehicle.open_door(carla.VehicleDoor.FL)
                     angle_270 = True
                 if not angle_360 and angle >= 360:
                     vehicle.close_door(carla.VehicleDoor.FL)
+                    world.wait_for_tick()
                     vehicle.open_door(carla.VehicleDoor.All)
                     angle_360 = True
 

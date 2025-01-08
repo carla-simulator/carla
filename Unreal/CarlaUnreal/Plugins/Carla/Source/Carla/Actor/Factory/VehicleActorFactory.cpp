@@ -19,6 +19,12 @@
 TArray<FActorDefinition> AVehicleActorFactory::GetDefinitions()
 {
   LoadVehicleParametersArrayFromFile("VehicleParameters.json", VehiclesParams);
+  FString UniqueVehicleParameters = GetWorld()->GetMapName().Mid(GetWorld()->StreamingLevelsPrefix.Len()) + "/Vehicles.json";
+  LoadVehicleParametersArrayFromFile(UniqueVehicleParameters, MineVehiclesParams);
+  for (const FVehicleParameters& VehicleParams : MineVehiclesParams)
+  {
+    VehiclesParams.Add(VehicleParams);
+  }
   UActorBlueprintFunctionLibrary::MakeVehicleDefinitions(VehiclesParams, Definitions);
   return Definitions;
 }
