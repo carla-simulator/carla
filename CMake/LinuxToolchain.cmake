@@ -74,6 +74,16 @@ set (
 	${UE_THIRD_PARTY}/Unix/LibCxx/lib/Unix/${TARGET_TRIPLE} CACHE PATH ""
 )
 
+set (
+	UE_OPENSSL_INCLUDE
+	${UE_THIRD_PARTY}/OpenSSL/1.1.1t/include/Unix CACHE PATH ""
+)
+
+set (
+	UE_OPENSSL_LIBS
+	${UE_THIRD_PARTY}/OpenSSL/1.1.1t/lib/Unix/x86_64-unknown-linux-gnu CACHE PATH ""
+)
+
 add_compile_options (
 	-fms-extensions
 	-fno-math-errno

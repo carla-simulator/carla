@@ -200,9 +200,10 @@ def get_actor_blueprints(world, filter, generation):
 
 
 class World(object):
-    def __init__(self, carla_world, hud, args):
+    def __init__(self, carla_world, hud, traffic_manager, args):
         self.world = carla_world
         self.sync = args.sync
+        self.traffic_manager = traffic_manager
         self.actor_role_name = args.rolename
         try:
             self.map = self.world.get_map()
@@ -303,6 +304,7 @@ class World(object):
         self.camera_manager.set_sensor(cam_index, notify=False)
         actor_type = get_actor_display_name(self.player)
         self.hud.notification(actor_type)
+        self.traffic_manager.update_vehicle_lights(self.player, True)
 
         if self.sync:
             self.world.tick()
@@ -590,8 +592,7 @@ class KeyboardControl(object):
                 else: # Remove the Reverse flag
                     current_lights &= ~carla.VehicleLightState.Reverse
                 if current_lights != self._lights: # Change the light state only if necessary
-                    self._lights = current_lights
-                    world.player.set_light_state(carla.VehicleLightState(self._lights))
+                    world.player.set_light_state(carla.VehicleLightState(current_lights))
                 # Apply control
                 if not self._ackermann_enabled:
                     world.player.apply_control(self._control)
@@ -605,6 +606,8 @@ class KeyboardControl(object):
             elif isinstance(self._control, carla.WalkerControl):
                 self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time(), world)
                 world.player.apply_control(self._control)
+
+        self._lights = current_lights
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         if keys[K_UP] or keys[K_w]:
@@ -1128,7 +1131,6 @@ class CameraManager(object):
             ['sensor.camera.instance_segmentation', cc.Raw, 'Camera Instance Segmentation (Raw)', {}],
             ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)', {'range': '50'}],
             ['sensor.lidar.ray_cast_semantic', None, 'Semantic Lidar (Ray-Cast)', {'range': '50'}],
-            ['sensor.camera.dvs', cc.Raw, 'Dynamic Vision Sensor', {}],
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB Distorted',
                 {'lens_circle_multiplier': '3.0',
                 'lens_circle_falloff': '3.0',
@@ -1228,15 +1230,6 @@ class CameraManager(object):
                 lidar_tag = image[i].object_tag
                 lidar_img[tuple(point.T)] = OBJECT_TO_COLOR[int(lidar_tag)]
             self.surface = pygame.surfarray.make_surface(lidar_img)
-        elif self.sensors[self.index][0].startswith('sensor.camera.dvs'):
-            # Example of converting the raw_data from a carla.DVSEventArray
-            # sensor into a NumPy array and using it as an image
-            dvs_events = np.frombuffer(image.raw_data, dtype=np.dtype([
-                ('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol', np.bool_)]))
-            dvs_img = np.zeros((image.height, image.width, 3), dtype=np.uint8)
-            # Blue is positive, red is negative
-            dvs_img[dvs_events[:]['y'], dvs_events[:]['x'], dvs_events[:]['pol'] * 2] = 255
-            self.surface = pygame.surfarray.make_surface(dvs_img.swapaxes(0, 1))
         elif self.sensors[self.index][0].startswith('sensor.camera.optical_flow'):
             image = image.get_color_coded_flow()
             array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
@@ -1271,6 +1264,7 @@ def game_loop(args):
         client.set_timeout(2000.0)
 
         sim_world = client.get_world()
+        traffic_manager = client.get_trafficmanager()
         if args.sync:
             original_settings = sim_world.get_settings()
             settings = sim_world.get_settings()
@@ -1279,7 +1273,6 @@ def game_loop(args):
                 settings.fixed_delta_seconds = 0.05
             sim_world.apply_settings(settings)
 
-            traffic_manager = client.get_trafficmanager()
             traffic_manager.set_synchronous_mode(True)
 
         if args.autopilot and not sim_world.get_settings().synchronous_mode:
@@ -1293,7 +1286,7 @@ def game_loop(args):
         pygame.display.flip()
 
         hud = HUD(args.width, args.height)
-        world = World(sim_world, hud, args)
+        world = World(sim_world, hud, traffic_manager, args)
         controller = KeyboardControl(world, args.autopilot)
 
         if args.sync:

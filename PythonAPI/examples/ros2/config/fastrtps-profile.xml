@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles" >
+    <transport_descriptors>
+        <transport_descriptor>
+            <transport_id>CustomUdpTransport</transport_id>
+            <type>UDPv4</type>
+        </transport_descriptor>
+    </transport_descriptors>
+
+    <participant profile_name="participant_profile" is_default_profile="true">
+        <rtps>
+            <userTransports>
+                <transport_id>CustomUdpTransport</transport_id>
+            </userTransports>
+
+            <useBuiltinTransports>false</useBuiltinTransports>
+        </rtps>
+    </participant>
+    <publisher profile_name="default publisher profile" is_default_profile="true">
+            <qos>
+                <publishMode>
+                    <kind>SYNCHRONOUS</kind>
+                </publishMode>
+            </qos>
+            <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
+        </publisher>
+</profiles>
