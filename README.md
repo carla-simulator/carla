@@ -145,7 +145,7 @@ __Launch the editor__:
 cmake --build Build --target launch
 ```
 
-For more instructions on building CARLA UE5, please consult the build documentation for [Linux]()https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/ or [Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/).
+For more instructions on building CARLA UE5, please consult the build documentation for [Linux](https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/) or [Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/).
 
 Contributing
 ------------
