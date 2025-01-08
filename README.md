@@ -4,7 +4,7 @@ CARLA Simulator
 [![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](https://carla-ue5.readthedocs.io)
 
 [![carla.org](Docs/img/btn/web.png)](http://carla.org)
-[![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/blob/master/Docs/download.md)
+[![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/releases)
 [![documentation](Docs/img/btn/docs.png)](https://carla-ue5.readthedocs.io)
 [![forum](Docs/img/btn/forum.png)](https://github.com/carla-simulator/carla/discussions)
 [![discord](Docs/img/btn/chat.png)](https://discord.gg/8kqACuC)
@@ -23,12 +23,12 @@ environmental conditions.
 
 * Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD Ryzen 7 / AMD Ryzen 9
 * +32 Gb RAM memory 
-* NVIDIA RTX 3070 / NVIDIA RTX 3080 / NVIDIA RTX 4090
+* NVIDIA RTX 3070/3080/3090 / NVIDIA RTX 4090 or better
 * 16 Gb or more VRAM
 * Ubuntu 22.04 or Windows 11
 
  >[!NOTE]
-> Ubuntu version 22.04 is required, the Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or lower. 
+> Ubuntu version 22.04 and Windows version 11 are required, the Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or Windows 10 or lower. 
 
 ## Documentation
 
@@ -115,26 +115,18 @@ Please take a look at our [Contribution guidelines][contriblink].
 
 [contriblink]: https://carla-ue5.readthedocs.io/en/latest/cont_contribution_guidelines/
 
-F.A.Q.
-------
-
-If you run into problems, check our
-[FAQ](https://carla-ue5.readthedocs.io/en/latest/build_faq/).
-
 Licenses
 -------
 
 #### CARLA licenses
 
-CARLA specific code is distributed under MIT License.
+CARLA specific code is distributed under the MIT License.
 
-CARLA specific assets are distributed under CC-BY License.
+CARLA specific assets are distributed under the CC-BY License.
 
 #### CARLA Dependency and Integration licenses
 
-The ad-rss-lib library compiled and linked by the [RSS Integration build variant](Docs/adv_rss.md) introduces [LGPL-2.1-only License](https://opensource.org/licenses/LGPL-2.1).
-
-Unreal Engine 4 follows its [own license terms](https://www.unrealengine.com/en-US/faq).
+Unreal Engine 5 follows its [own license terms](https://www.unrealengine.com/en-US/faq).
 
 CARLA uses three dependencies as part of the SUMO integration:
 - [PROJ](https://proj.org/), a generic coordinate transformation software which uses the [X/MIT open source license](https://proj.org/about.html#license).
