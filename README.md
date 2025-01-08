@@ -22,7 +22,7 @@ environmental conditions.
 ### Recommended system
 
 * Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD Ryzen 7 / AMD Ryzen 9
-* +32 GB RAM memory 
+* +32 Gb RAM memory 
 * NVIDIA RTX 3070 / NVIDIA RTX 3080 / NVIDIA RTX 4090
 * 16 Gb or more VRAM
 * Ubuntu 22.04 or Windows 11
