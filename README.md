@@ -81,7 +81,7 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 Building CARLA with Unreal Engine 5.5
 --------------
 
-Clone this repository and branch locally from GitHub:
+Clone this repository locally from GitHub, specifying the *ue5-dev* branch:
 
 ```sh
 git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
