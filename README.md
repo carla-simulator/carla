@@ -103,10 +103,49 @@ cd CarlaUE5
 CarlaSetup.bat
 ```
 
-This will download and install Unreal Engine 5.5, install the prerequisite requirements and build and launch CARLA. It may take some time to complete and use a significant amount of disk space. For further instructions on building in Linux can be found [here][buildlinuxlink] and the instructions for building in Windows can be found [here][buildwindowslink].
+This will download and install Unreal Engine 5.5, install the prerequisites and build and launch CARLA. It may take some time to complete and use a significant amount of disk space.
 
-[buildlinuxlink]: https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/
-[buildwindowslink]: https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/
+Once the setup is complete, you can execute subsequent builds with the following commands in a terminal open in the CARLA root directory. In Linux, run these commands in a standard terminal. In Windows, open the x64 Native Tools Command Prompt for VS 2022.
+
+__Configure__:
+
+Linux:
+
+```sh
+cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/LinuxToolchain.cmake \
+-DLAUNCH_ARGS="-prefernvidia" -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON
+```
+
+Windows:
+
+```sh
+cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release
+```
+
+__Build__:
+
+Linux and Windows:
+
+```sh
+cmake --build Build
+```
+
+__Build and install the Python API__:
+
+
+Linux and windows:
+
+```sh
+cmake --build Build --target carla-python-api-install
+```
+
+__Launch the editor__:
+
+```sh
+cmake --build Build --target launch
+```
+
+For more instructions on building CARLA UE5, please consult the build documentation for [Linux][buildlinuxlink] or [Windows][buildwindowslink].
 
 Contributing
 ------------
