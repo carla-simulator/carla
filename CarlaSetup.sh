@@ -1,57 +1,65 @@
 #!/bin/bash
 
+set -e
 
+options=$(getopt -o "i" --long "interactive" -n 'CarlaSetup.sh' -- "$@")
+eval set -- "$options"
 
-# ==================================================================================================
-# -- FUNCTIONS -------------------------------------------------------------------------------------
-# ==================================================================================================
+interactive=0
 
-satisfies_minimum_version() {
-    CMAKE_VERSION="$($2 --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
-    CMAKE_MINIMUM_VERSION=$1
-    MAJOR="${CMAKE_VERSION%%.*}"
-    REMAINDER="${CMAKE_VERSION#*.}"
-    MINOR="${REMAINDER%.*}"
-    REVISION="${REMAINDER#*.}"
-    MINIMUM_MAJOR="${CMAKE_MINIMUM_VERSION%%.*}"
-    MINIMUM_REMAINDER="${CMAKE_MINIMUM_VERSION#*.}"
-    MINIMUM_MINOR="${MINIMUM_REMAINDER%.*}"
+while true; do
+    case "$1" in
+        -i | --interactive)
+            interactive=1
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            ;;
+    esac
+done
 
-    if [ $MAJOR -gt $MINIMUM_MAJOR ] ||
-        ( [ $MAJOR -eq $MINIMUM_MAJOR ] &&
-            ( [ $MINOR -gt $MINIMUM_MINOR ] || [ $MINOR -eq $MINIMUM_MINOR ])) ; then
-        true
-    else
-        false
+if [ $interactive -eq 1 ]; then
+    echo "Requesting root rights."
+    sudo echo "Acquired root rights."
+else
+    if [ -z "$EUID" ]; then
+        EUID=$(id -u)
     fi
-}
 
+    if [ "$EUID" -ne 0 ]; then
+        echo "Please run this script as root."
+        exit 1
+    fi
+fi
 
+arrIN=(${GIT_LOCAL_CREDENTIALS//@/ })
+GIT_LOCAL_USER=${arrIN[0]}
+GIT_LOCAL_TOKEN=${arrIN[1]}
+if [ -z "$GIT_LOCAL_CREDENTIALS" ]; then
+    if [ $interactive -eq 1 ]; then
+        echo "Warning: git credentials are not set"
+    else
+        echo "Git credentials are not set, can not continue setup in unatteded mode."
+        exit 1
+    fi
+fi
 
 # ==================================================================================================
 # -- MAIN ------------------------------------------------------------------------------------------
 # ==================================================================================================
 
-set -e
-sudo echo "Got super powers..."
-
-echo "Parsing GIT_LOCAL_CREDENTIALS local variable "
-arrIN=(${GIT_LOCAL_CREDENTIALS//@/ })
-GIT_LOCAL_USER=${arrIN[0]}
-GIT_LOCAL_TOKEN=${arrIN[1]}
-if [ -z "$GIT_LOCAL_CREDENTIALS" ]
-then
-    echo "Git credentials are not set, they will be requested later on during the download of Unreal Engine Carla fork"
-fi
-
 echo "Installing Ubuntu Packages..."
 if ! command -v retry &> /dev/null
 then
-    sudo apt update
-    sudo apt-get install retry
+    apt update
+    apt-get install retry
 fi
-retry --until=success --times=12 --delay=300 -- sudo apt-get update
-retry --until=success --times=12 --delay=300 -- sudo apt-get -y install \
+retry --until=success --times=12 --delay=300 -- apt-get update
+retry --until=success --times=12 --delay=300 -- apt-get -y install \
     build-essential \
     g++-12 \
     gcc-12 \
@@ -79,9 +87,28 @@ pip3 install --upgrade pip
 pip3 install -r requirements.txt
 echo "Python Packages Installed..."
 
-echo "Clonning CARLA Content asynchronously... (see the progres in ContentClone.log)"
+echo "Clonning CARLA Content asynchronously... (see the progress in ContentClone.log)"
 mkdir -p Unreal/CarlaUnreal/Content
 git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla &> ContentClone.log&
+
+satisfies_minimum_version() {
+    CMAKE_VERSION="$($2 --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+    CMAKE_MINIMUM_VERSION=$1
+    MAJOR="${CMAKE_VERSION%%.*}"
+    REMAINDER="${CMAKE_VERSION#*.}"
+    MINOR="${REMAINDER%.*}"
+    REVISION="${REMAINDER#*.}"
+    MINIMUM_MAJOR="${CMAKE_MINIMUM_VERSION%%.*}"
+    MINIMUM_REMAINDER="${CMAKE_MINIMUM_VERSION#*.}"
+    MINIMUM_MINOR="${MINIMUM_REMAINDER%.*}"
+
+    if [ $MAJOR -gt $MINIMUM_MAJOR ] || ( [ $MAJOR -eq $MINIMUM_MAJOR ] &&
+            ( [ $MINOR -gt $MINIMUM_MINOR ] || [ $MINOR -eq $MINIMUM_MINOR ])) ; then
+        true
+    else
+        false
+    fi
+}
 
 CMAKE_MINIMUM_VERSION=3.28.0
 if (satisfies_minimum_version $CMAKE_MINIMUM_VERSION cmake) || (satisfies_minimum_version $CMAKE_MINIMUM_VERSION /opt/cmake-3.28.3-linux-x86_64/bin/cmake); then
@@ -90,8 +117,8 @@ else
     echo "Found CMake $CMAKE_VERSION - FAIL"
     echo "Installing CMake 3.28.3..."
     curl -L -O https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3-linux-x86_64.tar.gz
-    sudo mkdir -p /opt
-    sudo tar -xzf cmake-3.28.3-linux-x86_64.tar.gz -C /opt
+    mkdir -p /opt
+    tar -xzf cmake-3.28.3-linux-x86_64.tar.gz -C /opt
     if [[ ":$PATH:" != *":/opt/cmake-3.28.3-linux-x86_64/bin:"* ]]; then
         echo -e '\n#CARLA CMake 3.28.3\nPATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH' >> ~/.bashrc
         export PATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH
