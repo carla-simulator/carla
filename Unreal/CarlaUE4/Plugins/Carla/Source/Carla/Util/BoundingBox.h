@@ -24,4 +24,6 @@ struct CARLA_API FBoundingBox
   /// Rotation of the bounding box.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FRotator Rotation = {0.0f, 0.0f, 0.0f};
+
+  uint32_t ActorId = 0;
 };

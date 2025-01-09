@@ -88,6 +88,12 @@ namespace detail {
     const auto id = GetCurrentEpisode().GetId();
     _client.LoadEpisode(std::move(map_name), reset_settings, map_layers);
 
+    // delete the pointer to _episode so that the Navigation information
+    // will be loaded for the correct map
+    assert(_episode.use_count() == 1);
+    _episode.reset();
+    GetReadyCurrentEpisode();
+
     // We are waiting 50ms for the server to reload the episode.
     // If in this time we have not detected a change of episode, we try again
     // 'number_of_attempts' times.

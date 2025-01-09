@@ -8,7 +8,7 @@
 
 """
 Vehicle physics example for CARLA
-Small example that shows the effect of different impulse and force aplication
+Small example that shows the effect of different impulse and force application
 methods to a vehicle.
 """
 

@@ -32,6 +32,10 @@ namespace client {
     return GetEpisode().Lock()->GetActorAcceleration(*this);
   }
 
+  geom::BoundingBox Actor::GetBoundingBox() const {
+    return GetEpisode().Lock()->GetActorBoundingBox(*this);
+  }
+
   geom::Transform Actor::GetComponentWorldTransform(const std::string componentName) const {
     return GetEpisode().Lock()->GetActorComponentWorldTransform(*this, componentName);
   }
