@@ -101,7 +101,7 @@ You can add your github credentials to your `.bashrc` file:
 export GIT_LOCAL_CREDENTIALS=username@github_token
 ```
 
-You can run the setup script with your git credentials in the following way on Linux:
+You can alternatively run the setup script with your git credentials in the following way on Linux using the `env` command:
 
 ```sh
 cd CarlaUE5
