@@ -89,11 +89,15 @@ You may also want to build a development package which produces logs for debuggi
 cmake --build Build --target package-development
 ``` 
 
-The package will be generated in the directory `Build/Package`
+The package will be generated in the directory `Build/Package`.
 
 ### Run the package
 
-The package build is not yet tested for Windows
+Extract the package that you built, then from a command terminal open in the root folder of the extracted package, run the `CarlaUnreal.exe` file:
+
+```sh
+CarlaUnreal.exe
+```
 
 ## Presets
 
