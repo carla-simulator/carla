@@ -87,7 +87,28 @@ Clone this repository locally from GitHub, specifying the *ue5-dev* branch:
 git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
 ```
 
-Then run the setup script:
+In order to build CARLA, you need acces to the CARLA fork of Unreal Engine 5.5. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.5 repository. 
+
+You can do this in one of 2 ways:
+
+* Using GitHub command line tools: [download and install GitHub CLI](https://cli.github.com/) then set the credentials using `gh auth login` on the command line. You will be prompted for your username and access token, which will be stored for future use.
+
+* Using an environment variable in Linux: 
+
+You can add your github credentials to your `.bashrc` file:
+
+```sh
+export GIT_LOCAL_CREDENTIALS=username@github_token
+```
+
+You can run the setup script with your git credentials in the following way on Linux:
+
+```sh
+cd CarlaUE5
+env GIT_LOCAL_CREDENTIALS=username@github_token bash -x CarlaSetup.sh
+```
+
+If you already have your GitHub credentials set up, run the setup script (you will be prompted for GitHub credentials if they are not already set):
 
 Linux:
 
