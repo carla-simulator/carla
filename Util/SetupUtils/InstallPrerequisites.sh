@@ -59,17 +59,20 @@ check_cmake_version() {
     MINIMUM_REMAINDER="${CMAKE_MINIMUM_VERSION#*.}"
     MINIMUM_MINOR="${MINIMUM_REMAINDER%.*}"
 
-    if [ $MAJOR -gt $MINIMUM_MAJOR ] || ( [ $MAJOR -eq $MINIMUM_MAJOR ] &&
-            ( [ $MINOR -gt $MINIMUM_MINOR ] || [ $MINOR -eq $MINIMUM_MINOR ])) ; then
-        true
-    else
+    if [ "$CMAKE_VERSION" == "" ]; then
         false
+    else
+        if [ $MAJOR -gt $MINIMUM_MAJOR ] || ([ $MAJOR -eq $MINIMUM_MAJOR ] && ([ $MINOR -gt $MINIMUM_MINOR ] || [ $MINOR -eq $MINIMUM_MINOR ])); then
+            true
+        else
+            false
+        fi
     fi
 }
 
 CMAKE_MINIMUM_VERSION=3.28.0
 if (check_cmake_version $CMAKE_MINIMUM_VERSION cmake) || (check_cmake_version $CMAKE_MINIMUM_VERSION /opt/cmake-3.28.3-linux-x86_64/bin/cmake); then
-    echo "Found CMake $CMAKE_VERSION"
+    echo "Found CMake $CMAKE_MINIMUM_VERSION"
 else
     echo "Could not find CMake >=$CMAKE_MINIMUM_VERSION."
     echo "Installing CMake 3.28.3..."
