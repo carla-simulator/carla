@@ -78,7 +78,7 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 }
 ```
 
-Building CARLA with Unreal Engine 5.5
+## Building CARLA with Unreal Engine 5.5
 --------------
 
 Clone this repository locally from GitHub, specifying the *ue5-dev* branch:
@@ -89,42 +89,53 @@ git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
 
 In order to build CARLA, you need acces to the CARLA fork of Unreal Engine 5.5. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.5 repository. 
 
-You can do this in one of 2 ways:
+__Building in Linux__:
 
-* Using GitHub command line tools: [download and install GitHub CLI](https://cli.github.com/) then set the credentials using `gh auth login` on the command line. You will be prompted for your username and access token, which will be stored for future use.
+Run the setup script from a terminal open in the CARLA root directory:
 
-* Using an environment variable in Linux: 
+```sh
+cd CarlaUE5
+./CarlaSetup.sh --interactive
+```
 
-You can add your github credentials to your `.bashrc` file:
+The setup script will prompt you for your sudo password, in order to install the prerequisites. It will then prompt you for your GitHub credentials in order to authorise the download of the Unreal Engine repository. 
+
+If you want to run the setup script unattended, follow these steps:
+
+Your git credentials need to be stored in an environment variable. Add your github credentials to your `.bashrc` file:
 
 ```sh
 export GIT_LOCAL_CREDENTIALS=username@github_token
 ```
 
-You can alternatively run the setup script with your git credentials in the following way on Linux using the `env` command:
+Then run the setup script using the following command:
 
 ```sh
 cd CarlaUE5
-env GIT_LOCAL_CREDENTIALS=username@github_token bash -x CarlaSetup.sh
+sudo -E ./CarlaSetup.sh
 ```
 
-If you already have your GitHub credentials set up, run the setup script (you will be prompted for GitHub credentials if they are not already set):
+This will download and install Unreal Engine 5.5, install the prerequisites and build CARLA. It may take some time to complete and use a significant amount of disk space.
 
-Linux:
+If you prefer to add the git credentials in the terminal, use the following command:
 
 ```sh
 cd CarlaUE5
-./CarlaSetup.sh
+sudo -E env GIT_LOCAL_CREDENTIALS=github_username@github_token ./CarlaSetup.sh 
 ```
 
-Windows:
+___Building in Windows__:
+
+To build in windows, run the batch script:
 
 ```sh
 cd CarlaUE5
 CarlaSetup.bat
 ```
 
-This will download and install Unreal Engine 5.5, install the prerequisites and build and launch CARLA. It may take some time to complete and use a significant amount of disk space.
+Unattended mode is currently unavailable in Windows, you will need to enter GitHub credentials or administrator privileges when prompted.
+
+## Rebuilding CARLA
 
 Once the setup is complete, you can execute subsequent builds with the following commands in a terminal open in the CARLA root directory. In Linux, run these commands in a standard terminal. In Windows, open the x64 Native Tools Command Prompt for Visual Studio 2022.
 
@@ -178,22 +189,20 @@ Please take a look at our [Contribution guidelines][contriblink].
 Licenses
 -------
 
-#### CARLA licenses
+## CARLA licenses
 
 CARLA specific code is distributed under the MIT License.
 
 CARLA specific assets are distributed under the CC-BY License.
 
-#### CARLA Dependency and Integration licenses
+## CARLA Dependency and Integration licenses
 
 Unreal Engine 5 follows its [own license terms](https://www.unrealengine.com/en-US/faq).
 
-CARLA uses three dependencies as part of the SUMO integration:
+CARLA uses some dependencies related to 3rd party integrations:
 - [PROJ](https://proj.org/), a generic coordinate transformation software which uses the [X/MIT open source license](https://proj.org/about.html#license).
 - [SQLite](https://www.sqlite.org), part of the PROJ dependencies, which is [in the public domain](https://www.sqlite.org/purchase/license).
 - [Xerces-C](https://xerces.apache.org/xerces-c/), a validating XML parser, which is made available under the [Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
-
-CARLA uses one dependency as part of the Chrono integration:
 - [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page), a C++ template library for linear algebra which uses the [MPL2 license](https://www.mozilla.org/en-US/MPL/2.0/).
 
 CARLA uses the Autodesk FBX SDK for converting FBX to OBJ in the import process of maps. This step is optional, and the SDK is located [here](https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-0)
