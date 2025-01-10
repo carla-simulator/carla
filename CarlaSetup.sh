@@ -58,7 +58,7 @@ fi
 
 if [ $skip_prerequisites -eq 0 ]; then
     echo "Installing prerequisites..."
-    sudo bash -x Util/SetupUtils/InstallPrerequisites.sh
+    sudo -E bash -x Util/SetupUtils/InstallPrerequisites.sh
 else
     echo "Skipping prerequisites install step."
 fi
