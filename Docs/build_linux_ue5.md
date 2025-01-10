@@ -11,41 +11,48 @@
 
 ## Set up the environment
 
-This guide details how to build CARLA from source on Linux with Unreal Engine 5.5. If you are building CARLA for the first time, ensure that you **link your GitHub account to Epic Games** by following [this guide](https://www.unrealengine.com/en-US/ue-on-github).
-
-Clone the `ue5-dev` branch of CARLA on your local machine:
+Clone this repository locally from GitHub, specifying the *ue5-dev* branch:
 
 ```sh
 git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
 ```
 
-In order to build CARLA, you will need to set up your GitHub credentials to enable access to the Unreal Engine 5.5 repository. You can do this in one of 2 ways:
+In order to build CARLA, you need acces to the CARLA fork of Unreal Engine 5.5. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.5 repository. 
 
-* Using GitHub command line tools: [download and install GitHub CLI](https://cli.github.com/) then set the credentials using `gh auth login` on the command line. You will be prompted for your username and access token, which will be stored for future use.
+Run the setup script from a terminal open in the CARLA root directory:
 
-* Using an environment variable:
+```sh
+cd CarlaUE5
+./CarlaSetup.sh --interactive
+```
 
-You can add your GitHub credentials to your `.bashrc` file:
+The setup script will prompt you for your sudo password, in order to install the prerequisites. It will then prompt you for your GitHub credentials in order to authorise the download of the Unreal Engine repository. 
+
+__Building in Linux unattended__:
+
+If you want to run the setup script unattended, your git credentials need to be stored in an environment variable. Add your github credentials to your `.bashrc` file:
 
 ```sh
 export GIT_LOCAL_CREDENTIALS=username@github_token
 ```
 
-Alternatively, you can use the `env` command to set the environment variable in the terminal:
+Then run the setup script using the following command:
 
 ```sh
 cd CarlaUE5
-env GIT_LOCAL_CREDENTIALS=username@github_token bash -x CarlaSetup.sh
+sudo -E ./CarlaSetup.sh
 ```
 
-If your GitHub credentials are already set, you can run the setup script:
+This will download and install Unreal Engine 5.5, install the prerequisites and build CARLA. It may take some time to complete and use a significant amount of disk space.
+
+If you prefer to add the git credentials in the terminal, use the following command:
 
 ```sh
 cd CarlaUE5
-bash -x  CarlaSetup.sh
+sudo -E env GIT_LOCAL_CREDENTIALS=github_username@github_token ./CarlaSetup.sh 
 ```
 
-The CarlaSetup.sh script installs all the required packages, including Cmake, debian packages, Python packages and Unreal Engine 5.5 and sets up the necessary environment variables. It also downloads the CARLA content, builds CARLA then launches the editor. 
+The CarlaSetup.sh script installs all the required packages, including Cmake, debian packages, Python packages and Unreal Engine 5.5 and sets up the necessary environment variables. It also downloads the CARLA content.
 
 Once this is complete, the script will launch the CARLA Unreal Engine 5 editor. **Note: This script can therefore take a long time to complete.**
 
