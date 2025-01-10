@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /bin/bash
 
 set -e
 
@@ -45,16 +45,15 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Check for Git credentials:
-CREDENTIAL_INFO=(${GIT_LOCAL_CREDENTIALS//@/ })
-GIT_LOCAL_USER=${CREDENTIAL_INFO[0]}
-GIT_LOCAL_TOKEN=${CREDENTIAL_INFO[1]}
 if [ -z "$GIT_LOCAL_CREDENTIALS" ]; then
     if [ $interactive -eq 1 ]; then
         echo "Warning: git credentials are not set. You may be required to manually enter them later."
     else
-        echo "Git credentials are not set, can not continue setup in unatteded mode."
+        echo "Git credentials are not set, can not continue setup in unattended mode."
         exit 1
     fi
+else
+    echo "Found git credentials."
 fi
 
 if [ $skip_prerequisites -eq 0 ]; then
@@ -79,10 +78,14 @@ else
     pushd ..
     if [ -z "$GIT_LOCAL_CREDENTIALS" ]
     then
-        git clone -b ue5-dev-carla https://github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla
+        UE5_URL=https://github.com/CarlaUnreal/UnrealEngine.git
     else
-        git clone -b ue5-dev-carla https://$GIT_LOCAL_USER:$GIT_LOCAL_TOKEN@github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla
+        GIT_CREDENTIALS_INFO=(${GIT_LOCAL_CREDENTIALS//@/ })
+        GIT_LOCAL_USER=${GIT_CREDENTIALS_INFO[0]}
+        GIT_LOCAL_TOKEN=${GIT_CREDENTIALS_INFO[1]}
+        UE5_URL=https://$GIT_LOCAL_USER:$GIT_LOCAL_TOKEN@github.com/CarlaUnreal/UnrealEngine.git
     fi
+    git clone -b ue5-dev-carla $UE5_URL UnrealEngine5_carla
     pushd UnrealEngine5_carla
     echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$PWD >> ~/.bashrc
     export CARLA_UNREAL_ENGINE_PATH=$PWD
@@ -90,27 +93,6 @@ else
     popd
     echo "Installed CARLA Unreal Engine..."
 fi
-pushd ..
-pushd $CARLA_UNREAL_ENGINE_PATH
-echo Checking if Unreal Engine is in the most recent commit...
-git fetch
-if [[ $(git status) =~ "up to date" ]]; then
-    echo CARLA Unreal Engine is already in the last commit
-else
-    echo CARLA Unreal Engine is NOT in the last commit.
-    echo Running git clean...
-    git clean -fdx
-    echo Running git pull...
-    git pull
-fi
-echo "Running CARLA Unreal Engine setup..."
-./Setup.sh --force
-echo "Creating CARLA Unreal Engine project files..."
-./GenerateProjectFiles.sh
-echo "Building CARLA Unreal Engine..."
-make
-popd
-popd
 
 echo "Configuring CARLA..."
 cmake -G Ninja -S . -B Build \

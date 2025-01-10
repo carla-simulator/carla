@@ -59,7 +59,7 @@ check_cmake_version() {
     MINIMUM_REMAINDER="${CMAKE_MINIMUM_VERSION#*.}"
     MINIMUM_MINOR="${MINIMUM_REMAINDER%.*}"
 
-    if [ "$CMAKE_VERSION" == "" ]; then
+    if [ -z "$CMAKE_VERSION" ]; then
         false
     else
         if [ $MAJOR -gt $MINIMUM_MAJOR ] || ([ $MAJOR -eq $MINIMUM_MAJOR ] && ([ $MINOR -gt $MINIMUM_MINOR ] || [ $MINOR -eq $MINIMUM_MINOR ])); then
