@@ -100,9 +100,9 @@ cd CarlaUE5
 
 The setup script will prompt you for your sudo password, in order to install the prerequisites. It will then prompt you for your GitHub credentials in order to authorise the download of the Unreal Engine repository. 
 
-If you want to run the setup script unattended, follow these steps:
+__Building in Linux unattended__:
 
-Your git credentials need to be stored in an environment variable. Add your github credentials to your `.bashrc` file:
+If you want to run the setup script unattended, your git credentials need to be stored in an environment variable. Add your github credentials to your `.bashrc` file:
 
 ```sh
 export GIT_LOCAL_CREDENTIALS=username@github_token
@@ -124,9 +124,9 @@ cd CarlaUE5
 sudo -E env GIT_LOCAL_CREDENTIALS=github_username@github_token ./CarlaSetup.sh 
 ```
 
-___Building in Windows__:
+__Building in Windows__:
 
-To build in windows, run the batch script:
+To build in Windows, run the batch script:
 
 ```sh
 cd CarlaUE5
