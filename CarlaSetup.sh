@@ -4,8 +4,9 @@ set -e
 
 interactive=0
 skip_prerequisites=0
+launch=0
 
-options=$(getopt -o "i,p" --long "interactive,skip-prerequisites" -n 'CarlaSetup.sh' -- "$@")
+options=$(getopt -o "i,p,l" --long "interactive,skip-prerequisites,launch" -n 'CarlaSetup.sh' -- "$@")
 eval set -- "$options"
 while true; do
     case "$1" in
@@ -15,6 +16,10 @@ while true; do
             ;;
         -p | --skip-prerequisites)
             skip_prerequisites=1
+            shift
+            ;;
+        -l | --launch)
+            launch=1
             shift
             ;;
         --)
@@ -108,7 +113,7 @@ popd
 popd
 
 echo "Configuring CARLA..."
-retry --until=success --times=10 -- cmake -G Ninja -S . -B Build \
+cmake -G Ninja -S . -B Build \
     --toolchain=$PWD/CMake/LinuxToolchain.cmake \
     -DLAUNCH_ARGS="-prefernvidia" \
     -DCMAKE_BUILD_TYPE=Release \
@@ -116,11 +121,13 @@ retry --until=success --times=10 -- cmake -G Ninja -S . -B Build \
     -DBUILD_CARLA_UNREAL=ON \
     -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH
 echo "Building CARLA..."
-retry --until=success --times=10 -- cmake --build Build
+cmake --build Build
 echo "Building + installing Python API..."
 cmake --build Build --target carla-python-api-install
 echo "Waiting for Content to finish downloading..."
 wait #Waitting for content
-echo "Installation and build succesful."
-echo "Lauching Carla - Unreal Editor..."
-cmake --build Build --target launch
+echo "Installation and build successful."
+if [ $launch -eq 1 ]; then
+    echo "Launching Carla - Unreal Editor..."
+    cmake --build Build --target launch
+fi
