@@ -53,22 +53,26 @@ if sys.version_info >= (3, 9):
     from typing import Annotated
 else:
     from typing_extensions import Annotated
-    
+
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
-
 
 # Note: __protected_variables are not part of the carla module, they are helpers to complete the stubs.
 
 __SensorData = TypeVar("__SensorData", bound=SensorData)
 """Generic that allows subclassing."""
 
+__Actor = TypeVar(
+    "__Actor", bound=Actor, default=Actor, infer_variance=True
+)  # noqa: F405
+"""Generic Actor type that allows subclassing."""
+
 @type_check_only
-class __CarlaEnum(Enum):
+class _CarlaEnum(Enum):
     """
-    CARLA's Enums have a `values` and `names` attribute that are not part of the python `enum.Enum` 
+    CARLA's Enums have a `values` and `names` attribute that are not part of the python `enum.Enum`
     class. This abstract stub class adds these attributes.
 
     Attention:
@@ -80,10 +84,15 @@ class __CarlaEnum(Enum):
     names: dict[str, Self]
 
     @property
-    def name(self: Never) -> NoReturn:  # pylint: disable=invalid-overridden-method,function-redefined
+    def name(
+        self: Never,
+    ) -> NoReturn:  # pylint: disable=invalid-overridden-method,function-redefined
         """The name attribute is not available in CARLA's enums."""
+
     @property
-    def value(self: Never) -> NoReturn:  # pylint: disable=invalid-overridden-method,function-redefined
+    def value(
+        self: Never,
+    ) -> NoReturn:  # pylint: disable=invalid-overridden-method,function-redefined
         """The value attribute is not available in CARLA's enums."""
 
     def __init_subclass__(cls) -> None:
@@ -121,22 +130,21 @@ class AckermannControllerSettings:
     # endregion
 
     # region Methods
-    def __init__(self,
-                 speed_kp: float = 0.15,
-                 speed_ki: float = 0.0,
-                 speed_kd: float = 0.25,
-                 accel_kp: float = 0.01,
-                 accel_ki: float = 0.0,
-                 accel_kd: float = 0.01):
-        """Manages the settings of the Ackermann PID controller.
-        """
+    def __init__(
+        self,
+        speed_kp: float = 0.15,
+        speed_ki: float = 0.0,
+        speed_kd: float = 0.25,
+        accel_kp: float = 0.01,
+        accel_ki: float = 0.0,
+        accel_kd: float = 0.01,
+    ) -> None:
+        """Manages the settings of the Ackermann PID controller."""
     # endregion
 
     # region Dunder Methods
-    def __eq__(self, __value: AckermannControllerSettings) -> bool: ...
-
-    def __ne__(self, __value: AckermannControllerSettings) -> bool: ...
-
+    def __eq__(self, other: AckermannControllerSettings, /) -> bool: ...
+    def __ne__(self, other: AckermannControllerSettings, /) -> bool: ...
     def __str__(self) -> str: ...
     # endregion
 
@@ -204,7 +212,7 @@ class Actor:
         This method should be used for instantaneous torques, usually applied once. Use `add_torque()` to apply rotation forces over a period of time.
 
         Args:
-            `angular_impulse (Vector3D - degrees*s)`: Angular impulse vector in global coordinates.\n
+            `angular_impulse (Vector3D - degrees*s)`: Angular impulse vector in global coordinates.
         """
 
     def add_force(self, force: Vector3D):
@@ -213,7 +221,7 @@ class Actor:
         This method should be used for forces that are applied over a certain period of time. Use `add_impulse()` to apply an impulse that only lasts an instant.
 
         Args:
-            `force (Vector3D - N)`: Force vector in global coordinates.\n
+            `force (Vector3D - N)`: Force vector in global coordinates.
         """
 
     def add_impulse(self, impulse: Vector3D):
@@ -222,7 +230,7 @@ class Actor:
         This method should be used for instantaneous forces, usually applied once. Use `add_force()` to apply forces over a period of time.
 
         Args:
-            `impulse (Vector3D - N*s)`: Impulse vector in global coordinates.\n
+            `impulse (Vector3D - N*s)`: Impulse vector in global coordinates.
         """
 
     def add_torque(self, torque: Vector3D):
@@ -231,7 +239,7 @@ class Actor:
         This method should be used for torques that are applied over a certain period of time. Use `add_angular_impulse()` to apply a torque that only lasts an instant.
 
         Args:
-            `torque (Vector3D - degrees)`: Torque vector in global coordinates.\n
+            `torque (Vector3D - degrees)`: Torque vector in global coordinates.
         """
 
     def destroy(self) -> bool:
@@ -244,7 +252,6 @@ class Actor:
 
     def disable_constant_velocity(self):
         """Disables any constant velocity previously set for a `carla.Vehicle` actor."""
-        ...
 
     def enable_constant_velocity(self, velocity: Vector3D):
         """Sets a vehicle's velocity vector to a constant value over time.
@@ -256,18 +263,18 @@ class Actor:
         + Warning: Enabling a constant velocity for a vehicle managed by the `Traffic Manager` may cause conflicts. This method overrides any changes in velocity by the TM.
 
         Args:
-            `velocity (Vector3D - m/s)`:  Velocity vector in local space.\n
+            `velocity (Vector3D - m/s)`:  Velocity vector in local space.
         """
     # endregion
 
     # region Getters
     def get_acceleration(self) -> Vector3D:
-        """Returns the actor's 3D acceleration vector the client received during last tick. 
+        """Returns the actor's 3D acceleration vector the client received during last tick.
 
         The method does not call the simulator.
 
         Returns:
-            `Vector3D`: m/s^2\n
+            `Vector3D`: m/s^2
         """
 
     def get_angular_velocity(self) -> Vector3D:
@@ -276,18 +283,18 @@ class Actor:
         The method does not call the simulator.
 
         Returns:
-            `Vector3D`: deg/s\n
+            `Vector3D`: deg/s
         """
 
     def get_location(self) -> Location:
-        """Returns the actor's location the client received during last tick. 
+        """Returns the actor's location the client received during last tick.
 
         The method does not call the simulator.
 
         + Setter: `carla.Actor.set_location`
 
         Returns:
-            `Location`: - meters\n
+            `Location`: - meters
         """
 
     def get_transform(self) -> Transform:
@@ -298,7 +305,7 @@ class Actor:
         + Setter: `carla.Actor.set_transform`
 
         Returns:
-            `Transform`\n
+            `Transform`
         """
 
     def get_velocity(self) -> Vector3D:
@@ -307,7 +314,7 @@ class Actor:
         The method does not call the simulator.
 
         Returns:
-            `Vector3D`:  m/s\n
+            `Vector3D`:  m/s
         """
 
     def get_world(self) -> World:
@@ -375,22 +382,28 @@ class Actor:
     def __str__(self) -> str: ...
     # endregion
 
+class ActorAttribute:
+    """
+    CARLA provides a library of blueprints for actors that can be accessed as `carla.BlueprintLibrary`.
+    Each of these blueprints has a series of attributes defined internally.
+    Some of these are modifiable, others are not.
 
-class ActorAttribute():
-    """CARLA provides a library of blueprints for actors that can be accessed as `carla.BlueprintLibrary`. Each of these blueprints has a series of attributes defined internally. Some of these are modifiable, others are not. A list of recommended values is provided for those that can be set.
+    A list of recommended values is provided for those that can be set.
     """
 
     # region Instance Variables
     @property
     def id(self) -> str:
-        """The attribute's name and identifier in the library.
-        """
+        """The attribute's name and identifier in the library."""
+
     @property
     def is_modifiable(self) -> bool:
         """It is True if the attribute's value can be modified."""
+
     @property
     def recommended_values(self) -> list[str]:
         """A list of values suggested by those who designed the blueprint."""
+
     @property
     def type(self) -> ActorAttributeType:
         """The attribute's parameter type."""
@@ -415,18 +428,21 @@ class ActorAttribute():
 
     # region Dunder Methods
     def __bool__(self) -> bool: ...
-    def __eq__(self, __value: Union[bool, int, float, str, Color, ActorAttribute]) -> bool: ...
+    def __eq__(
+        self, other: Union[bool, float, str, Color, ActorAttribute], /
+    ) -> bool: ...
     def __float__(self) -> float: ...
     def __int__(self) -> int: ...
-    def __ne__(self, __value: Union[bool, int, float, str, Color, ActorAttribute]) -> bool: ...
+    def __ne__(
+        self, other: Union[bool, float, str, Color, ActorAttribute], /
+    ) -> bool: ...
     def __nonzero__(self) -> bool: ...
     def __str__(self) -> str: ...
     # endregion
 
+class ActorAttributeType(int, _CarlaEnum):
+    """CARLA provides a library of blueprints for actors in `carla.BlueprintLibrary` with different attributes each. This class defines the types those at `carla.ActorAttribute` can be as a series of enum. All this information is managed internally and listed here for a better comprehension of how CARLA works."""
 
-class ActorAttributeType(int, __CarlaEnum):
-    """CARLA provides a library of blueprints for actors in `carla.BlueprintLibrary` with different attributes each. This class defines the types those at `carla.ActorAttribute` can be as a series of enum. All this information is managed internally and listed here for a better comprehension of how CARLA works.
-    """
     # region Instance Variables
     Bool = 0
     Int = 1
@@ -435,17 +451,16 @@ class ActorAttributeType(int, __CarlaEnum):
     RGBColor = 4
     # endregion
 
-
-class ActorBlueprint():
-    """CARLA provides a blueprint library for actors that can be consulted through `carla.BlueprintLibrary`. Each of these consists of an identifier for the blueprint and a series of attributes that may be modifiable or not. This class is the intermediate step between the library and the actor creation. Actors need an actor blueprint to be spawned. These store the information for said blueprint in an object with its attributes and some tags to categorize them. The user can then customize some attributes and eventually spawn the actors through `carla.World`.
-    """
+class ActorBlueprint:
+    """CARLA provides a blueprint library for actors that can be consulted through `carla.BlueprintLibrary`. Each of these consists of an identifier for the blueprint and a series of attributes that may be modifiable or not. This class is the intermediate step between the library and the actor creation. Actors need an actor blueprint to be spawned. These store the information for said blueprint in an object with its attributes and some tags to categorize them. The user can then customize some attributes and eventually spawn the actors through `carla.World`."""
 
     # region Instance Variables
     @property
     def id(self) -> str:
         """The identifier of said blueprint inside the library.
 
-        E.g. `walker.pedestrian.0001`."""
+        E.g. `walker.pedestrian.0001`.
+        """
 
     @property
     def tags(self) -> list[str]:
@@ -523,57 +538,56 @@ class ActorBlueprint():
     def __str__(self) -> str: ...
     # endregion
 
-
-class ActorList():
+class ActorList(Generic[__Actor]):
     """
     A class that contains every actor present on the scene and provides access to them.
     The list is automatically created and updated by the server and it can be returned using `carla.World`.
     """
 
     # Heuristic to infer type without Generic
-    
+
     @overload
-    def filter(self, wildcard_pattern: Literal['traffic_light.*']) -> ActorList[TrafficLight]: ...
-    
+    def filter(
+        self, wildcard_pattern: Literal["traffic_light.*"]
+    ) -> ActorList[TrafficLight]: ...
     @overload
-    def filter(self, wildcard_pattern: Literal['vehicle.*']) -> ActorList[Vehicle]: ...
-    
+    def filter(self, wildcard_pattern: Literal["vehicle.*"]) -> ActorList[Vehicle]: ...
     @overload
-    def filter(self, wildcard_pattern: Literal['walker.pedestrian.*', 'walker.*']) -> ActorList[Walker]: ...
-    
+    def filter(
+        self, wildcard_pattern: Literal["walker.pedestrian.*", "walker.*"]
+    ) -> ActorList[Walker]: ...
     @overload
-    def filter(self, wildcard_pattern: Literal['sensor.*']) -> ActorList[Sensor]: ...
-    
+    def filter(self, wildcard_pattern: Literal["sensor.*"]) -> ActorList[Sensor]: ...
     @overload
     def filter(self, wildcard_pattern: str) -> ActorList[__Actor]: ...
-    
+
     # region Methods
-    def filter(self, wildcard_pattern: str) -> ActorList:
+    def filter(self, wildcard_pattern: str) -> ActorList[__Actor]:
         """Filters a list of Actors matching wildcard_pattern against their variable `type_id` (which identifies the blueprint used to spawn them). Matching follows fnmatch standard.
 
         Args:
             `wildcard_pattern (str)`\n
 
         Returns:
-            `ActorList`\n
+            `ActorList`
         """
 
-    def find(self, actor_id: int) -> Actor:
+    def find(self, actor_id: int) -> __Actor:
         """Finds an actor using its identifier and returns it or None if it is not present.
 
         Args:
             `actor_id (int)`\n
 
         Returns:
-            `Actor`\n
+            `Actor`
         """
     # endregion
 
     # region Dunder methods
-    def __getitem__(self, pos: int) -> Actor:
+    def __getitem__(self, pos: int) -> __Actor:
         """Returns the actor corresponding to pos position in the list."""
 
-    def __iter__(self) -> Iterator[Actor]:
+    def __iter__(self) -> Iterator[__Actor]:
         """Iterate over the `carla.Actor` contained in the list."""
 
     def __len__(self) -> int:
@@ -583,9 +597,10 @@ class ActorList():
         """Parses to the ID for every actor listed."""
     # endregion
 
-
-class ActorSnapshot():
-    """A class that comprises all the information for an actor at a certain moment in time. These objects are contained in a `carla.WorldSnapshot` and sent to the client once every tick.
+class ActorSnapshot:
+    """
+    A class that comprises all the information for an actor at a certain moment in time.
+    These objects are contained in a `carla.WorldSnapshot` and sent to the client once every tick.
     """
 
     # region Instance Variables
@@ -746,6 +761,7 @@ class BoundingBox:
         Returns:
             `Vector3D`: meters
         """
+
     @property
     def location(self) -> Location:
         """The center of the bounding box.
@@ -853,7 +869,9 @@ class Client:
 
     # region Methods
 
-    def __init__(self, host: str = "127.0.0.1", port: int = 2000, worker_threads: int = 0) -> None:
+    def __init__(
+        self, host: str = "127.0.0.1", port: int = 2000, worker_threads: int = 0
+    ) -> None:
         """Client constructor.
 
         Args:
@@ -862,7 +880,9 @@ class Client:
             `worker_threads (int, optional)`: Number of working threads used for background updates. If 0, use all available concurrency. Defaults to 0.
         """
 
-    def apply_batch(self, commands: Sequence[command._IsCommand], do_tick: bool = False) -> None:
+    def apply_batch(
+        self, commands: Sequence[command._IsCommand], do_tick: bool = False
+    ) -> None:
         """Executes a list of commands on a single simulation step and retrieves no information.
 
         If you need information about the response of each command, use the `apply_batch_sync()` method. Here is an example on how to delete the actors that appear in `carla.ActorList` all at once.
@@ -875,7 +895,9 @@ class Client:
                 Defaults to False.
         """
 
-    def apply_batch_sync(self, commands: Sequence[command._IsCommand], do_tick: bool = False) -> list[command.Response]:
+    def apply_batch_sync(
+        self, commands: Sequence[command._IsCommand], do_tick: bool = False
+    ) -> list[command.Response]:
         """Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of command.Response that can be used to determine whether a single command succeeded or not. Here is an example of it being used to spawn actors.
 
         https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py
@@ -888,10 +910,14 @@ class Client:
             `list[command.Response]`
         """
 
-    def generate_opendrive_world(self,
-                                 opendrive: str,
-                                 parameters: OpendriveGenerationParameters = OpendriveGenerationParameters(2.0, 50.0, 1.0, 0.6, True, True),
-                                 reset_settings: bool = True):
+    def generate_opendrive_world(
+        self,
+        opendrive: str,
+        parameters: OpendriveGenerationParameters = OpendriveGenerationParameters(
+            2.0, 50.0, 1.0, 0.6, True, True
+        ),
+        reset_settings: bool = True,
+    ):
         """Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter. It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side. Cars can drive around the map, but there are no graphics besides the road and sidewalks.
 
         Args:
@@ -900,7 +926,12 @@ class Client:
             `reset_settings (bool, optional)`: Option to reset the episode setting to default values, set to false to keep the current settings. This is useful to keep sync mode when changing map and to keep deterministic scenarios. Defaults to True.
         """
 
-    def load_world(self, map_name: str, reset_settings: bool = True, map_layers: MapLayer = MapLayer.All) -> World:
+    def load_world(
+        self,
+        map_name: str,
+        reset_settings: bool = True,
+        map_layers: MapLayer = MapLayer.All,
+    ) -> World:
         """Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.
 
         + Warning: `map_layers` are only available for "Opt" maps
@@ -927,8 +958,13 @@ class Client:
             `World`
         """
 
-    def load_world_if_different(self, map_name: str, reset_settings: bool = True, map_layers: MapLayer = MapLayer.All):
-        """"
+    def load_world_if_different(
+        self,
+        map_name: str,
+        reset_settings: bool = True,
+        map_layers: MapLayer = MapLayer.All,
+    ):
+        """ "
         Creates a new world with default settings using `map_name` map only if it is a different map
         from the currently loaded map.
         Otherwise this function returns `None`. All actors in the current world will be destroyed.
@@ -946,7 +982,14 @@ class Client:
             None
         """
 
-    def replay_file(self, name: str, start: float, duration: float, follow_id: int, replay_sensors: bool = False) -> str:
+    def replay_file(
+        self,
+        name: str,
+        start: float,
+        duration: float,
+        follow_id: int,
+        replay_sensors: bool = False,
+    ) -> str:
         """Load a new world with default settings using `map_name` map. All actors present in the current world will be destroyed, but traffic manager instances will stay alive.
 
         Args:
@@ -955,16 +998,21 @@ class Client:
             `duration (float  - seconds)`: Time that will be reenacted using the information `name` file. If the end is reached, the simulation will continue.\n
             `follow_id (int)`: ID of the actor to follow. If this is 0 then camera is disabled.\n
             `replay_sensors (bool)`: Flag to enable or disable the spawn of sensors during playback.\n
+
+        Returns:
+            Logging information.
         """
 
     def request_file(self, name: str):
         """Requests one of the required files returned by `carla.Client.get_required_files`.
 
         Args:
-            `name (str)`: Name of the file you are requesting.\n
+            `name (str)`: Name of the file you are requesting.
         """
 
-    def show_recorder_actors_blocked(self, filename: str, min_time: float, min_distance: float) -> str:
+    def show_recorder_actors_blocked(
+        self, filename: str, min_time: float, min_distance: float
+    ) -> str:
         """The terminal will show the information registered for actors considered blocked. An actor is considered blocked when it does not move a minimum distance in a period of time, being these `min_distance` and `min_time`.
 
         Args:
@@ -976,7 +1024,9 @@ class Client:
             `str`
         """
 
-    def show_recorder_collisions(self, filename: str, category1: str, category2: str) -> str:
+    def show_recorder_collisions(
+        self, filename: str, category1: str, category2: str
+    ) -> str:
         """The terminal will show the collisions registered by the recorder. These can be filtered by specifying the type of actor involved. The categories will be specified in `category1` and `category2` as follows: 'h' = Hero, the one vehicle that can be controlled manually or managed by the user. 'v' = Vehicle 'w' = Walker 't' = Traffic light 'o' = Other 'a' = Any If you want to see only collisions between a vehicles and a walkers, use for `category1` as 'v' and `category2` as 'w' or vice versa. If you want to see all the collisions (filter off) you can use 'a' for both parameters.
 
         Args:
@@ -1087,7 +1137,6 @@ class Client:
         Args:
             `second (float - seconds)`: New timeout value. Default is 5 seconds.
         """
-
     # endregion
 
 class CollisionEvent(SensorData):
@@ -1100,9 +1149,11 @@ class CollisionEvent(SensorData):
     @property
     def actor(self) -> Actor:
         """The actor the sensor is attached to, the one that measured the collision."""
+
     @property
     def other_actor(self) -> Actor:
         """The second actor involved in the collision."""
+
     @property
     def normal_impulse(self) -> Vector3D:
         """Normal impulse resulting of the collision.(N*s)"""
@@ -1115,24 +1166,25 @@ class Color:
     @property
     def r(self) -> int:
         """Red color (0-255)."""
+
     @r.setter
     def r(self, value: int) -> None: ...
-
     @property
     def g(self) -> int:
         """Green color (0-255)."""
+
     @g.setter
     def g(self, value: int) -> None: ...
-
     @property
     def b(self) -> int:
         """Blue color (0-255)."""
+
     @b.setter
     def b(self, value: int) -> None: ...
-
     @property
     def a(self) -> int:
         """Alpha channel (0-255)."""
+
     @a.setter
     def a(self, value: int) -> None: ...
     # endregion
@@ -1185,12 +1237,15 @@ class DVSEvent:
     @property
     def x(self) -> int:
         """X pixel coordinate."""
+
     @property
     def y(self) -> int:
         """Y pixel coordinate."""
+
     @property
     def t(self) -> int:
         """Timestamp of the moment the event happened."""
+
     @property
     def pol(self) -> bool:
         """Polarity of the event. True for positive and False for negative."""
@@ -1213,12 +1268,15 @@ class DVSEventArray(SensorData):
     @property
     def fov(self) -> float:
         """Horizontal field of view of the image."""
+
     @property
     def height(self) -> int:
         """Image height in pixels."""
+
     @property
     def width(self) -> int:
         """Image width in pixels."""
+
     @property
     def raw_data(self) -> bytes: ...  # pylint: disable=missing-function-docstring
     # endregion
@@ -1247,7 +1305,6 @@ class DVSEventArray(SensorData):
 
     # region Dunder Methods
     def __getitem__(self, pos: int, /) -> DVSEvent: ...
-
     def __iter__(self) -> Iterator[DVSEvent]:
         """Iterate over the `carla.DVSEvent` retrieved as data."""
 
@@ -1264,7 +1321,16 @@ class DebugHelper:
     """
 
     # region Methods
-    def draw_arrow(self, begin: Vector3D, end: Vector3D, thickness: float = 0.1, arrow_size: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
+    def draw_arrow(
+        self,
+        begin: Vector3D,
+        end: Vector3D,
+        thickness: float = 0.1,
+        arrow_size: float = 0.1,
+        color: Color = Color(255, 0, 0),
+        life_time: float = -1,
+        persistent_lines: bool = True,
+    ) -> None:
         """
         Draws an arrow from `begin` to `end` pointing in that direction.
 
@@ -1277,7 +1343,16 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes (seconds). Defaults to -1.0.
         """
 
-    def draw_hud_arrow(self, begin: Vector3D, end: Vector3D, thickness: float = 0.1, arrow_size: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
+    def draw_hud_arrow(
+        self,
+        begin: Vector3D,
+        end: Vector3D,
+        thickness: float = 0.1,
+        arrow_size: float = 0.1,
+        color: Color = Color(255, 0, 0),
+        life_time: float = -1,
+        persistent_lines: bool = True,
+    ) -> None:
         """
         Draws an arrow on the HUD from `begin` to `end` which can only be seen server-side.
 
@@ -1290,7 +1365,15 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes (seconds). Defaults to -1.0.
         """
 
-    def draw_box(self, box: BoundingBox, rotation: Rotation, thickness: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
+    def draw_box(
+        self,
+        box: BoundingBox,
+        rotation: Rotation,
+        thickness: float = 0.1,
+        color: Color = Color(255, 0, 0),
+        life_time: float = -1,
+        persistent_lines: bool = True,
+    ) -> None:
         """Draws a box, usually to act for object colliders.
 
         Args:
@@ -1301,7 +1384,15 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes. Defaults to -1.0.
         """
 
-    def draw_hud_box(self, box: BoundingBox, rotation: Rotation, thickness: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
+    def draw_hud_box(
+        self,
+        box: BoundingBox,
+        rotation: Rotation,
+        thickness: float = 0.1,
+        color: Color = Color(255, 0, 0),
+        life_time: float = -1,
+        persistent_lines: bool = True,
+    ) -> None:
         """
         Draws a box on the HUD, usually to act for object colliders. The box can only be seen server-side.
 
@@ -1313,7 +1404,15 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes. Defaults to -1.0.
         """
 
-    def draw_line(self, begin: Vector3D, end: Vector3D, thickness: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
+    def draw_line(
+        self,
+        begin: Vector3D,
+        end: Vector3D,
+        thickness: float = 0.1,
+        color: Color = Color(255, 0, 0),
+        life_time: float = -1,
+        persistent_lines: bool = True,
+    ) -> None:
         """
         Draws a line in between `begin` and `end`.
 
@@ -1325,7 +1424,15 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes. Defaults to -1.0.
         """
 
-    def draw_hud_line(self, begin: Vector3D, end: Vector3D, thickness: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
+    def draw_hud_line(
+        self,
+        begin: Vector3D,
+        end: Vector3D,
+        thickness: float = 0.1,
+        color: Color = Color(255, 0, 0),
+        life_time: float = -1,
+        persistent_lines: bool = True,
+    ) -> None:
         """
         Draws a line on the HUD in between `begin` and `end`. The line can only be seen server-side.
 
@@ -1337,7 +1444,14 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to `0` for permanent shapes. Defaults to -1.0.
         """
 
-    def draw_point(self, location: Vector3D, size: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
+    def draw_point(
+        self,
+        location: Vector3D,
+        size: float = 0.1,
+        color: Color = Color(255, 0, 0),
+        life_time: float = -1,
+        persistent_lines: bool = True,
+    ) -> None:
         """
         Draws a point location.
 
@@ -1348,7 +1462,14 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to 0 for permanent shapes (seconds). Defaults to -1.0.
         """
 
-    def draw_hud_point(self, location: Vector3D, size: float = 0.1, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
+    def draw_hud_point(
+        self,
+        location: Vector3D,
+        size: float = 0.1,
+        color: Color = Color(255, 0, 0),
+        life_time: float = -1,
+        persistent_lines: bool = True,
+    ) -> None:
         """
         Draws a point on the HUD at `location`. The point can only be seen server-side.
 
@@ -1359,7 +1480,15 @@ class DebugHelper:
             life_time (float, optional): Shape's lifespan. By default it only lasts one frame. Set this to 0 for permanent shapes (seconds). Defaults to -1.0.
         """
 
-    def draw_string(self, location: Vector3D, text: str, draw_shadow: bool = False, color: Color = Color(255, 0, 0), life_time: float = -1, persistent_lines: bool = True) -> None:
+    def draw_string(
+        self,
+        location: Vector3D,
+        text: str,
+        draw_shadow: bool = False,
+        color: Color = Color(255, 0, 0),
+        life_time: float = -1,
+        persistent_lines: bool = True,
+    ) -> None:
         """Draws a string in a given location of the simulation which can only be seen server-side.
 
         Args:
@@ -1423,7 +1552,9 @@ class FloatColor:
     # endregion
 
     # region Methods
-    def __init__(self, r: float = .0, g: float = .0, b: float = .0, a: float = 1.0) -> None:
+    def __init__(
+        self, r: float = 0.0, g: float = 0.0, b: float = 0.0, a: float = 1.0
+    ) -> None:
         """Initializes a color, black by default.
 
         Args:
@@ -1511,7 +1642,9 @@ class GearPhysicsControl:
     # endregion
 
     # region Methods
-    def __init__(self, ratio: float = 1.0, down_ratio: float = 0.5, up_ratio: float = 0.65) -> None:
+    def __init__(
+        self, ratio: float = 1.0, down_ratio: float = 0.5, up_ratio: float = 0.65
+    ) -> None:
         """Class that provides access to vehicle transmission details by defining a gear and when to run on it. This will be later used by `carla.VehiclePhysicsControl` to help simulate physics.
 
         Args:
@@ -1545,7 +1678,9 @@ class GeoLocation:
     # endregion
 
     # region Methods
-    def __init__(self, latitude: float = 0.0, longitude: float = 0.0, altitude: float = 0.0) -> None:
+    def __init__(
+        self, latitude: float = 0.0, longitude: float = 0.0, altitude: float = 0.0
+    ) -> None:
         """Class that contains geographical coordinates simulated data. The `carla.Map` can convert simulation locations by using the tag in the OpenDRIVE file.
 
         Args:
@@ -1635,7 +1770,9 @@ class Image(SensorData):
             `color_converter (ColorConverter)`
         """
 
-    def save_to_disk(self, path: str, color_converter: ColorConverter = ColorConverter.Raw):
+    def save_to_disk(
+        self, path: str, color_converter: ColorConverter = ColorConverter.Raw
+    ):
         """Saves the image to disk using a converter pattern stated as `color_converter`. The default conversion pattern is `Raw` that will make no changes to the image.
 
         Args:
@@ -1646,7 +1783,6 @@ class Image(SensorData):
 
     # region Dunder Methods
     def __getitem__(self, pos: int) -> Color: ...
-
     def __iter__(self) -> Iterator[Color]:
         """Iterate over the `carla.Color` that form the image."""
 
@@ -1848,8 +1984,10 @@ class LandmarkType(Enum):
     CityEnd = "311"
     Highway = "330"
     DeadEnd = "357"
-    RecomendedSpeed = "380"    # NOTE: Wrong Spelling, but is named like this internally!
-    RecomendedSpeedEnd = "381"  # NOTE: Wrong Spelling, but is named like this internally!
+    RecomendedSpeed = "380"  # NOTE: Wrong Spelling, but is named like this internally!
+    RecomendedSpeedEnd = (
+        "381"  # NOTE: Wrong Spelling, but is named like this internally!
+    )
     # endregion
 
 class LaneChange(IntFlag, _CarlaEnum):
@@ -1981,6 +2119,7 @@ class LidarDetection:
     @property
     def point(self) -> Location:
         """Point in xyz coordinates (meters)."""
+
     @property
     def intensity(self) -> float:
         """Computed intensity for this point as a scalar value between [0.0 , 1.0]."""
@@ -2030,7 +2169,6 @@ class LidarMeasurement(SensorData):
 
     # region Dunder Methods
     def __getitem__(self, pos: int) -> LidarDetection: ...
-
     def __iter__(self) -> Iterator[LidarDetection]:
         """Iterate over the carla.LidarDetection retrieved as data."""
 
@@ -2331,7 +2469,13 @@ class LightState:
     # endregion
 
     # region Methods
-    def __init__(self, intensity: float = 0.0, color: Color = Color(0, 0, 0, 0), group: LightGroup = LightGroup.NONE, active: bool = False) -> None:
+    def __init__(
+        self,
+        intensity: float = 0.0,
+        color: Color = Color(0, 0, 0, 0),
+        group: LightGroup = LightGroup.NONE,
+        active: bool = False,
+    ) -> None:
         """This class represents all the light variables except the identifier and the location, which are should to be static. Using this class allows to manage all the parametrization of the light in one call.
 
         Args:
@@ -2349,18 +2493,19 @@ class Location(Vector3D):
     @property
     def x(self) -> float:
         """Distance from origin to spot on X axis (meter)."""
+
     @x.setter
     def x(self, value: float) -> None: ...
-
     @property
     def y(self) -> float:
         """Distance from origin to spot on Y axis (meter)."""
+
     @y.setter
     def y(self, value: float) -> None: ...
-
     @property
     def z(self) -> float:
         """Distance from origin to spot on Z axis. (meter)"""
+
     @z.setter
     def z(self, value: float) -> None: ...
     # endregion
@@ -2368,10 +2513,8 @@ class Location(Vector3D):
     # region Methods
     @overload
     def __init__(self, rhs: Vector3D) -> None: ...
-
     @overload
     def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0) -> None: ...
-
     def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
         """Represents a spot in the world.
 
@@ -2507,18 +2650,28 @@ class Map:
 
         Output could look like this: `[(w0, w1), (w0, w2), (w1, w3), (w2, w3), (w0, w4)]`.
         """
-
     # TODO: Correct overloads, decide if -> None should be disregarded
 
     @overload
-    def get_waypoint(self, location: Location, project_to_road: Literal[True] = True, lane_type: Literal[LaneType.Driving, LaneType.Any] = LaneType.Driving) -> Waypoint:
-        ...
-
+    def get_waypoint(
+        self,
+        location: Location,
+        project_to_road: Literal[True] = True,
+        lane_type: Literal[LaneType.Driving, LaneType.Any] = LaneType.Driving,
+    ) -> Waypoint: ...
     @overload
-    def get_waypoint(self, location: Location, project_to_road: bool | None = True, lane_type: LaneType = LaneType.Driving) -> Waypoint | None:
-        ...
-
-    def get_waypoint(self, location: Location, project_to_road: bool | None = True, lane_type: LaneType = LaneType.Driving) -> Waypoint | None:
+    def get_waypoint(
+        self,
+        location: Location,
+        project_to_road: bool | None = True,
+        lane_type: LaneType = LaneType.Driving,
+    ) -> Waypoint | None: ...
+    def get_waypoint(
+        self,
+        location: Location,
+        project_to_road: bool | None = True,
+        lane_type: LaneType = LaneType.Driving,
+    ) -> Waypoint | None:
         """Returns a waypoint that can be located in an exact location or translated to the center of the nearest lane. Said lane type can be defined using flags such as `LaneType.Driving & LaneType.Shoulder`.
 
         The method will return `None` if the waypoint is not found, which may happen only when trying to retrieve a waypoint for an exact location. That eases checking if a point is inside a certain road, as otherwise, it will return the corresponding waypoint.
@@ -2529,7 +2682,9 @@ class Map:
             `lane_type (_type_, optional)`: Limits the search for nearest lane to one or various lane types that can be flagged. Defaults to LaneType.Driving.
         """
 
-    def get_waypoint_xodr(self, road_id: int, lane_id: int, s: float) -> Waypoint | None:
+    def get_waypoint_xodr(
+        self, road_id: int, lane_id: int, s: float
+    ) -> Waypoint | None:
         """Returns a waypoint if all the parameters passed are correct. Otherwise, returns `None`.
 
         Args:
@@ -2630,13 +2785,16 @@ class OpendriveGenerationParameters:
     # endregion
 
     # region Methods
-    def __init__(self, vertex_distance: float = 2.0,
-                 max_road_length: float = 50.0,
-                 wall_height: float = 1.0,
-                 additional_width: float = 0.6,
-                 smooth_junctions: bool = True,
-                 enable_mesh_visibility: bool = True,
-                 enable_pedestrian_navigation: bool = True) -> None:
+    def __init__(
+        self,
+        vertex_distance: float = 2.0,
+        max_road_length: float = 50.0,
+        wall_height: float = 1.0,
+        additional_width: float = 0.6,
+        smooth_junctions: bool = True,
+        enable_mesh_visibility: bool = True,
+        enable_pedestrian_navigation: bool = True,
+    ) -> None:
         """Constructor method"""
 
 class OpticalFlowImage(SensorData):
@@ -2667,7 +2825,6 @@ class OpticalFlowImage(SensorData):
 
     # region Dunder Methods
     def __getitem__(self, pos: int) -> OpticalFlowPixel: ...
-
     def __iter__(self) -> Iterator[OpticalFlowPixel]:
         """Iterate over the `carla.OpticalFlowPixel `that form the image."""
 
@@ -2690,7 +2847,7 @@ class OpticalFlowPixel:
     # endregion
 
     # region Methods
-    def __init__(self, x: float = .0, y: float = .0) -> None:
+    def __init__(self, x: float = 0.0, y: float = 0.0) -> None:
         """Initializes the Optical Flow Pixel. Zero by default.
 
         Args:
@@ -2834,7 +2991,6 @@ class RadarMeasurement(SensorData):
 
     # region Dunder Methods
     def __getitem__(self, pos: int) -> RadarDetection: ...
-
     def __iter__(self) -> Iterator[RadarDetection]:
         """Iterate over the `carla.RadarDetection` retrieved as data."""
 
@@ -2853,6 +3009,7 @@ class Rotation:
     @property
     def pitch(self) -> float:
         """Y-axis rotation angle (degrees)."""
+
     @pitch.setter
     def pitch(self, value: float) -> None:
         """Set the Y-axis rotation angle (degrees)."""
@@ -2860,6 +3017,7 @@ class Rotation:
     @property
     def yaw(self) -> float:
         """Z-axis rotation angle (degrees)."""
+
     @yaw.setter
     def yaw(self, value: float) -> None:
         """Set the Z-axis rotation angle (degrees)."""
@@ -2867,13 +3025,14 @@ class Rotation:
     @property
     def roll(self) -> float:
         """X-axis rotation angle (degrees)."""
+
     @roll.setter
     def roll(self, value: float) -> None:
         """Set the X-axis rotation angle (degrees)."""
     # endregion
 
     # region Methods
-    def __init__(self, pitch: float = .0, yaw: float = .0, roll: float = .0) -> None:
+    def __init__(self, pitch: float = 0.0, yaw: float = 0.0, roll: float = 0.0) -> None:
         """+ Warning: The declaration order is different in CARLA (pitch,yaw,roll), and in the Unreal Engine Editor (roll,pitch,yaw). When working in a build from source, don't mix up the axes' rotations.
 
         Args:
@@ -2898,347 +3057,7 @@ class Rotation:
     def __eq__(self, other: Rotation, /) -> bool:
         """Returns `True` if both rotations represent the same orientation for every axis."""
 
-    def __ne__(self, other: Rotation, /) -> bool:
-        ...
-
-    def __str__(self) -> str: ...
-    # endregion
-
-class RssActorConstellationData:
-    """Data structure that is provided within the callback registered by RssSensor.register_actor_constellation_callback()."""
-
-    # region Instance Variables
-    @property
-    def ego_match_object(self) -> ad.map.match.Object:
-        """The ego map matched information."""
-
-    @property
-    def ego_route(self) -> ad.map.route.FullRoute:
-        """The ego route."""
-
-    @property
-    def ego_dynamics_on_route(self) -> RssEgoDynamicsOnRoute:
-        """Current ego vehicle dynamics regarding the route."""
-
-    @property
-    def other_match_object(self) -> ad.map.match.Object:
-        """The other object's map matched information. This is only valid if 'other_actor' is not 'None'."""
-
-    @property
-    def other_actor(self) -> Actor | None:
-        """
-        The other actor.
-        This is 'None' in case of query of default parameters or artificial objects of kind [ad.rss.world.ObjectType.ArtificialObject](https://intel.github.io/ad-rss-lib/doxygen/ad_rss/namespacead_1_1rss_1_1world.html#a6432f1ef8d0657b4f21ed5966aca1625)
-        with no dedicated 'carla.Actor' (as e.g. for the road boundaries at the moment; see RssSensor).
-        """
-
-    # region Dunder Methods
-    def __str__(self) -> str: ...
-    # endregion
-
-class RssActorConstellationResult:
-    """
-    Data structure that should be returned by the callback
-    registered by RssSensor.register_actor_constellation_callback().
-    """
-
-    # region Instance Variables
-    @property
-    def rss_calculation_mode(self) -> ad.rss.map.RssMode:
-        """The calculation mode to be applied with the actor."""
-    @rss_calculation_mode.setter
-    def rss_calculation_mode(self, value: ad.rss.map.RssMode) -> None:
-        """Setter for rss_calculation_mode property."""
-
-    @property
-    def restrict_speed_limit_mode(self) -> ad.rss.map.RssSceneCreation.RestrictSpeedLimitMode:
-        """The mode for restricting speed limit."""
-    @restrict_speed_limit_mode.setter
-    def restrict_speed_limit_mode(self, value: ad.rss.map.RssSceneCreation.RestrictSpeedLimitMode) -> None:
-        """Setter for restrict_speed_limit_mode property."""
-
-    @property
-    def ego_vehicle_dynamics(self) -> ad.rss.world.RssDynamics:
-        """The RSS dynamics to be applied for the ego vehicle."""
-    @ego_vehicle_dynamics.setter
-    def ego_vehicle_dynamics(self, value: ad.rss.world.RssDynamics) -> None:
-        """Setter for ego_vehicle_dynamics property."""
-
-    @property
-    def actor_object_type(self) -> ad.rss.world.ObjectType:
-        """The RSS object type to be used for the actor."""
-    @actor_object_type.setter
-    def actor_object_type(self, value: ad.rss.world.ObjectType) -> None:
-        """Setter for actor_object_type property."""
-
-    @property
-    def actor_dynamics(self) -> ad.rss.world.RssDynamics:
-        """The RSS dynamics to be applied for the actor."""
-    @actor_dynamics.setter
-    def actor_dynamics(self, value: ad.rss.world.RssDynamics) -> None:
-        """Setter for actor_dynamics property."""
-    # endregion
-
-    # region Dunder Methods
-    def __str__(self) -> str: ...
-    # endregion
-
-class RssEgoDynamicsOnRoute:
-    """
-    Part of the data contained inside a carla.RssResponse describing the state of the vehicle.
-    The parameters include its current dynamics, and how it is heading regarding the target route.
-    """
-
-    # region Instance Variables
-    @property
-    def ego_speed(self) -> ad.physics.Speed:
-        """The ego vehicle's speed."""
-
-    @property
-    def min_stopping_distance(self) -> ad.physics.Distance:
-        """The current minimum stopping distance."""
-
-    @property
-    def ego_center(self) -> ad.map.point.ENUPoint:
-        """The considered enu position of the ego vehicle."""
-
-    @property
-    def ego_heading(self) -> ad.map.point.ENUHeading:
-        """The considered heading of the ego vehicle."""
-
-    @property
-    def ego_center_within_route(self) -> bool:
-        """States if the ego vehicle's center is within the route."""
-
-    @property
-    def crossing_border(self) -> bool:
-        """States if the vehicle is already crossing one of the lane borders."""
-
-    @property
-    def route_heading(self) -> ad.map.point.ENUHeading:
-        """The considered heading of the route."""
-
-    @property
-    def route_nominal_center(self) -> ad.map.point.ENUPoint:
-        """The considered nominal center of the route."""
-
-    @property
-    def heading_diff(self) -> ad.map.point.ENUHeading:
-        """The considered heading diff towards the route."""
-
-    @property
-    def route_speed_lat(self) -> ad.physics.Speed:
-        """TThe ego vehicle's speed component lat regarding the route."""
-
-    @property
-    def route_speed_lon(self) -> ad.physics.Speed:
-        """The ego vehicle's speed component lon regarding the route."""
-
-    @property
-    def route_accel_lat(self) -> ad.physics.Acceleration:
-        """The ego vehicle's acceleration component lat regarding the route."""
-
-    @property
-    def route_accel_lon(self) -> ad.physics.Acceleration:
-        """The ego vehicle's acceleration component lon regarding the route."""
-
-    @property
-    def avg_route_accel_lat(self) -> ad.physics.Acceleration:
-        """The ego vehicle's acceleration component lat regarding the route smoothened by an average filter."""
-
-    @property
-    def avg_route_accel_lon(self) -> ad.physics.Acceleration:
-        """The ego acceleration component lon regarding the route smoothened by an average filter."""
-    # endregion
-
-    # region Dunder Methods
-    def __str__(self) -> str: ...
-    # endregion
-
-class RssLogLevel(int, _CarlaEnum):
-    """Enum declaration used in carla.RssSensor to set the log level."""
-
-    trace = 0
-    debug = 1
-    info = 2
-    warn = 3
-    err = 4
-    critical = 5
-    off = 6
-
-class RssResponse(SensorData):
-    """
-    Class that contains the output of a carla.RssSensor.
-    This is the result of the RSS calculations performed for the parent vehicle of the sensor.
-
-    A carla.RssRestrictor will use the data to modify the carla.VehicleControl of the vehicle.
-    """
-
-    # region Instance Variables
-    @property
-    def response_valid(self) -> bool:
-        """
-        States if the response is valid.
-        It is False if calculations failed or an exception occurred.
-        """
-
-    @property
-    def proper_response(self) -> ad.rss.state.ProperResponse:
-        """The proper response that the RSS calculated for the vehicle."""
-
-    @property
-    def rss_state_snapshot(self) -> ad.rss.state.RssStateSnapshot:
-        """Detailed RSS states at the current moment in time."""
-
-    @property
-    def ego_dynamics_on_route(self) -> RssEgoDynamicsOnRoute:
-        """Current ego vehicle dynamics regarding the route."""
-
-    @property
-    def world_model(self) -> ad.rss.world.WorldModel:
-        """World model used for calculations."""
-
-    @property
-    def situation_snapshot(self) -> ad.rss.situation.SituationSnapshot:
-        """Detailed RSS situations extracted from the world model."""
-    # endregion
-
-    # region Dunder Methods
-    def __str__(self) -> str: ...
-    # endregion
-
-class RssRestrictor:
-    """
-    These objects apply restrictions to a carla.VehicleControl.
-    It is part of the CARLA implementation of the C++ Library for Responsibility Sensitive Safety.
-    This class works hand in hand with a rss sensor, which provides the data of the restrictions to be applied.
-    """
-
-    # region Methods
-    def restrict_vehicle_control(self,
-                                 vehicle_control: VehicleControl,
-                                 proper_response: ad.rss.state.ProperResponse,
-                                 ego_dynamics_on_route: RssEgoDynamicsOnRoute,
-                                 vehicle_physics: VehiclePhysicsControl,
-                                 ) -> VehicleControl:
-        """
-        Applies the safety restrictions given by a carla.RssSensor to a carla.VehicleCon
-
-        Args:
-            vehicle_control (VehicleControl):
-                The input vehicle control to be restricted.
-            proper_response (ad.rss.state.ProperResponse):
-                Part of the response generated by the sensor. Contains restrictions to be applied to the acceleration of the vehicle.
-            ego_dynamics_on_route (RssEgoDynamicsOnRoute):
-                Tart of the response generated by the sensor. Contains dynamics and heading of the vehicle regarding its route.
-            vehicle_physics (VehiclePhysicsControl):
-                The current physics of the vehicle. Used to apply the restrictions properly.
-
-        Returns:
-            VehicleControl: The restricted vehicle control.
-
-        """
-    # endregion
-
-    # region Setters
-    def set_log_level(self, log_level: RssLogLevel):
-        """Sets the log level."""
-    # endregion
-
-class RssRoadBoundariesMode(int, _CarlaEnum):
-    """
-    Enum declaration used in carla.RssSensor to enable or disable the stay on road feature.
-    In summary, this feature considers the road boundaries as virtual objects.
-    The minimum safety distance check is applied to these virtual walls,
-    in order to make sure the vehicle does not drive off the road.
-    """
-
-    Off = 0
-    On = 1
-
-class RssSensor(Sensor):
-    """
-    This sensor works a bit differently than the rest. Take look at the [specific documentation](https://carla.readthedocs.io/en/latest/adv_rss/),
-    and the [rss sensor reference](https://carla.readthedocs.io/en/latest/ref_sensors/#rss-sensor) to gain full understanding of it.
-
-    The RSS sensor uses world information, and a [RSS library](https://github.com/intel/ad-rss-lib) to make safety checks on a vehicle.
-    The output retrieved by the sensor is a `carla.RssResponse`. This will be used
-    by a `carla.RssRestrictor` to modify a `carla.VehicleControl` before applying
-    it to a vehicle.
-    """
-
-    # region Instance Variables
-
-    @property
-    def ego_vehicle_dynamics(self) -> ad.rss.world.RssDynamics:
-        """
-        States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider
-        for the ego vehicle if no actor constellation callback is registered.
-        """
-
-    @property
-    def other_vehicle_dynamics(self) -> ad.rss.world.RssDynamics:
-        """
-        States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider
-        for the rest of vehicles if no actor constellation callback is registered.
-        """
-
-    @property
-    def pedestrian_dynamics(self) -> ad.rss.world.RssDynamics:
-        """
-        States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider
-        for pedestrians if no actor constellation callback is registered.
-        """
-
-    @property
-    def road_boundaries_mode(self) -> RssRoadBoundariesMode:
-        """Switches the stay on road feature. By default is Off."""
-
-    @road_boundaries_mode.setter
-    def road_boundaries_mode(self, value: RssRoadBoundariesMode) -> None:
-        ...
-
-    @property
-    def routing_targets(self) -> list[Transform]:  # declared as vector<carla.Transform>
-        """The current list of targets considered to route the vehicle. If no routing targets are defined, a route is generated at random."""
-
-    # region Methods
-    def append_routing_target(self, routing_target: Transform):
-        """
-        Appends a new target position to the current route of the vehicle.
-
-        Args:
-            routing_target (Transform): New target point for the route. Choose these after the intersections to force the route to take the desired turn.
-        """
-
-    def drop_route(self):
-        """
-        Discards the current route.
-
-        If there are targets remaining in `routing_targets`, creates a new route using those.
-        Otherwise, a new route is created at random.
-        """
-
-    def register_actor_constellation_callback(self, callback: Callable[[RssActorConstellationData], RssActorConstellationResult]):
-        """
-        Register a callback to customize a `carla.RssActorConstellationResult`.
-        By this callback the settings of RSS parameters are done per actor constellation
-        and the settings (ego_vehicle_dynamics, other_vehicle_dynamics and pedestrian_dynamics) have no effect.
-
-        Args:
-            callback (Callable): The function to be called whenever a RSS situation is about to be calculated.
-        """
-
-    def reset_routing_targets(self):
-        """Erases the targets that have been appended to the route."""
-
-    def set_log_level(self, log_level: RssLogLevel | int):
-        """Sets the log level."""
-    def set_map_log_level(self, log_level: RssLogLevel | int):
-        """Sets the map log level."""
-    # endregion
-
-    # region Dunder Methods
+    def __ne__(self, other: Rotation, /) -> bool: ...
     def __str__(self) -> str: ...
     # endregion
 
@@ -3249,12 +3068,15 @@ class SemanticLidarDetection:
     @property
     def point(self) -> Location:
         """[x,y,z] coordinates of the point (meters)."""
+
     @property
     def cos_inc_angle(self) -> float:
         """Cosine of the incident angle between the ray, and the normal of the hit object."""
+
     @property
     def object_idx(self) -> int:
         """ID of the actor hit by the ray."""
+
     @property
     def object_tag(self) -> int:
         """`Semantic tag` of the component hit by the ray."""
@@ -3274,9 +3096,11 @@ class SemanticLidarMeasurement(SensorData):
     @property
     def channels(self) -> int:
         """Number of lasers shot."""
+
     @property
     def horizontal_angle(self) -> float:
         """Horizontal angle the LIDAR is rotated at the time of the measurement (radians)."""
+
     @property
     def raw_data(self) -> bytes:
         """Received list of raw detection points. Each point consists of [x,y,z] coordinates plus the cosine of the incident angle, the index of the hit actor, and its semantic tag."""
@@ -3302,7 +3126,6 @@ class SemanticLidarMeasurement(SensorData):
 
     # region Dunder Methods
     def __getitem__(self, pos: int) -> SemanticLidarDetection: ...
-
     def __iter__(self) -> Iterator[SemanticLidarDetection]:
         """Iterate over the `carla.SemanticLidarDetection` retrieved as data."""
 
@@ -3362,7 +3185,9 @@ class Sensor(Actor):
             `callback (Callable[[SensorData], Any])`: The called function with one argument containing the sensor data.
         """
 
-    def listen_to_gbuffer(self, gbuffer_id: GBufferTextureID, callback: Callable[[__SensorData], Any]) -> None:
+    def listen_to_gbuffer(
+        self, gbuffer_id: GBufferTextureID, callback: Callable[[__SensorData], Any]
+    ) -> None:
         """
         The function the sensor will be calling to every time the desired GBuffer texture is received.
         This function needs for an argument containing an object type `carla.SensorData` to work with.
@@ -3430,6 +3255,7 @@ class TextureColor:
     @property
     def width(self) -> int:
         """X-coordinate size of the texture."""
+
     @property
     def height(self) -> int:
         """Y-coordinate size of the texture."""
@@ -3448,7 +3274,6 @@ class TextureColor:
     # region Getters
     def get(self, x: int, y: int) -> Color:
         """Get the `(x,y)` pixel data."""
-
     # endregion
 
     # region Setters
@@ -3469,6 +3294,7 @@ class TextureFloatColor:
     @property
     def width(self) -> int:
         """X-coordinate size of the texture."""
+
     @property
     def height(self) -> int:
         """Y-coordinate size of the texture."""
@@ -3477,7 +3303,6 @@ class TextureFloatColor:
     # region Getters
     def get(self, x: int, y: int) -> FloatColor:
         """Get the `(x,y)` pixel data."""
-
     # endregion
 
     # region Setters
@@ -3499,9 +3324,11 @@ class Timestamp:
     @property
     def frame(self) -> int:
         """The number of frames elapsed since the simulator was launched."""
+
     @property
     def elapsed_seconds(self) -> float:
         """Simulated seconds elapsed since the beginning of the current episode (seconds)."""
+
     @property
     def delta_seconds(self) -> float:
         """Simulated seconds elapsed since the previous frame (seconds)."""
@@ -3512,7 +3339,13 @@ class Timestamp:
     # endregion
 
     # region Methods
-    def __init__(self, frame: int, elapsed_seconds: float, delta_seconds: float, platform_timestamp: float) -> None: ...
+    def __init__(
+        self,
+        frame: int,
+        elapsed_seconds: float,
+        delta_seconds: float,
+        platform_timestamp: float,
+    ) -> None: ...
     # endregion
 
     # region Dunder Methods
@@ -3663,7 +3496,9 @@ class TrafficManager:
             enable (bool): `True` is default and enables lane changes. `False` will disable them.
         """
 
-    def collision_detection(self, reference_actor: Actor, other_actor: Actor, detect_collision: bool):
+    def collision_detection(
+        self, reference_actor: Actor, other_actor: Actor, detect_collision: bool
+    ):
         """Turns on/off collisions between a vehicle and another specific actor. In order to ignore all other vehicles, traffic lights or walkers, use the specific `ignore` methods described in this same section.
 
         Args:
@@ -3817,7 +3652,11 @@ class TrafficManager:
     # endregion
 
     # region Setters
-    def set_boundaries_respawn_dormant_vehicles(self, lower_bound: Annotated[float, ">=25.0"], upper_bound: Annotated[float, "<= WorldSettings.actor_active_distance"]) -> None:
+    def set_boundaries_respawn_dormant_vehicles(
+        self,
+        lower_bound: Annotated[float, ">=25.0"],
+        upper_bound: Annotated[float, "<= WorldSettings.actor_active_distance"],
+    ) -> None:
         """Sets the upper and lower boundaries for dormant actors to be respawned near the hero vehicle.
 
         + Warning: The `upper_bound` cannot be higher than the `actor_active_distance`. The `lower_bound` cannot be less than `25`.
@@ -3923,21 +3762,23 @@ class Transform:
     @property
     def location(self) -> Location:
         """Describes a point in the coordinate system."""
-    @location.setter
-    def location(self, value: Location | Vector3D) -> None:
-        ...
 
+    @location.setter
+    def location(self, value: Location | Vector3D) -> None: ...
     @property
     def rotation(self) -> Rotation:
         """Describes a rotation for an object according to Unreal Engine's axis system (degrees (pitch, yaw, roll))."""
+
     @rotation.setter
-    def rotation(self, value: Rotation | Vector3D) -> None:
-        ...
+    def rotation(self, value: Rotation | Vector3D) -> None: ...
     # endregion
 
     # region Methods
-    def __init__(self, location: Location = Location(0, 0, 0), rotation: Rotation = Rotation(0, 0, 0)) -> None: ...
-
+    def __init__(
+        self,
+        location: Location = Location(0, 0, 0),
+        rotation: Rotation = Rotation(0, 0, 0),
+    ) -> None: ...
     def transform(self, in_point: Vector3D) -> Vector3D:
         """
         Translates a 3D point from local to global coordinates using the current
@@ -4010,6 +3851,7 @@ class Vector2D:
     @property
     def x(self) -> float:
         """X-axis value."""
+
     @property
     def y(self) -> float:
         """Y-axis value."""
@@ -4017,7 +3859,6 @@ class Vector2D:
 
     # region Methods
     def __init__(self, x: float = 0.0, y: float = 0.0) -> None: ...
-
     def length(self) -> float:
         """Computes the length of the vector."""
 
@@ -4030,12 +3871,10 @@ class Vector2D:
 
     # region Dunder Methods
     def __add__(self, other: Vector2D) -> Vector2D: ...
-
     def __eq__(self, other: Vector2D) -> bool:
         """Returns `True` if values for every axis are equal."""
 
     def __mul__(self, other: float) -> float: ...
-
     def __ne__(self, other: Vector2D) -> bool:
         """Returns `True` if the value for any axis is different."""
 
@@ -4055,28 +3894,25 @@ class Vector3D:
     @property
     def x(self) -> float:
         """X-axis value."""
-    @x.setter
-    def x(self, value: float) -> None:
-        ...
 
+    @x.setter
+    def x(self, value: float) -> None: ...
     @property
     def y(self) -> float:
         """Y-axis value."""
-    @y.setter
-    def y(self, value: float) -> None:
-        ...
 
+    @y.setter
+    def y(self, value: float) -> None: ...
     @property
     def z(self) -> float:
         """Z-axis value."""
+
     @z.setter
-    def z(self, value: float) -> None:
-        ...
+    def z(self, value: float) -> None: ...
     # endregion
 
     # region Methods
     def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0) -> None: ...
-
     def cross(self, vector: Vector3D) -> Vector3D:
         """Computes the cross product between two vectors."""
 
@@ -4165,7 +4001,15 @@ class Vehicle(Actor):
             `simfile_path (str)`: Path to the `.simfile` file with the parameters of the simulation.
         """
 
-    def enable_chrono_physics(self, max_substeps: int, max_substep_delta_time: int, vehicle_json: str, powertrain_json: str, tire_json: str, base_json_path: str):
+    def enable_chrono_physics(
+        self,
+        max_substeps: int,
+        max_substep_delta_time: int,
+        vehicle_json: str,
+        powertrain_json: str,
+        tire_json: str,
+        base_json_path: str,
+    ):
         """Enables Chrono physics on a spawned vehicle.
 
         + Note: Ensure that you have started the CARLA server with the ARGS="--chrono" flag. You will not be able to use Chrono physics without this flag set.
@@ -4258,7 +4102,9 @@ class Vehicle(Actor):
         + Getter: `carla.Vehicle.get_light_state`
         """
 
-    def set_wheel_steer_direction(self, wheel_location: VehicleWheelLocation, angle_in_deg: float):
+    def set_wheel_steer_direction(
+        self, wheel_location: VehicleWheelLocation, angle_in_deg: float
+    ):
         """Sets the angle of a vehicle's wheel visually.
 
         + Warning: Does not affect the physics of the vehicle.
@@ -4276,6 +4122,7 @@ class VehicleAckermannControl:
     @property
     def steer(self) -> float:
         """Desired steer (rad). Positive value is to the right. Default is 0.0."""
+
     @property
     def steer_speed(self) -> float:
         """Steering velocity (rad/s). Zero steering angle velocity means change the steering angle as quickly as possible. Default is 0.0."""
@@ -4294,7 +4141,14 @@ class VehicleAckermannControl:
     # endregion
 
     # region Methods
-    def __init__(self, steer: float = 0.0, steer_speed: float = 0.0, speed: float = 0.0, acceleration: float = 0.0, jerk: float = 0.0) -> None: ...
+    def __init__(
+        self,
+        steer: float = 0.0,
+        steer_speed: float = 0.0,
+        speed: float = 0.0,
+        acceleration: float = 0.0,
+        jerk: float = 0.0,
+    ) -> None: ...
     # endregion
 
     # region Dunder Methods
@@ -4312,48 +4166,58 @@ class VehicleControl:
     @property
     def throttle(self) -> float:
         """A scalar value to control the vehicle throttle [0.0, 1.0]. Default is 0.0."""
+
     @throttle.setter
     def throttle(self, value: float) -> None: ...
-
     @property
     def steer(self) -> float:
         """A scalar value to control the vehicle steering [-1.0, 1.0]. Default is 0.0."""
+
     @steer.setter
     def steer(self, value: float) -> None: ...
-
     @property
     def brake(self) -> float:
         """A scalar value to control the vehicle brake [0.0, 1.0]. Default is 0.0."""
+
     @brake.setter
     def brake(self, value: float) -> None: ...
-
     @property
     def hand_brake(self) -> bool:
         """Determines whether hand brake will be used. Default is `False`."""
+
     @hand_brake.setter
     def hand_brake(self, value: bool) -> None: ...
-
     @property
     def reverse(self) -> bool:
         """Determines whether the vehicle will move backwards. Default is `False`."""
+
     @reverse.setter
     def reverse(self, value: bool) -> None: ...
-
     @property
     def manual_gear_shift(self) -> bool:
         """Determines whether the vehicle will be controlled by changing gears manually. Default is `False`."""
+
     @manual_gear_shift.setter
     def manual_gear_shift(self, value: bool) -> None: ...
-
     @property
     def gear(self) -> int:
         """States which gear is the vehicle running on."""
+
     @gear.setter
-    def gear(self, value: int) -> None:  ...
+    def gear(self, value: int) -> None: ...
     # endregion
 
     # region Methods
-    def __init__(self, throttle: float = 0.0, steer: float = 0.0, brake: float = 0.0, hand_brake: bool = False, reverse: bool = False, manual_gear_shift: bool = False, gear: int = 0) -> None:
+    def __init__(
+        self,
+        throttle: float = 0.0,
+        steer: float = 0.0,
+        brake: float = 0.0,
+        hand_brake: bool = False,
+        reverse: bool = False,
+        manual_gear_shift: bool = False,
+        gear: int = 0,
+    ) -> None:
         """
         Args:
             `throttle (float, optional)`: Scalar value between [0.0,1.0]. Defaults to 0.0.\n
@@ -4431,6 +4295,7 @@ class VehiclePhysicsControl:
     @property
     def torque_curve(self) -> list[Vector2D]:
         """Curve that indicates the torque measured in Nm for a specific RPM of the vehicle's engine."""
+
     @property
     def max_rpm(self) -> float:
         """The maximum RPM of the vehicle's engine."""
@@ -4490,33 +4355,41 @@ class VehiclePhysicsControl:
     @property
     def use_sweep_wheel_collision(self) -> bool:
         """Enable the use of sweep for wheel collision. By default, it is disabled and it uses a simple raycast from the axis to the floor for each wheel. This option provides a better collision model in which the full volume of the wheel is checked against collisions."""
+
     @use_sweep_wheel_collision.setter
     def use_sweep_wheel_collision(self, value: bool) -> None: ...
-
     @property
     def wheels(self) -> list[WheelPhysicsControl]:
         """List of wheel physics objects. This list should have 4 elements, where index 0 corresponds to the front left wheel, index 1 corresponds to the front right wheel, index 2 corresponds to the back left wheel and index 3 corresponds to the back right wheel. For 2 wheeled vehicles, set the same values for both front and back wheels."""
     # endregion
 
     # region Methods
-    def __init__(self,
-                 torque_curve: list[Vector2D | Annotated[Sequence[float], "length 2"]] = [[0.0, 500.0], [5000.0, 500.0]],
-                 max_rpm: float = 5000.0,
-                 moi: float = 1.0,
-                 damping_rate_full_throttle: float = 0.15,
-                 damping_rate_zero_throttle_clutch_engaged: float = 2.0,
-                 damping_rate_zero_throttle_clutch_disengaged: float = 0.35,
-                 use_gear_autobox: bool = True,
-                 gear_switch_time: float = 0.5,
-                 clutch_strength: float = 10.0,
-                 final_ratio: float = 4.0,
-                 forward_gears: list[GearPhysicsControl] = [],
-                 drag_coefficient: float = 0.3,
-                 center_of_mass: Location = Location(0.0, 0.0, 0.0),
-                 steering_curve: list[Vector2D | Annotated[Sequence[float], "length 2"]] = [[0.0, 1.0], [10.0, 0.5]],
-                 wheels=[],
-                 use_sweep_wheel_collision: bool = False,
-                 mass: float = 1000.0) -> None:
+    def __init__(
+        self,
+        torque_curve: list[Vector2D | Annotated[Sequence[float], "length 2"]] = [
+            [0.0, 500.0],
+            [5000.0, 500.0],
+        ],
+        max_rpm: float = 5000.0,
+        moi: float = 1.0,
+        damping_rate_full_throttle: float = 0.15,
+        damping_rate_zero_throttle_clutch_engaged: float = 2.0,
+        damping_rate_zero_throttle_clutch_disengaged: float = 0.35,
+        use_gear_autobox: bool = True,
+        gear_switch_time: float = 0.5,
+        clutch_strength: float = 10.0,
+        final_ratio: float = 4.0,
+        forward_gears: list[GearPhysicsControl] = [],
+        drag_coefficient: float = 0.3,
+        center_of_mass: Location = Location(0.0, 0.0, 0.0),
+        steering_curve: list[Vector2D | Annotated[Sequence[float], "length 2"]] = [
+            [0.0, 1.0],
+            [10.0, 0.5],
+        ],
+        wheels=[],
+        use_sweep_wheel_collision: bool = False,
+        mass: float = 1000.0,
+    ) -> None:
         """VehiclePhysicsControl constructor.
 
         Args:
@@ -4608,7 +4481,6 @@ class Walker(Actor):
 
     def get_pose_from_animation(self):
         """Make a copy of the current animation frame as the custom pose. Initially the custom pose is the neutral pedestrian pose."""
-
     # endregion
 
     # region Setters
@@ -4719,16 +4591,23 @@ class WalkerControl:
     @property
     def direction(self) -> Vector3D:
         """Vector using global coordinates that will correspond to the direction of the walker."""
+
     @property
     def speed(self) -> float:
         """A scalar value to control the walker's speed (m/s)."""
+
     @property
     def jump(self) -> bool:
         """If `True`, the walker will perform a jump."""
     # endregion
 
     # region Methods
-    def __init__(self, direction: Vector3D = Vector3D(1.0, 0.0, 0.0), speed: float = 0.0, jump: bool = False) -> None:
+    def __init__(
+        self,
+        direction: Vector3D = Vector3D(1.0, 0.0, 0.0),
+        speed: float = 0.0,
+        jump: bool = False,
+    ) -> None:
         """This class defines specific directions that can be commanded to a `carla.Walker` to control it via script.
 
         Args:
@@ -4853,7 +4732,9 @@ class Waypoint:
     def get_junction(self) -> Junction:
         """If the waypoint belongs to a junction this method returns the associated junction object. Otherwise returns `null`."""
 
-    def get_landmarks(self, distance: float, stop_at_junction: bool = False) -> list[Landmark]:
+    def get_landmarks(
+        self, distance: float, stop_at_junction: bool = False
+    ) -> list[Landmark]:
         """Returns a list of landmarks in the road from the current waypoint until the specified distance.
 
         Args:
@@ -4861,7 +4742,9 @@ class Waypoint:
             `stop_at_junction (bool, optional)`: Enables or disables the landmark search through junctions. Defaults to False.
         """
 
-    def get_landmarks_of_type(self, distance: float, type: str, stop_at_junction: bool = False) -> list[Landmark]:
+    def get_landmarks_of_type(
+        self, distance: float, type: str, stop_at_junction: bool = False
+    ) -> list[Landmark]:
         """Returns a list of landmarks in the road of a specified type from the current waypoint until the specified distance.
 
         Args:
@@ -4901,30 +4784,39 @@ class WeatherParameters:
     @property
     def cloudiness(self) -> float:
         """Values range from 0 to 100, being 0 a clear sky and 100 one completely covered with clouds."""
+
     @property
     def precipitation(self) -> float:
         """Rain intensity values range from 0 to 100, being 0 none at all and 100 a heavy rain."""
+
     @property
     def precipitation_deposits(self) -> float:
         """Determines the creation of puddles. Values range from 0 to 100, being 0 none at all and 100 a road completely capped with water. Puddles are created with static noise, meaning that they will always appear at the same locations."""
+
     @property
     def wind_intensity(self) -> float:
         """Controls the strength of the wind with values from 0, no wind at all, to 100, a strong wind. The wind does affect rain direction and leaves from trees, so this value is restricted to avoid animation issues."""
+
     @property
     def sun_azimuth_angle(self) -> float:
         """The azimuth angle of the sun. Values range from 0 to 360. Zero is an origin point in a sphere determined by Unreal Engine (degrees)."""
+
     @property
     def sun_altitude_angle(self) -> float:
         """Altitude angle of the sun. Values range from -90 to 90 corresponding to midnight and midday each (degrees)."""
+
     @property
     def fog_density(self) -> float:
         """Fog concentration or thickness. It only affects the RGB camera sensor. Values range from 0 to 100."""
+
     @property
     def fog_distance(self) -> float:
         """Fog start distance. Values range from 0 to infinite (meters)."""
+
     @property
     def wetness(self) -> float:
         """Wetness intensity. It only affects the RGB camera sensor. Values range from 0 to 100."""
+
     @property
     def fog_falloff(self) -> float:
         """Density of the fog (as in specific mass) from 0 to infinity. The bigger the value, the more dense and heavy it will be, and the fog will reach smaller heights. Corresponds to `Fog Height Falloff` in the UE docs.
@@ -4934,35 +4826,41 @@ class WeatherParameters:
 
         For values greater than 5, the air will be so dense that it will be compressed on ground level.
         """
+
     @property
     def scattering_intensity(self) -> float:
         """Controls how much the light will contribute to volumetric fog. When set to 0, there is no contribution."""
+
     @property
     def mie_scattering_scale(self) -> float:
         """Controls interaction of light with large particles like pollen or air pollution resulting in a hazy sky with halos around the light sources. When set to 0, there is no contribution."""
+
     @property
     def rayleigh_scattering_scale(self) -> float:
         """Controls interaction of light with small particles like air molecules. Dependent on light wavelength, resulting in a blue sky in the day or red sky in the evening."""
+
     @property
     def dust_storm(self) -> float:
         """Determines the strength of the dust storm weather. Values range from 0 to 100."""
     # endregion
 
     # region Methods
-    def __init__(self,
-                 cloudiness: float = 0.0,
-                 precipitation: float = 0.0,
-                 precipitation_deposits: float = 0.0,
-                 wind_intensity: float = 0.0,
-                 sun_azimuth_angle: float = 0.0,
-                 sun_altitude_angle: float = 0.0,
-                 fog_density: float = 0.0,
-                 fog_distance: float = 0.0,
-                 wetness: float = 0.0,
-                 fog_falloff: float = 0.0,
-                 scattering_intensity: float = 0.0,
-                 mie_scattering_scale: float = 0.0,
-                 rayleigh_scattering_scale: float = 0.0331) -> None:
+    def __init__(
+        self,
+        cloudiness: float = 0.0,
+        precipitation: float = 0.0,
+        precipitation_deposits: float = 0.0,
+        wind_intensity: float = 0.0,
+        sun_azimuth_angle: float = 0.0,
+        sun_altitude_angle: float = 0.0,
+        fog_density: float = 0.0,
+        fog_distance: float = 0.0,
+        wetness: float = 0.0,
+        fog_falloff: float = 0.0,
+        scattering_intensity: float = 0.0,
+        mie_scattering_scale: float = 0.0,
+        rayleigh_scattering_scale: float = 0.0331,
+    ) -> None:
         """Method to initialize an object defining weather conditions. This class has some presets for different noon and sunset conditions listed in a note below.
 
         + Note: ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset.
@@ -4997,44 +4895,55 @@ class WheelPhysicsControl:
     @property
     def tire_friction(self) -> float:
         """A scalar value that indicates the friction of the wheel."""
+
     @property
     def damping_rate(self) -> float:
         """Damping rate of the wheel."""
+
     @property
     def max_steer_angle(self) -> float:
         """Maximum angle that the wheel can steer (degrees)."""
+
     @property
     def radius(self) -> float:
         """Radius of the wheel (centimeters)."""
+
     @property
     def max_brake_torque(self) -> float:
         """Maximum brake torque (N*m)."""
+
     @property
     def max_handbrake_torque(self) -> float:
         """Maximum handbrake torque."""
+
     @property
     def position(self) -> Vector3D:
         """World position of the wheel. This is a read-only parameter."""
+
     @property
     def long_stiff_value(self) -> float:
         """Tire longitudinal stiffness per unit gravitational acceleration. Each vehicle has a custom value (kg/rad)."""
+
     @property
     def lat_stiff_max_load(self) -> float:
         """Maximum normalized tire load at which the tire can deliver no more lateral stiffness no matter how much extra load is applied to the tire. Each vehicle has a custom value."""
+
     @property
     def lat_stiff_value(self) -> float:
         """Maximum stiffness per unit of lateral slip. Each vehicle has a custom value."""
     # endregion
 
     # region Methods
-    def __init__(self,
-                 tire_friction: float = 2.0,
-                 damping_rate: float = 0.25,
-                 max_steer_angle: float = 70.0,
-                 radius: float = 30.0,
-                 max_brake_torque: float = 1500.0,
-                 max_handbrake_torque: float = 3000.0,
-                 position: Vector3D = Vector3D(0.0, 0.0, 0.0)) -> None: ...
+    def __init__(
+        self,
+        tire_friction: float = 2.0,
+        damping_rate: float = 0.25,
+        max_steer_angle: float = 70.0,
+        radius: float = 30.0,
+        max_brake_torque: float = 1500.0,
+        max_handbrake_torque: float = 3000.0,
+        position: Vector3D = Vector3D(0.0, 0.0, 0.0),
+    ) -> None: ...
     # endregion
 
     # region Dunder Methods
@@ -5050,22 +4959,43 @@ class World:
     @property
     def id(self) -> int:
         """The ID of the episode associated with this world. Episodes are different sessions of a simulation. These change everytime a world is disabled or reloaded. Keeping track is useful to avoid possible issues."""
+
     @property
     def debug(self) -> DebugHelper:
         """Responsible for creating different shapes for debugging. Take a look at its class to learn more about it."""
     # endregion
 
     # region Methods
-    def apply_color_texture_to_object(self, object_name: str, material_parameter: MaterialParameter, texture: TextureColor):
+    def apply_color_texture_to_object(
+        self,
+        object_name: str,
+        material_parameter: MaterialParameter,
+        texture: TextureColor,
+    ):
         """Applies a `texture` object in the field corresponding to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to `object_name`."""
 
-    def apply_color_texture_to_objects(self, objects_name_list: list[str], material_parameter: MaterialParameter, texture: TextureColor):
+    def apply_color_texture_to_objects(
+        self,
+        objects_name_list: list[str],
+        material_parameter: MaterialParameter,
+        texture: TextureColor,
+    ):
         """Applies a `texture` object in the field corresponding to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`."""
 
-    def apply_float_color_texture_to_object(self, object_name: str, material_parameter: MaterialParameter, texture: TextureFloatColor):
+    def apply_float_color_texture_to_object(
+        self,
+        object_name: str,
+        material_parameter: MaterialParameter,
+        texture: TextureFloatColor,
+    ):
         """Applies a `texture` object in the field corresponding to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`."""
 
-    def apply_float_color_texture_to_objects(self, objects_name_list: list[str], material_parameter: MaterialParameter, texture: TextureFloatColor):
+    def apply_float_color_texture_to_objects(
+        self,
+        objects_name_list: list[str],
+        material_parameter: MaterialParameter,
+        texture: TextureFloatColor,
+    ):
         """Applies a `texture` object in the field corresponding to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`."""
 
     def apply_settings(self, world_settings: WorldSettings) -> int:
@@ -5075,13 +5005,29 @@ class World:
         https://carla.readthedocs.io/en/latest/adv_traffic_manager/#synchronous-mode
         """
 
-    def apply_textures_to_object(self, object_name: str, diffuse_texture: TextureColor, emissive_texture: TextureFloatColor, normal_texture: TextureFloatColor, ao_roughness_metallic_emissive_texture: TextureFloatColor):
+    def apply_textures_to_object(
+        self,
+        object_name: str,
+        diffuse_texture: TextureColor,
+        emissive_texture: TextureFloatColor,
+        normal_texture: TextureFloatColor,
+        ao_roughness_metallic_emissive_texture: TextureFloatColor,
+    ):
         """Applies all texture fields in `carla.MaterialParameter` to the object `object_name`. Empty textures here will not be applied."""
 
-    def apply_textures_to_objects(self, objects_name_list: list[str], diffuse_texture: TextureColor, emissive_texture: TextureFloatColor, normal_texture: TextureFloatColor, ao_roughness_metallic_emissive_texture: TextureFloatColor):
+    def apply_textures_to_objects(
+        self,
+        objects_name_list: list[str],
+        diffuse_texture: TextureColor,
+        emissive_texture: TextureFloatColor,
+        normal_texture: TextureFloatColor,
+        ao_roughness_metallic_emissive_texture: TextureFloatColor,
+    ):
         """Applies all texture fields in `carla.MaterialParameter` to all objects in `objects_name_list`. Empty textures here will not be applied."""
 
-    def cast_ray(self, initial_location: Location, final_location: Location) -> list[LabelledPoint]:
+    def cast_ray(
+        self, initial_location: Location, final_location: Location
+    ) -> list[LabelledPoint]:
         """Casts a ray from the specified initial_location to final_location. The function then detects all geometries intersecting the ray and returns a list of `carla.LabelledPoint` in order.
 
         Args:
@@ -5100,7 +5046,9 @@ class World:
     def freeze_all_traffic_lights(self, frozen: bool):
         """Freezes or unfreezes all traffic lights in the scene. Frozen traffic lights can be modified by the user but the time will not update them until unfrozen."""
 
-    def ground_projection(self, location: Location, search_distance: float) -> LabelledPoint:
+    def ground_projection(
+        self, location: Location, search_distance: float
+    ) -> LabelledPoint:
         """Projects the specified point downwards in the scene. The functions casts a ray from location in the direction (0,0,-1) (downwards) and returns a `carla.LabelledPoint` object with the first geometry this ray intersects (usually the ground). If no geometry is found in the search_distance range the function returns `None`.
 
         Args:
@@ -5126,7 +5074,9 @@ class World:
             callback (Callable[[WorldSnapshot], Any]): Function with a `snapshot` as compulsory parameter that will be called when the client receives a tick.
         """
 
-    def project_point(self, location: Location, direction: Vector3D, search_distance: float) -> LabelledPoint:
+    def project_point(
+        self, location: Location, direction: Vector3D, search_distance: float
+    ) -> LabelledPoint:
         """Projects the specified point to the desired direction in the scene. The functions casts a ray from location in a direction and returns a carla.Labelled object with the first geometry this ray intersects. If no geometry is found in the search_distance range the function returns `None`.
 
         Args:
@@ -5148,7 +5098,13 @@ class World:
     def reset_all_traffic_lights(self):
         """Resets the cycle of all traffic lights in the map to the initial state."""
 
-    def spawn_actor(self, blueprint: ActorBlueprint, transform: Transform, attach_to: Optional[Actor] = None, attachment_type: AttachmentType = AttachmentType.Rigid) -> Actor:
+    def spawn_actor(
+        self,
+        blueprint: ActorBlueprint,
+        transform: Transform,
+        attach_to: Optional[Actor] = None,
+        attachment_type: AttachmentType = AttachmentType.Rigid,
+    ) -> Actor:
         """The method will create, return and spawn an actor into the world. The actor will need an available blueprint to be created and a transform (location and rotation). It can also be attached to a parent with a certain attachment type.
 
         Args:
@@ -5173,7 +5129,13 @@ class World:
             `int`
         """
 
-    def try_spawn_actor(self, blueprint: ActorBlueprint, transform: Transform, attach_to: Optional[Actor] = None, attachment_type: AttachmentType = AttachmentType.Rigid) -> Actor:
+    def try_spawn_actor(
+        self,
+        blueprint: ActorBlueprint,
+        transform: Transform,
+        attach_to: Optional[Actor] = None,
+        attachment_type: AttachmentType = AttachmentType.Rigid,
+    ) -> Actor:
         """Same as `spawn_actor()` but returns `None` on failure instead of throwing an exception.
 
         Args:
@@ -5227,14 +5189,18 @@ class World:
     def get_blueprint_library(self) -> BlueprintLibrary:
         """Returns a list of actor blueprints available to ease the spawn of these into the world."""
 
-    def get_environment_objects(self, object_type: CityObjectLabel = CityObjectLabel.Any) -> list[EnvironmentObject]:
+    def get_environment_objects(
+        self, object_type: CityObjectLabel = CityObjectLabel.Any
+    ) -> list[EnvironmentObject]:
         """Returns a list of EnvironmentObject with the requested semantic tag. The method returns all the EnvironmentObjects in the level by default, but the query can be filtered by semantic tags with the argument `object_type`.
 
         Args:
             `object_type (CityObjectLabel, optional)`: Semantic tag of the EnvironmentObjects that are returned. Defaults to CityObjectLabel.Any.
         """
 
-    def get_level_bbs(self, actor_type: CityObjectLabel = CityObjectLabel.Any) -> list[BoundingBox]:
+    def get_level_bbs(
+        self, actor_type: CityObjectLabel = CityObjectLabel.Any
+    ) -> list[BoundingBox]:
         """Returns an array of bounding boxes with location and rotation in world space. The method returns all the bounding boxes in the level by default, but the query can be filtered by semantic tags with the argument `actor_type`.
 
         Args:
@@ -5276,14 +5242,18 @@ class World:
             `landmark (Landmark)`: The landmark object describing a traffic light.
         """
 
-    def get_traffic_light_from_opendrive_id(self, traffic_light_id: str) -> TrafficLight:
+    def get_traffic_light_from_opendrive_id(
+        self, traffic_light_id: str
+    ) -> TrafficLight:
         """Returns the traffic light actor corresponding to the indicated OpenDRIVE id.
 
         Args:
             `traffic_light_id (str)`: The OpenDRIVE id.
         """
 
-    def get_traffic_lights_from_waypoint(self, waypoint: Waypoint, distance: float) -> list[TrafficLight]:
+    def get_traffic_lights_from_waypoint(
+        self, waypoint: Waypoint, distance: float
+    ) -> list[TrafficLight]:
         """This function performs a search along the road in front of the specified waypoint and returns a list of traffic light actors found in the specified search distance.
 
         Args:
@@ -5356,90 +5326,82 @@ class WorldSettings:
     @property
     def synchronous_mode(self) -> bool:
         """States the synchrony between client and server. When set to true, the server will wait for a client tick in order to move forward. It is `False` by default."""
-    @synchronous_mode.setter
-    def synchronous_mode(self, value: bool) -> None:
-        ...
 
+    @synchronous_mode.setter
+    def synchronous_mode(self, value: bool) -> None: ...
     @property
     def no_rendering_mode(self) -> bool:
         """When enabled, the simulation will run no rendering at all. This is mainly used to avoid overhead during heavy traffic simulations. It is `False` by default."""
-    @no_rendering_mode.setter
-    def no_rendering_mode(self, value: bool) -> None:
-        ...
 
+    @no_rendering_mode.setter
+    def no_rendering_mode(self, value: bool) -> None: ...
     @property
     def fixed_delta_seconds(self) -> float | None:
         """Ensures that the time elapsed between two steps of the simulation is fixed. Set this to `0.0` to work with a variable time-step, as happens by default."""
-    @fixed_delta_seconds.setter
-    def fixed_delta_seconds(self, value: float | None) -> None:
-        ...
 
+    @fixed_delta_seconds.setter
+    def fixed_delta_seconds(self, value: float | None) -> None: ...
     @property
     def substepping(self) -> bool:
         """Enable the physics substepping. This option allows computing some physics substeps between two render frames. If synchronous mode is set, the number of substeps and its time interval are fixed and computed are so they fulfilled the requirements of `carla.WorldSettings.max_substep` and `carla.WorldSettings.max_substep_delta_time`. These last two parameters need to be compatible with c`arla.WorldSettings.fixed_delta_seconds`. Enabled by default."""
-    @substepping.setter
-    def substepping(self, value: bool) -> None:
-        ...
 
+    @substepping.setter
+    def substepping(self, value: bool) -> None: ...
     @property
     def max_substep_delta_time(self) -> float:
         """Maximum delta time of the substeps. If the carla.`WorldSettings.max_substep` is high enough, the substep delta time would be always below or equal to this value. By default, the value is set to 0.01."""
-    @max_substep_delta_time.setter
-    def max_substep_delta_time(self, value: float) -> None:
-        ...
 
+    @max_substep_delta_time.setter
+    def max_substep_delta_time(self, value: float) -> None: ...
     @property
     def max_substeps(self) -> int:
         """The maximum number of physics substepping that are allowed. By default, the value is set to 10."""
-    @max_substeps.setter
-    def max_substeps(self, value: int) -> None:
-        ...
 
+    @max_substeps.setter
+    def max_substeps(self, value: int) -> None: ...
     @property
     def max_culling_distance(self) -> float:
         """Configure the max draw distance for each mesh of the level."""
-    @max_culling_distance.setter
-    def max_culling_distance(self, value: float) -> None:
-        ...
 
+    @max_culling_distance.setter
+    def max_culling_distance(self, value: float) -> None: ...
     @property
     def deterministic_ragdolls(self) -> bool:
         """Defines wether to use deterministic physics for pedestrian death animations or physical ragdoll simulation. When enabled, pedestrians have less realistic death animation but ensures determinism. When disabled, pedestrians are simulated as ragdolls with more realistic simulation and collision but no determinsm can be ensured."""
-    @deterministic_ragdolls.setter
-    def deterministic_ragdolls(self, value: bool) -> None:
-        ...
 
+    @deterministic_ragdolls.setter
+    def deterministic_ragdolls(self, value: bool) -> None: ...
     @property
     def tile_stream_distance(self) -> bool:
         """Used for large maps only. Configures the maximum distance from the hero vehicle to stream tiled maps. Regions of the map within this range will be visible (and capable of simulating physics). Regions outside this region will not be loaded."""
-    @tile_stream_distance.setter
-    def tile_stream_distance(self, value: bool) -> None:
-        ...
 
+    @tile_stream_distance.setter
+    def tile_stream_distance(self, value: bool) -> None: ...
     @property
     def actor_active_distance(self) -> float:
         """Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant. Actors within this range will be active, and actors outside will become dormant."""
-    @actor_active_distance.setter
-    def actor_active_distance(self, value: float) -> None:
-        ...
 
+    @actor_active_distance.setter
+    def actor_active_distance(self, value: float) -> None: ...
     @property
     def spectator_as_ego(self) -> float:
         """Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. By default, the spectator will provoke loading of neighboring tiles in the absence of an ego actor. This might be inconvenient for applications that immediately spawn an ego actor."""
+
     @spectator_as_ego.setter
-    def spectator_as_ego(self, value: float) -> None:
-        ...
+    def spectator_as_ego(self, value: float) -> None: ...
 
     # region Methods
-    def __init__(self,
-                 synchronous_mode: bool = False,
-                 no_rendering_mode: bool = False,
-                 fixed_delta_seconds: float = 0.0,
-                 max_culling_distance: float = 0.0,
-                 deterministic_ragdolls: bool = False,
-                 tile_stream_distance: int = 3000,
-                 actor_active_distance: int = 2000,
-                 spectator_as_ego: bool = True) -> None:
+    def __init__(
+        self,
+        synchronous_mode: bool = False,
+        no_rendering_mode: bool = False,
+        fixed_delta_seconds: float = 0.0,
+        max_culling_distance: float = 0.0,
+        deterministic_ragdolls: bool = False,
+        tile_stream_distance: int = 3000,
+        actor_active_distance: int = 2000,
+        spectator_as_ego: bool = True,
+    ) -> None:
         """Creates an object containing desired settings that could later be applied through `carla.World` and its method `apply_settings()`.
 
         Args:
@@ -5474,9 +5436,11 @@ class WorldSnapshot:
     @property
     def id(self) -> int:
         """A value unique for every snapshot to differentiate them."""
+
     @property
     def frame(self) -> int:
         """Simulation frame in which the snapshot was taken."""
+
     @property
     def timestamp(self) -> Timestamp:
         """Precise moment in time when snapshot was taken. This class works in seconds as given by the operative system (seconds)."""

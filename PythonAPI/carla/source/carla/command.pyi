@@ -2,6 +2,7 @@
 Submodule with commands that can be used with `carla.Client.apply_batch`
 and `carla.Client.apply_batch_sync`.
 """
+
 # needs change in API
 # pylint: disable=too-many-locals,too-many-public-methods,too-many-arguments,too-many-public-methods,too-few-public-methods,too-many-lines
 # Fixable low-priority
@@ -66,6 +67,7 @@ class ApplyAngularImpulse(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Actor affected by the command."""
+
     @property
     def impulse(self) -> Vector3D:
         """Angular impulse applied to the actor (degrees*s)."""
@@ -88,6 +90,7 @@ class ApplyForce(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Actor affected by the command."""
+
     @property
     def force(self) -> Vector3D:
         """Force applied to the actor over time (N)."""
@@ -110,6 +113,7 @@ class ApplyImpulse(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Actor affected by the command."""
+
     @property
     def impulse(self) -> Vector3D:
         """Impulse applied to the actor (N*s)."""
@@ -132,6 +136,7 @@ class ApplyTargetAngularVelocity(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Actor affected by the command."""
+
     @property
     def angular_velocity(self) -> Vector3D:
         """The 3D angular velocity that will be applied to the actor (deg/s)."""
@@ -154,6 +159,7 @@ class ApplyTargetVelocity(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Actor affected by the command."""
+
     @property
     def velocity(self) -> Vector3D:
         """The 3D velocity applied to the actor (m/s)."""
@@ -180,7 +186,6 @@ class ApplyTorque(_IsCommand):
     @property
     def transform(self) -> Vector3D:
         """Torque applied to the actor over time (degrees)."""
-
     # endregion
 
     # region Methods
@@ -200,6 +205,7 @@ class ApplyTransform(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Actor affected by the command."""
+
     @property
     def transform(self) -> Transform:
         """Transformation to be applied."""
@@ -222,13 +228,16 @@ class ApplyVehicleAckermannControl(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Actor affected by the command."""
+
     @property
     def control(self) -> AckermannControllerSettings:
         """Vehicle ackermann control to be applied."""
     # endregion
 
     # region Methods
-    def __init__(self, actor: Actor | int, control: AckermannControllerSettings) -> None:
+    def __init__(
+        self, actor: Actor | int, control: AckermannControllerSettings
+    ) -> None:
         """Applies a certain akermann control to a vehicle.
 
         Args:
@@ -244,6 +253,7 @@ class ApplyVehicleControl(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Actor affected by the command."""
+
     @property
     def control(self) -> VehicleControl:
         """Vehicle control to be applied."""
@@ -266,6 +276,7 @@ class ApplyVehiclePhysicsControl(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Actor affected by the command."""
+
     @property
     def control(self) -> VehiclePhysicsControl:
         """Physics control to be applied."""
@@ -288,6 +299,7 @@ class ApplyWalkerControl(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Walker actor affected by the command."""
+
     @property
     def control(self) -> VehiclePhysicsControl:
         """Walker control to be applied."""
@@ -310,9 +322,11 @@ class ApplyWalkerState(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Walker actor affected by the command."""
+
     @property
     def transform(self) -> Transform:
         """Transform to be applied."""
+
     @property
     def speed(self) -> float:
         """Speed to be applied (m/s)."""
@@ -357,6 +371,7 @@ class Response:
     @property
     def actor_id(self) -> int:
         """Actor to whom the command was applied to. States that the command was successful."""
+
     @property
     def error(self) -> str:
         """A string stating the command has failed."""
@@ -374,9 +389,11 @@ class SetAutopilot(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Actor that is affected by the command."""
+
     @property
     def enabled(self) -> bool:
         """If autopilot should be activated or not."""
+
     @property
     def port(self) -> int:
         """Port of the Traffic Manager where the vehicle is to be registered or unlisted."""
@@ -400,6 +417,7 @@ class SetEnableGravity(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Actor that is affected by the command."""
+
     @property
     def enabled(self) -> bool:
         """If gravity should be activated or not."""
@@ -422,6 +440,7 @@ class SetSimulatePhysics(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Actor that is affected by the command."""
+
     @property
     def enabled(self) -> bool:
         """If physics should be activated or not."""
@@ -444,6 +463,7 @@ class SetVehicleLightState(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Actor that is affected by the command."""
+
     @property
     def light_state(self) -> VehicleLightState:
         """Recaps the state of the lights of a vehicle, these can be used as a flags."""
@@ -466,6 +486,7 @@ class ShowDebugTelemetry(_IsCommand):
     @property
     def actor_id(self) -> int:
         """Actor that is affected by the command."""
+
     @property
     def enabled(self) -> bool:
         """If debug should be activated or not."""
@@ -488,6 +509,7 @@ class SpawnActor(_IsCommand):
     @property
     def transform(self) -> Transform:
         """Transform to be applied."""
+
     @property
     def parent_id(self) -> int:
         """Identificator of the parent actor."""
@@ -499,8 +521,9 @@ class SpawnActor(_IsCommand):
     @overload
     def __init__(self, blueprint: ActorBlueprint, transform: Transform) -> None: ...
     @overload
-    def __init__(self, blueprint: ActorBlueprint, transform: Transform, parent: Actor | int) -> None: ...
-
+    def __init__(
+        self, blueprint: ActorBlueprint, transform: Transform, parent: Actor | int
+    ) -> None: ...
     def then(self, command: _IsCommand) -> _IsCommand:
         """Links another command to be executed right after. It allows to ease very common flows such as spawning a set of vehicles by command and then using this method to set them to autopilot automatically.
 
