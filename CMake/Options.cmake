@@ -222,8 +222,28 @@ carla_string_option (
 
 carla_string_option (
   CARLA_UNREAL_BUILD_TYPE
-  "Carla Unreal-style build type (Debug/Development/Shipping)."
+  "Set the default CARLA Unreal Editor build configuration."
   "Development"
+)
+
+# Docs for UE5 build configurations:
+# https://docs.unrealengine.com/4.27/en-US/ProductionPipelines/DevelopmentSetup/BuildConfigurations/
+
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  set (CARLA_UNREAL_PACKAGE_BUILD_TYPE_DEFAULT Debug)
+elseif (${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
+  set (CARLA_UNREAL_PACKAGE_BUILD_TYPE_DEFAULT Development)
+elseif (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+  set (CARLA_UNREAL_PACKAGE_BUILD_TYPE_DEFAULT Shipping)
+else ()
+  carla_warning("Unexpected CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\". Unreal packages will default to Development. Manually override DEFAULT_PACKAGE_CONFIGURATION if this behavior is not desired.")
+  set (CARLA_UNREAL_PACKAGE_BUILD_TYPE_DEFAULT Development)
+endif ()
+
+carla_string_option (
+  CARLA_UNREAL_PACKAGE_BUILD_TYPE
+  "Set the default CARLA package build configuration."
+  "${CARLA_UNREAL_PACKAGE_BUILD_TYPE_DEFAULT}"
 )
 
 

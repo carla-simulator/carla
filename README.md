@@ -4,7 +4,7 @@ CARLA Simulator
 [![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](https://carla-ue5.readthedocs.io)
 
 [![carla.org](Docs/img/btn/web.png)](http://carla.org)
-[![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/blob/master/Docs/download.md)
+[![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/releases)
 [![documentation](Docs/img/btn/docs.png)](https://carla-ue5.readthedocs.io)
 [![forum](Docs/img/btn/forum.png)](https://github.com/carla-simulator/carla/discussions)
 [![discord](Docs/img/btn/chat.png)](https://discord.gg/8kqACuC)
@@ -21,20 +21,21 @@ environmental conditions.
 
 ### Recommended system
 
-* Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD ryzen 7 / AMD ryzen 9
-* +32 GB RAM memory 
-* NVIDIA RTX 3070 / NVIDIA RTX 3080 / NVIDIA RTX 4090
-* Ubuntu 22.04
+* Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD Ryzen 7 / AMD Ryzen 9
+* +32 Gb RAM memory 
+* NVIDIA RTX 3070/3080/3090 / NVIDIA RTX 4090 or better
+* 16 Gb or more VRAM
+* Ubuntu 22.04 or Windows 11
 
  >[!NOTE]
-> Ubuntu version 22.04 is required, the Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or lower. 
+> Ubuntu version 22.04 and Windows version 11 are required, the Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or Windows 10 or lower. 
 
 ## Documentation
 
 The [CARLA documentation](https://carla-ue5.readthedocs.io/en/latest/) is hosted on ReadTheDocs. Please see the following key links:
 
-- [Building on Linux](https://carla-ue5.readthedocs.io/en/latest/build_linux/)
-- [Building on Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows/)
+- [Building on Linux](https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/)
+- [Building on Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/)
 - [First steps](https://carla-ue5.readthedocs.io/en/latest/tuto_first_steps/)
 - [CARLA asset catalogue](https://carla-ue5.readthedocs.io/en/latest/catalogue/)
 - [Python API reference](https://carla-ue5.readthedocs.io/en/latest/python_api/)
@@ -77,35 +78,106 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 }
 ```
 
-Building CARLA with Unreal Engine 5.5
+## Building CARLA with Unreal Engine 5.5
 --------------
 
-Clone this repository locally from GitHub:
+Clone this repository locally from GitHub, specifying the *ue5-dev* branch:
 
 ```sh
 git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
 ```
 
-Then run the setup script:
+In order to build CARLA, you need acces to the CARLA fork of Unreal Engine 5.5. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.5 repository. 
 
-Linux:
+__Building in Linux__:
+
+Run the setup script from a terminal open in the CARLA root directory:
 
 ```sh
 cd CarlaUE5
-./CarlaSetup.sh
+./CarlaSetup.sh --interactive
 ```
 
-Windows:
+The setup script will prompt you for your sudo password, in order to install the prerequisites. It will then prompt you for your GitHub credentials in order to authorise the download of the Unreal Engine repository. 
+
+__Building in Linux unattended__:
+
+If you want to run the setup script unattended, your git credentials need to be stored in an environment variable. Add your github credentials to your `.bashrc` file:
+
+```sh
+export GIT_LOCAL_CREDENTIALS=username@github_token
+```
+
+Then run the setup script using the following command:
+
+```sh
+cd CarlaUE5
+sudo -E ./CarlaSetup.sh
+```
+
+This will download and install Unreal Engine 5.5, install the prerequisites and build CARLA. It may take some time to complete and use a significant amount of disk space.
+
+If you prefer to add the git credentials in the terminal, use the following command:
+
+```sh
+cd CarlaUE5
+sudo -E env GIT_LOCAL_CREDENTIALS=github_username@github_token ./CarlaSetup.sh 
+```
+
+__Building in Windows__:
+
+To build in Windows, run the batch script:
 
 ```sh
 cd CarlaUE5
 CarlaSetup.bat
 ```
 
-This will download and install Unreal Engine 5.5, install the prerequisite requirements and build and launch CARLA. It may take some time to complete and use a significant amount of disk space. For further instructions on building in Linux can be found [here][buildlinuxlink] and the instructions for building in Windows can be found [here][buildwindowslink].
+Unattended mode is currently unavailable in Windows, you will need to enter GitHub credentials or administrator privileges when prompted.
 
-[buildlinuxlink]: https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/
-[buildwindowslink]: https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/
+## Rebuilding CARLA
+
+Once the setup is complete, you can execute subsequent builds with the following commands in a terminal open in the CARLA root directory. In Linux, run these commands in a standard terminal. In Windows, open the x64 Native Tools Command Prompt for Visual Studio 2022.
+
+__Configure__:
+
+Linux:
+
+```sh
+cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/LinuxToolchain.cmake \
+-DLAUNCH_ARGS="-prefernvidia" -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON
+```
+
+Windows:
+
+```sh
+cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release
+```
+
+__Build__:
+
+Linux and Windows:
+
+```sh
+cmake --build Build
+```
+
+__Build and install the Python API__:
+
+
+Linux and windows:
+
+```sh
+cmake --build Build --target carla-python-api-install
+```
+
+__Launch the editor__:
+
+```sh
+cmake --build Build --target launch
+```
+
+For more instructions on building CARLA UE5, please consult the build documentation for [Linux](https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/) or [Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/).
 
 Contributing
 ------------
@@ -114,33 +186,23 @@ Please take a look at our [Contribution guidelines][contriblink].
 
 [contriblink]: https://carla-ue5.readthedocs.io/en/latest/cont_contribution_guidelines/
 
-F.A.Q.
-------
-
-If you run into problems, check our
-[FAQ](https://carla-ue5.readthedocs.io/en/latest/build_faq/).
-
 Licenses
 -------
 
-#### CARLA licenses
+## CARLA licenses
 
-CARLA specific code is distributed under MIT License.
+CARLA specific code is distributed under the MIT License.
 
-CARLA specific assets are distributed under CC-BY License.
+CARLA specific assets are distributed under the CC-BY License.
 
-#### CARLA Dependency and Integration licenses
+## CARLA Dependency and Integration licenses
 
-The ad-rss-lib library compiled and linked by the [RSS Integration build variant](Docs/adv_rss.md) introduces [LGPL-2.1-only License](https://opensource.org/licenses/LGPL-2.1).
+Unreal Engine 5 follows its [own license terms](https://www.unrealengine.com/en-US/faq).
 
-Unreal Engine 4 follows its [own license terms](https://www.unrealengine.com/en-US/faq).
-
-CARLA uses three dependencies as part of the SUMO integration:
+CARLA uses some dependencies related to 3rd party integrations:
 - [PROJ](https://proj.org/), a generic coordinate transformation software which uses the [X/MIT open source license](https://proj.org/about.html#license).
 - [SQLite](https://www.sqlite.org), part of the PROJ dependencies, which is [in the public domain](https://www.sqlite.org/purchase/license).
 - [Xerces-C](https://xerces.apache.org/xerces-c/), a validating XML parser, which is made available under the [Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
-
-CARLA uses one dependency as part of the Chrono integration:
 - [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page), a C++ template library for linear algebra which uses the [MPL2 license](https://www.mozilla.org/en-US/MPL/2.0/).
 
 CARLA uses the Autodesk FBX SDK for converting FBX to OBJ in the import process of maps. This step is optional, and the SDK is located [here](https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-0)

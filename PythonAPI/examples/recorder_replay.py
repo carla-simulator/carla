@@ -6,7 +6,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Script that helps users to manually check a specific log"""
+"""Script that helps users to manually replay a log previously recorded"""
 
 import argparse
 import threading

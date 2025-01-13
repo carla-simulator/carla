@@ -1,8 +1,5 @@
-future
-numpy; python_version < '3.0'
-numpy==1.24; python_version >= '3.0'
+numpy<2.0,>=1.24.4
 pygame
-matplotlib
-open3d
+open3d; python_version <= '3.11'
 Pillow
 invertedai@git+https://github.com/inverted-ai/invertedai.git@develop

@@ -5,6 +5,8 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
+"""Visualize the skeleton of a pedestrian"""
+
 import math
 import argparse
 import copy
@@ -305,7 +307,7 @@ def main():
     camera = world.spawn_actor(camera_bp, carla.Transform())
     
     # spawn a pedestrian
-    world.set_pedestrians_seed(1235)
+    world.set_pedestrians_seed(3)
     ped_bp = random.choice(world.get_blueprint_library().filter("walker.pedestrian.*"))
     trans = carla.Transform()
     trans.location = world.get_random_location_from_navigation()
