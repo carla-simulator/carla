@@ -28,20 +28,20 @@ rmdir %cd%\Temp
 
 ninja --version 2>NUL
 if errorlevel 1 (
-    echo Could not find ninja %NINJA_VERSION%, downloading...
+    echo Could not find Ninja. Downloading...
     curl -L -o %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win.zip https://github.com/ninja-build/ninja/releases/download/v%NINJA_VERSION%/ninja-win.zip || exit /b
     powershell -command "Expand-Archive $env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\ninja-win.zip $env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\ninja-win" || exit /b
     move %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win\ninja.exe %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja.exe || exit /b
     rmdir /s /q %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win
     del /f %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win.zip
-    echo Installed ninja %NINJA_VERSION%.
+    echo Installed Ninja %NINJA_VERSION%.
 ) else (
     echo Found Ninja.
 )
 
 python --version 2>NUL
 if errorlevel 1 (
-    echo Found Python - FAIL
+    echo Could not find Python. Downloading...
     echo Installing Python %PYTHON_VERSION%...
     curl -L -O https://www.python.org/ftp/python/%PYTHON_VERSION%/python-%PYTHON_VERSION%-amd64.exe || exit /b
     python-%PYTHON_VERSION%-amd64.exe /passive PrependPath=1  || exit /b
@@ -49,8 +49,7 @@ if errorlevel 1 (
     set "PATH=%LocalAppData%\Programs\Python\Python38\Scripts\;%LocalAppData%\Programs\Python\Python38\;%PATH%"
     echo Python %PYTHON_VERSION% installed!!!
 ) else (
-    echo Found Python:
-    python --version
+    echo Found Python.
 )
 
 python -m pip install --upgrade pip || exit /b
