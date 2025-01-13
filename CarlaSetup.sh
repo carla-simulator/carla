@@ -56,6 +56,7 @@ else
     echo "Found git credentials."
 fi
 
+# -- PREREQUISITES INSTALL STEP --
 if [ $skip_prerequisites -eq 0 ]; then
     echo "Installing prerequisites..."
     sudo -E bash -x Util/SetupUtils/InstallPrerequisites.sh
@@ -63,16 +64,25 @@ else
     echo "Skipping prerequisites install step."
 fi
 
+# -- CLONE CONTENT --
+if [ -d $cd/Unreal/CarlaUnreal/Content ]; then
+    echo "Found CARLA content."
+else
+    echo "Could not find CARLA content. Downloading..."
+    mkdir -p $cd/Unreal/CarlaUnreal/Content
+    git \
+        -C $cd/Unreal/CarlaUnreal/Content \
+        clone \
+        -b ue5-dev \
+        https://bitbucket.org/carla-simulator/carla-content.git \
+        Carla
+fi
+
+# -- DOWNLOAD + BUILD UNREAL ENGINE --
 if [ ! -z $CARLA_UNREAL_ENGINE_PATH ] && [ -d $CARLA_UNREAL_ENGINE_PATH ]; then
     echo "Found CARLA Unreal Engine at $CARLA_UNREAL_ENGINE_PATH"
 elif [ -d ../UnrealEngine5_carla ]; then
-    pushd ..
-    pushd UnrealEngine5_carla
-    echo "Found CARLA Unreal Engine at ../UnrealEngine5_carla"
-    export CARLA_UNREAL_ENGINE_PATH=$PWD
-    echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$CARLA_UNREAL_ENGINE_PATH >> ~/.bashrc
-    popd
-    popd
+    echo "Found CARLA Unreal Engine at $cd/UnrealEngine5_carla. Assuming already built..."
 else
     echo "Could not find CARLA Unreal Engine, downloading..."
     pushd ..
@@ -89,12 +99,17 @@ else
     pushd UnrealEngine5_carla
     echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$PWD >> ~/.bashrc
     export CARLA_UNREAL_ENGINE_PATH=$PWD
+    echo "Running Unreal Engine pre-build steps..."
+    bash -x Setup.sh
+    bash -x GenerateProjectFiles.sh
+    echo "Building Unreal Engine 5..."
+    make
     popd
     popd
-    echo "Installed CARLA Unreal Engine..."
 fi
 
-echo "Configuring CARLA..."
+# -- BUILD CARLA --
+echo "Configuring the CARLA CMake project..."
 cmake -G Ninja -S . -B Build \
     --toolchain=$PWD/CMake/LinuxToolchain.cmake \
     -DLAUNCH_ARGS="-prefernvidia" \
@@ -104,11 +119,11 @@ cmake -G Ninja -S . -B Build \
     -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH
 echo "Building CARLA..."
 cmake --build Build
-echo "Building + installing Python API..."
+echo "Installing Python API..."
 cmake --build Build --target carla-python-api-install
-echo "Waiting for Content to finish downloading..."
-wait #Waitting for content
-echo "Installation and build successful."
+echo "CARLA Python API build+install succeeded."
+
+# -- POST-BUILD STEPS --
 if [ $launch -eq 1 ]; then
     echo "Launching Carla - Unreal Editor..."
     cmake --build Build --target launch

@@ -1,25 +1,70 @@
 @echo off
+setlocal EnableDelayedExpansion
 
-echo Starting Content Download...
-if not exist "Unreal\CarlaUnreal\Content" mkdir Unreal\CarlaUnreal\Content
-start cmd /c git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla
+set SKIP_PREREQS=false
+set LAUNCH=false
+set INTERACTIVE=false
 
-call Util/SetupUtils/InstallPrerequisites.bat
+if not "%*"=="" (
+    for %%x in ("%*") do (
+        if "%%~x"=="--interactive" (
+            set INTERACTIVE=true
+        ) else if "%%~x"=="-i" (
+            set INTERACTIVE=true
+        ) else if "%%~x"=="--skip-prerequisites" (
+            set SKIP_PREREQS=true
+        ) else if "%%~x"=="-p" (
+            set SKIP_PREREQS=true
+        ) else if "%%~x"=="--launch" (
+            set LAUNCH=true
+        ) else if "%%~x"=="-l" (
+            set LAUNCH=true
+        ) else (
+            echo Unknown argument "%%~x"
+        )
+    )
+)
 
+rem -- PREREQUISITES INSTALL STEP --
+
+if %SKIP_PREREQS%==false (
+    echo Installing prerequisites...
+    call Util/SetupUtils/InstallPrerequisites.bat || exit /b
+) else (
+    echo Skipping prerequisites install step.
+)
+
+rem -- CLONE CONTENT --
+if exist "%cd%\Unreal\CarlaUnreal\Content" (
+    echo Found CARLA content.
+) else (
+    echo Could not find CARLA content. Downloading...
+    mkdir %cd%\Unreal\CarlaUnreal\Content
+    git ^
+        -C %cd%\Unreal\CarlaUnreal\Content ^
+        clone ^
+        -b ue5-dev ^
+        https://bitbucket.org/carla-simulator/carla-content.git ^
+        Carla ^
+    || exit /b
+)
+
+rem Activate VS terminal development environment:
 if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" (
     echo Activating "x64 Native Tools Command Prompt" terminal environment.
-    call "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+    call "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" || exit /b
 ) else (
     echo Could not find vcvarsall.bat, aborting setup...
     exit 1
 )
 
+rem -- DOWNLOAD + BUILD UNREAL ENGINE --
 if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     echo Found Unreal Engine 5 at "%CARLA_UNREAL_ENGINE_PATH%".
 ) else if exist ..\UnrealEngine5_carla (
-    echo Found Unreal Engine 5 at "%cd%\..\UnrealEngine5_carla".
+    echo Found CARLA Unreal Engine at %cd%/UnrealEngine5_carla. Assuming already built...
 ) else (
-    echo Could not find Unreal Engine 5, downloading...
+    echo Could not find CARLA Unreal Engine, downloading...
     pushd ..
     git clone ^
         -b ue5-dev-carla ^
@@ -28,29 +73,35 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     pushd UnrealEngine5_carla
     set CARLA_UNREAL_ENGINE_PATH=!cd!
     setx CARLA_UNREAL_ENGINE_PATH !cd!
-    popd
-    popd
-    pushd ..
-    pushd %CARLA_UNREAL_ENGINE_PATH%
+    echo Running Unreal Engine pre-build steps...
     call Setup.bat || exit /b
     call GenerateProjectFiles.bat || exit /b
-    msbuild Engine\Intermediate\ProjectFiles\UE5.vcxproj ^
+    echo Building Unreal Engine 5...
+    msbuild ^
+        Engine\Intermediate\ProjectFiles\UE5.vcxproj ^
         /property:Configuration="Development_Editor" ^
         /property:Platform="x64" || exit /b
     popd
     popd
 )
 
+rem -- BUILD CARLA --
+echo Configuring the CARLA CMake project...
 cmake ^
     -G Ninja ^
     -S . ^
     -B Build ^
     -DCMAKE_BUILD_TYPE=Release ^
-    -DBUILD_CARLA_UNREAL=ON ^
     -DCARLA_UNREAL_ENGINE_PATH=%CARLA_UNREAL_ENGINE_PATH% || exit /b
-
+echo Building CARLA...
 cmake --build Build || exit /b
+echo Installing Python API...
+cmake --build Build --target carla-python-api-install || exit /b
+echo CARLA Python API build+install succeeded.
 
-cmake --build Build --target carla-python-api-install
+rem -- POST-BUILD STEPS --
 
-cmake --build Build --target launch || exit /b
+if %LAUNCH%==true (
+    echo Launching Carla Unreal Editor...
+    cmake --build Build --target launch || exit /b
+)

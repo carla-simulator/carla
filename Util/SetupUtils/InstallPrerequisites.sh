@@ -12,13 +12,8 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 echo "Installing Ubuntu Packages..."
-if ! command -v retry &> /dev/null
-then
-    apt update
-    apt-get install retry
-fi
-retry --until=success --times=12 --delay=300 -- apt-get update
-retry --until=success --times=12 --delay=300 -- apt-get -y install \
+apt-get update
+apt-get -y install \
     build-essential \
     g++-12 \
     gcc-12 \
