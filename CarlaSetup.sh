@@ -115,7 +115,6 @@ cmake -G Ninja -S . -B Build \
     -DLAUNCH_ARGS="-prefernvidia" \
     -DCMAKE_BUILD_TYPE=Release \
     -DENABLE_ROS2=ON \
-    -DBUILD_CARLA_UNREAL=ON \
     -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH
 echo "Building CARLA..."
 cmake --build Build

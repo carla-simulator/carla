@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-set SKIP_PREREQS=false
+set SKIP_PREREQUISITES=false
 set LAUNCH=false
 set INTERACTIVE=false
 
@@ -12,9 +12,9 @@ if not "%*"=="" (
         ) else if "%%~x"=="-i" (
             set INTERACTIVE=true
         ) else if "%%~x"=="--skip-prerequisites" (
-            set SKIP_PREREQS=true
+            set SKIP_PREREQUISITES=true
         ) else if "%%~x"=="-p" (
-            set SKIP_PREREQS=true
+            set SKIP_PREREQUISITES=true
         ) else if "%%~x"=="--launch" (
             set LAUNCH=true
         ) else if "%%~x"=="-l" (
@@ -27,7 +27,7 @@ if not "%*"=="" (
 
 rem -- PREREQUISITES INSTALL STEP --
 
-if %SKIP_PREREQS%==false (
+if %SKIP_PREREQUISITES%==false (
     echo Installing prerequisites...
     call Util/SetupUtils/InstallPrerequisites.bat || exit /b
 ) else (
