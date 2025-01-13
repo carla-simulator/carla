@@ -16,6 +16,7 @@ set VISUAL_STUDIO_COMPONENTS=^
     Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang ^
     Microsoft.VisualStudio.Component.VC.14.36.17.6.x86.x64
 
+rem -- INSTALL VISUAL STUDIO --
 if not exist %cd%\Temp (
     mkdir %cd%\Temp
 )
@@ -26,6 +27,7 @@ popd Temp
 del %cd%\Temp\vs_community.exe
 rmdir %cd%\Temp
 
+rem -- INSTALL NINJA --
 ninja --version 2>NUL
 if errorlevel 1 (
     echo Could not find Ninja. Downloading...
@@ -39,6 +41,7 @@ if errorlevel 1 (
     echo Found Ninja.
 )
 
+rem -- INSTALL PYTHON --
 python --version 2>NUL
 if errorlevel 1 (
     echo Could not find Python. Downloading...
@@ -52,5 +55,6 @@ if errorlevel 1 (
     echo Found Python.
 )
 
+rem -- INSTALL PYTHON PACKAGES --
 python -m pip install --upgrade pip || exit /b
 python -m pip install -r requirements.txt || exit /b
