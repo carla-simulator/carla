@@ -11,14 +11,10 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# -- INSTALL APT PACKAGES --
 echo "Installing Ubuntu Packages..."
-if ! command -v retry &> /dev/null
-then
-    apt update
-    apt-get install retry
-fi
-retry --until=success --times=12 --delay=300 -- apt-get update
-retry --until=success --times=12 --delay=300 -- apt-get -y install \
+apt-get update
+apt-get -y install \
     build-essential \
     g++-12 \
     gcc-12 \
@@ -40,13 +36,12 @@ retry --until=success --times=12 --delay=300 -- apt-get -y install \
     git \
     git-lfs
 
+# -- INSTALL PYTHON PACKAGES --
 echo "Installing Python Packages..."
 pip3 install --upgrade pip
 pip3 install -r requirements.txt
 
-echo "Cloning CARLA Content asynchronously... (see progress in ContentClone.log)"
-mkdir -p Unreal/CarlaUnreal/Content
-git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla &> ContentClone.log&
+# -- INSTALL CMAKE --
 
 check_cmake_version() {
     CMAKE_VERSION="$($2 --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
